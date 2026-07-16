@@ -38,7 +38,7 @@ main_branch = "main"
 # Where the gate points an agent when a stage fails in a non-obvious way. Keep
 # this doc current with the traps specific to your stack (see the comment block
 # the gate prints on failure). Empty disables the pointer.
-gotchas_doc = ""
+gotchas_doc = "map/80-development/done-gate-gotchas.md"
 
 # Where the deferred-work ledger lives — the running TODO list agents read and
 # maintain, relative to the project root. `discern setup` seeds it here.
@@ -126,6 +126,11 @@ dir = "discern/skills"
 # ─────────────────────────────────────────────────────────────────────────────
 
 [capabilities]
+test = "deno task test"
+build = "deno task build && deno task check:catalogue"
+typecheck = "deno task typecheck"
+lint = "deno task lint"
+format = "deno task fix"
 # format    = "prettier --write ."   # or "ruff format ." or "gofmt -w ."
 # build     = "npm run build"        # or "cargo build"
 # lint      = "eslint ."             # or "ruff check ." or "golangci-lint run"
@@ -284,7 +289,7 @@ ignored_file_drift = true
 # re-entry or update it is recorded but never undoes a merge or blocks startup.
 [worktree.setup]
 steps = []   # one-shot, e.g. ["seed-fixtures"]
-ensure = []  # converge, e.g. ["<install deps>"]
+ensure = ["deno install --frozen"]  # converge, e.g. ["<install deps>"]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -429,3 +434,19 @@ in_gate = false
 # Where your project scripts live, relative to the project root. The default works with
 # no config at all; point it elsewhere (e.g. "tools/") if you prefer.
 dir = "discern/scripts"
+
+[checks.codegen]
+provides = "generated-registry-currency"
+run = "deno task codegen"
+stage = "fix"
+
+[standards.css_size]
+run = "[ -f dist/discern.css ] || deno task build >/dev/null 2>&1; printf 'DISCERN_METRIC css_bytes %s\\n' \"$(wc -c < dist/discern.css | tr -d ' ')\""
+limit = 140000
+direction = "down"
+metric = "css_bytes"
+# Replay the last measurement when nothing that shapes the CSS changed.
+inputs = ["src/**", "scripts/**"]
+# Headroom `discern standards --pin` leaves so ordinary token/component
+# work never trips a freshly pinned ceiling.
+margin = 4000
