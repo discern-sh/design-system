@@ -6,11 +6,6 @@ This subtree documents the developer experience: getting set up locally, the
 testing approach, the conventions the tooling enforces, and where to look when
 the quality gate fails in a way the message did not explain.
 
-> The leaves marked below are skeletons. `discern setup` and the
-> `discern-document-subsystem` skill fill them once the project's stack is
-> known. The [gate gotchas](done-gate-gotchas.md) leaf already carries the
-> stack-independent traps and is ready to grow.
-
 The end-to-end loop is short and the same on every stack discern runs on:
 
 - `discern start` creates an isolated worktree for a change and moves you into
@@ -26,7 +21,7 @@ The end-to-end loop is short and the same on every stack discern runs on:
 
 | File                                         | What's in it                                                                                                                                                                                                             |
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [done-gate-gotchas.md](done-gate-gotchas.md) | Non-obvious ways `discern done` fails — the stack-independent traps (merge check, parallel-run state, stale artifacts, masked exit codes), plus a section for your stack's own. The gate points here when a stage fails. |
-| `getting-started.md`                         | _Skeleton — fill during `discern setup`._ Cloning, the worktree step, environment setup, running the app, the first `discern done`.                                                                                      |
-| `testing.md`                                 | _Skeleton — fill during `discern setup`._ The testing approach in this repo, how to run tests, and the parallel-safe patterns the gate assumes.                                                                          |
-| `code-conventions.md`                        | _Skeleton — fill during `discern setup`._ The rules the tooling enforces, mirroring the Conventions section of the project guidelines.                                                                                   |
+| [done-gate-gotchas.md](done-gate-gotchas.md) | Non-obvious ways `discern done` fails — the stack-independent traps (merge check, parallel-run state, stale artifacts, masked exit codes), plus a section for this stack's own. The gate points here when a stage fails. |
+| [getting-started.md](getting-started.md)     | Deno prerequisites, `deno install --frozen`, running the Catalogue, and what the first `discern done` runs.                                                                                                              |
+| [testing.md](testing.md)                     | The two suites, the permissions they need, cached-only fixtures, filtering one test, and how tests are written here.                                                                                                     |
+| [code-conventions.md](code-conventions.md)   | What each gate stage enforces (fmt, codegen, lint, strict typecheck, css_size) and the working-level conventions beyond the tooling.                                                                                     |

@@ -15,10 +15,6 @@ code is authoritative and the map must not drift from it.
 If you're new, start with [00-orientation/](00-orientation/) and follow the
 trail.
 
-> The map starts as a skeleton. Run the `discern setup` command to have your
-> coding agent seed it from the repo and a few questions it asks you. The
-> markers below (`<!-- setup fills this -->`) show what is still a placeholder.
-
 ---
 
 ## Reading order
@@ -31,20 +27,21 @@ trail.
 
 ### Subsystems
 
-<!-- setup fills this -->
-
 The subsystems are numbered subtrees, in the order a newcomer should read them —
-`10-…` through `80-…`. Each has a `README.md` tour plus deeper leaves.
-`discern setup` proposes the subtree names from the repo's shape; until then,
-only the placeholders below exist. Rename and renumber freely — the numbers are
-a reading order, not a contract.
+`10-…` through `80-…`. Each has a `README.md` tour plus deeper leaves. Rename
+and renumber freely — the numbers are a reading order, not a contract. The
+numbered subtrees below hold stub READMEs today; writing their leaves is tracked
+in [`discern/TODO.md`](../discern/TODO.md).
 
-| Path                               | What's in it                                                                                                                                                                                                             |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `10-<subsystem>/`                  | _Proposed during `discern setup`._                                                                                                                                                                                       |
-| `20-<subsystem>/`                  | _Proposed during `discern setup`._                                                                                                                                                                                       |
-| `…`                                | _Add as many numbered subtrees as the system needs._                                                                                                                                                                     |
-| [80-development/](80-development/) | Working on discern-design-system: getting set up, the testing approach, code conventions, and the [gate gotchas](80-development/done-gate-gotchas.md) the quality gate points at when a step fails in a non-obvious way. |
+| Path                                       | What's in it                                                                                                                                                                                                             |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [10-tokens-themes/](10-tokens-themes/)     | Tokens (primitive, role, and Preset layers), light/dark Themes, and the Root-scoped foundation and utility CSS.                                                                                                          |
+| [20-components/](20-components/)           | The 54 Component folders: anatomy, the eight Groups, Owned Classes, and the authoring rules.                                                                                                                             |
+| [30-codegen/](30-codegen/)                 | How `generate.ts` derives the Registry, React surface, base styles, asset tables, and example registry from Metadata.                                                                                                    |
+| [40-runtime-emitter/](40-runtime-emitter/) | The Emitter: Selection resolution, deterministic output, the Manifest, and Optional Assets.                                                                                                                              |
+| [50-react-adapter/](50-react-adapter/)     | The optional React Adapter: peer contract and build-time static rendering.                                                                                                                                               |
+| [60-catalogue/](60-catalogue/)             | The local component browser: the styleguide app, the build pipeline, and the dev server.                                                                                                                                 |
+| [80-development/](80-development/)         | Working on discern-design-system: getting set up, the testing approach, code conventions, and the [gate gotchas](80-development/done-gate-gotchas.md) the quality gate points at when a step fails in a non-obvious way. |
 
 ### Reference material
 

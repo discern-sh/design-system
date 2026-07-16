@@ -3,29 +3,57 @@
 _The testing approach in this repo — how tests are written, how they run, and
 the patterns the gate assumes._
 
-> This doc is a skeleton. The `discern setup` command (and the
-> `discern-document-subsystem` skill, when filling the `80-development` subtree)
-> writes it from the project's actual test stack. Look for the
-> `<!-- setup fills this -->` marker.
-
 The `test` capability in `discern.toml` is what `discern done` runs; this doc
 explains how to write tests that pass it and how to run them while iterating.
 
 ## How tests run
 
-<!-- setup fills this -->
+The gate's `test` capability is `deno task test`:
 
-_(How the `test` capability invokes the suite, how to run a single test or a
-filtered subset while iterating, and — importantly — whether the suite runs in
-parallel. If it does, the [gate gotchas](done-gate-gotchas.md) "passes alone but
-fails in the full run" trap applies: every test must own its fixtures and assume
-no ordering. Spell out the parallel-safe pattern this project uses.)_
+```sh
+deno test --config deno.json --allow-read --allow-write --allow-env --allow-run tests
+```
+
+Two suites live under [`tests/`](../../tests/):
+
+- [`design_system_test.ts`](../../tests/design_system_test.ts) — the package
+  contract: namespace scoping, metadata auto-enrolment, Selection resolution,
+  byte-for-byte determinism, asset independence, theme/contrast semantics, and
+  the external consumer fixtures.
+- [`release_test.ts`](../../tests/release_test.ts) — the publish contract:
+  allowlisted publish set, module-graph containment, no import attributes,
+  neutral-consumer artifact, documentation coverage, release identity coherence.
+
+Cases run sequentially in one process (no `--parallel`), so ordering hazards
+don't apply here — but every test still owns its state: fixtures are built in
+`Deno.makeTempDir()` directories, never shared.
+
+The broad permissions exist because the suites exercise real artifacts: they
+spawn Deno subprocesses (`Deno.Command` on `Deno.execPath()`), and the release
+suite shells `deno publish --dry-run --allow-dirty`. The external fixtures run
+`--cached-only`, so tests need a warm cache (`deno install --frozen` first) but
+**no network at test time** — a test that fetches at runtime is a defect.
+
+Run one test while iterating:
+
+```sh
+deno test --config deno.json --allow-read --allow-write --allow-env --allow-run \
+  --filter "all selection and repeated emission are byte-for-byte deterministic" tests
+```
 
 ## How tests are written
 
-<!-- setup fills this -->
-
-_(The conventions for a good test here: structure, what to assert,
-fixtures/factories, what to mock and what not to. If the project practices a
-particular discipline — write the failing test first, test behaviour not
-implementation — state it and what it requires.)_
+- **Assert on real emitted bytes, not internals.** The suites emit a Runtime
+  into a temp dir and parse the actual CSS, Manifest, and file tree (helpers
+  like `publicCssGlobals` and `contrast` measure emitted output). Prefer
+  extending those assertions over mocking anything — nothing here is mocked.
+- **Class-level invariants, not instance checks.** Tests walk all Component
+  folders and generated surfaces so a new Component auto-enrols in every
+  guarantee (namespace, metadata, docs coverage) without a new test.
+- **Consumer-contract changes get a fixture.** Anything promised to external
+  consumers is proved from an _external_ temp project importing only documented
+  exports — the neutral fixture declares no React dependency; the React fixture
+  proves the Adapter's peer contract. Neither reaches into `dist/` or the repo
+  itself.
+- **Determinism is asserted, not assumed.** Repeat emission and compare SHA-256
+  per file; any new emitted artifact must join that comparison.

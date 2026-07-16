@@ -39,6 +39,12 @@ owing.
       subtree's `README.md` and its leaves from the real code, replacing the
       placeholder stubs setup laid. Delete each subtree's line as you fill it,
       and delete this whole section once the tree is complete.
+  - [ ] `map/10-tokens-themes/` — Tokens, Theme roles, the Preset, foundations
+  - [ ] `map/20-components/` — Component anatomy, Groups, Owned Classes
+  - [ ] `map/30-codegen/` — generate.ts and the generated surfaces
+  - [ ] `map/40-runtime-emitter/` — the Emitter, Selections, the Manifest
+  - [ ] `map/50-react-adapter/` — the Adapter and static rendering
+  - [ ] `map/60-catalogue/` — the styleguide app, build.ts, serve.ts
 
 ---
 
