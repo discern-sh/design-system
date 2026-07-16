@@ -1,0 +1,26 @@
+{
+  "hooksConfig": {
+    "enabled": true
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "discern worktree ensure"
+          }
+        ]
+      }
+    ]
+  },
+  "mcpServers": {
+    "discern": {
+      "command": "discern",
+      "args": [
+        "mcp"
+      ]
+    }
+  }
+}

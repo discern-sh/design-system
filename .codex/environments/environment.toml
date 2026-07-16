@@ -1,0 +1,8 @@
+version = 1
+name = "Discern"
+
+[setup]
+script = "discern worktree ensure"
+
+[cleanup]
+script = "discern worktree teardown"
