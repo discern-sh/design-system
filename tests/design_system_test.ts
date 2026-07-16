@@ -532,22 +532,24 @@ Deno.test("neutral entrypoints work in an external cached-only Deno project", as
   const temp = await Deno.makeTempDir();
   try {
     const packageImports = {
-      "discern-design-system": new URL("../src/mod.ts", import.meta.url).href,
-      "discern-design-system/manifest": new URL(
+      "@discern-sh/design-system":
+        new URL("../src/mod.ts", import.meta.url).href,
+      "@discern-sh/design-system/manifest": new URL(
         "../src/manifest.ts",
         import.meta.url,
       ).href,
-      "discern-design-system/react": new URL("../src/react.ts", import.meta.url)
-        .href,
-      "discern-design-system/runtime": new URL(
+      "@discern-sh/design-system/react":
+        new URL("../src/react.ts", import.meta.url)
+          .href,
+      "@discern-sh/design-system/runtime": new URL(
         "../src/runtime.ts",
         import.meta.url,
       ).href,
-      "discern-design-system/theme/discern": new URL(
+      "@discern-sh/design-system/theme/discern": new URL(
         "../src/theme/discern.ts",
         import.meta.url,
       ).href,
-      "discern-design-system/tokens": new URL(
+      "@discern-sh/design-system/tokens": new URL(
         "../src/tokens/tokens.ts",
         import.meta.url,
       ).href,
@@ -565,9 +567,9 @@ Deno.test("neutral entrypoints work in an external cached-only Deno project", as
     );
     await Deno.writeTextFile(
       join(temp, "neutral.ts"),
-      `import { packageManifest, semanticClass } from "discern-design-system";
-import { emitDesignSystemRuntime } from "discern-design-system/runtime";
-import { discernTheme } from "discern-design-system/theme/discern";
+      `import { packageManifest, semanticClass } from "@discern-sh/design-system";
+import { emitDesignSystemRuntime } from "@discern-sh/design-system/runtime";
+import { discernTheme } from "@discern-sh/design-system/theme/discern";
 const result = await emitDesignSystemRuntime({
   outputRoot: new URL("./runtime/", import.meta.url),
   components: ["button"],
@@ -617,7 +619,7 @@ console.log(JSON.stringify({
       join(temp, "react-consumer.ts"),
       `import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { Button } from "discern-design-system/react";
+import { Button } from "@discern-sh/design-system/react";
 console.log(renderToStaticMarkup(createElement(Button, null, "Continue")));
 `,
     );

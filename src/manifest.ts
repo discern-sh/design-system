@@ -31,7 +31,7 @@ export interface IntegrityFile {
 
 export interface RuntimeManifest {
   readonly schemaVersion: typeof RUNTIME_MANIFEST_SCHEMA_VERSION;
-  readonly package: "discern-design-system";
+  readonly package: "@discern-sh/design-system";
   readonly selection: {
     readonly all: boolean;
     readonly requestedComponents: readonly string[];
@@ -57,7 +57,7 @@ export interface RuntimeManifest {
 /** Package identity and ownership facts without catalogue descriptions or React. */
 export const packageManifest = {
   schemaVersion: RUNTIME_MANIFEST_SCHEMA_VERSION,
-  package: "discern-design-system",
+  package: "@discern-sh/design-system",
   groups: componentGroups.map((name) => ({
     name,
     components: componentRegistry.filter((entry) => entry.meta.group === name)

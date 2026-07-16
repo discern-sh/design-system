@@ -245,7 +245,7 @@ export async function emitDesignSystemRuntime(
   }));
   const manifest: RuntimeManifest = {
     schemaVersion: RUNTIME_MANIFEST_SCHEMA_VERSION,
-    package: "discern-design-system",
+    package: "@discern-sh/design-system",
     selection: {
       all: options.all === true,
       requestedComponents: selection.requestedComponents,
