@@ -1,24 +1,25 @@
 # Discern design system
 
-The Discern design system is a local, independently testable Deno package. Its
-default graph is framework-neutral; React is an explicit authoring adapter for
-consumers that render static HTML. The extraction programme records
-`@discern-sh/design-system` as its intended JSR coordinate; this wave remains
-local and unpublished.
+The design system behind [discern.sh](https://discern.sh): an opinionated,
+framework-neutral visual system for Deno sites. It ships semantic tokens,
+light/dark themes, scoped component CSS under one `discern` namespace, an
+optional React adapter for static rendering, and a deterministic runtime emitter
+that outputs only what a consumer selects.
+
+```sh
+deno add jsr:@discern-sh/design-system
+```
 
 ## Public imports
 
-Discern's root import map currently binds these package-shaped specifiers to the
-local source. A future immutable release keeps the same export paths.
-
-| Import                                | Contract                                                                                  |
-| ------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `discern-design-system`               | Token metadata, component/group metadata types, the package manifest, and `semanticClass` |
-| `discern-design-system/manifest`      | Framework-neutral manifest schema and the complete package ownership manifest             |
-| `discern-design-system/runtime`       | Deterministic selected-runtime emitter                                                    |
-| `discern-design-system/tokens`        | Primitive, semantic, and Discern-preset token metadata                                    |
-| `discern-design-system/theme/discern` | Default branded blue preset                                                               |
-| `discern-design-system/react`         | Optional React components and their public prop types                                     |
+| Import                                    | Contract                                                                                  |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `@discern-sh/design-system`               | Token metadata, component/group metadata types, the package manifest, and `semanticClass` |
+| `@discern-sh/design-system/manifest`      | Framework-neutral manifest schema and the complete package ownership manifest             |
+| `@discern-sh/design-system/runtime`       | Deterministic selected-runtime emitter                                                    |
+| `@discern-sh/design-system/tokens`        | Primitive, semantic, and Discern-preset token metadata                                    |
+| `@discern-sh/design-system/theme/discern` | Default branded blue preset                                                               |
+| `@discern-sh/design-system/react`         | Optional React components and their public prop types                                     |
 
 Only `./react` resolves React. The package keeps React and React DOM as
 catalogue development dependencies and peer dependencies, while its root,
@@ -54,7 +55,7 @@ The emitter accepts explicit component IDs, canonical groups, or the explicit
 metadata and writes stable output order to a dedicated directory:
 
 ```ts
-import { emitDesignSystemRuntime } from "discern-design-system/runtime";
+import { emitDesignSystemRuntime } from "@discern-sh/design-system/runtime";
 
 const result = await emitDesignSystemRuntime({
   outputRoot: new URL("./public/design-system/", import.meta.url),
@@ -77,7 +78,9 @@ emission replaces it. Every selection writes:
 - only the optional assets requested by the consumer.
 
 Use `{ all: true }` for the complete catalogue. Repeated emissions with the same
-inputs are byte-for-byte identical.
+inputs are byte-for-byte identical. Emitted files are build inputs for your own
+static output; browsers should never hotlink the registry or another third-party
+host.
 
 ## Optional assets
 
@@ -131,31 +134,41 @@ themes; they do not invert with the ordinary canvas and ink roles.
 React consumers import only the explicit adapter and can render the same class
 contract to static HTML:
 
-```ts
+```tsx
 import { renderToStaticMarkup } from "react-dom/server";
-import { Button } from "discern-design-system/react";
+import { Button } from "@discern-sh/design-system/react";
 
 const html = renderToStaticMarkup(
   <Button variant="secondary">Continue</Button>,
 );
 ```
 
-Discern uses this adapter at build time under ADR 0135. The browser receives
-static HTML and CSS, with no React bundle, hydration, or implicit component
-behaviour. Stateful catalogue examples require a consumer-owned browser strategy
-if they are used outside the catalogue.
+Discern uses this adapter at build time only: the browser receives static HTML
+and CSS, with no React bundle, hydration, or implicit component behaviour.
+Stateful catalogue examples require a consumer-owned browser strategy if they
+are used outside the catalogue.
 
-## Commands and local proof
+## Output sizes
 
-Run these from this directory:
+Unminified reference points for selection behaviour:
+
+- the complete catalogue with fonts and grain emits roughly 127 KB of CSS and
+  293 KB of optional assets;
+- a docs-sized selection with fonts only emits roughly 15 KB of CSS;
+- a core selection with no optional assets emits zero asset bytes.
+
+## Developing
 
 ```sh
-deno task check
-deno task build
-deno task test
+deno install
 deno task verify
-deno task serve
 ```
+
+`deno task verify` runs formatting, lint, type-checks, the catalogue build, and
+the tests. `deno task serve` builds and serves the local component catalogue.
+Run `deno task codegen` after changing component metadata, component CSS,
+component imports, or package assets; do not edit `src/generated/` or
+`styleguide/generated/` by hand.
 
 `deno task test` creates a temporary external Deno project. Its neutral fixture
 declares no React dependency, imports only documented package exports, emits a
@@ -164,46 +177,26 @@ adds the React peer contract and renders static HTML through `./react`. Neither
 fixture reaches into `dist/`, relies on a global Deno-cache path, uses
 `--unstable-raw-imports`, or fetches an asset at runtime.
 
-The repository root's `deno task site:build` consumes only the public runtime
-and React entrypoints. `deno task watch` rebuilds the static pages and serves
-the complete local catalogue at `/style-guide/`.
-
-## Boundary measurements
-
-Unminified bytes measured on 2026-07-15. Before this boundary, every consumer
-received the same 115,510-byte all-component CSS and all 292,467 authored asset
-bytes.
-
-| Selection                     | Before CSS | After CSS | Before assets | After assets | After manifest |
-| ----------------------------- | ---------: | --------: | ------------: | -----------: | -------------: |
-| Full catalogue, fonts + grain |    115,510 |   127,113 |       292,467 |      293,116 |         58,545 |
-| Docs components, fonts only   |    115,510 |    15,072 |       292,467 |      193,674 |          9,323 |
-
-The full CSS grows because the permanent namespace changes from `ds` to
-`discern` and the theme seam becomes explicit. The docs-sized selection drops
-unrelated Marketing and Editorial component CSS. A core selection with no
-optional assets emits zero asset bytes.
-
-## Authoring rules
+### Authoring rules
 
 - Change token values in `src/tokens/tokens.ts`; do not edit emitted CSS.
 - Every component folder owns its implementation, CSS, metadata, examples, and
   `mod.ts`. Metadata and group order generate the runtime registry, React export
   surface, catalogue registry, and dependency graph.
-- Run `deno task codegen` after changing component metadata, component CSS,
-  component imports, or package assets. Do not edit `src/generated/` or
-  `styleguide/generated/` by hand.
 - Keep examples generic. Product claims, customer names, routes, commands, and
   bespoke artwork belong to the consumer and enter components through props or
   slots.
 - Preserve `--discern-font-size-xs` as the authored interface-text floor and
   pair the UI font role with its central OpenType feature set.
-- Preserve the stable inverse roles rather than using ordinary theme-relative
-  canvas and ink as an inverse palette.
-- Keep font licences with their files and the repository's Apache-2.0 terms.
-- `dist/`, `styleguide/generated/`, and Discern's generated site runtime are
-  ignored outputs.
 
-The package test suite cannot import Discern parent source. Site routes,
-generated-page assertions, static-runtime checks, and consumer CSS ownership
-guards belong to the repository-level consumer tests.
+## Versioning
+
+Releases follow SemVer and JSR versions are immutable. Before 1.0, minor
+versions may still change the public contract; the changelog records every
+breaking change.
+
+## License
+
+Apache-2.0 for the code. The bundled fonts remain under their own SIL Open Font
+Licence terms in `assets/licenses/`, and those licence texts accompany every
+emitted font selection.
