@@ -19,6 +19,7 @@
       "src/"
     ],
     "exclude": [
+      "src/**/*.css",
       "src/**/*.examples.tsx",
       "src/fixtures/"
     ]

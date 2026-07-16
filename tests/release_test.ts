@@ -56,7 +56,7 @@ function isAllowedPublishPath(path: string): boolean {
   if (!path.startsWith("src/")) return false;
   if (path.startsWith("src/fixtures/")) return false;
   if (path.endsWith(".examples.tsx")) return false;
-  return /\.(ts|tsx|css)$/.test(path);
+  return /\.(ts|tsx)$/.test(path);
 }
 
 Deno.test("the publish set contains only allowlisted package files", async () => {
@@ -96,6 +96,23 @@ Deno.test("every exported module graph is inside the publish set", async () => {
       );
     }
   }
+});
+
+Deno.test("published modules carry no import attributes", async () => {
+  const files = await publishFileSet();
+  const offenders: string[] = [];
+  for (const path of files) {
+    if (!/\.(ts|tsx)$/.test(path)) continue;
+    const source = await Deno.readTextFile(join(PACKAGE_ROOT, path));
+    if (/\bwith\s*\{\s*type\s*:/.test(source)) offenders.push(path);
+  }
+  assertEquals(
+    offenders,
+    [],
+    "the registry rejects import attributes when it builds the module " +
+      "graph, even though a local dry run accepts them; embed the data " +
+      "in a generated module instead",
+  );
 });
 
 Deno.test("the publish-shaped artifact serves the neutral consumer alone", async () => {
