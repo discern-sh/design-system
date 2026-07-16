@@ -10,6 +10,16 @@ lint, strict type-checks, package tests, the catalogue build, generated-output
 currency, and a publish dry run against the allowlisted artifact — and published
 through JSR trusted publishing from CI.
 
+## 0.1.1
+
+- Every entrypoint now carries a module doc and all public symbols carry symbol
+  documentation, generated into the JSR reference docs. A release test fails if
+  an undocumented export appears.
+- The runtime emitter writes through `node:fs/promises` instead of Deno file
+  APIs, so selected-runtime emission also works on Node.js with byte-identical
+  output. Under Deno the emitter now needs read as well as write permission for
+  its output directory.
+
 ## 0.1.0
 
 The first published version. Extracted from the Discern repository with its
