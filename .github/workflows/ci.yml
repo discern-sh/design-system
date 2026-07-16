@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.9.2
+      - name: Install dependencies
+        run: deno install --frozen
+      - name: Generated output is current
+        run: |
+          deno task codegen
+          git diff --exit-code
+      - name: Verify
+        run: deno task verify
+      - name: Publish dry run
+        run: deno publish --dry-run
