@@ -1,5 +1,4 @@
-import foundationCss from "./styles/foundation.css" with { type: "text" };
-import utilitiesCss from "./styles/utilities.css" with { type: "text" };
+import { foundationCss, utilitiesCss } from "./generated/base-styles.ts";
 import { embeddedRuntimeAssets } from "./generated/assets.ts";
 import { componentRegistry } from "./generated/component-registry.ts";
 import {
