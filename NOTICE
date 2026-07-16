@@ -1,0 +1,10 @@
+Discern Design System
+Copyright 2026 Jack Webb-Heller
+
+This product is the design system behind discern.sh
+(https://discern.sh), published as @discern-sh/design-system.
+
+The optional self-hosted fonts (Crimson Pro, Inter, and JetBrains
+Mono) are licensed separately under the SIL Open Font License,
+Version 1.1. Their licence texts live in assets/licenses/ in the
+source repository and accompany every emitted font selection.

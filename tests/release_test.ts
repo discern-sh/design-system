@@ -48,7 +48,13 @@ async function publishFileSet(): Promise<readonly string[]> {
   return files;
 }
 
-const REQUIRED_FILES = ["CHANGELOG.md", "LICENSE", "README.md", "deno.json"];
+const REQUIRED_FILES = [
+  "CHANGELOG.md",
+  "LICENSE",
+  "NOTICE",
+  "README.md",
+  "deno.json",
+];
 
 /** Every published path must match one of these shapes and none of the denies. */
 function isAllowedPublishPath(path: string): boolean {
