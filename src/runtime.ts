@@ -7,6 +7,7 @@
  *
  * @module
  */
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import { foundationCss, utilitiesCss } from "./generated/base-styles.ts";
 import { embeddedRuntimeAssets } from "./generated/assets.ts";
 import { componentRegistry } from "./generated/component-registry.ts";
@@ -173,11 +174,7 @@ async function digest(bytes: Uint8Array): Promise<`sha256:${string}`> {
 }
 
 async function removeIfPresent(url: URL): Promise<void> {
-  try {
-    await Deno.remove(url, { recursive: true });
-  } catch (error) {
-    if (!(error instanceof Deno.errors.NotFound)) throw error;
-  }
+  await rm(url, { recursive: true, force: true });
 }
 
 async function writeOutput(
@@ -187,8 +184,8 @@ async function writeOutput(
   bytes: Uint8Array,
 ): Promise<IntegrityFile> {
   const url = new URL(path, outputRoot);
-  await Deno.mkdir(new URL("./", url), { recursive: true });
-  await Deno.writeFile(url, bytes);
+  await mkdir(new URL("./", url), { recursive: true });
+  await writeFile(url, bytes);
   return {
     path,
     bytes: bytes.byteLength,
@@ -208,7 +205,7 @@ export async function emitDesignSystemRuntime(
   const assets = selectedAssets(options.assets);
   const theme = options.theme ?? "discern";
   await removeIfPresent(options.outputRoot);
-  await Deno.mkdir(options.outputRoot, { recursive: true });
+  await mkdir(options.outputRoot, { recursive: true });
 
   const css = [
     LAYER_ORDER,
@@ -278,7 +275,7 @@ export async function emitDesignSystemRuntime(
     },
     integrity: { algorithm: "sha256", files },
   };
-  await Deno.writeTextFile(
+  await writeFile(
     new URL("manifest.json", options.outputRoot),
     JSON.stringify(manifest, null, 2) + "\n",
   );

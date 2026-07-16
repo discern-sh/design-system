@@ -82,6 +82,10 @@ inputs are byte-for-byte identical. Emitted files are build inputs for your own
 static output; browsers should never hotlink the registry or another third-party
 host.
 
+The emitter writes through `node:fs/promises`, so it runs on Deno and Node.js
+with identical output. Under Deno, grant it read and write permission for the
+output directory.
+
 ## Optional assets
 
 No asset is copied by default. Asset selections are independent:

@@ -582,11 +582,17 @@ console.log(JSON.stringify({
 }));
 `,
     );
-    const first = await command(temp, ["run", "--allow-write", "neutral.ts"]);
+    const first = await command(temp, [
+      "run",
+      "--allow-read",
+      "--allow-write",
+      "neutral.ts",
+    ]);
     assertStringIncludes(first, '"className":"discern-button"');
     const cached = await command(temp, [
       "run",
       "--cached-only",
+      "--allow-read",
       "--allow-write",
       "neutral.ts",
     ]);

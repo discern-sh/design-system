@@ -6,6 +6,7 @@
     "jsr:@std/internal@^1.0.12": "1.0.14",
     "jsr:@std/internal@^1.0.14": "1.0.14",
     "jsr:@std/path@^1.0.8": "1.1.5",
+    "npm:@types/node@24.0.3": "24.0.3",
     "npm:@types/react-dom@18.3.1": "18.3.1",
     "npm:@types/react@18.3.12": "18.3.12",
     "npm:react-dom@18.3.1": "18.3.1_react@18.3.1",
@@ -32,6 +33,12 @@
     }
   },
   "npm": {
+    "@types/node@24.0.3": {
+      "integrity": "sha512-R4I/kzCYAdRLzfiCabn9hxWfbuHS573x+r0dJMkkzThEa7pbrcDWK+9zu3e7aBOouf+rQAciqPFMnxwr0aWgKg==",
+      "dependencies": [
+        "undici-types"
+      ]
+    },
     "@types/prop-types@15.7.15": {
       "integrity": "sha512-F6bEyamV9jKGAFBEmlQnesRPGOQqS2+Uwi0Em15xenOxHaf2hv6L8YCVn3rPdPJOiJfPiCnLIRyvwVaqMY3MIw=="
     },
@@ -80,6 +87,9 @@
       "dependencies": [
         "loose-envify"
       ]
+    },
+    "undici-types@7.8.0": {
+      "integrity": "sha512-9UJ2xGDvQ43tYyVMpuHlsgApydB8ZKfVYTsLDhXkFL/6gfkp+U8xTGdh8pMJv1SpZna0zxG1DwsKZsreLbXBxw=="
     }
   },
   "workspace": {
@@ -92,6 +102,7 @@
     ],
     "packageJson": {
       "dependencies": [
+        "npm:@types/node@24.0.3",
         "npm:@types/react-dom@18.3.1",
         "npm:@types/react@18.3.12",
         "npm:react-dom@18.3.1",
