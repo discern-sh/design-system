@@ -3,11 +3,13 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** One nav item entry rendered by the Site header component. */
 export interface SiteHeaderNavItem {
   readonly label: ReactNode;
   readonly href: string;
 }
 
+/** Props for the {@linkcode SiteHeader} component. */
 export interface SiteHeaderProps extends HTMLAttributes<HTMLElement> {
   readonly brand: ReactNode;
   readonly brandMark?: ReactNode;
@@ -19,6 +21,7 @@ export interface SiteHeaderProps extends HTMLAttributes<HTMLElement> {
   readonly sticky?: boolean;
 }
 
+/** Responsive landing-page masthead with optional notice, navigation, actions, and sticky positioning. */
 export const SiteHeader: DiscernComponent<HTMLElement, SiteHeaderProps> =
   forwardRef<HTMLElement, SiteHeaderProps>(function SiteHeader(
     {

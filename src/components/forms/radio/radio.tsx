@@ -3,11 +3,13 @@ import type { InputHTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Props for the {@linkcode Radio} component. */
 export interface RadioProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {
   readonly label: ReactNode;
   readonly description?: ReactNode;
 }
+/** Native radio option sharing the labelled Choice structure. */
 export const Radio: DiscernComponent<HTMLInputElement, RadioProps> = forwardRef<
   HTMLInputElement,
   RadioProps

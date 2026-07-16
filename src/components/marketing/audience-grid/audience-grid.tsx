@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** One item entry rendered by the Audience grid component. */
 export interface AudienceGridItem {
   readonly eyebrow?: ReactNode;
   readonly title: ReactNode;
@@ -14,6 +15,7 @@ export interface AudienceGridItem {
   readonly featured?: boolean;
 }
 
+/** Props for the {@linkcode AudienceGrid} component. */
 export interface AudienceGridProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly eyebrow?: ReactNode;
@@ -22,6 +24,7 @@ export interface AudienceGridProps
   readonly items: readonly AudienceGridItem[];
 }
 
+/** Persona-led card grid for explaining one product through the outcomes different audiences care about. */
 export const AudienceGrid: DiscernComponent<HTMLElement, AudienceGridProps> =
   forwardRef<HTMLElement, AudienceGridProps>(function AudienceGrid(
     { eyebrow, title, description, items, className, ...props },

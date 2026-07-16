@@ -3,6 +3,7 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Props for the {@linkcode IconButton} component. */
 export interface IconButtonProps
   extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> {
   readonly icon: ReactNode;
@@ -11,6 +12,7 @@ export interface IconButtonProps
   readonly size?: "sm" | "md" | "lg";
 }
 
+/** Square icon action with a required accessible label and injected graphic. */
 export const IconButton: DiscernComponent<HTMLButtonElement, IconButtonProps> =
   forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
     {

@@ -3,11 +3,13 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** One legend item entry rendered by the Data figure component. */
 export interface DataFigureLegendItem {
   readonly label: ReactNode;
   readonly tone?: "accent" | "ink" | "success" | "warning";
 }
 
+/** Props for the {@linkcode DataFigure} component. */
 export interface DataFigureProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly eyebrow?: ReactNode;
@@ -19,6 +21,7 @@ export interface DataFigureProps
   readonly surface?: "canvas" | "sunken";
 }
 
+/** Framed figure for charts, diagrams, annotated images, and research evidence, with legend, caption, and source slots. */
 export const DataFigure: DiscernComponent<HTMLElement, DataFigureProps> =
   forwardRef<HTMLElement, DataFigureProps>(function DataFigure(
     {

@@ -6,12 +6,14 @@ import { classNames } from "../../class-names.ts";
 interface TooltipChildProps {
   readonly "aria-describedby"?: string;
 }
+/** Props for the {@linkcode Tooltip} component. */
 export interface TooltipProps
   extends Omit<HTMLAttributes<HTMLSpanElement>, "children"> {
   readonly label: string;
   readonly children: ReactElement<TooltipChildProps>;
   readonly placement?: "top" | "bottom";
 }
+/** Hover and focus tooltip that connects its bubble through aria-describedby. */
 export const Tooltip: DiscernComponent<HTMLSpanElement, TooltipProps> =
   forwardRef<HTMLSpanElement, TooltipProps>(function Tooltip(
     { label, children, placement = "top", className, ...props },

@@ -3,11 +3,13 @@ import type { InputHTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Props for the {@linkcode Switch} component. */
 export interface SwitchProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "role"> {
   readonly label: ReactNode;
   readonly description?: ReactNode;
 }
+/** Native checkbox exposed as a switch, with associated label and description. */
 export const Switch: DiscernComponent<HTMLInputElement, SwitchProps> =
   forwardRef<HTMLInputElement, SwitchProps>(function Switch(
     {

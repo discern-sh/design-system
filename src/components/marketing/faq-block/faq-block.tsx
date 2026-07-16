@@ -3,11 +3,13 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** One faq item entry rendered by the FAQ block component. */
 export interface FaqItem {
   readonly question: ReactNode;
   readonly answer: ReactNode;
 }
 
+/** Props for the {@linkcode FaqBlock} component. */
 export interface FaqBlockProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly eyebrow?: ReactNode;
@@ -18,6 +20,7 @@ export interface FaqBlockProps
   readonly openFirst?: boolean;
 }
 
+/** Editorial frequently-asked-questions section using native disclosure controls and a sticky introduction. */
 export const FaqBlock: DiscernComponent<HTMLElement, FaqBlockProps> =
   forwardRef<HTMLElement, FaqBlockProps>(function FaqBlock(
     {

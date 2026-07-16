@@ -2,11 +2,13 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+/** Props for the {@linkcode Section} component. */
 export interface SectionProps extends HTMLAttributes<HTMLElement> {
   readonly surface?: "canvas" | "surface" | "sunken";
   readonly spacing?: "none" | "sm" | "md" | "lg";
   readonly children: ReactNode;
 }
+/** Semantic page section with tokenized surface and vertical rhythm. */
 export const Section: DiscernComponent<HTMLElement, SectionProps> = forwardRef<
   HTMLElement,
   SectionProps

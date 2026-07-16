@@ -1,5 +1,13 @@
+/**
+ * The branded default preset: Discern's blue accent expressed as public
+ * theme tokens, kept separate from the semantic base roles so a consumer
+ * theme can replace it without forking component CSS.
+ *
+ * @module
+ */
 import { discernThemeTokens } from "../tokens/tokens.ts";
 
+/** Name of the branded default preset. */
 export const DISCERN_THEME_NAME = "discern" as const;
 
 /** Shape of the branded preset exported beside the semantic base roles. */

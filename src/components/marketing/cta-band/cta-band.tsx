@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Props for the {@linkcode CtaBand} component. */
 export interface CtaBandProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly eyebrow?: ReactNode;
@@ -15,6 +16,7 @@ export interface CtaBandProps
   readonly align?: "center" | "split";
 }
 
+/** High-emphasis closing invitation with centered or split layouts, three surface treatments, and a visual slot. */
 export const CtaBand: DiscernComponent<HTMLElement, CtaBandProps> = forwardRef<
   HTMLElement,
   CtaBandProps

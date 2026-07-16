@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** One item entry rendered by the Related content component. */
 export interface RelatedContentItem {
   readonly eyebrow?: ReactNode;
   readonly title: ReactNode;
@@ -11,6 +12,7 @@ export interface RelatedContentItem {
   readonly meta?: ReactNode;
 }
 
+/** Props for the {@linkcode RelatedContent} component. */
 export interface RelatedContentProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly eyebrow?: ReactNode;
@@ -19,6 +21,7 @@ export interface RelatedContentProps
   readonly surface?: "canvas" | "sunken";
 }
 
+/** Continuation band for related essays, guides, reports, or issues, with enough context to make each next-reading choice meaningful. */
 export const RelatedContent: DiscernComponent<
   HTMLElement,
   RelatedContentProps

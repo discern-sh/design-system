@@ -1,3 +1,12 @@
+/**
+ * Primitive, semantic, and preset design tokens. Base tokens carry one
+ * value everywhere; theme tokens carry a light and a dark value under the
+ * same role. All public custom properties use the `discern` namespace.
+ *
+ * @module
+ */
+
+/** Catalogue category a design token belongs to. */
 export type TokenCategory =
   | "Color"
   | "Typography"
@@ -6,6 +15,7 @@ export type TokenCategory =
   | "Motion"
   | "Layout";
 
+/** One public custom property with a single theme-independent value. */
 export interface DesignToken {
   readonly name: `--discern-${string}`;
   readonly value: string;
@@ -13,6 +23,7 @@ export interface DesignToken {
   readonly description: string;
 }
 
+/** One public custom property with distinct light and dark values. */
 export interface ThemeToken {
   readonly name: `--discern-${string}`;
   readonly light: string;
@@ -234,6 +245,7 @@ export const designTokens: readonly DesignToken[] = [
   ...discernThemeTokens,
 ];
 
+/** Semantic light/dark role tokens shared by every theme. */
 export const themeTokens: readonly ThemeToken[] = [
   themeToken(
     "--discern-color-ink",
@@ -426,6 +438,7 @@ export const themeTokens: readonly ThemeToken[] = [
   ),
 ];
 
+/** Every public token: primitives, presets, and theme roles together. */
 export const allTokens: readonly (DesignToken | ThemeToken)[] = [
   ...designTokens,
   ...themeTokens,

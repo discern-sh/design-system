@@ -3,11 +3,13 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** One point entry rendered by the Split feature component. */
 export interface SplitFeaturePoint {
   readonly title: ReactNode;
   readonly description?: ReactNode;
 }
 
+/** Props for the {@linkcode SplitFeature} component. */
 export interface SplitFeatureProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly eyebrow?: ReactNode;
@@ -20,6 +22,7 @@ export interface SplitFeatureProps
   readonly surface?: "canvas" | "surface" | "sunken";
 }
 
+/** Alternating editorial feature section with narrative copy, proof points, actions, and an unconstrained media slot. */
 export const SplitFeature: DiscernComponent<HTMLElement, SplitFeatureProps> =
   forwardRef<HTMLElement, SplitFeatureProps>(function SplitFeature(
     {

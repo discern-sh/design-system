@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Props for the {@linkcode Callout} component. */
 export interface CalloutProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly eyebrow?: ReactNode;
@@ -12,6 +13,7 @@ export interface CalloutProps
   readonly tone?: "note" | "insight" | "warning" | "success";
 }
 
+/** Inset editorial note for context, interpretation, cautions, and successful outcomes without breaking the reading flow. */
 export const Callout: DiscernComponent<HTMLElement, CalloutProps> = forwardRef<
   HTMLElement,
   CalloutProps

@@ -4,17 +4,20 @@ import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Field, fieldDescriptionId } from "../field/field.tsx";
 
+/** One option entry rendered by the Select component. */
 export interface SelectOption {
   readonly value: string;
   readonly label: ReactNode;
   readonly disabled?: boolean;
 }
+/** Props for the {@linkcode Select} component. */
 export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   readonly label?: ReactNode;
   readonly hint?: ReactNode;
   readonly error?: ReactNode;
   readonly options?: readonly SelectOption[];
 }
+/** Styled native select with typed options and associated field messaging. */
 export const Select: DiscernComponent<HTMLSelectElement, SelectProps> =
   forwardRef<HTMLSelectElement, SelectProps>(function Select(
     {

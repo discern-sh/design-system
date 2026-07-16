@@ -3,7 +3,9 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Tone options for the Toast component. */
 export type ToastTone = "neutral" | "success" | "warning" | "danger";
+/** Props for the {@linkcode Toast} component. */
 export interface ToastProps extends HTMLAttributes<HTMLDivElement> {
   readonly tone?: ToastTone;
   readonly icon?: ReactNode;
@@ -12,6 +14,7 @@ export interface ToastProps extends HTMLAttributes<HTMLDivElement> {
   readonly dismissLabel?: string;
   readonly children: ReactNode;
 }
+/** Transient status message plus a labelled live-region container. */
 export const Toast: DiscernComponent<HTMLDivElement, ToastProps> = forwardRef<
   HTMLDivElement,
   ToastProps
@@ -70,9 +73,11 @@ export const Toast: DiscernComponent<HTMLDivElement, ToastProps> = forwardRef<
   );
 });
 
+/** Props for the {@linkcode ToastRegion} component. */
 export interface ToastRegionProps extends HTMLAttributes<HTMLDivElement> {
   readonly label?: string;
 }
+/** Live region that positions and announces Toast notifications. */
 export const ToastRegion: DiscernComponent<HTMLDivElement, ToastRegionProps> =
   forwardRef<HTMLDivElement, ToastRegionProps>(
     function ToastRegion(

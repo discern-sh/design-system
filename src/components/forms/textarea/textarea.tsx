@@ -4,12 +4,14 @@ import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Field, fieldDescriptionId } from "../field/field.tsx";
 
+/** Props for the {@linkcode Textarea} component. */
 export interface TextareaProps
   extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   readonly label?: ReactNode;
   readonly hint?: ReactNode;
   readonly error?: ReactNode;
 }
+/** Resizable multiline input sharing the Field accessibility contract. */
 export const Textarea: DiscernComponent<HTMLTextAreaElement, TextareaProps> =
   forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
     {

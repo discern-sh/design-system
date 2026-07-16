@@ -5,11 +5,13 @@ import { classNames } from "../../class-names.ts";
 import { spaceValue } from "../space.ts";
 import type { SpaceStep } from "../space.ts";
 type StackStyle = CSSProperties & { readonly "--discern-stack-gap"?: string };
+/** Props for the {@linkcode Stack} component. */
 export interface StackProps extends HTMLAttributes<HTMLDivElement> {
   readonly gap?: SpaceStep;
   readonly align?: "start" | "center" | "end" | "stretch";
   readonly children: ReactNode;
 }
+/** Vertical composition using token-constrained gaps and explicit alignment. */
 export const Stack: DiscernComponent<HTMLDivElement, StackProps> = forwardRef<
   HTMLDivElement,
   StackProps

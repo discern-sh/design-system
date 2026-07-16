@@ -1,3 +1,11 @@
+/**
+ * Framework-neutral manifest schema and the complete package ownership
+ * manifest: which components exist, which classes and public tokens each
+ * owns, and the shape of the `manifest.json` every runtime emission writes.
+ * Consumer guards read this instead of scanning package source.
+ *
+ * @module
+ */
 import { componentRegistry } from "./generated/component-registry.ts";
 import { allTokens } from "./tokens/tokens.ts";
 import {
@@ -6,8 +14,10 @@ import {
 } from "./types/component-meta.ts";
 import type { RuntimeAssetSelection } from "./runtime-assets.ts";
 
+/** Schema version stamped into every emitted `manifest.json`. */
 export const RUNTIME_MANIFEST_SCHEMA_VERSION = 1 as const;
 
+/** One component's identity, dependency, and CSS-ownership facts. */
 export interface ManifestComponent {
   readonly id: string;
   readonly name: string;
@@ -17,11 +27,13 @@ export interface ManifestComponent {
   readonly publicTokenNames: readonly string[];
 }
 
+/** One canonical component group and its member component ids. */
 export interface ManifestGroup {
   readonly name: ComponentGroup;
   readonly components: readonly string[];
 }
 
+/** Size, media type, and SHA-256 integrity facts for one emitted file. */
 export interface IntegrityFile {
   readonly path: string;
   readonly bytes: number;
@@ -29,6 +41,7 @@ export interface IntegrityFile {
   readonly mediaType: string;
 }
 
+/** Shape of the `manifest.json` written beside every emitted runtime. */
 export interface RuntimeManifest {
   readonly schemaVersion: typeof RUNTIME_MANIFEST_SCHEMA_VERSION;
   readonly package: "@discern-sh/design-system";

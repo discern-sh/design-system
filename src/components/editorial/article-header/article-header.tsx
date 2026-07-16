@@ -3,12 +3,14 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** One article author entry rendered by the Article header component. */
 export interface ArticleAuthor {
   readonly name: ReactNode;
   readonly role?: ReactNode;
   readonly initials?: ReactNode;
 }
 
+/** Props for the {@linkcode ArticleHeader} component. */
 export interface ArticleHeaderProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly eyebrow?: ReactNode;
@@ -22,6 +24,7 @@ export interface ArticleHeaderProps
   readonly surface?: "canvas" | "sunken" | "accent";
 }
 
+/** Publication-scale opening for essays, reports, guides, and premium long-form pages, with byline, metadata, actions, and optional cover media. */
 export const ArticleHeader: DiscernComponent<HTMLElement, ArticleHeaderProps> =
   forwardRef<HTMLElement, ArticleHeaderProps>(function ArticleHeader(
     {

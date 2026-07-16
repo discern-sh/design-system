@@ -10,6 +10,7 @@ import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Kicker } from "../../display/kicker/kicker.tsx";
 
+/** Props for the {@linkcode Dialog} component. */
 export interface DialogProps extends
   Omit<
     DialogHTMLAttributes<HTMLDialogElement>,
@@ -25,6 +26,7 @@ export interface DialogProps extends
   readonly children: ReactNode;
 }
 
+/** Controlled native modal dialog with platform focus containment and explicit close behaviour. */
 export const Dialog: DiscernComponent<HTMLDialogElement, DialogProps> =
   forwardRef<HTMLDialogElement, DialogProps>(function Dialog(
     {

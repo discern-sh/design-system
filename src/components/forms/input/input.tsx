@@ -4,12 +4,14 @@ import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Field, fieldDescriptionId } from "../field/field.tsx";
 
+/** Props for the {@linkcode Input} component. */
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   readonly label?: ReactNode;
   readonly hint?: ReactNode;
   readonly error?: ReactNode;
 }
 
+/** Native input with typed label, help, required, and invalid relationships. */
 export const Input: DiscernComponent<HTMLInputElement, InputProps> = forwardRef<
   HTMLInputElement,
   InputProps

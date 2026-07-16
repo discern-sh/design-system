@@ -8,11 +8,13 @@ type GridStyle = CSSProperties & {
   readonly "--discern-grid-gap"?: string;
   readonly "--discern-grid-min"?: string;
 };
+/** Props for the {@linkcode Grid} component. */
 export interface GridProps extends HTMLAttributes<HTMLDivElement> {
   readonly gap?: SpaceStep;
   readonly minimum?: string;
   readonly children: ReactNode;
 }
+/** Intrinsic responsive grid without breakpoint-specific column props. */
 export const Grid: DiscernComponent<HTMLDivElement, GridProps> = forwardRef<
   HTMLDivElement,
   GridProps

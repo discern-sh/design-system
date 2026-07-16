@@ -3,11 +3,13 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** One key point entry rendered by the Key points component. */
 export interface KeyPoint {
   readonly title: ReactNode;
   readonly description: ReactNode;
 }
 
+/** Props for the {@linkcode KeyPoints} component. */
 export interface KeyPointsProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly eyebrow?: ReactNode;
@@ -16,6 +18,7 @@ export interface KeyPointsProps
   readonly tone?: "accent" | "sunken" | "contrast";
 }
 
+/** Scannable article summary that turns a small set of central ideas into a numbered editorial brief. */
 export const KeyPoints: DiscernComponent<HTMLElement, KeyPointsProps> =
   forwardRef<HTMLElement, KeyPointsProps>(function KeyPoints(
     { eyebrow, title, items, tone = "accent", className, ...props },

@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Props for the {@linkcode Prose} component. */
 export interface ProseProps extends HTMLAttributes<HTMLDivElement> {
   readonly children: ReactNode;
   readonly dropCap?: boolean;
@@ -10,6 +11,7 @@ export interface ProseProps extends HTMLAttributes<HTMLDivElement> {
   readonly measure?: "narrow" | "default" | "wide";
 }
 
+/** Long-form typographic context for headings, paragraphs, lists, links, inline code, rules, and optional lead or drop-cap treatments. */
 export const Prose: DiscernComponent<HTMLDivElement, ProseProps> = forwardRef<
   HTMLDivElement,
   ProseProps

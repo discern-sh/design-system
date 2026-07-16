@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Props for the {@linkcode ArticleLayout} component. */
 export interface ArticleLayoutProps extends HTMLAttributes<HTMLDivElement> {
   readonly navigation?: ReactNode;
   readonly navigationLabel?: string;
@@ -11,6 +12,7 @@ export interface ArticleLayoutProps extends HTMLAttributes<HTMLDivElement> {
   readonly railLabel?: string;
 }
 
+/** Responsive long-form reading shell with optional navigation and contextual rail around a primary article column. */
 export const ArticleLayout: DiscernComponent<
   HTMLDivElement,
   ArticleLayoutProps

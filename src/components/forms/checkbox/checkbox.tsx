@@ -3,11 +3,13 @@ import type { InputHTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Props for the {@linkcode Checkbox} component. */
 export interface CheckboxProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, "type"> {
   readonly label: ReactNode;
   readonly description?: ReactNode;
 }
+/** Native checkbox with an associated visible label and optional description. */
 export const Checkbox: DiscernComponent<HTMLInputElement, CheckboxProps> =
   forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
     {

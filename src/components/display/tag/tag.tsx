@@ -3,11 +3,13 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Props for the {@linkcode Tag} component. */
 export interface TagProps extends HTMLAttributes<HTMLSpanElement> {
   readonly children: ReactNode;
   readonly onRemove?: () => void;
   readonly removeLabel?: string;
 }
+/** Compact metadata chip with an optional accessible remove action. */
 export const Tag: DiscernComponent<HTMLSpanElement, TagProps> = forwardRef<
   HTMLSpanElement,
   TagProps

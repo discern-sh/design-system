@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Props for the {@linkcode Card} component. */
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   readonly raised?: boolean;
   readonly texture?: "plain" | "dots";
@@ -10,6 +11,7 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   readonly children: ReactNode;
 }
 
+/** Composable surface with explicit elevation, texture, and padding choices. */
 export const Card: DiscernComponent<HTMLDivElement, CardProps> = forwardRef<
   HTMLDivElement,
   CardProps

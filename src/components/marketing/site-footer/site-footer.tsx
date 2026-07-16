@@ -3,16 +3,19 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** One link entry rendered by the Site footer component. */
 export interface SiteFooterLink {
   readonly label: ReactNode;
   readonly href: string;
 }
 
+/** One group entry rendered by the Site footer component. */
 export interface SiteFooterGroup {
   readonly title: ReactNode;
   readonly links: readonly SiteFooterLink[];
 }
 
+/** Props for the {@linkcode SiteFooter} component. */
 export interface SiteFooterProps extends HTMLAttributes<HTMLElement> {
   readonly brand: ReactNode;
   readonly brandMark?: ReactNode;
@@ -22,6 +25,7 @@ export interface SiteFooterProps extends HTMLAttributes<HTMLElement> {
   readonly meta?: ReactNode;
 }
 
+/** Responsive page colophon with product context, grouped navigation, legal copy, and a compact metadata rail. */
 export const SiteFooter: DiscernComponent<HTMLElement, SiteFooterProps> =
   forwardRef<HTMLElement, SiteFooterProps>(function SiteFooter(
     {

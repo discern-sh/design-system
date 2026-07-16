@@ -1,3 +1,4 @@
+/** Canonical component groups in catalogue display order. */
 export const componentGroups = [
   "Core",
   "Layout",
@@ -9,8 +10,10 @@ export const componentGroups = [
   "Editorial",
 ] as const;
 
+/** Name of one canonical component group. */
 export type ComponentGroup = (typeof componentGroups)[number];
 
+/** Authored identity, ordering, and accessibility facts for a component. */
 export interface ComponentMeta {
   readonly name: string;
   readonly slug: string;

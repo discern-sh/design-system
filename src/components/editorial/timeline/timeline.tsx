@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** One item entry rendered by the Timeline component. */
 export interface TimelineItem {
   readonly date: ReactNode;
   readonly title: ReactNode;
@@ -11,6 +12,7 @@ export interface TimelineItem {
   readonly status?: "complete" | "current" | "upcoming";
 }
 
+/** Props for the {@linkcode Timeline} component. */
 export interface TimelineProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly eyebrow?: ReactNode;
@@ -19,6 +21,7 @@ export interface TimelineProps
   readonly items: readonly TimelineItem[];
 }
 
+/** Chronological narrative for histories, release stories, investigations, and staged programmes, with optional status and detail. */
 export const Timeline: DiscernComponent<HTMLElement, TimelineProps> =
   forwardRef<HTMLElement, TimelineProps>(function Timeline(
     { eyebrow, title, description, items, className, ...props },

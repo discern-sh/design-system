@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Props for the {@linkcode Icon} component. */
 export interface IconProps
   extends Omit<HTMLAttributes<HTMLSpanElement>, "children"> {
   readonly children: ReactNode;
@@ -10,6 +11,7 @@ export interface IconProps
   readonly size?: number | string;
 }
 
+/** Vendor-neutral sizing and accessibility wrapper for an injected icon graphic. */
 export const Icon: DiscernComponent<HTMLSpanElement, IconProps> = forwardRef<
   HTMLSpanElement,
   IconProps

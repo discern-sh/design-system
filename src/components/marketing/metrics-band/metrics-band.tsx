@@ -3,12 +3,14 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** One metric item entry rendered by the Metrics band component. */
 export interface MetricItem {
   readonly value: ReactNode;
   readonly label: ReactNode;
   readonly detail?: ReactNode;
 }
 
+/** Props for the {@linkcode MetricsBand} component. */
 export interface MetricsBandProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly eyebrow?: ReactNode;
@@ -17,6 +19,7 @@ export interface MetricsBandProps
   readonly tone?: "surface" | "accent" | "contrast";
 }
 
+/** Compact evidence strip for a handful of high-signal outcomes, with surface, accent, and contrast treatments. */
 export const MetricsBand: DiscernComponent<HTMLElement, MetricsBandProps> =
   forwardRef<HTMLElement, MetricsBandProps>(function MetricsBand(
     { eyebrow, title, items, tone = "surface", className, ...props },

@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Props for the {@linkcode Testimonial} component. */
 export interface TestimonialProps extends HTMLAttributes<HTMLElement> {
   readonly eyebrow?: ReactNode;
   readonly quote: ReactNode;
@@ -15,6 +16,7 @@ export interface TestimonialProps extends HTMLAttributes<HTMLElement> {
   readonly layout?: "wide" | "card";
 }
 
+/** Editorial customer quote with attribution, optional portrait, and an adjacent measurable outcome. */
 export const Testimonial: DiscernComponent<HTMLElement, TestimonialProps> =
   forwardRef<HTMLElement, TestimonialProps>(function Testimonial(
     {

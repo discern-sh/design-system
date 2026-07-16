@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Props for the {@linkcode CodeListing} component. */
 export interface CodeListingProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly title?: ReactNode;
@@ -13,6 +14,7 @@ export interface CodeListingProps
   readonly caption?: ReactNode;
 }
 
+/** Captioned source listing with file and language context, stable line numbers, horizontal overflow, and optional highlighted lines. */
 export const CodeListing: DiscernComponent<HTMLElement, CodeListingProps> =
   forwardRef<HTMLElement, CodeListingProps>(function CodeListing(
     {

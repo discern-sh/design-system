@@ -8,7 +8,9 @@ import type {
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Variant options for the Button component. */
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+/** Size options for the Button component. */
 export type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonCommonProps {
@@ -20,6 +22,7 @@ interface ButtonCommonProps {
   readonly className?: string;
 }
 
+/** Native button props options for the Button component. */
 export type NativeButtonProps =
   & ButtonCommonProps
   & Omit<
@@ -30,6 +33,7 @@ export type NativeButtonProps =
     readonly href?: never;
   };
 
+/** Anchor button props options for the Button component. */
 export type AnchorButtonProps =
   & ButtonCommonProps
   & Omit<
@@ -41,6 +45,7 @@ export type AnchorButtonProps =
     readonly disabled?: never;
   };
 
+/** Props options for the Button component. */
 export type ButtonProps = NativeButtonProps | AnchorButtonProps;
 
 function content(
@@ -69,6 +74,7 @@ function content(
   );
 }
 
+/** Typed button and anchor variants with vendor-neutral leading and trailing icon slots. */
 export const Button: DiscernComponent<
   HTMLButtonElement | HTMLAnchorElement,
   ButtonProps

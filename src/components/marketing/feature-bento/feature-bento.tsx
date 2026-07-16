@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** One item entry rendered by the Feature bento component. */
 export interface FeatureBentoItem {
   readonly title: ReactNode;
   readonly description: ReactNode;
@@ -13,6 +14,7 @@ export interface FeatureBentoItem {
   readonly tone?: "plain" | "accent" | "sunken";
 }
 
+/** Props for the {@linkcode FeatureBento} component. */
 export interface FeatureBentoProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly eyebrow?: ReactNode;
@@ -21,6 +23,7 @@ export interface FeatureBentoProps
   readonly items: readonly FeatureBentoItem[];
 }
 
+/** Dense asymmetric feature grid with intentional size, surface, icon, and visual slots. */
 export const FeatureBento: DiscernComponent<HTMLElement, FeatureBentoProps> =
   forwardRef<HTMLElement, FeatureBentoProps>(function FeatureBento(
     { eyebrow, title, description, items, className, ...props },

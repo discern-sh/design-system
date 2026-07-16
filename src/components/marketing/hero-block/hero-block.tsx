@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Props for the {@linkcode HeroBlock} component. */
 export interface HeroBlockProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly eyebrow?: ReactNode;
@@ -16,6 +17,7 @@ export interface HeroBlockProps
   readonly surface?: "canvas" | "sunken" | "accent";
 }
 
+/** High-impact opening section with split and centered compositions, flexible actions, proof, and visual slots. */
 export const HeroBlock: DiscernComponent<HTMLElement, HeroBlockProps> =
   forwardRef<HTMLElement, HeroBlockProps>(function HeroBlock(
     {

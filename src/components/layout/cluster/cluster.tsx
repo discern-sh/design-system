@@ -7,12 +7,14 @@ import type { SpaceStep } from "../space.ts";
 type ClusterStyle = CSSProperties & {
   readonly "--discern-cluster-gap"?: string;
 };
+/** Props for the {@linkcode Cluster} component. */
 export interface ClusterProps extends HTMLAttributes<HTMLDivElement> {
   readonly gap?: SpaceStep;
   readonly align?: "start" | "center" | "end" | "baseline" | "stretch";
   readonly justify?: "start" | "center" | "end" | "between";
   readonly children: ReactNode;
 }
+/** Wrapping horizontal composition for actions, tags, and compact groups. */
 export const Cluster: DiscernComponent<HTMLDivElement, ClusterProps> =
   forwardRef<HTMLDivElement, ClusterProps>(function Cluster(
     {

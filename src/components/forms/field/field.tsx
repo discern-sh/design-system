@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from "react";
 import { classNames } from "../../class-names.ts";
 
+/** Props for the {@linkcode Field} component. */
 export interface FieldProps {
   readonly controlId: string;
   readonly label?: ReactNode;
@@ -11,6 +12,7 @@ export interface FieldProps {
   readonly className?: string;
 }
 
+/** Shared label, hint, required, and error structure for custom controls. */
 export function Field(
   { controlId, label, hint, error, required = false, children, className }:
     FieldProps,
@@ -58,6 +60,7 @@ export function Field(
   );
 }
 
+/** Resolve the describedby id a Field-wrapped control should reference. */
 export function fieldDescriptionId(
   controlId: string,
   hint: ReactNode,

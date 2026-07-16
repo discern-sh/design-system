@@ -3,11 +3,13 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** One stat entry rendered by the Case study component. */
 export interface CaseStudyStat {
   readonly value: ReactNode;
   readonly label: ReactNode;
 }
 
+/** Props for the {@linkcode CaseStudy} component. */
 export interface CaseStudyProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly eyebrow?: ReactNode;
@@ -20,6 +22,7 @@ export interface CaseStudyProps
   readonly reverse?: boolean;
 }
 
+/** Long-form proof block pairing a customer narrative with visual evidence and compact outcome metrics. */
 export const CaseStudy: DiscernComponent<HTMLElement, CaseStudyProps> =
   forwardRef<HTMLElement, CaseStudyProps>(function CaseStudy(
     {

@@ -3,12 +3,14 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** One comparison row entry rendered by the Comparison table component. */
 export interface ComparisonRow {
   readonly feature: ReactNode;
   readonly first: ReactNode;
   readonly second: ReactNode;
 }
 
+/** Props for the {@linkcode ComparisonTable} component. */
 export interface ComparisonTableProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly eyebrow?: ReactNode;
@@ -21,6 +23,7 @@ export interface ComparisonTableProps
   readonly secondBadge?: ReactNode;
 }
 
+/** Three-column capability comparison with an emphasized recommendation and card-like mobile rows. */
 export const ComparisonTable: DiscernComponent<
   HTMLElement,
   ComparisonTableProps

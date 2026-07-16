@@ -3,14 +3,17 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Tone options for the Badge component. */
 export type BadgeTone = "accent" | "neutral" | "success" | "warning" | "danger";
 
+/** Props for the {@linkcode Badge} component. */
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   readonly tone?: BadgeTone;
   readonly dot?: boolean;
   readonly children: ReactNode;
 }
 
+/** Compact status and metadata label with semantic tones. */
 export const Badge: DiscernComponent<HTMLSpanElement, BadgeProps> = forwardRef<
   HTMLSpanElement,
   BadgeProps

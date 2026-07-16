@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** One process step entry rendered by the Process steps component. */
 export interface ProcessStep {
   readonly title: ReactNode;
   readonly description: ReactNode;
@@ -10,6 +11,7 @@ export interface ProcessStep {
   readonly detail?: ReactNode;
 }
 
+/** Props for the {@linkcode ProcessSteps} component. */
 export interface ProcessStepsProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly eyebrow?: ReactNode;
@@ -19,6 +21,7 @@ export interface ProcessStepsProps
   readonly orientation?: "horizontal" | "vertical";
 }
 
+/** Numbered horizontal or vertical journey for onboarding, workflow, implementation, or methodology stories. */
 export const ProcessSteps: DiscernComponent<HTMLElement, ProcessStepsProps> =
   forwardRef<HTMLElement, ProcessStepsProps>(function ProcessSteps(
     {

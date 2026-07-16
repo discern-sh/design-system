@@ -3,11 +3,13 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Props for the {@linkcode Divider} component. */
 export interface DividerProps extends HTMLAttributes<HTMLDivElement> {
   readonly label?: ReactNode;
   readonly surface?: "canvas" | "surface";
 }
 
+/** Quiet editorial rule with an optional annotation label. */
 export const Divider: DiscernComponent<HTMLDivElement, DividerProps> =
   forwardRef<HTMLDivElement, DividerProps>(function Divider(
     { label, surface = "canvas", className, ...props },

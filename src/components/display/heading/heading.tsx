@@ -3,15 +3,19 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Level options for the Heading component. */
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
+/** Props for the {@linkcode Heading} component. */
 export interface HeadingProps extends HTMLAttributes<HTMLHeadingElement> {
   readonly level?: HeadingLevel;
   readonly children: ReactNode;
 }
+/** Props for the {@linkcode HeadingAccent} component. */
 export interface HeadingAccentProps extends HTMLAttributes<HTMLSpanElement> {
   readonly children: ReactNode;
 }
 
+/** Semantic heading with an explicit accent child instead of string parsing. */
 export const Heading: DiscernComponent<HTMLHeadingElement, HeadingProps> =
   forwardRef<HTMLHeadingElement, HeadingProps>(function Heading(
     { level = 2, className, children, ...props },
@@ -29,6 +33,7 @@ export const Heading: DiscernComponent<HTMLHeadingElement, HeadingProps> =
     );
   });
 
+/** Accent span that highlights part of a Heading. */
 export const HeadingAccent: DiscernComponent<
   HTMLSpanElement,
   HeadingAccentProps

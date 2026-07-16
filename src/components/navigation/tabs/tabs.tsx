@@ -3,6 +3,7 @@ import type { HTMLAttributes, KeyboardEvent, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** One tab item entry rendered by the Tabs component. */
 export interface TabItem {
   readonly value: string;
   readonly label: ReactNode;
@@ -10,6 +11,7 @@ export interface TabItem {
   readonly disabled?: boolean;
 }
 
+/** Props for the {@linkcode Tabs} component. */
 export interface TabsProps
   extends Omit<HTMLAttributes<HTMLDivElement>, "defaultValue" | "onChange"> {
   readonly items: readonly TabItem[];
@@ -20,6 +22,7 @@ export interface TabsProps
   readonly label?: string;
 }
 
+/** Controlled or uncontrolled tab set with roving focus and complete horizontal keyboard navigation. */
 export const Tabs: DiscernComponent<HTMLDivElement, TabsProps> = forwardRef<
   HTMLDivElement,
   TabsProps

@@ -3,12 +3,14 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** One item entry rendered by the Table of contents component. */
 export interface TableOfContentsItem {
   readonly label: ReactNode;
   readonly href: string;
   readonly current?: boolean;
 }
 
+/** Props for the {@linkcode TableOfContents} component. */
 export interface TableOfContentsProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly title?: ReactNode;
@@ -17,6 +19,7 @@ export interface TableOfContentsProps
   readonly label?: string;
 }
 
+/** Compact numbered article navigation with an optional reading-progress note and a clear current-location state. */
 export const TableOfContents: DiscernComponent<
   HTMLElement,
   TableOfContentsProps

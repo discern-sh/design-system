@@ -3,12 +3,14 @@ import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Props for the {@linkcode Window} component. */
 export interface WindowProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly title?: ReactNode;
   readonly bodyStyle?: CSSProperties;
   readonly children: ReactNode;
 }
+/** Framed presentation surface for product UI and code examples. */
 export const Window: DiscernComponent<HTMLElement, WindowProps> = forwardRef<
   HTMLElement,
   WindowProps

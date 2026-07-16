@@ -3,6 +3,7 @@ import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Props for the {@linkcode Terminal} component. */
 export interface TerminalProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly title?: ReactNode;
@@ -10,6 +11,7 @@ export interface TerminalProps
   readonly children: ReactNode;
 }
 
+/** Framed monospace surface for commands and terminal output. */
 export const Terminal: DiscernComponent<HTMLElement, TerminalProps> =
   forwardRef<HTMLElement, TerminalProps>(
     function Terminal(

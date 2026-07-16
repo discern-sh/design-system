@@ -3,17 +3,20 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** One item entry rendered by the Logo cloud component. */
 export interface LogoCloudItem {
   readonly name: string;
   readonly mark?: ReactNode;
 }
 
+/** Props for the {@linkcode LogoCloud} component. */
 export interface LogoCloudProps extends HTMLAttributes<HTMLElement> {
   readonly label?: ReactNode;
   readonly items: readonly LogoCloudItem[];
   readonly align?: "start" | "center";
 }
 
+/** Quiet trust band for customer, partner, integration, or publication marks without requiring image assets. */
 export const LogoCloud: DiscernComponent<HTMLElement, LogoCloudProps> =
   forwardRef<HTMLElement, LogoCloudProps>(function LogoCloud(
     { label, items, align = "center", className, ...props },

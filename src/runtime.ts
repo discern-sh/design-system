@@ -1,3 +1,12 @@
+/**
+ * Deterministic selected-runtime emitter. {@linkcode emitDesignSystemRuntime}
+ * resolves the requested components, groups, theme, and optional assets to a
+ * dedicated output directory: dependency-ordered `discern.css`, a
+ * {@linkcode RuntimeManifest} as `manifest.json`, and only the assets the
+ * consumer selected. Repeated emissions are byte-for-byte identical.
+ *
+ * @module
+ */
 import { foundationCss, utilitiesCss } from "./generated/base-styles.ts";
 import { embeddedRuntimeAssets } from "./generated/assets.ts";
 import { componentRegistry } from "./generated/component-registry.ts";
@@ -23,6 +32,7 @@ const LAYER_ORDER =
   "@layer discern.reset, discern.tokens, discern.theme, discern.foundation, discern.components, discern.utilities;";
 const textEncoder = new TextEncoder();
 
+/** Selection, theme, and asset choices for one runtime emission. */
 export interface RuntimeOptions {
   /** A dedicated directory URL. Existing contents are replaced. */
   readonly outputRoot: URL;
@@ -33,6 +43,7 @@ export interface RuntimeOptions {
   readonly theme?: "discern" | "none";
 }
 
+/** Counts and the emitted manifest returned by a runtime emission. */
 export interface BuildSummary {
   readonly components: number;
   readonly tokens: number;
