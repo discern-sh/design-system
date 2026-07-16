@@ -52,15 +52,24 @@
   "tasks": {
     "codegen": "deno run --config deno.json --allow-read --allow-write scripts/generate.ts",
     "build": "deno run --config deno.json --allow-read --allow-write --allow-run --allow-env=NODE_ENV scripts/build.ts",
-    "check": "deno fmt --config deno.json --check . && deno lint --no-config src styleguide scripts tests && deno check --config deno.json src/mod.ts src/manifest.ts src/runtime.ts src/react.ts src/theme/discern.ts scripts/build.ts scripts/generate.ts",
+    "check": "deno fmt --config deno.json --check . && deno task lint && deno task typecheck",
     "check:catalogue": "deno check --config deno.json styleguide/app.tsx",
+    "lint": "deno lint --no-config src styleguide scripts tests",
+    "typecheck": "deno check --config deno.json src/mod.ts src/manifest.ts src/runtime.ts src/react.ts src/theme/discern.ts scripts/build.ts scripts/generate.ts",
     "fix": "deno fmt --config deno.json . && deno lint --no-config --fix src styleguide scripts tests",
     "serve": "deno task build && deno serve --host 127.0.0.1 --allow-read --port 8010 scripts/serve.ts",
     "test": "deno test --config deno.json --allow-read --allow-write --allow-env --allow-run tests",
     "verify": "deno task check && deno task build && deno task check:catalogue && deno task test"
   },
   "fmt": {
-    "exclude": ["dist/", "src/generated/", "styleguide/generated/"]
+    "exclude": [
+      "dist/",
+      "src/generated/",
+      "styleguide/generated/",
+      "CLAUDE.md",
+      "AGENTS.md",
+      "GEMINI.md"
+    ]
   },
   "lint": {
     "exclude": ["dist/", "src/generated/", "styleguide/generated/"]
