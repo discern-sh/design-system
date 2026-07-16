@@ -69,7 +69,13 @@ _Lower-severity fixes, rough edges, and UX papercuts. Nothing outstanding._
 
 ## 🟢 Test & tooling hygiene
 
-_Gaps in test coverage, gate, and developer tooling. Nothing outstanding._
+- [ ] **Catalogue dev server port is fixed at 8010.** `deno task serve`
+      hardcodes `--port 8010`, so two worktrees cannot serve the Catalogue
+      concurrently. discern already assigns each worktree a deterministic port
+      (`discern
+      identity --port`, exported into the worktree `.env`);
+      teach the serve task to honour it, falling back to 8010. Evidence:
+      `deno.json` `serve` task, `scripts/serve.ts`.
 
 ## 🔵 Unmerged / at-risk work — decide: land or drop
 
