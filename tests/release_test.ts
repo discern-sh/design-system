@@ -178,6 +178,45 @@ console.log(JSON.stringify({
   }
 });
 
+Deno.test("every entrypoint and public symbol is documented", async () => {
+  const result = await new Deno.Command(Deno.execPath(), {
+    args: ["doc", "--json", ...Object.values(config.exports)],
+    cwd: PACKAGE_ROOT,
+    stdout: "piped",
+    stderr: "piped",
+  }).output();
+  assertEquals(
+    result.code,
+    0,
+    `deno doc failed:\n${new TextDecoder().decode(result.stderr)}`,
+  );
+  const parsed = JSON.parse(new TextDecoder().decode(result.stdout)) as {
+    readonly nodes: Readonly<
+      Record<string, {
+        readonly module_doc?: unknown;
+        readonly symbols?: readonly {
+          readonly name?: string;
+          readonly jsDoc?: unknown;
+          readonly declarations?: readonly { readonly jsDoc?: unknown }[];
+        }[];
+      }>
+    >;
+  };
+  const problems: string[] = [];
+  for (const [entry, node] of Object.entries(parsed.nodes)) {
+    const path = relative(PACKAGE_ROOT, fromFileUrl(entry));
+    if (!node.module_doc) problems.push(`${path}: missing module doc`);
+    for (const symbol of node.symbols ?? []) {
+      const documented = Boolean(symbol.jsDoc) ||
+        (symbol.declarations ?? []).some((dec) => Boolean(dec.jsDoc));
+      if (!documented) {
+        problems.push(`${path}: ${symbol.name} has no JSDoc`);
+      }
+    }
+  }
+  assertEquals(problems, [], problems.join("\n"));
+});
+
 Deno.test("release identity stays coherent across config and changelog", async () => {
   assertEquals(config.name, "@discern-sh/design-system");
   const changelog = await Deno.readTextFile(join(PACKAGE_ROOT, "CHANGELOG.md"));
