@@ -10,6 +10,19 @@
     "./theme/discern": "./src/theme/discern.ts",
     "./tokens": "./src/tokens/tokens.ts"
   },
+  "publish": {
+    "include": [
+      "CHANGELOG.md",
+      "LICENSE",
+      "README.md",
+      "deno.json",
+      "src/"
+    ],
+    "exclude": [
+      "src/**/*.examples.tsx",
+      "src/fixtures/"
+    ]
+  },
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext", "deno.ns"],
     "strict": true,
