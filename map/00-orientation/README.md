@@ -7,10 +7,6 @@ Orientation is deliberately small and stable. The subsystem subtrees go deep on
 mechanism; this tier exists so you understand _what the pieces are_ and _why the
 system is shaped the way it is_ before you read how any one piece works.
 
-> These four docs start as skeletons. The `discern setup` command fills them
-> from the repo and a few questions it asks you. Look for the
-> `<!-- setup fills this -->` markers.
-
 ---
 
 ## What's in here

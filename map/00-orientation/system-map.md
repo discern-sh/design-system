@@ -3,48 +3,75 @@
 Bird's-eye view of how discern-design-system fits together. Read this once and
 the rest of the documentation tree should slot into place.
 
-> This doc is a skeleton. The `discern setup` command fills it from the repo and
-> a few questions it asks you. The map is **ASCII-first** so it lives in the
-> text and stays diffable — draw the boxes and arrows below.
-
 ---
 
 ## The system, end to end
 
-<!-- setup fills this -->
-
-Replace the sketch below with an ASCII diagram of the real components and the
-flow between them. Show the major pieces as boxes and the direction data or
-control moves as arrows. Keep it to one screen; depth belongs in the subsystem
-leaves.
-
 ```
-┌─────────────┐      ┌─────────────┐      ┌─────────────┐
-│   <input>   │ ───► │  <core>     │ ───► │  <output>   │
-└─────────────┘      └─────────────┘      └─────────────┘
+        AUTHORED SOURCES                          GENERATED SURFACES
+┌───────────────────────────────┐   deno task   ┌──────────────────────────────┐
+│ Tokens        tokens.ts       │    codegen    │ src/generated/               │
+│ Foundations   styles/*.css    │ ────────────► │  Registry (deps, classes)    │
+│ Components    src/components/ │  generate.ts  │  React surface               │
+│  54 folders × (css, tsx,      │               │  base styles · asset tables  │
+│   meta.ts, examples, mod.ts)  │               │ styleguide/generated/        │
+│ Preset        theme/discern.ts│               │  example registry            │
+└───────────────────────────────┘               └───────┬──────────────────────┘
+                                                        │ resolved through
+                       ┌────────────────────────────────┼───────────────┐
+                       ▼                                ▼               ▼
+        ┌──────────────────────────┐   ┌──────────────────────┐  ┌─────────────────┐
+        │ Emitter    runtime.ts    │   │ Adapter   react.ts   │  │ Catalogue       │
+        │ Selection ──► Runtime:   │   │ React 18.3+ (peer)   │  │ styleguide/ +   │
+        │  discern.css             │   │ renders the class    │  │ scripts/build.ts│
+        │  manifest.json (SHA-256) │   │ contract to static   │  │ + serve.ts      │
+        │  Optional Assets         │   │ HTML at build time   │  │ (dist/, :8010)  │
+        └────────────┬─────────────┘   └──────────┬───────────┘  └─────────────────┘
+                     ▼                            ▼
+        ┌─────────────────────────────────────────────────────┐
+        │ CONSUMER SITE (Deno or Node build; static output)   │
+        │ <main data-discern-root data-discern-theme="light"> │
+        │   semantic HTML using discern-* classes             │
+        │ — consumer Preset may override public Tokens —      │
+        └─────────────────────────────────────────────────────┘
 ```
+
+Arrows are build-time data flow. Nothing flows at browser runtime: the browser
+receives static HTML plus the emitted CSS, and no registry, cache, or
+third-party host is ever hotlinked.
 
 ---
 
 ## Where each piece runs
 
-<!-- setup fills this -->
-
-_(A short list: which parts are processes, which are libraries, which are
-external services; what holds the persistent state; where work happens
-synchronously vs in the background. The "physical" view that the box diagram
-above does not show.)_
+- **Everything ships as a library** — the JSR package
+  `@discern-sh/design-system`. There are no services and no persistent state;
+  the only state anywhere is files in the consumer's build output.
+- **The Emitter** runs inside a consumer's build (Deno or Node — it writes via
+  `node:fs/promises`). Under Deno it needs read and write permission for its
+  output directory.
+- **The Adapter** runs in a consumer's build-time React render
+  (`renderToStaticMarkup`); nothing of React reaches the browser.
+- **Codegen and the Catalogue build** are repo-local dev processes:
+  `deno task codegen`, `deno task build` (writes `dist/`, gitignored), and
+  `deno task serve` (local HTTP on port 8010).
+- **CI** (GitHub Actions) re-runs codegen for currency, the full verify task,
+  and a publish dry run on every push/PR; releases publish to JSR via trusted
+  publishing when a `v*` tag matching `deno.json`'s version is released.
 
 ---
 
 ## How the map relates to the subtrees
 
-<!-- setup fills this -->
+The numbered subtrees are proposed but not yet written — filling them is tracked
+in [`discern/TODO.md`](../../discern/TODO.md). `80-development/` exists today.
 
-_(A table mapping each region of the diagram to the subsystem subtree that
-documents it in depth — the numbered subtrees on the docs front page. This is
-what turns the picture into a navigation aid.)_
-
-| Region of the map | Documented in      |
-| ----------------- | ------------------ |
-| _component_       | `../NN-subsystem/` |
+| Region of the map             | Documented in            |
+| ----------------------------- | ------------------------ |
+| Tokens, Preset, foundations   | `../10-tokens-themes/`   |
+| Components (authored sources) | `../20-components/`      |
+| Codegen → generated surfaces  | `../30-codegen/`         |
+| Emitter, Selection, Manifest  | `../40-runtime-emitter/` |
+| Adapter                       | `../50-react-adapter/`   |
+| Catalogue, build, serve       | `../60-catalogue/`       |
+| CI, the gate, working here    | `../80-development/`     |
