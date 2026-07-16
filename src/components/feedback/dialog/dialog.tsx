@@ -6,6 +6,7 @@ import {
   useRef,
 } from "react";
 import type { DialogHTMLAttributes, MouseEvent, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Kicker } from "../../display/kicker/kicker.tsx";
 
@@ -24,8 +25,8 @@ export interface DialogProps extends
   readonly children: ReactNode;
 }
 
-export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
-  function Dialog(
+export const Dialog: DiscernComponent<HTMLDialogElement, DialogProps> =
+  forwardRef<HTMLDialogElement, DialogProps>(function Dialog(
     {
       open,
       onOpenChange,
@@ -108,5 +109,4 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
         </div>
       </dialog>
     );
-  },
-);
+  });

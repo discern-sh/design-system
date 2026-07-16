@@ -1,5 +1,6 @@
 import { forwardRef, useEffect } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export type ToastTone = "neutral" | "success" | "warning" | "danger";
@@ -11,75 +12,80 @@ export interface ToastProps extends HTMLAttributes<HTMLDivElement> {
   readonly dismissLabel?: string;
   readonly children: ReactNode;
 }
-export const Toast = forwardRef<HTMLDivElement, ToastProps>(
-  function Toast(
-    {
-      tone = "neutral",
-      icon,
-      onDismiss,
-      duration,
-      dismissLabel = "Dismiss notification",
-      className,
-      children,
-      role,
-      ...props
-    },
-    ref,
-  ) {
-    useEffect(() => {
-      if (!duration || !onDismiss) return;
-      const timer = globalThis.setTimeout(onDismiss, duration);
-      return () => globalThis.clearTimeout(timer);
-    }, [duration, onDismiss]);
-    const semanticRole = role ?? (tone === "danger" ? "alert" : "status");
-    return (
-      <div
-        ref={ref}
-        role={semanticRole}
-        className={classNames(
-          "discern-toast",
-          `discern-toast--${tone}`,
-          className,
-        )}
-        {...props}
-      >
-        {icon
-          ? (
-            <span className="discern-toast__icon" aria-hidden="true">
-              {icon}
-            </span>
-          )
-          : null}
-        <span className="discern-toast__content">{children}</span>
-        {onDismiss
-          ? (
-            <button
-              type="button"
-              className="discern-toast__dismiss"
-              aria-label={dismissLabel}
-              onClick={onDismiss}
-            >
-              <span aria-hidden="true">×</span>
-            </button>
-          )
-          : null}
-      </div>
-    );
+export const Toast: DiscernComponent<HTMLDivElement, ToastProps> = forwardRef<
+  HTMLDivElement,
+  ToastProps
+>(function Toast(
+  {
+    tone = "neutral",
+    icon,
+    onDismiss,
+    duration,
+    dismissLabel = "Dismiss notification",
+    className,
+    children,
+    role,
+    ...props
   },
-);
+  ref,
+) {
+  useEffect(() => {
+    if (!duration || !onDismiss) return;
+    const timer = globalThis.setTimeout(onDismiss, duration);
+    return () => globalThis.clearTimeout(timer);
+  }, [duration, onDismiss]);
+  const semanticRole = role ?? (tone === "danger" ? "alert" : "status");
+  return (
+    <div
+      ref={ref}
+      role={semanticRole}
+      className={classNames(
+        "discern-toast",
+        `discern-toast--${tone}`,
+        className,
+      )}
+      {...props}
+    >
+      {icon
+        ? (
+          <span className="discern-toast__icon" aria-hidden="true">
+            {icon}
+          </span>
+        )
+        : null}
+      <span className="discern-toast__content">{children}</span>
+      {onDismiss
+        ? (
+          <button
+            type="button"
+            className="discern-toast__dismiss"
+            aria-label={dismissLabel}
+            onClick={onDismiss}
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        )
+        : null}
+    </div>
+  );
+});
 
 export interface ToastRegionProps extends HTMLAttributes<HTMLDivElement> {
   readonly label?: string;
 }
-export const ToastRegion = forwardRef<HTMLDivElement, ToastRegionProps>(
-  function ToastRegion({ label = "Notifications", className, ...props }, ref) {
-    return (
-      <div
-        ref={ref}
-        aria-label={label}
-        className={classNames("discern-toast-region", className)}
-        {...props}
-      />
-    );
-  },
-);
+export const ToastRegion: DiscernComponent<HTMLDivElement, ToastRegionProps> =
+  forwardRef<HTMLDivElement, ToastRegionProps>(
+    function ToastRegion(
+      { label = "Notifications", className, ...props },
+      ref,
+    ) {
+      return (
+        <div
+          ref={ref}
+          aria-label={label}
+          className={classNames("discern-toast-region", className)}
+          {...props}
+        />
+      );
+    },
+  );

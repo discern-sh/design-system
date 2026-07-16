@@ -1,5 +1,6 @@
 import { forwardRef, useId } from "react";
 import type { ReactNode, TextareaHTMLAttributes } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Field, fieldDescriptionId } from "../field/field.tsx";
 
@@ -9,8 +10,8 @@ export interface TextareaProps
   readonly hint?: ReactNode;
   readonly error?: ReactNode;
 }
-export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  function Textarea(
+export const Textarea: DiscernComponent<HTMLTextAreaElement, TextareaProps> =
+  forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
     {
       label,
       hint,
@@ -54,5 +55,4 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         {control}
       </Field>
     );
-  },
-);
+  });

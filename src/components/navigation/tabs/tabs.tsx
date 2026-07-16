@@ -1,5 +1,6 @@
 import { forwardRef, useId, useRef, useState } from "react";
 import type { HTMLAttributes, KeyboardEvent, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface TabItem {
@@ -19,7 +20,10 @@ export interface TabsProps
   readonly label?: string;
 }
 
-export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
+export const Tabs: DiscernComponent<HTMLDivElement, TabsProps> = forwardRef<
+  HTMLDivElement,
+  TabsProps
+>(function Tabs(
   {
     items,
     value,

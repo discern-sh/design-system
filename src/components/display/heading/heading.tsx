@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
@@ -11,8 +12,8 @@ export interface HeadingAccentProps extends HTMLAttributes<HTMLSpanElement> {
   readonly children: ReactNode;
 }
 
-export const Heading = forwardRef<HTMLHeadingElement, HeadingProps>(
-  function Heading(
+export const Heading: DiscernComponent<HTMLHeadingElement, HeadingProps> =
+  forwardRef<HTMLHeadingElement, HeadingProps>(function Heading(
     { level = 2, className, children, ...props },
     ref,
   ) {
@@ -26,22 +27,22 @@ export const Heading = forwardRef<HTMLHeadingElement, HeadingProps>(
         {children}
       </Element>
     );
-  },
-);
+  });
 
-export const HeadingAccent = forwardRef<HTMLSpanElement, HeadingAccentProps>(
-  function HeadingAccent(
-    { className, children, ...props },
-    ref,
-  ) {
-    return (
-      <span
-        ref={ref}
-        className={classNames("discern-heading__accent", className)}
-        {...props}
-      >
-        {children}
-      </span>
-    );
-  },
-);
+export const HeadingAccent: DiscernComponent<
+  HTMLSpanElement,
+  HeadingAccentProps
+> = forwardRef<HTMLSpanElement, HeadingAccentProps>(function HeadingAccent(
+  { className, children, ...props },
+  ref,
+) {
+  return (
+    <span
+      ref={ref}
+      className={classNames("discern-heading__accent", className)}
+      {...props}
+    >
+      {children}
+    </span>
+  );
+});

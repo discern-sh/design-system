@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface PullQuoteProps extends HTMLAttributes<HTMLElement> {
@@ -10,8 +11,8 @@ export interface PullQuoteProps extends HTMLAttributes<HTMLElement> {
   readonly align?: "inline" | "wide";
 }
 
-export const PullQuote = forwardRef<HTMLElement, PullQuoteProps>(
-  function PullQuote(
+export const PullQuote: DiscernComponent<HTMLElement, PullQuoteProps> =
+  forwardRef<HTMLElement, PullQuoteProps>(function PullQuote(
     {
       quote,
       attribution,
@@ -45,5 +46,4 @@ export const PullQuote = forwardRef<HTMLElement, PullQuoteProps>(
           : null}
       </figure>
     );
-  },
-);
+  });

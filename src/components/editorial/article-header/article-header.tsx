@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface ArticleAuthor {
@@ -21,8 +22,8 @@ export interface ArticleHeaderProps
   readonly surface?: "canvas" | "sunken" | "accent";
 }
 
-export const ArticleHeader = forwardRef<HTMLElement, ArticleHeaderProps>(
-  function ArticleHeader(
+export const ArticleHeader: DiscernComponent<HTMLElement, ArticleHeaderProps> =
+  forwardRef<HTMLElement, ArticleHeaderProps>(function ArticleHeader(
     {
       eyebrow,
       title,
@@ -115,5 +116,4 @@ export const ArticleHeader = forwardRef<HTMLElement, ArticleHeaderProps>(
         </div>
       </header>
     );
-  },
-);
+  });

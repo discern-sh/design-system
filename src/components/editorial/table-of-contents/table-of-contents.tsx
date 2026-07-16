@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface TableOfContentsItem {
@@ -16,52 +17,53 @@ export interface TableOfContentsProps
   readonly label?: string;
 }
 
-export const TableOfContents = forwardRef<HTMLElement, TableOfContentsProps>(
-  function TableOfContents(
-    {
-      title = "On this page",
-      items,
-      progress,
-      label = "Table of contents",
-      className,
-      ...props
-    },
-    ref,
-  ) {
-    return (
-      <nav
-        ref={ref}
-        className={classNames("discern-table-of-contents", className)}
-        aria-label={label}
-        {...props}
-      >
-        <strong className="discern-table-of-contents__title">{title}</strong>
-        <ol>
-          {items.map((item, index) => (
-            <li
-              className={classNames(
-                item.current && "discern-table-of-contents__item--current",
-              )}
-              key={item.href}
-            >
-              <a
-                href={item.href}
-                aria-current={item.current ? "location" : undefined}
-              >
-                <span>{String(index + 1).padStart(2, "0")}</span>
-                {item.label}
-              </a>
-            </li>
-          ))}
-        </ol>
-        {progress
-          ? (
-            <div className="discern-table-of-contents__progress">
-              {progress}
-            </div>
-          )
-          : null}
-      </nav>
-    );
+export const TableOfContents: DiscernComponent<
+  HTMLElement,
+  TableOfContentsProps
+> = forwardRef<HTMLElement, TableOfContentsProps>(function TableOfContents(
+  {
+    title = "On this page",
+    items,
+    progress,
+    label = "Table of contents",
+    className,
+    ...props
   },
-);
+  ref,
+) {
+  return (
+    <nav
+      ref={ref}
+      className={classNames("discern-table-of-contents", className)}
+      aria-label={label}
+      {...props}
+    >
+      <strong className="discern-table-of-contents__title">{title}</strong>
+      <ol>
+        {items.map((item, index) => (
+          <li
+            className={classNames(
+              item.current && "discern-table-of-contents__item--current",
+            )}
+            key={item.href}
+          >
+            <a
+              href={item.href}
+              aria-current={item.current ? "location" : undefined}
+            >
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              {item.label}
+            </a>
+          </li>
+        ))}
+      </ol>
+      {progress
+        ? (
+          <div className="discern-table-of-contents__progress">
+            {progress}
+          </div>
+        )
+        : null}
+    </nav>
+  );
+});

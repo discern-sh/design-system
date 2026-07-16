@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface ProcessStep {
@@ -18,8 +19,8 @@ export interface ProcessStepsProps
   readonly orientation?: "horizontal" | "vertical";
 }
 
-export const ProcessSteps = forwardRef<HTMLElement, ProcessStepsProps>(
-  function ProcessSteps(
+export const ProcessSteps: DiscernComponent<HTMLElement, ProcessStepsProps> =
+  forwardRef<HTMLElement, ProcessStepsProps>(function ProcessSteps(
     {
       eyebrow,
       title,
@@ -93,5 +94,4 @@ export const ProcessSteps = forwardRef<HTMLElement, ProcessStepsProps>(
         </div>
       </section>
     );
-  },
-);
+  });

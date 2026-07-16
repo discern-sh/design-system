@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface IconButtonProps
@@ -10,8 +11,8 @@ export interface IconButtonProps
   readonly size?: "sm" | "md" | "lg";
 }
 
-export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
-  function IconButton(
+export const IconButton: DiscernComponent<HTMLButtonElement, IconButtonProps> =
+  forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
     {
       icon,
       label,
@@ -39,5 +40,4 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
         <span aria-hidden="true">{icon}</span>
       </button>
     );
-  },
-);
+  });

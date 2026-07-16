@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface DataFigureLegendItem {
@@ -18,8 +19,8 @@ export interface DataFigureProps
   readonly surface?: "canvas" | "sunken";
 }
 
-export const DataFigure = forwardRef<HTMLElement, DataFigureProps>(
-  function DataFigure(
+export const DataFigure: DiscernComponent<HTMLElement, DataFigureProps> =
+  forwardRef<HTMLElement, DataFigureProps>(function DataFigure(
     {
       eyebrow,
       title,
@@ -73,5 +74,4 @@ export const DataFigure = forwardRef<HTMLElement, DataFigureProps>(
         </figcaption>
       </figure>
     );
-  },
-);
+  });

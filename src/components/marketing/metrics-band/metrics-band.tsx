@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface MetricItem {
@@ -16,8 +17,8 @@ export interface MetricsBandProps
   readonly tone?: "surface" | "accent" | "contrast";
 }
 
-export const MetricsBand = forwardRef<HTMLElement, MetricsBandProps>(
-  function MetricsBand(
+export const MetricsBand: DiscernComponent<HTMLElement, MetricsBandProps> =
+  forwardRef<HTMLElement, MetricsBandProps>(function MetricsBand(
     { eyebrow, title, items, tone = "surface", className, ...props },
     ref,
   ) {
@@ -64,5 +65,4 @@ export const MetricsBand = forwardRef<HTMLElement, MetricsBandProps>(
         </div>
       </section>
     );
-  },
-);
+  });

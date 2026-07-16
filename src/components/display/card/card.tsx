@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
@@ -9,7 +10,10 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   readonly children: ReactNode;
 }
 
-export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
+export const Card: DiscernComponent<HTMLDivElement, CardProps> = forwardRef<
+  HTMLDivElement,
+  CardProps
+>(function Card(
   {
     raised = false,
     texture = "plain",

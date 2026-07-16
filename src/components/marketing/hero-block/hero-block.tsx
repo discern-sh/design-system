@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface HeroBlockProps
@@ -15,8 +16,8 @@ export interface HeroBlockProps
   readonly surface?: "canvas" | "sunken" | "accent";
 }
 
-export const HeroBlock = forwardRef<HTMLElement, HeroBlockProps>(
-  function HeroBlock(
+export const HeroBlock: DiscernComponent<HTMLElement, HeroBlockProps> =
+  forwardRef<HTMLElement, HeroBlockProps>(function HeroBlock(
     {
       eyebrow,
       title,
@@ -71,5 +72,4 @@ export const HeroBlock = forwardRef<HTMLElement, HeroBlockProps>(
         </div>
       </section>
     );
-  },
-);
+  });

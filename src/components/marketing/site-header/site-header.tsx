@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface SiteHeaderNavItem {
@@ -18,8 +19,8 @@ export interface SiteHeaderProps extends HTMLAttributes<HTMLElement> {
   readonly sticky?: boolean;
 }
 
-export const SiteHeader = forwardRef<HTMLElement, SiteHeaderProps>(
-  function SiteHeader(
+export const SiteHeader: DiscernComponent<HTMLElement, SiteHeaderProps> =
+  forwardRef<HTMLElement, SiteHeaderProps>(function SiteHeader(
     {
       brand,
       brandMark,
@@ -74,5 +75,4 @@ export const SiteHeader = forwardRef<HTMLElement, SiteHeaderProps>(
         </div>
       </header>
     );
-  },
-);
+  });

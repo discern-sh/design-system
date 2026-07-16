@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface FootnoteItem {
@@ -14,8 +15,8 @@ export interface FootnotesProps
   readonly items: readonly FootnoteItem[];
 }
 
-export const Footnotes = forwardRef<HTMLElement, FootnotesProps>(
-  function Footnotes(
+export const Footnotes: DiscernComponent<HTMLElement, FootnotesProps> =
+  forwardRef<HTMLElement, FootnotesProps>(function Footnotes(
     { title = "Notes & sources", items, className, ...props },
     ref,
   ) {
@@ -49,5 +50,4 @@ export const Footnotes = forwardRef<HTMLElement, FootnotesProps>(
         </ol>
       </section>
     );
-  },
-);
+  });

@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { spaceValue } from "../space.ts";
 import type { SpaceStep } from "../space.ts";
@@ -12,8 +13,8 @@ export interface ClusterProps extends HTMLAttributes<HTMLDivElement> {
   readonly justify?: "start" | "center" | "end" | "between";
   readonly children: ReactNode;
 }
-export const Cluster = forwardRef<HTMLDivElement, ClusterProps>(
-  function Cluster(
+export const Cluster: DiscernComponent<HTMLDivElement, ClusterProps> =
+  forwardRef<HTMLDivElement, ClusterProps>(function Cluster(
     {
       gap = 3,
       align = "center",
@@ -44,5 +45,4 @@ export const Cluster = forwardRef<HTMLDivElement, ClusterProps>(
         {children}
       </div>
     );
-  },
-);
+  });

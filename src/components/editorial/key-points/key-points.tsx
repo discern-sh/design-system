@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface KeyPoint {
@@ -15,8 +16,8 @@ export interface KeyPointsProps
   readonly tone?: "accent" | "sunken" | "contrast";
 }
 
-export const KeyPoints = forwardRef<HTMLElement, KeyPointsProps>(
-  function KeyPoints(
+export const KeyPoints: DiscernComponent<HTMLElement, KeyPointsProps> =
+  forwardRef<HTMLElement, KeyPointsProps>(function KeyPoints(
     { eyebrow, title, items, tone = "accent", className, ...props },
     ref,
   ) {
@@ -47,5 +48,4 @@ export const KeyPoints = forwardRef<HTMLElement, KeyPointsProps>(
         </ol>
       </section>
     );
-  },
-);
+  });

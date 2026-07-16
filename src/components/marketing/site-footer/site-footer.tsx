@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface SiteFooterLink {
@@ -21,8 +22,8 @@ export interface SiteFooterProps extends HTMLAttributes<HTMLElement> {
   readonly meta?: ReactNode;
 }
 
-export const SiteFooter = forwardRef<HTMLElement, SiteFooterProps>(
-  function SiteFooter(
+export const SiteFooter: DiscernComponent<HTMLElement, SiteFooterProps> =
+  forwardRef<HTMLElement, SiteFooterProps>(function SiteFooter(
     {
       brand,
       brandMark,
@@ -93,5 +94,4 @@ export const SiteFooter = forwardRef<HTMLElement, SiteFooterProps>(
         </div>
       </footer>
     );
-  },
-);
+  });

@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface SplitFeaturePoint {
@@ -19,8 +20,8 @@ export interface SplitFeatureProps
   readonly surface?: "canvas" | "surface" | "sunken";
 }
 
-export const SplitFeature = forwardRef<HTMLElement, SplitFeatureProps>(
-  function SplitFeature(
+export const SplitFeature: DiscernComponent<HTMLElement, SplitFeatureProps> =
+  forwardRef<HTMLElement, SplitFeatureProps>(function SplitFeature(
     {
       eyebrow,
       title,
@@ -89,5 +90,4 @@ export const SplitFeature = forwardRef<HTMLElement, SplitFeatureProps>(
         </div>
       </section>
     );
-  },
-);
+  });

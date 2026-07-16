@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface CalloutProps
@@ -11,7 +12,10 @@ export interface CalloutProps
   readonly tone?: "note" | "insight" | "warning" | "success";
 }
 
-export const Callout = forwardRef<HTMLElement, CalloutProps>(function Callout(
+export const Callout: DiscernComponent<HTMLElement, CalloutProps> = forwardRef<
+  HTMLElement,
+  CalloutProps
+>(function Callout(
   {
     eyebrow,
     title,

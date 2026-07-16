@@ -37,17 +37,17 @@ const themeToken = (
 ): ThemeToken => ({ name, light, dark, category, description });
 
 /** Public values owned by the default blue preset, not by the semantic base. */
-export const discernThemeTokens = [
+export const discernThemeTokens: readonly DesignToken[] = [
   token(
     "--discern-accent-hue",
     "259",
     "Color",
     "Master hue for the default Discern accent family.",
   ),
-] satisfies readonly DesignToken[];
+];
 
 /** Framework-neutral primitives and system-font defaults shared by every theme. */
-export const baseTokens = [
+export const baseTokens: readonly DesignToken[] = [
   token(
     "--discern-ink-hue",
     "225",
@@ -226,12 +226,15 @@ export const baseTokens = [
     "Layout",
     "Section rhythm.",
   ),
-] satisfies readonly DesignToken[];
+];
 
 /** Compatibility inventory for catalogue consumers; base and preset stay distinct. */
-export const designTokens = [...baseTokens, ...discernThemeTokens] as const;
+export const designTokens: readonly DesignToken[] = [
+  ...baseTokens,
+  ...discernThemeTokens,
+];
 
-export const themeTokens = [
+export const themeTokens: readonly ThemeToken[] = [
   themeToken(
     "--discern-color-ink",
     "oklch(24% 0.03 var(--discern-ink-hue))",
@@ -421,6 +424,9 @@ export const themeTokens = [
     "color-mix(in oklab, #000 58%, transparent)",
     "Modal backdrop.",
   ),
-] satisfies readonly ThemeToken[];
+];
 
-export const allTokens = [...designTokens, ...themeTokens] as const;
+export const allTokens: readonly (DesignToken | ThemeToken)[] = [
+  ...designTokens,
+  ...themeTokens,
+];

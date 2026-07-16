@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface TestimonialProps extends HTMLAttributes<HTMLElement> {
@@ -14,8 +15,8 @@ export interface TestimonialProps extends HTMLAttributes<HTMLElement> {
   readonly layout?: "wide" | "card";
 }
 
-export const Testimonial = forwardRef<HTMLElement, TestimonialProps>(
-  function Testimonial(
+export const Testimonial: DiscernComponent<HTMLElement, TestimonialProps> =
+  forwardRef<HTMLElement, TestimonialProps>(function Testimonial(
     {
       eyebrow,
       quote,
@@ -78,5 +79,4 @@ export const Testimonial = forwardRef<HTMLElement, TestimonialProps>(
         </figure>
       </section>
     );
-  },
-);
+  });

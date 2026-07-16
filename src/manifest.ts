@@ -54,8 +54,17 @@ export interface RuntimeManifest {
   };
 }
 
+/** Shape of the package-identity manifest exported to consumers. */
+export interface PackageManifest {
+  readonly schemaVersion: typeof RUNTIME_MANIFEST_SCHEMA_VERSION;
+  readonly package: "@discern-sh/design-system";
+  readonly groups: readonly ManifestGroup[];
+  readonly components: readonly ManifestComponent[];
+  readonly publicTokenNames: readonly string[];
+}
+
 /** Package identity and ownership facts without catalogue descriptions or React. */
-export const packageManifest = {
+export const packageManifest: PackageManifest = {
   schemaVersion: RUNTIME_MANIFEST_SCHEMA_VERSION,
   package: "@discern-sh/design-system",
   groups: componentGroups.map((name) => ({
@@ -72,4 +81,4 @@ export const packageManifest = {
     publicTokenNames: entry.publicTokenNames,
   })),
   publicTokenNames: allTokens.map((token) => token.name),
-} as const;
+};

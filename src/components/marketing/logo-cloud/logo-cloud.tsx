@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface LogoCloudItem {
@@ -13,8 +14,8 @@ export interface LogoCloudProps extends HTMLAttributes<HTMLElement> {
   readonly align?: "start" | "center";
 }
 
-export const LogoCloud = forwardRef<HTMLElement, LogoCloudProps>(
-  function LogoCloud(
+export const LogoCloud: DiscernComponent<HTMLElement, LogoCloudProps> =
+  forwardRef<HTMLElement, LogoCloudProps>(function LogoCloud(
     { label, items, align = "center", className, ...props },
     ref,
   ) {
@@ -45,5 +46,4 @@ export const LogoCloud = forwardRef<HTMLElement, LogoCloudProps>(
         </ul>
       </section>
     );
-  },
-);
+  });

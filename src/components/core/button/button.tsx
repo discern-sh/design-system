@@ -5,6 +5,7 @@ import type {
   ReactNode,
   Ref,
 } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
@@ -68,62 +69,63 @@ function content(
   );
 }
 
-export const Button = forwardRef<
+export const Button: DiscernComponent<
   HTMLButtonElement | HTMLAnchorElement,
   ButtonProps
->(
-  function Button(props, forwardedRef) {
-    const variant = props.variant ?? "primary";
-    const size = props.size ?? "md";
-    const classes = classNames(
-      "discern-button",
-      `discern-button--${variant}`,
-      `discern-button--${size}`,
-      props.className,
-    );
+> = forwardRef<
+  HTMLButtonElement | HTMLAnchorElement,
+  ButtonProps
+>(function Button(props, forwardedRef) {
+  const variant = props.variant ?? "primary";
+  const size = props.size ?? "md";
+  const classes = classNames(
+    "discern-button",
+    `discern-button--${variant}`,
+    `discern-button--${size}`,
+    props.className,
+  );
 
-    if ("href" in props && typeof props.href === "string") {
-      const {
-        href,
-        variant: _variant,
-        size: _size,
-        leadingIcon,
-        trailingIcon,
-        children,
-        className: _className,
-        ...anchorProps
-      } = props;
-      return (
-        <a
-          ref={forwardedRef as Ref<HTMLAnchorElement>}
-          href={href}
-          className={classes}
-          {...anchorProps}
-        >
-          {content(leadingIcon, children, trailingIcon)}
-        </a>
-      );
-    }
-
+  if ("href" in props && typeof props.href === "string") {
     const {
+      href,
       variant: _variant,
       size: _size,
       leadingIcon,
       trailingIcon,
       children,
       className: _className,
-      type = "button",
-      ...buttonProps
+      ...anchorProps
     } = props;
     return (
-      <button
-        ref={forwardedRef as Ref<HTMLButtonElement>}
-        type={type}
+      <a
+        ref={forwardedRef as Ref<HTMLAnchorElement>}
+        href={href}
         className={classes}
-        {...buttonProps}
+        {...anchorProps}
       >
         {content(leadingIcon, children, trailingIcon)}
-      </button>
+      </a>
     );
-  },
-);
+  }
+
+  const {
+    variant: _variant,
+    size: _size,
+    leadingIcon,
+    trailingIcon,
+    children,
+    className: _className,
+    type = "button",
+    ...buttonProps
+  } = props;
+  return (
+    <button
+      ref={forwardedRef as Ref<HTMLButtonElement>}
+      type={type}
+      className={classes}
+      {...buttonProps}
+    >
+      {content(leadingIcon, children, trailingIcon)}
+    </button>
+  );
+});

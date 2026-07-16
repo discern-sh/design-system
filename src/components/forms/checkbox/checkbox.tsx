@@ -1,5 +1,6 @@
 import { forwardRef, useId } from "react";
 import type { InputHTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface CheckboxProps
@@ -7,8 +8,8 @@ export interface CheckboxProps
   readonly label: ReactNode;
   readonly description?: ReactNode;
 }
-export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
-  function Checkbox(
+export const Checkbox: DiscernComponent<HTMLInputElement, CheckboxProps> =
+  forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
     {
       label,
       description,
@@ -48,5 +49,4 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           : null}
       </div>
     );
-  },
-);
+  });

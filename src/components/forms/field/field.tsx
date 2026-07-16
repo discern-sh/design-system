@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { classNames } from "../../class-names.ts";
 
 export interface FieldProps {
@@ -14,7 +14,7 @@ export interface FieldProps {
 export function Field(
   { controlId, label, hint, error, required = false, children, className }:
     FieldProps,
-) {
+): ReactElement {
   return (
     <div
       className={classNames(

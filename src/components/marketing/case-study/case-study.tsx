@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface CaseStudyStat {
@@ -19,8 +20,8 @@ export interface CaseStudyProps
   readonly reverse?: boolean;
 }
 
-export const CaseStudy = forwardRef<HTMLElement, CaseStudyProps>(
-  function CaseStudy(
+export const CaseStudy: DiscernComponent<HTMLElement, CaseStudyProps> =
+  forwardRef<HTMLElement, CaseStudyProps>(function CaseStudy(
     {
       eyebrow,
       title,
@@ -79,5 +80,4 @@ export const CaseStudy = forwardRef<HTMLElement, CaseStudyProps>(
         </div>
       </article>
     );
-  },
-);
+  });

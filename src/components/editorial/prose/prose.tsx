@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface ProseProps extends HTMLAttributes<HTMLDivElement> {
@@ -9,7 +10,10 @@ export interface ProseProps extends HTMLAttributes<HTMLDivElement> {
   readonly measure?: "narrow" | "default" | "wide";
 }
 
-export const Prose = forwardRef<HTMLDivElement, ProseProps>(function Prose(
+export const Prose: DiscernComponent<HTMLDivElement, ProseProps> = forwardRef<
+  HTMLDivElement,
+  ProseProps
+>(function Prose(
   {
     children,
     dropCap = false,

@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface TimelineItem {
@@ -18,8 +19,8 @@ export interface TimelineProps
   readonly items: readonly TimelineItem[];
 }
 
-export const Timeline = forwardRef<HTMLElement, TimelineProps>(
-  function Timeline(
+export const Timeline: DiscernComponent<HTMLElement, TimelineProps> =
+  forwardRef<HTMLElement, TimelineProps>(function Timeline(
     { eyebrow, title, description, items, className, ...props },
     ref,
   ) {
@@ -52,5 +53,4 @@ export const Timeline = forwardRef<HTMLElement, TimelineProps>(
         </ol>
       </section>
     );
-  },
-);
+  });

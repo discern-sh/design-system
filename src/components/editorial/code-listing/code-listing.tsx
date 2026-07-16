@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface CodeListingProps
@@ -12,8 +13,8 @@ export interface CodeListingProps
   readonly caption?: ReactNode;
 }
 
-export const CodeListing = forwardRef<HTMLElement, CodeListingProps>(
-  function CodeListing(
+export const CodeListing: DiscernComponent<HTMLElement, CodeListingProps> =
+  forwardRef<HTMLElement, CodeListingProps>(function CodeListing(
     {
       title,
       filename,
@@ -66,5 +67,4 @@ export const CodeListing = forwardRef<HTMLElement, CodeListingProps>(
         {caption ? <figcaption>{caption}</figcaption> : null}
       </figure>
     );
-  },
-);
+  });

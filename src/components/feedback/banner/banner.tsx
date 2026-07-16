@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export type BannerTone =
@@ -13,32 +14,33 @@ export interface BannerProps extends HTMLAttributes<HTMLDivElement> {
   readonly icon?: ReactNode;
   readonly children: ReactNode;
 }
-export const Banner = forwardRef<HTMLDivElement, BannerProps>(
-  function Banner(
-    { tone = "neutral", icon, children, className, role, ...props },
-    ref,
-  ) {
-    const semanticRole = role ?? (tone === "danger" ? "alert" : "status");
-    return (
-      <div
-        ref={ref}
-        role={semanticRole}
-        className={classNames(
-          "discern-banner",
-          `discern-banner--${tone}`,
-          className,
-        )}
-        {...props}
-      >
-        {icon
-          ? (
-            <span className="discern-banner__icon" aria-hidden="true">
-              {icon}
-            </span>
-          )
-          : null}
-        <div>{children}</div>
-      </div>
-    );
-  },
-);
+export const Banner: DiscernComponent<HTMLDivElement, BannerProps> = forwardRef<
+  HTMLDivElement,
+  BannerProps
+>(function Banner(
+  { tone = "neutral", icon, children, className, role, ...props },
+  ref,
+) {
+  const semanticRole = role ?? (tone === "danger" ? "alert" : "status");
+  return (
+    <div
+      ref={ref}
+      role={semanticRole}
+      className={classNames(
+        "discern-banner",
+        `discern-banner--${tone}`,
+        className,
+      )}
+      {...props}
+    >
+      {icon
+        ? (
+          <span className="discern-banner__icon" aria-hidden="true">
+            {icon}
+          </span>
+        )
+        : null}
+      <div>{children}</div>
+    </div>
+  );
+});

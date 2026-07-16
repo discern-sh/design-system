@@ -1,5 +1,6 @@
 import { forwardRef, useId } from "react";
 import type { InputHTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Field, fieldDescriptionId } from "../field/field.tsx";
 
@@ -9,7 +10,10 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   readonly error?: ReactNode;
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
+export const Input: DiscernComponent<HTMLInputElement, InputProps> = forwardRef<
+  HTMLInputElement,
+  InputProps
+>(function Input(
   {
     label,
     hint,

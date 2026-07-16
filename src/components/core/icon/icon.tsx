@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface IconProps
@@ -9,7 +10,10 @@ export interface IconProps
   readonly size?: number | string;
 }
 
-export const Icon = forwardRef<HTMLSpanElement, IconProps>(function Icon(
+export const Icon: DiscernComponent<HTMLSpanElement, IconProps> = forwardRef<
+  HTMLSpanElement,
+  IconProps
+>(function Icon(
   { children, label, size = "1em", className, style, ...props },
   ref,
 ) {

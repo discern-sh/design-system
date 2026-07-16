@@ -1,5 +1,6 @@
 import { forwardRef, useId } from "react";
 import type { InputHTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface SwitchProps
@@ -7,8 +8,8 @@ export interface SwitchProps
   readonly label: ReactNode;
   readonly description?: ReactNode;
 }
-export const Switch = forwardRef<HTMLInputElement, SwitchProps>(
-  function Switch(
+export const Switch: DiscernComponent<HTMLInputElement, SwitchProps> =
+  forwardRef<HTMLInputElement, SwitchProps>(function Switch(
     {
       label,
       description,
@@ -54,5 +55,4 @@ export const Switch = forwardRef<HTMLInputElement, SwitchProps>(
         </label>
       </div>
     );
-  },
-);
+  });

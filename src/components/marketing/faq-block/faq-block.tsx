@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface FaqItem {
@@ -17,8 +18,8 @@ export interface FaqBlockProps
   readonly openFirst?: boolean;
 }
 
-export const FaqBlock = forwardRef<HTMLElement, FaqBlockProps>(
-  function FaqBlock(
+export const FaqBlock: DiscernComponent<HTMLElement, FaqBlockProps> =
+  forwardRef<HTMLElement, FaqBlockProps>(function FaqBlock(
     {
       eyebrow,
       title,
@@ -71,5 +72,4 @@ export const FaqBlock = forwardRef<HTMLElement, FaqBlockProps>(
         </div>
       </section>
     );
-  },
-);
+  });

@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface DividerProps extends HTMLAttributes<HTMLDivElement> {
@@ -7,8 +8,8 @@ export interface DividerProps extends HTMLAttributes<HTMLDivElement> {
   readonly surface?: "canvas" | "surface";
 }
 
-export const Divider = forwardRef<HTMLDivElement, DividerProps>(
-  function Divider(
+export const Divider: DiscernComponent<HTMLDivElement, DividerProps> =
+  forwardRef<HTMLDivElement, DividerProps>(function Divider(
     { label, surface = "canvas", className, ...props },
     ref,
   ) {
@@ -30,5 +31,4 @@ export const Divider = forwardRef<HTMLDivElement, DividerProps>(
           : null}
       </div>
     );
-  },
-);
+  });

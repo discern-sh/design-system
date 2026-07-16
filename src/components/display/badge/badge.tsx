@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export type BadgeTone = "accent" | "neutral" | "success" | "warning" | "danger";
@@ -10,7 +11,10 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   readonly children: ReactNode;
 }
 
-export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(function Badge(
+export const Badge: DiscernComponent<HTMLSpanElement, BadgeProps> = forwardRef<
+  HTMLSpanElement,
+  BadgeProps
+>(function Badge(
   { tone = "accent", dot = false, className, children, ...props },
   ref,
 ) {

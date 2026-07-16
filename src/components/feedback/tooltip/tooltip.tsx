@@ -1,5 +1,6 @@
 import { cloneElement, forwardRef, useId } from "react";
 import type { HTMLAttributes, ReactElement } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 interface TooltipChildProps {
@@ -11,8 +12,8 @@ export interface TooltipProps
   readonly children: ReactElement<TooltipChildProps>;
   readonly placement?: "top" | "bottom";
 }
-export const Tooltip = forwardRef<HTMLSpanElement, TooltipProps>(
-  function Tooltip(
+export const Tooltip: DiscernComponent<HTMLSpanElement, TooltipProps> =
+  forwardRef<HTMLSpanElement, TooltipProps>(function Tooltip(
     { label, children, placement = "top", className, ...props },
     ref,
   ) {
@@ -39,5 +40,4 @@ export const Tooltip = forwardRef<HTMLSpanElement, TooltipProps>(
         </span>
       </span>
     );
-  },
-);
+  });

@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface FeatureBentoItem {
@@ -20,8 +21,8 @@ export interface FeatureBentoProps
   readonly items: readonly FeatureBentoItem[];
 }
 
-export const FeatureBento = forwardRef<HTMLElement, FeatureBentoProps>(
-  function FeatureBento(
+export const FeatureBento: DiscernComponent<HTMLElement, FeatureBentoProps> =
+  forwardRef<HTMLElement, FeatureBentoProps>(function FeatureBento(
     { eyebrow, title, description, items, className, ...props },
     ref,
   ) {
@@ -89,5 +90,4 @@ export const FeatureBento = forwardRef<HTMLElement, FeatureBentoProps>(
         </div>
       </section>
     );
-  },
-);
+  });

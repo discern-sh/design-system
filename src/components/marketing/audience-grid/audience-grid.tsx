@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
 export interface AudienceGridItem {
@@ -21,8 +22,8 @@ export interface AudienceGridProps
   readonly items: readonly AudienceGridItem[];
 }
 
-export const AudienceGrid = forwardRef<HTMLElement, AudienceGridProps>(
-  function AudienceGrid(
+export const AudienceGrid: DiscernComponent<HTMLElement, AudienceGridProps> =
+  forwardRef<HTMLElement, AudienceGridProps>(function AudienceGrid(
     { eyebrow, title, description, items, className, ...props },
     ref,
   ) {
@@ -111,5 +112,4 @@ export const AudienceGrid = forwardRef<HTMLElement, AudienceGridProps>(
         </div>
       </section>
     );
-  },
-);
+  });

@@ -1,5 +1,6 @@
 import { forwardRef, useId } from "react";
 import type { ReactNode, SelectHTMLAttributes } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Field, fieldDescriptionId } from "../field/field.tsx";
 
@@ -14,8 +15,8 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   readonly error?: ReactNode;
   readonly options?: readonly SelectOption[];
 }
-export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  function Select(
+export const Select: DiscernComponent<HTMLSelectElement, SelectProps> =
+  forwardRef<HTMLSelectElement, SelectProps>(function Select(
     {
       label,
       hint,
@@ -74,5 +75,4 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         {control}
       </Field>
     );
-  },
-);
+  });
