@@ -2,6 +2,7 @@
 export * from "../components/core/icon/mod.ts";
 export * from "../components/core/button/mod.ts";
 export * from "../components/core/icon-button/mod.ts";
+export * from "../components/core/theme-toggle/mod.ts";
 export * from "../components/layout/container/mod.ts";
 export * from "../components/layout/stack/mod.ts";
 export * from "../components/layout/cluster/mod.ts";
@@ -29,6 +30,7 @@ export * from "../components/feedback/toast/mod.ts";
 export * from "../components/feedback/tooltip/mod.ts";
 export * from "../components/feedback/dialog/mod.ts";
 export * from "../components/feedback/meter/mod.ts";
+export * from "../components/feedback/empty-state/mod.ts";
 export * from "../components/navigation/tabs/mod.ts";
 export * from "../components/navigation/breadcrumbs/mod.ts";
 export * from "../components/docs/skip-link/mod.ts";
