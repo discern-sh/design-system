@@ -41,7 +41,8 @@
     margin-inline: var(--discern-space-3);
     color: var(--discern-color-border-strong);
   }
-  .discern-breadcrumbs__current {
+  .discern-breadcrumbs .discern-breadcrumbs__current {
+    display: block;
     max-inline-size: min(48ch, 72vw);
     overflow: hidden;
     color: var(--discern-color-ink);
