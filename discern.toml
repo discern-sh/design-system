@@ -184,10 +184,13 @@ stage = "fix"
 paths   = ["${map.dir}", "discern/", ".claude/", ".agents/"]
 neutral = true
 
-# The subset of changes a person could see — worth a preview link.
-# [scopes.assets]
-# paths       = ["public/**"]
-# previewable = true
+# The subset of changes a person could see — worth a preview link. Backs the
+# guidance rule "Ship visible changes with a preview": a change touching these
+# paths is flagged as preview-worthy, so hand off the Catalogue URL on the
+# worktree's deterministic port (`discern identity --port`).
+[scopes.visual]
+paths       = ["src/components/**", "src/styles/**", "src/tokens/**", "src/theme/**", "styleguide/**", "assets/**"]
+previewable = true
 
 # A sub-component with its own self-contained gate:
 # [scopes.native]
@@ -359,6 +362,16 @@ inputs = ["src/**", "scripts/**"]
 # Headroom `discern standards --pin` leaves so ordinary token/component
 # work never trips a freshly pinned ceiling.
 margin = 4000
+
+# Suppression directives stay at zero: the strict lint/type surface holds
+# because nothing is ever silenced. Counts deno-lint-ignore, deno-fmt-ignore,
+# @ts-ignore, and @ts-expect-error across authored (non-generated) sources.
+[standards.lint_suppressions]
+metric = "lint_suppressions"
+direction = "down"
+limit = 0
+run = "printf 'DISCERN_METRIC lint_suppressions %s\\n' \"$(grep -rEn 'deno-lint-ignore|deno-fmt-ignore|@ts-ignore|@ts-expect-error' src scripts styleguide tests --include='*.ts' --include='*.tsx' | grep -v generated | wc -l | tr -d ' ')\""
+inputs = ["src/**", "scripts/**", "styleguide/**", "tests/**"]
 
 # Coverage — keep line coverage at or above a rising floor:
 # [standards.coverage]
