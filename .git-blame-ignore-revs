@@ -1,0 +1,6 @@
+# Bulk mechanical commits that `git blame` should look through.
+# Local use: git config blame.ignoreRevsFile .git-blame-ignore-revs
+# (GitHub's blame view honors this file automatically.)
+
+# Store Markdown prose unwrapped: proseWrap never, one-time reflow
+32eb9358029b78e1775bf7577e3cf4b34bf9ea77
