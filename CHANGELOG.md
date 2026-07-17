@@ -4,7 +4,7 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
-## Unreleased
+## 0.4.0
 
 - Add the Docs group, the ninth canonical group: eight components covering documentation chrome — Skip link, Docs header, Docs nav, Pager, Search palette, Anchor heading, Kbd, and Copy button. Selecting `groups: ["Docs"]` emits the full set.
 - Add five generally useful components: Table and Stat (Display), Meter and Empty state (Feedback), and Theme toggle (Core).
