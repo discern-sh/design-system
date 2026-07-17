@@ -1,0 +1,18 @@
+@layer discern.components {
+  .discern-kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 1.6em;
+    padding: 0.1em 0.45em;
+    border: 1px solid var(--discern-color-border-strong);
+    border-block-end-width: 2px;
+    border-radius: var(--discern-radius-xs);
+    background: var(--discern-color-surface-sunken);
+    color: var(--discern-color-ink-muted);
+    font-family: var(--discern-font-mono);
+    font-size: var(--discern-font-size-xs);
+    line-height: var(--discern-leading-tight);
+    white-space: nowrap;
+  }
+}

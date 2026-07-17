@@ -6,6 +6,7 @@ export const componentGroups = [
   "Forms",
   "Feedback",
   "Navigation",
+  "Docs",
   "Marketing",
   "Editorial",
 ] as const;
