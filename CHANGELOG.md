@@ -10,6 +10,10 @@ lint, strict type-checks, package tests, the catalogue build, generated-output
 currency, and a publish dry run against the allowlisted artifact — and published
 through JSR trusted publishing from CI.
 
+## 0.2.0
+
+- Set up discern, ensuring the quality of the code in its own design system.
+
 ## 0.1.1
 
 - Every entrypoint now carries a module doc and all public symbols carry symbol
