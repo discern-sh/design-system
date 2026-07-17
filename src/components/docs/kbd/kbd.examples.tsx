@@ -6,8 +6,12 @@ export default function KbdExamples() {
       <span>
         <Kbd>⌘</Kbd> <Kbd>K</Kbd>
       </span>
-      <Kbd>Esc</Kbd>
-      <Kbd>Enter</Kbd>
+      <span>
+        <Kbd>Esc</Kbd>
+      </span>
+      <span>
+        <Kbd>Enter</Kbd>
+      </span>
       <span>
         <Kbd>Ctrl</Kbd> <Kbd>Shift</Kbd> <Kbd>P</Kbd>
       </span>
