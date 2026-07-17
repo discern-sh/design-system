@@ -151,6 +151,11 @@ format = "deno task fix"
 # its label, so the two would collide.
 # ─────────────────────────────────────────────────────────────────────────────
 
+[checks.codegen]
+provides = "generated-registry-currency"
+run = "deno task codegen"
+stage = "fix"
+
 # [checks.licenses]
 # stage    = "check"
 # run      = "./scripts/check-licenses.sh"
@@ -344,6 +349,17 @@ ensure = ["deno install --frozen"]  # converge, e.g. ["<install deps>"]
 # hand-edit (which can't tell a real gain from a quiet loosening).
 # ─────────────────────────────────────────────────────────────────────────────
 
+[standards.css_size]
+run = "[ -f dist/discern.css ] || deno task build >/dev/null 2>&1; printf 'DISCERN_METRIC css_bytes %s\\n' \"$(wc -c < dist/discern.css | tr -d ' ')\""
+limit = 140000
+direction = "down"
+metric = "css_bytes"
+# Replay the last measurement when nothing that shapes the CSS changed.
+inputs = ["src/**", "scripts/**"]
+# Headroom `discern standards --pin` leaves so ordinary token/component
+# work never trips a freshly pinned ceiling.
+margin = 4000
+
 # Coverage — keep line coverage at or above a rising floor:
 # [standards.coverage]
 # direction = "up"
@@ -435,19 +451,3 @@ in_gate = false
 # Where your project scripts live, relative to the project root. The default works with
 # no config at all; point it elsewhere (e.g. "tools/") if you prefer.
 dir = "discern/scripts"
-
-[checks.codegen]
-provides = "generated-registry-currency"
-run = "deno task codegen"
-stage = "fix"
-
-[standards.css_size]
-run = "[ -f dist/discern.css ] || deno task build >/dev/null 2>&1; printf 'DISCERN_METRIC css_bytes %s\\n' \"$(wc -c < dist/discern.css | tr -d ' ')\""
-limit = 140000
-direction = "down"
-metric = "css_bytes"
-# Replay the last measurement when nothing that shapes the CSS changed.
-inputs = ["src/**", "scripts/**"]
-# Headroom `discern standards --pin` leaves so ordinary token/component
-# work never trips a freshly pinned ceiling.
-margin = 4000
