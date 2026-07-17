@@ -84,6 +84,10 @@ as API.
   accent, and the inverse roles stay dark-on-light in both site themes.
 - **Keep examples generic.** Product claims, customer names, routes, commands,
   and bespoke artwork belong to the consumer and enter through props or slots.
+- **Ship visible changes with a preview.** For every component or Catalogue
+  change, leave the Catalogue dev server running on the worktree's deterministic
+  port (`discern identity --port`) and include the exact localhost URL in the
+  handoff, so review never requires reconstructing the development command.
 - **The published contract is guarded.** JSR versions are immutable; releases
   follow SemVer and every contract change lands in `CHANGELOG.md`. Every
   exported symbol carries documentation and the publish set is allowlisted in
