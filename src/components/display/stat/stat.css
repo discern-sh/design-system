@@ -1,0 +1,32 @@
+@layer discern.components {
+  .discern-stat {
+    display: grid;
+    gap: var(--discern-space-1);
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+  }
+  .discern-stat__label {
+    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .discern-stat__value {
+    color: var(--discern-color-ink);
+    font-family: var(--discern-font-display);
+    font-size: var(--discern-font-size-display-sm);
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--discern-font-weight-display);
+    line-height: var(--discern-leading-tight);
+  }
+  .discern-stat__context {
+    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-xs);
+  }
+  .discern-stat__context--positive {
+    color: var(--discern-color-success-deep);
+  }
+  .discern-stat__context--negative {
+    color: var(--discern-color-danger);
+  }
+}
