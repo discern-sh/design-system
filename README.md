@@ -116,7 +116,7 @@ Discern uses this adapter at build time only: the browser receives static HTML a
 
 Unminified reference points for selection behaviour:
 
-- the complete catalogue with fonts and grain emits roughly 127 KB of CSS and 293 KB of optional assets;
+- the complete catalogue with fonts and grain emits roughly 136 KB of CSS and 293 KB of optional assets;
 - a docs-sized selection with fonts only emits roughly 15 KB of CSS;
 - a core selection with no optional assets emits zero asset bytes.
 

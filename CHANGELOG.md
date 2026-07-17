@@ -4,6 +4,11 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## Unreleased
+
+- Add the Docs group, the ninth canonical group: eight components covering documentation chrome — Skip link, Docs header, Docs nav, Pager, Search palette, Anchor heading, Kbd, and Copy button. Selecting `groups: ["Docs"]` emits the full set.
+- The Search palette composes the native dialog with platform focus containment and Escape dismissal; the Copy button carries clipboard behaviour in the React adapter only. Statically rendered output stays complete without JavaScript; scroll-spy and drawer state remain consumer-wired through documented props and attributes.
+
 ## 0.3.0
 
 - Add the Navigation-group Breadcrumbs component: a labelled ordered hierarchy with linked ancestors, one explicit current page, and narrow-view overflow.
