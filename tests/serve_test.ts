@@ -1,5 +1,14 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertStringIncludes } from "@std/assert";
 import server from "../scripts/serve.ts";
+
+Deno.test("the serve task resolves the worktree's deterministic port with a fixed fallback", async () => {
+  const config = JSON.parse(
+    await Deno.readTextFile(new URL("../deno.json", import.meta.url)),
+  ) as { tasks: Record<string, string> };
+  const serve = config.tasks["serve"] ?? "";
+  assertStringIncludes(serve, "$(discern identity --port");
+  assertStringIncludes(serve, "echo 8010");
+});
 
 Deno.test("catalogue entry routes redirect to the canonical style guide URL", async () => {
   const cases = [
