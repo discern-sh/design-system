@@ -27,7 +27,7 @@
     border-inline-start: 1px solid var(--discern-color-border-strong);
     list-style: none;
   }
-  .discern-docs-nav a {
+  .discern-docs-nav ul a {
     display: block;
     padding: var(--discern-space-2) var(--discern-space-3);
     border-inline-start: 2px solid transparent;
@@ -36,14 +36,14 @@
     text-decoration: none;
     transform: translateX(-1px);
   }
-  .discern-docs-nav a:hover,
-  .discern-docs-nav a:focus-visible {
+  .discern-docs-nav ul a:hover,
+  .discern-docs-nav ul a:focus-visible {
     border-inline-start-color: var(--discern-color-accent-600);
     background: var(--discern-color-accent-100);
     color: var(--discern-color-ink);
     outline: none;
   }
-  .discern-docs-nav a[aria-current="page"] {
+  .discern-docs-nav ul a[aria-current="page"] {
     border-inline-start-color: var(--discern-color-accent-600);
     background: var(--discern-color-accent-100);
     color: var(--discern-color-ink);

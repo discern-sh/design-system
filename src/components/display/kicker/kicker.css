@@ -13,6 +13,7 @@
   .discern-kicker__index {
     color: var(--discern-color-accent-600);
     font-family: var(--discern-font-mono);
+    letter-spacing: 0.11em;
   }
   .discern-kicker__text {
     font-family: var(--discern-font-ui);
