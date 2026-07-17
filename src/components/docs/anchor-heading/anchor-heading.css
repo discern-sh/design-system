@@ -1,0 +1,37 @@
+@layer discern.components {
+  .discern-anchor-heading {
+    position: relative;
+  }
+  .discern-anchor-heading__anchor {
+    margin-inline-start: 0.35em;
+    color: var(--discern-color-accent-600);
+    font-weight: var(--discern-font-weight-body);
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity var(--discern-duration-fast) var(--discern-ease-out);
+  }
+  .discern-anchor-heading:hover .discern-anchor-heading__anchor,
+  .discern-anchor-heading__anchor:focus-visible {
+    opacity: 1;
+  }
+  .discern-anchor-heading__anchor:hover {
+    color: var(--discern-color-accent-700);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .discern-anchor-heading__anchor:focus-visible {
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: 2px;
+    border-radius: var(--discern-radius-xs);
+  }
+  @media (hover: none) {
+    .discern-anchor-heading__anchor {
+      opacity: 1;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .discern-anchor-heading__anchor {
+      transition: none;
+    }
+  }
+}

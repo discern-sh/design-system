@@ -1,0 +1,31 @@
+@layer discern.components {
+  .discern-skip-link {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .discern-skip-link:focus-visible {
+    position: fixed;
+    inset-block-start: var(--discern-space-4);
+    inset-inline-start: var(--discern-space-4);
+    z-index: 40;
+    inline-size: auto;
+    block-size: auto;
+    padding: var(--discern-space-3) var(--discern-space-5);
+    border: 1px solid var(--discern-color-accent-500);
+    border-radius: var(--discern-radius-sm);
+    background: var(--discern-color-surface);
+    box-shadow: var(--discern-shadow-pop);
+    clip-path: none;
+    color: var(--discern-color-ink);
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+    font-size: var(--discern-font-size-sm);
+    text-decoration: none;
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: 2px;
+  }
+}
