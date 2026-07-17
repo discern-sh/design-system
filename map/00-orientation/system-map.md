@@ -13,7 +13,7 @@ the rest of the documentation tree should slot into place.
 │ Tokens        tokens.ts       │    codegen    │ src/generated/               │
 │ Foundations   styles/*.css    │ ────────────► │  Registry (deps, classes)    │
 │ Components    src/components/ │  generate.ts  │  React surface               │
-│  54 folders × (css, tsx,      │               │  base styles · asset tables  │
+│  55 folders × (css, tsx,      │               │  base styles · asset tables  │
 │   meta.ts, examples, mod.ts)  │               │ styleguide/generated/        │
 │ Preset        theme/discern.ts│               │  example registry            │
 └───────────────────────────────┘               └───────┬──────────────────────┘
@@ -25,7 +25,7 @@ the rest of the documentation tree should slot into place.
         │ Selection ──► Runtime:   │   │ React 18.3+ (peer)   │  │ styleguide/ +   │
         │  discern.css             │   │ renders the class    │  │ scripts/build.ts│
         │  manifest.json (SHA-256) │   │ contract to static   │  │ + serve.ts      │
-        │  Optional Assets         │   │ HTML at build time   │  │ (dist/, :8010)  │
+        │  Optional Assets         │   │ HTML at build time   │  │ + conformance   │
         └────────────┬─────────────┘   └──────────┬───────────┘  └─────────────────┘
                      ▼                            ▼
         ┌─────────────────────────────────────────────────────┐
@@ -52,9 +52,11 @@ third-party host is ever hotlinked.
   output directory.
 - **The Adapter** runs in a consumer's build-time React render
   (`renderToStaticMarkup`); nothing of React reaches the browser.
-- **Codegen and the Catalogue build** are repo-local dev processes:
-  `deno task codegen`, `deno task build` (writes `dist/`, gitignored), and
-  `deno task serve` (local HTTP on port 8010).
+- **Codegen, the Catalogue build, and browser conformance** are repo-local dev
+  processes: `deno task codegen`, `deno task build` (writes `dist/`,
+  gitignored), and `deno task serve` (local HTTP on port 8010).
+  `deno task conformance` opens every generated example in headless Chrome for
+  accessibility, interaction, forced-colour, and visual checks.
 - **CI** (GitHub Actions) re-runs codegen for currency, the full verify task,
   and a publish dry run on every push/PR; releases publish to JSR via trusted
   publishing when a `v*` tag matching `deno.json`'s version is released.

@@ -4,6 +4,7 @@ import { Kicker } from "../src/components/display/kicker/kicker.tsx";
 import { allTokens } from "../src/tokens/tokens.ts";
 import { componentGroups } from "../src/types/component-meta.ts";
 import { registry } from "./generated/registry.ts";
+import type { RegistryEntry } from "./generated/registry.ts";
 
 function slugify(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -62,9 +63,56 @@ function TokenPreview(
   );
 }
 
+function ComponentPreview({ entry }: { readonly entry: RegistryEntry }) {
+  const { meta, Examples, conformance } = entry;
+  return (
+    <article
+      className="discern-catalogue-component"
+      id={`component-${meta.slug}`}
+      data-discern-component={meta.slug}
+      data-discern-conformance-scenarios={JSON.stringify(conformance)}
+    >
+      <header>
+        <div>
+          <h4>{meta.name}</h4>
+          <p>{meta.description}</p>
+        </div>
+        <a
+          href={`src/components/${meta.group.toLowerCase()}/${meta.slug}/${meta.slug}.tsx`}
+          target="_blank"
+        >
+          Source ↗
+        </a>
+      </header>
+      <div className="discern-catalogue-component__canvas">
+        <Examples />
+      </div>
+      {meta.accessibility?.length
+        ? (
+          <footer>
+            <strong>Accessibility</strong>
+            <ul>
+              {meta.accessibility.map((note) => <li key={note}>{note}</li>)}
+            </ul>
+          </footer>
+        )
+        : null}
+    </article>
+  );
+}
+
 function App() {
+  const parameters = useMemo(
+    () => new URLSearchParams(globalThis.location.search),
+    [],
+  );
+  const requestedTheme = parameters.get("theme");
+  const conformanceMode = parameters.get("conformance") === "1";
+  const selectedComponent = parameters.get("component");
   const [theme, setTheme] = useState<"light" | "dark">(() =>
-    localStorage.getItem("discern-styleguide-theme") === "dark"
+    requestedTheme === "dark" ||
+      (requestedTheme !== "light" &&
+        localStorage.getItem("discern-styleguide-theme") === "dark")
       ? "dark"
       : "light"
   );
@@ -84,7 +132,11 @@ function App() {
         `${meta.name} ${meta.group} ${meta.description}`.toLowerCase().includes(
           normalizedQuery,
         )
-      ), [normalizedQuery]);
+      )
+      .filter(({ meta }) =>
+        !conformanceMode || !selectedComponent ||
+        meta.slug === selectedComponent
+      ), [conformanceMode, normalizedQuery, selectedComponent]);
 
   const tokens = useMemo(
     () =>
@@ -107,6 +159,24 @@ function App() {
     setTheme(next);
     localStorage.setItem("discern-styleguide-theme", next);
   };
+
+  if (conformanceMode) {
+    return (
+      <main
+        className="discern-catalogue-conformance"
+        data-discern-root
+        data-discern-theme={theme}
+        data-discern-conformance-ready="true"
+      >
+        <h1 className="discern-visually-hidden">
+          Discern component conformance sheet
+        </h1>
+        {components.map((entry) => (
+          <ComponentPreview entry={entry} key={entry.meta.slug} />
+        ))}
+      </main>
+    );
+  }
 
   return (
     <div
@@ -267,40 +337,8 @@ function App() {
                 <h3>{group}</h3>
                 <span>{entries.length}</span>
               </div>
-              {entries.map(({ meta, Examples }) => (
-                <article
-                  className="discern-catalogue-component"
-                  id={`component-${meta.slug}`}
-                  key={meta.slug}
-                >
-                  <header>
-                    <div>
-                      <h4>{meta.name}</h4>
-                      <p>{meta.description}</p>
-                    </div>
-                    <a
-                      href={`src/components/${meta.group.toLowerCase()}/${meta.slug}/${meta.slug}.tsx`}
-                      target="_blank"
-                    >
-                      Source ↗
-                    </a>
-                  </header>
-                  <div className="discern-catalogue-component__canvas">
-                    <Examples />
-                  </div>
-                  {meta.accessibility?.length
-                    ? (
-                      <footer>
-                        <strong>Accessibility</strong>
-                        <ul>
-                          {meta.accessibility.map((note) => (
-                            <li key={note}>{note}</li>
-                          ))}
-                        </ul>
-                      </footer>
-                    )
-                    : null}
-                </article>
+              {entries.map((entry) => (
+                <ComponentPreview entry={entry} key={entry.meta.slug} />
               ))}
             </section>
           ))}

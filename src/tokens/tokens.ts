@@ -261,8 +261,8 @@ export const themeTokens: readonly ThemeToken[] = [
   ),
   themeToken(
     "--discern-color-ink-faint",
-    "oklch(56% 0.02 var(--discern-ink-hue))",
-    "oklch(60% 0.018 var(--discern-ink-hue))",
+    "oklch(53% 0.02 var(--discern-ink-hue))",
+    "oklch(67% 0.018 var(--discern-ink-hue))",
     "Tertiary ink.",
   ),
   themeToken(
@@ -390,6 +390,12 @@ export const themeTokens: readonly ThemeToken[] = [
     "oklch(96% 0.045 82)",
     "oklch(30% 0.055 82)",
     "Warning surface.",
+  ),
+  themeToken(
+    "--discern-color-warning-deep",
+    "oklch(50% 0.12 74)",
+    "oklch(86% 0.1 82)",
+    "Warning text on a tinted surface.",
   ),
   themeToken(
     "--discern-color-danger",

@@ -9,7 +9,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { generateSources } from "../scripts/generate.ts";
 import { packageManifest } from "../src/manifest.ts";
-import { Button } from "../src/react.ts";
+import { Breadcrumbs, Button } from "../src/react.ts";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
 import { semanticClass } from "../src/semantic-class.ts";
 import {
@@ -291,6 +291,7 @@ Deno.test("runtime globals are branded and defaults stay inside the opted-in roo
       const packagePath = relative(PACKAGE_ROOT, path);
       return !packagePath.startsWith("tests/") &&
         !packagePath.startsWith("dist/") &&
+        !packagePath.startsWith("node_modules/") &&
         /\.(?:css|html|json|md|ts|tsx)$/.test(path);
     });
     const generatedSources = (await walk(temp)).filter((path) =>
@@ -393,7 +394,7 @@ Deno.test("all selection and repeated emission are byte-for-byte deterministic",
       outputRoot: toFileUrl(`${second}/`),
       ...options,
     });
-    assertEquals(firstSummary.components, 54);
+    assertEquals(firstSummary.components, packageManifest.components.length);
     assertEquals(firstSummary.manifest, secondSummary.manifest);
     const paths = await outputPaths(first);
     assertEquals(paths, await outputPaths(second));
@@ -489,7 +490,15 @@ Deno.test("default blue and green themes share component CSS and preserve state 
   for (const mode of ["light", "dark"] as const) {
     const pairs = [
       ["--discern-color-ink", "--discern-color-canvas"],
+      ["--discern-color-ink-muted", "--discern-color-canvas"],
+      ["--discern-color-ink-faint", "--discern-color-canvas"],
+      ["--discern-color-ink-faint", "--discern-color-surface"],
+      ["--discern-color-ink-faint", "--discern-color-surface-sunken"],
+      ["--discern-color-ink-faint", "--discern-color-accent-100"],
+      ["--discern-color-accent-700", "--discern-color-accent-100"],
       ["--discern-color-accent-800", "--discern-color-accent-100"],
+      ["--discern-color-success-deep", "--discern-color-success-soft"],
+      ["--discern-color-warning-deep", "--discern-color-warning-soft"],
     ] as const;
     for (const [foreground, background] of pairs) {
       assert(
@@ -526,6 +535,22 @@ Deno.test("default blue and green themes share component CSS and preserve state 
   assertStringIncludes(foundation, "@media (forced-colors: active)");
   assertStringIncludes(foundation, ":focus-visible");
   assertStringIncludes(foundation, "CanvasText");
+});
+
+Deno.test("catalogue chrome cannot leak descendant styles into component examples", async () => {
+  const source = await Deno.readTextFile(
+    join(PACKAGE_ROOT, "styleguide", "styleguide.css"),
+  );
+  const selectors = [...source.matchAll(/([^{}]+)\{/g)]
+    .flatMap((match) => (match[1] ?? "").split(","))
+    .map((selector) => selector.trim())
+    .filter((selector) => !selector.startsWith("@"));
+  assertEquals(
+    selectors.filter((selector) =>
+      /\.discern-catalogue-component\s+(?!>)/.test(selector)
+    ),
+    [],
+  );
 });
 
 Deno.test("neutral entrypoints work in an external cached-only Deno project", async () => {
@@ -662,4 +687,17 @@ Deno.test("semantic HTML and React adapters share the public class contract", ()
     'class="discern-button discern-button--secondary discern-button--md"',
   );
   assertMatch(html, /^<button/);
+
+  const breadcrumbs = renderToStaticMarkup(
+    createElement(Breadcrumbs, {
+      label: "Page trail",
+      items: [{ label: "Library", href: "/library" }],
+      current: "Navigation",
+    }),
+  );
+  assertMatch(breadcrumbs, /^<nav/);
+  assertStringIncludes(breadcrumbs, 'aria-label="Page trail"');
+  assertStringIncludes(breadcrumbs, '<a href="/library">Library</a>');
+  assertStringIncludes(breadcrumbs, 'aria-hidden="true">/</span>');
+  assertStringIncludes(breadcrumbs, 'aria-current="page">Navigation</span>');
 });

@@ -27,7 +27,7 @@
   .discern-banner--warning {
     --discern-banner-bg: var(--discern-color-warning-soft);
     --discern-banner-border: color-mix(in oklab, var(--discern-color-warning) 36%, transparent);
-    --discern-banner-text: var(--discern-color-warning);
+    --discern-banner-text: var(--discern-color-warning-deep);
   }
   .discern-banner--danger {
     --discern-banner-bg: var(--discern-color-danger-soft);

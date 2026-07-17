@@ -53,13 +53,15 @@ export const MetricsBand: DiscernComponent<HTMLElement, MetricsBandProps> =
           <dl className="discern-metrics-band__list">
             {items.map((item, index) => (
               <div key={index}>
-                <dd>{item.value}</dd>
                 <dt>{item.label}</dt>
+                <dd className="discern-metrics-band__value">
+                  {item.value}
+                </dd>
                 {item.detail
                   ? (
-                    <div className="discern-metrics-band__detail">
+                    <dd className="discern-metrics-band__detail">
                       {item.detail}
-                    </div>
+                    </dd>
                   )
                   : null}
               </div>

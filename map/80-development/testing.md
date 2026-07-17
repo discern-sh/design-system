@@ -11,10 +11,11 @@ explains how to write tests that pass it and how to run them while iterating.
 The gate's `test` capability is `deno task test`:
 
 ```sh
-deno test --config deno.json --allow-read --allow-write --allow-env --allow-run tests
+deno task test
 ```
 
-Two suites live under [`tests/`](../../tests/):
+It runs `deno task test:unit`, then `deno task conformance`. Three unit suites
+live under [`tests/`](../../tests/):
 
 - [`design_system_test.ts`](../../tests/design_system_test.ts) — the package
   contract: namespace scoping, metadata auto-enrolment, Selection resolution,
@@ -23,6 +24,8 @@ Two suites live under [`tests/`](../../tests/):
 - [`release_test.ts`](../../tests/release_test.ts) — the publish contract:
   allowlisted publish set, module-graph containment, no import attributes,
   neutral-consumer artifact, documentation coverage, release identity coherence.
+- [`serve_test.ts`](../../tests/serve_test.ts) — canonical Catalogue routing and
+  path mapping.
 
 Cases run sequentially in one process (no `--parallel`), so ordering hazards
 don't apply here — but every test still owns its state: fixtures are built in
@@ -34,11 +37,27 @@ suite shells `deno publish --dry-run --allow-dirty`. The external fixtures run
 `--cached-only`, so tests need a warm cache (`deno install --frozen` first) but
 **no network at test time** — a test that fetches at runtime is a defect.
 
+The conformance pass builds and serves the real Catalogue on an ephemeral local
+port, then drives installed Chrome through every generated Component example.
+Every example is scanned in light and dark against automated WCAG A/AA rules.
+Typed `conformance` exports beside interactive `*.examples.tsx` modules add
+keyboard, focus, relationship, and state-change paths without a second Component
+manifest. The pass also checks focused controls under forced colours and writes
+light/dark narrow/wide plus forced-colour review sheets to `dist/conformance/`.
+It uses the installed Chrome channel by default; `DISCERN_CHROME_PATH` selects a
+non-standard executable.
+
 Run one test while iterating:
 
 ```sh
 deno test --config deno.json --allow-read --allow-write --allow-env --allow-run \
   --filter "all selection and repeated emission are byte-for-byte deterministic" tests
+```
+
+Run only the browser harness while iterating:
+
+```sh
+deno task conformance
 ```
 
 ## How tests are written
@@ -49,7 +68,8 @@ deno test --config deno.json --allow-read --allow-write --allow-env --allow-run 
   extending those assertions over mocking anything — nothing here is mocked.
 - **Class-level invariants, not instance checks.** Tests walk all Component
   folders and generated surfaces so a new Component auto-enrols in every
-  guarantee (namespace, metadata, docs coverage) without a new test.
+  guarantee (namespace, metadata, docs coverage, browser accessibility, and
+  review rendering) without a new test.
 - **Consumer-contract changes get a fixture.** Anything promised to external
   consumers is proved from an _external_ temp project importing only documented
   exports — the neutral fixture declares no React dependency; the React fixture

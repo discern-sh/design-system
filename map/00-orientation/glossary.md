@@ -27,7 +27,7 @@ One self-contained folder under
 [`src/components/<group>/<slug>/`](../../src/components/) owning its
 implementation (`<slug>.tsx`), stylesheet (`<slug>.css`), Metadata
 (`<slug>.meta.ts`), examples (`<slug>.examples.tsx`), and `mod.ts`. There are
-54, and every surface that lists them is generated from their Metadata.
+55, and every surface that lists them is generated from their Metadata.
 
 ### Selection
 

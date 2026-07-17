@@ -1,6 +1,6 @@
 # Components
 
-The 54 Component folders under [`src/components/`](../../src/components/) —
+The 55 Component folders under [`src/components/`](../../src/components/) —
 anatomy (CSS, implementation, Metadata, examples, `mod.ts`), the eight Groups,
 Owned Classes, and the authoring rules for adding or changing a Component.
 

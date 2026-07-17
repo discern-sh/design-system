@@ -37,7 +37,7 @@
   .discern-badge--warning {
     --discern-badge-bg: var(--discern-color-warning-soft);
     --discern-badge-border: color-mix(in oklab, var(--discern-color-warning) 42%, transparent);
-    --discern-badge-text: var(--discern-color-warning);
+    --discern-badge-text: var(--discern-color-warning-deep);
   }
   .discern-badge--danger {
     --discern-badge-bg: var(--discern-color-danger-soft);

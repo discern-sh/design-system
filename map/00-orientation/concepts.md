@@ -18,7 +18,7 @@ consumer selects**. Three building blocks carry everything:
 
 - **Tokens** — the named public custom properties (primitive values, semantic
   roles, and the branded Preset) that all styling resolves through.
-- **Components** — 54 self-contained folders, each owning its CSS,
+- **Components** — 55 self-contained folders, each owning its CSS,
   implementation, examples, and Metadata, arranged in eight Groups.
 - **The Runtime** — the emitted output set (`discern.css`, a Manifest, and any
   requested Optional Assets) that the Emitter writes into a consumer's build

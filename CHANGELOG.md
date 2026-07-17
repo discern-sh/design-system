@@ -10,6 +10,17 @@ lint, strict type-checks, package tests, the catalogue build, generated-output
 currency, and a publish dry run against the allowlisted artifact — and published
 through JSR trusted publishing from CI.
 
+## Unreleased
+
+- Add the Navigation-group Breadcrumbs component: a labelled ordered hierarchy
+  with linked ancestors, one explicit current page, and narrow-view overflow.
+- Add catalogue-driven browser conformance: every component example auto-enrols
+  in light/dark accessibility scans and review sheets, with co-located
+  interaction scenarios plus reduced-motion and forced-colour checks.
+- Strengthen tertiary-ink contrast across semantic surfaces, add the
+  `--discern-color-warning-deep` text role, and correct definition-list and
+  figure-example semantics uncovered by the browser gate.
+
 ## 0.2.0
 
 - Set up discern, ensuring the quality of the code in its own design system.

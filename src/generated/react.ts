@@ -27,6 +27,7 @@ export * from "../components/feedback/toast/mod.ts";
 export * from "../components/feedback/tooltip/mod.ts";
 export * from "../components/feedback/dialog/mod.ts";
 export * from "../components/navigation/tabs/mod.ts";
+export * from "../components/navigation/breadcrumbs/mod.ts";
 export * from "../components/marketing/site-header/mod.ts";
 export * from "../components/marketing/hero-block/mod.ts";
 export * from "../components/marketing/logo-cloud/mod.ts";

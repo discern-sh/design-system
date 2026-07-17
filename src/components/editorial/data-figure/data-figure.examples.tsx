@@ -18,6 +18,7 @@ export default function DataFigureExamples() {
             gap: "1rem",
             minHeight: "13rem",
           }}
+          role="img"
           aria-label="Example bar chart"
         >
           {[42, 58, 49, 76, 91].map((height, index) => (

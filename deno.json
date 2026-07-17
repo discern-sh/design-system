@@ -54,11 +54,13 @@
     "build": "deno run --config deno.json --allow-read --allow-write --allow-run --allow-env=NODE_ENV scripts/build.ts",
     "check": "deno fmt --config deno.json --check . && deno task lint && deno task typecheck",
     "check:catalogue": "deno check --config deno.json styleguide/app.tsx",
+    "conformance": "deno run --config deno.json -A scripts/conformance.ts",
     "lint": "deno lint --no-config src styleguide scripts tests",
-    "typecheck": "deno check --config deno.json src/mod.ts src/manifest.ts src/runtime.ts src/react.ts src/theme/discern.ts scripts/build.ts scripts/generate.ts",
+    "typecheck": "deno check --config deno.json src/mod.ts src/manifest.ts src/runtime.ts src/react.ts src/theme/discern.ts scripts/build.ts scripts/conformance.ts scripts/generate.ts",
     "fix": "deno fmt --config deno.json . && deno lint --no-config --fix src styleguide scripts tests",
     "serve": "deno task build && deno serve --host 127.0.0.1 --allow-read --port 8010 scripts/serve.ts",
-    "test": "deno test --config deno.json --allow-read --allow-write --allow-env --allow-run tests",
+    "test": "deno task test:unit && deno task conformance",
+    "test:unit": "deno test --config deno.json --allow-read --allow-write --allow-env --allow-run tests",
     "verify": "deno task check && deno task build && deno task check:catalogue && deno task test"
   },
   "fmt": {

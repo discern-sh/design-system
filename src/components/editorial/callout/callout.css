@@ -2,6 +2,7 @@
   .discern-callout {
     --discern-callout-edge: var(--discern-color-accent-500);
     --discern-callout-fill: var(--discern-color-accent-100);
+    --discern-callout-text: var(--discern-color-accent-700);
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     gap: var(--discern-space-4);
@@ -18,10 +19,12 @@
   .discern-callout--warning {
     --discern-callout-edge: var(--discern-color-warning);
     --discern-callout-fill: var(--discern-color-warning-soft);
+    --discern-callout-text: var(--discern-color-warning-deep);
   }
   .discern-callout--success {
     --discern-callout-edge: var(--discern-color-success);
     --discern-callout-fill: var(--discern-color-success-soft);
+    --discern-callout-text: var(--discern-color-success-deep);
   }
   .discern-callout__icon {
     display: grid;
@@ -30,14 +33,14 @@
     block-size: 2.25rem;
     border: 1px solid var(--discern-callout-edge);
     border-radius: 50%;
-    color: var(--discern-callout-edge);
+    color: var(--discern-callout-text);
     font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
   }
   .discern-callout__eyebrow {
     display: block;
     margin-block-end: var(--discern-space-1);
-    color: var(--discern-callout-edge);
+    color: var(--discern-callout-text);
     font-family: var(--discern-font-ui);
     font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-xs);
