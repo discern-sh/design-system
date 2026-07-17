@@ -38,7 +38,7 @@ function safePath(url: URL): URL | null {
 export default {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
-    if (url.pathname === "/style-guide") {
+    if (url.pathname === "/" || url.pathname === "/style-guide") {
       url.pathname = "/style-guide/";
       return Response.redirect(url, 307);
     }
