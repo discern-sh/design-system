@@ -1,7 +1,6 @@
 # System map
 
-Bird's-eye view of how discern-design-system fits together. Read this once and
-the rest of the documentation tree should slot into place.
+Bird's-eye view of how discern-design-system fits together. Read this once and the rest of the documentation tree should slot into place.
 
 ---
 
@@ -36,37 +35,23 @@ the rest of the documentation tree should slot into place.
         └─────────────────────────────────────────────────────┘
 ```
 
-Arrows are build-time data flow. Nothing flows at browser runtime: the browser
-receives static HTML plus the emitted CSS, and no registry, cache, or
-third-party host is ever hotlinked.
+Arrows are build-time data flow. Nothing flows at browser runtime: the browser receives static HTML plus the emitted CSS, and no registry, cache, or third-party host is ever hotlinked.
 
 ---
 
 ## Where each piece runs
 
-- **Everything ships as a library** — the JSR package
-  `@discern-sh/design-system`. There are no services and no persistent state;
-  the only state anywhere is files in the consumer's build output.
-- **The Emitter** runs inside a consumer's build (Deno or Node — it writes via
-  `node:fs/promises`). Under Deno it needs read and write permission for its
-  output directory.
-- **The Adapter** runs in a consumer's build-time React render
-  (`renderToStaticMarkup`); nothing of React reaches the browser.
-- **Codegen, the Catalogue build, and browser conformance** are repo-local dev
-  processes: `deno task codegen`, `deno task build` (writes `dist/`,
-  gitignored), and `deno task serve` (local HTTP on port 8010).
-  `deno task conformance` opens every generated example in headless Chrome for
-  accessibility, interaction, forced-colour, and visual checks.
-- **CI** (GitHub Actions) re-runs codegen for currency, the full verify task,
-  and a publish dry run on every push/PR; releases publish to JSR via trusted
-  publishing when a `v*` tag matching `deno.json`'s version is released.
+- **Everything ships as a library** — the JSR package `@discern-sh/design-system`. There are no services and no persistent state; the only state anywhere is files in the consumer's build output.
+- **The Emitter** runs inside a consumer's build (Deno or Node — it writes via `node:fs/promises`). Under Deno it needs read and write permission for its output directory.
+- **The Adapter** runs in a consumer's build-time React render (`renderToStaticMarkup`); nothing of React reaches the browser.
+- **Codegen, the Catalogue build, and browser conformance** are repo-local dev processes: `deno task codegen`, `deno task build` (writes `dist/`, gitignored), and `deno task serve` (local HTTP on port 8010). `deno task conformance` opens every generated example in headless Chrome for accessibility, interaction, forced-colour, and visual checks.
+- **CI** (GitHub Actions) re-runs codegen for currency, the full verify task, and a publish dry run on every push/PR; releases publish to JSR via trusted publishing when a `v*` tag matching `deno.json`'s version is released.
 
 ---
 
 ## How the map relates to the subtrees
 
-The numbered subtrees are proposed but not yet written — filling them is tracked
-in [`discern/TODO.md`](../../discern/TODO.md). `80-development/` exists today.
+The numbered subtrees are proposed but not yet written — filling them is tracked in [`discern/TODO.md`](../../discern/TODO.md). `80-development/` exists today.
 
 | Region of the map             | Documented in            |
 | ----------------------------- | ------------------------ |

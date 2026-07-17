@@ -1,10 +1,6 @@
 # Discern design system
 
-The design system behind [discern.sh](https://discern.sh): an opinionated,
-framework-neutral visual system for Deno sites. It ships semantic tokens,
-light/dark themes, scoped component CSS under one `discern` namespace, an
-optional React adapter for static rendering, and a deterministic runtime emitter
-that outputs only what a consumer selects.
+The design system behind [discern.sh](https://discern.sh): an opinionated, framework-neutral visual system for Deno sites. It ships semantic tokens, light/dark themes, scoped component CSS under one `discern` namespace, an optional React adapter for static rendering, and a deterministic runtime emitter that outputs only what a consumer selects.
 
 ```sh
 deno add jsr:@discern-sh/design-system
@@ -21,15 +17,11 @@ deno add jsr:@discern-sh/design-system
 | `@discern-sh/design-system/theme/discern` | Default branded blue preset                                                               |
 | `@discern-sh/design-system/react`         | Optional React components and their public prop types                                     |
 
-Only `./react` resolves React. The package keeps React and React DOM as
-catalogue development dependencies and peer dependencies, while its root,
-manifest, runtime, token, and theme graphs do not import them.
+Only `./react` resolves React. The package keeps React and React DOM as catalogue development dependencies and peer dependencies, while its root, manifest, runtime, token, and theme graphs do not import them.
 
 ## Root, theme, and semantic HTML
 
-Generated foundations apply only inside an opted-in boundary. Put
-`data-discern-root` on that boundary and choose light or dark roles with
-`data-discern-theme`:
+Generated foundations apply only inside an opted-in boundary. Put `data-discern-root` on that boundary and choose light or dark roles with `data-discern-theme`:
 
 ```html
 <main data-discern-root data-discern-theme="light">
@@ -39,20 +31,13 @@ Generated foundations apply only inside an opted-in boundary. Put
 </main>
 ```
 
-Load the emitted `discern.css` before consumer composition styles. Semantic HTML
-does not require React or a browser runtime. Public classes, custom properties,
-data attributes, layers, and keyframes use the `discern` namespace. Consumer
-styles may add their own composition class, but must not target a component's
-`ownedClasses` from `manifest.json`.
+Load the emitted `discern.css` before consumer composition styles. Semantic HTML does not require React or a browser runtime. Public classes, custom properties, data attributes, layers, and keyframes use the `discern` namespace. Consumer styles may add their own composition class, but must not target a component's `ownedClasses` from `manifest.json`.
 
-Core typography uses documented system fallbacks. Selecting the optional font
-pack changes the public font-role tokens without changing component CSS.
+Core typography uses documented system fallbacks. Selecting the optional font pack changes the public font-role tokens without changing component CSS.
 
 ## Emit a selected runtime
 
-The emitter accepts explicit component IDs, canonical groups, or the explicit
-`all` catalogue selection. It resolves dependencies from generated component
-metadata and writes stable output order to a dedicated directory:
+The emitter accepts explicit component IDs, canonical groups, or the explicit `all` catalogue selection. It resolves dependencies from generated component metadata and writes stable output order to a dedicated directory:
 
 ```ts
 import { emitDesignSystemRuntime } from "@discern-sh/design-system/runtime";
@@ -67,44 +52,29 @@ const result = await emitDesignSystemRuntime({
 console.log(result.manifest.selection.resolvedComponents);
 ```
 
-`outputRoot` must end in `/` and must be dedicated to the runtime because each
-emission replaces it. Every selection writes:
+`outputRoot` must end in `/` and must be dedicated to the runtime because each emission replaces it. Every selection writes:
 
-- `discern.css`, containing tokens, the selected theme, root-scoped foundations,
-  utilities, and dependency-ordered component CSS;
-- `manifest.json`, containing schema version, requested and resolved selections,
-  canonical groups, component dependencies, owned classes, public token names,
-  output paths, media types, byte sizes, and SHA-256 integrity; and
+- `discern.css`, containing tokens, the selected theme, root-scoped foundations, utilities, and dependency-ordered component CSS;
+- `manifest.json`, containing schema version, requested and resolved selections, canonical groups, component dependencies, owned classes, public token names, output paths, media types, byte sizes, and SHA-256 integrity; and
 - only the optional assets requested by the consumer.
 
-Use `{ all: true }` for the complete catalogue. Repeated emissions with the same
-inputs are byte-for-byte identical. Emitted files are build inputs for your own
-static output; browsers should never hotlink the registry or another third-party
-host.
+Use `{ all: true }` for the complete catalogue. Repeated emissions with the same inputs are byte-for-byte identical. Emitted files are build inputs for your own static output; browsers should never hotlink the registry or another third-party host.
 
-The emitter writes through `node:fs/promises`, so it runs on Deno and Node.js
-with identical output. Under Deno, grant it read and write permission for the
-output directory.
+The emitter writes through `node:fs/promises`, so it runs on Deno and Node.js with identical output. Under Deno, grant it read and write permission for the output directory.
 
 ## Optional assets
 
 No asset is copied by default. Asset selections are independent:
 
-- `fonts` emits `fonts.css`, four stable WOFF2 filenames, and all three SIL Open
-  Font Licence texts;
+- `fonts` emits `fonts.css`, four stable WOFF2 filenames, and all three SIL Open Font Licence texts;
 - `grain` emits `grain.css` and `textures/grain.png`;
 - selecting either one never copies the other.
 
-Component CSS has no hidden texture dependency. The core `.discern-grain-wash`
-utility remains useful as a gradient without the optional texture; `grain.css`
-adds the texture only when a consumer chooses it. Consumers should read emitted
-asset paths from the manifest rather than infer a cache or registry location.
+Component CSS has no hidden texture dependency. The core `.discern-grain-wash` utility remains useful as a gradient without the optional texture; `grain.css` adds the texture only when a consumer chooses it. Consumers should read emitted asset paths from the manifest rather than infer a cache or registry location.
 
 ## Custom themes
 
-Semantic component roles are separate from the default blue preset. The runtime
-uses that preset unless `theme: "none"` is requested. A consumer can override
-public tokens in its own layer without forking a component stylesheet:
+Semantic component roles are separate from the default blue preset. The runtime uses that preset unless `theme: "none"` is requested. A consumer can override public tokens in its own layer without forking a component stylesheet:
 
 ```css
 @layer discern.consumer {
@@ -123,20 +93,13 @@ public tokens in its own layer without forking a component stylesheet:
 }
 ```
 
-The distinct success hue is deliberate: a green accent must not erase the
-difference between brand actions and successful outcomes. Automated package
-tests cover light/dark text contrast, accent/success/warning/danger separation,
-reduced-motion rules, forced-colour focus outlines, and unchanged component CSS.
-Manual browser review still checks visible focus shape and status recognition in
-the consumer's actual type, layout, zoom, and operating-system colour settings.
+The distinct success hue is deliberate: a green accent must not erase the difference between brand actions and successful outcomes. Automated package tests cover light/dark text contrast, accent/success/warning/danger separation, reduced-motion rules, forced-colour focus outlines, and unchanged component CSS. Manual browser review still checks visible focus shape and status recognition in the consumer's actual type, layout, zoom, and operating-system colour settings.
 
-Inverse surface and ink roles remain dark-on-light in purpose across both site
-themes; they do not invert with the ordinary canvas and ink roles.
+Inverse surface and ink roles remain dark-on-light in purpose across both site themes; they do not invert with the ordinary canvas and ink roles.
 
 ## Optional React adapter
 
-React consumers import only the explicit adapter and can render the same class
-contract to static HTML:
+React consumers import only the explicit adapter and can render the same class contract to static HTML:
 
 ```tsx
 import { renderToStaticMarkup } from "react-dom/server";
@@ -147,17 +110,13 @@ const html = renderToStaticMarkup(
 );
 ```
 
-Discern uses this adapter at build time only: the browser receives static HTML
-and CSS, with no React bundle, hydration, or implicit component behaviour.
-Stateful catalogue examples require a consumer-owned browser strategy if they
-are used outside the catalogue.
+Discern uses this adapter at build time only: the browser receives static HTML and CSS, with no React bundle, hydration, or implicit component behaviour. Stateful catalogue examples require a consumer-owned browser strategy if they are used outside the catalogue.
 
 ## Output sizes
 
 Unminified reference points for selection behaviour:
 
-- the complete catalogue with fonts and grain emits roughly 127 KB of CSS and
-  293 KB of optional assets;
+- the complete catalogue with fonts and grain emits roughly 127 KB of CSS and 293 KB of optional assets;
 - a docs-sized selection with fonts only emits roughly 15 KB of CSS;
 - a core selection with no optional assets emits zero asset bytes.
 
@@ -168,47 +127,23 @@ deno install
 deno task verify
 ```
 
-`deno task verify` runs formatting, lint, type-checks, the catalogue build, and
-the unit and real-browser conformance tests. `deno task serve` builds and serves
-the local component catalogue. Run `deno task codegen` after changing component
-metadata, component CSS, component imports, or package assets; do not edit
-`src/generated/` or `styleguide/generated/` by hand.
+`deno task verify` runs formatting, lint, type-checks, the catalogue build, and the unit and real-browser conformance tests. `deno task serve` builds and serves the local component catalogue. Run `deno task codegen` after changing component metadata, component CSS, component imports, or package assets; do not edit `src/generated/` or `styleguide/generated/` by hand.
 
-`deno task test` creates a temporary external Deno project. Its neutral fixture
-declares no React dependency, imports only documented package exports, emits a
-runtime, and is exercised again with `deno run --cached-only`. A second fixture
-adds the React peer contract and renders static HTML through `./react`. Neither
-fixture reaches into `dist/`, relies on a global Deno-cache path, uses
-`--unstable-raw-imports`, or fetches an asset at runtime.
+`deno task test` creates a temporary external Deno project. Its neutral fixture declares no React dependency, imports only documented package exports, emits a runtime, and is exercised again with `deno run --cached-only`. A second fixture adds the React peer contract and renders static HTML through `./react`. Neither fixture reaches into `dist/`, relies on a global Deno-cache path, uses `--unstable-raw-imports`, or fetches an asset at runtime.
 
-`deno task conformance` builds the Catalogue and opens it in headless Chrome.
-Every generated example auto-enrols in light and dark WCAG scans; examples may
-export typed keyboard/focus scenarios beside their fixture. Reduced-motion,
-forced-colour focus visibility, and narrow/wide rendering are exercised too.
-Five review sheets are written under `dist/conformance/`. The task uses an
-installed Google Chrome by default; set `DISCERN_CHROME_PATH` when Chrome lives
-at a non-standard path.
+`deno task conformance` builds the Catalogue and opens it in headless Chrome. Every generated example auto-enrols in light and dark WCAG scans; examples may export typed keyboard/focus scenarios beside their fixture. Reduced-motion, forced-colour focus visibility, and narrow/wide rendering are exercised too. Five review sheets are written under `dist/conformance/`. The task uses an installed Google Chrome by default; set `DISCERN_CHROME_PATH` when Chrome lives at a non-standard path.
 
 ### Authoring rules
 
 - Change token values in `src/tokens/tokens.ts`; do not edit emitted CSS.
-- Every component folder owns its implementation, CSS, metadata, examples, and
-  `mod.ts`. Metadata and group order generate the runtime registry, React export
-  surface, catalogue registry, and dependency graph.
-- Keep examples generic. Product claims, customer names, routes, commands, and
-  bespoke artwork belong to the consumer and enter components through props or
-  slots.
-- Preserve `--discern-font-size-xs` as the authored interface-text floor and
-  pair the UI font role with its central OpenType feature set.
+- Every component folder owns its implementation, CSS, metadata, examples, and `mod.ts`. Metadata and group order generate the runtime registry, React export surface, catalogue registry, and dependency graph.
+- Keep examples generic. Product claims, customer names, routes, commands, and bespoke artwork belong to the consumer and enter components through props or slots.
+- Preserve `--discern-font-size-xs` as the authored interface-text floor and pair the UI font role with its central OpenType feature set.
 
 ## Versioning
 
-Releases follow SemVer and JSR versions are immutable. Before 1.0, minor
-versions may still change the public contract; the changelog records every
-breaking change.
+Releases follow SemVer and JSR versions are immutable. Before 1.0, minor versions may still change the public contract; the changelog records every breaking change.
 
 ## License
 
-Apache-2.0 for the code. The bundled fonts remain under their own SIL Open Font
-Licence terms in `assets/licenses/`, and those licence texts accompany every
-emitted font selection.
+Apache-2.0 for the code. The bundled fonts remain under their own SIL Open Font Licence terms in `assets/licenses/`, and those licence texts accompany every emitted font selection.

@@ -64,6 +64,7 @@
     "verify": "deno task check && deno task build && deno task check:catalogue && deno task test"
   },
   "fmt": {
+    "proseWrap": "never",
     "exclude": [
       ".idea/",
       "dist/",
