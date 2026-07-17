@@ -29,9 +29,4 @@
       opacity: 1;
     }
   }
-  @media (prefers-reduced-motion: reduce) {
-    .discern-anchor-heading__anchor {
-      transition: none;
-    }
-  }
 }

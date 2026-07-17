@@ -34,9 +34,4 @@
     background: var(--discern-color-success-soft);
     color: var(--discern-color-success-deep);
   }
-  @media (prefers-reduced-motion: reduce) {
-    .discern-copy-button {
-      transition: none;
-    }
-  }
 }

@@ -701,3 +701,36 @@ Deno.test("semantic HTML and React adapters share the public class contract", ()
   assertStringIncludes(breadcrumbs, 'aria-hidden="true">/</span>');
   assertStringIncludes(breadcrumbs, 'aria-current="page">Navigation</span>');
 });
+
+Deno.test("every custom property the emitted css references is defined by the emission", async () => {
+  const temp = await Deno.makeTempDir();
+  try {
+    await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${temp}/`),
+      all: true,
+      assets: ["fonts", "grain"],
+    });
+    const css = await Deno.readTextFile(join(temp, "discern.css"));
+    const defined = new Set(
+      [...css.matchAll(/(--discern-[a-z0-9-]+)\s*:/g)].map((match) =>
+        match[1] ?? ""
+      ),
+    );
+    // A reference carrying a fallback is a deliberate consumer knob (the
+    // layout gap properties); a bare reference must resolve to a definition.
+    const referenced = new Set(
+      [...css.matchAll(/var\(\s*(--discern-[a-z0-9-]+)\s*([,)])/g)]
+        .filter((match) => match[2] === ")")
+        .map((match) => match[1] ?? ""),
+    );
+    const unresolved = [...referenced].filter((name) => !defined.has(name))
+      .toSorted();
+    assertEquals(
+      unresolved,
+      [],
+      "component css references custom properties no token, theme, or foundation defines",
+    );
+  } finally {
+    await Deno.remove(temp, { recursive: true });
+  }
+});
