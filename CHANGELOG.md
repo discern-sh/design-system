@@ -4,7 +4,7 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
-## Unreleased
+## 0.4.1
 
 - Scope the Docs nav's item styling to its lists, so a composed section-title link — a linked Kicker, for example — keeps its own component styling instead of inheriting item padding, borders, and hover states.
 - Give the Kicker index its own explicit letter-spacing, so a consumer that tightens the label's tracking does not silently strip the index's.
