@@ -207,3 +207,25 @@ source edits measures whatever the last build wrote.
 **Fix.** Trust the number in `discern done`. For a standalone measurement, run
 `deno task build` first (or delete `dist/discern.css` and let the standard's run
 rebuild).
+
+### The main checkout's `node_modules` lags a landed dependency
+
+**Symptom.** In the **main checkout**, `discern done` fails its typecheck stage
+with
+`error: Could not resolve "<package>", but found it in a package.json. Deno
+expects the node_modules/ directory to be up to date. Did you forget to run
+'deno install'?`
+— right after work landed on `main`, even though the same gate was green in the
+worktree that built that work.
+
+**Cause.** Worktrees converge dependencies on every pass —
+`[worktree.setup].ensure` runs `deno install --frozen` at creation, on
+session-start re-entry, and after `discern update`. The main checkout has no
+such pass: landing a branch that added an npm dependency fast-forwards `main`
+without installing anything, so the main checkout's `node_modules/` no longer
+matches the lockfile. This is the main-checkout variant of "A merge pulled in a
+new dependency" above.
+
+**Fix.** Run `deno install --frozen` in the main checkout, then re-run the gate.
+Any time `main` moves under you (a landed branch, a pull), reinstall before
+gating.
