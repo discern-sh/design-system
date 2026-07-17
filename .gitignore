@@ -1,5 +1,7 @@
 .DS_Store
 node_modules/
+.idea/php.xml
+.idea/inspectionProfiles/Project_Default.xml
 dist/*
 !dist/.gitkeep
 styleguide/generated/*
