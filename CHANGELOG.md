@@ -7,6 +7,8 @@ Each release is cut from a green run of the full release gate — formatting, li
 ## Unreleased
 
 - Add the Docs group, the ninth canonical group: eight components covering documentation chrome — Skip link, Docs header, Docs nav, Pager, Search palette, Anchor heading, Kbd, and Copy button. Selecting `groups: ["Docs"]` emits the full set.
+- Add five generally useful components: Table and Stat (Display), Meter and Empty state (Feedback), and Theme toggle (Core).
+- Replace the raw catalogue-size standard with two durable ones: css_density holds emitted bytes per component stylesheet, and docs_selection budgets the bytes the documentation selection ships to consumers.
 - The Search palette composes the native dialog with platform focus containment and Escape dismissal; the Copy button carries clipboard behaviour in the React adapter only. Statically rendered output stays complete without JavaScript; scroll-spy and drawer state remain consumer-wired through documented props and attributes.
 
 ## 0.3.0

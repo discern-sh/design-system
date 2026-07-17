@@ -98,9 +98,9 @@ refresh` immediately rewrites them back) — the two sides loop forever.
 
 **Fix.** Keep all three listed in `fmt.exclude` in [`deno.json`](../../deno.json) (they are, since setup). Edit `discern/guidance.md` (which fmt _does_ format), run `discern refresh`, and never hand-edit or format the compiled copies. Any newly added compiled agent file joins the exclude list in the same change.
 
-### The `css_size` standard measures a stale `dist/discern.css`
+### The `css_density` standard measures a stale `dist/discern.css`
 
-**Symptom.** The `css_size` number does not move when you expected it to (or a standalone `discern standards` run reports a size that ignores your change).
+**Symptom.** The `css_density` number does not move when you expected it to (or a standalone `discern standards` run reports a size that ignores your change).
 
 **Cause.** The measurement reads `dist/discern.css` and only builds when the file is _missing_, not when it is stale. Inside `discern done` this is always fresh — the build stage runs first — but a standalone `discern standards` after source edits measures whatever the last build wrote.
 

@@ -369,6 +369,17 @@ inputs = ["src/**", "scripts/**"]
 # work never trips a freshly pinned ceiling.
 margin = 100
 
+# The consumer-facing raw budget: the bytes a documentation site receives
+# from `groups: ["Docs"]`. Unlike the full catalogue, this number does not
+# grow when unrelated groups gain components — it is the true shipped cost.
+[standards.docs_selection]
+run = "deno run --config deno.json --allow-read --allow-write scripts/measure.ts"
+limit = 25000
+direction = "down"
+metric = "docs_selection_bytes"
+inputs = ["src/**", "scripts/**"]
+margin = 1000
+
 # Suppression directives stay at zero: the strict lint/type surface holds
 # because nothing is ever silenced. Counts deno-lint-ignore, deno-fmt-ignore,
 # @ts-ignore, and @ts-expect-error across authored (non-generated) sources.

@@ -37,7 +37,7 @@ Rules that bite:
 
 1. `deno task codegen` — regenerates the registry, React surface, base styles, and catalogue registry. The new component now exists on every surface.
 2. `discern prepare` while iterating; `discern done` before calling it done. The Catalogue build type-checks your examples, and every example auto-enrols in the light and dark accessibility scans. Add `export const conformance = [...]` scenarios (see `styleguide/conformance.ts`) when the component has keyboard or focus behaviour worth pinning.
-3. Watch the `css_size` standard in the gate output — a new component grows `dist/discern.css`, and the ceiling is deliberate. A heavy component is a design smell before it is a budget problem.
+3. Watch the css standards in the gate output: `css_density` holds emitted bytes per component stylesheet, so a heavy component raises the rate it is judged by, and `docs_selection` budgets the documentation selection. A heavy component is a design smell before it is a budget problem.
 
 ## 4. Ship it
 

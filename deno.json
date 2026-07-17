@@ -56,7 +56,7 @@
     "check:catalogue": "deno check --config deno.json styleguide/app.tsx",
     "conformance": "deno run --config deno.json -A scripts/conformance.ts",
     "lint": "deno lint --no-config src styleguide scripts tests",
-    "typecheck": "deno check --config deno.json src/mod.ts src/manifest.ts src/runtime.ts src/react.ts src/theme/discern.ts scripts/build.ts scripts/conformance.ts scripts/generate.ts",
+    "typecheck": "deno check --config deno.json src/mod.ts src/manifest.ts src/runtime.ts src/react.ts src/theme/discern.ts scripts/build.ts scripts/conformance.ts scripts/generate.ts scripts/measure.ts",
     "fix": "deno fmt --config deno.json . && deno lint --no-config --fix src styleguide scripts tests",
     "serve": "deno task build && deno serve --host 127.0.0.1 --allow-read --port $(discern identity --port 2>/dev/null || echo 8010) scripts/serve.ts",
     "test": "deno task test:unit && deno task conformance",
