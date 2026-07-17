@@ -4,7 +4,7 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
-## Unreleased
+## 0.3.0
 
 - Add the Navigation-group Breadcrumbs component: a labelled ordered hierarchy with linked ancestors, one explicit current page, and narrow-view overflow.
 - Add catalogue-driven browser conformance: every component example auto-enrols in light/dark accessibility scans and review sheets, with co-located interaction scenarios plus reduced-motion and forced-colour checks.
