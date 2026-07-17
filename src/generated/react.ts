@@ -29,6 +29,8 @@ export * from "../components/feedback/dialog/mod.ts";
 export * from "../components/navigation/tabs/mod.ts";
 export * from "../components/navigation/breadcrumbs/mod.ts";
 export * from "../components/docs/skip-link/mod.ts";
+export * from "../components/docs/docs-nav/mod.ts";
+export * from "../components/docs/pager/mod.ts";
 export * from "../components/docs/anchor-heading/mod.ts";
 export * from "../components/docs/kbd/mod.ts";
 export * from "../components/docs/copy-button/mod.ts";
