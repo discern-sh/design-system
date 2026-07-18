@@ -35,6 +35,7 @@ export * from "../components/navigation/tabs/mod.ts";
 export * from "../components/navigation/breadcrumbs/mod.ts";
 export * from "../components/people/avatar/mod.ts";
 export * from "../components/people/avatar-group/mod.ts";
+export * from "../components/people/persona/mod.ts";
 export * from "../components/docs/skip-link/mod.ts";
 export * from "../components/docs/docs-header/mod.ts";
 export * from "../components/docs/docs-nav/mod.ts";
