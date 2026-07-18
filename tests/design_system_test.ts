@@ -755,7 +755,9 @@ Deno.test("avatar and agent avatar resolve every size step from the shared scale
         `${stylesheet} is missing the ${step} scale step`,
       );
     }
-    for (const declaration of css.matchAll(/--discern-avatar-size:\s*([^;]+);/g)) {
+    for (
+      const declaration of css.matchAll(/--discern-avatar-size:\s*([^;]+);/g)
+    ) {
       const value = (declaration[1] ?? "").trim();
       const reference = value.match(/^var\(--discern-avatar-size-([a-z]+)\)$/);
       const step = reference?.[1];

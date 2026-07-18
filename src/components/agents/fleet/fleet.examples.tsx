@@ -11,18 +11,14 @@ export default function FleetExamples() {
         style={{ maxWidth: "40rem" }}
         rows={[
           {
-            persona: (
-              <AgentPersona name="quill" size="sm" status="working" />
-            ),
+            persona: <AgentPersona name="quill" size="sm" status="working" />,
             branch: "agent/checkout-flow",
             state: <Badge tone="accent">running tests</Badge>,
             ahead: 4,
             meta: "2m ago",
           },
           {
-            persona: (
-              <AgentPersona name="forge-2" size="sm" status="waiting" />
-            ),
+            persona: <AgentPersona name="forge-2" size="sm" status="waiting" />,
             branch: "agent/payment-step",
             state: <Badge tone="warning">needs review</Badge>,
             ahead: 7,
@@ -30,9 +26,7 @@ export default function FleetExamples() {
             meta: "18m ago",
           },
           {
-            persona: (
-              <AgentPersona name="atlas-3" size="sm" status="done" />
-            ),
+            persona: <AgentPersona name="atlas-3" size="sm" status="done" />,
             branch: "agent/import-cleanup",
             state: <Badge tone="success">gate green</Badge>,
             ahead: 3,
