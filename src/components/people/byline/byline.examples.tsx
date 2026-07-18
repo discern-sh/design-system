@@ -1,3 +1,4 @@
+import { AgentMention } from "../../agents/agent-mention/agent-mention.tsx";
 import { Mention } from "../mention/mention.tsx";
 import { Persona } from "../persona/persona.tsx";
 import { Byline } from "./byline.tsx";
@@ -22,6 +23,19 @@ export default function BylineExamples() {
         <time dateTime="2026-06-02">2 June 2026</time>
         <span>Field notes</span>
         <span>Issue 14</span>
+      </Byline>
+      <Byline
+        lede="By"
+        authors={
+          <>
+            <Mention name="Morgan Ellis" href="#morgan" />
+            <span>with</span>
+            <AgentMention name="quill" href="#quill" />
+          </>
+        }
+      >
+        <time dateTime="2026-07-14">14 July 2026</time>
+        <span>Changelog</span>
       </Byline>
       <Byline
         authors={

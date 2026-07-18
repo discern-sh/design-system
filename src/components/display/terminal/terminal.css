@@ -1,8 +1,8 @@
 @layer discern.components {
   .discern-terminal {
-    --discern-terminal-surface: color-mix(in oklab, var(--discern-shadow-color) 94%,
-      var(--discern-color-accent-800));
-    --discern-terminal-text: var(--discern-color-surface);
+    --discern-terminal-surface: color-mix(in oklab,
+      var(--discern-color-inverse-surface) 94%, var(--discern-color-accent-800));
+    --discern-terminal-text: var(--discern-color-inverse-ink);
     --discern-terminal-muted: color-mix(in oklab, var(--discern-terminal-text) 58%,
       transparent);
     overflow: hidden;
@@ -13,9 +13,6 @@
     background: var(--discern-terminal-surface);
     box-shadow: var(--discern-shadow-window);
     color: var(--discern-terminal-text);
-  }
-  [data-discern-theme="dark"] .discern-terminal {
-    --discern-terminal-text: var(--discern-color-ink);
   }
   .discern-terminal__bar {
     position: relative;
