@@ -11,7 +11,7 @@ A short narrative that connects the dots — the mental model of discern-design-
 The system turns **authored design sources into a deterministic CSS bundle a consumer selects**. Three building blocks carry everything:
 
 - **Tokens** — the named public custom properties (primitive values, semantic roles, and the branded Preset) that all styling resolves through.
-- **Components** — 80 self-contained folders, each owning its CSS, implementation, examples, and Metadata, arranged in eleven Groups.
+- **Components** — 82 self-contained folders, each owning its CSS, implementation, examples, and Metadata, arranged in eleven Groups.
 - **The Runtime** — the emitted output set (`discern.css`, a Manifest, and any requested Optional Assets) that the Emitter writes into a consumer's build from a Selection.
 
 Everything between those blocks is generated: Codegen reads the Metadata and derives the Registry, the React export surface, and the Catalogue, so no surface can disagree with the authored sources. Consumers never take a stylesheet wholesale — they state a Selection, and the Emitter resolves it into exactly those bytes, identically on every run.
