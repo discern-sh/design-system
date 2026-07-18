@@ -51,7 +51,7 @@ const themeToken = (
 export const discernThemeTokens: readonly DesignToken[] = [
   token(
     "--discern-accent-hue",
-    "259",
+    "255",
     "Color",
     "Master hue for the default Discern accent family.",
   ),
@@ -61,7 +61,7 @@ export const discernThemeTokens: readonly DesignToken[] = [
 export const baseTokens: readonly DesignToken[] = [
   token(
     "--discern-ink-hue",
-    "225",
+    "285",
     "Color",
     "Master hue for cool ink neutrals.",
   ),
@@ -270,31 +270,31 @@ export const themeTokens: readonly ThemeToken[] = [
   themeToken(
     "--discern-color-ink-muted",
     "oklch(40% 0.026 var(--discern-ink-hue))",
-    "oklch(76% 0.016 var(--discern-ink-hue))",
+    "oklch(85% 0.016 var(--discern-ink-hue))",
     "Secondary ink.",
   ),
   themeToken(
     "--discern-color-ink-faint",
     "oklch(53% 0.02 var(--discern-ink-hue))",
-    "oklch(67% 0.018 var(--discern-ink-hue))",
+    "oklch(75% 0.018 var(--discern-ink-hue))",
     "Tertiary ink.",
   ),
   themeToken(
     "--discern-color-canvas",
     "oklch(98.97% 0.0028 var(--discern-canvas-hue))",
-    "oklch(20% 0.018 var(--discern-ink-hue))",
+    "oklch(25% 0.018 var(--discern-ink-hue))",
     "Page canvas.",
   ),
   themeToken(
     "--discern-color-surface",
     "#fff",
-    "oklch(24.5% 0.02 var(--discern-ink-hue))",
+    "oklch(28.5% 0.018 var(--discern-ink-hue))",
     "Raised surface.",
   ),
   themeToken(
     "--discern-color-surface-sunken",
     "oklch(96.5% 0.004 var(--discern-canvas-hue))",
-    "oklch(17.5% 0.016 var(--discern-ink-hue))",
+    "oklch(22% 0.018 var(--discern-ink-hue))",
     "Inset surface.",
   ),
   themeToken(
@@ -312,13 +312,13 @@ export const themeTokens: readonly ThemeToken[] = [
   themeToken(
     "--discern-color-accent-100",
     "oklch(96.2% 0.019 var(--discern-accent-hue))",
-    "oklch(29% 0.055 var(--discern-accent-hue))",
+    "oklch(35% 0.055 var(--discern-accent-hue))",
     "Subtlest accent surface.",
   ),
   themeToken(
     "--discern-color-accent-200",
     "oklch(92% 0.045 var(--discern-accent-hue))",
-    "oklch(35% 0.08 var(--discern-accent-hue))",
+    "oklch(40% 0.08 var(--discern-accent-hue))",
     "Quiet accent surface.",
   ),
   themeToken(
@@ -371,7 +371,7 @@ export const themeTokens: readonly ThemeToken[] = [
   ),
   themeToken(
     "--discern-color-stripe",
-    "oklch(85% 0.014 var(--discern-canvas-hue))",
+    "oklch(92% 0.014 var(--discern-canvas-hue))",
     "oklch(33% 0.022 var(--discern-ink-hue))",
     "Decorative hatch and window-chrome pigment.",
   ),
