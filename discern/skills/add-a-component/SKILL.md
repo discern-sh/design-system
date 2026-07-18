@@ -12,7 +12,7 @@ Every component is one folder plus codegen — no manual registration anywhere. 
 
 ## 1. Place it
 
-- Pick the group: one of `Core`, `Layout`, `Display`, `Forms`, `Feedback`, `Navigation`, `Marketing`, `Editorial` (`src/types/component-meta.ts` is the canonical list). The folder lives at `src/components/<group>/<slug>/`.
+- Pick the group: one of `Core`, `Layout`, `Display`, `Forms`, `Feedback`, `Navigation`, `People`, `Agents`, `Docs`, `Marketing`, `Editorial` (`src/types/component-meta.ts` is the canonical list). The folder lives at `src/components/<group>/<slug>/`.
 - Pick `order` by reading the sibling `*.meta.ts` files in the group — it sets catalogue display order. Leave gaps (10, 20, 30…) so later insertions don't renumber the group.
 
 ## 2. Scaffold the fixed anatomy
