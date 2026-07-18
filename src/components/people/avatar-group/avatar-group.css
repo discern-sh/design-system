@@ -1,0 +1,23 @@
+@layer discern.components {
+  .discern-avatar-group {
+    --discern-avatar-ring: var(--discern-color-canvas);
+    display: inline-flex;
+    align-items: center;
+  }
+  .discern-avatar-group > * + * {
+    margin-inline-start: calc(var(--discern-avatar-size, 2.5rem) * -0.3);
+  }
+  .discern-avatar-group .discern-avatar-group__overflow {
+    border-color: var(--discern-color-border-strong);
+    background: var(--discern-color-surface-sunken);
+    color: var(--discern-color-ink-muted);
+  }
+  .discern-avatar-group .discern-avatar-group__overflow
+    .discern-avatar__monogram {
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+    font-size: max(0.7rem, calc(var(--discern-avatar-size) * 0.34));
+    font-weight: var(--discern-font-weight-strong);
+    letter-spacing: 0;
+  }
+}
