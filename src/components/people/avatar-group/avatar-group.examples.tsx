@@ -7,7 +7,7 @@ export const conformance = [{
   steps: [
     {
       expect: "attribute",
-      target: { selector: ".discern-avatar-group" },
+      target: { selector: '.discern-avatar-group[aria-label="Reviewers"]' },
       attribute: "role",
       value: "group",
     },

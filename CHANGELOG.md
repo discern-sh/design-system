@@ -4,6 +4,12 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## 0.5.0
+
+- Add the People group, the tenth canonical group: six components for representing humans — Avatar, Avatar group, Persona, Mention, Byline, and Profile card. Selecting `groups: ["People"]` emits the full set, and each composite resolves its Avatar dependency automatically.
+- Avatar renders a portrait photo or a serif monogram derived from the name, in five sizes, circle or square, with an optional presence badge whose state joins the accessible label instead of relying on colour. Avatar group stacks avatars with ring separation through the overridable `--discern-avatar-ring` custom property and clamps to `max` behind a labelled overflow chip.
+- Persona (avatar–name–detail row), Mention (em-scaled inline person chip; a real anchor when linked, a plain span otherwise), Byline (address-element attribution row with middot separators carrying empty alternative text), and Profile card (square editorial portrait, serif name, links slot) compose the same Avatar as decoration, keeping the visible name the single announced identity.
+
 ## 0.4.1
 
 - Scope the Docs nav's item styling to its lists, so a composed section-title link — a linked Kicker, for example — keeps its own component styling instead of inheriting item padding, borders, and hover states.

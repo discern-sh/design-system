@@ -5,10 +5,16 @@ const portrait =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23cfd6e4'/%3E%3Ccircle cx='32' cy='25' r='11' fill='%23515f7d'/%3E%3Cpath d='M9 61c2-14 11-22 23-22s21 8 23 22z' fill='%23515f7d'/%3E%3C/svg%3E";
 
 export const conformance = [{
-  name: "a linked mention is a focusable link named after its person",
+  name: "a linked mention is focusable and hides its sigil from the name",
   steps: [
-    { action: "focus", target: { role: "link", name: "Morgan Ellis" } },
-    { expect: "focused", target: { role: "link", name: "Morgan Ellis" } },
+    { action: "focus", target: { selector: 'a.discern-mention[href="#morgan"]' } },
+    { expect: "focused", target: { selector: 'a.discern-mention[href="#morgan"]' } },
+    {
+      expect: "attribute",
+      target: { selector: 'a[href="#morgan"] .discern-mention__sigil' },
+      attribute: "aria-hidden",
+      value: "true",
+    },
   ],
 }] satisfies readonly ConformanceScenario[];
 
