@@ -1,0 +1,73 @@
+@layer discern.components {
+  .discern-worklog {
+    display: flex;
+    flex-direction: column;
+    gap: var(--discern-space-2);
+    margin: 0;
+    padding: 0;
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+    list-style: none;
+  }
+  .discern-worklog__entry {
+    display: flex;
+    align-items: baseline;
+    gap: var(--discern-space-3);
+  }
+  .discern-worklog__marker {
+    flex: none;
+    inline-size: 1.1em;
+    color: var(--discern-color-ink-faint);
+    font-family: var(--discern-font-mono);
+    font-size: var(--discern-font-size-sm);
+    text-align: center;
+  }
+  .discern-worklog__entry[data-discern-status="done"] .discern-worklog__marker {
+    color: var(--discern-color-success);
+  }
+  .discern-worklog__entry[data-discern-status="active"]
+    .discern-worklog__marker {
+    color: var(--discern-color-accent-600);
+  }
+  .discern-worklog__entry[data-discern-status="failed"]
+    .discern-worklog__marker {
+    color: var(--discern-color-danger);
+  }
+  .discern-worklog__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    min-inline-size: 0;
+  }
+  .discern-worklog__label {
+    color: var(--discern-color-ink);
+    font-size: var(--discern-font-size-sm);
+    line-height: 1.4;
+  }
+  .discern-worklog__entry[data-discern-status="active"]
+    .discern-worklog__label {
+    font-weight: var(--discern-font-weight-strong);
+  }
+  .discern-worklog__entry[data-discern-status="queued"] .discern-worklog__label,
+  .discern-worklog__entry[data-discern-status="skipped"]
+    .discern-worklog__label {
+    color: var(--discern-color-ink-muted);
+  }
+  .discern-worklog__detail {
+    overflow: hidden;
+    color: var(--discern-color-ink-muted);
+    font-family: var(--discern-font-mono);
+    font-size: var(--discern-font-size-xs);
+    line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .discern-worklog__meta {
+    flex: none;
+    color: var(--discern-color-ink-muted);
+    font-family: var(--discern-font-mono);
+    font-size: var(--discern-font-size-xs);
+    line-height: 1.4;
+  }
+}
