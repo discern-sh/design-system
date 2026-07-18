@@ -37,9 +37,7 @@ export const AgentAvatar: DiscernComponent<HTMLSpanElement, AgentAvatarProps> =
   ) {
     const mark = sigil ??
       derivedInitials(name, size === "xs" ? 1 : 2, /[\s\-_./]+/);
-    const stateLabel = status !== undefined
-      ? statusLabel ?? status
-      : undefined;
+    const stateLabel = status !== undefined ? statusLabel ?? status : undefined;
     const identity = decorative ? { "aria-hidden": true } : {
       role: "img",
       "aria-label": stateLabel !== undefined ? `${name} (${stateLabel})` : name,

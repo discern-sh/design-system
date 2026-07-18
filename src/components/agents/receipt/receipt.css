@@ -79,10 +79,10 @@
   .discern-receipt__checks > div {
     background:
       repeating-linear-gradient(
-        to right,
-        var(--discern-color-border-strong) 0 2px,
-        transparent 2px 6px
-      )
+      to right,
+      var(--discern-color-border-strong) 0 2px,
+      transparent 2px 6px
+    )
       0 calc(100% - 0.45em) / 100% 1px no-repeat;
   }
   .discern-receipt__checks dt {
@@ -99,12 +99,10 @@
     margin-inline-start: 0.45em;
     text-align: end;
   }
-  .discern-receipt__checks > div[data-discern-state="pass"]
-    .discern-receipt__glyph {
+  .discern-receipt__checks > div[data-discern-state="pass"] .discern-receipt__glyph {
     color: var(--discern-color-success);
   }
-  .discern-receipt__checks > div[data-discern-state="fail"]
-    .discern-receipt__glyph {
+  .discern-receipt__checks > div[data-discern-state="fail"] .discern-receipt__glyph {
     color: var(--discern-color-danger);
   }
   .discern-receipt__checks > div[data-discern-state="skip"] dt,

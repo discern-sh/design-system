@@ -25,12 +25,10 @@
   .discern-worklog__entry[data-discern-status="done"] .discern-worklog__marker {
     color: var(--discern-color-success);
   }
-  .discern-worklog__entry[data-discern-status="active"]
-    .discern-worklog__marker {
+  .discern-worklog__entry[data-discern-status="active"] .discern-worklog__marker {
     color: var(--discern-color-accent-600);
   }
-  .discern-worklog__entry[data-discern-status="failed"]
-    .discern-worklog__marker {
+  .discern-worklog__entry[data-discern-status="failed"] .discern-worklog__marker {
     color: var(--discern-color-danger);
   }
   .discern-worklog__body {
@@ -45,13 +43,11 @@
     font-size: var(--discern-font-size-sm);
     line-height: 1.4;
   }
-  .discern-worklog__entry[data-discern-status="active"]
-    .discern-worklog__label {
+  .discern-worklog__entry[data-discern-status="active"] .discern-worklog__label {
     font-weight: var(--discern-font-weight-strong);
   }
   .discern-worklog__entry[data-discern-status="queued"] .discern-worklog__label,
-  .discern-worklog__entry[data-discern-status="skipped"]
-    .discern-worklog__label {
+  .discern-worklog__entry[data-discern-status="skipped"] .discern-worklog__label {
     color: var(--discern-color-ink-muted);
   }
   .discern-worklog__detail {

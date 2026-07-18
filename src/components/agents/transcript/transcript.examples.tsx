@@ -19,22 +19,18 @@ export default function TranscriptExamples() {
             ),
           },
           {
-            speaker: (
-              <AgentPersona name="quill" size="sm" status="working" />
-            ),
+            speaker: <AgentPersona name="quill" size="sm" status="working" />,
             aside: <time dateTime="09:13">09:13</time>,
             body: (
               <p>
-                Starting in an isolated worktree. I'll extract the payment
-                step behind the existing interface first, then move the cart
-                flow over one call site at a time.
+                Starting in an isolated worktree. I'll extract the payment step
+                behind the existing interface first, then move the cart flow
+                over one call site at a time.
               </p>
             ),
           },
           {
-            speaker: (
-              <AgentPersona name="quill" size="sm" status="done" />
-            ),
+            speaker: <AgentPersona name="quill" size="sm" status="done" />,
             aside: <time dateTime="09:41">09:41</time>,
             body: (
               <p>
