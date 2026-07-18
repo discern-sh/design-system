@@ -1,0 +1,49 @@
+@layer discern.components {
+  .discern-agent-mention {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    max-inline-size: 100%;
+    padding-block: 0.09em 0.13em;
+    padding-inline: 0.5em 0.55em;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-xs);
+    background: var(--discern-color-surface-sunken);
+    color: var(--discern-color-ink);
+    font-family: var(--discern-font-mono);
+    font-size: 0.88em;
+    font-weight: var(--discern-font-weight-strong);
+    line-height: 1.45;
+    text-decoration: none;
+    vertical-align: baseline;
+    white-space: nowrap;
+  }
+  a.discern-agent-mention {
+    transition:
+      background var(--discern-duration-fast) var(--discern-ease-out),
+      border-color var(--discern-duration-fast) var(--discern-ease-out);
+  }
+  a.discern-agent-mention:hover {
+    border-color: var(--discern-color-border-strong);
+    background: var(--discern-color-surface);
+  }
+  a.discern-agent-mention:focus-visible {
+    outline: 3px solid color-mix(in oklab, var(--discern-color-accent-500) 35%,
+      transparent);
+    outline-offset: 1px;
+  }
+  .discern-agent-mention__sigil {
+    color: var(--discern-color-accent-600);
+    font-weight: var(--discern-font-weight-body);
+  }
+  .discern-agent-mention__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .discern-agent-mention .discern-agent-avatar {
+    --discern-avatar-size: 1.3em;
+    margin-inline-start: -0.28em;
+    border-radius: 3px;
+    box-shadow: none;
+  }
+}
