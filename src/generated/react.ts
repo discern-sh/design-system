@@ -40,6 +40,7 @@ export * from "../components/people/mention/mod.ts";
 export * from "../components/people/byline/mod.ts";
 export * from "../components/people/profile-card/mod.ts";
 export * from "../components/agents/agent-avatar/mod.ts";
+export * from "../components/agents/agent-persona/mod.ts";
 export * from "../components/docs/skip-link/mod.ts";
 export * from "../components/docs/docs-header/mod.ts";
 export * from "../components/docs/docs-nav/mod.ts";
