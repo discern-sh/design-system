@@ -17,7 +17,8 @@ export default function MentionExamples() {
     <div className="discern-example-stack discern-example-stack--start">
       <p style={{ margin: 0, maxWidth: "38rem" }}>
         The review from <Mention name="Morgan Ellis" href="#morgan" />{" "}
-        landed this morning, and <Mention name="Priya Anand" src={portrait} />{" "}
+        landed this morning, and <Mention name="Priya Anand" src={portrait} />
+        {" "}
         picked up the follow-up work after a short handover call with{" "}
         <Mention name="Ada Osei" />.
       </p>

@@ -52,14 +52,10 @@ export const Avatar: DiscernComponent<HTMLSpanElement, AvatarProps> =
     const stateLabel = presence !== undefined
       ? presenceLabel ?? presence
       : undefined;
-    const identity = decorative
-      ? { "aria-hidden": true }
-      : {
-        role: "img",
-        "aria-label": stateLabel !== undefined
-          ? `${name} (${stateLabel})`
-          : name,
-      };
+    const identity = decorative ? { "aria-hidden": true } : {
+      role: "img",
+      "aria-label": stateLabel !== undefined ? `${name} (${stateLabel})` : name,
+    };
     return (
       <span
         ref={ref}

@@ -9,7 +9,9 @@ export const conformance = [{
   steps: [
     {
       expect: "attribute",
-      target: { selector: '.discern-avatar[aria-label="Morgan Ellis (online)"]' },
+      target: {
+        selector: '.discern-avatar[aria-label="Morgan Ellis (online)"]',
+      },
       attribute: "role",
       value: "img",
     },
