@@ -2,7 +2,6 @@
   .discern-worklog {
     display: flex;
     flex-direction: column;
-    gap: var(--discern-space-2);
     margin: 0;
     padding: 0;
     font-family: var(--discern-font-ui);
@@ -10,25 +9,55 @@
     list-style: none;
   }
   .discern-worklog__entry {
-    display: flex;
-    align-items: baseline;
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.5rem minmax(0, 1fr) max-content;
+    align-items: start;
     gap: var(--discern-space-3);
+    padding-block: var(--discern-space-2);
+  }
+  .discern-worklog__entry:not(:last-child)::after {
+    position: absolute;
+    z-index: 0;
+    inset-block-start: calc(var(--discern-space-2) + 1.5rem);
+    inset-block-end: calc(var(--discern-space-2) * -1);
+    inset-inline-start: calc(0.75rem - 0.5px);
+    inline-size: 1px;
+    background: var(--discern-color-border);
+    content: "";
   }
   .discern-worklog__marker {
+    position: relative;
+    z-index: 1;
+    display: grid;
     flex: none;
-    inline-size: 1.1em;
+    place-items: center;
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-xs);
+    background: var(--discern-color-surface);
     color: var(--discern-color-ink-faint);
     font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-sm);
+    line-height: 1;
     text-align: center;
   }
   .discern-worklog__entry[data-discern-status="done"] .discern-worklog__marker {
-    color: var(--discern-color-success);
+    border-color: color-mix(in oklab, var(--discern-color-success) 42%,
+      var(--discern-color-border));
+    background: var(--discern-color-success-soft);
+    color: var(--discern-color-success-deep);
   }
   .discern-worklog__entry[data-discern-status="active"] .discern-worklog__marker {
-    color: var(--discern-color-accent-600);
+    border-color: var(--discern-color-accent-300);
+    background: var(--discern-color-accent-100);
+    color: var(--discern-color-accent-700);
   }
   .discern-worklog__entry[data-discern-status="failed"] .discern-worklog__marker {
+    border-color: color-mix(in oklab, var(--discern-color-danger) 40%,
+      var(--discern-color-border));
+    background: var(--discern-color-danger-soft);
     color: var(--discern-color-danger);
   }
   .discern-worklog__body {
@@ -37,6 +66,7 @@
     flex-direction: column;
     gap: 2px;
     min-inline-size: 0;
+    padding-block-start: 1px;
   }
   .discern-worklog__label {
     color: var(--discern-color-ink);
@@ -65,5 +95,8 @@
     font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
     line-height: 1.4;
+    padding-block-start: 2px;
+    text-align: end;
+    white-space: nowrap;
   }
 }

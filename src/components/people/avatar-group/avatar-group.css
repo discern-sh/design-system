@@ -1,13 +1,19 @@
 @layer discern.components {
   .discern-avatar-group {
     --discern-avatar-ring: var(--discern-color-canvas);
+    isolation: isolate;
     display: inline-flex;
     align-items: center;
+    max-inline-size: 100%;
+  }
+  .discern-avatar-group > * {
+    position: relative;
   }
   .discern-avatar-group > * + * {
     margin-inline-start: calc(var(--discern-avatar-size, 2.5rem) * -0.3);
   }
   .discern-avatar-group .discern-avatar-group__overflow {
+    z-index: 1;
     border-color: var(--discern-color-border-strong);
     background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink-muted);

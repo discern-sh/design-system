@@ -9,6 +9,8 @@
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-xs);
     background: var(--discern-color-surface-sunken);
+    box-shadow: inset 0 1px 0 color-mix(in oklab, var(--discern-color-surface)
+      72%, transparent);
     color: var(--discern-color-ink);
     font-family: var(--discern-font-mono);
     font-size: 0.88em;
@@ -26,6 +28,8 @@
   a.discern-agent-mention:hover {
     border-color: var(--discern-color-border-strong);
     background: var(--discern-color-surface);
+    box-shadow: 2px 2px 0 color-mix(in oklab, var(--discern-color-ink) 8%,
+      transparent);
   }
   a.discern-agent-mention:focus-visible {
     outline: 3px solid color-mix(in oklab, var(--discern-color-accent-500) 35%,

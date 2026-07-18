@@ -4,6 +4,11 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## Unreleased
+
+- Polish the People identity set with layered monogram surfaces, clearer linked mentions, structured editorial bylines, and a stronger Profile card hierarchy that holds across portrait and landscape layouts.
+- Give Agents a more coherent technical grammar: dimensional agent tiles, monospace persona names, tracked Worklog steps, surfaced Transcript turns, receipt-like proof cards, and a responsive Fleet grid that preserves identity, state, branch, drift, and timing without narrow-view overflow.
+
 ## 0.5.0
 
 - Add the People group, the tenth canonical group: six components for representing humans — Avatar, Avatar group, Persona, Mention, Byline, and Profile card. Selecting `groups: ["People"]` emits the full set, and each composite resolves its Avatar dependency automatically.
