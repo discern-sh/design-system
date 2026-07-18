@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { derivedInitials } from "../../initials.ts";
 
 /** Size step shared by {@linkcode Avatar} and the components composing it. */
 export type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
@@ -19,16 +20,6 @@ export interface AvatarProps extends HTMLAttributes<HTMLSpanElement> {
   readonly presence?: AvatarPresence;
   readonly presenceLabel?: string;
   readonly decorative?: boolean;
-}
-
-function derivedInitials(name: string, limit: number): string {
-  const words = name.trim().split(/\s+/).filter((word) => word.length > 0);
-  const edges = words.length > 1 ? [words.at(0), words.at(-1)] : [words.at(0)];
-  return edges
-    .flatMap((word) => (word === undefined ? [] : [...word].slice(0, 1)))
-    .slice(0, limit)
-    .join("")
-    .toUpperCase();
 }
 
 /** Portrait photo or serif monogram identifying one person, with optional presence. */
