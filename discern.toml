@@ -60,7 +60,7 @@ branch_prefix = "agent/"
 # Post-landing failures are recorded, but later commands still run, as acceptance
 # is a one-way process. Keep worktree-identity-dependent commands under
 # [worktree.setup].ensure instead; those never run in the main checkout.
-ensure = []
+ensure = ["deno install --frozen"]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -320,7 +320,7 @@ ignored_file_drift = true
 # re-entry or update it is recorded but never undoes a merge or blocks startup.
 [worktree.setup]
 steps = []   # one-shot, e.g. ["seed-fixtures"]
-ensure = ["deno install --frozen"]  # converge, e.g. ["<install deps>"]
+ensure = []  # converge, e.g. ["<install deps>"]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
