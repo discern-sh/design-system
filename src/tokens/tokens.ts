@@ -231,6 +231,20 @@ export const baseTokens: readonly DesignToken[] = [
     "Maximum editorial page width.",
   ),
   token("--discern-measure", "62ch", "Layout", "Readable prose measure."),
+  ...([
+    ["xs", "1.5rem"],
+    ["sm", "2rem"],
+    ["md", "2.5rem"],
+    ["lg", "3.25rem"],
+    ["xl", "4.5rem"],
+  ] as const).map(([step, size]) =>
+    token(
+      `--discern-avatar-size-${step}`,
+      size,
+      "Layout",
+      `Identity tile ${step} size step shared by Avatar and Agent avatar.`,
+    )
+  ),
   token(
     "--discern-section-space",
     "clamp(4.5rem, 9vw, 7.75rem)",

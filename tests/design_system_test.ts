@@ -734,3 +734,104 @@ Deno.test("every custom property the emitted css references is defined by the em
     await Deno.remove(temp, { recursive: true });
   }
 });
+
+Deno.test("avatar and agent avatar resolve every size step from the shared scale tokens", async () => {
+  const prefix = "--discern-avatar-size-";
+  const steps = baseTokens
+    .filter((token) => token.name.startsWith(prefix))
+    .map((token) => token.name.slice(prefix.length));
+  assert(steps.length >= 5, "the avatar size scale lost its token steps");
+  for (
+    const stylesheet of [
+      join(COMPONENT_ROOT, "people", "avatar", "avatar.css"),
+      join(COMPONENT_ROOT, "agents", "agent-avatar", "agent-avatar.css"),
+    ]
+  ) {
+    const css = await Deno.readTextFile(stylesheet);
+    for (const step of steps) {
+      assertStringIncludes(
+        css,
+        `var(${prefix}${step})`,
+        `${stylesheet} is missing the ${step} scale step`,
+      );
+    }
+    for (const declaration of css.matchAll(/--discern-avatar-size:\s*([^;]+);/g)) {
+      const value = (declaration[1] ?? "").trim();
+      const reference = value.match(/^var\(--discern-avatar-size-([a-z]+)\)$/);
+      const step = reference?.[1];
+      assert(
+        step !== undefined && steps.includes(step),
+        `${stylesheet} pins --discern-avatar-size to "${value}" instead of a shared scale token`,
+      );
+    }
+  }
+});
+
+function accessibleText(html: string): string {
+  const voidTags = new Set([
+    "area",
+    "base",
+    "br",
+    "col",
+    "embed",
+    "hr",
+    "img",
+    "input",
+    "link",
+    "meta",
+    "source",
+    "track",
+    "wbr",
+  ]);
+  const openedHidden: boolean[] = [];
+  let hiddenDepth = 0;
+  let text = "";
+  for (const part of html.split(/(<[^>]+>)/)) {
+    if (part.startsWith("</")) {
+      if (openedHidden.pop() === true) hiddenDepth--;
+    } else if (part.startsWith("<")) {
+      const tag = (part.match(/^<([a-zA-Z0-9-]+)/)?.[1] ?? "").toLowerCase();
+      const hidden = part.includes('aria-hidden="true"');
+      const label = part.match(/aria-label="([^"]*)"/)?.[1];
+      if (!hidden && hiddenDepth === 0 && label !== undefined) {
+        text += ` ${label} `;
+      }
+      if (!part.endsWith("/>") && !voidTags.has(tag)) {
+        openedHidden.push(hidden);
+        if (hidden) hiddenDepth++;
+      }
+    } else if (hiddenDepth === 0) {
+      text += part;
+    }
+  }
+  return text;
+}
+
+Deno.test("every stateful marker joins the accessible text in its example", async () => {
+  const exampleFiles = (await walk(COMPONENT_ROOT))
+    .filter((path) => path.endsWith(".examples.tsx"));
+  assert(exampleFiles.length > 0);
+  const statePattern = /data-discern-(?:status|state|presence)="([^"]+)"/g;
+  let statefulExamples = 0;
+  for (const path of exampleFiles) {
+    const module = await import(toFileUrl(path).href) as {
+      default: Parameters<typeof createElement>[0];
+    };
+    const html = renderToStaticMarkup(createElement(module.default));
+    const states = new Set(
+      [...html.matchAll(statePattern)].map((match) => match[1] ?? ""),
+    );
+    if (states.size === 0) continue;
+    statefulExamples++;
+    const spoken = accessibleText(html).toLowerCase();
+    for (const state of states) {
+      assert(
+        spoken.includes(state.toLowerCase()),
+        `${
+          relative(PACKAGE_ROOT, path)
+        } renders state "${state}" without speaking it: the state word (or a label carrying it) must appear outside aria-hidden subtrees`,
+      );
+    }
+  }
+  assert(statefulExamples > 0, "no stateful example enrolled in the guard");
+});

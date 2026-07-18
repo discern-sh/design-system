@@ -1,6 +1,6 @@
 @layer discern.components {
   .discern-agent-avatar {
-    --discern-avatar-size: 2.5rem;
+    --discern-avatar-size: var(--discern-avatar-size-md);
     position: relative;
     display: inline-grid;
     flex: none;
@@ -16,20 +16,20 @@
     user-select: none;
   }
   .discern-agent-avatar--xs {
-    --discern-avatar-size: 1.5rem;
+    --discern-avatar-size: var(--discern-avatar-size-xs);
     border-radius: var(--discern-radius-xs);
   }
   .discern-agent-avatar--sm {
-    --discern-avatar-size: 2rem;
+    --discern-avatar-size: var(--discern-avatar-size-sm);
   }
   .discern-agent-avatar--md {
-    --discern-avatar-size: 2.5rem;
+    --discern-avatar-size: var(--discern-avatar-size-md);
   }
   .discern-agent-avatar--lg {
-    --discern-avatar-size: 3.25rem;
+    --discern-avatar-size: var(--discern-avatar-size-lg);
   }
   .discern-agent-avatar--xl {
-    --discern-avatar-size: 4.5rem;
+    --discern-avatar-size: var(--discern-avatar-size-xl);
   }
   .discern-agent-avatar__sigil {
     font-family: var(--discern-font-mono);
