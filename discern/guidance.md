@@ -2,6 +2,14 @@
 
 The design system behind [discern.sh](https://discern.sh): a framework-neutral, deterministic CSS design system for Deno sites, published to JSR as `@discern-sh/design-system` and consumed by the public — treat every public name as API.
 
+## One name, three roles
+
+"discern" means three things here — don't conflate them:
+
+1. **The product** — discern, the agent-development tool, and the discern.sh site that presents it. Both live in other repositories; nothing you edit here changes the tool or the site.
+2. **This repo** — the design system those properties consume, and your only subject: the published library under `src/` and its catalogue under `styleguide/`.
+3. **Your tooling** — this repo dogfoods discern, so the "Working with discern" guidance above describes the tool running your workflow (the gate, worktrees, the `discern_*` verbs), exactly as in any project that installs it. Its footprint — `discern.toml` and the `discern/` directory holding this guidance, skills, scripts, and the TODO ledger — is project configuration, not part of the published package.
+
 ## Conventions
 
 - **Component anatomy is fixed.** Every component lives in its own folder under `src/components/<group>/<slug>/` owning `<slug>.css`, `<slug>.tsx`, `<slug>.meta.ts`, `<slug>.examples.tsx`, and `mod.ts`. The metadata and group order generate the runtime registry, React export surface, catalogue, and dependency graph — a new component needs no manual registration anywhere.
