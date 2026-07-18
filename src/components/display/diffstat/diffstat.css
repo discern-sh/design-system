@@ -1,0 +1,35 @@
+@layer discern.components {
+  .discern-diffstat {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    font-family: var(--discern-font-mono);
+    font-size: var(--discern-font-size-xs);
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+  .discern-diffstat__added {
+    color: var(--discern-color-success-deep);
+  }
+  .discern-diffstat__removed {
+    color: var(--discern-color-danger);
+  }
+  .discern-diffstat__blocks {
+    display: inline-flex;
+    gap: 2px;
+  }
+  .discern-diffstat__block {
+    inline-size: 7px;
+    block-size: 7px;
+    border-radius: 1px;
+  }
+  .discern-diffstat__block--added {
+    background: var(--discern-color-success);
+  }
+  .discern-diffstat__block--removed {
+    background: var(--discern-color-danger);
+  }
+  .discern-diffstat__block--neutral {
+    background: var(--discern-color-border);
+  }
+}

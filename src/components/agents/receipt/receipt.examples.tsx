@@ -1,4 +1,5 @@
 import { Receipt } from "./receipt.tsx";
+import { Diffstat } from "../../display/diffstat/diffstat.tsx";
 
 export default function ReceiptExamples() {
   return (
@@ -19,7 +20,11 @@ export default function ReceiptExamples() {
           { label: "tests", state: "pass", value: "184 passed" },
         ]}
         summary="Ready for review"
-        footer="12 files changed · +310 −204"
+        footer={
+          <>
+            12 files changed · <Diffstat added={310} removed={204} />
+          </>
+        }
       />
       <Receipt
         style={{ width: "min(100%, 22rem)" }}

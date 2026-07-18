@@ -18,6 +18,7 @@ export * from "../components/display/window/mod.ts";
 export * from "../components/display/terminal/mod.ts";
 export * from "../components/display/table/mod.ts";
 export * from "../components/display/stat/mod.ts";
+export * from "../components/display/diffstat/mod.ts";
 export * from "../components/forms/field/mod.ts";
 export * from "../components/forms/input/mod.ts";
 export * from "../components/forms/textarea/mod.ts";
