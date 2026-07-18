@@ -1,0 +1,5 @@
+#!/bin/sh
+# desc: Rebuild and serve the Catalogue on every source edit (deno task watch)
+set -eu
+cd "${DISCERN_ROOT:-$(dirname "$0")/../..}"
+exec deno task watch "$@"
