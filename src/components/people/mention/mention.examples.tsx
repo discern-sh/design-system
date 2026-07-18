@@ -7,8 +7,14 @@ const portrait =
 export const conformance = [{
   name: "a linked mention is focusable and hides its sigil from the name",
   steps: [
-    { action: "focus", target: { selector: 'a.discern-mention[href="#morgan"]' } },
-    { expect: "focused", target: { selector: 'a.discern-mention[href="#morgan"]' } },
+    {
+      action: "focus",
+      target: { selector: 'a.discern-mention[href="#morgan"]' },
+    },
+    {
+      expect: "focused",
+      target: { selector: 'a.discern-mention[href="#morgan"]' },
+    },
     {
       expect: "attribute",
       target: { selector: 'a[href="#morgan"] .discern-mention__sigil' },
