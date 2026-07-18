@@ -36,10 +36,25 @@ export type ConformanceStep =
     readonly expect: "describes";
     readonly target: ConformanceTarget;
     readonly description: ConformanceTarget;
+  }
+  | {
+    readonly expect: "aligned";
+    readonly target: ConformanceTarget;
+    readonly edge: "top" | "bottom";
+    readonly tolerance?: number;
+  }
+  | {
+    readonly expect: "balanced-rows";
+    readonly target: ConformanceTarget;
+    readonly tolerance?: number;
   };
 
 /** A browser path exported beside one component's catalogue example. */
 export interface ConformanceScenario {
   readonly name: string;
+  readonly viewport?: {
+    readonly width: number;
+    readonly height: number;
+  };
   readonly steps: readonly ConformanceStep[];
 }

@@ -13,3 +13,14 @@
     --discern-color-success-deep: oklch(90% 0.08 190);
   }
 }
+
+@media (prefers-color-scheme: dark) {
+  @layer discern.consumer {
+    :where([data-discern-root]:not([data-discern-theme])),
+    :where([data-discern-root][data-discern-theme="system"]) {
+      --discern-color-success: oklch(74% 0.13 190);
+      --discern-color-success-soft: oklch(30% 0.055 190);
+      --discern-color-success-deep: oklch(90% 0.08 190);
+    }
+  }
+}

@@ -12,6 +12,8 @@
   }
   .discern-kicker__index {
     color: var(--discern-color-accent-600);
+    color: light-dark(var(--discern-color-accent-600),
+      var(--discern-color-accent-500));
     font-family: var(--discern-font-mono);
     letter-spacing: 0.11em;
   }

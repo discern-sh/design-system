@@ -183,6 +183,56 @@ async function performStep(
     );
     return;
   }
+  if (step.expect === "aligned") {
+    const positions = await target.evaluateAll(
+      (nodes, edge) =>
+        nodes.map((node) => {
+          const bounds = node.getBoundingClientRect();
+          return edge === "top" ? bounds.top : bounds.bottom;
+        }),
+      step.edge,
+    );
+    invariant(
+      positions.length > 1,
+      `Expected multiple aligned targets but found ${positions.length}: ${
+        JSON.stringify(step.target)
+      }`,
+    );
+    const tolerance = step.tolerance ?? 1;
+    invariant(
+      Math.max(...positions) - Math.min(...positions) <= tolerance,
+      `Expected ${step.edge} edges within ${tolerance}px but found ${
+        positions.map((position) => position.toFixed(2)).join(", ")
+      }`,
+    );
+    return;
+  }
+  if (step.expect === "balanced-rows") {
+    const tops = await target.evaluateAll((nodes) =>
+      nodes.map((node) => node.getBoundingClientRect().top)
+    );
+    invariant(
+      tops.length > 1,
+      `Expected multiple row targets but found ${tops.length}: ${
+        JSON.stringify(step.target)
+      }`,
+    );
+    const tolerance = step.tolerance ?? 1;
+    const rows: number[][] = [];
+    for (const top of tops.toSorted((left, right) => left - right)) {
+      const row = rows.find((positions) =>
+        Math.abs((positions[0] ?? top) - top) <= tolerance
+      );
+      if (row) row.push(top);
+      else rows.push([top]);
+    }
+    const counts = rows.map((row) => row.length);
+    invariant(
+      counts.length === 1 || counts.every((count) => count > 1),
+      `Expected balanced rows without a singleton; found ${counts.join(" + ")}`,
+    );
+    return;
+  }
   const element = await exactlyOne(target, step.target);
   if (step.expect === "visible") {
     await eventually(
@@ -347,6 +397,7 @@ async function runInteractionScenarios(
   for (const component of components) {
     for (const scenario of manifests.get(component) ?? []) {
       try {
+        await page.setViewportSize(scenario.viewport ?? WIDE_VIEWPORT);
         await loadConformancePage(
           page,
           conformanceUrl(origin, "light", component),
@@ -368,6 +419,37 @@ async function runInteractionScenarios(
     }
   }
   return scenariosRun;
+}
+
+async function verifyInitialFragmentRestoration(
+  page: Page,
+  origin: string,
+  components: readonly string[],
+): Promise<void> {
+  const component = components.at(-1);
+  invariant(component, "Fragment restoration needs a catalogue component");
+  await page.setViewportSize(WIDE_VIEWPORT);
+  const url = new URL("/style-guide/", origin);
+  url.hash = `component-${component}`;
+  await page.goto(url.href, { waitUntil: "networkidle" });
+  await page.locator("[data-discern-root]").waitFor();
+  const target = page.locator(`#component-${component}`);
+  let position = Number.POSITIVE_INFINITY;
+  await eventually(
+    async () => {
+      position = await target.evaluate((node) =>
+        node.getBoundingClientRect().top
+      );
+      return position >= 0 && position <= 160;
+    },
+    `Cold fragment load left #component-${component} outside the viewport`,
+  );
+  invariant(
+    position >= 0 && position <= 160,
+    `Cold fragment load left #component-${component} at ${
+      position.toFixed(2)
+    }px`,
+  );
 }
 
 async function captureReviewSheets(
@@ -496,6 +578,19 @@ export async function runConformance(): Promise<void> {
       expectedComponents,
       failures,
     );
+    try {
+      await verifyInitialFragmentRestoration(
+        page,
+        origin,
+        expectedComponents,
+      );
+    } catch (error) {
+      failures.push(
+        `initial fragment restoration: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
     const screenshots = await captureReviewSheets(page, origin);
     await context.close();
     const forcedColorFocusChecks = await verifyForcedColors(
@@ -510,7 +605,7 @@ export async function runConformance(): Promise<void> {
       `Component conformance failed:\n- ${failures.join("\n- ")}`,
     );
     console.log(
-      `Conformance passed: ${expectedComponents.length} components, ${accessibilityScans} accessibility scans, ${scenarios} interaction scenarios, ${forcedColorFocusChecks} forced-colour focus checks, and ${
+      `Conformance passed: ${expectedComponents.length} components, ${accessibilityScans} accessibility scans, ${scenarios} interaction scenarios, 1 cold-fragment check, ${forcedColorFocusChecks} forced-colour focus checks, and ${
         screenshots + 1
       } review screenshots.`,
     );

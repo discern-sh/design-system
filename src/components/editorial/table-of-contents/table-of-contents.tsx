@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { useInitialFragmentTarget } from "../../use-initial-fragment-target.ts";
 
 /** One item entry rendered by the Table of contents component. */
 export interface TableOfContentsItem {
@@ -34,6 +35,7 @@ export const TableOfContents: DiscernComponent<
   },
   ref,
 ) {
+  useInitialFragmentTarget();
   return (
     <nav
       ref={ref}

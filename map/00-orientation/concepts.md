@@ -11,7 +11,7 @@ A short narrative that connects the dots — the mental model of discern-design-
 The system turns **authored design sources into a deterministic CSS bundle a consumer selects**. Three building blocks carry everything:
 
 - **Tokens** — the named public custom properties (primitive values, semantic roles, and the branded Preset) that all styling resolves through.
-- **Components** — 82 self-contained folders, each owning its CSS, implementation, examples, and Metadata, arranged in eleven Groups.
+- **Components** — 83 self-contained folders, each owning its CSS, implementation, examples, and Metadata, arranged in eleven Groups.
 - **The Runtime** — the emitted output set (`discern.css`, a Manifest, and any requested Optional Assets) that the Emitter writes into a consumer's build from a Selection.
 
 Everything between those blocks is generated: Codegen reads the Metadata and derives the Registry, the React export surface, and the Catalogue, so no surface can disagree with the authored sources. Consumers never take a stylesheet wholesale — they state a Selection, and the Emitter resolves it into exactly those bytes, identically on every run.
@@ -26,7 +26,7 @@ Everything between those blocks is generated: Codegen reads the Metadata and der
 
 **Emission.** A consumer calls `emitDesignSystemRuntime()` ([`runtime.ts`](../../src/runtime.ts)) with a Selection — explicit component IDs, canonical Groups, `all`, plus Optional Assets. The Emitter resolves dependencies through the Registry, orders output stably, and writes the Runtime: `discern.css` (Tokens, the selected Theme, Root-scoped foundations, utilities, and dependency-ordered component CSS), `manifest.json` (the Manifest: resolved Selection, Owned Classes, public token names, byte sizes, SHA-256 integrity), and only the Optional Assets requested. Identical inputs produce byte-identical output on Deno and Node alike.
 
-**Consumption.** The consumer loads `discern.css`, marks a boundary with `data-discern-root` (the Root), picks light or dark with `data-discern-theme`, and writes semantic HTML against the public class contract — no React and no browser runtime required. React consumers may instead render the same contract to static HTML through the Adapter ([`react.ts`](../../src/react.ts)) at build time.
+**Consumption.** The consumer loads `discern.css`, marks a boundary with `data-discern-root` (the Root), and writes semantic HTML against the public class contract — no React and no browser runtime required. An unforced Root follows the user's system colour scheme; `data-discern-theme="light"` and `"dark"` are explicit overrides, while `"system"` states the default preference directly. React consumers may instead render the same contract to static HTML through the Adapter ([`react.ts`](../../src/react.ts)) at build time.
 
 **Presentation.** The Catalogue ([`styleguide/`](../../styleguide/)) is the local component browser: `deno task serve` builds the full Runtime plus the example registry and serves it for human review.
 

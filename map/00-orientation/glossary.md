@@ -14,7 +14,7 @@ A named public CSS custom property in the `discern` namespace — the unit all s
 
 ### Component
 
-One self-contained folder under [`src/components/<group>/<slug>/`](../../src/components/) owning its implementation (`<slug>.tsx`), stylesheet (`<slug>.css`), Metadata (`<slug>.meta.ts`), examples (`<slug>.examples.tsx`), and `mod.ts`. There are 82, and every surface that lists them is generated from their Metadata.
+One self-contained folder under [`src/components/<group>/<slug>/`](../../src/components/) owning its implementation (`<slug>.tsx`), stylesheet (`<slug>.css`), Metadata (`<slug>.meta.ts`), examples (`<slug>.examples.tsx`), and `mod.ts`. There are 83, and every surface that lists them is generated from their Metadata.
 
 ### Selection
 
@@ -78,7 +78,7 @@ The consumer-marked boundary element carrying `data-discern-root`. All generated
 
 ### Theme
 
-The light/dark role assignment chosen per Root with `data-discern-theme`. Themes move Tokens only — component CSS is byte-identical across Themes.
+The system/light/dark role assignment chosen per Root. A Root without `data-discern-theme` follows `prefers-color-scheme`; `data-discern-theme="system"` makes that preference explicit, while `"light"` and `"dark"` force an override. Themes move Tokens only — component CSS is byte-identical across Themes.
 
 ### Preset
 

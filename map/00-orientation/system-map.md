@@ -12,7 +12,7 @@ Bird's-eye view of how discern-design-system fits together. Read this once and t
 │ Tokens        tokens.ts       │    codegen    │ src/generated/               │
 │ Foundations   styles/*.css    │ ────────────► │  Registry (deps, classes)    │
 │ Components    src/components/ │  generate.ts  │  React surface               │
-│  82 folders × (css, tsx,      │               │  base styles · asset tables  │
+│  83 folders × (css, tsx,      │               │  base styles · asset tables  │
 │   meta.ts, examples, mod.ts)  │               │ styleguide/generated/        │
 │ Preset        theme/discern.ts│               │  example registry            │
 └───────────────────────────────┘               └───────┬──────────────────────┘
@@ -29,7 +29,7 @@ Bird's-eye view of how discern-design-system fits together. Read this once and t
                      ▼                            ▼
         ┌─────────────────────────────────────────────────────┐
         │ CONSUMER SITE (Deno or Node build; static output)   │
-        │ <main data-discern-root data-discern-theme="light"> │
+        │ <main data-discern-root data-discern-theme="system">│
         │   semantic HTML using discern-* classes             │
         │ — consumer Preset may override public Tokens —      │
         └─────────────────────────────────────────────────────┘

@@ -1,0 +1,65 @@
+@layer discern.components {
+  .discern-theme-switcher {
+    display: inline-grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2px;
+    margin: 0;
+    padding: 2px;
+    border: 1px solid var(--discern-color-border-strong);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-surface-sunken);
+    color: var(--discern-color-ink-muted);
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+    font-size: var(--discern-font-size-xs);
+  }
+  .discern-theme-switcher__legend {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    border: 0;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  .discern-theme-switcher__option {
+    position: relative;
+    min-inline-size: 0;
+    cursor: pointer;
+  }
+  .discern-theme-switcher__option input {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    opacity: 0;
+  }
+  .discern-theme-switcher__option span {
+    display: grid;
+    place-items: center;
+    min-block-size: 2rem;
+    padding-inline: var(--discern-space-3);
+    border-radius: var(--discern-radius-sm);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .discern-theme-switcher__option:hover span {
+    color: var(--discern-color-ink);
+  }
+  .discern-theme-switcher__option input:checked + span {
+    background: var(--discern-color-surface);
+    box-shadow: 0 1px 0 color-mix(in oklab, var(--discern-shadow-color) 12%,
+      transparent);
+    color: var(--discern-color-ink);
+    font-weight: var(--discern-font-weight-strong);
+  }
+  .discern-theme-switcher__option input:focus-visible + span {
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: 1px;
+  }
+  .discern-theme-switcher:disabled .discern-theme-switcher__option {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}

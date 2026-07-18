@@ -1,4 +1,34 @@
 import { ProcessSteps } from "./process-steps.tsx";
+import type { ConformanceScenario } from "../../../../styleguide/conformance.ts";
+
+export const conformance = [
+  {
+    name:
+      "five steps share one row and keep their footers level when space permits",
+    steps: [
+      {
+        expect: "aligned",
+        target: { selector: ".discern-process-steps__list > li" },
+        edge: "top",
+      },
+      {
+        expect: "aligned",
+        target: { selector: ".discern-process-steps__detail" },
+        edge: "top",
+      },
+    ],
+  },
+  {
+    name: "five steps wrap into balanced rows before becoming a single column",
+    viewport: { width: 800, height: 1000 },
+    steps: [
+      {
+        expect: "balanced-rows",
+        target: { selector: ".discern-process-steps__list > li" },
+      },
+    ],
+  },
+] satisfies readonly ConformanceScenario[];
 
 export default function ProcessStepsExamples() {
   return (
@@ -24,9 +54,13 @@ export default function ProcessStepsExamples() {
         {
           title: "Shape",
           description: (
-            <p>Turn the desired outcome into a concrete, reviewable plan.</p>
+            <p>
+              Turn the desired outcome into a concrete, reviewable plan with
+              room for constraints, alternatives, and a clear definition of
+              done.
+            </p>
           ),
-          detail: "Human-readable defaults",
+          detail: "Clear defaults",
         },
         {
           title: "Build",
@@ -41,6 +75,11 @@ export default function ProcessStepsExamples() {
             <p>Finish with evidence someone else can independently inspect.</p>
           ),
           detail: "Permanent receipt",
+        },
+        {
+          title: "Share",
+          description: <p>Hand the result back with its evidence attached.</p>,
+          detail: "Ready for review",
         },
       ]}
     />

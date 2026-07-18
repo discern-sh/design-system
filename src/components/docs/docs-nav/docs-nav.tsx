@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { useInitialFragmentTarget } from "../../use-initial-fragment-target.ts";
 
 /** One destination rendered by the Docs nav component. */
 export interface DocsNavItem {
@@ -31,6 +32,7 @@ export const DocsNav: DiscernComponent<HTMLElement, DocsNavProps> = forwardRef<
   { sections, label = "Section navigation", className, ...props },
   ref,
 ) {
+  useInitialFragmentTarget();
   return (
     <nav
       ref={ref}

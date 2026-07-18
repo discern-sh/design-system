@@ -1,6 +1,8 @@
 @layer discern.components {
   .discern-heading__accent {
     color: var(--discern-color-accent-600);
+    color: light-dark(var(--discern-color-accent-600),
+      var(--discern-color-accent-500));
     font-style: italic;
   }
   [data-discern-theme="dark"] .discern-heading__accent {

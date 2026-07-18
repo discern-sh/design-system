@@ -5,7 +5,7 @@ export default {
   group: "People",
   order: 10,
   description:
-    "Identity mark for one person: portrait photo or serif monogram in five sizes, with an optional presence badge.",
+    "Identity mark for one person: portrait photo or UI monogram in five sizes, with an optional presence badge.",
   accessibility: [
     'A named avatar carries role="img" with the person\'s name — and presence, when set — as its accessible label; set decorative when adjacent text already names the person.',
     "Presence is never colour alone: the labelled form folds it into the accessible name, and composers such as Persona render their own text alternative.",

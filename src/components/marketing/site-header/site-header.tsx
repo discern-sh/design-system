@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { useInitialFragmentTarget } from "../../use-initial-fragment-target.ts";
 
 /** One nav item entry rendered by the Site header component. */
 export interface SiteHeaderNavItem {
@@ -38,6 +39,7 @@ export const SiteHeader: DiscernComponent<HTMLElement, SiteHeaderProps> =
     },
     ref,
   ) {
+    useInitialFragmentTarget();
     return (
       <header
         ref={ref}

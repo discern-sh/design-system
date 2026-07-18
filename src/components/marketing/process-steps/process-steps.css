@@ -43,8 +43,14 @@
     padding: 0;
     list-style: none;
   }
+  .discern-process-steps--horizontal .discern-process-steps__list:has(> :nth-child(5):last-child) {
+    grid-template-columns: repeat(var(--discern-process-columns, 5), minmax(0,
+      1fr));
+  }
   .discern-process-steps__list li {
     position: relative;
+    display: flex;
+    flex-direction: column;
     min-width: 0;
     padding-inline-end: var(--discern-space-6);
   }
@@ -72,6 +78,9 @@
     font-size: var(--discern-font-size-xs);
   }
   .discern-process-steps__content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
     padding-block-start: var(--discern-space-6);
   }
   .discern-process-steps__content h3 {
@@ -82,13 +91,16 @@
     font-weight: var(--discern-font-weight-strong);
   }
   .discern-process-steps__detail {
-    margin-block-start: var(--discern-space-5);
+    margin-block-start: auto;
     padding-block-start: var(--discern-space-4);
     border-block-start: 1px solid var(--discern-color-border);
     color: var(--discern-color-ink-faint);
     font-family: var(--discern-font-ui);
     font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-xs);
+  }
+  .discern-process-steps__copy {
+    padding-block-end: var(--discern-space-5);
   }
   .discern-process-steps--vertical .discern-process-steps__list {
     grid-template-columns: 1fr;
@@ -120,12 +132,39 @@
     .discern-process-steps--horizontal .discern-process-steps__list li:nth-child(2n)::before {
       display: none;
     }
+    .discern-process-steps--horizontal .discern-process-steps__list:has(> :nth-child(5):last-child) {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+    .discern-process-steps--horizontal .discern-process-steps__list:has(> :nth-child(5):last-child) > li {
+      grid-column: span 2;
+    }
+    .discern-process-steps--horizontal .discern-process-steps__list:has(> :nth-child(5):last-child) > li:nth-last-child(-n + 2) {
+      grid-column: span 3;
+    }
+    .discern-process-steps--horizontal .discern-process-steps__list:has(> :nth-child(5):last-child) > li:nth-child(2n)::before {
+      display: block;
+    }
+    .discern-process-steps--horizontal .discern-process-steps__list:has(> :nth-child(5):last-child) > li:nth-child(3)::before {
+      display: none;
+    }
   }
   @media (max-width: 560px) {
     .discern-process-steps--horizontal .discern-process-steps__list {
       grid-template-columns: 1fr;
     }
     .discern-process-steps--horizontal .discern-process-steps__list li::before {
+      display: none;
+    }
+    .discern-process-steps--horizontal .discern-process-steps__list:has(> :nth-child(5):last-child) {
+      grid-template-columns: 1fr;
+    }
+    .discern-process-steps--horizontal .discern-process-steps__list:has(> :nth-child(5):last-child) > li {
+      grid-column: 1;
+    }
+    .discern-process-steps--horizontal .discern-process-steps__list:has(> :nth-child(5):last-child) > li:nth-last-child(-n + 2) {
+      grid-column: 1;
+    }
+    .discern-process-steps--horizontal .discern-process-steps__list:has(> :nth-child(5):last-child) > li::before {
       display: none;
     }
   }

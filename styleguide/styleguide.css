@@ -164,16 +164,7 @@
   }
   .discern-catalogue-theme {
     margin-inline-start: auto;
-    min-height: 38px;
-    padding-inline: 12px;
-    border: 1px solid var(--discern-color-border-strong);
-    border-radius: var(--discern-radius-md);
-    background: var(--discern-color-surface);
-    color: var(--discern-color-ink-muted);
-    cursor: pointer;
-    font-family: var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
-    font-size: var(--discern-font-size-xs);
+    flex: none;
   }
   .discern-catalogue-main {
     margin-inline-start: var(--discern-catalogue-sidebar);
@@ -467,6 +458,18 @@
     }
   }
   @media (max-width: 640px) {
+    .discern-catalogue-toolbar {
+      padding-inline: 12px;
+    }
+    .discern-catalogue-search {
+      flex: 1;
+      width: auto;
+      min-width: 0;
+      padding-inline: 8px;
+    }
+    .discern-catalogue-theme .discern-theme-switcher__option span {
+      padding-inline: var(--discern-space-2);
+    }
     .discern-catalogue-conformance {
       padding: 10px;
     }

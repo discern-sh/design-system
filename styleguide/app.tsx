@@ -1,6 +1,9 @@
 import { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { ThemeSwitcher } from "../src/components/core/theme-switcher/theme-switcher.tsx";
+import type { ThemeSwitcherMode } from "../src/components/core/theme-switcher/theme-switcher.tsx";
 import { Kicker } from "../src/components/display/kicker/kicker.tsx";
+import { useInitialFragmentTarget } from "../src/components/use-initial-fragment-target.ts";
 import { allTokens } from "../src/tokens/tokens.ts";
 import { componentGroups } from "../src/types/component-meta.ts";
 import { registry } from "./generated/registry.ts";
@@ -8,6 +11,12 @@ import type { RegistryEntry } from "./generated/registry.ts";
 
 function slugify(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function catalogueTheme(value: string | null): ThemeSwitcherMode | undefined {
+  return value === "system" || value === "light" || value === "dark"
+    ? value
+    : undefined;
 }
 
 function TokenPreview(
@@ -102,6 +111,7 @@ function ComponentPreview({ entry }: { readonly entry: RegistryEntry }) {
 }
 
 function App() {
+  useInitialFragmentTarget();
   const parameters = useMemo(
     () => new URLSearchParams(globalThis.location.search),
     [],
@@ -109,12 +119,10 @@ function App() {
   const requestedTheme = parameters.get("theme");
   const conformanceMode = parameters.get("conformance") === "1";
   const selectedComponent = parameters.get("component");
-  const [theme, setTheme] = useState<"light" | "dark">(() =>
-    requestedTheme === "dark" ||
-      (requestedTheme !== "light" &&
-        localStorage.getItem("discern-styleguide-theme") === "dark")
-      ? "dark"
-      : "light"
+  const [theme, setTheme] = useState<ThemeSwitcherMode>(() =>
+    catalogueTheme(requestedTheme) ??
+      catalogueTheme(localStorage.getItem("discern-styleguide-theme")) ??
+      "system"
   );
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLowerCase();
@@ -154,10 +162,13 @@ function App() {
   })).filter(({ entries }) => entries.length);
   const tokenCategories = [...new Set(tokens.map((token) => token.category))];
 
-  const toggleTheme = () => {
-    const next = theme === "light" ? "dark" : "light";
+  const changeTheme = (next: ThemeSwitcherMode) => {
     setTheme(next);
-    localStorage.setItem("discern-styleguide-theme", next);
+    if (next === "system") {
+      localStorage.removeItem("discern-styleguide-theme");
+    } else {
+      localStorage.setItem("discern-styleguide-theme", next);
+    }
   };
 
   if (conformanceMode) {
@@ -234,13 +245,12 @@ function App() {
             placeholder="Search tokens and components"
           />
         </label>
-        <button
+        <ThemeSwitcher
           className="discern-catalogue-theme"
-          type="button"
-          onClick={toggleTheme}
-        >
-          {theme === "light" ? "Dark" : "Light"} mode
-        </button>
+          mode={theme}
+          onModeChange={changeTheme}
+          label="Catalogue colour theme"
+        />
       </header>
 
       <main className="discern-catalogue-main" id="top">

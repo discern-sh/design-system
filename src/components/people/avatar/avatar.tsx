@@ -22,7 +22,7 @@ export interface AvatarProps extends HTMLAttributes<HTMLSpanElement> {
   readonly decorative?: boolean;
 }
 
-/** Portrait photo or serif monogram identifying one person, with optional presence. */
+/** Portrait photo or interface-type monogram identifying one person, with optional presence. */
 export const Avatar: DiscernComponent<HTMLSpanElement, AvatarProps> =
   forwardRef<HTMLSpanElement, AvatarProps>(function Avatar(
     {

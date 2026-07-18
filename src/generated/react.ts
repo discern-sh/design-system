@@ -3,6 +3,7 @@ export * from "../components/core/icon/mod.ts";
 export * from "../components/core/button/mod.ts";
 export * from "../components/core/icon-button/mod.ts";
 export * from "../components/core/theme-toggle/mod.ts";
+export * from "../components/core/theme-switcher/mod.ts";
 export * from "../components/layout/container/mod.ts";
 export * from "../components/layout/stack/mod.ts";
 export * from "../components/layout/cluster/mod.ts";

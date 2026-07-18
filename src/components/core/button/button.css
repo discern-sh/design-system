@@ -3,8 +3,12 @@
     --discern-button-fill: var(--discern-color-accent-100);
     --discern-button-fill-hover: var(--discern-color-accent-200);
     --discern-button-border: var(--discern-color-accent-600);
+    --discern-button-border: light-dark(var(--discern-color-accent-600),
+      var(--discern-color-accent-500));
     --discern-button-text: var(--discern-color-accent-800);
     --discern-button-shadow: var(--discern-color-accent-600);
+    --discern-button-shadow: light-dark(var(--discern-color-accent-600),
+      var(--discern-shadow-color));
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -48,8 +52,12 @@
     --discern-button-fill: var(--discern-color-surface);
     --discern-button-fill-hover: color-mix(in oklab, var(--discern-color-accent-100) 55%, var(--discern-color-surface));
     --discern-button-border: var(--discern-color-ink);
+    --discern-button-border: light-dark(var(--discern-color-ink),
+      var(--discern-color-border-strong));
     --discern-button-text: var(--discern-color-ink);
     --discern-button-shadow: var(--discern-color-ink);
+    --discern-button-shadow: light-dark(var(--discern-color-ink),
+      var(--discern-shadow-color));
   }
   .discern-button--ghost {
     --discern-button-fill: transparent;

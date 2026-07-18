@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { useInitialFragmentTarget } from "../../use-initial-fragment-target.ts";
 
 /** One adjacent page rendered by the Pager component. */
 export interface PagerLink {
@@ -35,6 +36,7 @@ export const Pager: DiscernComponent<HTMLElement, PagerProps> = forwardRef<
   },
   ref,
 ) {
+  useInitialFragmentTarget();
   return (
     <nav
       ref={ref}

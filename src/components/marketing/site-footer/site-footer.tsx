@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { useInitialFragmentTarget } from "../../use-initial-fragment-target.ts";
 
 /** One link entry rendered by the Site footer component. */
 export interface SiteFooterLink {
@@ -40,6 +41,7 @@ export const SiteFooter: DiscernComponent<HTMLElement, SiteFooterProps> =
     },
     ref,
   ) {
+    useInitialFragmentTarget();
     return (
       <footer
         ref={ref}

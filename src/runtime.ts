@@ -62,14 +62,26 @@ function generateTokenCss(): string {
     .join("\n");
   return `@layer discern.tokens {
   :where([data-discern-root]) {
-    color-scheme: light;
+    color-scheme: light dark;
 ${primitiveLines}
 ${lightLines}
+  }
+
+  :where([data-discern-root][data-discern-theme="light"]) {
+    color-scheme: light;
   }
 
   :where([data-discern-root][data-discern-theme="dark"]) {
     color-scheme: dark;
 ${darkLines}
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :where([data-discern-root]:not([data-discern-theme])),
+    :where([data-discern-root][data-discern-theme="system"]) {
+      color-scheme: dark;
+${darkLines}
+    }
   }
 }`;
 }

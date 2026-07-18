@@ -9,7 +9,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { generateSources } from "../scripts/generate.ts";
 import { packageManifest } from "../src/manifest.ts";
-import { Breadcrumbs, Button } from "../src/react.ts";
+import { Breadcrumbs, Button, ThemeSwitcher } from "../src/react.ts";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
 import { semanticClass } from "../src/semantic-class.ts";
 import {
@@ -338,6 +338,21 @@ Deno.test("runtime globals are branded and defaults stay inside the opted-in roo
       output,
       /@layer discern\.tokens \{\s*:where\(\[data-discern-root\]\)/,
     );
+    assertStringIncludes(output, "color-scheme: light dark;");
+    assertStringIncludes(output, "\n  @media (prefers-color-scheme: dark)");
+    const systemDark = output.slice(
+      output.indexOf("@media (prefers-color-scheme: dark)"),
+    );
+    assertStringIncludes(
+      systemDark,
+      ':where([data-discern-root][data-discern-theme="system"])',
+    );
+    for (const token of themeTokens) {
+      assertStringIncludes(
+        systemDark,
+        `${token.name}: ${token.dark};`,
+      );
+    }
     assert(!output.includes("\n  :root {"));
   } finally {
     await Deno.remove(temp, { recursive: true });
@@ -483,6 +498,11 @@ Deno.test("default blue and green themes share component CSS and preserve state 
     join(PACKAGE_ROOT, "tests", "fixtures", "green-theme.css"),
   );
   assertEquals([...publicCssGlobals(fixture).classes], []);
+  assertStringIncludes(fixture, "@media (prefers-color-scheme: dark)");
+  assertStringIncludes(
+    fixture,
+    ':where([data-discern-root][data-discern-theme="system"])',
+  );
   for (const declaration of fixture.matchAll(/(--[\w-]+):/g)) {
     assert((declaration[1] ?? "").startsWith("--discern-"));
   }
@@ -700,6 +720,17 @@ Deno.test("semantic HTML and React adapters share the public class contract", ()
   assertStringIncludes(breadcrumbs, '<a href="/library">Library</a>');
   assertStringIncludes(breadcrumbs, 'aria-hidden="true">/</span>');
   assertStringIncludes(breadcrumbs, 'aria-current="page">Navigation</span>');
+
+  const themeSwitcher = renderToStaticMarkup(
+    createElement(ThemeSwitcher, { onModeChange: () => undefined }),
+  );
+  assertMatch(themeSwitcher, /^<fieldset/);
+  assertStringIncludes(themeSwitcher, 'data-discern-mode="system"');
+  assertEquals((themeSwitcher.match(/type="radio"/g) ?? []).length, 3);
+  assertMatch(
+    themeSwitcher,
+    /<input(?=[^>]*value="system")(?=[^>]*checked="")[^>]*>/,
+  );
 });
 
 Deno.test("every custom property the emitted css references is defined by the emission", async () => {
@@ -767,6 +798,65 @@ Deno.test("avatar and agent avatar resolve every size step from the shared scale
       );
     }
   }
+});
+
+Deno.test("people monograms use interface type while names remain independently styled", async () => {
+  const stylesheets = (await walk(join(COMPONENT_ROOT, "people")))
+    .filter((path) => path.endsWith(".css"));
+  let monogramRules = 0;
+  for (const stylesheet of stylesheets) {
+    const css = await Deno.readTextFile(stylesheet);
+    for (
+      const rule of css.matchAll(
+        /([^{}]*(?:monogram|initial)[^{}]*)\{([^{}]+)\}/gi,
+      )
+    ) {
+      const declarations = rule[2] ?? "";
+      if (!declarations.includes("font-family")) continue;
+      monogramRules += 1;
+      assertStringIncludes(
+        declarations,
+        "font-family: var(--discern-font-ui)",
+        `${
+          relative(PACKAGE_ROOT, stylesheet)
+        } gives a monogram non-interface type`,
+      );
+    }
+  }
+  assert(monogramRules > 0, "no People monogram typography rules enrolled");
+});
+
+function rendersLinkedNavigation(source: string): boolean {
+  return /<nav\b/.test(source) && /\bhref=/.test(source);
+}
+
+Deno.test("linked navigation adapters restore a fragment after client mounting", async () => {
+  assert(
+    rendersLinkedNavigation(
+      "function Wayfinder(){return <nav><a href={destination}>Go</a></nav>}",
+    ),
+    "the fresh-name navigation fixture did not enter the detector",
+  );
+  const adapters = (await walk(COMPONENT_ROOT))
+    .filter((path) => path.endsWith(".tsx"));
+  let enrolled = 0;
+  for (const adapter of adapters) {
+    const source = await Deno.readTextFile(adapter);
+    if (!rendersLinkedNavigation(source)) continue;
+    enrolled += 1;
+    assertStringIncludes(
+      source,
+      "useInitialFragmentTarget();",
+      `${
+        relative(PACKAGE_ROOT, adapter)
+      } can mount fragment navigation without restoring the initial target`,
+    );
+  }
+  assert(enrolled > 0, "no linked navigation adapters enrolled");
+  assertStringIncludes(
+    await Deno.readTextFile(join(PACKAGE_ROOT, "styleguide", "app.tsx")),
+    "useInitialFragmentTarget();",
+  );
 });
 
 function accessibleText(html: string): string {

@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { useInitialFragmentTarget } from "../../use-initial-fragment-target.ts";
 
 /** One ancestor link rendered before the current breadcrumb. */
 export interface BreadcrumbItem {
@@ -31,6 +32,7 @@ export const Breadcrumbs: DiscernComponent<HTMLElement, BreadcrumbsProps> =
     },
     ref,
   ) {
+    useInitialFragmentTarget();
     return (
       <nav
         ref={ref}
