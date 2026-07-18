@@ -1,0 +1,71 @@
+@layer discern.components {
+  .discern-profile-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--discern-space-4);
+    padding: var(--discern-space-6);
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-surface);
+    box-shadow: var(--discern-shadow-card);
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+  }
+  .discern-profile-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--discern-space-2);
+    min-inline-size: 0;
+  }
+  .discern-profile-card__name {
+    margin: 0;
+    color: var(--discern-color-ink);
+    font-family: var(--discern-font-display);
+    font-size: var(--discern-font-size-display-sm);
+    font-weight: var(--discern-font-weight-display);
+    letter-spacing: -0.01em;
+    line-height: var(--discern-leading-snug);
+  }
+  .discern-profile-card__detail {
+    color: var(--discern-color-accent-700);
+    font-size: var(--discern-font-size-xs);
+    font-weight: var(--discern-font-weight-strong);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .discern-profile-card__bio {
+    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-sm);
+    line-height: var(--discern-leading-body);
+  }
+  .discern-profile-card__bio > :first-child {
+    margin-block-start: 0;
+  }
+  .discern-profile-card__bio > :last-child {
+    margin-block-end: 0;
+  }
+  .discern-profile-card__links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--discern-space-3);
+    margin-block-start: auto;
+    padding-block-start: var(--discern-space-4);
+    border-block-start: 1px solid var(--discern-color-border);
+    font-size: var(--discern-font-size-xs);
+  }
+  .discern-profile-card--landscape {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  .discern-profile-card--landscape .discern-profile-card__body {
+    flex: 1;
+  }
+  .discern-profile-card--landscape .discern-profile-card__name {
+    font-size: var(--discern-font-size-card-title);
+  }
+  .discern-profile-card--landscape .discern-profile-card__links {
+    flex-basis: 100%;
+  }
+}
