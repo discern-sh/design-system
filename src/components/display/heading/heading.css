@@ -5,7 +5,4 @@
       var(--discern-color-accent-500));
     font-style: italic;
   }
-  [data-discern-theme="dark"] .discern-heading__accent {
-    color: var(--discern-color-accent-500);
-  }
 }

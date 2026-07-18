@@ -859,6 +859,21 @@ Deno.test("linked navigation adapters restore a fragment after client mounting",
   );
 });
 
+Deno.test("component and utility styles stay token-driven across theme modes", async () => {
+  const stylesheets = [
+    ...(await walk(COMPONENT_ROOT)).filter((path) => path.endsWith(".css")),
+    join(PACKAGE_ROOT, "src", "styles", "utilities.css"),
+  ];
+  for (const stylesheet of stylesheets) {
+    assert(
+      !/\[data-discern-theme=/.test(await Deno.readTextFile(stylesheet)),
+      `${
+        relative(PACKAGE_ROOT, stylesheet)
+      } branches on a theme attribute instead of semantic tokens`,
+    );
+  }
+});
+
 function accessibleText(html: string): string {
   const voidTags = new Set([
     "area",

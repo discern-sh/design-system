@@ -63,7 +63,8 @@ export const ThemeSwitcher: DiscernComponent<
               name={name}
               value={option.mode}
               checked={mode === option.mode}
-              onChange={() => onModeChange(option.mode)}
+              onChange={() =>
+                onModeChange(option.mode)}
             />
             <span>{option.label}</span>
           </label>

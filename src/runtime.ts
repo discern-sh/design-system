@@ -52,19 +52,18 @@ export interface BuildSummary {
 }
 
 function generateTokenCss(): string {
-  const primitiveLines = baseTokens.map(({ name, value }) =>
-    `    ${name}: ${value};`
-  ).join("\n");
-  const lightLines = themeTokens.map(({ name, light }) =>
-    `    ${name}: ${light};`
-  ).join("\n");
-  const darkLines = themeTokens.map(({ name, dark }) => `    ${name}: ${dark};`)
-    .join("\n");
+  const primitiveDeclarations = baseTokens.map(({ name, value }) =>
+    `${name}: ${value};`
+  ).join(" ");
+  const lightDeclarations = themeTokens.map(({ name, light }) =>
+    `${name}: ${light};`
+  ).join(" ");
+  const darkDeclarations = themeTokens.map(({ name, dark }) =>
+    `${name}: ${dark};`
+  ).join(" ");
   return `@layer discern.tokens {
   :where([data-discern-root]) {
-    color-scheme: light dark;
-${primitiveLines}
-${lightLines}
+    color-scheme: light dark; ${primitiveDeclarations} ${lightDeclarations}
   }
 
   :where([data-discern-root][data-discern-theme="light"]) {
@@ -72,15 +71,13 @@ ${lightLines}
   }
 
   :where([data-discern-root][data-discern-theme="dark"]) {
-    color-scheme: dark;
-${darkLines}
+    color-scheme: dark; ${darkDeclarations}
   }
 
   @media (prefers-color-scheme: dark) {
     :where([data-discern-root]:not([data-discern-theme])),
     :where([data-discern-root][data-discern-theme="system"]) {
-      color-scheme: dark;
-${darkLines}
+      color-scheme: dark; ${darkDeclarations}
     }
   }
 }`;
