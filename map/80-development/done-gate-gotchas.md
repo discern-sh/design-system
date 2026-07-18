@@ -106,6 +106,14 @@ refresh` immediately rewrites them back) — the two sides loop forever.
 
 **Fix.** Trust the number in `discern done`. For a standalone measurement, run `deno task build` first (or delete `dist/discern.css` and let the standard's run rebuild).
 
+### A conformance role target with `name` misses because hidden text joins the computed name
+
+**Symptom.** A conformance scenario targeting `{ role: "...", name: "..." }` fails with `Expected one target but found 0`, even though the element visibly exists and its accessible name looks like an exact match — typically when the element contains aria-hidden decoration (a sigil, an icon, a decorative Avatar) beside its visible text.
+
+**Cause.** The runner resolves role targets with Playwright's `getByRole(role, { name, exact: true, includeHidden: true })` (see `targetLocator` in [`conformance.ts`](../../scripts/conformance.ts)). Playwright's `includeHidden` option also feeds its accessible-name computation, so aria-hidden descendants join the computed name — the name stops matching exactly even though real assistive technology would exclude them. An explicit `aria-label` is immune (it wins over content), which is why label-based scenarios like Tag's pass.
+
+**Fix.** For elements whose accessible name comes from content next to hidden decoration, either target by a unique `selector` and pin the decoration's `aria-hidden="true"` with an attribute expectation, or give the scenario's role target the full text including the hidden parts. Also remember `exactlyOne`: any target that matches twice in the example canvas fails, so scope selectors with an attribute (`[aria-label="…"]`, `[href="…"]`) when an example renders several instances.
+
 ### The main checkout's `node_modules` lags a landed dependency
 
 **Symptom.** In the **main checkout**, `discern done` fails its typecheck stage with `error: Could not resolve "<package>", but found it in a package.json. Deno
