@@ -874,6 +874,26 @@ Deno.test("component and utility styles stay token-driven across theme modes", a
   }
 });
 
+Deno.test("terminal shares Code listing's theme-responsive surface roles", async () => {
+  const styles = await Promise.all(
+    [
+      join(COMPONENT_ROOT, "display", "terminal", "terminal.css"),
+      join(COMPONENT_ROOT, "editorial", "code-listing", "code-listing.css"),
+    ].map((path) => Deno.readTextFile(path)),
+  );
+  for (
+    const token of [
+      "--discern-color-surface",
+      "--discern-color-surface-sunken",
+      "--discern-color-border-strong",
+      "--discern-color-ink",
+    ]
+  ) {
+    for (const style of styles) assertStringIncludes(style, token);
+  }
+  assert(!styles[0]?.includes("--discern-color-inverse-"));
+});
+
 function accessibleText(html: string): string {
   const voidTags = new Set([
     "area",

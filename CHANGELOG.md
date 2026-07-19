@@ -7,7 +7,7 @@ Each release is cut from a green run of the full release gate — formatting, li
 ## Unreleased
 
 - Default an unforced root to the user's system colour scheme, retain explicit Light and Dark overrides, and add the controlled Theme switcher component with native System, Light, and Dark radio semantics. The Catalogue now uses the same control and treats System as its unsaved default.
-- Restore cold fragment navigation after client-rendered navigation mounts, including the Catalogue, Docs nav, Table of contents, and every other linked navigation landmark. Give Code listing a semantic light surface, set People monograms in the UI face with a clearer dark gradient, and let Process steps hold five level-footed columns before wrapping into balanced rows.
+- Restore cold fragment navigation after client-rendered navigation mounts, including the Catalogue, Docs nav, Table of contents, and every other linked navigation landmark. Give Code listing and Terminal calmer semantic light surfaces, while Terminal keeps its monospace console grammar; set People monograms in the UI face with a clearer dark gradient, and let Process steps hold five level-footed columns before wrapping into balanced rows.
 - Polish the People identity set with layered monogram surfaces, clearer linked mentions, structured editorial bylines, and a stronger Profile card hierarchy that holds across portrait and landscape layouts.
 - Give Agents a more coherent technical grammar: dimensional agent tiles, monospace persona names, tracked Worklog steps, surfaced Transcript turns, receipt-like proof cards, and a responsive Fleet grid that preserves identity, state, branch, drift, and timing without narrow-view overflow.
 

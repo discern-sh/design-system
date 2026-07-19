@@ -1,14 +1,13 @@
 @layer discern.components {
   .discern-terminal {
-    --discern-terminal-surface: color-mix(in oklab,
-      var(--discern-color-inverse-surface) 94%, var(--discern-color-accent-800));
-    --discern-terminal-text: var(--discern-color-inverse-ink);
-    --discern-terminal-muted: color-mix(in oklab, var(--discern-terminal-text) 58%,
-      transparent);
+    --discern-terminal-surface: var(--discern-color-surface-sunken);
+    --discern-terminal-chrome: var(--discern-color-surface);
+    --discern-terminal-border: var(--discern-color-border-strong);
+    --discern-terminal-text: var(--discern-color-ink);
+    --discern-terminal-muted: var(--discern-color-ink-faint);
     overflow: hidden;
     margin: 0;
-    border: 1px solid color-mix(in oklab, var(--discern-terminal-text) 22%,
-      var(--discern-terminal-surface));
+    border: 1px solid var(--discern-terminal-border);
     border-radius: var(--discern-radius-lg);
     background: var(--discern-terminal-surface);
     box-shadow: var(--discern-shadow-window);
@@ -21,22 +20,20 @@
     gap: 6px;
     min-block-size: 38px;
     padding-inline: 13px;
-    border-block-end: 1px solid color-mix(in oklab,
-      var(--discern-terminal-text) 15%, transparent);
-    background: color-mix(in oklab, var(--discern-terminal-surface) 86%,
-      var(--discern-color-accent-600));
+    border-block-end: 1px solid var(--discern-terminal-border);
+    background: var(--discern-terminal-chrome);
   }
   .discern-terminal__dot {
     inline-size: 7px;
     block-size: 7px;
     border-radius: 50%;
-    background: var(--discern-color-accent-400);
+    background: var(--discern-color-danger);
   }
   .discern-terminal__dot:nth-child(2) {
-    opacity: 0.7;
+    background: var(--discern-color-warning);
   }
   .discern-terminal__dot:nth-child(3) {
-    opacity: 0.4;
+    background: var(--discern-color-success);
   }
   .discern-terminal__title {
     position: absolute;
@@ -69,12 +66,12 @@
     font: inherit;
   }
   .discern-terminal__prompt {
-    color: var(--discern-color-accent-400);
+    color: var(--discern-color-accent-700);
   }
   .discern-terminal__muted {
     color: var(--discern-terminal-muted);
   }
   .discern-terminal__success {
-    color: var(--discern-color-success);
+    color: var(--discern-color-success-deep);
   }
 }
