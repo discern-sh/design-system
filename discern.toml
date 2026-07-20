@@ -407,9 +407,11 @@ margin = 100
 # The consumer-facing raw budget: the bytes a documentation site receives
 # from `groups: ["Docs"]`. Unlike the full catalogue, this number does not
 # grow when unrelated groups gain components — it is the true shipped cost.
+# The 33 kB ceiling deliberately accommodates the glossary term component and
+# its general-purpose hover-card dependency, with headroom for ordinary drift.
 [standards.docs_selection]
 run = "deno run --config deno.json --allow-read --allow-write scripts/measure.ts"
-limit = 25000
+limit = 33000
 direction = "down"
 metric = "docs_selection_bytes"
 inputs = ["src/**", "scripts/**"]
