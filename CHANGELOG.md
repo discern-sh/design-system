@@ -4,7 +4,7 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
-## Unreleased
+## 0.7.0
 
 - Add the Core `Logo` and `Brand` components. `Logo` defaults to an unboxed, natural-width, `currentColor` mark suitable for a text glyph, injected SVG, image, or wide wordmark; `treatment="tile"` preserves the bounded accent box and `shape="square"` opts into square geometry. `Brand` composes a decorative mark with the visible name and optional tagline, with inherited, UI, display, and monospace typefaces. Discern consumers can now render the canonical lockup as `<Brand name="discern" mark="◮" typeface="mono" />` without announcing the decorative glyph twice. Selecting `brand` automatically emits its `logo` dependency.
 - Extend Site header and Site footer with `brandTypeface`, `brandMarkTreatment`, and `brandMarkShape`. Their existing display-type, tiled-square defaults remain unchanged for current consumers; choosing `brandMarkTreatment="plain"` defaults the mark to natural width, so glyphs and non-square injected graphics have no visible container.
