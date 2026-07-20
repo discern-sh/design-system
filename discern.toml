@@ -38,6 +38,13 @@ gotchas_doc = "map/80-development/done-gate-gotchas.md"
 # maintain, relative to the project root. `discern setup` seeds it here.
 todo = "discern/TODO.md"
 
+# discern keeps a logbook: one line of local operational history per verb run,
+# stored under .git and shared by this repository's worktrees. Metadata only —
+# timings, outcomes, and names, never code or command output — and it never
+# leaves this machine. It exists because recording writes even when never read:
+# set false to stop all writes (existing history stays until you delete it).
+logbook = true
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # [repository] — policy shared by every checkout of this Git repository: where
@@ -332,8 +339,14 @@ ensure = []  # converge, e.g. ["<install deps>"]
 # subsystem on.
 #
 # Each limit may only improve: line coverage, a bundle-size budget, a lint/type-
-# error count, a perf budget. Each [standards.<name>]
-# table declares one:
+# error count, a perf budget. Sort the number before holding it: an invariant a
+# healthy project never adds (suppressions, a banned pattern) holds the raw
+# count; a quality that scales (coverage, alert density) holds a rate via
+# `per`; a total that grows with the product (a size, a word count) needs
+# `margin` and an owner willing to raise the limit as the product grows —
+# pinned at today's value it fails the next legitimate change.
+#
+# Each [standards.<name>] table declares one:
 #   metric     the metric name the run emits        (default: the standard name)
 #   direction  "up"   value should rise; limit is a FLOOR   (e.g. coverage)
 #              "down" value should fall; limit is a CEILING (e.g. a size budget)
