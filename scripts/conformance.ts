@@ -183,6 +183,33 @@ async function performStep(
     );
     return;
   }
+  if (step.expect === "within-viewport") {
+    const element = await exactlyOne(target, step.target);
+    const bounds = await element.evaluate((node) => {
+      const rect = node.getBoundingClientRect();
+      return {
+        top: rect.top,
+        right: rect.right,
+        bottom: rect.bottom,
+        left: rect.left,
+        viewportWidth: node.ownerDocument.documentElement.clientWidth,
+        viewportHeight: node.ownerDocument.documentElement.clientHeight,
+      };
+    });
+    const tolerance = step.tolerance ?? 1;
+    invariant(
+      bounds.top >= -tolerance &&
+        bounds.left >= -tolerance &&
+        bounds.right <= bounds.viewportWidth + tolerance &&
+        bounds.bottom <= bounds.viewportHeight + tolerance,
+      `Expected target within ${bounds.viewportWidth}×${bounds.viewportHeight}px viewport but found ${
+        bounds.left.toFixed(2)
+      }, ${bounds.top.toFixed(2)} → ${bounds.right.toFixed(2)}, ${
+        bounds.bottom.toFixed(2)
+      }: ${JSON.stringify(step.target)}`,
+    );
+    return;
+  }
   if (step.expect === "aligned") {
     const positions = await target.evaluateAll(
       (nodes, edge) =>

@@ -4,8 +4,10 @@ import { SiteHeader } from "./site-header.tsx";
 export default function SiteHeaderExamples() {
   return (
     <SiteHeader
-      brand="Northstar"
-      brandMark="N"
+      brand="Waypoint"
+      brandMark="◮"
+      brandTypeface="mono"
+      brandMarkTreatment="plain"
       navItems={[
         { label: "Product", href: "#product" },
         { label: "Principles", href: "#principles" },

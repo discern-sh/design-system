@@ -20,6 +20,9 @@ export interface SiteFooterGroup {
 export interface SiteFooterProps extends HTMLAttributes<HTMLElement> {
   readonly brand: ReactNode;
   readonly brandMark?: ReactNode;
+  readonly brandTypeface?: "inherit" | "ui" | "display" | "mono";
+  readonly brandMarkTreatment?: "plain" | "tile";
+  readonly brandMarkShape?: "natural" | "square";
   readonly description?: ReactNode;
   readonly groups?: readonly SiteFooterGroup[];
   readonly legal?: ReactNode;
@@ -32,6 +35,9 @@ export const SiteFooter: DiscernComponent<HTMLElement, SiteFooterProps> =
     {
       brand,
       brandMark,
+      brandTypeface = "display",
+      brandMarkTreatment = "tile",
+      brandMarkShape,
       description,
       groups = [],
       legal,
@@ -42,6 +48,8 @@ export const SiteFooter: DiscernComponent<HTMLElement, SiteFooterProps> =
     ref,
   ) {
     useInitialFragmentTarget();
+    const resolvedMarkShape = brandMarkShape ??
+      (brandMarkTreatment === "tile" ? "square" : "natural");
     return (
       <footer
         ref={ref}
@@ -50,11 +58,21 @@ export const SiteFooter: DiscernComponent<HTMLElement, SiteFooterProps> =
       >
         <div className="discern-site-footer__inner">
           <div className="discern-site-footer__brand-column">
-            <a className="discern-site-footer__brand" href="/">
+            <a
+              className={classNames(
+                "discern-site-footer__brand",
+                "discern-site-footer__brand--" + brandTypeface,
+              )}
+              href="/"
+            >
               {brandMark
                 ? (
                   <span
-                    className="discern-site-footer__mark"
+                    className={classNames(
+                      "discern-site-footer__mark",
+                      "discern-site-footer__mark--" + brandMarkTreatment,
+                      "discern-site-footer__mark--" + resolvedMarkShape,
+                    )}
                     aria-hidden="true"
                   >
                     {brandMark}

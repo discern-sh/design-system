@@ -14,6 +14,9 @@ export interface SiteHeaderNavItem {
 export interface SiteHeaderProps extends HTMLAttributes<HTMLElement> {
   readonly brand: ReactNode;
   readonly brandMark?: ReactNode;
+  readonly brandTypeface?: "inherit" | "ui" | "display" | "mono";
+  readonly brandMarkTreatment?: "plain" | "tile";
+  readonly brandMarkShape?: "natural" | "square";
   readonly homeHref?: string;
   readonly navItems?: readonly SiteHeaderNavItem[];
   readonly navLabel?: string;
@@ -28,6 +31,9 @@ export const SiteHeader: DiscernComponent<HTMLElement, SiteHeaderProps> =
     {
       brand,
       brandMark,
+      brandTypeface = "display",
+      brandMarkTreatment = "tile",
+      brandMarkShape,
       homeHref = "/",
       navItems = [],
       navLabel = "Primary",
@@ -40,6 +46,8 @@ export const SiteHeader: DiscernComponent<HTMLElement, SiteHeaderProps> =
     ref,
   ) {
     useInitialFragmentTarget();
+    const resolvedMarkShape = brandMarkShape ??
+      (brandMarkTreatment === "tile" ? "square" : "natural");
     return (
       <header
         ref={ref}
@@ -55,10 +63,23 @@ export const SiteHeader: DiscernComponent<HTMLElement, SiteHeaderProps> =
           ? <div className="discern-site-header__notice">{notice}</div>
           : null}
         <div className="discern-site-header__inner">
-          <a className="discern-site-header__brand" href={homeHref}>
+          <a
+            className={classNames(
+              "discern-site-header__brand",
+              "discern-site-header__brand--" + brandTypeface,
+            )}
+            href={homeHref}
+          >
             {brandMark
               ? (
-                <span className="discern-site-header__mark" aria-hidden="true">
+                <span
+                  className={classNames(
+                    "discern-site-header__mark",
+                    "discern-site-header__mark--" + brandMarkTreatment,
+                    "discern-site-header__mark--" + resolvedMarkShape,
+                  )}
+                  aria-hidden="true"
+                >
                   {brandMark}
                 </span>
               )

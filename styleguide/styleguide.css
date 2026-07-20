@@ -52,22 +52,16 @@
     text-decoration: none;
   }
   .discern-catalogue-brand__mark {
-    display: grid;
-    place-items: center;
-    inline-size: 29px;
-    block-size: 29px;
-    border: 1px solid var(--discern-color-accent-600);
-    border-radius: var(--discern-radius-sm);
-    background: var(--discern-color-accent-200);
-    box-shadow: 2px 2px 0 var(--discern-color-accent-600);
-    color: var(--discern-color-accent-800);
-    font-family: var(--discern-font-display);
-    font-weight: 700;
+    color: inherit;
+    font-size: 1.65rem;
+    font-style: normal;
+    line-height: 1;
   }
   .discern-catalogue-brand strong {
     display: block;
-    font-family: var(--discern-font-display);
+    font-family: var(--discern-font-mono);
     font-size: 1.0625rem;
+    font-weight: var(--discern-font-weight-strong);
     line-height: 1;
   }
   .discern-catalogue-brand small {

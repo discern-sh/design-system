@@ -9,7 +9,16 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { generateSources } from "../scripts/generate.ts";
 import { packageManifest } from "../src/manifest.ts";
-import { Breadcrumbs, Button, ThemeSwitcher } from "../src/react.ts";
+import {
+  Brand,
+  Breadcrumbs,
+  Button,
+  GlossaryTerm,
+  HoverCard,
+  Logo,
+  SiteHeader,
+  ThemeSwitcher,
+} from "../src/react.ts";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
 import { semanticClass } from "../src/semantic-class.ts";
 import {
@@ -388,6 +397,28 @@ Deno.test("selection resolves dependencies and excludes unrelated groups", async
     ]);
     assertEquals(docs.manifest.selection.requestedGroups, []);
     assertEquals(await outputPaths(temp), ["discern.css", "manifest.json"]);
+
+    const branding = await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${temp}/`),
+      components: ["brand"],
+    });
+    assertEquals(branding.manifest.selection.resolvedComponents, [
+      "logo",
+      "brand",
+    ]);
+
+    const glossary = await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${temp}/`),
+      components: ["glossary-term"],
+    });
+    assertEquals(glossary.manifest.selection.resolvedComponents, [
+      "hover-card",
+      "glossary-term",
+    ]);
+    const glossaryCss = await Deno.readTextFile(join(temp, "discern.css"));
+    assertStringIncludes(glossaryCss, ".discern-hover-card");
+    assertStringIncludes(glossaryCss, ".discern-glossary-term");
+    assert(!glossaryCss.includes(".discern-brand"));
   } finally {
     await Deno.remove(temp, { recursive: true });
   }
@@ -731,6 +762,108 @@ Deno.test("semantic HTML and React adapters share the public class contract", ()
     themeSwitcher,
     /<input(?=[^>]*value="system")(?=[^>]*checked="")[^>]*>/,
   );
+});
+
+Deno.test("branding and hover-card adapters preserve their semantic relationships", () => {
+  const logo = renderToStaticMarkup(
+    createElement(Logo, { label: "Field notes", children: "FN" }),
+  );
+  assertStringIncludes(logo, 'role="img"');
+  assertStringIncludes(logo, 'aria-label="Field notes"');
+  assertStringIncludes(logo, "discern-logo--plain");
+  assertStringIncludes(logo, "discern-logo--natural");
+
+  const brand = renderToStaticMarkup(
+    createElement(Brand, {
+      name: "discern",
+      mark: "◮",
+      typeface: "mono",
+    }),
+  );
+  assertStringIncludes(brand, "discern-brand--mono");
+  assertStringIncludes(brand, 'aria-hidden="true">◮</span>');
+  assert(!brand.includes('role="img"'));
+
+  const header = renderToStaticMarkup(
+    createElement(SiteHeader, {
+      brand: "discern",
+      brandMark: "◮",
+      brandTypeface: "mono",
+      brandMarkTreatment: "plain",
+    }),
+  );
+  assertStringIncludes(header, "discern-site-header__brand--mono");
+  assertStringIncludes(header, "discern-site-header__mark--plain");
+  assertStringIncludes(header, "discern-site-header__mark--natural");
+
+  const hoverCard = renderToStaticMarkup(
+    createElement(HoverCard, {
+      layout: "block",
+      label: "Record details",
+      align: "start",
+      trigger: createElement(
+        "button",
+        { "aria-details": "existing" },
+        "Inspect",
+      ),
+      children: createElement("p", null, "Flexible content"),
+    }),
+  );
+  assertMatch(hoverCard, /^<div/);
+  assertMatch(hoverCard, /aria-details="existing [^"]+"/);
+  assertMatch(
+    hoverCard,
+    /id="([^"]+)" role="group" aria-label="Record details"/,
+  );
+
+  const glossaryTerm = renderToStaticMarkup(
+    createElement(GlossaryTerm, {
+      definition: "A separate checkout for one line of work.",
+      children: "Worktree",
+    }),
+  );
+  assertStringIncludes(glossaryTerm, "<dfn");
+  assertStringIncludes(glossaryTerm, 'tabindex="0"');
+  assertStringIncludes(glossaryTerm, "discern-dotted-underline");
+  assertMatch(glossaryTerm, /aria-details="[^"]+"/);
+  assertStringIncludes(
+    glossaryTerm,
+    'role="group" aria-label="Worktree definition"',
+  );
+});
+
+Deno.test("brand-bearing page chrome keeps plain, tiled, mono, and adaptive mark variants", async () => {
+  for (
+    const stylesheet of [
+      join(COMPONENT_ROOT, "marketing", "site-header", "site-header.css"),
+      join(COMPONENT_ROOT, "marketing", "site-footer", "site-footer.css"),
+    ]
+  ) {
+    const css = await Deno.readTextFile(stylesheet);
+    for (
+      const variant of [
+        "__brand--mono",
+        "__mark--plain",
+        "__mark--tile",
+        "__mark--square",
+      ]
+    ) {
+      assertStringIncludes(
+        css,
+        variant,
+        `${relative(PACKAGE_ROOT, stylesheet)} is missing ${variant}`,
+      );
+    }
+    assertMatch(
+      css,
+      /__mark > :where\(img, svg\)/,
+      `${relative(PACKAGE_ROOT, stylesheet)} does not adapt injected graphics`,
+    );
+  }
+  const utilities = await Deno.readTextFile(
+    join(PACKAGE_ROOT, "src", "styles", "utilities.css"),
+  );
+  assertStringIncludes(utilities, ".discern-dotted-underline");
 });
 
 Deno.test("every custom property the emitted css references is defined by the emission", async () => {

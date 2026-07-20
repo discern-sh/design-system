@@ -47,6 +47,11 @@ export type ConformanceStep =
     readonly expect: "balanced-rows";
     readonly target: ConformanceTarget;
     readonly tolerance?: number;
+  }
+  | {
+    readonly expect: "within-viewport";
+    readonly target: ConformanceTarget;
+    readonly tolerance?: number;
   };
 
 /** A browser path exported beside one component's catalogue example. */

@@ -14,7 +14,7 @@ A named public CSS custom property in the `discern` namespace — the unit all s
 
 ### Component
 
-One self-contained folder under [`src/components/<group>/<slug>/`](../../src/components/) owning its implementation (`<slug>.tsx`), stylesheet (`<slug>.css`), Metadata (`<slug>.meta.ts`), examples (`<slug>.examples.tsx`), and `mod.ts`. There are 83, and every surface that lists them is generated from their Metadata.
+One self-contained folder under [`src/components/<group>/<slug>/`](../../src/components/) owning its implementation (`<slug>.tsx`), stylesheet (`<slug>.css`), Metadata (`<slug>.meta.ts`), examples (`<slug>.examples.tsx`), and `mod.ts`. There are 87, and every surface that lists them is generated from their Metadata.
 
 ### Selection
 

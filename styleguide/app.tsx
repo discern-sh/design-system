@@ -197,9 +197,11 @@ function App() {
     >
       <aside className="discern-catalogue-sidebar">
         <a className="discern-catalogue-brand" href="#top">
-          <span className="discern-catalogue-brand__mark">D</span>
+          <span className="discern-catalogue-brand__mark" aria-hidden="true">
+            ◮
+          </span>
           <span>
-            <strong>Discern</strong>
+            <strong>discern</strong>
             <small>Design system</small>
           </span>
         </a>

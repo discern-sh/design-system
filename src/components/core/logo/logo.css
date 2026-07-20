@@ -1,0 +1,56 @@
+@layer discern.components {
+  .discern-logo {
+    --discern-logo-size: var(--discern-font-size-display-sm);
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    max-inline-size: 100%;
+    block-size: var(--discern-logo-size);
+    color: inherit;
+    font-size: var(--discern-logo-size);
+    font-style: normal;
+    line-height: 1;
+    vertical-align: middle;
+  }
+  .discern-logo--sm {
+    --discern-logo-size: var(--discern-font-size-sm);
+  }
+  .discern-logo--md {
+    --discern-logo-size: var(--discern-font-size-display-sm);
+  }
+  .discern-logo--lg {
+    --discern-logo-size: var(--discern-font-size-display-md);
+  }
+  .discern-logo--xl {
+    --discern-logo-size: var(--discern-font-size-display-lg);
+  }
+  .discern-logo--natural {
+    min-inline-size: min-content;
+  }
+  .discern-logo--square {
+    inline-size: var(--discern-logo-size);
+    overflow: hidden;
+  }
+  .discern-logo--tile {
+    min-inline-size: var(--discern-logo-size);
+    padding-inline: var(--discern-space-2);
+    border: 1px solid var(--discern-color-accent-600);
+    border-radius: var(--discern-radius-sm);
+    background: var(--discern-color-accent-200);
+    box-shadow: var(--discern-shadow-card);
+    color: var(--discern-color-accent-800);
+    font-size: calc(var(--discern-logo-size) * 0.58);
+    font-weight: var(--discern-font-weight-strong);
+  }
+  .discern-logo--tile.discern-logo--square {
+    padding-inline: var(--discern-space-1);
+  }
+  .discern-logo > :where(img, svg) {
+    display: block;
+    inline-size: auto;
+    max-inline-size: 100%;
+    block-size: 100%;
+    object-fit: contain;
+  }
+}

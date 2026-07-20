@@ -15,6 +15,27 @@
   .discern-mono {
     font-family: var(--discern-font-mono);
   }
+  .discern-dotted-underline {
+    color: inherit;
+    text-decoration-line: underline;
+    text-decoration-style: dotted;
+    text-decoration-color: color-mix(in oklab, currentColor 48%, transparent);
+    text-decoration-thickness: 0.08em;
+    text-underline-offset: 0.2em;
+    text-decoration-skip-ink: auto;
+    cursor: help;
+  }
+  .discern-dotted-underline:hover,
+  .discern-dotted-underline:focus-visible {
+    text-decoration-style: solid;
+    text-decoration-color: currentColor;
+  }
+  button.discern-dotted-underline {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+  }
   .discern-visually-hidden {
     position: absolute !important;
     width: 1px !important;
