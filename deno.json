@@ -68,6 +68,8 @@
     "proseWrap": "never",
     "exclude": [
       ".idea/",
+      "discern.toml",
+      "map/**",
       "dist/",
       "src/generated/",
       "styleguide/generated/",
