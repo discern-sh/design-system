@@ -45,7 +45,18 @@ When a session yields a durable lesson — a correction, a hard-won procedure, a
 
 ## The map & decisions
 
-The tree at `map/` is the **map** — the agent-maintained account of this codebase, browsable with **`discern_map`**. Agents write it and keep it current; humans read it to audit what their agents understand; a stale map is a defect. Never touch documentation the user didn't point discern at — the map is the only tree discern maintains. Record significant or hard-to-reverse decisions as **Architecture Decision Records** under `map/_adr/`.
+`map/` is the agent-maintained **map**, browsable with **`discern_map`**. Keep it current; staleness is a defect. Humans audit agent understanding. Maintain no documentation outside it unless the user asks. Put significant, hard-to-reverse decisions in **Architecture Decision Records** under `map/_adr/`.
+
+Use a region as `target` for its index, or add `search` to scope a query. When unsure, search in task language, then fetch a result with its canonical `target`.
+
+- `00-orientation` — Orientation
+- `10-tokens-themes` — Tokens & themes
+- `20-components` — Components
+- `30-codegen` — Codegen
+- `40-runtime-emitter` — Runtime emitter
+- `50-react-adapter` — React adapter
+- `60-catalogue` — Catalogue
+- `80-development` — Working on this project
 
 ---
 
