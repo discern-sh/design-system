@@ -160,6 +160,48 @@
     margin-inline-start: auto;
     flex: none;
   }
+  .discern-catalogue-accent {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 38px;
+    padding-inline: 10px;
+    border: 1px solid var(--discern-color-border-strong);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-surface-sunken);
+    color: var(--discern-color-ink-muted);
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+    font-size: var(--discern-font-size-xs);
+    white-space: nowrap;
+  }
+  .discern-catalogue-accent__swatch {
+    inline-size: 12px;
+    block-size: 12px;
+    flex: none;
+    border: 1px solid color-mix(in oklab, var(--discern-color-accent-700) 55%,
+      transparent);
+    border-radius: 50%;
+    background: var(--discern-color-accent-500);
+  }
+  .discern-catalogue-accent input {
+    inline-size: 96px;
+    block-size: 18px;
+    margin: 0;
+    cursor: ew-resize;
+    accent-color: var(--discern-color-accent-500);
+  }
+  .discern-catalogue-accent input:focus-visible {
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: 2px;
+  }
+  .discern-catalogue-accent output {
+    inline-size: 3.5ch;
+    color: var(--discern-color-ink);
+    font-family: var(--discern-font-mono);
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+  }
   .discern-catalogue-main {
     margin-inline-start: var(--discern-catalogue-sidebar);
     padding: 116px clamp(28px, 5vw, 76px) 120px;
@@ -464,6 +506,21 @@
     .discern-catalogue-theme .discern-theme-switcher__option span {
       padding-inline: var(--discern-space-2);
     }
+    .discern-catalogue-accent {
+      gap: 6px;
+      padding-inline: 8px;
+    }
+    .discern-catalogue-accent__label {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+    }
+    .discern-catalogue-accent input {
+      inline-size: 72px;
+    }
     .discern-catalogue-conformance {
       padding: 10px;
     }
@@ -478,6 +535,17 @@
       grid-template-columns: 1fr;
     }
     .discern-catalogue-component > header p {
+      display: none;
+    }
+  }
+  @media (max-width: 480px) {
+    .discern-catalogue-accent {
+      padding-inline: 6px;
+    }
+    .discern-catalogue-accent input {
+      inline-size: 60px;
+    }
+    .discern-catalogue-accent output {
       display: none;
     }
   }

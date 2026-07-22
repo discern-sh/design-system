@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
 import { ThemeSwitcher } from "../src/components/core/theme-switcher/theme-switcher.tsx";
 import type { ThemeSwitcherMode } from "../src/components/core/theme-switcher/theme-switcher.tsx";
 import { Kicker } from "../src/components/display/kicker/kicker.tsx";
 import { useInitialFragmentTarget } from "../src/components/use-initial-fragment-target.ts";
-import { allTokens } from "../src/tokens/tokens.ts";
+import { allTokens, discernThemeTokens } from "../src/tokens/tokens.ts";
 import { componentGroups } from "../src/types/component-meta.ts";
 import { registry } from "./generated/registry.ts";
 import type { RegistryEntry } from "./generated/registry.ts";
@@ -18,6 +19,11 @@ function catalogueTheme(value: string | null): ThemeSwitcherMode | undefined {
     ? value
     : undefined;
 }
+
+const defaultAccentHue = Number(
+  discernThemeTokens.find(({ name }) => name === "--discern-accent-hue")
+    ?.value ?? "255",
+);
 
 function TokenPreview(
   { name, category }: { readonly name: string; readonly category: string },
@@ -125,6 +131,7 @@ function App() {
       "system"
   );
   const [query, setQuery] = useState("");
+  const [accentHue, setAccentHue] = useState(defaultAccentHue);
   const normalizedQuery = query.trim().toLowerCase();
 
   const components = useMemo(() =>
@@ -194,6 +201,7 @@ function App() {
       className="discern-catalogue-shell"
       data-discern-root
       data-discern-theme={theme}
+      style={{ "--discern-accent-hue": accentHue } as CSSProperties}
     >
       <aside className="discern-catalogue-sidebar">
         <a className="discern-catalogue-brand" href="#top">
@@ -253,6 +261,23 @@ function App() {
           onModeChange={changeTheme}
           label="Catalogue colour theme"
         />
+        <label className="discern-catalogue-accent">
+          <span
+            className="discern-catalogue-accent__swatch"
+            aria-hidden="true"
+          />
+          <span className="discern-catalogue-accent__label">Accent</span>
+          <input
+            type="range"
+            min="0"
+            max="360"
+            step="1"
+            value={accentHue}
+            onInput={(event) => setAccentHue(event.currentTarget.valueAsNumber)}
+            aria-label="Accent hue"
+          />
+          <output>{accentHue}°</output>
+        </label>
       </header>
 
       <main className="discern-catalogue-main" id="top">
