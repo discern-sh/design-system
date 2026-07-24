@@ -4,9 +4,10 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
-## Unreleased
+## 0.8.0
 
 - Prevent `HoverCard` and `Tooltip` panels from being clipped by tables, scrolling regions, and other overflow ancestors. Components now declare selection-scoped browser behaviors in Metadata; resolving either surface emits a shared `discern.js` enhancer that uses the Popover API top layer, viewport-aware positioning, and automatic enrollment for later DOM additions while retaining the static CSS fallback. Runtime Manifest schema 2 adds each component's `behaviors` and `outputs.scripts`.
+- **Breaking for Manifest readers:** readers that assert schema 1 must accept schema 2. Each component may now declare `behaviors`, and `outputs.scripts` lists the browser scripts emitted for the selected component graph.
 
 ## 0.7.0
 
