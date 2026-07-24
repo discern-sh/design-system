@@ -143,6 +143,21 @@
       display: none;
     }
   }
+  .discern-hover-card .discern-hover-card__panel[data-discern-floating-enhanced] {
+    position: fixed;
+    inset: auto;
+    inline-size: min(
+      var(--discern-hover-card-width),
+      calc(100vw - 2 * var(--discern-space-4))
+    );
+    max-block-size: calc(100dvh - 2 * var(--discern-space-4));
+    margin: 0;
+    overflow-y: auto;
+    translate: 0 0;
+  }
+  .discern-hover-card__panel[data-discern-floating-enhanced]::before {
+    display: none;
+  }
   @media (forced-colors: active) {
     .discern-hover-card__panel {
       border-color: CanvasText;

@@ -6,6 +6,7 @@ import { classNames } from "../../class-names.ts";
 interface HoverCardTriggerProps {
   readonly "aria-details"?: string;
   readonly className?: string;
+  readonly "data-discern-floating-trigger"?: "";
 }
 
 /** Placement edge for the {@linkcode HoverCard} panel. */
@@ -53,6 +54,7 @@ export const HoverCard: DiscernComponent<HTMLElement, HoverCardProps> =
     const details = [existingDetails, panelId].filter(Boolean).join(" ");
     const trigger = cloneElement(triggerElement, {
       "aria-details": details,
+      "data-discern-floating-trigger": "",
       className: classNames(
         triggerElement.props.className,
         "discern-hover-card__trigger",
@@ -72,6 +74,9 @@ export const HoverCard: DiscernComponent<HTMLElement, HoverCardProps> =
           ref={forwardedRef as Ref<HTMLDivElement>}
           className={rootClassName}
           {...props}
+          data-discern-floating-root=""
+          data-discern-floating-placement={placement}
+          data-discern-floating-align={align}
         >
           {trigger}
           <div
@@ -79,6 +84,7 @@ export const HoverCard: DiscernComponent<HTMLElement, HoverCardProps> =
             role="group"
             aria-label={label}
             className="discern-hover-card__panel"
+            data-discern-floating-panel=""
           >
             {children}
           </div>
@@ -90,6 +96,9 @@ export const HoverCard: DiscernComponent<HTMLElement, HoverCardProps> =
         ref={forwardedRef as Ref<HTMLSpanElement>}
         className={rootClassName}
         {...props}
+        data-discern-floating-root=""
+        data-discern-floating-placement={placement}
+        data-discern-floating-align={align}
       >
         {trigger}
         <span
@@ -97,6 +106,7 @@ export const HoverCard: DiscernComponent<HTMLElement, HoverCardProps> =
           role="group"
           aria-label={label}
           className="discern-hover-card__panel"
+          data-discern-floating-panel=""
         >
           {children}
         </span>

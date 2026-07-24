@@ -23,8 +23,9 @@ Bird's-eye view of how discern-design-system fits together. Read this once and t
         │ Emitter    runtime.ts    │   │ Adapter   react.ts   │  │ Catalogue       │
         │ Selection ──► Runtime:   │   │ React 18.3+ (peer)   │  │ styleguide/ +   │
         │  discern.css             │   │ renders the class    │  │ scripts/build.ts│
-        │  manifest.json (SHA-256) │   │ contract to static   │  │ + serve.ts      │
-        │  Optional Assets         │   │ HTML at build time   │  │ + conformance   │
+        │  conditional discern.js  │   │ contract to static   │  │ + serve.ts      │
+        │  manifest.json (SHA-256) │   │ HTML at build time   │  │ + conformance   │
+        │  Optional Assets         │   │                      │  │                 │
         └────────────┬─────────────┘   └──────────┬───────────┘  └─────────────────┘
                      ▼                            ▼
         ┌─────────────────────────────────────────────────────┐
@@ -35,7 +36,7 @@ Bird's-eye view of how discern-design-system fits together. Read this once and t
         └─────────────────────────────────────────────────────┘
 ```
 
-Arrows are build-time data flow. Nothing flows at browser runtime: the browser receives static HTML plus the emitted CSS, and no registry, cache, or third-party host is ever hotlinked.
+The arrows are build-time data flow. The browser receives static HTML and selected CSS plus `discern.js` only when resolved Component Metadata declares browser behavior; no Registry, cache, or third-party host is ever hotlinked.
 
 ---
 
@@ -44,6 +45,7 @@ Arrows are build-time data flow. Nothing flows at browser runtime: the browser r
 - **Everything ships as a library** — the JSR package `@discern-sh/design-system`. There are no services and no persistent state; the only state anywhere is files in the consumer's build output.
 - **The Emitter** runs inside a consumer's build (Deno or Node — it writes via `node:fs/promises`). Under Deno it needs read and write permission for its output directory.
 - **The Adapter** runs in a consumer's build-time React render (`renderToStaticMarkup`); nothing of React reaches the browser.
+- **Selection-scoped browser behavior** runs from the emitted `discern.js` only for Components that declare it. The floating-surface behavior progressively promotes Hover card and Tooltip panels to the browser top layer; their static CSS fallback remains usable when the script or Popover API is absent.
 - **Codegen, the Catalogue build, and browser conformance** are repo-local dev processes: `deno task codegen`, `deno task build` (writes `dist/`, gitignored), and `deno task serve` / `deno task watch` (local HTTP on the worktree's deterministic port, `8010` in the main checkout). `deno task conformance` opens every generated example in headless Chrome for accessibility, interaction, forced-colour, and visual checks.
 - **CI** (GitHub Actions) re-runs codegen for currency, the full verify task, and a publish dry run on every push/PR; releases publish to JSR via trusted publishing when a `v*` tag matching `deno.json`'s version is released.
 

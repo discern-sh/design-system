@@ -1,7 +1,8 @@
 /**
  * Framework-neutral manifest schema and the complete package ownership
- * manifest: which components exist, which classes and public tokens each
- * owns, and the shape of the `manifest.json` every runtime emission writes.
+ * manifest: which components exist, which browser behaviors, classes, and
+ * public tokens each owns, and the shape of the `manifest.json` every runtime
+ * emission writes.
  * Consumer guards read this instead of scanning package source.
  *
  * @module
@@ -9,20 +10,22 @@
 import { componentRegistry } from "./generated/component-registry.ts";
 import { allTokens } from "./tokens/tokens.ts";
 import {
+  type ComponentBehavior,
   type ComponentGroup,
   componentGroups,
 } from "./types/component-meta.ts";
 import type { RuntimeAssetSelection } from "./runtime-assets.ts";
 
 /** Schema version stamped into every emitted `manifest.json`. */
-export const RUNTIME_MANIFEST_SCHEMA_VERSION = 1 as const;
+export const RUNTIME_MANIFEST_SCHEMA_VERSION = 2 as const;
 
-/** One component's identity, dependency, and CSS-ownership facts. */
+/** One component's identity, dependencies, behaviors, and CSS-ownership facts. */
 export interface ManifestComponent {
   readonly id: string;
   readonly name: string;
   readonly group: ComponentGroup;
   readonly dependencies: readonly string[];
+  readonly behaviors: readonly ComponentBehavior[];
   readonly ownedClasses: readonly string[];
   readonly publicTokenNames: readonly string[];
 }
@@ -59,6 +62,7 @@ export interface RuntimeManifest {
   readonly outputs: {
     readonly css: "discern.css";
     readonly manifest: "manifest.json";
+    readonly scripts: readonly string[];
     readonly assets: readonly string[];
   };
   readonly integrity: {
@@ -90,6 +94,7 @@ export const packageManifest: PackageManifest = {
     name: entry.meta.name,
     group: entry.meta.group,
     dependencies: entry.dependencies,
+    behaviors: entry.behaviors,
     ownedClasses: entry.ownedClasses,
     publicTokenNames: entry.publicTokenNames,
   })),

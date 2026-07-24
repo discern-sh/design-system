@@ -22,6 +22,24 @@ export const conformance = [{
       target: { role: "group", name: "Record details" },
     },
   ],
+}, {
+  name: "top-layer card remains visible outside an overflow region",
+  steps: [
+    { action: "focus", target: { role: "button", name: "Clipped parent" } },
+    {
+      expect: "visible",
+      target: { role: "group", name: "Clipping proof" },
+    },
+    {
+      expect: "within-viewport",
+      target: { role: "group", name: "Clipping proof" },
+    },
+    { action: "press", key: "Escape" },
+    {
+      expect: "hidden",
+      target: { role: "group", name: "Clipping proof" },
+    },
+  ],
 }] satisfies readonly ConformanceScenario[];
 
 export default function HoverCardExamples() {
@@ -55,6 +73,28 @@ export default function HoverCardExamples() {
       >
         <span>Inline cards keep phrasing content valid inside prose.</span>
       </HoverCard>
+      <div
+        style={{
+          inlineSize: "9rem",
+          overflow: "hidden",
+          padding: "var(--discern-space-3)",
+          border: "1px solid var(--discern-color-border)",
+        }}
+      >
+        <HoverCard
+          layout="block"
+          label="Clipping proof"
+          placement="bottom"
+          align="start"
+          width="md"
+          trigger={<Button variant="secondary">Clipped parent</Button>}
+        >
+          <div>
+            <h3>Shared floating surface</h3>
+            <p>This card remains visible beyond its overflow ancestor.</p>
+          </div>
+        </HoverCard>
+      </div>
     </div>
   );
 }

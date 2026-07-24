@@ -16,6 +16,11 @@ export const componentGroups = [
 /** Name of one canonical component group. */
 export type ComponentGroup = (typeof componentGroups)[number];
 
+/** Browser behaviors a component can ask the runtime emitter to include. */
+export const componentBehaviors = ["floating-surface"] as const;
+/** One selection-scoped browser behavior. */
+export type ComponentBehavior = (typeof componentBehaviors)[number];
+
 /** Authored identity, ordering, and accessibility facts for a component. */
 export interface ComponentMeta {
   readonly name: string;
@@ -23,5 +28,6 @@ export interface ComponentMeta {
   readonly group: ComponentGroup;
   readonly order: number;
   readonly description: string;
+  readonly behaviors?: readonly ComponentBehavior[];
   readonly accessibility?: readonly string[];
 }

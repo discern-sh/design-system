@@ -1,14 +1,16 @@
 /**
  * Deterministic selected-runtime emitter. {@linkcode emitDesignSystemRuntime}
  * resolves the requested components, groups, theme, and optional assets to a
- * dedicated output directory: dependency-ordered `discern.css`, a
- * {@linkcode RuntimeManifest} as `manifest.json`, and only the assets the
- * consumer selected. Repeated emissions are byte-for-byte identical.
+ * dedicated output directory: dependency-ordered `discern.css`,
+ * selection-scoped `discern.js` when required, a {@linkcode RuntimeManifest}
+ * as `manifest.json`, and only the assets the consumer selected. Repeated
+ * emissions are byte-for-byte identical.
  *
  * @module
  */
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { foundationCss, utilitiesCss } from "./generated/base-styles.ts";
+import { browserBehaviorSources } from "./generated/behaviors.ts";
 import { embeddedRuntimeAssets } from "./generated/assets.ts";
 import { componentRegistry } from "./generated/component-registry.ts";
 import {
@@ -24,6 +26,8 @@ import {
 import { discernThemeCss } from "./theme/discern.ts";
 import { allTokens, baseTokens, themeTokens } from "./tokens/tokens.ts";
 import {
+  type ComponentBehavior,
+  componentBehaviors,
   type ComponentGroup,
   componentGroups,
 } from "./types/component-meta.ts";
@@ -159,6 +163,14 @@ function selectedAssets(
   return runtimeAssetSelections.filter((asset) => requested.includes(asset));
 }
 
+function selectedBehaviors(
+  entries: readonly ComponentRegistryEntry[],
+): ComponentBehavior[] {
+  return componentBehaviors.filter((behavior) =>
+    entries.some((entry) => entry.behaviors.includes(behavior))
+  );
+}
+
 function decodeAsset(
   asset: (typeof embeddedRuntimeAssets)[number],
 ): Uint8Array {
@@ -203,7 +215,7 @@ async function writeOutput(
   };
 }
 
-/** Emit deterministic CSS, a consumer manifest, and only requested assets. */
+/** Emit deterministic CSS, selected browser behavior, a manifest, and requested assets. */
 export async function emitDesignSystemRuntime(
   options: RuntimeOptions,
 ): Promise<BuildSummary> {
@@ -212,6 +224,7 @@ export async function emitDesignSystemRuntime(
   }
   const selection = resolveSelection(options);
   const assets = selectedAssets(options.assets);
+  const behaviors = selectedBehaviors(selection.entries);
   const theme = options.theme ?? "discern";
   await removeIfPresent(options.outputRoot);
   await mkdir(options.outputRoot, { recursive: true });
@@ -234,6 +247,22 @@ export async function emitDesignSystemRuntime(
       textEncoder.encode(css),
     ),
   ];
+  const scriptPaths: string[] = [];
+  if (behaviors.length > 0) {
+    const source = behaviors.map((behavior) =>
+      browserBehaviorSources[behavior].trim()
+    ).join("\n\n") + "\n";
+    const path = "discern.js";
+    files.push(
+      await writeOutput(
+        options.outputRoot,
+        path,
+        "text/javascript; charset=utf-8",
+        textEncoder.encode(source),
+      ),
+    );
+    scriptPaths.push(path);
+  }
   const assetPaths: string[] = [];
   for (
     const asset of embeddedRuntimeAssets.filter((candidate) =>
@@ -256,6 +285,7 @@ export async function emitDesignSystemRuntime(
     name: entry.meta.name,
     group: entry.meta.group,
     dependencies: entry.dependencies,
+    behaviors: entry.behaviors,
     ownedClasses: entry.ownedClasses,
     publicTokenNames: entry.publicTokenNames,
   }));
@@ -280,6 +310,7 @@ export async function emitDesignSystemRuntime(
     outputs: {
       css: "discern.css",
       manifest: "manifest.json",
+      scripts: scriptPaths,
       assets: assetPaths,
     },
     integrity: { algorithm: "sha256", files },

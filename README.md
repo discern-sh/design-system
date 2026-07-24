@@ -31,7 +31,7 @@ Generated foundations apply only inside an opted-in boundary. Put `data-discern-
 </main>
 ```
 
-Load the emitted `discern.css` before consumer composition styles. Semantic HTML does not require React or a browser runtime. Public classes, custom properties, data attributes, layers, and keyframes use the `discern` namespace. Consumer styles may add their own composition class, but must not target a component's `ownedClasses` from `manifest.json`.
+Load the emitted `discern.css` before consumer composition styles. Semantic HTML never requires React; most Components remain CSS-only, while Components that declare browser behavior name their emitted script in the Manifest. Public classes, custom properties, data attributes, layers, and keyframes use the `discern` namespace. Consumer styles may add their own composition class, but must not target a Component's `ownedClasses` from `manifest.json`.
 
 Core typography uses documented system fallbacks. Selecting the optional font pack changes the public font-role tokens without changing component CSS.
 
@@ -55,12 +55,23 @@ console.log(result.manifest.selection.resolvedComponents);
 `outputRoot` must end in `/` and must be dedicated to the runtime because each emission replaces it. Every selection writes:
 
 - `discern.css`, containing tokens, the selected theme, root-scoped foundations, utilities, and dependency-ordered component CSS;
-- `manifest.json`, containing schema version, requested and resolved selections, canonical groups, component dependencies, owned classes, public token names, output paths, media types, byte sizes, and SHA-256 integrity; and
+- `manifest.json`, containing schema version, requested and resolved selections, canonical groups, component dependencies and browser behaviors, owned classes, public token names, output paths, media types, byte sizes, and SHA-256 integrity;
+- `discern.js` when a resolved component declares browser behavior; and
 - only the optional assets requested by the consumer.
 
 Use `{ all: true }` for the complete catalogue. Repeated emissions with the same inputs are byte-for-byte identical. Emitted files are build inputs for your own static output; browsers should never hotlink the registry or another third-party host.
 
 The emitter writes through `node:fs/promises`, so it runs on Deno and Node.js with identical output. Under Deno, grant it read and write permission for the output directory.
+
+### Selection-scoped browser behavior
+
+Most components remain static HTML and CSS. When a Selection resolves a component with browser behavior, the Emitter adds its stable script path to `manifest.outputs.scripts`. Load each path once as a deferred module:
+
+```html
+<script type="module" src="/assets/design-system/discern.js"></script>
+```
+
+`HoverCard` and `Tooltip` use this shared behavior to promote their panels into the browser's top layer, position them against their trigger, keep them inside the viewport, and preserve hover, focus, outside-press, nested-scroll, resize, and Escape behavior. The enhancer observes later DOM additions, so client-rendered instances use the same contract. Without the script or the Popover API, their static CSS fallback remains keyboard and pointer reachable, but an ancestor that clips overflow can still clip the panel.
 
 ## Optional assets
 
@@ -110,7 +121,7 @@ const html = renderToStaticMarkup(
 );
 ```
 
-Discern uses this adapter at build time only: the browser receives static HTML and CSS, with no React bundle, hydration, or implicit component behaviour. Stateful catalogue examples require a consumer-owned browser strategy if they are used outside the catalogue.
+Discern uses this adapter at build time only: no React bundle or hydration reaches the browser. Static components need no browser runtime; components whose Metadata declares browser behavior use the selection-scoped `discern.js` emitted beside their CSS. Stateful catalogue examples beyond that published behavior still require a consumer-owned browser strategy outside the catalogue.
 
 ## Output sizes
 

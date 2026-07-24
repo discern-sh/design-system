@@ -5,6 +5,7 @@ import { classNames } from "../../class-names.ts";
 
 interface TooltipChildProps {
   readonly "aria-describedby"?: string;
+  readonly "data-discern-floating-trigger"?: "";
 }
 /** Props for the {@linkcode Tooltip} component. */
 export interface TooltipProps
@@ -25,6 +26,7 @@ export const Tooltip: DiscernComponent<HTMLSpanElement, TooltipProps> =
       "aria-describedby": [existingDescription, tooltipId].filter(Boolean).join(
         " ",
       ),
+      "data-discern-floating-trigger": "",
     });
     return (
       <span
@@ -35,9 +37,17 @@ export const Tooltip: DiscernComponent<HTMLSpanElement, TooltipProps> =
           className,
         )}
         {...props}
+        data-discern-floating-root=""
+        data-discern-floating-placement={placement}
+        data-discern-floating-align="center"
       >
         {trigger}
-        <span id={tooltipId} role="tooltip" className="discern-tooltip__bubble">
+        <span
+          id={tooltipId}
+          role="tooltip"
+          className="discern-tooltip__bubble"
+          data-discern-floating-panel=""
+        >
           {label}
         </span>
       </span>

@@ -32,4 +32,13 @@
     opacity: 1;
     translate: -50% 0;
   }
+  .discern-tooltip .discern-tooltip__bubble[data-discern-floating-enhanced] {
+    position: fixed;
+    inset: auto;
+    width: max-content;
+    max-width: min(18rem, calc(100vw - 2 * var(--discern-space-4)));
+    margin: 0;
+    overflow-wrap: anywhere;
+    translate: 0 0;
+  }
 }

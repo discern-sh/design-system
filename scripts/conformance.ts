@@ -7,6 +7,7 @@ import {
   type Page,
 } from "playwright-core";
 import { packageManifest } from "../src/manifest.ts";
+import type { ComponentBehavior } from "../src/types/component-meta.ts";
 import type {
   ConformanceScenario,
   ConformanceStep,
@@ -359,6 +360,164 @@ async function assertAutoEnrollment(
   );
 }
 
+function componentProvidesBehavior(
+  componentId: string,
+  behavior: ComponentBehavior,
+  visited = new Set<string>(),
+): boolean {
+  if (visited.has(componentId)) return false;
+  visited.add(componentId);
+  const component = packageManifest.components.find(({ id }) =>
+    id === componentId
+  );
+  return component?.behaviors.includes(behavior) === true ||
+    component?.dependencies.some((dependency) =>
+        componentProvidesBehavior(dependency, behavior, visited)
+      ) === true;
+}
+
+async function verifyFloatingSurfaceCure(page: Page): Promise<number> {
+  const current = await page.evaluate(() => {
+    const references = [...document.querySelectorAll<HTMLElement>(
+      "[aria-details], [aria-describedby]",
+    )];
+    return [...document.querySelectorAll<HTMLElement>(
+      "[id][role='group'], [id][role='tooltip']",
+    )].flatMap((panel) => {
+      const trigger = references.find((candidate) =>
+        ["aria-details", "aria-describedby"].some((attribute) =>
+          candidate.getAttribute(attribute)?.split(/\s+/).includes(panel.id)
+        )
+      );
+      if (!trigger) return [];
+      const position = getComputedStyle(panel).position;
+      if (position !== "absolute" && position !== "fixed") return [];
+      return [{
+        component: panel.closest<HTMLElement>("[data-discern-component]")
+          ?.dataset.discernComponent ?? "",
+        panel: panel.outerHTML.slice(0, 180),
+        hasRoot: panel.closest("[data-discern-floating-root]") !== null,
+        hasTrigger: trigger.hasAttribute("data-discern-floating-trigger"),
+        hasPanel: panel.hasAttribute("data-discern-floating-panel"),
+      }];
+    });
+  });
+  invariant(current.length > 0, "No floating supplementary surfaces found");
+  const contractFailures: string[] = [];
+  for (const surface of current) {
+    if (!(surface.hasRoot && surface.hasTrigger && surface.hasPanel)) {
+      contractFailures.push(
+        `${surface.component} floating surface lacks the shared behavior contract: ${surface.panel}`,
+      );
+      continue;
+    }
+    if (
+      !packageManifest.components.some(({ id }) => id === surface.component)
+    ) {
+      contractFailures.push(`Unknown floating component: ${surface.component}`);
+      continue;
+    }
+    if (!componentProvidesBehavior(surface.component, "floating-surface")) {
+      contractFailures.push(
+        `${surface.component} does not enrol the floating-surface behavior`,
+      );
+    }
+  }
+
+  const futureSibling = await page.evaluate(async () => {
+    const fixture = document.createElement("div");
+    fixture.innerHTML = `
+      <div class="future-crop" style="width: 8rem; height: 4rem; overflow: hidden">
+        <span
+          class="future-shell"
+          data-discern-floating-root
+          data-discern-floating-placement="bottom"
+          data-discern-floating-align="start"
+        >
+          <button
+            id="future-trigger"
+            type="button"
+            aria-details="future-panel"
+            data-discern-floating-trigger
+          >Future trigger</button>
+          <span
+            id="future-panel"
+            class="future-panel"
+            role="group"
+            aria-label="Future details"
+            data-discern-floating-panel
+            style="width: 18rem; height: 3rem; opacity: 0; visibility: hidden"
+          >Future supplementary surface</span>
+        </span>
+      </div>`;
+    document.body.append(fixture);
+    const trigger = fixture.querySelector<HTMLElement>("#future-trigger");
+    const panel = fixture.querySelector<HTMLElement>("#future-panel");
+    const clip = fixture.querySelector<HTMLElement>(".future-crop");
+    if (!trigger || !panel || !clip) {
+      throw new Error("Future floating-surface fixture is incomplete");
+    }
+    const waitFor = async (predicate: () => boolean): Promise<void> => {
+      const deadline = performance.now() + 2_000;
+      while (!predicate() && performance.now() < deadline) {
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+      }
+      if (!predicate()) {
+        throw new Error("Floating-surface enhancement timed out");
+      }
+    };
+    await waitFor(() => panel.hasAttribute("popover"));
+    trigger.focus();
+    await waitFor(() =>
+      panel.matches(":popover-open") &&
+      panel.hasAttribute("data-discern-floating-positioned")
+    );
+    const panelBounds = panel.getBoundingClientRect();
+    const clipBounds = clip.getBoundingClientRect();
+    const sample = {
+      x: Math.min(
+        panelBounds.right - 2,
+        Math.max(clipBounds.right + 2, panelBounds.left + 2),
+      ),
+      y: Math.min(panelBounds.bottom - 2, panelBounds.top + 8),
+    };
+    const extendsBeyondClip = panelBounds.right > clipBounds.right + 1 ||
+      panelBounds.bottom > clipBounds.bottom + 1 ||
+      panelBounds.left < clipBounds.left - 1 ||
+      panelBounds.top < clipBounds.top - 1;
+    const paintedBeyondClip = document.elementsFromPoint(sample.x, sample.y)
+      .some((element) => element === panel || panel.contains(element));
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+    );
+    await waitFor(() => !panel.matches(":popover-open"));
+    const focusRestored = document.activeElement === trigger;
+    fixture.remove();
+    return {
+      extendsBeyondClip,
+      paintedBeyondClip,
+      focusRestored,
+    };
+  });
+  invariant(
+    futureSibling.extendsBeyondClip,
+    "Future floating surface did not extend beyond its clipping ancestor",
+  );
+  invariant(
+    futureSibling.paintedBeyondClip,
+    "Future floating surface was clipped outside its ancestor",
+  );
+  invariant(
+    futureSibling.focusRestored,
+    "Escape did not restore the future floating surface trigger",
+  );
+  invariant(
+    contractFailures.length === 0,
+    contractFailures.join("\n"),
+  );
+  return current.length;
+}
+
 async function scanAccessibility(
   page: Page,
   theme: CatalogueTheme,
@@ -589,6 +748,7 @@ export async function runConformance(): Promise<void> {
 
     await loadConformancePage(page, conformanceUrl(origin, "light"));
     await assertAutoEnrollment(page, expectedComponents);
+    const floatingSurfaces = await verifyFloatingSurfaceCure(page);
     let accessibilityScans = 0;
     for (const theme of ["light", "dark"] as const) {
       await loadConformancePage(page, conformanceUrl(origin, theme));
@@ -634,7 +794,7 @@ export async function runConformance(): Promise<void> {
     console.log(
       `Conformance passed: ${expectedComponents.length} components, ${accessibilityScans} accessibility scans, ${scenarios} interaction scenarios, 1 cold-fragment check, ${forcedColorFocusChecks} forced-colour focus checks, and ${
         screenshots + 1
-      } review screenshots.`,
+      } review screenshots; ${floatingSurfaces} floating surfaces share the clipping cure.`,
     );
   } finally {
     await browser?.close();

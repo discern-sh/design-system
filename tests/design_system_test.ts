@@ -8,7 +8,10 @@ import { fromFileUrl, join, relative, toFileUrl } from "@std/path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { generateSources } from "../scripts/generate.ts";
-import { packageManifest } from "../src/manifest.ts";
+import {
+  packageManifest,
+  RUNTIME_MANIFEST_SCHEMA_VERSION,
+} from "../src/manifest.ts";
 import {
   Brand,
   Breadcrumbs,
@@ -18,6 +21,7 @@ import {
   Logo,
   SiteHeader,
   ThemeSwitcher,
+  Tooltip,
 } from "../src/react.ts";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
 import { semanticClass } from "../src/semantic-class.ts";
@@ -282,6 +286,12 @@ Deno.test("component metadata auto-enrols React and runtime surfaces", async () 
   );
   assertEquals(
     await Deno.readTextFile(
+      join(PACKAGE_ROOT, "src", "generated", "behaviors.ts"),
+    ),
+    generated.behaviors,
+  );
+  assertEquals(
+    await Deno.readTextFile(
       join(PACKAGE_ROOT, "src", "generated", "react.ts"),
     ),
     generated.react,
@@ -424,6 +434,80 @@ Deno.test("selection resolves dependencies and excludes unrelated groups", async
   }
 });
 
+Deno.test("floating supplementary surfaces auto-enrol shared browser behavior", async () => {
+  const floatingComponents = packageManifest.components.filter(({ id }) =>
+    id === "hover-card" || id === "tooltip"
+  );
+  assertEquals(
+    floatingComponents.map((component) => ({
+      id: component.id,
+      behaviors: component.behaviors,
+    })),
+    [
+      { id: "tooltip", behaviors: ["floating-surface"] },
+      { id: "hover-card", behaviors: ["floating-surface"] },
+    ],
+  );
+
+  const hoverCard = renderToStaticMarkup(
+    createElement(HoverCard, {
+      label: "Record details",
+      trigger: createElement(
+        "button",
+        { "aria-details": "existing-details" },
+        "Inspect",
+      ),
+      children: "Supplementary detail",
+    }),
+  );
+  const tooltip = renderToStaticMarkup(
+    createElement(Tooltip, {
+      label: "Supplementary label",
+      children: createElement(
+        "button",
+        { "aria-describedby": "existing-description" },
+        "Inspect",
+      ),
+    }),
+  );
+  for (const markup of [hoverCard, tooltip]) {
+    assertStringIncludes(markup, "data-discern-floating-root");
+    assertStringIncludes(markup, "data-discern-floating-trigger");
+    assertStringIncludes(markup, "data-discern-floating-panel");
+  }
+
+  const floating = await Deno.makeTempDir();
+  const staticOnly = await Deno.makeTempDir();
+  try {
+    const summary = await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${floating}/`),
+      components: ["hover-card"],
+    });
+    assertEquals(summary.manifest.outputs.scripts, ["discern.js"]);
+    assertEquals(await outputPaths(floating), [
+      "discern.css",
+      "discern.js",
+      "manifest.json",
+    ]);
+    const behavior = await Deno.readTextFile(join(floating, "discern.js"));
+    assertStringIncludes(behavior, "[data-discern-floating-root]");
+    assertStringIncludes(behavior, "showPopover");
+
+    const staticSummary = await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${staticOnly}/`),
+      components: ["button"],
+    });
+    assertEquals(staticSummary.manifest.outputs.scripts, []);
+    assertEquals(await outputPaths(staticOnly), [
+      "discern.css",
+      "manifest.json",
+    ]);
+  } finally {
+    await Deno.remove(floating, { recursive: true });
+    await Deno.remove(staticOnly, { recursive: true });
+  }
+});
+
 Deno.test("all selection and repeated emission are byte-for-byte deterministic", async () => {
   const first = await Deno.makeTempDir();
   const second = await Deno.makeTempDir();
@@ -508,7 +592,10 @@ Deno.test("font and grain assets are independent, licensed, and integrity-mapped
     );
 
     for (const summary of [fontSummary, grainSummary]) {
-      assertEquals(summary.manifest.schemaVersion, 1);
+      assertEquals(
+        summary.manifest.schemaVersion,
+        RUNTIME_MANIFEST_SCHEMA_VERSION,
+      );
       assert(!JSON.stringify(summary.manifest).includes('"description"'));
       for (const file of summary.manifest.integrity.files) {
         const root = summary === fontSummary ? fonts : grain;

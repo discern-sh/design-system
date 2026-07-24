@@ -4,6 +4,10 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## Unreleased
+
+- Prevent `HoverCard` and `Tooltip` panels from being clipped by tables, scrolling regions, and other overflow ancestors. Components now declare selection-scoped browser behaviors in Metadata; resolving either surface emits a shared `discern.js` enhancer that uses the Popover API top layer, viewport-aware positioning, and automatic enrollment for later DOM additions while retaining the static CSS fallback. Runtime Manifest schema 2 adds each component's `behaviors` and `outputs.scripts`.
+
 ## 0.7.0
 
 - Add the Core `Logo` and `Brand` components. `Logo` defaults to an unboxed, natural-width, `currentColor` mark suitable for a text glyph, injected SVG, image, or wide wordmark; `treatment="tile"` preserves the bounded accent box and `shape="square"` opts into square geometry. `Brand` composes a decorative mark with the visible name and optional tagline, with inherited, UI, display, and monospace typefaces. Discern consumers can now render the canonical lockup as `<Brand name="discern" mark="◮" typeface="mono" />` without announcing the decorative glyph twice. Selecting `brand` automatically emits its `logo` dependency.
