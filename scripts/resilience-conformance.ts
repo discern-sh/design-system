@@ -7,6 +7,7 @@ import {
   bundledFontMetricSources,
 } from "./font-metric-overrides.ts";
 import { fontMetricCssomSnapshot } from "./font-metric-cssom.ts";
+import { requireViewport, withViewport } from "./viewport.ts";
 
 const WIDE_VIEWPORT = { width: 1440, height: 1000 } as const;
 const NARROW_VIEWPORT = { width: 390, height: 844 } as const;
@@ -26,8 +27,12 @@ const WCAG_TAGS = [
 const SURFACE_SELECTOR =
   ".discern-catalogue-component__canvas, [data-discern-journey]";
 const FOCUSABLE_SELECTOR =
-  "a[href], button, input:not([type='hidden']), select, textarea, summary, " +
-  "[tabindex]:not([tabindex='-1'])";
+  "a[href], area[href], button, input:not([type='hidden']), select, textarea, " +
+  "summary, audio[controls], video[controls], iframe, object, embed, " +
+  "[tabindex], [contenteditable]";
+const SEMANTIC_FOCUS_ID_ATTRIBUTE = "data-discern-semantic-focus-id";
+const FOCUS_CANDIDATE_ID_ATTRIBUTE = "data-discern-focus-candidate-id";
+const FOCUS_SCROLL_ID_ATTRIBUTE = "data-discern-focus-scroll-id";
 const INTERACTIVE_SELECTOR =
   "a[href], button, input:not([type='hidden']), select, textarea, summary, " +
   "[role='button'], [role='link'], [role='checkbox'], [role='radio'], " +
@@ -118,6 +123,7 @@ interface FocusIndicatorStyle {
   readonly authoredProxy: boolean;
   readonly backgroundColor: string;
   readonly candidate: "target" | "next-sibling" | "parent";
+  readonly candidateId: string;
   readonly effectiveOpacity: number;
   readonly outlineColor: string;
   readonly outlineOffset: string;
@@ -129,6 +135,7 @@ interface FocusIndicatorStyle {
     | undefined;
   readonly nativeLabelAssociated: boolean;
   readonly paintKnown: boolean;
+  readonly pseudos: readonly FocusPseudoStyle[];
   readonly rect: FocusRect;
   readonly semanticallyAssociated: boolean;
   readonly sharedParentRect: FocusRect | undefined;
@@ -137,6 +144,58 @@ interface FocusIndicatorStyle {
   readonly textDecorationLine: string;
   readonly textDecorationThickness: string;
   readonly visible: boolean;
+}
+
+interface FocusPseudoStyle {
+  readonly backdropFilter: string;
+  readonly backgroundColor: string;
+  readonly backgroundImage: string;
+  readonly borderBottomColor: string;
+  readonly borderBottomStyle: string;
+  readonly borderBottomWidth: string;
+  readonly borderLeftColor: string;
+  readonly borderLeftStyle: string;
+  readonly borderLeftWidth: string;
+  readonly borderRightColor: string;
+  readonly borderRightStyle: string;
+  readonly borderRightWidth: string;
+  readonly borderTopColor: string;
+  readonly borderTopStyle: string;
+  readonly borderTopWidth: string;
+  readonly boxShadow: string;
+  readonly boxShadowLayers: readonly FocusShadowLayer[] | undefined;
+  readonly clipPath: string;
+  readonly color: string;
+  readonly content: string;
+  readonly display: string;
+  readonly height: string;
+  readonly insetBlockEnd: string;
+  readonly insetBlockStart: string;
+  readonly insetInlineEnd: string;
+  readonly insetInlineStart: string;
+  readonly opacity: string;
+  readonly outlineColor: string;
+  readonly outlineOffset: string;
+  readonly outlineStyle: string;
+  readonly outlineWidth: string;
+  readonly position: string;
+  readonly pseudo: "::before" | "::after";
+  readonly filter: string;
+  readonly marginBottom: string;
+  readonly marginLeft: string;
+  readonly marginRight: string;
+  readonly marginTop: string;
+  readonly maskImage: string;
+  readonly mixBlendMode: string;
+  readonly rotate: string;
+  readonly scale: string;
+  readonly textDecorationColor: string;
+  readonly textDecorationLine: string;
+  readonly textDecorationThickness: string;
+  readonly transform: string;
+  readonly translate: string;
+  readonly visibility: string;
+  readonly width: string;
 }
 
 interface FocusShadowGeometry {
@@ -179,6 +238,57 @@ interface FocusFixtureOracle {
   readonly visible: boolean;
 }
 
+interface FocusSampleRegion {
+  readonly bottom: number;
+  readonly left: number;
+  readonly right: number;
+  readonly top: number;
+}
+
+interface FocusSamplePlan {
+  readonly clip: {
+    readonly height: number;
+    readonly width: number;
+    readonly x: number;
+    readonly y: number;
+  };
+  readonly envelopes: readonly {
+    readonly candidateId: string;
+    readonly rect: FocusRect;
+    readonly region: FocusSampleRegion;
+  }[];
+}
+
+interface FocusRenderedDelta {
+  readonly changedDevicePixels: number;
+  readonly candidateId: string;
+  readonly maximumAdjacentContrast: number;
+  readonly maximumRestContrast: number;
+  readonly outsideEnvelopeDevicePixels: number;
+  readonly qualifyingCssPixels: number;
+  readonly qualifyingDevicePixels: number;
+  readonly requiredCssPixels: number;
+  readonly scaleX: number;
+  readonly scaleY: number;
+  readonly stable: boolean;
+  readonly instability: string | undefined;
+}
+
+interface FocusInspection {
+  readonly after: readonly FocusIndicatorStyle[];
+  readonly before: readonly FocusIndicatorStyle[];
+  readonly failures: readonly string[];
+  readonly keyboardFocused: boolean;
+  readonly plan: FocusSamplePlan | undefined;
+  readonly renderedDelta: FocusRenderedDelta | undefined;
+}
+
+interface FocusRenderedCoverage {
+  readonly measured: number | undefined;
+  readonly required: number | undefined;
+  readonly sufficient: boolean;
+}
+
 interface ColorChannels {
   readonly red: number;
   readonly green: number;
@@ -192,11 +302,40 @@ interface SemanticSurfaceToken {
 }
 
 interface SemanticFocusTarget {
-  readonly surface: number;
-  readonly element: number;
-  readonly role: string;
-  readonly surfaceColor: string;
+  readonly audited: boolean;
   readonly proofKind: string;
+  readonly role: string;
+  readonly signature: string;
+  readonly surfaceColor: string;
+  readonly targetId: string;
+}
+
+interface FocusCandidateEvidence {
+  readonly candidate: FocusIndicatorStyle["candidate"];
+  readonly candidateId: string;
+  readonly envelope: FocusSampleRegion;
+  readonly local: boolean;
+  readonly localityFailure: string | undefined;
+  readonly pseudos: readonly ("::before" | "::after")[];
+  readonly regions: readonly FocusSampleRegion[];
+  readonly requiredCssPixels: number;
+  readonly viewportLocality: boolean;
+}
+
+interface FocusSceneCapture {
+  readonly activeTargetId: string | undefined;
+  readonly bytes: Uint8Array;
+  readonly candidateGeometryKey: string;
+  readonly geometryKey: string;
+  readonly styles: readonly FocusIndicatorStyle[];
+}
+
+interface FocusViewportLocalityCaptures {
+  readonly focusedOne: FocusSceneCapture;
+  readonly focusedTwo: FocusSceneCapture;
+  readonly plan: FocusSamplePlan;
+  readonly suppressedOne: FocusSceneCapture;
+  readonly suppressedTwo: FocusSceneCapture;
 }
 
 function computedColor(value: string): ColorChannels | undefined {
@@ -481,82 +620,6 @@ function shadowGeometryDistance(
   );
 }
 
-function shadowPaintsMinimumVisibleArea(
-  layer: FocusShadowGeometry,
-  rect: Pick<FocusRect, "height" | "width">,
-): boolean {
-  if (
-    !Number.isFinite(rect.width) ||
-    !Number.isFinite(rect.height) ||
-    !Number.isFinite(layer.x) ||
-    !Number.isFinite(layer.y) ||
-    !Number.isFinite(layer.blur) ||
-    !Number.isFinite(layer.spread) ||
-    rect.width <= 0 ||
-    rect.height <= 0
-  ) {
-    return false;
-  }
-  if (
-    rect.width + 2 * layer.spread <= 0 ||
-    rect.height + 2 * layer.spread <= 0
-  ) {
-    return false;
-  }
-
-  const blurReach = layer.blur / 2;
-  const reach = layer.spread + blurReach;
-  let visibleArea: number;
-  if (layer.inset) {
-    const leftBand = Math.min(
-      rect.width,
-      Math.max(0, reach - layer.x),
-    );
-    const rightBand = Math.min(
-      rect.width,
-      Math.max(0, reach + layer.x),
-    );
-    const topBand = Math.min(
-      rect.height,
-      Math.max(0, reach - layer.y),
-    );
-    const bottomBand = Math.min(
-      rect.height,
-      Math.max(0, reach + layer.y),
-    );
-    const unpaintedWidth = Math.max(
-      0,
-      rect.width - leftBand - rightBand,
-    );
-    const unpaintedHeight = Math.max(
-      0,
-      rect.height - topBand - bottomBand,
-    );
-    visibleArea = rect.width * rect.height -
-      unpaintedWidth * unpaintedHeight;
-  } else {
-    const shadowLeft = layer.x - reach;
-    const shadowRight = layer.x + rect.width + reach;
-    const shadowTop = layer.y - reach;
-    const shadowBottom = layer.y + rect.height + reach;
-    const shadowWidth = Math.max(0, shadowRight - shadowLeft);
-    const shadowHeight = Math.max(0, shadowBottom - shadowTop);
-    const overlapWidth = Math.max(
-      0,
-      Math.min(rect.width, shadowRight) - Math.max(0, shadowLeft),
-    );
-    const overlapHeight = Math.max(
-      0,
-      Math.min(rect.height, shadowBottom) - Math.max(0, shadowTop),
-    );
-    visibleArea = shadowWidth * shadowHeight -
-      overlapWidth * overlapHeight;
-  }
-  const minimumVisibleArea = MINIMUM_FOCUS_GEOMETRY_CHANGE *
-    Math.min(rect.width, rect.height);
-  return visibleArea >= minimumVisibleArea;
-}
-
 function changedShadowLayers(
   previous: FocusIndicatorStyle | undefined,
   current: FocusIndicatorStyle,
@@ -564,11 +627,7 @@ function changedShadowLayers(
 ): readonly FocusShadowLayer[] {
   const currentLayers = current.boxShadowLayers;
   if (currentLayers === undefined || currentLayers.length === 0) return [];
-  if (previous === undefined) {
-    return currentLayers.filter((layer) =>
-      shadowPaintsMinimumVisibleArea(layer, current.rect)
-    );
-  }
+  if (previous === undefined) return currentLayers;
   const previousLayers = previous.boxShadowLayers;
   if (previousLayers === undefined) return [];
 
@@ -641,9 +700,8 @@ function changedShadowLayers(
   const matchedCurrent = new Set(
     previousMatches.filter((index): index is number => index !== undefined),
   );
-  return currentLayers.filter((layer, currentIndex) =>
-    !matchedCurrent.has(currentIndex) &&
-    shadowPaintsMinimumVisibleArea(layer, current.rect)
+  return currentLayers.filter((_, currentIndex) =>
+    !matchedCurrent.has(currentIndex)
   );
 }
 
@@ -949,6 +1007,71 @@ async function focusStyles(target: Locator): Promise<FocusIndicatorStyle[]> {
     return candidates.map(({ element: candidate, kind }) => {
       const style = getComputedStyle(candidate);
       const shadowColorPattern = /(?:rgba?|hsla?|oklab|oklch|color)\([^)]+\)/g;
+      const candidateId = candidate.getAttribute(
+        "data-discern-focus-candidate-id",
+      );
+      if (candidateId === null) {
+        throw new Error(
+          "Focus candidate was not marked before bracket measurement",
+        );
+      }
+      const pseudoStyle = (
+        pseudo: "::before" | "::after",
+      ) => {
+        const current = getComputedStyle(candidate, pseudo);
+        return {
+          backdropFilter: current.backdropFilter,
+          backgroundColor: pixelColor(current.backgroundColor),
+          backgroundImage: current.backgroundImage,
+          borderBottomColor: pixelColor(current.borderBottomColor),
+          borderBottomStyle: current.borderBottomStyle,
+          borderBottomWidth: current.borderBottomWidth,
+          borderLeftColor: pixelColor(current.borderLeftColor),
+          borderLeftStyle: current.borderLeftStyle,
+          borderLeftWidth: current.borderLeftWidth,
+          borderRightColor: pixelColor(current.borderRightColor),
+          borderRightStyle: current.borderRightStyle,
+          borderRightWidth: current.borderRightWidth,
+          borderTopColor: pixelColor(current.borderTopColor),
+          borderTopStyle: current.borderTopStyle,
+          borderTopWidth: current.borderTopWidth,
+          boxShadow: current.boxShadow,
+          boxShadowColors: (current.boxShadow.match(shadowColorPattern) ?? [])
+            .map(pixelColor),
+          clipPath: current.clipPath,
+          color: pixelColor(current.color),
+          content: current.content,
+          display: current.display,
+          filter: current.filter,
+          height: current.height,
+          insetBlockEnd: current.insetBlockEnd,
+          insetBlockStart: current.insetBlockStart,
+          insetInlineEnd: current.insetInlineEnd,
+          insetInlineStart: current.insetInlineStart,
+          marginBottom: current.marginBottom,
+          marginLeft: current.marginLeft,
+          marginRight: current.marginRight,
+          marginTop: current.marginTop,
+          maskImage: current.maskImage,
+          mixBlendMode: current.mixBlendMode,
+          opacity: current.opacity,
+          outlineColor: pixelColor(current.outlineColor),
+          outlineOffset: current.outlineOffset,
+          outlineStyle: current.outlineStyle,
+          outlineWidth: current.outlineWidth,
+          position: current.position,
+          pseudo,
+          rotate: current.rotate,
+          scale: current.scale,
+          textDecorationColor: pixelColor(current.textDecorationColor),
+          textDecorationLine: current.textDecorationLine,
+          textDecorationThickness: current.textDecorationThickness,
+          transform: current.transform,
+          translate: current.translate,
+          visibility: current.visibility,
+          width: current.width,
+        };
+      };
       let effectiveOpacity = 1;
       let paintKnown = true;
       let ancestor: Element | null = candidate;
@@ -975,6 +1098,7 @@ async function focusStyles(target: Locator): Promise<FocusIndicatorStyle[]> {
         authoredProxy,
         backgroundColor: pixelColor(style.backgroundColor),
         candidate: kind,
+        candidateId,
         effectiveOpacity,
         outlineColor: pixelColor(style.outlineColor),
         outlineOffset: style.outlineOffset,
@@ -985,6 +1109,10 @@ async function focusStyles(target: Locator): Promise<FocusIndicatorStyle[]> {
           .map(pixelColor),
         nativeLabelAssociated,
         paintKnown,
+        pseudos: [
+          pseudoStyle("::before"),
+          pseudoStyle("::after"),
+        ],
         rect: rect(candidate),
         semanticallyAssociated: nativeLabelAssociated ||
           explicitlyRelated(node, candidate),
@@ -1006,7 +1134,1053 @@ async function focusStyles(target: Locator): Promise<FocusIndicatorStyle[]> {
       style.boxShadow,
       style.boxShadowColors,
     ),
+    pseudos: style.pseudos.map((pseudo) => ({
+      ...pseudo,
+      boxShadowLayers: computedShadowLayers(
+        pseudo.boxShadow,
+        pseudo.boxShadowColors,
+      ),
+    })),
   }));
+}
+
+function focusExpandedRegion(
+  rect: FocusRect | FocusSampleRegion,
+  amount: number,
+): FocusSampleRegion | undefined {
+  const region = {
+    bottom: rect.bottom + amount,
+    left: rect.left - amount,
+    right: rect.right + amount,
+    top: rect.top - amount,
+  };
+  return region.right > region.left && region.bottom > region.top
+    ? region
+    : undefined;
+}
+
+function focusRegionDifference(
+  outer: FocusSampleRegion,
+  inner: FocusSampleRegion,
+): FocusSampleRegion[] {
+  const overlap = {
+    bottom: Math.min(outer.bottom, inner.bottom),
+    left: Math.max(outer.left, inner.left),
+    right: Math.min(outer.right, inner.right),
+    top: Math.max(outer.top, inner.top),
+  };
+  if (
+    overlap.right <= overlap.left ||
+    overlap.bottom <= overlap.top
+  ) {
+    return [outer];
+  }
+  return [
+    {
+      bottom: overlap.top,
+      left: outer.left,
+      right: outer.right,
+      top: outer.top,
+    },
+    {
+      bottom: outer.bottom,
+      left: outer.left,
+      right: outer.right,
+      top: overlap.bottom,
+    },
+    {
+      bottom: overlap.bottom,
+      left: outer.left,
+      right: overlap.left,
+      top: overlap.top,
+    },
+    {
+      bottom: overlap.bottom,
+      left: overlap.right,
+      right: outer.right,
+      top: overlap.top,
+    },
+  ].filter((region) =>
+    region.right > region.left && region.bottom > region.top
+  );
+}
+
+function focusLocalityEnvelope(
+  style: FocusIndicatorStyle,
+): FocusSampleRegion {
+  const distance = Math.max(
+    MINIMUM_TARGET_SIZE,
+    style.rect.width,
+    style.rect.height,
+  ) * FOCUS_PROXY_DISTANCE_FACTOR;
+  return focusExpandedRegion(style.rect, distance) ?? {
+    bottom: style.rect.bottom,
+    left: style.rect.left,
+    right: style.rect.right,
+    top: style.rect.top,
+  };
+}
+
+function focusRegionContained(
+  envelope: FocusSampleRegion,
+  region: FocusSampleRegion,
+): boolean {
+  const tolerance = 0.01;
+  return region.left >= envelope.left - tolerance &&
+    region.right <= envelope.right + tolerance &&
+    region.top >= envelope.top - tolerance &&
+    region.bottom <= envelope.bottom + tolerance;
+}
+
+function focusOutlineRegions(
+  style: FocusIndicatorStyle,
+): readonly FocusSampleRegion[] {
+  const width = computedPixelLength(style.outlineWidth);
+  const offset = computedPixelLength(style.outlineOffset);
+  if (
+    style.outlineStyle === "none" ||
+    width === undefined ||
+    offset === undefined ||
+    width <= 0
+  ) {
+    return [];
+  }
+  const outer = focusExpandedRegion(style.rect, offset + width);
+  const inner = focusExpandedRegion(style.rect, offset);
+  if (outer === undefined) return [];
+  return inner === undefined ? [outer] : focusRegionDifference(outer, inner);
+}
+
+function focusShadowRegions(
+  style: FocusIndicatorStyle,
+  layers: readonly FocusShadowLayer[],
+): readonly FocusSampleRegion[] {
+  const targetRegion = {
+    bottom: style.rect.bottom,
+    left: style.rect.left,
+    right: style.rect.right,
+    top: style.rect.top,
+  };
+  return layers.flatMap((layer) => {
+    if (layer.inset) {
+      return [targetRegion];
+    }
+    const blurExtent = 2 * layer.blur;
+    const region = focusExpandedRegion(
+      {
+        bottom: style.rect.bottom + layer.y,
+        left: style.rect.left + layer.x,
+        right: style.rect.right + layer.x,
+        top: style.rect.top + layer.y,
+      },
+      layer.spread + blurExtent,
+    );
+    if (region === undefined) return [targetRegion];
+    const difference = focusRegionDifference(region, style.rect);
+    return difference.length === 0 ? [targetRegion] : difference;
+  });
+}
+
+function focusUnderlineRegions(
+  style: FocusIndicatorStyle,
+): readonly FocusSampleRegion[] {
+  const thickness = computedPixelLength(style.textDecorationThickness);
+  if (
+    thickness === undefined ||
+    thickness <= 0 ||
+    !style.textDecorationLine.split(/\s+/).includes("underline")
+  ) {
+    return [];
+  }
+  return [{
+    bottom: style.rect.bottom,
+    left: style.rect.left,
+    right: style.rect.right,
+    top: style.rect.top,
+  }];
+}
+
+function focusPseudoPaintSignature(style: FocusPseudoStyle): string {
+  return JSON.stringify([
+    style.backdropFilter,
+    style.backgroundColor,
+    style.backgroundImage,
+    style.borderBottomColor,
+    style.borderBottomStyle,
+    style.borderBottomWidth,
+    style.borderLeftColor,
+    style.borderLeftStyle,
+    style.borderLeftWidth,
+    style.borderRightColor,
+    style.borderRightStyle,
+    style.borderRightWidth,
+    style.borderTopColor,
+    style.borderTopStyle,
+    style.borderTopWidth,
+    style.boxShadow,
+    style.clipPath,
+    style.color,
+    style.content,
+    style.display,
+    style.filter,
+    style.height,
+    style.insetBlockEnd,
+    style.insetBlockStart,
+    style.insetInlineEnd,
+    style.insetInlineStart,
+    style.marginBottom,
+    style.marginLeft,
+    style.marginRight,
+    style.marginTop,
+    style.maskImage,
+    style.mixBlendMode,
+    style.opacity,
+    style.outlineColor,
+    style.outlineOffset,
+    style.outlineWidth,
+    style.position,
+    style.rotate,
+    style.scale,
+    style.textDecorationColor,
+    style.textDecorationLine,
+    style.textDecorationThickness,
+    style.transform,
+    style.translate,
+    style.visibility,
+    style.width,
+  ]);
+}
+
+function focusPseudoHasEligiblePaint(style: FocusPseudoStyle): boolean {
+  const visibleColor = (value: string): boolean =>
+    (computedColor(value)?.alpha ?? 0) > 0;
+  const borderPaint = [
+    [style.borderBottomColor, style.borderBottomStyle, style.borderBottomWidth],
+    [style.borderLeftColor, style.borderLeftStyle, style.borderLeftWidth],
+    [style.borderRightColor, style.borderRightStyle, style.borderRightWidth],
+    [style.borderTopColor, style.borderTopStyle, style.borderTopWidth],
+  ].some(([color, borderStyle, width]) =>
+    borderStyle !== "none" &&
+    (computedPixelLength(width ?? "") ?? 0) > 0 &&
+    visibleColor(color ?? "")
+  );
+  const outlinePaint = style.outlineStyle !== "none" &&
+    (computedPixelLength(style.outlineWidth) ?? 0) > 0 &&
+    visibleColor(style.outlineColor);
+  const shadowPaint = (style.boxShadowLayers ?? []).some((layer) =>
+    visibleColor(layer.color)
+  );
+  const underlinePaint = style.textDecorationLine.split(/\s+/).includes(
+    "underline",
+  ) && visibleColor(style.textDecorationColor);
+  const contentPaint = !['""', "''"].includes(style.content) &&
+    visibleColor(style.color);
+  return Number.parseFloat(style.opacity) > 0 &&
+    (
+      visibleColor(style.backgroundColor) ||
+      style.backgroundImage !== "none" ||
+      borderPaint ||
+      outlinePaint ||
+      shadowPaint ||
+      underlinePaint ||
+      contentPaint
+    );
+}
+
+function focusPseudoLocal(
+  pseudo: FocusPseudoStyle,
+  owner: FocusIndicatorStyle,
+): boolean {
+  if (
+    pseudo.position === "fixed" ||
+    pseudo.backgroundImage !== "none" ||
+    pseudo.backdropFilter !== "none" ||
+    pseudo.filter !== "none" ||
+    pseudo.clipPath !== "none" ||
+    pseudo.maskImage !== "none" ||
+    pseudo.mixBlendMode !== "normal" ||
+    pseudo.rotate !== "none" ||
+    pseudo.scale !== "none" ||
+    pseudo.translate !== "none"
+  ) {
+    return false;
+  }
+  const limit = Math.max(
+    MINIMUM_TARGET_SIZE,
+    owner.rect.width,
+    owner.rect.height,
+  ) * FOCUS_PROXY_DISTANCE_FACTOR;
+  const lengths = [
+    pseudo.height,
+    pseudo.insetBlockEnd,
+    pseudo.insetBlockStart,
+    pseudo.insetInlineEnd,
+    pseudo.insetInlineStart,
+    pseudo.marginBottom,
+    pseudo.marginLeft,
+    pseudo.marginRight,
+    pseudo.marginTop,
+    pseudo.width,
+  ];
+  for (const value of lengths) {
+    if (value === "auto" || value === "none") continue;
+    const length = computedPixelLength(value);
+    if (length === undefined || Math.abs(length) > limit * 2) return false;
+  }
+  if (pseudo.transform !== "none") {
+    const match = pseudo.transform.match(
+      /^matrix\([^,]+,[^,]+,[^,]+,[^,]+,\s*([^,]+),\s*([^)]+)\)$/,
+    );
+    if (match?.[1] === undefined || match[2] === undefined) return false;
+    const x = Number(match[1]);
+    const y = Number(match[2]);
+    if (
+      !Number.isFinite(x) || !Number.isFinite(y) ||
+      Math.abs(x) > limit || Math.abs(y) > limit
+    ) {
+      return false;
+    }
+  }
+  if (
+    pseudo.boxShadow !== "none" &&
+    (
+      pseudo.boxShadowLayers === undefined ||
+      pseudo.boxShadowLayers.some((layer) =>
+        Math.max(
+          Math.abs(layer.x),
+          Math.abs(layer.y),
+          2 * layer.blur,
+          Math.abs(layer.spread),
+        ) > limit
+      )
+    )
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function focusCandidateEvidence(
+  before: readonly FocusIndicatorStyle[],
+  after: readonly FocusIndicatorStyle[],
+  surfaceColor: string,
+  plan: FocusSamplePlan,
+): readonly FocusCandidateEvidence[] {
+  const previousById = new Map(
+    before.map((style) => [style.candidateId, style] as const),
+  );
+  const envelopes = new Map(
+    plan.envelopes.map(({ candidateId, region }) => [candidateId, region]),
+  );
+  return after.flatMap((current) => {
+    const previous = previousById.get(current.candidateId);
+    const envelope = envelopes.get(current.candidateId);
+    if (
+      previous === undefined ||
+      envelope === undefined ||
+      !current.visible ||
+      !current.paintKnown ||
+      !focusCandidateAssociated(current)
+    ) {
+      return [];
+    }
+    const opacityOrVisibilityChanged =
+      current.effectiveOpacity !== previous.effectiveOpacity ||
+      current.visible !== previous.visible;
+    const outlineChanged = current.outlineColor !== previous.outlineColor ||
+      opacityOrVisibilityChanged ||
+      outlineGeometryChanged(previous, current);
+    const outlineRegions = outlineChanged ? focusOutlineRegions(current) : [];
+    const changedShadows = changedShadowLayers(
+      previous,
+      current,
+      surfaceColor,
+    );
+    const shadowRegions = focusShadowRegions(current, changedShadows);
+    const underlineChanged =
+      current.textDecorationColor !== previous.textDecorationColor ||
+      opacityOrVisibilityChanged ||
+      underlineGeometryChanged(previous, current);
+    const underlineRegions = underlineChanged
+      ? focusUnderlineRegions(current)
+      : [];
+    const previousPseudos = new Map(
+      previous.pseudos.map((pseudo) => [pseudo.pseudo, pseudo] as const),
+    );
+    const changedPseudos = current.pseudos.filter((pseudo) => {
+      const prior = previousPseudos.get(pseudo.pseudo);
+      return prior !== undefined &&
+        pseudo.content !== "none" &&
+        pseudo.display !== "none" &&
+        pseudo.visibility === "visible" &&
+        focusPseudoHasEligiblePaint(pseudo) &&
+        focusPseudoPaintSignature(prior) !== focusPseudoPaintSignature(pseudo);
+    });
+    const regions = [
+      ...outlineRegions,
+      ...shadowRegions,
+      ...underlineRegions,
+      ...(changedPseudos.length === 0 ? [] : [envelope]),
+    ];
+    if (regions.length === 0) return [];
+    const remotePseudo = changedPseudos.find((pseudo) =>
+      !focusPseudoLocal(pseudo, current)
+    );
+    const overflowingRegion = regions.find((region) =>
+      !focusRegionContained(envelope, region)
+    );
+    const localityFailure = remotePseudo !== undefined
+      ? `${remotePseudo.pseudo} uses non-local geometry`
+      : overflowingRegion !== undefined
+      ? "eligible focus paint exceeds the declared locality envelope"
+      : undefined;
+    return [{
+      candidate: current.candidate,
+      candidateId: current.candidateId,
+      envelope,
+      local: localityFailure === undefined,
+      localityFailure,
+      pseudos: changedPseudos.map(({ pseudo }) => pseudo),
+      regions,
+      requiredCssPixels: MINIMUM_FOCUS_GEOMETRY_CHANGE *
+        Math.max(
+          MINIMUM_TARGET_SIZE,
+          Math.min(current.rect.width, current.rect.height),
+        ),
+      viewportLocality: changedPseudos.length > 0,
+    }];
+  });
+}
+
+async function focusSamplePlan(
+  page: Page,
+  before: readonly FocusIndicatorStyle[],
+): Promise<FocusSamplePlan | undefined> {
+  if (before.length === 0) return undefined;
+  const envelopes = before.filter(focusCandidateAssociated).map((style) => ({
+    candidateId: style.candidateId,
+    rect: style.rect,
+    region: focusLocalityEnvelope(style),
+  }));
+  if (envelopes.length === 0) return undefined;
+  const viewport = await page.evaluate(() => ({
+    height: globalThis.innerHeight,
+    width: globalThis.innerWidth,
+  }));
+  const visible = envelopes.flatMap(({ candidateId, region }) => {
+    const clipped = {
+      bottom: Math.min(viewport.height, region.bottom),
+      left: Math.max(0, region.left),
+      right: Math.min(viewport.width, region.right),
+      top: Math.max(0, region.top),
+    };
+    return clipped.right > clipped.left && clipped.bottom > clipped.top
+      ? [{ candidateId, region: clipped }]
+      : [];
+  });
+  if (visible.length === 0) return undefined;
+  const x = Math.floor(Math.min(...visible.map(({ region }) => region.left)));
+  const y = Math.floor(Math.min(...visible.map(({ region }) => region.top)));
+  const right = Math.ceil(
+    Math.max(...visible.map(({ region }) => region.right)),
+  );
+  const bottom = Math.ceil(
+    Math.max(...visible.map(({ region }) => region.bottom)),
+  );
+  if (right <= x || bottom <= y) return undefined;
+  return {
+    clip: { height: bottom - y, width: right - x, x, y },
+    envelopes,
+  };
+}
+
+async function focusViewportPlan(
+  page: Page,
+  plan: FocusSamplePlan,
+): Promise<FocusSamplePlan> {
+  const viewport = await page.evaluate(() => ({
+    height: globalThis.innerHeight,
+    width: globalThis.innerWidth,
+  }));
+  return {
+    clip: {
+      height: viewport.height,
+      width: viewport.width,
+      x: 0,
+      y: 0,
+    },
+    envelopes: plan.envelopes,
+  };
+}
+
+async function settleFocusPaint(page: Page): Promise<void> {
+  await page.evaluate(() =>
+    new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    })
+  );
+}
+
+async function focusScreenshot(
+  page: Page,
+  plan: FocusSamplePlan,
+  expectedScroll: { readonly x: number; readonly y: number },
+): Promise<Uint8Array> {
+  const scroll = await page.evaluate(() => ({
+    x: globalThis.scrollX,
+    y: globalThis.scrollY,
+  }));
+  if (scroll.x !== expectedScroll.x || scroll.y !== expectedScroll.y) {
+    throw new Error(
+      `Focus screenshot scroll changed before capture: expected ${expectedScroll.x},${expectedScroll.y}; received ${scroll.x},${scroll.y}`,
+    );
+  }
+  return await page.screenshot({
+    animations: "disabled",
+    caret: "hide",
+    clip: plan.clip,
+    scale: "device",
+  });
+}
+
+async function measureFocusRenderedDelta(
+  page: Page,
+  restOne: FocusSceneCapture,
+  restTwo: FocusSceneCapture,
+  focusedOne: FocusSceneCapture,
+  focusedTwo: FocusSceneCapture,
+  suppressedOne: FocusSceneCapture,
+  suppressedTwo: FocusSceneCapture,
+  restoredRest: FocusSceneCapture,
+  evidence: FocusCandidateEvidence,
+  plan: FocusSamplePlan,
+): Promise<FocusRenderedDelta | undefined> {
+  return await page.evaluate(
+    async (
+      {
+        candidateId,
+        clip,
+        envelope,
+        focusedOneBytes,
+        focusedTwoBytes,
+        regions,
+        requiredCssPixels,
+        restOneBytes,
+        restTwoBytes,
+        restoredRestBytes,
+        suppressedOneBytes,
+        suppressedTwoBytes,
+      },
+    ) => {
+      const decodedPixels = async (
+        bytes: readonly number[],
+      ): Promise<
+        | {
+          readonly data: Uint8ClampedArray;
+          readonly height: number;
+          readonly width: number;
+        }
+        | undefined
+      > => {
+        const bitmap = await createImageBitmap(
+          new Blob([Uint8Array.from(bytes)], { type: "image/png" }),
+        );
+        const canvas = document.createElement("canvas");
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        const context = canvas.getContext("2d", {
+          willReadFrequently: true,
+        });
+        if (context === null) {
+          bitmap.close();
+          return undefined;
+        }
+        context.drawImage(bitmap, 0, 0);
+        const data = context.getImageData(
+          0,
+          0,
+          bitmap.width,
+          bitmap.height,
+        ).data;
+        const result = {
+          data,
+          height: bitmap.height,
+          width: bitmap.width,
+        };
+        bitmap.close();
+        return result;
+      };
+      const [
+        restOnePixels,
+        restTwoPixels,
+        focusedOnePixels,
+        focusedTwoPixels,
+        suppressedOnePixels,
+        suppressedTwoPixels,
+        restoredRestPixels,
+      ] = await Promise.all([
+        decodedPixels(restOneBytes),
+        decodedPixels(restTwoBytes),
+        decodedPixels(focusedOneBytes),
+        decodedPixels(focusedTwoBytes),
+        decodedPixels(suppressedOneBytes),
+        decodedPixels(suppressedTwoBytes),
+        decodedPixels(restoredRestBytes),
+      ]);
+      if (
+        restOnePixels === undefined ||
+        restTwoPixels === undefined ||
+        focusedOnePixels === undefined ||
+        focusedTwoPixels === undefined ||
+        suppressedOnePixels === undefined ||
+        suppressedTwoPixels === undefined ||
+        restoredRestPixels === undefined
+      ) {
+        return undefined;
+      }
+      if (
+        [
+          restTwoPixels,
+          focusedOnePixels,
+          focusedTwoPixels,
+          suppressedOnePixels,
+          suppressedTwoPixels,
+          restoredRestPixels,
+        ].some((image) =>
+          image.width !== restOnePixels.width ||
+          image.height !== restOnePixels.height
+        )
+      ) {
+        return undefined;
+      }
+      const scaleX = restOnePixels.width / clip.width;
+      const scaleY = restOnePixels.height / clip.height;
+      if (
+        !Number.isFinite(scaleX) ||
+        !Number.isFinite(scaleY) ||
+        scaleX <= 0 ||
+        scaleY <= 0
+      ) {
+        return undefined;
+      }
+      const linearChannel = (channel: number): number => {
+        const normalized = channel / 255;
+        return normalized <= 0.04045
+          ? normalized / 12.92
+          : ((normalized + 0.055) / 1.055) ** 2.4;
+      };
+      const luminance = (
+        data: Uint8ClampedArray,
+        offset: number,
+      ): number => {
+        const alpha = (data[offset + 3] ?? 255) / 255;
+        const red = (data[offset] ?? 0) * alpha + 255 * (1 - alpha);
+        const green = (data[offset + 1] ?? 0) * alpha +
+          255 * (1 - alpha);
+        const blue = (data[offset + 2] ?? 0) * alpha +
+          255 * (1 - alpha);
+        return 0.2126 * linearChannel(red) +
+          0.7152 * linearChannel(green) +
+          0.0722 * linearChannel(blue);
+      };
+      const differingPixels = (
+        left: Uint8ClampedArray,
+        right: Uint8ClampedArray,
+      ): number => {
+        let differences = 0;
+        for (let row = 0; row < restOnePixels.height; row += 1) {
+          const top = clip.y + row / scaleY;
+          const bottom = clip.y + (row + 1) / scaleY;
+          for (let column = 0; column < restOnePixels.width; column += 1) {
+            const cellLeft = clip.x + column / scaleX;
+            const cellRight = clip.x + (column + 1) / scaleX;
+            if (
+              !regions.some((region) =>
+                cellLeft < region.right &&
+                cellRight > region.left &&
+                top < region.bottom &&
+                bottom > region.top
+              )
+            ) {
+              continue;
+            }
+            const offset = (row * restOnePixels.width + column) * 4;
+            const attributedInFirstPair = focusedOnePixels.data[offset] !==
+                suppressedOnePixels.data[offset] ||
+              focusedOnePixels.data[offset + 1] !==
+                suppressedOnePixels.data[offset + 1] ||
+              focusedOnePixels.data[offset + 2] !==
+                suppressedOnePixels.data[offset + 2] ||
+              focusedOnePixels.data[offset + 3] !==
+                suppressedOnePixels.data[offset + 3];
+            const attributedInSecondPair = focusedTwoPixels.data[offset] !==
+                suppressedTwoPixels.data[offset] ||
+              focusedTwoPixels.data[offset + 1] !==
+                suppressedTwoPixels.data[offset + 1] ||
+              focusedTwoPixels.data[offset + 2] !==
+                suppressedTwoPixels.data[offset + 2] ||
+              focusedTwoPixels.data[offset + 3] !==
+                suppressedTwoPixels.data[offset + 3];
+            if (!attributedInFirstPair && !attributedInSecondPair) continue;
+            if (
+              left[offset] !== right[offset] ||
+              left[offset + 1] !== right[offset + 1] ||
+              left[offset + 2] !== right[offset + 2] ||
+              left[offset + 3] !== right[offset + 3]
+            ) {
+              differences += 1;
+            }
+          }
+        }
+        return differences;
+      };
+      const unstablePairs = [
+        ["rest A1/A2", differingPixels(restOnePixels.data, restTwoPixels.data)],
+        [
+          "focused F1/F2",
+          differingPixels(focusedOnePixels.data, focusedTwoPixels.data),
+        ],
+        [
+          "suppressed S1/S2",
+          differingPixels(suppressedOnePixels.data, suppressedTwoPixels.data),
+        ],
+        [
+          "rest A1/A3",
+          differingPixels(restOnePixels.data, restoredRestPixels.data),
+        ],
+      ] as const;
+      const unstable = unstablePairs.find(([, differences]) => differences > 0);
+      const pixelIntersectionArea = (
+        left: number,
+        right: number,
+        top: number,
+        bottom: number,
+        sampleRegions: readonly {
+          readonly bottom: number;
+          readonly left: number;
+          readonly right: number;
+          readonly top: number;
+        }[],
+      ): number => {
+        const clipped = sampleRegions.flatMap((region) => {
+          const overlap = {
+            bottom: Math.min(bottom, region.bottom),
+            left: Math.max(left, region.left),
+            right: Math.min(right, region.right),
+            top: Math.max(top, region.top),
+          };
+          return overlap.right > overlap.left && overlap.bottom > overlap.top
+            ? [overlap]
+            : [];
+        });
+        const xBreaks = [
+          ...new Set(clipped.flatMap((region) => [
+            region.left,
+            region.right,
+          ])),
+        ].toSorted((a, b) => a - b);
+        let area = 0;
+        for (let index = 0; index + 1 < xBreaks.length; index += 1) {
+          const xOne = xBreaks[index];
+          const xTwo = xBreaks[index + 1];
+          if (xOne === undefined || xTwo === undefined || xTwo <= xOne) {
+            continue;
+          }
+          const middle = (xOne + xTwo) / 2;
+          const intervals = clipped.flatMap((region) =>
+            middle >= region.left && middle < region.right
+              ? [[region.top, region.bottom] as const]
+              : []
+          ).toSorted((a, b) => a[0] - b[0]);
+          let covered = 0;
+          let start: number | undefined;
+          let end: number | undefined;
+          for (const interval of intervals) {
+            if (start === undefined || end === undefined) {
+              [start, end] = interval;
+            } else if (interval[0] > end) {
+              covered += end - start;
+              [start, end] = interval;
+            } else {
+              end = Math.max(end, interval[1]);
+            }
+          }
+          if (start !== undefined && end !== undefined) {
+            covered += end - start;
+          }
+          area += (xTwo - xOne) * covered;
+        }
+        return area;
+      };
+      let changedDevicePixels = 0;
+      let maximumAdjacentContrast = 1;
+      let maximumRestContrast = 1;
+      let outsideEnvelopeDevicePixels = 0;
+      let qualifyingDevicePixels = 0;
+      let qualifyingCssPixels = 0;
+      const regionBounds = {
+        bottom: Math.max(...regions.map((region) => region.bottom)),
+        left: Math.min(...regions.map((region) => region.left)),
+        right: Math.max(...regions.map((region) => region.right)),
+        top: Math.min(...regions.map((region) => region.top)),
+      };
+      for (let row = 0; row < restOnePixels.height; row += 1) {
+        const top = clip.y + row / scaleY;
+        const bottom = clip.y + (row + 1) / scaleY;
+        for (let column = 0; column < restOnePixels.width; column += 1) {
+          const left = clip.x + column / scaleX;
+          const right = clip.x + (column + 1) / scaleX;
+          const offset = (row * restOnePixels.width + column) * 4;
+          const suppressionChanged = focusedOnePixels.data[offset] !==
+              suppressedOnePixels.data[offset] ||
+            focusedOnePixels.data[offset + 1] !==
+              suppressedOnePixels.data[offset + 1] ||
+            focusedOnePixels.data[offset + 2] !==
+              suppressedOnePixels.data[offset + 2] ||
+            focusedOnePixels.data[offset + 3] !==
+              suppressedOnePixels.data[offset + 3];
+          if (suppressionChanged) {
+            const envelopeArea = pixelIntersectionArea(
+              left,
+              right,
+              top,
+              bottom,
+              [envelope],
+            );
+            const deviceCellArea = (right - left) * (bottom - top);
+            if (envelopeArea < deviceCellArea - 1e-6) {
+              outsideEnvelopeDevicePixels += 1;
+            }
+          }
+          if (
+            right <= regionBounds.left ||
+            left >= regionBounds.right ||
+            bottom <= regionBounds.top ||
+            top >= regionBounds.bottom
+          ) {
+            continue;
+          }
+          const intersectionArea = pixelIntersectionArea(
+            left,
+            right,
+            top,
+            bottom,
+            regions,
+          );
+          if (intersectionArea <= 0) continue;
+          if (
+            restOnePixels.data[offset] !== focusedOnePixels.data[offset] ||
+            restOnePixels.data[offset + 1] !==
+              focusedOnePixels.data[offset + 1] ||
+            restOnePixels.data[offset + 2] !==
+              focusedOnePixels.data[offset + 2] ||
+            restOnePixels.data[offset + 3] !==
+              focusedOnePixels.data[offset + 3]
+          ) {
+            changedDevicePixels += 1;
+          }
+          const focusedLuminance = luminance(focusedOnePixels.data, offset);
+          const restLuminance = luminance(restOnePixels.data, offset);
+          const suppressedLuminance = luminance(
+            suppressedOnePixels.data,
+            offset,
+          );
+          const restContrast = (
+            Math.max(focusedLuminance, restLuminance) + 0.05
+          ) / (Math.min(focusedLuminance, restLuminance) + 0.05);
+          const adjacentContrast = (
+            Math.max(focusedLuminance, suppressedLuminance) + 0.05
+          ) / (Math.min(focusedLuminance, suppressedLuminance) + 0.05);
+          maximumRestContrast = Math.max(maximumRestContrast, restContrast);
+          maximumAdjacentContrast = Math.max(
+            maximumAdjacentContrast,
+            adjacentContrast,
+          );
+          if (restContrast >= 3 && adjacentContrast >= 3) {
+            qualifyingDevicePixels += 1;
+            qualifyingCssPixels += intersectionArea;
+          }
+        }
+      }
+      return {
+        candidateId,
+        changedDevicePixels,
+        maximumAdjacentContrast,
+        maximumRestContrast,
+        outsideEnvelopeDevicePixels,
+        qualifyingCssPixels,
+        qualifyingDevicePixels,
+        requiredCssPixels,
+        scaleX,
+        scaleY,
+        stable: unstable === undefined,
+        instability: unstable === undefined
+          ? undefined
+          : `${unstable[0]} changed at ${unstable[1]} attributed device pixels`,
+      };
+    },
+    {
+      candidateId: evidence.candidateId,
+      clip: plan.clip,
+      envelope: evidence.envelope,
+      focusedOneBytes: [...focusedOne.bytes],
+      focusedTwoBytes: [...focusedTwo.bytes],
+      regions: evidence.regions,
+      requiredCssPixels: evidence.requiredCssPixels,
+      restOneBytes: [...restOne.bytes],
+      restTwoBytes: [...restTwo.bytes],
+      restoredRestBytes: [...restoredRest.bytes],
+      suppressedOneBytes: [...suppressedOne.bytes],
+      suppressedTwoBytes: [...suppressedTwo.bytes],
+    },
+  );
+}
+
+async function measureFocusViewportLocality(
+  page: Page,
+  captures: FocusViewportLocalityCaptures,
+  envelope: FocusSampleRegion,
+): Promise<{
+  readonly instability: string | undefined;
+  readonly outsideEnvelopeDevicePixels: number;
+}> {
+  return await page.evaluate(
+    async (
+      {
+        envelope,
+        focusedOneBytes,
+        focusedTwoBytes,
+        plan,
+        suppressedOneBytes,
+        suppressedTwoBytes,
+      },
+    ) => {
+      const decode = async (bytes: readonly number[]) => {
+        const bitmap = await createImageBitmap(
+          new Blob([Uint8Array.from(bytes)], { type: "image/png" }),
+        );
+        const canvas = document.createElement("canvas");
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        const context = canvas.getContext("2d", {
+          willReadFrequently: true,
+        });
+        if (context === null) {
+          bitmap.close();
+          return undefined;
+        }
+        context.drawImage(bitmap, 0, 0);
+        const result = {
+          data: context.getImageData(
+            0,
+            0,
+            bitmap.width,
+            bitmap.height,
+          ).data,
+          height: bitmap.height,
+          width: bitmap.width,
+        };
+        bitmap.close();
+        return result;
+      };
+      const [focusedOne, focusedTwo, suppressedOne, suppressedTwo] =
+        await Promise.all([
+          decode(focusedOneBytes),
+          decode(focusedTwoBytes),
+          decode(suppressedOneBytes),
+          decode(suppressedTwoBytes),
+        ]);
+      if (
+        focusedOne === undefined ||
+        focusedTwo === undefined ||
+        suppressedOne === undefined ||
+        suppressedTwo === undefined ||
+        [focusedTwo, suppressedOne, suppressedTwo].some((image) =>
+          image.width !== focusedOne.width ||
+          image.height !== focusedOne.height
+        )
+      ) {
+        return {
+          instability:
+            "viewport locality screenshots could not be decoded consistently",
+          outsideEnvelopeDevicePixels: 0,
+        };
+      }
+      const scaleX = focusedOne.width / plan.clip.width;
+      const scaleY = focusedOne.height / plan.clip.height;
+      let outsideEnvelopeDevicePixels = 0;
+      let unstableAttributionPixels = 0;
+      for (let row = 0; row < focusedOne.height; row += 1) {
+        const top = plan.clip.y + row / scaleY;
+        const bottom = plan.clip.y + (row + 1) / scaleY;
+        for (let column = 0; column < focusedOne.width; column += 1) {
+          const offset = (row * focusedOne.width + column) * 4;
+          const changed =
+            focusedOne.data[offset] !== suppressedOne.data[offset] ||
+            focusedOne.data[offset + 1] !== suppressedOne.data[offset + 1] ||
+            focusedOne.data[offset + 2] !== suppressedOne.data[offset + 2] ||
+            focusedOne.data[offset + 3] !== suppressedOne.data[offset + 3];
+          if (!changed) continue;
+          const focusedStable =
+            focusedOne.data[offset] === focusedTwo.data[offset] &&
+            focusedOne.data[offset + 1] === focusedTwo.data[offset + 1] &&
+            focusedOne.data[offset + 2] === focusedTwo.data[offset + 2] &&
+            focusedOne.data[offset + 3] === focusedTwo.data[offset + 3];
+          const suppressedStable =
+            suppressedOne.data[offset] === suppressedTwo.data[offset] &&
+            suppressedOne.data[offset + 1] === suppressedTwo.data[offset + 1] &&
+            suppressedOne.data[offset + 2] === suppressedTwo.data[offset + 2] &&
+            suppressedOne.data[offset + 3] === suppressedTwo.data[offset + 3];
+          const left = plan.clip.x + column / scaleX;
+          const right = plan.clip.x + (column + 1) / scaleX;
+          if (
+            left < envelope.left ||
+            right > envelope.right ||
+            top < envelope.top ||
+            bottom > envelope.bottom
+          ) {
+            if (focusedStable && suppressedStable) {
+              outsideEnvelopeDevicePixels += 1;
+            } else {
+              unstableAttributionPixels += 1;
+            }
+          }
+        }
+      }
+      const instability = unstableAttributionPixels > 0
+        ? `viewport attribution changed state at ${unstableAttributionPixels} device pixels`
+        : undefined;
+      return { instability, outsideEnvelopeDevicePixels };
+    },
+    {
+      envelope,
+      focusedOneBytes: [...captures.focusedOne.bytes],
+      focusedTwoBytes: [...captures.focusedTwo.bytes],
+      plan: captures.plan,
+      suppressedOneBytes: [...captures.suppressedOne.bytes],
+      suppressedTwoBytes: [...captures.suppressedTwo.bytes],
+    },
+  );
+}
+
+function focusRenderedCoverage(
+  plan: FocusSamplePlan | undefined,
+  renderedDelta: FocusRenderedDelta | undefined,
+): FocusRenderedCoverage {
+  const required = plan === undefined
+    ? undefined
+    : renderedDelta?.requiredCssPixels;
+  const measured = renderedDelta?.qualifyingCssPixels;
+  return {
+    measured,
+    required,
+    sufficient: measured !== undefined &&
+      required !== undefined &&
+      required > 0 &&
+      renderedDelta?.stable === true &&
+      renderedDelta.outsideEnvelopeDevicePixels === 0 &&
+      measured >= required,
+  };
 }
 
 async function focusFixtureOracle(
@@ -1029,6 +2203,9 @@ async function focusFixtureOracle(
       "inherited-far-label-proxy",
       "marked-far-label-proxy",
       "marked-wide-label-proxy",
+      "proxy-speck-threshold",
+      "candidate-sibling-removal",
+      "shadow-root-radio-proxy",
     ].includes(kind);
     const parentProxy = [
       "huge-parent-proxy",
@@ -1150,7 +2327,7 @@ async function focusFixtureOracle(
             "--discern-focus-proxy",
           ).trim() !== "1"
       );
-    const sharedLabelContains = nativeLabelAssociated &&
+    const sharedAssociationContains = semanticallyAssociated &&
       parent !== undefined &&
       contains(parent, targetRect) &&
       contains(parent, current);
@@ -1160,7 +2337,7 @@ async function focusFixtureOracle(
       ? contains(current, targetRect) || overlaps
       : overlaps ||
         (
-          sharedLabelContains &&
+          sharedAssociationContains &&
           (authoredProxy || distanceLocal)
         );
     const parentEdgesLocal = !parentProxy ||
@@ -1171,7 +2348,11 @@ async function focusFixtureOracle(
           Math.abs(current.bottom - targetRect.bottom),
         ) <= controlScale * parentEdgeFactor;
     const shadowColorPattern = /(?:rgba?|hsla?|oklab|oklch|color)\([^)]+\)/g;
-    const shadowProof = kind.includes("shadow");
+    const shadowProof = kind !== "shadow-root-radio-proxy" &&
+      (
+        kind.includes("shadow") ||
+        kind === "background-attribution-duplicate"
+      );
     const underlineProof = kind.includes("underline");
     const shadowLayerSources: string[] | undefined = (() => {
       if (style.boxShadow === "none") return [];
@@ -1276,37 +2457,672 @@ async function focusFixtureOracle(
 
 async function blurActiveElement(page: Page): Promise<void> {
   await page.evaluate(() => {
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
+    let active: Element | null = document.activeElement;
+    while (active?.shadowRoot?.activeElement !== null) {
+      const nested = active?.shadowRoot?.activeElement;
+      if (nested === undefined || nested === null) break;
+      active = nested;
+    }
+    if (active instanceof HTMLElement) {
+      active.blur();
     }
   });
 }
 
-async function focusByKeyboard(page: Page, target: Locator): Promise<boolean> {
-  const marker = crypto.randomUUID();
-  await target.evaluate((node, marker) => {
-    node.setAttribute("data-discern-semantic-focus-target", marker);
+interface FocusKeyboardHarness {
+  readonly radioState: readonly {
+    readonly checked: boolean;
+    readonly id: string;
+  }[];
+  readonly targetId: string;
+}
+
+interface FocusInspectionHooks {
+  readonly afterBlur?: () => Promise<void>;
+  readonly afterFocus?: () => Promise<void>;
+}
+
+async function installFocusBracketInfrastructure(
+  page: Page,
+  target: Locator,
+): Promise<void> {
+  await page.evaluate(() => {
+    if (
+      document.querySelector("[data-discern-focus-bracket-style]") === null
+    ) {
+      const stability = document.createElement("style");
+      stability.dataset.discernFocusBracketStyle = "";
+      stability.textContent = "*,*::before,*::after{" +
+        "animation:none!important;transition:none!important;" +
+        "caret-color:transparent!important;scroll-behavior:auto!important;}";
+      document.head.append(stability);
+    }
+    if (
+      document.querySelector("[data-discern-focus-suppression-style]") === null
+    ) {
+      const suppression = document.createElement("style");
+      suppression.dataset.discernFocusSuppressionStyle = "";
+      document.head.append(suppression);
+    }
+  });
+  await target.evaluate((node, {
+    candidateAttribute,
+    scrollAttribute,
+    targetAttribute,
+  }) => {
+    const stableId = (): string =>
+      crypto.randomUUID?.() ??
+        `discern-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    if (node.getAttribute(targetAttribute) === null) {
+      throw new Error(
+        "Focus target identity was not prepared before bracket installation",
+      );
+    }
+    const candidates = [node, node.nextElementSibling, node.parentElement]
+      .filter((candidate): candidate is Element => candidate !== null);
+    for (const candidate of candidates) {
+      if (candidate.getAttribute(candidateAttribute) === null) {
+        candidate.setAttribute(candidateAttribute, stableId());
+      }
+      let ancestor: Element | null = candidate;
+      while (ancestor !== null) {
+        if (
+          ancestor instanceof HTMLElement &&
+          ancestor.getAttribute(scrollAttribute) === null
+        ) {
+          ancestor.setAttribute(scrollAttribute, stableId());
+        }
+        ancestor = ancestor.parentElement ??
+          (ancestor.getRootNode() instanceof ShadowRoot
+            ? (ancestor.getRootNode() as ShadowRoot).host
+            : null);
+      }
+    }
+    const roots = new Set<Document | ShadowRoot>();
+    for (const candidate of candidates) {
+      const root = candidate?.getRootNode();
+      if (root instanceof Document || root instanceof ShadowRoot) {
+        roots.add(root);
+      }
+    }
+    for (const root of roots) {
+      if (root instanceof Document) continue;
+      if (
+        root.querySelector("[data-discern-focus-bracket-style]") === null
+      ) {
+        const stability = document.createElement("style");
+        stability.dataset.discernFocusBracketStyle = "";
+        stability.textContent = "*,*::before,*::after{" +
+          "animation:none!important;transition:none!important;" +
+          "caret-color:transparent!important;scroll-behavior:auto!important;}";
+        root.append(stability);
+      }
+      if (
+        root.querySelector("[data-discern-focus-suppression-style]") === null
+      ) {
+        const suppression = document.createElement("style");
+        suppression.dataset.discernFocusSuppressionStyle = "";
+        root.append(suppression);
+      }
+    }
+  }, {
+    candidateAttribute: FOCUS_CANDIDATE_ID_ATTRIBUTE,
+    scrollAttribute: FOCUS_SCROLL_ID_ATTRIBUTE,
+    targetAttribute: SEMANTIC_FOCUS_ID_ATTRIBUTE,
+  });
+}
+
+async function prepareFocusKeyboardHarness(
+  target: Locator,
+): Promise<FocusKeyboardHarness> {
+  return await target.evaluate((node) => {
+    const stableId = (): string =>
+      crypto.randomUUID?.() ??
+        `discern-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    let targetId = node.getAttribute("data-discern-semantic-focus-id");
+    if (targetId === null) {
+      targetId = stableId();
+      node.setAttribute("data-discern-semantic-focus-id", targetId);
+    }
+    const tree = node.getRootNode();
+    const radioGroup = node instanceof HTMLInputElement &&
+        node.type === "radio" &&
+        (tree instanceof Document || tree instanceof ShadowRoot)
+      ? Array.from(
+        tree.querySelectorAll<HTMLInputElement>("input[type='radio']"),
+      ).filter((radio) =>
+        !radio.disabled &&
+        radio.name === node.name &&
+        radio.form === node.form
+      )
+      : [];
+    const sequentialPeer = radioGroup.find((radio) => radio.checked) ??
+      radioGroup[0] ??
+      node;
     const sentinel = document.createElement("span");
     sentinel.dataset.discernSemanticFocusSentinel = "";
-    sentinel.tabIndex = 0;
-    node.before(sentinel);
-    sentinel.focus();
-  }, marker);
-  await page.keyboard.press("Tab");
-  const stableTarget = page.locator(
-    `[data-discern-semantic-focus-target="${marker}"]`,
-  );
-  return await stableTarget.evaluate((node) => {
-    const focused = document.activeElement === node;
-    const sentinel = node.previousElementSibling;
-    if (
-      sentinel?.matches("[data-discern-semantic-focus-sentinel]") === true
-    ) {
-      sentinel.remove();
-    }
-    node.removeAttribute("data-discern-semantic-focus-target");
-    return focused;
+    sentinel.dataset.discernSemanticFocusSentinelFor = targetId;
+    sentinel.tabIndex = Math.max(0, sequentialPeer.tabIndex);
+    sentinel.style.cssText =
+      "position:fixed;inset:0 auto auto 0;inline-size:1px;block-size:1px;" +
+      "overflow:hidden;opacity:0;pointer-events:none;z-index:-1;";
+    sequentialPeer.before(sentinel);
+    const radioState = radioGroup.map((radio) => {
+      const id = radio.dataset.discernFocusRadioStateId ??
+        crypto.randomUUID?.() ??
+        `discern-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      radio.dataset.discernFocusRadioStateId = id;
+      return { checked: radio.checked, id };
+    });
+    return { radioState, targetId };
   });
+}
+
+async function focusByKeyboard(
+  page: Page,
+  target: Locator,
+  harness?: FocusKeyboardHarness,
+): Promise<boolean> {
+  const currentHarness = harness ?? await prepareFocusKeyboardHarness(target);
+  const sentinel = page.locator(
+    `[data-discern-semantic-focus-sentinel-for="${currentHarness.targetId}"]`,
+  );
+  await sentinel.focus();
+  await page.keyboard.press("Tab");
+  const targetFocused = async (): Promise<boolean> =>
+    await target.evaluate((node) => {
+      let active: Element | null = document.activeElement;
+      while (active?.shadowRoot?.activeElement !== null) {
+        const nested = active?.shadowRoot?.activeElement;
+        if (nested === undefined || nested === null) break;
+        active = nested;
+      }
+      return active === node;
+    });
+  if (await targetFocused()) return true;
+  const radioPeers = currentHarness.radioState.length;
+  for (let index = 0; index < radioPeers; index += 1) {
+    await page.keyboard.press("ArrowRight");
+    if (await targetFocused()) return true;
+  }
+  return false;
+}
+
+async function restoreFocusKeyboardHarness(
+  target: Locator,
+  harness: FocusKeyboardHarness,
+): Promise<void> {
+  await target.evaluate((node, harness) => {
+    const tree = node.getRootNode();
+    for (const state of harness.radioState) {
+      const radio = tree instanceof Document || tree instanceof ShadowRoot
+        ? tree.querySelector<HTMLInputElement>(
+          `[data-discern-focus-radio-state-id="${state.id}"]`,
+        )
+        : null;
+      if (radio !== null) {
+        radio.checked = state.checked;
+        delete radio.dataset.discernFocusRadioStateId;
+      }
+    }
+    if (tree instanceof Document || tree instanceof ShadowRoot) {
+      tree.querySelector(
+        `[data-discern-semantic-focus-sentinel-for="${harness.targetId}"]`,
+      )?.remove();
+    }
+  }, harness);
+}
+
+async function setFocusCandidateSuppression(
+  target: Locator,
+  candidateId: string | undefined,
+): Promise<void> {
+  await target.evaluate((node, { attribute, candidateId }) => {
+    type SuppressibleElement = Element & {
+      __discernFocusInlineStyle?: string | null;
+    };
+    const candidates = [node, node.nextElementSibling, node.parentElement]
+      .filter((candidate): candidate is Element => candidate !== null);
+    const restoreInline = (candidate: SuppressibleElement): void => {
+      const inlineStyle = candidate.__discernFocusInlineStyle;
+      if (inlineStyle === undefined) return;
+      if (inlineStyle === null) candidate.removeAttribute("style");
+      else candidate.setAttribute("style", inlineStyle);
+      delete candidate.__discernFocusInlineStyle;
+    };
+    for (const candidate of candidates) {
+      restoreInline(candidate as SuppressibleElement);
+    }
+    const roots = new Set<Document | ShadowRoot>();
+    for (const candidate of candidates) {
+      const root = candidate.getRootNode();
+      if (root instanceof Document || root instanceof ShadowRoot) {
+        roots.add(root);
+      }
+    }
+    const styles = [...roots].flatMap((root) => {
+      const style = root.querySelector<HTMLStyleElement>(
+        "[data-discern-focus-suppression-style]",
+      );
+      return style === null ? [] : [style];
+    });
+    for (const style of styles) style.textContent = "";
+    if (
+      candidateId === undefined ||
+      !/^[a-zA-Z0-9_-]+$/.test(candidateId)
+    ) {
+      return;
+    }
+    const candidate = candidates.find((element) =>
+      element.getAttribute(attribute) === candidateId
+    );
+    if (candidate === undefined) return;
+    const root = candidate.getRootNode();
+    if (!(root instanceof Document || root instanceof ShadowRoot)) return;
+    const style = root.querySelector<HTMLStyleElement>(
+      "[data-discern-focus-suppression-style]",
+    );
+    if (style === null) return;
+    const selector = `[${attribute}="${candidateId}"]`;
+    style.textContent =
+      `${selector}{outline:none!important;box-shadow:none!important;` +
+      "text-decoration-line:none!important;}" +
+      `${selector}::before,${selector}::after{visibility:hidden!important;` +
+      "outline:none!important;box-shadow:none!important;" +
+      "text-decoration-line:none!important;}";
+    if (
+      "style" in candidate &&
+      candidate.style instanceof CSSStyleDeclaration
+    ) {
+      const suppressible = candidate as SuppressibleElement & {
+        readonly style: CSSStyleDeclaration;
+      };
+      const computed = getComputedStyle(candidate);
+      if (
+        computed.outlineStyle !== "none" ||
+        computed.boxShadow !== "none" ||
+        computed.textDecorationLine.split(/\s+/).includes("underline")
+      ) {
+        suppressible.__discernFocusInlineStyle = candidate.getAttribute(
+          "style",
+        );
+        suppressible.style.setProperty("outline", "none", "important");
+        suppressible.style.setProperty("box-shadow", "none", "important");
+        suppressible.style.setProperty(
+          "text-decoration",
+          "none",
+          "important",
+        );
+      }
+    }
+  }, { attribute: FOCUS_CANDIDATE_ID_ATTRIBUTE, candidateId });
+}
+
+async function focusSceneCapture(
+  page: Page,
+  target: Locator,
+  plan: FocusSamplePlan,
+): Promise<FocusSceneCapture> {
+  await settleFocusPaint(page);
+  const styles = await focusStyles(target);
+  const scene = await target.evaluate((node, {
+    allowedCandidateIds,
+    candidateAttribute,
+    scrollAttribute,
+    targetAttribute,
+  }) => {
+    const composedParent = (element: Element): Element | null =>
+      element.parentElement ??
+        (element.getRootNode() instanceof ShadowRoot
+          ? (element.getRootNode() as ShadowRoot).host
+          : null);
+    const candidates = [node, node.nextElementSibling, node.parentElement]
+      .filter((element): element is Element =>
+        element !== null &&
+        allowedCandidateIds.includes(
+          element.getAttribute(candidateAttribute) ?? "",
+        )
+      );
+    const scrolls = new Map<string, {
+      readonly clientHeight: number;
+      readonly clientWidth: number;
+      readonly scrollHeight: number;
+      readonly scrollLeft: number;
+      readonly scrollTop: number;
+      readonly scrollWidth: number;
+    }>();
+    for (const candidate of candidates) {
+      let ancestor: Element | null = candidate;
+      while (ancestor !== null) {
+        if (ancestor instanceof HTMLElement) {
+          const style = getComputedStyle(ancestor);
+          const scrollable = /(auto|scroll|overlay)/.test(
+            `${style.overflow} ${style.overflowX} ${style.overflowY}`,
+          ) || ancestor.scrollHeight > ancestor.clientHeight ||
+            ancestor.scrollWidth > ancestor.clientWidth;
+          if (scrollable) {
+            const id = ancestor.getAttribute(scrollAttribute);
+            if (id === null) {
+              throw new Error(
+                "Focus scroll container was not marked before bracket measurement",
+              );
+            }
+            scrolls.set(id, {
+              clientHeight: ancestor.clientHeight,
+              clientWidth: ancestor.clientWidth,
+              scrollHeight: ancestor.scrollHeight,
+              scrollLeft: ancestor.scrollLeft,
+              scrollTop: ancestor.scrollTop,
+              scrollWidth: ancestor.scrollWidth,
+            });
+          }
+        }
+        ancestor = composedParent(ancestor);
+      }
+    }
+    let active: Element | null = document.activeElement;
+    while (active?.shadowRoot?.activeElement !== null) {
+      const nested = active?.shadowRoot?.activeElement;
+      if (nested === undefined || nested === null) break;
+      active = nested;
+    }
+    return {
+      activeTargetId: active?.getAttribute(targetAttribute) ?? undefined,
+      scrolls: [...scrolls.entries()].toSorted(([left], [right]) =>
+        left.localeCompare(right)
+      ),
+      viewport: {
+        height: globalThis.innerHeight,
+        scrollX: globalThis.scrollX,
+        scrollY: globalThis.scrollY,
+        width: globalThis.innerWidth,
+      },
+      candidateIds: candidates.map((candidate) =>
+        candidate.getAttribute(candidateAttribute)
+      ),
+    };
+  }, {
+    allowedCandidateIds: plan.envelopes.map(({ candidateId }) => candidateId),
+    candidateAttribute: FOCUS_CANDIDATE_ID_ATTRIBUTE,
+    scrollAttribute: FOCUS_SCROLL_ID_ATTRIBUTE,
+    targetAttribute: SEMANTIC_FOCUS_ID_ATTRIBUTE,
+  });
+  const geometryKey = JSON.stringify({
+    candidates: styles.filter((style) =>
+      plan.envelopes.some(({ candidateId }) =>
+        candidateId === style.candidateId
+      )
+    ).map((style) => ({
+      candidate: style.candidate,
+      candidateId: style.candidateId,
+      rect: style.rect,
+    })),
+    candidateIds: scene.candidateIds,
+    scrolls: scene.scrolls,
+    viewport: scene.viewport,
+  });
+  const candidateGeometryKey = JSON.stringify(
+    styles.filter((style) =>
+      plan.envelopes.some(({ candidateId }) =>
+        candidateId === style.candidateId
+      )
+    ).map(({ candidateId, rect }) => ({ candidateId, rect })),
+  );
+  const bytes = await focusScreenshot(page, plan, {
+    x: scene.viewport.scrollX,
+    y: scene.viewport.scrollY,
+  });
+  return {
+    activeTargetId: scene.activeTargetId,
+    bytes,
+    candidateGeometryKey,
+    geometryKey,
+    styles,
+  };
+}
+
+async function inspectKeyboardFocus(
+  page: Page,
+  target: Locator,
+  surfaceColor: string,
+  hooks: FocusInspectionHooks = {},
+): Promise<FocusInspection> {
+  const harness = await prepareFocusKeyboardHarness(target);
+  await installFocusBracketInfrastructure(page, target);
+  let restoredRest: FocusSceneCapture | undefined;
+  try {
+    await target.scrollIntoViewIfNeeded();
+    await blurActiveElement(page);
+    if (hooks.afterBlur !== undefined) await hooks.afterBlur();
+    await settleFocusPaint(page);
+    const before = await focusStyles(target);
+    const plan = await focusSamplePlan(page, before);
+    if (plan === undefined) {
+      return {
+        after: before,
+        before,
+        failures: ["focus locality clip could not be established"],
+        keyboardFocused: false,
+        plan,
+        renderedDelta: undefined,
+      };
+    }
+    const plannedCandidateGeometryKey = JSON.stringify(
+      plan.envelopes.map(({ candidateId, rect }) => ({ candidateId, rect })),
+    );
+    const inspectionFailures: string[] = [];
+    const suppressed = new Map<
+      string,
+      readonly [FocusSceneCapture, FocusSceneCapture]
+    >();
+    const viewportSuppressed = new Map<
+      string,
+      FocusViewportLocalityCaptures
+    >();
+    const restOne = await focusSceneCapture(page, target, plan);
+    const restTwo = await focusSceneCapture(page, target, plan);
+    const keyboardFocused = await focusByKeyboard(page, target, harness);
+    if (hooks.afterFocus !== undefined) await hooks.afterFocus();
+    const focusedOne = await focusSceneCapture(page, target, plan);
+    const focusedTwo = await focusSceneCapture(page, target, plan);
+    const evidence = focusCandidateEvidence(
+      restOne.styles,
+      focusedOne.styles,
+      surfaceColor,
+      plan,
+    );
+    const viewportCandidates = evidence.filter((candidate) =>
+      candidate.local && candidate.viewportLocality
+    );
+    const viewportPlan = viewportCandidates.length === 0
+      ? undefined
+      : await focusViewportPlan(page, plan);
+    const viewportFocused = viewportPlan === undefined ? undefined : [
+      await focusSceneCapture(page, target, viewportPlan),
+      await focusSceneCapture(page, target, viewportPlan),
+    ] as const;
+    for (const candidate of evidence) {
+      if (!candidate.local) {
+        inspectionFailures.push(
+          `${candidate.candidate}/${candidate.candidateId}: ${
+            candidate.localityFailure ?? "non-local focus paint"
+          }`,
+        );
+        continue;
+      }
+      await setFocusCandidateSuppression(target, candidate.candidateId);
+      const suppressedOne = await focusSceneCapture(page, target, plan);
+      const suppressedTwo = await focusSceneCapture(page, target, plan);
+      suppressed.set(candidate.candidateId, [suppressedOne, suppressedTwo]);
+      const suppressedStyle = suppressedOne.styles.find((style) =>
+        style.candidateId === candidate.candidateId
+      );
+      const elementSuppressed = suppressedStyle !== undefined &&
+        suppressedStyle.outlineStyle === "none" &&
+        suppressedStyle.boxShadow === "none" &&
+        !suppressedStyle.textDecorationLine.split(/\s+/).includes(
+          "underline",
+        );
+      const pseudosSuppressed = suppressedStyle !== undefined &&
+        candidate.pseudos.every((pseudo) =>
+          suppressedStyle.pseudos.find((style) => style.pseudo === pseudo)
+            ?.visibility === "hidden"
+        );
+      if (!elementSuppressed || !pseudosSuppressed) {
+        inspectionFailures.push(
+          `${candidate.candidate}/${candidate.candidateId}: eligible candidate paint could not be authoritatively suppressed`,
+        );
+      }
+      if (
+        candidate.viewportLocality &&
+        viewportPlan !== undefined &&
+        viewportFocused !== undefined
+      ) {
+        viewportSuppressed.set(candidate.candidateId, {
+          focusedOne: viewportFocused[0],
+          focusedTwo: viewportFocused[1],
+          plan: viewportPlan,
+          suppressedOne: await focusSceneCapture(page, target, viewportPlan),
+          suppressedTwo: await focusSceneCapture(page, target, viewportPlan),
+        });
+      }
+      await setFocusCandidateSuppression(target, undefined);
+    }
+    await blurActiveElement(page);
+    if (hooks.afterBlur !== undefined) await hooks.afterBlur();
+    await target.evaluate((node, radioState) => {
+      const tree = node.getRootNode();
+      for (const state of radioState) {
+        const radio = tree instanceof Document || tree instanceof ShadowRoot
+          ? tree.querySelector<HTMLInputElement>(
+            `[data-discern-focus-radio-state-id="${state.id}"]`,
+          )
+          : null;
+        if (radio !== null) radio.checked = state.checked;
+      }
+      if (document.activeElement === node && node instanceof HTMLElement) {
+        node.blur();
+      }
+    }, harness.radioState);
+    restoredRest = await focusSceneCapture(page, target, plan);
+    const captures = [
+      restOne,
+      restTwo,
+      focusedOne,
+      focusedTwo,
+      restoredRest,
+      ...[...suppressed.values()].flat(),
+    ];
+    const geometry = new Set(captures.map(({ geometryKey }) => geometryKey));
+    if (geometry.size !== 1) {
+      inspectionFailures.push(
+        "candidate identity, geometry, viewport, or scroll coordinates changed during the focus bracket",
+      );
+    }
+    if (
+      captures.some(({ candidateGeometryKey }) =>
+        candidateGeometryKey !== plannedCandidateGeometryKey
+      )
+    ) {
+      inspectionFailures.push(
+        "a planned candidate changed stable identity or viewport-relative geometry during the focus bracket",
+      );
+    }
+    if (
+      focusedOne.activeTargetId !== harness.targetId ||
+      focusedTwo.activeTargetId !== harness.targetId ||
+      [...suppressed.values()].some(([one, two]) =>
+        one.activeTargetId !== harness.targetId ||
+        two.activeTargetId !== harness.targetId
+      )
+    ) {
+      inspectionFailures.push(
+        "the stable target did not retain keyboard focus through the focused bracket",
+      );
+    }
+    const evidenceById = new Map(
+      focusCandidateEvidence(
+        restOne.styles,
+        focusedOne.styles,
+        surfaceColor,
+        plan,
+      ).map((candidate) => [candidate.candidateId, candidate] as const),
+    );
+    const witnesses: FocusRenderedDelta[] = [];
+    for (const [candidateId, [one, two]] of suppressed) {
+      const candidate = evidenceById.get(candidateId);
+      if (candidate === undefined) continue;
+      const measured = await measureFocusRenderedDelta(
+        page,
+        restOne,
+        restTwo,
+        focusedOne,
+        focusedTwo,
+        one,
+        two,
+        restoredRest,
+        candidate,
+        plan,
+      );
+      if (measured !== undefined) {
+        const viewportCaptures = viewportSuppressed.get(candidateId);
+        const viewportLocality = viewportCaptures === undefined
+          ? undefined
+          : await measureFocusViewportLocality(
+            page,
+            viewportCaptures,
+            candidate.envelope,
+          );
+        const witness: FocusRenderedDelta = {
+          ...measured,
+          instability: measured.instability ??
+            viewportLocality?.instability,
+          outsideEnvelopeDevicePixels: Math.max(
+            measured.outsideEnvelopeDevicePixels,
+            viewportLocality?.outsideEnvelopeDevicePixels ?? 0,
+          ),
+          stable: measured.stable &&
+            viewportLocality?.instability === undefined,
+        };
+        witnesses.push(witness);
+        if (!witness.stable) {
+          inspectionFailures.push(
+            `${candidate.candidate}/${candidateId}: ${
+              witness.instability ?? "rendered scene was unstable"
+            }`,
+          );
+        }
+        if (witness.outsideEnvelopeDevicePixels > 0) {
+          inspectionFailures.push(
+            `${candidate.candidate}/${candidateId}: suppressed candidate paint changed ${witness.outsideEnvelopeDevicePixels} device pixels outside its declared locality envelope`,
+          );
+        }
+      }
+    }
+    const renderedDelta = witnesses.toSorted((left, right) => {
+      const leftAccepted = left.stable &&
+        left.qualifyingCssPixels >= left.requiredCssPixels;
+      const rightAccepted = right.stable &&
+        right.qualifyingCssPixels >= right.requiredCssPixels;
+      return Number(rightAccepted) - Number(leftAccepted) ||
+        right.qualifyingCssPixels - left.qualifyingCssPixels;
+    })[0];
+    return {
+      after: focusedOne.styles,
+      before: restOne.styles,
+      failures: inspectionFailures,
+      keyboardFocused,
+      plan,
+      renderedDelta,
+    };
+  } finally {
+    await setFocusCandidateSuppression(target, undefined);
+    await blurActiveElement(page);
+    if (hooks.afterBlur !== undefined && restoredRest === undefined) {
+      await hooks.afterBlur();
+    }
+    await restoreFocusKeyboardHarness(target, harness);
+  }
 }
 
 async function installSemanticRoleProbes(
@@ -1343,7 +3159,14 @@ async function discoverSemanticTargets(
   surfaceTokens: readonly SemanticSurfaceToken[],
 ): Promise<SemanticFocusTarget[]> {
   return await page.evaluate(
-    ({ surfaceSelector, focusableSelector, surfaceTokens }) => {
+    (
+      {
+        focusableSelector,
+        surfaceSelector,
+        surfaceTokens,
+        targetAttribute,
+      },
+    ) => {
       const root = document.querySelector<HTMLElement>("[data-discern-root]");
       if (root === null) return [];
       const canvas = document.createElement("canvas");
@@ -1373,44 +3196,115 @@ async function discoverSemanticTargets(
         tokenColors.push({ role, color: getComputedStyle(probe).color });
         probe.remove();
       }
-      const surfaces = Array.from(document.querySelectorAll(surfaceSelector));
-      const result: Array<{
-        readonly surface: number;
-        readonly element: number;
-        readonly role: string;
-        readonly surfaceColor: string;
-        readonly proofKind: string;
-      }> = [];
-      for (let surface = 0; surface < surfaces.length; surface += 1) {
-        const container = surfaces[surface];
-        if (!(container instanceof HTMLElement)) continue;
-        const focusable = Array.from(
-          container.querySelectorAll<HTMLElement>(focusableSelector),
-        );
-        for (let element = 0; element < focusable.length; element += 1) {
-          const target = focusable[element];
-          if (target === undefined) continue;
-          let ancestor: HTMLElement | null = target;
-          while (ancestor !== null && container.contains(ancestor)) {
-            const surfaceColor = getComputedStyle(ancestor).backgroundColor;
-            const semantic = tokenColors.find(({ color }) =>
-              color === surfaceColor
-            );
-            if (semantic !== undefined) {
-              result.push({
-                surface,
-                element,
-                role: semantic.role,
-                surfaceColor: pixelColor(surfaceColor),
-                proofKind: target.dataset.discernFocusProof ??
-                  target.dataset.discernFocusRoleProof ?? "",
-              });
-              break;
-            }
-            if (ancestor === container) break;
-            ancestor = ancestor.parentElement;
-          }
+      const composedParent = (element: Element): Element | null =>
+        element.parentElement ??
+          (element.getRootNode() instanceof ShadowRoot
+            ? (element.getRootNode() as ShadowRoot).host
+            : null);
+      const potentiallySequentialScrollable = (
+        element: HTMLElement,
+        style = getComputedStyle(element),
+      ): boolean => {
+        return style.overflowX === "auto" ||
+          style.overflowX === "scroll" ||
+          style.overflowY === "auto" ||
+          style.overflowY === "scroll";
+      };
+      const allElements: HTMLElement[] = [];
+      const collect = (scope: Document | Element | ShadowRoot): void => {
+        for (const element of scope.querySelectorAll<HTMLElement>("*")) {
+          if (!allElements.includes(element)) allElements.push(element);
+          if (element.shadowRoot !== null) collect(element.shadowRoot);
         }
+      };
+      collect(document);
+      const authoredCandidates = allElements.filter((element) =>
+        element.matches(focusableSelector) ||
+        potentiallySequentialScrollable(element)
+      );
+      const structuralPath = (element: Element): string => {
+        const segments: string[] = [];
+        let current: Element | null = element;
+        while (current !== null && current !== root) {
+          const parent: Element | null = current.parentElement;
+          if (parent !== null) {
+            const index = Array.from(parent.children).indexOf(current);
+            segments.push(
+              `${current.tagName.toLowerCase()}:${index}`,
+            );
+            current = parent;
+            continue;
+          }
+          const nodeRoot = current.getRootNode();
+          if (nodeRoot instanceof ShadowRoot) {
+            const index = Array.from(nodeRoot.children).indexOf(current);
+            segments.push(`${current.tagName.toLowerCase()}:${index}#shadow`);
+            current = nodeRoot.host;
+            continue;
+          }
+          break;
+        }
+        return segments.reverse().join("/");
+      };
+      const result: SemanticFocusTarget[] = [];
+      for (const target of authoredCandidates) {
+        let ancestor: Element | null = target;
+        let semantic:
+          | { readonly role: string; readonly color: string }
+          | undefined;
+        let surfaceColor = "";
+        let fallbackSurfaceColor = "";
+        ancestor = target;
+        while (ancestor !== null) {
+          const ancestorColor = getComputedStyle(ancestor).backgroundColor;
+          if (
+            fallbackSurfaceColor === "" &&
+            ancestorColor !== "transparent" &&
+            ancestorColor !== "rgba(0, 0, 0, 0)"
+          ) {
+            fallbackSurfaceColor = pixelColor(ancestorColor);
+          }
+          if (ancestor.matches(surfaceSelector)) {
+            let painted: Element | null = target;
+            while (painted !== null) {
+              const color = getComputedStyle(painted).backgroundColor;
+              const match = tokenColors.find((candidate) =>
+                candidate.color === color
+              );
+              if (match !== undefined) {
+                semantic = match;
+                surfaceColor = pixelColor(color);
+                break;
+              }
+              if (painted === ancestor) break;
+              painted = composedParent(painted);
+            }
+            break;
+          }
+          ancestor = composedParent(ancestor);
+        }
+        const audited = semantic !== undefined;
+        const role = semantic?.role ?? "outside-semantic-surface";
+        const targetId = target.getAttribute(targetAttribute) ??
+          crypto.randomUUID?.() ??
+          `discern-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        target.setAttribute(targetAttribute, targetId);
+        const proofKind = target.dataset.discernFocusProof ??
+          target.dataset.discernFocusRoleProof ?? "";
+        result.push({
+          audited,
+          proofKind,
+          role,
+          signature: JSON.stringify([
+            structuralPath(target),
+            target.tagName.toLowerCase(),
+            target.getAttribute("type") ?? "",
+            target.getAttribute("name") ?? "",
+            proofKind,
+          ]),
+          surfaceColor: surfaceColor || fallbackSurfaceColor,
+          targetId,
+        });
       }
       return result;
     },
@@ -1418,8 +3312,238 @@ async function discoverSemanticTargets(
       surfaceSelector: SURFACE_SELECTOR,
       focusableSelector: FOCUSABLE_SELECTOR,
       surfaceTokens,
+      targetAttribute: SEMANTIC_FOCUS_ID_ATTRIBUTE,
     },
   );
+}
+
+async function installSemanticTargetRegistry(
+  page: Page,
+  targets: readonly SemanticFocusTarget[],
+): Promise<void> {
+  await page.evaluate(({ targetAttribute, targets }) => {
+    const allElements = (): Element[] => {
+      const result: Element[] = [];
+      const collect = (scope: Document | Element | ShadowRoot): void => {
+        for (const element of scope.querySelectorAll("*")) {
+          result.push(element);
+          if (element.shadowRoot !== null) collect(element.shadowRoot);
+        }
+      };
+      collect(document);
+      return result;
+    };
+    const elements = allElements();
+    const records = targets.flatMap(({ signature, targetId }) => {
+      const element = elements.find((candidate) =>
+        candidate.getAttribute(targetAttribute) === targetId
+      );
+      return element === undefined ? [] : [{ element, signature, targetId }];
+    });
+    (globalThis as typeof globalThis & {
+      __discernSemanticTargetRegistry?: typeof records;
+    }).__discernSemanticTargetRegistry = records;
+  }, {
+    targetAttribute: SEMANTIC_FOCUS_ID_ATTRIBUTE,
+    targets,
+  });
+}
+
+async function semanticTargetRegistryFailures(
+  page: Page,
+  surfaceTokens: readonly SemanticSurfaceToken[],
+  expectedUniverse: readonly SemanticFocusTarget[],
+  expectedIdentities: readonly SemanticFocusTarget[],
+): Promise<readonly string[]> {
+  const current = await discoverSemanticTargets(page, surfaceTokens);
+  const expectedSignatures = expectedUniverse.map(({ signature }) => signature)
+    .toSorted();
+  const currentSignatures = current.map(({ signature }) => signature)
+    .toSorted();
+  const failures: string[] = [];
+  if (
+    JSON.stringify(expectedSignatures) !== JSON.stringify(currentSignatures)
+  ) {
+    const expectedSet = new Set(expectedSignatures);
+    const currentSet = new Set(currentSignatures);
+    const removed = expectedSignatures.filter((signature) =>
+      !currentSet.has(signature)
+    );
+    const added = currentSignatures.filter((signature) =>
+      !expectedSet.has(signature)
+    );
+    failures.push(
+      `the enrolled semantic focus universe changed (removed: ${
+        removed.join(", ") || "none"
+      }; added: ${added.join(", ") || "none"})`,
+    );
+  }
+  const currentById = new Map(
+    current.map((target) => [target.targetId, target] as const),
+  );
+  for (const target of expectedIdentities) {
+    const currentTarget = currentById.get(target.targetId);
+    if (currentTarget?.signature !== target.signature) {
+      failures.push(
+        `target ${target.signature} lost its stable marker or signature (current: ${
+          currentTarget?.signature ?? "not enrolled"
+        })`,
+      );
+    }
+  }
+  const identityFailures = await page.evaluate(({ targetAttribute }) => {
+    const registry = (globalThis as typeof globalThis & {
+      __discernSemanticTargetRegistry?: Array<{
+        readonly element: Element;
+        readonly signature: string;
+        readonly targetId: string;
+      }>;
+    }).__discernSemanticTargetRegistry ?? [];
+    const allElements: Element[] = [];
+    const collect = (scope: Document | Element | ShadowRoot): void => {
+      for (const element of scope.querySelectorAll("*")) {
+        allElements.push(element);
+        if (element.shadowRoot !== null) collect(element.shadowRoot);
+      }
+    };
+    collect(document);
+    return registry.flatMap(({ element, signature, targetId }) => {
+      const marked = allElements.find((candidate) =>
+        candidate.getAttribute(targetAttribute) === targetId
+      );
+      if (!element.isConnected) {
+        return [`target ${signature} was disconnected`];
+      }
+      if (marked !== element) {
+        return [`target ${signature} was replaced by a different Element`];
+      }
+      return [];
+    });
+  }, { targetAttribute: SEMANTIC_FOCUS_ID_ATTRIBUTE });
+  failures.push(...identityFailures);
+  return failures;
+}
+
+interface SequentialSemanticEnrollment {
+  readonly complete: boolean;
+  readonly order: readonly string[];
+  readonly potentialUniverse: readonly string[];
+  readonly unknownStops: readonly string[];
+  readonly universe: readonly string[];
+}
+
+async function discoverSequentialSemanticTargets(
+  page: Page,
+  surfaceTokens: readonly SemanticSurfaceToken[],
+): Promise<SequentialSemanticEnrollment> {
+  const targets = await discoverSemanticTargets(page, surfaceTokens);
+  const signatureById = new Map(
+    targets.map(({ signature, targetId }) => [targetId, signature] as const),
+  );
+  const sentinelId = crypto.randomUUID();
+  await page.evaluate((sentinelId) => {
+    const sentinel = document.createElement("span");
+    sentinel.dataset.discernSemanticEnrollmentSentinel = sentinelId;
+    sentinel.tabIndex = 0;
+    sentinel.style.cssText =
+      "position:fixed;inset:0 auto auto 0;inline-size:1px;block-size:1px;" +
+      "overflow:hidden;opacity:0;pointer-events:none;z-index:-1;";
+    document.body.append(sentinel);
+    sentinel.focus();
+  }, sentinelId);
+  const order: string[] = [];
+  const enrolled = new Set<string>();
+  const unknownStops = new Set<string>();
+  let complete = false;
+  const activeState = async (): Promise<{
+    readonly description: string;
+    readonly ignorable: boolean;
+    readonly radioPeers: number;
+    readonly sentinel: boolean;
+    readonly targetId: string | undefined;
+  }> =>
+    await page.evaluate(({ sentinelId, targetAttribute }) => {
+      let active: Element | null = document.activeElement;
+      while (active?.shadowRoot?.activeElement !== null) {
+        const nested = active?.shadowRoot?.activeElement;
+        if (nested === undefined || nested === null) break;
+        active = nested;
+      }
+      const radioPeers = active instanceof HTMLInputElement &&
+          active.type === "radio"
+        ? (() => {
+          const tree = active.getRootNode();
+          return tree instanceof Document || tree instanceof ShadowRoot
+            ? Array.from(
+              tree.querySelectorAll<HTMLInputElement>("input[type='radio']"),
+            ).filter((radio) =>
+              !radio.disabled &&
+              radio.name === active.name &&
+              radio.form === active.form
+            ).length
+            : 0;
+        })()
+        : 0;
+      return {
+        description: active?.outerHTML.replace(/\s+/g, " ").slice(0, 180) ??
+          "no active element",
+        ignorable: active === null ||
+          active === document.body ||
+          active === document.documentElement,
+        radioPeers,
+        sentinel: active instanceof HTMLElement &&
+          active.dataset.discernSemanticEnrollmentSentinel === sentinelId,
+        targetId: active?.getAttribute(targetAttribute) ?? undefined,
+      };
+    }, {
+      sentinelId,
+      targetAttribute: SEMANTIC_FOCUS_ID_ATTRIBUTE,
+    });
+  const recordActive = (state: {
+    readonly description: string;
+    readonly ignorable: boolean;
+    readonly targetId: string | undefined;
+  }): void => {
+    if (state.ignorable) return;
+    if (state.targetId === undefined) {
+      unknownStops.add(state.description);
+      return;
+    }
+    if (enrolled.has(state.targetId)) return;
+    const signature = signatureById.get(state.targetId);
+    if (signature === undefined) {
+      unknownStops.add(state.description);
+      return;
+    }
+    enrolled.add(state.targetId);
+    order.push(signature);
+  };
+  const maximumStops = Math.max(100, targets.length * 8);
+  for (let stop = 0; stop < maximumStops; stop += 1) {
+    await page.keyboard.press("Tab");
+    const state = await activeState();
+    if (state.sentinel) {
+      complete = true;
+      break;
+    }
+    recordActive(state);
+    for (let peer = 1; peer <= state.radioPeers; peer += 1) {
+      await page.keyboard.press("ArrowRight");
+      recordActive(await activeState());
+    }
+  }
+  await page.evaluate((sentinelId) => {
+    document.querySelector(
+      `[data-discern-semantic-enrollment-sentinel="${sentinelId}"]`,
+    )?.remove();
+  }, sentinelId);
+  return {
+    complete,
+    order,
+    potentialUniverse: targets.map(({ signature }) => signature).toSorted(),
+    unknownStops: [...unknownStops],
+    universe: order.toSorted(),
+  };
 }
 
 /** Measured populations exercised by the journey and resilience browser gate. */
@@ -1726,82 +3850,89 @@ async function verifyJourneyKeyboard(
   origin: string,
   failures: string[],
 ): Promise<{ readonly tabStops: number; readonly commandCopies: number }> {
-  await page.setViewportSize(WIDE_VIEWPORT);
-  await loadPage(page, conformanceUrl(origin));
-  const journeys = page.locator("[data-discern-journey]");
-  let tabStops = 0;
-  let commandCopies = 0;
-  for (
-    let journeyIndex = 0;
-    journeyIndex < await journeys.count();
-    journeyIndex += 1
-  ) {
-    const journey = journeys.nth(journeyIndex);
-    const id = await journey.getAttribute("data-discern-journey") ??
-      `journey-${journeyIndex}`;
-    const targets = await visibleEnabledTargets(journey);
-    if (targets.length > 0) {
-      const sentinelId = `discern-journey-sentinel-${journeyIndex}`;
-      await journey.evaluate((node, id) => {
-        const sentinel = document.createElement("button");
-        sentinel.id = id;
-        sentinel.type = "button";
-        sentinel.textContent = "Journey focus sentinel";
-        sentinel.style.cssText =
-          "position:absolute;inline-size:1px;block-size:1px;opacity:0;";
-        node.before(sentinel);
-      }, sentinelId);
-      await page.locator(`#${sentinelId}`).focus();
-      for (const target of targets) {
+  return await withViewport(page, WIDE_VIEWPORT, async () => {
+    await loadPage(page, conformanceUrl(origin));
+    const journeys = page.locator("[data-discern-journey]");
+    let tabStops = 0;
+    let commandCopies = 0;
+    for (
+      let journeyIndex = 0;
+      journeyIndex < await journeys.count();
+      journeyIndex += 1
+    ) {
+      const journey = journeys.nth(journeyIndex);
+      const id = await journey.getAttribute("data-discern-journey") ??
+        `journey-${journeyIndex}`;
+      const targets = await visibleEnabledTargets(journey);
+      if (targets.length > 0) {
+        const sentinelId = `discern-journey-sentinel-${journeyIndex}`;
+        await journey.evaluate((node, id) => {
+          const sentinel = document.createElement("button");
+          sentinel.id = id;
+          sentinel.type = "button";
+          sentinel.textContent = "Journey focus sentinel";
+          sentinel.style.cssText =
+            "position:absolute;inline-size:1px;block-size:1px;opacity:0;";
+          node.before(sentinel);
+        }, sentinelId);
+        await page.locator(`#${sentinelId}`).focus();
+        for (const target of targets) {
+          await page.keyboard.press("Tab");
+          const state = await target.evaluate((node) => ({
+            active: node.ownerDocument.activeElement === node,
+            focusVisible: node.matches(":focus-visible"),
+          }));
+          if (!state.active) {
+            failures.push(`${id}: Tab order diverged from DOM order`);
+            break;
+          }
+          if (!state.focusVisible) {
+            failures.push(
+              `${id}: keyboard target did not match :focus-visible`,
+            );
+          }
+          tabStops += 1;
+        }
         await page.keyboard.press("Tab");
-        const state = await target.evaluate((node) => ({
-          active: node.ownerDocument.activeElement === node,
-          focusVisible: node.matches(":focus-visible"),
-        }));
-        if (!state.active) {
-          failures.push(`${id}: Tab order diverged from DOM order`);
-          break;
+        if (
+          await journey.evaluate((node) =>
+            node.contains(node.ownerDocument.activeElement)
+          )
+        ) {
+          failures.push(`${id}: keyboard traversal is trapped in the journey`);
         }
-        if (!state.focusVisible) {
-          failures.push(`${id}: keyboard target did not match :focus-visible`);
-        }
-        tabStops += 1;
+        await page.locator(`#${sentinelId}`).evaluate((node) => node.remove());
       }
-      await page.keyboard.press("Tab");
-      if (
-        await journey.evaluate((node) =>
-          node.contains(node.ownerDocument.activeElement)
-        )
-      ) {
-        failures.push(`${id}: keyboard traversal is trapped in the journey`);
-      }
-      await page.locator(`#${sentinelId}`).evaluate((node) => node.remove());
-    }
 
-    const commands = journey.locator(".discern-command");
-    for (let index = 0; index < await commands.count(); index += 1) {
-      const command = commands.nth(index);
-      const expected = await command.locator(
-        ".discern-command__text code",
-      ).innerText();
-      const copy = command.locator(".discern-command__copy");
-      if (await copy.count() !== 1) {
-        failures.push(`${id}: command ${index + 1} has no single copy target`);
-        continue;
-      }
-      await copy.focus();
-      await page.keyboard.press("Enter");
-      const copied = await page.evaluate(() => navigator.clipboard.readText());
-      if (copied !== expected) {
-        failures.push(
-          `${id}: command ${index + 1} copied ${JSON.stringify(copied)} ` +
-            `instead of ${JSON.stringify(expected)}`,
+      const commands = journey.locator(".discern-command");
+      for (let index = 0; index < await commands.count(); index += 1) {
+        const command = commands.nth(index);
+        const expected = await command.locator(
+          ".discern-command__text code",
+        ).innerText();
+        const copy = command.locator(".discern-command__copy");
+        if (await copy.count() !== 1) {
+          failures.push(
+            `${id}: command ${index + 1} has no single copy target`,
+          );
+          continue;
+        }
+        await copy.focus();
+        await page.keyboard.press("Enter");
+        const copied = await page.evaluate(() =>
+          navigator.clipboard.readText()
         );
+        if (copied !== expected) {
+          failures.push(
+            `${id}: command ${index + 1} copied ${JSON.stringify(copied)} ` +
+              `instead of ${JSON.stringify(expected)}`,
+          );
+        }
+        commandCopies += 1;
       }
-      commandCopies += 1;
     }
-  }
-  return { tabStops, commandCopies };
+    return { tabStops, commandCopies };
+  });
 }
 
 async function verifyDisclosures(
@@ -1977,165 +4108,169 @@ async function verifyTargetSizes(
   origin: string,
   failures: string[],
 ): Promise<TargetResult> {
-  await page.setViewportSize(NARROW_VIEWPORT);
-  await loadPage(page, conformanceUrl(origin));
-  const result = await page.evaluate(
-    ({ surfaceSelector, interactiveSelector, minimumTargetSize }) => {
-      interface Measurement {
-        readonly failures: string[];
-        targets: number;
-        inlineTextExceptions: number;
-        labelledControlBoxes: number;
-      }
-
-      function visible(element: HTMLElement): boolean {
-        const style = getComputedStyle(element);
-        const rect = element.getBoundingClientRect();
-        return style.display !== "none" && style.visibility !== "hidden" &&
-          style.clipPath !== "inset(50%)" &&
-          (style.clip === "auto" || style.clip === "") &&
-          rect.width > 0 && rect.height > 0;
-      }
-
-      function description(element: HTMLElement): string {
-        return element.outerHTML.replace(/\s+/g, " ").slice(0, 180);
-      }
-
-      function inlineTextLink(element: HTMLElement): boolean {
-        if (!(element instanceof HTMLAnchorElement)) return false;
-        if (getComputedStyle(element).display !== "inline") return false;
-        const block = element.closest("p, li, dd, dt, figcaption");
-        if (block === null) return false;
-        return [...block.childNodes].some((node) =>
-          node !== element && (node.textContent?.trim().length ?? 0) > 0
-        );
-      }
-
-      function labelledRect(element: HTMLElement): DOMRect | undefined {
-        if (!(element instanceof HTMLInputElement)) return undefined;
-        if (element.type !== "checkbox" && element.type !== "radio") {
-          return undefined;
+  return await withViewport(page, NARROW_VIEWPORT, async () => {
+    await loadPage(page, conformanceUrl(origin));
+    const result = await page.evaluate(
+      ({ surfaceSelector, interactiveSelector, minimumTargetSize }) => {
+        interface Measurement {
+          readonly failures: string[];
+          targets: number;
+          inlineTextExceptions: number;
+          labelledControlBoxes: number;
         }
-        const label = element.labels?.[0];
-        if (label === undefined) return undefined;
-        const rect = label.getBoundingClientRect();
-        return rect.width > 0 && rect.height > 0 ? rect : undefined;
-      }
 
-      function inspect(root: ParentNode): Measurement {
-        const result: Measurement = {
-          failures: [],
-          targets: 0,
-          inlineTextExceptions: 0,
-          labelledControlBoxes: 0,
+        function visible(element: HTMLElement): boolean {
+          const style = getComputedStyle(element);
+          const rect = element.getBoundingClientRect();
+          return style.display !== "none" && style.visibility !== "hidden" &&
+            style.clipPath !== "inset(50%)" &&
+            (style.clip === "auto" || style.clip === "") &&
+            rect.width > 0 && rect.height > 0;
+        }
+
+        function description(element: HTMLElement): string {
+          return element.outerHTML.replace(/\s+/g, " ").slice(0, 180);
+        }
+
+        function inlineTextLink(element: HTMLElement): boolean {
+          if (!(element instanceof HTMLAnchorElement)) return false;
+          if (getComputedStyle(element).display !== "inline") return false;
+          const block = element.closest("p, li, dd, dt, figcaption");
+          if (block === null) return false;
+          return [...block.childNodes].some((node) =>
+            node !== element && (node.textContent?.trim().length ?? 0) > 0
+          );
+        }
+
+        function labelledRect(element: HTMLElement): DOMRect | undefined {
+          if (!(element instanceof HTMLInputElement)) return undefined;
+          if (element.type !== "checkbox" && element.type !== "radio") {
+            return undefined;
+          }
+          const label = element.labels?.[0];
+          if (label === undefined) return undefined;
+          const rect = label.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0 ? rect : undefined;
+        }
+
+        function inspect(root: ParentNode): Measurement {
+          const result: Measurement = {
+            failures: [],
+            targets: 0,
+            inlineTextExceptions: 0,
+            labelledControlBoxes: 0,
+          };
+          const elements = [
+            ...(root instanceof HTMLElement && root.matches(interactiveSelector)
+              ? [root]
+              : []),
+            ...root.querySelectorAll<HTMLElement>(interactiveSelector),
+          ];
+          for (const element of elements) {
+            if (!visible(element)) continue;
+            if (
+              "disabled" in element &&
+              (element as HTMLButtonElement | HTMLInputElement).disabled
+            ) {
+              continue;
+            }
+            result.targets += 1;
+            if (inlineTextLink(element)) {
+              result.inlineTextExceptions += 1;
+              if (
+                !(element instanceof HTMLAnchorElement) ||
+                ![
+                  ...(
+                    element.closest("p, li, dd, dt, figcaption")?.childNodes ??
+                      []
+                  ),
+                ].some((node) =>
+                  node !== element && (node.textContent?.trim().length ?? 0) > 0
+                )
+              ) {
+                result.failures.push(
+                  `invalid inline-text exception: ${description(element)}`,
+                );
+              }
+              continue;
+            }
+            const labelBox = labelledRect(element);
+            const rect = labelBox ?? element.getBoundingClientRect();
+            if (labelBox !== undefined) {
+              result.labelledControlBoxes += 1;
+              if (
+                !(element instanceof HTMLInputElement) ||
+                (element.type !== "checkbox" && element.type !== "radio") ||
+                element.labels?.[0] === undefined
+              ) {
+                result.failures.push(
+                  `invalid native-label exception: ${description(element)}`,
+                );
+              }
+            }
+            if (
+              rect.width < minimumTargetSize ||
+              rect.height < minimumTargetSize
+            ) {
+              result.failures.push(
+                `${description(element)} measures ${rect.width.toFixed(1)}×${
+                  rect.height.toFixed(1)
+                }px`,
+              );
+            }
+          }
+          return result;
+        }
+
+        const surfaces = Array.from(document.querySelectorAll(surfaceSelector));
+        const measurements = surfaces.map(inspect);
+        const current: Measurement = {
+          failures: measurements.flatMap((item) => item.failures),
+          targets: measurements.reduce((sum, item) => sum + item.targets, 0),
+          inlineTextExceptions: measurements.reduce(
+            (sum, item) => sum + item.inlineTextExceptions,
+            0,
+          ),
+          labelledControlBoxes: measurements.reduce(
+            (sum, item) => sum + item.labelledControlBoxes,
+            0,
+          ),
         };
-        const elements = [
-          ...(root instanceof HTMLElement && root.matches(interactiveSelector)
-            ? [root]
-            : []),
-          ...root.querySelectorAll<HTMLElement>(interactiveSelector),
-        ];
-        for (const element of elements) {
-          if (!visible(element)) continue;
-          if (
-            "disabled" in element &&
-            (element as HTMLButtonElement | HTMLInputElement).disabled
-          ) {
-            continue;
-          }
-          result.targets += 1;
-          if (inlineTextLink(element)) {
-            result.inlineTextExceptions += 1;
-            if (
-              !(element instanceof HTMLAnchorElement) ||
-              ![
-                ...(
-                  element.closest("p, li, dd, dt, figcaption")?.childNodes ?? []
-                ),
-              ].some((node) =>
-                node !== element && (node.textContent?.trim().length ?? 0) > 0
-              )
-            ) {
-              result.failures.push(
-                `invalid inline-text exception: ${description(element)}`,
-              );
-            }
-            continue;
-          }
-          const labelBox = labelledRect(element);
-          const rect = labelBox ?? element.getBoundingClientRect();
-          if (labelBox !== undefined) {
-            result.labelledControlBoxes += 1;
-            if (
-              !(element instanceof HTMLInputElement) ||
-              (element.type !== "checkbox" && element.type !== "radio") ||
-              element.labels?.[0] === undefined
-            ) {
-              result.failures.push(
-                `invalid native-label exception: ${description(element)}`,
-              );
-            }
-          }
-          if (
-            rect.width < minimumTargetSize ||
-            rect.height < minimumTargetSize
-          ) {
-            result.failures.push(
-              `${description(element)} measures ${rect.width.toFixed(1)}×${
-                rect.height.toFixed(1)
-              }px`,
-            );
-          }
-        }
-        return result;
-      }
 
-      const surfaces = Array.from(document.querySelectorAll(surfaceSelector));
-      const measurements = surfaces.map(inspect);
-      const current: Measurement = {
-        failures: measurements.flatMap((item) => item.failures),
-        targets: measurements.reduce((sum, item) => sum + item.targets, 0),
-        inlineTextExceptions: measurements.reduce(
-          (sum, item) => sum + item.inlineTextExceptions,
-          0,
-        ),
-        labelledControlBoxes: measurements.reduce(
-          (sum, item) => sum + item.labelledControlBoxes,
-          0,
-        ),
-      };
-
-      const future = document.createElement("button");
-      future.type = "button";
-      future.textContent = "Tiny";
-      future.style.cssText =
-        "inline-size:12px!important;block-size:12px!important;" +
-        "min-inline-size:0!important;min-block-size:0!important;" +
-        "padding:0!important;border:0!important;";
-      const futureRoot = surfaces[0];
-      const failuresBeforeFuture = futureRoot === undefined
-        ? 0
-        : inspect(futureRoot).failures.length;
-      futureRoot?.append(future);
-      const futureMeasurement = inspect(futureRoot ?? future);
-      const futureProof = futureMeasurement.failures.length >
-        failuresBeforeFuture;
-      future.remove();
-      return { ...current, futureProof };
-    },
-    {
-      surfaceSelector: SURFACE_SELECTOR,
-      interactiveSelector: TARGET_SELECTOR,
-      minimumTargetSize: MINIMUM_TARGET_SIZE,
-    },
-  );
-  failures.push(...result.failures.map((failure) => `Target size: ${failure}`));
-  if (!result.futureProof) {
-    failures.push(
-      "Target size: synthetic future target escaped the detector",
+        const future = document.createElement("button");
+        future.type = "button";
+        future.textContent = "Tiny";
+        future.style.cssText =
+          "inline-size:12px!important;block-size:12px!important;" +
+          "min-inline-size:0!important;min-block-size:0!important;" +
+          "padding:0!important;border:0!important;";
+        const futureRoot = surfaces[0];
+        const failuresBeforeFuture = futureRoot === undefined
+          ? 0
+          : inspect(futureRoot).failures.length;
+        futureRoot?.append(future);
+        const futureMeasurement = inspect(futureRoot ?? future);
+        const futureProof = futureMeasurement.failures.length >
+          failuresBeforeFuture;
+        future.remove();
+        return { ...current, futureProof };
+      },
+      {
+        surfaceSelector: SURFACE_SELECTOR,
+        interactiveSelector: TARGET_SELECTOR,
+        minimumTargetSize: MINIMUM_TARGET_SIZE,
+      },
     );
-  }
-  return result;
+    failures.push(
+      ...result.failures.map((failure) => `Target size: ${failure}`),
+    );
+    if (!result.futureProof) {
+      failures.push(
+        "Target size: synthetic future target escaped the detector",
+      );
+    }
+    return result;
+  });
 }
 
 async function reflowAt(
@@ -2145,93 +4280,94 @@ async function reflowAt(
   label: string,
   failures: string[],
 ): Promise<ReflowResult> {
-  await page.setViewportSize(viewport);
-  await loadPage(page, conformanceUrl(origin));
-  const result = await page.evaluate((surfaceSelector) => {
-    function inspect(): {
-      readonly surfaces: number;
-      readonly containedOverflow: number;
-      readonly failures: readonly string[];
-    } {
-      const problems: string[] = [];
-      const surfaces = Array.from(
-        document.querySelectorAll<HTMLElement>(surfaceSelector),
-      );
-      if (
-        document.documentElement.scrollWidth >
-          document.documentElement.clientWidth + 1
-      ) {
-        problems.push(
-          `page is ${document.documentElement.scrollWidth}px wide for a ` +
-            `${document.documentElement.clientWidth}px viewport`,
+  return await withViewport(page, viewport, async () => {
+    await loadPage(page, conformanceUrl(origin));
+    const result = await page.evaluate((surfaceSelector) => {
+      function inspect(): {
+        readonly surfaces: number;
+        readonly containedOverflow: number;
+        readonly failures: readonly string[];
+      } {
+        const problems: string[] = [];
+        const surfaces = Array.from(
+          document.querySelectorAll<HTMLElement>(surfaceSelector),
         );
-      }
-      let containedOverflow = 0;
-      const viewportWidth = document.documentElement.clientWidth;
-      for (const surface of surfaces) {
-        for (
-          const element of [
-            surface,
-            ...surface.querySelectorAll<HTMLElement>("*"),
-          ]
+        if (
+          document.documentElement.scrollWidth >
+            document.documentElement.clientWidth + 1
         ) {
-          const rect = element.getBoundingClientRect();
-          if (rect.left >= -1 && rect.right <= viewportWidth + 1) continue;
-          let container: HTMLElement | null = element;
-          let contained = false;
-          while (container !== null && surface.contains(container)) {
-            const overflow = getComputedStyle(container).overflowX;
-            const containerRect = container.getBoundingClientRect();
-            if (
-              (overflow === "auto" || overflow === "scroll") &&
-              container.scrollWidth > container.clientWidth + 1 &&
-              containerRect.left >= -1 &&
-              containerRect.right <= viewportWidth + 1
-            ) {
-              contained = true;
-              break;
+          problems.push(
+            `page is ${document.documentElement.scrollWidth}px wide for a ` +
+              `${document.documentElement.clientWidth}px viewport`,
+          );
+        }
+        let containedOverflow = 0;
+        const viewportWidth = document.documentElement.clientWidth;
+        for (const surface of surfaces) {
+          for (
+            const element of [
+              surface,
+              ...surface.querySelectorAll<HTMLElement>("*"),
+            ]
+          ) {
+            const rect = element.getBoundingClientRect();
+            if (rect.left >= -1 && rect.right <= viewportWidth + 1) continue;
+            let container: HTMLElement | null = element;
+            let contained = false;
+            while (container !== null && surface.contains(container)) {
+              const overflow = getComputedStyle(container).overflowX;
+              const containerRect = container.getBoundingClientRect();
+              if (
+                (overflow === "auto" || overflow === "scroll") &&
+                container.scrollWidth > container.clientWidth + 1 &&
+                containerRect.left >= -1 &&
+                containerRect.right <= viewportWidth + 1
+              ) {
+                contained = true;
+                break;
+              }
+              if (container === surface) break;
+              container = container.parentElement;
             }
-            if (container === surface) break;
-            container = container.parentElement;
-          }
-          if (contained) {
-            containedOverflow += 1;
-          } else {
-            problems.push(
-              element.outerHTML.replace(/\s+/g, " ").slice(0, 180) +
-                " overflows without an internal horizontal scroller",
-            );
+            if (contained) {
+              containedOverflow += 1;
+            } else {
+              problems.push(
+                element.outerHTML.replace(/\s+/g, " ").slice(0, 180) +
+                  " overflows without an internal horizontal scroller",
+              );
+            }
           }
         }
+        return {
+          surfaces: surfaces.length,
+          containedOverflow,
+          failures: problems,
+        };
       }
-      return {
-        surfaces: surfaces.length,
-        containedOverflow,
-        failures: problems,
-      };
-    }
 
-    const current = inspect();
-    const future = document.createElement("div");
-    future.textContent = "Future wide surface";
-    future.style.cssText = "inline-size:200vw;block-size:1px;";
-    document.querySelector(surfaceSelector)?.append(future);
-    const futureFailures = inspect().failures;
-    future.remove();
-    return {
-      ...current,
-      futureProof: futureFailures.length > current.failures.length,
-    };
-  }, SURFACE_SELECTOR);
-  failures.push(
-    ...result.failures.map((failure) => `Reflow ${label}: ${failure}`),
-  );
-  if (!result.futureProof) {
+      const current = inspect();
+      const future = document.createElement("div");
+      future.textContent = "Future wide surface";
+      future.style.cssText = "inline-size:200vw;block-size:1px;";
+      document.querySelector(surfaceSelector)?.append(future);
+      const futureFailures = inspect().failures;
+      future.remove();
+      return {
+        ...current,
+        futureProof: futureFailures.length > current.failures.length,
+      };
+    }, SURFACE_SELECTOR);
     failures.push(
-      `Reflow ${label}: synthetic wide sibling escaped the detector`,
+      ...result.failures.map((failure) => `Reflow ${label}: ${failure}`),
     );
-  }
-  return result;
+    if (!result.futureProof) {
+      failures.push(
+        `Reflow ${label}: synthetic wide sibling escaped the detector`,
+      );
+    }
+    return result;
+  });
 }
 
 async function discoverMotionTargets(page: Page): Promise<MotionTarget[]> {
@@ -2828,11 +4964,146 @@ async function verifyThemeSystem(
   }
 }
 
+async function verifyFocusDeviceScaleInvariant(
+  browser: Browser,
+  origin: string,
+  rawProofKinds: readonly string[],
+): Promise<readonly string[]> {
+  const measurements: Array<{
+    readonly area: number;
+    readonly deviceScale: number;
+    readonly measuredScaleX: number;
+    readonly measuredScaleY: number;
+  }> = [];
+  const failures: string[] = [];
+  for (const deviceScale of [1, 2] as const) {
+    const context = await browser.newContext({
+      deviceScaleFactor: deviceScale,
+      viewport: { height: 240, width: 320 },
+    });
+    try {
+      const page = await context.newPage();
+      await page.setContent(`
+        <!doctype html>
+        <style>
+          html, body { background: rgb(255, 255, 255); margin: 0; }
+          button {
+            background: rgb(255, 255, 255);
+            border: 0;
+            box-shadow: none;
+            height: 44.5px;
+            left: 80.25px;
+            outline: none;
+            padding: 0;
+            position: absolute;
+            top: 80.25px;
+            width: 44.5px;
+          }
+          button:focus-visible {
+            box-shadow: 0 0 0 2px rgb(0, 0, 0);
+          }
+        </style>
+        <button type="button" aria-label="Fractional focus raster proof"></button>
+      `);
+      const inspection = await inspectKeyboardFocus(
+        page,
+        page.locator("button"),
+        "rgb(255, 255, 255)",
+      );
+      const rendered = inspection.renderedDelta;
+      if (
+        !inspection.keyboardFocused ||
+        inspection.failures.length > 0 ||
+        rendered === undefined ||
+        !rendered.stable ||
+        rendered.qualifyingCssPixels < rendered.requiredCssPixels
+      ) {
+        failures.push(
+          `DPR ${deviceScale} fractional focus raster did not satisfy the production witness: keyboard=${inspection.keyboardFocused}, failures=${
+            inspection.failures.join(", ") || "none"
+          }, area=${rendered?.qualifyingCssPixels.toFixed(2) ?? "missing"}/${
+            rendered?.requiredCssPixels.toFixed(2) ?? "missing"
+          }, changed=${rendered?.changedDevicePixels ?? "missing"}, rest=${
+            rendered?.maximumRestContrast.toFixed(2) ?? "missing"
+          }:1, suppressed=${
+            rendered?.maximumAdjacentContrast.toFixed(2) ?? "missing"
+          }:1, scale=${
+            rendered === undefined
+              ? "missing"
+              : `${rendered.scaleX.toFixed(2)}×${rendered.scaleY.toFixed(2)}`
+          }`,
+        );
+        continue;
+      }
+      measurements.push({
+        area: rendered.qualifyingCssPixels,
+        deviceScale,
+        measuredScaleX: rendered.scaleX,
+        measuredScaleY: rendered.scaleY,
+      });
+    } finally {
+      await context.close();
+    }
+  }
+  const one = measurements.find(({ deviceScale }) => deviceScale === 1);
+  const two = measurements.find(({ deviceScale }) => deviceScale === 2);
+  if (
+    one === undefined ||
+    two === undefined ||
+    Math.abs(one.measuredScaleX - 1) > 0.01 ||
+    Math.abs(one.measuredScaleY - 1) > 0.01 ||
+    Math.abs(two.measuredScaleX - 2) > 0.01 ||
+    Math.abs(two.measuredScaleY - 2) > 0.01 ||
+    Math.abs(one.area - two.area) > 2
+  ) {
+    failures.push(
+      `fractional focus coverage was not device-scale invariant: DPR1=${
+        one?.area.toFixed(2) ?? "missing"
+      } CSS pixels, DPR2=${two?.area.toFixed(2) ?? "missing"} CSS pixels`,
+    );
+  }
+  for (const deviceScale of [1, 2] as const) {
+    const rawContext = await browser.newContext({
+      deviceScaleFactor: deviceScale,
+      reducedMotion: "reduce",
+      viewport: WIDE_VIEWPORT,
+    });
+    try {
+      const rawPage = await rawContext.newPage();
+      const rawFailures: string[] = [];
+      await verifySemanticFocus(
+        browser,
+        rawPage,
+        origin,
+        rawFailures,
+        {
+          auditProductionThemes: false,
+          syntheticProofKinds: rawProofKinds,
+        },
+      );
+      failures.push(
+        ...rawFailures.map((failure) =>
+          `isolated DPR ${deviceScale} raw raster: ${failure}`
+        ),
+      );
+    } finally {
+      await rawContext.close();
+    }
+  }
+  return failures;
+}
+
 async function verifySemanticFocus(
+  browser: Browser,
   page: Page,
   origin: string,
   failures: string[],
+  scope: {
+    readonly auditProductionThemes?: boolean;
+    readonly syntheticProofKinds?: readonly string[];
+  } = {},
 ): Promise<SemanticFocusResult> {
+  requireViewport(page, WIDE_VIEWPORT, "Semantic focus verification");
   const requiredRoles = ["accent", "success", "warning", "danger"] as const;
   const surfaceTokens = themeTokens.flatMap(({ name }) => {
     const role = requiredRoles.find((candidate) =>
@@ -2851,23 +5122,82 @@ async function verifySemanticFocus(
   let targets = 0;
   const currentFailures: string[] = [];
   const coveredRoles = new Set<string>();
-  for (const theme of ["light", "dark"] as const) {
+  const auditedThemes = scope.auditProductionThemes === false
+    ? []
+    : ["light", "dark"] as const;
+  for (const theme of auditedThemes) {
     await loadPage(page, conformanceUrl(origin, theme));
     await installSemanticRoleProbes(page, surfaceTokens);
-    const semanticTargets = await discoverSemanticTargets(page, surfaceTokens);
-    const surfaces = page.locator(SURFACE_SELECTOR);
+    const sacrificial = await discoverSequentialSemanticTargets(
+      page,
+      surfaceTokens,
+    );
+    if (!sacrificial.complete) {
+      currentFailures.push(
+        `${theme}: sacrificial real-Tab enrollment did not return to its fixed sentinel`,
+      );
+    }
+    if (sacrificial.unknownStops.length > 0) {
+      currentFailures.push(
+        `${theme}: real Tab reached focus stops outside the canonical enrollment universe: ${
+          sacrificial.unknownStops.join(", ")
+        }`,
+      );
+    }
+    await loadPage(page, conformanceUrl(origin, theme));
+    await installSemanticRoleProbes(page, surfaceTokens);
+    const freshTargets = await discoverSemanticTargets(page, surfaceTokens);
+    const freshUniverse = freshTargets.map(({ signature }) => signature)
+      .toSorted();
+    if (
+      JSON.stringify(freshUniverse) !==
+        JSON.stringify(sacrificial.potentialUniverse)
+    ) {
+      currentFailures.push(
+        `${theme}: semantic focus universe changed between the sacrificial and fresh page loads`,
+      );
+    }
+    const freshBySignature = new Map(
+      freshTargets.map((target) => [target.signature, target] as const),
+    );
+    const orderedTargets = sacrificial.order.flatMap((signature) => {
+      const target = freshBySignature.get(signature);
+      return target === undefined ? [] : [target];
+    });
+    if (
+      new Set(sacrificial.order).size !== sacrificial.universe.length ||
+      orderedTargets.length !== sacrificial.order.length
+    ) {
+      currentFailures.push(
+        `${theme}: the browser sequential-focus order did not account for every enrolled target and radio peer`,
+      );
+    }
+    await installSemanticTargetRegistry(page, orderedTargets);
+    const semanticTargets = orderedTargets.filter(({ audited }) => audited);
     const themeRoles = new Set<string>();
     for (const semanticTarget of semanticTargets) {
-      const target = surfaces.nth(semanticTarget.surface).locator(
-        FOCUSABLE_SELECTOR,
-      ).nth(
-        semanticTarget.element,
+      const target = page.locator(
+        `[${SEMANTIC_FOCUS_ID_ATTRIBUTE}="${semanticTarget.targetId}"]`,
       );
-      if (!await target.isVisible() || !await target.isEnabled()) continue;
-      await blurActiveElement(page);
-      const before = await focusStyles(target);
-      const keyboardFocused = await focusByKeyboard(page, target);
-      const after = await focusStyles(target);
+      if (await target.count() !== 1 || !await target.isVisible()) {
+        currentFailures.push(
+          `${theme}/${semanticTarget.role}: enrolled target is missing, duplicated, or no longer visible before its focus audit`,
+        );
+        continue;
+      }
+      const {
+        after,
+        before,
+        failures: inspectionFailures,
+        keyboardFocused,
+        plan,
+        renderedDelta,
+      } = await inspectKeyboardFocus(
+        page,
+        target,
+        semanticTarget.surfaceColor,
+      );
+      const renderedCoverage = focusRenderedCoverage(plan, renderedDelta);
       const indicator = focusIndicatorContrast(
         before,
         after,
@@ -2880,11 +5210,21 @@ async function verifySemanticFocus(
               node.outerHTML.replace(/\s+/g, " ").slice(0, 180)
             )}`,
         );
-      } else if (indicator.maxContrast < 3) {
+      } else if (
+        !renderedCoverage.sufficient || inspectionFailures.length > 0
+      ) {
         currentFailures.push(
-          `${theme}/${semanticTarget.role}: semantic-surface focus indicator contrasts ${
+          `${theme}/${semanticTarget.role}: semantic-surface focus indicator has ${
             indicator.maxContrast.toFixed(2)
-          }:1 instead of 3:1: ${await target.evaluate((node) =>
+          }:1 modeled diagnostic contrast, ${
+            renderedCoverage.measured?.toFixed(2) ?? "unmeasured"
+          } CSS pixels witnessed at both 3:1 focus-vs-rest and 3:1 focus-vs-suppressed-candidate contrast; requires ${
+            renderedCoverage.required?.toFixed(2) ?? "an available threshold"
+          } CSS pixels for one stable associated candidate${
+            inspectionFailures.length === 0
+              ? ""
+              : ` (${inspectionFailures.join(", ")})`
+          }: ${await target.evaluate((node) =>
             node.outerHTML.replace(/\s+/g, " ").slice(0, 180)
           )}`,
         );
@@ -2892,6 +5232,17 @@ async function verifySemanticFocus(
       themeRoles.add(semanticTarget.role);
       coveredRoles.add(semanticTarget.role);
       targets += 1;
+      const registryFailures = await semanticTargetRegistryFailures(
+        page,
+        surfaceTokens,
+        freshTargets,
+        orderedTargets,
+      );
+      currentFailures.push(
+        ...registryFailures.map((failure) =>
+          `${theme}/${semanticTarget.role}: ${failure}`
+        ),
+      );
     }
     for (const role of requiredRoles) {
       if (!themeRoles.has(role)) {
@@ -2903,47 +5254,298 @@ async function verifySemanticFocus(
   }
 
   await loadPage(page, conformanceUrl(origin));
+  type ShadowProofLayer = {
+    readonly blur: number;
+    readonly inset: boolean;
+    readonly spread: number;
+    readonly x: number;
+    readonly y: number;
+  };
+  type FocusDeviceScale = 1 | 2;
+  type FocusRasterExpectation = {
+    readonly changedDevicePixels: number;
+    readonly maximumRestContrast: number;
+    readonly qualifyingCssPixels: number;
+  };
+  type ShadowRenderedProof = {
+    readonly afterLayers: readonly ShadowProofLayer[];
+    readonly beforeLayers: readonly ShadowProofLayer[];
+    readonly borderRadius: string;
+    readonly expectedAccepted: boolean;
+    readonly expectedRaster: Readonly<
+      Record<FocusDeviceScale, FocusRasterExpectation>
+    >;
+    readonly expectedRequiredCssPixels: number;
+    readonly height: number;
+    readonly kind: string;
+    readonly width: number;
+  };
   const nearCollapsedShadowBaseProofs = [
     {
       baseSide: 0,
-      expectedChangedPixels: 0,
+      expectedRaster: {
+        1: {
+          changedDevicePixels: 0,
+          maximumRestContrast: 1,
+          qualifyingCssPixels: 0,
+        },
+        2: {
+          changedDevicePixels: 0,
+          maximumRestContrast: 1,
+          qualifyingCssPixels: 0,
+        },
+      },
       label: "collapsed-base",
     },
     {
       baseSide: 0.002,
-      expectedChangedPixels: 0,
+      expectedRaster: {
+        1: {
+          changedDevicePixels: 0,
+          maximumRestContrast: 1,
+          qualifyingCssPixels: 0,
+        },
+        2: {
+          changedDevicePixels: 0,
+          maximumRestContrast: 1,
+          qualifyingCssPixels: 0,
+        },
+      },
       label: "positive-base-1",
     },
     {
       baseSide: 0.02,
-      expectedChangedPixels: 4,
+      expectedRaster: {
+        1: {
+          changedDevicePixels: 4,
+          maximumRestContrast: 1.0089257904478435,
+          qualifyingCssPixels: 0,
+        },
+        2: {
+          changedDevicePixels: 4,
+          maximumRestContrast: 1.0245258509127817,
+          qualifyingCssPixels: 0,
+        },
+      },
       label: "positive-base-2",
     },
   ] as const;
-  const shadowPixelProofs = [
+  const shadowRenderedProofs = [
     ...nearCollapsedShadowBaseProofs.map(
-      ({ baseSide, expectedChangedPixels, label }) => ({
-        blur: 0,
+      ({ baseSide, expectedRaster, label }) => ({
+        afterLayers: [{
+          blur: 0,
+          inset: false,
+          spread: (baseSide - 44) / 2,
+          x: 24,
+          y: 0,
+        }],
+        beforeLayers: [],
+        borderRadius: "0",
         expectedAccepted: false,
-        expectedChangedPixels,
-        inset: false,
+        expectedRaster,
+        expectedRequiredCssPixels: 88,
+        height: 44,
         kind: `new-shadow-${label}-geometry`,
-        spread: (baseSide - 44) / 2,
-        x: 24,
-        y: 0,
+        width: 44,
       }),
     ),
     {
-      blur: 0,
+      afterLayers: [{
+        blur: 0,
+        inset: false,
+        spread: 0,
+        x: 2,
+        y: 0,
+      }],
+      beforeLayers: [],
+      borderRadius: "0",
       expectedAccepted: true,
-      expectedChangedPixels: 88,
-      inset: false,
+      expectedRaster: {
+        1: {
+          changedDevicePixels: 88,
+          maximumRestContrast: 14.7872786921595,
+          qualifyingCssPixels: 88,
+        },
+        2: {
+          changedDevicePixels: 352,
+          maximumRestContrast: 14.7872786921595,
+          qualifyingCssPixels: 88,
+        },
+      },
+      expectedRequiredCssPixels: 88,
+      height: 44,
       kind: "new-shadow-offset-geometry",
-      spread: 0,
-      x: 2,
-      y: 0,
+      width: 44,
     },
-  ] as const;
+    {
+      afterLayers: [{
+        blur: 0.99,
+        inset: false,
+        spread: 0,
+        x: 0,
+        y: 0,
+      }],
+      beforeLayers: [],
+      borderRadius: "0",
+      expectedAccepted: false,
+      expectedRaster: {
+        1: {
+          changedDevicePixels: 180,
+          maximumRestContrast: 1.3709144265045325,
+          qualifyingCssPixels: 0,
+        },
+        2: {
+          changedDevicePixels: 1072,
+          maximumRestContrast: 1.9216258801692638,
+          qualifyingCssPixels: 0,
+        },
+      },
+      expectedRequiredCssPixels: 88,
+      height: 44,
+      kind: "new-shadow-blurred-outset-geometry",
+      width: 44,
+    },
+    {
+      afterLayers: [{
+        blur: 1.02,
+        inset: true,
+        spread: 0,
+        x: 0,
+        y: 0,
+      }],
+      beforeLayers: [],
+      borderRadius: "0",
+      expectedAccepted: false,
+      expectedRaster: {
+        1: {
+          changedDevicePixels: 172,
+          maximumRestContrast: 1.5497980121506556,
+          qualifyingCssPixels: 0,
+        },
+        2: {
+          changedDevicePixels: 1020,
+          maximumRestContrast: 3.1993000874256312,
+          qualifyingCssPixels: 1,
+        },
+      },
+      expectedRequiredCssPixels: 88,
+      height: 44,
+      kind: "new-shadow-blurred-inset-geometry",
+      width: 44,
+    },
+    {
+      afterLayers: [{
+        blur: 0,
+        inset: false,
+        spread: 0,
+        x: 0.12,
+        y: 0,
+      }],
+      beforeLayers: [],
+      borderRadius: "0",
+      expectedAccepted: false,
+      expectedRaster: {
+        1: {
+          changedDevicePixels: 400,
+          maximumRestContrast: 1.2695668023862239,
+          qualifyingCssPixels: 0,
+        },
+        2: {
+          changedDevicePixels: 800,
+          maximumRestContrast: 1.6337760499447278,
+          qualifyingCssPixels: 0,
+        },
+      },
+      expectedRequiredCssPixels: 48,
+      height: 400,
+      kind: "new-shadow-tall-subpixel-geometry",
+      width: 24,
+    },
+    {
+      afterLayers: [{
+        blur: 0,
+        inset: false,
+        spread: -17,
+        x: 30,
+        y: 0,
+      }],
+      beforeLayers: [],
+      borderRadius: "50%",
+      expectedAccepted: false,
+      expectedRaster: {
+        1: {
+          changedDevicePixels: 88,
+          maximumRestContrast: 14.7872786921595,
+          qualifyingCssPixels: 80,
+        },
+        2: {
+          changedDevicePixels: 332,
+          maximumRestContrast: 14.7872786921595,
+          qualifyingCssPixels: 79,
+        },
+      },
+      expectedRequiredCssPixels: 88,
+      height: 44,
+      kind: "new-shadow-rounded-speck-geometry",
+      width: 44,
+    },
+    {
+      afterLayers: [
+        { blur: 0, inset: false, spread: 2, x: 0, y: 0 },
+        { blur: 0, inset: false, spread: 2, x: 0, y: 0 },
+      ],
+      beforeLayers: [
+        { blur: 0, inset: false, spread: 2, x: 0, y: 0 },
+      ],
+      borderRadius: "0",
+      expectedAccepted: false,
+      expectedRaster: {
+        1: {
+          changedDevicePixels: 0,
+          maximumRestContrast: 1,
+          qualifyingCssPixels: 0,
+        },
+        2: {
+          changedDevicePixels: 0,
+          maximumRestContrast: 1,
+          qualifyingCssPixels: 0,
+        },
+      },
+      expectedRequiredCssPixels: 88,
+      height: 44,
+      kind: "shadow-opaque-duplicate-insertion-geometry",
+      width: 44,
+    },
+    {
+      afterLayers: [{
+        blur: 0,
+        inset: true,
+        spread: -22,
+        x: 24,
+        y: 0,
+      }],
+      beforeLayers: [],
+      borderRadius: "0",
+      expectedAccepted: true,
+      expectedRaster: {
+        1: {
+          changedDevicePixels: 88,
+          maximumRestContrast: 14.7872786921595,
+          qualifyingCssPixels: 88,
+        },
+        2: {
+          changedDevicePixels: 352,
+          maximumRestContrast: 14.7872786921595,
+          qualifyingCssPixels: 88,
+        },
+      },
+      expectedRequiredCssPixels: 88,
+      height: 44,
+      kind: "new-shadow-collapsed-inset-geometry",
+      width: 44,
+    },
+  ] satisfies readonly ShadowRenderedProof[];
   const negativeProofKinds = [
     "transparent",
     "same-colour",
@@ -2978,9 +5580,24 @@ async function verifySemanticFocus(
     "shadow-inset-to-outside-background-geometry",
     "new-shadow-zero-band-geometry",
     "new-shadow-zero-target-geometry",
-    ...shadowPixelProofs.filter(({ expectedAccepted }) => !expectedAccepted)
+    ...shadowRenderedProofs.filter(({ expectedAccepted }) => !expectedAccepted)
       .map(({ kind }) => kind),
     "subtle-underline-geometry",
+    "background-attribution-duplicate",
+    "surface-has-invisible-outline",
+    "proxy-speck-threshold",
+    "candidate-sibling-removal",
+    "ticking-focused-child",
+    "one-time-focus-mutation",
+    "remote-pseudo-indicator",
+    "remote-pseudo-scale",
+    "remote-pseudo-translate",
+    "remote-pseudo-shadow",
+    "pseudo-layered-important",
+    "transparent-in-flow-pseudo",
+    "contenteditable-no-indicator",
+    "iframe-no-indicator",
+    "cross-target-replaces-next",
   ] as const;
   const positiveProofKinds = [
     "revealed-indicator",
@@ -2993,7 +5610,7 @@ async function verifySemanticFocus(
     "new-outline-geometry",
     "new-shadow-geometry",
     "new-shadow-spread-geometry",
-    ...shadowPixelProofs.filter(({ expectedAccepted }) => expectedAccepted)
+    ...shadowRenderedProofs.filter(({ expectedAccepted }) => expectedAccepted)
       .map(({ kind }) => kind),
     "new-inset-shadow-geometry",
     "shadow-layer-insertion-geometry",
@@ -3002,10 +5619,30 @@ async function verifySemanticFocus(
     "meaningful-outline-offset-geometry",
     "meaningful-shadow-geometry",
     "meaningful-underline-geometry",
+    "nested-scroll-indicator",
+    "window-scroll-indicator",
+    "pseudo-ring-indicator",
+    "pseudo-border-style-ring",
+    "radio-checked-before-target",
+    "radio-checked-after-target",
+    "shadow-root-radio-proxy",
+    "inline-important-outline",
+    "positive-tabindex-indicator",
+    "aria-disabled-indicator",
+    "underline-single-line-descent",
+    "underline-multiline",
+    "cross-target-victim",
   ] as const;
   const proofKinds = [...negativeProofKinds, ...positiveProofKinds] as const;
   const synthetic = await page.evaluate(
-    ({ proofKinds, surfaceSelector, surfaceTokens }) => {
+    (
+      {
+        proofKinds,
+        shadowRenderedProofs,
+        surfaceSelector,
+        surfaceTokens,
+      },
+    ) => {
       const root = document.querySelector<HTMLElement>(
         "[data-discern-root]",
       );
@@ -3018,7 +5655,36 @@ async function verifySemanticFocus(
       futureSurface.dataset.discernFocusProofSurface = "";
       futureSurface.style.cssText =
         `display:grid;gap:8px;padding:8px;background:var(${accent.token});`;
+      const rawStage = document.createElement("div");
+      rawStage.dataset.discernFocusRawStage = "";
+      rawStage.setAttribute("data-discern-journey", "focus-raster-fixtures");
+      rawStage.style.cssText =
+        `position:absolute;left:100px;top:${
+          Math.ceil(document.documentElement.scrollHeight) + 100
+        }px;display:grid;gap:8px;inline-size:300px;` +
+        `background:${
+          getComputedStyle(root).getPropertyValue(accent.token).trim()
+        };`;
+      rawStage.style.setProperty(
+        "--discern-color-ink",
+        getComputedStyle(root).getPropertyValue("--discern-color-ink").trim(),
+      );
+      document.body.append(rawStage);
+      const shadowValue = (
+        layers: readonly ShadowProofLayer[],
+        color: string,
+      ): string =>
+        layers.length === 0
+          ? "none"
+          : layers.map((layer) =>
+            `${
+              layer.inset ? "inset " : ""
+            }${layer.x}px ${layer.y}px ${layer.blur}px ${layer.spread}px ${color}`
+          ).join(", ");
       for (const kind of proofKinds) {
+        const shadowRenderedProof = shadowRenderedProofs.find((proof) =>
+          proof.kind === kind
+        );
         const siblingProxy = [
           "fixed-proxy",
           "generic-parent-proxy",
@@ -3028,11 +5694,17 @@ async function verifySemanticFocus(
           "inherited-far-label-proxy",
           "marked-far-label-proxy",
           "marked-wide-label-proxy",
+          "proxy-speck-threshold",
+          "candidate-sibling-removal",
+          "shadow-root-radio-proxy",
         ].includes(kind);
         const parentProxy = [
           "huge-parent-proxy",
           "edge-parent-proxy",
           "local-parent-proxy",
+          "proxy-speck-threshold",
+          "candidate-sibling-removal",
+          "shadow-root-radio-proxy",
         ].includes(kind);
         const labelWrapper = [
           "fixed-proxy",
@@ -3063,33 +5735,127 @@ async function verifySemanticFocus(
             "block-size:510px;justify-self:start;"
           : kind.endsWith("-far-label-proxy")
           ? "display:flex;align-items:flex-start;justify-content:space-between;" +
-            "inline-size:1054px;min-block-size:44px;justify-self:start;"
+            "inline-size:600px;min-block-size:44px;justify-self:start;"
           : kind.endsWith("-wide-label-proxy")
           ? "display:inline-flex;align-items:flex-start;gap:10px;" +
             "justify-self:start;"
           : kind === "generic-parent-proxy"
           ? "display:flex;justify-content:space-between;inline-size:100%;" +
             "min-block-size:44px;"
+          : kind === "surface-has-invisible-outline"
+          ? "display:inline-block;padding:8px;background:white;" +
+            "position:relative;justify-self:start;"
+          : kind === "nested-scroll-indicator"
+          ? "display:block;inline-size:72px;block-size:56px;overflow:auto;" +
+            "justify-self:start;"
+          : kind === "window-scroll-indicator"
+          ? "display:inline-block;margin-block-start:1200px;" +
+            "position:relative;justify-self:start;"
           : "display:inline-block;position:relative;justify-self:start;";
         if (kind === "inherited-far-label-proxy") {
           wrapper.style.setProperty("--discern-focus-proxy", "1");
         }
-        const target = labelWrapper
+        wrapper.dataset.discernFocusProofWrapper = kind;
+        const target = kind === "contenteditable-no-indicator"
+          ? document.createElement("div")
+          : kind === "iframe-no-indicator"
+          ? document.createElement("iframe")
+          : labelWrapper ||
+              kind === "radio-checked-before-target" ||
+              kind === "radio-checked-after-target" ||
+              kind === "shadow-root-radio-proxy"
           ? document.createElement("input")
           : document.createElement("button");
         if (target instanceof HTMLInputElement) target.type = "checkbox";
         if (target instanceof HTMLButtonElement) target.type = "button";
-        target.dataset.discernFocusProof = kind;
-        if (target instanceof HTMLButtonElement) {
-          target.textContent = `Future ${kind} action`;
+        if (kind === "contenteditable-no-indicator") {
+          target.contentEditable = "true";
+          target.textContent = "Editable future focus proof";
         }
-        target.style.cssText =
-          "min-inline-size:44px;min-block-size:44px;background:transparent;" +
-          "inline-size:44px;block-size:44px;overflow:hidden;" +
+        if (target instanceof HTMLIFrameElement) {
+          target.srcdoc = "<!doctype html><title>Future frame</title>";
+          target.title = "Future frame focus proof";
+        }
+        if (
+          target instanceof HTMLInputElement &&
+          (
+            kind === "radio-checked-before-target" ||
+            kind === "radio-checked-after-target" ||
+            kind === "shadow-root-radio-proxy"
+          )
+        ) {
+          target.type = "radio";
+          target.name = `future-${kind}`;
+        }
+        target.dataset.discernFocusProof = kind;
+        if (kind === "positive-tabindex-indicator") target.tabIndex = 5;
+        if (kind === "aria-disabled-indicator") {
+          target.setAttribute("aria-disabled", "true");
+        }
+        if (target instanceof HTMLButtonElement) {
+          if (shadowRenderedProof === undefined) {
+            target.textContent = `Future ${kind} action`;
+          } else {
+            target.setAttribute("aria-label", `Future ${kind} action`);
+          }
+        }
+        const targetWidth = kind === "proxy-speck-threshold"
+          ? 1
+          : kind === "underline-single-line-descent"
+          ? 120
+          : kind === "underline-multiline"
+          ? 100
+          : shadowRenderedProof?.width ?? 44;
+        const targetHeight = kind === "proxy-speck-threshold"
+          ? 1
+          : kind === "underline-multiline"
+          ? 60
+          : shadowRenderedProof?.height ?? 44;
+        target.style.cssText = `min-inline-size:${targetWidth}px;` +
+          `min-block-size:${targetHeight}px;background:transparent;` +
+          `inline-size:${targetWidth}px;block-size:${targetHeight}px;` +
+          "overflow:hidden;" +
           "border:0;box-shadow:none;outline:none;text-decoration:none;";
         if (target instanceof HTMLInputElement) {
           target.style.cssText +=
-            "appearance:none;inline-size:44px;block-size:44px;margin:0;";
+            `appearance:none;inline-size:${targetWidth}px;` +
+            `block-size:${targetHeight}px;margin:0;`;
+        }
+        if (shadowRenderedProof !== undefined) {
+          wrapper.style.cssText =
+            `display:block;inline-size:${targetWidth}px;` +
+            `block-size:${targetHeight}px;margin-inline-start:100px;` +
+            "position:relative;";
+          target.style.borderRadius = shadowRenderedProof.borderRadius;
+          target.style.boxShadow = shadowValue(
+            shadowRenderedProof.beforeLayers,
+            "var(--discern-color-ink)",
+          );
+        }
+        if (kind === "background-attribution-duplicate") {
+          target.style.backgroundColor = "rgb(0, 0, 0)";
+          target.style.boxShadow = "0 0 0 3px rgb(0, 0, 0)";
+        }
+        if (kind === "underline-single-line-descent") {
+          target.textContent = "gyp focus descent";
+        } else if (kind === "underline-multiline") {
+          target.textContent = "multiline focus underline wraps";
+          target.style.whiteSpace = "normal";
+        }
+        if (
+          [
+            "pseudo-ring-indicator",
+            "pseudo-border-style-ring",
+            "remote-pseudo-indicator",
+            "remote-pseudo-scale",
+            "remote-pseudo-translate",
+            "remote-pseudo-shadow",
+            "pseudo-layered-important",
+            "transparent-in-flow-pseudo",
+          ].includes(kind)
+        ) {
+          target.style.overflow = "visible";
+          target.style.position = "relative";
         }
         if (
           kind === "shadow-outside-to-inset-background-geometry" ||
@@ -3114,11 +5880,13 @@ async function verifySemanticFocus(
           kind === "subtle-outline-color" ||
           kind === "meaningful-outline-color"
         ) {
-          target.style.outline = `2px solid ${
+          target.style.outlineColor = `${
             kind === "subtle-outline-color"
               ? "rgb(0, 0, 0)"
               : `var(${accent.token})`
           }`;
+          target.style.outlineStyle = "solid";
+          target.style.outlineWidth = "2px";
           target.style.outlineOffset = "2px";
         }
         if (
@@ -3136,7 +5904,7 @@ async function verifySemanticFocus(
           kind === "meaningful-underline-color"
         ) {
           target.style.textDecorationLine = "underline";
-          target.style.textDecorationThickness = "2px";
+          target.style.textDecorationThickness = "3px";
           target.style.textDecorationColor = kind === "subtle-underline-color"
             ? "rgb(0, 0, 0)"
             : `var(${accent.token})`;
@@ -3151,11 +5919,13 @@ async function verifySemanticFocus(
             "meaningful-outline-offset-geometry",
           ].includes(kind)
         ) {
-          target.style.outline = `${
-            kind === "outline-one-to-two-geometry" ? "1px" : "2px"
-          } ${
-            kind === "outline-style-only-geometry" ? "dashed" : "solid"
-          } var(--discern-color-ink)`;
+          target.style.outlineColor = "var(--discern-color-ink)";
+          target.style.outlineStyle = kind === "outline-style-only-geometry"
+            ? "dashed"
+            : "solid";
+          target.style.outlineWidth = kind === "outline-one-to-two-geometry"
+            ? "1px"
+            : "2px";
           target.style.outlineOffset = "2px";
         }
         if (
@@ -3192,9 +5962,8 @@ async function verifySemanticFocus(
           target.style.textDecorationColor = "var(--discern-color-ink)";
         }
         if (kind === "revealed-indicator") target.style.opacity = "0";
-        wrapper.append(target);
-        if (siblingProxy) {
-          const proxy = document.createElement("span");
+        const proxy = siblingProxy ? document.createElement("span") : undefined;
+        if (proxy !== undefined) {
           proxy.dataset.discernFocusProxy = kind;
           proxy.style.cssText = kind === "fixed-proxy"
             ? "position:fixed;inset:8px auto auto 8px;inline-size:44px;" +
@@ -3203,15 +5972,169 @@ async function verifySemanticFocus(
             ? "display:block;inline-size:1000px;block-size:500px;"
             : kind.endsWith("-wide-label-proxy")
             ? "display:block;inline-size:200px;block-size:44px;"
+            : kind === "proxy-speck-threshold"
+            ? "display:block;position:relative;inline-size:44px;block-size:22px;"
             : "display:block;inline-size:44px;block-size:44px;";
-          if (kind.startsWith("marked-")) {
+          if (
+            kind.startsWith("marked-") ||
+            kind === "proxy-speck-threshold" ||
+            kind === "candidate-sibling-removal" ||
+            kind === "shadow-root-radio-proxy"
+          ) {
             proxy.style.setProperty("--discern-focus-proxy", "1");
           }
-          wrapper.append(proxy);
+        }
+        if (kind === "nested-scroll-indicator") {
+          const middle = document.createElement("div");
+          middle.style.cssText =
+            "inline-size:120px;block-size:96px;overflow:auto;padding:12px;";
+          const inner = document.createElement("div");
+          inner.style.cssText =
+            "inline-size:96px;block-size:80px;padding:12px;";
+          inner.append(target);
+          middle.append(inner);
+          wrapper.append(middle);
+        } else if (
+          kind === "radio-checked-before-target" ||
+          kind === "radio-checked-after-target"
+        ) {
+          const peer = document.createElement("input");
+          peer.type = "radio";
+          peer.name = `future-${kind}`;
+          peer.checked = true;
+          peer.setAttribute("aria-label", `${kind} checked peer`);
+          peer.style.cssText =
+            "inline-size:20px;block-size:20px;margin:0;appearance:none;";
+          if (kind === "radio-checked-before-target") {
+            wrapper.append(peer, target);
+          } else {
+            wrapper.append(target, peer);
+          }
+        } else if (kind === "shadow-root-radio-proxy") {
+          const host = document.createElement("span");
+          host.style.display = "inline-block";
+          const shadow = host.attachShadow({ mode: "open" });
+          const group = document.createElement("span");
+          group.style.cssText =
+            "display:inline-flex;gap:4px;align-items:center;";
+          const peer = document.createElement("input");
+          peer.type = "radio";
+          peer.name = `future-${kind}`;
+          peer.checked = true;
+          peer.setAttribute("aria-label", `${kind} checked peer`);
+          peer.style.cssText =
+            "inline-size:20px;block-size:20px;margin:0;appearance:none;";
+          if (proxy !== undefined) {
+            proxy.id = `proxy-${
+              crypto.randomUUID?.() ??
+                `discern-${Date.now()}-${Math.random().toString(36).slice(2)}`
+            }`;
+            target.setAttribute("aria-controls", proxy.id);
+            group.append(peer, target, proxy);
+          } else {
+            group.append(peer, target);
+          }
+          shadow.append(group);
+          wrapper.append(host);
+        } else {
+          wrapper.append(target);
+          if (proxy !== undefined) wrapper.append(proxy);
         }
         if (parentProxy) wrapper.dataset.discernFocusProxy = kind;
-        futureSurface.append(wrapper);
+        if (shadowRenderedProof === undefined) {
+          futureSurface.append(wrapper);
+        } else {
+          rawStage.append(wrapper);
+        }
       }
+      const proofStyles = document.createElement("style");
+      proofStyles.dataset.discernFocusProofStyles = "";
+      proofStyles.textContent = `
+        [data-discern-focus-proof-wrapper="surface-has-invisible-outline"]:has(
+          [data-discern-focus-proof="surface-has-invisible-outline"]:focus-visible
+        ) { background: rgb(0, 0, 0) !important; }
+        [data-discern-focus-proof="surface-has-invisible-outline"]:focus-visible {
+          outline: 2px solid rgb(0, 0, 0) !important;
+          outline-offset: 2px !important;
+        }
+        [data-discern-focus-proof-wrapper="proxy-speck-threshold"]:has(
+          [data-discern-focus-proof="proxy-speck-threshold"]:focus-visible
+        ) > [data-discern-focus-proxy="proxy-speck-threshold"]::after {
+          background: rgb(0, 0, 0);
+          content: "";
+          height: 2px;
+          position: absolute;
+          right: -2px;
+          top: 10px;
+          width: 2px;
+        }
+        [data-discern-focus-proof="pseudo-ring-indicator"]:focus-visible::after,
+        [data-discern-focus-proof="pseudo-layered-important"]:focus-visible::after {
+          box-shadow: 0 0 0 2px rgb(0, 0, 0);
+          content: "";
+          inset: 0;
+          position: absolute;
+        }
+        [data-discern-focus-proof="pseudo-border-style-ring"]::after {
+          border: 2px none rgb(0, 0, 0);
+          content: "";
+          inset: -2px;
+          position: absolute;
+        }
+        [data-discern-focus-proof="pseudo-border-style-ring"]:focus-visible::after {
+          border-style: solid;
+        }
+        [data-discern-focus-proof="remote-pseudo-indicator"]:focus-visible::after {
+          background: rgb(0, 0, 0);
+          content: "";
+          height: 44px;
+          left: 0;
+          position: fixed;
+          top: 0;
+          width: 44px;
+        }
+        [data-discern-focus-proof="remote-pseudo-scale"]:focus-visible::after {
+          background: rgb(0, 0, 0);
+          content: "";
+          height: 2px;
+          inset: 0;
+          position: absolute;
+          scale: 100;
+          width: 2px;
+        }
+        [data-discern-focus-proof="remote-pseudo-translate"]:focus-visible::after {
+          background: rgb(0, 0, 0);
+          content: "";
+          height: 8px;
+          inset: 0;
+          position: absolute;
+          translate: 1000px 0;
+          width: 8px;
+        }
+        [data-discern-focus-proof="remote-pseudo-shadow"]:focus-visible::after {
+          box-shadow: 1000px 0 0 0 rgb(0, 0, 0);
+          content: "";
+          height: 8px;
+          inset: 0;
+          position: absolute;
+          width: 8px;
+        }
+        [data-discern-focus-proof="transparent-in-flow-pseudo"]:focus-visible::before {
+          color: transparent;
+          content: "layout only";
+          display: inline;
+        }
+      `;
+      futureSurface.prepend(proofStyles);
+      const layeredStyles = document.createElement("style");
+      layeredStyles.textContent = `
+        @layer future-focus-lock {
+          [data-discern-focus-proof="pseudo-layered-important"]:focus-visible::after {
+            visibility: visible !important;
+          }
+        }
+      `;
+      futureSurface.prepend(layeredStyles);
       container.append(futureSurface);
       const canvas = document.createElement("canvas");
       canvas.width = 1;
@@ -3233,6 +6156,7 @@ async function verifySemanticFocus(
     },
     {
       proofKinds,
+      shadowRenderedProofs,
       surfaceSelector: SURFACE_SELECTOR,
       surfaceTokens,
     },
@@ -3242,139 +6166,94 @@ async function verifySemanticFocus(
     syntheticFailures.push("fixture could not be installed");
   }
   if (synthetic.ready) {
-    const discoveredProofs = new Set(
-      (await discoverSemanticTargets(page, surfaceTokens))
-        .map(({ proofKind }) => proofKind)
-        .filter(Boolean),
+    const discoveredTargets = await discoverSemanticTargets(
+      page,
+      surfaceTokens,
     );
+    const sequentialProof = await discoverSequentialSemanticTargets(
+      page,
+      surfaceTokens,
+    );
+    if (
+      !sequentialProof.complete ||
+      sequentialProof.unknownStops.length > 0 ||
+      new Set(sequentialProof.order).size !== sequentialProof.universe.length
+    ) {
+      syntheticFailures.push(
+        `synthetic real-Tab enrollment was incomplete or reached unknown stops: ${
+          sequentialProof.unknownStops.join(", ") || "no unknown stop"
+        }`,
+      );
+    }
+    const discoveredBySignature = new Map(
+      discoveredTargets.map((target) => [target.signature, target] as const),
+    );
+    const enrolledTargets = sequentialProof.order.flatMap((signature) => {
+      const target = discoveredBySignature.get(signature);
+      return target === undefined ? [] : [target];
+    });
+    if (enrolledTargets.length !== sequentialProof.order.length) {
+      syntheticFailures.push(
+        "synthetic real-Tab enrollment could not remap every target identity",
+      );
+    }
+    await installSemanticTargetRegistry(page, enrolledTargets);
+    const discoveredProofs = new Set(
+      discoveredTargets.map(({ proofKind }) => proofKind).filter(Boolean),
+    );
+    const auditedProofKinds = scope.syntheticProofKinds === undefined
+      ? proofKinds
+      : proofKinds.filter((kind) => scope.syntheticProofKinds?.includes(kind));
     for (const kind of proofKinds) {
       if (!discoveredProofs.has(kind)) {
         syntheticFailures.push(`${kind} target did not auto-enrol`);
       }
     }
-    const screenshotClipFor = async (
+    type InlineStyleSnapshot = readonly (
+      | string
+      | null
+      | false
+    )[];
+    const inlineStyleSnapshot = async (
       target: Locator,
-    ): Promise<
-      | {
-        readonly height: number;
-        readonly width: number;
-        readonly x: number;
-        readonly y: number;
-      }
-      | undefined
-    > => {
-      await target.scrollIntoViewIfNeeded();
-      const box = await target.boundingBox();
-      if (box === null || box.width <= 0 || box.height <= 0) return undefined;
-      const margin = 32;
-      const x = Math.max(0, box.x - margin);
-      const y = Math.max(0, box.y - margin);
-      return {
-        height: box.height + box.y - y + margin,
-        width: box.width + box.x - x + margin,
-        x,
-        y,
-      };
-    };
-    const screenshotChangedPixels = async (
-      left: Uint8Array | undefined,
-      right: Uint8Array | undefined,
-    ): Promise<number | undefined> => {
-      if (left === undefined || right === undefined) return undefined;
-      return await page.evaluate(
-        async ({ leftBytes, rightBytes }) => {
-          const decodedPixels = async (
-            bytes: readonly number[],
-          ): Promise<
-            | {
-              readonly data: Uint8ClampedArray;
-              readonly height: number;
-              readonly width: number;
-            }
-            | undefined
-          > => {
-            const bitmap = await createImageBitmap(
-              new Blob([Uint8Array.from(bytes)], { type: "image/png" }),
-            );
-            const canvas = document.createElement("canvas");
-            canvas.width = bitmap.width;
-            canvas.height = bitmap.height;
-            const context = canvas.getContext("2d", {
-              willReadFrequently: true,
-            });
-            if (context === null) {
-              bitmap.close();
-              return undefined;
-            }
-            context.drawImage(bitmap, 0, 0);
-            const data = context.getImageData(
-              0,
-              0,
-              bitmap.width,
-              bitmap.height,
-            ).data;
-            const result = {
-              data,
-              height: bitmap.height,
-              width: bitmap.width,
-            };
-            bitmap.close();
-            return result;
-          };
-          const leftPixels = await decodedPixels(leftBytes);
-          const rightPixels = await decodedPixels(rightBytes);
-          if (
-            leftPixels === undefined ||
-            rightPixels === undefined ||
-            leftPixels.width !== rightPixels.width ||
-            leftPixels.height !== rightPixels.height
-          ) {
-            return undefined;
-          }
-          let changedPixels = 0;
-          for (
-            let offset = 0;
-            offset < leftPixels.data.length;
-            offset += 4
-          ) {
-            if (
-              leftPixels.data[offset] !== rightPixels.data[offset] ||
-              leftPixels.data[offset + 1] !== rightPixels.data[offset + 1] ||
-              leftPixels.data[offset + 2] !== rightPixels.data[offset + 2] ||
-              leftPixels.data[offset + 3] !== rightPixels.data[offset + 3]
-            ) {
-              changedPixels += 1;
-            }
-          }
-          return changedPixels;
-        },
-        {
-          leftBytes: [...left],
-          rightBytes: [...right],
-        },
+    ): Promise<InlineStyleSnapshot> =>
+      await target.evaluate((node) =>
+        [node, node.parentElement, node.nextElementSibling].map((element) =>
+          element instanceof HTMLElement ? element.getAttribute("style") : false
+        )
       );
+    const restoreInlineStyles = async (
+      target: Locator,
+      snapshot: InlineStyleSnapshot,
+    ): Promise<void> => {
+      await target.evaluate((node, snapshot) => {
+        const elements = [node, node.parentElement, node.nextElementSibling];
+        for (const [index, value] of snapshot.entries()) {
+          const element = elements[index];
+          if (!(element instanceof HTMLElement) || value === false) continue;
+          if (value === null) {
+            element.removeAttribute("style");
+          } else {
+            element.setAttribute("style", value);
+          }
+        }
+      }, snapshot);
     };
-    for (const kind of proofKinds) {
+    for (const kind of auditedProofKinds) {
       const target = page.locator(`[data-discern-focus-proof="${kind}"]`);
+      await installFocusBracketInfrastructure(page, target);
+      await target.scrollIntoViewIfNeeded();
+      const windowScrollOffset = await page.evaluate(() => globalThis.scrollY);
       await blurActiveElement(page);
+      await settleFocusPaint(page);
       const before = await focusStyles(target);
       const oracleBefore = await focusFixtureOracle(target, kind);
-      const keyboardFocused = await focusByKeyboard(page, target);
-      const shadowPixelProof = shadowPixelProofs.find((proof) =>
+      const beforeInlineStyles = await inlineStyleSnapshot(target);
+      const shadowRenderedProof = shadowRenderedProofs.find((proof) =>
         proof.kind === kind
       );
-      const screenshotClip = shadowPixelProof !== undefined
-        ? await screenshotClipFor(target)
-        : undefined;
-      const screenshotBefore = screenshotClip === undefined
-        ? undefined
-        : await page.screenshot({
-          animations: "disabled",
-          caret: "hide",
-          clip: screenshotClip,
-        });
       await target.evaluate(
-        async (node, { kind, shadowPixelProof, surfaceColor }) => {
+        async (node, { kind, shadowRenderedProof, surfaceColor }) => {
           const siblingProxy = [
             "fixed-proxy",
             "generic-parent-proxy",
@@ -3384,6 +6263,9 @@ async function verifySemanticFocus(
             "inherited-far-label-proxy",
             "marked-far-label-proxy",
             "marked-wide-label-proxy",
+            "proxy-speck-threshold",
+            "candidate-sibling-removal",
+            "shadow-root-radio-proxy",
           ].includes(kind);
           const parentProxy = [
             "huge-parent-proxy",
@@ -3408,7 +6290,42 @@ async function verifySemanticFocus(
             : subtleColor
             ? "rgb(1, 1, 1)"
             : "var(--discern-color-ink)";
-          if (
+          const cssDriven = [
+            "surface-has-invisible-outline",
+            "proxy-speck-threshold",
+            "pseudo-ring-indicator",
+            "pseudo-border-style-ring",
+            "remote-pseudo-indicator",
+            "remote-pseudo-scale",
+            "remote-pseudo-translate",
+            "remote-pseudo-shadow",
+            "pseudo-layered-important",
+            "transparent-in-flow-pseudo",
+            "contenteditable-no-indicator",
+            "iframe-no-indicator",
+          ].includes(kind);
+          const shadowValue = (
+            layers: readonly ShadowProofLayer[],
+          ): string =>
+            layers.map((layer) =>
+              `${
+                layer.inset ? "inset " : ""
+              }${layer.x}px ${layer.y}px ${layer.blur}px ${layer.spread}px ${paintColor}`
+            ).join(", ");
+          if (cssDriven) {
+            // These fixtures exercise authored focus selectors and pseudos.
+          } else if (kind === "background-attribution-duplicate") {
+            paint.style.setProperty(
+              "box-shadow",
+              "0 0 0 3px rgb(0, 0, 0), 0 0 0 3px rgb(0, 0, 0)",
+              "important",
+            );
+            paint.style.setProperty(
+              "background-color",
+              "rgb(255, 255, 255)",
+              "important",
+            );
+          } else if (
             kind === "outline-one-to-two-geometry" ||
             kind === "subtle-outline-width-geometry" ||
             kind === "meaningful-outline-width-geometry"
@@ -3496,12 +6413,10 @@ async function verifySemanticFocus(
               `0 0 0 3px ${paintColor}`,
               "important",
             );
-          } else if (shadowPixelProof !== null) {
+          } else if (shadowRenderedProof !== null) {
             paint.style.setProperty(
               "box-shadow",
-              `${
-                shadowPixelProof.inset ? "inset " : ""
-              }${shadowPixelProof.x}px ${shadowPixelProof.y}px ${shadowPixelProof.blur}px ${shadowPixelProof.spread}px ${paintColor}`,
+              shadowValue(shadowRenderedProof.afterLayers),
               "important",
             );
           } else if (kind === "new-shadow-geometry") {
@@ -3531,7 +6446,11 @@ async function verifySemanticFocus(
               kind === "subtle-underline-geometry" ? "2.02px" : "4px",
               "important",
             );
-          } else if (kind === "new-underline-geometry") {
+          } else if (
+            kind === "new-underline-geometry" ||
+            kind === "underline-single-line-descent" ||
+            kind === "underline-multiline"
+          ) {
             paint.style.setProperty(
               "text-decoration-line",
               "underline",
@@ -3539,7 +6458,7 @@ async function verifySemanticFocus(
             );
             paint.style.setProperty(
               "text-decoration-thickness",
-              "2px",
+              kind === "new-underline-geometry" ? "3px" : "4px",
               "important",
             );
             paint.style.setProperty(
@@ -3561,7 +6480,7 @@ async function verifySemanticFocus(
             );
             paint.style.setProperty(
               "text-decoration-thickness",
-              "2px",
+              "3px",
               "important",
             );
             paint.style.setProperty(
@@ -3624,25 +6543,162 @@ async function verifySemanticFocus(
         },
         {
           kind,
-          shadowPixelProof: shadowPixelProof ?? null,
+          shadowRenderedProof: shadowRenderedProof ?? null,
           surfaceColor: synthetic.surfaceColor,
         },
       );
-      const screenshotAfter = screenshotClip === undefined
-        ? undefined
-        : await page.screenshot({
-          animations: "disabled",
-          caret: "hide",
-          clip: screenshotClip,
-        });
-      const changedPixels = await screenshotChangedPixels(
-        screenshotBefore,
-        screenshotAfter,
-      );
-      const screenshotProofMatches = shadowPixelProof === undefined ||
-        changedPixels === shadowPixelProof.expectedChangedPixels;
       const oracleAfter = await focusFixtureOracle(target, kind);
       const after = await focusStyles(target);
+      const afterInlineStyles = await inlineStyleSnapshot(target);
+      await restoreInlineStyles(target, beforeInlineStyles);
+      const inspection = await inspectKeyboardFocus(
+        page,
+        target,
+        synthetic.surfaceColor,
+        {
+          afterBlur: async () => {
+            await target.evaluate((node, kind) => {
+              type FixtureNode = Element & {
+                __discernRemovedFocusSibling?: Element;
+                __discernReplacedFocusVictim?: Element;
+                __discernTickingFocusInterval?: ReturnType<
+                  typeof setInterval
+                >;
+                __discernTickingFocusText?: string;
+              };
+              const fixture = node as FixtureNode;
+              if (
+                kind === "candidate-sibling-removal" &&
+                fixture.__discernRemovedFocusSibling !== undefined
+              ) {
+                node.after(fixture.__discernRemovedFocusSibling);
+                delete fixture.__discernRemovedFocusSibling;
+              }
+              if (
+                kind === "ticking-focused-child" &&
+                fixture.__discernTickingFocusInterval !== undefined
+              ) {
+                clearInterval(fixture.__discernTickingFocusInterval);
+                if (node instanceof HTMLElement) {
+                  node.textContent = fixture.__discernTickingFocusText ?? "";
+                }
+                delete fixture.__discernTickingFocusInterval;
+                delete fixture.__discernTickingFocusText;
+              }
+            }, kind);
+            await restoreInlineStyles(target, beforeInlineStyles);
+          },
+          afterFocus: async () => {
+            await restoreInlineStyles(target, afterInlineStyles);
+            await target.evaluate((node, kind) => {
+              type FixtureNode = Element & {
+                __discernRemovedFocusSibling?: Element;
+                __discernReplacedFocusVictim?: Element;
+                __discernTickingFocusInterval?: ReturnType<
+                  typeof setInterval
+                >;
+                __discernTickingFocusText?: string;
+              };
+              const fixture = node as FixtureNode;
+              if (kind === "candidate-sibling-removal") {
+                const sibling = node.nextElementSibling;
+                if (sibling !== null) {
+                  fixture.__discernRemovedFocusSibling = sibling;
+                  sibling.remove();
+                }
+              } else if (
+                kind === "ticking-focused-child" &&
+                node instanceof HTMLElement
+              ) {
+                fixture.__discernTickingFocusText = node.textContent ?? "";
+                let tick = 0;
+                fixture.__discernTickingFocusInterval = setInterval(() => {
+                  tick += 1;
+                  node.textContent = `focus tick ${tick}`;
+                }, 1);
+              } else if (
+                kind === "one-time-focus-mutation" &&
+                node instanceof HTMLElement &&
+                node.dataset.discernOneTimeFocusMutation !== "done"
+              ) {
+                node.dataset.discernOneTimeFocusMutation = "done";
+                node.textContent = "permanently changed on first focus";
+                node.style.backgroundColor = "rgb(255, 255, 255)";
+              } else if (kind === "cross-target-replaces-next") {
+                const victim = document.querySelector(
+                  '[data-discern-focus-proof="cross-target-victim"]',
+                );
+                if (victim !== null) {
+                  fixture.__discernReplacedFocusVictim = victim;
+                  victim.replaceWith(victim.cloneNode(true));
+                }
+              }
+            }, kind);
+          },
+        },
+      );
+      const {
+        failures: inspectionFailures,
+        keyboardFocused,
+        plan: samplePlan,
+        renderedDelta,
+      } = inspection;
+      const registryFailures = await semanticTargetRegistryFailures(
+        page,
+        surfaceTokens,
+        discoveredTargets,
+        enrolledTargets,
+      );
+      const registryStable = registryFailures.length === 0;
+      const registryProofMatches = kind === "cross-target-replaces-next"
+        ? registryFailures.some((failure) =>
+          failure.includes("replaced") || failure.includes("disconnected")
+        )
+        : registryStable;
+      if (kind === "cross-target-replaces-next") {
+        await target.evaluate((node) => {
+          type FixtureNode = Element & {
+            __discernReplacedFocusVictim?: Element;
+          };
+          const fixture = node as FixtureNode;
+          const original = fixture.__discernReplacedFocusVictim;
+          const replacement = document.querySelector(
+            '[data-discern-focus-proof="cross-target-victim"]',
+          );
+          if (original !== undefined && replacement !== null) {
+            replacement.replaceWith(original);
+            delete fixture.__discernReplacedFocusVictim;
+          }
+        });
+      }
+      const renderedCoverage = focusRenderedCoverage(
+        samplePlan,
+        renderedDelta,
+      );
+      const renderedDeviceScale: FocusDeviceScale | undefined =
+        renderedDelta !== undefined &&
+          renderedDelta.scaleX === renderedDelta.scaleY &&
+          (renderedDelta.scaleX === 1 || renderedDelta.scaleX === 2)
+          ? renderedDelta.scaleX
+          : undefined;
+      const expectedRaster = shadowRenderedProof === undefined ||
+          renderedDeviceScale === undefined
+        ? undefined
+        : shadowRenderedProof.expectedRaster[renderedDeviceScale];
+      const screenshotProofMatches = shadowRenderedProof === undefined ||
+        (
+          renderedDelta !== undefined &&
+          renderedDelta.stable &&
+          expectedRaster !== undefined &&
+          renderedDelta.changedDevicePixels ===
+            expectedRaster.changedDevicePixels &&
+          renderedDelta.qualifyingCssPixels ===
+            expectedRaster.qualifyingCssPixels &&
+          renderedDelta.requiredCssPixels ===
+            shadowRenderedProof.expectedRequiredCssPixels &&
+          renderedDelta.maximumRestContrast ===
+            expectedRaster.maximumRestContrast
+        );
       const indicator = focusIndicatorContrast(
         before,
         after,
@@ -3715,6 +6771,26 @@ async function verifySemanticFocus(
       const afterShadowLayers = oracleAfter.shadowLayers;
       const shadowLayerSignature = (layer: FocusShadowLayer): string =>
         `${layer.color}|${layer.inset}|${layer.x}|${layer.y}|${layer.blur}|${layer.spread}`;
+      const shadowLayerGeometryMatches = (
+        actual: FocusShadowGeometry,
+        expected: ShadowProofLayer,
+      ): boolean =>
+        near(actual.x, expected.x) &&
+        near(actual.y, expected.y) &&
+        near(actual.blur, expected.blur) &&
+        near(actual.spread, expected.spread) &&
+        actual.inset === expected.inset;
+      const shadowProofLayersMatch = (
+        actual: readonly FocusShadowLayer[] | undefined,
+        expected: readonly ShadowProofLayer[],
+      ): boolean =>
+        actual !== undefined &&
+        actual.length === expected.length &&
+        actual.every((layer, index) => {
+          const expectedLayer = expected[index];
+          return expectedLayer !== undefined &&
+            shadowLayerGeometryMatches(layer, expectedLayer);
+        });
       const shadowLayerMultisetEqual = beforeShadowLayers !== undefined &&
         afterShadowLayers !== undefined &&
         beforeShadowLayers.length === afterShadowLayers.length &&
@@ -3733,23 +6809,9 @@ async function verifySemanticFocus(
             !beforeShadowLayers.some((previousLayer) =>
               shadowLayerSignature(previousLayer) ===
                 shadowLayerSignature(layer)
-            ) &&
-            shadowPaintsMinimumVisibleArea(
-              layer,
-              {
-                height: oracleAfter.candidateHeight,
-                width: oracleAfter.candidateWidth,
-              },
             )
           )
         : afterShadow !== undefined &&
-          shadowPaintsMinimumVisibleArea(
-            afterShadow,
-            {
-              height: oracleAfter.candidateHeight,
-              width: oracleAfter.candidateWidth,
-            },
-          ) &&
           (
             beforeShadow === undefined ||
             Math.max(
@@ -3860,16 +6922,17 @@ async function verifySemanticFocus(
           afterShadow !== undefined &&
           near(oracleAfter.candidateWidth, 0) &&
           near(oracleAfter.candidateHeight, 0)
-        : shadowPixelProof !== undefined
-        ? beforeShadow === undefined &&
-          afterShadow !== undefined &&
-          near(afterShadow.x, shadowPixelProof.x) &&
-          near(afterShadow.y, shadowPixelProof.y) &&
-          near(afterShadow.blur, shadowPixelProof.blur) &&
-          near(afterShadow.spread, shadowPixelProof.spread) &&
-          afterShadow.inset === shadowPixelProof.inset &&
-          near(oracleAfter.candidateWidth, 44) &&
-          near(oracleAfter.candidateHeight, 44)
+        : shadowRenderedProof !== undefined
+        ? shadowProofLayersMatch(
+          beforeShadowLayers,
+          shadowRenderedProof.beforeLayers,
+        ) &&
+          shadowProofLayersMatch(
+            afterShadowLayers,
+            shadowRenderedProof.afterLayers,
+          ) &&
+          near(oracleAfter.candidateWidth, shadowRenderedProof.width) &&
+          near(oracleAfter.candidateHeight, shadowRenderedProof.height)
         : kind === "new-shadow-spread-geometry"
         ? beforeShadow === undefined &&
           afterShadow !== undefined &&
@@ -3913,9 +6976,50 @@ async function verifySemanticFocus(
       const inheritedFarProxy = kind === "inherited-far-label-proxy";
       const markedFarProxy = kind === "marked-far-label-proxy";
       const markedWideProxy = kind === "marked-wide-label-proxy";
+      const shadowRootRadioProxy = kind === "shadow-root-radio-proxy";
       const ambiguous = kind === "ambiguous-filter";
       const expectedAccepted = (positiveProofKinds as readonly string[])
         .includes(kind);
+      const cssDriven = [
+        "surface-has-invisible-outline",
+        "proxy-speck-threshold",
+        "pseudo-ring-indicator",
+        "pseudo-border-style-ring",
+        "remote-pseudo-indicator",
+        "remote-pseudo-scale",
+        "remote-pseudo-translate",
+        "remote-pseudo-shadow",
+        "pseudo-layered-important",
+        "transparent-in-flow-pseudo",
+        "contenteditable-no-indicator",
+        "iframe-no-indicator",
+      ].includes(kind);
+      const renderedAdversarialNegative = [
+        "background-attribution-duplicate",
+        "surface-has-invisible-outline",
+        "proxy-speck-threshold",
+        "candidate-sibling-removal",
+        "ticking-focused-child",
+        "one-time-focus-mutation",
+        "remote-pseudo-indicator",
+        "remote-pseudo-scale",
+        "remote-pseudo-translate",
+        "remote-pseudo-shadow",
+        "pseudo-layered-important",
+        "transparent-in-flow-pseudo",
+        "contenteditable-no-indicator",
+        "iframe-no-indicator",
+        "cross-target-replaces-next",
+      ].includes(kind);
+      const renderedPseudoPositive = [
+        "pseudo-ring-indicator",
+        "pseudo-border-style-ring",
+        "underline-single-line-descent",
+        "underline-multiline",
+      ].includes(kind);
+      const productionAccepted = renderedCoverage.sufficient &&
+        inspectionFailures.length === 0 &&
+        registryStable;
       const acceptedAssociationEvidence = localParentProxy
         ? oracleAfter.semanticallyAssociated &&
           oracleAfter.geometricallyAssociated &&
@@ -3933,22 +7037,46 @@ async function verifySemanticFocus(
           oracleAfter.geometricallyAssociated &&
           !oracleAfter.controlSized &&
           oracleAfter.distanceLocal
+        : shadowRootRadioProxy
+        ? oracleAfter.authoredProxy &&
+          oracleAfter.semanticallyAssociated &&
+          oracleAfter.geometricallyAssociated &&
+          oracleAfter.controlSized &&
+          oracleAfter.distanceLocal
         : true;
-      const oracleSupportsExpectation = expectedAccepted
+      const windowScrollEvidence = kind !== "window-scroll-indicator" ||
+        windowScrollOffset > 0;
+      const oracleSupportsExpectation = renderedAdversarialNegative
+        ? !productionAccepted
+        : renderedPseudoPositive
+        ? productionAccepted
+        : shadowRenderedProof !== undefined
+        ? computedFixtureContrast !== undefined &&
+          computedFixtureContrast >= 3 &&
+          geometryFixtureMatches &&
+          screenshotProofMatches
+        : expectedAccepted
         ? computedFixtureContrast !== undefined &&
           computedFixtureContrast >= 3 &&
           (
             geometryProof
-              ? geometryFixtureMatches && geometryEvidence
+              ? geometryFixtureMatches &&
+                geometryEvidence &&
+                renderedCoverage.sufficient
               : appearanceContrast !== undefined &&
                 appearanceContrast >= 3 &&
-                acceptedAssociationEvidence
+                acceptedAssociationEvidence &&
+                windowScrollEvidence &&
+                renderedCoverage.sufficient
           )
         : geometryProof
         ? computedFixtureContrast !== undefined &&
           computedFixtureContrast >= 3 &&
           geometryFixtureMatches &&
-          !geometryEvidence
+          (
+            !geometryEvidence ||
+            !renderedCoverage.sufficient
+          )
         : subtle
         ? computedFixtureContrast !== undefined &&
           computedFixtureContrast >= 3 &&
@@ -4010,50 +7138,82 @@ async function verifySemanticFocus(
         : computedFixtureContrast !== undefined &&
           computedFixtureContrast < 3;
       const productionMatchesExpectation = expectedAccepted
-        ? indicator.maxContrast >= 3
-        : indicator.maxContrast < 3;
+        ? productionAccepted
+        : !productionAccepted;
       const serializedFilterMatches = !opacityFiltered ||
         oracleAfter.filters.flatMap((filter) =>
             filter.match(/opacity\([^)]*\)/g) ?? []
           ).length === 2;
+      const oraclePaintMatches = cssDriven ? true : oracleAfter.paintPresent;
+      const proofDiagnostic =
+        `${kind} target: keyboard=${keyboardFocused}, colours=${
+          indicator.colors.join(", ") || "none"
+        }, contrast=${
+          indicator.maxContrast.toFixed(2)
+        }:1, computed=${oracleAfter.color} (${
+          computedFixtureContrast?.toFixed(2) ?? "unknown"
+        }:1 at opacity ${
+          oracleAfter.effectiveOpacity.toFixed(4)
+        }), appearance=${
+          appearanceContrast?.toFixed(2) ?? "unknown"
+        }:1, changed-device-pixels=${
+          renderedDelta?.changedDevicePixels ?? "not-measured"
+        }, qualifying-css-pixels=${
+          renderedDelta?.qualifyingCssPixels.toFixed(2) ?? "not-measured"
+        }, required-css-pixels=${
+          renderedCoverage.required?.toFixed(2) ?? "not-measured"
+        }, rendered-max=${
+          renderedDelta?.maximumRestContrast.toFixed(2) ?? "not-measured"
+        }:1, suppressed-max=${
+          renderedDelta?.maximumAdjacentContrast.toFixed(2) ?? "not-measured"
+        }:1, screenshot-scale=${
+          renderedDelta === undefined
+            ? "not-measured"
+            : `${renderedDelta.scaleX.toFixed(2)}×${
+              renderedDelta.scaleY.toFixed(2)
+            }`
+        }, filters=${
+          oracleAfter.filters.join(", ") || "none"
+        }, semantic=${oracleAfter.semanticallyAssociated}, native-label=${oracleAfter.nativeLabelAssociated}, authored-proxy=${oracleAfter.authoredProxy}, geometry=${oracleAfter.geometricallyAssociated}, distance-local=${oracleAfter.distanceLocal}, sized=${oracleAfter.controlSized}, parent-edges=${oracleAfter.parentEdgesLocal}, candidate=${
+          oracleAfter.candidateWidth.toFixed(1)
+        }×${oracleAfter.candidateHeight.toFixed(1)}, target=${
+          oracleAfter.targetWidth.toFixed(1)
+        }×${
+          oracleAfter.targetHeight.toFixed(1)
+        }, outline=${oracleAfter.outlineWidth}/${oracleAfter.outlineOffset}/${oracleAfter.outlineStyle}, shadow=${
+          oracleAfter.shadowGeometry === undefined
+            ? "none"
+            : `${oracleAfter.shadowGeometry.x}/${oracleAfter.shadowGeometry.y}/${oracleAfter.shadowGeometry.blur}/${oracleAfter.shadowGeometry.spread}/${oracleAfter.shadowGeometry.inset}`
+        }, underline=${oracleAfter.underlinePresent}/${oracleAfter.underlineThickness}, bracket=${
+          inspectionFailures.join(", ") || "stable"
+        }, registry=${
+          registryFailures.join(", ") || "stable"
+        }, window-scroll=${windowScrollOffset}`;
       if (
         !keyboardFocused ||
         !productionMatchesExpectation ||
-        !oracleAfter.paintPresent ||
+        !oraclePaintMatches ||
         !oracleSupportsExpectation ||
         !screenshotProofMatches ||
+        !registryProofMatches ||
         !serializedFilterMatches
       ) {
-        syntheticFailures.push(
-          `${kind} target: keyboard=${keyboardFocused}, colours=${
-            indicator.colors.join(", ") || "none"
-          }, contrast=${
-            indicator.maxContrast.toFixed(2)
-          }:1, computed=${oracleAfter.color} (${
-            computedFixtureContrast?.toFixed(2) ?? "unknown"
-          }:1 at opacity ${
-            oracleAfter.effectiveOpacity.toFixed(4)
-          }), appearance=${
-            appearanceContrast?.toFixed(2) ?? "unknown"
-          }:1, changed-pixels=${changedPixels ?? "not-measured"}, filters=${
-            oracleAfter.filters.join(", ") || "none"
-          }, semantic=${oracleAfter.semanticallyAssociated}, native-label=${oracleAfter.nativeLabelAssociated}, authored-proxy=${oracleAfter.authoredProxy}, geometry=${oracleAfter.geometricallyAssociated}, distance-local=${oracleAfter.distanceLocal}, sized=${oracleAfter.controlSized}, parent-edges=${oracleAfter.parentEdgesLocal}, candidate=${
-            oracleAfter.candidateWidth.toFixed(1)
-          }×${oracleAfter.candidateHeight.toFixed(1)}, target=${
-            oracleAfter.targetWidth.toFixed(1)
-          }×${
-            oracleAfter.targetHeight.toFixed(1)
-          }, outline=${oracleAfter.outlineWidth}/${oracleAfter.outlineOffset}/${oracleAfter.outlineStyle}, shadow=${
-            oracleAfter.shadowGeometry === undefined
-              ? "none"
-              : `${oracleAfter.shadowGeometry.x}/${oracleAfter.shadowGeometry.y}/${oracleAfter.shadowGeometry.blur}/${oracleAfter.shadowGeometry.spread}/${oracleAfter.shadowGeometry.inset}`
-          }, underline=${oracleAfter.underlinePresent}/${oracleAfter.underlineThickness}`,
-        );
+        syntheticFailures.push(proofDiagnostic);
       }
     }
     await page.evaluate(() => {
       document.querySelector("[data-discern-focus-proof-surface]")?.remove();
+      document.querySelector("[data-discern-focus-raw-stage]")?.remove();
     });
+  }
+  if (scope.syntheticProofKinds === undefined) {
+    syntheticFailures.push(
+      ...await verifyFocusDeviceScaleInvariant(
+        browser,
+        origin,
+        shadowRenderedProofs.map(({ kind }) => kind),
+      ),
+    );
   }
   const futureProof = syntheticFailures.length === 0;
   failures.push(
@@ -4081,7 +7241,7 @@ export async function runResilienceConformance(
   origin: string,
   failures: string[],
 ): Promise<ResilienceConformanceSummary> {
-  await page.setViewportSize(WIDE_VIEWPORT);
+  requireViewport(page, WIDE_VIEWPORT, "Resilience conformance");
   await loadPage(page, conformanceUrl(origin));
   const journeyStructure = await verifyJourneyStructure(page, failures);
   const journeyAxeScans = await scanJourneyAccessibility(
@@ -4119,6 +7279,7 @@ export async function runResilienceConformance(
   const theme = await verifyThemeSystem(browser, origin, failures);
   failures.push(...theme.failures.map((failure) => `Theme system: ${failure}`));
   const semanticFocus = await verifySemanticFocus(
+    browser,
     page,
     origin,
     failures,

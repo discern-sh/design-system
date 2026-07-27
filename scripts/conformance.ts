@@ -12,6 +12,7 @@ import { launchBrowser } from "./browser.ts";
 import { buildDesignSystem } from "./build.ts";
 import { runResilienceConformance } from "./resilience-conformance.ts";
 import catalogueServer from "./serve.ts";
+import { withViewport } from "./viewport.ts";
 
 const OUTPUT_ROOT = new URL("../dist/conformance/", import.meta.url);
 const WIDE_VIEWPORT = { width: 1440, height: 1000 } as const;
@@ -587,18 +588,23 @@ async function runInteractionScenarios(
   for (const component of components) {
     for (const scenario of manifests.get(component) ?? []) {
       try {
-        await page.setViewportSize(scenario.viewport ?? WIDE_VIEWPORT);
-        await loadConformancePage(
+        await withViewport(
           page,
-          conformanceUrl(origin, "light", component),
+          scenario.viewport ?? WIDE_VIEWPORT,
+          async () => {
+            await loadConformancePage(
+              page,
+              conformanceUrl(origin, "light", component),
+            );
+            const root = page.locator(
+              `[data-discern-component="${component}"] .discern-catalogue-component__canvas`,
+            );
+            for (const step of scenario.steps) {
+              await performStep(page, root, step);
+            }
+            scenariosRun += 1;
+          },
         );
-        const root = page.locator(
-          `[data-discern-component="${component}"] .discern-catalogue-component__canvas`,
-        );
-        for (const step of scenario.steps) {
-          await performStep(page, root, step);
-        }
-        scenariosRun += 1;
       } catch (error) {
         failures.push(
           `${component}/${scenario.name}: ${
@@ -615,83 +621,87 @@ async function verifyStateFragmentRestoration(
   page: Page,
   origin: string,
 ): Promise<void> {
-  await page.setViewportSize(WIDE_VIEWPORT);
-  await page.goto(new URL("/style-guide/", origin).href, {
-    waitUntil: "networkidle",
-  });
-  await page.locator("[data-discern-root]").waitFor();
-  await page.evaluate(() => document.fonts.ready.then(() => undefined));
-  const states = await page.locator(
-    '.discern-catalogue-example-state[id^="component-"][id*="--"]',
-  ).evaluateAll((nodes) =>
-    nodes.map((node) => {
-      const component = node.closest<HTMLElement>(
-        "[data-discern-component]",
-      );
-      return {
-        fragment: node.id,
-        component: component?.dataset.discernComponent,
-      };
-    })
-  );
-  invariant(states.length > 0, "Fragment restoration needs a Catalogue state");
-  for (const state of states) {
-    invariant(
-      state.component !== undefined &&
-        state.fragment.startsWith(`component-${state.component}--`) &&
-        /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(
-          state.fragment.slice(`component-${state.component}--`.length),
-        ),
-      `Catalogue state ID does not derive from its component: #${state.fragment}`,
+  await withViewport(page, WIDE_VIEWPORT, async () => {
+    await page.goto(new URL("/style-guide/", origin).href, {
+      waitUntil: "networkidle",
+    });
+    await page.locator("[data-discern-root]").waitFor();
+    await page.evaluate(() => document.fonts.ready.then(() => undefined));
+    const states = await page.locator(
+      '.discern-catalogue-example-state[id^="component-"][id*="--"]',
+    ).evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const component = node.closest<HTMLElement>(
+          "[data-discern-component]",
+        );
+        return {
+          fragment: node.id,
+          component: component?.dataset.discernComponent,
+        };
+      })
     );
-  }
-  const state = states[Math.floor(states.length / 2)];
-  invariant(state, "Fragment restoration needs a middle Catalogue state");
-  const fragment = state.fragment;
-  const url = new URL("/style-guide/", origin);
-  url.hash = fragment;
-  await page.goto(url.href, { waitUntil: "networkidle" });
-  await page.locator("[data-discern-root]").waitFor();
-  const target = page.locator(`#${fragment}`);
-  let position = Number.POSITIVE_INFINITY;
-  await eventually(
-    async () => {
-      position = await target.evaluate((node) =>
-        node.getBoundingClientRect().top
+    invariant(
+      states.length > 0,
+      "Fragment restoration needs a Catalogue state",
+    );
+    for (const state of states) {
+      invariant(
+        state.component !== undefined &&
+          state.fragment.startsWith(`component-${state.component}--`) &&
+          /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(
+            state.fragment.slice(`component-${state.component}--`.length),
+          ),
+        `Catalogue state ID does not derive from its component: #${state.fragment}`,
       );
-      return position >= 0 && position <= 160;
-    },
-    `Cold fragment load left #${fragment} outside the viewport`,
-  );
-  const targetState = await target.evaluate((node) => ({
-    matchesTarget: node.matches(":target"),
-    boxShadow: getComputedStyle(node).boxShadow,
-    component: node.closest<HTMLElement>("[data-discern-component]")?.dataset
-      .discernComponent,
-    activeElement: node.ownerDocument.activeElement ===
-        node.ownerDocument.body
-      ? "body"
-      : node.ownerDocument.activeElement?.id ||
-        node.ownerDocument.activeElement?.tagName.toLowerCase(),
-  }));
-  invariant(
-    position >= 0 && position <= 160,
-    `Cold fragment load left #${fragment} at ${position.toFixed(2)}px`,
-  );
-  invariant(
-    targetState.component === state.component,
-    `Cold fragment load targeted a parent instead of #${fragment}`,
-  );
-  invariant(
-    targetState.matchesTarget && targetState.boxShadow !== "none",
-    `Cold fragment load did not highlight #${fragment}`,
-  );
-  invariant(
-    targetState.activeElement === "body",
-    `Cold fragment load moved focus to ${
-      targetState.activeElement ?? "nothing"
-    }`,
-  );
+    }
+    const state = states[Math.floor(states.length / 2)];
+    invariant(state, "Fragment restoration needs a middle Catalogue state");
+    const fragment = state.fragment;
+    const url = new URL("/style-guide/", origin);
+    url.hash = fragment;
+    await page.goto(url.href, { waitUntil: "networkidle" });
+    await page.locator("[data-discern-root]").waitFor();
+    const target = page.locator(`#${fragment}`);
+    let position = Number.POSITIVE_INFINITY;
+    await eventually(
+      async () => {
+        position = await target.evaluate((node) =>
+          node.getBoundingClientRect().top
+        );
+        return position >= 0 && position <= 160;
+      },
+      `Cold fragment load left #${fragment} outside the viewport`,
+    );
+    const targetState = await target.evaluate((node) => ({
+      matchesTarget: node.matches(":target"),
+      boxShadow: getComputedStyle(node).boxShadow,
+      component: node.closest<HTMLElement>("[data-discern-component]")?.dataset
+        .discernComponent,
+      activeElement: node.ownerDocument.activeElement ===
+          node.ownerDocument.body
+        ? "body"
+        : node.ownerDocument.activeElement?.id ||
+          node.ownerDocument.activeElement?.tagName.toLowerCase(),
+    }));
+    invariant(
+      position >= 0 && position <= 160,
+      `Cold fragment load left #${fragment} at ${position.toFixed(2)}px`,
+    );
+    invariant(
+      targetState.component === state.component,
+      `Cold fragment load targeted a parent instead of #${fragment}`,
+    );
+    invariant(
+      targetState.matchesTarget && targetState.boxShadow !== "none",
+      `Cold fragment load did not highlight #${fragment}`,
+    );
+    invariant(
+      targetState.activeElement === "body",
+      `Cold fragment load moved focus to ${
+        targetState.activeElement ?? "nothing"
+      }`,
+    );
+  });
 }
 
 async function captureReviewSheets(
@@ -706,18 +716,19 @@ async function captureReviewSheets(
       ["narrow", NARROW_VIEWPORT],
     ] as const
   ) {
-    await page.setViewportSize(viewport);
-    for (const theme of ["light", "dark"] as const) {
-      await loadConformancePage(page, conformanceUrl(origin, theme));
-      await page.screenshot({
-        path: fromFileUrl(
-          new URL(`catalogue-${theme}-${size}.png`, OUTPUT_ROOT),
-        ),
-        fullPage: true,
-        animations: "disabled",
-      });
-      screenshots += 1;
-    }
+    await withViewport(page, viewport, async () => {
+      for (const theme of ["light", "dark"] as const) {
+        await loadConformancePage(page, conformanceUrl(origin, theme));
+        await page.screenshot({
+          path: fromFileUrl(
+            new URL(`catalogue-${theme}-${size}.png`, OUTPUT_ROOT),
+          ),
+          fullPage: true,
+          animations: "disabled",
+        });
+        screenshots += 1;
+      }
+    });
   }
   return screenshots;
 }
