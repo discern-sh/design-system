@@ -17,7 +17,7 @@ export interface BranchChoiceProps
   readonly choices: readonly BranchChoiceItem[];
 }
 
-/** Two or three explicit routes through a procedure, complete and linkable in static HTML. */
+/** A small set of explicit routes through a procedure, complete and linkable in static HTML. */
 export const BranchChoice: DiscernComponent<
   HTMLDivElement,
   BranchChoiceProps

@@ -6,6 +6,7 @@ Each release is cut from a green run of the full release gate — formatting, li
 
 ## 0.8.0
 
+- Compose end-of-page next actions from Branch choice instead of adding another runtime Component. A named, permalinkable four-route state and source-backed Catalogue recipe make the pattern findable while keeping its recommendation and alternatives as visible text.
 - Add Workflow Agent handoff, a neutral prose block whose one visible prompt string also supplies its adapter-only copy action. Clipboard confirmation is polite, focus stays on the button, and long instructions wrap instead of adopting shell-command grammar.
 - Add Workflow Task metadata, a quiet definition-list strip that gives operational pages one complete, text-first account of their outcome, audience, prerequisites, complexity, file effects, retry safety, and expected end state.
 - Turn the Catalogue into a source-backed selection instrument. Purpose collections and guidance narrow the 107-Component registry; every example exposes copyable runtime selection and React import, linkable named states, and API evidence extracted from its TypeScript declaration. The toolbar and conformance sheets identify package version 0.8.0, while styleguide-only recipes demonstrate documentation tasks, failure triage, and review handoffs without adding runtime Components.

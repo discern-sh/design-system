@@ -1,6 +1,7 @@
 import type { ComponentType, ReactNode } from "react";
 import { Receipt } from "../src/components/agents/receipt/receipt.tsx";
 import { ArtifactCard } from "../src/components/workflow/artifact-card/artifact-card.tsx";
+import { BranchChoice } from "../src/components/workflow/branch-choice/branch-choice.tsx";
 import { Diagnostic } from "../src/components/workflow/diagnostic/diagnostic.tsx";
 import { PathReference } from "../src/components/workflow/path-reference/path-reference.tsx";
 import { Procedure } from "../src/components/workflow/procedure/procedure.tsx";
@@ -109,6 +110,48 @@ const documentationTaskRecipe = defineRecipe({
     completionCriterion: ${value(definition.stepCompletion)},
   }]}
   completion={${value(definition.completion)}}
+/>`,
+});
+
+const nextAction = {
+  title: "Choose what happens next",
+  choices: [{
+    label: "Recommended — it worked",
+    path: "Continue to the next task",
+    href: "#continue",
+  }, {
+    label: "It failed",
+    path: "Open troubleshooting",
+    href: "#troubleshooting",
+  }, {
+    label: "I need the reference",
+    path: "Read the command reference",
+    href: "#reference",
+  }, {
+    label: "Hand it to an agent",
+    path: "Open the agent handoff",
+    href: "#agent-handoff",
+  }],
+} as const;
+
+const nextActionRecipe = defineRecipe({
+  id: "next-action",
+  title: "Next action",
+  description:
+    "An end-of-page recommendation plus condition-labelled alternatives, composed from Branch choice.",
+  definition: nextAction,
+  render: (definition) => (
+    <BranchChoice
+      title={definition.title}
+      choices={definition.choices}
+    />
+  ),
+  source: (definition) =>
+    `import { BranchChoice } from "@discern-sh/design-system/react";
+
+<BranchChoice
+  title={${value(definition.title)}}
+  choices={${value(definition.choices)}}
 />`,
 });
 
@@ -264,6 +307,7 @@ const handoffReceiptRecipe = defineRecipe({
 
 export const compositionRecipes: readonly CompositionRecipe[] = [
   documentationTaskRecipe,
+  nextActionRecipe,
   failureTriageRecipe,
   handoffReceiptRecipe,
 ];

@@ -195,6 +195,10 @@ Deno.test("Catalogue selection snippets and state fragments derive from the regi
     entry(registry, "agent-handoff").states.map(({ name }) => name),
     ["default", "long-prompt"],
   );
+  assertEquals(
+    entry(registry, "branch-choice").states.map(({ name }) => name),
+    ["default", "next-action"],
+  );
 });
 
 Deno.test("Catalogue prop evidence is source-derived and complete", async () => {
@@ -275,7 +279,12 @@ Deno.test("Catalogue version and composition source share their authorities", as
 
   assertEquals(
     compositionRecipes.map(({ id }) => id),
-    ["documentation-task", "failure-triage", "handoff-receipt"],
+    [
+      "documentation-task",
+      "next-action",
+      "failure-triage",
+      "handoff-receipt",
+    ],
   );
   for (const recipe of compositionRecipes) {
     assertStringIncludes(

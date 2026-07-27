@@ -8,6 +8,9 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { packageManifest } from "../src/manifest.ts";
 import { AgentHandoff } from "../src/components/workflow/agent-handoff/agent-handoff.tsx";
+import { catalogueStates as branchChoiceStates } from "../src/components/workflow/branch-choice/branch-choice.examples.tsx";
+import type { ComponentMeta } from "../src/types/component-meta.ts";
+import { compositionRecipes } from "../styleguide/compositions.tsx";
 import {
   type TaskFileEffects,
   TaskMetadata,
@@ -118,4 +121,43 @@ Deno.test("agent handoff has one visible plain-text prompt authority", () => {
   );
   assert(manifestEntry !== undefined);
   assertEquals(manifestEntry.dependencies, ["copy-button"]);
+});
+
+Deno.test("next action remains a guarded Branch choice composition", async () => {
+  assert(
+    !packageManifest.components.some(({ id }) => id === "next-action"),
+    "next action must not become a runtime component",
+  );
+
+  const workflowRoot = new URL(
+    "../src/components/workflow/",
+    import.meta.url,
+  );
+  for await (const entry of Deno.readDir(workflowRoot)) {
+    if (!entry.isDirectory) continue;
+    assert(entry.name !== "next-action");
+    const module = await import(
+      new URL(`${entry.name}/${entry.name}.meta.ts`, workflowRoot).href
+    ) as { readonly default: ComponentMeta };
+    assert(
+      module.default.order !== 420,
+      `${module.default.slug} occupies reserved composition order 420`,
+    );
+  }
+
+  const state = branchChoiceStates.find(({ name }) => name === "next-action");
+  assert(state !== undefined);
+  const stateHtml = renderToStaticMarkup(createElement(state.Example));
+  assertEquals(
+    (stateHtml.match(/class="discern-branch-choice__choice"/g) ?? []).length,
+    4,
+  );
+  assertStringIncludes(stateHtml, "Recommended — it worked");
+  assertStringIncludes(stateHtml, "Hand it to an agent");
+
+  const recipe = compositionRecipes.find(({ id }) => id === "next-action");
+  assert(recipe !== undefined);
+  assertStringIncludes(recipe.source, "import { BranchChoice }");
+  assertStringIncludes(recipe.source, "<BranchChoice");
+  assert(!recipe.source.includes("<NextAction"));
 });
