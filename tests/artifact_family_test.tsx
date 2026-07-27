@@ -293,7 +293,7 @@ Deno.test("Artifact tree annotations accept inline and flow compositions without
 
   assertEquals(
     invalidPhrasingFlowNesting(
-      "<mark class=\"future-note\"><section>Flow content</section></mark>",
+      '<mark class="future-note"><section>Flow content</section></mark>',
     ),
     ["mark cannot contain section"],
   );
