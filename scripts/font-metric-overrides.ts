@@ -7,11 +7,16 @@ interface FontFaceRecord {
   readonly family: string;
   readonly style: string;
   readonly weight: WeightRange;
-  readonly source: string;
+  readonly sources: readonly FontSourceRecord[];
   readonly sizeAdjust: number | undefined;
   readonly ascentOverride: number | undefined;
   readonly descentOverride: number | undefined;
   readonly lineGapOverride: number | undefined;
+}
+
+interface FontSourceRecord {
+  readonly kind: "local" | "url";
+  readonly value: string;
 }
 
 interface TargetFontMetricAuthority {
@@ -20,6 +25,8 @@ interface TargetFontMetricAuthority {
   readonly bundledFaces: readonly {
     readonly source: string;
     readonly sha256: string;
+    readonly style: string;
+    readonly weight: WeightRange;
   }[];
   readonly ascentPercent: number;
   readonly descentPercent: number;
@@ -43,11 +50,15 @@ const TARGET_FONT_METRICS: readonly TargetFontMetricAuthority[] = [
         source: "./fonts/crimson-pro-roman.woff2",
         sha256:
           "20ce4189b9e41b3439a2a36dd63deff44b6d91182532202cb96b65521b4a3c23",
+        style: "normal",
+        weight: { minimum: 200, maximum: 900 },
       },
       {
         source: "./fonts/crimson-pro-italic.woff2",
         sha256:
           "b3faa8f9ce36db53253e11fb107d77b983150c5c21dc8fcf3906234530ab69f2",
+        style: "italic",
+        weight: { minimum: 200, maximum: 900 },
       },
     ],
     ascentPercent: 90,
@@ -62,6 +73,8 @@ const TARGET_FONT_METRICS: readonly TargetFontMetricAuthority[] = [
       source: "./fonts/inter.woff2",
       sha256:
         "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4",
+      style: "normal",
+      weight: { minimum: 400, maximum: 700 },
     }],
     ascentPercent: 97,
     descentPercent: 24,
@@ -105,6 +118,109 @@ function unquote(value: string): string {
   return value.replace(/^(["'])(.*)\1$/, "$2");
 }
 
+function cssEscapeEnd(value: string, start: number): number {
+  let position = start + 1;
+  if (position >= value.length) return position;
+  if (/[0-9a-f]/i.test(value[position] ?? "")) {
+    let digits = 0;
+    while (
+      position < value.length && digits < 6 &&
+      /[0-9a-f]/i.test(value[position] ?? "")
+    ) {
+      position += 1;
+      digits += 1;
+    }
+    if (/\s/.test(value[position] ?? "")) position += 1;
+    return position;
+  }
+  if (value[position] === "\r" && value[position + 1] === "\n") {
+    return position + 2;
+  }
+  return position + 1;
+}
+
+function decodeCssEscapes(value: string): string {
+  let decoded = "";
+  let position = 0;
+  while (position < value.length) {
+    if (value[position] !== "\\") {
+      decoded += value[position] ?? "";
+      position += 1;
+      continue;
+    }
+    const end = cssEscapeEnd(value, position);
+    const escaped = value.slice(position + 1, end);
+    const hexadecimal = escaped.match(/^([0-9a-f]{1,6})/i)?.[1];
+    if (hexadecimal !== undefined) {
+      const codePoint = Number.parseInt(hexadecimal, 16);
+      decoded += codePoint === 0 || codePoint > 0x10ffff
+        ? "\uFFFD"
+        : String.fromCodePoint(codePoint);
+    } else if (!/^[\r\n\f]/.test(escaped)) {
+      decoded += escaped[0] ?? "";
+    }
+    position = end;
+  }
+  return decoded;
+}
+
+function sourceFunctionValue(argument: string): string | undefined {
+  const trimmed = argument.trim();
+  const quote = trimmed[0];
+  if (quote === "'" || quote === '"') {
+    if (trimmed.at(-1) !== quote || trimmed.length < 2) return undefined;
+    return decodeCssEscapes(trimmed.slice(1, -1));
+  }
+  return trimmed === "" ? undefined : decodeCssEscapes(trimmed);
+}
+
+function fontSources(value: string | undefined): readonly FontSourceRecord[] {
+  if (value === undefined) return [];
+  const sources: FontSourceRecord[] = [];
+  let position = 0;
+  while (position < value.length) {
+    if (!/[-a-z]/i.test(value[position] ?? "")) {
+      position += 1;
+      continue;
+    }
+    const nameStart = position;
+    while (/[-a-z]/i.test(value[position] ?? "")) position += 1;
+    const name = value.slice(nameStart, position).toLowerCase();
+    while (/\s/.test(value[position] ?? "")) position += 1;
+    if (value[position] !== "(") continue;
+    position += 1;
+    const argumentStart = position;
+    let depth = 1;
+    let quote: "'" | '"' | undefined;
+    while (position < value.length && depth > 0) {
+      const character = value[position];
+      if (character === "\\") {
+        position = cssEscapeEnd(value, position);
+        continue;
+      }
+      if (quote !== undefined) {
+        if (character === quote) quote = undefined;
+      } else if (character === "'" || character === '"') {
+        quote = character;
+      } else if (character === "(") {
+        depth += 1;
+      } else if (character === ")") {
+        depth -= 1;
+      }
+      position += 1;
+    }
+    if (depth !== 0 || quote !== undefined) break;
+    if (name !== "url" && name !== "local") continue;
+    const source = sourceFunctionValue(
+      value.slice(argumentStart, position - 1),
+    );
+    if (source !== undefined) {
+      sources.push({ kind: name, value: source });
+    }
+  }
+  return sources;
+}
+
 function percentage(value: string | undefined): number | undefined {
   const match = value?.match(/^(\d+(?:\.\d+)?)%$/);
   return match?.[1] === undefined ? undefined : Number(match[1]);
@@ -127,9 +243,9 @@ function fontFaces(css: string): FontFaceRecord[] {
     if (family === undefined) return [];
     return [{
       family: unquote(family),
-      style: descriptor(block, "font-style") ?? "normal",
+      style: (descriptor(block, "font-style") ?? "normal").toLowerCase(),
       weight: weightRange(descriptor(block, "font-weight")),
-      source: descriptor(block, "src") ?? "",
+      sources: fontSources(descriptor(block, "src")),
       sizeAdjust: percentage(descriptor(block, "size-adjust")),
       ascentOverride: percentage(descriptor(block, "ascent-override")),
       descentOverride: percentage(descriptor(block, "descent-override")),
@@ -170,6 +286,14 @@ function effectiveMetric(
 
 function describeFace(face: FontFaceRecord): string {
   return `${face.family} ${face.style} ${face.weight.minimum}–${face.weight.maximum}`;
+}
+
+function sameWeight(left: WeightRange, right: WeightRange): boolean {
+  return left.minimum === right.minimum && left.maximum === right.maximum;
+}
+
+function describeSource(source: FontSourceRecord): string {
+  return `${source.kind}("${source.value}")`;
 }
 
 function covers(
@@ -305,10 +429,45 @@ export function auditFontMetricOverrides(
     const targetFaces = faces.filter(({ family }) =>
       family === authority.family
     );
-    for (const { source } of authority.bundledFaces) {
-      if (!targetFaces.some((face) => face.source.includes(source))) {
+    const liveSources = targetFaces.flatMap((face) =>
+      face.sources.map((source) => ({ face, source }))
+    );
+    for (const face of targetFaces) {
+      if (face.sources.length === 0) {
         failures.push(
-          `${authority.family} target metric authority is missing bundled face ${source}`,
+          `${describeFace(face)} has no parseable target font source`,
+        );
+      }
+    }
+    for (const live of liveSources) {
+      const authorized = authority.bundledFaces.some((face) =>
+        live.source.kind === "url" &&
+        face.source === live.source.value &&
+        face.style === live.face.style &&
+        sameWeight(face.weight, live.face.weight)
+      );
+      if (!authorized) {
+        failures.push(
+          `${describeFace(live.face)} target source ${
+            describeSource(live.source)
+          } has no exact metric authority`,
+        );
+      }
+    }
+    for (const authorized of authority.bundledFaces) {
+      const matches = liveSources.filter(({ face, source }) =>
+        source.kind === "url" &&
+        source.value === authorized.source &&
+        face.style === authorized.style &&
+        sameWeight(face.weight, authorized.weight)
+      );
+      if (matches.length === 0) {
+        failures.push(
+          `${authority.family} target metric authority has no live ${authorized.style} ${authorized.weight.minimum}–${authorized.weight.maximum} face for url("${authorized.source}")`,
+        );
+      } else if (matches.length > 1) {
+        failures.push(
+          `${authority.family} target metric authority matches ${matches.length} live ${authorized.style} ${authorized.weight.minimum}–${authorized.weight.maximum} faces for url("${authorized.source}")`,
         );
       }
     }

@@ -679,6 +679,52 @@ Deno.test("font and grain assets are independent, licensed, and integrity-mapped
   }
 });
 
+Deno.test("target font metrics authorize the exact live face population", async () => {
+  const fontCss = await Deno.readTextFile(
+    new URL("../assets/fonts.css", import.meta.url),
+  );
+  const futureSource = "./fonts/crimson-pro-future.woff2";
+  const futureFace = auditFontMetricOverrides(`${fontCss}
+@font-face {
+  font-family: "Crimson Pro";
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url("${futureSource}") format("woff2");
+}
+`);
+  assertEquals(futureFace.failures.length, 1);
+  assertStringIncludes(futureFace.failures[0] ?? "", futureSource);
+  assertStringIncludes(
+    futureFace.failures[0] ?? "",
+    "no exact metric authority",
+  );
+  assert(!bundledFontMetricSources().includes(futureSource));
+
+  const romanSource = "./fonts/crimson-pro-roman.woff2";
+  const confusedSource = `${romanSource}-next`;
+  const confused = auditFontMetricOverrides(
+    fontCss.replace(romanSource, confusedSource),
+  );
+  assertEquals(confused.failures.length, 2);
+  const confusedEvidence = confused.failures.join("\n");
+  assertStringIncludes(confusedEvidence, confusedSource);
+  assertStringIncludes(confusedEvidence, romanSource);
+  assertStringIncludes(confusedEvidence, "no live normal 200–900 face");
+
+  const locallyShadowed = auditFontMetricOverrides(
+    fontCss.replace(
+      `src: url("${romanSource}")`,
+      `src: local("Crimson Pro"), url("${romanSource}")`,
+    ),
+  );
+  assertEquals(locallyShadowed.failures.length, 1);
+  assertStringIncludes(
+    locallyShadowed.failures[0] ?? "",
+    'local("Crimson Pro") has no exact metric authority',
+  );
+});
+
 Deno.test("font metric audit enrolls future aliases and rejects malformed faces", async () => {
   const fontCss = await Deno.readTextFile(
     new URL("../assets/fonts.css", import.meta.url),
