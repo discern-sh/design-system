@@ -470,6 +470,14 @@ inputs = [
   "discern/scripts/measure-runtime.ts",
 ]
 
+# Cap browser-test glue so resilience checks stay direct and bounded.
+[standards.resilience_conformance_lines]
+metric = "resilience_conformance_lines"
+direction = "down"
+limit = 1712
+run = "printf 'DISCERN_METRIC resilience_conformance_lines %s\\n' \"$(wc -l < scripts/resilience-conformance.ts | tr -d ' ')\""
+inputs = ["scripts/resilience-conformance.ts"]
+
 # Suppression directives stay at zero: the strict lint/type surface holds
 # because nothing is ever silenced. Counts deno-lint-ignore, deno-fmt-ignore,
 # @ts-ignore, and @ts-expect-error across authored (non-generated) sources.
