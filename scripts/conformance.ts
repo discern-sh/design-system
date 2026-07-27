@@ -211,6 +211,25 @@ async function performStep(
     );
     return;
   }
+  if (step.expect === "scrollable-x") {
+    const element = await exactlyOne(target, step.target);
+    const overflow = await element.evaluate((node) => {
+      const style = getComputedStyle(node);
+      return {
+        clientWidth: node.clientWidth,
+        scrollWidth: node.scrollWidth,
+        overflowX: style.overflowX,
+      };
+    });
+    invariant(
+      overflow.scrollWidth > overflow.clientWidth &&
+        (overflow.overflowX === "auto" || overflow.overflowX === "scroll"),
+      `Expected horizontal scrolling but found ${overflow.clientWidth}px client / ${overflow.scrollWidth}px content with overflow-x=${overflow.overflowX}: ${
+        JSON.stringify(step.target)
+      }`,
+    );
+    return;
+  }
   if (step.expect === "aligned") {
     const positions = await target.evaluateAll(
       (nodes, edge) =>
@@ -607,19 +626,48 @@ async function runInteractionScenarios(
   return scenariosRun;
 }
 
-async function verifyInitialFragmentRestoration(
+async function verifyStateFragmentRestoration(
   page: Page,
   origin: string,
-  components: readonly string[],
 ): Promise<void> {
-  const component = components.at(-1);
-  invariant(component, "Fragment restoration needs a catalogue component");
   await page.setViewportSize(WIDE_VIEWPORT);
+  await page.goto(new URL("/style-guide/", origin).href, {
+    waitUntil: "networkidle",
+  });
+  await page.locator("[data-discern-root]").waitFor();
+  await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  const states = await page.locator(
+    '.discern-catalogue-example-state[id^="component-"][id*="--"]',
+  ).evaluateAll((nodes) =>
+    nodes.map((node) => {
+      const component = node.closest<HTMLElement>(
+        "[data-discern-component]",
+      );
+      return {
+        fragment: node.id,
+        component: component?.dataset.discernComponent,
+      };
+    })
+  );
+  invariant(states.length > 0, "Fragment restoration needs a Catalogue state");
+  for (const state of states) {
+    invariant(
+      state.component !== undefined &&
+        state.fragment.startsWith(`component-${state.component}--`) &&
+        /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(
+          state.fragment.slice(`component-${state.component}--`.length),
+        ),
+      `Catalogue state ID does not derive from its component: #${state.fragment}`,
+    );
+  }
+  const state = states[Math.floor(states.length / 2)];
+  invariant(state, "Fragment restoration needs a middle Catalogue state");
+  const fragment = state.fragment;
   const url = new URL("/style-guide/", origin);
-  url.hash = `component-${component}`;
+  url.hash = fragment;
   await page.goto(url.href, { waitUntil: "networkidle" });
   await page.locator("[data-discern-root]").waitFor();
-  const target = page.locator(`#component-${component}`);
+  const target = page.locator(`#${fragment}`);
   let position = Number.POSITIVE_INFINITY;
   await eventually(
     async () => {
@@ -628,13 +676,36 @@ async function verifyInitialFragmentRestoration(
       );
       return position >= 0 && position <= 160;
     },
-    `Cold fragment load left #component-${component} outside the viewport`,
+    `Cold fragment load left #${fragment} outside the viewport`,
   );
+  const targetState = await target.evaluate((node) => ({
+    matchesTarget: node.matches(":target"),
+    boxShadow: getComputedStyle(node).boxShadow,
+    component: node.closest<HTMLElement>("[data-discern-component]")?.dataset
+      .discernComponent,
+    activeElement: node.ownerDocument.activeElement ===
+        node.ownerDocument.body
+      ? "body"
+      : node.ownerDocument.activeElement?.id ||
+        node.ownerDocument.activeElement?.tagName.toLowerCase(),
+  }));
   invariant(
     position >= 0 && position <= 160,
-    `Cold fragment load left #component-${component} at ${
-      position.toFixed(2)
-    }px`,
+    `Cold fragment load left #${fragment} at ${position.toFixed(2)}px`,
+  );
+  invariant(
+    targetState.component === state.component,
+    `Cold fragment load targeted a parent instead of #${fragment}`,
+  );
+  invariant(
+    targetState.matchesTarget && targetState.boxShadow !== "none",
+    `Cold fragment load did not highlight #${fragment}`,
+  );
+  invariant(
+    targetState.activeElement === "body",
+    `Cold fragment load moved focus to ${
+      targetState.activeElement ?? "nothing"
+    }`,
   );
 }
 
@@ -766,14 +837,13 @@ export async function runConformance(): Promise<void> {
       failures,
     );
     try {
-      await verifyInitialFragmentRestoration(
+      await verifyStateFragmentRestoration(
         page,
         origin,
-        expectedComponents,
       );
     } catch (error) {
       failures.push(
-        `initial fragment restoration: ${
+        `state fragment restoration: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -792,7 +862,7 @@ export async function runConformance(): Promise<void> {
       `Component conformance failed:\n- ${failures.join("\n- ")}`,
     );
     console.log(
-      `Conformance passed: ${expectedComponents.length} components, ${accessibilityScans} accessibility scans, ${scenarios} interaction scenarios, 1 cold-fragment check, ${forcedColorFocusChecks} forced-colour focus checks, and ${
+      `Conformance passed: ${expectedComponents.length} components, ${accessibilityScans} accessibility scans, ${scenarios} interaction scenarios, 1 cold-state-fragment check, ${forcedColorFocusChecks} forced-colour focus checks, and ${
         screenshots + 1
       } review screenshots; ${floatingSurfaces} floating surfaces share the clipping cure.`,
     );

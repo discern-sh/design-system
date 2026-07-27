@@ -1,4 +1,7 @@
-import type { ConformanceScenario } from "../../../../styleguide/conformance.ts";
+import type {
+  CatalogueExampleState,
+  ConformanceScenario,
+} from "../../../../styleguide/conformance.ts";
 import { PathReference } from "./path-reference.tsx";
 
 export const conformance = [{
@@ -20,20 +23,41 @@ export const conformance = [{
   }],
 }] satisfies readonly ConformanceScenario[];
 
+function InlinePathState() {
+  return (
+    <p style={{ margin: 0 }}>
+      Open <PathReference path="/path/to/project/deno.json" />{" "}
+      before running the task.
+    </p>
+  );
+}
+
+function OverflowPathState() {
+  return (
+    <div style={{ maxWidth: "22rem" }}>
+      <PathReference
+        path="/path/to/a/deliberately/long/project/src/components/example/component.tsx"
+        copyable
+        data-example-long-path
+      />
+    </div>
+  );
+}
+
+export const catalogueStates = [
+  { name: "default", label: "Inline path", Example: InlinePathState },
+  {
+    name: "long-path",
+    label: "Long copyable path",
+    Example: OverflowPathState,
+  },
+] satisfies readonly CatalogueExampleState[];
+
 export default function PathReferenceExamples() {
   return (
     <div className="discern-example-stack discern-example-stack--start">
-      <p style={{ margin: 0 }}>
-        Open <PathReference path="/path/to/project/deno.json" />{" "}
-        before running the task.
-      </p>
-      <div style={{ maxWidth: "22rem" }}>
-        <PathReference
-          path="/path/to/a/deliberately/long/project/src/components/example/component.tsx"
-          copyable
-          data-example-long-path
-        />
-      </div>
+      <InlinePathState />
+      <OverflowPathState />
     </div>
   );
 }

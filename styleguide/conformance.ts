@@ -1,3 +1,40 @@
+import type { ComponentType } from "react";
+
+/** One stable, linkable state exported by a component examples module. */
+export interface CatalogueExampleState {
+  readonly name: string;
+  readonly label: string;
+  readonly Example: ComponentType;
+}
+
+/** One component-specific prop extracted from its authored TypeScript source. */
+export interface CatalogueProp {
+  readonly name: string;
+  readonly type: string;
+  readonly required: boolean;
+  readonly description?: string;
+}
+
+/** Source-derived prop documentation or an explicit reason it is unavailable. */
+export type CataloguePropDocumentation =
+  | {
+    readonly status: "available";
+    readonly typeName: string;
+    readonly inheritedTypes: readonly string[];
+    readonly props: readonly CatalogueProp[];
+  }
+  | {
+    readonly status: "unavailable";
+    readonly typeName: string;
+    readonly reason: string;
+  };
+
+/** One source-declared literal union exposed as a component variant. */
+export interface CatalogueVariant {
+  readonly typeName: string;
+  readonly values: readonly string[];
+}
+
 /** A catalogue element found either by CSS selector or accessible role. */
 export type ConformanceTarget =
   | {
@@ -52,6 +89,10 @@ export type ConformanceStep =
     readonly expect: "within-viewport";
     readonly target: ConformanceTarget;
     readonly tolerance?: number;
+  }
+  | {
+    readonly expect: "scrollable-x";
+    readonly target: ConformanceTarget;
   };
 
 /** A browser path exported beside one component's catalogue example. */

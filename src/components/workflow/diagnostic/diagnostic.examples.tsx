@@ -1,4 +1,7 @@
-import type { ConformanceScenario } from "../../../../styleguide/conformance.ts";
+import type {
+  CatalogueExampleState,
+  ConformanceScenario,
+} from "../../../../styleguide/conformance.ts";
 import { Diagnostic } from "./diagnostic.tsx";
 
 const verboseEvidence =
@@ -19,6 +22,12 @@ export const conformance = [{
         "[data-example-diagnostic-stress] .discern-path-reference__suffix",
     },
   }, {
+    expect: "scrollable-x",
+    target: {
+      selector:
+        "[data-example-diagnostic-stress] .discern-diagnostic__evidence pre",
+    },
+  }, {
     expect: "visible",
     target: {
       selector:
@@ -27,30 +36,51 @@ export const conformance = [{
   }],
 }] satisfies readonly ConformanceScenario[];
 
+function VerboseFailureState() {
+  return (
+    <Diagnostic
+      title="Type check failed"
+      impact="The package cannot be built until the incompatible value is corrected."
+      path="/path/to/a/deliberately/long/project/src/components/workflow/example/example.tsx"
+      line={118}
+      column={17}
+      pathCopyable
+      evidence={verboseEvidence}
+      reproductionCommand="deno task typecheck"
+      retryCommand="deno task typecheck --reload"
+      workingDirectory="/path/to/project"
+      correction='Handle the "pending" case before assigning the value, then rerun the type check.'
+      rawDetail={rawDetail}
+      data-example-diagnostic-stress
+    />
+  );
+}
+
+function AttentionState() {
+  return (
+    <Diagnostic
+      severity="attention"
+      title="Generated output is stale"
+      impact="The checked-in surface may not match its authored metadata."
+      correction="Regenerate the derived files and inspect the resulting diff."
+    />
+  );
+}
+
+export const catalogueStates = [
+  {
+    name: "verbose-failure",
+    label: "Verbose failure",
+    Example: VerboseFailureState,
+  },
+  { name: "attention", label: "Attention", Example: AttentionState },
+] satisfies readonly CatalogueExampleState[];
+
 export default function DiagnosticExamples() {
   return (
     <div className="discern-example-stack discern-example-stack--start">
-      <Diagnostic
-        title="Type check failed"
-        impact="The package cannot be built until the incompatible value is corrected."
-        path="/path/to/a/deliberately/long/project/src/components/workflow/example/example.tsx"
-        line={118}
-        column={17}
-        pathCopyable
-        evidence={verboseEvidence}
-        reproductionCommand="deno task typecheck"
-        retryCommand="deno task typecheck --reload"
-        workingDirectory="/path/to/project"
-        correction='Handle the "pending" case before assigning the value, then rerun the type check.'
-        rawDetail={rawDetail}
-        data-example-diagnostic-stress
-      />
-      <Diagnostic
-        severity="attention"
-        title="Generated output is stale"
-        impact="The checked-in surface may not match its authored metadata."
-        correction="Regenerate the derived files and inspect the resulting diff."
-      />
+      <VerboseFailureState />
+      <AttentionState />
     </div>
   );
 }

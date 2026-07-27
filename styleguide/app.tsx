@@ -4,10 +4,16 @@ import { createRoot } from "react-dom/client";
 import { ThemeSwitcher } from "../src/components/core/theme-switcher/theme-switcher.tsx";
 import type { ThemeSwitcherMode } from "../src/components/core/theme-switcher/theme-switcher.tsx";
 import { Kicker } from "../src/components/display/kicker/kicker.tsx";
+import { CopyButton } from "../src/components/docs/copy-button/copy-button.tsx";
 import { useInitialFragmentTarget } from "../src/components/use-initial-fragment-target.ts";
 import { allTokens, discernThemeTokens } from "../src/tokens/tokens.ts";
-import { componentGroups } from "../src/types/component-meta.ts";
-import { registry } from "./generated/registry.ts";
+import {
+  type CataloguePurpose,
+  cataloguePurposes,
+  componentGroups,
+} from "../src/types/component-meta.ts";
+import { compositionRecipes } from "./compositions.tsx";
+import { packageVersion, registry } from "./generated/registry.ts";
 import type { RegistryEntry } from "./generated/registry.ts";
 
 function slugify(value: string): string {
@@ -18,6 +24,38 @@ function catalogueTheme(value: string | null): ThemeSwitcherMode | undefined {
   return value === "system" || value === "light" || value === "dark"
     ? value
     : undefined;
+}
+
+function cataloguePurpose(
+  value: string | null,
+): CataloguePurpose | undefined {
+  return cataloguePurposes.find((purpose) => purpose === value);
+}
+
+const purposeDetails = {
+  "building-documentation": {
+    label: "Building documentation",
+    description: "Long-form guidance, reference, and documentation chrome.",
+  },
+  "displaying-tool-output": {
+    label: "Displaying tool output",
+    description: "Runs, diagnostics, artifacts, and machine evidence.",
+  },
+  "procedural-workflow": {
+    label: "Procedural workflow",
+    description: "Executable steps, choices, recovery, and proof.",
+  },
+  "marketing-site": {
+    label: "Marketing site",
+    description: "Product narrative, trust, comparison, and conversion.",
+  },
+} satisfies Record<
+  CataloguePurpose,
+  { readonly label: string; readonly description: string }
+>;
+
+function stateFragmentId(component: string, state: string): string {
+  return `component-${component}--${state}`;
 }
 
 const defaultAccentHue = Number(
@@ -78,8 +116,34 @@ function TokenPreview(
   );
 }
 
+function CopyableCode(
+  { label, value }: { readonly label: string; readonly value: string },
+) {
+  return (
+    <div className="discern-catalogue-copyable">
+      <span>{label}</span>
+      <code>{value}</code>
+      <CopyButton
+        value={value}
+        label={`Copy ${label.toLowerCase()}`}
+        copiedLabel={`${label} copied`}
+      />
+    </div>
+  );
+}
+
 function ComponentPreview({ entry }: { readonly entry: RegistryEntry }) {
-  const { meta, Examples, conformance } = entry;
+  const {
+    meta,
+    states,
+    conformance,
+    selection,
+    propDocumentation,
+    variants,
+  } = entry;
+  const hasGuidance = Boolean(
+    meta.useWhen?.length || meta.notWhen?.length || meta.accessibility?.length,
+  );
   return (
     <article
       className="discern-catalogue-component"
@@ -100,18 +164,147 @@ function ComponentPreview({ entry }: { readonly entry: RegistryEntry }) {
         </a>
       </header>
       <div className="discern-catalogue-component__canvas">
-        <Examples />
+        {states.map(({ name, label, Example }) => {
+          const fragmentId = stateFragmentId(meta.slug, name);
+          return (
+            <section
+              className="discern-catalogue-example-state"
+              id={fragmentId}
+              data-discern-example-state={name}
+              key={name}
+            >
+              <header>
+                <h5>{label}</h5>
+                <a
+                  href={`#${fragmentId}`}
+                  aria-label={`Link to ${meta.name}: ${label}`}
+                >
+                  #
+                </a>
+              </header>
+              <div className="discern-catalogue-example-state__canvas">
+                <Example />
+              </div>
+            </section>
+          );
+        })}
       </div>
-      {meta.accessibility?.length
+      <details className="discern-catalogue-instrument">
+        <summary>Selection and React import</summary>
+        <div>
+          <CopyableCode
+            label="Component selection"
+            value={selection.component}
+          />
+          <CopyableCode label="Group selection" value={selection.group} />
+          <CopyableCode label="React import" value={selection.reactImport} />
+        </div>
+      </details>
+      {hasGuidance
         ? (
-          <footer>
-            <strong>Accessibility</strong>
-            <ul>
-              {meta.accessibility.map((note) => <li key={note}>{note}</li>)}
-            </ul>
+          <footer className="discern-catalogue-guidance">
+            {meta.useWhen?.length
+              ? (
+                <div>
+                  <strong>Use when</strong>
+                  <ul>
+                    {meta.useWhen.map((note) => <li key={note}>{note}</li>)}
+                  </ul>
+                </div>
+              )
+              : null}
+            {meta.notWhen?.length
+              ? (
+                <div>
+                  <strong>Not when</strong>
+                  <ul>
+                    {meta.notWhen.map((note) => <li key={note}>{note}</li>)}
+                  </ul>
+                </div>
+              )
+              : null}
+            {meta.accessibility?.length
+              ? (
+                <div>
+                  <strong>Author responsibilities</strong>
+                  <ul>
+                    {meta.accessibility.map((note) => <li key={note}>{note}
+                    </li>)}
+                  </ul>
+                </div>
+              )
+              : null}
           </footer>
         )
         : null}
+      <details className="discern-catalogue-api">
+        <summary>Props and variants</summary>
+        <div>
+          <h5>{propDocumentation.typeName}</h5>
+          {propDocumentation.status === "available"
+            ? (
+              <>
+                {propDocumentation.inheritedTypes.length
+                  ? (
+                    <p>
+                      Also accepts{" "}
+                      <code>{propDocumentation.inheritedTypes.join(", ")}
+                      </code>.
+                    </p>
+                  )
+                  : null}
+                {propDocumentation.props.length
+                  ? (
+                    <div className="discern-catalogue-api__table">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th scope="col">Prop</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Requirement</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {propDocumentation.props.map((prop) => (
+                            <tr key={prop.name}>
+                              <th scope="row">
+                                <code>{prop.name}</code>
+                                {prop.description
+                                  ? <small>{prop.description}</small>
+                                  : null}
+                              </th>
+                              <td>
+                                <code>{prop.type}</code>
+                              </td>
+                              <td>{prop.required ? "Required" : "Optional"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )
+                  : <p>No component-specific props.</p>}
+              </>
+            )
+            : <p>{propDocumentation.reason}</p>}
+          {variants.length
+            ? (
+              <div className="discern-catalogue-variants">
+                {variants.map((variant) => (
+                  <div key={variant.typeName}>
+                    <strong>{variant.typeName}</strong>
+                    <span>
+                      {variant.values.map((value) => (
+                        <code key={value}>{value}</code>
+                      ))}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )
+            : null}
+        </div>
+      </details>
     </article>
   );
 }
@@ -123,6 +316,7 @@ function App() {
     [],
   );
   const requestedTheme = parameters.get("theme");
+  const requestedPurpose = parameters.get("purpose");
   const conformanceMode = parameters.get("conformance") === "1";
   const selectedComponent = parameters.get("component");
   const [theme, setTheme] = useState<ThemeSwitcherMode>(() =>
@@ -131,6 +325,9 @@ function App() {
       "system"
   );
   const [query, setQuery] = useState("");
+  const [purpose, setPurpose] = useState<CataloguePurpose | undefined>(() =>
+    cataloguePurpose(requestedPurpose)
+  );
   const [accentHue, setAccentHue] = useState(defaultAccentHue);
   const normalizedQuery = query.trim().toLowerCase();
 
@@ -144,14 +341,22 @@ function App() {
       )
       .filter(({ meta }) =>
         !normalizedQuery ||
-        `${meta.name} ${meta.group} ${meta.description}`.toLowerCase().includes(
-          normalizedQuery,
-        )
+        [
+          meta.name,
+          meta.group,
+          meta.description,
+          ...(meta.purposes ?? []),
+          ...(meta.useWhen ?? []),
+          ...(meta.notWhen ?? []),
+        ].join(" ").toLowerCase().includes(normalizedQuery)
+      )
+      .filter(({ meta }) =>
+        purpose === undefined || meta.purposes?.includes(purpose)
       )
       .filter(({ meta }) =>
         !conformanceMode || !selectedComponent ||
         meta.slug === selectedComponent
-      ), [conformanceMode, normalizedQuery, selectedComponent]);
+      ), [conformanceMode, normalizedQuery, purpose, selectedComponent]);
 
   const tokens = useMemo(
     () =>
@@ -167,6 +372,12 @@ function App() {
     group,
     entries: components.filter(({ meta }) => meta.group === group),
   })).filter(({ entries }) => entries.length);
+  const purposeCounts = Object.fromEntries(
+    cataloguePurposes.map((candidate) => [
+      candidate,
+      registry.filter(({ meta }) => meta.purposes?.includes(candidate)).length,
+    ]),
+  ) as Record<CataloguePurpose, number>;
   const tokenCategories = [...new Set(tokens.map((token) => token.category))];
 
   const changeTheme = (next: ThemeSwitcherMode) => {
@@ -176,6 +387,15 @@ function App() {
     } else {
       localStorage.setItem("discern-styleguide-theme", next);
     }
+  };
+
+  const changePurpose = (next: CataloguePurpose | undefined): void => {
+    setPurpose(next);
+    const url = new URL(globalThis.location.href);
+    if (next === undefined) url.searchParams.delete("purpose");
+    else url.searchParams.set("purpose", next);
+    url.hash = "components";
+    globalThis.history.replaceState(null, "", url);
   };
 
   if (conformanceMode) {
@@ -189,6 +409,9 @@ function App() {
         <h1 className="discern-visually-hidden">
           Discern component conformance sheet
         </h1>
+        <p className="discern-catalogue-conformance__identity">
+          @discern-sh/design-system v{packageVersion}
+        </p>
         {components.map((entry) => (
           <ComponentPreview entry={entry} key={entry.meta.slug} />
         ))}
@@ -224,6 +447,33 @@ function App() {
               {category}
             </a>
           ))}
+          <a href="#compositions">Compositions</a>
+          <span className="discern-catalogue-nav__heading">
+            Purpose collections
+          </span>
+          <button
+            type="button"
+            className="discern-catalogue-nav__collection"
+            aria-pressed={purpose === undefined}
+            onClick={() => changePurpose(undefined)}
+          >
+            All components
+            <small>{registry.length}</small>
+          </button>
+          {cataloguePurposes.map((candidate) => (
+            <button
+              type="button"
+              className="discern-catalogue-nav__collection"
+              aria-pressed={purpose === candidate}
+              data-discern-catalogue-purpose={candidate}
+              onClick={() => changePurpose(candidate)}
+              title={purposeDetails[candidate].description}
+              key={candidate}
+            >
+              {purposeDetails[candidate].label}
+              <small>{purposeCounts[candidate]}</small>
+            </button>
+          ))}
           <span className="discern-catalogue-nav__heading">Components</span>
           {groupedComponents.map(({ group, entries }) => (
             <div key={group}>
@@ -252,9 +502,12 @@ function App() {
             type="search"
             value={query}
             onChange={(event) => setQuery(event.currentTarget.value)}
-            placeholder="Search tokens and components"
+            placeholder="Search components, guidance, and tokens"
           />
         </label>
+        <span className="discern-catalogue-version">
+          <span>@discern-sh/design-system</span> v{packageVersion}
+        </span>
         <ThemeSwitcher
           className="discern-catalogue-theme"
           mode={theme}
@@ -353,10 +606,46 @@ function App() {
           })}
         </section>
 
+        <section className="discern-catalogue-section" id="compositions">
+          <header className="discern-catalogue-section__header">
+            <div>
+              <Kicker index="02">— Compositions</Kicker>
+              <h2>Components working together.</h2>
+            </div>
+            <p>
+              These styleguide-only recipes join existing components into
+              repeatable documentation and tool-output patterns.
+            </p>
+          </header>
+          <div className="discern-catalogue-recipes">
+            {compositionRecipes.map((
+              { id, title, description, Example, source },
+            ) => (
+              <section
+                className="discern-catalogue-recipe"
+                id={`recipe-${id}`}
+                key={id}
+              >
+                <header>
+                  <h3>{title}</h3>
+                  <p>{description}</p>
+                </header>
+                <div className="discern-catalogue-recipe__preview">
+                  <Example />
+                </div>
+                <details className="discern-catalogue-recipe__source">
+                  <summary>Copy recipe source</summary>
+                  <CopyableCode label="Recipe source" value={source} />
+                </details>
+              </section>
+            ))}
+          </div>
+        </section>
+
         <section className="discern-catalogue-section" id="components">
           <header className="discern-catalogue-section__header">
             <div>
-              <Kicker index="02">— Components</Kicker>
+              <Kicker index="03">— Components</Kicker>
               <h2>Typed, composable, inspectable.</h2>
             </div>
             <p>
@@ -364,6 +653,37 @@ function App() {
               fixtures. New metadata files enter this page automatically.
             </p>
           </header>
+          <label className="discern-catalogue-purpose-picker">
+            <span>Purpose collection</span>
+            <select
+              value={purpose ?? ""}
+              onChange={(event) =>
+                changePurpose(cataloguePurpose(event.currentTarget.value))}
+            >
+              <option value="">All components</option>
+              {cataloguePurposes.map((candidate) => (
+                <option value={candidate} key={candidate}>
+                  {purposeDetails[candidate].label} ({purposeCounts[candidate]})
+                </option>
+              ))}
+            </select>
+          </label>
+          {purpose !== undefined
+            ? (
+              <div
+                className="discern-catalogue-purpose-context"
+                data-discern-active-purpose={purpose}
+              >
+                <div>
+                  <strong>{purposeDetails[purpose].label}</strong>
+                  <span>{purposeDetails[purpose].description}</span>
+                </div>
+                <button type="button" onClick={() => changePurpose(undefined)}>
+                  Show all
+                </button>
+              </div>
+            )
+            : null}
           {groupedComponents.map(({ group, entries }) => (
             <section
               className="discern-catalogue-component-group"
@@ -385,7 +705,10 @@ function App() {
           ? (
             <div className="discern-catalogue-empty">
               <h2>No matches.</h2>
-              <p>Try a component group, token role, or visual property.</p>
+              <p>
+                Try another purpose, component group, token role, or visual
+                property.
+              </p>
             </div>
           )
           : null}
