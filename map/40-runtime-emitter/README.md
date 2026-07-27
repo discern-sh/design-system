@@ -6,6 +6,6 @@ Resolved Component Metadata can also declare selection-scoped browser behavior. 
 
 ## Guides
 
-| Page | What it answers |
-| --- | --- |
+| Page                                             | What it answers                                                                                                                                                 |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [Select a Runtime per route](route-selection.md) | How to combine Groups and Components per route, inspect resolved dependencies in the Manifest, price Optional Assets, and read the governed reference profiles. |

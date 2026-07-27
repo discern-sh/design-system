@@ -42,13 +42,13 @@ Keep each `outputRoot` dedicated to its Runtime. Emission replaces that director
 
 The requested list is an instruction. `manifest.selection.resolvedComponents` is the result after dependency resolution. Read these Manifest fields after every emission:
 
-| Question | Manifest authority |
-| --- | --- |
-| Which Components did the route request? | `selection.requestedComponents` and `selection.requestedGroups` |
-| Which dependencies joined them? | `selection.resolvedComponents` and each Component's `dependencies` |
-| Did the Selection acquire browser behavior? | each Component's `behaviors` and `outputs.scripts` |
-| Which optional assets were copied? | `selection.assets` and `outputs.assets` |
-| What does each emitted file cost? | `integrity.files[].bytes` |
+| Question                                    | Manifest authority                                                 |
+| ------------------------------------------- | ------------------------------------------------------------------ |
+| Which Components did the route request?     | `selection.requestedComponents` and `selection.requestedGroups`    |
+| Which dependencies joined them?             | `selection.resolvedComponents` and each Component's `dependencies` |
+| Did the Selection acquire browser behavior? | each Component's `behaviors` and `outputs.scripts`                 |
+| Which optional assets were copied?          | `selection.assets` and `outputs.assets`                            |
+| What does each emitted file cost?           | `integrity.files[].bytes`                                          |
 
 Optional assets never enter through Component dependencies. Select `fonts` or `grain` on the route that uses it.
 
@@ -56,14 +56,14 @@ Optional assets never enter through Component dependencies. Select `fonts` or `g
 
 The standards in `discern.toml` hold these unminified emitted costs at their measured ceilings:
 
-| Profile | Selection and included files | Ceiling |
-| --- | --- | ---: |
-| Minimal docs CSS | Docs header, Docs nav, Anchor heading, Prose, Code listing, and Pager; `discern.css` after dependency resolution | 25,804 bytes |
-| Workflow CSS | `groups: ["Workflow"]`; resolved `discern.css` | 67,377 bytes |
-| Marketing CSS | `groups: ["Marketing"]`; resolved `discern.css` | 66,287 bytes |
-| Browser behavior | every declared behavior-bearing Component; `discern.js` | 6,844 bytes |
-| Fonts | `fonts.css` and 4 WOFF2 files | 183,726 bytes |
-| Grain | `grain.css` and `textures/grain.png` | 99,442 bytes |
+| Profile          | Selection and included files                                                                                     |       Ceiling |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------- | ------------: |
+| Minimal docs CSS | Docs header, Docs nav, Anchor heading, Prose, Code listing, and Pager; `discern.css` after dependency resolution |  25,804 bytes |
+| Workflow CSS     | `groups: ["Workflow"]`; resolved `discern.css`                                                                   |  67,377 bytes |
+| Marketing CSS    | `groups: ["Marketing"]`; resolved `discern.css`                                                                  |  66,287 bytes |
+| Browser behavior | every declared behavior-bearing Component; `discern.js`                                                          |   6,844 bytes |
+| Fonts            | `fonts.css` and 4 WOFF2 files                                                                                    | 183,726 bytes |
+| Grain            | `grain.css` and `textures/grain.png`                                                                             |  99,442 bytes |
 
 The font measure excludes the 3 emitted OFL texts because a browser doesn't request them as font resources. They remain in the Manifest with byte sizes and integrity hashes.
 

@@ -56,14 +56,14 @@ deno task conformance
 
 The accessibility-resilience audit on 2026-07-27 classified all 46 unit cases and judged every baseline class guard against the fresh-name test:
 
-| Test file                      | Cases | Guard assessment                                                                                                                |
-| ------------------------------ | ----: | ------------------------------------------------------------------------------------------------------------------------------- |
-| `artifact_family_test.tsx`     |     4 | Canonical ownership/disposition arrays and the generated Component order enrol future members; depth stress is unique.          |
-| `catalogue_instrument_test.ts` |     4 | Metadata, generated registry, and recipe definitions are the authorities; no hand-listed Component population remains.          |
-| `design_system_test.ts`        |    22 | Folder, token, runtime, and state vocabularies drive the class guards; semantic focus derives its surface-token set.            |
-| `docs_page_furniture_test.ts`  |     4 | Closed Task states and each composition's own definition are the authorities; feature-specific cases assert distinct contracts. |
-| `journey_resilience_test.tsx`  |     3 | Journey-marked recipes auto-enrol; malformed unrelated Procedure and Diagnostic markup proves the plaintext detector.           |
+| Test file                      | Cases | Guard assessment                                                                                                                   |
+| ------------------------------ | ----: | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `artifact_family_test.tsx`     |     4 | Canonical ownership/disposition arrays and the generated Component order enrol future members; depth stress is unique.             |
+| `catalogue_instrument_test.ts` |     4 | Metadata, generated registry, and recipe definitions are the authorities; no hand-listed Component population remains.             |
+| `design_system_test.ts`        |    22 | Folder, token, runtime, and state vocabularies drive the class guards; semantic focus derives its surface-token set.               |
+| `docs_page_furniture_test.ts`  |     4 | Closed Task states and each composition's own definition are the authorities; feature-specific cases assert distinct contracts.    |
+| `journey_resilience_test.tsx`  |     3 | Journey-marked recipes auto-enrol; malformed unrelated Procedure and Diagnostic markup proves the plaintext detector.              |
 | `release_test.ts`              |     7 | The publish allowlist, exported module graph, package declarations, and behavior opt-in authority provide the release populations. |
-| `serve_test.ts`                |     2 | The two cases pin distinct routing and deterministic-port contracts rather than a repeated class property.                      |
+| `serve_test.ts`                |     2 | The two cases pin distinct routing and deterministic-port contracts rather than a repeated class property.                         |
 
 No uncovered invariant or under-scoped guard remained after the journey and semantic-focus guards were added. The browser phase separately proves each generic rendered-DOM detector with a synthetic future sibling.
