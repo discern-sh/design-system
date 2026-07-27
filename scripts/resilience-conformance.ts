@@ -153,6 +153,7 @@ interface FocusShadowLayer extends FocusShadowGeometry {
 
 interface FocusFixtureOracle {
   readonly authoredProxy: boolean;
+  readonly backgroundColor: string;
   readonly candidateHeight: number;
   readonly candidateWidth: number;
   readonly color: string;
@@ -480,16 +481,45 @@ function shadowGeometryDistance(
   );
 }
 
+function shadowPaintsMinimumSideBand(
+  layer: FocusShadowGeometry,
+  rect: FocusRect,
+): boolean {
+  if (
+    !Number.isFinite(rect.width) ||
+    !Number.isFinite(rect.height) ||
+    rect.width <= 0 ||
+    rect.height <= 0
+  ) {
+    return false;
+  }
+  const reach = layer.spread + layer.blur / 2;
+  let left = Math.max(0, reach - layer.x);
+  let right = Math.max(0, reach + layer.x);
+  let top = Math.max(0, reach - layer.y);
+  let bottom = Math.max(0, reach + layer.y);
+  if (layer.inset) {
+    left = Math.min(rect.width, left);
+    right = Math.min(rect.width, right);
+    top = Math.min(rect.height, top);
+    bottom = Math.min(rect.height, bottom);
+  }
+  return Math.max(left, right, top, bottom) >=
+    MINIMUM_FOCUS_GEOMETRY_CHANGE;
+}
+
 function changedShadowLayers(
   previous: FocusIndicatorStyle | undefined,
   current: FocusIndicatorStyle,
-  previousInsideBackground: string,
-  currentInsideBackground: string,
   surfaceColor: string,
 ): readonly FocusShadowLayer[] {
   const currentLayers = current.boxShadowLayers;
   if (currentLayers === undefined || currentLayers.length === 0) return [];
-  if (previous === undefined) return currentLayers;
+  if (previous === undefined) {
+    return currentLayers.filter((layer) =>
+      shadowPaintsMinimumSideBand(layer, current.rect)
+    );
+  }
   const previousLayers = previous.boxShadowLayers;
   if (previousLayers === undefined) return [];
 
@@ -507,8 +537,8 @@ function changedShadowLayers(
       const paintContrast = paintAppearanceContrast(
         previousLayer.color,
         currentLayer.color,
-        previousLayer.inset ? previousInsideBackground : surfaceColor,
-        currentLayer.inset ? currentInsideBackground : surfaceColor,
+        surfaceColor,
+        surfaceColor,
         previous,
         current,
       );
@@ -562,8 +592,9 @@ function changedShadowLayers(
   const matchedCurrent = new Set(
     previousMatches.filter((index): index is number => index !== undefined),
   );
-  return currentLayers.filter((_, currentIndex) =>
-    !matchedCurrent.has(currentIndex)
+  return currentLayers.filter((layer, currentIndex) =>
+    !matchedCurrent.has(currentIndex) &&
+    shadowPaintsMinimumSideBand(layer, current.rect)
   );
 }
 
@@ -670,8 +701,6 @@ function focusIndicatorContrast(
       : changedShadowLayers(
         previous,
         current,
-        previousInsideBackground,
-        insideBackground,
         surfaceColor,
       );
     if (shadowChanges.length > 0) {
@@ -1159,6 +1188,7 @@ async function focusFixtureOracle(
         Number.parseFloat(style.outlineWidth) >= 2;
     return {
       authoredProxy,
+      backgroundColor: pixelColor(style.backgroundColor),
       candidateHeight: current.height,
       candidateWidth: current.width,
       color,
@@ -2854,6 +2884,10 @@ async function verifySemanticFocus(
     "shadow-layer-reorder-geometry",
     "shadow-duplicate-reorder-geometry",
     "shadow-inset-only-geometry",
+    "shadow-outside-to-inset-background-geometry",
+    "shadow-inset-to-outside-background-geometry",
+    "new-shadow-zero-band-geometry",
+    "new-shadow-zero-target-geometry",
     "subtle-underline-geometry",
   ] as const;
   const positiveProofKinds = [
@@ -2866,6 +2900,9 @@ async function verifySemanticFocus(
     "meaningful-underline-color",
     "new-outline-geometry",
     "new-shadow-geometry",
+    "new-shadow-spread-geometry",
+    "new-shadow-offset-geometry",
+    "new-inset-shadow-geometry",
     "shadow-layer-insertion-geometry",
     "new-underline-geometry",
     "meaningful-outline-width-geometry",
@@ -2962,6 +2999,17 @@ async function verifySemanticFocus(
             "appearance:none;inline-size:44px;block-size:44px;margin:0;";
         }
         if (
+          kind === "shadow-outside-to-inset-background-geometry" ||
+          kind === "shadow-inset-to-outside-background-geometry"
+        ) {
+          target.style.backgroundColor = "rgb(0, 0, 0)";
+        }
+        if (kind === "new-shadow-zero-target-geometry") {
+          target.style.cssText +=
+            "min-inline-size:0;min-block-size:0;inline-size:0;" +
+            "block-size:0;padding:0;margin:0;";
+        }
+        if (
           kind === "subtle-opacity" ||
           kind === "subtle-filter-opacity" ||
           kind === "revealed-indicator"
@@ -3034,6 +3082,11 @@ async function verifySemanticFocus(
             : kind === "shadow-layer-insertion-geometry"
             ? "0 0 0 3px rgb(0, 0, 0)"
             : "0 0 0 3px var(--discern-color-ink)";
+        }
+        if (kind === "shadow-outside-to-inset-background-geometry") {
+          target.style.boxShadow = "0 0 0 3px rgba(255, 255, 255, 0.5)";
+        } else if (kind === "shadow-inset-to-outside-background-geometry") {
+          target.style.boxShadow = "inset 0 0 0 3px rgba(0, 0, 0, 0.5)";
         }
         if (
           [
@@ -3207,10 +3260,56 @@ async function verifySemanticFocus(
               `inset 0 0 0 3px ${paintColor}`,
               "important",
             );
+          } else if (
+            kind === "shadow-outside-to-inset-background-geometry"
+          ) {
+            paint.style.setProperty(
+              "box-shadow",
+              "inset 0 0 0 3px rgba(255, 255, 255, 0.5)",
+              "important",
+            );
+          } else if (
+            kind === "shadow-inset-to-outside-background-geometry"
+          ) {
+            paint.style.setProperty(
+              "box-shadow",
+              "0 0 0 3px rgba(0, 0, 0, 0.5)",
+              "important",
+            );
+          } else if (kind === "new-shadow-zero-band-geometry") {
+            paint.style.setProperty(
+              "box-shadow",
+              `0 0 0 0 ${paintColor}`,
+              "important",
+            );
+          } else if (kind === "new-shadow-zero-target-geometry") {
+            paint.style.setProperty(
+              "box-shadow",
+              `0 0 0 3px ${paintColor}`,
+              "important",
+            );
           } else if (kind === "new-shadow-geometry") {
             paint.style.setProperty(
               "box-shadow",
               `0 0 0 3px ${paintColor}`,
+              "important",
+            );
+          } else if (kind === "new-shadow-spread-geometry") {
+            paint.style.setProperty(
+              "box-shadow",
+              `0 0 0 2px ${paintColor}`,
+              "important",
+            );
+          } else if (kind === "new-shadow-offset-geometry") {
+            paint.style.setProperty(
+              "box-shadow",
+              `2px 0 0 0 ${paintColor}`,
+              "important",
+            );
+          } else if (kind === "new-inset-shadow-geometry") {
+            paint.style.setProperty(
+              "box-shadow",
+              `inset 0 0 0 2px ${paintColor}`,
               "important",
             );
           } else if (
@@ -3326,9 +3425,23 @@ async function verifySemanticFocus(
         syntheticFailures.push(`${kind} target lost its oracle candidate`);
         continue;
       }
+      const oracleBeforeInsideBackground = paintedBackground(
+        oracleBefore.backgroundColor,
+        synthetic.surfaceColor,
+        oracleBefore.effectiveOpacity,
+      );
+      const oracleAfterInsideBackground = paintedBackground(
+        oracleAfter.backgroundColor,
+        synthetic.surfaceColor,
+        oracleAfter.effectiveOpacity,
+      );
+      const computedFixtureBackground = kind.includes("shadow") &&
+          oracleAfter.shadowGeometry?.inset === true
+        ? oracleAfterInsideBackground
+        : synthetic.surfaceColor;
       const computedFixtureContrast = contrastRatio(
         oracleAfter.color,
-        synthetic.surfaceColor,
+        computedFixtureBackground,
         oracleAfter.visible && oracleAfter.paintPresent
           ? oracleAfter.effectiveOpacity
           : 0,
@@ -3380,6 +3493,27 @@ async function verifySemanticFocus(
         beforeShadowLayers.length === afterShadowLayers.length &&
         beforeShadowLayers.map(shadowLayerSignature).toSorted().join("\n") ===
           afterShadowLayers.map(shadowLayerSignature).toSorted().join("\n");
+      const shadowPaintsMinimumSideBand = (
+        layer: FocusShadowGeometry,
+        width: number,
+        height: number,
+      ): boolean => {
+        if (width <= 0 || height <= 0) return false;
+        const reach = layer.spread + layer.blur / 2;
+        const extents = [
+          Math.max(0, reach - layer.x),
+          Math.max(0, reach + layer.x),
+          Math.max(0, reach - layer.y),
+          Math.max(0, reach + layer.y),
+        ];
+        if (layer.inset) {
+          extents[0] = Math.min(width, extents[0] ?? 0);
+          extents[1] = Math.min(width, extents[1] ?? 0);
+          extents[2] = Math.min(height, extents[2] ?? 0);
+          extents[3] = Math.min(height, extents[3] ?? 0);
+        }
+        return Math.max(...extents) >= 2;
+      };
       const shadowGeometryEvidence = [
           "shadow-layer-reorder-geometry",
           "shadow-duplicate-reorder-geometry",
@@ -3388,8 +3522,24 @@ async function verifySemanticFocus(
         : kind === "shadow-layer-insertion-geometry"
         ? beforeShadowLayers !== undefined &&
           afterShadowLayers !== undefined &&
-          afterShadowLayers.length > beforeShadowLayers.length
+          afterShadowLayers.length > beforeShadowLayers.length &&
+          afterShadowLayers.some((layer) =>
+            !beforeShadowLayers.some((previousLayer) =>
+              shadowLayerSignature(previousLayer) ===
+                shadowLayerSignature(layer)
+            ) &&
+            shadowPaintsMinimumSideBand(
+              layer,
+              oracleAfter.candidateWidth,
+              oracleAfter.candidateHeight,
+            )
+          )
         : afterShadow !== undefined &&
+          shadowPaintsMinimumSideBand(
+            afterShadow,
+            oracleAfter.candidateWidth,
+            oracleAfter.candidateHeight,
+          ) &&
           (
             beforeShadow === undefined ||
             Math.max(
@@ -3445,6 +3595,22 @@ async function verifySemanticFocus(
           !beforeShadow.inset &&
           afterShadow.inset &&
           near(beforeShadow.spread, afterShadow.spread)
+        : kind === "shadow-outside-to-inset-background-geometry"
+        ? beforeShadow !== undefined &&
+          afterShadow !== undefined &&
+          !beforeShadow.inset &&
+          afterShadow.inset &&
+          oracleBefore.color === oracleAfter.color &&
+          oracleBeforeInsideBackground !== synthetic.surfaceColor &&
+          near(beforeShadow.spread, afterShadow.spread)
+        : kind === "shadow-inset-to-outside-background-geometry"
+        ? beforeShadow !== undefined &&
+          afterShadow !== undefined &&
+          beforeShadow.inset &&
+          !afterShadow.inset &&
+          oracleBefore.color === oracleAfter.color &&
+          oracleBeforeInsideBackground !== synthetic.surfaceColor &&
+          near(beforeShadow.spread, afterShadow.spread)
         : kind === "shadow-layer-reorder-geometry"
         ? beforeShadowLayers !== undefined &&
           afterShadowLayers !== undefined &&
@@ -3470,6 +3636,44 @@ async function verifySemanticFocus(
           near(afterShadow.spread, 5)
         : kind === "new-shadow-geometry"
         ? beforeShadow === undefined && afterShadow !== undefined
+        : kind === "new-shadow-zero-band-geometry"
+        ? beforeShadow === undefined &&
+          afterShadow !== undefined &&
+          near(afterShadow.x, 0) &&
+          near(afterShadow.y, 0) &&
+          near(afterShadow.blur, 0) &&
+          near(afterShadow.spread, 0) &&
+          oracleAfter.candidateWidth > 0 &&
+          oracleAfter.candidateHeight > 0
+        : kind === "new-shadow-zero-target-geometry"
+        ? beforeShadow === undefined &&
+          afterShadow !== undefined &&
+          near(oracleAfter.candidateWidth, 0) &&
+          near(oracleAfter.candidateHeight, 0)
+        : kind === "new-shadow-spread-geometry"
+        ? beforeShadow === undefined &&
+          afterShadow !== undefined &&
+          near(afterShadow.x, 0) &&
+          near(afterShadow.y, 0) &&
+          near(afterShadow.blur, 0) &&
+          near(afterShadow.spread, 2) &&
+          !afterShadow.inset
+        : kind === "new-shadow-offset-geometry"
+        ? beforeShadow === undefined &&
+          afterShadow !== undefined &&
+          near(afterShadow.x, 2) &&
+          near(afterShadow.y, 0) &&
+          near(afterShadow.blur, 0) &&
+          near(afterShadow.spread, 0) &&
+          !afterShadow.inset
+        : kind === "new-inset-shadow-geometry"
+        ? beforeShadow === undefined &&
+          afterShadow !== undefined &&
+          near(afterShadow.x, 0) &&
+          near(afterShadow.y, 0) &&
+          near(afterShadow.blur, 0) &&
+          near(afterShadow.spread, 2) &&
+          afterShadow.inset
         : kind === "subtle-underline-geometry"
         ? near(oracleBefore.underlineThickness, 2) &&
           near(oracleAfter.underlineThickness, 2.02)
