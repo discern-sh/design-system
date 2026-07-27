@@ -448,7 +448,6 @@ function outlineGeometryChanged(
   if (previous.outlineStyle === "none") return true;
   const previousWidth = computedPixelLength(previous.outlineWidth);
   if (previousWidth === undefined) return false;
-  if (previousWidth < 2) return true;
   const previousOffset = computedPixelLength(previous.outlineOffset);
   const currentOffset = computedPixelLength(current.outlineOffset);
   if (previousOffset === undefined || currentOffset === undefined) return false;
@@ -2748,6 +2747,7 @@ async function verifySemanticFocus(
     "subtle-outline-color",
     "subtle-shadow-color",
     "subtle-underline-color",
+    "outline-one-to-two-geometry",
     "subtle-outline-width-geometry",
     "subtle-outline-offset-geometry",
     "outline-style-only-geometry",
@@ -2902,12 +2902,15 @@ async function verifySemanticFocus(
           [
             "subtle-outline-width-geometry",
             "subtle-outline-offset-geometry",
+            "outline-one-to-two-geometry",
             "outline-style-only-geometry",
             "meaningful-outline-width-geometry",
             "meaningful-outline-offset-geometry",
           ].includes(kind)
         ) {
-          target.style.outline = `2px ${
+          target.style.outline = `${
+            kind === "outline-one-to-two-geometry" ? "1px" : "2px"
+          } ${
             kind === "outline-style-only-geometry" ? "dashed" : "solid"
           } var(--discern-color-ink)`;
           target.style.outlineOffset = "2px";
@@ -3034,12 +3037,17 @@ async function verifySemanticFocus(
             ? "rgb(1, 1, 1)"
             : "var(--discern-color-ink)";
           if (
+            kind === "outline-one-to-two-geometry" ||
             kind === "subtle-outline-width-geometry" ||
             kind === "meaningful-outline-width-geometry"
           ) {
             paint.style.setProperty(
               "outline-width",
-              kind === "subtle-outline-width-geometry" ? "3px" : "4px",
+              kind === "outline-one-to-two-geometry"
+                ? "2px"
+                : kind === "subtle-outline-width-geometry"
+                ? "3px"
+                : "4px",
               "important",
             );
           } else if (
@@ -3215,13 +3223,14 @@ async function verifySemanticFocus(
       const geometryProof = kind.endsWith("-geometry");
       const near = (value: number, expected: number): boolean =>
         Math.abs(value - expected) < 0.001;
-      const beforeOutlinePresent = oracleBefore.outlineStyle !== "none" &&
+      const beforeOutlineRendered = oracleBefore.outlineStyle !== "none";
+      const beforeOutlinePresent = beforeOutlineRendered &&
         oracleBefore.outlineWidth >= 2;
       const afterOutlinePresent = oracleAfter.outlineStyle !== "none" &&
         oracleAfter.outlineWidth >= 2;
       const outlineGeometryEvidence = afterOutlinePresent &&
         (
-          !beforeOutlinePresent ||
+          !beforeOutlineRendered ||
           Math.max(
               Math.abs(
                 oracleAfter.outlineWidth - oracleBefore.outlineWidth,
@@ -3259,6 +3268,9 @@ async function verifySemanticFocus(
       const geometryFixtureMatches = kind === "subtle-outline-width-geometry"
         ? near(oracleBefore.outlineWidth, 2) &&
           near(oracleAfter.outlineWidth, 3)
+        : kind === "outline-one-to-two-geometry"
+        ? near(oracleBefore.outlineWidth, 1) &&
+          near(oracleAfter.outlineWidth, 2)
         : kind === "subtle-outline-offset-geometry"
         ? near(oracleBefore.outlineOffset, 2) &&
           near(oracleAfter.outlineOffset, 3)
