@@ -31,10 +31,147 @@
   src: url("./fonts/jetbrains-mono.woff2") format("woff2");
 }
 
+@font-face {
+  font-family: "Discern Crimson Fallback Iowan";
+  font-style: normal;
+  font-weight: 200 599;
+  src: local("IowanOldStyle-Roman");
+  size-adjust: 87.88%;
+  ascent-override: 102.41%;
+  descent-override: 23.9%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Discern Crimson Fallback Iowan";
+  font-style: normal;
+  font-weight: 600 900;
+  src: local("IowanOldStyle-Bold");
+  size-adjust: 87.22%;
+  ascent-override: 103.19%;
+  descent-override: 24.08%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Discern Crimson Fallback Iowan";
+  font-style: italic;
+  font-weight: 200 599;
+  src: local("IowanOldStyle-Italic");
+  size-adjust: 92.74%;
+  ascent-override: 97.05%;
+  descent-override: 22.64%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Discern Crimson Fallback Iowan";
+  font-style: italic;
+  font-weight: 600 900;
+  src: local("IowanOldStyle-BoldItalic");
+  size-adjust: 92.94%;
+  ascent-override: 96.84%;
+  descent-override: 22.6%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Discern Crimson Fallback Georgia";
+  font-style: normal;
+  font-weight: 200 599;
+  src: local("Georgia");
+  size-adjust: 89.12%;
+  ascent-override: 100.99%;
+  descent-override: 23.56%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Discern Crimson Fallback Georgia";
+  font-style: normal;
+  font-weight: 600 900;
+  src: local("Georgia-Bold");
+  size-adjust: 82.06%;
+  ascent-override: 109.68%;
+  descent-override: 25.59%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Discern Crimson Fallback Georgia";
+  font-style: italic;
+  font-weight: 200 599;
+  src: local("Georgia-Italic");
+  size-adjust: 82.51%;
+  ascent-override: 109.08%;
+  descent-override: 25.45%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Discern Crimson Fallback Georgia";
+  font-style: italic;
+  font-weight: 600 900;
+  src: local("Georgia-BoldItalic");
+  size-adjust: 78.31%;
+  ascent-override: 114.93%;
+  descent-override: 26.82%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Discern Inter Fallback Helvetica";
+  font-style: normal;
+  font-weight: 200 599;
+  src: local("HelveticaNeue");
+  size-adjust: 105.51%;
+  ascent-override: 91.93%;
+  descent-override: 22.75%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Discern Inter Fallback Helvetica";
+  font-style: normal;
+  font-weight: 600 900;
+  src: local("HelveticaNeue-Bold");
+  size-adjust: 102.45%;
+  ascent-override: 94.68%;
+  descent-override: 23.43%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Discern Inter Fallback Arial";
+  font-style: normal;
+  font-weight: 200 599;
+  src: local("ArialMT");
+  size-adjust: 106.17%;
+  ascent-override: 91.36%;
+  descent-override: 22.61%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Discern Inter Fallback Arial";
+  font-style: normal;
+  font-weight: 600 900;
+  src: local("Arial-BoldMT");
+  size-adjust: 102.56%;
+  ascent-override: 94.58%;
+  descent-override: 23.4%;
+  line-gap-override: 0%;
+}
+
 :where([data-discern-root]) {
-  --discern-font-display: "Crimson Pro", "Iowan Old Style", Georgia, serif;
-  --discern-font-body: "Inter", "Helvetica Neue", system-ui, sans-serif;
-  --discern-font-ui: "Inter", "Helvetica Neue", system-ui, sans-serif;
+  --discern-font-display: "Crimson Pro", "Discern Crimson Fallback Iowan",
+    "Discern Crimson Fallback Georgia", "Iowan Old Style", Georgia, serif;
+  --discern-font-body: "Inter", "Discern Inter Fallback Helvetica",
+    "Discern Inter Fallback Arial", "Helvetica Neue", Arial, system-ui,
+    sans-serif;
+  --discern-font-ui: "Inter", "Discern Inter Fallback Helvetica",
+    "Discern Inter Fallback Arial", "Helvetica Neue", Arial, system-ui,
+    sans-serif;
   --discern-font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo,
     monospace;
 }

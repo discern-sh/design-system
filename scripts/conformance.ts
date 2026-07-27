@@ -926,7 +926,12 @@ export async function runConformance(): Promise<void> {
         `${resilience.reflowSurfaces} reflow surfaces with ` +
         `${resilience.containedOverflowRegions} contained wide regions, ` +
         `${resilience.motionTargets} motion targets, ` +
-        `${resilience.themeConsumers} theme consumer, and ` +
+        `${resilience.themeConsumers} theme consumer with ` +
+        `${resilience.themeGeometryChecks} stable geometry checks, ` +
+        `${resilience.fontFallbackChecks} font fallback checks (maximum ` +
+        `${
+          resilience.maxFontWidthDeltaPercent.toFixed(2)
+        }% width residual), and ` +
         `${resilience.semanticFocusTargets} semantic-surface focus targets.`,
     );
   } finally {

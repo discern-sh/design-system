@@ -33,7 +33,7 @@ Generated foundations apply only inside an opted-in boundary. Put `data-discern-
 
 Load the emitted `discern.css` before consumer composition styles. Semantic HTML never requires React; most Components remain CSS-only, while Components that declare browser behavior name their emitted script in the Manifest. Public classes, custom properties, data attributes, layers, and keyframes use the `discern` namespace. Consumer styles may add their own composition class, but must not target a Component's `ownedClasses` from `manifest.json`.
 
-Core typography uses documented system fallbacks. Selecting the optional font pack changes the public font-role tokens without changing component CSS.
+Core typography uses documented system fallbacks. Selecting the optional font pack changes the public font-role tokens without changing component CSS. Metric-adjusted Iowan, Georgia, Helvetica Neue, and Arial aliases reduce geometry movement while the intended webfonts load.
 
 ## Emit a selected runtime
 
@@ -60,6 +60,8 @@ console.log(result.manifest.selection.resolvedComponents);
 - only the optional assets requested by the consumer.
 
 Use `{ all: true }` for the complete catalogue. Repeated emissions with the same inputs are byte-for-byte identical. Emitted files are build inputs for your own static output; browsers should never hotlink the registry or another third-party host.
+
+Select a Runtime per route family instead of selecting once for a whole site. Use Groups for breadth, individual Components for precision, and `manifest.selection.resolvedComponents` to inspect the dependencies that joined the request. The [route-selection guide](map/40-runtime-emitter/route-selection.md) includes a two-route example and the governed reference profiles.
 
 The emitter writes through `node:fs/promises`, so it runs on Deno and Node.js with identical output. Under Deno, grant it read and write permission for the output directory.
 
@@ -125,11 +127,7 @@ Discern uses this adapter at build time only: no React bundle or hydration reach
 
 ## Output sizes
 
-Unminified reference points for selection behaviour:
-
-- the complete catalogue with fonts and grain emits roughly 142 KB of CSS and 293 KB of optional assets;
-- the documentation selection (`groups: ["Docs"]`) emits roughly 22 KB of CSS;
-- a core selection with no optional assets emits zero asset bytes.
+`discern.toml` holds the current unminified ceilings: 25,804 bytes for the minimal docs CSS profile, 67,377 for the Workflow Group, 66,287 for the Marketing Group, 6,844 for behavior-bearing `discern.js`, 183,726 for browser-requested font files, and 99,442 for grain. The [route-selection guide](map/40-runtime-emitter/route-selection.md) defines every included Selection and file.
 
 ## Developing
 

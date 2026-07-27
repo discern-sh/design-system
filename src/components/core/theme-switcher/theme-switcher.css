@@ -52,7 +52,6 @@
     box-shadow: 0 1px 0 color-mix(in oklab, var(--discern-shadow-color) 12%,
       transparent);
     color: var(--discern-color-ink);
-    font-weight: var(--discern-font-weight-strong);
   }
   .discern-theme-switcher__option input:focus-visible + span {
     outline: 2px solid var(--discern-color-accent-500);

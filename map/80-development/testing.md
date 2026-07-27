@@ -28,9 +28,9 @@ The broad permissions exist because the suites exercise real artifacts: they spa
 
 The conformance pass builds and serves the real Catalogue on an ephemeral local port, then drives installed Chrome through every generated Component example. Every example is scanned in light and dark against automated WCAG A/AA rules. Typed `conformance` exports beside interactive `*.examples.tsx` modules add keyboard, focus, relationship, state-change, and reusable layout assertions without a second Component manifest. The pass also checks a cold fragment URL, focused controls under forced colours, and writes light/dark narrow/wide plus forced-colour review sheets to `dist/conformance/`.
 
-[`resilience-conformance.ts`](../../scripts/resilience-conformance.ts) is a mandatory second phase, not an optional scenario set. It discovers journey recipes and rendered Component surfaces from the Catalogue DOM. Its checks cover journey structure and both-theme axe scans, keyboard order and exact Command copies, disclosures, nested controls, minimum targets, reflow at 390 pixels and 400% zoom, reduced motion, system-theme return, and focus across semantic surfaces and forced colours. The structural class detectors include unrelated synthetic violations, so a future sibling must fail without joining a hand-maintained case list.
+[`resilience-conformance.ts`](../../scripts/resilience-conformance.ts) is a mandatory second phase, not an optional scenario set. It discovers journey recipes and rendered Component surfaces from the Catalogue DOM. Its checks cover journey structure and both-theme axe scans, keyboard order and exact Command copies, disclosures, nested controls, minimum targets, reflow at 390 pixels and 400% zoom, reduced motion, system-theme return, theme geometry, tuned local-font fallbacks, and focus across semantic surfaces and forced colours. The structural class detectors include unrelated synthetic violations, so a future sibling must fail without joining a hand-maintained case list.
 
-This phase covers static Catalogue surfaces and the declared Catalogue theme consumer. It does not replace consumer-level route testing, product navigation checks, or manual screen-reader acceptance. It uses the installed Chrome channel by default; `DISCERN_CHROME_PATH` selects a non-standard executable.
+This phase covers static Catalogue surfaces and the declared Catalogue theme consumer. Theme checks compare the consumer, control, sidebar, toolbar, and main geometry before and after a color-mode change. Font checks compare the intended webfonts with each available metric-adjusted local alias; the public stacks and alias descriptors have a source-level guard on hosts without those local faces. Review sheets still carry cross-browser glyph rasterization, text wrapping, and full-page visual review. The phase does not replace consumer-level route testing, product navigation checks, or manual screen-reader acceptance. It uses the installed Chrome channel by default; `DISCERN_CHROME_PATH` selects a non-standard executable.
 
 Run one test while iterating:
 
@@ -54,7 +54,7 @@ deno task conformance
 
 ## Suite audit ledger
 
-The accessibility-resilience audit on 2026-07-27 classified all 45 unit cases and judged every baseline class guard against the fresh-name test:
+The accessibility-resilience audit on 2026-07-27 classified all 46 unit cases and judged every baseline class guard against the fresh-name test:
 
 | Test file                      | Cases | Guard assessment                                                                                                                |
 | ------------------------------ | ----: | ------------------------------------------------------------------------------------------------------------------------------- |
@@ -63,7 +63,7 @@ The accessibility-resilience audit on 2026-07-27 classified all 45 unit cases an
 | `design_system_test.ts`        |    22 | Folder, token, runtime, and state vocabularies drive the class guards; semantic focus derives its surface-token set.            |
 | `docs_page_furniture_test.ts`  |     4 | Closed Task states and each composition's own definition are the authorities; feature-specific cases assert distinct contracts. |
 | `journey_resilience_test.tsx`  |     3 | Journey-marked recipes auto-enrol; malformed unrelated Procedure and Diagnostic markup proves the plaintext detector.           |
-| `release_test.ts`              |     6 | The publish allowlist, exported module graph, and package declarations provide the release populations.                         |
+| `release_test.ts`              |     7 | The publish allowlist, exported module graph, package declarations, and behavior opt-in authority provide the release populations. |
 | `serve_test.ts`                |     2 | The two cases pin distinct routing and deterministic-port contracts rather than a repeated class property.                      |
 
 No uncovered invariant or under-scoped guard remained after the journey and semantic-focus guards were added. The browser phase separately proves each generic rendered-DOM detector with a synthetic future sibling.

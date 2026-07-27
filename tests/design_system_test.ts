@@ -573,6 +573,26 @@ Deno.test("font and grain assets are independent, licensed, and integrity-mapped
     assert(fontPaths.some((path) => path.startsWith("licenses/")));
     assert(!fontPaths.includes("grain.css"));
     assert(!fontPaths.some((path) => path.startsWith("textures/")));
+    const fontCss = await Deno.readTextFile(join(fonts, "fonts.css"));
+    for (
+      const fragment of [
+        '--discern-font-display: "Crimson Pro", "Discern Crimson Fallback Iowan",',
+        '"Discern Crimson Fallback Georgia", "Iowan Old Style", Georgia, serif;',
+        '--discern-font-body: "Inter", "Discern Inter Fallback Helvetica",',
+        '"Discern Inter Fallback Arial", "Helvetica Neue", Arial, system-ui,',
+        '--discern-font-ui: "Inter", "Discern Inter Fallback Helvetica",',
+        '--discern-font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo,',
+      ]
+    ) {
+      assertStringIncludes(fontCss, fragment);
+    }
+    assertEquals([...fontCss.matchAll(/\bsize-adjust:/g)].length, 12);
+    assertEquals([...fontCss.matchAll(/\bascent-override:/g)].length, 12);
+    assertEquals([...fontCss.matchAll(/\bdescent-override:/g)].length, 12);
+    assertEquals(
+      [...fontCss.matchAll(/\bline-gap-override:\s*0%/g)].length,
+      12,
+    );
     for (
       const path of fontPaths.filter((candidate) =>
         candidate.endsWith(".woff2")

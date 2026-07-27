@@ -76,6 +76,9 @@ interface ReducedMotionResult {
 
 interface ThemeResult {
   readonly consumers: number;
+  readonly geometryChecks: number;
+  readonly fontFallbackChecks: number;
+  readonly maxFontWidthDeltaPercent: number;
   readonly failures: readonly string[];
   readonly futureProof: boolean;
 }
@@ -103,6 +106,9 @@ export interface ResilienceConformanceSummary {
   readonly containedOverflowRegions: number;
   readonly motionTargets: number;
   readonly themeConsumers: number;
+  readonly themeGeometryChecks: number;
+  readonly fontFallbackChecks: number;
+  readonly maxFontWidthDeltaPercent: number;
   readonly semanticFocusTargets: number;
 }
 
@@ -1096,6 +1102,7 @@ async function verifyThemeSystem(
     await page.evaluate(() => localStorage.clear());
     await page.reload({ waitUntil: "networkidle" });
     await page.locator("[data-discern-theme-consumer]").waitFor();
+    await page.evaluate(() => document.fonts.ready.then(() => undefined));
 
     const inspect = async (): Promise<{
       readonly consumers: number;
@@ -1143,6 +1150,38 @@ async function verifyThemeSystem(
 
     const initial = await inspect();
     const root = page.locator("[data-discern-theme-consumer]").first();
+    const geometry = async (): Promise<
+      Readonly<Record<string, readonly number[]>>
+    > =>
+      await page.evaluate(() => {
+        const targets = {
+          consumer: document.querySelector("[data-discern-theme-consumer]"),
+          control: document.querySelector(
+            "[data-discern-theme-consumer] [data-discern-mode]",
+          ),
+          sidebar: document.querySelector(".discern-catalogue-sidebar"),
+          toolbar: document.querySelector(".discern-catalogue-toolbar"),
+          main: document.querySelector("main"),
+        };
+        return Object.fromEntries(
+          Object.entries(targets).map(([name, node]) => {
+            if (!(node instanceof HTMLElement)) return [name, []];
+            const rect = node.getBoundingClientRect();
+            return [
+              name,
+              [
+                rect.x,
+                rect.y,
+                rect.width,
+                rect.height,
+                node.scrollWidth,
+                node.scrollHeight,
+              ],
+            ];
+          }),
+        );
+      });
+    const darkGeometry = await geometry();
     const initialMode = await root.getAttribute("data-discern-theme");
     if (initialMode !== "system") {
       failures.push(`Theme system: fresh consumer started in ${initialMode}`);
@@ -1158,6 +1197,28 @@ async function verifyThemeSystem(
     }
     const control = root.locator(controlSelector);
     await control.getByRole("radio", { name: "Light", exact: true }).check();
+    const lightGeometry = await geometry();
+    let geometryChecks = 0;
+    for (const [name, before] of Object.entries(darkGeometry)) {
+      const after = lightGeometry[name] ?? [];
+      if (before.length === 0 || after.length !== before.length) {
+        failures.push(`Theme geometry: missing ${name} measurement`);
+        continue;
+      }
+      for (let index = 0; index < before.length; index += 1) {
+        const darkValue = before[index];
+        const lightValue = after[index];
+        if (
+          darkValue === undefined || lightValue === undefined ||
+          Math.abs(darkValue - lightValue) > 0.25
+        ) {
+          failures.push(
+            `Theme geometry: ${name} metric ${index} moved from ${darkValue} to ${lightValue}`,
+          );
+        }
+        geometryChecks += 1;
+      }
+    }
     failures.push(
       ...(await inspect()).failures.map((failure) =>
         `Theme system: ${failure}`
@@ -1178,6 +1239,186 @@ async function verifyThemeSystem(
         "Theme system: System mode did not follow the operating-system scheme",
       );
     }
+
+    const fontGeometry = await page.evaluate(async () => {
+      const consumer = document.querySelector<HTMLElement>(
+        "[data-discern-theme-consumer]",
+      );
+      if (consumer === null) {
+        return {
+          checks: 0,
+          maxWidthDeltaPercent: 0,
+          failures: ["font role consumer is missing"],
+        };
+      }
+      const roleStacks = {
+        "--discern-font-display": [
+          '"Crimson Pro"',
+          '"Discern Crimson Fallback Iowan"',
+          '"Discern Crimson Fallback Georgia"',
+          "serif",
+        ],
+        "--discern-font-body": [
+          '"Inter"',
+          '"Discern Inter Fallback Helvetica"',
+          '"Discern Inter Fallback Arial"',
+          "sans-serif",
+        ],
+        "--discern-font-ui": [
+          '"Inter"',
+          '"Discern Inter Fallback Helvetica"',
+          '"Discern Inter Fallback Arial"',
+          "sans-serif",
+        ],
+        "--discern-font-mono": [
+          '"JetBrains Mono"',
+          "ui-monospace",
+          "monospace",
+        ],
+      } as const;
+      const current = getComputedStyle(consumer);
+      const currentFailures: string[] = [];
+      for (const [role, expected] of Object.entries(roleStacks)) {
+        const stack = current.getPropertyValue(role).trim();
+        let previous = -1;
+        for (const family of expected) {
+          const index = stack.indexOf(family);
+          if (index <= previous) {
+            currentFailures.push(
+              `${role} does not preserve ${expected.join(" → ")}`,
+            );
+            break;
+          }
+          previous = index;
+        }
+      }
+
+      const texts = [
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+        "Pack my box with five dozen liquor jugs. 0123456789",
+        "System Light Dark Continue Cancel Retry Complete",
+        "Deterministic interfaces guide reliable work",
+      ];
+      const cases = [
+        {
+          name: "Crimson/Iowan normal",
+          target: '"Crimson Pro"',
+          fallback: '"Discern Crimson Fallback Iowan"',
+          style: "normal",
+          weights: [400, 700],
+        },
+        {
+          name: "Crimson/Iowan italic",
+          target: '"Crimson Pro"',
+          fallback: '"Discern Crimson Fallback Iowan"',
+          style: "italic",
+          weights: [400, 700],
+        },
+        {
+          name: "Crimson/Georgia normal",
+          target: '"Crimson Pro"',
+          fallback: '"Discern Crimson Fallback Georgia"',
+          style: "normal",
+          weights: [400, 700],
+        },
+        {
+          name: "Crimson/Georgia italic",
+          target: '"Crimson Pro"',
+          fallback: '"Discern Crimson Fallback Georgia"',
+          style: "italic",
+          weights: [400, 700],
+        },
+        {
+          name: "Inter/Helvetica",
+          target: '"Inter"',
+          fallback: '"Discern Inter Fallback Helvetica"',
+          style: "normal",
+          weights: [400, 650],
+        },
+        {
+          name: "Inter/Arial",
+          target: '"Inter"',
+          fallback: '"Discern Inter Fallback Arial"',
+          style: "normal",
+          weights: [400, 650],
+        },
+        {
+          name: "JetBrains/terminal mono",
+          target: '"JetBrains Mono"',
+          fallback: 'ui-monospace, "SF Mono", Menlo, monospace',
+          style: "normal",
+          weights: [400, 600],
+        },
+      ] as const;
+      let checks = 0;
+      let maxWidthDeltaPercent = 0;
+      for (const candidate of cases) {
+        const loaded = await document.fonts.load(
+          `${candidate.style} ${
+            candidate.weights[0]
+          } 64px ${candidate.fallback}`,
+        );
+        if (
+          candidate.name !== "JetBrains/terminal mono" && loaded.length === 0
+        ) {
+          continue;
+        }
+        for (const weight of candidate.weights) {
+          for (const text of texts) {
+            const measure = (
+              family: string,
+            ): { readonly width: number; readonly height: number } => {
+              const probe = document.createElement("span");
+              probe.textContent = text;
+              Object.assign(probe.style, {
+                position: "absolute",
+                display: "inline-block",
+                whiteSpace: "nowrap",
+                fontFamily: family,
+                fontSize: "64px",
+                fontStyle: candidate.style,
+                fontWeight: String(weight),
+                lineHeight: "1.2",
+              });
+              consumer.append(probe);
+              const rect = probe.getBoundingClientRect();
+              probe.remove();
+              return { width: rect.width, height: rect.height };
+            };
+            const target = measure(candidate.target);
+            const fallback = measure(candidate.fallback);
+            const delta = Math.abs(
+              (target.width / fallback.width - 1) * 100,
+            );
+            maxWidthDeltaPercent = Math.max(
+              maxWidthDeltaPercent,
+              delta,
+            );
+            if (delta > 2.5) {
+              currentFailures.push(
+                `${candidate.name} width differs by ${
+                  delta.toFixed(2)
+                }% at ${weight}`,
+              );
+            }
+            if (Math.abs(target.height - fallback.height) > 0.25) {
+              currentFailures.push(
+                `${candidate.name} line box differs at ${weight}`,
+              );
+            }
+            checks += 1;
+          }
+        }
+      }
+      return {
+        checks,
+        maxWidthDeltaPercent,
+        failures: currentFailures,
+      };
+    });
+    failures.push(
+      ...fontGeometry.failures.map((failure) => `Font geometry: ${failure}`),
+    );
 
     const futureProof = await page.evaluate(() => {
       function failuresFor(consumer: HTMLElement): string[] {
@@ -1223,6 +1464,9 @@ async function verifyThemeSystem(
     }
     return {
       consumers: initial.consumers,
+      geometryChecks,
+      fontFallbackChecks: fontGeometry.checks,
+      maxFontWidthDeltaPercent: fontGeometry.maxWidthDeltaPercent,
       failures: initial.failures,
       futureProof,
     };
@@ -1467,6 +1711,9 @@ export async function runResilienceConformance(
       zoomedReflow.containedOverflow,
     motionTargets,
     themeConsumers: theme.consumers,
+    themeGeometryChecks: theme.geometryChecks,
+    fontFallbackChecks: theme.fontFallbackChecks,
+    maxFontWidthDeltaPercent: theme.maxFontWidthDeltaPercent,
     semanticFocusTargets: semanticFocus.targets,
   };
 }
