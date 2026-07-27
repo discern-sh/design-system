@@ -12,7 +12,7 @@ import {
   cataloguePurposes,
   componentGroups,
 } from "../src/types/component-meta.ts";
-import { compositionRecipes } from "./compositions.tsx";
+import { type CompositionRecipe, compositionRecipes } from "./compositions.tsx";
 import { packageVersion, registry } from "./generated/registry.ts";
 import type { RegistryEntry } from "./generated/registry.ts";
 
@@ -309,6 +309,28 @@ function ComponentPreview({ entry }: { readonly entry: RegistryEntry }) {
   );
 }
 
+function JourneyPreview({ recipe }: { readonly recipe: CompositionRecipe }) {
+  const { id, title, description, journey, Example } = recipe;
+  if (journey === undefined) return null;
+  const titleId = `journey-${id}-title`;
+  return (
+    <section
+      className="discern-catalogue-journey"
+      data-discern-journey={id}
+      data-discern-journey-stages={JSON.stringify(journey.stages)}
+      aria-labelledby={titleId}
+    >
+      <header>
+        <h2 id={titleId}>{title}</h2>
+        <p>{description}</p>
+      </header>
+      <div className="discern-catalogue-journey__canvas">
+        <Example />
+      </div>
+    </section>
+  );
+}
+
 function App() {
   useInitialFragmentTarget();
   const parameters = useMemo(
@@ -412,6 +434,11 @@ function App() {
         <p className="discern-catalogue-conformance__identity">
           @discern-sh/design-system v{packageVersion}
         </p>
+        {selectedComponent === null
+          ? compositionRecipes.map((recipe) => (
+            <JourneyPreview recipe={recipe} key={recipe.id} />
+          ))
+          : null}
         {components.map((entry) => (
           <ComponentPreview entry={entry} key={entry.meta.slug} />
         ))}
@@ -424,6 +451,9 @@ function App() {
       className="discern-catalogue-shell"
       data-discern-root
       data-discern-theme={theme}
+      data-discern-theme-consumer=""
+      data-discern-theme-control=".discern-catalogue-toolbar .discern-theme-switcher"
+      data-discern-theme-storage-key="discern-styleguide-theme"
       style={{ "--discern-accent-hue": accentHue } as CSSProperties}
     >
       <aside className="discern-catalogue-sidebar">
@@ -619,11 +649,15 @@ function App() {
           </header>
           <div className="discern-catalogue-recipes">
             {compositionRecipes.map((
-              { id, title, description, Example, source },
+              { id, title, description, journey, Example, source },
             ) => (
               <section
                 className="discern-catalogue-recipe"
                 id={`recipe-${id}`}
+                data-discern-journey={journey === undefined ? undefined : id}
+                data-discern-journey-stages={journey === undefined
+                  ? undefined
+                  : JSON.stringify(journey.stages)}
                 key={id}
               >
                 <header>

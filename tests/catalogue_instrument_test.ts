@@ -284,6 +284,7 @@ Deno.test("Catalogue version and composition source share their authorities", as
       "next-action",
       "failure-triage",
       "handoff-receipt",
+      "survey-artifacts",
     ],
   );
   for (const recipe of compositionRecipes) {
