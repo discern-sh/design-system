@@ -123,9 +123,8 @@ interface FocusIndicatorStyle {
   readonly outlineStyle: string;
   readonly outlineWidth: string;
   readonly boxShadow: string;
-  readonly boxShadowColors: readonly string[];
-  readonly boxShadowGeometries:
-    | readonly FocusShadowGeometry[]
+  readonly boxShadowLayers:
+    | readonly FocusShadowLayer[]
     | undefined;
   readonly nativeLabelAssociated: boolean;
   readonly paintKnown: boolean;
@@ -147,6 +146,10 @@ interface FocusShadowGeometry {
   readonly y: number;
 }
 
+interface FocusShadowLayer extends FocusShadowGeometry {
+  readonly color: string;
+}
+
 interface FocusFixtureOracle {
   readonly authoredProxy: boolean;
   readonly candidateHeight: number;
@@ -166,6 +169,7 @@ interface FocusFixtureOracle {
   readonly parentEdgesLocal: boolean;
   readonly semanticallyAssociated: boolean;
   readonly shadowGeometry: FocusShadowGeometry | undefined;
+  readonly shadowLayers: readonly FocusShadowLayer[] | undefined;
   readonly targetHeight: number;
   readonly targetWidth: number;
   readonly underlinePresent: boolean;
@@ -376,7 +380,9 @@ function computedPixelLength(value: string): number | undefined {
   return Number.isFinite(length) ? length : undefined;
 }
 
-function computedShadowLayers(value: string): readonly string[] | undefined {
+function computedShadowLayerSources(
+  value: string,
+): readonly string[] | undefined {
   if (value === "none") return [];
   const layers: string[] = [];
   let depth = 0;
@@ -402,14 +408,15 @@ function computedShadowLayers(value: string): readonly string[] | undefined {
   return layers;
 }
 
-function computedShadowGeometries(
+function computedShadowLayers(
   value: string,
-): readonly FocusShadowGeometry[] | undefined {
-  const layers = computedShadowLayers(value);
-  if (layers === undefined) return undefined;
+  colors: readonly string[],
+): readonly FocusShadowLayer[] | undefined {
+  const layers = computedShadowLayerSources(value);
+  if (layers === undefined || layers.length !== colors.length) return undefined;
   const colorPattern = /(?:rgba?|hsla?|oklab|oklch|color)\([^)]+\)/gi;
-  const geometries: FocusShadowGeometry[] = [];
-  for (const layer of layers) {
+  const parsed: FocusShadowLayer[] = [];
+  for (const [index, layer] of layers.entries()) {
     const tokens = layer.replace(colorPattern, " ").trim().split(/\s+/);
     const insetTokens = tokens.filter((token) => token === "inset");
     if (insetTokens.length > 1) return undefined;
@@ -421,15 +428,18 @@ function computedShadowGeometries(
       lengths.push(length);
     }
     if (lengths.length < 2 || lengths.length > 4) return undefined;
-    geometries.push({
+    const color = colors[index];
+    if (color === undefined) return undefined;
+    parsed.push({
       blur: lengths[2] ?? 0,
+      color,
       inset: insetTokens.length === 1,
       spread: lengths[3] ?? 0,
       x: lengths[0] ?? 0,
       y: lengths[1] ?? 0,
     });
   }
-  return geometries;
+  return parsed;
 }
 
 function outlineGeometryChanged(
@@ -457,28 +467,103 @@ function outlineGeometryChanged(
   ) >= MINIMUM_FOCUS_GEOMETRY_CHANGE;
 }
 
-function shadowGeometryChanged(
+function shadowGeometryDistance(
+  previous: FocusShadowGeometry,
+  current: FocusShadowGeometry,
+): number {
+  return Math.max(
+    Math.abs(current.x - previous.x),
+    Math.abs(current.y - previous.y),
+    Math.abs(current.blur - previous.blur),
+    Math.abs(current.spread - previous.spread),
+  );
+}
+
+function changedShadowLayers(
   previous: FocusIndicatorStyle | undefined,
   current: FocusIndicatorStyle,
-): boolean {
-  const currentGeometries = current.boxShadowGeometries;
-  if (currentGeometries === undefined || currentGeometries.length === 0) {
+  previousInsideBackground: string,
+  currentInsideBackground: string,
+  surfaceColor: string,
+): readonly FocusShadowLayer[] {
+  const currentLayers = current.boxShadowLayers;
+  if (currentLayers === undefined || currentLayers.length === 0) return [];
+  if (previous === undefined) return currentLayers;
+  const previousLayers = previous.boxShadowLayers;
+  if (previousLayers === undefined) return [];
+
+  const previousMatches = new Array<number | undefined>(
+    previousLayers.length,
+  ).fill(undefined);
+  // An admissible edge stays below both evidence thresholds. Finding a
+  // complete maximum matching proves that order alone explains every current
+  // layer; identity and distance order only choose a stable witness.
+  const candidates = (currentIndex: number): readonly number[] => {
+    const currentLayer = currentLayers[currentIndex];
+    if (currentLayer === undefined) return [];
+    return previousLayers.flatMap((previousLayer, previousIndex) => {
+      const distance = shadowGeometryDistance(previousLayer, currentLayer);
+      const paintContrast = paintAppearanceContrast(
+        previousLayer.color,
+        currentLayer.color,
+        previousLayer.inset ? previousInsideBackground : surfaceColor,
+        currentLayer.inset ? currentInsideBackground : surfaceColor,
+        previous,
+        current,
+      );
+      if (
+        distance >= MINIMUM_FOCUS_GEOMETRY_CHANGE ||
+        paintContrast >= 3
+      ) {
+        return [];
+      }
+      const identityRank = previousLayer.color === currentLayer.color &&
+          previousLayer.inset === currentLayer.inset
+        ? 0
+        : previousLayer.inset === currentLayer.inset
+        ? 1
+        : previousLayer.color === currentLayer.color
+        ? 2
+        : 3;
+      return [{ distance, identityRank, previousIndex }];
+    }).toSorted((left, right) =>
+      left.identityRank - right.identityRank ||
+      left.distance - right.distance ||
+      left.previousIndex - right.previousIndex
+    ).map(({ previousIndex }) => previousIndex);
+  };
+  const match = (
+    currentIndex: number,
+    visitedPrevious: Set<number>,
+  ): boolean => {
+    for (const previousIndex of candidates(currentIndex)) {
+      if (visitedPrevious.has(previousIndex)) continue;
+      visitedPrevious.add(previousIndex);
+      const occupiedBy = previousMatches[previousIndex];
+      if (
+        occupiedBy === undefined ||
+        match(occupiedBy, visitedPrevious)
+      ) {
+        previousMatches[previousIndex] = currentIndex;
+        return true;
+      }
+    }
     return false;
+  };
+
+  for (
+    let currentIndex = 0;
+    currentIndex < currentLayers.length;
+    currentIndex += 1
+  ) {
+    match(currentIndex, new Set());
   }
-  if (previous === undefined) return true;
-  const previousGeometries = previous.boxShadowGeometries;
-  if (previousGeometries === undefined) return false;
-  if (currentGeometries.length > previousGeometries.length) return true;
-  return currentGeometries.some((geometry, index) => {
-    const prior = previousGeometries[index];
-    if (prior === undefined) return true;
-    return Math.max(
-      Math.abs(geometry.x - prior.x),
-      Math.abs(geometry.y - prior.y),
-      Math.abs(geometry.blur - prior.blur),
-      Math.abs(geometry.spread - prior.spread),
-    ) >= MINIMUM_FOCUS_GEOMETRY_CHANGE;
-  });
+  const matchedCurrent = new Set(
+    previousMatches.filter((index): index is number => index !== undefined),
+  );
+  return currentLayers.filter((_, currentIndex) =>
+    !matchedCurrent.has(currentIndex)
+  );
 }
 
 function underlineGeometryChanged(
@@ -579,43 +664,20 @@ function focusIndicatorContrast(
         effectiveOpacity: current.effectiveOpacity,
       });
     }
-    if (
-      current.boxShadow !== "none" &&
-      (
-        shadowGeometryChanged(previous, current) ||
-        (
-          previous !== undefined &&
-          (
-            opacityOrVisibilityChanged ||
-            current.boxShadowColors.some((color, colorIndex) =>
-              color !== previous.boxShadowColors[colorIndex]
-            )
-          ) &&
-          current.boxShadowColors.some((color, colorIndex) =>
-            previous !== undefined &&
-            paintAppearanceContrast(
-                previous.boxShadowColors[colorIndex] ?? color,
-                color,
-                previous.boxShadow.includes("inset")
-                  ? previousInsideBackground
-                  : surfaceColor,
-                current.boxShadow.includes("inset")
-                  ? insideBackground
-                  : surfaceColor,
-                previous,
-                current,
-              ) >= 3
-          )
-        )
-      )
-    ) {
-      const background = current.boxShadow.includes("inset")
-        ? insideBackground
-        : surfaceColor;
+    const shadowChanges = current.boxShadow === "none"
+      ? []
+      : changedShadowLayers(
+        previous,
+        current,
+        previousInsideBackground,
+        insideBackground,
+        surfaceColor,
+      );
+    if (shadowChanges.length > 0) {
       indicators.push(
-        ...current.boxShadowColors.map((color) => ({
-          color,
-          background,
+        ...shadowChanges.map((layer) => ({
+          color: layer.color,
+          background: layer.inset ? insideBackground : surfaceColor,
           effectiveOpacity: current.effectiveOpacity,
         })),
       );
@@ -861,7 +923,10 @@ async function focusStyles(target: Locator): Promise<FocusIndicatorStyle[]> {
   });
   return styles.map((style) => ({
     ...style,
-    boxShadowGeometries: computedShadowGeometries(style.boxShadow),
+    boxShadowLayers: computedShadowLayers(
+      style.boxShadow,
+      style.boxShadowColors,
+    ),
   }));
 }
 
@@ -1027,22 +1092,52 @@ async function focusFixtureOracle(
           Math.abs(current.bottom - targetRect.bottom),
         ) <= controlScale * parentEdgeFactor;
     const shadowColorPattern = /(?:rgba?|hsla?|oklab|oklch|color)\([^)]+\)/g;
-    const shadowColors = (style.boxShadow.match(shadowColorPattern) ?? [])
-      .map(pixelColor);
     const shadowProof = kind.includes("shadow");
     const underlineProof = kind.includes("underline");
-    const shadowLengths = style.boxShadow === "none"
-      ? []
-      : (style.boxShadow.replace(shadowColorPattern, "").match(
+    const shadowLayerSources: string[] | undefined = (() => {
+      if (style.boxShadow === "none") return [];
+      const layers: string[] = [];
+      let depth = 0;
+      let start = 0;
+      for (
+        let position = 0;
+        position < style.boxShadow.length;
+        position += 1
+      ) {
+        const character = style.boxShadow[position];
+        if (character === "(") depth += 1;
+        else if (character === ")") {
+          depth -= 1;
+          if (depth < 0) return undefined;
+        } else if (character === "," && depth === 0) {
+          layers.push(style.boxShadow.slice(start, position).trim());
+          start = position + 1;
+        }
+      }
+      if (depth !== 0) return undefined;
+      layers.push(style.boxShadow.slice(start).trim());
+      return layers.some((layer) => layer === "") ? undefined : layers;
+    })();
+    const parsedShadowLayers = shadowLayerSources?.flatMap((layer) => {
+      const colors = layer.match(shadowColorPattern) ?? [];
+      const lengths = (layer.replace(shadowColorPattern, "").match(
         /[+-]?(?:\d+(?:\.\d+)?|\.\d+)px/g,
       ) ?? []).map(Number.parseFloat);
-    const shadowGeometry = shadowLengths.length < 2 ? undefined : {
-      blur: shadowLengths[2] ?? 0,
-      inset: style.boxShadow.split(/\s+/).includes("inset"),
-      spread: shadowLengths[3] ?? 0,
-      x: shadowLengths[0] ?? 0,
-      y: shadowLengths[1] ?? 0,
-    };
+      if (colors.length !== 1 || lengths.length < 2) return [];
+      return [{
+        blur: lengths[2] ?? 0,
+        color: pixelColor(colors[0] ?? "transparent"),
+        inset: layer.split(/\s+/).includes("inset"),
+        spread: lengths[3] ?? 0,
+        x: lengths[0] ?? 0,
+        y: lengths[1] ?? 0,
+      }];
+    });
+    const shadowLayers = parsedShadowLayers !== undefined &&
+        parsedShadowLayers.length === shadowLayerSources?.length
+      ? parsedShadowLayers
+      : undefined;
+    const shadowGeometry = shadowLayers?.[0];
     const underlinePresent = style.textDecorationLine.split(/\s+/).includes(
       "underline",
     );
@@ -1050,12 +1145,12 @@ async function focusFixtureOracle(
       style.textDecorationThickness,
     );
     const color = shadowProof
-      ? shadowColors[0] ?? "rgba(0, 0, 0, 0)"
+      ? shadowLayers?.[0]?.color ?? "rgba(0, 0, 0, 0)"
       : underlineProof
       ? pixelColor(style.textDecorationColor)
       : pixelColor(style.outlineColor);
     const paintPresent = shadowProof
-      ? style.boxShadow !== "none" && shadowColors.length > 0
+      ? style.boxShadow !== "none" && (shadowLayers?.length ?? 0) > 0
       : underlineProof
       ? underlinePresent &&
         underlineThickness >= 2
@@ -1080,6 +1175,7 @@ async function focusFixtureOracle(
       parentEdgesLocal,
       semanticallyAssociated,
       shadowGeometry,
+      shadowLayers,
       targetHeight: targetRect.height,
       targetWidth: targetRect.width,
       underlinePresent,
@@ -2752,6 +2848,8 @@ async function verifySemanticFocus(
     "subtle-outline-offset-geometry",
     "outline-style-only-geometry",
     "subtle-shadow-geometry",
+    "shadow-layer-reorder-geometry",
+    "shadow-duplicate-reorder-geometry",
     "shadow-inset-only-geometry",
     "subtle-underline-geometry",
   ] as const;
@@ -2765,6 +2863,7 @@ async function verifySemanticFocus(
     "meaningful-underline-color",
     "new-outline-geometry",
     "new-shadow-geometry",
+    "shadow-layer-insertion-geometry",
     "new-underline-geometry",
     "meaningful-outline-width-geometry",
     "meaningful-outline-offset-geometry",
@@ -2918,11 +3017,20 @@ async function verifySemanticFocus(
         if (
           [
             "subtle-shadow-geometry",
+            "shadow-layer-reorder-geometry",
+            "shadow-duplicate-reorder-geometry",
+            "shadow-layer-insertion-geometry",
             "shadow-inset-only-geometry",
             "meaningful-shadow-geometry",
           ].includes(kind)
         ) {
-          target.style.boxShadow = "0 0 0 3px var(--discern-color-ink)";
+          target.style.boxShadow = kind === "shadow-layer-reorder-geometry"
+            ? "0 0 0 3px var(--discern-color-ink), 0 0 0 6px rgb(0, 0, 0)"
+            : kind === "shadow-duplicate-reorder-geometry"
+            ? "0 0 0 3px var(--discern-color-ink), 0 0 0 6px var(--discern-color-ink)"
+            : kind === "shadow-layer-insertion-geometry"
+            ? "0 0 0 3px rgb(0, 0, 0)"
+            : "0 0 0 3px var(--discern-color-ink)";
         }
         if (
           [
@@ -3070,6 +3178,24 @@ async function verifySemanticFocus(
               `0 0 0 ${
                 kind === "subtle-shadow-geometry" ? "3.02px" : "5px"
               } ${paintColor}`,
+              "important",
+            );
+          } else if (kind === "shadow-layer-reorder-geometry") {
+            paint.style.setProperty(
+              "box-shadow",
+              "0 0 0 6px rgb(0, 0, 0), 0 0 0 3px var(--discern-color-ink)",
+              "important",
+            );
+          } else if (kind === "shadow-duplicate-reorder-geometry") {
+            paint.style.setProperty(
+              "box-shadow",
+              "0 0 0 6px var(--discern-color-ink), 0 0 0 3px var(--discern-color-ink)",
+              "important",
+            );
+          } else if (kind === "shadow-layer-insertion-geometry") {
+            paint.style.setProperty(
+              "box-shadow",
+              "0 0 0 3px rgb(0, 0, 0), 0 0 0 6px var(--discern-color-ink)",
               "important",
             );
           } else if (kind === "shadow-inset-only-geometry") {
@@ -3242,16 +3368,34 @@ async function verifySemanticFocus(
         );
       const beforeShadow = oracleBefore.shadowGeometry;
       const afterShadow = oracleAfter.shadowGeometry;
-      const shadowGeometryEvidence = afterShadow !== undefined &&
-        (
-          beforeShadow === undefined ||
-          Math.max(
-              Math.abs(afterShadow.x - beforeShadow.x),
-              Math.abs(afterShadow.y - beforeShadow.y),
-              Math.abs(afterShadow.blur - beforeShadow.blur),
-              Math.abs(afterShadow.spread - beforeShadow.spread),
-            ) >= 2
-        );
+      const beforeShadowLayers = oracleBefore.shadowLayers;
+      const afterShadowLayers = oracleAfter.shadowLayers;
+      const shadowLayerSignature = (layer: FocusShadowLayer): string =>
+        `${layer.color}|${layer.inset}|${layer.x}|${layer.y}|${layer.blur}|${layer.spread}`;
+      const shadowLayerMultisetEqual = beforeShadowLayers !== undefined &&
+        afterShadowLayers !== undefined &&
+        beforeShadowLayers.length === afterShadowLayers.length &&
+        beforeShadowLayers.map(shadowLayerSignature).toSorted().join("\n") ===
+          afterShadowLayers.map(shadowLayerSignature).toSorted().join("\n");
+      const shadowGeometryEvidence = [
+          "shadow-layer-reorder-geometry",
+          "shadow-duplicate-reorder-geometry",
+        ].includes(kind)
+        ? !shadowLayerMultisetEqual
+        : kind === "shadow-layer-insertion-geometry"
+        ? beforeShadowLayers !== undefined &&
+          afterShadowLayers !== undefined &&
+          afterShadowLayers.length > beforeShadowLayers.length
+        : afterShadow !== undefined &&
+          (
+            beforeShadow === undefined ||
+            Math.max(
+                Math.abs(afterShadow.x - beforeShadow.x),
+                Math.abs(afterShadow.y - beforeShadow.y),
+                Math.abs(afterShadow.blur - beforeShadow.blur),
+                Math.abs(afterShadow.spread - beforeShadow.spread),
+              ) >= 2
+          );
       const underlineGeometryEvidence = oracleAfter.underlinePresent &&
         (
           !oracleBefore.underlinePresent ||
@@ -3298,6 +3442,24 @@ async function verifySemanticFocus(
           !beforeShadow.inset &&
           afterShadow.inset &&
           near(beforeShadow.spread, afterShadow.spread)
+        : kind === "shadow-layer-reorder-geometry"
+        ? beforeShadowLayers !== undefined &&
+          afterShadowLayers !== undefined &&
+          shadowLayerMultisetEqual &&
+          beforeShadowLayers.map(shadowLayerSignature).join("\n") !==
+            afterShadowLayers.map(shadowLayerSignature).join("\n")
+        : kind === "shadow-duplicate-reorder-geometry"
+        ? beforeShadowLayers !== undefined &&
+          afterShadowLayers !== undefined &&
+          shadowLayerMultisetEqual &&
+          new Set(beforeShadowLayers.map(({ color }) => color)).size === 1 &&
+          beforeShadowLayers.map(shadowLayerSignature).join("\n") !==
+            afterShadowLayers.map(shadowLayerSignature).join("\n")
+        : kind === "shadow-layer-insertion-geometry"
+        ? beforeShadowLayers !== undefined &&
+          afterShadowLayers !== undefined &&
+          beforeShadowLayers.length === 1 &&
+          afterShadowLayers.length === 2
         : kind === "meaningful-shadow-geometry"
         ? beforeShadow !== undefined &&
           afterShadow !== undefined &&
