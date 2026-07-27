@@ -10,21 +10,25 @@ const completeResponse = `{
 const disclosure = {
   selector: "[data-example-raw-output] .discern-raw-output__summary",
 } as const;
-const collapsedState = {
-  selector: "[data-example-raw-output] .discern-raw-output__state--collapsed",
+const rawOutput = {
+  selector: "[data-example-raw-output]",
 } as const;
-const expandedState = {
-  selector: "[data-example-raw-output] .discern-raw-output__state--expanded",
+const content = {
+  selector: "[data-example-raw-output] .discern-raw-output__content",
 } as const;
 
 export const conformance = [{
-  name: "native disclosure labels its collapsed and expanded states",
+  name: "native disclosure toggles its content and open state",
   steps: [
-    { expect: "visible", target: collapsedState },
-    { expect: "hidden", target: expandedState },
+    { expect: "hidden", target: content },
     { action: "click", target: disclosure },
-    { expect: "hidden", target: collapsedState },
-    { expect: "visible", target: expandedState },
+    {
+      expect: "attribute",
+      target: rawOutput,
+      attribute: "open",
+      value: "",
+    },
+    { expect: "visible", target: content },
   ],
 }] satisfies readonly ConformanceScenario[];
 
