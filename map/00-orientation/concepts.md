@@ -14,13 +14,13 @@ The system turns **authored design sources into a deterministic CSS bundle a con
 - **Components** — 107 self-contained folders, each owning its CSS, implementation, examples, and Metadata, arranged in twelve Groups.
 - **The Runtime** — the emitted output set (`discern.css`, a Manifest, selection-scoped browser behavior when required, and any requested Optional Assets) that the Emitter writes into a consumer's build from a Selection.
 
-Everything between those blocks is generated: Codegen reads the Metadata and derives the Registry, the React export surface, and the Catalogue, so no surface can disagree with the authored sources. Consumers never take a stylesheet wholesale — they state a Selection, and the Emitter resolves it into exactly those bytes, identically on every run.
+Codegen reads the Metadata and derives the Registry and React export surface. The Catalogue build combines that Metadata with Component examples and public TypeScript declarations, keeping its states, selection snippets, and prop evidence tied to the authored sources. Consumers state a Selection, and the Emitter resolves it into the requested bytes identically on every run.
 
 ---
 
 ## How it works, end to end
 
-**Authoring.** A designer-developer edits Tokens in [`tokens.ts`](../../src/tokens/tokens.ts) or a Component folder under [`src/components/`](../../src/components/). Each Component's `*.meta.ts` declares its name, slug, Group, ordering, accessibility notes, and any selection-scoped browser behavior.
+**Authoring.** A designer-developer edits Tokens in [`tokens.ts`](../../src/tokens/tokens.ts) or a Component folder under [`src/components/`](../../src/components/). Each Component's `*.meta.ts` declares its name, slug, Group, ordering, purpose memberships, usage guidance, accessibility notes, and any selection-scoped browser behavior. Its examples module may add stable named Catalogue states.
 
 **Generation.** `deno task codegen` ([`generate.ts`](../../scripts/generate.ts)) walks the Metadata and writes the generated surfaces in [`src/generated/`](../../src/generated/): the Registry (component IDs, Groups, dependencies, owned classes), the React surface, base styles, and asset tables. Generated files are committed but never hand-edited; the quality gate regenerates them on every run.
 
