@@ -729,6 +729,35 @@ Deno.test("target font metrics authorize the exact live face population", async 
       ),
       ["font-face"],
     );
+    const importedFaceUrl = `data:text/css;charset=utf-8,${
+      encodeURIComponent(futureFaceCss)
+    }`;
+    for (
+      const importRule of [
+        `@import url("${importedFaceUrl}");`,
+        `@IMPORT url("${importedFaceUrl}");`,
+        `@\\69mport url("${importedFaceUrl}");`,
+        `/**/@import/**/url("${importedFaceUrl}")/**/;`,
+      ]
+    ) {
+      assertStringIncludes(
+        (await auditFontMetricCss(page, `${importRule}\n${fontCss}`)).failures
+          .join("\n"),
+        "font source has 1 @import rule",
+        `${importRule.slice(0, 24)} bypassed the self-contained font policy`,
+      );
+    }
+    assertEquals(
+      (
+        await auditFontMetricCss(
+          page,
+          `/* @import url("${importedFaceUrl}"); */
+.future-surface { content: "@import url('${importedFaceUrl}')"; }
+${fontCss}`,
+        )
+      ).failures,
+      [],
+    );
 
     for (
       const [family, source] of [

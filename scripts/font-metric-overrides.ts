@@ -462,11 +462,21 @@ export interface FontMetricSourcePolicyAudit {
 export function auditFontMetricSourcePolicy(
   css: string,
 ): FontMetricSourcePolicyAudit {
+  const atRuleNames = cssAtRuleNames(css).map((name) => name.toLowerCase());
   const fontFaceRules =
-    cssAtRuleNames(css).filter((name) => name.toLowerCase() === "font-face")
-      .length;
+    atRuleNames.filter((name) => name === "font-face").length;
+  const importRules = atRuleNames.filter((name) => name === "import").length;
   const parsedBlocks = cssAtRuleBlocks(css, "font-face");
   const failures = [...parsedBlocks.failures];
+  if (importRules > 0) {
+    failures.push(
+      `font source has ${importRules} @import ${
+        importRules === 1 ? "rule" : "rules"
+      }; inline ${
+        importRules === 1 ? "that rule" : "those rules"
+      } so the optional font asset stays self-contained and every live face enters the audit`,
+    );
+  }
   if (parsedBlocks.blocks.length !== fontFaceRules) {
     failures.push(
       `font source policy parsed ${parsedBlocks.blocks.length} of ${fontFaceRules} authored @font-face rules`,
