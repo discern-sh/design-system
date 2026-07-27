@@ -38,8 +38,7 @@
     box-shadow: 1px 1px 0 var(--discern-button-shadow);
   }
   .discern-button:focus-visible {
-    outline: 3px solid color-mix(in oklab, var(--discern-color-accent-500) 35%,
-      transparent);
+    outline: 3px solid var(--discern-color-accent-500);
     outline-offset: 3px;
   }
   .discern-button:disabled {

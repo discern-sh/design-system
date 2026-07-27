@@ -24,6 +24,10 @@
     color: inherit;
     font-weight: var(--discern-font-weight-strong);
   }
+  .discern-site-header__notice a:focus-visible {
+    outline: 2px solid var(--discern-color-accent-700);
+    outline-offset: 2px;
+  }
   .discern-site-header__inner {
     display: flex;
     align-items: center;

@@ -85,8 +85,388 @@ interface ThemeResult {
 
 interface SemanticFocusResult {
   readonly targets: number;
+  readonly roles: readonly string[];
   readonly failures: readonly string[];
   readonly futureProof: boolean;
+}
+
+interface FocusIndicatorStyle {
+  readonly backgroundColor: string;
+  readonly outlineColor: string;
+  readonly outlineOffset: string;
+  readonly outlineStyle: string;
+  readonly outlineWidth: string;
+  readonly boxShadow: string;
+  readonly boxShadowColors: readonly string[];
+  readonly textDecorationColor: string;
+  readonly textDecorationLine: string;
+  readonly textDecorationThickness: string;
+}
+
+interface ColorChannels {
+  readonly red: number;
+  readonly green: number;
+  readonly blue: number;
+  readonly alpha: number;
+}
+
+interface SemanticSurfaceToken {
+  readonly role: string;
+  readonly token: string;
+}
+
+interface SemanticFocusTarget {
+  readonly surface: number;
+  readonly element: number;
+  readonly role: string;
+  readonly surfaceColor: string;
+  readonly proofKind: string;
+}
+
+function computedColor(value: string): ColorChannels | undefined {
+  if (value === "transparent") {
+    return { red: 0, green: 0, blue: 0, alpha: 0 };
+  }
+  const match = value.match(/^rgba?\(([^)]+)\)$/);
+  if (match === null) return undefined;
+  const channels = (match[1] ?? "").match(/[\d.]+/g)?.map(Number) ?? [];
+  const red = channels[0];
+  const green = channels[1];
+  const blue = channels[2];
+  if (red === undefined || green === undefined || blue === undefined) {
+    return undefined;
+  }
+  return {
+    red,
+    green,
+    blue,
+    alpha: channels[3] ?? 1,
+  };
+}
+
+function contrastRatio(
+  foregroundValue: string,
+  backgroundValue: string,
+): number | undefined {
+  const foreground = computedColor(foregroundValue);
+  const background = computedColor(backgroundValue);
+  if (foreground === undefined || background === undefined) return undefined;
+  const composite = {
+    red: foreground.red * foreground.alpha +
+      background.red * (1 - foreground.alpha),
+    green: foreground.green * foreground.alpha +
+      background.green * (1 - foreground.alpha),
+    blue: foreground.blue * foreground.alpha +
+      background.blue * (1 - foreground.alpha),
+  };
+  const luminance = (
+    color: {
+      readonly red: number;
+      readonly green: number;
+      readonly blue: number;
+    },
+  ): number => {
+    const channels = [color.red, color.green, color.blue].map((channel) => {
+      const normalized = channel / 255;
+      return normalized <= 0.04045
+        ? normalized / 12.92
+        : ((normalized + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * (channels[0] ?? 0) +
+      0.7152 * (channels[1] ?? 0) +
+      0.0722 * (channels[2] ?? 0);
+  };
+  const foregroundLuminance = luminance(composite);
+  const backgroundLuminance = luminance(background);
+  return (Math.max(foregroundLuminance, backgroundLuminance) + 0.05) /
+    (Math.min(foregroundLuminance, backgroundLuminance) + 0.05);
+}
+
+function paintedBackground(
+  foregroundValue: string,
+  backgroundValue: string,
+): string {
+  const foreground = computedColor(foregroundValue);
+  const background = computedColor(backgroundValue);
+  if (foreground === undefined || background === undefined) {
+    return backgroundValue;
+  }
+  const red = foreground.red * foreground.alpha +
+    background.red * (1 - foreground.alpha);
+  const green = foreground.green * foreground.alpha +
+    background.green * (1 - foreground.alpha);
+  const blue = foreground.blue * foreground.alpha +
+    background.blue * (1 - foreground.alpha);
+  return `rgb(${red}, ${green}, ${blue})`;
+}
+
+function focusIndicatorContrast(
+  before: readonly FocusIndicatorStyle[],
+  after: readonly FocusIndicatorStyle[],
+  surfaceColor: string,
+): {
+  readonly colors: readonly string[];
+  readonly maxContrast: number;
+} {
+  const indicators: Array<
+    { readonly color: string; readonly background: string }
+  > = [];
+  for (let index = 0; index < after.length; index += 1) {
+    const current = after[index];
+    const previous = before[index];
+    if (current === undefined) continue;
+    const insideBackground = paintedBackground(
+      current.backgroundColor,
+      surfaceColor,
+    );
+    const outlineChanged = previous === undefined ||
+      current.outlineColor !== previous.outlineColor ||
+      current.outlineOffset !== previous.outlineOffset ||
+      current.outlineStyle !== previous.outlineStyle ||
+      current.outlineWidth !== previous.outlineWidth;
+    if (
+      outlineChanged && current.outlineStyle !== "none" &&
+      Number.parseFloat(current.outlineWidth) >= 2
+    ) {
+      indicators.push({
+        color: current.outlineColor,
+        background: Number.parseFloat(current.outlineOffset) < 0
+          ? insideBackground
+          : surfaceColor,
+      });
+    }
+    if (
+      current.boxShadow !== "none" &&
+      (previous === undefined || current.boxShadow !== previous.boxShadow)
+    ) {
+      const background = current.boxShadow.includes("inset")
+        ? insideBackground
+        : surfaceColor;
+      indicators.push(
+        ...current.boxShadowColors.map((color) => ({
+          color,
+          background,
+        })),
+      );
+    }
+    const underlineChanged = previous === undefined ||
+      current.textDecorationColor !== previous.textDecorationColor ||
+      current.textDecorationLine !== previous.textDecorationLine ||
+      current.textDecorationThickness !== previous.textDecorationThickness;
+    if (
+      underlineChanged &&
+      current.textDecorationLine.split(/\s+/).includes("underline")
+    ) {
+      indicators.push({
+        color: current.textDecorationColor,
+        background: insideBackground,
+      });
+    }
+  }
+  const contrasts = indicators.map(({ color, background }) =>
+    contrastRatio(color, background)
+  )
+    .filter((ratio): ratio is number => ratio !== undefined);
+  return {
+    colors: indicators.map(({ color }) => color),
+    maxContrast: contrasts.length === 0 ? 0 : Math.max(...contrasts),
+  };
+}
+
+async function focusStyles(target: Locator): Promise<FocusIndicatorStyle[]> {
+  return await target.evaluate((node) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1;
+    canvas.height = 1;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    const pixelColor = (value: string): string => {
+      if (value === "transparent") return "rgba(0, 0, 0, 0)";
+      if (/^rgba?\(/.test(value)) return value;
+      if (context === null) return value;
+      context.clearRect(0, 0, 1, 1);
+      context.fillStyle = "rgba(0, 0, 0, 0)";
+      context.fillStyle = value;
+      context.fillRect(0, 0, 1, 1);
+      const pixel = context.getImageData(0, 0, 1, 1).data;
+      return `rgba(${pixel[0]}, ${pixel[1]}, ${pixel[2]}, ${
+        (pixel[3] ?? 0) / 255
+      })`;
+    };
+    const candidates = [
+      node,
+      node.nextElementSibling,
+      node.parentElement,
+    ].filter((candidate): candidate is Element => candidate !== null).filter(
+      (candidate, index, all) => all.indexOf(candidate) === index,
+    );
+    return candidates.map((candidate) => {
+      const style = getComputedStyle(candidate);
+      return {
+        backgroundColor: pixelColor(style.backgroundColor),
+        outlineColor: pixelColor(style.outlineColor),
+        outlineOffset: style.outlineOffset,
+        outlineStyle: style.outlineStyle,
+        outlineWidth: style.outlineWidth,
+        boxShadow: style.boxShadow,
+        boxShadowColors: (
+          style.boxShadow.match(
+            /(?:rgba?|hsla?|oklab|oklch|color)\([^)]+\)/g,
+          ) ?? []
+        ).map(pixelColor),
+        textDecorationColor: pixelColor(style.textDecorationColor),
+        textDecorationLine: style.textDecorationLine,
+        textDecorationThickness: style.textDecorationThickness,
+      };
+    });
+  });
+}
+
+async function blurActiveElement(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  });
+}
+
+async function focusByKeyboard(page: Page, target: Locator): Promise<boolean> {
+  const marker = crypto.randomUUID();
+  await target.evaluate((node, marker) => {
+    node.setAttribute("data-discern-semantic-focus-target", marker);
+    const sentinel = document.createElement("span");
+    sentinel.dataset.discernSemanticFocusSentinel = "";
+    sentinel.tabIndex = 0;
+    node.before(sentinel);
+    sentinel.focus();
+  }, marker);
+  await page.keyboard.press("Tab");
+  const stableTarget = page.locator(
+    `[data-discern-semantic-focus-target="${marker}"]`,
+  );
+  return await stableTarget.evaluate((node) => {
+    const focused = document.activeElement === node;
+    const sentinel = node.previousElementSibling;
+    if (
+      sentinel?.matches("[data-discern-semantic-focus-sentinel]") === true
+    ) {
+      sentinel.remove();
+    }
+    node.removeAttribute("data-discern-semantic-focus-target");
+    return focused;
+  });
+}
+
+async function installSemanticRoleProbes(
+  page: Page,
+  surfaceTokens: readonly SemanticSurfaceToken[],
+): Promise<void> {
+  await page.evaluate(
+    ({ surfaceSelector, surfaceTokens }) => {
+      const host = document.querySelector<HTMLElement>(surfaceSelector);
+      if (host === null) return;
+      const probes = document.createElement("div");
+      probes.dataset.discernSemanticRoleProbes = "";
+      probes.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;padding:8px;";
+      for (const { role, token } of surfaceTokens) {
+        const surface = document.createElement("div");
+        surface.style.cssText =
+          `display:inline-block;padding:8px;background:var(${token});`;
+        const target = document.createElement("button");
+        target.type = "button";
+        target.className = "discern-copy-button";
+        target.dataset.discernFocusRoleProof = role;
+        target.textContent = `${role} focus proof`;
+        surface.append(target);
+        probes.append(surface);
+      }
+      host.append(probes);
+    },
+    { surfaceSelector: SURFACE_SELECTOR, surfaceTokens },
+  );
+}
+
+async function discoverSemanticTargets(
+  page: Page,
+  surfaceTokens: readonly SemanticSurfaceToken[],
+): Promise<SemanticFocusTarget[]> {
+  return await page.evaluate(
+    ({ surfaceSelector, focusableSelector, surfaceTokens }) => {
+      const root = document.querySelector<HTMLElement>("[data-discern-root]");
+      if (root === null) return [];
+      const canvas = document.createElement("canvas");
+      canvas.width = 1;
+      canvas.height = 1;
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      const pixelColor = (value: string): string => {
+        if (context === null) return value;
+        context.clearRect(0, 0, 1, 1);
+        context.fillStyle = "rgba(0, 0, 0, 0)";
+        context.fillStyle = value;
+        context.fillRect(0, 0, 1, 1);
+        const pixel = context.getImageData(0, 0, 1, 1).data;
+        return `rgba(${pixel[0]}, ${pixel[1]}, ${pixel[2]}, ${
+          (pixel[3] ?? 0) / 255
+        })`;
+      };
+      const tokenColors: Array<
+        { readonly role: string; readonly color: string }
+      > = [];
+      for (const { role, token } of surfaceTokens) {
+        const value = getComputedStyle(root).getPropertyValue(token).trim();
+        if (!value) continue;
+        const probe = document.createElement("span");
+        probe.style.color = value;
+        root.append(probe);
+        tokenColors.push({ role, color: getComputedStyle(probe).color });
+        probe.remove();
+      }
+      const surfaces = Array.from(document.querySelectorAll(surfaceSelector));
+      const result: Array<{
+        readonly surface: number;
+        readonly element: number;
+        readonly role: string;
+        readonly surfaceColor: string;
+        readonly proofKind: string;
+      }> = [];
+      for (let surface = 0; surface < surfaces.length; surface += 1) {
+        const container = surfaces[surface];
+        if (!(container instanceof HTMLElement)) continue;
+        const focusable = Array.from(
+          container.querySelectorAll<HTMLElement>(focusableSelector),
+        );
+        for (let element = 0; element < focusable.length; element += 1) {
+          const target = focusable[element];
+          if (target === undefined) continue;
+          let ancestor: HTMLElement | null = target;
+          while (ancestor !== null && container.contains(ancestor)) {
+            const surfaceColor = getComputedStyle(ancestor).backgroundColor;
+            const semantic = tokenColors.find(({ color }) =>
+              color === surfaceColor
+            );
+            if (semantic !== undefined) {
+              result.push({
+                surface,
+                element,
+                role: semantic.role,
+                surfaceColor: pixelColor(surfaceColor),
+                proofKind: target.dataset.discernFocusProof ??
+                  target.dataset.discernFocusRoleProof ?? "",
+              });
+              break;
+            }
+            if (ancestor === container) break;
+            ancestor = ancestor.parentElement;
+          }
+        }
+      }
+      return result;
+    },
+    {
+      surfaceSelector: SURFACE_SELECTOR,
+      focusableSelector: FOCUSABLE_SELECTOR,
+      surfaceTokens,
+    },
+  );
 }
 
 /** Measured populations exercised by the journey and resilience browser gate. */
@@ -110,6 +490,7 @@ export interface ResilienceConformanceSummary {
   readonly fontFallbackChecks: number;
   readonly maxFontWidthDeltaPercent: number;
   readonly semanticFocusTargets: number;
+  readonly semanticFocusRoles: readonly string[];
 }
 
 function conformanceUrl(origin: string, theme = "light"): string {
@@ -1480,168 +1861,217 @@ async function verifySemanticFocus(
   origin: string,
   failures: string[],
 ): Promise<SemanticFocusResult> {
-  const surfaceTokens = themeTokens.filter(({ name }) =>
-    name === "--discern-color-accent-100" || name.endsWith("-soft")
-  ).map(({ name }) => name);
+  const requiredRoles = ["accent", "success", "warning", "danger"] as const;
+  const surfaceTokens = themeTokens.flatMap(({ name }) => {
+    const role = requiredRoles.find((candidate) =>
+      name.includes(`-${candidate}-`)
+    );
+    if (
+      role === undefined ||
+      (role === "accent"
+        ? name !== "--discern-color-accent-100"
+        : name !== `--discern-color-${role}-soft`)
+    ) {
+      return [];
+    }
+    return [{ role, token: name }];
+  });
   let targets = 0;
   const currentFailures: string[] = [];
+  const coveredRoles = new Set<string>();
   for (const theme of ["light", "dark"] as const) {
     await loadPage(page, conformanceUrl(origin, theme));
-    const semanticTargets = await page.evaluate(
-      ({ surfaceSelector, focusableSelector, surfaceTokens }) => {
-        const root = document.querySelector<HTMLElement>("[data-discern-root]");
-        if (root === null) return [];
-        const colors = new Set(
-          surfaceTokens.map((token) =>
-            getComputedStyle(root).getPropertyValue(token).trim()
-          ).filter(Boolean).map((value) => {
-            const probe = document.createElement("span");
-            probe.style.color = value;
-            root.append(probe);
-            const color = getComputedStyle(probe).color;
-            probe.remove();
-            return color;
-          }),
-        );
-        const surfaces = Array.from(document.querySelectorAll(surfaceSelector));
-        const result: number[][] = [];
-        for (let surface = 0; surface < surfaces.length; surface += 1) {
-          const container = surfaces[surface];
-          if (!(container instanceof HTMLElement)) continue;
-          const focusable = Array.from(
-            container.querySelectorAll<HTMLElement>(focusableSelector),
-          );
-          for (let element = 0; element < focusable.length; element += 1) {
-            const target = focusable[element];
-            if (target === undefined) continue;
-            let ancestor: HTMLElement | null = target;
-            let semantic = false;
-            while (ancestor !== null && container.contains(ancestor)) {
-              if (colors.has(getComputedStyle(ancestor).backgroundColor)) {
-                semantic = true;
-                break;
-              }
-              if (ancestor === container) break;
-              ancestor = ancestor.parentElement;
-            }
-            if (semantic) result.push([surface, element]);
-          }
-        }
-        return result;
-      },
-      {
-        surfaceSelector: SURFACE_SELECTOR,
-        focusableSelector: FOCUSABLE_SELECTOR,
-        surfaceTokens,
-      },
-    );
+    await installSemanticRoleProbes(page, surfaceTokens);
+    const semanticTargets = await discoverSemanticTargets(page, surfaceTokens);
     const surfaces = page.locator(SURFACE_SELECTOR);
-    for (const [surfaceIndex, elementIndex] of semanticTargets) {
-      if (surfaceIndex === undefined || elementIndex === undefined) continue;
-      const target = surfaces.nth(surfaceIndex).locator(FOCUSABLE_SELECTOR).nth(
-        elementIndex,
+    const themeRoles = new Set<string>();
+    for (const semanticTarget of semanticTargets) {
+      const target = surfaces.nth(semanticTarget.surface).locator(
+        FOCUSABLE_SELECTOR,
+      ).nth(
+        semanticTarget.element,
       );
       if (!await target.isVisible() || !await target.isEnabled()) continue;
-      await target.focus();
-      const visible = await target.evaluate((node) => {
-        const candidates = [
-          node,
-          node.nextElementSibling,
-          node.parentElement,
-        ].filter((candidate): candidate is Element => candidate !== null);
-        return candidates.some((candidate) => {
-          const style = getComputedStyle(candidate);
-          return (style.outlineStyle !== "none" &&
-            Number.parseFloat(style.outlineWidth) >= 2) ||
-            style.boxShadow !== "none" ||
-            style.textDecorationLine.includes("underline");
-        });
-      });
-      if (!visible) {
+      await blurActiveElement(page);
+      const before = await focusStyles(target);
+      const keyboardFocused = await focusByKeyboard(page, target);
+      const after = await focusStyles(target);
+      const indicator = focusIndicatorContrast(
+        before,
+        after,
+        semanticTarget.surfaceColor,
+      );
+      if (!keyboardFocused) {
         currentFailures.push(
-          `${theme}: semantic-surface target has no visible focus treatment: ${await target
+          `${theme}/${semanticTarget.role}: semantic target could not receive keyboard focus: ${await target
             .evaluate((node) =>
               node.outerHTML.replace(/\s+/g, " ").slice(0, 180)
             )}`,
         );
+      } else if (indicator.maxContrast < 3) {
+        currentFailures.push(
+          `${theme}/${semanticTarget.role}: semantic-surface focus indicator contrasts ${
+            indicator.maxContrast.toFixed(2)
+          }:1 instead of 3:1: ${await target.evaluate((node) =>
+            node.outerHTML.replace(/\s+/g, " ").slice(0, 180)
+          )}`,
+        );
       }
+      themeRoles.add(semanticTarget.role);
+      coveredRoles.add(semanticTarget.role);
       targets += 1;
+    }
+    for (const role of requiredRoles) {
+      if (!themeRoles.has(role)) {
+        currentFailures.push(
+          `${theme}: no rendered focusable enrolled on the ${role} semantic surface`,
+        );
+      }
     }
   }
 
   await loadPage(page, conformanceUrl(origin));
-  const futureProof = await page.evaluate(
-    ({ surfaceSelector, focusableSelector, surfaceTokens }) => {
+  const synthetic = await page.evaluate(
+    ({ surfaceSelector, surfaceTokens }) => {
       const root = document.querySelector<HTMLElement>(
         "[data-discern-root]",
       );
       const container = document.querySelector<HTMLElement>(surfaceSelector);
-      if (root === null || container === null) return false;
-      const semanticColors = new Set(
-        surfaceTokens.map((token) =>
-          getComputedStyle(root).getPropertyValue(token).trim()
-        ).filter(Boolean).map((value) => {
-          const probe = document.createElement("span");
-          probe.style.color = value;
-          root.append(probe);
-          const color = getComputedStyle(probe).color;
-          probe.remove();
-          return color;
-        }),
-      );
-      const futureSurface = document.createElement("div");
-      futureSurface.style.backgroundColor = `var(${
-        surfaceTokens[0] ?? "--discern-color-warning-soft"
-      })`;
-      const futureTarget = document.createElement("button");
-      futureTarget.textContent = "Future semantic action";
-      futureTarget.style.cssText =
-        "background:transparent;border:0;box-shadow:none;" +
-        "outline:none;text-decoration:none;";
-      futureSurface.append(futureTarget);
-      container.append(futureSurface);
-      let ancestor: HTMLElement | null = futureTarget;
-      let enrolled = false;
-      while (ancestor !== null && container.contains(ancestor)) {
-        if (semanticColors.has(getComputedStyle(ancestor).backgroundColor)) {
-          enrolled = true;
-          break;
-        }
-        if (ancestor === container) break;
-        ancestor = ancestor.parentElement;
+      const accent = surfaceTokens.find(({ role }) => role === "accent");
+      if (root === null || container === null || accent === undefined) {
+        return { ready: false as const, surfaceColor: "" };
       }
-      futureTarget.focus();
-      const candidates = [
-        futureTarget,
-        futureTarget.nextElementSibling,
-        futureTarget.parentElement,
-      ].filter((candidate): candidate is Element => candidate !== null);
-      const visible = candidates.some((candidate) => {
-        const style = getComputedStyle(candidate);
-        return (style.outlineStyle !== "none" &&
-          Number.parseFloat(style.outlineWidth) >= 2) ||
-          style.boxShadow !== "none" ||
-          style.textDecorationLine.includes("underline");
-      });
-      const focusable = futureTarget.matches(focusableSelector);
-      futureSurface.remove();
-      return focusable && enrolled && !visible;
+      const futureSurface = document.createElement("div");
+      futureSurface.dataset.discernFocusProofSurface = "";
+      futureSurface.style.backgroundColor = `var(${accent.token})`;
+      for (const kind of ["transparent", "same-colour"] as const) {
+        const target = document.createElement("button");
+        target.dataset.discernFocusProof = kind;
+        target.textContent = `Future ${kind} action`;
+        target.style.cssText =
+          "background:transparent;border:0;box-shadow:none;" +
+          "outline:none;text-decoration:none;";
+        futureSurface.append(target);
+      }
+      container.append(futureSurface);
+      const canvas = document.createElement("canvas");
+      canvas.width = 1;
+      canvas.height = 1;
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      const value = getComputedStyle(futureSurface).backgroundColor;
+      if (context === null) {
+        return { ready: true as const, surfaceColor: value };
+      }
+      context.fillStyle = value;
+      context.fillRect(0, 0, 1, 1);
+      const pixel = context.getImageData(0, 0, 1, 1).data;
+      return {
+        ready: true as const,
+        surfaceColor: `rgba(${pixel[0]}, ${pixel[1]}, ${pixel[2]}, ${
+          (pixel[3] ?? 0) / 255
+        })`,
+      };
     },
     {
       surfaceSelector: SURFACE_SELECTOR,
-      focusableSelector: FOCUSABLE_SELECTOR,
       surfaceTokens,
     },
   );
+  const syntheticFailures: string[] = [];
+  if (!synthetic.ready) {
+    syntheticFailures.push("fixture could not be installed");
+  }
+  if (synthetic.ready) {
+    const discoveredProofs = new Set(
+      (await discoverSemanticTargets(page, surfaceTokens))
+        .map(({ proofKind }) => proofKind)
+        .filter(Boolean),
+    );
+    for (const kind of ["transparent", "same-colour"] as const) {
+      if (!discoveredProofs.has(kind)) {
+        syntheticFailures.push(`${kind} target did not auto-enrol`);
+      }
+    }
+    for (const kind of ["transparent", "same-colour"] as const) {
+      const target = page.locator(`[data-discern-focus-proof="${kind}"]`);
+      await blurActiveElement(page);
+      const before = await focusStyles(target);
+      const keyboardFocused = await focusByKeyboard(page, target);
+      const expectedColor = kind === "transparent"
+        ? "transparent"
+        : synthetic.surfaceColor;
+      const computedFixture = await target.evaluate(
+        async (node, { kind, surfaceColor }) => {
+          node.style.setProperty(
+            "outline-color",
+            kind === "transparent" ? "transparent" : surfaceColor,
+            "important",
+          );
+          node.style.setProperty("outline-style", "solid", "important");
+          node.style.setProperty("outline-width", "2px", "important");
+          node.style.setProperty("outline-offset", "2px", "important");
+          await new Promise<void>((resolve) => {
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+          });
+          const style = getComputedStyle(node);
+          return {
+            color: style.outlineColor,
+            style: style.outlineStyle,
+            width: style.outlineWidth,
+          };
+        },
+        { kind, surfaceColor: synthetic.surfaceColor },
+      );
+      const computedFixtureContrast = contrastRatio(
+        computedFixture.color,
+        synthetic.surfaceColor,
+      );
+      const after = await focusStyles(target);
+      const indicator = focusIndicatorContrast(
+        before,
+        after,
+        synthetic.surfaceColor,
+      );
+      if (
+        !keyboardFocused || indicator.colors.length === 0 ||
+        indicator.maxContrast >= 3 ||
+        computedFixture.style !== "solid" ||
+        Number.parseFloat(computedFixture.width) < 2 ||
+        computedFixtureContrast === undefined ||
+        computedFixtureContrast >= 3
+      ) {
+        syntheticFailures.push(
+          `${kind} target: keyboard=${keyboardFocused}, colours=${
+            indicator.colors.join(", ") || "none"
+          }, contrast=${
+            indicator.maxContrast.toFixed(2)
+          }:1, computed=${computedFixture.color} (${
+            computedFixtureContrast?.toFixed(2) ?? "unknown"
+          }:1), requested=${expectedColor}`,
+        );
+      }
+    }
+    await page.evaluate(() => {
+      document.querySelector("[data-discern-focus-proof-surface]")?.remove();
+    });
+  }
+  const futureProof = syntheticFailures.length === 0;
   failures.push(
     ...currentFailures.map((failure) => `Semantic focus: ${failure}`),
   );
   if (!futureProof) {
     failures.push(
-      "Semantic focus: synthetic future semantic target escaped the detector",
+      `Semantic focus: transparent or same-colour synthetic indicator escaped the contrast detector: ${
+        syntheticFailures.join("; ")
+      }`,
     );
   }
-  return { targets, failures: currentFailures, futureProof };
+  return {
+    targets,
+    roles: [...coveredRoles].toSorted(),
+    failures: currentFailures,
+    futureProof,
+  };
 }
 
 /** Run the journey and cross-component resilience predicates. */
@@ -1715,5 +2145,6 @@ export async function runResilienceConformance(
     fontFallbackChecks: theme.fontFallbackChecks,
     maxFontWidthDeltaPercent: theme.maxFontWidthDeltaPercent,
     semanticFocusTargets: semanticFocus.targets,
+    semanticFocusRoles: semanticFocus.roles,
   };
 }

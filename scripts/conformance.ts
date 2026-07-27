@@ -932,7 +932,8 @@ export async function runConformance(): Promise<void> {
         `${
           resilience.maxFontWidthDeltaPercent.toFixed(2)
         }% width residual), and ` +
-        `${resilience.semanticFocusTargets} semantic-surface focus targets.`,
+        `${resilience.semanticFocusTargets} semantic-surface focus targets ` +
+        `across ${resilience.semanticFocusRoles.join(", ")}.`,
     );
   } finally {
     await browser?.close();
