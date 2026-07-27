@@ -36,6 +36,7 @@
     opacity: 0;
   }
   .discern-theme-switcher__option span {
+    --discern-focus-proxy: 1;
     display: grid;
     place-items: center;
     min-block-size: 2rem;

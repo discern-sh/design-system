@@ -12,6 +12,7 @@ const NARROW_VIEWPORT = { width: 390, height: 844 } as const;
 const ZOOMED_REFLOW_VIEWPORT = { width: 320, height: 256 } as const;
 const MINIMUM_TARGET_SIZE = 24;
 const FOCUS_PROXY_SIZE_FACTOR = 4;
+const FOCUS_PROXY_DISTANCE_FACTOR = 2;
 const PARENT_FOCUS_EDGE_FACTOR = 2;
 const WCAG_TAGS = [
   "wcag2a",
@@ -112,6 +113,7 @@ interface FocusRect {
 }
 
 interface FocusIndicatorStyle {
+  readonly authoredProxy: boolean;
   readonly backgroundColor: string;
   readonly candidate: "target" | "next-sibling" | "parent";
   readonly effectiveOpacity: number;
@@ -122,6 +124,7 @@ interface FocusIndicatorStyle {
   readonly boxShadow: string;
   readonly boxShadowColors: readonly string[];
   readonly boxShadowGeometry: string;
+  readonly nativeLabelAssociated: boolean;
   readonly paintKnown: boolean;
   readonly rect: FocusRect;
   readonly semanticallyAssociated: boolean;
@@ -134,14 +137,17 @@ interface FocusIndicatorStyle {
 }
 
 interface FocusFixtureOracle {
+  readonly authoredProxy: boolean;
   readonly candidateHeight: number;
   readonly candidateWidth: number;
   readonly color: string;
   readonly controlSized: boolean;
+  readonly distanceLocal: boolean;
   readonly effectiveOpacity: number;
   readonly filterKnown: boolean;
   readonly filters: readonly string[];
   readonly geometricallyAssociated: boolean;
+  readonly nativeLabelAssociated: boolean;
   readonly paintPresent: boolean;
   readonly parentEdgesLocal: boolean;
   readonly semanticallyAssociated: boolean;
@@ -289,10 +295,9 @@ function focusProxyIsControlSized(style: FocusIndicatorStyle): boolean {
 
 function focusCandidateAssociated(style: FocusIndicatorStyle): boolean {
   if (style.candidate === "target") return true;
-  if (!style.semanticallyAssociated || !focusProxyIsControlSized(style)) {
-    return false;
-  }
+  if (!style.semanticallyAssociated) return false;
   if (style.candidate === "parent") {
+    if (!focusProxyIsControlSized(style)) return false;
     if (
       !rectContains(style.rect, style.targetRect) &&
       !rectsOverlap(style.rect, style.targetRect)
@@ -307,17 +312,20 @@ function focusCandidateAssociated(style: FocusIndicatorStyle): boolean {
       Math.abs(style.rect.bottom - style.targetRect.bottom),
     ) <= edgeLimit;
   }
-  if (rectsOverlap(style.rect, style.targetRect)) return true;
   const sharedParent = style.sharedParentRect;
+  const sharedParentContainsBoth = sharedParent !== undefined &&
+    rectContains(sharedParent, style.targetRect) &&
+    rectContains(sharedParent, style.rect);
   if (
-    sharedParent === undefined ||
-    !rectContains(sharedParent, style.targetRect) ||
-    !rectContains(sharedParent, style.rect)
-  ) {
-    return false;
-  }
+    style.authoredProxy &&
+    style.nativeLabelAssociated &&
+    sharedParentContainsBoth
+  ) return true;
+  if (!focusProxyIsControlSized(style)) return false;
+  if (rectsOverlap(style.rect, style.targetRect)) return true;
+  if (!sharedParentContainsBoth) return false;
   return rectGap(style.rect, style.targetRect) <=
-    Math.max(sharedParent.width, sharedParent.height);
+    focusControlScale(style) * FOCUS_PROXY_DISTANCE_FACTOR;
 }
 
 function paintAppearanceContrast(
@@ -613,24 +621,20 @@ async function focusStyles(target: Locator): Promise<FocusIndicatorStyle[]> {
         left.id !== "" &&
         references(right, "aria-owns").includes(left.id),
       ].some(Boolean);
-    const semanticAssociation = (
+    const nativeLabelAssociation = (
       candidate: Element,
       kind: Candidate["kind"],
     ): boolean => {
       if (kind === "target") return true;
       if (kind === "parent") {
-        return (
-          candidate instanceof HTMLLabelElement &&
-          candidate.control === node
-        ) || explicitlyRelated(node, candidate);
+        return candidate instanceof HTMLLabelElement &&
+          candidate.control === node;
       }
       const parent = node.parentElement;
-      return (
-        parent !== null &&
+      return parent !== null &&
         candidate.parentElement === parent &&
         parent instanceof HTMLLabelElement &&
-        parent.control === node
-      ) || explicitlyRelated(node, candidate);
+        parent.control === node;
     };
     const candidates: Candidate[] = [
       { element: node, kind: "target" as const },
@@ -665,7 +669,17 @@ async function focusStyles(target: Locator): Promise<FocusIndicatorStyle[]> {
         ancestor = ancestor.parentElement;
       }
       effectiveOpacity = Math.max(0, Math.min(1, effectiveOpacity));
+      const nativeLabelAssociated = nativeLabelAssociation(candidate, kind);
+      const authoredProxy = kind === "next-sibling" &&
+        style.getPropertyValue("--discern-focus-proxy").trim() === "1" &&
+        (
+          candidate.parentElement === null ||
+          getComputedStyle(candidate.parentElement).getPropertyValue(
+              "--discern-focus-proxy",
+            ).trim() !== "1"
+        );
       return {
+        authoredProxy,
         backgroundColor: pixelColor(style.backgroundColor),
         candidate: kind,
         effectiveOpacity,
@@ -680,9 +694,11 @@ async function focusStyles(target: Locator): Promise<FocusIndicatorStyle[]> {
           shadowColorPattern,
           "<color>",
         ),
+        nativeLabelAssociated,
         paintKnown,
         rect: rect(candidate),
-        semanticallyAssociated: semanticAssociation(candidate, kind),
+        semanticallyAssociated: nativeLabelAssociated ||
+          explicitlyRelated(node, candidate),
         sharedParentRect,
         targetRect,
         textDecorationColor: pixelColor(style.textDecorationColor),
@@ -705,12 +721,18 @@ async function focusFixtureOracle(
     kind,
     minimumTargetSize,
     parentEdgeFactor,
+    proxyDistanceFactor,
     proxySizeFactor,
   }) => {
     const siblingProxy = [
       "fixed-proxy",
       "generic-parent-proxy",
       "huge-sibling-proxy",
+      "unmarked-far-label-proxy",
+      "unmarked-wide-label-proxy",
+      "inherited-far-label-proxy",
+      "marked-far-label-proxy",
+      "marked-wide-label-proxy",
     ].includes(kind);
     const parentProxy = [
       "huge-parent-proxy",
@@ -790,17 +812,6 @@ async function focusFixtureOracle(
       current.top - targetRect.bottom,
     );
     const gap = Math.hypot(horizontal, vertical);
-    const geometricallyAssociated = candidate === node
-      ? true
-      : parentProxy
-      ? contains(current, targetRect) || overlaps
-      : overlaps ||
-        (
-          parent !== undefined &&
-          contains(parent, targetRect) &&
-          contains(parent, current) &&
-          gap <= Math.max(parent.width, parent.height)
-        );
     const references = (element: Element, attribute: string): string[] =>
       (element.getAttribute(attribute) ?? "").trim().split(/\s+/).filter(
         Boolean,
@@ -819,14 +830,13 @@ async function focusFixtureOracle(
         left.id !== "" &&
         references(right, "aria-owns").includes(left.id),
       ].some(Boolean);
-    const semanticallyAssociated = candidate === node ||
-      (
-        parentProxy
-          ? candidate instanceof HTMLLabelElement &&
-            candidate.control === node
-          : node.parentElement instanceof HTMLLabelElement &&
-            node.parentElement.control === node
-      ) ||
+    const nativeLabelAssociated = candidate === node ||
+      (parentProxy
+        ? candidate instanceof HTMLLabelElement &&
+          candidate.control === node
+        : node.parentElement instanceof HTMLLabelElement &&
+          node.parentElement.control === node);
+    const semanticallyAssociated = nativeLabelAssociated ||
       explicitlyRelated(node, candidate);
     const controlScale = Math.max(
       minimumTargetSize,
@@ -835,6 +845,28 @@ async function focusFixtureOracle(
     );
     const controlSized = current.width <= controlScale * proxySizeFactor &&
       current.height <= controlScale * proxySizeFactor;
+    const distanceLocal = gap <= controlScale * proxyDistanceFactor;
+    const authoredProxy = siblingProxy &&
+      style.getPropertyValue("--discern-focus-proxy").trim() === "1" &&
+      (
+        candidate.parentElement === null ||
+        getComputedStyle(candidate.parentElement).getPropertyValue(
+            "--discern-focus-proxy",
+          ).trim() !== "1"
+      );
+    const sharedLabelContains = nativeLabelAssociated &&
+      parent !== undefined &&
+      contains(parent, targetRect) &&
+      contains(parent, current);
+    const geometricallyAssociated = candidate === node
+      ? true
+      : parentProxy
+      ? contains(current, targetRect) || overlaps
+      : overlaps ||
+        (
+          sharedLabelContains &&
+          (authoredProxy || distanceLocal)
+        );
     const parentEdgesLocal = !parentProxy ||
       Math.max(
           Math.abs(current.left - targetRect.left),
@@ -860,14 +892,17 @@ async function focusFixtureOracle(
       : style.outlineStyle !== "none" &&
         Number.parseFloat(style.outlineWidth) >= 2;
     return {
+      authoredProxy,
       candidateHeight: current.height,
       candidateWidth: current.width,
       color,
       controlSized,
+      distanceLocal,
       effectiveOpacity: Math.max(0, Math.min(1, effectiveOpacity)),
       filterKnown,
       filters,
       geometricallyAssociated,
+      nativeLabelAssociated,
       paintPresent,
       parentEdgesLocal,
       semanticallyAssociated,
@@ -882,6 +917,7 @@ async function focusFixtureOracle(
     kind,
     minimumTargetSize: MINIMUM_TARGET_SIZE,
     parentEdgeFactor: PARENT_FOCUS_EDGE_FACTOR,
+    proxyDistanceFactor: FOCUS_PROXY_DISTANCE_FACTOR,
     proxySizeFactor: FOCUS_PROXY_SIZE_FACTOR,
   });
 }
@@ -2529,6 +2565,9 @@ async function verifySemanticFocus(
     "huge-parent-proxy",
     "edge-parent-proxy",
     "huge-sibling-proxy",
+    "unmarked-far-label-proxy",
+    "unmarked-wide-label-proxy",
+    "inherited-far-label-proxy",
     "subtle-outline-color",
     "subtle-shadow-color",
     "subtle-underline-color",
@@ -2536,6 +2575,8 @@ async function verifySemanticFocus(
   const positiveProofKinds = [
     "revealed-indicator",
     "local-parent-proxy",
+    "marked-far-label-proxy",
+    "marked-wide-label-proxy",
     "meaningful-outline-color",
     "meaningful-shadow-color",
     "meaningful-underline-color",
@@ -2561,6 +2602,11 @@ async function verifySemanticFocus(
           "fixed-proxy",
           "generic-parent-proxy",
           "huge-sibling-proxy",
+          "unmarked-far-label-proxy",
+          "unmarked-wide-label-proxy",
+          "inherited-far-label-proxy",
+          "marked-far-label-proxy",
+          "marked-wide-label-proxy",
         ].includes(kind);
         const parentProxy = [
           "huge-parent-proxy",
@@ -2570,6 +2616,11 @@ async function verifySemanticFocus(
         const labelWrapper = [
           "fixed-proxy",
           "huge-sibling-proxy",
+          "unmarked-far-label-proxy",
+          "unmarked-wide-label-proxy",
+          "inherited-far-label-proxy",
+          "marked-far-label-proxy",
+          "marked-wide-label-proxy",
           "edge-parent-proxy",
           "local-parent-proxy",
         ].includes(kind);
@@ -2589,10 +2640,19 @@ async function verifySemanticFocus(
           : kind === "huge-sibling-proxy"
           ? "display:flex;align-items:flex-start;gap:10px;inline-size:1054px;" +
             "block-size:510px;justify-self:start;"
+          : kind.endsWith("-far-label-proxy")
+          ? "display:flex;align-items:flex-start;justify-content:space-between;" +
+            "inline-size:1054px;min-block-size:44px;justify-self:start;"
+          : kind.endsWith("-wide-label-proxy")
+          ? "display:inline-flex;align-items:flex-start;gap:10px;" +
+            "justify-self:start;"
           : kind === "generic-parent-proxy"
           ? "display:flex;justify-content:space-between;inline-size:100%;" +
             "min-block-size:44px;"
           : "display:inline-block;position:relative;justify-self:start;";
+        if (kind === "inherited-far-label-proxy") {
+          wrapper.style.setProperty("--discern-focus-proxy", "1");
+        }
         const target = labelWrapper
           ? document.createElement("input")
           : document.createElement("button");
@@ -2659,7 +2719,12 @@ async function verifySemanticFocus(
               "block-size:44px;"
             : kind === "huge-sibling-proxy"
             ? "display:block;inline-size:1000px;block-size:500px;"
+            : kind.endsWith("-wide-label-proxy")
+            ? "display:block;inline-size:200px;block-size:44px;"
             : "display:block;inline-size:44px;block-size:44px;";
+          if (kind.startsWith("marked-")) {
+            proxy.style.setProperty("--discern-focus-proxy", "1");
+          }
           wrapper.append(proxy);
         }
         if (parentProxy) wrapper.dataset.discernFocusProxy = kind;
@@ -2717,6 +2782,11 @@ async function verifySemanticFocus(
             "fixed-proxy",
             "generic-parent-proxy",
             "huge-sibling-proxy",
+            "unmarked-far-label-proxy",
+            "unmarked-wide-label-proxy",
+            "inherited-far-label-proxy",
+            "marked-far-label-proxy",
+            "marked-wide-label-proxy",
           ].includes(kind);
           const parentProxy = [
             "huge-parent-proxy",
@@ -2865,21 +2935,38 @@ async function verifySemanticFocus(
       const edgeParentProxy = kind === "edge-parent-proxy";
       const hugeSiblingProxy = kind === "huge-sibling-proxy";
       const localParentProxy = kind === "local-parent-proxy";
+      const unmarkedFarProxy = kind === "unmarked-far-label-proxy";
+      const unmarkedWideProxy = kind === "unmarked-wide-label-proxy";
+      const inheritedFarProxy = kind === "inherited-far-label-proxy";
+      const markedFarProxy = kind === "marked-far-label-proxy";
+      const markedWideProxy = kind === "marked-wide-label-proxy";
       const ambiguous = kind === "ambiguous-filter";
       const expectedAccepted = (positiveProofKinds as readonly string[])
         .includes(kind);
+      const acceptedAssociationEvidence = localParentProxy
+        ? oracleAfter.semanticallyAssociated &&
+          oracleAfter.geometricallyAssociated &&
+          oracleAfter.controlSized &&
+          oracleAfter.parentEdgesLocal
+        : markedFarProxy
+        ? oracleAfter.authoredProxy &&
+          oracleAfter.nativeLabelAssociated &&
+          oracleAfter.geometricallyAssociated &&
+          oracleAfter.controlSized &&
+          !oracleAfter.distanceLocal
+        : markedWideProxy
+        ? oracleAfter.authoredProxy &&
+          oracleAfter.nativeLabelAssociated &&
+          oracleAfter.geometricallyAssociated &&
+          !oracleAfter.controlSized &&
+          oracleAfter.distanceLocal
+        : true;
       const oracleSupportsExpectation = expectedAccepted
         ? computedFixtureContrast !== undefined &&
           computedFixtureContrast >= 3 &&
           appearanceContrast !== undefined &&
           appearanceContrast >= 3 &&
-          (!localParentProxy ||
-            (
-              oracleAfter.semanticallyAssociated &&
-              oracleAfter.geometricallyAssociated &&
-              oracleAfter.controlSized &&
-              oracleAfter.parentEdgesLocal
-            ))
+          acceptedAssociationEvidence
         : subtle
         ? computedFixtureContrast !== undefined &&
           computedFixtureContrast >= 3 &&
@@ -2894,7 +2981,9 @@ async function verifySemanticFocus(
         ? computedFixtureContrast !== undefined &&
           computedFixtureContrast >= 3 &&
           !oracleAfter.semanticallyAssociated &&
-          oracleAfter.geometricallyAssociated
+          !oracleAfter.geometricallyAssociated &&
+          oracleAfter.controlSized &&
+          !oracleAfter.distanceLocal
         : hugeParentProxy
         ? computedFixtureContrast !== undefined &&
           computedFixtureContrast >= 3 &&
@@ -2915,6 +3004,22 @@ async function verifySemanticFocus(
           oracleAfter.semanticallyAssociated &&
           oracleAfter.geometricallyAssociated &&
           !oracleAfter.controlSized
+        : unmarkedFarProxy || inheritedFarProxy
+        ? computedFixtureContrast !== undefined &&
+          computedFixtureContrast >= 3 &&
+          !oracleAfter.authoredProxy &&
+          oracleAfter.nativeLabelAssociated &&
+          !oracleAfter.geometricallyAssociated &&
+          oracleAfter.controlSized &&
+          !oracleAfter.distanceLocal
+        : unmarkedWideProxy
+        ? computedFixtureContrast !== undefined &&
+          computedFixtureContrast >= 3 &&
+          !oracleAfter.authoredProxy &&
+          oracleAfter.nativeLabelAssociated &&
+          oracleAfter.geometricallyAssociated &&
+          !oracleAfter.controlSized &&
+          oracleAfter.distanceLocal
         : ambiguous
         ? !oracleAfter.filterKnown &&
           oracleAfter.filters.some((filter) => filter.includes("url("))
@@ -2949,7 +3054,7 @@ async function verifySemanticFocus(
             appearanceContrast?.toFixed(2) ?? "unknown"
           }:1, filters=${
             oracleAfter.filters.join(", ") || "none"
-          }, semantic=${oracleAfter.semanticallyAssociated}, geometry=${oracleAfter.geometricallyAssociated}, sized=${oracleAfter.controlSized}, parent-edges=${oracleAfter.parentEdgesLocal}, candidate=${
+          }, semantic=${oracleAfter.semanticallyAssociated}, native-label=${oracleAfter.nativeLabelAssociated}, authored-proxy=${oracleAfter.authoredProxy}, geometry=${oracleAfter.geometricallyAssociated}, distance-local=${oracleAfter.distanceLocal}, sized=${oracleAfter.controlSized}, parent-edges=${oracleAfter.parentEdgesLocal}, candidate=${
             oracleAfter.candidateWidth.toFixed(1)
           }×${oracleAfter.candidateHeight.toFixed(1)}, target=${
             oracleAfter.targetWidth.toFixed(1)

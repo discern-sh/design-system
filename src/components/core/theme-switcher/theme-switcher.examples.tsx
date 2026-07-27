@@ -23,7 +23,15 @@ export default function ThemeSwitcherExamples() {
   const [mode, setMode] = useState<ThemeSwitcherMode>("system");
   return (
     <div className="discern-example-row">
-      <ThemeSwitcher mode={mode} onModeChange={setMode} />
+      <ThemeSwitcher
+        mode={mode}
+        onModeChange={setMode}
+        systemLabel={
+          <>
+            <strong>Use this device</strong> preference
+          </>
+        }
+      />
       <span>Lorem ipsum: the {mode} preference is selected.</span>
     </div>
   );

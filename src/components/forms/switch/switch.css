@@ -24,6 +24,7 @@
     font-size: var(--discern-font-size-xs);
   }
   .discern-switch__track {
+    --discern-focus-proxy: 1;
     display: flex;
     flex: none;
     align-items: center;

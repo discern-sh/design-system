@@ -20,6 +20,7 @@
     opacity: 0;
   }
   .discern-choice__control {
+    --discern-focus-proxy: 1;
     display: grid;
     flex: none;
     place-items: center;
