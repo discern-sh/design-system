@@ -723,6 +723,91 @@ Deno.test("target font metrics authorize the exact live face population", async 
     locallyShadowed.failures[0] ?? "",
     'local("Crimson Pro") has no exact metric authority',
   );
+
+  for (
+    const mutation of [
+      {
+        descriptor: "src",
+        css: fontCss.replace(
+          `src: url("${romanSource}")`,
+          `src: url("${romanSource}"); src: url("${futureSource}")`,
+        ),
+      },
+      {
+        descriptor: "font-family",
+        css: fontCss.replace(
+          `font-family: "Crimson Pro";`,
+          `font-family: "Crimson Pro"; font-family: "Future Family";`,
+        ),
+      },
+      {
+        descriptor: "font-style",
+        css: fontCss.replace(
+          `font-style: normal;`,
+          `font-style: normal; font-style: italic;`,
+        ),
+      },
+      {
+        descriptor: "font-weight",
+        css: fontCss.replace(
+          `font-weight: 200 900;`,
+          `font-weight: 200 900; font-weight: 400;`,
+        ),
+      },
+    ]
+  ) {
+    assertStringIncludes(
+      auditFontMetricOverrides(mutation.css).failures.join("\n"),
+      `duplicate ${mutation.descriptor}`,
+    );
+  }
+
+  for (
+    const variant of [
+      {
+        source: "./fonts/crimson-pro-uppercase.woff2",
+        face: `@FONT-FACE/**/ {
+  FONT-FAMILY/**/:/**/"Crimson Pro";
+  FONT-STYLE:/**/normal;
+  FONT-WEIGHT:/**/200/**/900;
+  SRC/**/:/**/url("./fonts/crimson-pro-uppercase.woff2") format("woff2");
+}`,
+      },
+      {
+        source: "./fonts/crimson-pro-escaped-family.woff2",
+        face: `@font-face {
+  font-family: "Crimson\\20 Pro";
+  font-style: normal;
+  font-weight: 200 900;
+  src: url("./fonts/crimson-pro-escaped-family.woff2") format("woff2");
+}`,
+      },
+      {
+        source: "./fonts/crimson-pro-escaped-keywords.woff2",
+        face: `@f\\6f nt-face {
+  f\\6f nt-family: "Crimson Pro";
+  font-style: normal;
+  font-weight: 200 900;
+  src: url("./fonts/crimson-pro-escaped-keywords.woff2") format("woff2");
+}`,
+      },
+      {
+        source: "./fonts/crimson-pro-/**/-literal.woff2",
+        face: `@font-face {
+  font-family: "Crimson Pro";
+  font-style: normal;
+  font-weight: 200 900;
+  src: url("./fonts/crimson-pro-/**/-literal.woff2") format("woff2");
+}`,
+      },
+    ]
+  ) {
+    const evidence = auditFontMetricOverrides(
+      `${fontCss}\n${variant.face}`,
+    ).failures.join("\n");
+    assertStringIncludes(evidence, variant.source);
+    assertStringIncludes(evidence, "no exact metric authority");
+  }
 });
 
 Deno.test("font metric audit enrolls future aliases and rejects malformed faces", async () => {

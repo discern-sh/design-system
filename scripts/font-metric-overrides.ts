@@ -19,6 +19,16 @@ interface FontSourceRecord {
   readonly value: string;
 }
 
+interface CssDeclaration {
+  readonly name: string;
+  readonly value: string;
+}
+
+interface ParsedFontFaces {
+  readonly faces: readonly FontFaceRecord[];
+  readonly failures: readonly string[];
+}
+
 interface TargetFontMetricAuthority {
   readonly family: string;
   readonly fallbackPrefix: string;
@@ -84,6 +94,16 @@ const TARGET_FONT_METRICS: readonly TargetFontMetricAuthority[] = [
 ] as const;
 
 const METRIC_TOLERANCE_PERCENT = 0.01;
+const AUDITED_FONT_DESCRIPTORS = new Set([
+  "font-family",
+  "font-style",
+  "font-weight",
+  "src",
+  "size-adjust",
+  "ascent-override",
+  "descent-override",
+  "line-gap-override",
+]);
 
 /** Deterministic source-level evidence for metric-adjusted local aliases. */
 export interface FontMetricOverrideAudit {
@@ -106,16 +126,6 @@ export interface FontMetricBrowserCase {
 export interface BundledFontMetricAsset {
   readonly source: string;
   readonly bytes: Uint8Array;
-}
-
-function descriptor(block: string, name: string): string | undefined {
-  return block.match(
-    new RegExp(`(?:^|;)\\s*${name}\\s*:\\s*([^;]+)`, "i"),
-  )?.[1]?.trim();
-}
-
-function unquote(value: string): string {
-  return value.replace(/^(["'])(.*)\1$/, "$2");
 }
 
 function cssEscapeEnd(value: string, start: number): number {
@@ -164,6 +174,233 @@ function decodeCssEscapes(value: string): string {
   return decoded;
 }
 
+function cssIdentifier(
+  value: string,
+  start: number,
+): { readonly end: number; readonly value: string } | undefined {
+  const first = value[start] ?? "";
+  if (
+    !/[-_a-z]/i.test(first) &&
+    first !== "\\" &&
+    (first.codePointAt(0) ?? 0) < 0x80
+  ) {
+    return undefined;
+  }
+  let position = start;
+  while (position < value.length) {
+    const character = value[position] ?? "";
+    if (character === "\\") {
+      position = cssEscapeEnd(value, position);
+      continue;
+    }
+    if (
+      /[-_a-z0-9]/i.test(character) ||
+      (character.codePointAt(0) ?? 0) >= 0x80
+    ) {
+      position += 1;
+      continue;
+    }
+    break;
+  }
+  return {
+    end: position,
+    value: decodeCssEscapes(value.slice(start, position)),
+  };
+}
+
+function skipCssString(value: string, start: number): number {
+  const quote = value[start];
+  let position = start + 1;
+  while (position < value.length) {
+    const character = value[position];
+    if (character === "\\") {
+      position = cssEscapeEnd(value, position);
+    } else {
+      position += 1;
+      if (character === quote) break;
+    }
+  }
+  return position;
+}
+
+function stripCssComments(
+  value: string,
+): { readonly css: string; readonly failures: readonly string[] } {
+  const chunks: string[] = [];
+  const failures: string[] = [];
+  let position = 0;
+  while (position < value.length) {
+    const character = value[position];
+    if (character === "'" || character === '"') {
+      const end = skipCssString(value, position);
+      chunks.push(value.slice(position, end));
+      position = end;
+      continue;
+    }
+    if (character === "\\") {
+      const end = cssEscapeEnd(value, position);
+      chunks.push(value.slice(position, end));
+      position = end;
+      continue;
+    }
+    if (character === "/" && value[position + 1] === "*") {
+      const commentEnd = value.indexOf("*/", position + 2);
+      if (commentEnd < 0) {
+        chunks.push(" ".repeat(value.length - position));
+        failures.push("font CSS has an unterminated comment");
+        break;
+      }
+      const end = commentEnd + 2;
+      chunks.push(" ".repeat(end - position));
+      position = end;
+      continue;
+    }
+    chunks.push(character ?? "");
+    position += 1;
+  }
+  return { css: chunks.join(""), failures };
+}
+
+function matchingBlockEnd(value: string, start: number): number | undefined {
+  let depth = 1;
+  let position = start + 1;
+  while (position < value.length) {
+    const character = value[position];
+    if (character === "'" || character === '"') {
+      position = skipCssString(value, position);
+      continue;
+    }
+    if (character === "\\") {
+      position = cssEscapeEnd(value, position);
+      continue;
+    }
+    if (character === "{") depth += 1;
+    else if (character === "}") {
+      depth -= 1;
+      if (depth === 0) return position;
+    }
+    position += 1;
+  }
+  return undefined;
+}
+
+function fontFaceBlocks(
+  css: string,
+): {
+  readonly blocks: readonly string[];
+  readonly failures: readonly string[];
+} {
+  const stripped = stripCssComments(css);
+  const blocks: string[] = [];
+  const failures = [...stripped.failures];
+  let position = 0;
+  while (position < stripped.css.length) {
+    const character = stripped.css[position];
+    if (character === "'" || character === '"') {
+      position = skipCssString(stripped.css, position);
+      continue;
+    }
+    if (character === "\\") {
+      position = cssEscapeEnd(stripped.css, position);
+      continue;
+    }
+    if (character !== "@") {
+      position += 1;
+      continue;
+    }
+    const name = cssIdentifier(stripped.css, position + 1);
+    if (name === undefined) {
+      position += 1;
+      continue;
+    }
+    position = name.end;
+    if (name.value.toLowerCase() !== "font-face") continue;
+    while (/\s/.test(stripped.css[position] ?? "")) position += 1;
+    if (stripped.css[position] !== "{") continue;
+    const end = matchingBlockEnd(stripped.css, position);
+    if (end === undefined) {
+      failures.push("@font-face has an unterminated declaration block");
+      break;
+    }
+    blocks.push(stripped.css.slice(position + 1, end));
+    position = end + 1;
+  }
+  return { blocks, failures };
+}
+
+function cssDeclarations(block: string): CssDeclaration[] {
+  const declarations: CssDeclaration[] = [];
+  let position = 0;
+  while (position < block.length) {
+    while (
+      position < block.length &&
+      (/\s/.test(block[position] ?? "") || block[position] === ";")
+    ) {
+      position += 1;
+    }
+    const property = cssIdentifier(block, position);
+    if (property === undefined) {
+      position += 1;
+      continue;
+    }
+    position = property.end;
+    while (/\s/.test(block[position] ?? "")) position += 1;
+    if (block[position] !== ":") {
+      while (position < block.length && block[position] !== ";") position += 1;
+      continue;
+    }
+    position += 1;
+    const valueStart = position;
+    let roundDepth = 0;
+    let squareDepth = 0;
+    let curlyDepth = 0;
+    while (position < block.length) {
+      const character = block[position];
+      if (character === "'" || character === '"') {
+        position = skipCssString(block, position);
+        continue;
+      }
+      if (character === "\\") {
+        position = cssEscapeEnd(block, position);
+        continue;
+      }
+      if (character === "(") roundDepth += 1;
+      else if (character === ")") roundDepth = Math.max(0, roundDepth - 1);
+      else if (character === "[") squareDepth += 1;
+      else if (character === "]") squareDepth = Math.max(0, squareDepth - 1);
+      else if (character === "{") curlyDepth += 1;
+      else if (character === "}") curlyDepth = Math.max(0, curlyDepth - 1);
+      else if (
+        character === ";" &&
+        roundDepth === 0 &&
+        squareDepth === 0 &&
+        curlyDepth === 0
+      ) {
+        break;
+      }
+      position += 1;
+    }
+    declarations.push({
+      name: property.value.toLowerCase(),
+      value: block.slice(valueStart, position).trim(),
+    });
+    if (block[position] === ";") position += 1;
+  }
+  return declarations;
+}
+
+function descriptor(
+  declarations: readonly CssDeclaration[],
+  name: string,
+): string | undefined {
+  return declarations.findLast((declaration) => declaration.name === name)
+    ?.value;
+}
+
+function descriptorText(value: string | undefined): string | undefined {
+  return value === undefined ? undefined : sourceFunctionValue(value);
+}
+
 function sourceFunctionValue(argument: string): string | undefined {
   const trimmed = argument.trim();
   const quote = trimmed[0];
@@ -179,13 +416,13 @@ function fontSources(value: string | undefined): readonly FontSourceRecord[] {
   const sources: FontSourceRecord[] = [];
   let position = 0;
   while (position < value.length) {
-    if (!/[-a-z]/i.test(value[position] ?? "")) {
+    const identifier = cssIdentifier(value, position);
+    if (identifier === undefined) {
       position += 1;
       continue;
     }
-    const nameStart = position;
-    while (/[-a-z]/i.test(value[position] ?? "")) position += 1;
-    const name = value.slice(nameStart, position).toLowerCase();
+    position = identifier.end;
+    const name = identifier.value.toLowerCase();
     while (/\s/.test(value[position] ?? "")) position += 1;
     if (value[position] !== "(") continue;
     position += 1;
@@ -235,23 +472,41 @@ function weightRange(value: string | undefined): WeightRange {
   };
 }
 
-function fontFaces(css: string): FontFaceRecord[] {
-  return [...css.matchAll(/@font-face\s*\{([^}]+)\}/g)].flatMap((match) => {
-    const block = match[1];
-    if (block === undefined) return [];
-    const family = descriptor(block, "font-family");
+function fontFaces(css: string): ParsedFontFaces {
+  const parsedBlocks = fontFaceBlocks(css);
+  const failures = [...parsedBlocks.failures];
+  const faces = parsedBlocks.blocks.flatMap((block) => {
+    const declarations = cssDeclarations(block);
+    const family = descriptorText(descriptor(declarations, "font-family"));
     if (family === undefined) return [];
+    for (const name of AUDITED_FONT_DESCRIPTORS) {
+      if (
+        declarations.filter((declaration) => declaration.name === name)
+          .length > 1
+      ) {
+        failures.push(`${family} @font-face has duplicate ${name} descriptor`);
+      }
+    }
     return [{
-      family: unquote(family),
-      style: (descriptor(block, "font-style") ?? "normal").toLowerCase(),
-      weight: weightRange(descriptor(block, "font-weight")),
-      sources: fontSources(descriptor(block, "src")),
-      sizeAdjust: percentage(descriptor(block, "size-adjust")),
-      ascentOverride: percentage(descriptor(block, "ascent-override")),
-      descentOverride: percentage(descriptor(block, "descent-override")),
-      lineGapOverride: percentage(descriptor(block, "line-gap-override")),
+      family,
+      style: (
+        descriptorText(descriptor(declarations, "font-style")) ?? "normal"
+      ).toLowerCase(),
+      weight: weightRange(descriptor(declarations, "font-weight")),
+      sources: fontSources(descriptor(declarations, "src")),
+      sizeAdjust: percentage(descriptor(declarations, "size-adjust")),
+      ascentOverride: percentage(
+        descriptor(declarations, "ascent-override"),
+      ),
+      descentOverride: percentage(
+        descriptor(declarations, "descent-override"),
+      ),
+      lineGapOverride: percentage(
+        descriptor(declarations, "line-gap-override"),
+      ),
     }];
   });
+  return { faces, failures };
 }
 
 function fontRoleAliases(css: string): string[] {
@@ -419,11 +674,12 @@ export function auditFontMetricOverrides(
   css: string,
 ): FontMetricOverrideAudit {
   const aliases = fontRoleAliases(css);
-  const faces = fontFaces(css);
+  const parsedFaces = fontFaces(css);
+  const faces = parsedFaces.faces;
   const aliasFaces = faces.filter(({ family }) =>
     family.includes(" Fallback ")
   );
-  const failures: string[] = [];
+  const failures = [...parsedFaces.failures];
 
   for (const authority of TARGET_FONT_METRICS) {
     const targetFaces = faces.filter(({ family }) =>
