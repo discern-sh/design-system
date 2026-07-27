@@ -1,0 +1,64 @@
+@layer discern.components {
+  .discern-branch-choice {
+    display: grid;
+    gap: var(--discern-space-3);
+    min-inline-size: 0;
+    color: var(--discern-color-ink);
+  }
+  .discern-branch-choice__title {
+    color: var(--discern-color-ink);
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+    font-size: var(--discern-font-size-sm);
+    font-weight: var(--discern-font-weight-strong);
+    line-height: var(--discern-leading-snug);
+  }
+  .discern-branch-choice__choices,
+  .discern-branch-choice__paths {
+    margin: 0;
+  }
+  .discern-branch-choice__choices {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    gap: var(--discern-space-3);
+    padding: 0;
+    list-style: none;
+  }
+  .discern-branch-choice__choice {
+    display: grid;
+    grid-template-rows: max-content 1fr;
+    gap: var(--discern-space-2);
+    min-inline-size: 0;
+    padding: var(--discern-space-3);
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-surface);
+  }
+  .discern-branch-choice__label {
+    color: var(--discern-color-ink-muted);
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+    font-size: var(--discern-font-size-xs);
+    font-weight: var(--discern-font-weight-strong);
+    line-height: var(--discern-leading-snug);
+  }
+  .discern-branch-choice__paths {
+    padding-inline-start: var(--discern-space-4);
+  }
+  .discern-branch-choice__path {
+    min-inline-size: 0;
+    color: var(--discern-color-ink);
+    font-family: var(--discern-font-body);
+    font-size: var(--discern-font-size-sm);
+    line-height: var(--discern-leading-body);
+  }
+  .discern-branch-choice__path::marker {
+    color: var(--discern-color-accent-700);
+    content: "→  ";
+  }
+  .discern-branch-choice__path a {
+    overflow-wrap: anywhere;
+    color: var(--discern-color-accent-700);
+    text-underline-offset: 0.16em;
+  }
+}
