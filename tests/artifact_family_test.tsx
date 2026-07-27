@@ -1,9 +1,9 @@
 import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
+  cssClassNames,
+  cssDecodedIdentifiers,
   cssIdentifiers,
-  cssQualifiedRuleSelectors,
-  cssSelectorClassNames,
 } from "../scripts/css-syntax.ts";
 import artifactCardMeta from "../src/components/workflow/artifact-card/artifact-card.meta.ts";
 import artifactTreeMeta from "../src/components/workflow/artifact-tree/artifact-tree.meta.ts";
@@ -12,7 +12,10 @@ import fileChangeMeta from "../src/components/workflow/file-change/file-change.m
 import ownershipBadgeMeta from "../src/components/workflow/ownership-badge/ownership-badge.meta.ts";
 import ruleMeta from "../src/components/workflow/rule/rule.meta.ts";
 import { componentRegistry } from "../src/generated/component-registry.ts";
-import type { ComponentRegistryEntry } from "../src/registry-types.ts";
+import {
+  type RuntimeCssSurface,
+  runtimeCssSurfaceRegistry,
+} from "../src/runtime.ts";
 import type { ArtifactTreeNode } from "../src/react.ts";
 import {
   ArtifactCard,
@@ -86,9 +89,11 @@ function prohibitedFileChangeSemanticTokens(
 }
 
 function foreignFileChangeStylesheetReferences(
-  entries: readonly ComponentRegistryEntry[],
+  surfaces: readonly RuntimeCssSurface[],
 ): readonly string[] {
-  const owner = entries.find(({ meta }) => meta.slug === "file-change");
+  const owner = surfaces.find(({ componentId }) =>
+    componentId === "file-change"
+  );
   if (owner === undefined) return ["file-change owner stylesheet is missing"];
   const ownedClasses = owner.ownedClasses.filter((name) =>
     name === "discern-file-change" ||
@@ -96,13 +101,12 @@ function foreignFileChangeStylesheetReferences(
     name.startsWith("discern-file-change--")
   );
   const owned = new Set(ownedClasses);
-  return entries.flatMap((entry) => {
-    if (entry.meta.slug === owner.meta.slug) return [];
-    const referencesOwner = cssQualifiedRuleSelectors(entry.css)
-      .flatMap(cssSelectorClassNames)
+  return surfaces.flatMap((surface) => {
+    if (surface.id === owner.id) return [];
+    const referencesOwner = cssDecodedIdentifiers(surface.css)
       .some((name) => owned.has(name as `discern-${string}`));
     return referencesOwner
-      ? [`${entry.meta.slug} references a FileChange-owned selector`]
+      ? [`${surface.id} references a FileChange-owned class`]
       : [];
   });
 }
@@ -433,7 +437,16 @@ Deno.test("every file disposition has its complete semantic token mapping", asyn
     [],
   );
   assertEquals(prohibitedFileChangeSemanticTokens(css), []);
-  assertEquals(foreignFileChangeStylesheetReferences(componentRegistry), []);
+  assertEquals(
+    foreignFileChangeStylesheetReferences(runtimeCssSurfaceRegistry),
+    [],
+  );
+  assertEquals(
+    runtimeCssSurfaceRegistry.flatMap(({ componentId }) =>
+      componentId === undefined ? [] : [componentId]
+    ),
+    componentRegistry.map(({ meta }) => meta.slug),
+  );
 
   const wrongPositiveState = `
     .discern-file-change__state {
@@ -495,31 +508,81 @@ Deno.test("every file disposition has its complete semantic token mapping", asyn
     );
   }
 
-  const foreignTemplate = componentRegistry.find(({ meta }) =>
-    meta.slug === "artifact-card"
+  const foreignTemplate = runtimeCssSurfaceRegistry.find(({ componentId }) =>
+    componentId === "artifact-card"
   );
   assert(foreignTemplate !== undefined);
   for (
     const selector of [
       ".discern-file-change",
       ".\\64 iscern-file-change",
+      '[class~="discern-file-change"]',
+      "@scope (.discern-file-change) { :scope",
     ]
   ) {
     const foreign = {
       ...foreignTemplate,
-      meta: {
-        ...foreignTemplate.meta,
-        name: "Future surface",
-        slug: "future-surface",
-      },
-      css: `${selector} { color: inherit; }\n`,
-    } satisfies ComponentRegistryEntry;
+      id: "component:future-surface",
+      componentId: "future-surface",
+      css: `${selector} { color: inherit; }${
+        selector.startsWith("@scope") ? " }" : ""
+      }\n`,
+    } satisfies RuntimeCssSurface;
     assertEquals(
-      foreignFileChangeStylesheetReferences([...componentRegistry, foreign]),
-      ["future-surface references a FileChange-owned selector"],
+      foreignFileChangeStylesheetReferences([
+        ...runtimeCssSurfaceRegistry,
+        foreign,
+      ]),
+      ["component:future-surface references a FileChange-owned class"],
       `${selector} escaped the registry-wide owner boundary`,
     );
   }
+  assertEquals(
+    cssClassNames(
+      "@scope (.\\64 iscern-file-change) { :scope { color: inherit; } }",
+    ),
+    ["discern-file-change"],
+  );
+
+  const ownerSurface = runtimeCssSurfaceRegistry.find(({ componentId }) =>
+    componentId === "file-change"
+  );
+  assert(ownerSurface !== undefined);
+  for (
+    const enrolled of runtimeCssSurfaceRegistry.filter(({ id }) =>
+      id !== ownerSurface.id
+    )
+  ) {
+    const mutated = runtimeCssSurfaceRegistry.map((surface) =>
+      surface.id === enrolled.id
+        ? {
+          ...surface,
+          css:
+            `${surface.css}\n[class~="discern-file-change"] { color: inherit; }\n`,
+        }
+        : surface
+    );
+    assertEquals(
+      foreignFileChangeStylesheetReferences(mutated),
+      [`${enrolled.id} references a FileChange-owned class`],
+      `${enrolled.id} escaped the emitted-surface owner boundary`,
+    );
+  }
+
+  const harmless = {
+    ...foreignTemplate,
+    id: "component:near-name",
+    componentId: "near-name",
+    css:
+      "/* discern-file-change */ .discern-file-change-extra { color: inherit; }",
+  } satisfies RuntimeCssSurface;
+  assertEquals(
+    foreignFileChangeStylesheetReferences([
+      ...runtimeCssSurfaceRegistry,
+      harmless,
+    ]),
+    [],
+  );
 });
 
 Deno.test("Artifact tree renders six nested directory levels and preserves the exact long path", () => {

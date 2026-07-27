@@ -4,6 +4,7 @@ import {
   componentGroups,
   type ComponentMeta,
 } from "../src/types/component-meta.ts";
+import { cssClassNames } from "./css-syntax.ts";
 
 const COMPONENT_ROOT = new URL("../src/components/", import.meta.url);
 const ASSET_ROOT = new URL("../assets/", import.meta.url);
@@ -79,13 +80,10 @@ async function componentSources(): Promise<ComponentSource[]> {
   );
 }
 
-function cssClassNames(source: string): `discern-${string}`[] {
-  return [
-    ...new Set(
-      [...source.matchAll(/\.((?:discern-)[_a-zA-Z0-9-]+)/g)]
-        .map((match) => match[1] as `discern-${string}`),
-    ),
-  ].toSorted();
+function discernClassNames(source: string): `discern-${string}`[] {
+  return cssClassNames(source).filter(
+    (name): name is `discern-${string}` => name.startsWith("discern-"),
+  );
 }
 
 function cssTokenNames(source: string): `--discern-${string}`[] {
@@ -151,7 +149,7 @@ async function generateComponentRegistry(): Promise<string> {
       )
     },
     behaviors: ${JSON.stringify(component.meta.behaviors ?? [])},
-    ownedClasses: ${JSON.stringify(cssClassNames(css))},
+    ownedClasses: ${JSON.stringify(discernClassNames(css))},
     publicTokenNames: ${JSON.stringify(cssTokenNames(css))},
   },`);
   }

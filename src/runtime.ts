@@ -87,6 +87,86 @@ function generateTokenCss(): string {
 }`;
 }
 
+/** One authored CSS surface that the runtime emitter can write. */
+export interface RuntimeCssSurface {
+  readonly id: string;
+  readonly kind:
+    | "layer-order"
+    | "tokens"
+    | "theme"
+    | "foundation"
+    | "utilities"
+    | "component"
+    | "asset";
+  readonly outputPath: string;
+  readonly css: string;
+  readonly componentId?: string;
+  readonly assetSelection?: RuntimeAssetSelection;
+  readonly ownedClasses: readonly `discern-${string}`[];
+}
+
+/**
+ * The complete authored CSS population available to runtime emission. Runtime
+ * selection and repository-wide ownership checks both derive from this list.
+ */
+export const runtimeCssSurfaceRegistry: readonly RuntimeCssSurface[] = [
+  {
+    id: "layer-order",
+    kind: "layer-order",
+    outputPath: "discern.css",
+    css: LAYER_ORDER,
+    ownedClasses: [],
+  },
+  {
+    id: "tokens",
+    kind: "tokens",
+    outputPath: "discern.css",
+    css: generateTokenCss(),
+    ownedClasses: [],
+  },
+  {
+    id: "theme:discern",
+    kind: "theme",
+    outputPath: "discern.css",
+    css: discernThemeCss,
+    ownedClasses: [],
+  },
+  {
+    id: "foundation",
+    kind: "foundation",
+    outputPath: "discern.css",
+    css: foundationCss,
+    ownedClasses: [],
+  },
+  {
+    id: "utilities",
+    kind: "utilities",
+    outputPath: "discern.css",
+    css: utilitiesCss,
+    ownedClasses: [],
+  },
+  ...componentRegistry.map((entry) => ({
+    id: `component:${entry.meta.slug}`,
+    kind: "component" as const,
+    outputPath: "discern.css",
+    css: entry.css,
+    componentId: entry.meta.slug,
+    ownedClasses: entry.ownedClasses,
+  })),
+  ...embeddedRuntimeAssets.flatMap((asset) =>
+    asset.encoding === "utf8" && asset.mediaType.startsWith("text/css")
+      ? [{
+        id: `asset:${asset.path}`,
+        kind: "asset" as const,
+        outputPath: asset.path,
+        css: asset.contents,
+        assetSelection: asset.selection,
+        ownedClasses: [],
+      }]
+      : []
+  ),
+];
+
 function canonicalIndex(id: string): number {
   return componentRegistry.findIndex((entry) => entry.meta.slug === id);
 }
@@ -229,14 +309,16 @@ export async function emitDesignSystemRuntime(
   await removeIfPresent(options.outputRoot);
   await mkdir(options.outputRoot, { recursive: true });
 
-  const css = [
-    LAYER_ORDER,
-    generateTokenCss(),
-    theme === "discern" ? discernThemeCss : "",
-    foundationCss,
-    utilitiesCss,
-    ...selection.entries.map((entry) => entry.css),
-  ].filter((section) => section.trim().length > 0)
+  const selectedComponentIds = new Set(
+    selection.entries.map((entry) => entry.meta.slug),
+  );
+  const css = runtimeCssSurfaceRegistry.filter((surface) => {
+    if (surface.kind === "asset") return false;
+    if (surface.kind === "theme") return theme === "discern";
+    return surface.componentId === undefined ||
+      selectedComponentIds.has(surface.componentId);
+  }).map((surface) => surface.css)
+    .filter((section) => section.trim().length > 0)
     .map((section) => section.trim()).join("\n\n") + "\n";
 
   const files: IntegrityFile[] = [

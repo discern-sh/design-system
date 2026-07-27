@@ -294,6 +294,26 @@ export function cssIdentifiers(source: string): readonly string[] {
   return identifiers;
 }
 
+/**
+ * Decoded identifier-shaped words from every non-comment part of a CSS
+ * source, including strings and at-rule preludes.
+ */
+export function cssDecodedIdentifiers(source: string): readonly string[] {
+  const decoded = decodeCssEscapes(stripCssComments(source).css);
+  const identifiers: string[] = [];
+  let position = 0;
+  while (position < decoded.length) {
+    const identifier = cssIdentifier(decoded, position);
+    if (identifier === undefined) {
+      position += 1;
+      continue;
+    }
+    identifiers.push(identifier.value);
+    position = identifier.end;
+  }
+  return identifiers;
+}
+
 function ruleBoundary(
   source: string,
   start: number,
@@ -333,12 +353,14 @@ function ruleBoundary(
   return undefined;
 }
 
-/** Qualified-rule selector preludes, including rules nested in at-rules. */
-export function cssQualifiedRuleSelectors(
-  source: string,
-): readonly string[] {
+interface CssRulePrelude {
+  readonly kind: "at-rule" | "qualified-rule";
+  readonly value: string;
+}
+
+function cssRulePreludes(source: string): readonly CssRulePrelude[] {
   const stripped = stripCssComments(source).css;
-  const selectors: string[] = [];
+  const preludes: CssRulePrelude[] = [];
   const walk = (start: number, end: number): void => {
     let position = start;
     while (position < end) {
@@ -349,18 +371,30 @@ export function cssQualifiedRuleSelectors(
         position = boundary.position + 1;
         continue;
       }
-      const prelude = stripped.slice(position, boundary.position).trim();
+      const value = stripped.slice(position, boundary.position).trim();
       const blockEnd = matchingCssBlockEnd(stripped, boundary.position);
       if (blockEnd === undefined || blockEnd > end) return;
-      if (!prelude.startsWith("@") && prelude !== "") {
-        selectors.push(prelude);
+      if (value !== "") {
+        preludes.push({
+          kind: value.startsWith("@") ? "at-rule" : "qualified-rule",
+          value,
+        });
       }
       walk(boundary.position + 1, blockEnd);
       position = blockEnd + 1;
     }
   };
   walk(0, stripped.length);
-  return selectors;
+  return preludes;
+}
+
+/** Qualified-rule selector preludes, including rules nested in at-rules. */
+export function cssQualifiedRuleSelectors(
+  source: string,
+): readonly string[] {
+  return cssRulePreludes(source).flatMap(({ kind, value }) =>
+    kind === "qualified-rule" ? [value] : []
+  );
 }
 
 /** Decoded class-selector identifiers from one selector prelude. */
@@ -388,4 +422,15 @@ export function cssSelectorClassNames(
     position = identifier.end;
   }
   return classes;
+}
+
+/** Decoded class-selector names from qualified rules and at-rule preludes. */
+export function cssClassNames(source: string): readonly string[] {
+  return [
+    ...new Set(
+      cssRulePreludes(source).flatMap(({ value }) =>
+        cssSelectorClassNames(value)
+      ),
+    ),
+  ].toSorted();
 }
