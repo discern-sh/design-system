@@ -458,19 +458,74 @@ export function cssQualifiedRuleSelectors(
 export function cssSelectorClassNames(
   selector: string,
 ): readonly string[] {
+  const source = stripCssComments(selector).css;
   const classes: string[] = [];
+  const whitespaceEnd = (start: number): number => {
+    let end = start;
+    while (/\s/.test(source[end] ?? "")) end += 1;
+    return end;
+  };
+  const attributeClass = (
+    start: number,
+  ): { readonly end: number; readonly name: string } | undefined => {
+    let position = whitespaceEnd(start + 1);
+    const attribute = cssIdentifier(source, position);
+    if (attribute === undefined) return undefined;
+    position = whitespaceEnd(attribute.end);
+    if (source.slice(position, position + 2) !== "~=") return undefined;
+    position = whitespaceEnd(position + 2);
+
+    const quote = source[position];
+    let className: string;
+    if (quote === "'" || quote === '"') {
+      const end = skipCssString(source, position);
+      if (end > source.length || source[end - 1] !== quote) return undefined;
+      className = decodeCssEscapes(source.slice(position + 1, end - 1));
+      position = end;
+    } else {
+      const value = cssIdentifier(source, position);
+      if (value === undefined) return undefined;
+      className = value.value;
+      position = value.end;
+    }
+    if (/\s/.test(className)) return undefined;
+
+    const valueEnd = position;
+    position = whitespaceEnd(position);
+    let modifier: string | undefined;
+    const parsedModifier = cssIdentifier(source, position);
+    if (parsedModifier !== undefined) {
+      if (position === valueEnd) return undefined;
+      modifier = parsedModifier.value.toLowerCase();
+      if (modifier !== "i" && modifier !== "s") return undefined;
+      position = whitespaceEnd(parsedModifier.end);
+    }
+    if (source[position] !== "]") return undefined;
+    return {
+      end: position + 1,
+      name: modifier === "i" ? className.toLowerCase() : className,
+    };
+  };
   let position = 0;
-  while (position < selector.length) {
-    const character = selector[position];
+  while (position < source.length) {
+    const character = source[position];
     if (character === "'" || character === '"') {
-      position = skipCssString(selector, position);
+      position = skipCssString(source, position);
       continue;
+    }
+    if (character === "[") {
+      const attribute = attributeClass(position);
+      if (attribute !== undefined) {
+        classes.push(attribute.name);
+        position = attribute.end;
+        continue;
+      }
     }
     if (character !== ".") {
       position += 1;
       continue;
     }
-    const identifier = cssIdentifier(selector, position + 1);
+    const identifier = cssIdentifier(source, position + 1);
     if (identifier === undefined) {
       position += 1;
       continue;

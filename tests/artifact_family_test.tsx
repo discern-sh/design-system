@@ -100,11 +100,11 @@ function foreignFileChangeStylesheetReferences(
     name.startsWith("discern-file-change__") ||
     name.startsWith("discern-file-change--")
   );
-  const owned = new Set(ownedClasses);
+  const owned = new Set(ownedClasses.map((name) => name.toLowerCase()));
   return surfaces.flatMap((surface) => {
     if (surface.id === owner.id) return [];
     const referencesOwner = cssDecodedIdentifiers(surface.css)
-      .some((name) => owned.has(name as `discern-${string}`));
+      .some((name) => owned.has(name.toLowerCase() as `discern-${string}`));
     return referencesOwner
       ? [`${surface.id} references a FileChange-owned class`]
       : [];
@@ -447,7 +447,6 @@ Deno.test("every file disposition has its complete semantic token mapping", asyn
     ),
     componentRegistry.map(({ meta }) => meta.slug),
   );
-
   const wrongPositiveState = `
     .discern-file-change__state {
       color: var(--discern-color-ink-muted);
@@ -517,7 +516,10 @@ Deno.test("every file disposition has its complete semantic token mapping", asyn
       ".discern-file-change",
       ".\\64 iscern-file-change",
       '[class~="discern-file-change"]',
+      '[class~="DISCERN-FILE-CHANGE" i]',
+      '[cl\\61 ss~="\\44 ISCERN-FILE-CHANGE" i]',
       "@scope (.discern-file-change) { :scope",
+      '@scope ([class~="DISCERN-FILE-CHANGE" i]) { :scope',
     ]
   ) {
     const foreign = {
@@ -542,6 +544,21 @@ Deno.test("every file disposition has its complete semantic token mapping", asyn
       "@scope (.\\64 iscern-file-change) { :scope { color: inherit; } }",
     ),
     ["discern-file-change"],
+  );
+  assertEquals(
+    cssClassNames(
+      '[class~="discern-file-change"] {} ' +
+        '[class~="DISCERN-FILE-CHANGE" i] {} ' +
+        "[cl\\61 ss~=discern-file-change__state] {}",
+    ),
+    ["discern-file-change", "discern-file-change__state"],
+  );
+  assertEquals(
+    cssClassNames(
+      '/* .discern-file-change */ [data-label="discern-file-change"] {} ' +
+        ".discern-file-change-extra {}",
+    ),
+    ["discern-file-change-extra"],
   );
 
   const ownerSurface = runtimeCssSurfaceRegistry.find(({ componentId }) =>
@@ -573,8 +590,8 @@ Deno.test("every file disposition has its complete semantic token mapping", asyn
     ...foreignTemplate,
     id: "component:near-name",
     componentId: "near-name",
-    css:
-      "/* discern-file-change */ .discern-file-change-extra { color: inherit; }",
+    css: "/* discern-file-change DISCERN-FILE-CHANGE */ " +
+      ".DISCERN-FILE-CHANGE-EXTRA { color: inherit; }",
   } satisfies RuntimeCssSurface;
   assertEquals(
     foreignFileChangeStylesheetReferences([
