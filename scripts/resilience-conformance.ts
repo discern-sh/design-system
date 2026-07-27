@@ -493,6 +493,12 @@ function shadowPaintsMinimumSideBand(
   ) {
     return false;
   }
+  if (
+    rect.width + 2 * layer.spread <= 0 ||
+    rect.height + 2 * layer.spread <= 0
+  ) {
+    return false;
+  }
   const reach = layer.spread + layer.blur / 2;
   let left = Math.max(0, reach - layer.x);
   let right = Math.max(0, reach + layer.x);
@@ -2888,6 +2894,7 @@ async function verifySemanticFocus(
     "shadow-inset-to-outside-background-geometry",
     "new-shadow-zero-band-geometry",
     "new-shadow-zero-target-geometry",
+    "new-shadow-collapsed-base-geometry",
     "subtle-underline-geometry",
   ] as const;
   const positiveProofKinds = [
@@ -3159,12 +3166,56 @@ async function verifySemanticFocus(
         syntheticFailures.push(`${kind} target did not auto-enrol`);
       }
     }
+    const screenshotClipFor = async (
+      target: Locator,
+    ): Promise<
+      | {
+        readonly height: number;
+        readonly width: number;
+        readonly x: number;
+        readonly y: number;
+      }
+      | undefined
+    > => {
+      await target.scrollIntoViewIfNeeded();
+      const box = await target.boundingBox();
+      if (box === null || box.width <= 0 || box.height <= 0) return undefined;
+      const margin = 32;
+      const x = Math.max(0, box.x - margin);
+      const y = Math.max(0, box.y - margin);
+      return {
+        height: box.height + box.y - y + margin,
+        width: box.width + box.x - x + margin,
+        x,
+        y,
+      };
+    };
+    const screenshotBytesEqual = (
+      left: Uint8Array | undefined,
+      right: Uint8Array | undefined,
+    ): boolean | undefined => {
+      if (left === undefined || right === undefined) return undefined;
+      return left.length === right.length &&
+        left.every((byte, index) => byte === right[index]);
+    };
     for (const kind of proofKinds) {
       const target = page.locator(`[data-discern-focus-proof="${kind}"]`);
       await blurActiveElement(page);
       const before = await focusStyles(target);
       const oracleBefore = await focusFixtureOracle(target, kind);
       const keyboardFocused = await focusByKeyboard(page, target);
+      const screenshotProof = kind === "new-shadow-collapsed-base-geometry" ||
+        kind === "new-shadow-offset-geometry";
+      const screenshotClip = screenshotProof
+        ? await screenshotClipFor(target)
+        : undefined;
+      const screenshotBefore = screenshotClip === undefined
+        ? undefined
+        : await page.screenshot({
+          animations: "disabled",
+          caret: "hide",
+          clip: screenshotClip,
+        });
       await target.evaluate(
         async (node, { kind, surfaceColor }) => {
           const siblingProxy = [
@@ -3286,6 +3337,12 @@ async function verifySemanticFocus(
             paint.style.setProperty(
               "box-shadow",
               `0 0 0 3px ${paintColor}`,
+              "important",
+            );
+          } else if (kind === "new-shadow-collapsed-base-geometry") {
+            paint.style.setProperty(
+              "box-shadow",
+              `24px 0 0 -22px ${paintColor}`,
               "important",
             );
           } else if (kind === "new-shadow-geometry") {
@@ -3414,6 +3471,23 @@ async function verifySemanticFocus(
         },
         { kind, surfaceColor: synthetic.surfaceColor },
       );
+      const screenshotAfter = screenshotClip === undefined
+        ? undefined
+        : await page.screenshot({
+          animations: "disabled",
+          caret: "hide",
+          clip: screenshotClip,
+        });
+      const screenshotEqual = screenshotBytesEqual(
+        screenshotBefore,
+        screenshotAfter,
+      );
+      const screenshotProofMatches =
+        kind === "new-shadow-collapsed-base-geometry"
+          ? screenshotEqual === true
+          : kind === "new-shadow-offset-geometry"
+          ? screenshotEqual === false
+          : true;
       const oracleAfter = await focusFixtureOracle(target, kind);
       const after = await focusStyles(target);
       const indicator = focusIndicatorContrast(
@@ -3499,6 +3573,12 @@ async function verifySemanticFocus(
         height: number,
       ): boolean => {
         if (width <= 0 || height <= 0) return false;
+        if (
+          width + 2 * layer.spread <= 0 ||
+          height + 2 * layer.spread <= 0
+        ) {
+          return false;
+        }
         const reach = layer.spread + layer.blur / 2;
         const extents = [
           Math.max(0, reach - layer.x),
@@ -3650,6 +3730,15 @@ async function verifySemanticFocus(
           afterShadow !== undefined &&
           near(oracleAfter.candidateWidth, 0) &&
           near(oracleAfter.candidateHeight, 0)
+        : kind === "new-shadow-collapsed-base-geometry"
+        ? beforeShadow === undefined &&
+          afterShadow !== undefined &&
+          near(afterShadow.x, 24) &&
+          near(afterShadow.y, 0) &&
+          near(afterShadow.blur, 0) &&
+          near(afterShadow.spread, -22) &&
+          near(oracleAfter.candidateWidth, 44) &&
+          near(oracleAfter.candidateHeight, 44)
         : kind === "new-shadow-spread-geometry"
         ? beforeShadow === undefined &&
           afterShadow !== undefined &&
@@ -3809,6 +3898,7 @@ async function verifySemanticFocus(
         !productionMatchesExpectation ||
         !oracleAfter.paintPresent ||
         !oracleSupportsExpectation ||
+        !screenshotProofMatches ||
         !serializedFilterMatches
       ) {
         syntheticFailures.push(
@@ -3822,7 +3912,7 @@ async function verifySemanticFocus(
             oracleAfter.effectiveOpacity.toFixed(4)
           }), appearance=${
             appearanceContrast?.toFixed(2) ?? "unknown"
-          }:1, filters=${
+          }:1, screenshot-equal=${screenshotEqual ?? "not-measured"}, filters=${
             oracleAfter.filters.join(", ") || "none"
           }, semantic=${oracleAfter.semanticallyAssociated}, native-label=${oracleAfter.nativeLabelAssociated}, authored-proxy=${oracleAfter.authoredProxy}, geometry=${oracleAfter.geometricallyAssociated}, distance-local=${oracleAfter.distanceLocal}, sized=${oracleAfter.controlSized}, parent-edges=${oracleAfter.parentEdgesLocal}, candidate=${
             oracleAfter.candidateWidth.toFixed(1)
