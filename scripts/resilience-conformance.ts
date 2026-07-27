@@ -481,13 +481,17 @@ function shadowGeometryDistance(
   );
 }
 
-function shadowPaintsMinimumSideBand(
+function shadowPaintsMinimumVisibleArea(
   layer: FocusShadowGeometry,
-  rect: FocusRect,
+  rect: Pick<FocusRect, "height" | "width">,
 ): boolean {
   if (
     !Number.isFinite(rect.width) ||
     !Number.isFinite(rect.height) ||
+    !Number.isFinite(layer.x) ||
+    !Number.isFinite(layer.y) ||
+    !Number.isFinite(layer.blur) ||
+    !Number.isFinite(layer.spread) ||
     rect.width <= 0 ||
     rect.height <= 0
   ) {
@@ -499,19 +503,58 @@ function shadowPaintsMinimumSideBand(
   ) {
     return false;
   }
-  const reach = layer.spread + layer.blur / 2;
-  let left = Math.max(0, reach - layer.x);
-  let right = Math.max(0, reach + layer.x);
-  let top = Math.max(0, reach - layer.y);
-  let bottom = Math.max(0, reach + layer.y);
+
+  const blurReach = layer.blur / 2;
+  const reach = layer.spread + blurReach;
+  let visibleArea: number;
   if (layer.inset) {
-    left = Math.min(rect.width, left);
-    right = Math.min(rect.width, right);
-    top = Math.min(rect.height, top);
-    bottom = Math.min(rect.height, bottom);
+    const leftBand = Math.min(
+      rect.width,
+      Math.max(0, reach - layer.x),
+    );
+    const rightBand = Math.min(
+      rect.width,
+      Math.max(0, reach + layer.x),
+    );
+    const topBand = Math.min(
+      rect.height,
+      Math.max(0, reach - layer.y),
+    );
+    const bottomBand = Math.min(
+      rect.height,
+      Math.max(0, reach + layer.y),
+    );
+    const unpaintedWidth = Math.max(
+      0,
+      rect.width - leftBand - rightBand,
+    );
+    const unpaintedHeight = Math.max(
+      0,
+      rect.height - topBand - bottomBand,
+    );
+    visibleArea = rect.width * rect.height -
+      unpaintedWidth * unpaintedHeight;
+  } else {
+    const shadowLeft = layer.x - reach;
+    const shadowRight = layer.x + rect.width + reach;
+    const shadowTop = layer.y - reach;
+    const shadowBottom = layer.y + rect.height + reach;
+    const shadowWidth = Math.max(0, shadowRight - shadowLeft);
+    const shadowHeight = Math.max(0, shadowBottom - shadowTop);
+    const overlapWidth = Math.max(
+      0,
+      Math.min(rect.width, shadowRight) - Math.max(0, shadowLeft),
+    );
+    const overlapHeight = Math.max(
+      0,
+      Math.min(rect.height, shadowBottom) - Math.max(0, shadowTop),
+    );
+    visibleArea = shadowWidth * shadowHeight -
+      overlapWidth * overlapHeight;
   }
-  return Math.max(left, right, top, bottom) >=
-    MINIMUM_FOCUS_GEOMETRY_CHANGE;
+  const minimumVisibleArea = MINIMUM_FOCUS_GEOMETRY_CHANGE *
+    Math.min(rect.width, rect.height);
+  return visibleArea >= minimumVisibleArea;
 }
 
 function changedShadowLayers(
@@ -523,7 +566,7 @@ function changedShadowLayers(
   if (currentLayers === undefined || currentLayers.length === 0) return [];
   if (previous === undefined) {
     return currentLayers.filter((layer) =>
-      shadowPaintsMinimumSideBand(layer, current.rect)
+      shadowPaintsMinimumVisibleArea(layer, current.rect)
     );
   }
   const previousLayers = previous.boxShadowLayers;
@@ -600,7 +643,7 @@ function changedShadowLayers(
   );
   return currentLayers.filter((layer, currentIndex) =>
     !matchedCurrent.has(currentIndex) &&
-    shadowPaintsMinimumSideBand(layer, current.rect)
+    shadowPaintsMinimumVisibleArea(layer, current.rect)
   );
 }
 
@@ -2860,6 +2903,47 @@ async function verifySemanticFocus(
   }
 
   await loadPage(page, conformanceUrl(origin));
+  const nearCollapsedShadowBaseProofs = [
+    {
+      baseSide: 0,
+      expectedChangedPixels: 0,
+      label: "collapsed-base",
+    },
+    {
+      baseSide: 0.002,
+      expectedChangedPixels: 0,
+      label: "positive-base-1",
+    },
+    {
+      baseSide: 0.02,
+      expectedChangedPixels: 4,
+      label: "positive-base-2",
+    },
+  ] as const;
+  const shadowPixelProofs = [
+    ...nearCollapsedShadowBaseProofs.map(
+      ({ baseSide, expectedChangedPixels, label }) => ({
+        blur: 0,
+        expectedAccepted: false,
+        expectedChangedPixels,
+        inset: false,
+        kind: `new-shadow-${label}-geometry`,
+        spread: (baseSide - 44) / 2,
+        x: 24,
+        y: 0,
+      }),
+    ),
+    {
+      blur: 0,
+      expectedAccepted: true,
+      expectedChangedPixels: 88,
+      inset: false,
+      kind: "new-shadow-offset-geometry",
+      spread: 0,
+      x: 2,
+      y: 0,
+    },
+  ] as const;
   const negativeProofKinds = [
     "transparent",
     "same-colour",
@@ -2894,7 +2978,8 @@ async function verifySemanticFocus(
     "shadow-inset-to-outside-background-geometry",
     "new-shadow-zero-band-geometry",
     "new-shadow-zero-target-geometry",
-    "new-shadow-collapsed-base-geometry",
+    ...shadowPixelProofs.filter(({ expectedAccepted }) => !expectedAccepted)
+      .map(({ kind }) => kind),
     "subtle-underline-geometry",
   ] as const;
   const positiveProofKinds = [
@@ -2908,7 +2993,8 @@ async function verifySemanticFocus(
     "new-outline-geometry",
     "new-shadow-geometry",
     "new-shadow-spread-geometry",
-    "new-shadow-offset-geometry",
+    ...shadowPixelProofs.filter(({ expectedAccepted }) => expectedAccepted)
+      .map(({ kind }) => kind),
     "new-inset-shadow-geometry",
     "shadow-layer-insertion-geometry",
     "new-underline-geometry",
@@ -3190,13 +3276,83 @@ async function verifySemanticFocus(
         y,
       };
     };
-    const screenshotBytesEqual = (
+    const screenshotChangedPixels = async (
       left: Uint8Array | undefined,
       right: Uint8Array | undefined,
-    ): boolean | undefined => {
+    ): Promise<number | undefined> => {
       if (left === undefined || right === undefined) return undefined;
-      return left.length === right.length &&
-        left.every((byte, index) => byte === right[index]);
+      return await page.evaluate(
+        async ({ leftBytes, rightBytes }) => {
+          const decodedPixels = async (
+            bytes: readonly number[],
+          ): Promise<
+            | {
+              readonly data: Uint8ClampedArray;
+              readonly height: number;
+              readonly width: number;
+            }
+            | undefined
+          > => {
+            const bitmap = await createImageBitmap(
+              new Blob([Uint8Array.from(bytes)], { type: "image/png" }),
+            );
+            const canvas = document.createElement("canvas");
+            canvas.width = bitmap.width;
+            canvas.height = bitmap.height;
+            const context = canvas.getContext("2d", {
+              willReadFrequently: true,
+            });
+            if (context === null) {
+              bitmap.close();
+              return undefined;
+            }
+            context.drawImage(bitmap, 0, 0);
+            const data = context.getImageData(
+              0,
+              0,
+              bitmap.width,
+              bitmap.height,
+            ).data;
+            const result = {
+              data,
+              height: bitmap.height,
+              width: bitmap.width,
+            };
+            bitmap.close();
+            return result;
+          };
+          const leftPixels = await decodedPixels(leftBytes);
+          const rightPixels = await decodedPixels(rightBytes);
+          if (
+            leftPixels === undefined ||
+            rightPixels === undefined ||
+            leftPixels.width !== rightPixels.width ||
+            leftPixels.height !== rightPixels.height
+          ) {
+            return undefined;
+          }
+          let changedPixels = 0;
+          for (
+            let offset = 0;
+            offset < leftPixels.data.length;
+            offset += 4
+          ) {
+            if (
+              leftPixels.data[offset] !== rightPixels.data[offset] ||
+              leftPixels.data[offset + 1] !== rightPixels.data[offset + 1] ||
+              leftPixels.data[offset + 2] !== rightPixels.data[offset + 2] ||
+              leftPixels.data[offset + 3] !== rightPixels.data[offset + 3]
+            ) {
+              changedPixels += 1;
+            }
+          }
+          return changedPixels;
+        },
+        {
+          leftBytes: [...left],
+          rightBytes: [...right],
+        },
+      );
     };
     for (const kind of proofKinds) {
       const target = page.locator(`[data-discern-focus-proof="${kind}"]`);
@@ -3204,9 +3360,10 @@ async function verifySemanticFocus(
       const before = await focusStyles(target);
       const oracleBefore = await focusFixtureOracle(target, kind);
       const keyboardFocused = await focusByKeyboard(page, target);
-      const screenshotProof = kind === "new-shadow-collapsed-base-geometry" ||
-        kind === "new-shadow-offset-geometry";
-      const screenshotClip = screenshotProof
+      const shadowPixelProof = shadowPixelProofs.find((proof) =>
+        proof.kind === kind
+      );
+      const screenshotClip = shadowPixelProof !== undefined
         ? await screenshotClipFor(target)
         : undefined;
       const screenshotBefore = screenshotClip === undefined
@@ -3217,7 +3374,7 @@ async function verifySemanticFocus(
           clip: screenshotClip,
         });
       await target.evaluate(
-        async (node, { kind, surfaceColor }) => {
+        async (node, { kind, shadowPixelProof, surfaceColor }) => {
           const siblingProxy = [
             "fixed-proxy",
             "generic-parent-proxy",
@@ -3339,10 +3496,12 @@ async function verifySemanticFocus(
               `0 0 0 3px ${paintColor}`,
               "important",
             );
-          } else if (kind === "new-shadow-collapsed-base-geometry") {
+          } else if (shadowPixelProof !== null) {
             paint.style.setProperty(
               "box-shadow",
-              `24px 0 0 -22px ${paintColor}`,
+              `${
+                shadowPixelProof.inset ? "inset " : ""
+              }${shadowPixelProof.x}px ${shadowPixelProof.y}px ${shadowPixelProof.blur}px ${shadowPixelProof.spread}px ${paintColor}`,
               "important",
             );
           } else if (kind === "new-shadow-geometry") {
@@ -3355,12 +3514,6 @@ async function verifySemanticFocus(
             paint.style.setProperty(
               "box-shadow",
               `0 0 0 2px ${paintColor}`,
-              "important",
-            );
-          } else if (kind === "new-shadow-offset-geometry") {
-            paint.style.setProperty(
-              "box-shadow",
-              `2px 0 0 0 ${paintColor}`,
               "important",
             );
           } else if (kind === "new-inset-shadow-geometry") {
@@ -3469,7 +3622,11 @@ async function verifySemanticFocus(
             requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
           });
         },
-        { kind, surfaceColor: synthetic.surfaceColor },
+        {
+          kind,
+          shadowPixelProof: shadowPixelProof ?? null,
+          surfaceColor: synthetic.surfaceColor,
+        },
       );
       const screenshotAfter = screenshotClip === undefined
         ? undefined
@@ -3478,16 +3635,12 @@ async function verifySemanticFocus(
           caret: "hide",
           clip: screenshotClip,
         });
-      const screenshotEqual = screenshotBytesEqual(
+      const changedPixels = await screenshotChangedPixels(
         screenshotBefore,
         screenshotAfter,
       );
-      const screenshotProofMatches =
-        kind === "new-shadow-collapsed-base-geometry"
-          ? screenshotEqual === true
-          : kind === "new-shadow-offset-geometry"
-          ? screenshotEqual === false
-          : true;
+      const screenshotProofMatches = shadowPixelProof === undefined ||
+        changedPixels === shadowPixelProof.expectedChangedPixels;
       const oracleAfter = await focusFixtureOracle(target, kind);
       const after = await focusStyles(target);
       const indicator = focusIndicatorContrast(
@@ -3567,33 +3720,6 @@ async function verifySemanticFocus(
         beforeShadowLayers.length === afterShadowLayers.length &&
         beforeShadowLayers.map(shadowLayerSignature).toSorted().join("\n") ===
           afterShadowLayers.map(shadowLayerSignature).toSorted().join("\n");
-      const shadowPaintsMinimumSideBand = (
-        layer: FocusShadowGeometry,
-        width: number,
-        height: number,
-      ): boolean => {
-        if (width <= 0 || height <= 0) return false;
-        if (
-          width + 2 * layer.spread <= 0 ||
-          height + 2 * layer.spread <= 0
-        ) {
-          return false;
-        }
-        const reach = layer.spread + layer.blur / 2;
-        const extents = [
-          Math.max(0, reach - layer.x),
-          Math.max(0, reach + layer.x),
-          Math.max(0, reach - layer.y),
-          Math.max(0, reach + layer.y),
-        ];
-        if (layer.inset) {
-          extents[0] = Math.min(width, extents[0] ?? 0);
-          extents[1] = Math.min(width, extents[1] ?? 0);
-          extents[2] = Math.min(height, extents[2] ?? 0);
-          extents[3] = Math.min(height, extents[3] ?? 0);
-        }
-        return Math.max(...extents) >= 2;
-      };
       const shadowGeometryEvidence = [
           "shadow-layer-reorder-geometry",
           "shadow-duplicate-reorder-geometry",
@@ -3608,17 +3734,21 @@ async function verifySemanticFocus(
               shadowLayerSignature(previousLayer) ===
                 shadowLayerSignature(layer)
             ) &&
-            shadowPaintsMinimumSideBand(
+            shadowPaintsMinimumVisibleArea(
               layer,
-              oracleAfter.candidateWidth,
-              oracleAfter.candidateHeight,
+              {
+                height: oracleAfter.candidateHeight,
+                width: oracleAfter.candidateWidth,
+              },
             )
           )
         : afterShadow !== undefined &&
-          shadowPaintsMinimumSideBand(
+          shadowPaintsMinimumVisibleArea(
             afterShadow,
-            oracleAfter.candidateWidth,
-            oracleAfter.candidateHeight,
+            {
+              height: oracleAfter.candidateHeight,
+              width: oracleAfter.candidateWidth,
+            },
           ) &&
           (
             beforeShadow === undefined ||
@@ -3730,13 +3860,14 @@ async function verifySemanticFocus(
           afterShadow !== undefined &&
           near(oracleAfter.candidateWidth, 0) &&
           near(oracleAfter.candidateHeight, 0)
-        : kind === "new-shadow-collapsed-base-geometry"
+        : shadowPixelProof !== undefined
         ? beforeShadow === undefined &&
           afterShadow !== undefined &&
-          near(afterShadow.x, 24) &&
-          near(afterShadow.y, 0) &&
-          near(afterShadow.blur, 0) &&
-          near(afterShadow.spread, -22) &&
+          near(afterShadow.x, shadowPixelProof.x) &&
+          near(afterShadow.y, shadowPixelProof.y) &&
+          near(afterShadow.blur, shadowPixelProof.blur) &&
+          near(afterShadow.spread, shadowPixelProof.spread) &&
+          afterShadow.inset === shadowPixelProof.inset &&
           near(oracleAfter.candidateWidth, 44) &&
           near(oracleAfter.candidateHeight, 44)
         : kind === "new-shadow-spread-geometry"
@@ -3746,14 +3877,6 @@ async function verifySemanticFocus(
           near(afterShadow.y, 0) &&
           near(afterShadow.blur, 0) &&
           near(afterShadow.spread, 2) &&
-          !afterShadow.inset
-        : kind === "new-shadow-offset-geometry"
-        ? beforeShadow === undefined &&
-          afterShadow !== undefined &&
-          near(afterShadow.x, 2) &&
-          near(afterShadow.y, 0) &&
-          near(afterShadow.blur, 0) &&
-          near(afterShadow.spread, 0) &&
           !afterShadow.inset
         : kind === "new-inset-shadow-geometry"
         ? beforeShadow === undefined &&
@@ -3912,7 +4035,7 @@ async function verifySemanticFocus(
             oracleAfter.effectiveOpacity.toFixed(4)
           }), appearance=${
             appearanceContrast?.toFixed(2) ?? "unknown"
-          }:1, screenshot-equal=${screenshotEqual ?? "not-measured"}, filters=${
+          }:1, changed-pixels=${changedPixels ?? "not-measured"}, filters=${
             oracleAfter.filters.join(", ") || "none"
           }, semantic=${oracleAfter.semanticallyAssociated}, native-label=${oracleAfter.nativeLabelAssociated}, authored-proxy=${oracleAfter.authoredProxy}, geometry=${oracleAfter.geometricallyAssociated}, distance-local=${oracleAfter.distanceLocal}, sized=${oracleAfter.controlSized}, parent-edges=${oracleAfter.parentEdgesLocal}, candidate=${
             oracleAfter.candidateWidth.toFixed(1)
