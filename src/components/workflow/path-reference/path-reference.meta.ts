@@ -1,0 +1,15 @@
+import type { ComponentMeta } from "../../../types/component-meta.ts";
+
+export default {
+  name: "Path reference",
+  slug: "path-reference",
+  group: "Workflow",
+  order: 40,
+  description:
+    "Inline file or directory path with middle truncation and an opt-in adapter-only copy affordance, keeping quiet prose inert while owning the correct clipboard payload when copying matters.",
+  accessibility: [
+    "The full path remains accessible text and a title even when its visible middle is truncated.",
+    "Truncation preserves the rootward prefix and final file or directory segment at narrow widths.",
+    "The optional copy action announces its text state and copies the full untruncated path.",
+  ],
+} satisfies ComponentMeta;

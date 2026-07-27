@@ -8,6 +8,7 @@ export const componentGroups = [
   "Navigation",
   "People",
   "Agents",
+  "Workflow",
   "Docs",
   "Marketing",
   "Editorial",
