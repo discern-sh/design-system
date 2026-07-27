@@ -7,6 +7,13 @@ export default {
   order: 310,
   description:
     "Semantic nested-list project tree with explicit file and directory kinds, middle-truncated names, full-path titles, and an optional annotation slot per node.",
+  purposes: ["building-documentation", "displaying-tool-output"],
+  useWhen: [
+    "A project or output structure must show nested files and directories with full paths and annotations.",
+  ],
+  notWhen: [
+    "The hierarchy is site navigation or the reader needs details for one artifact only.",
+  ],
   accessibility: [
     "Files and directories are nested list items, not an ASCII-art approximation.",
     "Each node exposes its kind and full path as text while visual glyphs remain decorative.",

@@ -5,4 +5,11 @@ export default {
   group: "Display",
   order: 10,
   description: "Compact status and metadata label with semantic tones.",
+  purposes: ["marketing-site"],
+  useWhen: [
+    "A compact visible label communicates status, category, or arbitrary metadata.",
+  ],
+  notWhen: [
+    "The label must distinguish authored, generated, project-owned, or tool-owned provenance; use Ownership badge.",
+  ],
 } satisfies ComponentMeta;

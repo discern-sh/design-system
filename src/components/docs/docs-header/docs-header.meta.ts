@@ -7,6 +7,7 @@ export default {
   order: 20,
   description:
     "Sticky translucent documentation top bar with brand, middle, and action regions.",
+  purposes: ["building-documentation"],
   accessibility: [
     "The header element is a banner landmark; slotted controls keep their own semantics and focus outlines.",
     "The translucent surface keeps token-driven text contrast over scrolled content in both themes.",

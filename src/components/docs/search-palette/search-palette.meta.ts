@@ -7,6 +7,7 @@ export default {
   order: 50,
   description:
     "Modal command-palette search on the native dialog element, with a search field, results region, and hint row.",
+  purposes: ["building-documentation"],
   accessibility: [
     "The native dialog provides focus containment, Escape dismissal, and focus return to the opening control.",
     "The search input is name-labelled and focused on open; results are real links, not synthetic listbox options.",

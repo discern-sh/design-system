@@ -7,6 +7,7 @@ export default {
   order: 85,
   description:
     "Scrollable semantic data table wrapper with optional stripes and a numeric last column.",
+  purposes: ["displaying-tool-output"],
   accessibility: [
     "Consumers author real thead/tbody/th markup, so header associations stay native; the wrapper only owns overflow and styling.",
     "Horizontal overflow scrolls inside the wrapper rather than the page, and the optional caption keeps its semantic position.",

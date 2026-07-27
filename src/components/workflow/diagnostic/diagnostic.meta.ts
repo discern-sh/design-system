@@ -7,6 +7,17 @@ export default {
   order: 220,
   description:
     "Structured failure account that explains impact, exact location, evidence, reproduction and retry commands, correction, and optional raw detail.",
+  purposes: [
+    "building-documentation",
+    "displaying-tool-output",
+    "procedural-workflow",
+  ],
+  useWhen: [
+    "A specific failure needs its impact, location, evidence, reproduction, correction, and retry path kept together.",
+  ],
+  notWhen: [
+    "You need a short page-level announcement without reproduction or correction detail; use Banner.",
+  ],
   accessibility: [
     "Failure severity derives role=alert while attention derives role=status, unless a consumer supplies an explicit role.",
     "Failure and attention appear as visible words; danger and warning colour only reinforce the actionable marker.",

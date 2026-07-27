@@ -6,6 +6,7 @@ export default {
   order: 95,
   description:
     "Inline added/removed change summary — signed monospace counts beside proportional squares, with both sides kept visible when either is non-zero.",
+  purposes: ["displaying-tool-output"],
   accessibility: [
     "The signed counts are real text and the whole meaning; the squares are hidden decoration.",
     "Direction is carried by the plus and minus signs, never by colour alone.",

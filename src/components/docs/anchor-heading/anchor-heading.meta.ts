@@ -7,6 +7,7 @@ export default {
   order: 60,
   description:
     "Heading with a hover-revealed self link for direct section linking.",
+  purposes: ["building-documentation"],
   accessibility: [
     "The self link carries a configurable descriptive label rather than the bare section-mark glyph.",
     "The link stays keyboard reachable while visually hidden, becomes visible on focus, and is always visible on hoverless devices.",

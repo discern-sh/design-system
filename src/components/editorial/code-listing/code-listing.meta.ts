@@ -7,6 +7,7 @@ export default {
   order: 80,
   description:
     "Captioned source listing with file and language context, stable line numbers, horizontal overflow, and optional highlighted lines.",
+  purposes: ["building-documentation"],
   accessibility: [
     "Source remains semantic preformatted code; line numbers and highlights do not alter its readable text.",
     "Long lines scroll horizontally rather than being visually reflowed into invalid code.",

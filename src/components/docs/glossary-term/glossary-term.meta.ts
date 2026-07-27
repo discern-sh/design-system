@@ -7,6 +7,7 @@ export default {
   order: 90,
   description:
     "Inline definition term with a keyboard-reachable, dotted-underlined hover card.",
+  purposes: ["building-documentation"],
   accessibility: [
     "The semantic dfn trigger is always focusable, so the same definition available on hover is available from the keyboard and on touch focus.",
     "The trigger and card are connected through aria-details; the visible term is repeated as the card heading for context.",

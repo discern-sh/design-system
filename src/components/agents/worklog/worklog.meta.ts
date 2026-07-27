@@ -6,6 +6,7 @@ export default {
   order: 40,
   description:
     "Compact statused feed of a run's steps — done, active, queued, failed, or skipped — with monospace annotations and right-aligned timing.",
+  purposes: ["displaying-tool-output"],
   accessibility: [
     "Each entry's status is spoken as visually hidden text after its label; the marker glyphs are hidden decoration.",
     "Status pairs a distinct glyph shape with its colour, so no state is conveyed by colour alone.",

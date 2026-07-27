@@ -7,6 +7,13 @@ export default {
   order: 230,
   description:
     "Native disclosure for machine-oriented detail, with a visible collapsed or expanded label and faithful horizontal overflow.",
+  purposes: ["building-documentation", "displaying-tool-output"],
+  useWhen: [
+    "Machine-oriented detail should remain available without competing with the human-readable result or diagnostic.",
+  ],
+  notWhen: [
+    "The output is the primary content readers need to compare or act on; show it directly with Terminal, Table, or Diagnostic.",
+  ],
   accessibility: [
     "Native details and summary semantics keep the disclosure operable without client JavaScript.",
     "Collapsed and expanded are visible text labels that change with the native open state.",

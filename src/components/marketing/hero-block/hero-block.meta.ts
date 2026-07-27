@@ -7,6 +7,7 @@ export default {
   order: 20,
   description:
     "High-impact opening section with split and centered compositions, flexible actions, proof, and visual slots.",
+  purposes: ["marketing-site"],
   accessibility: [
     "The heading level is explicit so the block can open a page or a nested campaign.",
     "Copy, actions, and supporting visuals retain source order when the layout collapses.",

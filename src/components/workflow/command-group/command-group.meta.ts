@@ -7,6 +7,13 @@ export default {
   order: 20,
   description:
     "Named command alternatives stacked with clear labels, keeping every option readable and executable in static HTML without tab behaviour.",
+  purposes: ["building-documentation", "procedural-workflow"],
+  useWhen: [
+    "Readers need labelled command alternatives for different platforms or equivalent tools.",
+  ],
+  notWhen: [
+    "The commands must run in sequence; place Command components inside Procedure steps.",
+  ],
   accessibility: [
     "Alternatives remain an ordered list rather than becoming hidden tab panels.",
     "A string title labels the group automatically; non-text titles should be paired with an explicit aria-label.",

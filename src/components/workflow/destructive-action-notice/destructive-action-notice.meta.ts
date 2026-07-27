@@ -7,6 +7,13 @@ export default {
   order: 160,
   description:
     "Explicit scope, impact, authority, and recovery route for an irreversible or owner-only action, with danger reserved for urgent hazards.",
+  purposes: ["building-documentation", "procedural-workflow"],
+  useWhen: [
+    "An irreversible or owner-only action needs explicit scope, impact, authority, and recovery information.",
+  ],
+  notWhen: [
+    "The content is an ordinary caution, page-level announcement, or recoverable validation message.",
+  ],
   accessibility: [
     "Scope, impact, authority, and recovery are labelled definition-list facts rather than an undifferentiated warning paragraph.",
     "The visible label carries the warning; colour reinforces only that actionable hazard instead of tinting the entire block.",

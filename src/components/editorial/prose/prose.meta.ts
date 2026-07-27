@@ -7,6 +7,7 @@ export default {
   order: 40,
   description:
     "Long-form typographic context for headings, paragraphs, lists, links, inline code, rules, and optional lead or drop-cap treatments.",
+  purposes: ["building-documentation"],
   accessibility: [
     "The adapter adds no document hierarchy; authors keep full control of semantic headings and content order.",
     "Readable measure and generous line height persist across all variants.",

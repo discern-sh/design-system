@@ -7,6 +7,13 @@ export default {
   order: 110,
   description:
     "Complete operational sequence with prerequisites, semantic ordered steps, recovery paths, and explicit evidence of completion.",
+  purposes: ["building-documentation", "procedural-workflow"],
+  useWhen: [
+    "A reader must carry out an ordered operational task with prerequisites, branches, recovery, and completion evidence.",
+  ],
+  notWhen: [
+    "The sequence explains a high-level journey or methodology without executable actions; use Process steps.",
+  ],
   accessibility: [
     "Steps remain a native ordered list, so their sequence and numbering survive without component styles.",
     "Prerequisites, commands, expected results, branches, and recovery guidance remain complete in static HTML.",

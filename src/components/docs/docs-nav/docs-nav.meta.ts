@@ -7,6 +7,7 @@ export default {
   order: 30,
   description:
     "Sectioned documentation navigation rail with one explicit current destination.",
+  purposes: ["building-documentation"],
   accessibility: [
     "A configurable label names the navigation landmark, and each section stays a real list.",
     "The current destination carries aria-current=page and reinforces its highlight with weight, not colour alone.",
