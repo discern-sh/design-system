@@ -63,9 +63,9 @@ function treeNode(node: ArtifactTreeNode, index: number): ReactElement {
         </span>
         {node.annotation !== undefined && node.annotation !== null
           ? (
-            <span className="discern-artifact-tree__annotation">
+            <div className="discern-artifact-tree__annotation">
               {node.annotation}
-            </span>
+            </div>
           )
           : null}
       </div>

@@ -57,6 +57,85 @@ function dispositionTokenFailures(
   return failures;
 }
 
+function invalidPhrasingFlowNesting(html: string): readonly string[] {
+  const phrasingContainers = new Set([
+    "a",
+    "abbr",
+    "b",
+    "code",
+    "em",
+    "i",
+    "mark",
+    "small",
+    "span",
+    "strong",
+    "sub",
+    "sup",
+  ]);
+  const flowOnly = new Set([
+    "address",
+    "article",
+    "aside",
+    "blockquote",
+    "div",
+    "dl",
+    "fieldset",
+    "figure",
+    "footer",
+    "form",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "header",
+    "hr",
+    "main",
+    "nav",
+    "ol",
+    "p",
+    "pre",
+    "section",
+    "table",
+    "ul",
+  ]);
+  const voidTags = new Set([
+    "area",
+    "base",
+    "br",
+    "col",
+    "embed",
+    "hr",
+    "img",
+    "input",
+    "link",
+    "meta",
+    "source",
+    "track",
+    "wbr",
+  ]);
+  const stack: string[] = [];
+  const failures: string[] = [];
+  for (const match of html.matchAll(/<(\/?)([a-z][a-z0-9-]*)\b[^>]*>/gi)) {
+    const closing = match[1] === "/";
+    const tag = (match[2] ?? "").toLowerCase();
+    if (closing) {
+      const index = stack.lastIndexOf(tag);
+      if (index >= 0) stack.splice(index);
+      continue;
+    }
+    const phrasingAncestor = stack.findLast((ancestor) =>
+      phrasingContainers.has(ancestor)
+    );
+    if (phrasingAncestor !== undefined && flowOnly.has(tag)) {
+      failures.push(`${phrasingAncestor} cannot contain ${tag}`);
+    }
+    if (!voidTags.has(tag) && !match[0].endsWith("/>")) stack.push(tag);
+  }
+  return failures;
+}
+
 Deno.test("the Artifact family occupies its reserved Workflow order band", () => {
   assertEquals(
     [
@@ -183,6 +262,41 @@ Deno.test("Artifact tree renders six nested directory levels and preserves the e
   assertStringIncludes(markup, `title="${path}"`);
   assertStringIncludes(markup, `File: ${path}`);
   assertStringIncludes(markup, "Generated");
+});
+
+Deno.test("Artifact tree annotations accept inline and flow compositions without invalid nesting", () => {
+  const ownership = renderToStaticMarkup(
+    <ArtifactTree
+      nodes={[{
+        name: "guidance.md",
+        kind: "file",
+        annotation: <OwnershipBadge ownership="authored" />,
+      }]}
+    />,
+  );
+  const fileChange = renderToStaticMarkup(
+    <ArtifactTree
+      nodes={[{
+        name: "guidance.md",
+        kind: "file",
+        annotation: (
+          <FileChange
+            path="/workspace/guidance.md"
+            disposition="updated"
+          />
+        ),
+      }]}
+    />,
+  );
+  assertEquals(invalidPhrasingFlowNesting(ownership), []);
+  assertEquals(invalidPhrasingFlowNesting(fileChange), []);
+
+  assertEquals(
+    invalidPhrasingFlowNesting(
+      "<mark class=\"future-note\"><section>Flow content</section></mark>",
+    ),
+    ["mark cannot contain section"],
+  );
 });
 
 Deno.test("artifact, decision, and rule surfaces expose their source semantics", () => {
