@@ -6,6 +6,7 @@ import {
   auditFontMetricOverrides,
   bundledFontMetricSources,
 } from "./font-metric-overrides.ts";
+import { fontMetricCssomSnapshot } from "./font-metric-cssom.ts";
 
 const WIDE_VIEWPORT = { width: 1440, height: 1000 } as const;
 const NARROW_VIEWPORT = { width: 390, height: 844 } as const;
@@ -2353,14 +2354,7 @@ async function verifyThemeSystem(
   failures: string[],
 ): Promise<ThemeResult> {
   const fontCssUrl = new URL("../assets/fonts.css", import.meta.url);
-  const fontMetricAudit = auditFontMetricOverrides(
-    await Deno.readTextFile(fontCssUrl),
-  );
-  failures.push(
-    ...fontMetricAudit.failures.map((failure) =>
-      `Font metric overrides: ${failure}`
-    ),
-  );
+  const fontCss = await Deno.readTextFile(fontCssUrl);
   const fontMetricAssetFailures = await auditBundledFontMetricAssets(
     await Promise.all(
       bundledFontMetricSources().map(async (source) => ({
@@ -2380,6 +2374,15 @@ async function verifyThemeSystem(
   });
   const page = await context.newPage();
   try {
+    const fontMetricAudit = auditFontMetricOverrides(
+      fontCss,
+      await fontMetricCssomSnapshot(page, fontCss),
+    );
+    failures.push(
+      ...fontMetricAudit.failures.map((failure) =>
+        `Font metric overrides: ${failure}`
+      ),
+    );
     await page.goto(new URL("/style-guide/", origin).href, {
       waitUntil: "networkidle",
     });

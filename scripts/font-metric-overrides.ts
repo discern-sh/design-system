@@ -1,5 +1,6 @@
 import {
   cssAtRuleBlocks,
+  cssAtRuleNames,
   cssDeclarations,
   cssEscapeEnd,
   cssIdentifier,
@@ -41,6 +42,27 @@ type FontSourceRecord = LocalFontSourceRecord | UrlFontSourceRecord;
 
 interface ParsedFontFaces {
   readonly faces: readonly FontFaceRecord[];
+  readonly failures: readonly string[];
+}
+
+/** Browser-normalized descriptors for one CSSOM font-face rule. */
+export interface FontMetricCssomFace {
+  readonly context: readonly string[];
+  readonly descriptors: {
+    readonly ascentOverride: string;
+    readonly descentOverride: string;
+    readonly family: string;
+    readonly lineGapOverride: string;
+    readonly sizeAdjust: string;
+    readonly source: string;
+    readonly style: string;
+    readonly weight: string;
+  };
+}
+
+/** CSSOM font-face population and browser extraction failures. */
+export interface FontMetricCssomSnapshot {
+  readonly faces: readonly FontMetricCssomFace[];
   readonly failures: readonly string[];
 }
 
@@ -123,6 +145,15 @@ const AUDITED_FONT_DESCRIPTORS = new Set([
   "descent-override",
   "line-gap-override",
 ]);
+
+/** CSSOM grouping-rule contexts in which font-face rules remain live. */
+export const fontMetricCssomGroupingRules = [
+  "CSSMediaRule",
+  "CSSSupportsRule",
+  "CSSContainerRule",
+  "CSSLayerBlockRule",
+  "CSSScopeRule",
+] as const;
 
 /** Deterministic source-level evidence for metric-adjusted local aliases. */
 export interface FontMetricOverrideAudit {
@@ -240,7 +271,7 @@ function cssFunction(
 ): ParsedCssFunction | undefined {
   const identifier = cssIdentifier(value, start);
   if (identifier === undefined) return undefined;
-  let position = skipCssWhitespace(value, identifier.end);
+  let position = identifier.end;
   if (value[position] !== "(") return undefined;
   const argumentStart = position + 1;
   position = argumentStart;
@@ -421,45 +452,109 @@ function weightRange(value: string | undefined): WeightRange | undefined {
   return { minimum, maximum };
 }
 
-function fontFaces(css: string): ParsedFontFaces {
+/** Raw-source policies that CSSOM normalization cannot retain. */
+export interface FontMetricSourcePolicyAudit {
+  readonly failures: readonly string[];
+  readonly fontFaceRules: number;
+}
+
+/** Audit duplicate descriptors and count every authored font-face at-keyword. */
+export function auditFontMetricSourcePolicy(
+  css: string,
+): FontMetricSourcePolicyAudit {
+  const fontFaceRules =
+    cssAtRuleNames(css).filter((name) => name.toLowerCase() === "font-face")
+      .length;
   const parsedBlocks = cssAtRuleBlocks(css, "font-face");
   const failures = [...parsedBlocks.failures];
-  const faces = parsedBlocks.blocks.filter(({ depth, parent }) =>
-    depth === 0 && parent === "stylesheet"
-  ).flatMap(({ block }) => {
-    const declarations = cssDeclarations(block);
-    const parsedFamily = fontFamily(
-      descriptor(declarations, "font-family"),
+  if (parsedBlocks.blocks.length !== fontFaceRules) {
+    failures.push(
+      `font source policy parsed ${parsedBlocks.blocks.length} of ${fontFaceRules} authored @font-face rules`,
     );
-    if (parsedFamily === undefined) {
+  }
+  for (const { block } of parsedBlocks.blocks) {
+    const declarations = cssDeclarations(block);
+    const family = fontFamily(descriptor(declarations, "font-family"));
+    const label = family === undefined
+      ? "@font-face"
+      : `${family.name} @font-face`;
+    if (family === undefined) {
       failures.push("@font-face has invalid font-family descriptor");
-      return [];
     }
     for (const name of AUDITED_FONT_DESCRIPTORS) {
       if (
         declarations.filter((declaration) => declaration.name === name)
           .length > 1
       ) {
-        failures.push(
-          `${parsedFamily.name} @font-face has duplicate ${name} descriptor`,
-        );
+        failures.push(`${label} has duplicate ${name} descriptor`);
       }
     }
-    const style = fontStyle(descriptor(declarations, "font-style"));
+    if (fontStyle(descriptor(declarations, "font-style")) === undefined) {
+      failures.push(`${label} has invalid font-style descriptor`);
+    }
+    if (weightRange(descriptor(declarations, "font-weight")) === undefined) {
+      failures.push(`${label} has invalid font-weight descriptor`);
+    }
+    if (!fontSources(descriptor(declarations, "src")).valid) {
+      failures.push(`${label} has invalid src descriptor`);
+    }
+    for (
+      const [name, value] of [
+        ["size-adjust", descriptor(declarations, "size-adjust")],
+        ["ascent-override", descriptor(declarations, "ascent-override")],
+        ["descent-override", descriptor(declarations, "descent-override")],
+        ["line-gap-override", descriptor(declarations, "line-gap-override")],
+      ] as const
+    ) {
+      if (value !== undefined && percentage(value) === undefined) {
+        failures.push(`${label} has invalid ${name} descriptor`);
+      }
+    }
+  }
+  return { failures, fontFaceRules };
+}
+
+function optionalCssomDescriptor(value: string): string | undefined {
+  return value === "" ? undefined : value;
+}
+
+function fontFaces(snapshot: FontMetricCssomSnapshot): ParsedFontFaces {
+  const failures = [...snapshot.failures];
+  const allowedContexts = new Set<string>(fontMetricCssomGroupingRules);
+  const faces = snapshot.faces.flatMap(({ context, descriptors }) => {
+    const unsupportedContext = context.find((name) =>
+      !allowedContexts.has(name)
+    );
+    if (unsupportedContext !== undefined) {
+      failures.push(
+        `@font-face has unsupported CSSOM context ${context.join(" > ")}`,
+      );
+      return [];
+    }
+    const parsedFamily = fontFamily(
+      optionalCssomDescriptor(descriptors.family),
+    );
+    if (parsedFamily === undefined) {
+      failures.push("@font-face has invalid font-family descriptor");
+      return [];
+    }
+    const style = fontStyle(optionalCssomDescriptor(descriptors.style));
     if (style === undefined) {
       failures.push(
         `${parsedFamily.name} @font-face has invalid font-style descriptor`,
       );
       return [];
     }
-    const weight = weightRange(descriptor(declarations, "font-weight"));
+    const weight = weightRange(optionalCssomDescriptor(descriptors.weight));
     if (weight === undefined) {
       failures.push(
         `${parsedFamily.name} @font-face has invalid font-weight descriptor`,
       );
       return [];
     }
-    const parsedSources = fontSources(descriptor(declarations, "src"));
+    const parsedSources = fontSources(
+      optionalCssomDescriptor(descriptors.source),
+    );
     if (!parsedSources.valid) {
       failures.push(
         `${parsedFamily.name} @font-face has invalid src descriptor`,
@@ -467,10 +562,16 @@ function fontFaces(css: string): ParsedFontFaces {
       return [];
     }
     const metricDescriptors = [
-      ["size-adjust", descriptor(declarations, "size-adjust")],
-      ["ascent-override", descriptor(declarations, "ascent-override")],
-      ["descent-override", descriptor(declarations, "descent-override")],
-      ["line-gap-override", descriptor(declarations, "line-gap-override")],
+      ["size-adjust", optionalCssomDescriptor(descriptors.sizeAdjust)],
+      ["ascent-override", optionalCssomDescriptor(descriptors.ascentOverride)],
+      [
+        "descent-override",
+        optionalCssomDescriptor(descriptors.descentOverride),
+      ],
+      [
+        "line-gap-override",
+        optionalCssomDescriptor(descriptors.lineGapOverride),
+      ],
     ] as const;
     for (const [name, value] of metricDescriptors) {
       if (value !== undefined && percentage(value) === undefined) {
@@ -485,15 +586,15 @@ function fontFaces(css: string): ParsedFontFaces {
       style,
       weight,
       sources: parsedSources.sources,
-      sizeAdjust: percentage(descriptor(declarations, "size-adjust")),
+      sizeAdjust: percentage(optionalCssomDescriptor(descriptors.sizeAdjust)),
       ascentOverride: percentage(
-        descriptor(declarations, "ascent-override"),
+        optionalCssomDescriptor(descriptors.ascentOverride),
       ),
       descentOverride: percentage(
-        descriptor(declarations, "descent-override"),
+        optionalCssomDescriptor(descriptors.descentOverride),
       ),
       lineGapOverride: percentage(
-        descriptor(declarations, "line-gap-override"),
+        optionalCssomDescriptor(descriptors.lineGapOverride),
       ),
     }];
   });
@@ -709,20 +810,27 @@ export async function auditBundledFontMetricAssets(
 }
 
 /**
- * Audit every metric-adjusted alias discovered from the public font-role
- * stacks. A new alias joins without being added to a second list.
+ * Audit every metric-adjusted alias against a browser CSSOM face snapshot.
+ * A new alias joins from the public font-role stacks.
  */
 export function auditFontMetricOverrides(
   css: string,
+  snapshot: FontMetricCssomSnapshot,
 ): FontMetricOverrideAudit {
   const aliases = fontRoleAliases(css);
   const aliasIdentities = new Set(aliases.map(({ identity }) => identity));
-  const parsedFaces = fontFaces(css);
+  const sourcePolicy = auditFontMetricSourcePolicy(css);
+  const parsedFaces = fontFaces(snapshot);
   const faces = parsedFaces.faces;
   const aliasFaces = faces.filter(({ familyIdentity }) =>
     familyIdentity.includes(" fallback ")
   );
-  const failures = [...parsedFaces.failures];
+  const failures = [...sourcePolicy.failures, ...parsedFaces.failures];
+  if (sourcePolicy.fontFaceRules !== snapshot.faces.length) {
+    failures.push(
+      `browser CSSOM retained ${snapshot.faces.length} of ${sourcePolicy.fontFaceRules} authored @font-face rules`,
+    );
+  }
 
   for (const authority of TARGET_FONT_METRICS) {
     const targetIdentity = fontFamilyIdentity(authority.family);

@@ -1,11 +1,6 @@
 import { AxeBuilder } from "@axe-core/playwright";
 import { fromFileUrl } from "@std/path";
-import {
-  type Browser,
-  chromium,
-  type Locator,
-  type Page,
-} from "playwright-core";
+import { type Browser, type Locator, type Page } from "playwright-core";
 import { packageManifest } from "../src/manifest.ts";
 import type { ComponentBehavior } from "../src/types/component-meta.ts";
 import type {
@@ -13,6 +8,7 @@ import type {
   ConformanceStep,
   ConformanceTarget,
 } from "../styleguide/conformance.ts";
+import { launchBrowser } from "./browser.ts";
 import { buildDesignSystem } from "./build.ts";
 import { runResilienceConformance } from "./resilience-conformance.ts";
 import catalogueServer from "./serve.ts";
@@ -45,45 +41,6 @@ function conformanceUrl(
   url.searchParams.set("theme", theme);
   if (component) url.searchParams.set("component", component);
   return url.href;
-}
-
-async function launchBrowser(): Promise<Browser> {
-  const explicitPath = Deno.env.get("DISCERN_CHROME_PATH");
-  const attempts: Array<{
-    readonly label: string;
-    readonly options: Parameters<typeof chromium.launch>[0];
-  }> = explicitPath
-    ? [{
-      label: `DISCERN_CHROME_PATH (${explicitPath})`,
-      options: { executablePath: explicitPath, headless: true },
-    }]
-    : [
-      {
-        label: "installed Google Chrome",
-        options: { channel: "chrome", headless: true },
-      },
-      {
-        label: "Playwright-managed Chromium",
-        options: { headless: true },
-      },
-    ];
-  const failures: string[] = [];
-  for (const attempt of attempts) {
-    try {
-      return await chromium.launch(attempt.options);
-    } catch (error) {
-      failures.push(
-        `${attempt.label}: ${
-          error instanceof Error ? error.message.split("\n")[0] : String(error)
-        }`,
-      );
-    }
-  }
-  throw new Error(
-    `No compatible Chromium browser was available. Install Google Chrome, run the Playwright Chromium installer, or set DISCERN_CHROME_PATH.\n${
-      failures.join("\n")
-    }`,
-  );
 }
 
 async function loadConformancePage(

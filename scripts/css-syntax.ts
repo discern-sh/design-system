@@ -291,6 +291,32 @@ export function cssIdentifiers(source: string): readonly string[] {
   return identifiers;
 }
 
+/** Decoded at-rule names outside comments and strings. */
+export function cssAtRuleNames(source: string): readonly string[] {
+  const stripped = stripCssComments(source).css;
+  const names: string[] = [];
+  let position = 0;
+  while (position < stripped.length) {
+    const character = stripped[position];
+    if (character === "'" || character === '"') {
+      position = skipCssString(stripped, position);
+      continue;
+    }
+    if (character !== "@") {
+      position += 1;
+      continue;
+    }
+    const identifier = cssIdentifier(stripped, position + 1);
+    if (identifier === undefined) {
+      position += 1;
+      continue;
+    }
+    names.push(identifier.value);
+    position = identifier.end;
+  }
+  return names;
+}
+
 /**
  * Decoded identifier-shaped words from every non-comment part of a CSS
  * source, including strings and at-rule preludes.

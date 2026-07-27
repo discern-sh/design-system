@@ -61,7 +61,7 @@
     "serve": "deno task build && deno serve --host 127.0.0.1 --allow-read --port $(discern identity --port 2>/dev/null || echo 8010) scripts/serve.ts",
     "watch": "deno serve --config deno.json --host 127.0.0.1 --allow-read --allow-write --allow-run --allow-env=NODE_ENV --port $(discern identity --port 2>/dev/null || echo 8010) --watch=src/,styleguide/,assets/ --watch-exclude=src/generated/,styleguide/generated/,dist/ scripts/watch.ts",
     "test": "deno task test:unit && deno task conformance",
-    "test:unit": "deno test --config deno.json --allow-read --allow-write --allow-env --allow-run tests",
+    "test:unit": "deno test --config deno.json --allow-read --allow-write --allow-env --allow-run --allow-sys tests",
     "verify": "deno task check && deno task build && deno task check:catalogue && deno task test"
   },
   "fmt": {

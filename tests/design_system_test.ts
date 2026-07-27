@@ -5,14 +5,18 @@ import {
   assertStringIncludes,
 } from "@std/assert";
 import { fromFileUrl, join, relative, toFileUrl } from "@std/path";
+import type { Page } from "playwright-core";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { cssAtRuleBlocks } from "../scripts/css-syntax.ts";
+import { cssAtRuleBlocks, cssAtRuleNames } from "../scripts/css-syntax.ts";
+import { launchBrowser } from "../scripts/browser.ts";
+import { fontMetricCssomSnapshot } from "../scripts/font-metric-cssom.ts";
 import {
   auditBundledFontMetricAssets,
   auditFontMetricOverrides,
   bundledFontMetricSources,
 } from "../scripts/font-metric-overrides.ts";
+import type { FontMetricOverrideAudit } from "../scripts/font-metric-overrides.ts";
 import { generateSources } from "../scripts/generate.ts";
 import {
   packageManifest,
@@ -47,6 +51,16 @@ import type { ComponentMeta } from "../src/types/component-meta.ts";
 const PACKAGE_ROOT_URL = new URL("../", import.meta.url);
 const PACKAGE_ROOT = fromFileUrl(PACKAGE_ROOT_URL);
 const COMPONENT_ROOT = join(PACKAGE_ROOT, "src", "components");
+
+async function auditFontMetricCss(
+  page: Page,
+  css: string,
+): Promise<FontMetricOverrideAudit> {
+  return auditFontMetricOverrides(
+    css,
+    await fontMetricCssomSnapshot(page, css),
+  );
+}
 
 async function walk(directory: string): Promise<string[]> {
   const files: string[] = [];
@@ -593,19 +607,6 @@ Deno.test("font and grain assets are independent, licensed, and integrity-mapped
     ) {
       assertStringIncludes(fontCss, fragment);
     }
-    const metricAudit = auditFontMetricOverrides(fontCss);
-    assert(metricAudit.faces > 0, "no metric-adjusted font faces enrolled");
-    assertEquals(metricAudit.failures, []);
-    assertEquals(
-      [
-        ...new Set(
-          metricAudit.browserCases.map(({ fallback }) =>
-            fallback.replaceAll('"', "")
-          ),
-        ),
-      ].toSorted(),
-      metricAudit.aliases,
-    );
     const metricAssets = await Promise.all(
       bundledFontMetricSources().map(async (source) => ({
         source,
@@ -681,11 +682,27 @@ Deno.test("font and grain assets are independent, licensed, and integrity-mapped
 });
 
 Deno.test("target font metrics authorize the exact live face population", async () => {
-  const fontCss = await Deno.readTextFile(
-    new URL("../assets/fonts.css", import.meta.url),
-  );
-  const futureSource = "./fonts/crimson-pro-future.woff2";
-  const futureFace = auditFontMetricOverrides(`${fontCss}
+  const browser = await launchBrowser();
+  const page = await browser.newPage();
+  try {
+    const fontCss = await Deno.readTextFile(
+      new URL("../assets/fonts.css", import.meta.url),
+    );
+    const baseline = await auditFontMetricCss(page, fontCss);
+    assert(baseline.faces > 0, "no metric-adjusted font faces enrolled");
+    assertEquals(baseline.failures, []);
+    assertEquals(
+      [
+        ...new Set(
+          baseline.browserCases.map(({ fallback }) =>
+            fallback.replaceAll('"', "")
+          ),
+        ),
+      ].toSorted(),
+      baseline.aliases,
+    );
+    const futureSource = "./fonts/crimson-pro-future.woff2";
+    const futureFaceCss = `
 @font-face {
   font-family: "Crimson Pro";
   font-style: normal;
@@ -693,293 +710,399 @@ Deno.test("target font metrics authorize the exact live face population", async 
   font-display: swap;
   src: url("${futureSource}") format("woff2");
 }
-`);
-  assertEquals(futureFace.failures.length, 1);
-  assertStringIncludes(futureFace.failures[0] ?? "", futureSource);
-  assertStringIncludes(
-    futureFace.failures[0] ?? "",
-    "no exact metric authority",
-  );
-  assert(!bundledFontMetricSources().includes(futureSource));
+`;
+    const futureFace = await auditFontMetricCss(
+      page,
+      `${fontCss}${futureFaceCss}`,
+    );
+    assertEquals(futureFace.failures.length, 1);
+    assertStringIncludes(futureFace.failures[0] ?? "", futureSource);
+    assertStringIncludes(
+      futureFace.failures[0] ?? "",
+      "no exact metric authority",
+    );
+    assert(!bundledFontMetricSources().includes(futureSource));
+    assertEquals(
+      cssAtRuleNames(
+        '/* @font-face {} */ .future { content: "@font-face {}"; } ' +
+          "@f\\6f nt-face {}",
+      ),
+      ["font-face"],
+    );
 
-  for (
-    const [family, source] of [
-      ['"crimson pro"', "./fonts/crimson-pro-lowercase.woff2"],
-      ["Crimson/**/ Pro", "./fonts/crimson-pro-unquoted.woff2"],
-    ] as const
-  ) {
-    const normalizedFamily = auditFontMetricOverrides(`${fontCss}
+    for (
+      const [family, source] of [
+        ['"crimson pro"', "./fonts/crimson-pro-lowercase.woff2"],
+        ["Crimson/**/ Pro", "./fonts/crimson-pro-unquoted.woff2"],
+      ] as const
+    ) {
+      const normalizedFamily = await auditFontMetricCss(
+        page,
+        `${fontCss}
 @font-face {
   font-family: ${family};
   font-style: normal;
   font-weight: 200 900;
   src: url("${source}") format("woff2");
 }
-`);
-    assertStringIncludes(normalizedFamily.failures.join("\n"), source);
-    assertStringIncludes(
-      normalizedFamily.failures.join("\n"),
-      "no exact metric authority",
-    );
-  }
+`,
+      );
+      assertStringIncludes(normalizedFamily.failures.join("\n"), source);
+      assertStringIncludes(
+        normalizedFamily.failures.join("\n"),
+        "no exact metric authority",
+      );
+    }
 
-  for (const family of ['"Crimson  Pro"', '" Crimson Pro"']) {
-    const distinctQuotedFamily = auditFontMetricOverrides(
-      fontCss.replace(
-        'font-family: "Crimson Pro";',
-        `font-family: ${family};`,
-      ),
-    );
-    assertStringIncludes(
-      distinctQuotedFamily.failures.join("\n"),
-      "target metric authority has no live normal 200–900 face",
-      `${family} collapsed into the Crimson Pro authority`,
-    );
-  }
-
-  for (
-    const equivalentFamily of [
-      '"crimson pro"',
-      "Crimson/**/\n\t Pro",
-    ]
-  ) {
-    assertEquals(
-      auditFontMetricOverrides(
+    for (const family of ['"Crimson  Pro"', '" Crimson Pro"']) {
+      const distinctQuotedFamily = await auditFontMetricCss(
+        page,
         fontCss.replace(
           'font-family: "Crimson Pro";',
-          `font-family: ${equivalentFamily};`,
+          `font-family: ${family};`,
         ),
-      ).failures,
-      [],
-      `${equivalentFamily} did not preserve the Crimson Pro identity`,
+      );
+      assertStringIncludes(
+        distinctQuotedFamily.failures.join("\n"),
+        "target metric authority has no live normal 200–900 face",
+        `${family} collapsed into the Crimson Pro authority`,
+      );
+    }
+
+    for (
+      const equivalentFamily of [
+        '"crimson pro"',
+        "Crimson/**/\n\t Pro",
+      ]
+    ) {
+      assertEquals(
+        (
+          await auditFontMetricCss(
+            page,
+            fontCss.replace(
+              'font-family: "Crimson Pro";',
+              `font-family: ${equivalentFamily};`,
+            ),
+          )
+        ).failures,
+        [],
+        `${equivalentFamily} did not preserve the Crimson Pro identity`,
+      );
+    }
+
+    const romanSource = "./fonts/crimson-pro-roman.woff2";
+    const confusedSource = `${romanSource}-next`;
+    const confused = await auditFontMetricCss(
+      page,
+      fontCss.replace(romanSource, confusedSource),
     );
-  }
+    assertEquals(confused.failures.length, 2);
+    const confusedEvidence = confused.failures.join("\n");
+    assertStringIncludes(confusedEvidence, confusedSource);
+    assertStringIncludes(confusedEvidence, romanSource);
+    assertStringIncludes(confusedEvidence, "no live normal 200–900 face");
 
-  const romanSource = "./fonts/crimson-pro-roman.woff2";
-  const confusedSource = `${romanSource}-next`;
-  const confused = auditFontMetricOverrides(
-    fontCss.replace(romanSource, confusedSource),
-  );
-  assertEquals(confused.failures.length, 2);
-  const confusedEvidence = confused.failures.join("\n");
-  assertStringIncludes(confusedEvidence, confusedSource);
-  assertStringIncludes(confusedEvidence, romanSource);
-  assertStringIncludes(confusedEvidence, "no live normal 200–900 face");
-
-  const locallyShadowed = auditFontMetricOverrides(
-    fontCss.replace(
-      `src: url("${romanSource}")`,
-      `src: local("Crimson Pro"), url("${romanSource}")`,
-    ),
-  );
-  assertEquals(locallyShadowed.failures.length, 1);
-  assertStringIncludes(
-    locallyShadowed.failures[0] ?? "",
-    'local("Crimson Pro") has no exact metric authority',
-  );
-
-  for (
-    const mutation of [
-      {
-        descriptor: "src",
-        css: fontCss.replace(
-          `src: url("${romanSource}")`,
-          `src: url("${romanSource}"); src: url("${futureSource}")`,
-        ),
-      },
-      {
-        descriptor: "font-family",
-        css: fontCss.replace(
-          `font-family: "Crimson Pro";`,
-          `font-family: "Crimson Pro"; font-family: "Future Family";`,
-        ),
-      },
-      {
-        descriptor: "font-style",
-        css: fontCss.replace(
-          `font-style: normal;`,
-          `font-style: normal; font-style: italic;`,
-        ),
-      },
-      {
-        descriptor: "font-weight",
-        css: fontCss.replace(
-          `font-weight: 200 900;`,
-          `font-weight: 200 900; font-weight: 400;`,
-        ),
-      },
-    ]
-  ) {
-    assertStringIncludes(
-      auditFontMetricOverrides(mutation.css).failures.join("\n"),
-      `duplicate ${mutation.descriptor}`,
-    );
-  }
-
-  for (
-    const [descriptor, value] of [
-      [
-        "src",
-        `url("${romanSource}") format("woff2"),`,
-      ],
-      [
-        "src",
-        `url("${romanSource}")) format("woff2")`,
-      ],
-      [
-        "src",
-        `url("${romanSource}") format("woff2") garbage`,
-      ],
-      [
-        "src",
-        `url("${romanSource}") tech("variations") format("woff2")`,
-      ],
-      [
-        "src",
-        `url("${romanSource}") format("woff2") tech("variations")`,
-      ],
-      [
-        "src",
-        `format("woff2") url("${romanSource}")`,
-      ],
-      [
-        "src",
-        `url("${romanSource}")`,
-      ],
-      [
-        "src",
-        `url("${romanSource}") format(woff2,)`,
-      ],
-      ["font-weight", "200 900 garbage"],
-    ] as const
-  ) {
-    const invalid = auditFontMetricOverrides(
+    const locallyShadowed = await auditFontMetricCss(
+      page,
       fontCss.replace(
-        descriptor === "src"
-          ? `url("${romanSource}") format("woff2")`
-          : "font-weight: 200 900",
-        descriptor === "src" ? value : `font-weight: ${value}`,
+        `src: url("${romanSource}")`,
+        `src: local("Crimson Pro"), url("${romanSource}")`,
+      ),
+    );
+    assertEquals(locallyShadowed.failures.length, 1);
+    assertStringIncludes(
+      locallyShadowed.failures[0] ?? "",
+      'local("Crimson Pro") has no exact metric authority',
+    );
+
+    for (
+      const mutation of [
+        {
+          descriptor: "src",
+          css: fontCss.replace(
+            `src: url("${romanSource}")`,
+            `src: url("${romanSource}"); src: url("${futureSource}")`,
+          ),
+        },
+        {
+          descriptor: "font-family",
+          css: fontCss.replace(
+            `font-family: "Crimson Pro";`,
+            `font-family: "Crimson Pro"; font-family: "Future Family";`,
+          ),
+        },
+        {
+          descriptor: "font-style",
+          css: fontCss.replace(
+            `font-style: normal;`,
+            `font-style: normal; font-style: italic;`,
+          ),
+        },
+        {
+          descriptor: "font-weight",
+          css: fontCss.replace(
+            `font-weight: 200 900;`,
+            `font-weight: 200 900; font-weight: 400;`,
+          ),
+        },
+      ]
+    ) {
+      assertStringIncludes(
+        (await auditFontMetricCss(page, mutation.css)).failures.join("\n"),
+        `duplicate ${mutation.descriptor}`,
+      );
+    }
+
+    for (
+      const [descriptor, value] of [
+        [
+          "src",
+          `url("${romanSource}") format("woff2"),`,
+        ],
+        [
+          "src",
+          `url("${romanSource}")) format("woff2")`,
+        ],
+        [
+          "src",
+          `url("${romanSource}") format("woff2") garbage`,
+        ],
+        [
+          "src",
+          `url("${romanSource}") tech("variations") format("woff2")`,
+        ],
+        [
+          "src",
+          `url("${romanSource}") format("woff2") tech("variations")`,
+        ],
+        [
+          "src",
+          `format("woff2") url("${romanSource}")`,
+        ],
+        [
+          "src",
+          `url("${romanSource}")`,
+        ],
+        [
+          "src",
+          `url("${romanSource}") format(woff2,)`,
+        ],
+        [
+          "src",
+          `url ("${romanSource}") format("woff2")`,
+        ],
+        [
+          "src",
+          `url/**/("${romanSource}") format("woff2")`,
+        ],
+        [
+          "src",
+          `url("${romanSource}") format ("woff2")`,
+        ],
+        [
+          "src",
+          `url("${romanSource}") format/**/("woff2")`,
+        ],
+        [
+          "src",
+          `url(/**/"${romanSource}"/**/) format("woff2")`,
+        ],
+        ["font-weight", "200 900 garbage"],
+      ] as const
+    ) {
+      const invalid = await auditFontMetricCss(
+        page,
+        fontCss.replace(
+          descriptor === "src"
+            ? `url("${romanSource}") format("woff2")`
+            : "font-weight: 200 900",
+          descriptor === "src" ? value : `font-weight: ${value}`,
+        ),
+      );
+      assertStringIncludes(
+        invalid.failures.join("\n"),
+        `invalid ${descriptor} descriptor`,
+        `${descriptor}: ${value}`,
+      );
+    }
+
+    const balanced = await auditFontMetricCss(
+      page,
+      fontCss.replace(
+        `url("${romanSource}") format("woff2")`,
+        `url("${romanSource}") /**/ format("woff2")`,
+      ),
+    );
+    assertEquals(balanced.failures, []);
+
+    const identifierFormat = await auditFontMetricCss(
+      page,
+      fontCss.replace(
+        `url("${romanSource}") format("woff2")`,
+        `url("${romanSource}") format(woff2)`,
+      ),
+    );
+    assertEquals(identifierFormat.failures, []);
+
+    const wrongFormat = await auditFontMetricCss(
+      page,
+      fontCss.replace(
+        `url("${romanSource}") format("woff2")`,
+        `url("${romanSource}") format("woff")`,
       ),
     );
     assertStringIncludes(
-      invalid.failures.join("\n"),
-      `invalid ${descriptor} descriptor`,
+      wrongFormat.failures.join("\n"),
+      "has no exact metric authority",
     );
-  }
 
-  const balanced = auditFontMetricOverrides(
-    fontCss.replace(
-      `url("${romanSource}") format("woff2")`,
-      `url(/**/"${romanSource}"/**/) /**/ format(/**/"woff2"/**/)`,
-    ),
-  );
-  assertEquals(balanced.failures, []);
+    for (
+      const grouped of [
+        `@media all`,
+        `@supports (display: block)`,
+        `@container (width > 1px)`,
+        `@layer future-fonts`,
+        `@scope ([data-discern-root])`,
+      ]
+    ) {
+      const conditional = await auditFontMetricCss(
+        page,
+        `${fontCss}\n${grouped} {\n${futureFaceCss}\n}`,
+      );
+      assertStringIncludes(
+        conditional.failures.join("\n"),
+        futureSource,
+        `${grouped} hid a live target face`,
+      );
+    }
+    assertStringIncludes(
+      (
+        await auditFontMetricCss(
+          page,
+          `${fontCss}\n.future-surface {\n${futureFaceCss}\n}`,
+        )
+      ).failures.join("\n"),
+      "browser CSSOM retained",
+      "a style ancestor entered the live font-face population",
+    );
+    assertStringIncludes(
+      (
+        await auditFontMetricCss(
+          page,
+          `${fontCss}\n@starting-style {\n${futureFaceCss}\n}`,
+        )
+      ).failures.join("\n"),
+      "unsupported CSSOM context CSSStartingStyleRule",
+    );
 
-  const identifierFormat = auditFontMetricOverrides(
-    fontCss.replace(
-      `url("${romanSource}") format("woff2")`,
-      `url("${romanSource}") format(woff2)`,
-    ),
-  );
-  assertEquals(identifierFormat.failures, []);
+    assert(
+      (await auditFontMetricCss(page, `garbage;\n${fontCss}`)).failures.length >
+        0,
+      "a garbage prefix invented a valid font-face population",
+    );
+    assertStringIncludes(
+      (
+        await auditFontMetricCss(page, `${fontCss}\n}\n${futureFaceCss}`)
+      ).failures.join("\n"),
+      "authored @font-face rules",
+      "a stray closing brace hid the following target face",
+    );
 
-  const wrongFormat = auditFontMetricOverrides(
-    fontCss.replace(
-      `url("${romanSource}") format("woff2")`,
-      `url("${romanSource}") format("woff")`,
-    ),
-  );
-  assertStringIncludes(
-    wrongFormat.failures.join("\n"),
-    "has no exact metric authority",
-  );
-
-  const ruleContexts = cssAtRuleBlocks(
-    `@font-face { font-family: "Top"; }
+    const ruleContexts = cssAtRuleBlocks(
+      `@font-face { font-family: "Top"; }
 .future-surface { @font-face { font-family: "Nested"; } }
 @media (min-width: 1px) { @font-face { font-family: "Conditional"; } }`,
-    "font-face",
-  );
-  assertEquals(
-    ruleContexts.blocks.map(({ depth, parent }) => ({ depth, parent })),
-    [
-      { depth: 0, parent: "stylesheet" },
-      { depth: 1, parent: "qualified-rule" },
-      { depth: 1, parent: "at-rule" },
-    ],
-  );
+      "font-face",
+    );
+    assertEquals(
+      ruleContexts.blocks.map(({ depth, parent }) => ({ depth, parent })),
+      [
+        { depth: 0, parent: "stylesheet" },
+        { depth: 1, parent: "qualified-rule" },
+        { depth: 1, parent: "at-rule" },
+      ],
+    );
 
-  const nestedAuthority = auditFontMetricOverrides(
-    `.future-surface {\n${fontCss}\n}`,
-  );
-  assertStringIncludes(
-    nestedAuthority.failures.join("\n"),
-    "target metric authority has no live normal 200–900 face",
-  );
+    const nestedAuthority = await auditFontMetricCss(
+      page,
+      `.future-surface {\n${fontCss}\n}`,
+    );
+    assertStringIncludes(
+      nestedAuthority.failures.join("\n"),
+      "target metric authority has no live normal 200–900 face",
+    );
 
-  for (
-    const variant of [
-      {
-        source: "./fonts/crimson-pro-uppercase.woff2",
-        face: `@FONT-FACE/**/ {
+    for (
+      const variant of [
+        {
+          source: "./fonts/crimson-pro-uppercase.woff2",
+          face: `@FONT-FACE/**/ {
   FONT-FAMILY/**/:/**/"Crimson Pro";
   FONT-STYLE:/**/normal;
   FONT-WEIGHT:/**/200/**/900;
   SRC/**/:/**/url("./fonts/crimson-pro-uppercase.woff2") format("woff2");
 }`,
-      },
-      {
-        source: "./fonts/crimson-pro-escaped-family.woff2",
-        face: `@font-face {
+        },
+        {
+          source: "./fonts/crimson-pro-escaped-family.woff2",
+          face: `@font-face {
   font-family: "Crimson\\20 Pro";
   font-style: normal;
   font-weight: 200 900;
   src: url("./fonts/crimson-pro-escaped-family.woff2") format("woff2");
 }`,
-      },
-      {
-        source: "./fonts/crimson-pro-escaped-keywords.woff2",
-        face: `@f\\6f nt-face {
+        },
+        {
+          source: "./fonts/crimson-pro-escaped-keywords.woff2",
+          face: `@f\\6f nt-face {
   f\\6f nt-family: "Crimson Pro";
   font-style: normal;
   font-weight: 200 900;
   src: url("./fonts/crimson-pro-escaped-keywords.woff2") format("woff2");
 }`,
-      },
-      {
-        source: "./fonts/crimson-pro-/**/-literal.woff2",
-        face: `@font-face {
+        },
+        {
+          source: "./fonts/crimson-pro-/**/-literal.woff2",
+          face: `@font-face {
   font-family: "Crimson Pro";
   font-style: normal;
   font-weight: 200 900;
   src: url("./fonts/crimson-pro-/**/-literal.woff2") format("woff2");
 }`,
-      },
-      {
-        source: "./fonts/crimson-pro-)/**/-literal.woff2",
-        face: `@font-face {
+        },
+        {
+          source: "./fonts/crimson-pro-)/**/-literal.woff2",
+          face: `@font-face {
   font-family: "Crimson Pro";
   font-style: normal;
   font-weight: 200 900;
   src: url("./fonts/crimson-pro-)/**/-literal.woff2") format("woff2");
 }`,
-      },
-    ]
-  ) {
-    const evidence = auditFontMetricOverrides(
-      `${fontCss}\n${variant.face}`,
-    ).failures.join("\n");
-    assertStringIncludes(evidence, variant.source);
-    assertStringIncludes(evidence, "no exact metric authority");
+        },
+      ]
+    ) {
+      const evidence = (
+        await auditFontMetricCss(page, `${fontCss}\n${variant.face}`)
+      ).failures.join("\n");
+      assertStringIncludes(evidence, variant.source);
+      assertStringIncludes(evidence, "no exact metric authority");
+    }
+  } finally {
+    await browser.close();
   }
 });
 
 Deno.test("font metric audit enrolls future aliases and rejects malformed faces", async () => {
-  const fontCss = await Deno.readTextFile(
-    new URL("../assets/fonts.css", import.meta.url),
-  );
-  const futureAlias = "Discern Crimson Fallback Future";
-  const valid = auditFontMetricOverrides(`${fontCss}
+  const browser = await launchBrowser();
+  const page = await browser.newPage();
+  try {
+    const fontCss = await Deno.readTextFile(
+      new URL("../assets/fonts.css", import.meta.url),
+    );
+    const futureAlias = "Discern Crimson Fallback Future";
+    const valid = await auditFontMetricCss(
+      page,
+      `${fontCss}
 @font-face {
   font-family: "${futureAlias}";
   font-style: normal;
@@ -1003,19 +1126,24 @@ Deno.test("font metric audit enrolls future aliases and rejects malformed faces"
 :where([data-discern-root]) {
   --discern-font-future: "Crimson Pro", "${futureAlias}", serif;
 }
-`);
-  assertEquals(valid.failures, []);
-  assert(valid.aliases.includes(futureAlias));
-  assertEquals(
-    valid.browserCases.filter(({ fallback }) => fallback.includes(futureAlias))
-      .map(({ style, weights }) => ({ style, weights })),
-    [
-      { style: "italic", weights: [400, 700] },
-      { style: "normal", weights: [400, 700] },
-    ],
-  );
+`,
+    );
+    assertEquals(valid.failures, []);
+    assert(valid.aliases.includes(futureAlias));
+    assertEquals(
+      valid.browserCases.filter(({ fallback }) =>
+        fallback.includes(futureAlias)
+      )
+        .map(({ style, weights }) => ({ style, weights })),
+      [
+        { style: "italic", weights: [400, 700] },
+        { style: "normal", weights: [400, 700] },
+      ],
+    );
 
-  const malformed = auditFontMetricOverrides(`${fontCss}
+    const malformed = await auditFontMetricCss(
+      page,
+      `${fontCss}
 @font-face {
   font-family: "${futureAlias}";
   font-style: normal;
@@ -1039,22 +1167,26 @@ Deno.test("font metric audit enrolls future aliases and rejects malformed faces"
 :where([data-discern-root]) {
   --discern-font-future: "Crimson Pro", "${futureAlias}", serif;
 }
-`);
-  assert(
-    malformed.aliases.includes(futureAlias),
-    "the future alias did not enroll from its font-role stack",
-  );
-  const evidence = malformed.failures.join("\n");
-  for (
-    const expected of [
-      "effective ascent",
-      "effective descent",
-      "overlapping or duplicate",
-      "do not cover",
-      "missing an italic face",
-    ]
-  ) {
-    assertStringIncludes(evidence, expected);
+`,
+    );
+    assert(
+      malformed.aliases.includes(futureAlias),
+      "the future alias did not enroll from its font-role stack",
+    );
+    const evidence = malformed.failures.join("\n");
+    for (
+      const expected of [
+        "effective ascent",
+        "effective descent",
+        "overlapping or duplicate",
+        "do not cover",
+        "missing an italic face",
+      ]
+    ) {
+      assertStringIncludes(evidence, expected);
+    }
+  } finally {
+    await browser.close();
   }
 });
 
