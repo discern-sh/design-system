@@ -1,11 +1,18 @@
 import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { renderToStaticMarkup } from "react-dom/server";
+import {
+  cssIdentifiers,
+  cssQualifiedRuleSelectors,
+  cssSelectorClassNames,
+} from "../scripts/css-syntax.ts";
 import artifactCardMeta from "../src/components/workflow/artifact-card/artifact-card.meta.ts";
 import artifactTreeMeta from "../src/components/workflow/artifact-tree/artifact-tree.meta.ts";
 import decisionRecordMeta from "../src/components/workflow/decision-record/decision-record.meta.ts";
 import fileChangeMeta from "../src/components/workflow/file-change/file-change.meta.ts";
 import ownershipBadgeMeta from "../src/components/workflow/ownership-badge/ownership-badge.meta.ts";
 import ruleMeta from "../src/components/workflow/rule/rule.meta.ts";
+import { componentRegistry } from "../src/generated/component-registry.ts";
+import type { ComponentRegistryEntry } from "../src/registry-types.ts";
 import type { ArtifactTreeNode } from "../src/react.ts";
 import {
   ArtifactCard,
@@ -73,9 +80,31 @@ function dispositionTokenFailures(
 function prohibitedFileChangeSemanticTokens(
   css: string,
 ): readonly string[] {
-  return [...css.matchAll(
-    /--discern-color-(?:danger|warning)(?:-[\w-]+)?/g,
-  )].map((match) => match[0]);
+  return cssIdentifiers(css).filter((identifier) =>
+    /^--discern-color-(?:danger|warning)(?:-|$)/.test(identifier)
+  );
+}
+
+function foreignFileChangeStylesheetReferences(
+  entries: readonly ComponentRegistryEntry[],
+): readonly string[] {
+  const owner = entries.find(({ meta }) => meta.slug === "file-change");
+  if (owner === undefined) return ["file-change owner stylesheet is missing"];
+  const ownedClasses = owner.ownedClasses.filter((name) =>
+    name === "discern-file-change" ||
+    name.startsWith("discern-file-change__") ||
+    name.startsWith("discern-file-change--")
+  );
+  const owned = new Set(ownedClasses);
+  return entries.flatMap((entry) => {
+    if (entry.meta.slug === owner.meta.slug) return [];
+    const referencesOwner = cssQualifiedRuleSelectors(entry.css)
+      .flatMap(cssSelectorClassNames)
+      .some((name) => owned.has(name as `discern-${string}`));
+    return referencesOwner
+      ? [`${entry.meta.slug} references a FileChange-owned selector`]
+      : [];
+  });
 }
 
 // WHATWG HTML Living Standard, "Index of elements" and "Phrasing content",
@@ -404,6 +433,7 @@ Deno.test("every file disposition has its complete semantic token mapping", asyn
     [],
   );
   assertEquals(prohibitedFileChangeSemanticTokens(css), []);
+  assertEquals(foreignFileChangeStylesheetReferences(componentRegistry), []);
 
   const wrongPositiveState = `
     .discern-file-change__state {
@@ -446,6 +476,48 @@ Deno.test("every file disposition has its complete semantic token mapping", asyn
       prohibitedFileChangeSemanticTokens(mutation),
       ["--discern-color-danger-soft", "--discern-color-warning"],
       `${selector} escaped the component-wide semantic-token invariant`,
+    );
+  }
+
+  for (
+    const [token, decoded] of [
+      ["--discern-color-dang\\65 r", "--discern-color-danger"],
+      ["--discern-color-\\77 arning-soft", "--discern-color-warning-soft"],
+      ["--discern-c\\6f lor-danger", "--discern-color-danger"],
+    ] as const
+  ) {
+    assertEquals(
+      prohibitedFileChangeSemanticTokens(
+        `.discern-file-change { color: var(${token}); }`,
+      ),
+      [decoded],
+      `${token} escaped semantic-token decoding`,
+    );
+  }
+
+  const foreignTemplate = componentRegistry.find(({ meta }) =>
+    meta.slug === "artifact-card"
+  );
+  assert(foreignTemplate !== undefined);
+  for (
+    const selector of [
+      ".discern-file-change",
+      ".\\64 iscern-file-change",
+    ]
+  ) {
+    const foreign = {
+      ...foreignTemplate,
+      meta: {
+        ...foreignTemplate.meta,
+        name: "Future surface",
+        slug: "future-surface",
+      },
+      css: `${selector} { color: inherit; }\n`,
+    } satisfies ComponentRegistryEntry;
+    assertEquals(
+      foreignFileChangeStylesheetReferences([...componentRegistry, foreign]),
+      ["future-surface references a FileChange-owned selector"],
+      `${selector} escaped the registry-wide owner boundary`,
     );
   }
 });
