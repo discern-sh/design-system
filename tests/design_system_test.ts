@@ -7,6 +7,7 @@ import {
 import { fromFileUrl, join, relative, toFileUrl } from "@std/path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { auditFontMetricOverrides } from "../scripts/font-metric-overrides.ts";
 import { generateSources } from "../scripts/generate.ts";
 import {
   packageManifest,
@@ -587,13 +588,9 @@ Deno.test("font and grain assets are independent, licensed, and integrity-mapped
     ) {
       assertStringIncludes(fontCss, fragment);
     }
-    assertEquals([...fontCss.matchAll(/\bsize-adjust:/g)].length, 12);
-    assertEquals([...fontCss.matchAll(/\bascent-override:/g)].length, 12);
-    assertEquals([...fontCss.matchAll(/\bdescent-override:/g)].length, 12);
-    assertEquals(
-      [...fontCss.matchAll(/\bline-gap-override:\s*0%/g)].length,
-      12,
-    );
+    const metricAudit = auditFontMetricOverrides(fontCss);
+    assert(metricAudit.faces > 0, "no metric-adjusted font faces enrolled");
+    assertEquals(metricAudit.failures, []);
     for (
       const path of fontPaths.filter((candidate) =>
         candidate.endsWith(".woff2")
@@ -646,6 +643,54 @@ Deno.test("font and grain assets are independent, licensed, and integrity-mapped
   } finally {
     await Deno.remove(fonts, { recursive: true });
     await Deno.remove(grain, { recursive: true });
+  }
+});
+
+Deno.test("font metric override audit catches a future malformed alias", async () => {
+  const fontCss = await Deno.readTextFile(
+    new URL("../assets/fonts.css", import.meta.url),
+  );
+  const futureAlias = "Discern Crimson Fallback Future";
+  const malformed = auditFontMetricOverrides(`${fontCss}
+@font-face {
+  font-family: "${futureAlias}";
+  font-style: normal;
+  font-weight: 200 400;
+  src: local("Future Serif");
+  size-adjust: 100%;
+  ascent-override: 50%;
+  descent-override: 50%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "${futureAlias}";
+  font-style: normal;
+  font-weight: 200 400;
+  src: local("Future Serif Duplicate");
+  size-adjust: 100%;
+  ascent-override: 50%;
+  descent-override: 50%;
+  line-gap-override: 0%;
+}
+:where([data-discern-root]) {
+  --discern-font-future: "Crimson Pro", "${futureAlias}", serif;
+}
+`);
+  assert(
+    malformed.aliases.includes(futureAlias),
+    "the future alias did not enroll from its font-role stack",
+  );
+  const evidence = malformed.failures.join("\n");
+  for (
+    const expected of [
+      "effective ascent",
+      "effective descent",
+      "overlapping or duplicate",
+      "do not cover",
+      "missing an italic face",
+    ]
+  ) {
+    assertStringIncludes(evidence, expected);
   }
 });
 

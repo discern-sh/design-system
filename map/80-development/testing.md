@@ -30,7 +30,7 @@ The conformance pass builds and serves the real Catalogue on an ephemeral local 
 
 [`resilience-conformance.ts`](../../scripts/resilience-conformance.ts) is a mandatory second phase, not an optional scenario set. It discovers journey recipes and rendered Component surfaces from the Catalogue DOM. Its checks cover journey structure and both-theme axe scans, keyboard order and exact Command copies, disclosures, nested controls, minimum targets, reflow at 390 pixels and 400% zoom, reduced motion, system-theme return, theme geometry, tuned local-font fallbacks, and focus across semantic surfaces and forced colours. Semantic focus uses the rendered adjacent surface, requires at least 3:1 indicator contrast, and proves accent, success, warning, and danger enrollment in both themes. The structural class detectors include unrelated synthetic violations, so a future sibling must fail without joining a hand-maintained case list.
 
-This phase covers static Catalogue surfaces and the declared Catalogue theme consumer. Theme checks compare the consumer, control, sidebar, toolbar, and main geometry before and after a color-mode change. Font checks compare the intended webfonts with each available metric-adjusted local alias; the public stacks and alias descriptors have a source-level guard on hosts without those local faces. Review sheets still carry cross-browser glyph rasterization, text wrapping, and full-page visual review. The phase does not replace consumer-level route testing, product navigation checks, or manual screen-reader acceptance. It uses the installed Chrome channel by default; `DISCERN_CHROME_PATH` selects a non-standard executable.
+This phase covers static Catalogue surfaces and the declared Catalogue theme consumer. Theme checks compare the consumer, control, sidebar, toolbar, and main geometry before and after a color-mode change. Font checks compare width and `normal` line boxes between the intended webfonts and each available metric-adjusted local alias, reporting every covered and skipped alias by name. [`font-metric-overrides.ts`](../../scripts/font-metric-overrides.ts) derives the deterministic alias population from the public font-role stacks and audits every face against the bundled target authorities: Crimson Pro uses 90% ascent, 21% descent, and 0% line gap; Inter uses 97%, 24%, and 0%. This source guard remains complete on hosts without those local faces. Review sheets still carry cross-browser glyph rasterization, text wrapping, and full-page visual review. The phase does not replace consumer-level route testing, product navigation checks, or manual screen-reader acceptance. It uses the installed Chrome channel by default; `DISCERN_CHROME_PATH` selects a non-standard executable.
 
 Run one test while iterating:
 
@@ -54,16 +54,16 @@ deno task conformance
 
 ## Suite audit ledger
 
-The accessibility-resilience audit on 2026-07-27 classified all 46 unit cases and judged every baseline class guard against the fresh-name test:
+The final accessibility-resilience audit on 2026-07-27 classified all 52 unit cases and judged every baseline class guard against the fresh-name test:
 
-| Test file                      | Cases | Guard assessment                                                                                                                   |
-| ------------------------------ | ----: | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `artifact_family_test.tsx`     |     4 | Canonical ownership/disposition arrays and the generated Component order enrol future members; depth stress is unique.             |
-| `catalogue_instrument_test.ts` |     4 | Metadata, generated registry, and recipe definitions are the authorities; no hand-listed Component population remains.             |
-| `design_system_test.ts`        |    22 | Folder, token, runtime, and state vocabularies drive the class guards; semantic focus derives its surface-token set.               |
-| `docs_page_furniture_test.ts`  |     4 | Closed Task states and each composition's own definition are the authorities; feature-specific cases assert distinct contracts.    |
-| `journey_resilience_test.tsx`  |     3 | Journey-marked recipes auto-enrol; malformed unrelated Procedure and Diagnostic markup proves the plaintext detector.              |
-| `release_test.ts`              |     7 | The publish allowlist, exported module graph, package declarations, and behavior opt-in authority provide the release populations. |
-| `serve_test.ts`                |     2 | The two cases pin distinct routing and deterministic-port contracts rather than a repeated class property.                         |
+| Test file                      | Cases | Guard assessment                                                                                                                                    |
+| ------------------------------ | ----: | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `artifact_family_test.tsx`     |     6 | Canonical ownership/disposition arrays enrol future members; a content-category parser and unrelated invalid nesting prove the annotation guard.    |
+| `catalogue_instrument_test.ts` |     4 | Metadata, generated registry, and recipe definitions are the authorities; no hand-listed Component population remains.                              |
+| `design_system_test.ts`        |    25 | Folder, token, runtime, and state vocabularies drive class guards; font aliases derive from role stacks, with a malformed future alias as tripwire. |
+| `docs_page_furniture_test.ts`  |     4 | Closed Task states and each composition's own definition are the authorities; feature-specific cases assert distinct contracts.                     |
+| `journey_resilience_test.tsx`  |     4 | Journey-marked recipes auto-enrol; three shipped sequences have an independent test oracle, plus unrelated and missing-middle synthetics.           |
+| `release_test.ts`              |     7 | The publish allowlist, exported module graph, package declarations, and behavior opt-in authority provide the release populations.                  |
+| `serve_test.ts`                |     2 | The two cases pin distinct routing and deterministic-port contracts rather than a repeated class property.                                          |
 
-No uncovered invariant or under-scoped guard remained after the journey and semantic-focus guards were added. The browser phase separately proves each generic rendered-DOM detector with a synthetic future sibling.
+No uncovered invariant or under-scoped guard remained after the final review corrections. The browser phase separately proves each generic rendered-DOM detector with a synthetic future sibling; local-font availability is reported rather than hidden.

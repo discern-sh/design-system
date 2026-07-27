@@ -908,6 +908,10 @@ export async function runConformance(): Promise<void> {
         `Detector failure counts: ${JSON.stringify(failureCounts)}\n` +
         `Resilience populations: ${JSON.stringify(resilience)}`,
     );
+    const coveredFontAliases =
+      resilience.fontFallbackAliasesCovered.join(", ") || "none";
+    const skippedFontAliases =
+      resilience.fontFallbackAliasesSkipped.join(", ") || "none";
     console.log(
       `Conformance passed: ${expectedComponents.length} components, ${accessibilityScans} accessibility scans, ${scenarios} interaction scenarios, 1 cold-state-fragment check, ${forcedColorFocusChecks} forced-colour focus checks, and ${
         screenshots + 1
@@ -928,10 +932,15 @@ export async function runConformance(): Promise<void> {
         `${resilience.motionTargets} motion targets, ` +
         `${resilience.themeConsumers} theme consumer with ` +
         `${resilience.themeGeometryChecks} stable geometry checks, ` +
-        `${resilience.fontFallbackChecks} font fallback checks (maximum ` +
+        `${resilience.fontFallbackChecks} font fallback checks across ` +
+        `${resilience.fontMetricOverrideFaces} source-audited metric faces ` +
+        `(covered aliases: ${coveredFontAliases}; ` +
+        `skipped aliases: ${skippedFontAliases}; maximum ` +
         `${
           resilience.maxFontWidthDeltaPercent.toFixed(2)
-        }% width residual), and ` +
+        }% width residual and ${
+          resilience.maxFontLineBoxDeltaPixels.toFixed(2)
+        }px normal-line residual), and ` +
         `${resilience.semanticFocusTargets} semantic-surface focus targets ` +
         `across ${resilience.semanticFocusRoles.join(", ")}.`,
     );

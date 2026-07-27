@@ -1,6 +1,7 @@
 import { AxeBuilder } from "@axe-core/playwright";
 import type { Browser, Locator, Page } from "playwright-core";
 import { themeTokens } from "../src/tokens/tokens.ts";
+import { auditFontMetricOverrides } from "./font-metric-overrides.ts";
 
 const WIDE_VIEWPORT = { width: 1440, height: 1000 } as const;
 const NARROW_VIEWPORT = { width: 390, height: 844 } as const;
@@ -78,6 +79,10 @@ interface ThemeResult {
   readonly consumers: number;
   readonly geometryChecks: number;
   readonly fontFallbackChecks: number;
+  readonly fontFallbackAliasesCovered: readonly string[];
+  readonly fontFallbackAliasesSkipped: readonly string[];
+  readonly fontMetricOverrideFaces: number;
+  readonly maxFontLineBoxDeltaPixels: number;
   readonly maxFontWidthDeltaPercent: number;
   readonly failures: readonly string[];
   readonly futureProof: boolean;
@@ -488,6 +493,10 @@ export interface ResilienceConformanceSummary {
   readonly themeConsumers: number;
   readonly themeGeometryChecks: number;
   readonly fontFallbackChecks: number;
+  readonly fontFallbackAliasesCovered: readonly string[];
+  readonly fontFallbackAliasesSkipped: readonly string[];
+  readonly fontMetricOverrideFaces: number;
+  readonly maxFontLineBoxDeltaPixels: number;
   readonly maxFontWidthDeltaPercent: number;
   readonly semanticFocusTargets: number;
   readonly semanticFocusRoles: readonly string[];
@@ -1471,6 +1480,14 @@ async function verifyThemeSystem(
   origin: string,
   failures: string[],
 ): Promise<ThemeResult> {
+  const fontMetricAudit = auditFontMetricOverrides(
+    await Deno.readTextFile(new URL("../assets/fonts.css", import.meta.url)),
+  );
+  failures.push(
+    ...fontMetricAudit.failures.map((failure) =>
+      `Font metric overrides: ${failure}`
+    ),
+  );
   const context = await browser.newContext({
     viewport: WIDE_VIEWPORT,
     colorScheme: "dark",
@@ -1628,7 +1645,10 @@ async function verifyThemeSystem(
       if (consumer === null) {
         return {
           checks: 0,
+          coveredAliases: [] as string[],
           maxWidthDeltaPercent: 0,
+          maxLineBoxDeltaPixels: 0,
+          skippedAliases: [] as string[],
           failures: ["font role consumer is missing"],
         };
       }
@@ -1732,17 +1752,23 @@ async function verifyThemeSystem(
         },
       ] as const;
       let checks = 0;
+      const coveredAliases: string[] = [];
       let maxWidthDeltaPercent = 0;
+      let maxLineBoxDeltaPixels = 0;
+      const skippedAliases: string[] = [];
       for (const candidate of cases) {
+        const metricAdjusted = candidate.name !== "JetBrains/terminal mono";
         const loaded = await document.fonts.load(
           `${candidate.style} ${
             candidate.weights[0]
           } 64px ${candidate.fallback}`,
         );
-        if (
-          candidate.name !== "JetBrains/terminal mono" && loaded.length === 0
-        ) {
+        if (metricAdjusted && loaded.length === 0) {
+          skippedAliases.push(candidate.name);
           continue;
+        }
+        if (metricAdjusted) {
+          coveredAliases.push(candidate.name);
         }
         for (const weight of candidate.weights) {
           for (const text of texts) {
@@ -1759,7 +1785,7 @@ async function verifyThemeSystem(
                 fontSize: "64px",
                 fontStyle: candidate.style,
                 fontWeight: String(weight),
-                lineHeight: "1.2",
+                lineHeight: "normal",
               });
               consumer.append(probe);
               const rect = probe.getBoundingClientRect();
@@ -1775,6 +1801,13 @@ async function verifyThemeSystem(
               maxWidthDeltaPercent,
               delta,
             );
+            const lineBoxDelta = Math.abs(target.height - fallback.height);
+            if (metricAdjusted) {
+              maxLineBoxDeltaPixels = Math.max(
+                maxLineBoxDeltaPixels,
+                lineBoxDelta,
+              );
+            }
             if (delta > 2.5) {
               currentFailures.push(
                 `${candidate.name} width differs by ${
@@ -1782,9 +1815,11 @@ async function verifyThemeSystem(
                 }% at ${weight}`,
               );
             }
-            if (Math.abs(target.height - fallback.height) > 0.25) {
+            if (metricAdjusted && lineBoxDelta > 0.25) {
               currentFailures.push(
-                `${candidate.name} line box differs at ${weight}`,
+                `${candidate.name} normal line box differs by ${
+                  lineBoxDelta.toFixed(2)
+                }px at ${weight}`,
               );
             }
             checks += 1;
@@ -1793,7 +1828,10 @@ async function verifyThemeSystem(
       }
       return {
         checks,
+        coveredAliases,
         maxWidthDeltaPercent,
+        maxLineBoxDeltaPixels,
+        skippedAliases,
         failures: currentFailures,
       };
     });
@@ -1847,6 +1885,10 @@ async function verifyThemeSystem(
       consumers: initial.consumers,
       geometryChecks,
       fontFallbackChecks: fontGeometry.checks,
+      fontFallbackAliasesCovered: fontGeometry.coveredAliases,
+      fontFallbackAliasesSkipped: fontGeometry.skippedAliases,
+      fontMetricOverrideFaces: fontMetricAudit.faces,
+      maxFontLineBoxDeltaPixels: fontGeometry.maxLineBoxDeltaPixels,
       maxFontWidthDeltaPercent: fontGeometry.maxWidthDeltaPercent,
       failures: initial.failures,
       futureProof,
@@ -2143,6 +2185,10 @@ export async function runResilienceConformance(
     themeConsumers: theme.consumers,
     themeGeometryChecks: theme.geometryChecks,
     fontFallbackChecks: theme.fontFallbackChecks,
+    fontFallbackAliasesCovered: theme.fontFallbackAliasesCovered,
+    fontFallbackAliasesSkipped: theme.fontFallbackAliasesSkipped,
+    fontMetricOverrideFaces: theme.fontMetricOverrideFaces,
+    maxFontLineBoxDeltaPixels: theme.maxFontLineBoxDeltaPixels,
     maxFontWidthDeltaPercent: theme.maxFontWidthDeltaPercent,
     semanticFocusTargets: semanticFocus.targets,
     semanticFocusRoles: semanticFocus.roles,
