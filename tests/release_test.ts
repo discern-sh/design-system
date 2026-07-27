@@ -1,5 +1,10 @@
 import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { dirname, fromFileUrl, join, relative } from "@std/path";
+import { packageManifest } from "../src/manifest.ts";
+import {
+  componentBehaviorOptIns,
+  componentBehaviors,
+} from "../src/types/component-meta.ts";
 
 const PACKAGE_ROOT = fromFileUrl(new URL("..", import.meta.url));
 
@@ -118,6 +123,22 @@ Deno.test("published modules carry no import attributes", async () => {
     "the registry rejects import attributes when it builds the module " +
       "graph, even though a local dry run accepts them; embed the data " +
       "in a generated module instead",
+  );
+});
+
+Deno.test("browser behavior stays inside the declared component opt-ins", () => {
+  for (const behavior of componentBehaviors) {
+    const actual: readonly string[] = packageManifest.components
+      .filter((component) => component.behaviors.includes(behavior))
+      .map(({ id }) => id);
+    assertEquals(actual, componentBehaviorOptIns[behavior]);
+  }
+
+  const declaredComponents = Object.values(componentBehaviorOptIns).flat();
+  assertEquals(
+    new Set(declaredComponents).size,
+    declaredComponents.length,
+    "a component must not repeat across behavior opt-in sets",
   );
 });
 

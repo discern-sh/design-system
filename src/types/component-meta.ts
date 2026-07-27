@@ -33,6 +33,14 @@ export const componentBehaviors = ["floating-surface"] as const;
 /** One selection-scoped browser behavior. */
 export type ComponentBehavior = (typeof componentBehaviors)[number];
 
+/**
+ * Components deliberately allowed to make one browser behavior part of a
+ * resolved runtime. Release tests compare Metadata with this opt-in authority.
+ */
+export const componentBehaviorOptIns = {
+  "floating-surface": ["tooltip", "hover-card"],
+} as const satisfies Readonly<Record<ComponentBehavior, readonly string[]>>;
+
 /** Authored identity, ordering, discovery, and accessibility facts for a component. */
 export interface ComponentMeta {
   readonly name: string;
