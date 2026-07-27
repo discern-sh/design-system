@@ -1,3 +1,14 @@
+import {
+  cssAtRuleBlocks,
+  cssDeclarations,
+  cssEscapeEnd,
+  cssIdentifier,
+  decodeCssEscapes,
+  skipCssString,
+  stripCssComments,
+} from "./css-syntax.ts";
+import type { CssDeclaration } from "./css-syntax.ts";
+
 interface WeightRange {
   readonly minimum: number;
   readonly maximum: number;
@@ -5,6 +16,7 @@ interface WeightRange {
 
 interface FontFaceRecord {
   readonly family: string;
+  readonly familyIdentity: string;
   readonly style: string;
   readonly weight: WeightRange;
   readonly sources: readonly FontSourceRecord[];
@@ -16,11 +28,6 @@ interface FontFaceRecord {
 
 interface FontSourceRecord {
   readonly kind: "local" | "url";
-  readonly value: string;
-}
-
-interface CssDeclaration {
-  readonly name: string;
   readonly value: string;
 }
 
@@ -128,267 +135,6 @@ export interface BundledFontMetricAsset {
   readonly bytes: Uint8Array;
 }
 
-function cssEscapeEnd(value: string, start: number): number {
-  let position = start + 1;
-  if (position >= value.length) return position;
-  if (/[0-9a-f]/i.test(value[position] ?? "")) {
-    let digits = 0;
-    while (
-      position < value.length && digits < 6 &&
-      /[0-9a-f]/i.test(value[position] ?? "")
-    ) {
-      position += 1;
-      digits += 1;
-    }
-    if (/\s/.test(value[position] ?? "")) position += 1;
-    return position;
-  }
-  if (value[position] === "\r" && value[position + 1] === "\n") {
-    return position + 2;
-  }
-  return position + 1;
-}
-
-function decodeCssEscapes(value: string): string {
-  let decoded = "";
-  let position = 0;
-  while (position < value.length) {
-    if (value[position] !== "\\") {
-      decoded += value[position] ?? "";
-      position += 1;
-      continue;
-    }
-    const end = cssEscapeEnd(value, position);
-    const escaped = value.slice(position + 1, end);
-    const hexadecimal = escaped.match(/^([0-9a-f]{1,6})/i)?.[1];
-    if (hexadecimal !== undefined) {
-      const codePoint = Number.parseInt(hexadecimal, 16);
-      decoded += codePoint === 0 || codePoint > 0x10ffff
-        ? "\uFFFD"
-        : String.fromCodePoint(codePoint);
-    } else if (!/^[\r\n\f]/.test(escaped)) {
-      decoded += escaped[0] ?? "";
-    }
-    position = end;
-  }
-  return decoded;
-}
-
-function cssIdentifier(
-  value: string,
-  start: number,
-): { readonly end: number; readonly value: string } | undefined {
-  const first = value[start] ?? "";
-  if (
-    !/[-_a-z]/i.test(first) &&
-    first !== "\\" &&
-    (first.codePointAt(0) ?? 0) < 0x80
-  ) {
-    return undefined;
-  }
-  let position = start;
-  while (position < value.length) {
-    const character = value[position] ?? "";
-    if (character === "\\") {
-      position = cssEscapeEnd(value, position);
-      continue;
-    }
-    if (
-      /[-_a-z0-9]/i.test(character) ||
-      (character.codePointAt(0) ?? 0) >= 0x80
-    ) {
-      position += 1;
-      continue;
-    }
-    break;
-  }
-  return {
-    end: position,
-    value: decodeCssEscapes(value.slice(start, position)),
-  };
-}
-
-function skipCssString(value: string, start: number): number {
-  const quote = value[start];
-  let position = start + 1;
-  while (position < value.length) {
-    const character = value[position];
-    if (character === "\\") {
-      position = cssEscapeEnd(value, position);
-    } else {
-      position += 1;
-      if (character === quote) break;
-    }
-  }
-  return position;
-}
-
-function stripCssComments(
-  value: string,
-): { readonly css: string; readonly failures: readonly string[] } {
-  const chunks: string[] = [];
-  const failures: string[] = [];
-  let position = 0;
-  while (position < value.length) {
-    const character = value[position];
-    if (character === "'" || character === '"') {
-      const end = skipCssString(value, position);
-      chunks.push(value.slice(position, end));
-      position = end;
-      continue;
-    }
-    if (character === "\\") {
-      const end = cssEscapeEnd(value, position);
-      chunks.push(value.slice(position, end));
-      position = end;
-      continue;
-    }
-    if (character === "/" && value[position + 1] === "*") {
-      const commentEnd = value.indexOf("*/", position + 2);
-      if (commentEnd < 0) {
-        chunks.push(" ".repeat(value.length - position));
-        failures.push("font CSS has an unterminated comment");
-        break;
-      }
-      const end = commentEnd + 2;
-      chunks.push(" ".repeat(end - position));
-      position = end;
-      continue;
-    }
-    chunks.push(character ?? "");
-    position += 1;
-  }
-  return { css: chunks.join(""), failures };
-}
-
-function matchingBlockEnd(value: string, start: number): number | undefined {
-  let depth = 1;
-  let position = start + 1;
-  while (position < value.length) {
-    const character = value[position];
-    if (character === "'" || character === '"') {
-      position = skipCssString(value, position);
-      continue;
-    }
-    if (character === "\\") {
-      position = cssEscapeEnd(value, position);
-      continue;
-    }
-    if (character === "{") depth += 1;
-    else if (character === "}") {
-      depth -= 1;
-      if (depth === 0) return position;
-    }
-    position += 1;
-  }
-  return undefined;
-}
-
-function fontFaceBlocks(
-  css: string,
-): {
-  readonly blocks: readonly string[];
-  readonly failures: readonly string[];
-} {
-  const stripped = stripCssComments(css);
-  const blocks: string[] = [];
-  const failures = [...stripped.failures];
-  let position = 0;
-  while (position < stripped.css.length) {
-    const character = stripped.css[position];
-    if (character === "'" || character === '"') {
-      position = skipCssString(stripped.css, position);
-      continue;
-    }
-    if (character === "\\") {
-      position = cssEscapeEnd(stripped.css, position);
-      continue;
-    }
-    if (character !== "@") {
-      position += 1;
-      continue;
-    }
-    const name = cssIdentifier(stripped.css, position + 1);
-    if (name === undefined) {
-      position += 1;
-      continue;
-    }
-    position = name.end;
-    if (name.value.toLowerCase() !== "font-face") continue;
-    while (/\s/.test(stripped.css[position] ?? "")) position += 1;
-    if (stripped.css[position] !== "{") continue;
-    const end = matchingBlockEnd(stripped.css, position);
-    if (end === undefined) {
-      failures.push("@font-face has an unterminated declaration block");
-      break;
-    }
-    blocks.push(stripped.css.slice(position + 1, end));
-    position = end + 1;
-  }
-  return { blocks, failures };
-}
-
-function cssDeclarations(block: string): CssDeclaration[] {
-  const declarations: CssDeclaration[] = [];
-  let position = 0;
-  while (position < block.length) {
-    while (
-      position < block.length &&
-      (/\s/.test(block[position] ?? "") || block[position] === ";")
-    ) {
-      position += 1;
-    }
-    const property = cssIdentifier(block, position);
-    if (property === undefined) {
-      position += 1;
-      continue;
-    }
-    position = property.end;
-    while (/\s/.test(block[position] ?? "")) position += 1;
-    if (block[position] !== ":") {
-      while (position < block.length && block[position] !== ";") position += 1;
-      continue;
-    }
-    position += 1;
-    const valueStart = position;
-    let roundDepth = 0;
-    let squareDepth = 0;
-    let curlyDepth = 0;
-    while (position < block.length) {
-      const character = block[position];
-      if (character === "'" || character === '"') {
-        position = skipCssString(block, position);
-        continue;
-      }
-      if (character === "\\") {
-        position = cssEscapeEnd(block, position);
-        continue;
-      }
-      if (character === "(") roundDepth += 1;
-      else if (character === ")") roundDepth = Math.max(0, roundDepth - 1);
-      else if (character === "[") squareDepth += 1;
-      else if (character === "]") squareDepth = Math.max(0, squareDepth - 1);
-      else if (character === "{") curlyDepth += 1;
-      else if (character === "}") curlyDepth = Math.max(0, curlyDepth - 1);
-      else if (
-        character === ";" &&
-        roundDepth === 0 &&
-        squareDepth === 0 &&
-        curlyDepth === 0
-      ) {
-        break;
-      }
-      position += 1;
-    }
-    declarations.push({
-      name: property.value.toLowerCase(),
-      value: block.slice(valueStart, position).trim(),
-    });
-    if (block[position] === ";") position += 1;
-  }
-  return declarations;
-}
-
 function descriptor(
   declarations: readonly CssDeclaration[],
   name: string,
@@ -397,103 +143,329 @@ function descriptor(
     ?.value;
 }
 
-function descriptorText(value: string | undefined): string | undefined {
-  return value === undefined ? undefined : sourceFunctionValue(value);
+const CSS_WHITESPACE = /[\t\n\f\r ]/;
+const CSS_WHITESPACE_RUN = /[\t\n\f\r ]+/g;
+
+interface FontFamilyRecord {
+  readonly identity: string;
+  readonly name: string;
 }
 
-function sourceFunctionValue(argument: string): string | undefined {
-  const trimmed = argument.trim();
-  const quote = trimmed[0];
-  if (quote === "'" || quote === '"') {
-    if (trimmed.at(-1) !== quote || trimmed.length < 2) return undefined;
-    return decodeCssEscapes(trimmed.slice(1, -1));
-  }
-  return trimmed === "" ? undefined : decodeCssEscapes(trimmed);
+interface ParsedCssFunction {
+  readonly argument: string;
+  readonly end: number;
+  readonly name: string;
 }
 
-function fontSources(value: string | undefined): readonly FontSourceRecord[] {
-  if (value === undefined) return [];
-  const sources: FontSourceRecord[] = [];
-  let position = 0;
-  while (position < value.length) {
-    const identifier = cssIdentifier(value, position);
-    if (identifier === undefined) {
-      position += 1;
-      continue;
-    }
-    position = identifier.end;
-    const name = identifier.value.toLowerCase();
-    while (/\s/.test(value[position] ?? "")) position += 1;
-    if (value[position] !== "(") continue;
-    position += 1;
-    const argumentStart = position;
-    let depth = 1;
-    let quote: "'" | '"' | undefined;
-    while (position < value.length && depth > 0) {
-      const character = value[position];
-      if (character === "\\") {
-        position = cssEscapeEnd(value, position);
-        continue;
-      }
-      if (quote !== undefined) {
-        if (character === quote) quote = undefined;
-      } else if (character === "'" || character === '"') {
-        quote = character;
-      } else if (character === "(") {
-        depth += 1;
-      } else if (character === ")") {
-        depth -= 1;
-      }
-      position += 1;
-    }
-    if (depth !== 0 || quote !== undefined) break;
-    if (name !== "url" && name !== "local") continue;
-    const source = sourceFunctionValue(
-      value.slice(argumentStart, position - 1),
-    );
-    if (source !== undefined) {
-      sources.push({ kind: name, value: source });
-    }
-  }
-  return sources;
+interface ParsedFontSources {
+  readonly sources: readonly FontSourceRecord[];
+  readonly valid: boolean;
 }
 
-function percentage(value: string | undefined): number | undefined {
-  const match = value?.match(/^(\d+(?:\.\d+)?)%$/);
-  return match?.[1] === undefined ? undefined : Number(match[1]);
+function skipCssWhitespace(value: string, start: number): number {
+  let position = start;
+  while (CSS_WHITESPACE.test(value[position] ?? "")) position += 1;
+  return position;
 }
 
-function weightRange(value: string | undefined): WeightRange {
-  const weights = value?.match(/\d+(?:\.\d+)?/g)?.map(Number) ?? [400];
-  const minimum = weights[0] ?? 400;
+function trimCssWhitespace(value: string): string {
+  const start = skipCssWhitespace(value, 0);
+  let end = value.length;
+  while (end > start && CSS_WHITESPACE.test(value[end - 1] ?? "")) end -= 1;
+  return value.slice(start, end);
+}
+
+function normalizedFamilyName(value: string): string {
+  return value.replace(CSS_WHITESPACE_RUN, " ").trim();
+}
+
+function fontFamilyIdentity(value: string): string {
+  return normalizedFamilyName(value).toLowerCase();
+}
+
+function cssStringValue(
+  value: string,
+  start: number,
+): { readonly end: number; readonly value: string } | undefined {
+  const quote = value[start];
+  if (quote !== "'" && quote !== '"') return undefined;
+  const end = skipCssString(value, start);
+  if (end > value.length || value[end - 1] !== quote) return undefined;
   return {
-    minimum,
-    maximum: weights[1] ?? minimum,
+    end,
+    value: decodeCssEscapes(value.slice(start + 1, end - 1)),
   };
 }
 
+function fontFamily(value: string | undefined): FontFamilyRecord | undefined {
+  if (value === undefined) return undefined;
+  let position = skipCssWhitespace(value, 0);
+  const quoted = cssStringValue(value, position);
+  if (quoted !== undefined) {
+    position = skipCssWhitespace(value, quoted.end);
+    if (position !== value.length) return undefined;
+    const name = normalizedFamilyName(quoted.value);
+    return name === ""
+      ? undefined
+      : { identity: fontFamilyIdentity(name), name };
+  }
+
+  const words: string[] = [];
+  while (position < value.length) {
+    const word = cssIdentifier(value, position);
+    if (word === undefined) return undefined;
+    words.push(word.value);
+    const afterWord = word.end;
+    position = skipCssWhitespace(value, afterWord);
+    if (position === afterWord && position < value.length) return undefined;
+  }
+  const name = normalizedFamilyName(words.join(" "));
+  return name === "" ? undefined : { identity: fontFamilyIdentity(name), name };
+}
+
+function cssFunction(
+  value: string,
+  start: number,
+): ParsedCssFunction | undefined {
+  const identifier = cssIdentifier(value, start);
+  if (identifier === undefined) return undefined;
+  let position = skipCssWhitespace(value, identifier.end);
+  if (value[position] !== "(") return undefined;
+  const argumentStart = position + 1;
+  position = argumentStart;
+  let depth = 1;
+  while (position < value.length) {
+    const character = value[position];
+    if (character === "'" || character === '"') {
+      const end = skipCssString(value, position);
+      if (end > value.length || value[end - 1] !== character) return undefined;
+      position = end;
+      continue;
+    }
+    if (character === "\\") {
+      position = cssEscapeEnd(value, position);
+      continue;
+    }
+    if (character === "(") {
+      depth += 1;
+    } else if (character === ")") {
+      depth -= 1;
+      if (depth === 0) {
+        return {
+          argument: value.slice(argumentStart, position),
+          end: position + 1,
+          name: identifier.value.toLowerCase(),
+        };
+      }
+    }
+    position += 1;
+  }
+  return undefined;
+}
+
+function sourceFunctionValue(argument: string): string | undefined {
+  const start = skipCssWhitespace(argument, 0);
+  const quoted = cssStringValue(argument, start);
+  if (quoted !== undefined) {
+    return skipCssWhitespace(argument, quoted.end) === argument.length
+      ? quoted.value
+      : undefined;
+  }
+  const trimmed = trimCssWhitespace(argument);
+  if (trimmed === "") return undefined;
+  let position = 0;
+  while (position < trimmed.length) {
+    const character = trimmed[position];
+    if (
+      character === "'" ||
+      character === '"' ||
+      character === "(" ||
+      character === ")" ||
+      CSS_WHITESPACE.test(character ?? "") ||
+      (character?.codePointAt(0) ?? 0) < 0x20
+    ) {
+      return undefined;
+    }
+    position = character === "\\"
+      ? cssEscapeEnd(trimmed, position)
+      : position + 1;
+  }
+  return decodeCssEscapes(trimmed);
+}
+
+function validSourceModifierArgument(argument: string): boolean {
+  const trimmed = trimCssWhitespace(argument);
+  if (trimmed === "") return false;
+  const quoted = cssStringValue(trimmed, 0);
+  if (quoted !== undefined) return quoted.end === trimmed.length;
+  return !/["'();]/.test(trimmed);
+}
+
+function fontSources(value: string | undefined): ParsedFontSources {
+  if (value === undefined) return { sources: [], valid: false };
+  const sources: FontSourceRecord[] = [];
+  let position = skipCssWhitespace(value, 0);
+  if (position === value.length) return { sources, valid: false };
+  while (position < value.length) {
+    const sourceFunction = cssFunction(value, position);
+    if (
+      sourceFunction === undefined ||
+      (sourceFunction.name !== "url" && sourceFunction.name !== "local")
+    ) {
+      return { sources, valid: false };
+    }
+    const source = sourceFunction.name === "url"
+      ? sourceFunctionValue(sourceFunction.argument)
+      : fontFamily(sourceFunction.argument)?.name;
+    if (source === undefined) return { sources, valid: false };
+    sources.push({ kind: sourceFunction.name, value: source });
+    position = skipCssWhitespace(value, sourceFunction.end);
+
+    const modifiers = new Set<string>();
+    while (position < value.length && value[position] !== ",") {
+      if (sourceFunction.name !== "url") return { sources, valid: false };
+      const modifier = cssFunction(value, position);
+      if (
+        modifier === undefined ||
+        (modifier.name !== "format" && modifier.name !== "tech") ||
+        modifiers.has(modifier.name) ||
+        !validSourceModifierArgument(modifier.argument)
+      ) {
+        return { sources, valid: false };
+      }
+      modifiers.add(modifier.name);
+      position = skipCssWhitespace(value, modifier.end);
+    }
+    if (position === value.length) return { sources, valid: true };
+    position = skipCssWhitespace(value, position + 1);
+    if (position === value.length) return { sources, valid: false };
+  }
+  return { sources, valid: true };
+}
+
+function percentage(value: string | undefined): number | undefined {
+  const match = trimCssWhitespace(value ?? "").match(
+    /^(\d+(?:\.\d+)?|\.\d+)%$/,
+  );
+  return match?.[1] === undefined ? undefined : Number(match[1]);
+}
+
+function fontStyle(value: string | undefined): string | undefined {
+  if (value === undefined) return "normal";
+  const trimmed = trimCssWhitespace(value);
+  const identifier = cssIdentifier(trimmed, 0);
+  if (identifier === undefined) return undefined;
+  const keyword = identifier.value.toLowerCase();
+  const remainder = trimCssWhitespace(trimmed.slice(identifier.end));
+  if (keyword === "normal" || keyword === "italic") {
+    return remainder === "" ? keyword : undefined;
+  }
+  if (keyword !== "oblique") return undefined;
+  if (remainder === "") return keyword;
+  const angles = remainder.split(CSS_WHITESPACE_RUN);
+  if (
+    angles.length > 2 ||
+    angles.some((angle) =>
+      !/^[+-]?(?:\d+(?:\.\d+)?|\.\d+)(?:deg|grad|rad|turn)$/i.test(angle)
+    )
+  ) {
+    return undefined;
+  }
+  return `${keyword} ${angles.map((angle) => angle.toLowerCase()).join(" ")}`;
+}
+
+function weightRange(value: string | undefined): WeightRange | undefined {
+  if (value === undefined) return { minimum: 400, maximum: 400 };
+  const trimmed = trimCssWhitespace(value);
+  const keyword = cssIdentifier(trimmed, 0);
+  if (keyword !== undefined && keyword.end === trimmed.length) {
+    if (keyword.value.toLowerCase() === "normal") {
+      return { minimum: 400, maximum: 400 };
+    }
+    if (keyword.value.toLowerCase() === "bold") {
+      return { minimum: 700, maximum: 700 };
+    }
+    return undefined;
+  }
+  const match = trimmed.match(
+    /^(\d+(?:\.\d+)?|\.\d+)(?:[\t\n\f\r ]+(\d+(?:\.\d+)?|\.\d+))?$/,
+  );
+  if (match?.[1] === undefined) return undefined;
+  const minimum = Number(match[1]);
+  const maximum = Number(match[2] ?? match[1]);
+  if (
+    minimum < 1 ||
+    minimum > 1000 ||
+    maximum < minimum ||
+    maximum > 1000
+  ) {
+    return undefined;
+  }
+  return { minimum, maximum };
+}
+
 function fontFaces(css: string): ParsedFontFaces {
-  const parsedBlocks = fontFaceBlocks(css);
+  const parsedBlocks = cssAtRuleBlocks(css, "font-face");
   const failures = [...parsedBlocks.failures];
   const faces = parsedBlocks.blocks.flatMap((block) => {
     const declarations = cssDeclarations(block);
-    const family = descriptorText(descriptor(declarations, "font-family"));
-    if (family === undefined) return [];
+    const parsedFamily = fontFamily(
+      descriptor(declarations, "font-family"),
+    );
+    if (parsedFamily === undefined) {
+      failures.push("@font-face has invalid font-family descriptor");
+      return [];
+    }
     for (const name of AUDITED_FONT_DESCRIPTORS) {
       if (
         declarations.filter((declaration) => declaration.name === name)
           .length > 1
       ) {
-        failures.push(`${family} @font-face has duplicate ${name} descriptor`);
+        failures.push(
+          `${parsedFamily.name} @font-face has duplicate ${name} descriptor`,
+        );
+      }
+    }
+    const style = fontStyle(descriptor(declarations, "font-style"));
+    if (style === undefined) {
+      failures.push(
+        `${parsedFamily.name} @font-face has invalid font-style descriptor`,
+      );
+      return [];
+    }
+    const weight = weightRange(descriptor(declarations, "font-weight"));
+    if (weight === undefined) {
+      failures.push(
+        `${parsedFamily.name} @font-face has invalid font-weight descriptor`,
+      );
+      return [];
+    }
+    const parsedSources = fontSources(descriptor(declarations, "src"));
+    if (!parsedSources.valid) {
+      failures.push(
+        `${parsedFamily.name} @font-face has invalid src descriptor`,
+      );
+      return [];
+    }
+    const metricDescriptors = [
+      ["size-adjust", descriptor(declarations, "size-adjust")],
+      ["ascent-override", descriptor(declarations, "ascent-override")],
+      ["descent-override", descriptor(declarations, "descent-override")],
+      ["line-gap-override", descriptor(declarations, "line-gap-override")],
+    ] as const;
+    for (const [name, value] of metricDescriptors) {
+      if (value !== undefined && percentage(value) === undefined) {
+        failures.push(
+          `${parsedFamily.name} @font-face has invalid ${name} descriptor`,
+        );
       }
     }
     return [{
-      family,
-      style: (
-        descriptorText(descriptor(declarations, "font-style")) ?? "normal"
-      ).toLowerCase(),
-      weight: weightRange(descriptor(declarations, "font-weight")),
-      sources: fontSources(descriptor(declarations, "src")),
+      family: parsedFamily.name,
+      familyIdentity: parsedFamily.identity,
+      style,
+      weight,
+      sources: parsedSources.sources,
       sizeAdjust: percentage(descriptor(declarations, "size-adjust")),
       ascentOverride: percentage(
         descriptor(declarations, "ascent-override"),
@@ -509,26 +481,71 @@ function fontFaces(css: string): ParsedFontFaces {
   return { faces, failures };
 }
 
+function cssCommaSeparated(value: string): readonly string[] | undefined {
+  const parts: string[] = [];
+  let start = 0;
+  let position = 0;
+  let depth = 0;
+  while (position < value.length) {
+    const character = value[position];
+    if (character === "'" || character === '"') {
+      const end = skipCssString(value, position);
+      if (end > value.length || value[end - 1] !== character) return undefined;
+      position = end;
+      continue;
+    }
+    if (character === "\\") {
+      position = cssEscapeEnd(value, position);
+      continue;
+    }
+    if (character === "(") {
+      depth += 1;
+    } else if (character === ")") {
+      depth -= 1;
+      if (depth < 0) return undefined;
+    } else if (character === "," && depth === 0) {
+      const part = trimCssWhitespace(value.slice(start, position));
+      if (part === "") return undefined;
+      parts.push(part);
+      start = position + 1;
+    }
+    position += 1;
+  }
+  if (depth !== 0) return undefined;
+  const part = trimCssWhitespace(value.slice(start));
+  if (part === "") return undefined;
+  parts.push(part);
+  return parts;
+}
+
 function fontRoleAliases(css: string): string[] {
-  const aliases = new Set<string>();
+  const aliases = new Map<string, string>();
+  const stripped = stripCssComments(css).css;
   for (
-    const declaration of css.matchAll(
+    const declaration of stripped.matchAll(
       /--discern-font-[-\w]+\s*:\s*([^;]+);/g,
     )
   ) {
-    for (const family of (declaration[1] ?? "").matchAll(/"([^"]+)"/g)) {
-      const name = family[1];
-      if (name?.includes(" Fallback ") === true) aliases.add(name);
+    for (const value of cssCommaSeparated(declaration[1] ?? "") ?? []) {
+      const family = fontFamily(value);
+      if (
+        family !== undefined &&
+        family.identity.includes(" fallback ") &&
+        !aliases.has(family.identity)
+      ) {
+        aliases.set(family.identity, family.name);
+      }
     }
   }
-  return [...aliases].toSorted();
+  return [...aliases.values()].toSorted();
 }
 
 function authorityForAlias(
   alias: string,
 ): TargetFontMetricAuthority | undefined {
+  const identity = fontFamilyIdentity(alias);
   return TARGET_FONT_METRICS.find(({ fallbackPrefix }) =>
-    alias.startsWith(fallbackPrefix)
+    identity.startsWith(fontFamilyIdentity(fallbackPrefix))
   );
 }
 
@@ -576,10 +593,14 @@ function browserCases(
   return aliases.flatMap((alias) => {
     const authority = authorityForAlias(alias);
     if (authority === undefined) return [];
-    const targetFaces = faces.filter(({ family }) =>
-      family === authority.family
+    const targetIdentity = fontFamilyIdentity(authority.family);
+    const aliasIdentity = fontFamilyIdentity(alias);
+    const targetFaces = faces.filter(({ familyIdentity }) =>
+      familyIdentity === targetIdentity
     );
-    const aliasFaces = faces.filter(({ family }) => family === alias);
+    const aliasFaces = faces.filter(({ familyIdentity }) =>
+      familyIdentity === aliasIdentity
+    );
     return [...new Set(targetFaces.map(({ style }) => style))]
       .toSorted()
       .flatMap((style) => {
@@ -674,16 +695,18 @@ export function auditFontMetricOverrides(
   css: string,
 ): FontMetricOverrideAudit {
   const aliases = fontRoleAliases(css);
+  const aliasIdentities = new Set(aliases.map(fontFamilyIdentity));
   const parsedFaces = fontFaces(css);
   const faces = parsedFaces.faces;
-  const aliasFaces = faces.filter(({ family }) =>
-    family.includes(" Fallback ")
+  const aliasFaces = faces.filter(({ familyIdentity }) =>
+    familyIdentity.includes(" fallback ")
   );
   const failures = [...parsedFaces.failures];
 
   for (const authority of TARGET_FONT_METRICS) {
-    const targetFaces = faces.filter(({ family }) =>
-      family === authority.family
+    const targetIdentity = fontFamilyIdentity(authority.family);
+    const targetFaces = faces.filter(({ familyIdentity }) =>
+      familyIdentity === targetIdentity
     );
     const liveSources = targetFaces.flatMap((face) =>
       face.sources.map((source) => ({ face, source }))
@@ -730,7 +753,7 @@ export function auditFontMetricOverrides(
   }
 
   for (const face of aliasFaces) {
-    if (!aliases.includes(face.family)) {
+    if (!aliasIdentities.has(face.familyIdentity)) {
       failures.push(
         `${describeFace(face)} is not enrolled by a public font-role stack`,
       );
@@ -781,7 +804,10 @@ export function auditFontMetricOverrides(
       failures.push(`${alias} has no target metric authority`);
       continue;
     }
-    const enrolledFaces = aliasFaces.filter(({ family }) => family === alias);
+    const aliasIdentity = fontFamilyIdentity(alias);
+    const enrolledFaces = aliasFaces.filter(({ familyIdentity }) =>
+      familyIdentity === aliasIdentity
+    );
     if (enrolledFaces.length === 0) {
       failures.push(`${alias} has no @font-face declarations`);
       continue;
@@ -804,8 +830,9 @@ export function auditFontMetricOverrides(
         }
       }
     }
-    const targetFaces = faces.filter(({ family }) =>
-      family === authority.family
+    const targetIdentity = fontFamilyIdentity(authority.family);
+    const targetFaces = faces.filter(({ familyIdentity }) =>
+      familyIdentity === targetIdentity
     );
     for (const targetFace of targetFaces) {
       const matchingRanges = enrolledFaces

@@ -701,6 +701,27 @@ Deno.test("target font metrics authorize the exact live face population", async 
   );
   assert(!bundledFontMetricSources().includes(futureSource));
 
+  for (
+    const [family, source] of [
+      ['"crimson pro"', "./fonts/crimson-pro-lowercase.woff2"],
+      ["Crimson/**/ Pro", "./fonts/crimson-pro-unquoted.woff2"],
+    ] as const
+  ) {
+    const normalizedFamily = auditFontMetricOverrides(`${fontCss}
+@font-face {
+  font-family: ${family};
+  font-style: normal;
+  font-weight: 200 900;
+  src: url("${source}") format("woff2");
+}
+`);
+    assertStringIncludes(normalizedFamily.failures.join("\n"), source);
+    assertStringIncludes(
+      normalizedFamily.failures.join("\n"),
+      "no exact metric authority",
+    );
+  }
+
   const romanSource = "./fonts/crimson-pro-roman.woff2";
   const confusedSource = `${romanSource}-next`;
   const confused = auditFontMetricOverrides(
@@ -763,6 +784,45 @@ Deno.test("target font metrics authorize the exact live face population", async 
   }
 
   for (
+    const [descriptor, value] of [
+      [
+        "src",
+        `url("${romanSource}") format("woff2"),`,
+      ],
+      [
+        "src",
+        `url("${romanSource}")) format("woff2")`,
+      ],
+      [
+        "src",
+        `url("${romanSource}") format("woff2") garbage`,
+      ],
+      ["font-weight", "200 900 garbage"],
+    ] as const
+  ) {
+    const invalid = auditFontMetricOverrides(
+      fontCss.replace(
+        descriptor === "src"
+          ? `url("${romanSource}") format("woff2")`
+          : "font-weight: 200 900",
+        descriptor === "src" ? value : `font-weight: ${value}`,
+      ),
+    );
+    assertStringIncludes(
+      invalid.failures.join("\n"),
+      `invalid ${descriptor} descriptor`,
+    );
+  }
+
+  const balanced = auditFontMetricOverrides(
+    fontCss.replace(
+      `url("${romanSource}") format("woff2")`,
+      `url(/**/"${romanSource}"/**/) /**/ format(/**/"woff2"/**/)`,
+    ),
+  );
+  assertEquals(balanced.failures, []);
+
+  for (
     const variant of [
       {
         source: "./fonts/crimson-pro-uppercase.woff2",
@@ -798,6 +858,15 @@ Deno.test("target font metrics authorize the exact live face population", async 
   font-style: normal;
   font-weight: 200 900;
   src: url("./fonts/crimson-pro-/**/-literal.woff2") format("woff2");
+}`,
+      },
+      {
+        source: "./fonts/crimson-pro-)/**/-literal.woff2",
+        face: `@font-face {
+  font-family: "Crimson Pro";
+  font-style: normal;
+  font-weight: 200 900;
+  src: url("./fonts/crimson-pro-)/**/-literal.woff2") format("woff2");
 }`,
       },
     ]
