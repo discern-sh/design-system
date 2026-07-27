@@ -262,6 +262,8 @@ interface FocusSamplePlan {
 interface FocusRenderedDelta {
   readonly changedDevicePixels: number;
   readonly candidateId: string;
+  readonly firstQualifyingCssPixels: number;
+  readonly focusedDifferingDevicePixels: number;
   readonly maximumAdjacentContrast: number;
   readonly maximumRestContrast: number;
   readonly outsideEnvelopeDevicePixels: number;
@@ -270,6 +272,7 @@ interface FocusRenderedDelta {
   readonly requiredCssPixels: number;
   readonly scaleX: number;
   readonly scaleY: number;
+  readonly secondQualifyingCssPixels: number;
   readonly stable: boolean;
   readonly instability: string | undefined;
 }
@@ -1552,6 +1555,37 @@ function focusCandidateEvidence(
   });
 }
 
+function mergeFocusCandidateEvidence(
+  first: readonly FocusCandidateEvidence[],
+  second: readonly FocusCandidateEvidence[],
+): readonly FocusCandidateEvidence[] {
+  const merged = new Map(
+    first.map((candidate) => [candidate.candidateId, candidate] as const),
+  );
+  for (const candidate of second) {
+    const previous = merged.get(candidate.candidateId);
+    if (previous === undefined) {
+      merged.set(candidate.candidateId, candidate);
+      continue;
+    }
+    merged.set(candidate.candidateId, {
+      ...previous,
+      local: previous.local && candidate.local,
+      localityFailure: previous.localityFailure ??
+        candidate.localityFailure,
+      pseudos: [...new Set([...previous.pseudos, ...candidate.pseudos])],
+      regions: [...previous.regions, ...candidate.regions],
+      requiredCssPixels: Math.max(
+        previous.requiredCssPixels,
+        candidate.requiredCssPixels,
+      ),
+      viewportLocality: previous.viewportLocality ||
+        candidate.viewportLocality,
+    });
+  }
+  return [...merged.values()];
+}
+
 async function focusSamplePlan(
   page: Page,
   before: readonly FocusIndicatorStyle[],
@@ -1651,7 +1685,6 @@ async function measureFocusRenderedDelta(
   focusedTwo: FocusSceneCapture,
   suppressedOne: FocusSceneCapture,
   suppressedTwo: FocusSceneCapture,
-  restoredRest: FocusSceneCapture,
   evidence: FocusCandidateEvidence,
   plan: FocusSamplePlan,
 ): Promise<FocusRenderedDelta | undefined> {
@@ -1667,7 +1700,6 @@ async function measureFocusRenderedDelta(
         requiredCssPixels,
         restOneBytes,
         restTwoBytes,
-        restoredRestBytes,
         suppressedOneBytes,
         suppressedTwoBytes,
       },
@@ -1717,7 +1749,6 @@ async function measureFocusRenderedDelta(
         focusedTwoPixels,
         suppressedOnePixels,
         suppressedTwoPixels,
-        restoredRestPixels,
       ] = await Promise.all([
         decodedPixels(restOneBytes),
         decodedPixels(restTwoBytes),
@@ -1725,7 +1756,6 @@ async function measureFocusRenderedDelta(
         decodedPixels(focusedTwoBytes),
         decodedPixels(suppressedOneBytes),
         decodedPixels(suppressedTwoBytes),
-        decodedPixels(restoredRestBytes),
       ]);
       if (
         restOnePixels === undefined ||
@@ -1733,8 +1763,7 @@ async function measureFocusRenderedDelta(
         focusedOnePixels === undefined ||
         focusedTwoPixels === undefined ||
         suppressedOnePixels === undefined ||
-        suppressedTwoPixels === undefined ||
-        restoredRestPixels === undefined
+        suppressedTwoPixels === undefined
       ) {
         return undefined;
       }
@@ -1745,7 +1774,6 @@ async function measureFocusRenderedDelta(
           focusedTwoPixels,
           suppressedOnePixels,
           suppressedTwoPixels,
-          restoredRestPixels,
         ].some((image) =>
           image.width !== restOnePixels.width ||
           image.height !== restOnePixels.height
@@ -1783,73 +1811,6 @@ async function measureFocusRenderedDelta(
           0.7152 * linearChannel(green) +
           0.0722 * linearChannel(blue);
       };
-      const differingPixels = (
-        left: Uint8ClampedArray,
-        right: Uint8ClampedArray,
-      ): number => {
-        let differences = 0;
-        for (let row = 0; row < restOnePixels.height; row += 1) {
-          const top = clip.y + row / scaleY;
-          const bottom = clip.y + (row + 1) / scaleY;
-          for (let column = 0; column < restOnePixels.width; column += 1) {
-            const cellLeft = clip.x + column / scaleX;
-            const cellRight = clip.x + (column + 1) / scaleX;
-            if (
-              !regions.some((region) =>
-                cellLeft < region.right &&
-                cellRight > region.left &&
-                top < region.bottom &&
-                bottom > region.top
-              )
-            ) {
-              continue;
-            }
-            const offset = (row * restOnePixels.width + column) * 4;
-            const attributedInFirstPair = focusedOnePixels.data[offset] !==
-                suppressedOnePixels.data[offset] ||
-              focusedOnePixels.data[offset + 1] !==
-                suppressedOnePixels.data[offset + 1] ||
-              focusedOnePixels.data[offset + 2] !==
-                suppressedOnePixels.data[offset + 2] ||
-              focusedOnePixels.data[offset + 3] !==
-                suppressedOnePixels.data[offset + 3];
-            const attributedInSecondPair = focusedTwoPixels.data[offset] !==
-                suppressedTwoPixels.data[offset] ||
-              focusedTwoPixels.data[offset + 1] !==
-                suppressedTwoPixels.data[offset + 1] ||
-              focusedTwoPixels.data[offset + 2] !==
-                suppressedTwoPixels.data[offset + 2] ||
-              focusedTwoPixels.data[offset + 3] !==
-                suppressedTwoPixels.data[offset + 3];
-            if (!attributedInFirstPair && !attributedInSecondPair) continue;
-            if (
-              left[offset] !== right[offset] ||
-              left[offset + 1] !== right[offset + 1] ||
-              left[offset + 2] !== right[offset + 2] ||
-              left[offset + 3] !== right[offset + 3]
-            ) {
-              differences += 1;
-            }
-          }
-        }
-        return differences;
-      };
-      const unstablePairs = [
-        ["rest A1/A2", differingPixels(restOnePixels.data, restTwoPixels.data)],
-        [
-          "focused F1/F2",
-          differingPixels(focusedOnePixels.data, focusedTwoPixels.data),
-        ],
-        [
-          "suppressed S1/S2",
-          differingPixels(suppressedOnePixels.data, suppressedTwoPixels.data),
-        ],
-        [
-          "rest A1/A3",
-          differingPixels(restOnePixels.data, restoredRestPixels.data),
-        ],
-      ] as const;
-      const unstable = unstablePairs.find(([, differences]) => differences > 0);
       const pixelIntersectionArea = (
         left: number,
         right: number,
@@ -1913,11 +1874,14 @@ async function measureFocusRenderedDelta(
         return area;
       };
       let changedDevicePixels = 0;
+      let firstQualifyingCssPixels = 0;
+      let focusedDifferingDevicePixels = 0;
       let maximumAdjacentContrast = 1;
       let maximumRestContrast = 1;
       let outsideEnvelopeDevicePixels = 0;
       let qualifyingDevicePixels = 0;
       let qualifyingCssPixels = 0;
+      let secondQualifyingCssPixels = 0;
       const regionBounds = {
         bottom: Math.max(...regions.map((region) => region.bottom)),
         left: Math.min(...regions.map((region) => region.left)),
@@ -1931,15 +1895,35 @@ async function measureFocusRenderedDelta(
           const left = clip.x + column / scaleX;
           const right = clip.x + (column + 1) / scaleX;
           const offset = (row * restOnePixels.width + column) * 4;
-          const suppressionChanged = focusedOnePixels.data[offset] !==
-              suppressedOnePixels.data[offset] ||
-            focusedOnePixels.data[offset + 1] !==
-              suppressedOnePixels.data[offset + 1] ||
-            focusedOnePixels.data[offset + 2] !==
-              suppressedOnePixels.data[offset + 2] ||
-            focusedOnePixels.data[offset + 3] !==
-              suppressedOnePixels.data[offset + 3];
-          if (suppressionChanged) {
+          const firstFocusedLuminance = luminance(
+            focusedOnePixels.data,
+            offset,
+          );
+          const firstSuppressedLuminance = luminance(
+            suppressedOnePixels.data,
+            offset,
+          );
+          const firstAdjacentContrast = (
+            Math.max(firstFocusedLuminance, firstSuppressedLuminance) + 0.05
+          ) /
+            (Math.min(firstFocusedLuminance, firstSuppressedLuminance) + 0.05);
+          const secondFocusedLuminance = luminance(
+            focusedTwoPixels.data,
+            offset,
+          );
+          const secondSuppressedLuminance = luminance(
+            suppressedTwoPixels.data,
+            offset,
+          );
+          const secondAdjacentContrast = (
+            Math.max(secondFocusedLuminance, secondSuppressedLuminance) + 0.05
+          ) /
+            (Math.min(secondFocusedLuminance, secondSuppressedLuminance) +
+              0.05);
+          if (
+            firstAdjacentContrast >= 3 &&
+            secondAdjacentContrast >= 3
+          ) {
             const envelopeArea = pixelIntersectionArea(
               left,
               right,
@@ -1969,6 +1953,17 @@ async function measureFocusRenderedDelta(
           );
           if (intersectionArea <= 0) continue;
           if (
+            focusedOnePixels.data[offset] !== focusedTwoPixels.data[offset] ||
+            focusedOnePixels.data[offset + 1] !==
+              focusedTwoPixels.data[offset + 1] ||
+            focusedOnePixels.data[offset + 2] !==
+              focusedTwoPixels.data[offset + 2] ||
+            focusedOnePixels.data[offset + 3] !==
+              focusedTwoPixels.data[offset + 3]
+          ) {
+            focusedDifferingDevicePixels += 1;
+          }
+          if (
             restOnePixels.data[offset] !== focusedOnePixels.data[offset] ||
             restOnePixels.data[offset + 1] !==
               focusedOnePixels.data[offset + 1] ||
@@ -1979,32 +1974,46 @@ async function measureFocusRenderedDelta(
           ) {
             changedDevicePixels += 1;
           }
-          const focusedLuminance = luminance(focusedOnePixels.data, offset);
-          const restLuminance = luminance(restOnePixels.data, offset);
-          const suppressedLuminance = luminance(
-            suppressedOnePixels.data,
-            offset,
+          const firstRestLuminance = luminance(restOnePixels.data, offset);
+          const firstRestContrast = (
+            Math.max(firstFocusedLuminance, firstRestLuminance) + 0.05
+          ) / (Math.min(firstFocusedLuminance, firstRestLuminance) + 0.05);
+          maximumRestContrast = Math.max(
+            maximumRestContrast,
+            firstRestContrast,
           );
-          const restContrast = (
-            Math.max(focusedLuminance, restLuminance) + 0.05
-          ) / (Math.min(focusedLuminance, restLuminance) + 0.05);
-          const adjacentContrast = (
-            Math.max(focusedLuminance, suppressedLuminance) + 0.05
-          ) / (Math.min(focusedLuminance, suppressedLuminance) + 0.05);
-          maximumRestContrast = Math.max(maximumRestContrast, restContrast);
           maximumAdjacentContrast = Math.max(
             maximumAdjacentContrast,
-            adjacentContrast,
+            firstAdjacentContrast,
           );
-          if (restContrast >= 3 && adjacentContrast >= 3) {
+          const secondRestLuminance = luminance(restTwoPixels.data, offset);
+          const secondRestContrast = (
+            Math.max(secondFocusedLuminance, secondRestLuminance) + 0.05
+          ) / (Math.min(secondFocusedLuminance, secondRestLuminance) + 0.05);
+          const firstQualifies = firstRestContrast >= 3 &&
+            firstAdjacentContrast >= 3;
+          const secondQualifies = secondRestContrast >= 3 &&
+            secondAdjacentContrast >= 3;
+          if (firstQualifies) {
+            firstQualifyingCssPixels += intersectionArea;
+          }
+          if (secondQualifies) {
+            secondQualifyingCssPixels += intersectionArea;
+          }
+          if (firstQualifies && secondQualifies) {
             qualifyingDevicePixels += 1;
             qualifyingCssPixels += intersectionArea;
           }
         }
       }
+      const witnessMoved = firstQualifyingCssPixels >= requiredCssPixels &&
+        secondQualifyingCssPixels >= requiredCssPixels &&
+        qualifyingCssPixels < requiredCssPixels;
       return {
         candidateId,
         changedDevicePixels,
+        firstQualifyingCssPixels,
+        focusedDifferingDevicePixels,
         maximumAdjacentContrast,
         maximumRestContrast,
         outsideEnvelopeDevicePixels,
@@ -2013,10 +2022,15 @@ async function measureFocusRenderedDelta(
         requiredCssPixels,
         scaleX,
         scaleY,
-        stable: unstable === undefined,
-        instability: unstable === undefined
-          ? undefined
-          : `${unstable[0]} changed at ${unstable[1]} attributed device pixels`,
+        secondQualifyingCssPixels,
+        stable: !witnessMoved,
+        instability: witnessMoved
+          ? `qualifying witness moved between captures: F1 ${
+            firstQualifyingCssPixels.toFixed(2)
+          }, F2 ${secondQualifyingCssPixels.toFixed(2)}, intersection ${
+            qualifyingCssPixels.toFixed(2)
+          }, required ${requiredCssPixels.toFixed(2)} CSS pixels`
+          : undefined,
       };
     },
     {
@@ -2029,7 +2043,6 @@ async function measureFocusRenderedDelta(
       requiredCssPixels: evidence.requiredCssPixels,
       restOneBytes: [...restOne.bytes],
       restTwoBytes: [...restTwo.bytes],
-      restoredRestBytes: [...restoredRest.bytes],
       suppressedOneBytes: [...suppressedOne.bytes],
       suppressedTwoBytes: [...suppressedTwo.bytes],
     },
@@ -2108,29 +2121,48 @@ async function measureFocusViewportLocality(
       }
       const scaleX = focusedOne.width / plan.clip.width;
       const scaleY = focusedOne.height / plan.clip.height;
+      const linearChannel = (channel: number): number => {
+        const normalized = channel / 255;
+        return normalized <= 0.04045
+          ? normalized / 12.92
+          : ((normalized + 0.055) / 1.055) ** 2.4;
+      };
+      const luminance = (
+        data: Uint8ClampedArray,
+        offset: number,
+      ): number => {
+        const alpha = (data[offset + 3] ?? 255) / 255;
+        const red = (data[offset] ?? 0) * alpha + 255 * (1 - alpha);
+        const green = (data[offset + 1] ?? 0) * alpha +
+          255 * (1 - alpha);
+        const blue = (data[offset + 2] ?? 0) * alpha +
+          255 * (1 - alpha);
+        return 0.2126 * linearChannel(red) +
+          0.7152 * linearChannel(green) +
+          0.0722 * linearChannel(blue);
+      };
+      const contrast = (
+        left: Uint8ClampedArray,
+        right: Uint8ClampedArray,
+        offset: number,
+      ): number => {
+        const leftLuminance = luminance(left, offset);
+        const rightLuminance = luminance(right, offset);
+        return (Math.max(leftLuminance, rightLuminance) + 0.05) /
+          (Math.min(leftLuminance, rightLuminance) + 0.05);
+      };
       let outsideEnvelopeDevicePixels = 0;
-      let unstableAttributionPixels = 0;
       for (let row = 0; row < focusedOne.height; row += 1) {
         const top = plan.clip.y + row / scaleY;
         const bottom = plan.clip.y + (row + 1) / scaleY;
         for (let column = 0; column < focusedOne.width; column += 1) {
           const offset = (row * focusedOne.width + column) * 4;
-          const changed =
-            focusedOne.data[offset] !== suppressedOne.data[offset] ||
-            focusedOne.data[offset + 1] !== suppressedOne.data[offset + 1] ||
-            focusedOne.data[offset + 2] !== suppressedOne.data[offset + 2] ||
-            focusedOne.data[offset + 3] !== suppressedOne.data[offset + 3];
-          if (!changed) continue;
-          const focusedStable =
-            focusedOne.data[offset] === focusedTwo.data[offset] &&
-            focusedOne.data[offset + 1] === focusedTwo.data[offset + 1] &&
-            focusedOne.data[offset + 2] === focusedTwo.data[offset + 2] &&
-            focusedOne.data[offset + 3] === focusedTwo.data[offset + 3];
-          const suppressedStable =
-            suppressedOne.data[offset] === suppressedTwo.data[offset] &&
-            suppressedOne.data[offset + 1] === suppressedTwo.data[offset + 1] &&
-            suppressedOne.data[offset + 2] === suppressedTwo.data[offset + 2] &&
-            suppressedOne.data[offset + 3] === suppressedTwo.data[offset + 3];
+          if (
+            contrast(focusedOne.data, suppressedOne.data, offset) < 3 ||
+            contrast(focusedTwo.data, suppressedTwo.data, offset) < 3
+          ) {
+            continue;
+          }
           const left = plan.clip.x + column / scaleX;
           const right = plan.clip.x + (column + 1) / scaleX;
           if (
@@ -2139,18 +2171,14 @@ async function measureFocusViewportLocality(
             top < envelope.top ||
             bottom > envelope.bottom
           ) {
-            if (focusedStable && suppressedStable) {
-              outsideEnvelopeDevicePixels += 1;
-            } else {
-              unstableAttributionPixels += 1;
-            }
+            outsideEnvelopeDevicePixels += 1;
           }
         }
       }
-      const instability = unstableAttributionPixels > 0
-        ? `viewport attribution changed state at ${unstableAttributionPixels} device pixels`
-        : undefined;
-      return { instability, outsideEnvelopeDevicePixels };
+      return {
+        instability: undefined,
+        outsideEnvelopeDevicePixels,
+      };
     },
     {
       envelope,
@@ -2480,6 +2508,7 @@ interface FocusKeyboardHarness {
 interface FocusInspectionHooks {
   readonly afterBlur?: () => Promise<void>;
   readonly afterFocus?: () => Promise<void>;
+  readonly afterFocusedOne?: () => Promise<void>;
 }
 
 async function installFocusBracketInfrastructure(
@@ -2924,12 +2953,23 @@ async function inspectKeyboardFocus(
     const keyboardFocused = await focusByKeyboard(page, target, harness);
     if (hooks.afterFocus !== undefined) await hooks.afterFocus();
     const focusedOne = await focusSceneCapture(page, target, plan);
+    if (hooks.afterFocusedOne !== undefined) {
+      await hooks.afterFocusedOne();
+    }
     const focusedTwo = await focusSceneCapture(page, target, plan);
-    const evidence = focusCandidateEvidence(
-      restOne.styles,
-      focusedOne.styles,
-      surfaceColor,
-      plan,
+    const evidence = mergeFocusCandidateEvidence(
+      focusCandidateEvidence(
+        restOne.styles,
+        focusedOne.styles,
+        surfaceColor,
+        plan,
+      ),
+      focusCandidateEvidence(
+        restTwo.styles,
+        focusedTwo.styles,
+        surfaceColor,
+        plan,
+      ),
     );
     const viewportCandidates = evidence.filter((candidate) =>
       candidate.local && candidate.viewportLocality
@@ -3041,12 +3081,7 @@ async function inspectKeyboardFocus(
       );
     }
     const evidenceById = new Map(
-      focusCandidateEvidence(
-        restOne.styles,
-        focusedOne.styles,
-        surfaceColor,
-        plan,
-      ).map((candidate) => [candidate.candidateId, candidate] as const),
+      evidence.map((candidate) => [candidate.candidateId, candidate] as const),
     );
     const witnesses: FocusRenderedDelta[] = [];
     for (const [candidateId, [one, two]] of suppressed) {
@@ -3060,7 +3095,6 @@ async function inspectKeyboardFocus(
         focusedTwo,
         one,
         two,
-        restoredRest,
         candidate,
         plan,
       );
@@ -3094,7 +3128,7 @@ async function inspectKeyboardFocus(
         }
         if (witness.outsideEnvelopeDevicePixels > 0) {
           inspectionFailures.push(
-            `${candidate.candidate}/${candidateId}: suppressed candidate paint changed ${witness.outsideEnvelopeDevicePixels} device pixels outside its declared locality envelope`,
+            `${candidate.candidate}/${candidateId}: stable contrast-qualified candidate paint reached ${witness.outsideEnvelopeDevicePixels} device pixels outside its declared locality envelope`,
           );
         }
       }
@@ -5021,7 +5055,13 @@ async function verifyFocusDeviceScaleInvariant(
         failures.push(
           `DPR ${deviceScale} fractional focus raster did not satisfy the production witness: keyboard=${inspection.keyboardFocused}, failures=${
             inspection.failures.join(", ") || "none"
-          }, area=${rendered?.qualifyingCssPixels.toFixed(2) ?? "missing"}/${
+          }, F1=${
+            rendered?.firstQualifyingCssPixels.toFixed(2) ?? "missing"
+          }, F2=${
+            rendered?.secondQualifyingCssPixels.toFixed(2) ?? "missing"
+          }, intersection=${
+            rendered?.qualifyingCssPixels.toFixed(2) ?? "missing"
+          }, required=${
             rendered?.requiredCssPixels.toFixed(2) ?? "missing"
           }, changed=${rendered?.changedDevicePixels ?? "missing"}, rest=${
             rendered?.maximumRestContrast.toFixed(2) ?? "missing"
@@ -5216,9 +5256,13 @@ async function verifySemanticFocus(
         currentFailures.push(
           `${theme}/${semanticTarget.role}: semantic-surface focus indicator has ${
             indicator.maxContrast.toFixed(2)
-          }:1 modeled diagnostic contrast, ${
+          }:1 modeled diagnostic contrast; F1 ${
+            renderedDelta?.firstQualifyingCssPixels.toFixed(2) ?? "unmeasured"
+          }, F2 ${
+            renderedDelta?.secondQualifyingCssPixels.toFixed(2) ?? "unmeasured"
+          }, and stable intersection ${
             renderedCoverage.measured?.toFixed(2) ?? "unmeasured"
-          } CSS pixels witnessed at both 3:1 focus-vs-rest and 3:1 focus-vs-suppressed-candidate contrast; requires ${
+          } CSS pixels independently witnessed at both 3:1 focus-vs-rest and 3:1 focus-vs-suppressed-candidate contrast; requires ${
             renderedCoverage.required?.toFixed(2) ?? "an available threshold"
           } CSS pixels for one stable associated candidate${
             inspectionFailures.length === 0
@@ -5589,6 +5633,7 @@ async function verifySemanticFocus(
     "candidate-sibling-removal",
     "ticking-focused-child",
     "one-time-focus-mutation",
+    "disjoint-moving-witness",
     "remote-pseudo-indicator",
     "remote-pseudo-scale",
     "remote-pseudo-translate",
@@ -5631,6 +5676,7 @@ async function verifySemanticFocus(
     "aria-disabled-indicator",
     "underline-single-line-descent",
     "underline-multiline",
+    "low-contrast-fringe-drift",
     "cross-target-victim",
   ] as const;
   const proofKinds = [...negativeProofKinds, ...positiveProofKinds] as const;
@@ -5816,6 +5862,12 @@ async function verifySemanticFocus(
           `inline-size:${targetWidth}px;block-size:${targetHeight}px;` +
           "overflow:hidden;" +
           "border:0;box-shadow:none;outline:none;text-decoration:none;";
+        if (
+          kind === "disjoint-moving-witness" ||
+          kind === "low-contrast-fringe-drift"
+        ) {
+          target.style.backgroundColor = `var(${accent.token})`;
+        }
         if (target instanceof HTMLInputElement) {
           target.style.cssText +=
             `appearance:none;inline-size:${targetWidth}px;` +
@@ -6084,14 +6136,16 @@ async function verifySemanticFocus(
         [data-discern-focus-proof="pseudo-border-style-ring"]:focus-visible::after {
           border-style: solid;
         }
+        [data-discern-focus-proof="remote-pseudo-indicator"]:focus-visible {
+          outline: 2px solid rgb(0, 0, 0) !important;
+          outline-offset: 2px !important;
+        }
         [data-discern-focus-proof="remote-pseudo-indicator"]:focus-visible::after {
-          background: rgb(0, 0, 0);
-          content: "";
-          height: 44px;
-          left: 0;
-          position: fixed;
-          top: 0;
-          width: 44px;
+          color: rgb(0, 0, 0);
+          content: "•";
+          inset: 0;
+          position: absolute;
+          text-shadow: 600px 0 0 rgb(0, 0, 0);
         }
         [data-discern-focus-proof="remote-pseudo-scale"]:focus-visible::after {
           background: rgb(0, 0, 0);
@@ -6431,6 +6485,24 @@ async function verifySemanticFocus(
               `0 0 0 2px ${paintColor}`,
               "important",
             );
+          } else if (kind === "disjoint-moving-witness") {
+            paint.style.setProperty(
+              "box-shadow",
+              "-3px 0 0 0 var(--discern-color-ink)",
+              "important",
+            );
+          } else if (kind === "low-contrast-fringe-drift") {
+            paint.style.setProperty(
+              "outline",
+              "2px solid var(--discern-color-ink)",
+              "important",
+            );
+            paint.style.setProperty("outline-offset", "2px", "important");
+            paint.style.setProperty(
+              "box-shadow",
+              "0 0 1px 3px rgba(0, 0, 0, 0.05)",
+              "important",
+            );
           } else if (kind === "new-inset-shadow-geometry") {
             paint.style.setProperty(
               "box-shadow",
@@ -6635,6 +6707,24 @@ async function verifySemanticFocus(
               }
             }, kind);
           },
+          afterFocusedOne: async () => {
+            await target.evaluate((node, kind) => {
+              if (!(node instanceof HTMLElement)) return;
+              if (kind === "disjoint-moving-witness") {
+                node.style.setProperty(
+                  "box-shadow",
+                  "3px 0 0 0 var(--discern-color-ink)",
+                  "important",
+                );
+              } else if (kind === "low-contrast-fringe-drift") {
+                node.style.setProperty(
+                  "box-shadow",
+                  "0 0 1px 3px rgba(0, 0, 0, 0.06)",
+                  "important",
+                );
+              }
+            }, kind);
+          },
         },
       );
       const {
@@ -6675,6 +6765,40 @@ async function verifySemanticFocus(
         samplePlan,
         renderedDelta,
       );
+      const disjointMovingWitnessMatches = kind !== "disjoint-moving-witness" ||
+        (
+          renderedDelta !== undefined &&
+          renderedDelta.firstQualifyingCssPixels >
+            renderedDelta.requiredCssPixels &&
+          renderedDelta.secondQualifyingCssPixels >
+            renderedDelta.requiredCssPixels &&
+          renderedDelta.qualifyingCssPixels === 0 &&
+          !renderedDelta.stable
+        );
+      const lowContrastFringeMatches = kind !== "low-contrast-fringe-drift" ||
+        (
+          renderedDelta !== undefined &&
+          renderedDelta.focusedDifferingDevicePixels > 0 &&
+          renderedDelta.firstQualifyingCssPixels ===
+            renderedDelta.qualifyingCssPixels &&
+          renderedDelta.secondQualifyingCssPixels ===
+            renderedDelta.qualifyingCssPixels &&
+          renderedDelta.qualifyingCssPixels >=
+            renderedDelta.requiredCssPixels &&
+          renderedDelta.stable
+        );
+      const remotePseudoWithLocalWitnessMatches =
+        kind !== "remote-pseudo-indicator" ||
+        (
+          renderedDelta !== undefined &&
+          renderedDelta.firstQualifyingCssPixels >=
+            renderedDelta.requiredCssPixels &&
+          renderedDelta.secondQualifyingCssPixels >=
+            renderedDelta.requiredCssPixels &&
+          renderedDelta.qualifyingCssPixels >=
+            renderedDelta.requiredCssPixels &&
+          renderedDelta.outsideEnvelopeDevicePixels > 0
+        );
       const renderedDeviceScale: FocusDeviceScale | undefined =
         renderedDelta !== undefined &&
           renderedDelta.scaleX === renderedDelta.scaleY &&
@@ -7001,6 +7125,7 @@ async function verifySemanticFocus(
         "candidate-sibling-removal",
         "ticking-focused-child",
         "one-time-focus-mutation",
+        "disjoint-moving-witness",
         "remote-pseudo-indicator",
         "remote-pseudo-scale",
         "remote-pseudo-translate",
@@ -7144,7 +7269,10 @@ async function verifySemanticFocus(
         oracleAfter.filters.flatMap((filter) =>
             filter.match(/opacity\([^)]*\)/g) ?? []
           ).length === 2;
-      const oraclePaintMatches = cssDriven ? true : oracleAfter.paintPresent;
+      const oraclePaintMatches = cssDriven ||
+          kind === "disjoint-moving-witness"
+        ? true
+        : oracleAfter.paintPresent;
       const proofDiagnostic =
         `${kind} target: keyboard=${keyboardFocused}, colours=${
           indicator.colors.join(", ") || "none"
@@ -7158,8 +7286,14 @@ async function verifySemanticFocus(
           appearanceContrast?.toFixed(2) ?? "unknown"
         }:1, changed-device-pixels=${
           renderedDelta?.changedDevicePixels ?? "not-measured"
-        }, qualifying-css-pixels=${
+        }, F1-qualifying-css-pixels=${
+          renderedDelta?.firstQualifyingCssPixels.toFixed(2) ?? "not-measured"
+        }, F2-qualifying-css-pixels=${
+          renderedDelta?.secondQualifyingCssPixels.toFixed(2) ?? "not-measured"
+        }, qualifying-intersection-css-pixels=${
           renderedDelta?.qualifyingCssPixels.toFixed(2) ?? "not-measured"
+        }, focused-differing-device-pixels=${
+          renderedDelta?.focusedDifferingDevicePixels ?? "not-measured"
         }, required-css-pixels=${
           renderedCoverage.required?.toFixed(2) ?? "not-measured"
         }, rendered-max=${
@@ -7196,7 +7330,10 @@ async function verifySemanticFocus(
         !oracleSupportsExpectation ||
         !screenshotProofMatches ||
         !registryProofMatches ||
-        !serializedFilterMatches
+        !serializedFilterMatches ||
+        !disjointMovingWitnessMatches ||
+        !lowContrastFringeMatches ||
+        !remotePseudoWithLocalWitnessMatches
       ) {
         syntheticFailures.push(proofDiagnostic);
       }
@@ -7211,7 +7348,11 @@ async function verifySemanticFocus(
       ...await verifyFocusDeviceScaleInvariant(
         browser,
         origin,
-        shadowRenderedProofs.map(({ kind }) => kind),
+        [
+          ...shadowRenderedProofs.map(({ kind }) => kind),
+          "disjoint-moving-witness",
+          "low-contrast-fringe-drift",
+        ],
       ),
     );
   }
