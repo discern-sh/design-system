@@ -102,6 +102,9 @@
     margin-inline: auto 0;
   }
   .discern-site-header__nav a {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 24px;
     padding-block: var(--discern-space-2);
     color: var(--discern-color-ink-muted);
     font-family: var(--discern-font-ui);

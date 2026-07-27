@@ -17,8 +17,8 @@
   .discern-tag__remove {
     display: grid;
     place-items: center;
-    inline-size: 18px;
-    block-size: 18px;
+    inline-size: 24px;
+    block-size: 24px;
     margin-inline-end: -5px;
     padding: 0;
     border: 0;

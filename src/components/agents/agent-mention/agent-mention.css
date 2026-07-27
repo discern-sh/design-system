@@ -4,6 +4,7 @@
     align-items: center;
     gap: 0.35em;
     max-inline-size: 100%;
+    min-block-size: 24px;
     padding-block: 0.09em 0.13em;
     padding-inline: 0.5em 0.55em;
     border: 1px solid var(--discern-color-border);

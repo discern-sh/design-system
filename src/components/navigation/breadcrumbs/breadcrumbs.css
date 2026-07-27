@@ -23,6 +23,9 @@
     align-items: center;
   }
   .discern-breadcrumbs a {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 24px;
     border-radius: var(--discern-radius-xs);
     color: inherit;
     text-decoration-color: transparent;

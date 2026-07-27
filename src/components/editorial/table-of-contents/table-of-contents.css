@@ -40,6 +40,10 @@
     color: var(--discern-color-ink);
     outline: none;
   }
+  .discern-table-of-contents a:focus-visible {
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: -2px;
+  }
   .discern-table-of-contents a span {
     color: var(--discern-color-accent-700);
     font-family: var(--discern-font-mono);

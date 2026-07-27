@@ -65,6 +65,11 @@
     margin: 0;
     font-size: var(--discern-font-size-sm);
   }
+  .discern-artifact-card__meta dd > a {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 24px;
+  }
   @media (max-width: 28rem) {
     .discern-artifact-card {
       padding: var(--discern-space-4);

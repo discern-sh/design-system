@@ -3,6 +3,10 @@
     position: relative;
   }
   .discern-anchor-heading__anchor {
+    display: inline-grid;
+    place-items: center;
+    min-inline-size: 24px;
+    min-block-size: 24px;
     margin-inline-start: 0.35em;
     color: var(--discern-color-accent-600);
     font-weight: var(--discern-font-weight-body);

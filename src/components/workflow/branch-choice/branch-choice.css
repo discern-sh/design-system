@@ -57,6 +57,9 @@
     content: "→  ";
   }
   .discern-branch-choice__path a {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 24px;
     overflow-wrap: anywhere;
     color: var(--discern-color-accent-700);
     text-underline-offset: 0.16em;

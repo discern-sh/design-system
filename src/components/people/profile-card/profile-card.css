@@ -82,6 +82,11 @@
     border-block-start: 1px solid var(--discern-color-border);
     font-size: var(--discern-font-size-xs);
   }
+  .discern-profile-card__links a {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 24px;
+  }
   .discern-profile-card--landscape {
     flex-direction: row;
     flex-wrap: wrap;

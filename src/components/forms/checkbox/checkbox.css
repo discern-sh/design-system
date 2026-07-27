@@ -7,6 +7,7 @@
     display: inline-flex;
     align-items: flex-start;
     gap: 10px;
+    min-block-size: 24px;
     color: var(--discern-color-ink);
     cursor: pointer;
     font-size: var(--discern-font-size-sm);
