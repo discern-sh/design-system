@@ -486,35 +486,65 @@ export function cssSelectorClassNames(
 ): readonly string[] {
   const source = stripCssComments(selector).css;
   const classes: string[] = [];
+  const isWhitespace = (character: string): boolean =>
+    /[\t\n\f\r ]/.test(character);
   const whitespaceEnd = (start: number): number => {
     let end = start;
-    while (/\s/.test(source[end] ?? "")) end += 1;
+    while (isWhitespace(source[end] ?? "")) end += 1;
     return end;
+  };
+  const attributeEnd = (start: number): number => {
+    let position = start + 1;
+    while (position < source.length) {
+      const character = source[position];
+      if (character === "'" || character === '"') {
+        position = skipCssString(source, position);
+        continue;
+      }
+      if (character === "\\") {
+        position = cssEscapeEnd(source, position);
+        continue;
+      }
+      if (character === "]") return position + 1;
+      position += 1;
+    }
+    return source.length;
   };
   const attributeClass = (
     start: number,
-  ): { readonly end: number; readonly name: string } | undefined => {
+  ):
+    | { readonly end: number; readonly names: readonly string[] }
+    | undefined => {
     let position = whitespaceEnd(start + 1);
     const attribute = cssIdentifier(source, position);
-    if (attribute === undefined) return undefined;
+    if (
+      attribute === undefined ||
+      attribute.value.toLowerCase() !== "class"
+    ) {
+      return undefined;
+    }
     position = whitespaceEnd(attribute.end);
-    if (source.slice(position, position + 2) !== "~=") return undefined;
-    position = whitespaceEnd(position + 2);
+    const operator = source.slice(position, position + 2) === "~="
+      ? "~="
+      : source[position] === "="
+      ? "="
+      : undefined;
+    if (operator === undefined) return undefined;
+    position = whitespaceEnd(position + operator.length);
 
     const quote = source[position];
-    let className: string;
+    let valueText: string;
     if (quote === "'" || quote === '"') {
       const end = skipCssString(source, position);
       if (end > source.length || source[end - 1] !== quote) return undefined;
-      className = decodeCssEscapes(source.slice(position + 1, end - 1));
+      valueText = decodeCssEscapes(source.slice(position + 1, end - 1));
       position = end;
     } else {
       const value = cssIdentifier(source, position);
       if (value === undefined) return undefined;
-      className = value.value;
+      valueText = value.value;
       position = value.end;
     }
-    if (/\s/.test(className)) return undefined;
 
     const valueEnd = position;
     position = whitespaceEnd(position);
@@ -527,9 +557,12 @@ export function cssSelectorClassNames(
       position = whitespaceEnd(parsedModifier.end);
     }
     if (source[position] !== "]") return undefined;
+    const names = operator === "~="
+      ? isWhitespace(valueText) || valueText === "" ? [] : [valueText]
+      : valueText.split(/[\t\n\f\r ]+/).filter(Boolean);
     return {
       end: position + 1,
-      name: modifier === "i" ? className.toLowerCase() : className,
+      names: modifier === "i" ? names.map((name) => name.toLowerCase()) : names,
     };
   };
   let position = 0;
@@ -542,10 +575,12 @@ export function cssSelectorClassNames(
     if (character === "[") {
       const attribute = attributeClass(position);
       if (attribute !== undefined) {
-        classes.push(attribute.name);
+        classes.push(...attribute.names);
         position = attribute.end;
         continue;
       }
+      position = attributeEnd(position);
+      continue;
     }
     if (character !== ".") {
       position += 1;

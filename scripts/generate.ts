@@ -80,7 +80,10 @@ async function componentSources(): Promise<ComponentSource[]> {
   );
 }
 
-function discernClassNames(source: string): `discern-${string}`[] {
+/** Decoded Component-owned class names recorded in the generated registry. */
+export function componentOwnedClassNames(
+  source: string,
+): `discern-${string}`[] {
   return cssClassNames(source).filter(
     (name): name is `discern-${string}` => name.startsWith("discern-"),
   );
@@ -149,7 +152,7 @@ async function generateComponentRegistry(): Promise<string> {
       )
     },
     behaviors: ${JSON.stringify(component.meta.behaviors ?? [])},
-    ownedClasses: ${JSON.stringify(discernClassNames(css))},
+    ownedClasses: ${JSON.stringify(componentOwnedClassNames(css))},
     publicTokenNames: ${JSON.stringify(cssTokenNames(css))},
   },`);
   }

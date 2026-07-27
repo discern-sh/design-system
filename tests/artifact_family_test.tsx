@@ -5,6 +5,7 @@ import {
   cssDecodedIdentifiers,
   cssIdentifiers,
 } from "../scripts/css-syntax.ts";
+import { componentOwnedClassNames } from "../scripts/generate.ts";
 import artifactCardMeta from "../src/components/workflow/artifact-card/artifact-card.meta.ts";
 import artifactTreeMeta from "../src/components/workflow/artifact-tree/artifact-tree.meta.ts";
 import decisionRecordMeta from "../src/components/workflow/decision-record/decision-record.meta.ts";
@@ -518,8 +519,14 @@ Deno.test("every file disposition has its complete semantic token mapping", asyn
       '[class~="discern-file-change"]',
       '[class~="DISCERN-FILE-CHANGE" i]',
       '[cl\\61 ss~="\\44 ISCERN-FILE-CHANGE" i]',
+      '[class="discern-file-change"]',
+      '[class="future-entry discern-file-change__state future-state"]',
+      "[CLASS=discern-file-change]",
+      '[cl\\61 ss="\\64 iscern-file-change"]',
+      '[CLASS="DISCERN-FILE-CHANGE future-entry" i]',
       "@scope (.discern-file-change) { :scope",
       '@scope ([class~="DISCERN-FILE-CHANGE" i]) { :scope',
+      '@scope ([class="future-entry discern-file-change"]) { :scope',
     ]
   ) {
     const foreign = {
@@ -555,10 +562,44 @@ Deno.test("every file disposition has its complete semantic token mapping", asyn
   );
   assertEquals(
     cssClassNames(
+      '[class="discern-file-change"] {} ' +
+        '[class="future-entry discern-file-change__state future-state"] {} ' +
+        "[CLASS=discern-file-change--future] {} " +
+        '[cl\\61 ss="\\64 iscern-file-change\\20 discern-file-change__escaped"] {} ' +
+        '[CLASS="DISCERN-FILE-CHANGE FUTURE-ENTRY" i] {} ' +
+        '[class="DISCERN-FILE-CHANGE--STRICT" s] {}',
+    ),
+    [
+      "DISCERN-FILE-CHANGE--STRICT",
+      "discern-file-change",
+      "discern-file-change--future",
+      "discern-file-change__escaped",
+      "discern-file-change__state",
+      "future-entry",
+      "future-state",
+    ],
+  );
+  assertEquals(
+    cssClassNames(
       '/* .discern-file-change */ [data-label="discern-file-change"] {} ' +
+        '[data-tags~="discern-file-change"] {} ' +
+        '[data-tags="discern-file-change"] {} ' +
+        "[class] {} " +
+        '[class^="discern-file-change"] {} ' +
+        '[class$="discern-file-change"] {} ' +
+        '[class*="discern-file-change"] {} ' +
+        '[class|="discern-file-change"] {} ' +
         ".discern-file-change-extra {}",
     ),
     ["discern-file-change-extra"],
+  );
+  assertEquals(
+    componentOwnedClassNames(
+      '[class="future-entry discern-file-change__future"] {} ' +
+        "[CLASS=discern-file-change--exact] {} " +
+        '[data-tags~="discern-file-change__foreign"] {}',
+    ),
+    ["discern-file-change--exact", "discern-file-change__future"],
   );
 
   const ownerSurface = runtimeCssSurfaceRegistry.find(({ componentId }) =>
