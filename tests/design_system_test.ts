@@ -7,7 +7,11 @@ import {
 import { fromFileUrl, join, relative, toFileUrl } from "@std/path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { auditFontMetricOverrides } from "../scripts/font-metric-overrides.ts";
+import {
+  auditBundledFontMetricAssets,
+  auditFontMetricOverrides,
+  bundledFontMetricSources,
+} from "../scripts/font-metric-overrides.ts";
 import { generateSources } from "../scripts/generate.ts";
 import {
   packageManifest,
@@ -591,6 +595,35 @@ Deno.test("font and grain assets are independent, licensed, and integrity-mapped
     const metricAudit = auditFontMetricOverrides(fontCss);
     assert(metricAudit.faces > 0, "no metric-adjusted font faces enrolled");
     assertEquals(metricAudit.failures, []);
+    assertEquals(
+      [
+        ...new Set(
+          metricAudit.browserCases.map(({ fallback }) =>
+            fallback.replaceAll('"', "")
+          ),
+        ),
+      ].toSorted(),
+      metricAudit.aliases,
+    );
+    const metricAssets = await Promise.all(
+      bundledFontMetricSources().map(async (source) => ({
+        source,
+        bytes: await Deno.readFile(join(fonts, source)),
+      })),
+    );
+    assertEquals(await auditBundledFontMetricAssets(metricAssets), []);
+    const firstMetricAsset = metricAssets[0];
+    assert(firstMetricAsset !== undefined);
+    const changedBytes = new Uint8Array(firstMetricAsset.bytes);
+    const changedIndex = Math.floor(changedBytes.length / 2);
+    changedBytes[changedIndex] = (changedBytes[changedIndex] ?? 0) ^ 1;
+    const changedAssets = metricAssets.map((asset) =>
+      asset === firstMetricAsset ? { ...asset, bytes: changedBytes } : asset
+    );
+    const changedFailures = await auditBundledFontMetricAssets(changedAssets);
+    assertEquals(changedFailures.length, 1);
+    assertStringIncludes(changedFailures[0] ?? "", firstMetricAsset.source);
+    assertStringIncludes(changedFailures[0] ?? "", "re-measure the font");
     for (
       const path of fontPaths.filter((candidate) =>
         candidate.endsWith(".woff2")
@@ -646,11 +679,47 @@ Deno.test("font and grain assets are independent, licensed, and integrity-mapped
   }
 });
 
-Deno.test("font metric override audit catches a future malformed alias", async () => {
+Deno.test("font metric audit enrolls future aliases and rejects malformed faces", async () => {
   const fontCss = await Deno.readTextFile(
     new URL("../assets/fonts.css", import.meta.url),
   );
   const futureAlias = "Discern Crimson Fallback Future";
+  const valid = auditFontMetricOverrides(`${fontCss}
+@font-face {
+  font-family: "${futureAlias}";
+  font-style: normal;
+  font-weight: 200 900;
+  src: local("Future Serif");
+  size-adjust: 100%;
+  ascent-override: 90%;
+  descent-override: 21%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "${futureAlias}";
+  font-style: italic;
+  font-weight: 200 900;
+  src: local("Future Serif Italic");
+  size-adjust: 100%;
+  ascent-override: 90%;
+  descent-override: 21%;
+  line-gap-override: 0%;
+}
+:where([data-discern-root]) {
+  --discern-font-future: "Crimson Pro", "${futureAlias}", serif;
+}
+`);
+  assertEquals(valid.failures, []);
+  assert(valid.aliases.includes(futureAlias));
+  assertEquals(
+    valid.browserCases.filter(({ fallback }) => fallback.includes(futureAlias))
+      .map(({ style, weights }) => ({ style, weights })),
+    [
+      { style: "italic", weights: [400, 700] },
+      { style: "normal", weights: [400, 700] },
+    ],
+  );
+
   const malformed = auditFontMetricOverrides(`${fontCss}
 @font-face {
   font-family: "${futureAlias}";

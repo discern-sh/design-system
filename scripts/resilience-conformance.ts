@@ -1,7 +1,11 @@
 import { AxeBuilder } from "@axe-core/playwright";
 import type { Browser, Locator, Page } from "playwright-core";
 import { themeTokens } from "../src/tokens/tokens.ts";
-import { auditFontMetricOverrides } from "./font-metric-overrides.ts";
+import {
+  auditBundledFontMetricAssets,
+  auditFontMetricOverrides,
+  bundledFontMetricSources,
+} from "./font-metric-overrides.ts";
 
 const WIDE_VIEWPORT = { width: 1440, height: 1000 } as const;
 const NARROW_VIEWPORT = { width: 390, height: 844 } as const;
@@ -1511,12 +1515,26 @@ async function verifyThemeSystem(
   origin: string,
   failures: string[],
 ): Promise<ThemeResult> {
+  const fontCssUrl = new URL("../assets/fonts.css", import.meta.url);
   const fontMetricAudit = auditFontMetricOverrides(
-    await Deno.readTextFile(new URL("../assets/fonts.css", import.meta.url)),
+    await Deno.readTextFile(fontCssUrl),
   );
   failures.push(
     ...fontMetricAudit.failures.map((failure) =>
       `Font metric overrides: ${failure}`
+    ),
+  );
+  const fontMetricAssetFailures = await auditBundledFontMetricAssets(
+    await Promise.all(
+      bundledFontMetricSources().map(async (source) => ({
+        source,
+        bytes: await Deno.readFile(new URL(source, fontCssUrl)),
+      })),
+    ),
+  );
+  failures.push(
+    ...fontMetricAssetFailures.map((failure) =>
+      `Font metric authority: ${failure}`
     ),
   );
   const context = await browser.newContext({
@@ -1669,7 +1687,7 @@ async function verifyThemeSystem(
       );
     }
 
-    const fontGeometry = await page.evaluate(async () => {
+    const fontGeometry = await page.evaluate(async (metricCases) => {
       const consumer = document.querySelector<HTMLElement>(
         "[data-discern-theme-consumer]",
       );
@@ -1732,73 +1750,35 @@ async function verifyThemeSystem(
         "Deterministic interfaces guide reliable work",
       ];
       const cases = [
-        {
-          name: "Crimson/Iowan normal",
-          target: '"Crimson Pro"',
-          fallback: '"Discern Crimson Fallback Iowan"',
-          style: "normal",
-          weights: [400, 700],
-        },
-        {
-          name: "Crimson/Iowan italic",
-          target: '"Crimson Pro"',
-          fallback: '"Discern Crimson Fallback Iowan"',
-          style: "italic",
-          weights: [400, 700],
-        },
-        {
-          name: "Crimson/Georgia normal",
-          target: '"Crimson Pro"',
-          fallback: '"Discern Crimson Fallback Georgia"',
-          style: "normal",
-          weights: [400, 700],
-        },
-        {
-          name: "Crimson/Georgia italic",
-          target: '"Crimson Pro"',
-          fallback: '"Discern Crimson Fallback Georgia"',
-          style: "italic",
-          weights: [400, 700],
-        },
-        {
-          name: "Inter/Helvetica",
-          target: '"Inter"',
-          fallback: '"Discern Inter Fallback Helvetica"',
-          style: "normal",
-          weights: [400, 650],
-        },
-        {
-          name: "Inter/Arial",
-          target: '"Inter"',
-          fallback: '"Discern Inter Fallback Arial"',
-          style: "normal",
-          weights: [400, 650],
-        },
+        ...metricCases.map((candidate) => ({
+          ...candidate,
+          metricAdjusted: true,
+        })),
         {
           name: "JetBrains/terminal mono",
           target: '"JetBrains Mono"',
           fallback: 'ui-monospace, "SF Mono", Menlo, monospace',
           style: "normal",
           weights: [400, 600],
+          metricAdjusted: false,
         },
-      ] as const;
+      ];
       let checks = 0;
       const coveredAliases: string[] = [];
       let maxWidthDeltaPercent = 0;
       let maxLineBoxDeltaPixels = 0;
       const skippedAliases: string[] = [];
       for (const candidate of cases) {
-        const metricAdjusted = candidate.name !== "JetBrains/terminal mono";
         const loaded = await document.fonts.load(
           `${candidate.style} ${
             candidate.weights[0]
           } 64px ${candidate.fallback}`,
         );
-        if (metricAdjusted && loaded.length === 0) {
+        if (candidate.metricAdjusted && loaded.length === 0) {
           skippedAliases.push(candidate.name);
           continue;
         }
-        if (metricAdjusted) {
+        if (candidate.metricAdjusted) {
           coveredAliases.push(candidate.name);
         }
         for (const weight of candidate.weights) {
@@ -1833,7 +1813,7 @@ async function verifyThemeSystem(
               delta,
             );
             const lineBoxDelta = Math.abs(target.height - fallback.height);
-            if (metricAdjusted) {
+            if (candidate.metricAdjusted) {
               maxLineBoxDeltaPixels = Math.max(
                 maxLineBoxDeltaPixels,
                 lineBoxDelta,
@@ -1846,7 +1826,7 @@ async function verifyThemeSystem(
                 }% at ${weight}`,
               );
             }
-            if (metricAdjusted && lineBoxDelta > 0.25) {
+            if (candidate.metricAdjusted && lineBoxDelta > 0.25) {
               currentFailures.push(
                 `${candidate.name} normal line box differs by ${
                   lineBoxDelta.toFixed(2)
@@ -1865,7 +1845,7 @@ async function verifyThemeSystem(
         skippedAliases,
         failures: currentFailures,
       };
-    });
+    }, fontMetricAudit.browserCases);
     failures.push(
       ...fontGeometry.failures.map((failure) => `Font geometry: ${failure}`),
     );
