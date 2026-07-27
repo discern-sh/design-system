@@ -99,8 +99,18 @@ interface SemanticFocusResult {
   readonly futureProof: boolean;
 }
 
+interface FocusRect {
+  readonly bottom: number;
+  readonly height: number;
+  readonly left: number;
+  readonly right: number;
+  readonly top: number;
+  readonly width: number;
+}
+
 interface FocusIndicatorStyle {
   readonly backgroundColor: string;
+  readonly candidate: "target" | "next-sibling" | "parent";
   readonly effectiveOpacity: number;
   readonly outlineColor: string;
   readonly outlineOffset: string;
@@ -108,10 +118,27 @@ interface FocusIndicatorStyle {
   readonly outlineWidth: string;
   readonly boxShadow: string;
   readonly boxShadowColors: readonly string[];
+  readonly paintKnown: boolean;
+  readonly rect: FocusRect;
+  readonly semanticallyAssociated: boolean;
+  readonly sharedParentRect: FocusRect | undefined;
+  readonly targetRect: FocusRect;
   readonly textDecorationColor: string;
   readonly textDecorationLine: string;
   readonly textDecorationThickness: string;
   readonly visible: boolean;
+}
+
+interface FocusFixtureOracle {
+  readonly color: string;
+  readonly effectiveOpacity: number;
+  readonly filterKnown: boolean;
+  readonly filters: readonly string[];
+  readonly geometricallyAssociated: boolean;
+  readonly semanticallyAssociated: boolean;
+  readonly style: string;
+  readonly visible: boolean;
+  readonly width: string;
 }
 
 interface ColorChannels {
@@ -211,6 +238,79 @@ function paintedBackground(
   return `rgb(${red}, ${green}, ${blue})`;
 }
 
+function rectContains(outer: FocusRect, inner: FocusRect): boolean {
+  const tolerance = 1;
+  return outer.left <= inner.left + tolerance &&
+    outer.top <= inner.top + tolerance &&
+    outer.right >= inner.right - tolerance &&
+    outer.bottom >= inner.bottom - tolerance;
+}
+
+function rectsOverlap(left: FocusRect, right: FocusRect): boolean {
+  return left.left < right.right && left.right > right.left &&
+    left.top < right.bottom && left.bottom > right.top;
+}
+
+function rectGap(left: FocusRect, right: FocusRect): number {
+  const horizontal = Math.max(
+    0,
+    left.left - right.right,
+    right.left - left.right,
+  );
+  const vertical = Math.max(
+    0,
+    left.top - right.bottom,
+    right.top - left.bottom,
+  );
+  return Math.hypot(horizontal, vertical);
+}
+
+function focusCandidateAssociated(style: FocusIndicatorStyle): boolean {
+  if (style.candidate === "target") return true;
+  if (style.candidate === "parent") {
+    return rectContains(style.rect, style.targetRect) ||
+      rectsOverlap(style.rect, style.targetRect) ||
+      rectGap(style.rect, style.targetRect) <= Math.max(
+          style.rect.width,
+          style.rect.height,
+          style.targetRect.width,
+          style.targetRect.height,
+        );
+  }
+  if (!style.semanticallyAssociated) return false;
+  if (rectsOverlap(style.rect, style.targetRect)) return true;
+  const sharedParent = style.sharedParentRect;
+  if (
+    sharedParent === undefined ||
+    !rectContains(sharedParent, style.targetRect) ||
+    !rectContains(sharedParent, style.rect)
+  ) {
+    return false;
+  }
+  return rectGap(style.rect, style.targetRect) <=
+    Math.max(sharedParent.width, sharedParent.height);
+}
+
+function paintAppearanceContrast(
+  color: string,
+  background: string,
+  previous: FocusIndicatorStyle,
+  current: FocusIndicatorStyle,
+): number {
+  if (!previous.paintKnown || !current.paintKnown) return 0;
+  const beforePaint = paintedBackground(
+    color,
+    background,
+    previous.visible ? previous.effectiveOpacity : 0,
+  );
+  const afterPaint = paintedBackground(
+    color,
+    background,
+    current.visible ? current.effectiveOpacity : 0,
+  );
+  return contrastRatio(afterPaint, beforePaint) ?? 0;
+}
+
 function focusIndicatorContrast(
   before: readonly FocusIndicatorStyle[],
   after: readonly FocusIndicatorStyle[],
@@ -229,17 +329,34 @@ function focusIndicatorContrast(
   for (let index = 0; index < after.length; index += 1) {
     const current = after[index];
     const previous = before[index];
-    if (current === undefined || !current.visible) continue;
+    if (
+      current === undefined || !current.visible || !current.paintKnown ||
+      !focusCandidateAssociated(current)
+    ) {
+      continue;
+    }
     const insideBackground = paintedBackground(
       current.backgroundColor,
       surfaceColor,
       current.effectiveOpacity,
     );
-    const paintChanged = previous === undefined ||
-      current.effectiveOpacity !== previous.effectiveOpacity ||
-      current.visible !== previous.visible;
+    const opacityOrVisibilityChanged = previous !== undefined &&
+      (
+        current.effectiveOpacity !== previous.effectiveOpacity ||
+        current.visible !== previous.visible
+      );
+    const outlineAppearanceChanged = previous !== undefined &&
+      opacityOrVisibilityChanged &&
+      paintAppearanceContrast(
+          current.outlineColor,
+          Number.parseFloat(current.outlineOffset) < 0
+            ? insideBackground
+            : surfaceColor,
+          previous,
+          current,
+        ) >= 3;
     const outlineChanged = previous === undefined ||
-      paintChanged ||
+      outlineAppearanceChanged ||
       current.outlineColor !== previous.outlineColor ||
       current.outlineOffset !== previous.outlineOffset ||
       current.outlineStyle !== previous.outlineStyle ||
@@ -259,8 +376,22 @@ function focusIndicatorContrast(
     if (
       current.boxShadow !== "none" &&
       (
-        previous === undefined || paintChanged ||
-        current.boxShadow !== previous.boxShadow
+        previous === undefined ||
+        current.boxShadow !== previous.boxShadow ||
+        (
+          opacityOrVisibilityChanged &&
+          current.boxShadowColors.some((color) =>
+            previous !== undefined &&
+            paintAppearanceContrast(
+                color,
+                current.boxShadow.includes("inset")
+                  ? insideBackground
+                  : surfaceColor,
+                previous,
+                current,
+              ) >= 3
+          )
+        )
       )
     ) {
       const background = current.boxShadow.includes("inset")
@@ -274,8 +405,16 @@ function focusIndicatorContrast(
         })),
       );
     }
+    const underlineAppearanceChanged = previous !== undefined &&
+      opacityOrVisibilityChanged &&
+      paintAppearanceContrast(
+          current.textDecorationColor,
+          insideBackground,
+          previous,
+          current,
+        ) >= 3;
     const underlineChanged = previous === undefined ||
-      paintChanged ||
+      underlineAppearanceChanged ||
       current.textDecorationColor !== previous.textDecorationColor ||
       current.textDecorationLine !== previous.textDecorationLine ||
       current.textDecorationThickness !== previous.textDecorationThickness;
@@ -302,6 +441,18 @@ function focusIndicatorContrast(
 
 async function focusStyles(target: Locator): Promise<FocusIndicatorStyle[]> {
   return await target.evaluate((node) => {
+    type Candidate = {
+      readonly element: Element;
+      readonly kind: "target" | "next-sibling" | "parent";
+    };
+    type Rect = {
+      readonly bottom: number;
+      readonly height: number;
+      readonly left: number;
+      readonly right: number;
+      readonly top: number;
+      readonly width: number;
+    };
     const canvas = document.createElement("canvas");
     canvas.width = 1;
     canvas.height = 1;
@@ -319,25 +470,135 @@ async function focusStyles(target: Locator): Promise<FocusIndicatorStyle[]> {
         (pixel[3] ?? 0) / 255
       })`;
     };
-    const candidates = [
-      node,
-      node.nextElementSibling,
-      node.parentElement,
-    ].filter((candidate): candidate is Element => candidate !== null).filter(
-      (candidate, index, all) => all.indexOf(candidate) === index,
+    const rect = (element: Element): Rect => {
+      const current = element.getBoundingClientRect();
+      return {
+        bottom: current.bottom,
+        height: current.height,
+        left: current.left,
+        right: current.right,
+        top: current.top,
+        width: current.width,
+      };
+    };
+    const filterOpacity = (
+      value: string,
+    ): { readonly known: boolean; readonly opacity: number } => {
+      if (value === "none") return { known: true, opacity: 1 };
+      let position = 0;
+      let opacity = 1;
+      while (position < value.length) {
+        while (/\s/.test(value[position] ?? "")) position += 1;
+        if (position >= value.length) break;
+        const name = value.slice(position).match(/^[-a-z]+/i)?.[0];
+        if (name === undefined) return { known: false, opacity };
+        position += name.length;
+        while (/\s/.test(value[position] ?? "")) position += 1;
+        if (value[position] !== "(") return { known: false, opacity };
+        position += 1;
+        const argumentStart = position;
+        let depth = 1;
+        let escaped = false;
+        let quote: "'" | '"' | undefined;
+        while (position < value.length && depth > 0) {
+          const character = value[position];
+          if (character === undefined) break;
+          if (escaped) {
+            escaped = false;
+          } else if (character === "\\") {
+            escaped = true;
+          } else if (quote !== undefined) {
+            if (character === quote) quote = undefined;
+          } else if (character === "'" || character === '"') {
+            quote = character;
+          } else if (character === "(") {
+            depth += 1;
+          } else if (character === ")") {
+            depth -= 1;
+          }
+          position += 1;
+        }
+        if (depth !== 0 || quote !== undefined) {
+          return { known: false, opacity };
+        }
+        const argument = value.slice(argumentStart, position - 1).trim();
+        if (name.toLowerCase() !== "opacity") {
+          return { known: false, opacity };
+        }
+        if (
+          !/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(
+            argument,
+          )
+        ) {
+          return { known: false, opacity };
+        }
+        const factor = Number(argument);
+        if (!Number.isFinite(factor)) return { known: false, opacity };
+        opacity *= Math.max(0, Math.min(1, factor));
+      }
+      return { known: true, opacity };
+    };
+    const references = (element: Element, attribute: string): string[] =>
+      (element.getAttribute(attribute) ?? "").trim().split(/\s+/).filter(
+        Boolean,
+      );
+    const semanticAssociation = (
+      candidate: Element,
+    ): boolean => {
+      const parent = node.parentElement;
+      if (parent === null || candidate.parentElement !== parent) return false;
+      if (
+        parent instanceof HTMLLabelElement &&
+        parent.control === node
+      ) {
+        return true;
+      }
+      return [
+        candidate.id !== "" &&
+        references(node, "aria-controls").includes(candidate.id),
+        candidate.id !== "" &&
+        references(node, "aria-owns").includes(candidate.id),
+        node.id !== "" &&
+        references(candidate, "aria-controls").includes(node.id),
+        node.id !== "" &&
+        references(candidate, "aria-owns").includes(node.id),
+      ].some(Boolean);
+    };
+    const candidates: Candidate[] = [
+      { element: node, kind: "target" as const },
+      ...(node.nextElementSibling === null ? [] : [{
+        element: node.nextElementSibling,
+        kind: "next-sibling" as const,
+      }]),
+      ...(node.parentElement === null
+        ? []
+        : [{ element: node.parentElement, kind: "parent" as const }]),
+    ].filter(
+      (candidate, index, all) =>
+        all.findIndex(({ element }) => element === candidate.element) === index,
     );
-    return candidates.map((candidate) => {
+    const targetRect = rect(node);
+    const sharedParentRect = node.parentElement === null
+      ? undefined
+      : rect(node.parentElement);
+    return candidates.map(({ element: candidate, kind }) => {
       const style = getComputedStyle(candidate);
       let effectiveOpacity = 1;
+      let paintKnown = true;
       let ancestor: Element | null = candidate;
       while (ancestor !== null) {
-        const opacity = Number.parseFloat(getComputedStyle(ancestor).opacity);
+        const ancestorStyle = getComputedStyle(ancestor);
+        const opacity = Number.parseFloat(ancestorStyle.opacity);
         effectiveOpacity *= Number.isFinite(opacity) ? opacity : 1;
+        const filtered = filterOpacity(ancestorStyle.filter);
+        effectiveOpacity *= filtered.opacity;
+        paintKnown &&= filtered.known;
         ancestor = ancestor.parentElement;
       }
       effectiveOpacity = Math.max(0, Math.min(1, effectiveOpacity));
       return {
         backgroundColor: pixelColor(style.backgroundColor),
+        candidate: kind,
         effectiveOpacity,
         outlineColor: pixelColor(style.outlineColor),
         outlineOffset: style.outlineOffset,
@@ -349,6 +610,12 @@ async function focusStyles(target: Locator): Promise<FocusIndicatorStyle[]> {
             /(?:rgba?|hsla?|oklab|oklch|color)\([^)]+\)/g,
           ) ?? []
         ).map(pixelColor),
+        paintKnown,
+        rect: rect(candidate),
+        semanticallyAssociated: kind === "next-sibling" &&
+          semanticAssociation(candidate),
+        sharedParentRect,
+        targetRect,
         textDecorationColor: pixelColor(style.textDecorationColor),
         textDecorationLine: style.textDecorationLine,
         textDecorationThickness: style.textDecorationThickness,
@@ -359,6 +626,108 @@ async function focusStyles(target: Locator): Promise<FocusIndicatorStyle[]> {
       };
     });
   });
+}
+
+async function focusFixtureOracle(
+  target: Locator,
+  kind: string,
+): Promise<FocusFixtureOracle | undefined> {
+  return await target.evaluate((node, kind) => {
+    const candidate = kind === "fixed-proxy" ||
+        kind === "generic-parent-proxy"
+      ? node.nextElementSibling
+      : node;
+    if (candidate === null) return undefined;
+    const canvas = document.createElement("canvas");
+    canvas.width = 1;
+    canvas.height = 1;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    const pixelColor = (value: string): string => {
+      if (/^rgba?\(/.test(value) || context === null) return value;
+      context.clearRect(0, 0, 1, 1);
+      context.fillStyle = "rgba(0, 0, 0, 0)";
+      context.fillStyle = value;
+      context.fillRect(0, 0, 1, 1);
+      const pixel = context.getImageData(0, 0, 1, 1).data;
+      return `rgba(${pixel[0]}, ${pixel[1]}, ${pixel[2]}, ${
+        (pixel[3] ?? 0) / 255
+      })`;
+    };
+    const style = getComputedStyle(candidate);
+    let effectiveOpacity = 1;
+    let filterKnown = true;
+    const filters: string[] = [];
+    let ancestor: Element | null = candidate;
+    while (ancestor !== null) {
+      const ancestorStyle = getComputedStyle(ancestor);
+      const opacity = Number(ancestorStyle.opacity);
+      effectiveOpacity *= Number.isFinite(opacity) ? opacity : 1;
+      const filter = ancestorStyle.filter;
+      if (filter !== "none") {
+        filters.push(filter);
+        const matches = [
+          ...filter.matchAll(
+            /opacity\(\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*\)/gi,
+          ),
+        ];
+        const remainder = filter.replace(
+          /opacity\(\s*[+-]?(?:\d+(?:\.\d*)?|\.\d+)\s*\)/gi,
+          "",
+        ).trim();
+        if (remainder !== "") filterKnown = false;
+        for (const match of matches) {
+          const factor = Number(match[1]);
+          if (Number.isFinite(factor)) effectiveOpacity *= factor;
+        }
+      }
+      ancestor = ancestor.parentElement;
+    }
+    const current = candidate.getBoundingClientRect();
+    const targetRect = node.getBoundingClientRect();
+    const parent = node.parentElement?.getBoundingClientRect();
+    const horizontal = Math.max(
+      0,
+      targetRect.left - current.right,
+      current.left - targetRect.right,
+    );
+    const vertical = Math.max(
+      0,
+      targetRect.top - current.bottom,
+      current.top - targetRect.bottom,
+    );
+    const gap = Math.hypot(horizontal, vertical);
+    const contains = (outer: DOMRect, inner: DOMRect): boolean =>
+      outer.left <= inner.left + 1 &&
+      outer.top <= inner.top + 1 &&
+      outer.right >= inner.right - 1 &&
+      outer.bottom >= inner.bottom - 1;
+    const overlaps = targetRect.left < current.right &&
+      targetRect.right > current.left &&
+      targetRect.top < current.bottom &&
+      targetRect.bottom > current.top;
+    const geometricallyAssociated = overlaps ||
+      (
+        parent !== undefined &&
+        contains(parent, targetRect) &&
+        contains(parent, current) &&
+        gap <= Math.max(parent.width, parent.height)
+      );
+    return {
+      color: pixelColor(style.outlineColor),
+      effectiveOpacity: Math.max(0, Math.min(1, effectiveOpacity)),
+      filterKnown,
+      filters,
+      geometricallyAssociated,
+      semanticallyAssociated: node.parentElement instanceof
+          HTMLLabelElement &&
+        node.parentElement.control === node,
+      style: style.outlineStyle,
+      visible: effectiveOpacity > 0 &&
+        style.visibility === "visible" &&
+        candidate.getClientRects().length > 0,
+      width: style.outlineWidth,
+    };
+  }, kind);
 }
 
 async function blurActiveElement(page: Page): Promise<void> {
@@ -1984,8 +2353,24 @@ async function verifySemanticFocus(
   }
 
   await loadPage(page, conformanceUrl(origin));
+  const negativeProofKinds = [
+    "transparent",
+    "same-colour",
+    "target-opacity",
+    "ancestor-opacity",
+    "target-filter-opacity",
+    "ancestor-filter-opacity",
+    "ambiguous-filter",
+    "hidden",
+    "subtle-opacity",
+    "subtle-filter-opacity",
+    "fixed-proxy",
+    "generic-parent-proxy",
+  ] as const;
+  const positiveProofKinds = ["revealed-indicator"] as const;
+  const proofKinds = [...negativeProofKinds, ...positiveProofKinds] as const;
   const synthetic = await page.evaluate(
-    ({ surfaceSelector, surfaceTokens }) => {
+    ({ proofKinds, surfaceSelector, surfaceTokens }) => {
       const root = document.querySelector<HTMLElement>(
         "[data-discern-root]",
       );
@@ -1996,25 +2381,49 @@ async function verifySemanticFocus(
       }
       const futureSurface = document.createElement("div");
       futureSurface.dataset.discernFocusProofSurface = "";
-      futureSurface.style.backgroundColor = `var(${accent.token})`;
-      for (
-        const kind of [
-          "transparent",
-          "same-colour",
-          "target-opacity",
-          "ancestor-opacity",
-          "hidden",
-        ] as const
-      ) {
-        const wrapper = document.createElement("span");
-        wrapper.style.display = "inline-block";
-        const target = document.createElement("button");
+      futureSurface.style.cssText =
+        `display:grid;gap:8px;padding:8px;background:var(${accent.token});`;
+      for (const kind of proofKinds) {
+        const proxyKind = kind === "fixed-proxy" ||
+          kind === "generic-parent-proxy";
+        const wrapper = kind === "fixed-proxy"
+          ? document.createElement("label")
+          : document.createElement("span");
+        wrapper.style.cssText = kind === "generic-parent-proxy"
+          ? "display:flex;justify-content:space-between;inline-size:100%;" +
+            "min-block-size:44px;"
+          : "display:inline-block;position:relative;";
+        const target = kind === "fixed-proxy"
+          ? document.createElement("input")
+          : document.createElement("button");
+        if (target instanceof HTMLInputElement) target.type = "checkbox";
+        if (target instanceof HTMLButtonElement) target.type = "button";
         target.dataset.discernFocusProof = kind;
-        target.textContent = `Future ${kind} action`;
+        if (target instanceof HTMLButtonElement) {
+          target.textContent = `Future ${kind} action`;
+        }
         target.style.cssText =
-          "background:transparent;border:0;box-shadow:none;" +
-          "outline:none;text-decoration:none;";
+          "min-inline-size:44px;min-block-size:44px;background:transparent;" +
+          "border:0;box-shadow:none;outline:none;text-decoration:none;";
+        if (
+          kind === "subtle-opacity" ||
+          kind === "subtle-filter-opacity" ||
+          kind === "revealed-indicator"
+        ) {
+          target.style.outline = "2px solid var(--discern-color-ink)";
+          target.style.outlineOffset = "2px";
+        }
+        if (kind === "revealed-indicator") target.style.opacity = "0";
         wrapper.append(target);
+        if (proxyKind) {
+          const proxy = document.createElement("span");
+          proxy.dataset.discernFocusProxy = kind;
+          proxy.style.cssText = kind === "fixed-proxy"
+            ? "position:fixed;inset:8px auto auto 8px;inline-size:44px;" +
+              "block-size:44px;"
+            : "display:block;inline-size:44px;block-size:44px;";
+          wrapper.append(proxy);
+        }
         futureSurface.append(wrapper);
       }
       container.append(futureSurface);
@@ -2037,6 +2446,7 @@ async function verifySemanticFocus(
       };
     },
     {
+      proofKinds,
       surfaceSelector: SURFACE_SELECTOR,
       surfaceTokens,
     },
@@ -2051,13 +2461,6 @@ async function verifySemanticFocus(
         .map(({ proofKind }) => proofKind)
         .filter(Boolean),
     );
-    const proofKinds = [
-      "transparent",
-      "same-colour",
-      "target-opacity",
-      "ancestor-opacity",
-      "hidden",
-    ] as const;
     for (const kind of proofKinds) {
       if (!discoveredProofs.has(kind)) {
         syntheticFailures.push(`${kind} target did not auto-enrol`);
@@ -2067,28 +2470,37 @@ async function verifySemanticFocus(
       const target = page.locator(`[data-discern-focus-proof="${kind}"]`);
       await blurActiveElement(page);
       const before = await focusStyles(target);
+      const oracleBefore = await focusFixtureOracle(target, kind);
       const keyboardFocused = await focusByKeyboard(page, target);
-      const expectedColor = kind === "transparent"
-        ? "transparent"
-        : kind === "same-colour"
-        ? synthetic.surfaceColor
-        : "black";
-      const computedFixture = await target.evaluate(
+      await target.evaluate(
         async (node, { kind, surfaceColor }) => {
-          node.style.setProperty(
+          const proxyKind = kind === "fixed-proxy" ||
+            kind === "generic-parent-proxy";
+          const paint = proxyKind ? node.nextElementSibling : node;
+          if (!(paint instanceof HTMLElement)) return;
+          paint.style.setProperty(
             "outline-color",
             kind === "transparent" ? "transparent" : surfaceColor,
             "important",
           );
           if (
             kind === "target-opacity" || kind === "ancestor-opacity" ||
-            kind === "hidden"
+            kind === "target-filter-opacity" ||
+            kind === "ancestor-filter-opacity" ||
+            kind === "ambiguous-filter" || kind === "hidden" ||
+            kind === "subtle-opacity" ||
+            kind === "subtle-filter-opacity" ||
+            kind === "revealed-indicator" || proxyKind
           ) {
-            node.style.setProperty("outline-color", "black", "important");
+            paint.style.setProperty(
+              "outline-color",
+              "var(--discern-color-ink)",
+              "important",
+            );
           }
-          node.style.setProperty("outline-style", "solid", "important");
-          node.style.setProperty("outline-width", "2px", "important");
-          node.style.setProperty("outline-offset", "2px", "important");
+          paint.style.setProperty("outline-style", "solid", "important");
+          paint.style.setProperty("outline-width", "2px", "important");
+          paint.style.setProperty("outline-offset", "2px", "important");
           if (kind === "target-opacity") {
             node.style.setProperty("opacity", "0", "important");
           } else if (kind === "ancestor-opacity") {
@@ -2097,67 +2509,141 @@ async function verifySemanticFocus(
               "0.1",
               "important",
             );
+          } else if (kind === "target-filter-opacity") {
+            node.style.setProperty(
+              "filter",
+              "opacity(50%) opacity(.0)",
+              "important",
+            );
+          } else if (kind === "ancestor-filter-opacity") {
+            node.parentElement?.style.setProperty(
+              "filter",
+              "opacity(.2) opacity(50%)",
+              "important",
+            );
+          } else if (kind === "ambiguous-filter") {
+            node.style.setProperty(
+              "filter",
+              'url("#future-filter")',
+              "important",
+            );
           } else if (kind === "hidden") {
             node.style.setProperty("visibility", "hidden", "important");
+          } else if (kind === "subtle-opacity") {
+            node.style.setProperty("opacity", ".9999", "important");
+          } else if (kind === "subtle-filter-opacity") {
+            node.style.setProperty(
+              "filter",
+              "opacity(99.99%)",
+              "important",
+            );
+          } else if (kind === "revealed-indicator") {
+            node.style.setProperty("opacity", "1", "important");
+          } else if (proxyKind) {
+            paint.style.setProperty(
+              "box-shadow",
+              "0 0 0 4px var(--discern-color-canvas)",
+              "important",
+            );
           }
           await new Promise<void>((resolve) => {
             requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
           });
-          const style = getComputedStyle(node);
-          let effectiveOpacity = 1;
-          let ancestor: Element | null = node;
-          while (ancestor !== null) {
-            const opacity = Number.parseFloat(
-              getComputedStyle(ancestor).opacity,
-            );
-            effectiveOpacity *= Number.isFinite(opacity) ? opacity : 1;
-            ancestor = ancestor.parentElement;
-          }
-          return {
-            color: style.outlineColor,
-            effectiveOpacity,
-            style: style.outlineStyle,
-            visible: style.visibility === "visible" &&
-              node.getClientRects().length > 0,
-            width: style.outlineWidth,
-          };
         },
         { kind, surfaceColor: synthetic.surfaceColor },
       );
-      const computedFixtureContrast = contrastRatio(
-        computedFixture.color,
-        synthetic.surfaceColor,
-        computedFixture.effectiveOpacity,
-      );
+      const oracleAfter = await focusFixtureOracle(target, kind);
       const after = await focusStyles(target);
       const indicator = focusIndicatorContrast(
         before,
         after,
         synthetic.surfaceColor,
       );
-      const fixtureShouldBeVisible = kind !== "target-opacity" &&
-        kind !== "hidden";
-      const independentOracleRejected = kind === "hidden"
-        ? !computedFixture.visible
+      if (oracleBefore === undefined || oracleAfter === undefined) {
+        syntheticFailures.push(`${kind} target lost its oracle candidate`);
+        continue;
+      }
+      const computedFixtureContrast = contrastRatio(
+        oracleAfter.color,
+        synthetic.surfaceColor,
+        oracleAfter.visible ? oracleAfter.effectiveOpacity : 0,
+      );
+      const appearanceContrast = contrastRatio(
+        paintedBackground(
+          oracleAfter.color,
+          synthetic.surfaceColor,
+          oracleAfter.visible ? oracleAfter.effectiveOpacity : 0,
+        ),
+        paintedBackground(
+          oracleAfter.color,
+          synthetic.surfaceColor,
+          oracleBefore.visible ? oracleBefore.effectiveOpacity : 0,
+        ),
+      );
+      const subtle = kind === "subtle-opacity" ||
+        kind === "subtle-filter-opacity";
+      const opacityFiltered = kind === "target-filter-opacity" ||
+        kind === "ancestor-filter-opacity";
+      const fixedProxy = kind === "fixed-proxy";
+      const genericProxy = kind === "generic-parent-proxy";
+      const ambiguous = kind === "ambiguous-filter";
+      const expectedAccepted = kind === "revealed-indicator";
+      const oracleSupportsExpectation = expectedAccepted
+        ? computedFixtureContrast !== undefined &&
+          computedFixtureContrast >= 3 &&
+          appearanceContrast !== undefined &&
+          appearanceContrast >= 3
+        : subtle
+        ? computedFixtureContrast !== undefined &&
+          computedFixtureContrast >= 3 &&
+          appearanceContrast !== undefined &&
+          appearanceContrast < 3
+        : fixedProxy
+        ? computedFixtureContrast !== undefined &&
+          computedFixtureContrast >= 3 &&
+          oracleAfter.semanticallyAssociated &&
+          !oracleAfter.geometricallyAssociated
+        : genericProxy
+        ? computedFixtureContrast !== undefined &&
+          computedFixtureContrast >= 3 &&
+          !oracleAfter.semanticallyAssociated &&
+          oracleAfter.geometricallyAssociated
+        : ambiguous
+        ? !oracleAfter.filterKnown &&
+          oracleAfter.filters.some((filter) => filter.includes("url("))
+        : kind === "hidden"
+        ? !oracleAfter.visible
         : computedFixtureContrast !== undefined &&
           computedFixtureContrast < 3;
+      const productionMatchesExpectation = expectedAccepted
+        ? indicator.maxContrast >= 3
+        : indicator.maxContrast < 3;
+      const serializedFilterMatches = !opacityFiltered ||
+        oracleAfter.filters.flatMap((filter) =>
+            filter.match(/opacity\([^)]*\)/g) ?? []
+          ).length === 2;
       if (
         !keyboardFocused ||
-        (fixtureShouldBeVisible && indicator.colors.length === 0) ||
-        indicator.maxContrast >= 3 ||
-        computedFixture.style !== "solid" ||
-        Number.parseFloat(computedFixture.width) < 2 ||
-        !independentOracleRejected
+        !productionMatchesExpectation ||
+        oracleAfter.style !== "solid" ||
+        Number.parseFloat(oracleAfter.width) < 2 ||
+        !oracleSupportsExpectation ||
+        !serializedFilterMatches
       ) {
         syntheticFailures.push(
           `${kind} target: keyboard=${keyboardFocused}, colours=${
             indicator.colors.join(", ") || "none"
           }, contrast=${
             indicator.maxContrast.toFixed(2)
-          }:1, computed=${computedFixture.color} (${
+          }:1, computed=${oracleAfter.color} (${
             computedFixtureContrast?.toFixed(2) ?? "unknown"
-          }:1 at opacity ${computedFixture.effectiveOpacity.toFixed(2)}), ` +
-            `visible=${computedFixture.visible}, requested=${expectedColor}`,
+          }:1 at opacity ${
+            oracleAfter.effectiveOpacity.toFixed(4)
+          }), appearance=${
+            appearanceContrast?.toFixed(2) ?? "unknown"
+          }:1, filters=${
+            oracleAfter.filters.join(", ") || "none"
+          }, semantic=${oracleAfter.semanticallyAssociated}, geometry=${oracleAfter.geometricallyAssociated}`,
         );
       }
     }
