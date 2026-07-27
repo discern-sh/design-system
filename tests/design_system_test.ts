@@ -16,9 +16,14 @@ import {
   Brand,
   Breadcrumbs,
   Button,
+  DestructiveActionNotice,
+  Diagnostic,
+  type DiagnosticProps,
   GlossaryTerm,
   HoverCard,
   Logo,
+  Procedure,
+  RetryNotice,
   SiteHeader,
   ThemeSwitcher,
   Tooltip,
@@ -851,6 +856,51 @@ Deno.test("semantic HTML and React adapters share the public class contract", ()
   );
 });
 
+type IsRequired<T, Key extends keyof T> = Partial<Record<Key, never>> extends
+  Pick<
+    T,
+    Key
+  > ? false
+  : true;
+
+Deno.test("diagnostics require a correction and derive their default role from severity", () => {
+  const correctionIsRequired: IsRequired<DiagnosticProps, "correction"> = true;
+  assert(correctionIsRequired);
+
+  const failure = renderToStaticMarkup(
+    createElement(Diagnostic, {
+      title: "Type check failed",
+      impact: "The package cannot be built.",
+      correction: "Handle the missing case, then retry.",
+    }),
+  );
+  assertMatch(failure, /^<article role="alert"/);
+  assertStringIncludes(failure, 'data-discern-state="failure">Failure');
+  assertStringIncludes(failure, "Suggested correction");
+  assertStringIncludes(failure, "Handle the missing case, then retry.");
+
+  const attention = renderToStaticMarkup(
+    createElement(Diagnostic, {
+      severity: "attention",
+      title: "Generated output is stale",
+      impact: "The derived surface may be out of date.",
+      correction: "Regenerate the derived files.",
+    }),
+  );
+  assertMatch(attention, /^<article role="status"/);
+  assertStringIncludes(attention, 'data-discern-state="attention">Attention');
+
+  const explicitRole = renderToStaticMarkup(
+    createElement(Diagnostic, {
+      role: "note",
+      title: "Recorded failure",
+      impact: "The failure needs review.",
+      correction: "Review the recorded evidence.",
+    }),
+  );
+  assertMatch(explicitRole, /^<article role="note"/);
+});
+
 Deno.test("branding and hover-card adapters preserve their semantic relationships", () => {
   const logo = renderToStaticMarkup(
     createElement(Logo, { label: "Field notes", children: "FN" }),
@@ -1153,6 +1203,103 @@ function accessibleText(html: string): string {
   }
   return text;
 }
+
+Deno.test("procedure grammar preserves sequence and state in plain HTML", () => {
+  const html = renderToStaticMarkup(
+    createElement(Procedure, {
+      title: "Restore a directory",
+      prerequisites: {
+        items: [{
+          requirement: "The backup is readable.",
+          state: "satisfied",
+        }, {
+          requirement: "The destination is empty.",
+          state: "unresolved",
+        }],
+      },
+      steps: [{
+        title: "Inspect the archive",
+        action: "List its contents before extracting anything.",
+        command: { command: "tar -tf backup.tar" },
+        expectedResult: {
+          variant: "state",
+          children: "The archive lists successfully.",
+        },
+        branch: {
+          choices: [{
+            label: "It worked",
+            path: "Continue to restore",
+            href: "#restore",
+          }, {
+            label: "It failed",
+            path: "Open recovery guidance",
+            href: "#recover",
+          }],
+        },
+        recovery: createElement(RetryNotice, {
+          safeToRetry: true,
+          reason: "The inspection does not change the archive.",
+        }),
+      }, {
+        title: "Restore into a new destination",
+        action: "Extract beside the source and inspect the result.",
+      }],
+      completion: "The restored copy has been inspected.",
+    }),
+  );
+
+  assertMatch(
+    html,
+    /<ol class="discern-procedure__steps"><li class="discern-procedure__step"><article/,
+  );
+  assertEquals(
+    (html.match(/<li class="discern-procedure__step">/g) ?? []).length,
+    2,
+  );
+  assert(
+    html.indexOf("Inspect the archive") <
+      html.indexOf("Restore into a new destination"),
+    "procedure step source order changed",
+  );
+  assertMatch(
+    html,
+    /<ul class="discern-branch-choice__choices"><li class="discern-branch-choice__choice">.*<ul class="discern-branch-choice__paths"><li class="discern-branch-choice__path"><a href="#restore">/s,
+  );
+  const spoken = accessibleText(html);
+  assertStringIncludes(spoken, "Satisfied");
+  assertStringIncludes(spoken, "Unresolved");
+  assertStringIncludes(spoken, "Safe to retry");
+  assertStringIncludes(spoken, "You are done when");
+
+  const unsafeRetry = renderToStaticMarkup(
+    createElement(RetryNotice, {
+      safeToRetry: false,
+      reason: "The action may already have moved the source.",
+    }),
+  );
+  assertStringIncludes(accessibleText(unsafeRetry), "Do not retry");
+
+  const warning = renderToStaticMarkup(
+    createElement(DestructiveActionNotice, {
+      scope: "The temporary directory.",
+      impact: "Its files will be removed.",
+      recovery: "Move it to recoverable storage first.",
+    }),
+  );
+  assertStringIncludes(accessibleText(warning), "Warning");
+  assertStringIncludes(warning, 'role="note"');
+
+  const danger = renderToStaticMarkup(
+    createElement(DestructiveActionNotice, {
+      tone: "danger",
+      scope: "The active directory.",
+      impact: "Newer files will be replaced.",
+      recovery: "Create a dated copy first.",
+    }),
+  );
+  assertStringIncludes(accessibleText(danger), "Danger");
+  assertStringIncludes(danger, 'role="alert"');
+});
 
 Deno.test("every stateful marker joins the accessible text in its example", async () => {
   const exampleFiles = (await walk(COMPONENT_ROOT))
