@@ -58,7 +58,7 @@ The final accessibility-resilience audit on 2026-07-27 classified all 52 unit ca
 
 | Test file                      | Cases | Guard assessment                                                                                                                                    |
 | ------------------------------ | ----: | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `artifact_family_test.tsx`     |     6 | Canonical ownership/disposition arrays enrol future members; a content-category parser and unrelated invalid nesting prove the annotation guard.    |
+| `artifact_family_test.tsx`     |     6 | Canonical state arrays enroll future members; every neutral-applicable CSS declaration excludes warning and danger tokens; a content-category parser guards annotations. |
 | `catalogue_instrument_test.ts` |     4 | Metadata, generated registry, and recipe definitions are the authorities; no hand-listed Component population remains.                              |
 | `design_system_test.ts`        |    25 | Folder, token, runtime, and state vocabularies drive class guards; a valid future font alias and a one-byte target mutation prove browser enrollment and metric authority. |
 | `docs_page_furniture_test.ts`  |     4 | Closed Task states and each composition's own definition are the authorities; feature-specific cases assert distinct contracts.                     |

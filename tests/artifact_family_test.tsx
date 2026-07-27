@@ -69,6 +69,59 @@ function dispositionTokenFailures(
   return failures;
 }
 
+function neutralDispositionTreatmentFailures(
+  css: string,
+  dispositions: readonly string[],
+  expected: Readonly<Record<string, string>>,
+): readonly string[] {
+  const neutralDispositions = dispositions.filter((disposition) =>
+    expected[disposition] === "--discern-color-ink-muted"
+  );
+  const failures: string[] = [];
+  for (const match of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const selectorList = match[1]?.trim() ?? "";
+    const block = match[2] ?? "";
+    for (
+      const declaration of block.matchAll(
+        /([-\w]+)\s*:\s*([^;}]*)/g,
+      )
+    ) {
+      const property = declaration[1] ?? "";
+      const value = declaration[2] ?? "";
+      const hazardTokens = [
+        ...value.matchAll(
+          /--discern-color-(?:danger|warning)(?:-[\w-]+)?/g,
+        ),
+      ].map((token) => token[0]);
+      if (hazardTokens.length === 0) continue;
+      for (
+        const selector of selectorList.split(",").map((part) => part.trim())
+      ) {
+        const constrainedDispositions = [
+          ...selector.matchAll(
+            /\[data-discern-disposition=["']([^"']+)["']\]/g,
+          ),
+        ].flatMap((constraint) =>
+          constraint[1] === undefined ? [] : [constraint[1]]
+        );
+        const appliesTo = constrainedDispositions.length === 0
+          ? selector.includes(".discern-file-change") ? neutralDispositions : []
+          : neutralDispositions.filter((disposition) =>
+            constrainedDispositions.includes(disposition)
+          );
+        for (const disposition of appliesTo) {
+          for (const token of hazardTokens) {
+            failures.push(
+              `${disposition}: ${property} references ${token} in ${selector}`,
+            );
+          }
+        }
+      }
+    }
+  }
+  return failures;
+}
+
 function invalidPhrasingFlowNesting(html: string): readonly string[] {
   const phrasingContainers = new Set([
     "a",
@@ -217,16 +270,38 @@ Deno.test("every file disposition has its complete semantic token mapping", asyn
     dispositionTokenFailures(css, fileDispositions, expected),
     [],
   );
+  assertEquals(
+    neutralDispositionTreatmentFailures(css, fileDispositions, expected),
+    [],
+  );
 
-  const synthetic = `
+  const wrongColor = `
     .future-entry[data-discern-disposition="removed"] .future-state {
       color: var(--discern-color-danger);
     }
   `;
   assertEquals(
-    dispositionTokenFailures(synthetic, ["removed"], expected),
+    dispositionTokenFailures(wrongColor, ["removed"], expected),
     [
       "removed: expected --discern-color-ink-muted, found --discern-color-danger",
+    ],
+  );
+
+  const wrongTreatment = `
+    .future-entry[data-discern-disposition="removed"] .future-state {
+      background: var(--discern-color-danger-soft);
+      border-color: var(--discern-color-warning);
+    }
+  `;
+  assertEquals(
+    neutralDispositionTreatmentFailures(
+      wrongTreatment,
+      fileDispositions,
+      expected,
+    ),
+    [
+      'removed: background references --discern-color-danger-soft in .future-entry[data-discern-disposition="removed"] .future-state',
+      'removed: border-color references --discern-color-warning in .future-entry[data-discern-disposition="removed"] .future-state',
     ],
   );
 });
