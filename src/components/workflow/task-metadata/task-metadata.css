@@ -1,0 +1,38 @@
+@layer discern.components {
+  .discern-task-metadata {
+    min-inline-size: 0;
+    padding-block: var(--discern-space-4);
+    border-block: 1px solid var(--discern-color-border);
+    color: var(--discern-color-ink);
+  }
+  .discern-task-metadata__facts {
+    display: grid;
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(min(100%, 10rem), 1fr)
+    );
+    gap: var(--discern-space-4);
+    margin: 0;
+  }
+  .discern-task-metadata__fact {
+    min-inline-size: 0;
+  }
+  .discern-task-metadata__fact dt {
+    margin-block-end: var(--discern-space-1);
+    color: var(--discern-color-ink-muted);
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+    font-size: var(--discern-font-size-xs);
+    font-weight: var(--discern-font-weight-strong);
+    line-height: var(--discern-leading-snug);
+  }
+  .discern-task-metadata__fact dd {
+    min-inline-size: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: var(--discern-color-ink);
+    font-family: var(--discern-font-body);
+    font-size: var(--discern-font-size-sm);
+    line-height: var(--discern-leading-body);
+  }
+}

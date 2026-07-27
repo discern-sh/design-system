@@ -187,6 +187,10 @@ Deno.test("Catalogue selection snippets and state fragments derive from the regi
     entry(registry, "table").states.map(({ name }) => name),
     ["default", "dense-overflow"],
   );
+  assertEquals(
+    entry(registry, "task-metadata").states.map(({ name }) => name),
+    ["default", "file-changing"],
+  );
 });
 
 Deno.test("Catalogue prop evidence is source-derived and complete", async () => {
@@ -197,7 +201,7 @@ Deno.test("Catalogue prop evidence is source-derived and complete", async () => 
   const unavailable = registry.filter(({ propDocumentation }) =>
     propDocumentation.status === "unavailable"
   );
-  assertEquals(available.length, 104);
+  assertEquals(available.length, 105);
   assertEquals(unavailable.length, 3);
   for (const { meta, propDocumentation } of available) {
     if (propDocumentation.status !== "available") {
