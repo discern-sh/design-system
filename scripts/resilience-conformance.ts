@@ -97,6 +97,7 @@ interface SemanticFocusResult {
 
 interface FocusIndicatorStyle {
   readonly backgroundColor: string;
+  readonly effectiveOpacity: number;
   readonly outlineColor: string;
   readonly outlineOffset: string;
   readonly outlineStyle: string;
@@ -106,6 +107,7 @@ interface FocusIndicatorStyle {
   readonly textDecorationColor: string;
   readonly textDecorationLine: string;
   readonly textDecorationThickness: string;
+  readonly visible: boolean;
 }
 
 interface ColorChannels {
@@ -152,17 +154,17 @@ function computedColor(value: string): ColorChannels | undefined {
 function contrastRatio(
   foregroundValue: string,
   backgroundValue: string,
+  effectiveOpacity = 1,
 ): number | undefined {
   const foreground = computedColor(foregroundValue);
   const background = computedColor(backgroundValue);
   if (foreground === undefined || background === undefined) return undefined;
+  const alpha = foreground.alpha *
+    Math.max(0, Math.min(1, effectiveOpacity));
   const composite = {
-    red: foreground.red * foreground.alpha +
-      background.red * (1 - foreground.alpha),
-    green: foreground.green * foreground.alpha +
-      background.green * (1 - foreground.alpha),
-    blue: foreground.blue * foreground.alpha +
-      background.blue * (1 - foreground.alpha),
+    red: foreground.red * alpha + background.red * (1 - alpha),
+    green: foreground.green * alpha + background.green * (1 - alpha),
+    blue: foreground.blue * alpha + background.blue * (1 - alpha),
   };
   const luminance = (
     color: {
@@ -190,18 +192,18 @@ function contrastRatio(
 function paintedBackground(
   foregroundValue: string,
   backgroundValue: string,
+  effectiveOpacity = 1,
 ): string {
   const foreground = computedColor(foregroundValue);
   const background = computedColor(backgroundValue);
   if (foreground === undefined || background === undefined) {
     return backgroundValue;
   }
-  const red = foreground.red * foreground.alpha +
-    background.red * (1 - foreground.alpha);
-  const green = foreground.green * foreground.alpha +
-    background.green * (1 - foreground.alpha);
-  const blue = foreground.blue * foreground.alpha +
-    background.blue * (1 - foreground.alpha);
+  const alpha = foreground.alpha *
+    Math.max(0, Math.min(1, effectiveOpacity));
+  const red = foreground.red * alpha + background.red * (1 - alpha);
+  const green = foreground.green * alpha + background.green * (1 - alpha);
+  const blue = foreground.blue * alpha + background.blue * (1 - alpha);
   return `rgb(${red}, ${green}, ${blue})`;
 }
 
@@ -214,17 +216,26 @@ function focusIndicatorContrast(
   readonly maxContrast: number;
 } {
   const indicators: Array<
-    { readonly color: string; readonly background: string }
+    {
+      readonly color: string;
+      readonly background: string;
+      readonly effectiveOpacity: number;
+    }
   > = [];
   for (let index = 0; index < after.length; index += 1) {
     const current = after[index];
     const previous = before[index];
-    if (current === undefined) continue;
+    if (current === undefined || !current.visible) continue;
     const insideBackground = paintedBackground(
       current.backgroundColor,
       surfaceColor,
+      current.effectiveOpacity,
     );
+    const paintChanged = previous === undefined ||
+      current.effectiveOpacity !== previous.effectiveOpacity ||
+      current.visible !== previous.visible;
     const outlineChanged = previous === undefined ||
+      paintChanged ||
       current.outlineColor !== previous.outlineColor ||
       current.outlineOffset !== previous.outlineOffset ||
       current.outlineStyle !== previous.outlineStyle ||
@@ -238,11 +249,15 @@ function focusIndicatorContrast(
         background: Number.parseFloat(current.outlineOffset) < 0
           ? insideBackground
           : surfaceColor,
+        effectiveOpacity: current.effectiveOpacity,
       });
     }
     if (
       current.boxShadow !== "none" &&
-      (previous === undefined || current.boxShadow !== previous.boxShadow)
+      (
+        previous === undefined || paintChanged ||
+        current.boxShadow !== previous.boxShadow
+      )
     ) {
       const background = current.boxShadow.includes("inset")
         ? insideBackground
@@ -251,10 +266,12 @@ function focusIndicatorContrast(
         ...current.boxShadowColors.map((color) => ({
           color,
           background,
+          effectiveOpacity: current.effectiveOpacity,
         })),
       );
     }
     const underlineChanged = previous === undefined ||
+      paintChanged ||
       current.textDecorationColor !== previous.textDecorationColor ||
       current.textDecorationLine !== previous.textDecorationLine ||
       current.textDecorationThickness !== previous.textDecorationThickness;
@@ -265,12 +282,13 @@ function focusIndicatorContrast(
       indicators.push({
         color: current.textDecorationColor,
         background: insideBackground,
+        effectiveOpacity: current.effectiveOpacity,
       });
     }
   }
-  const contrasts = indicators.map(({ color, background }) =>
-    contrastRatio(color, background)
-  )
+  const contrasts = indicators.map((
+    { color, background, effectiveOpacity },
+  ) => contrastRatio(color, background, effectiveOpacity))
     .filter((ratio): ratio is number => ratio !== undefined);
   return {
     colors: indicators.map(({ color }) => color),
@@ -306,8 +324,17 @@ async function focusStyles(target: Locator): Promise<FocusIndicatorStyle[]> {
     );
     return candidates.map((candidate) => {
       const style = getComputedStyle(candidate);
+      let effectiveOpacity = 1;
+      let ancestor: Element | null = candidate;
+      while (ancestor !== null) {
+        const opacity = Number.parseFloat(getComputedStyle(ancestor).opacity);
+        effectiveOpacity *= Number.isFinite(opacity) ? opacity : 1;
+        ancestor = ancestor.parentElement;
+      }
+      effectiveOpacity = Math.max(0, Math.min(1, effectiveOpacity));
       return {
         backgroundColor: pixelColor(style.backgroundColor),
+        effectiveOpacity,
         outlineColor: pixelColor(style.outlineColor),
         outlineOffset: style.outlineOffset,
         outlineStyle: style.outlineStyle,
@@ -321,6 +348,10 @@ async function focusStyles(target: Locator): Promise<FocusIndicatorStyle[]> {
         textDecorationColor: pixelColor(style.textDecorationColor),
         textDecorationLine: style.textDecorationLine,
         textDecorationThickness: style.textDecorationThickness,
+        visible: effectiveOpacity > 0 &&
+          style.visibility === "visible" &&
+          style.getPropertyValue("content-visibility") !== "hidden" &&
+          candidate.getClientRects().length > 0,
       };
     });
   });
@@ -1986,14 +2017,25 @@ async function verifySemanticFocus(
       const futureSurface = document.createElement("div");
       futureSurface.dataset.discernFocusProofSurface = "";
       futureSurface.style.backgroundColor = `var(${accent.token})`;
-      for (const kind of ["transparent", "same-colour"] as const) {
+      for (
+        const kind of [
+          "transparent",
+          "same-colour",
+          "target-opacity",
+          "ancestor-opacity",
+          "hidden",
+        ] as const
+      ) {
+        const wrapper = document.createElement("span");
+        wrapper.style.display = "inline-block";
         const target = document.createElement("button");
         target.dataset.discernFocusProof = kind;
         target.textContent = `Future ${kind} action`;
         target.style.cssText =
           "background:transparent;border:0;box-shadow:none;" +
           "outline:none;text-decoration:none;";
-        futureSurface.append(target);
+        wrapper.append(target);
+        futureSurface.append(wrapper);
       }
       container.append(futureSurface);
       const canvas = document.createElement("canvas");
@@ -2029,19 +2071,28 @@ async function verifySemanticFocus(
         .map(({ proofKind }) => proofKind)
         .filter(Boolean),
     );
-    for (const kind of ["transparent", "same-colour"] as const) {
+    const proofKinds = [
+      "transparent",
+      "same-colour",
+      "target-opacity",
+      "ancestor-opacity",
+      "hidden",
+    ] as const;
+    for (const kind of proofKinds) {
       if (!discoveredProofs.has(kind)) {
         syntheticFailures.push(`${kind} target did not auto-enrol`);
       }
     }
-    for (const kind of ["transparent", "same-colour"] as const) {
+    for (const kind of proofKinds) {
       const target = page.locator(`[data-discern-focus-proof="${kind}"]`);
       await blurActiveElement(page);
       const before = await focusStyles(target);
       const keyboardFocused = await focusByKeyboard(page, target);
       const expectedColor = kind === "transparent"
         ? "transparent"
-        : synthetic.surfaceColor;
+        : kind === "same-colour"
+        ? synthetic.surfaceColor
+        : "black";
       const computedFixture = await target.evaluate(
         async (node, { kind, surfaceColor }) => {
           node.style.setProperty(
@@ -2049,16 +2100,45 @@ async function verifySemanticFocus(
             kind === "transparent" ? "transparent" : surfaceColor,
             "important",
           );
+          if (
+            kind === "target-opacity" || kind === "ancestor-opacity" ||
+            kind === "hidden"
+          ) {
+            node.style.setProperty("outline-color", "black", "important");
+          }
           node.style.setProperty("outline-style", "solid", "important");
           node.style.setProperty("outline-width", "2px", "important");
           node.style.setProperty("outline-offset", "2px", "important");
+          if (kind === "target-opacity") {
+            node.style.setProperty("opacity", "0", "important");
+          } else if (kind === "ancestor-opacity") {
+            node.parentElement?.style.setProperty(
+              "opacity",
+              "0.1",
+              "important",
+            );
+          } else if (kind === "hidden") {
+            node.style.setProperty("visibility", "hidden", "important");
+          }
           await new Promise<void>((resolve) => {
             requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
           });
           const style = getComputedStyle(node);
+          let effectiveOpacity = 1;
+          let ancestor: Element | null = node;
+          while (ancestor !== null) {
+            const opacity = Number.parseFloat(
+              getComputedStyle(ancestor).opacity,
+            );
+            effectiveOpacity *= Number.isFinite(opacity) ? opacity : 1;
+            ancestor = ancestor.parentElement;
+          }
           return {
             color: style.outlineColor,
+            effectiveOpacity,
             style: style.outlineStyle,
+            visible: style.visibility === "visible" &&
+              node.getClientRects().length > 0,
             width: style.outlineWidth,
           };
         },
@@ -2067,6 +2147,7 @@ async function verifySemanticFocus(
       const computedFixtureContrast = contrastRatio(
         computedFixture.color,
         synthetic.surfaceColor,
+        computedFixture.effectiveOpacity,
       );
       const after = await focusStyles(target);
       const indicator = focusIndicatorContrast(
@@ -2074,13 +2155,19 @@ async function verifySemanticFocus(
         after,
         synthetic.surfaceColor,
       );
+      const fixtureShouldBeVisible = kind !== "target-opacity" &&
+        kind !== "hidden";
+      const independentOracleRejected = kind === "hidden"
+        ? !computedFixture.visible
+        : computedFixtureContrast !== undefined &&
+          computedFixtureContrast < 3;
       if (
-        !keyboardFocused || indicator.colors.length === 0 ||
+        !keyboardFocused ||
+        (fixtureShouldBeVisible && indicator.colors.length === 0) ||
         indicator.maxContrast >= 3 ||
         computedFixture.style !== "solid" ||
         Number.parseFloat(computedFixture.width) < 2 ||
-        computedFixtureContrast === undefined ||
-        computedFixtureContrast >= 3
+        !independentOracleRejected
       ) {
         syntheticFailures.push(
           `${kind} target: keyboard=${keyboardFocused}, colours=${
@@ -2089,7 +2176,8 @@ async function verifySemanticFocus(
             indicator.maxContrast.toFixed(2)
           }:1, computed=${computedFixture.color} (${
             computedFixtureContrast?.toFixed(2) ?? "unknown"
-          }:1), requested=${expectedColor}`,
+          }:1 at opacity ${computedFixture.effectiveOpacity.toFixed(2)}), ` +
+            `visible=${computedFixture.visible}, requested=${expectedColor}`,
         );
       }
     }
@@ -2103,7 +2191,7 @@ async function verifySemanticFocus(
   );
   if (!futureProof) {
     failures.push(
-      `Semantic focus: transparent or same-colour synthetic indicator escaped the contrast detector: ${
+      `Semantic focus: synthetic indicator escaped composited contrast or post-focus visibility detection: ${
         syntheticFailures.join("; ")
       }`,
     );
