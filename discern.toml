@@ -401,6 +401,75 @@ metric = "docs_selection_bytes"
 inputs = ["src/**", "scripts/**"]
 margin = 1000
 
+# A small long-form documentation route: Docs header, Docs nav, Anchor
+# heading, Prose, Code listing, and Pager, plus resolved dependencies.
+[standards.minimal_docs_css]
+run = "deno run --config deno.json --allow-read --allow-write discern/scripts/measure-runtime.ts minimal_docs_css_bytes"
+limit = 25804
+direction = "down"
+metric = "minimal_docs_css_bytes"
+inputs = ["src/**", "scripts/generate.ts", "discern/scripts/measure-runtime.ts"]
+
+# The complete Workflow grammar selected by its canonical Group, including
+# every dependency the Runtime Manifest resolves.
+[standards.workflow_css]
+run = "deno run --config deno.json --allow-read --allow-write discern/scripts/measure-runtime.ts workflow_css_bytes"
+limit = 67377
+direction = "down"
+metric = "workflow_css_bytes"
+inputs = ["src/**", "scripts/generate.ts", "discern/scripts/measure-runtime.ts"]
+
+# The complete Marketing Group, including its resolved dependencies.
+[standards.marketing_css]
+run = "deno run --config deno.json --allow-read --allow-write discern/scripts/measure-runtime.ts marketing_css_bytes"
+limit = 66287
+direction = "down"
+metric = "marketing_css_bytes"
+inputs = ["src/**", "scripts/generate.ts", "discern/scripts/measure-runtime.ts"]
+
+# The selection-scoped discern.js produced by every Component in the closed
+# behavior opt-in registry. CSS-only selections remain outside this measure.
+[standards.behavior_script]
+run = "deno run --config deno.json --allow-read --allow-write discern/scripts/measure-runtime.ts behavior_script_bytes"
+limit = 6844
+direction = "down"
+metric = "behavior_script_bytes"
+inputs = [
+  "src/**",
+  "assets/behaviors/**",
+  "scripts/generate.ts",
+  "discern/scripts/measure-runtime.ts",
+]
+
+# Browser-transfer bytes for fonts.css and the four WOFF2 files. The three
+# emitted OFL texts stay integrity-mapped but are not browser font requests.
+[standards.font_transfer]
+run = "deno run --config deno.json --allow-read --allow-write discern/scripts/measure-runtime.ts font_transfer_bytes"
+limit = 183726
+direction = "down"
+metric = "font_transfer_bytes"
+inputs = [
+  "src/**",
+  "assets/fonts.css",
+  "assets/fonts/**",
+  "scripts/generate.ts",
+  "discern/scripts/measure-runtime.ts",
+]
+
+# Browser-transfer bytes for grain.css and its one optional texture.
+[standards.grain_transfer]
+run = "deno run --config deno.json --allow-read --allow-write discern/scripts/measure-runtime.ts grain_transfer_bytes"
+limit = 99442
+direction = "down"
+metric = "grain_transfer_bytes"
+inputs = [
+  "src/**",
+  "assets/grain.css",
+  "assets/textures/**",
+  "scripts/generate.ts",
+  "discern/scripts/measure-runtime.ts",
+]
+
 # Suppression directives stay at zero: the strict lint/type surface holds
 # because nothing is ever silenced. Counts deno-lint-ignore, deno-fmt-ignore,
 # @ts-ignore, and @ts-expect-error across authored (non-generated) sources.

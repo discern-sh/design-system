@@ -24,6 +24,10 @@ The toolbar reads the package version from `deno.json`, and conformance sheets r
 
 The automated boundary is the Catalogue's rendered static surfaces and its declared theme consumer. Consumer application routes, product navigation, and manual screen-reader output remain consumer-level acceptance work.
 
+## Initial render
+
+Composition recipes remain mounted on the initial Catalogue route. The 5 recipes contribute 25,197 bytes to a 572,992-byte mounted body, or 4.40%; Component examples contribute 505,073 bytes. Deferring the recipes would retain their imports in the 1,722,630-byte unminified Catalogue bundle while removing about 25 KB of DOM and complicating the journey auto-enrollment. The measured render does not justify that trade.
+
 ## Where it lives
 
 | Concern                                                | Authority                                                                  |

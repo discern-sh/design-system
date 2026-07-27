@@ -8,11 +8,11 @@ This doc is the detailed companion to the **Conventions** section of the project
 
 - **Formatting — `deno fmt`** (via `deno task fix` in the fix stage) formats TypeScript, CSS, JSON, and markdown, including this documentation tree. Excluded: `dist/`, `src/generated/`, `styleguide/generated/`, and the three compiled agent files (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`), which discern regenerates from `discern/guidance.md` — edit the source, run `discern refresh`, never the copies.
 - **Codegen currency** — the fix stage runs `deno task codegen`, so `src/generated/` and `styleguide/generated/` always match the Metadata. Hand-edits to generated files are overwritten on the next gate run; CI fails a stale generation independently.
-- **Linting — `deno task lint`** (`deno lint --no-config`, default rule set) over `src`, `styleguide`, `scripts`, and `tests`.
+- **Linting — `deno task lint`** (`deno lint --no-config`, default rule set) over `src`, `styleguide`, `scripts`, `discern/scripts`, and `tests`.
 - **Type-checking — `deno task typecheck`** checks every public entrypoint and the scripts under the strict compiler options in [`deno.json`](../../deno.json): `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `noFallthroughCasesInSwitch`, `noImplicitReturns`, `noUnusedLocals`, `noUnusedParameters`, `useUnknownInCatchVariables`, `verbatimModuleSyntax`. Satisfy the flag, never loosen it. `verbatimModuleSyntax` means type-only imports must say `import type`.
 - **Build** — `deno task build` assembles the Catalogue into `dist/`, then the Catalogue itself is type-checked (`deno task check:catalogue`).
 - **Tests** — `deno task test` (see [testing.md](testing.md)).
-- **`css_size` standard** — full-catalogue `dist/discern.css` bytes are measured on every gate run against a never-worsen ceiling in `discern.toml`. If a change trips it, shrink the CSS or justify the growth to the maintainer — never raise the limit in a branch (the gate blocks loosened limits, and `discern standards --pin` is the only sanctioned way to tighten).
+- **Standards** — `css_density` holds average authored Component CSS, `docs_selection` holds the complete Docs Group, and 6 Runtime profiles hold minimal docs, Workflow, Marketing, browser behavior, font transfer, and grain transfer at measured ceilings. [`route-selection.md`](../40-runtime-emitter/route-selection.md) records the selections, included files, and current numbers. If a change trips one, reduce the cost or report it to the maintainer. Never raise a limit in a branch.
 
 ## Conventions to follow
 
