@@ -28,6 +28,17 @@ function dispositionTokenFailures(
   dispositions: readonly string[],
   expected: Readonly<Record<string, string>>,
 ): readonly string[] {
+  const baseTokens = new Set(
+    [
+      ...css.matchAll(
+        /(?:^|})\s*\.discern-file-change__state\s*\{([^}]*)\}/g,
+      ),
+    ].flatMap((match) =>
+      [...(match[1] ?? "").matchAll(/color:\s*var\((--[^)]+)\)/g)].map(
+        (color) => color[1] ?? "",
+      )
+    ).filter(Boolean),
+  );
   const failures: string[] = [];
   for (const disposition of dispositions) {
     const blocks = [
@@ -38,13 +49,14 @@ function dispositionTokenFailures(
         ),
       ),
     ];
-    const tokens = new Set(
+    const overrideTokens = new Set(
       blocks.flatMap((match) =>
         [...(match[1] ?? "").matchAll(/color:\s*var\((--[^)]+)\)/g)].map(
           (color) => color[1] ?? "",
         )
       ).filter(Boolean),
     );
+    const tokens = overrideTokens.size > 0 ? overrideTokens : baseTokens;
     const token = expected[disposition];
     if (token === undefined || tokens.size !== 1 || !tokens.has(token)) {
       failures.push(

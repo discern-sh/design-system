@@ -40,11 +40,6 @@
   .discern-file-change[data-discern-disposition="updated"] .discern-file-change__state {
     color: var(--discern-color-accent-700);
   }
-  .discern-file-change[data-discern-disposition="generated"] .discern-file-change__state,
-  .discern-file-change[data-discern-disposition="removed"] .discern-file-change__state,
-  .discern-file-change[data-discern-disposition="unchanged"] .discern-file-change__state {
-    color: var(--discern-color-ink-muted);
-  }
   .discern-file-change__path {
     grid-area: path;
     min-inline-size: 0;
