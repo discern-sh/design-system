@@ -16,6 +16,8 @@ import {
   Brand,
   Breadcrumbs,
   Button,
+  Diagnostic,
+  type DiagnosticProps,
   GlossaryTerm,
   HoverCard,
   Logo,
@@ -849,6 +851,51 @@ Deno.test("semantic HTML and React adapters share the public class contract", ()
     themeSwitcher,
     /<input(?=[^>]*value="system")(?=[^>]*checked="")[^>]*>/,
   );
+});
+
+type IsRequired<T, Key extends keyof T> = Partial<Record<Key, never>> extends
+  Pick<
+    T,
+    Key
+  > ? false
+  : true;
+
+Deno.test("diagnostics require a correction and derive their default role from severity", () => {
+  const correctionIsRequired: IsRequired<DiagnosticProps, "correction"> = true;
+  assert(correctionIsRequired);
+
+  const failure = renderToStaticMarkup(
+    createElement(Diagnostic, {
+      title: "Type check failed",
+      impact: "The package cannot be built.",
+      correction: "Handle the missing case, then retry.",
+    }),
+  );
+  assertMatch(failure, /^<article role="alert"/);
+  assertStringIncludes(failure, 'data-discern-state="failure">Failure');
+  assertStringIncludes(failure, "Suggested correction");
+  assertStringIncludes(failure, "Handle the missing case, then retry.");
+
+  const attention = renderToStaticMarkup(
+    createElement(Diagnostic, {
+      severity: "attention",
+      title: "Generated output is stale",
+      impact: "The derived surface may be out of date.",
+      correction: "Regenerate the derived files.",
+    }),
+  );
+  assertMatch(attention, /^<article role="status"/);
+  assertStringIncludes(attention, 'data-discern-state="attention">Attention');
+
+  const explicitRole = renderToStaticMarkup(
+    createElement(Diagnostic, {
+      role: "note",
+      title: "Recorded failure",
+      impact: "The failure needs review.",
+      correction: "Review the recorded evidence.",
+    }),
+  );
+  assertMatch(explicitRole, /^<article role="note"/);
 });
 
 Deno.test("branding and hover-card adapters preserve their semantic relationships", () => {

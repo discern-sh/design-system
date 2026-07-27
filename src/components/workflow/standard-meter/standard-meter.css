@@ -1,0 +1,67 @@
+@layer discern.components {
+  .discern-standard-meter {
+    display: grid;
+    gap: var(--discern-space-4);
+    max-inline-size: 100%;
+    padding: var(--discern-space-5);
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-lg);
+    background: var(--discern-color-surface);
+    color: var(--discern-color-ink);
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+  }
+  .discern-standard-meter__header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--discern-space-3);
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .discern-standard-meter__header strong {
+    font-size: var(--discern-font-size-sm);
+  }
+  .discern-standard-meter__trend {
+    color: var(--discern-color-ink-muted);
+    font-family: var(--discern-font-mono);
+    font-size: var(--discern-font-size-xs);
+    text-transform: capitalize;
+  }
+  .discern-standard-meter__trend[data-discern-state="improving"] {
+    color: var(--discern-color-success-deep);
+  }
+  .discern-standard-meter__trend[data-discern-state="drifting"] {
+    color: var(--discern-color-warning-deep);
+  }
+  .discern-standard-meter__facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--discern-space-4);
+    margin: 0;
+    padding-block-start: var(--discern-space-3);
+    border-block-start: 1px dashed var(--discern-color-border);
+  }
+  .discern-standard-meter__facts > div {
+    display: grid;
+    gap: var(--discern-space-1);
+    min-inline-size: 0;
+  }
+  .discern-standard-meter__facts dt {
+    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-xs);
+  }
+  .discern-standard-meter__facts dd {
+    margin: 0;
+    font-size: var(--discern-font-size-xs);
+    line-height: var(--discern-leading-body);
+  }
+  .discern-standard-meter__facts > div:not(:first-child) dd {
+    color: var(--discern-color-ink-muted);
+  }
+  @media (max-width: 32rem) {
+    .discern-standard-meter__facts {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--discern-space-3);
+    }
+  }
+}
