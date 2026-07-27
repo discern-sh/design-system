@@ -11,6 +11,7 @@ const WIDE_VIEWPORT = { width: 1440, height: 1000 } as const;
 const NARROW_VIEWPORT = { width: 390, height: 844 } as const;
 const ZOOMED_REFLOW_VIEWPORT = { width: 320, height: 256 } as const;
 const MINIMUM_TARGET_SIZE = 24;
+const MINIMUM_FOCUS_GEOMETRY_CHANGE = 2;
 const FOCUS_PROXY_SIZE_FACTOR = 4;
 const FOCUS_PROXY_DISTANCE_FACTOR = 2;
 const PARENT_FOCUS_EDGE_FACTOR = 2;
@@ -123,7 +124,9 @@ interface FocusIndicatorStyle {
   readonly outlineWidth: string;
   readonly boxShadow: string;
   readonly boxShadowColors: readonly string[];
-  readonly boxShadowGeometry: string;
+  readonly boxShadowGeometries:
+    | readonly FocusShadowGeometry[]
+    | undefined;
   readonly nativeLabelAssociated: boolean;
   readonly paintKnown: boolean;
   readonly rect: FocusRect;
@@ -134,6 +137,14 @@ interface FocusIndicatorStyle {
   readonly textDecorationLine: string;
   readonly textDecorationThickness: string;
   readonly visible: boolean;
+}
+
+interface FocusShadowGeometry {
+  readonly blur: number;
+  readonly inset: boolean;
+  readonly spread: number;
+  readonly x: number;
+  readonly y: number;
 }
 
 interface FocusFixtureOracle {
@@ -148,11 +159,17 @@ interface FocusFixtureOracle {
   readonly filters: readonly string[];
   readonly geometricallyAssociated: boolean;
   readonly nativeLabelAssociated: boolean;
+  readonly outlineOffset: number;
+  readonly outlineStyle: string;
+  readonly outlineWidth: number;
   readonly paintPresent: boolean;
   readonly parentEdgesLocal: boolean;
   readonly semanticallyAssociated: boolean;
+  readonly shadowGeometry: FocusShadowGeometry | undefined;
   readonly targetHeight: number;
   readonly targetWidth: number;
+  readonly underlinePresent: boolean;
+  readonly underlineThickness: number;
   readonly visible: boolean;
 }
 
@@ -350,6 +367,147 @@ function paintAppearanceContrast(
   return contrastRatio(afterPaint, beforePaint) ?? 0;
 }
 
+function computedPixelLength(value: string): number | undefined {
+  const match = value.match(
+    /^([+-]?(?:\d+(?:\.\d+)?|\.\d+))px$/,
+  );
+  if (match?.[1] === undefined) return undefined;
+  const length = Number(match[1]);
+  return Number.isFinite(length) ? length : undefined;
+}
+
+function computedShadowLayers(value: string): readonly string[] | undefined {
+  if (value === "none") return [];
+  const layers: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let position = 0; position < value.length; position += 1) {
+    const character = value[position];
+    if (character === "(") {
+      depth += 1;
+    } else if (character === ")") {
+      depth -= 1;
+      if (depth < 0) return undefined;
+    } else if (character === "," && depth === 0) {
+      const layer = value.slice(start, position).trim();
+      if (layer === "") return undefined;
+      layers.push(layer);
+      start = position + 1;
+    }
+  }
+  if (depth !== 0) return undefined;
+  const layer = value.slice(start).trim();
+  if (layer === "") return undefined;
+  layers.push(layer);
+  return layers;
+}
+
+function computedShadowGeometries(
+  value: string,
+): readonly FocusShadowGeometry[] | undefined {
+  const layers = computedShadowLayers(value);
+  if (layers === undefined) return undefined;
+  const colorPattern = /(?:rgba?|hsla?|oklab|oklch|color)\([^)]+\)/gi;
+  const geometries: FocusShadowGeometry[] = [];
+  for (const layer of layers) {
+    const tokens = layer.replace(colorPattern, " ").trim().split(/\s+/);
+    const insetTokens = tokens.filter((token) => token === "inset");
+    if (insetTokens.length > 1) return undefined;
+    const lengths: number[] = [];
+    for (const token of tokens) {
+      if (token === "inset") continue;
+      const length = computedPixelLength(token);
+      if (length === undefined) return undefined;
+      lengths.push(length);
+    }
+    if (lengths.length < 2 || lengths.length > 4) return undefined;
+    geometries.push({
+      blur: lengths[2] ?? 0,
+      inset: insetTokens.length === 1,
+      spread: lengths[3] ?? 0,
+      x: lengths[0] ?? 0,
+      y: lengths[1] ?? 0,
+    });
+  }
+  return geometries;
+}
+
+function outlineGeometryChanged(
+  previous: FocusIndicatorStyle | undefined,
+  current: FocusIndicatorStyle,
+): boolean {
+  const currentWidth = computedPixelLength(current.outlineWidth);
+  if (
+    current.outlineStyle === "none" ||
+    currentWidth === undefined ||
+    currentWidth < 2
+  ) {
+    return false;
+  }
+  if (previous === undefined) return true;
+  if (previous.outlineStyle === "none") return true;
+  const previousWidth = computedPixelLength(previous.outlineWidth);
+  if (previousWidth === undefined) return false;
+  if (previousWidth < 2) return true;
+  const previousOffset = computedPixelLength(previous.outlineOffset);
+  const currentOffset = computedPixelLength(current.outlineOffset);
+  if (previousOffset === undefined || currentOffset === undefined) return false;
+  return Math.max(
+    Math.abs(currentWidth - previousWidth),
+    Math.abs(currentOffset - previousOffset),
+  ) >= MINIMUM_FOCUS_GEOMETRY_CHANGE;
+}
+
+function shadowGeometryChanged(
+  previous: FocusIndicatorStyle | undefined,
+  current: FocusIndicatorStyle,
+): boolean {
+  const currentGeometries = current.boxShadowGeometries;
+  if (currentGeometries === undefined || currentGeometries.length === 0) {
+    return false;
+  }
+  if (previous === undefined) return true;
+  const previousGeometries = previous.boxShadowGeometries;
+  if (previousGeometries === undefined) return false;
+  if (currentGeometries.length > previousGeometries.length) return true;
+  return currentGeometries.some((geometry, index) => {
+    const prior = previousGeometries[index];
+    if (prior === undefined) return true;
+    return Math.max(
+      Math.abs(geometry.x - prior.x),
+      Math.abs(geometry.y - prior.y),
+      Math.abs(geometry.blur - prior.blur),
+      Math.abs(geometry.spread - prior.spread),
+    ) >= MINIMUM_FOCUS_GEOMETRY_CHANGE;
+  });
+}
+
+function underlineGeometryChanged(
+  previous: FocusIndicatorStyle | undefined,
+  current: FocusIndicatorStyle,
+): boolean {
+  const currentPresent = current.textDecorationLine.split(/\s+/).includes(
+    "underline",
+  );
+  if (!currentPresent) return false;
+  if (previous === undefined) return true;
+  const previousPresent = previous.textDecorationLine.split(/\s+/).includes(
+    "underline",
+  );
+  if (!previousPresent) return true;
+  const previousThickness = computedPixelLength(
+    previous.textDecorationThickness,
+  );
+  const currentThickness = computedPixelLength(
+    current.textDecorationThickness,
+  );
+  if (previousThickness === undefined || currentThickness === undefined) {
+    return false;
+  }
+  return Math.abs(currentThickness - previousThickness) >=
+    MINIMUM_FOCUS_GEOMETRY_CHANGE;
+}
+
 function focusIndicatorContrast(
   before: readonly FocusIndicatorStyle[],
   after: readonly FocusIndicatorStyle[],
@@ -408,14 +566,11 @@ function focusIndicatorContrast(
           previous,
           current,
         ) >= 3;
-    const outlineChanged = previous === undefined ||
-      outlinePaintChanged ||
-      current.outlineOffset !== previous.outlineOffset ||
-      current.outlineStyle !== previous.outlineStyle ||
-      current.outlineWidth !== previous.outlineWidth;
+    const outlineChanged = outlinePaintChanged ||
+      outlineGeometryChanged(previous, current);
     if (
       outlineChanged && current.outlineStyle !== "none" &&
-      Number.parseFloat(current.outlineWidth) >= 2
+      (computedPixelLength(current.outlineWidth) ?? 0) >= 2
     ) {
       indicators.push({
         color: current.outlineColor,
@@ -428,9 +583,9 @@ function focusIndicatorContrast(
     if (
       current.boxShadow !== "none" &&
       (
-        previous === undefined ||
-        current.boxShadowGeometry !== previous.boxShadowGeometry ||
+        shadowGeometryChanged(previous, current) ||
         (
+          previous !== undefined &&
           (
             opacityOrVisibilityChanged ||
             current.boxShadowColors.some((color, colorIndex) =>
@@ -479,10 +634,8 @@ function focusIndicatorContrast(
           previous,
           current,
         ) >= 3;
-    const underlineChanged = previous === undefined ||
-      underlinePaintChanged ||
-      current.textDecorationLine !== previous.textDecorationLine ||
-      current.textDecorationThickness !== previous.textDecorationThickness;
+    const underlineChanged = underlinePaintChanged ||
+      underlineGeometryChanged(previous, current);
     if (
       underlineChanged &&
       current.textDecorationLine.split(/\s+/).includes("underline")
@@ -505,7 +658,7 @@ function focusIndicatorContrast(
 }
 
 async function focusStyles(target: Locator): Promise<FocusIndicatorStyle[]> {
-  return await target.evaluate((node) => {
+  const styles = await target.evaluate((node) => {
     type Candidate = {
       readonly element: Element;
       readonly kind: "target" | "next-sibling" | "parent";
@@ -690,10 +843,6 @@ async function focusStyles(target: Locator): Promise<FocusIndicatorStyle[]> {
         boxShadow: style.boxShadow,
         boxShadowColors: (style.boxShadow.match(shadowColorPattern) ?? [])
           .map(pixelColor),
-        boxShadowGeometry: style.boxShadow.replace(
-          shadowColorPattern,
-          "<color>",
-        ),
         nativeLabelAssociated,
         paintKnown,
         rect: rect(candidate),
@@ -711,6 +860,10 @@ async function focusStyles(target: Locator): Promise<FocusIndicatorStyle[]> {
       };
     });
   });
+  return styles.map((style) => ({
+    ...style,
+    boxShadowGeometries: computedShadowGeometries(style.boxShadow),
+  }));
 }
 
 async function focusFixtureOracle(
@@ -877,8 +1030,26 @@ async function focusFixtureOracle(
     const shadowColorPattern = /(?:rgba?|hsla?|oklab|oklch|color)\([^)]+\)/g;
     const shadowColors = (style.boxShadow.match(shadowColorPattern) ?? [])
       .map(pixelColor);
-    const shadowProof = kind.includes("-shadow-color");
-    const underlineProof = kind.includes("-underline-color");
+    const shadowProof = kind.includes("shadow");
+    const underlineProof = kind.includes("underline");
+    const shadowLengths = style.boxShadow === "none"
+      ? []
+      : (style.boxShadow.replace(shadowColorPattern, "").match(
+        /[+-]?(?:\d+(?:\.\d+)?|\.\d+)px/g,
+      ) ?? []).map(Number.parseFloat);
+    const shadowGeometry = shadowLengths.length < 2 ? undefined : {
+      blur: shadowLengths[2] ?? 0,
+      inset: style.boxShadow.split(/\s+/).includes("inset"),
+      spread: shadowLengths[3] ?? 0,
+      x: shadowLengths[0] ?? 0,
+      y: shadowLengths[1] ?? 0,
+    };
+    const underlinePresent = style.textDecorationLine.split(/\s+/).includes(
+      "underline",
+    );
+    const underlineThickness = Number.parseFloat(
+      style.textDecorationThickness,
+    );
     const color = shadowProof
       ? shadowColors[0] ?? "rgba(0, 0, 0, 0)"
       : underlineProof
@@ -887,8 +1058,8 @@ async function focusFixtureOracle(
     const paintPresent = shadowProof
       ? style.boxShadow !== "none" && shadowColors.length > 0
       : underlineProof
-      ? style.textDecorationLine.split(/\s+/).includes("underline") &&
-        Number.parseFloat(style.textDecorationThickness) >= 2
+      ? underlinePresent &&
+        underlineThickness >= 2
       : style.outlineStyle !== "none" &&
         Number.parseFloat(style.outlineWidth) >= 2;
     return {
@@ -903,11 +1074,17 @@ async function focusFixtureOracle(
       filters,
       geometricallyAssociated,
       nativeLabelAssociated,
+      outlineOffset: Number.parseFloat(style.outlineOffset),
+      outlineStyle: style.outlineStyle,
+      outlineWidth: Number.parseFloat(style.outlineWidth),
       paintPresent,
       parentEdgesLocal,
       semanticallyAssociated,
+      shadowGeometry,
       targetHeight: targetRect.height,
       targetWidth: targetRect.width,
+      underlinePresent,
+      underlineThickness,
       visible: effectiveOpacity > 0 &&
         style.visibility === "visible" &&
         style.getPropertyValue("content-visibility") !== "hidden" &&
@@ -2571,6 +2748,12 @@ async function verifySemanticFocus(
     "subtle-outline-color",
     "subtle-shadow-color",
     "subtle-underline-color",
+    "subtle-outline-width-geometry",
+    "subtle-outline-offset-geometry",
+    "outline-style-only-geometry",
+    "subtle-shadow-geometry",
+    "shadow-inset-only-geometry",
+    "subtle-underline-geometry",
   ] as const;
   const positiveProofKinds = [
     "revealed-indicator",
@@ -2581,6 +2764,12 @@ async function verifySemanticFocus(
     "meaningful-shadow-color",
     "meaningful-underline-color",
     "new-outline-geometry",
+    "new-shadow-geometry",
+    "new-underline-geometry",
+    "meaningful-outline-width-geometry",
+    "meaningful-outline-offset-geometry",
+    "meaningful-shadow-geometry",
+    "meaningful-underline-geometry",
   ] as const;
   const proofKinds = [...negativeProofKinds, ...positiveProofKinds] as const;
   const synthetic = await page.evaluate(
@@ -2709,6 +2898,39 @@ async function verifySemanticFocus(
             ? "rgb(0, 0, 0)"
             : `var(${accent.token})`;
         }
+        if (
+          [
+            "subtle-outline-width-geometry",
+            "subtle-outline-offset-geometry",
+            "outline-style-only-geometry",
+            "meaningful-outline-width-geometry",
+            "meaningful-outline-offset-geometry",
+          ].includes(kind)
+        ) {
+          target.style.outline = `2px ${
+            kind === "outline-style-only-geometry" ? "dashed" : "solid"
+          } var(--discern-color-ink)`;
+          target.style.outlineOffset = "2px";
+        }
+        if (
+          [
+            "subtle-shadow-geometry",
+            "shadow-inset-only-geometry",
+            "meaningful-shadow-geometry",
+          ].includes(kind)
+        ) {
+          target.style.boxShadow = "0 0 0 3px var(--discern-color-ink)";
+        }
+        if (
+          [
+            "subtle-underline-geometry",
+            "meaningful-underline-geometry",
+          ].includes(kind)
+        ) {
+          target.style.textDecorationLine = "underline";
+          target.style.textDecorationThickness = "2px";
+          target.style.textDecorationColor = "var(--discern-color-ink)";
+        }
         if (kind === "revealed-indicator") target.style.opacity = "0";
         wrapper.append(target);
         if (siblingProxy) {
@@ -2811,7 +3033,75 @@ async function verifySemanticFocus(
             : subtleColor
             ? "rgb(1, 1, 1)"
             : "var(--discern-color-ink)";
-          if (kind.includes("-shadow-color")) {
+          if (
+            kind === "subtle-outline-width-geometry" ||
+            kind === "meaningful-outline-width-geometry"
+          ) {
+            paint.style.setProperty(
+              "outline-width",
+              kind === "subtle-outline-width-geometry" ? "3px" : "4px",
+              "important",
+            );
+          } else if (
+            kind === "subtle-outline-offset-geometry" ||
+            kind === "meaningful-outline-offset-geometry"
+          ) {
+            paint.style.setProperty(
+              "outline-offset",
+              kind === "subtle-outline-offset-geometry" ? "3px" : "4px",
+              "important",
+            );
+          } else if (kind === "outline-style-only-geometry") {
+            paint.style.setProperty("outline-style", "solid", "important");
+          } else if (
+            kind === "subtle-shadow-geometry" ||
+            kind === "meaningful-shadow-geometry"
+          ) {
+            paint.style.setProperty(
+              "box-shadow",
+              `0 0 0 ${
+                kind === "subtle-shadow-geometry" ? "3.02px" : "5px"
+              } ${paintColor}`,
+              "important",
+            );
+          } else if (kind === "shadow-inset-only-geometry") {
+            paint.style.setProperty(
+              "box-shadow",
+              `inset 0 0 0 3px ${paintColor}`,
+              "important",
+            );
+          } else if (kind === "new-shadow-geometry") {
+            paint.style.setProperty(
+              "box-shadow",
+              `0 0 0 3px ${paintColor}`,
+              "important",
+            );
+          } else if (
+            kind === "subtle-underline-geometry" ||
+            kind === "meaningful-underline-geometry"
+          ) {
+            paint.style.setProperty(
+              "text-decoration-thickness",
+              kind === "subtle-underline-geometry" ? "2.02px" : "4px",
+              "important",
+            );
+          } else if (kind === "new-underline-geometry") {
+            paint.style.setProperty(
+              "text-decoration-line",
+              "underline",
+              "important",
+            );
+            paint.style.setProperty(
+              "text-decoration-thickness",
+              "2px",
+              "important",
+            );
+            paint.style.setProperty(
+              "text-decoration-color",
+              paintColor,
+              "important",
+            );
+          } else if (kind.includes("-shadow-color")) {
             paint.style.setProperty(
               "box-shadow",
               `0 0 0 3px ${paintColor}`,
@@ -2922,6 +3212,96 @@ async function verifySemanticFocus(
             : 0,
         ),
       );
+      const geometryProof = kind.endsWith("-geometry");
+      const near = (value: number, expected: number): boolean =>
+        Math.abs(value - expected) < 0.001;
+      const beforeOutlinePresent = oracleBefore.outlineStyle !== "none" &&
+        oracleBefore.outlineWidth >= 2;
+      const afterOutlinePresent = oracleAfter.outlineStyle !== "none" &&
+        oracleAfter.outlineWidth >= 2;
+      const outlineGeometryEvidence = afterOutlinePresent &&
+        (
+          !beforeOutlinePresent ||
+          Math.max(
+              Math.abs(
+                oracleAfter.outlineWidth - oracleBefore.outlineWidth,
+              ),
+              Math.abs(
+                oracleAfter.outlineOffset - oracleBefore.outlineOffset,
+              ),
+            ) >= 2
+        );
+      const beforeShadow = oracleBefore.shadowGeometry;
+      const afterShadow = oracleAfter.shadowGeometry;
+      const shadowGeometryEvidence = afterShadow !== undefined &&
+        (
+          beforeShadow === undefined ||
+          Math.max(
+              Math.abs(afterShadow.x - beforeShadow.x),
+              Math.abs(afterShadow.y - beforeShadow.y),
+              Math.abs(afterShadow.blur - beforeShadow.blur),
+              Math.abs(afterShadow.spread - beforeShadow.spread),
+            ) >= 2
+        );
+      const underlineGeometryEvidence = oracleAfter.underlinePresent &&
+        (
+          !oracleBefore.underlinePresent ||
+          Math.abs(
+              oracleAfter.underlineThickness -
+                oracleBefore.underlineThickness,
+            ) >= 2
+        );
+      const geometryEvidence = kind.includes("outline")
+        ? outlineGeometryEvidence
+        : kind.includes("shadow")
+        ? shadowGeometryEvidence
+        : underlineGeometryEvidence;
+      const geometryFixtureMatches = kind === "subtle-outline-width-geometry"
+        ? near(oracleBefore.outlineWidth, 2) &&
+          near(oracleAfter.outlineWidth, 3)
+        : kind === "subtle-outline-offset-geometry"
+        ? near(oracleBefore.outlineOffset, 2) &&
+          near(oracleAfter.outlineOffset, 3)
+        : kind === "outline-style-only-geometry"
+        ? oracleBefore.outlineStyle === "dashed" &&
+          oracleAfter.outlineStyle === "solid" &&
+          near(oracleBefore.outlineWidth, oracleAfter.outlineWidth) &&
+          near(oracleBefore.outlineOffset, oracleAfter.outlineOffset)
+        : kind === "meaningful-outline-width-geometry"
+        ? near(oracleBefore.outlineWidth, 2) &&
+          near(oracleAfter.outlineWidth, 4)
+        : kind === "meaningful-outline-offset-geometry"
+        ? near(oracleBefore.outlineOffset, 2) &&
+          near(oracleAfter.outlineOffset, 4)
+        : kind === "new-outline-geometry"
+        ? !beforeOutlinePresent && afterOutlinePresent
+        : kind === "subtle-shadow-geometry"
+        ? beforeShadow !== undefined &&
+          afterShadow !== undefined &&
+          near(beforeShadow.spread, 3) &&
+          near(afterShadow.spread, 3.02)
+        : kind === "shadow-inset-only-geometry"
+        ? beforeShadow !== undefined &&
+          afterShadow !== undefined &&
+          !beforeShadow.inset &&
+          afterShadow.inset &&
+          near(beforeShadow.spread, afterShadow.spread)
+        : kind === "meaningful-shadow-geometry"
+        ? beforeShadow !== undefined &&
+          afterShadow !== undefined &&
+          near(beforeShadow.spread, 3) &&
+          near(afterShadow.spread, 5)
+        : kind === "new-shadow-geometry"
+        ? beforeShadow === undefined && afterShadow !== undefined
+        : kind === "subtle-underline-geometry"
+        ? near(oracleBefore.underlineThickness, 2) &&
+          near(oracleAfter.underlineThickness, 2.02)
+        : kind === "meaningful-underline-geometry"
+        ? near(oracleBefore.underlineThickness, 2) &&
+          near(oracleAfter.underlineThickness, 4)
+        : kind === "new-underline-geometry"
+        ? !oracleBefore.underlinePresent && oracleAfter.underlinePresent
+        : true;
       const subtle = kind === "subtle-opacity" ||
         kind === "subtle-filter-opacity" ||
         kind === "subtle-outline-color" ||
@@ -2964,9 +3344,18 @@ async function verifySemanticFocus(
       const oracleSupportsExpectation = expectedAccepted
         ? computedFixtureContrast !== undefined &&
           computedFixtureContrast >= 3 &&
-          appearanceContrast !== undefined &&
-          appearanceContrast >= 3 &&
-          acceptedAssociationEvidence
+          (
+            geometryProof
+              ? geometryFixtureMatches && geometryEvidence
+              : appearanceContrast !== undefined &&
+                appearanceContrast >= 3 &&
+                acceptedAssociationEvidence
+          )
+        : geometryProof
+        ? computedFixtureContrast !== undefined &&
+          computedFixtureContrast >= 3 &&
+          geometryFixtureMatches &&
+          !geometryEvidence
         : subtle
         ? computedFixtureContrast !== undefined &&
           computedFixtureContrast >= 3 &&
@@ -3058,7 +3447,13 @@ async function verifySemanticFocus(
             oracleAfter.candidateWidth.toFixed(1)
           }×${oracleAfter.candidateHeight.toFixed(1)}, target=${
             oracleAfter.targetWidth.toFixed(1)
-          }×${oracleAfter.targetHeight.toFixed(1)}`,
+          }×${
+            oracleAfter.targetHeight.toFixed(1)
+          }, outline=${oracleAfter.outlineWidth}/${oracleAfter.outlineOffset}/${oracleAfter.outlineStyle}, shadow=${
+            oracleAfter.shadowGeometry === undefined
+              ? "none"
+              : `${oracleAfter.shadowGeometry.x}/${oracleAfter.shadowGeometry.y}/${oracleAfter.shadowGeometry.blur}/${oracleAfter.shadowGeometry.spread}/${oracleAfter.shadowGeometry.inset}`
+          }, underline=${oracleAfter.underlinePresent}/${oracleAfter.underlineThickness}`,
         );
       }
     }
