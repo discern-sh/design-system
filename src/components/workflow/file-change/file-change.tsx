@@ -1,0 +1,84 @@
+import { forwardRef } from "react";
+import type { HTMLAttributes } from "react";
+import type { DiscernComponent } from "../../component-type.ts";
+import { classNames } from "../../class-names.ts";
+import { Diffstat } from "../../display/diffstat/diffstat.tsx";
+import { PathReference } from "../path-reference/path-reference.tsx";
+
+/** Canonical file dispositions the {@linkcode FileChange} component names. */
+export const fileDispositions = [
+  "added",
+  "updated",
+  "generated",
+  "removed",
+  "unchanged",
+] as const;
+
+/** One canonical file disposition. */
+export type FileDisposition = (typeof fileDispositions)[number];
+
+/** Added and removed line counts shown beside one file change. */
+export interface FileChangeMagnitude {
+  readonly added: number;
+  readonly removed: number;
+}
+
+/** Props for the {@linkcode FileChange} component. */
+export interface FileChangeProps
+  extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
+  readonly path: string;
+  readonly disposition: FileDisposition;
+  readonly magnitude?: FileChangeMagnitude;
+}
+
+const dispositionLabels: Record<FileDisposition, string> = {
+  added: "Added",
+  updated: "Updated",
+  generated: "Generated",
+  removed: "Removed",
+  unchanged: "Unchanged",
+};
+
+const dispositionMarkers: Record<FileDisposition, string> = {
+  added: "+",
+  updated: "~",
+  generated: "◇",
+  removed: "−",
+  unchanged: "=",
+};
+
+/** One file's textual disposition, path, and optional change magnitude. */
+export const FileChange: DiscernComponent<HTMLDivElement, FileChangeProps> =
+  forwardRef<HTMLDivElement, FileChangeProps>(function FileChange(
+    { path, disposition, magnitude, className, ...props },
+    ref,
+  ) {
+    return (
+      <div
+        ref={ref}
+        className={classNames("discern-file-change", className)}
+        data-discern-disposition={disposition}
+        {...props}
+      >
+        <span className="discern-file-change__state">
+          <span className="discern-file-change__marker" aria-hidden="true">
+            {dispositionMarkers[disposition]}
+          </span>
+          {dispositionLabels[disposition]}
+        </span>
+        <span className="discern-file-change__path">
+          <PathReference path={path} />
+        </span>
+        {magnitude
+          ? (
+            <span className="discern-file-change__magnitude">
+              <Diffstat
+                added={magnitude.added}
+                removed={magnitude.removed}
+              />
+            </span>
+          )
+          : null}
+      </div>
+    );
+  });

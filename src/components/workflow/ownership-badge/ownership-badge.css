@@ -1,0 +1,17 @@
+@layer discern.components {
+  .discern-ownership-badge {
+    white-space: nowrap;
+  }
+  .discern-ownership-badge[data-discern-ownership="generated"] {
+    border-style: dashed;
+  }
+  .discern-ownership-badge[data-discern-ownership="project-owned"] {
+    --discern-badge-bg: var(--discern-color-accent-100);
+    --discern-badge-border: var(--discern-color-accent-300);
+    --discern-badge-text: var(--discern-color-accent-800);
+  }
+  .discern-ownership-badge[data-discern-ownership="tool-owned"] {
+    font-family: var(--discern-font-mono);
+    font-weight: var(--discern-font-weight-body);
+  }
+}

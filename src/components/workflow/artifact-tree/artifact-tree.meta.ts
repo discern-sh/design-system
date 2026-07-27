@@ -1,0 +1,15 @@
+import type { ComponentMeta } from "../../../types/component-meta.ts";
+
+export default {
+  name: "Artifact tree",
+  slug: "artifact-tree",
+  group: "Workflow",
+  order: 310,
+  description:
+    "Semantic nested-list project tree with explicit file and directory kinds, middle-truncated names, full-path titles, and an optional annotation slot per node.",
+  accessibility: [
+    "Files and directories are nested list items, not an ASCII-art approximation.",
+    "Each node exposes its kind and full path as text while visual glyphs remain decorative.",
+    "Long names preserve both ends under truncation, and narrow layouts move annotations below the name without page overflow.",
+  ],
+} satisfies ComponentMeta;

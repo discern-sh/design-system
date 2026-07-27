@@ -1,0 +1,86 @@
+@layer discern.components {
+  .discern-artifact-tree__list {
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+    list-style: none;
+  }
+  .discern-artifact-tree__node {
+    min-inline-size: 0;
+  }
+  .discern-artifact-tree__row {
+    display: grid;
+    grid-template-columns: 1.25rem minmax(0, 1fr) max-content;
+    gap: var(--discern-space-2);
+    align-items: center;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    min-block-size: 2rem;
+  }
+  .discern-artifact-tree__kind {
+    display: grid;
+    place-items: center;
+    color: var(--discern-color-ink-faint);
+    font-family: var(--discern-font-mono);
+    font-size: var(--discern-font-size-xs);
+  }
+  .discern-artifact-tree__node[data-discern-kind="directory"] > .discern-artifact-tree__row > .discern-artifact-tree__kind {
+    color: var(--discern-color-accent-600);
+  }
+  .discern-artifact-tree__name {
+    display: flex;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    color: var(--discern-color-ink);
+    font-family: var(--discern-font-mono);
+    font-size: var(--discern-font-size-xs);
+    line-height: var(--discern-leading-snug);
+  }
+  .discern-artifact-tree__node[data-discern-kind="directory"] > .discern-artifact-tree__row > .discern-artifact-tree__name {
+    font-family: var(--discern-font-ui);
+    font-weight: var(--discern-font-weight-strong);
+  }
+  .discern-artifact-tree__name-visual {
+    display: flex;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+  .discern-artifact-tree__name-prefix {
+    overflow: hidden;
+    min-inline-size: 1ch;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .discern-artifact-tree__name-suffix {
+    flex: none;
+    white-space: nowrap;
+  }
+  .discern-artifact-tree__annotation {
+    min-inline-size: 0;
+    justify-self: end;
+  }
+  .discern-artifact-tree__children {
+    margin-inline-start: 0.62rem;
+    padding-inline-start: var(--discern-space-3);
+    border-inline-start: 1px solid var(--discern-color-border);
+  }
+  @media (max-width: 32rem) {
+    .discern-artifact-tree__row {
+      grid-template-columns: 1rem minmax(0, 1fr);
+    }
+    .discern-artifact-tree__annotation {
+      grid-column: 2;
+      justify-self: start;
+      margin-block-end: var(--discern-space-2);
+    }
+    .discern-artifact-tree__children {
+      margin-inline-start: 0.42rem;
+      padding-inline-start: var(--discern-space-2);
+    }
+  }
+}
