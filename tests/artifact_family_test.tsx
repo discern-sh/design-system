@@ -122,49 +122,218 @@ function neutralDispositionTreatmentFailures(
   return failures;
 }
 
+// WHATWG HTML Living Standard, "Index of elements" and "Phrasing content",
+// reviewed 2026-07-27:
+// https://html.spec.whatwg.org/multipage/indices.html
+const FLOW_CONTENT_ELEMENTS = new Set([
+  "a",
+  "abbr",
+  "address",
+  "article",
+  "aside",
+  "audio",
+  "b",
+  "bdi",
+  "bdo",
+  "blockquote",
+  "br",
+  "button",
+  "canvas",
+  "cite",
+  "code",
+  "data",
+  "datalist",
+  "del",
+  "details",
+  "dfn",
+  "dialog",
+  "div",
+  "dl",
+  "em",
+  "embed",
+  "fieldset",
+  "figure",
+  "footer",
+  "form",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "header",
+  "hgroup",
+  "hr",
+  "i",
+  "iframe",
+  "img",
+  "input",
+  "ins",
+  "kbd",
+  "label",
+  "main",
+  "map",
+  "mark",
+  "math",
+  "menu",
+  "meter",
+  "nav",
+  "noscript",
+  "object",
+  "ol",
+  "output",
+  "p",
+  "picture",
+  "pre",
+  "progress",
+  "q",
+  "ruby",
+  "s",
+  "samp",
+  "script",
+  "search",
+  "section",
+  "select",
+  "slot",
+  "small",
+  "span",
+  "strong",
+  "sub",
+  "sup",
+  "svg",
+  "table",
+  "template",
+  "textarea",
+  "time",
+  "u",
+  "ul",
+  "var",
+  "video",
+  "wbr",
+]);
+
+const PHRASING_CONTENT_ELEMENTS = new Set([
+  "a",
+  "abbr",
+  "audio",
+  "b",
+  "bdi",
+  "bdo",
+  "br",
+  "button",
+  "canvas",
+  "cite",
+  "code",
+  "data",
+  "datalist",
+  "del",
+  "dfn",
+  "em",
+  "embed",
+  "i",
+  "iframe",
+  "img",
+  "input",
+  "ins",
+  "kbd",
+  "label",
+  "map",
+  "mark",
+  "math",
+  "meter",
+  "noscript",
+  "object",
+  "output",
+  "picture",
+  "progress",
+  "q",
+  "ruby",
+  "s",
+  "samp",
+  "script",
+  "select",
+  "selectedcontent",
+  "slot",
+  "small",
+  "span",
+  "strong",
+  "sub",
+  "sup",
+  "svg",
+  "template",
+  "textarea",
+  "time",
+  "u",
+  "var",
+  "video",
+  "wbr",
+]);
+
+const FLOW_BUT_NOT_PHRASING_ELEMENTS = new Set(
+  [...FLOW_CONTENT_ELEMENTS].filter((tag) =>
+    !PHRASING_CONTENT_ELEMENTS.has(tag)
+  ),
+);
+
+const PHRASING_CONTENT_MODELS = new Set([
+  "abbr",
+  "b",
+  "bdi",
+  "bdo",
+  "button",
+  "cite",
+  "code",
+  "data",
+  "datalist",
+  "dfn",
+  "em",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "i",
+  "kbd",
+  "label",
+  "mark",
+  "meter",
+  "output",
+  "p",
+  "pre",
+  "progress",
+  "q",
+  "rt",
+  "ruby",
+  "s",
+  "samp",
+  "small",
+  "span",
+  "strong",
+  "sub",
+  "sup",
+  "textarea",
+  "time",
+  "u",
+  "var",
+]);
+
+const PHRASING_OR_HEADING_CONTENT_MODELS = new Set([
+  "legend",
+  "summary",
+]);
+
+const HEADING_CONTENT_ELEMENTS = new Set([
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "hgroup",
+]);
+
 function invalidPhrasingFlowNesting(html: string): readonly string[] {
-  const phrasingContainers = new Set([
-    "a",
-    "abbr",
-    "b",
-    "code",
-    "em",
-    "i",
-    "mark",
-    "small",
-    "span",
-    "strong",
-    "sub",
-    "sup",
-  ]);
-  const flowOnly = new Set([
-    "address",
-    "article",
-    "aside",
-    "blockquote",
-    "div",
-    "dl",
-    "fieldset",
-    "figure",
-    "footer",
-    "form",
-    "h1",
-    "h2",
-    "h3",
-    "h4",
-    "h5",
-    "h6",
-    "header",
-    "hr",
-    "main",
-    "nav",
-    "ol",
-    "p",
-    "pre",
-    "section",
-    "table",
-    "ul",
-  ]);
   const voidTags = new Set([
     "area",
     "base",
@@ -190,11 +359,19 @@ function invalidPhrasingFlowNesting(html: string): readonly string[] {
       if (index >= 0) stack.splice(index);
       continue;
     }
-    const phrasingAncestor = stack.findLast((ancestor) =>
-      phrasingContainers.has(ancestor)
+    const restrictedAncestor = stack.findLast((ancestor) =>
+      PHRASING_CONTENT_MODELS.has(ancestor) ||
+      PHRASING_OR_HEADING_CONTENT_MODELS.has(ancestor)
     );
-    if (phrasingAncestor !== undefined && flowOnly.has(tag)) {
-      failures.push(`${phrasingAncestor} cannot contain ${tag}`);
+    if (
+      restrictedAncestor !== undefined &&
+      FLOW_BUT_NOT_PHRASING_ELEMENTS.has(tag) &&
+      !(
+        PHRASING_OR_HEADING_CONTENT_MODELS.has(restrictedAncestor) &&
+        HEADING_CONTENT_ELEMENTS.has(tag)
+      )
+    ) {
+      failures.push(`${restrictedAncestor} cannot contain ${tag}`);
     }
     if (!voidTags.has(tag) && !match[0].endsWith("/>")) stack.push(tag);
   }
@@ -384,6 +561,35 @@ Deno.test("Artifact tree annotations accept inline and flow compositions without
     ),
     ["mark cannot contain section"],
   );
+  assertEquals(
+    invalidPhrasingFlowNesting(
+      "<button><div>Future flow composition</div></button>",
+    ),
+    ["button cannot contain div"],
+  );
+  assertEquals(
+    invalidPhrasingFlowNesting("<a><div>Flow link</div></a>"),
+    [],
+  );
+  assertEquals(
+    invalidPhrasingFlowNesting(
+      "<p><a><div>Flow link in a paragraph</div></a></p>",
+    ),
+    ["p cannot contain div"],
+  );
+  assertEquals(
+    invalidPhrasingFlowNesting("<summary><h2>Heading</h2></summary>"),
+    [],
+  );
+  for (const container of PHRASING_CONTENT_MODELS) {
+    assertEquals(
+      invalidPhrasingFlowNesting(
+        `<${container}><div>Future flow composition</div></${container}>`,
+      ),
+      [`${container} cannot contain div`],
+      container,
+    );
+  }
 });
 
 Deno.test("artifact, decision, and rule surfaces expose their source semantics", () => {
