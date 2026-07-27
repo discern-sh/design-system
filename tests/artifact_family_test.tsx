@@ -23,6 +23,259 @@ function canonicalLabel(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+interface AttributeConstraint {
+  readonly caseInsensitive: boolean;
+  readonly name: string;
+  readonly operator: "" | "=" | "~=" | "|=" | "^=" | "$=" | "*=";
+  readonly value: string | undefined;
+}
+
+function cssEscapeEnd(value: string, start: number): number {
+  let position = start + 1;
+  if (position >= value.length) return position;
+  if (/[0-9a-f]/i.test(value[position] ?? "")) {
+    let digits = 0;
+    while (
+      position < value.length && digits < 6 &&
+      /[0-9a-f]/i.test(value[position] ?? "")
+    ) {
+      position += 1;
+      digits += 1;
+    }
+    if (/\s/.test(value[position] ?? "")) position += 1;
+    return position;
+  }
+  if (value[position] === "\r" && value[position + 1] === "\n") {
+    return position + 2;
+  }
+  return position + 1;
+}
+
+function decodeCssEscapes(value: string): string {
+  let decoded = "";
+  let position = 0;
+  while (position < value.length) {
+    const character = value[position];
+    if (character !== "\\") {
+      decoded += character ?? "";
+      position += 1;
+      continue;
+    }
+    const escapeEnd = cssEscapeEnd(value, position);
+    const escaped = value.slice(position + 1, escapeEnd);
+    const hexadecimal = escaped.match(/^([0-9a-f]{1,6})/i)?.[1];
+    if (hexadecimal !== undefined) {
+      const codePoint = Number.parseInt(hexadecimal, 16);
+      decoded += codePoint === 0 || codePoint > 0x10ffff
+        ? "\uFFFD"
+        : String.fromCodePoint(codePoint);
+    } else if (!/^[\r\n\f]/.test(escaped)) {
+      decoded += escaped[0] ?? "";
+    }
+    position = escapeEnd;
+  }
+  return decoded;
+}
+
+function splitSelectorList(selectorList: string): readonly string[] {
+  const selectors: string[] = [];
+  let start = 0;
+  let bracketDepth = 0;
+  let parenthesisDepth = 0;
+  let position = 0;
+  let quote: "'" | '"' | undefined;
+  while (position < selectorList.length) {
+    const character = selectorList[position];
+    if (character === "\\") {
+      position = cssEscapeEnd(selectorList, position);
+      continue;
+    }
+    if (quote !== undefined) {
+      if (character === quote) quote = undefined;
+    } else if (character === "'" || character === '"') {
+      quote = character;
+    } else if (character === "[") {
+      bracketDepth += 1;
+    } else if (character === "]") {
+      bracketDepth = Math.max(0, bracketDepth - 1);
+    } else if (character === "(") {
+      parenthesisDepth += 1;
+    } else if (character === ")") {
+      parenthesisDepth = Math.max(0, parenthesisDepth - 1);
+    } else if (
+      character === "," && bracketDepth === 0 && parenthesisDepth === 0
+    ) {
+      selectors.push(selectorList.slice(start, position).trim());
+      start = position + 1;
+    }
+    position += 1;
+  }
+  selectors.push(selectorList.slice(start).trim());
+  return selectors.filter(Boolean);
+}
+
+function attributeSelectorContents(selector: string): readonly string[] {
+  const contents: string[] = [];
+  let position = 0;
+  while (position < selector.length) {
+    if (selector[position] === "\\") {
+      position = cssEscapeEnd(selector, position);
+      continue;
+    }
+    if (selector[position] !== "[") {
+      position += 1;
+      continue;
+    }
+    const start = position + 1;
+    position = start;
+    let quote: "'" | '"' | undefined;
+    while (position < selector.length) {
+      const character = selector[position];
+      if (character === "\\") {
+        position = cssEscapeEnd(selector, position);
+        continue;
+      }
+      if (quote !== undefined) {
+        if (character === quote) quote = undefined;
+      } else if (character === "'" || character === '"') {
+        quote = character;
+      } else if (character === "]") {
+        contents.push(selector.slice(start, position));
+        position += 1;
+        break;
+      }
+      position += 1;
+    }
+  }
+  return contents;
+}
+
+function parseAttributeConstraint(
+  content: string,
+): AttributeConstraint | undefined {
+  let position = 0;
+  const skipWhitespace = (): void => {
+    while (/\s/.test(content[position] ?? "")) position += 1;
+  };
+  const readToken = (stops: RegExp): string => {
+    const start = position;
+    while (position < content.length) {
+      if (content[position] === "\\") {
+        position = cssEscapeEnd(content, position);
+      } else if (stops.test(content[position] ?? "")) {
+        break;
+      } else {
+        position += 1;
+      }
+    }
+    return content.slice(start, position);
+  };
+  skipWhitespace();
+  const rawName = readToken(/[\s~|^$*=\]]/);
+  if (rawName === "") return undefined;
+  const name = decodeCssEscapes(rawName).toLowerCase();
+  skipWhitespace();
+  if (position >= content.length) {
+    return {
+      caseInsensitive: false,
+      name,
+      operator: "",
+      value: undefined,
+    };
+  }
+  const twoCharacterOperator = content.slice(position, position + 2);
+  const operator = ["~=", "|=", "^=", "$=", "*="].includes(
+      twoCharacterOperator,
+    )
+    ? twoCharacterOperator as AttributeConstraint["operator"]
+    : content[position] === "="
+    ? "="
+    : undefined;
+  if (operator === undefined) return undefined;
+  position += operator.length;
+  skipWhitespace();
+  let rawValue = "";
+  const quote = content[position];
+  if (quote === "'" || quote === '"') {
+    position += 1;
+    const start = position;
+    while (position < content.length && content[position] !== quote) {
+      position = content[position] === "\\"
+        ? cssEscapeEnd(content, position)
+        : position + 1;
+    }
+    if (content[position] !== quote) return undefined;
+    rawValue = content.slice(start, position);
+    position += 1;
+  } else {
+    rawValue = readToken(/\s/);
+  }
+  if (rawValue === "") return undefined;
+  skipWhitespace();
+  let caseInsensitive = false;
+  if (/[is]/i.test(content[position] ?? "")) {
+    caseInsensitive = content[position]?.toLowerCase() === "i";
+    position += 1;
+    skipWhitespace();
+  }
+  if (position !== content.length) return undefined;
+  return {
+    caseInsensitive,
+    name,
+    operator,
+    value: decodeCssEscapes(rawValue),
+  };
+}
+
+function constraintMatches(
+  constraint: AttributeConstraint,
+  disposition: string,
+): boolean {
+  if (constraint.operator === "") return true;
+  const rawExpected = constraint.value;
+  if (rawExpected === undefined) return false;
+  const actual = constraint.caseInsensitive
+    ? disposition.toLowerCase()
+    : disposition;
+  const expected = constraint.caseInsensitive
+    ? rawExpected.toLowerCase()
+    : rawExpected;
+  switch (constraint.operator) {
+    case "=":
+      return actual === expected;
+    case "~=":
+      return actual.split(/\s+/).includes(expected);
+    case "|=":
+      return actual === expected || actual.startsWith(`${expected}-`);
+    case "^=":
+      return actual.startsWith(expected);
+    case "$=":
+      return actual.endsWith(expected);
+    case "*=":
+      return actual.includes(expected);
+  }
+}
+
+function selectorDispositionConstraints(
+  selector: string,
+): readonly AttributeConstraint[] {
+  return attributeSelectorContents(selector).flatMap((content) => {
+    const constraint = parseAttributeConstraint(content);
+    return constraint?.name === "data-discern-disposition" ? [constraint] : [];
+  });
+}
+
+function constrainedDispositions(
+  selector: string,
+  dispositions: readonly string[],
+): readonly string[] | undefined {
+  const constraints = selectorDispositionConstraints(selector);
+  if (constraints.length === 0) return undefined;
+  return dispositions.filter((disposition) =>
+    constraints.some((constraint) => constraintMatches(constraint, disposition))
+  );
+}
+
 function dispositionTokenFailures(
   css: string,
   dispositions: readonly string[],
@@ -41,20 +294,19 @@ function dispositionTokenFailures(
   );
   const failures: string[] = [];
   for (const disposition of dispositions) {
-    const blocks = [
-      ...css.matchAll(
-        new RegExp(
-          `[^{}]*\\[data-discern-disposition="${disposition}"\\][^{}]*\\{([^}]*)\\}`,
-          "g",
-        ),
-      ),
-    ];
     const overrideTokens = new Set(
-      blocks.flatMap((match) =>
-        [...(match[1] ?? "").matchAll(/color:\s*var\((--[^)]+)\)/g)].map(
-          (color) => color[1] ?? "",
-        )
-      ).filter(Boolean),
+      [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].flatMap((match) => {
+        const applies = splitSelectorList(match[1] ?? "").some((selector) =>
+          constrainedDispositions(selector, dispositions)?.includes(
+            disposition,
+          ) === true
+        );
+        return applies
+          ? [...(match[2] ?? "").matchAll(
+            /(?:^|;)\s*color\s*:\s*var\((--[^)]+)\)/g,
+          )].map((color) => color[1] ?? "")
+          : [];
+      }).filter(Boolean),
     );
     const tokens = overrideTokens.size > 0 ? overrideTokens : baseTokens;
     const token = expected[disposition];
@@ -94,21 +346,14 @@ function neutralDispositionTreatmentFailures(
         ),
       ].map((token) => token[0]);
       if (hazardTokens.length === 0) continue;
-      for (
-        const selector of selectorList.split(",").map((part) => part.trim())
-      ) {
-        const constrainedDispositions = [
-          ...selector.matchAll(
-            /\[data-discern-disposition=["']([^"']+)["']\]/g,
-          ),
-        ].flatMap((constraint) =>
-          constraint[1] === undefined ? [] : [constraint[1]]
+      for (const selector of splitSelectorList(selectorList)) {
+        const constrained = constrainedDispositions(
+          selector,
+          neutralDispositions,
         );
-        const appliesTo = constrainedDispositions.length === 0
+        const appliesTo = constrained === undefined
           ? selector.includes(".discern-file-change") ? neutralDispositions : []
-          : neutralDispositions.filter((disposition) =>
-            constrainedDispositions.includes(disposition)
-          );
+          : constrained;
         for (const disposition of appliesTo) {
           for (const token of hazardTokens) {
             failures.push(
@@ -480,6 +725,126 @@ Deno.test("every file disposition has its complete semantic token mapping", asyn
       'removed: background references --discern-color-danger-soft in .future-entry[data-discern-disposition="removed"] .future-state',
       'removed: border-color references --discern-color-warning in .future-entry[data-discern-disposition="removed"] .future-state',
     ],
+  );
+
+  const neutralDispositions = fileDispositions.filter((disposition) =>
+    expected[disposition] === "--discern-color-ink-muted"
+  );
+  const escaped = (disposition: string): string =>
+    `\\${disposition.codePointAt(0)?.toString(16)} ${disposition.slice(1)}`;
+  for (const disposition of neutralDispositions) {
+    const forms = [
+      {
+        name: "unquoted",
+        selector:
+          `.future-entry[data-discern-disposition=${disposition}] .future-state`,
+        matches: 1,
+      },
+      {
+        name: "quoted with whitespace",
+        selector:
+          `.future-entry[ data-discern-disposition = '${disposition}' s ] .future-state`,
+        matches: 1,
+      },
+      {
+        name: "compound selector",
+        selector:
+          `.future-entry.future-compact[data-kind=change][data-discern-disposition="${disposition}"] > .future-state`,
+        matches: 1,
+      },
+      {
+        name: "nested selector list",
+        selector:
+          `:is(.future-entry, .future-card)[data-discern-disposition=${disposition}] .future-state`,
+        matches: 1,
+      },
+      {
+        name: "top-level selector list",
+        selector:
+          `.future-a[data-discern-disposition=${disposition}], :where(.future-b, .future-c)[data-discern-disposition="${disposition}"]`,
+        matches: 2,
+      },
+      {
+        name: "escaped name and value",
+        selector: `.future-entry[data-discern-dispositio\\6e =${
+          escaped(disposition)
+        }]`,
+        matches: 1,
+      },
+      {
+        name: "case-insensitive value",
+        selector:
+          `.future-entry[data-discern-disposition=${disposition.toUpperCase()} i]`,
+        matches: 1,
+      },
+      ...(["~=", "|=", "^=", "$=", "*="] as const).map((operator) => ({
+        name: `${operator} operator`,
+        selector:
+          `.future-entry[data-discern-disposition${operator}${disposition}]`,
+        matches: 1,
+      })),
+    ] as const;
+    for (const form of forms) {
+      const tokenMutation = `
+        ${form.selector} {
+          color: var(--discern-color-danger);
+        }
+      `;
+      const treatmentMutation = `
+        ${form.selector} {
+          background: var(--discern-color-danger-soft);
+          border-color: var(--discern-color-warning);
+        }
+      `;
+      assertEquals(
+        dispositionTokenFailures(tokenMutation, [disposition], expected),
+        [
+          `${disposition}: expected --discern-color-ink-muted, found --discern-color-danger`,
+        ],
+        `${disposition}/${form.name} escaped the state-token parser`,
+      );
+      const treatmentFailures = neutralDispositionTreatmentFailures(
+        treatmentMutation,
+        fileDispositions,
+        expected,
+      );
+      assertEquals(
+        treatmentFailures.length,
+        form.matches * 2,
+        `${disposition}/${form.name} escaped the treatment parser: ${
+          treatmentFailures.join("; ")
+        }`,
+      );
+      for (
+        const token of [
+          "--discern-color-danger-soft",
+          "--discern-color-warning",
+        ]
+      ) {
+        assert(
+          treatmentFailures.some((failure) =>
+            failure.startsWith(`${disposition}:`) &&
+            failure.includes(token)
+          ),
+          `${disposition}/${form.name} did not report ${token}`,
+        );
+      }
+    }
+  }
+
+  const existenceMutation = `
+    .future-entry[data-discern-disposition] {
+      background: var(--discern-color-danger-soft);
+      border-color: var(--discern-color-warning);
+    }
+  `;
+  assertEquals(
+    neutralDispositionTreatmentFailures(
+      existenceMutation,
+      fileDispositions,
+      expected,
+    ).length,
+    neutralDispositions.length * 2,
   );
 });
 
