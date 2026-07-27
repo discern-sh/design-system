@@ -23,10 +23,7 @@
   .discern-site-header__notice a {
     color: inherit;
     font-weight: var(--discern-font-weight-strong);
-  }
-  .discern-site-header__notice a:focus-visible {
-    outline: 2px solid var(--discern-color-accent-700);
-    outline-offset: 2px;
+    outline-width: 2px;
   }
   .discern-site-header__inner {
     display: flex;
@@ -116,8 +113,7 @@
     font-size: var(--discern-font-size-xs);
     text-decoration: none;
   }
-  .discern-site-header__nav a:hover,
-  .discern-site-header__nav a:focus-visible {
+  .discern-site-header__nav a:is(:hover, :focus-visible) {
     color: var(--discern-color-ink);
   }
   .discern-site-header__actions {
