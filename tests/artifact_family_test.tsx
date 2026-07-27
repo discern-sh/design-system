@@ -23,6 +23,40 @@ function canonicalLabel(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+function dispositionTokenFailures(
+  css: string,
+  dispositions: readonly string[],
+  expected: Readonly<Record<string, string>>,
+): readonly string[] {
+  const failures: string[] = [];
+  for (const disposition of dispositions) {
+    const blocks = [
+      ...css.matchAll(
+        new RegExp(
+          `[^{}]*\\[data-discern-disposition="${disposition}"\\][^{}]*\\{([^}]*)\\}`,
+          "g",
+        ),
+      ),
+    ];
+    const tokens = new Set(
+      blocks.flatMap((match) =>
+        [...(match[1] ?? "").matchAll(/color:\s*var\((--[^)]+)\)/g)].map(
+          (color) => color[1] ?? "",
+        )
+      ).filter(Boolean),
+    );
+    const token = expected[disposition];
+    if (token === undefined || tokens.size !== 1 || !tokens.has(token)) {
+      failures.push(
+        `${disposition}: expected ${token ?? "a declared token"}, found ${
+          [...tokens].join(", ") || "no explicit token"
+        }`,
+      );
+    }
+  }
+  return failures;
+}
+
 Deno.test("the Artifact family occupies its reserved Workflow order band", () => {
   assertEquals(
     [
@@ -70,6 +104,40 @@ Deno.test("every canonical ownership and disposition is a visible text label", (
     );
     assertStringIncludes(markup, "/workspace/example.ts");
   }
+});
+
+Deno.test("every file disposition has its complete semantic token mapping", async () => {
+  const css = await Deno.readTextFile(
+    new URL(
+      "../src/components/workflow/file-change/file-change.css",
+      import.meta.url,
+    ),
+  );
+  const expected = {
+    added: "--discern-color-success-deep",
+    updated: "--discern-color-accent-700",
+    generated: "--discern-color-ink-muted",
+    removed: "--discern-color-ink-muted",
+    unchanged: "--discern-color-ink-muted",
+  } as const satisfies Readonly<
+    Record<(typeof fileDispositions)[number], string>
+  >;
+  assertEquals(
+    dispositionTokenFailures(css, fileDispositions, expected),
+    [],
+  );
+
+  const synthetic = `
+    .future-entry[data-discern-disposition="removed"] .future-state {
+      color: var(--discern-color-danger);
+    }
+  `;
+  assertEquals(
+    dispositionTokenFailures(synthetic, ["removed"], expected),
+    [
+      "removed: expected --discern-color-ink-muted, found --discern-color-danger",
+    ],
+  );
 });
 
 Deno.test("Artifact tree renders six nested directory levels and preserves the exact long path", () => {
