@@ -12,6 +12,64 @@ interface RenderedJourney {
   readonly html: string;
 }
 
+interface JourneyStageDeclaration {
+  readonly id: string;
+  readonly stages: readonly string[];
+}
+
+// These three sequences are a closed product contract. This test-only oracle is
+// intentionally independent of the recipes: deriving it from journey.stages
+// would let a removed middle stage authorize its own regression. Generic future
+// journeys still auto-enrol in the structural and plaintext guards below.
+const interactionGrammarJourneyStages = {
+  "documentation-task": [
+    ".discern-procedure__prerequisites",
+    ".discern-procedure__steps",
+    ".discern-procedure-step__branch",
+    ".discern-procedure__completion",
+  ],
+  "failure-triage": [
+    ".discern-result-summary",
+    ".discern-diagnostic",
+    ".discern-raw-output",
+    ".discern-retry-notice",
+  ],
+  "survey-artifacts": [
+    ".discern-artifact-tree",
+    ".discern-artifact-survey__changes",
+    ".discern-artifact-survey__ownership",
+  ],
+} as const satisfies Readonly<Record<string, readonly string[]>>;
+
+function namedJourneyStageFailures(
+  declarations: readonly JourneyStageDeclaration[],
+): readonly string[] {
+  const actual = new Map(
+    declarations.map(({ id, stages }) => [id, stages] as const),
+  );
+  const failures: string[] = [];
+  for (
+    const [id, expected] of Object.entries(interactionGrammarJourneyStages)
+  ) {
+    const stages = actual.get(id);
+    if (stages === undefined) {
+      failures.push(`${id}: required journey is missing`);
+      continue;
+    }
+    if (
+      stages.length !== expected.length ||
+      stages.some((stage, index) => stage !== expected[index])
+    ) {
+      failures.push(
+        `${id}: expected ${expected.join(" → ")}, received ${
+          stages.join(" → ")
+        }`,
+      );
+    }
+  }
+  return failures;
+}
+
 function blocks(
   html: string,
   tag: string,
@@ -100,7 +158,7 @@ Deno.test("every composition journey preserves its plaintext grammar", () => {
   const recipes = compositionRecipes.filter((recipe) =>
     recipe.journey !== undefined
   );
-  assertEquals(recipes.length, 3);
+  assert(recipes.length > 0);
   for (const recipe of recipes) {
     const stages = recipe.journey?.stages ?? [];
     assert(stages.length > 0, `${recipe.id} has no journey stages`);
@@ -110,7 +168,38 @@ Deno.test("every composition journey preserves its plaintext grammar", () => {
       `${recipe.id} repeats a journey stage`,
     );
   }
+  assertEquals(
+    namedJourneyStageFailures(
+      recipes.map((recipe) => ({
+        id: recipe.id,
+        stages: recipe.journey?.stages ?? [],
+      })),
+    ),
+    [],
+  );
   assertEquals(journeyMarkupFailures(renderedJourneys(recipes)), []);
+});
+
+Deno.test("the named journey oracle catches a removed middle stage", () => {
+  const declarations = compositionRecipes.flatMap((recipe) =>
+    recipe.journey === undefined
+      ? []
+      : [{ id: recipe.id, stages: recipe.journey.stages }]
+  );
+  const missingRawOutput = declarations.map((declaration) =>
+    declaration.id === "failure-triage"
+      ? {
+        ...declaration,
+        stages: declaration.stages.filter((stage) =>
+          stage !== ".discern-raw-output"
+        ),
+      }
+      : declaration
+  );
+  const failures = namedJourneyStageFailures(missingRawOutput);
+  assertEquals(failures.length, 1);
+  assertStringIncludes(failures[0] ?? "", "failure-triage");
+  assertStringIncludes(failures[0] ?? "", ".discern-raw-output");
 });
 
 Deno.test("the plaintext detector catches a future incomplete journey", () => {
