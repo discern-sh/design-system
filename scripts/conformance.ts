@@ -14,6 +14,7 @@ import type {
   ConformanceTarget,
 } from "../styleguide/conformance.ts";
 import { buildDesignSystem } from "./build.ts";
+import { runResilienceConformance } from "./resilience-conformance.ts";
 import catalogueServer from "./serve.ts";
 
 const OUTPUT_ROOT = new URL("../dist/conformance/", import.meta.url);
@@ -785,7 +786,9 @@ async function verifyForcedColors(
       "Forced-colours rendering did not include every component",
     );
     const focusable = page.locator(
-      ".discern-catalogue-component__canvas :is(a[href], button, input, select, textarea, [tabindex]:not([tabindex='-1']))",
+      ".discern-catalogue-component__canvas, [data-discern-journey]",
+    ).locator(
+      ":is(a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex='-1']))",
     );
     for (let index = 0; index < await focusable.count(); index += 1) {
       const element = focusable.nth(index);
@@ -876,6 +879,12 @@ export async function runConformance(): Promise<void> {
         }`,
       );
     }
+    const resilience = await runResilienceConformance(
+      browser,
+      page,
+      origin,
+      failures,
+    );
     const screenshots = await captureReviewSheets(page, origin);
     await context.close();
     const forcedColorFocusChecks = await verifyForcedColors(
@@ -884,15 +893,41 @@ export async function runConformance(): Promise<void> {
       expectedComponents.length,
       failures,
     );
+    const failureCounts = failures.reduce<Record<string, number>>(
+      (counts, failure) => {
+        const category = failure.split(":")[0] ?? "Unclassified";
+        counts[category] = (counts[category] ?? 0) + 1;
+        return counts;
+      },
+      {},
+    );
 
     invariant(
       !failures.length,
-      `Component conformance failed:\n- ${failures.join("\n- ")}`,
+      `Component conformance failed:\n- ${failures.join("\n- ")}\n` +
+        `Detector failure counts: ${JSON.stringify(failureCounts)}\n` +
+        `Resilience populations: ${JSON.stringify(resilience)}`,
     );
     console.log(
       `Conformance passed: ${expectedComponents.length} components, ${accessibilityScans} accessibility scans, ${scenarios} interaction scenarios, 1 cold-state-fragment check, ${forcedColorFocusChecks} forced-colour focus checks, and ${
         screenshots + 1
-      } review screenshots; ${floatingSurfaces} floating surfaces share the clipping cure.`,
+      } review screenshots; ${floatingSurfaces} floating surfaces share the clipping cure. ` +
+        `Journey resilience passed: ${resilience.journeys} journeys, ` +
+        `${resilience.journeyStages} ordered stages, ` +
+        `${resilience.journeyAxeScans} axe scans, ` +
+        `${resilience.journeyTabStops} keyboard stops, ` +
+        `${resilience.journeyCommandCopies} command copies, ` +
+        `${resilience.disclosures} disclosures with ` +
+        `${resilience.disclosureToggles} keyboard toggles, ` +
+        `${resilience.interactiveControls} interactive controls, ` +
+        `${resilience.targets} measured targets ` +
+        `(${resilience.inlineTextTargetExceptions} inline-text exceptions, ` +
+        `${resilience.labelledControlBoxes} native label boxes), ` +
+        `${resilience.reflowSurfaces} reflow surfaces with ` +
+        `${resilience.containedOverflowRegions} contained wide regions, ` +
+        `${resilience.motionTargets} motion targets, ` +
+        `${resilience.themeConsumers} theme consumer, and ` +
+        `${resilience.semanticFocusTargets} semantic-surface focus targets.`,
     );
   } finally {
     await browser?.close();

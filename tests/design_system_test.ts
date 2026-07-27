@@ -164,6 +164,18 @@ function contrast(first: string, second: string): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
+function focusSurfaceFailures(
+  focus: string,
+  surfaces: readonly {
+    readonly name: string;
+    readonly color: string;
+  }[],
+): readonly string[] {
+  return surfaces.filter(({ color }) => contrast(focus, color) < 3).map((
+    { name },
+  ) => name);
+}
+
 function distance(first: Oklab, second: Oklab): number {
   return Math.hypot(
     first.l - second.l,
@@ -630,6 +642,10 @@ Deno.test("default blue and green themes share component CSS and preserve state 
     assert((declaration[1] ?? "").startsWith("--discern-"));
   }
   const overrides = fixtureOverrides(fixture);
+  const semanticFocusSurfaces = themeTokens.filter(({ name }) =>
+    name === "--discern-color-accent-100" || name.endsWith("-soft")
+  );
+  assertEquals(semanticFocusSurfaces.length, 4);
   for (const mode of ["light", "dark"] as const) {
     const pairs = [
       ["--discern-color-ink", "--discern-color-canvas"],
@@ -652,6 +668,17 @@ Deno.test("default blue and green themes share component CSS and preserve state 
         `${mode} ${foreground} on ${background} lacks text contrast`,
       );
     }
+    assertEquals(
+      focusSurfaceFailures(
+        themeValue("--discern-color-accent-500", mode, overrides),
+        semanticFocusSurfaces.map(({ name }) => ({
+          name,
+          color: themeValue(name, mode, overrides),
+        })),
+      ),
+      [],
+      `${mode} focus indicator lacks 3:1 contrast on a semantic surface`,
+    );
     const states = [
       parseOklch(themeValue("--discern-color-accent-600", mode, overrides)),
       parseOklch(themeValue("--discern-color-success", mode, overrides)),
@@ -670,6 +697,14 @@ Deno.test("default blue and green themes share component CSS and preserve state 
       }
     }
   }
+  assertEquals(
+    focusSurfaceFailures("#fff", [{
+      name: "--discern-color-future-soft",
+      color: "#fff",
+    }]),
+    ["--discern-color-future-soft"],
+    "a future semantic surface escaped focus-contrast detection",
+  );
 
   const foundation = await Deno.readTextFile(
     join(PACKAGE_ROOT, "src", "styles", "foundation.css"),

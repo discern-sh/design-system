@@ -14,13 +14,15 @@ Each Component exposes copyable runtime selection by slug, Group selection, and 
 
 Props and variants come from authored TypeScript through `deno doc --json`. Flat prop interfaces become tables and literal unions become variant values. Source unions stay omitted because flattening their branches would erase the contract; the Catalogue prints the reason.
 
-Composition recipes live only in the styleguide. Each recipe renders a preview and produces copyable JSX from one structured definition.
+Composition recipes live only in the styleguide. Each recipe renders a preview and produces copyable JSX from one structured definition. A recipe with a `journey` contract declares its ordered semantic stages; the conformance view renders every enrolled journey from that same recipe authority.
 
 ## Link to a state
 
 An examples module may export named `catalogueStates`; other Components receive a generated `default` state. The fragment `#component-<slug>--<state>` restores and highlights the state after the app mounts. Command, Path reference, Diagnostic, and Table include stress states.
 
-The toolbar reads the package version from `deno.json`, and conformance sheets repeat it in screenshots. Browser checks cover accessibility, interactions, overflow, viewport containment, and cold fragment restoration.
+The toolbar reads the package version from `deno.json`, and conformance sheets repeat it in screenshots. The browser pass first checks every generated Component example, then runs the mandatory journey-resilience phase. Journey checks cover stage order, headings, landmarks, keyboard traversal, exact Command copies, and axe in both themes. Generic rendered-surface scans cover disclosure semantics, nested controls, minimum targets, page reflow at 390 pixels and the 320-pixel equivalent of 400% zoom, reduced motion, system-theme return, semantic focus contrast, and forced-colour focus.
+
+The automated boundary is the Catalogue's rendered static surfaces and its declared theme consumer. Consumer application routes, product navigation, and manual screen-reader output remain consumer-level acceptance work.
 
 ## Where it lives
 
@@ -31,4 +33,6 @@ The toolbar reads the package version from `deno.json`, and conformance sheets r
 | Filtering, state links, and rendered instrumentation   | [`app.tsx`](../../styleguide/app.tsx)                                      |
 | Composition definitions                                | [`compositions.tsx`](../../styleguide/compositions.tsx)                    |
 | Browser assertions                                     | [`conformance.ts`](../../scripts/conformance.ts)                           |
+| Journey and rendered-surface resilience                | [`resilience-conformance.ts`](../../scripts/resilience-conformance.ts)     |
+| CSS-free journey grammar                               | [`journey_resilience_test.tsx`](../../tests/journey_resilience_test.tsx)   |
 | Authority guards                                       | [`catalogue_instrument_test.ts`](../../tests/catalogue_instrument_test.ts) |

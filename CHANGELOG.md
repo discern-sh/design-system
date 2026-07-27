@@ -6,6 +6,8 @@ Each release is cut from a green run of the full release gate — formatting, li
 
 ## 0.8.0
 
+- Add three source-backed Catalogue journeys for following a Procedure, triaging a failure, and surveying artifacts. The mandatory browser gate now checks their declared stage order, headings, landmarks, keyboard route, exact Command copies, and both-theme accessibility, while static markup tests preserve Procedure numbering and Diagnostic meaning without CSS.
+- Extend resilience conformance across every rendered Component surface: disclosures, nested controls, minimum target size, 390-pixel and 400%-zoom reflow, reduced motion, system-theme return, semantic-surface focus, and forced colours now auto-enrol from the Catalogue. The audit raises undersized targets across shared Component families, keeps current navigation state distinct under focus, and contains long Procedure and journey content without page overflow.
 - Compose end-of-page next actions from Branch choice instead of adding another runtime Component. A named, permalinkable four-route state and source-backed Catalogue recipe make the pattern findable while keeping its recommendation and alternatives as visible text.
 - Add Workflow Agent handoff, a neutral prose block whose one visible prompt string also supplies its adapter-only copy action. Clipboard confirmation is polite, focus stays on the button, and long instructions wrap instead of adopting shell-command grammar.
 - Add Workflow Task metadata, a quiet definition-list strip that gives operational pages one complete, text-first account of their outcome, audience, prerequisites, complexity, file effects, retry safety, and expected end state.

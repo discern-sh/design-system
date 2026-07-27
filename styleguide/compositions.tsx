@@ -1,17 +1,28 @@
 import type { ComponentType, ReactNode } from "react";
 import { Receipt } from "../src/components/agents/receipt/receipt.tsx";
 import { ArtifactCard } from "../src/components/workflow/artifact-card/artifact-card.tsx";
+import { ArtifactTree } from "../src/components/workflow/artifact-tree/artifact-tree.tsx";
 import { BranchChoice } from "../src/components/workflow/branch-choice/branch-choice.tsx";
 import { Diagnostic } from "../src/components/workflow/diagnostic/diagnostic.tsx";
+import { FileChange } from "../src/components/workflow/file-change/file-change.tsx";
+import { OwnershipBadge } from "../src/components/workflow/ownership-badge/ownership-badge.tsx";
 import { PathReference } from "../src/components/workflow/path-reference/path-reference.tsx";
 import { Procedure } from "../src/components/workflow/procedure/procedure.tsx";
+import { RawOutput } from "../src/components/workflow/raw-output/raw-output.tsx";
 import { ResultSummary } from "../src/components/workflow/result-summary/result-summary.tsx";
+import { RetryNotice } from "../src/components/workflow/retry-notice/retry-notice.tsx";
+
+/** Ordered semantic stages a conformance journey must render. */
+export interface JourneyContract {
+  readonly stages: readonly string[];
+}
 
 /** A styleguide-only composition with a preview and source built from one definition. */
 export interface CompositionRecipe {
   readonly id: string;
   readonly title: string;
   readonly description: string;
+  readonly journey?: JourneyContract;
   readonly Example: ComponentType;
   readonly source: string;
 }
@@ -20,6 +31,7 @@ interface RecipeDefinition<Definition> {
   readonly id: string;
   readonly title: string;
   readonly description: string;
+  readonly journey?: JourneyContract;
   readonly definition: Definition;
   readonly render: (definition: Definition) => ReactNode;
   readonly source: (definition: Definition) => string;
@@ -36,6 +48,7 @@ function defineRecipe<Definition>(
     id: recipe.id,
     title: recipe.title,
     description: recipe.description,
+    ...(recipe.journey === undefined ? {} : { journey: recipe.journey }),
     Example,
     source: recipe.source(recipe.definition),
   };
@@ -50,12 +63,33 @@ const documentationTask = {
   description:
     "Update the generated command reference after changing a command contract.",
   path: "project/map/70-reference/commands.md",
+  prerequisites: {
+    items: [{
+      requirement: "The command registry includes the intended contract.",
+      state: "satisfied",
+    }, {
+      requirement: "The worktree has no unrelated changes.",
+      state: "satisfied",
+    }],
+  },
   stepTitle: "Build the reference",
   action: "Run the source-backed generator from the project root.",
   command: "deno task codegen",
   workingDirectory: "/path/to/project",
   expected: "The generated reference matches the command registry.",
   stepCompletion: "The generator exits successfully.",
+  branch: {
+    title: "Choose the next check",
+    choices: [{
+      label: "The reference changed",
+      path: "Review the generated diff",
+      href: "#review-generated-reference",
+    }, {
+      label: "The reference did not change",
+      path: "Check the command registry",
+      href: "#check-command-registry",
+    }],
+  },
   completion:
     "The build passes and the generated reference has no uncommitted drift.",
 } as const;
@@ -65,6 +99,14 @@ const documentationTaskRecipe = defineRecipe({
   title: "Documentation task",
   description:
     "A complete operational page with a target path, executable step, and finish condition.",
+  journey: {
+    stages: [
+      ".discern-procedure__prerequisites",
+      ".discern-procedure__steps",
+      ".discern-procedure-step__branch",
+      ".discern-procedure__completion",
+    ],
+  },
   definition: documentationTask,
   render: (definition) => (
     <Procedure
@@ -75,6 +117,7 @@ const documentationTaskRecipe = defineRecipe({
           <PathReference path={definition.path} copyable />
         </p>
       }
+      prerequisites={definition.prerequisites}
       steps={[{
         title: definition.stepTitle,
         action: definition.action,
@@ -84,6 +127,7 @@ const documentationTaskRecipe = defineRecipe({
         },
         expectedResult: { children: definition.expected },
         completionCriterion: definition.stepCompletion,
+        branch: definition.branch,
       }]}
       completion={definition.completion}
     />
@@ -99,6 +143,7 @@ const documentationTaskRecipe = defineRecipe({
       <PathReference path={${value(definition.path)}} copyable />
     </p>
   }
+  prerequisites={${value(definition.prerequisites)}}
   steps={[{
     title: ${value(definition.stepTitle)},
     action: ${value(definition.action)},
@@ -108,6 +153,7 @@ const documentationTaskRecipe = defineRecipe({
     },
     expectedResult: { children: ${value(definition.expected)} },
     completionCriterion: ${value(definition.stepCompletion)},
+    branch: ${value(definition.branch)},
   }]}
   completion={${value(definition.completion)}}
 />`,
@@ -165,8 +211,6 @@ const failureTriage = {
     evidence: 'timeout: expected number, received "fast"',
     reproductionCommand: "tool validate config/project.toml",
     workingDirectory: "/path/to/project",
-    rawDetail:
-      'ValidationError: property "timeout" must satisfy type "number".',
   },
   result: {
     fact: "Configuration validation failed.",
@@ -177,6 +221,14 @@ const failureTriage = {
     duration: "0.4s",
     nextAction: "Correct the timeout value, then run validation again.",
   },
+  raw: {
+    label: "Validator output",
+    detail: 'ValidationError: property "timeout" must satisfy type "number".',
+  },
+  retry: {
+    safeToRetry: true,
+    reason: "Retry after replacing the invalid timeout value.",
+  },
 } as const;
 
 const failureTriageRecipe = defineRecipe({
@@ -184,9 +236,24 @@ const failureTriageRecipe = defineRecipe({
   title: "Failure triage",
   description:
     "A diagnostic account followed by the run-level result and its next action.",
+  journey: {
+    stages: [
+      ".discern-result-summary",
+      ".discern-diagnostic",
+      ".discern-raw-output",
+      ".discern-retry-notice",
+    ],
+  },
   definition: failureTriage,
   render: (definition) => (
     <div className="discern-example-stack">
+      <ResultSummary
+        state="failed"
+        fact={definition.result.fact}
+        counts={definition.result.counts}
+        duration={definition.result.duration}
+        nextAction={definition.result.nextAction}
+      />
       <Diagnostic
         title={definition.diagnostic.title}
         impact={definition.diagnostic.impact}
@@ -196,21 +263,32 @@ const failureTriageRecipe = defineRecipe({
         evidence={definition.diagnostic.evidence}
         reproductionCommand={definition.diagnostic.reproductionCommand}
         workingDirectory={definition.diagnostic.workingDirectory}
-        rawDetail={definition.diagnostic.rawDetail}
       />
-      <ResultSummary
-        state="failed"
-        fact={definition.result.fact}
-        counts={definition.result.counts}
-        duration={definition.result.duration}
-        nextAction={definition.result.nextAction}
+      <RawOutput label={definition.raw.label}>
+        {definition.raw.detail}
+      </RawOutput>
+      <RetryNotice
+        safeToRetry={definition.retry.safeToRetry}
+        reason={definition.retry.reason}
       />
     </div>
   ),
   source: (definition) =>
-    `import { Diagnostic, ResultSummary } from "@discern-sh/design-system/react";
+    `import {
+  Diagnostic,
+  RawOutput,
+  ResultSummary,
+  RetryNotice,
+} from "@discern-sh/design-system/react";
 
 <div className="discern-example-stack">
+  <ResultSummary
+    state="failed"
+    fact={${value(definition.result.fact)}}
+    counts={${value(definition.result.counts)}}
+    duration={${value(definition.result.duration)}}
+    nextAction={${value(definition.result.nextAction)}}
+  />
   <Diagnostic
     title={${value(definition.diagnostic.title)}}
     impact={${value(definition.diagnostic.impact)}}
@@ -224,14 +302,13 @@ const failureTriageRecipe = defineRecipe({
       )
     }}
     workingDirectory={${value(definition.diagnostic.workingDirectory)}}
-    rawDetail={${value(definition.diagnostic.rawDetail)}}
   />
-  <ResultSummary
-    state="failed"
-    fact={${value(definition.result.fact)}}
-    counts={${value(definition.result.counts)}}
-    duration={${value(definition.result.duration)}}
-    nextAction={${value(definition.result.nextAction)}}
+  <RawOutput label={${value(definition.raw.label)}}>
+    {${value(definition.raw.detail)}}
+  </RawOutput>
+  <RetryNotice
+    safeToRetry={${value(definition.retry.safeToRetry)}}
+    reason={${value(definition.retry.reason)}}
   />
 </div>`,
 });
@@ -305,9 +382,145 @@ const handoffReceiptRecipe = defineRecipe({
 </div>`,
 });
 
+const surveyArtifacts = {
+  tree: [{
+    name: "project",
+    kind: "directory",
+    children: [{
+      name: "map",
+      path: "project/map",
+      kind: "directory",
+      children: [{
+        name: "commands.md",
+        path: "project/map/70-reference/commands.md",
+        kind: "file",
+        annotation: "updated",
+      }],
+    }, {
+      name: "component-registry.ts",
+      path: "src/generated/component-registry.ts",
+      kind: "file",
+      annotation: "generated",
+    }],
+  }],
+  changes: [{
+    path: "project/map/70-reference/commands.md",
+    disposition: "updated",
+    magnitude: { added: 8, removed: 3 },
+  }, {
+    path: "src/generated/component-registry.ts",
+    disposition: "generated",
+    magnitude: { added: 4, removed: 4 },
+  }],
+  ownership: [{
+    label: "Command reference",
+    ownership: "project-owned",
+  }, {
+    label: "Component registry",
+    ownership: "generated",
+  }],
+} as const;
+
+const surveyArtifactsRecipe = defineRecipe({
+  id: "survey-artifacts",
+  title: "Survey artifacts",
+  description:
+    "A project tree followed by changed-file evidence and explicit ownership.",
+  journey: {
+    stages: [
+      ".discern-artifact-tree",
+      ".discern-artifact-survey__changes",
+      ".discern-artifact-survey__ownership",
+    ],
+  },
+  definition: surveyArtifacts,
+  render: (definition) => (
+    <div className="discern-example-stack">
+      <ArtifactTree label="Project artifacts" nodes={definition.tree} />
+      <section
+        className="discern-artifact-survey__changes"
+        aria-label="Changed files"
+      >
+        <h3>Changed files</h3>
+        <ul>
+          {definition.changes.map((change) => (
+            <li key={change.path}>
+              <FileChange
+                path={change.path}
+                disposition={change.disposition}
+                magnitude={change.magnitude}
+              />
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section
+        className="discern-artifact-survey__ownership"
+        aria-label="Artifact ownership"
+      >
+        <h3>Artifact ownership</h3>
+        <dl>
+          {definition.ownership.map((item) => (
+            <div key={item.label}>
+              <dt>{item.label}</dt>
+              <dd>
+                <OwnershipBadge ownership={item.ownership} />
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+    </div>
+  ),
+  source: (definition) =>
+    `import {
+  ArtifactTree,
+  FileChange,
+  OwnershipBadge,
+} from "@discern-sh/design-system/react";
+
+<div className="discern-example-stack">
+  <ArtifactTree label="Project artifacts" nodes={${value(definition.tree)}} />
+  <section
+    className="discern-artifact-survey__changes"
+    aria-label="Changed files"
+  >
+    <h3>Changed files</h3>
+    <ul>
+      {(${value(definition.changes)} as const).map((change) => (
+        <li key={change.path}>
+          <FileChange
+            path={change.path}
+            disposition={change.disposition}
+            magnitude={change.magnitude}
+          />
+        </li>
+      ))}
+    </ul>
+  </section>
+  <section
+    className="discern-artifact-survey__ownership"
+    aria-label="Artifact ownership"
+  >
+    <h3>Artifact ownership</h3>
+    <dl>
+      {(${value(definition.ownership)} as const).map((item) => (
+        <div key={item.label}>
+          <dt>{item.label}</dt>
+          <dd>
+            <OwnershipBadge ownership={item.ownership} />
+          </dd>
+        </div>
+      ))}
+    </dl>
+  </section>
+</div>`,
+});
+
 export const compositionRecipes: readonly CompositionRecipe[] = [
   documentationTaskRecipe,
   nextActionRecipe,
   failureTriageRecipe,
   handoffReceiptRecipe,
+  surveyArtifactsRecipe,
 ];

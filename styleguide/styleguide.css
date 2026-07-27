@@ -25,6 +25,26 @@
     margin-inline: auto;
     break-inside: avoid;
   }
+  .discern-catalogue-conformance .discern-catalogue-journey {
+    box-sizing: border-box;
+    width: min(100%, 1050px);
+    min-width: 0;
+    margin: 0 auto 32px;
+    padding: 24px;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-lg);
+    background: var(--discern-color-surface);
+    break-inside: avoid;
+  }
+  .discern-catalogue-journey > header {
+    min-width: 0;
+  }
+  .discern-catalogue-journey > header h2 {
+    overflow-wrap: anywhere;
+  }
+  .discern-catalogue-journey__canvas {
+    min-width: 0;
+  }
   .discern-catalogue-conformance__identity {
     width: min(100%, 1440px);
     margin: 0 auto 12px;
@@ -561,7 +581,7 @@
   .discern-catalogue-example-state > header a {
     display: grid;
     place-items: center;
-    inline-size: 24px;
+    inline-size: 25px;
     block-size: 24px;
     border-radius: var(--discern-radius-sm);
     color: var(--discern-color-ink-faint);
@@ -729,6 +749,44 @@
   }
   .discern-example-stack--start {
     justify-items: start;
+  }
+  .discern-artifact-survey__changes,
+  .discern-artifact-survey__ownership {
+    display: grid;
+    gap: var(--discern-space-4);
+    min-inline-size: 0;
+  }
+  .discern-artifact-survey__changes > h3,
+  .discern-artifact-survey__ownership > h3 {
+    margin: 0;
+  }
+  .discern-artifact-survey__changes > ul,
+  .discern-artifact-survey__ownership > dl {
+    display: grid;
+    gap: var(--discern-space-3);
+    min-inline-size: 0;
+    margin: 0;
+    padding: 0;
+  }
+  .discern-artifact-survey__changes > ul {
+    list-style: none;
+  }
+  .discern-artifact-survey__ownership > dl > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--discern-space-3);
+    min-inline-size: 0;
+    padding: var(--discern-space-3);
+    border-block-end: 1px solid var(--discern-color-border);
+  }
+  .discern-artifact-survey__ownership dt {
+    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-sm);
+  }
+  .discern-artifact-survey__ownership dd {
+    margin: 0;
   }
   .discern-example-grid {
     display: grid;
