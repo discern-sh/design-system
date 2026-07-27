@@ -10,6 +10,9 @@ import {
 const WIDE_VIEWPORT = { width: 1440, height: 1000 } as const;
 const NARROW_VIEWPORT = { width: 390, height: 844 } as const;
 const ZOOMED_REFLOW_VIEWPORT = { width: 320, height: 256 } as const;
+const MINIMUM_TARGET_SIZE = 24;
+const FOCUS_PROXY_SIZE_FACTOR = 4;
+const PARENT_FOCUS_EDGE_FACTOR = 2;
 const WCAG_TAGS = [
   "wcag2a",
   "wcag2aa",
@@ -118,6 +121,7 @@ interface FocusIndicatorStyle {
   readonly outlineWidth: string;
   readonly boxShadow: string;
   readonly boxShadowColors: readonly string[];
+  readonly boxShadowGeometry: string;
   readonly paintKnown: boolean;
   readonly rect: FocusRect;
   readonly semanticallyAssociated: boolean;
@@ -130,15 +134,20 @@ interface FocusIndicatorStyle {
 }
 
 interface FocusFixtureOracle {
+  readonly candidateHeight: number;
+  readonly candidateWidth: number;
   readonly color: string;
+  readonly controlSized: boolean;
   readonly effectiveOpacity: number;
   readonly filterKnown: boolean;
   readonly filters: readonly string[];
   readonly geometricallyAssociated: boolean;
+  readonly paintPresent: boolean;
+  readonly parentEdgesLocal: boolean;
   readonly semanticallyAssociated: boolean;
-  readonly style: string;
+  readonly targetHeight: number;
+  readonly targetWidth: number;
   readonly visible: boolean;
-  readonly width: string;
 }
 
 interface ColorChannels {
@@ -265,19 +274,39 @@ function rectGap(left: FocusRect, right: FocusRect): number {
   return Math.hypot(horizontal, vertical);
 }
 
+function focusControlScale(style: FocusIndicatorStyle): number {
+  return Math.max(
+    MINIMUM_TARGET_SIZE,
+    style.targetRect.width,
+    style.targetRect.height,
+  );
+}
+
+function focusProxyIsControlSized(style: FocusIndicatorStyle): boolean {
+  const limit = focusControlScale(style) * FOCUS_PROXY_SIZE_FACTOR;
+  return style.rect.width <= limit && style.rect.height <= limit;
+}
+
 function focusCandidateAssociated(style: FocusIndicatorStyle): boolean {
   if (style.candidate === "target") return true;
-  if (style.candidate === "parent") {
-    return rectContains(style.rect, style.targetRect) ||
-      rectsOverlap(style.rect, style.targetRect) ||
-      rectGap(style.rect, style.targetRect) <= Math.max(
-          style.rect.width,
-          style.rect.height,
-          style.targetRect.width,
-          style.targetRect.height,
-        );
+  if (!style.semanticallyAssociated || !focusProxyIsControlSized(style)) {
+    return false;
   }
-  if (!style.semanticallyAssociated) return false;
+  if (style.candidate === "parent") {
+    if (
+      !rectContains(style.rect, style.targetRect) &&
+      !rectsOverlap(style.rect, style.targetRect)
+    ) {
+      return false;
+    }
+    const edgeLimit = focusControlScale(style) * PARENT_FOCUS_EDGE_FACTOR;
+    return Math.max(
+      Math.abs(style.rect.left - style.targetRect.left),
+      Math.abs(style.rect.top - style.targetRect.top),
+      Math.abs(style.rect.right - style.targetRect.right),
+      Math.abs(style.rect.bottom - style.targetRect.bottom),
+    ) <= edgeLimit;
+  }
   if (rectsOverlap(style.rect, style.targetRect)) return true;
   const sharedParent = style.sharedParentRect;
   if (
@@ -292,20 +321,22 @@ function focusCandidateAssociated(style: FocusIndicatorStyle): boolean {
 }
 
 function paintAppearanceContrast(
-  color: string,
-  background: string,
+  previousColor: string,
+  currentColor: string,
+  previousBackground: string,
+  currentBackground: string,
   previous: FocusIndicatorStyle,
   current: FocusIndicatorStyle,
 ): number {
   if (!previous.paintKnown || !current.paintKnown) return 0;
   const beforePaint = paintedBackground(
-    color,
-    background,
+    previousColor,
+    previousBackground,
     previous.visible ? previous.effectiveOpacity : 0,
   );
   const afterPaint = paintedBackground(
-    color,
-    background,
+    currentColor,
+    currentBackground,
     current.visible ? current.effectiveOpacity : 0,
   );
   return contrastRatio(afterPaint, beforePaint) ?? 0;
@@ -340,15 +371,29 @@ function focusIndicatorContrast(
       surfaceColor,
       current.effectiveOpacity,
     );
+    const previousInsideBackground = previous === undefined
+      ? surfaceColor
+      : paintedBackground(
+        previous.backgroundColor,
+        surfaceColor,
+        previous.effectiveOpacity,
+      );
     const opacityOrVisibilityChanged = previous !== undefined &&
       (
         current.effectiveOpacity !== previous.effectiveOpacity ||
         current.visible !== previous.visible
       );
-    const outlineAppearanceChanged = previous !== undefined &&
-      opacityOrVisibilityChanged &&
+    const outlinePaintChanged = previous !== undefined &&
+      (
+        opacityOrVisibilityChanged ||
+        current.outlineColor !== previous.outlineColor
+      ) &&
       paintAppearanceContrast(
+          previous.outlineColor,
           current.outlineColor,
+          Number.parseFloat(previous.outlineOffset) < 0
+            ? previousInsideBackground
+            : surfaceColor,
           Number.parseFloat(current.outlineOffset) < 0
             ? insideBackground
             : surfaceColor,
@@ -356,8 +401,7 @@ function focusIndicatorContrast(
           current,
         ) >= 3;
     const outlineChanged = previous === undefined ||
-      outlineAppearanceChanged ||
-      current.outlineColor !== previous.outlineColor ||
+      outlinePaintChanged ||
       current.outlineOffset !== previous.outlineOffset ||
       current.outlineStyle !== previous.outlineStyle ||
       current.outlineWidth !== previous.outlineWidth;
@@ -377,13 +421,22 @@ function focusIndicatorContrast(
       current.boxShadow !== "none" &&
       (
         previous === undefined ||
-        current.boxShadow !== previous.boxShadow ||
+        current.boxShadowGeometry !== previous.boxShadowGeometry ||
         (
-          opacityOrVisibilityChanged &&
-          current.boxShadowColors.some((color) =>
+          (
+            opacityOrVisibilityChanged ||
+            current.boxShadowColors.some((color, colorIndex) =>
+              color !== previous.boxShadowColors[colorIndex]
+            )
+          ) &&
+          current.boxShadowColors.some((color, colorIndex) =>
             previous !== undefined &&
             paintAppearanceContrast(
+                previous.boxShadowColors[colorIndex] ?? color,
                 color,
+                previous.boxShadow.includes("inset")
+                  ? previousInsideBackground
+                  : surfaceColor,
                 current.boxShadow.includes("inset")
                   ? insideBackground
                   : surfaceColor,
@@ -405,17 +458,21 @@ function focusIndicatorContrast(
         })),
       );
     }
-    const underlineAppearanceChanged = previous !== undefined &&
-      opacityOrVisibilityChanged &&
+    const underlinePaintChanged = previous !== undefined &&
+      (
+        opacityOrVisibilityChanged ||
+        current.textDecorationColor !== previous.textDecorationColor
+      ) &&
       paintAppearanceContrast(
+          previous.textDecorationColor,
           current.textDecorationColor,
+          previousInsideBackground,
           insideBackground,
           previous,
           current,
         ) >= 3;
     const underlineChanged = previous === undefined ||
-      underlineAppearanceChanged ||
-      current.textDecorationColor !== previous.textDecorationColor ||
+      underlinePaintChanged ||
       current.textDecorationLine !== previous.textDecorationLine ||
       current.textDecorationThickness !== previous.textDecorationThickness;
     if (
@@ -542,27 +599,38 @@ async function focusStyles(target: Locator): Promise<FocusIndicatorStyle[]> {
       (element.getAttribute(attribute) ?? "").trim().split(/\s+/).filter(
         Boolean,
       );
+    const explicitlyRelated = (
+      left: Element,
+      right: Element,
+    ): boolean =>
+      [
+        right.id !== "" &&
+        references(left, "aria-controls").includes(right.id),
+        right.id !== "" &&
+        references(left, "aria-owns").includes(right.id),
+        left.id !== "" &&
+        references(right, "aria-controls").includes(left.id),
+        left.id !== "" &&
+        references(right, "aria-owns").includes(left.id),
+      ].some(Boolean);
     const semanticAssociation = (
       candidate: Element,
+      kind: Candidate["kind"],
     ): boolean => {
+      if (kind === "target") return true;
+      if (kind === "parent") {
+        return (
+          candidate instanceof HTMLLabelElement &&
+          candidate.control === node
+        ) || explicitlyRelated(node, candidate);
+      }
       const parent = node.parentElement;
-      if (parent === null || candidate.parentElement !== parent) return false;
-      if (
+      return (
+        parent !== null &&
+        candidate.parentElement === parent &&
         parent instanceof HTMLLabelElement &&
         parent.control === node
-      ) {
-        return true;
-      }
-      return [
-        candidate.id !== "" &&
-        references(node, "aria-controls").includes(candidate.id),
-        candidate.id !== "" &&
-        references(node, "aria-owns").includes(candidate.id),
-        node.id !== "" &&
-        references(candidate, "aria-controls").includes(node.id),
-        node.id !== "" &&
-        references(candidate, "aria-owns").includes(node.id),
-      ].some(Boolean);
+      ) || explicitlyRelated(node, candidate);
     };
     const candidates: Candidate[] = [
       { element: node, kind: "target" as const },
@@ -583,6 +651,7 @@ async function focusStyles(target: Locator): Promise<FocusIndicatorStyle[]> {
       : rect(node.parentElement);
     return candidates.map(({ element: candidate, kind }) => {
       const style = getComputedStyle(candidate);
+      const shadowColorPattern = /(?:rgba?|hsla?|oklab|oklch|color)\([^)]+\)/g;
       let effectiveOpacity = 1;
       let paintKnown = true;
       let ancestor: Element | null = candidate;
@@ -605,15 +674,15 @@ async function focusStyles(target: Locator): Promise<FocusIndicatorStyle[]> {
         outlineStyle: style.outlineStyle,
         outlineWidth: style.outlineWidth,
         boxShadow: style.boxShadow,
-        boxShadowColors: (
-          style.boxShadow.match(
-            /(?:rgba?|hsla?|oklab|oklch|color)\([^)]+\)/g,
-          ) ?? []
-        ).map(pixelColor),
+        boxShadowColors: (style.boxShadow.match(shadowColorPattern) ?? [])
+          .map(pixelColor),
+        boxShadowGeometry: style.boxShadow.replace(
+          shadowColorPattern,
+          "<color>",
+        ),
         paintKnown,
         rect: rect(candidate),
-        semanticallyAssociated: kind === "next-sibling" &&
-          semanticAssociation(candidate),
+        semanticallyAssociated: semanticAssociation(candidate, kind),
         sharedParentRect,
         targetRect,
         textDecorationColor: pixelColor(style.textDecorationColor),
@@ -632,10 +701,26 @@ async function focusFixtureOracle(
   target: Locator,
   kind: string,
 ): Promise<FocusFixtureOracle | undefined> {
-  return await target.evaluate((node, kind) => {
-    const candidate = kind === "fixed-proxy" ||
-        kind === "generic-parent-proxy"
+  return await target.evaluate((node, {
+    kind,
+    minimumTargetSize,
+    parentEdgeFactor,
+    proxySizeFactor,
+  }) => {
+    const siblingProxy = [
+      "fixed-proxy",
+      "generic-parent-proxy",
+      "huge-sibling-proxy",
+    ].includes(kind);
+    const parentProxy = [
+      "huge-parent-proxy",
+      "edge-parent-proxy",
+      "local-parent-proxy",
+    ].includes(kind);
+    const candidate = siblingProxy
       ? node.nextElementSibling
+      : parentProxy
+      ? node.parentElement
       : node;
     if (candidate === null) return undefined;
     const canvas = document.createElement("canvas");
@@ -685,6 +770,15 @@ async function focusFixtureOracle(
     const current = candidate.getBoundingClientRect();
     const targetRect = node.getBoundingClientRect();
     const parent = node.parentElement?.getBoundingClientRect();
+    const contains = (outer: DOMRect, inner: DOMRect): boolean =>
+      outer.left <= inner.left + 1 &&
+      outer.top <= inner.top + 1 &&
+      outer.right >= inner.right - 1 &&
+      outer.bottom >= inner.bottom - 1;
+    const overlaps = targetRect.left < current.right &&
+      targetRect.right > current.left &&
+      targetRect.top < current.bottom &&
+      targetRect.bottom > current.top;
     const horizontal = Math.max(
       0,
       targetRect.left - current.right,
@@ -696,38 +790,100 @@ async function focusFixtureOracle(
       current.top - targetRect.bottom,
     );
     const gap = Math.hypot(horizontal, vertical);
-    const contains = (outer: DOMRect, inner: DOMRect): boolean =>
-      outer.left <= inner.left + 1 &&
-      outer.top <= inner.top + 1 &&
-      outer.right >= inner.right - 1 &&
-      outer.bottom >= inner.bottom - 1;
-    const overlaps = targetRect.left < current.right &&
-      targetRect.right > current.left &&
-      targetRect.top < current.bottom &&
-      targetRect.bottom > current.top;
-    const geometricallyAssociated = overlaps ||
-      (
-        parent !== undefined &&
-        contains(parent, targetRect) &&
-        contains(parent, current) &&
-        gap <= Math.max(parent.width, parent.height)
+    const geometricallyAssociated = candidate === node
+      ? true
+      : parentProxy
+      ? contains(current, targetRect) || overlaps
+      : overlaps ||
+        (
+          parent !== undefined &&
+          contains(parent, targetRect) &&
+          contains(parent, current) &&
+          gap <= Math.max(parent.width, parent.height)
+        );
+    const references = (element: Element, attribute: string): string[] =>
+      (element.getAttribute(attribute) ?? "").trim().split(/\s+/).filter(
+        Boolean,
       );
+    const explicitlyRelated = (
+      left: Element,
+      right: Element,
+    ): boolean =>
+      [
+        right.id !== "" &&
+        references(left, "aria-controls").includes(right.id),
+        right.id !== "" &&
+        references(left, "aria-owns").includes(right.id),
+        left.id !== "" &&
+        references(right, "aria-controls").includes(left.id),
+        left.id !== "" &&
+        references(right, "aria-owns").includes(left.id),
+      ].some(Boolean);
+    const semanticallyAssociated = candidate === node ||
+      (
+        parentProxy
+          ? candidate instanceof HTMLLabelElement &&
+            candidate.control === node
+          : node.parentElement instanceof HTMLLabelElement &&
+            node.parentElement.control === node
+      ) ||
+      explicitlyRelated(node, candidate);
+    const controlScale = Math.max(
+      minimumTargetSize,
+      targetRect.width,
+      targetRect.height,
+    );
+    const controlSized = current.width <= controlScale * proxySizeFactor &&
+      current.height <= controlScale * proxySizeFactor;
+    const parentEdgesLocal = !parentProxy ||
+      Math.max(
+          Math.abs(current.left - targetRect.left),
+          Math.abs(current.top - targetRect.top),
+          Math.abs(current.right - targetRect.right),
+          Math.abs(current.bottom - targetRect.bottom),
+        ) <= controlScale * parentEdgeFactor;
+    const shadowColorPattern = /(?:rgba?|hsla?|oklab|oklch|color)\([^)]+\)/g;
+    const shadowColors = (style.boxShadow.match(shadowColorPattern) ?? [])
+      .map(pixelColor);
+    const shadowProof = kind.includes("-shadow-color");
+    const underlineProof = kind.includes("-underline-color");
+    const color = shadowProof
+      ? shadowColors[0] ?? "rgba(0, 0, 0, 0)"
+      : underlineProof
+      ? pixelColor(style.textDecorationColor)
+      : pixelColor(style.outlineColor);
+    const paintPresent = shadowProof
+      ? style.boxShadow !== "none" && shadowColors.length > 0
+      : underlineProof
+      ? style.textDecorationLine.split(/\s+/).includes("underline") &&
+        Number.parseFloat(style.textDecorationThickness) >= 2
+      : style.outlineStyle !== "none" &&
+        Number.parseFloat(style.outlineWidth) >= 2;
     return {
-      color: pixelColor(style.outlineColor),
+      candidateHeight: current.height,
+      candidateWidth: current.width,
+      color,
+      controlSized,
       effectiveOpacity: Math.max(0, Math.min(1, effectiveOpacity)),
       filterKnown,
       filters,
       geometricallyAssociated,
-      semanticallyAssociated: node.parentElement instanceof
-          HTMLLabelElement &&
-        node.parentElement.control === node,
-      style: style.outlineStyle,
+      paintPresent,
+      parentEdgesLocal,
+      semanticallyAssociated,
+      targetHeight: targetRect.height,
+      targetWidth: targetRect.width,
       visible: effectiveOpacity > 0 &&
         style.visibility === "visible" &&
+        style.getPropertyValue("content-visibility") !== "hidden" &&
         candidate.getClientRects().length > 0,
-      width: style.outlineWidth,
     };
-  }, kind);
+  }, {
+    kind,
+    minimumTargetSize: MINIMUM_TARGET_SIZE,
+    parentEdgeFactor: PARENT_FOCUS_EDGE_FACTOR,
+    proxySizeFactor: FOCUS_PROXY_SIZE_FACTOR,
+  });
 }
 
 async function blurActiveElement(page: Page): Promise<void> {
@@ -1436,7 +1592,7 @@ async function verifyTargetSizes(
   await page.setViewportSize(NARROW_VIEWPORT);
   await loadPage(page, conformanceUrl(origin));
   const result = await page.evaluate(
-    ({ surfaceSelector, interactiveSelector }) => {
+    ({ surfaceSelector, interactiveSelector, minimumTargetSize }) => {
       interface Measurement {
         readonly failures: string[];
         targets: number;
@@ -1532,7 +1688,10 @@ async function verifyTargetSizes(
               );
             }
           }
-          if (rect.width < 24 || rect.height < 24) {
+          if (
+            rect.width < minimumTargetSize ||
+            rect.height < minimumTargetSize
+          ) {
             result.failures.push(
               `${description(element)} measures ${rect.width.toFixed(1)}×${
                 rect.height.toFixed(1)
@@ -1579,6 +1738,7 @@ async function verifyTargetSizes(
     {
       surfaceSelector: SURFACE_SELECTOR,
       interactiveSelector: TARGET_SELECTOR,
+      minimumTargetSize: MINIMUM_TARGET_SIZE,
     },
   );
   failures.push(...result.failures.map((failure) => `Target size: ${failure}`));
@@ -2366,8 +2526,21 @@ async function verifySemanticFocus(
     "subtle-filter-opacity",
     "fixed-proxy",
     "generic-parent-proxy",
+    "huge-parent-proxy",
+    "edge-parent-proxy",
+    "huge-sibling-proxy",
+    "subtle-outline-color",
+    "subtle-shadow-color",
+    "subtle-underline-color",
   ] as const;
-  const positiveProofKinds = ["revealed-indicator"] as const;
+  const positiveProofKinds = [
+    "revealed-indicator",
+    "local-parent-proxy",
+    "meaningful-outline-color",
+    "meaningful-shadow-color",
+    "meaningful-underline-color",
+    "new-outline-geometry",
+  ] as const;
   const proofKinds = [...negativeProofKinds, ...positiveProofKinds] as const;
   const synthetic = await page.evaluate(
     ({ proofKinds, surfaceSelector, surfaceTokens }) => {
@@ -2384,16 +2557,43 @@ async function verifySemanticFocus(
       futureSurface.style.cssText =
         `display:grid;gap:8px;padding:8px;background:var(${accent.token});`;
       for (const kind of proofKinds) {
-        const proxyKind = kind === "fixed-proxy" ||
-          kind === "generic-parent-proxy";
-        const wrapper = kind === "fixed-proxy"
+        const siblingProxy = [
+          "fixed-proxy",
+          "generic-parent-proxy",
+          "huge-sibling-proxy",
+        ].includes(kind);
+        const parentProxy = [
+          "huge-parent-proxy",
+          "edge-parent-proxy",
+          "local-parent-proxy",
+        ].includes(kind);
+        const labelWrapper = [
+          "fixed-proxy",
+          "huge-sibling-proxy",
+          "edge-parent-proxy",
+          "local-parent-proxy",
+        ].includes(kind);
+        const wrapper = labelWrapper
           ? document.createElement("label")
+          : kind === "huge-parent-proxy"
+          ? document.createElement("div")
           : document.createElement("span");
-        wrapper.style.cssText = kind === "generic-parent-proxy"
+        wrapper.style.cssText = kind === "huge-parent-proxy"
+          ? "display:flex;align-items:flex-start;inline-size:1000px;" +
+            "block-size:500px;justify-self:start;"
+          : kind === "edge-parent-proxy"
+          ? "display:flex;align-items:flex-start;inline-size:240px;" +
+            "block-size:60px;justify-self:start;"
+          : kind === "local-parent-proxy"
+          ? "display:inline-flex;padding:8px;justify-self:start;"
+          : kind === "huge-sibling-proxy"
+          ? "display:flex;align-items:flex-start;gap:10px;inline-size:1054px;" +
+            "block-size:510px;justify-self:start;"
+          : kind === "generic-parent-proxy"
           ? "display:flex;justify-content:space-between;inline-size:100%;" +
             "min-block-size:44px;"
-          : "display:inline-block;position:relative;";
-        const target = kind === "fixed-proxy"
+          : "display:inline-block;position:relative;justify-self:start;";
+        const target = labelWrapper
           ? document.createElement("input")
           : document.createElement("button");
         if (target instanceof HTMLInputElement) target.type = "checkbox";
@@ -2404,7 +2604,12 @@ async function verifySemanticFocus(
         }
         target.style.cssText =
           "min-inline-size:44px;min-block-size:44px;background:transparent;" +
+          "inline-size:44px;block-size:44px;overflow:hidden;" +
           "border:0;box-shadow:none;outline:none;text-decoration:none;";
+        if (target instanceof HTMLInputElement) {
+          target.style.cssText +=
+            "appearance:none;inline-size:44px;block-size:44px;margin:0;";
+        }
         if (
           kind === "subtle-opacity" ||
           kind === "subtle-filter-opacity" ||
@@ -2413,17 +2618,51 @@ async function verifySemanticFocus(
           target.style.outline = "2px solid var(--discern-color-ink)";
           target.style.outlineOffset = "2px";
         }
+        if (
+          kind === "subtle-outline-color" ||
+          kind === "meaningful-outline-color"
+        ) {
+          target.style.outline = `2px solid ${
+            kind === "subtle-outline-color"
+              ? "rgb(0, 0, 0)"
+              : `var(${accent.token})`
+          }`;
+          target.style.outlineOffset = "2px";
+        }
+        if (
+          kind === "subtle-shadow-color" ||
+          kind === "meaningful-shadow-color"
+        ) {
+          target.style.boxShadow = `0 0 0 3px ${
+            kind === "subtle-shadow-color"
+              ? "rgb(0, 0, 0)"
+              : `var(${accent.token})`
+          }`;
+        }
+        if (
+          kind === "subtle-underline-color" ||
+          kind === "meaningful-underline-color"
+        ) {
+          target.style.textDecorationLine = "underline";
+          target.style.textDecorationThickness = "2px";
+          target.style.textDecorationColor = kind === "subtle-underline-color"
+            ? "rgb(0, 0, 0)"
+            : `var(${accent.token})`;
+        }
         if (kind === "revealed-indicator") target.style.opacity = "0";
         wrapper.append(target);
-        if (proxyKind) {
+        if (siblingProxy) {
           const proxy = document.createElement("span");
           proxy.dataset.discernFocusProxy = kind;
           proxy.style.cssText = kind === "fixed-proxy"
             ? "position:fixed;inset:8px auto auto 8px;inline-size:44px;" +
               "block-size:44px;"
+            : kind === "huge-sibling-proxy"
+            ? "display:block;inline-size:1000px;block-size:500px;"
             : "display:block;inline-size:44px;block-size:44px;";
           wrapper.append(proxy);
         }
+        if (parentProxy) wrapper.dataset.discernFocusProxy = kind;
         futureSurface.append(wrapper);
       }
       container.append(futureSurface);
@@ -2474,33 +2713,66 @@ async function verifySemanticFocus(
       const keyboardFocused = await focusByKeyboard(page, target);
       await target.evaluate(
         async (node, { kind, surfaceColor }) => {
-          const proxyKind = kind === "fixed-proxy" ||
-            kind === "generic-parent-proxy";
-          const paint = proxyKind ? node.nextElementSibling : node;
+          const siblingProxy = [
+            "fixed-proxy",
+            "generic-parent-proxy",
+            "huge-sibling-proxy",
+          ].includes(kind);
+          const parentProxy = [
+            "huge-parent-proxy",
+            "edge-parent-proxy",
+            "local-parent-proxy",
+          ].includes(kind);
+          const paint = siblingProxy
+            ? node.nextElementSibling
+            : parentProxy
+            ? node.parentElement
+            : node;
           if (!(paint instanceof HTMLElement)) return;
-          paint.style.setProperty(
-            "outline-color",
-            kind === "transparent" ? "transparent" : surfaceColor,
-            "important",
-          );
-          if (
-            kind === "target-opacity" || kind === "ancestor-opacity" ||
-            kind === "target-filter-opacity" ||
-            kind === "ancestor-filter-opacity" ||
-            kind === "ambiguous-filter" || kind === "hidden" ||
-            kind === "subtle-opacity" ||
-            kind === "subtle-filter-opacity" ||
-            kind === "revealed-indicator" || proxyKind
-          ) {
+          const subtleColor = [
+            "subtle-outline-color",
+            "subtle-shadow-color",
+            "subtle-underline-color",
+          ].includes(kind);
+          const paintColor = kind === "transparent"
+            ? "transparent"
+            : kind === "same-colour"
+            ? surfaceColor
+            : subtleColor
+            ? "rgb(1, 1, 1)"
+            : "var(--discern-color-ink)";
+          if (kind.includes("-shadow-color")) {
             paint.style.setProperty(
-              "outline-color",
-              "var(--discern-color-ink)",
+              "box-shadow",
+              `0 0 0 3px ${paintColor}`,
               "important",
             );
+          } else if (kind.includes("-underline-color")) {
+            paint.style.setProperty(
+              "text-decoration-line",
+              "underline",
+              "important",
+            );
+            paint.style.setProperty(
+              "text-decoration-thickness",
+              "2px",
+              "important",
+            );
+            paint.style.setProperty(
+              "text-decoration-color",
+              paintColor,
+              "important",
+            );
+          } else {
+            paint.style.setProperty(
+              "outline-color",
+              paintColor,
+              "important",
+            );
+            paint.style.setProperty("outline-style", "solid", "important");
+            paint.style.setProperty("outline-width", "2px", "important");
+            paint.style.setProperty("outline-offset", "2px", "important");
           }
-          paint.style.setProperty("outline-style", "solid", "important");
-          paint.style.setProperty("outline-width", "2px", "important");
-          paint.style.setProperty("outline-offset", "2px", "important");
           if (kind === "target-opacity") {
             node.style.setProperty("opacity", "0", "important");
           } else if (kind === "ancestor-opacity") {
@@ -2539,12 +2811,6 @@ async function verifySemanticFocus(
             );
           } else if (kind === "revealed-indicator") {
             node.style.setProperty("opacity", "1", "important");
-          } else if (proxyKind) {
-            paint.style.setProperty(
-              "box-shadow",
-              "0 0 0 4px var(--discern-color-canvas)",
-              "important",
-            );
           }
           await new Promise<void>((resolve) => {
             requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
@@ -2566,33 +2832,54 @@ async function verifySemanticFocus(
       const computedFixtureContrast = contrastRatio(
         oracleAfter.color,
         synthetic.surfaceColor,
-        oracleAfter.visible ? oracleAfter.effectiveOpacity : 0,
+        oracleAfter.visible && oracleAfter.paintPresent
+          ? oracleAfter.effectiveOpacity
+          : 0,
       );
       const appearanceContrast = contrastRatio(
         paintedBackground(
           oracleAfter.color,
           synthetic.surfaceColor,
-          oracleAfter.visible ? oracleAfter.effectiveOpacity : 0,
+          oracleAfter.visible && oracleAfter.paintPresent
+            ? oracleAfter.effectiveOpacity
+            : 0,
         ),
         paintedBackground(
-          oracleAfter.color,
+          oracleBefore.color,
           synthetic.surfaceColor,
-          oracleBefore.visible ? oracleBefore.effectiveOpacity : 0,
+          oracleBefore.visible && oracleBefore.paintPresent
+            ? oracleBefore.effectiveOpacity
+            : 0,
         ),
       );
       const subtle = kind === "subtle-opacity" ||
-        kind === "subtle-filter-opacity";
+        kind === "subtle-filter-opacity" ||
+        kind === "subtle-outline-color" ||
+        kind === "subtle-shadow-color" ||
+        kind === "subtle-underline-color";
       const opacityFiltered = kind === "target-filter-opacity" ||
         kind === "ancestor-filter-opacity";
       const fixedProxy = kind === "fixed-proxy";
       const genericProxy = kind === "generic-parent-proxy";
+      const hugeParentProxy = kind === "huge-parent-proxy";
+      const edgeParentProxy = kind === "edge-parent-proxy";
+      const hugeSiblingProxy = kind === "huge-sibling-proxy";
+      const localParentProxy = kind === "local-parent-proxy";
       const ambiguous = kind === "ambiguous-filter";
-      const expectedAccepted = kind === "revealed-indicator";
+      const expectedAccepted = (positiveProofKinds as readonly string[])
+        .includes(kind);
       const oracleSupportsExpectation = expectedAccepted
         ? computedFixtureContrast !== undefined &&
           computedFixtureContrast >= 3 &&
           appearanceContrast !== undefined &&
-          appearanceContrast >= 3
+          appearanceContrast >= 3 &&
+          (!localParentProxy ||
+            (
+              oracleAfter.semanticallyAssociated &&
+              oracleAfter.geometricallyAssociated &&
+              oracleAfter.controlSized &&
+              oracleAfter.parentEdgesLocal
+            ))
         : subtle
         ? computedFixtureContrast !== undefined &&
           computedFixtureContrast >= 3 &&
@@ -2608,6 +2895,26 @@ async function verifySemanticFocus(
           computedFixtureContrast >= 3 &&
           !oracleAfter.semanticallyAssociated &&
           oracleAfter.geometricallyAssociated
+        : hugeParentProxy
+        ? computedFixtureContrast !== undefined &&
+          computedFixtureContrast >= 3 &&
+          !oracleAfter.semanticallyAssociated &&
+          oracleAfter.geometricallyAssociated &&
+          !oracleAfter.controlSized &&
+          !oracleAfter.parentEdgesLocal
+        : edgeParentProxy
+        ? computedFixtureContrast !== undefined &&
+          computedFixtureContrast >= 3 &&
+          oracleAfter.semanticallyAssociated &&
+          oracleAfter.geometricallyAssociated &&
+          !oracleAfter.controlSized &&
+          !oracleAfter.parentEdgesLocal
+        : hugeSiblingProxy
+        ? computedFixtureContrast !== undefined &&
+          computedFixtureContrast >= 3 &&
+          oracleAfter.semanticallyAssociated &&
+          oracleAfter.geometricallyAssociated &&
+          !oracleAfter.controlSized
         : ambiguous
         ? !oracleAfter.filterKnown &&
           oracleAfter.filters.some((filter) => filter.includes("url("))
@@ -2625,8 +2932,7 @@ async function verifySemanticFocus(
       if (
         !keyboardFocused ||
         !productionMatchesExpectation ||
-        oracleAfter.style !== "solid" ||
-        Number.parseFloat(oracleAfter.width) < 2 ||
+        !oracleAfter.paintPresent ||
         !oracleSupportsExpectation ||
         !serializedFilterMatches
       ) {
@@ -2643,7 +2949,11 @@ async function verifySemanticFocus(
             appearanceContrast?.toFixed(2) ?? "unknown"
           }:1, filters=${
             oracleAfter.filters.join(", ") || "none"
-          }, semantic=${oracleAfter.semanticallyAssociated}, geometry=${oracleAfter.geometricallyAssociated}`,
+          }, semantic=${oracleAfter.semanticallyAssociated}, geometry=${oracleAfter.geometricallyAssociated}, sized=${oracleAfter.controlSized}, parent-edges=${oracleAfter.parentEdgesLocal}, candidate=${
+            oracleAfter.candidateWidth.toFixed(1)
+          }×${oracleAfter.candidateHeight.toFixed(1)}, target=${
+            oracleAfter.targetWidth.toFixed(1)
+          }×${oracleAfter.targetHeight.toFixed(1)}`,
         );
       }
     }
