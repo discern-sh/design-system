@@ -23,6 +23,7 @@ import {
   HoverCard,
   Logo,
   Procedure,
+  RawOutput,
   RetryNotice,
   SiteHeader,
   ThemeSwitcher,
@@ -1258,6 +1259,52 @@ function accessibleText(html: string): string {
   }
   return text;
 }
+
+Deno.test("Raw output leaves disclosure state to native CSS-free semantics", () => {
+  function summaryTextFailures(
+    cases: readonly {
+      readonly name: string;
+      readonly html: string;
+      readonly label: string;
+    }[],
+  ): readonly string[] {
+    const failures: string[] = [];
+    for (const item of cases) {
+      const summary = item.html.match(/<summary\b[^>]*>([\s\S]*?)<\/summary>/)
+        ?.[1] ?? "";
+      const text = accessibleText(summary).replace(/\s+/g, " ").trim();
+      if (text !== item.label) {
+        failures.push(
+          `${item.name}: CSS-free summary exposes "${text}" instead of "${item.label}"`,
+        );
+      }
+    }
+    return failures;
+  }
+
+  const cases = [false, true].map((open) => ({
+    name: open ? "open" : "closed",
+    label: "Validator output",
+    html: renderToStaticMarkup(
+      createElement(RawOutput, {
+        label: "Validator output",
+        open,
+        children: "ValidationError",
+      }),
+    ),
+  }));
+  assertEquals(summaryTextFailures(cases), []);
+  assert(!cases[0]?.html.includes(' open=""'));
+  assertMatch(cases[1]?.html ?? "", /<details\b[^>]*\bopen=""/);
+
+  const syntheticFailures = summaryTextFailures([{
+    name: "unrelated-disclosure",
+    label: "Build log",
+    html:
+      "<details><summary>Build log<span>Offline</span><span>Online</span></summary></details>",
+  }]);
+  assertEquals(syntheticFailures.length, 1);
+});
 
 Deno.test("procedure grammar preserves sequence and state in plain HTML", () => {
   const html = renderToStaticMarkup(

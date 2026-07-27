@@ -32,12 +32,10 @@ export const RawOutput: DiscernComponent<HTMLDetailsElement, RawOutputProps> =
             ›
           </span>
           <span>{label}</span>
-          <span className="discern-raw-output__state discern-raw-output__state--collapsed">
-            Collapsed
-          </span>
-          <span className="discern-raw-output__state discern-raw-output__state--expanded">
-            Expanded
-          </span>
+          <span
+            className="discern-raw-output__state"
+            aria-hidden="true"
+          />
         </summary>
         <pre className="discern-raw-output__content">
           <code>{children}</code>

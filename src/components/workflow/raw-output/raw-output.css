@@ -45,12 +45,11 @@
     color: var(--discern-color-ink-muted);
     font-family: var(--discern-font-mono);
   }
-  .discern-raw-output__state--expanded,
-  .discern-raw-output[open] .discern-raw-output__state--collapsed {
-    display: none;
+  .discern-raw-output__state::after {
+    content: "Collapsed";
   }
-  .discern-raw-output[open] .discern-raw-output__state--expanded {
-    display: inline;
+  .discern-raw-output[open] .discern-raw-output__state::after {
+    content: "Expanded";
   }
   .discern-raw-output__content {
     max-block-size: 20rem;
