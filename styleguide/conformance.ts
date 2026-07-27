@@ -70,6 +70,10 @@ export type ConformanceStep =
     readonly value: string;
   }
   | {
+    readonly expect: "clipboard";
+    readonly value: string;
+  }
+  | {
     readonly expect: "describes";
     readonly target: ConformanceTarget;
     readonly description: ConformanceTarget;
@@ -87,6 +91,11 @@ export type ConformanceStep =
   }
   | {
     readonly expect: "within-viewport";
+    readonly target: ConformanceTarget;
+    readonly tolerance?: number;
+  }
+  | {
+    readonly expect: "contained-x";
     readonly target: ConformanceTarget;
     readonly tolerance?: number;
   }

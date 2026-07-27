@@ -72,6 +72,7 @@ export * from "../components/workflow/ownership-badge/mod.ts";
 export * from "../components/workflow/decision-record/mod.ts";
 export * from "../components/workflow/rule/mod.ts";
 export * from "../components/workflow/task-metadata/mod.ts";
+export * from "../components/workflow/agent-handoff/mod.ts";
 export * from "../components/docs/skip-link/mod.ts";
 export * from "../components/docs/docs-header/mod.ts";
 export * from "../components/docs/docs-nav/mod.ts";

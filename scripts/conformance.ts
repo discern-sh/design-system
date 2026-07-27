@@ -176,6 +176,18 @@ async function performStep(
     return;
   }
 
+  if (step.expect === "clipboard") {
+    await eventually(
+      async () =>
+        await page.evaluate(async () =>
+          await navigator.clipboard.readText()
+        ) ===
+          step.value,
+      `Expected clipboard to contain ${JSON.stringify(step.value)}`,
+    );
+    return;
+  }
+
   const target = targetLocator(root, step.target);
   if (step.expect === "hidden") {
     await eventually(
@@ -208,6 +220,21 @@ async function performStep(
       }, ${bounds.top.toFixed(2)} → ${bounds.right.toFixed(2)}, ${
         bounds.bottom.toFixed(2)
       }: ${JSON.stringify(step.target)}`,
+    );
+    return;
+  }
+  if (step.expect === "contained-x") {
+    const element = await exactlyOne(target, step.target);
+    const width = await element.evaluate((node) => ({
+      clientWidth: node.clientWidth,
+      scrollWidth: node.scrollWidth,
+    }));
+    const tolerance = step.tolerance ?? 1;
+    invariant(
+      width.scrollWidth <= width.clientWidth + tolerance,
+      `Expected horizontal containment but found ${width.clientWidth}px client / ${width.scrollWidth}px content: ${
+        JSON.stringify(step.target)
+      }`,
     );
     return;
   }
@@ -813,6 +840,7 @@ export async function runConformance(): Promise<void> {
     const context = await browser.newContext({
       viewport: WIDE_VIEWPORT,
       reducedMotion: "reduce",
+      permissions: ["clipboard-read", "clipboard-write"],
     });
     const page = await context.newPage();
     addPageFailureListeners(page, failures);

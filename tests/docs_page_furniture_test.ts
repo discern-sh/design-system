@@ -1,6 +1,13 @@
-import { assertEquals, assertMatch, assertStringIncludes } from "@std/assert";
+import {
+  assert,
+  assertEquals,
+  assertMatch,
+  assertStringIncludes,
+} from "@std/assert";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { packageManifest } from "../src/manifest.ts";
+import { AgentHandoff } from "../src/components/workflow/agent-handoff/agent-handoff.tsx";
 import {
   type TaskFileEffects,
   TaskMetadata,
@@ -83,4 +90,32 @@ Deno.test("task metadata writes every closed state as visible text", () => {
     );
     assertStringIncludes(html, label);
   }
+});
+
+Deno.test("agent handoff has one visible plain-text prompt authority", () => {
+  const prompt =
+    "Inspect the assigned change.\nRun the checks.\nReport the evidence.";
+  const html = renderToStaticMarkup(
+    createElement(AgentHandoff, {
+      title: "Hand off the review",
+      description: "Paste these instructions into an agent session.",
+      children: prompt,
+    }),
+  );
+
+  assertStringIncludes(html, 'role="group"');
+  assertStringIncludes(html, 'aria-label="Hand off the review"');
+  assertStringIncludes(
+    html,
+    `<pre class="discern-agent-handoff__prompt">${prompt}</pre>`,
+  );
+  assertEquals(html.split(prompt).length - 1, 1);
+  assert(!html.includes("<code"));
+  assertStringIncludes(html, "Copy prompt");
+
+  const manifestEntry = packageManifest.components.find(({ id }) =>
+    id === "agent-handoff"
+  );
+  assert(manifestEntry !== undefined);
+  assertEquals(manifestEntry.dependencies, ["copy-button"]);
 });

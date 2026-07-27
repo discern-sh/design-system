@@ -6,9 +6,12 @@ import { TaskMetadata } from "./task-metadata.tsx";
 
 export const conformance = [{
   name: "all task facts remain contained at a narrow viewport",
-  viewport: { width: 390, height: 844 },
+  viewport: { width: 390, height: 1400 },
   steps: [{
     expect: "within-viewport",
+    target: { selector: "[data-example-task-metadata-narrow]" },
+  }, {
+    expect: "contained-x",
     target: { selector: "[data-example-task-metadata-narrow]" },
   }, {
     expect: "visible",
