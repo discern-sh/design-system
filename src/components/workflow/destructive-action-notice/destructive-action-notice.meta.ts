@@ -16,7 +16,7 @@ export default {
   ],
   accessibility: [
     "Scope, impact, authority, and recovery are labelled definition-list facts rather than an undifferentiated warning paragraph.",
-    "The visible label carries the warning; colour reinforces only that actionable hazard instead of tinting the entire block.",
+    "An immutable warning or danger token stays visible when a custom label adds context; colour reinforces only that actionable hazard instead of tinting the entire block.",
     "Warning uses a static note role by default; danger opts into an alert role and should be reserved for immediate hazards.",
   ],
 } satisfies ComponentMeta;

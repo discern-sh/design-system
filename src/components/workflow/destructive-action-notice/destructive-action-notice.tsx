@@ -37,10 +37,6 @@ export const DestructiveActionNotice: DiscernComponent<
     ref,
   ) {
     const semanticRole = role ?? (tone === "danger" ? "alert" : "note");
-    const resolvedLabel = label ??
-      (tone === "danger"
-        ? "Danger: destructive action"
-        : "Warning: destructive action");
     return (
       <div
         ref={ref}
@@ -53,7 +49,13 @@ export const DestructiveActionNotice: DiscernComponent<
         {...props}
       >
         <strong className="discern-destructive-action-notice__label">
-          {resolvedLabel}
+          <span className="discern-destructive-action-notice__state">
+            {tone === "danger" ? "Danger" : "Warning"}
+          </span>
+          {": "}
+          <span className="discern-destructive-action-notice__custom-label">
+            {label ?? "Destructive action"}
+          </span>
         </strong>
         <dl className="discern-destructive-action-notice__facts">
           <div className="discern-destructive-action-notice__fact">

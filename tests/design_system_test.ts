@@ -1306,6 +1306,54 @@ Deno.test("Raw output leaves disclosure state to native CSS-free semantics", () 
   assertEquals(syntheticFailures.length, 1);
 });
 
+Deno.test("custom notice labels cannot replace canonical semantic state", () => {
+  const retryCases = [
+    { safeToRetry: true, token: "Safe to retry" },
+    { safeToRetry: false, token: "Do not retry" },
+  ] as const;
+  for (const { safeToRetry, token } of retryCases) {
+    const html = renderToStaticMarkup(
+      createElement(RetryNotice, {
+        safeToRetry,
+        label: "Operator context",
+        reason: "Inspect the current state first.",
+      }),
+    );
+    assertStringIncludes(
+      html,
+      `<span class="discern-retry-notice__state">${token}</span>`,
+    );
+    assertStringIncludes(
+      html,
+      '<span class="discern-retry-notice__custom-label">Operator context</span>',
+    );
+  }
+
+  const destructiveCases = [
+    { tone: "warning", token: "Warning" },
+    { tone: "danger", token: "Danger" },
+  ] as const;
+  for (const { tone, token } of destructiveCases) {
+    const html = renderToStaticMarkup(
+      createElement(DestructiveActionNotice, {
+        tone,
+        label: "Owner approval required",
+        scope: "The selected directory.",
+        impact: "Its contents will change.",
+        recovery: "Create a recoverable copy first.",
+      }),
+    );
+    assertStringIncludes(
+      html,
+      `<span class="discern-destructive-action-notice__state">${token}</span>`,
+    );
+    assertStringIncludes(
+      html,
+      '<span class="discern-destructive-action-notice__custom-label">Owner approval required</span>',
+    );
+  }
+});
+
 Deno.test("procedure grammar preserves sequence and state in plain HTML", () => {
   const html = renderToStaticMarkup(
     createElement(Procedure, {

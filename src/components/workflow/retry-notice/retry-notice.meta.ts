@@ -15,7 +15,7 @@ export default {
     "The message is a general warning or live failure without an idempotence decision.",
   ],
   accessibility: [
-    "The safe or unsafe instruction is written in the visible label and never conveyed by colour alone.",
+    "The immutable safe or unsafe instruction stays visible when a custom label adds context, and is never conveyed by colour alone.",
     "The neutral note role avoids announcing static retry guidance as a live status.",
     "Unsafe guidance uses the warning role rather than success or danger decoration.",
   ],

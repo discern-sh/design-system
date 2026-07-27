@@ -19,7 +19,7 @@ export const RetryNotice: DiscernComponent<
   {
     safeToRetry,
     reason,
-    label = safeToRetry ? "Safe to retry" : "Do not retry",
+    label,
     className,
     role = "note",
     ...props
@@ -39,7 +39,21 @@ export const RetryNotice: DiscernComponent<
       role={role}
       {...props}
     >
-      <strong className="discern-retry-notice__label">{label}</strong>
+      <strong className="discern-retry-notice__label">
+        <span className="discern-retry-notice__state">
+          {safeToRetry ? "Safe to retry" : "Do not retry"}
+        </span>
+        {label !== undefined
+          ? (
+            <>
+              {" — "}
+              <span className="discern-retry-notice__custom-label">
+                {label}
+              </span>
+            </>
+          )
+          : null}
+      </strong>
       <div className="discern-retry-notice__reason">{reason}</div>
     </div>
   );
