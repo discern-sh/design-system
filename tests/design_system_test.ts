@@ -7,6 +7,7 @@ import {
 import { fromFileUrl, join, relative, toFileUrl } from "@std/path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { cssAtRuleBlocks } from "../scripts/css-syntax.ts";
 import {
   auditBundledFontMetricAssets,
   auditFontMetricOverrides,
@@ -722,6 +723,38 @@ Deno.test("target font metrics authorize the exact live face population", async 
     );
   }
 
+  for (const family of ['"Crimson  Pro"', '" Crimson Pro"']) {
+    const distinctQuotedFamily = auditFontMetricOverrides(
+      fontCss.replace(
+        'font-family: "Crimson Pro";',
+        `font-family: ${family};`,
+      ),
+    );
+    assertStringIncludes(
+      distinctQuotedFamily.failures.join("\n"),
+      "target metric authority has no live normal 200–900 face",
+      `${family} collapsed into the Crimson Pro authority`,
+    );
+  }
+
+  for (
+    const equivalentFamily of [
+      '"crimson pro"',
+      "Crimson/**/\n\t Pro",
+    ]
+  ) {
+    assertEquals(
+      auditFontMetricOverrides(
+        fontCss.replace(
+          'font-family: "Crimson Pro";',
+          `font-family: ${equivalentFamily};`,
+        ),
+      ).failures,
+      [],
+      `${equivalentFamily} did not preserve the Crimson Pro identity`,
+    );
+  }
+
   const romanSource = "./fonts/crimson-pro-roman.woff2";
   const confusedSource = `${romanSource}-next`;
   const confused = auditFontMetricOverrides(
@@ -797,6 +830,26 @@ Deno.test("target font metrics authorize the exact live face population", async 
         "src",
         `url("${romanSource}") format("woff2") garbage`,
       ],
+      [
+        "src",
+        `url("${romanSource}") tech("variations") format("woff2")`,
+      ],
+      [
+        "src",
+        `url("${romanSource}") format("woff2") tech("variations")`,
+      ],
+      [
+        "src",
+        `format("woff2") url("${romanSource}")`,
+      ],
+      [
+        "src",
+        `url("${romanSource}")`,
+      ],
+      [
+        "src",
+        `url("${romanSource}") format(woff2,)`,
+      ],
       ["font-weight", "200 900 garbage"],
     ] as const
   ) {
@@ -821,6 +874,48 @@ Deno.test("target font metrics authorize the exact live face population", async 
     ),
   );
   assertEquals(balanced.failures, []);
+
+  const identifierFormat = auditFontMetricOverrides(
+    fontCss.replace(
+      `url("${romanSource}") format("woff2")`,
+      `url("${romanSource}") format(woff2)`,
+    ),
+  );
+  assertEquals(identifierFormat.failures, []);
+
+  const wrongFormat = auditFontMetricOverrides(
+    fontCss.replace(
+      `url("${romanSource}") format("woff2")`,
+      `url("${romanSource}") format("woff")`,
+    ),
+  );
+  assertStringIncludes(
+    wrongFormat.failures.join("\n"),
+    "has no exact metric authority",
+  );
+
+  const ruleContexts = cssAtRuleBlocks(
+    `@font-face { font-family: "Top"; }
+.future-surface { @font-face { font-family: "Nested"; } }
+@media (min-width: 1px) { @font-face { font-family: "Conditional"; } }`,
+    "font-face",
+  );
+  assertEquals(
+    ruleContexts.blocks.map(({ depth, parent }) => ({ depth, parent })),
+    [
+      { depth: 0, parent: "stylesheet" },
+      { depth: 1, parent: "qualified-rule" },
+      { depth: 1, parent: "at-rule" },
+    ],
+  );
+
+  const nestedAuthority = auditFontMetricOverrides(
+    `.future-surface {\n${fontCss}\n}`,
+  );
+  assertStringIncludes(
+    nestedAuthority.failures.join("\n"),
+    "target metric authority has no live normal 200–900 face",
+  );
 
   for (
     const variant of [

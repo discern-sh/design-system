@@ -10,6 +10,16 @@ export interface StrippedCss {
   readonly failures: readonly string[];
 }
 
+/** The grammar context that directly contains a parsed CSS rule. */
+export type CssRuleParent = "stylesheet" | "at-rule" | "qualified-rule";
+
+/** One parsed block at-rule with its grammar context. */
+export interface CssAtRuleBlock {
+  readonly block: string;
+  readonly depth: number;
+  readonly parent: CssRuleParent;
+}
+
 export function cssEscapeEnd(value: string, start: number): number {
   let position = start + 1;
   if (position >= value.length) return position;
@@ -171,43 +181,30 @@ export function cssAtRuleBlocks(
   source: string,
   atRuleName: string,
 ): {
-  readonly blocks: readonly string[];
+  readonly blocks: readonly CssAtRuleBlock[];
   readonly failures: readonly string[];
 } {
-  const stripped = stripCssComments(source);
-  const blocks: string[] = [];
-  const failures = [...stripped.failures];
-  let position = 0;
-  while (position < stripped.css.length) {
-    const character = stripped.css[position];
-    if (character === "'" || character === '"') {
-      position = skipCssString(stripped.css, position);
+  const parsed = parsedCssRules(source);
+  const blocks: CssAtRuleBlock[] = [];
+  const failures = [...parsed.failures];
+  for (const rule of parsed.rules) {
+    if (rule.kind !== "at-rule") continue;
+    const atRule = cssAtRulePrelude(rule.prelude);
+    if (
+      atRule === undefined ||
+      atRule.name.toLowerCase() !== atRuleName.toLowerCase()
+    ) {
       continue;
     }
-    if (character === "\\") {
-      position = cssEscapeEnd(stripped.css, position);
+    if (atRule.remainder !== "") {
+      failures.push(`@${atRuleName} has an invalid prelude`);
       continue;
     }
-    if (character !== "@") {
-      position += 1;
-      continue;
-    }
-    const name = cssIdentifier(stripped.css, position + 1);
-    if (name === undefined) {
-      position += 1;
-      continue;
-    }
-    position = name.end;
-    if (name.value.toLowerCase() !== atRuleName.toLowerCase()) continue;
-    while (/\s/.test(stripped.css[position] ?? "")) position += 1;
-    if (stripped.css[position] !== "{") continue;
-    const end = matchingCssBlockEnd(stripped.css, position);
-    if (end === undefined) {
-      failures.push(`@${atRuleName} has an unterminated declaration block`);
-      break;
-    }
-    blocks.push(stripped.css.slice(position + 1, end));
-    position = end + 1;
+    blocks.push({
+      block: rule.block,
+      depth: rule.depth,
+      parent: rule.parent,
+    });
   }
   return { blocks, failures };
 }
@@ -358,10 +355,42 @@ interface CssRulePrelude {
   readonly value: string;
 }
 
-function cssRulePreludes(source: string): readonly CssRulePrelude[] {
-  const stripped = stripCssComments(source).css;
-  const preludes: CssRulePrelude[] = [];
-  const walk = (start: number, end: number): void => {
+interface ParsedCssRule {
+  readonly block: string;
+  readonly depth: number;
+  readonly kind: CssRulePrelude["kind"];
+  readonly parent: CssRuleParent;
+  readonly prelude: string;
+}
+
+interface ParsedCssRules {
+  readonly failures: readonly string[];
+  readonly rules: readonly ParsedCssRule[];
+}
+
+function cssAtRulePrelude(
+  prelude: string,
+): { readonly name: string; readonly remainder: string } | undefined {
+  if (!prelude.startsWith("@")) return undefined;
+  const name = cssIdentifier(prelude, 1);
+  if (name === undefined) return undefined;
+  return {
+    name: name.value,
+    remainder: prelude.slice(name.end).trim(),
+  };
+}
+
+function parsedCssRules(source: string): ParsedCssRules {
+  const strippedSource = stripCssComments(source);
+  const stripped = strippedSource.css;
+  const failures = [...strippedSource.failures];
+  const rules: ParsedCssRule[] = [];
+  const walk = (
+    start: number,
+    end: number,
+    parent: CssRuleParent,
+    depth: number,
+  ): void => {
     let position = start;
     while (position < end) {
       while (/\s/.test(stripped[position] ?? "")) position += 1;
@@ -373,19 +402,47 @@ function cssRulePreludes(source: string): readonly CssRulePrelude[] {
       }
       const value = stripped.slice(position, boundary.position).trim();
       const blockEnd = matchingCssBlockEnd(stripped, boundary.position);
-      if (blockEnd === undefined || blockEnd > end) return;
-      if (value !== "") {
-        preludes.push({
-          kind: value.startsWith("@") ? "at-rule" : "qualified-rule",
-          value,
-        });
+      if (blockEnd === undefined || blockEnd > end) {
+        failures.push("CSS has an unterminated rule block");
+        return;
       }
-      walk(boundary.position + 1, blockEnd);
+      if (value !== "") {
+        const kind = value.startsWith("@")
+          ? "at-rule" as const
+          : "qualified-rule" as const;
+        rules.push({
+          block: stripped.slice(boundary.position + 1, blockEnd),
+          depth,
+          kind,
+          parent,
+          prelude: value,
+        });
+        walk(
+          boundary.position + 1,
+          blockEnd,
+          kind,
+          depth + 1,
+        );
+      } else {
+        walk(
+          boundary.position + 1,
+          blockEnd,
+          "qualified-rule",
+          depth + 1,
+        );
+      }
       position = blockEnd + 1;
     }
   };
-  walk(0, stripped.length);
-  return preludes;
+  walk(0, stripped.length, "stylesheet", 0);
+  return { failures, rules };
+}
+
+function cssRulePreludes(source: string): readonly CssRulePrelude[] {
+  return parsedCssRules(source).rules.map(({ kind, prelude }) => ({
+    kind,
+    value: prelude,
+  }));
 }
 
 /** Qualified-rule selector preludes, including rules nested in at-rules. */

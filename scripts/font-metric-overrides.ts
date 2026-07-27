@@ -26,10 +26,18 @@ interface FontFaceRecord {
   readonly lineGapOverride: number | undefined;
 }
 
-interface FontSourceRecord {
-  readonly kind: "local" | "url";
+interface LocalFontSourceRecord {
+  readonly kind: "local";
   readonly value: string;
 }
+
+interface UrlFontSourceRecord {
+  readonly format: string;
+  readonly kind: "url";
+  readonly value: string;
+}
+
+type FontSourceRecord = LocalFontSourceRecord | UrlFontSourceRecord;
 
 interface ParsedFontFaces {
   readonly faces: readonly FontFaceRecord[];
@@ -40,6 +48,7 @@ interface TargetFontMetricAuthority {
   readonly family: string;
   readonly fallbackPrefix: string;
   readonly bundledFaces: readonly {
+    readonly format: string;
     readonly source: string;
     readonly sha256: string;
     readonly style: string;
@@ -64,6 +73,7 @@ const TARGET_FONT_METRICS: readonly TargetFontMetricAuthority[] = [
     fallbackPrefix: "Discern Crimson Fallback ",
     bundledFaces: [
       {
+        format: "woff2",
         source: "./fonts/crimson-pro-roman.woff2",
         sha256:
           "20ce4189b9e41b3439a2a36dd63deff44b6d91182532202cb96b65521b4a3c23",
@@ -71,6 +81,7 @@ const TARGET_FONT_METRICS: readonly TargetFontMetricAuthority[] = [
         weight: { minimum: 200, maximum: 900 },
       },
       {
+        format: "woff2",
         source: "./fonts/crimson-pro-italic.woff2",
         sha256:
           "b3faa8f9ce36db53253e11fb107d77b983150c5c21dc8fcf3906234530ab69f2",
@@ -87,6 +98,7 @@ const TARGET_FONT_METRICS: readonly TargetFontMetricAuthority[] = [
     family: "Inter",
     fallbackPrefix: "Discern Inter Fallback ",
     bundledFaces: [{
+      format: "woff2",
       source: "./fonts/inter.woff2",
       sha256:
         "c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4",
@@ -149,6 +161,7 @@ const CSS_WHITESPACE_RUN = /[\t\n\f\r ]+/g;
 interface FontFamilyRecord {
   readonly identity: string;
   readonly name: string;
+  readonly syntax: "quoted" | "unquoted";
 }
 
 interface ParsedCssFunction {
@@ -175,12 +188,8 @@ function trimCssWhitespace(value: string): string {
   return value.slice(start, end);
 }
 
-function normalizedFamilyName(value: string): string {
-  return value.replace(CSS_WHITESPACE_RUN, " ").trim();
-}
-
 function fontFamilyIdentity(value: string): string {
-  return normalizedFamilyName(value).toLowerCase();
+  return value.toLowerCase();
 }
 
 function cssStringValue(
@@ -204,10 +213,10 @@ function fontFamily(value: string | undefined): FontFamilyRecord | undefined {
   if (quoted !== undefined) {
     position = skipCssWhitespace(value, quoted.end);
     if (position !== value.length) return undefined;
-    const name = normalizedFamilyName(quoted.value);
+    const name = quoted.value;
     return name === ""
       ? undefined
-      : { identity: fontFamilyIdentity(name), name };
+      : { identity: fontFamilyIdentity(name), name, syntax: "quoted" };
   }
 
   const words: string[] = [];
@@ -219,8 +228,10 @@ function fontFamily(value: string | undefined): FontFamilyRecord | undefined {
     position = skipCssWhitespace(value, afterWord);
     if (position === afterWord && position < value.length) return undefined;
   }
-  const name = normalizedFamilyName(words.join(" "));
-  return name === "" ? undefined : { identity: fontFamilyIdentity(name), name };
+  const name = words.join(" ");
+  return name === ""
+    ? undefined
+    : { identity: fontFamilyIdentity(name), name, syntax: "unquoted" };
 }
 
 function cssFunction(
@@ -293,12 +304,19 @@ function sourceFunctionValue(argument: string): string | undefined {
   return decodeCssEscapes(trimmed);
 }
 
-function validSourceModifierArgument(argument: string): boolean {
+function fontSourceFormat(argument: string): string | undefined {
   const trimmed = trimCssWhitespace(argument);
-  if (trimmed === "") return false;
+  if (trimmed === "") return undefined;
   const quoted = cssStringValue(trimmed, 0);
-  if (quoted !== undefined) return quoted.end === trimmed.length;
-  return !/["'();]/.test(trimmed);
+  if (quoted !== undefined) {
+    return quoted.end === trimmed.length
+      ? quoted.value.toLowerCase()
+      : undefined;
+  }
+  const identifier = cssIdentifier(trimmed, 0);
+  return identifier !== undefined && identifier.end === trimmed.length
+    ? identifier.value.toLowerCase()
+    : undefined;
 }
 
 function fontSources(value: string | undefined): ParsedFontSources {
@@ -318,23 +336,22 @@ function fontSources(value: string | undefined): ParsedFontSources {
       ? sourceFunctionValue(sourceFunction.argument)
       : fontFamily(sourceFunction.argument)?.name;
     if (source === undefined) return { sources, valid: false };
-    sources.push({ kind: sourceFunction.name, value: source });
     position = skipCssWhitespace(value, sourceFunction.end);
 
-    const modifiers = new Set<string>();
-    while (position < value.length && value[position] !== ",") {
-      if (sourceFunction.name !== "url") return { sources, valid: false };
+    if (sourceFunction.name === "url") {
       const modifier = cssFunction(value, position);
-      if (
-        modifier === undefined ||
-        (modifier.name !== "format" && modifier.name !== "tech") ||
-        modifiers.has(modifier.name) ||
-        !validSourceModifierArgument(modifier.argument)
-      ) {
+      if (modifier === undefined || modifier.name !== "format") {
         return { sources, valid: false };
       }
-      modifiers.add(modifier.name);
+      const format = fontSourceFormat(modifier.argument);
+      if (format === undefined) return { sources, valid: false };
+      sources.push({ format, kind: "url", value: source });
       position = skipCssWhitespace(value, modifier.end);
+    } else {
+      sources.push({ kind: "local", value: source });
+    }
+    if (position < value.length && value[position] !== ",") {
+      return { sources, valid: false };
     }
     if (position === value.length) return { sources, valid: true };
     position = skipCssWhitespace(value, position + 1);
@@ -407,7 +424,9 @@ function weightRange(value: string | undefined): WeightRange | undefined {
 function fontFaces(css: string): ParsedFontFaces {
   const parsedBlocks = cssAtRuleBlocks(css, "font-face");
   const failures = [...parsedBlocks.failures];
-  const faces = parsedBlocks.blocks.flatMap((block) => {
+  const faces = parsedBlocks.blocks.filter(({ depth, parent }) =>
+    depth === 0 && parent === "stylesheet"
+  ).flatMap(({ block }) => {
     const declarations = cssDeclarations(block);
     const parsedFamily = fontFamily(
       descriptor(declarations, "font-family"),
@@ -518,8 +537,8 @@ function cssCommaSeparated(value: string): readonly string[] | undefined {
   return parts;
 }
 
-function fontRoleAliases(css: string): string[] {
-  const aliases = new Map<string, string>();
+function fontRoleAliases(css: string): FontFamilyRecord[] {
+  const aliases = new Map<string, FontFamilyRecord>();
   const stripped = stripCssComments(css).css;
   for (
     const declaration of stripped.matchAll(
@@ -533,17 +552,18 @@ function fontRoleAliases(css: string): string[] {
         family.identity.includes(" fallback ") &&
         !aliases.has(family.identity)
       ) {
-        aliases.set(family.identity, family.name);
+        aliases.set(family.identity, family);
       }
     }
   }
-  return [...aliases.values()].toSorted();
+  return [...aliases.values()].toSorted((left, right) =>
+    left.name.localeCompare(right.name)
+  );
 }
 
-function authorityForAlias(
-  alias: string,
+function authorityForAliasIdentity(
+  identity: string,
 ): TargetFontMetricAuthority | undefined {
-  const identity = fontFamilyIdentity(alias);
   return TARGET_FONT_METRICS.find(({ fallbackPrefix }) =>
     identity.startsWith(fontFamilyIdentity(fallbackPrefix))
   );
@@ -565,7 +585,9 @@ function sameWeight(left: WeightRange, right: WeightRange): boolean {
 }
 
 function describeSource(source: FontSourceRecord): string {
-  return `${source.kind}("${source.value}")`;
+  return source.kind === "url"
+    ? `url("${source.value}") format("${source.format}")`
+    : `local("${source.value}")`;
 }
 
 function covers(
@@ -587,19 +609,18 @@ function covers(
 }
 
 function browserCases(
-  aliases: readonly string[],
+  aliases: readonly FontFamilyRecord[],
   faces: readonly FontFaceRecord[],
 ): FontMetricBrowserCase[] {
   return aliases.flatMap((alias) => {
-    const authority = authorityForAlias(alias);
+    const authority = authorityForAliasIdentity(alias.identity);
     if (authority === undefined) return [];
     const targetIdentity = fontFamilyIdentity(authority.family);
-    const aliasIdentity = fontFamilyIdentity(alias);
     const targetFaces = faces.filter(({ familyIdentity }) =>
       familyIdentity === targetIdentity
     );
     const aliasFaces = faces.filter(({ familyIdentity }) =>
-      familyIdentity === aliasIdentity
+      familyIdentity === alias.identity
     );
     return [...new Set(targetFaces.map(({ style }) => style))]
       .toSorted()
@@ -621,12 +642,12 @@ function browserCases(
         if (weights.length === 0) return [];
         return [{
           name: `${authority.family}/${
-            alias.slice(
+            alias.name.slice(
               authority.fallbackPrefix.length,
             )
           } ${style}`,
           target: `"${authority.family}"`,
-          fallback: `"${alias}"`,
+          fallback: `"${alias.name}"`,
           style,
           weights,
         }];
@@ -695,7 +716,7 @@ export function auditFontMetricOverrides(
   css: string,
 ): FontMetricOverrideAudit {
   const aliases = fontRoleAliases(css);
-  const aliasIdentities = new Set(aliases.map(fontFamilyIdentity));
+  const aliasIdentities = new Set(aliases.map(({ identity }) => identity));
   const parsedFaces = fontFaces(css);
   const faces = parsedFaces.faces;
   const aliasFaces = faces.filter(({ familyIdentity }) =>
@@ -722,6 +743,7 @@ export function auditFontMetricOverrides(
       const authorized = authority.bundledFaces.some((face) =>
         live.source.kind === "url" &&
         face.source === live.source.value &&
+        face.format === live.source.format &&
         face.style === live.face.style &&
         sameWeight(face.weight, live.face.weight)
       );
@@ -737,6 +759,7 @@ export function auditFontMetricOverrides(
       const matches = liveSources.filter(({ face, source }) =>
         source.kind === "url" &&
         source.value === authorized.source &&
+        source.format === authorized.format &&
         face.style === authorized.style &&
         sameWeight(face.weight, authorized.weight)
       );
@@ -758,7 +781,7 @@ export function auditFontMetricOverrides(
         `${describeFace(face)} is not enrolled by a public font-role stack`,
       );
     }
-    const authority = authorityForAlias(face.family);
+    const authority = authorityForAliasIdentity(face.familyIdentity);
     if (authority === undefined) {
       failures.push(
         `${describeFace(face)} has no target metric authority`,
@@ -799,17 +822,16 @@ export function auditFontMetricOverrides(
   }
 
   for (const alias of aliases) {
-    const authority = authorityForAlias(alias);
+    const authority = authorityForAliasIdentity(alias.identity);
     if (authority === undefined) {
-      failures.push(`${alias} has no target metric authority`);
+      failures.push(`${alias.name} has no target metric authority`);
       continue;
     }
-    const aliasIdentity = fontFamilyIdentity(alias);
     const enrolledFaces = aliasFaces.filter(({ familyIdentity }) =>
-      familyIdentity === aliasIdentity
+      familyIdentity === alias.identity
     );
     if (enrolledFaces.length === 0) {
-      failures.push(`${alias} has no @font-face declarations`);
+      failures.push(`${alias.name} has no @font-face declarations`);
       continue;
     }
     for (const style of new Set(enrolledFaces.map((face) => face.style))) {
@@ -825,7 +847,7 @@ export function auditFontMetricOverrides(
           current.minimum <= previous.maximum
         ) {
           failures.push(
-            `${alias} ${style} has overlapping or duplicate weight faces ${previous.minimum}–${previous.maximum} and ${current.minimum}–${current.maximum}`,
+            `${alias.name} ${style} has overlapping or duplicate weight faces ${previous.minimum}–${previous.maximum} and ${current.minimum}–${current.maximum}`,
           );
         }
       }
@@ -841,18 +863,18 @@ export function auditFontMetricOverrides(
       if (matchingRanges.length === 0) {
         const article = /^[aeiou]/i.test(targetFace.style) ? "an" : "a";
         failures.push(
-          `${alias} is missing ${article} ${targetFace.style} face for bundled ${authority.family}`,
+          `${alias.name} is missing ${article} ${targetFace.style} face for bundled ${authority.family}`,
         );
       } else if (!covers(matchingRanges, targetFace.weight)) {
         failures.push(
-          `${alias} ${targetFace.style} faces do not cover bundled ${authority.family} weights ${targetFace.weight.minimum}–${targetFace.weight.maximum}`,
+          `${alias.name} ${targetFace.style} faces do not cover bundled ${authority.family} weights ${targetFace.weight.minimum}–${targetFace.weight.maximum}`,
         );
       }
     }
   }
 
   return {
-    aliases,
+    aliases: aliases.map(({ name }) => name),
     browserCases: browserCases(aliases, faces),
     faces: aliasFaces.length,
     failures,
