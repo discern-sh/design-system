@@ -4,9 +4,11 @@ The Catalogue is the local browser for every Component example, public Token, co
 
 ## Find the right component
 
-Search covers Component names, Groups, descriptions, purposes, and usage guidance. Purpose collections narrow the registry to documentation, tool output, procedural workflow, or marketing work. Search and purpose filters combine. `?purpose=<name>` restores the collection on a cold load.
+Search covers Component names, Groups, descriptions, purposes, and usage guidance. The purpose selector in the Components section narrows the rendered Catalogue to documentation, tool output, procedural workflow, or marketing work. The sidebar remains a complete Component index, independent of that filter. Search and purpose filters combine. `?purpose=<name>` restores the collection on a cold load.
 
 Component Metadata owns purpose membership, `useWhen`, and `notWhen`. Every Workflow Component and each easily confused pair carries that guidance beside its examples.
+
+Each Component presents its available supporting material in closed disclosures: Best practices first, then Selection and React import, then Props and variants. Best practices contains `useWhen`, `notWhen`, and author responsibilities when its Metadata supplies them.
 
 ## Copy source-backed configuration
 

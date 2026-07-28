@@ -53,7 +53,8 @@
     overflow-x: auto;
     color: var(--discern-color-ink);
     font-family: var(--discern-font-mono);
-    font-size: var(--discern-font-size-xs);
+    font-size: var(--discern-font-size-sm);
+    font-weight: var(--discern-font-weight-strong);
     line-height: var(--discern-leading-body);
     white-space: pre;
   }

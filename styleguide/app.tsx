@@ -58,6 +58,13 @@ function stateFragmentId(component: string, state: string): string {
   return `component-${component}--${state}`;
 }
 
+function groupComponentEntries(entries: readonly RegistryEntry[]) {
+  return componentGroups.map((group) => ({
+    group,
+    entries: entries.filter(({ meta }) => meta.group === group),
+  })).filter(({ entries: groupedEntries }) => groupedEntries.length);
+}
+
 const defaultAccentHue = Number(
   discernThemeTokens.find(({ name }) => name === "--discern-accent-hue")
     ?.value ?? "255",
@@ -189,6 +196,47 @@ function ComponentPreview({ entry }: { readonly entry: RegistryEntry }) {
           );
         })}
       </div>
+      {hasGuidance
+        ? (
+          <details className="discern-catalogue-guidance">
+            <summary>Best practices</summary>
+            <div>
+              {meta.useWhen?.length
+                ? (
+                  <div>
+                    <strong>Use when</strong>
+                    <ul>
+                      {meta.useWhen.map((note) => <li key={note}>{note}</li>)}
+                    </ul>
+                  </div>
+                )
+                : null}
+              {meta.notWhen?.length
+                ? (
+                  <div>
+                    <strong>Not when</strong>
+                    <ul>
+                      {meta.notWhen.map((note) => <li key={note}>{note}</li>)}
+                    </ul>
+                  </div>
+                )
+                : null}
+              {meta.accessibility?.length
+                ? (
+                  <div>
+                    <strong>Author responsibilities</strong>
+                    <ul>
+                      {meta.accessibility.map((note) => (
+                        <li key={note}>{note}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+                : null}
+            </div>
+          </details>
+        )
+        : null}
       <details className="discern-catalogue-instrument">
         <summary>Selection and React import</summary>
         <div>
@@ -200,43 +248,6 @@ function ComponentPreview({ entry }: { readonly entry: RegistryEntry }) {
           <CopyableCode label="React import" value={selection.reactImport} />
         </div>
       </details>
-      {hasGuidance
-        ? (
-          <footer className="discern-catalogue-guidance">
-            {meta.useWhen?.length
-              ? (
-                <div>
-                  <strong>Use when</strong>
-                  <ul>
-                    {meta.useWhen.map((note) => <li key={note}>{note}</li>)}
-                  </ul>
-                </div>
-              )
-              : null}
-            {meta.notWhen?.length
-              ? (
-                <div>
-                  <strong>Not when</strong>
-                  <ul>
-                    {meta.notWhen.map((note) => <li key={note}>{note}</li>)}
-                  </ul>
-                </div>
-              )
-              : null}
-            {meta.accessibility?.length
-              ? (
-                <div>
-                  <strong>Author responsibilities</strong>
-                  <ul>
-                    {meta.accessibility.map((note) => <li key={note}>{note}
-                    </li>)}
-                  </ul>
-                </div>
-              )
-              : null}
-          </footer>
-        )
-        : null}
       <details className="discern-catalogue-api">
         <summary>Props and variants</summary>
         <div>
@@ -353,14 +364,16 @@ function App() {
   const [accentHue, setAccentHue] = useState(defaultAccentHue);
   const normalizedQuery = query.trim().toLowerCase();
 
-  const components = useMemo(() =>
+  const sortedComponents = useMemo(() =>
     registry
       .slice()
       .sort((a, b) =>
         componentGroups.indexOf(a.meta.group) -
           componentGroups.indexOf(b.meta.group) ||
         a.meta.order - b.meta.order
-      )
+      ), []);
+  const components = useMemo(() =>
+    sortedComponents
       .filter(({ meta }) =>
         !normalizedQuery ||
         [
@@ -378,7 +391,13 @@ function App() {
       .filter(({ meta }) =>
         !conformanceMode || !selectedComponent ||
         meta.slug === selectedComponent
-      ), [conformanceMode, normalizedQuery, purpose, selectedComponent]);
+      ), [
+    conformanceMode,
+    normalizedQuery,
+    purpose,
+    selectedComponent,
+    sortedComponents,
+  ]);
 
   const tokens = useMemo(
     () =>
@@ -390,10 +409,8 @@ function App() {
     [normalizedQuery],
   );
 
-  const groupedComponents = componentGroups.map((group) => ({
-    group,
-    entries: components.filter(({ meta }) => meta.group === group),
-  })).filter(({ entries }) => entries.length);
+  const groupedComponents = groupComponentEntries(components);
+  const sidebarGroupedComponents = groupComponentEntries(sortedComponents);
   const purposeCounts = Object.fromEntries(
     cataloguePurposes.map((candidate) => [
       candidate,
@@ -417,6 +434,15 @@ function App() {
     if (next === undefined) url.searchParams.delete("purpose");
     else url.searchParams.set("purpose", next);
     url.hash = "components";
+    globalThis.history.replaceState(null, "", url);
+  };
+
+  const showAllForComponentNavigation = (): void => {
+    setQuery("");
+    if (purpose === undefined) return;
+    setPurpose(undefined);
+    const url = new URL(globalThis.location.href);
+    url.searchParams.delete("purpose");
     globalThis.history.replaceState(null, "", url);
   };
 
@@ -478,36 +504,13 @@ function App() {
             </a>
           ))}
           <a href="#compositions">Compositions</a>
-          <span className="discern-catalogue-nav__heading">
-            Purpose collections
-          </span>
-          <button
-            type="button"
-            className="discern-catalogue-nav__collection"
-            aria-pressed={purpose === undefined}
-            onClick={() => changePurpose(undefined)}
-          >
-            All components
-            <small>{registry.length}</small>
-          </button>
-          {cataloguePurposes.map((candidate) => (
-            <button
-              type="button"
-              className="discern-catalogue-nav__collection"
-              aria-pressed={purpose === candidate}
-              data-discern-catalogue-purpose={candidate}
-              onClick={() => changePurpose(candidate)}
-              title={purposeDetails[candidate].description}
-              key={candidate}
-            >
-              {purposeDetails[candidate].label}
-              <small>{purposeCounts[candidate]}</small>
-            </button>
-          ))}
           <span className="discern-catalogue-nav__heading">Components</span>
-          {groupedComponents.map(({ group, entries }) => (
+          {sidebarGroupedComponents.map(({ group, entries }) => (
             <div key={group}>
-              <a href={`#group-${slugify(group)}`}>
+              <a
+                href={`#group-${slugify(group)}`}
+                onClick={showAllForComponentNavigation}
+              >
                 {group}
                 <small>{entries.length}</small>
               </a>
@@ -516,6 +519,7 @@ function App() {
                   key={meta.slug}
                   className="discern-catalogue-nav__child"
                   href={`#component-${meta.slug}`}
+                  onClick={showAllForComponentNavigation}
                 >
                   {meta.name}
                 </a>
@@ -688,7 +692,7 @@ function App() {
             </p>
           </header>
           <label className="discern-catalogue-purpose-picker">
-            <span>Purpose collection</span>
+            <span>Filter components by purpose</span>
             <select
               value={purpose ?? ""}
               onChange={(event) =>
@@ -710,7 +714,10 @@ function App() {
               >
                 <div>
                   <strong>{purposeDetails[purpose].label}</strong>
-                  <span>{purposeDetails[purpose].description}</span>
+                  <span>
+                    {components.length} of {registry.length} components.{" "}
+                    {purposeDetails[purpose].description}
+                  </span>
                 </div>
                 <button type="button" onClick={() => changePurpose(undefined)}>
                   Show all

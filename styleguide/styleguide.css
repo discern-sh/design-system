@@ -106,7 +106,6 @@
     padding: 18px 14px 36px;
   }
   .discern-catalogue-nav a,
-  .discern-catalogue-nav button,
   .discern-catalogue-nav__heading {
     display: flex;
     align-items: center;
@@ -120,26 +119,15 @@
     font-size: var(--discern-font-size-xs);
     text-decoration: none;
   }
-  .discern-catalogue-nav button {
-    width: 100%;
-    border: 0;
-    background: transparent;
-    cursor: pointer;
-    text-align: start;
-  }
-  .discern-catalogue-nav a:hover,
-  .discern-catalogue-nav button:hover,
-  .discern-catalogue-nav button[aria-pressed="true"] {
+  .discern-catalogue-nav a:hover {
     background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink);
   }
-  .discern-catalogue-nav a:focus-visible,
-  .discern-catalogue-nav button:focus-visible {
+  .discern-catalogue-nav a:focus-visible {
     outline: 2px solid var(--discern-color-accent-500);
     outline-offset: 1px;
   }
-  .discern-catalogue-nav a small,
-  .discern-catalogue-nav button small {
+  .discern-catalogue-nav a small {
     min-width: 20px;
     padding: 1px 6px;
     border: 1px solid var(--discern-color-border);
@@ -150,9 +138,6 @@
   }
   .discern-catalogue-nav__child {
     padding-inline-start: 22px !important;
-    color: var(--discern-color-ink-faint) !important;
-  }
-  .discern-catalogue-nav__collection {
     color: var(--discern-color-ink-faint) !important;
   }
   .discern-catalogue-nav__heading {
@@ -326,7 +311,24 @@
     font-size: var(--discern-font-size-xs);
   }
   .discern-catalogue-purpose-picker {
-    display: none;
+    display: grid;
+    gap: 6px;
+    margin-block: -18px 22px;
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+  }
+  .discern-catalogue-purpose-picker select {
+    min-height: 38px;
+    padding-inline: 10px;
+    border: 1px solid var(--discern-color-border-strong);
+    border-radius: var(--discern-radius-sm);
+    background: var(--discern-color-surface);
+    color: var(--discern-color-ink);
+    font: inherit;
+  }
+  .discern-catalogue-purpose-picker select:focus-visible {
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: 2px;
   }
   .discern-catalogue-purpose-context {
     display: flex;
@@ -599,10 +601,12 @@
   .discern-catalogue-example-state__canvas {
     padding: clamp(22px, 4vw, 42px);
   }
+  .discern-catalogue-guidance,
   .discern-catalogue-instrument,
   .discern-catalogue-api {
     border-block-start: 1px solid var(--discern-color-border);
   }
+  .discern-catalogue-guidance > summary,
   .discern-catalogue-instrument > summary,
   .discern-catalogue-api > summary {
     padding: 11px 18px;
@@ -611,6 +615,7 @@
     cursor: pointer;
     font: var(--discern-font-size-xs) var(--discern-font-mono);
   }
+  .discern-catalogue-guidance > summary:focus-visible,
   .discern-catalogue-instrument > summary:focus-visible,
   .discern-catalogue-api > summary:focus-visible {
     outline: 2px solid var(--discern-color-accent-500);
@@ -648,12 +653,11 @@
     min-height: 32px;
     padding-inline: 10px;
   }
-  .discern-catalogue-guidance {
+  .discern-catalogue-guidance > div {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
     gap: 18px;
     padding: 14px 18px;
-    border-block-start: 1px solid var(--discern-color-border);
     background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-xs);
@@ -830,26 +834,6 @@
     }
     .discern-catalogue-main {
       margin-inline-start: 0;
-    }
-    .discern-catalogue-purpose-picker {
-      display: grid;
-      gap: 6px;
-      margin-block: -18px 22px;
-      color: var(--discern-color-ink-muted);
-      font: var(--discern-font-size-xs) var(--discern-font-ui);
-    }
-    .discern-catalogue-purpose-picker select {
-      min-height: 38px;
-      padding-inline: 10px;
-      border: 1px solid var(--discern-color-border-strong);
-      border-radius: var(--discern-radius-sm);
-      background: var(--discern-color-surface);
-      color: var(--discern-color-ink);
-      font: inherit;
-    }
-    .discern-catalogue-purpose-picker select:focus-visible {
-      outline: 2px solid var(--discern-color-accent-500);
-      outline-offset: 2px;
     }
   }
   @media (max-width: 1100px) {

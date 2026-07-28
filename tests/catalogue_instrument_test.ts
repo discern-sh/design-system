@@ -305,3 +305,80 @@ Deno.test("Catalogue version and composition source share their authorities", as
     compositionRecipes.length,
   );
 });
+
+Deno.test("Catalogue navigation stays stable while purpose filters the component view", async () => {
+  const source = await Deno.readTextFile(
+    join(PACKAGE_ROOT, "styleguide", "app.tsx"),
+  );
+  const navStart = source.indexOf(
+    '<nav className="discern-catalogue-nav" aria-label="Styleguide">',
+  );
+  const navEnd = source.indexOf("</nav>", navStart);
+  assert(navStart >= 0 && navEnd > navStart, "missing Catalogue navigation");
+  const navigation = source.slice(navStart, navEnd);
+
+  assert(!navigation.includes("Purpose collections"));
+  assert(!navigation.includes("discern-catalogue-nav__collection"));
+  assert(!navigation.includes("<button"));
+  assertStringIncludes(navigation, "sidebarGroupedComponents.map");
+  assertStringIncludes(source, "<span>Filter components by purpose</span>");
+
+  const css = await Deno.readTextFile(
+    join(PACKAGE_ROOT, "styleguide", "styleguide.css"),
+  );
+  const pickerRule = /\.discern-catalogue-purpose-picker\s*\{(?<body>[^}]*)\}/
+    .exec(css);
+  const pickerBody = pickerRule?.groups?.body;
+  assert(pickerBody !== undefined, "missing purpose picker rule");
+  assertStringIncludes(pickerBody, "display: grid;");
+  assert(!pickerBody.includes("display: none;"));
+});
+
+Deno.test("Catalogue component panels share a closed canonical order", async () => {
+  const source = await Deno.readTextFile(
+    join(PACKAGE_ROOT, "styleguide", "app.tsx"),
+  );
+  const previewStart = source.indexOf("function ComponentPreview");
+  const previewEnd = source.indexOf("function JourneyPreview", previewStart);
+  assert(
+    previewStart >= 0 && previewEnd > previewStart,
+    "missing shared ComponentPreview renderer",
+  );
+  const preview = source.slice(previewStart, previewEnd);
+  const summaries = [...preview.matchAll(/<summary>([^<]+)<\/summary>/g)].map(
+    (match) => match[1],
+  );
+
+  assertEquals(summaries, [
+    "Best practices",
+    "Selection and React import",
+    "Props and variants",
+  ]);
+  assertEquals([...preview.matchAll(/<details\b/g)].length, summaries.length);
+  assert(!/<details\b[^>]*\bopen(?:\s|=|>)/.test(preview));
+  assert(!preview.includes("<footer"));
+});
+
+Deno.test("Command text carries the stronger readable type treatment", async () => {
+  const source = await Deno.readTextFile(
+    join(
+      PACKAGE_ROOT,
+      "src",
+      "components",
+      "workflow",
+      "command",
+      "command.css",
+    ),
+  );
+  const rule = /\.discern-command__text\s*\{(?<body>[^}]*)\}/.exec(source);
+  const body = rule?.groups?.body;
+  assert(body !== undefined, "missing .discern-command__text rule");
+  assertStringIncludes(
+    body,
+    "font-size: var(--discern-font-size-sm);",
+  );
+  assertStringIncludes(
+    body,
+    "font-weight: var(--discern-font-weight-strong);",
+  );
+});
