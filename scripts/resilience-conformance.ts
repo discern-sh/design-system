@@ -6,6 +6,7 @@ import {
   auditFontMetricOverrides,
   bundledFontMetricSources,
 } from "./font-metric-overrides.ts";
+import { availableFontMetricCases } from "./font-availability.ts";
 import { fontMetricCssomSnapshot } from "./font-metric-cssom.ts";
 import { requireViewport, withViewport } from "./viewport.ts";
 
@@ -1297,7 +1298,11 @@ async function verifyThemeSystem(
       );
     }
 
-    const fontGeometry = await page.evaluate(async (metricCases) => {
+    const fontCases = await availableFontMetricCases(
+      page,
+      fontMetricAudit.browserCases,
+    );
+    const fontGeometry = await page.evaluate(({ metrics, skipped }) => {
       const consumer = document.querySelector<HTMLElement>(
         "[data-discern-theme-consumer]",
       );
@@ -1360,7 +1365,7 @@ async function verifyThemeSystem(
         "Deterministic interfaces guide reliable work",
       ];
       const cases = [
-        ...metricCases.map((candidate) => ({
+        ...metrics.map((candidate) => ({
           ...candidate,
           metricAdjusted: true,
         })),
@@ -1377,17 +1382,8 @@ async function verifyThemeSystem(
       const coveredAliases: string[] = [];
       let maxWidthDeltaPercent = 0;
       let maxLineBoxDeltaPixels = 0;
-      const skippedAliases: string[] = [];
+      const skippedAliases = [...skipped];
       for (const candidate of cases) {
-        const loaded = await document.fonts.load(
-          `${candidate.style} ${
-            candidate.weights[0]
-          } 64px ${candidate.fallback}`,
-        );
-        if (candidate.metricAdjusted && loaded.length === 0) {
-          skippedAliases.push(candidate.name);
-          continue;
-        }
         if (candidate.metricAdjusted) {
           coveredAliases.push(candidate.name);
         }
@@ -1455,7 +1451,10 @@ async function verifyThemeSystem(
         skippedAliases,
         failures: currentFailures,
       };
-    }, fontMetricAudit.browserCases);
+    }, {
+      metrics: fontCases.available,
+      skipped: fontCases.skipped,
+    });
     failures.push(
       ...fontGeometry.failures.map((failure) => `Font geometry: ${failure}`),
     );
