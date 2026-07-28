@@ -1,5 +1,6 @@
 import type { BuildSummary } from "../src/runtime.ts";
 import type { ComponentMeta } from "../src/types/component-meta.ts";
+import { stripVTControlCharacters } from "node:util";
 import type {
   CatalogueProp,
   CataloguePropDocumentation,
@@ -299,13 +300,14 @@ function extractVariants(symbols: readonly unknown[]): CatalogueVariant[] {
   return variants;
 }
 
-function assertKnownDocWarnings(stderr: string): void {
-  if (!stderr) return;
+export function assertKnownDocWarnings(stderr: string): void {
+  const normalized = stripVTControlCharacters(stderr);
+  if (!normalized) return;
   const known =
     "Warning Failed resolving types. Could not find package 'global.d.ts'";
   if (
-    !stderr.startsWith(known) ||
-    stderr.slice(known.length).includes("\nWarning")
+    !normalized.startsWith(known) ||
+    normalized.slice(known.length).includes("\nWarning")
   ) {
     throw new Error(`deno doc emitted an unexpected warning:\n${stderr}`);
   }
