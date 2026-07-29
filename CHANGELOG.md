@@ -6,7 +6,7 @@ Each release is cut from a green run of the full release gate — formatting, li
 
 ## 0.10.0
 
-- Add a quiet Theme toggle treatment for text-led navigation, align plain Brand, Site header, and Site footer marks to one smaller optical scale, remove the browser body gutter from full-page roots, and move Logo cloud marks to the lighter accent text role.
+- Add a quiet Theme toggle treatment for text-led navigation, align plain Brand, Site header, and Site footer marks to one smaller optical scale, style linked footer metadata, remove the browser body gutter from full-page roots, and move Logo cloud marks to the lighter accent text role.
 - Add nested Table of contents entries. Nested entries are indented, omit a section number, and do not advance the numbering of later sections.
 - Add a neutral `required` Prerequisite list state for static documentation while retaining `satisfied` and `unresolved` for live state. Procedure now preserves trailing space before the document continues.
 

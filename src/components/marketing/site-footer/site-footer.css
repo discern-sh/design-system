@@ -131,6 +131,16 @@
     font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
   }
+  .discern-site-footer__base a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .discern-site-footer__base a:hover,
+  .discern-site-footer__base a:focus-visible {
+    color: var(--discern-color-accent-700);
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+  }
   @media (max-width: 720px) {
     .discern-site-footer__inner {
       grid-template-columns: 1fr;

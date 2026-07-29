@@ -1659,6 +1659,13 @@ Deno.test("brand-bearing page chrome keeps plain, tiled, mono, and adaptive mark
       /__mark--plain\s*\{[^}]*block-size:\s*1em;[^}]*font-size:\s*1\.15em;/s,
       `${relative(PACKAGE_ROOT, stylesheet)} has a divergent plain-mark scale`,
     );
+    if (stylesheet.endsWith("site-footer.css")) {
+      assertMatch(
+        css,
+        /__base a\s*\{[^}]*color:\s*inherit;[^}]*text-decoration:\s*none;/s,
+        "Site footer metadata links need component-owned styling",
+      );
+    }
   }
 });
 
