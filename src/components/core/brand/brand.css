@@ -21,7 +21,6 @@
     flex: none;
   }
   .discern-brand__mark.discern-logo--plain {
-    block-size: 1em;
     font-size: 1.15em;
   }
   .discern-brand__copy {

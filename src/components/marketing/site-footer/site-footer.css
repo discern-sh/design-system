@@ -61,7 +61,6 @@
     color: var(--discern-color-accent-800);
   }
   .discern-site-footer__mark--plain {
-    block-size: 1em;
     font-size: 1.15em;
   }
   .discern-site-footer__mark--square {
@@ -133,13 +132,6 @@
   }
   .discern-site-footer__base a {
     color: inherit;
-    text-decoration: none;
-  }
-  .discern-site-footer__base a:hover,
-  .discern-site-footer__base a:focus-visible {
-    color: var(--discern-color-accent-700);
-    text-decoration: underline;
-    text-underline-offset: 0.25em;
   }
   @media (max-width: 720px) {
     .discern-site-footer__inner {

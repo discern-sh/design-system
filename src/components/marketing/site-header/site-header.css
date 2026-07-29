@@ -81,7 +81,6 @@
     color: var(--discern-color-accent-800);
   }
   .discern-site-header__mark--plain {
-    block-size: 1em;
     font-size: 1.15em;
   }
   .discern-site-header__mark--square {

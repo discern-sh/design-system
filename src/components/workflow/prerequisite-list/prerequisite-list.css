@@ -47,13 +47,6 @@
   .discern-prerequisite-list__item[data-discern-state="satisfied"] .discern-prerequisite-list__marker {
     color: var(--discern-color-success-deep);
   }
-  .discern-prerequisite-list__item[data-discern-state="required"] .discern-prerequisite-list__marker,
-  .discern-prerequisite-list__item[data-discern-state="required"] .discern-prerequisite-list__state {
-    color: var(--discern-color-accent-700);
-  }
-  .discern-prerequisite-list__item[data-discern-state="unresolved"] .discern-prerequisite-list__marker {
-    color: var(--discern-color-warning-deep);
-  }
   .discern-prerequisite-list__body {
     display: grid;
     gap: var(--discern-space-1);
@@ -76,7 +69,7 @@
   .discern-prerequisite-list__state {
     font-weight: var(--discern-font-weight-strong);
   }
-  .discern-prerequisite-list__item[data-discern-state="unresolved"] .discern-prerequisite-list__state {
+  [data-discern-state="unresolved"] > :where(.discern-prerequisite-list__marker, .discern-prerequisite-list__state) {
     color: var(--discern-color-warning-deep);
   }
   @media (max-width: 620px) {

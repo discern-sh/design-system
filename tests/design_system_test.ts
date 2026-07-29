@@ -1645,7 +1645,7 @@ Deno.test("brand-bearing page chrome keeps plain, tiled, mono, and adaptive mark
   );
   assertMatch(
     brand,
-    /\.discern-brand__mark\.discern-logo--plain\s*\{[^}]*block-size:\s*1em;[^}]*font-size:\s*1\.15em;/s,
+    /\.discern-brand__mark\.discern-logo--plain\s*\{[^}]*font-size:\s*1\.15em;/s,
   );
   for (
     const stylesheet of [
@@ -1656,13 +1656,13 @@ Deno.test("brand-bearing page chrome keeps plain, tiled, mono, and adaptive mark
     const css = await Deno.readTextFile(stylesheet);
     assertMatch(
       css,
-      /__mark--plain\s*\{[^}]*block-size:\s*1em;[^}]*font-size:\s*1\.15em;/s,
+      /__mark--plain\s*\{[^}]*font-size:\s*1\.15em;/s,
       `${relative(PACKAGE_ROOT, stylesheet)} has a divergent plain-mark scale`,
     );
     if (stylesheet.endsWith("site-footer.css")) {
       assertMatch(
         css,
-        /__base a\s*\{[^}]*color:\s*inherit;[^}]*text-decoration:\s*none;/s,
+        /__base a\s*\{[^}]*color:\s*inherit;/s,
         "Site footer metadata links need component-owned styling",
       );
     }

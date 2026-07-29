@@ -51,10 +51,7 @@
   :where([data-discern-root]) a {
     color: var(--discern-color-accent-600);
   }
-  :where([data-discern-root]) button,
-  :where([data-discern-root]) input,
-  :where([data-discern-root]) select,
-  :where([data-discern-root]) textarea {
+  :where([data-discern-root]) :where(button, input, select, textarea) {
     font: inherit;
   }
 }
