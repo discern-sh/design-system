@@ -4,15 +4,27 @@ import { ThemeToggle } from "./theme-toggle.tsx";
 import type { ThemeToggleTheme } from "./theme-toggle.tsx";
 
 export const conformance = [{
-  name: "the toggle's accessible name always states the destination theme",
+  name: "every toggle variant names the destination theme",
   steps: [
     {
       action: "click",
-      target: { role: "button", name: "Switch to the dark theme" },
+      target: {
+        selector: ".discern-theme-toggle:not(.discern-theme-toggle--quiet)",
+      },
     },
     {
-      expect: "visible",
-      target: { role: "button", name: "Switch to the light theme" },
+      expect: "attribute",
+      target: {
+        selector: ".discern-theme-toggle:not(.discern-theme-toggle--quiet)",
+      },
+      attribute: "aria-label",
+      value: "Switch to the light theme",
+    },
+    {
+      expect: "attribute",
+      target: { selector: ".discern-theme-toggle--quiet" },
+      attribute: "aria-label",
+      value: "Switch to the light theme",
     },
   ],
 }] satisfies readonly ConformanceScenario[];
