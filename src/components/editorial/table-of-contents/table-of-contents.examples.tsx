@@ -5,7 +5,11 @@ export default function TableOfContentsExamples() {
     <TableOfContents
       items={[
         { label: "The starting condition", href: "#starting", current: true },
-        { label: "A useful constraint", href: "#constraint" },
+        {
+          label: "A useful constraint",
+          href: "#constraint",
+          nested: true,
+        },
         { label: "What changed", href: "#changed" },
         { label: "Notes and sources", href: "#notes" },
       ]}

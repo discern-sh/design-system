@@ -49,6 +49,12 @@
     font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
   }
+  .discern-table-of-contents__item--nested a {
+    grid-template-columns: minmax(0, 1fr);
+    padding-inline-start: calc(
+      var(--discern-space-3) + 1.65rem + var(--discern-space-2)
+    );
+  }
   .discern-table-of-contents__progress {
     margin-block-start: var(--discern-space-5);
     padding-block-start: var(--discern-space-4);

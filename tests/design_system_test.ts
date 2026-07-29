@@ -36,6 +36,7 @@ import {
   RawOutput,
   RetryNotice,
   SiteHeader,
+  TableOfContents,
   ThemeSwitcher,
   ThemeToggle,
   Tooltip,
@@ -2078,6 +2079,25 @@ Deno.test("procedure grammar preserves sequence and state in plain HTML", () => 
   );
   assertStringIncludes(accessibleText(danger), "Danger");
   assertStringIncludes(danger, 'role="alert"');
+});
+
+Deno.test("table-of-contents numbering excludes nested entries", () => {
+  const html = renderToStaticMarkup(
+    createElement(TableOfContents, {
+      items: [
+        { label: "First section", href: "#first" },
+        { label: "Nested detail", href: "#detail", nested: true },
+        { label: "Second section", href: "#second" },
+      ],
+    }),
+  );
+  assertStringIncludes(html, "<span>01</span>First section");
+  assertMatch(
+    html,
+    /class="discern-table-of-contents__item--nested"><a href="#detail">Nested detail<\/a>/,
+  );
+  assertStringIncludes(html, "<span>02</span>Second section");
+  assert(!html.includes("<span>03</span>"));
 });
 
 Deno.test("every stateful marker joins the accessible text in its example", async () => {
