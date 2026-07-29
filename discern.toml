@@ -1,4 +1,4 @@
-# discern | https://discern.sh | project configuration file
+# discern | generated from the bundled project configuration template | hand edits to this discern-owned content are overwritten | https://discern.sh
 #
 # discern is a stack-neutral system for coding agents and their humans.
 # Use discern.toml to teach discern about your project, preferences, and tooling.
@@ -51,6 +51,12 @@ trunk = "main"
 
 # Branch prefix for worktrees created by discern, e.g. "agent/my-feature".
 branch_prefix = "agent/"
+
+# Landed receipts are recorded as local Git notes by default. Set this to
+# "fetch" so ordinary fetches can carry them, even before a remote publishes its
+# first receipt note. Publishing remains an explicit
+# `git push <remote> refs/notes/discern`.
+receipt_notes = "local"
 
 # Idempotent commands that make ANY checkout usable for its current tracked tree
 # — typically dependency installation from a lockfile. They run in order on each
@@ -189,7 +195,15 @@ stage = "fix"
 # guidance outputs are refreshed by the gate itself; editing the source changes
 # no behaviour.) Root-level *.md is always treated as neutral.
 [scopes.docs]
-paths = ["${map.dir}", "discern/", ".claude/", ".agents/"]
+paths = [
+  "discern/guidance.md",
+  "${map.dir}",
+  "discern/skills/",
+  "discern/TODO.md",
+  "discern/brief.md",
+  ".claude/skills/",
+  ".agents/skills/",
+]
 neutral = true
 
 # The subset of changes a person could see — worth a preview link. Backs the
@@ -211,6 +225,18 @@ previewable = true
 # [scopes.native]
 # paths = ["native/**"]
 # gate  = "make -C native check"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# [acceptance] — standing grants for landing. Each entry names a scope whose
+# changes may land without a per-landing conversation. The owner records this
+# decision on the trunk. Scope definitions become consent-bearing: widening a
+# named scope widens its grant. An empty list changes nothing; landing asks for
+# the owner's acceptance as it does today. The example grants pure documentation
+# only; agent-instruction surfaces stay owner-reviewed.
+# ─────────────────────────────────────────────────────────────────────────────
+
+[acceptance]
+pre_authorized = [] # e.g. ["docs"]
 
 # ─────────────────────────────────────────────────────────────────────────────
 # [worktree] — the isolated-worktree workflow. The git mechanics are generic;
@@ -332,7 +358,8 @@ ensure = [] # converge, e.g. ["<install deps>"]
 #
 # Each [standards.<name>] table declares one:
 #   metric     the metric name the run emits        (default: the standard name)
-#   direction  "up"   value should rise; limit is a FLOOR   (e.g. coverage)
+#   direction  required:
+#              "up"   value should rise; limit is a FLOOR   (e.g. coverage)
 #              "down" value should fall; limit is a CEILING (e.g. a size budget)
 #   limit      the floor/ceiling — compared vs main, so a floor may only rise and
 #              a ceiling may only fall (you can't loosen the gate on a branch)
@@ -540,6 +567,19 @@ fail_fast = true
 # its own `timeout` on its config entry instead of a slower global.
 timeout = 600
 
+# Cap on how many test-stage runs may be in flight AT ONCE across every checkout
+# of this repository — the main checkout and all its linked worktrees. It counts
+# whole runs (`discern done`'s and `discern test`'s test group, and `discern
+# standards`' measurement pass); each run's own test-runner worker parallelism
+# is untouched. Parallel agents each running a machine-saturating suite slow
+# each other down more than a queue would; with a cap, a run arriving past it
+# waits for a slot before its tests start (fix and check stages never wait —
+# a broken check still fails fast), says what it is waiting for, and continues
+# the moment a slot frees. A killed run's slot is released by the operating
+# system, so a crash never blocks the others. 0 (the default) means no cap;
+# 1 runs every suite at full speed, one after another.
+concurrent_test_runs = 0
+
 # ─────────────────────────────────────────────────────────────────────────────
 # [coupling] — co-change detection: a read-only advisory that mines git history
 # for files that change TOGETHER, so a touched file's habitual sibling isn't
@@ -556,7 +596,7 @@ timeout = 600
 # loop `discern prepare` (as hints, at the tail — it never affects pass/fail), so
 # the nudge meets a change while it is hot. Off by default; opt in to get the
 # nudge in the gate as well as on demand.
-in_gate = false
+in_gate = true
 
 # ─────────────────────────────────────────────────────────────────────────────
 # [scripts] — your own executable project scripts. Drop any executable into the
@@ -587,4 +627,4 @@ setup_model = "claude-fable-5"
 setup_version = "1.0.0"
 # The install schema version — managed by discern (bumped by `discern upgrade`).
 # Don't edit this by hand.
-schema_version = 22
+schema_version = 24
