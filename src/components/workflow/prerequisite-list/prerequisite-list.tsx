@@ -3,8 +3,8 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
-/** Verification state for one {@linkcode PrerequisiteItem}. */
-export type PrerequisiteState = "satisfied" | "unresolved";
+/** Presentation state for one {@linkcode PrerequisiteItem}. */
+export type PrerequisiteState = "required" | "satisfied" | "unresolved";
 
 /** One requirement rendered by {@linkcode PrerequisiteList}. */
 export interface PrerequisiteItem {
@@ -21,16 +21,18 @@ export interface PrerequisiteListProps
 }
 
 const stateLabels: Readonly<Record<PrerequisiteState, string>> = {
+  required: "Required",
   satisfied: "Satisfied",
   unresolved: "Unresolved",
 };
 
 const stateMarkers: Readonly<Record<PrerequisiteState, string>> = {
+  required: "•",
   satisfied: "✓",
   unresolved: "!",
 };
 
-/** Requirements checked before a procedure begins, with every state carried in visible text and shape. */
+/** Requirements named before a procedure begins, with every state carried in visible text and shape. */
 export const PrerequisiteList: DiscernComponent<
   HTMLDivElement,
   PrerequisiteListProps

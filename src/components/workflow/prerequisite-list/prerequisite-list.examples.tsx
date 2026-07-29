@@ -6,6 +6,11 @@ export default function PrerequisiteListExamples() {
       <PrerequisiteList
         items={[
           {
+            requirement: "The destination path is known.",
+            state: "required",
+            detail: "Confirm the path before starting the restore.",
+          },
+          {
             requirement: "A current backup exists outside the source.",
             state: "satisfied",
             detail: "Verified by listing its contents.",

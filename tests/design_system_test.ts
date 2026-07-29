@@ -1990,6 +1990,9 @@ Deno.test("procedure grammar preserves sequence and state in plain HTML", () => 
       title: "Restore a directory",
       prerequisites: {
         items: [{
+          requirement: "The destination is known.",
+          state: "required",
+        }, {
           requirement: "The backup is readable.",
           state: "satisfied",
         }, {
@@ -2046,6 +2049,7 @@ Deno.test("procedure grammar preserves sequence and state in plain HTML", () => 
     /<ul class="discern-branch-choice__choices"><li class="discern-branch-choice__choice">.*<ul class="discern-branch-choice__paths"><li class="discern-branch-choice__path"><a href="#restore">/s,
   );
   const spoken = accessibleText(html);
+  assertStringIncludes(spoken, "Required");
   assertStringIncludes(spoken, "Satisfied");
   assertStringIncludes(spoken, "Unresolved");
   assertStringIncludes(spoken, "Safe to retry");
@@ -2079,6 +2083,16 @@ Deno.test("procedure grammar preserves sequence and state in plain HTML", () => 
   );
   assertStringIncludes(accessibleText(danger), "Danger");
   assertStringIncludes(danger, 'role="alert"');
+});
+
+Deno.test("procedure blocks preserve trailing document rhythm", async () => {
+  const css = await Deno.readTextFile(
+    join(COMPONENT_ROOT, "workflow", "procedure", "procedure.css"),
+  );
+  assertMatch(
+    css,
+    /\.discern-procedure\s*\{[^}]*margin-block-end:\s*var\(--discern-space-8\);/s,
+  );
 });
 
 Deno.test("table-of-contents numbering excludes nested entries", () => {

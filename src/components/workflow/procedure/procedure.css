@@ -3,6 +3,7 @@
     display: grid;
     gap: var(--discern-space-6);
     min-inline-size: 0;
+    margin-block-end: var(--discern-space-8);
     color: var(--discern-color-ink);
   }
   .discern-procedure__header {
