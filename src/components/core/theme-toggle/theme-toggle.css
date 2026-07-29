@@ -12,9 +12,18 @@
     color: var(--discern-color-ink-muted);
     cursor: pointer;
   }
+  .discern-theme-toggle--quiet {
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    border-color: transparent;
+    background: transparent;
+  }
   .discern-theme-toggle:hover {
     border-color: var(--discern-color-accent-500);
     color: var(--discern-color-ink);
+  }
+  .discern-theme-toggle--quiet:hover {
+    border-color: transparent;
   }
   .discern-theme-toggle:focus-visible {
     outline: 2px solid var(--discern-color-accent-500);

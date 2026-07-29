@@ -22,6 +22,11 @@ export default function ThemeToggleExamples() {
   return (
     <div className="discern-example-row">
       <ThemeToggle theme={theme} onThemeChange={setTheme} />
+      <ThemeToggle
+        theme={theme}
+        variant="quiet"
+        onThemeChange={setTheme}
+      />
       <span>Lorem ipsum: the {theme} theme is selected.</span>
     </div>
   );

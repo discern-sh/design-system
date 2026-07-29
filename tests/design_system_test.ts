@@ -37,6 +37,7 @@ import {
   RetryNotice,
   SiteHeader,
   ThemeSwitcher,
+  ThemeToggle,
   Tooltip,
 } from "../src/react.ts";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
@@ -1559,6 +1560,16 @@ Deno.test("branding and hover-card adapters preserve their semantic relationship
   assertStringIncludes(header, "discern-site-header__mark--plain");
   assertStringIncludes(header, "discern-site-header__mark--natural");
 
+  const quietToggle = renderToStaticMarkup(
+    createElement(ThemeToggle, {
+      theme: "light",
+      variant: "quiet",
+      onThemeChange: () => undefined,
+    }),
+  );
+  assertStringIncludes(quietToggle, "discern-theme-toggle--quiet");
+  assertStringIncludes(quietToggle, 'aria-label="Switch to the dark theme"');
+
   const hoverCard = renderToStaticMarkup(
     createElement(HoverCard, {
       layout: "block",
@@ -1627,6 +1638,54 @@ Deno.test("brand-bearing page chrome keeps plain, tiled, mono, and adaptive mark
     join(PACKAGE_ROOT, "src", "styles", "utilities.css"),
   );
   assertStringIncludes(utilities, ".discern-dotted-underline");
+
+  const brand = await Deno.readTextFile(
+    join(COMPONENT_ROOT, "core", "brand", "brand.css"),
+  );
+  assertMatch(
+    brand,
+    /\.discern-brand__mark\.discern-logo--plain\s*\{[^}]*block-size:\s*1em;[^}]*font-size:\s*1\.15em;/s,
+  );
+  for (
+    const stylesheet of [
+      join(COMPONENT_ROOT, "marketing", "site-header", "site-header.css"),
+      join(COMPONENT_ROOT, "marketing", "site-footer", "site-footer.css"),
+    ]
+  ) {
+    const css = await Deno.readTextFile(stylesheet);
+    assertMatch(
+      css,
+      /__mark--plain\s*\{[^}]*block-size:\s*1em;[^}]*font-size:\s*1\.15em;/s,
+      `${relative(PACKAGE_ROOT, stylesheet)} has a divergent plain-mark scale`,
+    );
+  }
+});
+
+Deno.test("full-page roots remove the browser body gutter", async () => {
+  const foundation = await Deno.readTextFile(
+    join(PACKAGE_ROOT, "src", "styles", "foundation.css"),
+  );
+  assertMatch(
+    foundation,
+    /:where\(html\[data-discern-root\] body\)\s*\{\s*margin:\s*0;/,
+  );
+});
+
+Deno.test("quiet header actions and logo marks keep their shared visual roles", async () => {
+  const toggle = await Deno.readTextFile(
+    join(COMPONENT_ROOT, "core", "theme-toggle", "theme-toggle.css"),
+  );
+  assertMatch(
+    toggle,
+    /\.discern-theme-toggle--quiet\s*\{[^}]*inline-size:\s*1\.75rem;[^}]*block-size:\s*1\.75rem;[^}]*border-color:\s*transparent;[^}]*background:\s*transparent;/s,
+  );
+  const cloud = await Deno.readTextFile(
+    join(COMPONENT_ROOT, "marketing", "logo-cloud", "logo-cloud.css"),
+  );
+  assertMatch(
+    cloud,
+    /\.discern-logo-cloud__mark\s*\{[^}]*color:\s*var\(--discern-color-accent-700\);/s,
+  );
 });
 
 Deno.test("every custom property the emitted css references is defined by the emission", async () => {

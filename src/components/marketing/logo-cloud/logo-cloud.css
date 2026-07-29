@@ -45,7 +45,7 @@
     place-items: center;
     inline-size: 1.5rem;
     block-size: 1.5rem;
-    color: var(--discern-color-accent-600);
+    color: var(--discern-color-accent-700);
   }
   @media (max-width: 680px) {
     .discern-logo-cloud__list {

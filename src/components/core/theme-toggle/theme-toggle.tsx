@@ -6,6 +6,9 @@ import { classNames } from "../../class-names.ts";
 /** The two site theme roles the toggle switches between. */
 export type ThemeToggleTheme = "light" | "dark";
 
+/** Visual treatment for the {@linkcode ThemeToggle} component. */
+export type ThemeToggleVariant = "outlined" | "quiet";
+
 /** Props for the {@linkcode ThemeToggle} component. */
 export interface ThemeToggleProps extends
   Omit<
@@ -18,6 +21,7 @@ export interface ThemeToggleProps extends
   readonly darkGlyph?: ReactNode;
   readonly toLightLabel?: string;
   readonly toDarkLabel?: string;
+  readonly variant?: ThemeToggleVariant;
 }
 
 /** Controlled light/dark theme switch: the consumer owns the theme state and applies it to its root. */
@@ -32,6 +36,7 @@ export const ThemeToggle: DiscernComponent<
     darkGlyph = "☾",
     toLightLabel = "Switch to the light theme",
     toDarkLabel = "Switch to the dark theme",
+    variant = "outlined",
     className,
     ...props
   },
@@ -42,7 +47,11 @@ export const ThemeToggle: DiscernComponent<
     <button
       ref={ref}
       type="button"
-      className={classNames("discern-theme-toggle", className)}
+      className={classNames(
+        "discern-theme-toggle",
+        "discern-theme-toggle--" + variant,
+        className,
+      )}
       aria-label={dark ? toLightLabel : toDarkLabel}
       onClick={() => onThemeChange(dark ? "light" : "dark")}
       {...props}

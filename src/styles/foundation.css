@@ -14,6 +14,10 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  :where(html[data-discern-root] body) {
+    margin: 0;
+  }
+
   :where([data-discern-root]) ::selection {
     background: var(--discern-color-accent-200);
     color: var(--discern-color-ink);
