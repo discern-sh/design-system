@@ -4,6 +4,12 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## 0.10.0
+
+- Add a quiet Theme toggle treatment for text-led navigation, align plain Brand, Site header, and Site footer marks to one smaller optical scale, remove the browser body gutter from full-page roots, and move Logo cloud marks to the lighter accent text role.
+- Add nested Table of contents entries. Nested entries are indented, omit a section number, and do not advance the numbering of later sections.
+- Add a neutral `required` Prerequisite list state for static documentation while retaining `satisfied` and `unresolved` for live state. Procedure now preserves trailing space before the document continues.
+
 ## 0.9.0
 
 - Hold representative runtime CSS, browser behavior, font, and grain transfer costs under measured ceilings. The optional font provider now puts metric-adjusted Iowan, Georgia, Helvetica Neue, and Arial aliases behind the intended webfonts, reducing layout movement while each WOFF2 loads. A source audit pins their effective ascent, descent, and line gap to the bundled Crimson Pro 90/21/0% and Inter 97/24/0% metrics. Parsed family identities decode escapes and compare case-insensitively. Quoted names preserve their whitespace; unquoted names collapse CSS whitespace and comments. Chromium CSSOM supplies the live face population. Root faces and descendants of media, supports, container, layer, and scope grouping rules enroll; qualified and unsupported contexts fail. A decoded authored-rule count must equal the CSSOM population. Decoded `@import` rules outside comments and strings fail, keeping the optional asset self-contained and every live face inside the audit. Target URLs carry one WOFF2 format hint in source order, and each function name touches its opening parenthesis. Complete family, style, weight, and source descriptors must then match the live target faces and the SHA-256 authority in both directions. Malformed descriptor tails fail explicitly, while duplicate audited descriptors remain failures even though CSS gives the last value effect. Browser cases derive from the audited alias faces, report every covered or skipped local alias, and measure real normal line boxes. Theme switching retains one control geometry across System, Light, and Dark.
