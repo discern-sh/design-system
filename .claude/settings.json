@@ -17,28 +17,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "discern worktree create"
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
             "command": "discern worktree hook create"
           }
         ]
       }
     ],
     "WorktreeRemove": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "discern worktree remove"
-          }
-        ]
-      },
       {
         "hooks": [
           {
