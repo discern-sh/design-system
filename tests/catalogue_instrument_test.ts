@@ -24,7 +24,9 @@ type PropDocumentation =
   | {
     readonly status: "available";
     readonly props: readonly {
+      readonly name: string;
       readonly type: string;
+      readonly required: boolean;
     }[];
   }
   | {
@@ -209,8 +211,8 @@ Deno.test("Catalogue prop evidence is source-derived and complete", async () => 
   const unavailable = registry.filter(({ propDocumentation }) =>
     propDocumentation.status === "unavailable"
   );
-  assertEquals(available.length, 106);
-  assertEquals(unavailable.length, 3);
+  assertEquals(available.length, 109);
+  assertEquals(unavailable.length, 0);
   for (const { meta, propDocumentation } of available) {
     if (propDocumentation.status !== "available") {
       throw new TypeError(`${meta.slug} unexpectedly lacks prop evidence`);
@@ -222,19 +224,20 @@ Deno.test("Catalogue prop evidence is source-derived and complete", async () => 
       );
     }
   }
-  assertEquals(
-    unavailable.map(({ meta }) => meta.slug).toSorted(),
-    ["agent-mention", "button", "mention"],
-  );
-  for (const { meta, propDocumentation } of unavailable) {
-    if (propDocumentation.status !== "unavailable") {
-      throw new TypeError(`${meta.slug} unexpectedly has prop evidence`);
+  // Union Props components (the linked/static branch pattern) document
+  // their merged shared surface instead of an omission reason.
+  for (const slug of ["agent-mention", "button", "mention"]) {
+    const documentation = entry(registry, slug).propDocumentation;
+    if (documentation.status !== "available") {
+      throw new TypeError(`${slug} lost its merged union prop evidence`);
     }
+    const names = documentation.props.map(({ name }) => name);
     assert(
-      propDocumentation.reason.trim().length > 0,
-      `${meta.slug} needs an omission reason`,
+      names.includes("href"),
+      `${slug} should document the linked branch's href as optional`,
     );
-    assertStringIncludes(propDocumentation.reason, "source union");
+    const href = documentation.props.find(({ name }) => name === "href");
+    assert(href !== undefined && !href.required && href.type === "string");
   }
 
   const appSource = await Deno.readTextFile(
