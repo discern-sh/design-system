@@ -2,6 +2,7 @@ import type { BuildSummary } from "../src/runtime.ts";
 import type { ComponentMeta } from "../src/types/component-meta.ts";
 import { stripVTControlCharacters } from "node:util";
 import type {
+  CatalogueObjectType,
   CatalogueProp,
   CataloguePropDocumentation,
   CatalogueVariant,
@@ -34,7 +35,13 @@ interface ComponentSource extends ComponentPaths {
   readonly reactExport: string;
   readonly propDocumentation: CataloguePropDocumentation;
   readonly variants: readonly CatalogueVariant[];
-  readonly objectTypes: readonly string[];
+  readonly objectTypes: readonly CatalogueObjectType[];
+}
+
+/** Types declared by shared modules that sit outside any one component. */
+interface SharedTypeFacts {
+  readonly variants: readonly CatalogueVariant[];
+  readonly objectTypes: readonly CatalogueObjectType[];
 }
 
 const textDecoder = new TextDecoder();
@@ -190,12 +197,192 @@ function symbolDeclaration(
     : asRecord(declaration, `deno doc declaration ${name}`);
 }
 
+/**
+ * The module's exported symbols. The doc pass runs with `--private` so
+ * union Props branches can resolve their unexported common interfaces, but
+ * only exported names may become public variants or object types.
+ */
+function exportedSymbolNames(symbols: readonly unknown[]): readonly string[] {
+  return symbols.flatMap((value) => {
+    const symbol = asRecord(value, "deno doc symbol");
+    const name = requiredString(symbol.name, "deno doc symbol.name");
+    const declaration = symbolDeclaration(symbols, name);
+    return declaration?.declarationKind === "export" ? [name] : [];
+  });
+}
+
 function propDescription(
   property: Record<string, unknown>,
 ): string | undefined {
   if (property.jsDoc === undefined) return undefined;
   const doc = asRecord(property.jsDoc, "prop jsDoc").doc;
   return typeof doc === "string" && doc.trim() ? doc.trim() : undefined;
+}
+
+function propsFromProperties(
+  values: readonly unknown[],
+  context: string,
+): CatalogueProp[] {
+  return values.map((value, index) => {
+    const property = asRecord(value, `${context}.properties[${index}]`);
+    const description = propDescription(property);
+    return {
+      name: requiredString(
+        property.name,
+        `${context}.properties[${index}].name`,
+      ),
+      type: renderDocType(
+        property.tsType,
+        `${context}.properties[${index}].type`,
+      ),
+      required: property.optional !== true,
+      ...(description === undefined ? {} : { description }),
+    };
+  });
+}
+
+function interfaceProps(
+  definition: Record<string, unknown>,
+  context: string,
+): CatalogueProp[] {
+  return propsFromProperties(
+    definition.properties === undefined
+      ? []
+      : asArray(definition.properties, `${context}.properties`),
+    context,
+  );
+}
+
+/**
+ * The literal members of one union branch: a type alias intersecting a
+ * common interface with an own-member type literal, plus opaque references
+ * (the inherited HTML attribute surface) collected as inherited names.
+ * Later intersection members override earlier ones by name.
+ */
+function branchProps(
+  symbols: readonly unknown[],
+  branchName: string,
+  inherited: string[],
+): readonly CatalogueProp[] | undefined {
+  const declaration = symbolDeclaration(symbols, branchName);
+  if (declaration?.kind !== "typeAlias") return undefined;
+  const definition = asRecord(
+    declaration.def,
+    `deno doc declaration ${branchName}.def`,
+  );
+  const branchType = unparenthesized(definition.tsType);
+  const parts = branchType.kind === "intersection"
+    ? asArray(branchType.value, `${branchName}.members`)
+    : [definition.tsType];
+  const byName = new Map<string, CatalogueProp>();
+  for (const [index, partValue] of parts.entries()) {
+    const part = unparenthesized(partValue);
+    const context = `${branchName}.members[${index}]`;
+    if (part.kind === "typeLiteral") {
+      const literal = asRecord(part.value, context);
+      for (
+        const prop of propsFromProperties(
+          literal.properties === undefined
+            ? []
+            : asArray(literal.properties, `${context}.properties`),
+          context,
+        )
+      ) {
+        byName.set(prop.name, prop);
+      }
+      continue;
+    }
+    if (part.kind === "typeRef") {
+      const reference = asRecord(part.value, context);
+      const refName = requiredString(reference.typeName, `${context}.typeName`);
+      const refDeclaration = symbolDeclaration(symbols, refName);
+      if (refDeclaration?.kind === "interface") {
+        const refDefinition = asRecord(
+          refDeclaration.def,
+          `deno doc declaration ${refName}.def`,
+        );
+        for (const prop of interfaceProps(refDefinition, refName)) {
+          byName.set(prop.name, prop);
+        }
+        continue;
+      }
+      inherited.push(renderDocType(partValue, context));
+      continue;
+    }
+    return undefined;
+  }
+  return [...byName.values()];
+}
+
+/**
+ * Documentation for a Props alias declared as a union of branch aliases —
+ * the linked/static component pattern. Each branch resolves to its literal
+ * members and the union merges to the surface the branches share: a prop
+ * stays required only when every branch requires it, `never`-typed markers
+ * drop out, and diverging types join into a union.
+ */
+function mergedUnionDocumentation(
+  symbols: readonly unknown[],
+  typeName: string,
+  definition: Record<string, unknown>,
+): CataloguePropDocumentation | undefined {
+  const union = asRecord(definition.tsType, `${typeName}.type`);
+  if (union.kind !== "union") return undefined;
+  const inherited: string[] = [];
+  const branches: (readonly CatalogueProp[])[] = [];
+  for (
+    const [index, memberValue] of asArray(union.value, `${typeName}.members`)
+      .entries()
+  ) {
+    const member = unparenthesized(memberValue);
+    if (member.kind !== "typeRef") return undefined;
+    const reference = asRecord(member.value, `${typeName}.members[${index}]`);
+    const branch = branchProps(
+      symbols,
+      requiredString(
+        reference.typeName,
+        `${typeName}.members[${index}].typeName`,
+      ),
+      inherited,
+    );
+    if (branch === undefined) return undefined;
+    branches.push(branch);
+  }
+  if (branches.length < 2) return undefined;
+
+  const names: string[] = [];
+  for (const branch of branches) {
+    for (const prop of branch) {
+      if (!names.includes(prop.name)) names.push(prop.name);
+    }
+  }
+  const props: CatalogueProp[] = [];
+  for (const name of names) {
+    const occurrences = branches.map((branch) =>
+      branch.find((prop) => prop.name === name)
+    );
+    const present = occurrences.flatMap((prop) =>
+      prop === undefined || prop.type === "never" ? [] : [prop]
+    );
+    if (present.length === 0) continue;
+    const types = [...new Set(present.map((prop) => prop.type))];
+    const description = present.find((prop) => prop.description !== undefined)
+      ?.description;
+    props.push({
+      name,
+      type: types.join(" | "),
+      required: occurrences.every((prop) =>
+        prop !== undefined && prop.type !== "never" && prop.required
+      ),
+      ...(description === undefined ? {} : { description }),
+    });
+  }
+  return {
+    status: "available",
+    typeName,
+    inheritedTypes: [...new Set(inherited)],
+    props,
+  };
 }
 
 function extractPropDocumentation(
@@ -220,6 +407,8 @@ function extractPropDocumentation(
     `deno doc declaration ${typeName}.def`,
   );
   if (kind === "typeAlias") {
+    const merged = mergedUnionDocumentation(symbols, typeName, definition);
+    if (merged !== undefined) return merged;
     return {
       status: "unavailable",
       typeName,
@@ -228,7 +417,7 @@ function extractPropDocumentation(
           definition.tsType,
           `${typeName}.type`,
         )
-      }); flattening its branches would hide their contract.`,
+      }) whose branches do not merge into one documented surface.`,
     };
   }
   if (kind !== "interface") {
@@ -245,26 +434,12 @@ function extractPropDocumentation(
     : asArray(definition.extends, `${typeName}.extends`).map((value, index) =>
       renderDocType(value, `${typeName}.extends[${index}]`)
     );
-  const properties = definition.properties === undefined
-    ? []
-    : asArray(definition.properties, `${typeName}.properties`);
-  const props: CatalogueProp[] = properties.map((value, index) => {
-    const property = asRecord(value, `${typeName}.properties[${index}]`);
-    const description = propDescription(property);
-    return {
-      name: requiredString(
-        property.name,
-        `${typeName}.properties[${index}].name`,
-      ),
-      type: renderDocType(
-        property.tsType,
-        `${typeName}.properties[${index}].type`,
-      ),
-      required: property.optional !== true,
-      ...(description === undefined ? {} : { description }),
-    };
-  });
-  return { status: "available", typeName, inheritedTypes, props };
+  return {
+    status: "available",
+    typeName,
+    inheritedTypes,
+    props: interfaceProps(definition, typeName),
+  };
 }
 
 function literalUnionValues(value: unknown): readonly string[] | undefined {
@@ -324,9 +499,7 @@ function indexedConstUnionValues(
 
 function extractVariants(symbols: readonly unknown[]): CatalogueVariant[] {
   const variants: CatalogueVariant[] = [];
-  for (const value of symbols) {
-    const symbol = asRecord(value, "deno doc symbol");
-    const typeName = requiredString(symbol.name, "deno doc symbol.name");
+  for (const typeName of exportedSymbolNames(symbols)) {
     if (typeName.endsWith("Props")) continue;
     const declaration = symbolDeclaration(symbols, typeName);
     if (declaration?.kind !== "typeAlias") continue;
@@ -344,17 +517,24 @@ function extractVariants(symbols: readonly unknown[]): CatalogueVariant[] {
 }
 
 /** Exported non-Props interfaces: the object shapes props may reference. */
-function extractObjectTypes(symbols: readonly unknown[]): string[] {
-  const names: string[] = [];
-  for (const value of symbols) {
-    const symbol = asRecord(value, "deno doc symbol");
-    const typeName = requiredString(symbol.name, "deno doc symbol.name");
+function extractObjectTypes(
+  symbols: readonly unknown[],
+): CatalogueObjectType[] {
+  const objectTypes: CatalogueObjectType[] = [];
+  for (const typeName of exportedSymbolNames(symbols)) {
     if (typeName.endsWith("Props")) continue;
-    if (symbolDeclaration(symbols, typeName)?.kind === "interface") {
-      names.push(typeName);
-    }
+    const declaration = symbolDeclaration(symbols, typeName);
+    if (declaration?.kind !== "interface") continue;
+    const definition = asRecord(
+      declaration.def,
+      `deno doc declaration ${typeName}.def`,
+    );
+    objectTypes.push({
+      typeName,
+      props: interfaceProps(definition, typeName),
+    });
   }
-  return names;
+  return objectTypes;
 }
 
 export function assertKnownDocWarnings(stderr: string): void {
@@ -372,7 +552,11 @@ export function assertKnownDocWarnings(stderr: string): void {
 
 async function enrichComponentSources(
   paths: readonly ComponentPaths[],
-): Promise<ComponentSource[]> {
+  sharedModules: readonly URL[],
+): Promise<{
+  readonly sources: ComponentSource[];
+  readonly shared: SharedTypeFacts;
+}> {
   const metadata = await Promise.all(paths.map(async (source) => {
     const module = await import(source.metaUrl.href) as {
       default: ComponentMeta;
@@ -384,9 +568,14 @@ async function enrichComponentSources(
     args: [
       "doc",
       "--json",
+      // Unexported symbols stay documentable so union Props branches can
+      // resolve their common interfaces; exported-only filters guard the
+      // public surfaces.
+      "--private",
       ...paths.map(({ componentUrl }) =>
         decodeURIComponent(componentUrl.pathname)
       ),
+      ...sharedModules.map((url) => decodeURIComponent(url.pathname)),
     ],
     stdout: "piped",
     stderr: "piped",
@@ -407,20 +596,19 @@ async function enrichComponentSources(
     "deno doc nodes",
   );
 
-  return paths.map((source, index) => {
+  const moduleSymbols = (url: URL): readonly unknown[] =>
+    asArray(
+      asRecord(nodes[url.href], `deno doc node for ${url.pathname}`).symbols,
+      `deno doc symbols for ${url.pathname}`,
+    );
+
+  const sources = paths.map((source, index) => {
     const meta = metadata[index];
     if (meta === undefined) {
       throw new TypeError(`Missing metadata for ${source.metaUrl.pathname}`);
     }
     const reactExport = pascalCase(meta.slug);
-    const document = asRecord(
-      nodes[source.componentUrl.href],
-      `deno doc node for ${source.componentUrl.pathname}`,
-    );
-    const symbols = asArray(
-      document.symbols,
-      `deno doc symbols for ${source.componentUrl.pathname}`,
-    );
+    const symbols = moduleSymbols(source.componentUrl);
     if (symbolDeclaration(symbols, reactExport) === undefined) {
       throw new TypeError(
         `${source.componentUrl.pathname} does not export the registry-derived adapter name ${reactExport}`,
@@ -438,9 +626,22 @@ async function enrichComponentSources(
       objectTypes: extractObjectTypes(symbols),
     };
   });
+
+  const shared: SharedTypeFacts = {
+    variants: sharedModules.flatMap((url) =>
+      extractVariants(moduleSymbols(url))
+    ),
+    objectTypes: sharedModules.flatMap((url) =>
+      extractObjectTypes(moduleSymbols(url))
+    ),
+  };
+  return { sources, shared };
 }
 
-async function discoverComponents(): Promise<ComponentSource[]> {
+async function discoverComponents(): Promise<{
+  readonly sources: ComponentSource[];
+  readonly shared: SharedTypeFacts;
+}> {
   const files = await walk(COMPONENT_ROOT);
   const metaFiles = files.filter((url) => url.pathname.endsWith(".meta.ts"))
     .sort((a, b) => a.pathname.localeCompare(b.pathname));
@@ -461,11 +662,23 @@ async function discoverComponents(): Promise<ComponentSource[]> {
     }
     return { metaUrl, examplesUrl, componentUrl };
   });
-  return await enrichComponentSources(paths);
+  // Shared modules: .ts files in the component tree outside any component
+  // folder (e.g. layout/space.ts) — the home of cross-component types.
+  const componentDirectories = new Set(
+    metaFiles.map((url) => url.pathname.replace(/[^/]+$/, "")),
+  );
+  const sharedModules = files
+    .filter((url) =>
+      url.pathname.endsWith(".ts") && !url.pathname.endsWith(".meta.ts") &&
+      !componentDirectories.has(url.pathname.replace(/[^/]+$/, ""))
+    )
+    .sort((a, b) => a.pathname.localeCompare(b.pathname));
+  return await enrichComponentSources(paths, sharedModules);
 }
 
 async function generateRegistry(
   sources: readonly ComponentSource[],
+  shared: SharedTypeFacts,
   packageVersion: string,
 ): Promise<void> {
   const imports: string[] = [];
@@ -500,6 +713,7 @@ import type { ComponentType } from "react";
 import type { ComponentMeta } from "../../src/types/component-meta.ts";
 import type {
   CatalogueExampleState,
+  CatalogueObjectType,
   CataloguePropDocumentation,
   CatalogueVariant,
   ConformanceScenario,
@@ -600,10 +814,21 @@ export interface RegistryEntry {
   readonly selection: CatalogueSelection;
   readonly propDocumentation: CataloguePropDocumentation;
   readonly variants: readonly CatalogueVariant[];
-  readonly objectTypes: readonly string[];
+  readonly objectTypes: readonly CatalogueObjectType[];
 }
 
 export const packageVersion = ${JSON.stringify(packageVersion)};
+
+/** Variant unions declared by shared modules outside any one component. */
+export const sharedModuleVariants: readonly CatalogueVariant[] = ${
+    JSON.stringify(shared.variants)
+  };
+
+/** Object interfaces declared by shared modules outside any one component. */
+export const sharedModuleObjectTypes: readonly CatalogueObjectType[] = ${
+    JSON.stringify(shared.objectTypes)
+  };
+
 export const registry: readonly RegistryEntry[] = [
 ${entries.join("\n")}
 ];
@@ -655,8 +880,8 @@ async function bundleStyleguide(): Promise<void> {
 /** Build the React catalogue and its explicit all-component runtime. */
 export async function buildDesignSystem(): Promise<BuildSummary> {
   await writeGeneratedSources();
-  const sources = await discoverComponents();
-  await generateRegistry(sources, await packageVersion());
+  const { sources, shared } = await discoverComponents();
+  await generateRegistry(sources, shared, await packageVersion());
   const { emitDesignSystemRuntime } = await import("../src/runtime.ts");
   const summary = await emitDesignSystemRuntime({
     outputRoot: DIST_ROOT,

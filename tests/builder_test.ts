@@ -174,6 +174,19 @@ Deno.test("prop controls derive from documented props and variants", () => {
       typeName: "HeroBlockSurface",
       values: ["canvas", "sunken", "accent"],
     }],
+    sharedVariants: [{ typeName: "SpaceStep", values: ["0", "1", "2"] }],
+    objectTypes: new Map([[
+      "HeroRow",
+      {
+        typeName: "HeroRow",
+        props: [
+          { name: "label", type: "ReactNode", required: true },
+          { name: "width", type: "number", required: false },
+          { name: "surface", type: "HeroBlockSurface", required: false },
+          { name: "onPick", type: "() => void", required: false },
+        ],
+      },
+    ]]),
   };
   const controls = deriveControls(source);
   const byName = new Map(controls.map((control) => [control.name, control]));
@@ -192,8 +205,17 @@ Deno.test("prop controls derive from documented props and variants", () => {
   assert(surface?.control === "select");
   assertEquals(surface.options, ["canvas", "sunken", "accent"]);
   assertEquals(byName.get("raised")?.control, "toggle");
-  assertEquals(byName.get("gap")?.control, "text");
-  assertEquals(byName.get("rows")?.control, "json");
+  const gap = byName.get("gap");
+  assert(gap?.control === "select");
+  assertEquals(gap.options, [0, 1, 2]);
+  const rows = byName.get("rows");
+  assert(rows?.control === "json");
+  assert(rows.shape !== undefined && rows.shape.list);
+  assertEquals(rows.shape.typeName, "HeroRow");
+  assertEquals(
+    rows.shape.members.map((member) => [member.name, member.control]),
+    [["label", "text"], ["width", "number"], ["surface", "select"]],
+  );
   assertEquals(byName.get("count")?.control, "number");
   assertEquals(byName.get("label")?.control, "text");
   assertEquals(byName.get("label")?.label, "Label");
@@ -588,6 +610,41 @@ Deno.test("every catalogue component yields controls, a default instance, and ex
     name === "bodyStyle"
   );
   assert(bodyStyle?.control === "json");
+
+  // Union Props (linked/static branches) merge into the shared surface:
+  // Mention exposes its real text prop and never a phantom children slot.
+  const mentionControls = controlsBySlug("mention");
+  assertEquals(
+    mentionControls.find(({ name }) => name === "name")?.control,
+    "text",
+  );
+  assert(!mentionControls.some(({ name }) => name === "children"));
+  const buttonControls = controlsBySlug("button");
+  const buttonChildren = buttonControls.find(({ name }) => name === "children");
+  assert(buttonChildren?.control === "slot" && buttonChildren.required);
+  const buttonSize = buttonControls.find(({ name }) => name === "size");
+  assert(buttonSize?.control === "select");
+  assertEquals(buttonSize.options, ["sm", "md", "lg"]);
+  assert(!buttonControls.some(({ name }) => name === "disabled"));
+
+  // Shared-module unions (layout/space.ts) resolve to selects too.
+  const stackGap = controlsBySlug("stack").find(({ name }) => name === "gap");
+  assert(stackGap?.control === "select");
+  assert(stackGap.options.includes(0) && stackGap.options.includes(24));
+
+  // Typed object props carry their form shape for structured editing.
+  const selectOptions = controlsBySlug("select").find(({ name }) =>
+    name === "options"
+  );
+  assert(selectOptions?.control === "json");
+  assert(selectOptions.shape !== undefined && selectOptions.shape.list);
+  assertEquals(
+    selectOptions.shape.members.map((member) => [
+      member.name,
+      member.control,
+    ]),
+    [["value", "text"], ["label", "text"], ["disabled", "toggle"]],
+  );
 
   for (const entry of componentEntries) {
     const slug = entry.meta.slug;

@@ -6,9 +6,13 @@
 import type { ComponentType } from "react";
 import * as reactSurface from "../../src/react.ts";
 import { componentGroups } from "../../src/types/component-meta.ts";
-import type { CatalogueVariant } from "../conformance.ts";
+import type { CatalogueObjectType, CatalogueVariant } from "../conformance.ts";
 import type { RegistryEntry } from "../generated/registry.ts";
-import { registry } from "../generated/registry.ts";
+import {
+  registry,
+  sharedModuleObjectTypes,
+  sharedModuleVariants,
+} from "../generated/registry.ts";
 import type { PropControl } from "./controls.ts";
 import { defaultProps, deriveControls } from "./controls.ts";
 import type { ExportNaming } from "./export.ts";
@@ -72,10 +76,15 @@ export function componentBySlug(
   return component;
 }
 
-/** Variant unions from every entry, first declaration winning per name. */
+/**
+ * Variant unions from every entry and shared module, first declaration
+ * winning per name.
+ */
 const sharedVariants: readonly CatalogueVariant[] = [
-  ...componentEntries
-    .flatMap((entry) => entry.variants)
+  ...[
+    ...componentEntries.flatMap((entry) => entry.variants),
+    ...sharedModuleVariants,
+  ]
     .reduce(
       (byName, variant) =>
         byName.has(variant.typeName)
@@ -86,9 +95,16 @@ const sharedVariants: readonly CatalogueVariant[] = [
     .values(),
 ];
 
-/** Object interface names exported anywhere in the component tree. */
-const objectTypeNames: ReadonlySet<string> = new Set(
-  componentEntries.flatMap((entry) => entry.objectTypes),
+/** Object interfaces exported anywhere in the component tree, by name. */
+const objectTypes: ReadonlyMap<string, CatalogueObjectType> = [
+  ...componentEntries.flatMap((entry) => entry.objectTypes),
+  ...sharedModuleObjectTypes,
+].reduce(
+  (byName, objectType) =>
+    byName.has(objectType.typeName)
+      ? byName
+      : byName.set(objectType.typeName, objectType),
+  new Map<string, CatalogueObjectType>(),
 );
 
 const controlsCache = new Map<string, readonly PropControl[]>();
@@ -104,7 +120,7 @@ export function controlsBySlug(slug: string): readonly PropControl[] {
   const controls = deriveControls({
     ...entry,
     sharedVariants,
-    objectTypeNames,
+    objectTypes,
   });
   controlsCache.set(slug, controls);
   return controls;

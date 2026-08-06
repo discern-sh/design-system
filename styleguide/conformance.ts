@@ -35,6 +35,12 @@ export interface CatalogueVariant {
   readonly values: readonly string[];
 }
 
+/** One exported object interface that component props may reference. */
+export interface CatalogueObjectType {
+  readonly typeName: string;
+  readonly props: readonly CatalogueProp[];
+}
+
 /** A catalogue element found either by CSS selector or accessible role. */
 export type ConformanceTarget =
   | {

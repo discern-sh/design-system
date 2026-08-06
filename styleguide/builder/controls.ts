@@ -4,6 +4,7 @@
  * and default configurations for newly placed components.
  */
 import type {
+  CatalogueObjectType,
   CataloguePropDocumentation,
   CatalogueVariant,
 } from "../conformance.ts";
@@ -17,8 +18,8 @@ export interface ControlSource {
   readonly variants: readonly CatalogueVariant[];
   /** Variants from every catalogue entry, for unions imported across components. */
   readonly sharedVariants?: readonly CatalogueVariant[];
-  /** Exported object interface names, for typeRef props that hold structures. */
-  readonly objectTypeNames?: ReadonlySet<string>;
+  /** Exported object interfaces by name, for typeRef props that hold structures. */
+  readonly objectTypes?: ReadonlyMap<string, CatalogueObjectType>;
 }
 
 interface ControlBase {
@@ -27,6 +28,15 @@ interface ControlBase {
   readonly required: boolean;
   readonly typeText: string;
   readonly description?: string;
+}
+
+/** The known object structure behind a json control, for form editing. */
+export interface JsonShape {
+  /** True when the prop holds an array of the object, not a single one. */
+  readonly list: boolean;
+  readonly typeName: string;
+  /** One editable control per member of the object type. */
+  readonly members: readonly PropControl[];
 }
 
 /** One editable prop rendered by the inspector. */
@@ -43,7 +53,7 @@ export type PropControl =
     /** True when the prop demands a component child, never literal text. */
     readonly elementOnly: boolean;
   })
-  | (ControlBase & { readonly control: "json" });
+  | (ControlBase & { readonly control: "json"; readonly shape?: JsonShape });
 
 function labelFor(name: string): string {
   const spaced = name
@@ -83,7 +93,50 @@ function looksStructural(typeText: string, source: ControlSource): boolean {
   return typeText.includes("[]") || typeText.includes("{") ||
     typeText.includes("<") || typeText.startsWith("readonly ") ||
     typeText === "CSSProperties" ||
-    (source.objectTypeNames?.has(typeText) ?? false);
+    (source.objectTypes?.has(typeText) ?? false);
+}
+
+/**
+ * The form structure of a json control whose type resolves to a known
+ * object interface, directly or as an array of it. Member controls derive
+ * without object-type knowledge so recursive shapes stay raw JSON.
+ */
+function jsonShape(
+  typeText: string,
+  source: ControlSource,
+): JsonShape | undefined {
+  if (source.objectTypes === undefined) return undefined;
+  const listMatch = /^(?:readonly\s+)?([A-Za-z_$][A-Za-z0-9_$]*)\[\]$/.exec(
+    typeText,
+  );
+  const typeName = listMatch?.[1] ?? typeText;
+  const objectType = source.objectTypes.get(typeName);
+  if (objectType === undefined) return undefined;
+  const memberSource: ControlSource = {
+    reactExport: source.reactExport,
+    propDocumentation: source.propDocumentation,
+    variants: source.variants,
+    ...(source.sharedVariants === undefined
+      ? {}
+      : { sharedVariants: source.sharedVariants }),
+  };
+  const members = objectType.props.flatMap((prop) => {
+    // JSON holds no React nodes; node-typed members edit as plain text.
+    const memberType =
+      prop.type === "ReactNode" || /^ReactElement\b/.test(prop.type)
+        ? "string"
+        : prop.type;
+    const control = controlFor(
+      prop.name,
+      memberType,
+      prop.required,
+      memberSource,
+      prop.description,
+    );
+    return control === undefined ? [] : [control];
+  });
+  if (members.length === 0) return undefined;
+  return { list: listMatch !== null, typeName, members };
 }
 
 function variantNamed(
@@ -134,7 +187,14 @@ function controlFor(
       ),
     };
   }
-  if (looksStructural(typeText, source)) return { ...base, control: "json" };
+  if (looksStructural(typeText, source)) {
+    const shape = jsonShape(typeText, source);
+    return {
+      ...base,
+      control: "json",
+      ...(shape === undefined ? {} : { shape }),
+    };
+  }
   return { ...base, control: "text" };
 }
 
