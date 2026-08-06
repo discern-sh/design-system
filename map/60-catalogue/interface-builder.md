@@ -10,10 +10,11 @@ A builder document is a serializable tree: Component instances with configured p
 
 Everything the builder knows is derived — it adds no authored metadata anywhere:
 
-- The palette is the generated Catalogue registry in canonical Group order, searchable and filterable by purpose, exactly like the Catalogue's own index.
-- Inspector controls derive in [`controls.ts`](../../styleguide/builder/controls.ts) from each entry's extracted prop documentation and literal-union variants: booleans become toggles, literal unions become selects (numeric literals stay numbers), `ReactNode` props become slots, `ReactElement` props become element-only slots that start empty, structural types become JSON editors, and event handlers are excluded. Components whose props form a source union (Button, Mention, Agent mention) reconstruct their shared surface from their variant type aliases plus a children slot; anything further enters through the additional-props JSON field.
+- The palette is the generated Catalogue registry in canonical Group order, searchable and filterable by purpose, exactly like the Catalogue's own index. Each palette card carries a live, scaled-down render of the Component's default instance, mounted lazily as it scrolls into view; a Component whose defaults cannot render shows a neutral glyph instead.
+- Inspector controls derive in [`controls.ts`](../../styleguide/builder/controls.ts) from each entry's extracted prop documentation and literal-union variants: booleans become toggles, literal unions become selects (numeric literals stay numbers), `ReactNode` props become slots, `ReactElement` props become element-only slots that start empty, structural types become JSON editors, and event handlers are excluded. Components whose props form a source union (Button, Mention, Agent mention) are documented by the build's branch merge — the extraction resolves each branch alias through its common interface and merges to the shared surface — so they carry real controls, not a guessed children slot. Variant unions and object interfaces declared in shared modules under `src/components/` (e.g. `layout/space.ts`, home of `SpaceStep`) join the extraction, so cross-module unions such as layout gaps derive as selects.
+- A JSON control whose type resolves to a known object interface (directly or as an array of it) edits as structured rows — one field per member, with add/remove for arrays — while the JSON string stays the stored value and raw editing stays one disclosure away ([`object-editor.ts`](../../styleguide/builder/object-editor.ts)).
 - Required controls receive synthesized defaults so a freshly placed Component renders immediately; required structural JSON and element-only slots wait for the user instead.
-- The canvas and the tests share one renderer, [`render.tsx`](../../styleguide/builder/render.tsx), so anything the builder exports previews identically. Required function props render as no-ops; exports leave them for the consumer to wire. The canvas alone renders leniently — a mid-edit invalid JSON value is omitted rather than fatal — while export refuses invalid JSON outright.
+- The canvas and the tests share one renderer, [`render.tsx`](../../styleguide/builder/render.tsx), so anything the builder exports previews identically. Newlines in literal text render as explicit `<br />` line breaks, and the TSX export emits the same breaks. Required function props render as no-ops; exports leave them for the consumer to wire. The canvas alone renders leniently — a mid-edit invalid JSON value is omitted rather than fatal — while export refuses invalid JSON outright.
 
 ## Export surfaces
 
@@ -26,6 +27,8 @@ Everything the builder knows is derived — it adds no authored metadata anywher
 - The builder is styleguide-only: nothing under `styleguide/builder/` is published to JSR, and the neutral core stays React-free.
 - Canvas selection and drag attribution ride on `data-discern-builder-*` attributes passed through Component prop spreads; an instance of a Component that does not spread unknown props is still fully editable through the outline and inspector.
 - Canvas clicks select instead of activating — interactive Component behavior is exercised in the Catalogue, not the builder.
+- The inspector navigates by breadcrumb (Composition › ancestors › selection), and any selection can be wrapped in a layout Component (Stack, Cluster, Section, Container) in place — the design system's own way to control spacing, since Components carry no margin props.
+- The builder chrome dogfoods the design system where it fits: its dropdowns are the Select Component, as is the Catalogue's purpose picker.
 
 ## Where it lives
 
@@ -34,6 +37,7 @@ Everything the builder knows is derived — it adds no authored metadata anywher
 | Document model and tree operations         | [`model.ts`](../../styleguide/builder/model.ts)                   |
 | Control derivation and default synthesis   | [`controls.ts`](../../styleguide/builder/controls.ts)             |
 | TSX, selection, and JSON export            | [`export.ts`](../../styleguide/builder/export.ts)                 |
+| Structured object-prop editing             | [`object-editor.ts`](../../styleguide/builder/object-editor.ts)   |
 | Dependency-closure cost                    | [`cost.ts`](../../styleguide/builder/cost.ts)                     |
 | Registry lookups and adapter resolution    | [`registry-index.ts`](../../styleguide/builder/registry-index.ts) |
 | Shared canvas/test renderer                | [`render.tsx`](../../styleguide/builder/render.tsx)               |
