@@ -12,6 +12,11 @@ export interface CompositionCost {
   readonly placed: readonly string[];
   /** The dependency closure in canonical registry order. */
   readonly resolved: readonly string[];
+  /** Per-component CSS bytes across the closure, in canonical order. */
+  readonly breakdown: readonly {
+    readonly id: string;
+    readonly cssBytes: number;
+  }[];
   /** Component CSS bytes across the closure (base styles excluded). */
   readonly componentCssBytes: number;
   /** True when a resolved component opts into the emitted behavior script. */
@@ -49,11 +54,16 @@ export function compositionCost(slugs: readonly string[]): CompositionCost {
   const ordered = [...resolved].sort(
     (a, b) => (canonicalOrder.get(a) ?? 0) - (canonicalOrder.get(b) ?? 0),
   );
+  const breakdown = ordered.map((id) => ({
+    id,
+    cssBytes: cssBytesBySlug.get(id) ?? 0,
+  }));
   return {
     placed: [...new Set(slugs)].sort((a, b) => a.localeCompare(b)),
     resolved: ordered,
-    componentCssBytes: ordered.reduce(
-      (total, id) => total + (cssBytesBySlug.get(id) ?? 0),
+    breakdown,
+    componentCssBytes: breakdown.reduce(
+      (total, entry) => total + entry.cssBytes,
       0,
     ),
     needsBehaviorScript: ordered.some(

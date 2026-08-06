@@ -143,7 +143,9 @@ function mapChildren(
 function withChildrenAt(
   document: BuilderDocument,
   location: BuilderLocation,
-  update: (children: readonly BuilderSlotChild[]) => readonly BuilderSlotChild[],
+  update: (
+    children: readonly BuilderSlotChild[],
+  ) => readonly BuilderSlotChild[],
 ): BuilderDocument {
   if (location.parent === "root") {
     return { ...document, children: update(document.children) };
@@ -185,8 +187,11 @@ export function removeChild(
 ): BuilderDocument {
   const found = findChild(document, id);
   if (found === undefined) return document;
-  return withChildrenAt(document, found.location, (children) =>
-    children.filter((child) => child.id !== id));
+  return withChildrenAt(
+    document,
+    found.location,
+    (children) => children.filter((child) => child.id !== id),
+  );
 }
 
 /**
@@ -201,12 +206,17 @@ export function moveChild(
 ): BuilderDocument {
   const found = findChild(document, id);
   if (found === undefined) return document;
-  if (location.parent === "node" && isWithinSubtree(document, id, location.nodeId)) {
+  if (
+    location.parent === "node" && isWithinSubtree(document, id, location.nodeId)
+  ) {
     return document;
   }
   const sameParent = sameLocation(found.location, location);
-  const removed = withChildrenAt(document, found.location, (children) =>
-    children.filter((child) => child.id !== id));
+  const removed = withChildrenAt(
+    document,
+    found.location,
+    (children) => children.filter((child) => child.id !== id),
+  );
   const at = sameParent && found.index < index ? index - 1 : index;
   return insertChild(removed, location, at, found.child);
 }
@@ -276,7 +286,8 @@ export function updateTextChild(
 ): BuilderDocument {
   const children = mapChildren(
     document.children,
-    (child) => child.kind === "text" && child.id === id ? { ...child, text } : child,
+    (child) =>
+      child.kind === "text" && child.id === id ? { ...child, text } : child,
   );
   return { ...document, children };
 }

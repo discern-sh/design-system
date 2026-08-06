@@ -6,7 +6,11 @@ import { Fragment } from "react";
 import type { ReactNode } from "react";
 import { BuilderDocumentError } from "./export.ts";
 import type { BuilderNode, BuilderSlotChild } from "./model.ts";
-import { componentBySlug, controlsBySlug, entryBySlug } from "./registry-index.ts";
+import {
+  componentBySlug,
+  controlsBySlug,
+  entryBySlug,
+} from "./registry-index.ts";
 
 /** Hooks the interactive canvas layers onto the shared renderer. */
 export interface RenderOptions {

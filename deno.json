@@ -53,7 +53,7 @@
     "codegen": "deno run --config deno.json --allow-read --allow-write scripts/generate.ts",
     "build": "deno run --config deno.json --allow-read --allow-write --allow-run --allow-env=NODE_ENV scripts/build.ts",
     "check": "deno fmt --config deno.json --check . && deno task lint && deno task typecheck",
-    "check:catalogue": "deno check --config deno.json styleguide/app.tsx",
+    "check:catalogue": "deno check --config deno.json styleguide/app.tsx styleguide/builder/app.tsx",
     "conformance": "deno run --config deno.json -A scripts/conformance.ts",
     "lint": "deno lint --no-config src styleguide scripts discern/scripts tests",
     "typecheck": "deno check --config deno.json src/mod.ts src/manifest.ts src/runtime.ts src/react.ts src/theme/discern.ts scripts/build.ts scripts/conformance.ts scripts/generate.ts scripts/measure.ts scripts/watch.ts discern/scripts/measure-runtime.ts",

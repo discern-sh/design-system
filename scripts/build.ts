@@ -562,23 +562,32 @@ async function packageVersion(): Promise<string> {
   return version;
 }
 
+const STYLEGUIDE_BUNDLES = [
+  { entry: "styleguide/app.tsx", output: "dist/styleguide.js" },
+  { entry: "styleguide/builder/app.tsx", output: "dist/builder.js" },
+] as const;
+
 async function bundleStyleguide(): Promise<void> {
-  const command = new Deno.Command(Deno.execPath(), {
-    cwd: decodeURIComponent(ROOT.pathname),
-    args: [
-      "bundle",
-      "--platform=browser",
-      "--format=esm",
-      "--sourcemap=linked",
-      "styleguide/app.tsx",
-      "--output=dist/styleguide.js",
-    ],
-    stdout: "inherit",
-    stderr: "inherit",
-  });
-  const result = await command.output();
-  if (!result.success) {
-    throw new Error(`Styleguide bundle failed with exit code ${result.code}`);
+  for (const { entry, output } of STYLEGUIDE_BUNDLES) {
+    const command = new Deno.Command(Deno.execPath(), {
+      cwd: decodeURIComponent(ROOT.pathname),
+      args: [
+        "bundle",
+        "--platform=browser",
+        "--format=esm",
+        "--sourcemap=linked",
+        entry,
+        `--output=${output}`,
+      ],
+      stdout: "inherit",
+      stderr: "inherit",
+    });
+    const result = await command.output();
+    if (!result.success) {
+      throw new Error(
+        `Styleguide bundle ${entry} failed with exit code ${result.code}`,
+      );
+    }
   }
 }
 

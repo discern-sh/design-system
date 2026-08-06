@@ -504,6 +504,7 @@ function App() {
             </a>
           ))}
           <a href="#compositions">Compositions</a>
+          <a href="builder/">Interface builder ↗</a>
           <span className="discern-catalogue-nav__heading">Components</span>
           {sidebarGroupedComponents.map(({ group, entries }) => (
             <div key={group}>

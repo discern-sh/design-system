@@ -54,7 +54,9 @@ function text(id: string, value: string): BuilderSlotChild {
   return { kind: "text", id, text: value };
 }
 
-function slot(...children: readonly BuilderSlotChild[]): BuilderNode["props"][string] {
+function slot(
+  ...children: readonly BuilderSlotChild[]
+): BuilderNode["props"][string] {
   return { kind: "slot", children };
 }
 
@@ -246,7 +248,8 @@ Deno.test("documents export deterministic consumer TSX", () => {
     ],
   };
 
-  const expected = `import { Badge, Button, Stack } from "@discern-sh/design-system/react";
+  const expected =
+    `import { Badge, Button, Stack } from "@discern-sh/design-system/react";
 
 /** Landing hero — composed with the Discern interface builder. */
 export function LandingHero() {
@@ -418,7 +421,8 @@ Deno.test("composition cost resolves the emitter's dependency closure", () => {
 });
 
 interface BuiltBuilderModules {
-  readonly registryIndex: typeof import("../styleguide/builder/registry-index.ts");
+  readonly registryIndex:
+    typeof import("../styleguide/builder/registry-index.ts");
   readonly render: typeof import("../styleguide/builder/render.tsx");
 }
 
@@ -473,7 +477,10 @@ Deno.test("every catalogue component yields controls, a default instance, and ex
     );
     const tsx = documentToTsx(document, exportNaming);
     assertStringIncludes(tsx, `<${entry.reactExport}`);
-    assertEquals(parseDocument(serializeDocument(document), knownSlugs), document);
+    assertEquals(
+      parseDocument(serializeDocument(document), knownSlugs),
+      document,
+    );
     assert(compositionCost([slug]).resolved.includes(slug));
   }
 });

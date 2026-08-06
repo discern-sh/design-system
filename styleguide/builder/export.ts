@@ -139,7 +139,9 @@ function renderNode(
     attributes.push(`{...${source}}`);
   }
 
-  const inlineAttributes = attributes.length === 0 ? "" : ` ${attributes.join(" ")}`;
+  const inlineAttributes = attributes.length === 0
+    ? ""
+    : ` ${attributes.join(" ")}`;
   const multiline = attributes.some((attribute) => attribute.includes("\n")) ||
     pad.length + tag.length + inlineAttributes.length > 76;
   const open = multiline
@@ -166,7 +168,9 @@ export function documentToTsx(
   const importList = names.join(", ");
   const importLine = importList.length + REACT_MODULE.length + 26 <= 80
     ? `import { ${importList} } from "${REACT_MODULE}";`
-    : `import {\n${names.map((name) => `  ${name},`).join("\n")}\n} from "${REACT_MODULE}";`;
+    : `import {\n${
+      names.map((name) => `  ${name},`).join("\n")
+    }\n} from "${REACT_MODULE}";`;
 
   const componentName = pascalIdentifier(document.name);
   const body = document.children.length === 0
@@ -213,7 +217,9 @@ export function documentSelectionSnippet(document: BuilderDocument): string {
   };
   visit(document.children);
   const sorted = [...slugs].sort((a, b) => a.localeCompare(b));
-  return `components: [${sorted.map((slug) => JSON.stringify(slug)).join(", ")}],`;
+  return `components: [${
+    sorted.map((slug) => JSON.stringify(slug)).join(", ")
+  }],`;
 }
 
 /** The document's JSON save format. */
@@ -239,7 +245,11 @@ function asString(value: unknown, path: string): string {
   return value;
 }
 
-function parsePropValue(value: unknown, path: string, state: ParseState): BuilderPropValue {
+function parsePropValue(
+  value: unknown,
+  path: string,
+  state: ParseState,
+): BuilderPropValue {
   const record = asRecord(value, path);
   switch (record.kind) {
     case "string":
@@ -255,7 +265,10 @@ function parsePropValue(value: unknown, path: string, state: ParseState): Builde
         ? { kind: "boolean", value: record.value }
         : fail(`${path}.value`, "must be a boolean");
     case "json":
-      return { kind: "json", source: asString(record.source, `${path}.source`) };
+      return {
+        kind: "json",
+        source: asString(record.source, `${path}.source`),
+      };
     case "slot": {
       if (!Array.isArray(record.children)) {
         fail(`${path}.children`, "must be an array");
