@@ -79,17 +79,25 @@ function scalarAttribute(
   }
 }
 
+function renderTextBlock(text: string, pad: string): string {
+  const line = (value: string): string =>
+    safeJsxText(value) ? `${pad}${value}` : `${pad}{${JSON.stringify(value)}}`;
+  if (!text.includes("\n")) return line(text);
+  // Newlines export as explicit <br /> breaks — JSX would collapse a bare
+  // newline to a space, but the canvas shows a line break.
+  return text.split("\n").flatMap((value, index) => [
+    ...(index > 0 ? [`${pad}<br />`] : []),
+    ...(value === "" ? [] : [line(value)]),
+  ]).join("\n");
+}
+
 function renderChild(
   child: BuilderSlotChild,
   naming: ExportNaming,
   indent: number,
 ): string {
   const pad = "  ".repeat(indent);
-  if (child.kind === "text") {
-    return safeJsxText(child.text)
-      ? `${pad}${child.text}`
-      : `${pad}{${JSON.stringify(child.text)}}`;
-  }
+  if (child.kind === "text") return renderTextBlock(child.text, pad);
   return renderNode(child, naming, indent);
 }
 
@@ -99,6 +107,9 @@ function slotExpression(
 ): string {
   const only = children.length === 1 ? children[0] : undefined;
   if (only !== undefined && only.kind === "text") {
+    if (only.text.includes("\n")) {
+      return `{\n  <>\n${renderTextBlock(only.text, "    ")}\n  </>\n}`;
+    }
     return safeAttributeString(only.text)
       ? `"${only.text}"`
       : `{${JSON.stringify(only.text)}}`;

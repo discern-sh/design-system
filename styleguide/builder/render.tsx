@@ -54,6 +54,17 @@ function requiredFunctionProps(slug: string): readonly string[] {
     .map((prop) => prop.name);
 }
 
+/** Literal text as React children: newlines become explicit line breaks. */
+function textNode(id: string, text: string): ReactNode {
+  if (!text.includes("\n")) return text;
+  return text.split("\n").map((line, index) => (
+    <Fragment key={`${id}:${String(index)}`}>
+      {index > 0 ? <br /> : null}
+      {line}
+    </Fragment>
+  ));
+}
+
 function slotChildren(
   children: readonly BuilderSlotChild[],
   options: RenderOptions,
@@ -63,7 +74,9 @@ function slotChildren(
   if (children.length === 1 && only !== undefined) {
     // A lone child passes through unwrapped so ReactElement-typed props
     // (cloneElement consumers) receive the element itself, never an array.
-    return only.kind === "text" ? only.text : renderBuilderChild(only, options);
+    return only.kind === "text"
+      ? textNode(only.id, only.text)
+      : renderBuilderChild(only, options);
   }
   return children.map((child) => (
     <Fragment key={child.id}>{renderBuilderChild(child, options)}</Fragment>
@@ -75,7 +88,7 @@ export function renderBuilderChild(
   child: BuilderSlotChild,
   options: RenderOptions = {},
 ): ReactNode {
-  if (child.kind === "text") return child.text;
+  if (child.kind === "text") return textNode(child.id, child.text);
   const Component = componentBySlug(child.slug);
   const props: Record<string, unknown> = {};
   for (const name of requiredFunctionProps(child.slug)) {

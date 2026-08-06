@@ -407,6 +407,47 @@ Deno.test("TSX export survives hostile names and lone text roots", () => {
   assertStringIncludes(ampersandOutput, '{"Fish &amp; Chips"}');
 });
 
+Deno.test("newlines in text literals export as explicit line breaks", () => {
+  const block: BuilderDocument = {
+    version: 1,
+    name: "Poem",
+    children: [
+      node("s1", "stack", {
+        children: slot(text("t1", "Line one\nLine two\n\nLine four")),
+      }),
+    ],
+  };
+  const blockOutput = documentToTsx(block, naming);
+  assertStringIncludes(
+    blockOutput,
+    "      Line one\n      <br />\n      Line two\n      <br />\n      <br />\n      Line four",
+  );
+
+  const named: BuilderDocument = {
+    version: 1,
+    name: "Card",
+    children: [
+      node("h1", "hero-block", {
+        title: slot(text("t1", "First\nSecond")),
+      }),
+    ],
+  };
+  const namedOutput = documentToTsx(named, naming);
+  assertStringIncludes(namedOutput, "title={");
+  assertStringIncludes(namedOutput, "First");
+  assertStringIncludes(namedOutput, "<br />");
+  assertStringIncludes(namedOutput, "Second");
+
+  const singleLine: BuilderDocument = {
+    version: 1,
+    name: "Plain",
+    children: [
+      node("b1", "button", { children: slot(text("t1", "No breaks")) }),
+    ],
+  };
+  assert(!documentToTsx(singleLine, naming).includes("<br />"));
+});
+
 Deno.test("documents round-trip through the JSON save format", () => {
   const knownSlugs = new Set(["stack", "button"]);
   const document: BuilderDocument = {
@@ -720,6 +761,26 @@ Deno.test("cloneElement components preview a lone slotted element", async () => 
   const markup = renderToStaticMarkup(renderBuilderChild(configured));
   assertStringIncludes(markup, "discern-tooltip");
   assertStringIncludes(markup, "discern-button");
+});
+
+Deno.test("the canvas renders newlines in text literals as line breaks", async () => {
+  const { registryIndex, render } = await builderModules();
+  const { instantiateComponent } = registryIndex;
+  const { renderBuilderChild } = render;
+
+  const button = instantiateComponent("button");
+  const configured = {
+    ...button,
+    props: {
+      ...button.props,
+      children: {
+        kind: "slot",
+        children: [{ kind: "text", id: "t1", text: "One\nTwo" }],
+      },
+    },
+  } as typeof button;
+  const markup = renderToStaticMarkup(renderBuilderChild(configured));
+  assertStringIncludes(markup, "One<br/>Two");
 });
 
 Deno.test("lenient rendering tolerates mid-edit invalid JSON", async () => {
