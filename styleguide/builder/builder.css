@@ -508,7 +508,7 @@
   .discern-builder-outline__row:hover {
     background: var(--discern-color-surface-sunken);
   }
-  .discern-builder-outline__row.is-selected {
+  .discern-builder-outline__row--selected {
     border-color: var(--discern-color-accent-400);
     background: var(--discern-color-accent-100);
   }

@@ -1232,7 +1232,7 @@ function App() {
                     type="button"
                     draggable
                     className={row.child.id === selection
-                      ? "discern-builder-outline__row is-selected"
+                      ? "discern-builder-outline__row discern-builder-outline__row--selected"
                       : "discern-builder-outline__row"}
                     onClick={() => setSelection(row.child.id)}
                     onDragStart={(event) => {
