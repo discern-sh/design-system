@@ -5,6 +5,7 @@ import { ThemeSwitcher } from "../src/components/core/theme-switcher/theme-switc
 import type { ThemeSwitcherMode } from "../src/components/core/theme-switcher/theme-switcher.tsx";
 import { Kicker } from "../src/components/display/kicker/kicker.tsx";
 import { CopyButton } from "../src/components/docs/copy-button/copy-button.tsx";
+import { Select } from "../src/components/forms/select/select.tsx";
 import { useInitialFragmentTarget } from "../src/components/use-initial-fragment-target.ts";
 import { allTokens, discernThemeTokens } from "../src/tokens/tokens.ts";
 import {
@@ -694,18 +695,20 @@ function App() {
           </header>
           <label className="discern-catalogue-purpose-picker">
             <span>Filter components by purpose</span>
-            <select
+            <Select
               value={purpose ?? ""}
               onChange={(event) =>
                 changePurpose(cataloguePurpose(event.currentTarget.value))}
-            >
-              <option value="">All components</option>
-              {cataloguePurposes.map((candidate) => (
-                <option value={candidate} key={candidate}>
-                  {purposeDetails[candidate].label} ({purposeCounts[candidate]})
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: "", label: "All components" },
+                ...cataloguePurposes.map((candidate) => ({
+                  value: candidate,
+                  label: `${purposeDetails[candidate].label} (${
+                    String(purposeCounts[candidate])
+                  })`,
+                })),
+              ]}
+            />
           </label>
           {purpose !== undefined
             ? (

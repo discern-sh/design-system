@@ -1,9 +1,22 @@
-import { Component, useEffect, useMemo, useState } from "react";
-import type { CSSProperties, DragEvent, ReactNode } from "react";
+import {
+  Component,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import type {
+  CSSProperties,
+  DragEvent,
+  ReactNode,
+  TextareaHTMLAttributes,
+} from "react";
 import { createRoot } from "react-dom/client";
 import { ThemeSwitcher } from "../../src/components/core/theme-switcher/theme-switcher.tsx";
 import type { ThemeSwitcherMode } from "../../src/components/core/theme-switcher/theme-switcher.tsx";
 import { CopyButton } from "../../src/components/docs/copy-button/copy-button.tsx";
+import { Select } from "../../src/components/forms/select/select.tsx";
 import {
   type CataloguePurpose,
   cataloguePurposes,
@@ -11,7 +24,14 @@ import {
 } from "../../src/types/component-meta.ts";
 import { packageVersion } from "../generated/registry.ts";
 import { compositionCost } from "./cost.ts";
-import type { PropControl } from "./controls.ts";
+import type { JsonShape, PropControl } from "./controls.ts";
+import {
+  editableCell,
+  newShapedRow,
+  parseShapedSource,
+  serializeShapedRows,
+  withRowValue,
+} from "./object-editor.ts";
 import {
   BuilderDocumentError,
   documentSelectionSnippet,
@@ -27,6 +47,7 @@ import type {
   BuilderSlotChild,
 } from "./model.ts";
 import {
+  ancestorsOf,
   componentCount,
   duplicateChild,
   emptyDocument,
@@ -40,6 +61,7 @@ import {
   updateNodeProp,
   updateTextChild,
   usedSlugs,
+  wrapChild,
 } from "./model.ts";
 import {
   componentEntries,
@@ -50,7 +72,7 @@ import {
   knownSlugs,
 } from "./registry-index.ts";
 import type { RenderOptions } from "./render.tsx";
-import { renderBuilderChild } from "./render.tsx";
+import { renderBuilderChild, rendersFromDefaults } from "./render.tsx";
 
 const DOCUMENT_STORAGE_KEY = "discern-builder-document";
 const THEME_STORAGE_KEY = "discern-builder-theme";
@@ -221,13 +243,32 @@ function formatBytes(bytes: number): string {
     : `${String(bytes)} B`;
 }
 
-interface CanvasBoundaryProps {
-  readonly label: string;
+interface BoundaryProps {
+  /** Rendered in place of the children after a render crash. */
+  readonly fallback: (message: string) => ReactNode;
   readonly children: ReactNode;
 }
 
-interface CanvasBoundaryState {
+interface BoundaryState {
   readonly message: string | null;
+}
+
+/** Contains one subtree's render crash; the key resets it. */
+class Boundary extends Component<BoundaryProps, BoundaryState> {
+  override state: BoundaryState = { message: null };
+
+  static getDerivedStateFromError(error: unknown): BoundaryState {
+    return {
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
+
+  override render(): ReactNode {
+    if (this.state.message !== null) {
+      return this.props.fallback(this.state.message);
+    }
+    return this.props.children;
+  }
 }
 
 interface AppBoundaryProps {
@@ -277,30 +318,88 @@ function CanvasInstance({ child, options }: CanvasInstanceProps) {
   return <>{renderBuilderChild(child, options)}</>;
 }
 
+interface CanvasBoundaryProps {
+  readonly label: string;
+  readonly children: ReactNode;
+}
+
 /** Keeps one broken instance from blanking the whole canvas. */
-class CanvasBoundary extends Component<
-  CanvasBoundaryProps,
-  CanvasBoundaryState
-> {
-  override state: CanvasBoundaryState = { message: null };
-
-  static getDerivedStateFromError(error: unknown): CanvasBoundaryState {
-    return {
-      message: error instanceof Error ? error.message : String(error),
-    };
-  }
-
-  override render(): ReactNode {
-    if (this.state.message !== null) {
-      return (
+function CanvasBoundary({ label, children }: CanvasBoundaryProps) {
+  return (
+    <Boundary
+      fallback={(message) => (
         <div className="discern-builder-node-error" role="note">
-          <strong>{this.props.label} needs attention</strong>
-          <span>{this.state.message}</span>
+          <strong>{label} needs attention</strong>
+          <span>{message}</span>
         </div>
-      );
-    }
-    return this.props.children;
-  }
+      )}
+    >
+      {children}
+    </Boundary>
+  );
+}
+
+/** A textarea that grows with its content instead of scrolling inside 3 rows. */
+function AutoGrowTextarea(
+  props: TextareaHTMLAttributes<HTMLTextAreaElement>,
+) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (element === null) return;
+    element.style.height = "auto";
+    element.style.height = `${String(element.scrollHeight + 2)}px`;
+  }, [props.value]);
+  return <textarea ref={ref} {...props} />;
+}
+
+interface PalettePreviewProps {
+  readonly slug: string;
+}
+
+/**
+ * A live, scaled-down render of the component's default instance, mounted
+ * lazily once the palette card scrolls near the viewport. Components whose
+ * defaults cannot render show a neutral glyph instead.
+ */
+function PalettePreview({ slug }: PalettePreviewProps) {
+  const [visible, setVisible] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const element = ref.current;
+    if (element === null) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        setVisible(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: "200px" });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+  const instance = useMemo(
+    () =>
+      visible && rendersFromDefaults(slug) ? instantiateComponent(slug) : null,
+    [visible, slug],
+  );
+  const glyph = <span className="discern-builder-palette__glyph">▢</span>;
+  return (
+    <div
+      ref={ref}
+      className="discern-builder-palette__preview"
+      aria-hidden="true"
+    >
+      {instance !== null
+        ? (
+          <Boundary fallback={() => glyph}>
+            <div className="discern-builder-palette__preview-stage">
+              {renderBuilderChild(instance, { lenient: true })}
+            </div>
+          </Boundary>
+        )
+        : glyph}
+    </div>
+  );
 }
 
 interface PaletteProps {
@@ -354,6 +453,7 @@ function Palette(
                   onClick={() => onPlace(entry.meta.slug)}
                   onDragStart={(event) => onDragStart(entry.meta.slug, event)}
                 >
+                  <PalettePreview slug={entry.meta.slug} />
                   <span>{entry.meta.name}</span>
                   <small>{entry.meta.description}</small>
                 </button>
@@ -366,6 +466,219 @@ function Palette(
     </div>
   );
 }
+
+interface MemberCellProps {
+  readonly member: PropControl;
+  readonly row: Readonly<Record<string, unknown>>;
+  readonly onValue: (value: unknown) => void;
+}
+
+/** One member field inside a structured object row. */
+function MemberCell({ member, row, onValue }: MemberCellProps) {
+  const value = row[member.name];
+  if (!editableCell(row, member)) {
+    return (
+      <label className="discern-builder-object__cell">
+        <span>{member.label}</span>
+        <input type="text" disabled value="(edit as JSON)" />
+      </label>
+    );
+  }
+  if (member.control === "toggle") {
+    return (
+      <label className="discern-builder-object__cell discern-builder-object__cell--row">
+        <input
+          type="checkbox"
+          checked={value === true}
+          onChange={(event) =>
+            onValue(
+              event.currentTarget.checked
+                ? true
+                : member.required
+                ? false
+                : undefined,
+            )}
+        />
+        <span>{member.label}</span>
+      </label>
+    );
+  }
+  if (member.control === "select") {
+    const options = member.options;
+    const currentIndex = options.findIndex((option) => option === value);
+    return (
+      <label className="discern-builder-object__cell">
+        <span>{member.label}</span>
+        <Select
+          value={String(currentIndex)}
+          onChange={(event) =>
+            onValue(options[Number(event.currentTarget.value)])}
+          options={[
+            ...(member.required ? [] : [{ value: "-1", label: "(not set)" }]),
+            ...options.map((option, index) => ({
+              value: String(index),
+              label: String(option),
+            })),
+          ]}
+        />
+      </label>
+    );
+  }
+  if (member.control === "number") {
+    return (
+      <label className="discern-builder-object__cell">
+        <span>{member.label}</span>
+        <input
+          type="number"
+          value={typeof value === "number" ? String(value) : ""}
+          onChange={(event) => {
+            const raw = event.currentTarget.value;
+            onValue(raw === "" ? undefined : event.currentTarget.valueAsNumber);
+          }}
+        />
+      </label>
+    );
+  }
+  return (
+    <label className="discern-builder-object__cell">
+      <span>{member.label}</span>
+      <input
+        type="text"
+        value={typeof value === "string" ? value : ""}
+        onChange={(event) => {
+          const raw = event.currentTarget.value;
+          onValue(raw === "" && !member.required ? undefined : raw);
+        }}
+      />
+    </label>
+  );
+}
+
+interface ShapedJsonEditorProps {
+  readonly shape: JsonShape;
+  readonly source: string;
+  readonly onSource: (source: string) => void;
+}
+
+/**
+ * Row-based editing for a json control whose object shape is known. The
+ * JSON string stays the stored value; rows are a view over it, and raw
+ * editing stays one disclosure away.
+ */
+function ShapedJsonEditor({ shape, source, onSource }: ShapedJsonEditorProps) {
+  const rows = parseShapedSource(source, shape);
+  const raw = (
+    <AutoGrowTextarea
+      rows={2}
+      spellCheck={false}
+      value={source}
+      placeholder={shape.list ? "[]" : "{}"}
+      onChange={(event) => onSource(event.currentTarget.value)}
+    />
+  );
+  if (rows === undefined) {
+    return (
+      <>
+        {raw}
+        <small className="discern-builder-control__error">
+          Fix the JSON to edit it as a form.
+        </small>
+      </>
+    );
+  }
+  const commit = (
+    next: readonly Readonly<Record<string, unknown>>[],
+  ): void => onSource(serializeShapedRows(next, shape));
+  return (
+    <div className="discern-builder-object">
+      {rows.map((row, index) => (
+        <div className="discern-builder-object__row" key={index}>
+          <div className="discern-builder-object__cells">
+            {shape.members.map((member) => (
+              <MemberCell
+                key={member.name}
+                member={member}
+                row={row}
+                onValue={(value) =>
+                  commit(withRowValue(rows, index, member.name, value))}
+              />
+            ))}
+          </div>
+          {shape.list
+            ? (
+              <button
+                type="button"
+                aria-label={`Remove ${shape.typeName} ${String(index + 1)}`}
+                onClick={() =>
+                  commit(rows.filter((_, at) => at !== index))}
+              >
+                ✕
+              </button>
+            )
+            : null}
+        </div>
+      ))}
+      {shape.list
+        ? (
+          <button
+            type="button"
+            className="discern-builder-object__add"
+            onClick={() => commit([...rows, newShapedRow(shape)])}
+          >
+            ＋ {shape.typeName}
+          </button>
+        )
+        : null}
+      <details className="discern-builder-object__raw">
+        <summary>Edit as JSON</summary>
+        {raw}
+      </details>
+    </div>
+  );
+}
+
+interface InspectorBreadcrumbProps {
+  readonly document: BuilderDocument;
+  readonly selectionId: string;
+  readonly currentLabel: string;
+  readonly onSelect: (id: string | null) => void;
+}
+
+/** The selection's path: Composition › ancestors › current, all clickable. */
+function InspectorBreadcrumb(
+  { document, selectionId, currentLabel, onSelect }: InspectorBreadcrumbProps,
+) {
+  const ancestors = ancestorsOf(document, selectionId);
+  return (
+    <nav className="discern-builder-breadcrumb" aria-label="Selection path">
+      <button
+        type="button"
+        onClick={() =>
+          onSelect(null)}
+      >
+        Composition
+      </button>
+      {ancestors.map((ancestor) => (
+        <button
+          type="button"
+          key={ancestor.id}
+          onClick={() => onSelect(ancestor.id)}
+        >
+          {entryBySlug.get(ancestor.slug)?.meta.name ?? ancestor.slug}
+        </button>
+      ))}
+      <strong aria-current="true">{currentLabel}</strong>
+    </nav>
+  );
+}
+
+/** Layout components offered by the wrap action, in offer order. */
+const LAYOUT_WRAPPER_SLUGS = [
+  "stack",
+  "cluster",
+  "section",
+  "container",
+] as const;
 
 interface ControlFieldProps {
   readonly node: BuilderNode;
@@ -411,7 +724,7 @@ function ControlField({ node, control, onChange }: ControlFieldProps) {
     return (
       <label className="discern-builder-control" htmlFor={inputId}>
         <span>{control.label} {requirement}</span>
-        <select
+        <Select
           id={inputId}
           value={String(currentIndex)}
           onChange={(event) => {
@@ -424,14 +737,14 @@ function ControlField({ node, control, onChange }: ControlFieldProps) {
                 : { kind: "string", value: option },
             );
           }}
-        >
-          {control.required ? null : <option value="-1">(not set)</option>}
-          {control.options.map((option, index) => (
-            <option value={String(index)} key={String(option)}>
-              {String(option)}
-            </option>
-          ))}
-        </select>
+          options={[
+            ...(control.required ? [] : [{ value: "-1", label: "(not set)" }]),
+            ...control.options.map((option, index) => ({
+              value: String(index),
+              label: String(option),
+            })),
+          ]}
+        />
       </label>
     );
   }
@@ -462,6 +775,24 @@ function ControlField({ node, control, onChange }: ControlFieldProps) {
     const source = value !== undefined && value.kind === "json"
       ? value.source
       : "";
+    if (control.shape !== undefined) {
+      return (
+        <div className="discern-builder-control">
+          <span>
+            {control.label} {requirement}
+            <code>{control.typeText}</code>
+          </span>
+          <ShapedJsonEditor
+            shape={control.shape}
+            source={source}
+            onSource={(next) =>
+              onChange(
+                next.trim() === "" ? undefined : { kind: "json", source: next },
+              )}
+          />
+        </div>
+      );
+    }
     let jsonError: string | null = null;
     if (source.trim() !== "") {
       try {
@@ -476,7 +807,7 @@ function ControlField({ node, control, onChange }: ControlFieldProps) {
           {control.label} {requirement}
           <code>{control.typeText}</code>
         </span>
-        <textarea
+        <AutoGrowTextarea
           id={inputId}
           rows={3}
           spellCheck={false}
@@ -631,6 +962,20 @@ function App() {
     setSelection(null);
     setPendingSlot(null);
   };
+
+  const wrapSelection = (id: string, slug: string): void => {
+    if (findChild(document, id) === undefined) return;
+    const wrapper = instantiateComponent(slug);
+    apply((current) => wrapChild(current, id, wrapper));
+    setSelection(wrapper.id);
+  };
+
+  const wrapTargets = LAYOUT_WRAPPER_SLUGS
+    .filter((slug) => knownSlugs.has(slug))
+    .map((slug) => ({
+      slug,
+      name: entryBySlug.get(slug)?.meta.name ?? slug,
+    }));
 
   const handleDrop = (
     payload: DragPayload,
@@ -824,15 +1169,15 @@ function App() {
         </div>
         <label className="discern-builder-width">
           <span>Width</span>
-          <select
+          <Select
             value={canvasWidth}
             onChange={(event) =>
               setCanvasWidth(event.currentTarget.value as CanvasWidth)}
-          >
-            {Object.entries(canvasWidths).map(([key, { label }]) => (
-              <option value={key} key={key}>{label}</option>
-            ))}
-          </select>
+            options={Object.entries(canvasWidths).map(([key, { label }]) => ({
+              value: key,
+              label,
+            }))}
+          />
         </label>
         <ThemeSwitcher
           className="discern-builder-theme"
@@ -867,7 +1212,7 @@ function App() {
         </label>
         <label className="discern-builder-purpose">
           <span className="discern-visually-hidden">Filter by purpose</span>
-          <select
+          <Select
             value={purpose ?? ""}
             onChange={(event) =>
               setPurpose(
@@ -875,12 +1220,14 @@ function App() {
                   (candidate) => candidate === event.currentTarget.value,
                 ),
               )}
-          >
-            <option value="">All purposes</option>
-            {cataloguePurposes.map((candidate) => (
-              <option value={candidate} key={candidate}>{candidate}</option>
-            ))}
-          </select>
+            options={[
+              { value: "", label: "All purposes" },
+              ...cataloguePurposes.map((candidate) => ({
+                value: candidate,
+                label: candidate,
+              })),
+            ]}
+          />
         </label>
         <Palette
           query={query}
@@ -960,6 +1307,12 @@ function App() {
         {selectedNode !== undefined && selectedEntry !== undefined
           ? (
             <div className="discern-builder-inspector__body">
+              <InspectorBreadcrumb
+                document={document}
+                selectionId={selectedNode.id}
+                currentLabel={selectedEntry.meta.name}
+                onSelect={setSelection}
+              />
               <header>
                 <h2>{selectedEntry.meta.name}</h2>
                 <p>{selectedEntry.meta.description}</p>
@@ -969,22 +1322,6 @@ function App() {
                 role="group"
                 aria-label="Instance actions"
               >
-                {selectedContext !== undefined &&
-                    selectedContext.location.parent === "node"
-                  ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const location = selectedContext.location;
-                        if (location.parent === "node") {
-                          setSelection(location.nodeId);
-                        }
-                      }}
-                    >
-                      Parent
-                    </button>
-                  )
-                  : null}
                 <button
                   type="button"
                   onClick={() =>
@@ -1017,6 +1354,22 @@ function App() {
                 >
                   Delete
                 </button>
+              </div>
+              <div
+                className="discern-builder-toolbar__group discern-builder-wrap"
+                role="group"
+                aria-label="Wrap in a layout component"
+              >
+                <span>Wrap in</span>
+                {wrapTargets.map(({ slug, name }) => (
+                  <button
+                    type="button"
+                    key={slug}
+                    onClick={() => wrapSelection(selectedNode.id, slug)}
+                  >
+                    {name}
+                  </button>
+                ))}
               </div>
               {controlsBySlug(selectedNode.slug).map((control) =>
                 control.control === "slot"
@@ -1118,7 +1471,7 @@ function App() {
                 <span>
                   Additional props <code>JSON object</code>
                 </span>
-                <textarea
+                <AutoGrowTextarea
                   rows={2}
                   spellCheck={false}
                   value={selectedNode.extra ?? ""}
@@ -1136,13 +1489,21 @@ function App() {
           : selectedText !== undefined
           ? (
             <div className="discern-builder-inspector__body">
+              <InspectorBreadcrumb
+                document={document}
+                selectionId={selectedText.id}
+                currentLabel="Text"
+                onSelect={setSelection}
+              />
               <header>
                 <h2>Text</h2>
-                <p>Literal text placed in a slot.</p>
+                <p>
+                  Literal text placed in a slot. Newlines become line breaks.
+                </p>
               </header>
               <label className="discern-builder-control">
                 <span>Content</span>
-                <textarea
+                <AutoGrowTextarea
                   rows={4}
                   value={selectedText.text}
                   onChange={(event) => {
@@ -1153,6 +1514,22 @@ function App() {
                   }}
                 />
               </label>
+              <div
+                className="discern-builder-toolbar__group discern-builder-wrap"
+                role="group"
+                aria-label="Wrap in a layout component"
+              >
+                <span>Wrap in</span>
+                {wrapTargets.map(({ slug, name }) => (
+                  <button
+                    type="button"
+                    key={slug}
+                    onClick={() => wrapSelection(selectedText.id, slug)}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
               <button
                 type="button"
                 className="discern-builder-danger"

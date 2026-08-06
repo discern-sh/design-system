@@ -27,6 +27,7 @@ import type {
   BuilderSlotChild,
 } from "../styleguide/builder/model.ts";
 import {
+  ancestorsOf,
   componentCount,
   duplicateChild,
   emptyDocument,
@@ -40,6 +41,7 @@ import {
   updateNodeProp,
   updateTextChild,
   usedSlugs,
+  wrapChild,
 } from "../styleguide/builder/model.ts";
 
 function node(
@@ -143,6 +145,49 @@ Deno.test("builder document operations keep the tree consistent", () => {
 
   document = removeChild(document, "s1");
   assertEquals(componentCount(document), 0);
+});
+
+Deno.test("ancestors resolve and wrapping replaces a child in place", () => {
+  let document = emptyDocument("Wrap check");
+  const card = node("c1", "card", {
+    children: slot(
+      node("b1", "button", { children: slot(text("t1", "Go")) }),
+    ),
+  });
+  document = insertChild(document, { parent: "root" }, 0, card);
+
+  assertEquals(ancestorsOf(document, "c1"), []);
+  assertEquals(
+    ancestorsOf(document, "t1").map((ancestor) => ancestor.id),
+    ["c1", "b1"],
+  );
+  assertEquals(ancestorsOf(document, "missing"), []);
+
+  const wrapper = node("s1", "stack", {
+    gap: { kind: "number", value: 4 },
+    children: slot(text("seed", "placeholder")),
+  });
+  document = wrapChild(document, "b1", wrapper);
+  const placed = findChild(document, "s1");
+  assert(placed !== undefined && placed.child.kind === "component");
+  assertEquals(placed.location, {
+    parent: "node",
+    nodeId: "c1",
+    prop: "children",
+  });
+  const wrapped = placed.child.props.children;
+  assert(wrapped !== undefined && wrapped.kind === "slot");
+  assertEquals(wrapped.children.map((child) => child.id), ["b1"]);
+  assertEquals(placed.child.props.gap, { kind: "number", value: 4 });
+  assertEquals(ancestorsOf(document, "b1").map((a) => a.id), ["c1", "s1"]);
+  assert(findChild(document, "seed") === undefined);
+
+  // A wrapper whose id already exists in the tree is refused.
+  assertEquals(
+    wrapChild(document, "b1", node("c1", "stack")),
+    document,
+  );
+  assertEquals(wrapChild(document, "missing", node("x1", "stack")), document);
 });
 
 Deno.test("prop controls derive from documented props and variants", () => {
@@ -253,6 +298,92 @@ Deno.test("union props components fall back to variant controls and a children s
   const children = instance.props.children;
   assert(children !== undefined && children.kind === "slot");
   assertEquals(children.children.length, 1);
+});
+
+Deno.test("shaped JSON sources round-trip through row editing", async () => {
+  const {
+    editableCell,
+    newShapedRow,
+    parseShapedSource,
+    serializeShapedRows,
+    withRowValue,
+  } = await import("../styleguide/builder/object-editor.ts");
+  const shape = {
+    list: true,
+    typeName: "SelectOption",
+    members: [
+      {
+        name: "value",
+        label: "Value",
+        required: true,
+        typeText: "string",
+        control: "text",
+      },
+      {
+        name: "label",
+        label: "Label",
+        required: true,
+        typeText: "string",
+        control: "text",
+      },
+      {
+        name: "disabled",
+        label: "Disabled",
+        required: false,
+        typeText: "boolean",
+        control: "toggle",
+      },
+    ],
+  } as const;
+
+  assertEquals(parseShapedSource("", shape), []);
+  assertEquals(
+    parseShapedSource('[{"value":"a","label":"A"}]', shape),
+    [{ value: "a", label: "A" }],
+  );
+  assertEquals(parseShapedSource("{oops", shape), undefined);
+  assertEquals(parseShapedSource('{"value":"a"}', shape), undefined);
+  assertEquals(parseShapedSource("[1, 2]", shape), undefined);
+
+  const rows = [...(parseShapedSource("[]", shape) ?? []), newShapedRow(shape)];
+  assertEquals(rows, [{ value: "", label: "" }]);
+  const edited = withRowValue(
+    withRowValue(rows, 0, "value", "gb"),
+    0,
+    "label",
+    "United Kingdom",
+  );
+  assertEquals(
+    JSON.parse(serializeShapedRows(edited, shape)),
+    [{ value: "gb", label: "United Kingdom" }],
+  );
+  const cleared = withRowValue(edited, 0, "disabled", undefined);
+  assert(!("disabled" in (cleared[0] ?? {})));
+
+  const row = edited[0];
+  assert(row !== undefined);
+  assert(editableCell(row, shape.members[0]));
+  assert(editableCell({ value: 3 }, shape.members[1]));
+  assert(!editableCell({ value: 3 }, shape.members[0]));
+  assert(!editableCell({ value: { nested: true } }, shape.members[0]));
+
+  const single = {
+    list: false,
+    typeName: "FileChangeMagnitude",
+    members: [{
+      name: "added",
+      label: "Added",
+      required: false,
+      typeText: "number",
+      control: "number",
+    }],
+  } as const;
+  assertEquals(parseShapedSource("", single), [{}]);
+  assertEquals(parseShapedSource('{"added":3}', single), [{ added: 3 }]);
+  assertEquals(
+    serializeShapedRows([{ added: 4 }], single),
+    '{\n  "added": 4\n}',
+  );
 });
 
 Deno.test("documents export deterministic consumer TSX", () => {

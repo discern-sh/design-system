@@ -313,22 +313,10 @@
   .discern-catalogue-purpose-picker {
     display: grid;
     gap: 6px;
+    max-width: 420px;
     margin-block: -18px 22px;
     color: var(--discern-color-ink-muted);
     font: var(--discern-font-size-xs) var(--discern-font-ui);
-  }
-  .discern-catalogue-purpose-picker select {
-    min-height: 38px;
-    padding-inline: 10px;
-    border: 1px solid var(--discern-color-border-strong);
-    border-radius: var(--discern-radius-sm);
-    background: var(--discern-color-surface);
-    color: var(--discern-color-ink);
-    font: inherit;
-  }
-  .discern-catalogue-purpose-picker select:focus-visible {
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: 2px;
   }
   .discern-catalogue-purpose-context {
     display: flex;

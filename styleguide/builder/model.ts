@@ -104,6 +104,55 @@ export function findChild(
   return findInChildren(document.children, { parent: "root" }, id);
 }
 
+/** The component chain from the root down to the direct parent of `id`. */
+export function ancestorsOf(
+  document: BuilderDocument,
+  id: string,
+): readonly BuilderNode[] {
+  const walk = (
+    children: readonly BuilderSlotChild[],
+    path: readonly BuilderNode[],
+  ): readonly BuilderNode[] | undefined => {
+    for (const child of children) {
+      if (child.id === id) return path;
+      if (child.kind !== "component") continue;
+      for (const [, slot] of slotEntries(child)) {
+        const found = walk(slot.children, [...path, child]);
+        if (found !== undefined) return found;
+      }
+    }
+    return undefined;
+  };
+  return walk(document.children, []) ?? [];
+}
+
+/**
+ * Replace a child with `wrapper` holding that child as the sole member of
+ * its `prop` slot. The wrapper must be a fresh instance, not a placed one.
+ */
+export function wrapChild(
+  document: BuilderDocument,
+  id: string,
+  wrapper: BuilderNode,
+  prop = "children",
+): BuilderDocument {
+  const found = findChild(document, id);
+  if (found === undefined) return document;
+  if (findChild(document, wrapper.id) !== undefined) return document;
+  const wrapped: BuilderNode = {
+    ...wrapper,
+    props: {
+      ...wrapper.props,
+      [prop]: { kind: "slot", children: [found.child] },
+    },
+  };
+  return withChildrenAt(
+    document,
+    found.location,
+    (children) => children.map((child) => (child.id === id ? wrapped : child)),
+  );
+}
+
 /** True when `candidateId` is `ancestorId` itself or sits inside its subtree. */
 export function isWithinSubtree(
   document: BuilderDocument,
