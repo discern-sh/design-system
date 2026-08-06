@@ -487,6 +487,22 @@ Deno.test("composition cost resolves the emitter's dependency closure", () => {
   assertThrows(() => compositionCost(["missing"]), Error, "Unknown component");
 });
 
+Deno.test("state updaters never read the synthetic event", async () => {
+  // React nulls event.currentTarget after dispatch, so an updater callback
+  // that touches the event crashes on the deferred invocation.
+  const source = await Deno.readTextFile(
+    new URL("../styleguide/builder/app.tsx", import.meta.url),
+  );
+  for (const [index, chunk] of source.split("apply(").entries()) {
+    if (index === 0) continue;
+    const head = chunk.slice(0, 300);
+    assert(
+      !head.includes("event."),
+      `an apply() updater reads the synthetic event:\n${head.slice(0, 160)}`,
+    );
+  }
+});
+
 interface BuiltBuilderModules {
   readonly registryIndex:
     typeof import("../styleguide/builder/registry-index.ts");

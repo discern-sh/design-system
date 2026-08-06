@@ -42,7 +42,8 @@ _Dead code, N+1s, and known-slow paths worth removing or fixing. Nothing outstan
 
 ## 🟡 Smaller fixes & polish
 
-_Lower-severity fixes, rough edges, and UX papercuts. Nothing outstanding._
+- [ ] **Builder: unions defined outside component files derive as text controls.** `SpaceStep` (`src/tokens/tokens.ts`) and any future union living outside `src/components/` never reaches the catalogue variant extraction, so props typed with it (e.g. `stack.gap`) get a free-text input instead of a select. Extending `scripts/build.ts` extraction to shared modules would close the gap. Evidence: styleguide/builder/controls.ts (typeRef fallthrough), scripts/build.ts `extractVariants`.
+- [ ] **Builder canvas: root drops append only.** Dropping on empty canvas space appends to the page end; between-sibling insertion needs the outline (drop on a row inserts before it) or the inspector arrows. Pointer-position insertion indicators on the canvas would remove that indirection. Evidence: styleguide/builder/app.tsx canvas `onDropCapture`.
 
 ## 🟢 Test & tooling hygiene
 

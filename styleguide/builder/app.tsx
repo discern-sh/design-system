@@ -230,6 +230,40 @@ interface CanvasBoundaryState {
   readonly message: string | null;
 }
 
+interface AppBoundaryProps {
+  readonly children: ReactNode;
+}
+
+interface AppBoundaryState {
+  readonly message: string | null;
+}
+
+/** Last-resort boundary: a crash shows a recovery note, never a blank page. */
+class AppBoundary extends Component<AppBoundaryProps, AppBoundaryState> {
+  override state: AppBoundaryState = { message: null };
+
+  static getDerivedStateFromError(error: unknown): AppBoundaryState {
+    return {
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
+
+  override render(): ReactNode {
+    if (this.state.message !== null) {
+      return (
+        <div className="discern-builder-crash" data-discern-root>
+          <h1>The builder hit an unexpected error</h1>
+          <p>{this.state.message}</p>
+          <p>
+            Your composition autosaves on every change — reload to continue.
+          </p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 interface CanvasInstanceProps {
   readonly child: BuilderSlotChild;
   readonly options: RenderOptions;
@@ -1089,12 +1123,12 @@ function App() {
                   spellCheck={false}
                   value={selectedNode.extra ?? ""}
                   placeholder='{"aria-label": "…"}'
-                  onChange={(event) =>
-                    apply((current) => updateNodeExtra(
-                      current,
-                      selectedNode.id,
-                      event.currentTarget.value,
-                    ))}
+                  onChange={(event) => {
+                    const extra = event.currentTarget.value;
+                    apply((current) =>
+                      updateNodeExtra(current, selectedNode.id, extra)
+                    );
+                  }}
                 />
               </label>
             </div>
@@ -1111,14 +1145,12 @@ function App() {
                 <textarea
                   rows={4}
                   value={selectedText.text}
-                  onChange={(event) =>
+                  onChange={(event) => {
+                    const content = event.currentTarget.value;
                     apply((current) =>
-                      updateTextChild(
-                        current,
-                        selectedText.id,
-                        event.currentTarget.value,
-                      )
-                    )}
+                      updateTextChild(current, selectedText.id, content)
+                    );
+                  }}
                 />
               </label>
               <button
@@ -1322,4 +1354,8 @@ function App() {
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Builder root is missing");
-createRoot(root).render(<App />);
+createRoot(root).render(
+  <AppBoundary>
+    <App />
+  </AppBoundary>,
+);
