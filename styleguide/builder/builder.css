@@ -231,7 +231,8 @@
   .discern-builder-canvas [data-discern-builder-node] {
     cursor: default;
   }
-  .discern-builder-canvas [data-discern-builder-node]:hover {
+  .discern-builder-canvas
+    [data-discern-builder-node]:hover:not([data-discern-builder-selected]) {
     outline: 1px dashed var(--discern-color-accent-300);
     outline-offset: 2px;
   }

@@ -503,6 +503,21 @@ Deno.test("state updaters never read the synthetic event", async () => {
   }
 });
 
+Deno.test("canvas hover styling never overrides the selection outline", async () => {
+  // Hover and selection both draw outlines; an unguarded hover rule outranks
+  // the selection ring, hiding it exactly while the pointer is over the node.
+  const css = await Deno.readTextFile(
+    new URL("../styleguide/builder/builder.css", import.meta.url),
+  );
+  const hoverRules = css.match(
+    /\[data-discern-builder-node\][^,{]*:hover[^,{]*/g,
+  ) ?? [];
+  assert(hoverRules.length > 0);
+  for (const rule of hoverRules) {
+    assertStringIncludes(rule, ":not([data-discern-builder-selected])");
+  }
+});
+
 interface BuiltBuilderModules {
   readonly registryIndex:
     typeof import("../styleguide/builder/registry-index.ts");
