@@ -15,6 +15,10 @@ export interface ControlSource {
   readonly reactExport: string;
   readonly propDocumentation: CataloguePropDocumentation;
   readonly variants: readonly CatalogueVariant[];
+  /** Variants from every catalogue entry, for unions imported across components. */
+  readonly sharedVariants?: readonly CatalogueVariant[];
+  /** Exported object interface names, for typeRef props that hold structures. */
+  readonly objectTypeNames?: ReadonlySet<string>;
 }
 
 interface ControlBase {
@@ -75,16 +79,26 @@ function isEventHandlerName(name: string): boolean {
   return /^on[A-Z]/.test(name);
 }
 
-function looksStructural(typeText: string): boolean {
+function looksStructural(typeText: string, source: ControlSource): boolean {
   return typeText.includes("[]") || typeText.includes("{") ||
-    typeText.startsWith("readonly ");
+    typeText.includes("<") || typeText.startsWith("readonly ") ||
+    typeText === "CSSProperties" ||
+    (source.objectTypeNames?.has(typeText) ?? false);
+}
+
+function variantNamed(
+  typeText: string,
+  source: ControlSource,
+): CatalogueVariant | undefined {
+  return source.variants.find(({ typeName }) => typeName === typeText) ??
+    source.sharedVariants?.find(({ typeName }) => typeName === typeText);
 }
 
 function controlFor(
   name: string,
   typeText: string,
   required: boolean,
-  variants: readonly CatalogueVariant[],
+  source: ControlSource,
   description?: string,
 ): PropControl | undefined {
   if (isEventHandlerName(name) || isFunctionType(typeText)) return undefined;
@@ -110,7 +124,7 @@ function controlFor(
   if (literalOptions !== undefined) {
     return { ...base, control: "select", options: literalOptions };
   }
-  const variant = variants.find(({ typeName }) => typeName === typeText);
+  const variant = variantNamed(typeText, source);
   if (variant !== undefined) {
     return {
       ...base,
@@ -120,7 +134,7 @@ function controlFor(
       ),
     };
   }
-  if (looksStructural(typeText)) return { ...base, control: "json" };
+  if (looksStructural(typeText, source)) return { ...base, control: "json" };
   return { ...base, control: "text" };
 }
 
@@ -143,12 +157,7 @@ function fallbackControls(source: ControlSource): readonly PropControl[] {
   const variantControls = source.variants.flatMap((variant) => {
     const name = variantPropName(variant.typeName, source.reactExport);
     if (name === undefined) return [];
-    const control = controlFor(
-      name,
-      variant.typeName,
-      false,
-      source.variants,
-    );
+    const control = controlFor(name, variant.typeName, false, source);
     return control === undefined ? [] : [control];
   });
   return [
@@ -174,7 +183,7 @@ export function deriveControls(source: ControlSource): readonly PropControl[] {
       prop.name,
       prop.type,
       prop.required,
-      source.variants,
+      source,
       prop.description,
     );
     return control === undefined ? [] : [control];

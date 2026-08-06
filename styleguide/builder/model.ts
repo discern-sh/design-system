@@ -206,10 +206,12 @@ export function moveChild(
 ): BuilderDocument {
   const found = findChild(document, id);
   if (found === undefined) return document;
-  if (
-    location.parent === "node" && isWithinSubtree(document, id, location.nodeId)
-  ) {
-    return document;
+  if (location.parent === "node") {
+    const destination = findChild(document, location.nodeId)?.child;
+    if (destination === undefined || destination.kind !== "component") {
+      return document;
+    }
+    if (isWithinSubtree(document, id, location.nodeId)) return document;
   }
   const sameParent = sameLocation(found.location, location);
   const removed = withChildrenAt(

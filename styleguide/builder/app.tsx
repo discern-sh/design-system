@@ -12,7 +12,6 @@ import {
 import { packageVersion } from "../generated/registry.ts";
 import { compositionCost } from "./cost.ts";
 import type { PropControl } from "./controls.ts";
-import { createNode } from "./controls.ts";
 import {
   BuilderDocumentError,
   documentSelectionSnippet,
@@ -47,8 +46,10 @@ import {
   controlsBySlug,
   entryBySlug,
   exportNaming,
+  instantiateComponent,
   knownSlugs,
 } from "./registry-index.ts";
+import type { RenderOptions } from "./render.tsx";
 import { renderBuilderChild } from "./render.tsx";
 
 const DOCUMENT_STORAGE_KEY = "discern-builder-document";
@@ -86,11 +87,20 @@ function builderTheme(value: string | null): ThemeSwitcherMode | undefined {
 }
 
 function loadInitialDocument(): BuilderDocument {
+  let raw: string | null = null;
   try {
-    const raw = localStorage.getItem(DOCUMENT_STORAGE_KEY);
+    raw = localStorage.getItem(DOCUMENT_STORAGE_KEY);
     if (raw !== null) return parseDocument(raw, knownSlugs);
   } catch {
-    // A missing or outdated saved document falls back to a fresh one.
+    // An unreadable saved document is preserved below, never destroyed:
+    // the autosave overwrites the main key on first render.
+    if (raw !== null) {
+      try {
+        localStorage.setItem(`${DOCUMENT_STORAGE_KEY}-recovery`, raw);
+      } catch {
+        // With storage unavailable there is nothing left to preserve.
+      }
+    }
   }
   return emptyDocument("Untitled page");
 }
@@ -218,6 +228,19 @@ interface CanvasBoundaryProps {
 
 interface CanvasBoundaryState {
   readonly message: string | null;
+}
+
+interface CanvasInstanceProps {
+  readonly child: BuilderSlotChild;
+  readonly options: RenderOptions;
+}
+
+/**
+ * Renders one placed subtree inside its own component so a throw lands in
+ * the enclosing CanvasBoundary instead of unmounting the whole app.
+ */
+function CanvasInstance({ child, options }: CanvasInstanceProps) {
+  return <>{renderBuilderChild(child, options)}</>;
 }
 
 /** Keeps one broken instance from blanking the whole canvas. */
@@ -485,6 +508,7 @@ function App() {
     undefined,
   );
   const [canvasWidth, setCanvasWidth] = useState<CanvasWidth>("fluid");
+  const [nameDraft, setNameDraft] = useState<string | null>(null);
   const [theme, setTheme] = useState<ThemeSwitcherMode>(() =>
     builderTheme(localStorage.getItem(THEME_STORAGE_KEY)) ?? "system"
   );
@@ -507,11 +531,13 @@ function App() {
       };
     });
 
-  const rename = (name: string): void =>
-    setHistory((state) => ({
-      ...state,
-      present: { ...state.present, name },
-    }));
+  const commitName = (): void => {
+    if (nameDraft === null) return;
+    const name = nameDraft;
+    setNameDraft(null);
+    if (name === document.name) return;
+    apply((current) => ({ ...current, name }));
+  };
 
   const undo = (): void =>
     setHistory((state) => {
@@ -542,25 +568,34 @@ function App() {
   };
 
   const placeComponent = (slug: string, at?: InsertionPoint): void => {
-    const entry = entryBySlug.get(slug);
-    if (entry === undefined) return;
+    if (!knownSlugs.has(slug)) return;
+    const armedSlot = pendingSlot !== null &&
+        findChild(document, pendingSlot.nodeId)?.child.kind === "component"
+      ? pendingSlot
+      : null;
     const target = at ??
-      (pendingSlot !== null
+      (armedSlot !== null
         ? {
           location: {
             parent: "node",
-            nodeId: pendingSlot.nodeId,
-            prop: pendingSlot.prop,
+            nodeId: armedSlot.nodeId,
+            prop: armedSlot.prop,
           } as const,
           index: Number.MAX_SAFE_INTEGER,
         }
         : insertionPoint(document, selection));
-    const instance = createNode(slug, entry);
+    const instance = instantiateComponent(slug);
     apply((current) =>
       insertChild(current, target.location, target.index, instance)
     );
     setPendingSlot(null);
     setSelection(instance.id);
+  };
+
+  const deleteChild = (id: string): void => {
+    apply((current) => removeChild(current, id));
+    setSelection(null);
+    setPendingSlot(null);
   };
 
   const handleDrop = (
@@ -616,12 +651,19 @@ function App() {
         selection !== null
       ) {
         event.preventDefault();
-        apply((current) => removeChild(current, selection));
-        setSelection(null);
+        deleteChild(selection);
       }
     };
+    const onDragEnd = (): void => {
+      setDragging(false);
+      setDropHint(null);
+    };
     globalThis.addEventListener("keydown", onKeyDown);
-    return () => globalThis.removeEventListener("keydown", onKeyDown);
+    globalThis.addEventListener("dragend", onDragEnd);
+    return () => {
+      globalThis.removeEventListener("keydown", onKeyDown);
+      globalThis.removeEventListener("dragend", onDragEnd);
+    };
   }, [selection]);
 
   const slugs = useMemo(() => usedSlugs(document), [document]);
@@ -718,9 +760,13 @@ function App() {
         <input
           className="discern-builder-name"
           type="text"
-          value={document.name}
+          value={nameDraft ?? document.name}
           aria-label="Composition name"
-          onChange={(event) => rename(event.currentTarget.value)}
+          onChange={(event) => setNameDraft(event.currentTarget.value)}
+          onBlur={commitName}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") event.currentTarget.blur();
+          }}
         />
         <div
           className="discern-builder-toolbar__group"
@@ -850,10 +896,6 @@ function App() {
             dropOnNode(payload, nodeId);
           }
         }}
-        onDragEndCapture={() => {
-          setDropHint(null);
-          setDragging(false);
-        }}
       >
         <div className="discern-builder-canvas__page" style={pageStyle}>
           {document.children.length === 0
@@ -871,7 +913,10 @@ function App() {
                 key={`${child.id}:${JSON.stringify(child)}`}
                 label={childLabel(child)}
               >
-                {renderBuilderChild(child, { decorate })}
+                <CanvasInstance
+                  child={child}
+                  options={{ decorate, lenient: true }}
+                />
               </CanvasBoundary>
             ))}
         </div>
@@ -934,10 +979,7 @@ function App() {
                 <button
                   type="button"
                   className="discern-builder-danger"
-                  onClick={() => {
-                    apply((current) => removeChild(current, selectedNode.id));
-                    setSelection(null);
-                  }}
+                  onClick={() => deleteChild(selectedNode.id)}
                 >
                   Delete
                 </button>
@@ -1082,10 +1124,7 @@ function App() {
               <button
                 type="button"
                 className="discern-builder-danger"
-                onClick={() => {
-                  apply((current) => removeChild(current, selectedText.id));
-                  setSelection(null);
-                }}
+                onClick={() => deleteChild(selectedText.id)}
               >
                 Delete
               </button>

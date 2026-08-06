@@ -41,11 +41,11 @@ function pascalIdentifier(name: string): string {
 }
 
 function safeJsxText(text: string): boolean {
-  return !/[{}<>\\]/.test(text) && text === text.trim() && text !== "";
+  return !/[{}<>\\&]/.test(text) && text === text.trim() && text !== "";
 }
 
 function safeAttributeString(text: string): boolean {
-  return !/["\\\n\r{}<>]/.test(text);
+  return !/["\\\n\r{}<>&]/.test(text);
 }
 
 function parsedJsonSource(source: string, spot: string): string {
@@ -173,16 +173,22 @@ export function documentToTsx(
     }\n} from "${REACT_MODULE}";`;
 
   const componentName = pascalIdentifier(document.name);
+  const only = document.children.length === 1
+    ? document.children[0]
+    : undefined;
   const body = document.children.length === 0
     ? "  return null;"
-    : document.children.length === 1 && document.children[0] !== undefined
-    ? `  return (\n${renderChild(document.children[0], naming, 2)}\n  );`
+    : only !== undefined && only.kind === "component"
+    ? `  return (\n${renderNode(only, naming, 2)}\n  );`
     : `  return (\n    <>\n${
       document.children.map((child) => renderChild(child, naming, 3)).join("\n")
     }\n    </>\n  );`;
 
   const header = names.length === 0 ? "" : `${importLine}\n\n`;
-  return `${header}/** ${document.name} — composed with the Discern interface builder. */\nexport function ${componentName}() {\n${body}\n}\n`;
+  const commentName =
+    (document.name.trim() === "" ? "Untitled page" : document.name)
+      .replaceAll("*/", "*\\/");
+  return `${header}/** ${commentName} — composed with the Discern interface builder. */\nexport function ${componentName}() {\n${body}\n}\n`;
 }
 
 function collectExportNames(
@@ -314,6 +320,9 @@ function parseChild(
   const propsRecord = asRecord(record.props ?? {}, `${path}.props`);
   const props: Record<string, BuilderPropValue> = {};
   for (const [name, propValue] of Object.entries(propsRecord)) {
+    if (!/^[A-Za-z_$][A-Za-z0-9_$-]*$/.test(name)) {
+      fail(`${path}.props`, `holds "${name}", not a JSX-safe prop name`);
+    }
     props[name] = parsePropValue(propValue, `${path}.props.${name}`, state);
   }
   const extra = record.extra === undefined
@@ -341,7 +350,8 @@ export function parseDocument(
   }
   const record = asRecord(raw, "document");
   if (record.version !== 1) fail("document.version", "must be 1");
-  const name = asString(record.name, "document.name");
+  const name = record.name;
+  if (typeof name !== "string") fail("document.name", "must be a string");
   if (!Array.isArray(record.children)) {
     fail("document.children", "must be an array");
   }

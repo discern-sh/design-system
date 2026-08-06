@@ -96,6 +96,13 @@ Deno.test("builder document operations keep the tree consistent", () => {
     0,
   );
   assertEquals(refused, document);
+  const vanished = moveChild(
+    document,
+    "b1",
+    { parent: "node", nodeId: "gone", prop: "children" },
+    0,
+  );
+  assertEquals(vanished, document);
 
   document = updateNodeProp(document, "b1", "variant", {
     kind: "string",
@@ -335,6 +342,49 @@ Deno.test("TSX export escapes text, spreads extras, and names slots", () => {
   );
 });
 
+Deno.test("TSX export survives hostile names and lone text roots", () => {
+  const emptyName: BuilderDocument = { version: 1, name: "", children: [] };
+  assertEquals(
+    parseDocument(serializeDocument(emptyName), new Set()),
+    emptyName,
+  );
+  const emptyOutput = documentToTsx(emptyName, naming);
+  assertStringIncludes(emptyOutput, "Untitled page");
+  assertStringIncludes(emptyOutput, "export function ComposedPage()");
+
+  const hostileName: BuilderDocument = {
+    version: 1,
+    name: "A */ alert(1); /*",
+    children: [],
+  };
+  const hostileOutput = documentToTsx(hostileName, naming);
+  assertEquals(hostileOutput.split("*/").length, 2);
+
+  const loneText: BuilderDocument = {
+    version: 1,
+    name: "Note",
+    children: [text("t1", "Hello world")],
+  };
+  const loneOutput = documentToTsx(loneText, naming);
+  assertStringIncludes(loneOutput, "<>");
+  assertStringIncludes(loneOutput, "Hello world");
+  assertStringIncludes(loneOutput, "</>");
+
+  const ampersand: BuilderDocument = {
+    version: 1,
+    name: "Menu",
+    children: [
+      node("b1", "button", {
+        variant: { kind: "string", value: "A & B" },
+        children: slot(text("t1", "Fish &amp; Chips")),
+      }),
+    ],
+  };
+  const ampersandOutput = documentToTsx(ampersand, naming);
+  assertStringIncludes(ampersandOutput, 'variant={"A & B"}');
+  assertStringIncludes(ampersandOutput, '{"Fish &amp; Chips"}');
+});
+
 Deno.test("documents round-trip through the JSON save format", () => {
   const knownSlugs = new Set(["stack", "button"]);
   const document: BuilderDocument = {
@@ -390,6 +440,23 @@ Deno.test("documents round-trip through the JSON save format", () => {
       ),
     BuilderDocumentError,
     "unknown component",
+  );
+  assertThrows(
+    () =>
+      parseDocument(
+        JSON.stringify({
+          version: 1,
+          name: "x",
+          children: [
+            node("a", "stack", {
+              "my prop": { kind: "string", value: "x" },
+            }),
+          ],
+        }),
+        knownSlugs,
+      ),
+    BuilderDocumentError,
+    "JSX-safe",
   );
 });
 
@@ -461,6 +528,36 @@ Deno.test("every catalogue component yields controls, a default instance, and ex
   assert(layout?.control === "select");
   assertEquals(layout.options, ["split", "centered"]);
 
+  // Unions imported from sibling components resolve through shared variants.
+  const status = controlsBySlug("agent-persona").find(({ name }) =>
+    name === "status"
+  );
+  assert(status?.control === "select");
+  assert(status.options.includes("working"));
+  const level = controlsBySlug("anchor-heading").find(({ name }) =>
+    name === "level"
+  );
+  assert(level?.control === "select");
+  assert(level.options.includes(2));
+
+  // Derived `(typeof array)[number]` unions become selects, so required
+  // ones synthesize valid defaults instead of the literal string "Text".
+  const ownership = controlsBySlug("ownership-badge").find(({ name }) =>
+    name === "ownership"
+  );
+  assert(ownership?.control === "select");
+  assert(ownership.options.includes("authored"));
+  const disposition = controlsBySlug("file-change").find(({ name }) =>
+    name === "disposition"
+  );
+  assert(disposition?.control === "select");
+
+  // Object-shaped props edit as JSON, never as free text.
+  const bodyStyle = controlsBySlug("terminal").find(({ name }) =>
+    name === "bodyStyle"
+  );
+  assert(bodyStyle?.control === "json");
+
   for (const entry of componentEntries) {
     const slug = entry.meta.slug;
     const controls = controlsBySlug(slug);
@@ -478,7 +575,7 @@ Deno.test("every catalogue component yields controls, a default instance, and ex
     }
 
     assert(componentBySlug(slug) !== undefined);
-    const instance = createNode(slug, entry);
+    const instance = registryIndex.instantiateComponent(slug);
     const document = insertChild(
       emptyDocument(`${entry.meta.name} check`),
       { parent: "root" },
@@ -497,7 +594,7 @@ Deno.test("every catalogue component yields controls, a default instance, and ex
 
 Deno.test("default instances render real markup through the shared renderer", async () => {
   const { registryIndex, render } = await builderModules();
-  const { componentEntries } = registryIndex;
+  const { componentEntries, instantiateComponent } = registryIndex;
   const { renderBuilderChild, rendersFromDefaults } = render;
 
   let rendered = 0;
@@ -505,7 +602,7 @@ Deno.test("default instances render real markup through the shared renderer", as
     const slug = entry.meta.slug;
     if (!rendersFromDefaults(slug)) continue;
     const markup = renderToStaticMarkup(
-      renderBuilderChild(createNode(slug, entry)),
+      renderBuilderChild(instantiateComponent(slug)),
     );
     assert(
       markup.length > 0,
@@ -517,4 +614,38 @@ Deno.test("default instances render real markup through the shared renderer", as
     rendered >= componentEntries.length / 2,
     "most components should render from synthesized defaults",
   );
+});
+
+Deno.test("cloneElement components preview a lone slotted element", async () => {
+  const { registryIndex, render } = await builderModules();
+  const { instantiateComponent } = registryIndex;
+  const { renderBuilderChild } = render;
+
+  const tooltip = instantiateComponent("tooltip");
+  const configured = {
+    ...tooltip,
+    props: {
+      ...tooltip.props,
+      children: { kind: "slot", children: [instantiateComponent("button")] },
+    },
+  } as typeof tooltip;
+  const markup = renderToStaticMarkup(renderBuilderChild(configured));
+  assertStringIncludes(markup, "discern-tooltip");
+  assertStringIncludes(markup, "discern-button");
+});
+
+Deno.test("lenient rendering tolerates mid-edit invalid JSON", async () => {
+  const { registryIndex, render } = await builderModules();
+  const { instantiateComponent } = registryIndex;
+  const { renderBuilderChild } = render;
+
+  const card = { ...instantiateComponent("card"), extra: "{" };
+  assertThrows(
+    () => renderToStaticMarkup(renderBuilderChild(card)),
+    BuilderDocumentError,
+  );
+  const markup = renderToStaticMarkup(
+    renderBuilderChild(card, { lenient: true }),
+  );
+  assertStringIncludes(markup, "discern-card");
 });

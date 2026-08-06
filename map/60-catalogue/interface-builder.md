@@ -13,7 +13,7 @@ Everything the builder knows is derived — it adds no authored metadata anywher
 - The palette is the generated Catalogue registry in canonical Group order, searchable and filterable by purpose, exactly like the Catalogue's own index.
 - Inspector controls derive in [`controls.ts`](../../styleguide/builder/controls.ts) from each entry's extracted prop documentation and literal-union variants: booleans become toggles, literal unions become selects (numeric literals stay numbers), `ReactNode` props become slots, `ReactElement` props become element-only slots that start empty, structural types become JSON editors, and event handlers are excluded. Components whose props form a source union (Button, Mention, Agent mention) reconstruct their shared surface from their variant type aliases plus a children slot; anything further enters through the additional-props JSON field.
 - Required controls receive synthesized defaults so a freshly placed Component renders immediately; required structural JSON and element-only slots wait for the user instead.
-- The canvas and the tests share one renderer, [`render.tsx`](../../styleguide/builder/render.tsx), so preview and export can never disagree. Required function props render as no-ops; exports leave them for the consumer to wire.
+- The canvas and the tests share one renderer, [`render.tsx`](../../styleguide/builder/render.tsx), so anything the builder exports previews identically. Required function props render as no-ops; exports leave them for the consumer to wire. The canvas alone renders leniently — a mid-edit invalid JSON value is omitted rather than fatal — while export refuses invalid JSON outright.
 
 ## Export surfaces
 

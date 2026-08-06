@@ -19,12 +19,25 @@ export interface RenderOptions {
     node: BuilderNode,
     props: Record<string, unknown>,
   ) => Record<string, unknown>;
+  /**
+   * Tolerate mid-edit invalid JSON by omitting the value instead of
+   * throwing, so the canvas keeps rendering while the user types. Export
+   * stays strict, so nothing lenient ever leaves the builder.
+   */
+  readonly lenient?: boolean;
 }
 
-function parsedJson(source: string, spot: string): unknown {
+const OMITTED = Symbol("invalid-json");
+
+function parsedJson(
+  source: string,
+  spot: string,
+  options: RenderOptions,
+): unknown {
   try {
     return JSON.parse(source);
   } catch {
+    if (options.lenient) return OMITTED;
     throw new BuilderDocumentError(`${spot} holds invalid JSON.`);
   }
 }
@@ -47,8 +60,10 @@ function slotChildren(
 ): ReactNode {
   if (children.length === 0) return undefined;
   const only = children[0];
-  if (children.length === 1 && only !== undefined && only.kind === "text") {
-    return only.text;
+  if (children.length === 1 && only !== undefined) {
+    // A lone child passes through unwrapped so ReactElement-typed props
+    // (cloneElement consumers) receive the element itself, never an array.
+    return only.kind === "text" ? only.text : renderBuilderChild(only, options);
   }
   return children.map((child) => (
     <Fragment key={child.id}>{renderBuilderChild(child, options)}</Fragment>
@@ -70,10 +85,12 @@ export function renderBuilderChild(
     if (value.kind === "slot") {
       props[name] = slotChildren(value.children, options);
     } else if (value.kind === "json") {
-      props[name] = parsedJson(
+      const parsed = parsedJson(
         value.source,
         `The "${name}" prop of ${labelFor(child)}`,
+        options,
       );
+      if (parsed !== OMITTED) props[name] = parsed;
     } else {
       props[name] = value.value;
     }
@@ -82,8 +99,12 @@ export function renderBuilderChild(
     const extra = parsedJson(
       child.extra,
       `The additional props of ${labelFor(child)}`,
+      options,
     );
-    if (typeof extra === "object" && extra !== null && !Array.isArray(extra)) {
+    if (
+      extra !== OMITTED && typeof extra === "object" && extra !== null &&
+      !Array.isArray(extra)
+    ) {
       Object.assign(props, extra);
     }
   }

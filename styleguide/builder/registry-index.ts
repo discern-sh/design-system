@@ -6,11 +6,14 @@
 import type { ComponentType } from "react";
 import * as reactSurface from "../../src/react.ts";
 import { componentGroups } from "../../src/types/component-meta.ts";
+import type { CatalogueVariant } from "../conformance.ts";
 import type { RegistryEntry } from "../generated/registry.ts";
 import { registry } from "../generated/registry.ts";
 import type { PropControl } from "./controls.ts";
-import { deriveControls } from "./controls.ts";
+import { defaultProps, deriveControls } from "./controls.ts";
 import type { ExportNaming } from "./export.ts";
+import type { BuilderNode } from "./model.ts";
+import { newChildId } from "./model.ts";
 
 /** Registry entries in canonical catalogue order (group, then meta order). */
 export const componentEntries: readonly RegistryEntry[] = registry
@@ -69,6 +72,25 @@ export function componentBySlug(
   return component;
 }
 
+/** Variant unions from every entry, first declaration winning per name. */
+const sharedVariants: readonly CatalogueVariant[] = [
+  ...componentEntries
+    .flatMap((entry) => entry.variants)
+    .reduce(
+      (byName, variant) =>
+        byName.has(variant.typeName)
+          ? byName
+          : byName.set(variant.typeName, variant),
+      new Map<string, CatalogueVariant>(),
+    )
+    .values(),
+];
+
+/** Object interface names exported anywhere in the component tree. */
+const objectTypeNames: ReadonlySet<string> = new Set(
+  componentEntries.flatMap((entry) => entry.objectTypes),
+);
+
 const controlsCache = new Map<string, readonly PropControl[]>();
 
 /** Memoized inspector controls for a component slug. */
@@ -79,7 +101,21 @@ export function controlsBySlug(slug: string): readonly PropControl[] {
   if (entry === undefined) {
     throw new Error(`Unknown component slug "${slug}".`);
   }
-  const controls = deriveControls(entry);
+  const controls = deriveControls({
+    ...entry,
+    sharedVariants,
+    objectTypeNames,
+  });
   controlsCache.set(slug, controls);
   return controls;
+}
+
+/** A fresh instance of a component with its required defaults configured. */
+export function instantiateComponent(slug: string): BuilderNode {
+  return {
+    kind: "component",
+    id: newChildId(),
+    slug,
+    props: defaultProps(controlsBySlug(slug)),
+  };
 }
