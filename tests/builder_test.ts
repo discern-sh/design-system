@@ -451,6 +451,16 @@ Deno.test("every catalogue component yields controls, a default instance, and ex
   } = registryIndex;
   assert(componentEntries.length >= 100);
 
+  // Inline string-literal unions must survive extraction as select controls.
+  const texture = controlsBySlug("card").find(({ name }) => name === "texture");
+  assert(texture?.control === "select");
+  assertEquals(texture.options, ["plain", "dots"]);
+  const layout = controlsBySlug("hero-block").find(({ name }) =>
+    name === "layout"
+  );
+  assert(layout?.control === "select");
+  assertEquals(layout.options, ["split", "centered"]);
+
   for (const entry of componentEntries) {
     const slug = entry.meta.slug;
     const controls = controlsBySlug(slug);

@@ -2,6 +2,8 @@
 
 The Catalogue is the local browser for every Component example, public Token, composition recipe, and Component selection. Run `deno task serve` and open the worktree's assigned port.
 
+The Catalogue also hosts the [interface builder](interface-builder.md), a drag-and-drop composition surface at `/style-guide/builder/` that renders real Components on a live canvas and exports consumer TSX with its runtime selection.
+
 ## Find the right component
 
 Search covers Component names, Groups, descriptions, purposes, and usage guidance. The purpose selector in the Components section narrows the rendered Catalogue to documentation, tool output, procedural workflow, or marketing work. The sidebar remains a complete Component index, independent of that filter. Search and purpose filters combine. `?purpose=<name>` restores the collection on a cold load.

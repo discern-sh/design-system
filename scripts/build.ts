@@ -95,7 +95,14 @@ function pascalCase(slug: string): string {
 
 function renderDocType(value: unknown, context: string): string {
   const type = asRecord(value, context);
-  if (typeof type.repr === "string" && type.repr.length > 0) {
+  // deno doc's repr drops the quotes from string literals, so literal-bearing
+  // kinds render from their structure to keep `"a" | "b"` distinguishable
+  // from a union of type references.
+  const structuralKind = type.kind === "literal" || type.kind === "union" ||
+    type.kind === "intersection";
+  if (
+    !structuralKind && typeof type.repr === "string" && type.repr.length > 0
+  ) {
     return type.repr;
   }
   const kind = requiredString(type.kind, `${context}.kind`);
