@@ -29,13 +29,13 @@ Everything the builder knows is derived — it adds no authored metadata anywher
 
 ## Where it lives
 
-| Concern                                    | Authority                                                              |
-| ------------------------------------------ | ---------------------------------------------------------------------- |
-| Document model and tree operations         | [`model.ts`](../../styleguide/builder/model.ts)                        |
-| Control derivation and default synthesis   | [`controls.ts`](../../styleguide/builder/controls.ts)                  |
-| TSX, selection, and JSON export            | [`export.ts`](../../styleguide/builder/export.ts)                      |
-| Dependency-closure cost                    | [`cost.ts`](../../styleguide/builder/cost.ts)                          |
-| Registry lookups and adapter resolution    | [`registry-index.ts`](../../styleguide/builder/registry-index.ts)      |
-| Shared canvas/test renderer                | [`render.tsx`](../../styleguide/builder/render.tsx)                    |
-| Builder chrome and interactions            | [`app.tsx`](../../styleguide/builder/app.tsx)                          |
-| Class-level guarantees for every Component | [`builder_test.ts`](../../tests/builder_test.ts)                       |
+| Concern                                    | Authority                                                         |
+| ------------------------------------------ | ----------------------------------------------------------------- |
+| Document model and tree operations         | [`model.ts`](../../styleguide/builder/model.ts)                   |
+| Control derivation and default synthesis   | [`controls.ts`](../../styleguide/builder/controls.ts)             |
+| TSX, selection, and JSON export            | [`export.ts`](../../styleguide/builder/export.ts)                 |
+| Dependency-closure cost                    | [`cost.ts`](../../styleguide/builder/cost.ts)                     |
+| Registry lookups and adapter resolution    | [`registry-index.ts`](../../styleguide/builder/registry-index.ts) |
+| Shared canvas/test renderer                | [`render.tsx`](../../styleguide/builder/render.tsx)               |
+| Builder chrome and interactions            | [`app.tsx`](../../styleguide/builder/app.tsx)                     |
+| Class-level guarantees for every Component | [`builder_test.ts`](../../tests/builder_test.ts)                  |
