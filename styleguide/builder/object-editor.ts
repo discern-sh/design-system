@@ -73,6 +73,9 @@ export function newShapedRow(shape: JsonShape): ObjectEditorRow {
           row[member.name] = member.options[0];
         }
         break;
+      case "json":
+        row[member.name] = member.typeText.includes("[]") ? [] : {};
+        break;
       default:
         break;
     }
@@ -97,24 +100,26 @@ export function withRowValue(
 }
 
 /**
- * True when the member's current value in the row is absent or matches its
- * control, so the cell can edit it without destroying structured data.
+ * True when the member's control is scalar and the row's current value is
+ * absent or matches it, so the cell can edit without destroying structure.
+ * Structural members (nested arrays and objects) are never cell-editable —
+ * a text cell would store a string where structure belongs.
  */
 export function editableCell(
   row: ObjectEditorRow,
   member: PropControl,
 ): boolean {
   const value = row[member.name];
-  if (value === undefined) return true;
   switch (member.control) {
     case "text":
-      return typeof value === "string";
+      return value === undefined || typeof value === "string";
     case "number":
-      return typeof value === "number";
+      return value === undefined || typeof value === "number";
     case "toggle":
-      return typeof value === "boolean";
+      return value === undefined || typeof value === "boolean";
     case "select":
-      return typeof value === "string" || typeof value === "number";
+      return value === undefined || typeof value === "string" ||
+        typeof value === "number";
     default:
       return false;
   }

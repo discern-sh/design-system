@@ -4,6 +4,7 @@ import {
   assertStringIncludes,
   assertThrows,
 } from "@std/assert";
+import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { buildDesignSystem } from "../scripts/build.ts";
 import { packageManifest } from "../src/manifest.ts";
@@ -367,6 +368,33 @@ Deno.test("shaped JSON sources round-trip through row editing", async () => {
   assert(!editableCell({ value: 3 }, shape.members[0]));
   assert(!editableCell({ value: { nested: true } }, shape.members[0]));
 
+  // Structural members are never cell-editable, present or absent — a text
+  // cell would store a string where an array or object belongs.
+  const itemsMember = {
+    name: "items",
+    label: "Items",
+    required: true,
+    typeText: "readonly DocsNavItem[]",
+    control: "json",
+  } as const;
+  assert(!editableCell({}, itemsMember));
+  assert(!editableCell({ items: [] }, itemsMember));
+  const seeded = newShapedRow({
+    list: true,
+    typeName: "DocsNavSection",
+    members: [
+      {
+        name: "label",
+        label: "Label",
+        required: true,
+        typeText: "string",
+        control: "text",
+      },
+      itemsMember,
+    ],
+  });
+  assertEquals(seeded, { label: "", items: [] });
+
   const single = {
     list: false,
     typeName: "FileChangeMagnitude",
@@ -684,17 +712,82 @@ Deno.test("composition cost resolves the emitter's dependency closure", () => {
 Deno.test("state updaters never read the synthetic event", async () => {
   // React nulls event.currentTarget after dispatch, so an updater callback
   // that touches the event crashes on the deferred invocation.
-  const source = await Deno.readTextFile(
-    new URL("../styleguide/builder/app.tsx", import.meta.url),
-  );
-  for (const [index, chunk] of source.split("apply(").entries()) {
-    if (index === 0) continue;
-    const head = chunk.slice(0, 300);
-    assert(
-      !head.includes("event."),
-      `an apply() updater reads the synthetic event:\n${head.slice(0, 160)}`,
+  for (const module of ["app.tsx", "fields.tsx"]) {
+    const source = await Deno.readTextFile(
+      new URL(`../styleguide/builder/${module}`, import.meta.url),
     );
+    for (const [index, chunk] of source.split("apply(").entries()) {
+      if (index === 0) continue;
+      const head = chunk.slice(0, 300);
+      assert(
+        !head.includes("event."),
+        `an apply() updater in ${module} reads the synthetic event:\n${
+          head.slice(0, 160)
+        }`,
+      );
+    }
   }
+});
+
+Deno.test("the shaped editor keeps a stable scaffold across validity flips", async () => {
+  // A structural difference between the valid and invalid states would
+  // remount the raw textarea mid-keystroke, dropping focus and caret.
+  const { ShapedJsonEditor, MemberCell } = await import(
+    "../styleguide/builder/fields.tsx"
+  );
+  const shape = {
+    list: true,
+    typeName: "SelectOption",
+    members: [
+      {
+        name: "value",
+        label: "Value",
+        required: true,
+        typeText: "string",
+        control: "text",
+      },
+      {
+        name: "items",
+        label: "Items",
+        required: false,
+        typeText: "readonly DocsNavItem[]",
+        control: "json",
+      },
+    ],
+  } as const;
+  const scaffold = (markup: string): string[] => {
+    const container = /<div class="discern-builder-object"/.exec(markup);
+    const details = /<details[^>]*class="discern-builder-object__raw"/.exec(
+      markup,
+    );
+    assert(container !== null && details !== null);
+    return [String(container.index < details.index)];
+  };
+  const valid = renderToStaticMarkup(createElement(ShapedJsonEditor, {
+    shape,
+    source: '[{"value":"a"}]',
+    onSource: () => {},
+  }));
+  const invalid = renderToStaticMarkup(createElement(ShapedJsonEditor, {
+    shape,
+    source: "{oops",
+    onSource: () => {},
+  }));
+  assertEquals(scaffold(valid), scaffold(invalid));
+  // The disclosure forces itself open while the source is invalid, so the
+  // field being typed in cannot vanish behind a collapsed summary.
+  assert(/<details[^>]*open/.test(invalid));
+  assertStringIncludes(invalid, "Fix the JSON");
+
+  // Structural members render as read-only cells, never as text inputs
+  // that would corrupt the value with the first keystroke.
+  const cell = renderToStaticMarkup(createElement(MemberCell, {
+    member: shape.members[1],
+    row: {},
+    onValue: () => {},
+  }));
+  assertStringIncludes(cell, "(edit as JSON)");
+  assertStringIncludes(cell, "disabled");
 });
 
 Deno.test("canvas hover styling never overrides the selection outline", async () => {

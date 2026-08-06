@@ -1,17 +1,5 @@
-import {
-  Component,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import type {
-  CSSProperties,
-  DragEvent,
-  ReactNode,
-  TextareaHTMLAttributes,
-} from "react";
+import { Component, useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties, DragEvent, ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { ThemeSwitcher } from "../../src/components/core/theme-switcher/theme-switcher.tsx";
 import type { ThemeSwitcherMode } from "../../src/components/core/theme-switcher/theme-switcher.tsx";
@@ -24,14 +12,8 @@ import {
 } from "../../src/types/component-meta.ts";
 import { packageVersion } from "../generated/registry.ts";
 import { compositionCost } from "./cost.ts";
-import type { JsonShape, PropControl } from "./controls.ts";
-import {
-  editableCell,
-  newShapedRow,
-  parseShapedSource,
-  serializeShapedRows,
-  withRowValue,
-} from "./object-editor.ts";
+import type { PropControl } from "./controls.ts";
+import { AutoGrowTextarea, ShapedJsonEditor } from "./fields.tsx";
 import {
   BuilderDocumentError,
   documentSelectionSnippet,
@@ -339,20 +321,6 @@ function CanvasBoundary({ label, children }: CanvasBoundaryProps) {
   );
 }
 
-/** A textarea that grows with its content instead of scrolling inside 3 rows. */
-function AutoGrowTextarea(
-  props: TextareaHTMLAttributes<HTMLTextAreaElement>,
-) {
-  const ref = useRef<HTMLTextAreaElement>(null);
-  useLayoutEffect(() => {
-    const element = ref.current;
-    if (element === null) return;
-    element.style.height = "auto";
-    element.style.height = `${String(element.scrollHeight + 2)}px`;
-  }, [props.value]);
-  return <textarea ref={ref} {...props} />;
-}
-
 interface PalettePreviewProps {
   readonly slug: string;
 }
@@ -368,6 +336,9 @@ function PalettePreview({ slug }: PalettePreviewProps) {
   useEffect(() => {
     const element = ref.current;
     if (element === null) return;
+    // Previews are decoration: inert removes their controls from the tab
+    // order and assistive tech (React 18 has no typed inert prop yet).
+    element.inert = true;
     const observer = new IntersectionObserver((entries) => {
       if (entries.some((entry) => entry.isIntersecting)) {
         setVisible(true);
@@ -463,176 +434,6 @@ function Palette(
         </section>
       ))}
       {grouped.length === 0 ? <p>No components match.</p> : null}
-    </div>
-  );
-}
-
-interface MemberCellProps {
-  readonly member: PropControl;
-  readonly row: Readonly<Record<string, unknown>>;
-  readonly onValue: (value: unknown) => void;
-}
-
-/** One member field inside a structured object row. */
-function MemberCell({ member, row, onValue }: MemberCellProps) {
-  const value = row[member.name];
-  if (!editableCell(row, member)) {
-    return (
-      <label className="discern-builder-object__cell">
-        <span>{member.label}</span>
-        <input type="text" disabled value="(edit as JSON)" />
-      </label>
-    );
-  }
-  if (member.control === "toggle") {
-    return (
-      <label className="discern-builder-object__cell discern-builder-object__cell--row">
-        <input
-          type="checkbox"
-          checked={value === true}
-          onChange={(event) =>
-            onValue(
-              event.currentTarget.checked
-                ? true
-                : member.required
-                ? false
-                : undefined,
-            )}
-        />
-        <span>{member.label}</span>
-      </label>
-    );
-  }
-  if (member.control === "select") {
-    const options = member.options;
-    const currentIndex = options.findIndex((option) => option === value);
-    return (
-      <label className="discern-builder-object__cell">
-        <span>{member.label}</span>
-        <Select
-          value={String(currentIndex)}
-          onChange={(event) =>
-            onValue(options[Number(event.currentTarget.value)])}
-          options={[
-            ...(member.required ? [] : [{ value: "-1", label: "(not set)" }]),
-            ...options.map((option, index) => ({
-              value: String(index),
-              label: String(option),
-            })),
-          ]}
-        />
-      </label>
-    );
-  }
-  if (member.control === "number") {
-    return (
-      <label className="discern-builder-object__cell">
-        <span>{member.label}</span>
-        <input
-          type="number"
-          value={typeof value === "number" ? String(value) : ""}
-          onChange={(event) => {
-            const raw = event.currentTarget.value;
-            onValue(raw === "" ? undefined : event.currentTarget.valueAsNumber);
-          }}
-        />
-      </label>
-    );
-  }
-  return (
-    <label className="discern-builder-object__cell">
-      <span>{member.label}</span>
-      <input
-        type="text"
-        value={typeof value === "string" ? value : ""}
-        onChange={(event) => {
-          const raw = event.currentTarget.value;
-          onValue(raw === "" && !member.required ? undefined : raw);
-        }}
-      />
-    </label>
-  );
-}
-
-interface ShapedJsonEditorProps {
-  readonly shape: JsonShape;
-  readonly source: string;
-  readonly onSource: (source: string) => void;
-}
-
-/**
- * Row-based editing for a json control whose object shape is known. The
- * JSON string stays the stored value; rows are a view over it, and raw
- * editing stays one disclosure away.
- */
-function ShapedJsonEditor({ shape, source, onSource }: ShapedJsonEditorProps) {
-  const rows = parseShapedSource(source, shape);
-  const raw = (
-    <AutoGrowTextarea
-      rows={2}
-      spellCheck={false}
-      value={source}
-      placeholder={shape.list ? "[]" : "{}"}
-      onChange={(event) => onSource(event.currentTarget.value)}
-    />
-  );
-  if (rows === undefined) {
-    return (
-      <>
-        {raw}
-        <small className="discern-builder-control__error">
-          Fix the JSON to edit it as a form.
-        </small>
-      </>
-    );
-  }
-  const commit = (
-    next: readonly Readonly<Record<string, unknown>>[],
-  ): void => onSource(serializeShapedRows(next, shape));
-  return (
-    <div className="discern-builder-object">
-      {rows.map((row, index) => (
-        <div className="discern-builder-object__row" key={index}>
-          <div className="discern-builder-object__cells">
-            {shape.members.map((member) => (
-              <MemberCell
-                key={member.name}
-                member={member}
-                row={row}
-                onValue={(value) =>
-                  commit(withRowValue(rows, index, member.name, value))}
-              />
-            ))}
-          </div>
-          {shape.list
-            ? (
-              <button
-                type="button"
-                aria-label={`Remove ${shape.typeName} ${String(index + 1)}`}
-                onClick={() =>
-                  commit(rows.filter((_, at) => at !== index))}
-              >
-                ✕
-              </button>
-            )
-            : null}
-        </div>
-      ))}
-      {shape.list
-        ? (
-          <button
-            type="button"
-            className="discern-builder-object__add"
-            onClick={() => commit([...rows, newShapedRow(shape)])}
-          >
-            ＋ {shape.typeName}
-          </button>
-        )
-        : null}
-      <details className="discern-builder-object__raw">
-        <summary>Edit as JSON</summary>
-        {raw}
-      </details>
     </div>
   );
 }

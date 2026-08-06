@@ -673,6 +673,7 @@
   .discern-builder-object__raw textarea {
     box-sizing: border-box;
     width: 100%;
+    min-height: 38px;
     margin-top: 6px;
   }
 
