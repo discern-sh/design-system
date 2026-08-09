@@ -74,7 +74,7 @@ export default function ProcessStepsExamples() {
           description: (
             <p>Finish with evidence someone else can independently inspect.</p>
           ),
-          detail: "Permanent receipt",
+          detail: "Permanent proof",
         },
         {
           title: "Share",

@@ -58,11 +58,11 @@
   # Branch prefix for worktrees created by discern, e.g. "agent/my-feature".
   branch_prefix = "agent/"
 
-  # Landed receipts are recorded as local Git notes by default. Set this to
+  # Landed proofs are recorded as local Git notes by default. Set this to
   # "fetch" so ordinary fetches can carry them, even before a remote publishes its
-  # first receipt note. Publishing remains an explicit
+  # first proof note. Publishing remains an explicit
   # `git push <remote> refs/notes/discern`.
-  receipt_notes = "local"
+  proof_notes = "local"
 
   # Idempotent commands that make ANY checkout usable for its current tracked tree
   # — typically dependency installation from a lockfile. They run in order on each
@@ -140,8 +140,8 @@
 # your coding agent fill these by sniffing the repo; `discern doctor` shows which
 # known names and custom jobs are wired.
 #
-# `discern prepare` is the fast inner loop: it runs the fix-stage then the check-stage
-# jobs, and never builds or tests.
+# `discern prepare` is the fast inner loop: it runs the fix-stage jobs, regenerates
+# every `[generated]` group, then runs the check-stage jobs — never build jobs or tests.
 #
 # `smoke` is the project's fast readiness check — real config and essential shared
 # runtime dependencies that Discern cannot infer. Keep it much faster than `test`:

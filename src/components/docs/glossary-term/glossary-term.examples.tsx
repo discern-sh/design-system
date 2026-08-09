@@ -50,7 +50,7 @@ export default function GlossaryTermExamples() {
           align="start"
           width="sm"
         >
-          gate receipt
+          gate proof
         </GlossaryTerm>{" "}
         preserves the evidence used at handoff.
       </p>

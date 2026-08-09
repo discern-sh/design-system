@@ -2,7 +2,7 @@ import { CodeListing } from "./code-listing.tsx";
 
 const example = `const brief = {
   question: "What must remain true?",
-  evidence: ["tests", "receipt"],
+  evidence: ["tests", "proof"],
 };
 
 await prove(brief);`;

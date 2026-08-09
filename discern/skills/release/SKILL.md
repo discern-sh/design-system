@@ -19,7 +19,7 @@ Run and report, then confirm the findings with the user:
 - `git status` — clean tree, on `main`. `git log origin/main..main --oneline` — anything unpushed rides along with this release; name it.
 - `git tag -l` and `gh release list --limit 3` — the last released version, and whether any tag exists without a release (a previously stranded attempt; offer to resume it instead of minting a new version).
 - Current version: `deno.json` `version` (must equal `package.json` `version` and the newest `## X.Y.Z` heading in `CHANGELOG.md` — the release test enforces this triple).
-- `discern done` on the release tree if there is no green receipt for HEAD — the full gate, including the browser conformance suite, is the release bar.
+- `discern done` on the release tree if there is no green proof for HEAD — the full gate, including the browser conformance suite, is the release bar.
 
 ## 2. Choose the version
 
