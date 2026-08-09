@@ -1801,7 +1801,9 @@ function monospaceTypefaceRules(path: string, css: string): string[] {
 Deno.test("monospace is reserved for brand names and code-bearing surfaces", async () => {
   const allowed = [
     "src/components/agents/fleet/fleet.css::.discern-fleet__branch",
+    "src/components/agents/receipt/receipt.css::.discern-receipt__meta dd code",
     "src/components/core/brand/brand.css::.discern-brand--mono .discern-brand__name",
+    "src/components/display/diffstat/diffstat.css::.discern-diffstat__added, .discern-diffstat__removed",
     "src/components/display/terminal/terminal.css::.discern-terminal__body",
     "src/components/editorial/code-listing/code-listing.css::.discern-code-listing__body",
     "src/components/editorial/prose/prose.css::.discern-prose :not(pre) > code",
@@ -1847,6 +1849,27 @@ Deno.test("monospace is reserved for brand names and code-bearing surfaces", asy
     allowed,
     "monospace typography reached a non-code or non-brand surface",
   );
+});
+
+Deno.test("Receipt keeps code typography on metadata values, not labels", async () => {
+  const example = await Deno.readTextFile(
+    join(
+      COMPONENT_ROOT,
+      "agents",
+      "receipt",
+      "receipt.examples.tsx",
+    ),
+  );
+  assertStringIncludes(
+    example,
+    'label: "branch", value: <code>agent/checkout-flow</code>',
+  );
+  assertStringIncludes(
+    example,
+    'label: "commit", value: <code>4f2c9d1</code>',
+  );
+  assert(!example.includes("<code>branch</code>"));
+  assert(!example.includes("<code>commit</code>"));
 });
 
 function rendersLinkedNavigation(source: string): boolean {

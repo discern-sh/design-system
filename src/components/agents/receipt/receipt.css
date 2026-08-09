@@ -87,6 +87,9 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .discern-receipt__meta dd code {
+    font-family: var(--discern-font-mono);
+  }
   .discern-receipt__checks > div {
     background:
       repeating-linear-gradient(

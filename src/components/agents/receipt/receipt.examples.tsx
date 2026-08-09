@@ -9,8 +9,8 @@ export default function ReceiptExamples() {
         title="Checkout refactor"
         stamp="pass"
         meta={[
-          { label: "branch", value: "agent/checkout-flow" },
-          { label: "commit", value: "4f2c9d1" },
+          { label: "branch", value: <code>agent/checkout-flow</code> },
+          { label: "commit", value: <code>4f2c9d1</code> },
           { label: "finished", value: <time dateTime="09:41">09:41</time> },
         ]}
         checks={[
