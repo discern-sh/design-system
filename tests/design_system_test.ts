@@ -1789,6 +1789,66 @@ Deno.test("people monograms use interface type while names remain independently 
   assert(monogramRules > 0, "no People monogram typography rules enrolled");
 });
 
+function monospaceTypefaceRules(path: string, css: string): string[] {
+  return [...css.matchAll(
+    /([^{}]+)\{([^{}]*var\(--discern-font-mono\)[^{}]*)\}/g,
+  )].map((match) => {
+    const selector = (match[1] ?? "").trim().replace(/\s+/g, " ");
+    return `${path}::${selector}`;
+  });
+}
+
+Deno.test("monospace is reserved for brand names and code-bearing surfaces", async () => {
+  const allowed = [
+    "src/components/agents/fleet/fleet.css::.discern-fleet__branch",
+    "src/components/core/brand/brand.css::.discern-brand--mono .discern-brand__name",
+    "src/components/display/terminal/terminal.css::.discern-terminal__body",
+    "src/components/editorial/code-listing/code-listing.css::.discern-code-listing__body",
+    "src/components/editorial/prose/prose.css::.discern-prose :not(pre) > code",
+    "src/components/marketing/site-footer/site-footer.css::.discern-site-footer__brand--mono",
+    "src/components/marketing/site-header/site-header.css::.discern-site-header__brand--mono",
+    "src/components/workflow/artifact-tree/artifact-tree.css::.discern-artifact-tree__name",
+    "src/components/workflow/command/command.css::.discern-command__context code",
+    "src/components/workflow/command/command.css::.discern-command__text",
+    "src/components/workflow/diagnostic/diagnostic.css::.discern-diagnostic__coordinates",
+    "src/components/workflow/diagnostic/diagnostic.css::.discern-diagnostic__evidence pre",
+    "src/components/workflow/expected-result/expected-result.css::.discern-expected-result__output",
+    "src/components/workflow/path-reference/path-reference.css::.discern-path-reference__path",
+    "src/components/workflow/raw-output/raw-output.css::.discern-raw-output__content",
+    "src/styles/utilities.css::.discern-mono",
+    "styleguide/styleguide.css::.discern-catalogue-api code",
+    "styleguide/styleguide.css::.discern-catalogue-brand strong",
+    "styleguide/styleguide.css::.discern-catalogue-copyable > code",
+    "styleguide/styleguide.css::.discern-catalogue-token code",
+    "styleguide/styleguide.css::.discern-catalogue-token__value",
+  ].toSorted();
+  assertEquals(
+    monospaceTypefaceRules(
+      "fresh.css",
+      ".discern-fresh-caption { font-family: var(--discern-font-mono); }",
+    ),
+    ["fresh.css::.discern-fresh-caption"],
+    "the fresh non-code fixture did not enter the detector",
+  );
+  const stylesheets = [
+    ...(await walk(COMPONENT_ROOT)).filter((path) => path.endsWith(".css")),
+    join(PACKAGE_ROOT, "src", "styles", "utilities.css"),
+    join(PACKAGE_ROOT, "styleguide", "styleguide.css"),
+  ];
+  const actual: string[] = [];
+  for (const stylesheet of stylesheets) {
+    actual.push(...monospaceTypefaceRules(
+      relative(PACKAGE_ROOT, stylesheet),
+      await Deno.readTextFile(stylesheet),
+    ));
+  }
+  assertEquals(
+    actual.toSorted(),
+    allowed,
+    "monospace typography reached a non-code or non-brand surface",
+  );
+});
+
 function rendersLinkedNavigation(source: string): boolean {
   return /<nav\b/.test(source) && /\bhref=/.test(source);
 }

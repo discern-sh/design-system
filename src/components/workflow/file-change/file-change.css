@@ -31,7 +31,6 @@
     block-size: 1.35rem;
     border: 1px solid currentColor;
     border-radius: var(--discern-radius-xs);
-    font-family: var(--discern-font-mono);
     line-height: 1;
   }
   .discern-file-change[data-discern-disposition="added"] .discern-file-change__state {

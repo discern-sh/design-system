@@ -38,7 +38,7 @@ const checkGlyphs: Record<ReceiptCheckState, string> = {
   skip: "–",
 };
 
-/** Monospace proof-of-work card: a stamped title, metadata rows, and dot-leadered check lines. */
+/** Proof-of-work card with a stamped title, metadata rows, and dot-leadered check lines. */
 export const Receipt: DiscernComponent<HTMLElement, ReceiptProps> = forwardRef<
   HTMLElement,
   ReceiptProps

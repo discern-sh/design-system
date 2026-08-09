@@ -71,7 +71,6 @@
   }
   .discern-result-summary__readings dd {
     margin: 0;
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
     font-variant-numeric: tabular-nums;
     font-weight: var(--discern-font-weight-strong);

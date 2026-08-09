@@ -20,7 +20,7 @@ export interface AgentAvatarProps extends HTMLAttributes<HTMLSpanElement> {
   readonly decorative?: boolean;
 }
 
-/** Dark square tile with a monospace sigil identifying one agent, with optional status. */
+/** Dark square tile with an interface-type sigil identifying one agent, with optional status. */
 export const AgentAvatar: DiscernComponent<HTMLSpanElement, AgentAvatarProps> =
   forwardRef<HTMLSpanElement, AgentAvatarProps>(function AgentAvatar(
     {

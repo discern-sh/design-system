@@ -3,7 +3,7 @@ import { Brand } from "./brand.tsx";
 export default function BrandExamples() {
   return (
     <div className="discern-example-stack discern-example-stack--start">
-      <Brand name="Waypoint" mark="◮" typeface="mono" />
+      <Brand name="Waypoint" mark="◮" typeface="ui" />
       <Brand
         name="Northstar"
         mark="N"

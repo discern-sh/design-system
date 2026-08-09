@@ -11,7 +11,6 @@
     --discern-badge-text: var(--discern-color-accent-800);
   }
   .discern-ownership-badge[data-discern-ownership="tool-owned"] {
-    font-family: var(--discern-font-mono);
     font-weight: var(--discern-font-weight-body);
   }
 }

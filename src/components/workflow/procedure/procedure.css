@@ -47,7 +47,6 @@
   }
   .discern-procedure__step::marker {
     color: var(--discern-color-accent-700);
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
     font-weight: var(--discern-font-weight-strong);
   }

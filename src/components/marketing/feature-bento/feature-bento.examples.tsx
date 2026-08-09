@@ -5,7 +5,8 @@ const visual = (label: string) => (
   <span
     style={{
       color: "var(--discern-color-ink-faint)",
-      fontFamily: "var(--discern-font-mono)",
+      fontFamily: "var(--discern-font-ui)",
+      fontFeatureSettings: "var(--discern-font-features-ui)",
     }}
   >
     {label}

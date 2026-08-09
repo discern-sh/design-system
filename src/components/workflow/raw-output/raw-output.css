@@ -32,7 +32,6 @@
     inline-size: 1rem;
     block-size: 1rem;
     color: var(--discern-color-ink-muted);
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-sm);
     transition: transform var(--discern-duration-fast)
       var(--discern-ease-out);
@@ -43,7 +42,6 @@
   .discern-raw-output__state {
     margin-inline-start: auto;
     color: var(--discern-color-ink-muted);
-    font-family: var(--discern-font-mono);
   }
   .discern-raw-output__state::after {
     content: "Collapsed";

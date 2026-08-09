@@ -19,7 +19,7 @@ export interface AgentPersonaProps extends HTMLAttributes<HTMLSpanElement> {
   readonly avatar?: ReactNode;
 }
 
-/** Agent avatar, name, and monospace detail lockup identifying one agent in interface chrome. */
+/** Agent avatar, name, and detail lockup identifying one agent in interface chrome. */
 export const AgentPersona: DiscernComponent<
   HTMLSpanElement,
   AgentPersonaProps

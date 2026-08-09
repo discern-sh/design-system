@@ -38,7 +38,6 @@
     border-radius: var(--discern-radius-xs);
     background: var(--discern-color-surface);
     color: var(--discern-color-ink-faint);
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-sm);
     line-height: 1;
     text-align: center;
@@ -83,7 +82,6 @@
   .discern-worklog__detail {
     overflow: hidden;
     color: var(--discern-color-ink-muted);
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
     line-height: 1.4;
     text-overflow: ellipsis;
@@ -92,7 +90,6 @@
   .discern-worklog__meta {
     flex: none;
     color: var(--discern-color-ink-muted);
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
     line-height: 1.4;
     padding-block-start: 2px;

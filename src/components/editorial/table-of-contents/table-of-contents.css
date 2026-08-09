@@ -46,7 +46,6 @@
   }
   .discern-table-of-contents a span {
     color: var(--discern-color-accent-700);
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
   }
   .discern-table-of-contents__item--nested a {
@@ -60,7 +59,6 @@
     padding-block-start: var(--discern-space-4);
     border-block-start: 1px dashed var(--discern-color-border-strong);
     color: var(--discern-color-ink-faint);
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
   }
   @media (max-width: 720px) {

@@ -39,7 +39,6 @@
     border: 1px solid currentColor;
     border-radius: 50%;
     color: var(--discern-color-ink-faint);
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
     font-weight: var(--discern-font-weight-strong);
     line-height: 1;

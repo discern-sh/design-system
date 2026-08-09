@@ -3,7 +3,6 @@
     display: inline-flex;
     align-items: center;
     gap: 0.45em;
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
     line-height: 1.2;
     white-space: nowrap;

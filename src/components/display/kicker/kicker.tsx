@@ -8,7 +8,7 @@ export interface KickerProps extends HTMLAttributes<HTMLSpanElement> {
   readonly index?: ReactNode;
   readonly children: ReactNode;
 }
-/** Uppercase annotation label with an optional monospace index. */
+/** Uppercase annotation label with an optional index. */
 export const Kicker: DiscernComponent<HTMLSpanElement, KickerProps> =
   forwardRef<HTMLSpanElement, KickerProps>(
     function Kicker({ index, className, children, ...props }, ref) {

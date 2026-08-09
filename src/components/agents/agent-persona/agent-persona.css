@@ -18,7 +18,6 @@
   .discern-agent-persona__name {
     overflow: hidden;
     color: var(--discern-color-ink);
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-sm);
     font-weight: var(--discern-font-weight-strong);
     letter-spacing: -0.02em;
@@ -29,7 +28,6 @@
   .discern-agent-persona__detail {
     overflow: hidden;
     color: var(--discern-color-ink-muted);
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
     line-height: 1.35;
     text-overflow: ellipsis;
