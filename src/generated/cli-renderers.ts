@@ -25,5 +25,9 @@ export { default as renderWindowCli, cliExamples as windowCliExamples } from "..
 export type { WindowCliProps } from "../components/display/window/window.cli.ts";
 export { default as renderTerminalCli, cliExamples as terminalCliExamples } from "../components/display/terminal/terminal.cli.ts";
 export type { TerminalCliProps } from "../components/display/terminal/terminal.cli.ts";
+export { default as renderTableCli, cliExamples as tableCliExamples } from "../components/display/table/table.cli.ts";
+export type { TableCliProps } from "../components/display/table/table.cli.ts";
 export { default as renderStatCli, cliExamples as statCliExamples } from "../components/display/stat/stat.cli.ts";
 export type { StatCliProps } from "../components/display/stat/stat.cli.ts";
+export { default as renderDiffstatCli, cliExamples as diffstatCliExamples } from "../components/display/diffstat/diffstat.cli.ts";
+export type { DiffstatCliProps } from "../components/display/diffstat/diffstat.cli.ts";
