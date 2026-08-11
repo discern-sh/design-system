@@ -54,6 +54,12 @@ Deno.test("Meter uses exact ASCII progress and every colour capability", () => {
       capabilities,
     );
   }
+  const wide = testCapabilities({ columns: 40 });
+  assertExactFrame(
+    renderMeterCli({ ...meter(25), width: 40 }, wide),
+    "Upload\n[ 25%] ◮⧩◭⧨◮⧩◭⧨.........................",
+    wide,
+  );
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
     const capabilities = testCapabilities({ colorDepth, columns: 20 });
     assertStyledFrame(
