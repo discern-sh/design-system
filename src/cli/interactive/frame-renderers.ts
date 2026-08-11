@@ -473,17 +473,19 @@ export function renderSequentialFormFrame(
     ...theme.typography.strong,
     color: terminalToneColor(theme, lifecycleTone(state.lifecycle)),
   }, capabilities);
-  const stepper = renderTriangleWorkflowStepper(
-    state.sections.map((section) => ({
-      label: section.summary === undefined
-        ? section.label
-        : `${section.label}: ${section.summary}`,
-      status: section.status,
-      ...(section.status === "active" ? { phase: state.activePhase } : {}),
-    })),
-    capabilities,
-    options,
-  );
+  const stepper = state.sections.length === 0
+    ? "No applicable steps."
+    : renderTriangleWorkflowStepper(
+      state.sections.map((section) => ({
+        label: section.summary === undefined
+          ? section.label
+          : `${section.label}: ${section.summary}`,
+        status: section.status,
+        ...(section.status === "active" ? { phase: state.activePhase } : {}),
+      })),
+      capabilities,
+      options,
+    );
   const beacon = state.beaconPhase === undefined
     ? undefined
     : renderTriangleActivityBeacon({
