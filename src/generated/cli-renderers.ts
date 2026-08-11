@@ -7,6 +7,12 @@ export { default as renderAvatarGroupCli, cliExamples as avatarGroupCliExamples 
 export type { AvatarGroupCliProps } from "../components/people/avatar-group/avatar-group.cli.ts";
 export { default as renderPersonaCli, cliExamples as personaCliExamples } from "../components/people/persona/persona.cli.ts";
 export type { PersonaCliProps } from "../components/people/persona/persona.cli.ts";
+export { default as renderMentionCli, cliExamples as mentionCliExamples } from "../components/people/mention/mention.cli.ts";
+export type { MentionCliProps } from "../components/people/mention/mention.cli.ts";
+export { default as renderBylineCli, cliExamples as bylineCliExamples } from "../components/people/byline/byline.cli.ts";
+export type { BylineCliProps } from "../components/people/byline/byline.cli.ts";
+export { default as renderProfileCardCli, cliExamples as profileCardCliExamples } from "../components/people/profile-card/profile-card.cli.ts";
+export type { ProfileCardCliProps } from "../components/people/profile-card/profile-card.cli.ts";
 export { default as renderDocsHeaderCli, cliExamples as docsHeaderCliExamples } from "../components/docs/docs-header/docs-header.cli.ts";
 export type { DocsHeaderCliProps } from "../components/docs/docs-header/docs-header.cli.ts";
 export { default as renderDocsNavCli, cliExamples as docsNavCliExamples } from "../components/docs/docs-nav/docs-nav.cli.ts";

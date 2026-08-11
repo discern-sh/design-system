@@ -3,6 +3,9 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Avatar } from "../avatar/avatar.tsx";
+import type { ProfileCardLayout } from "./profile-card.types.ts";
+
+export type { ProfileCardLayout } from "./profile-card.types.ts";
 
 /** Props for the {@linkcode ProfileCard} component. */
 export interface ProfileCardProps extends HTMLAttributes<HTMLElement> {
@@ -12,7 +15,7 @@ export interface ProfileCardProps extends HTMLAttributes<HTMLElement> {
   readonly src?: string;
   readonly avatar?: ReactNode;
   readonly links?: ReactNode;
-  readonly layout?: "portrait" | "landscape";
+  readonly layout?: ProfileCardLayout;
 }
 
 /** Card presenting one person: portrait, serif name, detail, bio, and links. */
