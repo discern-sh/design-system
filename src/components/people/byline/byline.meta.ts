@@ -4,6 +4,7 @@ export default {
   slug: "byline",
   group: "People",
   order: 50,
+  cli: { stance: "rendered" },
   description:
     "Editorial attribution row: an optional lede, the authors, and middot-separated meta segments such as dates and reading time.",
   accessibility: [

@@ -5,6 +5,7 @@ export default {
   slug: "prose",
   group: "Editorial",
   order: 40,
+  cli: { stance: "rendered" },
   description:
     "Long-form typographic context for headings, paragraphs, lists, links, inline code, rules, and optional lead or drop-cap treatments.",
   purposes: ["building-documentation"],

@@ -5,6 +5,7 @@ export default {
   slug: "related-content",
   group: "Editorial",
   order: 120,
+  cli: { stance: "rendered" },
   description:
     "Continuation band for related essays, guides, reports, or issues, with enough context to make each next-reading choice meaningful.",
   accessibility: [

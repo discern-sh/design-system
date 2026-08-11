@@ -5,6 +5,7 @@ export default {
   slug: "agent-handoff",
   group: "Workflow",
   order: 430,
+  cli: { stance: "rendered" },
   description:
     "Self-contained prose instructions for an agent session, with one visible string serving as the exact adapter-only clipboard payload.",
   purposes: ["building-documentation", "procedural-workflow"],

@@ -1,0 +1,99 @@
+/**
+ * Pure terminal renderer and deterministic example states for Destructive action notice.
+ *
+ * @module
+ */
+
+import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type { TerminalThemeVariant } from "../../../cli/theme.ts";
+import type { DestructiveActionNoticeTone } from "./destructive-action-notice.types.ts";
+import {
+  assertWorkflowCliText,
+  styleWorkflowHeading,
+  workflowCliWidth,
+  workflowFactLines,
+  workflowPrefixedLines,
+} from "../workflow-cli.ts";
+
+/** Inputs accepted by the terminal Destructive action notice renderer. */
+export interface DestructiveActionNoticeCliProps {
+  readonly label?: string;
+  readonly scope: string;
+  readonly impact: string;
+  readonly recovery: string;
+  readonly authority?: string;
+  readonly tone?: DestructiveActionNoticeTone;
+  readonly theme?: TerminalThemeVariant;
+  readonly maxWidth?: number;
+}
+
+/** Deterministic Destructive action notice states rendered by the CLI catalogue. */
+export const cliExamples: readonly CliExample<
+  DestructiveActionNoticeCliProps
+>[] = [
+  {
+    name: "warning",
+    props: {
+      label: "Replace generated output",
+      scope: "src/generated/",
+      impact: "Existing generated files are overwritten.",
+      recovery: "Re-run codegen from the committed metadata.",
+    },
+  },
+  {
+    name: "danger",
+    props: {
+      label: "Delete worktree",
+      scope: "agent/cli-2b",
+      impact: "Uncommitted work is lost.",
+      recovery: "No automatic recovery.",
+      authority: "Repository owner",
+      tone: "danger",
+    },
+  },
+] as const;
+
+/** Render explicit destructive scope, impact, authority, and recovery facts. */
+const renderDestructiveActionNoticeCli: CliRenderer<
+  DestructiveActionNoticeCliProps
+> = (props, capabilities) => {
+  const width = workflowCliWidth(props.maxWidth, capabilities);
+  const tone = props.tone ?? "warning";
+  const label = props.label ?? "Destructive action";
+  assertWorkflowCliText(label, "destructive action label");
+  for (
+    const [name, value] of [
+      ["scope", props.scope],
+      ["impact", props.impact],
+      ["recovery", props.recovery],
+    ] as const
+  ) {
+    assertWorkflowCliText(value, `destructive action ${name}`, true);
+  }
+  const lines = [
+    styleWorkflowHeading(
+      workflowPrefixedLines(
+        `${tone === "danger" ? "DANGER" : "WARNING"}: `,
+        label,
+        width,
+      ).join("\n"),
+      tone,
+      capabilities,
+      props.theme,
+    ),
+    ...workflowFactLines("Scope", props.scope, width),
+    ...workflowFactLines("Impact", props.impact, width),
+  ];
+  if (props.authority !== undefined) {
+    assertWorkflowCliText(
+      props.authority,
+      "destructive action authority",
+      true,
+    );
+    lines.push(...workflowFactLines("Authority", props.authority, width));
+  }
+  lines.push(...workflowFactLines("Recovery", props.recovery, width));
+  return lines.join("\n");
+};
+
+export default renderDestructiveActionNoticeCli;

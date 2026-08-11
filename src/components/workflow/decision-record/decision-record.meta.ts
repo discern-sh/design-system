@@ -5,6 +5,7 @@ export default {
   slug: "decision-record",
   group: "Workflow",
   order: 350,
+  cli: { stance: "rendered" },
   description:
     "Architecture decision record rendered as an honest article with title, accepted or superseded status, date, context, decision, and consequences.",
   purposes: ["building-documentation", "displaying-tool-output"],

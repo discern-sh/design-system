@@ -4,6 +4,7 @@ export default {
   slug: "profile-card",
   group: "People",
   order: 60,
+  cli: { stance: "rendered" },
   description:
     "Team-member card: square editorial portrait, serif name, kicker-style detail, short bio, and a links slot — portrait or landscape.",
   accessibility: [

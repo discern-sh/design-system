@@ -2,6 +2,9 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { HeroBlockLayout, HeroBlockSurface } from "./hero-block.types.ts";
+
+export type { HeroBlockLayout, HeroBlockSurface } from "./hero-block.types.ts";
 
 /** Props for the {@linkcode HeroBlock} component. */
 export interface HeroBlockProps
@@ -13,8 +16,8 @@ export interface HeroBlockProps
   readonly actions?: ReactNode;
   readonly meta?: ReactNode;
   readonly visual?: ReactNode;
-  readonly layout?: "split" | "centered";
-  readonly surface?: "canvas" | "sunken" | "accent";
+  readonly layout?: HeroBlockLayout;
+  readonly surface?: HeroBlockSurface;
 }
 
 /** High-impact opening section with split and centered compositions, flexible actions, proof, and visual slots. */

@@ -5,6 +5,7 @@ export default {
   slug: "task-metadata",
   group: "Workflow",
   order: 410,
+  cli: { stance: "rendered" },
   description:
     "Quiet task-page orientation strip that labels outcome, audience, prerequisites, complexity, file effects, retry safety, and expected end state.",
   purposes: ["building-documentation", "procedural-workflow"],

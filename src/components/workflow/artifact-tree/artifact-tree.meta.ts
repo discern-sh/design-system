@@ -5,6 +5,7 @@ export default {
   slug: "artifact-tree",
   group: "Workflow",
   order: 310,
+  cli: { stance: "rendered" },
   description:
     "Semantic nested-list project tree with explicit file and directory kinds, middle-truncated names, full-path titles, and an optional annotation slot per node.",
   purposes: ["building-documentation", "displaying-tool-output"],

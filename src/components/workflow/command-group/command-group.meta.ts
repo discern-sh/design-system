@@ -5,6 +5,7 @@ export default {
   slug: "command-group",
   group: "Workflow",
   order: 20,
+  cli: { stance: "rendered" },
   description:
     "Named command alternatives stacked with clear labels, keeping every option readable and executable in static HTML without tab behaviour.",
   purposes: ["building-documentation", "procedural-workflow"],

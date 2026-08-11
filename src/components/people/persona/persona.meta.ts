@@ -4,6 +4,7 @@ export default {
   slug: "persona",
   group: "People",
   order: 30,
+  cli: { stance: "rendered" },
   description:
     "Identity lockup pairing an Avatar with a name and secondary detail line — the row form for tables, headers, and comment threads.",
   accessibility: [

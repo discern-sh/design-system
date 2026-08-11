@@ -3,7 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Avatar } from "../avatar/avatar.tsx";
-import type { AvatarSize } from "../avatar/avatar.tsx";
+import type { AvatarSize } from "../avatar/avatar.types.ts";
 
 /** Props for the {@linkcode AvatarGroup} component. */
 export interface AvatarGroupProps extends HTMLAttributes<HTMLSpanElement> {

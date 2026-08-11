@@ -7,6 +7,7 @@ export default {
   order: 110,
   description:
     "Long-form proof block pairing a customer narrative with visual evidence and compact outcome metrics.",
+  cli: { stance: "rendered" },
   accessibility: [
     "The story is an article and the supporting figures use a description list.",
   ],

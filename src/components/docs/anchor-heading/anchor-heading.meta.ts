@@ -5,6 +5,7 @@ export default {
   slug: "anchor-heading",
   group: "Docs",
   order: 60,
+  cli: { stance: "rendered" },
   description:
     "Heading with a hover-revealed self link for direct section linking.",
   purposes: ["building-documentation"],

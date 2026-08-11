@@ -5,6 +5,11 @@ export default {
   slug: "skip-link",
   group: "Docs",
   order: 10,
+  cli: {
+    stance: "exempt",
+    reason:
+      "Browser focus-bypass navigation has no terminal document equivalent because terminal output is already linear.",
+  },
   description:
     "Visually hidden bypass link that surfaces on keyboard focus and jumps to the main content.",
   accessibility: [

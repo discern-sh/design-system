@@ -5,6 +5,7 @@ export default {
   slug: "glossary-term",
   group: "Docs",
   order: 90,
+  cli: { stance: "rendered" },
   description:
     "Inline definition term with a keyboard-reachable, dotted-underlined hover card.",
   purposes: ["building-documentation"],

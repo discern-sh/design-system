@@ -5,6 +5,7 @@ export default {
   slug: "docs-header",
   group: "Docs",
   order: 20,
+  cli: { stance: "rendered" },
   description:
     "Sticky translucent documentation top bar with brand, middle, and action regions.",
   purposes: ["building-documentation"],

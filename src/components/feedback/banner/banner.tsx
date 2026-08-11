@@ -2,14 +2,9 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { BannerTone } from "./banner.types.ts";
 
-/** Tone options for the Banner component. */
-export type BannerTone =
-  | "neutral"
-  | "accent"
-  | "success"
-  | "warning"
-  | "danger";
+export type { BannerTone } from "./banner.types.ts";
 /** Props for the {@linkcode Banner} component. */
 export interface BannerProps extends HTMLAttributes<HTMLDivElement> {
   readonly tone?: BannerTone;

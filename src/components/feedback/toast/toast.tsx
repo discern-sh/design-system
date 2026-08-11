@@ -2,9 +2,9 @@ import { forwardRef, useEffect } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { ToastTone } from "./toast.types.ts";
 
-/** Tone options for the Toast component. */
-export type ToastTone = "neutral" | "success" | "warning" | "danger";
+export type { ToastTone } from "./toast.types.ts";
 /** Props for the {@linkcode Toast} component. */
 export interface ToastProps extends HTMLAttributes<HTMLDivElement> {
   readonly tone?: ToastTone;

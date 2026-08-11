@@ -7,6 +7,7 @@ export default {
   order: 120,
   description:
     "Editorial frequently-asked-questions section using native disclosure controls and a sticky introduction.",
+  cli: { stance: "rendered" },
   accessibility: [
     "Questions use native details and summary elements, so disclosure works without JavaScript.",
     "Keyboard focus receives a visible accent outline.",

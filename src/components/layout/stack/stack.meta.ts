@@ -6,4 +6,5 @@ export default {
   order: 20,
   description:
     "Vertical composition using token-constrained gaps and explicit alignment.",
+  cli: { stance: "rendered" },
 } satisfies ComponentMeta;

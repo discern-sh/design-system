@@ -4,6 +4,7 @@ export default {
   slug: "fleet",
   group: "Agents",
   order: 70,
+  cli: { stance: "rendered" },
   description:
     "Board of parallel efforts — one row per worktree pairing a persona with a monospace branch, a state slot, ahead/behind drift, and timing.",
   purposes: ["displaying-tool-output"],

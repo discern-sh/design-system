@@ -5,6 +5,7 @@ export default {
   slug: "pager",
   group: "Docs",
   order: 40,
+  cli: { stance: "rendered" },
   description:
     "Sequential previous/next navigation between adjacent pages in a reading order.",
   accessibility: [

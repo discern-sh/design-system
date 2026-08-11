@@ -7,6 +7,7 @@ export default {
   order: 30,
   description:
     "Quiet trust band for customer, partner, integration, or publication marks without requiring image assets.",
+  cli: { stance: "rendered" },
   purposes: ["marketing-site"],
   accessibility: [
     "Marks are decorative by default while every item retains a readable text name.",

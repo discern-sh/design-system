@@ -2,12 +2,15 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type {
+  TaskFileEffects,
+  TaskRetrySafety,
+} from "./task-metadata.types.ts";
 
-/** File-change states carried by {@linkcode TaskMetadata}. */
-export type TaskFileEffects = "none" | "may-change" | "changes-files";
-
-/** Retry-safety states carried by {@linkcode TaskMetadata}. */
-export type TaskRetrySafety = "safe" | "check-first" | "do-not-retry";
+export type {
+  TaskFileEffects,
+  TaskRetrySafety,
+} from "./task-metadata.types.ts";
 
 /** Props for the {@linkcode TaskMetadata} component. */
 export interface TaskMetadataProps

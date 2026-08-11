@@ -5,9 +5,9 @@ import { classNames } from "../../class-names.ts";
 import { Command } from "../command/command.tsx";
 import { PathReference } from "../path-reference/path-reference.tsx";
 import { RawOutput } from "../raw-output/raw-output.tsx";
+import type { DiagnosticSeverity } from "./diagnostic.types.ts";
 
-/** Severity states carried by a {@linkcode Diagnostic}. */
-export type DiagnosticSeverity = "failure" | "attention";
+export type { DiagnosticSeverity } from "./diagnostic.types.ts";
 
 /** Props for the {@linkcode Diagnostic} component. */
 export interface DiagnosticProps
