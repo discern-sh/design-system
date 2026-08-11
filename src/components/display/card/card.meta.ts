@@ -6,5 +6,6 @@ export default {
   order: 20,
   description:
     "Composable surface with explicit elevation, texture, and padding choices.",
+  cli: { stance: "rendered" },
   purposes: ["marketing-site"],
 } satisfies ComponentMeta;

@@ -5,4 +5,5 @@ export default {
   group: "Display",
   order: 70,
   description: "Framed presentation surface for product UI and code examples.",
+  cli: { stance: "rendered" },
 } satisfies ComponentMeta;

@@ -13,11 +13,17 @@ export { default as renderBrandCli, cliExamples as brandCliExamples } from "../c
 export type { BrandCliProps } from "../components/core/brand/brand.cli.ts";
 export { default as renderBadgeCli, cliExamples as badgeCliExamples } from "../components/display/badge/badge.cli.ts";
 export type { BadgeCliProps } from "../components/display/badge/badge.cli.ts";
+export { default as renderCardCli, cliExamples as cardCliExamples } from "../components/display/card/card.cli.ts";
+export type { CardCliProps } from "../components/display/card/card.cli.ts";
 export { default as renderHeadingCli, cliExamples as headingCliExamples } from "../components/display/heading/heading.cli.ts";
 export type { HeadingCliProps } from "../components/display/heading/heading.cli.ts";
 export { default as renderKickerCli, cliExamples as kickerCliExamples } from "../components/display/kicker/kicker.cli.ts";
 export type { KickerCliProps } from "../components/display/kicker/kicker.cli.ts";
 export { default as renderTagCli, cliExamples as tagCliExamples } from "../components/display/tag/tag.cli.ts";
 export type { TagCliProps } from "../components/display/tag/tag.cli.ts";
+export { default as renderWindowCli, cliExamples as windowCliExamples } from "../components/display/window/window.cli.ts";
+export type { WindowCliProps } from "../components/display/window/window.cli.ts";
+export { default as renderTerminalCli, cliExamples as terminalCliExamples } from "../components/display/terminal/terminal.cli.ts";
+export type { TerminalCliProps } from "../components/display/terminal/terminal.cli.ts";
 export { default as renderStatCli, cliExamples as statCliExamples } from "../components/display/stat/stat.cli.ts";
 export type { StatCliProps } from "../components/display/stat/stat.cli.ts";
