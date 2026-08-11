@@ -11,6 +11,12 @@ export { default as renderLogoCli, cliExamples as logoCliExamples } from "../com
 export type { LogoCliProps } from "../components/core/logo/logo.cli.ts";
 export { default as renderBrandCli, cliExamples as brandCliExamples } from "../components/core/brand/brand.cli.ts";
 export type { BrandCliProps } from "../components/core/brand/brand.cli.ts";
+export { default as renderContainerCli, cliExamples as containerCliExamples } from "../components/layout/container/container.cli.ts";
+export type { ContainerCliProps } from "../components/layout/container/container.cli.ts";
+export { default as renderStackCli, cliExamples as stackCliExamples } from "../components/layout/stack/stack.cli.ts";
+export type { StackCliProps } from "../components/layout/stack/stack.cli.ts";
+export { default as renderClusterCli, cliExamples as clusterCliExamples } from "../components/layout/cluster/cluster.cli.ts";
+export type { ClusterCliProps } from "../components/layout/cluster/cluster.cli.ts";
 export { default as renderBadgeCli, cliExamples as badgeCliExamples } from "../components/display/badge/badge.cli.ts";
 export type { BadgeCliProps } from "../components/display/badge/badge.cli.ts";
 export { default as renderCardCli, cliExamples as cardCliExamples } from "../components/display/card/card.cli.ts";
