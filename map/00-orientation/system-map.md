@@ -35,14 +35,13 @@ Bird's-eye view of how discern-design-system fits together. Read this once and t
         │ — consumer Preset may override public Tokens —      │
         └─────────────────────────────────────────────────────┘
 
-        Tokens + Metadata                ./cli
-        ─────────────────►  Terminal capabilities + pure renderers
-                                      │
-                                      ▼
-                            TERMINAL CONSUMER (ANSI/string)
+        Tokens + Metadata --> ./cli (pure) --> TERMINAL CONSUMER
+                                  |               (ANSI/string)
+                                  +--> ./cli/interactive
+                                       (Deno input + repaint)
 ```
 
-`CLI*` marks the optional renderer file present when Component Metadata declares a rendered CLI stance.
+`CLI*` marks the renderer file present when Component Metadata declares a rendered CLI stance; a Component without that file must declare a reasoned exemption.
 
 The arrows are build-time data flow. The browser receives static HTML and selected CSS plus `discern.js` only when resolved Component Metadata declares browser behavior; no Registry, cache, or third-party host is ever hotlinked.
 
@@ -53,7 +52,7 @@ The arrows are build-time data flow. The browser receives static HTML and select
 - **Everything ships as a library** — the JSR package `@discern-sh/design-system`. There are no services and no persistent state; the only state anywhere is files in the consumer's build output.
 - **The Emitter** runs inside a consumer's build (Deno or Node — it writes via `node:fs/promises`). Under Deno it needs read and write permission for its output directory.
 - **The Adapter** runs in a consumer's build-time React render (`renderToStaticMarkup`); nothing of React reaches the browser.
-- **The CLI surface** runs wherever a consumer renders terminal output. Callers detect capabilities and pass them to pure string renderers; the package performs no terminal I/O.
+- **The CLI surface** runs wherever a consumer renders terminal output. Callers detect capabilities and pass them to pure string renderers. The optional Deno Interactive Adapter performs terminal I/O only while a prompt or activity is running, and renders its semantic state through those Component renderers.
 - **Selection-scoped browser behavior** runs from the emitted `discern.js` only for Components that declare it. The floating-surface behavior progressively promotes Hover card and Tooltip panels to the browser top layer; their static CSS fallback remains usable when the script or Popover API is absent.
 - **Codegen, the Catalogue build, and browser conformance** are repo-local dev processes: `deno task codegen`, `deno task build` (writes `dist/`, gitignored), and `deno task serve` / `deno task watch` (local HTTP on the worktree's deterministic port, `8010` in the main checkout). `deno task conformance` opens every generated example in headless Chrome for accessibility, interaction, forced-colour, and visual checks.
 - **CI** (GitHub Actions) re-runs codegen for currency, the full verify task, and a publish dry run on every push/PR; releases publish to JSR via trusted publishing when a `v*` tag matching `deno.json`'s version is released.

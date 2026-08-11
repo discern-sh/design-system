@@ -21,7 +21,7 @@ Codegen reads the Metadata and derives the Registry, React export surface, CLI s
 
 ## How it works, end to end
 
-**Authoring.** A designer-developer edits Tokens in [`tokens.ts`](../../src/tokens/tokens.ts) or a Component folder under [`src/components/`](../../src/components/). Each Component's `*.meta.ts` declares its name, slug, Group, ordering, purpose memberships, usage guidance, accessibility notes, any selection-scoped browser behavior, and an optional CLI stance. A rendered stance adds a React-free `*.cli.ts`; vocabulary shared with `*.tsx` lives in a neutral sibling module. Its examples module may add stable named Catalogue states.
+**Authoring.** A designer-developer edits Tokens in [`tokens.ts`](../../src/tokens/tokens.ts) or a Component folder under [`src/components/`](../../src/components/). Each Component's `*.meta.ts` declares its name, slug, Group, ordering, purpose memberships, usage guidance, accessibility notes, any selection-scoped browser behavior, and a required rendered or reasoned-exempt CLI stance. A rendered stance adds a React-free `*.cli.ts`; vocabulary shared with `*.tsx` lives in a neutral sibling module. Its examples module may add stable named Catalogue states.
 
 **Generation.** `deno task codegen` ([`generate.ts`](../../scripts/generate.ts)) walks the Metadata and writes the generated surfaces in [`src/generated/`](../../src/generated/): the Registry (component IDs, Groups, dependencies, owned classes), the React surface, CLI registry and renderer barrel, base styles, and asset tables. Generated files are committed but never hand-edited; the quality gate regenerates them on every run.
 
@@ -29,9 +29,9 @@ Codegen reads the Metadata and derives the Registry, React export surface, CLI s
 
 **Consumption.** The consumer loads `discern.css`, loads every path in `manifest.outputs.scripts`, marks a boundary with `data-discern-root` (the Root), and writes semantic HTML against the public class and data-attribute contract. Components without declared browser behavior remain CSS-only, and declared behavior progressively enhances a usable static fallback. An unforced Root follows the user's system colour scheme; `data-discern-theme="light"` and `"dark"` are explicit overrides, while `"system"` states the default preference directly. React consumers may instead render the same contract to static HTML through the Adapter ([`react.ts`](../../src/react.ts)) at build time.
 
-**Terminal consumption.** A consumer imports `./cli`, detects or declares its terminal colour depth, columns, and Unicode support, and passes those capabilities to a pure renderer. The renderer returns a bounded string. Light and dark terminal colours, ANSI fallbacks, spacing cells, and type attributes derive from the same Token metadata as web output.
+**Terminal consumption.** A consumer imports `./cli`, detects or declares its terminal colour depth, columns, and Unicode support, and passes those capabilities to a pure renderer. The renderer returns a bounded string. Light and dark terminal colours, ANSI fallbacks, spacing cells, and type attributes derive from the same Token metadata as web output. A Deno consumer may opt into `./cli/interactive`; its prompt state machines own raw input and repainting while delegating every form frame to the same Component renderers.
 
-**Presentation.** The Catalogue ([`styleguide/`](../../styleguide/)) is the local web component browser: `deno task serve` builds the full Runtime plus the example registry and serves it for human review. `deno task catalogue:cli badge` prints the named rendered Component's deterministic terminal examples.
+**Presentation.** The Catalogue ([`styleguide/`](../../styleguide/)) is the local web component browser: `deno task serve` builds the full Runtime plus the example registry and serves it for human review. The CLI Catalogue (`deno task catalogue:cli`) prints every rendered Component example, every reasoned exemption, and the generated Triangle motifs sheet; a Group, Component slug, or `triangles` narrows it.
 
 ---
 

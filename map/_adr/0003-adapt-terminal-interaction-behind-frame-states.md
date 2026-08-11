@@ -1,6 +1,6 @@
 # ADR 0003: Adapt terminal interaction behind frame states
 
-**Status**: accepted
+**Status**: superseded by [ADR-0004](0004-finalize-cli-through-component-renderers.md)
 
 ## Context
 

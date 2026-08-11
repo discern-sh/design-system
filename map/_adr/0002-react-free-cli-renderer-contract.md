@@ -1,6 +1,6 @@
 # ADR 0002: Terminal rendering is a React-free pure renderer contract
 
-**Status**: accepted
+**Status**: superseded by [ADR-0004](0004-finalize-cli-through-component-renderers.md)
 
 ## Context
 

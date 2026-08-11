@@ -18,7 +18,7 @@ Every class, custom property, data attribute, keyframe, and cascade layer the pa
 
 ## 2. Component metadata is the single source; generated surfaces are never hand-edited
 
-Each component folder owns its `*.meta.ts`, CSS, implementation, examples, `mod.ts`, and any declared CLI renderer. The Runtime Registry, React export surface, CLI stance registry and renderer barrel, Catalogue registry, and dependency graph are all generated from that Metadata by `deno task codegen` — never edited directly.
+Each component folder owns its `*.meta.ts`, CSS, implementation, examples, `mod.ts`, required CLI stance, and the CLI renderer that a rendered stance declares. The Runtime Registry, React export surface, CLI stance registry and renderer barrel, Catalogue registry, and dependency graph are all generated from that Metadata by `deno task codegen` — never edited directly.
 
 **Why it matters.** The same component facts feed four surfaces. Hand-editing a generated file forks a fact: the next codegen run silently reverts it, or worse, the surfaces disagree about what components exist and what they depend on.
 
@@ -26,13 +26,13 @@ Each component folder owns its `*.meta.ts`, CSS, implementation, examples, `mod.
 
 ## 3. The neutral core and CLI surface never resolve React
 
-The root, `./cli`, `./manifest`, `./runtime`, `./tokens`, and `./theme/discern` module graphs import no React. React lives only behind the optional `./react` Adapter, as an 18.3+ peer contract, and is a build-time renderer: consumers ship static HTML and CSS or terminal strings, never a React bundle or hydration.
+The root, `./cli`, `./cli/interactive`, `./manifest`, `./runtime`, `./tokens`, and `./theme/discern` module graphs import no React. React lives only behind the optional `./react` Adapter, as an 18.3+ peer contract, and is a build-time renderer: consumers ship static HTML and CSS or terminal strings, never a React bundle or hydration.
 
 **Why it matters.** The package's promise is framework-neutrality. One stray React import in the neutral graph forces every non-React consumer to install React just to emit CSS — a contract break that type-checks fine locally and only explodes in a consumer's project.
 
 **How it shows up.** The release tests "the publish-shaped artifact serves the neutral consumer alone" and "the CLI export graph never resolves React" in [`release_test.ts`](../../tests/release_test.ts) build and inspect external Deno consumption with no React dependency; only [`react.ts`](../../src/react.ts) resolves the Adapter; `react` and `react-dom` are peer/development dependencies only.
 
-The pure terminal boundary and its renderer/driver split are recorded in [ADR-0002](../_adr/0002-react-free-cli-renderer-contract.md).
+The pure terminal boundary, permanent stance contract, and renderer/driver split are recorded in [ADR-0004](../_adr/0004-finalize-cli-through-component-renderers.md).
 
 ## 4. Emission is deterministic and selection-scoped
 

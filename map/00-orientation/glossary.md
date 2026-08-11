@@ -34,7 +34,7 @@ One of the twelve canonical component families — Agents, Core, Display, Docs, 
 
 ### Metadata
 
-A Component's `*.meta.ts` file: name, slug, Group, catalogue order, description, accessibility notes, and optional CLI stance, typed by [`component-meta.ts`](../../src/types/component-meta.ts). Metadata is the single source Codegen reads; adding a Component folder with Metadata enrols it in every generated surface with no manual registration.
+A Component's `*.meta.ts` file: name, slug, Group, catalogue order, description, accessibility notes, and required rendered or reasoned-exempt CLI stance, typed by [`component-meta.ts`](../../src/types/component-meta.ts). Metadata is the single source Codegen reads; adding a Component folder with Metadata enrols it in every generated surface with no manual registration.
 
 ### Owned Classes
 
@@ -50,7 +50,7 @@ The `deno task codegen` run of [`generate.ts`](../../scripts/generate.ts), which
 
 ### Registry
 
-The generated Runtime component catalogue in [`src/generated/component-registry.ts`](../../src/generated/component-registry.ts): IDs, Groups, dependency edges, and Owned Classes. The Emitter resolves every Selection through it. The separate generated [CLI Registry](../../src/generated/cli-registry.ts) maps the same Component slugs to pending, exempt, or rendered terminal stances and records renderer module paths.
+The generated Runtime component catalogue in [`src/generated/component-registry.ts`](../../src/generated/component-registry.ts): IDs, Groups, dependency edges, and Owned Classes. The Emitter resolves every Selection through it. The separate generated [CLI Registry](../../src/generated/cli-registry.ts) maps the same Component slugs to exempt or rendered terminal stances and records renderer module paths.
 
 ---
 
@@ -96,9 +96,13 @@ The explicit colour depth, column count, and Unicode support passed to every pur
 
 A pure React-free function exported through [`./cli`](../../src/cli/mod.ts) that accepts typed visual props plus Terminal Capabilities and returns a terminal string without I/O or environment reads.
 
+### Interactive Adapter
+
+The optional Deno terminal surface at [`./cli/interactive`](../../src/cli/interactive/mod.ts): typed prompt state machines, raw input, cursor-safe repainting, and activity controllers. It performs no effect on import and renders prompt state through CLI Renderers while a consumer runs it.
+
 ### CLI Stance
 
-A Component Metadata declaration of `rendered` or `exempt` with a reason; absence is pending. Codegen validates a rendered stance against the colocated `*.cli.ts` file and derives the CLI Registry and renderer exports.
+A required Component Metadata declaration of `rendered` or `exempt` with a non-empty reason. Codegen rejects absence, validates renderer files and rendered stances in both directions, and derives the CLI Registry and renderer exports.
 
 ---
 
@@ -107,6 +111,10 @@ A Component Metadata declaration of `rendered` or `exempt` with a reason; absenc
 ### Catalogue
 
 The local component browser under [`styleguide/`](../../styleguide/), built by [`build.ts`](../../scripts/build.ts) and served by `deno task serve`. It renders every Component's examples from the generated example registry.
+
+### CLI Catalogue
+
+The stdout component browser run by `deno task catalogue:cli`. It derives Component examples and exemption reasons from the CLI Registry and renderer modules, adds specimens generated from the public triangle APIs, and narrows by Group, Component, or motif sheet.
 
 ---
 
