@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { stripAnsi } from "../../src/cli/ansi.ts";
+import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import {
   renderTriangleActivityBeacon,
   renderTrianglePattern,
@@ -13,6 +13,50 @@ import {
   assertStyledFrame,
   testCapabilities,
 } from "./helpers.ts";
+
+const CAPABILITY_MATRIX_STEPS = [
+  { label: "Done", status: "complete" },
+  { label: "Work", status: "active", phase: 1 },
+  { label: "Later", status: "pending" },
+  { label: "Fail", status: "error" },
+  { label: "Stop", status: "cancelled" },
+] as const;
+
+function renderCapabilityMatrix(
+  capabilities: TerminalCapabilities,
+): readonly string[] {
+  return [
+    renderTrianglePattern({ length: 4 }, capabilities),
+    renderTriangleSpinnerFrame(0, capabilities),
+    renderTriangleProgressFrame(
+      { completed: 1, total: 2, width: 12 },
+      capabilities,
+    ),
+    renderTriangleSectionRule("go", { width: 12 }, capabilities),
+    renderTriangleWorkflowStepper(CAPABILITY_MATRIX_STEPS, capabilities),
+    renderTriangleActivityBeacon({ width: 8, phase: 0 }, capabilities),
+  ];
+}
+
+function assertCapabilityMatrix(
+  actual: readonly string[],
+  expected: readonly string[],
+  capabilities: TerminalCapabilities,
+  styled: boolean,
+): void {
+  assertEquals(actual.length, expected.length);
+  for (const [index, frame] of actual.entries()) {
+    const expectedFrame = expected[index];
+    if (expectedFrame === undefined) {
+      throw new Error(`missing capability-matrix frame ${index}`);
+    }
+    if (styled) {
+      assertStyledFrame(frame, expectedFrame, capabilities);
+    } else {
+      assertExactFrame(frame, expectedFrame, capabilities);
+    }
+  }
+}
 
 Deno.test("triangle patterns preserve horizontal, vertical, thick, phase, and direction contracts", () => {
   const capabilities = testCapabilities({ columns: 20 });
@@ -137,17 +181,45 @@ Deno.test("activity beacon preserves every phase in its out-and-back journey", (
   );
 });
 
-Deno.test("triangle motifs emit exact plaintext under every colour depth", () => {
-  const expected = "◮⧩◭⧨";
-  for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-    const capabilities = testCapabilities({ colorDepth, columns: 4 });
-    assertStyledFrame(
-      renderTrianglePattern({ length: 4 }, capabilities),
+Deno.test("every triangle primitive degrades exactly across the capability matrix", () => {
+  const unicodeFrames = [
+    "◮⧩◭⧨",
+    "◮",
+    "[ 50%] ◮⧩...",
+    "◮⧩◭⧨ go ⧨◭⧩◮",
+    "◮ Done\n│\n[◭] Work\n│\n· Later\n│\n! Fail\n│\n× Stop",
+    "◮⧩◭⧨....",
+  ];
+  const asciiFrames = [
+    ">v^<",
+    ">",
+    "[ 50%] >v...",
+    ">v^< go <^v>",
+    "> Done\n|\n[^] Work\n|\n. Later\n|\n! Fail\n|\nx Stop",
+    ">v^<....",
+  ];
+
+  for (const unicode of [true, false]) {
+    const expected = unicode ? unicodeFrames : asciiFrames;
+    for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
+      const capabilities = testCapabilities({
+        colorDepth,
+        columns: 30,
+        unicode,
+      });
+      assertCapabilityMatrix(
+        renderCapabilityMatrix(capabilities),
+        expected,
+        capabilities,
+        true,
+      );
+    }
+    const capabilities = testCapabilities({ columns: 30, unicode });
+    assertCapabilityMatrix(
+      renderCapabilityMatrix(capabilities),
       expected,
       capabilities,
+      false,
     );
   }
-  const none = testCapabilities({ columns: 4 });
-  assertExactFrame(renderTrianglePattern({ length: 4 }, none), expected, none);
-  assertEquals(stripAnsi(renderTrianglePattern({ length: 4 }, none)), expected);
 });
