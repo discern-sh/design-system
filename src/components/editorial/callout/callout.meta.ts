@@ -5,6 +5,7 @@ export default {
   slug: "callout",
   group: "Editorial",
   order: 70,
+  cli: { stance: "rendered" },
   description:
     "Inset editorial note for context, interpretation, cautions, and successful outcomes without breaking the reading flow.",
   accessibility: [

@@ -2,11 +2,15 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type {
+  DataFigureLegendTone,
+  DataFigureSurface,
+} from "./data-figure.types.ts";
 
 /** One legend item entry rendered by the Data figure component. */
 export interface DataFigureLegendItem {
   readonly label: ReactNode;
-  readonly tone?: "accent" | "ink" | "success" | "warning";
+  readonly tone?: DataFigureLegendTone;
 }
 
 /** Props for the {@linkcode DataFigure} component. */
@@ -18,7 +22,7 @@ export interface DataFigureProps
   readonly legend?: readonly DataFigureLegendItem[];
   readonly caption: ReactNode;
   readonly source?: ReactNode;
-  readonly surface?: "canvas" | "sunken";
+  readonly surface?: DataFigureSurface;
 }
 
 /** Framed figure for charts, diagrams, annotated images, and research evidence, with legend, caption, and source slots. */

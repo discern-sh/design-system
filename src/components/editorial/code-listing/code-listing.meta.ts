@@ -5,6 +5,7 @@ export default {
   slug: "code-listing",
   group: "Editorial",
   order: 80,
+  cli: { stance: "rendered" },
   description:
     "Captioned source listing with file and language context, stable line numbers, horizontal overflow, and optional highlighted lines.",
   purposes: ["building-documentation"],

@@ -7,3 +7,9 @@ export { default as renderArticleLayoutCli, cliExamples as articleLayoutCliExamp
 export type { ArticleLayoutCliProps } from "../components/editorial/article-layout/article-layout.cli.ts";
 export { default as renderProseCli, cliExamples as proseCliExamples } from "../components/editorial/prose/prose.cli.ts";
 export type { ProseCliProps } from "../components/editorial/prose/prose.cli.ts";
+export { default as renderCalloutCli, cliExamples as calloutCliExamples } from "../components/editorial/callout/callout.cli.ts";
+export type { CalloutCliProps } from "../components/editorial/callout/callout.cli.ts";
+export { default as renderCodeListingCli, cliExamples as codeListingCliExamples } from "../components/editorial/code-listing/code-listing.cli.ts";
+export type { CodeListingCliProps } from "../components/editorial/code-listing/code-listing.cli.ts";
+export { default as renderDataFigureCli, cliExamples as dataFigureCliExamples } from "../components/editorial/data-figure/data-figure.cli.ts";
+export type { DataFigureCliProps } from "../components/editorial/data-figure/data-figure.cli.ts";
