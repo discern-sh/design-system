@@ -4,6 +4,7 @@ export default {
   slug: "agent-mention",
   group: "Agents",
   order: 30,
+  cli: { stance: "rendered" },
   description:
     "Inline agent chip for running prose — a prompt sigil beside the agent name, em-scaled so it sits in text at any size.",
   accessibility: [

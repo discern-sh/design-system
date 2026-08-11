@@ -3,12 +3,9 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { derivedInitials } from "../../initials.ts";
+import type { AgentAvatarSize, AgentStatus } from "./agent-avatar.types.ts";
 
-/** Size step shared by {@linkcode AgentAvatar} and the components composing it. */
-export type AgentAvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
-
-/** Activity state an {@linkcode AgentAvatar} status light can carry. */
-export type AgentStatus = "working" | "waiting" | "blocked" | "done" | "idle";
+export type { AgentAvatarSize, AgentStatus } from "./agent-avatar.types.ts";
 
 /** Props for the {@linkcode AgentAvatar} component. */
 export interface AgentAvatarProps extends HTMLAttributes<HTMLSpanElement> {
