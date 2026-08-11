@@ -51,7 +51,7 @@ _Test-isolation and tooling debt. Nothing outstanding._
 ## ⌨️ CLI parity
 
 - [ ] **Resolve every pending Component CLI stance.** Add a pure renderer or a reasoned exemption for each of the 108 pending Metadata entries and lower `[standards.cli_pending]` with each landed tranche; at zero, make pending an always-on conformance error and retire the standard. Evidence: `src/generated/cli-registry.ts`, `discern.toml`.
-- [ ] **Implement the interactive terminal driver.** Produce the visual states in `src/cli/interactive-states.ts` from raw-mode input, validation, timing, and frame replacement without moving effects into renderers. Evidence: `src/cli/interactive-states.ts` contains states and `src/cli/` contains no `interactive/` driver.
+- [ ] **Wire interactive states to Component renderers.** Replace the temporary one-module frame seam with the landed form Component CLI renderers without changing terminal I/O or prompt state machines. Evidence: `src/cli/interactive/frame-renderers.ts` is the isolated Wave 3 seam.
 - [ ] **Promote the CLI catalogue beyond its Badge loop.** Build a complete Component/state browser on the generated CLI registry and renderer examples. Evidence: `scripts/catalogue-cli.ts` renders the named rendered Component only.
 
 ## 🔵 Unmerged / at-risk work — decide: land or drop
