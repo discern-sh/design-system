@@ -7,6 +7,7 @@ export default {
   order: 80,
   description:
     "Compact evidence strip for a handful of high-signal outcomes, with surface, accent, and contrast treatments.",
+  cli: { stance: "rendered" },
   accessibility: [
     "Metrics use a description list so each figure stays paired with its label.",
   ],
