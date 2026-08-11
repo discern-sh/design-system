@@ -516,10 +516,9 @@
     run = "printf 'DISCERN_METRIC lint_suppressions %s\\n' \"$(grep -rEn 'deno-lint-ignore|deno-fmt-ignore|@ts-ignore|@ts-expect-error' src scripts styleguide tests --include='*.ts' --include='*.tsx' | grep -v generated | wc -l | tr -d ' ')\""
     inputs = ["src/**", "scripts/**", "styleguide/**", "tests/**"]
 
-  # A pending component has no Metadata `cli` field. This falling ceiling makes
-  # a new undecided stance illegal while group-by-group renderer work lowers the
-  # census. At zero, pending becomes an always-on conformance error and this
-  # transitional standard is retired.
+  # Missing CLI stances are permanent Codegen and type errors. This zero ceiling
+  # remains as a trunk-held second line of defence: a feature branch cannot
+  # delete a Standard, while the always-on rule rejects the first new instance.
   [standards.cli_pending]
     metric = "cli_pending"
     direction = "down"

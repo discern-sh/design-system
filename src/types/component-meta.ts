@@ -70,8 +70,8 @@ export interface ComponentMeta {
   readonly useWhen?: readonly string[];
   /** Concrete situations better served by another component or pattern. */
   readonly notWhen?: readonly string[];
-  /** Terminal rendering stance; absence is the ratcheted pending state. */
-  readonly cli?: ComponentCliStance;
+  /** Required terminal contract: render this Component or record why it is exempt. */
+  readonly cli: ComponentCliStance;
   readonly behaviors?: readonly ComponentBehavior[];
   readonly accessibility?: readonly string[];
 }

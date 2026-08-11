@@ -18,11 +18,6 @@ export interface CliExample<Props> {
   readonly props: Readonly<Props>;
 }
 
-/** Generated registry entry for a component whose CLI stance is not decided. */
-export interface CliPendingRegistryEntry {
-  readonly stance: "pending";
-}
-
 /** Generated registry entry for a component intentionally absent from CLI. */
 export interface CliExemptRegistryEntry {
   readonly stance: "exempt";
@@ -37,6 +32,5 @@ export interface CliRenderedRegistryEntry {
 
 /** One generated per-component CLI stance. */
 export type CliComponentRegistryEntry =
-  | CliPendingRegistryEntry
   | CliExemptRegistryEntry
   | CliRenderedRegistryEntry;

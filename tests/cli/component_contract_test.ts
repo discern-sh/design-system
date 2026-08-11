@@ -1,6 +1,9 @@
 import { assert, assertEquals, assertThrows } from "@std/assert";
 import { cliComponentRegistry } from "../../src/generated/cli-registry.ts";
-import { validateCliStance } from "../../scripts/generate.ts";
+import {
+  validateCliInventory,
+  validateCliStance,
+} from "../../scripts/generate.ts";
 import type { ComponentMeta } from "../../src/types/component-meta.ts";
 
 const meta = {
@@ -9,7 +12,7 @@ const meta = {
   group: "Core",
   order: 999,
   description: "Synthetic CLI contract fixture.",
-} satisfies ComponentMeta;
+} satisfies Omit<ComponentMeta, "cli">;
 
 Deno.test("CLI stance validation guards metadata and renderer files in both directions", () => {
   validateCliStance(
@@ -22,7 +25,11 @@ Deno.test("CLI stance validation guards metadata and renderer files in both dire
     false,
     "fixture.meta.ts",
   );
-  validateCliStance(meta, false, "fixture.meta.ts");
+  assertThrows(
+    () => validateCliStance(meta, false, "fixture.meta.ts"),
+    Error,
+    "has no declared CLI stance",
+  );
   assertThrows(
     () =>
       validateCliStance(
@@ -34,7 +41,12 @@ Deno.test("CLI stance validation guards metadata and renderer files in both dire
     "has no .cli.ts file",
   );
   assertThrows(
-    () => validateCliStance(meta, true, "fixture.meta.ts"),
+    () =>
+      validateCliStance(
+        { ...meta, cli: { stance: "exempt", reason: "Browser only." } },
+        true,
+        "fixture.meta.ts",
+      ),
     Error,
     "no rendered CLI stance",
   );
@@ -50,6 +62,21 @@ Deno.test("CLI stance validation guards metadata and renderer files in both dire
   );
 });
 
+Deno.test("CLI inventory rejects a renderer without Component Metadata", () => {
+  assertThrows(
+    () =>
+      validateCliInventory([
+        new URL("file:///components/fixture/fixture.cli.ts"),
+      ]),
+    Error,
+    "has no matching .meta.ts file",
+  );
+  validateCliInventory([
+    new URL("file:///components/fixture/fixture.meta.ts"),
+    new URL("file:///components/fixture/fixture.cli.ts"),
+  ]);
+});
+
 Deno.test("generated CLI registry validates every enrolled stance", () => {
   assertEquals(cliComponentRegistry.badge, {
     stance: "rendered",
@@ -63,7 +90,7 @@ Deno.test("generated CLI registry validates every enrolled stance", () => {
         true,
         `${slug} renderer path does not match its slug`,
       );
-    } else if (entry.stance === "exempt") {
+    } else {
       assert(
         entry.reason.trim() !== "",
         `${slug} has an empty CLI exemption reason`,

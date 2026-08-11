@@ -279,6 +279,13 @@ Deno.test("component metadata auto-enrols React, runtime, and CLI surfaces", asy
   const files = await walk(COMPONENT_ROOT);
   const fileSet = new Set(files);
   const metaFiles = files.filter((path) => path.endsWith(".meta.ts"));
+  const cliFiles = files.filter((path) => path.endsWith(".cli.ts"));
+  for (const cliPath of cliFiles) {
+    assert(
+      fileSet.has(cliPath.replace(/\.cli\.ts$/u, ".meta.ts")),
+      `${cliPath} has no matching Component Metadata`,
+    );
+  }
   const identities = new Set<string>();
   const positions = new Set<string>();
   for (const metaPath of metaFiles) {
@@ -308,7 +315,7 @@ Deno.test("component metadata auto-enrols React, runtime, and CLI surfaces", asy
       `${metaPath} is missing mod.ts`,
     );
     const cliPath = `${stem}.cli.ts`;
-    if (meta.cli?.stance === "rendered") {
+    if (meta.cli.stance === "rendered") {
       assert(fileSet.has(cliPath), `${metaPath} is missing ${cliPath}`);
     } else {
       assert(
@@ -316,7 +323,7 @@ Deno.test("component metadata auto-enrols React, runtime, and CLI surfaces", asy
         `${cliPath} exists without a rendered CLI stance`,
       );
     }
-    if (meta.cli?.stance === "exempt") {
+    if (meta.cli.stance === "exempt") {
       assert(
         meta.cli.reason.trim() !== "",
         `${metaPath} has no exemption reason`,

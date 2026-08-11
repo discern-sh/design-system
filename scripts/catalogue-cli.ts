@@ -140,9 +140,6 @@ async function renderComponent(
       `Generated CLI registry has no ${JSON.stringify(slug)}`,
     );
   }
-  if (entry.stance === "pending") {
-    throw new TypeError(`${slug} has no declared CLI stance`);
-  }
   if (entry.stance === "exempt") {
     return `### ${name} (\`${slug}\`) — exempt\n\n${entry.reason}`;
   }

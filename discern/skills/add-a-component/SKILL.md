@@ -19,23 +19,24 @@ Every component is one folder plus codegen — no manual registration anywhere. 
 
 Five files, always the same shape (crib a small sibling like `src/components/display/kicker/`):
 
-| File                  | Owns                                                                                                                   |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `<slug>.css`          | All component CSS. Every class is `discern-<slug>`-prefixed BEM (`discern-x__part`, `discern-x--variant`); no globals. |
-| `<slug>.tsx`          | The React adapter: `forwardRef`, typed props, `classNames` helper, type-only imports, JSDoc on every export.           |
-| `<slug>.meta.ts`      | `export default {...} satisfies ComponentMeta` — name, slug, group, order, description, accessibility notes.           |
-| `<slug>.examples.tsx` | Default-export component rendering representative states with **generic copy** (no product claims, no customer names). |
-| `mod.ts`              | `export * from "./<slug>.tsx";`                                                                                        |
+| File                  | Owns                                                                                                                              |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `<slug>.css`          | All component CSS. Every class is `discern-<slug>`-prefixed BEM (`discern-x__part`, `discern-x--variant`); no globals.            |
+| `<slug>.tsx`          | The React adapter: `forwardRef`, typed props, `classNames` helper, type-only imports, JSDoc on every export.                      |
+| `<slug>.meta.ts`      | `export default {...} satisfies ComponentMeta` — name, slug, group, order, description, required CLI stance, accessibility notes. |
+| `<slug>.examples.tsx` | Default-export component rendering representative states with **generic copy** (no product claims, no customer names).            |
+| `mod.ts`              | `export * from "./<slug>.tsx";`                                                                                                   |
 
 Rules that bite:
 
+- **Decide the CLI stance at birth.** Metadata always declares `cli: { stance: "rendered" }` or `cli: { stance: "exempt", reason: "…" }`. Rendered Components add `<slug>.cli.ts` with a pure default renderer, `<Pascal>CliProps`, and deterministic `cliExamples`; exemptions state the concrete terminal mismatch. Codegen rejects an absent stance, a missing or orphan renderer, and an empty exemption reason.
 - **Style with tokens, not raw values.** Colors, space, radii, and type come from the public `--discern-*` custom properties; themes must move the component without touching its CSS. Keep interface text at or above `--discern-font-size-xs`.
 - **Depend by importing.** If the component uses another component, import its `.tsx` directly — codegen derives the dependency graph from imports, so the runtime emitter pulls the dependency's CSS automatically.
 - **No client JS.** The adapter renders static HTML at build time. Interactive behaviour must come from the platform (native `<dialog>`, `<details>`, CSS) or stay a consumer concern.
 
 ## 3. Generate and verify
 
-1. `deno task codegen` — regenerates the registry, React surface, base styles, and catalogue registry. The new component now exists on every surface.
+1. `deno task codegen` — regenerates the registry, React and CLI surfaces, base styles, and catalogue registry. The new component now exists on every declared surface.
 2. `discern prepare` while iterating; `discern done` before calling it done. The Catalogue build type-checks your examples, and every example auto-enrols in the light and dark accessibility scans. Add `export const conformance = [...]` scenarios (see `styleguide/conformance.ts`) when the component has keyboard or focus behaviour worth pinning.
 3. Watch the css standards in the gate output: `css_density` holds emitted bytes per component stylesheet, so a heavy component raises the rate it is judged by, and `docs_selection` budgets the documentation selection. A heavy component is a design smell before it is a budget problem.
 

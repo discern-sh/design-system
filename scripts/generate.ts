@@ -30,6 +30,10 @@ export interface GeneratedSources {
   readonly baseStyles: string;
 }
 
+type ComponentMetaCandidate =
+  & Omit<ComponentMeta, "cli">
+  & { readonly cli?: ComponentMeta["cli"] };
+
 async function walk(directory: URL): Promise<URL[]> {
   const files: URL[] = [];
   for await (const entry of Deno.readDir(directory)) {
@@ -55,20 +59,38 @@ function relativeImport(fromDirectory: URL, target: URL): string {
 
 /** Enforce the two-way relationship between CLI Metadata and renderer files. */
 export function validateCliStance(
-  meta: ComponentMeta,
+  meta: ComponentMetaCandidate,
   hasRenderer: boolean,
   source: string,
 ): void {
-  if (meta.cli?.stance === "rendered" && !hasRenderer) {
+  if (meta.cli === undefined) {
+    throw new Error(`${source} has no declared CLI stance`);
+  }
+  if (meta.cli.stance === "rendered" && !hasRenderer) {
     throw new Error(
       `${source} declares a CLI renderer but has no .cli.ts file`,
     );
   }
-  if (hasRenderer && meta.cli?.stance !== "rendered") {
+  if (hasRenderer && meta.cli.stance !== "rendered") {
     throw new Error(`${source} has a .cli.ts file but no rendered CLI stance`);
   }
-  if (meta.cli?.stance === "exempt" && meta.cli.reason.trim() === "") {
+  if (meta.cli.stance === "exempt" && meta.cli.reason.trim() === "") {
     throw new Error(`${source} declares an exempt CLI stance without a reason`);
+  }
+}
+
+/** Reject renderer modules that have no matching Component Metadata authority. */
+export function validateCliInventory(files: readonly URL[]): void {
+  const fileSet = new Set(files.map((url) => url.pathname));
+  for (
+    const cliUrl of files.filter((url) => url.pathname.endsWith(".cli.ts"))
+  ) {
+    const metaPath = cliUrl.pathname.replace(/\.cli\.ts$/u, ".meta.ts");
+    if (!fileSet.has(metaPath)) {
+      throw new Error(
+        `${decodeURIComponent(cliUrl.pathname)} has no matching .meta.ts file`,
+      );
+    }
   }
 }
 
@@ -76,6 +98,7 @@ export function validateCliStance(
 export async function loadComponentSources(): Promise<ComponentSource[]> {
   const files = await walk(COMPONENT_ROOT);
   const fileSet = new Set(files.map((url) => url.pathname));
+  validateCliInventory(files);
   const sources: ComponentSource[] = [];
   for (
     const metaUrl of files.filter((url) => url.pathname.endsWith(".meta.ts"))
@@ -266,9 +289,7 @@ async function generateCliRegistry(): Promise<string> {
   const components = await loadComponentSources();
   const entries = components.map((component) => {
     const stance = component.meta.cli;
-    const value = stance === undefined
-      ? '{ stance: "pending" }'
-      : stance.stance === "exempt"
+    const value = stance.stance === "exempt"
       ? `{ stance: "exempt", reason: ${JSON.stringify(stance.reason)} }`
       : `{ stance: "rendered", modulePath: ${
         JSON.stringify(relativeImport(GENERATED_ROOT, component.cliUrl))
@@ -287,7 +308,7 @@ ${entries.join("\n")}
 
 async function generateCliRenderers(): Promise<string> {
   const rendered = (await loadComponentSources()).filter((component) =>
-    component.meta.cli?.stance === "rendered"
+    component.meta.cli.stance === "rendered"
   );
   const exports = rendered.flatMap((component) => {
     const pascal = pascalIdentifier(component.meta.slug);
