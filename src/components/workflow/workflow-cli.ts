@@ -103,7 +103,14 @@ export function workflowFactLines(
   value: string,
   width: number,
 ): readonly string[] {
-  return workflowPrefixedLines(`${label}: `, value, width);
+  const prefix = `${label}: `;
+  if (width - measureText(prefix) < 10) {
+    return [
+      truncateText(`${label}:`, width),
+      ...workflowPrefixedLines("  ", value, width),
+    ];
+  }
+  return workflowPrefixedLines(prefix, value, width);
 }
 
 /** Indent and wrap a free-text Workflow block. */

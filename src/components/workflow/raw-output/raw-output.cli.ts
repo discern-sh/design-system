@@ -11,6 +11,7 @@ import {
   styleWorkflowHeading,
   workflowCliWidth,
   workflowIndentedLines,
+  workflowPrefixedLines,
 } from "../workflow-cli.ts";
 
 /** Inputs accepted by the terminal Raw output renderer. */
@@ -48,7 +49,7 @@ const renderRawOutputCli: CliRenderer<RawOutputCliProps> = (
     ? (expanded ? "▾" : "▸")
     : (expanded ? "v" : ">");
   const heading = styleWorkflowHeading(
-    `${marker} ${label}`,
+    workflowPrefixedLines(`${marker} `, label, width).join("\n"),
     "neutral",
     capabilities,
     props.theme,

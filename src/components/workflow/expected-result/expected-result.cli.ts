@@ -12,6 +12,7 @@ import {
   styleWorkflowHeading,
   workflowCliWidth,
   workflowIndentedLines,
+  workflowPrefixedLines,
 } from "../workflow-cli.ts";
 
 /** Inputs accepted by the terminal Expected result renderer. */
@@ -44,9 +45,10 @@ const renderExpectedResultCli: CliRenderer<ExpectedResultCliProps> = (
   const marker = props.variant === "state"
     ? (capabilities.unicode ? "→" : ">")
     : (capabilities.unicode ? "✓" : "+");
+  const heading = workflowPrefixedLines(`${marker} `, label, width).join("\n");
   return [
     styleWorkflowHeading(
-      `${marker} ${label}`,
+      heading,
       "success",
       capabilities,
       props.theme,
