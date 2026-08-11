@@ -354,7 +354,10 @@ export function renderAutocompleteFrame(
     return renderFrameBox(state, state.value, capabilities, options);
   }
   const suggestion = state.suggestions[state.highlightedIndex];
-  const ghost = suggestion !== undefined && suggestion.startsWith(state.value)
+  const ghost = suggestion !== undefined &&
+      suggestion.toLocaleLowerCase().startsWith(
+        state.value.toLocaleLowerCase(),
+      )
     ? suggestion.slice(state.value.length)
     : "";
   const input = editableLine(
