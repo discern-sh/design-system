@@ -109,20 +109,31 @@ Deno.test("every exported module graph is inside the publish set", async () => {
   }
 });
 
-Deno.test("the CLI export graph never resolves React", async () => {
-  const entry = config.exports["./cli"];
-  assert(entry !== undefined, "deno.json has no ./cli export");
-  const { code, output } = await run(PACKAGE_ROOT, [
-    "info",
-    "--json",
-    "--config",
-    "deno.json",
-    entry,
-  ]);
-  assertEquals(code, 0, `deno info failed for ${entry}:\n${output}`);
-  assert(!output.includes("npm:react"), "./cli resolved the React package");
-  assert(!output.includes("/src/react.ts"), "./cli reached the React adapter");
-  assert(!output.includes('.tsx"'), "./cli reached a TSX component module");
+Deno.test("the CLI export graphs never resolve React", async () => {
+  for (const exportName of ["./cli", "./cli/interactive"]) {
+    const entry = config.exports[exportName];
+    assert(entry !== undefined, `deno.json has no ${exportName} export`);
+    const { code, output } = await run(PACKAGE_ROOT, [
+      "info",
+      "--json",
+      "--config",
+      "deno.json",
+      entry,
+    ]);
+    assertEquals(code, 0, `deno info failed for ${entry}:\n${output}`);
+    assert(
+      !output.includes("npm:react"),
+      `${exportName} resolved the React package`,
+    );
+    assert(
+      !output.includes("/src/react.ts"),
+      `${exportName} reached the React adapter`,
+    );
+    assert(
+      !output.includes('.tsx"'),
+      `${exportName} reached a TSX component module`,
+    );
+  }
 });
 
 Deno.test("published modules carry no import attributes", async () => {
@@ -184,6 +195,7 @@ Deno.test("the publish-shaped artifact serves the neutral consumer alone", async
       join(consumer, "neutral.ts"),
       `import { packageManifest, semanticClass } from "${config.name}";
 import { renderBadgeCli } from "${config.name}/cli";
+import { segmentGraphemes } from "${config.name}/cli/interactive";
 import { emitDesignSystemRuntime } from "${config.name}/runtime";
 const result = await emitDesignSystemRuntime({
   outputRoot: new URL("./runtime/", import.meta.url),
@@ -193,6 +205,7 @@ const result = await emitDesignSystemRuntime({
 console.log(JSON.stringify({
   className: semanticClass("button"),
   badge: renderBadgeCli({ label: "Ready", dot: true }, { colorDepth: "none", columns: 80, unicode: true }),
+  graphemes: segmentGraphemes("A👩‍💻B").length,
   files: result.manifest.integrity.files.length,
   package: packageManifest.package,
 }));
@@ -207,6 +220,7 @@ console.log(JSON.stringify({
     assertEquals(code, 0, `staged consumer failed:\n${output}`);
     assertStringIncludes(output, `"className":"discern-button"`);
     assertStringIncludes(output, `"badge":"[● Ready]"`);
+    assertStringIncludes(output, `"graphemes":3`);
     assertStringIncludes(output, `"package":"${config.name}"`);
     const css = await Deno.readTextFile(
       join(consumer, "runtime", "discern.css"),
