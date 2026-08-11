@@ -5,6 +5,7 @@
  */
 
 export * from "./basic-prompts.ts";
+export * from "./choice-prompts.ts";
 export * from "./errors.ts";
 export * from "./editor.ts";
 export * from "./io.ts";
