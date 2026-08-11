@@ -6,7 +6,7 @@ export default function SiteHeaderExamples() {
     <SiteHeader
       brand="Waypoint"
       brandMark="◮"
-      brandTypeface="mono"
+      brandTypeface="ui"
       brandMarkTreatment="plain"
       navItems={[
         { label: "Product", href: "#product" },

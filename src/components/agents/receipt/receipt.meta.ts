@@ -5,7 +5,7 @@ export default {
   group: "Agents",
   order: 60,
   description:
-    "Monospace proof-of-work card — a stamped title, metadata rows, and dot-leadered check lines recording what ran and how it ended.",
+    "Proof-of-work card with a stamped title, metadata rows, and dot-leadered check lines recording what ran and how it ended.",
   purposes: ["displaying-tool-output"],
   useWhen: [
     "A durable handoff must record several checks and their outcomes with branch, commit, timing, or change metadata.",

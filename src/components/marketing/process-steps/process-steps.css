@@ -74,7 +74,6 @@
     background: var(--discern-color-canvas);
     box-shadow: 3px 3px 0 var(--discern-color-accent-300);
     color: var(--discern-color-accent-700);
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
   }
   .discern-process-steps__content {

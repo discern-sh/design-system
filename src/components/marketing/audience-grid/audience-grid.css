@@ -78,7 +78,6 @@
     block-size: 100%;
   }
   .discern-audience-grid__index {
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
   }
   .discern-audience-grid__item h3 {

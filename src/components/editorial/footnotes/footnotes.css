@@ -38,7 +38,6 @@
   }
   .discern-footnotes li > span {
     color: var(--discern-color-accent-700);
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
   }
   .discern-footnotes li div > :last-child {
@@ -46,7 +45,6 @@
   }
   .discern-footnotes li > a {
     color: var(--discern-color-ink-faint);
-    font-family: var(--discern-font-mono);
     text-decoration: none;
   }
   .discern-footnotes li > a:hover,

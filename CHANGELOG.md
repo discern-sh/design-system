@@ -4,6 +4,10 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## 0.10.1
+
+- Reserve monospace typography for explicit brand-name and code surfaces. Non-code component labels, indices, dates, measurements, status metadata, agent identities, annotations, captions, and Catalogue chrome now use the body or interface faces. Commands, paths, branch names, commit hashes, and Git change counts retain the code face.
+
 ## 0.10.0
 
 - Add a quiet Theme toggle treatment for text-led navigation, align plain Brand, Site header, and Site footer marks to one smaller optical scale, style linked footer metadata, remove the browser body gutter from full-page roots, and move Logo cloud marks to the lighter accent text role.

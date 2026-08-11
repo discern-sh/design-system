@@ -23,7 +23,6 @@
   }
   .discern-standard-meter__trend {
     color: var(--discern-color-ink-muted);
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
     text-transform: capitalize;
   }

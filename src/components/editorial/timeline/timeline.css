@@ -43,7 +43,6 @@
   .discern-timeline__date {
     padding-block-start: var(--discern-space-1);
     color: var(--discern-color-ink-faint);
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
     text-align: end;
   }
@@ -99,7 +98,6 @@
     display: block;
     margin-block-start: var(--discern-space-3);
     color: var(--discern-color-accent-700);
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
   }
   @media (max-width: 620px) {

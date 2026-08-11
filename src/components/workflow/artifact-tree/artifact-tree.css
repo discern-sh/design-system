@@ -26,7 +26,6 @@
     display: grid;
     place-items: center;
     color: var(--discern-color-ink-faint);
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
   }
   .discern-artifact-tree__node[data-discern-kind="directory"] > .discern-artifact-tree__row > .discern-artifact-tree__kind {

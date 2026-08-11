@@ -90,7 +90,7 @@ function TokenPreview(
           ? { fontFamily: `var(${name})` }
           : undefined}
       >
-        Aa
+        {name === "--discern-font-mono" ? "discern" : "Aa"}
       </span>
     );
   }
@@ -628,11 +628,11 @@ function App() {
                       <div>
                         <code>{token.name}</code>
                         <p>{token.description}</p>
-                        <small>
+                        <code className="discern-catalogue-token__value">
                           {"light" in token
                             ? `${token.light} / ${token.dark}`
                             : token.value}
-                        </small>
+                        </code>
                       </div>
                     </article>
                   ))}

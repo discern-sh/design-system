@@ -17,7 +17,6 @@
   }
   .discern-meter__reading {
     color: var(--discern-color-ink-muted);
-    font-family: var(--discern-font-mono);
     font-variant-numeric: tabular-nums;
   }
   .discern-meter__track {

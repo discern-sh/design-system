@@ -63,7 +63,7 @@ function chipContent(name: string, sigil: ReactNode, avatar: ReactNode) {
   );
 }
 
-/** Inline agent chip: a prompt sigil or tiny tile beside the monospace name, linked or static. */
+/** Inline agent chip: a prompt sigil or tiny tile beside the agent name, linked or static. */
 export const AgentMention: DiscernComponent<
   HTMLAnchorElement | HTMLSpanElement,
   AgentMentionProps

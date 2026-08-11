@@ -61,7 +61,6 @@
   }
   .discern-prose li::marker {
     color: var(--discern-color-accent-600);
-    font-family: var(--discern-font-mono);
   }
   .discern-prose a {
     text-decoration-color: var(--discern-color-accent-300);

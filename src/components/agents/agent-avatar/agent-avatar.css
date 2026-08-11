@@ -44,7 +44,8 @@
     --discern-avatar-size: var(--discern-avatar-size-xl);
   }
   .discern-agent-avatar__sigil {
-    font-family: var(--discern-font-mono);
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
     font-size: calc(var(--discern-avatar-size) * 0.34);
     font-weight: var(--discern-font-weight-strong);
     letter-spacing: 0.02em;

@@ -49,7 +49,8 @@
     width: min(100%, 1440px);
     margin: 0 auto 12px;
     color: var(--discern-color-ink-faint);
-    font: var(--discern-font-size-xs) var(--discern-font-mono);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
     text-align: end;
   }
   .discern-catalogue-conformance :is(.discern-catalogue-instrument, .discern-catalogue-guidance, .discern-catalogue-api) {
@@ -98,7 +99,8 @@
     display: block;
     margin-block-start: 4px;
     color: var(--discern-color-ink-faint);
-    font: var(--discern-font-size-xs) var(--discern-font-mono);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
     letter-spacing: 0.1em;
     text-transform: uppercase;
   }
@@ -133,7 +135,7 @@
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-pill);
     color: var(--discern-color-ink-faint);
-    font: var(--discern-font-size-xs) var(--discern-font-mono);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
     text-align: center;
   }
   .discern-catalogue-nav__child {
@@ -143,7 +145,7 @@
   .discern-catalogue-nav__heading {
     margin-block-start: 18px;
     color: var(--discern-color-ink-faint);
-    font: var(--discern-font-size-xs) var(--discern-font-mono);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
     letter-spacing: 0.1em;
     text-transform: uppercase;
   }
@@ -193,7 +195,8 @@
   .discern-catalogue-version {
     flex: none;
     color: var(--discern-color-ink-faint);
-    font: var(--discern-font-size-xs) var(--discern-font-mono);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
     white-space: nowrap;
   }
   .discern-catalogue-theme {
@@ -238,7 +241,6 @@
   .discern-catalogue-accent output {
     inline-size: 3.5ch;
     color: var(--discern-color-ink);
-    font-family: var(--discern-font-mono);
     font-variant-numeric: tabular-nums;
     text-align: end;
   }
@@ -285,7 +287,8 @@
     border-radius: var(--discern-radius-pill);
     background: var(--discern-color-surface);
     color: var(--discern-color-ink-muted);
-    font: var(--discern-font-size-xs) var(--discern-font-mono);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
     letter-spacing: 0.05em;
     text-transform: uppercase;
   }
@@ -372,7 +375,8 @@
   }
   .discern-catalogue-subsection__heading span {
     color: var(--discern-color-ink-faint);
-    font: var(--discern-font-size-xs) var(--discern-font-mono);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
   }
   .discern-catalogue-token-grid {
     display: grid;
@@ -452,7 +456,7 @@
     font-size: var(--discern-font-size-xs);
     line-height: 1.4;
   }
-  .discern-catalogue-token small {
+  .discern-catalogue-token__value {
     display: block;
     color: var(--discern-color-ink-faint);
     font: var(--discern-font-size-xs) var(--discern-font-mono);
@@ -496,7 +500,8 @@
     background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink-muted);
     cursor: pointer;
-    font: var(--discern-font-size-xs) var(--discern-font-mono);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
   }
   .discern-catalogue-recipe__source > summary:focus-visible {
     outline: 2px solid var(--discern-color-accent-500);
@@ -564,7 +569,8 @@
   .discern-catalogue-example-state > header h5 {
     margin: 0;
     color: var(--discern-color-ink-muted);
-    font: var(--discern-font-size-xs) var(--discern-font-mono);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
@@ -575,7 +581,8 @@
     block-size: 24px;
     border-radius: var(--discern-radius-sm);
     color: var(--discern-color-ink-faint);
-    font: var(--discern-font-size-sm) var(--discern-font-mono);
+    font: var(--discern-font-size-sm) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
     text-decoration: none;
   }
   .discern-catalogue-example-state > header a:hover {
@@ -601,7 +608,8 @@
     background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink-muted);
     cursor: pointer;
-    font: var(--discern-font-size-xs) var(--discern-font-mono);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
   }
   .discern-catalogue-guidance > summary:focus-visible,
   .discern-catalogue-instrument > summary:focus-visible,
@@ -651,7 +659,8 @@
     font-size: var(--discern-font-size-xs);
   }
   .discern-catalogue-guidance strong {
-    font-family: var(--discern-font-mono);
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-xs);
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -662,7 +671,8 @@
   }
   .discern-catalogue-api h5 {
     margin: 0 0 8px;
-    font: var(--discern-font-size-xs) var(--discern-font-mono);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
   }
   .discern-catalogue-api p {
     margin: 8px 0;
@@ -709,7 +719,8 @@
     gap: 12px;
   }
   .discern-catalogue-variants strong {
-    font: var(--discern-font-size-xs) var(--discern-font-mono);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
   }
   .discern-catalogue-variants span {
     display: flex;
@@ -805,7 +816,8 @@
     border-radius: var(--discern-radius-sm);
     background: var(--discern-color-accent-100);
     color: var(--discern-color-accent-800);
-    font: var(--discern-font-size-xs) var(--discern-font-mono);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
     text-align: center;
   }
   .discern-section-demo {

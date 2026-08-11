@@ -22,7 +22,6 @@
   }
   .discern-decision-record__identifier {
     color: var(--discern-color-accent-700);
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
     font-weight: var(--discern-font-weight-strong);
     letter-spacing: 0.06em;
@@ -44,7 +43,6 @@
   }
   .discern-decision-record__meta time {
     color: var(--discern-color-ink-muted);
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
   }
   .discern-decision-record section {

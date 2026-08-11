@@ -44,7 +44,6 @@
     grid-area: drift;
     justify-self: end;
     color: var(--discern-color-ink-muted);
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
     white-space: nowrap;
   }
@@ -52,7 +51,6 @@
     grid-area: meta;
     justify-self: end;
     color: var(--discern-color-ink-muted);
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
     text-align: end;
   }

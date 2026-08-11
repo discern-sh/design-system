@@ -5,7 +5,7 @@ export default {
   group: "Agents",
   order: 20,
   description:
-    "Identity lockup pairing an Agent avatar with a name and monospace detail line — the row form for fleet views, tables, and activity chrome.",
+    "Identity lockup pairing an Agent avatar with a name and detail line — the row form for fleet views, tables, and activity chrome.",
   accessibility: [
     "The visible name is the single source of identity: the built-in avatar renders decorative so nothing is announced twice.",
     "Status is spoken as visually hidden text directly after the name, never conveyed by colour alone.",

@@ -65,7 +65,6 @@
   }
   .discern-key-points li > span {
     color: var(--discern-color-accent-700);
-    font-family: var(--discern-font-mono);
     font-size: var(--discern-font-size-xs);
   }
   .discern-key-points li h3 {

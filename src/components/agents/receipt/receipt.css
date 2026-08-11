@@ -20,7 +20,7 @@
     );
     box-shadow: var(--discern-shadow-card);
     color: var(--discern-color-ink);
-    font-family: var(--discern-font-mono);
+    font-family: var(--discern-font-body);
     font-size: var(--discern-font-size-xs);
     line-height: 1.6;
   }
@@ -86,6 +86,9 @@
     text-align: end;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .discern-receipt__meta dd code {
+    font-family: var(--discern-font-mono);
   }
   .discern-receipt__checks > div {
     background:
