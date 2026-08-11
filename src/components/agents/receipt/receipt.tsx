@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { ReceiptCheckState, ReceiptStamp } from "./receipt.types.ts";
 
 /** One metadata row printed by the {@linkcode Receipt} component. */
 export interface ReceiptMeta {
@@ -9,8 +10,7 @@ export interface ReceiptMeta {
   readonly value: ReactNode;
 }
 
-/** Outcome one {@linkcode ReceiptCheck} row can carry. */
-export type ReceiptCheckState = "pass" | "fail" | "skip";
+export type { ReceiptCheckState, ReceiptStamp } from "./receipt.types.ts";
 
 /** One check row printed by the {@linkcode Receipt} component. */
 export interface ReceiptCheck {
@@ -24,7 +24,7 @@ export interface ReceiptCheck {
 export interface ReceiptProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
   readonly title: ReactNode;
-  readonly stamp?: "pass" | "fail";
+  readonly stamp?: ReceiptStamp;
   readonly stampLabel?: ReactNode;
   readonly meta?: readonly ReceiptMeta[];
   readonly checks?: readonly ReceiptCheck[];

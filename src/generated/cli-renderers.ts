@@ -7,6 +7,14 @@ export { default as renderAgentPersonaCli, cliExamples as agentPersonaCliExample
 export type { AgentPersonaCliProps } from "../components/agents/agent-persona/agent-persona.cli.ts";
 export { default as renderAgentMentionCli, cliExamples as agentMentionCliExamples } from "../components/agents/agent-mention/agent-mention.cli.ts";
 export type { AgentMentionCliProps } from "../components/agents/agent-mention/agent-mention.cli.ts";
+export { default as renderWorklogCli, cliExamples as worklogCliExamples } from "../components/agents/worklog/worklog.cli.ts";
+export type { WorklogCliProps } from "../components/agents/worklog/worklog.cli.ts";
+export { default as renderTranscriptCli, cliExamples as transcriptCliExamples } from "../components/agents/transcript/transcript.cli.ts";
+export type { TranscriptCliProps } from "../components/agents/transcript/transcript.cli.ts";
+export { default as renderReceiptCli, cliExamples as receiptCliExamples } from "../components/agents/receipt/receipt.cli.ts";
+export type { ReceiptCliProps } from "../components/agents/receipt/receipt.cli.ts";
+export { default as renderFleetCli, cliExamples as fleetCliExamples } from "../components/agents/fleet/fleet.cli.ts";
+export type { FleetCliProps } from "../components/agents/fleet/fleet.cli.ts";
 export { default as renderCommandCli, cliExamples as commandCliExamples } from "../components/workflow/command/command.cli.ts";
 export type { CommandCliProps } from "../components/workflow/command/command.cli.ts";
 export { default as renderCommandGroupCli, cliExamples as commandGroupCliExamples } from "../components/workflow/command-group/command-group.cli.ts";
