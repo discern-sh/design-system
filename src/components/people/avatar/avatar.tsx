@@ -3,12 +3,17 @@ import type { HTMLAttributes } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { derivedInitials } from "../../initials.ts";
+import type {
+  AvatarPresence,
+  AvatarShape,
+  AvatarSize,
+} from "./avatar.types.ts";
 
-/** Size step shared by {@linkcode Avatar} and the components composing it. */
-export type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
-
-/** Presence state an {@linkcode Avatar} badge can carry. */
-export type AvatarPresence = "online" | "away" | "busy" | "offline";
+export type {
+  AvatarPresence,
+  AvatarShape,
+  AvatarSize,
+} from "./avatar.types.ts";
 
 /** Props for the {@linkcode Avatar} component. */
 export interface AvatarProps extends HTMLAttributes<HTMLSpanElement> {
@@ -16,7 +21,7 @@ export interface AvatarProps extends HTMLAttributes<HTMLSpanElement> {
   readonly src?: string;
   readonly initials?: string;
   readonly size?: AvatarSize;
-  readonly shape?: "circle" | "square";
+  readonly shape?: AvatarShape;
   readonly presence?: AvatarPresence;
   readonly presenceLabel?: string;
   readonly decorative?: boolean;
