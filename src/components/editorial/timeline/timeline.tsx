@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { TimelineStatus } from "./timeline.types.ts";
 
 /** One item entry rendered by the Timeline component. */
 export interface TimelineItem {
@@ -9,7 +10,7 @@ export interface TimelineItem {
   readonly title: ReactNode;
   readonly description: ReactNode;
   readonly detail?: ReactNode;
-  readonly status?: "complete" | "current" | "upcoming";
+  readonly status?: TimelineStatus;
 }
 
 /** Props for the {@linkcode Timeline} component. */

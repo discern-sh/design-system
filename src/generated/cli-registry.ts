@@ -105,11 +105,11 @@ export const cliComponentRegistry = {
   "table-of-contents": { stance: "rendered", modulePath: "../components/editorial/table-of-contents/table-of-contents.cli.ts" },
   "prose": { stance: "rendered", modulePath: "../components/editorial/prose/prose.cli.ts" },
   "key-points": { stance: "rendered", modulePath: "../components/editorial/key-points/key-points.cli.ts" },
-  "pull-quote": { stance: "pending" },
+  "pull-quote": { stance: "rendered", modulePath: "../components/editorial/pull-quote/pull-quote.cli.ts" },
   "callout": { stance: "rendered", modulePath: "../components/editorial/callout/callout.cli.ts" },
   "code-listing": { stance: "rendered", modulePath: "../components/editorial/code-listing/code-listing.cli.ts" },
   "data-figure": { stance: "rendered", modulePath: "../components/editorial/data-figure/data-figure.cli.ts" },
-  "timeline": { stance: "pending" },
+  "timeline": { stance: "rendered", modulePath: "../components/editorial/timeline/timeline.cli.ts" },
   "footnotes": { stance: "rendered", modulePath: "../components/editorial/footnotes/footnotes.cli.ts" },
   "related-content": { stance: "rendered", modulePath: "../components/editorial/related-content/related-content.cli.ts" },
 } as const satisfies Readonly<Record<string, CliComponentRegistryEntry>>;
