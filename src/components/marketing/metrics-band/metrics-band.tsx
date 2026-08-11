@@ -2,6 +2,9 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { MetricsBandTone } from "./metrics-band.types.ts";
+
+export type { MetricsBandTone } from "./metrics-band.types.ts";
 
 /** One metric item entry rendered by the Metrics band component. */
 export interface MetricItem {
@@ -16,7 +19,7 @@ export interface MetricsBandProps
   readonly eyebrow?: ReactNode;
   readonly title?: ReactNode;
   readonly items: readonly MetricItem[];
-  readonly tone?: "surface" | "accent" | "contrast";
+  readonly tone?: MetricsBandTone;
 }
 
 /** Compact evidence strip for a handful of high-signal outcomes, with surface, accent, and contrast treatments. */

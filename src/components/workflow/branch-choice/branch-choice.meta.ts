@@ -5,6 +5,7 @@ export default {
   slug: "branch-choice",
   group: "Workflow",
   order: 140,
+  cli: { stance: "rendered" },
   description:
     "A small set of explicitly labelled routes through a procedure or next action, complete and linkable without diagram machinery or client behaviour.",
   purposes: ["building-documentation", "procedural-workflow"],

@@ -5,6 +5,7 @@ export default {
   slug: "diagnostic",
   group: "Workflow",
   order: 220,
+  cli: { stance: "rendered" },
   description:
     "Structured failure account that explains impact, exact location, evidence, reproduction and retry commands, correction, and optional raw detail.",
   purposes: [

@@ -5,4 +5,5 @@ export default {
   group: "Display",
   order: 30,
   description: "Quiet editorial rule with an optional annotation label.",
+  cli: { stance: "rendered" },
 } satisfies ComponentMeta;

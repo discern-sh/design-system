@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ConformanceScenario } from "../../../../styleguide/conformance.ts";
 import { ThemeToggle } from "./theme-toggle.tsx";
-import type { ThemeToggleTheme } from "./theme-toggle.tsx";
+import type { ThemeToggleTheme } from "./theme-toggle.types.ts";
 
 export const conformance = [{
   name: "every toggle variant names the destination theme",

@@ -5,6 +5,7 @@ export default {
   slug: "procedure",
   group: "Workflow",
   order: 110,
+  cli: { stance: "rendered" },
   description:
     "Complete operational sequence with prerequisites, semantic ordered steps, recovery paths, and explicit evidence of completion.",
   purposes: ["building-documentation", "procedural-workflow"],

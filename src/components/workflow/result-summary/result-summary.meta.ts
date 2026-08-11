@@ -5,6 +5,7 @@ export default {
   slug: "result-summary",
   group: "Workflow",
   order: 210,
+  cli: { stance: "rendered" },
   description:
     "One tool outcome stated in plain language, with supporting counts, duration, next action, and an optional adapter-only copy of its machine-readable form.",
   purposes: [

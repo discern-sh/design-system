@@ -7,6 +7,7 @@ export default {
   order: 60,
   description:
     "Centred placeholder for a region with nothing to show yet, with optional icon and follow-up actions.",
+  cli: { stance: "rendered" },
   accessibility: [
     "Title and description are ordinary paragraphs in reading order; the decorative icon is hidden from assistive technology.",
     "Follow-up actions are slotted real controls that keep their own semantics and focus behaviour.",

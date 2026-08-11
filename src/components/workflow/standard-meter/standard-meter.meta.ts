@@ -5,6 +5,7 @@ export default {
   slug: "standard-meter",
   group: "Workflow",
   order: 240,
+  cli: { stance: "rendered" },
   description:
     "Quality reading against a rising floor or falling ceiling, with current value, limit, headroom, and an optional plain-text trend.",
   purposes: ["building-documentation", "displaying-tool-output"],

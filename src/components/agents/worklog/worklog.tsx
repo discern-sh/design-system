@@ -2,14 +2,9 @@ import { forwardRef } from "react";
 import type { OlHTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { WorklogStatus } from "./worklog.types.ts";
 
-/** Progress state one {@linkcode WorklogEntry} can carry. */
-export type WorklogStatus =
-  | "done"
-  | "active"
-  | "queued"
-  | "failed"
-  | "skipped";
+export type { WorklogStatus } from "./worklog.types.ts";
 
 /** One entry rendered by the {@linkcode Worklog} component. */
 export interface WorklogEntry {

@@ -6,6 +6,7 @@ export default {
   order: 20,
   description:
     "Transient status message plus a labelled live-region container.",
+  cli: { stance: "rendered" },
   accessibility: [
     "Danger uses alert semantics; other tones use status semantics.",
     "Auto-dismiss is opt-in.",

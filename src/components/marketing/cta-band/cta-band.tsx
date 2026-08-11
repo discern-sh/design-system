@@ -2,6 +2,9 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { CtaBandAlign, CtaBandTone } from "./cta-band.types.ts";
+
+export type { CtaBandAlign, CtaBandTone } from "./cta-band.types.ts";
 
 /** Props for the {@linkcode CtaBand} component. */
 export interface CtaBandProps
@@ -12,8 +15,8 @@ export interface CtaBandProps
   readonly actions?: ReactNode;
   readonly note?: ReactNode;
   readonly visual?: ReactNode;
-  readonly tone?: "accent" | "sunken" | "contrast";
-  readonly align?: "center" | "split";
+  readonly tone?: CtaBandTone;
+  readonly align?: CtaBandAlign;
 }
 
 /** High-emphasis closing invitation with centered or split layouts, three surface treatments, and a visual slot. */

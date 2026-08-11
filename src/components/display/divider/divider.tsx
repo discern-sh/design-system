@@ -2,11 +2,12 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { DividerSurface } from "./divider.types.ts";
 
 /** Props for the {@linkcode Divider} component. */
 export interface DividerProps extends HTMLAttributes<HTMLDivElement> {
   readonly label?: ReactNode;
-  readonly surface?: "canvas" | "surface";
+  readonly surface?: DividerSurface;
 }
 
 /** Quiet editorial rule with an optional annotation label. */

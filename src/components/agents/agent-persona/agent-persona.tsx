@@ -3,10 +3,10 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { AgentAvatar } from "../agent-avatar/agent-avatar.tsx";
-import type { AgentStatus } from "../agent-avatar/agent-avatar.tsx";
+import type { AgentStatus } from "../agent-avatar/agent-avatar.types.ts";
+import type { AgentPersonaSize } from "./agent-persona.types.ts";
 
-/** Size step for the {@linkcode AgentPersona} lockup. */
-export type AgentPersonaSize = "sm" | "md" | "lg";
+export type { AgentPersonaSize } from "./agent-persona.types.ts";
 
 /** Props for the {@linkcode AgentPersona} component. */
 export interface AgentPersonaProps extends HTMLAttributes<HTMLSpanElement> {

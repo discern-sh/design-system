@@ -6,6 +6,7 @@ export default {
   order: 40,
   description:
     "Controlled native modal dialog with platform focus containment and explicit close behaviour.",
+  cli: { stance: "rendered" },
   accessibility: [
     "Uses showModal(), aria-labelledby, Escape handling, and a labelled close button.",
     "Background scrolling is locked while open.",

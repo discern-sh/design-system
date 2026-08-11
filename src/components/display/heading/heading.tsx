@@ -2,9 +2,9 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { HeadingLevel } from "./heading.types.ts";
 
-/** Level options for the Heading component. */
-export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
+export type { HeadingLevel } from "./heading.types.ts";
 /** Props for the {@linkcode Heading} component. */
 export interface HeadingProps extends HTMLAttributes<HTMLHeadingElement> {
   readonly level?: HeadingLevel;

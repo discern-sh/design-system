@@ -4,6 +4,7 @@ export default {
   slug: "worklog",
   group: "Agents",
   order: 40,
+  cli: { stance: "rendered" },
   description:
     "Compact statused feed of a run's steps — done, active, queued, failed, or skipped — with text annotations and right-aligned timing.",
   purposes: ["displaying-tool-output"],

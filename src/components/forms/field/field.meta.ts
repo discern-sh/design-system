@@ -6,5 +6,6 @@ export default {
   order: 10,
   description:
     "Shared label, hint, required, and error structure for custom controls.",
+  cli: { stance: "rendered" },
   accessibility: ["Labels and messages use deterministic control IDs."],
 } satisfies ComponentMeta;

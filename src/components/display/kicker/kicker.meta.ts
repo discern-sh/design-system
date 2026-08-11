@@ -5,4 +5,5 @@ export default {
   group: "Display",
   order: 50,
   description: "Uppercase annotation label with an optional index.",
+  cli: { stance: "rendered" },
 } satisfies ComponentMeta;

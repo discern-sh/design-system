@@ -5,6 +5,7 @@ export default {
   slug: "destructive-action-notice",
   group: "Workflow",
   order: 160,
+  cli: { stance: "rendered" },
   description:
     "Explicit scope, impact, authority, and recovery route for an irreversible or owner-only action, with danger reserved for urgent hazards.",
   purposes: ["building-documentation", "procedural-workflow"],

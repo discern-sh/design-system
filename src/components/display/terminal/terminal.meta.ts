@@ -6,6 +6,7 @@ export default {
   group: "Display",
   order: 80,
   description: "Framed monospace surface for commands and terminal output.",
+  cli: { stance: "rendered" },
   purposes: ["displaying-tool-output"],
   useWhen: [
     "You need to reproduce a terminal session or present interleaved commands and output as one framed surface.",

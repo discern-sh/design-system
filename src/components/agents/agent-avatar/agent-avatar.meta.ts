@@ -4,6 +4,7 @@ export default {
   slug: "agent-avatar",
   group: "Agents",
   order: 10,
+  cli: { stance: "rendered" },
   description:
     "Dark square tile with an interface-type sigil identifying one agent — the machine counterpart to Avatar, so mixed rosters read at a glance.",
   accessibility: [

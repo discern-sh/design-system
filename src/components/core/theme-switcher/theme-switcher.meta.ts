@@ -7,6 +7,11 @@ export default {
   order: 50,
   description:
     "Controlled System, Light, and Dark preference group for applying the design system theme contract.",
+  cli: {
+    stance: "exempt",
+    reason:
+      "Terminal colour selection is already a caller-owned renderer input; presenting a System, Light, and Dark form would falsely imply an input driver and persistence policy.",
+  },
   accessibility: [
     "Native radio inputs preserve one-of-three selection semantics and keyboard navigation.",
     "A fieldset and visually hidden legend name the preference group; every choice retains a visible text label.",

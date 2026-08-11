@@ -2,9 +2,9 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { PrerequisiteState } from "./prerequisite-list.types.ts";
 
-/** Presentation state for one {@linkcode PrerequisiteItem}. */
-export type PrerequisiteState = "required" | "satisfied" | "unresolved";
+export type { PrerequisiteState } from "./prerequisite-list.types.ts";
 
 /** One requirement rendered by {@linkcode PrerequisiteList}. */
 export interface PrerequisiteItem {
