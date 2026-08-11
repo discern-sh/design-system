@@ -21,10 +21,14 @@ export { default as renderRetryNoticeCli, cliExamples as retryNoticeCliExamples 
 export type { RetryNoticeCliProps } from "../components/workflow/retry-notice/retry-notice.cli.ts";
 export { default as renderDestructiveActionNoticeCli, cliExamples as destructiveActionNoticeCliExamples } from "../components/workflow/destructive-action-notice/destructive-action-notice.cli.ts";
 export type { DestructiveActionNoticeCliProps } from "../components/workflow/destructive-action-notice/destructive-action-notice.cli.ts";
+export { default as renderResultSummaryCli, cliExamples as resultSummaryCliExamples } from "../components/workflow/result-summary/result-summary.cli.ts";
+export type { ResultSummaryCliProps } from "../components/workflow/result-summary/result-summary.cli.ts";
 export { default as renderDiagnosticCli, cliExamples as diagnosticCliExamples } from "../components/workflow/diagnostic/diagnostic.cli.ts";
 export type { DiagnosticCliProps } from "../components/workflow/diagnostic/diagnostic.cli.ts";
 export { default as renderRawOutputCli, cliExamples as rawOutputCliExamples } from "../components/workflow/raw-output/raw-output.cli.ts";
 export type { RawOutputCliProps } from "../components/workflow/raw-output/raw-output.cli.ts";
+export { default as renderStandardMeterCli, cliExamples as standardMeterCliExamples } from "../components/workflow/standard-meter/standard-meter.cli.ts";
+export type { StandardMeterCliProps } from "../components/workflow/standard-meter/standard-meter.cli.ts";
 export { default as renderArtifactTreeCli, cliExamples as artifactTreeCliExamples } from "../components/workflow/artifact-tree/artifact-tree.cli.ts";
 export type { ArtifactTreeCliProps } from "../components/workflow/artifact-tree/artifact-tree.cli.ts";
 export { default as renderFileChangeCli, cliExamples as fileChangeCliExamples } from "../components/workflow/file-change/file-change.cli.ts";

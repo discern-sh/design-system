@@ -3,14 +3,9 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { CopyButton } from "../../docs/copy-button/copy-button.tsx";
+import type { ResultSummaryState } from "./result-summary.types.ts";
 
-/** Outcome states carried by a {@linkcode ResultSummary}. */
-export type ResultSummaryState =
-  | "passed"
-  | "failed"
-  | "blocked"
-  | "changed"
-  | "unchanged";
+export type { ResultSummaryState } from "./result-summary.types.ts";
 
 /** One supporting count in a {@linkcode ResultSummary}. */
 export interface ResultSummaryCount {
