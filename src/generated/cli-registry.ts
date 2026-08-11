@@ -4,10 +4,10 @@ import type { CliComponentRegistryEntry } from "../cli/contracts.ts";
 /** Generated CLI stance and renderer-module facts keyed by component slug. */
 export const cliComponentRegistry = {
   "icon": { stance: "rendered", modulePath: "../components/core/icon/icon.cli.ts" },
-  "button": { stance: "pending" },
-  "icon-button": { stance: "pending" },
-  "theme-toggle": { stance: "pending" },
-  "theme-switcher": { stance: "pending" },
+  "button": { stance: "rendered", modulePath: "../components/core/button/button.cli.ts" },
+  "icon-button": { stance: "rendered", modulePath: "../components/core/icon-button/icon-button.cli.ts" },
+  "theme-toggle": { stance: "rendered", modulePath: "../components/core/theme-toggle/theme-toggle.cli.ts" },
+  "theme-switcher": { stance: "exempt", reason: "Terminal colour selection is already a caller-owned renderer input; presenting a System, Light, and Dark form would falsely imply an input driver and persistence policy." },
   "logo": { stance: "rendered", modulePath: "../components/core/logo/logo.cli.ts" },
   "brand": { stance: "rendered", modulePath: "../components/core/brand/brand.cli.ts" },
   "container": { stance: "pending" },

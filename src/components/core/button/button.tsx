@@ -7,11 +7,7 @@ import type {
 } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
-
-/** Variant options for the Button component. */
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
-/** Size options for the Button component. */
-export type ButtonSize = "sm" | "md" | "lg";
+import type { ButtonSize, ButtonVariant } from "./button.types.ts";
 
 interface ButtonCommonProps {
   readonly variant?: ButtonVariant;
