@@ -13,4 +13,5 @@ export * from "./io.ts";
 export * from "./keys.ts";
 export * from "./lifecycle.ts";
 export * from "./painter.ts";
+export * from "./textarea-prompt.ts";
 export * from "./types.ts";

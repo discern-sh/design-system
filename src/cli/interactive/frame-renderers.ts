@@ -387,7 +387,10 @@ function textareaBody(
   const rows = Math.max(1, state.rows);
   const start = Math.max(
     0,
-    Math.min(cursorLine, Math.max(0, lines.length - rows)),
+    Math.min(
+      cursorLine - rows + 1,
+      Math.max(0, lines.length - rows),
+    ),
   );
   const visible = lines.slice(start, start + rows);
   while (visible.length < rows) visible.push("");
