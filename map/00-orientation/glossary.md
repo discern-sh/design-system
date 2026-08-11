@@ -14,7 +14,7 @@ A named public CSS custom property in the `discern` namespace — the unit all s
 
 ### Component
 
-One self-contained folder under [`src/components/<group>/<slug>/`](../../src/components/) owning its implementation (`<slug>.tsx`), stylesheet (`<slug>.css`), Metadata (`<slug>.meta.ts`), examples (`<slug>.examples.tsx`), and `mod.ts`. There are 109, and every surface that lists them is generated from their Metadata.
+One self-contained folder under [`src/components/<group>/<slug>/`](../../src/components/) owning its implementation (`<slug>.tsx`), stylesheet (`<slug>.css`), Metadata (`<slug>.meta.ts`), examples (`<slug>.examples.tsx`), and `mod.ts`. A rendered CLI stance adds `<slug>.cli.ts`, with framework-neutral vocabulary in a sibling types module when web and terminal share it. There are 109, and every surface that lists them is generated from their Metadata.
 
 ### Selection
 
@@ -34,7 +34,7 @@ One of the twelve canonical component families — Agents, Core, Display, Docs, 
 
 ### Metadata
 
-A Component's `*.meta.ts` file: name, slug, Group, catalogue order, description, and accessibility notes, typed by [`component-meta.ts`](../../src/types/component-meta.ts). Metadata is the single source Codegen reads; adding a Component folder with Metadata enrols it in every generated surface with no manual registration.
+A Component's `*.meta.ts` file: name, slug, Group, catalogue order, description, accessibility notes, and optional CLI stance, typed by [`component-meta.ts`](../../src/types/component-meta.ts). Metadata is the single source Codegen reads; adding a Component folder with Metadata enrols it in every generated surface with no manual registration.
 
 ### Owned Classes
 
@@ -50,7 +50,7 @@ The `deno task codegen` run of [`generate.ts`](../../scripts/generate.ts), which
 
 ### Registry
 
-The generated component catalogue in [`src/generated/component-registry.ts`](../../src/generated/component-registry.ts): IDs, Groups, dependency edges, and Owned Classes. The Emitter resolves every Selection through it.
+The generated Runtime component catalogue in [`src/generated/component-registry.ts`](../../src/generated/component-registry.ts): IDs, Groups, dependency edges, and Owned Classes. The Emitter resolves every Selection through it. The separate generated [CLI Registry](../../src/generated/cli-registry.ts) maps the same Component slugs to pending, exempt, or rendered terminal stances and records renderer module paths.
 
 ---
 
@@ -87,6 +87,18 @@ A branded Token layer. The default blue Preset lives in [`theme/discern.ts`](../
 ### Adapter
 
 The optional React surface at [`react.ts`](../../src/react.ts) (`./react`): components rendering the same public class contract to static HTML, with React 18.3+ as a peer dependency. Build-time only — no bundle, hydration, or implicit browser behaviour ships to consumers.
+
+### Terminal Capabilities
+
+The explicit colour depth, column count, and Unicode support passed to every pure CLI Renderer. [`detectTerminalCapabilities()`](../../src/cli/capabilities.ts) derives them from caller-supplied terminal facts without reading the process itself.
+
+### CLI Renderer
+
+A pure React-free function exported through [`./cli`](../../src/cli/mod.ts) that accepts typed visual props plus Terminal Capabilities and returns a terminal string without I/O or environment reads.
+
+### CLI Stance
+
+A Component Metadata declaration of `rendered` or `exempt` with a reason; absence is pending. Codegen validates a rendered stance against the colocated `*.cli.ts` file and derives the CLI Registry and renderer exports.
 
 ---
 

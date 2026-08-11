@@ -18,19 +18,21 @@ Every class, custom property, data attribute, keyframe, and cascade layer the pa
 
 ## 2. Component metadata is the single source; generated surfaces are never hand-edited
 
-Each component folder owns its `*.meta.ts`, CSS, implementation, examples, and `mod.ts`. The runtime registry, React export surface, catalogue registry, and dependency graph are all generated from that metadata by `deno task codegen` — never edited directly.
+Each component folder owns its `*.meta.ts`, CSS, implementation, examples, `mod.ts`, and any declared CLI renderer. The Runtime Registry, React export surface, CLI stance registry and renderer barrel, Catalogue registry, and dependency graph are all generated from that Metadata by `deno task codegen` — never edited directly.
 
 **Why it matters.** The same component facts feed four surfaces. Hand-editing a generated file forks a fact: the next codegen run silently reverts it, or worse, the surfaces disagree about what components exist and what they depend on.
 
-**How it shows up.** [`generate.ts`](../../scripts/generate.ts) writes `src/generated/` (registry, React surface, assets, base styles) from the `*.meta.ts` files; the test "component metadata auto-enrols React and runtime surfaces" proves a new component folder needs no manual registration; CI fails if `deno task codegen` produces a diff, and the quality gate runs codegen as a fix stage so the generated files can never go stale on a gated change.
+**How it shows up.** [`generate.ts`](../../scripts/generate.ts) writes `src/generated/` (Runtime Registry, React surface, CLI registry and renderer barrel, assets, base styles) from the `*.meta.ts` files; the test "component metadata auto-enrols React, runtime, and CLI surfaces" proves a new Component folder needs no manual registration; CI fails if `deno task codegen` produces a diff, and the quality gate runs Codegen as a fix stage so the generated files can never go stale on a gated change.
 
-## 3. The neutral core never resolves React
+## 3. The neutral core and CLI surface never resolve React
 
-The root, `./manifest`, `./runtime`, `./tokens`, and `./theme/discern` module graphs import no React. React lives only behind the optional `./react` adapter, as an 18.3+ peer contract, and is a build-time renderer: consumers ship static HTML and CSS, never a React bundle or hydration.
+The root, `./cli`, `./manifest`, `./runtime`, `./tokens`, and `./theme/discern` module graphs import no React. React lives only behind the optional `./react` Adapter, as an 18.3+ peer contract, and is a build-time renderer: consumers ship static HTML and CSS or terminal strings, never a React bundle or hydration.
 
 **Why it matters.** The package's promise is framework-neutrality. One stray React import in the neutral graph forces every non-React consumer to install React just to emit CSS — a contract break that type-checks fine locally and only explodes in a consumer's project.
 
-**How it shows up.** The release test "the publish-shaped artifact serves the neutral consumer alone" in [`release_test.ts`](../../tests/release_test.ts) builds an external Deno project with no React dependency and runs it `--cached-only`; only [`react.ts`](../../src/react.ts) resolves the adapter; `react` and `react-dom` are peer/development dependencies only.
+**How it shows up.** The release tests "the publish-shaped artifact serves the neutral consumer alone" and "the CLI export graph never resolves React" in [`release_test.ts`](../../tests/release_test.ts) build and inspect external Deno consumption with no React dependency; only [`react.ts`](../../src/react.ts) resolves the Adapter; `react` and `react-dom` are peer/development dependencies only.
+
+The pure terminal boundary and its renderer/driver split are recorded in [ADR-0002](../_adr/0002-react-free-cli-renderer-contract.md).
 
 ## 4. Emission is deterministic and selection-scoped
 
@@ -46,7 +48,7 @@ Semantic roles (canvas, ink, accent, success, warning, danger, and the deliberat
 
 **Why it matters.** The moment a theme forks a component stylesheet, every component fix must land per-theme and themes drift apart. Token-only theming is also what keeps role semantics intact — a green-branded consumer must still be able to tell "brand action" from "successful outcome".
 
-**How it shows up.** Roles live in [`tokens.ts`](../../src/tokens/tokens.ts); the preset in [`theme/discern.ts`](../../src/theme/discern.ts) sets only public tokens; [`green-theme.css`](../../tests/fixtures/green-theme.css) re-brands without touching component CSS, and the test "default blue and green themes share component CSS and preserve state semantics" fails a theme that forks or an accent that swallows success.
+**How it shows up.** Roles live in [`tokens.ts`](../../src/tokens/tokens.ts); the Preset in [`theme/discern.ts`](../../src/theme/discern.ts) sets only public Tokens; [`cli/theme.ts`](../../src/cli/theme.ts) derives terminal light/dark and ANSI values from those same Tokens; [`green-theme.css`](../../tests/fixtures/green-theme.css) re-brands without touching Component CSS, and tests fail a theme that forks, a terminal colour that escapes Token enrollment, or an accent that swallows success.
 
 ## 6. Accessibility invariants are tested contract, not garnish
 

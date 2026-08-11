@@ -18,7 +18,7 @@ If you're new, start with [00-orientation/](00-orientation/) and follow the trai
 
 ### Subsystems
 
-The subsystems are numbered subtrees, in the order a newcomer should read them — `10-…` through `80-…`. Each has a `README.md` tour plus deeper leaves. Rename and renumber freely — the numbers are a reading order, not a contract. The numbered subtrees below hold stub READMEs today; writing their leaves is tracked in [`discern/TODO.md`](../discern/TODO.md).
+The subsystems are numbered subtrees, in the order a newcomer should read them — `10-…` through `80-…`. Each has a `README.md` tour plus deeper leaves where needed. Rename and renumber freely — the numbers are a reading order, not a contract. The `10-…` through `60-…` subtrees remain stubs; writing their leaves is tracked in [`discern/TODO.md`](../discern/TODO.md). The CLI and development subtrees describe implemented code.
 
 | Path                                       | What's in it                                                                                                                                                                                                             |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -28,6 +28,7 @@ The subsystems are numbered subtrees, in the order a newcomer should read them �
 | [40-runtime-emitter/](40-runtime-emitter/) | The Emitter: Selection resolution, deterministic output, the Manifest, and Optional Assets.                                                                                                                              |
 | [50-react-adapter/](50-react-adapter/)     | The optional React Adapter: peer contract and build-time static rendering.                                                                                                                                               |
 | [60-catalogue/](60-catalogue/)             | The local component browser: the styleguide app, the build pipeline, and the dev server.                                                                                                                                 |
+| [70-cli/](70-cli/)                         | The React-free terminal foundation: capabilities, Token-derived themes, text and layout primitives, triangle motifs, interactive frame states, and per-Component CLI enrollment.                                         |
 | [80-development/](80-development/)         | Working on discern-design-system: getting set up, the testing approach, code conventions, and the [gate gotchas](80-development/done-gate-gotchas.md) the quality gate points at when a step fails in a non-obvious way. |
 
 ### Reference material
