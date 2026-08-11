@@ -4,6 +4,7 @@
  * @module
  */
 
+export * from "./activity.ts";
 export * from "./basic-prompts.ts";
 export * from "./choice-prompts.ts";
 export * from "./discovery-prompts.ts";
