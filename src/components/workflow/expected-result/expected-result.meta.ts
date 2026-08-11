@@ -5,6 +5,7 @@ export default {
   slug: "expected-result",
   group: "Workflow",
   order: 30,
+  cli: { stance: "rendered" },
   description:
     "Observable output or a stated end state that tells a reader how to recognise a successful command or procedure.",
   purposes: [

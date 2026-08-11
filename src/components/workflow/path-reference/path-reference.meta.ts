@@ -5,6 +5,7 @@ export default {
   slug: "path-reference",
   group: "Workflow",
   order: 40,
+  cli: { stance: "rendered" },
   description:
     "Inline file or directory path with middle truncation and an opt-in adapter-only copy affordance, keeping quiet prose inert while owning the correct clipboard payload when copying matters.",
   purposes: [
