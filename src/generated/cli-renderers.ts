@@ -9,6 +9,14 @@ export { default as renderExpectedResultCli, cliExamples as expectedResultCliExa
 export type { ExpectedResultCliProps } from "../components/workflow/expected-result/expected-result.cli.ts";
 export { default as renderPathReferenceCli, cliExamples as pathReferenceCliExamples } from "../components/workflow/path-reference/path-reference.cli.ts";
 export type { PathReferenceCliProps } from "../components/workflow/path-reference/path-reference.cli.ts";
+export { default as renderProcedureCli, cliExamples as procedureCliExamples } from "../components/workflow/procedure/procedure.cli.ts";
+export type { ProcedureCliProps } from "../components/workflow/procedure/procedure.cli.ts";
+export { default as renderProcedureStepCli, cliExamples as procedureStepCliExamples } from "../components/workflow/procedure-step/procedure-step.cli.ts";
+export type { ProcedureStepCliProps } from "../components/workflow/procedure-step/procedure-step.cli.ts";
+export { default as renderPrerequisiteListCli, cliExamples as prerequisiteListCliExamples } from "../components/workflow/prerequisite-list/prerequisite-list.cli.ts";
+export type { PrerequisiteListCliProps } from "../components/workflow/prerequisite-list/prerequisite-list.cli.ts";
+export { default as renderBranchChoiceCli, cliExamples as branchChoiceCliExamples } from "../components/workflow/branch-choice/branch-choice.cli.ts";
+export type { BranchChoiceCliProps } from "../components/workflow/branch-choice/branch-choice.cli.ts";
 export { default as renderRetryNoticeCli, cliExamples as retryNoticeCliExamples } from "../components/workflow/retry-notice/retry-notice.cli.ts";
 export type { RetryNoticeCliProps } from "../components/workflow/retry-notice/retry-notice.cli.ts";
 export { default as renderDestructiveActionNoticeCli, cliExamples as destructiveActionNoticeCliExamples } from "../components/workflow/destructive-action-notice/destructive-action-notice.cli.ts";
