@@ -79,9 +79,6 @@ const renderProcessStepsCli: CliRenderer<ProcessStepsCliProps> = (
   props,
   capabilities,
 ) => {
-  if (props.sections.length === 0) {
-    throw new TypeError("process steps requires at least one section");
-  }
   const width = marketingCliWidth(props.width, capabilities);
   const boundedCapabilities = { ...capabilities, columns: width };
   const steps = props.sections.map((section, index) => ({
@@ -111,9 +108,11 @@ const renderProcessStepsCli: CliRenderer<ProcessStepsCliProps> = (
       ...(props.theme === undefined ? {} : { theme: props.theme }),
       width,
     }, capabilities),
-    renderTriangleWorkflowStepper(steps, boundedCapabilities, {
-      ...(props.theme === undefined ? {} : { theme: props.theme }),
-    }),
+    steps.length === 0
+      ? "No applicable steps."
+      : renderTriangleWorkflowStepper(steps, boundedCapabilities, {
+        ...(props.theme === undefined ? {} : { theme: props.theme }),
+      }),
     summaries,
     props.beaconPhase === undefined ? "" : renderTriangleActivityBeacon({
       width,

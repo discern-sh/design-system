@@ -6,6 +6,7 @@
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import type {
+  AutocompleteFrameState,
   MaskedInputFrameState,
   TextInputFrameState,
 } from "../../../cli/interactive-states.ts";
@@ -21,6 +22,7 @@ export type InputCliProps =
   & (
     | TextInputFrameState
     | MaskedInputFrameState
+    | AutocompleteFrameState
   )
   & {
     readonly presentation?: FormCliPresentation;
@@ -98,7 +100,7 @@ export const cliExamples: readonly CliExample<InputCliProps>[] = [
 ] as const;
 
 function rawValue(
-  state: TextInputFrameState | MaskedInputFrameState,
+  state: TextInputFrameState | MaskedInputFrameState | AutocompleteFrameState,
   capabilities: Parameters<CliRenderer<InputCliProps>>[1],
 ): string {
   if (state.kind === "masked-input") {
@@ -109,6 +111,17 @@ function rawValue(
     }
     const mask = (capabilities.unicode ? "•" : "*").repeat(state.valueLength);
     return mask === "" ? state.placeholder ?? "" : mask;
+  }
+  if (
+    state.kind === "autocomplete" && state.lifecycle.status !== "submitted"
+  ) {
+    const suggestion = state.suggestions[state.highlightedIndex];
+    if (
+      suggestion !== undefined &&
+      suggestion.toLocaleLowerCase().startsWith(state.value.toLocaleLowerCase())
+    ) {
+      return suggestion;
+    }
   }
   return state.value === "" ? state.placeholder ?? "" : state.value;
 }

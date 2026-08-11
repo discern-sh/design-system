@@ -9,6 +9,10 @@ import type {
   MultiselectFrameState,
   SelectFrameState,
 } from "../interactive-states.ts";
+import type { TerminalCapabilities } from "../capabilities.ts";
+import type { TerminalThemeVariant } from "../theme.ts";
+import renderCheckboxCli from "../../components/forms/checkbox/checkbox.cli.ts";
+import renderSelectCli from "../../components/forms/select/select.cli.ts";
 import {
   assertChoices,
   choiceVisibleCount,
@@ -23,6 +27,28 @@ import {
 import { type PromptMachine, runPrompt } from "./driver.ts";
 import { isNamedKey, type TerminalKey } from "./keys.ts";
 import type { PromptChoice, PromptOptions, PromptRuntime } from "./types.ts";
+
+function renderSelectFrame(
+  state: SelectFrameState,
+  capabilities: TerminalCapabilities,
+  theme: TerminalThemeVariant | undefined,
+): string {
+  return renderSelectCli({
+    ...state,
+    ...(theme === undefined ? {} : { theme }),
+  }, capabilities);
+}
+
+function renderMultiselectFrame(
+  state: MultiselectFrameState,
+  capabilities: TerminalCapabilities,
+  theme: TerminalThemeVariant | undefined,
+): string {
+  return renderCheckboxCli({
+    ...state,
+    ...(theme === undefined ? {} : { theme }),
+  }, capabilities);
+}
 
 /** Options for selecting zero or one value from a scrollable choice list. */
 export interface SelectPromptOptions<T> extends PromptOptions<T | undefined> {
@@ -112,6 +138,7 @@ export async function promptSelect<T>(
     requiredOptions,
     new SelectPromptMachine(requiredOptions),
     runtime,
+    renderSelectFrame,
   );
 }
 
@@ -211,5 +238,6 @@ export async function promptMultiselect<T>(
     options,
     new MultiselectPromptMachine(options),
     runtime,
+    renderMultiselectFrame,
   );
 }

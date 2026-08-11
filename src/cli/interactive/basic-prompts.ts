@@ -10,10 +10,36 @@ import type {
   MaskedInputFrameState,
   TextInputFrameState,
 } from "../interactive-states.ts";
+import type { TerminalCapabilities } from "../capabilities.ts";
+import type { TerminalThemeVariant } from "../theme.ts";
+import renderInputCli from "../../components/forms/input/input.cli.ts";
+import renderSwitchCli from "../../components/forms/switch/switch.cli.ts";
 import { GraphemeTextEditor, segmentGraphemes } from "./editor.ts";
 import { type PromptMachine, runPrompt } from "./driver.ts";
 import { isNamedKey, type TerminalKey } from "./keys.ts";
 import type { PromptOptions, PromptRuntime } from "./types.ts";
+
+function renderInputFrame(
+  state: TextInputFrameState | MaskedInputFrameState,
+  capabilities: TerminalCapabilities,
+  theme: TerminalThemeVariant | undefined,
+): string {
+  return renderInputCli({
+    ...state,
+    ...(theme === undefined ? {} : { theme }),
+  }, capabilities);
+}
+
+function renderConfirmFrame(
+  state: ConfirmFrameState,
+  capabilities: TerminalCapabilities,
+  theme: TerminalThemeVariant | undefined,
+): string {
+  return renderSwitchCli({
+    ...state,
+    ...(theme === undefined ? {} : { theme }),
+  }, capabilities);
+}
 
 /** Options for one editable line of text. */
 export interface TextPromptOptions extends PromptOptions<string> {
@@ -58,7 +84,12 @@ export async function promptText(
   options: TextPromptOptions,
   runtime: PromptRuntime = {},
 ): Promise<string> {
-  return await runPrompt(options, new TextPromptMachine(options), runtime);
+  return await runPrompt(
+    options,
+    new TextPromptMachine(options),
+    runtime,
+    renderInputFrame,
+  );
 }
 
 /** Options for one masked editable line. */
@@ -102,7 +133,12 @@ export async function promptMasked(
   options: MaskedPromptOptions,
   runtime: PromptRuntime = {},
 ): Promise<string> {
-  return await runPrompt(options, new MaskedPromptMachine(options), runtime);
+  return await runPrompt(
+    options,
+    new MaskedPromptMachine(options),
+    runtime,
+    renderInputFrame,
+  );
 }
 
 /** Options for a yes/no confirmation prompt. */
@@ -168,5 +204,10 @@ export async function promptConfirm(
   options: ConfirmPromptOptions,
   runtime: PromptRuntime = {},
 ): Promise<boolean> {
-  return await runPrompt(options, new ConfirmPromptMachine(options), runtime);
+  return await runPrompt(
+    options,
+    new ConfirmPromptMachine(options),
+    runtime,
+    renderConfirmFrame,
+  );
 }

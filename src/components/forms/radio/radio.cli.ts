@@ -5,17 +5,29 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
-import type { SelectFrameState } from "../../../cli/interactive-states.ts";
+import type {
+  SearchFrameState,
+  SelectFrameState,
+} from "../../../cli/interactive-states.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
-import { type FormCliPresentation, renderFormCliFrame } from "../form-frame.ts";
+import {
+  type FormCliPresentation,
+  insertFormCliCursor,
+  renderFormCliFrame,
+} from "../form-frame.ts";
 
 /** Inputs accepted by the terminal Radio renderer. */
-export interface RadioCliProps extends SelectFrameState {
+interface RadioCliOptions {
   readonly presentation?: FormCliPresentation;
   readonly required?: boolean;
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
+
+/** Inputs accepted by the terminal Radio renderer. */
+export type RadioCliProps =
+  & (SelectFrameState | SearchFrameState)
+  & RadioCliOptions;
 
 const options = [
   { id: "alpha", label: "Alpha" },
@@ -88,29 +100,55 @@ export const cliExamples: readonly CliExample<RadioCliProps>[] = [
 /** Render a Wave 1 single-selection state as a terminal radio group. */
 const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
   const state = props;
+  const options = state.kind === "search" ? state.results : state.options;
+  const highlightedIndex = state.kind === "search"
+    ? state.highlightedIndex
+    : state.highlightedIndex;
   if (
-    state.options.length === 0 || state.highlightedIndex < 0 ||
-    state.highlightedIndex >= state.options.length
+    state.kind === "select" &&
+    (options.length === 0 || state.highlightedIndex < 0 ||
+      state.highlightedIndex >= options.length)
   ) {
     throw new TypeError("radio state requires an in-range highlighted option");
+  }
+  if (
+    state.kind === "search" && highlightedIndex !== undefined &&
+    (highlightedIndex < 0 || highlightedIndex >= options.length)
+  ) {
+    throw new TypeError("search state requires an in-range highlighted result");
   }
   const expanded = props.presentation === undefined &&
     (state.lifecycle.status === "active" ||
       state.lifecycle.status === "validation-error");
-  const control = state.options.map((option, index) => {
-    const selected = option.id === state.selectedId;
-    const marker = capabilities.unicode
-      ? selected ? "◉" : "○"
-      : selected
-      ? "(*)"
-      : "( )";
-    const pointer = expanded && index === state.highlightedIndex
-      ? capabilities.unicode ? "› " : "> "
-      : "  ";
-    return `${pointer}${marker} ${option.label}${
-      option.disabled === true ? " (disabled)" : ""
-    }`;
-  }).join("\n");
+  const choices = options.length === 0
+    ? ["No results."]
+    : options.map((option, index) => {
+      const selected = state.kind === "search"
+        ? state.lifecycle.status === "submitted" && index === highlightedIndex
+        : option.id === state.selectedId;
+      const marker = capabilities.unicode
+        ? selected ? "◉" : "○"
+        : selected
+        ? "(*)"
+        : "( )";
+      const pointer = expanded && index === highlightedIndex
+        ? capabilities.unicode ? "› " : "> "
+        : "  ";
+      return `${pointer}${marker} ${option.label}${
+        option.disabled === true ? " (disabled)" : ""
+      }`;
+    });
+  const control = state.kind === "search"
+    ? `${
+      state.lifecycle.status === "submitted"
+        ? state.query
+        : insertFormCliCursor(
+          state.query === "" ? state.placeholder ?? "" : state.query,
+          state.cursor,
+          capabilities,
+        )
+    }\n${choices.join("\n")}`
+    : choices.join("\n");
   return renderFormCliFrame({
     label: state.label,
     control,

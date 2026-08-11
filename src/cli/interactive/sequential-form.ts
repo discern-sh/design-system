@@ -10,9 +10,9 @@ import type {
   SequentialFormSectionState,
   SequentialStepStatus,
 } from "../interactive-states.ts";
+import renderProcessStepsCli from "../../components/marketing/process-steps/process-steps.cli.ts";
 import { PromptCancelled } from "./errors.ts";
 import { PromptBackNavigation } from "./driver.ts";
-import { renderInteractiveFrame } from "./frame-renderers.ts";
 import { DenoTerminalIO, type TerminalIO } from "./io.ts";
 import { assertInteractiveTerminal } from "./lifecycle.ts";
 import type { PromptRuntime } from "./types.ts";
@@ -224,11 +224,13 @@ export class SequentialFormBuilder {
 
   #paint(frame: SequentialFormFrameState): void {
     this.#io.write(`${
-      renderInteractiveFrame(
-        frame,
-        this.#io.capabilities(),
-        this.options.theme === undefined ? {} : { theme: this.options.theme },
-      )
+      renderProcessStepsCli({
+        ...frame,
+        ...(this.options.theme === undefined
+          ? {}
+          : { theme: this.options.theme }),
+        width: Math.min(48, this.#io.capabilities().columns),
+      }, this.#io.capabilities())
     }\n`);
   }
 }

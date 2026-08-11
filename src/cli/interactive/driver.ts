@@ -4,8 +4,9 @@ import type {
   InteractiveFrameLifecycle,
   InteractiveFrameState,
 } from "../interactive-states.ts";
+import type { TerminalCapabilities } from "../capabilities.ts";
+import type { TerminalThemeVariant } from "../theme.ts";
 import { PromptCancelled } from "./errors.ts";
-import { renderInteractiveFrame } from "./frame-renderers.ts";
 import { DenoTerminalIO } from "./io.ts";
 import { isNamedKey, type TerminalKey, TerminalKeyReader } from "./keys.ts";
 import { withRawTerminal } from "./lifecycle.ts";
@@ -18,6 +19,13 @@ export interface PromptMachine<T, State extends InteractiveFrameState> {
   value(): T;
   frame(lifecycle: InteractiveFrameLifecycle): State;
 }
+
+/** Component-backed renderer selected by one prompt entrypoint. */
+export type PromptFrameRenderer<State extends InteractiveFrameState> = (
+  state: State,
+  capabilities: TerminalCapabilities,
+  theme: TerminalThemeVariant | undefined,
+) => string;
 
 export class PromptBackNavigation extends Error {
   override readonly name = "PromptBackNavigation";
@@ -44,15 +52,16 @@ export async function runPrompt<T, State extends InteractiveFrameState>(
   options: PromptOptions<T>,
   machine: PromptMachine<T, State>,
   runtime: PromptRuntime,
+  renderFrame: PromptFrameRenderer<State>,
 ): Promise<T> {
   const io = runtime.io ?? new DenoTerminalIO();
   const painter = new InlineFramePainter(io);
   const reader = new TerminalKeyReader(io);
   const paint = (lifecycle: InteractiveFrameLifecycle): void => {
-    painter.replace(renderInteractiveFrame(
+    painter.replace(renderFrame(
       machine.frame(lifecycle),
       io.capabilities(),
-      runtime.theme === undefined ? {} : { theme: runtime.theme },
+      runtime.theme,
     ));
   };
 

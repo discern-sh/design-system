@@ -8,9 +8,14 @@ import type {
   DeterminateProgressFrameState,
   SpinnerFrameState,
 } from "../interactive-states.ts";
-import type { TerminalThemeVariant } from "../theme.ts";
-import { DISCERN_TRIANGLE_SPINNER_ORDER } from "../triangles.ts";
-import { renderInteractiveFrame } from "./frame-renderers.ts";
+import type { TerminalCapabilities } from "../capabilities.ts";
+import { measureText, truncateText } from "../text.ts";
+import { terminalThemes, type TerminalThemeVariant } from "../theme.ts";
+import {
+  DISCERN_TRIANGLE_SPINNER_ORDER,
+  renderTriangleSpinnerFrame,
+} from "../triangles.ts";
+import renderMeterCli from "../../components/feedback/meter/meter.cli.ts";
 import { DenoTerminalIO, type TerminalIO } from "./io.ts";
 import {
   assertInteractiveTerminal,
@@ -64,6 +69,34 @@ function spinnerFrame(
   };
 }
 
+function renderSpinner(
+  state: SpinnerFrameState,
+  capabilities: TerminalCapabilities,
+  theme: TerminalThemeVariant | undefined,
+): string {
+  const selectedTheme = terminalThemes[theme ?? "dark"];
+  const gap = " ".repeat(
+    selectedTheme.spacing["--discern-space-2"] ?? 1,
+  );
+  const spinner = renderTriangleSpinnerFrame(
+    state.phase,
+    capabilities,
+    theme === undefined ? {} : { theme },
+  );
+  const label = truncateText(
+    state.label,
+    Math.max(
+      0,
+      capabilities.columns - measureText(spinner) - measureText(gap),
+    ),
+    capabilities.unicode ? "…" : ".",
+  );
+  const frame = `${spinner}${gap}${label}`;
+  return state.hint === undefined || state.hint === ""
+    ? frame
+    : `${frame}\n${state.hint}`;
+}
+
 /** Run a callback while repainting the canonical triangle spinner cycle. */
 export async function withSpinner<T>(
   options: SpinnerOptions,
@@ -77,10 +110,10 @@ export async function withSpinner<T>(
     const painter = new InlineFramePainter(io);
     let phase = 0;
     const paint = (): void => {
-      painter.replace(renderInteractiveFrame(
+      painter.replace(renderSpinner(
         spinnerFrame(options, phase),
         io.capabilities(),
-        options.theme === undefined ? {} : { theme: options.theme },
+        options.theme,
       ));
       phase = (phase + 1) % DISCERN_TRIANGLE_SPINNER_ORDER.length;
     };
@@ -181,11 +214,13 @@ class ProgressController implements DeterminateProgressController {
       total: this.total,
       ...(this.options.hint === undefined ? {} : { hint: this.options.hint }),
     };
-    this.painter.replace(renderInteractiveFrame(
-      state,
-      this.io.capabilities(),
-      this.options.theme === undefined ? {} : { theme: this.options.theme },
-    ));
+    this.painter.replace(renderMeterCli({
+      ...state,
+      ...(this.options.theme === undefined
+        ? {}
+        : { theme: this.options.theme }),
+      width: Math.min(48, this.io.capabilities().columns),
+    }, this.io.capabilities()));
   }
 }
 

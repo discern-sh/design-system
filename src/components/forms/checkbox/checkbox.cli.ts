@@ -5,17 +5,25 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
-import type { ConfirmFrameState } from "../../../cli/interactive-states.ts";
+import type {
+  ConfirmFrameState,
+  MultiselectFrameState,
+} from "../../../cli/interactive-states.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import { type FormCliPresentation, renderFormCliFrame } from "../form-frame.ts";
 
 /** Inputs accepted by the terminal Checkbox renderer. */
-export interface CheckboxCliProps extends ConfirmFrameState {
+interface CheckboxCliOptions {
   readonly presentation?: FormCliPresentation;
   readonly required?: boolean;
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
+
+/** Inputs accepted by the terminal Checkbox renderer. */
+export type CheckboxCliProps =
+  & (ConfirmFrameState | MultiselectFrameState)
+  & CheckboxCliOptions;
 
 const base = {
   kind: "confirm" as const,
@@ -81,16 +89,15 @@ const renderCheckboxCli: CliRenderer<CheckboxCliProps> = (
   capabilities,
 ) => {
   const state = props;
-  const checked = state.value ? capabilities.unicode ? "[✓]" : "[x]" : "[ ]";
   const active = props.presentation === undefined &&
     (state.lifecycle.status === "active" ||
       state.lifecycle.status === "validation-error");
-  const pointer = active ? `${capabilities.unicode ? "›" : ">"} ` : "";
+  const control = state.kind === "multiselect"
+    ? renderMultiselectControl(state, active, capabilities)
+    : renderConfirmControl(state, active, capabilities);
   return renderFormCliFrame({
     label: state.label,
-    control: `${pointer}${checked} ${
-      state.value ? state.yesLabel : state.noLabel
-    }`,
+    control,
     lifecycle: state.lifecycle,
     ...(state.hint === undefined ? {} : { hint: state.hint }),
     ...(props.presentation === undefined
@@ -101,5 +108,64 @@ const renderCheckboxCli: CliRenderer<CheckboxCliProps> = (
     ...(props.width === undefined ? {} : { width: props.width }),
   }, capabilities);
 };
+
+function checkboxMark(
+  checked: boolean,
+  capabilities: Parameters<CliRenderer<CheckboxCliProps>>[1],
+): string {
+  return checked ? capabilities.unicode ? "[✓]" : "[x]" : "[ ]";
+}
+
+function renderConfirmControl(
+  state: ConfirmFrameState,
+  active: boolean,
+  capabilities: Parameters<CliRenderer<CheckboxCliProps>>[1],
+): string {
+  const pointer = active ? `${capabilities.unicode ? "›" : ">"} ` : "";
+  return `${pointer}${checkboxMark(state.value, capabilities)} ${
+    state.value ? state.yesLabel : state.noLabel
+  }`;
+}
+
+function renderMultiselectControl(
+  state: MultiselectFrameState,
+  active: boolean,
+  capabilities: Parameters<CliRenderer<CheckboxCliProps>>[1],
+): string {
+  if (
+    state.options.length > 0 &&
+    (state.highlightedIndex < 0 ||
+      state.highlightedIndex >= state.options.length)
+  ) {
+    throw new TypeError(
+      "multiselect state requires an in-range highlighted option",
+    );
+  }
+  const start = state.visibleStart ?? 0;
+  const count = state.visibleCount ?? state.options.length;
+  if (
+    !Number.isSafeInteger(start) || start < 0 || start > state.options.length
+  ) {
+    throw new TypeError(
+      `multiselect visible start must be between 0 and ${state.options.length}; received ${start}`,
+    );
+  }
+  if (!Number.isSafeInteger(count) || count < 0) {
+    throw new TypeError(
+      `multiselect visible count must be a non-negative safe integer; received ${count}`,
+    );
+  }
+  const choices = state.options.slice(start, start + count);
+  if (choices.length === 0) return "No options.";
+  return choices.map((option, offset) => {
+    const index = start + offset;
+    const pointer = active && index === state.highlightedIndex
+      ? capabilities.unicode ? "› " : "> "
+      : "  ";
+    return `${pointer}${
+      checkboxMark(state.selectedIds.includes(option.id), capabilities)
+    } ${option.label}${option.disabled === true ? " (disabled)" : ""}`;
+  }).join("\n");
+}
 
 export default renderCheckboxCli;

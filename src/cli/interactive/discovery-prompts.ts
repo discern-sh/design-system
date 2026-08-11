@@ -9,6 +9,10 @@ import type {
   InteractiveFrameLifecycle,
   SearchFrameState,
 } from "../interactive-states.ts";
+import type { TerminalCapabilities } from "../capabilities.ts";
+import type { TerminalThemeVariant } from "../theme.ts";
+import renderInputCli from "../../components/forms/input/input.cli.ts";
+import renderRadioCli from "../../components/forms/radio/radio.cli.ts";
 import {
   assertChoices,
   choiceVisibleCount,
@@ -20,6 +24,28 @@ import { type PromptMachine, runPrompt } from "./driver.ts";
 import { GraphemeTextEditor } from "./editor.ts";
 import { isNamedKey, type TerminalKey } from "./keys.ts";
 import type { PromptChoice, PromptOptions, PromptRuntime } from "./types.ts";
+
+function renderSearchFrame(
+  state: SearchFrameState,
+  capabilities: TerminalCapabilities,
+  theme: TerminalThemeVariant | undefined,
+): string {
+  return renderRadioCli({
+    ...state,
+    ...(theme === undefined ? {} : { theme }),
+  }, capabilities);
+}
+
+function renderAutocompleteFrame(
+  state: AutocompleteFrameState,
+  capabilities: TerminalCapabilities,
+  theme: TerminalThemeVariant | undefined,
+): string {
+  return renderInputCli({
+    ...state,
+    ...(theme === undefined ? {} : { theme }),
+  }, capabilities);
+}
 
 /** Synchronous or asynchronous choice provider used by search prompts. */
 export type SearchPromptProvider<T> = (
@@ -143,6 +169,7 @@ export async function promptSearch<T>(
     requiredOptions,
     new SearchPromptMachine(requiredOptions),
     runtime,
+    renderSearchFrame,
   );
 }
 
@@ -256,5 +283,6 @@ export async function promptAutocomplete(
     options,
     new AutocompletePromptMachine(options),
     runtime,
+    renderAutocompleteFrame,
   );
 }

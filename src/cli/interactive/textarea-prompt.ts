@@ -8,10 +8,24 @@ import type {
   InteractiveFrameLifecycle,
   TextareaFrameState,
 } from "../interactive-states.ts";
+import type { TerminalCapabilities } from "../capabilities.ts";
+import type { TerminalThemeVariant } from "../theme.ts";
+import renderTextareaCli from "../../components/forms/textarea/textarea.cli.ts";
 import { type PromptMachine, runPrompt } from "./driver.ts";
 import { GraphemeTextEditor } from "./editor.ts";
 import { isNamedKey, type TerminalKey } from "./keys.ts";
 import type { PromptOptions, PromptRuntime } from "./types.ts";
+
+function renderTextareaFrame(
+  state: TextareaFrameState,
+  capabilities: TerminalCapabilities,
+  theme: TerminalThemeVariant | undefined,
+): string {
+  return renderTextareaCli({
+    ...state,
+    ...(theme === undefined ? {} : { theme }),
+  }, capabilities);
+}
 
 /** Options for a grapheme-aware multiline textarea. */
 export interface TextareaPromptOptions extends PromptOptions<string> {
@@ -73,5 +87,10 @@ export async function promptTextarea(
   options: TextareaPromptOptions,
   runtime: PromptRuntime = {},
 ): Promise<string> {
-  return await runPrompt(options, new TextareaPromptMachine(options), runtime);
+  return await runPrompt(
+    options,
+    new TextareaPromptMachine(options),
+    runtime,
+    renderTextareaFrame,
+  );
 }

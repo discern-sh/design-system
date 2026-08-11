@@ -1,5 +1,6 @@
 /**
  * Optional React-free interactive terminal adapter for raw input and prompts.
+ * Typed prompt states render through the package's Component CLI renderers.
  *
  * @module
  */

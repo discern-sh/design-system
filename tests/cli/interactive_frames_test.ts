@@ -1,216 +1,164 @@
 import { assertEquals } from "@std/assert";
-import type { InteractiveFrameState } from "../../src/cli/interactive-states.ts";
 import {
-  renderDeterminateProgressFrame,
-  renderInteractiveFrame,
-  renderSpinnerFrame,
-} from "../../src/cli/interactive/frame-renderers.ts";
+  createSequentialForm,
+  promptAutocomplete,
+  promptConfirm,
+  promptMasked,
+  promptMultiselect,
+  promptSearch,
+  promptSelect,
+  promptText,
+  promptTextarea,
+  withDeterminateProgress,
+} from "../../src/cli/interactive/mod.ts";
 import { assertExactFrame, testCapabilities } from "./helpers.ts";
+import { FakeTerminal } from "./fake-terminal.ts";
 
-const ACTIVE = { status: "active" } as const;
+const ENTER = "\r";
+const CTRL_D = "\x04";
 
-const FRAME_STATES = [
-  {
-    kind: "text-input",
-    label: "Name",
-    lifecycle: ACTIVE,
-    value: "Ada",
-    cursor: 1,
-  },
-  {
-    kind: "masked-input",
-    label: "Secret",
-    lifecycle: ACTIVE,
-    valueLength: 3,
-    cursor: 3,
-  },
-  {
-    kind: "confirm",
-    label: "Continue",
-    lifecycle: ACTIVE,
-    value: true,
-    yesLabel: "Yes",
-    noLabel: "No",
-  },
-  {
-    kind: "select",
-    label: "Pick",
-    lifecycle: ACTIVE,
-    options: [{ id: "one", label: "One" }, { id: "two", label: "Two" }],
-    highlightedIndex: 1,
-    selectedId: "two",
-  },
-  {
-    kind: "multiselect",
-    label: "Tags",
-    lifecycle: ACTIVE,
-    options: [{ id: "a", label: "Alpha" }, { id: "b", label: "Beta" }],
-    highlightedIndex: 0,
-    selectedIds: ["b"],
-  },
-  {
-    kind: "search",
-    label: "Find",
-    lifecycle: ACTIVE,
-    query: "th",
-    cursor: 2,
-    results: [{ id: "a", label: "Alpha" }, { id: "t", label: "Theta" }],
-    highlightedIndex: 1,
-  },
-  {
-    kind: "autocomplete",
-    label: "Shell",
-    lifecycle: ACTIVE,
-    value: "z",
-    cursor: 1,
-    suggestions: ["zsh"],
-    highlightedIndex: 0,
-  },
-  {
-    kind: "textarea",
-    label: "Notes",
-    lifecycle: ACTIVE,
-    value: "ab\ncd",
-    cursor: 3,
-    rows: 2,
-  },
-  { kind: "spinner", label: "Work", lifecycle: ACTIVE, phase: 2 },
-  {
-    kind: "determinate-progress",
-    label: "Work",
-    lifecycle: ACTIVE,
-    completed: 1,
-    total: 4,
-  },
-  {
-    kind: "sequential-form",
-    label: "Setup",
-    lifecycle: ACTIVE,
-    sections: [
-      { id: "a", label: "Account", status: "complete", summary: "Ada" },
-      { id: "b", label: "Confirm", status: "active" },
-    ],
-    activePhase: 1,
-  },
-] as const satisfies readonly InteractiveFrameState[];
-
-type FrameKind = InteractiveFrameState["kind"];
-
-const EXPECTED: Readonly<
-  Record<number, Readonly<Record<FrameKind, string>>>
-> = {
-  20: {
-    "text-input":
-      "┌ Name ────────────┐\n│ A▌da             │\n└──────────────────┘",
-    "masked-input":
-      "┌ Secret ──────────┐\n│ •••▌             │\n└──────────────────┘",
-    confirm: "┌ Continue ────────┐\n│ [●] Yes [○] No   │\n└──────────────────┘",
-    select:
-      "┌ Pick ────────────┐\n│ [ ] One          │\n│ > [●] Two        │\n└──────────────────┘",
-    multiselect:
-      "┌ Tags ────────────┐\n│ > [ ] Alpha      │\n│ [x] Beta         │\n└──────────────────┘",
-    search:
-      "┌ Find ────────────┐\n│ th▌              │\n│ Alpha            │\n│ > Theta          │\n└──────────────────┘",
-    autocomplete:
-      "┌ Shell ───────────┐\n│ z▌sh             │\n└──────────────────┘",
-    textarea:
-      "┌ Notes ───────────┐\n│ ab               │\n│ ▌cd              │\n└──────────────────┘",
-    spinner: "⧨ Work",
-    "determinate-progress": "Work\n[ 25%] ◮⧩◭..........",
-    "sequential-form": "Setup\n◮ Account: Ada\n│\n[◭] Confirm",
-  },
-  32: {
-    "text-input":
-      "┌ Name ────────────────────────┐\n│ A▌da                         │\n└──────────────────────────────┘",
-    "masked-input":
-      "┌ Secret ──────────────────────┐\n│ •••▌                         │\n└──────────────────────────────┘",
-    confirm:
-      "┌ Continue ────────────────────┐\n│ [●] Yes [○] No               │\n└──────────────────────────────┘",
-    select:
-      "┌ Pick ────────────────────────┐\n│ [ ] One                      │\n│ > [●] Two                    │\n└──────────────────────────────┘",
-    multiselect:
-      "┌ Tags ────────────────────────┐\n│ > [ ] Alpha                  │\n│ [x] Beta                     │\n└──────────────────────────────┘",
-    search:
-      "┌ Find ────────────────────────┐\n│ th▌                          │\n│ Alpha                        │\n│ > Theta                      │\n└──────────────────────────────┘",
-    autocomplete:
-      "┌ Shell ───────────────────────┐\n│ z▌sh                         │\n└──────────────────────────────┘",
-    textarea:
-      "┌ Notes ───────────────────────┐\n│ ab                           │\n│ ▌cd                          │\n└──────────────────────────────┘",
-    spinner: "⧨ Work",
-    "determinate-progress": "Work\n[ 25%] ◮⧩◭⧨◮⧩...................",
-    "sequential-form": "Setup\n◮ Account: Ada\n│\n[◭] Confirm",
-  },
-  48: {
-    "text-input":
-      "┌ Name ────────────────────────────────────────┐\n│ A▌da                                         │\n└──────────────────────────────────────────────┘",
-    "masked-input":
-      "┌ Secret ──────────────────────────────────────┐\n│ •••▌                                         │\n└──────────────────────────────────────────────┘",
-    confirm:
-      "┌ Continue ────────────────────────────────────┐\n│ [●] Yes [○] No                               │\n└──────────────────────────────────────────────┘",
-    select:
-      "┌ Pick ────────────────────────────────────────┐\n│ [ ] One                                      │\n│ > [●] Two                                    │\n└──────────────────────────────────────────────┘",
-    multiselect:
-      "┌ Tags ────────────────────────────────────────┐\n│ > [ ] Alpha                                  │\n│ [x] Beta                                     │\n└──────────────────────────────────────────────┘",
-    search:
-      "┌ Find ────────────────────────────────────────┐\n│ th▌                                          │\n│ Alpha                                        │\n│ > Theta                                      │\n└──────────────────────────────────────────────┘",
-    autocomplete:
-      "┌ Shell ───────────────────────────────────────┐\n│ z▌sh                                         │\n└──────────────────────────────────────────────┘",
-    textarea:
-      "┌ Notes ───────────────────────────────────────┐\n│ ab                                           │\n│ ▌cd                                          │\n└──────────────────────────────────────────────┘",
-    spinner: "⧨ Work",
-    "determinate-progress":
-      "Work\n[ 25%] ◮⧩◭⧨◮⧩◭⧨◮⧩...............................",
-    "sequential-form": "Setup\n◮ Account: Ada\n│\n[◭] Confirm",
-  },
-};
-
-for (const columns of [20, 32, 48]) {
-  Deno.test(`every interactive frame is exact at ${columns} columns`, () => {
-    const capabilities = testCapabilities({ columns });
-    const expected = EXPECTED[columns];
-    if (expected === undefined) {
-      throw new Error(`missing ${columns}-column fixture`);
-    }
-    for (const state of FRAME_STATES) {
-      assertExactFrame(
-        renderInteractiveFrame(state, capabilities),
-        expected[state.kind],
-        capabilities,
-      );
-    }
-  });
+function firstPromptFrame(io: FakeTerminal): string {
+  const frame = io.writes[1];
+  if (frame === undefined) throw new Error("prompt painted no initial frame");
+  return frame;
 }
 
-Deno.test("interactive spinner renders the complete canonical triangle cycle", () => {
+Deno.test("interactive prompts paint exact real Component frames", async () => {
+  const capabilities = testCapabilities({ columns: 32 });
+  const frames = new Map<string, string>();
+
+  let io = new FakeTerminal([ENTER], { columns: 32 });
+  await promptText({ label: "Name", initialValue: "Ada" }, { io });
+  frames.set("input", firstPromptFrame(io));
+
+  io = new FakeTerminal([`abc${ENTER}`], { columns: 32 });
+  await promptMasked({ label: "Secret", placeholder: "token" }, { io });
+  frames.set("masked input", firstPromptFrame(io));
+
+  io = new FakeTerminal([ENTER], { columns: 32 });
+  await promptConfirm({
+    label: "Continue",
+    initialValue: true,
+    yesLabel: "Yes",
+    noLabel: "No",
+  }, { io });
+  frames.set("switch", firstPromptFrame(io));
+
+  const choices = [
+    { id: "one", label: "One", value: 1 },
+    { id: "two", label: "Two", value: 2 },
+  ] as const;
+  io = new FakeTerminal([ENTER], { columns: 32 });
+  await promptSelect({
+    label: "Pick",
+    choices,
+    initialId: "two",
+  }, { io });
+  frames.set("select", firstPromptFrame(io));
+
+  io = new FakeTerminal([ENTER], { columns: 32 });
+  await promptMultiselect({
+    label: "Tags",
+    choices,
+    initialIds: ["two"],
+  }, { io });
+  frames.set("checkboxes", firstPromptFrame(io));
+
+  io = new FakeTerminal([`${ENTER}${ENTER}`], { columns: 32 });
+  await promptSearch({
+    label: "Find",
+    placeholder: "Search",
+    search: () => choices,
+  }, { io });
+  frames.set("radio search", firstPromptFrame(io));
+
+  io = new FakeTerminal([ENTER], { columns: 32 });
+  await promptAutocomplete({
+    label: "Shell",
+    initialValue: "z",
+    suggestions: ["zsh"],
+  }, { io });
+  frames.set("autocomplete input", firstPromptFrame(io));
+
+  io = new FakeTerminal([CTRL_D], { columns: 32 });
+  await promptTextarea({
+    label: "Notes",
+    initialValue: "ab\ncd",
+    rows: 2,
+  }, { io });
+  frames.set("textarea", firstPromptFrame(io));
+
+  const expected = new Map([
+    [
+      "input",
+      "Name [active]\n┌──────────────────────────────┐\n│Ada▌                          │\n└──────────────────────────────┘",
+    ],
+    [
+      "masked input",
+      "Secret [active]\n┌──────────────────────────────┐\n│▌token                        │\n└──────────────────────────────┘",
+    ],
+    [
+      "switch",
+      "Continue [active]\n┌──────────────────────────────┐\n│› ◀● ON Yes                  │\n└──────────────────────────────┘",
+    ],
+    [
+      "select",
+      "Pick [active]\n┌──────────────────────────────┐\n│[ ] One                       │\n│› [●] Two                     │\n└──────────────────────────────┘",
+    ],
+    [
+      "checkboxes",
+      "Tags [active]\n┌──────────────────────────────┐\n│› [ ] One                     │\n│[✓] Two                       │\n└──────────────────────────────┘",
+    ],
+    [
+      "radio search",
+      "Find [active]\n┌──────────────────────────────┐\n│▌Search                       │\n│○ One                         │\n│○ Two                         │\n└──────────────────────────────┘",
+    ],
+    [
+      "autocomplete input",
+      "Shell [active]\n┌──────────────────────────────┐\n│z▌sh                          │\n└──────────────────────────────┘",
+    ],
+    [
+      "textarea",
+      "Notes [active]\n┌──────────────────────────────┐\n│ab                            │\n│cd▌                           │\n└──────────────────────────────┘\nCtrl+D to submit",
+    ],
+  ]);
+
+  assertEquals(frames.keys().toArray(), expected.keys().toArray());
+  for (const [name, frame] of frames) {
+    assertExactFrame(frame, expected.get(name) ?? "", capabilities);
+  }
+});
+
+Deno.test("interactive progress paints exact Meter frames", async () => {
   const capabilities = testCapabilities({ columns: 20 });
-  assertEquals(
-    [0, 1, 2, 3].map((phase) =>
-      renderSpinnerFrame({
-        kind: "spinner",
-        label: "Work",
-        lifecycle: ACTIVE,
-        phase,
-      }, capabilities)
-    ),
-    ["◮ Work", "◭ Work", "⧨ Work", "⧩ Work"],
+  const io = new FakeTerminal([], { columns: 20 });
+  await withDeterminateProgress({
+    label: "Work",
+    total: 4,
+    completed: 1,
+    io,
+  }, () => undefined);
+  assertExactFrame(
+    firstPromptFrame(io),
+    "Work\n[ 25%] ◮⧩◭..........",
+    capabilities,
   );
 });
 
-Deno.test("interactive progress is exact at zero, 25 percent, and complete", () => {
-  const capabilities = testCapabilities({ columns: 15 });
-  const frame = (completed: number): string =>
-    renderDeterminateProgressFrame({
-      kind: "determinate-progress",
-      label: "Work",
-      lifecycle: completed === 4 ? { status: "submitted" } : ACTIVE,
-      completed,
-      total: 4,
-    }, capabilities);
-  assertExactFrame(frame(0), "Work\n[  0%] ........", capabilities);
-  assertExactFrame(frame(1), "Work\n[ 25%] ◮⧩......", capabilities);
-  assertExactFrame(
-    frame(4),
-    "Work\n[100%] ◮⧩◭⧨◮⧩◭⧨",
-    capabilities,
-  );
+Deno.test("sequential forms paint exact Process steps frames", async () => {
+  const io = new FakeTerminal([], { columns: 32 });
+  await createSequentialForm({ label: "Setup", io })
+    .add({
+      id: "account",
+      label: "Account",
+      run: () => "Ada",
+      summarize: (value) => String(value),
+    })
+    .add({ id: "confirm", label: "Confirm", run: () => true })
+    .submit();
+  assertEquals(io.writes, [
+    "Setup\n\n[◮] Account\n│\n· Confirm\n",
+    "Setup\n\n◮ Account\n│\n[◭] Confirm\n\nAccount: Ada\n",
+    "Setup\n\n◮ Account\n│\n⧩ Confirm\n\nAccount: Ada\n\n✓ Complete\n",
+  ]);
 });
