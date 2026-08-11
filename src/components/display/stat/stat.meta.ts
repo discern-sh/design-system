@@ -7,6 +7,7 @@ export default {
   order: 90,
   description:
     "One labelled figure with an optional trend-coloured context line.",
+  cli: { stance: "rendered" },
   purposes: ["displaying-tool-output", "marketing-site"],
   accessibility: [
     "Label, value, and context read as one continuous text run in source order.",

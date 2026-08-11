@@ -2,9 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
-
-/** Direction options for the Stat context line. */
-export type StatTrend = "positive" | "negative" | "neutral";
+import type { StatTrend } from "./stat.types.ts";
 
 /** Props for the {@linkcode Stat} component. */
 export interface StatProps extends HTMLAttributes<HTMLDivElement> {
