@@ -3,12 +3,10 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Badge } from "../../display/badge/badge.tsx";
+import type { DecisionRecordStatus } from "./decision-record.types.ts";
 
-/** Canonical statuses rendered by the {@linkcode DecisionRecord} component. */
-export const decisionRecordStatuses = ["accepted", "superseded"] as const;
-
-/** One canonical decision-record status. */
-export type DecisionRecordStatus = (typeof decisionRecordStatuses)[number];
+export { decisionRecordStatuses } from "./decision-record.types.ts";
+export type { DecisionRecordStatus } from "./decision-record.types.ts";
 
 /** Props for the {@linkcode DecisionRecord} component. */
 export interface DecisionRecordProps
