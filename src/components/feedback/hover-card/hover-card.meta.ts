@@ -7,6 +7,11 @@ export default {
   order: 35,
   description:
     "Hover- and focus-revealed supplementary surface accepting arbitrary inline or block content.",
+  cli: {
+    stance: "exempt",
+    reason:
+      "Its identity is supplementary content revealed by pointer hover or browser focus; a terminal has neither that hidden spatial relationship nor a faithful static equivalent.",
+  },
   behaviors: ["floating-surface"],
   accessibility: [
     "The trigger must be keyboard focusable; focus-within keeps interactive panel content available while users tab through it.",

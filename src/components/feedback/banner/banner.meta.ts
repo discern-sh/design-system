@@ -13,4 +13,5 @@ export default {
   notWhen: [
     "A specific failure needs location, evidence, reproduction, correction, and retry guidance; use Diagnostic.",
   ],
+  cli: { stance: "rendered" },
 } satisfies ComponentMeta;

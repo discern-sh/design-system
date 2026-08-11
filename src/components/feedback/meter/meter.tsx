@@ -2,9 +2,9 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { MeterTone } from "./meter.types.ts";
 
-/** Tone options for the Meter fill. */
-export type MeterTone = "neutral" | "warning" | "danger";
+export type { MeterTone } from "./meter.types.ts";
 
 /** Props for the {@linkcode Meter} component. */
 export interface MeterProps
