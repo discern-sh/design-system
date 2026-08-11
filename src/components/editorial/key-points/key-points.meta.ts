@@ -5,6 +5,7 @@ export default {
   slug: "key-points",
   group: "Editorial",
   order: 50,
+  cli: { stance: "rendered" },
   description:
     "Scannable article summary that turns a small set of central ideas into a numbered editorial brief.",
   accessibility: [
