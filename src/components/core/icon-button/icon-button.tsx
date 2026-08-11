@@ -2,14 +2,15 @@ import { forwardRef } from "react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { IconButtonSize, IconButtonVariant } from "./icon-button.types.ts";
 
 /** Props for the {@linkcode IconButton} component. */
 export interface IconButtonProps
   extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> {
   readonly icon: ReactNode;
   readonly label: string;
-  readonly variant?: "quiet" | "outline";
-  readonly size?: "sm" | "md" | "lg";
+  readonly variant?: IconButtonVariant;
+  readonly size?: IconButtonSize;
 }
 
 /** Square icon action with a required accessible label and injected graphic. */

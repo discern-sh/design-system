@@ -6,4 +6,5 @@ export default {
   order: 40,
   description:
     "Semantic heading with an explicit accent child instead of string parsing.",
+  cli: { stance: "rendered" },
 } satisfies ComponentMeta;

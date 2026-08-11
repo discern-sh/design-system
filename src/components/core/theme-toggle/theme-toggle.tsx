@@ -2,12 +2,10 @@ import { forwardRef } from "react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
-
-/** The two site theme roles the toggle switches between. */
-export type ThemeToggleTheme = "light" | "dark";
-
-/** Visual treatment for the {@linkcode ThemeToggle} component. */
-export type ThemeToggleVariant = "outlined" | "quiet";
+import type {
+  ThemeToggleTheme,
+  ThemeToggleVariant,
+} from "./theme-toggle.types.ts";
 
 /** Props for the {@linkcode ThemeToggle} component. */
 export interface ThemeToggleProps extends

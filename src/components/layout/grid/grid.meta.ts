@@ -6,5 +6,6 @@ export default {
   order: 40,
   description:
     "Intrinsic responsive grid without breakpoint-specific column props.",
+  cli: { stance: "rendered" },
   purposes: ["marketing-site"],
 } satisfies ComponentMeta;

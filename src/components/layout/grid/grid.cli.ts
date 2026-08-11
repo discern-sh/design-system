@@ -1,0 +1,87 @@
+/**
+ * Pure terminal renderer and deterministic example states for Grid.
+ *
+ * @module
+ */
+
+import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { joinVertical, layoutColumns } from "../../../cli/layout.ts";
+import {
+  type TerminalSpacingTokenName,
+  terminalThemes,
+  type TerminalThemeVariant,
+} from "../../../cli/theme.ts";
+import type { SpaceStep } from "../space.ts";
+
+/** Inputs accepted by the terminal Grid renderer. */
+export interface GridCliProps {
+  readonly blocks: readonly string[];
+  readonly gap?: SpaceStep;
+  readonly minimum?: number;
+  readonly theme?: TerminalThemeVariant;
+  readonly width?: number;
+}
+
+/** Deterministic Grid states rendered by `deno task catalogue:cli grid`. */
+export const cliExamples: readonly CliExample<GridCliProps>[] = [
+  {
+    name: "responsive",
+    props: {
+      blocks: ["Alpha", "Beta", "Gamma", "Delta"],
+      minimum: 8,
+      width: 32,
+    },
+  },
+  {
+    name: "single-column",
+    props: { blocks: ["One", "Two", "Three"], minimum: 12, width: 12 },
+  },
+] as const;
+
+/** Flow terminal blocks through responsive rows using the foundation column layout. */
+const renderGridCli: CliRenderer<GridCliProps> = (props, capabilities) => {
+  if (
+    props.blocks.some((block) =>
+      /[\p{Cc}\p{Cf}]/u.test(block.replaceAll("\n", ""))
+    )
+  ) {
+    throw new TypeError("grid blocks must be control-free");
+  }
+  if (props.blocks.length === 0) return "";
+  const requestedWidth = props.width ?? capabilities.columns;
+  if (!Number.isSafeInteger(requestedWidth) || requestedWidth < 1) {
+    throw new TypeError(
+      `grid width must be a positive safe integer; received ${requestedWidth}`,
+    );
+  }
+  const width = Math.min(requestedWidth, capabilities.columns);
+  const minimum = props.minimum ?? 14;
+  if (!Number.isSafeInteger(minimum) || minimum < 1) {
+    throw new TypeError(
+      `grid minimum must be a positive safe integer; received ${minimum}`,
+    );
+  }
+  const step = props.gap ?? 5;
+  const gap = step === 0 ? 0 : terminalThemes[props.theme ?? "dark"].spacing[
+    `--discern-space-${step}` as TerminalSpacingTokenName
+  ] ?? 1;
+  const columnCount = Math.max(
+    1,
+    Math.min(
+      props.blocks.length,
+      Math.floor((width + gap) / (minimum + gap)),
+    ),
+  );
+  const rows: string[] = [];
+  for (let index = 0; index < props.blocks.length; index += columnCount) {
+    const row = props.blocks.slice(index, index + columnCount);
+    const padded = [
+      ...row,
+      ...Array.from({ length: columnCount - row.length }, () => ""),
+    ];
+    rows.push(layoutColumns(padded, { columns: width, gap }));
+  }
+  return joinVertical(rows, { spacing: Math.max(0, gap - 1) });
+};
+
+export default renderGridCli;

@@ -60,12 +60,18 @@ Deno.test("generated CLI registry enrolls every decided renderer", () => {
     Object.values(cliComponentRegistry).filter((entry) =>
       entry.stance === "pending"
     ).length,
-    79,
+    57,
   );
   assertEquals(
     Object.values(cliComponentRegistry).filter((entry) =>
       entry.stance === "rendered"
     ).length,
-    30,
+    51,
+  );
+  assertEquals(
+    Object.values(cliComponentRegistry).filter((entry) =>
+      entry.stance === "exempt"
+    ).length,
+    1,
   );
 });

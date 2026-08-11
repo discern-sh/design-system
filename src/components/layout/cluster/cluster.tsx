@@ -4,14 +4,15 @@ import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { spaceValue } from "../space.ts";
 import type { SpaceStep } from "../space.ts";
+import type { ClusterAlign, ClusterJustify } from "./cluster.types.ts";
 type ClusterStyle = CSSProperties & {
   readonly "--discern-cluster-gap"?: string;
 };
 /** Props for the {@linkcode Cluster} component. */
 export interface ClusterProps extends HTMLAttributes<HTMLDivElement> {
   readonly gap?: SpaceStep;
-  readonly align?: "start" | "center" | "end" | "baseline" | "stretch";
-  readonly justify?: "start" | "center" | "end" | "between";
+  readonly align?: ClusterAlign;
+  readonly justify?: ClusterJustify;
   readonly children: ReactNode;
 }
 /** Wrapping horizontal composition for actions, tags, and compact groups. */

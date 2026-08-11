@@ -7,6 +7,7 @@ export default {
   order: 40,
   description:
     "Controlled light/dark theme switch with outlined and quiet treatments; the consumer owns the theme state and applies it to its root.",
+  cli: { stance: "rendered" },
   accessibility: [
     "The accessible name states the destination theme and swaps with the state, so the action is always explicit.",
     "The glyph is decorative and hidden; the component never mutates the document itself, keeping theme application observable by the consumer.",

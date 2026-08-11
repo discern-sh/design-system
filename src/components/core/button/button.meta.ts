@@ -7,6 +7,7 @@ export default {
   order: 20,
   description:
     "Typed button and anchor variants with vendor-neutral leading and trailing icon slots.",
+  cli: { stance: "rendered" },
   accessibility: [
     "Anchor and button props are mutually exclusive.",
     "Visible focus and disabled states are built in.",
