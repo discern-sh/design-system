@@ -3,13 +3,13 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Heading } from "../../display/heading/heading.tsx";
-import type { HeadingLevel } from "../../display/heading/heading.tsx";
+import type { AnchorHeadingLevel } from "./anchor-heading.types.ts";
 
 /** Props for the {@linkcode AnchorHeading} component. */
 export interface AnchorHeadingProps
   extends Omit<HTMLAttributes<HTMLHeadingElement>, "id"> {
   readonly id: string;
-  readonly level?: HeadingLevel;
+  readonly level?: AnchorHeadingLevel;
   readonly anchorLabel?: string;
   readonly children: ReactNode;
 }
