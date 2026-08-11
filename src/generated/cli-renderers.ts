@@ -17,6 +17,10 @@ export { default as renderStackCli, cliExamples as stackCliExamples } from "../c
 export type { StackCliProps } from "../components/layout/stack/stack.cli.ts";
 export { default as renderClusterCli, cliExamples as clusterCliExamples } from "../components/layout/cluster/cluster.cli.ts";
 export type { ClusterCliProps } from "../components/layout/cluster/cluster.cli.ts";
+export { default as renderGridCli, cliExamples as gridCliExamples } from "../components/layout/grid/grid.cli.ts";
+export type { GridCliProps } from "../components/layout/grid/grid.cli.ts";
+export { default as renderSectionCli, cliExamples as sectionCliExamples } from "../components/layout/section/section.cli.ts";
+export type { SectionCliProps } from "../components/layout/section/section.cli.ts";
 export { default as renderBadgeCli, cliExamples as badgeCliExamples } from "../components/display/badge/badge.cli.ts";
 export type { BadgeCliProps } from "../components/display/badge/badge.cli.ts";
 export { default as renderCardCli, cliExamples as cardCliExamples } from "../components/display/card/card.cli.ts";
