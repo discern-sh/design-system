@@ -6,4 +6,5 @@ export default {
   order: 50,
   description:
     "Native checkbox with an associated visible label and optional description.",
+  cli: { stance: "rendered" },
 } satisfies ComponentMeta;

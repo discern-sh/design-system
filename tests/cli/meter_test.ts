@@ -35,7 +35,7 @@ Deno.test("Meter renders zero, quarter, and complete at narrow and standard widt
     for (const [index, completed] of [0, 25, 100].entries()) {
       assertExactFrame(
         renderMeterCli({
-          state: meter(completed, completed === 100 ? "submitted" : "active"),
+          ...meter(completed, completed === 100 ? "submitted" : "active"),
           width,
         }, capabilities),
         expected[index] ?? "",
@@ -49,7 +49,7 @@ Deno.test("Meter uses exact ASCII progress and every colour capability", () => {
   for (const width of [12, 20]) {
     const capabilities = testCapabilities({ columns: width, unicode: false });
     assertExactFrame(
-      renderMeterCli({ state: meter(25), width }, capabilities),
+      renderMeterCli({ ...meter(25), width }, capabilities),
       width === 12 ? "Upload\n[ 25%] >...." : "Upload\n[ 25%] >v^..........",
       capabilities,
     );
@@ -57,7 +57,7 @@ Deno.test("Meter uses exact ASCII progress and every colour capability", () => {
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
     const capabilities = testCapabilities({ colorDepth, columns: 20 });
     assertStyledFrame(
-      renderMeterCli({ state: meter(25), width: 20 }, capabilities),
+      renderMeterCli({ ...meter(25), width: 20 }, capabilities),
       "Upload\n[ 25%] ◮⧩◭..........",
       capabilities,
     );
@@ -68,10 +68,8 @@ Deno.test("Meter renders validation and cancellation lifecycle frames", () => {
   const capabilities = testCapabilities({ columns: 20 });
   assertExactFrame(
     renderMeterCli({
-      state: {
-        ...meter(25),
-        lifecycle: { status: "validation-error", message: "Quota exceeded" },
-      },
+      ...meter(25),
+      lifecycle: { status: "validation-error", message: "Quota exceeded" },
       width: 20,
     }, capabilities),
     "Upload\n[ 25%] ◮⧩◭..........\n! Quota exceeded",
@@ -79,10 +77,8 @@ Deno.test("Meter renders validation and cancellation lifecycle frames", () => {
   );
   assertExactFrame(
     renderMeterCli({
-      state: {
-        ...meter(25),
-        lifecycle: { status: "cancelled", reason: "Stopped" },
-      },
+      ...meter(25),
+      lifecycle: { status: "cancelled", reason: "Stopped" },
       width: 20,
     }, capabilities),
     "Upload\n[ 25%] ◮⧩◭..........\n× Stopped",

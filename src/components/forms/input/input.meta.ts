@@ -6,4 +6,5 @@ export default {
   order: 20,
   description:
     "Native input with typed label, help, required, and invalid relationships.",
+  cli: { stance: "rendered" },
 } satisfies ComponentMeta;

@@ -6,4 +6,5 @@ export default {
   order: 40,
   description:
     "Styled native select with typed options and associated field messaging.",
+  cli: { stance: "rendered" },
 } satisfies ComponentMeta;

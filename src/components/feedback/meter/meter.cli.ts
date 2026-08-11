@@ -17,8 +17,7 @@ import { renderTriangleProgressFrame } from "../../../cli/triangles.ts";
 import type { MeterTone } from "./meter.types.ts";
 
 /** Inputs accepted by the terminal Meter renderer. */
-export interface MeterCliProps {
-  readonly state: DeterminateProgressFrameState;
+export interface MeterCliProps extends DeterminateProgressFrameState {
   readonly reading?: string;
   readonly tone?: MeterTone;
   readonly theme?: TerminalThemeVariant;
@@ -30,38 +29,32 @@ export const cliExamples: readonly CliExample<MeterCliProps>[] = [
   {
     name: "zero",
     props: {
-      state: {
-        kind: "determinate-progress",
-        label: "Upload",
-        lifecycle: { status: "active" },
-        completed: 0,
-        total: 100,
-      },
+      kind: "determinate-progress",
+      label: "Upload",
+      lifecycle: { status: "active" },
+      completed: 0,
+      total: 100,
     },
   },
   {
     name: "quarter",
     props: {
-      state: {
-        kind: "determinate-progress",
-        label: "Upload",
-        lifecycle: { status: "active" },
-        completed: 25,
-        total: 100,
-      },
+      kind: "determinate-progress",
+      label: "Upload",
+      lifecycle: { status: "active" },
+      completed: 25,
+      total: 100,
       reading: "25 / 100 files",
     },
   },
   {
     name: "complete",
     props: {
-      state: {
-        kind: "determinate-progress",
-        label: "Upload",
-        lifecycle: { status: "submitted" },
-        completed: 100,
-        total: 100,
-      },
+      kind: "determinate-progress",
+      label: "Upload",
+      lifecycle: { status: "submitted" },
+      completed: 100,
+      total: 100,
     },
   },
 ] as const;
@@ -70,7 +63,7 @@ export const cliExamples: readonly CliExample<MeterCliProps>[] = [
 const renderMeterCli: CliRenderer<MeterCliProps> = (props, capabilities) => {
   const theme = terminalThemes[props.theme ?? "dark"];
   const tone = props.tone ?? "neutral";
-  const state = props.state;
+  const state = props;
   const width = props.width ?? Math.min(48, capabilities.columns);
   const toneLabel = tone === "neutral" ? "" : ` [${tone}]`;
   const heading = styleText(`${state.label}${toneLabel}`, {
