@@ -5,8 +5,14 @@ export { default as renderDocsHeaderCli, cliExamples as docsHeaderCliExamples } 
 export type { DocsHeaderCliProps } from "../components/docs/docs-header/docs-header.cli.ts";
 export { default as renderDocsNavCli, cliExamples as docsNavCliExamples } from "../components/docs/docs-nav/docs-nav.cli.ts";
 export type { DocsNavCliProps } from "../components/docs/docs-nav/docs-nav.cli.ts";
+export { default as renderPagerCli, cliExamples as pagerCliExamples } from "../components/docs/pager/pager.cli.ts";
+export type { PagerCliProps } from "../components/docs/pager/pager.cli.ts";
 export { default as renderAnchorHeadingCli, cliExamples as anchorHeadingCliExamples } from "../components/docs/anchor-heading/anchor-heading.cli.ts";
 export type { AnchorHeadingCliProps } from "../components/docs/anchor-heading/anchor-heading.cli.ts";
+export { default as renderKbdCli, cliExamples as kbdCliExamples } from "../components/docs/kbd/kbd.cli.ts";
+export type { KbdCliProps } from "../components/docs/kbd/kbd.cli.ts";
+export { default as renderGlossaryTermCli, cliExamples as glossaryTermCliExamples } from "../components/docs/glossary-term/glossary-term.cli.ts";
+export type { GlossaryTermCliProps } from "../components/docs/glossary-term/glossary-term.cli.ts";
 export { default as renderArticleHeaderCli, cliExamples as articleHeaderCliExamples } from "../components/editorial/article-header/article-header.cli.ts";
 export type { ArticleHeaderCliProps } from "../components/editorial/article-header/article-header.cli.ts";
 export { default as renderArticleLayoutCli, cliExamples as articleLayoutCliExamples } from "../components/editorial/article-layout/article-layout.cli.ts";

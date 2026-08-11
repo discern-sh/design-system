@@ -5,6 +5,7 @@ export default {
   slug: "kbd",
   group: "Docs",
   order: 70,
+  cli: { stance: "rendered" },
   description:
     "Keycap-styled display of one keyboard key or chord segment using the semantic kbd element.",
   accessibility: [
