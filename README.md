@@ -1,6 +1,6 @@
 # Discern design system
 
-The design system behind [discern.sh](https://discern.sh): an opinionated, framework-neutral visual system for Deno sites. It ships semantic tokens, light/dark themes, scoped component CSS under one `discern` namespace, an optional React adapter for static rendering, and a deterministic runtime emitter that outputs only what a consumer selects.
+The design system behind [discern.sh](https://discern.sh): an opinionated, framework-neutral visual system for Deno sites and terminals. It ships semantic tokens, light/dark themes, scoped component CSS under one `discern` namespace, pure terminal renderers, optional React and interactive-terminal adapters, and a deterministic runtime emitter that outputs only what a consumer selects.
 
 ```sh
 deno add jsr:@discern-sh/design-system
@@ -8,14 +8,16 @@ deno add jsr:@discern-sh/design-system
 
 ## Public imports
 
-| Import                                    | Contract                                                                                  |
-| ----------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `@discern-sh/design-system`               | Token metadata, component/group metadata types, the package manifest, and `semanticClass` |
-| `@discern-sh/design-system/manifest`      | Framework-neutral manifest schema and the complete package ownership manifest             |
-| `@discern-sh/design-system/runtime`       | Deterministic selected-runtime emitter                                                    |
-| `@discern-sh/design-system/tokens`        | Primitive, semantic, and Discern-preset token metadata                                    |
-| `@discern-sh/design-system/theme/discern` | Default branded blue preset                                                               |
-| `@discern-sh/design-system/react`         | Optional React components and their public prop types                                     |
+| Import                                      | Contract                                                                                  |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `@discern-sh/design-system`                 | Token metadata, component/group metadata types, the package manifest, and `semanticClass` |
+| `@discern-sh/design-system/cli`             | Pure React-free terminal renderers, capabilities, themes, and triangle primitives         |
+| `@discern-sh/design-system/cli/interactive` | Optional Deno terminal driver and typed prompt state machines                             |
+| `@discern-sh/design-system/manifest`        | Framework-neutral manifest schema and the complete package ownership manifest             |
+| `@discern-sh/design-system/runtime`         | Deterministic selected-runtime emitter                                                    |
+| `@discern-sh/design-system/tokens`          | Primitive, semantic, and Discern-preset token metadata                                    |
+| `@discern-sh/design-system/theme/discern`   | Default branded blue preset                                                               |
+| `@discern-sh/design-system/react`           | Optional React components and their public prop types                                     |
 
 Only `./react` resolves React. The package keeps React and React DOM as catalogue development dependencies and peer dependencies, while its root, manifest, runtime, token, and theme graphs do not import them.
 
@@ -109,6 +111,46 @@ Semantic component roles are separate from the default blue preset. The runtime 
 The distinct success hue is deliberate: a green accent must not erase the difference between brand actions and successful outcomes. Automated package tests cover light/dark text contrast, accent/success/warning/danger separation, reduced-motion rules, forced-colour focus outlines, and unchanged component CSS. Manual browser review still checks visible focus shape and status recognition in the consumer's actual type, layout, zoom, and operating-system colour settings.
 
 Inverse surface and ink roles remain dark-on-light in purpose across both site themes; they do not invert with the ordinary canvas and ink roles.
+
+## Terminal rendering and prompts
+
+The pure `./cli` entrypoint exports every rendered Component through the same Metadata-driven registry as the web surfaces. Callers provide truthful terminal facts, and a renderer returns one deterministic, width-bounded string:
+
+```ts
+import {
+  detectTerminalCapabilities,
+  renderBadgeCli,
+} from "@discern-sh/design-system/cli";
+
+const isTty = Deno.stdout.isTerminal();
+const capabilities = detectTerminalCapabilities({
+  env: Deno.env.toObject(),
+  isTty,
+  columns: isTty ? Deno.consoleSize().columns : undefined,
+});
+
+console.log(
+  renderBadgeCli({ label: "Passed", tone: "success", dot: true }, capabilities),
+);
+```
+
+The optional `./cli/interactive` adapter turns raw terminal input into typed prompt state and renders it through the package's Forms Component renderers. Running a prompt is the effects boundary; importing the module does not mutate the terminal:
+
+```ts
+import { promptSelect } from "@discern-sh/design-system/cli/interactive";
+
+const environment = await promptSelect({
+  label: "Environment",
+  choices: [
+    { id: "preview", label: "Preview", value: "preview" },
+    { id: "production", label: "Production", value: "production" },
+  ],
+});
+```
+
+Prompts require TTY stdin and stdout. The adapter brackets raw mode, cursor hiding, repainting, validation, cancellation, and cleanup; exceptions and EOF still restore the terminal. Renderers derive light and dark colour roles from the same Token metadata as the web system, then degrade through truecolour, ANSI 256, ANSI 16, and plain text. `NO_COLOR` disables ANSI styling, non-Unicode terminals receive ASCII geometry, and grapheme-aware measurement keeps frames within the declared column count.
+
+Run `deno task catalogue:cli` to inspect every rendered Component, every recorded exemption, and the generated triangle motifs. Pass a Component slug or Group name to narrow the output, or `triangles` for the motif sheet alone.
 
 ## Optional React adapter
 

@@ -4,6 +4,13 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## 0.11.0
+
+- Add the public React-free `./cli` layer across all twelve Component Groups: 99 Components ship pure, capability-aware terminal renderers and ten record visible, reasoned exemptions. Token-derived light/dark themes degrade through truecolour, ANSI 256, ANSI 16, `NO_COLOR` plaintext, and ASCII geometry without a second palette; package-owned triangle primitives supply dividers, ribbons, fields, weaves, spinner phases, progress, labeled rules, workflow steppers, and activity beacons.
+- Add the optional `./cli/interactive` Deno adapter. Text, masked, confirm, select, multiselect, search, autocomplete, textarea, progress, and sequential-form state machines render through the real Forms, Meter, and Process steps CLI renderers; the triangle spinner remains the single spinner authority. Raw-mode, cursor, repaint, cancellation, EOF, validation, and exception cleanup are held by an injectable fake-terminal test harness.
+- Promote `deno task catalogue:cli` into the complete terminal catalogue. It renders all named examples and reasoned exemptions, narrows by Component or Group, includes a generated triangle-motif sheet, and honours `NO_COLOR`.
+- **Breaking for Component Metadata authors:** every Component must declare a rendered or reasoned-exempt CLI stance. Codegen and conformance reject absent stances, missing or orphan renderer modules, empty exemption reasons, and registry drift in both directions; the zero `cli_pending` ceiling remains as defence in depth.
+
 ## 0.10.1
 
 - Reserve monospace typography for explicit brand-name and code surfaces. Non-code component labels, indices, dates, measurements, status metadata, agent identities, annotations, captions, and Catalogue chrome now use the body or interface faces. Commands, paths, branch names, commit hashes, and Git change counts retain the code face.
