@@ -25,3 +25,7 @@ export { default as renderMeterCli, cliExamples as meterCliExamples } from "../c
 export type { MeterCliProps } from "../components/feedback/meter/meter.cli.ts";
 export { default as renderEmptyStateCli, cliExamples as emptyStateCliExamples } from "../components/feedback/empty-state/empty-state.cli.ts";
 export type { EmptyStateCliProps } from "../components/feedback/empty-state/empty-state.cli.ts";
+export { default as renderTabsCli, cliExamples as tabsCliExamples } from "../components/navigation/tabs/tabs.cli.ts";
+export type { TabsCliProps } from "../components/navigation/tabs/tabs.cli.ts";
+export { default as renderBreadcrumbsCli, cliExamples as breadcrumbsCliExamples } from "../components/navigation/breadcrumbs/breadcrumbs.cli.ts";
+export type { BreadcrumbsCliProps } from "../components/navigation/breadcrumbs/breadcrumbs.cli.ts";

@@ -2,6 +2,9 @@ import { forwardRef, useId, useRef, useState } from "react";
 import type { HTMLAttributes, KeyboardEvent, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { TabsActivationMode } from "./tabs.types.ts";
+
+export type { TabsActivationMode } from "./tabs.types.ts";
 
 /** One tab item entry rendered by the Tabs component. */
 export interface TabItem {
@@ -18,7 +21,7 @@ export interface TabsProps
   readonly value?: string;
   readonly defaultValue?: string;
   readonly onValueChange?: (value: string) => void;
-  readonly activationMode?: "automatic" | "manual";
+  readonly activationMode?: TabsActivationMode;
   readonly label?: string;
 }
 
