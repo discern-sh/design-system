@@ -2,9 +2,9 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { ExpectedResultVariant } from "./expected-result.types.ts";
 
-/** Content treatment for an {@linkcode ExpectedResult}. */
-export type ExpectedResultVariant = "output" | "state";
+export type { ExpectedResultVariant } from "./expected-result.types.ts";
 
 /** Props for the {@linkcode ExpectedResult} component. */
 export interface ExpectedResultProps

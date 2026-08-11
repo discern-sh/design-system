@@ -3,12 +3,15 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Meter, type MeterTone } from "../../feedback/meter/meter.tsx";
+import type {
+  StandardDirection,
+  StandardTrend,
+} from "./standard-meter.types.ts";
 
-/** Limit direction carried by a {@linkcode StandardMeter}. */
-export type StandardDirection = "floor" | "ceiling";
-
-/** Optional trajectory carried by a {@linkcode StandardMeter}. */
-export type StandardTrend = "improving" | "drifting" | "flat";
+export type {
+  StandardDirection,
+  StandardTrend,
+} from "./standard-meter.types.ts";
 
 /** Props for the {@linkcode StandardMeter} component. */
 export interface StandardMeterProps

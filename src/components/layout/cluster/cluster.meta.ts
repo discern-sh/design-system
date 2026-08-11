@@ -6,4 +6,5 @@ export default {
   order: 30,
   description:
     "Wrapping horizontal composition for actions, tags, and compact groups.",
+  cli: { stance: "rendered" },
 } satisfies ComponentMeta;

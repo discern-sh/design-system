@@ -4,6 +4,7 @@ export default {
   slug: "transcript",
   group: "Agents",
   order: 50,
+  cli: { stance: "rendered" },
   description:
     "Ordered conversation turns between named speakers — compose Persona and Agent persona headers to show humans and agents working together.",
   purposes: ["displaying-tool-output"],

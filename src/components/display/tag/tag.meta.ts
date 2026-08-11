@@ -6,4 +6,5 @@ export default {
   order: 60,
   description:
     "Compact metadata chip with an optional accessible remove action.",
+  cli: { stance: "rendered" },
 } satisfies ComponentMeta;

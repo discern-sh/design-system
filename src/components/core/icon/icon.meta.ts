@@ -7,6 +7,7 @@ export default {
   order: 10,
   description:
     "Vendor-neutral sizing and accessibility wrapper for an injected icon graphic.",
+  cli: { stance: "rendered" },
   accessibility: [
     "Decorative icons are hidden automatically.",
     "Meaningful icons require a label.",

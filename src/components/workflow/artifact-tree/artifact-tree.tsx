@@ -2,9 +2,9 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactElement, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { ArtifactTreeNodeKind } from "./artifact-tree.types.ts";
 
-/** File or directory kind represented by one {@linkcode ArtifactTreeNode}. */
-export type ArtifactTreeNodeKind = "file" | "directory";
+export type { ArtifactTreeNodeKind } from "./artifact-tree.types.ts";
 
 /** One file or directory in an {@linkcode ArtifactTree}. */
 export interface ArtifactTreeNode {

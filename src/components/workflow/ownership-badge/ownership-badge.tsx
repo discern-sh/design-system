@@ -3,17 +3,10 @@ import type { HTMLAttributes } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Badge } from "../../display/badge/badge.tsx";
+import type { ArtifactOwnership } from "./ownership-badge.types.ts";
 
-/** Canonical ownership relationships the {@linkcode OwnershipBadge} component names. */
-export const artifactOwnerships = [
-  "authored",
-  "generated",
-  "project-owned",
-  "tool-owned",
-] as const;
-
-/** One canonical ownership relationship. */
-export type ArtifactOwnership = (typeof artifactOwnerships)[number];
+export { artifactOwnerships } from "./ownership-badge.types.ts";
+export type { ArtifactOwnership } from "./ownership-badge.types.ts";
 
 /** Props for the {@linkcode OwnershipBadge} component. */
 export interface OwnershipBadgeProps

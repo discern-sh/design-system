@@ -7,6 +7,7 @@ export default {
   order: 30,
   description:
     "Square icon action with a required accessible label and injected graphic.",
+  cli: { stance: "rendered" },
   accessibility: [
     "A text label is required even when only an icon is visible.",
   ],

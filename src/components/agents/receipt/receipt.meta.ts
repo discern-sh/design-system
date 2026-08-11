@@ -4,6 +4,7 @@ export default {
   slug: "receipt",
   group: "Agents",
   order: 60,
+  cli: { stance: "rendered" },
   description:
     "Proof-of-work card with a stamped title, metadata rows, and dot-leadered check lines recording what ran and how it ended.",
   purposes: ["displaying-tool-output"],

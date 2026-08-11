@@ -5,6 +5,7 @@ export default {
   slug: "command",
   group: "Workflow",
   order: 10,
+  cli: { stance: "rendered" },
   description:
     "Executable input with working-directory and platform context, an explanation, embedded expected proof, a failure note, and a clean-copy affordance.",
   purposes: [

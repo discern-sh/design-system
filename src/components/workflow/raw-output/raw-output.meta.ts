@@ -5,6 +5,7 @@ export default {
   slug: "raw-output",
   group: "Workflow",
   order: 230,
+  cli: { stance: "rendered" },
   description:
     "Native disclosure for machine-oriented detail, with a visible collapsed or expanded label and faithful horizontal overflow.",
   purposes: ["building-documentation", "displaying-tool-output"],

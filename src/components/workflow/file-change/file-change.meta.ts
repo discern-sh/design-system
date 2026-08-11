@@ -5,6 +5,7 @@ export default {
   slug: "file-change",
   group: "Workflow",
   order: 320,
+  cli: { stance: "rendered" },
   description:
     "One file's added, updated, generated, removed, or unchanged disposition beside its full path and an optional Diffstat magnitude.",
   purposes: ["building-documentation", "displaying-tool-output"],

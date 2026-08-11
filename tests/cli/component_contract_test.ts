@@ -50,7 +50,7 @@ Deno.test("CLI stance validation guards metadata and renderer files in both dire
   );
 });
 
-Deno.test("generated CLI registry enrolls all components in the current CLI tranche", () => {
+Deno.test("generated CLI registry enrolls every decided renderer", () => {
   assertEquals(Object.keys(cliComponentRegistry).length, 109);
   assertEquals(cliComponentRegistry.badge, {
     stance: "rendered",
@@ -60,6 +60,18 @@ Deno.test("generated CLI registry enrolls all components in the current CLI tran
     Object.values(cliComponentRegistry).filter((entry) =>
       entry.stance === "pending"
     ).length,
-    78,
+    27,
+  );
+  assertEquals(
+    Object.values(cliComponentRegistry).filter((entry) =>
+      entry.stance === "rendered"
+    ).length,
+    75,
+  );
+  assertEquals(
+    Object.values(cliComponentRegistry).filter((entry) =>
+      entry.stance === "exempt"
+    ).length,
+    7,
   );
 });

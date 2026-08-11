@@ -2,12 +2,13 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { CardPadding, CardTexture } from "./card.types.ts";
 
 /** Props for the {@linkcode Card} component. */
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   readonly raised?: boolean;
-  readonly texture?: "plain" | "dots";
-  readonly padding?: "none" | "sm" | "md" | "lg";
+  readonly texture?: CardTexture;
+  readonly padding?: CardPadding;
   readonly children: ReactNode;
 }
 
