@@ -5,6 +5,11 @@ export default {
   slug: "search-palette",
   group: "Docs",
   order: 50,
+  cli: {
+    stance: "exempt",
+    reason:
+      "Modal focus management, query input, and result activation belong to an interactive terminal driver.",
+  },
   description:
     "Modal command-palette search on the native dialog element, with a search field, results region, and hint row.",
   purposes: ["building-documentation"],

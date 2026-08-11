@@ -5,6 +5,11 @@ export default {
   slug: "copy-button",
   group: "Docs",
   order: 80,
+  cli: {
+    stance: "exempt",
+    reason:
+      "Clipboard mutation and transient confirmation require an interactive driver, not a pure terminal renderer.",
+  },
   description:
     "Clipboard copy button with a transient copied state, an optional icon slot, and a polite announcement.",
   purposes: ["building-documentation"],
