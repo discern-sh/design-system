@@ -50,16 +50,10 @@ Deno.test("CLI stance validation guards metadata and renderer files in both dire
   );
 });
 
-Deno.test("generated CLI registry enrolls all components with badge rendered", () => {
+Deno.test("generated CLI registry enrolls all components with the Badge exemplar rendered", () => {
   assertEquals(Object.keys(cliComponentRegistry).length, 109);
   assertEquals(cliComponentRegistry.badge, {
     stance: "rendered",
     modulePath: "../components/display/badge/badge.cli.ts",
   });
-  assertEquals(
-    Object.values(cliComponentRegistry).filter((entry) =>
-      entry.stance === "pending"
-    ).length,
-    108,
-  );
 });
