@@ -523,7 +523,7 @@
   [standards.cli_pending]
     metric = "cli_pending"
     direction = "down"
-    limit = 108
+    limit = 86
     run = "deno run --config deno.json --allow-read discern/scripts/measure-cli-pending.ts"
     inputs = [
       "src/components/**/*.meta.ts",
