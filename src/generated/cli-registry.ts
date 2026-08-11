@@ -3,13 +3,13 @@ import type { CliComponentRegistryEntry } from "../cli/contracts.ts";
 
 /** Generated CLI stance and renderer-module facts keyed by component slug. */
 export const cliComponentRegistry = {
-  "icon": { stance: "pending" },
+  "icon": { stance: "rendered", modulePath: "../components/core/icon/icon.cli.ts" },
   "button": { stance: "pending" },
   "icon-button": { stance: "pending" },
   "theme-toggle": { stance: "pending" },
   "theme-switcher": { stance: "pending" },
-  "logo": { stance: "pending" },
-  "brand": { stance: "pending" },
+  "logo": { stance: "rendered", modulePath: "../components/core/logo/logo.cli.ts" },
+  "brand": { stance: "rendered", modulePath: "../components/core/brand/brand.cli.ts" },
   "container": { stance: "pending" },
   "stack": { stance: "pending" },
   "cluster": { stance: "pending" },

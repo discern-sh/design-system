@@ -3,13 +3,8 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Logo } from "../logo/logo.tsx";
-import type { LogoShape, LogoSize, LogoTreatment } from "../logo/logo.tsx";
-
-/** Name typeface for the {@linkcode Brand} component. */
-export type BrandTypeface = "inherit" | "ui" | "display" | "mono";
-
-/** Preset visual size for the {@linkcode Brand} component. */
-export type BrandSize = "sm" | "md" | "lg";
+import type { LogoShape, LogoSize, LogoTreatment } from "../logo/logo.types.ts";
+import type { BrandSize, BrandTypeface } from "./brand.types.ts";
 
 /** Props for the {@linkcode Brand} component. */
 export interface BrandProps
