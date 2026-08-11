@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/mod.ts",
     "./cli": "./src/cli/mod.ts",
+    "./cli/interactive": "./src/cli/interactive/mod.ts",
     "./manifest": "./src/manifest.ts",
     "./react": "./src/react.ts",
     "./runtime": "./src/runtime.ts",
