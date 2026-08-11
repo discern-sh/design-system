@@ -15,6 +15,8 @@ export { default as renderBadgeCli, cliExamples as badgeCliExamples } from "../c
 export type { BadgeCliProps } from "../components/display/badge/badge.cli.ts";
 export { default as renderCardCli, cliExamples as cardCliExamples } from "../components/display/card/card.cli.ts";
 export type { CardCliProps } from "../components/display/card/card.cli.ts";
+export { default as renderDividerCli, cliExamples as dividerCliExamples } from "../components/display/divider/divider.cli.ts";
+export type { DividerCliProps } from "../components/display/divider/divider.cli.ts";
 export { default as renderHeadingCli, cliExamples as headingCliExamples } from "../components/display/heading/heading.cli.ts";
 export type { HeadingCliProps } from "../components/display/heading/heading.cli.ts";
 export { default as renderKickerCli, cliExamples as kickerCliExamples } from "../components/display/kicker/kicker.cli.ts";

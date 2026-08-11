@@ -17,7 +17,7 @@ export const cliComponentRegistry = {
   "section": { stance: "pending" },
   "badge": { stance: "rendered", modulePath: "../components/display/badge/badge.cli.ts" },
   "card": { stance: "rendered", modulePath: "../components/display/card/card.cli.ts" },
-  "divider": { stance: "pending" },
+  "divider": { stance: "rendered", modulePath: "../components/display/divider/divider.cli.ts" },
   "heading": { stance: "rendered", modulePath: "../components/display/heading/heading.cli.ts" },
   "kicker": { stance: "rendered", modulePath: "../components/display/kicker/kicker.cli.ts" },
   "tag": { stance: "rendered", modulePath: "../components/display/tag/tag.cli.ts" },
