@@ -5,6 +5,7 @@ export default {
   slug: "article-header",
   group: "Editorial",
   order: 10,
+  cli: { stance: "rendered" },
   description:
     "Publication-scale opening for essays, reports, guides, and premium long-form pages, with byline, metadata, actions, and optional cover media.",
   accessibility: [

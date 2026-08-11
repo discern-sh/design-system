@@ -5,6 +5,7 @@ export default {
   slug: "article-layout",
   group: "Editorial",
   order: 20,
+  cli: { stance: "rendered" },
   description:
     "Responsive long-form reading shell with optional navigation and contextual rail around a primary article column.",
   purposes: ["building-documentation"],
