@@ -5,6 +5,7 @@ export default {
   group: "Display",
   order: 10,
   description: "Compact status and metadata label with semantic tones.",
+  cli: { stance: "rendered" },
   purposes: ["marketing-site"],
   useWhen: [
     "A compact visible label communicates status, category, or arbitrary metadata.",

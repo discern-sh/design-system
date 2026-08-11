@@ -275,7 +275,7 @@ Deno.test("package tests and tasks cannot reach above the package root", async (
   assertEquals(violations, []);
 });
 
-Deno.test("component metadata auto-enrols React and runtime surfaces", async () => {
+Deno.test("component metadata auto-enrols React, runtime, and CLI surfaces", async () => {
   const files = await walk(COMPONENT_ROOT);
   const fileSet = new Set(files);
   const metaFiles = files.filter((path) => path.endsWith(".meta.ts"));
@@ -307,6 +307,21 @@ Deno.test("component metadata auto-enrols React and runtime surfaces", async () 
       fileSet.has(join(directory, "mod.ts")),
       `${metaPath} is missing mod.ts`,
     );
+    const cliPath = `${stem}.cli.ts`;
+    if (meta.cli?.stance === "rendered") {
+      assert(fileSet.has(cliPath), `${metaPath} is missing ${cliPath}`);
+    } else {
+      assert(
+        !fileSet.has(cliPath),
+        `${cliPath} exists without a rendered CLI stance`,
+      );
+    }
+    if (meta.cli?.stance === "exempt") {
+      assert(
+        meta.cli.reason.trim() !== "",
+        `${metaPath} has no exemption reason`,
+      );
+    }
   }
   assert(metaFiles.length > 0);
   assertEquals(packageManifest.components.length, metaFiles.length);
@@ -335,6 +350,18 @@ Deno.test("component metadata auto-enrols React and runtime surfaces", async () 
       join(PACKAGE_ROOT, "src", "generated", "react.ts"),
     ),
     generated.react,
+  );
+  assertEquals(
+    await Deno.readTextFile(
+      join(PACKAGE_ROOT, "src", "generated", "cli-registry.ts"),
+    ),
+    generated.cliRegistry,
+  );
+  assertEquals(
+    await Deno.readTextFile(
+      join(PACKAGE_ROOT, "src", "generated", "cli-renderers.ts"),
+    ),
+    generated.cliRenderers,
   );
 });
 
@@ -1330,6 +1357,10 @@ Deno.test("neutral entrypoints work in an external cached-only Deno project", as
     const packageImports = {
       "@discern-sh/design-system":
         new URL("../src/mod.ts", import.meta.url).href,
+      "@discern-sh/design-system/cli": new URL(
+        "../src/cli/mod.ts",
+        import.meta.url,
+      ).href,
       "@discern-sh/design-system/manifest": new URL(
         "../src/manifest.ts",
         import.meta.url,
@@ -1364,6 +1395,7 @@ Deno.test("neutral entrypoints work in an external cached-only Deno project", as
     await Deno.writeTextFile(
       join(temp, "neutral.ts"),
       `import { packageManifest, semanticClass } from "@discern-sh/design-system";
+import { renderBadgeCli } from "@discern-sh/design-system/cli";
 import { emitDesignSystemRuntime } from "@discern-sh/design-system/runtime";
 import { discernTheme } from "@discern-sh/design-system/theme/discern";
 const result = await emitDesignSystemRuntime({
@@ -1372,6 +1404,7 @@ const result = await emitDesignSystemRuntime({
 });
 console.log(JSON.stringify({
   className: semanticClass("button"),
+  badge: renderBadgeCli({ label: "Ready", dot: true }, { colorDepth: "none", columns: 80, unicode: true }),
   components: result.components,
   package: packageManifest.package,
   theme: discernTheme.name,
@@ -1385,6 +1418,7 @@ console.log(JSON.stringify({
       "neutral.ts",
     ]);
     assertStringIncludes(first, '"className":"discern-button"');
+    assertStringIncludes(first, '"badge":"[● Ready]"');
     const cached = await command(temp, [
       "run",
       "--cached-only",

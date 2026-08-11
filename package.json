@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/mod.ts",
+    "./cli": "./src/cli/mod.ts",
     "./manifest": "./src/manifest.ts",
     "./react": "./src/react.ts",
     "./runtime": "./src/runtime.ts",

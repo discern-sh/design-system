@@ -2,9 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
-
-/** Tone options for the Badge component. */
-export type BadgeTone = "accent" | "neutral" | "success" | "warning" | "danger";
+import type { BadgeTone } from "./badge.types.ts";
 
 /** Props for the {@linkcode Badge} component. */
 export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {

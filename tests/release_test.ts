@@ -109,6 +109,22 @@ Deno.test("every exported module graph is inside the publish set", async () => {
   }
 });
 
+Deno.test("the CLI export graph never resolves React", async () => {
+  const entry = config.exports["./cli"];
+  assert(entry !== undefined, "deno.json has no ./cli export");
+  const { code, output } = await run(PACKAGE_ROOT, [
+    "info",
+    "--json",
+    "--config",
+    "deno.json",
+    entry,
+  ]);
+  assertEquals(code, 0, `deno info failed for ${entry}:\n${output}`);
+  assert(!output.includes("npm:react"), "./cli resolved the React package");
+  assert(!output.includes("/src/react.ts"), "./cli reached the React adapter");
+  assert(!output.includes('.tsx"'), "./cli reached a TSX component module");
+});
+
 Deno.test("published modules carry no import attributes", async () => {
   const files = await publishFileSet();
   const offenders: string[] = [];
@@ -167,6 +183,7 @@ Deno.test("the publish-shaped artifact serves the neutral consumer alone", async
     await Deno.writeTextFile(
       join(consumer, "neutral.ts"),
       `import { packageManifest, semanticClass } from "${config.name}";
+import { renderBadgeCli } from "${config.name}/cli";
 import { emitDesignSystemRuntime } from "${config.name}/runtime";
 const result = await emitDesignSystemRuntime({
   outputRoot: new URL("./runtime/", import.meta.url),
@@ -175,6 +192,7 @@ const result = await emitDesignSystemRuntime({
 });
 console.log(JSON.stringify({
   className: semanticClass("button"),
+  badge: renderBadgeCli({ label: "Ready", dot: true }, { colorDepth: "none", columns: 80, unicode: true }),
   files: result.manifest.integrity.files.length,
   package: packageManifest.package,
 }));
@@ -188,6 +206,7 @@ console.log(JSON.stringify({
     ]);
     assertEquals(code, 0, `staged consumer failed:\n${output}`);
     assertStringIncludes(output, `"className":"discern-button"`);
+    assertStringIncludes(output, `"badge":"[● Ready]"`);
     assertStringIncludes(output, `"package":"${config.name}"`);
     const css = await Deno.readTextFile(
       join(consumer, "runtime", "discern.css"),
@@ -250,7 +269,16 @@ Deno.test("release identity stays coherent across config and changelog", async (
   );
   const npm = JSON.parse(
     await Deno.readTextFile(join(PACKAGE_ROOT, "package.json")),
-  ) as { readonly version: string; readonly private: boolean };
+  ) as {
+    readonly version: string;
+    readonly private: boolean;
+    readonly exports: Readonly<Record<string, string>>;
+  };
   assertEquals(npm.version, config.version);
   assertEquals(npm.private, true, "npm publication is not a release channel");
+  assertEquals(
+    npm.exports,
+    config.exports,
+    "package manifests disagree on exports",
+  );
 });

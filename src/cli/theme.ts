@@ -405,10 +405,12 @@ export function deriveTerminalTheme(
 }
 
 /** Package terminal themes, derived once from the light and dark Token variants. */
-export const terminalThemes = {
+export const terminalThemes: Readonly<
+  Record<TerminalThemeVariant, TerminalTheme>
+> = {
   light: deriveTerminalTheme("light"),
   dark: deriveTerminalTheme("dark"),
-} as const satisfies Readonly<Record<TerminalThemeVariant, TerminalTheme>>;
+};
 
 /** Resolve one authored semantic colour from a derived terminal theme. */
 export function terminalThemeColor(
