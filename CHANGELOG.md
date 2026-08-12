@@ -4,6 +4,11 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## 0.12.0
+
+- Add the opt-in Marketing section foundation with standard or wide frames, standard or spacious rhythm, and canvas, raised, sunken, inherited, or stable contrast surfaces. Contrast remaps semantic ink, surface, and border roles as one local scope so ordinary descendants remain readable in both themes.
+- Add the Marketing intro composition for a repeatable eyebrow, explicit heading rank, and standfirst at standard or editorial scale with start or centred alignment. Global Layout, Display, and Token defaults are unchanged, and existing Marketing components and consumer-owned artwork retain their current contracts.
+
 ## 0.11.0
 
 - Add the public React-free `./cli` layer across all twelve Component Groups: 99 pure, capability-aware terminal renderers, ten visible reasoned exemptions, token-derived colour degradation, and package-owned triangle motifs.
