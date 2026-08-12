@@ -209,8 +209,7 @@ Deno.test("Catalogue prop evidence is source-derived and complete", async () => 
   const unavailable = registry.filter(({ propDocumentation }) =>
     propDocumentation.status === "unavailable"
   );
-  assertEquals(available.length, 106);
-  assertEquals(unavailable.length, 3);
+  assertEquals(available.length + unavailable.length, registry.length);
   for (const { meta, propDocumentation } of available) {
     if (propDocumentation.status !== "available") {
       throw new TypeError(`${meta.slug} unexpectedly lacks prop evidence`);

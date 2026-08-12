@@ -11,7 +11,7 @@ A short narrative that connects the dots — the mental model of discern-design-
 The system turns **authored design sources into deterministic web and terminal renderings**. Four building blocks carry everything:
 
 - **Tokens** — the named public custom properties (primitive values, semantic roles, and the branded Preset) that all styling resolves through.
-- **Components** — 109 self-contained folders, each owning its CSS, implementation, examples, and Metadata, arranged in twelve Groups.
+- **Components** — 111 self-contained folders, each owning its CSS, implementation, examples, and Metadata, arranged in twelve Groups.
 - **The Runtime** — the emitted output set (`discern.css`, a Manifest, selection-scoped browser behavior when required, and any requested Optional Assets) that the Emitter writes into a consumer's build from a Selection.
 - **The CLI surface** — pure terminal renderers over explicit capabilities, Token-derived themes, and generated per-Component CLI stances.
 

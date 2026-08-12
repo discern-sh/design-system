@@ -10,4 +10,8 @@ Components that accept arbitrary content keep the text face by default. Consumer
 
 The emitted Runtime treats the user's system colour scheme as the default. A Root with no `data-discern-theme`, or with `data-discern-theme="system"`, follows `prefers-color-scheme`; `"light"` and `"dark"` remain deterministic overrides. Consumer Presets mirror their dark overrides inside the same system media query so branding and semantic roles move together.
 
+## Contextual contrast
+
+The inverse surface and ink roles remain stable dark-on-light roles across both Themes. Marketing section's contrast surface uses them to establish a local semantic scope: ordinary canvas, surface, sunken, ink, muted ink, faint ink, and border roles move together for the section's descendants. This is contextual composition rather than a third Theme, and it requires no `data-discern-theme` branch in Component CSS. [ADR-0005](../_adr/0005-marketing-scale-stays-opt-in.md) records why this recipe belongs to an opt-in Marketing Component instead of the global Token defaults.
+
 _This subtree is not yet written — filling it is tracked in [`discern/TODO.md`](../../discern/TODO.md). Until then, start from the [orientation docs](../00-orientation/)._

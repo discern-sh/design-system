@@ -1,0 +1,58 @@
+@layer discern.components {
+  .discern-marketing-intro {
+    --discern-marketing-intro-title-size: var(--discern-font-size-display-lg);
+    --discern-marketing-intro-title-leading: var(--discern-leading-tight);
+    --discern-marketing-intro-title-tracking: -0.014em;
+    max-inline-size: 47rem;
+    margin-block-end: clamp(2.5rem, 6vw, 4.75rem);
+    color: var(--discern-color-ink);
+  }
+  .discern-marketing-intro--editorial {
+    --discern-marketing-intro-title-size: clamp(3rem, 5.1vw, 5.5rem);
+    --discern-marketing-intro-title-leading: 0.98;
+    --discern-marketing-intro-title-tracking: -0.035em;
+  }
+  .discern-marketing-intro--center {
+    margin-inline: auto;
+    text-align: center;
+  }
+  .discern-marketing-intro--contrast {
+    --discern-marketing-accent-ink: var(--discern-color-inverse-ink);
+    color: var(--discern-color-inverse-ink);
+  }
+  .discern-marketing-intro__eyebrow {
+    margin-block-end: var(--discern-space-4);
+    color: var(--discern-marketing-accent-ink,
+      var(--discern-color-accent-600));
+  }
+  .discern-marketing-intro__title {
+    margin: 0;
+    color: inherit;
+    font-size: var(--discern-marketing-intro-title-size);
+    line-height: var(--discern-marketing-intro-title-leading);
+    letter-spacing: var(--discern-marketing-intro-title-tracking);
+    text-wrap: balance;
+  }
+  .discern-marketing-intro__description {
+    max-inline-size: 42rem;
+    margin-block-start: var(--discern-space-6);
+    color: var(--discern-color-ink-muted);
+    font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+    line-height: 1.65;
+  }
+  .discern-marketing-intro--contrast .discern-marketing-intro__description {
+    color: color-mix(in oklab, var(--discern-color-inverse-ink) 76%,
+      transparent);
+  }
+  .discern-marketing-intro--center .discern-marketing-intro__description {
+    margin-inline: auto;
+  }
+  .discern-marketing-intro__description > :last-child {
+    margin-block-end: 0;
+  }
+  @media (max-width: 700px) {
+    .discern-marketing-intro--editorial {
+      --discern-marketing-intro-title-size: clamp(2.7rem, 13vw, 4.25rem);
+    }
+  }
+}

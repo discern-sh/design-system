@@ -32,6 +32,8 @@ import {
   GlossaryTerm,
   HoverCard,
   Logo,
+  MarketingIntro,
+  MarketingSection,
   Procedure,
   RawOutput,
   RetryNotice,
@@ -1523,6 +1525,27 @@ Deno.test("semantic HTML and React adapters share the public class contract", ()
     themeSwitcher,
     /<input(?=[^>]*value="system")(?=[^>]*checked="")[^>]*>/,
   );
+
+  const marketing = renderToStaticMarkup(
+    createElement(MarketingSection, {
+      surface: "contrast",
+      spacing: "spacious",
+      frame: "wide",
+      children: createElement(MarketingIntro, {
+        eyebrow: "Chapter three",
+        title: "A durable marketing hierarchy",
+        description: createElement("p", null, "Supporting context."),
+        scale: "editorial",
+      }),
+    }),
+  );
+  assertMatch(marketing, /^<section/);
+  assertStringIncludes(
+    marketing,
+    "discern-marketing-section--contrast discern-marketing-section--space-spacious discern-marketing-section--frame-wide",
+  );
+  assertStringIncludes(marketing, "discern-marketing-intro--editorial");
+  assertStringIncludes(marketing, "<h2");
 });
 
 type IsRequired<T, Key extends keyof T> = Partial<Record<Key, never>> extends
