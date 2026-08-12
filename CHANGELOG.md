@@ -8,6 +8,7 @@ Each release is cut from a green run of the full release gate — formatting, li
 
 - Add the opt-in Marketing section foundation with standard or wide frames, standard or spacious rhythm, and canvas, raised, sunken, inherited, or stable contrast surfaces. Contrast remaps semantic ink, surface, and border roles as one local scope so ordinary descendants remain readable in both themes.
 - Add the Marketing intro composition for a repeatable eyebrow, explicit heading rank, and standfirst at standard or editorial scale with start or centred alignment. Global Layout, Display, and Token defaults are unchanged, and existing Marketing components and consumer-owned artwork retain their current contracts.
+- Add opt-in homepage-derived variants without changing existing defaults: campaign Site header, showcase and atmospheric Hero block, strip Logo cloud with theme-safe image masks, and showcase Window, Terminal, and Code listing frames. Window and Terminal accept trailing chrome, while Terminal can carry a contextual footer; provider data, narrative content, and decorative artwork remain consumer-owned.
 
 ## 0.11.0
 

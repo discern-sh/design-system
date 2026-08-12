@@ -24,6 +24,10 @@
     border-radius: 50%;
     background: var(--discern-color-stripe);
   }
+  .discern-window__dots {
+    display: flex;
+    gap: 6px;
+  }
   .discern-window__title {
     position: absolute;
     inset-inline: 70px;
@@ -40,5 +44,58 @@
   .discern-window__body {
     min-block-size: 80px;
     background: var(--discern-color-surface);
+  }
+  .discern-window__actions {
+    display: inline-flex;
+    align-items: center;
+    margin-inline-start: auto;
+  }
+  .discern-window--showcase {
+    border-color: color-mix(in oklab,
+      var(--discern-color-border-strong) 85%, transparent);
+    border-radius: clamp(1.25rem, 2.8vw, 2rem);
+    box-shadow:
+      0 3rem 8rem color-mix(in oklab,
+      var(--discern-color-accent-700) 14%, transparent),
+      0 0.4rem 1.2rem color-mix(in oklab,
+      var(--discern-shadow-color) 35%, transparent),
+      inset 0 1px color-mix(in oklab, white 55%, transparent);
+  }
+  .discern-window--showcase .discern-window__bar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: var(--discern-space-4);
+    min-block-size: 4rem;
+    padding-inline: clamp(1.1rem, 2.6vw, 2rem);
+    background: color-mix(in oklab,
+      var(--discern-color-surface-sunken) 56%, var(--discern-color-surface));
+  }
+  .discern-window--showcase .discern-window__dot {
+    inline-size: 0.62rem;
+    block-size: 0.62rem;
+  }
+  .discern-window--showcase .discern-window__dot:nth-child(1) {
+    background: color-mix(in oklab, var(--discern-color-danger) 65%,
+      var(--discern-color-border));
+  }
+  .discern-window--showcase .discern-window__dot:nth-child(2) {
+    background: color-mix(in oklab, var(--discern-color-warning) 65%,
+      var(--discern-color-border));
+  }
+  .discern-window--showcase .discern-window__dot:nth-child(3) {
+    background: color-mix(in oklab, var(--discern-color-success) 65%,
+      var(--discern-color-border));
+  }
+  .discern-window--showcase .discern-window__title {
+    position: static;
+    grid-column: 2;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    justify-self: stretch;
+  }
+  .discern-window--showcase .discern-window__actions {
+    grid-column: 3;
+    justify-self: end;
+    margin-inline-start: 0;
   }
 }

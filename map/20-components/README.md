@@ -4,7 +4,9 @@ The 111 Component folders under [`src/components/`](../../src/components/) cover
 
 ## Marketing foundations
 
-Marketing section and Marketing intro are the opt-in campaign-page foundation. Marketing section owns standard or wide frames, standard or spacious rhythm, and semantic surface scopes. Its contrast scope remaps ink, surface, and border roles together, keeping ordinary descendants readable on a stable dark chapter in either Theme. Marketing intro owns the recurring eyebrow, heading, and standfirst hierarchy at standard or editorial scale. Global Layout, Display, and Token defaults remain unchanged; the boundary and the decision to keep bespoke provider arrangements, product mockups, and narrative artwork consumer-owned are recorded in [ADR-0005](../_adr/0005-marketing-scale-stays-opt-in.md).
+Marketing section and Marketing intro are the opt-in campaign-page foundation. Marketing section owns standard or wide frames, standard or spacious rhythm, and semantic surface scopes. Its contrast scope remaps ink, surface, and border roles together, keeping ordinary descendants readable on a stable dark chapter in either Theme. Marketing intro owns the recurring eyebrow, heading, and standfirst hierarchy at standard or editorial scale.
+
+Existing Components carry the reusable launch-page treatments as variants, not replacements. Site header's campaign treatment widens and strengthens the translucent masthead. Hero block's showcase layout and atmospheric surface create publication-scale copy above wide visual evidence. Logo cloud's strip loosens the provider line and can recolour image marks through a supplied mask. Window, Terminal, and Code listing keep their standard frames while offering larger showcase treatments; Window and Terminal accept trailing chrome, and Terminal can carry a contextual footer. Global Layout, Display, and Token defaults remain unchanged, and provider data, narrative content, and decorative artwork remain consumer-owned. [ADR-0006](../_adr/0006-homepage-treatments-ship-as-variants.md) records the boundary and supersedes the earlier no-variant decision.
 
 ## Workflow and Agents
 

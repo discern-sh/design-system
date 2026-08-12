@@ -26,12 +26,15 @@ import {
   Brand,
   Breadcrumbs,
   Button,
+  CodeListing,
   DestructiveActionNotice,
   Diagnostic,
   type DiagnosticProps,
   GlossaryTerm,
+  HeroBlock,
   HoverCard,
   Logo,
+  LogoCloud,
   MarketingIntro,
   MarketingSection,
   Procedure,
@@ -39,9 +42,11 @@ import {
   RetryNotice,
   SiteHeader,
   TableOfContents,
+  Terminal,
   ThemeSwitcher,
   ThemeToggle,
   Tooltip,
+  Window,
 } from "../src/react.ts";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
 import { semanticClass } from "../src/semantic-class.ts";
@@ -1548,6 +1553,79 @@ Deno.test("semantic HTML and React adapters share the public class contract", ()
   assertStringIncludes(marketing, "<h2");
 });
 
+Deno.test("homepage-derived treatments remain opt-in component variants", () => {
+  const defaults = [
+    renderToStaticMarkup(createElement(SiteHeader, { brand: "Northstar" })),
+    renderToStaticMarkup(createElement(HeroBlock, { title: "Build clearly" })),
+    renderToStaticMarkup(createElement(LogoCloud, {
+      items: [{ name: "Northstar", mark: "N" }],
+    })),
+    renderToStaticMarkup(createElement(Window, { children: "Preview" })),
+    renderToStaticMarkup(createElement(Terminal, { children: "$ verify" })),
+    renderToStaticMarkup(
+      createElement(CodeListing, { code: "const ready = true;" }),
+    ),
+  ];
+  for (const html of defaults) {
+    assert(!/--(?:campaign|showcase|strip|atmospheric)/.test(html));
+  }
+
+  const variants = [
+    renderToStaticMarkup(createElement(SiteHeader, {
+      brand: "Northstar",
+      variant: "campaign",
+    })),
+    renderToStaticMarkup(createElement(HeroBlock, {
+      title: createElement("em", null, "Build boldly"),
+      layout: "showcase",
+      surface: "atmospheric",
+    })),
+    renderToStaticMarkup(createElement(LogoCloud, {
+      items: [{
+        name: "Northstar",
+        mark: "N",
+        markMask: "linear-gradient(black 0 0)",
+      }],
+      variant: "strip",
+    })),
+    renderToStaticMarkup(createElement(Window, {
+      title: "Project",
+      actions: "Ready",
+      variant: "showcase",
+      children: "Preview",
+    })),
+    renderToStaticMarkup(createElement(Terminal, {
+      title: "Result",
+      actions: "Structured",
+      footer: "Bounded context",
+      variant: "showcase",
+      children: "$ verify",
+    })),
+    renderToStaticMarkup(createElement(CodeListing, {
+      code: "const ready = true;",
+      variant: "showcase",
+    })),
+  ].join("\n");
+  for (
+    const className of [
+      "discern-site-header--campaign",
+      "discern-hero-block--showcase",
+      "discern-hero-block--atmospheric",
+      "discern-logo-cloud--strip",
+      "discern-logo-cloud__mark--masked",
+      "discern-window--showcase",
+      "discern-window__actions",
+      "discern-terminal--showcase",
+      "discern-terminal__actions",
+      "discern-terminal__footer",
+      "discern-code-listing--showcase",
+    ]
+  ) {
+    assertStringIncludes(variants, className);
+  }
+  assertStringIncludes(variants, "--discern-logo-cloud-mark-mask");
+});
+
 type IsRequired<T, Key extends keyof T> = Partial<Record<Key, never>> extends
   Pick<
     T,
@@ -1984,7 +2062,7 @@ Deno.test("component and utility styles stay token-driven across theme modes", a
   }
 });
 
-Deno.test("terminal shares Code listing's theme-responsive surface roles", async () => {
+Deno.test("Terminal and Code listing keep standard and showcase surface roles", async () => {
   const styles = await Promise.all(
     [
       join(COMPONENT_ROOT, "display", "terminal", "terminal.css"),
@@ -2001,7 +2079,11 @@ Deno.test("terminal shares Code listing's theme-responsive surface roles", async
   ) {
     for (const style of styles) assertStringIncludes(style, token);
   }
-  assert(!styles[0]?.includes("--discern-color-inverse-"));
+  for (const style of styles) {
+    assertStringIncludes(style, "--showcase");
+    assertStringIncludes(style, "--discern-color-inverse-surface");
+    assertStringIncludes(style, "--discern-color-inverse-ink");
+  }
 });
 
 function accessibleText(html: string): string {

@@ -1,3 +1,4 @@
+import type { CatalogueExampleState } from "../../../../styleguide/conformance.ts";
 import { CodeListing } from "./code-listing.tsx";
 
 const example = `const brief = {
@@ -7,7 +8,7 @@ const example = `const brief = {
 
 await prove(brief);`;
 
-export default function CodeListingExamples() {
+function StandardCodeListingState() {
   return (
     <CodeListing
       filename="example.ts"
@@ -16,5 +17,32 @@ export default function CodeListingExamples() {
       highlightLines={[2, 3]}
       caption="Highlighted lines carry the decision into executable evidence."
     />
+  );
+}
+
+function ShowcaseCodeListingState() {
+  return (
+    <CodeListing
+      filename="decision.ts"
+      language="TypeScript"
+      code={example}
+      highlightLines={[2, 3]}
+      caption="A stable dark treatment for source used as campaign evidence."
+      variant="showcase"
+    />
+  );
+}
+
+export const catalogueStates = [
+  { name: "standard", label: "Standard", Example: StandardCodeListingState },
+  { name: "showcase", label: "Showcase", Example: ShowcaseCodeListingState },
+] satisfies readonly CatalogueExampleState[];
+
+export default function CodeListingExamples() {
+  return (
+    <div className="discern-example-stack">
+      <StandardCodeListingState />
+      <ShowcaseCodeListingState />
+    </div>
   );
 }

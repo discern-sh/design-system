@@ -1,6 +1,8 @@
+import type { CatalogueExampleState } from "../../../../styleguide/conformance.ts";
+import { Badge } from "../badge/badge.tsx";
 import { Terminal } from "./terminal.tsx";
 
-export default function TerminalExamples() {
+function StandardTerminalState() {
   return (
     <Terminal title="~/project — verify">
       <span className="discern-terminal__prompt">$</span> deno task verify{"\n"}
@@ -12,5 +14,43 @@ export default function TerminalExamples() {
       <span className="discern-terminal__prompt">$</span>
       {" "}
     </Terminal>
+  );
+}
+
+function ShowcaseTerminalState() {
+  return (
+    <Terminal
+      title="agent result"
+      actions={<Badge tone="accent">structured output</Badge>}
+      footer={
+        <>
+          <span>bounded context</span>
+          <span>explicit state</span>
+          <span>useful next step</span>
+        </>
+      }
+      variant="showcase"
+    >
+      {`{
+  "ok": false,
+  "error": "behind_trunk",
+  "state": "4 commits behind",
+  "next": "call project_update"
+}`}
+    </Terminal>
+  );
+}
+
+export const catalogueStates = [
+  { name: "standard", label: "Standard", Example: StandardTerminalState },
+  { name: "showcase", label: "Showcase", Example: ShowcaseTerminalState },
+] satisfies readonly CatalogueExampleState[];
+
+export default function TerminalExamples() {
+  return (
+    <div className="discern-example-stack">
+      <StandardTerminalState />
+      <ShowcaseTerminalState />
+    </div>
   );
 }

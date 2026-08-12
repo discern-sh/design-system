@@ -3,6 +3,9 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Visual treatments available to a Code listing. */
+export type CodeListingVariant = "standard" | "showcase";
+
 /** Props for the {@linkcode CodeListing} component. */
 export interface CodeListingProps
   extends Omit<HTMLAttributes<HTMLElement>, "title"> {
@@ -12,6 +15,8 @@ export interface CodeListingProps
   readonly code: string;
   readonly highlightLines?: readonly number[];
   readonly caption?: ReactNode;
+  /** Theme-responsive editorial frame or a stable dark campaign showcase. */
+  readonly variant?: CodeListingVariant;
 }
 
 /** Captioned source listing with file and language context, stable line numbers, horizontal overflow, and optional highlighted lines. */
@@ -24,6 +29,7 @@ export const CodeListing: DiscernComponent<HTMLElement, CodeListingProps> =
       code,
       highlightLines = [],
       caption,
+      variant = "standard",
       className,
       ...props
     },
@@ -33,7 +39,11 @@ export const CodeListing: DiscernComponent<HTMLElement, CodeListingProps> =
     return (
       <figure
         ref={ref}
-        className={classNames("discern-code-listing", className)}
+        className={classNames(
+          "discern-code-listing",
+          variant === "showcase" && "discern-code-listing--showcase",
+          className,
+        )}
         {...props}
       >
         {title || filename || language

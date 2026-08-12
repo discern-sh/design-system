@@ -10,6 +10,9 @@ export interface SiteHeaderNavItem {
   readonly href: string;
 }
 
+/** Visual treatments available to a Site header. */
+export type SiteHeaderVariant = "standard" | "campaign";
+
 /** Props for the {@linkcode SiteHeader} component. */
 export interface SiteHeaderProps extends HTMLAttributes<HTMLElement> {
   readonly brand: ReactNode;
@@ -23,6 +26,8 @@ export interface SiteHeaderProps extends HTMLAttributes<HTMLElement> {
   readonly actions?: ReactNode;
   readonly notice?: ReactNode;
   readonly sticky?: boolean;
+  /** Standard page chrome or the wider, more translucent campaign masthead. */
+  readonly variant?: SiteHeaderVariant;
 }
 
 /** Responsive landing-page masthead with optional notice, navigation, actions, and sticky positioning. */
@@ -40,6 +45,7 @@ export const SiteHeader: DiscernComponent<HTMLElement, SiteHeaderProps> =
       actions,
       notice,
       sticky = false,
+      variant = "standard",
       className,
       ...props
     },
@@ -55,6 +61,7 @@ export const SiteHeader: DiscernComponent<HTMLElement, SiteHeaderProps> =
           "discern-site-header",
           sticky && "discern-site-header--sticky",
           Boolean(notice) && "discern-site-header--with-notice",
+          variant === "campaign" && "discern-site-header--campaign",
           className,
         )}
         {...props}

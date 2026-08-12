@@ -1,5 +1,6 @@
 @layer discern.components {
   .discern-logo-cloud {
+    --discern-logo-cloud-mark-mask: none;
     width: min(100% - 2 * var(--discern-space-6), var(--discern-page-max));
     margin-inline: auto;
     padding-block: var(--discern-space-10);
@@ -41,11 +42,59 @@
     border-inline-start: 1px solid var(--discern-color-border);
   }
   .discern-logo-cloud__mark {
+    position: relative;
     display: grid;
     place-items: center;
     inline-size: 1.5rem;
     block-size: 1.5rem;
     color: var(--discern-color-accent-700);
+  }
+  .discern-logo-cloud__mark > :where(img, svg) {
+    display: block;
+    max-inline-size: 100%;
+    max-block-size: 100%;
+    object-fit: contain;
+  }
+  .discern-logo-cloud__mark--masked::after {
+    position: absolute;
+    inset: 0;
+    background: light-dark(transparent, currentColor);
+    content: "";
+    mask: var(--discern-logo-cloud-mark-mask) center / contain no-repeat;
+    pointer-events: none;
+  }
+  .discern-logo-cloud--strip {
+    width: min(100% - 2 * var(--discern-space-6), 86rem);
+    padding-block: var(--discern-space-20);
+  }
+  .discern-logo-cloud--strip .discern-logo-cloud__label {
+    margin-block-end: var(--discern-space-5);
+    font-weight: var(--discern-font-weight-strong);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .discern-logo-cloud--strip .discern-logo-cloud__list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(var(--discern-space-4), 4vw, var(--discern-space-10));
+    border: 0;
+  }
+  .discern-logo-cloud--start.discern-logo-cloud--strip .discern-logo-cloud__list {
+    justify-content: flex-start;
+  }
+  .discern-logo-cloud--strip .discern-logo-cloud__list li {
+    min-height: 0;
+    padding: 0;
+    text-align: start;
+  }
+  .discern-logo-cloud--strip .discern-logo-cloud__list li + li {
+    border: 0;
+  }
+  .discern-logo-cloud--strip .discern-logo-cloud__mark {
+    inline-size: 2rem;
+    block-size: 2rem;
   }
   @media (max-width: 680px) {
     .discern-logo-cloud__list {
@@ -56,6 +105,16 @@
     }
     .discern-logo-cloud__list li:nth-child(n + 3) {
       border-block-start: 1px solid var(--discern-color-border);
+    }
+    .discern-logo-cloud--strip {
+      width: min(100% - 2 * var(--discern-space-4), 86rem);
+    }
+    .discern-logo-cloud--strip .discern-logo-cloud__list {
+      display: flex;
+    }
+    .discern-logo-cloud--strip .discern-logo-cloud__list li {
+      min-inline-size: 7.5rem;
+      border: 0;
     }
   }
 }

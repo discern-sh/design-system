@@ -1,6 +1,6 @@
 # ADR 0005: Marketing scale stays opt-in
 
-**Status**: accepted
+**Status**: superseded by [ADR-0006](0006-homepage-treatments-ship-as-variants.md)
 
 ## Context
 
