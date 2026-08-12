@@ -430,13 +430,16 @@
     margin = 1000
 
   # A small long-form documentation route: Docs header, Docs nav, Anchor
-  # heading, Prose, Code listing, and Pager, plus resolved dependencies.
+  # heading, Prose, Code listing, and Pager, plus resolved dependencies. The
+  # 30 kB ceiling includes Code listing's standard and showcase treatments,
+  # with headroom for ordinary iteration and a warning before it is exhausted.
   [standards.minimal_docs_css]
     run = "deno run --config deno.json --allow-read --allow-write discern/scripts/measure-runtime.ts minimal_docs_css_bytes"
-    limit = 25804
+    limit = 30000
     direction = "down"
     metric = "minimal_docs_css_bytes"
     inputs = ["src/**", "scripts/generate.ts", "discern/scripts/measure-runtime.ts"]
+    margin = 1500
 
   # The complete Workflow grammar selected by its canonical Group, including
   # every dependency the Runtime Manifest resolves.
@@ -447,13 +450,16 @@
     metric = "workflow_css_bytes"
     inputs = ["src/**", "scripts/generate.ts", "discern/scripts/measure-runtime.ts"]
 
-  # The complete Marketing Group, including its resolved dependencies.
+  # The complete Marketing Group, including its resolved dependencies. The
+  # 86 kB ceiling accommodates the additive campaign foundations and opt-in
+  # component variants, with room for the current homepage direction to settle.
   [standards.marketing_css]
     run = "deno run --config deno.json --allow-read --allow-write discern/scripts/measure-runtime.ts marketing_css_bytes"
-    limit = 66287
+    limit = 86000
     direction = "down"
     metric = "marketing_css_bytes"
     inputs = ["src/**", "scripts/generate.ts", "discern/scripts/measure-runtime.ts"]
+    margin = 4000
 
   # The selection-scoped discern.js produced by every Component in the closed
   # behavior opt-in registry. CSS-only selections remain outside this measure.
