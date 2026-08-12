@@ -14,6 +14,6 @@ export default {
   ],
   accessibility: [
     "Marks are decorative by default while every item retains a readable text name.",
-    "An optional mark mask recolours image artwork through the active colour scheme without replacing the readable name.",
+    "An optional mark mask preserves supplied image artwork in light Theme and replaces it completely with a neutral silhouette in dark Theme, without replacing the readable name.",
   ],
 } satisfies ComponentMeta;

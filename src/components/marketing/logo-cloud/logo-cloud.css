@@ -63,6 +63,13 @@
     mask: var(--discern-logo-cloud-mark-mask) center / contain no-repeat;
     pointer-events: none;
   }
+  .discern-logo-cloud__mark--masked {
+    color: light-dark(var(--discern-color-accent-700),
+      var(--discern-color-ink-muted));
+  }
+  .discern-logo-cloud__mark--masked > :where(img, svg) {
+    opacity: var(--discern-brand-artwork-opacity);
+  }
   .discern-logo-cloud--strip {
     width: min(100% - 2 * var(--discern-space-6), 86rem);
     padding-block: var(--discern-space-20);

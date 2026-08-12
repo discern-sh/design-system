@@ -1626,6 +1626,104 @@ Deno.test("homepage-derived treatments remain opt-in component variants", () => 
   assertStringIncludes(variants, "--discern-logo-cloud-mark-mask");
 });
 
+Deno.test("masked provider-strip marks swap brand artwork for a neutral dark silhouette", async () => {
+  const output = await Deno.makeTempDir();
+  const browser = await launchBrowser();
+  const page = await browser.newPage({ colorScheme: "dark" });
+  try {
+    await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${output}/`),
+      components: ["logo-cloud"],
+      theme: "discern",
+    });
+    const css = await Deno.readTextFile(join(output, "discern.css"));
+    const markup = renderToStaticMarkup(createElement(LogoCloud, {
+      label: "Compatible providers",
+      items: [{
+        name: "Future provider",
+        mark: createElement("img", {
+          alt: "",
+          src:
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='orange'/%3E%3C/svg%3E",
+        }),
+        markMask: "linear-gradient(black 0 0)",
+      }, {
+        name: "Inline provider",
+        mark: createElement(
+          "svg",
+          { viewBox: "0 0 32 32" },
+          createElement("rect", {
+            width: "32",
+            height: "32",
+            fill: "green",
+          }),
+        ),
+        markMask: "linear-gradient(black 0 0)",
+      }, {
+        name: "Unmasked provider",
+        mark: createElement("img", {
+          alt: "",
+          src:
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='purple'/%3E%3C/svg%3E",
+        }),
+      }],
+      variant: "strip",
+    }));
+    await page.setContent(
+      `<style>${css}</style><main data-discern-root>${markup}</main>`,
+    );
+
+    const dark = await page.evaluate(() => {
+      const masked = [...document.querySelectorAll<HTMLElement>(
+        ".discern-logo-cloud__mark--masked",
+      )].map((element) => {
+        const media = element.querySelector<HTMLElement>("img, svg");
+        const item = element.closest("li");
+        if (media === null || item === null) throw new Error("incomplete mark");
+        return {
+          mediaOpacity: getComputedStyle(media).opacity,
+          markColor: getComputedStyle(element).color,
+          itemColor: getComputedStyle(item).color,
+        };
+      });
+      const unmasked = document.querySelector<HTMLElement>(
+        ".discern-logo-cloud__mark:not(.discern-logo-cloud__mark--masked) img",
+      );
+      if (unmasked === null) throw new Error("missing unmasked mark");
+      return {
+        masked,
+        unmaskedOpacity: getComputedStyle(unmasked).opacity,
+      };
+    });
+    const darkViolations = dark.masked.flatMap((mark, index) => [
+      mark.mediaOpacity === "0"
+        ? undefined
+        : `masked source ${index} remains at opacity ${mark.mediaOpacity}`,
+      mark.markColor === mark.itemColor
+        ? undefined
+        : `silhouette ${index} ${mark.markColor} differs from item ${mark.itemColor}`,
+    ]).concat(
+      dark.unmaskedOpacity === "1"
+        ? []
+        : [`unmasked source changed to opacity ${dark.unmaskedOpacity}`],
+    ).filter((violation): violation is string => violation !== undefined);
+    assertEquals(darkViolations, []);
+
+    await page.emulateMedia({ colorScheme: "light" });
+    assertEquals(
+      await page.evaluate(() =>
+        [...document.querySelectorAll<HTMLElement>(
+          ".discern-logo-cloud__mark > :where(img, svg)",
+        )].map((media) => getComputedStyle(media).opacity)
+      ),
+      ["1", "1", "1"],
+    );
+  } finally {
+    await browser.close();
+    await Deno.remove(output, { recursive: true });
+  }
+});
+
 type IsRequired<T, Key extends keyof T> = Partial<Record<Key, never>> extends
   Pick<
     T,

@@ -456,6 +456,12 @@ export const themeTokens: readonly ThemeToken[] = [
     "color-mix(in oklab, #000 58%, transparent)",
     "Modal backdrop.",
   ),
+  themeToken(
+    "--discern-brand-artwork-opacity",
+    "1",
+    "0",
+    "Visibility of original multicolour artwork when a monochrome dark-mode mask is available.",
+  ),
 ];
 
 /** Every public token: primitives, presets, and theme roles together. */

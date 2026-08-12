@@ -7,7 +7,7 @@ import { classNames } from "../../class-names.ts";
 export interface LogoCloudItem {
   readonly name: string;
   readonly mark?: ReactNode;
-  /** Optional CSS image used to recolour an image mark in dark colour schemes. */
+  /** Optional CSS image that replaces supplied image artwork with a neutral dark-Theme silhouette. */
   readonly markMask?: string;
 }
 

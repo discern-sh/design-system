@@ -4,6 +4,10 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## Unreleased
+
+- Fix masked Logo cloud marks so light Theme retains the supplied brand artwork while dark Theme replaces it completely with a neutral silhouette. This removes colour artwork leaking around the mask and keeps provider rows visually consistent without changing unmasked marks.
+
 ## 0.12.0
 
 - Add the opt-in Marketing section foundation with standard or wide frames, standard or spacious rhythm, and canvas, raised, sunken, inherited, or stable contrast surfaces. Contrast remaps semantic ink, surface, and border roles as one local scope so ordinary descendants remain readable in both themes.
