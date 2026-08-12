@@ -6,11 +6,10 @@ Each release is cut from a green run of the full release gate — formatting, li
 
 ## 0.11.0
 
-- Add the public React-free `./cli` layer across all twelve Component Groups: 99 Components ship pure, capability-aware terminal renderers and ten record visible, reasoned exemptions. Token-derived light/dark themes degrade through truecolour, ANSI 256, ANSI 16, `NO_COLOR` plaintext, and ASCII geometry without a second palette; package-owned triangle primitives supply dividers, ribbons, fields, weaves, spinner phases, progress, labeled rules, workflow steppers, and activity beacons.
-- Add the optional `./cli/interactive` Deno adapter. Text, masked, confirm, select, multiselect, search, autocomplete, textarea, progress, and sequential-form state machines render through the real Forms, Meter, and Process steps CLI renderers; the triangle spinner remains the single spinner authority. Raw-mode, cursor, repaint, cancellation, EOF, validation, and exception cleanup are held by an injectable fake-terminal test harness.
-- Promote `deno task catalogue:cli` into the complete terminal catalogue. It renders all named examples and reasoned exemptions, narrows by Component or Group, includes a generated triangle-motif sheet, and honours `NO_COLOR`.
-- Add an independent Web/CLI surface switch to every browser Catalogue Component. The CLI view executes the same generated renderer examples under a fixed 80-column truecolour Unicode profile, projects their ANSI spans into the package Terminal component, and keeps reasoned exemptions visible beside their web counterparts.
-- **Breaking for Component Metadata authors:** every Component must declare a rendered or reasoned-exempt CLI stance. Codegen and conformance reject absent stances, missing or orphan renderer modules, empty exemption reasons, and registry drift in both directions; the zero `cli_pending` ceiling remains as defence in depth.
+- Add the public React-free `./cli` layer across all twelve Component Groups: 99 pure, capability-aware terminal renderers, ten visible reasoned exemptions, token-derived colour degradation, and package-owned triangle motifs.
+- Add the optional `./cli/interactive` Deno adapter for text, choice, search, textarea, progress, and sequential-form prompts, wired to the real Component renderers and covered through an injectable terminal harness.
+- Add a complete `catalogue:cli` stdout catalogue and independent Web/CLI previews for every browser Catalogue Component, with shared generated examples and visible exemptions.
+- **Breaking for Component Metadata authors:** every Component must declare a rendered or reasoned-exempt CLI stance. Codegen and conformance permanently reject absent stances, missing or orphan renderer modules, empty exemption reasons, and registry drift.
 
 ## 0.10.1
 
