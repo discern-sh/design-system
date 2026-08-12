@@ -334,6 +334,30 @@ Deno.test("Catalogue navigation stays stable while purpose filters the component
   assert(!pickerBody.includes("display: none;"));
 });
 
+Deno.test("Catalogue switches all ordinary previews while conformance stays web-only", async () => {
+  const source = await Deno.readTextFile(
+    join(PACKAGE_ROOT, "styleguide", "app.tsx"),
+  );
+  assertStringIncludes(source, 'parameters.get("surface")');
+  assertStringIncludes(source, 'url.searchParams.set("surface", next)');
+  assertStringIncludes(source, "<CliComponentPreview entry={entry} />");
+  assertStringIncludes(source, "<span>Web</span>");
+  assertStringIncludes(source, "<span>CLI</span>");
+
+  const conformanceStart = source.indexOf("if (conformanceMode)");
+  const ordinaryStart = source.indexOf(
+    '<div\n      className="discern-catalogue-shell"',
+    conformanceStart,
+  );
+  assert(
+    conformanceStart >= 0 && ordinaryStart > conformanceStart,
+    "missing Catalogue render boundaries",
+  );
+  const conformance = source.slice(conformanceStart, ordinaryStart);
+  assertStringIncludes(conformance, 'surface="web"');
+  assert(!conformance.includes("surface={surface}"));
+});
+
 Deno.test("Catalogue component panels share a closed canonical order", async () => {
   const source = await Deno.readTextFile(
     join(PACKAGE_ROOT, "styleguide", "app.tsx"),

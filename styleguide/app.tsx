@@ -13,8 +13,11 @@ import {
   componentGroups,
 } from "../src/types/component-meta.ts";
 import { type CompositionRecipe, compositionRecipes } from "./compositions.tsx";
+import { CliComponentPreview } from "./cli-preview.tsx";
 import { packageVersion, registry } from "./generated/registry.ts";
 import type { RegistryEntry } from "./generated/registry.ts";
+
+type CatalogueSurface = "web" | "cli";
 
 function slugify(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -30,6 +33,10 @@ function cataloguePurpose(
   value: string | null,
 ): CataloguePurpose | undefined {
   return cataloguePurposes.find((purpose) => purpose === value);
+}
+
+function catalogueSurface(value: string | null): CatalogueSurface {
+  return value === "cli" ? "cli" : "web";
 }
 
 const purposeDetails = {
@@ -139,7 +146,12 @@ function CopyableCode(
   );
 }
 
-function ComponentPreview({ entry }: { readonly entry: RegistryEntry }) {
+function ComponentPreview(
+  { entry, surface }: {
+    readonly entry: RegistryEntry;
+    readonly surface: CatalogueSurface;
+  },
+) {
   const {
     meta,
     states,
@@ -163,39 +175,56 @@ function ComponentPreview({ entry }: { readonly entry: RegistryEntry }) {
           <h4>{meta.name}</h4>
           <p>{meta.description}</p>
         </div>
-        <a
-          href={`src/components/${meta.group.toLowerCase()}/${meta.slug}/${meta.slug}.tsx`}
-          target="_blank"
-        >
-          Source ↗
-        </a>
-      </header>
-      <div className="discern-catalogue-component__canvas">
-        {states.map(({ name, label, Example }) => {
-          const fragmentId = stateFragmentId(meta.slug, name);
-          return (
-            <section
-              className="discern-catalogue-example-state"
-              id={fragmentId}
-              data-discern-example-state={name}
-              key={name}
+        {surface === "web"
+          ? (
+            <a
+              href={`src/components/${meta.group.toLowerCase()}/${meta.slug}/${meta.slug}.tsx`}
+              target="_blank"
             >
-              <header>
-                <h5>{label}</h5>
-                <a
-                  href={`#${fragmentId}`}
-                  aria-label={`Link to ${meta.name}: ${label}`}
+              React source ↗
+            </a>
+          )
+          : (
+            <a
+              href={`src/components/${meta.group.toLowerCase()}/${meta.slug}/${meta.slug}.${
+                entry.cli.stance === "rendered" ? "cli" : "meta"
+              }.ts`}
+              target="_blank"
+            >
+              {entry.cli.stance === "rendered" ? "CLI source ↗" : "Metadata ↗"}
+            </a>
+          )}
+      </header>
+      {surface === "cli"
+        ? <CliComponentPreview entry={entry} />
+        : (
+          <div className="discern-catalogue-component__canvas">
+            {states.map(({ name, label, Example }) => {
+              const fragmentId = stateFragmentId(meta.slug, name);
+              return (
+                <section
+                  className="discern-catalogue-example-state"
+                  id={fragmentId}
+                  data-discern-example-state={name}
+                  key={name}
                 >
-                  #
-                </a>
-              </header>
-              <div className="discern-catalogue-example-state__canvas">
-                <Example />
-              </div>
-            </section>
-          );
-        })}
-      </div>
+                  <header>
+                    <h5>{label}</h5>
+                    <a
+                      href={`#${fragmentId}`}
+                      aria-label={`Link to ${meta.name}: ${label}`}
+                    >
+                      #
+                    </a>
+                  </header>
+                  <div className="discern-catalogue-example-state__canvas">
+                    <Example />
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+        )}
       {hasGuidance
         ? (
           <details className="discern-catalogue-guidance">
@@ -350,6 +379,7 @@ function App() {
   );
   const requestedTheme = parameters.get("theme");
   const requestedPurpose = parameters.get("purpose");
+  const requestedSurface = parameters.get("surface");
   const conformanceMode = parameters.get("conformance") === "1";
   const selectedComponent = parameters.get("component");
   const [theme, setTheme] = useState<ThemeSwitcherMode>(() =>
@@ -360,6 +390,9 @@ function App() {
   const [query, setQuery] = useState("");
   const [purpose, setPurpose] = useState<CataloguePurpose | undefined>(() =>
     cataloguePurpose(requestedPurpose)
+  );
+  const [surface, setSurface] = useState<CatalogueSurface>(() =>
+    catalogueSurface(requestedSurface)
   );
   const [accentHue, setAccentHue] = useState(defaultAccentHue);
   const normalizedQuery = query.trim().toLowerCase();
@@ -417,6 +450,9 @@ function App() {
       registry.filter(({ meta }) => meta.purposes?.includes(candidate)).length,
     ]),
   ) as Record<CataloguePurpose, number>;
+  const renderedCliCount =
+    registry.filter(({ cli }) => cli.stance === "rendered").length;
+  const exemptCliCount = registry.length - renderedCliCount;
   const tokenCategories = [...new Set(tokens.map((token) => token.category))];
 
   const changeTheme = (next: ThemeSwitcherMode) => {
@@ -433,6 +469,15 @@ function App() {
     const url = new URL(globalThis.location.href);
     if (next === undefined) url.searchParams.delete("purpose");
     else url.searchParams.set("purpose", next);
+    url.hash = "components";
+    globalThis.history.replaceState(null, "", url);
+  };
+
+  const changeSurface = (next: CatalogueSurface): void => {
+    setSurface(next);
+    const url = new URL(globalThis.location.href);
+    if (next === "web") url.searchParams.delete("surface");
+    else url.searchParams.set("surface", next);
     url.hash = "components";
     globalThis.history.replaceState(null, "", url);
   };
@@ -466,7 +511,11 @@ function App() {
           ))
           : null}
         {components.map((entry) => (
-          <ComponentPreview entry={entry} key={entry.meta.slug} />
+          <ComponentPreview
+            entry={entry}
+            surface="web"
+            key={entry.meta.slug}
+          />
         ))}
       </main>
     );
@@ -687,25 +736,58 @@ function App() {
               <h2>Typed, composable, inspectable.</h2>
             </div>
             <p>
-              Each component owns implementation, CSS, metadata, and neutral
-              fixtures. New metadata files enter this page automatically.
+              One generated inventory pairs each web example with its real CLI
+              renderer or recorded exemption. New metadata enters both views
+              automatically.
             </p>
           </header>
-          <label className="discern-catalogue-purpose-picker">
-            <span>Filter components by purpose</span>
-            <select
-              value={purpose ?? ""}
-              onChange={(event) =>
-                changePurpose(cataloguePurpose(event.currentTarget.value))}
-            >
-              <option value="">All components</option>
-              {cataloguePurposes.map((candidate) => (
-                <option value={candidate} key={candidate}>
-                  {purposeDetails[candidate].label} ({purposeCounts[candidate]})
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="discern-catalogue-component-controls">
+            <fieldset className="discern-catalogue-surface-picker">
+              <legend>Preview surface</legend>
+              <div>
+                <label>
+                  <input
+                    type="radio"
+                    name="catalogue-surface"
+                    value="web"
+                    checked={surface === "web"}
+                    onChange={() => changeSurface("web")}
+                  />
+                  <span>Web</span>
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="catalogue-surface"
+                    value="cli"
+                    checked={surface === "cli"}
+                    onChange={() => changeSurface("cli")}
+                  />
+                  <span>CLI</span>
+                </label>
+              </div>
+              <small>
+                {renderedCliCount} real renderers · {exemptCliCount}{" "}
+                visible exemptions
+              </small>
+            </fieldset>
+            <label className="discern-catalogue-purpose-picker">
+              <span>Filter components by purpose</span>
+              <select
+                value={purpose ?? ""}
+                onChange={(event) =>
+                  changePurpose(cataloguePurpose(event.currentTarget.value))}
+              >
+                <option value="">All components</option>
+                {cataloguePurposes.map((candidate) => (
+                  <option value={candidate} key={candidate}>
+                    {purposeDetails[candidate].label}{" "}
+                    ({purposeCounts[candidate]})
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
           {purpose !== undefined
             ? (
               <div
@@ -736,7 +818,11 @@ function App() {
                 <span>{entries.length}</span>
               </div>
               {entries.map((entry) => (
-                <ComponentPreview entry={entry} key={entry.meta.slug} />
+                <ComponentPreview
+                  entry={entry}
+                  surface={surface}
+                  key={entry.meta.slug}
+                />
               ))}
             </section>
           ))}
