@@ -4,7 +4,7 @@ The Catalogue is the local browser for every Component example, public Token, co
 
 ## Find the right component
 
-Search covers Component names, Groups, descriptions, purposes, and usage guidance. The purpose selector in the Components section narrows the rendered Catalogue to documentation, tool output, procedural workflow, or marketing work. The Web/CLI surface switch changes every visible Component together; `?surface=cli` restores terminal specimens on a cold load. The sidebar remains a complete Component index, independent of those controls. Search and purpose filters combine. `?purpose=<name>` restores the collection on a cold load.
+Search covers Component names, Groups, descriptions, purposes, and usage guidance. The purpose selector in the Components section narrows the rendered Catalogue to documentation, tool output, procedural workflow, or marketing work. Every ordinary Component card carries its own Web/CLI surface switch; changing one leaves the other cards in place, while `?surface=cli` starts every card on its terminal specimen for review. The sidebar remains a complete Component index, independent of those controls. Search and purpose filters combine. `?purpose=<name>` restores the collection on a cold load.
 
 Component Metadata owns purpose membership, `useWhen`, and `notWhen`. Every Workflow Component and each easily confused pair carries that guidance beside its examples.
 
@@ -22,7 +22,7 @@ The CLI view is not a screenshot or a second set of fixtures. [`build.ts`](../..
 
 ## Link to a state
 
-An examples module may export named `catalogueStates`; other Components receive a generated `default` state. The fragment `#component-<slug>--<state>` restores and highlights the state after the app mounts. Command, Path reference, Diagnostic, and Table include stress states.
+An examples module may export named `catalogueStates`; other Components receive a generated `default` state. Ordinary single-example cards omit the redundant Default label, while the state and its fragment remain enrolled. The fragment `#component-<slug>--<state>` restores and highlights the state after the app mounts. Command, Path reference, Diagnostic, and Table include stress states.
 
 The toolbar reads the package version from `deno.json`, and conformance sheets repeat it in screenshots. The browser pass first checks every generated Component example, then runs the mandatory journey-resilience phase. Journey checks cover stage order, headings, landmarks, keyboard traversal, exact Command copies, and axe in both themes. Generic rendered-surface scans cover disclosure semantics, nested controls, minimum targets, page reflow at 390 pixels and the 320-pixel equivalent of 400% zoom, reduced motion, system-theme return, composited and visible semantic focus, and forced-colour focus.
 

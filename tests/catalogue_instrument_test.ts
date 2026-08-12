@@ -334,15 +334,18 @@ Deno.test("Catalogue navigation stays stable while purpose filters the component
   assert(!pickerBody.includes("display: none;"));
 });
 
-Deno.test("Catalogue switches all ordinary previews while conformance stays web-only", async () => {
+Deno.test("Catalogue switches each ordinary Component while conformance stays web-only", async () => {
   const source = await Deno.readTextFile(
     join(PACKAGE_ROOT, "styleguide", "app.tsx"),
   );
   assertStringIncludes(source, 'parameters.get("surface")');
-  assertStringIncludes(source, 'url.searchParams.set("surface", next)');
+  assertStringIncludes(source, "componentSurfaces[entry.meta.slug]");
+  assertStringIncludes(source, "changeComponentSurface(entry.meta.slug, next)");
   assertStringIncludes(source, "<CliComponentPreview entry={entry} />");
-  assertStringIncludes(source, "<span>Web</span>");
-  assertStringIncludes(source, "<span>CLI</span>");
+  assertStringIncludes(source, 'role="group"');
+  assertStringIncludes(source, "aria-pressed={surface === candidate}");
+  assertStringIncludes(source, 'candidate === "web" ? "Web" : "CLI"');
+  assertStringIncludes(source, 'states.length !== 1 || name !== "default"');
 
   const conformanceStart = source.indexOf("if (conformanceMode)");
   const ordinaryStart = source.indexOf(
@@ -355,7 +358,10 @@ Deno.test("Catalogue switches all ordinary previews while conformance stays web-
   );
   const conformance = source.slice(conformanceStart, ordinaryStart);
   assertStringIncludes(conformance, 'surface="web"');
-  assert(!conformance.includes("surface={surface}"));
+  assert(!conformance.includes("onSurfaceChange"));
+
+  const ordinary = source.slice(ordinaryStart);
+  assertStringIncludes(ordinary, "onSurfaceChange={(next) =>");
 });
 
 Deno.test("Catalogue component panels share a closed canonical order", async () => {

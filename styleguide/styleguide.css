@@ -313,78 +313,12 @@
     color: var(--discern-color-ink-faint);
     font-size: var(--discern-font-size-xs);
   }
-  .discern-catalogue-component-controls {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px;
-    align-items: start;
-    margin-block: -18px 22px;
-  }
   .discern-catalogue-purpose-picker {
     display: grid;
-  }
-  .discern-catalogue-purpose-picker,
-  .discern-catalogue-surface-picker {
     gap: 6px;
-    min-width: 0;
-    margin: 0;
+    margin-block: -18px 22px;
     color: var(--discern-color-ink-muted);
     font: var(--discern-font-size-xs) var(--discern-font-ui);
-  }
-  .discern-catalogue-surface-picker {
-    padding: 0;
-    border: 0;
-  }
-  .discern-catalogue-surface-picker legend {
-    margin-block-end: 6px;
-    padding: 0;
-  }
-  .discern-catalogue-surface-picker > div {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .discern-catalogue-surface-picker label {
-    position: relative;
-    cursor: pointer;
-  }
-  .discern-catalogue-surface-picker input {
-    position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
-    opacity: 0;
-  }
-  .discern-catalogue-surface-picker label span {
-    display: grid;
-    place-items: center;
-    min-height: 36px;
-    padding-inline: 12px;
-    border: 1px solid var(--discern-color-border-strong);
-    background: var(--discern-color-surface);
-    color: var(--discern-color-ink-muted);
-    font-weight: 650;
-  }
-  .discern-catalogue-surface-picker label:first-child span {
-    border-radius: var(--discern-radius-sm) 0 0 var(--discern-radius-sm);
-  }
-  .discern-catalogue-surface-picker label:last-child span {
-    margin-inline-start: -1px;
-    border-radius: 0 var(--discern-radius-sm) var(--discern-radius-sm) 0;
-  }
-  .discern-catalogue-surface-picker input:checked + span {
-    position: relative;
-    z-index: 1;
-    border-color: var(--discern-color-accent-500);
-    background: var(--discern-color-accent-100);
-    color: var(--discern-color-accent-800);
-  }
-  .discern-catalogue-surface-picker input:focus-visible + span {
-    z-index: 2;
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: 2px;
-  }
-  .discern-catalogue-surface-picker small {
-    color: var(--discern-color-ink-faint);
-    line-height: 1.4;
   }
   .discern-catalogue-purpose-picker select {
     min-height: 38px;
@@ -603,9 +537,51 @@
     padding: 16px 18px;
     border-block-end: 1px solid var(--discern-color-border);
   }
-  .discern-catalogue-component > header > div {
+  .discern-catalogue-component__identity {
     flex: 1;
     min-width: 0;
+  }
+  .discern-catalogue-component__actions {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 12px;
+  }
+  .discern-catalogue-component__surface-picker {
+    display: inline-flex;
+  }
+  .discern-catalogue-component__surface-picker button {
+    position: relative;
+    min-inline-size: 48px;
+    min-block-size: 34px;
+    padding-inline: 10px;
+    border: 1px solid var(--discern-color-border-strong);
+    background: var(--discern-color-surface);
+    color: var(--discern-color-ink-muted);
+    cursor: pointer;
+    font: 650 var(--discern-font-size-xs) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+  }
+  .discern-catalogue-component__surface-picker button:first-child {
+    border-radius: var(--discern-radius-sm) 0 0 var(--discern-radius-sm);
+  }
+  .discern-catalogue-component__surface-picker button:last-child {
+    margin-inline-start: -1px;
+    border-radius: 0 var(--discern-radius-sm) var(--discern-radius-sm) 0;
+  }
+  .discern-catalogue-component__surface-picker button[aria-pressed="true"] {
+    z-index: 1;
+    border-color: var(--discern-color-accent-500);
+    background: var(--discern-color-accent-100);
+    color: var(--discern-color-accent-800);
+  }
+  .discern-catalogue-component__surface-picker button:hover {
+    color: var(--discern-color-ink);
+  }
+  .discern-catalogue-component__surface-picker button:focus-visible {
+    z-index: 2;
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: 2px;
   }
   .discern-catalogue-component > header h4 {
     margin: 0 0 3px;
@@ -989,9 +965,6 @@
       padding-inline: 18px;
     }
     .discern-catalogue-section__header {
-      grid-template-columns: 1fr;
-    }
-    .discern-catalogue-component-controls {
       grid-template-columns: 1fr;
     }
     .discern-catalogue-token-grid,
