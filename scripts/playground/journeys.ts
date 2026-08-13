@@ -469,8 +469,11 @@ const stressJourneys: readonly PlaygroundJourney[] = [
     title: "Label and grapheme stress",
     section: "Stress & lifecycle",
     description:
-      "ZWJ emoji, combining marks, wide CJK, duplicate labels, and very long labels.",
+      "Flag and modifier clusters, combining marks, wide CJK, duplicate labels, and very long labels.",
     run: async (runtime) => {
+      runtime.print(
+        "Note: ZWJ-joined emoji are rejected by prompt label validation (format characters); flag pairs, modifier clusters, and combining marks are within the accepted repertoire.",
+      );
       const single = await promptSelect({
         label: "Grapheme and width stress",
         choices: unicodeStressChoices,

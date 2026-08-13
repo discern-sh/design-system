@@ -101,8 +101,10 @@ export const longGroupedChoices = [
 ] as const satisfies readonly PromptChoiceEntry<string>[];
 
 /**
- * Grapheme, width, and duplication stress: ZWJ emoji, flag sequences,
+ * Grapheme, width, and duplication stress: multi-codepoint clusters,
  * combining marks, wide CJK, duplicate visible labels, and long labels.
+ * ZWJ-joined emoji stay out deliberately: the package rejects
+ * control/format characters (including U+200D) in choice labels.
  */
 export const unicodeStressChoices = [
   {
@@ -110,8 +112,8 @@ export const unicodeStressChoices = [
     id: "heading-graphemes",
     label: "Grapheme clusters",
   },
-  { id: "family", label: "👨‍👩‍👧‍👦 Family cluster", value: "family" },
-  { id: "flag", label: "🏳️‍🌈 Flag sequence", value: "flag" },
+  { id: "flag-pair", label: "🇯🇵 Regional flag pair", value: "flag-pair" },
+  { id: "modifier", label: "👍🏽 Skin-tone modifier", value: "modifier" },
   { id: "combining", label: "Décor (combining mark)", value: "combining" },
   { id: "cjk", label: "設計システムの選択肢", value: "cjk" },
   {
