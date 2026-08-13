@@ -22,11 +22,16 @@ import {
   initialHighlight,
   isBackwardChoiceKey,
   isForwardChoiceKey,
+  isPromptChoice,
   moveEnabledIndex,
 } from "./choice-navigation.ts";
 import { type PromptMachine, runPrompt } from "./driver.ts";
 import { isNamedKey, type TerminalKey } from "./keys.ts";
-import type { PromptChoice, PromptOptions, PromptRuntime } from "./types.ts";
+import type {
+  PromptChoiceEntry,
+  PromptOptions,
+  PromptRuntime,
+} from "./types.ts";
 
 function renderSelectFrame(
   state: SelectFrameState,
@@ -52,7 +57,7 @@ function renderMultiselectFrame(
 
 /** Options for selecting zero or one value from a scrollable choice list. */
 export interface SelectPromptOptions<T> extends PromptOptions<T | undefined> {
-  readonly choices: readonly PromptChoice<T>[];
+  readonly choices: readonly PromptChoiceEntry<T>[];
   readonly initialId?: string;
   readonly visibleCount?: number;
 }
@@ -60,7 +65,7 @@ export interface SelectPromptOptions<T> extends PromptOptions<T | undefined> {
 /** Options for selecting zero or more values from a scrollable choice list. */
 export interface MultiselectPromptOptions<T>
   extends PromptOptions<readonly T[]> {
-  readonly choices: readonly PromptChoice<T>[];
+  readonly choices: readonly PromptChoiceEntry<T>[];
   readonly initialIds?: readonly string[];
   readonly visibleCount?: number;
 }
@@ -71,7 +76,7 @@ class SelectPromptMachine<T>
   #highlighted: number;
 
   constructor(readonly options: SelectPromptOptions<T>) {
-    assertChoices(options.choices);
+    assertChoices(options.choices, options.required !== false);
     this.#visibleCount = choiceVisibleCount(options.visibleCount);
     this.#highlighted = initialHighlight(options.choices, options.initialId);
   }
@@ -95,18 +100,25 @@ class SelectPromptMachine<T>
       this.#highlighted = edgeEnabledIndex(this.options.choices, "last");
     }
     if (!isNamedKey(key, "enter")) return false;
-    const choice = this.options.choices[this.#highlighted];
-    return choice?.disabled !== true &&
-      (choice !== undefined || this.options.required === false);
+    const entry = this.options.choices[this.#highlighted];
+    return (entry !== undefined && isPromptChoice(entry) &&
+      entry.disabled !== true) ||
+      this.options.required === false;
   }
 
   value(): T | undefined {
-    const choice = this.options.choices[this.#highlighted];
-    return choice?.disabled === true ? undefined : choice?.value;
+    const entry = this.options.choices[this.#highlighted];
+    return entry === undefined || !isPromptChoice(entry) ||
+        entry.disabled === true
+      ? undefined
+      : entry.value;
   }
 
   frame(lifecycle: InteractiveFrameLifecycle): SelectFrameState {
-    const selected = this.options.choices[this.#highlighted];
+    const highlighted = this.options.choices[this.#highlighted];
+    const selected = highlighted !== undefined && isPromptChoice(highlighted)
+      ? highlighted
+      : undefined;
     return {
       kind: "select",
       label: this.options.label,
@@ -153,7 +165,12 @@ class MultiselectPromptMachine<T>
     this.#visibleCount = choiceVisibleCount(options.visibleCount);
     const knownIds = new Set(options.choices.map((choice) => choice.id));
     this.#selectedIds = new Set(
-      (options.initialIds ?? []).filter((id) => knownIds.has(id)),
+      (options.initialIds ?? []).filter((id) =>
+        knownIds.has(id) &&
+        options.choices.some((entry) =>
+          isPromptChoice(entry) && entry.id === id
+        )
+      ),
     );
     this.#highlighted = initialHighlight(options.choices, undefined);
   }
@@ -184,8 +201,10 @@ class MultiselectPromptMachine<T>
   }
 
   value(): readonly T[] {
-    return this.options.choices.flatMap((choice) =>
-      this.#selectedIds.has(choice.id) ? [choice.value] : []
+    return this.options.choices.flatMap((entry) =>
+      isPromptChoice(entry) && this.#selectedIds.has(entry.id)
+        ? [entry.value]
+        : []
     );
   }
 
@@ -196,8 +215,10 @@ class MultiselectPromptMachine<T>
       lifecycle,
       options: frameChoices(this.options.choices),
       highlightedIndex: this.#highlighted,
-      selectedIds: this.options.choices.flatMap((choice) =>
-        this.#selectedIds.has(choice.id) ? [choice.id] : []
+      selectedIds: this.options.choices.flatMap((entry) =>
+        isPromptChoice(entry) && this.#selectedIds.has(entry.id)
+          ? [entry.id]
+          : []
       ),
       visibleStart: choiceVisibleStart(
         this.#highlighted,
@@ -210,21 +231,23 @@ class MultiselectPromptMachine<T>
   }
 
   #toggleHighlighted(): void {
-    const choice = this.options.choices[this.#highlighted];
-    if (choice === undefined || choice.disabled === true) return;
-    if (this.#selectedIds.has(choice.id)) this.#selectedIds.delete(choice.id);
-    else this.#selectedIds.add(choice.id);
+    const entry = this.options.choices[this.#highlighted];
+    if (
+      entry === undefined || !isPromptChoice(entry) || entry.disabled === true
+    ) return;
+    if (this.#selectedIds.has(entry.id)) this.#selectedIds.delete(entry.id);
+    else this.#selectedIds.add(entry.id);
   }
 
   #toggleAllEnabled(): void {
-    const enabled = this.options.choices.filter((choice) =>
-      choice.disabled !== true
+    const enabled = this.options.choices.filter((entry) =>
+      isPromptChoice(entry) && entry.disabled !== true
     );
     const allSelected = enabled.length > 0 &&
-      enabled.every((choice) => this.#selectedIds.has(choice.id));
-    for (const choice of enabled) {
-      if (allSelected) this.#selectedIds.delete(choice.id);
-      else this.#selectedIds.add(choice.id);
+      enabled.every((entry) => this.#selectedIds.has(entry.id));
+    for (const entry of enabled) {
+      if (allSelected) this.#selectedIds.delete(entry.id);
+      else this.#selectedIds.add(entry.id);
     }
   }
 }

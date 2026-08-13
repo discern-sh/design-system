@@ -9,11 +9,17 @@ import type {
   SearchFrameState,
   SelectFrameState,
 } from "../../../cli/interactive-states.ts";
+import {
+  isInteractiveChoice,
+  isInteractiveChoiceGroupHeading,
+} from "../../../cli/interactive-choice.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
   type FormCliPresentation,
   insertFormCliCursor,
+  renderFormCliChoiceHeading,
   renderFormCliFrame,
+  visibleFormCliChoiceEntries,
 } from "../form-frame.ts";
 
 /** Inputs accepted by the terminal Radio renderer. */
@@ -95,6 +101,22 @@ export const cliExamples: readonly CliExample<RadioCliProps>[] = [
       lifecycle: { status: "cancelled", reason: "Selection cancelled" },
     },
   },
+  {
+    name: "grouped",
+    props: {
+      ...base,
+      options: [
+        { kind: "group-heading", id: "stable", label: "Stable" },
+        { id: "alpha", label: "Alpha" },
+        { id: "bravo", label: "Bravo" },
+        { kind: "group-heading", id: "preview", label: "Preview" },
+        { id: "charlie", label: "Charlie", disabled: true },
+      ],
+      highlightedIndex: 2,
+      selectedId: "bravo",
+      lifecycle: { status: "active" },
+    },
+  },
 ] as const;
 
 /** Render a Wave 1 single-selection state as a terminal radio group. */
@@ -106,23 +128,50 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
     : state.highlightedIndex;
   if (
     state.kind === "select" &&
-    (options.length === 0 || state.highlightedIndex < 0 ||
-      state.highlightedIndex >= options.length)
+    (!Number.isSafeInteger(state.highlightedIndex) ||
+      (state.highlightedIndex === -1 &&
+        options.some((entry) =>
+          isInteractiveChoice(entry) && entry.disabled !== true
+        )) ||
+      (state.highlightedIndex !== -1 &&
+        (options[state.highlightedIndex] === undefined ||
+          !isInteractiveChoice(options[state.highlightedIndex]!) ||
+          options[state.highlightedIndex]?.disabled === true)))
   ) {
-    throw new TypeError("radio state requires an in-range highlighted option");
+    throw new TypeError(
+      "radio state requires a selectable highlighted option, or -1 when none exist",
+    );
   }
   if (
     state.kind === "search" && highlightedIndex !== undefined &&
-    (highlightedIndex < 0 || highlightedIndex >= options.length)
+    (highlightedIndex < 0 || highlightedIndex >= options.length ||
+      !isInteractiveChoice(options[highlightedIndex]!) ||
+      options[highlightedIndex]?.disabled === true)
   ) {
-    throw new TypeError("search state requires an in-range highlighted result");
+    throw new TypeError(
+      "search state requires a selectable highlighted result",
+    );
   }
   const expanded = props.presentation === undefined &&
     (state.lifecycle.status === "active" ||
       state.lifecycle.status === "validation-error");
-  const choices = options.length === 0
+  const entries = state.kind === "select"
+    ? visibleFormCliChoiceEntries(state)
+    : options.map((entry, sourceIndex) => ({ entry, sourceIndex }));
+  const choices = entries.length === 0
     ? ["No results."]
-    : options.map((option, index) => {
+    : entries.map(({ entry, sourceIndex: index }) => {
+      if (isInteractiveChoiceGroupHeading(entry)) {
+        return renderFormCliChoiceHeading(
+          entry,
+          {
+            ...(props.theme === undefined ? {} : { theme: props.theme }),
+            ...(props.width === undefined ? {} : { width: props.width }),
+          },
+          capabilities,
+        );
+      }
+      const option = entry;
       const selected = state.kind === "search"
         ? state.lifecycle.status === "submitted" && index === highlightedIndex
         : option.id === state.selectedId;

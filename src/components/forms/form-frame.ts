@@ -8,9 +8,14 @@ import { styleText } from "../../cli/ansi.ts";
 import { renderBox } from "../../cli/box.ts";
 import type { TerminalCapabilities } from "../../cli/capabilities.ts";
 import type {
+  InteractiveChoiceGroupHeadingState,
   InteractiveFrameLifecycle,
   SelectFrameState,
 } from "../../cli/interactive-states.ts";
+import {
+  interactiveChoiceWindow,
+  type InteractiveChoiceWindowEntry,
+} from "../../cli/interactive-choice.ts";
 import { joinVertical } from "../../cli/layout.ts";
 import { truncateText } from "../../cli/text.ts";
 import {
@@ -18,6 +23,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../cli/theme.ts";
+import { renderTriangleSectionRule } from "../../cli/triangles.ts";
 
 /** Static presentation layered over an active Wave 1 frame. */
 export type FormCliPresentation =
@@ -70,15 +76,11 @@ function footer(
   return options.hint ?? "";
 }
 
-/** Render label, state, control, and lifecycle message as one form frame. */
-export function renderFormCliFrame(
-  options: FormCliFrameOptions,
+function formCliFrameWidth(
+  requested: number | undefined,
   capabilities: TerminalCapabilities,
-): string {
-  if (options.label.trim() === "") {
-    throw new TypeError("form frame label must be non-empty");
-  }
-  const width = options.width ?? Math.min(48, capabilities.columns);
+): number {
+  const width = requested ?? Math.min(48, capabilities.columns);
   if (!Number.isSafeInteger(width) || width < 8) {
     throw new TypeError(
       `form frame width must be a safe integer of at least 8; received ${width}`,
@@ -90,6 +92,26 @@ export function renderFormCliFrame(
       `terminal width ${capabilities.columns} cannot hold a form frame`,
     );
   }
+  return boundedWidth;
+}
+
+/** Resolve the content width inside one shared form frame. */
+export function formCliControlWidth(
+  requested: number | undefined,
+  capabilities: TerminalCapabilities,
+): number {
+  return formCliFrameWidth(requested, capabilities) - 2;
+}
+
+/** Render label, state, control, and lifecycle message as one form frame. */
+export function renderFormCliFrame(
+  options: FormCliFrameOptions,
+  capabilities: TerminalCapabilities,
+): string {
+  if (options.label.trim() === "") {
+    throw new TypeError("form frame label must be non-empty");
+  }
+  const boundedWidth = formCliFrameWidth(options.width, capabilities);
   const theme = terminalThemes[options.theme ?? "dark"];
   const status = statusLabel(options);
   const tone = statusTone(status);
@@ -142,23 +164,39 @@ export function insertFormCliCursor(
   return graphemes.join("");
 }
 
-/** Resolve the explicit visible window from a Wave 1 Select frame. */
-export function visibleFormCliChoices(
-  state: SelectFrameState,
-): readonly SelectFrameState["options"][number][] {
+/** Resolve a heading-aware visible window from a selection-like frame. */
+export function visibleFormCliChoiceEntries(
+  state: Pick<SelectFrameState, "options" | "visibleStart" | "visibleCount">,
+): readonly InteractiveChoiceWindowEntry[] {
   const start = state.visibleStart ?? 0;
   const count = state.visibleCount ?? state.options.length;
-  if (
-    !Number.isSafeInteger(start) || start < 0 || start > state.options.length
-  ) {
-    throw new TypeError(
-      `select visible start must be between 0 and ${state.options.length}; received ${start}`,
-    );
-  }
-  if (!Number.isSafeInteger(count) || count < 0) {
-    throw new TypeError(
-      `select visible count must be a non-negative safe integer; received ${count}`,
-    );
-  }
-  return state.options.slice(start, start + count);
+  return interactiveChoiceWindow(state.options, start, count);
+}
+
+/** Render a semantic choice heading through the package section-rule authority. */
+export function renderFormCliChoiceHeading(
+  heading: InteractiveChoiceGroupHeadingState,
+  options: {
+    readonly theme?: TerminalThemeVariant;
+    readonly width?: number;
+  },
+  capabilities: TerminalCapabilities,
+): string {
+  const width = formCliControlWidth(options.width, capabilities);
+  const theme = terminalThemes[options.theme ?? "dark"];
+  const gap = theme.spacing["--discern-space-2"] ?? 1;
+  const labelWidth = Math.max(1, width - 2 * gap - 2);
+  const label = truncateText(
+    heading.label,
+    labelWidth,
+    capabilities.unicode ? "…" : ".",
+  );
+  return renderTriangleSectionRule(
+    label,
+    {
+      width,
+      ...(options.theme === undefined ? {} : { theme: options.theme }),
+    },
+    { ...capabilities, columns: width },
+  );
 }

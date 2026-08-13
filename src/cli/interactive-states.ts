@@ -46,15 +46,31 @@ export interface ConfirmFrameState extends InteractiveFrameBase {
 
 /** One addressable option displayed by selection-like frames. */
 export interface InteractiveChoiceState {
+  /** Optional explicit discriminant; omitted choices remain source-compatible. */
+  readonly kind?: "choice";
   readonly id: string;
   readonly label: string;
   readonly disabled?: boolean;
 }
 
+/** One non-selectable semantic group heading in a selection-like frame. */
+export interface InteractiveChoiceGroupHeadingState {
+  readonly kind: "group-heading";
+  readonly id: string;
+  readonly label: string;
+  /** Group headings are structural rather than disabled choices. */
+  readonly disabled?: never;
+}
+
+/** Every value or semantic heading displayed by a selection-like frame. */
+export type InteractiveChoiceEntryState =
+  | InteractiveChoiceState
+  | InteractiveChoiceGroupHeadingState;
+
 /** Visual state for selecting exactly one option. */
 export interface SelectFrameState extends InteractiveFrameBase {
   readonly kind: "select";
-  readonly options: readonly InteractiveChoiceState[];
+  readonly options: readonly InteractiveChoiceEntryState[];
   readonly highlightedIndex: number;
   readonly selectedId?: string;
   readonly visibleStart?: number;
@@ -64,7 +80,7 @@ export interface SelectFrameState extends InteractiveFrameBase {
 /** Visual state for selecting zero or more options. */
 export interface MultiselectFrameState extends InteractiveFrameBase {
   readonly kind: "multiselect";
-  readonly options: readonly InteractiveChoiceState[];
+  readonly options: readonly InteractiveChoiceEntryState[];
   readonly highlightedIndex: number;
   readonly selectedIds: readonly string[];
   readonly visibleStart?: number;
@@ -77,7 +93,7 @@ export interface SearchFrameState extends InteractiveFrameBase {
   readonly query: string;
   /** Grapheme index at which the query cursor is drawn. */
   readonly cursor: number;
-  readonly results: readonly InteractiveChoiceState[];
+  readonly results: readonly InteractiveChoiceEntryState[];
   readonly highlightedIndex?: number;
   readonly placeholder?: string;
 }

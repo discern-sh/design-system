@@ -9,8 +9,17 @@ import type {
   ConfirmFrameState,
   MultiselectFrameState,
 } from "../../../cli/interactive-states.ts";
+import {
+  isInteractiveChoice,
+  isInteractiveChoiceGroupHeading,
+} from "../../../cli/interactive-choice.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
-import { type FormCliPresentation, renderFormCliFrame } from "../form-frame.ts";
+import {
+  type FormCliPresentation,
+  renderFormCliChoiceHeading,
+  renderFormCliFrame,
+  visibleFormCliChoiceEntries,
+} from "../form-frame.ts";
 
 /** Inputs accepted by the terminal Checkbox renderer. */
 interface CheckboxCliOptions {
@@ -81,6 +90,23 @@ export const cliExamples: readonly CliExample<CheckboxCliProps>[] = [
       lifecycle: { status: "cancelled", reason: "Choice cancelled" },
     },
   },
+  {
+    name: "grouped",
+    props: {
+      kind: "multiselect",
+      label: "Capabilities",
+      lifecycle: { status: "active" },
+      options: [
+        { kind: "group-heading", id: "core", label: "Core" },
+        { id: "render", label: "Render frames" },
+        { id: "inspect", label: "Inspect output", disabled: true },
+        { kind: "group-heading", id: "optional", label: "Optional" },
+        { id: "animate", label: "Animate progress" },
+      ],
+      highlightedIndex: 1,
+      selectedIds: ["render"],
+    },
+  },
 ] as const;
 
 /** Render a Wave 1 confirmation state with checkbox semantics. */
@@ -128,37 +154,49 @@ function renderConfirmControl(
 }
 
 function renderMultiselectControl(
-  state: MultiselectFrameState,
+  state: MultiselectFrameState & CheckboxCliOptions,
   active: boolean,
   capabilities: Parameters<CliRenderer<CheckboxCliProps>>[1],
 ): string {
+  const highlighted = state.options[state.highlightedIndex];
+  const selectable = state.options.some((entry) =>
+    isInteractiveChoice(entry) && entry.disabled !== true
+  );
   if (
-    state.options.length > 0 &&
-    (state.highlightedIndex < 0 ||
-      state.highlightedIndex >= state.options.length)
+    !Number.isSafeInteger(state.highlightedIndex) ||
+    (state.highlightedIndex === -1 && selectable) ||
+    (state.highlightedIndex !== -1 &&
+      (highlighted === undefined ||
+        !isInteractiveChoice(highlighted) ||
+        highlighted.disabled === true))
   ) {
     throw new TypeError(
-      "multiselect state requires an in-range highlighted option",
+      "multiselect state requires a selectable highlighted option, or -1 when none exist",
     );
   }
-  const start = state.visibleStart ?? 0;
-  const count = state.visibleCount ?? state.options.length;
-  if (
-    !Number.isSafeInteger(start) || start < 0 || start > state.options.length
-  ) {
+  const headingIds = new Set(
+    state.options.filter(isInteractiveChoiceGroupHeading).map(({ id }) => id),
+  );
+  if (state.selectedIds.some((id) => headingIds.has(id))) {
     throw new TypeError(
-      `multiselect visible start must be between 0 and ${state.options.length}; received ${start}`,
+      "multiselect selected ids cannot include a choice group heading",
     );
   }
-  if (!Number.isSafeInteger(count) || count < 0) {
-    throw new TypeError(
-      `multiselect visible count must be a non-negative safe integer; received ${count}`,
-    );
-  }
-  const choices = state.options.slice(start, start + count);
-  if (choices.length === 0) return "No options.";
-  return choices.map((option, offset) => {
-    const index = start + offset;
+  const entries = visibleFormCliChoiceEntries(state);
+  if (entries.length === 0) return "No options.";
+  return entries.map(({ entry, sourceIndex }) => {
+    if (isInteractiveChoiceGroupHeading(entry)) {
+      return renderFormCliChoiceHeading(
+        entry,
+        {
+          ...(state.theme === undefined ? {} : { theme: state.theme }),
+          ...(state.width === undefined ? {} : { width: state.width }),
+        },
+        capabilities,
+      );
+    }
+    const option = entry;
+    const index = sourceIndex;
     const pointer = active && index === state.highlightedIndex
       ? capabilities.unicode ? "› " : "> "
       : "  ";

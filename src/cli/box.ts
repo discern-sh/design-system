@@ -5,7 +5,7 @@
  */
 
 import type { TerminalCapabilities } from "./capabilities.ts";
-import { styleText, type TerminalTextStyle } from "./ansi.ts";
+import { stripAnsi, styleText, type TerminalTextStyle } from "./ansi.ts";
 import { measureText, padText, truncateText, wrapText } from "./text.ts";
 
 /** Inputs for a bordered terminal text frame. */
@@ -86,9 +86,12 @@ export function renderBox(
       glyphs.horizontal.repeat(width - 2)
     }${glyphs.bottomRight}`,
   );
-  const bodyLines = options.body.split("\n").flatMap((line) =>
-    wrapText(line, innerWidth)
-  );
+  const bodyLines = options.body.split("\n").flatMap((line) => {
+    const wrapped = wrapText(line, innerWidth);
+    return wrapped.length === 1 && stripAnsi(line) === wrapped[0]
+      ? [line]
+      : wrapped;
+  });
   const content = (bodyLines.length === 0 ? [""] : bodyLines).map((line) =>
     `${border(glyphs.vertical)}${" ".repeat(padding)}${
       padText(line, innerWidth)
