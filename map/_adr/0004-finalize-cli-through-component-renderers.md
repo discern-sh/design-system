@@ -14,6 +14,10 @@ Every Component Metadata record declares a CLI stance. A rendered stance and its
 
 `./cli` remains a pure React-free renderer graph over explicit Terminal Capabilities. `./cli/interactive` may import pure Component `*.cli.ts` modules but no `.tsx` module or React. Text, masked, and autocomplete frames render through Input; confirm through Switch; select through Select; multiselect through Checkbox; search through Radio; and textarea through Textarea. Determinate progress renders through Meter, sequential forms through Process steps, and spinner animation stays on the package triangle spinner primitive. The temporary frame renderer is deleted rather than retained as another composition layer.
 
+Choice prompts accept semantic group headings beside value-bearing choices. The public discriminated heading carries identity and visible text but no caller value; every navigation and result operation works over selectable choices only. Select, Checkbox, and Radio render the heading through the package's Token-derived triangle section-rule authority. The shared viewport retains a visible choice's governing heading while scrolling, and search providers use the same entry vocabulary rather than introduce another model.
+
+Fleet keeps compact, width-bounded identity cells as its default and exposes an opt-in lossless policy for operational views. When complete persona or branch text cannot fit a compact cell, the renderer emits an explicit labelled continuation containing the caller value exactly. This is a deliberate local width exception for copyable identity facts, not terminal auto-wrap or a second Fleet composition.
+
 The CLI Catalogue treats the generated stance registry and renderer examples as its inventory. Its all view shows every rendered state and every exemption reason, while its motif sheet calls public triangle APIs. It carries no copied Component frames or private motif constants.
 
 This record supersedes ADR-0002 and ADR-0003 as the final-state account. Their pure-renderer, Token-derived theme, explicit-capability, typed-state, injectable-I/O, and exception-safe lifecycle decisions remain in force through this decision; their pending stance and temporary frame seam do not.
@@ -21,6 +25,8 @@ This record supersedes ADR-0002 and ADR-0003 as the final-state account. Their p
 ## Consequences
 
 A new Component cannot type-check without choosing terminal support or explaining its exemption, and a renderer cannot appear on disk without Metadata enrollment. Interactive output changes when a Component renderer intentionally changes, so exact-frame tests pin that integration rather than a looser semantic assertion. The Interactive Adapter depends on pure Component modules and is therefore wider than the foundation-only graph, but it still introduces neither React nor import-time effects.
+
+Consumers can preserve menu hierarchy without fake disabled values or sentinels in their generic value types, and submitted results remain arrays of caller values in caller order. Consumers that need copyable operational identities can request them without changing the compact Fleet contract for every other caller; in that mode an identity continuation may exceed the nominal frame width so the value remains contiguous.
 
 Keeping a constant zero Standard costs one small measurement script and repeats a rule already enforced by types and Codegen. It preserves the trunk quality contract and makes any future regression fail in more than one surface. Removing pending from the contract also means another staged CLI migration would need an explicit new decision instead of silently omitting stances.
 
