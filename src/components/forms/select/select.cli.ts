@@ -6,11 +6,16 @@
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import type { SelectFrameState } from "../../../cli/interactive-states.ts";
+import {
+  isInteractiveChoice,
+  isInteractiveChoiceGroupHeading,
+} from "../../../cli/interactive-choice.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
   type FormCliPresentation,
+  renderFormCliChoiceHeading,
   renderFormCliFrame,
-  visibleFormCliChoices,
+  visibleFormCliChoiceEntries,
 } from "../form-frame.ts";
 
 /** Inputs accepted by the terminal Select renderer. */
@@ -25,6 +30,13 @@ export interface SelectCliProps extends SelectFrameState {
 const options = [
   { id: "alpha", label: "Alpha" },
   { id: "bravo", label: "Bravo" },
+  { id: "charlie", label: "Charlie", disabled: true },
+] as const;
+const groupedOptions = [
+  { kind: "group-heading", id: "recommended", label: "Recommended" },
+  { id: "alpha", label: "Alpha" },
+  { id: "bravo", label: "Bravo" },
+  { kind: "group-heading", id: "other", label: "Other" },
   { id: "charlie", label: "Charlie", disabled: true },
 ] as const;
 const base = {
@@ -96,26 +108,57 @@ export const cliExamples: readonly CliExample<SelectCliProps>[] = [
       lifecycle: { status: "cancelled", reason: "Selection cancelled" },
     },
   },
+  {
+    name: "grouped",
+    props: {
+      ...base,
+      options: groupedOptions,
+      highlightedIndex: 2,
+      selectedId: "bravo",
+      lifecycle: { status: "active" },
+    },
+  },
 ] as const;
 
 /** Render a Wave 1 single-selection state as a collapsed or expanded terminal Select. */
 const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
   const state = props;
+  const highlighted = state.options[state.highlightedIndex];
+  const selectable = state.options.some((entry) =>
+    isInteractiveChoice(entry) && entry.disabled !== true
+  );
   if (
-    state.options.length === 0 || state.highlightedIndex < 0 ||
-    state.highlightedIndex >= state.options.length
+    !Number.isSafeInteger(state.highlightedIndex) ||
+    (state.highlightedIndex === -1 && selectable) ||
+    (state.highlightedIndex !== -1 &&
+      (highlighted === undefined ||
+        !isInteractiveChoice(highlighted) ||
+        highlighted.disabled === true))
   ) {
-    throw new TypeError("select state requires an in-range highlighted option");
+    throw new TypeError(
+      "select state requires a selectable highlighted option, or -1 when none exist",
+    );
   }
   const expanded = props.presentation === undefined &&
     (state.lifecycle.status === "active" ||
       state.lifecycle.status === "validation-error");
-  const selected = state.options.find((option) =>
-    option.id === state.selectedId
+  const selected = state.options.find((entry) =>
+    isInteractiveChoice(entry) && entry.id === state.selectedId
   );
   const control = expanded
-    ? visibleFormCliChoices(state).map((option) => {
-      const absoluteIndex = state.options.indexOf(option);
+    ? visibleFormCliChoiceEntries(state).map(({ entry, sourceIndex }) => {
+      if (isInteractiveChoiceGroupHeading(entry)) {
+        return renderFormCliChoiceHeading(
+          entry,
+          {
+            ...(props.theme === undefined ? {} : { theme: props.theme }),
+            ...(props.width === undefined ? {} : { width: props.width }),
+          },
+          capabilities,
+        );
+      }
+      const option = entry;
+      const absoluteIndex = sourceIndex;
       const pointer = absoluteIndex === state.highlightedIndex
         ? capabilities.unicode ? "›" : ">"
         : " ";

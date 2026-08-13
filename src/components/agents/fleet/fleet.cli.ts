@@ -5,7 +5,7 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
-import { padText, truncateText } from "../../../cli/text.ts";
+import { measureText, padText, truncateText } from "../../../cli/text.ts";
 import { renderTriangleActivityBeacon } from "../../../cli/triangles.ts";
 import type {
   TerminalSemanticTone,
@@ -45,6 +45,8 @@ export interface FleetCliRow {
 export interface FleetCliProps {
   readonly rows: readonly FleetCliRow[];
   readonly label?: string;
+  /** Preserve complete persona and branch text when compact cells cannot. */
+  readonly identityMode?: "compact" | "lossless";
   readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
@@ -69,6 +71,23 @@ export const cliExamples: readonly CliExample<FleetCliProps>[] = [
           branch: "agent/cli-2a",
           status: "waiting",
           behind: 1,
+        },
+      ],
+    },
+  },
+  {
+    name: "lossless-identities",
+    props: {
+      identityMode: "lossless",
+      maxWidth: 60,
+      rows: [
+        {
+          persona: "Terminal contract audit",
+          branch: "agent/terminal-contract-audit-with-complete-identities",
+          status: "working",
+          ahead: 3,
+          meta: "Reviewing compatibility evidence",
+          beaconPhase: 1,
         },
       ],
     },
@@ -99,6 +118,13 @@ const renderFleetCli: CliRenderer<FleetCliProps> = (props, capabilities) => {
   const width = agentsCliWidth(props.maxWidth, capabilities, 20);
   const label = props.label ?? "Fleet";
   assertAgentsCliText(label, "fleet label");
+  if (
+    props.identityMode !== undefined && props.identityMode !== "compact" &&
+    props.identityMode !== "lossless"
+  ) {
+    throw new TypeError("fleet identity mode must be compact or lossless");
+  }
+  const lossless = props.identityMode === "lossless";
   for (const [index, row] of props.rows.entries()) {
     assertAgentsCliText(row.persona, `fleet row ${index + 1} persona`);
     if (row.branch !== undefined) {
@@ -125,18 +151,27 @@ const renderFleetCli: CliRenderer<FleetCliProps> = (props, capabilities) => {
       const state = row.status === undefined
         ? "idle"
         : row.statusLabel ?? row.status;
+      const identity = agentsPrefixedLines(
+        "",
+        `${row.persona}${capabilities.unicode ? " · " : " - "}${state}`,
+        width,
+      );
       lines.push(styleAgentsHeading(
-        agentsPrefixedLines(
-          "",
-          `${row.persona}${capabilities.unicode ? " · " : " - "}${state}`,
-          width,
-        ).join("\n"),
+        identity.join("\n"),
         row.status === undefined ? "neutral" : statusTones[row.status],
         capabilities,
         props.theme,
       ));
+      if (lossless && !identity.join("\n").includes(row.persona)) {
+        lines.push(`Persona: ${row.persona}`);
+      }
       if (row.branch !== undefined) {
-        lines.push(...agentsFactLines("Branch", row.branch, width));
+        const branch = agentsFactLines("Branch", row.branch, width);
+        if (lossless && !branch.join("\n").includes(row.branch)) {
+          lines.push(`Branch: ${row.branch}`);
+        } else {
+          lines.push(...branch);
+        }
       }
       lines.push(
         ...agentsFactLines("Drift", drift(row, capabilities.unicode), width),
@@ -197,6 +232,15 @@ const renderFleetCli: CliRenderer<FleetCliProps> = (props, capabilities) => {
         truncateText(drift(row, capabilities.unicode), driftWidth)
       }`,
     );
+    if (lossless && measureText(row.persona) > agentWidth) {
+      lines.push(`  Persona: ${row.persona}`);
+    }
+    if (
+      lossless && row.branch !== undefined &&
+      measureText(row.branch) > branchWidth
+    ) {
+      lines.push(`  Branch: ${row.branch}`);
+    }
     if (row.status === "working" && row.beaconPhase !== undefined) {
       const offset = agentWidth + gap.length + branchWidth + gap.length;
       lines.push(`${" ".repeat(offset)}${

@@ -127,3 +127,17 @@ Deno.test("NO_COLOR suppresses ANSI throughout catalogue output", async () => {
   const output = await renderCliCatalogue("badge", capabilities);
   assert(!output.includes(String.fromCharCode(27)));
 });
+
+Deno.test("consumer-hardening examples enrol through Component CLI registries", async () => {
+  const capabilities = testCapabilities({ columns: 80 });
+  const select = await renderCliCatalogue("select", capabilities);
+  assertStringIncludes(select, "#### grouped");
+  assertStringIncludes(select, "Recommended");
+
+  const fleet = await renderCliCatalogue("fleet", capabilities);
+  assertStringIncludes(fleet, "#### lossless-identities");
+  assertStringIncludes(
+    fleet,
+    "agent/terminal-contract-audit-with-complete-identities",
+  );
+});

@@ -33,8 +33,26 @@ export interface PromptRuntime {
 
 /** One stable, labeled value offered by a choice prompt. */
 export interface PromptChoice<T> {
+  /** Optional explicit discriminant; omitted choices remain source-compatible. */
+  readonly kind?: "choice";
   readonly id: string;
   readonly label: string;
   readonly value: T;
   readonly disabled?: boolean;
 }
+
+/** A stable semantic group heading displayed inside a choice prompt. */
+export interface PromptChoiceGroupHeading {
+  readonly kind: "group-heading";
+  readonly id: string;
+  readonly label: string;
+  /** Group headings never carry a caller value. */
+  readonly value?: never;
+  /** Group headings are structural rather than disabled choices. */
+  readonly disabled?: never;
+}
+
+/** Selectable values and semantic group headings accepted by choice prompts. */
+export type PromptChoiceEntry<T> =
+  | PromptChoice<T>
+  | PromptChoiceGroupHeading;

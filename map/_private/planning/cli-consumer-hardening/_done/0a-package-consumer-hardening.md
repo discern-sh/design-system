@@ -1,5 +1,7 @@
 # 0A — Close the two consumer contract gaps
 
+**Status:** complete — release 0.12.1 prepared for the owner-run publication checkpoint.
+
 **Goal:** Make the released design-system CLI safe for its flagship Discern consumer by adding first-class semantic headings to interactive choice lists and an opt-in lossless identity mode to Fleet, then prepare a patch release without publishing it.
 
 **Wave:** 0 — solo in the design-system repository. It precedes the owner-run package release checkpoint and every Discern adoption stream.

@@ -142,13 +142,35 @@ import { promptSelect } from "@discern-sh/design-system/cli/interactive";
 const environment = await promptSelect({
   label: "Environment",
   choices: [
+    {
+      kind: "group-heading",
+      id: "recommended-environments",
+      label: "Recommended",
+    },
     { id: "preview", label: "Preview", value: "preview" },
     { id: "production", label: "Production", value: "production" },
   ],
 });
 ```
 
+The `group-heading` entry is semantic prompt structure: it has a stable ID and non-empty label, needs no sentinel value of the caller's generic type, and can never be highlighted, toggled, or returned. Disabled choices remain selectable entries with their own visible disabled state.
+
 Prompts require TTY stdin and stdout. The adapter brackets raw mode, cursor hiding, repainting, validation, cancellation, and cleanup; exceptions and EOF still restore the terminal. Renderers derive light and dark colour roles from the same Token metadata as the web system, then degrade through truecolour, ANSI 256, ANSI 16, and plain text. `NO_COLOR` disables ANSI styling, non-Unicode terminals receive ASCII geometry, and grapheme-aware measurement keeps frames within the declared column count.
+
+Fleet uses compact, width-bounded identity cells by default. Operational views can opt into complete, copyable persona and branch values; when either value cannot fit its cell, the renderer emits an explicit labelled continuation instead of relying on terminal wrapping:
+
+```ts
+import { renderFleetCli } from "@discern-sh/design-system/cli";
+
+console.log(renderFleetCli({
+  identityMode: "lossless",
+  rows: [{
+    persona: "Terminal contract audit",
+    branch: "agent/terminal-contract-audit-with-complete-identities",
+    status: "working",
+  }],
+}, capabilities));
+```
 
 Run `deno task catalogue:cli` to inspect every rendered Component, every recorded exemption, and the generated triangle motifs. Pass a Component slug or Group name to narrow the output, or `triangles` for the motif sheet alone.
 

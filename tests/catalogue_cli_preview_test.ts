@@ -37,3 +37,21 @@ Deno.test("browser Catalogue projects every declared CLI stance from disk", () =
     }
   }
 });
+
+Deno.test("browser Catalogue enrols grouped prompts and lossless Fleet identities", () => {
+  for (
+    const [slug, exampleName] of [
+      ["select", "grouped"],
+      ["fleet", "lossless-identities"],
+    ] as const
+  ) {
+    const entry = registry.find(({ meta }) => meta.slug === slug);
+    assert(entry !== undefined, `${slug} is missing from the Catalogue`);
+    assertEquals(entry.cli.stance, "rendered");
+    if (entry.cli.stance !== "rendered") continue;
+    assert(
+      entry.cli.examples.some(({ name }) => name === exampleName),
+      `${slug} is missing CLI example ${exampleName}`,
+    );
+  }
+});

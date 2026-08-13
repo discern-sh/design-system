@@ -97,6 +97,7 @@ const checkboxFrames = [
   "Include examples [disabled]\n┌──────────────────────────┐\n│[ ] Not included          │\n└──────────────────────────┘\nDisabled",
   "Include examples [submitted]\n┌──────────────────────────┐\n│[✓] Included              │\n└──────────────────────────┘\n✓ Submitted",
   "Include examples [cancelled]\n┌──────────────────────────┐\n│[ ] Not included          │\n└──────────────────────────┘\n× Choice cancelled",
+  "Capabilities [active]\n┌──────────────────────────┐\n│◮⧩◭⧨◮⧩◭⧨◮⧩ Core ⧩◮⧨◭⧩◮⧨◭⧩◮│\n│› [✓] Render frames       │\n│[ ] Inspect output        │\n│(disabled)                │\n│◮⧩◭⧨◮⧩◭⧨ Optional ⧨◭⧩◮⧨◭⧩◮│\n│[ ] Animate progress      │\n└──────────────────────────┘",
 ] as const;
 
 Deno.test("Checkbox renders every static form state exactly", () => {
@@ -181,6 +182,7 @@ const radioFrames = [
   "Channel [disabled]\n┌──────────────────────────┐\n│◉ Alpha                   │\n│○ Bravo                   │\n│○ Charlie (disabled)      │\n└──────────────────────────┘\nDisabled",
   "Channel [submitted]\n┌──────────────────────────┐\n│○ Alpha                   │\n│◉ Bravo                   │\n│○ Charlie (disabled)      │\n└──────────────────────────┘\n✓ Submitted",
   "Channel [cancelled]\n┌──────────────────────────┐\n│○ Alpha                   │\n│○ Bravo                   │\n│○ Charlie (disabled)      │\n└──────────────────────────┘\n× Selection cancelled",
+  "Channel [active]\n┌──────────────────────────┐\n│◮⧩◭⧨◮⧩◭⧨◮ Stable ◮⧨◭⧩◮⧨◭⧩◮│\n│○ Alpha                   │\n│› ◉ Bravo                 │\n│◮⧩◭⧨◮⧩◭⧨ Preview ⧨◭⧩◮⧨◭⧩◮⧨│\n│○ Charlie (disabled)      │\n└──────────────────────────┘",
 ] as const;
 
 Deno.test("Radio renders every static selection state exactly", () => {
@@ -209,6 +211,7 @@ const selectFrames = [
   "Environment [disabled]\n┌──────────────────────────┐\n│Alpha ⌄                   │\n└──────────────────────────┘\nDisabled",
   "Environment [submitted]\n┌──────────────────────────┐\n│Bravo ⌄                   │\n└──────────────────────────┘\n✓ Submitted",
   "Environment [cancelled]\n┌──────────────────────────┐\n│Choose an option ⌄        │\n└──────────────────────────┘\n× Selection cancelled",
+  "Environment [active]\n┌──────────────────────────┐\n│◮⧩◭⧨◮⧩ Recommended ⧩◮⧨◭⧩◮⧨│\n│[ ] Alpha                 │\n│› [●] Bravo               │\n│◮⧩◭⧨◮⧩◭⧨◮ Other ◮⧨◭⧩◮⧨◭⧩◮⧨│\n│[ ] Charlie (disabled)    │\n└──────────────────────────┘",
 ] as const;
 
 Deno.test("Select renders every static selection state exactly", () => {
@@ -227,6 +230,43 @@ Deno.test("Select covers narrow, standard, wide, colour, and ASCII frames", () =
     selectFrames[1],
     "Environment [active]\n+--------------------------+\n|[ ] Alpha                 |\n|> [ ] Bravo               |\n|[ ] Charlie (disabled)    |\n+--------------------------+",
   );
+});
+
+Deno.test("grouped Select, Checkbox, and Radio retain structure in narrow ASCII frames", () => {
+  const checkbox = checkboxCliExamples.find(({ name }) => name === "grouped");
+  const radio = radioCliExamples.find(({ name }) => name === "grouped");
+  const select = selectCliExamples.find(({ name }) => name === "grouped");
+  if (checkbox === undefined || radio === undefined || select === undefined) {
+    throw new TypeError("grouped form examples must remain enrolled");
+  }
+  const unicode = testCapabilities({ columns: 20 });
+  const ascii = testCapabilities({ columns: 20, unicode: false });
+  const expected = [
+    [
+      renderCheckboxCli,
+      { ...checkbox.props, width: 20 },
+      "Capabilities [activ…\n┌──────────────────┐\n│◮⧩◭⧨◮⧩ Core ⧩◮⧨◭⧩◮│\n│› [✓] Render      │\n│frames            │\n│[ ] Inspect output│\n│(disabled)        │\n│◮⧩◭⧨ Optional ⧨◭⧩◮│\n│[ ] Animate       │\n│progress          │\n└──────────────────┘",
+      "Capabilities [activ.\n+------------------+\n|>v^<>v Core v><^v>|\n|> [x] Render      |\n|frames            |\n|[ ] Inspect output|\n|(disabled)        |\n|>v^< Optional <^v>|\n|[ ] Animate       |\n|progress          |\n+------------------+",
+    ],
+    [
+      renderRadioCli,
+      { ...radio.props, width: 20 },
+      "Channel [active]\n┌──────────────────┐\n│◮⧩◭⧨◮ Stable ◮⧨◭⧩◮│\n│○ Alpha           │\n│› ◉ Bravo         │\n│◮⧩◭⧨ Preview ⧨◭⧩◮⧨│\n│○ Charlie         │\n│(disabled)        │\n└──────────────────┘",
+      "Channel [active]\n+------------------+\n|>v^<> Stable ><^v>|\n|( ) Alpha         |\n|> (*) Bravo       |\n|>v^< Preview <^v><|\n|( ) Charlie       |\n|(disabled)        |\n+------------------+",
+    ],
+    [
+      renderSelectCli,
+      { ...select.props, width: 20 },
+      "Environment [active]\n┌──────────────────┐\n│◮⧩ Recommended ⧩◮⧨│\n│[ ] Alpha         │\n│› [●] Bravo       │\n│◮⧩◭⧨◮ Other ◮⧨◭⧩◮⧨│\n│[ ] Charlie       │\n│(disabled)        │\n└──────────────────┘",
+      "Environment [active]\n+------------------+\n|>v Recommended v><|\n|[ ] Alpha         |\n|> [*] Bravo       |\n|>v^<> Other ><^v><|\n|[ ] Charlie       |\n|(disabled)        |\n+------------------+",
+    ],
+  ] as const;
+
+  for (const [render, props, unicodeFrame, asciiFrame] of expected) {
+    const renderFrame = render as Renderer<typeof props>;
+    assertExactFrame(renderFrame(props, unicode), unicodeFrame, unicode);
+    assertExactFrame(renderFrame(props, ascii), asciiFrame, ascii);
+  }
 });
 
 const switchFrames = [

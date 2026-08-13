@@ -1,3 +1,5 @@
+import { assert } from "@std/assert";
+import { stripAnsi, styleText } from "../../src/cli/ansi.ts";
 import { renderBox } from "../../src/cli/box.ts";
 import { assertExactFrame, testCapabilities } from "./helpers.ts";
 
@@ -21,6 +23,23 @@ Deno.test("box bodies wrap to their derived inner width", () => {
   assertExactFrame(
     renderBox({ body: "one two three", width: 12 }, capabilities),
     "┌──────────┐\n│ one two  │\n│ three    │\n└──────────┘",
+    capabilities,
+  );
+});
+
+Deno.test("box bodies preserve fitting Token-styled structural lines", () => {
+  const capabilities = testCapabilities({
+    colorDepth: "truecolor",
+    columns: 12,
+  });
+  const frame = renderBox({
+    body: styleText("Section", { bold: true }, capabilities),
+    width: 12,
+  }, capabilities);
+  assert(frame.includes(String.fromCharCode(27)));
+  assertExactFrame(
+    stripAnsi(frame),
+    "┌──────────┐\n│ Section  │\n└──────────┘",
     capabilities,
   );
 });
