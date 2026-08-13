@@ -461,6 +461,7 @@ export const themeTokens: readonly ThemeToken[] = [
     "1",
     "0",
     "Visibility of original multicolour artwork when a monochrome dark-mode mask is available.",
+    "Motion",
   ),
 ];
 
