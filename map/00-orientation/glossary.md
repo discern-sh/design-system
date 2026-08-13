@@ -114,7 +114,11 @@ The local component browser under [`styleguide/`](../../styleguide/), built by [
 
 ### CLI Catalogue
 
-The stdout component browser run by `deno task catalogue:cli`. It derives Component examples and exemption reasons from the CLI Registry and renderer modules, adds specimens generated from the public triangle APIs, and narrows by Group, Component, or motif sheet.
+The stdout component browser run by `deno task catalogue:cli`. It derives Component examples and exemption reasons from the CLI Registry and renderer modules through the shared [`cli-inventory.ts`](../../scripts/cli-inventory.ts) authority, adds specimens generated from the public triangle APIs, and narrows by Group, Component, or motif sheet.
+
+### CLI Playground
+
+The live terminal review surface run by `deno task playground:cli`. It drives every high-level Interactive Adapter API through named journeys, browses the same generated inventory as the CLI Catalogue, and adds stress journeys for viewport, grapheme, degradation, and repeated-prompt review. `--list`, `tour`, and direct journey IDs are scriptable; it is a repository instrument, not a published command.
 
 ---
 

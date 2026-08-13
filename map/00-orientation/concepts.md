@@ -31,7 +31,7 @@ Codegen reads the Metadata and derives the Registry, React export surface, CLI s
 
 **Terminal consumption.** A consumer imports `./cli`, detects or declares its terminal colour depth, columns, and Unicode support, and passes those capabilities to a pure renderer. The renderer returns a bounded string. Light and dark terminal colours, ANSI fallbacks, spacing cells, and type attributes derive from the same Token metadata as web output. A Deno consumer may opt into `./cli/interactive`; its prompt state machines own raw input and repainting while delegating every form frame to the same Component renderers.
 
-**Presentation.** The Catalogue ([`styleguide/`](../../styleguide/)) is the local web component browser: `deno task serve` builds the full Runtime plus the example registry and serves it for human review. The CLI Catalogue (`deno task catalogue:cli`) prints every rendered Component example, every reasoned exemption, and the generated Triangle motifs sheet; a Group, Component slug, or `triangles` narrows it.
+**Presentation.** The Catalogue ([`styleguide/`](../../styleguide/)) is the local web component browser: `deno task serve` builds the full Runtime plus the example registry and serves it for human review. The CLI Catalogue (`deno task catalogue:cli`) prints every rendered Component example, every reasoned exemption, and the generated Triangle motifs sheet; a Group, Component slug, or `triangles` narrows it. The CLI Playground (`deno task playground:cli`) is the live counterpart: named journeys exercise every high-level interactive API and browse the same generated inventory in a real terminal.
 
 ---
 
