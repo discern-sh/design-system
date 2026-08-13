@@ -197,6 +197,20 @@ export async function renderCliComponent(
   return `### ${name} (\`${slug}\`)\n\n${specimens.join("\n\n")}`;
 }
 
+/** Render every recorded CLI exemption with its identity and reason. */
+export function renderCliExemptions(): string {
+  const records: string[] = [];
+  for (const fact of listCliComponents()) {
+    if (fact.entry.stance !== "exempt") continue;
+    records.push(`${fact.name} (\`${fact.slug}\`) — ${fact.entry.reason}`);
+  }
+  return [
+    `${records.length} recorded CLI exemptions`,
+    "",
+    records.join("\n\n"),
+  ].join("\n");
+}
+
 function motifWidth(capabilities: TerminalCapabilities): number {
   return Math.min(32, capabilities.columns);
 }
