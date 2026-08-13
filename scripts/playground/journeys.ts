@@ -25,7 +25,10 @@ import {
 } from "../../src/cli/interactive/mod.ts";
 import {
   detectTerminalCapabilities,
+  measureText,
+  renderTrianglePattern,
   renderTriangleSectionRule,
+  type TerminalCapabilities,
 } from "../../src/cli/mod.ts";
 import {
   renderCliExemptions,
@@ -43,6 +46,23 @@ import {
   unicodeStressChoices,
 } from "./fixtures.ts";
 import type { PlaygroundJourney, PlaygroundRuntime } from "./types.ts";
+
+/**
+ * Render a journey heading that can never throw: the triangle section rule
+ * when the title fits its width contract with margin to spare, otherwise
+ * the plain title. Playground chrome must not crash any terminal a
+ * journey is reviewing.
+ */
+function journeyHeading(
+  title: string,
+  capabilities: TerminalCapabilities,
+): string {
+  const width = Math.min(48, capabilities.columns);
+  if (measureText(title) + 6 <= width) {
+    return renderTriangleSectionRule(title, { width }, capabilities);
+  }
+  return title;
+}
 
 function describeResult(value: unknown): string {
   if (value === undefined) return "undefined (nothing selected)";
@@ -487,7 +507,7 @@ const stressJourneys: readonly PlaygroundJourney[] = [
     },
   },
   {
-    id: "stress-desk-loop",
+    id: "stress-reopen-loop",
     title: "Repeated selection loop",
     section: "Stress & lifecycle",
     description:
@@ -560,9 +580,7 @@ const stressJourneys: readonly PlaygroundJourney[] = [
       const capabilities = io.capabilities();
       print("Width probe at the full current column count:");
       print(
-        renderTriangleSectionRule("Width probe", {
-          width: capabilities.columns,
-        }, capabilities),
+        renderTrianglePattern({ length: capabilities.columns }, capabilities),
       );
       print(
         "Rerun this journey in narrow (~40), ordinary (~80), and very wide (160+) terminals, and in limited-height and generous-height windows.",
@@ -636,11 +654,7 @@ export async function runJourney(
 ): Promise<"completed" | "cancelled"> {
   const capabilities = runtime.io.capabilities();
   runtime.print("");
-  runtime.print(
-    renderTriangleSectionRule(journey.title, {
-      width: Math.min(48, capabilities.columns),
-    }, capabilities),
-  );
+  runtime.print(journeyHeading(journey.title, capabilities));
   runtime.print(`[${journey.id}] ${journey.description}`);
   runtime.print(renderTerminalFacts(runtime.io));
   try {

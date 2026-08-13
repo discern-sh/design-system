@@ -89,9 +89,9 @@ Deno.test("playground selectors resolve every mode and reject unknowns", () => {
   assertEquals(resolvePlaygroundSelection(["list"]), { kind: "list" });
   assertEquals(resolvePlaygroundSelection(["--help"]), { kind: "list" });
   assertEquals(resolvePlaygroundSelection(["tour"]), { kind: "tour" });
-  assertEquals(resolvePlaygroundSelection(["stress-desk-loop"]), {
+  assertEquals(resolvePlaygroundSelection(["stress-reopen-loop"]), {
     kind: "journey",
-    id: "stress-desk-loop",
+    id: "stress-reopen-loop",
   });
   const unknown = assertThrows(
     () => resolvePlaygroundSelection(["unknown-journey"]),
@@ -392,7 +392,7 @@ Deno.test("repeated journey runs share no orchestration state", async () => {
   assertEquals(await runSixteen(), await runSixteen());
 });
 
-Deno.test("desk loop reopens 16-row prompts across passes and exits on demand", async () => {
+Deno.test("reopen loop drives 16-row prompts across passes and exits on demand", async () => {
   const io = new FakeTerminal(
     [
       ENTER,
@@ -407,7 +407,7 @@ Deno.test("desk loop reopens 16-row prompts across passes and exits on demand", 
     { columns: 60, rows: 30 },
   );
   assertEquals(
-    await runJourney(journey("stress-desk-loop"), testRuntime(io)),
+    await runJourney(journey("stress-reopen-loop"), testRuntime(io)),
     "completed",
   );
   assertStringIncludes(io.output(), "Pass 1");
@@ -502,6 +502,24 @@ Deno.test("tour skips a cancelled journey only after explicit consent", async ()
   assertStringIncludes(io.output(), "Journey cancelled (Cancelled.)");
   assertStringIncludes(io.output(), "Tour ended early.");
   assertEquals(io.rawTransitions.at(-1), false);
+});
+
+Deno.test("every journey survives every terminal width without throwing", async () => {
+  // 12 columns is the package's own floor: the marketing frame behind
+  // sequential forms rejects anything narrower, so the sweep starts there.
+  for (const columns of [12, 24, 28, 30, 31, 32, 48, 80]) {
+    for (const entry of playgroundJourneys) {
+      const io = new FakeTerminal([], { columns });
+      const runtime = testRuntime(io, {
+        degradedIo: () => new FakeTerminal([], { columns }),
+      });
+      const outcome = await runJourney(entry, runtime);
+      assert(
+        outcome === "completed" || outcome === "cancelled",
+        `journey ${entry.id} at ${columns} columns returned ${outcome}`,
+      );
+    }
+  }
 });
 
 Deno.test("journey wrapper rethrows non-cancellation faults", async () => {
