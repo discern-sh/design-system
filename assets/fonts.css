@@ -31,49 +31,11 @@
   src: url("./fonts/jetbrains-mono.woff2") format("woff2");
 }
 
-@font-face {
-  font-family: "Discern Crimson Fallback Iowan";
-  font-style: normal;
-  font-weight: 200 599;
-  src: local("IowanOldStyle-Roman");
-  size-adjust: 87.88%;
-  ascent-override: 102.41%;
-  descent-override: 23.9%;
-  line-gap-override: 0%;
-}
-
-@font-face {
-  font-family: "Discern Crimson Fallback Iowan";
-  font-style: normal;
-  font-weight: 600 900;
-  src: local("IowanOldStyle-Bold");
-  size-adjust: 87.22%;
-  ascent-override: 103.19%;
-  descent-override: 24.08%;
-  line-gap-override: 0%;
-}
-
-@font-face {
-  font-family: "Discern Crimson Fallback Iowan";
-  font-style: italic;
-  font-weight: 200 599;
-  src: local("IowanOldStyle-Italic");
-  size-adjust: 92.74%;
-  ascent-override: 97.05%;
-  descent-override: 22.64%;
-  line-gap-override: 0%;
-}
-
-@font-face {
-  font-family: "Discern Crimson Fallback Iowan";
-  font-style: italic;
-  font-weight: 600 900;
-  src: local("IowanOldStyle-BoldItalic");
-  size-adjust: 92.94%;
-  ascent-override: 96.84%;
-  descent-override: 22.6%;
-  line-gap-override: 0%;
-}
+/*
+ * Iowan is a native first choice and never swaps. On hosts without it,
+ * Crimson Pro becomes the loading target, so the serif alias stays calibrated
+ * to Crimson rather than Iowan.
+ */
 
 @font-face {
   font-family: "Discern Crimson Fallback Georgia";
@@ -164,8 +126,9 @@
 }
 
 :where([data-discern-root]) {
-  --discern-font-display: "Crimson Pro", "Discern Crimson Fallback Iowan",
-    "Discern Crimson Fallback Georgia", "Iowan Old Style", Georgia, serif;
+  --discern-font-display: "Iowan Old Style", "Crimson Pro",
+    "Discern Crimson Fallback Georgia", "Palatino Linotype", Georgia,
+    ui-serif, serif;
   --discern-font-body: "Inter", "Discern Inter Fallback Helvetica",
     "Discern Inter Fallback Arial", "Helvetica Neue", Arial, system-ui,
     sans-serif;

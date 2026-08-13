@@ -35,7 +35,7 @@ Generated foundations apply only inside an opted-in boundary. Put `data-discern-
 
 Load the emitted `discern.css` before consumer composition styles. Semantic HTML never requires React; most Components remain CSS-only, while Components that declare browser behavior name their emitted script in the Manifest. Public classes, custom properties, data attributes, layers, and keyframes use the `discern` namespace. Consumer styles may add their own composition class, but must not target a Component's `ownedClasses` from `manifest.json`.
 
-Core typography uses documented system fallbacks. Selecting the optional font pack changes the public font-role tokens without changing component CSS. Metric-adjusted Iowan, Georgia, Helvetica Neue, and Arial aliases reduce geometry movement while the intended webfonts load.
+Core typography uses documented system fallbacks. Selecting the optional font pack preserves Iowan Old Style as the display lead and adds bundled Crimson Pro behind it without changing component CSS. Metric-adjusted Georgia, Helvetica Neue, and Arial aliases reduce geometry movement while the downloadable fonts load.
 
 ## Emit a selected runtime
 

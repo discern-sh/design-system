@@ -1298,9 +1298,10 @@ async function verifyThemeSystem(
       );
     }
 
-    const fontCases = await availableFontMetricCases(
-      page,
-      fontMetricAudit.browserCases,
+    const { browserCases } = fontMetricAudit;
+    const fontCases = await availableFontMetricCases(page, browserCases);
+    failures.push(
+      ...fontCases.failures.map((failure) => `Font loading: ${failure}`),
     );
     const fontGeometry = await page.evaluate(({ metrics, skipped }) => {
       const consumer = document.querySelector<HTMLElement>(
@@ -1318,10 +1319,9 @@ async function verifyThemeSystem(
       }
       const roleStacks = {
         "--discern-font-display": [
-          '"Crimson Pro"',
-          '"Discern Crimson Fallback Iowan"',
-          '"Discern Crimson Fallback Georgia"',
-          "serif",
+          '"Iowan Old Style", "Crimson Pro"',
+          '"Discern Crimson Fallback Georgia", "Palatino Linotype", Georgia,',
+          "ui-serif, serif",
         ],
         "--discern-font-body": [
           '"Inter"',

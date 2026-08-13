@@ -4,6 +4,10 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## Unreleased
+
+- Make Iowan Old Style the primary display face in both the core system stack and optional font provider, with bundled Crimson Pro as its first portable fallback. Remove the redundant Crimson-matched Iowan aliases; on hosts without Iowan, the remaining Georgia alias stays calibrated to Crimson Pro because Crimson is the font that loads and swaps in. The browser gate now resolves every target and local stand-in at each probe weight before measuring their geometry, so an earlier native face cannot leave a later downloadable target in its temporary fallback state.
+
 ## 0.12.2
 
 - Separate Unicode repertoire, ANSI colour, and ANSI cursor-control detection so `C.UTF-8`, `C.utf8`, and UTF-8 redirected output retain Unicode triangle geometry without receiving unsupported colour or cursor escapes. The public capability record adds source-compatible optional `ansiControl`, and the inline painter returns typed painted, unchanged, or refused results instead of partially replacing frames that exceed the viewport.

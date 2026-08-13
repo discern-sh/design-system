@@ -623,6 +623,12 @@ Deno.test("all selection and repeated emission are byte-for-byte deterministic",
 });
 
 Deno.test("font and grain assets are independent, licensed, and integrity-mapped", async () => {
+  const systemDisplay = baseTokens.find(({ name }) =>
+    name === "--discern-font-display"
+  );
+  assert(systemDisplay !== undefined);
+  assertMatch(systemDisplay.value, /^"Iowan Old Style",/);
+
   const fonts = await Deno.makeTempDir();
   const grain = await Deno.makeTempDir();
   try {
@@ -640,8 +646,9 @@ Deno.test("font and grain assets are independent, licensed, and integrity-mapped
     const fontCss = await Deno.readTextFile(join(fonts, "fonts.css"));
     for (
       const fragment of [
-        '--discern-font-display: "Crimson Pro", "Discern Crimson Fallback Iowan",',
-        '"Discern Crimson Fallback Georgia", "Iowan Old Style", Georgia, serif;',
+        '--discern-font-display: "Iowan Old Style", "Crimson Pro",',
+        '"Discern Crimson Fallback Georgia", "Palatino Linotype", Georgia,',
+        "ui-serif, serif;",
         '--discern-font-body: "Inter", "Discern Inter Fallback Helvetica",',
         '"Discern Inter Fallback Arial", "Helvetica Neue", Arial, system-ui,',
         '--discern-font-ui: "Inter", "Discern Inter Fallback Helvetica",',
@@ -650,6 +657,7 @@ Deno.test("font and grain assets are independent, licensed, and integrity-mapped
     ) {
       assertStringIncludes(fontCss, fragment);
     }
+    assert(!fontCss.includes("Discern Crimson Fallback Iowan"));
     const metricAssets = await Promise.all(
       bundledFontMetricSources().map(async (source) => ({
         source,

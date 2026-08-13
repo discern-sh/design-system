@@ -2,6 +2,7 @@ import type { Page } from "playwright-core";
 import type { FontMetricBrowserCase } from "./font-metric-overrides.ts";
 
 const OPTIONAL_LOCAL_FONT_TIMEOUT_MS = 500;
+const REQUIRED_TARGET_FONT_TIMEOUT_MS = 2_000;
 
 export interface FontLoadRequest {
   readonly font: string;
@@ -10,7 +11,7 @@ export interface FontLoadRequest {
 
 type FontLoader = (font: string) => PromiseLike<readonly unknown[]>;
 
-/** Report whether one optional font resolves before its local-only deadline. */
+/** Report whether one font resolves before its bounded deadline. */
 export async function fontLoadsWithin(
   request: FontLoadRequest,
   load: FontLoader = (font) => document.fonts.load(font),
@@ -31,26 +32,43 @@ export async function fontLoadsWithin(
   }
 }
 
-/** Keep installed metric aliases and name those unavailable on this machine. */
+/**
+ * Load every target and keep metric cases whose optional aliases also resolve.
+ */
 export async function availableFontMetricCases(
   page: Page,
   cases: readonly FontMetricBrowserCase[],
 ): Promise<{
   readonly available: readonly FontMetricBrowserCase[];
+  readonly failures: readonly string[];
   readonly skipped: readonly string[];
 }> {
   const available: FontMetricBrowserCase[] = [];
+  const failures: string[] = [];
   const skipped: string[] = [];
   for (const candidate of cases) {
-    let installed = true;
+    let fallbackAvailable = true;
+    let targetAvailable = true;
     for (const weight of candidate.weights) {
-      installed &&= await page.evaluate(fontLoadsWithin, {
-        font: `${candidate.style} ${weight} 64px ${candidate.fallback}`,
+      const font = `${candidate.style} ${weight} 64px`;
+      const targetLoaded = await page.evaluate(fontLoadsWithin, {
+        font: `${font} ${candidate.target}`,
+        timeoutMs: REQUIRED_TARGET_FONT_TIMEOUT_MS,
+      });
+      const fallbackLoaded = await page.evaluate(fontLoadsWithin, {
+        font: `${font} ${candidate.fallback}`,
         timeoutMs: OPTIONAL_LOCAL_FONT_TIMEOUT_MS,
       });
+      targetAvailable &&= targetLoaded;
+      fallbackAvailable &&= fallbackLoaded;
+      if (!targetLoaded) {
+        failures.push(
+          `${candidate.name} target ${candidate.target} did not load at ${weight}`,
+        );
+      }
     }
-    if (installed) available.push(candidate);
-    else skipped.push(candidate.name);
+    if (!fallbackAvailable) skipped.push(candidate.name);
+    if (targetAvailable && fallbackAvailable) available.push(candidate);
   }
-  return { available, skipped };
+  return { available, failures, skipped };
 }

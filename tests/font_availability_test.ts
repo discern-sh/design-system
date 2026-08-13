@@ -38,16 +38,47 @@ Deno.test("an unresolved optional font load is bounded", async () => {
   assertEquals(result, false);
 });
 
-Deno.test("a metric case needs every measured weight to load", async () => {
-  const probes: string[] = [];
+Deno.test(
+  "every future metric case loads its target and fallback before measurement",
+  async () => {
+    const probes: string[] = [];
+    const page = {
+      evaluate: (
+        _evaluate: unknown,
+        candidate: { readonly font: string },
+      ): Promise<boolean> => {
+        probes.push(candidate.font);
+        return Promise.resolve(true);
+      },
+    } as unknown as Page;
+    const candidate = {
+      name: "Future Typeface italic",
+      target: '"Future Primary"',
+      fallback: '"Future Substitute"',
+      style: "italic",
+      weights: [350, 725],
+    } as const;
+    const result = await availableFontMetricCases(page, [candidate]);
+
+    assertEquals(probes, [
+      'italic 350 64px "Future Primary"',
+      'italic 350 64px "Future Substitute"',
+      'italic 725 64px "Future Primary"',
+      'italic 725 64px "Future Substitute"',
+    ]);
+    assertEquals(result.available, [candidate]);
+    assertEquals(result.failures, []);
+    assertEquals(result.skipped, []);
+  },
+);
+
+Deno.test("an unavailable optional fallback skips a fully loaded target", async () => {
   const page = {
     evaluate: (
       _evaluate: unknown,
       candidate: { readonly font: string },
-    ): Promise<boolean> => {
-      probes.push(candidate.font);
-      return Promise.resolve(!candidate.font.includes("600"));
-    },
+    ): Promise<boolean> =>
+      Promise.resolve(!candidate.font.includes('600 64px "Optional Alias"')),
   } as unknown as Page;
   const result = await availableFontMetricCases(page, [{
     name: "Optional Alias normal",
@@ -57,10 +88,35 @@ Deno.test("a metric case needs every measured weight to load", async () => {
     weights: [400, 600],
   }]);
 
-  assertEquals(probes, [
-    'normal 400 64px "Optional Alias"',
-    'normal 600 64px "Optional Alias"',
-  ]);
   assertEquals(result.available, []);
+  assertEquals(result.failures, []);
   assertEquals(result.skipped, ["Optional Alias normal"]);
 });
+
+Deno.test(
+  "an unavailable required target fails instead of becoming an optional skip",
+  async () => {
+    const page = {
+      evaluate: (
+        _evaluate: unknown,
+        candidate: { readonly font: string },
+      ): Promise<boolean> =>
+        Promise.resolve(
+          !candidate.font.includes('700 64px "Required Target"'),
+        ),
+    } as unknown as Page;
+    const result = await availableFontMetricCases(page, [{
+      name: "Required Target/Local Stand-in normal",
+      target: '"Required Target"',
+      fallback: '"Local Stand-in"',
+      style: "normal",
+      weights: [400, 700],
+    }]);
+
+    assertEquals(result.available, []);
+    assertEquals(result.failures, [
+      'Required Target/Local Stand-in normal target "Required Target" did not load at 700',
+    ]);
+    assertEquals(result.skipped, []);
+  },
+);
