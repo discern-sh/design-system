@@ -3,6 +3,7 @@ import type { TerminalIO, TerminalSize } from "../../src/cli/interactive/io.ts";
 
 /** Configuration for a queue-backed deterministic terminal. */
 export interface FakeTerminalOptions {
+  readonly ansiControl?: boolean;
   readonly interactive?: boolean;
   readonly colorDepth?: TerminalCapabilities["colorDepth"];
   readonly columns?: number;
@@ -16,6 +17,7 @@ const encoder = new TextEncoder();
 export class FakeTerminal implements TerminalIO {
   readonly writes: string[] = [];
   readonly rawTransitions: boolean[] = [];
+  readonly #ansiControl: boolean;
   readonly #chunks: Uint8Array[];
   readonly #interactive: boolean;
   readonly #colorDepth: TerminalCapabilities["colorDepth"];
@@ -30,6 +32,7 @@ export class FakeTerminal implements TerminalIO {
     this.#chunks = chunks.map((chunk) =>
       typeof chunk === "string" ? encoder.encode(chunk) : chunk.slice()
     );
+    this.#ansiControl = options.ansiControl ?? true;
     this.#interactive = options.interactive ?? true;
     this.#colorDepth = options.colorDepth ?? "none";
     this.#columns = options.columns ?? 80;
@@ -43,6 +46,7 @@ export class FakeTerminal implements TerminalIO {
 
   capabilities(): TerminalCapabilities {
     return {
+      ansiControl: this.#ansiControl,
       colorDepth: this.#colorDepth,
       columns: this.#columns,
       unicode: this.#unicode,

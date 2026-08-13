@@ -245,6 +245,70 @@ Deno.test("spinner advances every triangle phase and restores cursor", async () 
   assertEquals(io.writes.at(-1), SHOW_TERMINAL_CURSOR);
 });
 
+Deno.test("no-control terminals keep Unicode and use static interactive frames", async () => {
+  const choices = [
+    { id: "one", label: "One", value: 1 },
+    { id: "two", label: "Two", value: 2 },
+  ] as const;
+  const io = new FakeTerminal(["\x1b[B\r"], {
+    ansiControl: false,
+    columns: 24,
+    rows: 4,
+    unicode: true,
+  });
+  assertEquals(
+    await promptSelect({ label: "Pick", choices }, { io }),
+    2,
+  );
+  assertStringIncludes(io.output(), "› [●] One");
+  assertStringIncludes(io.output(), "› [●] Two");
+  assert(!io.output().includes("\x1b"));
+  assertEquals(io.rawTransitions, [true, false]);
+
+  let scheduled = false;
+  const spinnerIo = new FakeTerminal([], {
+    ansiControl: false,
+    columns: 20,
+    unicode: true,
+  });
+  await withSpinner({
+    label: "Work",
+    io: spinnerIo,
+    scheduler: {
+      repeat() {
+        scheduled = true;
+        return () => {};
+      },
+    },
+  }, () => undefined);
+  assertEquals(scheduled, false);
+  assertEquals(spinnerIo.writes, ["◮ Work\n"]);
+});
+
+Deno.test("oversized prompts emit static frames without inline erasure", async () => {
+  const io = new FakeTerminal(["\x1b[B\r"], {
+    ansiControl: true,
+    columns: 24,
+    rows: 2,
+    unicode: true,
+  });
+  assertEquals(
+    await promptSelect({
+      label: "Pick",
+      choices: [
+        { id: "one", label: "One", value: 1 },
+        { id: "two", label: "Two", value: 2 },
+      ],
+    }, { io }),
+    2,
+  );
+  assertStringIncludes(io.output(), "› [●] One");
+  assertStringIncludes(io.output(), "› [●] Two");
+  assert(!io.output().includes("\x1b[1G"));
+  assert(!io.output().includes("\x1b[J"));
+  assertEquals(io.rawTransitions, [true, false]);
+});
+
 Deno.test("spinner and progress restore cursor after callback failures", async () => {
   const spinnerIo = new FakeTerminal();
   await assertRejects(

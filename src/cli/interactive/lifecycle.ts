@@ -38,8 +38,10 @@ export async function withHiddenTerminalCursor<T>(
   let cursorAttempted = false;
   let outcome: Outcome<T>;
   try {
-    cursorAttempted = true;
-    io.write(HIDE_TERMINAL_CURSOR);
+    if (io.capabilities().ansiControl !== false) {
+      cursorAttempted = true;
+      io.write(HIDE_TERMINAL_CURSOR);
+    }
     outcome = { ok: true, value: await operation() };
   } catch (error) {
     outcome = { ok: false, error };
@@ -73,8 +75,10 @@ export async function withRawTerminal<T>(
   try {
     rawAttempted = true;
     io.setRawMode(true);
-    cursorAttempted = true;
-    io.write(HIDE_TERMINAL_CURSOR);
+    if (io.capabilities().ansiControl !== false) {
+      cursorAttempted = true;
+      io.write(HIDE_TERMINAL_CURSOR);
+    }
     outcome = { ok: true, value: await operation() };
   } catch (error) {
     outcome = { ok: false, error };

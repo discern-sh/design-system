@@ -109,16 +109,30 @@ export async function withSpinner<T>(
   return await withHiddenTerminalCursor(io, async () => {
     const painter = new InlineFramePainter(io);
     let phase = 0;
+    let staticMode = false;
+    let stop = (): void => {};
     const paint = (): void => {
-      painter.replace(renderSpinner(
+      if (staticMode) return;
+      const frame = renderSpinner(
         spinnerFrame(options, phase),
         io.capabilities(),
         options.theme,
-      ));
+      );
+      const result = painter.replace(frame);
+      if (result.status === "refused") {
+        painter.finish();
+        io.write(`${frame}\n`);
+        staticMode = true;
+        stop();
+        return;
+      }
       phase = (phase + 1) % DISCERN_TRIANGLE_SPINNER_ORDER.length;
     };
     paint();
-    const stop = scheduler.repeat(paint, interval);
+    if (!staticMode) {
+      stop = scheduler.repeat(paint, interval);
+      if (staticMode) stop();
+    }
     try {
       return await operation();
     } finally {
@@ -171,6 +185,7 @@ function assertCompleted(completed: number, total: number): void {
 
 class ProgressController implements DeterminateProgressController {
   #completed: number;
+  #staticMode = false;
 
   constructor(
     readonly options: DeterminateProgressOptions,
@@ -214,13 +229,23 @@ class ProgressController implements DeterminateProgressController {
       total: this.total,
       ...(this.options.hint === undefined ? {} : { hint: this.options.hint }),
     };
-    this.painter.replace(renderMeterCli({
+    const frame = renderMeterCli({
       ...state,
       ...(this.options.theme === undefined
         ? {}
         : { theme: this.options.theme }),
       width: Math.min(48, this.io.capabilities().columns),
-    }, this.io.capabilities()));
+    }, this.io.capabilities());
+    if (this.#staticMode) {
+      this.io.write(`${frame}\n`);
+      return;
+    }
+    const result = this.painter.replace(frame);
+    if (result.status === "refused") {
+      this.painter.finish();
+      this.io.write(`${frame}\n`);
+      this.#staticMode = true;
+    }
   }
 }
 

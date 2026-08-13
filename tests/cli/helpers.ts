@@ -8,6 +8,7 @@ export function testCapabilities(
   overrides: Partial<TerminalCapabilities> = {},
 ): TerminalCapabilities {
   return {
+    ansiControl: true,
     colorDepth: "none",
     columns: 80,
     unicode: true,

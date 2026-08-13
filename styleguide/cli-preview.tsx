@@ -6,6 +6,7 @@ import { parseTerminalAnsi, type TerminalAnsiStyle } from "./terminal-ansi.ts";
 
 /** Fixed terminal profile used for deterministic browser specimens. */
 export const catalogueCliCapabilities = {
+  ansiControl: true,
   colorDepth: "truecolor",
   columns: 80,
   unicode: true,

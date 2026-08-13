@@ -57,12 +57,23 @@ export async function runPrompt<T, State extends InteractiveFrameState>(
   const io = runtime.io ?? new DenoTerminalIO();
   const painter = new InlineFramePainter(io);
   const reader = new TerminalKeyReader(io);
+  let staticMode = false;
   const paint = (lifecycle: InteractiveFrameLifecycle): void => {
-    painter.replace(renderFrame(
+    const frame = renderFrame(
       machine.frame(lifecycle),
       io.capabilities(),
       runtime.theme,
-    ));
+    );
+    if (staticMode) {
+      io.write(`${frame}\n`);
+      return;
+    }
+    const result = painter.replace(frame);
+    if (result.status === "refused") {
+      painter.finish();
+      io.write(`${frame}\n`);
+      staticMode = true;
+    }
   };
 
   return await withRawTerminal(io, async () => {
