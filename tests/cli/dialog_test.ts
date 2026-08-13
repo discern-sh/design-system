@@ -14,9 +14,9 @@ const frames = {
   narrow:
     "┌ Confirm ───┐\n│ Continue   │\n│ now?       │\n│            │\n│ [No] [Yes] │\n└────────────┘",
   standard:
-    "┌ Confirm ─────────────────┐\n│ Continue now?            │\n│                          │\n│ [No] [Yes]               │\n└──────────────────────────┘",
+    "┌ Confirm ─────────────────┐\n│ Continue now?            │\n│                          │\n│ [No]  [Yes]              │\n└──────────────────────────┘",
   wide:
-    "┌ Confirm ─────────────────────────────────────┐\n│ Continue now?                                │\n│                                              │\n│ [No] [Yes]                                   │\n└──────────────────────────────────────────────┘",
+    "┌ Confirm ─────────────────────────────────────┐\n│ Continue now?                                │\n│                                              │\n│ [No]  [Yes]                                  │\n└──────────────────────────────────────────────┘",
 } as const;
 
 Deno.test("Dialog renders exact narrow, standard, and wide modal blocks", () => {

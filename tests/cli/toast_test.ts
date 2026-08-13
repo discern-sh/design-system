@@ -6,11 +6,11 @@ import {
 } from "./helpers.ts";
 
 const frames = {
-  narrow: "┌ Success ───┐\n│Saved. ×    │\n└────────────┘",
+  narrow: "┌ Success ───┐\n│Saved.  ×   │\n└────────────┘",
   standard:
-    "┌ Success ─────────────────┐\n│Saved. ×                  │\n└──────────────────────────┘",
+    "┌ Success ─────────────────┐\n│Saved.  ×                 │\n└──────────────────────────┘",
   wide:
-    "┌ Success ─────────────────────────────────────┐\n│Saved. ×                                      │\n└──────────────────────────────────────────────┘",
+    "┌ Success ─────────────────────────────────────┐\n│Saved.  ×                                     │\n└──────────────────────────────────────────────┘",
 } as const;
 
 Deno.test("Toast renders exact narrow, standard, and wide notifications", () => {
@@ -56,7 +56,7 @@ Deno.test("Toast preserves semantic tone through every capability level", () => 
       dismissible: true,
       width: 20,
     }, capabilities),
-    "+ Success ---------+\n|Saved. x          |\n+------------------+",
+    "+ Success ---------+\n|Saved.  x         |\n+------------------+",
     capabilities,
   );
 });
