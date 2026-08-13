@@ -27,6 +27,19 @@ Deno.test("box bodies wrap to their derived inner width", () => {
   );
 });
 
+Deno.test("box bodies preserve meaningful leading indentation while fitting and wrapping", () => {
+  const capabilities = testCapabilities({ columns: 12 });
+  assertExactFrame(
+    renderBox({
+      body: "  Alpha\n  one two three",
+      width: 12,
+      padding: 0,
+    }, capabilities),
+    "┌──────────┐\n│  Alpha   │\n│  one two │\n│  three   │\n└──────────┘",
+    capabilities,
+  );
+});
+
 Deno.test("box bodies preserve fitting Token-styled structural lines", () => {
   const capabilities = testCapabilities({
     colorDepth: "truecolor",

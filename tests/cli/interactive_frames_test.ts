@@ -99,19 +99,19 @@ Deno.test("interactive prompts paint exact real Component frames", async () => {
     ],
     [
       "switch",
-      "Continue [active]\n┌──────────────────────────────┐\n│› ◀● ON Yes                  │\n└──────────────────────────────┘",
+      "Continue [active]\n┌──────────────────────────────┐\n│› ◀● ON  Yes                 │\n└──────────────────────────────┘",
     ],
     [
       "select",
-      "Pick [active]\n┌──────────────────────────────┐\n│[ ] One                       │\n│› [●] Two                     │\n└──────────────────────────────┘",
+      "Pick [active]\n┌──────────────────────────────┐\n│  [ ] One                     │\n│› [●] Two                     │\n└──────────────────────────────┘",
     ],
     [
       "checkboxes",
-      "Tags [active]\n┌──────────────────────────────┐\n│› [ ] One                     │\n│[✓] Two                       │\n└──────────────────────────────┘",
+      "Tags [active]\n┌──────────────────────────────┐\n│› [ ] One                     │\n│  [✓] Two                     │\n└──────────────────────────────┘",
     ],
     [
       "radio search",
-      "Find [active]\n┌──────────────────────────────┐\n│▌Search                       │\n│○ One                         │\n│○ Two                         │\n└──────────────────────────────┘",
+      "Find [active]\n┌──────────────────────────────┐\n│▌Search                       │\n│  ○ One                       │\n│  ○ Two                       │\n└──────────────────────────────┘",
     ],
     [
       "autocomplete input",
@@ -157,8 +157,8 @@ Deno.test("sequential forms paint exact Process steps frames", async () => {
     .add({ id: "confirm", label: "Confirm", run: () => true })
     .submit();
   assertEquals(io.writes, [
-    "Setup\n\n[◮] Account\n│\n· Confirm\n",
-    "Setup\n\n◮ Account\n│\n[◭] Confirm\n\nAccount: Ada\n",
-    "Setup\n\n◮ Account\n│\n⧩ Confirm\n\nAccount: Ada\n\n✓ Complete\n",
+    "Setup\n\n[◮] Account\n │\n ·  Confirm\n",
+    "Setup\n\n ◮  Account\n │\n[◭] Confirm\n\nAccount: Ada\n",
+    "Setup\n\n ◮  Account\n │\n ⧩  Confirm\n\nAccount: Ada\n\n✓ Complete\n",
   ]);
 });

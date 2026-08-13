@@ -118,17 +118,17 @@ Deno.test("Procedure renders exact narrow, standard, wide, and every semantic st
     completion: "The branch is on main",
   } as const;
   const standard =
-    "Ship the wave\n  Complete every owned CLI renderer\n\nBefore you start\n✓ Wave 1 [Satisfied]\n\n◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩ Steps ⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨\n◮ Implemented\n│\n[⧨] Run gate\n│\n· Land\n│\n! Rejected\n│\n× Stopped\n\nDone when: The branch is on main";
+    "Ship the wave\n  Complete every owned CLI renderer\n\nBefore you start\n✓ Wave 1 [Satisfied]\n\n◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩ Steps ⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨\n ◮  Implemented\n │\n[⧨] Run gate\n │\n ·  Land\n │\n !  Rejected\n │\n ×  Stopped\n\nDone when: The branch is on main";
   for (
     const [columns, expected] of [
       [
         24,
-        "Ship the wave\n  Complete every owned\n  CLI renderer\n\nBefore you start\n✓ Wave 1 [Satisfied]\n\n◮⧩◭⧨◮⧩◭⧨ Steps ⧨◭⧩◮⧨◭⧩◮⧨\n◮ Implemented\n│\n[⧨] Run gate\n│\n· Land\n│\n! Rejected\n│\n× Stopped\n\nDone when: The branch is\n           on main",
+        "Ship the wave\n  Complete every owned\n  CLI renderer\n\nBefore you start\n✓ Wave 1 [Satisfied]\n\n◮⧩◭⧨◮⧩◭⧨ Steps ⧨◭⧩◮⧨◭⧩◮⧨\n ◮  Implemented\n │\n[⧨] Run gate\n │\n ·  Land\n │\n !  Rejected\n │\n ×  Stopped\n\nDone when: The branch is\n           on main",
       ],
       [52, standard],
       [
         80,
-        "Ship the wave\n  Complete every owned CLI renderer\n\nBefore you start\n✓ Wave 1 [Satisfied]\n\n◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨ Steps ⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨\n◮ Implemented\n│\n[⧨] Run gate\n│\n· Land\n│\n! Rejected\n│\n× Stopped\n\nDone when: The branch is on main",
+        "Ship the wave\n  Complete every owned CLI renderer\n\nBefore you start\n✓ Wave 1 [Satisfied]\n\n◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨ Steps ⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨\n ◮  Implemented\n │\n[⧨] Run gate\n │\n ·  Land\n │\n !  Rejected\n │\n ×  Stopped\n\nDone when: The branch is on main",
       ],
     ] as const
   ) {
@@ -142,7 +142,7 @@ Deno.test("Procedure renders exact narrow, standard, wide, and every semantic st
   assertCapabilityLevels(
     (capabilities) => renderProcedureCli(props, capabilities),
     standard,
-    "Ship the wave\n  Complete every owned CLI renderer\n\nBefore you start\n+ Wave 1 [Satisfied]\n\n>v^<>v^<>v^<>v^<>v^<>v Steps v><^v><^v><^v><^v><^v><\n> Implemented\n|\n[<] Run gate\n|\n. Land\n|\n! Rejected\n|\nx Stopped\n\nDone when: The branch is on main",
+    "Ship the wave\n  Complete every owned CLI renderer\n\nBefore you start\n+ Wave 1 [Satisfied]\n\n>v^<>v^<>v^<>v^<>v^<>v Steps v><^v><^v><^v><^v><^v><\n >  Implemented\n |\n[<] Run gate\n |\n .  Land\n |\n !  Rejected\n |\n x  Stopped\n\nDone when: The branch is on main",
   );
 });
 
@@ -183,11 +183,11 @@ Deno.test("Procedure step renders exact widths, capability levels, statuses, and
 
   const capabilities = testCapabilities({ columns: 52 });
   const states = [
-    ["pending", "· Run gate\n  Verify tree"],
+    ["pending", " ·  Run gate\n  Verify tree"],
     ["active", "[⧨] Run gate\n  Verify tree"],
-    ["complete", "◭ Run gate\n  Verify tree"],
-    ["error", "! Run gate\n  Verify tree"],
-    ["cancelled", "× Run gate\n  Verify tree"],
+    ["complete", " ◭  Run gate\n  Verify tree"],
+    ["error", " !  Run gate\n  Verify tree"],
+    ["cancelled", " ×  Run gate\n  Verify tree"],
   ] as const;
   for (const [status, expected] of states) {
     assertExactFrame(

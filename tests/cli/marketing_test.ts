@@ -96,7 +96,7 @@ Deno.test("Case study renders exact story and metric frames", () => {
     [
       "Release story\n┌ Evidence ────┐\n│ A repeatable │\n│ path.        │\n│              │\n│ 42%          │\n│ less rework  │\n│ 2 wk         │\n│ to adoption  │\n└──────────────┘",
       "Release story\n┌ Evidence ────────────────────────┐\n│ A repeatable path.               │\n│                                  │\n│ 42%                              │\n│ less rework                      │\n│ 2 wk                             │\n│ to adoption                      │\n└──────────────────────────────────┘",
-      "Release story\n┌ Evidence ────────────────────────────────────────────────────┐\n│ A repeatable path.                                           │\n│                                                              │\n│ 42% 2 wk                                                     │\n│ less rework to adoption                                      │\n└──────────────────────────────────────────────────────────────┘",
+      "Release story\n┌ Evidence ────────────────────────────────────────────────────┐\n│ A repeatable path.                                           │\n│                                                              │\n│ 42%                             2 wk                         │\n│ less rework                     to adoption                  │\n└──────────────────────────────────────────────────────────────┘",
     ],
     "Release story\n+ Evidence ------------------------+\n| A repeatable path.               |\n|                                  |\n| 42%                              |\n| less rework                      |\n| 2 wk                             |\n| to adoption                      |\n+----------------------------------+",
   );
@@ -219,11 +219,11 @@ Deno.test("Process steps renders exact canonical stepper and beacon frames", () 
       beaconPhase: 2,
     },
     [
-      "Release path\n\n◮ Build\n│\n[◭] Prove\n│\n· Share\n\n..◭⧨◮⧩..........",
-      "Release path\n\n◮ Build\n│\n[◭] Prove\n│\n· Share\n\n..◭⧨◮⧩..............................",
-      "Release path\n\n◮ Build\n│\n[◭] Prove\n│\n· Share\n\n..◭⧨◮⧩..........................................................",
+      "Release path\n\n ◮  Build\n │\n[◭] Prove\n │\n ·  Share\n\n..◭⧨◮⧩..........",
+      "Release path\n\n ◮  Build\n │\n[◭] Prove\n │\n ·  Share\n\n..◭⧨◮⧩..............................",
+      "Release path\n\n ◮  Build\n │\n[◭] Prove\n │\n ·  Share\n\n..◭⧨◮⧩..........................................................",
     ],
-    "Release path\n\n> Build\n|\n[^] Prove\n|\n. Share\n\n..^<>v..............................",
+    "Release path\n\n >  Build\n |\n[^] Prove\n |\n .  Share\n\n..^<>v..............................",
   );
 });
 
@@ -244,13 +244,13 @@ Deno.test("Process steps covers complete, error, cancelled, and pending states",
   const unicode = testCapabilities({ columns: 36 });
   assertExactFrame(
     renderProcessStepsCli(props, unicode),
-    "Step states\n\n◮ Done\n│\n! Failed\n│\n× Stopped\n│\n· Waiting\n\n! Proof failed",
+    "Step states\n\n ◮  Done\n │\n !  Failed\n │\n ×  Stopped\n │\n ·  Waiting\n\n! Proof failed",
     unicode,
   );
   const ascii = testCapabilities({ columns: 36, unicode: false });
   assertExactFrame(
     renderProcessStepsCli(props, ascii),
-    "Step states\n\n> Done\n|\n! Failed\n|\nx Stopped\n|\n. Waiting\n\n! Proof failed",
+    "Step states\n\n >  Done\n |\n !  Failed\n |\n x  Stopped\n |\n .  Waiting\n\n! Proof failed",
     ascii,
   );
 });

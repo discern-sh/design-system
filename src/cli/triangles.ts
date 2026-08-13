@@ -349,24 +349,24 @@ function stepMarker(
   }
   if (step.status === "complete") {
     return {
-      text: renderCycle(1, phase, "forward", capabilities),
+      text: ` ${renderCycle(1, phase, "forward", capabilities)} `,
       style: { color: motifColor(theme, "success") },
     };
   }
   if (step.status === "error") {
     return {
-      text: "!",
+      text: " ! ",
       style: { color: motifColor(theme, "danger"), bold: true },
     };
   }
   if (step.status === "cancelled") {
     return {
-      text: capabilities.unicode ? "×" : "x",
+      text: ` ${capabilities.unicode ? "×" : "x"} `,
       style: { color: motifColor(theme, "neutral"), dim: true },
     };
   }
   return {
-    text: capabilities.unicode ? "·" : ".",
+    text: ` ${capabilities.unicode ? "·" : "."} `,
     style: {
       color: terminalThemeColor(theme, "--discern-color-ink-faint"),
       dim: true,
@@ -418,7 +418,7 @@ export function renderTriangleWorkflowStepper(
     ], capabilities));
     if (index < steps.length - 1) {
       lines.push(styleText(
-        capabilities.unicode ? "│" : "|",
+        ` ${capabilities.unicode ? "│" : "|"}`,
         {
           color: terminalThemeColor(theme, "--discern-color-ink-faint"),
           dim: true,

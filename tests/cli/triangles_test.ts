@@ -147,7 +147,7 @@ Deno.test("workflow stepper renders every semantic step state", () => {
       { label: "Failed", status: "error" },
       { label: "Stopped", status: "cancelled" },
     ], capabilities),
-    "◮ Done\n│\n[◭] Working\n│\n· Later\n│\n! Failed\n│\n× Stopped",
+    " ◮  Done\n │\n[◭] Working\n │\n ·  Later\n │\n !  Failed\n │\n ×  Stopped",
     capabilities,
   );
 });
@@ -187,7 +187,7 @@ Deno.test("every triangle primitive degrades exactly across the capability matri
     "◮",
     "[ 50%] ◮⧩...",
     "◮⧩◭⧨ go ⧨◭⧩◮",
-    "◮ Done\n│\n[◭] Work\n│\n· Later\n│\n! Fail\n│\n× Stop",
+    " ◮  Done\n │\n[◭] Work\n │\n ·  Later\n │\n !  Fail\n │\n ×  Stop",
     "◮⧩◭⧨....",
   ];
   const asciiFrames = [
@@ -195,7 +195,7 @@ Deno.test("every triangle primitive degrades exactly across the capability matri
     ">",
     "[ 50%] >v...",
     ">v^< go <^v>",
-    "> Done\n|\n[^] Work\n|\n. Later\n|\n! Fail\n|\nx Stop",
+    " >  Done\n |\n[^] Work\n |\n .  Later\n |\n !  Fail\n |\n x  Stop",
     ">v^<....",
   ];
 
