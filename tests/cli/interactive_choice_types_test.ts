@@ -1,5 +1,9 @@
 import { assertEquals } from "@std/assert";
 import type {
+  FleetCliProps,
+  InteractiveChoiceEntryState,
+} from "../../src/cli/mod.ts";
+import type {
   PromptChoice,
   PromptChoiceEntry,
   PromptChoiceGroupHeading,
@@ -34,9 +38,19 @@ const legacyOptions = {
   label: "Legacy",
   choices: legacyChoices,
 } satisfies SelectPromptOptions<number>;
+const frameEntries = [
+  { kind: "group-heading", id: "recommended", label: "Recommended" },
+  { id: "one", label: "One" },
+] as const satisfies readonly InteractiveChoiceEntryState[];
+const fleetOptions = {
+  rows: [{ persona: "Audit", branch: "agent/audit" }],
+  identityMode: "lossless",
+} as const satisfies FleetCliProps;
 
 Deno.test("choice entry types need no generic sentinel and preserve legacy calls", () => {
   assertEquals(headingValueIsNever, true);
   assertEquals(groupedOptions.choices[0], heading);
   assertEquals(legacyOptions.choices, legacyChoices);
+  assertEquals(frameEntries[0].kind, "group-heading");
+  assertEquals(fleetOptions.identityMode, "lossless");
 });

@@ -1,4 +1,12 @@
+import {
+  assert,
+  assertEquals,
+  assertStringIncludes,
+  assertThrows,
+} from "@std/assert";
+import { stripAnsi } from "../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
+import { measureText } from "../../src/cli/text.ts";
 import {
   renderFleetCli,
   renderReceiptCli,
@@ -25,6 +33,33 @@ function assertCapabilityLevels(
     }
     const capabilities = testCapabilities({ columns, unicode });
     assertExactFrame(render(capabilities), expected, capabilities);
+  }
+}
+
+function assertLosslessIdentity(
+  frame: string,
+  label: "Persona" | "Branch",
+  expected: string,
+): void {
+  const marker = `${label}: `;
+  const line = stripAnsi(frame).split("\n").find((candidate) =>
+    candidate.includes(marker)
+  );
+  assert(line !== undefined, `${label} continuation is missing`);
+  const markerAt = line.indexOf(marker);
+  assertEquals(line.slice(markerAt + marker.length), expected);
+}
+
+function assertOnlyIdentitiesExceed(
+  frame: string,
+  width: number,
+): void {
+  for (const line of stripAnsi(frame).split("\n")) {
+    if (/^\s*(?:Persona|Branch): /u.test(line)) continue;
+    assert(
+      measureText(line) <= width,
+      `${JSON.stringify(line)} exceeds the Fleet width ${width}`,
+    );
   }
 }
 
@@ -75,6 +110,138 @@ Deno.test("Fleet renders exact narrow, standard, wide, and capability frames", (
     (capabilities) => renderFleetCli(props, capabilities),
     standard,
     "Fleet\nAGENT            BRANCH              STATE         DRIFT\nCLI 2B           agent/cli-2b        working       +5 -0\n                                     ..^<>v..\n  Workflow + Agents\nCLI 2A           agent/cli-2a        waiting       -1",
+  );
+});
+
+Deno.test("Fleet keeps compact identity rendering as the backward-compatible default", () => {
+  const capabilities = testCapabilities({ columns: 60 });
+  const rows = [{
+    persona: "Audit",
+    branch: "agent/audit",
+    status: "working",
+    ahead: 1,
+    beaconPhase: 1,
+  }] as const;
+  const implicit = renderFleetCli({ rows }, capabilities);
+  assertEquals(
+    renderFleetCli({ rows, identityMode: "compact" }, capabilities),
+    implicit,
+  );
+  assertEquals(
+    renderFleetCli({ rows, identityMode: "lossless" }, capabilities),
+    implicit,
+  );
+  assertThrows(
+    () =>
+      renderFleetCli({ rows, identityMode: "expanded" as never }, capabilities),
+    TypeError,
+    "compact or lossless",
+  );
+});
+
+Deno.test("Fleet lossless mode preserves long ASCII identities at narrow and wide widths", () => {
+  const persona = "Terminal contract coordination agent";
+  const branch = "agent/terminal-contract-coordination-with-complete-identity";
+  const row = {
+    persona,
+    branch,
+    status: "working",
+    ahead: 5,
+    behind: 2,
+    meta: "Compatibility evidence",
+    beaconPhase: 2,
+  } as const;
+
+  const narrow = renderFleetCli(
+    { rows: [row], identityMode: "lossless", maxWidth: 32 },
+    testCapabilities({ columns: 32 }),
+  );
+  assertEquals(
+    narrow,
+    "Fleet\nTerminal contract coordination\nagent · working\nPersona: Terminal contract coordination agent\nBranch: agent/terminal-contract-coordination-with-complete-identity\nDrift: ↑5 ↓2\nMeta: Compatibility evidence\n  ..◭⧨◮⧩......",
+  );
+  assertLosslessIdentity(narrow, "Persona", persona);
+  assertLosslessIdentity(narrow, "Branch", branch);
+  assertOnlyIdentitiesExceed(narrow, 32);
+
+  const wide = renderFleetCli(
+    { rows: [row], identityMode: "lossless", maxWidth: 60 },
+    testCapabilities({ columns: 80 }),
+  );
+  assertEquals(
+    wide,
+    "Fleet\nAGENT            BRANCH              STATE         DRIFT\nTerminal contr…  agent/terminal-co…  working       ↑5 ↓2\n  Persona: Terminal contract coordination agent\n  Branch: agent/terminal-contract-coordination-with-complete-identity\n                                     ..◭⧨◮⧩..\n  Compatibility evidence",
+  );
+  assertLosslessIdentity(wide, "Persona", persona);
+  assertLosslessIdentity(wide, "Branch", branch);
+  assertOnlyIdentitiesExceed(wide, 60);
+  assertStringIncludes(wide, "working       ↑5 ↓2");
+  assertStringIncludes(wide, "..◭⧨◮⧩..");
+  assertStringIncludes(wide, "Compatibility evidence");
+});
+
+Deno.test("Fleet lossless identities survive Unicode, ASCII, colour, and no-colour modes", () => {
+  const unicodePersona = "界面監査チームの完全な識別子 🧭";
+  const unicodeBranch = "agent/監査-完全-識別子-枝-長期運用";
+  const unicode = renderFleetCli({
+    identityMode: "lossless",
+    maxWidth: 60,
+    rows: [{
+      persona: unicodePersona,
+      branch: unicodeBranch,
+      status: "waiting",
+      ahead: 1,
+      behind: 3,
+      meta: "Unicode identity evidence",
+    }],
+  }, testCapabilities({ columns: 80 }));
+  assertEquals(
+    unicode,
+    "Fleet\nAGENT            BRANCH              STATE         DRIFT\n界面監査チーム…  agent/監査-完全-…   waiting       ↑1 ↓3\n  Persona: 界面監査チームの完全な識別子 🧭\n  Branch: agent/監査-完全-識別子-枝-長期運用\n  Unicode identity evidence",
+  );
+  assertLosslessIdentity(unicode, "Persona", unicodePersona);
+  assertLosslessIdentity(unicode, "Branch", unicodeBranch);
+  assert(!unicode.includes(String.fromCharCode(27)));
+
+  const asciiPersona = "Terminal contract coordination agent";
+  const asciiBranch =
+    "agent/terminal-contract-coordination-with-complete-identity";
+  const asciiRow = {
+    persona: asciiPersona,
+    branch: asciiBranch,
+    status: "working",
+    ahead: 5,
+    behind: 2,
+    meta: "Compatibility evidence",
+    beaconPhase: 2,
+  } as const;
+  const ascii = renderFleetCli(
+    { rows: [asciiRow], identityMode: "lossless", maxWidth: 60 },
+    testCapabilities({ columns: 80, unicode: false }),
+  );
+  assertEquals(
+    ascii,
+    "Fleet\nAGENT            BRANCH              STATE         DRIFT\nTerminal contr…  agent/terminal-co…  working       +5 -2\n  Persona: Terminal contract coordination agent\n  Branch: agent/terminal-contract-coordination-with-complete-identity\n                                     ..^<>v..\n  Compatibility evidence",
+  );
+  assertLosslessIdentity(ascii, "Persona", asciiPersona);
+  assertLosslessIdentity(ascii, "Branch", asciiBranch);
+
+  const coloured = renderFleetCli(
+    { rows: [asciiRow], identityMode: "lossless", maxWidth: 60 },
+    testCapabilities({
+      colorDepth: "truecolor",
+      columns: 80,
+    }),
+  );
+  assert(coloured.includes(String.fromCharCode(27)));
+  assertLosslessIdentity(coloured, "Persona", asciiPersona);
+  assertLosslessIdentity(coloured, "Branch", asciiBranch);
+  assertEquals(
+    stripAnsi(coloured),
+    stripAnsi(renderFleetCli(
+      { rows: [asciiRow], identityMode: "lossless", maxWidth: 60 },
+      testCapabilities({ columns: 80 }),
+    )),
   );
 });
 
