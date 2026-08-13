@@ -4,7 +4,7 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
-## Unreleased
+## 0.12.2
 
 - Separate Unicode repertoire, ANSI colour, and ANSI cursor-control detection so `C.UTF-8`, `C.utf8`, and UTF-8 redirected output retain Unicode triangle geometry without receiving unsupported colour or cursor escapes. The public capability record adds source-compatible optional `ansiControl`, and the inline painter returns typed painted, unchanged, or refused results instead of partially replacing frames that exceed the viewport.
 - Preserve meaningful Box indentation across fitting and wrapped lines so highlighted choice rows retain one label column, and reserve a stable three-cell marker slot across every Unicode and ASCII workflow-step state.
