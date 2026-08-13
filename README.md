@@ -208,6 +208,10 @@ deno task verify
 
 A mandatory resilience phase discovers rendered disclosures, interactive controls, pointer targets, wide regions, active motion, theme consumers, and semantic focus surfaces from the Catalogue itself. It checks disclosure state and keyboard operation, nested controls, 24-pixel targets with the inline-prose exception, page reflow at 390 CSS pixels and the 320-pixel equivalent of 400% zoom, reduced motion, return to system theme, and focus in ordinary and forced colours. Five review sheets are written under `dist/conformance/`. The task uses an installed Google Chrome by default; set `DISCERN_CHROME_PATH` when Chrome lives at a non-standard path.
 
+### Terminal review surfaces
+
+`deno task catalogue:cli` statically prints every rendered Component example, every recorded exemption, and the triangle motif sheet; `deno task playground:cli` is its live counterpart, driving the real interactive adapter in your terminal. The playground opens a hub of named journeys covering every high-level prompt, activity, and sequential-form API, static-catalogue browsing, and stress cases for width, height, resize, Unicode/ASCII repertoire, colour degradation, and repeated prompt cycles. `deno task playground:cli --list` prints every journey ID without a TTY, `tour` visits them all in recommended order, and a direct `<journey-id>` bypasses the hub menu entirely. Both surfaces derive their inventory from the generated registries, so neither can drift from Codegen, and each journey prints the current terminal facts (columns, rows, Unicode, colour depth, ANSI control) before it runs so observations are reproducible. These are development and review instruments for this repository, not published package APIs.
+
 ### Authoring rules
 
 - Change token values in `src/tokens/tokens.ts`; do not edit emitted CSS.
