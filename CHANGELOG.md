@@ -4,12 +4,9 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
-## Unreleased
-
-- Fix masked Logo cloud marks so light Theme retains the supplied brand artwork while dark Theme replaces it completely with a neutral silhouette. This removes colour artwork leaking around the mask and keeps provider rows visually consistent without changing unmasked marks.
-
 ## 0.12.1
 
+- Fix masked Logo cloud marks so light Theme retains the supplied brand artwork while dark Theme replaces it completely with a neutral silhouette. This removes colour artwork leaking around the mask and keeps provider rows visually consistent without changing unmasked marks.
 - Add typed semantic group headings to select, multiselect, and search prompts. Headings carry no caller value, remain outside navigation and results, retain their governing context while scrolling, and render through the Token-derived triangle section rule across colour, no-colour, and ASCII terminals.
 - Add Fleet's opt-in `identityMode: "lossless"`, which preserves complete persona and branch identities as copyable continuation lines when compact cells cannot contain them. The existing compact, width-bounded rendering remains the default.
 
