@@ -1,8 +1,8 @@
 import { assert, assertEquals, assertMatch } from "@std/assert";
 import { stripAnsi } from "../src/cli/ansi.ts";
+import { projectTerminalSpans } from "../src/cli/projection.ts";
 import { catalogueCliCapabilities } from "../styleguide/cli-preview.tsx";
 import { registry } from "../styleguide/generated/registry.ts";
-import { parseTerminalAnsi } from "../styleguide/terminal-ansi.ts";
 
 Deno.test("browser Catalogue projects every declared CLI stance from disk", () => {
   const fragments = new Set<string>();
@@ -30,9 +30,8 @@ Deno.test("browser Catalogue projects every declared CLI stance from disk", () =
         catalogueCliCapabilities,
       );
       assert(output.length > 0, `${fragment} rendered an empty frame`);
-      const projected = parseTerminalAnsi(output).map(({ text }) => text).join(
-        "",
-      );
+      const projected = projectTerminalSpans(output).map(({ text }) => text)
+        .join("");
       assertEquals(projected, stripAnsi(output), `${fragment} lost text`);
     }
   }

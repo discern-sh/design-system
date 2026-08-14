@@ -1,8 +1,11 @@
-import type { CSSProperties } from "react";
 import type { TerminalCapabilities } from "../src/cli/capabilities.ts";
+import {
+  projectTerminalSpans,
+  terminalLinkHref,
+  terminalSpanCss,
+} from "../src/cli/projection.ts";
 import { Terminal } from "../src/components/display/terminal/terminal.tsx";
 import type { RegistryEntry } from "./generated/registry.ts";
-import { parseTerminalAnsi, type TerminalAnsiStyle } from "./terminal-ansi.ts";
 
 /** Fixed terminal profile used for deterministic browser specimens. */
 export const catalogueCliCapabilities = {
@@ -17,26 +20,27 @@ function exampleLabel(name: string): string {
   return `${label.slice(0, 1).toUpperCase()}${label.slice(1)}`;
 }
 
-function browserStyle(style: TerminalAnsiStyle): CSSProperties {
-  const decoration = [
-    style.underline === true ? "underline" : undefined,
-    style.strikethrough === true ? "line-through" : undefined,
-  ].filter((value) => value !== undefined).join(" ");
-  return {
-    color: style.color,
-    fontStyle: style.italic === true ? "italic" : undefined,
-    fontWeight: style.bold === true ? 700 : undefined,
-    opacity: style.dim === true ? 0.68 : undefined,
-    textDecorationLine: decoration || undefined,
-  };
-}
-
 function TerminalAnsiText({ value }: { readonly value: string }) {
-  return parseTerminalAnsi(value).map(({ text, style }, index) =>
-    style === undefined
+  return projectTerminalSpans(value).map(({ text, style, link }, index) => {
+    const css = style === undefined ? undefined : terminalSpanCss(style);
+    const href = link === undefined ? undefined : terminalLinkHref(link);
+    if (href !== undefined) {
+      return (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={css}
+          key={index}
+        >
+          {text}
+        </a>
+      );
+    }
+    return css === undefined
       ? text
-      : <span style={browserStyle(style)} key={index}>{text}</span>
-  );
+      : <span style={css} key={index}>{text}</span>;
+  });
 }
 
 function cliFragmentId(component: string, state: string): string {
