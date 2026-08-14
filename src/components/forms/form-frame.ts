@@ -40,6 +40,8 @@ export interface FormCliFrameOptions {
   readonly lifecycle: InteractiveFrameLifecycle;
   readonly hint?: string;
   readonly required?: boolean;
+  /** Provider work is scheduled or in flight behind an active frame. */
+  readonly pending?: boolean;
   readonly presentation?: FormCliPresentation;
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
@@ -48,7 +50,8 @@ export interface FormCliFrameOptions {
 function statusLabel(options: FormCliFrameOptions): string {
   if (options.lifecycle.status === "validation-error") return "error";
   if (options.lifecycle.status !== "active") return options.lifecycle.status;
-  return options.presentation ?? "active";
+  return options.presentation ??
+    (options.pending === true ? "searching" : "active");
 }
 
 function statusTone(
@@ -56,7 +59,9 @@ function statusTone(
 ): "accent" | "neutral" | "success" | "danger" {
   if (status === "error") return "danger";
   if (status === "submitted") return "success";
-  if (status === "active" || status === "filled") return "accent";
+  if (status === "active" || status === "searching" || status === "filled") {
+    return "accent";
+  }
   return "neutral";
 }
 
@@ -182,6 +187,15 @@ export function insertFormCliMarker(
   }
   graphemes.splice(cursor, 0, marker);
   return graphemes.join("");
+}
+
+/** The one truthful empty-results row: in-flight work is not an empty answer. */
+export function formCliEmptyResultsRow(
+  pending: boolean,
+  capabilities: TerminalCapabilities,
+): string {
+  if (pending) return capabilities.unicode ? "Searching…" : "Searching...";
+  return "No results.";
 }
 
 /** Resolve a heading-aware visible window from a selection-like frame. */

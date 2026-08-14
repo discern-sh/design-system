@@ -75,7 +75,12 @@ Deno.test("terminal interactions paint exact real Component frames", async () =>
     placeholder: "Search",
     search: () => choices,
   }, { io });
-  frames.set("radio search", firstInteractionFrame(io));
+  frames.set("radio search pending", firstInteractionFrame(io));
+  const resolved = io.writes[2] ?? "";
+  frames.set(
+    "radio search",
+    resolved.slice(resolved.indexOf("\x1b[J") + "\x1b[J".length),
+  );
 
   io = new FakeTerminalIO([ENTER], { columns: 32 });
   await requestAutocomplete({
@@ -113,6 +118,10 @@ Deno.test("terminal interactions paint exact real Component frames", async () =>
     [
       "checkboxes",
       "Tags [active]\n┌──────────────────────────────┐\n│› [ ] One                     │\n│  [✓] Two                     │\n└──────────────────────────────┘\n",
+    ],
+    [
+      "radio search pending",
+      "Find [searching]\n┌──────────────────────────────┐\n│▌Search                       │\n│Searching…                    │\n└──────────────────────────────┘\n",
     ],
     [
       "radio search",

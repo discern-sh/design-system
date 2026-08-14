@@ -29,9 +29,28 @@ export interface InteractionOptions<T> {
   readonly label: string;
   readonly hint?: string;
   readonly required?: InteractionRequired;
+  /**
+   * Terminal rows above the frame that the caller's own composition
+   * occupies — a board header, a task preamble. Frame fitting targets the
+   * live viewport minus this reservation, so a full-budget frame never
+   * scrolls the caller's rows away. Zero — the default — keeps frames
+   * byte-identical to an unreserved request, and a reservation taller than
+   * the viewport degrades exactly like a too-short terminal.
+   */
+  readonly reservedRows?: number;
   /** Runs first: transform, then the required check, then `validate`. */
   readonly transform?: InteractionTransform<T>;
   readonly validate?: InteractionValidator<T>;
+}
+
+/**
+ * Injectable one-shot scheduler behind time-advancing request machinery,
+ * mirroring the spinner's injectable repetition: tests advance debounce
+ * windows deterministically instead of sleeping through real timers.
+ */
+export interface InteractionDelayScheduler {
+  /** Call `callback` once after `delayMs`; returns an idempotent cancellation. */
+  delay(callback: () => void, delayMs: number): () => void;
 }
 
 /**

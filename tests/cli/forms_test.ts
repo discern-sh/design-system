@@ -124,6 +124,9 @@ const checkboxFrames = [
   }│\n│› [✓] Render frames       │\n│  [ ] Inspect output      │\n│  (disabled)              │\n│${
     sectionRule("Optional", 26)
   }│\n│  [ ] Animate progress    │\n└──────────────────────────┘\n`,
+  `Roles [active]\n┌──────────────────────────┐\n│re▌                       │\n│› [✓] Render frames       │\n│  [ ] Inspect (disabled)  │\n│${
+    sectionRule("Selected", 26)
+  }│\n│  [✓] Animate progress    │\n└──────────────────────────┘\n`,
 ] as const;
 
 Deno.test("Checkbox renders every static form state exactly", () => {
@@ -152,6 +155,7 @@ const fieldFrames = [
   "Environment [disabled]\n┌──────────────────────────┐\n│staging                   │\n└──────────────────────────┘\nDisabled",
   "Environment [submitted]\n┌──────────────────────────┐\n│staging                   │\n└──────────────────────────┘\n✓ Submitted",
   "Environment [cancelled]\n┌──────────────────────────┐\n│staging                   │\n└──────────────────────────┘\n× Selection cancelled",
+  "Heads up [active]\n┌──────────────────────────┐\n│Review the summary above. │\n└──────────────────────────┘\nPress Enter to continue.",
 ] as const;
 
 Deno.test("Field renders every static form state exactly", () => {
@@ -180,6 +184,7 @@ const inputFrames = [
   "Project name [disabled]\n┌──────────────────────────┐\n│atlas                     │\n└──────────────────────────┘\nDisabled",
   "Project name [submitted]\n┌──────────────────────────┐\n│atlas                     │\n└──────────────────────────┘\n✓ Submitted",
   "Project name [cancelled]\n┌──────────────────────────┐\n│my-project                │\n└──────────────────────────┘\n× Input cancelled",
+  "Token reference [searching]\n┌──────────────────────────┐\n│can▌                      │\n└──────────────────────────┘\n",
 ] as const;
 
 Deno.test("Input renders idle through cancelled states exactly", () => {
@@ -213,6 +218,7 @@ const radioFrames = [
   }│\n│  ○ Alpha                 │\n│› ◉ Bravo                 │\n│${
     sectionRule("Preview", 26)
   }│\n│  ○ Charlie (disabled)    │\n└──────────────────────────┘\n`,
+  "Channel [searching]\n┌──────────────────────────┐\n│cha▌                      │\n│Searching…                │\n└──────────────────────────┘\n",
 ] as const;
 
 Deno.test("Radio renders every static selection state exactly", () => {
@@ -243,6 +249,81 @@ Deno.test("Radio search reserves its pointer column across highlight movement", 
     renderRadioCli({ ...base, highlightedIndex: 1 }, capabilities),
     "Find [active]\n┌──────────────────┐\n│▌Search           │\n│  ○ Alpha         │\n│› ○ Bravo         │\n└──────────────────┘\n",
     capabilities,
+  );
+});
+
+Deno.test("pending keeps discovery frames honest without moving a row", () => {
+  const capabilities = testTerminalCapabilities({ columns: 24 });
+  const search = {
+    kind: "search" as const,
+    label: "Find",
+    lifecycle: { status: "active" as const },
+    query: "al",
+    cursor: 2,
+    results: [
+      { id: "alpha", label: "Alpha" },
+      { id: "album", label: "Album" },
+    ],
+    highlightedIndex: 0,
+    width: 24,
+  };
+  const settled = renderRadioCli(search, capabilities);
+  const pending = renderRadioCli({ ...search, pending: true }, capabilities);
+  assertExactFrame(
+    pending,
+    "Find [searching]\n┌──────────────────────┐\n│al▌                   │\n│› ○ Alpha             │\n│  ○ Album             │\n└──────────────────────┘\n",
+    capabilities,
+  );
+  assertEquals(
+    settled.split("\n").length,
+    pending.split("\n").length,
+    "pending must never change a discovery frame's height",
+  );
+
+  const { highlightedIndex: _highlighted, ...unhighlighted } = search;
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
+  assertExactFrame(
+    renderRadioCli(
+      { ...unhighlighted, results: [], pending: true },
+      ascii,
+    ),
+    "Find [searching]\n+----------------------+\n|al|                   |\n|Searching...          |\n+----------------------+\n",
+    ascii,
+  );
+
+  const styled = testTerminalCapabilities({
+    columns: 24,
+    colorDepth: "truecolor",
+  });
+  assertStyledFrame(
+    renderRadioCli({ ...search, pending: true }, styled),
+    "Find [searching]\n┌──────────────────────┐\n│al▌                   │\n│› ○ Alpha             │\n│  ○ Album             │\n└──────────────────────┘\n",
+    styled,
+  );
+
+  const autocomplete = {
+    kind: "autocomplete" as const,
+    label: "Token",
+    lifecycle: { status: "active" as const },
+    value: "ca",
+    cursor: 2,
+    suggestions: ["canvas"],
+    highlightedIndex: 0,
+    width: 24,
+  };
+  const autocompleteSettled = renderInputCli(autocomplete, capabilities);
+  const autocompletePending = renderInputCli(
+    { ...autocomplete, pending: true },
+    capabilities,
+  );
+  assertExactFrame(
+    autocompletePending,
+    "Token [searching]\n┌──────────────────────┐\n│ca▌nvas               │\n└──────────────────────┘\n",
+    capabilities,
+  );
+  assertEquals(
+    autocompleteSettled.split("\n").length,
+    autocompletePending.split("\n").length,
   );
 });
 

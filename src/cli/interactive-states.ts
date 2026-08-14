@@ -96,6 +96,26 @@ export interface SearchFrameState extends InteractiveFrameBase {
   readonly results: readonly InteractiveChoiceEntryState[];
   readonly highlightedIndex?: number;
   readonly placeholder?: string;
+  /** A provider call is scheduled or in flight; the results shown answer an earlier query. */
+  readonly pending?: boolean;
+}
+
+/**
+ * Visual state for a query-filtered multiselection. Entries the query no
+ * longer returns but the person has selected stay visible — composed after
+ * the results — so selection state never silently drops.
+ */
+export interface SearchMultiselectFrameState extends InteractiveFrameBase {
+  readonly kind: "search-multiselect";
+  readonly query: string;
+  /** Grapheme index at which the query cursor is drawn. */
+  readonly cursor: number;
+  readonly results: readonly InteractiveChoiceEntryState[];
+  readonly selectedIds: readonly string[];
+  readonly highlightedIndex?: number;
+  readonly placeholder?: string;
+  /** A provider call is scheduled or in flight; the results shown answer an earlier query. */
+  readonly pending?: boolean;
 }
 
 /** Visual state for editable text with a highlighted completion candidate. */
@@ -107,6 +127,14 @@ export interface AutocompleteFrameState extends InteractiveFrameBase {
   readonly suggestions: readonly string[];
   readonly highlightedIndex: number;
   readonly placeholder?: string;
+  /** A provider call is scheduled or in flight; the suggestions shown answer an earlier value. */
+  readonly pending?: boolean;
+}
+
+/** Visual state for a message acknowledged by a single continue action. */
+export interface AcknowledgementFrameState extends InteractiveFrameBase {
+  readonly kind: "acknowledgement";
+  readonly message: string;
 }
 
 /** Visual state for a multi-line editable text area. */
@@ -168,7 +196,9 @@ export type InteractiveFrameState =
   | SelectFrameState
   | MultiselectFrameState
   | SearchFrameState
+  | SearchMultiselectFrameState
   | AutocompleteFrameState
+  | AcknowledgementFrameState
   | TextareaFrameState
   | SpinnerFrameState
   | DeterminateProgressFrameState

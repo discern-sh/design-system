@@ -11,10 +11,12 @@
 import {
   createSequentialForm,
   InteractionCancelled,
+  requestAcknowledgement,
   requestAutocomplete,
   requestConfirmation,
   requestMaskedText,
   requestSearch,
+  requestSearchSelections,
   requestSelection,
   requestSelections,
   requestText,
@@ -320,6 +322,26 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
     },
   },
   {
+    id: "search-multiselect",
+    title: "Query-filtered multiselection",
+    section: "Interactive APIs",
+    description:
+      "A slow, debounced provider behind Tab-toggled multiselection; entries the query excludes stay selected in a retained band.",
+    run: async (runtime) => {
+      const values = await requestSearchSelections({
+        label: "Roles to audit",
+        placeholder: "Type to filter",
+        hint: "Tab toggles; Ctrl+A toggles the current matches.",
+        debounceMs: 150,
+        search: async (query) => {
+          await runtime.delay(400);
+          return searchGroupedEntries(longGroupedChoices, query);
+        },
+      }, { io: runtime.io });
+      report(runtime, values);
+    },
+  },
+  {
     id: "autocomplete",
     title: "Autocomplete",
     section: "Interactive APIs",
@@ -346,6 +368,22 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
         initialValue: "Added a terminal playground.\nNothing else changed.",
       }, { io: runtime.io });
       report(runtime, value);
+    },
+  },
+  {
+    id: "acknowledge",
+    title: "Acknowledgement",
+    section: "Interactive APIs",
+    description:
+      "The smallest request: a message acknowledged with Enter or Space; Escape dismisses it.",
+    run: async (runtime) => {
+      await requestAcknowledgement({
+        label: "Release note",
+        message:
+          "The playground restores your terminal after every journey, including cancelled ones.",
+        hint: "Press Enter or Space to continue.",
+      }, { io: runtime.io });
+      runtime.print("Result: acknowledged (void).");
     },
   },
   {
@@ -892,12 +930,14 @@ export const interactiveExportCoverage: Readonly<
     { readonly journey: string } | { readonly excluded: string }
   >
 > = {
+  requestAcknowledgement: { journey: "acknowledge" },
   requestText: { journey: "text" },
   requestMaskedText: { journey: "masked" },
   requestConfirmation: { journey: "confirm" },
   requestSelection: { journey: "select" },
   requestSelections: { journey: "multiselect" },
   requestSearch: { journey: "search" },
+  requestSearchSelections: { journey: "search-multiselect" },
   requestAutocomplete: { journey: "autocomplete" },
   requestTextarea: { journey: "textarea" },
   createSequentialForm: { journey: "form" },
