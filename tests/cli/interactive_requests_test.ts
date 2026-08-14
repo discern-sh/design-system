@@ -229,6 +229,67 @@ Deno.test("the no-previous-step notice clears on the next key and restores the l
   );
 });
 
+Deno.test("transform canonicalises before validation and shapes the returned value", async () => {
+  const seen: string[] = [];
+  const io = new FakeTerminal(["  hi  \r"], { columns: 40 });
+  const result = await requestText({
+    label: "Trimmed",
+    transform: (value) => value.trim(),
+    validate: (value) => {
+      seen.push(value);
+      return undefined;
+    },
+  }, { io });
+  assertEquals(result, "hi");
+  assertEquals(seen, ["hi"]);
+
+  const requiredIo = new FakeTerminal(["   \r", "\x7f\x7f\x7fok\r"], {
+    columns: 40,
+  });
+  assertEquals(
+    await requestText({
+      label: "Required",
+      required: "Give a real value.",
+      transform: (value) => value.trim(),
+    }, { io: requiredIo }),
+    "ok",
+  );
+  assertStringIncludes(requiredIo.output(), "Give a real value.");
+});
+
+Deno.test("the latch tracks the transformed value rather than raw edits", async () => {
+  const seen: string[] = [];
+  const io = new FakeTerminal(["ab\r", " ", "c\r"], { columns: 40 });
+  const result = await requestText({
+    label: "Canonical",
+    transform: (value) => value.trim(),
+    validate: (value) => {
+      seen.push(value);
+      return value.length >= 3 ? undefined : "Too short.";
+    },
+  }, { io });
+  assertEquals(result, "ab c");
+  assertEquals(
+    seen,
+    ["ab", "ab c", "ab c"],
+    "a trailing space that the transform removes must not re-run the validator",
+  );
+});
+
+Deno.test("masked transform applies to the real value without exposing either form", async () => {
+  const io = new FakeTerminal(["  secret  \r"], { columns: 40 });
+  const result = await requestMaskedText({
+    label: "Token",
+    transform: (value) => value.trim(),
+  }, { io });
+  assertEquals(result, "secret");
+  assert(
+    !io.output().includes("secret"),
+    "neither the raw nor the transformed secret may reach the terminal",
+  );
+  assertStringIncludes(io.output(), "••••••••••");
+});
+
 Deno.test("validator exceptions restore raw mode and cursor", async () => {
   const io = new FakeTerminal(["ok\r"], { columns: 32 });
   await assertRejects(

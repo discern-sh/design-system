@@ -107,6 +107,14 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
     }
   };
 
+  // The submitted value: the machine's value after the caller's canonicalising
+  // transform. Validation always judges — and the interaction always returns —
+  // this value, while frames keep presenting the value as edited.
+  const submittedValue = (): T => {
+    const value = machine.value();
+    return options.transform === undefined ? value : options.transform(value);
+  };
+
   return await withRawTerminal(io, async () => {
     await machine.start?.();
     let lifecycle: InteractiveFrameLifecycle = { status: "active" };
@@ -135,7 +143,7 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
     // blocks key handling; a verdict superseded by a newer edit is discarded.
     const revalidateOnEdit = (): void => {
       if (!latched) return;
-      const value = machine.value();
+      const value = submittedValue();
       if (
         lastValidated !== undefined &&
         sameInteractionValue(lastValidated.value, value)
@@ -199,7 +207,7 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
       }
       const submitted = await machine.handle(key);
       if (submitted) {
-        const value = machine.value();
+        const value = submittedValue();
         lastValidated = { value };
         generation += 1;
         const error = await validationVerdict(options, value);
