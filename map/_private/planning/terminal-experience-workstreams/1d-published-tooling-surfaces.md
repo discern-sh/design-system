@@ -14,8 +14,8 @@ Verify anchors against the live tree; they were checked on trunk `c3ec5d6`.
 
 Two quality instruments already exist in this repository but are unpublishable:
 
-1. **The fake terminal.** `tests/cli/fake-terminal.ts:17-60` is a queue-backed `TerminalIO` capturing writes and raw-mode transitions, driving the *real* driver, painter, and renderers. It is excluded from the publish allowlist (`deno.json:15-23`), so every consumer must rebuild it — and the flagship consumer's own review checklist explicitly hunts "tests that invoke a fake adapter instead of production" as an anti-pattern. The injectable `TerminalIO` seam (`src/cli/interactive/io.ts`) exists precisely so a published fake is possible.
-2. **The projection.** `styleguide/cli-preview.tsx` decodes the package's emitted SGR subset into browser spans for the catalogue's Web/CLI switch. That decode logic is the bridge that lets rendered terminal output be *reviewed as a visual artifact* — by humans and by agents — yet it lives unexported inside the styleguide.
+1. **The fake terminal.** `tests/cli/fake-terminal.ts:17-60` is a queue-backed `TerminalIO` capturing writes and raw-mode transitions, driving the _real_ driver, painter, and renderers. It is excluded from the publish allowlist (`deno.json:15-23`), so every consumer must rebuild it — and the flagship consumer's own review checklist explicitly hunts "tests that invoke a fake adapter instead of production" as an anti-pattern. The injectable `TerminalIO` seam (`src/cli/interactive/io.ts`) exists precisely so a published fake is possible.
+2. **The projection.** `styleguide/cli-preview.tsx` decodes the package's emitted SGR subset into browser spans for the catalogue's Web/CLI switch. That decode logic is the bridge that lets rendered terminal output be _reviewed as a visual artifact_ — by humans and by agents — yet it lives unexported inside the styleguide.
 
 Publishing both turns "test the real path" and "look at what the terminal actually shows" from private privileges into consumer contract. The consumer programme's screenshot-loop brief depends on the projection surface.
 
