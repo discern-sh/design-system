@@ -100,8 +100,7 @@ export async function runHub(runtime: PlaygroundRuntime): Promise<void> {
     try {
       target = await promptSelect({
         label: "Playground hub",
-        hint:
-          "Ctrl+C quits. If this menu itself misbehaves, use direct journey IDs.",
+        hint: "Ctrl+C quits; direct journey IDs still work.",
         choices: hubChoices(),
         visibleCount: 12,
       }, { io });

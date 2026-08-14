@@ -127,8 +127,7 @@ function degradedJourney(
       const value = await promptSelect({
         label: title,
         choices: tokenRoleChoices,
-        hint:
-          "This prompt detects capabilities from the synthetic environment.",
+        hint: "Capabilities come from the synthetic env.",
       }, { io: degraded });
       report(runtime, value);
       print(`Relaunch fully degraded: ${relaunch}`);
@@ -147,7 +146,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
       const value = await promptText({
         label: "Display name",
         placeholder: "Ada Lovelace",
-        hint: "Submit empty or one-character input to see validation fail.",
+        hint: "Submit empty input to see validation.",
         required: "A display name is required.",
         validate: (candidate) =>
           segmentGraphemes(candidate).length < 2
@@ -167,7 +166,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
       const value = await promptMasked({
         label: "Access token",
         placeholder: "paste a throwaway value",
-        hint: "Characters stay masked; the result reports length only.",
+        hint: "Masked entry; the result reports length only.",
         required: "A value is required.",
       }, { io: runtime.io });
       runtime.print(
@@ -189,7 +188,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
         initialValue: false,
         yesLabel: "Enable",
         noLabel: "Keep off",
-        hint: "y/n answers directly; arrows and hjkl flip the switch.",
+        hint: "y/n answers; arrows and hjkl flip it.",
       }, { io: runtime.io });
       report(runtime, value);
     },
@@ -205,8 +204,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
         label: "Accent swatch",
         choices: swatchChoices,
         initialId: "citrine",
-        hint:
-          "Duplicate labels carry distinct stable IDs; one entry is disabled.",
+        hint: "Duplicate labels; one disabled entry.",
       }, { io: runtime.io });
       report(runtime, value);
     },
@@ -221,8 +219,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
       const value = await promptSelect({
         label: "Semantic role",
         choices: tokenRoleChoices,
-        hint:
-          "Headings are structure, never selectable; submit Accent to see validation.",
+        hint: "Submit Accent to see validation fail.",
         validate: (candidate) =>
           candidate === "accent"
             ? "Accent is rejected here so validation failure stays reviewable."
@@ -256,8 +253,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
       const values = await promptMultiselect({
         label: "Roles to audit",
         choices: tokenRoleChoices,
-        hint:
-          "Headings cannot be toggled; the disabled entry stays unselectable.",
+        hint: "Headings and disabled entries stay fixed.",
       }, { io: runtime.io });
       report(runtime, values);
     },
@@ -272,7 +268,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
       const value = await promptSearch({
         label: "Find a token",
         placeholder: "Type to filter",
-        hint: "Results resolve asynchronously and keep grouped structure.",
+        hint: "Async results keep their group headings.",
         search: async (query) => {
           await runtime.delay(60);
           return searchGroupedEntries(longGroupedChoices, query);
@@ -291,7 +287,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
         label: "Token reference",
         suggestions: tokenNameSuggestions,
         placeholder: "canvas",
-        hint: "Tab or Right accepts the ghost; Up/Down cycles candidates.",
+        hint: "Tab accepts the ghost; Up/Down cycles.",
       }, { io: runtime.io });
       report(runtime, value);
     },
@@ -461,7 +457,7 @@ const stressJourneys: readonly PlaygroundJourney[] = [
       const value = await promptSelect({
         label: "Long grouped list",
         choices: longGroupedChoices,
-        hint: "Scroll through every group; headings travel with their choices.",
+        hint: "Headings travel with their choices.",
       }, { io: runtime.io });
       report(runtime, value);
     },
@@ -545,7 +541,7 @@ const stressJourneys: readonly PlaygroundJourney[] = [
         const again = await promptConfirm({
           label: "Run another pass",
           initialValue: true,
-          hint: "Every pass should keep the full requested viewport.",
+          hint: "Each pass should keep the full viewport.",
         }, { io });
         if (again !== true) return;
       }

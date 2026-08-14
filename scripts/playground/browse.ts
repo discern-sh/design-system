@@ -167,7 +167,7 @@ export async function runBrowseJourney(
   while (true) {
     const target = await promptSelect({
       label: "Static CLI catalogue",
-      hint: "Enter opens; Back choices step out; Ctrl+C returns to the hub.",
+      hint: "Enter opens; Ctrl+C returns to the hub.",
       choices: browseTopChoices(),
     }, { io });
     if (target === "back" || target === undefined) return;
