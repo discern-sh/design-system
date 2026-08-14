@@ -74,6 +74,7 @@ export * from "../components/workflow/result-summary/mod.ts";
 export * from "../components/workflow/diagnostic/mod.ts";
 export * from "../components/workflow/raw-output/mod.ts";
 export * from "../components/workflow/standard-meter/mod.ts";
+export * from "../components/workflow/activity-log/mod.ts";
 export * from "../components/workflow/artifact-tree/mod.ts";
 export * from "../components/workflow/file-change/mod.ts";
 export * from "../components/workflow/artifact-card/mod.ts";

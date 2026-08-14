@@ -78,6 +78,7 @@ export const cliComponentRegistry = {
   "diagnostic": { stance: "rendered", modulePath: "../components/workflow/diagnostic/diagnostic.cli.ts" },
   "raw-output": { stance: "rendered", modulePath: "../components/workflow/raw-output/raw-output.cli.ts" },
   "standard-meter": { stance: "rendered", modulePath: "../components/workflow/standard-meter/standard-meter.cli.ts" },
+  "activity-log": { stance: "rendered", modulePath: "../components/workflow/activity-log/activity-log.cli.ts" },
   "artifact-tree": { stance: "rendered", modulePath: "../components/workflow/artifact-tree/artifact-tree.cli.ts" },
   "file-change": { stance: "rendered", modulePath: "../components/workflow/file-change/file-change.cli.ts" },
   "artifact-card": { stance: "rendered", modulePath: "../components/workflow/artifact-card/artifact-card.cli.ts" },

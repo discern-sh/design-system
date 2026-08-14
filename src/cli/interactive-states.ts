@@ -162,6 +162,35 @@ export interface DeterminateProgressFrameState extends InteractiveFrameBase {
   readonly total: number;
 }
 
+/** Narration severity carried by one pinned activity log line. */
+export type ActivityLogLineTone = "success" | "note" | "warning" | "failure";
+
+/** One pinned line that persists above an activity log's streaming tail. */
+export interface ActivityLogStableLineState {
+  readonly text: string;
+  readonly tone: ActivityLogLineTone;
+}
+
+/**
+ * Visual state for long-running work streaming detail beneath stable
+ * results: a headline naming the work, pinned stable lines, and a
+ * fixed-height tail of the most recent streamed lines with an optional
+ * in-progress partial line replaced in place until committed.
+ */
+export interface ActivityLogFrameState extends InteractiveFrameBase {
+  readonly kind: "activity-log";
+  /** Semantic phase consumed by the package spinner authority while active. */
+  readonly phase: number;
+  /** Pinned stable lines in pin order. */
+  readonly stable: readonly ActivityLogStableLineState[];
+  /** Most recent committed streamed lines, oldest first. */
+  readonly tail: readonly string[];
+  /** In-progress line replaced in place until committed. */
+  readonly partial?: string;
+  /** Exact rows the streaming tail region occupies, reserved while empty. */
+  readonly tailRows: number;
+}
+
 /** Semantic state of one step in a sequential form or workflow. */
 export type SequentialStepStatus =
   | "pending"
@@ -202,4 +231,5 @@ export type InteractiveFrameState =
   | TextareaFrameState
   | SpinnerFrameState
   | DeterminateProgressFrameState
+  | ActivityLogFrameState
   | SequentialFormFrameState;
