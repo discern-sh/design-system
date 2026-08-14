@@ -5,7 +5,13 @@
  */
 
 import type { TerminalCapabilities } from "./capabilities.ts";
-import { CSI_PATTERN, OSC_PATTERN, sgrSequence } from "./styled-sequences.ts";
+import {
+  CSI_PATTERN,
+  hyperlinkSequence,
+  OSC_PATTERN,
+  sgrSequence,
+  validHyperlinkTarget,
+} from "./styled-sequences.ts";
 import type { TerminalColor, TerminalTypeStyle } from "./theme.ts";
 
 /** Visual attributes carried by one terminal text span. */
@@ -70,6 +76,49 @@ export function styleText(
   return text === "" || codes.length === 0
     ? text
     : `${sgrSequence(codes)}${text}${sgrSequence([0])}`;
+}
+
+/**
+ * Compose one terminal hyperlink from a label and URL. This is the only
+ * public authority for OSC 8 hyperlinks; consumers never write the envelope
+ * bytes themselves.
+ *
+ * Emission is gated by the `hyperlinks` capability fact. When the caller
+ * omits that fact, support derives from colour depth, so a stream that
+ * receives SGR styling also receives ST-ended OSC 8 envelopes while an
+ * unstyled stream receives the textual fallback. The fallback never loses
+ * the label: it renders `label (url)`, or the label alone when the label
+ * already is the URL. The optional style dresses the label through
+ * {@linkcode styleText} in both modes, inside the envelope when one is
+ * emitted.
+ *
+ * Labels must be non-empty and free of control and format characters; URLs
+ * must be non-empty printable ASCII, so anything wider is percent-encoded
+ * by the caller before composition. Invalid input throws a `TypeError`.
+ */
+export function styleHyperlink(
+  label: string,
+  url: string,
+  capabilities: TerminalCapabilities,
+  style?: TerminalTextStyle,
+): string {
+  if (label === "" || /[\p{Cc}\p{Cf}]/u.test(label)) {
+    throw new TypeError("hyperlink label must be non-empty and control-free");
+  }
+  if (!validHyperlinkTarget(url)) {
+    throw new TypeError(
+      `hyperlink url must be non-empty printable ASCII; received ${
+        JSON.stringify(url)
+      }`,
+    );
+  }
+  const text = style === undefined
+    ? label
+    : styleText(label, style, capabilities);
+  if (!(capabilities.hyperlinks ?? capabilities.colorDepth !== "none")) {
+    return label === url ? text : `${text} (${url})`;
+  }
+  return `${hyperlinkSequence(url)}${text}${hyperlinkSequence("")}`;
 }
 
 /** Compose styled spans into one independently reset ANSI string. */

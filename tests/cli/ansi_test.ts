@@ -1,5 +1,10 @@
-import { assertEquals } from "@std/assert";
-import { renderStyledSpans, stripAnsi, styleText } from "../../src/cli/ansi.ts";
+import { assertEquals, assertThrows } from "@std/assert";
+import {
+  renderStyledSpans,
+  stripAnsi,
+  styleHyperlink,
+  styleText,
+} from "../../src/cli/ansi.ts";
 import type { TerminalColor } from "../../src/cli/theme.ts";
 import { testCapabilities } from "./helpers.ts";
 
@@ -36,6 +41,72 @@ Deno.test("ANSI emission degrades through truecolour, 256, 16, and none", () => 
   assertEquals(
     styleText("discern", { bold: true, color }, testCapabilities()),
     "discern",
+  );
+});
+
+Deno.test("hyperlink authority gates on capability and never loses the label", () => {
+  const url = "https://discern.sh/docs";
+  const linked = styleHyperlink(
+    "docs",
+    url,
+    testCapabilities({ colorDepth: "truecolor" }),
+  );
+  assertEquals(
+    linked,
+    `${escape}]8;;${url}${escape}\\docs${escape}]8;;${escape}\\`,
+  );
+  assertEquals(stripAnsi(linked), "docs");
+  assertEquals(
+    styleHyperlink("docs", url, testCapabilities({ colorDepth: "truecolor" }), {
+      bold: true,
+    }),
+    `${escape}]8;;${url}${escape}\\${escape}[1mdocs${escape}[0m${escape}]8;;${escape}\\`,
+  );
+  assertEquals(styleHyperlink("docs", url, testCapabilities()), `docs (${url})`);
+  assertEquals(
+    styleHyperlink("docs", url, testCapabilities(), { bold: true }),
+    `docs (${url})`,
+  );
+  assertEquals(
+    styleHyperlink(
+      "https://discern.sh",
+      "https://discern.sh",
+      testCapabilities(),
+    ),
+    "https://discern.sh",
+  );
+  assertEquals(
+    styleHyperlink(
+      "docs",
+      url,
+      testCapabilities({ colorDepth: "ansi16", hyperlinks: false }),
+      { bold: true },
+    ),
+    `${escape}[1mdocs${escape}[0m (${url})`,
+  );
+  assertEquals(
+    styleHyperlink("docs", url, testCapabilities({ hyperlinks: true })),
+    `${escape}]8;;${url}${escape}\\docs${escape}]8;;${escape}\\`,
+  );
+});
+
+Deno.test("hyperlink authority rejects control-bearing and non-ASCII input", () => {
+  const capabilities = testCapabilities();
+  const url = "https://discern.sh";
+  assertThrows(() => styleHyperlink("", url, capabilities), TypeError);
+  assertThrows(() => styleHyperlink("a\nb", url, capabilities), TypeError);
+  assertThrows(() => styleHyperlink("docs", "", capabilities), TypeError);
+  assertThrows(
+    () => styleHyperlink("docs", `${url}/a b`, capabilities),
+    TypeError,
+  );
+  assertThrows(
+    () => styleHyperlink("docs", `${url}/${escape}]`, capabilities),
+    TypeError,
+  );
+  assertThrows(
+    () => styleHyperlink("docs", `${url}/café`, capabilities),
+    TypeError,
   );
 });
 
