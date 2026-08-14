@@ -132,7 +132,7 @@ Deno.test("consumer-hardening examples enrol through Component CLI registries", 
   const capabilities = testCapabilities({ columns: 80 });
   const select = await renderCliCatalogue("select", capabilities);
   assertStringIncludes(select, "#### grouped");
-  assertStringIncludes(select, "Recommended");
+  assertStringIncludes(select, "RECOMMENDED");
 
   const fleet = await renderCliCatalogue("fleet", capabilities);
   assertStringIncludes(fleet, "#### lossless-identities");

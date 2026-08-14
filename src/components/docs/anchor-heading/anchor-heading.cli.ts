@@ -8,13 +8,15 @@ import { styleText } from "../../../cli/ansi.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { withCliHeadingBoundary } from "../../../cli/heading-boundary.ts";
 import { joinVertical } from "../../../cli/layout.ts";
-import { truncateText } from "../../../cli/text.ts";
 import {
   terminalThemeColor,
   terminalThemes,
   type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
-import { renderTriangleSectionRule } from "../../../cli/triangles.ts";
+import {
+  renderTriangleSectionRule,
+  type TriangleSectionRuleTreatment,
+} from "../../../cli/triangles.ts";
 import type { AnchorHeadingLevel } from "./anchor-heading.types.ts";
 
 /** Inputs accepted by the terminal Anchor heading renderer. */
@@ -25,6 +27,8 @@ export interface AnchorHeadingCliProps {
   readonly showTarget?: boolean;
   readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
+  /** Full-width section-boundary treatment; defaults to `embedded`. */
+  readonly treatment?: TriangleSectionRuleTreatment;
   /** Blank lines owned before this heading; defaults to one. */
   readonly leadingBlankLines?: number;
 }
@@ -32,8 +36,26 @@ export interface AnchorHeadingCliProps {
 /** Deterministic Anchor heading states rendered by the CLI catalogue. */
 export const cliExamples: readonly CliExample<AnchorHeadingCliProps>[] = [
   {
-    name: "section",
+    name: "strong-embedded",
     props: { id: "renderer-contract", text: "Renderer contract", level: 2 },
+  },
+  {
+    name: "strong-underline",
+    props: {
+      id: "renderer-contract-underline",
+      text: "Renderer contract",
+      level: 2,
+      treatment: "underline",
+    },
+  },
+  {
+    name: "quiet-sandwich",
+    props: {
+      id: "renderer-contract-sandwich",
+      text: "Renderer contract",
+      level: 2,
+      treatment: "sandwich",
+    },
   },
   {
     name: "nested-boundary",
@@ -63,16 +85,11 @@ const renderAnchorHeadingCli: CliRenderer<AnchorHeadingCliProps> = (
   const width = Math.min(requested, capabilities.columns);
   const level = props.level ?? 2;
   const prefix = `${"#".repeat(level)} `;
-  const label = `${prefix}${
-    truncateText(
-      props.text,
-      Math.max(1, width - prefix.length - 6),
-      capabilities.unicode ? "…" : ".",
-    )
-  }`;
+  const label = `${prefix}${props.text}`;
   const rule = renderTriangleSectionRule(label, {
     width,
     ...(props.theme === undefined ? {} : { theme: props.theme }),
+    ...(props.treatment === undefined ? {} : { treatment: props.treatment }),
   }, capabilities);
   if (props.showTarget !== true) {
     return withCliHeadingBoundary(rule, props.leadingBlankLines);

@@ -9,6 +9,7 @@ import {
   renderTriangleSpinnerFrame,
   renderTriangleWorkflowStepper,
 } from "../../src/cli/triangles.ts";
+import { measureText } from "../../src/cli/text.ts";
 import {
   assertExactFrame,
   assertStyledFrame,
@@ -124,18 +125,92 @@ Deno.test("progress frames are exact at zero, partial, complete, and ASCII degra
   );
 });
 
-Deno.test("labeled section rules reflect their triangle arms at varied widths", () => {
+Deno.test("section rules default to the strong embedded heading treatment", () => {
   const capabilities = testCapabilities({ columns: 17 });
   assertExactFrame(
     renderTriangleSectionRule("gate", { width: 16 }, capabilities),
-    "◮⧩◭⧨◮ gate ◮⧨◭⧩◮",
+    "━━ ◮ GATE ━━━━━━",
     capabilities,
   );
   assertExactFrame(
     renderTriangleSectionRule("gate", { width: 17 }, capabilities),
-    "◮⧩◭⧨◮ gate ◮⧨◭⧩◮⧨",
+    "━━ ◮ GATE ━━━━━━━",
     capabilities,
   );
+});
+
+Deno.test("section rules expose strong underline and quiet sandwich treatments", () => {
+  const unicode = testCapabilities({ columns: 16 });
+  assertExactFrame(
+    renderTriangleSectionRule(
+      "gate",
+      { width: 16, treatment: "underline" },
+      unicode,
+    ),
+    "◮ GATE\n━━━━━━━━━━━━━━━━",
+    unicode,
+  );
+  assertExactFrame(
+    renderTriangleSectionRule(
+      "gate",
+      { width: 16, treatment: "sandwich" },
+      unicode,
+    ),
+    "────────────────\n◮ GATE\n────────────────",
+    unicode,
+  );
+
+  const ascii = testCapabilities({ columns: 16, unicode: false });
+  assertExactFrame(
+    renderTriangleSectionRule("gate", { width: 16 }, ascii),
+    "== > GATE ======",
+    ascii,
+  );
+  assertExactFrame(
+    renderTriangleSectionRule(
+      "gate",
+      { width: 16, treatment: "underline" },
+      ascii,
+    ),
+    "> GATE\n================",
+    ascii,
+  );
+  assertExactFrame(
+    renderTriangleSectionRule(
+      "gate",
+      { width: 16, treatment: "sandwich" },
+      ascii,
+    ),
+    "----------------\n> GATE\n----------------",
+    ascii,
+  );
+});
+
+Deno.test("every section-rule treatment truncates long headings without overflow", () => {
+  const label = "A deliberately long terminal section heading";
+  for (const treatment of ["embedded", "underline", "sandwich"] as const) {
+    for (const columns of [8, 16, 39, 80, 104]) {
+      for (const unicode of [true, false]) {
+        for (const colorDepth of ["truecolor", "none"] as const) {
+          const capabilities = testCapabilities({
+            columns,
+            unicode,
+            colorDepth,
+          });
+          const frame = stripAnsi(
+            renderTriangleSectionRule(
+              label,
+              { width: columns, treatment },
+              capabilities,
+            ),
+          );
+          for (const line of frame.split("\n")) {
+            assertEquals(measureText(line) <= columns, true);
+          }
+        }
+      }
+    }
+  }
 });
 
 Deno.test("workflow stepper renders every semantic step state", () => {
@@ -208,7 +283,7 @@ Deno.test("every triangle primitive degrades exactly across the capability matri
     "◮⧩◭⧨",
     "◮",
     "[ 50%] ◮⧩...",
-    "◮⧩◭⧨ go ⧨◭⧩◮",
+    "━━ ◮ GO ━━━━",
     " ◭  Done\n │\n[◭] Work\n │\n ·  Later\n │\n !  Fail\n │\n ×  Stop",
     "◮⧩◭⧨....",
   ];
@@ -216,7 +291,7 @@ Deno.test("every triangle primitive degrades exactly across the capability matri
     ">v^<",
     ">",
     "[ 50%] >v...",
-    ">v^< go <^v>",
+    "== > GO ====",
     " ^  Done\n |\n[^] Work\n |\n .  Later\n |\n !  Fail\n |\n x  Stop",
     ">v^<....",
   ];

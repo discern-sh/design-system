@@ -1,5 +1,9 @@
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
-import { renderGridCli, renderSectionCli } from "../../src/cli/mod.ts";
+import {
+  renderGridCli,
+  renderSectionCli,
+  renderTriangleSectionRule,
+} from "../../src/cli/mod.ts";
 import {
   assertExactFrame,
   assertStyledFrame,
@@ -59,27 +63,42 @@ Deno.test("Section renders exact narrow, standard, wide, and degraded labelled r
       },
       capabilities,
     );
-  const narrow = "◮⧩ Build ⧩◮⧨\n\nShared\ndesign\nlanguage";
-  const standard = "◮⧩◭⧨◮⧩◭⧨ Build ⧨◭⧩◮⧨◭⧩◮⧨\n\nShared design language";
-  const wide =
-    "◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨ Build ⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨\n\nShared design language";
   for (
-    const [columns, expected] of [[12, narrow], [24, standard], [
+    const [columns, body] of [[12, "Shared\ndesign\nlanguage"], [
+      24,
+      "Shared design language",
+    ], [
       40,
-      wide,
+      "Shared design language",
     ]] as const
   ) {
     const capabilities = testCapabilities({ columns });
-    assertExactFrame(render(capabilities), expected, capabilities);
+    const rule = renderTriangleSectionRule(
+      "Build",
+      { width: columns },
+      capabilities,
+    );
+    assertExactFrame(render(capabilities), `${rule}\n\n${body}`, capabilities);
   }
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
     const capabilities = testCapabilities({ colorDepth, columns: 24 });
-    assertStyledFrame(render(capabilities), standard, capabilities);
+    const rule = renderTriangleSectionRule(
+      "Build",
+      { width: 24 },
+      { ...capabilities, colorDepth: "none" },
+    );
+    assertStyledFrame(
+      render(capabilities),
+      `${rule}\n\nShared design language`,
+      capabilities,
+    );
   }
   const ascii = testCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     render(ascii),
-    ">v^<>v^< Build <^v><^v><\n\nShared design language",
+    `${
+      renderTriangleSectionRule("Build", { width: 24 }, ascii)
+    }\n\nShared design language`,
     ascii,
   );
 });

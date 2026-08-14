@@ -39,7 +39,7 @@ import {
 } from "../cli-inventory.ts";
 import { describeCapabilities, renderTerminalFacts } from "./banner.ts";
 import { runBrowseJourney } from "./browse.ts";
-import { runHeadingCandidatesJourney } from "./heading-candidates.ts";
+import { runHeadingVariantsJourney } from "./heading-variants.ts";
 import {
   longGroupedChoices,
   searchGroupedEntries,
@@ -419,12 +419,12 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
 
 const staticCatalogueJourneys: readonly PlaygroundJourney[] = [
   {
-    id: "heading-candidates",
-    title: "Calm heading candidates",
+    id: "heading-variants",
+    title: "Heading treatments",
     section: "Static catalogue",
     description:
-      "Compare four internal restrained-triangle treatments before the owner selects one.",
-    run: runHeadingCandidatesJourney,
+      "Review the settled embedded, underline, and sandwich section boundaries.",
+    run: runHeadingVariantsJourney,
   },
   {
     id: "triangle-statuses",

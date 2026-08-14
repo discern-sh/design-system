@@ -79,11 +79,19 @@ export interface TriangleProgressOptions extends TriangleThemeOptions {
   readonly width: number;
 }
 
-/** Inputs for a centered labeled triangle rule. */
+/** Public visual treatments for a labeled terminal section boundary. */
+export type TriangleSectionRuleTreatment =
+  | "embedded"
+  | "underline"
+  | "sandwich";
+
+/** Inputs for a labeled triangle section boundary. */
 export interface TriangleSectionRuleOptions extends TriangleThemeOptions {
   readonly width: number;
   readonly phase?: number;
   readonly direction?: TriangleDirection;
+  /** Boundary geometry; defaults to the single-row strong embedded title. */
+  readonly treatment?: TriangleSectionRuleTreatment;
 }
 
 /** One semantic workflow step rendered by the triangle stepper. */
@@ -121,6 +129,10 @@ function assertInteger(value: number, name: string, minimum?: number): void {
 
 function normalizedIndex(index: number, length: number): number {
   return ((index % length) + length) % length;
+}
+
+function unknownSectionRuleTreatment(value: never): never {
+  throw new TypeError(`unknown triangle section-rule treatment: ${value}`);
 }
 
 function themeFor(variant: TerminalThemeVariant | undefined): TerminalTheme {
@@ -272,7 +284,7 @@ export function renderTriangleProgressFrame(
   ], capabilities);
 }
 
-/** Render a centered label between canonical and reflected triangle arms. */
+/** Render a full-width labeled section boundary with one triangle marker. */
 export function renderTriangleSectionRule(
   label: string,
   options: TriangleSectionRuleOptions,
@@ -289,41 +301,75 @@ export function renderTriangleSectionRule(
   const width = Math.min(options.width, capabilities.columns);
   const theme = themeFor(options.theme);
   const gap = " ".repeat(theme.spacing["--discern-space-2"] ?? 1);
-  const labelWidth = measureText(label);
-  const armCells = width - labelWidth - 2 * measureText(gap);
-  if (armCells < 2) {
-    throw new TypeError(
-      `triangle section-rule width ${width} cannot hold ${
-        JSON.stringify(label)
-      }`,
-    );
-  }
-  const leftCells = Math.floor(armCells / 2);
-  const rightCells = armCells - leftCells;
-  const left = renderCycle(
-    leftCells,
+  const requestedLabel = label.toUpperCase();
+  const marker = renderCycle(
+    1,
     phase,
     options.direction ?? "forward",
     capabilities,
   );
-  const right = [...left].reverse().join("") +
-    (rightCells > leftCells
-      ? renderCycle(1, phase - 1, options.direction ?? "forward", capabilities)
-      : "");
-  const armStyle = { color: motifColor(theme, "accent") } as const;
-  return renderStyledSpans([
-    { text: left, style: armStyle },
+  const treatment = options.treatment ?? "embedded";
+  const accentStyle = { color: motifColor(theme, "accent") } as const;
+  const headingStyle = {
+    ...theme.typography.strong,
+    color: terminalThemeColor(theme, "--discern-color-ink"),
+  } as const;
+  const strongRule = capabilities.unicode ? "━" : "=";
+  const quietRule = capabilities.unicode ? "─" : "-";
+
+  if (treatment === "embedded") {
+    const lead = strongRule.repeat(2) + gap + marker + gap;
+    const labelWidth = width - measureText(lead) - measureText(gap) - 1;
+    if (labelWidth < 1) {
+      throw new TypeError(
+        `triangle section-rule width ${width} is too narrow for the embedded treatment`,
+      );
+    }
+    const displayLabel = truncateText(
+      requestedLabel,
+      labelWidth,
+      capabilities.unicode ? "…" : ".",
+    );
+    const remaining = width - measureText(lead) - measureText(displayLabel) -
+      measureText(gap);
+    return renderStyledSpans([
+      { text: lead, style: accentStyle },
+      { text: displayLabel, style: headingStyle },
+      { text: gap },
+      { text: strongRule.repeat(remaining), style: accentStyle },
+    ], capabilities);
+  }
+
+  const labelWidth = width - measureText(marker) - measureText(gap);
+  if (labelWidth < 1) {
+    throw new TypeError(
+      `triangle section-rule width ${width} is too narrow for the ${treatment} treatment`,
+    );
+  }
+  const displayLabel = truncateText(
+    requestedLabel,
+    labelWidth,
+    capabilities.unicode ? "…" : ".",
+  );
+  const heading = renderStyledSpans([
+    { text: marker, style: accentStyle },
     { text: gap },
-    {
-      text: label,
-      style: {
-        ...theme.typography.strong,
-        color: terminalThemeColor(theme, "--discern-color-ink"),
-      },
-    },
-    { text: gap },
-    { text: right, style: armStyle },
+    { text: displayLabel, style: headingStyle },
   ], capabilities);
+  if (treatment === "underline") {
+    return `${heading}\n${
+      styleText(strongRule.repeat(width), accentStyle, capabilities)
+    }`;
+  }
+  if (treatment === "sandwich") {
+    const ruleStyle = {
+      ...theme.typography.muted,
+      color: terminalThemeColor(theme, "--discern-color-ink-faint"),
+    } as const;
+    const rule = styleText(quietRule.repeat(width), ruleStyle, capabilities);
+    return `${rule}\n${heading}\n${rule}`;
+  }
+  return unknownSectionRuleTreatment(treatment);
 }
 
 function stepMarker(

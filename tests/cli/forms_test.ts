@@ -19,6 +19,7 @@ import {
   renderSelectCli,
   renderSwitchCli,
   renderTextareaCli,
+  renderTriangleSectionRule,
   selectCliExamples,
   switchCliExamples,
   textareaCliExamples,
@@ -37,6 +38,17 @@ type Renderer<Props> = (
   props: Readonly<Props>,
   capabilities: TerminalCapabilities,
 ) => string;
+
+function sectionRule(
+  label: string,
+  width: number,
+  unicode = true,
+): string {
+  const capabilities = testCapabilities({ columns: width, unicode });
+  return stripAnsi(
+    renderTriangleSectionRule(label, { width }, capabilities),
+  );
+}
 
 function withWidth<Props extends WidthProps>(
   props: Readonly<Props>,
@@ -104,7 +116,11 @@ const checkboxFrames = [
   "Include examples [disabled]\n┌──────────────────────────┐\n│[ ] Not included          │\n└──────────────────────────┘\nDisabled",
   "Include examples [submitted]\n┌──────────────────────────┐\n│[✓] Included              │\n└──────────────────────────┘\n✓ Submitted",
   "Include examples [cancelled]\n┌──────────────────────────┐\n│[ ] Not included          │\n└──────────────────────────┘\n× Choice cancelled",
-  "Capabilities [active]\n┌──────────────────────────┐\n│◮⧩◭⧨◮⧩◭⧨◮⧩ Core ⧩◮⧨◭⧩◮⧨◭⧩◮│\n│› [✓] Render frames       │\n│  [ ] Inspect output      │\n│  (disabled)              │\n│◮⧩◭⧨◮⧩◭⧨ Optional ⧨◭⧩◮⧨◭⧩◮│\n│  [ ] Animate progress    │\n└──────────────────────────┘",
+  `Capabilities [active]\n┌──────────────────────────┐\n│${
+    sectionRule("Core", 26)
+  }│\n│› [✓] Render frames       │\n│  [ ] Inspect output      │\n│  (disabled)              │\n│${
+    sectionRule("Optional", 26)
+  }│\n│  [ ] Animate progress    │\n└──────────────────────────┘`,
 ] as const;
 
 Deno.test("Checkbox renders every static form state exactly", () => {
@@ -189,7 +205,11 @@ const radioFrames = [
   "Channel [disabled]\n┌──────────────────────────┐\n│  ◉ Alpha                 │\n│  ○ Bravo                 │\n│  ○ Charlie (disabled)    │\n└──────────────────────────┘\nDisabled",
   "Channel [submitted]\n┌──────────────────────────┐\n│  ○ Alpha                 │\n│  ◉ Bravo                 │\n│  ○ Charlie (disabled)    │\n└──────────────────────────┘\n✓ Submitted",
   "Channel [cancelled]\n┌──────────────────────────┐\n│  ○ Alpha                 │\n│  ○ Bravo                 │\n│  ○ Charlie (disabled)    │\n└──────────────────────────┘\n× Selection cancelled",
-  "Channel [active]\n┌──────────────────────────┐\n│◮⧩◭⧨◮⧩◭⧨◮ Stable ◮⧨◭⧩◮⧨◭⧩◮│\n│  ○ Alpha                 │\n│› ◉ Bravo                 │\n│◮⧩◭⧨◮⧩◭⧨ Preview ⧨◭⧩◮⧨◭⧩◮⧨│\n│  ○ Charlie (disabled)    │\n└──────────────────────────┘",
+  `Channel [active]\n┌──────────────────────────┐\n│${
+    sectionRule("Stable", 26)
+  }│\n│  ○ Alpha                 │\n│› ◉ Bravo                 │\n│${
+    sectionRule("Preview", 26)
+  }│\n│  ○ Charlie (disabled)    │\n└──────────────────────────┘`,
 ] as const;
 
 Deno.test("Radio renders every static selection state exactly", () => {
@@ -245,7 +265,11 @@ const selectFrames = [
   "Environment [disabled]\n┌──────────────────────────┐\n│Alpha ⌄                   │\n└──────────────────────────┘\nDisabled",
   "Environment [submitted]\n┌──────────────────────────┐\n│Bravo ⌄                   │\n└──────────────────────────┘\n✓ Submitted",
   "Environment [cancelled]\n┌──────────────────────────┐\n│Choose an option ⌄        │\n└──────────────────────────┘\n× Selection cancelled",
-  "Environment [active]\n┌──────────────────────────┐\n│◮⧩◭⧨◮⧩ Recommended ⧩◮⧨◭⧩◮⧨│\n│  [ ] Alpha               │\n│› [●] Bravo               │\n│◮⧩◭⧨◮⧩◭⧨◮ Other ◮⧨◭⧩◮⧨◭⧩◮⧨│\n│  [ ] Charlie (disabled)  │\n└──────────────────────────┘",
+  `Environment [active]\n┌──────────────────────────┐\n│${
+    sectionRule("Recommended", 26)
+  }│\n│  [ ] Alpha               │\n│› [●] Bravo               │\n│${
+    sectionRule("Other", 26)
+  }│\n│  [ ] Charlie (disabled)  │\n└──────────────────────────┘`,
 ] as const;
 
 Deno.test("Select renders every static selection state exactly", () => {
@@ -279,20 +303,44 @@ Deno.test("grouped Select, Checkbox, and Radio retain structure in narrow ASCII 
     [
       renderCheckboxCli,
       { ...checkbox.props, width: 20 },
-      "Capabilities [activ…\n┌──────────────────┐\n│◮⧩◭⧨◮⧩ Core ⧩◮⧨◭⧩◮│\n│› [✓] Render      │\n│frames            │\n│  [ ] Inspect     │\n│  output          │\n│  (disabled)      │\n│◮⧩◭⧨ Optional ⧨◭⧩◮│\n│  [ ] Animate     │\n│  progress        │\n└──────────────────┘",
-      "Capabilities [activ.\n+------------------+\n|>v^<>v Core v><^v>|\n|> [x] Render      |\n|frames            |\n|  [ ] Inspect     |\n|  output          |\n|  (disabled)      |\n|>v^< Optional <^v>|\n|  [ ] Animate     |\n|  progress        |\n+------------------+",
+      `Capabilities [activ…\n┌──────────────────┐\n│${
+        sectionRule("Core", 18)
+      }│\n│› [✓] Render      │\n│frames            │\n│  [ ] Inspect     │\n│  output          │\n│  (disabled)      │\n│${
+        sectionRule("Optional", 18)
+      }│\n│  [ ] Animate     │\n│  progress        │\n└──────────────────┘`,
+      `Capabilities [activ.\n+------------------+\n|${
+        sectionRule("Core", 18, false)
+      }|\n|> [x] Render      |\n|frames            |\n|  [ ] Inspect     |\n|  output          |\n|  (disabled)      |\n|${
+        sectionRule("Optional", 18, false)
+      }|\n|  [ ] Animate     |\n|  progress        |\n+------------------+`,
     ],
     [
       renderRadioCli,
       { ...radio.props, width: 20 },
-      "Channel [active]\n┌──────────────────┐\n│◮⧩◭⧨◮ Stable ◮⧨◭⧩◮│\n│  ○ Alpha         │\n│› ◉ Bravo         │\n│◮⧩◭⧨ Preview ⧨◭⧩◮⧨│\n│  ○ Charlie       │\n│  (disabled)      │\n└──────────────────┘",
-      "Channel [active]\n+------------------+\n|>v^<> Stable ><^v>|\n|  ( ) Alpha       |\n|> (*) Bravo       |\n|>v^< Preview <^v><|\n|  ( ) Charlie     |\n|  (disabled)      |\n+------------------+",
+      `Channel [active]\n┌──────────────────┐\n│${
+        sectionRule("Stable", 18)
+      }│\n│  ○ Alpha         │\n│› ◉ Bravo         │\n│${
+        sectionRule("Preview", 18)
+      }│\n│  ○ Charlie       │\n│  (disabled)      │\n└──────────────────┘`,
+      `Channel [active]\n+------------------+\n|${
+        sectionRule("Stable", 18, false)
+      }|\n|  ( ) Alpha       |\n|> (*) Bravo       |\n|${
+        sectionRule("Preview", 18, false)
+      }|\n|  ( ) Charlie     |\n|  (disabled)      |\n+------------------+`,
     ],
     [
       renderSelectCli,
       { ...select.props, width: 20 },
-      "Environment [active]\n┌──────────────────┐\n│◮⧩ Recommended ⧩◮⧨│\n│  [ ] Alpha       │\n│› [●] Bravo       │\n│◮⧩◭⧨◮ Other ◮⧨◭⧩◮⧨│\n│  [ ] Charlie     │\n│  (disabled)      │\n└──────────────────┘",
-      "Environment [active]\n+------------------+\n|>v Recommended v><|\n|  [ ] Alpha       |\n|> [*] Bravo       |\n|>v^<> Other ><^v><|\n|  [ ] Charlie     |\n|  (disabled)      |\n+------------------+",
+      `Environment [active]\n┌──────────────────┐\n│${
+        sectionRule("Recommended", 18)
+      }│\n│  [ ] Alpha       │\n│› [●] Bravo       │\n│${
+        sectionRule("Other", 18)
+      }│\n│  [ ] Charlie     │\n│  (disabled)      │\n└──────────────────┘`,
+      `Environment [active]\n+------------------+\n|${
+        sectionRule("Recommended", 18, false)
+      }|\n|  [ ] Alpha       |\n|> [*] Bravo       |\n|${
+        sectionRule("Other", 18, false)
+      }|\n|  [ ] Charlie     |\n|  (disabled)      |\n+------------------+`,
     ],
   ] as const;
 

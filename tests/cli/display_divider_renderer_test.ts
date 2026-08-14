@@ -20,7 +20,7 @@ Deno.test("Divider renders exact narrow, standard, wide, and capability-degraded
       capabilities,
     );
   }
-  const labelled = "◮⧩◭⧨◮ gate ◮⧨◭⧩◮";
+  const labelled = "━━ ◮ GATE ━━━━━━";
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
     const capabilities = testCapabilities({ colorDepth, columns: 16 });
     assertStyledFrame(
@@ -32,7 +32,7 @@ Deno.test("Divider renders exact narrow, standard, wide, and capability-degraded
   const ascii = testCapabilities({ columns: 16, unicode: false });
   assertExactFrame(
     renderDividerCli({ label: "gate", width: 16 }, ascii),
-    ">v^<> gate ><^v>",
+    "== > GATE ======",
     ascii,
   );
 });

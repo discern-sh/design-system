@@ -215,7 +215,7 @@ Deno.test("an active grouped prompt recomputes its window after shrinking and gr
     );
   }
   const shrunk = io.frameWrites.find(({ rows }) => rows === 8)?.frame ?? "";
-  assertStringIncludes(shrunk, "Group 1");
+  assertStringIncludes(shrunk, "GROUP 1");
   assertStringIncludes(shrunk, "Choice 1.2");
 });
 
@@ -233,7 +233,7 @@ Deno.test("group headings consume real viewport rows without becoming selectable
   const active =
     displayedFrames(io).find((frame) => frame.includes("[active]")) ?? "";
   assert(frameRows(active) <= 8);
-  assertStringIncludes(active, "Group 4");
+  assertStringIncludes(active, "GROUP 4");
   assertStringIncludes(active, "Choice 4.4");
 });
 

@@ -21,23 +21,30 @@ const anchorHeadingProps = {
 } as const;
 
 Deno.test("Anchor heading renders exact width, ASCII, and colour frames", () => {
-  const frames = [
-    [24, "## Renderer contr…"],
-    [52, "## Renderer contract"],
-    [96, "## Renderer contract"],
-  ] as const;
-  for (const [columns, label] of frames) {
+  for (const columns of [24, 52, 96]) {
     const capabilities = testCapabilities({ columns });
     assertExactFrame(
       renderAnchorHeadingCli(anchorHeadingProps, capabilities),
-      `\n${renderTriangleSectionRule(label, { width: columns }, capabilities)}`,
+      `\n${
+        renderTriangleSectionRule(
+          "## Renderer contract",
+          { width: columns },
+          capabilities,
+        )
+      }`,
       capabilities,
     );
   }
   const ascii = testCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderAnchorHeadingCli(anchorHeadingProps, ascii),
-    "\n>v ## Renderer contr. v>",
+    `\n${
+      renderTriangleSectionRule(
+        "## Renderer contract",
+        { width: 24 },
+        ascii,
+      )
+    }`,
     ascii,
   );
   for (
@@ -54,6 +61,27 @@ Deno.test("Anchor heading renders exact width, ASCII, and colour frames", () => 
         )
       }`,
       capabilities,
+    );
+  }
+});
+
+Deno.test("Anchor heading exposes every public section-boundary treatment", () => {
+  const capabilities = testCapabilities({ columns: 32 });
+  for (const treatment of ["embedded", "underline", "sandwich"] as const) {
+    assertEquals(
+      renderAnchorHeadingCli(
+        {
+          ...anchorHeadingProps,
+          treatment,
+          leadingBlankLines: 0,
+        },
+        capabilities,
+      ),
+      renderTriangleSectionRule(
+        "## Renderer contract",
+        { width: 32, treatment },
+        capabilities,
+      ),
     );
   }
 });
@@ -76,7 +104,7 @@ Deno.test("Anchor heading shares the validated default heading boundary", () => 
       text: "Boundary",
       leadingBlankLines: 0,
     }, capabilities)[0],
-    "◮",
+    "━",
   );
   assertThrows(
     () =>
@@ -100,29 +128,41 @@ Deno.test("Docs header renders exact width, ASCII, and colour frames", () => {
   const frames = [
     [
       24,
-      "◮⧩◭⧨◮ discern docs ◮⧨◭⧩◮\nDesign system / CLI\nrendering\nActions: Search · Theme",
+      "Design system / CLI\nrendering\nActions: Search · Theme",
     ],
     [
       52,
-      "◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭ discern docs ◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮\nDesign system / CLI rendering\nActions: Search · Theme",
+      "Design system / CLI rendering\nActions: Search · Theme",
     ],
     [
       96,
-      "◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮ discern docs ◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮\nDesign system / CLI rendering\nActions: Search · Theme",
+      "Design system / CLI rendering\nActions: Search · Theme",
     ],
   ] as const;
-  for (const [columns, expected] of frames) {
+  for (const [columns, context] of frames) {
     const capabilities = testCapabilities({ columns });
     assertExactFrame(
       renderDocsHeaderCli(docsHeaderProps, capabilities),
-      expected,
+      `${
+        renderTriangleSectionRule(
+          "discern docs",
+          { width: columns },
+          capabilities,
+        )
+      }\n${context}`,
       capabilities,
     );
   }
   const ascii = testCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderDocsHeaderCli(docsHeaderProps, ascii),
-    ">v^<> discern docs ><^v>\nDesign system / CLI\nrendering\nActions: Search | Theme",
+    `${
+      renderTriangleSectionRule(
+        "discern docs",
+        { width: 24 },
+        ascii,
+      )
+    }\nDesign system / CLI\nrendering\nActions: Search | Theme`,
     ascii,
   );
   const theme = terminalThemes.dark;

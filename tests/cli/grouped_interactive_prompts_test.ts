@@ -6,6 +6,7 @@ import {
   promptSelect,
 } from "../../src/cli/interactive/mod.ts";
 import type { PromptChoiceEntry } from "../../src/cli/interactive/types.ts";
+import { renderTriangleSectionRule } from "../../src/cli/mod.ts";
 import { assertExactFrame, testCapabilities } from "./helpers.ts";
 import { FakeTerminal } from "./fake-terminal.ts";
 
@@ -33,6 +34,11 @@ function paintedFrames(io: FakeTerminal): readonly string[] {
       ? write.slice(eraseAt + eraseToEnd.length)
       : write;
   }).filter((write) => /\[(?:active|error|submitted|cancelled)\]/u.test(write));
+}
+
+function groupRule(label: string): string {
+  const capabilities = testCapabilities({ columns: 30 });
+  return renderTriangleSectionRule(label, { width: 30 }, capabilities);
 }
 
 Deno.test("grouped select supports every promised movement key", async () => {
@@ -149,7 +155,7 @@ Deno.test("search providers share grouped entry vocabulary and skip structure", 
     }, { io }),
     "three",
   );
-  assertStringIncludes(io.output(), "Secondary");
+  assertStringIncludes(io.output(), "SECONDARY");
   assertStringIncludes(io.output(), "Three");
 });
 
@@ -160,7 +166,7 @@ Deno.test("grouped prompts cancel cleanly and reject required structure-only lis
     PromptCancelled,
     "Cancelled.",
   );
-  assertStringIncludes(cancelled.output(), "Primary");
+  assertStringIncludes(cancelled.output(), "PRIMARY");
   assertEquals(cancelled.rawTransitions, [true, false]);
 
   const invalid = new FakeTerminal(["\r"]);
@@ -204,7 +210,9 @@ Deno.test("long grouped viewports and submitted frames stay exact", async () => 
   const selectFrames = paintedFrames(io);
   assertExactFrame(
     selectFrames[1] ?? "",
-    "Pick [active]\n┌──────────────────────────────┐\n│◮⧩◭⧨◮⧩◭⧨◮ Secondary ◮⧨◭⧩◮⧨◭⧩◮⧨│\n│  [ ] Two                     │\n│› [●] Three                   │\n└──────────────────────────────┘",
+    `Pick [active]\n┌──────────────────────────────┐\n│${
+      groupRule("Secondary")
+    }│\n│  [ ] Two                     │\n│› [●] Three                   │\n└──────────────────────────────┘`,
     capabilities,
   );
   assertExactFrame(
@@ -221,7 +229,11 @@ Deno.test("long grouped viewports and submitted frames stay exact", async () => 
   const multiselectFrames = paintedFrames(io);
   assertExactFrame(
     multiselectFrames.at(-1) ?? "",
-    "Pick many [submitted]\n┌──────────────────────────────┐\n│◮⧩◭⧨◮⧩◭⧨◮⧩ Primary ⧩◮⧨◭⧩◮⧨◭⧩◮⧨│\n│  [✓] One                     │\n│  [ ] Disabled (disabled)     │\n│◮⧩◭⧨◮⧩◭⧨◮ Secondary ◮⧨◭⧩◮⧨◭⧩◮⧨│\n│  [✓] Two                     │\n└──────────────────────────────┘\n✓ Submitted",
+    `Pick many [submitted]\n┌──────────────────────────────┐\n│${
+      groupRule("Primary")
+    }│\n│  [✓] One                     │\n│  [ ] Disabled (disabled)     │\n│${
+      groupRule("Secondary")
+    }│\n│  [✓] Two                     │\n└──────────────────────────────┘\n✓ Submitted`,
     capabilities,
   );
 
@@ -237,7 +249,9 @@ Deno.test("long grouped viewports and submitted frames stay exact", async () => 
   const searchFrames = paintedFrames(io);
   assertExactFrame(
     searchFrames.at(-1) ?? "",
-    "Find [submitted]\n┌──────────────────────────────┐\n│                              │\n│◮⧩◭⧨◮⧩◭⧨◮ Secondary ◮⧨◭⧩◮⧨◭⧩◮⧨│\n│  ○ Two                       │\n│  ◉ Three                     │\n└──────────────────────────────┘\n✓ Submitted",
+    `Find [submitted]\n┌──────────────────────────────┐\n│                              │\n│${
+      groupRule("Secondary")
+    }│\n│  ○ Two                       │\n│  ◉ Three                     │\n└──────────────────────────────┘\n✓ Submitted`,
     capabilities,
   );
 });

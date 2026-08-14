@@ -18,16 +18,10 @@ import {
   listCliComponents,
   renderCliExemptions,
 } from "../../scripts/cli-inventory.ts";
-import { stripAnsi } from "../../src/cli/ansi.ts";
-import { measureText } from "../../src/cli/text.ts";
 import {
   browseComponentChoices,
   browseTopChoices,
 } from "../../scripts/playground/browse.ts";
-import {
-  headingCandidateFacts,
-  renderHeadingCandidate,
-} from "../../scripts/playground/heading-candidates.ts";
 import {
   interactiveExportCoverage,
   journeyById,
@@ -47,7 +41,6 @@ import {
   runPlayground,
 } from "../../scripts/playground-cli.ts";
 import { FakeTerminal } from "./fake-terminal.ts";
-import { testCapabilities } from "./helpers.ts";
 
 const ENTER = "\r";
 const DOWN = "\x1b[B";
@@ -138,46 +131,22 @@ Deno.test("journey inventory stays unique, sectioned, and fully listed", () => {
   }
 });
 
-Deno.test("heading candidates remain directly addressable internal review material", async () => {
-  assertEquals(resolvePlaygroundSelection(["heading-candidates"]), {
+Deno.test("public heading treatments have one direct, concise review journey", async () => {
+  assertEquals(resolvePlaygroundSelection(["heading-variants"]), {
     kind: "journey",
-    id: "heading-candidates",
+    id: "heading-variants",
   });
   const io = new FakeTerminal([], { columns: 80 });
   assertEquals(
-    await runJourney(journey("heading-candidates"), testRuntime(io)),
+    await runJourney(journey("heading-variants"), testRuntime(io)),
     "completed",
   );
-  for (
-    const id of ["quiet-marker", "short-rule", "offset-pair", "stacked-corner"]
-  ) {
+  for (const id of ["embedded", "underline", "sandwich"]) {
     assertStringIncludes(io.output(), `[${id}]`);
   }
-  assertStringIncludes(io.output(), "Default boundary (1 line)");
-  assertStringIncludes(io.output(), "Explicit boundary (0 lines)");
-
-  const longTitle =
-    "A calm heading treatment for a deliberately long terminal section name";
-  for (const { id } of headingCandidateFacts) {
-    for (const columns of [39, 80, 104]) {
-      for (const unicode of [true, false]) {
-        for (const colorDepth of ["truecolor", "none"] as const) {
-          const capabilities = testCapabilities({
-            columns,
-            unicode,
-            colorDepth,
-          });
-          const rendered = stripAnsi(
-            renderHeadingCandidate(id, longTitle, capabilities),
-          );
-          assert(
-            rendered.split("\n").every((line) => measureText(line) <= columns),
-            `${id} overflowed ${columns} columns`,
-          );
-        }
-      }
-    }
-  }
+  assertStringIncludes(io.output(), "━━ ◮ DEPLOYING WORKSPACE CHANGES");
+  assertStringIncludes(io.output(), "◮ DEPLOYING WORKSPACE CHANGES\n━━");
+  assertStringIncludes(io.output(), "──\n◮ DEPLOYING WORKSPACE CHANGES\n──");
 });
 
 Deno.test("Timeline and stepper status review has a direct journey", async () => {
