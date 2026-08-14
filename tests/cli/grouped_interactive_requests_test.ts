@@ -213,7 +213,7 @@ Deno.test("long grouped viewports and submitted frames stay exact", async () => 
     selectFrames[1] ?? "",
     `Pick [active]\n┌──────────────────────────────┐\n│${
       groupRule("Secondary")
-    }│\n│  [ ] Two                     │\n│› [●] Three                   │\n└──────────────────────────────┘`,
+    }│\n│  [ ] Two                     │\n│› [●] Three                   │\n└──────────────────────────────┘\n`,
     capabilities,
   );
   assertExactFrame(
