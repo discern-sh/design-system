@@ -17,7 +17,6 @@ import {
   interactiveChoiceWindow,
   type InteractiveChoiceWindowEntry,
 } from "../../cli/interactive-choice.ts";
-import { joinVertical } from "../../cli/layout.ts";
 import { truncateText } from "../../cli/text.ts";
 import {
   terminalThemeColor,
@@ -105,7 +104,13 @@ export function formCliControlWidth(
   return formCliFrameWidth(requested, capabilities) - 2;
 }
 
-/** Render label, state, control, and lifecycle message as one form frame. */
+/**
+ * Render label, state, control, and lifecycle message as one form frame.
+ *
+ * The message row below the box is always reserved: it carries the hint,
+ * the lifecycle message, or stays blank, so a frame's height never changes
+ * when a message appears or clears.
+ */
 export function renderFormCliFrame(
   options: FormCliFrameOptions,
   capabilities: TerminalCapabilities,
@@ -128,7 +133,7 @@ export function renderFormCliFrame(
     boundedWidth,
     capabilities.unicode ? "…" : ".",
   );
-  return joinVertical([
+  return [
     styleText(heading, {
       ...theme.typography.strong,
       color: terminalToneColor(theme, tone),
@@ -143,7 +148,7 @@ export function renderFormCliFrame(
       ...theme.typography.annotation,
       color: terminalToneColor(theme, tone),
     }, capabilities),
-  ]);
+  ].join("\n");
 }
 
 const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });

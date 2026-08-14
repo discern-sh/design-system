@@ -28,6 +28,28 @@ function assertRestored(io: FakeTerminal): void {
   assertEquals(io.writes.at(-1), SHOW_TERMINAL_CURSOR);
 }
 
+function frameSequence(io: FakeTerminal): readonly string[] {
+  const firstColumn = "\x1b[1G";
+  const eraseToEnd = "\x1b[J";
+  return io.writes.flatMap((write) => {
+    const eraseAt = write.indexOf(eraseToEnd);
+    const frame = write.startsWith(firstColumn) && eraseAt >= 0
+      ? write.slice(eraseAt + eraseToEnd.length)
+      : write;
+    return /\[(?:active|error|submitted|cancelled)\]/u.test(frame)
+      ? [frame]
+      : [];
+  });
+}
+
+async function until(condition: () => boolean): Promise<void> {
+  for (let attempt = 0; attempt < 1000; attempt += 1) {
+    if (condition()) return;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+  throw new Error("condition never held");
+}
+
 Deno.test("text interaction edits, validates, submits, and restores terminal state", async () => {
   const io = new FakeTerminal(["\r", "J", "e", "s", "s", "\r"], {
     columns: 32,
@@ -77,6 +99,200 @@ Deno.test("Ctrl+C and EOF cancel with exact cleanup", async () => {
   assertStringIncludes(ended.output(), "Input ended.");
 });
 
+Deno.test("a failed submission latches the validator to every value change", async () => {
+  const calls: string[] = [];
+  const io = new FakeTerminal(["ab\r", "\x1b[A", "c", "\x7f", "c\r"], {
+    columns: 40,
+  });
+  const result = await requestText({
+    label: "Latch",
+    validate: (value) => {
+      calls.push(value);
+      return value.length >= 3 ? undefined : "Too short.";
+    },
+  }, { io });
+  assertEquals(result, "abc");
+  assertEquals(calls, ["ab", "abc", "ab", "abc", "abc"]);
+  const frames = frameSequence(io);
+  assertEquals(
+    frames.filter((frame) => frame.includes("Too short.")).length,
+    2,
+  );
+  const firstError = frames.findIndex((frame) => frame.includes("Too short."));
+  assert(firstError >= 0, "the failed submission painted no message");
+  const afterError = frames[firstError + 1] ?? "";
+  assert(
+    afterError.includes("abc") && !afterError.includes("Too short."),
+    "the message must persist through the no-op arrow key and clear on the fixing edit",
+  );
+  assert(
+    (frames[firstError + 2] ?? "").includes("Too short."),
+    "the message must return live when an edit makes the value invalid again",
+  );
+  assertRestored(io);
+});
+
+Deno.test("submission while invalid re-presents the message and re-runs the validator", async () => {
+  const calls: string[] = [];
+  const io = new FakeTerminal(["x\r", "\r", "yz\r"], { columns: 40 });
+  const result = await requestText({
+    label: "Retry",
+    validate: (value) => {
+      calls.push(value);
+      return value.length >= 3 ? undefined : "Use three characters.";
+    },
+  }, { io });
+  assertEquals(result, "xyz");
+  assertEquals(calls, ["x", "x", "xy", "xyz", "xyz"]);
+});
+
+Deno.test("stale asynchronous verdicts are discarded while a fast typist edits", async () => {
+  const io = new FakeTerminal(["ab\r"], { columns: 40, holdOpen: true });
+  const pending: Array<{
+    readonly value: string;
+    readonly resolve: (message: string | undefined) => void;
+  }> = [];
+  const request = requestText({
+    label: "Async",
+    validate: (value) =>
+      new Promise<string | undefined>((resolve) =>
+        pending.push({ value, resolve })
+      ),
+  }, { io });
+  await until(() => pending.length === 1);
+  pending[0]?.resolve("Not yet.");
+  await until(() => io.output().includes("Not yet."));
+
+  io.enqueue("c");
+  await until(() => pending.length === 2);
+  io.enqueue("d");
+  await until(() => pending.length === 3);
+  assertEquals(
+    pending.map(({ value }) => value),
+    ["ab", "abc", "abcd"],
+    "an in-flight verdict must never block further edits",
+  );
+
+  pending[2]?.resolve(undefined);
+  await until(() => !(frameSequence(io).at(-1) ?? "").includes("Not yet."));
+  pending[1]?.resolve("Stale problem.");
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert(
+    !io.output().includes("Stale problem."),
+    "a verdict superseded by a newer edit must be discarded",
+  );
+
+  io.enqueue("\r");
+  await until(() => pending.length === 4);
+  pending[3]?.resolve(undefined);
+  assertEquals(await request, "abcd");
+  assertRestored(io);
+});
+
+Deno.test("a rejecting live re-validation faults the interaction and restores", async () => {
+  const io = new FakeTerminal(["x\r"], { columns: 40, holdOpen: true });
+  let verdicts = 0;
+  const request = requestText({
+    label: "Fault",
+    validate: () => {
+      verdicts += 1;
+      return verdicts === 1
+        ? Promise.resolve("Not yet.")
+        : Promise.reject(new Error("validator broke"));
+    },
+  }, { io });
+  await until(() => io.output().includes("Not yet."));
+  io.enqueue("y");
+  await assertRejects(() => request, Error, "validator broke");
+  assertEquals(io.rawTransitions, [true, false]);
+  assertRestored(io);
+});
+
+Deno.test("the no-previous-step notice clears on the next key and restores the latched message", async () => {
+  const io = new FakeTerminal(["x\r", "\x15", "\x1b[A", "yz\r"], {
+    columns: 40,
+  });
+  const result = await requestText({
+    label: "Notice",
+    validate: (value) =>
+      value.length >= 3 ? undefined : "Use three characters.",
+  }, { io });
+  assertEquals(result, "xyz");
+  const frames = frameSequence(io);
+  const notice = frames.findIndex((frame) =>
+    frame.includes("There is no previous form step.")
+  );
+  assert(notice >= 0, "Ctrl+U outside a form must present its notice");
+  const restored = frames[notice + 1] ?? "";
+  assert(
+    restored.includes("Use three characters.") &&
+      !restored.includes("previous form step"),
+    "the next key must restore the latched message beneath the notice",
+  );
+});
+
+Deno.test("transform canonicalises before validation and shapes the returned value", async () => {
+  const seen: string[] = [];
+  const io = new FakeTerminal(["  hi  \r"], { columns: 40 });
+  const result = await requestText({
+    label: "Trimmed",
+    transform: (value) => value.trim(),
+    validate: (value) => {
+      seen.push(value);
+      return undefined;
+    },
+  }, { io });
+  assertEquals(result, "hi");
+  assertEquals(seen, ["hi"]);
+
+  const requiredIo = new FakeTerminal(["   \r", "\x7f\x7f\x7fok\r"], {
+    columns: 40,
+  });
+  assertEquals(
+    await requestText({
+      label: "Required",
+      required: "Give a real value.",
+      transform: (value) => value.trim(),
+    }, { io: requiredIo }),
+    "ok",
+  );
+  assertStringIncludes(requiredIo.output(), "Give a real value.");
+});
+
+Deno.test("the latch tracks the transformed value rather than raw edits", async () => {
+  const seen: string[] = [];
+  const io = new FakeTerminal(["ab\r", " ", "c\r"], { columns: 40 });
+  const result = await requestText({
+    label: "Canonical",
+    transform: (value) => value.trim(),
+    validate: (value) => {
+      seen.push(value);
+      return value.length >= 3 ? undefined : "Too short.";
+    },
+  }, { io });
+  assertEquals(result, "ab c");
+  assertEquals(
+    seen,
+    ["ab", "ab c", "ab c"],
+    "a trailing space that the transform removes must not re-run the validator",
+  );
+});
+
+Deno.test("masked transform applies to the real value without exposing either form", async () => {
+  const io = new FakeTerminal(["  secret  \r"], { columns: 40 });
+  const result = await requestMaskedText({
+    label: "Token",
+    transform: (value) => value.trim(),
+  }, { io });
+  assertEquals(result, "secret");
+  assert(
+    !io.output().includes("secret"),
+    "neither the raw nor the transformed secret may reach the terminal",
+  );
+  assertStringIncludes(io.output(), "••••••••••");
+});
+
 Deno.test("validator exceptions restore raw mode and cursor", async () => {
   const io = new FakeTerminal(["ok\r"], { columns: 32 });
   await assertRejects(
@@ -92,6 +308,75 @@ Deno.test("validator exceptions restore raw mode and cursor", async () => {
   );
   assertEquals(io.rawTransitions, [true, false]);
   assertRestored(io);
+});
+
+Deno.test("Escape cancels every request kind with its own reason", async () => {
+  const choices = [
+    { id: "one", label: "One", value: 1 },
+    { id: "two", label: "Two", value: 2 },
+  ] as const;
+  const kinds: ReadonlyArray<
+    readonly [string, (io: FakeTerminal) => Promise<unknown>]
+  > = [
+    ["text", (io) => requestText({ label: "Text" }, { io })],
+    ["masked", (io) => requestMaskedText({ label: "Masked" }, { io })],
+    ["confirm", (io) => requestConfirmation({ label: "Confirm" }, { io })],
+    ["select", (io) => requestSelection({ label: "Select", choices }, { io })],
+    [
+      "multiselect",
+      (io) => requestSelections({ label: "Multi", choices }, { io }),
+    ],
+    [
+      "search",
+      (io) => requestSearch({ label: "Search", search: () => choices }, { io }),
+    ],
+    [
+      "autocomplete",
+      (io) =>
+        requestAutocomplete({ label: "Auto", suggestions: ["one"] }, { io }),
+    ],
+    ["textarea", (io) => requestTextarea({ label: "Notes" }, { io })],
+  ];
+  for (const [kind, run] of kinds) {
+    const io = new FakeTerminal(["\x1b"], { columns: 40 });
+    const error = await assertRejects(() => run(io), InteractionCancelled);
+    assertEquals(error.reason, "Dismissed.", kind);
+    assertStringIncludes(io.output(), "Dismissed.");
+    assertEquals(io.rawTransitions, [true, false], kind);
+    assertRestored(io);
+  }
+});
+
+Deno.test("Escape followed by split CSI bytes still decodes as one arrow key", async () => {
+  const choices = [
+    { id: "one", label: "One", value: 1 },
+    { id: "two", label: "Two", value: 2 },
+  ] as const;
+  const io = new FakeTerminal(["\x1b", "[B", "\r"], { columns: 40 });
+  assertEquals(await requestSelection({ label: "Pick", choices }, { io }), 2);
+  assert(
+    !io.output().includes("Dismissed."),
+    "a split escape sequence must never read as a lone Escape",
+  );
+});
+
+Deno.test("Escape cancels a sequential form with the cancelled frame and reason", async () => {
+  const io = new FakeTerminal(["\x1b"], { columns: 40 });
+  await assertRejects(
+    () =>
+      createSequentialForm({ label: "Setup", io })
+        .add({
+          id: "name",
+          label: "Name",
+          run: (_values, _previous, runtime) =>
+            requestText({ label: "Name" }, runtime),
+        })
+        .submit(),
+    InteractionCancelled,
+    "Dismissed.",
+  );
+  assertStringIncludes(io.output(), "Dismissed.");
+  assertEquals(io.rawTransitions, [true, false]);
 });
 
 Deno.test("terminal interactions refuse non-TTY input before terminal mutation", async () => {

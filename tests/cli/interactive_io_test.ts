@@ -5,6 +5,7 @@ import {
   HIDE_TERMINAL_CURSOR,
   InlineFramePainter,
   SHOW_TERMINAL_CURSOR,
+  TerminalKeyReader,
   tokenizeTerminalKeys,
   withRawTerminal,
 } from "../../src/cli/interactive/mod.ts";
@@ -40,6 +41,59 @@ Deno.test("standalone Escape waits for EOF and unknown CSI stays non-printable",
     keys: [{ kind: "unknown", sequence: "\x1b[99~" }],
     rest: "",
   });
+});
+
+Deno.test("Alt and meta chords stay non-printable unknown sequences", () => {
+  assertEquals(tokenizeTerminalKeys("\x1bb", true).keys, [
+    { kind: "unknown", sequence: "\x1bb" },
+  ]);
+  const decoder = new BufferedTerminalKeyDecoder();
+  assertEquals(decoder.push(new TextEncoder().encode("\x1bb")), [
+    { kind: "unknown", sequence: "\x1bb" },
+  ]);
+  assertEquals(tokenizeTerminalKeys("\x1b\x1b[A").keys, [
+    { kind: "named", name: "escape" },
+    { kind: "named", name: "up" },
+  ]);
+});
+
+Deno.test("flushLoneEscape delivers only an exactly-lone Escape", () => {
+  const lone = new BufferedTerminalKeyDecoder();
+  lone.push(new Uint8Array([27]));
+  assertEquals(lone.flushLoneEscape(), [{ kind: "named", name: "escape" }]);
+  assertEquals(lone.bufferedText, "");
+  assertEquals(lone.flushLoneEscape(), []);
+
+  const partial = new BufferedTerminalKeyDecoder();
+  partial.push(new TextEncoder().encode("\x1b["));
+  assertEquals(partial.flushLoneEscape(), []);
+  assertEquals(partial.bufferedText, "\x1b[");
+});
+
+Deno.test("the reader delivers a lone Escape once its continuation window elapses", async () => {
+  const io = new FakeTerminal(["\x1b"], { holdOpen: true });
+  const reader = new TerminalKeyReader(io, { escapeDelayMs: 5 });
+  assertEquals(await reader.readKey(), { kind: "named", name: "escape" });
+});
+
+Deno.test("continuation bytes inside the window complete a split escape sequence", async () => {
+  const io = new FakeTerminal(["\x1b"], { holdOpen: true });
+  const reader = new TerminalKeyReader(io, { escapeDelayMs: 60_000 });
+  const first = reader.readKey();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  io.enqueue("[A");
+  assertEquals(await first, { kind: "named", name: "up" });
+});
+
+Deno.test("a read left pending by an elapsed window is adopted by the next reader", async () => {
+  const io = new FakeTerminal(["\x1b"], { holdOpen: true });
+  const first = new TerminalKeyReader(io, { escapeDelayMs: 5 });
+  assertEquals(await first.readKey(), { kind: "named", name: "escape" });
+
+  const second = new TerminalKeyReader(io);
+  const next = second.readKey();
+  io.enqueue("x");
+  assertEquals(await next, { kind: "text", text: "x" });
 });
 
 Deno.test("grapheme editor handles emoji clusters, Emacs keys, and multiline movement", () => {

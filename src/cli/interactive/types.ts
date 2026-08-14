@@ -15,11 +15,21 @@ export type InteractionValidator<T> = (
 /** Required-value policy with an optional caller-authored error message. */
 export type InteractionRequired = boolean | string;
 
+/**
+ * Synchronous canonicalisation applied to a submitted value before any
+ * validation. The transformed value is what the required check and validator
+ * see and what the interaction returns; the frame keeps presenting the value
+ * as edited, and a masked value stays masked throughout.
+ */
+export type InteractionTransform<T> = (value: T) => T;
+
 /** Options shared by every value-producing interaction. */
 export interface InteractionOptions<T> {
   readonly label: string;
   readonly hint?: string;
   readonly required?: InteractionRequired;
+  /** Runs first: transform, then the required check, then `validate`. */
+  readonly transform?: InteractionTransform<T>;
   readonly validate?: InteractionValidator<T>;
 }
 

@@ -279,6 +279,32 @@ Deno.test("text journey validates, completes, and restores the terminal", async 
   assert(io.writes.includes(SHOW_TERMINAL_CURSOR));
 });
 
+Deno.test("validation latch journey latches, transforms, and completes", async () => {
+  const io = new FakeTerminal(
+    ["Bad Slug!", ENTER, "\x7f".repeat(9), "ok ", ENTER],
+    { columns: 60 },
+  );
+  const outcome = await runJourney(
+    journey("validation-latch"),
+    testRuntime(io),
+  );
+  assertEquals(outcome, "completed");
+  assertStringIncludes(io.output(), "Use lowercase letters");
+  assertStringIncludes(io.output(), 'Result: string "ok"');
+  assertEquals(io.rawTransitions, [true, false]);
+});
+
+Deno.test("Escape backs out of a journey through the shared cancellation wrapper", async () => {
+  const io = new FakeTerminal(["\x1b"], { columns: 60 });
+  const outcome = await runJourney(
+    journey("validation-latch"),
+    testRuntime(io),
+  );
+  assertEquals(outcome, "cancelled");
+  assertStringIncludes(io.output(), "Journey cancelled (Dismissed.)");
+  assertEquals(io.rawTransitions, [true, false]);
+});
+
 Deno.test("masked journey never echoes the secret", async () => {
   const io = new FakeTerminal([`hunter2${ENTER}`], { columns: 40 });
   const outcome = await runJourney(journey("masked"), testRuntime(io));
