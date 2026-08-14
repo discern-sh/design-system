@@ -100,6 +100,33 @@ export function moveEnabledIndex<T>(
   return enabled[next] ?? enabled[0] ?? 0;
 }
 
+/**
+ * Move the highlight one visible window in a direction, landing on the
+ * nearest enabled choice at or beyond the jump target. Paging clamps at the
+ * list's edges rather than wrapping.
+ */
+export function pageEnabledIndex<T>(
+  choices: readonly InteractionEntry<T>[],
+  current: number,
+  direction: -1 | 1,
+  pageSize: number,
+): number {
+  const enabled = enabledIndices(choices);
+  if (enabled.length === 0) return -1;
+  const origin = enabled.includes(current)
+    ? current
+    : direction === 1
+    ? -1
+    : choices.length;
+  const target = origin + direction * Math.max(1, pageSize);
+  if (direction === 1) {
+    return enabled.find((index) => index >= target) ??
+      enabled[enabled.length - 1] ?? 0;
+  }
+  return [...enabled].reverse().find((index) => index <= target) ??
+    enabled[0] ?? 0;
+}
+
 export function edgeEnabledIndex<T>(
   choices: readonly InteractionEntry<T>[],
   edge: "first" | "last",

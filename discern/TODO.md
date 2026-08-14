@@ -46,7 +46,7 @@ _Dead code, N+1s, and known-slow paths worth removing or fixing. Nothing outstan
 
 ## 🟢 Test & tooling hygiene
 
-_Test-isolation and tooling debt. Nothing outstanding._
+- [ ] **Teach the browser CLI preview to decode OSC 8 hyperlink envelopes.** The styleguide's SGR decoder fails closed on any ESC byte outside its truecolour SGR subset, so the first `cliExamples` entry that renders through `styleHyperlink` will break the Catalogue's CLI preview. Before enrolling such an example, extend the decoder to project envelopes into anchor spans (or deliberately strip them) using the package's sequence grammar rather than a second one. Evidence: `styleguide/terminal-ansi.ts:29-41` (control bytes rejected); `src/cli/styled-sequences.ts` (the byte grammar authority).
 
 ## 🔵 Unmerged / at-risk work — decide: land or drop
 

@@ -43,16 +43,34 @@ function isEmpty(value: unknown): boolean {
     (Array.isArray(value) && value.length === 0);
 }
 
-async function validationError<T>(
+function requiredMessage<T>(
   options: InteractionOptions<T>,
   value: T,
-): Promise<string | undefined> {
+): string | undefined {
   if ((options.required ?? false) !== false && isEmpty(value)) {
     return typeof options.required === "string" && options.required !== ""
       ? options.required
       : "Required.";
   }
-  return await options.validate?.(value);
+  return undefined;
+}
+
+/**
+ * Run the required check and validator without forcing asynchrony, so a
+ * synchronous verdict can settle a frame before it paints while an
+ * asynchronous verdict resolves later.
+ */
+function validationVerdict<T>(
+  options: InteractionOptions<T>,
+  value: T,
+): string | undefined | Promise<string | undefined> {
+  return requiredMessage(options, value) ?? options.validate?.(value);
+}
+
+function sameInteractionValue(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true;
+  return Array.isArray(a) && Array.isArray(b) && a.length === b.length &&
+    a.every((item, index) => Object.is(item, b[index]));
 }
 
 export async function runInteraction<T, State extends InteractiveFrameState>(
@@ -89,30 +107,100 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
     }
   };
 
+  // The submitted value: the machine's value after the caller's canonicalising
+  // transform. Validation always judges — and the interaction always returns —
+  // this value, while frames keep presenting the value as edited.
+  const submittedValue = (): T => {
+    const value = machine.value();
+    return options.transform === undefined ? value : options.transform(value);
+  };
+
   return await withRawTerminal(io, async () => {
     await machine.start?.();
     let lifecycle: InteractiveFrameLifecycle = { status: "active" };
+    let noticeRestore: InteractiveFrameLifecycle | undefined;
+    let latched = false;
+    let lastValidated: { readonly value: T } | undefined;
+    let generation = 0;
+    let finished = false;
+    const fault: { current: { readonly error: unknown } | null } = {
+      current: null,
+    };
+    let signalFault: (error: unknown) => void = () => {};
+    const interactionFault = new Promise<never>((_, reject) => {
+      signalFault = reject;
+    });
+
+    const applyVerdict = (message: string | undefined): void => {
+      lifecycle = message === undefined
+        ? { status: "active" }
+        : { status: "validation-error", message };
+    };
+
+    // After a submission has failed once, the validator tracks every value
+    // change so the message clears the moment the value actually passes —
+    // and returns the moment it stops passing. An asynchronous verdict never
+    // blocks key handling; a verdict superseded by a newer edit is discarded.
+    const revalidateOnEdit = (): void => {
+      if (!latched) return;
+      const value = submittedValue();
+      if (
+        lastValidated !== undefined &&
+        sameInteractionValue(lastValidated.value, value)
+      ) {
+        return;
+      }
+      lastValidated = { value };
+      const run = ++generation;
+      const verdict = validationVerdict(options, value);
+      if (verdict === undefined || typeof verdict === "string") {
+        applyVerdict(verdict);
+        return;
+      }
+      verdict.then((message) => {
+        if (finished || run !== generation) return;
+        applyVerdict(message);
+        paint(lifecycle);
+      }, (error) => {
+        if (finished || run !== generation) return;
+        fault.current = { error };
+        signalFault(error);
+      });
+    };
+
     paint(lifecycle);
     while (true) {
-      const key = await reader.readKey();
+      if (fault.current !== null) throw fault.current.error;
+      const key = await Promise.race([reader.readKey(), interactionFault]);
       if (key === null) {
+        finished = true;
         const reason = "Input ended.";
         paint({ status: "cancelled", reason });
         painter.finish();
         throw new InteractionCancelled(reason);
       }
       if (isNamedKey(key, "ctrl-c")) {
+        finished = true;
         const reason = "Cancelled.";
+        paint({ status: "cancelled", reason });
+        painter.finish();
+        throw new InteractionCancelled(reason);
+      }
+      if (isNamedKey(key, "escape")) {
+        finished = true;
+        const reason = "Dismissed.";
         paint({ status: "cancelled", reason });
         painter.finish();
         throw new InteractionCancelled(reason);
       }
       if (isNamedKey(key, "ctrl-u")) {
         if (runtime.canGoBack === true) {
+          finished = true;
           paint({ status: "cancelled", reason: "Back." });
           painter.finish();
           throw new InteractionBackNavigation();
         }
+        if (noticeRestore === undefined) noticeRestore = lifecycle;
         lifecycle = {
           status: "validation-error",
           message: "There is no previous form step.",
@@ -120,19 +208,26 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
         paint(lifecycle);
         continue;
       }
-      if (lifecycle.status === "validation-error") {
-        lifecycle = { status: "active" };
+      if (noticeRestore !== undefined) {
+        lifecycle = noticeRestore;
+        noticeRestore = undefined;
       }
       const submitted = await machine.handle(key);
       if (submitted) {
-        const value = machine.value();
-        const error = await validationError(options, value);
+        const value = submittedValue();
+        lastValidated = { value };
+        generation += 1;
+        const error = await validationVerdict(options, value);
         if (error === undefined) {
+          finished = true;
           paint({ status: "submitted" });
           painter.finish();
           return value;
         }
+        latched = true;
         lifecycle = { status: "validation-error", message: error };
+      } else {
+        revalidateOnEdit();
       }
       paint(lifecycle);
     }
