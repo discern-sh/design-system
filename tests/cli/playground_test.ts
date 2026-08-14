@@ -240,6 +240,7 @@ Deno.test("every generated component, exemption, and sheet is reachable from the
     );
   }
   assert(top.some(({ id }) => id === "motifs"));
+  assert(top.some(({ id }) => id === "narration"));
   assert(top.some(({ id }) => id === "exemptions"));
 
   const seenSlugs = new Set<string>();
@@ -485,7 +486,7 @@ Deno.test("degraded journeys run through the synthetic environment", async () =>
 
 Deno.test("browse journey reaches the motif sheet and returns to the hub", async () => {
   const io = new FakeTerminal(
-    [`${END}${UP}${UP}${ENTER}`, `${END}${ENTER}`],
+    [`${END}${UP}${UP}${UP}${ENTER}`, `${END}${ENTER}`],
     { columns: 80 },
   );
   assertEquals(
@@ -493,6 +494,19 @@ Deno.test("browse journey reaches the motif sheet and returns to the hub", async
     "completed",
   );
   assertStringIncludes(io.output(), "## Triangle motifs");
+});
+
+Deno.test("browse journey reaches the narration sheet and returns to the hub", async () => {
+  const io = new FakeTerminal(
+    [`${END}${UP}${UP}${ENTER}`, `${END}${ENTER}`],
+    { columns: 80 },
+  );
+  assertEquals(
+    await runJourney(journey("browse"), testRuntime(io)),
+    "completed",
+  );
+  assertStringIncludes(io.output(), "## Narration lines");
+  assertStringIncludes(io.output(), "✓ Checks passed");
 });
 
 Deno.test("browse journey walks Group, component, and example navigation", async () => {

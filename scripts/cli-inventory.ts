@@ -26,6 +26,8 @@ import type {
   CliExample,
   CliRenderedRegistryEntry,
 } from "../src/cli/contracts.ts";
+import { createCliPresenter } from "../src/cli/presenter.ts";
+import { composeCliBlocks } from "../src/cli/rhythm.ts";
 import { cliComponentRegistry } from "../src/generated/cli-registry.ts";
 import { componentRegistry } from "../src/generated/component-registry.ts";
 import {
@@ -46,7 +48,8 @@ export type CatalogueSelection =
   | { readonly kind: "all" }
   | { readonly kind: "component"; readonly slug: string }
   | { readonly kind: "group"; readonly group: ComponentGroup }
-  | { readonly kind: "motifs" };
+  | { readonly kind: "motifs" }
+  | { readonly kind: "narration" };
 
 /** A validated, dynamically loaded rendered-component CLI module. */
 export interface LoadedCliModule {
@@ -75,7 +78,7 @@ const STEPPER_STATES = [
 
 /** Usage line for the static CLI catalogue command. */
 export function cliCatalogueUsage(): string {
-  return `Usage: deno task catalogue:cli [all|triangles|<group>|<component-slug>]
+  return `Usage: deno task catalogue:cli [all|triangles|narration|<group>|<component-slug>]
 Groups: ${componentGroups.join(", ")}`;
 }
 
@@ -87,6 +90,7 @@ export function resolveCatalogueSelection(
     return { kind: "all" };
   }
   if (argument === "triangles") return { kind: "motifs" };
+  if (argument === "narration") return { kind: "narration" };
   if (registry[argument] !== undefined) {
     return { kind: "component", slug: argument };
   }
@@ -300,6 +304,38 @@ export function renderTriangleMotifSheet(
     ["Activity-beacon phases", beacons],
   ] as const;
   return `## Triangle motifs\n\n${
+    specimens.map(([name, frame]) => `### ${name}\n\n${frame}`).join("\n\n")
+  }`;
+}
+
+/**
+ * Render the narration-line foundation sheet through the bound presenter,
+ * covering every verb plus one rhythm composition, so the smallest package
+ * output jobs stay visually inspectable beside the triangle motifs.
+ */
+export function renderNarrationLineSheet(
+  capabilities: TerminalCapabilities,
+): string {
+  const presenter = createCliPresenter(capabilities);
+  const specimens = [
+    ["Success", presenter.success("Checks passed")],
+    ["Note", presenter.note("Cache already warm")],
+    ["Warning", presenter.warning("Two files skipped")],
+    ["Failure", presenter.failure("One frame diverged")],
+    ["Lead-in", presenter.lead("Release checks")],
+    [
+      "Composed rhythm",
+      composeCliBlocks([
+        presenter.lead("Release checks"),
+        [
+          presenter.success("Checks passed"),
+          presenter.note("Cache already warm"),
+        ].join("\n"),
+        presenter.warning("Two files skipped"),
+      ]),
+    ],
+  ] as const;
+  return `## Narration lines\n\n${
     specimens.map(([name, frame]) => `### ${name}\n\n${frame}`).join("\n\n")
   }`;
 }

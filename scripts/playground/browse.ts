@@ -1,8 +1,9 @@
 /**
  * Interactive browser over the generated static CLI inventory: canonical
  * Groups, every Component entry, every named example, every recorded
- * exemption, and the triangle motif sheet — derived from the same authority
- * as `deno task catalogue:cli`, so nothing here can drift from Codegen.
+ * exemption, and the triangle motif and narration line sheets — derived from
+ * the same authority as `deno task catalogue:cli`, so nothing here can
+ * drift from Codegen.
  *
  * @module
  */
@@ -13,6 +14,7 @@ import {
   loadRenderedCliModule,
   renderCliComponent,
   renderCliExemptions,
+  renderNarrationLineSheet,
   renderTriangleMotifSheet,
 } from "../cli-inventory.ts";
 import {
@@ -25,12 +27,17 @@ import {
 } from "../../src/cli/interactive/mod.ts";
 import type { PlaygroundRuntime } from "./types.ts";
 
-type TopTarget = ComponentGroup | "motifs" | "exemptions" | "back";
+type TopTarget =
+  | ComponentGroup
+  | "motifs"
+  | "narration"
+  | "exemptions"
+  | "back";
 type ComponentTarget = CliComponentFact | "back";
 type ExampleTarget = number | "all" | "back";
 type ExampleNavigation = number | "list";
 
-/** Top-level browse menu: every canonical Group plus the two sheets. */
+/** Top-level browse menu: every canonical Group plus the foundation sheets. */
 export function browseTopChoices(): readonly InteractionEntry<TopTarget>[] {
   return [
     ...componentGroups.map((group) => ({
@@ -39,6 +46,7 @@ export function browseTopChoices(): readonly InteractionEntry<TopTarget>[] {
       value: group as TopTarget,
     })),
     { id: "motifs", label: "Triangle motif sheet", value: "motifs" },
+    { id: "narration", label: "Narration line sheet", value: "narration" },
     { id: "exemptions", label: "Recorded exemptions", value: "exemptions" },
     { id: "back", label: "Back to the hub", value: "back" },
   ];
@@ -174,6 +182,11 @@ export async function runBrowseJourney(
     if (target === "motifs") {
       print("");
       print(renderTriangleMotifSheet(io.capabilities()));
+      continue;
+    }
+    if (target === "narration") {
+      print("");
+      print(renderNarrationLineSheet(io.capabilities()));
       continue;
     }
     if (target === "exemptions") {

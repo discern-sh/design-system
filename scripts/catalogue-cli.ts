@@ -5,6 +5,7 @@ import {
   detectProcessTerminalCapabilities,
   listCliComponents,
   renderCliComponent,
+  renderNarrationLineSheet,
   renderTriangleMotifSheet,
   resolveCatalogueSelection,
 } from "./cli-inventory.ts";
@@ -33,7 +34,7 @@ function selectedGroups(
   return componentGroups;
 }
 
-/** Render all, one Group, one Component, or the foundation motif specimens. */
+/** Render all, one Group, one Component, or one foundation specimen sheet. */
 export async function renderCliCatalogue(
   argument: string | undefined,
   capabilities: TerminalCapabilities,
@@ -43,7 +44,10 @@ export async function renderCliCatalogue(
   if (selection.kind === "all" || selection.kind === "motifs") {
     sections.push(renderTriangleMotifSheet(capabilities));
   }
-  if (selection.kind !== "motifs") {
+  if (selection.kind === "all" || selection.kind === "narration") {
+    sections.push(renderNarrationLineSheet(capabilities));
+  }
+  if (selection.kind !== "motifs" && selection.kind !== "narration") {
     for (const group of selectedGroups(selection)) {
       const components = listCliComponents(group).filter(({ slug }) =>
         selection.kind !== "component" || slug === selection.slug
