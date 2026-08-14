@@ -9,8 +9,8 @@ import {
 import {
   assertExactFrame,
   assertStyledFrame,
-  testCapabilities,
-} from "./helpers.ts";
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 function assertCapabilityLevels(
   render: (capabilities: TerminalCapabilities) => string,
@@ -20,14 +20,14 @@ function assertCapabilityLevels(
   for (const unicode of [true, false]) {
     const expected = unicode ? expectedUnicode : expectedAscii;
     for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-      const capabilities = testCapabilities({
+      const capabilities = testTerminalCapabilities({
         colorDepth,
         columns: 40,
         unicode,
       });
       assertStyledFrame(render(capabilities), expected, capabilities);
     }
-    const capabilities = testCapabilities({ columns: 40, unicode });
+    const capabilities = testTerminalCapabilities({ columns: 40, unicode });
     assertExactFrame(render(capabilities), expected, capabilities);
   }
 }
@@ -43,7 +43,7 @@ Deno.test("Path reference renders exact narrow, standard, wide, and capability f
       [80, "src/components/workflow/command/command.cli.ts"],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderPathReferenceCli(props, capabilities),
       expected,
@@ -66,7 +66,7 @@ Deno.test("Ownership badge renders exact narrow, standard, wide, and capability 
       [80, "[Project-owned]"],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderOwnershipBadgeCli(props, capabilities),
       expected,
@@ -101,7 +101,7 @@ Deno.test("Expected result renders exact narrow, standard, wide, and capability 
       ],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderExpectedResultCli(props, capabilities),
       expected,
@@ -129,7 +129,7 @@ Deno.test("Raw output renders exact narrow, standard, wide, and capability frame
       [80, "▾ Raw output\n  error: unexpected token at generated registry"],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderRawOutputCli(props, capabilities),
       expected,
@@ -156,7 +156,7 @@ Deno.test("File change renders exact narrow, standard, wide, and capability fram
       [80, "◇ Generated src/generated/cli-renderers.ts +24 -3"],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderFileChangeCli(props, capabilities),
       expected,

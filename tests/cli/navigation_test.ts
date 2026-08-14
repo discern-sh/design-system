@@ -2,8 +2,8 @@ import { renderBreadcrumbsCli, renderTabsCli } from "../../src/cli/mod.ts";
 import {
   assertExactFrame,
   assertStyledFrame,
-  testCapabilities,
-} from "./helpers.ts";
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 const breadcrumbs = {
   items: [{ label: "Home" }, { label: "Library" }],
@@ -17,7 +17,7 @@ const breadcrumbFrames = [
 
 Deno.test("Breadcrumbs renders exact narrow, standard, and wide paths", () => {
   for (const [index, columns] of [12, 28, 48].entries()) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderBreadcrumbsCli({ ...breadcrumbs, width: columns }, capabilities),
       breadcrumbFrames[index] ?? "",
@@ -28,14 +28,17 @@ Deno.test("Breadcrumbs renders exact narrow, standard, and wide paths", () => {
 
 Deno.test("Breadcrumbs preserves its path across every capability level", () => {
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-    const capabilities = testCapabilities({ colorDepth, columns: 28 });
+    const capabilities = testTerminalCapabilities({ colorDepth, columns: 28 });
     assertStyledFrame(
       renderBreadcrumbsCli({ ...breadcrumbs, width: 28 }, capabilities),
       breadcrumbFrames[1],
       capabilities,
     );
   }
-  const capabilities = testCapabilities({ columns: 28, unicode: false });
+  const capabilities = testTerminalCapabilities({
+    columns: 28,
+    unicode: false,
+  });
   assertExactFrame(
     renderBreadcrumbsCli({ ...breadcrumbs, width: 28 }, capabilities),
     "Home > Library >\n[Components]",
@@ -59,7 +62,7 @@ const tabFrames = [
 
 Deno.test("Tabs renders exact narrow, standard, and wide strips", () => {
   for (const [index, columns] of [12, 28, 48].entries()) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderTabsCli({ ...tabs, width: columns }, capabilities),
       tabFrames[index] ?? "",
@@ -70,14 +73,17 @@ Deno.test("Tabs renders exact narrow, standard, and wide strips", () => {
 
 Deno.test("Tabs preserves selection across every capability level", () => {
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-    const capabilities = testCapabilities({ colorDepth, columns: 28 });
+    const capabilities = testTerminalCapabilities({ colorDepth, columns: 28 });
     assertStyledFrame(
       renderTabsCli({ ...tabs, width: 28 }, capabilities),
       tabFrames[1],
       capabilities,
     );
   }
-  const capabilities = testCapabilities({ columns: 28, unicode: false });
+  const capabilities = testTerminalCapabilities({
+    columns: 28,
+    unicode: false,
+  });
   assertExactFrame(
     renderTabsCli({
       ...tabs,

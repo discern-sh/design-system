@@ -9,8 +9,8 @@ import {
 import {
   assertExactFrame,
   assertStyledFrame,
-  testCapabilities,
-} from "./helpers.ts";
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 function assertCapabilityLevels(
   render: (capabilities: TerminalCapabilities) => string,
@@ -20,20 +20,20 @@ function assertCapabilityLevels(
   for (const unicode of [true, false]) {
     const expected = unicode ? expectedUnicode : expectedAscii;
     for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-      const capabilities = testCapabilities({
+      const capabilities = testTerminalCapabilities({
         colorDepth,
         columns: 52,
         unicode,
       });
       assertStyledFrame(render(capabilities), expected, capabilities);
     }
-    const capabilities = testCapabilities({ columns: 52, unicode });
+    const capabilities = testTerminalCapabilities({ columns: 52, unicode });
     assertExactFrame(render(capabilities), expected, capabilities);
   }
 }
 
 function procedureRule(width: number, unicode = true): string {
-  const capabilities = testCapabilities({ columns: width, unicode });
+  const capabilities = testTerminalCapabilities({ columns: width, unicode });
   return renderTriangleSectionRule("Steps", { width }, capabilities);
 }
 
@@ -57,7 +57,7 @@ Deno.test("Branch choice renders exact narrow, standard, wide, and capability fr
       [80, standard],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderBranchChoiceCli(props, capabilities),
       expected,
@@ -95,7 +95,7 @@ Deno.test("Prerequisite list renders exact narrow, standard, wide, and capabilit
       [80, standard],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderPrerequisiteListCli(props, capabilities),
       expected,
@@ -144,7 +144,7 @@ Deno.test("Procedure renders exact narrow, standard, wide, and every semantic st
       ],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderProcedureCli(props, capabilities),
       expected,
@@ -182,7 +182,7 @@ Deno.test("Procedure step renders exact widths, capability levels, statuses, and
       [80, standard],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderProcedureStepCli(props, capabilities),
       expected,
@@ -195,7 +195,7 @@ Deno.test("Procedure step renders exact widths, capability levels, statuses, and
     "[<] Run the gate\n  Verify the committed tree\n  Run: discern done\n  + You should see\n    The full gate passes\nComplete when: A proof is recorded",
   );
 
-  const capabilities = testCapabilities({ columns: 52 });
+  const capabilities = testTerminalCapabilities({ columns: 52 });
   const states = [
     ["pending", " ·  Run gate\n  Verify tree"],
     ["active", "[⧨] Run gate\n  Verify tree"],

@@ -10,7 +10,10 @@ import {
   terminalThemes,
   terminalToneColor,
 } from "../../src/cli/theme.ts";
-import { assertExactFrame, testCapabilities } from "./helpers.ts";
+import {
+  assertExactFrame,
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 const keyPointsProps = {
   eyebrow: "The brief",
@@ -43,14 +46,14 @@ Deno.test("Key points renders exact width, ASCII, and colour frames", () => {
     ],
   ] as const;
   for (const [columns, expected] of frames) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderKeyPointsCli(keyPointsProps, capabilities),
       expected,
       capabilities,
     );
   }
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderKeyPointsCli(keyPointsProps, ascii),
     frames[0][1],
@@ -60,7 +63,7 @@ Deno.test("Key points renders exact width, ASCII, and colour frames", () => {
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
-    const capabilities = testCapabilities({ columns: 52, colorDepth });
+    const capabilities = testTerminalCapabilities({ columns: 52, colorDepth });
     const expected = [
       styleText("THE BRIEF", {
         ...theme.typography.annotation,
@@ -117,14 +120,14 @@ Deno.test("Footnotes renders exact width, ASCII, and colour frames", () => {
     ],
   ] as const;
   for (const [columns, expected] of frames) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderFootnotesCli(footnotesProps, capabilities),
       expected,
       capabilities,
     );
   }
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderFootnotesCli(footnotesProps, ascii),
     "+ Notes & sources\n\n[01] Terminal widths\n     were measured in\n     character cells.\n\n[02] Source labels\n     remain plain text\n     when links are\n     unavailable. <-\n     return",
@@ -134,7 +137,7 @@ Deno.test("Footnotes renders exact width, ASCII, and colour frames", () => {
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
-    const capabilities = testCapabilities({ columns: 52, colorDepth });
+    const capabilities = testTerminalCapabilities({ columns: 52, colorDepth });
     const heading = styleText("† Notes & sources", {
       ...theme.typography.strong,
       color: terminalToneColor(theme, "accent"),
@@ -177,14 +180,14 @@ Deno.test("Related content renders exact width, ASCII, and colour frames", () =>
     ],
   ] as const;
   for (const [columns, expected] of frames) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderRelatedContentCli(relatedContentProps, capabilities),
       expected,
       capabilities,
     );
   }
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderRelatedContentCli(relatedContentProps, ascii),
     "CONTINUE\n\nRelated reading\n\n01  [GUIDE] Terminal\n    reading patterns\n    How hierarchy\n    survives capability\n    changes.\n    /guides/terminal-rea\n    ding | 6 min",
@@ -194,7 +197,7 @@ Deno.test("Related content renders exact width, ASCII, and colour frames", () =>
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
-    const capabilities = testCapabilities({ columns: 52, colorDepth });
+    const capabilities = testTerminalCapabilities({ columns: 52, colorDepth });
     const expected = [
       styleText("CONTINUE", {
         ...theme.typography.annotation,
@@ -238,14 +241,14 @@ Deno.test("Table of contents renders exact width, ASCII, and colour frames", () 
   const unicode =
     "On this page\n  01 Context\n▶ 02 Evidence\n  └─ Methods and sources\n  03 Decision\n2 of 3 sections";
   for (const columns of [24, 52, 96]) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderTableOfContentsCli(tableOfContentsProps, capabilities),
       unicode,
       capabilities,
     );
   }
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderTableOfContentsCli(tableOfContentsProps, ascii),
     "On this page\n  01 Context\n> 02 Evidence\n  \\- Methods and sources\n  03 Decision\n2 of 3 sections",
@@ -255,7 +258,7 @@ Deno.test("Table of contents renders exact width, ASCII, and colour frames", () 
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
-    const capabilities = testCapabilities({ columns: 52, colorDepth });
+    const capabilities = testTerminalCapabilities({ columns: 52, colorDepth });
     const heading = styleText("On this page", {
       ...theme.typography.strong,
       color: terminalToneColor(theme, "accent"),

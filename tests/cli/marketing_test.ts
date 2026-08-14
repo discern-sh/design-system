@@ -14,8 +14,8 @@ import {
 import {
   assertExactFrame,
   assertStyledFrame,
-  testCapabilities,
-} from "./helpers.ts";
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 interface WidthProps {
   readonly width?: number;
@@ -40,7 +40,7 @@ function assertMarketingMatrix<Props extends WidthProps>(
   ascii: string,
 ): void {
   for (const [index, columns] of [16, 36, 64].entries()) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       render(withWidth(props, columns), capabilities),
       frames[index] ?? "",
@@ -48,14 +48,17 @@ function assertMarketingMatrix<Props extends WidthProps>(
     );
   }
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-    const capabilities = testCapabilities({ colorDepth, columns: 36 });
+    const capabilities = testTerminalCapabilities({ colorDepth, columns: 36 });
     assertStyledFrame(
       render(withWidth(props, 36), capabilities),
       frames[1],
       capabilities,
     );
   }
-  const capabilities = testCapabilities({ columns: 36, unicode: false });
+  const capabilities = testTerminalCapabilities({
+    columns: 36,
+    unicode: false,
+  });
   assertExactFrame(
     render(withWidth(props, 36), capabilities),
     ascii,
@@ -241,13 +244,13 @@ Deno.test("Process steps covers complete, error, cancelled, and pending states",
     activePhase: 0,
     width: 36,
   };
-  const unicode = testCapabilities({ columns: 36 });
+  const unicode = testTerminalCapabilities({ columns: 36 });
   assertExactFrame(
     renderProcessStepsCli(props, unicode),
     "Step states\n\n ◭  Done\n │\n !  Failed\n │\n ×  Stopped\n │\n ·  Waiting\n\n! Proof failed",
     unicode,
   );
-  const ascii = testCapabilities({ columns: 36, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 36, unicode: false });
   assertExactFrame(
     renderProcessStepsCli(props, ascii),
     "Step states\n\n ^  Done\n |\n !  Failed\n |\n x  Stopped\n |\n .  Waiting\n\n! Proof failed",

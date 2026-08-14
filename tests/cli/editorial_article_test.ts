@@ -9,7 +9,10 @@ import {
   terminalThemes,
   terminalToneColor,
 } from "../../src/cli/theme.ts";
-import { assertExactFrame, testCapabilities } from "./helpers.ts";
+import {
+  assertExactFrame,
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 const articleHeaderProps = {
   eyebrow: "Field notes",
@@ -35,14 +38,14 @@ Deno.test("Article header renders exact narrow, standard, and wide frames", () =
     ],
   ] as const;
   for (const [columns, expected] of frames) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderArticleHeaderCli(articleHeaderProps, capabilities),
       expected,
       capabilities,
     );
   }
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderArticleHeaderCli(articleHeaderProps, ascii),
     "FIELD NOTES\n\nDesigning for the\nreading path\n\nA calm hierarchy keeps\nevidence close to the\nargument.\n\n[AO] Ada Osei - Research\n\n8 min read | 11 August\n2026",
@@ -55,7 +58,7 @@ Deno.test("Article header degrades exactly across terminal colour levels", () =>
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
-    const capabilities = testCapabilities({ columns: 52, colorDepth });
+    const capabilities = testTerminalCapabilities({ columns: 52, colorDepth });
     const expected = [
       styleText("FIELD NOTES", {
         ...theme.typography.annotation,
@@ -105,7 +108,7 @@ Deno.test("Article layout renders exact width and capability frames", () => {
     ],
   ] as const;
   for (const [columns, expected] of frames) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderArticleLayoutCli(articleLayoutProps, capabilities),
       expected,
@@ -116,7 +119,7 @@ Deno.test("Article layout renders exact width and capability frames", () => {
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
-    const capabilities = testCapabilities({ columns: 52, colorDepth });
+    const capabilities = testTerminalCapabilities({ columns: 52, colorDepth });
     const label = (value: string) =>
       styleText(value, {
         ...theme.typography.strong,
@@ -158,7 +161,7 @@ Deno.test("Prose renders exact measured width and capability frames", () => {
     ],
   ] as const;
   for (const [columns, expected] of frames) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderProseCli(proseProps, capabilities),
       expected,
@@ -169,7 +172,7 @@ Deno.test("Prose renders exact measured width and capability frames", () => {
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
-    const capabilities = testCapabilities({ columns: 52, colorDepth });
+    const capabilities = testTerminalCapabilities({ columns: 52, colorDepth });
     const first = renderStyledSpans([
       {
         text: "G",

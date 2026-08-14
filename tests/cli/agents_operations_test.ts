@@ -16,8 +16,8 @@ import {
 import {
   assertExactFrame,
   assertStyledFrame,
-  testCapabilities,
-} from "./helpers.ts";
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 function assertCapabilityLevels(
   columns: number,
@@ -28,10 +28,14 @@ function assertCapabilityLevels(
   for (const unicode of [true, false]) {
     const expected = unicode ? expectedUnicode : expectedAscii;
     for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-      const capabilities = testCapabilities({ colorDepth, columns, unicode });
+      const capabilities = testTerminalCapabilities({
+        colorDepth,
+        columns,
+        unicode,
+      });
       assertStyledFrame(render(capabilities), expected, capabilities);
     }
-    const capabilities = testCapabilities({ columns, unicode });
+    const capabilities = testTerminalCapabilities({ columns, unicode });
     assertExactFrame(render(capabilities), expected, capabilities);
   }
 }
@@ -98,7 +102,7 @@ Deno.test("Fleet renders exact narrow, standard, wide, and capability frames", (
       ],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderFleetCli(props, capabilities),
       expected,
@@ -114,7 +118,7 @@ Deno.test("Fleet renders exact narrow, standard, wide, and capability frames", (
 });
 
 Deno.test("Fleet keeps compact identity rendering as the backward-compatible default", () => {
-  const capabilities = testCapabilities({ columns: 60 });
+  const capabilities = testTerminalCapabilities({ columns: 60 });
   const rows = [{
     persona: "Audit",
     branch: "agent/audit",
@@ -154,7 +158,7 @@ Deno.test("Fleet lossless mode preserves long ASCII identities at narrow and wid
 
   const narrow = renderFleetCli(
     { rows: [row], identityMode: "lossless", maxWidth: 32 },
-    testCapabilities({ columns: 32 }),
+    testTerminalCapabilities({ columns: 32 }),
   );
   assertEquals(
     narrow,
@@ -166,7 +170,7 @@ Deno.test("Fleet lossless mode preserves long ASCII identities at narrow and wid
 
   const wide = renderFleetCli(
     { rows: [row], identityMode: "lossless", maxWidth: 60 },
-    testCapabilities({ columns: 80 }),
+    testTerminalCapabilities({ columns: 80 }),
   );
   assertEquals(
     wide,
@@ -194,7 +198,7 @@ Deno.test("Fleet lossless identities survive Unicode, ASCII, colour, and no-colo
       behind: 3,
       meta: "Unicode identity evidence",
     }],
-  }, testCapabilities({ columns: 80 }));
+  }, testTerminalCapabilities({ columns: 80 }));
   assertEquals(
     unicode,
     "Fleet\nAGENT            BRANCH              STATE         DRIFT\n界面監査チーム…  agent/監査-完全-…   waiting       ↑1 ↓3\n  Persona: 界面監査チームの完全な識別子 🧭\n  Branch: agent/監査-完全-識別子-枝-長期運用\n  Unicode identity evidence",
@@ -217,7 +221,7 @@ Deno.test("Fleet lossless identities survive Unicode, ASCII, colour, and no-colo
   } as const;
   const ascii = renderFleetCli(
     { rows: [asciiRow], identityMode: "lossless", maxWidth: 60 },
-    testCapabilities({ columns: 80, unicode: false }),
+    testTerminalCapabilities({ columns: 80, unicode: false }),
   );
   assertEquals(
     ascii,
@@ -228,7 +232,7 @@ Deno.test("Fleet lossless identities survive Unicode, ASCII, colour, and no-colo
 
   const coloured = renderFleetCli(
     { rows: [asciiRow], identityMode: "lossless", maxWidth: 60 },
-    testCapabilities({
+    testTerminalCapabilities({
       colorDepth: "truecolor",
       columns: 80,
     }),
@@ -240,7 +244,7 @@ Deno.test("Fleet lossless identities survive Unicode, ASCII, colour, and no-colo
     stripAnsi(coloured),
     stripAnsi(renderFleetCli(
       { rows: [asciiRow], identityMode: "lossless", maxWidth: 60 },
-      testCapabilities({ columns: 80 }),
+      testTerminalCapabilities({ columns: 80 }),
     )),
   );
 });
@@ -275,7 +279,7 @@ Deno.test("Receipt renders exact narrow, standard, wide, and capability frames",
       ],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderReceiptCli(props, capabilities),
       expected,
@@ -313,7 +317,7 @@ Deno.test("Transcript renders exact narrow, standard, wide, and capability frame
       [80, standard],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderTranscriptCli(props, capabilities),
       expected,
@@ -355,7 +359,7 @@ Deno.test("Worklog renders exact widths, capability levels, and every status", (
       [80, standard],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderWorklogCli(props, capabilities),
       expected,

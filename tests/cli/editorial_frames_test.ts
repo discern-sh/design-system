@@ -15,7 +15,10 @@ import {
   terminalThemes,
   terminalToneColor,
 } from "../../src/cli/theme.ts";
-import { assertExactFrame, testCapabilities } from "./helpers.ts";
+import {
+  assertExactFrame,
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 function expectedFrame(
   title: string,
@@ -90,14 +93,14 @@ Deno.test("Callout renders exact width, ASCII, and colour frames", () => {
     ],
   ] as const;
   for (const [columns, expected] of frames) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderCalloutCli(calloutProps, capabilities),
       expected,
       capabilities,
     );
   }
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderCalloutCli(calloutProps, ascii),
     "+ INSIGHT: Keep the. --+\n| A terminal note      |\n| should interrupt the |\n| eye without          |\n| interrupting the     |\n| argument.            |\n+----------------------+",
@@ -107,7 +110,7 @@ Deno.test("Callout renders exact width, ASCII, and colour frames", () => {
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
-    const capabilities = testCapabilities({ columns: 52, colorDepth });
+    const capabilities = testTerminalCapabilities({ columns: 52, colorDepth });
     const expected = expectedFrame(
       "INSIGHT: Keep the evidence close",
       [
@@ -153,14 +156,14 @@ Deno.test("Code listing renders exact width, ASCII, and colour frames", () => {
     ],
   ] as const;
   for (const [columns, expected] of frames) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderCodeListingCli(codeListingProps, capabilities),
       expected,
       capabilities,
     );
   }
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderCodeListingCli(codeListingProps, ascii),
     '+ brief.ts [ts] -------+\n|  1 const brief = {   |\n| >2   scope: "editor. |\n|  3   status: "ready. |\n|  4 };                |\n+----------------------+\nCaption: A small,\ndeterministic input.',
@@ -170,7 +173,7 @@ Deno.test("Code listing renders exact width, ASCII, and colour frames", () => {
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
-    const capabilities = testCapabilities({ columns: 52, colorDepth });
+    const capabilities = testTerminalCapabilities({ columns: 52, colorDepth });
     const frame = expectedFrame(
       "brief.ts [ts]",
       [
@@ -223,14 +226,14 @@ Deno.test("Data figure renders exact width, ASCII, and colour frames", () => {
     ],
   ] as const;
   for (const [columns, expected] of frames) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderDataFigureCli(dataFigureProps, capabilities),
       expected,
       capabilities,
     );
   }
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderDataFigureCli(dataFigureProps, ascii),
     "+ SURVEY: Preferred. --+\n| Terminal  ####### 7. |\n| Browser   ###     3. |\n+----------------------+\n* Terminal\n* Browser\nShare of respondents by\nprimary reading mode.\nSource: Documentation\nsurvey",
@@ -240,7 +243,7 @@ Deno.test("Data figure renders exact width, ASCII, and colour frames", () => {
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
-    const capabilities = testCapabilities({ columns: 52, colorDepth });
+    const capabilities = testTerminalCapabilities({ columns: 52, colorDepth });
     const frame = expectedFrame(
       "SURVEY: Preferred reading mode",
       ["Terminal  ####### 70%", "Browser   ###     30%"],

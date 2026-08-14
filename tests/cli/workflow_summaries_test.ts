@@ -10,8 +10,8 @@ import {
 import {
   assertExactFrame,
   assertStyledFrame,
-  testCapabilities,
-} from "./helpers.ts";
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 function assertCapabilityLevels(
   render: (capabilities: TerminalCapabilities) => string,
@@ -21,14 +21,14 @@ function assertCapabilityLevels(
   for (const unicode of [true, false]) {
     const expected = unicode ? expectedUnicode : expectedAscii;
     for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-      const capabilities = testCapabilities({
+      const capabilities = testTerminalCapabilities({
         colorDepth,
         columns: 52,
         unicode,
       });
       assertStyledFrame(render(capabilities), expected, capabilities);
     }
-    const capabilities = testCapabilities({ columns: 52, unicode });
+    const capabilities = testTerminalCapabilities({ columns: 52, unicode });
     assertExactFrame(render(capabilities), expected, capabilities);
   }
 }
@@ -57,7 +57,7 @@ Deno.test("Result summary renders exact widths, capability levels, and every out
       [80, standard],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderResultSummaryCli(props, capabilities),
       expected,
@@ -70,7 +70,7 @@ Deno.test("Result summary renders exact widths, capability levels, and every out
     '+ Passed: The full gate passed\nTests: 310   Files: 98   Duration: 2m 18s\nNext: Accept the branch\nData: {"ok":true}',
   );
 
-  const capabilities = testCapabilities({ columns: 52 });
+  const capabilities = testTerminalCapabilities({ columns: 52 });
   for (
     const [state, expected] of [
       ["passed", "✓ Passed: One fact"],
@@ -103,7 +103,7 @@ Deno.test("mixed Result summary groups own one widest visible prefix column", ()
         "none",
       ] as const
     ) {
-      const capabilities = testCapabilities({
+      const capabilities = testTerminalCapabilities({
         columns: 52,
         colorDepth,
         unicode,
@@ -126,7 +126,7 @@ Deno.test("mixed Result summary groups own one widest visible prefix column", ()
   const narrow = stripAnsi(renderResultSummaryGroupCli({
     items,
     maxWidth: 24,
-  }, testCapabilities({ columns: 24 })));
+  }, testTerminalCapabilities({ columns: 24 })));
   const continuation = narrow.split("\n").filter((line) =>
     line.startsWith(" ".repeat(13))
   );
@@ -138,7 +138,7 @@ Deno.test("mixed Result summary groups own one widest visible prefix column", ()
       state,
       fact: `Canonical ${state}`,
     })),
-  }, testCapabilities({ columns: 52, unicode: false })));
+  }, testTerminalCapabilities({ columns: 52, unicode: false })));
   const canonicalColumns = canonical.split("\n").map((line) =>
     line.indexOf("Canonical")
   ).filter((column) => column >= 0);
@@ -171,7 +171,7 @@ Deno.test("Standard meter renders exact widths, capability levels, and both limi
       [80, wide],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderStandardMeterCli(props, capabilities),
       expected,
@@ -184,7 +184,7 @@ Deno.test("Standard meter renders exact widths, capability levels, and both limi
     "CLI pending - improving\n[ 65%] >v^<>v^<>v^<>v^<>v^<>v^<>v^<>................\nCurrent: 79\nStatus: Within limit\nLimit: ceiling 108\nHeadroom: 29 below ceiling\nDirection: Lower is better",
   );
 
-  const capabilities = testCapabilities({ columns: 52 });
+  const capabilities = testTerminalCapabilities({ columns: 52 });
   assertExactFrame(
     renderStandardMeterCli(
       {

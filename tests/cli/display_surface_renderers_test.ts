@@ -7,8 +7,8 @@ import {
 import {
   assertExactFrame,
   assertStyledFrame,
-  testCapabilities,
-} from "./helpers.ts";
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 function assertCapabilityLevels(
   render: (capabilities: TerminalCapabilities) => string,
@@ -16,12 +16,12 @@ function assertCapabilityLevels(
   expectedAscii: string,
 ): void {
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-    const capabilities = testCapabilities({ colorDepth, columns: 24 });
+    const capabilities = testTerminalCapabilities({ colorDepth, columns: 24 });
     assertStyledFrame(render(capabilities), expectedUnicode, capabilities);
   }
-  const plain = testCapabilities({ columns: 24 });
+  const plain = testTerminalCapabilities({ columns: 24 });
   assertExactFrame(render(plain), expectedUnicode, plain);
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(render(ascii), expectedAscii, ascii);
 }
 
@@ -46,7 +46,7 @@ Deno.test("Card renders exact narrow, standard, wide, and ASCII boxes", () => {
     ],
   ] as const;
   for (const [columns, expected] of frames) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(render(capabilities), expected, capabilities);
   }
   assertCapabilityLevels(
@@ -81,7 +81,7 @@ Deno.test("Window renders exact narrow, standard, wide, and degraded triangle fr
     ],
   ] as const;
   for (const [columns, expected] of frames) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(render(capabilities), expected, capabilities);
   }
   assertCapabilityLevels(
@@ -112,7 +112,7 @@ Deno.test("Terminal renders exact narrow, standard, wide, and degraded session f
     ],
   ] as const;
   for (const [columns, expected] of frames) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(render(capabilities), expected, capabilities);
   }
   assertCapabilityLevels(

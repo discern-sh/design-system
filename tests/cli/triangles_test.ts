@@ -13,8 +13,8 @@ import { measureText } from "../../src/cli/text.ts";
 import {
   assertExactFrame,
   assertStyledFrame,
-  testCapabilities,
-} from "./helpers.ts";
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 const CAPABILITY_MATRIX_STEPS = [
   { label: "Done", status: "complete" },
@@ -61,7 +61,7 @@ function assertCapabilityMatrix(
 }
 
 Deno.test("triangle patterns preserve horizontal, vertical, thick, phase, and direction contracts", () => {
-  const capabilities = testCapabilities({ columns: 20 });
+  const capabilities = testTerminalCapabilities({ columns: 20 });
   assertExactFrame(
     renderTrianglePattern({ length: 4 }, capabilities),
     "◮⧩◭⧨",
@@ -88,8 +88,8 @@ Deno.test("triangle patterns preserve horizontal, vertical, thick, phase, and di
 });
 
 Deno.test("all spinner phases preserve their Unicode and ASCII orders", () => {
-  const unicode = testCapabilities();
-  const ascii = testCapabilities({ unicode: false });
+  const unicode = testTerminalCapabilities();
+  const ascii = testTerminalCapabilities({ unicode: false });
   assertEquals(
     [0, 1, 2, 3, 4].map((phase) => renderTriangleSpinnerFrame(phase, unicode)),
     ["◮", "◭", "⧨", "⧩", "◮"],
@@ -101,7 +101,7 @@ Deno.test("all spinner phases preserve their Unicode and ASCII orders", () => {
 });
 
 Deno.test("progress frames are exact at zero, partial, complete, and ASCII degradation", () => {
-  const unicode = testCapabilities({ columns: 15 });
+  const unicode = testTerminalCapabilities({ columns: 15 });
   assertExactFrame(
     renderTriangleProgressFrame({ completed: 0, total: 4, width: 15 }, unicode),
     "[  0%] ........",
@@ -117,7 +117,7 @@ Deno.test("progress frames are exact at zero, partial, complete, and ASCII degra
     "[100%] ◮⧩◭⧨◮⧩◭⧨",
     unicode,
   );
-  const ascii = testCapabilities({ columns: 12, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 12, unicode: false });
   assertExactFrame(
     renderTriangleProgressFrame({ completed: 1, total: 2, width: 12 }, ascii),
     "[ 50%] >v...",
@@ -126,7 +126,7 @@ Deno.test("progress frames are exact at zero, partial, complete, and ASCII degra
 });
 
 Deno.test("section rules default to the strong embedded heading treatment", () => {
-  const capabilities = testCapabilities({ columns: 17 });
+  const capabilities = testTerminalCapabilities({ columns: 17 });
   assertExactFrame(
     renderTriangleSectionRule("gate", { width: 16 }, capabilities),
     "━━ ◮ GATE ━━━━━━",
@@ -140,7 +140,7 @@ Deno.test("section rules default to the strong embedded heading treatment", () =
 });
 
 Deno.test("section rules expose strong underline and quiet sandwich treatments", () => {
-  const unicode = testCapabilities({ columns: 16 });
+  const unicode = testTerminalCapabilities({ columns: 16 });
   assertExactFrame(
     renderTriangleSectionRule(
       "gate",
@@ -160,7 +160,7 @@ Deno.test("section rules expose strong underline and quiet sandwich treatments",
     unicode,
   );
 
-  const ascii = testCapabilities({ columns: 16, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 16, unicode: false });
   assertExactFrame(
     renderTriangleSectionRule("gate", { width: 16 }, ascii),
     "== > GATE ======",
@@ -192,7 +192,7 @@ Deno.test("every section-rule treatment truncates long headings without overflow
     for (const columns of [8, 16, 39, 80, 104]) {
       for (const unicode of [true, false]) {
         for (const colorDepth of ["truecolor", "none"] as const) {
-          const capabilities = testCapabilities({
+          const capabilities = testTerminalCapabilities({
             columns,
             unicode,
             colorDepth,
@@ -214,7 +214,7 @@ Deno.test("every section-rule treatment truncates long headings without overflow
 });
 
 Deno.test("workflow stepper renders every semantic step state", () => {
-  const capabilities = testCapabilities({ columns: 30 });
+  const capabilities = testTerminalCapabilities({ columns: 30 });
   assertExactFrame(
     renderTriangleWorkflowStepper([
       { label: "Done", status: "complete" },
@@ -230,7 +230,7 @@ Deno.test("workflow stepper renders every semantic step state", () => {
 
 Deno.test("workflow triangle direction follows completion status rather than list index or phase", () => {
   for (const unicode of [true, false]) {
-    const capabilities = testCapabilities({ columns: 32, unicode });
+    const capabilities = testTerminalCapabilities({ columns: 32, unicode });
     const completedMarker = unicode ? " ◭ " : " ^ ";
     for (const completedIndex of [0, 1, 2]) {
       const steps = Array.from({ length: 3 }, (_, index) => ({
@@ -250,7 +250,7 @@ Deno.test("workflow triangle direction follows completion status rather than lis
 });
 
 Deno.test("activity beacon preserves every phase in its out-and-back journey", () => {
-  const capabilities = testCapabilities({ columns: 8 });
+  const capabilities = testTerminalCapabilities({ columns: 8 });
   assertEquals(
     Array.from(
       { length: 8 },
@@ -299,7 +299,7 @@ Deno.test("every triangle primitive degrades exactly across the capability matri
   for (const unicode of [true, false]) {
     const expected = unicode ? unicodeFrames : asciiFrames;
     for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-      const capabilities = testCapabilities({
+      const capabilities = testTerminalCapabilities({
         colorDepth,
         columns: 30,
         unicode,
@@ -311,7 +311,7 @@ Deno.test("every triangle primitive degrades exactly across the capability matri
         true,
       );
     }
-    const capabilities = testCapabilities({ columns: 30, unicode });
+    const capabilities = testTerminalCapabilities({ columns: 30, unicode });
     assertCapabilityMatrix(
       renderCapabilityMatrix(capabilities),
       expected,

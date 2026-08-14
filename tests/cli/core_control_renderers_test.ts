@@ -7,8 +7,8 @@ import {
 import {
   assertExactFrame,
   assertStyledFrame,
-  testCapabilities,
-} from "./helpers.ts";
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 function assertCapabilityLevels(
   render: (capabilities: TerminalCapabilities) => string,
@@ -16,12 +16,12 @@ function assertCapabilityLevels(
   expectedAscii: string,
 ): void {
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-    const capabilities = testCapabilities({ colorDepth, columns: 24 });
+    const capabilities = testTerminalCapabilities({ colorDepth, columns: 24 });
     assertStyledFrame(render(capabilities), expectedUnicode, capabilities);
   }
-  const plain = testCapabilities({ columns: 24 });
+  const plain = testTerminalCapabilities({ columns: 24 });
   assertExactFrame(render(plain), expectedUnicode, plain);
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(render(ascii), expectedAscii, ascii);
 }
 
@@ -35,7 +35,7 @@ Deno.test("Button renders exact narrow, standard, wide, and colour-degraded acti
       [48, "[  Continue  ]"],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(render(capabilities), expected, capabilities);
   }
   assertCapabilityLevels(render, "[  Continue  ]", "[  Continue  ]");
@@ -54,7 +54,7 @@ Deno.test("Icon button renders exact narrow, standard, wide, and ASCII actions",
       [48, "[ ✦ Generate ]"],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(render(capabilities), expected, capabilities);
   }
   assertCapabilityLevels(render, "[ ✦ Generate ]", "[ * Generate ]");
@@ -70,7 +70,7 @@ Deno.test("Theme toggle renders exact narrow, standard, wide, and degraded desti
       [48, "[ ☀ Switch to the light theme ]"],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(render(capabilities), expected, capabilities);
   }
   assertCapabilityLevels(

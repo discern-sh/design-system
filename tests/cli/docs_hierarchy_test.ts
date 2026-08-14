@@ -12,7 +12,10 @@ import {
   terminalToneColor,
 } from "../../src/cli/theme.ts";
 import { renderTriangleSectionRule } from "../../src/cli/triangles.ts";
-import { assertExactFrame, testCapabilities } from "./helpers.ts";
+import {
+  assertExactFrame,
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 const anchorHeadingProps = {
   id: "renderer-contract",
@@ -22,7 +25,7 @@ const anchorHeadingProps = {
 
 Deno.test("Anchor heading renders exact width, ASCII, and colour frames", () => {
   for (const columns of [24, 52, 96]) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderAnchorHeadingCli(anchorHeadingProps, capabilities),
       `\n${
@@ -35,7 +38,7 @@ Deno.test("Anchor heading renders exact width, ASCII, and colour frames", () => 
       capabilities,
     );
   }
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderAnchorHeadingCli(anchorHeadingProps, ascii),
     `\n${
@@ -50,7 +53,7 @@ Deno.test("Anchor heading renders exact width, ASCII, and colour frames", () => 
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
-    const capabilities = testCapabilities({ columns: 52, colorDepth });
+    const capabilities = testTerminalCapabilities({ columns: 52, colorDepth });
     assertExactFrame(
       renderAnchorHeadingCli(anchorHeadingProps, capabilities),
       `\n${
@@ -66,7 +69,7 @@ Deno.test("Anchor heading renders exact width, ASCII, and colour frames", () => 
 });
 
 Deno.test("Anchor heading exposes every public section-boundary treatment", () => {
-  const capabilities = testCapabilities({ columns: 32 });
+  const capabilities = testTerminalCapabilities({ columns: 32 });
   for (const treatment of ["embedded", "underline", "sandwich"] as const) {
     assertEquals(
       renderAnchorHeadingCli(
@@ -87,7 +90,7 @@ Deno.test("Anchor heading exposes every public section-boundary treatment", () =
 });
 
 Deno.test("Anchor heading shares the validated default heading boundary", () => {
-  const capabilities = testCapabilities({ columns: 32 });
+  const capabilities = testTerminalCapabilities({ columns: 32 });
   const render = renderAnchorHeadingCli as unknown as (
     props: {
       readonly id: string;
@@ -140,7 +143,7 @@ Deno.test("Docs header renders exact width, ASCII, and colour frames", () => {
     ],
   ] as const;
   for (const [columns, context] of frames) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderDocsHeaderCli(docsHeaderProps, capabilities),
       `${
@@ -153,7 +156,7 @@ Deno.test("Docs header renders exact width, ASCII, and colour frames", () => {
       capabilities,
     );
   }
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderDocsHeaderCli(docsHeaderProps, ascii),
     `${
@@ -169,7 +172,7 @@ Deno.test("Docs header renders exact width, ASCII, and colour frames", () => {
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
-    const capabilities = testCapabilities({ columns: 52, colorDepth });
+    const capabilities = testTerminalCapabilities({ columns: 52, colorDepth });
     const rule = renderTriangleSectionRule(
       "discern docs",
       { width: 52 },
@@ -207,14 +210,14 @@ Deno.test("Docs nav renders exact width, ASCII, and colour frames", () => {
   const unicode =
     "Section navigation\n\nFOUNDATIONS\n  ├─ Capabilities\n▶ └─ Text layout\n\nCOMPONENTS\n  └─ Editorial";
   for (const columns of [24, 52, 96]) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderDocsNavCli(docsNavProps, capabilities),
       unicode,
       capabilities,
     );
   }
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderDocsNavCli(docsNavProps, ascii),
     "Section navigation\n\nFOUNDATIONS\n  +- Capabilities\n> \\- Text layout\n\nCOMPONENTS\n  \\- Editorial",
@@ -224,7 +227,7 @@ Deno.test("Docs nav renders exact width, ASCII, and colour frames", () => {
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
-    const capabilities = testCapabilities({ columns: 52, colorDepth });
+    const capabilities = testTerminalCapabilities({ columns: 52, colorDepth });
     const heading = styleText("Section navigation", {
       ...theme.typography.strong,
       color: terminalToneColor(theme, "accent"),

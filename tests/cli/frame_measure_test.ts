@@ -13,8 +13,10 @@ import {
   createSequentialForm,
   withDeterminateProgress,
 } from "../../src/cli/interactive/mod.ts";
-import { FakeTerminal } from "./fake-terminal.ts";
-import { testCapabilities } from "./helpers.ts";
+import {
+  FakeTerminalIO,
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 function authoredMeasureCells(): number {
   const token = designTokens.find(({ name }) => name === "--discern-measure");
@@ -34,7 +36,7 @@ function widestLine(frame: string): number {
 
 Deno.test("default frame widths derive from the authored measure token", async () => {
   const measure = authoredMeasureCells();
-  const wide = testCapabilities({ columns: 200 });
+  const wide = testTerminalCapabilities({ columns: 200 });
 
   const select = renderSelectCli({
     kind: "select",
@@ -76,7 +78,7 @@ Deno.test("default frame widths derive from the authored measure token", async (
   }, wide);
   assertEquals(widestLine(meter), measure);
 
-  const progressIo = new FakeTerminal([], { columns: 200 });
+  const progressIo = new FakeTerminalIO([], { columns: 200 });
   await withDeterminateProgress(
     { label: "Work", total: 2, io: progressIo },
     (progress) => progress.advance(),
@@ -91,7 +93,7 @@ Deno.test("default frame widths derive from the authored measure token", async (
     "no progress frame reached the authored measure",
   );
 
-  const formIo = new FakeTerminal([], { columns: 200 });
+  const formIo = new FakeTerminalIO([], { columns: 200 });
   await createSequentialForm({ label: "Setup", io: formIo })
     .add({ id: "step", label: "Step", run: () => true })
     .submit();
@@ -102,7 +104,7 @@ Deno.test("default frame widths derive from the authored measure token", async (
 });
 
 Deno.test("default frame widths clamp to narrower terminals", () => {
-  const narrow = testCapabilities({ columns: 40 });
+  const narrow = testTerminalCapabilities({ columns: 40 });
   const select = renderSelectCli({
     kind: "select",
     label: "Pick",

@@ -40,7 +40,7 @@ import {
   resolvePlaygroundSelection,
   runPlayground,
 } from "../../scripts/playground-cli.ts";
-import { FakeTerminal } from "./fake-terminal.ts";
+import { FakeTerminalIO } from "../../src/cli/interactive/testing.ts";
 
 const ENTER = "\r";
 const DOWN = "\x1b[B";
@@ -69,7 +69,7 @@ function instantScheduler(): SpinnerScheduler {
 }
 
 function testRuntime(
-  io: FakeTerminal,
+  io: FakeTerminalIO,
   overrides: Partial<Omit<PlaygroundRuntime, "io">> = {},
 ): PlaygroundRuntime {
   return createPlaygroundRuntime(io, {
@@ -136,7 +136,7 @@ Deno.test("public heading treatments have one direct, concise review journey", a
     kind: "journey",
     id: "heading-variants",
   });
-  const io = new FakeTerminal([], { columns: 80 });
+  const io = new FakeTerminalIO([], { columns: 80 });
   assertEquals(
     await runJourney(journey("heading-variants"), testRuntime(io)),
     "completed",
@@ -154,7 +154,7 @@ Deno.test("Timeline and stepper status review has a direct journey", async () =>
     kind: "journey",
     id: "triangle-statuses",
   });
-  const io = new FakeTerminal([], { columns: 52 });
+  const io = new FakeTerminalIO([], { columns: 52 });
   assertEquals(
     await runJourney(journey("triangle-statuses"), testRuntime(io)),
     "completed",
@@ -164,7 +164,7 @@ Deno.test("Timeline and stepper status review has a direct journey", async () =>
 });
 
 Deno.test("--list works without a terminal", async () => {
-  const io = new FakeTerminal([], { interactive: false });
+  const io = new FakeTerminalIO([], { interactive: false });
   await runPlayground({ kind: "list" }, testRuntime(io));
   assertStringIncludes(io.output(), "stress-ascii");
   assertEquals(io.rawTransitions, []);
@@ -178,7 +178,7 @@ Deno.test("interactive modes refuse a non-TTY before terminal mutation", async (
       { kind: "journey", id: "text" },
     ] as const
   ) {
-    const io = new FakeTerminal([], { interactive: false });
+    const io = new FakeTerminalIO([], { interactive: false });
     await assertRejects(
       () => runPlayground(selection, testRuntime(io)),
       NonInteractiveTerminalError,
@@ -270,7 +270,7 @@ Deno.test("every generated component, exemption, and sheet is reachable from the
 });
 
 Deno.test("text journey validates, completes, and restores the terminal", async () => {
-  const io = new FakeTerminal([ENTER, `Jo${ENTER}`], { columns: 40 });
+  const io = new FakeTerminalIO([ENTER, `Jo${ENTER}`], { columns: 40 });
   const outcome = await runJourney(journey("text"), testRuntime(io));
   assertEquals(outcome, "completed");
   assertStringIncludes(io.output(), "A display name is required.");
@@ -280,7 +280,7 @@ Deno.test("text journey validates, completes, and restores the terminal", async 
 });
 
 Deno.test("masked journey never echoes the secret", async () => {
-  const io = new FakeTerminal([`hunter2${ENTER}`], { columns: 40 });
+  const io = new FakeTerminalIO([`hunter2${ENTER}`], { columns: 40 });
   const outcome = await runJourney(journey("masked"), testRuntime(io));
   assertEquals(outcome, "completed");
   assert(
@@ -292,14 +292,14 @@ Deno.test("masked journey never echoes the secret", async () => {
 });
 
 Deno.test("confirm journey reports its boolean and EOF cancels cleanly", async () => {
-  const confirmed = new FakeTerminal([`y${ENTER}`], { columns: 40 });
+  const confirmed = new FakeTerminalIO([`y${ENTER}`], { columns: 40 });
   assertEquals(
     await runJourney(journey("confirm"), testRuntime(confirmed)),
     "completed",
   );
   assertStringIncludes(confirmed.output(), "Result: boolean true");
 
-  const ended = new FakeTerminal([], { columns: 40 });
+  const ended = new FakeTerminalIO([], { columns: 40 });
   assertEquals(
     await runJourney(journey("confirm"), testRuntime(ended)),
     "cancelled",
@@ -310,14 +310,14 @@ Deno.test("confirm journey reports its boolean and EOF cancels cleanly", async (
 });
 
 Deno.test("selection journeys report typed results", async () => {
-  const single = new FakeTerminal([ENTER], { columns: 40 });
+  const single = new FakeTerminalIO([ENTER], { columns: 40 });
   assertEquals(
     await runJourney(journey("select"), testRuntime(single)),
     "completed",
   );
   assertStringIncludes(single.output(), 'Result: string "citrine"');
 
-  const multiple = new FakeTerminal([" ", ENTER], { columns: 40 });
+  const multiple = new FakeTerminalIO([" ", ENTER], { columns: 40 });
   assertEquals(
     await runJourney(journey("multiselect"), testRuntime(multiple)),
     "completed",
@@ -327,7 +327,7 @@ Deno.test("selection journeys report typed results", async () => {
     'Result: array ["space-1","space-2","space-4"]',
   );
 
-  const grouped = new FakeTerminal([`${CTRL_A}${ENTER}`], { columns: 40 });
+  const grouped = new FakeTerminalIO([`${CTRL_A}${ENTER}`], { columns: 40 });
   assertEquals(
     await runJourney(journey("multiselect-grouped"), testRuntime(grouped)),
     "completed",
@@ -339,14 +339,14 @@ Deno.test("selection journeys report typed results", async () => {
 });
 
 Deno.test("search and autocomplete journeys resolve through their providers", async () => {
-  const search = new FakeTerminal([ENTER, ENTER], { columns: 48 });
+  const search = new FakeTerminalIO([ENTER, ENTER], { columns: 48 });
   assertEquals(
     await runJourney(journey("search"), testRuntime(search)),
     "completed",
   );
   assertStringIncludes(search.output(), 'Result: string "typography/heading"');
 
-  const autocomplete = new FakeTerminal([`ca\t${ENTER}`], { columns: 48 });
+  const autocomplete = new FakeTerminalIO([`ca\t${ENTER}`], { columns: 48 });
   assertEquals(
     await runJourney(journey("autocomplete"), testRuntime(autocomplete)),
     "completed",
@@ -355,7 +355,7 @@ Deno.test("search and autocomplete journeys resolve through their providers", as
 });
 
 Deno.test("textarea journey submits its multiline value", async () => {
-  const io = new FakeTerminal([CTRL_D], { columns: 60 });
+  const io = new FakeTerminalIO([CTRL_D], { columns: 60 });
   assertEquals(
     await runJourney(journey("textarea"), testRuntime(io)),
     "completed",
@@ -369,7 +369,7 @@ Deno.test("textarea journey submits its multiline value", async () => {
 });
 
 Deno.test("form journey retains answers across Ctrl+U back-navigation", async () => {
-  const io = new FakeTerminal(
+  const io = new FakeTerminalIO(
     [`Ada${ENTER}`, CTRL_U, ENTER, ENTER, ENTER],
     { columns: 60 },
   );
@@ -383,7 +383,7 @@ Deno.test("form journey retains answers across Ctrl+U back-navigation", async ()
 });
 
 Deno.test("spinner and progress journeys complete with truthful frames", async () => {
-  const spinner = new FakeTerminal([], { columns: 24 });
+  const spinner = new FakeTerminalIO([], { columns: 24 });
   assertEquals(
     await runJourney(journey("spinner"), testRuntime(spinner)),
     "completed",
@@ -392,7 +392,7 @@ Deno.test("spinner and progress journeys complete with truthful frames", async (
   assert(spinner.writes.includes(HIDE_TERMINAL_CURSOR));
   assert(spinner.writes.includes(SHOW_TERMINAL_CURSOR));
 
-  const progress = new FakeTerminal([], { columns: 24 });
+  const progress = new FakeTerminalIO([], { columns: 24 });
   assertEquals(
     await runJourney(journey("progress"), testRuntime(progress)),
     "completed",
@@ -404,7 +404,7 @@ Deno.test("spinner and progress journeys complete with truthful frames", async (
 
 Deno.test("repeated journey runs share no orchestration state", async () => {
   const runGrouped = async (): Promise<readonly string[]> => {
-    const io = new FakeTerminal([ENTER], { columns: 40 });
+    const io = new FakeTerminalIO([ENTER], { columns: 40 });
     assertEquals(
       await runJourney(journey("select-grouped"), testRuntime(io)),
       "completed",
@@ -414,7 +414,7 @@ Deno.test("repeated journey runs share no orchestration state", async () => {
   assertEquals(await runGrouped(), await runGrouped());
 
   const runSixteen = async (): Promise<readonly string[]> => {
-    const io = new FakeTerminal([`${END}${ENTER}`], { columns: 60 });
+    const io = new FakeTerminalIO([`${END}${ENTER}`], { columns: 60 });
     assertEquals(
       await runJourney(journey("stress-visible-16"), testRuntime(io)),
       "completed",
@@ -425,7 +425,7 @@ Deno.test("repeated journey runs share no orchestration state", async () => {
 });
 
 Deno.test("reopen loop drives 16-row interactions across passes and exits on demand", async () => {
-  const io = new FakeTerminal(
+  const io = new FakeTerminalIO(
     [
       ENTER,
       ENTER,
@@ -449,7 +449,7 @@ Deno.test("reopen loop drives 16-row interactions across passes and exits on dem
 });
 
 Deno.test("label stress journey completes across graphemes and duplicates", async () => {
-  const io = new FakeTerminal([ENTER, `${CTRL_A}${ENTER}`], { columns: 80 });
+  const io = new FakeTerminalIO([ENTER, `${CTRL_A}${ENTER}`], { columns: 80 });
   assertEquals(
     await runJourney(journey("stress-labels"), testRuntime(io)),
     "completed",
@@ -459,8 +459,8 @@ Deno.test("label stress journey completes across graphemes and duplicates", asyn
 });
 
 Deno.test("degraded journeys run through the synthetic environment", async () => {
-  const io = new FakeTerminal([], { columns: 80 });
-  const degraded = new FakeTerminal([ENTER], {
+  const io = new FakeTerminalIO([], { columns: 80 });
+  const degraded = new FakeTerminalIO([ENTER], {
     columns: 40,
     unicode: false,
     colorDepth: "ansi256",
@@ -484,7 +484,7 @@ Deno.test("degraded journeys run through the synthetic environment", async () =>
 });
 
 Deno.test("browse journey reaches the motif sheet and returns to the hub", async () => {
-  const io = new FakeTerminal(
+  const io = new FakeTerminalIO(
     [`${END}${UP}${UP}${ENTER}`, `${END}${ENTER}`],
     { columns: 80 },
   );
@@ -496,7 +496,7 @@ Deno.test("browse journey reaches the motif sheet and returns to the hub", async
 });
 
 Deno.test("browse journey walks Group, component, and example navigation", async () => {
-  const io = new FakeTerminal(
+  const io = new FakeTerminalIO(
     [
       `${DOWN}${DOWN}${ENTER}`,
       ENTER,
@@ -517,7 +517,7 @@ Deno.test("browse journey walks Group, component, and example navigation", async
 });
 
 Deno.test("hub runs a journey, returns, and quits on cancellation", async () => {
-  const io = new FakeTerminal(
+  const io = new FakeTerminalIO(
     [`${DOWN}${ENTER}`, `Jo${ENTER}`, CTRL_C],
     { columns: 60 },
   );
@@ -528,7 +528,7 @@ Deno.test("hub runs a journey, returns, and quits on cancellation", async () => 
 });
 
 Deno.test("tour skips a cancelled journey only after explicit consent", async () => {
-  const io = new FakeTerminal([CTRL_C, `n${ENTER}`], { columns: 60 });
+  const io = new FakeTerminalIO([CTRL_C, `n${ENTER}`], { columns: 60 });
   await runTour(testRuntime(io));
   assertStringIncludes(io.output(), "Tour stop 1 of");
   assertStringIncludes(io.output(), "Journey cancelled (Cancelled.)");
@@ -541,9 +541,9 @@ Deno.test("every journey survives every terminal width without throwing", async 
   // sequential forms rejects anything narrower, so the sweep starts there.
   for (const columns of [12, 24, 28, 30, 31, 32, 48, 80]) {
     for (const entry of playgroundJourneys) {
-      const io = new FakeTerminal([], { columns });
+      const io = new FakeTerminalIO([], { columns });
       const runtime = testRuntime(io, {
-        degradedIo: () => new FakeTerminal([], { columns }),
+        degradedIo: () => new FakeTerminalIO([], { columns }),
       });
       const outcome = await runJourney(entry, runtime);
       assert(
@@ -555,7 +555,7 @@ Deno.test("every journey survives every terminal width without throwing", async 
 });
 
 Deno.test("journey wrapper rethrows non-cancellation faults", async () => {
-  const io = new FakeTerminal([], { interactive: false });
+  const io = new FakeTerminalIO([], { interactive: false });
   await assertRejects(
     () => runJourney(journey("select"), testRuntime(io)),
     NonInteractiveTerminalError,

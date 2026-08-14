@@ -13,7 +13,7 @@ import {
   renderCliCatalogue,
   resolveCatalogueSelection,
 } from "../../scripts/catalogue-cli.ts";
-import { testCapabilities } from "./helpers.ts";
+import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
 
 const registry = cliComponentRegistry as Readonly<
   Record<string, CliComponentRegistryEntry>
@@ -41,7 +41,7 @@ Deno.test("CLI catalogue resolves all, Group, Component, and motif selectors", (
 Deno.test("complete CLI catalogue renders every registry entry and exemption", async () => {
   const output = await renderCliCatalogue(
     undefined,
-    testCapabilities({ columns: 80 }),
+    testTerminalCapabilities({ columns: 80 }),
   );
   for (const group of componentGroups) {
     assertStringIncludes(output, `## ${group}`);
@@ -60,7 +60,7 @@ Deno.test("complete CLI catalogue renders every registry entry and exemption", a
 });
 
 Deno.test("CLI catalogue filters one Group or Component without hiding exemptions", async () => {
-  const capabilities = testCapabilities({ columns: 80 });
+  const capabilities = testTerminalCapabilities({ columns: 80 });
   const feedback = await renderCliCatalogue("Feedback", capabilities);
   assertStringIncludes(feedback, "## Feedback");
   assert(!feedback.includes("## Forms"));
@@ -88,7 +88,7 @@ Deno.test("CLI catalogue filters one Group or Component without hiding exemption
 Deno.test("triangle catalogue derives the complete motif specimen set", async () => {
   const output = await renderCliCatalogue(
     "triangles",
-    testCapabilities({ columns: 32 }),
+    testTerminalCapabilities({ columns: 32 }),
   );
   for (
     const heading of [
@@ -129,7 +129,7 @@ Deno.test("NO_COLOR suppresses ANSI throughout catalogue output", async () => {
 });
 
 Deno.test("consumer-hardening examples enrol through Component CLI registries", async () => {
-  const capabilities = testCapabilities({ columns: 80 });
+  const capabilities = testTerminalCapabilities({ columns: 80 });
   const select = await renderCliCatalogue("select", capabilities);
   assertStringIncludes(select, "#### grouped");
   assertStringIncludes(select, "RECOMMENDED");

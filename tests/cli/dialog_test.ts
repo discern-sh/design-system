@@ -2,8 +2,8 @@ import { renderDialogCli } from "../../src/cli/mod.ts";
 import {
   assertExactFrame,
   assertStyledFrame,
-  testCapabilities,
-} from "./helpers.ts";
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 const props = {
   title: "Confirm",
@@ -26,7 +26,7 @@ Deno.test("Dialog renders exact narrow, standard, and wide modal blocks", () => 
       frames.wide,
     ]] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderDialogCli({ ...props, width: columns }, capabilities),
       expected,
@@ -37,14 +37,17 @@ Deno.test("Dialog renders exact narrow, standard, and wide modal blocks", () => 
 
 Deno.test("Dialog preserves hierarchy across capability levels", () => {
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-    const capabilities = testCapabilities({ colorDepth, columns: 28 });
+    const capabilities = testTerminalCapabilities({ colorDepth, columns: 28 });
     assertStyledFrame(
       renderDialogCli({ ...props, width: 28 }, capabilities),
       frames.standard,
       capabilities,
     );
   }
-  const capabilities = testCapabilities({ columns: 28, unicode: false });
+  const capabilities = testTerminalCapabilities({
+    columns: 28,
+    unicode: false,
+  });
   assertExactFrame(
     renderDialogCli({
       title: "Published",

@@ -2,8 +2,8 @@ import { renderMeterCli } from "../../src/cli/mod.ts";
 import {
   assertExactFrame,
   assertStyledFrame,
-  testCapabilities,
-} from "./helpers.ts";
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 const meter = (
   completed: number,
@@ -31,7 +31,7 @@ Deno.test("Meter renders zero, quarter, and complete at narrow and standard widt
       ]],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns: width });
+    const capabilities = testTerminalCapabilities({ columns: width });
     for (const [index, completed] of [0, 25, 100].entries()) {
       assertExactFrame(
         renderMeterCli({
@@ -47,21 +47,24 @@ Deno.test("Meter renders zero, quarter, and complete at narrow and standard widt
 
 Deno.test("Meter uses exact ASCII progress and every colour capability", () => {
   for (const width of [12, 20]) {
-    const capabilities = testCapabilities({ columns: width, unicode: false });
+    const capabilities = testTerminalCapabilities({
+      columns: width,
+      unicode: false,
+    });
     assertExactFrame(
       renderMeterCli({ ...meter(25), width }, capabilities),
       width === 12 ? "Upload\n[ 25%] >...." : "Upload\n[ 25%] >v^..........",
       capabilities,
     );
   }
-  const wide = testCapabilities({ columns: 40 });
+  const wide = testTerminalCapabilities({ columns: 40 });
   assertExactFrame(
     renderMeterCli({ ...meter(25), width: 40 }, wide),
     "Upload\n[ 25%] ◮⧩◭⧨◮⧩◭⧨.........................",
     wide,
   );
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-    const capabilities = testCapabilities({ colorDepth, columns: 20 });
+    const capabilities = testTerminalCapabilities({ colorDepth, columns: 20 });
     assertStyledFrame(
       renderMeterCli({ ...meter(25), width: 20 }, capabilities),
       "Upload\n[ 25%] ◮⧩◭..........",
@@ -71,7 +74,7 @@ Deno.test("Meter uses exact ASCII progress and every colour capability", () => {
 });
 
 Deno.test("Meter renders validation and cancellation lifecycle frames", () => {
-  const capabilities = testCapabilities({ columns: 20 });
+  const capabilities = testTerminalCapabilities({ columns: 20 });
   assertExactFrame(
     renderMeterCli({
       ...meter(25),

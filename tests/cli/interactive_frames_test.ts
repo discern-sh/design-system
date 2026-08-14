@@ -11,13 +11,16 @@ import {
   requestTextarea,
   withDeterminateProgress,
 } from "../../src/cli/interactive/mod.ts";
-import { assertExactFrame, testCapabilities } from "./helpers.ts";
-import { FakeTerminal } from "./fake-terminal.ts";
+import {
+  assertExactFrame,
+  FakeTerminalIO,
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 const ENTER = "\r";
 const CTRL_D = "\x04";
 
-function firstInteractionFrame(io: FakeTerminal): string {
+function firstInteractionFrame(io: FakeTerminalIO): string {
   const frame = io.writes[1];
   if (frame === undefined) {
     throw new Error("interaction painted no initial frame");
@@ -26,18 +29,18 @@ function firstInteractionFrame(io: FakeTerminal): string {
 }
 
 Deno.test("terminal interactions paint exact real Component frames", async () => {
-  const capabilities = testCapabilities({ columns: 32 });
+  const capabilities = testTerminalCapabilities({ columns: 32 });
   const frames = new Map<string, string>();
 
-  let io = new FakeTerminal([ENTER], { columns: 32 });
+  let io = new FakeTerminalIO([ENTER], { columns: 32 });
   await requestText({ label: "Name", initialValue: "Ada" }, { io });
   frames.set("input", firstInteractionFrame(io));
 
-  io = new FakeTerminal([`abc${ENTER}`], { columns: 32 });
+  io = new FakeTerminalIO([`abc${ENTER}`], { columns: 32 });
   await requestMaskedText({ label: "Secret", placeholder: "token" }, { io });
   frames.set("masked input", firstInteractionFrame(io));
 
-  io = new FakeTerminal([ENTER], { columns: 32 });
+  io = new FakeTerminalIO([ENTER], { columns: 32 });
   await requestConfirmation({
     label: "Continue",
     initialValue: true,
@@ -50,7 +53,7 @@ Deno.test("terminal interactions paint exact real Component frames", async () =>
     { id: "one", label: "One", value: 1 },
     { id: "two", label: "Two", value: 2 },
   ] as const;
-  io = new FakeTerminal([ENTER], { columns: 32 });
+  io = new FakeTerminalIO([ENTER], { columns: 32 });
   await requestSelection({
     label: "Pick",
     choices,
@@ -58,7 +61,7 @@ Deno.test("terminal interactions paint exact real Component frames", async () =>
   }, { io });
   frames.set("select", firstInteractionFrame(io));
 
-  io = new FakeTerminal([ENTER], { columns: 32 });
+  io = new FakeTerminalIO([ENTER], { columns: 32 });
   await requestSelections({
     label: "Tags",
     choices,
@@ -66,7 +69,7 @@ Deno.test("terminal interactions paint exact real Component frames", async () =>
   }, { io });
   frames.set("checkboxes", firstInteractionFrame(io));
 
-  io = new FakeTerminal([`${ENTER}${ENTER}`], { columns: 32 });
+  io = new FakeTerminalIO([`${ENTER}${ENTER}`], { columns: 32 });
   await requestSearch({
     label: "Find",
     placeholder: "Search",
@@ -74,7 +77,7 @@ Deno.test("terminal interactions paint exact real Component frames", async () =>
   }, { io });
   frames.set("radio search", firstInteractionFrame(io));
 
-  io = new FakeTerminal([ENTER], { columns: 32 });
+  io = new FakeTerminalIO([ENTER], { columns: 32 });
   await requestAutocomplete({
     label: "Shell",
     initialValue: "z",
@@ -82,7 +85,7 @@ Deno.test("terminal interactions paint exact real Component frames", async () =>
   }, { io });
   frames.set("autocomplete input", firstInteractionFrame(io));
 
-  io = new FakeTerminal([CTRL_D], { columns: 32 });
+  io = new FakeTerminalIO([CTRL_D], { columns: 32 });
   await requestTextarea({
     label: "Notes",
     initialValue: "ab\ncd",
@@ -132,8 +135,8 @@ Deno.test("terminal interactions paint exact real Component frames", async () =>
 });
 
 Deno.test("interactive progress paints exact Meter frames", async () => {
-  const capabilities = testCapabilities({ columns: 20 });
-  const io = new FakeTerminal([], { columns: 20 });
+  const capabilities = testTerminalCapabilities({ columns: 20 });
+  const io = new FakeTerminalIO([], { columns: 20 });
   await withDeterminateProgress({
     label: "Work",
     total: 4,
@@ -148,7 +151,7 @@ Deno.test("interactive progress paints exact Meter frames", async () => {
 });
 
 Deno.test("sequential forms paint exact Process steps frames", async () => {
-  const io = new FakeTerminal([], { columns: 32 });
+  const io = new FakeTerminalIO([], { columns: 32 });
   await createSequentialForm({ label: "Setup", io })
     .add({
       id: "account",

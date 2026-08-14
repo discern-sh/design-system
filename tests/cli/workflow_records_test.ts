@@ -10,8 +10,8 @@ import {
 import {
   assertExactFrame,
   assertStyledFrame,
-  testCapabilities,
-} from "./helpers.ts";
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 function assertCapabilityLevels(
   render: (capabilities: TerminalCapabilities) => string,
@@ -21,14 +21,14 @@ function assertCapabilityLevels(
   for (const unicode of [true, false]) {
     const expected = unicode ? expectedUnicode : expectedAscii;
     for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-      const capabilities = testCapabilities({
+      const capabilities = testTerminalCapabilities({
         colorDepth,
         columns: 52,
         unicode,
       });
       assertStyledFrame(render(capabilities), expected, capabilities);
     }
-    const capabilities = testCapabilities({ columns: 52, unicode });
+    const capabilities = testTerminalCapabilities({ columns: 52, unicode });
     assertExactFrame(render(capabilities), expected, capabilities);
   }
 }
@@ -54,7 +54,7 @@ Deno.test("Agent handoff renders exact narrow, standard, wide, and capability fr
       ],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderAgentHandoffCli(props, capabilities),
       expected,
@@ -92,7 +92,7 @@ Deno.test("Artifact card renders exact narrow, standard, wide, and capability fr
       ],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderArtifactCardCli(props, capabilities),
       expected,
@@ -131,7 +131,7 @@ Deno.test("Artifact tree renders exact narrow, standard, wide, and capability fr
       [80, standard],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderArtifactTreeCli(props, capabilities),
       expected,
@@ -167,7 +167,7 @@ Deno.test("Decision record renders exact narrow, standard, wide, and capability 
       [80, standard],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderDecisionRecordCli(props, capabilities),
       expected,
@@ -199,7 +199,7 @@ Deno.test("Rule renders exact narrow, standard, wide, and capability frames", ()
       [80, standard],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderRuleCli(props, capabilities),
       expected,
@@ -235,7 +235,7 @@ Deno.test("Task metadata renders exact narrow, standard, wide, and capability fr
       [80, standard],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderTaskMetadataCli(props, capabilities),
       expected,

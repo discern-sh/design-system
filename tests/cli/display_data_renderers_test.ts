@@ -3,8 +3,8 @@ import { renderDiffstatCli, renderTableCli } from "../../src/cli/mod.ts";
 import {
   assertExactFrame,
   assertStyledFrame,
-  testCapabilities,
-} from "./helpers.ts";
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 Deno.test("Diffstat renders exact narrow, standard, wide, and sign-preserving degraded bars", () => {
   const render = (capabilities: TerminalCapabilities) =>
@@ -19,14 +19,14 @@ Deno.test("Diffstat renders exact narrow, standard, wide, and sign-preserving de
       [40, "+14 −5 ++++−"],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(render(capabilities), expected, capabilities);
   }
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-    const capabilities = testCapabilities({ colorDepth, columns: 20 });
+    const capabilities = testTerminalCapabilities({ colorDepth, columns: 20 });
     assertStyledFrame(render(capabilities), "+14 −5 ++++−", capabilities);
   }
-  const ascii = testCapabilities({ columns: 20, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 20, unicode: false });
   assertExactFrame(render(ascii), "+14 -5 ++++-", ascii);
 });
 
@@ -56,14 +56,14 @@ Deno.test("Table renders exact narrow, standard, wide, and box-degraded columns"
       wide,
     ]] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(render(capabilities), expected, capabilities);
   }
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-    const capabilities = testCapabilities({ colorDepth, columns: 30 });
+    const capabilities = testTerminalCapabilities({ colorDepth, columns: 30 });
     assertStyledFrame(render(capabilities), standard, capabilities);
   }
-  const ascii = testCapabilities({ columns: 30, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 30, unicode: false });
   assertExactFrame(
     render(ascii),
     "Checks\n+--------+---------+---------+\n| Name   | State   |   Count |\n+--------+---------+---------+\n| Alpha  | Ready   |      12 |\n| Beta   | Queued  |       3 |\n+--------+---------+---------+",

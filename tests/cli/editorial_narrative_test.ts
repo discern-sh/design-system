@@ -7,7 +7,10 @@ import {
   terminalToneColor,
 } from "../../src/cli/theme.ts";
 import { renderTrianglePattern } from "../../src/cli/triangles.ts";
-import { assertExactFrame, testCapabilities } from "./helpers.ts";
+import {
+  assertExactFrame,
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 const pullQuoteProps = {
   quote:
@@ -32,14 +35,14 @@ Deno.test("Pull quote renders exact width, ASCII, and colour frames", () => {
     ],
   ] as const;
   for (const [columns, expected] of frames) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderPullQuoteCli(pullQuoteProps, capabilities),
       expected,
       capabilities,
     );
   }
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderPullQuoteCli(pullQuoteProps, ascii),
     '| "A durable interface\n| leaves the reader with\n| the argument, not the\n| rendering machinery."\n  - Ada Osei - Field\n  notes',
@@ -49,7 +52,7 @@ Deno.test("Pull quote renders exact width, ASCII, and colour frames", () => {
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
-    const capabilities = testCapabilities({ columns: 52, colorDepth });
+    const capabilities = testTerminalCapabilities({ columns: 52, colorDepth });
     const line = (text: string) =>
       renderStyledSpans([
         {
@@ -111,14 +114,14 @@ Deno.test("Timeline renders exact width, ASCII, and colour frames", () => {
       standard,
     ]] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderTimelineCli(timelineProps, capabilities),
       expected,
       capabilities,
     );
   }
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderTimelineCli(timelineProps, ascii),
     "HISTORY\n\nOne decision at a time\n\n^ Week 01 - Observe\n  [complete]\n|   Name the recurring\n    friction.\n|\nv Week 03 - Constrain\n  [current]\n|   Make the shared\n    boundary executable.\n|\nv Week 06 - Review\n  [upcoming]\n    Compare evidence,\n    not recollections.",
@@ -128,7 +131,7 @@ Deno.test("Timeline renders exact width, ASCII, and colour frames", () => {
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
-    const capabilities = testCapabilities({ columns: 52, colorDepth });
+    const capabilities = testTerminalCapabilities({ columns: 52, colorDepth });
     const heading = styleText("HISTORY", {
       ...theme.typography.annotation,
       color: terminalThemeColor(theme, "--discern-color-accent-700"),
@@ -157,7 +160,7 @@ Deno.test("Timeline renders exact width, ASCII, and colour frames", () => {
 
 Deno.test("Timeline markers point up only for complete events regardless of item order", () => {
   for (const unicode of [true, false]) {
-    const capabilities = testCapabilities({ columns: 52, unicode });
+    const capabilities = testTerminalCapabilities({ columns: 52, unicode });
     const output = stripAnsi(renderTimelineCli({
       title: "Direction",
       items: [

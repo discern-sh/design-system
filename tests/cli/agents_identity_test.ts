@@ -7,8 +7,8 @@ import {
 import {
   assertExactFrame,
   assertStyledFrame,
-  testCapabilities,
-} from "./helpers.ts";
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 function assertCapabilityLevels(
   render: (capabilities: TerminalCapabilities) => string,
@@ -18,14 +18,14 @@ function assertCapabilityLevels(
   for (const unicode of [true, false]) {
     const expected = unicode ? expectedUnicode : expectedAscii;
     for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-      const capabilities = testCapabilities({
+      const capabilities = testTerminalCapabilities({
         colorDepth,
         columns: 32,
         unicode,
       });
       assertStyledFrame(render(capabilities), expected, capabilities);
     }
-    const capabilities = testCapabilities({ columns: 32, unicode });
+    const capabilities = testTerminalCapabilities({ columns: 32, unicode });
     assertExactFrame(render(capabilities), expected, capabilities);
   }
 }
@@ -39,7 +39,7 @@ Deno.test("Agent avatar renders exact widths, capability levels, sizes, and stat
       [60, "[RA] ● working"],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderAgentAvatarCli(props, capabilities),
       expected,
@@ -52,7 +52,7 @@ Deno.test("Agent avatar renders exact widths, capability levels, sizes, and stat
     "[RA] * working",
   );
 
-  const capabilities = testCapabilities({ columns: 32 });
+  const capabilities = testTerminalCapabilities({ columns: 32 });
   for (
     const [status, expected] of [
       ["working", "[RA] ● working"],
@@ -87,7 +87,7 @@ Deno.test("Agent mention renders exact narrow, standard, wide, and capability fr
       [60, "❯ @release <https://example.test/agents/release>"],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderAgentMentionCli(props, capabilities),
       expected,
@@ -118,7 +118,7 @@ Deno.test("Agent persona renders exact narrow, standard, wide, and capability fr
       [60, standard],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderAgentPersonaCli(props, capabilities),
       expected,

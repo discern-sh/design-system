@@ -7,8 +7,8 @@ import {
 import {
   assertExactFrame,
   assertStyledFrame,
-  testCapabilities,
-} from "./helpers.ts";
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 Deno.test("Grid renders exact narrow, standard, wide, and capability-invariant rows", () => {
   const render = (capabilities: TerminalCapabilities) =>
@@ -27,7 +27,7 @@ Deno.test("Grid renders exact narrow, standard, wide, and capability-invariant r
       [40, "Alpha         Beta          Gamma\n\n\nDelta"],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(render(capabilities), expected, capabilities);
   }
   for (
@@ -39,7 +39,7 @@ Deno.test("Grid renders exact narrow, standard, wide, and capability-invariant r
     ] as const
   ) {
     for (const unicode of [true, false]) {
-      const capabilities = testCapabilities({
+      const capabilities = testTerminalCapabilities({
         colorDepth,
         columns: 24,
         unicode,
@@ -72,7 +72,7 @@ Deno.test("Section renders exact narrow, standard, wide, and degraded labelled r
       "Shared design language",
     ]] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     const rule = renderTriangleSectionRule(
       "Build",
       { width: columns },
@@ -81,7 +81,7 @@ Deno.test("Section renders exact narrow, standard, wide, and degraded labelled r
     assertExactFrame(render(capabilities), `${rule}\n\n${body}`, capabilities);
   }
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-    const capabilities = testCapabilities({ colorDepth, columns: 24 });
+    const capabilities = testTerminalCapabilities({ colorDepth, columns: 24 });
     const rule = renderTriangleSectionRule(
       "Build",
       { width: 24 },
@@ -93,7 +93,7 @@ Deno.test("Section renders exact narrow, standard, wide, and degraded labelled r
       capabilities,
     );
   }
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     render(ascii),
     `${
@@ -104,7 +104,7 @@ Deno.test("Section renders exact narrow, standard, wide, and degraded labelled r
 });
 
 Deno.test("Section selects the authoritative multi-row ribbon treatment", () => {
-  const capabilities = testCapabilities({ columns: 12 });
+  const capabilities = testTerminalCapabilities({ columns: 12 });
   assertExactFrame(
     renderSectionCli(
       {

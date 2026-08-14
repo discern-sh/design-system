@@ -2,8 +2,8 @@ import { renderDividerCli } from "../../src/cli/mod.ts";
 import {
   assertExactFrame,
   assertStyledFrame,
-  testCapabilities,
-} from "./helpers.ts";
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 Deno.test("Divider renders exact narrow, standard, wide, and capability-degraded rules", () => {
   for (
@@ -13,7 +13,7 @@ Deno.test("Divider renders exact narrow, standard, wide, and capability-degraded
       [24, "◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨"],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderDividerCli({ width: columns }, capabilities),
       expected,
@@ -22,14 +22,14 @@ Deno.test("Divider renders exact narrow, standard, wide, and capability-degraded
   }
   const labelled = "━━ ◮ GATE ━━━━━━";
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-    const capabilities = testCapabilities({ colorDepth, columns: 16 });
+    const capabilities = testTerminalCapabilities({ colorDepth, columns: 16 });
     assertStyledFrame(
       renderDividerCli({ label: "gate", width: 16 }, capabilities),
       labelled,
       capabilities,
     );
   }
-  const ascii = testCapabilities({ columns: 16, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 16, unicode: false });
   assertExactFrame(
     renderDividerCli({ label: "gate", width: 16 }, ascii),
     "== > GATE ======",
@@ -38,7 +38,7 @@ Deno.test("Divider renders exact narrow, standard, wide, and capability-degraded
 });
 
 Deno.test("Divider owns exact vertical, thick, phased, ribbon, field, weave, and ASCII treatments", () => {
-  const unicode = testCapabilities({ columns: 8 });
+  const unicode = testTerminalCapabilities({ columns: 8 });
   assertExactFrame(
     renderDividerCli(
       {
@@ -67,7 +67,7 @@ Deno.test("Divider owns exact vertical, thick, phased, ribbon, field, weave, and
     "◭⧨◮⧩\n⧩◭⧨◮\n◭⧨◮⧩",
     unicode,
   );
-  const ascii = testCapabilities({ columns: 8, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 8, unicode: false });
   assertExactFrame(
     renderDividerCli(
       { treatment: "weave", length: 8, width: 8 },

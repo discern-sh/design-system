@@ -4,7 +4,10 @@ import {
   renderContainerCli,
   renderStackCli,
 } from "../../src/cli/mod.ts";
-import { assertExactFrame, testCapabilities } from "./helpers.ts";
+import {
+  assertExactFrame,
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 function assertCapabilityInvariant(
   render: (capabilities: TerminalCapabilities) => string,
@@ -20,7 +23,11 @@ function assertCapabilityInvariant(
     ] as const
   ) {
     for (const unicode of [true, false]) {
-      const capabilities = testCapabilities({ colorDepth, columns, unicode });
+      const capabilities = testTerminalCapabilities({
+        colorDepth,
+        columns,
+        unicode,
+      });
       assertExactFrame(render(capabilities), expected, capabilities);
     }
   }
@@ -43,7 +50,7 @@ Deno.test("Container wraps exact narrow, standard, wide, and capability-invarian
       [80, "                Readable content stays centred"],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(render(capabilities), expected, capabilities);
   }
   assertCapabilityInvariant(
@@ -66,7 +73,7 @@ Deno.test("Cluster wraps exact narrow, standard, wide, and capability-invariant 
       [32, "Save  Preview  Cancel"],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(render(capabilities), expected, capabilities);
   }
   assertCapabilityInvariant(render, "Save  Preview\nCancel", 16);
@@ -85,7 +92,7 @@ Deno.test("Stack joins exact narrow, standard, wide, and capability-invariant bl
       [40, "First block\n\nSecond block"],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(render(capabilities), expected, capabilities);
   }
   assertCapabilityInvariant(render, "First block\n\nSecond block", 20);

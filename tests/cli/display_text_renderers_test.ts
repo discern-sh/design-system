@@ -9,8 +9,8 @@ import {
 import {
   assertExactFrame,
   assertStyledFrame,
-  testCapabilities,
-} from "./helpers.ts";
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 function assertCapabilityLevels(
   render: (capabilities: TerminalCapabilities) => string,
@@ -18,12 +18,12 @@ function assertCapabilityLevels(
   expectedAscii: string,
 ): void {
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-    const capabilities = testCapabilities({ colorDepth, columns: 24 });
+    const capabilities = testTerminalCapabilities({ colorDepth, columns: 24 });
     assertStyledFrame(render(capabilities), expectedUnicode, capabilities);
   }
-  const plain = testCapabilities({ columns: 24 });
+  const plain = testTerminalCapabilities({ columns: 24 });
   assertExactFrame(render(plain), expectedUnicode, plain);
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(render(ascii), expectedAscii, ascii);
 }
 
@@ -40,7 +40,7 @@ Deno.test("Heading renders exact narrow, standard, wide, and colour-degraded tex
       [48, "## Rules that travel"],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(render(capabilities), `\n${expected}`, capabilities);
   }
   assertCapabilityLevels(
@@ -51,7 +51,7 @@ Deno.test("Heading renders exact narrow, standard, wide, and colour-degraded tex
 });
 
 Deno.test("Heading owns one leading blank line by default and validates explicit overrides", () => {
-  const capabilities = testCapabilities({ columns: 32 });
+  const capabilities = testTerminalCapabilities({ columns: 32 });
   const render = renderHeadingCli as unknown as (
     props: {
       readonly text: string;
@@ -88,7 +88,7 @@ Deno.test("Kicker renders exact narrow, standard, wide, and colour-degraded anno
       [48, "[02] WORKING AGREEMENT"],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(render(capabilities), expected, capabilities);
   }
   assertCapabilityLevels(
@@ -111,7 +111,7 @@ Deno.test("Stat renders exact narrow, standard, wide, and colour-degraded figure
       [48, "ENTRIES\n128\nAcross four collections"],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(render(capabilities), expected, capabilities);
   }
   assertCapabilityLevels(
@@ -131,7 +131,7 @@ Deno.test("Tag renders exact narrow, standard, wide, and ASCII-removal frames", 
       [48, "‹ selected × ›"],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(render(capabilities), expected, capabilities);
   }
   assertCapabilityLevels(render, "‹ selected × ›", "[ selected x ]");

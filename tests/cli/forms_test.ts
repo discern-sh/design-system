@@ -27,8 +27,8 @@ import {
 import {
   assertExactFrame,
   assertStyledFrame,
-  testCapabilities,
-} from "./helpers.ts";
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 interface WidthProps {
   readonly width?: number;
@@ -44,7 +44,7 @@ function sectionRule(
   width: number,
   unicode = true,
 ): string {
-  const capabilities = testCapabilities({ columns: width, unicode });
+  const capabilities = testTerminalCapabilities({ columns: width, unicode });
   return stripAnsi(
     renderTriangleSectionRule(label, { width }, capabilities),
   );
@@ -62,7 +62,7 @@ function assertStateFrames<Props extends WidthProps>(
   render: Renderer<Props>,
   expected: readonly string[],
 ): void {
-  const capabilities = testCapabilities({ columns: 28 });
+  const capabilities = testTerminalCapabilities({ columns: 28 });
   for (const [index, example] of examples.entries()) {
     assertExactFrame(
       render(withWidth(example.props, 28), capabilities),
@@ -85,7 +85,7 @@ function assertWidthsAndCapabilities<Props extends WidthProps>(
     throw new TypeError("form examples must include active and filled states");
   }
   for (const [index, columns] of [16, 28, 48].entries()) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       render(withWidth(filled.props, columns), capabilities),
       widths[index] ?? "",
@@ -93,14 +93,17 @@ function assertWidthsAndCapabilities<Props extends WidthProps>(
     );
   }
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-    const capabilities = testCapabilities({ colorDepth, columns: 28 });
+    const capabilities = testTerminalCapabilities({ colorDepth, columns: 28 });
     assertStyledFrame(
       render(withWidth(active.props, 28), capabilities),
       activePlaintext,
       capabilities,
     );
   }
-  const capabilities = testCapabilities({ columns: 28, unicode: false });
+  const capabilities = testTerminalCapabilities({
+    columns: 28,
+    unicode: false,
+  });
   assertExactFrame(
     render(withWidth(active.props, 28), capabilities),
     ascii,
@@ -217,7 +220,7 @@ Deno.test("Radio renders every static selection state exactly", () => {
 });
 
 Deno.test("Radio search reserves its pointer column across highlight movement", () => {
-  const capabilities = testCapabilities({ columns: 20 });
+  const capabilities = testTerminalCapabilities({ columns: 20 });
   const base = {
     kind: "search" as const,
     label: "Find",
@@ -297,8 +300,8 @@ Deno.test("grouped Select, Checkbox, and Radio retain structure in narrow ASCII 
   if (checkbox === undefined || radio === undefined || select === undefined) {
     throw new TypeError("grouped form examples must remain enrolled");
   }
-  const unicode = testCapabilities({ columns: 20 });
-  const ascii = testCapabilities({ columns: 20, unicode: false });
+  const unicode = testTerminalCapabilities({ columns: 20 });
+  const ascii = testTerminalCapabilities({ columns: 20, unicode: false });
   const expected = [
     [
       renderCheckboxCli,
@@ -382,7 +385,7 @@ Deno.test("Switch covers narrow, standard, wide, colour, and ASCII frames", () =
 Deno.test("choice navigation and selected markers use Token-derived accent while disabled text stays muted", () => {
   const theme = terminalThemes.dark;
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-    const capabilities = testCapabilities({
+    const capabilities = testTerminalCapabilities({
       colorDepth,
       columns: 32,
     });
@@ -440,7 +443,7 @@ Deno.test("choice navigation and selected markers use Token-derived accent while
     );
   }
 
-  const plain = testCapabilities({ columns: 32 });
+  const plain = testTerminalCapabilities({ columns: 32 });
   assertStringIncludes(
     renderSelectCli({
       kind: "select",
@@ -456,7 +459,7 @@ Deno.test("choice navigation and selected markers use Token-derived accent while
     }, plain),
     "› [●] Alpha",
   );
-  const ascii = testCapabilities({ columns: 32, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 32, unicode: false });
   assertStringIncludes(
     renderCheckboxCli({
       kind: "multiselect",
@@ -502,7 +505,7 @@ Deno.test("Switch keeps custom yes and no labels in fixed columns across values 
         "none",
       ] as const
     ) {
-      const capabilities = testCapabilities({
+      const capabilities = testTerminalCapabilities({
         colorDepth,
         columns: 32,
         unicode,
@@ -575,7 +578,7 @@ Deno.test("Textarea covers narrow, standard, wide, colour, and ASCII frames", ()
 });
 
 Deno.test("Input masks secret state without exposing its value", () => {
-  const capabilities = testCapabilities({ columns: 24 });
+  const capabilities = testTerminalCapabilities({ columns: 24 });
   assertExactFrame(
     renderInputCli({
       kind: "masked-input",

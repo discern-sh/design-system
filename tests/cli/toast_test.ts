@@ -2,8 +2,8 @@ import { renderToastCli } from "../../src/cli/mod.ts";
 import {
   assertExactFrame,
   assertStyledFrame,
-  testCapabilities,
-} from "./helpers.ts";
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 const frames = {
   narrow: "┌ Success ───┐\n│Saved.  ×   │\n└────────────┘",
@@ -20,7 +20,7 @@ Deno.test("Toast renders exact narrow, standard, and wide notifications", () => 
       frames.wide,
     ]] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderToastCli({
         message: "Saved.",
@@ -36,7 +36,7 @@ Deno.test("Toast renders exact narrow, standard, and wide notifications", () => 
 
 Deno.test("Toast preserves semantic tone through every capability level", () => {
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-    const capabilities = testCapabilities({ colorDepth, columns: 28 });
+    const capabilities = testTerminalCapabilities({ colorDepth, columns: 28 });
     assertStyledFrame(
       renderToastCli({
         message: "Saved.",
@@ -48,7 +48,10 @@ Deno.test("Toast preserves semantic tone through every capability level", () => 
       capabilities,
     );
   }
-  const capabilities = testCapabilities({ columns: 20, unicode: false });
+  const capabilities = testTerminalCapabilities({
+    columns: 20,
+    unicode: false,
+  });
   assertExactFrame(
     renderToastCli({
       message: "Saved.",

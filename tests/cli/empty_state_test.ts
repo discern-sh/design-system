@@ -2,8 +2,8 @@ import { renderEmptyStateCli } from "../../src/cli/mod.ts";
 import {
   assertExactFrame,
   assertStyledFrame,
-  testCapabilities,
-} from "./helpers.ts";
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 const props = {
   title: "No items",
@@ -26,7 +26,7 @@ Deno.test("Empty state renders exact narrow, standard, and wide placeholders", (
       frames.wide,
     ]] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderEmptyStateCli({ ...props, width: columns }, capabilities),
       expected,
@@ -37,14 +37,17 @@ Deno.test("Empty state renders exact narrow, standard, and wide placeholders", (
 
 Deno.test("Empty state degrades its mark and action intentionally", () => {
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-    const capabilities = testCapabilities({ colorDepth, columns: 28 });
+    const capabilities = testTerminalCapabilities({ colorDepth, columns: 28 });
     assertStyledFrame(
       renderEmptyStateCli({ ...props, width: 28 }, capabilities),
       frames.standard,
       capabilities,
     );
   }
-  const capabilities = testCapabilities({ columns: 20, unicode: false });
+  const capabilities = testTerminalCapabilities({
+    columns: 20,
+    unicode: false,
+  });
   assertExactFrame(
     renderEmptyStateCli(
       { title: "No items", action: "Create", width: 20 },

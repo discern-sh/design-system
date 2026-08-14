@@ -10,7 +10,10 @@ import {
   terminalThemes,
   terminalToneColor,
 } from "../../src/cli/theme.ts";
-import { assertExactFrame, testCapabilities } from "./helpers.ts";
+import {
+  assertExactFrame,
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 const bylineProps = {
   authors: [{ name: "Ada Osei" }, { name: "June Park" }],
@@ -24,14 +27,14 @@ Deno.test("Byline renders exact width, ASCII, and colour frames", () => {
     [96, "By [AO] Ada Osei & [JP] June Park · 11 August 2026 · 8 min read"],
   ] as const;
   for (const [columns, expected] of frames) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderBylineCli(bylineProps, capabilities),
       expected,
       capabilities,
     );
   }
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderBylineCli(bylineProps, ascii),
     "By [AO] Ada Osei & [JP]\nJune Park\n11 August 2026 | 8 min\nread",
@@ -43,7 +46,7 @@ Deno.test("Byline renders exact width, ASCII, and colour frames", () => {
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
-    const capabilities = testCapabilities({ columns: 52, colorDepth });
+    const capabilities = testTerminalCapabilities({ columns: 52, colorDepth });
     const expected = styleText(plain, {
       ...theme.typography.strong,
       color: terminalThemeColor(theme, "--discern-color-ink"),
@@ -64,14 +67,14 @@ const mentionProps = {
 
 Deno.test("Mention renders exact width, ASCII, and colour frames", () => {
   for (const columns of [24, 52, 96]) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderMentionCli(mentionProps, capabilities),
       "[AO] Ada Osei",
       capabilities,
     );
   }
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderMentionCli(mentionProps, ascii),
     "[AO] Ada Osei",
@@ -81,7 +84,7 @@ Deno.test("Mention renders exact width, ASCII, and colour frames", () => {
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
-    const capabilities = testCapabilities({ columns: 52, colorDepth });
+    const capabilities = testTerminalCapabilities({ columns: 52, colorDepth });
     const expected = styleText("[AO] Ada Osei", {
       ...theme.typography.strong,
       color: terminalToneColor(theme, "accent"),
@@ -108,7 +111,7 @@ const profileBody =
 Deno.test("Profile card renders exact width, ASCII, and colour frames", () => {
   const theme = terminalThemes.dark;
   for (const columns of [24, 52, 96]) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderProfileCardCli(profileCardProps, capabilities),
       renderBox({
@@ -123,7 +126,7 @@ Deno.test("Profile card renders exact width, ASCII, and colour frames", () => {
       capabilities,
     );
   }
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderProfileCardCli(profileCardProps, ascii),
     "+ Profile -------------+\n| [AO] Ada Osei        |\n| Research             |\n|                      |\n| Turns field evidence |\n| into the questions a |\n| roadmap has to       |\n| answer.              |\n|                      |\n| Field notes:         |\n| /people/ada/notes    |\n+----------------------+",
@@ -132,7 +135,7 @@ Deno.test("Profile card renders exact width, ASCII, and colour frames", () => {
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
-    const capabilities = testCapabilities({ columns: 52, colorDepth });
+    const capabilities = testTerminalCapabilities({ columns: 52, colorDepth });
     const expected = renderBox({
       title: "Profile",
       body: profileBody,

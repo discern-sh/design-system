@@ -16,7 +16,7 @@ import type {
 } from "../../src/cli/interactive/mod.ts";
 import { stripAnsi } from "../../src/cli/ansi.ts";
 import { fitInteractionFrame } from "../../src/cli/interactive/viewport-budget.ts";
-import { FakeTerminal } from "./fake-terminal.ts";
+import { FakeTerminalIO } from "../../src/cli/interactive/testing.ts";
 
 const FIRST_COLUMN = "\x1b[1G";
 const ERASE_TO_END = "\x1b[J";
@@ -50,7 +50,7 @@ function displayedFrame(write: string): string | undefined {
   );
 }
 
-function displayedFrames(io: FakeTerminal): readonly string[] {
+function displayedFrames(io: FakeTerminalIO): readonly string[] {
   return io.writes.flatMap((write) => {
     const frame = displayedFrame(write);
     return frame === undefined ? [] : [frame];
@@ -61,7 +61,7 @@ function frameRows(frame: string): number {
   return frame === "" ? 0 : frame.split("\n").length;
 }
 
-class ResizingTerminal extends FakeTerminal {
+class ResizingTerminal extends FakeTerminalIO {
   readonly frameWrites: Array<
     { readonly frame: string; readonly rows: number }
   > = [];
@@ -97,7 +97,7 @@ Deno.test("grouped 16-row select and search frames obey short, ordinary, and tal
   const selectHeights: number[] = [];
   const searchHeights: number[] = [];
   for (const rows of [8, 24, 40]) {
-    const selectIo = new FakeTerminal(["\r"], { columns: 42, rows });
+    const selectIo = new FakeTerminalIO(["\r"], { columns: 42, rows });
     assertEquals(
       await requestSelection({
         label: `Select at ${rows} rows`,
@@ -115,7 +115,7 @@ Deno.test("grouped 16-row select and search frames obey short, ordinary, and tal
       );
     }
 
-    const searchIo = new FakeTerminal(["\r", "\r"], {
+    const searchIo = new FakeTerminalIO(["\r", "\r"], {
       columns: 42,
       rows,
     });
@@ -168,7 +168,7 @@ Deno.test("the renderer-measured authority enrolls future interaction machines",
 });
 
 Deno.test("repeated 16-row interaction cycles do not progressively surrender terminal height", async () => {
-  const io = new FakeTerminal([], { columns: 42, rows: 10 });
+  const io = new FakeTerminalIO([], { columns: 42, rows: 10 });
   const activeHeights: number[] = [];
   for (let cycle = 0; cycle < 3; cycle += 1) {
     io.enqueue("\r\r");
@@ -220,7 +220,7 @@ Deno.test("an active grouped interaction recomputes its window after shrinking a
 });
 
 Deno.test("group headings consume real viewport rows without becoming selectable counts", async () => {
-  const io = new FakeTerminal(["\r"], { columns: 42, rows: 8 });
+  const io = new FakeTerminalIO(["\r"], { columns: 42, rows: 8 });
   assertEquals(
     await requestSelection({
       label: "Many headings",
@@ -240,7 +240,7 @@ Deno.test("group headings consume real viewport rows without becoming selectable
 Deno.test("textarea uses requested tall rows and keeps the logical cursor inside a bounded window", async () => {
   const tallValue = Array.from({ length: 8 }, (_, index) => `Line ${index + 1}`)
     .join("\n");
-  const tallIo = new FakeTerminal(["\x04"], { columns: 42, rows: 20 });
+  const tallIo = new FakeTerminalIO(["\x04"], { columns: 42, rows: 20 });
   assertEquals(
     await requestTextarea({
       label: "Tall editor",
@@ -254,7 +254,7 @@ Deno.test("textarea uses requested tall rows and keeps the logical cursor inside
   assertStringIncludes(tallActive, "Line 8▌");
   assert(frameRows(tallActive) > 7);
 
-  const boundedIo = new FakeTerminal(["\x1b[A", "\x04"], {
+  const boundedIo = new FakeTerminalIO(["\x1b[A", "\x04"], {
     columns: 42,
     rows: 8,
   });
@@ -275,7 +275,7 @@ Deno.test("textarea uses requested tall rows and keeps the logical cursor inside
 });
 
 Deno.test("a terminal shorter than the minimum coherent interaction frame refuses cleanly", async () => {
-  const io = new FakeTerminal(["\r"], { columns: 42, rows: 3 });
+  const io = new FakeTerminalIO(["\r"], { columns: 42, rows: 3 });
   await assertRejects(
     () =>
       requestSelection({
@@ -306,19 +306,19 @@ Deno.test("search initialId remembers a stable enabled choice across filtering a
     },
   } satisfies SearchRequestOptions<string> & { readonly initialId: string };
 
-  const initial = new FakeTerminal(["\r"]);
+  const initial = new FakeTerminalIO(["\r"]);
   assertEquals(await requestSearch(options, { io: initial }), "remembered");
 
-  const reordered = new FakeTerminal(["x\r"]);
+  const reordered = new FakeTerminalIO(["x\r"]);
   assertEquals(await requestSearch(options, { io: reordered }), "remembered");
 
-  const cleared = new FakeTerminal(["x\x7f\r"]);
+  const cleared = new FakeTerminalIO(["x\x7f\r"]);
   assertEquals(await requestSearch(options, { io: cleared }), "remembered");
 
-  const navigated = new FakeTerminal(["\x1b[B\r"]);
+  const navigated = new FakeTerminalIO(["\x1b[B\r"]);
   assertEquals(await requestSearch(options, { io: navigated }), "first");
 
-  const filteredNavigation = new FakeTerminal(["x\x1b[B\r"]);
+  const filteredNavigation = new FakeTerminalIO(["x\x1b[B\r"]);
   assertEquals(
     await requestSearch(options, { io: filteredNavigation }),
     "first",
@@ -326,11 +326,11 @@ Deno.test("search initialId remembers a stable enabled choice across filtering a
 
   for (const invalidId of ["group", "disabled"]) {
     const invalidOptions = { ...options, initialId: invalidId };
-    const io = new FakeTerminal(["\r", "\r"]);
+    const io = new FakeTerminalIO(["\r", "\r"]);
     assertEquals(await requestSearch(invalidOptions, { io }), "first");
   }
 
-  const absent = new FakeTerminal(["\r", "\r"]);
+  const absent = new FakeTerminalIO(["\r", "\r"]);
   assertEquals(
     await requestSearch({ label: "Current", search: () => entries }, {
       io: absent,

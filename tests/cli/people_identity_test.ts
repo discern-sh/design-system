@@ -9,26 +9,29 @@ import {
   terminalThemes,
   terminalToneColor,
 } from "../../src/cli/theme.ts";
-import { assertExactFrame, testCapabilities } from "./helpers.ts";
+import {
+  assertExactFrame,
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 const avatarProps = { name: "Ada Osei", presence: "online" } as const;
 
 Deno.test("Avatar renders exact width, ASCII, and colour frames", () => {
   for (const columns of [24, 52, 96]) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderAvatarCli(avatarProps, capabilities),
       "(AO) ● online",
       capabilities,
     );
   }
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(renderAvatarCli(avatarProps, ascii), "(AO) * online", ascii);
   const theme = terminalThemes.dark;
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
-    const capabilities = testCapabilities({ columns: 52, colorDepth });
+    const capabilities = testTerminalCapabilities({ columns: 52, colorDepth });
     const expected = renderStyledSpans([
       {
         text: "(AO)",
@@ -64,20 +67,20 @@ const avatarGroupProps = {
 Deno.test("Avatar group renders exact width, ASCII, and colour frames", () => {
   const plain = "Review team\n[AO] [JP] [TV] [IC] [+1]";
   for (const columns of [24, 52, 96]) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderAvatarGroupCli(avatarGroupProps, capabilities),
       plain,
       capabilities,
     );
   }
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(renderAvatarGroupCli(avatarGroupProps, ascii), plain, ascii);
   const theme = terminalThemes.dark;
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
-    const capabilities = testCapabilities({ columns: 52, colorDepth });
+    const capabilities = testTerminalCapabilities({ columns: 52, colorDepth });
     const label = styleText("Review team", {
       ...theme.typography.annotation,
       color: terminalThemeColor(theme, "--discern-color-ink-muted"),
@@ -115,14 +118,14 @@ Deno.test("Persona renders exact width, ASCII, and colour frames", () => {
     [96, "[AO] Ada Osei — Research editor [online]"],
   ] as const;
   for (const [columns, expected] of frames) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderPersonaCli(personaProps, capabilities),
       expected,
       capabilities,
     );
   }
-  const ascii = testCapabilities({ columns: 24, unicode: false });
+  const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderPersonaCli(personaProps, ascii),
     "[AO] Ada Osei - Research\n     editor [online]",
@@ -132,7 +135,7 @@ Deno.test("Persona renders exact width, ASCII, and colour frames", () => {
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
-    const capabilities = testCapabilities({ columns: 52, colorDepth });
+    const capabilities = testTerminalCapabilities({ columns: 52, colorDepth });
     const expected = renderStyledSpans([
       {
         text: "[AO]",

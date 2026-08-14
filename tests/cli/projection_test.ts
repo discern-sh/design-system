@@ -19,7 +19,7 @@ import {
   terminalSpanCss,
 } from "../../src/cli/projection.ts";
 import { terminalThemes, terminalToneColor } from "../../src/cli/theme.ts";
-import { testCapabilities } from "./helpers.ts";
+import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
 
 const ESC = "\u001b";
 const BEL = "\u0007";
@@ -42,13 +42,13 @@ Deno.test("projection round-trips the real emitter at every colour depth", () =>
   const accent = terminalToneColor(terminalThemes.dark, "accent");
   const style = { bold: true as const, color: accent };
 
-  const none = styleText("plain", style, testCapabilities());
+  const none = styleText("plain", style, testTerminalCapabilities());
   assertEquals(projectTerminalSpans(none), [{ text: "plain" }]);
 
   const ansi16 = styleText(
     "sixteen",
     style,
-    testCapabilities({ colorDepth: "ansi16" }),
+    testTerminalCapabilities({ colorDepth: "ansi16" }),
   );
   assertEquals(projectTerminalSpans(ansi16), [{
     text: "sixteen",
@@ -58,7 +58,7 @@ Deno.test("projection round-trips the real emitter at every colour depth", () =>
   const ansi256 = styleText(
     "extended",
     style,
-    testCapabilities({ colorDepth: "ansi256" }),
+    testTerminalCapabilities({ colorDepth: "ansi256" }),
   );
   assertEquals(projectTerminalSpans(ansi256), [{
     text: "extended",
@@ -68,7 +68,7 @@ Deno.test("projection round-trips the real emitter at every colour depth", () =>
   const truecolor = styleText(
     "exact",
     style,
-    testCapabilities({ colorDepth: "truecolor" }),
+    testTerminalCapabilities({ colorDepth: "truecolor" }),
   );
   assertEquals(projectTerminalSpans(truecolor), [{
     text: "exact",
@@ -80,7 +80,7 @@ Deno.test("projection round-trips the real emitter at every colour depth", () =>
 });
 
 Deno.test("projection decodes every emitted attribute and span boundary", () => {
-  const capabilities = testCapabilities({ colorDepth: "truecolor" });
+  const capabilities = testTerminalCapabilities({ colorDepth: "truecolor" });
   const output = renderStyledSpans([
     {
       text: "Discern",
@@ -124,7 +124,7 @@ Deno.test("projection preserves Unicode, ASCII, and rendered component text", ()
     for (const unicode of [true, false]) {
       const output = renderBadgeCli(
         { label: "Ready", dot: true, tone: "success" },
-        testCapabilities({ colorDepth, unicode }),
+        testTerminalCapabilities({ colorDepth, unicode }),
       );
       assertEquals(
         projectedText(output),
@@ -242,7 +242,7 @@ Deno.test("hyperlink targets resolve to safe hrefs only", () => {
 });
 
 Deno.test("projected HTML is self-contained, escaped, and theme-coloured", () => {
-  const capabilities = testCapabilities({ colorDepth: "truecolor" });
+  const capabilities = testTerminalCapabilities({ colorDepth: "truecolor" });
   const output = styleText(
     `<danger> & "quoted"`,
     { bold: true, color: terminalToneColor(terminalThemes.dark, "danger") },

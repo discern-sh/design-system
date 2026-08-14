@@ -11,8 +11,8 @@ import {
 import {
   assertExactFrame,
   assertStyledFrame,
-  testCapabilities,
-} from "./helpers.ts";
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 function assertCapabilityLevels(
   render: (capabilities: TerminalCapabilities) => string,
@@ -22,14 +22,14 @@ function assertCapabilityLevels(
   for (const unicode of [true, false]) {
     const expected = unicode ? expectedUnicode : expectedAscii;
     for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-      const capabilities = testCapabilities({
+      const capabilities = testTerminalCapabilities({
         colorDepth,
         columns: 48,
         unicode,
       });
       assertStyledFrame(render(capabilities), expected, capabilities);
     }
-    const capabilities = testCapabilities({ columns: 48, unicode });
+    const capabilities = testTerminalCapabilities({ columns: 48, unicode });
     assertExactFrame(render(capabilities), expected, capabilities);
   }
 }
@@ -57,7 +57,7 @@ Deno.test("Command renders exact narrow, standard, wide, and capability frames",
       ],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderCommandCli(props, capabilities),
       expected,
@@ -84,7 +84,7 @@ Deno.test("Command suggestions use explicit action grammar and never begin like 
         "none",
       ] as const
     ) {
-      const capabilities = testCapabilities({
+      const capabilities = testTerminalCapabilities({
         columns: 52,
         colorDepth,
         unicode,
@@ -96,7 +96,7 @@ Deno.test("Command suggestions use explicit action grammar and never begin like 
   }
   const narrow = stripAnsi(renderCommandCli(
     { command },
-    testCapabilities({
+    testTerminalCapabilities({
       columns: 20,
     }),
   ));
@@ -131,7 +131,7 @@ Deno.test("Command group renders exact narrow, standard, wide, and capability fr
       [80, standard],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderCommandGroupCli(props, capabilities),
       expected,
@@ -167,7 +167,7 @@ Deno.test("Diagnostic renders exact narrow, standard, wide, and capability frame
       [80, standard],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderDiagnosticCli(props, capabilities),
       expected,
@@ -202,7 +202,7 @@ Deno.test("Destructive action notice renders exact narrow, standard, wide, and c
       [80, standard],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderDestructiveActionNoticeCli(props, capabilities),
       expected,
@@ -237,7 +237,7 @@ Deno.test("Retry notice renders exact narrow, standard, wide, and capability fra
       ],
     ] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderRetryNoticeCli(props, capabilities),
       expected,

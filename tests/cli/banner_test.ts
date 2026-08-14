@@ -2,8 +2,8 @@ import { renderBannerCli } from "../../src/cli/mod.ts";
 import {
   assertExactFrame,
   assertStyledFrame,
-  testCapabilities,
-} from "./helpers.ts";
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 const frames = {
   narrow: "┌ Success ───┐\n│ Ready.     │\n└────────────┘",
@@ -20,7 +20,7 @@ Deno.test("Banner renders exact narrow, standard, and wide frames", () => {
       frames.wide,
     ]] as const
   ) {
-    const capabilities = testCapabilities({ columns });
+    const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
       renderBannerCli(
         { message: "Ready.", tone: "success", width: columns },
@@ -34,7 +34,7 @@ Deno.test("Banner renders exact narrow, standard, and wide frames", () => {
 
 Deno.test("Banner preserves its frame through every colour capability", () => {
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
-    const capabilities = testCapabilities({ colorDepth, columns: 28 });
+    const capabilities = testTerminalCapabilities({ colorDepth, columns: 28 });
     assertStyledFrame(
       renderBannerCli(
         { message: "Ready.", tone: "success", width: 28 },
@@ -44,7 +44,10 @@ Deno.test("Banner preserves its frame through every colour capability", () => {
       capabilities,
     );
   }
-  const capabilities = testCapabilities({ columns: 24, unicode: false });
+  const capabilities = testTerminalCapabilities({
+    columns: 24,
+    unicode: false,
+  });
   assertExactFrame(
     renderBannerCli(
       { message: "Build passed.", tone: "success", width: 24 },

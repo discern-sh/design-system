@@ -21,15 +21,15 @@ import {
   withDeterminateProgress,
   withSpinner,
 } from "../../src/cli/interactive/mod.ts";
-import { FakeTerminal } from "./fake-terminal.ts";
+import { FakeTerminalIO } from "../../src/cli/interactive/testing.ts";
 
-function assertRestored(io: FakeTerminal): void {
+function assertRestored(io: FakeTerminalIO): void {
   assertEquals(io.rawTransitions.at(-1), false);
   assertEquals(io.writes.at(-1), SHOW_TERMINAL_CURSOR);
 }
 
 Deno.test("text interaction edits, validates, submits, and restores terminal state", async () => {
-  const io = new FakeTerminal(["\r", "J", "e", "s", "s", "\r"], {
+  const io = new FakeTerminalIO(["\r", "J", "e", "s", "s", "\r"], {
     columns: 32,
   });
   const result = await requestText({ label: "Name", required: true }, { io });
@@ -42,7 +42,7 @@ Deno.test("text interaction edits, validates, submits, and restores terminal sta
 });
 
 Deno.test("masked interaction never writes the raw secret", async () => {
-  const io = new FakeTerminal(["secret\r"], { columns: 32 });
+  const io = new FakeTerminalIO(["secret\r"], { columns: 32 });
   assertEquals(
     await requestMaskedText({ label: "Secret", required: true }, { io }),
     "secret",
@@ -56,7 +56,7 @@ Deno.test("masked interaction never writes the raw secret", async () => {
 });
 
 Deno.test("Ctrl+C and EOF cancel with exact cleanup", async () => {
-  const cancelled = new FakeTerminal(["x\x03"], { columns: 32 });
+  const cancelled = new FakeTerminalIO(["x\x03"], { columns: 32 });
   await assertRejects(
     () => requestText({ label: "Cancel" }, { io: cancelled }),
     InteractionCancelled,
@@ -66,7 +66,7 @@ Deno.test("Ctrl+C and EOF cancel with exact cleanup", async () => {
   assertRestored(cancelled);
   assertStringIncludes(cancelled.output(), "Cancelled.");
 
-  const ended = new FakeTerminal([], { columns: 32 });
+  const ended = new FakeTerminalIO([], { columns: 32 });
   await assertRejects(
     () => requestText({ label: "End" }, { io: ended }),
     InteractionCancelled,
@@ -78,7 +78,7 @@ Deno.test("Ctrl+C and EOF cancel with exact cleanup", async () => {
 });
 
 Deno.test("validator exceptions restore raw mode and cursor", async () => {
-  const io = new FakeTerminal(["ok\r"], { columns: 32 });
+  const io = new FakeTerminalIO(["ok\r"], { columns: 32 });
   await assertRejects(
     () =>
       requestText({
@@ -95,7 +95,7 @@ Deno.test("validator exceptions restore raw mode and cursor", async () => {
 });
 
 Deno.test("terminal interactions refuse non-TTY input before terminal mutation", async () => {
-  const io = new FakeTerminal([], { interactive: false });
+  const io = new FakeTerminalIO([], { interactive: false });
   await assertRejects(
     () => requestText({ label: "No terminal" }, { io }),
     NonInteractiveTerminalError,
@@ -106,7 +106,7 @@ Deno.test("terminal interactions refuse non-TTY input before terminal mutation",
 });
 
 Deno.test("confirm, select, and multiselect return their semantic values", async () => {
-  const confirmIo = new FakeTerminal(["n\r"]);
+  const confirmIo = new FakeTerminalIO(["n\r"]);
   assertEquals(
     await requestConfirmation({ label: "Continue?" }, { io: confirmIo }),
     false,
@@ -116,13 +116,13 @@ Deno.test("confirm, select, and multiselect return their semantic values", async
     { id: "one", label: "One", value: 1 },
     { id: "two", label: "Two", value: 2 },
   ] as const;
-  const selectIo = new FakeTerminal(["\x1b[B\r"]);
+  const selectIo = new FakeTerminalIO(["\x1b[B\r"]);
   assertEquals(
     await requestSelection({ label: "Pick", choices }, { io: selectIo }),
     2,
   );
 
-  const multipleIo = new FakeTerminal([" \x1b[B \r"]);
+  const multipleIo = new FakeTerminalIO([" \x1b[B \r"]);
   assertEquals(
     await requestSelections({ label: "Pick many", choices }, {
       io: multipleIo,
@@ -132,7 +132,7 @@ Deno.test("confirm, select, and multiselect return their semantic values", async
 });
 
 Deno.test("search and autocomplete resolve asynchronous and ghost choices", async () => {
-  const searchIo = new FakeTerminal(["t", "\r", "\r"]);
+  const searchIo = new FakeTerminalIO(["t", "\r", "\r"]);
   const found = await requestSearch({
     label: "Find",
     search: (query) =>
@@ -143,7 +143,7 @@ Deno.test("search and autocomplete resolve asynchronous and ghost choices", asyn
   }, { io: searchIo });
   assertEquals(found, "t");
 
-  const autocompleteIo = new FakeTerminal(["z\t\r"]);
+  const autocompleteIo = new FakeTerminalIO(["z\t\r"]);
   assertEquals(
     await requestAutocomplete({
       label: "Shell",
@@ -155,7 +155,7 @@ Deno.test("search and autocomplete resolve asynchronous and ghost choices", asyn
 });
 
 Deno.test("textarea inserts newlines, moves vertically, and submits with Ctrl+D", async () => {
-  const io = new FakeTerminal(["ab\rcd\x1b[A!\x04"], { columns: 32 });
+  const io = new FakeTerminalIO(["ab\rcd\x1b[A!\x04"], { columns: 32 });
   assertEquals(
     await requestTextarea({ label: "Notes", rows: 3 }, { io }),
     "ab!\ncd",
@@ -165,7 +165,7 @@ Deno.test("textarea inserts newlines, moves vertically, and submits with Ctrl+D"
 });
 
 Deno.test("sequential form retains answers, runs conditions, and navigates back", async () => {
-  const io = new FakeTerminal(["one\r", "\x15", "\r", "n\r"], {
+  const io = new FakeTerminalIO(["one\r", "\x15", "\r", "n\r"], {
     columns: 40,
   });
   const values = await createSequentialForm({ label: "Setup", io })
@@ -220,7 +220,7 @@ Deno.test("sequential form retains answers, runs conditions, and navigates back"
 });
 
 Deno.test("spinner advances every triangle phase and restores cursor", async () => {
-  const io = new FakeTerminal([], { columns: 20 });
+  const io = new FakeTerminalIO([], { columns: 20 });
   let stopped = false;
   const result = await withSpinner({
     label: "Work",
@@ -250,7 +250,7 @@ Deno.test("no-control terminals keep Unicode and use static interactive frames",
     { id: "one", label: "One", value: 1 },
     { id: "two", label: "Two", value: 2 },
   ] as const;
-  const io = new FakeTerminal(["\x1b[B\r"], {
+  const io = new FakeTerminalIO(["\x1b[B\r"], {
     ansiControl: false,
     columns: 24,
     rows: 5,
@@ -266,7 +266,7 @@ Deno.test("no-control terminals keep Unicode and use static interactive frames",
   assertEquals(io.rawTransitions, [true, false]);
 
   let scheduled = false;
-  const spinnerIo = new FakeTerminal([], {
+  const spinnerIo = new FakeTerminalIO([], {
     ansiControl: false,
     columns: 20,
     unicode: true,
@@ -286,7 +286,7 @@ Deno.test("no-control terminals keep Unicode and use static interactive frames",
 });
 
 Deno.test("terminals below the coherent frame minimum refuse and restore", async () => {
-  const io = new FakeTerminal(["\x1b[B\r"], {
+  const io = new FakeTerminalIO(["\x1b[B\r"], {
     ansiControl: true,
     columns: 24,
     rows: 2,
@@ -311,7 +311,7 @@ Deno.test("terminals below the coherent frame minimum refuse and restore", async
 });
 
 Deno.test("spinner and progress restore cursor after callback failures", async () => {
-  const spinnerIo = new FakeTerminal();
+  const spinnerIo = new FakeTerminalIO();
   await assertRejects(
     () =>
       withSpinner({ label: "Fail", io: spinnerIo }, () => {
@@ -322,7 +322,7 @@ Deno.test("spinner and progress restore cursor after callback failures", async (
   );
   assertEquals(spinnerIo.writes.at(-1), SHOW_TERMINAL_CURSOR);
 
-  const progressIo = new FakeTerminal([], { columns: 20 });
+  const progressIo = new FakeTerminalIO([], { columns: 20 });
   await assertRejects(
     () =>
       withDeterminateProgress(
@@ -338,7 +338,7 @@ Deno.test("spinner and progress restore cursor after callback failures", async (
 });
 
 Deno.test("determinate progress paints zero, partial, and semantic completion", async () => {
-  const io = new FakeTerminal([], { columns: 20 });
+  const io = new FakeTerminalIO([], { columns: 20 });
   const result = await withDeterminateProgress({
     label: "Work",
     total: 4,

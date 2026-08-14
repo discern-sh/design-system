@@ -8,7 +8,7 @@ import {
   tokenizeTerminalKeys,
   withRawTerminal,
 } from "../../src/cli/interactive/mod.ts";
-import { FakeTerminal } from "./fake-terminal.ts";
+import { FakeTerminalIO } from "../../src/cli/interactive/testing.ts";
 
 Deno.test("interactive key decoding buffers split escape sequences and UTF-8", () => {
   assertEquals(tokenizeTerminalKeys("a\x1b[").keys, [
@@ -61,7 +61,7 @@ Deno.test("grapheme editor handles emoji clusters, Emacs keys, and multiline mov
 });
 
 Deno.test("inline painter replaces and clears the prior frame exactly", () => {
-  const io = new FakeTerminal([], { columns: 20, rows: 10 });
+  const io = new FakeTerminalIO([], { columns: 20, rows: 10 });
   const painter = new InlineFramePainter(io);
   assertEquals(painter.replace("one\ntwo"), {
     status: "painted",
@@ -84,7 +84,7 @@ Deno.test("inline painter replaces and clears the prior frame exactly", () => {
 });
 
 Deno.test("inline painter refuses initial oversized frames without writing", () => {
-  const io = new FakeTerminal([], { columns: 20, rows: 2 });
+  const io = new FakeTerminalIO([], { columns: 20, rows: 2 });
   const painter = new InlineFramePainter(io);
   assertEquals(painter.replace("one\ntwo\nthree"), {
     status: "refused",
@@ -98,7 +98,7 @@ Deno.test("inline painter refuses initial oversized frames without writing", () 
 });
 
 Deno.test("inline painter counts empty and trailing-newline rows exactly", () => {
-  const io = new FakeTerminal([], { columns: 20, rows: 1 });
+  const io = new FakeTerminalIO([], { columns: 20, rows: 1 });
   const painter = new InlineFramePainter(io);
   assertEquals(painter.replace(""), {
     status: "unchanged",
@@ -117,7 +117,7 @@ Deno.test("inline painter counts empty and trailing-newline rows exactly", () =>
 });
 
 Deno.test("inline painter abandons rather than partially erasing after a viewport shrink", () => {
-  const io = new FakeTerminal([], { columns: 20, rows: 4 });
+  const io = new FakeTerminalIO([], { columns: 20, rows: 4 });
   const painter = new InlineFramePainter(io);
   painter.replace("one\ntwo\nthree");
   io.resize(20, 2);
@@ -152,7 +152,7 @@ Deno.test("inline painter abandons rather than partially erasing after a viewpor
 });
 
 Deno.test("inline painter reports unavailable cursor control without emitting escapes", () => {
-  const io = new FakeTerminal([], {
+  const io = new FakeTerminalIO([], {
     ansiControl: false,
     columns: 20,
     rows: 10,
@@ -169,7 +169,7 @@ Deno.test("inline painter reports unavailable cursor control without emitting es
 });
 
 Deno.test("inline painter keeps its prior frame when a terminal write fails", () => {
-  class FailingTerminal extends FakeTerminal {
+  class FailingTerminal extends FakeTerminalIO {
     #remainingWrites = 1;
 
     override write(value: string): void {
@@ -188,7 +188,7 @@ Deno.test("inline painter keeps its prior frame when a terminal write fails", ()
 });
 
 Deno.test("raw terminal lifecycle restores mode and cursor after exceptions", async () => {
-  const io = new FakeTerminal();
+  const io = new FakeTerminalIO();
   await assertRejects(
     () => withRawTerminal(io, () => Promise.reject(new Error("boom"))),
     Error,
