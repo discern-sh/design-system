@@ -33,6 +33,16 @@ export interface InteractionOptions<T> {
   readonly validate?: InteractionValidator<T>;
 }
 
+/**
+ * Injectable one-shot scheduler behind time-advancing request machinery,
+ * mirroring the spinner's injectable repetition: tests advance debounce
+ * windows deterministically instead of sleeping through real timers.
+ */
+export interface InteractionDelayScheduler {
+  /** Call `callback` once after `delayMs`; returns an idempotent cancellation. */
+  delay(callback: () => void, delayMs: number): () => void;
+}
+
 /** Injectable process and presentation facts shared by interaction loops. */
 export interface InteractionRuntime {
   readonly io?: TerminalIO;

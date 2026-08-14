@@ -17,8 +17,22 @@ import {
   type InteractionFrameViewport,
 } from "./viewport-budget.ts";
 
+/**
+ * Live driver services offered to a machine whose state settles outside a
+ * key: a provider resolution repaints the current lifecycle, and a provider
+ * failure faults the interaction with full terminal restoration. Both are
+ * ignored once the interaction has finished.
+ */
+export interface InteractionMachineContext {
+  readonly repaint: () => void;
+  readonly fail: (error: unknown) => void;
+}
+
 export interface InteractionMachine<T, State extends InteractiveFrameState> {
-  start?(): void | Promise<void>;
+  /** Begin machine work; asynchronous work must not block the key loop. */
+  start?(context: InteractionMachineContext): void | Promise<void>;
+  /** Release timers and abort in-flight provider work at interaction end. */
+  dispose?(): void;
   handle(key: TerminalKey): boolean | Promise<boolean>;
   value(): T;
   frame(
@@ -83,6 +97,7 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
   const painter = new InlineFramePainter(io);
   const reader = new TerminalKeyReader(io);
   let staticMode = false;
+  let lastStaticFrame: string | undefined;
   const paint = (lifecycle: InteractiveFrameLifecycle): void => {
     const capabilities = io.capabilities();
     const fitted = fitInteractionFrame({
@@ -92,6 +107,8 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
     });
     const frame = fitted.rendered;
     if (staticMode) {
+      if (frame === lastStaticFrame) return;
+      lastStaticFrame = frame;
       io.write(`${frame}\n`);
       return;
     }
@@ -104,6 +121,7 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
       }
       io.write(`${frame}\n`);
       staticMode = true;
+      lastStaticFrame = frame;
     }
   };
 
@@ -116,7 +134,6 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
   };
 
   return await withRawTerminal(io, async () => {
-    await machine.start?.();
     let lifecycle: InteractiveFrameLifecycle = { status: "active" };
     let noticeRestore: InteractiveFrameLifecycle | undefined;
     let latched = false;
@@ -130,6 +147,9 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
     const interactionFault = new Promise<never>((_, reject) => {
       signalFault = reject;
     });
+    // A fault can arrive while nothing is racing this promise yet; the
+    // loop-top check still surfaces it, so mark the rejection observed.
+    interactionFault.catch(() => {});
 
     const applyVerdict = (message: string | undefined): void => {
       lifecycle = message === undefined
@@ -168,68 +188,89 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
       });
     };
 
-    paint(lifecycle);
-    while (true) {
-      if (fault.current !== null) throw fault.current.error;
-      const key = await Promise.race([reader.readKey(), interactionFault]);
-      if (key === null) {
-        finished = true;
-        const reason = "Input ended.";
-        paint({ status: "cancelled", reason });
-        painter.finish();
-        throw new InteractionCancelled(reason);
-      }
-      if (isNamedKey(key, "ctrl-c")) {
-        finished = true;
-        const reason = "Cancelled.";
-        paint({ status: "cancelled", reason });
-        painter.finish();
-        throw new InteractionCancelled(reason);
-      }
-      if (isNamedKey(key, "escape")) {
-        finished = true;
-        const reason = "Dismissed.";
-        paint({ status: "cancelled", reason });
-        painter.finish();
-        throw new InteractionCancelled(reason);
-      }
-      if (isNamedKey(key, "ctrl-u")) {
-        if (runtime.canGoBack === true) {
-          finished = true;
-          paint({ status: "cancelled", reason: "Back." });
-          painter.finish();
-          throw new InteractionBackNavigation();
-        }
-        if (noticeRestore === undefined) noticeRestore = lifecycle;
-        lifecycle = {
-          status: "validation-error",
-          message: "There is no previous form step.",
-        };
-        paint(lifecycle);
-        continue;
-      }
-      if (noticeRestore !== undefined) {
-        lifecycle = noticeRestore;
-        noticeRestore = undefined;
-      }
-      const submitted = await machine.handle(key);
-      if (submitted) {
-        const value = submittedValue();
-        lastValidated = { value };
-        generation += 1;
-        const error = await validationVerdict(options, value);
-        if (error === undefined) {
-          finished = true;
-          paint({ status: "submitted" });
-          painter.finish();
-          return value;
-        }
-        latched = true;
-        lifecycle = { status: "validation-error", message: error };
-      } else {
+    const context: InteractionMachineContext = {
+      repaint: () => {
+        if (finished) return;
         revalidateOnEdit();
-      }
+        paint(lifecycle);
+      },
+      fail: (error) => {
+        if (finished || fault.current !== null) return;
+        fault.current = { error };
+        signalFault(error);
+      },
+    };
+
+    try {
+      // The initial frame paints before any machine work, so a slow provider
+      // never delays the first honest frame.
       paint(lifecycle);
+      await machine.start?.(context);
+      while (true) {
+        if (fault.current !== null) throw fault.current.error;
+        const key = await Promise.race([reader.readKey(), interactionFault]);
+        if (key === null) {
+          finished = true;
+          const reason = "Input ended.";
+          paint({ status: "cancelled", reason });
+          painter.finish();
+          throw new InteractionCancelled(reason);
+        }
+        if (isNamedKey(key, "ctrl-c")) {
+          finished = true;
+          const reason = "Cancelled.";
+          paint({ status: "cancelled", reason });
+          painter.finish();
+          throw new InteractionCancelled(reason);
+        }
+        if (isNamedKey(key, "escape")) {
+          finished = true;
+          const reason = "Dismissed.";
+          paint({ status: "cancelled", reason });
+          painter.finish();
+          throw new InteractionCancelled(reason);
+        }
+        if (isNamedKey(key, "ctrl-u")) {
+          if (runtime.canGoBack === true) {
+            finished = true;
+            paint({ status: "cancelled", reason: "Back." });
+            painter.finish();
+            throw new InteractionBackNavigation();
+          }
+          if (noticeRestore === undefined) noticeRestore = lifecycle;
+          lifecycle = {
+            status: "validation-error",
+            message: "There is no previous form step.",
+          };
+          paint(lifecycle);
+          continue;
+        }
+        if (noticeRestore !== undefined) {
+          lifecycle = noticeRestore;
+          noticeRestore = undefined;
+        }
+        const submitted = await machine.handle(key);
+        if (submitted) {
+          const value = submittedValue();
+          lastValidated = { value };
+          generation += 1;
+          const error = await validationVerdict(options, value);
+          if (error === undefined) {
+            finished = true;
+            paint({ status: "submitted" });
+            painter.finish();
+            return value;
+          }
+          latched = true;
+          lifecycle = { status: "validation-error", message: error };
+        } else {
+          revalidateOnEdit();
+        }
+        paint(lifecycle);
+      }
+    } finally {
+      finished = true;
+      machine.dispose?.();
     }
   });
 }
