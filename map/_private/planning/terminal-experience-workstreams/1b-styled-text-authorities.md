@@ -12,7 +12,7 @@ Verify anchors against the live tree; they were checked on trunk `c3ec5d6`.
 
 ## Background
 
-`src/cli/text.ts` measures, wraps, truncates, and pads **plain** text with full grapheme awareness, and `src/cli/ansi.ts` composes styled spans — but nothing wraps text that is *already styled*. The flagship consumer's evidence shows what that costs:
+`src/cli/text.ts` measures, wraps, truncates, and pads **plain** text with full grapheme awareness, and `src/cli/ansi.ts` composes styled spans — but nothing wraps text that is _already styled_. The flagship consumer's evidence shows what that costs:
 
 - Discern re-derives styled/plain boundaries with an O(n²) reprojection probe that **throws** — "package wrapping produced an unmappable text boundary" — when it cannot map a wrapped line back onto the styled source (`/Users/jack/Sites/discern/src/lib/text.ts:106-142`).
 - Discern hand-builds OSC 8 hyperlink sequences in its Markdown renderer (`/Users/jack/Sites/discern/src/lib/markdown.ts:68-71`) — raw escape composition that its own terminal boundary guard exists to outlaw, tolerated only because the package offers no authority to route through.
