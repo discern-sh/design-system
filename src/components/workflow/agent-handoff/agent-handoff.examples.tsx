@@ -1,7 +1,7 @@
 import type {
   CatalogueExampleState,
   ConformanceScenario,
-} from "../../../../styleguide/conformance.ts";
+} from "../../../../catalogue/conformance.ts";
 import { AgentHandoff } from "./agent-handoff.tsx";
 
 const handoffPrompt = `Review the configuration change in this worktree.

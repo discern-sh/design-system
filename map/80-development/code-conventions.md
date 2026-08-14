@@ -6,9 +6,9 @@ This doc is the detailed companion to the **Conventions** section of the project
 
 ## What the gate enforces
 
-- **Formatting — `deno fmt`** (via `deno task fix` in the fix stage) formats TypeScript, CSS, JSON, and markdown, including this documentation tree. Excluded: `dist/`, `src/generated/`, `styleguide/generated/`, and the three compiled agent files (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`), which discern regenerates from `discern/guidance.md` — edit the source, run `discern refresh`, never the copies.
-- **Codegen currency** — the fix stage runs `deno task codegen`, so `src/generated/` and `styleguide/generated/` always match the Metadata. Hand-edits to generated files are overwritten on the next gate run; CI fails a stale generation independently.
-- **Linting — `deno task lint`** (`deno lint --no-config`, default rule set) over `src`, `styleguide`, `scripts`, `discern/scripts`, and `tests`.
+- **Formatting — `deno fmt`** (via `deno task fix` in the fix stage) formats TypeScript, CSS, JSON, and markdown, including this documentation tree. Excluded: `dist/`, `src/generated/`, `catalogue/generated/`, and the three compiled agent files (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`), which discern regenerates from `discern/guidance.md` — edit the source, run `discern refresh`, never the copies.
+- **Codegen currency** — the fix stage runs `deno task codegen`, so `src/generated/` and `catalogue/generated/` always match the Metadata. Hand-edits to generated files are overwritten on the next gate run; CI fails a stale generation independently.
+- **Linting — `deno task lint`** (`deno lint --no-config`, default rule set) over `src`, `catalogue`, `scripts`, `discern/scripts`, and `tests`.
 - **Type-checking — `deno task typecheck`** checks every public entrypoint and the scripts under the strict compiler options in [`deno.json`](../../deno.json): `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `noFallthroughCasesInSwitch`, `noImplicitReturns`, `noUnusedLocals`, `noUnusedParameters`, `useUnknownInCatchVariables`, `verbatimModuleSyntax`. Satisfy the flag, never loosen it. `verbatimModuleSyntax` means type-only imports must say `import type`.
 - **Build** — `deno task build` assembles the Catalogue into `dist/`, then the Catalogue itself is type-checked (`deno task check:catalogue`).
 - **Tests** — `deno task test` (see [testing.md](testing.md)).

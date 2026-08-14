@@ -1,5 +1,5 @@
 import { ExampleIcon } from "../../../fixtures/example-icon.tsx";
-import type { ConformanceScenario } from "../../../../styleguide/conformance.ts";
+import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
 import { IconButton } from "../../core/icon-button/icon-button.tsx";
 import { Tooltip } from "./tooltip.tsx";
 

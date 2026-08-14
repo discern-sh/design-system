@@ -131,7 +131,7 @@ export interface ResilienceConformanceSummary {
 }
 
 function conformanceUrl(origin: string, theme = "light"): string {
-  const url = new URL("/style-guide/", origin);
+  const url = new URL("/catalogue/", origin);
   url.searchParams.set("conformance", "1");
   url.searchParams.set("theme", theme);
   return url.href;
@@ -1154,7 +1154,7 @@ async function verifyThemeSystem(
         `Font metric overrides: ${failure}`
       ),
     );
-    await page.goto(new URL("/style-guide/", origin).href, {
+    await page.goto(new URL("/catalogue/", origin).href, {
       waitUntil: "networkidle",
     });
     await page.evaluate(() => localStorage.clear());

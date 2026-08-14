@@ -5,8 +5,8 @@ node_modules/
 /.idea/gbrowser_project.xml
 dist/*
 !dist/.gitkeep
-styleguide/generated/*
-!styleguide/generated/.gitkeep
+catalogue/generated/*
+!catalogue/generated/.gitkeep
 
 # --- discern ---
 # Generated automatically by discern via the bundled .gitignore fragment and provider registry | https://discern.sh

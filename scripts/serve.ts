@@ -11,8 +11,8 @@ const CONTENT_TYPES: Readonly<Record<string, string>> = {
   ".woff2": "font/woff2",
 };
 
-/** Map the mounted styleguide URL space onto its authored and generated files. */
-export function styleguideFilePath(rawPathname: string): string | null {
+/** Map the mounted Catalogue URL space onto its authored and generated files. */
+export function catalogueFilePath(rawPathname: string): string | null {
   let pathname: string;
   try {
     pathname = decodeURIComponent(rawPathname);
@@ -20,26 +20,36 @@ export function styleguideFilePath(rawPathname: string): string | null {
     return null;
   }
   if (pathname.includes("..") || pathname.includes("\0")) return null;
-  if (pathname.startsWith("/style-guide/")) {
-    const mountedPath = pathname.slice("/style-guide".length);
+  if (pathname.startsWith("/catalogue/")) {
+    const mountedPath = pathname.slice("/catalogue".length);
     pathname = /^\/(?:dist|src|assets)\//.test(mountedPath)
       ? mountedPath
-      : `/styleguide${mountedPath}`;
+      : `/catalogue${mountedPath}`;
   }
   if (pathname.endsWith("/")) pathname += "index.html";
   return `.${pathname}`;
 }
 
 function safePath(url: URL): URL | null {
-  const path = styleguideFilePath(url.pathname);
+  const path = catalogueFilePath(url.pathname);
   return path === null ? null : new URL(path, ROOT);
 }
 
 export default {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
-    if (url.pathname === "/" || url.pathname === "/style-guide") {
-      url.pathname = "/style-guide/";
+    for (const legacyMount of ["/style-guide", "/styleguide"] as const) {
+      if (
+        url.pathname === legacyMount ||
+        url.pathname.startsWith(`${legacyMount}/`)
+      ) {
+        const suffix = url.pathname.slice(legacyMount.length);
+        url.pathname = `/catalogue${suffix === "" ? "/" : suffix}`;
+        return Response.redirect(url, 307);
+      }
+    }
+    if (url.pathname === "/" || url.pathname === "/catalogue") {
+      url.pathname = "/catalogue/";
       return Response.redirect(url, 307);
     }
     const target = safePath(url);

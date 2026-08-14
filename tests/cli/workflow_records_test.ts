@@ -185,15 +185,15 @@ Deno.test("Rule renders exact narrow, standard, wide, and capability frames", ()
   const props = {
     rule: "Never hand-edit generated surfaces",
     origin: "AGENTS.md",
-    scope: "src/generated and styleguide/generated",
+    scope: "src/generated and catalogue/generated",
   } as const;
   const standard =
-    "RULE\n  Never hand-edit generated surfaces\nOrigin: AGENTS.md\nScope: src/generated and styleguide/generated";
+    "RULE\n  Never hand-edit generated surfaces\nOrigin: AGENTS.md\nScope: src/generated and catalogue/generated";
   for (
     const [columns, expected] of [
       [
         24,
-        "RULE\n  Never hand-edit\n  generated surfaces\nOrigin: AGENTS.md\nScope: src/generated and\n       styleguide/genera\n       ted",
+        "RULE\n  Never hand-edit\n  generated surfaces\nOrigin: AGENTS.md\nScope: src/generated and\n       catalogue/generat\n       ed",
       ],
       [52, standard],
       [80, standard],

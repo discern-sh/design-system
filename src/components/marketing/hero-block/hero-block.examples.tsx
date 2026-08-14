@@ -1,4 +1,4 @@
-import type { CatalogueExampleState } from "../../../../styleguide/conformance.ts";
+import type { CatalogueExampleState } from "../../../../catalogue/conformance.ts";
 import { EnvelopeGround } from "../../artwork/envelope-ground/envelope-ground.tsx";
 import { Button } from "../../core/button/button.tsx";
 import { Badge } from "../../display/badge/badge.tsx";

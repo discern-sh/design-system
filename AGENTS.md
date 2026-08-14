@@ -69,13 +69,13 @@ The interface system behind [discern.sh](https://discern.sh): a framework-neutra
 "discern" means three things here — don't conflate them:
 
 1. **The product** — discern, the agent-development tool, and the discern.sh site that presents it. They live together in the sibling discern repository; nothing you edit here changes the tool or the site.
-2. **This repo** — the design system those properties consume, and your only subject: the published library under `src/` and its Catalogue under `styleguide/`.
+2. **This repo** — the design system those properties consume, and your only subject: the published library under `src/` and its Catalogue under `catalogue/`.
 3. **Your tooling** — this repo dogfoods discern, so the "Working with discern" guidance above describes the tool running your workflow (the gate, worktrees, the `discern_*` verbs), exactly as in any project that installs it. Its footprint — `discern.toml` and the `discern/` directory holding this guidance, skills, scripts, and the TODO ledger — is project configuration, not part of the published package.
 
 ## Conventions
 
 - **Component anatomy is fixed.** Every component lives in its own folder under `src/components/<group>/<slug>/` owning `<slug>.css`, `<slug>.tsx`, `<slug>.meta.ts`, `<slug>.examples.tsx`, and `mod.ts`. Metadata must declare its CLI stance at birth: `rendered` adds `<slug>.cli.ts`, while `exempt` records a non-empty terminal-specific reason. Vocabulary shared with React lives in a framework-neutral sibling module. The metadata and group order generate the runtime registry, React and CLI export surfaces, CLI stance registry, catalogue, and dependency graph — a new component needs no manual registration anywhere.
-- **Never hand-edit generated surfaces.** `src/generated/` and `styleguide/generated/` come from `deno task codegen` (the gate runs it in its fix stage). After changing component metadata, component CSS, component imports, or package assets, regenerate rather than patch.
+- **Never hand-edit generated surfaces.** `src/generated/` and `catalogue/generated/` come from `deno task codegen` (the gate runs it in its fix stage). After changing component metadata, component CSS, component imports, or package assets, regenerate rather than patch.
 - **Tokens change in `src/tokens/tokens.ts` only** — never in emitted CSS. Preserve `--discern-font-size-xs` as the authored interface-text floor and keep the UI font role paired with its central OpenType feature set.
 - **Every public name wears the `discern` namespace** (classes, custom properties, data attributes, keyframes, layers) and every foundation rule stays scoped beneath `:where([data-discern-root])`. No unprefixed globals, ever.
 - **The neutral core and CLI surface never import React.** React enters only through the `./react` adapter (18.3+ peer contract, build-time rendering). The release tests fail a stray React import in the root, CLI, manifest, runtime, tokens, or theme graphs.

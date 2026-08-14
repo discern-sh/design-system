@@ -1,4 +1,4 @@
-import type { CatalogueExampleState } from "../../../../styleguide/conformance.ts";
+import type { CatalogueExampleState } from "../../../../catalogue/conformance.ts";
 import { Badge } from "../badge/badge.tsx";
 import { Terminal } from "./terminal.tsx";
 

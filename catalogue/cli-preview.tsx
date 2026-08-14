@@ -4,10 +4,9 @@ import {
   terminalLinkHref,
   terminalSpanCss,
 } from "../src/cli/projection.ts";
-import { Terminal } from "../src/components/display/terminal/terminal.tsx";
 import type { RegistryEntry } from "./generated/registry.ts";
 
-/** Fixed terminal profile used for deterministic browser specimens. */
+/** Fixed terminal profile used for deterministic Catalogue specimens. */
 export const catalogueCliCapabilities = {
   ansiControl: true,
   colorDepth: "truecolor",
@@ -47,7 +46,7 @@ function cliFragmentId(component: string, state: string): string {
   return `component-${component}--cli-${state}`;
 }
 
-/** Render one Component's real CLI Catalogue examples into browser terminals. */
+/** Render one Component's real CLI Catalogue examples as bare terminal output. */
 export function CliComponentPreview(
   { entry }: { readonly entry: RegistryEntry },
 ) {
@@ -105,17 +104,16 @@ export function CliComponentPreview(
               </a>
             </header>
             <div
-              className="discern-catalogue-cli-terminal"
+              className="discern-catalogue-cli-preview"
               data-discern-root
               data-discern-theme="dark"
             >
-              <Terminal
-                title={`${meta.name} · 80 columns · truecolour · Unicode`}
-                bodyStyle={{ minBlockSize: 0 }}
+              <pre
+                className="discern-catalogue-cli-output"
                 aria-label={`${meta.name}: ${label} CLI output`}
               >
-                <TerminalAnsiText value={output} />
-              </Terminal>
+                <code><TerminalAnsiText value={output} /></code>
+              </pre>
             </div>
           </section>
         );

@@ -1,4 +1,4 @@
-import type { ConformanceScenario } from "../../../../styleguide/conformance.ts";
+import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
 import { AgentMention } from "./agent-mention.tsx";
 import { AgentAvatar } from "../agent-avatar/agent-avatar.tsx";
 

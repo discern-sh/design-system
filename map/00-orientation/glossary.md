@@ -110,7 +110,7 @@ A required Component Metadata declaration of `rendered` or `exempt` with a non-e
 
 ### Catalogue
 
-The local component browser under [`styleguide/`](../../styleguide/), built by [`build.ts`](../../scripts/build.ts) and served by `deno task serve`. It renders every Component's examples from the generated example registry.
+The local component browser under [`catalogue/`](../../catalogue/), built by [`build.ts`](../../scripts/build.ts) and served by `deno task serve`. It renders every Component's examples from the generated example registry.
 
 ### CLI Catalogue
 

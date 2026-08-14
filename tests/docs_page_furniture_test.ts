@@ -10,7 +10,7 @@ import { packageManifest } from "../src/manifest.ts";
 import { AgentHandoff } from "../src/components/workflow/agent-handoff/agent-handoff.tsx";
 import { catalogueStates as branchChoiceStates } from "../src/components/workflow/branch-choice/branch-choice.examples.tsx";
 import type { ComponentMeta } from "../src/types/component-meta.ts";
-import { compositionRecipes } from "../styleguide/compositions.tsx";
+import { compositionRecipes } from "../catalogue/compositions.tsx";
 import {
   type TaskFileEffects,
   TaskMetadata,

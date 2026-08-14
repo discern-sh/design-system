@@ -7,7 +7,7 @@ import type {
   ConformanceScenario,
   ConformanceStep,
   ConformanceTarget,
-} from "../styleguide/conformance.ts";
+} from "../catalogue/conformance.ts";
 import { launchBrowser } from "./browser.ts";
 import { buildDesignSystem } from "./build.ts";
 import { runResilienceConformance } from "./resilience-conformance.ts";
@@ -37,7 +37,7 @@ function conformanceUrl(
   theme: CatalogueTheme,
   component?: string,
 ): string {
-  const url = new URL("/style-guide/", origin);
+  const url = new URL("/catalogue/", origin);
   url.searchParams.set("conformance", "1");
   url.searchParams.set("theme", theme);
   if (component) url.searchParams.set("component", component);
@@ -622,7 +622,7 @@ async function verifyStateFragmentRestoration(
   origin: string,
 ): Promise<void> {
   await withViewport(page, WIDE_VIEWPORT, async () => {
-    await page.goto(new URL("/style-guide/", origin).href, {
+    await page.goto(new URL("/catalogue/", origin).href, {
       waitUntil: "networkidle",
     });
     await page.locator("[data-discern-root]").waitFor();
@@ -657,7 +657,7 @@ async function verifyStateFragmentRestoration(
     const state = states[Math.floor(states.length / 2)];
     invariant(state, "Fragment restoration needs a middle Catalogue state");
     const fragment = state.fragment;
-    const url = new URL("/style-guide/", origin);
+    const url = new URL("/catalogue/", origin);
     url.hash = fragment;
     await page.goto(url.href, { waitUntil: "networkidle" });
     await page.locator("[data-discern-root]").waitFor();

@@ -1,4 +1,4 @@
-import type { CatalogueExampleState } from "../../../../styleguide/conformance.ts";
+import type { CatalogueExampleState } from "../../../../catalogue/conformance.ts";
 import { Button } from "../../core/button/button.tsx";
 import { SiteHeader } from "./site-header.tsx";
 

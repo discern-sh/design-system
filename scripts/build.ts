@@ -5,14 +5,14 @@ import type {
   CatalogueProp,
   CataloguePropDocumentation,
   CatalogueVariant,
-} from "../styleguide/conformance.ts";
+} from "../catalogue/conformance.ts";
 import { writeGeneratedSources } from "./generate.ts";
 
 const ROOT = new URL("../", import.meta.url);
 const COMPONENT_ROOT = new URL("../src/components/", import.meta.url);
 export const DESIGN_SYSTEM_BUILD_OUTPUTS = {
   runtime: "dist/",
-  catalogueRegistry: "styleguide/generated/",
+  catalogueRegistry: "catalogue/generated/",
 } as const;
 const GENERATED_ROOT = new URL(
   `../${DESIGN_SYSTEM_BUILD_OUTPUTS.catalogueRegistry}`,
@@ -618,7 +618,7 @@ async function packageVersion(): Promise<string> {
   return version;
 }
 
-async function bundleStyleguide(): Promise<void> {
+async function bundleCatalogue(): Promise<void> {
   const command = new Deno.Command(Deno.execPath(), {
     cwd: decodeURIComponent(ROOT.pathname),
     args: [
@@ -626,15 +626,15 @@ async function bundleStyleguide(): Promise<void> {
       "--platform=browser",
       "--format=esm",
       "--sourcemap=linked",
-      "styleguide/app.tsx",
-      "--output=dist/styleguide.js",
+      "catalogue/app.tsx",
+      "--output=dist/catalogue.js",
     ],
     stdout: "inherit",
     stderr: "inherit",
   });
   const result = await command.output();
   if (!result.success) {
-    throw new Error(`Styleguide bundle failed with exit code ${result.code}`);
+    throw new Error(`Catalogue bundle failed with exit code ${result.code}`);
   }
 }
 
@@ -652,7 +652,7 @@ export async function buildDesignSystem(): Promise<BuildSummary> {
   if (summary.components !== sources.length) {
     throw new Error("Catalogue and runtime component discovery disagree");
   }
-  await bundleStyleguide();
+  await bundleCatalogue();
   return summary;
 }
 

@@ -1,4 +1,4 @@
-import type { ConformanceScenario } from "../../../../styleguide/conformance.ts";
+import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
 import { Prose } from "../../editorial/prose/prose.tsx";
 import { GlossaryTerm } from "./glossary-term.tsx";
 

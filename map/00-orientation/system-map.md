@@ -21,7 +21,7 @@ Bird's-eye view of how discern-design-system fits together. Read this once and t
                        ▼                                ▼               ▼
         ┌──────────────────────────┐   ┌──────────────────────┐  ┌─────────────────┐
         │ Emitter    runtime.ts    │   │ Adapter   react.ts   │  │ Catalogue       │
-        │ Selection ──► Runtime:   │   │ React 18.3+ (peer)   │  │ styleguide/ +   │
+        │ Selection ──► Runtime:   │   │ React 18.3+ (peer)   │  │ catalogue/ +    │
         │  discern.css             │   │ renders the class    │  │ scripts/build.ts│
         │  conditional discern.js  │   │ contract to static   │  │ + serve.ts      │
         │  manifest.json (SHA-256) │   │ HTML at build time   │  │ + conformance   │

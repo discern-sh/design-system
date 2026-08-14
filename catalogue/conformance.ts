@@ -1,3 +1,4 @@
+/** Shared authored contracts for Catalogue examples and conformance. */
 import type { ComponentType } from "react";
 
 /** One stable, linkable state exported by a component examples module. */

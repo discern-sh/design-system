@@ -217,7 +217,7 @@
       "src/styles/**",
       "src/tokens/**",
       "src/theme/**",
-      "styleguide/**",
+      "catalogue/**",
       "assets/**",
     ]
     previewable = true
@@ -519,8 +519,8 @@
     metric = "lint_suppressions"
     direction = "down"
     limit = 0
-    run = "printf 'DISCERN_METRIC lint_suppressions %s\\n' \"$(grep -rEn 'deno-lint-ignore|deno-fmt-ignore|@ts-ignore|@ts-expect-error' src scripts styleguide tests --include='*.ts' --include='*.tsx' | grep -v generated | wc -l | tr -d ' ')\""
-    inputs = ["src/**", "scripts/**", "styleguide/**", "tests/**"]
+    run = "printf 'DISCERN_METRIC lint_suppressions %s\\n' \"$(grep -rEn 'deno-lint-ignore|deno-fmt-ignore|@ts-ignore|@ts-expect-error' src scripts catalogue tests --include='*.ts' --include='*.tsx' | grep -v generated | wc -l | tr -d ' ')\""
+    inputs = ["src/**", "scripts/**", "catalogue/**", "tests/**"]
 
   # Missing CLI stances are permanent Codegen and type errors. This zero ceiling
   # remains as a trunk-held second line of defence: a feature branch cannot

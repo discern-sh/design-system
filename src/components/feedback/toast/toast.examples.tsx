@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ExampleIcon } from "../../../fixtures/example-icon.tsx";
-import type { ConformanceScenario } from "../../../../styleguide/conformance.ts";
+import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
 import { Toast } from "./toast.tsx";
 
 export const conformance = [{
