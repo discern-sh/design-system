@@ -42,7 +42,7 @@ _Dead code, N+1s, and known-slow paths worth removing or fixing. Nothing outstan
 
 ## 🟡 Smaller fixes & polish
 
-_Lower-severity fixes, rough edges, and UX papercuts. Nothing outstanding._
+- [ ] **Typed sequential-form step constructors that carry `previous` automatically.** A step's prior value arrives only as the untyped `previous` argument to `step.run`; seeding it into the request's initial value is manual wiring each step author must remember, so Ctrl+U back-navigation silently discards typed work whenever it's forgotten. Add per-kind step constructors (text, selection, …) that thread `previous` into the initial value and give it a real type, keeping the general closure form as the escape hatch. Evidence: `src/cli/interactive/sequential-form.ts:118-129`; `tests/cli/interactive_requests_test.ts:175-179` (the manual pattern).
 
 ## 🟢 Test & tooling hygiene
 
@@ -54,4 +54,5 @@ _Work built but not merged, or otherwise at risk of being lost. Nothing outstand
 
 ## ⚪ Explorations / ideas (unscheduled)
 
-_Ideas worth keeping but not yet scheduled. Nothing outstanding._
+- [ ] **A caller-declared non-interactive posture for requests.** Every request refuses on a non-TTY handle, so each consumer rebuilds the same fallback chain (a flag equivalent per question, `--yes` vetoes). Offer a runtime-declared alternative: resolve with the caller-supplied default, still run validation, and throw a typed rejection on failure — the caller supplies the non-interactive fact; the package never reads the environment. Evidence: `src/cli/interactive/lifecycle.ts:26-28`; the consumer chain at discern's `src/lib/terminal_interaction.ts:111-127`.
+- [ ] **A numeric request kind.** Bounded numeric input (minimum/maximum/step, arrow-key stepping, built-in range checks composing with caller validation) has no request kind; `requestText` plus a validator is the only route. Add it when a consumer surface needs one. Evidence: `src/cli/interactive-states.ts` (no numeric frame state).
