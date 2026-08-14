@@ -6,6 +6,7 @@ import {
   styleText,
 } from "../../src/cli/ansi.ts";
 import {
+  measureText,
   padText,
   truncateStyledText,
   truncateText,
@@ -157,6 +158,101 @@ Deno.test("single-line styled wrapping round-trips package emission bytes", () =
     bold: true,
   });
   assertEquals(wrapStyledText(linked, 40), [linked]);
+});
+
+Deno.test("styled hyperlink labels wrap with both envelope and style intact", () => {
+  const url = "https://discern.sh/docs";
+  const linked = styleHyperlink("discern documentation", url, truecolor, {
+    bold: true,
+  });
+  const lines = wrapStyledText(linked, 13);
+  assertEquals(lines, [
+    `${escape}]8;;${url}${escape}\\${escape}[1mdiscern${escape}[0m${escape}]8;;${escape}\\`,
+    `${escape}]8;;${url}${escape}\\${escape}[1mdocumentation${escape}[0m${escape}]8;;${escape}\\`,
+  ]);
+  for (const line of lines) {
+    assertEquals(wrapStyledText(line, 13), [line]);
+  }
+});
+
+Deno.test("distinct hyperlinks separate cleanly across runs and lines", () => {
+  const first = styleHyperlink("alpha", "https://a.example", truecolor);
+  const second = styleHyperlink("beta", "https://b.example", truecolor);
+  const joined = `${first} ${second}`;
+  assertEquals(wrapStyledText(joined, 20), [joined]);
+  assertEquals(wrapStyledText(joined, 5), [first, second]);
+});
+
+Deno.test("a hyperlink between styled neighbours keeps every boundary on one line", () => {
+  const ansi16 = testCapabilities({ colorDepth: "ansi16" });
+  const url = "https://discern.sh";
+  const composed = `${styleText("see ", { color }, ansi16)}${
+    styleHyperlink("docs", url, truecolor)
+  } now`;
+  assertEquals(wrapStyledText(composed, 20), [composed]);
+  assertEquals(wrapStyledText(composed, 8), [
+    `${escape}[36msee ${escape}[0m${escape}]8;;${url}${escape}\\docs${escape}]8;;${escape}\\`,
+    "now",
+  ]);
+});
+
+Deno.test("a hyperlink label wider than the width splits with the envelope reopening", () => {
+  const url = "https://discern.sh/docs";
+  const lines = wrapStyledText(styleHyperlink("documentation", url, truecolor), 6);
+  assertEquals(lines, [
+    `${escape}]8;;${url}${escape}\\docume${escape}]8;;${escape}\\`,
+    `${escape}]8;;${url}${escape}\\ntatio${escape}]8;;${escape}\\`,
+    `${escape}]8;;${url}${escape}\\n${escape}]8;;${escape}\\`,
+  ]);
+  for (const line of lines) {
+    assertEquals(measureText(line) <= 6, true);
+    assertEquals(wrapStyledText(line, 6), [line]);
+  }
+});
+
+Deno.test("an open hyperlink persists across a blank paragraph without dressing it", () => {
+  const url = "https://discern.sh";
+  const torn = `${escape}]8;;${url}${escape}\\a\n\nb${escape}]8;;${escape}\\`;
+  assertEquals(wrapStyledText(torn, 10), [
+    `${escape}]8;;${url}${escape}\\a${escape}]8;;${escape}\\`,
+    "",
+    `${escape}]8;;${url}${escape}\\b${escape}]8;;${escape}\\`,
+  ]);
+});
+
+Deno.test("styled truncation respects hyperlink edges exactly", () => {
+  const url = "https://discern.sh/docs";
+  const linked = styleHyperlink("docs", url, truecolor);
+  const composed = `${linked} tail`;
+  assertEquals(truncateStyledText(composed, 9), composed);
+  assertEquals(truncateStyledText(composed, 5), `${linked}…`);
+  assertEquals(
+    truncateStyledText(composed, 3),
+    `${escape}]8;;${url}${escape}\\do${escape}]8;;${escape}\\…`,
+  );
+  assertEquals(truncateStyledText(`head ${linked}`, 3), "he…");
+  assertEquals(truncateStyledText(`${escape}[1mbold`, 10), `${escape}[1mbold${escape}[0m`);
+});
+
+Deno.test("styled truncation mirrors plain marker and depth-none behaviour", () => {
+  const ansi16 = testCapabilities({ colorDepth: "ansi16" });
+  assertEquals(
+    truncateStyledText(styleText("abcdef", { color }, testCapabilities()), 4),
+    truncateText("abcdef", 4),
+  );
+  assertEquals(truncateStyledText(styleText("abcdef", { color }, ansi16), 2, "..."), "..");
+  assertEquals(truncateStyledText(styleText("abcdef", { color }, ansi16), 1), "…");
+});
+
+Deno.test("the plain family measures and wraps hyperlinked strings by label alone", () => {
+  const url = "https://discern.sh/docs";
+  const linked = styleHyperlink("docs", url, truecolor);
+  assertEquals(measureText(linked), 4);
+  assertEquals(truncateText(linked, 3), "do…");
+  assertEquals(
+    wrapText(styleHyperlink("discern documentation", url, truecolor), 13),
+    ["discern", "documentation"],
+  );
 });
 
 Deno.test("styled truncation keeps styling and never leaves a hyperlink open", () => {
