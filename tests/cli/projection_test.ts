@@ -9,7 +9,12 @@ import {
   ANSI_256_RGB,
   type TerminalRgbColor,
 } from "../../src/cli/ansi-palette.ts";
-import { renderStyledSpans, stripAnsi, styleText } from "../../src/cli/ansi.ts";
+import {
+  renderStyledSpans,
+  stripAnsi,
+  styleHyperlink,
+  styleText,
+} from "../../src/cli/ansi.ts";
 import { renderBadgeCli } from "../../src/generated/cli-renderers.ts";
 import {
   projectTerminalHtml,
@@ -117,7 +122,7 @@ Deno.test("projection decodes every emitted attribute and span boundary", () => 
 });
 
 Deno.test("projection preserves Unicode, ASCII, and rendered component text", () => {
-  assertEquals(projectedText("A👩‍💻B ◮ é"), "A👩‍💻B ◮ é");
+  assertEquals(projectedText("A👩‍💻B ◮ é"), "A👩‍💻B ◮ é");
   for (
     const colorDepth of ["none", "ansi16", "ansi256", "truecolor"] as const
   ) {
@@ -135,25 +140,70 @@ Deno.test("projection preserves Unicode, ASCII, and rendered component text", ()
   }
 });
 
-Deno.test("projection scopes hyperlink envelopes independently of SGR resets", () => {
-  for (const terminator of [BEL, ST]) {
-    const output =
-      `${ESC}]8;;https://discern.sh${terminator}${ESC}[1mHome${ESC}[0m plain${ESC}]8;;${terminator} after`;
-    assertEquals(projectTerminalSpans(output), [
-      { text: "Home", style: { bold: true }, link: "https://discern.sh" },
-      { text: " plain", link: "https://discern.sh" },
-      { text: " after" },
-    ]);
-  }
+Deno.test("projection round-trips the package hyperlink composer", () => {
+  const capabilities = testTerminalCapabilities({ colorDepth: "truecolor" });
+  const accent = terminalToneColor(terminalThemes.dark, "accent");
+  const linked = styleHyperlink(
+    "Docs",
+    "https://discern.sh/docs",
+    capabilities,
+    { bold: true, color: accent },
+  );
+  assertEquals(projectTerminalSpans(linked), [{
+    text: "Docs",
+    style: {
+      bold: true,
+      color: { red: accent.red, green: accent.green, blue: accent.blue },
+    },
+    link: "https://discern.sh/docs",
+  }]);
+
+  const fallback = styleHyperlink(
+    "Docs",
+    "https://discern.sh/docs",
+    testTerminalCapabilities(),
+  );
+  assertEquals(projectTerminalSpans(fallback), [
+    { text: "Docs (https://discern.sh/docs)" },
+  ]);
 });
 
-Deno.test("projection follows hyperlink parameters and target switches", () => {
+Deno.test("projection scopes hyperlink envelopes independently of SGR resets", () => {
   const output =
-    `${ESC}]8;id=doc;https://discern.sh/a${BEL}first${ESC}]8;;https://discern.sh/b${ST}second${ESC}]8;;${BEL}done`;
+    `${ESC}]8;;https://discern.sh${ST}${ESC}[1mHome${ESC}[0m plain${ESC}]8;;${ST} after`;
+  assertEquals(projectTerminalSpans(output), [
+    { text: "Home", style: { bold: true }, link: "https://discern.sh" },
+    { text: " plain", link: "https://discern.sh" },
+    { text: " after" },
+  ]);
+});
+
+Deno.test("projection follows hyperlink target switches without a close", () => {
+  const output =
+    `${ESC}]8;;https://discern.sh/a${ST}first${ESC}]8;;https://discern.sh/b${ST}second${ESC}]8;;${ST}done`;
   assertEquals(projectTerminalSpans(output), [
     { text: "first", link: "https://discern.sh/a" },
     { text: "second", link: "https://discern.sh/b" },
     { text: "done" },
+  ]);
+});
+
+Deno.test("adjacent identically styled runs merge into one span", () => {
+  const capabilities = testTerminalCapabilities({ colorDepth: "truecolor" });
+  const twice = styleText("one ", { bold: true }, capabilities) +
+    styleText("two", { bold: true }, capabilities);
+  assertEquals(projectTerminalSpans(twice), [
+    { text: "one two", style: { bold: true } },
+  ]);
+});
+
+Deno.test("styling or a hyperlink left open ends with the final span", () => {
+  assertEquals(
+    projectTerminalSpans(`${ESC}]8;;https://discern.sh${ST}open`),
+    [{ text: "open", link: "https://discern.sh" }],
+  );
+  assertEquals(projectTerminalSpans(`${ESC}[1mbold`), [
+    { text: "bold", style: { bold: true } },
   ]);
 });
 
@@ -166,26 +216,25 @@ Deno.test("projection rejects input outside the emitted repertoire", () => {
     );
     assertEquals(error.name, "TerminalProjectionError");
   };
-  rejects(`${ESC}[2K`, "does not support the terminal sequence");
-  rejects(`${ESC}[1G`, "does not support the terminal sequence");
-  rejects(`${ESC}[?25l`, "does not support the terminal sequence");
-  rejects(`${ESC}]0;title${BEL}`, "does not support the terminal sequence");
-  rejects(`${ESC}[39m`, "does not support SGR code 39");
-  rejects(`${ESC}[48;2;0;0;0m`, "does not support SGR code 48");
-  rejects(`${ESC}[22m`, "does not support SGR code 22");
-  rejects(`${ESC}[m`, "malformed SGR sequence");
-  rejects(`${ESC}[1;;3m`, "malformed SGR sequence");
-  rejects(`${ESC}[38;2;300;0;0m`, "invalid truecolour channel");
-  rejects(`${ESC}[38;5;256m`, "palette index 256");
-  rejects(`${ESC}[38;6;1m`, "does not support SGR code 38");
+  const foreign = "unsupported or unterminated sequence";
+  rejects(`${ESC}[2K`, foreign);
+  rejects(`${ESC}[1G`, foreign);
+  rejects(`${ESC}[?25l`, foreign);
+  rejects(`${ESC}]0;title${BEL}`, foreign);
+  rejects(`${ESC}[39m`, foreign);
+  rejects(`${ESC}[48;2;0;0;0m`, foreign);
+  rejects(`${ESC}[22m`, foreign);
+  rejects(`${ESC}[m`, foreign);
+  rejects(`${ESC}[1;;3m`, foreign);
+  rejects(`${ESC}[38;2;300;0;0m`, foreign);
+  rejects(`${ESC}[38;5;256m`, foreign);
+  rejects(`${ESC}[38;6;1m`, foreign);
+  rejects(`${ESC}]8;;https://discern.sh${BEL}bel-ended`, foreign);
+  rejects(`${ESC}]8;id=doc;https://discern.sh${ST}params`, foreign);
+  rejects(`${ESC}]8;;has space${ST}target`, foreign);
+  rejects(`${ESC}]8;;https://discern.sh`, foreign);
   rejects(`bare${BEL}bell`, "unsupported control character");
   rejects("form\ffeed", "unsupported control character");
-  rejects(`${ESC}]8;;https://discern.sh`, "unterminated hyperlink envelope");
-  rejects(`${ESC}]8;no-target${BEL}`, "without a target field");
-  rejects(
-    `${ESC}]8;;https://discern.sh${BEL}open`,
-    "ended inside an open hyperlink envelope",
-  );
 });
 
 Deno.test("projection accepts newlines and tabs as frame text", () => {
@@ -272,8 +321,11 @@ Deno.test("projected HTML is self-contained, escaped, and theme-coloured", () =>
 });
 
 Deno.test("projected HTML links safe targets and neutralises unsafe ones", () => {
+  const capabilities = testTerminalCapabilities({ colorDepth: "truecolor" });
   const linked = projectTerminalHtml(
-    `${ESC}]8;;https://discern.sh${BEL}${ESC}[4mdocs${ESC}[0m${ESC}]8;;${BEL}`,
+    styleHyperlink("docs", "https://discern.sh", capabilities, {
+      underline: true,
+    }),
   );
   assertStringIncludes(
     linked,
@@ -281,7 +333,7 @@ Deno.test("projected HTML links safe targets and neutralises unsafe ones", () =>
   );
 
   const unsafe = projectTerminalHtml(
-    `${ESC}]8;;javascript:alert(1)${BEL}click${ESC}]8;;${BEL}`,
+    `${ESC}]8;;javascript:alert(1)${ST}click${ESC}]8;;${ST}`,
   );
   assert(!unsafe.includes("<a "), "unsafe hyperlink target became an anchor");
   assertStringIncludes(unsafe, "click");

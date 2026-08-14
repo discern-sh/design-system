@@ -31,6 +31,7 @@ Deno.test("CLI catalogue resolves all, Group, Component, and motif selectors", (
     slug: "badge",
   });
   assertEquals(resolveCatalogueSelection("triangles"), { kind: "motifs" });
+  assertEquals(resolveCatalogueSelection("narration"), { kind: "narration" });
   assertThrows(
     () => resolveCatalogueSelection("unknown-surface"),
     TypeError,
@@ -43,6 +44,8 @@ Deno.test("complete CLI catalogue renders every registry entry and exemption", a
     undefined,
     testTerminalCapabilities({ columns: 80 }),
   );
+  assertStringIncludes(output, "## Triangle motifs");
+  assertStringIncludes(output, "## Narration lines");
   for (const group of componentGroups) {
     assertStringIncludes(output, `## ${group}`);
   }
@@ -111,6 +114,43 @@ Deno.test("triangle catalogue derives the complete motif specimen set", async ()
   ) {
     assertStringIncludes(output, status);
   }
+});
+
+Deno.test("narration catalogue presents every verb and the composed rhythm", async () => {
+  const output = await renderCliCatalogue(
+    "narration",
+    testTerminalCapabilities({ columns: 80 }),
+  );
+  for (
+    const heading of [
+      "Success",
+      "Note",
+      "Warning",
+      "Failure",
+      "Lead-in",
+      "Composed rhythm",
+    ]
+  ) {
+    assertStringIncludes(output, `### ${heading}`);
+  }
+  assertStringIncludes(output, "✓ Checks passed");
+  assertStringIncludes(output, "◮ Cache already warm");
+  assertStringIncludes(output, "! Two files skipped");
+  assertStringIncludes(output, "✕ One frame diverged");
+  assertStringIncludes(output, "◮ RELEASE CHECKS");
+  assertStringIncludes(
+    output,
+    "◮ RELEASE CHECKS\n\n✓ Checks passed\n◮ Cache already warm\n\n! Two files skipped",
+  );
+  assert(!output.includes("## Triangle motifs"));
+  assert(!output.includes("## Display"));
+
+  const ascii = await renderCliCatalogue(
+    "narration",
+    testTerminalCapabilities({ columns: 80, unicode: false }),
+  );
+  assertStringIncludes(ascii, "+ Checks passed");
+  assertStringIncludes(ascii, "> RELEASE CHECKS");
 });
 
 Deno.test("NO_COLOR suppresses ANSI throughout catalogue output", async () => {

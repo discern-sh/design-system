@@ -240,6 +240,7 @@ Deno.test("every generated component, exemption, and sheet is reachable from the
     );
   }
   assert(top.some(({ id }) => id === "motifs"));
+  assert(top.some(({ id }) => id === "narration"));
   assert(top.some(({ id }) => id === "exemptions"));
 
   const seenSlugs = new Set<string>();
@@ -277,6 +278,32 @@ Deno.test("text journey validates, completes, and restores the terminal", async 
   assertStringIncludes(io.output(), 'Result: string "Jo"');
   assertEquals(io.rawTransitions, [true, false]);
   assert(io.writes.includes(SHOW_TERMINAL_CURSOR));
+});
+
+Deno.test("validation latch journey latches, transforms, and completes", async () => {
+  const io = new FakeTerminalIO(
+    ["Bad Slug!", ENTER, "\x7f".repeat(9), "ok ", ENTER],
+    { columns: 60 },
+  );
+  const outcome = await runJourney(
+    journey("validation-latch"),
+    testRuntime(io),
+  );
+  assertEquals(outcome, "completed");
+  assertStringIncludes(io.output(), "Use lowercase letters");
+  assertStringIncludes(io.output(), 'Result: string "ok"');
+  assertEquals(io.rawTransitions, [true, false]);
+});
+
+Deno.test("Escape backs out of a journey through the shared cancellation wrapper", async () => {
+  const io = new FakeTerminalIO(["\x1b"], { columns: 60 });
+  const outcome = await runJourney(
+    journey("validation-latch"),
+    testRuntime(io),
+  );
+  assertEquals(outcome, "cancelled");
+  assertStringIncludes(io.output(), "Journey cancelled (Dismissed.)");
+  assertEquals(io.rawTransitions, [true, false]);
 });
 
 Deno.test("masked journey never echoes the secret", async () => {
@@ -485,7 +512,7 @@ Deno.test("degraded journeys run through the synthetic environment", async () =>
 
 Deno.test("browse journey reaches the motif sheet and returns to the hub", async () => {
   const io = new FakeTerminalIO(
-    [`${END}${UP}${UP}${ENTER}`, `${END}${ENTER}`],
+    [`${END}${UP}${UP}${UP}${ENTER}`, `${END}${ENTER}`],
     { columns: 80 },
   );
   assertEquals(
@@ -493,6 +520,19 @@ Deno.test("browse journey reaches the motif sheet and returns to the hub", async
     "completed",
   );
   assertStringIncludes(io.output(), "## Triangle motifs");
+});
+
+Deno.test("browse journey reaches the narration sheet and returns to the hub", async () => {
+  const io = new FakeTerminalIO(
+    [`${END}${UP}${UP}${ENTER}`, `${END}${ENTER}`],
+    { columns: 80 },
+  );
+  assertEquals(
+    await runJourney(journey("browse"), testRuntime(io)),
+    "completed",
+  );
+  assertStringIncludes(io.output(), "## Narration lines");
+  assertStringIncludes(io.output(), "✓ Checks passed");
 });
 
 Deno.test("browse journey walks Group, component, and example navigation", async () => {

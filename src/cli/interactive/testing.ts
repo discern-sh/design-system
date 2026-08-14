@@ -24,6 +24,12 @@ export interface FakeTerminalIOOptions {
   readonly columns?: number;
   readonly rows?: number;
   readonly unicode?: boolean;
+  /**
+   * Keep reads pending while the queue is empty instead of returning
+   * end-of-input, until {@linkcode FakeTerminalIO.close} delivers EOF.
+   * Models a live terminal whose user has not typed yet.
+   */
+  readonly holdOpen?: boolean;
 }
 
 /**
@@ -95,6 +101,8 @@ export class FakeTerminalIO implements TerminalIO {
   readonly #interactive: boolean;
   readonly #colorDepth: TerminalCapabilities["colorDepth"];
   readonly #unicode: boolean;
+  readonly #waiters: ((chunk: Uint8Array | null) => void)[] = [];
+  #holdOpen: boolean;
   #columns: number;
   #rows: number;
 
@@ -112,6 +120,7 @@ export class FakeTerminalIO implements TerminalIO {
     this.#columns = options.columns ?? 80;
     this.#rows = options.rows ?? 24;
     this.#unicode = options.unicode ?? true;
+    this.#holdOpen = options.holdOpen ?? false;
   }
 
   /** Whether the terminal presents itself as an interactive TTY pair. */
@@ -137,15 +146,19 @@ export class FakeTerminalIO implements TerminalIO {
   /**
    * Read the next scripted chunk, or `null` after the queue drains. A queued
    * resize applies its new viewport and yields one empty chunk, which the
-   * package's key reader skips, so the resize lands between keystrokes.
+   * package's key reader skips, so the resize lands between keystrokes. A
+   * held-open terminal keeps the read pending until input arrives or
+   * {@linkcode FakeTerminalIO.close} delivers end-of-input.
    */
   read(): Promise<Uint8Array | null> {
     const next = this.#queue.shift();
-    if (next === undefined) return Promise.resolve(null);
-    if (next instanceof Uint8Array) return Promise.resolve(next);
-    this.#columns = next.columns;
-    this.#rows = next.rows ?? this.#rows;
-    return Promise.resolve(new Uint8Array(0));
+    if (next !== undefined) {
+      if (next instanceof Uint8Array) return Promise.resolve(next);
+      this.#applyResize(next);
+      return Promise.resolve(new Uint8Array(0));
+    }
+    if (!this.#holdOpen) return Promise.resolve(null);
+    return new Promise((resolve) => this.#waiters.push(resolve));
   }
 
   /** Record a raw-mode transition. */
@@ -163,11 +176,14 @@ export class FakeTerminalIO implements TerminalIO {
     return this.writes.join("");
   }
 
-  /** Queue another UTF-8 input chunk. */
+  /** Queue another UTF-8 input chunk, waking a held-open pending read. */
   enqueue(value: string | Uint8Array): void {
-    this.#queue.push(
-      typeof value === "string" ? encoder.encode(value) : value.slice(),
-    );
+    const bytes = typeof value === "string"
+      ? encoder.encode(value)
+      : value.slice();
+    const waiter = this.#waiters.shift();
+    if (waiter !== undefined) waiter(bytes);
+    else this.#queue.push(bytes);
   }
 
   /** Queue named keys as one input chunk through the real key decoder. */
@@ -177,17 +193,34 @@ export class FakeTerminalIO implements TerminalIO {
 
   /**
    * Queue a viewport change that applies when the input queue reaches it,
-   * so a resize lands between earlier and later scripted keystrokes.
-   * Omitted rows keep the height current at that point in the script.
+   * so a resize lands between earlier and later scripted keystrokes. On a
+   * held-open terminal with a pending read, the resize applies immediately
+   * and the read receives the empty marker chunk. Omitted rows keep the
+   * height current at that point in the script.
    */
   enqueueResize(columns: number, rows?: number): void {
-    this.#queue.push({ columns, rows });
+    const waiter = this.#waiters.shift();
+    if (waiter !== undefined) {
+      this.#applyResize({ columns, rows });
+      waiter(new Uint8Array(0));
+    } else this.#queue.push({ columns, rows });
+  }
+
+  /** Deliver end-of-input to pending and future reads of a held-open terminal. */
+  close(): void {
+    this.#holdOpen = false;
+    for (const waiter of this.#waiters.splice(0)) waiter(null);
   }
 
   /** Change the viewport returned by subsequent size and capability reads. */
   resize(columns: number, rows: number = this.#rows): void {
     this.#columns = columns;
     this.#rows = rows;
+  }
+
+  #applyResize(entry: QueuedResize): void {
+    this.#columns = entry.columns;
+    this.#rows = entry.rows ?? this.#rows;
   }
 }
 

@@ -1,5 +1,10 @@
-import { assertEquals } from "@std/assert";
-import { renderStyledSpans, stripAnsi, styleText } from "../../src/cli/ansi.ts";
+import { assertEquals, assertThrows } from "@std/assert";
+import {
+  renderStyledSpans,
+  stripAnsi,
+  styleHyperlink,
+  styleText,
+} from "../../src/cli/ansi.ts";
 import type { TerminalColor } from "../../src/cli/theme.ts";
 import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
 
@@ -40,6 +45,87 @@ Deno.test("ANSI emission degrades through truecolour, 256, 16, and none", () => 
   assertEquals(
     styleText("discern", { bold: true, color }, testTerminalCapabilities()),
     "discern",
+  );
+});
+
+Deno.test("hyperlink authority gates on capability and never loses the label", () => {
+  const url = "https://discern.sh/docs";
+  const linked = styleHyperlink(
+    "docs",
+    url,
+    testTerminalCapabilities({ colorDepth: "truecolor" }),
+  );
+  assertEquals(
+    linked,
+    `${escape}]8;;${url}${escape}\\docs${escape}]8;;${escape}\\`,
+  );
+  assertEquals(stripAnsi(linked), "docs");
+  assertEquals(
+    styleHyperlink("docs", url, testTerminalCapabilities({ colorDepth: "truecolor" }), {
+      bold: true,
+    }),
+    `${escape}]8;;${url}${escape}\\${escape}[1mdocs${escape}[0m${escape}]8;;${escape}\\`,
+  );
+  assertEquals(
+    styleHyperlink("docs", url, testTerminalCapabilities()),
+    `docs (${url})`,
+  );
+  assertEquals(
+    styleHyperlink("docs", url, testTerminalCapabilities(), { bold: true }),
+    `docs (${url})`,
+  );
+  assertEquals(
+    styleHyperlink(
+      "https://discern.sh",
+      "https://discern.sh",
+      testTerminalCapabilities(),
+    ),
+    "https://discern.sh",
+  );
+  assertEquals(
+    styleHyperlink(
+      "docs",
+      url,
+      testTerminalCapabilities({ colorDepth: "ansi16", hyperlinks: false }),
+      { bold: true },
+    ),
+    `${escape}[1mdocs${escape}[0m (${url})`,
+  );
+  assertEquals(
+    styleHyperlink("docs", url, testTerminalCapabilities({ hyperlinks: true })),
+    `${escape}]8;;${url}${escape}\\docs${escape}]8;;${escape}\\`,
+  );
+});
+
+Deno.test("hyperlink authority rejects control-bearing and non-ASCII input", () => {
+  const capabilities = testTerminalCapabilities();
+  const url = "https://discern.sh";
+  assertThrows(() => styleHyperlink("", url, capabilities), TypeError);
+  assertThrows(() => styleHyperlink("a\nb", url, capabilities), TypeError);
+  assertThrows(() => styleHyperlink("docs", "", capabilities), TypeError);
+  assertThrows(
+    () => styleHyperlink("docs", `${url}/a b`, capabilities),
+    TypeError,
+  );
+  assertThrows(
+    () => styleHyperlink("docs", `${url}/${escape}]`, capabilities),
+    TypeError,
+  );
+  assertThrows(
+    () => styleHyperlink("docs", `${url}/café`, capabilities),
+    TypeError,
+  );
+});
+
+Deno.test("stripping treats OSC envelopes as zero-width and keeps labels", () => {
+  const bell = String.fromCharCode(7);
+  const linked =
+    `${escape}]8;;https://discern.sh${escape}\\docs${escape}]8;;${escape}\\`;
+  assertEquals(stripAnsi(linked), "docs");
+  assertEquals(stripAnsi(`a${escape}]0;title${bell}b`), "ab");
+  assertEquals(
+    stripAnsi(`${escape}[1m${linked}${escape}[0m after`),
+    "docs after",
   );
 });
 

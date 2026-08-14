@@ -8,6 +8,7 @@ import {
 import {
   requestSearch,
   requestSelection,
+  requestSelections,
   requestTextarea,
 } from "../../src/cli/interactive/mod.ts";
 import type {
@@ -337,4 +338,70 @@ Deno.test("search initialId remembers a stable enabled choice across filtering a
     }),
     "first",
   );
+});
+
+Deno.test("PageUp and PageDown jump the visible window of grouped choice machines", async () => {
+  const io = new FakeTerminalIO(["\x1b[6~", "\x1b[6~", "\x1b[5~", "\r"], {
+    columns: 42,
+    rows: 24,
+  });
+  assertEquals(
+    await requestSelection({
+      label: "Paged",
+      choices: groupedChoices,
+      visibleCount: 5,
+    }, { io }),
+    "1-0",
+  );
+  assert(
+    displayedFrames(io).some((frame) => frame.includes("Choice 3.1")),
+    "PageDown must scroll the window to the jumped choice",
+  );
+
+  const multi = new FakeTerminalIO(["\x1b[6~", " ", "\r"], {
+    columns: 42,
+    rows: 24,
+  });
+  assertEquals(
+    await requestSelections({
+      label: "Paged many",
+      choices: groupedChoices,
+      visibleCount: 5,
+    }, { io: multi }),
+    ["1-0"],
+  );
+
+  const clamped = new FakeTerminalIO(["\x1b[F", "\x1b[6~", "\r"], {
+    columns: 42,
+    rows: 24,
+  });
+  assertEquals(
+    await requestSelection({
+      label: "Clamped",
+      choices: groupedChoices,
+      visibleCount: 5,
+    }, { io: clamped }),
+    "3-3",
+  );
+});
+
+Deno.test("paging jumps follow the fitted window rather than the requested count", async () => {
+  const io = new FakeTerminalIO(["\x1b[6~", "\x1b[6~", "\r"], {
+    columns: 42,
+    rows: 8,
+  });
+  assertEquals(
+    await requestSelection({
+      label: "Short paged",
+      choices: groupedChoices,
+      visibleCount: 16,
+    }, { io }),
+    "1-3",
+  );
+  for (const frame of displayedFrames(io)) {
+    assert(
+      frameRows(frame) <= 8,
+      `paged frame rendered ${frameRows(frame)} rows into an 8-row terminal`,
+    );
+  }
 });

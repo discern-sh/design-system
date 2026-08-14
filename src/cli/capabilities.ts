@@ -20,6 +20,13 @@ export interface TerminalCapabilities {
   readonly ansiControl?: boolean;
   readonly colorDepth: TerminalColorDepth;
   readonly columns: number;
+  /**
+   * Whether OSC 8 hyperlink envelopes are worth emitting. Omission derives
+   * the fact from colour depth, so a stream styled with SGR colour also
+   * receives hyperlinks while an unstyled stream receives a textual
+   * fallback instead.
+   */
+  readonly hyperlinks?: boolean;
   readonly unicode: boolean;
 }
 
@@ -54,7 +61,10 @@ function supportsUnicode(
 /**
  * Infer rendering capabilities from caller-supplied process facts. The helper
  * performs no environment or terminal reads itself, so detection stays
- * independently testable and renderers remain pure.
+ * independently testable and renderers remain pure. No portable environment
+ * fact announces OSC 8 hyperlink support, so detection aligns hyperlinks with
+ * styled output; callers holding terminal-specific knowledge state the field
+ * directly.
  */
 export function detectTerminalCapabilities(
   input: TerminalDetectionInput,
@@ -82,6 +92,7 @@ export function detectTerminalCapabilities(
     ansiControl,
     colorDepth,
     columns,
+    hyperlinks: colorDepth !== "none",
     unicode: supportsUnicode(locale, input.isTty),
   };
 }

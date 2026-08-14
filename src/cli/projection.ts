@@ -3,14 +3,17 @@
  * repertoire into typed spans, and a renderer from those spans to
  * self-contained HTML that a reviewer can read in a browser.
  *
- * The supported input is exactly what this package's CLI renderers emit: plain
- * text with newlines and tabs, the emitted SGR subset (bold, dim, italic,
- * underline, strikethrough, and 16-, 256-, and truecolour foregrounds), and
- * OSC 8 hyperlink envelopes. The projection is not a terminal emulator: cursor
- * movement, erasure, and every other control sequence found in captured
- * interactive sessions are rejected with {@linkcode TerminalProjectionError}
- * rather than silently passed through, so foreign byte streams surface as
- * defects instead of leaking raw controls into a review artifact.
+ * The decode derives from the package's internal styled-sequence authority —
+ * the same byte grammar the emitters compose with — so the supported input is
+ * exactly what this package's CLI renderers emit: plain text with newlines
+ * and tabs, the emitted SGR subset (bold, dim, italic, underline,
+ * strikethrough, and 16-, 256-, and truecolour foregrounds), and complete
+ * ST-ended OSC 8 hyperlink envelopes. The projection is not a terminal
+ * emulator: cursor movement, erasure, and every other control sequence found
+ * in captured interactive sessions are rejected with
+ * {@linkcode TerminalProjectionError} rather than silently passed through, so
+ * foreign byte streams surface as defects instead of leaking raw controls
+ * into a review artifact.
  *
  * @module
  */
@@ -20,6 +23,7 @@ import {
   ANSI_256_RGB,
   type TerminalRgbColor,
 } from "./ansi-palette.ts";
+import { parseStyledSource, type StyledSegment } from "./styled-sequences.ts";
 import {
   terminalThemeColor,
   terminalThemes,
@@ -74,16 +78,6 @@ interface MutableSpanStyle {
   color?: TerminalRgbColor;
 }
 
-const ESCAPE = "\u001b";
-const BELL = "\u0007";
-const SGR_PREFIX = `${ESCAPE}[`;
-const HYPERLINK_PREFIX = `${ESCAPE}]8;`;
-const HYPERLINK_TERMINATORS = [BELL, `${ESCAPE}\\`] as const;
-
-function printableSequence(value: string): string {
-  return value.replaceAll(ESCAPE, "\\u001b").replaceAll(BELL, "\\u0007");
-}
-
 function assertProjectableText(value: string): void {
   for (const character of value) {
     const code = character.codePointAt(0);
@@ -111,177 +105,76 @@ function paletteColor(
   return color;
 }
 
-function truecolorChannel(value: number | undefined): number {
-  if (
-    value === undefined || !Number.isInteger(value) || value < 0 || value > 255
-  ) {
-    throw new TerminalProjectionError(
-      "Terminal projection received an invalid truecolour channel",
-    );
-  }
-  return value;
-}
-
-function applySgr(parameters: string, style: MutableSpanStyle): void {
-  const segments = parameters.split(";");
-  const codes = segments.map((segment) => {
-    if (!/^[0-9]+$/u.test(segment)) {
-      throw new TerminalProjectionError(
-        `Terminal projection received a malformed SGR sequence “${
-          printableSequence(`${SGR_PREFIX}${parameters}m`)
-        }”`,
-      );
-    }
-    return Number(segment);
-  });
+function styleFromCodes(
+  codes: readonly number[],
+): TerminalSpanStyle | undefined {
+  if (codes.length === 0) return undefined;
+  const style: MutableSpanStyle = {};
   for (let index = 0; index < codes.length; index += 1) {
     const code = codes[index];
-    if (code === 0) {
-      delete style.bold;
-      delete style.dim;
-      delete style.italic;
-      delete style.underline;
-      delete style.strikethrough;
-      delete style.color;
-    } else if (code === 1) {
-      style.bold = true;
-    } else if (code === 2) {
-      style.dim = true;
-    } else if (code === 3) {
-      style.italic = true;
-    } else if (code === 4) {
-      style.underline = true;
-    } else if (code === 9) {
-      style.strikethrough = true;
-    } else if (code === 38 && codes[index + 1] === 2) {
-      style.color = {
-        red: truecolorChannel(codes[index + 2]),
-        green: truecolorChannel(codes[index + 3]),
-        blue: truecolorChannel(codes[index + 4]),
-      };
-      index += 4;
-    } else if (code === 38 && codes[index + 1] === 5) {
-      style.color = paletteColor(ANSI_256_RGB, codes[index + 2] ?? -1);
-      index += 2;
-    } else if (code !== undefined && code >= 30 && code <= 37) {
+    if (code === 1) style.bold = true;
+    else if (code === 2) style.dim = true;
+    else if (code === 3) style.italic = true;
+    else if (code === 4) style.underline = true;
+    else if (code === 9) style.strikethrough = true;
+    else if (code !== undefined && code >= 30 && code <= 37) {
       style.color = paletteColor(ANSI_16_RGB, code - 30);
     } else if (code !== undefined && code >= 90 && code <= 97) {
       style.color = paletteColor(ANSI_16_RGB, code - 90 + 8);
+    } else if (code === 38 && codes[index + 1] === 5) {
+      style.color = paletteColor(ANSI_256_RGB, codes[index + 2] ?? -1);
+      index += 2;
+    } else if (code === 38 && codes[index + 1] === 2) {
+      const red = codes[index + 2];
+      const green = codes[index + 3];
+      const blue = codes[index + 4];
+      if (red === undefined || green === undefined || blue === undefined) {
+        throw new TerminalProjectionError(
+          "Terminal projection received an incomplete truecolour code",
+        );
+      }
+      style.color = { red, green, blue };
+      index += 4;
     } else {
       throw new TerminalProjectionError(
         `Terminal projection does not support SGR code ${code}`,
       );
     }
   }
-}
-
-function snapshotStyle(style: MutableSpanStyle): TerminalSpanStyle | undefined {
-  return Object.keys(style).length === 0 ? undefined : { ...style };
-}
-
-interface HyperlinkEnvelope {
-  readonly target: string;
-  readonly end: number;
-}
-
-function parseHyperlink(output: string, start: number): HyperlinkEnvelope {
-  const fieldsStart = start + HYPERLINK_PREFIX.length;
-  const terminated = HYPERLINK_TERMINATORS
-    .map((terminator) => ({
-      terminator,
-      at: output.indexOf(terminator, fieldsStart),
-    }))
-    .filter(({ at }) => at !== -1)
-    .sort((left, right) => left.at - right.at)[0];
-  if (terminated === undefined) {
-    throw new TerminalProjectionError(
-      "Terminal projection received an unterminated hyperlink envelope",
-    );
-  }
-  const fields = output.slice(fieldsStart, terminated.at);
-  const separator = fields.indexOf(";");
-  if (separator === -1) {
-    throw new TerminalProjectionError(
-      "Terminal projection received a hyperlink envelope without a target field",
-    );
-  }
-  const target = fields.slice(separator + 1);
-  for (const character of target) {
-    const code = character.codePointAt(0);
-    if (code !== undefined && (code <= 31 || code === 127)) {
-      throw new TerminalProjectionError(
-        "Terminal projection received a control character inside a hyperlink target",
-      );
-    }
-  }
-  return { target, end: terminated.at + terminated.terminator.length };
+  return style;
 }
 
 /**
  * Decode one string of package-emitted terminal output into projected spans.
  *
  * Spans carry the decoded text run, the SGR styling active over it, and the
- * target of the OSC 8 hyperlink envelope containing it. Input outside the
- * documented repertoire — foreign escape sequences, unsupported SGR codes,
- * bare control characters, or a hyperlink envelope left open at end of
- * input — throws {@linkcode TerminalProjectionError}.
+ * target of the ST-ended OSC 8 hyperlink envelope containing it, exactly as
+ * the package's styled-sequence authority parses them: adjacent runs with
+ * identical style and link merge into one span, and styling or a hyperlink
+ * left open at end of input simply ends with the final span, mirroring how a
+ * terminal displays it. Input outside the documented repertoire — foreign
+ * escape sequences, unsupported SGR codes, BEL-ended or parameterised
+ * hyperlink envelopes, or bare control characters other than newline and
+ * tab — throws {@linkcode TerminalProjectionError}.
  */
 export function projectTerminalSpans(output: string): readonly TerminalSpan[] {
-  const spans: TerminalSpan[] = [];
-  const style: MutableSpanStyle = {};
-  let link: string | undefined;
-  let index = 0;
-  let runStart = 0;
-
-  const flush = (end: number): void => {
-    const text = output.slice(runStart, end);
-    if (text === "") return;
-    assertProjectableText(text);
-    const snapshot = snapshotStyle(style);
-    spans.push({
-      text,
-      ...(snapshot === undefined ? {} : { style: snapshot }),
-      ...(link === undefined ? {} : { link }),
-    });
-  };
-
-  while (index < output.length) {
-    if (output[index] !== ESCAPE) {
-      index += 1;
-      continue;
-    }
-    flush(index);
-    if (output.startsWith(HYPERLINK_PREFIX, index)) {
-      const envelope = parseHyperlink(output, index);
-      link = envelope.target === "" ? undefined : envelope.target;
-      index = envelope.end;
-    } else if (output.startsWith(SGR_PREFIX, index)) {
-      const sgr = /^\[([0-9;]*)m/u.exec(output.slice(index));
-      if (sgr === null) {
-        throw new TerminalProjectionError(
-          `Terminal projection does not support the terminal sequence “${
-            printableSequence(output.slice(index, index + 12))
-          }”`,
-        );
-      }
-      applySgr(sgr[1] ?? "", style);
-      index += sgr[0].length;
-    } else {
-      throw new TerminalProjectionError(
-        `Terminal projection does not support the terminal sequence “${
-          printableSequence(output.slice(index, index + 12))
-        }”`,
-      );
-    }
-    runStart = index;
-  }
-  flush(output.length);
-  if (link !== undefined) {
+  let segments: readonly StyledSegment[];
+  try {
+    segments = parseStyledSource(output);
+  } catch (error) {
     throw new TerminalProjectionError(
-      "Terminal projection input ended inside an open hyperlink envelope",
+      error instanceof Error ? error.message : String(error),
     );
   }
-  return spans;
+  return segments.map((segment) => {
+    assertProjectableText(segment.text);
+    const style = styleFromCodes(segment.codes);
+    return {
+      text: segment.text,
+      ...(style === undefined ? {} : { style }),
+      ...(segment.link === undefined ? {} : { link: segment.link }),
+    };
+  });
 }
 
 /**

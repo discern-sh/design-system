@@ -112,9 +112,9 @@ function assertWidthsAndCapabilities<Props extends WidthProps>(
 }
 
 const checkboxFrames = [
-  "Include examples [idle]\n┌──────────────────────────┐\n│[ ] Not included          │\n└──────────────────────────┘",
-  "Include examples [active]\n┌──────────────────────────┐\n│› [ ] Not included        │\n└──────────────────────────┘",
-  "Include examples [filled]\n┌──────────────────────────┐\n│[✓] Included              │\n└──────────────────────────┘",
+  "Include examples [idle]\n┌──────────────────────────┐\n│[ ] Not included          │\n└──────────────────────────┘\n",
+  "Include examples [active]\n┌──────────────────────────┐\n│› [ ] Not included        │\n└──────────────────────────┘\n",
+  "Include examples [filled]\n┌──────────────────────────┐\n│[✓] Included              │\n└──────────────────────────┘\n",
   "Include examples [error]\n┌──────────────────────────┐\n│› [ ] Not included        │\n└──────────────────────────┘\n! Choose before continuing",
   "Include examples [disabled]\n┌──────────────────────────┐\n│[ ] Not included          │\n└──────────────────────────┘\nDisabled",
   "Include examples [submitted]\n┌──────────────────────────┐\n│[✓] Included              │\n└──────────────────────────┘\n✓ Submitted",
@@ -123,7 +123,7 @@ const checkboxFrames = [
     sectionRule("Core", 26)
   }│\n│› [✓] Render frames       │\n│  [ ] Inspect output      │\n│  (disabled)              │\n│${
     sectionRule("Optional", 26)
-  }│\n│  [ ] Animate progress    │\n└──────────────────────────┘`,
+  }│\n│  [ ] Animate progress    │\n└──────────────────────────┘\n`,
 ] as const;
 
 Deno.test("Checkbox renders every static form state exactly", () => {
@@ -135,19 +135,19 @@ Deno.test("Checkbox covers narrow, standard, wide, colour, and ASCII frames", ()
     checkboxCliExamples,
     renderCheckboxCli,
     [
-      "Include example…\n┌──────────────┐\n│[✓] Included  │\n└──────────────┘",
+      "Include example…\n┌──────────────┐\n│[✓] Included  │\n└──────────────┘\n",
       checkboxFrames[2],
-      "Include examples [filled]\n┌──────────────────────────────────────────────┐\n│[✓] Included                                  │\n└──────────────────────────────────────────────┘",
+      "Include examples [filled]\n┌──────────────────────────────────────────────┐\n│[✓] Included                                  │\n└──────────────────────────────────────────────┘\n",
     ],
     checkboxFrames[1],
-    "Include examples [active]\n+--------------------------+\n|> [ ] Not included        |\n+--------------------------+",
+    "Include examples [active]\n+--------------------------+\n|> [ ] Not included        |\n+--------------------------+\n",
   );
 });
 
 const fieldFrames = [
-  "Environment [idle]\n┌──────────────────────────┐\n│Choose a value            │\n└──────────────────────────┘",
+  "Environment [idle]\n┌──────────────────────────┐\n│Choose a value            │\n└──────────────────────────┘\n",
   "Environment [active]\n┌──────────────────────────┐\n│staging                   │\n└──────────────────────────┘\nUse a configured environment",
-  "Environment [filled]\n┌──────────────────────────┐\n│staging                   │\n└──────────────────────────┘",
+  "Environment [filled]\n┌──────────────────────────┐\n│staging                   │\n└──────────────────────────┘\n",
   "Environment [error]\n┌──────────────────────────┐\n│staging                   │\n└──────────────────────────┘\n! Environment is unavailable",
   "Environment [disabled]\n┌──────────────────────────┐\n│staging                   │\n└──────────────────────────┘\nDisabled",
   "Environment [submitted]\n┌──────────────────────────┐\n│staging                   │\n└──────────────────────────┘\n✓ Submitted",
@@ -163,9 +163,9 @@ Deno.test("Field covers narrow, standard, wide, colour, and ASCII frames", () =>
     fieldCliExamples,
     renderFieldCli,
     [
-      "Environment [fi…\n┌──────────────┐\n│staging       │\n└──────────────┘",
+      "Environment [fi…\n┌──────────────┐\n│staging       │\n└──────────────┘\n",
       fieldFrames[2],
-      "Environment [filled]\n┌──────────────────────────────────────────────┐\n│staging                                       │\n└──────────────────────────────────────────────┘",
+      "Environment [filled]\n┌──────────────────────────────────────────────┐\n│staging                                       │\n└──────────────────────────────────────────────┘\n",
     ],
     fieldFrames[1],
     "Environment [active]\n+--------------------------+\n|staging                   |\n+--------------------------+\nUse a configured environment",
@@ -173,9 +173,9 @@ Deno.test("Field covers narrow, standard, wide, colour, and ASCII frames", () =>
 });
 
 const inputFrames = [
-  "Project name [idle]\n┌──────────────────────────┐\n│my-project                │\n└──────────────────────────┘",
-  "Project name [active]\n┌──────────────────────────┐\n│▌my-project               │\n└──────────────────────────┘",
-  "Project name [filled]\n┌──────────────────────────┐\n│atlas                     │\n└──────────────────────────┘",
+  "Project name [idle]\n┌──────────────────────────┐\n│my-project                │\n└──────────────────────────┘\n",
+  "Project name [active]\n┌──────────────────────────┐\n│▌my-project               │\n└──────────────────────────┘\n",
+  "Project name [filled]\n┌──────────────────────────┐\n│atlas                     │\n└──────────────────────────┘\n",
   "Project name [error]\n┌──────────────────────────┐\n│a▌                        │\n└──────────────────────────┘\n! Use at least three charac…",
   "Project name [disabled]\n┌──────────────────────────┐\n│atlas                     │\n└──────────────────────────┘\nDisabled",
   "Project name [submitted]\n┌──────────────────────────┐\n│atlas                     │\n└──────────────────────────┘\n✓ Submitted",
@@ -191,19 +191,19 @@ Deno.test("Input covers narrow, standard, wide, colour, and ASCII frames", () =>
     inputCliExamples,
     renderInputCli,
     [
-      "Project name [f…\n┌──────────────┐\n│atlas         │\n└──────────────┘",
+      "Project name [f…\n┌──────────────┐\n│atlas         │\n└──────────────┘\n",
       inputFrames[2],
-      "Project name [filled]\n┌──────────────────────────────────────────────┐\n│atlas                                         │\n└──────────────────────────────────────────────┘",
+      "Project name [filled]\n┌──────────────────────────────────────────────┐\n│atlas                                         │\n└──────────────────────────────────────────────┘\n",
     ],
     inputFrames[1],
-    "Project name [active]\n+--------------------------+\n||my-project               |\n+--------------------------+",
+    "Project name [active]\n+--------------------------+\n||my-project               |\n+--------------------------+\n",
   );
 });
 
 const radioFrames = [
-  "Channel [idle]\n┌──────────────────────────┐\n│  ○ Alpha                 │\n│  ○ Bravo                 │\n│  ○ Charlie (disabled)    │\n└──────────────────────────┘",
-  "Channel [active]\n┌──────────────────────────┐\n│  ○ Alpha                 │\n│› ○ Bravo                 │\n│  ○ Charlie (disabled)    │\n└──────────────────────────┘",
-  "Channel [filled]\n┌──────────────────────────┐\n│  ○ Alpha                 │\n│  ◉ Bravo                 │\n│  ○ Charlie (disabled)    │\n└──────────────────────────┘",
+  "Channel [idle]\n┌──────────────────────────┐\n│  ○ Alpha                 │\n│  ○ Bravo                 │\n│  ○ Charlie (disabled)    │\n└──────────────────────────┘\n",
+  "Channel [active]\n┌──────────────────────────┐\n│  ○ Alpha                 │\n│› ○ Bravo                 │\n│  ○ Charlie (disabled)    │\n└──────────────────────────┘\n",
+  "Channel [filled]\n┌──────────────────────────┐\n│  ○ Alpha                 │\n│  ◉ Bravo                 │\n│  ○ Charlie (disabled)    │\n└──────────────────────────┘\n",
   "Channel [error]\n┌──────────────────────────┐\n│› ○ Alpha                 │\n│  ○ Bravo                 │\n│  ○ Charlie (disabled)    │\n└──────────────────────────┘\n! Choose a channel",
   "Channel [disabled]\n┌──────────────────────────┐\n│  ◉ Alpha                 │\n│  ○ Bravo                 │\n│  ○ Charlie (disabled)    │\n└──────────────────────────┘\nDisabled",
   "Channel [submitted]\n┌──────────────────────────┐\n│  ○ Alpha                 │\n│  ◉ Bravo                 │\n│  ○ Charlie (disabled)    │\n└──────────────────────────┘\n✓ Submitted",
@@ -212,7 +212,7 @@ const radioFrames = [
     sectionRule("Stable", 26)
   }│\n│  ○ Alpha                 │\n│› ◉ Bravo                 │\n│${
     sectionRule("Preview", 26)
-  }│\n│  ○ Charlie (disabled)    │\n└──────────────────────────┘`,
+  }│\n│  ○ Charlie (disabled)    │\n└──────────────────────────┘\n`,
 ] as const;
 
 Deno.test("Radio renders every static selection state exactly", () => {
@@ -236,12 +236,12 @@ Deno.test("Radio search reserves its pointer column across highlight movement", 
   };
   assertExactFrame(
     renderRadioCli({ ...base, highlightedIndex: 0 }, capabilities),
-    "Find [active]\n┌──────────────────┐\n│▌Search           │\n│› ○ Alpha         │\n│  ○ Bravo         │\n└──────────────────┘",
+    "Find [active]\n┌──────────────────┐\n│▌Search           │\n│› ○ Alpha         │\n│  ○ Bravo         │\n└──────────────────┘\n",
     capabilities,
   );
   assertExactFrame(
     renderRadioCli({ ...base, highlightedIndex: 1 }, capabilities),
-    "Find [active]\n┌──────────────────┐\n│▌Search           │\n│  ○ Alpha         │\n│› ○ Bravo         │\n└──────────────────┘",
+    "Find [active]\n┌──────────────────┐\n│▌Search           │\n│  ○ Alpha         │\n│› ○ Bravo         │\n└──────────────────┘\n",
     capabilities,
   );
 });
@@ -251,19 +251,19 @@ Deno.test("Radio covers narrow, standard, wide, colour, and ASCII frames", () =>
     radioCliExamples,
     renderRadioCli,
     [
-      "Channel [filled]\n┌──────────────┐\n│  ○ Alpha     │\n│  ◉ Bravo     │\n│  ○ Charlie   │\n│  (disabled)  │\n└──────────────┘",
+      "Channel [filled]\n┌──────────────┐\n│  ○ Alpha     │\n│  ◉ Bravo     │\n│  ○ Charlie   │\n│  (disabled)  │\n└──────────────┘\n",
       radioFrames[2],
-      "Channel [filled]\n┌──────────────────────────────────────────────┐\n│  ○ Alpha                                     │\n│  ◉ Bravo                                     │\n│  ○ Charlie (disabled)                        │\n└──────────────────────────────────────────────┘",
+      "Channel [filled]\n┌──────────────────────────────────────────────┐\n│  ○ Alpha                                     │\n│  ◉ Bravo                                     │\n│  ○ Charlie (disabled)                        │\n└──────────────────────────────────────────────┘\n",
     ],
     radioFrames[1],
-    "Channel [active]\n+--------------------------+\n|  ( ) Alpha               |\n|> ( ) Bravo               |\n|  ( ) Charlie (disabled)  |\n+--------------------------+",
+    "Channel [active]\n+--------------------------+\n|  ( ) Alpha               |\n|> ( ) Bravo               |\n|  ( ) Charlie (disabled)  |\n+--------------------------+\n",
   );
 });
 
 const selectFrames = [
-  "Environment [idle]\n┌──────────────────────────┐\n│Choose an environment ⌄   │\n└──────────────────────────┘",
-  "Environment [active]\n┌──────────────────────────┐\n│  [ ] Alpha               │\n│› [ ] Bravo               │\n│  [ ] Charlie (disabled)  │\n└──────────────────────────┘",
-  "Environment [filled]\n┌──────────────────────────┐\n│Bravo ⌄                   │\n└──────────────────────────┘",
+  "Environment [idle]\n┌──────────────────────────┐\n│Choose an environment ⌄   │\n└──────────────────────────┘\n",
+  "Environment [active]\n┌──────────────────────────┐\n│  [ ] Alpha               │\n│› [ ] Bravo               │\n│  [ ] Charlie (disabled)  │\n└──────────────────────────┘\n",
+  "Environment [filled]\n┌──────────────────────────┐\n│Bravo ⌄                   │\n└──────────────────────────┘\n",
   "Environment [error]\n┌──────────────────────────┐\n│› [ ] Alpha               │\n│  [ ] Bravo               │\n│  [ ] Charlie (disabled)  │\n└──────────────────────────┘\n! Choose an environment",
   "Environment [disabled]\n┌──────────────────────────┐\n│Alpha ⌄                   │\n└──────────────────────────┘\nDisabled",
   "Environment [submitted]\n┌──────────────────────────┐\n│Bravo ⌄                   │\n└──────────────────────────┘\n✓ Submitted",
@@ -272,7 +272,7 @@ const selectFrames = [
     sectionRule("Recommended", 26)
   }│\n│  [ ] Alpha               │\n│› [●] Bravo               │\n│${
     sectionRule("Other", 26)
-  }│\n│  [ ] Charlie (disabled)  │\n└──────────────────────────┘`,
+  }│\n│  [ ] Charlie (disabled)  │\n└──────────────────────────┘\n`,
 ] as const;
 
 Deno.test("Select renders every static selection state exactly", () => {
@@ -284,12 +284,12 @@ Deno.test("Select covers narrow, standard, wide, colour, and ASCII frames", () =
     selectCliExamples,
     renderSelectCli,
     [
-      "Environment [fi…\n┌──────────────┐\n│Bravo ⌄       │\n└──────────────┘",
+      "Environment [fi…\n┌──────────────┐\n│Bravo ⌄       │\n└──────────────┘\n",
       selectFrames[2],
-      "Environment [filled]\n┌──────────────────────────────────────────────┐\n│Bravo ⌄                                       │\n└──────────────────────────────────────────────┘",
+      "Environment [filled]\n┌──────────────────────────────────────────────┐\n│Bravo ⌄                                       │\n└──────────────────────────────────────────────┘\n",
     ],
     selectFrames[1],
-    "Environment [active]\n+--------------------------+\n|  [ ] Alpha               |\n|> [ ] Bravo               |\n|  [ ] Charlie (disabled)  |\n+--------------------------+",
+    "Environment [active]\n+--------------------------+\n|  [ ] Alpha               |\n|> [ ] Bravo               |\n|  [ ] Charlie (disabled)  |\n+--------------------------+\n",
   );
 });
 
@@ -310,12 +310,12 @@ Deno.test("grouped Select, Checkbox, and Radio retain structure in narrow ASCII 
         sectionRule("Core", 18)
       }│\n│› [✓] Render      │\n│frames            │\n│  [ ] Inspect     │\n│  output          │\n│  (disabled)      │\n│${
         sectionRule("Optional", 18)
-      }│\n│  [ ] Animate     │\n│  progress        │\n└──────────────────┘`,
+      }│\n│  [ ] Animate     │\n│  progress        │\n└──────────────────┘\n`,
       `Capabilities [activ.\n+------------------+\n|${
         sectionRule("Core", 18, false)
       }|\n|> [x] Render      |\n|frames            |\n|  [ ] Inspect     |\n|  output          |\n|  (disabled)      |\n|${
         sectionRule("Optional", 18, false)
-      }|\n|  [ ] Animate     |\n|  progress        |\n+------------------+`,
+      }|\n|  [ ] Animate     |\n|  progress        |\n+------------------+\n`,
     ],
     [
       renderRadioCli,
@@ -324,12 +324,12 @@ Deno.test("grouped Select, Checkbox, and Radio retain structure in narrow ASCII 
         sectionRule("Stable", 18)
       }│\n│  ○ Alpha         │\n│› ◉ Bravo         │\n│${
         sectionRule("Preview", 18)
-      }│\n│  ○ Charlie       │\n│  (disabled)      │\n└──────────────────┘`,
+      }│\n│  ○ Charlie       │\n│  (disabled)      │\n└──────────────────┘\n`,
       `Channel [active]\n+------------------+\n|${
         sectionRule("Stable", 18, false)
       }|\n|  ( ) Alpha       |\n|> (*) Bravo       |\n|${
         sectionRule("Preview", 18, false)
-      }|\n|  ( ) Charlie     |\n|  (disabled)      |\n+------------------+`,
+      }|\n|  ( ) Charlie     |\n|  (disabled)      |\n+------------------+\n`,
     ],
     [
       renderSelectCli,
@@ -338,12 +338,12 @@ Deno.test("grouped Select, Checkbox, and Radio retain structure in narrow ASCII 
         sectionRule("Recommended", 18)
       }│\n│  [ ] Alpha       │\n│› [●] Bravo       │\n│${
         sectionRule("Other", 18)
-      }│\n│  [ ] Charlie     │\n│  (disabled)      │\n└──────────────────┘`,
+      }│\n│  [ ] Charlie     │\n│  (disabled)      │\n└──────────────────┘\n`,
       `Environment [active]\n+------------------+\n|${
         sectionRule("Recommended", 18, false)
       }|\n|  [ ] Alpha       |\n|> [*] Bravo       |\n|${
         sectionRule("Other", 18, false)
-      }|\n|  [ ] Charlie     |\n|  (disabled)      |\n+------------------+`,
+      }|\n|  [ ] Charlie     |\n|  (disabled)      |\n+------------------+\n`,
     ],
   ] as const;
 
@@ -355,9 +355,9 @@ Deno.test("grouped Select, Checkbox, and Radio retain structure in narrow ASCII 
 });
 
 const switchFrames = [
-  "Automatic updates [idle]\n┌──────────────────────────┐\n│Off ●──○ On               │\n└──────────────────────────┘",
-  "Automatic updates [active]\n┌──────────────────────────┐\n│› Off ●──○ On             │\n└──────────────────────────┘",
-  "Automatic updates [filled]\n┌──────────────────────────┐\n│Off ○──● On               │\n└──────────────────────────┘",
+  "Automatic updates [idle]\n┌──────────────────────────┐\n│Off ●──○ On               │\n└──────────────────────────┘\n",
+  "Automatic updates [active]\n┌──────────────────────────┐\n│› Off ●──○ On             │\n└──────────────────────────┘\n",
+  "Automatic updates [filled]\n┌──────────────────────────┐\n│Off ○──● On               │\n└──────────────────────────┘\n",
   "Automatic updates [error]\n┌──────────────────────────┐\n│› Off ●──○ On             │\n└──────────────────────────┘\n! Setting is locked",
   "Automatic updates [disabled]\n┌──────────────────────────┐\n│Off ●──○ On               │\n└──────────────────────────┘\nDisabled",
   "Automatic updates [submitte…\n┌──────────────────────────┐\n│Off ○──● On               │\n└──────────────────────────┘\n✓ Submitted",
@@ -373,12 +373,12 @@ Deno.test("Switch covers narrow, standard, wide, colour, and ASCII frames", () =
     switchCliExamples,
     renderSwitchCli,
     [
-      "Automatic updat…\n┌──────────────┐\n│Off ○──● On   │\n└──────────────┘",
+      "Automatic updat…\n┌──────────────┐\n│Off ○──● On   │\n└──────────────┘\n",
       switchFrames[2],
-      "Automatic updates [filled]\n┌──────────────────────────────────────────────┐\n│Off ○──● On                                   │\n└──────────────────────────────────────────────┘",
+      "Automatic updates [filled]\n┌──────────────────────────────────────────────┐\n│Off ○──● On                                   │\n└──────────────────────────────────────────────┘\n",
     ],
     switchFrames[1],
-    "Automatic updates [active]\n+--------------------------+\n|> Off *--o On             |\n+--------------------------+",
+    "Automatic updates [active]\n+--------------------------+\n|> Off *--o On             |\n+--------------------------+\n",
   );
 });
 
@@ -549,10 +549,10 @@ Deno.test("Switch keeps custom yes and no labels in fixed columns across values 
 });
 
 const textareaFrames = [
-  "Release notes [idle]\n┌──────────────────────────┐\n│Describe the change       │\n│                          │\n│                          │\n└──────────────────────────┘",
-  "Release notes [active]\n┌──────────────────────────┐\n│▌Describe the change      │\n│                          │\n│                          │\n└──────────────────────────┘",
-  "Release notes [filled]\n┌──────────────────────────┐\n│Adds CLI frames.          │\n│                          │\n│                          │\n└──────────────────────────┘",
-  "Release notes [active]\n┌──────────────────────────┐\n│Two                       │\n│Three                     │\n│Four                      │\n│Five                      │\n│Six                       │\n│Seven▌                    │\n└──────────────────────────┘",
+  "Release notes [idle]\n┌──────────────────────────┐\n│Describe the change       │\n│                          │\n│                          │\n└──────────────────────────┘\n",
+  "Release notes [active]\n┌──────────────────────────┐\n│▌Describe the change      │\n│                          │\n│                          │\n└──────────────────────────┘\n",
+  "Release notes [filled]\n┌──────────────────────────┐\n│Adds CLI frames.          │\n│                          │\n│                          │\n└──────────────────────────┘\n",
+  "Release notes [active]\n┌──────────────────────────┐\n│Two                       │\n│Three                     │\n│Four                      │\n│Five                      │\n│Six                       │\n│Seven▌                    │\n└──────────────────────────┘\n",
   "Release notes [error]\n┌──────────────────────────┐\n│Short▌                    │\n│                          │\n│                          │\n└──────────────────────────┘\n! Add more detail",
   "Release notes [disabled]\n┌──────────────────────────┐\n│Managed by policy         │\n│                          │\n│                          │\n└──────────────────────────┘\nDisabled",
   "Release notes [submitted]\n┌──────────────────────────┐\n│Adds CLI frames.          │\n│                          │\n│                          │\n└──────────────────────────┘\n✓ Submitted",
@@ -568,12 +568,12 @@ Deno.test("Textarea covers narrow, standard, wide, colour, and ASCII frames", ()
     textareaCliExamples,
     renderTextareaCli,
     [
-      "Release notes […\n┌──────────────┐\n│Adds CLI      │\n│frames.       │\n│              │\n└──────────────┘",
+      "Release notes […\n┌──────────────┐\n│Adds CLI      │\n│frames.       │\n│              │\n└──────────────┘\n",
       textareaFrames[2],
-      "Release notes [filled]\n┌──────────────────────────────────────────────┐\n│Adds CLI frames.                              │\n│                                              │\n│                                              │\n└──────────────────────────────────────────────┘",
+      "Release notes [filled]\n┌──────────────────────────────────────────────┐\n│Adds CLI frames.                              │\n│                                              │\n│                                              │\n└──────────────────────────────────────────────┘\n",
     ],
     textareaFrames[1],
-    "Release notes [active]\n+--------------------------+\n||Describe the change      |\n|                          |\n|                          |\n+--------------------------+",
+    "Release notes [active]\n+--------------------------+\n||Describe the change      |\n|                          |\n|                          |\n+--------------------------+\n",
   );
 });
 
@@ -588,7 +588,7 @@ Deno.test("Input masks secret state without exposing its value", () => {
       cursor: 4,
       width: 24,
     }, capabilities),
-    "Token [active]\n┌──────────────────────┐\n│••••▌                 │\n└──────────────────────┘",
+    "Token [active]\n┌──────────────────────┐\n│••••▌                 │\n└──────────────────────┘\n",
     capabilities,
   );
 });
