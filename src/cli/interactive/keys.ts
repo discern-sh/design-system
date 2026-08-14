@@ -123,6 +123,10 @@ function possibleEscapePrefix(value: string): boolean {
 /**
  * Split decoded terminal text into normalized keys. Incomplete escape sequences
  * stay in `rest` until more bytes arrive or `flush` declares end-of-input.
+ * A lone Escape is emitted only at a flush or through
+ * {@linkcode BufferedTerminalKeyDecoder.flushLoneEscape}; Escape followed by
+ * an unrecognised character is an Alt/meta chord and stays a non-printable
+ * unknown sequence rather than leaking an `escape` key and literal text.
  */
 export function tokenizeTerminalKeys(
   input: string,
@@ -149,8 +153,14 @@ export function tokenizeTerminalKeys(
         rest = rest.slice(unknown.length);
         continue;
       }
-      keys.push(namedKey("escape"));
-      rest = rest.slice(1);
+      const following = firstGrapheme(rest.slice(1));
+      if (following === undefined || following === "\x1b") {
+        keys.push(namedKey("escape"));
+        rest = rest.slice(1);
+        continue;
+      }
+      keys.push({ kind: "unknown", sequence: `\x1b${following}` });
+      rest = rest.slice(1 + following.length);
       continue;
     }
 
@@ -206,20 +216,110 @@ export class BufferedTerminalKeyDecoder {
     this.#rest = parsed.rest;
     return parsed.keys;
   }
+
+  /**
+   * Deliver a retained lone Escape once its continuation window has elapsed.
+   * Any longer escape-sequence fragment stays buffered untouched, so split
+   * sequences keep decoding incrementally no matter how late their remaining
+   * bytes arrive.
+   */
+  flushLoneEscape(): readonly TerminalKey[] {
+    if (this.#rest !== "\x1b") return [];
+    const parsed = tokenizeTerminalKeys(this.#rest, true);
+    this.#rest = parsed.rest;
+    return parsed.keys;
+  }
+}
+
+/** Default milliseconds a lone Escape waits for sequence continuation bytes. */
+const LONE_ESCAPE_DELAY_MS = 100;
+
+const LONE_ESCAPE_ELAPSED = Symbol("lone-escape-elapsed");
+
+/**
+ * A raw read left pending by an earlier reader on the same terminal — for
+ * example after Escape cancelled an interaction while the read waited for
+ * more input. The next reader adopts it instead of issuing a parallel read
+ * that would race the abandoned one for the terminal's next bytes.
+ */
+const inflightTerminalReads = new WeakMap<
+  TerminalIO,
+  Promise<Uint8Array | null>
+>();
+
+async function raceLoneEscapeDelay(
+  read: Promise<Uint8Array | null>,
+  delayMs: number,
+): Promise<Uint8Array | null | typeof LONE_ESCAPE_ELAPSED> {
+  let timer: number | undefined;
+  try {
+    return await Promise.race([
+      read,
+      new Promise<typeof LONE_ESCAPE_ELAPSED>((resolve) => {
+        timer = setTimeout(() => resolve(LONE_ESCAPE_ELAPSED), delayMs);
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
+/** Tuning accepted by {@linkcode TerminalKeyReader}. */
+export interface TerminalKeyReaderOptions {
+  /**
+   * Milliseconds a lone Escape byte waits for escape-sequence continuation
+   * bytes before it is delivered as the `escape` key. Defaults to 100.
+   * Continuation bytes arriving later than this window decode on their own,
+   * so an escape sequence split across a slower link than the window reads
+   * as Escape followed by the remainder.
+   */
+  readonly escapeDelayMs?: number;
 }
 
 /** Buffered one-key-at-a-time reader over a {@linkcode TerminalIO}. */
 export class TerminalKeyReader {
   readonly #decoder = new BufferedTerminalKeyDecoder();
   readonly #pending: TerminalKey[] = [];
+  readonly #escapeDelayMs: number;
   #ended = false;
 
-  constructor(readonly io: TerminalIO) {}
+  constructor(
+    readonly io: TerminalIO,
+    options: TerminalKeyReaderOptions = {},
+  ) {
+    const delay = options.escapeDelayMs ?? LONE_ESCAPE_DELAY_MS;
+    if (!Number.isSafeInteger(delay) || delay < 1) {
+      throw new TypeError(
+        `escape delay must be a positive safe integer of milliseconds; received ${delay}`,
+      );
+    }
+    this.#escapeDelayMs = delay;
+  }
 
-  /** Read one decoded key, or `null` after all EOF-buffered keys are consumed. */
+  /**
+   * Read one decoded key, or `null` after all EOF-buffered keys are consumed.
+   * While a lone Escape sits in the buffer, the next read races a short
+   * continuation window: bytes arriving inside it complete the sequence,
+   * and an elapsed window delivers the Escape itself.
+   */
   async readKey(): Promise<TerminalKey | null> {
     while (this.#pending.length === 0 && !this.#ended) {
-      const chunk = await this.io.read();
+      const read = inflightTerminalReads.get(this.io) ?? this.io.read();
+      inflightTerminalReads.set(this.io, read);
+      let chunk: Uint8Array | null | typeof LONE_ESCAPE_ELAPSED;
+      try {
+        chunk = this.#decoder.bufferedText === "\x1b"
+          ? await raceLoneEscapeDelay(read, this.#escapeDelayMs)
+          : await read;
+      } catch (error) {
+        inflightTerminalReads.delete(this.io);
+        throw error;
+      }
+      if (chunk === LONE_ESCAPE_ELAPSED) {
+        this.#pending.push(...this.#decoder.flushLoneEscape());
+        continue;
+      }
+      inflightTerminalReads.delete(this.io);
       if (chunk === null) {
         this.#ended = true;
         this.#pending.push(...this.#decoder.finish());
