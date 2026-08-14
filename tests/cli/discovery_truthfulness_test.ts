@@ -8,6 +8,7 @@ import {
   type InteractionDelayScheduler,
   requestAutocomplete,
   requestSearch,
+  requestSearchSelections,
 } from "../../src/cli/interactive/mod.ts";
 import type { InteractionEntry } from "../../src/cli/interactive/types.ts";
 import { FakeTerminalIO } from "../../src/cli/interactive/testing.ts";
@@ -287,6 +288,130 @@ Deno.test("debounce coalesces rapid edits through the injectable scheduler", asy
   await until(() => lastFrame(io).includes("[active]"));
   io.enqueueKeys("enter", "enter");
   assertEquals(await request, "two");
+});
+
+Deno.test("an edit supersedes provider work before its debounce window elapses", async () => {
+  const io = new FakeTerminalIO([], { columns: 40, holdOpen: true });
+  const scheduler = new ManualDelayScheduler();
+  const provider = deferredProvider();
+  const request = requestSearch({
+    label: "Paced race",
+    debounceMs: 150,
+    scheduler,
+    search: provider.search,
+  }, { io });
+  await until(() => provider.calls.length === 1);
+
+  io.enqueue("x");
+  await until(() => scheduler.scheduled.length === 1);
+  const abortedBeforeDelay = provider.calls[0]?.signal.aborted;
+  provider.calls[0]?.resolve([
+    { id: "stale", label: "StaleDuringDebounce", value: "stale" },
+  ]);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  const stalePainted = io.output().includes("StaleDuringDebounce");
+  const pendingStayedTrue = lastFrame(io).includes("[searching]");
+
+  scheduler.fireLast();
+  await until(() => provider.calls.length === 2);
+  provider.calls[1]?.resolve([
+    { id: "current", label: "CurrentAfterDebounce", value: "current" },
+  ]);
+  await until(() => lastFrame(io).includes("CurrentAfterDebounce"));
+  io.enqueueKeys("enter", "enter");
+  assertEquals(await request, "current");
+
+  assertEquals(
+    abortedBeforeDelay,
+    true,
+    "the query edit, not the later provider call, supersedes old work",
+  );
+  assertEquals(
+    stalePainted,
+    false,
+    "a provider resolving inside the debounce window must never paint",
+  );
+  assertEquals(
+    pendingStayedTrue,
+    true,
+    "stale settlement must not clear pending truth for the newer query",
+  );
+});
+
+Deno.test("debounced autocomplete also rejects a stale in-flight suggestion", async () => {
+  const io = new FakeTerminalIO([], { columns: 40, holdOpen: true });
+  const scheduler = new ManualDelayScheduler();
+  const calls: Array<{
+    readonly query: string;
+    readonly signal: AbortSignal;
+    readonly resolve: (suggestions: readonly string[]) => void;
+  }> = [];
+  const request = requestAutocomplete({
+    label: "Shell",
+    debounceMs: 150,
+    scheduler,
+    suggestions: (query, signal) =>
+      new Promise((resolve) => calls.push({ query, signal, resolve })),
+  }, { io });
+  await until(() => calls.length === 1);
+
+  io.enqueue("s");
+  await until(() => scheduler.scheduled.length === 1);
+  const abortedBeforeDelay = calls[0]?.signal.aborted;
+  calls[0]?.resolve(["staleghost"]);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  const stalePainted = io.output().includes("taleghost");
+
+  scheduler.fireLast();
+  await until(() => calls.length === 2);
+  calls[1]?.resolve(["shell"]);
+  await until(() => lastFrame(io).includes("s▌hell"));
+  io.enqueueKeys("tab", "enter");
+  assertEquals(await request, "shell");
+
+  assertEquals(abortedBeforeDelay, true);
+  assertEquals(
+    stalePainted,
+    false,
+    "the shared provider authority must protect a different result shape",
+  );
+});
+
+Deno.test("debounced search multiselection shares edit-time supersession", async () => {
+  const io = new FakeTerminalIO([], { columns: 40, holdOpen: true });
+  const scheduler = new ManualDelayScheduler();
+  const provider = deferredProvider();
+  const request = requestSearchSelections({
+    label: "Tags",
+    debounceMs: 150,
+    scheduler,
+    search: provider.search,
+  }, { io });
+  await until(() => provider.calls.length === 1);
+
+  io.enqueue("x");
+  await until(() => scheduler.scheduled.length === 1);
+  const abortedBeforeDelay = provider.calls[0]?.signal.aborted;
+  provider.calls[0]?.resolve([
+    { id: "stale", label: "StaleMultiselect", value: "stale" },
+  ]);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  const stalePainted = io.output().includes("StaleMultiselect");
+
+  scheduler.fireLast();
+  await until(() => provider.calls.length === 2);
+  provider.calls[1]?.resolve([
+    { id: "current", label: "CurrentMultiselect", value: "current" },
+  ]);
+  await until(() => lastFrame(io).includes("CurrentMultiselect"));
+  io.enqueueKeys("escape");
+  await assertRejects(() => request);
+
+  assertEquals(abortedBeforeDelay, true);
+  assertEquals(stalePainted, false);
 });
 
 Deno.test("autocomplete providers gain the same pending, discard, and pacing truth", async () => {

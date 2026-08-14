@@ -149,6 +149,7 @@ class DiscoveryProviderCalls<Result> {
   refresh(query: string): void {
     this.#cancelDelay?.();
     this.#cancelDelay = undefined;
+    this.#supersede();
     if (this.options.debounceMs === 0) {
       this.#issue(query);
       return;
@@ -164,6 +165,11 @@ class DiscoveryProviderCalls<Result> {
   dispose(): void {
     this.#cancelDelay?.();
     this.#cancelDelay = undefined;
+    this.#supersede();
+  }
+
+  /** Invalidate current work at the moment a newer query owns the frame. */
+  #supersede(): void {
     this.#generation += 1;
     this.#controller?.abort();
     this.#controller = undefined;
