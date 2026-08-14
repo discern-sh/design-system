@@ -109,8 +109,15 @@ Deno.test("every exported module graph is inside the publish set", async () => {
   }
 });
 
+const CLI_EXPORTS = [
+  "./cli",
+  "./cli/interactive",
+  "./cli/interactive/testing",
+  "./cli/projection",
+] as const;
+
 Deno.test("the CLI export graphs never resolve React", async () => {
-  for (const exportName of ["./cli", "./cli/interactive"]) {
+  for (const exportName of CLI_EXPORTS) {
     const entry = config.exports[exportName];
     assert(entry !== undefined, `deno.json has no ${exportName} export`);
     const { code, output } = await run(PACKAGE_ROOT, [
@@ -132,6 +139,23 @@ Deno.test("the CLI export graphs never resolve React", async () => {
     assert(
       !output.includes('.tsx"'),
       `${exportName} reached a TSX component module`,
+    );
+  }
+});
+
+Deno.test("the CLI module graphs import without ambient I/O", async () => {
+  for (const exportName of CLI_EXPORTS) {
+    const entry = config.exports[exportName];
+    assert(entry !== undefined, `deno.json has no ${exportName} export`);
+    const { code, output } = await run(PACKAGE_ROOT, [
+      "run",
+      "--no-prompt",
+      entry,
+    ]);
+    assertEquals(
+      code,
+      0,
+      `importing ${exportName} with no permissions failed:\n${output}`,
     );
   }
 });
@@ -194,20 +218,44 @@ Deno.test("the publish-shaped artifact serves the neutral consumer alone", async
     await Deno.writeTextFile(
       join(consumer, "neutral.ts"),
       `import { packageManifest, semanticClass } from "${config.name}";
-import { renderBadgeCli } from "${config.name}/cli";
-import { segmentGraphemes } from "${config.name}/cli/interactive";
+import { renderBadgeCli, stripAnsi } from "${config.name}/cli";
+import { requestText, segmentGraphemes } from "${config.name}/cli/interactive";
+import {
+  encodeTerminalKeys,
+  FakeTerminalIO,
+} from "${config.name}/cli/interactive/testing";
+import {
+  projectTerminalHtml,
+  projectTerminalSpans,
+} from "${config.name}/cli/projection";
 import { emitDesignSystemRuntime } from "${config.name}/runtime";
 const result = await emitDesignSystemRuntime({
   outputRoot: new URL("./runtime/", import.meta.url),
   components: ["button"],
   assets: ["fonts"],
 });
+const io = new FakeTerminalIO(
+  ["Ada", encodeTerminalKeys("enter")],
+  { colorDepth: "truecolor", columns: 40 },
+);
+const requested = await requestText({ label: "Name" }, { io });
+const styledBadge = renderBadgeCli(
+  { label: "Ready", dot: true, tone: "success" },
+  { colorDepth: "truecolor", columns: 80, unicode: true },
+);
+const spans = projectTerminalSpans(styledBadge);
 console.log(JSON.stringify({
   className: semanticClass("button"),
   badge: renderBadgeCli({ label: "Ready", dot: true }, { colorDepth: "none", columns: 80, unicode: true }),
   graphemes: segmentGraphemes("A👩‍💻B").length,
   files: result.manifest.integrity.files.length,
   package: packageManifest.package,
+  requested,
+  rawModeBalanced: io.rawTransitions.join(","),
+  projectedText: spans.map(({ text }) => text).join(""),
+  projectionMatchesStrip: spans.map(({ text }) => text).join("") ===
+    stripAnsi(styledBadge),
+  htmlShell: projectTerminalHtml(styledBadge).startsWith("<pre style="),
 }));
 `,
     );
@@ -222,6 +270,11 @@ console.log(JSON.stringify({
     assertStringIncludes(output, `"badge":"[● Ready]"`);
     assertStringIncludes(output, `"graphemes":3`);
     assertStringIncludes(output, `"package":"${config.name}"`);
+    assertStringIncludes(output, `"requested":"Ada"`);
+    assertStringIncludes(output, `"rawModeBalanced":"true,false"`);
+    assertStringIncludes(output, `"projectedText":"[● Ready]"`);
+    assertStringIncludes(output, `"projectionMatchesStrip":true`);
+    assertStringIncludes(output, `"htmlShell":true`);
     const css = await Deno.readTextFile(
       join(consumer, "runtime", "discern.css"),
     );

@@ -185,7 +185,7 @@ export class FakeTerminalIO implements TerminalIO {
   }
 
   /** Change the viewport returned by subsequent size and capability reads. */
-  resize(columns: number, rows = this.#rows): void {
+  resize(columns: number, rows: number = this.#rows): void {
     this.#columns = columns;
     this.#rows = rows;
   }
