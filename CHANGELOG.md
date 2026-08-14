@@ -4,7 +4,7 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
-## Unreleased
+## 0.13.0
 
 - Add the opt-in Artwork Group: a shared, theme-aware Ground foundation and eight individually selectable decorative compositions — Survey, Approach, Fold, Aperture, Impression, Envelope, Cleave, and Resonance. Grounds expose presence and ambient-or-still motion, retain complete reduced-motion states, disappear in forced colours, and remain selection-scoped; Impression accepts a glyph and defaults to the neutral half-disc `◐`. Hero block gains a generic decorative `ground` slot without depending on or selecting any Artwork Component.
 - Derive default terminal frame widths from the authored `--discern-measure` token (62ch) instead of a hardcoded 48-column cap. Form frames including Textarea, Toast, Meter, and the interactive activity and sequential-form paints now span up to the authored measure on wide terminals and still clamp to narrower ones; explicit `width` props behave as before.
