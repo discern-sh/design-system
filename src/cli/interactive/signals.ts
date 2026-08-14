@@ -40,6 +40,21 @@ export interface TerminalSignalOptions {
 }
 
 /**
+ * Forward a caller's SIGINT posture to another options bag without
+ * materialising absent optional fields.
+ */
+export function signalPassthrough(
+  options: TerminalSignalOptions,
+): TerminalSignalOptions {
+  return {
+    ...(options.signals === undefined ? {} : { signals: options.signals }),
+    ...(options.onInterrupt === undefined
+      ? {}
+      : { onInterrupt: options.onInterrupt }),
+  };
+}
+
+/**
  * Deno-process SIGINT source used whenever a caller injects nothing.
  * `raise` prefers true signal re-delivery so the process dies as an
  * interrupt; where re-delivery is unavailable it exits with the

@@ -16,6 +16,10 @@ import { InteractionCancelled } from "./errors.ts";
 import { InteractionBackNavigation } from "./driver.ts";
 import { DenoTerminalIO, type TerminalIO } from "./io.ts";
 import { assertInteractiveTerminal } from "./lifecycle.ts";
+import {
+  signalPassthrough,
+  type TerminalSignalOptions,
+} from "./signals.ts";
 import type { InteractionRuntime } from "./types.ts";
 import type { TerminalThemeVariant } from "../theme.ts";
 
@@ -37,7 +41,7 @@ export interface SequentialFormStep {
 }
 
 /** Construction options for a sequential form. */
-export interface SequentialFormOptions {
+export interface SequentialFormOptions extends TerminalSignalOptions {
   readonly label: string;
   readonly hint?: string;
   readonly io?: TerminalIO;
@@ -114,6 +118,7 @@ export class SequentialFormBuilder {
         ...(this.options.theme === undefined
           ? {}
           : { theme: this.options.theme }),
+        ...signalPassthrough(this.options),
       };
       try {
         values[step.id] = await step.run(

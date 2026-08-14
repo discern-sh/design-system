@@ -6,6 +6,7 @@
 
 import type { TerminalThemeVariant } from "../theme.ts";
 import type { TerminalIO } from "./io.ts";
+import type { TerminalSignalOptions } from "./signals.ts";
 
 /** Synchronous or asynchronous validation performed before interaction submission. */
 export type InteractionValidator<T> = (
@@ -33,8 +34,11 @@ export interface InteractionOptions<T> {
   readonly validate?: InteractionValidator<T>;
 }
 
-/** Injectable process and presentation facts shared by interaction loops. */
-export interface InteractionRuntime {
+/**
+ * Injectable process and presentation facts shared by interaction loops,
+ * including the SIGINT posture forwarded to the raw-terminal bracket.
+ */
+export interface InteractionRuntime extends TerminalSignalOptions {
   readonly io?: TerminalIO;
   readonly theme?: TerminalThemeVariant;
   /** Allow Ctrl+U to return control to a sequential form's prior step. */

@@ -23,6 +23,10 @@ import {
   withHiddenTerminalCursor,
 } from "./lifecycle.ts";
 import { InlineFramePainter } from "./painter.ts";
+import {
+  signalPassthrough,
+  type TerminalSignalOptions,
+} from "./signals.ts";
 
 /** Injectable repeating scheduler used by deterministic spinner tests. */
 export interface SpinnerScheduler {
@@ -38,7 +42,7 @@ const systemSpinnerScheduler: SpinnerScheduler = {
 };
 
 /** Options for an indeterminate triangle spinner operation. */
-export interface SpinnerOptions {
+export interface SpinnerOptions extends TerminalSignalOptions {
   readonly label: string;
   readonly hint?: string;
   readonly io?: TerminalIO;
@@ -98,7 +102,12 @@ function renderSpinner(
     : `${frame}\n${state.hint}`;
 }
 
-/** Run a callback while repainting the canonical triangle spinner cycle. */
+/**
+ * Run a callback while repainting the canonical triangle spinner cycle.
+ * A SIGINT during the run stops the animation, clears the live frame, and
+ * restores the cursor before the signal re-raises — or reaches the caller's
+ * `onInterrupt` cancellation path instead.
+ */
 export async function withSpinner<T>(
   options: SpinnerOptions,
   operation: () => T | Promise<T>,
@@ -107,11 +116,11 @@ export async function withSpinner<T>(
   assertInteractiveTerminal(io);
   const interval = spinnerInterval(options.intervalMs);
   const scheduler = options.scheduler ?? systemSpinnerScheduler;
+  const painter = new InlineFramePainter(io);
+  let stop = (): void => {};
   return await withHiddenTerminalCursor(io, async () => {
-    const painter = new InlineFramePainter(io);
     let phase = 0;
     let staticMode = false;
-    let stop = (): void => {};
     const paint = (): void => {
       if (staticMode) return;
       const frame = renderSpinner(
@@ -143,11 +152,17 @@ export async function withSpinner<T>(
         painter.clear();
       }
     }
+  }, {
+    ...signalPassthrough(options),
+    onSignalRestore: () => {
+      stop();
+      painter.clear();
+    },
   });
 }
 
 /** Options for a determinate progress operation. */
-export interface DeterminateProgressOptions {
+export interface DeterminateProgressOptions extends TerminalSignalOptions {
   readonly label: string;
   readonly total: number;
   readonly completed?: number;
@@ -252,7 +267,9 @@ class ProgressController implements DeterminateProgressController {
 
 /**
  * Run a callback with a determinate progress handle. Successful completion
- * truthfully advances to `total`; exceptions clear the frame and restore cursor.
+ * truthfully advances to `total`; exceptions clear the frame and restore the
+ * cursor, and a SIGINT clears the incomplete frame and restores the cursor
+ * before re-raising — or reaches the caller's `onInterrupt` path instead.
  */
 export async function withDeterminateProgress<T>(
   options: DeterminateProgressOptions,
@@ -262,8 +279,8 @@ export async function withDeterminateProgress<T>(
   assertCompleted(options.completed ?? 0, options.total);
   const io = options.io ?? new DenoTerminalIO();
   assertInteractiveTerminal(io);
+  const painter = new InlineFramePainter(io);
   return await withHiddenTerminalCursor(io, async () => {
-    const painter = new InlineFramePainter(io);
     const progress = new ProgressController(options, io, painter);
     progress.paint();
     try {
@@ -275,5 +292,8 @@ export async function withDeterminateProgress<T>(
       painter.clear();
       throw error;
     }
+  }, {
+    ...signalPassthrough(options),
+    onSignalRestore: () => painter.clear(),
   });
 }

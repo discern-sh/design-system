@@ -11,6 +11,7 @@ import { DenoTerminalIO } from "./io.ts";
 import { isNamedKey, type TerminalKey, TerminalKeyReader } from "./keys.ts";
 import { withRawTerminal } from "./lifecycle.ts";
 import { InlineFramePainter } from "./painter.ts";
+import { signalPassthrough } from "./signals.ts";
 import type { InteractionOptions, InteractionRuntime } from "./types.ts";
 import {
   fitInteractionFrame,
@@ -83,6 +84,7 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
   const painter = new InlineFramePainter(io);
   const reader = new TerminalKeyReader(io);
   let staticMode = false;
+  let finished = false;
   const paint = (lifecycle: InteractiveFrameLifecycle): void => {
     const capabilities = io.capabilities();
     const fitted = fitInteractionFrame({
@@ -122,7 +124,6 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
     let latched = false;
     let lastValidated: { readonly value: T } | undefined;
     let generation = 0;
-    let finished = false;
     const fault: { current: { readonly error: unknown } | null } = {
       current: null,
     };
@@ -231,5 +232,14 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
       }
       paint(lifecycle);
     }
+  }, {
+    ...signalPassthrough(runtime),
+    // An externally delivered SIGINT ends the request exactly as Ctrl+C
+    // presents it — a truthful cancelled frame, its live region closed —
+    // before the bracket restores the terminal and the signal re-raises.
+    onSignalRestore: () => {
+      if (!finished) paint({ status: "cancelled", reason: "Cancelled." });
+      painter.finish();
+    },
   });
 }
