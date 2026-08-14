@@ -24,6 +24,7 @@ import {
   isForwardChoiceKey,
   isInteractionChoice,
   moveEnabledIndex,
+  pageEnabledIndex,
 } from "./choice-navigation.ts";
 import { type InteractionMachine, runInteraction } from "./driver.ts";
 import { isNamedKey, type TerminalKey } from "./keys.ts";
@@ -80,11 +81,14 @@ class SelectionInteractionMachine<T>
   implements InteractionMachine<T | undefined, SelectFrameState> {
   readonly #visibleCount: number;
   #highlighted: number;
+  /** The most recently fitted visible window, sizing a paging jump. */
+  #pageSize: number;
 
   constructor(readonly options: SelectionRequestOptions<T>) {
     assertChoices(options.choices, options.required !== false);
     this.#visibleCount = choiceVisibleCount(options.visibleCount);
     this.#highlighted = initialHighlight(options.choices, options.initialId);
+    this.#pageSize = this.#visibleCount;
   }
 
   handle(key: TerminalKey): boolean {
@@ -99,6 +103,20 @@ class SelectionInteractionMachine<T>
         this.options.choices,
         this.#highlighted,
         1,
+      );
+    } else if (isNamedKey(key, "page-up")) {
+      this.#highlighted = pageEnabledIndex(
+        this.options.choices,
+        this.#highlighted,
+        -1,
+        this.#pageSize,
+      );
+    } else if (isNamedKey(key, "page-down")) {
+      this.#highlighted = pageEnabledIndex(
+        this.options.choices,
+        this.#highlighted,
+        1,
+        this.#pageSize,
       );
     } else if (isNamedKey(key, "home")) {
       this.#highlighted = edgeEnabledIndex(this.options.choices, "first");
@@ -128,6 +146,7 @@ class SelectionInteractionMachine<T>
       this.#visibleCount,
       viewport.maximumControlRows,
     );
+    this.#pageSize = visibleCount;
     const highlighted = this.options.choices[this.#highlighted];
     const selected =
       highlighted !== undefined && isInteractionChoice(highlighted)
@@ -173,10 +192,13 @@ class SelectionsInteractionMachine<T>
   readonly #visibleCount: number;
   readonly #selectedIds: Set<string>;
   #highlighted: number;
+  /** The most recently fitted visible window, sizing a paging jump. */
+  #pageSize: number;
 
   constructor(readonly options: SelectionsRequestOptions<T>) {
     assertChoices(options.choices);
     this.#visibleCount = choiceVisibleCount(options.visibleCount);
+    this.#pageSize = this.#visibleCount;
     const knownIds = new Set(options.choices.map((choice) => choice.id));
     this.#selectedIds = new Set(
       (options.initialIds ?? []).filter((id) =>
@@ -201,6 +223,20 @@ class SelectionsInteractionMachine<T>
         this.options.choices,
         this.#highlighted,
         1,
+      );
+    } else if (isNamedKey(key, "page-up")) {
+      this.#highlighted = pageEnabledIndex(
+        this.options.choices,
+        this.#highlighted,
+        -1,
+        this.#pageSize,
+      );
+    } else if (isNamedKey(key, "page-down")) {
+      this.#highlighted = pageEnabledIndex(
+        this.options.choices,
+        this.#highlighted,
+        1,
+        this.#pageSize,
       );
     } else if (isNamedKey(key, "home")) {
       this.#highlighted = edgeEnabledIndex(this.options.choices, "first");
@@ -230,6 +266,7 @@ class SelectionsInteractionMachine<T>
       this.#visibleCount,
       viewport.maximumControlRows,
     );
+    this.#pageSize = visibleCount;
     return {
       kind: "multiselect",
       label: this.options.label,
