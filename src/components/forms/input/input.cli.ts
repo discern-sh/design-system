@@ -97,6 +97,19 @@ export const cliExamples: readonly CliExample<InputCliProps>[] = [
       lifecycle: { status: "cancelled", reason: "Input cancelled" },
     },
   },
+  {
+    name: "searching",
+    props: {
+      kind: "autocomplete",
+      label: "Token reference",
+      lifecycle: { status: "active" },
+      value: "can",
+      cursor: 3,
+      suggestions: [],
+      highlightedIndex: 0,
+      pending: true,
+    },
+  },
 ] as const;
 
 function rawValue(
@@ -142,6 +155,9 @@ const renderInputCli: CliRenderer<InputCliProps> = (props, capabilities) => {
     control: value,
     lifecycle: state.lifecycle,
     ...(state.hint === undefined ? {} : { hint: state.hint }),
+    ...(state.kind === "autocomplete" && state.pending === true
+      ? { pending: true }
+      : {}),
     ...(props.presentation === undefined
       ? {}
       : { presentation: props.presentation }),

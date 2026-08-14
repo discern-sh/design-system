@@ -96,6 +96,8 @@ export interface SearchFrameState extends InteractiveFrameBase {
   readonly results: readonly InteractiveChoiceEntryState[];
   readonly highlightedIndex?: number;
   readonly placeholder?: string;
+  /** A provider call is scheduled or in flight; the results shown answer an earlier query. */
+  readonly pending?: boolean;
 }
 
 /** Visual state for editable text with a highlighted completion candidate. */
@@ -107,6 +109,8 @@ export interface AutocompleteFrameState extends InteractiveFrameBase {
   readonly suggestions: readonly string[];
   readonly highlightedIndex: number;
   readonly placeholder?: string;
+  /** A provider call is scheduled or in flight; the suggestions shown answer an earlier value. */
+  readonly pending?: boolean;
 }
 
 /** Visual state for a multi-line editable text area. */

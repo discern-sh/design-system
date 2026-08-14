@@ -15,6 +15,7 @@ import {
 } from "../../../cli/interactive-choice.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
+  formCliEmptyResultsRow,
   type FormCliPresentation,
   insertFormCliCursor,
   renderFormCliChoiceHeading,
@@ -119,6 +120,18 @@ export const cliExamples: readonly CliExample<RadioCliProps>[] = [
       lifecycle: { status: "active" },
     },
   },
+  {
+    name: "searching",
+    props: {
+      kind: "search",
+      label: "Channel",
+      lifecycle: { status: "active" },
+      query: "cha",
+      cursor: 3,
+      results: [],
+      pending: true,
+    },
+  },
 ] as const;
 
 /** Render a Wave 1 single-selection state as a terminal radio group. */
@@ -161,7 +174,10 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
     ? visibleFormCliChoiceEntries(state)
     : options.map((entry, sourceIndex) => ({ entry, sourceIndex }));
   const choices = entries.length === 0
-    ? ["No results."]
+    ? [formCliEmptyResultsRow(
+      state.kind === "search" && state.pending === true,
+      capabilities,
+    )]
     : entries.map(({ entry, sourceIndex: index }) => {
       if (isInteractiveChoiceGroupHeading(entry)) {
         return renderFormCliChoiceHeading(
@@ -227,6 +243,9 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
     control,
     lifecycle: state.lifecycle,
     ...(state.hint === undefined ? {} : { hint: state.hint }),
+    ...(state.kind === "search" && state.pending === true
+      ? { pending: true }
+      : {}),
     ...(props.presentation === undefined
       ? {}
       : { presentation: props.presentation }),
