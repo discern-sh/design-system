@@ -1,0 +1,84 @@
+@layer discern.components {
+  .discern-resonance-ground {
+    color: var(--discern-ground-ink);
+  }
+
+  .discern-resonance-ground__field {
+    animation: discern-resonance-ground-breathe calc(var(--discern-ground-beat)
+      *
+      48)
+      var(--discern-ground-ease-drift) infinite both;
+  }
+
+  .discern-resonance-ground__field--east {
+    color: var(--discern-ground-guide);
+    animation-delay: calc(var(--discern-ground-beat) * -24);
+  }
+
+  .discern-resonance-ground__wave {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: var(--discern-ground-hairline);
+    opacity: calc(var(--discern-ground-veil-1) * 0.9);
+  }
+
+  .discern-resonance-ground__wave--measure {
+    stroke-width: var(--discern-ground-line);
+    opacity: var(--discern-ground-veil-2);
+  }
+
+  .discern-resonance-ground__wave--coupled {
+    stroke: var(--discern-ground-accent);
+    stroke-width: var(--discern-ground-line);
+    opacity: calc(var(--discern-ground-veil-2) * 1.15);
+  }
+
+  .discern-resonance-ground__well {
+    fill: var(--discern-ground-accent);
+    opacity: calc(var(--discern-ground-veil-1) * 0.75);
+  }
+
+  .discern-resonance-ground__contour {
+    fill: none;
+    stroke: var(--discern-ground-guide);
+    stroke-width: var(--discern-ground-hairline);
+    opacity: var(--discern-ground-veil-3);
+  }
+
+  /* The paired marks are the interval: their distance is fixed while their
+   * place on the shared contour changes. pathLength keeps the phrase stable
+   * if the authored lens is ever refined. */
+  .discern-resonance-ground__interval {
+    fill: none;
+    stroke: var(--discern-ground-accent);
+    stroke-width: calc(var(--discern-ground-line) * 2.2);
+    stroke-linecap: round;
+    stroke-dasharray: 4 2 4 90;
+    stroke-dashoffset: -35;
+    opacity: var(--discern-ground-veil-4);
+    animation: discern-resonance-ground-travel calc(var(--discern-ground-beat) *
+      32)
+      linear infinite both;
+  }
+
+  @keyframes discern-resonance-ground-breathe {
+    0%,
+    100% {
+      opacity: 0.74;
+    }
+
+    46% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes discern-resonance-ground-travel {
+    from {
+      stroke-dashoffset: -35;
+    }
+
+    to {
+      stroke-dashoffset: -135;
+    }
+  }
+}

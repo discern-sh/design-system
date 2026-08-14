@@ -41,6 +41,7 @@ import {
   MarketingSection,
   Procedure,
   RawOutput,
+  ResonanceGround,
   RetryNotice,
   SiteHeader,
   TableOfContents,
@@ -533,6 +534,25 @@ Deno.test("artwork selection includes Ground but excludes sibling compositions",
     assertStringIncludes(surveyCss, ".discern-survey-ground {");
     assert(!surveyCss.includes(".discern-impression-ground"));
     assert(!surveyCss.includes(".discern-envelope-ground"));
+
+    const resonanceRoot = join(temp, "resonance");
+    const resonance = await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${resonanceRoot}/`),
+      components: ["resonance-ground"],
+    });
+    assertEquals(resonance.manifest.selection.resolvedComponents, [
+      "ground",
+      "resonance-ground",
+    ]);
+    const resonanceCss = await Deno.readTextFile(
+      join(resonanceRoot, "discern.css"),
+    );
+    assertStringIncludes(
+      resonanceCss,
+      ".discern-resonance-ground__interval",
+    );
+    assert(!resonanceCss.includes(".discern-survey-ground"));
+    assert(!resonanceCss.includes(".discern-cleave-ground"));
 
     const hero = await emitDesignSystemRuntime({
       outputRoot: toFileUrl(`${temp}/`),
@@ -1622,6 +1642,20 @@ Deno.test("Ground fixes decorative semantics and Impression keeps its glyph cons
   );
   assertStringIncludes(customImpression, "✦");
   assert(!customImpression.includes("◐"));
+
+  const resonance = renderToStaticMarkup(
+    createElement(ResonanceGround, { motion: "still" }),
+  );
+  assertStringIncludes(
+    resonance,
+    "discern-ground discern-ground--still discern-resonance-ground",
+  );
+  assertStringIncludes(resonance, 'aria-hidden="true"');
+  assertStringIncludes(
+    resonance,
+    'class="discern-resonance-ground__interval"',
+  );
+  assertStringIncludes(resonance, 'pathLength="100"');
 
   const hero = renderToStaticMarkup(
     createElement(HeroBlock, {

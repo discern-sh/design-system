@@ -2,6 +2,8 @@
 
 **Status**: accepted
 
+**Later addition**: Resonance became the first ordinary post-decision entry to the Artwork Group, following the same five-file anatomy and ownership boundary without changing this decision.
+
 ## Context
 
 [ADR-0006](0006-homepage-treatments-ship-as-variants.md) kept decorative artwork consumer-owned while moving reusable homepage layout and chrome into opt-in Component variants. That boundary was correct for the provider assets, product-state diagrams, narrative compositions, and identity-specific pieces under review at the time. A later set of seven token-driven grounds exposed a different category: decorative compositions with no product claim, brand mark, or page-specific meaning, useful behind many kinds of consumer-owned content.

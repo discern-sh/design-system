@@ -30,6 +30,7 @@ export * from "../components/artwork/aperture-ground/mod.ts";
 export * from "../components/artwork/impression-ground/mod.ts";
 export * from "../components/artwork/envelope-ground/mod.ts";
 export * from "../components/artwork/cleave-ground/mod.ts";
+export * from "../components/artwork/resonance-ground/mod.ts";
 export * from "../components/forms/field/mod.ts";
 export * from "../components/forms/input/mod.ts";
 export * from "../components/forms/textarea/mod.ts";

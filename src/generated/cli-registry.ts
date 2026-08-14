@@ -34,6 +34,7 @@ export const cliComponentRegistry = {
   "impression-ground": { stance: "exempt", reason: "Decorative scalable browser artwork has no semantic terminal equivalent." },
   "envelope-ground": { stance: "exempt", reason: "Decorative scalable browser artwork has no semantic terminal equivalent." },
   "cleave-ground": { stance: "exempt", reason: "Decorative scalable browser artwork has no semantic terminal equivalent." },
+  "resonance-ground": { stance: "exempt", reason: "Decorative scalable browser artwork has no semantic terminal equivalent." },
   "field": { stance: "rendered", modulePath: "../components/forms/field/field.cli.ts" },
   "input": { stance: "rendered", modulePath: "../components/forms/input/input.cli.ts" },
   "textarea": { stance: "rendered", modulePath: "../components/forms/textarea/textarea.cli.ts" },
