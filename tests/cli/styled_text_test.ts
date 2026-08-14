@@ -1,10 +1,17 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import {
   renderStyledSpans,
+  stripAnsi,
   styleHyperlink,
   styleText,
 } from "../../src/cli/ansi.ts";
-import { wrapStyledText, wrapText } from "../../src/cli/text.ts";
+import {
+  padText,
+  truncateStyledText,
+  truncateText,
+  wrapStyledText,
+  wrapText,
+} from "../../src/cli/text.ts";
 import type { TerminalColor } from "../../src/cli/theme.ts";
 import { testCapabilities } from "./helpers.ts";
 
@@ -150,6 +157,53 @@ Deno.test("single-line styled wrapping round-trips package emission bytes", () =
     bold: true,
   });
   assertEquals(wrapStyledText(linked, 40), [linked]);
+});
+
+Deno.test("styled truncation keeps styling and never leaves a hyperlink open", () => {
+  const ansi16 = testCapabilities({ colorDepth: "ansi16" });
+  assertEquals(
+    truncateStyledText(styleText("ab\ncd", { color }, ansi16), 10),
+    `${escape}[36mab cd${escape}[0m`,
+  );
+  assertEquals(
+    truncateStyledText(styleText("abcdef", { color }, ansi16), 4),
+    `${escape}[36mabc${escape}[0m…`,
+  );
+  assertEquals(
+    truncateStyledText(styleText("abcdef", { color }, ansi16), 4, "."),
+    `${escape}[36mabc${escape}[0m.`,
+  );
+  const url = "https://discern.sh/docs";
+  const linked = styleHyperlink("discern documentation", url, truecolor);
+  assertEquals(
+    truncateStyledText(linked, 10),
+    `${escape}]8;;${url}${escape}\\discern d${escape}]8;;${escape}\\…`,
+  );
+  assertEquals(stripAnsi(truncateStyledText(linked, 10)), "discern d…");
+  assertEquals(
+    truncateStyledText(styleText("👩‍💻tools", { bold: true }, truecolor), 4),
+    `${escape}[1m👩‍💻t${escape}[0m…`,
+  );
+  assertEquals(
+    truncateStyledText(styleText("abc", { bold: true }, truecolor), 0),
+    "",
+  );
+  assertEquals(
+    stripAnsi(truncateStyledText(styleText("abcdef", { color }, ansi16), 4)),
+    truncateText("abcdef", 4),
+  );
+});
+
+Deno.test("padding styled and hyperlinked text aligns by visible cells", () => {
+  const styled = styleText(
+    "界",
+    { color },
+    testCapabilities({ colorDepth: "ansi16" }),
+  );
+  assertEquals(padText(styled, 4), `${styled}  `);
+  const linked = styleHyperlink("docs", "https://discern.sh", truecolor);
+  assertEquals(padText(linked, 6, "end"), `  ${linked}`);
+  assertEquals(padText(linked, 6, "center"), ` ${linked} `);
 });
 
 Deno.test("styled wrapping rejects foreign, malformed, and unterminated sequences", () => {

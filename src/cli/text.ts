@@ -98,6 +98,38 @@ export function truncateText(
   return `${sliceToWidth(plain, columns - markerWidth)}${marker}`;
 }
 
+/**
+ * Truncate package-styled text to a visible width without splitting a
+ * grapheme or leaving styling open.
+ *
+ * Semantics mirror {@linkcode truncateText}: newlines flatten to spaces and
+ * a fitting value comes back whole — here with its styling preserved rather
+ * than stripped. When truncation applies, the kept text retains its styling
+ * and open hyperlink, everything closes before the marker, and the always
+ * unstyled marker ends the line, so a truncated hyperlink can never leak an
+ * open envelope. Accepted input and canonical re-emission follow
+ * {@linkcode wrapStyledText}.
+ */
+export function truncateStyledText(
+  value: string,
+  columns: number,
+  ellipsis = "…",
+): string {
+  assertColumns("truncate", columns, 0);
+  const segments = parseStyledSource(value).map((segment) =>
+    segment.text.includes("\n")
+      ? { ...segment, text: segment.text.replaceAll("\n", " ") }
+      : segment
+  );
+  const plain = segments.map((segment) => segment.text).join("");
+  if (lineWidth(plain) <= columns) return emitStyledLine(segments);
+  const marker = sliceToWidth(ellipsis, columns);
+  const kept = sliceToWidth(plain, columns - lineWidth(marker));
+  return `${
+    emitStyledLine(sliceStyledSegments(segments, 0, kept.length))
+  }${marker}`;
+}
+
 function splitLongWord(word: string, columns: number): readonly string[] {
   const chunks: string[] = [];
   let remaining = word;
@@ -257,7 +289,12 @@ export function wrapStyledText(
   });
 }
 
-/** Pad one line to a visible width without truncating over-wide content. */
+/**
+ * Pad one line to a visible width without truncating over-wide content.
+ * Styled and hyperlinked content pads by its visible width alone — escape
+ * sequences and OSC 8 envelopes measure zero cells — and the added spaces
+ * stay outside every styled run.
+ */
 export function padText(
   value: string,
   columns: number,
