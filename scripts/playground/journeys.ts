@@ -20,6 +20,7 @@ import {
   requestText,
   requestTextarea,
   segmentGraphemes,
+  senseTerminalBackground,
   withDeterminateProgress,
   withSpinner,
 } from "../../src/cli/interactive/mod.ts";
@@ -66,6 +67,19 @@ function journeyHeading(
     return renderTriangleSectionRule(title, { width }, capabilities);
   }
   return title;
+}
+
+/**
+ * The one environment fact background sensing falls back to, read defensively
+ * so a permission-restricted run simply presents no hint.
+ */
+function colorfgbgSnapshot(): Readonly<Record<string, string | undefined>> {
+  try {
+    const value = Deno.env.get("COLORFGBG");
+    return value === undefined ? {} : { COLORFGBG: value };
+  } catch {
+    return {};
+  }
 }
 
 function describeResult(value: unknown): string {
@@ -419,7 +433,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
     title: "Determinate progress",
     section: "Interactive APIs",
     description:
-      "Truthful unit-by-unit progress through advance() and set(), ending complete.",
+      "Truthful unit-by-unit progress naming each unit through advance() and set(), ending complete.",
     run: async (runtime) => {
       const value = await withDeterminateProgress({
         label: "Auditing 8 fixtures",
@@ -428,14 +442,44 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
       }, async (progress) => {
         for (let unit = 0; unit < 6; unit += 1) {
           await runtime.delay(180);
-          progress.advance();
+          progress.advance(1, `fixture ${unit + 1}`);
         }
         await runtime.delay(180);
-        progress.set(7);
+        progress.set(7, "fixture 7");
         await runtime.delay(180);
+        progress.relabel("Auditing 8 fixtures");
         return "audited";
       });
       report(runtime, value);
+    },
+  },
+  {
+    id: "background",
+    title: "Terminal background sensing",
+    section: "Interactive APIs",
+    description:
+      "Sense the terminal ground — light, dark, or unknown — and print the typed evidence.",
+    run: async (runtime) => {
+      const reading = await senseTerminalBackground({
+        io: runtime.io,
+        environment: colorfgbgSnapshot(),
+      });
+      runtime.print(`Ground: ${reading.ground}`);
+      const evidence = reading.evidence;
+      if (evidence.source === "terminal-report") {
+        runtime.print(
+          `Evidence: terminal report ${
+            JSON.stringify(evidence.report)
+          } -> rgb(${evidence.color.red}, ${evidence.color.green}, ${evidence.color.blue})`,
+        );
+      } else if (evidence.source === "environment-hint") {
+        runtime.print(`Evidence: COLORFGBG=${evidence.value}`);
+      } else {
+        runtime.print(`Evidence: none (${evidence.reason})`);
+      }
+      runtime.print(
+        "Selection stays yours: light -> terminalThemes.light, dark -> terminalThemes.dark, unknown -> your product default.",
+      );
     },
   },
 ];
@@ -670,6 +714,93 @@ const stressJourneys: readonly PlaygroundJourney[] = [
       report(runtime, value);
     },
   },
+  {
+    id: "interrupt-cancel",
+    title: "Interrupt with caller cancellation",
+    section: "Stress & lifecycle",
+    description:
+      "Ctrl+C mid-activity reaches onInterrupt: the frame ends truthfully, the cursor returns, and the playground continues.",
+    run: async (runtime) => {
+      runtime.print(
+        "Press Ctrl+C while each activity runs — onInterrupt cancels the operation and the session survives. Waiting completes normally.",
+      );
+      let interruptSpinner: () => void = () => {};
+      const spinnerInterrupted = new Promise<never>((_, reject) => {
+        interruptSpinner = () =>
+          reject(new InteractionCancelled("Interrupted."));
+      });
+      try {
+        const value = await withSpinner({
+          label: "Interruptible weave",
+          hint: "Ctrl+C cancels through onInterrupt.",
+          io: runtime.io,
+          onInterrupt: () => interruptSpinner(),
+          ...(runtime.spinnerScheduler === undefined
+            ? {}
+            : { scheduler: runtime.spinnerScheduler }),
+        }, () =>
+          Promise.race([
+            runtime.delay(6000).then(() => "completed without interruption"),
+            spinnerInterrupted,
+          ]));
+        report(runtime, value);
+      } catch (error) {
+        if (!(error instanceof InteractionCancelled)) throw error;
+        runtime.print(
+          `Spinner interrupted (${error.reason}) — frame cleared, cursor restored.`,
+        );
+      }
+      let interruptProgress: () => void = () => {};
+      const progressInterrupted = new Promise<never>((_, reject) => {
+        interruptProgress = () =>
+          reject(new InteractionCancelled("Interrupted."));
+      });
+      try {
+        const value = await withDeterminateProgress({
+          label: "Interruptible units",
+          total: 6,
+          io: runtime.io,
+          onInterrupt: () => interruptProgress(),
+        }, async (progress) => {
+          for (let unit = 1; unit <= 6; unit += 1) {
+            await Promise.race([runtime.delay(600), progressInterrupted]);
+            progress.advance(1, `unit ${unit}`);
+          }
+          return "all units complete";
+        });
+        report(runtime, value);
+      } catch (error) {
+        if (!(error instanceof InteractionCancelled)) throw error;
+        runtime.print(
+          `Progress interrupted (${error.reason}) — incomplete frame cleared, cursor restored.`,
+        );
+      }
+    },
+  },
+  {
+    id: "interrupt-exit",
+    title: "Interrupt with default exit",
+    section: "Stress & lifecycle",
+    description:
+      "Ctrl+C mid-spinner restores the terminal, then the process exits as an interrupt — running it and interrupting ends the playground.",
+    run: async (runtime) => {
+      runtime.print(
+        "Press Ctrl+C while the spinner runs: the frame clears, the cursor returns, and the playground exits by SIGINT with coherent scrollback. Waiting completes normally.",
+      );
+      const value = await withSpinner({
+        label: "Default interrupt posture",
+        hint: "Ctrl+C exits after restoration.",
+        io: runtime.io,
+        ...(runtime.spinnerScheduler === undefined
+          ? {}
+          : { scheduler: runtime.spinnerScheduler }),
+      }, async () => {
+        await runtime.delay(6000);
+        return "completed without interruption";
+      });
+      report(runtime, value);
+    },
+  },
   degradedJourney(
     "stress-no-color",
     "NO_COLOR",
@@ -772,6 +903,15 @@ export const interactiveExportCoverage: Readonly<
   createSequentialForm: { journey: "form" },
   withSpinner: { journey: "spinner" },
   withDeterminateProgress: { journey: "progress" },
+  senseTerminalBackground: { journey: "background" },
+  denoTerminalSignals: {
+    excluded:
+      "Process SIGINT source installed by default inside every lifecycle bracket; the interrupt journeys exercise it live.",
+  },
+  signalPassthrough: {
+    excluded:
+      "Options plumbing that forwards a caller's SIGINT posture; it has no interactive surface of its own.",
+  },
   SequentialFormBuilder: {
     excluded:
       "Constructed through createSequentialForm; the form journey exercises it.",

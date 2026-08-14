@@ -6,6 +6,7 @@
  */
 
 export * from "./activity.ts";
+export * from "./background.ts";
 export * from "./basic-requests.ts";
 export * from "./choice-requests.ts";
 export * from "./discovery-requests.ts";
@@ -16,5 +17,6 @@ export * from "./keys.ts";
 export * from "./lifecycle.ts";
 export * from "./painter.ts";
 export * from "./sequential-form.ts";
+export * from "./signals.ts";
 export * from "./textarea-request.ts";
 export * from "./types.ts";
