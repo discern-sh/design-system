@@ -23,6 +23,7 @@ import {
   requestTextarea,
   segmentGraphemes,
   senseTerminalBackground,
+  withActivityLog,
   withDeterminateProgress,
   withSpinner,
 } from "../../src/cli/interactive/mod.ts";
@@ -492,6 +493,71 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
     },
   },
   {
+    id: "activity-log",
+    title: "Live activity log",
+    section: "Interactive APIs",
+    description:
+      "Simulated multi-step run: pinned results above a bounded streaming tail with in-place partial updates, then a second run collapsing to one result line.",
+    run: async (runtime) => {
+      const steps = [
+        { name: "Scaffold fixtures", tone: "success" },
+        { name: "Compile styles", tone: "success" },
+        { name: "Audit contrast", tone: "warning" },
+      ] as const;
+      const value = await withActivityLog({
+        label: "Simulated three-step run",
+        hint: "Results pin above the tail; Ctrl+C interrupts.",
+        tailRows: 5,
+        io: runtime.io,
+        ...(runtime.spinnerScheduler === undefined
+          ? {}
+          : { scheduler: runtime.spinnerScheduler }),
+      }, async (log) => {
+        for (const [index, step] of steps.entries()) {
+          log.relabel(`Step ${index + 1} of ${steps.length}: ${step.name}`);
+          for (let unit = 1; unit <= 4; unit += 1) {
+            for (let percent = 25; percent <= 100; percent += 25) {
+              log.updatePartial(
+                `${step.name.toLowerCase()} unit ${unit} at ${percent}%`,
+              );
+              await runtime.delay(60);
+            }
+            log.append(`${step.name.toLowerCase()} unit ${unit} finished`);
+          }
+          log.pin(
+            step.tone === "warning"
+              ? `${step.name} kept one warning`
+              : `${step.name} held`,
+            step.tone,
+          );
+        }
+        log.finish({ mode: "summary" });
+        return "three steps summarised";
+      });
+      report(runtime, value);
+      const collapsed = await withActivityLog({
+        label: "Compact follow-up run",
+        tailRows: 3,
+        io: runtime.io,
+        ...(runtime.spinnerScheduler === undefined
+          ? {}
+          : { scheduler: runtime.spinnerScheduler }),
+      }, async (log) => {
+        for (let unit = 1; unit <= 6; unit += 1) {
+          log.append(`follow-up detail line ${unit}`);
+          await runtime.delay(120);
+        }
+        log.finish({
+          mode: "result",
+          tone: "success",
+          text: "Follow-up collapsed to this single line",
+        });
+        return "collapsed";
+      });
+      report(runtime, collapsed);
+    },
+  },
+  {
     id: "background",
     title: "Terminal background sensing",
     section: "Interactive APIs",
@@ -850,6 +916,44 @@ const stressJourneys: readonly PlaygroundJourney[] = [
     },
     "NO_COLOR=1 deno task playground:cli",
   ),
+  {
+    id: "activity-log-degraded",
+    title: "Activity log append-only degradation",
+    section: "Stress & lifecycle",
+    description:
+      "The same producer feed under TERM=dumb: no live frame, committed lines once each behind the rail, stable lines when pinned, no partial churn.",
+    run: async (runtime) => {
+      const environment = { TERM: "dumb", LANG: "C.UTF-8" } as const;
+      const synthetic = detectTerminalCapabilities({
+        env: environment,
+        isTty: true,
+        columns: runtime.io.size().columns,
+      });
+      runtime.print(`Synthetic detection: ${describeCapabilities(synthetic)}`);
+      const degraded = runtime.degradedIo(environment);
+      const value = await withActivityLog({
+        label: "Simulated run without live repaint",
+        tailRows: 4,
+        io: degraded,
+      }, async (log) => {
+        log.updatePartial("partial churn never prints here");
+        await runtime.delay(150);
+        log.append("first committed line");
+        log.updatePartial("half-finished detail");
+        await runtime.delay(150);
+        log.append("second committed line");
+        log.pin("Both units held", "success");
+        log.updatePartial("uncommitted at finish, flushed once");
+        await runtime.delay(150);
+        log.finish();
+        return "append-only feed complete";
+      });
+      report(runtime, value);
+      runtime.print(
+        "Relaunch fully degraded: TERM=dumb LANG=C.UTF-8 deno task playground:cli",
+      );
+    },
+  },
   degradedJourney(
     "stress-term-dumb",
     "TERM=dumb with UTF-8",
@@ -943,6 +1047,7 @@ export const interactiveExportCoverage: Readonly<
   createSequentialForm: { journey: "form" },
   withSpinner: { journey: "spinner" },
   withDeterminateProgress: { journey: "progress" },
+  withActivityLog: { journey: "activity-log" },
   senseTerminalBackground: { journey: "background" },
   denoTerminalSignals: {
     excluded:
