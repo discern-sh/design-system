@@ -81,6 +81,16 @@ function validationVerdict<T>(
   return requiredMessage(options, value) ?? options.validate?.(value);
 }
 
+function interactionReservedRows(value: number | undefined): number {
+  const reserved = value ?? 0;
+  if (!Number.isSafeInteger(reserved) || reserved < 0) {
+    throw new TypeError(
+      `interaction reserved rows must be a non-negative safe integer; received ${reserved}`,
+    );
+  }
+  return reserved;
+}
+
 function sameInteractionValue(a: unknown, b: unknown): boolean {
   if (Object.is(a, b)) return true;
   return Array.isArray(a) && Array.isArray(b) && a.length === b.length &&
@@ -93,6 +103,7 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
   runtime: InteractionRuntime,
   renderFrame: InteractionFrameRenderer<State>,
 ): Promise<T> {
+  const reservedRows = interactionReservedRows(options.reservedRows);
   const io = runtime.io ?? new DenoTerminalIO();
   const painter = new InlineFramePainter(io);
   const reader = new TerminalKeyReader(io);
@@ -101,7 +112,7 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
   const paint = (lifecycle: InteractiveFrameLifecycle): void => {
     const capabilities = io.capabilities();
     const fitted = fitInteractionFrame({
-      viewportRows: io.size().rows,
+      viewportRows: io.size().rows - reservedRows,
       frame: (viewport) => machine.frame(lifecycle, viewport),
       render: (state) => renderFrame(state, capabilities, runtime.theme),
     });
