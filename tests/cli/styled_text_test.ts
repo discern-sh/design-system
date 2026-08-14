@@ -198,7 +198,10 @@ Deno.test("a hyperlink between styled neighbours keeps every boundary on one lin
 
 Deno.test("a hyperlink label wider than the width splits with the envelope reopening", () => {
   const url = "https://discern.sh/docs";
-  const lines = wrapStyledText(styleHyperlink("documentation", url, truecolor), 6);
+  const lines = wrapStyledText(
+    styleHyperlink("documentation", url, truecolor),
+    6,
+  );
   assertEquals(lines, [
     `${escape}]8;;${url}${escape}\\docume${escape}]8;;${escape}\\`,
     `${escape}]8;;${url}${escape}\\ntatio${escape}]8;;${escape}\\`,
@@ -231,7 +234,10 @@ Deno.test("styled truncation respects hyperlink edges exactly", () => {
     `${escape}]8;;${url}${escape}\\do${escape}]8;;${escape}\\…`,
   );
   assertEquals(truncateStyledText(`head ${linked}`, 3), "he…");
-  assertEquals(truncateStyledText(`${escape}[1mbold`, 10), `${escape}[1mbold${escape}[0m`);
+  assertEquals(
+    truncateStyledText(`${escape}[1mbold`, 10),
+    `${escape}[1mbold${escape}[0m`,
+  );
 });
 
 Deno.test("styled truncation mirrors plain marker and depth-none behaviour", () => {
@@ -240,8 +246,14 @@ Deno.test("styled truncation mirrors plain marker and depth-none behaviour", () 
     truncateStyledText(styleText("abcdef", { color }, testCapabilities()), 4),
     truncateText("abcdef", 4),
   );
-  assertEquals(truncateStyledText(styleText("abcdef", { color }, ansi16), 2, "..."), "..");
-  assertEquals(truncateStyledText(styleText("abcdef", { color }, ansi16), 1), "…");
+  assertEquals(
+    truncateStyledText(styleText("abcdef", { color }, ansi16), 2, "..."),
+    "..",
+  );
+  assertEquals(
+    truncateStyledText(styleText("abcdef", { color }, ansi16), 1),
+    "…",
+  );
 });
 
 Deno.test("the plain family measures and wraps hyperlinked strings by label alone", () => {
