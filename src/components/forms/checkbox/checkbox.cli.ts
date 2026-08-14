@@ -8,6 +8,7 @@ import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import type {
   ConfirmFrameState,
   MultiselectFrameState,
+  SearchMultiselectFrameState,
 } from "../../../cli/interactive-states.ts";
 import {
   isInteractiveChoice,
@@ -15,7 +16,9 @@ import {
 } from "../../../cli/interactive-choice.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
+  formCliEmptyResultsRow,
   type FormCliPresentation,
+  insertFormCliCursor,
   renderFormCliChoiceHeading,
   renderFormCliFrame,
   styleFormCliChoiceText,
@@ -33,7 +36,7 @@ interface CheckboxCliOptions {
 
 /** Inputs accepted by the terminal Checkbox renderer. */
 export type CheckboxCliProps =
-  & (ConfirmFrameState | MultiselectFrameState)
+  & (ConfirmFrameState | MultiselectFrameState | SearchMultiselectFrameState)
   & CheckboxCliOptions;
 
 const base = {
@@ -109,6 +112,24 @@ export const cliExamples: readonly CliExample<CheckboxCliProps>[] = [
       selectedIds: ["render"],
     },
   },
+  {
+    name: "search-filtered",
+    props: {
+      kind: "search-multiselect",
+      label: "Roles",
+      lifecycle: { status: "active" },
+      query: "re",
+      cursor: 2,
+      results: [
+        { id: "render", label: "Render frames" },
+        { id: "inspect", label: "Inspect", disabled: true },
+        { kind: "group-heading", id: "selected", label: "Selected" },
+        { id: "animate", label: "Animate progress" },
+      ],
+      selectedIds: ["render", "animate"],
+      highlightedIndex: 0,
+    },
+  },
 ] as const;
 
 /** Render a Wave 1 confirmation state with checkbox semantics. */
@@ -122,12 +143,17 @@ const renderCheckboxCli: CliRenderer<CheckboxCliProps> = (
       state.lifecycle.status === "validation-error");
   const control = state.kind === "multiselect"
     ? renderMultiselectControl(state, active, capabilities)
+    : state.kind === "search-multiselect"
+    ? renderSearchMultiselectControl(state, active, capabilities)
     : renderConfirmControl(state, active, capabilities);
   return renderFormCliFrame({
     label: state.label,
     control,
     lifecycle: state.lifecycle,
     ...(state.hint === undefined ? {} : { hint: state.hint }),
+    ...(state.kind === "search-multiselect" && state.pending === true
+      ? { pending: true }
+      : {}),
     ...(props.presentation === undefined
       ? {}
       : { presentation: props.presentation }),
@@ -222,6 +248,73 @@ function renderMultiselectControl(
       )
     } ${styleFormCliChoiceText(label, styleOptions, capabilities)}`;
   }).join("\n");
+}
+
+function renderSearchMultiselectControl(
+  state: SearchMultiselectFrameState & CheckboxCliOptions,
+  active: boolean,
+  capabilities: Parameters<CliRenderer<CheckboxCliProps>>[1],
+): string {
+  const entries = state.results;
+  if (
+    state.highlightedIndex !== undefined &&
+    (!Number.isSafeInteger(state.highlightedIndex) ||
+      state.highlightedIndex < 0 ||
+      state.highlightedIndex >= entries.length ||
+      !isInteractiveChoice(entries[state.highlightedIndex]!) ||
+      entries[state.highlightedIndex]?.disabled === true)
+  ) {
+    throw new TypeError(
+      "search multiselect state requires a selectable highlighted result",
+    );
+  }
+  const headingIds = new Set(
+    entries.filter(isInteractiveChoiceGroupHeading).map(({ id }) => id),
+  );
+  if (state.selectedIds.some((id) => headingIds.has(id))) {
+    throw new TypeError(
+      "multiselect selected ids cannot include a choice group heading",
+    );
+  }
+  const rows = entries.length === 0
+    ? [formCliEmptyResultsRow(state.pending === true, capabilities)]
+    : entries.map((entry, index) => {
+      if (isInteractiveChoiceGroupHeading(entry)) {
+        return renderFormCliChoiceHeading(
+          entry,
+          {
+            ...(state.theme === undefined ? {} : { theme: state.theme }),
+            ...(state.width === undefined ? {} : { width: state.width }),
+          },
+          capabilities,
+        );
+      }
+      const highlighted = active && index === state.highlightedIndex;
+      const pointer = highlighted ? capabilities.unicode ? "› " : "> " : "  ";
+      const styleOptions = {
+        highlighted,
+        disabled: entry.disabled === true,
+        ...(state.theme === undefined ? {} : { theme: state.theme }),
+      };
+      const label = `${entry.label}${
+        entry.disabled === true ? " (disabled)" : ""
+      }`;
+      return `${styleFormCliChoiceText(pointer, styleOptions, capabilities)}${
+        checkboxMark(
+          state.selectedIds.includes(entry.id),
+          capabilities,
+          styleOptions,
+        )
+      } ${styleFormCliChoiceText(label, styleOptions, capabilities)}`;
+    });
+  const query = state.lifecycle.status === "submitted"
+    ? state.query
+    : insertFormCliCursor(
+      state.query === "" ? state.placeholder ?? "" : state.query,
+      state.cursor,
+      capabilities,
+    );
+  return `${query}\n${rows.join("\n")}`;
 }
 
 export default renderCheckboxCli;

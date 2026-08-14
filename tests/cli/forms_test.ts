@@ -124,6 +124,9 @@ const checkboxFrames = [
   }│\n│› [✓] Render frames       │\n│  [ ] Inspect output      │\n│  (disabled)              │\n│${
     sectionRule("Optional", 26)
   }│\n│  [ ] Animate progress    │\n└──────────────────────────┘\n`,
+  `Roles [active]\n┌──────────────────────────┐\n│re▌                       │\n│› [✓] Render frames       │\n│  [ ] Inspect (disabled)  │\n│${
+    sectionRule("Selected", 26)
+  }│\n│  [✓] Animate progress    │\n└──────────────────────────┘\n`,
 ] as const;
 
 Deno.test("Checkbox renders every static form state exactly", () => {

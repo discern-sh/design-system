@@ -15,6 +15,7 @@ import {
   requestConfirmation,
   requestMaskedText,
   requestSearch,
+  requestSearchSelections,
   requestSelection,
   requestSelections,
   requestText,
@@ -303,6 +304,26 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
         },
       }, { io: runtime.io });
       report(runtime, value);
+    },
+  },
+  {
+    id: "search-multiselect",
+    title: "Query-filtered multiselection",
+    section: "Interactive APIs",
+    description:
+      "A slow, debounced provider behind Tab-toggled multiselection; entries the query excludes stay selected in a retained band.",
+    run: async (runtime) => {
+      const values = await requestSearchSelections({
+        label: "Roles to audit",
+        placeholder: "Type to filter",
+        hint: "Tab toggles; Ctrl+A toggles the current matches.",
+        debounceMs: 150,
+        search: async (query) => {
+          await runtime.delay(400);
+          return searchGroupedEntries(longGroupedChoices, query);
+        },
+      }, { io: runtime.io });
+      report(runtime, values);
     },
   },
   {
@@ -767,6 +788,7 @@ export const interactiveExportCoverage: Readonly<
   requestSelection: { journey: "select" },
   requestSelections: { journey: "multiselect" },
   requestSearch: { journey: "search" },
+  requestSearchSelections: { journey: "search-multiselect" },
   requestAutocomplete: { journey: "autocomplete" },
   requestTextarea: { journey: "textarea" },
   createSequentialForm: { journey: "form" },

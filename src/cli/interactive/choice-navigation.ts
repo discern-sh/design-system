@@ -127,6 +127,37 @@ export function pageEnabledIndex<T>(
     enabled[0] ?? 0;
 }
 
+/**
+ * The enabled choice nearest a vacated position: the entry now occupying
+ * that index or the first enabled one after it, else the closest enabled
+ * choice before it.
+ */
+export function nearestEnabledIndex<T>(
+  choices: readonly InteractionEntry<T>[],
+  index: number,
+): number {
+  const anchor = Math.min(Math.max(0, index), choices.length - 1);
+  for (let probe = anchor; probe < choices.length; probe += 1) {
+    const entry = choices[probe];
+    if (
+      entry !== undefined && isInteractionChoice(entry) &&
+      entry.disabled !== true
+    ) {
+      return probe;
+    }
+  }
+  for (let probe = anchor - 1; probe >= 0; probe -= 1) {
+    const entry = choices[probe];
+    if (
+      entry !== undefined && isInteractionChoice(entry) &&
+      entry.disabled !== true
+    ) {
+      return probe;
+    }
+  }
+  return -1;
+}
+
 export function edgeEnabledIndex<T>(
   choices: readonly InteractionEntry<T>[],
   edge: "first" | "last",

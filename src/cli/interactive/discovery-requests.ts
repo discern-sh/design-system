@@ -14,10 +14,12 @@ import type {
   AutocompleteFrameState,
   InteractiveFrameLifecycle,
   SearchFrameState,
+  SearchMultiselectFrameState,
 } from "../interactive-states.ts";
 import type { TerminalCapabilities } from "../capabilities.ts";
 import type { TerminalThemeVariant } from "../theme.ts";
 import { interactiveChoiceWindow } from "../interactive-choice.ts";
+import renderCheckboxCli from "../../components/forms/checkbox/checkbox.cli.ts";
 import renderInputCli from "../../components/forms/input/input.cli.ts";
 import renderRadioCli from "../../components/forms/radio/radio.cli.ts";
 import {
@@ -27,6 +29,7 @@ import {
   frameChoices,
   isInteractionChoice,
   moveEnabledIndex,
+  nearestEnabledIndex,
 } from "./choice-navigation.ts";
 import {
   type InteractionMachine,
@@ -37,6 +40,7 @@ import { GraphemeTextEditor } from "./editor.ts";
 import { isNamedKey, type TerminalKey } from "./keys.ts";
 import type { InteractionFrameViewport } from "./viewport-budget.ts";
 import type {
+  InteractionChoice,
   InteractionDelayScheduler,
   InteractionEntry,
   InteractionOptions,
@@ -385,6 +389,281 @@ export async function requestSearch<T>(
     new SearchInteractionMachine(requiredOptions),
     runtime,
     renderSearchFrame,
+  );
+}
+
+function renderSearchMultiselectFrame(
+  state: SearchMultiselectFrameState,
+  capabilities: TerminalCapabilities,
+  theme: TerminalThemeVariant | undefined,
+): string {
+  return renderCheckboxCli({
+    ...state,
+    ...(theme === undefined ? {} : { theme }),
+  }, capabilities);
+}
+
+/** Options for a query-filtered multiselection over a search provider. */
+export interface SearchSelectionsRequestOptions<T>
+  extends InteractionOptions<readonly T[]>, DiscoveryRequestPacing {
+  readonly search: SearchProvider<T>;
+  /** Stable IDs selected from the first provider resolution, where present and enabled. */
+  readonly initialIds?: readonly string[];
+  readonly placeholder?: string;
+  /** Requested upper bound on entry rows; the viewport may reduce it per frame. */
+  readonly visibleCount?: number;
+}
+
+function retainedHeadingId(used: ReadonlySet<string>): string {
+  if (!used.has("selected")) return "selected";
+  let counter = 2;
+  while (used.has(`selected-${counter}`)) counter += 1;
+  return `selected-${counter}`;
+}
+
+class SearchSelectionsInteractionMachine<T>
+  implements InteractionMachine<readonly T[], SearchMultiselectFrameState> {
+  readonly #editor = new GraphemeTextEditor();
+  readonly #visibleCount: number;
+  readonly #calls: DiscoveryProviderCalls<readonly InteractionEntry<T>[]>;
+  /** Selected choices by stable ID, in the order the person selected them. */
+  readonly #selected = new Map<string, InteractionChoice<T>>();
+  #matches: readonly InteractionEntry<T>[] = [];
+  /** Current matches plus a labeled band of selected entries they exclude. */
+  #entries: readonly InteractionEntry<T>[] = [];
+  #highlighted: number | undefined;
+  #rememberedId: string | undefined;
+  #initialIds: readonly string[] | undefined;
+
+  constructor(readonly options: SearchSelectionsRequestOptions<T>) {
+    this.#visibleCount = choiceVisibleCount(options.visibleCount);
+    this.#initialIds = options.initialIds;
+    this.#calls = new DiscoveryProviderCalls({
+      call: (query, signal) => options.search(query, signal),
+      apply: (entries) => this.#apply(entries),
+      debounceMs: discoveryDebounceMs(options.debounceMs),
+      scheduler: options.scheduler ?? systemDelayScheduler,
+    });
+  }
+
+  start(context: InteractionMachineContext): void {
+    this.#calls.connect(context);
+    this.#calls.prime(this.#editor.value);
+  }
+
+  dispose(): void {
+    this.#calls.dispose();
+  }
+
+  handle(key: TerminalKey): boolean {
+    if (isNamedKey(key, "enter")) return true;
+    if (isNamedKey(key, "tab")) {
+      this.#toggleHighlighted();
+      return false;
+    }
+    if (isNamedKey(key, "ctrl-a")) {
+      this.#toggleAllMatches();
+      return false;
+    }
+    if (
+      isNamedKey(key, "up") || isNamedKey(key, "shift-tab") ||
+      isNamedKey(key, "ctrl-p")
+    ) {
+      const highlighted = moveEnabledIndex(
+        this.#entries,
+        this.#highlighted ?? 0,
+        -1,
+      );
+      this.#highlighted = highlighted < 0 ? undefined : highlighted;
+      this.#rememberHighlighted();
+      return false;
+    }
+    if (isNamedKey(key, "down") || isNamedKey(key, "ctrl-n")) {
+      const highlighted = moveEnabledIndex(
+        this.#entries,
+        this.#highlighted ?? -1,
+        1,
+      );
+      this.#highlighted = highlighted < 0 ? undefined : highlighted;
+      this.#rememberHighlighted();
+      return false;
+    }
+    if (this.#editor.handle(key)) {
+      this.#calls.refresh(this.#editor.value);
+    }
+    return false;
+  }
+
+  value(): readonly T[] {
+    return [...this.#selected.values()].map(({ value }) => value);
+  }
+
+  frame(
+    lifecycle: InteractiveFrameLifecycle,
+    viewport: InteractionFrameViewport,
+  ): SearchMultiselectFrameState {
+    const visibleCount = Math.min(
+      this.#visibleCount,
+      viewport.maximumControlRows,
+    );
+    const anchor = this.#highlighted ?? 0;
+    const start = choiceVisibleStart(
+      anchor,
+      this.#entries.length,
+      visibleCount,
+    );
+    const visible = interactiveChoiceWindow(
+      frameChoices(this.#entries),
+      start,
+      visibleCount,
+    );
+    const highlightedIndex = this.#highlighted === undefined
+      ? -1
+      : visible.findIndex(({ sourceIndex }) =>
+        sourceIndex === this.#highlighted
+      );
+    return {
+      kind: "search-multiselect",
+      label: this.options.label,
+      lifecycle,
+      query: this.#editor.value,
+      cursor: this.#editor.cursor,
+      results: visible.map(({ entry }) => entry),
+      selectedIds: [...this.#selected.keys()],
+      ...(this.#calls.pending ? { pending: true } : {}),
+      ...(highlightedIndex < 0 ? {} : { highlightedIndex }),
+      ...(this.options.hint === undefined ? {} : { hint: this.options.hint }),
+      ...(this.options.placeholder === undefined
+        ? {}
+        : { placeholder: this.options.placeholder }),
+    };
+  }
+
+  #apply(entries: readonly InteractionEntry<T>[]): void {
+    const choices = [...entries];
+    assertChoices(choices);
+    this.#matches = choices;
+    if (this.#initialIds !== undefined) {
+      const wanted = this.#initialIds;
+      this.#initialIds = undefined;
+      for (const id of wanted) {
+        const found = choices.find((entry) =>
+          isInteractionChoice(entry) && entry.id === id &&
+          entry.disabled !== true
+        );
+        if (found !== undefined && isInteractionChoice(found)) {
+          this.#selected.set(id, found);
+        }
+      }
+    }
+    this.#compose(undefined);
+  }
+
+  /**
+   * Recompose matches plus the retained band, then restore the highlight:
+   * the remembered stable ID where it survives, the nearest enabled entry
+   * to a vacated position after a toggle, and no highlight otherwise.
+   */
+  #compose(fallbackIndex: number | undefined): void {
+    const shown = new Set(this.#matches.map(({ id }) => id));
+    const retained = [...this.#selected.values()].filter(({ id }) =>
+      !shown.has(id)
+    );
+    if (retained.length === 0) {
+      this.#entries = this.#matches;
+    } else {
+      const used = new Set([...shown, ...retained.map(({ id }) => id)]);
+      this.#entries = [
+        ...this.#matches,
+        {
+          kind: "group-heading",
+          id: retainedHeadingId(used),
+          label: "Selected",
+        },
+        ...retained,
+      ];
+    }
+    const remembered = this.#rememberedId === undefined
+      ? -1
+      : this.#entries.findIndex((entry) =>
+        isInteractionChoice(entry) && entry.id === this.#rememberedId &&
+        entry.disabled !== true
+      );
+    if (remembered >= 0) {
+      this.#highlighted = remembered;
+      return;
+    }
+    if (fallbackIndex === undefined) {
+      this.#highlighted = undefined;
+      return;
+    }
+    const nearest = nearestEnabledIndex(this.#entries, fallbackIndex);
+    this.#highlighted = nearest < 0 ? undefined : nearest;
+  }
+
+  #toggleHighlighted(): void {
+    if (this.#highlighted === undefined) {
+      const first = moveEnabledIndex(this.#entries, -1, 1);
+      if (first >= 0) {
+        this.#highlighted = first;
+        this.#rememberHighlighted();
+      }
+      return;
+    }
+    const index = this.#highlighted;
+    const entry = this.#entries[index];
+    if (
+      entry === undefined || !isInteractionChoice(entry) ||
+      entry.disabled === true
+    ) {
+      return;
+    }
+    if (this.#selected.has(entry.id)) this.#selected.delete(entry.id);
+    else this.#selected.set(entry.id, entry);
+    this.#compose(index);
+  }
+
+  /** Toggle every enabled current match; retained-only entries stay put. */
+  #toggleAllMatches(): void {
+    const enabled = this.#matches.filter((entry) =>
+      isInteractionChoice(entry) && entry.disabled !== true
+    );
+    if (enabled.length === 0) return;
+    const allSelected = enabled.every((entry) => this.#selected.has(entry.id));
+    for (const entry of enabled) {
+      if (!isInteractionChoice(entry)) continue;
+      if (allSelected) this.#selected.delete(entry.id);
+      else this.#selected.set(entry.id, entry);
+    }
+    this.#compose(this.#highlighted);
+  }
+
+  #rememberHighlighted(): void {
+    if (this.#highlighted === undefined) return;
+    const entry = this.#entries[this.#highlighted];
+    if (
+      entry !== undefined && isInteractionChoice(entry) &&
+      entry.disabled !== true
+    ) {
+      this.#rememberedId = entry.id;
+    }
+  }
+}
+
+/**
+ * Request zero or more values discovered through a live query. Selected
+ * entries the query excludes stay visible and deselectable in a labeled
+ * band after the results; submission returns values in selection order.
+ */
+export async function requestSearchSelections<T>(
+  options: SearchSelectionsRequestOptions<T>,
+  runtime: InteractionRuntime = {},
+): Promise<readonly T[]> {
+  return await runInteraction(
+    options,
+    new SearchSelectionsInteractionMachine(options),
+    runtime,
+    renderSearchMultiselectFrame,
   );
 }
 
