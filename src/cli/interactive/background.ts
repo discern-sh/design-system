@@ -14,8 +14,9 @@ import type { TerminalIO } from "./io.ts";
 import { withRawTerminal } from "./lifecycle.ts";
 import {
   adoptTerminalRead,
+  filterTerminalReads,
   parkTerminalChunk,
-  releaseTerminalRead,
+  type TerminalReadFilter,
 } from "./read-broker.ts";
 import { signalPassthrough, type TerminalSignalOptions } from "./signals.ts";
 
@@ -155,6 +156,65 @@ function extractReport(received: Uint8Array): ExtractedReport | undefined {
   return undefined;
 }
 
+function reportPrefixSuffixLength(received: Uint8Array): number {
+  const maximum = Math.min(received.length, REPORT_PREFIX.length - 1);
+  for (let length = maximum; length > 0; length -= 1) {
+    const start = received.length - length;
+    let matches = true;
+    for (let offset = 0; offset < length; offset += 1) {
+      if (received[start + offset] !== REPORT_PREFIX[offset]) {
+        matches = false;
+        break;
+      }
+    }
+    if (matches) return length;
+  }
+  return 0;
+}
+
+/**
+ * Remove this query's eventual OSC 11 reply from later brokered reads while
+ * streaming every surrounding byte onward. Only a possible split prefix or
+ * unterminated report is retained between chunks.
+ */
+function lateBackgroundReportFilter(): TerminalReadFilter {
+  let held = new Uint8Array(0);
+  return {
+    transform(chunk) {
+      if (chunk === null) {
+        const leftover = held;
+        held = new Uint8Array(0);
+        return {
+          chunk: leftover.length === 0 ? null : leftover,
+          done: true,
+        };
+      }
+
+      const received = concatChunks(held, chunk);
+      held = new Uint8Array(0);
+      const start = reportStart(received);
+      if (start >= 0) {
+        const report = extractReport(received);
+        if (report !== undefined) {
+          return { chunk: report.leftover, done: true };
+        }
+        const safe = received.slice(0, start);
+        held = received.slice(start);
+        if (held.length > REPORT_LIMIT) {
+          held = new Uint8Array(0);
+          return { chunk: safe, done: true };
+        }
+        return { chunk: safe, done: false };
+      }
+
+      const suffix = reportPrefixSuffixLength(received);
+      const safeEnd = received.length - suffix;
+      held = received.slice(safeEnd);
+      return { chunk: received.slice(0, safeEnd), done: false };
+    },
+  };
+}
+
 async function readBackgroundReport(
   io: TerminalIO,
   timeoutMs: number,
@@ -162,21 +222,27 @@ async function readBackgroundReport(
   io.write(BACKGROUND_QUERY);
   const deadline = Date.now() + timeoutMs;
   let received: Uint8Array = new Uint8Array(0);
+  let timedOut = false;
   while (received.length <= REPORT_LIMIT) {
     const remaining = deadline - Date.now();
-    if (remaining <= 0) break;
+    if (remaining <= 0) {
+      timedOut = true;
+      break;
+    }
     const read = adoptTerminalRead(io);
     let chunk: Uint8Array | null | typeof QUERY_ELAPSED;
     try {
-      chunk = await raceQueryDeadline(read, remaining);
+      chunk = await raceQueryDeadline(read.result, remaining);
     } catch (error) {
-      releaseTerminalRead(io);
+      read.release();
       throw error;
     }
-    // An elapsed deadline leaves the pending read parked for the next
-    // consumer; nothing this query started is allowed to steal later input.
-    if (chunk === QUERY_ELAPSED) break;
-    releaseTerminalRead(io);
+    if (chunk === QUERY_ELAPSED) {
+      read.defer();
+      timedOut = true;
+      break;
+    }
+    read.release();
     if (chunk === null) break;
     received = concatChunks(received, chunk);
     const report = extractReport(received);
@@ -185,6 +251,7 @@ async function readBackgroundReport(
       return report.payload;
     }
   }
+  if (timedOut) filterTerminalReads(io, lateBackgroundReportFilter());
   if (received.length > 0) parkTerminalChunk(io, received);
   return undefined;
 }

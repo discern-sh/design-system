@@ -101,6 +101,75 @@ Deno.test("a silent terminal times out into the environment hint", async () => {
   assertEquals(await readAllText(io), "x");
 });
 
+Deno.test("a reply arriving after the deadline never becomes keyboard input", async () => {
+  const io = new FakeTerminalIO([], { columns: 80, holdOpen: true });
+  await senseTerminalBackground({
+    io,
+    environment: NO_HINT,
+    timeoutMs: 5,
+  });
+
+  const text = readAllText(io);
+  io.enqueue("\x1b]11;rgb:ffff/ffff/ffff\x1b\\");
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  io.enqueue("x");
+  io.close();
+  assertEquals(
+    await text,
+    "x",
+    "the protocol reply must be filtered while later typed input survives",
+  );
+});
+
+Deno.test("the late-reply filter survives ordinary input and split protocol chunks", async () => {
+  const io = new FakeTerminalIO([], { columns: 80, holdOpen: true });
+  await senseTerminalBackground({
+    io,
+    environment: NO_HINT,
+    timeoutMs: 5,
+  });
+
+  const text = readAllText(io);
+  io.enqueue("a");
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  io.enqueue("\x1b]11;rgb:00");
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  io.enqueue("00/0000/0000\x1b\\b");
+  io.close();
+  assertEquals(
+    await text,
+    "ab",
+    "input on either side of a split late report must remain byte-ordered",
+  );
+});
+
+Deno.test("buffering pre-timeout input cannot orphan the pending raw read", async () => {
+  const io = new FakeTerminalIO(["hi"], {
+    columns: 80,
+    holdOpen: true,
+  });
+  await senseTerminalBackground({
+    io,
+    environment: NO_HINT,
+    timeoutMs: 5,
+  });
+
+  const reader = new TerminalKeyReader(io);
+  assertEquals(await reader.readKey(), { kind: "text", text: "h" });
+  assertEquals(await reader.readKey(), { kind: "text", text: "i" });
+  const next = reader.readKey();
+  const fallback = setTimeout(() => io.enqueue("y"), 20);
+  io.enqueue("x");
+  const key = await next;
+  clearTimeout(fallback);
+  io.close();
+  assertEquals(
+    key,
+    { kind: "text", text: "x" },
+    "the still-pending read must remain behind buffered input and receive the next byte",
+  );
+});
+
 Deno.test("a silent terminal without a hint stays unknown as a first-class answer", async () => {
   const io = new FakeTerminalIO([], { columns: 80, holdOpen: true });
   const reading = await senseTerminalBackground({

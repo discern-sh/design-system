@@ -5,7 +5,7 @@
  */
 
 import type { TerminalIO } from "./io.ts";
-import { adoptTerminalRead, releaseTerminalRead } from "./read-broker.ts";
+import { adoptTerminalRead } from "./read-broker.ts";
 
 /** Named non-text keys understood by the terminal interaction state machines. */
 export type TerminalKeyName =
@@ -298,17 +298,18 @@ export class TerminalKeyReader {
       let chunk: Uint8Array | null | typeof LONE_ESCAPE_ELAPSED;
       try {
         chunk = this.#decoder.bufferedText === "\x1b"
-          ? await raceLoneEscapeDelay(read, this.#escapeDelayMs)
-          : await read;
+          ? await raceLoneEscapeDelay(read.result, this.#escapeDelayMs)
+          : await read.result;
       } catch (error) {
-        releaseTerminalRead(this.io);
+        read.release();
         throw error;
       }
       if (chunk === LONE_ESCAPE_ELAPSED) {
+        read.defer();
         this.#pending.push(...this.#decoder.flushLoneEscape());
         continue;
       }
-      releaseTerminalRead(this.io);
+      read.release();
       if (chunk === null) {
         this.#ended = true;
         this.#pending.push(...this.#decoder.finish());
