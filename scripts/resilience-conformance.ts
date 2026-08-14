@@ -839,88 +839,88 @@ async function reflowAt(
   return await withViewport(page, viewport, async () => {
     await loadPage(page, conformanceUrl(origin));
     const result = await page.evaluate((surfaceSelector) => {
-      function inspect(): {
-        readonly surfaces: number;
-        readonly containedOverflow: number;
-        readonly failures: readonly string[];
-      } {
+      function inspect() {
         const problems: string[] = [];
-        const surfaces = Array.from(
-          document.querySelectorAll<HTMLElement>(surfaceSelector),
+        const surfaces = document.querySelectorAll<HTMLElement>(
+          surfaceSelector,
         );
-        if (
-          document.documentElement.scrollWidth >
-            document.documentElement.clientWidth + 1
-        ) {
+        const viewportWidth = document.documentElement.clientWidth;
+        const inViewport = (element: HTMLElement) => {
+          const { left, right } = element.getBoundingClientRect();
+          return left >= -1 && right <= viewportWidth + 1;
+        };
+        const root = document.documentElement;
+        if (root.scrollWidth > root.clientWidth + 1) {
           problems.push(
-            `page is ${document.documentElement.scrollWidth}px wide for a ` +
-              `${document.documentElement.clientWidth}px viewport`,
+            `page is ${root.scrollWidth}px wide for a ${root.clientWidth}px viewport`,
           );
         }
         let containedOverflow = 0;
-        const viewportWidth = document.documentElement.clientWidth;
         for (const surface of surfaces) {
-          for (
-            const element of [
-              surface,
-              ...surface.querySelectorAll<HTMLElement>("*"),
-            ]
-          ) {
-            const rect = element.getBoundingClientRect();
-            if (rect.left >= -1 && rect.right <= viewportWidth + 1) continue;
+          const descendants = surface.querySelectorAll<HTMLElement>("*");
+          for (const element of [surface, ...descendants]) {
+            if (inViewport(element)) continue;
+            const decoration = element.closest('[aria-hidden="true"]') !== null;
             let container: HTMLElement | null = element;
-            let contained = false;
+            let containment: "decoration" | "scroll" | undefined;
             while (container !== null && surface.contains(container)) {
               const overflow = getComputedStyle(container).overflowX;
-              const containerRect = container.getBoundingClientRect();
               if (
-                (overflow === "auto" || overflow === "scroll") &&
-                container.scrollWidth > container.clientWidth + 1 &&
-                containerRect.left >= -1 &&
-                containerRect.right <= viewportWidth + 1
+                inViewport(container) && decoration &&
+                (overflow === "hidden" || overflow === "clip")
               ) {
-                contained = true;
+                containment = "decoration";
+                break;
+              }
+              if (
+                inViewport(container) &&
+                (overflow === "auto" || overflow === "scroll") &&
+                container.scrollWidth > container.clientWidth + 1
+              ) {
+                containment = "scroll";
                 break;
               }
               if (container === surface) break;
               container = container.parentElement;
             }
-            if (contained) {
-              containedOverflow += 1;
-            } else {
-              problems.push(
-                element.outerHTML.replace(/\s+/g, " ").slice(0, 180) +
-                  " overflows without an internal horizontal scroller",
-              );
+            if (containment !== undefined) {
+              containedOverflow += Number(containment === "scroll");
+              continue;
             }
+            problems.push(
+              element.outerHTML.replace(/\s+/g, " ").slice(0, 180) +
+                " overflows without an internal horizontal scroller",
+            );
           }
         }
         return {
-          surfaces: surfaces.length,
           containedOverflow,
           failures: problems,
+          surfaces: surfaces.length,
         };
       }
-
       const current = inspect();
+      const clip = document.createElement("div");
       const future = document.createElement("div");
-      future.textContent = "Future wide surface";
       future.style.cssText = "inline-size:200vw;block-size:1px;";
-      document.querySelector(surfaceSelector)?.append(future);
-      const futureFailures = inspect().failures;
-      future.remove();
+      clip.append(future);
+      document.querySelector(surfaceSelector)?.append(clip);
+      const futureFailures = inspect().failures.length;
+      clip.setAttribute("aria-hidden", "true");
+      clip.style.cssText = "overflow:hidden;inline-size:100%;block-size:1px;";
+      const decorativeFailures = inspect().failures.length;
+      clip.remove();
       return {
         ...current,
-        futureProof: futureFailures.length > current.failures.length,
+        futureProof: futureFailures > current.failures.length &&
+          decorativeFailures === current.failures.length,
       };
     }, SURFACE_SELECTOR);
     failures.push(
       ...result.failures.map((failure) => `Reflow ${label}: ${failure}`),
     );
     if (!result.futureProof) {
-      failures.push(
-        `Reflow ${label}: synthetic wide sibling escaped the detector`,
-      );
+      failures.push(`Reflow ${label}: synthetic boundary proof failed`);
     }
     return result;
   });
