@@ -4,6 +4,11 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## Unreleased
+
+- Add the styled text family to `./cli`: `wrapStyledText` and `truncateStyledText` wrap and truncate package-styled strings through the same grapheme-aware plain-projection authorities as the plain family, re-attributing active SGR styling and open hyperlinks to every produced line and closing them at line boundaries, so each emitted line renders correctly alone and is safe to prefix, indent, or excerpt. Foreign, malformed, or unterminated escape sequences are rejected with a `TypeError`; styling left open at end of input still closes on every line; truncation closes styling and hyperlinks before its always-unstyled marker; and `padText` pads styled content by visible cells.
+- Add `styleHyperlink`, the single terminal hyperlink authority, and the optional `hyperlinks` capability fact. The composer is the only place OSC 8 envelope bytes are written: emission follows the capability fact — derived from colour depth when omitted, stated explicitly by `detectTerminalCapabilities` — and the fallback keeps the label, appending the URL in parentheses unless the label already is the URL. Labels must be control-free and URLs printable ASCII. `stripAnsi` now removes complete OSC envelopes as zero-width, so hyperlinked strings measure, wrap, truncate, and pad by their visible labels alone.
+
 ## 0.14.0
 
 - **Breaking:** Rename the `./cli/interactive` value APIs from `prompt*` to `request*`: `requestText`, `requestMaskedText`, `requestConfirmation`, `requestSelection`, `requestSelections`, `requestSearch`, `requestAutocomplete`, and `requestTextarea`. Shared contracts now use `Interaction*`; operation-specific options use `*RequestOptions`; cancellation is `InteractionCancelled`. This reserves “prompt” for instructions sent to coding agents while terminal input consistently uses “request” and “interaction”. The Terminal Component's shell marker class is now `.discern-terminal__command-prefix`. Interaction behavior and frame geometry are unchanged.

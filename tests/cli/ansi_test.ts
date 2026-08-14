@@ -62,7 +62,10 @@ Deno.test("hyperlink authority gates on capability and never loses the label", (
     }),
     `${escape}]8;;${url}${escape}\\${escape}[1mdocs${escape}[0m${escape}]8;;${escape}\\`,
   );
-  assertEquals(styleHyperlink("docs", url, testCapabilities()), `docs (${url})`);
+  assertEquals(
+    styleHyperlink("docs", url, testCapabilities()),
+    `docs (${url})`,
+  );
   assertEquals(
     styleHyperlink("docs", url, testCapabilities(), { bold: true }),
     `docs (${url})`,
