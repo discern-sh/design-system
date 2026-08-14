@@ -2,6 +2,8 @@
 
 **Status**: accepted
 
+**Later qualification**: [ADR-0008](0008-package-owns-reusable-decorative-artwork.md) admits consumer-neutral, Token-driven, independently selectable decorative artwork into the package. The provider, product-state, semantic-diagram, and identity-specific ownership boundary recorded here remains in force.
+
 ## Context
 
 [ADR-0005](0005-marketing-scale-stays-opt-in.md) established an additive Marketing section and introduction while explicitly leaving the homepage's header, hero, provider line, windows, terminal, and code treatments consumer-owned. Reviewing the catalogue beside the homepage showed a more precise boundary. The provider assets, project-state narrative, and decorative artwork belong to the consumer, but the layouts, scale, chrome, contrast, and responsive behavior are useful beyond one page and materially stronger than rebuilding those properties in every campaign.

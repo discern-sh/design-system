@@ -1,0 +1,202 @@
+@property --discern-impression-ground-x {
+  syntax: "<length-percentage>";
+  inherits: true;
+  initial-value: 76%;
+}
+
+@property --discern-impression-ground-y {
+  syntax: "<length-percentage>";
+  inherits: true;
+  initial-value: 28%;
+}
+
+@layer discern.components {
+  .discern-impression-ground {
+    --discern-impression-ground-cell: 70px;
+    --discern-impression-ground-size: 26px;
+    --discern-impression-ground-reach-x: 24%;
+    --discern-impression-ground-reach-y: 38%;
+  }
+
+  .discern-impression-ground__field {
+    position: absolute;
+    inset: calc(var(--discern-impression-ground-cell) * -0.75)
+      calc(var(--discern-impression-ground-cell) * -1);
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--discern-impression-ground-cell) * 0.24);
+    justify-content: center;
+    font-family: var(--discern-font-display);
+    font-size: var(--discern-impression-ground-size);
+    line-height: 1;
+    user-select: none;
+  }
+
+  .discern-impression-ground__row {
+    display: flex;
+    gap: calc(var(--discern-impression-ground-cell) * 0.4);
+    justify-content: center;
+  }
+
+  .discern-impression-ground__row--offset {
+    transform: translateX(calc(var(--discern-impression-ground-cell) * 0.7));
+  }
+
+  .discern-impression-ground__glyph {
+    display: block;
+    inline-size: var(--discern-impression-ground-cell);
+    text-align: center;
+  }
+
+  .discern-impression-ground__glyph--turned {
+    transform: rotate(180deg);
+  }
+
+  .discern-impression-ground__field--base {
+    color: var(--discern-ground-ink);
+    opacity: calc(var(--discern-ground-veil-2) * 0.85);
+  }
+
+  /* The admitted field. Its opening is the only thing that ever moves. */
+  .discern-impression-ground__field--ink {
+    color: var(--discern-ground-accent);
+    opacity: calc(var(--discern-ground-veil-4) * 1.15);
+    mask-image: radial-gradient(
+      ellipse var(--discern-impression-ground-reach-x)
+      var(--discern-impression-ground-reach-y)
+      at var(--discern-impression-ground-x) var(--discern-impression-ground-y),
+      rgb(0 0 0 / 1) 0%,
+      rgb(0 0 0 / 0.4) 52%,
+      transparent 100%
+    );
+    transition:
+      --discern-impression-ground-x calc(var(--discern-ground-beat) * 3)
+      var(--discern-ground-ease-drift),
+      --discern-impression-ground-y calc(var(--discern-ground-beat) * 3)
+      var(--discern-ground-ease-drift);
+  }
+
+  /* Arriving is answered; leaving is not. With no panel under the pointer the
+   * opening keeps the long drift above, so it wanders home over seven seconds
+   * instead of snapping back the moment the cursor leaves the hero. */
+  .discern-impression-ground__sensor:hover ~ .discern-impression-ground__field--ink {
+    transition-duration: calc(var(--discern-ground-beat) * 0.5);
+    transition-timing-function: var(--discern-ground-ease-settle);
+  }
+
+  .discern-impression-ground__sensor {
+    position: absolute;
+    inline-size: 25%;
+    block-size: 33.3334%;
+    pointer-events: auto;
+  }
+
+  .discern-impression-ground__sensor:nth-child(2) {
+    inset: 0 auto auto 0;
+  }
+  .discern-impression-ground__sensor:nth-child(3) {
+    inset: 0 auto auto 25%;
+  }
+  .discern-impression-ground__sensor:nth-child(4) {
+    inset: 0 auto auto 50%;
+  }
+  .discern-impression-ground__sensor:nth-child(5) {
+    inset: 0 0 auto auto;
+  }
+  .discern-impression-ground__sensor:nth-child(6) {
+    inset: 33.3334% auto auto 0;
+  }
+  .discern-impression-ground__sensor:nth-child(7) {
+    inset: 33.3334% auto auto 25%;
+  }
+  .discern-impression-ground__sensor:nth-child(8) {
+    inset: 33.3334% auto auto 50%;
+  }
+  .discern-impression-ground__sensor:nth-child(9) {
+    inset: 33.3334% 0 auto auto;
+  }
+  .discern-impression-ground__sensor:nth-child(10) {
+    inset: auto auto 0 0;
+  }
+  .discern-impression-ground__sensor:nth-child(11) {
+    inset: auto auto 0 25%;
+  }
+  .discern-impression-ground__sensor:nth-child(12) {
+    inset: auto auto 0 50%;
+  }
+  .discern-impression-ground__sensor:nth-child(13) {
+    inset: auto 0 0 auto;
+  }
+
+  .discern-impression-ground__sensor:nth-child(2):hover ~ .discern-impression-ground__field--ink {
+    --discern-impression-ground-x: 12.5%;
+    --discern-impression-ground-y: 16.7%;
+  }
+
+  .discern-impression-ground__sensor:nth-child(3):hover ~ .discern-impression-ground__field--ink {
+    --discern-impression-ground-x: 37.5%;
+    --discern-impression-ground-y: 16.7%;
+  }
+
+  .discern-impression-ground__sensor:nth-child(4):hover ~ .discern-impression-ground__field--ink {
+    --discern-impression-ground-x: 62.5%;
+    --discern-impression-ground-y: 16.7%;
+  }
+
+  .discern-impression-ground__sensor:nth-child(5):hover ~ .discern-impression-ground__field--ink {
+    --discern-impression-ground-x: 87.5%;
+    --discern-impression-ground-y: 16.7%;
+  }
+
+  .discern-impression-ground__sensor:nth-child(6):hover ~ .discern-impression-ground__field--ink {
+    --discern-impression-ground-x: 12.5%;
+    --discern-impression-ground-y: 50%;
+  }
+
+  .discern-impression-ground__sensor:nth-child(7):hover ~ .discern-impression-ground__field--ink {
+    --discern-impression-ground-x: 37.5%;
+    --discern-impression-ground-y: 50%;
+  }
+
+  .discern-impression-ground__sensor:nth-child(8):hover ~ .discern-impression-ground__field--ink {
+    --discern-impression-ground-x: 62.5%;
+    --discern-impression-ground-y: 50%;
+  }
+
+  .discern-impression-ground__sensor:nth-child(9):hover ~ .discern-impression-ground__field--ink {
+    --discern-impression-ground-x: 87.5%;
+    --discern-impression-ground-y: 50%;
+  }
+
+  .discern-impression-ground__sensor:nth-child(10):hover ~ .discern-impression-ground__field--ink {
+    --discern-impression-ground-x: 12.5%;
+    --discern-impression-ground-y: 83.3%;
+  }
+
+  .discern-impression-ground__sensor:nth-child(11):hover ~ .discern-impression-ground__field--ink {
+    --discern-impression-ground-x: 37.5%;
+    --discern-impression-ground-y: 83.3%;
+  }
+
+  .discern-impression-ground__sensor:nth-child(12):hover ~ .discern-impression-ground__field--ink {
+    --discern-impression-ground-x: 62.5%;
+    --discern-impression-ground-y: 83.3%;
+  }
+
+  .discern-impression-ground__sensor:nth-child(13):hover ~ .discern-impression-ground__field--ink {
+    --discern-impression-ground-x: 87.5%;
+    --discern-impression-ground-y: 83.3%;
+  }
+}
+
+@layer discern.components {
+  .discern-ground--still .discern-impression-ground__sensor {
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .discern-impression-ground__sensor {
+      pointer-events: none;
+    }
+  }
+}

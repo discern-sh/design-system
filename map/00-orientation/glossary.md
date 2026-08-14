@@ -14,7 +14,7 @@ A named public CSS custom property in the `discern` namespace — the unit all s
 
 ### Component
 
-One self-contained folder under [`src/components/<group>/<slug>/`](../../src/components/) owning its implementation (`<slug>.tsx`), stylesheet (`<slug>.css`), Metadata (`<slug>.meta.ts`), examples (`<slug>.examples.tsx`), and `mod.ts`. A rendered CLI stance adds `<slug>.cli.ts`, with framework-neutral vocabulary in a sibling types module when web and terminal share it. There are 111, and every surface that lists them is generated from their Metadata.
+One self-contained folder under [`src/components/<group>/<slug>/`](../../src/components/) owning its implementation (`<slug>.tsx`), stylesheet (`<slug>.css`), Metadata (`<slug>.meta.ts`), examples (`<slug>.examples.tsx`), and `mod.ts`. A rendered CLI stance adds `<slug>.cli.ts`, with framework-neutral vocabulary in a sibling types module when web and terminal share it. There are 120, and every surface that lists them is generated from their Metadata.
 
 ### Selection
 
@@ -30,7 +30,7 @@ The emitted output set a Selection produces: `discern.css`, the Manifest, and on
 
 ### Group
 
-One of the twelve canonical component families — Agents, Core, Display, Docs, Editorial, Feedback, Forms, Layout, Marketing, Navigation, People, Workflow — mirrored by the folder layout under `src/components/`. A Group is a valid unit of Selection.
+One of the thirteen canonical component families — Agents, Artwork, Core, Display, Docs, Editorial, Feedback, Forms, Layout, Marketing, Navigation, People, Workflow — mirrored by the folder layout under `src/components/`. A Group is a valid unit of Selection.
 
 ### Metadata
 

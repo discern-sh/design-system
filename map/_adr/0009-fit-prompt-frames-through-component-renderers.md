@@ -1,4 +1,4 @@
-# ADR 0008: Fit prompt frames through Component renderers
+# ADR 0009: Fit prompt frames through Component renderers
 
 **Status**: accepted
 

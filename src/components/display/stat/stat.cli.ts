@@ -32,9 +32,9 @@ export const cliExamples: readonly CliExample<StatCliProps>[] = [
   {
     name: "neutral",
     props: {
-      label: "Components",
-      value: "111",
-      context: "Across twelve groups",
+      label: "Entries",
+      value: "128",
+      context: "Across four collections",
     },
   },
   {

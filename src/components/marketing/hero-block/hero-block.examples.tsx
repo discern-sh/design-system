@@ -1,4 +1,5 @@
 import type { CatalogueExampleState } from "../../../../styleguide/conformance.ts";
+import { EnvelopeGround } from "../../artwork/envelope-ground/envelope-ground.tsx";
 import { Button } from "../../core/button/button.tsx";
 import { Badge } from "../../display/badge/badge.tsx";
 import { Window } from "../../display/window/window.tsx";
@@ -80,9 +81,28 @@ function ShowcaseHeroState() {
   );
 }
 
+function GroundedHeroState() {
+  return (
+    <HeroBlock
+      eyebrow="Artwork ground"
+      title="Give the opening a quiet geometry."
+      description={
+        <p>
+          The optional ground sits behind complete copy and actions, so
+          atmosphere can change without changing the section's meaning.
+        </p>
+      }
+      actions={<Button href="#continue">Continue through the field</Button>}
+      ground={<EnvelopeGround presence={1.1} />}
+      layout="centered"
+    />
+  );
+}
+
 export const catalogueStates = [
   { name: "split", label: "Split accent", Example: SplitHeroState },
   { name: "showcase", label: "Showcase", Example: ShowcaseHeroState },
+  { name: "grounded", label: "Artwork ground", Example: GroundedHeroState },
 ] satisfies readonly CatalogueExampleState[];
 
 export default function HeroBlockExamples() {
@@ -90,6 +110,7 @@ export default function HeroBlockExamples() {
     <div className="discern-example-stack">
       <SplitHeroState />
       <ShowcaseHeroState />
+      <GroundedHeroState />
     </div>
   );
 }
