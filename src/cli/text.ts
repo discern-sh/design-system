@@ -178,6 +178,32 @@ export function wrapText(value: string, columns: number): readonly string[] {
   );
 }
 
+/**
+ * Wrap plain text into visible-width-bounded lines while preserving each
+ * line's leading space indentation as a hanging indent on its wrapped
+ * continuations, so indented structures — stack traces, nested build
+ * output — keep their shape across wrapping. A line that already fits is
+ * kept byte-intact, interior spacing included; only over-wide content
+ * re-flows through the {@linkcode wrapText} word-boundary authority.
+ * Indentation wider than the available columns is reduced to leave at
+ * least one content cell.
+ */
+export function wrapTextPreservingIndent(
+  value: string,
+  columns: number,
+): readonly string[] {
+  assertColumns("wrap", columns, 1);
+  return stripAnsi(value).split("\n").flatMap((line) => {
+    if (lineWidth(line) <= columns) return [line];
+    const leadingSpaces = line.match(/^ +/u)?.[0] ?? "";
+    const indent = leadingSpaces.slice(0, Math.max(0, columns - 1));
+    const content = line.slice(leadingSpaces.length);
+    return wrapParagraph(content, columns - indent.length).map((wrapped) =>
+      `${indent}${wrapped}`
+    );
+  });
+}
+
 function isWhitespace(character: string | undefined): boolean {
   return character !== undefined && /\s/u.test(character);
 }

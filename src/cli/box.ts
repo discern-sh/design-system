@@ -6,16 +6,16 @@
 
 import type { TerminalCapabilities } from "./capabilities.ts";
 import { stripAnsi, styleText, type TerminalTextStyle } from "./ansi.ts";
-import { measureText, padText, truncateText, wrapText } from "./text.ts";
+import {
+  measureText,
+  padText,
+  truncateText,
+  wrapTextPreservingIndent,
+} from "./text.ts";
 
 function wrapBoxLine(line: string, width: number): readonly string[] {
   if (measureText(line) <= width) return [line];
-  const plain = stripAnsi(line);
-  const leadingSpaces = plain.match(/^ +/u)?.[0] ?? "";
-  const indent = truncateText(leadingSpaces, Math.max(0, width - 1), "");
-  const content = plain.slice(leadingSpaces.length);
-  const contentWidth = Math.max(1, width - measureText(indent));
-  return wrapText(content, contentWidth).map((value) => `${indent}${value}`);
+  return wrapTextPreservingIndent(stripAnsi(line), width);
 }
 
 /** Inputs for a bordered terminal text frame. */
