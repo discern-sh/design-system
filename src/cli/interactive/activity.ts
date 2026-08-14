@@ -16,6 +16,7 @@ import {
   renderTriangleSpinnerFrame,
 } from "../triangles.ts";
 import renderMeterCli from "../../components/feedback/meter/meter.cli.ts";
+import { defaultTerminalFrameWidth } from "../frame-measure.ts";
 import { DenoTerminalIO, type TerminalIO } from "./io.ts";
 import {
   assertInteractiveTerminal,
@@ -234,7 +235,7 @@ class ProgressController implements DeterminateProgressController {
       ...(this.options.theme === undefined
         ? {}
         : { theme: this.options.theme }),
-      width: Math.min(48, this.io.capabilities().columns),
+      width: defaultTerminalFrameWidth(this.io.capabilities()),
     }, this.io.capabilities());
     if (this.#staticMode) {
       this.io.write(`${frame}\n`);

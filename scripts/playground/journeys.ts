@@ -30,6 +30,7 @@ import {
   renderTriangleSectionRule,
   type TerminalCapabilities,
 } from "../../src/cli/mod.ts";
+import { defaultTerminalFrameWidth } from "../../src/cli/frame-measure.ts";
 import {
   renderCliExemptions,
   renderTriangleMotifSheet,
@@ -57,7 +58,7 @@ function journeyHeading(
   title: string,
   capabilities: TerminalCapabilities,
 ): string {
-  const width = Math.min(48, capabilities.columns);
+  const width = defaultTerminalFrameWidth(capabilities);
   if (measureText(title) + 6 <= width) {
     return renderTriangleSectionRule(title, { width }, capabilities);
   }

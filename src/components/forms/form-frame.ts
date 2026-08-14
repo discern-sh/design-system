@@ -7,6 +7,7 @@
 import { styleText } from "../../cli/ansi.ts";
 import { renderBox } from "../../cli/box.ts";
 import type { TerminalCapabilities } from "../../cli/capabilities.ts";
+import { defaultTerminalFrameWidth } from "../../cli/frame-measure.ts";
 import type {
   InteractiveChoiceGroupHeadingState,
   InteractiveFrameLifecycle,
@@ -80,7 +81,7 @@ function formCliFrameWidth(
   requested: number | undefined,
   capabilities: TerminalCapabilities,
 ): number {
-  const width = requested ?? Math.min(48, capabilities.columns);
+  const width = requested ?? defaultTerminalFrameWidth(capabilities);
   if (!Number.isSafeInteger(width) || width < 8) {
     throw new TypeError(
       `form frame width must be a safe integer of at least 8; received ${width}`,

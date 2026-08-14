@@ -6,6 +6,7 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defaultTerminalFrameWidth } from "../../../cli/frame-measure.ts";
 import type { DeterminateProgressFrameState } from "../../../cli/interactive-states.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import {
@@ -64,7 +65,7 @@ const renderMeterCli: CliRenderer<MeterCliProps> = (props, capabilities) => {
   const theme = terminalThemes[props.theme ?? "dark"];
   const tone = props.tone ?? "neutral";
   const state = props;
-  const width = props.width ?? Math.min(48, capabilities.columns);
+  const width = props.width ?? defaultTerminalFrameWidth(capabilities);
   const toneLabel = tone === "neutral" ? "" : ` [${tone}]`;
   const heading = styleText(`${state.label}${toneLabel}`, {
     ...theme.typography.strong,

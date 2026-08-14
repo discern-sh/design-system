@@ -6,6 +6,7 @@
 
 import { renderBox } from "../../../cli/box.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defaultTerminalFrameWidth } from "../../../cli/frame-measure.ts";
 import {
   terminalThemes,
   type TerminalThemeVariant,
@@ -52,7 +53,7 @@ const renderToastCli: CliRenderer<ToastCliProps> = (props, capabilities) => {
   return renderBox({
     body: `${props.message}${dismiss}`,
     title: tone[0]?.toLocaleUpperCase() + tone.slice(1),
-    width: props.width ?? Math.min(48, capabilities.columns),
+    width: props.width ?? defaultTerminalFrameWidth(capabilities),
     padding: 0,
     borderStyle: { color: terminalToneColor(theme, tone) },
   }, capabilities);

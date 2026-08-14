@@ -11,6 +11,7 @@ import type {
   SequentialStepStatus,
 } from "../interactive-states.ts";
 import renderProcessStepsCli from "../../components/marketing/process-steps/process-steps.cli.ts";
+import { defaultTerminalFrameWidth } from "../frame-measure.ts";
 import { PromptCancelled } from "./errors.ts";
 import { PromptBackNavigation } from "./driver.ts";
 import { DenoTerminalIO, type TerminalIO } from "./io.ts";
@@ -229,7 +230,7 @@ export class SequentialFormBuilder {
         ...(this.options.theme === undefined
           ? {}
           : { theme: this.options.theme }),
-        width: Math.min(48, this.#io.capabilities().columns),
+        width: defaultTerminalFrameWidth(this.#io.capabilities()),
       }, this.#io.capabilities())
     }\n`);
   }
