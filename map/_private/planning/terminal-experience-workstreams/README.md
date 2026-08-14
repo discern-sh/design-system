@@ -37,15 +37,9 @@ Dispatch wave by wave. Wave 1 is the only four-way parallel wave; its briefs own
 
 Within wave 1 the landing order is 1A, 1B, 1C, 1D; within wave 2 it is 2A then 2B. Before landing, each later stream runs `discern_update`, re-verifies its gate, and resolves any shared-seam overlap. Wave 2's two streams own disjoint files (2A: discovery machines and frame states; 2B: activity, lifecycle, and a new sensing module).
 
-## Release checkpoints
+## Release checkpoint
 
-The consumer adopts only published JSR versions (Discern ADR 0279), so the owner runs the `release` skill at three checkpoints:
-
-1. **After wave 1 lands** — publishes the correctness fixes, styled-text authorities, presenter, narration verbs, and the two new tooling entrypoints. Unblocks consumer waves 2A and 2B.
-2. **After wave 2 lands** — publishes discovery truthfulness, the new request kinds, caller-reserved viewport rows, activity interrupt safety, and background sensing. Unblocks consumer wave 3B.
-3. **After wave 3 lands** — publishes the live activity log frame. Unblocks consumer wave 3A.
-
-The owner may combine checkpoints 2 and 3; each consumer brief guards on the capability it needs, not on a version number.
+The consumer adopts only published JSR versions (Discern ADR 0279), so the owner runs the `release` skill once, after wave 3 lands: one version publishing the correctness fixes, styled-text authorities, presenter, narration verbs, the two new tooling entrypoints, discovery truthfulness, the new request kinds, caller-reserved viewport rows, activity interrupt safety, background sensing, and the live activity log frame. That single release unblocks every consumer brief at once; each consumer brief guards on the capability it needs, not on a version number.
 
 ## Landing authority
 
