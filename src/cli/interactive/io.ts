@@ -51,13 +51,16 @@ export interface DenoTerminalIOOptions {
 }
 
 function environmentSnapshot(): Readonly<Record<string, string | undefined>> {
-  return Object.fromEntries(ENVIRONMENT_KEYS.map((name) => {
+  const snapshot: Record<string, string> = {};
+  for (const name of ENVIRONMENT_KEYS) {
     try {
-      return [name, Deno.env.get(name)];
+      const value = Deno.env.get(name);
+      if (value !== undefined) snapshot[name] = value;
     } catch {
-      return [name, undefined];
+      // An unreadable variable stays absent so detection treats it as unset.
     }
-  }));
+  }
+  return snapshot;
 }
 
 function validDimension(value: number | undefined, fallback: number): number {

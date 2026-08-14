@@ -61,7 +61,7 @@ export function detectTerminalCapabilities(
 ): TerminalCapabilities {
   const term = input.env.TERM?.toLocaleLowerCase() ?? "";
   const colorTerm = input.env.COLORTERM?.toLocaleLowerCase() ?? "";
-  const noColor = Object.prototype.hasOwnProperty.call(input.env, "NO_COLOR");
+  const noColor = input.env.NO_COLOR !== undefined;
   const ansiControl = input.isTty && term !== "dumb";
   const colorDepth: TerminalColorDepth =
     !input.isTty || noColor || term === "dumb"

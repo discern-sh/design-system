@@ -80,6 +80,36 @@ Deno.test("terminal control, colour, and Unicode are independent capability fact
   );
 });
 
+Deno.test("keys with explicitly undefined values detect exactly like absent keys", () => {
+  const defined = {
+    TERM: "xterm-256color",
+    COLORTERM: "truecolor",
+    LANG: "en_GB.UTF-8",
+  };
+  const withPhantoms = {
+    ...defined,
+    NO_COLOR: undefined,
+    LC_ALL: undefined,
+    LC_CTYPE: undefined,
+  };
+  for (const isTty of [true, false]) {
+    assertEquals(
+      detectTerminalCapabilities({ env: withPhantoms, isTty, columns: 245 }),
+      detectTerminalCapabilities({ env: defined, isTty, columns: 245 }),
+      `phantom undefined keys must not change detection (isTty ${isTty})`,
+    );
+  }
+  assertEquals(
+    detectTerminalCapabilities({
+      env: withPhantoms,
+      isTty: true,
+      columns: 245,
+    }).colorDepth,
+    "truecolor",
+    "an unset NO_COLOR materialized as undefined must not suppress colour",
+  );
+});
+
 Deno.test("locale repertoire matrix preserves UTF-8 and exact C/POSIX ASCII fallbacks", () => {
   const cases = [
     {

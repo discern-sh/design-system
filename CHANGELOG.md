@@ -6,6 +6,7 @@ Each release is cut from a green run of the full release gate — formatting, li
 
 ## Unreleased
 
+- Fix interactive terminal colour detection: `DenoTerminalIO`'s environment snapshot materialized unset variables as present-but-undefined keys, and the capability detector treated a present `NO_COLOR` key as the suppression signal, so every prompt run through `DenoTerminalIO` rendered colourless even on colour-capable terminals. Detection now treats an explicitly undefined value exactly like an absent key, and the snapshot no longer fabricates keys for unset variables. An empty-string `NO_COLOR` still suppresses colour.
 - Make Iowan Old Style the primary display face in both the core system stack and optional font provider, with bundled Crimson Pro as its first portable fallback. Remove the redundant Crimson-matched Iowan aliases; on hosts without Iowan, the remaining Georgia alias stays calibrated to Crimson Pro because Crimson is the font that loads and swaps in. The browser gate now resolves every target and local stand-in at each probe weight before measuring their geometry, so an earlier native face cannot leave a later downloadable target in its temporary fallback state.
 
 ## 0.12.2
