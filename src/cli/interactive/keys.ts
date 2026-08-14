@@ -5,6 +5,7 @@
  */
 
 import type { TerminalIO } from "./io.ts";
+import { adoptTerminalRead, releaseTerminalRead } from "./read-broker.ts";
 
 /** Named non-text keys understood by the terminal interaction state machines. */
 export type TerminalKeyName =
@@ -236,17 +237,6 @@ const LONE_ESCAPE_DELAY_MS = 100;
 
 const LONE_ESCAPE_ELAPSED = Symbol("lone-escape-elapsed");
 
-/**
- * A raw read left pending by an earlier reader on the same terminal — for
- * example after Escape cancelled an interaction while the read waited for
- * more input. The next reader adopts it instead of issuing a parallel read
- * that would race the abandoned one for the terminal's next bytes.
- */
-const inflightTerminalReads = new WeakMap<
-  TerminalIO,
-  Promise<Uint8Array | null>
->();
-
 async function raceLoneEscapeDelay(
   read: Promise<Uint8Array | null>,
   delayMs: number,
@@ -304,22 +294,21 @@ export class TerminalKeyReader {
    */
   async readKey(): Promise<TerminalKey | null> {
     while (this.#pending.length === 0 && !this.#ended) {
-      const read = inflightTerminalReads.get(this.io) ?? this.io.read();
-      inflightTerminalReads.set(this.io, read);
+      const read = adoptTerminalRead(this.io);
       let chunk: Uint8Array | null | typeof LONE_ESCAPE_ELAPSED;
       try {
         chunk = this.#decoder.bufferedText === "\x1b"
           ? await raceLoneEscapeDelay(read, this.#escapeDelayMs)
           : await read;
       } catch (error) {
-        inflightTerminalReads.delete(this.io);
+        releaseTerminalRead(this.io);
         throw error;
       }
       if (chunk === LONE_ESCAPE_ELAPSED) {
         this.#pending.push(...this.#decoder.flushLoneEscape());
         continue;
       }
-      inflightTerminalReads.delete(this.io);
+      releaseTerminalRead(this.io);
       if (chunk === null) {
         this.#ended = true;
         this.#pending.push(...this.#decoder.finish());
