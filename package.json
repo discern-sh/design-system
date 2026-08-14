@@ -7,6 +7,8 @@
     ".": "./src/mod.ts",
     "./cli": "./src/cli/mod.ts",
     "./cli/interactive": "./src/cli/interactive/mod.ts",
+    "./cli/interactive/testing": "./src/cli/interactive/testing.ts",
+    "./cli/projection": "./src/cli/projection.ts",
     "./manifest": "./src/manifest.ts",
     "./react": "./src/react.ts",
     "./runtime": "./src/runtime.ts",
