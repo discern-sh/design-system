@@ -5,17 +5,18 @@
  */
 
 import {
+  ANSI_16_RGB,
+  ANSI_256_RGB,
+  nearestPaletteIndex,
+  type TerminalRgbColor,
+} from "./ansi-palette.ts";
+import {
   baseTokens,
   discernThemeTokens,
   themeTokens,
 } from "../tokens/tokens.ts";
 
-/** A device-independent sRGB colour channel tuple. */
-export interface TerminalRgbColor {
-  readonly red: number;
-  readonly green: number;
-  readonly blue: number;
-}
+export type { TerminalRgbColor };
 
 /** One semantic colour with precomputed terminal-palette fallbacks. */
 export interface TerminalColor extends TerminalRgbColor {
@@ -65,25 +66,6 @@ export interface TerminalTheme {
   >;
   readonly typography: Readonly<Record<TerminalTextRole, TerminalTypeStyle>>;
 }
-
-const ANSI_16_RGB: readonly TerminalRgbColor[] = [
-  { red: 0, green: 0, blue: 0 },
-  { red: 128, green: 0, blue: 0 },
-  { red: 0, green: 128, blue: 0 },
-  { red: 128, green: 128, blue: 0 },
-  { red: 0, green: 0, blue: 128 },
-  { red: 128, green: 0, blue: 128 },
-  { red: 0, green: 128, blue: 128 },
-  { red: 192, green: 192, blue: 192 },
-  { red: 128, green: 128, blue: 128 },
-  { red: 255, green: 0, blue: 0 },
-  { red: 0, green: 255, blue: 0 },
-  { red: 255, green: 255, blue: 0 },
-  { red: 0, green: 0, blue: 255 },
-  { red: 255, green: 0, blue: 255 },
-  { red: 0, green: 255, blue: 255 },
-  { red: 255, green: 255, blue: 255 },
-] as const;
 
 const TONE_TOKENS = {
   accent: "--discern-color-accent-700",
@@ -245,47 +227,6 @@ function parseCssColor(
     );
   }
   return parseColorMix(value, canvas);
-}
-
-function colorDistance(
-  left: TerminalRgbColor,
-  right: TerminalRgbColor,
-): number {
-  return (left.red - right.red) ** 2 + (left.green - right.green) ** 2 +
-    (left.blue - right.blue) ** 2;
-}
-
-function ansi256Palette(): readonly TerminalRgbColor[] {
-  const palette: TerminalRgbColor[] = [...ANSI_16_RGB];
-  const levels = [0, 95, 135, 175, 215, 255] as const;
-  for (const red of levels) {
-    for (const green of levels) {
-      for (const blue of levels) palette.push({ red, green, blue });
-    }
-  }
-  for (let index = 0; index < 24; index += 1) {
-    const value = 8 + index * 10;
-    palette.push({ red: value, green: value, blue: value });
-  }
-  return palette;
-}
-
-const ANSI_256_RGB = ansi256Palette();
-
-function nearestPaletteIndex(
-  color: TerminalRgbColor,
-  palette: readonly TerminalRgbColor[],
-): number {
-  let nearest = 0;
-  let distance = Number.POSITIVE_INFINITY;
-  for (const [index, candidate] of palette.entries()) {
-    const candidateDistance = colorDistance(color, candidate);
-    if (candidateDistance < distance) {
-      nearest = index;
-      distance = candidateDistance;
-    }
-  }
-  return nearest;
 }
 
 function terminalColor(color: TerminalRgbColor): TerminalColor {
