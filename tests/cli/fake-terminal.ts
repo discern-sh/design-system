@@ -9,6 +9,12 @@ export interface FakeTerminalOptions {
   readonly columns?: number;
   readonly rows?: number;
   readonly unicode?: boolean;
+  /**
+   * Keep reads pending while the queue is empty instead of returning
+   * end-of-input, until `close()` delivers EOF. Models a live terminal whose
+   * user has not typed yet.
+   */
+  readonly holdOpen?: boolean;
 }
 
 const encoder = new TextEncoder();
@@ -22,6 +28,8 @@ export class FakeTerminal implements TerminalIO {
   readonly #interactive: boolean;
   readonly #colorDepth: TerminalCapabilities["colorDepth"];
   readonly #unicode: boolean;
+  readonly #waiters: Array<(chunk: Uint8Array | null) => void> = [];
+  #holdOpen: boolean;
   #columns: number;
   #rows: number;
 
@@ -38,6 +46,7 @@ export class FakeTerminal implements TerminalIO {
     this.#columns = options.columns ?? 80;
     this.#rows = options.rows ?? 24;
     this.#unicode = options.unicode ?? true;
+    this.#holdOpen = options.holdOpen ?? false;
   }
 
   isInteractive(): boolean {
@@ -58,7 +67,10 @@ export class FakeTerminal implements TerminalIO {
   }
 
   read(): Promise<Uint8Array | null> {
-    return Promise.resolve(this.#chunks.shift() ?? null);
+    const chunk = this.#chunks.shift();
+    if (chunk !== undefined) return Promise.resolve(chunk);
+    if (!this.#holdOpen) return Promise.resolve(null);
+    return new Promise((resolve) => this.#waiters.push(resolve));
   }
 
   setRawMode(enabled: boolean): void {
@@ -74,11 +86,20 @@ export class FakeTerminal implements TerminalIO {
     return this.writes.join("");
   }
 
-  /** Queue another UTF-8 input chunk. */
+  /** Queue another UTF-8 input chunk, waking a held-open pending read. */
   enqueue(value: string | Uint8Array): void {
-    this.#chunks.push(
-      typeof value === "string" ? encoder.encode(value) : value.slice(),
-    );
+    const bytes = typeof value === "string"
+      ? encoder.encode(value)
+      : value.slice();
+    const waiter = this.#waiters.shift();
+    if (waiter !== undefined) waiter(bytes);
+    else this.#chunks.push(bytes);
+  }
+
+  /** Deliver end-of-input to pending and future reads of a held-open terminal. */
+  close(): void {
+    this.#holdOpen = false;
+    for (const waiter of this.#waiters.splice(0)) waiter(null);
   }
 
   /** Change the viewport returned by subsequent size and capability reads. */
