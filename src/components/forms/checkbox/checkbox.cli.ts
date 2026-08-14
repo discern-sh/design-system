@@ -18,6 +18,8 @@ import {
   type FormCliPresentation,
   renderFormCliChoiceHeading,
   renderFormCliFrame,
+  styleFormCliChoiceText,
+  styleFormCliSelectedMark,
   visibleFormCliChoiceEntries,
 } from "../form-frame.ts";
 
@@ -138,8 +140,13 @@ const renderCheckboxCli: CliRenderer<CheckboxCliProps> = (
 function checkboxMark(
   checked: boolean,
   capabilities: Parameters<CliRenderer<CheckboxCliProps>>[1],
+  options: {
+    readonly disabled?: boolean;
+    readonly theme?: TerminalThemeVariant;
+  } = {},
 ): string {
-  return checked ? capabilities.unicode ? "[✓]" : "[x]" : "[ ]";
+  const mark = checked ? capabilities.unicode ? "✓" : "x" : " ";
+  return `[${styleFormCliSelectedMark(mark, checked, options, capabilities)}]`;
 }
 
 function renderConfirmControl(
@@ -197,12 +204,23 @@ function renderMultiselectControl(
     }
     const option = entry;
     const index = sourceIndex;
-    const pointer = active && index === state.highlightedIndex
-      ? capabilities.unicode ? "› " : "> "
-      : "  ";
-    return `${pointer}${
-      checkboxMark(state.selectedIds.includes(option.id), capabilities)
-    } ${option.label}${option.disabled === true ? " (disabled)" : ""}`;
+    const highlighted = active && index === state.highlightedIndex;
+    const pointer = highlighted ? capabilities.unicode ? "› " : "> " : "  ";
+    const styleOptions = {
+      highlighted,
+      disabled: option.disabled === true,
+      ...(state.theme === undefined ? {} : { theme: state.theme }),
+    };
+    const label = `${option.label}${
+      option.disabled === true ? " (disabled)" : ""
+    }`;
+    return `${styleFormCliChoiceText(pointer, styleOptions, capabilities)}${
+      checkboxMark(
+        state.selectedIds.includes(option.id),
+        capabilities,
+        styleOptions,
+      )
+    } ${styleFormCliChoiceText(label, styleOptions, capabilities)}`;
   }).join("\n");
 }
 

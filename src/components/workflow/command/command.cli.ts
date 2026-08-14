@@ -74,7 +74,9 @@ const renderCommandCli: CliRenderer<CommandCliProps> = (
     assertWorkflowCliText(props.platform, "command platform");
     lines.push(...workflowFactLines("Platform", props.platform, width));
   }
-  const command = workflowPrefixedLines("$ ", props.command, width).join("\n");
+  const command = workflowPrefixedLines("Run: ", props.command, width).join(
+    "\n",
+  );
   lines.push(
     styleWorkflowHeading(command, "accent", capabilities, props.theme),
   );

@@ -20,6 +20,7 @@ import {
 import { joinVertical } from "../../cli/layout.ts";
 import { truncateText } from "../../cli/text.ts";
 import {
+  terminalThemeColor,
   terminalThemes,
   type TerminalThemeVariant,
   terminalToneColor,
@@ -153,6 +154,19 @@ export function insertFormCliCursor(
   cursor: number,
   capabilities: TerminalCapabilities,
 ): string {
+  return insertFormCliMarker(
+    value,
+    cursor,
+    capabilities.unicode ? "▌" : "|",
+  );
+}
+
+/** Insert one visual marker at a grapheme index without splitting content. */
+export function insertFormCliMarker(
+  value: string,
+  cursor: number,
+  marker: string,
+): string {
   const graphemes = [...segmenter.segment(value)].map((part) => part.segment);
   if (
     !Number.isSafeInteger(cursor) || cursor < 0 || cursor > graphemes.length
@@ -161,7 +175,7 @@ export function insertFormCliCursor(
       `form cursor must be between 0 and ${graphemes.length}; received ${cursor}`,
     );
   }
-  graphemes.splice(cursor, 0, capabilities.unicode ? "▌" : "|");
+  graphemes.splice(cursor, 0, marker);
   return graphemes.join("");
 }
 
@@ -200,4 +214,49 @@ export function renderFormCliChoiceHeading(
     },
     { ...capabilities, columns: width },
   );
+}
+
+/** Style one choice-row fragment without replacing its non-colour signal. */
+export function styleFormCliChoiceText(
+  value: string,
+  options: {
+    readonly highlighted?: boolean;
+    readonly disabled?: boolean;
+    readonly theme?: TerminalThemeVariant;
+  },
+  capabilities: TerminalCapabilities,
+): string {
+  const theme = terminalThemes[options.theme ?? "dark"];
+  if (options.disabled === true) {
+    return styleText(value, {
+      ...theme.typography.muted,
+      color: terminalThemeColor(theme, "--discern-color-ink-muted"),
+    }, capabilities);
+  }
+  if (options.highlighted === true) {
+    return styleText(value, {
+      ...theme.typography.strong,
+      color: terminalToneColor(theme, "accent"),
+    }, capabilities);
+  }
+  return value;
+}
+
+/** Colour a selected choice mark with the active form-border accent role. */
+export function styleFormCliSelectedMark(
+  value: string,
+  selected: boolean,
+  options: {
+    readonly disabled?: boolean;
+    readonly theme?: TerminalThemeVariant;
+  },
+  capabilities: TerminalCapabilities,
+): string {
+  if (!selected) return value;
+  const theme = terminalThemes[options.theme ?? "dark"];
+  return styleText(value, {
+    color: options.disabled === true
+      ? terminalThemeColor(theme, "--discern-color-ink-muted")
+      : terminalToneColor(theme, "accent"),
+  }, capabilities);
 }

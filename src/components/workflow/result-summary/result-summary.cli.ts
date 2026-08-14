@@ -6,6 +6,7 @@
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { wrapInlineCluster } from "../../../cli/layout.ts";
+import { measureText, padText } from "../../../cli/text.ts";
 import type {
   TerminalSemanticTone,
   TerminalThemeVariant,
@@ -26,6 +27,33 @@ const stateLabels: Readonly<Record<ResultSummaryState, string>> = {
   changed: "Changed",
   unchanged: "Unchanged",
 };
+
+function resultSummaryMarker(
+  state: ResultSummaryState,
+  unicode: boolean,
+): string {
+  return state === "passed"
+    ? (unicode ? "✓" : "+")
+    : state === "failed"
+    ? (unicode ? "✕" : "x")
+    : state === "blocked"
+    ? "!"
+    : state === "changed"
+    ? (unicode ? "◇" : "*")
+    : "=";
+}
+
+/** Visible prefix width used to align one Result summary collection. */
+export function resultSummaryPrefixWidth(
+  state: ResultSummaryState,
+  capabilities: Parameters<CliRenderer<ResultSummaryCliProps>>[1],
+): number {
+  return measureText(
+    `${resultSummaryMarker(state, capabilities.unicode)} ${
+      stateLabels[state]
+    }:`,
+  );
+}
 
 const stateTones: Readonly<Record<ResultSummaryState, TerminalSemanticTone>> = {
   passed: "success",
@@ -74,23 +102,19 @@ export const cliExamples: readonly CliExample<ResultSummaryCliProps>[] = [
   },
 ] as const;
 
-/** Render one terse terminal outcome with readings and the next action. */
-const renderResultSummaryCli: CliRenderer<ResultSummaryCliProps> = (
-  props,
-  capabilities,
-) => {
+/** Render one outcome with an optional collection-owned prefix width. */
+export function renderResultSummaryCliWithPrefixWidth(
+  props: ResultSummaryCliProps,
+  capabilities: Parameters<CliRenderer<ResultSummaryCliProps>>[1],
+  prefixWidth?: number,
+): string {
   assertWorkflowCliText(props.fact, "result summary fact", true);
   const width = workflowCliWidth(props.maxWidth, capabilities);
-  const marker = props.state === "passed"
-    ? (capabilities.unicode ? "✓" : "+")
-    : props.state === "failed"
-    ? (capabilities.unicode ? "✕" : "x")
-    : props.state === "blocked"
-    ? "!"
-    : props.state === "changed"
-    ? (capabilities.unicode ? "◇" : "*")
-    : "=";
-  const prefix = `${marker} ${stateLabels[props.state]}: `;
+  const rawPrefix = `${
+    resultSummaryMarker(props.state, capabilities.unicode)
+  } ${stateLabels[props.state]}:`;
+  const resolvedPrefixWidth = prefixWidth ?? measureText(rawPrefix);
+  const prefix = `${padText(rawPrefix, resolvedPrefixWidth)} `;
   const lines = [
     styleWorkflowHeading(
       workflowPrefixedLines(prefix, props.fact, width).join("\n"),
@@ -125,6 +149,12 @@ const renderResultSummaryCli: CliRenderer<ResultSummaryCliProps> = (
     lines.push(...workflowFactLines("Data", props.machineReadable, width));
   }
   return lines.join("\n");
-};
+}
+
+/** Render one terse terminal outcome with readings and the next action. */
+const renderResultSummaryCli: CliRenderer<ResultSummaryCliProps> = (
+  props,
+  capabilities,
+) => renderResultSummaryCliWithPrefixWidth(props, capabilities);
 
 export default renderResultSummaryCli;

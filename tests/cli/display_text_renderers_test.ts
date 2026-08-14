@@ -1,3 +1,4 @@
+import { assertEquals, assertThrows } from "@std/assert";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import {
   renderHeadingCli,
@@ -40,13 +41,41 @@ Deno.test("Heading renders exact narrow, standard, wide, and colour-degraded tex
     ] as const
   ) {
     const capabilities = testCapabilities({ columns });
-    assertExactFrame(render(capabilities), expected, capabilities);
+    assertExactFrame(render(capabilities), `\n${expected}`, capabilities);
   }
   assertCapabilityLevels(
     render,
-    "## Rules that travel",
-    "## Rules that travel",
+    "\n## Rules that travel",
+    "\n## Rules that travel",
   );
+});
+
+Deno.test("Heading owns one leading blank line by default and validates explicit overrides", () => {
+  const capabilities = testCapabilities({ columns: 32 });
+  const render = renderHeadingCli as unknown as (
+    props: {
+      readonly text: string;
+      readonly leadingBlankLines?: number;
+    },
+    capabilities: TerminalCapabilities,
+  ) => string;
+  assertEquals(render({ text: "Boundary" }, capabilities), "\n## Boundary");
+  assertEquals(
+    render({ text: "Boundary", leadingBlankLines: 0 }, capabilities),
+    "## Boundary",
+  );
+  assertEquals(
+    render({ text: "Boundary", leadingBlankLines: 2 }, capabilities),
+    "\n\n## Boundary",
+  );
+  for (const invalid of [-1, 1.5, Number.NaN]) {
+    assertThrows(
+      () =>
+        render({ text: "Boundary", leadingBlankLines: invalid }, capabilities),
+      TypeError,
+      "leading blank lines",
+    );
+  }
 });
 
 Deno.test("Kicker renders exact narrow, standard, wide, and colour-degraded annotations", () => {

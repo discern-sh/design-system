@@ -14,6 +14,7 @@ import {
   type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import { renderTrianglePattern } from "../../../cli/triangles.ts";
+import { verticalTriangleStatusPhase } from "../../../cli/triangle-status.ts";
 import type { TimelineStatus } from "./timeline.types.ts";
 
 /** One terminal Timeline event. */
@@ -118,7 +119,9 @@ const renderTimelineCli: CliRenderer<TimelineCliProps> = (
     const status = item.status ?? "upcoming";
     const marker = renderTrianglePattern({
       length: 1,
-      phase: index,
+      phase: verticalTriangleStatusPhase(
+        status === "complete" ? "complete" : "incomplete",
+      ),
       tone: STATUS_TONES[status],
       ...(props.theme === undefined ? {} : { theme: props.theme }),
     }, capabilities);

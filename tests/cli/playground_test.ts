@@ -18,10 +18,16 @@ import {
   listCliComponents,
   renderCliExemptions,
 } from "../../scripts/cli-inventory.ts";
+import { stripAnsi } from "../../src/cli/ansi.ts";
+import { measureText } from "../../src/cli/text.ts";
 import {
   browseComponentChoices,
   browseTopChoices,
 } from "../../scripts/playground/browse.ts";
+import {
+  headingCandidateFacts,
+  renderHeadingCandidate,
+} from "../../scripts/playground/heading-candidates.ts";
 import {
   interactiveExportCoverage,
   journeyById,
@@ -41,6 +47,7 @@ import {
   runPlayground,
 } from "../../scripts/playground-cli.ts";
 import { FakeTerminal } from "./fake-terminal.ts";
+import { testCapabilities } from "./helpers.ts";
 
 const ENTER = "\r";
 const DOWN = "\x1b[B";
@@ -129,6 +136,62 @@ Deno.test("journey inventory stays unique, sectioned, and fully listed", () => {
     assertStringIncludes(list, id);
     assertStringIncludes(list, description);
   }
+});
+
+Deno.test("heading candidates remain directly addressable internal review material", async () => {
+  assertEquals(resolvePlaygroundSelection(["heading-candidates"]), {
+    kind: "journey",
+    id: "heading-candidates",
+  });
+  const io = new FakeTerminal([], { columns: 80 });
+  assertEquals(
+    await runJourney(journey("heading-candidates"), testRuntime(io)),
+    "completed",
+  );
+  for (
+    const id of ["quiet-marker", "short-rule", "offset-pair", "stacked-corner"]
+  ) {
+    assertStringIncludes(io.output(), `[${id}]`);
+  }
+  assertStringIncludes(io.output(), "Default boundary (1 line)");
+  assertStringIncludes(io.output(), "Explicit boundary (0 lines)");
+
+  const longTitle =
+    "A calm heading treatment for a deliberately long terminal section name";
+  for (const { id } of headingCandidateFacts) {
+    for (const columns of [39, 80, 104]) {
+      for (const unicode of [true, false]) {
+        for (const colorDepth of ["truecolor", "none"] as const) {
+          const capabilities = testCapabilities({
+            columns,
+            unicode,
+            colorDepth,
+          });
+          const rendered = stripAnsi(
+            renderHeadingCandidate(id, longTitle, capabilities),
+          );
+          assert(
+            rendered.split("\n").every((line) => measureText(line) <= columns),
+            `${id} overflowed ${columns} columns`,
+          );
+        }
+      }
+    }
+  }
+});
+
+Deno.test("Timeline and stepper status review has a direct journey", async () => {
+  assertEquals(resolvePlaygroundSelection(["triangle-statuses"]), {
+    kind: "journey",
+    id: "triangle-statuses",
+  });
+  const io = new FakeTerminal([], { columns: 52 });
+  assertEquals(
+    await runJourney(journey("triangle-statuses"), testRuntime(io)),
+    "completed",
+  );
+  assertStringIncludes(io.output(), " ◭  Completed");
+  assertStringIncludes(io.output(), "⧩ Now — Current [current]");
 });
 
 Deno.test("--list works without a terminal", async () => {
@@ -312,7 +375,7 @@ Deno.test("search and autocomplete journeys resolve through their providers", as
     await runJourney(journey("search"), testRuntime(search)),
     "completed",
   );
-  assertStringIncludes(search.output(), 'Result: string "foundations/canvas"');
+  assertStringIncludes(search.output(), 'Result: string "typography/heading"');
 
   const autocomplete = new FakeTerminal([`ca\t${ENTER}`], { columns: 48 });
   assertEquals(

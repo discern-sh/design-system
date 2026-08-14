@@ -1,7 +1,11 @@
+import { assert, assertEquals } from "@std/assert";
+import { stripAnsi } from "../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import {
   renderResultSummaryCli,
+  renderResultSummaryGroupCli,
   renderStandardMeterCli,
+  RESULT_SUMMARY_STATES,
 } from "../../src/cli/mod.ts";
 import {
   assertExactFrame,
@@ -82,6 +86,64 @@ Deno.test("Result summary renders exact widths, capability levels, and every out
       capabilities,
     );
   }
+});
+
+Deno.test("mixed Result summary groups own one widest visible prefix column", () => {
+  const items = [
+    { state: "changed" as const, fact: "Updated generated inventory" },
+    { state: "unchanged" as const, fact: "Kept the public command intact" },
+    { state: "passed" as const, fact: "All focused tests passed" },
+  ];
+  for (const unicode of [true, false]) {
+    for (
+      const colorDepth of [
+        "truecolor",
+        "ansi256",
+        "ansi16",
+        "none",
+      ] as const
+    ) {
+      const capabilities = testCapabilities({
+        columns: 52,
+        colorDepth,
+        unicode,
+      });
+      const rendered = stripAnsi(
+        renderResultSummaryGroupCli({ items }, capabilities),
+      );
+      const factColumns = rendered.split("\n").map((line) =>
+        Math.min(
+          ...items.map(({ fact }) => {
+            const index = line.indexOf(fact);
+            return index < 0 ? Number.POSITIVE_INFINITY : index;
+          }),
+        )
+      ).filter(Number.isFinite);
+      assertEquals(factColumns, [13, 13, 13]);
+    }
+  }
+
+  const narrow = stripAnsi(renderResultSummaryGroupCli({
+    items,
+    maxWidth: 24,
+  }, testCapabilities({ columns: 24 })));
+  const continuation = narrow.split("\n").filter((line) =>
+    line.startsWith(" ".repeat(13))
+  );
+  assertEquals(continuation.length, 7);
+  assert(continuation.every((line) => line.startsWith(" ".repeat(13))));
+
+  const canonical = stripAnsi(renderResultSummaryGroupCli({
+    items: RESULT_SUMMARY_STATES.map((state) => ({
+      state,
+      fact: `Canonical ${state}`,
+    })),
+  }, testCapabilities({ columns: 52, unicode: false })));
+  const canonicalColumns = canonical.split("\n").map((line) =>
+    line.indexOf("Canonical")
+  ).filter((column) => column >= 0);
+  assertEquals(canonicalColumns.length, RESULT_SUMMARY_STATES.length);
+  assertEquals(new Set(canonicalColumns).size, 1);
 });
 
 Deno.test("Standard meter renders exact widths, capability levels, and both limit directions", () => {

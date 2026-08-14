@@ -6,6 +6,7 @@
 
 import { renderStyledSpans } from "../../../cli/ansi.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { withCliHeadingBoundary } from "../../../cli/heading-boundary.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
 import {
   terminalThemeColor,
@@ -22,6 +23,8 @@ export interface HeadingCliProps {
   readonly level?: HeadingLevel;
   readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
+  /** Blank lines owned before this heading; defaults to one. */
+  readonly leadingBlankLines?: number;
 }
 
 /** Deterministic Heading states rendered by `deno task catalogue:cli heading`. */
@@ -29,6 +32,10 @@ export const cliExamples: readonly CliExample<HeadingCliProps>[] = [
   { name: "primary", props: { text: "Build with confidence", level: 1 } },
   { name: "accent", props: { text: "Rules that", accent: "travel", level: 2 } },
   { name: "minor", props: { text: "Implementation notes", level: 4 } },
+  {
+    name: "nested-boundary",
+    props: { text: "Nested section", level: 3, leadingBlankLines: 0 },
+  },
 ] as const;
 
 /** Render one semantic terminal heading with an optional accent segment. */
@@ -67,7 +74,7 @@ const renderHeadingCli: CliRenderer<HeadingCliProps> = (
     capabilities.unicode ? "…" : ".",
   );
   const theme = terminalThemes[props.theme ?? "dark"];
-  return renderStyledSpans([
+  const heading = renderStyledSpans([
     {
       text: prefix,
       style: {
@@ -84,6 +91,7 @@ const renderHeadingCli: CliRenderer<HeadingCliProps> = (
       },
     }]),
   ], capabilities);
+  return withCliHeadingBoundary(heading, props.leadingBlankLines);
 };
 
 export default renderHeadingCli;

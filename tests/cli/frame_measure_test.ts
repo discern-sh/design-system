@@ -6,6 +6,7 @@ import {
   renderInputCli,
   renderMeterCli,
   renderSelectCli,
+  renderTextareaCli,
   renderToastCli,
 } from "../../src/cli/mod.ts";
 import {
@@ -52,6 +53,16 @@ Deno.test("default frame widths derive from the authored measure token", async (
     cursor: 0,
   }, wide);
   assertEquals(widestLine(input), measure);
+
+  const textarea = renderTextareaCli({
+    kind: "textarea",
+    label: "Notes",
+    lifecycle: { status: "active" },
+    value: "",
+    cursor: 0,
+    rows: 5,
+  }, wide);
+  assertEquals(widestLine(textarea), measure);
 
   const toast = renderToastCli({ message: "Saved.", tone: "success" }, wide);
   assertEquals(widestLine(toast), measure);

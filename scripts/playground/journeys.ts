@@ -26,8 +26,10 @@ import {
 import {
   detectTerminalCapabilities,
   measureText,
+  renderTimelineCli,
   renderTrianglePattern,
   renderTriangleSectionRule,
+  renderTriangleWorkflowStepper,
   type TerminalCapabilities,
 } from "../../src/cli/mod.ts";
 import { defaultTerminalFrameWidth } from "../../src/cli/frame-measure.ts";
@@ -37,6 +39,7 @@ import {
 } from "../cli-inventory.ts";
 import { describeCapabilities, renderTerminalFacts } from "./banner.ts";
 import { runBrowseJourney } from "./browse.ts";
+import { runHeadingCandidatesJourney } from "./heading-candidates.ts";
 import {
   longGroupedChoices,
   searchGroupedEntries,
@@ -268,8 +271,9 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
     run: async (runtime) => {
       const value = await promptSearch({
         label: "Find a token",
+        initialId: "typography-heading",
         placeholder: "Type to filter",
-        hint: "Async results keep their group headings.",
+        hint: "Starts from the remembered Heading result.",
         search: async (query) => {
           await runtime.delay(60);
           return searchGroupedEntries(longGroupedChoices, query);
@@ -301,7 +305,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
     run: async (runtime) => {
       const value = await promptTextarea({
         label: "Release note",
-        rows: 4,
+        rows: 10,
         initialValue: "Added a terminal playground.\nNothing else changed.",
       }, { io: runtime.io });
       report(runtime, value);
@@ -414,6 +418,57 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
 ];
 
 const staticCatalogueJourneys: readonly PlaygroundJourney[] = [
+  {
+    id: "heading-candidates",
+    title: "Calm heading candidates",
+    section: "Static catalogue",
+    description:
+      "Compare four internal restrained-triangle treatments before the owner selects one.",
+    run: runHeadingCandidatesJourney,
+  },
+  {
+    id: "triangle-statuses",
+    title: "Timeline and stepper statuses",
+    section: "Static catalogue",
+    description:
+      "Review status-directed vertical triangles beside spinner, dot, bang, and cross markers.",
+    run: (runtime) => {
+      const capabilities = runtime.io.capabilities();
+      runtime.print("Workflow stepper:");
+      runtime.print(renderTriangleWorkflowStepper([
+        { label: "Completed", status: "complete" },
+        { label: "Active", status: "active", phase: 1 },
+        { label: "Pending", status: "pending" },
+        { label: "Error", status: "error" },
+        { label: "Cancelled", status: "cancelled" },
+      ], capabilities));
+      runtime.print("Timeline:");
+      runtime.print(renderTimelineCli({
+        title: "Status direction",
+        items: [
+          {
+            date: "Done",
+            title: "Complete",
+            description: "Completed points up.",
+            status: "complete",
+          },
+          {
+            date: "Now",
+            title: "Current",
+            description: "Incomplete points down.",
+            status: "current",
+          },
+          {
+            date: "Next",
+            title: "Upcoming",
+            description: "Upcoming remains incomplete.",
+            status: "upcoming",
+          },
+        ],
+      }, capabilities));
+      return Promise.resolve();
+    },
+  },
   {
     id: "browse",
     title: "Browse the static catalogue",

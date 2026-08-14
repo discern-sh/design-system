@@ -1,4 +1,6 @@
 import { styleText } from "../../src/cli/ansi.ts";
+import { assertEquals, assertThrows } from "@std/assert";
+import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import {
   renderAnchorHeadingCli,
   renderDocsHeaderCli,
@@ -28,14 +30,14 @@ Deno.test("Anchor heading renders exact width, ASCII, and colour frames", () => 
     const capabilities = testCapabilities({ columns });
     assertExactFrame(
       renderAnchorHeadingCli(anchorHeadingProps, capabilities),
-      renderTriangleSectionRule(label, { width: columns }, capabilities),
+      `\n${renderTriangleSectionRule(label, { width: columns }, capabilities)}`,
       capabilities,
     );
   }
   const ascii = testCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderAnchorHeadingCli(anchorHeadingProps, ascii),
-    ">v ## Renderer contr. v>",
+    "\n>v ## Renderer contr. v>",
     ascii,
   );
   for (
@@ -44,14 +46,48 @@ Deno.test("Anchor heading renders exact width, ASCII, and colour frames", () => 
     const capabilities = testCapabilities({ columns: 52, colorDepth });
     assertExactFrame(
       renderAnchorHeadingCli(anchorHeadingProps, capabilities),
-      renderTriangleSectionRule(
-        "## Renderer contract",
-        { width: 52 },
-        capabilities,
-      ),
+      `\n${
+        renderTriangleSectionRule(
+          "## Renderer contract",
+          { width: 52 },
+          capabilities,
+        )
+      }`,
       capabilities,
     );
   }
+});
+
+Deno.test("Anchor heading shares the validated default heading boundary", () => {
+  const capabilities = testCapabilities({ columns: 32 });
+  const render = renderAnchorHeadingCli as unknown as (
+    props: {
+      readonly id: string;
+      readonly text: string;
+      readonly leadingBlankLines?: number;
+    },
+    capabilities: TerminalCapabilities,
+  ) => string;
+  const defaults = render({ id: "boundary", text: "Boundary" }, capabilities);
+  assertEquals(defaults[0], "\n");
+  assertEquals(
+    render({
+      id: "boundary",
+      text: "Boundary",
+      leadingBlankLines: 0,
+    }, capabilities)[0],
+    "◮",
+  );
+  assertThrows(
+    () =>
+      render({
+        id: "boundary",
+        text: "Boundary",
+        leadingBlankLines: -1,
+      }, capabilities),
+    TypeError,
+    "leading blank lines",
+  );
 });
 
 const docsHeaderProps = {

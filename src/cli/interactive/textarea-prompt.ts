@@ -15,6 +15,7 @@ import { type PromptMachine, runPrompt } from "./driver.ts";
 import { GraphemeTextEditor } from "./editor.ts";
 import { isNamedKey, type TerminalKey } from "./keys.ts";
 import type { PromptOptions, PromptRuntime } from "./types.ts";
+import type { PromptFrameViewport } from "./viewport-budget.ts";
 
 function renderTextareaFrame(
   state: TextareaFrameState,
@@ -31,6 +32,7 @@ function renderTextareaFrame(
 export interface TextareaPromptOptions extends PromptOptions<string> {
   readonly placeholder?: string;
   readonly initialValue?: string;
+  /** Requested upper bound on editable rows; the viewport may reduce it per frame. */
   readonly rows?: number;
 }
 
@@ -64,14 +66,17 @@ class TextareaPromptMachine
     return this.#editor.value;
   }
 
-  frame(lifecycle: InteractiveFrameLifecycle): TextareaFrameState {
+  frame(
+    lifecycle: InteractiveFrameLifecycle,
+    viewport: PromptFrameViewport,
+  ): TextareaFrameState {
     return {
       kind: "textarea",
       label: this.options.label,
       lifecycle,
       value: this.#editor.value,
       cursor: this.#editor.cursor,
-      rows: this.#rows,
+      rows: Math.min(this.#rows, viewport.maximumControlRows),
       ...(this.options.hint === undefined
         ? { hint: "Ctrl+D to submit" }
         : { hint: this.options.hint }),

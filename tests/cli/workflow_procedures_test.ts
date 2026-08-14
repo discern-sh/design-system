@@ -118,17 +118,17 @@ Deno.test("Procedure renders exact narrow, standard, wide, and every semantic st
     completion: "The branch is on main",
   } as const;
   const standard =
-    "Ship the wave\n  Complete every owned CLI renderer\n\nBefore you start\n✓ Wave 1 [Satisfied]\n\n◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩ Steps ⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨\n ◮  Implemented\n │\n[⧨] Run gate\n │\n ·  Land\n │\n !  Rejected\n │\n ×  Stopped\n\nDone when: The branch is on main";
+    "Ship the wave\n  Complete every owned CLI renderer\n\nBefore you start\n✓ Wave 1 [Satisfied]\n\n◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩ Steps ⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨\n ◭  Implemented\n │\n[⧨] Run gate\n │\n ·  Land\n │\n !  Rejected\n │\n ×  Stopped\n\nDone when: The branch is on main";
   for (
     const [columns, expected] of [
       [
         24,
-        "Ship the wave\n  Complete every owned\n  CLI renderer\n\nBefore you start\n✓ Wave 1 [Satisfied]\n\n◮⧩◭⧨◮⧩◭⧨ Steps ⧨◭⧩◮⧨◭⧩◮⧨\n ◮  Implemented\n │\n[⧨] Run gate\n │\n ·  Land\n │\n !  Rejected\n │\n ×  Stopped\n\nDone when: The branch is\n           on main",
+        "Ship the wave\n  Complete every owned\n  CLI renderer\n\nBefore you start\n✓ Wave 1 [Satisfied]\n\n◮⧩◭⧨◮⧩◭⧨ Steps ⧨◭⧩◮⧨◭⧩◮⧨\n ◭  Implemented\n │\n[⧨] Run gate\n │\n ·  Land\n │\n !  Rejected\n │\n ×  Stopped\n\nDone when: The branch is\n           on main",
       ],
       [52, standard],
       [
         80,
-        "Ship the wave\n  Complete every owned CLI renderer\n\nBefore you start\n✓ Wave 1 [Satisfied]\n\n◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨ Steps ⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨\n ◮  Implemented\n │\n[⧨] Run gate\n │\n ·  Land\n │\n !  Rejected\n │\n ×  Stopped\n\nDone when: The branch is on main",
+        "Ship the wave\n  Complete every owned CLI renderer\n\nBefore you start\n✓ Wave 1 [Satisfied]\n\n◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨ Steps ⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨◭⧩◮⧨\n ◭  Implemented\n │\n[⧨] Run gate\n │\n ·  Land\n │\n !  Rejected\n │\n ×  Stopped\n\nDone when: The branch is on main",
       ],
     ] as const
   ) {
@@ -142,7 +142,7 @@ Deno.test("Procedure renders exact narrow, standard, wide, and every semantic st
   assertCapabilityLevels(
     (capabilities) => renderProcedureCli(props, capabilities),
     standard,
-    "Ship the wave\n  Complete every owned CLI renderer\n\nBefore you start\n+ Wave 1 [Satisfied]\n\n>v^<>v^<>v^<>v^<>v^<>v Steps v><^v><^v><^v><^v><^v><\n >  Implemented\n |\n[<] Run gate\n |\n .  Land\n |\n !  Rejected\n |\n x  Stopped\n\nDone when: The branch is on main",
+    "Ship the wave\n  Complete every owned CLI renderer\n\nBefore you start\n+ Wave 1 [Satisfied]\n\n>v^<>v^<>v^<>v^<>v^<>v Steps v><^v><^v><^v><^v><^v><\n ^  Implemented\n |\n[<] Run gate\n |\n .  Land\n |\n !  Rejected\n |\n x  Stopped\n\nDone when: The branch is on main",
   );
 });
 
@@ -157,12 +157,12 @@ Deno.test("Procedure step renders exact widths, capability levels, statuses, and
     completionCriterion: "A proof is recorded",
   } as const;
   const standard =
-    "[⧨] Run the gate\n  Verify the committed tree\n  $ discern done\n  ✓ You should see\n    The full gate passes\nComplete when: A proof is recorded";
+    "[⧨] Run the gate\n  Verify the committed tree\n  Run: discern done\n  ✓ You should see\n    The full gate passes\nComplete when: A proof is recorded";
   for (
     const [columns, expected] of [
       [
         24,
-        "[⧨] Run the gate\n  Verify the committed\n  tree\n  $ discern done\n  ✓ You should see\n    The full gate passes\nComplete when:\n  A proof is recorded",
+        "[⧨] Run the gate\n  Verify the committed\n  tree\n  Run: discern done\n  ✓ You should see\n    The full gate passes\nComplete when:\n  A proof is recorded",
       ],
       [52, standard],
       [80, standard],
@@ -178,7 +178,7 @@ Deno.test("Procedure step renders exact widths, capability levels, statuses, and
   assertCapabilityLevels(
     (capabilities) => renderProcedureStepCli(props, capabilities),
     standard,
-    "[<] Run the gate\n  Verify the committed tree\n  $ discern done\n  + You should see\n    The full gate passes\nComplete when: A proof is recorded",
+    "[<] Run the gate\n  Verify the committed tree\n  Run: discern done\n  + You should see\n    The full gate passes\nComplete when: A proof is recorded",
   );
 
   const capabilities = testCapabilities({ columns: 52 });

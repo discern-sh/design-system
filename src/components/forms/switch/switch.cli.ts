@@ -7,7 +7,12 @@
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import type { ConfirmFrameState } from "../../../cli/interactive-states.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
-import { type FormCliPresentation, renderFormCliFrame } from "../form-frame.ts";
+import {
+  type FormCliPresentation,
+  renderFormCliFrame,
+  styleFormCliChoiceText,
+  styleFormCliSelectedMark,
+} from "../form-frame.ts";
 
 /** Inputs accepted by the terminal Switch renderer. */
 export interface SwitchCliProps extends ConfirmFrameState {
@@ -74,20 +79,41 @@ export const cliExamples: readonly CliExample<SwitchCliProps>[] = [
 /** Render a Wave 1 confirmation state with binary switch semantics. */
 const renderSwitchCli: CliRenderer<SwitchCliProps> = (props, capabilities) => {
   const state = props;
-  const track = capabilities.unicode
-    ? state.value ? "◀● ON " : " OFF ●▶"
-    : state.value
-    ? "[ON ]"
-    : "[ OFF]";
   const active = props.presentation === undefined &&
     (state.lifecycle.status === "active" ||
       state.lifecycle.status === "validation-error");
   const pointer = active ? `${capabilities.unicode ? "›" : ">"} ` : "";
+  const disabled = props.presentation === "disabled";
+  const styleOptions = {
+    disabled,
+    ...(props.theme === undefined ? {} : { theme: props.theme }),
+  };
+  const noLabel = styleFormCliChoiceText(state.noLabel, {
+    ...styleOptions,
+    highlighted: !disabled && !state.value,
+  }, capabilities);
+  const yesLabel = styleFormCliChoiceText(state.yesLabel, {
+    ...styleOptions,
+    highlighted: !disabled && state.value,
+  }, capabilities);
+  const selected = capabilities.unicode ? "●" : "*";
+  const unselected = capabilities.unicode ? "○" : "o";
+  const left = styleFormCliSelectedMark(
+    state.value ? unselected : selected,
+    !state.value,
+    styleOptions,
+    capabilities,
+  );
+  const right = styleFormCliSelectedMark(
+    state.value ? selected : unselected,
+    state.value,
+    styleOptions,
+    capabilities,
+  );
+  const track = `${left}${capabilities.unicode ? "──" : "--"}${right}`;
   return renderFormCliFrame({
     label: state.label,
-    control: `${pointer}${track} ${
-      state.value ? state.yesLabel : state.noLabel
-    }`,
+    control: `${pointer}${noLabel} ${track} ${yesLabel}`,
     lifecycle: state.lifecycle,
     ...(state.hint === undefined ? {} : { hint: state.hint }),
     ...(props.presentation === undefined

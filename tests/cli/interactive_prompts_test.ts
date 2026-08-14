@@ -253,7 +253,7 @@ Deno.test("no-control terminals keep Unicode and use static interactive frames",
   const io = new FakeTerminal(["\x1b[B\r"], {
     ansiControl: false,
     columns: 24,
-    rows: 4,
+    rows: 5,
     unicode: true,
   });
   assertEquals(
@@ -285,28 +285,29 @@ Deno.test("no-control terminals keep Unicode and use static interactive frames",
   assertEquals(spinnerIo.writes, ["◮ Work\n"]);
 });
 
-Deno.test("oversized prompts emit static frames without inline erasure", async () => {
+Deno.test("terminals below the coherent frame minimum refuse and restore", async () => {
   const io = new FakeTerminal(["\x1b[B\r"], {
     ansiControl: true,
     columns: 24,
     rows: 2,
     unicode: true,
   });
-  assertEquals(
-    await promptSelect({
-      label: "Pick",
-      choices: [
-        { id: "one", label: "One", value: 1 },
-        { id: "two", label: "Two", value: 2 },
-      ],
-    }, { io }),
-    2,
+  await assertRejects(
+    () =>
+      promptSelect({
+        label: "Pick",
+        choices: [
+          { id: "one", label: "One", value: 1 },
+          { id: "two", label: "Two", value: 2 },
+        ],
+      }, { io }),
+    TypeError,
+    "cannot hold a coherent prompt frame",
   );
-  assertStringIncludes(io.output(), "› [●] One");
-  assertStringIncludes(io.output(), "› [●] Two");
   assert(!io.output().includes("\x1b[1G"));
   assert(!io.output().includes("\x1b[J"));
   assertEquals(io.rawTransitions, [true, false]);
+  assertRestored(io);
 });
 
 Deno.test("spinner and progress restore cursor after callback failures", async () => {

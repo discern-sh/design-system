@@ -1,4 +1,5 @@
-import { renderStyledSpans, styleText } from "../../src/cli/ansi.ts";
+import { assert } from "@std/assert";
+import { renderStyledSpans, stripAnsi, styleText } from "../../src/cli/ansi.ts";
 import { renderPullQuoteCli, renderTimelineCli } from "../../src/cli/mod.ts";
 import {
   terminalThemeColor,
@@ -101,9 +102,9 @@ const timelineProps = {
 
 Deno.test("Timeline renders exact width, ASCII, and colour frames", () => {
   const narrow =
-    "HISTORY\n\nOne decision at a time\n\n◮ Week 01 — Observe\n  [complete]\n│   Name the recurring\n    friction.\n│\n⧩ Week 03 — Constrain\n  [current]\n│   Make the shared\n    boundary executable.\n│\n◭ Week 06 — Review\n  [upcoming]\n    Compare evidence,\n    not recollections.";
+    "HISTORY\n\nOne decision at a time\n\n◭ Week 01 — Observe\n  [complete]\n│   Name the recurring\n    friction.\n│\n⧩ Week 03 — Constrain\n  [current]\n│   Make the shared\n    boundary executable.\n│\n⧩ Week 06 — Review\n  [upcoming]\n    Compare evidence,\n    not recollections.";
   const standard =
-    "HISTORY\n\nOne decision at a time\n\n◮ Week 01 — Observe [complete]\n│   Name the recurring friction.\n│\n⧩ Week 03 — Constrain [current]\n│   Make the shared boundary executable.\n│\n◭ Week 06 — Review [upcoming]\n    Compare evidence, not recollections.";
+    "HISTORY\n\nOne decision at a time\n\n◭ Week 01 — Observe [complete]\n│   Name the recurring friction.\n│\n⧩ Week 03 — Constrain [current]\n│   Make the shared boundary executable.\n│\n⧩ Week 06 — Review [upcoming]\n    Compare evidence, not recollections.";
   for (
     const [columns, expected] of [[24, narrow], [52, standard], [
       96,
@@ -120,7 +121,7 @@ Deno.test("Timeline renders exact width, ASCII, and colour frames", () => {
   const ascii = testCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderTimelineCli(timelineProps, ascii),
-    "HISTORY\n\nOne decision at a time\n\n> Week 01 - Observe\n  [complete]\n|   Name the recurring\n    friction.\n|\nv Week 03 - Constrain\n  [current]\n|   Make the shared\n    boundary executable.\n|\n^ Week 06 - Review\n  [upcoming]\n    Compare evidence,\n    not recollections.",
+    "HISTORY\n\nOne decision at a time\n\n^ Week 01 - Observe\n  [complete]\n|   Name the recurring\n    friction.\n|\nv Week 03 - Constrain\n  [current]\n|   Make the shared\n    boundary executable.\n|\nv Week 06 - Review\n  [upcoming]\n    Compare evidence,\n    not recollections.",
     ascii,
   );
   const theme = terminalThemes.dark;
@@ -139,11 +140,11 @@ Deno.test("Timeline renders exact width, ASCII, and colour frames", () => {
     const marker = (phase: number, tone: "success" | "accent" | "neutral") =>
       renderTrianglePattern({ length: 1, phase, tone }, capabilities);
     const events = `${
-      marker(0, "success")
+      marker(2, "success")
     } Week 01 — Observe [complete]\n│   Name the recurring friction.\n│\n${
       marker(1, "accent")
     } Week 03 — Constrain [current]\n│   Make the shared boundary executable.\n│\n${
-      marker(2, "neutral")
+      marker(1, "neutral")
     } Week 06 — Review [upcoming]\n    Compare evidence, not recollections.`;
     const expected = `${heading}\n\n${title}\n\n${events}`;
     assertExactFrame(
@@ -151,5 +152,41 @@ Deno.test("Timeline renders exact width, ASCII, and colour frames", () => {
       expected,
       capabilities,
     );
+  }
+});
+
+Deno.test("Timeline markers point up only for complete events regardless of item order", () => {
+  for (const unicode of [true, false]) {
+    const capabilities = testCapabilities({ columns: 52, unicode });
+    const output = stripAnsi(renderTimelineCli({
+      title: "Direction",
+      items: [
+        {
+          date: "Now",
+          title: "Current",
+          description: "Active",
+          status: "current",
+        },
+        {
+          date: "Then",
+          title: "Complete",
+          description: "Done",
+          status: "complete",
+        },
+        {
+          date: "Later",
+          title: "Upcoming",
+          description: "Pending",
+          status: "upcoming",
+        },
+      ],
+    }, capabilities));
+    const lines = output.split("\n");
+    const current = lines.find((line) => line.includes("Now")) ?? "";
+    const complete = lines.find((line) => line.includes("Then")) ?? "";
+    const upcoming = lines.find((line) => line.includes("Later")) ?? "";
+    assert(current.startsWith(unicode ? "⧩" : "v"));
+    assert(complete.startsWith(unicode ? "◭" : "^"));
+    assert(upcoming.startsWith(unicode ? "⧩" : "v"));
   }
 });

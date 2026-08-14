@@ -8,6 +8,7 @@ import { renderStyledSpans, type StyledSpan, styleText } from "./ansi.ts";
 import type { TerminalCapabilities } from "./capabilities.ts";
 import type { SequentialStepStatus } from "./interactive-states.ts";
 import { measureText, truncateText } from "./text.ts";
+import { verticalTriangleStatusPhase } from "./triangle-status.ts";
 import {
   type TerminalSemanticTone,
   type TerminalTheme,
@@ -331,9 +332,9 @@ function stepMarker(
   capabilities: TerminalCapabilities,
   theme: TerminalTheme,
 ): StyledSpan {
-  const phase = step.phase ?? index;
-  assertInteger(phase, `triangle workflow step ${index + 1} phase`);
   if (step.status === "active") {
+    const phase = step.phase ?? index;
+    assertInteger(phase, `triangle workflow step ${index + 1} phase`);
     const raw = `[${
       stripStyle(
         renderTriangleSpinnerFrame(phase, {
@@ -349,7 +350,14 @@ function stepMarker(
   }
   if (step.status === "complete") {
     return {
-      text: ` ${renderCycle(1, phase, "forward", capabilities)} `,
+      text: ` ${
+        renderCycle(
+          1,
+          verticalTriangleStatusPhase("complete"),
+          "forward",
+          capabilities,
+        )
+      } `,
       style: { color: motifColor(theme, "success") },
     };
   }

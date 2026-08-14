@@ -11,6 +11,7 @@ export * from "./capabilities.ts";
 export * from "./contracts.ts";
 export * from "./interactive-states.ts";
 export * from "./layout.ts";
+export * from "./result-summary-group.ts";
 export * from "./text.ts";
 export * from "./theme.ts";
 export * from "./triangles.ts";

@@ -15,6 +15,8 @@ import {
   type FormCliPresentation,
   renderFormCliChoiceHeading,
   renderFormCliFrame,
+  styleFormCliChoiceText,
+  styleFormCliSelectedMark,
   visibleFormCliChoiceEntries,
 } from "../form-frame.ts";
 
@@ -159,15 +161,26 @@ const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
       }
       const option = entry;
       const absoluteIndex = sourceIndex;
-      const pointer = absoluteIndex === state.highlightedIndex
-        ? capabilities.unicode ? "›" : ">"
-        : " ";
-      const mark = option.id === state.selectedId
-        ? capabilities.unicode ? "●" : "*"
-        : " ";
-      return `${pointer} [${mark}] ${option.label}${
+      const isHighlighted = absoluteIndex === state.highlightedIndex;
+      const pointer = isHighlighted ? capabilities.unicode ? "›" : ">" : " ";
+      const selected = option.id === state.selectedId;
+      const mark = selected ? capabilities.unicode ? "●" : "*" : " ";
+      const styleOptions = {
+        highlighted: isHighlighted,
+        disabled: option.disabled === true,
+        ...(props.theme === undefined ? {} : { theme: props.theme }),
+      };
+      const label = `${option.label}${
         option.disabled === true ? " (disabled)" : ""
       }`;
+      return `${styleFormCliChoiceText(pointer, styleOptions, capabilities)} [${
+        styleFormCliSelectedMark(
+          mark,
+          selected,
+          styleOptions,
+          capabilities,
+        )
+      }] ${styleFormCliChoiceText(label, styleOptions, capabilities)}`;
     }).join("\n")
     : `${selected?.label ?? props.placeholder ?? "Choose an option"} ${
       capabilities.unicode ? "⌄" : "v"

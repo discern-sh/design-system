@@ -19,6 +19,8 @@ import {
   insertFormCliCursor,
   renderFormCliChoiceHeading,
   renderFormCliFrame,
+  styleFormCliChoiceText,
+  styleFormCliSelectedMark,
   visibleFormCliChoiceEntries,
 } from "../form-frame.ts";
 
@@ -175,17 +177,39 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
       const selected = state.kind === "search"
         ? state.lifecycle.status === "submitted" && index === highlightedIndex
         : option.id === state.selectedId;
-      const marker = capabilities.unicode
+      const markerGlyph = capabilities.unicode
         ? selected ? "◉" : "○"
         : selected
-        ? "(*)"
-        : "( )";
-      const pointer = expanded && index === highlightedIndex
-        ? capabilities.unicode ? "› " : "> "
-        : "  ";
-      return `${pointer}${marker} ${option.label}${
+        ? "*"
+        : " ";
+      const highlighted = expanded && index === highlightedIndex;
+      const pointer = highlighted ? capabilities.unicode ? "› " : "> " : "  ";
+      const styleOptions = {
+        highlighted,
+        disabled: option.disabled === true,
+        ...(props.theme === undefined ? {} : { theme: props.theme }),
+      };
+      const marker = capabilities.unicode
+        ? styleFormCliSelectedMark(
+          markerGlyph,
+          selected,
+          styleOptions,
+          capabilities,
+        )
+        : `(${
+          styleFormCliSelectedMark(
+            markerGlyph,
+            selected,
+            styleOptions,
+            capabilities,
+          )
+        })`;
+      const label = `${option.label}${
         option.disabled === true ? " (disabled)" : ""
       }`;
+      return `${
+        styleFormCliChoiceText(pointer, styleOptions, capabilities)
+      }${marker} ${styleFormCliChoiceText(label, styleOptions, capabilities)}`;
     });
   const control = state.kind === "search"
     ? `${

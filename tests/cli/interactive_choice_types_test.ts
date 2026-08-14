@@ -7,6 +7,7 @@ import type {
   PromptChoice,
   PromptChoiceEntry,
   PromptChoiceGroupHeading,
+  SearchPromptOptions,
   SelectPromptOptions,
 } from "../../src/cli/interactive/mod.ts";
 
@@ -38,6 +39,11 @@ const legacyOptions = {
   label: "Legacy",
   choices: legacyChoices,
 } satisfies SelectPromptOptions<number>;
+const searchableOptions = {
+  label: "Search",
+  initialId: "one",
+  search: () => entries,
+} satisfies SearchPromptOptions<number>;
 const frameEntries = [
   { kind: "group-heading", id: "recommended", label: "Recommended" },
   { id: "one", label: "One" },
@@ -51,6 +57,7 @@ Deno.test("choice entry types need no generic sentinel and preserve legacy calls
   assertEquals(headingValueIsNever, true);
   assertEquals(groupedOptions.choices[0], heading);
   assertEquals(legacyOptions.choices, legacyChoices);
+  assertEquals(searchableOptions.initialId, "one");
   assertEquals(frameEntries[0].kind, "group-heading");
   assertEquals(fleetOptions.identityMode, "lossless");
 });

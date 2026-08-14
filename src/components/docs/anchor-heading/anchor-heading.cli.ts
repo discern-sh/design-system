@@ -6,6 +6,7 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { withCliHeadingBoundary } from "../../../cli/heading-boundary.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { truncateText } from "../../../cli/text.ts";
 import {
@@ -24,6 +25,8 @@ export interface AnchorHeadingCliProps {
   readonly showTarget?: boolean;
   readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
+  /** Blank lines owned before this heading; defaults to one. */
+  readonly leadingBlankLines?: number;
 }
 
 /** Deterministic Anchor heading states rendered by the CLI catalogue. */
@@ -31,6 +34,15 @@ export const cliExamples: readonly CliExample<AnchorHeadingCliProps>[] = [
   {
     name: "section",
     props: { id: "renderer-contract", text: "Renderer contract", level: 2 },
+  },
+  {
+    name: "nested-boundary",
+    props: {
+      id: "nested-contract",
+      text: "Nested contract",
+      level: 3,
+      leadingBlankLines: 0,
+    },
   },
 ] as const;
 
@@ -62,15 +74,20 @@ const renderAnchorHeadingCli: CliRenderer<AnchorHeadingCliProps> = (
     width,
     ...(props.theme === undefined ? {} : { theme: props.theme }),
   }, capabilities);
-  if (props.showTarget !== true) return rule;
+  if (props.showTarget !== true) {
+    return withCliHeadingBoundary(rule, props.leadingBlankLines);
+  }
   const theme = terminalThemes[props.theme ?? "dark"];
-  return joinVertical([
-    rule,
-    styleText(`#${props.id}`, {
-      ...theme.typography.annotation,
-      color: terminalThemeColor(theme, "--discern-color-ink-muted"),
-    }, capabilities),
-  ]);
+  return withCliHeadingBoundary(
+    joinVertical([
+      rule,
+      styleText(`#${props.id}`, {
+        ...theme.typography.annotation,
+        color: terminalThemeColor(theme, "--discern-color-ink-muted"),
+      }, capabilities),
+    ]),
+    props.leadingBlankLines,
+  );
 };
 
 export default renderAnchorHeadingCli;

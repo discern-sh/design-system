@@ -9,8 +9,9 @@ import type { TextareaFrameState } from "../../../cli/interactive-states.ts";
 import { wrapText } from "../../../cli/text.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
+  formCliControlWidth,
   type FormCliPresentation,
-  insertFormCliCursor,
+  insertFormCliMarker,
   renderFormCliFrame,
 } from "../form-frame.ts";
 
@@ -52,6 +53,16 @@ export const cliExamples: readonly CliExample<TextareaCliProps>[] = [
     },
   },
   {
+    name: "tall-window",
+    props: {
+      ...base,
+      value: "One\nTwo\nThree\nFour\nFive\nSix\nSeven",
+      cursor: 33,
+      rows: 6,
+      lifecycle: { status: "active" },
+    },
+  },
+  {
     name: "validation-error",
     props: {
       ...base,
@@ -88,7 +99,13 @@ export const cliExamples: readonly CliExample<TextareaCliProps>[] = [
   },
 ] as const;
 
-/** Render a Wave 1 textarea state as a fixed-row terminal frame. */
+function cursorSentinel(value: string): string {
+  let marker = "\u{e000}";
+  while (value.includes(marker)) marker += "\u{301}";
+  return marker;
+}
+
+/** Render a Wave 1 textarea state as a viewport-windowed terminal frame. */
 const renderTextareaCli: CliRenderer<TextareaCliProps> = (
   props,
   capabilities,
@@ -104,13 +121,18 @@ const renderTextareaCli: CliRenderer<TextareaCliProps> = (
     props.presentation !== "filled" && props.presentation !== "disabled" &&
     (state.lifecycle.status === "active" ||
       state.lifecycle.status === "validation-error");
-  const withCursor = showCursor
-    ? insertFormCliCursor(raw, state.cursor, capabilities)
-    : raw;
-  const width = Math.min(props.width ?? 48, capabilities.columns);
-  const lines = wrapText(withCursor, Math.max(1, width - 2)).slice(
+  const sentinel = cursorSentinel(raw);
+  const marked = insertFormCliMarker(raw, state.cursor, sentinel);
+  const width = formCliControlWidth(props.width, capabilities);
+  const wrapped = wrapText(marked, Math.max(1, width));
+  const cursorLine = Math.max(
     0,
-    state.rows,
+    wrapped.findIndex((line) => line.includes(sentinel)),
+  );
+  const visibleStart = Math.max(0, cursorLine - state.rows + 1);
+  const cursor = capabilities.unicode ? "▌" : "|";
+  const lines = wrapped.slice(visibleStart, visibleStart + state.rows).map(
+    (line) => line.replace(sentinel, showCursor ? cursor : ""),
   );
   while (lines.length < state.rows) lines.push("");
   return renderFormCliFrame({
@@ -123,7 +145,7 @@ const renderTextareaCli: CliRenderer<TextareaCliProps> = (
       : { presentation: props.presentation }),
     ...(props.required === undefined ? {} : { required: props.required }),
     ...(props.theme === undefined ? {} : { theme: props.theme }),
-    width,
+    ...(props.width === undefined ? {} : { width: props.width }),
   }, capabilities);
 };
 

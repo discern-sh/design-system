@@ -1,5 +1,12 @@
+import { assert, assertEquals, assertStringIncludes } from "@std/assert";
+import { stripAnsi, styleText } from "../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import type { CliExample } from "../../src/cli/contracts.ts";
+import {
+  terminalThemeColor,
+  terminalThemes,
+  terminalToneColor,
+} from "../../src/cli/theme.ts";
 import {
   checkboxCliExamples,
   fieldCliExamples,
@@ -297,13 +304,13 @@ Deno.test("grouped Select, Checkbox, and Radio retain structure in narrow ASCII 
 });
 
 const switchFrames = [
-  "Automatic updates [idle]\n┌──────────────────────────┐\n│ OFF ●▶ Off              │\n└──────────────────────────┘",
-  "Automatic updates [active]\n┌──────────────────────────┐\n│›  OFF ●▶ Off            │\n└──────────────────────────┘",
-  "Automatic updates [filled]\n┌──────────────────────────┐\n│◀● ON  On                │\n└──────────────────────────┘",
-  "Automatic updates [error]\n┌──────────────────────────┐\n│›  OFF ●▶ Off            │\n└──────────────────────────┘\n! Setting is locked",
-  "Automatic updates [disabled]\n┌──────────────────────────┐\n│ OFF ●▶ Off              │\n└──────────────────────────┘\nDisabled",
-  "Automatic updates [submitte…\n┌──────────────────────────┐\n│◀● ON  On                │\n└──────────────────────────┘\n✓ Submitted",
-  "Automatic updates [cancelle…\n┌──────────────────────────┐\n│ OFF ●▶ Off              │\n└──────────────────────────┘\n× Change cancelled",
+  "Automatic updates [idle]\n┌──────────────────────────┐\n│Off ●──○ On               │\n└──────────────────────────┘",
+  "Automatic updates [active]\n┌──────────────────────────┐\n│› Off ●──○ On             │\n└──────────────────────────┘",
+  "Automatic updates [filled]\n┌──────────────────────────┐\n│Off ○──● On               │\n└──────────────────────────┘",
+  "Automatic updates [error]\n┌──────────────────────────┐\n│› Off ●──○ On             │\n└──────────────────────────┘\n! Setting is locked",
+  "Automatic updates [disabled]\n┌──────────────────────────┐\n│Off ●──○ On               │\n└──────────────────────────┘\nDisabled",
+  "Automatic updates [submitte…\n┌──────────────────────────┐\n│Off ○──● On               │\n└──────────────────────────┘\n✓ Submitted",
+  "Automatic updates [cancelle…\n┌──────────────────────────┐\n│Off ●──○ On               │\n└──────────────────────────┘\n× Change cancelled",
 ] as const;
 
 Deno.test("Switch renders every static binary state exactly", () => {
@@ -315,19 +322,186 @@ Deno.test("Switch covers narrow, standard, wide, colour, and ASCII frames", () =
     switchCliExamples,
     renderSwitchCli,
     [
-      "Automatic updat…\n┌──────────────┐\n│◀● ON  On    │\n└──────────────┘",
+      "Automatic updat…\n┌──────────────┐\n│Off ○──● On   │\n└──────────────┘",
       switchFrames[2],
-      "Automatic updates [filled]\n┌──────────────────────────────────────────────┐\n│◀● ON  On                                    │\n└──────────────────────────────────────────────┘",
+      "Automatic updates [filled]\n┌──────────────────────────────────────────────┐\n│Off ○──● On                                   │\n└──────────────────────────────────────────────┘",
     ],
     switchFrames[1],
-    "Automatic updates [active]\n+--------------------------+\n|> [ OFF] Off              |\n+--------------------------+",
+    "Automatic updates [active]\n+--------------------------+\n|> Off *--o On             |\n+--------------------------+",
   );
+});
+
+Deno.test("choice navigation and selected markers use Token-derived accent while disabled text stays muted", () => {
+  const theme = terminalThemes.dark;
+  for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
+    const capabilities = testCapabilities({
+      colorDepth,
+      columns: 32,
+    });
+    const selectedElsewhere = renderSelectCli({
+      kind: "select",
+      label: "Environment",
+      lifecycle: { status: "active" },
+      options: [
+        { id: "alpha", label: "Alpha" },
+        { id: "bravo", label: "Bravo" },
+        { id: "disabled", label: "Disabled", disabled: true },
+      ],
+      highlightedIndex: 1,
+      selectedId: "alpha",
+      width: 32,
+    }, capabilities);
+    assertStringIncludes(
+      selectedElsewhere,
+      styleText("●", {
+        color: terminalToneColor(theme, "accent"),
+      }, capabilities),
+    );
+    assertStringIncludes(
+      selectedElsewhere,
+      styleText("Bravo", {
+        ...theme.typography.strong,
+        color: terminalToneColor(theme, "accent"),
+      }, capabilities),
+    );
+    assertStringIncludes(
+      selectedElsewhere,
+      styleText("Disabled (disabled)", {
+        ...theme.typography.muted,
+        color: terminalThemeColor(theme, "--discern-color-ink-muted"),
+      }, capabilities),
+    );
+
+    const multiselect = renderCheckboxCli({
+      kind: "multiselect",
+      label: "Capabilities",
+      lifecycle: { status: "active" },
+      options: [
+        { id: "render", label: "Render" },
+        { id: "inspect", label: "Inspect" },
+      ],
+      highlightedIndex: 1,
+      selectedIds: ["render"],
+      width: 32,
+    }, capabilities);
+    assertStringIncludes(
+      multiselect,
+      styleText("✓", {
+        color: terminalToneColor(theme, "accent"),
+      }, capabilities),
+    );
+  }
+
+  const plain = testCapabilities({ columns: 32 });
+  assertStringIncludes(
+    renderSelectCli({
+      kind: "select",
+      label: "Environment",
+      lifecycle: { status: "active" },
+      options: [
+        { id: "alpha", label: "Alpha" },
+        { id: "bravo", label: "Bravo", disabled: true },
+      ],
+      highlightedIndex: 0,
+      selectedId: "alpha",
+      width: 32,
+    }, plain),
+    "› [●] Alpha",
+  );
+  const ascii = testCapabilities({ columns: 32, unicode: false });
+  assertStringIncludes(
+    renderCheckboxCli({
+      kind: "multiselect",
+      label: "Capabilities",
+      lifecycle: { status: "active" },
+      options: [{ id: "render", label: "Render" }],
+      highlightedIndex: 0,
+      selectedIds: ["render"],
+      width: 32,
+    }, ascii),
+    "> [x] Render",
+  );
+});
+
+Deno.test("Switch keeps custom yes and no labels in fixed columns across values and states", () => {
+  const base = {
+    kind: "confirm" as const,
+    label: "Deploy",
+    yesLabel: "Proceed",
+    noLabel: "Keep off",
+    width: 32,
+  };
+  const states = [
+    { lifecycle: { status: "active" as const } },
+    {
+      lifecycle: {
+        status: "validation-error" as const,
+        message: "Choose deliberately",
+      },
+    },
+    { lifecycle: { status: "submitted" as const } },
+    {
+      lifecycle: { status: "active" as const },
+      presentation: "disabled" as const,
+    },
+  ];
+  for (const unicode of [true, false]) {
+    for (
+      const colorDepth of [
+        "truecolor",
+        "ansi256",
+        "ansi16",
+        "none",
+      ] as const
+    ) {
+      const capabilities = testCapabilities({
+        colorDepth,
+        columns: 32,
+        unicode,
+      });
+      for (const state of states) {
+        const off = stripAnsi(renderSwitchCli({
+          ...base,
+          ...state,
+          value: false,
+        }, capabilities));
+        const on = stripAnsi(renderSwitchCli({
+          ...base,
+          ...state,
+          value: true,
+        }, capabilities));
+        const offControl = off.split("\n").find((line) =>
+          line.includes("Keep off")
+        ) ?? "";
+        const onControl = on.split("\n").find((line) =>
+          line.includes("Keep off")
+        ) ?? "";
+        assertStringIncludes(offControl, "Proceed");
+        assertStringIncludes(onControl, "Proceed");
+        assertEquals(offControl.length, onControl.length);
+        assertEquals(
+          offControl.indexOf("Keep off"),
+          onControl.indexOf("Keep off"),
+        );
+        assertEquals(
+          offControl.indexOf("Proceed"),
+          onControl.indexOf("Proceed"),
+        );
+        assert(
+          unicode
+            ? offControl.includes("●──○") && onControl.includes("○──●")
+            : offControl.includes("*--o") && onControl.includes("o--*"),
+        );
+      }
+    }
+  }
 });
 
 const textareaFrames = [
   "Release notes [idle]\n┌──────────────────────────┐\n│Describe the change       │\n│                          │\n│                          │\n└──────────────────────────┘",
   "Release notes [active]\n┌──────────────────────────┐\n│▌Describe the change      │\n│                          │\n│                          │\n└──────────────────────────┘",
   "Release notes [filled]\n┌──────────────────────────┐\n│Adds CLI frames.          │\n│                          │\n│                          │\n└──────────────────────────┘",
+  "Release notes [active]\n┌──────────────────────────┐\n│Two                       │\n│Three                     │\n│Four                      │\n│Five                      │\n│Six                       │\n│Seven▌                    │\n└──────────────────────────┘",
   "Release notes [error]\n┌──────────────────────────┐\n│Short▌                    │\n│                          │\n│                          │\n└──────────────────────────┘\n! Add more detail",
   "Release notes [disabled]\n┌──────────────────────────┐\n│Managed by policy         │\n│                          │\n│                          │\n└──────────────────────────┘\nDisabled",
   "Release notes [submitted]\n┌──────────────────────────┐\n│Adds CLI frames.          │\n│                          │\n│                          │\n└──────────────────────────┘\n✓ Submitted",

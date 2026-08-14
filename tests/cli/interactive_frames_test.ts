@@ -99,7 +99,7 @@ Deno.test("interactive prompts paint exact real Component frames", async () => {
     ],
     [
       "switch",
-      "Continue [active]\n┌──────────────────────────────┐\n│› ◀● ON  Yes                 │\n└──────────────────────────────┘",
+      "Continue [active]\n┌──────────────────────────────┐\n│› No ○──● Yes                 │\n└──────────────────────────────┘",
     ],
     [
       "select",
@@ -158,7 +158,7 @@ Deno.test("sequential forms paint exact Process steps frames", async () => {
     .submit();
   assertEquals(io.writes, [
     "Setup\n\n[◮] Account\n │\n ·  Confirm\n",
-    "Setup\n\n ◮  Account\n │\n[◭] Confirm\n\nAccount: Ada\n",
-    "Setup\n\n ◮  Account\n │\n ⧩  Confirm\n\nAccount: Ada\n\n✓ Complete\n",
+    "Setup\n\n ◭  Account\n │\n[◭] Confirm\n\nAccount: Ada\n",
+    "Setup\n\n ◭  Account\n │\n ◭  Confirm\n\nAccount: Ada\n\n✓ Complete\n",
   ]);
 });

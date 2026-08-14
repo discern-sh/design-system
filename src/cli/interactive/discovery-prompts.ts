@@ -25,6 +25,7 @@ import {
 import { type PromptMachine, runPrompt } from "./driver.ts";
 import { GraphemeTextEditor } from "./editor.ts";
 import { isNamedKey, type TerminalKey } from "./keys.ts";
+import type { PromptFrameViewport } from "./viewport-budget.ts";
 import type {
   PromptChoiceEntry,
   PromptOptions,
@@ -63,7 +64,10 @@ export type SearchPromptProvider<T> = (
 /** Options for a query-driven selectable search prompt. */
 export interface SearchPromptOptions<T> extends PromptOptions<T | undefined> {
   readonly search: SearchPromptProvider<T>;
+  /** Stable enabled choice ID highlighted from the initial provider result. */
+  readonly initialId?: string;
   readonly placeholder?: string;
+  /** Requested upper bound on result rows; the viewport may reduce it per frame. */
   readonly visibleCount?: number;
 }
 
@@ -73,9 +77,11 @@ class SearchPromptMachine<T>
   readonly #visibleCount: number;
   #matches: readonly PromptChoiceEntry<T>[] = [];
   #highlighted: number | undefined;
+  #rememberedId: string | undefined;
 
   constructor(readonly options: SearchPromptOptions<T>) {
     this.#visibleCount = choiceVisibleCount(options.visibleCount);
+    this.#rememberedId = options.initialId;
   }
 
   async start(): Promise<void> {
@@ -88,6 +94,7 @@ class SearchPromptMachine<T>
         const first = moveEnabledIndex(this.#matches, -1, 1);
         if (first < 0) return this.options.required === false;
         this.#highlighted = first;
+        this.#rememberHighlighted();
         return false;
       }
       const entry = this.#matches[this.#highlighted];
@@ -104,6 +111,7 @@ class SearchPromptMachine<T>
         -1,
       );
       this.#highlighted = highlighted < 0 ? undefined : highlighted;
+      this.#rememberHighlighted();
       return false;
     }
     if (
@@ -116,10 +124,10 @@ class SearchPromptMachine<T>
         1,
       );
       this.#highlighted = highlighted < 0 ? undefined : highlighted;
+      this.#rememberHighlighted();
       return false;
     }
     if (this.#editor.handle(key)) {
-      this.#highlighted = undefined;
       await this.#refresh();
     }
     return false;
@@ -134,17 +142,24 @@ class SearchPromptMachine<T>
       : entry.value;
   }
 
-  frame(lifecycle: InteractiveFrameLifecycle): SearchFrameState {
+  frame(
+    lifecycle: InteractiveFrameLifecycle,
+    viewport: PromptFrameViewport,
+  ): SearchFrameState {
+    const visibleCount = Math.min(
+      this.#visibleCount,
+      viewport.maximumControlRows,
+    );
     const anchor = this.#highlighted ?? 0;
     const start = choiceVisibleStart(
       anchor,
       this.#matches.length,
-      this.#visibleCount,
+      visibleCount,
     );
     const visible = interactiveChoiceWindow(
       frameChoices(this.#matches),
       start,
-      this.#visibleCount,
+      visibleCount,
     );
     const highlightedIndex = this.#highlighted === undefined
       ? -1
@@ -170,13 +185,22 @@ class SearchPromptMachine<T>
     const choices = [...await this.options.search(this.#editor.value)];
     assertChoices(choices);
     this.#matches = choices;
+    const remembered = this.#rememberedId === undefined
+      ? -1
+      : choices.findIndex((entry) =>
+        isPromptChoice(entry) && entry.id === this.#rememberedId &&
+        entry.disabled !== true
+      );
+    this.#highlighted = remembered < 0 ? undefined : remembered;
+  }
+
+  #rememberHighlighted(): void {
+    if (this.#highlighted === undefined) return;
+    const entry = this.#matches[this.#highlighted];
     if (
-      this.#highlighted !== undefined &&
-      (this.#highlighted >= choices.length ||
-        !isPromptChoice(choices[this.#highlighted]!) ||
-        choices[this.#highlighted]?.disabled === true)
+      entry !== undefined && isPromptChoice(entry) && entry.disabled !== true
     ) {
-      this.#highlighted = undefined;
+      this.#rememberedId = entry.id;
     }
   }
 }

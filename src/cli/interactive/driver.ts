@@ -12,12 +12,16 @@ import { isNamedKey, type TerminalKey, TerminalKeyReader } from "./keys.ts";
 import { withRawTerminal } from "./lifecycle.ts";
 import { InlineFramePainter } from "./painter.ts";
 import type { PromptOptions, PromptRuntime } from "./types.ts";
+import { fitPromptFrame, type PromptFrameViewport } from "./viewport-budget.ts";
 
 export interface PromptMachine<T, State extends InteractiveFrameState> {
   start?(): void | Promise<void>;
   handle(key: TerminalKey): boolean | Promise<boolean>;
   value(): T;
-  frame(lifecycle: InteractiveFrameLifecycle): State;
+  frame(
+    lifecycle: InteractiveFrameLifecycle,
+    viewport: PromptFrameViewport,
+  ): State;
 }
 
 /** Component-backed renderer selected by one prompt entrypoint. */
@@ -59,11 +63,13 @@ export async function runPrompt<T, State extends InteractiveFrameState>(
   const reader = new TerminalKeyReader(io);
   let staticMode = false;
   const paint = (lifecycle: InteractiveFrameLifecycle): void => {
-    const frame = renderFrame(
-      machine.frame(lifecycle),
-      io.capabilities(),
-      runtime.theme,
-    );
+    const capabilities = io.capabilities();
+    const fitted = fitPromptFrame({
+      viewportRows: io.size().rows,
+      frame: (viewport) => machine.frame(lifecycle, viewport),
+      render: (state) => renderFrame(state, capabilities, runtime.theme),
+    });
+    const frame = fitted.rendered;
     if (staticMode) {
       io.write(`${frame}\n`);
       return;
@@ -71,6 +77,10 @@ export async function runPrompt<T, State extends InteractiveFrameState>(
     const result = painter.replace(frame);
     if (result.status === "refused") {
       painter.finish();
+      if (result.reason === "current-frame-exceeds-viewport") {
+        const restarted = painter.replace(frame);
+        if (restarted.status !== "refused") return;
+      }
       io.write(`${frame}\n`);
       staticMode = true;
     }

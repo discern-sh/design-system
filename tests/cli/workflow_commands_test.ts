@@ -1,3 +1,5 @@
+import { assert, assertEquals, assertStringIncludes } from "@std/assert";
+import { stripAnsi } from "../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import {
   renderCommandCli,
@@ -43,15 +45,15 @@ Deno.test("Command renders exact narrow, standard, wide, and capability frames",
     const [columns, expected] of [
       [
         20,
-        "Run in: design-syst…\n$ deno task verify\n✓ Expect: All\n          configured\n          checks\n          pass\n! If this fails:\n  Fix the first\n  diagnostic",
+        "Run in: design-syst…\nRun: deno task\n     verify\n✓ Expect: All\n          configured\n          checks\n          pass\n! If this fails:\n  Fix the first\n  diagnostic",
       ],
       [
         48,
-        "Run in: /workspace/design-system\n$ deno task verify\n✓ Expect: All configured checks pass\n! If this fails: Fix the first diagnostic",
+        "Run in: /workspace/design-system\nRun: deno task verify\n✓ Expect: All configured checks pass\n! If this fails: Fix the first diagnostic",
       ],
       [
         80,
-        "Run in: /workspace/design-system\n$ deno task verify\n✓ Expect: All configured checks pass\n! If this fails: Fix the first diagnostic",
+        "Run in: /workspace/design-system\nRun: deno task verify\n✓ Expect: All configured checks pass\n! If this fails: Fix the first diagnostic",
       ],
     ] as const
   ) {
@@ -63,12 +65,46 @@ Deno.test("Command renders exact narrow, standard, wide, and capability frames",
     );
   }
   const expected =
-    "Run in: /workspace/design-system\n$ deno task verify\n✓ Expect: All configured checks pass\n! If this fails: Fix the first diagnostic";
+    "Run in: /workspace/design-system\nRun: deno task verify\n✓ Expect: All configured checks pass\n! If this fails: Fix the first diagnostic";
   assertCapabilityLevels(
     (capabilities) => renderCommandCli(props, capabilities),
     expected,
     expected.replace("✓", "+"),
   );
+});
+
+Deno.test("Command suggestions use explicit action grammar and never begin like shell history", () => {
+  const command = "deno task verify --filter terminal";
+  for (const unicode of [true, false]) {
+    for (
+      const colorDepth of [
+        "truecolor",
+        "ansi256",
+        "ansi16",
+        "none",
+      ] as const
+    ) {
+      const capabilities = testCapabilities({
+        columns: 52,
+        colorDepth,
+        unicode,
+      });
+      const rendered = stripAnsi(renderCommandCli({ command }, capabilities));
+      assert(!/^\s*\$\s/u.test(rendered));
+      assertEquals(rendered, `Run: ${command}`);
+    }
+  }
+  const narrow = stripAnsi(renderCommandCli(
+    { command },
+    testCapabilities({
+      columns: 20,
+    }),
+  ));
+  assertEquals(
+    narrow,
+    "Run: deno task\n     verify --filter\n     terminal",
+  );
+  assertStringIncludes(narrow, "\n     verify");
 });
 
 Deno.test("Command group renders exact narrow, standard, wide, and capability frames", () => {
@@ -84,12 +120,12 @@ Deno.test("Command group renders exact narrow, standard, wide, and capability fr
     ],
   } as const;
   const standard =
-    "Release commands\n\n1. Dry run\n   $ deno publish --dry-run\n\n2. Publish\n   $ deno publish\n   ✓ Expect: Version is available";
+    "Release commands\n\n1. Dry run\n   Run: deno publish --dry-run\n\n2. Publish\n   Run: deno publish\n   ✓ Expect: Version is available";
   for (
     const [columns, expected] of [
       [
         20,
-        "Release commands\n\n1. Dry run\n   $ deno publish\n     --dry-run\n\n2. Publish\n   $ deno publish\n   ✓ Expect:\n     Version is\n     available",
+        "Release commands\n\n1. Dry run\n   Run: deno publish\n        --dry-run\n\n2. Publish\n   Run: deno publish\n   ✓ Expect:\n     Version is\n     available",
       ],
       [48, standard],
       [80, standard],

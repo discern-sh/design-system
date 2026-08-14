@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertStringIncludes } from "@std/assert";
+import { stripAnsi } from "../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import {
   renderTriangleActivityBeacon,
@@ -147,9 +148,30 @@ Deno.test("workflow stepper renders every semantic step state", () => {
       { label: "Failed", status: "error" },
       { label: "Stopped", status: "cancelled" },
     ], capabilities),
-    " ◮  Done\n │\n[◭] Working\n │\n ·  Later\n │\n !  Failed\n │\n ×  Stopped",
+    " ◭  Done\n │\n[◭] Working\n │\n ·  Later\n │\n !  Failed\n │\n ×  Stopped",
     capabilities,
   );
+});
+
+Deno.test("workflow triangle direction follows completion status rather than list index or phase", () => {
+  for (const unicode of [true, false]) {
+    const capabilities = testCapabilities({ columns: 32, unicode });
+    const completedMarker = unicode ? " ◭ " : " ^ ";
+    for (const completedIndex of [0, 1, 2]) {
+      const steps = Array.from({ length: 3 }, (_, index) => ({
+        label: `Step ${index + 1}`,
+        status: index === completedIndex
+          ? "complete" as const
+          : "pending" as const,
+        ...(index === completedIndex ? { phase: index + 9 } : {}),
+      }));
+      const markerLine = renderTriangleWorkflowStepper(
+        steps,
+        capabilities,
+      ).split("\n")[completedIndex * 2] ?? "";
+      assertStringIncludes(stripAnsi(markerLine), completedMarker);
+    }
+  }
 });
 
 Deno.test("activity beacon preserves every phase in its out-and-back journey", () => {
@@ -187,7 +209,7 @@ Deno.test("every triangle primitive degrades exactly across the capability matri
     "◮",
     "[ 50%] ◮⧩...",
     "◮⧩◭⧨ go ⧨◭⧩◮",
-    " ◮  Done\n │\n[◭] Work\n │\n ·  Later\n │\n !  Fail\n │\n ×  Stop",
+    " ◭  Done\n │\n[◭] Work\n │\n ·  Later\n │\n !  Fail\n │\n ×  Stop",
     "◮⧩◭⧨....",
   ];
   const asciiFrames = [
@@ -195,7 +217,7 @@ Deno.test("every triangle primitive degrades exactly across the capability matri
     ">",
     "[ 50%] >v...",
     ">v^< go <^v>",
-    " >  Done\n |\n[^] Work\n |\n .  Later\n |\n !  Fail\n |\n x  Stop",
+    " ^  Done\n |\n[^] Work\n |\n .  Later\n |\n !  Fail\n |\n x  Stop",
     ">v^<....",
   ];
 

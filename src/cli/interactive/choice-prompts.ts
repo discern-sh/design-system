@@ -27,6 +27,7 @@ import {
 } from "./choice-navigation.ts";
 import { type PromptMachine, runPrompt } from "./driver.ts";
 import { isNamedKey, type TerminalKey } from "./keys.ts";
+import type { PromptFrameViewport } from "./viewport-budget.ts";
 import type {
   PromptChoiceEntry,
   PromptOptions,
@@ -58,7 +59,9 @@ function renderMultiselectFrame(
 /** Options for selecting zero or one value from a scrollable choice list. */
 export interface SelectPromptOptions<T> extends PromptOptions<T | undefined> {
   readonly choices: readonly PromptChoiceEntry<T>[];
+  /** Stable ID of the enabled choice highlighted initially. */
   readonly initialId?: string;
+  /** Requested upper bound on choice rows; the viewport may reduce it per frame. */
   readonly visibleCount?: number;
 }
 
@@ -66,7 +69,9 @@ export interface SelectPromptOptions<T> extends PromptOptions<T | undefined> {
 export interface MultiselectPromptOptions<T>
   extends PromptOptions<readonly T[]> {
   readonly choices: readonly PromptChoiceEntry<T>[];
+  /** Stable IDs of initially selected choices, in caller choice order. */
   readonly initialIds?: readonly string[];
+  /** Requested upper bound on choice rows; the viewport may reduce it per frame. */
   readonly visibleCount?: number;
 }
 
@@ -114,7 +119,14 @@ class SelectPromptMachine<T>
       : entry.value;
   }
 
-  frame(lifecycle: InteractiveFrameLifecycle): SelectFrameState {
+  frame(
+    lifecycle: InteractiveFrameLifecycle,
+    viewport: PromptFrameViewport,
+  ): SelectFrameState {
+    const visibleCount = Math.min(
+      this.#visibleCount,
+      viewport.maximumControlRows,
+    );
     const highlighted = this.options.choices[this.#highlighted];
     const selected = highlighted !== undefined && isPromptChoice(highlighted)
       ? highlighted
@@ -128,9 +140,9 @@ class SelectPromptMachine<T>
       visibleStart: choiceVisibleStart(
         this.#highlighted,
         this.options.choices.length,
-        this.#visibleCount,
+        visibleCount,
       ),
-      visibleCount: this.#visibleCount,
+      visibleCount,
       ...(selected === undefined ? {} : { selectedId: selected.id }),
       ...(this.options.hint === undefined ? {} : { hint: this.options.hint }),
     };
@@ -208,7 +220,14 @@ class MultiselectPromptMachine<T>
     );
   }
 
-  frame(lifecycle: InteractiveFrameLifecycle): MultiselectFrameState {
+  frame(
+    lifecycle: InteractiveFrameLifecycle,
+    viewport: PromptFrameViewport,
+  ): MultiselectFrameState {
+    const visibleCount = Math.min(
+      this.#visibleCount,
+      viewport.maximumControlRows,
+    );
     return {
       kind: "multiselect",
       label: this.options.label,
@@ -223,9 +242,9 @@ class MultiselectPromptMachine<T>
       visibleStart: choiceVisibleStart(
         this.#highlighted,
         this.options.choices.length,
-        this.#visibleCount,
+        visibleCount,
       ),
-      visibleCount: this.#visibleCount,
+      visibleCount,
       ...(this.options.hint === undefined ? {} : { hint: this.options.hint }),
     };
   }
