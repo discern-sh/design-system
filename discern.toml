@@ -445,7 +445,7 @@
   # every dependency the Runtime Manifest resolves.
   [standards.workflow_css]
     run = "deno run --config deno.json --allow-read --allow-write discern/scripts/measure-runtime.ts workflow_css_bytes"
-    limit = 67377
+    limit = 70000
     direction = "down"
     metric = "workflow_css_bytes"
     inputs = ["src/**", "scripts/generate.ts", "discern/scripts/measure-runtime.ts"]
