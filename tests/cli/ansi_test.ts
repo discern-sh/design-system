@@ -39,6 +39,18 @@ Deno.test("ANSI emission degrades through truecolour, 256, 16, and none", () => 
   );
 });
 
+Deno.test("stripping treats OSC envelopes as zero-width and keeps labels", () => {
+  const bell = String.fromCharCode(7);
+  const linked =
+    `${escape}]8;;https://discern.sh${escape}\\docs${escape}]8;;${escape}\\`;
+  assertEquals(stripAnsi(linked), "docs");
+  assertEquals(stripAnsi(`a${escape}]0;title${bell}b`), "ab");
+  assertEquals(
+    stripAnsi(`${escape}[1m${linked}${escape}[0m after`),
+    "docs after",
+  );
+});
+
 Deno.test("styled spans compose independently and strip to source text", () => {
   const rendered = renderStyledSpans([
     { text: "A", style: { color } },

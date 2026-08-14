@@ -5,6 +5,7 @@
  */
 
 import type { TerminalCapabilities } from "./capabilities.ts";
+import { CSI_PATTERN, OSC_PATTERN, sgrSequence } from "./styled-sequences.ts";
 import type { TerminalColor, TerminalTypeStyle } from "./theme.ts";
 
 /** Visual attributes carried by one terminal text span. */
@@ -20,8 +21,10 @@ export interface StyledSpan {
   readonly style?: TerminalTextStyle;
 }
 
-const ESCAPE = String.fromCharCode(27);
-const ANSI_SEQUENCE = new RegExp(`${ESCAPE}\\[[0-?]*[ -/]*[@-~]`, "gu");
+const ANSI_SEQUENCE = new RegExp(
+  `(?:${CSI_PATTERN})|(?:${OSC_PATTERN})`,
+  "gu",
+);
 
 function ansi16Foreground(index: number): number {
   return index < 8 ? 30 + index : 90 + index - 8;
@@ -48,7 +51,11 @@ function styleCodes(
   return codes;
 }
 
-/** Remove ANSI control sequences before measuring or comparing terminal text. */
+/**
+ * Remove ANSI control sequences before measuring or comparing terminal text.
+ * CSI styling and complete OSC envelopes — including OSC 8 hyperlink
+ * boundaries — are zero-width; a hyperlink keeps only its visible label.
+ */
 export function stripAnsi(value: string): string {
   return value.replace(ANSI_SEQUENCE, "");
 }
@@ -62,7 +69,7 @@ export function styleText(
   const codes = styleCodes(style, capabilities);
   return text === "" || codes.length === 0
     ? text
-    : `${ESCAPE}[${codes.join(";")}m${text}${ESCAPE}[0m`;
+    : `${sgrSequence(codes)}${text}${sgrSequence([0])}`;
 }
 
 /** Compose styled spans into one independently reset ANSI string. */
