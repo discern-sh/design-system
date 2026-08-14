@@ -186,6 +186,13 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
         painter.finish();
         throw new InteractionCancelled(reason);
       }
+      if (isNamedKey(key, "escape")) {
+        finished = true;
+        const reason = "Dismissed.";
+        paint({ status: "cancelled", reason });
+        painter.finish();
+        throw new InteractionCancelled(reason);
+      }
       if (isNamedKey(key, "ctrl-u")) {
         if (runtime.canGoBack === true) {
           finished = true;

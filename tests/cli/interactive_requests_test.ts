@@ -307,6 +307,75 @@ Deno.test("validator exceptions restore raw mode and cursor", async () => {
   assertRestored(io);
 });
 
+Deno.test("Escape cancels every request kind with its own reason", async () => {
+  const choices = [
+    { id: "one", label: "One", value: 1 },
+    { id: "two", label: "Two", value: 2 },
+  ] as const;
+  const kinds: ReadonlyArray<
+    readonly [string, (io: FakeTerminal) => Promise<unknown>]
+  > = [
+    ["text", (io) => requestText({ label: "Text" }, { io })],
+    ["masked", (io) => requestMaskedText({ label: "Masked" }, { io })],
+    ["confirm", (io) => requestConfirmation({ label: "Confirm" }, { io })],
+    ["select", (io) => requestSelection({ label: "Select", choices }, { io })],
+    [
+      "multiselect",
+      (io) => requestSelections({ label: "Multi", choices }, { io }),
+    ],
+    [
+      "search",
+      (io) => requestSearch({ label: "Search", search: () => choices }, { io }),
+    ],
+    [
+      "autocomplete",
+      (io) =>
+        requestAutocomplete({ label: "Auto", suggestions: ["one"] }, { io }),
+    ],
+    ["textarea", (io) => requestTextarea({ label: "Notes" }, { io })],
+  ];
+  for (const [kind, run] of kinds) {
+    const io = new FakeTerminal(["\x1b"], { columns: 40 });
+    const error = await assertRejects(() => run(io), InteractionCancelled);
+    assertEquals(error.reason, "Dismissed.", kind);
+    assertStringIncludes(io.output(), "Dismissed.");
+    assertEquals(io.rawTransitions, [true, false], kind);
+    assertRestored(io);
+  }
+});
+
+Deno.test("Escape followed by split CSI bytes still decodes as one arrow key", async () => {
+  const choices = [
+    { id: "one", label: "One", value: 1 },
+    { id: "two", label: "Two", value: 2 },
+  ] as const;
+  const io = new FakeTerminal(["\x1b", "[B", "\r"], { columns: 40 });
+  assertEquals(await requestSelection({ label: "Pick", choices }, { io }), 2);
+  assert(
+    !io.output().includes("Dismissed."),
+    "a split escape sequence must never read as a lone Escape",
+  );
+});
+
+Deno.test("Escape cancels a sequential form with the cancelled frame and reason", async () => {
+  const io = new FakeTerminal(["\x1b"], { columns: 40 });
+  await assertRejects(
+    () =>
+      createSequentialForm({ label: "Setup", io })
+        .add({
+          id: "name",
+          label: "Name",
+          run: (_values, _previous, runtime) =>
+            requestText({ label: "Name" }, runtime),
+        })
+        .submit(),
+    InteractionCancelled,
+    "Dismissed.",
+  );
+  assertStringIncludes(io.output(), "Dismissed.");
+  assertEquals(io.rawTransitions, [true, false]);
+});
+
 Deno.test("terminal interactions refuse non-TTY input before terminal mutation", async () => {
   const io = new FakeTerminal([], { interactive: false });
   await assertRejects(
