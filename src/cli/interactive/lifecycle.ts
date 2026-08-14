@@ -6,10 +6,7 @@
 
 import { NonInteractiveTerminalError } from "./errors.ts";
 import type { TerminalIO } from "./io.ts";
-import {
-  denoTerminalSignals,
-  type TerminalSignalOptions,
-} from "./signals.ts";
+import { denoTerminalSignals, type TerminalSignalOptions } from "./signals.ts";
 
 /** ANSI sequence that hides the terminal cursor. */
 export const HIDE_TERMINAL_CURSOR = "\x1b[?25l";

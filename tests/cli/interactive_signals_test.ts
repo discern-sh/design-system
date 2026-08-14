@@ -38,7 +38,11 @@ Deno.test("SIGINT during a raw bracket restores raw mode and cursor before re-ra
     return "survived";
   }, { signals });
   assertEquals(result, "survived");
-  assertEquals(io.rawTransitions, [true, false], "restoration must stay single");
+  assertEquals(
+    io.rawTransitions,
+    [true, false],
+    "restoration must stay single",
+  );
   assertEquals(io.writes, [HIDE_TERMINAL_CURSOR, SHOW_TERMINAL_CURSOR]);
 });
 

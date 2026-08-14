@@ -16,10 +16,7 @@ import { InteractionCancelled } from "./errors.ts";
 import { InteractionBackNavigation } from "./driver.ts";
 import { DenoTerminalIO, type TerminalIO } from "./io.ts";
 import { assertInteractiveTerminal } from "./lifecycle.ts";
-import {
-  signalPassthrough,
-  type TerminalSignalOptions,
-} from "./signals.ts";
+import { signalPassthrough, type TerminalSignalOptions } from "./signals.ts";
 import type { InteractionRuntime } from "./types.ts";
 import type { TerminalThemeVariant } from "../theme.ts";
 

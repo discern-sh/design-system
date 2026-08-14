@@ -23,10 +23,7 @@ import {
   withHiddenTerminalCursor,
 } from "./lifecycle.ts";
 import { InlineFramePainter } from "./painter.ts";
-import {
-  signalPassthrough,
-  type TerminalSignalOptions,
-} from "./signals.ts";
+import { signalPassthrough, type TerminalSignalOptions } from "./signals.ts";
 
 /** Injectable repeating scheduler used by deterministic spinner tests. */
 export interface SpinnerScheduler {
@@ -59,6 +56,19 @@ function spinnerInterval(value: number | undefined): number {
     );
   }
   return interval;
+}
+
+/**
+ * Reject labels that would break single-line activity frame geometry: a
+ * control character (including a newline) or an invisible format character
+ * inside a live repainted frame corrupts its row accounting.
+ */
+function assertActivityLabel(label: string): void {
+  if (/[\p{Cc}\p{Cf}]/u.test(label)) {
+    throw new TypeError(
+      "activity labels must be free of control and format characters",
+    );
+  }
 }
 
 function spinnerFrame(
@@ -112,6 +122,7 @@ export async function withSpinner<T>(
   options: SpinnerOptions,
   operation: () => T | Promise<T>,
 ): Promise<T> {
+  assertActivityLabel(options.label);
   const io = options.io ?? new DenoTerminalIO();
   assertInteractiveTerminal(io);
   const interval = spinnerInterval(options.intervalMs);
@@ -177,10 +188,20 @@ export interface DeterminateProgressController {
   readonly completed: number;
   /** Total work units represented by the progress frame. */
   readonly total: number;
-  /** Set an absolute completed-unit value and repaint. */
-  set(completed: number): void;
-  /** Advance by a non-negative number of units and repaint. */
-  advance(units?: number): void;
+  /** Label the progress frame currently presents. */
+  readonly label: string;
+  /**
+   * Set an absolute completed-unit value — optionally naming the unit of
+   * work now underway — and repaint.
+   */
+  set(completed: number, label?: string): void;
+  /**
+   * Advance by a non-negative number of units — optionally naming the unit
+   * of work now underway — and repaint.
+   */
+  advance(units?: number, label?: string): void;
+  /** Present a new label without changing completed units, and repaint. */
+  relabel(label: string): void;
 }
 
 function assertTotal(total: number): void {
@@ -201,6 +222,7 @@ function assertCompleted(completed: number, total: number): void {
 
 class ProgressController implements DeterminateProgressController {
   #completed: number;
+  #label: string;
   #staticMode = false;
 
   constructor(
@@ -209,6 +231,7 @@ class ProgressController implements DeterminateProgressController {
     readonly painter: InlineFramePainter,
   ) {
     this.#completed = options.completed ?? 0;
+    this.#label = options.label;
   }
 
   get completed(): number {
@@ -219,25 +242,37 @@ class ProgressController implements DeterminateProgressController {
     return this.options.total;
   }
 
-  set(completed: number): void {
+  get label(): string {
+    return this.#label;
+  }
+
+  set(completed: number, label?: string): void {
     assertCompleted(completed, this.total);
+    if (label !== undefined) assertActivityLabel(label);
     this.#completed = completed;
+    if (label !== undefined) this.#label = label;
     this.paint();
   }
 
-  advance(units = 1): void {
+  advance(units = 1, label?: string): void {
     if (!Number.isFinite(units) || units < 0) {
       throw new TypeError(
         `determinate progress advance must be non-negative and finite; received ${units}`,
       );
     }
-    this.set(Math.min(this.total, this.#completed + units));
+    this.set(Math.min(this.total, this.#completed + units), label);
+  }
+
+  relabel(label: string): void {
+    assertActivityLabel(label);
+    this.#label = label;
+    this.paint();
   }
 
   paint(): void {
     const state: DeterminateProgressFrameState = {
       kind: "determinate-progress",
-      label: this.options.label,
+      label: this.#label,
       lifecycle: this.#completed === this.total
         ? { status: "submitted" }
         : { status: "active" },
@@ -275,6 +310,7 @@ export async function withDeterminateProgress<T>(
   options: DeterminateProgressOptions,
   operation: (progress: DeterminateProgressController) => T | Promise<T>,
 ): Promise<T> {
+  assertActivityLabel(options.label);
   assertTotal(options.total);
   assertCompleted(options.completed ?? 0, options.total);
   const io = options.io ?? new DenoTerminalIO();
