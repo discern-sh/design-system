@@ -98,8 +98,8 @@ function visibleCountJourney(
         label: title,
         choices: longGroupedChoices,
         hint: visibleCount === undefined
-          ? "Package-default visible rows."
-          : `Requested ${visibleCount} visible rows.`,
+          ? "Default rows; PageUp/PageDown jump a window."
+          : `${visibleCount} rows; PageUp/PageDown jump a window.`,
         ...(visibleCount === undefined ? {} : { visibleCount }),
       }, { io: runtime.io });
       report(runtime, value);
@@ -156,6 +156,29 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
           segmentGraphemes(candidate).length < 2
             ? "Give at least two characters."
             : undefined,
+      }, { io: runtime.io });
+      report(runtime, value);
+    },
+  },
+  {
+    id: "validation-latch",
+    title: "Validation latch and transform",
+    section: "Interactive APIs",
+    description:
+      "After one failed submission the message tracks every edit until the value passes; input is trimmed before the asynchronous validator sees it. Escape backs out.",
+    run: async (runtime) => {
+      const value = await requestText({
+        label: "Kebab-case slug",
+        placeholder: "my-component",
+        hint: "Submit something invalid, then watch the message track edits.",
+        transform: (candidate) => candidate.trim(),
+        required: "A slug is required.",
+        validate: async (candidate) => {
+          await runtime.delay(120);
+          return /^[a-z][a-z0-9-]*$/u.test(candidate)
+            ? undefined
+            : "Use lowercase letters, digits, and hyphens.";
+        },
       }, { io: runtime.io });
       report(runtime, value);
     },
