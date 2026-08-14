@@ -13,7 +13,7 @@ export function segmentGraphemes(value: string): readonly string[] {
   return [...segmenter.segment(value)].map((part) => part.segment);
 }
 
-/** Editing behavior that differs between single-line prompts and textareas. */
+/** Editing behavior that differs between single-line interactions and textareas. */
 export interface TextEditorOptions {
   readonly multiline?: boolean;
 }

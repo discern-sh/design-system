@@ -38,7 +38,7 @@ Deno.test("browser Catalogue projects every declared CLI stance from disk", () =
   }
 });
 
-Deno.test("browser Catalogue enrols grouped prompts and lossless Fleet identities", () => {
+Deno.test("browser Catalogue enrols grouped interactions and lossless Fleet identities", () => {
   for (
     const [slug, exampleName] of [
       ["select", "grouped"],

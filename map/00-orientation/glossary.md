@@ -98,7 +98,7 @@ A pure React-free function exported through [`./cli`](../../src/cli/mod.ts) that
 
 ### Interactive Adapter
 
-The optional Deno terminal surface at [`./cli/interactive`](../../src/cli/interactive/mod.ts): typed prompt state machines, raw input, cursor-safe repainting, and activity controllers. It performs no effect on import and renders prompt state through CLI Renderers while a consumer runs it.
+The optional Deno terminal surface at [`./cli/interactive`](../../src/cli/interactive/mod.ts): typed interaction state machines, raw input, cursor-safe repainting, and activity controllers. It performs no effect on import and renders interaction state through CLI Renderers while a consumer runs it.
 
 ### CLI Stance
 
@@ -118,7 +118,7 @@ The stdout component browser run by `deno task catalogue:cli`. It derives Compon
 
 ### CLI Playground
 
-The live terminal review surface run by `deno task playground:cli`. It drives every high-level Interactive Adapter API through named journeys, browses the same generated inventory as the CLI Catalogue, and adds stress journeys for viewport, grapheme, degradation, and repeated-prompt review. `--list`, `tour`, and direct journey IDs are scriptable; it is a repository instrument, not a published command.
+The live terminal review surface run by `deno task playground:cli`. It drives every high-level Interactive Adapter API through named journeys, browses the same generated inventory as the CLI Catalogue, and adds stress journeys for viewport, grapheme, degradation, and repeated-interaction review. `--list`, `tour`, and direct journey IDs are scriptable; it is a repository instrument, not a published command.
 
 ---
 

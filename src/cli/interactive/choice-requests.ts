@@ -1,5 +1,5 @@
 /**
- * Single-select and multi-select prompt state machines.
+ * Single-select and multi-select interaction state machines.
  *
  * @module
  */
@@ -22,16 +22,16 @@ import {
   initialHighlight,
   isBackwardChoiceKey,
   isForwardChoiceKey,
-  isPromptChoice,
+  isInteractionChoice,
   moveEnabledIndex,
 } from "./choice-navigation.ts";
-import { type PromptMachine, runPrompt } from "./driver.ts";
+import { type InteractionMachine, runInteraction } from "./driver.ts";
 import { isNamedKey, type TerminalKey } from "./keys.ts";
-import type { PromptFrameViewport } from "./viewport-budget.ts";
+import type { InteractionFrameViewport } from "./viewport-budget.ts";
 import type {
-  PromptChoiceEntry,
-  PromptOptions,
-  PromptRuntime,
+  InteractionEntry,
+  InteractionOptions,
+  InteractionRuntime,
 } from "./types.ts";
 
 function renderSelectFrame(
@@ -57,8 +57,9 @@ function renderMultiselectFrame(
 }
 
 /** Options for selecting zero or one value from a scrollable choice list. */
-export interface SelectPromptOptions<T> extends PromptOptions<T | undefined> {
-  readonly choices: readonly PromptChoiceEntry<T>[];
+export interface SelectionRequestOptions<T>
+  extends InteractionOptions<T | undefined> {
+  readonly choices: readonly InteractionEntry<T>[];
   /** Stable ID of the enabled choice highlighted initially. */
   readonly initialId?: string;
   /** Requested upper bound on choice rows; the viewport may reduce it per frame. */
@@ -66,21 +67,21 @@ export interface SelectPromptOptions<T> extends PromptOptions<T | undefined> {
 }
 
 /** Options for selecting zero or more values from a scrollable choice list. */
-export interface MultiselectPromptOptions<T>
-  extends PromptOptions<readonly T[]> {
-  readonly choices: readonly PromptChoiceEntry<T>[];
+export interface SelectionsRequestOptions<T>
+  extends InteractionOptions<readonly T[]> {
+  readonly choices: readonly InteractionEntry<T>[];
   /** Stable IDs of initially selected choices, in caller choice order. */
   readonly initialIds?: readonly string[];
   /** Requested upper bound on choice rows; the viewport may reduce it per frame. */
   readonly visibleCount?: number;
 }
 
-class SelectPromptMachine<T>
-  implements PromptMachine<T | undefined, SelectFrameState> {
+class SelectionInteractionMachine<T>
+  implements InteractionMachine<T | undefined, SelectFrameState> {
   readonly #visibleCount: number;
   #highlighted: number;
 
-  constructor(readonly options: SelectPromptOptions<T>) {
+  constructor(readonly options: SelectionRequestOptions<T>) {
     assertChoices(options.choices, options.required !== false);
     this.#visibleCount = choiceVisibleCount(options.visibleCount);
     this.#highlighted = initialHighlight(options.choices, options.initialId);
@@ -106,14 +107,14 @@ class SelectPromptMachine<T>
     }
     if (!isNamedKey(key, "enter")) return false;
     const entry = this.options.choices[this.#highlighted];
-    return (entry !== undefined && isPromptChoice(entry) &&
+    return (entry !== undefined && isInteractionChoice(entry) &&
       entry.disabled !== true) ||
       this.options.required === false;
   }
 
   value(): T | undefined {
     const entry = this.options.choices[this.#highlighted];
-    return entry === undefined || !isPromptChoice(entry) ||
+    return entry === undefined || !isInteractionChoice(entry) ||
         entry.disabled === true
       ? undefined
       : entry.value;
@@ -121,16 +122,17 @@ class SelectPromptMachine<T>
 
   frame(
     lifecycle: InteractiveFrameLifecycle,
-    viewport: PromptFrameViewport,
+    viewport: InteractionFrameViewport,
   ): SelectFrameState {
     const visibleCount = Math.min(
       this.#visibleCount,
       viewport.maximumControlRows,
     );
     const highlighted = this.options.choices[this.#highlighted];
-    const selected = highlighted !== undefined && isPromptChoice(highlighted)
-      ? highlighted
-      : undefined;
+    const selected =
+      highlighted !== undefined && isInteractionChoice(highlighted)
+        ? highlighted
+        : undefined;
     return {
       kind: "select",
       label: this.options.label,
@@ -149,30 +151,30 @@ class SelectPromptMachine<T>
   }
 }
 
-/** Prompt for at most one value from a scrollable choice list. */
-export async function promptSelect<T>(
-  options: SelectPromptOptions<T>,
-  runtime: PromptRuntime = {},
+/** Request at most one value from a scrollable choice list. */
+export async function requestSelection<T>(
+  options: SelectionRequestOptions<T>,
+  runtime: InteractionRuntime = {},
 ): Promise<T | undefined> {
-  const requiredOptions: SelectPromptOptions<T> = {
+  const requiredOptions: SelectionRequestOptions<T> = {
     ...options,
     required: options.required ?? true,
   };
-  return await runPrompt(
+  return await runInteraction(
     requiredOptions,
-    new SelectPromptMachine(requiredOptions),
+    new SelectionInteractionMachine(requiredOptions),
     runtime,
     renderSelectFrame,
   );
 }
 
-class MultiselectPromptMachine<T>
-  implements PromptMachine<readonly T[], MultiselectFrameState> {
+class SelectionsInteractionMachine<T>
+  implements InteractionMachine<readonly T[], MultiselectFrameState> {
   readonly #visibleCount: number;
   readonly #selectedIds: Set<string>;
   #highlighted: number;
 
-  constructor(readonly options: MultiselectPromptOptions<T>) {
+  constructor(readonly options: SelectionsRequestOptions<T>) {
     assertChoices(options.choices);
     this.#visibleCount = choiceVisibleCount(options.visibleCount);
     const knownIds = new Set(options.choices.map((choice) => choice.id));
@@ -180,7 +182,7 @@ class MultiselectPromptMachine<T>
       (options.initialIds ?? []).filter((id) =>
         knownIds.has(id) &&
         options.choices.some((entry) =>
-          isPromptChoice(entry) && entry.id === id
+          isInteractionChoice(entry) && entry.id === id
         )
       ),
     );
@@ -214,7 +216,7 @@ class MultiselectPromptMachine<T>
 
   value(): readonly T[] {
     return this.options.choices.flatMap((entry) =>
-      isPromptChoice(entry) && this.#selectedIds.has(entry.id)
+      isInteractionChoice(entry) && this.#selectedIds.has(entry.id)
         ? [entry.value]
         : []
     );
@@ -222,7 +224,7 @@ class MultiselectPromptMachine<T>
 
   frame(
     lifecycle: InteractiveFrameLifecycle,
-    viewport: PromptFrameViewport,
+    viewport: InteractionFrameViewport,
   ): MultiselectFrameState {
     const visibleCount = Math.min(
       this.#visibleCount,
@@ -235,7 +237,7 @@ class MultiselectPromptMachine<T>
       options: frameChoices(this.options.choices),
       highlightedIndex: this.#highlighted,
       selectedIds: this.options.choices.flatMap((entry) =>
-        isPromptChoice(entry) && this.#selectedIds.has(entry.id)
+        isInteractionChoice(entry) && this.#selectedIds.has(entry.id)
           ? [entry.id]
           : []
       ),
@@ -252,7 +254,8 @@ class MultiselectPromptMachine<T>
   #toggleHighlighted(): void {
     const entry = this.options.choices[this.#highlighted];
     if (
-      entry === undefined || !isPromptChoice(entry) || entry.disabled === true
+      entry === undefined || !isInteractionChoice(entry) ||
+      entry.disabled === true
     ) return;
     if (this.#selectedIds.has(entry.id)) this.#selectedIds.delete(entry.id);
     else this.#selectedIds.add(entry.id);
@@ -260,7 +263,7 @@ class MultiselectPromptMachine<T>
 
   #toggleAllEnabled(): void {
     const enabled = this.options.choices.filter((entry) =>
-      isPromptChoice(entry) && entry.disabled !== true
+      isInteractionChoice(entry) && entry.disabled !== true
     );
     const allSelected = enabled.length > 0 &&
       enabled.every((entry) => this.#selectedIds.has(entry.id));
@@ -271,14 +274,14 @@ class MultiselectPromptMachine<T>
   }
 }
 
-/** Prompt for zero or more values from a scrollable choice list. */
-export async function promptMultiselect<T>(
-  options: MultiselectPromptOptions<T>,
-  runtime: PromptRuntime = {},
+/** Request zero or more values from a scrollable choice list. */
+export async function requestSelections<T>(
+  options: SelectionsRequestOptions<T>,
+  runtime: InteractionRuntime = {},
 ): Promise<readonly T[]> {
-  return await runPrompt(
+  return await runInteraction(
     options,
-    new MultiselectPromptMachine(options),
+    new SelectionsInteractionMachine(options),
     runtime,
     renderMultiselectFrame,
   );

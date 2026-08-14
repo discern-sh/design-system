@@ -7,8 +7,8 @@
  */
 
 import type {
-  PromptChoice,
-  PromptChoiceEntry,
+  InteractionChoice,
+  InteractionEntry,
 } from "../../src/cli/interactive/mod.ts";
 
 /** Flat swatch list with duplicate visible labels and one disabled entry. */
@@ -19,7 +19,7 @@ export const swatchChoices = [
   { id: "neutral-cool", label: "Neutral", value: "neutral-cool" },
   { id: "neutral-warm", label: "Neutral", value: "neutral-warm" },
   { id: "cobalt", label: "Cobalt (retired)", value: "cobalt", disabled: true },
-] as const satisfies readonly PromptChoice<string>[];
+] as const satisfies readonly InteractionChoice<string>[];
 
 /** Flat spacing steps used by the multiselect journey's initial selection. */
 export const spacingChoices = [
@@ -29,7 +29,7 @@ export const spacingChoices = [
   { id: "space-4", label: "Space 4 — default", value: "space-4" },
   { id: "space-6", label: "Space 6 — roomy", value: "space-6" },
   { id: "space-8", label: "Space 8 — expansive", value: "space-8" },
-] as const satisfies readonly PromptChoice<string>[];
+] as const satisfies readonly InteractionChoice<string>[];
 
 /** Grouped semantic roles with headings and one disabled reserved entry. */
 export const tokenRoleChoices = [
@@ -52,7 +52,7 @@ export const tokenRoleChoices = [
     value: "inverse",
     disabled: true,
   },
-] as const satisfies readonly PromptChoiceEntry<string>[];
+] as const satisfies readonly InteractionEntry<string>[];
 
 /**
  * Long grouped list: 26 selectable entries across four headed groups, with a
@@ -98,7 +98,7 @@ export const longGroupedChoices = [
   { id: "motifs-spinner", label: "Spinner", value: "motifs/spinner" },
   { id: "motifs-beacon", label: "Beacon", value: "motifs/beacon" },
   { id: "motifs-divider", label: "Divider", value: "motifs/divider" },
-] as const satisfies readonly PromptChoiceEntry<string>[];
+] as const satisfies readonly InteractionEntry<string>[];
 
 /**
  * Grapheme, width, and duplication stress: multi-codepoint clusters,
@@ -139,7 +139,7 @@ export const unicodeStressChoices = [
     label: "🎨🧵🔺🔻🎯 Wide emoji run beside 全角文字",
     value: "wide-emoji",
   },
-] as const satisfies readonly PromptChoiceEntry<string>[];
+] as const satisfies readonly InteractionEntry<string>[];
 
 /** Token-name candidates for the autocomplete journey's ghost completion. */
 export const tokenNameSuggestions = [
@@ -160,12 +160,12 @@ export const tokenNameSuggestions = [
  * group heading exactly when at least one of its choices matches.
  */
 export function searchGroupedEntries<T>(
-  entries: readonly PromptChoiceEntry<T>[],
+  entries: readonly InteractionEntry<T>[],
   query: string,
-): readonly PromptChoiceEntry<T>[] {
+): readonly InteractionEntry<T>[] {
   const needle = query.trim().toLocaleLowerCase();
-  const results: PromptChoiceEntry<T>[] = [];
-  let pendingHeading: PromptChoiceEntry<T> | undefined;
+  const results: InteractionEntry<T>[] = [];
+  let pendingHeading: InteractionEntry<T> | undefined;
   for (const entry of entries) {
     if (entry.kind === "group-heading") {
       pendingHeading = entry;

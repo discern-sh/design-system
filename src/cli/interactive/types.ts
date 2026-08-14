@@ -1,5 +1,5 @@
 /**
- * Public option and runtime contracts shared by interactive prompts.
+ * Public option and runtime contracts shared by terminal interactions.
  *
  * @module
  */
@@ -7,32 +7,32 @@
 import type { TerminalThemeVariant } from "../theme.ts";
 import type { TerminalIO } from "./io.ts";
 
-/** Synchronous or asynchronous validation performed before prompt submission. */
-export type PromptValidator<T> = (
+/** Synchronous or asynchronous validation performed before interaction submission. */
+export type InteractionValidator<T> = (
   value: T,
 ) => string | undefined | Promise<string | undefined>;
 
 /** Required-value policy with an optional caller-authored error message. */
-export type PromptRequired = boolean | string;
+export type InteractionRequired = boolean | string;
 
-/** Options shared by every value-producing prompt. */
-export interface PromptOptions<T> {
+/** Options shared by every value-producing interaction. */
+export interface InteractionOptions<T> {
   readonly label: string;
   readonly hint?: string;
-  readonly required?: PromptRequired;
-  readonly validate?: PromptValidator<T>;
+  readonly required?: InteractionRequired;
+  readonly validate?: InteractionValidator<T>;
 }
 
-/** Injectable process and presentation facts shared by prompt loops. */
-export interface PromptRuntime {
+/** Injectable process and presentation facts shared by interaction loops. */
+export interface InteractionRuntime {
   readonly io?: TerminalIO;
   readonly theme?: TerminalThemeVariant;
   /** Allow Ctrl+U to return control to a sequential form's prior step. */
   readonly canGoBack?: boolean;
 }
 
-/** One stable, labeled value offered by a choice prompt. */
-export interface PromptChoice<T> {
+/** One stable, labeled value offered by a choice interaction. */
+export interface InteractionChoice<T> {
   /** Optional explicit discriminant; omitted choices remain source-compatible. */
   readonly kind?: "choice";
   readonly id: string;
@@ -41,8 +41,8 @@ export interface PromptChoice<T> {
   readonly disabled?: boolean;
 }
 
-/** A stable semantic group heading displayed inside a choice prompt. */
-export interface PromptChoiceGroupHeading {
+/** A stable semantic group heading displayed inside a choice interaction. */
+export interface InteractionGroupHeading {
   readonly kind: "group-heading";
   readonly id: string;
   readonly label: string;
@@ -52,7 +52,7 @@ export interface PromptChoiceGroupHeading {
   readonly disabled?: never;
 }
 
-/** Selectable values and semantic group headings accepted by choice prompts. */
-export type PromptChoiceEntry<T> =
-  | PromptChoice<T>
-  | PromptChoiceGroupHeading;
+/** Selectable values and semantic group headings accepted by choice interactions. */
+export type InteractionEntry<T> =
+  | InteractionChoice<T>
+  | InteractionGroupHeading;

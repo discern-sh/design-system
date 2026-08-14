@@ -26,7 +26,7 @@ export interface TerminalSize {
   readonly rows: number;
 }
 
-/** Injectable effect boundary used by prompts and deterministic test terminals. */
+/** Injectable effect boundary used by interactions and deterministic test terminals. */
 export interface TerminalIO {
   /** Whether both the input and output handles are interactive terminals. */
   isInteractive(): boolean;

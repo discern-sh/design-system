@@ -1,5 +1,5 @@
 /**
- * Text, masked-text, and confirmation prompt state machines.
+ * Text, masked-text, and confirmation interaction state machines.
  *
  * @module
  */
@@ -15,9 +15,9 @@ import type { TerminalThemeVariant } from "../theme.ts";
 import renderInputCli from "../../components/forms/input/input.cli.ts";
 import renderSwitchCli from "../../components/forms/switch/switch.cli.ts";
 import { GraphemeTextEditor, segmentGraphemes } from "./editor.ts";
-import { type PromptMachine, runPrompt } from "./driver.ts";
+import { type InteractionMachine, runInteraction } from "./driver.ts";
 import { isNamedKey, type TerminalKey } from "./keys.ts";
-import type { PromptOptions, PromptRuntime } from "./types.ts";
+import type { InteractionOptions, InteractionRuntime } from "./types.ts";
 
 function renderInputFrame(
   state: TextInputFrameState | MaskedInputFrameState,
@@ -42,15 +42,16 @@ function renderConfirmFrame(
 }
 
 /** Options for one editable line of text. */
-export interface TextPromptOptions extends PromptOptions<string> {
+export interface TextRequestOptions extends InteractionOptions<string> {
   readonly placeholder?: string;
   readonly initialValue?: string;
 }
 
-class TextPromptMachine implements PromptMachine<string, TextInputFrameState> {
+class TextInteractionMachine
+  implements InteractionMachine<string, TextInputFrameState> {
   readonly #editor: GraphemeTextEditor;
 
-  constructor(readonly options: TextPromptOptions) {
+  constructor(readonly options: TextRequestOptions) {
     this.#editor = new GraphemeTextEditor(options.initialValue ?? "");
   }
 
@@ -79,29 +80,29 @@ class TextPromptMachine implements PromptMachine<string, TextInputFrameState> {
   }
 }
 
-/** Prompt for one grapheme-aware editable line. */
-export async function promptText(
-  options: TextPromptOptions,
-  runtime: PromptRuntime = {},
+/** Request one grapheme-aware editable line. */
+export async function requestText(
+  options: TextRequestOptions,
+  runtime: InteractionRuntime = {},
 ): Promise<string> {
-  return await runPrompt(
+  return await runInteraction(
     options,
-    new TextPromptMachine(options),
+    new TextInteractionMachine(options),
     runtime,
     renderInputFrame,
   );
 }
 
 /** Options for one masked editable line. */
-export interface MaskedPromptOptions extends PromptOptions<string> {
+export interface MaskedTextRequestOptions extends InteractionOptions<string> {
   readonly placeholder?: string;
 }
 
-class MaskedPromptMachine
-  implements PromptMachine<string, MaskedInputFrameState> {
+class MaskedTextInteractionMachine
+  implements InteractionMachine<string, MaskedInputFrameState> {
   readonly #editor = new GraphemeTextEditor();
 
-  constructor(readonly options: MaskedPromptOptions) {}
+  constructor(readonly options: MaskedTextRequestOptions) {}
 
   handle(key: TerminalKey): boolean {
     if (isNamedKey(key, "enter")) return true;
@@ -128,31 +129,32 @@ class MaskedPromptMachine
   }
 }
 
-/** Prompt for text whose raw value never enters a frame state or terminal write. */
-export async function promptMasked(
-  options: MaskedPromptOptions,
-  runtime: PromptRuntime = {},
+/** Request text whose raw value never enters a frame state or terminal write. */
+export async function requestMaskedText(
+  options: MaskedTextRequestOptions,
+  runtime: InteractionRuntime = {},
 ): Promise<string> {
-  return await runPrompt(
+  return await runInteraction(
     options,
-    new MaskedPromptMachine(options),
+    new MaskedTextInteractionMachine(options),
     runtime,
     renderInputFrame,
   );
 }
 
-/** Options for a yes/no confirmation prompt. */
-export interface ConfirmPromptOptions extends PromptOptions<boolean> {
+/** Options for a yes/no confirmation interaction. */
+export interface ConfirmationRequestOptions
+  extends InteractionOptions<boolean> {
   readonly initialValue?: boolean;
   readonly yesLabel?: string;
   readonly noLabel?: string;
 }
 
-class ConfirmPromptMachine
-  implements PromptMachine<boolean, ConfirmFrameState> {
+class ConfirmationInteractionMachine
+  implements InteractionMachine<boolean, ConfirmFrameState> {
   #value: boolean;
 
-  constructor(readonly options: ConfirmPromptOptions) {
+  constructor(readonly options: ConfirmationRequestOptions) {
     this.#value = options.initialValue ?? true;
   }
 
@@ -199,14 +201,14 @@ class ConfirmPromptMachine
   }
 }
 
-/** Prompt for a boolean decision. */
-export async function promptConfirm(
-  options: ConfirmPromptOptions,
-  runtime: PromptRuntime = {},
+/** Request a boolean decision. */
+export async function requestConfirmation(
+  options: ConfirmationRequestOptions,
+  runtime: InteractionRuntime = {},
 ): Promise<boolean> {
-  return await runPrompt(
+  return await runInteraction(
     options,
-    new ConfirmPromptMachine(options),
+    new ConfirmationInteractionMachine(options),
     runtime,
     renderConfirmFrame,
   );

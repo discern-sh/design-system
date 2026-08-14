@@ -4,7 +4,7 @@
  * @module
  */
 
-/** Lifecycle shared by active, failed, submitted, and cancelled prompt frames. */
+/** Lifecycle shared by active, failed, submitted, and cancelled interaction frames. */
 export type InteractiveFrameLifecycle =
   | { readonly status: "active" }
   | { readonly status: "validation-error"; readonly message: string }

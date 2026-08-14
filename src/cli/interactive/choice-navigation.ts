@@ -3,27 +3,27 @@
 import type { InteractiveChoiceEntryState } from "../interactive-states.ts";
 import type { TerminalKey } from "./keys.ts";
 import type {
-  PromptChoice,
-  PromptChoiceEntry,
-  PromptChoiceGroupHeading,
+  InteractionChoice,
+  InteractionEntry,
+  InteractionGroupHeading,
 } from "./types.ts";
 
 const DEFAULT_VISIBLE_CHOICES = 5;
 
-export function isPromptChoiceGroupHeading<T>(
-  entry: PromptChoiceEntry<T>,
-): entry is PromptChoiceGroupHeading {
+export function isInteractionGroupHeading<T>(
+  entry: InteractionEntry<T>,
+): entry is InteractionGroupHeading {
   return entry.kind === "group-heading";
 }
 
-export function isPromptChoice<T>(
-  entry: PromptChoiceEntry<T>,
-): entry is PromptChoice<T> {
+export function isInteractionChoice<T>(
+  entry: InteractionEntry<T>,
+): entry is InteractionChoice<T> {
   return entry.kind !== "group-heading";
 }
 
 export function assertChoices<T>(
-  choices: readonly PromptChoiceEntry<T>[],
+  choices: readonly InteractionEntry<T>[],
   requireSelectable = false,
 ): void {
   const ids = new Set<string>();
@@ -34,7 +34,7 @@ export function assertChoices<T>(
     if (ids.has(entry.id)) {
       throw new TypeError(`choice id ${JSON.stringify(entry.id)} is repeated`);
     }
-    const invalidHeading = isPromptChoiceGroupHeading(entry) &&
+    const invalidHeading = isInteractionGroupHeading(entry) &&
       (entry.label.trim() === "" || entry.label.trim() !== entry.label);
     if (
       entry.label === "" || invalidHeading ||
@@ -42,7 +42,7 @@ export function assertChoices<T>(
     ) {
       throw new TypeError(
         `${
-          isPromptChoiceGroupHeading(entry) ? "choice group heading" : "choice"
+          isInteractionGroupHeading(entry) ? "choice group heading" : "choice"
         } ${JSON.stringify(entry.id)} has an invalid label`,
       );
     }
@@ -50,7 +50,7 @@ export function assertChoices<T>(
   }
   if (requireSelectable && enabledIndices(choices).length === 0) {
     throw new TypeError(
-      "choice prompt requires at least one selectable choice",
+      "choice interaction requires at least one selectable choice",
     );
   }
 }
@@ -66,10 +66,10 @@ export function choiceVisibleCount(value: number | undefined): number {
 }
 
 export function frameChoices<T>(
-  choices: readonly PromptChoiceEntry<T>[],
+  choices: readonly InteractionEntry<T>[],
 ): readonly InteractiveChoiceEntryState[] {
   return choices.map((entry) =>
-    isPromptChoiceGroupHeading(entry)
+    isInteractionGroupHeading(entry)
       ? { kind: "group-heading", id: entry.id, label: entry.label }
       : {
         ...(entry.kind === undefined ? {} : { kind: entry.kind }),
@@ -80,14 +80,14 @@ export function frameChoices<T>(
   );
 }
 
-function enabledIndices<T>(choices: readonly PromptChoiceEntry<T>[]): number[] {
+function enabledIndices<T>(choices: readonly InteractionEntry<T>[]): number[] {
   return choices.flatMap((entry, index) =>
-    !isPromptChoice(entry) || entry.disabled === true ? [] : [index]
+    !isInteractionChoice(entry) || entry.disabled === true ? [] : [index]
   );
 }
 
 export function moveEnabledIndex<T>(
-  choices: readonly PromptChoiceEntry<T>[],
+  choices: readonly InteractionEntry<T>[],
   current: number,
   direction: -1 | 1,
 ): number {
@@ -101,7 +101,7 @@ export function moveEnabledIndex<T>(
 }
 
 export function edgeEnabledIndex<T>(
-  choices: readonly PromptChoiceEntry<T>[],
+  choices: readonly InteractionEntry<T>[],
   edge: "first" | "last",
 ): number {
   const enabled = enabledIndices(choices);
@@ -111,13 +111,13 @@ export function edgeEnabledIndex<T>(
 }
 
 export function initialHighlight<T>(
-  choices: readonly PromptChoiceEntry<T>[],
+  choices: readonly InteractionEntry<T>[],
   initialId: string | undefined,
 ): number {
   const requested = initialId === undefined
     ? -1
     : choices.findIndex((entry) =>
-      isPromptChoice(entry) && entry.id === initialId &&
+      isInteractionChoice(entry) && entry.id === initialId &&
       entry.disabled !== true
     );
   return requested >= 0 ? requested : edgeEnabledIndex(choices, "first");

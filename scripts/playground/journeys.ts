@@ -2,7 +2,7 @@
  * The playground's journey inventory: focused live journeys for every
  * high-level interactive API, stress and lifecycle review cases, and the
  * static-catalogue sheets. Journeys drive only the public exports of
- * `./cli` and `./cli/interactive`; they own no prompt machinery, key
+ * `./cli` and `./cli/interactive`; they own no interaction machinery, key
  * decoding, painting, or raw-terminal handling of their own.
  *
  * @module
@@ -10,15 +10,15 @@
 
 import {
   createSequentialForm,
-  promptAutocomplete,
-  PromptCancelled,
-  promptConfirm,
-  promptMasked,
-  promptMultiselect,
-  promptSearch,
-  promptSelect,
-  promptText,
-  promptTextarea,
+  InteractionCancelled,
+  requestAutocomplete,
+  requestConfirmation,
+  requestMaskedText,
+  requestSearch,
+  requestSelection,
+  requestSelections,
+  requestText,
+  requestTextarea,
   segmentGraphemes,
   withDeterminateProgress,
   withSpinner,
@@ -94,7 +94,7 @@ function visibleCountJourney(
     section: "Stress & lifecycle",
     description,
     run: async (runtime) => {
-      const value = await promptSelect({
+      const value = await requestSelection({
         label: title,
         choices: longGroupedChoices,
         hint: visibleCount === undefined
@@ -128,7 +128,7 @@ function degradedJourney(
       });
       print(`Synthetic detection: ${describeCapabilities(synthetic)}`);
       const degraded = runtime.degradedIo(environment);
-      const value = await promptSelect({
+      const value = await requestSelection({
         label: title,
         choices: tokenRoleChoices,
         hint: "Capabilities come from the synthetic env.",
@@ -147,7 +147,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
     description:
       "Grapheme-aware single-line editing with placeholder, hint, and a validator.",
     run: async (runtime) => {
-      const value = await promptText({
+      const value = await requestText({
         label: "Display name",
         placeholder: "Ada Lovelace",
         hint: "Submit empty input to see validation.",
@@ -167,7 +167,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
     description:
       "Secret entry whose raw value never reaches the terminal or this report.",
     run: async (runtime) => {
-      const value = await promptMasked({
+      const value = await requestMaskedText({
         label: "Access token",
         placeholder: "paste a throwaway value",
         hint: "Masked entry; the result reports length only.",
@@ -187,7 +187,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
     description:
       "Boolean switch with custom labels and a non-default initial value.",
     run: async (runtime) => {
-      const value = await promptConfirm({
+      const value = await requestConfirmation({
         label: "Enable preview features",
         initialValue: false,
         yesLabel: "Enable",
@@ -204,7 +204,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
     description:
       "Flat select with duplicate visible labels, a disabled entry, and an initial highlight.",
     run: async (runtime) => {
-      const value = await promptSelect({
+      const value = await requestSelection({
         label: "Accent swatch",
         choices: swatchChoices,
         initialId: "citrine",
@@ -220,7 +220,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
     description:
       "Semantic group headings, a disabled entry, and a validator that rejects one role.",
     run: async (runtime) => {
-      const value = await promptSelect({
+      const value = await requestSelection({
         label: "Semantic role",
         choices: tokenRoleChoices,
         hint: "Submit Accent to see validation fail.",
@@ -238,7 +238,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
     section: "Interactive APIs",
     description: "Flat multiselect with an initial selection and toggle-all.",
     run: async (runtime) => {
-      const values = await promptMultiselect({
+      const values = await requestSelections({
         label: "Spacing steps",
         choices: spacingChoices,
         initialIds: ["space-2", "space-4"],
@@ -254,7 +254,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
     description:
       "Group headings between checkboxes; results return in caller order.",
     run: async (runtime) => {
-      const values = await promptMultiselect({
+      const values = await requestSelections({
         label: "Roles to audit",
         choices: tokenRoleChoices,
         hint: "Headings and disabled entries stay fixed.",
@@ -269,7 +269,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
     description:
       "Asynchronous query-driven results that keep their group headings.",
     run: async (runtime) => {
-      const value = await promptSearch({
+      const value = await requestSearch({
         label: "Find a token",
         initialId: "typography-heading",
         placeholder: "Type to filter",
@@ -288,7 +288,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
     section: "Interactive APIs",
     description: "Inline ghost completion over token names.",
     run: async (runtime) => {
-      const value = await promptAutocomplete({
+      const value = await requestAutocomplete({
         label: "Token reference",
         suggestions: tokenNameSuggestions,
         placeholder: "canvas",
@@ -303,7 +303,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
     section: "Interactive APIs",
     description: "Multiline grapheme-aware editing submitted with Ctrl+D.",
     run: async (runtime) => {
-      const value = await promptTextarea({
+      const value = await requestTextarea({
         label: "Release note",
         rows: 10,
         initialValue: "Added a terminal playground.\nNothing else changed.",
@@ -327,7 +327,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
           id: "name",
           label: "Name",
           run: (_values, previous, formRuntime) =>
-            promptText({
+            requestText({
               label: "Component name",
               initialValue: typeof previous === "string" ? previous : "",
               required: "A component name is required.",
@@ -338,7 +338,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
           id: "terminal",
           label: "Terminal stance",
           run: (_values, previous, formRuntime) =>
-            promptConfirm({
+            requestConfirmation({
               label: "Render in terminals?",
               initialValue: typeof previous === "boolean" ? previous : true,
             }, formRuntime),
@@ -349,7 +349,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
           label: "Exemption reason",
           when: (answers) => answers.terminal === false,
           run: (_values, previous, formRuntime) =>
-            promptText({
+            requestText({
               label: "Exemption reason",
               initialValue: typeof previous === "string" ? previous : "",
               required: "Exempt stances record a reason.",
@@ -360,7 +360,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
           id: "confirmed",
           label: "Confirm",
           run: (_values, previous, formRuntime) =>
-            promptConfirm({
+            requestConfirmation({
               label: "Submit proposal?",
               initialValue: typeof previous === "boolean" ? previous : true,
             }, formRuntime),
@@ -510,7 +510,7 @@ const stressJourneys: readonly PlaygroundJourney[] = [
     description:
       "26 selectable entries in four headed groups, with a duplicate label and a disabled entry.",
     run: async (runtime) => {
-      const value = await promptSelect({
+      const value = await requestSelection({
         label: "Long grouped list",
         choices: longGroupedChoices,
         hint: "Headings travel with their choices.",
@@ -544,14 +544,14 @@ const stressJourneys: readonly PlaygroundJourney[] = [
       "Flag and modifier clusters, combining marks, wide CJK, duplicate labels, and very long labels.",
     run: async (runtime) => {
       runtime.print(
-        "Note: ZWJ-joined emoji are rejected by prompt label validation (format characters); flag pairs, modifier clusters, and combining marks are within the accepted repertoire.",
+        "Note: ZWJ-joined emoji are rejected by interaction label validation (format characters); flag pairs, modifier clusters, and combining marks are within the accepted repertoire.",
       );
-      const single = await promptSelect({
+      const single = await requestSelection({
         label: "Grapheme and width stress",
         choices: unicodeStressChoices,
       }, { io: runtime.io });
       report(runtime, single);
-      const multiple = await promptMultiselect({
+      const multiple = await requestSelections({
         label: "Toggle wide and duplicate labels",
         choices: unicodeStressChoices,
       }, { io: runtime.io });
@@ -563,7 +563,7 @@ const stressJourneys: readonly PlaygroundJourney[] = [
     title: "Repeated selection loop",
     section: "Stress & lifecycle",
     description:
-      "Repeatedly open, navigate, submit or cancel, and reopen 16-row search and select prompts — the reported progressive-height case.",
+      "Repeatedly open, navigate, submit or cancel, and reopen 16-row search and select interactions — the reported progressive-height case.",
     run: async (runtime) => {
       const { io, print } = runtime;
       let pass = 0;
@@ -572,7 +572,7 @@ const stressJourneys: readonly PlaygroundJourney[] = [
         print("");
         print(`Pass ${pass} — ${renderTerminalFacts(io)}`);
         try {
-          const found = await promptSearch({
+          const found = await requestSearch({
             label: `Search (pass ${pass}, 16 visible rows)`,
             visibleCount: 16,
             hint: "Navigate deep, submit or cancel, then reopen.",
@@ -580,21 +580,21 @@ const stressJourneys: readonly PlaygroundJourney[] = [
           }, { io });
           report(runtime, found);
         } catch (error) {
-          if (!(error instanceof PromptCancelled)) throw error;
+          if (!(error instanceof InteractionCancelled)) throw error;
           print(`Search cancelled (${error.reason}); the loop continues.`);
         }
         try {
-          const picked = await promptSelect({
+          const picked = await requestSelection({
             label: `Select (pass ${pass}, 16 visible rows)`,
             visibleCount: 16,
             choices: longGroupedChoices,
           }, { io });
           report(runtime, picked);
         } catch (error) {
-          if (!(error instanceof PromptCancelled)) throw error;
+          if (!(error instanceof InteractionCancelled)) throw error;
           print(`Select cancelled (${error.reason}); the loop continues.`);
         }
-        const again = await promptConfirm({
+        const again = await requestConfirmation({
           label: "Run another pass",
           initialValue: true,
           hint: "Each pass should keep the full viewport.",
@@ -608,17 +608,19 @@ const stressJourneys: readonly PlaygroundJourney[] = [
     title: "Resize while active",
     section: "Stress & lifecycle",
     description:
-      "Keep a long prompt open while resizing the terminal, then compare facts.",
+      "Keep a long interaction open while resizing the terminal, then compare facts.",
     run: async (runtime) => {
       const { io, print } = runtime;
-      print("Resize the terminal while the prompt is open, then navigate.");
-      const value = await promptSelect({
+      print(
+        "Resize the terminal while the interaction is open, then navigate.",
+      );
+      const value = await requestSelection({
         label: "Resize while active",
         choices: longGroupedChoices,
         visibleCount: 10,
       }, { io });
       report(runtime, value);
-      print(`After the prompt — ${renderTerminalFacts(io)}`);
+      print(`After the interaction — ${renderTerminalFacts(io)}`);
     },
   },
   {
@@ -626,7 +628,7 @@ const stressJourneys: readonly PlaygroundJourney[] = [
     title: "Width and height review",
     section: "Stress & lifecycle",
     description:
-      "Full-width rule plus a tall prompt; rerun in narrow, wide, short, and tall terminals.",
+      "Full-width rule plus a tall interaction; rerun in narrow, wide, short, and tall terminals.",
     run: async (runtime) => {
       const { io, print } = runtime;
       const capabilities = io.capabilities();
@@ -637,7 +639,7 @@ const stressJourneys: readonly PlaygroundJourney[] = [
       print(
         "Rerun this journey in narrow (~40), ordinary (~80), and very wide (160+) terminals, and in limited-height and generous-height windows.",
       );
-      const value = await promptSelect({
+      const value = await requestSelection({
         label: "Height probe (16 visible rows)",
         choices: longGroupedChoices,
         visibleCount: 16,
@@ -697,7 +699,7 @@ export function journeyById(id: string): PlaygroundJourney | undefined {
 /**
  * Run one journey inside the shared review boundary: a titled section rule,
  * the reproducibility banner, and the only cancellation catch — the
- * package's public `PromptCancelled`. Anything else propagates after the
+ * package's public `InteractionCancelled`. Anything else propagates after the
  * package has restored the terminal.
  */
 export async function runJourney(
@@ -712,7 +714,7 @@ export async function runJourney(
   try {
     await journey.run(runtime);
   } catch (error) {
-    if (error instanceof PromptCancelled) {
+    if (error instanceof InteractionCancelled) {
       runtime.print(
         `Journey cancelled (${error.reason}) — terminal restored.`,
       );
@@ -736,14 +738,14 @@ export const interactiveExportCoverage: Readonly<
     { readonly journey: string } | { readonly excluded: string }
   >
 > = {
-  promptText: { journey: "text" },
-  promptMasked: { journey: "masked" },
-  promptConfirm: { journey: "confirm" },
-  promptSelect: { journey: "select" },
-  promptMultiselect: { journey: "multiselect" },
-  promptSearch: { journey: "search" },
-  promptAutocomplete: { journey: "autocomplete" },
-  promptTextarea: { journey: "textarea" },
+  requestText: { journey: "text" },
+  requestMaskedText: { journey: "masked" },
+  requestConfirmation: { journey: "confirm" },
+  requestSelection: { journey: "select" },
+  requestSelections: { journey: "multiselect" },
+  requestSearch: { journey: "search" },
+  requestAutocomplete: { journey: "autocomplete" },
+  requestTextarea: { journey: "textarea" },
   createSequentialForm: { journey: "form" },
   withSpinner: { journey: "spinner" },
   withDeterminateProgress: { journey: "progress" },
@@ -751,7 +753,7 @@ export const interactiveExportCoverage: Readonly<
     excluded:
       "Constructed through createSequentialForm; the form journey exercises it.",
   },
-  PromptCancelled: {
+  InteractionCancelled: {
     excluded:
       "Public cancellation outcome; the journey wrapper catches it on every run.",
   },
@@ -765,7 +767,7 @@ export const interactiveExportCoverage: Readonly<
   },
   GraphemeTextEditor: {
     excluded:
-      "Editing engine driven inside every editing prompt; it has no separate interactive surface.",
+      "Editing engine driven inside every editing interaction; it has no separate interactive surface.",
   },
   segmentGraphemes: {
     excluded:
@@ -773,19 +775,19 @@ export const interactiveExportCoverage: Readonly<
   },
   tokenizeTerminalKeys: {
     excluded:
-      "Key decoding runs inside every prompt; the playground must not decode keys itself.",
+      "Key decoding runs inside every interaction; the playground must not decode keys itself.",
   },
   BufferedTerminalKeyDecoder: {
     excluded:
-      "Key decoding runs inside every prompt; the playground must not decode keys itself.",
+      "Key decoding runs inside every interaction; the playground must not decode keys itself.",
   },
   TerminalKeyReader: {
     excluded:
-      "Key decoding runs inside every prompt; the playground must not decode keys itself.",
+      "Key decoding runs inside every interaction; the playground must not decode keys itself.",
   },
   isNamedKey: {
     excluded:
-      "Key predicate for prompt machines; no interactive surface of its own.",
+      "Key predicate for interaction machines; no interactive surface of its own.",
   },
   HIDE_TERMINAL_CURSOR: {
     excluded:
@@ -801,13 +803,13 @@ export const interactiveExportCoverage: Readonly<
   },
   withHiddenTerminalCursor: {
     excluded:
-      "Lifecycle bracket already wrapped around every prompt and activity run.",
+      "Lifecycle bracket already wrapped around every interaction and activity run.",
   },
   withRawTerminal: {
-    excluded: "Lifecycle bracket already wrapped around every prompt run.",
+    excluded: "Lifecycle bracket already wrapped around every interaction run.",
   },
   InlineFramePainter: {
     excluded:
-      "Repaint control consumed by package prompts; its refusals surface through the viewport and degradation journeys.",
+      "Repaint control consumed by package interactions; its refusals surface through the viewport and degradation journeys.",
   },
 };

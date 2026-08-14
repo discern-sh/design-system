@@ -75,7 +75,7 @@
     color: inherit;
     font: inherit;
   }
-  .discern-terminal__prompt {
+  .discern-terminal__command-prefix {
     color: var(--discern-color-accent-700);
   }
   .discern-terminal__muted {
@@ -134,7 +134,7 @@
     padding: clamp(1.5rem, 4vw, 2.5rem);
     font-size: clamp(0.78rem, 1.5vw, 0.95rem);
   }
-  .discern-terminal--showcase .discern-terminal__prompt {
+  .discern-terminal--showcase .discern-terminal__command-prefix {
     color: var(--discern-color-accent-400);
   }
   .discern-terminal--showcase .discern-terminal__success {

@@ -1,11 +1,11 @@
 import { assertEquals, assertRejects, assertStringIncludes } from "@std/assert";
 import {
-  PromptCancelled,
-  promptMultiselect,
-  promptSearch,
-  promptSelect,
+  InteractionCancelled,
+  requestSearch,
+  requestSelection,
+  requestSelections,
 } from "../../src/cli/interactive/mod.ts";
-import type { PromptChoiceEntry } from "../../src/cli/interactive/types.ts";
+import type { InteractionEntry } from "../../src/cli/interactive/types.ts";
 import { renderTriangleSectionRule } from "../../src/cli/mod.ts";
 import { assertExactFrame, testCapabilities } from "./helpers.ts";
 import { FakeTerminal } from "./fake-terminal.ts";
@@ -22,7 +22,7 @@ const grouped = [
   { kind: "group-heading", id: "secondary", label: "Secondary" },
   { id: "two", label: "Two", value: "two" },
   { id: "three", label: "Three", value: "three" },
-] as const satisfies readonly PromptChoiceEntry<string>[];
+] as const satisfies readonly InteractionEntry<string>[];
 
 const firstColumn = "\x1b[1G";
 const eraseToEnd = "\x1b[J";
@@ -54,7 +54,7 @@ Deno.test("grouped select supports every promised movement key", async () => {
   for (const key of forward) {
     const io = new FakeTerminal([`${key}\r`]);
     assertEquals(
-      await promptSelect({ label: "Pick", choices: grouped }, { io }),
+      await requestSelection({ label: "Pick", choices: grouped }, { io }),
       "two",
     );
   }
@@ -71,7 +71,7 @@ Deno.test("grouped select supports every promised movement key", async () => {
   for (const key of backward) {
     const io = new FakeTerminal([`${key}\r`]);
     assertEquals(
-      await promptSelect({ label: "Pick", choices: grouped }, { io }),
+      await requestSelection({ label: "Pick", choices: grouped }, { io }),
       "three",
     );
   }
@@ -80,7 +80,7 @@ Deno.test("grouped select supports every promised movement key", async () => {
 Deno.test("grouped select Home, End, initial ids, and validation never land on headings", async () => {
   let io = new FakeTerminal(["\x1b[H\r"]);
   assertEquals(
-    await promptSelect({
+    await requestSelection({
       label: "Pick",
       choices: grouped,
       initialId: "two",
@@ -90,13 +90,13 @@ Deno.test("grouped select Home, End, initial ids, and validation never land on h
 
   io = new FakeTerminal(["\x1b[F\r"]);
   assertEquals(
-    await promptSelect({ label: "Pick", choices: grouped }, { io }),
+    await requestSelection({ label: "Pick", choices: grouped }, { io }),
     "three",
   );
 
   io = new FakeTerminal(["\r"]);
   assertEquals(
-    await promptSelect({
+    await requestSelection({
       label: "Pick",
       choices: grouped,
       initialId: "primary",
@@ -106,7 +106,7 @@ Deno.test("grouped select Home, End, initial ids, and validation never land on h
 
   io = new FakeTerminal(["\r\x1b[B\r"]);
   assertEquals(
-    await promptSelect({
+    await requestSelection({
       label: "Pick",
       choices: grouped,
       validate: (value) =>
@@ -120,7 +120,7 @@ Deno.test("grouped select Home, End, initial ids, and validation never land on h
 Deno.test("grouped multiselect toggles only values and returns caller order", async () => {
   let io = new FakeTerminal(["\x01\r"]);
   assertEquals(
-    await promptMultiselect({
+    await requestSelections({
       label: "Pick many",
       choices: grouped,
       initialIds: ["primary", "disabled"],
@@ -130,7 +130,7 @@ Deno.test("grouped multiselect toggles only values and returns caller order", as
 
   io = new FakeTerminal(["\x01\x01\r"]);
   assertEquals(
-    await promptMultiselect({
+    await requestSelections({
       label: "Pick many",
       choices: grouped,
       initialIds: ["disabled"],
@@ -140,7 +140,7 @@ Deno.test("grouped multiselect toggles only values and returns caller order", as
 
   io = new FakeTerminal([" \x1b[B \r"]);
   assertEquals(
-    await promptMultiselect({ label: "Pick many", choices: grouped }, { io }),
+    await requestSelections({ label: "Pick many", choices: grouped }, { io }),
     ["one", "two"],
   );
 });
@@ -148,7 +148,7 @@ Deno.test("grouped multiselect toggles only values and returns caller order", as
 Deno.test("search providers share grouped entry vocabulary and skip structure", async () => {
   const io = new FakeTerminal(["\r\x1b[B\x1b[B\r"], { columns: 32 });
   assertEquals(
-    await promptSearch({
+    await requestSearch({
       label: "Find",
       visibleCount: 2,
       search: () => grouped,
@@ -159,11 +159,12 @@ Deno.test("search providers share grouped entry vocabulary and skip structure", 
   assertStringIncludes(io.output(), "Three");
 });
 
-Deno.test("grouped prompts cancel cleanly and reject required structure-only lists", async () => {
+Deno.test("grouped interactions cancel cleanly and reject required structure-only lists", async () => {
   const cancelled = new FakeTerminal(["\x03"], { columns: 32 });
   await assertRejects(
-    () => promptSelect({ label: "Pick", choices: grouped }, { io: cancelled }),
-    PromptCancelled,
+    () =>
+      requestSelection({ label: "Pick", choices: grouped }, { io: cancelled }),
+    InteractionCancelled,
     "Cancelled.",
   );
   assertStringIncludes(cancelled.output(), "PRIMARY");
@@ -172,7 +173,7 @@ Deno.test("grouped prompts cancel cleanly and reject required structure-only lis
   const invalid = new FakeTerminal(["\r"]);
   await assertRejects(
     () =>
-      promptSelect({
+      requestSelection({
         label: "Pick",
         choices: [
           { kind: "group-heading", id: "only", label: "Only" },
@@ -186,7 +187,7 @@ Deno.test("grouped prompts cancel cleanly and reject required structure-only lis
 
   const optional = new FakeTerminal(["\r"]);
   assertEquals(
-    await promptSelect({
+    await requestSelection({
       label: "Optional",
       required: false,
       choices: [{ kind: "group-heading", id: "only", label: "Only" }],
@@ -200,7 +201,7 @@ Deno.test("long grouped viewports and submitted frames stay exact", async () => 
 
   let io = new FakeTerminal(["\x1b[F\r"], { columns: 32 });
   assertEquals(
-    await promptSelect({
+    await requestSelection({
       label: "Pick",
       choices: grouped,
       visibleCount: 2,
@@ -223,7 +224,7 @@ Deno.test("long grouped viewports and submitted frames stay exact", async () => 
 
   io = new FakeTerminal(["\x01\r"], { columns: 32 });
   assertEquals(
-    await promptMultiselect({ label: "Pick many", choices: grouped }, { io }),
+    await requestSelections({ label: "Pick many", choices: grouped }, { io }),
     ["one", "two", "three"],
   );
   const multiselectFrames = paintedFrames(io);
@@ -239,7 +240,7 @@ Deno.test("long grouped viewports and submitted frames stay exact", async () => 
 
   io = new FakeTerminal(["\r\x1b[B\x1b[B\r"], { columns: 32 });
   assertEquals(
-    await promptSearch({
+    await requestSearch({
       label: "Find",
       visibleCount: 2,
       search: () => grouped,

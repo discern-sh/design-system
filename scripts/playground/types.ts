@@ -21,7 +21,7 @@ export type JourneySection = (typeof journeySections)[number];
 
 /** Injectable effects shared by every playground journey. */
 export interface PlaygroundRuntime {
-  /** Terminal every journey prompts and prints through. */
+  /** Terminal every journey interactions and prints through. */
   readonly io: TerminalIO;
   /** Write one line of playground narration to the terminal. */
   readonly print: (text: string) => void;

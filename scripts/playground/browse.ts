@@ -20,8 +20,8 @@ import {
   componentGroups,
 } from "../../src/types/component-meta.ts";
 import {
-  type PromptChoiceEntry,
-  promptSelect,
+  type InteractionEntry,
+  requestSelection,
 } from "../../src/cli/interactive/mod.ts";
 import type { PlaygroundRuntime } from "./types.ts";
 
@@ -31,7 +31,7 @@ type ExampleTarget = number | "all" | "back";
 type ExampleNavigation = number | "list";
 
 /** Top-level browse menu: every canonical Group plus the two sheets. */
-export function browseTopChoices(): readonly PromptChoiceEntry<TopTarget>[] {
+export function browseTopChoices(): readonly InteractionEntry<TopTarget>[] {
   return [
     ...componentGroups.map((group) => ({
       id: `group-${group.toLocaleLowerCase()}`,
@@ -47,7 +47,7 @@ export function browseTopChoices(): readonly PromptChoiceEntry<TopTarget>[] {
 /** Component menu for one Group, marking exempt entries inline. */
 export function browseComponentChoices(
   group: ComponentGroup,
-): readonly PromptChoiceEntry<ComponentTarget>[] {
+): readonly InteractionEntry<ComponentTarget>[] {
   return [
     ...listCliComponents(group).map((fact) => ({
       id: `component-${fact.slug}`,
@@ -72,7 +72,7 @@ async function browseComponent(
   }
   const module = await loadRenderedCliModule(fact.slug, fact.entry);
   while (true) {
-    const choices: PromptChoiceEntry<ExampleTarget>[] = [
+    const choices: InteractionEntry<ExampleTarget>[] = [
       ...module.examples.map((example, index) => ({
         id: `example-${example.name}`,
         label: example.name,
@@ -81,7 +81,7 @@ async function browseComponent(
       { id: "all", label: "All examples", value: "all" },
       { id: "back", label: "Back to components", value: "back" },
     ];
-    const target = await promptSelect({
+    const target = await requestSelection({
       label: `${fact.name} examples`,
       choices,
     }, { io });
@@ -114,7 +114,7 @@ async function browseExample(
     );
     print("");
     print(module.render(example.props, io.capabilities()));
-    const navigation: PromptChoiceEntry<ExampleNavigation>[] = [];
+    const navigation: InteractionEntry<ExampleNavigation>[] = [];
     const next = module.examples[index + 1];
     if (next !== undefined) {
       navigation.push({
@@ -132,7 +132,7 @@ async function browseExample(
       });
     }
     navigation.push({ id: "back", label: "Back to examples", value: "list" });
-    const target = await promptSelect({
+    const target = await requestSelection({
       label: "Example navigation",
       choices: navigation,
     }, { io });
@@ -147,7 +147,7 @@ async function browseGroup(
 ): Promise<void> {
   const { io } = runtime;
   while (true) {
-    const target = await promptSelect({
+    const target = await requestSelection({
       label: `${group} components`,
       choices: browseComponentChoices(group),
     }, { io });
@@ -165,7 +165,7 @@ export async function runBrowseJourney(
 ): Promise<void> {
   const { io, print } = runtime;
   while (true) {
-    const target = await promptSelect({
+    const target = await requestSelection({
       label: "Static CLI catalogue",
       hint: "Enter opens; Ctrl+C returns to the hub.",
       choices: browseTopChoices(),

@@ -7,16 +7,16 @@ import {
 import {
   createSequentialForm,
   HIDE_TERMINAL_CURSOR,
+  InteractionCancelled,
   NonInteractiveTerminalError,
-  promptAutocomplete,
-  PromptCancelled,
-  promptConfirm,
-  promptMasked,
-  promptMultiselect,
-  promptSearch,
-  promptSelect,
-  promptText,
-  promptTextarea,
+  requestAutocomplete,
+  requestConfirmation,
+  requestMaskedText,
+  requestSearch,
+  requestSelection,
+  requestSelections,
+  requestText,
+  requestTextarea,
   SHOW_TERMINAL_CURSOR,
   withDeterminateProgress,
   withSpinner,
@@ -28,11 +28,11 @@ function assertRestored(io: FakeTerminal): void {
   assertEquals(io.writes.at(-1), SHOW_TERMINAL_CURSOR);
 }
 
-Deno.test("text prompt edits, validates, submits, and restores terminal state", async () => {
+Deno.test("text interaction edits, validates, submits, and restores terminal state", async () => {
   const io = new FakeTerminal(["\r", "J", "e", "s", "s", "\r"], {
     columns: 32,
   });
-  const result = await promptText({ label: "Name", required: true }, { io });
+  const result = await requestText({ label: "Name", required: true }, { io });
   assertEquals(result, "Jess");
   assertEquals(io.rawTransitions, [true, false]);
   assertEquals(io.writes[0], HIDE_TERMINAL_CURSOR);
@@ -41,10 +41,10 @@ Deno.test("text prompt edits, validates, submits, and restores terminal state", 
   assertStringIncludes(io.output(), "Jess");
 });
 
-Deno.test("masked prompt never writes the raw secret", async () => {
+Deno.test("masked interaction never writes the raw secret", async () => {
   const io = new FakeTerminal(["secret\r"], { columns: 32 });
   assertEquals(
-    await promptMasked({ label: "Secret", required: true }, { io }),
+    await requestMaskedText({ label: "Secret", required: true }, { io }),
     "secret",
   );
   assert(
@@ -58,8 +58,8 @@ Deno.test("masked prompt never writes the raw secret", async () => {
 Deno.test("Ctrl+C and EOF cancel with exact cleanup", async () => {
   const cancelled = new FakeTerminal(["x\x03"], { columns: 32 });
   await assertRejects(
-    () => promptText({ label: "Cancel" }, { io: cancelled }),
-    PromptCancelled,
+    () => requestText({ label: "Cancel" }, { io: cancelled }),
+    InteractionCancelled,
     "Cancelled.",
   );
   assertEquals(cancelled.rawTransitions, [true, false]);
@@ -68,8 +68,8 @@ Deno.test("Ctrl+C and EOF cancel with exact cleanup", async () => {
 
   const ended = new FakeTerminal([], { columns: 32 });
   await assertRejects(
-    () => promptText({ label: "End" }, { io: ended }),
-    PromptCancelled,
+    () => requestText({ label: "End" }, { io: ended }),
+    InteractionCancelled,
     "Input ended.",
   );
   assertEquals(ended.rawTransitions, [true, false]);
@@ -81,7 +81,7 @@ Deno.test("validator exceptions restore raw mode and cursor", async () => {
   const io = new FakeTerminal(["ok\r"], { columns: 32 });
   await assertRejects(
     () =>
-      promptText({
+      requestText({
         label: "Validate",
         validate: () => {
           throw new Error("validator failed");
@@ -94,10 +94,10 @@ Deno.test("validator exceptions restore raw mode and cursor", async () => {
   assertRestored(io);
 });
 
-Deno.test("interactive prompts refuse non-TTY input before terminal mutation", async () => {
+Deno.test("terminal interactions refuse non-TTY input before terminal mutation", async () => {
   const io = new FakeTerminal([], { interactive: false });
   await assertRejects(
-    () => promptText({ label: "No terminal" }, { io }),
+    () => requestText({ label: "No terminal" }, { io }),
     NonInteractiveTerminalError,
     "stdin and stdout",
   );
@@ -108,7 +108,7 @@ Deno.test("interactive prompts refuse non-TTY input before terminal mutation", a
 Deno.test("confirm, select, and multiselect return their semantic values", async () => {
   const confirmIo = new FakeTerminal(["n\r"]);
   assertEquals(
-    await promptConfirm({ label: "Continue?" }, { io: confirmIo }),
+    await requestConfirmation({ label: "Continue?" }, { io: confirmIo }),
     false,
   );
 
@@ -118,13 +118,13 @@ Deno.test("confirm, select, and multiselect return their semantic values", async
   ] as const;
   const selectIo = new FakeTerminal(["\x1b[B\r"]);
   assertEquals(
-    await promptSelect({ label: "Pick", choices }, { io: selectIo }),
+    await requestSelection({ label: "Pick", choices }, { io: selectIo }),
     2,
   );
 
   const multipleIo = new FakeTerminal([" \x1b[B \r"]);
   assertEquals(
-    await promptMultiselect({ label: "Pick many", choices }, {
+    await requestSelections({ label: "Pick many", choices }, {
       io: multipleIo,
     }),
     [1, 2],
@@ -133,7 +133,7 @@ Deno.test("confirm, select, and multiselect return their semantic values", async
 
 Deno.test("search and autocomplete resolve asynchronous and ghost choices", async () => {
   const searchIo = new FakeTerminal(["t", "\r", "\r"]);
-  const found = await promptSearch({
+  const found = await requestSearch({
     label: "Find",
     search: (query) =>
       Promise.resolve([
@@ -145,7 +145,7 @@ Deno.test("search and autocomplete resolve asynchronous and ghost choices", asyn
 
   const autocompleteIo = new FakeTerminal(["z\t\r"]);
   assertEquals(
-    await promptAutocomplete({
+    await requestAutocomplete({
       label: "Shell",
       suggestions: ["bash", "zsh"],
     }, { io: autocompleteIo }),
@@ -157,7 +157,7 @@ Deno.test("search and autocomplete resolve asynchronous and ghost choices", asyn
 Deno.test("textarea inserts newlines, moves vertically, and submits with Ctrl+D", async () => {
   const io = new FakeTerminal(["ab\rcd\x1b[A!\x04"], { columns: 32 });
   assertEquals(
-    await promptTextarea({ label: "Notes", rows: 3 }, { io }),
+    await requestTextarea({ label: "Notes", rows: 3 }, { io }),
     "ab!\ncd",
   );
   assertStringIncludes(io.output(), "Ctrl+D to submit");
@@ -173,7 +173,7 @@ Deno.test("sequential form retains answers, runs conditions, and navigates back"
       id: "name",
       label: "Name",
       run: async (_values, previous, runtime) =>
-        await promptText({
+        await requestText({
           label: "Name",
           initialValue: typeof previous === "string" ? previous : "",
         }, runtime),
@@ -183,7 +183,7 @@ Deno.test("sequential form retains answers, runs conditions, and navigates back"
       id: "enabled",
       label: "Enabled",
       run: async (_values, previous, runtime) =>
-        await promptConfirm({
+        await requestConfirmation({
           label: "Enabled?",
           initialValue: typeof previous === "boolean" ? previous : true,
         }, runtime),
@@ -194,7 +194,7 @@ Deno.test("sequential form retains answers, runs conditions, and navigates back"
       label: "Detail",
       when: (answers) => answers.enabled === true,
       run: async (_values, _previous, runtime) =>
-        await promptText({ label: "Detail" }, runtime),
+        await requestText({ label: "Detail" }, runtime),
     })
     .submit();
 
@@ -257,7 +257,7 @@ Deno.test("no-control terminals keep Unicode and use static interactive frames",
     unicode: true,
   });
   assertEquals(
-    await promptSelect({ label: "Pick", choices }, { io }),
+    await requestSelection({ label: "Pick", choices }, { io }),
     2,
   );
   assertStringIncludes(io.output(), "› [●] One");
@@ -294,7 +294,7 @@ Deno.test("terminals below the coherent frame minimum refuse and restore", async
   });
   await assertRejects(
     () =>
-      promptSelect({
+      requestSelection({
         label: "Pick",
         choices: [
           { id: "one", label: "One", value: 1 },
@@ -302,7 +302,7 @@ Deno.test("terminals below the coherent frame minimum refuse and restore", async
         ],
       }, { io }),
     TypeError,
-    "cannot hold a coherent prompt frame",
+    "cannot hold a coherent interaction frame",
   );
   assert(!io.output().includes("\x1b[1G"));
   assert(!io.output().includes("\x1b[J"));

@@ -1,14 +1,14 @@
 import { assertEquals } from "@std/assert";
 import {
   createSequentialForm,
-  promptAutocomplete,
-  promptConfirm,
-  promptMasked,
-  promptMultiselect,
-  promptSearch,
-  promptSelect,
-  promptText,
-  promptTextarea,
+  requestAutocomplete,
+  requestConfirmation,
+  requestMaskedText,
+  requestSearch,
+  requestSelection,
+  requestSelections,
+  requestText,
+  requestTextarea,
   withDeterminateProgress,
 } from "../../src/cli/interactive/mod.ts";
 import { assertExactFrame, testCapabilities } from "./helpers.ts";
@@ -17,76 +17,78 @@ import { FakeTerminal } from "./fake-terminal.ts";
 const ENTER = "\r";
 const CTRL_D = "\x04";
 
-function firstPromptFrame(io: FakeTerminal): string {
+function firstInteractionFrame(io: FakeTerminal): string {
   const frame = io.writes[1];
-  if (frame === undefined) throw new Error("prompt painted no initial frame");
+  if (frame === undefined) {
+    throw new Error("interaction painted no initial frame");
+  }
   return frame;
 }
 
-Deno.test("interactive prompts paint exact real Component frames", async () => {
+Deno.test("terminal interactions paint exact real Component frames", async () => {
   const capabilities = testCapabilities({ columns: 32 });
   const frames = new Map<string, string>();
 
   let io = new FakeTerminal([ENTER], { columns: 32 });
-  await promptText({ label: "Name", initialValue: "Ada" }, { io });
-  frames.set("input", firstPromptFrame(io));
+  await requestText({ label: "Name", initialValue: "Ada" }, { io });
+  frames.set("input", firstInteractionFrame(io));
 
   io = new FakeTerminal([`abc${ENTER}`], { columns: 32 });
-  await promptMasked({ label: "Secret", placeholder: "token" }, { io });
-  frames.set("masked input", firstPromptFrame(io));
+  await requestMaskedText({ label: "Secret", placeholder: "token" }, { io });
+  frames.set("masked input", firstInteractionFrame(io));
 
   io = new FakeTerminal([ENTER], { columns: 32 });
-  await promptConfirm({
+  await requestConfirmation({
     label: "Continue",
     initialValue: true,
     yesLabel: "Yes",
     noLabel: "No",
   }, { io });
-  frames.set("switch", firstPromptFrame(io));
+  frames.set("switch", firstInteractionFrame(io));
 
   const choices = [
     { id: "one", label: "One", value: 1 },
     { id: "two", label: "Two", value: 2 },
   ] as const;
   io = new FakeTerminal([ENTER], { columns: 32 });
-  await promptSelect({
+  await requestSelection({
     label: "Pick",
     choices,
     initialId: "two",
   }, { io });
-  frames.set("select", firstPromptFrame(io));
+  frames.set("select", firstInteractionFrame(io));
 
   io = new FakeTerminal([ENTER], { columns: 32 });
-  await promptMultiselect({
+  await requestSelections({
     label: "Tags",
     choices,
     initialIds: ["two"],
   }, { io });
-  frames.set("checkboxes", firstPromptFrame(io));
+  frames.set("checkboxes", firstInteractionFrame(io));
 
   io = new FakeTerminal([`${ENTER}${ENTER}`], { columns: 32 });
-  await promptSearch({
+  await requestSearch({
     label: "Find",
     placeholder: "Search",
     search: () => choices,
   }, { io });
-  frames.set("radio search", firstPromptFrame(io));
+  frames.set("radio search", firstInteractionFrame(io));
 
   io = new FakeTerminal([ENTER], { columns: 32 });
-  await promptAutocomplete({
+  await requestAutocomplete({
     label: "Shell",
     initialValue: "z",
     suggestions: ["zsh"],
   }, { io });
-  frames.set("autocomplete input", firstPromptFrame(io));
+  frames.set("autocomplete input", firstInteractionFrame(io));
 
   io = new FakeTerminal([CTRL_D], { columns: 32 });
-  await promptTextarea({
+  await requestTextarea({
     label: "Notes",
     initialValue: "ab\ncd",
     rows: 2,
   }, { io });
-  frames.set("textarea", firstPromptFrame(io));
+  frames.set("textarea", firstInteractionFrame(io));
 
   const expected = new Map([
     [
@@ -139,7 +141,7 @@ Deno.test("interactive progress paints exact Meter frames", async () => {
     io,
   }, () => undefined);
   assertExactFrame(
-    firstPromptFrame(io),
+    firstInteractionFrame(io),
     "Work\n[ 25%] ◮⧩◭..........",
     capabilities,
   );

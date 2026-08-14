@@ -1,5 +1,5 @@
 /**
- * Search and ghost-text autocomplete prompt state machines.
+ * Search and ghost-text autocomplete interaction state machines.
  *
  * @module
  */
@@ -19,17 +19,17 @@ import {
   choiceVisibleCount,
   choiceVisibleStart,
   frameChoices,
-  isPromptChoice,
+  isInteractionChoice,
   moveEnabledIndex,
 } from "./choice-navigation.ts";
-import { type PromptMachine, runPrompt } from "./driver.ts";
+import { type InteractionMachine, runInteraction } from "./driver.ts";
 import { GraphemeTextEditor } from "./editor.ts";
 import { isNamedKey, type TerminalKey } from "./keys.ts";
-import type { PromptFrameViewport } from "./viewport-budget.ts";
+import type { InteractionFrameViewport } from "./viewport-budget.ts";
 import type {
-  PromptChoiceEntry,
-  PromptOptions,
-  PromptRuntime,
+  InteractionEntry,
+  InteractionOptions,
+  InteractionRuntime,
 } from "./types.ts";
 
 function renderSearchFrame(
@@ -54,16 +54,17 @@ function renderAutocompleteFrame(
   }, capabilities);
 }
 
-/** Synchronous or asynchronous choice provider used by search prompts. */
-export type SearchPromptProvider<T> = (
+/** Synchronous or asynchronous choice provider used by search interactions. */
+export type SearchProvider<T> = (
   query: string,
 ) =>
-  | readonly PromptChoiceEntry<T>[]
-  | Promise<readonly PromptChoiceEntry<T>[]>;
+  | readonly InteractionEntry<T>[]
+  | Promise<readonly InteractionEntry<T>[]>;
 
-/** Options for a query-driven selectable search prompt. */
-export interface SearchPromptOptions<T> extends PromptOptions<T | undefined> {
-  readonly search: SearchPromptProvider<T>;
+/** Options for a query-driven selectable search interaction. */
+export interface SearchRequestOptions<T>
+  extends InteractionOptions<T | undefined> {
+  readonly search: SearchProvider<T>;
   /** Stable enabled choice ID highlighted from the initial provider result. */
   readonly initialId?: string;
   readonly placeholder?: string;
@@ -71,15 +72,15 @@ export interface SearchPromptOptions<T> extends PromptOptions<T | undefined> {
   readonly visibleCount?: number;
 }
 
-class SearchPromptMachine<T>
-  implements PromptMachine<T | undefined, SearchFrameState> {
+class SearchInteractionMachine<T>
+  implements InteractionMachine<T | undefined, SearchFrameState> {
   readonly #editor = new GraphemeTextEditor();
   readonly #visibleCount: number;
-  #matches: readonly PromptChoiceEntry<T>[] = [];
+  #matches: readonly InteractionEntry<T>[] = [];
   #highlighted: number | undefined;
   #rememberedId: string | undefined;
 
-  constructor(readonly options: SearchPromptOptions<T>) {
+  constructor(readonly options: SearchRequestOptions<T>) {
     this.#visibleCount = choiceVisibleCount(options.visibleCount);
     this.#rememberedId = options.initialId;
   }
@@ -98,7 +99,7 @@ class SearchPromptMachine<T>
         return false;
       }
       const entry = this.#matches[this.#highlighted];
-      return entry !== undefined && isPromptChoice(entry) &&
+      return entry !== undefined && isInteractionChoice(entry) &&
         entry.disabled !== true;
     }
     if (
@@ -136,7 +137,7 @@ class SearchPromptMachine<T>
   value(): T | undefined {
     if (this.#highlighted === undefined) return undefined;
     const entry = this.#matches[this.#highlighted];
-    return entry === undefined || !isPromptChoice(entry) ||
+    return entry === undefined || !isInteractionChoice(entry) ||
         entry.disabled === true
       ? undefined
       : entry.value;
@@ -144,7 +145,7 @@ class SearchPromptMachine<T>
 
   frame(
     lifecycle: InteractiveFrameLifecycle,
-    viewport: PromptFrameViewport,
+    viewport: InteractionFrameViewport,
   ): SearchFrameState {
     const visibleCount = Math.min(
       this.#visibleCount,
@@ -188,7 +189,7 @@ class SearchPromptMachine<T>
     const remembered = this.#rememberedId === undefined
       ? -1
       : choices.findIndex((entry) =>
-        isPromptChoice(entry) && entry.id === this.#rememberedId &&
+        isInteractionChoice(entry) && entry.id === this.#rememberedId &&
         entry.disabled !== true
       );
     this.#highlighted = remembered < 0 ? undefined : remembered;
@@ -198,38 +199,39 @@ class SearchPromptMachine<T>
     if (this.#highlighted === undefined) return;
     const entry = this.#matches[this.#highlighted];
     if (
-      entry !== undefined && isPromptChoice(entry) && entry.disabled !== true
+      entry !== undefined && isInteractionChoice(entry) &&
+      entry.disabled !== true
     ) {
       this.#rememberedId = entry.id;
     }
   }
 }
 
-/** Prompt for a value returned by a synchronous or asynchronous search. */
-export async function promptSearch<T>(
-  options: SearchPromptOptions<T>,
-  runtime: PromptRuntime = {},
+/** Request a value returned by a synchronous or asynchronous search. */
+export async function requestSearch<T>(
+  options: SearchRequestOptions<T>,
+  runtime: InteractionRuntime = {},
 ): Promise<T | undefined> {
-  const requiredOptions: SearchPromptOptions<T> = {
+  const requiredOptions: SearchRequestOptions<T> = {
     ...options,
     required: options.required ?? true,
   };
-  return await runPrompt(
+  return await runInteraction(
     requiredOptions,
-    new SearchPromptMachine(requiredOptions),
+    new SearchInteractionMachine(requiredOptions),
     runtime,
     renderSearchFrame,
   );
 }
 
 /** Synchronous or asynchronous source for autocomplete candidates. */
-export type AutocompletePromptProvider = (
+export type AutocompleteProvider = (
   query: string,
 ) => readonly string[] | Promise<readonly string[]>;
 
 /** Options for an editable line with one inline ghost completion. */
-export interface AutocompletePromptOptions extends PromptOptions<string> {
-  readonly suggestions: readonly string[] | AutocompletePromptProvider;
+export interface AutocompleteRequestOptions extends InteractionOptions<string> {
+  readonly suggestions: readonly string[] | AutocompleteProvider;
   readonly placeholder?: string;
   readonly initialValue?: string;
 }
@@ -242,13 +244,13 @@ function assertSuggestions(suggestions: readonly string[]): void {
   }
 }
 
-class AutocompletePromptMachine
-  implements PromptMachine<string, AutocompleteFrameState> {
+class AutocompleteInteractionMachine
+  implements InteractionMachine<string, AutocompleteFrameState> {
   readonly #editor: GraphemeTextEditor;
   #suggestions: readonly string[] = [];
   #highlighted = 0;
 
-  constructor(readonly options: AutocompletePromptOptions) {
+  constructor(readonly options: AutocompleteRequestOptions) {
     this.#editor = new GraphemeTextEditor(options.initialValue ?? "");
   }
 
@@ -323,14 +325,14 @@ class AutocompletePromptMachine
   }
 }
 
-/** Prompt for text with a ghost completion accepted by Tab or Right Arrow. */
-export async function promptAutocomplete(
-  options: AutocompletePromptOptions,
-  runtime: PromptRuntime = {},
+/** Request text with a ghost completion accepted by Tab or Right Arrow. */
+export async function requestAutocomplete(
+  options: AutocompleteRequestOptions,
+  runtime: InteractionRuntime = {},
 ): Promise<string> {
-  return await runPrompt(
+  return await runInteraction(
     options,
-    new AutocompletePromptMachine(options),
+    new AutocompleteInteractionMachine(options),
     runtime,
     renderAutocompleteFrame,
   );

@@ -211,7 +211,7 @@ Deno.test("every interactive adapter export is classified for the playground", (
     }
   }
   for (const name of exportNames) {
-    if (!/^prompt[A-Z]/u.test(name) && name !== "createSequentialForm") {
+    if (!/^request[A-Z]/u.test(name) && name !== "createSequentialForm") {
       continue;
     }
     const classification = interactiveExportCoverage[name];
@@ -424,7 +424,7 @@ Deno.test("repeated journey runs share no orchestration state", async () => {
   assertEquals(await runSixteen(), await runSixteen());
 });
 
-Deno.test("reopen loop drives 16-row prompts across passes and exits on demand", async () => {
+Deno.test("reopen loop drives 16-row interactions across passes and exits on demand", async () => {
   const io = new FakeTerminal(
     [
       ENTER,
@@ -458,7 +458,7 @@ Deno.test("label stress journey completes across graphemes and duplicates", asyn
   assertStringIncludes(io.output(), '"duplicate-first","duplicate-second"');
 });
 
-Deno.test("degraded journeys prompt through the synthetic environment", async () => {
+Deno.test("degraded journeys run through the synthetic environment", async () => {
   const io = new FakeTerminal([], { columns: 80 });
   const degraded = new FakeTerminal([ENTER], {
     columns: 40,

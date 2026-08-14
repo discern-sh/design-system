@@ -12,11 +12,11 @@ import type {
 } from "../interactive-states.ts";
 import renderProcessStepsCli from "../../components/marketing/process-steps/process-steps.cli.ts";
 import { defaultTerminalFrameWidth } from "../frame-measure.ts";
-import { PromptCancelled } from "./errors.ts";
-import { PromptBackNavigation } from "./driver.ts";
+import { InteractionCancelled } from "./errors.ts";
+import { InteractionBackNavigation } from "./driver.ts";
 import { DenoTerminalIO, type TerminalIO } from "./io.ts";
 import { assertInteractiveTerminal } from "./lifecycle.ts";
-import type { PromptRuntime } from "./types.ts";
+import type { InteractionRuntime } from "./types.ts";
 import type { TerminalThemeVariant } from "../theme.ts";
 
 /** Named results collected by a sequential form. */
@@ -29,7 +29,7 @@ export interface SequentialFormStep {
   readonly run: (
     values: Readonly<SequentialFormValues>,
     previous: unknown,
-    runtime: PromptRuntime,
+    runtime: InteractionRuntime,
   ) => unknown | Promise<unknown>;
   readonly when?: (values: Readonly<SequentialFormValues>) => boolean;
   /** Optional non-sensitive summary shown after this step completes. */
@@ -52,7 +52,7 @@ function hasValue(values: SequentialFormValues, id: string): boolean {
   return Object.prototype.hasOwnProperty.call(values, id);
 }
 
-/** Builder and event coordinator for named sequential prompt steps. */
+/** Builder and event coordinator for named sequential interaction steps. */
 export class SequentialFormBuilder {
   readonly #steps: SequentialFormStep[] = [];
   readonly #ids = new Set<string>();
@@ -108,7 +108,7 @@ export class SequentialFormBuilder {
 
       this.#paint(this.#frame(index, values, { status: "active" }));
       const previousIndex = this.#previousApplicableIndex(index, values);
-      const runtime: PromptRuntime = {
+      const runtime: InteractionRuntime = {
         io: this.#io,
         canGoBack: previousIndex >= 0,
         ...(this.options.theme === undefined
@@ -123,11 +123,11 @@ export class SequentialFormBuilder {
         );
         index += 1;
       } catch (error) {
-        if (error instanceof PromptBackNavigation) {
+        if (error instanceof InteractionBackNavigation) {
           index = Math.max(0, previousIndex);
           continue;
         }
-        if (error instanceof PromptCancelled) {
+        if (error instanceof InteractionCancelled) {
           this.#paint(this.#frame(index, values, {
             status: "cancelled",
             reason: error.reason,

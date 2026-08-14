@@ -261,6 +261,14 @@ Deno.test("every entrypoint and public symbol is documented", async () => {
     const path = relative(PACKAGE_ROOT, fromFileUrl(entry));
     if (!node.module_doc) problems.push(`${path}: missing module doc`);
     for (const symbol of node.symbols ?? []) {
+      if (
+        path === "src/cli/interactive/mod.ts" &&
+        /prompt/iu.test(symbol.name ?? "")
+      ) {
+        problems.push(
+          `${path}: ${symbol.name} uses terminal vocabulary reserved for agent instructions`,
+        );
+      }
       const documented = Boolean(symbol.jsDoc) ||
         (symbol.declarations ?? []).some((dec) => Boolean(dec.jsDoc));
       if (!documented) {

@@ -31,7 +31,7 @@ export const cliExamples: readonly CliExample<AgentMentionCliProps>[] = [
   },
 ] as const;
 
-/** Render one prompt-sigil agent mention with an optional link target. */
+/** Render one sigil-led agent mention with an optional link target. */
 const renderAgentMentionCli: CliRenderer<AgentMentionCliProps> = (
   props,
   capabilities,

@@ -22,7 +22,7 @@ function cleanupFailure(errors: readonly unknown[]): unknown {
   return new AggregateError(errors, "Terminal restoration failed.");
 }
 
-/** Refuse an effectful prompt when stdin or stdout is not a TTY. */
+/** Refuse an effectful interaction when stdin or stdout is not a TTY. */
 export function assertInteractiveTerminal(io: TerminalIO): void {
   if (!io.isInteractive()) throw new NonInteractiveTerminalError();
 }

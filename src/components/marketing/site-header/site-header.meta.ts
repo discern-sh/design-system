@@ -10,7 +10,7 @@ export default {
   cli: {
     stance: "exempt",
     reason:
-      "Sticky responsive website mastheads and page navigation are browser chrome; terminal applications expose their own command and prompt navigation rather than a site header.",
+      "Sticky responsive website mastheads and page navigation are browser chrome; terminal applications expose their own command and interaction navigation rather than a site header.",
   },
   purposes: ["marketing-site"],
   useWhen: [

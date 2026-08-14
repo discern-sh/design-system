@@ -5,13 +5,14 @@ import { Terminal } from "./terminal.tsx";
 function StandardTerminalState() {
   return (
     <Terminal title="~/project — verify">
-      <span className="discern-terminal__prompt">$</span> deno task verify{"\n"}
+      <span className="discern-terminal__command-prefix">$</span>{" "}
+      deno task verify{"\n"}
       <span className="discern-terminal__muted">
         Check formatting, types, catalogue, and tests
       </span>
       {"\n"}
       <span className="discern-terminal__success">✓</span> 18 tests passed{"\n"}
-      <span className="discern-terminal__prompt">$</span>
+      <span className="discern-terminal__command-prefix">$</span>
       {" "}
     </Terminal>
   );

@@ -11,7 +11,7 @@ import {
   moveEnabledIndex,
 } from "../../src/cli/interactive/choice-navigation.ts";
 import type { TerminalKeyName } from "../../src/cli/interactive/keys.ts";
-import type { PromptChoiceEntry } from "../../src/cli/interactive/types.ts";
+import type { InteractionEntry } from "../../src/cli/interactive/types.ts";
 
 const grouped = [
   { kind: "group-heading", id: "primary", label: "Primary" },
@@ -20,11 +20,11 @@ const grouped = [
   { kind: "group-heading", id: "secondary", label: "Secondary" },
   { id: "two", label: "Two", value: 2 },
   { id: "three", label: "Three", value: 3 },
-] as const satisfies readonly PromptChoiceEntry<number>[];
+] as const satisfies readonly InteractionEntry<number>[];
 
 Deno.test("choice validation treats semantic headings as stable non-values", () => {
   assertChoices(grouped, true);
-  assertChoices([{ id: "legacy", label: " Legacy label ", value: 1 }]);
+  assertChoices([{ id: "plain", label: " Padded label ", value: 1 }]);
 
   assertThrows(
     () =>

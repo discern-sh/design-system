@@ -6,7 +6,7 @@
 
 import type { TerminalIO } from "./io.ts";
 
-/** Named non-text keys understood by the interactive prompt state machines. */
+/** Named non-text keys understood by the terminal interaction state machines. */
 export type TerminalKeyName =
   | "up"
   | "down"

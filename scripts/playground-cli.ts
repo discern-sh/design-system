@@ -10,8 +10,8 @@
 import {
   assertInteractiveTerminal,
   DenoTerminalIO,
+  InteractionCancelled,
   NonInteractiveTerminalError,
-  PromptCancelled,
   type TerminalIO,
 } from "../src/cli/interactive/mod.ts";
 import { runHub, runTour } from "./playground/hub.ts";
@@ -166,7 +166,7 @@ if (import.meta.main) {
       );
       Deno.exit(1);
     }
-    if (error instanceof PromptCancelled) {
+    if (error instanceof InteractionCancelled) {
       await writeLine(Deno.stdout, "Playground closed.");
       Deno.exit(0);
     }

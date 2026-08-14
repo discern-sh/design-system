@@ -96,7 +96,7 @@ export const cliComponentRegistry = {
   "copy-button": { stance: "exempt", reason: "Clipboard mutation and transient confirmation require an interactive driver, not a pure terminal renderer." },
   "glossary-term": { stance: "rendered", modulePath: "../components/docs/glossary-term/glossary-term.cli.ts" },
   "marketing-section": { stance: "exempt", reason: "Its contract is a browser page-width, spacing, and background scope; terminal Marketing renderers own their width and hierarchy within each frame instead." },
-  "site-header": { stance: "exempt", reason: "Sticky responsive website mastheads and page navigation are browser chrome; terminal applications expose their own command and prompt navigation rather than a site header." },
+  "site-header": { stance: "exempt", reason: "Sticky responsive website mastheads and page navigation are browser chrome; terminal applications expose their own command and interaction navigation rather than a site header." },
   "marketing-intro": { stance: "exempt", reason: "Terminal Marketing renderers already share the equivalent text hierarchy through their frame helper; this component's distinct contract is browser measure, alignment, and responsive display scale." },
   "hero-block": { stance: "rendered", modulePath: "../components/marketing/hero-block/hero-block.cli.ts" },
   "logo-cloud": { stance: "rendered", modulePath: "../components/marketing/logo-cloud/logo-cloud.cli.ts" },

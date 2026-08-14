@@ -1,5 +1,5 @@
 /**
- * Multiline textarea prompt state machine.
+ * Multiline textarea interaction state machine.
  *
  * @module
  */
@@ -11,11 +11,11 @@ import type {
 import type { TerminalCapabilities } from "../capabilities.ts";
 import type { TerminalThemeVariant } from "../theme.ts";
 import renderTextareaCli from "../../components/forms/textarea/textarea.cli.ts";
-import { type PromptMachine, runPrompt } from "./driver.ts";
+import { type InteractionMachine, runInteraction } from "./driver.ts";
 import { GraphemeTextEditor } from "./editor.ts";
 import { isNamedKey, type TerminalKey } from "./keys.ts";
-import type { PromptOptions, PromptRuntime } from "./types.ts";
-import type { PromptFrameViewport } from "./viewport-budget.ts";
+import type { InteractionOptions, InteractionRuntime } from "./types.ts";
+import type { InteractionFrameViewport } from "./viewport-budget.ts";
 
 function renderTextareaFrame(
   state: TextareaFrameState,
@@ -29,7 +29,7 @@ function renderTextareaFrame(
 }
 
 /** Options for a grapheme-aware multiline textarea. */
-export interface TextareaPromptOptions extends PromptOptions<string> {
+export interface TextareaRequestOptions extends InteractionOptions<string> {
   readonly placeholder?: string;
   readonly initialValue?: string;
   /** Requested upper bound on editable rows; the viewport may reduce it per frame. */
@@ -46,12 +46,12 @@ function textareaRows(value: number | undefined): number {
   return rows;
 }
 
-class TextareaPromptMachine
-  implements PromptMachine<string, TextareaFrameState> {
+class TextareaInteractionMachine
+  implements InteractionMachine<string, TextareaFrameState> {
   readonly #editor: GraphemeTextEditor;
   readonly #rows: number;
 
-  constructor(readonly options: TextareaPromptOptions) {
+  constructor(readonly options: TextareaRequestOptions) {
     this.#editor = new GraphemeTextEditor(options.initialValue ?? "");
     this.#rows = textareaRows(options.rows);
   }
@@ -68,7 +68,7 @@ class TextareaPromptMachine
 
   frame(
     lifecycle: InteractiveFrameLifecycle,
-    viewport: PromptFrameViewport,
+    viewport: InteractionFrameViewport,
   ): TextareaFrameState {
     return {
       kind: "textarea",
@@ -87,14 +87,14 @@ class TextareaPromptMachine
   }
 }
 
-/** Prompt for multiline text, submitted with Ctrl+D. */
-export async function promptTextarea(
-  options: TextareaPromptOptions,
-  runtime: PromptRuntime = {},
+/** Request multiline text, submitted with Ctrl+D. */
+export async function requestTextarea(
+  options: TextareaRequestOptions,
+  runtime: InteractionRuntime = {},
 ): Promise<string> {
-  return await runPrompt(
+  return await runInteraction(
     options,
-    new TextareaPromptMachine(options),
+    new TextareaInteractionMachine(options),
     runtime,
     renderTextareaFrame,
   );

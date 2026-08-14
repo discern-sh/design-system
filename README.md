@@ -12,7 +12,7 @@ deno add jsr:@discern-sh/design-system
 | ------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | `@discern-sh/design-system`                 | Token metadata, component/group metadata types, the package manifest, and `semanticClass` |
 | `@discern-sh/design-system/cli`             | Pure React-free terminal renderers, capabilities, themes, and triangle primitives         |
-| `@discern-sh/design-system/cli/interactive` | Optional Deno terminal driver and typed prompt state machines                             |
+| `@discern-sh/design-system/cli/interactive` | Optional Deno terminal driver and typed interaction state machines                        |
 | `@discern-sh/design-system/manifest`        | Framework-neutral manifest schema and the complete package ownership manifest             |
 | `@discern-sh/design-system/runtime`         | Deterministic selected-runtime emitter                                                    |
 | `@discern-sh/design-system/tokens`          | Primitive, semantic, and Discern-preset token metadata                                    |
@@ -112,7 +112,7 @@ The distinct success hue is deliberate: a green accent must not erase the differ
 
 Inverse surface and ink roles remain dark-on-light in purpose across both site themes; they do not invert with the ordinary canvas and ink roles.
 
-## Terminal rendering and prompts
+## Terminal rendering and interactions
 
 The pure `./cli` entrypoint exports every rendered Component through the same Metadata-driven registry as the web surfaces. Callers provide truthful terminal facts, and a renderer returns one deterministic, width-bounded string:
 
@@ -134,12 +134,12 @@ console.log(
 );
 ```
 
-The optional `./cli/interactive` adapter turns raw terminal input into typed prompt state and renders it through the package's Forms Component renderers. Running a prompt is the effects boundary; importing the module does not mutate the terminal:
+The optional `./cli/interactive` adapter turns raw terminal input into typed interaction state and renders it through the package's Forms Component renderers. Running an interaction is the effects boundary; importing the module does not mutate the terminal:
 
 ```ts
-import { promptSelect } from "@discern-sh/design-system/cli/interactive";
+import { requestSelection } from "@discern-sh/design-system/cli/interactive";
 
-const environment = await promptSelect({
+const environment = await requestSelection({
   label: "Environment",
   choices: [
     {
@@ -153,7 +153,7 @@ const environment = await promptSelect({
 });
 ```
 
-The `group-heading` entry is semantic prompt structure: it has a stable ID and non-empty label, needs no sentinel value of the caller's generic type, and can never be highlighted, toggled, or returned. Disabled choices remain selectable entries with their own visible disabled state. Select and search `visibleCount` plus Textarea `rows` are requested upper bounds: the adapter reduces only the current visible window when terminal height is tight and expands it again after a resize. Search accepts `initialId` to restore an enabled provider result by stable ID without inventing a query or keypress.
+The `group-heading` entry is semantic interaction structure: it has a stable ID and non-empty label, needs no sentinel value of the caller's generic type, and can never be highlighted, toggled, or returned. Disabled choices remain selectable entries with their own visible disabled state. Select and search `visibleCount` plus Textarea `rows` are requested upper bounds: the adapter reduces only the current visible window when terminal height is tight and expands it again after a resize. Search accepts `initialId` to restore an enabled provider result by stable ID without inventing a query or keypress.
 
 Full-width section headings use one restrained triangle rather than a repeated triangle field. `renderTriangleSectionRule()` defaults to the one-row strong embedded treatment and also exposes explicit underline and sandwich variants:
 
@@ -166,9 +166,9 @@ const heading = renderTriangleSectionRule("Deploying workspace changes", {
 }, capabilities);
 ```
 
-The renderer uppercases and truncates the label inside the requested width. Unicode uses heavy `━` and quiet `─` rules; ASCII uses `=` and `-` so the weight distinction survives without colour. Underline and sandwich intentionally occupy two and three rows, while the embedded default remains one row for fixed prompt geometry.
+The renderer uppercases and truncates the label inside the requested width. Unicode uses heavy `━` and quiet `─` rules; ASCII uses `=` and `-` so the weight distinction survives without colour. Underline and sandwich intentionally occupy two and three rows, while the embedded default remains one row for fixed interaction geometry.
 
-Prompts require TTY stdin and stdout. The adapter brackets raw mode, supported cursor hiding, repainting, validation, cancellation, and cleanup; exceptions and EOF still restore the terminal. Before every live paint, the shared driver reads the current `TerminalIO` rows and fits the complete label, borders, control, grouped structure, hint, and lifecycle footer through the real Component renderer. A downward resize that makes the previous frame unreachable starts a new bounded live region; terminals without ANSI cursor control receive truthful static states, and a terminal below the minimum coherent frame refuses with full restoration. The public `InlineFramePainter.replace()` result remains available to product consumers choosing their own compact or static fallback; its row facts count a trailing newline as an additional occupied row. Renderers derive light and dark colour roles from the same Token metadata as the web system, then degrade through truecolour, ANSI 256, ANSI 16, and plain text. `NO_COLOR` disables ANSI styling without disabling Unicode; `C.UTF-8` and `C.utf8` keep Unicode even with `TERM=dumb`, while exact `C` and `POSIX` locales receive ASCII geometry. Grapheme-aware measurement keeps frames within the declared column count.
+Interactions require TTY stdin and stdout. The adapter brackets raw mode, supported cursor hiding, repainting, validation, cancellation, and cleanup; exceptions and EOF still restore the terminal. Before every live paint, the shared driver reads the current `TerminalIO` rows and fits the complete label, borders, control, grouped structure, hint, and lifecycle footer through the real Component renderer. A downward resize that makes the previous frame unreachable starts a new bounded live region; terminals without ANSI cursor control receive truthful static states, and a terminal below the minimum coherent frame refuses with full restoration. The public `InlineFramePainter.replace()` result remains available to product consumers choosing their own compact or static fallback; its row facts count a trailing newline as an additional occupied row. Renderers derive light and dark colour roles from the same Token metadata as the web system, then degrade through truecolour, ANSI 256, ANSI 16, and plain text. `NO_COLOR` disables ANSI styling without disabling Unicode; `C.UTF-8` and `C.utf8` keep Unicode even with `TERM=dumb`, while exact `C` and `POSIX` locales receive ASCII geometry. Grapheme-aware measurement keeps frames within the declared column count.
 
 Fleet uses compact, width-bounded identity cells by default. Operational views can opt into complete, copyable persona and branch values; when either value cannot fit its cell, the renderer emits an explicit labelled continuation instead of relying on terminal wrapping:
 
@@ -223,7 +223,7 @@ A mandatory resilience phase discovers rendered disclosures, interactive control
 
 ### Terminal review surfaces
 
-`deno task catalogue:cli` statically prints every rendered Component example, every recorded exemption, and the triangle motif sheet; `deno task playground:cli` is its live counterpart, driving the real interactive adapter in your terminal. The playground opens a hub of named journeys covering every high-level prompt, activity, and sequential-form API, static-catalogue browsing, and stress cases for width, height, resize, Unicode/ASCII repertoire, colour degradation, and repeated prompt cycles. `deno task playground:cli --list` prints every journey ID without a TTY, `tour` visits them all in recommended order, and a direct `<journey-id>` bypasses the hub menu entirely. Both surfaces derive their inventory from the generated registries, so neither can drift from Codegen, and each journey prints the current terminal facts (columns, rows, Unicode, colour depth, ANSI control) before it runs so observations are reproducible. These are development and review instruments for this repository, not published package APIs.
+`deno task catalogue:cli` statically prints every rendered Component example, every recorded exemption, and the triangle motif sheet; `deno task playground:cli` is its live counterpart, driving the real interactive adapter in your terminal. The playground opens a hub of named journeys covering every high-level interaction, activity, and sequential-form API, static-catalogue browsing, and stress cases for width, height, resize, Unicode/ASCII repertoire, colour degradation, and repeated interaction cycles. `deno task playground:cli --list` prints every journey ID without a TTY, `tour` visits them all in recommended order, and a direct `<journey-id>` bypasses the hub menu entirely. Both surfaces derive their inventory from the generated registries, so neither can drift from Codegen, and each journey prints the current terminal facts (columns, rows, Unicode, colour depth, ANSI control) before it runs so observations are reproducible. These are development and review instruments for this repository, not published package APIs.
 
 ### Authoring rules
 

@@ -1,4 +1,4 @@
-/** Shared prompt event loop over typed frame-state machines. */
+/** Shared interaction event loop over typed frame-state machines. */
 
 import type {
   InteractiveFrameLifecycle,
@@ -6,33 +6,36 @@ import type {
 } from "../interactive-states.ts";
 import type { TerminalCapabilities } from "../capabilities.ts";
 import type { TerminalThemeVariant } from "../theme.ts";
-import { PromptCancelled } from "./errors.ts";
+import { InteractionCancelled } from "./errors.ts";
 import { DenoTerminalIO } from "./io.ts";
 import { isNamedKey, type TerminalKey, TerminalKeyReader } from "./keys.ts";
 import { withRawTerminal } from "./lifecycle.ts";
 import { InlineFramePainter } from "./painter.ts";
-import type { PromptOptions, PromptRuntime } from "./types.ts";
-import { fitPromptFrame, type PromptFrameViewport } from "./viewport-budget.ts";
+import type { InteractionOptions, InteractionRuntime } from "./types.ts";
+import {
+  fitInteractionFrame,
+  type InteractionFrameViewport,
+} from "./viewport-budget.ts";
 
-export interface PromptMachine<T, State extends InteractiveFrameState> {
+export interface InteractionMachine<T, State extends InteractiveFrameState> {
   start?(): void | Promise<void>;
   handle(key: TerminalKey): boolean | Promise<boolean>;
   value(): T;
   frame(
     lifecycle: InteractiveFrameLifecycle,
-    viewport: PromptFrameViewport,
+    viewport: InteractionFrameViewport,
   ): State;
 }
 
-/** Component-backed renderer selected by one prompt entrypoint. */
-export type PromptFrameRenderer<State extends InteractiveFrameState> = (
+/** Component-backed renderer selected by one interaction entrypoint. */
+export type InteractionFrameRenderer<State extends InteractiveFrameState> = (
   state: State,
   capabilities: TerminalCapabilities,
   theme: TerminalThemeVariant | undefined,
 ) => string;
 
-export class PromptBackNavigation extends Error {
-  override readonly name = "PromptBackNavigation";
+export class InteractionBackNavigation extends Error {
+  override readonly name = "InteractionBackNavigation";
 }
 
 function isEmpty(value: unknown): boolean {
@@ -41,7 +44,7 @@ function isEmpty(value: unknown): boolean {
 }
 
 async function validationError<T>(
-  options: PromptOptions<T>,
+  options: InteractionOptions<T>,
   value: T,
 ): Promise<string | undefined> {
   if ((options.required ?? false) !== false && isEmpty(value)) {
@@ -52,11 +55,11 @@ async function validationError<T>(
   return await options.validate?.(value);
 }
 
-export async function runPrompt<T, State extends InteractiveFrameState>(
-  options: PromptOptions<T>,
-  machine: PromptMachine<T, State>,
-  runtime: PromptRuntime,
-  renderFrame: PromptFrameRenderer<State>,
+export async function runInteraction<T, State extends InteractiveFrameState>(
+  options: InteractionOptions<T>,
+  machine: InteractionMachine<T, State>,
+  runtime: InteractionRuntime,
+  renderFrame: InteractionFrameRenderer<State>,
 ): Promise<T> {
   const io = runtime.io ?? new DenoTerminalIO();
   const painter = new InlineFramePainter(io);
@@ -64,7 +67,7 @@ export async function runPrompt<T, State extends InteractiveFrameState>(
   let staticMode = false;
   const paint = (lifecycle: InteractiveFrameLifecycle): void => {
     const capabilities = io.capabilities();
-    const fitted = fitPromptFrame({
+    const fitted = fitInteractionFrame({
       viewportRows: io.size().rows,
       frame: (viewport) => machine.frame(lifecycle, viewport),
       render: (state) => renderFrame(state, capabilities, runtime.theme),
@@ -96,19 +99,19 @@ export async function runPrompt<T, State extends InteractiveFrameState>(
         const reason = "Input ended.";
         paint({ status: "cancelled", reason });
         painter.finish();
-        throw new PromptCancelled(reason);
+        throw new InteractionCancelled(reason);
       }
       if (isNamedKey(key, "ctrl-c")) {
         const reason = "Cancelled.";
         paint({ status: "cancelled", reason });
         painter.finish();
-        throw new PromptCancelled(reason);
+        throw new InteractionCancelled(reason);
       }
       if (isNamedKey(key, "ctrl-u")) {
         if (runtime.canGoBack === true) {
           paint({ status: "cancelled", reason: "Back." });
           painter.finish();
-          throw new PromptBackNavigation();
+          throw new InteractionBackNavigation();
         }
         lifecycle = {
           status: "validation-error",

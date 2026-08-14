@@ -4,6 +4,10 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## 0.14.0
+
+- **Breaking:** Rename the `./cli/interactive` value APIs from `prompt*` to `request*`: `requestText`, `requestMaskedText`, `requestConfirmation`, `requestSelection`, `requestSelections`, `requestSearch`, `requestAutocomplete`, and `requestTextarea`. Shared contracts now use `Interaction*`; operation-specific options use `*RequestOptions`; cancellation is `InteractionCancelled`. This reserves “prompt” for instructions sent to coding agents while terminal input consistently uses “request” and “interaction”. The Terminal Component's shell marker class is now `.discern-terminal__command-prefix`. Interaction behavior and frame geometry are unchanged.
+
 ## 0.13.0
 
 - Add the opt-in Artwork Group: a shared, theme-aware Ground foundation and eight individually selectable decorative compositions — Survey, Approach, Fold, Aperture, Impression, Envelope, Cleave, and Resonance. Grounds expose presence and ambient-or-still motion, retain complete reduced-motion states, disappear in forced colours, and remain selection-scoped; Impression accepts a glyph and defaults to the neutral half-disc `◐`. Hero block gains a generic decorative `ground` slot without depending on or selecting any Artwork Component.

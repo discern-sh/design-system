@@ -8,10 +8,10 @@
  */
 
 import {
-  PromptCancelled,
-  type PromptChoiceEntry,
-  promptConfirm,
-  promptSelect,
+  InteractionCancelled,
+  type InteractionEntry,
+  requestConfirmation,
+  requestSelection,
 } from "../../src/cli/interactive/mod.ts";
 import { renderTerminalFacts } from "./banner.ts";
 import { journeyById, playgroundJourneys, runJourney } from "./journeys.ts";
@@ -24,8 +24,8 @@ import {
 type HubTarget = string | "tour" | "quit";
 
 /** Grouped hub menu: the tour, every journey by section, then quit. */
-export function hubChoices(): readonly PromptChoiceEntry<HubTarget>[] {
-  const entries: PromptChoiceEntry<HubTarget>[] = [
+export function hubChoices(): readonly InteractionEntry<HubTarget>[] {
+  const entries: InteractionEntry<HubTarget>[] = [
     {
       id: "tour",
       label: "Guided tour (every journey in order)",
@@ -65,7 +65,7 @@ export async function runTour(runtime: PlaygroundRuntime): Promise<void> {
     print(`Tour stop ${index + 1} of ${playgroundJourneys.length}`);
     const outcome = await runJourney(journey, runtime);
     if (outcome === "cancelled" && index + 1 < playgroundJourneys.length) {
-      const proceed = await promptConfirm({
+      const proceed = await requestConfirmation({
         label: "Continue the tour",
         initialValue: true,
       }, { io: runtime.io });
@@ -82,7 +82,7 @@ async function runTourFromHub(runtime: PlaygroundRuntime): Promise<void> {
   try {
     await runTour(runtime);
   } catch (error) {
-    if (!(error instanceof PromptCancelled)) throw error;
+    if (!(error instanceof InteractionCancelled)) throw error;
     runtime.print("Tour cancelled — back to the hub.");
   }
 }
@@ -98,14 +98,14 @@ export async function runHub(runtime: PlaygroundRuntime): Promise<void> {
   while (true) {
     let target: HubTarget | undefined;
     try {
-      target = await promptSelect({
+      target = await requestSelection({
         label: "Playground hub",
         hint: "Ctrl+C quits; direct journey IDs still work.",
         choices: hubChoices(),
         visibleCount: 12,
       }, { io });
     } catch (error) {
-      if (!(error instanceof PromptCancelled)) throw error;
+      if (!(error instanceof InteractionCancelled)) throw error;
       print("Playground closed.");
       return;
     }

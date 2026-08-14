@@ -17,8 +17,8 @@ export class NonInteractiveTerminalError extends Error {
 }
 
 /** Cancellation signal raised for Ctrl+C and terminal end-of-input. */
-export class PromptCancelled extends Error {
-  override readonly name = "PromptCancelled";
+export class InteractionCancelled extends Error {
+  override readonly name = "InteractionCancelled";
 
   /** Human-readable cancellation reason rendered in the terminal frame. */
   readonly reason: string;
