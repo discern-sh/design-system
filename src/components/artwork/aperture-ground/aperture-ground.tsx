@@ -59,7 +59,7 @@ const APERTURE_BEAMS: readonly ApertureBeam[] = Object.freeze([{
 }]);
 
 /** Props for the {@linkcode ApertureGround} component. */
-export type ApertureGroundProps = Omit<GroundProps, "children">;
+export interface ApertureGroundProps extends Omit<GroundProps, "children"> {}
 
 /** Off-centre triangular opening that admits three unequal beams. */
 export const ApertureGround: DiscernComponent<

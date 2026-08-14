@@ -1,16 +1,3 @@
-/* Grd. III — the fold. One triangular tessellation covering the whole plate,
- * every facet authored at its own tint, as though a flat sheet had been
- * creased once and set down again. The tints are fixed: they are the piece.
- *
- * One 108s phrase (45 beats): the facets are gathered into fourteen diagonal
- * bands and each band lifts and settles on the same slow curve, offset by
- * where it lies across the plate — light crossing the sheet rather than the
- * sheet moving. Group opacity is the only animated property, so the whole
- * ground composites without repainting a single facet.
- *
- * With motion off every band rests at its authored weight and the faceted
- * sheet is complete. Quiet enough to set a headline directly on top.
- */
 @layer discern.components {
   .discern-fold-ground {
     color: var(--discern-ground-ink);

@@ -41,7 +41,7 @@ const APPROACH_SIGHTLINES: readonly { x2: number; y2: number }[] = Object
   }]);
 
 /** Props for the {@linkcode ApproachGround} component. */
-export type ApproachGroundProps = Omit<GroundProps, "children">;
+export interface ApproachGroundProps extends Omit<GroundProps, "children"> {}
 
 /** Nested right-anchored triangles whose accent moves between depths. */
 export const ApproachGround: DiscernComponent<

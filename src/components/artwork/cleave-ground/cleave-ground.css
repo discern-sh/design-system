@@ -1,12 +1,3 @@
-/* Grd. VII — the cleave. One triangle larger than the page: two edges and one
- * median, three tones, nothing else. The quietest figure in the series, and
- * the only one that works with area rather than line — the accent is a
- * surface here, not a mark.
- *
- * One 120s phrase (50 beats): the inked half's weight drifts, the way light
- * changes on a wall. Nothing moves; with motion off the two surfaces hold
- * their authored weights and the plate is finished.
- */
 @layer discern.components {
   .discern-cleave-ground {
     color: var(--discern-ground-ink);

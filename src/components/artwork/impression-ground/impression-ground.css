@@ -1,18 +1,3 @@
-/* Grd. V — the impression. The mark itself, set as type on an offset
- * lattice: eleven rows of the glyph, alternate rows shifted half a cell,
- * alternate positions turned through 180° so the field reads as a quire of
- * facing leaves rather than a repeated logo.
- *
- * Two identical fields lie in register. The lower one is ink at the quietest
- * step and is always complete. The upper one is accent, and is admitted only
- * through one soft opening that follows the reader: twelve sensor panels
- * cover the plate, and each moves the opening to its own centre. No script
- * is involved, and nothing but the opening's position changes.
- *
- * The opening rests toward the upper right, which is where it sits on a
- * touch device, with reduced motion, and in a static render: a finished
- * composition either way.
- */
 @property --discern-impression-ground-x {
   syntax: "<length-percentage>";
   inherits: true;
@@ -41,7 +26,7 @@
     flex-direction: column;
     gap: calc(var(--discern-impression-ground-cell) * 0.24);
     justify-content: center;
-    font-family: var(--discern-font-mono);
+    font-family: var(--discern-font-display);
     font-size: var(--discern-impression-ground-size);
     line-height: 1;
     user-select: none;

@@ -501,7 +501,7 @@ const FOLD_BANDS: readonly FoldBand[] = Object.freeze([{
 }]);
 
 /** Props for the {@linkcode FoldGround} component. */
-export type FoldGroundProps = Omit<GroundProps, "children">;
+export interface FoldGroundProps extends Omit<GroundProps, "children"> {}
 
 /** Faceted triangular field whose diagonal bands take light in turn. */
 export const FoldGround: DiscernComponent<HTMLDivElement, FoldGroundProps> =

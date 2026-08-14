@@ -1,18 +1,3 @@
-/* Grd. II — the approach. Nine apex-up triangles nested about one station
- * point set in the right third, each 1.32 times the last, with the three
- * sightlines from the station drawn through the vertices. The plate is
- * masked away toward the left, so the copy column stays clear and the
- * construction appears to arrive from off the right edge.
- *
- * The nest itself never moves. One 108s phrase (45 beats) instead carries the
- * accent between depths: each ring holds a second copy of itself resting at
- * zero opacity, and they take colour in an order that never lights two
- * neighbours in succession — attention moving through the corridor rather
- * than a mark marching outward.
- *
- * With motion off no accent copy is visible and the authored nest is the
- * finished figure.
- */
 @layer discern.components {
   .discern-approach-ground {
     color: var(--discern-ground-ink);

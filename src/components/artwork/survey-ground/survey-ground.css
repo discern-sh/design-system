@@ -1,13 +1,3 @@
-/* Grd. I — the survey. One exact equilateral ruling: three families of lines
- * on a 104px side, drawn as two SVG patterns so every vertex registers and
- * the field still tiles seamlessly in both axes. The ascending family carries
- * the grain — one step stronger, with every fourth line promoted to a major
- * rule — which is what keeps the ruling from reading as graph paper.
- *
- * One 72s phrase (30 beats): a single broad band of light crosses the ruling
- * and returns. Nothing else moves. With motion off the band rests where it
- * was authored, off-centre left, and the ruling is complete.
- */
 @layer discern.components {
   .discern-survey-ground {
     color: var(--discern-ground-guide);

@@ -1,14 +1,3 @@
-/* Grd. VI — the envelope. Two angles, each crossed by a family of straight
- * chords: chord i joins the point i/n along one leg to the point (n−i)/n
- * along the other. The family is tangent to a parabola, so the plate is full
- * of curves and contains none — the densest figure in the series, and the
- * only one that is not made of the shape it shows.
- *
- * One 96s phrase (40 beats): a narrow crest of light travels the chord order,
- * lighting two or three chords at a time, so the curve is read along its
- * tangents. The crest is a second copy of each chord resting at zero opacity;
- * with motion off none of them is visible and the two families are complete.
- */
 @layer discern.components {
   .discern-envelope-ground {
     color: var(--discern-ground-ink);

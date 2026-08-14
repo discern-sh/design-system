@@ -92,7 +92,7 @@ const ENVELOPE_FAMILIES: readonly EnvelopeFamily[] = Object.freeze([{
 }]);
 
 /** Props for the {@linkcode EnvelopeGround} component. */
-export type EnvelopeGroundProps = Omit<GroundProps, "children">;
+export interface EnvelopeGroundProps extends Omit<GroundProps, "children"> {}
 
 /** Straight chord families that imply curves no element actually draws. */
 export const EnvelopeGround: DiscernComponent<

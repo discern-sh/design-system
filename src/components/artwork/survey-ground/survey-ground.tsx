@@ -33,7 +33,7 @@ const GRAIN_PATH = "M 0 90.07 L 52 0 M 52 90.07 L 104 0";
 const MAJOR_PATH = "M 0 360.28 L 208 0 M 208 360.28 L 416 0";
 
 /** Props for the {@linkcode SurveyGround} component. */
-export type SurveyGroundProps = Omit<GroundProps, "children">;
+export interface SurveyGroundProps extends Omit<GroundProps, "children"> {}
 
 /** Tileable equilateral ruling crossed by one slow travelling band. */
 export const SurveyGround: DiscernComponent<HTMLDivElement, SurveyGroundProps> =

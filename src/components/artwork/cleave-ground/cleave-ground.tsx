@@ -29,7 +29,7 @@ const CLEAVE_GEOMETRY = Object.freeze({
 });
 
 /** Props for the {@linkcode CleaveGround} component. */
-export type CleaveGroundProps = Omit<GroundProps, "children">;
+export interface CleaveGroundProps extends Omit<GroundProps, "children"> {}
 
 /** Oversized split geometry reduced to two surfaces, two edges, and a median. */
 export const CleaveGround: DiscernComponent<HTMLDivElement, CleaveGroundProps> =
