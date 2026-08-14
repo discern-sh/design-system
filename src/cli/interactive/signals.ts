@@ -31,7 +31,7 @@ export interface TerminalSignalOptions {
   readonly signals?: TerminalSignalSource;
   /**
    * Receive SIGINT instead of the default restore-and-re-raise path. The
-   * caller owns cancellation: end the bracketed operation promptly, and the
+   * caller owns cancellation: end the bracketed operation quickly, and the
    * bracket's ordinary exception-safe restoration then runs exactly once.
    * Hosts that manage SIGINT themselves should always provide this, so the
    * package never re-raises into their handling.
