@@ -3,6 +3,7 @@ export const componentGroups = [
   "Core",
   "Layout",
   "Display",
+  "Artwork",
   "Forms",
   "Feedback",
   "Navigation",

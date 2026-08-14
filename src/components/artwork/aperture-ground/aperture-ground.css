@@ -1,0 +1,69 @@
+/* Grd. IV — the aperture. One triangular opening set above the plate and well
+ * to the right, so both of its edges rake left: the light arrives across the
+ * page rather than standing on it, and the figure cannot read as a
+ * symmetrical canopy. Nothing caps it: the two raking edges are the whole
+ * frame. Three beams are admitted, unequal in width, reach, and spacing, the
+ * second taking the accent. The plate is masked to nothing at
+ * the fold, so the ground hands the page over cleanly.
+ *
+ * One 84s phrase (35 beats): each beam leans about half a degree at the apex
+ * and back, on its own offset, and its intensity breathes with it. With
+ * motion off the beams hold their authored angles: three separated
+ * components, finished.
+ */
+@layer discern.components {
+  .discern-aperture-ground {
+    color: var(--discern-ground-ink);
+  }
+
+  .discern-aperture-ground__plate {
+    mask-image: linear-gradient(
+      170deg,
+      rgb(0 0 0 / 1) 0 40%,
+      rgb(0 0 0 / 0.5) 72%,
+      transparent 100%
+    );
+  }
+
+  .discern-aperture-ground__frame {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: var(--discern-ground-line);
+    opacity: var(--discern-ground-veil-3);
+  }
+
+  .discern-aperture-ground__beam {
+    stroke: none;
+    opacity: var(--discern-ground-veil-2);
+    transform-box: view-box;
+    transform-origin: 1210px -150px;
+    animation: discern-aperture-ground-lean calc(var(--discern-ground-beat) *
+      35)
+      var(--discern-ground-ease-drift) infinite both;
+    animation-delay: var(--discern-aperture-ground-offset, 0s);
+  }
+
+  .discern-aperture-ground__beam--accent {
+    opacity: var(--discern-ground-veil-3);
+  }
+
+  .discern-aperture-ground__edge {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: var(--discern-ground-hairline);
+    opacity: var(--discern-ground-veil-1);
+  }
+
+  @keyframes discern-aperture-ground-lean {
+    0%,
+    100% {
+      transform: rotate(0deg);
+      opacity: var(--discern-ground-veil-2);
+    }
+
+    46% {
+      transform: rotate(var(--discern-aperture-ground-lean, 0.5deg));
+      opacity: var(--discern-ground-veil-3);
+    }
+  }
+}

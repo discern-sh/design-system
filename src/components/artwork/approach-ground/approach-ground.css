@@ -1,0 +1,84 @@
+/* Grd. II — the approach. Nine apex-up triangles nested about one station
+ * point set in the right third, each 1.32 times the last, with the three
+ * sightlines from the station drawn through the vertices. The plate is
+ * masked away toward the left, so the copy column stays clear and the
+ * construction appears to arrive from off the right edge.
+ *
+ * The nest itself never moves. One 108s phrase (45 beats) instead carries the
+ * accent between depths: each ring holds a second copy of itself resting at
+ * zero opacity, and they take colour in an order that never lights two
+ * neighbours in succession — attention moving through the corridor rather
+ * than a mark marching outward.
+ *
+ * With motion off no accent copy is visible and the authored nest is the
+ * finished figure.
+ */
+@layer discern.components {
+  .discern-approach-ground {
+    color: var(--discern-ground-ink);
+  }
+
+  .discern-approach-ground__plate {
+    mask-image: linear-gradient(
+      90deg,
+      transparent 0 14%,
+      rgb(0 0 0 / 0.55) 42%,
+      rgb(0 0 0 / 1) 68% 100%
+    );
+  }
+
+  .discern-approach-ground__sightline {
+    fill: none;
+    stroke: var(--discern-ground-guide);
+    stroke-width: var(--discern-ground-hairline);
+    opacity: var(--discern-ground-veil-2);
+  }
+
+  .discern-approach-ground__ring {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: var(--discern-ground-hairline);
+    opacity: var(--discern-ground-veil-3);
+  }
+
+  /* The travelling accent. Only opacity animates, so the ring beneath it
+   * stays exactly where it was drawn. */
+  .discern-approach-ground__attend {
+    fill: none;
+    stroke: var(--discern-ground-accent);
+    stroke-width: var(--discern-ground-line);
+    opacity: 0;
+    animation: discern-approach-ground-attend calc(var(--discern-ground-beat) *
+      45)
+      var(--discern-ground-ease-drift) infinite both;
+    animation-delay: var(--discern-approach-ground-offset, 0s);
+  }
+
+  .discern-approach-ground__station line {
+    stroke: var(--discern-ground-accent);
+    stroke-width: var(--discern-ground-line);
+    opacity: var(--discern-ground-veil-4);
+  }
+
+  /* One ring's turn: in over two beats, held for four, out over two, then
+   * dark for the rest of the phrase while the other eight take theirs. */
+  @keyframes discern-approach-ground-attend {
+    0%,
+    100% {
+      opacity: 0;
+    }
+
+    4% {
+      opacity: var(--discern-ground-veil-4);
+    }
+
+    9% {
+      opacity: var(--discern-ground-veil-4);
+    }
+
+    14%,
+    99% {
+      opacity: 0;
+    }
+  }
+}

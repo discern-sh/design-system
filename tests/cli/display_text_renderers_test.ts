@@ -72,14 +72,14 @@ Deno.test("Kicker renders exact narrow, standard, wide, and colour-degraded anno
 Deno.test("Stat renders exact narrow, standard, wide, and colour-degraded figures", () => {
   const render = (capabilities: TerminalCapabilities) =>
     renderStatCli(
-      { label: "Components", value: "111", context: "Across twelve groups" },
+      { label: "Entries", value: "128", context: "Across four collections" },
       capabilities,
     );
   for (
     const [columns, expected] of [
-      [8, "COMPONE…\n111\nAcross …"],
-      [24, "COMPONENTS\n111\nAcross twelve groups"],
-      [48, "COMPONENTS\n111\nAcross twelve groups"],
+      [8, "ENTRIES\n128\nAcross …"],
+      [24, "ENTRIES\n128\nAcross four collections"],
+      [48, "ENTRIES\n128\nAcross four collections"],
     ] as const
   ) {
     const capabilities = testCapabilities({ columns });
@@ -87,8 +87,8 @@ Deno.test("Stat renders exact narrow, standard, wide, and colour-degraded figure
   }
   assertCapabilityLevels(
     render,
-    "COMPONENTS\n111\nAcross twelve groups",
-    "COMPONENTS\n111\nAcross twelve groups",
+    "ENTRIES\n128\nAcross four collections",
+    "ENTRIES\n128\nAcross four collections",
   );
 });
 

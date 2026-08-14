@@ -463,6 +463,13 @@ export const themeTokens: readonly ThemeToken[] = [
     "Visibility of original multicolour artwork when a monochrome dark-mode mask is available.",
     "Motion",
   ),
+  themeToken(
+    "--discern-ground-theme-gain",
+    "1",
+    "0.78",
+    "Optical opacity correction for decorative grounds across light and dark canvases.",
+    "Motion",
+  ),
 ];
 
 /** Every public token: primitives, presets, and theme roles together. */

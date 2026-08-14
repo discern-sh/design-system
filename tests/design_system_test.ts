@@ -31,8 +31,10 @@ import {
   Diagnostic,
   type DiagnosticProps,
   GlossaryTerm,
+  Ground,
   HeroBlock,
   HoverCard,
+  ImpressionGround,
   Logo,
   LogoCloud,
   MarketingIntro,
@@ -510,6 +512,37 @@ Deno.test("selection resolves dependencies and excludes unrelated groups", async
     assertStringIncludes(glossaryCss, ".discern-hover-card");
     assertStringIncludes(glossaryCss, ".discern-glossary-term");
     assert(!glossaryCss.includes(".discern-brand"));
+  } finally {
+    await Deno.remove(temp, { recursive: true });
+  }
+});
+
+Deno.test("artwork selection includes Ground but excludes sibling compositions", async () => {
+  const temp = await Deno.makeTempDir();
+  try {
+    const survey = await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${temp}/`),
+      components: ["survey-ground"],
+    });
+    assertEquals(survey.manifest.selection.resolvedComponents, [
+      "ground",
+      "survey-ground",
+    ]);
+    const surveyCss = await Deno.readTextFile(join(temp, "discern.css"));
+    assertStringIncludes(surveyCss, ".discern-ground");
+    assertStringIncludes(surveyCss, ".discern-survey-ground {");
+    assert(!surveyCss.includes(".discern-impression-ground"));
+    assert(!surveyCss.includes(".discern-envelope-ground"));
+
+    const hero = await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${temp}/`),
+      components: ["hero-block"],
+    });
+    assertEquals(hero.manifest.selection.resolvedComponents, ["hero-block"]);
+    const heroCss = await Deno.readTextFile(join(temp, "discern.css"));
+    assertStringIncludes(heroCss, ".discern-hero-block__ground");
+    assert(!heroCss.includes(".discern-ground {"));
+    assert(!heroCss.includes(".discern-survey-ground"));
   } finally {
     await Deno.remove(temp, { recursive: true });
   }
@@ -1559,6 +1592,51 @@ Deno.test("semantic HTML and React adapters share the public class contract", ()
   );
   assertStringIncludes(marketing, "discern-marketing-intro--editorial");
   assertStringIncludes(marketing, "<h2");
+});
+
+Deno.test("Ground fixes decorative semantics and Impression keeps its glyph consumer-owned", () => {
+  const ground = renderToStaticMarkup(
+    createElement(Ground, {
+      motion: "still",
+      presence: 1.25,
+      children: createElement("span", null, "Decoration"),
+    }),
+  );
+  assertMatch(ground, /^<div/);
+  assertStringIncludes(
+    ground,
+    'class="discern-ground discern-ground--still"',
+  );
+  assertStringIncludes(ground, 'aria-hidden="true"');
+  assertStringIncludes(ground, "--discern-ground-presence:1.25");
+
+  const defaultImpression = renderToStaticMarkup(
+    createElement(ImpressionGround),
+  );
+  assertStringIncludes(defaultImpression, "◐");
+  assert(!defaultImpression.includes("◮"));
+  assertStringIncludes(defaultImpression, 'aria-hidden="true"');
+
+  const customImpression = renderToStaticMarkup(
+    createElement(ImpressionGround, { glyph: "✦" }),
+  );
+  assertStringIncludes(customImpression, "✦");
+  assert(!customImpression.includes("◐"));
+
+  const hero = renderToStaticMarkup(
+    createElement(HeroBlock, {
+      title: "A complete foreground",
+      ground: createElement(ImpressionGround, { motion: "still" }),
+    }),
+  );
+  assertStringIncludes(
+    hero,
+    'class="discern-hero-block__ground" aria-hidden="true"',
+  );
+  assert(
+    hero.indexOf("discern-hero-block__ground") <
+      hero.indexOf("discern-hero-block__inner"),
+  );
 });
 
 Deno.test("homepage-derived treatments remain opt-in component variants", () => {

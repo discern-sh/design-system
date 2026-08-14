@@ -1,0 +1,65 @@
+/* Grd. VI — the envelope. Two angles, each crossed by a family of straight
+ * chords: chord i joins the point i/n along one leg to the point (n−i)/n
+ * along the other. The family is tangent to a parabola, so the plate is full
+ * of curves and contains none — the densest figure in the series, and the
+ * only one that is not made of the shape it shows.
+ *
+ * One 96s phrase (40 beats): a narrow crest of light travels the chord order,
+ * lighting two or three chords at a time, so the curve is read along its
+ * tangents. The crest is a second copy of each chord resting at zero opacity;
+ * with motion off none of them is visible and the two families are complete.
+ */
+@layer discern.components {
+  .discern-envelope-ground {
+    color: var(--discern-ground-ink);
+  }
+
+  .discern-envelope-ground__plate {
+    mask-image: radial-gradient(
+      ellipse 78% 92% at 74% 62%,
+      rgb(0 0 0 / 1) 0%,
+      rgb(0 0 0 / 0.6) 62%,
+      rgb(0 0 0 / 0.28) 100%
+    );
+  }
+
+  .discern-envelope-ground__leg line {
+    stroke: var(--discern-ground-guide);
+    stroke-width: var(--discern-ground-hairline);
+    opacity: var(--discern-ground-veil-2);
+  }
+
+  .discern-envelope-ground__chord {
+    stroke: currentColor;
+    stroke-width: var(--discern-ground-hairline);
+    opacity: var(--discern-ground-veil-2);
+  }
+
+  .discern-envelope-ground__crest line {
+    stroke: var(--discern-ground-accent);
+    stroke-width: var(--discern-ground-line);
+    opacity: 0;
+    animation: discern-envelope-ground-glance calc(var(--discern-ground-beat) *
+      40)
+      var(--discern-ground-ease-drift) infinite both;
+    animation-delay: var(--discern-envelope-ground-offset, 0s);
+  }
+
+  /* One chord's turn is a tenth of the phrase, so a handful are lit at once
+   * and the crest reads as a point of light sliding along the curve. */
+  @keyframes discern-envelope-ground-glance {
+    0%,
+    2% {
+      opacity: 0;
+    }
+
+    6% {
+      opacity: var(--discern-ground-veil-4);
+    }
+
+    11%,
+    100% {
+      opacity: 0;
+    }
+  }
+}
