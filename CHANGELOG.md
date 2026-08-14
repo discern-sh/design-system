@@ -4,6 +4,12 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## Unreleased
+
+- Add the bound terminal presenter: `createCliPresenter(capabilities, { theme, width })` binds terminal capabilities, a theme variant, and a default frame width once, and `present(renderer, props)` then supplies everything except the call's own props. Bound calls are byte-equal to the manual renderer calls, explicit props win one call at a time, the bound width narrows the effective columns without ever widening the real terminal, and `with()` derives re-themed or re-bounded presenters from the same base terminal.
+- Add narration line verbs for output too small to deserve a Component: `renderSuccessLine`, `renderNoteLine`, `renderWarningLine`, `renderFailureLine`, and the uppercase strong `renderLeadLine`, each a pure `CliRenderer` with Token-derived tone markers, hanging-indent wrapping, and ASCII fallbacks that keep the meaning, available standalone, through `narrationLineRenderers`, and bound on the presenter. `styleSemanticText` styles inline text by type role and semantic tone. The CLI catalogue and playground browser add a Narration lines sheet beside the triangle motifs under a new `narration` selector.
+- Add the vertical rhythm contract: `composeCliBlocks` joins narration lines and Component frames with exactly one blank line between blocks, normalising boundary-owning edges and preserving interiors so composed results nest unchanged, and `cliBlockBoundary` gives a consumer write sink the documented stream-tail algorithm, proven byte-equivalent to the composer.
+
 ## 0.14.0
 
 - **Breaking:** Rename the `./cli/interactive` value APIs from `prompt*` to `request*`: `requestText`, `requestMaskedText`, `requestConfirmation`, `requestSelection`, `requestSelections`, `requestSearch`, `requestAutocomplete`, and `requestTextarea`. Shared contracts now use `Interaction*`; operation-specific options use `*RequestOptions`; cancellation is `InteractionCancelled`. This reserves “prompt” for instructions sent to coding agents while terminal input consistently uses “request” and “interaction”. The Terminal Component's shell marker class is now `.discern-terminal__command-prefix`. Interaction behavior and frame geometry are unchanged.
