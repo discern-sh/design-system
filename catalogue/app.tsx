@@ -1,10 +1,16 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
 import { ThemeSwitcher } from "../src/components/core/theme-switcher/theme-switcher.tsx";
 import type { ThemeSwitcherMode } from "../src/components/core/theme-switcher/theme-switcher.tsx";
 import { Kicker } from "../src/components/display/kicker/kicker.tsx";
 import { CopyButton } from "../src/components/docs/copy-button/copy-button.tsx";
+import { Kbd } from "../src/components/docs/kbd/kbd.tsx";
+import {
+  SearchPalette,
+  SearchPaletteResult,
+} from "../src/components/docs/search-palette/search-palette.tsx";
+import { Tooltip } from "../src/components/feedback/tooltip/tooltip.tsx";
 import { useInitialFragmentTarget } from "../src/components/use-initial-fragment-target.ts";
 import { allTokens, discernThemeTokens } from "../src/tokens/tokens.ts";
 import {
@@ -18,6 +24,29 @@ import { packageVersion, registry } from "./generated/registry.ts";
 import type { RegistryEntry } from "./generated/registry.ts";
 
 type CatalogueSurface = "web" | "cli";
+
+interface CatalogueSearchDestination {
+  readonly href: string;
+  readonly title: string;
+  readonly context: string;
+  readonly keywords: string;
+  readonly revealsComponent?: true;
+}
+
+function catalogueSearchRank(
+  destination: CatalogueSearchDestination,
+  query: string,
+): number {
+  const title = destination.title.toLowerCase();
+  if (title === query) return 0;
+  if (title === `${query}s`) return 1;
+  if (title.startsWith(query)) return 2;
+  if (title.split(/\s+/).some((word) => word.startsWith(query))) return 3;
+  if (title.includes(query)) return 4;
+  return destination.keywords.toLowerCase().includes(query)
+    ? 5
+    : Number.POSITIVE_INFINITY;
+}
 
 function slugify(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -164,12 +193,17 @@ function ComponentPreview(
   const hasGuidance = Boolean(
     meta.useWhen?.length || meta.notWhen?.length || meta.accessibility?.length,
   );
-  const sourceType = surface === "web"
+  const cliUnavailableReason = entry.cli.stance === "exempt"
+    ? entry.cli.reason
+    : undefined;
+  const resolvedSurface =
+    surface === "cli" && cliUnavailableReason !== undefined ? "web" : surface;
+  const sourceType = resolvedSurface === "web"
     ? "React"
     : entry.cli.stance === "rendered"
     ? "CLI"
     : "Metadata";
-  const sourceExtension = surface === "web"
+  const sourceExtension = resolvedSurface === "web"
     ? "tsx"
     : entry.cli.stance === "rendered"
     ? "cli.ts"
@@ -193,16 +227,37 @@ function ComponentPreview(
               role="group"
               aria-label={`${meta.name} preview surface`}
             >
-              {(["web", "cli"] as const).map((candidate) => (
-                <button
-                  type="button"
-                  aria-pressed={surface === candidate}
-                  onClick={() => onSurfaceChange(candidate)}
-                  key={candidate}
-                >
-                  {candidate === "web" ? "Web" : "CLI"}
-                </button>
-              ))}
+              {(["web", "cli"] as const).map((candidate) => {
+                if (
+                  candidate === "cli" && cliUnavailableReason !== undefined
+                ) {
+                  return (
+                    <Tooltip
+                      label={cliUnavailableReason}
+                      placement="bottom"
+                      className="discern-catalogue-component__surface-unavailable"
+                      key={candidate}
+                    >
+                      <span
+                        tabIndex={0}
+                        aria-label="CLI preview unavailable"
+                      >
+                        <button type="button" disabled>CLI</button>
+                      </span>
+                    </Tooltip>
+                  );
+                }
+                return (
+                  <button
+                    type="button"
+                    aria-pressed={resolvedSurface === candidate}
+                    onClick={() => onSurfaceChange(candidate)}
+                    key={candidate}
+                  >
+                    {candidate === "web" ? "Web" : "CLI"}
+                  </button>
+                );
+              })}
             </div>
           )}
           <a
@@ -214,7 +269,7 @@ function ComponentPreview(
           </a>
         </div>
       </header>
-      {surface === "cli"
+      {resolvedSurface === "cli"
         ? <CliComponentPreview entry={entry} />
         : (
           <div className="discern-catalogue-component__canvas">
@@ -409,10 +464,11 @@ function App() {
   const selectedComponent = parameters.get("component");
   const [theme, setTheme] = useState<ThemeSwitcherMode>(() =>
     catalogueTheme(requestedTheme) ??
-      catalogueTheme(localStorage.getItem("discern-styleguide-theme")) ??
+      catalogueTheme(localStorage.getItem("discern-catalogue-theme")) ??
       "system"
   );
-  const [query, setQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [purpose, setPurpose] = useState<CataloguePurpose | undefined>(() =>
     cataloguePurpose(requestedPurpose)
   );
@@ -421,7 +477,23 @@ function App() {
     Readonly<Record<string, CatalogueSurface>>
   >({});
   const [accentHue, setAccentHue] = useState(defaultAccentHue);
-  const normalizedQuery = query.trim().toLowerCase();
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+
+  useEffect(() => {
+    const openSearch = (event: KeyboardEvent): void => {
+      const target = event.target;
+      if (
+        event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey ||
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement
+      ) return;
+      event.preventDefault();
+      setSearchOpen(true);
+    };
+    document.addEventListener("keydown", openSearch);
+    return () => document.removeEventListener("keydown", openSearch);
+  }, []);
 
   const sortedComponents = useMemo(() =>
     registry
@@ -434,17 +506,6 @@ function App() {
   const components = useMemo(() =>
     sortedComponents
       .filter(({ meta }) =>
-        !normalizedQuery ||
-        [
-          meta.name,
-          meta.group,
-          meta.description,
-          ...(meta.purposes ?? []),
-          ...(meta.useWhen ?? []),
-          ...(meta.notWhen ?? []),
-        ].join(" ").toLowerCase().includes(normalizedQuery)
-      )
-      .filter(({ meta }) =>
         purpose === undefined || meta.purposes?.includes(purpose)
       )
       .filter(({ meta }) =>
@@ -452,20 +513,56 @@ function App() {
         meta.slug === selectedComponent
       ), [
     conformanceMode,
-    normalizedQuery,
     purpose,
     selectedComponent,
     sortedComponents,
   ]);
 
-  const tokens = useMemo(
+  const tokens = allTokens;
+
+  const searchDestinations = useMemo<CatalogueSearchDestination[]>(() => [
+    ...sortedComponents.map(({ meta }) => ({
+      href: `#component-${meta.slug}`,
+      title: meta.name,
+      context: `Component · ${meta.group}`,
+      keywords: [
+        meta.name,
+        meta.group,
+        meta.description,
+        ...(meta.purposes ?? []),
+        ...(meta.useWhen ?? []),
+        ...(meta.notWhen ?? []),
+      ].join(" "),
+      revealsComponent: true as const,
+    })),
+    ...allTokens.map((token) => ({
+      href: `#tokens-${slugify(token.category)}`,
+      title: token.name,
+      context: `Token · ${token.category}`,
+      keywords: `${token.name} ${token.category} ${token.description}`,
+    })),
+    ...compositionRecipes.map((recipe) => ({
+      href: `#recipe-${recipe.id}`,
+      title: recipe.title,
+      context: "Composition",
+      keywords: `${recipe.title} ${recipe.description}`,
+    })),
+  ], [sortedComponents]);
+  const searchResults = useMemo(
     () =>
-      allTokens.filter((token) =>
-        !normalizedQuery ||
-        `${token.name} ${token.category} ${token.description}`.toLowerCase()
-          .includes(normalizedQuery)
-      ),
-    [normalizedQuery],
+      normalizedSearchQuery === "" ? [] : searchDestinations
+        .map((destination) => ({
+          destination,
+          rank: catalogueSearchRank(destination, normalizedSearchQuery),
+        }))
+        .filter(({ rank }) => Number.isFinite(rank))
+        .sort((left, right) =>
+          left.rank - right.rank ||
+          left.destination.title.localeCompare(right.destination.title)
+        )
+        .slice(0, 30)
+        .map(({ destination }) => destination),
+    [normalizedSearchQuery, searchDestinations],
   );
 
   const groupedComponents = groupComponentEntries(components);
@@ -481,9 +578,9 @@ function App() {
   const changeTheme = (next: ThemeSwitcherMode) => {
     setTheme(next);
     if (next === "system") {
-      localStorage.removeItem("discern-styleguide-theme");
+      localStorage.removeItem("discern-catalogue-theme");
     } else {
-      localStorage.setItem("discern-styleguide-theme", next);
+      localStorage.setItem("discern-catalogue-theme", next);
     }
   };
 
@@ -503,8 +600,13 @@ function App() {
     setComponentSurfaces((current) => ({ ...current, [slug]: next }));
   };
 
-  const showAllForComponentNavigation = (): void => {
-    setQuery("");
+  const closeSearch = (): void => {
+    setSearchOpen(false);
+    setSearchQuery("");
+  };
+
+  const prepareComponentNavigation = (): void => {
+    closeSearch();
     if (purpose === undefined) return;
     setPurpose(undefined);
     const url = new URL(globalThis.location.href);
@@ -549,7 +651,7 @@ function App() {
       data-discern-theme={theme}
       data-discern-theme-consumer=""
       data-discern-theme-control=".discern-catalogue-toolbar .discern-theme-switcher"
-      data-discern-theme-storage-key="discern-styleguide-theme"
+      data-discern-theme-storage-key="discern-catalogue-theme"
       style={{ "--discern-accent-hue": accentHue } as CSSProperties}
     >
       <aside className="discern-catalogue-sidebar">
@@ -562,7 +664,7 @@ function App() {
             <small>Design system</small>
           </span>
         </a>
-        <nav className="discern-catalogue-nav" aria-label="Styleguide">
+        <nav className="discern-catalogue-nav" aria-label="Catalogue">
           <a href="#foundations">Foundations</a>
           {tokenCategories.map((category) => (
             <a
@@ -579,7 +681,7 @@ function App() {
             <div key={group}>
               <a
                 href={`#group-${slugify(group)}`}
-                onClick={showAllForComponentNavigation}
+                onClick={prepareComponentNavigation}
               >
                 {group}
                 <small>{entries.length}</small>
@@ -589,7 +691,7 @@ function App() {
                   key={meta.slug}
                   className="discern-catalogue-nav__child"
                   href={`#component-${meta.slug}`}
-                  onClick={showAllForComponentNavigation}
+                  onClick={prepareComponentNavigation}
                 >
                   {meta.name}
                 </a>
@@ -600,15 +702,16 @@ function App() {
       </aside>
 
       <header className="discern-catalogue-toolbar">
-        <label className="discern-catalogue-search">
+        <button
+          className="discern-catalogue-search"
+          type="button"
+          aria-haspopup="dialog"
+          onClick={() => setSearchOpen(true)}
+        >
           <span aria-hidden="true">⌕</span>
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.currentTarget.value)}
-            placeholder="Search components, guidance, and tokens"
-          />
-        </label>
+          <span>Search the Catalogue</span>
+          <Kbd>/</Kbd>
+        </button>
         <span className="discern-catalogue-version">
           <span>@discern-sh/design-system</span> v{packageVersion}
         </span>
@@ -636,6 +739,54 @@ function App() {
           <output>{accentHue}°</output>
         </label>
       </header>
+
+      <SearchPalette
+        open={searchOpen}
+        onOpenChange={(open) => {
+          setSearchOpen(open);
+          if (!open) setSearchQuery("");
+        }}
+        value={searchQuery}
+        onValueChange={setSearchQuery}
+        label="Search the Catalogue"
+        placeholder="Search components, tokens, and compositions"
+        icon={<span>⌕</span>}
+        hint={
+          <span>
+            <Kbd>Esc</Kbd> close
+          </span>
+        }
+      >
+        {normalizedSearchQuery === ""
+          ? (
+            <p className="discern-search-palette__empty">
+              Search by Component name, purpose, guidance, Token, or
+              Composition.
+            </p>
+          )
+          : searchResults.length === 0
+          ? (
+            <p className="discern-search-palette__empty">
+              No matches for “{searchQuery}”.
+            </p>
+          )
+          : (
+            <ul className="discern-search-palette__list">
+              {searchResults.map((destination) => (
+                <li key={`${destination.href}:${destination.title}`}>
+                  <SearchPaletteResult
+                    href={destination.href}
+                    title={destination.title}
+                    context={destination.context}
+                    onClick={destination.revealsComponent
+                      ? prepareComponentNavigation
+                      : closeSearch}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+      </SearchPalette>
 
       <main className="discern-catalogue-main" id="top">
         <section className="discern-catalogue-hero">
@@ -717,7 +868,7 @@ function App() {
               <h2>Components working together.</h2>
             </div>
             <p>
-              These styleguide-only recipes join existing components into
+              These Catalogue-only recipes join existing components into
               repeatable documentation and tool-output patterns.
             </p>
           </header>
@@ -818,23 +969,11 @@ function App() {
             </section>
           ))}
         </section>
-
-        {!components.length && !tokens.length
-          ? (
-            <div className="discern-catalogue-empty">
-              <h2>No matches.</h2>
-              <p>
-                Try another purpose, component group, token role, or visual
-                property.
-              </p>
-            </div>
-          )
-          : null}
       </main>
     </div>
   );
 }
 
 const root = document.getElementById("root");
-if (!root) throw new Error("Styleguide root is missing");
+if (!root) throw new Error("Catalogue root is missing");
 createRoot(root).render(<App />);

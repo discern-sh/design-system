@@ -4,7 +4,7 @@ The Catalogue is the local browser for every Component example, public Token, co
 
 ## Find the right component
 
-Search covers Component names, Groups, descriptions, purposes, and usage guidance. The purpose selector in the Components section narrows the rendered Catalogue to documentation, tool output, procedural workflow, or marketing work. Every ordinary Component card carries its own Web/CLI surface switch; changing one leaves the other cards in place, while `?surface=cli` starts every card on its terminal specimen for review. The sidebar remains a complete Component index, independent of those controls. Search and purpose filters combine. `?purpose=<name>` restores the collection on a cold load.
+The toolbar Search Palette presents explicit destinations across Component names, Groups, descriptions, purposes, usage guidance, Tokens, and composition recipes. Selecting a result closes the palette and moves to that destination; searching never silently removes unrelated Catalogue content. Press `/` outside a form control to open it. The purpose selector in the Components section independently narrows the rendered Catalogue to documentation, tool output, procedural workflow, or marketing work. Every ordinary Component card carries its own Web/CLI surface switch; changing one leaves the other cards in place, while `?surface=cli` starts every rendered card on its terminal specimen for review. The sidebar remains a complete Component index, independent of those controls. `?purpose=<name>` restores the purpose collection on a cold load.
 
 Component Metadata owns purpose membership, `useWhen`, and `notWhen`. Every Workflow Component and each easily confused pair carries that guidance beside its examples.
 
@@ -16,9 +16,9 @@ Each Component exposes copyable runtime selection by slug, Group selection, and 
 
 Props and variants come from authored TypeScript through `deno doc --json`. Flat prop interfaces become tables and literal unions become variant values. Source unions stay omitted because flattening their branches would erase the contract; the Catalogue prints the reason.
 
-Composition recipes live only in the styleguide. Each recipe renders a preview and produces copyable JSX from one structured definition. A recipe with a `journey` contract declares its ordered semantic stages; the conformance view renders every enrolled journey from that same recipe authority.
+Composition recipes live only in the Catalogue. Each recipe renders a preview and produces copyable JSX from one structured definition. A recipe with a `journey` contract declares its ordered semantic stages; the conformance view renders every enrolled journey from that same recipe authority.
 
-The CLI view is not a screenshot or a second set of fixtures. [`build.ts`](../../scripts/build.ts) statically enrolls each rendered Component's default CLI renderer and `cliExamples` beside its web examples. [`cli-preview.tsx`](../../styleguide/cli-preview.tsx) calls those renderers with the fixed 80-column truecolour Unicode profile, decodes the emitted SGR attributes into React spans, and places the result inside Terminal. Exempt Components remain visible with the reason from Component Metadata. The decoder fails closed when output exceeds its supported SGR subset, and a registry-wide test renders and projects every example.
+The CLI view is not a screenshot or a second set of fixtures. [`build.ts`](../../scripts/build.ts) statically enrolls each rendered Component's default CLI renderer and `cliExamples` beside its web examples. [`cli-preview.tsx`](../../catalogue/cli-preview.tsx) calls those renderers with the fixed 80-column truecolour Unicode profile and decodes the emitted SGR attributes into React spans on one bare, cell-stable monospace output surface. It deliberately omits nested Terminal window chrome so the Component frame is the specimen. A reasoned exemption disables that card's CLI choice and exposes the exact Metadata reason as a tooltip before the unavailable choice can be made. The decoder fails closed when output exceeds its supported SGR subset, and a registry-wide test renders and projects every example.
 
 ## Link to a state
 
@@ -38,9 +38,9 @@ Composition recipes and web examples remain mounted on the initial Catalogue rou
 | ---------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | Purpose vocabulary and usage fields                                    | [`component-meta.ts`](../../src/types/component-meta.ts)                   |
 | Registry, snippets, prop evidence, CLI enrollment, and package version | [`build.ts`](../../scripts/build.ts)                                       |
-| Filtering, surface and state links, and rendered instrumentation       | [`app.tsx`](../../styleguide/app.tsx)                                      |
-| Browser terminal projection                                            | [`cli-preview.tsx`](../../styleguide/cli-preview.tsx)                      |
-| Composition definitions                                                | [`compositions.tsx`](../../styleguide/compositions.tsx)                    |
+| Search destinations, purpose filtering, surface and state links        | [`app.tsx`](../../catalogue/app.tsx)                                       |
+| Browser terminal projection                                            | [`cli-preview.tsx`](../../catalogue/cli-preview.tsx)                       |
+| Composition definitions                                                | [`compositions.tsx`](../../catalogue/compositions.tsx)                     |
 | Browser assertions                                                     | [`conformance.ts`](../../scripts/conformance.ts)                           |
 | Journey and rendered-surface resilience                                | [`resilience-conformance.ts`](../../scripts/resilience-conformance.ts)     |
 | CSS-free journey grammar                                               | [`journey_resilience_test.tsx`](../../tests/journey_resilience_test.tsx)   |

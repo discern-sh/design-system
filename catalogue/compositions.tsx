@@ -17,7 +17,7 @@ export interface JourneyContract {
   readonly stages: readonly string[];
 }
 
-/** A styleguide-only composition with a preview and source built from one definition. */
+/** A Catalogue-only composition with a preview and source built from one definition. */
 export interface CompositionRecipe {
   readonly id: string;
   readonly title: string;

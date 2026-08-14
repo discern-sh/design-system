@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { ConformanceScenario } from "../../../../styleguide/conformance.ts";
+import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
 import { ThemeSwitcher } from "./theme-switcher.tsx";
 import type { ThemeSwitcherMode } from "./theme-switcher.tsx";
 

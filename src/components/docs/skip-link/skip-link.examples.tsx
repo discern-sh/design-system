@@ -1,4 +1,4 @@
-import type { ConformanceScenario } from "../../../../styleguide/conformance.ts";
+import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
 import { Button } from "../../core/button/button.tsx";
 import { SkipLink } from "./skip-link.tsx";
 

@@ -1,8 +1,72 @@
-import { assert, assertEquals, assertMatch } from "@std/assert";
+import {
+  assert,
+  assertEquals,
+  assertMatch,
+  assertStringIncludes,
+} from "@std/assert";
+import { fromFileUrl, join } from "@std/path";
 import { stripAnsi } from "../src/cli/ansi.ts";
 import { projectTerminalSpans } from "../src/cli/projection.ts";
-import { catalogueCliCapabilities } from "../styleguide/cli-preview.tsx";
-import { registry } from "../styleguide/generated/registry.ts";
+import { catalogueCliCapabilities } from "../catalogue/cli-preview.tsx";
+import { registry } from "../catalogue/generated/registry.ts";
+
+const PACKAGE_ROOT = fromFileUrl(new URL("../", import.meta.url));
+
+Deno.test("browser Catalogue owns one bare cell-stable CLI projection", async () => {
+  const catalogueRoot = join(PACKAGE_ROOT, "catalogue");
+  const authoredSources: Array<
+    { readonly path: string; readonly source: string }
+  > = [];
+  for await (const entry of Deno.readDir(catalogueRoot)) {
+    if (!entry.isFile || !entry.name.endsWith(".tsx")) continue;
+    const path = join(catalogueRoot, entry.name);
+    authoredSources.push({ path, source: await Deno.readTextFile(path) });
+  }
+
+  const renderOwners = authoredSources.filter(({ source }) =>
+    source.includes("cli.render(") || source.includes("projectTerminalSpans(")
+  );
+  assertEquals(
+    renderOwners.map(({ path }) => path),
+    [join(catalogueRoot, "cli-preview.tsx")],
+    "new browser CLI projection containers must join the shared preview",
+  );
+
+  const preview = renderOwners[0]?.source ?? "";
+  assertStringIncludes(preview, "<pre");
+  assertStringIncludes(
+    preview,
+    'className="discern-catalogue-cli-output"',
+  );
+  assert(
+    !/<Terminal(?:\s|>)/.test(preview),
+    "CLI output must not grow window chrome",
+  );
+  assert(
+    !preview.includes("components/display/terminal"),
+    "browser projection must not depend on the showcase Terminal component",
+  );
+
+  const css = await Deno.readTextFile(
+    join(catalogueRoot, "catalogue.css"),
+  );
+  const outputRule = /\.discern-catalogue-cli-output\s*\{(?<body>[^}]*)\}/.exec(
+    css,
+  )
+    ?.groups?.body;
+  assert(outputRule !== undefined, "missing shared CLI output rule");
+  for (
+    const invariant of [
+      "padding: 0;",
+      "font-family: ui-monospace",
+      'font-feature-settings: "liga" 0, "calt" 0;',
+      "font-variant-ligatures: none;",
+      "white-space: pre;",
+    ]
+  ) {
+    assertStringIncludes(outputRule, invariant);
+  }
+});
 
 Deno.test("browser Catalogue projects every declared CLI stance from disk", () => {
   const fragments = new Set<string>();

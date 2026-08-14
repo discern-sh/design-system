@@ -1,4 +1,4 @@
-import type { CatalogueExampleState } from "../../../../styleguide/conformance.ts";
+import type { CatalogueExampleState } from "../../../../catalogue/conformance.ts";
 import { CodeListing } from "./code-listing.tsx";
 
 const example = `const brief = {

@@ -1412,7 +1412,7 @@ Deno.test("default blue and green themes share component CSS and preserve state 
 
 Deno.test("catalogue chrome cannot leak descendant styles into component examples", async () => {
   const source = await Deno.readTextFile(
-    join(PACKAGE_ROOT, "styleguide", "styleguide.css"),
+    join(PACKAGE_ROOT, "catalogue", "catalogue.css"),
   );
   const selectors = [...source.matchAll(/([^{}]+)\{/g)]
     .flatMap((match) => (match[1] ?? "").split(","))
@@ -1930,6 +1930,7 @@ Deno.test("branding and hover-card adapters preserve their semantic relationship
   );
   assertStringIncludes(quietToggle, "discern-theme-toggle--quiet");
   assertStringIncludes(quietToggle, 'aria-label="Switch to the dark theme"');
+  assert(!quietToggle.includes("aria-pressed"));
 
   const hoverCard = renderToStaticMarkup(
     createElement(HoverCard, {
@@ -2179,11 +2180,11 @@ Deno.test("monospace is reserved for brand names and code-bearing surfaces", asy
     "src/components/workflow/path-reference/path-reference.css::.discern-path-reference__path",
     "src/components/workflow/raw-output/raw-output.css::.discern-raw-output__content",
     "src/styles/utilities.css::.discern-mono",
-    "styleguide/styleguide.css::.discern-catalogue-api code",
-    "styleguide/styleguide.css::.discern-catalogue-brand strong",
-    "styleguide/styleguide.css::.discern-catalogue-copyable > code",
-    "styleguide/styleguide.css::.discern-catalogue-token code",
-    "styleguide/styleguide.css::.discern-catalogue-token__value",
+    "catalogue/catalogue.css::.discern-catalogue-api code",
+    "catalogue/catalogue.css::.discern-catalogue-brand strong",
+    "catalogue/catalogue.css::.discern-catalogue-copyable > code",
+    "catalogue/catalogue.css::.discern-catalogue-token code",
+    "catalogue/catalogue.css::.discern-catalogue-token__value",
   ].toSorted();
   assertEquals(
     monospaceTypefaceRules(
@@ -2196,7 +2197,7 @@ Deno.test("monospace is reserved for brand names and code-bearing surfaces", asy
   const stylesheets = [
     ...(await walk(COMPONENT_ROOT)).filter((path) => path.endsWith(".css")),
     join(PACKAGE_ROOT, "src", "styles", "utilities.css"),
-    join(PACKAGE_ROOT, "styleguide", "styleguide.css"),
+    join(PACKAGE_ROOT, "catalogue", "catalogue.css"),
   ];
   const actual: string[] = [];
   for (const stylesheet of stylesheets) {
@@ -2261,7 +2262,7 @@ Deno.test("linked navigation adapters restore a fragment after client mounting",
   }
   assert(enrolled > 0, "no linked navigation adapters enrolled");
   assertStringIncludes(
-    await Deno.readTextFile(join(PACKAGE_ROOT, "styleguide", "app.tsx")),
+    await Deno.readTextFile(join(PACKAGE_ROOT, "catalogue", "app.tsx")),
     "useInitialFragmentTarget();",
   );
 });

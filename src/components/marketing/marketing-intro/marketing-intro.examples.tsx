@@ -1,4 +1,4 @@
-import type { CatalogueExampleState } from "../../../../styleguide/conformance.ts";
+import type { CatalogueExampleState } from "../../../../catalogue/conformance.ts";
 import { MarketingIntro } from "./marketing-intro.tsx";
 
 function EditorialIntroState() {

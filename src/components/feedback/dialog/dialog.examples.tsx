@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { ConformanceScenario } from "../../../../styleguide/conformance.ts";
+import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
 import { Button } from "../../core/button/button.tsx";
 import { Input } from "../../forms/input/input.tsx";
 import { Dialog } from "./dialog.tsx";

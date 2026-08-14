@@ -1,4 +1,4 @@
-import type { ConformanceScenario } from "../../../../styleguide/conformance.ts";
+import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
 import { RawOutput } from "./raw-output.tsx";
 
 const collapsedOutput = "error: expected a string\nat src/example.ts:18:7";

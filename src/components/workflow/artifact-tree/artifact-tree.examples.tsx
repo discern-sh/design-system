@@ -1,4 +1,4 @@
-import type { ConformanceScenario } from "../../../../styleguide/conformance.ts";
+import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
 import { OwnershipBadge } from "../ownership-badge/ownership-badge.tsx";
 import { ArtifactTree } from "./artifact-tree.tsx";
 

@@ -5,7 +5,7 @@ import { Command } from "../src/components/workflow/command/command.tsx";
 import {
   type CompositionRecipe,
   compositionRecipes,
-} from "../styleguide/compositions.tsx";
+} from "../catalogue/compositions.tsx";
 
 interface RenderedJourney {
   readonly id: string;

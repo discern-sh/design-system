@@ -18,7 +18,7 @@ export interface ThemeSwitcherProps
   readonly inputName?: string;
 }
 
-/** Controlled System, Light, and Dark theme preference group; the consumer applies the selected mode to its root. */
+/** Controlled System, Light, and Dark settings or inspection group; the consumer applies the selected mode to its root. */
 export const ThemeSwitcher: DiscernComponent<
   HTMLFieldSetElement,
   ThemeSwitcherProps

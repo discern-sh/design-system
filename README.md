@@ -213,7 +213,7 @@ deno install
 deno task verify
 ```
 
-`deno task verify` runs formatting, lint, type-checks, the catalogue build, and the unit and real-browser conformance tests. `deno task serve` builds and serves the local component catalogue. Run `deno task codegen` after changing component metadata, component CSS, component imports, or package assets; do not edit `src/generated/` or `styleguide/generated/` by hand.
+`deno task verify` runs formatting, lint, type-checks, the catalogue build, and the unit and real-browser conformance tests. `deno task serve` builds and serves the local component catalogue. Run `deno task codegen` after changing component metadata, component CSS, component imports, or package assets; do not edit `src/generated/` or `catalogue/generated/` by hand.
 
 `deno task test` creates a temporary external Deno project. Its neutral fixture declares no React dependency, imports only documented package exports, emits a runtime, and is exercised again with `deno run --cached-only`. A second fixture adds the React peer contract and renders static HTML through `./react`. Neither fixture reaches into `dist/`, relies on a global Deno-cache path, uses `--unstable-raw-imports`, or fetches an asset at runtime.
 

@@ -1,4 +1,4 @@
-import type { CatalogueExampleState } from "../../../../styleguide/conformance.ts";
+import type { CatalogueExampleState } from "../../../../catalogue/conformance.ts";
 import { MarketingSection } from "./marketing-section.tsx";
 
 function StandardSectionState() {

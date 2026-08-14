@@ -11,7 +11,7 @@ import {
   cataloguePurposes,
 } from "../src/types/component-meta.ts";
 import type { ComponentMeta } from "../src/types/component-meta.ts";
-import { compositionRecipes } from "../styleguide/compositions.tsx";
+import { compositionRecipes } from "../catalogue/compositions.tsx";
 
 const PACKAGE_ROOT = fromFileUrl(new URL("../", import.meta.url));
 
@@ -56,7 +56,7 @@ function catalogue(): Promise<GeneratedCatalogue> {
     await buildDesignSystem();
     return await import(
       new URL(
-        "../styleguide/generated/registry.ts?catalogue-instrument-test",
+        "../catalogue/generated/registry.ts?catalogue-instrument-test",
         import.meta.url,
       ).href
     ) as GeneratedCatalogue;
@@ -237,7 +237,7 @@ Deno.test("Catalogue prop evidence is source-derived and complete", async () => 
   }
 
   const appSource = await Deno.readTextFile(
-    join(PACKAGE_ROOT, "styleguide", "app.tsx"),
+    join(PACKAGE_ROOT, "catalogue", "app.tsx"),
   );
   assertStringIncludes(appSource, "propDocumentation.props.map");
   assertStringIncludes(appSource, "{propDocumentation.reason}");
@@ -249,8 +249,8 @@ Deno.test("Catalogue prop evidence is source-derived and complete", async () => 
   assertStringIncludes(buildSource, '"--json",');
 
   const authoredCatalogueFiles = [
-    join(PACKAGE_ROOT, "styleguide", "app.tsx"),
-    join(PACKAGE_ROOT, "styleguide", "compositions.tsx"),
+    join(PACKAGE_ROOT, "catalogue", "app.tsx"),
+    join(PACKAGE_ROOT, "catalogue", "compositions.tsx"),
   ];
   for (const path of authoredCatalogueFiles) {
     const source = await Deno.readTextFile(path);
@@ -293,7 +293,7 @@ Deno.test("Catalogue version and composition source share their authorities", as
     );
   }
   const source = await Deno.readTextFile(
-    join(PACKAGE_ROOT, "styleguide", "compositions.tsx"),
+    join(PACKAGE_ROOT, "catalogue", "compositions.tsx"),
   );
   assertEquals(
     [...source.matchAll(/\bconst \w+Recipe = defineRecipe\(\{/g)].length,
@@ -307,10 +307,10 @@ Deno.test("Catalogue version and composition source share their authorities", as
 
 Deno.test("Catalogue navigation stays stable while purpose filters the component view", async () => {
   const source = await Deno.readTextFile(
-    join(PACKAGE_ROOT, "styleguide", "app.tsx"),
+    join(PACKAGE_ROOT, "catalogue", "app.tsx"),
   );
   const navStart = source.indexOf(
-    '<nav className="discern-catalogue-nav" aria-label="Styleguide">',
+    '<nav className="discern-catalogue-nav" aria-label="Catalogue">',
   );
   const navEnd = source.indexOf("</nav>", navStart);
   assert(navStart >= 0 && navEnd > navStart, "missing Catalogue navigation");
@@ -323,7 +323,7 @@ Deno.test("Catalogue navigation stays stable while purpose filters the component
   assertStringIncludes(source, "<span>Filter components by purpose</span>");
 
   const css = await Deno.readTextFile(
-    join(PACKAGE_ROOT, "styleguide", "styleguide.css"),
+    join(PACKAGE_ROOT, "catalogue", "catalogue.css"),
   );
   const pickerRule = /\.discern-catalogue-purpose-picker\s*\{(?<body>[^}]*)\}/
     .exec(css);
@@ -333,18 +333,45 @@ Deno.test("Catalogue navigation stays stable while purpose filters the component
   assert(!pickerBody.includes("display: none;"));
 });
 
+Deno.test("Catalogue search presents explicit destinations without filtering the page", async () => {
+  const source = await Deno.readTextFile(
+    join(PACKAGE_ROOT, "catalogue", "app.tsx"),
+  );
+
+  assertStringIncludes(source, "SearchPalette,");
+  assertStringIncludes(source, "SearchPaletteResult,");
+  assertStringIncludes(source, "const searchDestinations");
+  assertStringIncludes(source, "const searchResults");
+  assertStringIncludes(source, "catalogueSearchRank");
+  assertStringIncludes(source, "title === `${query}s`");
+  assertStringIncludes(source, 'aria-haspopup="dialog"');
+  assertStringIncludes(source, 'label="Search the Catalogue"');
+  assertStringIncludes(source, "<SearchPaletteResult");
+  assertStringIncludes(source, "prepareComponentNavigation");
+  assert(
+    !source.includes("normalizedQuery"),
+    "typing in search must not silently mutate the rendered inventory",
+  );
+});
+
 Deno.test("Catalogue switches each ordinary Component while conformance stays web-only", async () => {
   const source = await Deno.readTextFile(
-    join(PACKAGE_ROOT, "styleguide", "app.tsx"),
+    join(PACKAGE_ROOT, "catalogue", "app.tsx"),
   );
   assertStringIncludes(source, 'parameters.get("surface")');
   assertStringIncludes(source, "componentSurfaces[entry.meta.slug]");
   assertStringIncludes(source, "changeComponentSurface(entry.meta.slug, next)");
   assertStringIncludes(source, "<CliComponentPreview entry={entry} />");
   assertStringIncludes(source, 'role="group"');
-  assertStringIncludes(source, "aria-pressed={surface === candidate}");
+  assertStringIncludes(source, "aria-pressed={resolvedSurface === candidate}");
   assertStringIncludes(source, 'candidate === "web" ? "Web" : "CLI"');
   assertStringIncludes(source, 'states.length !== 1 || name !== "default"');
+  assertStringIncludes(source, "const cliUnavailableReason");
+  assertStringIncludes(source, "const resolvedSurface");
+  assertStringIncludes(source, "<Tooltip");
+  assertStringIncludes(source, "label={cliUnavailableReason}");
+  assertStringIncludes(source, "disabled");
+  assertStringIncludes(source, 'aria-label="CLI preview unavailable"');
 
   const conformanceStart = source.indexOf("if (conformanceMode)");
   const ordinaryStart = source.indexOf(
@@ -365,7 +392,7 @@ Deno.test("Catalogue switches each ordinary Component while conformance stays we
 
 Deno.test("Catalogue component panels share a closed canonical order", async () => {
   const source = await Deno.readTextFile(
-    join(PACKAGE_ROOT, "styleguide", "app.tsx"),
+    join(PACKAGE_ROOT, "catalogue", "app.tsx"),
   );
   const previewStart = source.indexOf("function ComponentPreview");
   const previewEnd = source.indexOf("function JourneyPreview", previewStart);

@@ -1,4 +1,4 @@
-import type { CatalogueExampleState } from "../../../../styleguide/conformance.ts";
+import type { CatalogueExampleState } from "../../../../catalogue/conformance.ts";
 import { fixtureCopy } from "../../../fixtures/content.ts";
 import { Badge } from "../badge/badge.tsx";
 import { Kicker } from "../kicker/kicker.tsx";

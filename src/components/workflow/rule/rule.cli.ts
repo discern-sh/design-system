@@ -30,7 +30,7 @@ export const cliExamples: readonly CliExample<RuleCliProps>[] = [
     props: {
       rule: "Never hand-edit generated surfaces.",
       origin: "AGENTS.md",
-      scope: "src/generated/ and styleguide/generated/",
+      scope: "src/generated/ and catalogue/generated/",
     },
   },
 ] as const;
