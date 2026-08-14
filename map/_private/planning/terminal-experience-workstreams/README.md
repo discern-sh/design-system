@@ -25,15 +25,15 @@ Change one only through an explicit ADR and an update to every unstarted brief.
 
 Dispatch wave by wave. Wave 1 is the only four-way parallel wave; its briefs own disjoint files apart from the shared seams above. Every later brief starts only after all lower waves have landed, and its dependency guard checks the predecessor's surface on trunk before editing.
 
-| Key | Brief                                                                                         | Runs with  | Depends on    |
-| --- | --------------------------------------------------------------------------------------------- | ---------- | ------------- |
-| 1A  | [Make validation truthful and frames stable](1a-request-correctness.md)                       | 1B, 1C, 1D | —             |
-| 1B  | [Wrap styled text and own hyperlinks](1b-styled-text-authorities.md)                          | 1A, 1C, 1D | —             |
-| 1C  | [Give consumers a presenter and narration verbs](1c-presenter-and-narration.md)               | 1A, 1B, 1D | —             |
-| 1D  | [Publish the testing and projection surfaces](1d-published-tooling-surfaces.md)               | 1A, 1B, 1C | —             |
-| 2A  | [Make discovery requests truthful under latency](2a-discovery-truthfulness.md)                | 2B         | wave 1 landed |
-| 2B  | [Make long-running activity interrupt-safe; sense the background](2b-activity-and-sensing.md) | 2A         | wave 1 landed |
-| 3A  | [Compose a live activity log frame](3a-live-activity-log.md)                                  | —          | wave 2 landed |
+| Key | Brief                                                                                               | Runs with  | Depends on    |
+| --- | --------------------------------------------------------------------------------------------------- | ---------- | ------------- |
+| 1A  | [Make validation truthful and frames stable](_done/1a-request-correctness.md)                       | 1B, 1C, 1D | —             |
+| 1B  | [Wrap styled text and own hyperlinks](_done/1b-styled-text-authorities.md)                          | 1A, 1C, 1D | —             |
+| 1C  | [Give consumers a presenter and narration verbs](_done/1c-presenter-and-narration.md)               | 1A, 1B, 1D | —             |
+| 1D  | [Publish the testing and projection surfaces](_done/1d-published-tooling-surfaces.md)               | 1A, 1B, 1C | —             |
+| 2A  | [Make discovery requests truthful under latency](_done/2a-discovery-truthfulness.md)                | 2B         | wave 1 landed |
+| 2B  | [Make long-running activity interrupt-safe; sense the background](_done/2b-activity-and-sensing.md) | 2A         | wave 1 landed |
+| 3A  | [Compose a live activity log frame](_done/3a-live-activity-log.md)                                  | —          | wave 2 landed |
 
 Within wave 1 the landing order is 1A, 1B, 1C, 1D; within wave 2 it is 2A then 2B. Before landing, each later stream runs `discern_update`, re-verifies its gate, and resolves any shared-seam overlap. Wave 2's two streams own disjoint files (2A: discovery machines and frame states; 2B: activity, lifecycle, and a new sensing module).
 
