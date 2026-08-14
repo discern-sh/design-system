@@ -13,6 +13,7 @@ import type { TerminalCapabilities } from "../capabilities.ts";
 import { measureText } from "../text.ts";
 import type { TerminalIO, TerminalSize } from "./io.ts";
 import type { TerminalKeyName } from "./keys.ts";
+import type { TerminalSignalSource } from "./signals.ts";
 
 const ESCAPE = "\u001b";
 
@@ -221,6 +222,50 @@ export class FakeTerminalIO implements TerminalIO {
   #applyResize(entry: QueuedResize): void {
     this.#columns = entry.columns;
     this.#rows = entry.rows ?? this.#rows;
+  }
+}
+
+/**
+ * Deterministic SIGINT source for driving the package's interrupt paths.
+ * {@linkcode FakeSignalSource.deliver} invokes every installed listener like
+ * an arriving SIGINT, and {@linkcode FakeSignalSource.raised} counts
+ * default-disposition re-raises — the moments a real process would have
+ * terminated as an interrupt.
+ */
+export class FakeSignalSource implements TerminalSignalSource {
+  readonly #handlers: (() => void)[] = [];
+  #raised = 0;
+
+  /** Number of default-disposition re-raises brackets have requested. */
+  get raised(): number {
+    return this.#raised;
+  }
+
+  /** Number of currently installed listeners. */
+  get listenerCount(): number {
+    return this.#handlers.length;
+  }
+
+  /** Install one SIGINT handler; the returned unsubscribe is idempotent. */
+  listen(handler: () => void): () => void {
+    this.#handlers.push(handler);
+    let active = true;
+    return () => {
+      if (!active) return;
+      active = false;
+      const index = this.#handlers.indexOf(handler);
+      if (index >= 0) this.#handlers.splice(index, 1);
+    };
+  }
+
+  /** Record a re-raise; a real process would now terminate by SIGINT. */
+  raise(): void {
+    this.#raised += 1;
+  }
+
+  /** Deliver one SIGINT to every listener installed at this moment. */
+  deliver(): void {
+    for (const handler of [...this.#handlers]) handler();
   }
 }
 
