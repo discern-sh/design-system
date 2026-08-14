@@ -10,7 +10,11 @@ import {
   requestTextarea,
 } from "../../src/cli/interactive/mod.ts";
 import type { InteractionEntry } from "../../src/cli/interactive/types.ts";
-import { FakeTerminalIO } from "../../src/cli/interactive/testing.ts";
+import {
+  assertExactFrame,
+  FakeTerminalIO,
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 const FIRST_COLUMN = "\x1b[1G";
 const ERASE_TO_END = "\x1b[J";
@@ -102,6 +106,11 @@ Deno.test("a reservation keeps a full-budget list out of the caller's header ban
   assert(
     highestCursorClimb(io) <= budget - 1,
     `a repaint climbed ${highestCursorClimb(io)} rows toward the header band`,
+  );
+  assertExactFrame(
+    io.writes[2] ?? "",
+    "Reserved [active]\n┌────────────────────────────────────────┐\n│━━ ◮ GROUP 1 ━━━━━━━━━━━━━━━━━━━━━━━━━━━│\n│› [●] Choice 1.1                        │\n│  [ ] Choice 1.2                        │\n│  [ ] Choice 1.3                        │\n└────────────────────────────────────────┘\n",
+    testTerminalCapabilities({ columns: 42 }),
   );
 });
 
