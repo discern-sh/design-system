@@ -2,9 +2,10 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
-import type { ActivityLogLineTone } from "../../../cli/interactive-states.ts";
+import type { ActivityLogLineTone as ActivityLogLineToneVocabulary } from "./activity-log.types.ts";
 
-export type { ActivityLogLineTone } from "../../../cli/interactive-states.ts";
+/** Narration severity accepted by pinned activity log lines. */
+export type ActivityLogLineTone = ActivityLogLineToneVocabulary;
 
 /** Overall state presented by one {@linkcode ActivityLog} snapshot. */
 export type ActivityLogStatus = "active" | "complete" | "cancelled";
@@ -70,7 +71,10 @@ export const ActivityLog: DiscernComponent<HTMLElement, ActivityLogProps> =
           <span className="discern-activity-log__marker" aria-hidden="true">
             {statusMarkers[status]}
           </span>
-          <span className="discern-activity-log__label">{label}</span>
+          <span className="discern-activity-log__label">
+            {label}
+            <span className="discern-visually-hidden">{`, ${status}`}</span>
+          </span>
         </p>
         {stable !== undefined && stable.length > 0
           ? (

@@ -21,7 +21,7 @@
   }
   .discern-activity-log__marker {
     flex: none;
-    color: var(--discern-color-accent);
+    color: var(--discern-color-accent-600);
     font-size: var(--discern-font-size-xs);
   }
   .discern-activity-log[data-discern-status="active"] .discern-activity-log__marker {
@@ -54,7 +54,7 @@
     color: var(--discern-color-success-deep);
   }
   .discern-activity-log__stable-line[data-discern-tone="note"] .discern-activity-log__stable-marker {
-    color: var(--discern-color-accent);
+    color: var(--discern-color-accent-600);
   }
   .discern-activity-log__stable-line[data-discern-tone="warning"] .discern-activity-log__stable-marker {
     color: var(--discern-color-warning-deep);

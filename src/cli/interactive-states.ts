@@ -4,6 +4,8 @@
  * @module
  */
 
+import type { ActivityLogLineTone } from "../components/workflow/activity-log/activity-log.types.ts";
+
 /** Lifecycle shared by active, failed, submitted, and cancelled interaction frames. */
 export type InteractiveFrameLifecycle =
   | { readonly status: "active" }
@@ -162,8 +164,7 @@ export interface DeterminateProgressFrameState extends InteractiveFrameBase {
   readonly total: number;
 }
 
-/** Narration severity carried by one pinned activity log line. */
-export type ActivityLogLineTone = "success" | "note" | "warning" | "failure";
+export type { ActivityLogLineTone } from "../components/workflow/activity-log/activity-log.types.ts";
 
 /** One pinned line that persists above an activity log's streaming tail. */
 export interface ActivityLogStableLineState {
