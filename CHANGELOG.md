@@ -4,7 +4,7 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
-## Unreleased
+## 0.15.0
 
 - Rename the local Style Guide source, bundle, and canonical route to the Catalogue, with legacy browser routes redirecting to `/catalogue/`. Replace the toolbar's implicit page filter with an explicit Search Palette of Component, Token, and composition destinations; disable each reasoned-exempt CLI choice before selection and expose its Metadata reason as a tooltip; and present rendered CLI examples on one bare, cell-stable monospace surface without nested Terminal window chrome. The actual terminal renderers and their exact frame geometry are unchanged.
 - Clarify the two theme controls' distinct jobs: Theme toggle is a compact light/dark comfort action whose consumer owns system-aware persistence, while Theme switcher is the explicit System, Light, and Dark control for settings and deterministic inspection surfaces. Catalogue guidance now teaches that boundary, and the Theme toggle contract explicitly remains a destination-named action button rather than an `aria-pressed` control.
