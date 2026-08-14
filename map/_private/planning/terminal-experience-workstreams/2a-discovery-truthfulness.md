@@ -15,7 +15,7 @@ Work in `/Users/jack/Sites/discern-design-system`. Run `discern_status` and read
 Verified on trunk `c3ec5d6` (re-verify; 1A will have moved the driver):
 
 1. **Every keystroke awaits the provider inline.** `src/cli/interactive/discovery-requests.ts:131-133` calls `await this.#refresh()` inside `handle()`, and `#refresh` awaits `this.options.search(...)` directly (`:186`); the driver awaits `machine.handle(key)` before reading the next key. A slow provider freezes input.
-2. **A slow first query is a blank screen.** The initial provider call runs inside `machine.start()` (`discovery-requests.ts:88-90`), which the driver awaits *before the first paint* — nothing at all is on screen while it runs.
+2. **A slow first query is a blank screen.** The initial provider call runs inside `machine.start()` (`discovery-requests.ts:88-90`), which the driver awaits _before the first paint_ — nothing at all is on screen while it runs.
 3. **No pending truth, no staleness defence.** `SearchFrameState` (`src/cli/interactive-states.ts:92-101`) has no pending member, and there is no debounce, no request ordering guard, and no `AbortSignal` anywhere in `src/cli` (grepped: zero hits). Out-of-order async resolutions can paint stale results as current.
 4. **Two request kinds are missing with consumer evidence.** The flagship consumer hand-rolls "press Enter to continue" by reading stdin directly (`/Users/jack/Sites/discern/src/engine/desk/desk.ts:225-230` — read-only evidence), and its large list surfaces offer either static multi-selection or single-value search, never query-filtered multi-selection.
 

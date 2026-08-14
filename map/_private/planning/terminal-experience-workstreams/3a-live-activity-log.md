@@ -12,7 +12,7 @@ Work in `/Users/jack/Sites/discern-design-system`. Run `discern_status` and read
 
 ## Background
 
-The flagship consumer's ledger records the need verbatim (read-only evidence, `/Users/jack/Sites/discern/project/TODO.md`): keep the live `done` progress table visible while `[gate].stream = true` emits each complete subprocess output line — accounting for partial lines, subprocess ANSI, resizing, and interrupts — without changing non-TTY/CI/`--plain`/JSON contracts. No compositor for "live frame plus streaming lines" exists in either repository today; the consumer's gate currently chooses between a live table *or* streamed lines.
+The flagship consumer's ledger records the need verbatim (read-only evidence, `/Users/jack/Sites/discern/project/TODO.md`): keep the live `done` progress table visible while `[gate].stream = true` emits each complete subprocess output line — accounting for partial lines, subprocess ANSI, resizing, and interrupts — without changing non-TTY/CI/`--plain`/JSON contracts. No compositor for "live frame plus streaming lines" exists in either repository today; the consumer's gate currently chooses between a live table _or_ streamed lines.
 
 The package already owns every ingredient: the refusal-typed painter, renderer-measured viewport fitting, the activity scheduler as the only time-advancing layer, and (after 2B) interrupt safety. What is missing is the frame itself and its producer API:
 

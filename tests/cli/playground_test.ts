@@ -284,7 +284,10 @@ Deno.test("validation latch journey latches, transforms, and completes", async (
     ["Bad Slug!", ENTER, "\x7f".repeat(9), "ok ", ENTER],
     { columns: 60 },
   );
-  const outcome = await runJourney(journey("validation-latch"), testRuntime(io));
+  const outcome = await runJourney(
+    journey("validation-latch"),
+    testRuntime(io),
+  );
   assertEquals(outcome, "completed");
   assertStringIncludes(io.output(), "Use lowercase letters");
   assertStringIncludes(io.output(), 'Result: string "ok"');
@@ -293,7 +296,10 @@ Deno.test("validation latch journey latches, transforms, and completes", async (
 
 Deno.test("Escape backs out of a journey through the shared cancellation wrapper", async () => {
   const io = new FakeTerminal(["\x1b"], { columns: 60 });
-  const outcome = await runJourney(journey("validation-latch"), testRuntime(io));
+  const outcome = await runJourney(
+    journey("validation-latch"),
+    testRuntime(io),
+  );
   assertEquals(outcome, "cancelled");
   assertStringIncludes(io.output(), "Journey cancelled (Dismissed.)");
   assertEquals(io.rawTransitions, [true, false]);

@@ -149,10 +149,22 @@ Deno.test("frame projection preserves heading structure without a disabled state
 Deno.test("paging jumps a window, lands on enabled choices, and clamps at the edges", () => {
   // Indices: 0 heading, 1 one, 2 disabled, 3 heading, 4 two, 5 three.
   assertEquals(pageEnabledIndex(grouped, 1, 1, 3), 4);
-  assertEquals(pageEnabledIndex(grouped, 1, 1, 2), 4, "a heading or disabled entry at the target defers to the next enabled choice");
+  assertEquals(
+    pageEnabledIndex(grouped, 1, 1, 2),
+    4,
+    "a heading or disabled entry at the target defers to the next enabled choice",
+  );
   assertEquals(pageEnabledIndex(grouped, 4, -1, 3), 1);
-  assertEquals(pageEnabledIndex(grouped, 5, 1, 3), 5, "paging past the end clamps to the last enabled choice");
-  assertEquals(pageEnabledIndex(grouped, 1, -1, 3), 1, "paging before the start clamps to the first enabled choice");
+  assertEquals(
+    pageEnabledIndex(grouped, 5, 1, 3),
+    5,
+    "paging past the end clamps to the last enabled choice",
+  );
+  assertEquals(
+    pageEnabledIndex(grouped, 1, -1, 3),
+    1,
+    "paging before the start clamps to the first enabled choice",
+  );
   assertEquals(pageEnabledIndex([], 0, 1, 3), -1);
   assertEquals(
     pageEnabledIndex(grouped, 5, 1, 0),

@@ -114,7 +114,10 @@ Deno.test("a failed submission latches the validator to every value change", asy
   assertEquals(result, "abc");
   assertEquals(calls, ["ab", "abc", "ab", "abc", "abc"]);
   const frames = frameSequence(io);
-  assertEquals(frames.filter((frame) => frame.includes("Too short.")).length, 2);
+  assertEquals(
+    frames.filter((frame) => frame.includes("Too short.")).length,
+    2,
+  );
   const firstError = frames.findIndex((frame) => frame.includes("Too short."));
   assert(firstError >= 0, "the failed submission painted no message");
   const afterError = frames[firstError + 1] ?? "";

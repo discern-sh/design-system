@@ -251,7 +251,7 @@ async function raceLoneEscapeDelay(
   read: Promise<Uint8Array | null>,
   delayMs: number,
 ): Promise<Uint8Array | null | typeof LONE_ESCAPE_ELAPSED> {
-  let timer: number | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([
       read,
