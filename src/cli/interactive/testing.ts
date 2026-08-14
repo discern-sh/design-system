@@ -1,0 +1,262 @@
+/**
+ * Deterministic terminal for testing interactive requests against the
+ * package's real machinery. Scripted input flows through the real key
+ * decoder, interaction state machines, and Component renderers, while writes
+ * and raw-mode transitions stay captured for assertion — so a test exercises
+ * the production path rather than a simulation of it.
+ *
+ * @module
+ */
+
+import { stripAnsi } from "../ansi.ts";
+import type { TerminalCapabilities } from "../capabilities.ts";
+import { measureText } from "../text.ts";
+import type { TerminalIO, TerminalSize } from "./io.ts";
+import type { TerminalKeyName } from "./keys.ts";
+
+const ESCAPE = "\u001b";
+
+/** Configuration for a queue-backed deterministic terminal. */
+export interface FakeTerminalIOOptions {
+  readonly ansiControl?: boolean;
+  readonly interactive?: boolean;
+  readonly colorDepth?: TerminalCapabilities["colorDepth"];
+  readonly columns?: number;
+  readonly rows?: number;
+  readonly unicode?: boolean;
+}
+
+/**
+ * Canonical byte sequence for every named key the package decodes. Adding a
+ * name to {@linkcode TerminalKeyName} does not compile until it is enrolled
+ * here, and the package tests decode every sequence back to its name.
+ */
+export const TERMINAL_KEY_SEQUENCES: Readonly<
+  Record<TerminalKeyName, string>
+> = {
+  up: `${ESCAPE}[A`,
+  down: `${ESCAPE}[B`,
+  right: `${ESCAPE}[C`,
+  left: `${ESCAPE}[D`,
+  "shift-up": `${ESCAPE}[1;2A`,
+  "shift-down": `${ESCAPE}[1;2B`,
+  "shift-tab": `${ESCAPE}[Z`,
+  "page-up": `${ESCAPE}[5~`,
+  "page-down": `${ESCAPE}[6~`,
+  delete: `${ESCAPE}[3~`,
+  backspace: "\u007f",
+  enter: "\r",
+  tab: "\t",
+  "ctrl-a": "\u0001",
+  "ctrl-b": "\u0002",
+  "ctrl-c": "\u0003",
+  "ctrl-d": "\u0004",
+  "ctrl-e": "\u0005",
+  "ctrl-f": "\u0006",
+  "ctrl-h": "\u0008",
+  "ctrl-n": "\u000e",
+  "ctrl-p": "\u0010",
+  "ctrl-u": "\u0015",
+  "option-backspace": `${ESCAPE}\u007f`,
+  home: `${ESCAPE}[H`,
+  end: `${ESCAPE}[F`,
+  escape: ESCAPE,
+};
+
+/** Encode named keys as one raw input chunk for the real key decoder. */
+export function encodeTerminalKeys(
+  ...names: readonly TerminalKeyName[]
+): string {
+  return names.map((name) => TERMINAL_KEY_SEQUENCES[name]).join("");
+}
+
+interface QueuedResize {
+  readonly columns: number;
+  readonly rows: number | undefined;
+}
+
+const encoder = new TextEncoder();
+
+/**
+ * Queue-backed {@linkcode TerminalIO} driving the real interactive machinery
+ * deterministically. Reads drain the scripted input queue, writes and
+ * raw-mode transitions are captured in order, and the viewport is scriptable
+ * — immediately through {@linkcode FakeTerminalIO.resize} or between queued
+ * chunks through {@linkcode FakeTerminalIO.enqueueResize} — so
+ * mid-interaction resizes are reproducible.
+ */
+export class FakeTerminalIO implements TerminalIO {
+  /** Complete write log in order, including control sequences. */
+  readonly writes: string[] = [];
+  /** Raw-mode transitions in the order interactions requested them. */
+  readonly rawTransitions: boolean[] = [];
+  readonly #ansiControl: boolean;
+  readonly #queue: (Uint8Array | QueuedResize)[];
+  readonly #interactive: boolean;
+  readonly #colorDepth: TerminalCapabilities["colorDepth"];
+  readonly #unicode: boolean;
+  #columns: number;
+  #rows: number;
+
+  /** Create a terminal with scripted input chunks and viewport facts. */
+  constructor(
+    chunks: readonly (string | Uint8Array)[] = [],
+    options: FakeTerminalIOOptions = {},
+  ) {
+    this.#queue = chunks.map((chunk) =>
+      typeof chunk === "string" ? encoder.encode(chunk) : chunk.slice()
+    );
+    this.#ansiControl = options.ansiControl ?? true;
+    this.#interactive = options.interactive ?? true;
+    this.#colorDepth = options.colorDepth ?? "none";
+    this.#columns = options.columns ?? 80;
+    this.#rows = options.rows ?? 24;
+    this.#unicode = options.unicode ?? true;
+  }
+
+  /** Whether the terminal presents itself as an interactive TTY pair. */
+  isInteractive(): boolean {
+    return this.#interactive;
+  }
+
+  /** Current rendering capabilities, tracking the scripted viewport width. */
+  capabilities(): TerminalCapabilities {
+    return {
+      ansiControl: this.#ansiControl,
+      colorDepth: this.#colorDepth,
+      columns: this.#columns,
+      unicode: this.#unicode,
+    };
+  }
+
+  /** Current scripted viewport dimensions. */
+  size(): TerminalSize {
+    return { columns: this.#columns, rows: this.#rows };
+  }
+
+  /**
+   * Read the next scripted chunk, or `null` after the queue drains. A queued
+   * resize applies its new viewport and yields one empty chunk, which the
+   * package's key reader skips, so the resize lands between keystrokes.
+   */
+  read(): Promise<Uint8Array | null> {
+    const next = this.#queue.shift();
+    if (next === undefined) return Promise.resolve(null);
+    if (next instanceof Uint8Array) return Promise.resolve(next);
+    this.#columns = next.columns;
+    this.#rows = next.rows ?? this.#rows;
+    return Promise.resolve(new Uint8Array(0));
+  }
+
+  /** Record a raw-mode transition. */
+  setRawMode(enabled: boolean): void {
+    this.rawTransitions.push(enabled);
+  }
+
+  /** Capture one terminal write. */
+  write(value: string): void {
+    this.writes.push(value);
+  }
+
+  /** Complete terminal output, including control sequences. */
+  output(): string {
+    return this.writes.join("");
+  }
+
+  /** Queue another UTF-8 input chunk. */
+  enqueue(value: string | Uint8Array): void {
+    this.#queue.push(
+      typeof value === "string" ? encoder.encode(value) : value.slice(),
+    );
+  }
+
+  /** Queue named keys as one input chunk through the real key decoder. */
+  enqueueKeys(...names: readonly TerminalKeyName[]): void {
+    this.enqueue(encodeTerminalKeys(...names));
+  }
+
+  /**
+   * Queue a viewport change that applies when the input queue reaches it,
+   * so a resize lands between earlier and later scripted keystrokes.
+   * Omitted rows keep the height current at that point in the script.
+   */
+  enqueueResize(columns: number, rows?: number): void {
+    this.#queue.push({ columns, rows });
+  }
+
+  /** Change the viewport returned by subsequent size and capability reads. */
+  resize(columns: number, rows = this.#rows): void {
+    this.#columns = columns;
+    this.#rows = rows;
+  }
+}
+
+/** Deterministic capabilities for exact terminal-frame tests. */
+export function testTerminalCapabilities(
+  overrides: Partial<TerminalCapabilities> = {},
+): TerminalCapabilities {
+  return {
+    ansiControl: true,
+    colorDepth: "none",
+    columns: 80,
+    unicode: true,
+    ...overrides,
+  };
+}
+
+function describeFrameLine(line: string | undefined): string {
+  return line === undefined ? "absent" : JSON.stringify(line);
+}
+
+function frameDifference(actual: string, expected: string): string {
+  const actualLines = actual.split("\n");
+  const expectedLines = expected.split("\n");
+  const length = Math.max(actualLines.length, expectedLines.length);
+  for (let index = 0; index < length; index += 1) {
+    if (actualLines[index] !== expectedLines[index]) {
+      return [
+        `Frame differs from the expected frame at line ${index + 1}.`,
+        `expected line: ${describeFrameLine(expectedLines[index])}`,
+        `received line: ${describeFrameLine(actualLines[index])}`,
+      ].join("\n");
+    }
+  }
+  return "Frame differs from the expected frame.";
+}
+
+/**
+ * Assert exact frame bytes and that every visible line fits the terminal.
+ * Failure names the first differing line rather than dumping both frames.
+ */
+export function assertExactFrame(
+  actual: string,
+  expected: string,
+  capabilities: TerminalCapabilities,
+): void {
+  if (actual !== expected) {
+    throw new Error(frameDifference(actual, expected));
+  }
+  for (const line of stripAnsi(actual).split("\n")) {
+    if (measureText(line) > capabilities.columns) {
+      throw new Error(
+        `${JSON.stringify(line)} is wider than ${capabilities.columns} columns`,
+      );
+    }
+  }
+}
+
+/**
+ * Assert a styled frame's ANSI-stripped plaintext contract: styling must be
+ * present, and what a person sees must match the expected plaintext exactly
+ * while fitting the terminal width.
+ */
+export function assertStyledFrame(
+  actual: string,
+  expectedPlaintext: string,
+  capabilities: TerminalCapabilities,
+): void {
+  if (!actual.includes(ESCAPE)) {
+    throw new Error("frame emitted no ANSI styling");
+  }
+  assertExactFrame(stripAnsi(actual), expectedPlaintext, capabilities);
+}
