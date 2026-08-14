@@ -11,6 +11,7 @@
 import {
   createSequentialForm,
   InteractionCancelled,
+  requestAcknowledgement,
   requestAutocomplete,
   requestConfirmation,
   requestMaskedText,
@@ -353,6 +354,22 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
         initialValue: "Added a terminal playground.\nNothing else changed.",
       }, { io: runtime.io });
       report(runtime, value);
+    },
+  },
+  {
+    id: "acknowledge",
+    title: "Acknowledgement",
+    section: "Interactive APIs",
+    description:
+      "The smallest request: a message acknowledged with Enter or Space; Escape dismisses it.",
+    run: async (runtime) => {
+      await requestAcknowledgement({
+        label: "Release note",
+        message:
+          "The playground restores your terminal after every journey, including cancelled ones.",
+        hint: "Press Enter or Space to continue.",
+      }, { io: runtime.io });
+      runtime.print("Result: acknowledged (void).");
     },
   },
   {
@@ -782,6 +799,7 @@ export const interactiveExportCoverage: Readonly<
     { readonly journey: string } | { readonly excluded: string }
   >
 > = {
+  requestAcknowledgement: { journey: "acknowledge" },
   requestText: { journey: "text" },
   requestMaskedText: { journey: "masked" },
   requestConfirmation: { journey: "confirm" },

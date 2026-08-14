@@ -5,21 +5,33 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
-import type { InteractiveFrameLifecycle } from "../../../cli/interactive-states.ts";
+import type {
+  AcknowledgementFrameState,
+  InteractiveFrameLifecycle,
+} from "../../../cli/interactive-states.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import { type FormCliPresentation, renderFormCliFrame } from "../form-frame.ts";
 
-/** Inputs accepted by the terminal Field renderer. */
-export interface FieldCliProps {
-  readonly label: string;
-  readonly control: string;
-  readonly lifecycle: InteractiveFrameLifecycle;
-  readonly hint?: string;
+/** Static presentation options shared by every Field rendering. */
+interface FieldCliOptions {
   readonly presentation?: FormCliPresentation;
   readonly required?: boolean;
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
+
+/** Direct labeled-control inputs rendered by the terminal Field shell. */
+export interface FieldControlCliProps extends FieldCliOptions {
+  readonly label: string;
+  readonly control: string;
+  readonly lifecycle: InteractiveFrameLifecycle;
+  readonly hint?: string;
+}
+
+/** Inputs accepted by the terminal Field renderer. */
+export type FieldCliProps =
+  | FieldControlCliProps
+  | (AcknowledgementFrameState & FieldCliOptions);
 
 const base = { label: "Environment", control: "staging" } as const;
 
@@ -72,13 +84,23 @@ export const cliExamples: readonly CliExample<FieldCliProps>[] = [
       lifecycle: { status: "cancelled", reason: "Selection cancelled" },
     },
   },
+  {
+    name: "acknowledgement",
+    props: {
+      kind: "acknowledgement",
+      label: "Heads up",
+      lifecycle: { status: "active" },
+      message: "Review the summary above.",
+      hint: "Press Enter to continue.",
+    },
+  },
 ] as const;
 
-/** Render a generic labeled form control with complete lifecycle messaging. */
+/** Render a generic labeled control or acknowledgement with full lifecycle messaging. */
 const renderFieldCli: CliRenderer<FieldCliProps> = (props, capabilities) =>
   renderFormCliFrame({
     label: props.label,
-    control: props.control,
+    control: "kind" in props ? props.message : props.control,
     lifecycle: props.lifecycle,
     ...(props.hint === undefined ? {} : { hint: props.hint }),
     ...(props.presentation === undefined

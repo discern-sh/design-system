@@ -1,10 +1,12 @@
 /**
- * Text, masked-text, and confirmation interaction state machines.
+ * Text, masked-text, confirmation, and acknowledgement interaction state
+ * machines.
  *
  * @module
  */
 
 import type {
+  AcknowledgementFrameState,
   ConfirmFrameState,
   InteractiveFrameLifecycle,
   MaskedInputFrameState,
@@ -12,6 +14,7 @@ import type {
 } from "../interactive-states.ts";
 import type { TerminalCapabilities } from "../capabilities.ts";
 import type { TerminalThemeVariant } from "../theme.ts";
+import renderFieldCli from "../../components/forms/field/field.cli.ts";
 import renderInputCli from "../../components/forms/input/input.cli.ts";
 import renderSwitchCli from "../../components/forms/switch/switch.cli.ts";
 import { GraphemeTextEditor, segmentGraphemes } from "./editor.ts";
@@ -211,5 +214,85 @@ export async function requestConfirmation(
     new ConfirmationInteractionMachine(options),
     runtime,
     renderConfirmFrame,
+  );
+}
+
+function renderAcknowledgementFrame(
+  state: AcknowledgementFrameState,
+  capabilities: TerminalCapabilities,
+  theme: TerminalThemeVariant | undefined,
+): string {
+  return renderFieldCli({
+    ...state,
+    ...(theme === undefined ? {} : { theme }),
+  }, capabilities);
+}
+
+/** Options for a message acknowledged with Enter or Space. */
+export interface AcknowledgementRequestOptions extends
+  Pick<
+    InteractionOptions<undefined>,
+    "label" | "hint" | "reservedRows"
+  > {
+  /** The message to acknowledge; long lines wrap inside the frame. */
+  readonly message: string;
+}
+
+function assertAcknowledgementMessage(message: string): void {
+  if (message.trim() === "") {
+    throw new TypeError("acknowledgement message must be non-empty");
+  }
+  if (/[^\P{Cc}\n]/u.test(message)) {
+    throw new TypeError(
+      "acknowledgement message must be control-free apart from newlines",
+    );
+  }
+}
+
+class AcknowledgementInteractionMachine
+  implements InteractionMachine<undefined, AcknowledgementFrameState> {
+  constructor(readonly options: AcknowledgementRequestOptions) {
+    assertAcknowledgementMessage(options.message);
+  }
+
+  handle(key: TerminalKey): boolean {
+    return isNamedKey(key, "enter") ||
+      (key.kind === "text" && key.text === " ");
+  }
+
+  value(): undefined {
+    return undefined;
+  }
+
+  frame(lifecycle: InteractiveFrameLifecycle): AcknowledgementFrameState {
+    return {
+      kind: "acknowledgement",
+      label: this.options.label,
+      lifecycle,
+      message: this.options.message,
+      hint: this.options.hint ?? "Press Enter to continue.",
+    };
+  }
+}
+
+/**
+ * Present a message until the person acknowledges it with Enter or Space.
+ * Cancellation follows the standard contract: Escape dismisses, Ctrl+C
+ * cancels, and end of input ends the request.
+ */
+export async function requestAcknowledgement(
+  options: AcknowledgementRequestOptions,
+  runtime: InteractionRuntime = {},
+): Promise<void> {
+  await runInteraction(
+    {
+      label: options.label,
+      ...(options.reservedRows === undefined
+        ? {}
+        : { reservedRows: options.reservedRows }),
+    },
+    new AcknowledgementInteractionMachine(options),
+    runtime,
+    renderAcknowledgementFrame,
   );
 }

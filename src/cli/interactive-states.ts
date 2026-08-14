@@ -131,6 +131,12 @@ export interface AutocompleteFrameState extends InteractiveFrameBase {
   readonly pending?: boolean;
 }
 
+/** Visual state for a message acknowledged by a single continue action. */
+export interface AcknowledgementFrameState extends InteractiveFrameBase {
+  readonly kind: "acknowledgement";
+  readonly message: string;
+}
+
 /** Visual state for a multi-line editable text area. */
 export interface TextareaFrameState extends InteractiveFrameBase {
   readonly kind: "textarea";
@@ -192,6 +198,7 @@ export type InteractiveFrameState =
   | SearchFrameState
   | SearchMultiselectFrameState
   | AutocompleteFrameState
+  | AcknowledgementFrameState
   | TextareaFrameState
   | SpinnerFrameState
   | DeterminateProgressFrameState

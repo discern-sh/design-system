@@ -155,6 +155,7 @@ const fieldFrames = [
   "Environment [disabled]\n┌──────────────────────────┐\n│staging                   │\n└──────────────────────────┘\nDisabled",
   "Environment [submitted]\n┌──────────────────────────┐\n│staging                   │\n└──────────────────────────┘\n✓ Submitted",
   "Environment [cancelled]\n┌──────────────────────────┐\n│staging                   │\n└──────────────────────────┘\n× Selection cancelled",
+  "Heads up [active]\n┌──────────────────────────┐\n│Review the summary above. │\n└──────────────────────────┘\nPress Enter to continue.",
 ] as const;
 
 Deno.test("Field renders every static form state exactly", () => {
