@@ -11,7 +11,10 @@ import {
   styleSemanticText,
 } from "../../src/cli/narration.ts";
 import type { TerminalTextRole } from "../../src/cli/theme.ts";
-import { assertExactFrame, testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
+import {
+  assertExactFrame,
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 const ESC = "\u001b";
 

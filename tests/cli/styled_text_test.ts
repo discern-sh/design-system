@@ -243,7 +243,10 @@ Deno.test("styled truncation respects hyperlink edges exactly", () => {
 Deno.test("styled truncation mirrors plain marker and depth-none behaviour", () => {
   const ansi16 = testTerminalCapabilities({ colorDepth: "ansi16" });
   assertEquals(
-    truncateStyledText(styleText("abcdef", { color }, testTerminalCapabilities()), 4),
+    truncateStyledText(
+      styleText("abcdef", { color }, testTerminalCapabilities()),
+      4,
+    ),
     truncateText("abcdef", 4),
   );
   assertEquals(
