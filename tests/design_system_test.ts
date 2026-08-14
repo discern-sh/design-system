@@ -1930,6 +1930,7 @@ Deno.test("branding and hover-card adapters preserve their semantic relationship
   );
   assertStringIncludes(quietToggle, "discern-theme-toggle--quiet");
   assertStringIncludes(quietToggle, 'aria-label="Switch to the dark theme"');
+  assert(!quietToggle.includes("aria-pressed"));
 
   const hoverCard = renderToStaticMarkup(
     createElement(HoverCard, {
