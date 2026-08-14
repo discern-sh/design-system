@@ -20,7 +20,7 @@ export default {
   accessibility: [
     "The streamed tail is a native log role, so assistive technology can treat newly added lines as a polite live region.",
     "Stable-line tones pair a distinct marker glyph with their colour, so severity survives without colour perception.",
-    "The active marker's pulse is decorative, hidden from assistive technology, and removed when reduced motion is requested.",
+    "The headline speaks its active, complete, or cancelled status as text while the marker glyph stays decorative.",
     "All text sizes stay at or above the authored interface floor, including the monospace tail.",
   ],
 } satisfies ComponentMeta;

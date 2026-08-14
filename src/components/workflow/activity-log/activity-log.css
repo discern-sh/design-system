@@ -24,9 +24,6 @@
     color: var(--discern-color-accent-600);
     font-size: var(--discern-font-size-xs);
   }
-  .discern-activity-log[data-discern-status="active"] .discern-activity-log__marker {
-    animation: discern-activity-log-pulse 1.2s ease-in-out infinite;
-  }
   .discern-activity-log[data-discern-status="cancelled"] .discern-activity-log__marker {
     color: var(--discern-color-ink-faint);
   }
@@ -70,7 +67,6 @@
     flex-direction: column;
     padding: var(--discern-space-3);
     border-inline-start: 2px solid var(--discern-color-border-strong);
-    border-radius: var(--discern-radius-xs);
     background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink-muted);
     font-family: var(--discern-font-mono);
@@ -92,19 +88,5 @@
     margin: 0;
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-xs);
-  }
-  @keyframes discern-activity-log-pulse {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.35;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .discern-activity-log[data-discern-status="active"] .discern-activity-log__marker {
-      animation: none;
-    }
   }
 }
