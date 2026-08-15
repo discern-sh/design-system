@@ -5,17 +5,17 @@
  */
 
 import type { TerminalCapabilities } from "./capabilities.ts";
-import { stripAnsi, styleText, type TerminalTextStyle } from "./ansi.ts";
+import { styleText, type TerminalTextStyle } from "./ansi.ts";
 import {
   measureText,
   padText,
   truncateText,
-  wrapTextPreservingIndent,
+  wrapStyledTextPreservingIndent,
 } from "./text.ts";
 
 function wrapBoxLine(line: string, width: number): readonly string[] {
   if (measureText(line) <= width) return [line];
-  return wrapTextPreservingIndent(stripAnsi(line), width);
+  return wrapStyledTextPreservingIndent(line, width);
 }
 
 /** Inputs for a bordered terminal text frame. */
@@ -25,6 +25,10 @@ export interface TerminalBoxOptions {
   readonly width?: number;
   readonly padding?: number;
   readonly borderStyle?: TerminalTextStyle;
+  /** Optional status embedded in the lower border. */
+  readonly bottomLabel?: string;
+  /** Styling applied only to the lower-border status. */
+  readonly bottomLabelStyle?: TerminalTextStyle;
 }
 
 /** Render a width-bounded box using Unicode or intentional ASCII borders. */
@@ -91,11 +95,32 @@ export function renderBox(
   const top = `${border(glyphs.topLeft)}${border(title)}${border(topFill)}${
     border(glyphs.topRight)
   }`;
-  const bottom = border(
-    `${glyphs.bottomLeft}${
-      glyphs.horizontal.repeat(width - 2)
-    }${glyphs.bottomRight}`,
+  const bottomLabel = options.bottomLabel === undefined ||
+      options.bottomLabel === ""
+    ? ""
+    : ` ${
+      truncateText(
+        options.bottomLabel,
+        Math.max(0, width - 5),
+        capabilities.unicode ? "…" : ".",
+      )
+    } `;
+  const bottomFill = glyphs.horizontal.repeat(
+    Math.max(0, width - 3 - measureText(bottomLabel)),
   );
+  const bottom = bottomLabel === ""
+    ? border(
+      `${glyphs.bottomLeft}${
+        glyphs.horizontal.repeat(width - 2)
+      }${glyphs.bottomRight}`,
+    )
+    : `${border(glyphs.bottomLeft)}${border(bottomFill)}${
+      styleText(
+        bottomLabel,
+        options.bottomLabelStyle ?? borderStyle,
+        capabilities,
+      )
+    }${border(glyphs.horizontal)}${border(glyphs.bottomRight)}`;
   const bodyLines = options.body.split("\n").flatMap((line) =>
     wrapBoxLine(line, innerWidth)
   );

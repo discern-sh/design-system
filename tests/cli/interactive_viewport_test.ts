@@ -156,6 +156,20 @@ Deno.test("the renderer-measured authority enrolls future interaction machines",
   assertEquals(fitted.state.rows, 3);
   assert(attempts.length > 1);
 
+  const largest = fitInteractionFrame({
+    viewportRows: 6,
+    frame: ({ maximumControlRows }) => ({
+      controlRows: maximumControlRows,
+      renderedRows: maximumControlRows === 6 ? 9 : 6,
+    }),
+    render: ({ renderedRows }) => Array(renderedRows).fill("row").join("\n"),
+  });
+  assertEquals(
+    largest.controlRows,
+    5,
+    "fitting must not skip a larger non-linear control window",
+  );
+
   assertThrows(
     () =>
       fitInteractionFrame({
@@ -396,7 +410,7 @@ Deno.test("paging jumps follow the fitted window rather than the requested count
       choices: groupedChoices,
       visibleCount: 16,
     }, { io }),
-    "1-3",
+    "1-0",
   );
   for (const frame of displayedFrames(io)) {
     assert(

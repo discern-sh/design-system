@@ -253,7 +253,7 @@ Deno.test("the reservation and viewport budget bound query-filtered frames", asy
     label: "Reserved roles",
     search: (query) => filterCatalogue(query),
     visibleCount: 16,
-    reservedRows: 13,
+    reservedRows: 12,
   }, { io });
   const frames = io.writes.flatMap((write) => {
     const eraseAt = write.indexOf("\x1b[J");
@@ -266,8 +266,8 @@ Deno.test("the reservation and viewport budget bound query-filtered frames", asy
   for (const frame of frames) {
     const rows = frame.replace(/\n$/u, "").split("\n").length;
     assert(
-      rows <= 7,
-      `rendered ${rows} rows into a 7-row remainder below the reservation`,
+      rows <= 8,
+      `rendered ${rows} rows into an 8-row remainder below the reservation`,
     );
   }
 });
@@ -324,7 +324,7 @@ Deno.test("the renderer holds query-filtered frames across widths, depths, and r
   const narrow = testTerminalCapabilities({ columns: 20 });
   assertExactFrame(
     renderCheckboxCli({ ...state, width: 20 }, narrow),
-    `Roles [active]\n┌──────────────────┐\n│re▌               │\n│› [✓] Render      │\n│${
+    `Roles [active]\n┌──────────────────┐\n│re▌               │\n│› [✓] Render      │\n│                  │\n│${
       headingRule("Selected", 18)
     }│\n│  [✓] Animate     │\n└──────────────────┘\n`,
     narrow,
@@ -332,7 +332,7 @@ Deno.test("the renderer holds query-filtered frames across widths, depths, and r
   const ascii = testTerminalCapabilities({ columns: 26, unicode: false });
   assertExactFrame(
     renderCheckboxCli({ ...state, width: 26 }, ascii),
-    `Roles [active]\n+------------------------+\n|re|                     |\n|> [x] Render            |\n|${
+    `Roles [active]\n+------------------------+\n|re|                     |\n|> [x] Render            |\n|                        |\n|${
       headingRule("Selected", 24, false)
     }|\n|  [x] Animate           |\n+------------------------+\n`,
     ascii,
@@ -343,7 +343,7 @@ Deno.test("the renderer holds query-filtered frames across widths, depths, and r
   });
   assertStyledFrame(
     renderCheckboxCli({ ...state, width: 26 }, styled),
-    `Roles [active]\n┌────────────────────────┐\n│re▌                     │\n│› [✓] Render            │\n│${
+    `Roles [active]\n┌────────────────────────┐\n│re▌                     │\n│› [✓] Render            │\n│                        │\n│${
       headingRule("Selected", 24)
     }│\n│  [✓] Animate           │\n└────────────────────────┘\n`,
     styled,

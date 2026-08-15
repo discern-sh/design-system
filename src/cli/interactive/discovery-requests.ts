@@ -18,7 +18,10 @@ import type {
 } from "../interactive-states.ts";
 import type { TerminalCapabilities } from "../capabilities.ts";
 import type { TerminalThemeVariant } from "../theme.ts";
-import { interactiveChoiceWindow } from "../interactive-choice.ts";
+import {
+  interactiveChoiceOverflow,
+  interactiveChoiceWindow,
+} from "../interactive-choice.ts";
 import renderCheckboxCli from "../../components/forms/checkbox/checkbox.cli.ts";
 import renderInputCli from "../../components/forms/input/input.cli.ts";
 import renderRadioCli from "../../components/forms/radio/radio.cli.ts";
@@ -330,8 +333,9 @@ class SearchInteractionMachine<T>
       this.#matches.length,
       visibleCount,
     );
+    const choices = frameChoices(this.#matches);
     const visible = interactiveChoiceWindow(
-      frameChoices(this.#matches),
+      choices,
       start,
       visibleCount,
     );
@@ -347,6 +351,7 @@ class SearchInteractionMachine<T>
       query: this.#editor.value,
       cursor: this.#editor.cursor,
       results: visible.map(({ entry }) => entry),
+      ...interactiveChoiceOverflow(choices, start, visibleCount),
       ...(this.#calls.pending ? { pending: true } : {}),
       ...(highlightedIndex < 0 ? {} : { highlightedIndex }),
       ...(this.options.hint === undefined ? {} : { hint: this.options.hint }),
@@ -518,8 +523,9 @@ class SearchSelectionsInteractionMachine<T>
       this.#entries.length,
       visibleCount,
     );
+    const choices = frameChoices(this.#entries);
     const visible = interactiveChoiceWindow(
-      frameChoices(this.#entries),
+      choices,
       start,
       visibleCount,
     );
@@ -536,6 +542,7 @@ class SearchSelectionsInteractionMachine<T>
       cursor: this.#editor.cursor,
       results: visible.map(({ entry }) => entry),
       selectedIds: [...this.#selected.keys()],
+      ...interactiveChoiceOverflow(choices, start, visibleCount),
       ...(this.#calls.pending ? { pending: true } : {}),
       ...(highlightedIndex < 0 ? {} : { highlightedIndex }),
       ...(this.options.hint === undefined ? {} : { hint: this.options.hint }),

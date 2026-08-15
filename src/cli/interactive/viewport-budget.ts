@@ -38,8 +38,7 @@ export function fitInteractionFrame<State>(options: {
     if (frameRows <= viewportRows) {
       return { state, rendered, frameRows, viewportRows, controlRows };
     }
-    const overflow = frameRows - viewportRows;
-    controlRows -= Math.max(1, overflow);
+    controlRows -= 1;
   }
   throw new TypeError(
     `terminal viewport of ${viewportRows} row(s) cannot hold a coherent interaction frame`,

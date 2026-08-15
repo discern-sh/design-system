@@ -1,9 +1,12 @@
-import { assertEquals } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
+import { stripAnsi, styleText } from "../../src/cli/ansi.ts";
+import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
 import {
   graphemeWidth,
   measureText,
   padText,
   truncateText,
+  wrapStyledTextPreservingIndent,
   wrapText,
   wrapTextPreservingIndent,
 } from "../../src/cli/text.ts";
@@ -47,6 +50,19 @@ Deno.test("indent-preserving wrap hangs continuations under the indentation", ()
     wrapTextPreservingIndent("\x1b[31m    styled words here\x1b[0m", 12),
     ["    styled", "    words", "    here"],
   );
+});
+
+Deno.test("styled indent-preserving wrap keeps style on every continuation", () => {
+  const capabilities = testTerminalCapabilities({
+    columns: 12,
+    colorDepth: "truecolor",
+  });
+  const lines = wrapStyledTextPreservingIndent(
+    styleText("  alpha beta gamma", { bold: true }, capabilities),
+    9,
+  );
+  assertEquals(lines.map(stripAnsi), ["  alpha", "  beta", "  gamma"]);
+  assert(lines.every((line) => line.includes(String.fromCharCode(27))));
 });
 
 Deno.test("padding aligns by visible cells", () => {

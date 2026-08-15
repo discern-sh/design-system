@@ -109,7 +109,7 @@ Deno.test("a reservation keeps a full-budget list out of the caller's header ban
   );
   assertExactFrame(
     io.writes[2] ?? "",
-    "Reserved [active]\n┌────────────────────────────────────────┐\n│━━ ◮ GROUP 1 ━━━━━━━━━━━━━━━━━━━━━━━━━━━│\n│› [●] Choice 1.1                        │\n│  [ ] Choice 1.2                        │\n│  [ ] Choice 1.3                        │\n└────────────────────────────────────────┘\n",
+    "Reserved [active]\n┌────────────────────────────────────────┐\n│                                        │\n│━━ ◮ GROUP 1 ━━━━━━━━━━━━━━━━━━━━━━━━━━━│\n│› [●] Choice 1.1                        │\n│  [ ] Choice 1.2                        │\n└──────────────────────────── ↓ 14 more ─┘\n",
     testTerminalCapabilities({ columns: 42 }),
   );
 });
@@ -164,16 +164,16 @@ Deno.test("every request kind honors the caller's reservation", async () => {
   > = [
     [
       "text",
-      (io) => requestText({ label: "Text", reservedRows: 13 }, { io }),
+      (io) => requestText({ label: "Text", reservedRows: 12 }, { io }),
     ],
     [
       "masked",
-      (io) => requestMaskedText({ label: "Masked", reservedRows: 13 }, { io }),
+      (io) => requestMaskedText({ label: "Masked", reservedRows: 12 }, { io }),
     ],
     [
       "confirm",
       (io) =>
-        requestConfirmation({ label: "Confirm", reservedRows: 13 }, { io }),
+        requestConfirmation({ label: "Confirm", reservedRows: 12 }, { io }),
     ],
     [
       "select",
@@ -182,7 +182,7 @@ Deno.test("every request kind honors the caller's reservation", async () => {
           label: "Select",
           choices: groupedChoices,
           visibleCount: 16,
-          reservedRows: 13,
+          reservedRows: 12,
         }, { io }),
     ],
     [
@@ -192,7 +192,7 @@ Deno.test("every request kind honors the caller's reservation", async () => {
           label: "Multi",
           choices: groupedChoices,
           visibleCount: 16,
-          reservedRows: 13,
+          reservedRows: 12,
         }, { io }),
     ],
     [
@@ -202,7 +202,7 @@ Deno.test("every request kind honors the caller's reservation", async () => {
           label: "Search",
           search: () => groupedChoices,
           visibleCount: 16,
-          reservedRows: 13,
+          reservedRows: 12,
         }, { io }),
     ],
     [
@@ -211,13 +211,13 @@ Deno.test("every request kind honors the caller's reservation", async () => {
         requestAutocomplete({
           label: "Auto",
           suggestions: ["one", "two"],
-          reservedRows: 13,
+          reservedRows: 12,
         }, { io }),
     ],
     [
       "textarea",
       (io) =>
-        requestTextarea({ label: "Notes", rows: 12, reservedRows: 13 }, { io }),
+        requestTextarea({ label: "Notes", rows: 12, reservedRows: 12 }, { io }),
     ],
   ];
   for (const [kind, run] of budgetted) {
@@ -230,10 +230,10 @@ Deno.test("every request kind honors the caller's reservation", async () => {
     await run(io);
     for (const frame of paintedFrames(io)) {
       assert(
-        frameRows(frame) <= 7,
+        frameRows(frame) <= 8,
         `${kind} rendered ${
           frameRows(frame)
-        } rows into a 7-row remainder below a 13-row reservation`,
+        } rows into an 8-row remainder below a 12-row reservation`,
       );
     }
   }

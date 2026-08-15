@@ -4,6 +4,10 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## Unreleased
+
+- Fix scrolling choice frames across Select, Checkbox, and Radio: they now use all available terminal columns unless explicitly narrowed; wrap styled labels beneath a stable pointer-and-marker prefix so highlight movement cannot reflow them; put one empty framed row above every semantic group heading; and disclose hidden choices in a quiet lower-border status such as `↑ 2 more · ↓ 7 more`, with plain ASCII equivalents. Provider-backed search states retain the before/after counts needed to render that status, Box preserves package styling while wrapping and accepts a styled lower-border label, and viewport fitting now selects the largest actually fitting window when structural rows make frame growth non-linear. Prose-oriented frames retain the Token-derived 62-column measure.
+
 ## 0.15.0
 
 - Rename the local Style Guide source, bundle, and canonical route to the Catalogue, with legacy browser routes redirecting to `/catalogue/`. Replace the toolbar's implicit page filter with an explicit Search Palette of Component, Token, and composition destinations; disable each reasoned-exempt CLI choice before selection and expose its Metadata reason as a tooltip; and present rendered CLI examples on one bare, cell-stable monospace surface without nested Terminal window chrome. The actual terminal renderers and their exact frame geometry are unchanged.

@@ -12,12 +12,14 @@ import {
 } from "../../../cli/interactive-choice.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
+  formCliChoiceFrameWidth,
   type FormCliPresentation,
   renderFormCliChoiceHeading,
+  renderFormCliChoiceRow,
   renderFormCliFrame,
-  styleFormCliChoiceText,
   styleFormCliSelectedMark,
   visibleFormCliChoiceEntries,
+  visibleFormCliChoiceOverflow,
 } from "../form-frame.ts";
 
 /** Inputs accepted by the terminal Select renderer. */
@@ -120,11 +122,32 @@ export const cliExamples: readonly CliExample<SelectCliProps>[] = [
       lifecycle: { status: "active" },
     },
   },
+  {
+    name: "windowed",
+    props: {
+      ...base,
+      options: [
+        {
+          id: "alpha",
+          label:
+            "A deliberately long navigation choice whose continuation stays aligned beneath its label",
+        },
+        { id: "bravo", label: "Bravo" },
+        { id: "charlie", label: "Charlie" },
+        { id: "delta", label: "Delta" },
+        { id: "echo", label: "Echo" },
+      ],
+      visibleStart: 0,
+      visibleCount: 2,
+      lifecycle: { status: "active" },
+    },
+  },
 ] as const;
 
 /** Render a Wave 1 single-selection state as a collapsed or expanded terminal Select. */
 const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
   const state = props;
+  const width = formCliChoiceFrameWidth(props.width, capabilities);
   const highlighted = state.options[state.highlightedIndex];
   const selectable = state.options.some((entry) =>
     isInteractiveChoice(entry) && entry.disabled !== true
@@ -154,7 +177,7 @@ const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
           entry,
           {
             ...(props.theme === undefined ? {} : { theme: props.theme }),
-            ...(props.width === undefined ? {} : { width: props.width }),
+            width,
           },
           capabilities,
         );
@@ -162,7 +185,9 @@ const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
       const option = entry;
       const absoluteIndex = sourceIndex;
       const isHighlighted = absoluteIndex === state.highlightedIndex;
-      const pointer = isHighlighted ? capabilities.unicode ? "›" : ">" : " ";
+      const pointer = isHighlighted
+        ? `${capabilities.unicode ? "›" : ">"} `
+        : "  ";
       const selected = option.id === state.selectedId;
       const mark = selected ? capabilities.unicode ? "●" : "*" : " ";
       const styleOptions = {
@@ -173,14 +198,21 @@ const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
       const label = `${option.label}${
         option.disabled === true ? " (disabled)" : ""
       }`;
-      return `${styleFormCliChoiceText(pointer, styleOptions, capabilities)} [${
+      const marker = `[${
         styleFormCliSelectedMark(
           mark,
           selected,
           styleOptions,
           capabilities,
         )
-      }] ${styleFormCliChoiceText(label, styleOptions, capabilities)}`;
+      }]`;
+      return renderFormCliChoiceRow({
+        pointer,
+        marker,
+        label,
+        ...styleOptions,
+        width,
+      }, capabilities);
     }).join("\n")
     : `${selected?.label ?? props.placeholder ?? "Choose an option"} ${
       capabilities.unicode ? "⌄" : "v"
@@ -195,7 +227,10 @@ const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
       : { presentation: props.presentation }),
     ...(props.required === undefined ? {} : { required: props.required }),
     ...(props.theme === undefined ? {} : { theme: props.theme }),
-    ...(props.width === undefined ? {} : { width: props.width }),
+    width,
+    ...(expanded
+      ? { choiceOverflow: visibleFormCliChoiceOverflow(state) }
+      : {}),
   }, capabilities);
 };
 

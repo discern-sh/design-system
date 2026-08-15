@@ -3,6 +3,7 @@
 import type {
   InteractiveChoiceEntryState,
   InteractiveChoiceGroupHeadingState,
+  InteractiveChoiceOverflowState,
   InteractiveChoiceState,
 } from "./interactive-states.ts";
 
@@ -66,4 +67,32 @@ export function interactiveChoiceWindow(
     }
   }
   return visible;
+}
+
+/**
+ * Count choice rows before and after one raw-entry viewport. Semantic
+ * headings describe choices but are not themselves reported as hidden items.
+ */
+export function interactiveChoiceOverflow(
+  entries: readonly InteractiveChoiceEntryState[],
+  start: number,
+  count: number,
+): Required<InteractiveChoiceOverflowState> {
+  if (!Number.isSafeInteger(start) || start < 0 || start > entries.length) {
+    throw new TypeError(
+      `choice visible start must be between 0 and ${entries.length}; received ${start}`,
+    );
+  }
+  if (!Number.isSafeInteger(count) || count < 0) {
+    throw new TypeError(
+      `choice visible count must be a non-negative safe integer; received ${count}`,
+    );
+  }
+  const countChoices = (
+    candidates: readonly InteractiveChoiceEntryState[],
+  ): number => candidates.filter(isInteractiveChoice).length;
+  return {
+    hiddenChoicesBefore: countChoices(entries.slice(0, start)),
+    hiddenChoicesAfter: countChoices(entries.slice(start + count)),
+  };
 }

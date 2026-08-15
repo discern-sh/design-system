@@ -316,6 +316,36 @@ export function wrapStyledText(
 }
 
 /**
+ * Wrap package-styled text while retaining each source line's leading-space
+ * indentation on every continuation. This is the styled counterpart to
+ * {@linkcode wrapTextPreservingIndent}: fitting lines keep their complete
+ * styled projection, while over-wide content reflows through
+ * {@linkcode wrapStyledText} so every emitted line owns a closed styling and
+ * hyperlink envelope.
+ */
+export function wrapStyledTextPreservingIndent(
+  value: string,
+  columns: number,
+): readonly string[] {
+  assertColumns("wrap", columns, 1);
+  return splitStyledParagraphs(parseStyledSource(value)).flatMap((segments) => {
+    const plain = segments.map((segment) => segment.text).join("");
+    if (lineWidth(plain) <= columns) return [emitStyledLine(segments)];
+    const leadingSpaces = plain.match(/^ +/u)?.[0] ?? "";
+    const indentLength = Math.min(leadingSpaces.length, columns - 1);
+    const indent = emitStyledLine(
+      sliceStyledSegments(segments, 0, indentLength),
+    );
+    const content = emitStyledLine(
+      sliceStyledSegments(segments, leadingSpaces.length, plain.length),
+    );
+    return wrapStyledText(content, columns - indentLength).map((line) =>
+      `${indent}${line}`
+    );
+  });
+}
+
+/**
  * Pad one line to a visible width without truncating over-wide content.
  * Styled and hyperlinked content pads by its visible width alone — escape
  * sequences and OSC 8 envelopes measure zero cells — and the added spaces

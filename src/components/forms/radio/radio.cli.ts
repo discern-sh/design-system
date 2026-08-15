@@ -15,14 +15,17 @@ import {
 } from "../../../cli/interactive-choice.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
+  formCliChoiceFrameWidth,
   formCliEmptyResultsRow,
   type FormCliPresentation,
   insertFormCliCursor,
   renderFormCliChoiceHeading,
+  renderFormCliChoiceRow,
   renderFormCliFrame,
-  styleFormCliChoiceText,
+  renderFormCliQueryChoices,
   styleFormCliSelectedMark,
   visibleFormCliChoiceEntries,
+  visibleFormCliChoiceOverflow,
 } from "../form-frame.ts";
 
 /** Inputs accepted by the terminal Radio renderer. */
@@ -132,11 +135,28 @@ export const cliExamples: readonly CliExample<RadioCliProps>[] = [
       pending: true,
     },
   },
+  {
+    name: "windowed",
+    props: {
+      ...base,
+      options: [
+        { id: "alpha", label: "Alpha" },
+        { id: "bravo", label: "Bravo" },
+        { id: "charlie", label: "Charlie" },
+        { id: "delta", label: "Delta" },
+        { id: "echo", label: "Echo" },
+      ],
+      visibleStart: 0,
+      visibleCount: 2,
+      lifecycle: { status: "active" },
+    },
+  },
 ] as const;
 
 /** Render a Wave 1 single-selection state as a terminal radio group. */
 const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
   const state = props;
+  const width = formCliChoiceFrameWidth(props.width, capabilities);
   const options = state.kind === "search" ? state.results : state.options;
   const highlightedIndex = state.kind === "search"
     ? state.highlightedIndex
@@ -184,7 +204,7 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
           entry,
           {
             ...(props.theme === undefined ? {} : { theme: props.theme }),
-            ...(props.width === undefined ? {} : { width: props.width }),
+            width,
           },
           capabilities,
         );
@@ -223,20 +243,25 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
       const label = `${option.label}${
         option.disabled === true ? " (disabled)" : ""
       }`;
-      return `${
-        styleFormCliChoiceText(pointer, styleOptions, capabilities)
-      }${marker} ${styleFormCliChoiceText(label, styleOptions, capabilities)}`;
+      return renderFormCliChoiceRow({
+        pointer,
+        marker,
+        label,
+        ...styleOptions,
+        width,
+      }, capabilities);
     });
   const control = state.kind === "search"
-    ? `${
+    ? renderFormCliQueryChoices(
       state.lifecycle.status === "submitted"
         ? state.query
         : insertFormCliCursor(
           state.query === "" ? state.placeholder ?? "" : state.query,
           state.cursor,
           capabilities,
-        )
-    }\n${choices.join("\n")}`
+        ),
+      choices.join("\n"),
+    )
     : choices.join("\n");
   return renderFormCliFrame({
     label: state.label,
@@ -251,7 +276,10 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
       : { presentation: props.presentation }),
     ...(props.required === undefined ? {} : { required: props.required }),
     ...(props.theme === undefined ? {} : { theme: props.theme }),
-    ...(props.width === undefined ? {} : { width: props.width }),
+    width,
+    choiceOverflow: state.kind === "select"
+      ? visibleFormCliChoiceOverflow(state)
+      : state,
   }, capabilities);
 };
 

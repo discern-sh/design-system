@@ -16,14 +16,17 @@ import {
 } from "../../../cli/interactive-choice.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
+  formCliChoiceFrameWidth,
   formCliEmptyResultsRow,
   type FormCliPresentation,
   insertFormCliCursor,
   renderFormCliChoiceHeading,
+  renderFormCliChoiceRow,
   renderFormCliFrame,
-  styleFormCliChoiceText,
+  renderFormCliQueryChoices,
   styleFormCliSelectedMark,
   visibleFormCliChoiceEntries,
+  visibleFormCliChoiceOverflow,
 } from "../form-frame.ts";
 
 /** Inputs accepted by the terminal Checkbox renderer. */
@@ -130,6 +133,25 @@ export const cliExamples: readonly CliExample<CheckboxCliProps>[] = [
       highlightedIndex: 0,
     },
   },
+  {
+    name: "windowed",
+    props: {
+      kind: "multiselect",
+      label: "Capabilities",
+      lifecycle: { status: "active" },
+      options: [
+        { id: "render", label: "Render" },
+        { id: "inspect", label: "Inspect" },
+        { id: "animate", label: "Animate" },
+        { id: "export", label: "Export" },
+        { id: "publish", label: "Publish" },
+      ],
+      highlightedIndex: 0,
+      selectedIds: [],
+      visibleStart: 0,
+      visibleCount: 2,
+    },
+  },
 ] as const;
 
 /** Render a Wave 1 confirmation state with checkbox semantics. */
@@ -141,10 +163,11 @@ const renderCheckboxCli: CliRenderer<CheckboxCliProps> = (
   const active = props.presentation === undefined &&
     (state.lifecycle.status === "active" ||
       state.lifecycle.status === "validation-error");
+  const choiceWidth = formCliChoiceFrameWidth(props.width, capabilities);
   const control = state.kind === "multiselect"
-    ? renderMultiselectControl(state, active, capabilities)
+    ? renderMultiselectControl(state, active, choiceWidth, capabilities)
     : state.kind === "search-multiselect"
-    ? renderSearchMultiselectControl(state, active, capabilities)
+    ? renderSearchMultiselectControl(state, active, choiceWidth, capabilities)
     : renderConfirmControl(state, active, capabilities);
   return renderFormCliFrame({
     label: state.label,
@@ -159,7 +182,14 @@ const renderCheckboxCli: CliRenderer<CheckboxCliProps> = (
       : { presentation: props.presentation }),
     ...(props.required === undefined ? {} : { required: props.required }),
     ...(props.theme === undefined ? {} : { theme: props.theme }),
-    ...(props.width === undefined ? {} : { width: props.width }),
+    ...(state.kind === "confirm"
+      ? props.width === undefined ? {} : { width: props.width }
+      : { width: choiceWidth }),
+    ...(state.kind === "multiselect"
+      ? { choiceOverflow: visibleFormCliChoiceOverflow(state) }
+      : state.kind === "search-multiselect"
+      ? { choiceOverflow: state }
+      : {}),
   }, capabilities);
 };
 
@@ -189,6 +219,7 @@ function renderConfirmControl(
 function renderMultiselectControl(
   state: MultiselectFrameState & CheckboxCliOptions,
   active: boolean,
+  width: number,
   capabilities: Parameters<CliRenderer<CheckboxCliProps>>[1],
 ): string {
   const highlighted = state.options[state.highlightedIndex];
@@ -223,7 +254,7 @@ function renderMultiselectControl(
         entry,
         {
           ...(state.theme === undefined ? {} : { theme: state.theme }),
-          ...(state.width === undefined ? {} : { width: state.width }),
+          width,
         },
         capabilities,
       );
@@ -240,19 +271,24 @@ function renderMultiselectControl(
     const label = `${option.label}${
       option.disabled === true ? " (disabled)" : ""
     }`;
-    return `${styleFormCliChoiceText(pointer, styleOptions, capabilities)}${
-      checkboxMark(
+    return renderFormCliChoiceRow({
+      pointer,
+      marker: checkboxMark(
         state.selectedIds.includes(option.id),
         capabilities,
         styleOptions,
-      )
-    } ${styleFormCliChoiceText(label, styleOptions, capabilities)}`;
+      ),
+      label,
+      ...styleOptions,
+      width,
+    }, capabilities);
   }).join("\n");
 }
 
 function renderSearchMultiselectControl(
   state: SearchMultiselectFrameState & CheckboxCliOptions,
   active: boolean,
+  width: number,
   capabilities: Parameters<CliRenderer<CheckboxCliProps>>[1],
 ): string {
   const entries = state.results;
@@ -284,7 +320,7 @@ function renderSearchMultiselectControl(
           entry,
           {
             ...(state.theme === undefined ? {} : { theme: state.theme }),
-            ...(state.width === undefined ? {} : { width: state.width }),
+            width,
           },
           capabilities,
         );
@@ -299,13 +335,17 @@ function renderSearchMultiselectControl(
       const label = `${entry.label}${
         entry.disabled === true ? " (disabled)" : ""
       }`;
-      return `${styleFormCliChoiceText(pointer, styleOptions, capabilities)}${
-        checkboxMark(
+      return renderFormCliChoiceRow({
+        pointer,
+        marker: checkboxMark(
           state.selectedIds.includes(entry.id),
           capabilities,
           styleOptions,
-        )
-      } ${styleFormCliChoiceText(label, styleOptions, capabilities)}`;
+        ),
+        label,
+        ...styleOptions,
+        width,
+      }, capabilities);
     });
   const query = state.lifecycle.status === "submitted"
     ? state.query
@@ -314,7 +354,7 @@ function renderSearchMultiselectControl(
       state.cursor,
       capabilities,
     );
-  return `${query}\n${rows.join("\n")}`;
+  return renderFormCliQueryChoices(query, rows.join("\n"));
 }
 
 export default renderCheckboxCli;

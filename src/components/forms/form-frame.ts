@@ -10,14 +10,16 @@ import type { TerminalCapabilities } from "../../cli/capabilities.ts";
 import { defaultTerminalFrameWidth } from "../../cli/frame-measure.ts";
 import type {
   InteractiveChoiceGroupHeadingState,
+  InteractiveChoiceOverflowState,
   InteractiveFrameLifecycle,
   SelectFrameState,
 } from "../../cli/interactive-states.ts";
 import {
+  interactiveChoiceOverflow,
   interactiveChoiceWindow,
   type InteractiveChoiceWindowEntry,
 } from "../../cli/interactive-choice.ts";
-import { truncateText } from "../../cli/text.ts";
+import { measureText, truncateText, wrapStyledText } from "../../cli/text.ts";
 import {
   terminalThemeColor,
   terminalThemes,
@@ -45,6 +47,8 @@ export interface FormCliFrameOptions {
   readonly presentation?: FormCliPresentation;
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
+  /** Counts of choices beyond a scrolling control's current window. */
+  readonly choiceOverflow?: InteractiveChoiceOverflowState;
 }
 
 function statusLabel(options: FormCliFrameOptions): string {
@@ -110,6 +114,44 @@ export function formCliControlWidth(
 }
 
 /**
+ * Resolve a scrolling choice frame against all currently available columns.
+ * An explicit width remains a caller-provided ceiling.
+ */
+export function formCliChoiceFrameWidth(
+  requested: number | undefined,
+  capabilities: TerminalCapabilities,
+): number {
+  return formCliFrameWidth(requested ?? capabilities.columns, capabilities);
+}
+
+function hiddenChoiceCount(value: number | undefined): number {
+  const count = value ?? 0;
+  if (!Number.isSafeInteger(count) || count < 0) {
+    throw new TypeError(
+      `hidden choice count must be a non-negative safe integer; received ${count}`,
+    );
+  }
+  return count;
+}
+
+function choiceOverflowLabel(
+  overflow: InteractiveChoiceOverflowState | undefined,
+  capabilities: TerminalCapabilities,
+): string {
+  const before = hiddenChoiceCount(overflow?.hiddenChoicesBefore);
+  const after = hiddenChoiceCount(overflow?.hiddenChoicesAfter);
+  const above = before === 0
+    ? ""
+    : `${capabilities.unicode ? "↑" : "^"} ${before} more`;
+  const below = after === 0
+    ? ""
+    : `${capabilities.unicode ? "↓" : "v"} ${after} more`;
+  return [above, below].filter((label) => label !== "").join(
+    capabilities.unicode ? " · " : " | ",
+  );
+}
+
+/**
  * Render label, state, control, and lifecycle message as one form frame.
  *
  * The message row below the box is always reserved: it carries the hint,
@@ -138,6 +180,10 @@ export function renderFormCliFrame(
     boundedWidth,
     capabilities.unicode ? "…" : ".",
   );
+  const overflowLabel = choiceOverflowLabel(
+    options.choiceOverflow,
+    capabilities,
+  );
   return [
     styleText(heading, {
       ...theme.typography.strong,
@@ -148,6 +194,16 @@ export function renderFormCliFrame(
       width: boundedWidth,
       padding: 0,
       borderStyle: { color: terminalToneColor(theme, tone) },
+      ...(overflowLabel === "" ? {} : {
+        bottomLabel: overflowLabel,
+        bottomLabelStyle: {
+          ...theme.typography.annotation,
+          color: terminalThemeColor(
+            theme,
+            "--discern-color-ink-muted",
+          ),
+        },
+      }),
     }, capabilities),
     message === "" ? "" : styleText(message, {
       ...theme.typography.annotation,
@@ -207,6 +263,27 @@ export function visibleFormCliChoiceEntries(
   return interactiveChoiceWindow(state.options, start, count);
 }
 
+/** Count choices hidden outside one complete selection frame's viewport. */
+export function visibleFormCliChoiceOverflow(
+  state: Pick<
+    SelectFrameState,
+    | "options"
+    | "visibleStart"
+    | "visibleCount"
+    | "hiddenChoicesBefore"
+    | "hiddenChoicesAfter"
+  >,
+): Required<InteractiveChoiceOverflowState> {
+  const start = state.visibleStart ?? 0;
+  const count = state.visibleCount ?? state.options.length;
+  const derived = interactiveChoiceOverflow(state.options, start, count);
+  return {
+    hiddenChoicesBefore: state.hiddenChoicesBefore ??
+      derived.hiddenChoicesBefore,
+    hiddenChoicesAfter: state.hiddenChoicesAfter ?? derived.hiddenChoicesAfter,
+  };
+}
+
 /** Render a semantic choice heading through the package section-rule authority. */
 export function renderFormCliChoiceHeading(
   heading: InteractiveChoiceGroupHeadingState,
@@ -216,7 +293,7 @@ export function renderFormCliChoiceHeading(
   },
   capabilities: TerminalCapabilities,
 ): string {
-  const width = formCliControlWidth(options.width, capabilities);
+  const width = formCliChoiceFrameWidth(options.width, capabilities) - 2;
   const theme = terminalThemes[options.theme ?? "dark"];
   const gap = theme.spacing["--discern-space-2"] ?? 1;
   const labelWidth = Math.max(1, width - 2 * gap - 2);
@@ -225,14 +302,74 @@ export function renderFormCliChoiceHeading(
     labelWidth,
     capabilities.unicode ? "…" : ".",
   );
-  return renderTriangleSectionRule(
-    label,
-    {
-      width,
-      ...(options.theme === undefined ? {} : { theme: options.theme }),
-    },
-    { ...capabilities, columns: width },
+  return `\n${
+    renderTriangleSectionRule(
+      label,
+      {
+        width,
+        ...(options.theme === undefined ? {} : { theme: options.theme }),
+      },
+      { ...capabilities, columns: width },
+    )
+  }`;
+}
+
+/** Inputs for one prefix-stable, hanging-indent choice row. */
+export interface FormCliChoiceRowOptions {
+  /** Fixed-width pointer slot, including its following space. */
+  readonly pointer: string;
+  /** Component-specific selection marker, already semantically styled. */
+  readonly marker: string;
+  readonly label: string;
+  readonly highlighted?: boolean;
+  readonly disabled?: boolean;
+  readonly theme?: TerminalThemeVariant;
+  readonly width?: number;
+}
+
+/**
+ * Render one choice row with every continuation aligned under its label.
+ * Pointer movement can therefore change styling and glyphs, but never the
+ * row's wrapping or indentation.
+ */
+export function renderFormCliChoiceRow(
+  options: FormCliChoiceRowOptions,
+  capabilities: TerminalCapabilities,
+): string {
+  const styleOptions = {
+    ...(options.highlighted === undefined
+      ? {}
+      : { highlighted: options.highlighted }),
+    ...(options.disabled === undefined ? {} : { disabled: options.disabled }),
+    ...(options.theme === undefined ? {} : { theme: options.theme }),
+  };
+  const prefix = `${
+    styleFormCliChoiceText(options.pointer, styleOptions, capabilities)
+  }${options.marker} `;
+  const prefixWidth = measureText(prefix);
+  const controlWidth = formCliChoiceFrameWidth(options.width, capabilities) - 2;
+  if (prefixWidth >= controlWidth) {
+    throw new TypeError(
+      `choice row prefix requires ${prefixWidth} of ${controlWidth} control columns`,
+    );
+  }
+  const lines = wrapStyledText(
+    styleFormCliChoiceText(options.label, styleOptions, capabilities),
+    controlWidth - prefixWidth,
   );
+  return lines.map((line, index) =>
+    index === 0 ? `${prefix}${line}` : `${" ".repeat(prefixWidth)}${line}`
+  ).join("\n");
+}
+
+/** Join a query row to choice rows without doubling an existing group spacer. */
+export function renderFormCliQueryChoices(
+  query: string,
+  choices: string,
+): string {
+  return query === "" && choices.startsWith("\n")
+    ? choices
+    : `${query}\n${choices}`;
 }
 
 /** Style one choice-row fragment without replacing its non-colour signal. */

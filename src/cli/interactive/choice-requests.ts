@@ -13,6 +13,7 @@ import type { TerminalCapabilities } from "../capabilities.ts";
 import type { TerminalThemeVariant } from "../theme.ts";
 import renderCheckboxCli from "../../components/forms/checkbox/checkbox.cli.ts";
 import renderSelectCli from "../../components/forms/select/select.cli.ts";
+import { interactiveChoiceOverflow } from "../interactive-choice.ts";
 import {
   assertChoices,
   choiceVisibleCount,
@@ -152,18 +153,21 @@ class SelectionInteractionMachine<T>
       highlighted !== undefined && isInteractionChoice(highlighted)
         ? highlighted
         : undefined;
+    const options = frameChoices(this.options.choices);
+    const visibleStart = choiceVisibleStart(
+      this.#highlighted,
+      this.options.choices.length,
+      visibleCount,
+    );
     return {
       kind: "select",
       label: this.options.label,
       lifecycle,
-      options: frameChoices(this.options.choices),
+      options,
       highlightedIndex: this.#highlighted,
-      visibleStart: choiceVisibleStart(
-        this.#highlighted,
-        this.options.choices.length,
-        visibleCount,
-      ),
+      visibleStart,
       visibleCount,
+      ...interactiveChoiceOverflow(options, visibleStart, visibleCount),
       ...(selected === undefined ? {} : { selectedId: selected.id }),
       ...(this.options.hint === undefined ? {} : { hint: this.options.hint }),
     };
@@ -267,23 +271,26 @@ class SelectionsInteractionMachine<T>
       viewport.maximumControlRows,
     );
     this.#pageSize = visibleCount;
+    const options = frameChoices(this.options.choices);
+    const visibleStart = choiceVisibleStart(
+      this.#highlighted,
+      this.options.choices.length,
+      visibleCount,
+    );
     return {
       kind: "multiselect",
       label: this.options.label,
       lifecycle,
-      options: frameChoices(this.options.choices),
+      options,
       highlightedIndex: this.#highlighted,
       selectedIds: this.options.choices.flatMap((entry) =>
         isInteractionChoice(entry) && this.#selectedIds.has(entry.id)
           ? [entry.id]
           : []
       ),
-      visibleStart: choiceVisibleStart(
-        this.#highlighted,
-        this.options.choices.length,
-        visibleCount,
-      ),
+      visibleStart,
       visibleCount,
+      ...interactiveChoiceOverflow(options, visibleStart, visibleCount),
       ...(this.options.hint === undefined ? {} : { hint: this.options.hint }),
     };
   }

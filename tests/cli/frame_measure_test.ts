@@ -34,7 +34,7 @@ function widestLine(frame: string): number {
   );
 }
 
-Deno.test("default frame widths derive from the authored measure token", async () => {
+Deno.test("prose frames derive from the authored measure while choice frames use available width", async () => {
   const measure = authoredMeasureCells();
   const wide = testTerminalCapabilities({ columns: 200 });
 
@@ -45,7 +45,7 @@ Deno.test("default frame widths derive from the authored measure token", async (
     options: [{ id: "one", label: "One" }],
     highlightedIndex: 0,
   }, wide);
-  assertEquals(widestLine(select), measure);
+  assertEquals(widestLine(select), wide.columns);
 
   const input = renderInputCli({
     kind: "text-input",
