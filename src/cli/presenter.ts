@@ -15,6 +15,7 @@
  */
 
 import type { TerminalCapabilities } from "./capabilities.ts";
+import { renderBox, type TerminalBoxOptions } from "./box.ts";
 import type { CliRenderer } from "./contracts.ts";
 import {
   type NarrationLineProps,
@@ -27,6 +28,15 @@ import {
   styleSemanticText,
 } from "./narration.ts";
 import type { TerminalThemeVariant } from "./theme.ts";
+import {
+  renderTriangleSectionRule,
+  renderTriangleSpinnerFrame,
+  renderTriangleWorkflowStepper,
+  type TriangleSectionRuleOptions,
+  type TriangleThemeOptions,
+  type TriangleWorkflowOptions,
+  type TriangleWorkflowStep,
+} from "./triangles.ts";
 
 /** Presentation defaults a presenter binds once for every later call. */
 export interface CliPresenterOptions {
@@ -59,6 +69,32 @@ export interface CliPresenter {
   present<Props extends { readonly theme?: TerminalThemeVariant }>(
     renderer: CliRenderer<Props>,
     props: Readonly<Props>,
+  ): string;
+  /** Render a box through the bound capabilities; see {@linkcode renderBox}. */
+  box(options: TerminalBoxOptions): string;
+  /**
+   * Render one triangle spinner frame through the bound theme and capabilities;
+   * see {@linkcode renderTriangleSpinnerFrame}.
+   */
+  triangleSpinnerFrame(
+    phase: number,
+    options?: TriangleThemeOptions,
+  ): string;
+  /**
+   * Render a triangle section rule through the bound theme and capabilities;
+   * see {@linkcode renderTriangleSectionRule}.
+   */
+  triangleSectionRule(
+    label: string,
+    options: TriangleSectionRuleOptions,
+  ): string;
+  /**
+   * Render a triangle workflow stepper through the bound theme and capabilities;
+   * see {@linkcode renderTriangleWorkflowStepper}.
+   */
+  triangleWorkflowStepper(
+    steps: readonly TriangleWorkflowStep[],
+    options?: TriangleWorkflowOptions,
   ): string;
   /** Derive a presenter with some defaults replaced; this one is untouched. */
   with(overrides: CliPresenterOptions): CliPresenter;
@@ -111,6 +147,37 @@ export function createCliPresenter(
     capabilities: effective,
     theme,
     present,
+    box(options: TerminalBoxOptions): string {
+      return renderBox(options, effective);
+    },
+    triangleSpinnerFrame(
+      phase: number,
+      overrides: TriangleThemeOptions = {},
+    ): string {
+      return renderTriangleSpinnerFrame(phase, effective, {
+        theme,
+        ...overrides,
+      });
+    },
+    triangleSectionRule(
+      label: string,
+      overrides: TriangleSectionRuleOptions,
+    ): string {
+      return renderTriangleSectionRule(
+        label,
+        { theme, ...overrides },
+        effective,
+      );
+    },
+    triangleWorkflowStepper(
+      steps: readonly TriangleWorkflowStep[],
+      overrides: TriangleWorkflowOptions = {},
+    ): string {
+      return renderTriangleWorkflowStepper(steps, effective, {
+        theme,
+        ...overrides,
+      });
+    },
     with(overrides: CliPresenterOptions): CliPresenter {
       return createCliPresenter(capabilities, {
         theme,

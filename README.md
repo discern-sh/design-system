@@ -120,6 +120,7 @@ The pure `./cli` entrypoint exports every rendered Component through the same Me
 
 ```ts
 import {
+  createCliPresenter,
   detectTerminalCapabilities,
   renderBadgeCli,
 } from "@discern-sh/design-system/cli";
@@ -131,12 +132,16 @@ const capabilities = detectTerminalCapabilities({
   columns: isTty ? Deno.consoleSize().columns : undefined,
 });
 
-const output = renderBadgeCli(
-  { label: "Passed", tone: "success", dot: true },
-  capabilities,
-);
+const presenter = createCliPresenter(capabilities, { theme: "light" });
+const output = presenter.present(renderBadgeCli, {
+  label: "Passed",
+  tone: "success",
+  dot: true,
+});
 console.log(output);
 ```
+
+The presenter is the default route when one consumer renders more than one frame: it binds capabilities, theme, and an optional default width once. Component renderers plus triangle pattern, progress, and beacon renderers use `present(renderer, props)`. The foundation call shapes that do not fit that signature are bound directly as `box()`, `triangleSpinnerFrame()`, `triangleSectionRule()`, and `triangleWorkflowStepper()`. In every case, an explicit per-call theme or narrower width still wins; the raw `(props, capabilities)` renderer APIs remain available when a caller already threads those facts itself.
 
 To review a complete static frame as a layout, use the pure projection entrypoint with an explicit terminal viewport:
 
@@ -180,15 +185,13 @@ const environment = await requestSelection({
 
 The `group-heading` entry is semantic interaction structure: it has a stable ID and non-empty label, needs no sentinel value of the caller's generic type, and can never be highlighted, toggled, or returned. Every rendered heading has one empty framed row above it. Disabled choices remain selectable entries with their own visible disabled state. Scrolling Select, Radio, Checkbox, and search frames use all available terminal columns unless an explicit `width` narrows them; wrapped labels keep their marker-aligned hanging indent and styling as the highlight moves. Select and search `visibleCount` plus Textarea `rows` are requested upper bounds: the adapter reduces only the current visible window when terminal height is tight and expands it again after a resize. A quiet lower-border label such as `↑ 2 more · ↓ 7 more` states how many choices remain outside the window, with `^`, `v`, and `|` fallbacks in ASCII. Search accepts `initialId` to restore an enabled provider result by stable ID without inventing a query or keypress.
 
-Full-width section headings use one restrained triangle rather than a repeated triangle field. `renderTriangleSectionRule()` defaults to the one-row strong embedded treatment and also exposes explicit underline and sandwich variants:
+Full-width section headings use one restrained triangle rather than a repeated triangle field. The presenter's `triangleSectionRule()` binds its theme and capabilities, defaults to the one-row strong embedded treatment, and also exposes explicit underline and sandwich variants:
 
 ```ts
-import { renderTriangleSectionRule } from "@discern-sh/design-system/cli";
-
-const heading = renderTriangleSectionRule("Deploying workspace changes", {
+const heading = presenter.triangleSectionRule("Deploying workspace changes", {
   width: capabilities.columns,
   treatment: "underline", // "embedded" (default) | "underline" | "sandwich"
-}, capabilities);
+});
 ```
 
 The renderer uppercases and truncates the label inside the requested width. Unicode uses heavy `━` and quiet `─` rules; ASCII uses `=` and `-` so the weight distinction survives without colour. Underline and sandwich intentionally occupy two and three rows, while the embedded default remains one row for fixed interaction geometry.

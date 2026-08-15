@@ -1,13 +1,28 @@
-import { assertEquals, assertStrictEquals, assertThrows } from "@std/assert";
+import {
+  assertEquals,
+  assertNotEquals,
+  assertStrictEquals,
+  assertThrows,
+} from "@std/assert";
+import { renderBox } from "../../src/cli/box.ts";
+import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import type { CliRenderer } from "../../src/cli/contracts.ts";
 import {
   renderNoteLine,
   renderSuccessLine,
   styleSemanticText,
 } from "../../src/cli/narration.ts";
-import { createCliPresenter } from "../../src/cli/presenter.ts";
+import {
+  type CliPresenter,
+  createCliPresenter,
+} from "../../src/cli/presenter.ts";
 import type { TerminalThemeVariant } from "../../src/cli/theme.ts";
-import { renderTrianglePattern } from "../../src/cli/triangles.ts";
+import {
+  renderTrianglePattern,
+  renderTriangleSectionRule,
+  renderTriangleSpinnerFrame,
+  renderTriangleWorkflowStepper,
+} from "../../src/cli/triangles.ts";
 import renderBadgeCli from "../../src/components/display/badge/badge.cli.ts";
 import renderToastCli from "../../src/components/feedback/toast/toast.cli.ts";
 import { cliComponentRegistry } from "../../src/generated/cli-registry.ts";
@@ -17,6 +32,148 @@ import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
 type PresentableRenderer = CliRenderer<{
   readonly theme?: TerminalThemeVariant;
 }>;
+
+type StringFunctionKeys<Surface> = {
+  [Key in keyof Surface]: Surface[Key] extends (
+    ...args: infer _Args
+  ) => string ? Key
+    : never;
+}[keyof Surface];
+
+type PresenterCompatibleKeys<Surface> = {
+  [Key in StringFunctionKeys<Surface>]: Surface[Key] extends (
+    props: infer Props,
+    capabilities: TerminalCapabilities,
+  ) => string ? "theme" extends keyof Props ? Key
+    : never
+    : never;
+}[StringFunctionKeys<Surface>];
+
+type FoundationSurface =
+  & typeof import("../../src/cli/box.ts")
+  & typeof import("../../src/cli/triangles.ts");
+
+type PresenterOwnedFoundationRenderer = Exclude<
+  StringFunctionKeys<FoundationSurface>,
+  PresenterCompatibleKeys<FoundationSurface>
+>;
+
+type StringPresenterMethod = StringFunctionKeys<CliPresenter>;
+
+type FoundationBindingContract = {
+  [Renderer in PresenterOwnedFoundationRenderer]: Renderer extends
+    `render${infer Name}`
+    ? Uncapitalize<Name> extends StringPresenterMethod ? Uncapitalize<Name>
+    : never
+    : never;
+};
+
+const presenterFoundationBindingMethods = {
+  renderBox: "box",
+  renderTriangleSectionRule: "triangleSectionRule",
+  renderTriangleSpinnerFrame: "triangleSpinnerFrame",
+  renderTriangleWorkflowStepper: "triangleWorkflowStepper",
+} as const satisfies FoundationBindingContract;
+
+type AdversarialFoundationSurface = {
+  readonly drawPulse: (
+    label: string,
+    capabilities: TerminalCapabilities,
+    options?: { readonly theme?: TerminalThemeVariant },
+  ) => string;
+};
+
+const adversarialFutureSibling: Exclude<
+  StringFunctionKeys<AdversarialFoundationSurface>,
+  PresenterCompatibleKeys<AdversarialFoundationSurface>
+> = "drawPulse";
+
+Deno.test("every non-presentable box and motif renderer has a presenter binding", () => {
+  assertEquals(presenterFoundationBindingMethods, {
+    renderBox: "box",
+    renderTriangleSectionRule: "triangleSectionRule",
+    renderTriangleSpinnerFrame: "triangleSpinnerFrame",
+    renderTriangleWorkflowStepper: "triangleWorkflowStepper",
+  });
+  assertEquals(adversarialFutureSibling, "drawPulse");
+});
+
+Deno.test("foundation bindings resolve capabilities and theme byte-for-byte", () => {
+  const steps = [
+    { label: "Inspect", status: "complete" as const },
+    { label: "Apply", status: "active" as const, phase: 2 },
+  ];
+  for (
+    const capabilities of [
+      testTerminalCapabilities({ columns: 80 }),
+      testTerminalCapabilities({
+        columns: 80,
+        colorDepth: "truecolor",
+      }),
+      testTerminalCapabilities({
+        columns: 80,
+        unicode: false,
+        colorDepth: "ansi16",
+      }),
+    ]
+  ) {
+    for (const theme of ["light", "dark"] as const) {
+      const effective = { ...capabilities, columns: 48 };
+      const presenter = createCliPresenter(capabilities, { theme, width: 48 });
+      assertEquals(
+        presenter.box({ body: "Ready", title: "Status" }),
+        renderBox({ body: "Ready", title: "Status" }, effective),
+      );
+      assertEquals(
+        presenter.triangleSpinnerFrame(2),
+        renderTriangleSpinnerFrame(2, effective, { theme }),
+      );
+      assertEquals(
+        presenter.triangleSectionRule("Status", { width: 80 }),
+        renderTriangleSectionRule("Status", { width: 80, theme }, effective),
+      );
+      assertEquals(
+        presenter.triangleWorkflowStepper(steps),
+        renderTriangleWorkflowStepper(steps, effective, { theme }),
+      );
+    }
+  }
+});
+
+Deno.test("foundation motif overrides win over the presenter theme", () => {
+  const capabilities = testTerminalCapabilities({
+    columns: 80,
+    colorDepth: "truecolor",
+  });
+  const effective = { ...capabilities, columns: 48 };
+  const presenter = createCliPresenter(capabilities, {
+    theme: "light",
+    width: 48,
+  });
+  const steps = [{ label: "Apply", status: "active" as const, phase: 2 }];
+
+  assertEquals(
+    presenter.triangleSpinnerFrame(2, { theme: "dark" }),
+    renderTriangleSpinnerFrame(2, effective, { theme: "dark" }),
+  );
+  assertEquals(
+    presenter.triangleSectionRule("Status", { width: 80, theme: "dark" }),
+    renderTriangleSectionRule(
+      "Status",
+      { width: 80, theme: "dark" },
+      effective,
+    ),
+  );
+  assertEquals(
+    presenter.triangleWorkflowStepper(steps, { theme: "dark" }),
+    renderTriangleWorkflowStepper(steps, effective, { theme: "dark" }),
+  );
+  assertNotEquals(
+    presenter.triangleSectionRule("Status", { width: 80 }),
+    renderTriangleSectionRule("Status", { width: 80 }, effective),
+    "a light presenter must not silently render the section rule's dark default",
+  );
+});
 
 Deno.test("a bound present call is byte-equal to the manual renderer call", () => {
   for (
