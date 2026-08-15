@@ -114,7 +114,7 @@ The local component browser under [`catalogue/`](../../catalogue/), built by [`b
 
 ### CLI Catalogue
 
-The stdout component browser run by `deno task catalogue:cli`. It derives Component examples and exemption reasons from the CLI Registry and renderer modules through the shared [`cli-inventory.ts`](../../scripts/cli-inventory.ts) authority, adds specimens generated from the public triangle APIs, and narrows by Group, Component, or motif sheet.
+The stdout component browser run by `deno task catalogue:cli`. It derives Component examples and exemption reasons from the CLI Registry and renderer modules through the shared [`cli-inventory.ts`](../../scripts/cli-inventory.ts) authority, adds default and consumer-derived specimens generated from the public motif APIs, and narrows by Group, Component, or motif sheet.
 
 ### CLI Playground
 

@@ -11,7 +11,7 @@ deno add jsr:@discern-sh/design-system
 | Import                                              | Contract                                                                                  |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | `@discern-sh/design-system`                         | Token metadata, component/group metadata types, the package manifest, and `semanticClass` |
-| `@discern-sh/design-system/cli`                     | Pure React-free terminal renderers, capabilities, themes, and triangle primitives         |
+| `@discern-sh/design-system/cli`                     | Pure React-free terminal renderers, capabilities, themes, and semantic motif primitives   |
 | `@discern-sh/design-system/cli/interactive`         | Optional Deno terminal driver and typed interaction state machines                        |
 | `@discern-sh/design-system/cli/interactive/testing` | Deterministic fake terminal, named-key scripting, and frame assertions                    |
 | `@discern-sh/design-system/cli/projection`          | Package-output decoding, browser projection, and explicit layout inspection               |
@@ -141,7 +141,35 @@ const output = presenter.present(renderBadgeCli, {
 console.log(output);
 ```
 
-The presenter is the default route when one consumer renders more than one frame: it binds capabilities, theme, and an optional default width once. Component renderers plus triangle pattern, progress, and beacon renderers use `present(renderer, props)`. The foundation call shapes that do not fit that signature are bound directly as `box()`, `triangleSpinnerFrame()`, `triangleSectionRule()`, and `triangleWorkflowStepper()`. In every case, an explicit per-call theme or narrower width still wins; the raw `(props, capabilities)` renderer APIs remain available when a caller already threads those facts itself.
+The presenter is the default route when one consumer renders more than one frame: it binds capabilities, theme, terminal motif, and an optional default width once. Component renderers plus motif pattern, progress, and beacon renderers use `present(renderer, props)`. The foundation call shapes that do not fit that signature are bound directly as `box()`, `motifSpinnerFrame()`, `motifSectionRule()`, and `motifWorkflowStepper()`. An explicit per-call theme, motif, or narrower width wins over the presenter; omission falls back to the bound presenter and then the package's discern motif. The raw `(props, capabilities)` renderer APIs remain available when a caller already threads those facts itself.
+
+The package supplies one discern-flavoured preset without making triangles part of the generic renderer contract. Define a complete product language with `defineTerminalMotif()`, or replace only selected semantic roles with `deriveTerminalMotif()`:
+
+```ts
+import {
+  createCliPresenter,
+  deriveTerminalMotif,
+  DISCERN_TERMINAL_MOTIF,
+} from "@discern-sh/design-system/cli";
+
+const productMotif = deriveTerminalMotif(DISCERN_TERMINAL_MOTIF, {
+  unicode: {
+    spinner: ["◴", "◷", "◶", "◵"],
+    pattern: ["▵", "▹", "▿", "◃"],
+    marker: "◉",
+    status: { complete: "▵", incomplete: "▿" },
+  },
+});
+
+const productPresenter = createCliPresenter(capabilities, {
+  theme: "light",
+  motif: productMotif,
+});
+
+console.log(productPresenter.motifSpinnerFrame(1)); // ◷
+```
+
+Every definition includes Unicode and ASCII repertoires for spinner, repeated pattern, accent marker, and complete/incomplete status roles. Definitions are validated and frozen at construction. Each Unicode glyph must be one visible, non-combining scalar that is one cell under the pinned Unicode 17.0 East Asian Width data; Ambiguous, Wide, and Fullwidth scalars are rejected because their terminal geometry is not portable. Each ASCII fallback is one printable non-space character. For example, the quadrant-circle cycle above is portable under that policy, while `◐` and `◑` are East Asian Width–Ambiguous.
 
 To review a complete static frame as a layout, use the pure projection entrypoint with an explicit terminal viewport:
 
@@ -180,15 +208,15 @@ const environment = await requestSelection({
     { id: "preview", label: "Preview", value: "preview" },
     { id: "production", label: "Production", value: "production" },
   ],
-});
+}, { motif: productMotif });
 ```
 
 The `group-heading` entry is semantic interaction structure: it has a stable ID and non-empty label, needs no sentinel value of the caller's generic type, and can never be highlighted, toggled, or returned. Every rendered heading has one empty framed row above it. Disabled choices remain selectable entries with their own visible disabled state. Scrolling Select, Radio, Checkbox, and search frames use all available terminal columns unless an explicit `width` narrows them; wrapped labels keep their marker-aligned hanging indent and styling as the highlight moves. Select and search `visibleCount` plus Textarea `rows` are requested upper bounds: the adapter reduces only the current visible window when terminal height is tight and expands it again after a resize. A quiet lower-border label such as `↑ 2 more · ↓ 7 more` states how many choices remain outside the window, with `^`, `v`, and `|` fallbacks in ASCII. Search accepts `initialId` to restore an enabled provider result by stable ID without inventing a query or keypress.
 
-Full-width section headings use one restrained triangle rather than a repeated triangle field. The presenter's `triangleSectionRule()` binds its theme and capabilities, defaults to the one-row strong embedded treatment, and also exposes explicit underline and sandwich variants:
+Full-width section headings use one restrained motif marker rather than a repeated field. The presenter's `motifSectionRule()` binds its theme, motif, and capabilities, defaults to the one-row strong embedded treatment, and also exposes explicit underline and sandwich variants:
 
 ```ts
-const heading = presenter.triangleSectionRule("Deploying workspace changes", {
+const heading = presenter.motifSectionRule("Deploying workspace changes", {
   width: capabilities.columns,
   treatment: "underline", // "embedded" (default) | "underline" | "sandwich"
 });
@@ -213,7 +241,7 @@ console.log(renderFleetCli({
 }, capabilities));
 ```
 
-Run `deno task catalogue:cli` to inspect every rendered Component, every recorded exemption, and the generated triangle motifs. Pass a Component slug or Group name to narrow the output, or `triangles` for the motif sheet alone.
+Run `deno task catalogue:cli` to inspect every rendered Component, every recorded exemption, and both the default and consumer-derived terminal motifs. Pass a Component slug or Group name to narrow the output, or `motifs` for the motif sheet alone.
 
 ## Optional React adapter
 
@@ -251,7 +279,7 @@ A mandatory resilience phase discovers rendered disclosures, interactive control
 
 ### Terminal review surfaces
 
-`deno task catalogue:cli` statically prints every rendered Component example, every recorded exemption, and the triangle motif sheet; `deno task playground:cli` is its live counterpart, driving the real interactive adapter in your terminal. The playground opens a hub of named journeys covering every high-level interaction, activity, and sequential-form API, static-catalogue browsing, and stress cases for width, height, resize, Unicode/ASCII repertoire, colour degradation, and repeated interaction cycles. `deno task playground:cli --list` prints every journey ID without a TTY, `tour` visits them all in recommended order, and a direct `<journey-id>` bypasses the hub menu entirely. Both surfaces derive their inventory from the generated registries, so neither can drift from Codegen, and each journey prints the current terminal facts (columns, rows, Unicode, colour depth, ANSI control) before it runs so observations are reproducible. These are development and review instruments for this repository, not published package APIs.
+`deno task catalogue:cli` statically prints every rendered Component example, every recorded exemption, and the terminal motif sheet; `deno task playground:cli` is its live counterpart, driving the real interactive adapter in your terminal. The playground opens a hub of named journeys covering every high-level interaction, activity, and sequential-form API, static-catalogue browsing, and stress cases for width, height, resize, Unicode/ASCII repertoire, colour degradation, and repeated interaction cycles. `deno task playground:cli --list` prints every journey ID without a TTY, `tour` visits them all in recommended order, and a direct `<journey-id>` bypasses the hub menu entirely. Both surfaces derive their inventory from the generated registries, so neither can drift from Codegen, and each journey prints the current terminal facts (columns, rows, Unicode, colour depth, ANSI control) before it runs so observations are reproducible. These are development and review instruments for this repository, not published package APIs.
 
 ### Authoring rules
 
