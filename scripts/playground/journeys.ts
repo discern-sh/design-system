@@ -37,10 +37,11 @@ import {
   type TerminalCapabilities,
 } from "../../src/cli/mod.ts";
 import { defaultTerminalFrameWidth } from "../../src/cli/frame-measure.ts";
+import { renderCliExemptions } from "../cli-inventory.ts";
 import {
-  renderCliExemptions,
-  renderTerminalMotifSheet,
-} from "../cli-inventory.ts";
+  renderTerminalFoundationSheet,
+  terminalFoundationSheet,
+} from "../../catalogue/terminal-foundations.ts";
 import { describeCapabilities, renderTerminalFacts } from "./banner.ts";
 import { runBrowseJourney } from "./browse.ts";
 import { runHeadingVariantsJourney } from "./heading-variants.ts";
@@ -666,8 +667,14 @@ const staticCatalogueJourneys: readonly PlaygroundJourney[] = [
     description:
       "Print the complete default and consumer-defined motif specimens at the current width.",
     run: (runtime) => {
+      const motifSheet = terminalFoundationSheet("motifs");
+      if (motifSheet === undefined) {
+        throw new TypeError("Terminal motif foundation is not enrolled");
+      }
       runtime.print("");
-      runtime.print(renderTerminalMotifSheet(runtime.io.capabilities()));
+      runtime.print(
+        renderTerminalFoundationSheet(motifSheet, runtime.io.capabilities()),
+      );
       return Promise.resolve();
     },
   },

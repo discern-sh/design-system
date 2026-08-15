@@ -5,10 +5,13 @@ import {
   detectProcessTerminalCapabilities,
   listCliComponents,
   renderCliComponent,
-  renderNarrationLineSheet,
-  renderTerminalMotifSheet,
   resolveCatalogueSelection,
 } from "./cli-inventory.ts";
+import {
+  renderTerminalFoundationSheet,
+  terminalFoundationSheet,
+  terminalFoundationSheets,
+} from "../catalogue/terminal-foundations.ts";
 import {
   type ComponentGroup,
   componentGroups,
@@ -41,13 +44,22 @@ export async function renderCliCatalogue(
 ): Promise<string> {
   const selection = resolveCatalogueSelection(argument);
   const sections: string[] = ["# discern CLI catalogue"];
-  if (selection.kind === "all" || selection.kind === "motifs") {
-    sections.push(renderTerminalMotifSheet(capabilities));
+  if (selection.kind === "all") {
+    sections.push(
+      ...terminalFoundationSheets.map((sheet) =>
+        renderTerminalFoundationSheet(sheet, capabilities)
+      ),
+    );
   }
-  if (selection.kind === "all" || selection.kind === "narration") {
-    sections.push(renderNarrationLineSheet(capabilities));
-  }
-  if (selection.kind !== "motifs" && selection.kind !== "narration") {
+  if (selection.kind === "foundation") {
+    const sheet = terminalFoundationSheet(selection.id);
+    if (sheet === undefined) {
+      throw new TypeError(
+        `Terminal foundation registry has no ${JSON.stringify(selection.id)}`,
+      );
+    }
+    sections.push(renderTerminalFoundationSheet(sheet, capabilities));
+  } else {
     for (const group of selectedGroups(selection)) {
       const components = listCliComponents(group).filter(({ slug }) =>
         selection.kind !== "component" || slug === selection.slug

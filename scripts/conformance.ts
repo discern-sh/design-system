@@ -8,6 +8,8 @@ import type {
   ConformanceStep,
   ConformanceTarget,
 } from "../catalogue/conformance.ts";
+import { catalogueCliCapabilities } from "../catalogue/cli-preview.tsx";
+import { terminalFoundationSheets } from "../catalogue/terminal-foundations.ts";
 import { launchBrowser } from "./browser.ts";
 import { buildDesignSystem } from "./build.ts";
 import { runResilienceConformance } from "./resilience-conformance.ts";
@@ -626,7 +628,7 @@ async function verifyStateFragmentRestoration(
     await page.goto(new URL("/catalogue/", origin).href, {
       waitUntil: "networkidle",
     });
-    await page.locator("[data-discern-root]").waitFor();
+    await page.locator(".discern-catalogue-shell").waitFor();
     await page.evaluate(() => document.fonts.ready.then(() => undefined));
     const states = await page.locator(
       '.discern-catalogue-example-state[id^="component-"][id*="--"]',
@@ -661,7 +663,7 @@ async function verifyStateFragmentRestoration(
     const url = new URL("/catalogue/", origin);
     url.hash = fragment;
     await page.goto(url.href, { waitUntil: "networkidle" });
-    await page.locator("[data-discern-root]").waitFor();
+    await page.locator(".discern-catalogue-shell").waitFor();
     const target = page.locator(`#${fragment}`);
     let position = Number.POSITIVE_INFINITY;
     await eventually(
@@ -709,6 +711,129 @@ interface TerminalCatalogueEvidence {
   readonly layouts: number;
   readonly profileChecks: number;
   readonly componentSpecimens: number;
+  readonly foundationSheets: number;
+  readonly foundationSpecimens: number;
+  readonly animationChecks: number;
+}
+
+async function verifyTerminalFoundationEnrollment(
+  page: Page,
+): Promise<
+  {
+    readonly sheets: number;
+    readonly specimens: number;
+    readonly animationChecks: number;
+  }
+> {
+  const expectedSheets = terminalFoundationSheets.map(({ id }) => id);
+  const actualSheets = await page.locator(
+    "[data-discern-terminal-foundation]",
+  ).evaluateAll((nodes) =>
+    nodes.map((node) =>
+      node.getAttribute("data-discern-terminal-foundation") ?? ""
+    )
+  );
+  invariant(
+    JSON.stringify(actualSheets) === JSON.stringify(expectedSheets),
+    `Terminal foundation enrollment differs from its registry.\nExpected: ${
+      expectedSheets.join(", ")
+    }\nActual: ${actualSheets.join(", ")}`,
+  );
+  const navigationSheets = await page.locator(
+    '.discern-catalogue-nav a[href^="#terminal-foundation-"]',
+  ).evaluateAll((nodes) =>
+    nodes.map((node) =>
+      node.getAttribute("href")?.replace("#terminal-foundation-", "") ?? ""
+    )
+  );
+  invariant(
+    JSON.stringify(navigationSheets) === JSON.stringify(expectedSheets),
+    `Terminal foundation navigation differs from its registry.\nExpected: ${
+      expectedSheets.join(", ")
+    }\nActual: ${navigationSheets.join(", ")}`,
+  );
+
+  const expectedSpecimens = terminalFoundationSheets.flatMap((sheet) =>
+    sheet.specimens(catalogueCliCapabilities, { theme: "light" }).map((
+      specimen,
+    ) => `${sheet.id}:${specimen.id}`)
+  );
+  const actualSpecimens = await page.locator(
+    "[data-discern-terminal-foundation-specimen]",
+  ).evaluateAll((nodes) =>
+    nodes.map((node) => {
+      const sheet = node.closest<HTMLElement>(
+        "[data-discern-terminal-foundation]",
+      )?.dataset.discernTerminalFoundation ?? "";
+      const specimen = (node as HTMLElement).dataset
+        .discernTerminalFoundationSpecimen ?? "";
+      return `${sheet}:${specimen}`;
+    })
+  );
+  invariant(
+    JSON.stringify(actualSpecimens) === JSON.stringify(expectedSpecimens),
+    `Terminal foundation specimens differ from their registry.\nExpected: ${
+      expectedSpecimens.join(", ")
+    }\nActual: ${actualSpecimens.join(", ")}`,
+  );
+
+  await page.locator(".discern-catalogue-search").click();
+  const searchDialog = page.getByRole("dialog", {
+    name: "Search the Catalogue",
+  });
+  await searchDialog.locator(".discern-search-palette__input").fill("spinner");
+  const motifResult = searchDialog.locator(
+    '.discern-search-palette__result[href="#terminal-foundation-motifs"]',
+  );
+  invariant(
+    await motifResult.count() === 1,
+    "Spinner search must resolve the Terminal motifs foundation",
+  );
+  invariant(
+    (await motifResult.textContent())?.includes("Terminal foundation") === true,
+    "Spinner search must identify its foundation context",
+  );
+  await motifResult.click();
+  await searchDialog.waitFor({ state: "hidden" });
+
+  const spinner = page.locator(
+    '[data-discern-terminal-foundation="motifs"] ' +
+      '[data-discern-terminal-foundation-specimen="spinner-phases"]',
+  );
+  const animation = spinner.locator("[data-discern-terminal-animation]");
+  invariant(
+    await animation.getAttribute("data-discern-terminal-animation") ===
+      "paused",
+    "Reduced motion must pause terminal foundation animation initially",
+  );
+  const liveOutput = animation.locator(".discern-catalogue-cli-output");
+  const pausedFrame = await liveOutput.textContent();
+  await page.waitForTimeout(180);
+  invariant(
+    await liveOutput.textContent() === pausedFrame,
+    "Reduced-motion terminal animation advanced while paused",
+  );
+  await animation.getByRole("button", { name: "Play animation" }).click();
+  await eventually(
+    async () => await liveOutput.textContent() !== pausedFrame,
+    "Terminal motif animation did not advance after Play",
+  );
+  await animation.getByRole("button", { name: "Pause animation" }).click();
+  const accessibility = await new AxeBuilder({ page })
+    .include("[data-discern-terminal-foundation]")
+    .withTags([...WCAG_TAGS])
+    .analyze();
+  invariant(
+    accessibility.violations.length === 0,
+    `Terminal foundations failed accessibility: ${
+      accessibility.violations.map(({ id }) => id).join(", ")
+    }`,
+  );
+  return {
+    sheets: actualSheets.length,
+    specimens: actualSpecimens.length,
+    animationChecks: 3,
+  };
 }
 
 async function verifyTerminalCatalogue(
@@ -723,6 +848,8 @@ async function verifyTerminalCatalogue(
     await page.goto(url.href, { waitUntil: "networkidle" });
     await page.locator(".discern-catalogue-shell").waitFor();
     await page.evaluate(() => document.fonts.ready.then(() => undefined));
+
+    const foundations = await verifyTerminalFoundationEnrollment(page);
 
     const layouts = page.locator("[data-discern-cli-composition]");
     const layoutCount = await layouts.count();
@@ -761,8 +888,11 @@ async function verifyTerminalCatalogue(
       }
     }
 
-    const componentSpecimens = page.locator(
+    const terminalSpecimens = page.locator(
       ".discern-catalogue-cli-preview",
+    );
+    const componentSpecimens = page.locator(
+      "[data-discern-component] .discern-catalogue-cli-preview",
     );
     const componentSpecimenCount = await componentSpecimens.count();
     invariant(
@@ -776,13 +906,13 @@ async function verifyTerminalCatalogue(
       const inspectorThemes = await inspectors.evaluateAll((nodes) =>
         nodes.map((node) => node.getAttribute("data-discern-terminal-theme"))
       );
-      const componentThemes = await componentSpecimens.evaluateAll((nodes) =>
+      const surfaceThemes = await terminalSpecimens.evaluateAll((nodes) =>
         nodes.map((node) => node.getAttribute("data-discern-theme"))
       );
       return inspectorThemes.length === layoutCount &&
         inspectorThemes.every((value) => value === theme) &&
-        componentThemes.length === componentSpecimenCount &&
-        componentThemes.every((value) => value === theme);
+        surfaceThemes.length === await terminalSpecimens.count() &&
+        surfaceThemes.every((value) => value === theme);
     };
     invariant(
       await allTerminalSurfacesUse("light"),
@@ -840,6 +970,9 @@ async function verifyTerminalCatalogue(
       layouts: layoutCount,
       profileChecks,
       componentSpecimens: componentSpecimenCount,
+      foundationSheets: foundations.sheets,
+      foundationSpecimens: foundations.specimens,
+      animationChecks: foundations.animationChecks,
     };
   });
 }
@@ -991,6 +1124,9 @@ export async function runConformance(): Promise<void> {
       layouts: 0,
       profileChecks: 0,
       componentSpecimens: 0,
+      foundationSheets: 0,
+      foundationSpecimens: 0,
+      animationChecks: 0,
     };
     try {
       terminalCatalogue = await verifyTerminalCatalogue(page, origin);
@@ -1039,6 +1175,7 @@ export async function runConformance(): Promise<void> {
         screenshots + 1
       } review screenshots; ${floatingSurfaces} floating surfaces share the clipping cure. ` +
         `Terminal Catalogue passed ${terminalCatalogue.profileChecks} profile fits across ${terminalCatalogue.layouts} layouts and re-themed ${terminalCatalogue.componentSpecimens} Component specimens. ` +
+        `It auto-enrolled ${terminalCatalogue.foundationSpecimens} specimens across ${terminalCatalogue.foundationSheets} terminal foundations with ${terminalCatalogue.animationChecks} reduced-motion and playback checks. ` +
         `Journey resilience passed: ${resilience.journeys} journeys, ` +
         `${resilience.journeyStages} ordered stages, ` +
         `${resilience.journeyAxeScans} axe scans, ` +

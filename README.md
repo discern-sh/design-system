@@ -241,7 +241,7 @@ console.log(renderFleetCli({
 }, capabilities));
 ```
 
-Run `deno task catalogue:cli` to inspect every rendered Component, every recorded exemption, and both the default and consumer-derived terminal motifs. Pass a Component slug or Group name to narrow the output, or `motifs` for the motif sheet alone.
+Run `deno task catalogue:cli` to inspect every rendered Component, every recorded exemption, and the shared Terminal motifs and Narration lines foundations. Pass a Component slug or Group name to narrow the output, or `motifs` for the motif sheet alone. The browser Catalogue renders those same foundation registries under Foundations: search for “spinner” to reach live, reduced-motion-safe default and consumer animations beside their complete static phase evidence.
 
 ## Optional React adapter
 
@@ -279,7 +279,7 @@ A mandatory resilience phase discovers rendered disclosures, interactive control
 
 ### Terminal review surfaces
 
-`deno task catalogue:cli` statically prints every rendered Component example, every recorded exemption, and the terminal motif sheet; `deno task playground:cli` is its live counterpart, driving the real interactive adapter in your terminal. The playground opens a hub of named journeys covering every high-level interaction, activity, and sequential-form API, static-catalogue browsing, and stress cases for width, height, resize, Unicode/ASCII repertoire, colour degradation, and repeated interaction cycles. `deno task playground:cli --list` prints every journey ID without a TTY, `tour` visits them all in recommended order, and a direct `<journey-id>` bypasses the hub menu entirely. Both surfaces derive their inventory from the generated registries, so neither can drift from Codegen, and each journey prints the current terminal facts (columns, rows, Unicode, colour depth, ANSI control) before it runs so observations are reproducible. These are development and review instruments for this repository, not published package APIs.
+`deno task catalogue:cli` statically prints every rendered Component example, every recorded exemption, and every sheet in the terminal-foundation registry; the browser Catalogue maps that same registry into searchable Foundation specimens. `deno task playground:cli` is the live terminal counterpart, driving the real interactive adapter. The playground opens a hub of named journeys covering every high-level interaction, activity, and sequential-form API, static-catalogue browsing, and stress cases for width, height, resize, Unicode/ASCII repertoire, colour degradation, and repeated interaction cycles. `deno task playground:cli --list` prints every journey ID without a TTY, `tour` visits them all in recommended order, and a direct `<journey-id>` bypasses the hub menu entirely. These surfaces derive their inventories from the generated Component registries or the shared terminal-foundation registry, so a new member auto-enrols in its applicable review paths; each journey prints the current terminal facts (columns, rows, Unicode, colour depth, ANSI control) before it runs so observations are reproducible. These are development and review instruments for this repository, not published package APIs.
 
 ### Authoring rules
 

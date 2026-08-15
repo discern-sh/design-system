@@ -1,9 +1,9 @@
 /**
  * Interactive browser over the generated static CLI inventory: canonical
  * Groups, every Component entry, every named example, every recorded
- * exemption, and the motif and narration line sheets — derived from
- * the same authority as `deno task catalogue:cli`, so nothing here can
- * drift from Codegen.
+ * exemption, and every terminal foundation sheet — derived from the same
+ * authorities as `deno task catalogue:cli`, so the two review surfaces cannot
+ * drift.
  *
  * @module
  */
@@ -14,9 +14,12 @@ import {
   loadRenderedCliModule,
   renderCliComponent,
   renderCliExemptions,
-  renderNarrationLineSheet,
-  renderTerminalMotifSheet,
 } from "../cli-inventory.ts";
+import {
+  renderTerminalFoundationSheet,
+  type TerminalFoundationSheet,
+  terminalFoundationSheets,
+} from "../../catalogue/terminal-foundations.ts";
 import {
   type ComponentGroup,
   componentGroups,
@@ -29,8 +32,7 @@ import type { PlaygroundRuntime } from "./types.ts";
 
 type TopTarget =
   | ComponentGroup
-  | "motifs"
-  | "narration"
+  | TerminalFoundationSheet
   | "exemptions"
   | "back";
 type ComponentTarget = CliComponentFact | "back";
@@ -38,15 +40,20 @@ type ExampleTarget = number | "all" | "back";
 type ExampleNavigation = number | "list";
 
 /** Top-level browse menu: every canonical Group plus the foundation sheets. */
-export function browseTopChoices(): readonly InteractionEntry<TopTarget>[] {
+export function browseTopChoices(
+  foundations: readonly TerminalFoundationSheet[] = terminalFoundationSheets,
+): readonly InteractionEntry<TopTarget>[] {
   return [
     ...componentGroups.map((group) => ({
       id: `group-${group.toLocaleLowerCase()}`,
       label: group,
       value: group as TopTarget,
     })),
-    { id: "motifs", label: "Terminal motif sheet", value: "motifs" },
-    { id: "narration", label: "Narration line sheet", value: "narration" },
+    ...foundations.map((sheet) => ({
+      id: `foundation-${sheet.id}`,
+      label: sheet.title,
+      value: sheet as TopTarget,
+    })),
     { id: "exemptions", label: "Recorded exemptions", value: "exemptions" },
     { id: "back", label: "Back to the hub", value: "back" },
   ];
@@ -179,14 +186,9 @@ export async function runBrowseJourney(
       choices: browseTopChoices(),
     }, { io });
     if (target === "back" || target === undefined) return;
-    if (target === "motifs") {
+    if (typeof target === "object") {
       print("");
-      print(renderTerminalMotifSheet(io.capabilities()));
-      continue;
-    }
-    if (target === "narration") {
-      print("");
-      print(renderNarrationLineSheet(io.capabilities()));
+      print(renderTerminalFoundationSheet(target, io.capabilities()));
       continue;
     }
     if (target === "exemptions") {

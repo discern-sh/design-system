@@ -110,11 +110,11 @@ A required Component Metadata declaration of `rendered` or `exempt` with a non-e
 
 ### Catalogue
 
-The local component browser under [`catalogue/`](../../catalogue/), built by [`build.ts`](../../scripts/build.ts) and served by `deno task serve`. It renders every Component's examples from the generated example registry.
+The local component browser under [`catalogue/`](../../catalogue/), built by [`build.ts`](../../scripts/build.ts) and served by `deno task serve`. It renders every Component's examples from the generated example registry and every terminal foundation from the shared [`terminal-foundations.ts`](../../catalogue/terminal-foundations.ts) registry.
 
 ### CLI Catalogue
 
-The stdout component browser run by `deno task catalogue:cli`. It derives Component examples and exemption reasons from the CLI Registry and renderer modules through the shared [`cli-inventory.ts`](../../scripts/cli-inventory.ts) authority, adds default and consumer-derived specimens generated from the public motif APIs, and narrows by Group, Component, or motif sheet.
+The stdout component browser run by `deno task catalogue:cli`. It derives Component examples and exemption reasons from the CLI Registry and renderer modules through [`cli-inventory.ts`](../../scripts/cli-inventory.ts), derives every foundation sheet and selector from the same [`terminal-foundations.ts`](../../catalogue/terminal-foundations.ts) registry as the browser Catalogue, and narrows by Group, Component, or foundation ID.
 
 ### CLI Playground
 

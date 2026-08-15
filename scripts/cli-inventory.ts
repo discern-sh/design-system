@@ -1,40 +1,33 @@
 /**
  * Shared authority over the terminal-surface inventory. The static CLI
- * catalogue and the interactive CLI playground both derive their component
- * sections, exemptions, examples, and terminal motifs from these generated
- * facts, so a new Component or example enrols in every terminal review
- * surface at once and no second hand-maintained inventory can drift.
+ * catalogue and the interactive CLI playground both derive their Component
+ * sections, exemptions, and examples from these generated facts, so a new
+ * Component or example enrols in every terminal review surface at once and no
+ * second hand-maintained inventory can drift. Framework-neutral foundations
+ * live in the adjacent Catalogue registry shared with the browser surface.
  *
  * @module
  */
 
 import {
-  deriveTerminalMotif,
   detectTerminalCapabilities,
-  DISCERN_TERMINAL_MOTIF,
-  renderMotifActivityBeacon,
-  renderMotifPattern,
-  renderMotifProgressFrame,
-  renderMotifSectionRule,
-  renderMotifSpinnerFrame,
-  renderMotifWorkflowStepper,
-  type SequentialStepStatus,
   type TerminalCapabilities,
-  terminalMotifRepertoire,
 } from "../src/cli/mod.ts";
 import type {
   CliComponentRegistryEntry,
   CliExample,
   CliRenderedRegistryEntry,
 } from "../src/cli/contracts.ts";
-import { createCliPresenter } from "../src/cli/presenter.ts";
-import { composeCliBlocks } from "../src/cli/rhythm.ts";
 import { cliComponentRegistry } from "../src/generated/cli-registry.ts";
 import { componentRegistry } from "../src/generated/component-registry.ts";
 import {
   type ComponentGroup,
   componentGroups,
 } from "../src/types/component-meta.ts";
+import {
+  terminalFoundationSheet,
+  terminalFoundationSheets,
+} from "../catalogue/terminal-foundations.ts";
 
 const registry = cliComponentRegistry as Readonly<
   Record<string, CliComponentRegistryEntry>
@@ -49,8 +42,7 @@ export type CatalogueSelection =
   | { readonly kind: "all" }
   | { readonly kind: "component"; readonly slug: string }
   | { readonly kind: "group"; readonly group: ComponentGroup }
-  | { readonly kind: "motifs" }
-  | { readonly kind: "narration" };
+  | { readonly kind: "foundation"; readonly id: string };
 
 /** A validated, dynamically loaded rendered-component CLI module. */
 export interface LoadedCliModule {
@@ -69,29 +61,11 @@ export interface CliComponentFact {
   readonly entry: CliComponentRegistryEntry;
 }
 
-const STEPPER_STATES = [
-  "pending",
-  "active",
-  "complete",
-  "error",
-  "cancelled",
-] as const satisfies readonly SequentialStepStatus[];
-
-const CATALOGUE_CUSTOM_MOTIF = deriveTerminalMotif(
-  DISCERN_TERMINAL_MOTIF,
-  {
-    unicode: {
-      spinner: ["◴", "◷", "◶", "◵"],
-      pattern: ["▵", "▹", "▿", "◃"],
-      marker: "◉",
-      status: { complete: "▵", incomplete: "▿" },
-    },
-  },
-);
-
 /** Usage line for the static CLI catalogue command. */
 export function cliCatalogueUsage(): string {
-  return `Usage: deno task catalogue:cli [all|motifs|narration|<group>|<component-slug>]
+  return `Usage: deno task catalogue:cli [all|${
+    terminalFoundationSheets.map(({ id }) => id).join("|")
+  }|<group>|<component-slug>]
 Groups: ${componentGroups.join(", ")}`;
 }
 
@@ -102,8 +76,9 @@ export function resolveCatalogueSelection(
   if (argument === undefined || argument === "" || argument === "all") {
     return { kind: "all" };
   }
-  if (argument === "motifs") return { kind: "motifs" };
-  if (argument === "narration") return { kind: "narration" };
+  if (terminalFoundationSheet(argument) !== undefined) {
+    return { kind: "foundation", id: argument };
+  }
   if (registry[argument] !== undefined) {
     return { kind: "component", slug: argument };
   }
@@ -226,144 +201,4 @@ export function renderCliExemptions(): string {
     "",
     records.join("\n\n"),
   ].join("\n");
-}
-
-function motifWidth(capabilities: TerminalCapabilities): number {
-  return Math.min(32, capabilities.columns);
-}
-
-/** Render the complete motif sheet through public package APIs. */
-export function renderTerminalMotifSheet(
-  capabilities: TerminalCapabilities,
-): string {
-  const width = motifWidth(capabilities);
-  if (width < 8) {
-    throw new TypeError(
-      `terminal width ${capabilities.columns} cannot hold the motif catalogue`,
-    );
-  }
-  const patternLength = Math.min(24, width);
-  const repertoire = terminalMotifRepertoire(
-    DISCERN_TERMINAL_MOTIF,
-    capabilities.unicode,
-  );
-  const spinnerPhases = repertoire.spinner.map((_glyph, phase) =>
-    `phase ${phase}\n${renderMotifSpinnerFrame(phase, capabilities)}`
-  ).join("\n");
-  const progress = [0, 25, 100].map((completed) =>
-    `${completed} percent\n${
-      renderMotifProgressFrame({
-        completed,
-        total: 100,
-        width,
-      }, capabilities)
-    }`
-  ).join("\n");
-  const stepper = renderMotifWorkflowStepper(
-    STEPPER_STATES.map((status, phase) => ({
-      label: status,
-      status,
-      ...(status === "active" ? { phase } : {}),
-    })),
-    capabilities,
-  );
-  const beaconWidth = Math.min(16, width);
-  const beaconExtent = beaconWidth - 4;
-  const beaconPhases = [
-    0,
-    Math.floor(beaconExtent / 2),
-    beaconExtent,
-    beaconExtent + Math.floor(beaconExtent / 2),
-  ];
-  const beacons = beaconPhases.map((phase) =>
-    `phase ${phase}\n${
-      renderMotifActivityBeacon({
-        width: beaconWidth,
-        phase,
-      }, capabilities)
-    }`
-  ).join("\n");
-  const specimens = [
-    [
-      "Horizontal divider",
-      renderMotifPattern({ length: patternLength }, capabilities),
-    ],
-    [
-      "Vertical divider",
-      renderMotifPattern({
-        length: 5,
-        orientation: "vertical",
-      }, capabilities),
-    ],
-    [
-      "Thick ribbon",
-      renderMotifPattern({
-        length: patternLength,
-        thickness: 2,
-      }, capabilities),
-    ],
-    [
-      "Field / weave",
-      renderMotifPattern({
-        length: patternLength,
-        thickness: 4,
-      }, capabilities),
-    ],
-    ["Spinner phases", spinnerPhases],
-    ["Determinate progress", progress],
-    [
-      "Labeled section rule",
-      renderMotifSectionRule("Rule", { width }, capabilities),
-    ],
-    ["Stepper states", stepper],
-    ["Activity-beacon phases", beacons],
-  ] as const;
-  const custom = createCliPresenter(capabilities, {
-    motif: CATALOGUE_CUSTOM_MOTIF,
-  });
-  const customFrames = [
-    [0, 1, 2, 3].map((phase) => custom.motifSpinnerFrame(phase)).join(" "),
-    custom.motifSectionRule("Consumer override", { width }),
-    custom.motifWorkflowStepper([
-      { label: "Complete", status: "complete" },
-      { label: "Active", status: "active", phase: 1 },
-      { label: "Pending", status: "pending" },
-    ]),
-    custom.note("One bound marker reaches narration too"),
-  ].join("\n");
-  return `## Terminal motifs\n\n${
-    specimens.map(([name, frame]) => `### ${name}\n\n${frame}`).join("\n\n")
-  }\n\n### Derived consumer override\n\n${customFrames}`;
-}
-
-/**
- * Render the narration-line foundation sheet through the bound presenter,
- * covering every verb plus one rhythm composition, so the smallest package
- * output jobs stay visually inspectable beside the terminal motifs.
- */
-export function renderNarrationLineSheet(
-  capabilities: TerminalCapabilities,
-): string {
-  const presenter = createCliPresenter(capabilities);
-  const specimens = [
-    ["Success", presenter.success("Checks passed")],
-    ["Note", presenter.note("Cache already warm")],
-    ["Warning", presenter.warning("Two files skipped")],
-    ["Failure", presenter.failure("One frame diverged")],
-    ["Lead-in", presenter.lead("Release checks")],
-    [
-      "Composed rhythm",
-      composeCliBlocks([
-        presenter.lead("Release checks"),
-        [
-          presenter.success("Checks passed"),
-          presenter.note("Cache already warm"),
-        ].join("\n"),
-        presenter.warning("Two files skipped"),
-      ]),
-    ],
-  ] as const;
-  return `## Narration lines\n\n${
-    specimens.map(([name, frame]) => `### ${name}\n\n${frame}`).join("\n\n")
-  }`;
 }

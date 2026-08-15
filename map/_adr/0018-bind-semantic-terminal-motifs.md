@@ -24,6 +24,8 @@ Every rendered Component accepts the shared presentation options and forwards th
 
 The package makes this set future-enrolling. A generated-registry test renders every Component example through a non-discern presenter and rejects discern-glyph leakage. Direct tests cover grouped requests and every interactive composition path. A source guard keeps the distinctive discern glyph repertoire in `motif.ts`, and the canonical-set map names that module as the only authority.
 
+Review foundations smaller than a Component have their own single inventory in `catalogue/terminal-foundations.ts`. The stdout and browser Catalogues plus the Playground's static browser derive sheet identities and complete specimen populations from it, so adding a foundation automatically adds its CLI selector and section, Playground choice, browser navigation and search destination, projected cards, and conformance enrollment. Terminal motifs and Narration lines are the initial population. Animated specimens carry both a live frame cycle and complete static evidence; the browser starts them paused under reduced motion and exposes explicit playback rather than relying on motion alone.
+
 The old `Triangle*`, `renderTriangle*`, presenter triangle bindings, constants, and `verticalTriangleStatusPhase` names are removed rather than aliased. The package has no external consumers at this point, is pre-1.0, and records the break in the changelog; retaining two vocabularies would create two apparent authorities for the same contract.
 
 ## Consequences
@@ -35,6 +37,8 @@ Motif identity stays orthogonal to light/dark selection and terminal capability 
 The strict portability policy excludes some visually attractive symbols. In particular, an East Asian Width–Ambiguous glyph can render as one cell in a Western locale and two in a CJK locale, so the factory rejects it even when the current terminal appears to align it. Consumers that intentionally target one controlled terminal cannot bypass the brand with an object literal; they retain the raw renderer escape hatch only with a valid motif. Updating the pinned Unicode width data is an observable layout change and receives normal review.
 
 The rename is deliberately breaking. Source code, exact-frame tests, documentation, and catalogue selectors use the generic motif vocabulary, while historical ADRs continue to describe the triangle-specific system that existed when those decisions were made.
+
+The motif architecture is inspectable without knowing which development surface owns it. Searching the browser Catalogue for “spinner” reaches the same public-API-derived phase set that `deno task catalogue:cli motifs` prints, while the CLI Playground remains the effectful proof of cursor restoration and real terminal timing. The shared foundation registry eliminates a handwritten browser/terminal inventory split without pretending an interactive wrapper is a Component.
 
 ## Alternatives considered
 

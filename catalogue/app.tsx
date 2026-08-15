@@ -24,6 +24,11 @@ import { type CompositionRecipe, compositionRecipes } from "./compositions.tsx";
 import { CliComponentPreview } from "./cli-preview.tsx";
 import { packageVersion, registry } from "./generated/registry.ts";
 import type { RegistryEntry } from "./generated/registry.ts";
+import { TerminalFoundationPreview } from "./terminal-foundation-preview.tsx";
+import {
+  terminalFoundationDestinations,
+  terminalFoundationSheets,
+} from "./terminal-foundations.ts";
 import { TerminalLayoutRecipe } from "./terminal-layout-inspector.tsx";
 import { useCatalogueTerminalTheme } from "./terminal-theme.ts";
 
@@ -547,6 +552,7 @@ function App() {
       context: `Token · ${token.category}`,
       keywords: `${token.name} ${token.category} ${token.description}`,
     })),
+    ...terminalFoundationDestinations(),
     ...compositionRecipes.map((recipe) => ({
       href: `#recipe-${recipe.id}`,
       title: recipe.title,
@@ -690,6 +696,15 @@ function App() {
               {category}
             </a>
           ))}
+          {terminalFoundationSheets.map((sheet) => (
+            <a
+              key={sheet.id}
+              className="discern-catalogue-nav__child"
+              href={`#terminal-foundation-${sheet.id}`}
+            >
+              {sheet.title}
+            </a>
+          ))}
           <a href="#compositions">Compositions</a>
           <a href="#terminal-layouts">Terminal layouts</a>
           <span className="discern-catalogue-nav__heading">Components</span>
@@ -765,7 +780,7 @@ function App() {
         value={searchQuery}
         onValueChange={setSearchQuery}
         label="Search the Catalogue"
-        placeholder="Search components, tokens, and compositions"
+        placeholder="Search components, foundations, tokens, and compositions"
         icon={<span>⌕</span>}
         hint={
           <span>
@@ -776,7 +791,7 @@ function App() {
         {normalizedSearchQuery === ""
           ? (
             <p className="discern-search-palette__empty">
-              Search by Component name, purpose, guidance, Token, or
+              Search by Component name, purpose, guidance, foundation, Token, or
               Composition.
             </p>
           )
@@ -831,9 +846,8 @@ function App() {
               <h2>One value, every surface.</h2>
             </div>
             <p>
-              Change authored values in{" "}
-              <code>src/tokens/tokens.ts</code>. CSS and this inventory are
-              generated.
+              Token and terminal-foundation inventories are each authored once
+              and projected into every applicable review surface.
             </p>
           </header>
           {tokenCategories.map((category) => {
@@ -875,6 +889,13 @@ function App() {
               </section>
             );
           })}
+          {terminalFoundationSheets.map((sheet) => (
+            <TerminalFoundationPreview
+              sheet={sheet}
+              theme={terminalTheme}
+              key={sheet.id}
+            />
+          ))}
         </section>
 
         <section className="discern-catalogue-section" id="compositions">

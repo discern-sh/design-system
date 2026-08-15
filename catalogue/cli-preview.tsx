@@ -43,6 +43,27 @@ function TerminalAnsiText({ value }: { readonly value: string }) {
   });
 }
 
+/** Project one bare terminal frame through the Catalogue's shared ANSI host. */
+export function CliOutputPreview(
+  { value, label, theme }: {
+    readonly value: string;
+    readonly label: string;
+    readonly theme: TerminalThemeVariant;
+  },
+) {
+  return (
+    <div
+      className="discern-catalogue-cli-preview"
+      data-discern-root
+      data-discern-theme={theme}
+    >
+      <pre className="discern-catalogue-cli-output" aria-label={label}>
+        <code><TerminalAnsiText value={value} /></code>
+      </pre>
+    </div>
+  );
+}
+
 function cliFragmentId(component: string, state: string): string {
   return `component-${component}--cli-${state}`;
 }
@@ -126,18 +147,11 @@ export function CliComponentPreview(
                 #
               </a>
             </header>
-            <div
-              className="discern-catalogue-cli-preview"
-              data-discern-root
-              data-discern-theme={theme}
-            >
-              <pre
-                className="discern-catalogue-cli-output"
-                aria-label={`${meta.name}: ${label} CLI output`}
-              >
-                <code><TerminalAnsiText value={output} /></code>
-              </pre>
-            </div>
+            <CliOutputPreview
+              value={output}
+              label={`${meta.name}: ${label} CLI output`}
+              theme={theme}
+            />
           </section>
         );
       })}

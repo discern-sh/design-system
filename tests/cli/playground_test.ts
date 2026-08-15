@@ -14,6 +14,7 @@ import {
 } from "../../src/cli/interactive/mod.ts";
 import { cliComponentRegistry } from "../../src/generated/cli-registry.ts";
 import { componentGroups } from "../../src/types/component-meta.ts";
+import { terminalFoundationSheets } from "../../catalogue/terminal-foundations.ts";
 import {
   listCliComponents,
   renderCliExemptions,
@@ -239,8 +240,12 @@ Deno.test("every generated component, exemption, and sheet is reachable from the
       `browse omits Group ${group}`,
     );
   }
-  assert(top.some(({ id }) => id === "motifs"));
-  assert(top.some(({ id }) => id === "narration"));
+  for (const sheet of terminalFoundationSheets) {
+    assert(
+      top.some(({ id }) => id === `foundation-${sheet.id}`),
+      `browse omits terminal foundation ${sheet.id}`,
+    );
+  }
   assert(top.some(({ id }) => id === "exemptions"));
 
   const seenSlugs = new Set<string>();

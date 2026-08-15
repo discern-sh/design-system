@@ -9,6 +9,7 @@ import type { CliComponentRegistryEntry } from "../../src/cli/contracts.ts";
 import { cliComponentRegistry } from "../../src/generated/cli-registry.ts";
 import { componentRegistry } from "../../src/generated/component-registry.ts";
 import { componentGroups } from "../../src/types/component-meta.ts";
+import { terminalFoundationSheets } from "../../catalogue/terminal-foundations.ts";
 import {
   renderCliCatalogue,
   resolveCatalogueSelection,
@@ -30,8 +31,14 @@ Deno.test("CLI catalogue resolves all, Group, Component, and motif selectors", (
     kind: "component",
     slug: "badge",
   });
-  assertEquals(resolveCatalogueSelection("motifs"), { kind: "motifs" });
-  assertEquals(resolveCatalogueSelection("narration"), { kind: "narration" });
+  assertEquals(resolveCatalogueSelection("motifs"), {
+    kind: "foundation",
+    id: "motifs",
+  });
+  assertEquals(resolveCatalogueSelection("narration"), {
+    kind: "foundation",
+    id: "narration",
+  });
   assertThrows(
     () => resolveCatalogueSelection("unknown-surface"),
     TypeError,
@@ -44,8 +51,9 @@ Deno.test("complete CLI catalogue renders every registry entry and exemption", a
     undefined,
     testTerminalCapabilities({ columns: 80 }),
   );
-  assertStringIncludes(output, "## Terminal motifs");
-  assertStringIncludes(output, "## Narration lines");
+  for (const sheet of terminalFoundationSheets) {
+    assertStringIncludes(output, `## ${sheet.title}`);
+  }
   for (const group of componentGroups) {
     assertStringIncludes(output, `## ${group}`);
   }
