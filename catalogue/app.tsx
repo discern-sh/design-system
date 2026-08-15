@@ -18,10 +18,12 @@ import {
   cataloguePurposes,
   componentGroups,
 } from "../src/types/component-meta.ts";
+import { cliCompositionRecipes } from "./cli-compositions.ts";
 import { type CompositionRecipe, compositionRecipes } from "./compositions.tsx";
 import { CliComponentPreview } from "./cli-preview.tsx";
 import { packageVersion, registry } from "./generated/registry.ts";
 import type { RegistryEntry } from "./generated/registry.ts";
+import { TerminalLayoutRecipe } from "./terminal-layout-inspector.tsx";
 
 type CatalogueSurface = "web" | "cli";
 
@@ -547,6 +549,14 @@ function App() {
       context: "Composition",
       keywords: `${recipe.title} ${recipe.description}`,
     })),
+    ...cliCompositionRecipes.map((recipe) => ({
+      href: `#terminal-layout-${recipe.id}`,
+      title: recipe.title,
+      context: "Terminal composition",
+      keywords: `${recipe.title} ${recipe.description} ${
+        recipe.components.join(" ")
+      } terminal layout CLI`,
+    })),
   ], [sortedComponents]);
   const searchResults = useMemo(
     () =>
@@ -676,6 +686,7 @@ function App() {
             </a>
           ))}
           <a href="#compositions">Compositions</a>
+          <a href="#terminal-layouts">Terminal layouts</a>
           <span className="discern-catalogue-nav__heading">Components</span>
           {sidebarGroupedComponents.map(({ group, entries }) => (
             <div key={group}>
@@ -901,10 +912,29 @@ function App() {
           </div>
         </section>
 
+        <section className="discern-catalogue-section" id="terminal-layouts">
+          <header className="discern-catalogue-section__header">
+            <div>
+              <Kicker index="03">— Terminal layouts</Kicker>
+              <h2>See the frame, not just the text.</h2>
+            </div>
+            <p>
+              Complete CLI compositions rendered through explicit terminal
+              geometry, with row and column rulers, a viewport fold, overflow
+              facts, and advisory review cues.
+            </p>
+          </header>
+          <div className="discern-catalogue-terminal-layouts">
+            {cliCompositionRecipes.map((recipe) => (
+              <TerminalLayoutRecipe recipe={recipe} key={recipe.id} />
+            ))}
+          </div>
+        </section>
+
         <section className="discern-catalogue-section" id="components">
           <header className="discern-catalogue-section__header">
             <div>
-              <Kicker index="03">— Components</Kicker>
+              <Kicker index="04">— Components</Kicker>
               <h2>Typed, composable, inspectable.</h2>
             </div>
             <p>

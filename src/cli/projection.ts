@@ -24,6 +24,7 @@ import {
   type TerminalRgbColor,
 } from "./ansi-palette.ts";
 import { parseStyledSource, type StyledSegment } from "./styled-sequences.ts";
+import { measureText } from "./text.ts";
 import {
   terminalThemeColor,
   terminalThemes,
@@ -67,6 +68,60 @@ export interface TerminalSpanCss {
 export interface TerminalHtmlOptions {
   /** Package terminal theme colouring the rendered shell. Defaults to dark. */
   readonly theme?: TerminalThemeVariant;
+}
+
+/** Fixed terminal geometry against which a static frame is inspected. */
+export interface TerminalLayoutViewport {
+  /** Available terminal character cells. */
+  readonly columns: number;
+  /** Visible terminal rows before content falls below the fold. */
+  readonly rows: number;
+}
+
+/** One visible row measured from projected terminal output. */
+export interface TerminalLayoutLine {
+  /** One-based row number. */
+  readonly row: number;
+  /** ANSI-free visible text. */
+  readonly text: string;
+  /** Display width in terminal character cells. */
+  readonly columns: number;
+  /** Whether the row contains no visible text. */
+  readonly blank: boolean;
+  /** Whether the row exceeds the inspected viewport width. */
+  readonly overflows: boolean;
+  /** Whether the row begins below the inspected viewport fold. */
+  readonly belowFold: boolean;
+}
+
+/** Advisory pattern worth reviewing in a static terminal layout. */
+export interface TerminalLayoutReviewCue {
+  readonly kind: "blank-run" | "repeated-line";
+  /** One-based rows participating in the cue. */
+  readonly rows: readonly number[];
+  readonly message: string;
+}
+
+/** Pure geometry and advisory review data for one static terminal frame. */
+export interface TerminalLayoutInspection extends TerminalLayoutViewport {
+  readonly contentRows: number;
+  readonly maximumColumns: number;
+  readonly spareRows: number;
+  readonly rowsBelowFold: number;
+  readonly overflowRows: readonly number[];
+  readonly lines: readonly TerminalLayoutLine[];
+  /** Heuristics for human review, never conformance failures. */
+  readonly reviewCues: readonly TerminalLayoutReviewCue[];
+}
+
+/** Options for {@linkcode projectTerminalInspectorHtml}. */
+export interface TerminalInspectorHtmlOptions extends TerminalLayoutViewport {
+  /** Package terminal theme colouring the inspector. Defaults to dark. */
+  readonly theme?: TerminalThemeVariant;
+  /** Inspector caption. Defaults to "Terminal layout inspection". */
+  readonly title?: string;
+  /** Draw one-character-cell guides over the terminal viewport. */
+  readonly showGrid?: boolean;
 }
 
 interface MutableSpanStyle {
@@ -257,6 +312,399 @@ function spanHtml(span: TerminalSpan): string {
     }" target="_blank" rel="noopener noreferrer"${styleAttribute}>${text}</a>`;
   }
   return styleAttribute === "" ? text : `<span${styleAttribute}>${text}</span>`;
+}
+
+function assertTerminalLayoutViewport(
+  viewport: TerminalLayoutViewport,
+): void {
+  for (
+    const [name, value] of [
+      ["columns", viewport.columns],
+      ["rows", viewport.rows],
+    ] as const
+  ) {
+    if (!Number.isSafeInteger(value) || value < 1) {
+      throw new TypeError(
+        `terminal inspector ${name} must be a positive safe integer; received ${value}`,
+      );
+    }
+  }
+}
+
+interface ProjectedTerminalLine {
+  readonly spans: readonly TerminalSpan[];
+  readonly text: string;
+}
+
+function projectedTerminalLines(
+  spans: readonly TerminalSpan[],
+): readonly ProjectedTerminalLine[] {
+  if (spans.length === 0) return [];
+  const rows: TerminalSpan[][] = [[]];
+  for (const span of spans) {
+    const parts = span.text.split("\n");
+    for (const [index, part] of parts.entries()) {
+      if (part !== "") {
+        rows.at(-1)?.push({ ...span, text: part });
+      }
+      if (index < parts.length - 1) rows.push([]);
+    }
+  }
+  if (spans.at(-1)?.text.endsWith("\n") === true) rows.pop();
+  return rows.map((row) => ({
+    spans: row,
+    text: row.map((span) => span.text).join(""),
+  }));
+}
+
+function terminalLineColumns(value: string): number {
+  const tabParts = value.split("\t");
+  let expanded = "";
+  for (const [index, part] of tabParts.entries()) {
+    expanded += part;
+    if (index < tabParts.length - 1) {
+      const width = measureText(expanded);
+      expanded += " ".repeat(8 - width % 8);
+    }
+  }
+  return measureText(expanded);
+}
+
+function cueRows(rows: readonly number[]): string {
+  if (rows.length === 0) return "";
+  if (rows.length === 1) return `row ${rows[0]}`;
+  if (rows.length === 2) return `rows ${rows[0]} and ${rows[1]}`;
+  const contiguous = rows.every((row, index) =>
+    index === 0 || row === (rows[index - 1] ?? 0) + 1
+  );
+  return contiguous
+    ? `rows ${rows[0]}–${rows.at(-1)}`
+    : `rows ${rows.slice(0, -1).join(", ")}, and ${rows.at(-1)}`;
+}
+
+/**
+ * Inspect one static package-emitted frame against explicit terminal geometry.
+ *
+ * Width and fold readings are facts. Repeated visible lines and consecutive
+ * blank rows are returned separately as review cues: they can reveal layout
+ * mistakes, but are never treated as conformance failures because either may
+ * be intentional in a terminal design.
+ */
+export function inspectTerminalLayout(
+  output: string,
+  viewport: TerminalLayoutViewport,
+): TerminalLayoutInspection {
+  assertTerminalLayoutViewport(viewport);
+  const projected = projectedTerminalLines(projectTerminalSpans(output));
+  return inspectProjectedTerminalLayout(projected, viewport);
+}
+
+function inspectProjectedTerminalLayout(
+  projected: readonly ProjectedTerminalLine[],
+  viewport: TerminalLayoutViewport,
+): TerminalLayoutInspection {
+  const lines = projected.map(({ text }, index): TerminalLayoutLine => {
+    const columns = terminalLineColumns(text);
+    return {
+      row: index + 1,
+      text,
+      columns,
+      blank: text.trim() === "",
+      overflows: columns > viewport.columns,
+      belowFold: index >= viewport.rows,
+    };
+  });
+  const reviewCues: TerminalLayoutReviewCue[] = [];
+  for (let index = 0; index < lines.length;) {
+    if (lines[index]?.blank !== true) {
+      index += 1;
+      continue;
+    }
+    const start = index;
+    while (lines[index]?.blank === true) index += 1;
+    if (index - start > 1) {
+      const rows = lines.slice(start, index).map((line) => line.row);
+      reviewCues.push({
+        kind: "blank-run",
+        rows,
+        message: `${cueRows(rows)} contain consecutive blank lines.`,
+      });
+    }
+  }
+  const repeated = new Map<string, number[]>();
+  for (const line of lines) {
+    if (line.blank) continue;
+    const key = line.text;
+    const rows = repeated.get(key) ?? [];
+    rows.push(line.row);
+    repeated.set(key, rows);
+  }
+  for (const rows of repeated.values()) {
+    if (rows.length < 2) continue;
+    reviewCues.push({
+      kind: "repeated-line",
+      rows,
+      message: `${cueRows(rows)} repeat the same visible line.`,
+    });
+  }
+  reviewCues.sort((left, right) =>
+    (left.rows[0] ?? 0) - (right.rows[0] ?? 0) ||
+    left.kind.localeCompare(right.kind)
+  );
+  const contentRows = lines.length;
+  return {
+    ...viewport,
+    contentRows,
+    maximumColumns: Math.max(0, ...lines.map((line) => line.columns)),
+    spareRows: Math.max(0, viewport.rows - contentRows),
+    rowsBelowFold: Math.max(0, contentRows - viewport.rows),
+    overflowRows: lines.filter((line) => line.overflows).map((line) =>
+      line.row
+    ),
+    lines,
+    reviewCues,
+  };
+}
+
+function rgb(color: TerminalRgbColor): string {
+  return `rgb(${color.red} ${color.green} ${color.blue})`;
+}
+
+function rgbAlpha(color: TerminalRgbColor, alpha: number): string {
+  return `rgb(${color.red} ${color.green} ${color.blue} / ${alpha})`;
+}
+
+function terminalRuler(columns: number): readonly [string, string] {
+  const labels = Array<string>(columns).fill(" ");
+  for (let column = 10; column <= columns; column += 10) {
+    const label = String(column);
+    const start = column - label.length;
+    for (const [offset, character] of [...label].entries()) {
+      labels[start + offset] = character;
+    }
+  }
+  return [
+    labels.join(""),
+    Array.from({ length: columns }, (_, index) => String((index + 1) % 10))
+      .join(""),
+  ];
+}
+
+function metricHtml(
+  label: string,
+  color: TerminalRgbColor,
+  border: TerminalRgbColor,
+): string {
+  const style = [
+    "display:inline-flex",
+    "align-items:center",
+    "min-height:1.75rem",
+    "padding:0 0.55rem",
+    `border:1px solid ${rgb(border)}`,
+    "border-radius:999px",
+    `color:${rgb(color)}`,
+    "font:600 0.75rem/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace",
+  ].join(";");
+  return `<span style="${escapeHtml(style)}">${escapeHtml(label)}</span>`;
+}
+
+/**
+ * Project a static terminal frame into a self-contained browser inspector.
+ *
+ * The inspector renders the real projected styles inside explicit columns and
+ * rows, supplies rulers and a fold boundary, and reports geometry separately
+ * from advisory review cues. It contains no script or global stylesheet, so a
+ * consumer can check the returned fragment into a screenshot-review artifact.
+ */
+export function projectTerminalInspectorHtml(
+  output: string,
+  options: TerminalInspectorHtmlOptions,
+): string {
+  assertTerminalLayoutViewport(options);
+  const spans = projectTerminalSpans(output);
+  const projected = projectedTerminalLines(spans);
+  const inspection = inspectProjectedTerminalLayout(projected, options);
+  const theme = terminalThemes[options.theme ?? "dark"];
+  const canvas = terminalThemeColor(theme, "--discern-color-canvas");
+  const surface = terminalThemeColor(theme, "--discern-color-surface");
+  const sunken = terminalThemeColor(theme, "--discern-color-surface-sunken");
+  const ink = terminalThemeColor(theme, "--discern-color-ink");
+  const muted = terminalThemeColor(theme, "--discern-color-ink-muted");
+  const border = terminalThemeColor(theme, "--discern-color-border");
+  const strongBorder = terminalThemeColor(
+    theme,
+    "--discern-color-border-strong",
+  );
+  const accent = terminalThemeColor(theme, "--discern-color-accent-700");
+  const warning = terminalThemeColor(theme, "--discern-color-warning-deep");
+  const danger = terminalThemeColor(theme, "--discern-color-danger");
+  const title = options.title ?? "Terminal layout inspection";
+  const [rulerLabels, rulerTicks] = terminalRuler(options.columns);
+  const reviewRows = new Map<number, TerminalLayoutReviewCue[]>();
+  for (const cue of inspection.reviewCues) {
+    for (const row of cue.rows) {
+      reviewRows.set(row, [...(reviewRows.get(row) ?? []), cue]);
+    }
+  }
+  const renderedRows = Math.max(options.rows, inspection.contentRows);
+  const gridBackground = options.showGrid === true
+    ? `repeating-linear-gradient(to right,transparent 0 calc(1ch - 1px),${
+      rgbAlpha(strongBorder, 0.22)
+    } calc(1ch - 1px) 1ch)`
+    : "none";
+  const rowHtml = Array.from({ length: renderedRows }, (_, index) => {
+    const row = index + 1;
+    const line = inspection.lines[index];
+    const projectedLine = projected[index];
+    const cues = reviewRows.get(row) ?? [];
+    const belowFold = row > options.rows;
+    const overflows = line?.overflows === true;
+    const cueMarker = cues.length === 0 ? "" : "•";
+    const cueTitle = cues.map((cue) => cue.message).join(" ");
+    const background = overflows
+      ? rgbAlpha(danger, 0.12)
+      : belowFold
+      ? rgbAlpha(warning, 0.08)
+      : cues.length > 0
+      ? rgbAlpha(accent, 0.07)
+      : "transparent";
+    const foldBorder = row === options.rows
+      ? `border-bottom:2px solid ${rgb(accent)}`
+      : "border-bottom:2px solid transparent";
+    const shared = [
+      "box-sizing:border-box",
+      "min-height:1.45em",
+      foldBorder,
+      `background-color:${background}`,
+    ].join(";");
+    const numberStyle = [
+      shared,
+      "padding-right:0.6rem",
+      "text-align:right",
+      `color:${rgb(overflows ? danger : belowFold ? warning : muted)}`,
+      "user-select:none",
+    ].join(";");
+    const cueStyle = [
+      shared,
+      `color:${rgb(overflows ? danger : accent)}`,
+      "text-align:center",
+      "user-select:none",
+    ].join(";");
+    const contentStyle = [
+      shared,
+      `min-width:${options.columns}ch`,
+      `background-image:${gridBackground}`,
+      "white-space:pre",
+      "tab-size:8",
+    ].join(";");
+    const content = projectedLine?.spans.map(spanHtml).join("") ?? "";
+    return `<span aria-hidden="true" style="${
+      escapeHtml(numberStyle)
+    }">${row}</span><span aria-hidden="true" title="${
+      escapeHtml(cueTitle)
+    }" style="${
+      escapeHtml(cueStyle)
+    }">${cueMarker}</span><span data-discern-terminal-row="${row}" data-discern-terminal-row-columns="${
+      line?.columns ?? 0
+    }" data-discern-terminal-row-overflow="${
+      overflows ? "true" : "false"
+    }" style="${escapeHtml(contentStyle)}">${content}</span>`;
+  }).join("");
+  const viewportGrid = [
+    "display:grid",
+    `grid-template-columns:max-content 1rem ${options.columns}ch`,
+    "grid-auto-rows:minmax(1.45em,auto)",
+    "width:max-content",
+    "font:0.8125rem/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace",
+    "font-variant-ligatures:none",
+    `color:${rgb(ink)}`,
+  ].join(";");
+  const rulerStyle = [
+    "white-space:pre",
+    "user-select:none",
+    `color:${rgb(muted)}`,
+    `background:${rgb(sunken)}`,
+  ].join(";");
+  const metricParts = [
+    metricHtml(`${options.columns} × ${options.rows} viewport`, accent, border),
+    metricHtml(
+      `${inspection.contentRows} content row${
+        inspection.contentRows === 1 ? "" : "s"
+      }`,
+      ink,
+      border,
+    ),
+    metricHtml(
+      `${inspection.maximumColumns} max columns`,
+      inspection.overflowRows.length === 0 ? ink : danger,
+      inspection.overflowRows.length === 0 ? border : danger,
+    ),
+    inspection.rowsBelowFold === 0
+      ? metricHtml(`${inspection.spareRows} rows spare`, muted, border)
+      : metricHtml(
+        `${inspection.rowsBelowFold} below fold`,
+        warning,
+        warning,
+      ),
+  ];
+  if (inspection.overflowRows.length > 0) {
+    metricParts.push(metricHtml(
+      `${inspection.overflowRows.length} overflow row${
+        inspection.overflowRows.length === 1 ? "" : "s"
+      }`,
+      danger,
+      danger,
+    ));
+  }
+  const cueItems = inspection.reviewCues.map((cue) =>
+    `<li><strong>${
+      cue.kind === "blank-run" ? "Blank run" : "Repeated line"
+    }:</strong> ${escapeHtml(cue.message)}</li>`
+  ).join("");
+  const cuePanel = inspection.reviewCues.length === 0
+    ? `<p style="margin:0;color:${rgb(muted)}">No advisory review cues.</p>`
+    : `<div style="display:flex;gap:0.65rem;align-items:flex-start"><span aria-hidden="true" style="color:${
+      rgb(accent)
+    }">•</span><div><strong>Review cues</strong><ul style="margin:0.3rem 0 0;padding-left:1.1rem">${cueItems}</ul></div></div>`;
+  const figureStyle = [
+    "margin:0",
+    `border:1px solid ${rgb(border)}`,
+    "border-radius:0.75rem",
+    "overflow:hidden",
+    `background:${rgb(surface)}`,
+    `color:${rgb(ink)}`,
+    "font-family:ui-sans-serif,system-ui,sans-serif",
+  ].join(";");
+  const captionStyle = [
+    "display:grid",
+    "gap:0.75rem",
+    "padding:0.9rem 1rem",
+    `border-bottom:1px solid ${rgb(border)}`,
+    `background:${rgb(surface)}`,
+  ].join(";");
+  return `<figure data-discern-terminal-inspector data-discern-terminal-columns="${options.columns}" data-discern-terminal-rows="${options.rows}" style="${
+    escapeHtml(figureStyle)
+  }"><figcaption style="${escapeHtml(captionStyle)}"><strong>${
+    escapeHtml(title)
+  }</strong><span style="display:flex;flex-wrap:wrap;gap:0.4rem">${
+    metricParts.join("")
+  }</span></figcaption><div style="overflow:auto;background:${
+    rgb(canvas)
+  };padding:0.75rem 1rem 1rem"><div role="group" aria-label="${
+    escapeHtml(`${title}, ${options.columns} columns by ${options.rows} rows`)
+  }" style="${
+    escapeHtml(viewportGrid)
+  }"><span></span><span></span><span aria-hidden="true" style="${
+    escapeHtml(rulerStyle)
+  }">${
+    escapeHtml(rulerLabels)
+  }</span><span></span><span></span><span aria-hidden="true" style="${
+    escapeHtml(rulerStyle)
+  }">${
+    escapeHtml(rulerTicks)
+  }</span>${rowHtml}</div></div><div style="padding:0.75rem 1rem;border-top:1px solid ${
+    rgb(border)
+  };font-size:0.8rem;line-height:1.45">${cuePanel}</div></figure>`;
 }
 
 /**

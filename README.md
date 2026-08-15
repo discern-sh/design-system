@@ -8,16 +8,18 @@ deno add jsr:@discern-sh/design-system
 
 ## Public imports
 
-| Import                                      | Contract                                                                                  |
-| ------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `@discern-sh/design-system`                 | Token metadata, component/group metadata types, the package manifest, and `semanticClass` |
-| `@discern-sh/design-system/cli`             | Pure React-free terminal renderers, capabilities, themes, and triangle primitives         |
-| `@discern-sh/design-system/cli/interactive` | Optional Deno terminal driver and typed interaction state machines                        |
-| `@discern-sh/design-system/manifest`        | Framework-neutral manifest schema and the complete package ownership manifest             |
-| `@discern-sh/design-system/runtime`         | Deterministic selected-runtime emitter                                                    |
-| `@discern-sh/design-system/tokens`          | Primitive, semantic, and Discern-preset token metadata                                    |
-| `@discern-sh/design-system/theme/discern`   | Default branded blue preset                                                               |
-| `@discern-sh/design-system/react`           | Optional React components and their public prop types                                     |
+| Import                                              | Contract                                                                                  |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `@discern-sh/design-system`                         | Token metadata, component/group metadata types, the package manifest, and `semanticClass` |
+| `@discern-sh/design-system/cli`                     | Pure React-free terminal renderers, capabilities, themes, and triangle primitives         |
+| `@discern-sh/design-system/cli/interactive`         | Optional Deno terminal driver and typed interaction state machines                        |
+| `@discern-sh/design-system/cli/interactive/testing` | Deterministic fake terminal, named-key scripting, and frame assertions                    |
+| `@discern-sh/design-system/cli/projection`          | Package-output decoding, browser projection, and explicit layout inspection               |
+| `@discern-sh/design-system/manifest`                | Framework-neutral manifest schema and the complete package ownership manifest             |
+| `@discern-sh/design-system/runtime`                 | Deterministic selected-runtime emitter                                                    |
+| `@discern-sh/design-system/tokens`                  | Primitive, semantic, and Discern-preset token metadata                                    |
+| `@discern-sh/design-system/theme/discern`           | Default branded blue preset                                                               |
+| `@discern-sh/design-system/react`                   | Optional React components and their public prop types                                     |
 
 Only `./react` resolves React. The package keeps React and React DOM as catalogue development dependencies and peer dependencies, while its root, manifest, runtime, token, and theme graphs do not import them.
 
@@ -129,10 +131,33 @@ const capabilities = detectTerminalCapabilities({
   columns: isTty ? Deno.consoleSize().columns : undefined,
 });
 
-console.log(
-  renderBadgeCli({ label: "Passed", tone: "success", dot: true }, capabilities),
+const output = renderBadgeCli(
+  { label: "Passed", tone: "success", dot: true },
+  capabilities,
 );
+console.log(output);
 ```
+
+To review a complete static frame as a layout, use the pure projection entrypoint with an explicit terminal viewport:
+
+```ts
+import {
+  inspectTerminalLayout,
+  projectTerminalInspectorHtml,
+} from "@discern-sh/design-system/cli/projection";
+
+const inspection = inspectTerminalLayout(output, { columns: 80, rows: 24 });
+const reviewHtml = projectTerminalInspectorHtml(output, {
+  columns: 80,
+  rows: 24,
+  title: "Status command",
+  showGrid: true,
+});
+
+console.log(inspection.rowsBelowFold, inspection.overflowRows);
+```
+
+The inspection reports visible-cell widths, overflow, content height, and the fold as geometry facts. Consecutive blank rows and repeated exact nonblank rows are advisory review cues, not failures: a Component may own either deliberately. The returned HTML is a self-contained fragment with the real projected styles, row and column rulers, the fold, and optional cell guides; it contains no script and does not emulate cursor-driven terminal sessions.
 
 The optional `./cli/interactive` adapter turns raw terminal input into typed interaction state and renders it through the package's Forms Component renderers. Running an interaction is the effects boundary; importing the module does not mutate the terminal:
 

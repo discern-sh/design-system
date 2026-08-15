@@ -4,6 +4,10 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## Unreleased
+
+- Add public static-frame layout inspection to `./cli/projection`: explicit terminal columns and rows produce line widths, overflow and fold facts, spare or below-fold rows, and advisory repeated-row or blank-run cues; the self-contained HTML inspector adds real package styles, rulers, a visible fold, and optional cell guides without becoming a terminal emulator or a conformance gate. The Catalogue adds four complete, copyable CLI compositions with compact 40×24, standard 80×24, and wide 120×30 review profiles. The guided-choice composition exercises 0.16.0's available-width wrapping, group spacing, and hidden-choice disclosure through the real Select renderer.
+
 ## 0.16.0
 
 - Fix scrolling choice frames across Select, Checkbox, and Radio: they now use all available terminal columns unless explicitly narrowed; wrap styled labels beneath a stable pointer-and-marker prefix so highlight movement cannot reflow them; put one empty framed row above every semantic group heading; and disclose hidden choices in a quiet lower-border status such as `↑ 2 more · ↓ 7 more`, with plain ASCII equivalents. Provider-backed search states retain the before/after counts needed to render that status, Box preserves package styling while wrapping and accepts a styled lower-border label, and viewport fitting now selects the largest actually fitting window when structural rows make frame growth non-linear. Prose-oriented frames retain the Token-derived 62-column measure.

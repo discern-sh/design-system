@@ -530,6 +530,158 @@
   .discern-catalogue-recipe__source > div {
     padding: 10px 18px 14px;
   }
+  .discern-catalogue-terminal-layouts {
+    display: grid;
+    gap: 32px;
+  }
+  .discern-catalogue-terminal-layout {
+    overflow: hidden;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-lg);
+    background: var(--discern-color-surface);
+    box-shadow: var(--discern-shadow-card);
+  }
+  .discern-catalogue-terminal-layout__header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 18px;
+    align-items: start;
+    padding: 18px;
+  }
+  .discern-catalogue-terminal-layout__header h3 {
+    margin: 0;
+    font-size: var(--discern-font-size-display-sm);
+  }
+  .discern-catalogue-terminal-layout__header p {
+    max-width: 68ch;
+    margin: 7px 0 0;
+    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-xs);
+  }
+  .discern-catalogue-terminal-layout__components {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: end;
+    gap: 5px;
+    max-width: 28rem;
+  }
+  .discern-catalogue-terminal-layout__components span {
+    padding: 4px 7px;
+    border: 1px solid var(--discern-color-border);
+    border-radius: 999px;
+    background: var(--discern-color-surface-sunken);
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+  }
+  .discern-catalogue-terminal-layout__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 12px 18px;
+    border-block: 1px solid var(--discern-color-border);
+    background: var(--discern-color-surface-sunken);
+  }
+  .discern-catalogue-terminal-layout__profiles {
+    display: inline-flex;
+  }
+  .discern-catalogue-terminal-layout__profiles button {
+    display: grid;
+    gap: 2px;
+    min-width: 88px;
+    min-height: 48px;
+    padding: 6px 11px;
+    border: 1px solid var(--discern-color-border-strong);
+    background: var(--discern-color-surface);
+    color: var(--discern-color-ink-muted);
+    cursor: pointer;
+    font: 650 var(--discern-font-size-xs) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+  }
+  .discern-catalogue-terminal-layout__profiles button + button {
+    margin-inline-start: -1px;
+  }
+  .discern-catalogue-terminal-layout__profiles button:first-child {
+    border-radius: var(--discern-radius-sm) 0 0 var(--discern-radius-sm);
+  }
+  .discern-catalogue-terminal-layout__profiles button:last-child {
+    border-radius: 0 var(--discern-radius-sm) var(--discern-radius-sm) 0;
+  }
+  .discern-catalogue-terminal-layout__profiles button[aria-pressed="true"] {
+    z-index: 1;
+    border-color: var(--discern-color-accent-500);
+    background: var(--discern-color-accent-100);
+    color: var(--discern-color-accent-800);
+  }
+  .discern-catalogue-terminal-layout__profiles button:focus-visible,
+  .discern-catalogue-terminal-layout__grid-toggle:has(input:focus-visible) {
+    z-index: 2;
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: 2px;
+  }
+  .discern-catalogue-terminal-layout__profiles small {
+    color: var(--discern-color-ink-faint);
+    font: inherit;
+    font-weight: 450;
+  }
+  .discern-catalogue-terminal-layout__grid-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    color: var(--discern-color-ink-muted);
+    cursor: pointer;
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+  }
+  .discern-catalogue-terminal-layout__grid-toggle input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--discern-color-accent-600);
+  }
+  .discern-catalogue-terminal-layout__inspector {
+    overflow: hidden;
+    padding: 18px;
+    background: var(--discern-color-canvas);
+  }
+  .discern-catalogue-terminal-layout__source {
+    border-block-start: 1px solid var(--discern-color-border);
+  }
+  .discern-catalogue-terminal-layout__source > summary {
+    padding: 11px 18px;
+    background: var(--discern-color-surface-sunken);
+    color: var(--discern-color-ink-muted);
+    cursor: pointer;
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+  }
+  .discern-catalogue-terminal-layout__source > summary:focus-visible {
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: -3px;
+  }
+  .discern-catalogue-terminal-layout__source > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: start;
+    padding: 14px 18px 18px;
+  }
+  .discern-catalogue-terminal-layout__source pre {
+    max-height: 28rem;
+    margin: 0;
+    overflow: auto;
+    padding: 12px;
+    border-radius: var(--discern-radius-sm);
+    background: var(--discern-color-canvas);
+    font: var(--discern-font-size-xs) / 1.55 var(--discern-font-mono);
+    white-space: pre;
+  }
+  .discern-catalogue-terminal-layout__source .discern-copy-button {
+    min-height: 36px;
+    padding-inline: 10px;
+  }
   .discern-catalogue-component {
     overflow: hidden;
     margin-block-end: 26px;
@@ -1011,6 +1163,27 @@
     }
     .discern-catalogue-token-grid,
     .discern-example-grid {
+      grid-template-columns: 1fr;
+    }
+    .discern-catalogue-terminal-layout__header {
+      grid-template-columns: 1fr;
+    }
+    .discern-catalogue-terminal-layout__components {
+      justify-content: start;
+    }
+    .discern-catalogue-terminal-layout__controls {
+      align-items: stretch;
+    }
+    .discern-catalogue-terminal-layout__profiles {
+      overflow-x: auto;
+    }
+    .discern-catalogue-terminal-layout__profiles button {
+      flex: 1 0 82px;
+    }
+    .discern-catalogue-terminal-layout__inspector {
+      padding: 10px;
+    }
+    .discern-catalogue-terminal-layout__source > div {
       grid-template-columns: 1fr;
     }
     .discern-catalogue-component > header p {
