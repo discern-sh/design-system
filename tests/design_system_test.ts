@@ -2183,6 +2183,7 @@ Deno.test("monospace is reserved for brand names and code-bearing surfaces", asy
     "catalogue/catalogue.css::.discern-catalogue-api code",
     "catalogue/catalogue.css::.discern-catalogue-brand strong",
     "catalogue/catalogue.css::.discern-catalogue-copyable > code",
+    "catalogue/catalogue.css::.discern-catalogue-terminal-layout__source pre",
     "catalogue/catalogue.css::.discern-catalogue-token code",
     "catalogue/catalogue.css::.discern-catalogue-token__value",
   ].toSorted();
