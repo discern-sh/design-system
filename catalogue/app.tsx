@@ -12,6 +12,7 @@ import {
 } from "../src/components/docs/search-palette/search-palette.tsx";
 import { Tooltip } from "../src/components/feedback/tooltip/tooltip.tsx";
 import { useInitialFragmentTarget } from "../src/components/use-initial-fragment-target.ts";
+import type { TerminalThemeVariant } from "../src/cli/theme.ts";
 import { allTokens, discernThemeTokens } from "../src/tokens/tokens.ts";
 import {
   type CataloguePurpose,
@@ -24,6 +25,7 @@ import { CliComponentPreview } from "./cli-preview.tsx";
 import { packageVersion, registry } from "./generated/registry.ts";
 import type { RegistryEntry } from "./generated/registry.ts";
 import { TerminalLayoutRecipe } from "./terminal-layout-inspector.tsx";
+import { useCatalogueTerminalTheme } from "./terminal-theme.ts";
 
 type CatalogueSurface = "web" | "cli";
 
@@ -178,9 +180,10 @@ function CopyableCode(
 }
 
 function ComponentPreview(
-  { entry, surface, onSurfaceChange }: {
+  { entry, surface, terminalTheme, onSurfaceChange }: {
     readonly entry: RegistryEntry;
     readonly surface: CatalogueSurface;
+    readonly terminalTheme: TerminalThemeVariant;
     readonly onSurfaceChange?: (surface: CatalogueSurface) => void;
   },
 ) {
@@ -272,7 +275,7 @@ function ComponentPreview(
         </div>
       </header>
       {resolvedSurface === "cli"
-        ? <CliComponentPreview entry={entry} />
+        ? <CliComponentPreview entry={entry} theme={terminalTheme} />
         : (
           <div className="discern-catalogue-component__canvas">
             {states.map(({ name, label, Example }) => {
@@ -469,6 +472,7 @@ function App() {
       catalogueTheme(localStorage.getItem("discern-catalogue-theme")) ??
       "system"
   );
+  const terminalTheme = useCatalogueTerminalTheme(theme);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [purpose, setPurpose] = useState<CataloguePurpose | undefined>(() =>
@@ -647,6 +651,7 @@ function App() {
           <ComponentPreview
             entry={entry}
             surface="web"
+            terminalTheme={terminalTheme}
             key={entry.meta.slug}
           />
         ))}
@@ -926,7 +931,11 @@ function App() {
           </header>
           <div className="discern-catalogue-terminal-layouts">
             {cliCompositionRecipes.map((recipe) => (
-              <TerminalLayoutRecipe recipe={recipe} key={recipe.id} />
+              <TerminalLayoutRecipe
+                recipe={recipe}
+                theme={terminalTheme}
+                key={recipe.id}
+              />
             ))}
           </div>
         </section>
@@ -991,6 +1000,7 @@ function App() {
                 <ComponentPreview
                   entry={entry}
                   surface={componentSurfaces[entry.meta.slug] ?? defaultSurface}
+                  terminalTheme={terminalTheme}
                   onSurfaceChange={(next) =>
                     changeComponentSurface(entry.meta.slug, next)}
                   key={entry.meta.slug}

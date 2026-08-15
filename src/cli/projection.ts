@@ -581,7 +581,9 @@ export function projectTerminalInspectorHtml(
       shared,
       "padding-right:0.6rem",
       "text-align:right",
-      `color:${rgb(overflows ? danger : belowFold ? warning : muted)}`,
+      `color:${
+        rgbAlpha(overflows ? danger : belowFold ? warning : muted, 0.68)
+      }`,
       "user-select:none",
     ].join(";");
     const cueStyle = [
@@ -598,7 +600,7 @@ export function projectTerminalInspectorHtml(
       "tab-size:8",
     ].join(";");
     const content = projectedLine?.spans.map(spanHtml).join("") ?? "";
-    return `<span aria-hidden="true" style="${
+    return `<span data-discern-terminal-row-number="${row}" aria-hidden="true" style="${
       escapeHtml(numberStyle)
     }">${row}</span><span aria-hidden="true" title="${
       escapeHtml(cueTitle)
@@ -619,10 +621,16 @@ export function projectTerminalInspectorHtml(
     "font-variant-ligatures:none",
     `color:${rgb(ink)}`,
   ].join(";");
-  const rulerStyle = [
+  const rulerLabelStyle = [
     "white-space:pre",
     "user-select:none",
-    `color:${rgb(muted)}`,
+    `color:${rgbAlpha(muted, 0.7)}`,
+    `background:${rgb(sunken)}`,
+  ].join(";");
+  const rulerTickStyle = [
+    "white-space:pre",
+    "user-select:none",
+    `color:${rgbAlpha(muted, 0.34)}`,
     `background:${rgb(sunken)}`,
   ].join(";");
   const metricParts = [
@@ -682,24 +690,24 @@ export function projectTerminalInspectorHtml(
     `border-bottom:1px solid ${rgb(border)}`,
     `background:${rgb(surface)}`,
   ].join(";");
-  return `<figure data-discern-terminal-inspector data-discern-terminal-columns="${options.columns}" data-discern-terminal-rows="${options.rows}" style="${
+  return `<figure data-discern-terminal-inspector data-discern-terminal-theme="${theme.variant}" data-discern-terminal-columns="${options.columns}" data-discern-terminal-rows="${options.rows}" style="${
     escapeHtml(figureStyle)
   }"><figcaption style="${escapeHtml(captionStyle)}"><strong>${
     escapeHtml(title)
   }</strong><span style="display:flex;flex-wrap:wrap;gap:0.4rem">${
     metricParts.join("")
-  }</span></figcaption><div style="overflow:auto;background:${
+  }</span></figcaption><div data-discern-terminal-viewport style="overflow:auto;background:${
     rgb(canvas)
   };padding:0.75rem 1rem 1rem"><div role="group" aria-label="${
     escapeHtml(`${title}, ${options.columns} columns by ${options.rows} rows`)
   }" style="${
     escapeHtml(viewportGrid)
-  }"><span></span><span></span><span aria-hidden="true" style="${
-    escapeHtml(rulerStyle)
+  }"><span></span><span></span><span data-discern-terminal-ruler="labels" aria-hidden="true" style="${
+    escapeHtml(rulerLabelStyle)
   }">${
     escapeHtml(rulerLabels)
-  }</span><span></span><span></span><span aria-hidden="true" style="${
-    escapeHtml(rulerStyle)
+  }</span><span></span><span></span><span data-discern-terminal-ruler="ticks" aria-hidden="true" style="${
+    escapeHtml(rulerTickStyle)
   }">${
     escapeHtml(rulerTicks)
   }</span>${rowHtml}</div></div><div style="padding:0.75rem 1rem;border-top:1px solid ${

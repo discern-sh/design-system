@@ -1,4 +1,5 @@
 import type { TerminalCapabilities } from "../src/cli/capabilities.ts";
+import type { TerminalThemeVariant } from "../src/cli/theme.ts";
 import {
   composeCliBlocks,
   createCliPresenter,
@@ -21,7 +22,10 @@ export interface CliCompositionRecipe {
   readonly title: string;
   readonly description: string;
   readonly components: readonly string[];
-  readonly render: (capabilities: TerminalCapabilities) => string;
+  readonly render: (
+    capabilities: TerminalCapabilities,
+    theme?: TerminalThemeVariant,
+  ) => string;
   readonly source: string;
 }
 
@@ -34,6 +38,7 @@ interface CliRecipeDefinition<Definition> {
   readonly render: (
     definition: Definition,
     capabilities: TerminalCapabilities,
+    theme: TerminalThemeVariant,
   ) => string;
   readonly source: (definition: Definition) => string;
 }
@@ -46,7 +51,8 @@ function defineCliRecipe<Definition>(
     title: recipe.title,
     description: recipe.description,
     components: recipe.components,
-    render: (capabilities) => recipe.render(recipe.definition, capabilities),
+    render: (capabilities, theme = "dark") =>
+      recipe.render(recipe.definition, capabilities, theme),
     source: recipe.source(recipe.definition),
   };
 }
@@ -114,8 +120,8 @@ const operationalStatusRecipe = defineCliRecipe({
     "Branch choice",
   ],
   definition: operationalStatus,
-  render: (definition, capabilities) => {
-    const presenter = createCliPresenter(capabilities);
+  render: (definition, capabilities, theme) => {
+    const presenter = createCliPresenter(capabilities, { theme });
     return composeCliBlocks([
       presenter.present(renderDocsHeaderCli, {
         brand: "Project status",
@@ -222,8 +228,8 @@ const failureReportRecipe = defineCliRecipe({
     "Retry notice",
   ],
   definition: failureReport,
-  render: (definition, capabilities) => {
-    const presenter = createCliPresenter(capabilities);
+  render: (definition, capabilities, theme) => {
+    const presenter = createCliPresenter(capabilities, { theme });
     return composeCliBlocks([
       presenter.present(renderDocsHeaderCli, {
         brand: "Validation report",
@@ -310,8 +316,8 @@ const commandReferenceRecipe = defineCliRecipe({
     "Pager",
   ],
   definition: commandReference,
-  render: (definition, capabilities) => {
-    const presenter = createCliPresenter(capabilities);
+  render: (definition, capabilities, theme) => {
+    const presenter = createCliPresenter(capabilities, { theme });
     return composeCliBlocks([
       presenter.present(renderDocsHeaderCli, {
         brand: "Command reference",
@@ -410,8 +416,8 @@ const guidedChoiceRecipe = defineCliRecipe({
     "A complete interactive decision frame that exercises responsive label wrapping, semantic groups, and hidden-choice disclosure.",
   components: ["Docs header", "Section", "Select"],
   definition: guidedChoice,
-  render: (definition, capabilities) => {
-    const presenter = createCliPresenter(capabilities);
+  render: (definition, capabilities, theme) => {
+    const presenter = createCliPresenter(capabilities, { theme });
     return composeCliBlocks([
       presenter.present(renderDocsHeaderCli, {
         brand: "Setup",

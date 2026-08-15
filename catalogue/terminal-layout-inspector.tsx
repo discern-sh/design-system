@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { CopyButton } from "../src/components/docs/copy-button/copy-button.tsx";
 import { projectTerminalInspectorHtml } from "../src/cli/projection.ts";
+import type { TerminalThemeVariant } from "../src/cli/theme.ts";
 import type { CliCompositionRecipe } from "./cli-compositions.ts";
 import { catalogueCliCapabilities } from "./cli-preview.tsx";
 
@@ -25,7 +26,10 @@ function terminalViewportProfile(id: TerminalViewportProfileId) {
 
 /** Render one complete CLI recipe through the package's real layout inspector. */
 export function TerminalLayoutRecipe(
-  { recipe }: { readonly recipe: CliCompositionRecipe },
+  { recipe, theme }: {
+    readonly recipe: CliCompositionRecipe;
+    readonly theme: TerminalThemeVariant;
+  },
 ) {
   const [profileId, setProfileId] = useState<TerminalViewportProfileId>(
     "standard",
@@ -37,13 +41,14 @@ export function TerminalLayoutRecipe(
       ...catalogueCliCapabilities,
       columns: profile.columns,
     };
-    return projectTerminalInspectorHtml(recipe.render(capabilities), {
+    return projectTerminalInspectorHtml(recipe.render(capabilities, theme), {
       columns: profile.columns,
       rows: profile.rows,
       title: `${recipe.title} · ${profile.label}`,
       showGrid,
+      theme,
     });
-  }, [profile, recipe, showGrid]);
+  }, [profile, recipe, showGrid, theme]);
 
   return (
     <article

@@ -361,7 +361,10 @@ Deno.test("Catalogue switches each ordinary Component while conformance stays we
   assertStringIncludes(source, 'parameters.get("surface")');
   assertStringIncludes(source, "componentSurfaces[entry.meta.slug]");
   assertStringIncludes(source, "changeComponentSurface(entry.meta.slug, next)");
-  assertStringIncludes(source, "<CliComponentPreview entry={entry} />");
+  assertStringIncludes(
+    source,
+    "<CliComponentPreview entry={entry} theme={terminalTheme} />",
+  );
   assertStringIncludes(source, 'role="group"');
   assertStringIncludes(source, "aria-pressed={resolvedSurface === candidate}");
   assertStringIncludes(source, 'candidate === "web" ? "Web" : "CLI"');

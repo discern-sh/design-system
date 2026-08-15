@@ -6,7 +6,7 @@ Each release is cut from a green run of the full release gate — formatting, li
 
 ## Unreleased
 
-- Add public static-frame layout inspection to `./cli/projection`: explicit terminal columns and rows produce line widths, overflow and fold facts, spare or below-fold rows, and advisory repeated-row or blank-run cues; the self-contained HTML inspector adds real package styles, rulers, a visible fold, and optional cell guides without becoming a terminal emulator or a conformance gate. The Catalogue adds four complete, copyable CLI compositions with compact 40×24, standard 80×24, and wide 120×30 review profiles. The guided-choice composition exercises 0.16.0's available-width wrapping, group spacing, and hidden-choice disclosure through the real Select renderer.
+- Add public static-frame layout inspection to `./cli/projection`: explicit terminal columns and rows produce line widths, overflow and fold facts, spare or below-fold rows, and advisory repeated-row or blank-run cues; the self-contained HTML inspector adds real package styles, quiet hierarchy-aware rulers, a visible fold, and optional cell guides without becoming a terminal emulator or a conformance gate. The Catalogue adds four complete, copyable CLI compositions with compact 40×24, standard 80×24, and wide 120×30 review profiles. Every terminal specimen follows the Catalogue's resolved System, Light, or Dark mode through the package's real terminal palettes. The guided-choice composition exercises 0.16.0's available-width wrapping, group spacing, and hidden-choice disclosure through the real Select renderer.
 
 ## 0.16.0
 

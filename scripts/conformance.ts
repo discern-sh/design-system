@@ -16,6 +16,7 @@ import { withViewport } from "./viewport.ts";
 
 const OUTPUT_ROOT = new URL("../dist/conformance/", import.meta.url);
 const WIDE_VIEWPORT = { width: 1440, height: 1000 } as const;
+const TERMINAL_REVIEW_VIEWPORT = { width: 1920, height: 1200 } as const;
 const NARROW_VIEWPORT = { width: 390, height: 844 } as const;
 const WCAG_TAGS = [
   "wcag2a",
@@ -704,6 +705,145 @@ async function verifyStateFragmentRestoration(
   });
 }
 
+interface TerminalCatalogueEvidence {
+  readonly layouts: number;
+  readonly profileChecks: number;
+  readonly componentSpecimens: number;
+}
+
+async function verifyTerminalCatalogue(
+  page: Page,
+  origin: string,
+): Promise<TerminalCatalogueEvidence> {
+  return await withViewport(page, TERMINAL_REVIEW_VIEWPORT, async () => {
+    const url = new URL("/catalogue/", origin);
+    url.searchParams.set("surface", "cli");
+    url.searchParams.set("theme", "light");
+    url.hash = "terminal-layouts";
+    await page.goto(url.href, { waitUntil: "networkidle" });
+    await page.locator(".discern-catalogue-shell").waitFor();
+    await page.evaluate(() => document.fonts.ready.then(() => undefined));
+
+    const layouts = page.locator("[data-discern-cli-composition]");
+    const layoutCount = await layouts.count();
+    invariant(layoutCount > 0, "Terminal Catalogue needs a layout recipe");
+    let profileChecks = 0;
+    for (let layoutIndex = 0; layoutIndex < layoutCount; layoutIndex += 1) {
+      const layout = layouts.nth(layoutIndex);
+      const title = await layout.locator("h3").first().textContent() ??
+        `layout ${layoutIndex + 1}`;
+      const profiles = layout.locator(
+        ".discern-catalogue-terminal-layout__profiles button",
+      );
+      const profileCount = await profiles.count();
+      invariant(profileCount > 0, `${title} needs a viewport profile`);
+      for (
+        let profileIndex = 0;
+        profileIndex < profileCount;
+        profileIndex += 1
+      ) {
+        const profile = profiles.nth(profileIndex);
+        const label = (await profile.textContent())?.trim() ??
+          `profile ${profileIndex + 1}`;
+        await profile.click();
+        const viewport = layout.locator("[data-discern-terminal-viewport]");
+        await viewport.waitFor();
+        const width = await viewport.evaluate((node) => ({
+          client: node.clientWidth,
+          scroll: node.scrollWidth,
+        }));
+        invariant(
+          width.scroll <= width.client,
+          `${title} / ${label} has a redundant horizontal scrollbar: ` +
+            `${width.client}px client / ${width.scroll}px content`,
+        );
+        profileChecks += 1;
+      }
+    }
+
+    const componentSpecimens = page.locator(
+      ".discern-catalogue-cli-preview",
+    );
+    const componentSpecimenCount = await componentSpecimens.count();
+    invariant(
+      componentSpecimenCount > 0,
+      "Terminal Catalogue needs a rendered Component specimen",
+    );
+    const inspectors = page.locator("[data-discern-terminal-theme]");
+    const allTerminalSurfacesUse = async (
+      theme: CatalogueTheme,
+    ): Promise<boolean> => {
+      const inspectorThemes = await inspectors.evaluateAll((nodes) =>
+        nodes.map((node) => node.getAttribute("data-discern-terminal-theme"))
+      );
+      const componentThemes = await componentSpecimens.evaluateAll((nodes) =>
+        nodes.map((node) => node.getAttribute("data-discern-theme"))
+      );
+      return inspectorThemes.length === layoutCount &&
+        inspectorThemes.every((value) => value === theme) &&
+        componentThemes.length === componentSpecimenCount &&
+        componentThemes.every((value) => value === theme);
+    };
+    invariant(
+      await allTerminalSurfacesUse("light"),
+      "Light mode did not reach every terminal surface",
+    );
+
+    const headingOutput = page.locator(
+      '[data-discern-component="heading"] .discern-catalogue-cli-preview',
+    ).first();
+    const terminalPalette = async (): Promise<
+      { readonly background: string; readonly foreground: string }
+    > =>
+      await headingOutput.evaluate((node) => {
+        const coloured = node.querySelector<HTMLElement>('[style*="color"]');
+        return {
+          background: getComputedStyle(node).backgroundColor,
+          foreground: coloured === null ? "" : getComputedStyle(coloured).color,
+        };
+      });
+    const lightPalette = await terminalPalette();
+    invariant(
+      lightPalette.foreground !== "",
+      "Heading CLI specimen needs projected colour evidence",
+    );
+
+    await page.locator(
+      '.discern-catalogue-theme input[value="dark"]',
+    ).check();
+    await eventually(
+      async () => await allTerminalSurfacesUse("dark"),
+      "Dark mode did not reach every terminal surface",
+    );
+    const darkPalette = await terminalPalette();
+    invariant(
+      darkPalette.background !== lightPalette.background &&
+        darkPalette.foreground !== lightPalette.foreground,
+      "Dark mode changed terminal labels without re-rendering its palette",
+    );
+
+    await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
+    await page.locator(
+      '.discern-catalogue-theme input[value="system"]',
+    ).check();
+    await eventually(
+      async () => await allTerminalSurfacesUse("light"),
+      "System mode did not follow a light browser preference",
+    );
+    await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
+    await eventually(
+      async () => await allTerminalSurfacesUse("dark"),
+      "System mode did not follow a changed dark browser preference",
+    );
+
+    return {
+      layouts: layoutCount,
+      profileChecks,
+      componentSpecimens: componentSpecimenCount,
+    };
+  });
+}
+
 async function captureReviewSheets(
   page: Page,
   origin: string,
@@ -847,6 +987,20 @@ export async function runConformance(): Promise<void> {
         }`,
       );
     }
+    let terminalCatalogue: TerminalCatalogueEvidence = {
+      layouts: 0,
+      profileChecks: 0,
+      componentSpecimens: 0,
+    };
+    try {
+      terminalCatalogue = await verifyTerminalCatalogue(page, origin);
+    } catch (error) {
+      failures.push(
+        `terminal Catalogue: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
     const resilience = await runResilienceConformance(
       browser,
       page,
@@ -884,6 +1038,7 @@ export async function runConformance(): Promise<void> {
       `Conformance passed: ${expectedComponents.length} components, ${accessibilityScans} accessibility scans, ${scenarios} interaction scenarios, 1 cold-state-fragment check, ${forcedColorFocusChecks} forced-colour focus checks, and ${
         screenshots + 1
       } review screenshots; ${floatingSurfaces} floating surfaces share the clipping cure. ` +
+        `Terminal Catalogue passed ${terminalCatalogue.profileChecks} profile fits across ${terminalCatalogue.layouts} layouts and re-themed ${terminalCatalogue.componentSpecimens} Component specimens. ` +
         `Journey resilience passed: ${resilience.journeys} journeys, ` +
         `${resilience.journeyStages} ordered stages, ` +
         `${resilience.journeyAxeScans} axe scans, ` +

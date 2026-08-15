@@ -108,6 +108,8 @@ Deno.test("terminal inspector HTML carries a self-contained viewport and real st
   });
 
   assertStringIncludes(html, "data-discern-terminal-inspector");
+  assertStringIncludes(html, 'data-discern-terminal-theme="dark"');
+  assertStringIncludes(html, "data-discern-terminal-viewport");
   assertStringIncludes(html, 'data-discern-terminal-columns="12"');
   assertStringIncludes(html, 'data-discern-terminal-rows="4"');
   assertStringIncludes(html, "&lt;Status&gt; &amp; layout");
@@ -115,6 +117,11 @@ Deno.test("terminal inspector HTML carries a self-contained viewport and real st
   assertStringIncludes(html, "2 content rows");
   assertStringIncludes(html, "2 rows spare");
   assertStringIncludes(html, "123456789012");
+  assertStringIncludes(html, 'data-discern-terminal-ruler="labels"');
+  assertStringIncludes(html, 'data-discern-terminal-ruler="ticks"');
+  assertStringIncludes(html, 'data-discern-terminal-row-number="1"');
+  assertStringIncludes(html, " / 0.7)");
+  assertStringIncludes(html, " / 0.34)");
   assertStringIncludes(html, "repeating-linear-gradient");
   assertStringIncludes(html, "font-weight:700");
   assertStringIncludes(html, "No advisory review cues.");

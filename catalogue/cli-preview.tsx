@@ -4,6 +4,7 @@ import {
   terminalLinkHref,
   terminalSpanCss,
 } from "../src/cli/projection.ts";
+import type { TerminalThemeVariant } from "../src/cli/theme.ts";
 import type { RegistryEntry } from "./generated/registry.ts";
 
 /** Fixed terminal profile used for deterministic Catalogue specimens. */
@@ -46,9 +47,28 @@ function cliFragmentId(component: string, state: string): string {
   return `component-${component}--cli-${state}`;
 }
 
+function terminalThemeProps(
+  component: string,
+  props: unknown,
+  theme: TerminalThemeVariant,
+): Readonly<Record<string, unknown>> {
+  if (props === null || typeof props !== "object" || Array.isArray(props)) {
+    throw new TypeError("Catalogue CLI example props must be an object");
+  }
+  const example = props as Readonly<Record<string, unknown>>;
+  // Theme toggle uses `theme` for its authored current-state example and
+  // `palette` for terminal colour; every other renderer uses `theme` itself.
+  return component === "theme-toggle"
+    ? { ...example, palette: theme }
+    : { ...example, theme };
+}
+
 /** Render one Component's real CLI Catalogue examples as bare terminal output. */
 export function CliComponentPreview(
-  { entry }: { readonly entry: RegistryEntry },
+  { entry, theme }: {
+    readonly entry: RegistryEntry;
+    readonly theme: TerminalThemeVariant;
+  },
 ) {
   const { cli, meta } = entry;
   if (cli.stance === "exempt") {
@@ -86,7 +106,10 @@ export function CliComponentPreview(
       {cli.examples.map(({ name, props }) => {
         const label = exampleLabel(name);
         const fragmentId = cliFragmentId(meta.slug, name);
-        const output = cli.render(props, catalogueCliCapabilities);
+        const output = cli.render(
+          terminalThemeProps(meta.slug, props, theme),
+          catalogueCliCapabilities,
+        );
         return (
           <section
             className="discern-catalogue-example-state"
@@ -106,7 +129,7 @@ export function CliComponentPreview(
             <div
               className="discern-catalogue-cli-preview"
               data-discern-root
-              data-discern-theme="dark"
+              data-discern-theme={theme}
             >
               <pre
                 className="discern-catalogue-cli-output"

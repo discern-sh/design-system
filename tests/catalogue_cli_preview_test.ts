@@ -2,12 +2,18 @@ import {
   assert,
   assertEquals,
   assertMatch,
+  assertNotEquals,
   assertStringIncludes,
 } from "@std/assert";
 import { fromFileUrl, join } from "@std/path";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { stripAnsi } from "../src/cli/ansi.ts";
 import { projectTerminalSpans } from "../src/cli/projection.ts";
-import { catalogueCliCapabilities } from "../catalogue/cli-preview.tsx";
+import {
+  catalogueCliCapabilities,
+  CliComponentPreview,
+} from "../catalogue/cli-preview.tsx";
 import { registry } from "../catalogue/generated/registry.ts";
 
 const PACKAGE_ROOT = fromFileUrl(new URL("../", import.meta.url));
@@ -117,4 +123,49 @@ Deno.test("browser Catalogue enrols grouped interactions and lossless Fleet iden
       `${slug} is missing CLI example ${exampleName}`,
     );
   }
+});
+
+Deno.test("browser CLI specimens follow the resolved Catalogue terminal theme", () => {
+  const heading = registry.find(({ meta }) => meta.slug === "heading");
+  if (heading === undefined) throw new TypeError("heading is missing");
+
+  const light = renderToStaticMarkup(
+    createElement(CliComponentPreview, { entry: heading, theme: "light" }),
+  );
+  const dark = renderToStaticMarkup(
+    createElement(CliComponentPreview, { entry: heading, theme: "dark" }),
+  );
+
+  assertStringIncludes(light, 'data-discern-theme="light"');
+  assertStringIncludes(dark, 'data-discern-theme="dark"');
+  assertNotEquals(light, dark);
+});
+
+Deno.test("Theme toggle owns the only semantic collision with terminal theme props", () => {
+  const owners = new Set<string>();
+  for (const entry of registry) {
+    if (entry.cli.stance !== "rendered") continue;
+    for (const { props } of entry.cli.examples) {
+      if (props !== null && typeof props === "object" && "theme" in props) {
+        owners.add(entry.meta.slug);
+      }
+    }
+  }
+  assertEquals([...owners].sort(), ["theme-toggle"]);
+});
+
+Deno.test("Catalogue palette injection preserves Theme toggle example states", () => {
+  const themeToggle = registry.find(({ meta }) => meta.slug === "theme-toggle");
+  if (themeToggle === undefined) throw new TypeError("theme toggle is missing");
+
+  const light = renderToStaticMarkup(
+    createElement(CliComponentPreview, {
+      entry: themeToggle,
+      theme: "light",
+    }),
+  );
+
+  assertStringIncludes(light, "Switch to the dark theme");
+  assertStringIncludes(light, "Switch to the light theme");
+  assertStringIncludes(light, 'data-discern-theme="light"');
 });
