@@ -244,7 +244,7 @@ function assertDefinedTerminalMotif(
  */
 export const DISCERN_TERMINAL_MOTIF: TerminalMotif = defineTerminalMotif({
   unicode: {
-    spinner: ["▴", "▸", "▾", "◂"],
+    spinner: ["▴", "◂", "▾", "▸"],
     pattern: ["◮", "⧩", "◭", "⧨"],
     marker: "◮",
     status: {
@@ -253,7 +253,7 @@ export const DISCERN_TERMINAL_MOTIF: TerminalMotif = defineTerminalMotif({
     },
   },
   ascii: {
-    spinner: ["^", ">", "v", "<"],
+    spinner: ["^", "<", "v", ">"],
     pattern: [">", "v", "^", "<"],
     marker: ">",
     status: {

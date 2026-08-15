@@ -173,7 +173,7 @@ Deno.test("sequential forms paint exact Process steps frames", async () => {
     .submit();
   assertEquals(io.writes, [
     "Setup\n\n[▴] Account\n │\n ·  Confirm\n",
-    "Setup\n\n ◭  Account\n │\n[▸] Confirm\n\nAccount: Ada\n",
+    "Setup\n\n ◭  Account\n │\n[◂] Confirm\n\nAccount: Ada\n",
     "Setup\n\n ◭  Account\n │\n ◭  Confirm\n\nAccount: Ada\n\n✓ Complete\n",
   ]);
 });

@@ -129,9 +129,9 @@ Deno.test("terminal motif factories validate, freeze, and derive semantic roles"
 
   assertEquals(DISCERN_TERMINAL_MOTIF.unicode.spinner, [
     "▴",
-    "▸",
-    "▾",
     "◂",
+    "▾",
+    "▸",
   ]);
   assertEquals(CUSTOM_TERMINAL_MOTIF.unicode.marker, "◉");
   assertEquals(DISCERN_TERMINAL_MOTIF.unicode.marker, "◮");
@@ -290,11 +290,11 @@ Deno.test("all spinner phases preserve their Unicode and ASCII orders", () => {
   const ascii = testTerminalCapabilities({ unicode: false });
   assertEquals(
     [0, 1, 2, 3, 4].map((phase) => renderMotifSpinnerFrame(phase, unicode)),
-    ["▴", "▸", "▾", "◂", "▴"],
+    ["▴", "◂", "▾", "▸", "▴"],
   );
   assertEquals(
     [0, 1, 2, 3, 4].map((phase) => renderMotifSpinnerFrame(phase, ascii)),
-    ["^", ">", "v", "<", "^"],
+    ["^", "<", "v", ">", "^"],
   );
 });
 
@@ -421,7 +421,7 @@ Deno.test("workflow stepper renders every semantic step state", () => {
       { label: "Failed", status: "error" },
       { label: "Stopped", status: "cancelled" },
     ], capabilities),
-    " ◭  Done\n │\n[▸] Working\n │\n ·  Later\n │\n !  Failed\n │\n ×  Stopped",
+    " ◭  Done\n │\n[◂] Working\n │\n ·  Later\n │\n !  Failed\n │\n ×  Stopped",
     capabilities,
   );
 });
@@ -482,7 +482,7 @@ Deno.test("every motif primitive degrades exactly across the capability matrix",
     "▴",
     "[ 50%] ◮⧩...",
     "━━ ◮ GO ━━━━",
-    " ◭  Done\n │\n[▸] Work\n │\n ·  Later\n │\n !  Fail\n │\n ×  Stop",
+    " ◭  Done\n │\n[◂] Work\n │\n ·  Later\n │\n !  Fail\n │\n ×  Stop",
     "◮⧩◭⧨....",
   ];
   const asciiFrames = [
@@ -490,7 +490,7 @@ Deno.test("every motif primitive degrades exactly across the capability matrix",
     "^",
     "[ 50%] >v...",
     "== > GO ====",
-    " ^  Done\n |\n[>] Work\n |\n .  Later\n |\n !  Fail\n |\n x  Stop",
+    " ^  Done\n |\n[<] Work\n |\n .  Later\n |\n !  Fail\n |\n x  Stop",
     ">v^<....",
   ];
 

@@ -45,15 +45,15 @@ Deno.test("Activity log renders exact narrow, standard, wide, and capability fra
     const [columns, expected] of [
       [
         16,
-        "▸ Build styles\n◮ Tokens held\n│   indented\n│   detail\n│ three now\nCtrl+C stops.",
+        "◂ Build styles\n◮ Tokens held\n│   indented\n│   detail\n│ three now\nCtrl+C stops.",
       ],
       [
         40,
-        "▸ Build styles\n◮ Tokens held\n│ two words that will wrap on narrow\n│   indented detail\n│ three now\nCtrl+C stops.",
+        "◂ Build styles\n◮ Tokens held\n│ two words that will wrap on narrow\n│   indented detail\n│ three now\nCtrl+C stops.",
       ],
       [
         80,
-        "▸ Build styles\n◮ Tokens held\n│ two words that will wrap on narrow\n│   indented detail\n│ three now\nCtrl+C stops.",
+        "◂ Build styles\n◮ Tokens held\n│ two words that will wrap on narrow\n│   indented detail\n│ three now\nCtrl+C stops.",
       ],
     ] as const
   ) {
@@ -66,8 +66,8 @@ Deno.test("Activity log renders exact narrow, standard, wide, and capability fra
   }
   assertCapabilityLevels(
     (capabilities) => renderActivityLogCli(streaming, capabilities),
-    "▸ Build styles\n◮ Tokens held\n│ two words that will wrap on narrow\n│   indented detail\n│ three now\nCtrl+C stops.",
-    "> Build styles\n> Tokens held\n| two words that will wrap on narrow\n|   indented detail\n| three now\nCtrl+C stops.",
+    "◂ Build styles\n◮ Tokens held\n│ two words that will wrap on narrow\n│   indented detail\n│ three now\nCtrl+C stops.",
+    "< Build styles\n> Tokens held\n| two words that will wrap on narrow\n|   indented detail\n| three now\nCtrl+C stops.",
   );
 });
 
@@ -89,7 +89,7 @@ Deno.test("Activity log tail rows stay reserved while the stream is empty", () =
       tail: [],
       tailRows: 4,
     }, capabilities),
-    "▸ Build styles\n│\n│\n│\n│\nCtrl+C stops.",
+    "◂ Build styles\n│\n│\n│\n│\nCtrl+C stops.",
     capabilities,
   );
 });
@@ -102,7 +102,7 @@ Deno.test("Activity log windows the last rows after width wrapping", () => {
   );
   assertExactFrame(
     rendered,
-    "▸ Build styles\n│   indented\n│   detail\n│ three now\nCtrl+C stops.",
+    "◂ Build styles\n│   indented\n│   detail\n│ three now\nCtrl+C stops.",
     capabilities,
   );
 });
@@ -145,7 +145,7 @@ Deno.test("Activity log footer row is reserved without a hint", () => {
     tail: ["only"],
     tailRows: 1,
   }, capabilities);
-  assertEquals(rendered, "▸ Build styles\n│ only\n");
+  assertEquals(rendered, "◂ Build styles\n│ only\n");
   assertEquals(rendered.split("\n").length, 3);
 });
 
