@@ -4,7 +4,7 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
-## Unreleased
+## 0.18.1
 
 - Fix clean-checkout verification so the build materializes the ignored Catalogue registry before any type-check or test can import it. Release publication now exercises the same build-before-check ordering as the discern quality gate instead of depending on generated files left by an earlier local build.
 
