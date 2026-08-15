@@ -4,7 +4,7 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
-## Unreleased
+## 0.17.0
 
 - Extend the bound terminal presenter across the foundation renderers whose call shapes cannot use generic `present(renderer, props)`: `box`, `triangleSpinnerFrame`, `triangleSectionRule`, and `triangleWorkflowStepper` now supply the presenter's effective capabilities and inject its light or dark theme where applicable, while an explicit per-call motif theme still wins. This keeps light-theme section headings out of the raw renderer's dark default and leaves every bound call byte-equal to the equivalent fully specified manual call.
 - Add public static-frame layout inspection to `./cli/projection`: explicit terminal columns and rows produce line widths, overflow and fold facts, spare or below-fold rows, and advisory repeated-row or blank-run cues; the self-contained HTML inspector adds real package styles, quiet hierarchy-aware rulers, a visible fold, and optional cell guides without becoming a terminal emulator or a conformance gate. The Catalogue adds four complete, copyable CLI compositions with compact 40×24, standard 80×24, and wide 120×30 review profiles. Every terminal specimen follows the Catalogue's resolved System, Light, or Dark mode through the package's real terminal palettes. The guided-choice composition exercises 0.16.0's available-width wrapping, group spacing, and hidden-choice disclosure through the real Select renderer.
