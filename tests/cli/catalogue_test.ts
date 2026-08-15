@@ -30,7 +30,7 @@ Deno.test("CLI catalogue resolves all, Group, Component, and motif selectors", (
     kind: "component",
     slug: "badge",
   });
-  assertEquals(resolveCatalogueSelection("triangles"), { kind: "motifs" });
+  assertEquals(resolveCatalogueSelection("motifs"), { kind: "motifs" });
   assertEquals(resolveCatalogueSelection("narration"), { kind: "narration" });
   assertThrows(
     () => resolveCatalogueSelection("unknown-surface"),
@@ -44,7 +44,7 @@ Deno.test("complete CLI catalogue renders every registry entry and exemption", a
     undefined,
     testTerminalCapabilities({ columns: 80 }),
   );
-  assertStringIncludes(output, "## Triangle motifs");
+  assertStringIncludes(output, "## Terminal motifs");
   assertStringIncludes(output, "## Narration lines");
   for (const group of componentGroups) {
     assertStringIncludes(output, `## ${group}`);
@@ -88,9 +88,9 @@ Deno.test("CLI catalogue filters one Group or Component without hiding exemption
   );
 });
 
-Deno.test("triangle catalogue derives the complete motif specimen set", async () => {
+Deno.test("motif catalogue derives the complete default and custom specimen set", async () => {
   const output = await renderCliCatalogue(
-    "triangles",
+    "motifs",
     testTerminalCapabilities({ columns: 32 }),
   );
   for (
@@ -104,6 +104,7 @@ Deno.test("triangle catalogue derives the complete motif specimen set", async ()
       "Labeled section rule",
       "Stepper states",
       "Activity-beacon phases",
+      "Derived consumer override",
     ]
   ) {
     assertStringIncludes(output, `### ${heading}`);
@@ -114,6 +115,8 @@ Deno.test("triangle catalogue derives the complete motif specimen set", async ()
   ) {
     assertStringIncludes(output, status);
   }
+  assertStringIncludes(output, "◴ ◷ ◶ ◵");
+  assertStringIncludes(output, "▵ CONSUMER OVERRIDE");
 });
 
 Deno.test("narration catalogue presents every verb and the composed rhythm", async () => {
@@ -142,7 +145,7 @@ Deno.test("narration catalogue presents every verb and the composed rhythm", asy
     output,
     "◮ RELEASE CHECKS\n\n✓ Checks passed\n◮ Cache already warm\n\n! Two files skipped",
   );
-  assert(!output.includes("## Triangle motifs"));
+  assert(!output.includes("## Terminal motifs"));
   assert(!output.includes("## Display"));
 
   const ascii = await renderCliCatalogue(

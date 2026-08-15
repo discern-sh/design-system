@@ -8,16 +8,20 @@ import { renderBox } from "../../../cli/box.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import {
+  motifPassthrough,
+  type TerminalMotifOptions,
+} from "../../../cli/motif.ts";
+import {
   terminalThemes,
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
-import { renderTrianglePattern } from "../../../cli/triangles.ts";
+import { renderMotifPattern } from "../../../cli/motifs.ts";
 import type { HeroBlockLayout, HeroBlockSurface } from "./hero-block.types.ts";
 import { marketingCliWidth, wrapMarketingCliText } from "../marketing-frame.ts";
 
 /** Inputs accepted by the terminal Hero block renderer. */
-export interface HeroBlockCliProps {
+export interface HeroBlockCliProps extends TerminalMotifOptions {
   readonly title: string;
   readonly eyebrow?: string;
   readonly description?: string;
@@ -43,7 +47,7 @@ export const cliExamples: readonly CliExample<HeroBlockCliProps>[] = [
   },
 ] as const;
 
-/** Render a terminal title banner beneath the package triangle weave. */
+/** Render a terminal title banner beneath the effective motif weave. */
 const renderHeroBlockCli: CliRenderer<HeroBlockCliProps> = (
   props,
   capabilities,
@@ -69,10 +73,11 @@ const renderHeroBlockCli: CliRenderer<HeroBlockCliProps> = (
     props.meta === undefined ? "" : wrapMarketingCliText(props.meta, bodyWidth),
   ], { spacing: 1 });
   return joinVertical([
-    renderTrianglePattern({
+    renderMotifPattern({
       length: width,
       tone: semanticTone,
       ...(props.theme === undefined ? {} : { theme: props.theme }),
+      ...motifPassthrough(props),
     }, { ...capabilities, columns: width }),
     renderBox({
       body,

@@ -15,11 +15,11 @@ import {
   renderCheckboxCli,
   renderFieldCli,
   renderInputCli,
+  renderMotifSectionRule,
   renderRadioCli,
   renderSelectCli,
   renderSwitchCli,
   renderTextareaCli,
-  renderTriangleSectionRule,
   selectCliExamples,
   switchCliExamples,
   textareaCliExamples,
@@ -46,7 +46,7 @@ function sectionRule(
 ): string {
   const capabilities = testTerminalCapabilities({ columns: width, unicode });
   return stripAnsi(
-    renderTriangleSectionRule(label, { width }, capabilities),
+    renderMotifSectionRule(label, { width }, capabilities),
   );
 }
 

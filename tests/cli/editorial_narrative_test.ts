@@ -6,7 +6,7 @@ import {
   terminalThemes,
   terminalToneColor,
 } from "../../src/cli/theme.ts";
-import { renderTrianglePattern } from "../../src/cli/triangles.ts";
+import { renderMotifPattern } from "../../src/cli/motifs.ts";
 import {
   assertExactFrame,
   testTerminalCapabilities,
@@ -141,7 +141,7 @@ Deno.test("Timeline renders exact width, ASCII, and colour frames", () => {
       color: terminalThemeColor(theme, "--discern-color-ink"),
     }, capabilities);
     const marker = (phase: number, tone: "success" | "accent" | "neutral") =>
-      renderTrianglePattern({ length: 1, phase, tone }, capabilities);
+      renderMotifPattern({ length: 1, phase, tone }, capabilities);
     const events = `${
       marker(2, "success")
     } Week 01 — Observe [complete]\n│   Name the recurring friction.\n│\n${

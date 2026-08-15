@@ -1,7 +1,7 @@
 /**
  * Interactive browser over the generated static CLI inventory: canonical
  * Groups, every Component entry, every named example, every recorded
- * exemption, and the triangle motif and narration line sheets — derived from
+ * exemption, and the motif and narration line sheets — derived from
  * the same authority as `deno task catalogue:cli`, so nothing here can
  * drift from Codegen.
  *
@@ -15,7 +15,7 @@ import {
   renderCliComponent,
   renderCliExemptions,
   renderNarrationLineSheet,
-  renderTriangleMotifSheet,
+  renderTerminalMotifSheet,
 } from "../cli-inventory.ts";
 import {
   type ComponentGroup,
@@ -45,7 +45,7 @@ export function browseTopChoices(): readonly InteractionEntry<TopTarget>[] {
       label: group,
       value: group as TopTarget,
     })),
-    { id: "motifs", label: "Triangle motif sheet", value: "motifs" },
+    { id: "motifs", label: "Terminal motif sheet", value: "motifs" },
     { id: "narration", label: "Narration line sheet", value: "narration" },
     { id: "exemptions", label: "Recorded exemptions", value: "exemptions" },
     { id: "back", label: "Back to the hub", value: "back" },
@@ -181,7 +181,7 @@ export async function runBrowseJourney(
     if (target === "back" || target === undefined) return;
     if (target === "motifs") {
       print("");
-      print(renderTriangleMotifSheet(io.capabilities()));
+      print(renderTerminalMotifSheet(io.capabilities()));
       continue;
     }
     if (target === "narration") {

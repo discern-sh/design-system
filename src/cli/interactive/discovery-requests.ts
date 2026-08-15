@@ -17,7 +17,7 @@ import type {
   SearchMultiselectFrameState,
 } from "../interactive-states.ts";
 import type { TerminalCapabilities } from "../capabilities.ts";
-import type { TerminalThemeVariant } from "../theme.ts";
+import type { CliPresentationOptions } from "../contracts.ts";
 import {
   interactiveChoiceOverflow,
   interactiveChoiceWindow,
@@ -53,22 +53,22 @@ import type {
 function renderSearchFrame(
   state: SearchFrameState,
   capabilities: TerminalCapabilities,
-  theme: TerminalThemeVariant | undefined,
+  presentation: CliPresentationOptions,
 ): string {
   return renderRadioCli({
     ...state,
-    ...(theme === undefined ? {} : { theme }),
+    ...presentation,
   }, capabilities);
 }
 
 function renderAutocompleteFrame(
   state: AutocompleteFrameState,
   capabilities: TerminalCapabilities,
-  theme: TerminalThemeVariant | undefined,
+  presentation: CliPresentationOptions,
 ): string {
   return renderInputCli({
     ...state,
-    ...(theme === undefined ? {} : { theme }),
+    ...presentation,
   }, capabilities);
 }
 
@@ -406,11 +406,11 @@ export async function requestSearch<T>(
 function renderSearchMultiselectFrame(
   state: SearchMultiselectFrameState,
   capabilities: TerminalCapabilities,
-  theme: TerminalThemeVariant | undefined,
+  presentation: CliPresentationOptions,
 ): string {
   return renderCheckboxCli({
     ...state,
-    ...(theme === undefined ? {} : { theme }),
+    ...presentation,
   }, capabilities);
 }
 

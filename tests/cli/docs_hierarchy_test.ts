@@ -11,7 +11,7 @@ import {
   terminalThemes,
   terminalToneColor,
 } from "../../src/cli/theme.ts";
-import { renderTriangleSectionRule } from "../../src/cli/triangles.ts";
+import { renderMotifSectionRule } from "../../src/cli/motifs.ts";
 import {
   assertExactFrame,
   testTerminalCapabilities,
@@ -29,7 +29,7 @@ Deno.test("Anchor heading renders exact width, ASCII, and colour frames", () => 
     assertExactFrame(
       renderAnchorHeadingCli(anchorHeadingProps, capabilities),
       `\n${
-        renderTriangleSectionRule(
+        renderMotifSectionRule(
           "## Renderer contract",
           { width: columns },
           capabilities,
@@ -42,7 +42,7 @@ Deno.test("Anchor heading renders exact width, ASCII, and colour frames", () => 
   assertExactFrame(
     renderAnchorHeadingCli(anchorHeadingProps, ascii),
     `\n${
-      renderTriangleSectionRule(
+      renderMotifSectionRule(
         "## Renderer contract",
         { width: 24 },
         ascii,
@@ -57,7 +57,7 @@ Deno.test("Anchor heading renders exact width, ASCII, and colour frames", () => 
     assertExactFrame(
       renderAnchorHeadingCli(anchorHeadingProps, capabilities),
       `\n${
-        renderTriangleSectionRule(
+        renderMotifSectionRule(
           "## Renderer contract",
           { width: 52 },
           capabilities,
@@ -80,7 +80,7 @@ Deno.test("Anchor heading exposes every public section-boundary treatment", () =
         },
         capabilities,
       ),
-      renderTriangleSectionRule(
+      renderMotifSectionRule(
         "## Renderer contract",
         { width: 32, treatment },
         capabilities,
@@ -147,7 +147,7 @@ Deno.test("Docs header renders exact width, ASCII, and colour frames", () => {
     assertExactFrame(
       renderDocsHeaderCli(docsHeaderProps, capabilities),
       `${
-        renderTriangleSectionRule(
+        renderMotifSectionRule(
           "discern docs",
           { width: columns },
           capabilities,
@@ -160,7 +160,7 @@ Deno.test("Docs header renders exact width, ASCII, and colour frames", () => {
   assertExactFrame(
     renderDocsHeaderCli(docsHeaderProps, ascii),
     `${
-      renderTriangleSectionRule(
+      renderMotifSectionRule(
         "discern docs",
         { width: 24 },
         ascii,
@@ -173,7 +173,7 @@ Deno.test("Docs header renders exact width, ASCII, and colour frames", () => {
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
     const capabilities = testTerminalCapabilities({ columns: 52, colorDepth });
-    const rule = renderTriangleSectionRule(
+    const rule = renderMotifSectionRule(
       "discern docs",
       { width: 52 },
       capabilities,

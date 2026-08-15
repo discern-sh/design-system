@@ -14,6 +14,10 @@ import {
   isInteractiveChoice,
   isInteractiveChoiceGroupHeading,
 } from "../../../cli/interactive-choice.ts";
+import {
+  motifPassthrough,
+  type TerminalMotifOptions,
+} from "../../../cli/motif.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
   formCliChoiceFrameWidth,
@@ -30,7 +34,7 @@ import {
 } from "../form-frame.ts";
 
 /** Inputs accepted by the terminal Checkbox renderer. */
-interface CheckboxCliOptions {
+interface CheckboxCliOptions extends TerminalMotifOptions {
   readonly presentation?: FormCliPresentation;
   readonly required?: boolean;
   readonly theme?: TerminalThemeVariant;
@@ -254,6 +258,7 @@ function renderMultiselectControl(
         entry,
         {
           ...(state.theme === undefined ? {} : { theme: state.theme }),
+          ...motifPassthrough(state),
           width,
         },
         capabilities,
@@ -320,6 +325,7 @@ function renderSearchMultiselectControl(
           entry,
           {
             ...(state.theme === undefined ? {} : { theme: state.theme }),
+            ...motifPassthrough(state),
             width,
           },
           capabilities,

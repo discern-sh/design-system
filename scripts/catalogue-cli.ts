@@ -6,7 +6,7 @@ import {
   listCliComponents,
   renderCliComponent,
   renderNarrationLineSheet,
-  renderTriangleMotifSheet,
+  renderTerminalMotifSheet,
   resolveCatalogueSelection,
 } from "./cli-inventory.ts";
 import {
@@ -42,7 +42,7 @@ export async function renderCliCatalogue(
   const selection = resolveCatalogueSelection(argument);
   const sections: string[] = ["# discern CLI catalogue"];
   if (selection.kind === "all" || selection.kind === "motifs") {
-    sections.push(renderTriangleMotifSheet(capabilities));
+    sections.push(renderTerminalMotifSheet(capabilities));
   }
   if (selection.kind === "all" || selection.kind === "narration") {
     sections.push(renderNarrationLineSheet(capabilities));

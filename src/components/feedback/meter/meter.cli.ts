@@ -10,15 +10,20 @@ import { defaultTerminalFrameWidth } from "../../../cli/frame-measure.ts";
 import type { DeterminateProgressFrameState } from "../../../cli/interactive-states.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import {
+  motifPassthrough,
+  type TerminalMotifOptions,
+} from "../../../cli/motif.ts";
+import {
   terminalThemes,
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
-import { renderTriangleProgressFrame } from "../../../cli/triangles.ts";
+import { renderMotifProgressFrame } from "../../../cli/motifs.ts";
 import type { MeterTone } from "./meter.types.ts";
 
 /** Inputs accepted by the terminal Meter renderer. */
-export interface MeterCliProps extends DeterminateProgressFrameState {
+export interface MeterCliProps
+  extends DeterminateProgressFrameState, TerminalMotifOptions {
   readonly reading?: string;
   readonly tone?: MeterTone;
   readonly theme?: TerminalThemeVariant;
@@ -60,7 +65,7 @@ export const cliExamples: readonly CliExample<MeterCliProps>[] = [
   },
 ] as const;
 
-/** Render a labeled determinate frame on the package-authoritative triangle track. */
+/** Render a labeled determinate frame on the package motif track. */
 const renderMeterCli: CliRenderer<MeterCliProps> = (props, capabilities) => {
   const theme = terminalThemes[props.theme ?? "dark"];
   const tone = props.tone ?? "neutral";
@@ -71,11 +76,12 @@ const renderMeterCli: CliRenderer<MeterCliProps> = (props, capabilities) => {
     ...theme.typography.strong,
     color: terminalToneColor(theme, tone),
   }, capabilities);
-  const progress = renderTriangleProgressFrame({
+  const progress = renderMotifProgressFrame({
     completed: state.completed,
     total: state.total,
     width,
     ...(props.theme === undefined ? {} : { theme: props.theme }),
+    ...motifPassthrough(props),
   }, capabilities);
   const lifecycle = state.lifecycle.status === "validation-error"
     ? styleText(`! ${state.lifecycle.message}`, {

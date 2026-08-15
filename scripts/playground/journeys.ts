@@ -30,16 +30,16 @@ import {
 import {
   detectTerminalCapabilities,
   measureText,
+  renderMotifPattern,
+  renderMotifSectionRule,
+  renderMotifWorkflowStepper,
   renderTimelineCli,
-  renderTrianglePattern,
-  renderTriangleSectionRule,
-  renderTriangleWorkflowStepper,
   type TerminalCapabilities,
 } from "../../src/cli/mod.ts";
 import { defaultTerminalFrameWidth } from "../../src/cli/frame-measure.ts";
 import {
   renderCliExemptions,
-  renderTriangleMotifSheet,
+  renderTerminalMotifSheet,
 } from "../cli-inventory.ts";
 import { describeCapabilities, renderTerminalFacts } from "./banner.ts";
 import { runBrowseJourney } from "./browse.ts";
@@ -56,7 +56,7 @@ import {
 import type { PlaygroundJourney, PlaygroundRuntime } from "./types.ts";
 
 /**
- * Render a journey heading that can never throw: the triangle section rule
+ * Render a journey heading that can never throw: the motif section rule
  * when the title fits its width contract with margin to spare, otherwise
  * the plain title. Playground chrome must not crash any terminal a
  * journey is reviewing.
@@ -67,7 +67,7 @@ function journeyHeading(
 ): string {
   const width = defaultTerminalFrameWidth(capabilities);
   if (measureText(title) + 6 <= width) {
-    return renderTriangleSectionRule(title, { width }, capabilities);
+    return renderMotifSectionRule(title, { width }, capabilities);
   }
   return title;
 }
@@ -451,10 +451,10 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
     title: "Spinner activity",
     section: "Interactive APIs",
     description:
-      "Indeterminate triangle spinner around a short operation, then its result.",
+      "Indeterminate motif spinner around a short operation, then its result.",
     run: async (runtime) => {
       const value = await withSpinner({
-        label: "Weaving triangles",
+        label: "Working through the motif cycle",
         hint: "Runs about two seconds — long enough to watch the full cycle.",
         io: runtime.io,
         ...(runtime.spinnerScheduler === undefined
@@ -598,15 +598,15 @@ const staticCatalogueJourneys: readonly PlaygroundJourney[] = [
     run: runHeadingVariantsJourney,
   },
   {
-    id: "triangle-statuses",
+    id: "motif-statuses",
     title: "Timeline and stepper statuses",
     section: "Static catalogue",
     description:
-      "Review status-directed vertical triangles beside spinner, dot, bang, and cross markers.",
+      "Review semantic status glyphs beside spinner, dot, bang, and cross markers.",
     run: (runtime) => {
       const capabilities = runtime.io.capabilities();
       runtime.print("Workflow stepper:");
-      runtime.print(renderTriangleWorkflowStepper([
+      runtime.print(renderMotifWorkflowStepper([
         { label: "Completed", status: "complete" },
         { label: "Active", status: "active", phase: 1 },
         { label: "Pending", status: "pending" },
@@ -661,13 +661,13 @@ const staticCatalogueJourneys: readonly PlaygroundJourney[] = [
   },
   {
     id: "motifs",
-    title: "Triangle motif sheet",
+    title: "Terminal motif sheet",
     section: "Static catalogue",
     description:
-      "Print the complete triangle motif specimens at the current width.",
+      "Print the complete default and consumer-defined motif specimens at the current width.",
     run: (runtime) => {
       runtime.print("");
-      runtime.print(renderTriangleMotifSheet(runtime.io.capabilities()));
+      runtime.print(renderTerminalMotifSheet(runtime.io.capabilities()));
       return Promise.resolve();
     },
   },
@@ -805,7 +805,7 @@ const stressJourneys: readonly PlaygroundJourney[] = [
       const capabilities = io.capabilities();
       print("Width probe at the full current column count:");
       print(
-        renderTrianglePattern({ length: capabilities.columns }, capabilities),
+        renderMotifPattern({ length: capabilities.columns }, capabilities),
       );
       print(
         "Rerun this journey in narrow (~40), ordinary (~80), and very wide (160+) terminals, and in limited-height and generous-height windows.",

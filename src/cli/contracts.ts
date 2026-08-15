@@ -5,6 +5,13 @@
  */
 
 import type { TerminalCapabilities } from "./capabilities.ts";
+import type { TerminalMotifOptions } from "./motif.ts";
+import type { TerminalThemeVariant } from "./theme.ts";
+
+/** Theme and motif defaults that can be bound across pure CLI renderers. */
+export interface CliPresentationOptions extends TerminalMotifOptions {
+  readonly theme?: TerminalThemeVariant;
+}
 
 /** Pure renderer signature implemented by every rendered CLI component. */
 export type CliRenderer<Props> = (

@@ -16,6 +16,7 @@ import {
   FakeTerminalIO,
   testTerminalCapabilities,
 } from "../../src/cli/interactive/testing.ts";
+import { TEST_TERMINAL_MOTIF } from "./motif_fixture.ts";
 
 const ENTER = "\r";
 const CTRL_D = "\x04";
@@ -171,8 +172,25 @@ Deno.test("sequential forms paint exact Process steps frames", async () => {
     .add({ id: "confirm", label: "Confirm", run: () => true })
     .submit();
   assertEquals(io.writes, [
-    "Setup\n\n[◮] Account\n │\n ·  Confirm\n",
-    "Setup\n\n ◭  Account\n │\n[◭] Confirm\n\nAccount: Ada\n",
+    "Setup\n\n[▴] Account\n │\n ·  Confirm\n",
+    "Setup\n\n ◭  Account\n │\n[▸] Confirm\n\nAccount: Ada\n",
     "Setup\n\n ◭  Account\n │\n ◭  Confirm\n\nAccount: Ada\n\n✓ Complete\n",
+  ]);
+});
+
+Deno.test("sequential forms pass a consumer motif through every step", async () => {
+  const io = new FakeTerminalIO([], { columns: 32 });
+  await createSequentialForm({
+    label: "Setup",
+    io,
+    motif: TEST_TERMINAL_MOTIF,
+  })
+    .add({ id: "account", label: "Account", run: () => "Ada" })
+    .add({ id: "confirm", label: "Confirm", run: () => true })
+    .submit();
+  assertEquals(io.writes, [
+    "Setup\n\n[◴] Account\n │\n ·  Confirm\n",
+    "Setup\n\n ▵  Account\n │\n[◷] Confirm\n",
+    "Setup\n\n ▵  Account\n │\n ▵  Confirm\n\n✓ Complete\n",
   ]);
 });

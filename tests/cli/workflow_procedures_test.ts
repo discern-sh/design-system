@@ -1,10 +1,10 @@
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import {
   renderBranchChoiceCli,
+  renderMotifSectionRule,
   renderPrerequisiteListCli,
   renderProcedureCli,
   renderProcedureStepCli,
-  renderTriangleSectionRule,
 } from "../../src/cli/mod.ts";
 import {
   assertExactFrame,
@@ -34,7 +34,7 @@ function assertCapabilityLevels(
 
 function procedureRule(width: number, unicode = true): string {
   const capabilities = testTerminalCapabilities({ columns: width, unicode });
-  return renderTriangleSectionRule("Steps", { width }, capabilities);
+  return renderMotifSectionRule("Steps", { width }, capabilities);
 }
 
 Deno.test("Branch choice renders exact narrow, standard, wide, and capability frames", () => {
@@ -126,21 +126,21 @@ Deno.test("Procedure renders exact narrow, standard, wide, and every semantic st
   const standard =
     `Ship the wave\n  Complete every owned CLI renderer\n\nBefore you start\n✓ Wave 1 [Satisfied]\n\n${
       procedureRule(52)
-    }\n ◭  Implemented\n │\n[⧨] Run gate\n │\n ·  Land\n │\n !  Rejected\n │\n ×  Stopped\n\nDone when: The branch is on main`;
+    }\n ◭  Implemented\n │\n[▾] Run gate\n │\n ·  Land\n │\n !  Rejected\n │\n ×  Stopped\n\nDone when: The branch is on main`;
   for (
     const [columns, expected] of [
       [
         24,
         `Ship the wave\n  Complete every owned\n  CLI renderer\n\nBefore you start\n✓ Wave 1 [Satisfied]\n\n${
           procedureRule(24)
-        }\n ◭  Implemented\n │\n[⧨] Run gate\n │\n ·  Land\n │\n !  Rejected\n │\n ×  Stopped\n\nDone when: The branch is\n           on main`,
+        }\n ◭  Implemented\n │\n[▾] Run gate\n │\n ·  Land\n │\n !  Rejected\n │\n ×  Stopped\n\nDone when: The branch is\n           on main`,
       ],
       [52, standard],
       [
         80,
         `Ship the wave\n  Complete every owned CLI renderer\n\nBefore you start\n✓ Wave 1 [Satisfied]\n\n${
           procedureRule(80)
-        }\n ◭  Implemented\n │\n[⧨] Run gate\n │\n ·  Land\n │\n !  Rejected\n │\n ×  Stopped\n\nDone when: The branch is on main`,
+        }\n ◭  Implemented\n │\n[▾] Run gate\n │\n ·  Land\n │\n !  Rejected\n │\n ×  Stopped\n\nDone when: The branch is on main`,
       ],
     ] as const
   ) {
@@ -156,7 +156,7 @@ Deno.test("Procedure renders exact narrow, standard, wide, and every semantic st
     standard,
     `Ship the wave\n  Complete every owned CLI renderer\n\nBefore you start\n+ Wave 1 [Satisfied]\n\n${
       procedureRule(52, false)
-    }\n ^  Implemented\n |\n[<] Run gate\n |\n .  Land\n |\n !  Rejected\n |\n x  Stopped\n\nDone when: The branch is on main`,
+    }\n ^  Implemented\n |\n[v] Run gate\n |\n .  Land\n |\n !  Rejected\n |\n x  Stopped\n\nDone when: The branch is on main`,
   );
 });
 
@@ -171,12 +171,12 @@ Deno.test("Procedure step renders exact widths, capability levels, statuses, and
     completionCriterion: "A proof is recorded",
   } as const;
   const standard =
-    "[⧨] Run the gate\n  Verify the committed tree\n  Run: discern done\n  ✓ You should see\n    The full gate passes\nComplete when: A proof is recorded";
+    "[▾] Run the gate\n  Verify the committed tree\n  Run: discern done\n  ✓ You should see\n    The full gate passes\nComplete when: A proof is recorded";
   for (
     const [columns, expected] of [
       [
         24,
-        "[⧨] Run the gate\n  Verify the committed\n  tree\n  Run: discern done\n  ✓ You should see\n    The full gate passes\nComplete when:\n  A proof is recorded",
+        "[▾] Run the gate\n  Verify the committed\n  tree\n  Run: discern done\n  ✓ You should see\n    The full gate passes\nComplete when:\n  A proof is recorded",
       ],
       [52, standard],
       [80, standard],
@@ -192,13 +192,13 @@ Deno.test("Procedure step renders exact widths, capability levels, statuses, and
   assertCapabilityLevels(
     (capabilities) => renderProcedureStepCli(props, capabilities),
     standard,
-    "[<] Run the gate\n  Verify the committed tree\n  Run: discern done\n  + You should see\n    The full gate passes\nComplete when: A proof is recorded",
+    "[v] Run the gate\n  Verify the committed tree\n  Run: discern done\n  + You should see\n    The full gate passes\nComplete when: A proof is recorded",
   );
 
   const capabilities = testTerminalCapabilities({ columns: 52 });
   const states = [
     ["pending", " ·  Run gate\n  Verify tree"],
-    ["active", "[⧨] Run gate\n  Verify tree"],
+    ["active", "[▾] Run gate\n  Verify tree"],
     ["complete", " ◭  Run gate\n  Verify tree"],
     ["error", " !  Run gate\n  Verify tree"],
     ["cancelled", " ×  Run gate\n  Verify tree"],
@@ -216,8 +216,8 @@ Deno.test("Procedure step renders exact widths, capability levels, statuses, and
 
   for (
     const [phase, unicodeMarker, asciiMarker] of [
-      [0, "[◮]", "[>]"],
-      [2, "[⧨]", "[<]"],
+      [0, "[▴]", "[^]"],
+      [2, "[▾]", "[v]"],
     ] as const
   ) {
     assertCapabilityLevels(

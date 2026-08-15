@@ -5,31 +5,35 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  motifPassthrough,
+  type TerminalMotifOptions,
+} from "../../../cli/motif.ts";
 import type {
   TerminalSemanticTone,
   TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import {
-  renderTrianglePattern,
-  renderTriangleSectionRule,
-  type TriangleDirection,
-  type TrianglePatternOrientation,
-} from "../../../cli/triangles.ts";
+  type MotifDirection,
+  type MotifPatternOrientation,
+  renderMotifPattern,
+  renderMotifSectionRule,
+} from "../../../cli/motifs.ts";
 import type { DividerSurface } from "./divider.types.ts";
 
 /** Semantic terminal treatments owned by Divider. */
 export type DividerCliTreatment = "rule" | "ribbon" | "field" | "weave";
 
 /** Inputs accepted by the terminal Divider renderer. */
-export interface DividerCliProps {
+export interface DividerCliProps extends TerminalMotifOptions {
   readonly label?: string;
   readonly surface?: DividerSurface;
   readonly treatment?: DividerCliTreatment;
-  readonly orientation?: TrianglePatternOrientation;
+  readonly orientation?: MotifPatternOrientation;
   readonly length?: number;
   readonly thickness?: number;
   readonly phase?: number;
-  readonly direction?: TriangleDirection;
+  readonly direction?: MotifDirection;
   readonly tone?: TerminalSemanticTone;
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
@@ -54,7 +58,7 @@ export const cliExamples: readonly CliExample<DividerCliProps>[] = [
   },
 ] as const;
 
-/** Render Divider's authoritative triangle rules, ribbons, fields, and weaves. */
+/** Render Divider's authoritative motif rules, ribbons, fields, and weaves. */
 const renderDividerCli: CliRenderer<DividerCliProps> = (
   props,
   capabilities,
@@ -79,8 +83,9 @@ const renderDividerCli: CliRenderer<DividerCliProps> = (
       ...(props.phase === undefined ? {} : { phase: props.phase }),
       ...(props.direction === undefined ? {} : { direction: props.direction }),
       ...(props.theme === undefined ? {} : { theme: props.theme }),
+      ...motifPassthrough(props),
     };
-    return renderTriangleSectionRule(props.label, options, capabilities);
+    return renderMotifSectionRule(props.label, options, capabilities);
   }
 
   const requestedThickness = props.thickness ?? TREATMENT_THICKNESS[treatment];
@@ -105,7 +110,7 @@ const renderDividerCli: CliRenderer<DividerCliProps> = (
   const phase = props.phase ?? (treatment === "weave" ? 1 : 0);
   const tone = props.tone ??
     (props.surface === "surface" ? "neutral" : "accent");
-  return renderTrianglePattern(
+  return renderMotifPattern(
     {
       length,
       orientation,
@@ -114,6 +119,7 @@ const renderDividerCli: CliRenderer<DividerCliProps> = (
       direction,
       tone,
       ...(props.theme === undefined ? {} : { theme: props.theme }),
+      ...motifPassthrough(props),
     },
     capabilities,
   );

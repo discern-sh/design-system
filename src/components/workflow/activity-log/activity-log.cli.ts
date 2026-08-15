@@ -12,6 +12,11 @@ import type {
   ActivityLogLineTone,
 } from "../../../cli/interactive-states.ts";
 import {
+  motifPassthrough,
+  type TerminalMotifOptions,
+  terminalMotifRepertoire,
+} from "../../../cli/motif.ts";
+import {
   type NarrationLineKind,
   narrationLineRenderers,
 } from "../../../cli/narration.ts";
@@ -26,15 +31,12 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
-import {
-  DISCERN_TRIANGLE_ASCII_GLYPHS,
-  DISCERN_TRIANGLE_GLYPHS,
-  renderTriangleSpinnerFrame,
-} from "../../../cli/triangles.ts";
+import { renderMotifSpinnerFrame } from "../../../cli/motifs.ts";
 import { workflowCliWidth } from "../workflow-cli.ts";
 
 /** Inputs accepted by the terminal Activity log renderer. */
-export interface ActivityLogCliProps extends ActivityLogFrameState {
+export interface ActivityLogCliProps
+  extends ActivityLogFrameState, TerminalMotifOptions {
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
@@ -146,17 +148,18 @@ const renderActivityLogCli: CliRenderer<ActivityLogCliProps> = (
     capabilities,
   );
   const theme = terminalThemes[props.theme ?? "dark"];
-  const themeOption = props.theme === undefined ? {} : { theme: props.theme };
+  const presentation = {
+    ...(props.theme === undefined ? {} : { theme: props.theme }),
+    ...motifPassthrough(props),
+  };
   const gap = " ".repeat(theme.spacing["--discern-space-2"] ?? 1);
   const ellipsis = capabilities.unicode ? "…" : ".";
 
   const marker = props.lifecycle.status === "active"
-    ? renderTriangleSpinnerFrame(props.phase, capabilities, themeOption)
+    ? renderMotifSpinnerFrame(props.phase, capabilities, presentation)
     : props.lifecycle.status === "submitted"
     ? styleText(
-      capabilities.unicode
-        ? DISCERN_TRIANGLE_GLYPHS.upRight
-        : DISCERN_TRIANGLE_ASCII_GLYPHS.upRight,
+      terminalMotifRepertoire(props.motif, capabilities.unicode).marker,
       { color: terminalToneColor(theme, "accent") },
       capabilities,
     )
@@ -183,7 +186,7 @@ const renderActivityLogCli: CliRenderer<ActivityLogCliProps> = (
     narrationLineRenderers[stableLineKinds[line.tone]]({
       text: line.text,
       maxWidth: width,
-      ...themeOption,
+      ...presentation,
     }, capabilities)
   );
 

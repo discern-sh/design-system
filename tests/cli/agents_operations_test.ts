@@ -18,6 +18,7 @@ import {
   assertStyledFrame,
   testTerminalCapabilities,
 } from "../../src/cli/interactive/testing.ts";
+import { TEST_TERMINAL_MOTIF } from "./motif_fixture.ts";
 
 function assertCapabilityLevels(
   columns: number,
@@ -405,4 +406,22 @@ Deno.test("Fleet and Worklog render representative beacon phases at every capabi
       `${asciiBeacon} Active [active]`,
     );
   }
+});
+
+Deno.test("Fleet and Worklog inherit a consumer activity motif", () => {
+  const capabilities = testTerminalCapabilities({ columns: 60 });
+  assertStringIncludes(
+    renderFleetCli({
+      rows: [{ persona: "Agent", status: "working", beaconPhase: 0 }],
+      motif: TEST_TERMINAL_MOTIF,
+    }, capabilities),
+    "▵▹▿◃....",
+  );
+  assertEquals(
+    renderWorklogCli({
+      entries: [{ label: "Active", status: "active", phase: 0 }],
+      motif: TEST_TERMINAL_MOTIF,
+    }, capabilities),
+    "▵▹▿◃.... Active [active]",
+  );
 });

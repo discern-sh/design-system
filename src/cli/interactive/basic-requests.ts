@@ -13,7 +13,7 @@ import type {
   TextInputFrameState,
 } from "../interactive-states.ts";
 import type { TerminalCapabilities } from "../capabilities.ts";
-import type { TerminalThemeVariant } from "../theme.ts";
+import type { CliPresentationOptions } from "../contracts.ts";
 import renderFieldCli from "../../components/forms/field/field.cli.ts";
 import renderInputCli from "../../components/forms/input/input.cli.ts";
 import renderSwitchCli from "../../components/forms/switch/switch.cli.ts";
@@ -25,22 +25,22 @@ import type { InteractionOptions, InteractionRuntime } from "./types.ts";
 function renderInputFrame(
   state: TextInputFrameState | MaskedInputFrameState,
   capabilities: TerminalCapabilities,
-  theme: TerminalThemeVariant | undefined,
+  presentation: CliPresentationOptions,
 ): string {
   return renderInputCli({
     ...state,
-    ...(theme === undefined ? {} : { theme }),
+    ...presentation,
   }, capabilities);
 }
 
 function renderConfirmFrame(
   state: ConfirmFrameState,
   capabilities: TerminalCapabilities,
-  theme: TerminalThemeVariant | undefined,
+  presentation: CliPresentationOptions,
 ): string {
   return renderSwitchCli({
     ...state,
-    ...(theme === undefined ? {} : { theme }),
+    ...presentation,
   }, capabilities);
 }
 
@@ -220,11 +220,11 @@ export async function requestConfirmation(
 function renderAcknowledgementFrame(
   state: AcknowledgementFrameState,
   capabilities: TerminalCapabilities,
-  theme: TerminalThemeVariant | undefined,
+  presentation: CliPresentationOptions,
 ): string {
   return renderFieldCli({
     ...state,
-    ...(theme === undefined ? {} : { theme }),
+    ...presentation,
   }, capabilities);
 }
 

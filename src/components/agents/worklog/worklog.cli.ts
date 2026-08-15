@@ -5,7 +5,11 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
-import { renderTriangleActivityBeacon } from "../../../cli/triangles.ts";
+import {
+  motifPassthrough,
+  type TerminalMotifOptions,
+} from "../../../cli/motif.ts";
+import { renderMotifActivityBeacon } from "../../../cli/motifs.ts";
 import type {
   TerminalSemanticTone,
   TerminalThemeVariant,
@@ -40,7 +44,7 @@ export interface WorklogCliEntry {
 }
 
 /** Inputs accepted by the terminal Worklog renderer. */
-export interface WorklogCliProps {
+export interface WorklogCliProps extends TerminalMotifOptions {
   readonly entries: readonly WorklogCliEntry[];
   readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
@@ -108,11 +112,12 @@ const renderWorklogCli: CliRenderer<WorklogCliProps> = (
       );
     }
     const marker = entry.status === "active"
-      ? renderTriangleActivityBeacon(
+      ? renderMotifActivityBeacon(
         {
           width: 8,
           phase: entry.phase ?? 0,
           ...(props.theme === undefined ? {} : { theme: props.theme }),
+          ...motifPassthrough(props),
         },
         { ...capabilities, columns: 8 },
       )

@@ -56,7 +56,7 @@ Deno.test("Card renders exact narrow, standard, wide, and ASCII boxes", () => {
   );
 });
 
-Deno.test("Window renders exact narrow, standard, wide, and degraded triangle frames", () => {
+Deno.test("Window renders exact narrow, standard, wide, and degraded motif frames", () => {
   const render = (capabilities: TerminalCapabilities) =>
     renderWindowCli(
       {

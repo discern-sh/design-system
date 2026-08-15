@@ -12,7 +12,7 @@ import type { InteractionEntry } from "../../src/cli/interactive/types.ts";
 import { stripAnsi } from "../../src/cli/ansi.ts";
 import {
   renderCheckboxCli,
-  renderTriangleSectionRule,
+  renderMotifSectionRule,
 } from "../../src/cli/mod.ts";
 import {
   assertExactFrame,
@@ -24,7 +24,7 @@ import {
 function headingRule(label: string, width: number, unicode = true): string {
   const capabilities = testTerminalCapabilities({ columns: width, unicode });
   return stripAnsi(
-    renderTriangleSectionRule(label, { width }, capabilities),
+    renderMotifSectionRule(label, { width }, capabilities),
   );
 }
 

@@ -5,8 +5,12 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  motifPassthrough,
+  type TerminalMotifOptions,
+} from "../../../cli/motif.ts";
 import { measureText, padText, truncateText } from "../../../cli/text.ts";
-import { renderTriangleActivityBeacon } from "../../../cli/triangles.ts";
+import { renderMotifActivityBeacon } from "../../../cli/motifs.ts";
 import type {
   TerminalSemanticTone,
   TerminalThemeVariant,
@@ -42,7 +46,7 @@ export interface FleetCliRow {
 }
 
 /** Inputs accepted by the terminal Fleet renderer. */
-export interface FleetCliProps {
+export interface FleetCliProps extends TerminalMotifOptions {
   readonly rows: readonly FleetCliRow[];
   readonly label?: string;
   /** Preserve complete persona and branch text when compact cells cannot. */
@@ -181,11 +185,12 @@ const renderFleetCli: CliRenderer<FleetCliProps> = (props, capabilities) => {
       }
       if (row.status === "working" && row.beaconPhase !== undefined) {
         lines.push(`  ${
-          renderTriangleActivityBeacon(
+          renderMotifActivityBeacon(
             {
               width: Math.min(12, width - 2),
               phase: row.beaconPhase,
               ...(props.theme === undefined ? {} : { theme: props.theme }),
+              ...motifPassthrough(props),
             },
             { ...capabilities, columns: width - 2 },
           )
@@ -244,11 +249,12 @@ const renderFleetCli: CliRenderer<FleetCliProps> = (props, capabilities) => {
     if (row.status === "working" && row.beaconPhase !== undefined) {
       const offset = agentWidth + gap.length + branchWidth + gap.length;
       lines.push(`${" ".repeat(offset)}${
-        renderTriangleActivityBeacon(
+        renderMotifActivityBeacon(
           {
             width: 8,
             phase: row.beaconPhase,
             ...(props.theme === undefined ? {} : { theme: props.theme }),
+            ...motifPassthrough(props),
           },
           { ...capabilities, columns: 8 },
         )

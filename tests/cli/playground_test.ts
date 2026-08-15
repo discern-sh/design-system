@@ -150,13 +150,13 @@ Deno.test("public heading treatments have one direct, concise review journey", a
 });
 
 Deno.test("Timeline and stepper status review has a direct journey", async () => {
-  assertEquals(resolvePlaygroundSelection(["triangle-statuses"]), {
+  assertEquals(resolvePlaygroundSelection(["motif-statuses"]), {
     kind: "journey",
-    id: "triangle-statuses",
+    id: "motif-statuses",
   });
   const io = new FakeTerminalIO([], { columns: 52 });
   assertEquals(
-    await runJourney(journey("triangle-statuses"), testRuntime(io)),
+    await runJourney(journey("motif-statuses"), testRuntime(io)),
     "completed",
   );
   assertStringIncludes(io.output(), " ◭  Completed");
@@ -519,7 +519,7 @@ Deno.test("browse journey reaches the motif sheet and returns to the hub", async
     await runJourney(journey("browse"), testRuntime(io)),
     "completed",
   );
-  assertStringIncludes(io.output(), "## Triangle motifs");
+  assertStringIncludes(io.output(), "## Terminal motifs");
 });
 
 Deno.test("browse journey reaches the narration sheet and returns to the hub", async () => {

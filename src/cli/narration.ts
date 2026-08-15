@@ -2,7 +2,7 @@
  * Narration verbs: semantic one-line terminal emitters for output too small
  * to deserve a Component — a success line, an informational note, a warning,
  * a failure, and a lead-in that opens a group of lines. Markers come from the
- * package's established terminal dialect (the triangle glyph authority and
+ * package's established terminal dialect (the bound motif marker and
  * the check/bang/cross marks), colours and spacing come from the token
  * bridge, and every form keeps its meaning without colour and without
  * Unicode. Each verb is a pure {@linkcode CliRenderer}, so a presenter binds
@@ -19,6 +19,7 @@ import {
 } from "./ansi.ts";
 import type { TerminalCapabilities } from "./capabilities.ts";
 import type { CliRenderer } from "./contracts.ts";
+import { type TerminalMotifOptions, terminalMotifRepertoire } from "./motif.ts";
 import { measureText, wrapText } from "./text.ts";
 import {
   type TerminalSemanticTone,
@@ -28,13 +29,8 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "./theme.ts";
-import {
-  DISCERN_TRIANGLE_ASCII_GLYPHS,
-  DISCERN_TRIANGLE_GLYPHS,
-} from "./triangles.ts";
-
 /** Inputs accepted by every narration line verb. */
-export interface NarrationLineProps {
+export interface NarrationLineProps extends TerminalMotifOptions {
   /** One trimmed, control-free line of narration. */
   readonly text: string;
   readonly theme?: TerminalThemeVariant;
@@ -50,13 +46,21 @@ export type NarrationLineKind =
   | "failure"
   | "lead";
 
-interface NarrationLineSpec {
+interface FixedNarrationLineSpec {
   readonly unicodeMarker: string;
   readonly asciiMarker: string;
   readonly tone: TerminalSemanticTone;
   /** Lead lines take the section-rule title treatment: uppercase strong ink. */
   readonly heading: boolean;
 }
+
+interface MotifNarrationLineSpec {
+  readonly motifMarker: true;
+  readonly tone: TerminalSemanticTone;
+  readonly heading: boolean;
+}
+
+type NarrationLineSpec = FixedNarrationLineSpec | MotifNarrationLineSpec;
 
 const NARRATION_LINE_SPECS: Readonly<
   Record<NarrationLineKind, NarrationLineSpec>
@@ -68,8 +72,7 @@ const NARRATION_LINE_SPECS: Readonly<
     heading: false,
   },
   note: {
-    unicodeMarker: DISCERN_TRIANGLE_GLYPHS.upRight,
-    asciiMarker: DISCERN_TRIANGLE_ASCII_GLYPHS.upRight,
+    motifMarker: true,
     tone: "accent",
     heading: false,
   },
@@ -86,8 +89,7 @@ const NARRATION_LINE_SPECS: Readonly<
     heading: false,
   },
   lead: {
-    unicodeMarker: DISCERN_TRIANGLE_GLYPHS.upRight,
-    asciiMarker: DISCERN_TRIANGLE_ASCII_GLYPHS.upRight,
+    motifMarker: true,
     tone: "accent",
     heading: true,
   },
@@ -115,7 +117,11 @@ function renderNarrationLine(
   }
   const width = Math.min(requestedWidth, capabilities.columns);
   const theme = terminalThemes[props.theme ?? "dark"];
-  const marker = capabilities.unicode ? spec.unicodeMarker : spec.asciiMarker;
+  const marker = "motifMarker" in spec
+    ? terminalMotifRepertoire(props.motif, capabilities.unicode).marker
+    : capabilities.unicode
+    ? spec.unicodeMarker
+    : spec.asciiMarker;
   const gap = " ".repeat(theme.spacing["--discern-space-2"] ?? 1);
   const indent = " ".repeat(measureText(marker) + gap.length);
   const textWidth = width - indent.length;
@@ -152,7 +158,7 @@ export const renderSuccessLine: CliRenderer<NarrationLineProps> = (
   capabilities,
 ) => renderNarrationLine("success", props, capabilities);
 
-/** Render one informational note behind the accent-toned triangle marker. */
+/** Render one informational note behind the accent-toned motif marker. */
 export const renderNoteLine: CliRenderer<NarrationLineProps> = (
   props,
   capabilities,
@@ -171,7 +177,7 @@ export const renderFailureLine: CliRenderer<NarrationLineProps> = (
 ) => renderNarrationLine("failure", props, capabilities);
 
 /**
- * Render one lead-in that opens a group of lines: the triangle marker before
+ * Render one lead-in that opens a group of lines: the motif marker before
  * an uppercase strong title, the embedded section-rule treatment without its
  * rule. Lighter than the Heading Component — it owns no blank lines.
  */

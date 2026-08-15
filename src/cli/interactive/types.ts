@@ -4,7 +4,7 @@
  * @module
  */
 
-import type { TerminalThemeVariant } from "../theme.ts";
+import type { CliPresentationOptions } from "../contracts.ts";
 import type { TerminalIO } from "./io.ts";
 import type { TerminalSignalOptions } from "./signals.ts";
 
@@ -57,9 +57,9 @@ export interface InteractionDelayScheduler {
  * Injectable process and presentation facts shared by interaction loops,
  * including the SIGINT posture forwarded to the raw-terminal bracket.
  */
-export interface InteractionRuntime extends TerminalSignalOptions {
+export interface InteractionRuntime
+  extends TerminalSignalOptions, CliPresentationOptions {
   readonly io?: TerminalIO;
-  readonly theme?: TerminalThemeVariant;
   /** Allow Ctrl+U to return control to a sequential form's prior step. */
   readonly canGoBack?: boolean;
 }

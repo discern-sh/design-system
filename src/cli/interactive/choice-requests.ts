@@ -10,7 +10,7 @@ import type {
   SelectFrameState,
 } from "../interactive-states.ts";
 import type { TerminalCapabilities } from "../capabilities.ts";
-import type { TerminalThemeVariant } from "../theme.ts";
+import type { CliPresentationOptions } from "../contracts.ts";
 import renderCheckboxCli from "../../components/forms/checkbox/checkbox.cli.ts";
 import renderSelectCli from "../../components/forms/select/select.cli.ts";
 import { interactiveChoiceOverflow } from "../interactive-choice.ts";
@@ -39,22 +39,22 @@ import type {
 function renderSelectFrame(
   state: SelectFrameState,
   capabilities: TerminalCapabilities,
-  theme: TerminalThemeVariant | undefined,
+  presentation: CliPresentationOptions,
 ): string {
   return renderSelectCli({
     ...state,
-    ...(theme === undefined ? {} : { theme }),
+    ...presentation,
   }, capabilities);
 }
 
 function renderMultiselectFrame(
   state: MultiselectFrameState,
   capabilities: TerminalCapabilities,
-  theme: TerminalThemeVariant | undefined,
+  presentation: CliPresentationOptions,
 ): string {
   return renderCheckboxCli({
     ...state,
-    ...(theme === undefined ? {} : { theme }),
+    ...presentation,
   }, capabilities);
 }
 

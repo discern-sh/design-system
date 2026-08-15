@@ -5,7 +5,11 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
-import { renderTriangleProgressFrame } from "../../../cli/triangles.ts";
+import {
+  motifPassthrough,
+  type TerminalMotifOptions,
+} from "../../../cli/motif.ts";
+import { renderMotifProgressFrame } from "../../../cli/motifs.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import type {
   StandardDirection,
@@ -20,7 +24,7 @@ import {
 } from "../workflow-cli.ts";
 
 /** Inputs accepted by the terminal Standard meter renderer. */
-export interface StandardMeterCliProps {
+export interface StandardMeterCliProps extends TerminalMotifOptions {
   readonly label: string;
   readonly value: number;
   readonly limit: number;
@@ -112,12 +116,13 @@ const renderStandardMeterCli: CliRenderer<StandardMeterCliProps> = (
       capabilities,
       props.theme,
     ),
-    renderTriangleProgressFrame(
+    renderMotifProgressFrame(
       {
         completed: scaleValue,
         total: scaleTotal,
         width,
         ...(props.theme === undefined ? {} : { theme: props.theme }),
+        ...motifPassthrough(props),
       },
       { ...capabilities, columns: width },
     ),

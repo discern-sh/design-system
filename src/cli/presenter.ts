@@ -16,7 +16,7 @@
 
 import type { TerminalCapabilities } from "./capabilities.ts";
 import { renderBox, type TerminalBoxOptions } from "./box.ts";
-import type { CliRenderer } from "./contracts.ts";
+import type { CliPresentationOptions, CliRenderer } from "./contracts.ts";
 import {
   type NarrationLineProps,
   renderFailureLine,
@@ -27,19 +27,24 @@ import {
   type SemanticTextOptions,
   styleSemanticText,
 } from "./narration.ts";
+import {
+  DISCERN_TERMINAL_MOTIF,
+  type TerminalMotif,
+  terminalMotifRepertoire,
+} from "./motif.ts";
 import type { TerminalThemeVariant } from "./theme.ts";
 import {
-  renderTriangleSectionRule,
-  renderTriangleSpinnerFrame,
-  renderTriangleWorkflowStepper,
-  type TriangleSectionRuleOptions,
-  type TriangleThemeOptions,
-  type TriangleWorkflowOptions,
-  type TriangleWorkflowStep,
-} from "./triangles.ts";
+  type MotifSectionRuleOptions,
+  type MotifThemeOptions,
+  type MotifWorkflowOptions,
+  type MotifWorkflowStep,
+  renderMotifSectionRule,
+  renderMotifSpinnerFrame,
+  renderMotifWorkflowStepper,
+} from "./motifs.ts";
 
 /** Presentation defaults a presenter binds once for every later call. */
-export interface CliPresenterOptions {
+export interface CliPresenterOptions extends CliPresentationOptions {
   /** Theme variant supplied to every renderer; defaults to `"dark"`. */
   readonly theme?: TerminalThemeVariant;
   /**
@@ -60,41 +65,43 @@ export interface CliPresenter {
   readonly capabilities: TerminalCapabilities;
   /** The bound theme variant injected wherever props leave it unset. */
   readonly theme: TerminalThemeVariant;
+  /** The bound motif injected wherever props leave it unset. */
+  readonly motif: TerminalMotif;
   /**
    * Render one pure renderer with the bound capabilities and theme. Props
    * you pass win over the bound defaults, so per-call overrides stay
    * ordinary props; the result is byte-equal to calling the renderer by
    * hand with the same resolved inputs.
    */
-  present<Props extends { readonly theme?: TerminalThemeVariant }>(
+  present<Props extends CliPresentationOptions>(
     renderer: CliRenderer<Props>,
     props: Readonly<Props>,
   ): string;
   /** Render a box through the bound capabilities; see {@linkcode renderBox}. */
   box(options: TerminalBoxOptions): string;
   /**
-   * Render one triangle spinner frame through the bound theme and capabilities;
-   * see {@linkcode renderTriangleSpinnerFrame}.
+   * Render one motif spinner frame through the bound defaults and capabilities;
+   * see {@linkcode renderMotifSpinnerFrame}.
    */
-  triangleSpinnerFrame(
+  motifSpinnerFrame(
     phase: number,
-    options?: TriangleThemeOptions,
+    options?: MotifThemeOptions,
   ): string;
   /**
-   * Render a triangle section rule through the bound theme and capabilities;
-   * see {@linkcode renderTriangleSectionRule}.
+   * Render a motif section rule through the bound defaults and capabilities;
+   * see {@linkcode renderMotifSectionRule}.
    */
-  triangleSectionRule(
+  motifSectionRule(
     label: string,
-    options: TriangleSectionRuleOptions,
+    options: MotifSectionRuleOptions,
   ): string;
   /**
-   * Render a triangle workflow stepper through the bound theme and capabilities;
-   * see {@linkcode renderTriangleWorkflowStepper}.
+   * Render a motif workflow stepper through the bound defaults and capabilities;
+   * see {@linkcode renderMotifWorkflowStepper}.
    */
-  triangleWorkflowStepper(
-    steps: readonly TriangleWorkflowStep[],
-    options?: TriangleWorkflowOptions,
+  motifWorkflowStepper(
+    steps: readonly MotifWorkflowStep[],
+    options?: MotifWorkflowOptions,
   ): string;
   /** Derive a presenter with some defaults replaced; this one is untouched. */
   with(overrides: CliPresenterOptions): CliPresenter;
@@ -135,10 +142,13 @@ export function createCliPresenter(
   const effective = width === undefined || width >= capabilities.columns
     ? capabilities
     : { ...capabilities, columns: width };
-  const present = <Props extends { readonly theme?: TerminalThemeVariant }>(
+  const motif = options.motif ?? DISCERN_TERMINAL_MOTIF;
+  terminalMotifRepertoire(motif, true);
+  const present = <Props extends CliPresentationOptions>(
     renderer: CliRenderer<Props>,
     props: Readonly<Props>,
-  ): string => renderer({ theme, ...props } as Readonly<Props>, effective);
+  ): string =>
+    renderer({ theme, motif, ...props } as Readonly<Props>, effective);
   const line =
     (renderer: CliRenderer<NarrationLineProps>) =>
     (text: string, overrides: CliPresenterLineOptions = {}): string =>
@@ -146,41 +156,45 @@ export function createCliPresenter(
   return {
     capabilities: effective,
     theme,
+    motif,
     present,
     box(options: TerminalBoxOptions): string {
       return renderBox(options, effective);
     },
-    triangleSpinnerFrame(
+    motifSpinnerFrame(
       phase: number,
-      overrides: TriangleThemeOptions = {},
+      overrides: MotifThemeOptions = {},
     ): string {
-      return renderTriangleSpinnerFrame(phase, effective, {
+      return renderMotifSpinnerFrame(phase, effective, {
         theme,
+        motif,
         ...overrides,
       });
     },
-    triangleSectionRule(
+    motifSectionRule(
       label: string,
-      overrides: TriangleSectionRuleOptions,
+      overrides: MotifSectionRuleOptions,
     ): string {
-      return renderTriangleSectionRule(
+      return renderMotifSectionRule(
         label,
-        { theme, ...overrides },
+        { theme, motif, ...overrides },
         effective,
       );
     },
-    triangleWorkflowStepper(
-      steps: readonly TriangleWorkflowStep[],
-      overrides: TriangleWorkflowOptions = {},
+    motifWorkflowStepper(
+      steps: readonly MotifWorkflowStep[],
+      overrides: MotifWorkflowOptions = {},
     ): string {
-      return renderTriangleWorkflowStepper(steps, effective, {
+      return renderMotifWorkflowStepper(steps, effective, {
         theme,
+        motif,
         ...overrides,
       });
     },
     with(overrides: CliPresenterOptions): CliPresenter {
       return createCliPresenter(capabilities, {
         theme,
+        motif,
         ...(width === undefined ? {} : { width }),
         ...overrides,
       });

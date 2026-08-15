@@ -9,7 +9,7 @@ import type {
   TextareaFrameState,
 } from "../interactive-states.ts";
 import type { TerminalCapabilities } from "../capabilities.ts";
-import type { TerminalThemeVariant } from "../theme.ts";
+import type { CliPresentationOptions } from "../contracts.ts";
 import renderTextareaCli from "../../components/forms/textarea/textarea.cli.ts";
 import { type InteractionMachine, runInteraction } from "./driver.ts";
 import { GraphemeTextEditor } from "./editor.ts";
@@ -20,11 +20,11 @@ import type { InteractionFrameViewport } from "./viewport-budget.ts";
 function renderTextareaFrame(
   state: TextareaFrameState,
   capabilities: TerminalCapabilities,
-  theme: TerminalThemeVariant | undefined,
+  presentation: CliPresentationOptions,
 ): string {
   return renderTextareaCli({
     ...state,
-    ...(theme === undefined ? {} : { theme }),
+    ...presentation,
   }, capabilities);
 }
 

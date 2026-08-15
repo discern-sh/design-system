@@ -5,6 +5,7 @@
  */
 
 import { stripAnsi } from "./ansi.ts";
+import { eastAsianWidthKind } from "./east-asian-width.ts";
 import {
   emitStyledLine,
   parseStyledSource,
@@ -31,23 +32,6 @@ function graphemes(value: string): readonly string[] {
   return [...segmenter.segment(value)].map((part) => part.segment);
 }
 
-function fullWidthCodePoint(codePoint: number): boolean {
-  return codePoint >= 0x1100 &&
-    (codePoint <= 0x115f ||
-      codePoint === 0x2329 || codePoint === 0x232a ||
-      (codePoint >= 0x2e80 && codePoint <= 0x303e) ||
-      (codePoint >= 0x3040 && codePoint <= 0xa4cf) ||
-      (codePoint >= 0xac00 && codePoint <= 0xd7a3) ||
-      (codePoint >= 0xf900 && codePoint <= 0xfaff) ||
-      (codePoint >= 0xfe10 && codePoint <= 0xfe19) ||
-      (codePoint >= 0xfe30 && codePoint <= 0xfe6f) ||
-      (codePoint >= 0xff00 && codePoint <= 0xff60) ||
-      (codePoint >= 0xffe0 && codePoint <= 0xffe6) ||
-      (codePoint >= 0x1b000 && codePoint <= 0x1b2ff) ||
-      (codePoint >= 0x1f200 && codePoint <= 0x1f251) ||
-      (codePoint >= 0x20000 && codePoint <= 0x3fffd));
-}
-
 /** Measure one Unicode grapheme in terminal character cells. */
 export function graphemeWidth(grapheme: string): number {
   if (grapheme === "" || grapheme === "\n" || grapheme === "\r") return 0;
@@ -57,7 +41,9 @@ export function graphemeWidth(grapheme: string): number {
     !/[\p{Mn}\p{Me}\p{Cf}]/u.test(character)
   );
   const codePoint = base?.codePointAt(0);
-  return codePoint !== undefined && fullWidthCodePoint(codePoint) ? 2 : 1;
+  return codePoint !== undefined && eastAsianWidthKind(codePoint) === "wide"
+    ? 2
+    : 1;
 }
 
 function lineWidth(value: string): number {

@@ -5,7 +5,7 @@ import type {
   InteractiveFrameState,
 } from "../interactive-states.ts";
 import type { TerminalCapabilities } from "../capabilities.ts";
-import type { TerminalThemeVariant } from "../theme.ts";
+import type { CliPresentationOptions } from "../contracts.ts";
 import { InteractionCancelled } from "./errors.ts";
 import { DenoTerminalIO } from "./io.ts";
 import { isNamedKey, type TerminalKey, TerminalKeyReader } from "./keys.ts";
@@ -46,7 +46,7 @@ export interface InteractionMachine<T, State extends InteractiveFrameState> {
 export type InteractionFrameRenderer<State extends InteractiveFrameState> = (
   state: State,
   capabilities: TerminalCapabilities,
-  theme: TerminalThemeVariant | undefined,
+  presentation: CliPresentationOptions,
 ) => string;
 
 export class InteractionBackNavigation extends Error {
@@ -116,7 +116,7 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
     const fitted = fitInteractionFrame({
       viewportRows: io.size().rows - reservedRows,
       frame: (viewport) => machine.frame(lifecycle, viewport),
-      render: (state) => renderFrame(state, capabilities, runtime.theme),
+      render: (state) => renderFrame(state, capabilities, runtime),
     });
     const frame = fitted.rendered;
     if (staticMode) {

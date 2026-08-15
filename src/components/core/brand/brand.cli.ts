@@ -7,6 +7,10 @@
 import { renderStyledSpans } from "../../../cli/ansi.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
+import {
+  motifPassthrough,
+  type TerminalMotifOptions,
+} from "../../../cli/motif.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
 import {
   terminalThemeColor,
@@ -14,12 +18,12 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
-import { renderTrianglePattern } from "../../../cli/triangles.ts";
+import { renderMotifPattern } from "../../../cli/motifs.ts";
 import type { LogoShape, LogoTreatment } from "../logo/logo.types.ts";
 import type { BrandSize, BrandTypeface } from "./brand.types.ts";
 
 /** Inputs accepted by the terminal Brand renderer. */
-export interface BrandCliProps {
+export interface BrandCliProps extends TerminalMotifOptions {
   readonly name: string;
   readonly tagline?: string;
   readonly mark?: boolean;
@@ -54,7 +58,7 @@ export const cliExamples: readonly CliExample<BrandCliProps>[] = [
   },
 ] as const;
 
-/** Render a width-bounded terminal brand lockup with optional triangle mark. */
+/** Render a width-bounded terminal brand lockup with an optional motif mark. */
 const renderBrandCli: CliRenderer<BrandCliProps> = (props, capabilities) => {
   if (props.name === "" || /[\p{Cc}\p{Cf}]/u.test(props.name)) {
     throw new TypeError("brand name must be non-empty and control-free");
@@ -77,6 +81,7 @@ const renderBrandCli: CliRenderer<BrandCliProps> = (props, capabilities) => {
       direction: props.markShape === "square"
         ? "reverse" as const
         : "forward" as const,
+      ...motifPassthrough(props),
     }
     : {
       length: Math.min(MARK_LENGTHS[size], Math.max(1, width - 2)),
@@ -84,10 +89,11 @@ const renderBrandCli: CliRenderer<BrandCliProps> = (props, capabilities) => {
       direction: props.markShape === "square"
         ? "reverse" as const
         : "forward" as const,
+      ...motifPassthrough(props),
     };
   const mark = props.mark === false
     ? ""
-    : renderTrianglePattern(markOptions, capabilities);
+    : renderMotifPattern(markOptions, capabilities);
   const brackets = props.markTreatment === "tile" ? 2 : 0;
   const nameWidth = width - (mark === "" ? 0 : measureText(mark) + 1) -
     brackets;

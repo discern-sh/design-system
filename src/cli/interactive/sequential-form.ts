@@ -11,14 +11,15 @@ import type {
   SequentialStepStatus,
 } from "../interactive-states.ts";
 import renderProcessStepsCli from "../../components/marketing/process-steps/process-steps.cli.ts";
+import type { CliPresentationOptions } from "../contracts.ts";
 import { defaultTerminalFrameWidth } from "../frame-measure.ts";
+import { motifPassthrough } from "../motif.ts";
 import { InteractionCancelled } from "./errors.ts";
 import { InteractionBackNavigation } from "./driver.ts";
 import { DenoTerminalIO, type TerminalIO } from "./io.ts";
 import { assertInteractiveTerminal } from "./lifecycle.ts";
 import { signalPassthrough, type TerminalSignalOptions } from "./signals.ts";
 import type { InteractionRuntime } from "./types.ts";
-import type { TerminalThemeVariant } from "../theme.ts";
 
 /** Named results collected by a sequential form. */
 export type SequentialFormValues = Record<string, unknown>;
@@ -38,11 +39,11 @@ export interface SequentialFormStep {
 }
 
 /** Construction options for a sequential form. */
-export interface SequentialFormOptions extends TerminalSignalOptions {
+export interface SequentialFormOptions
+  extends TerminalSignalOptions, CliPresentationOptions {
   readonly label: string;
   readonly hint?: string;
   readonly io?: TerminalIO;
-  readonly theme?: TerminalThemeVariant;
 }
 
 function validLabel(value: string): boolean {
@@ -115,6 +116,7 @@ export class SequentialFormBuilder {
         ...(this.options.theme === undefined
           ? {}
           : { theme: this.options.theme }),
+        ...motifPassthrough(this.options),
         ...signalPassthrough(this.options),
       };
       try {
@@ -232,6 +234,7 @@ export class SequentialFormBuilder {
         ...(this.options.theme === undefined
           ? {}
           : { theme: this.options.theme }),
+        ...motifPassthrough(this.options),
         width: defaultTerminalFrameWidth(this.#io.capabilities()),
       }, this.#io.capabilities())
     }\n`);

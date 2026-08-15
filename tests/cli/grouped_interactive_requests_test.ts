@@ -6,12 +6,13 @@ import {
   requestSelections,
 } from "../../src/cli/interactive/mod.ts";
 import type { InteractionEntry } from "../../src/cli/interactive/types.ts";
-import { renderTriangleSectionRule } from "../../src/cli/mod.ts";
+import { renderMotifSectionRule } from "../../src/cli/mod.ts";
 import {
   assertExactFrame,
   FakeTerminalIO,
   testTerminalCapabilities,
 } from "../../src/cli/interactive/testing.ts";
+import { TEST_TERMINAL_MOTIF } from "./motif_fixture.ts";
 
 const grouped = [
   { kind: "group-heading", id: "primary", label: "Primary" },
@@ -41,7 +42,7 @@ function paintedFrames(io: FakeTerminalIO): readonly string[] {
 
 function groupRule(label: string): string {
   const capabilities = testTerminalCapabilities({ columns: 30 });
-  return renderTriangleSectionRule(label, { width: 30 }, capabilities);
+  return renderMotifSectionRule(label, { width: 30 }, capabilities);
 }
 
 Deno.test("grouped select supports every promised movement key", async () => {
@@ -160,6 +161,19 @@ Deno.test("search providers share grouped entry vocabulary and skip structure", 
   );
   assertStringIncludes(io.output(), "SECONDARY");
   assertStringIncludes(io.output(), "Three");
+});
+
+Deno.test("grouped requests carry a consumer motif through the interaction runtime", async () => {
+  const io = new FakeTerminalIO(["\r"], { columns: 32 });
+  assertEquals(
+    await requestSelection(
+      { label: "Pick", choices: grouped },
+      { io, motif: TEST_TERMINAL_MOTIF },
+    ),
+    "one",
+  );
+  assertStringIncludes(io.output(), "▵ PRIMARY");
+  assertEquals(io.output().includes("◮ PRIMARY"), false);
 });
 
 Deno.test("grouped interactions cancel cleanly and reject required structure-only lists", async () => {

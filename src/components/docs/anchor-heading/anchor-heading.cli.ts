@@ -9,18 +9,22 @@ import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { withCliHeadingBoundary } from "../../../cli/heading-boundary.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import {
+  motifPassthrough,
+  type TerminalMotifOptions,
+} from "../../../cli/motif.ts";
+import {
   terminalThemeColor,
   terminalThemes,
   type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import {
-  renderTriangleSectionRule,
-  type TriangleSectionRuleTreatment,
-} from "../../../cli/triangles.ts";
+  type MotifSectionRuleTreatment,
+  renderMotifSectionRule,
+} from "../../../cli/motifs.ts";
 import type { AnchorHeadingLevel } from "./anchor-heading.types.ts";
 
 /** Inputs accepted by the terminal Anchor heading renderer. */
-export interface AnchorHeadingCliProps {
+export interface AnchorHeadingCliProps extends TerminalMotifOptions {
   readonly id: string;
   readonly text: string;
   readonly level?: AnchorHeadingLevel;
@@ -28,7 +32,7 @@ export interface AnchorHeadingCliProps {
   readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
   /** Full-width section-boundary treatment; defaults to `embedded`. */
-  readonly treatment?: TriangleSectionRuleTreatment;
+  readonly treatment?: MotifSectionRuleTreatment;
   /** Blank lines owned before this heading; defaults to one. */
   readonly leadingBlankLines?: number;
 }
@@ -68,7 +72,7 @@ export const cliExamples: readonly CliExample<AnchorHeadingCliProps>[] = [
   },
 ] as const;
 
-/** Render a documentation heading as a labeled package triangle rule. */
+/** Render a documentation heading as a labeled package motif rule. */
 const renderAnchorHeadingCli: CliRenderer<AnchorHeadingCliProps> = (
   props,
   capabilities,
@@ -86,10 +90,11 @@ const renderAnchorHeadingCli: CliRenderer<AnchorHeadingCliProps> = (
   const level = props.level ?? 2;
   const prefix = `${"#".repeat(level)} `;
   const label = `${prefix}${props.text}`;
-  const rule = renderTriangleSectionRule(label, {
+  const rule = renderMotifSectionRule(label, {
     width,
     ...(props.theme === undefined ? {} : { theme: props.theme }),
     ...(props.treatment === undefined ? {} : { treatment: props.treatment }),
+    ...motifPassthrough(props),
   }, capabilities);
   if (props.showTarget !== true) {
     return withCliHeadingBoundary(rule, props.leadingBlankLines);

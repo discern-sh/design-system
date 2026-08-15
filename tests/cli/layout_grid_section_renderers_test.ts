@@ -1,8 +1,8 @@
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import {
   renderGridCli,
+  renderMotifSectionRule,
   renderSectionCli,
-  renderTriangleSectionRule,
 } from "../../src/cli/mod.ts";
 import {
   assertExactFrame,
@@ -73,7 +73,7 @@ Deno.test("Section renders exact narrow, standard, wide, and degraded labelled r
     ]] as const
   ) {
     const capabilities = testTerminalCapabilities({ columns });
-    const rule = renderTriangleSectionRule(
+    const rule = renderMotifSectionRule(
       "Build",
       { width: columns },
       capabilities,
@@ -82,7 +82,7 @@ Deno.test("Section renders exact narrow, standard, wide, and degraded labelled r
   }
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
     const capabilities = testTerminalCapabilities({ colorDepth, columns: 24 });
-    const rule = renderTriangleSectionRule(
+    const rule = renderMotifSectionRule(
       "Build",
       { width: 24 },
       { ...capabilities, colorDepth: "none" },
@@ -97,7 +97,7 @@ Deno.test("Section renders exact narrow, standard, wide, and degraded labelled r
   assertExactFrame(
     render(ascii),
     `${
-      renderTriangleSectionRule("Build", { width: 24 }, ascii)
+      renderMotifSectionRule("Build", { width: 24 }, ascii)
     }\n\nShared design language`,
     ascii,
   );

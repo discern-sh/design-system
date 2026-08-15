@@ -9,14 +9,18 @@ import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import type { SequentialFormFrameState } from "../../../cli/interactive-states.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import {
+  motifPassthrough,
+  type TerminalMotifOptions,
+} from "../../../cli/motif.ts";
+import {
   terminalThemes,
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import {
-  renderTriangleActivityBeacon,
-  renderTriangleWorkflowStepper,
-} from "../../../cli/triangles.ts";
+  renderMotifActivityBeacon,
+  renderMotifWorkflowStepper,
+} from "../../../cli/motifs.ts";
 import {
   marketingCliWidth,
   renderMarketingCliHeader,
@@ -24,7 +28,8 @@ import {
 } from "../marketing-frame.ts";
 
 /** Inputs accepted by the terminal Process steps renderer. */
-export interface ProcessStepsCliProps extends SequentialFormFrameState {
+export interface ProcessStepsCliProps
+  extends SequentialFormFrameState, TerminalMotifOptions {
   readonly description?: string;
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
@@ -74,7 +79,7 @@ export const cliExamples: readonly CliExample<ProcessStepsCliProps>[] = [
   },
 ] as const;
 
-/** Render a Wave 1 sequential frame through the package triangle stepper authority. */
+/** Render a sequential frame through the package motif-stepper authority. */
 const renderProcessStepsCli: CliRenderer<ProcessStepsCliProps> = (
   props,
   capabilities,
@@ -110,14 +115,16 @@ const renderProcessStepsCli: CliRenderer<ProcessStepsCliProps> = (
     }, capabilities),
     steps.length === 0
       ? "No applicable steps."
-      : renderTriangleWorkflowStepper(steps, boundedCapabilities, {
+      : renderMotifWorkflowStepper(steps, boundedCapabilities, {
         ...(props.theme === undefined ? {} : { theme: props.theme }),
+        ...motifPassthrough(props),
       }),
     summaries,
-    props.beaconPhase === undefined ? "" : renderTriangleActivityBeacon({
+    props.beaconPhase === undefined ? "" : renderMotifActivityBeacon({
       width,
       phase: props.beaconPhase,
       ...(props.theme === undefined ? {} : { theme: props.theme }),
+      ...motifPassthrough(props),
     }, boundedCapabilities),
     lifecycle === "" ? "" : styleText(lifecycle, {
       color: terminalToneColor(

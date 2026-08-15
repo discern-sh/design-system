@@ -13,6 +13,7 @@ import {
   FakeTerminalIO,
   testTerminalCapabilities,
 } from "../../src/cli/interactive/testing.ts";
+import { TEST_TERMINAL_MOTIF } from "./motif_fixture.ts";
 
 class ManualScheduler implements SpinnerScheduler {
   #callback: (() => void) | undefined;
@@ -51,15 +52,42 @@ Deno.test("a slow producer streams partial updates into committed exact frames",
   );
   assertEquals(io.writes, [
     HIDE_TERMINAL_CURSOR,
-    "◮ Weave styles\n│\n│\n",
-    `${replacePrefix(4)}◭ Weave styles\n│ alpha\n│\n`,
-    `${replacePrefix(4)}⧨ Weave styles\n│ alpha\n│ beta grows\n`,
-    `${replacePrefix(4)}⧩ Weave styles\n│ alpha\n│ beta\n`,
+    "▴ Weave styles\n│\n│\n",
+    `${replacePrefix(4)}▸ Weave styles\n│ alpha\n│\n`,
+    `${replacePrefix(4)}▾ Weave styles\n│ alpha\n│ beta grows\n`,
+    `${replacePrefix(4)}◂ Weave styles\n│ alpha\n│ beta\n`,
     `${replacePrefix(4)}◮ Weave styles\n`,
     "\n",
     SHOW_TERMINAL_CURSOR,
   ]);
   assertEquals(scheduler.stopped, 1);
+});
+
+Deno.test("the activity driver carries a consumer motif through live and stable rows", async () => {
+  const io = new FakeTerminalIO([], { columns: 40, rows: 24 });
+  const scheduler = new ManualScheduler();
+  await withActivityLog(
+    {
+      label: "Build styles",
+      tailRows: 1,
+      io,
+      scheduler,
+      motif: TEST_TERMINAL_MOTIF,
+    },
+    (log) => {
+      log.pin("Context held", "note");
+      log.append("one");
+      scheduler.tick();
+      log.finish();
+    },
+  );
+  assertEquals(io.writes.slice(1), [
+    "◴ Build styles\n│\n",
+    `${replacePrefix(3)}◷ Build styles\n◉ Context held\n│ one\n`,
+    `${replacePrefix(4)}◉ Build styles\n◉ Context held\n`,
+    "\n",
+    SHOW_TERMINAL_CURSOR,
+  ]);
 });
 
 Deno.test("a fast producer coalesces into one repaint per tick showing the last rows", async () => {
@@ -76,7 +104,7 @@ Deno.test("a fast producer coalesces into one repaint per tick showing the last 
   assertEquals(io.writes.length, 6);
   assertEquals(
     io.writes[2],
-    `${replacePrefix(4)}◭ Weave styles\n│ line 29\n│ line 30\n`,
+    `${replacePrefix(4)}▸ Weave styles\n│ line 29\n│ line 30\n`,
   );
 });
 
@@ -101,10 +129,10 @@ Deno.test("pinned stable lines persist while the tail scrolls beneath them", asy
   assertEquals(io.writes.slice(3), [
     `${
       replacePrefix(4)
-    }⧨ Run checks\n✓ Format held\n│ lint starting\n│ lint retried\n`,
+    }▾ Run checks\n✓ Format held\n│ lint starting\n│ lint retried\n`,
     `${
       replacePrefix(5)
-    }⧩ Run checks\n✓ Format held\n! Lint warned once\n│ lint retried\n│ tests starting\n`,
+    }◂ Run checks\n✓ Format held\n! Lint warned once\n│ lint retried\n│ tests starting\n`,
     `${replacePrefix(6)}◮ Run checks\n✓ Format held\n! Lint warned once\n`,
     "\n",
     SHOW_TERMINAL_CURSOR,
@@ -144,10 +172,10 @@ Deno.test("a viewport shrink strands the old region and refits; regrowth restore
     },
   );
   assertEquals(io.writes.slice(1), [
-    "◮ Weave styles\n│\n│\n│\n│\n│\n│\n",
+    "▴ Weave styles\n│\n│\n│\n│\n│\n│\n",
     "\n",
-    "◭ Weave styles\n│ alpha\n│\n│\n",
-    `${replacePrefix(5)}⧨ Weave styles\n│ alpha\n│\n│\n│\n│\n│\n`,
+    "▸ Weave styles\n│ alpha\n│\n│\n",
+    `${replacePrefix(5)}▾ Weave styles\n│ alpha\n│\n│\n│\n│\n│\n`,
     `${replacePrefix(8)}◮ Weave styles\n`,
     "\n",
     SHOW_TERMINAL_CURSOR,
@@ -294,8 +322,8 @@ Deno.test("ASCII terminals keep the same journey in the fallback repertoire", as
     },
   );
   assertEquals(io.writes.slice(1), [
-    "> Weave styles\n|\n|\n",
-    `${replacePrefix(4)}^ Weave styles\n+ Held\n| alpha\n|\n`,
+    "^ Weave styles\n|\n|\n",
+    `${replacePrefix(4)}> Weave styles\n+ Held\n| alpha\n|\n`,
     `${replacePrefix(5)}> Weave styles\n+ Held\n`,
     "\n",
     SHOW_TERMINAL_CURSOR,
@@ -325,7 +353,7 @@ Deno.test("colour depth styles the same visible frame without moving a cell", as
   assert(io.writes[2] !== undefined);
   assertStyledFrame(
     io.writes[2].slice(replacePrefix(4).length),
-    "◭ Weave styles\n✓ Held\n│ alpha\n│\n",
+    "▸ Weave styles\n✓ Held\n│ alpha\n│\n",
     capabilities,
   );
 });
@@ -441,6 +469,6 @@ Deno.test("relabel presents the new headline on the next tick", async () => {
   );
   assertEquals(
     io.writes[3],
-    `${replacePrefix(4)}⧨ Second name\n│\n│\n`,
+    `${replacePrefix(4)}▾ Second name\n│\n│\n`,
   );
 });

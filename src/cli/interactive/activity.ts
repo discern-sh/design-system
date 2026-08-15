@@ -1,5 +1,5 @@
 /**
- * The time-advancing activity layer: the timed triangle spinner, truthful
+ * The time-advancing activity layer: the timed motif spinner, truthful
  * determinate progress, and the live activity log for long-running work
  * with streaming detail.
  *
@@ -16,16 +16,15 @@ import type {
 } from "../interactive-states.ts";
 import { stripAnsi, styleText } from "../ansi.ts";
 import type { TerminalCapabilities } from "../capabilities.ts";
+import type { CliPresentationOptions } from "../contracts.ts";
 import {
   type NarrationLineKind,
   narrationLineRenderers,
 } from "../narration.ts";
 import { graphemeWidth, measureText, truncateText } from "../text.ts";
-import { terminalThemes, type TerminalThemeVariant } from "../theme.ts";
-import {
-  DISCERN_TRIANGLE_SPINNER_ORDER,
-  renderTriangleSpinnerFrame,
-} from "../triangles.ts";
+import { motifPassthrough, terminalMotifRepertoire } from "../motif.ts";
+import { terminalThemes } from "../theme.ts";
+import { renderMotifSpinnerFrame } from "../motifs.ts";
 import renderActivityLogCli from "../../components/workflow/activity-log/activity-log.cli.ts";
 import renderMeterCli from "../../components/feedback/meter/meter.cli.ts";
 import { defaultTerminalFrameWidth } from "../frame-measure.ts";
@@ -51,12 +50,12 @@ const systemSpinnerScheduler: SpinnerScheduler = {
   },
 };
 
-/** Options for an indeterminate triangle spinner operation. */
-export interface SpinnerOptions extends TerminalSignalOptions {
+/** Options for an indeterminate motif spinner operation. */
+export interface SpinnerOptions
+  extends TerminalSignalOptions, CliPresentationOptions {
   readonly label: string;
   readonly hint?: string;
   readonly io?: TerminalIO;
-  readonly theme?: TerminalThemeVariant;
   readonly intervalMs?: number;
   readonly scheduler?: SpinnerScheduler;
 }
@@ -100,16 +99,16 @@ function spinnerFrame(
 function renderSpinner(
   state: SpinnerFrameState,
   capabilities: TerminalCapabilities,
-  theme: TerminalThemeVariant | undefined,
+  presentation: CliPresentationOptions,
 ): string {
-  const selectedTheme = terminalThemes[theme ?? "dark"];
+  const selectedTheme = terminalThemes[presentation.theme ?? "dark"];
   const gap = " ".repeat(
     selectedTheme.spacing["--discern-space-2"] ?? 1,
   );
-  const spinner = renderTriangleSpinnerFrame(
+  const spinner = renderMotifSpinnerFrame(
     state.phase,
     capabilities,
-    theme === undefined ? {} : { theme },
+    presentation,
   );
   const label = truncateText(
     state.label,
@@ -126,7 +125,7 @@ function renderSpinner(
 }
 
 /**
- * Run a callback while repainting the canonical triangle spinner cycle.
+ * Run a callback while repainting the effective motif spinner cycle.
  * A SIGINT during the run stops the animation, clears the live frame, and
  * restores the cursor before the signal re-raises — or reaches the caller's
  * `onInterrupt` cancellation path instead.
@@ -150,7 +149,7 @@ export async function withSpinner<T>(
       const frame = renderSpinner(
         spinnerFrame(options, phase),
         io.capabilities(),
-        options.theme,
+        options,
       );
       const result = painter.replace(frame);
       if (result.status === "refused") {
@@ -160,7 +159,11 @@ export async function withSpinner<T>(
         stop();
         return;
       }
-      phase = (phase + 1) % DISCERN_TRIANGLE_SPINNER_ORDER.length;
+      phase = (phase + 1) %
+        terminalMotifRepertoire(
+          options.motif,
+          io.capabilities().unicode,
+        ).spinner.length;
     };
     paint();
     if (!staticMode) {
@@ -186,13 +189,13 @@ export async function withSpinner<T>(
 }
 
 /** Options for a determinate progress operation. */
-export interface DeterminateProgressOptions extends TerminalSignalOptions {
+export interface DeterminateProgressOptions
+  extends TerminalSignalOptions, CliPresentationOptions {
   readonly label: string;
   readonly total: number;
   readonly completed?: number;
   readonly hint?: string;
   readonly io?: TerminalIO;
-  readonly theme?: TerminalThemeVariant;
 }
 
 /** Mutable progress handle scoped to {@linkcode withDeterminateProgress}. */
@@ -298,6 +301,7 @@ class ProgressController implements DeterminateProgressController {
       ...(this.options.theme === undefined
         ? {}
         : { theme: this.options.theme }),
+      ...motifPassthrough(this.options),
       width: defaultTerminalFrameWidth(this.io.capabilities()),
     }, this.io.capabilities());
     if (this.#staticMode) {
@@ -348,13 +352,13 @@ export async function withDeterminateProgress<T>(
 }
 
 /** Options for a live activity log operation. */
-export interface ActivityLogOptions extends TerminalSignalOptions {
+export interface ActivityLogOptions
+  extends TerminalSignalOptions, CliPresentationOptions {
   readonly label: string;
   readonly hint?: string;
   /** Requested upper bound on streamed tail rows (default 6). */
   readonly tailRows?: number;
   readonly io?: TerminalIO;
-  readonly theme?: TerminalThemeVariant;
   readonly intervalMs?: number;
   readonly scheduler?: SpinnerScheduler;
 }
@@ -640,7 +644,11 @@ class ActivityLogRun implements ActivityLogController {
 
   #tick(): void {
     if (this.#finished || this.#mode !== "live") return;
-    this.#phase = (this.#phase + 1) % DISCERN_TRIANGLE_SPINNER_ORDER.length;
+    this.#phase = (this.#phase + 1) %
+      terminalMotifRepertoire(
+        this.options.motif,
+        this.io.capabilities().unicode,
+      ).spinner.length;
     this.#paintActive();
   }
 
@@ -667,6 +675,7 @@ class ActivityLogRun implements ActivityLogController {
       ...(this.options.theme === undefined
         ? {}
         : { theme: this.options.theme }),
+      ...motifPassthrough(this.options),
     }, this.io.capabilities());
   }
 
@@ -690,6 +699,7 @@ class ActivityLogRun implements ActivityLogController {
       ...(this.options.theme === undefined
         ? {}
         : { theme: this.options.theme }),
+      ...motifPassthrough(this.options),
     }, capabilities);
   }
 

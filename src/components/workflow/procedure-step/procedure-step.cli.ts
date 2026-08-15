@@ -6,7 +6,11 @@
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import type { SequentialStepStatus } from "../../../cli/interactive-states.ts";
-import { renderTriangleWorkflowStepper } from "../../../cli/triangles.ts";
+import {
+  motifPassthrough,
+  type TerminalMotifOptions,
+} from "../../../cli/motif.ts";
+import { renderMotifWorkflowStepper } from "../../../cli/motifs.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import renderBranchChoiceCli, {
   type BranchChoiceCliProps,
@@ -25,7 +29,7 @@ import {
 } from "../workflow-cli.ts";
 
 /** Inputs accepted by the terminal Procedure step renderer. */
-export interface ProcedureStepCliProps {
+export interface ProcedureStepCliProps extends TerminalMotifOptions {
   readonly title: string;
   readonly status: SequentialStepStatus;
   readonly phase?: number;
@@ -68,16 +72,19 @@ const renderProcedureStepCli: CliRenderer<ProcedureStepCliProps> = (
   const width = workflowCliWidth(props.maxWidth, capabilities, 20);
   assertWorkflowCliText(props.title, "procedure step title");
   assertWorkflowCliText(props.action, "procedure step action", true);
-  const theme = props.theme === undefined ? {} : { theme: props.theme };
+  const presentation = {
+    ...(props.theme === undefined ? {} : { theme: props.theme }),
+    ...motifPassthrough(props),
+  };
   const lines = [
-    renderTriangleWorkflowStepper(
+    renderMotifWorkflowStepper(
       [{
         label: props.title,
         status: props.status,
         ...(props.phase === undefined ? {} : { phase: props.phase }),
       }],
       { ...capabilities, columns: width },
-      theme,
+      presentation,
     ),
     ...workflowIndentedLines(props.action, width),
   ];
@@ -87,7 +94,7 @@ const renderProcedureStepCli: CliRenderer<ProcedureStepCliProps> = (
     lines.push(indentFrame(renderCommandCli(
       {
         ...props.command,
-        ...theme,
+        ...presentation,
         maxWidth: innerWidth,
       },
       innerCapabilities,
@@ -97,7 +104,7 @@ const renderProcedureStepCli: CliRenderer<ProcedureStepCliProps> = (
     lines.push(indentFrame(renderExpectedResultCli(
       {
         ...props.expectedResult,
-        ...theme,
+        ...presentation,
         maxWidth: innerWidth,
       },
       innerCapabilities,
@@ -117,7 +124,7 @@ const renderProcedureStepCli: CliRenderer<ProcedureStepCliProps> = (
   }
   if (props.branch !== undefined) {
     lines.push(indentFrame(renderBranchChoiceCli(
-      { ...props.branch, ...theme, maxWidth: innerWidth },
+      { ...props.branch, ...presentation, maxWidth: innerWidth },
       innerCapabilities,
     )));
   }

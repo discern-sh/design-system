@@ -7,16 +7,20 @@
 import { styleText } from "../../../cli/ansi.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
+import {
+  motifPassthrough,
+  type TerminalMotifOptions,
+} from "../../../cli/motif.ts";
 import { truncateText, wrapText } from "../../../cli/text.ts";
 import {
   terminalThemeColor,
   terminalThemes,
   type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
-import { renderTriangleSectionRule } from "../../../cli/triangles.ts";
+import { renderMotifSectionRule } from "../../../cli/motifs.ts";
 
 /** Inputs accepted by the terminal Docs header renderer. */
-export interface DocsHeaderCliProps {
+export interface DocsHeaderCliProps extends TerminalMotifOptions {
   readonly brand: string;
   readonly middle?: string;
   readonly actions?: readonly string[];
@@ -36,7 +40,7 @@ export const cliExamples: readonly CliExample<DocsHeaderCliProps>[] = [
   },
 ] as const;
 
-/** Render a documentation masthead as a labeled triangle rule and context row. */
+/** Render a documentation masthead as a labeled motif rule and context row. */
 const renderDocsHeaderCli: CliRenderer<DocsHeaderCliProps> = (
   props,
   capabilities,
@@ -56,9 +60,10 @@ const renderDocsHeaderCli: CliRenderer<DocsHeaderCliProps> = (
     Math.max(1, width - 6),
     capabilities.unicode ? "…" : ".",
   );
-  const rule = renderTriangleSectionRule(brand, {
+  const rule = renderMotifSectionRule(brand, {
     width,
     ...(props.theme === undefined ? {} : { theme: props.theme }),
+    ...motifPassthrough(props),
   }, capabilities);
   const blocks = [rule];
   if (props.middle !== undefined) {

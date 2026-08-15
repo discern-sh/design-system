@@ -1,13 +1,13 @@
 /** Settled public heading treatments for focused terminal review. */
 
 import {
-  renderTriangleSectionRule,
-  type TriangleSectionRuleTreatment,
+  type MotifSectionRuleTreatment,
+  renderMotifSectionRule,
 } from "../../src/cli/mod.ts";
 import type { PlaygroundRuntime } from "./types.ts";
 
 const variants: readonly {
-  readonly treatment: TriangleSectionRuleTreatment;
+  readonly treatment: MotifSectionRuleTreatment;
   readonly label: string;
 }[] = [
   { treatment: "embedded", label: "Strong embedded title — default" },
@@ -23,7 +23,7 @@ export function runHeadingVariantsJourney(
   const width = Math.min(capabilities.columns, 80);
   for (const { treatment, label } of variants) {
     runtime.print(`[${treatment}] ${label}`);
-    runtime.print(renderTriangleSectionRule(
+    runtime.print(renderMotifSectionRule(
       "Deploying workspace changes",
       { width, treatment },
       { ...capabilities, columns: width },

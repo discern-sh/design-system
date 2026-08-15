@@ -2,11 +2,17 @@ import {
   assertEquals,
   assertNotEquals,
   assertStrictEquals,
+  assertStringIncludes,
   assertThrows,
 } from "@std/assert";
+import { stripAnsi } from "../../src/cli/ansi.ts";
 import { renderBox } from "../../src/cli/box.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
-import type { CliRenderer } from "../../src/cli/contracts.ts";
+import type {
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../src/cli/contracts.ts";
+import { DISCERN_TERMINAL_MOTIF } from "../../src/cli/motif.ts";
 import {
   renderNoteLine,
   renderSuccessLine,
@@ -18,20 +24,22 @@ import {
 } from "../../src/cli/presenter.ts";
 import type { TerminalThemeVariant } from "../../src/cli/theme.ts";
 import {
-  renderTrianglePattern,
-  renderTriangleSectionRule,
-  renderTriangleSpinnerFrame,
-  renderTriangleWorkflowStepper,
-} from "../../src/cli/triangles.ts";
+  renderMotifPattern,
+  renderMotifSectionRule,
+  renderMotifSpinnerFrame,
+  renderMotifWorkflowStepper,
+} from "../../src/cli/motifs.ts";
 import renderBadgeCli from "../../src/components/display/badge/badge.cli.ts";
 import renderToastCli from "../../src/components/feedback/toast/toast.cli.ts";
+import renderTimelineCli from "../../src/components/editorial/timeline/timeline.cli.ts";
 import { cliComponentRegistry } from "../../src/generated/cli-registry.ts";
 import { loadRenderedCliModule } from "../../scripts/cli-inventory.ts";
 import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
+import { TEST_TERMINAL_MOTIF } from "./motif_fixture.ts";
 
-type PresentableRenderer = CliRenderer<{
-  readonly theme?: TerminalThemeVariant;
-}>;
+type PresentableRenderer = CliRenderer<CliPresentationOptions>;
+
+const CUSTOM_MOTIF = TEST_TERMINAL_MOTIF;
 
 type StringFunctionKeys<Surface> = {
   [Key in keyof Surface]: Surface[Key] extends (
@@ -51,7 +59,7 @@ type PresenterCompatibleKeys<Surface> = {
 
 type FoundationSurface =
   & typeof import("../../src/cli/box.ts")
-  & typeof import("../../src/cli/triangles.ts");
+  & typeof import("../../src/cli/motifs.ts");
 
 type PresenterOwnedFoundationRenderer = Exclude<
   StringFunctionKeys<FoundationSurface>,
@@ -70,9 +78,9 @@ type FoundationBindingContract = {
 
 const presenterFoundationBindingMethods = {
   renderBox: "box",
-  renderTriangleSectionRule: "triangleSectionRule",
-  renderTriangleSpinnerFrame: "triangleSpinnerFrame",
-  renderTriangleWorkflowStepper: "triangleWorkflowStepper",
+  renderMotifSectionRule: "motifSectionRule",
+  renderMotifSpinnerFrame: "motifSpinnerFrame",
+  renderMotifWorkflowStepper: "motifWorkflowStepper",
 } as const satisfies FoundationBindingContract;
 
 type AdversarialFoundationSurface = {
@@ -91,9 +99,9 @@ const adversarialFutureSibling: Exclude<
 Deno.test("every non-presentable box and motif renderer has a presenter binding", () => {
   assertEquals(presenterFoundationBindingMethods, {
     renderBox: "box",
-    renderTriangleSectionRule: "triangleSectionRule",
-    renderTriangleSpinnerFrame: "triangleSpinnerFrame",
-    renderTriangleWorkflowStepper: "triangleWorkflowStepper",
+    renderMotifSectionRule: "motifSectionRule",
+    renderMotifSpinnerFrame: "motifSpinnerFrame",
+    renderMotifWorkflowStepper: "motifWorkflowStepper",
   });
   assertEquals(adversarialFutureSibling, "drawPulse");
 });
@@ -125,22 +133,32 @@ Deno.test("foundation bindings resolve capabilities and theme byte-for-byte", ()
         renderBox({ body: "Ready", title: "Status" }, effective),
       );
       assertEquals(
-        presenter.triangleSpinnerFrame(2),
-        renderTriangleSpinnerFrame(2, effective, { theme }),
+        presenter.motifSpinnerFrame(2),
+        renderMotifSpinnerFrame(2, effective, {
+          theme,
+          motif: DISCERN_TERMINAL_MOTIF,
+        }),
       );
       assertEquals(
-        presenter.triangleSectionRule("Status", { width: 80 }),
-        renderTriangleSectionRule("Status", { width: 80, theme }, effective),
+        presenter.motifSectionRule("Status", { width: 80 }),
+        renderMotifSectionRule(
+          "Status",
+          { width: 80, theme, motif: DISCERN_TERMINAL_MOTIF },
+          effective,
+        ),
       );
       assertEquals(
-        presenter.triangleWorkflowStepper(steps),
-        renderTriangleWorkflowStepper(steps, effective, { theme }),
+        presenter.motifWorkflowStepper(steps),
+        renderMotifWorkflowStepper(steps, effective, {
+          theme,
+          motif: DISCERN_TERMINAL_MOTIF,
+        }),
       );
     }
   }
 });
 
-Deno.test("foundation motif overrides win over the presenter theme", () => {
+Deno.test("foundation call overrides win over presenter defaults", () => {
   const capabilities = testTerminalCapabilities({
     columns: 80,
     colorDepth: "truecolor",
@@ -153,25 +171,64 @@ Deno.test("foundation motif overrides win over the presenter theme", () => {
   const steps = [{ label: "Apply", status: "active" as const, phase: 2 }];
 
   assertEquals(
-    presenter.triangleSpinnerFrame(2, { theme: "dark" }),
-    renderTriangleSpinnerFrame(2, effective, { theme: "dark" }),
+    presenter.motifSpinnerFrame(2, { theme: "dark" }),
+    renderMotifSpinnerFrame(2, effective, { theme: "dark" }),
   );
   assertEquals(
-    presenter.triangleSectionRule("Status", { width: 80, theme: "dark" }),
-    renderTriangleSectionRule(
+    presenter.motifSectionRule("Status", { width: 80, theme: "dark" }),
+    renderMotifSectionRule(
       "Status",
       { width: 80, theme: "dark" },
       effective,
     ),
   );
   assertEquals(
-    presenter.triangleWorkflowStepper(steps, { theme: "dark" }),
-    renderTriangleWorkflowStepper(steps, effective, { theme: "dark" }),
+    presenter.motifWorkflowStepper(steps, { theme: "dark" }),
+    renderMotifWorkflowStepper(steps, effective, { theme: "dark" }),
   );
   assertNotEquals(
-    presenter.triangleSectionRule("Status", { width: 80 }),
-    renderTriangleSectionRule("Status", { width: 80 }, effective),
+    presenter.motifSectionRule("Status", { width: 80 }),
+    renderMotifSectionRule("Status", { width: 80 }, effective),
     "a light presenter must not silently render the section rule's dark default",
+  );
+});
+
+Deno.test("presenter motifs bind globally, override per call, and reach semantic roles", () => {
+  const capabilities = testTerminalCapabilities({ columns: 48 });
+  const presenter = createCliPresenter(capabilities, {
+    motif: CUSTOM_MOTIF,
+  });
+  assertStrictEquals(presenter.motif, CUSTOM_MOTIF);
+  assertEquals(presenter.motifSpinnerFrame(1), "◷");
+  assertStringIncludes(
+    presenter.present(renderMotifPattern, { length: 4 }),
+    "▵▹▿◃",
+  );
+  assertEquals(presenter.note("Custom marker"), "◉ Custom marker");
+  assertStringIncludes(
+    presenter.present(renderTimelineCli, {
+      title: "Status",
+      items: [{
+        date: "Now",
+        title: "Custom",
+        description: "Uses the incomplete role.",
+        status: "current",
+      }],
+    }),
+    "▿ Now",
+  );
+  assertEquals(
+    presenter.motifSpinnerFrame(0, {
+      motif: DISCERN_TERMINAL_MOTIF,
+    }),
+    "▴",
+  );
+  assertEquals(
+    presenter.present(renderMotifPattern, {
+      length: 4,
+      motif: DISCERN_TERMINAL_MOTIF,
+    }),
+    "◮⧩◭⧨",
   );
 });
 
@@ -193,8 +250,8 @@ Deno.test("a bound present call is byte-equal to the manual renderer call", () =
       renderToastCli({ message: "Saved.", tone: "success" }, capabilities),
     );
     assertEquals(
-      presenter.present(renderTrianglePattern, { length: 8 }),
-      renderTrianglePattern({ length: 8 }, capabilities),
+      presenter.present(renderMotifPattern, { length: 8 }),
+      renderMotifPattern({ length: 8 }, capabilities),
     );
   }
 });
@@ -271,8 +328,12 @@ Deno.test("with derives a new presenter and leaves the source untouched", () => 
   const source = createCliPresenter(capabilities, { width: 40 });
   const before = source.success("Saved the draft");
   const light = source.with({ theme: "light" });
+  const custom = source.with({ motif: CUSTOM_MOTIF });
   assertEquals(source.theme, "dark");
   assertEquals(light.theme, "light");
+  assertStrictEquals(source.motif, DISCERN_TERMINAL_MOTIF);
+  assertStrictEquals(custom.motif, CUSTOM_MOTIF);
+  assertEquals(stripAnsi(custom.motifSpinnerFrame(0)), "◴");
   assertEquals(light.capabilities.columns, 40);
   assertEquals(source.success("Saved the draft"), before);
   assertEquals(
@@ -354,5 +415,43 @@ Deno.test("every rendered component presents byte-equal to its manual call", asy
         );
       }
     }
+  }
+});
+
+Deno.test("every rendered component inherits the bound motif without discern glyph leakage", async () => {
+  const capabilities = testTerminalCapabilities({ columns: 80 });
+  const presenter = createCliPresenter(capabilities, {
+    motif: CUSTOM_MOTIF,
+  });
+  const frames: string[] = [];
+  for (const [slug, entry] of Object.entries(cliComponentRegistry)) {
+    if (entry.stance !== "rendered") continue;
+    const module = await loadRenderedCliModule(slug, entry);
+    const render = module.render as PresentableRenderer;
+    for (const example of module.examples) {
+      frames.push(
+        presenter.present(
+          render,
+          example.props as Parameters<PresentableRenderer>[0],
+        ),
+      );
+    }
+  }
+  const output = frames.join("\n");
+  // ▸ and ▾ also carry non-motif disclosure semantics in FAQ and raw-output
+  // Components, so only the repertoire's distinctive glyphs belong here.
+  for (const defaultGlyph of ["◮", "⧩", "◭", "⧨", "▴", "◂"]) {
+    assertEquals(
+      output.includes(defaultGlyph),
+      false,
+      `bound component output leaked default glyph ${defaultGlyph}`,
+    );
+  }
+  for (const customGlyph of ["▵", "▹", "▿", "◃", "◉", "◶"]) {
+    assertEquals(
+      output.includes(customGlyph),
+      true,
+      `component inventory never exercised custom glyph ${customGlyph}`,
+    );
   }
 });

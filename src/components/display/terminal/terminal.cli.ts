@@ -8,14 +8,18 @@ import { stripAnsi } from "../../../cli/ansi.ts";
 import { renderBox } from "../../../cli/box.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import {
+  motifPassthrough,
+  type TerminalMotifOptions,
+} from "../../../cli/motif.ts";
+import {
   terminalThemeColor,
   terminalThemes,
   type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
-import { renderTrianglePattern } from "../../../cli/triangles.ts";
+import { renderMotifPattern } from "../../../cli/motifs.ts";
 
 /** Inputs accepted by the terminal Terminal renderer. */
-export interface TerminalCliProps {
+export interface TerminalCliProps extends TerminalMotifOptions {
   readonly body: string;
   readonly title?: string;
   readonly theme?: TerminalThemeVariant;
@@ -48,10 +52,13 @@ const renderTerminalCli: CliRenderer<TerminalCliProps> = (
     );
   }
   const theme = terminalThemes[props.theme ?? "dark"];
-  const motif = stripAnsi(renderTrianglePattern(
-    props.theme === undefined
-      ? { length: 3, direction: "reverse" }
-      : { length: 3, direction: "reverse", theme: props.theme },
+  const motif = stripAnsi(renderMotifPattern(
+    {
+      length: 3,
+      direction: "reverse",
+      ...(props.theme === undefined ? {} : { theme: props.theme }),
+      ...motifPassthrough(props),
+    },
     capabilities,
   ));
   return renderBox(

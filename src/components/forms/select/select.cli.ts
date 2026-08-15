@@ -10,6 +10,10 @@ import {
   isInteractiveChoice,
   isInteractiveChoiceGroupHeading,
 } from "../../../cli/interactive-choice.ts";
+import {
+  motifPassthrough,
+  type TerminalMotifOptions,
+} from "../../../cli/motif.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
   formCliChoiceFrameWidth,
@@ -23,7 +27,7 @@ import {
 } from "../form-frame.ts";
 
 /** Inputs accepted by the terminal Select renderer. */
-export interface SelectCliProps extends SelectFrameState {
+export interface SelectCliProps extends SelectFrameState, TerminalMotifOptions {
   readonly presentation?: FormCliPresentation;
   readonly placeholder?: string;
   readonly required?: boolean;
@@ -177,6 +181,7 @@ const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
           entry,
           {
             ...(props.theme === undefined ? {} : { theme: props.theme }),
+            ...motifPassthrough(props),
             width,
           },
           capabilities,

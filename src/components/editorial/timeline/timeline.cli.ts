@@ -7,14 +7,17 @@
 import { styleText } from "../../../cli/ansi.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
+import {
+  type TerminalMotifOptions,
+  terminalMotifRepertoire,
+} from "../../../cli/motif.ts";
 import { measureText, wrapText } from "../../../cli/text.ts";
 import {
   terminalThemeColor,
   terminalThemes,
   type TerminalThemeVariant,
+  terminalToneColor,
 } from "../../../cli/theme.ts";
-import { renderTrianglePattern } from "../../../cli/triangles.ts";
-import { verticalTriangleStatusPhase } from "../../../cli/triangle-status.ts";
 import type { TimelineStatus } from "./timeline.types.ts";
 
 /** One terminal Timeline event. */
@@ -27,7 +30,7 @@ export interface TimelineCliItem {
 }
 
 /** Inputs accepted by the terminal Timeline renderer. */
-export interface TimelineCliProps {
+export interface TimelineCliProps extends TerminalMotifOptions {
   readonly eyebrow?: string;
   readonly title: string;
   readonly description?: string;
@@ -83,7 +86,7 @@ function hanging(
   );
 }
 
-/** Render a status-explicit vertical Timeline using the package triangle motif. */
+/** Render a status-explicit vertical Timeline using the effective motif. */
 const renderTimelineCli: CliRenderer<TimelineCliProps> = (
   props,
   capabilities,
@@ -117,14 +120,17 @@ const renderTimelineCli: CliRenderer<TimelineCliProps> = (
   const rail = capabilities.unicode ? "│" : "|";
   const events = props.items.map((item, index) => {
     const status = item.status ?? "upcoming";
-    const marker = renderTrianglePattern({
-      length: 1,
-      phase: verticalTriangleStatusPhase(
-        status === "complete" ? "complete" : "incomplete",
-      ),
-      tone: STATUS_TONES[status],
-      ...(props.theme === undefined ? {} : { theme: props.theme }),
-    }, capabilities);
+    const repertoire = terminalMotifRepertoire(
+      props.motif,
+      capabilities.unicode,
+    );
+    const marker = styleText(
+      status === "complete"
+        ? repertoire.status.complete
+        : repertoire.status.incomplete,
+      { color: terminalToneColor(theme, STATUS_TONES[status]) },
+      capabilities,
+    );
     const label = `${item.date}${separator}${item.title} [${status}]`;
     const labelLines = hanging("  ", label, width);
     const header = `${marker}${labelLines[0]?.slice(1) ?? ""}`;

@@ -8,14 +8,18 @@ import { stripAnsi } from "../../../cli/ansi.ts";
 import { renderBox } from "../../../cli/box.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import {
+  motifPassthrough,
+  type TerminalMotifOptions,
+} from "../../../cli/motif.ts";
+import {
   terminalThemeColor,
   terminalThemes,
   type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
-import { renderTrianglePattern } from "../../../cli/triangles.ts";
+import { renderMotifPattern } from "../../../cli/motifs.ts";
 
 /** Inputs accepted by the terminal Window renderer. */
-export interface WindowCliProps {
+export interface WindowCliProps extends TerminalMotifOptions {
   readonly body: string;
   readonly title?: string;
   readonly theme?: TerminalThemeVariant;
@@ -28,7 +32,7 @@ export const cliExamples: readonly CliExample<WindowCliProps>[] = [
   { name: "untitled", props: { body: "Framed presentation surface" } },
 ] as const;
 
-/** Render a triangle-titled presentation Window inside a terminal box. */
+/** Render a motif-titled presentation Window inside a terminal box. */
 const renderWindowCli: CliRenderer<WindowCliProps> = (props, capabilities) => {
   for (const value of [props.body.replaceAll("\n", ""), props.title]) {
     if (value !== undefined && /[\p{Cc}\p{Cf}]/u.test(value)) {
@@ -42,10 +46,12 @@ const renderWindowCli: CliRenderer<WindowCliProps> = (props, capabilities) => {
     );
   }
   const theme = terminalThemes[props.theme ?? "dark"];
-  const motif = stripAnsi(renderTrianglePattern(
-    props.theme === undefined
-      ? { length: 3 }
-      : { length: 3, theme: props.theme },
+  const motif = stripAnsi(renderMotifPattern(
+    {
+      length: 3,
+      ...(props.theme === undefined ? {} : { theme: props.theme }),
+      ...motifPassthrough(props),
+    },
     capabilities,
   ));
   return renderBox(

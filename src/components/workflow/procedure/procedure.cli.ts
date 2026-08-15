@@ -7,9 +7,13 @@
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import type { SequentialStepStatus } from "../../../cli/interactive-states.ts";
 import {
-  renderTriangleSectionRule,
-  renderTriangleWorkflowStepper,
-} from "../../../cli/triangles.ts";
+  motifPassthrough,
+  type TerminalMotifOptions,
+} from "../../../cli/motif.ts";
+import {
+  renderMotifSectionRule,
+  renderMotifWorkflowStepper,
+} from "../../../cli/motifs.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import renderPrerequisiteListCli, {
   type PrerequisiteListCliItem,
@@ -31,7 +35,7 @@ export interface ProcedureCliStep {
 }
 
 /** Inputs accepted by the terminal Procedure renderer. */
-export interface ProcedureCliProps {
+export interface ProcedureCliProps extends TerminalMotifOptions {
   readonly title: string;
   readonly description?: string;
   readonly prerequisites?: readonly PrerequisiteListCliItem[];
@@ -101,18 +105,22 @@ const renderProcedureCli: CliRenderer<ProcedureCliProps> = (
   }
   lines.push(
     "",
-    renderTriangleSectionRule("Steps", {
+    renderMotifSectionRule("Steps", {
       width,
       ...(props.theme === undefined ? {} : { theme: props.theme }),
+      ...motifPassthrough(props),
     }, capabilities),
-    renderTriangleWorkflowStepper(
+    renderMotifWorkflowStepper(
       props.steps.map((step) => ({
         label: step.title,
         status: step.status,
         ...(step.phase === undefined ? {} : { phase: step.phase }),
       })),
       { ...capabilities, columns: width },
-      props.theme === undefined ? {} : { theme: props.theme },
+      {
+        ...(props.theme === undefined ? {} : { theme: props.theme }),
+        ...motifPassthrough(props),
+      },
     ),
   );
   const completionLabel = props.completionLabel ?? "Done when";

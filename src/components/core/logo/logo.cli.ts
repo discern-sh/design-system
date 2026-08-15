@@ -6,17 +6,21 @@
 
 import { renderStyledSpans, styleText } from "../../../cli/ansi.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  motifPassthrough,
+  type TerminalMotifOptions,
+} from "../../../cli/motif.ts";
 import { measureText, padText, truncateText } from "../../../cli/text.ts";
 import {
   terminalThemes,
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
-import { renderTrianglePattern } from "../../../cli/triangles.ts";
+import { renderMotifPattern } from "../../../cli/motifs.ts";
 import type { LogoShape, LogoSize, LogoTreatment } from "./logo.types.ts";
 
 /** Inputs accepted by the terminal Logo renderer. */
-export interface LogoCliProps {
+export interface LogoCliProps extends TerminalMotifOptions {
   readonly text: string;
   readonly size?: LogoSize;
   readonly treatment?: LogoTreatment;
@@ -39,7 +43,7 @@ export const cliExamples: readonly CliExample<LogoCliProps>[] = [
   { name: "square", props: { text: "d", shape: "square", treatment: "tile" } },
 ] as const;
 
-/** Render a triangle-led terminal wordmark in natural or square form. */
+/** Render a motif-led terminal wordmark in natural or square form. */
 const renderLogoCli: CliRenderer<LogoCliProps> = (props, capabilities) => {
   if (props.text === "" || /[\p{Cc}\p{Cf}]/u.test(props.text)) {
     throw new TypeError("logo text must be non-empty and control-free");
@@ -56,12 +60,16 @@ const renderLogoCli: CliRenderer<LogoCliProps> = (props, capabilities) => {
   const shape = props.shape ?? "natural";
   const theme = terminalThemes[props.theme ?? "dark"];
   const markOptions = props.theme === undefined
-    ? { length: Math.min(MARK_LENGTHS[size], Math.max(1, width - 2)) }
+    ? {
+      length: Math.min(MARK_LENGTHS[size], Math.max(1, width - 2)),
+      ...motifPassthrough(props),
+    }
     : {
       length: Math.min(MARK_LENGTHS[size], Math.max(1, width - 2)),
       theme: props.theme,
+      ...motifPassthrough(props),
     };
-  const mark = renderTrianglePattern(markOptions, capabilities);
+  const mark = renderMotifPattern(markOptions, capabilities);
   const frameCells = treatment === "tile" ? 2 : 0;
 
   if (shape === "square") {

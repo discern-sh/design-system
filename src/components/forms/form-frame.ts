@@ -19,6 +19,10 @@ import {
   interactiveChoiceWindow,
   type InteractiveChoiceWindowEntry,
 } from "../../cli/interactive-choice.ts";
+import {
+  motifPassthrough,
+  type TerminalMotifOptions,
+} from "../../cli/motif.ts";
 import { measureText, truncateText, wrapStyledText } from "../../cli/text.ts";
 import {
   terminalThemeColor,
@@ -26,7 +30,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../cli/theme.ts";
-import { renderTriangleSectionRule } from "../../cli/triangles.ts";
+import { renderMotifSectionRule } from "../../cli/motifs.ts";
 
 /** Static presentation layered over an active Wave 1 frame. */
 export type FormCliPresentation =
@@ -287,7 +291,7 @@ export function visibleFormCliChoiceOverflow(
 /** Render a semantic choice heading through the package section-rule authority. */
 export function renderFormCliChoiceHeading(
   heading: InteractiveChoiceGroupHeadingState,
-  options: {
+  options: TerminalMotifOptions & {
     readonly theme?: TerminalThemeVariant;
     readonly width?: number;
   },
@@ -303,11 +307,12 @@ export function renderFormCliChoiceHeading(
     capabilities.unicode ? "…" : ".",
   );
   return `\n${
-    renderTriangleSectionRule(
+    renderMotifSectionRule(
       label,
       {
         width,
         ...(options.theme === undefined ? {} : { theme: options.theme }),
+        ...motifPassthrough(options),
       },
       { ...capabilities, columns: width },
     )

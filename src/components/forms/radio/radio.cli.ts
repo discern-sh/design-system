@@ -13,6 +13,10 @@ import {
   isInteractiveChoice,
   isInteractiveChoiceGroupHeading,
 } from "../../../cli/interactive-choice.ts";
+import {
+  motifPassthrough,
+  type TerminalMotifOptions,
+} from "../../../cli/motif.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
   formCliChoiceFrameWidth,
@@ -29,7 +33,7 @@ import {
 } from "../form-frame.ts";
 
 /** Inputs accepted by the terminal Radio renderer. */
-interface RadioCliOptions {
+interface RadioCliOptions extends TerminalMotifOptions {
   readonly presentation?: FormCliPresentation;
   readonly required?: boolean;
   readonly theme?: TerminalThemeVariant;
@@ -204,6 +208,7 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
           entry,
           {
             ...(props.theme === undefined ? {} : { theme: props.theme }),
+            ...motifPassthrough(props),
             width,
           },
           capabilities,

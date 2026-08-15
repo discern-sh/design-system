@@ -8,22 +8,26 @@ import { styleText } from "../../../cli/ansi.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical, layoutColumns } from "../../../cli/layout.ts";
 import {
+  motifPassthrough,
+  type TerminalMotifOptions,
+} from "../../../cli/motif.ts";
+import {
   type TerminalSpacingTokenName,
   terminalThemeColor,
   terminalThemes,
   type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import {
-  renderTrianglePattern,
-  renderTriangleSectionRule,
-} from "../../../cli/triangles.ts";
+  renderMotifPattern,
+  renderMotifSectionRule,
+} from "../../../cli/motifs.ts";
 import type { SectionSpacing, SectionSurface } from "./section.types.ts";
 
 /** Structural treatments available to the terminal Section renderer. */
 export type SectionCliTreatment = "plain" | "rule" | "ribbon";
 
 /** Inputs accepted by the terminal Section renderer. */
-export interface SectionCliProps {
+export interface SectionCliProps extends TerminalMotifOptions {
   readonly body: string;
   readonly title?: string;
   readonly surface?: SectionSurface;
@@ -66,7 +70,7 @@ export const cliExamples: readonly CliExample<SectionCliProps>[] = [
   },
 ] as const;
 
-/** Compose a terminal section from layout primitives and selected triangle treatments. */
+/** Compose a terminal section from layout primitives and motif treatments. */
 const renderSectionCli: CliRenderer<SectionCliProps> = (
   props,
   capabilities,
@@ -88,20 +92,25 @@ const renderSectionCli: CliRenderer<SectionCliProps> = (
     (props.title === undefined ? "plain" : "rule");
   const heading: string[] = [];
   if (treatment === "ribbon") {
-    heading.push(renderTrianglePattern(
+    heading.push(renderMotifPattern(
       {
         length: width,
         thickness: 2,
         ...(props.theme === undefined ? {} : { theme: props.theme }),
+        ...motifPassthrough(props),
       },
       capabilities,
     ));
   }
   if (props.title !== undefined && props.title !== "") {
     if (treatment === "rule") {
-      heading.push(renderTriangleSectionRule(
+      heading.push(renderMotifSectionRule(
         props.title,
-        props.theme === undefined ? { width } : { width, theme: props.theme },
+        {
+          width,
+          ...(props.theme === undefined ? {} : { theme: props.theme }),
+          ...motifPassthrough(props),
+        },
         capabilities,
       ));
     } else {

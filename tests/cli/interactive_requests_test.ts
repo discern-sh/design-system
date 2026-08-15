@@ -22,6 +22,7 @@ import {
   withSpinner,
 } from "../../src/cli/interactive/mod.ts";
 import { FakeTerminalIO } from "../../src/cli/interactive/testing.ts";
+import { TEST_TERMINAL_MOTIF } from "./motif_fixture.ts";
 
 function assertRestored(io: FakeTerminalIO): void {
   assertEquals(io.rawTransitions.at(-1), false);
@@ -504,7 +505,7 @@ Deno.test("sequential form retains answers, runs conditions, and navigates back"
   );
 });
 
-Deno.test("spinner advances every triangle phase and restores cursor", async () => {
+Deno.test("spinner advances every motif phase and restores cursor", async () => {
   const io = new FakeTerminalIO([], { columns: 20 });
   let stopped = false;
   const result = await withSpinner({
@@ -523,11 +524,42 @@ Deno.test("spinner advances every triangle phase and restores cursor", async () 
   }, () => 42);
   assertEquals(result, 42);
   assert(stopped);
-  for (const glyph of ["◮", "◭", "⧨", "⧩"]) {
+  for (const glyph of ["▴", "▸", "▾", "◂"]) {
     assertStringIncludes(io.output(), glyph);
   }
   assertEquals(io.writes[0], HIDE_TERMINAL_CURSOR);
   assertEquals(io.writes.at(-1), SHOW_TERMINAL_CURSOR);
+});
+
+Deno.test("spinner and progress operations inherit a consumer motif", async () => {
+  const spinnerIo = new FakeTerminalIO([], { columns: 20 });
+  await withSpinner({
+    label: "Work",
+    io: spinnerIo,
+    motif: TEST_TERMINAL_MOTIF,
+    scheduler: {
+      repeat(callback) {
+        callback();
+        callback();
+        callback();
+        return () => {};
+      },
+    },
+  }, () => undefined);
+  for (const glyph of ["◴", "◷", "◶", "◵"]) {
+    assertStringIncludes(spinnerIo.output(), `${glyph} Work`);
+  }
+
+  const progressIo = new FakeTerminalIO([], { columns: 20 });
+  await withDeterminateProgress({
+    label: "Work",
+    total: 4,
+    completed: 1,
+    io: progressIo,
+    motif: TEST_TERMINAL_MOTIF,
+  }, () => undefined);
+  assertStringIncludes(progressIo.output(), "[ 25%] ▵▹▿");
+  assertStringIncludes(progressIo.output(), "[100%] ▵▹▿◃");
 });
 
 Deno.test("no-control terminals keep Unicode and use static interactive frames", async () => {
@@ -567,7 +599,7 @@ Deno.test("no-control terminals keep Unicode and use static interactive frames",
     },
   }, () => undefined);
   assertEquals(scheduled, false);
-  assertEquals(spinnerIo.writes, ["◮ Work\n"]);
+  assertEquals(spinnerIo.writes, ["▴ Work\n"]);
 });
 
 Deno.test("terminals below the coherent frame minimum refuse and restore", async () => {

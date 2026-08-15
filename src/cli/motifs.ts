@@ -1,5 +1,5 @@
 /**
- * Discern triangle motifs for pure, capability-aware terminal rendering.
+ * Semantic terminal motif renderers for pure, capability-aware output.
  *
  * @module
  */
@@ -7,8 +7,13 @@
 import { renderStyledSpans, type StyledSpan, styleText } from "./ansi.ts";
 import type { TerminalCapabilities } from "./capabilities.ts";
 import type { SequentialStepStatus } from "./interactive-states.ts";
+import {
+  type TerminalMotif,
+  type TerminalMotifCycle,
+  type TerminalMotifOptions,
+  terminalMotifRepertoire,
+} from "./motif.ts";
 import { measureText, truncateText } from "./text.ts";
-import { verticalTriangleStatusPhase } from "./triangle-status.ts";
 import {
   type TerminalSemanticTone,
   type TerminalTheme,
@@ -18,61 +23,29 @@ import {
   terminalToneColor,
 } from "./theme.ts";
 
-/** The four package-owned Unicode triangle marks, named by orientation. */
-export const DISCERN_TRIANGLE_GLYPHS = {
-  upRight: "◮",
-  upLeft: "◭",
-  downLeft: "⧨",
-  downRight: "⧩",
-} as const;
+/** Axis along which a motif pattern advances. */
+export type MotifPatternOrientation = "horizontal" | "vertical";
 
-/** Intentional ASCII orientations used when Unicode is unavailable. */
-export const DISCERN_TRIANGLE_ASCII_GLYPHS = {
-  upRight: ">",
-  upLeft: "^",
-  downLeft: "<",
-  downRight: "v",
-} as const;
+/** Direction in which a motif reads. */
+export type MotifDirection = "forward" | "reverse";
 
-/** Canonical tessellating order used by rules, fields, and progress fills. */
-export const DISCERN_TRIANGLE_WEAVE_ORDER = [
-  "upRight",
-  "downRight",
-  "upLeft",
-  "downLeft",
-] as const;
-
-/** Canonical rotational order used by indeterminate activity indicators. */
-export const DISCERN_TRIANGLE_SPINNER_ORDER = [
-  "upRight",
-  "upLeft",
-  "downLeft",
-  "downRight",
-] as const;
-
-/** Axis along which a triangle pattern advances. */
-export type TrianglePatternOrientation = "horizontal" | "vertical";
-
-/** Direction in which a triangle motif reads. */
-export type TriangleDirection = "forward" | "reverse";
-
-/** Shared theme selection for triangle motifs. */
-export interface TriangleThemeOptions {
+/** Shared theme and glyph selection for terminal motifs. */
+export interface MotifThemeOptions extends TerminalMotifOptions {
   readonly theme?: TerminalThemeVariant;
 }
 
-/** Inputs for a horizontal, vertical, or thick triangle tessellation. */
-export interface TrianglePatternOptions extends TriangleThemeOptions {
+/** Inputs for a horizontal, vertical, or thick motif tessellation. */
+export interface MotifPatternOptions extends MotifThemeOptions {
   readonly length: number;
-  readonly orientation?: TrianglePatternOrientation;
+  readonly orientation?: MotifPatternOrientation;
   readonly thickness?: number;
   readonly phase?: number;
-  readonly direction?: TriangleDirection;
+  readonly direction?: MotifDirection;
   readonly tone?: TerminalSemanticTone;
 }
 
 /** Inputs for one truthful determinate progress frame. */
-export interface TriangleProgressOptions extends TriangleThemeOptions {
+export interface MotifProgressOptions extends MotifThemeOptions {
   readonly completed: number;
   readonly total: number;
   /** Total visible frame width, including the percentage label. */
@@ -80,41 +53,38 @@ export interface TriangleProgressOptions extends TriangleThemeOptions {
 }
 
 /** Public visual treatments for a labeled terminal section boundary. */
-export type TriangleSectionRuleTreatment =
+export type MotifSectionRuleTreatment =
   | "embedded"
   | "underline"
   | "sandwich";
 
-/** Inputs for a labeled triangle section boundary. */
-export interface TriangleSectionRuleOptions extends TriangleThemeOptions {
+/** Inputs for a labeled motif section boundary. */
+export interface MotifSectionRuleOptions extends MotifThemeOptions {
   readonly width: number;
   readonly phase?: number;
-  readonly direction?: TriangleDirection;
+  readonly direction?: MotifDirection;
   /** Boundary geometry; defaults to the single-row strong embedded title. */
-  readonly treatment?: TriangleSectionRuleTreatment;
+  readonly treatment?: MotifSectionRuleTreatment;
 }
 
-/** One semantic workflow step rendered by the triangle stepper. */
-export interface TriangleWorkflowStep {
+/** One semantic workflow step rendered by the motif stepper. */
+export interface MotifWorkflowStep {
   readonly label: string;
   readonly status: SequentialStepStatus;
   /** Spinner phase used while this step is active. */
   readonly phase?: number;
 }
 
-/** Theme selection for a triangle workflow rail. */
-export interface TriangleWorkflowOptions extends TriangleThemeOptions {}
+/** Theme and motif selection for a workflow rail. */
+export interface MotifWorkflowOptions extends MotifThemeOptions {}
 
-/** Inputs for one moving triangle activity beacon. */
-export interface TriangleBeaconOptions extends TriangleThemeOptions {
+/** Inputs for one moving motif activity beacon. */
+export interface MotifBeaconOptions extends MotifThemeOptions {
   readonly width: number;
   /** Semantic animation phase; the renderer derives the packet position. */
   readonly phase: number;
-  readonly direction?: TriangleDirection;
+  readonly direction?: MotifDirection;
 }
-
-type TriangleName = keyof typeof DISCERN_TRIANGLE_GLYPHS;
-type TriangleGlyphSet = Readonly<Record<TriangleName, string>>;
 
 function assertInteger(value: number, name: string, minimum?: number): void {
   if (
@@ -132,37 +102,34 @@ function normalizedIndex(index: number, length: number): number {
 }
 
 function unknownSectionRuleTreatment(value: never): never {
-  throw new TypeError(`unknown triangle section-rule treatment: ${value}`);
+  throw new TypeError(`unknown motif section-rule treatment: ${value}`);
 }
 
 function themeFor(variant: TerminalThemeVariant | undefined): TerminalTheme {
   return terminalThemes[variant ?? "dark"];
 }
 
-function glyphSet(capabilities: TerminalCapabilities): TriangleGlyphSet {
-  return capabilities.unicode
-    ? DISCERN_TRIANGLE_GLYPHS
-    : DISCERN_TRIANGLE_ASCII_GLYPHS;
-}
-
-function weaveNames(direction: TriangleDirection): readonly TriangleName[] {
+function patternGlyphs(
+  motif: TerminalMotif | undefined,
+  capabilities: TerminalCapabilities,
+  direction: MotifDirection,
+): TerminalMotifCycle {
+  const glyphs = terminalMotifRepertoire(motif, capabilities.unicode).pattern;
   return direction === "forward"
-    ? DISCERN_TRIANGLE_WEAVE_ORDER
-    : ["downLeft", "upLeft", "downRight", "upRight"];
+    ? glyphs
+    : [...glyphs].reverse() as unknown as TerminalMotifCycle;
 }
 
 function renderCycle(
   length: number,
   phase: number,
-  direction: TriangleDirection,
+  direction: MotifDirection,
   capabilities: TerminalCapabilities,
+  motif: TerminalMotif | undefined,
 ): string {
-  const names = weaveNames(direction);
-  const glyphs = glyphSet(capabilities);
+  const glyphs = patternGlyphs(motif, capabilities, direction);
   return Array.from({ length }, (_, index) => {
-    const name = names[normalizedIndex(phase + index, names.length)] ??
-      "upRight";
-    return glyphs[name];
+    return glyphs[normalizedIndex(phase + index, glyphs.length)] ?? glyphs[0];
   }).join("");
 }
 
@@ -173,27 +140,40 @@ function motifColor(
   return terminalToneColor(theme, tone);
 }
 
-/** Render a configurable package-authoritative triangle pattern. */
-export function renderTrianglePattern(
-  options: TrianglePatternOptions,
+/** Render a configurable pattern through the effective motif repertoire. */
+export function renderMotifPattern(
+  options: MotifPatternOptions,
   capabilities: TerminalCapabilities,
 ): string {
-  assertInteger(options.length, "triangle pattern length", 1);
+  assertInteger(options.length, "motif pattern length", 1);
   const thickness = options.thickness ?? 1;
   const phase = options.phase ?? 0;
-  assertInteger(thickness, "triangle pattern thickness", 1);
-  assertInteger(phase, "triangle pattern phase");
+  assertInteger(thickness, "motif pattern thickness", 1);
+  assertInteger(phase, "motif pattern phase");
   const orientation = options.orientation ?? "horizontal";
   const direction = options.direction ?? "forward";
   const raw = orientation === "horizontal"
     ? Array.from(
       { length: thickness },
       (_, row) =>
-        renderCycle(options.length, phase - (row % 2), direction, capabilities),
+        renderCycle(
+          options.length,
+          phase - (row % 2),
+          direction,
+          capabilities,
+          options.motif,
+        ),
     ).join("\n")
     : Array.from(
       { length: options.length },
-      (_, row) => renderCycle(thickness, phase + row, direction, capabilities),
+      (_, row) =>
+        renderCycle(
+          thickness,
+          phase + row,
+          direction,
+          capabilities,
+          options.motif,
+        ),
     ).join("\n");
   return styleText(
     raw,
@@ -203,17 +183,19 @@ export function renderTrianglePattern(
 }
 
 /** Render one canonical indeterminate spinner phase. */
-export function renderTriangleSpinnerFrame(
+export function renderMotifSpinnerFrame(
   phase: number,
   capabilities: TerminalCapabilities,
-  options: TriangleThemeOptions = {},
+  options: MotifThemeOptions = {},
 ): string {
-  assertInteger(phase, "triangle spinner phase");
-  const name = DISCERN_TRIANGLE_SPINNER_ORDER[
-    normalizedIndex(phase, DISCERN_TRIANGLE_SPINNER_ORDER.length)
-  ] ?? DISCERN_TRIANGLE_SPINNER_ORDER[0];
+  assertInteger(phase, "motif spinner phase");
+  const spinner = terminalMotifRepertoire(
+    options.motif,
+    capabilities.unicode,
+  ).spinner;
+  const glyph = spinner[normalizedIndex(phase, spinner.length)] ?? spinner[0];
   return styleText(
-    glyphSet(capabilities)[name],
+    glyph,
     { color: motifColor(themeFor(options.theme), "accent") },
     capabilities,
   );
@@ -232,13 +214,13 @@ function proportionalFloor(
 }
 
 /** Render zero-to-complete determinate progress without overstating completion. */
-export function renderTriangleProgressFrame(
-  options: TriangleProgressOptions,
+export function renderMotifProgressFrame(
+  options: MotifProgressOptions,
   capabilities: TerminalCapabilities,
 ): string {
   if (!Number.isFinite(options.total) || options.total <= 0) {
     throw new TypeError(
-      `triangle progress total must be positive and finite; received ${options.total}`,
+      `motif progress total must be positive and finite; received ${options.total}`,
     );
   }
   if (
@@ -246,17 +228,17 @@ export function renderTriangleProgressFrame(
     options.completed > options.total
   ) {
     throw new TypeError(
-      `triangle progress completed must be between 0 and ${options.total}; received ${options.completed}`,
+      `motif progress completed must be between 0 and ${options.total}; received ${options.completed}`,
     );
   }
-  assertInteger(options.width, "triangle progress width", 1);
+  assertInteger(options.width, "motif progress width", 1);
   const width = Math.min(options.width, capabilities.columns);
   const percentage = proportionalFloor(options.completed, options.total, 100);
   const label = `[${String(percentage).padStart(3)}%] `;
   const trackWidth = width - measureText(label);
   if (trackWidth < 1) {
     throw new TypeError(
-      `triangle progress width must be at least ${
+      `motif progress width must be at least ${
         measureText(label) + 1
       }; received ${width}`,
     );
@@ -271,7 +253,13 @@ export function renderTriangleProgressFrame(
   return renderStyledSpans([
     { text: label, style: theme.typography.annotation },
     {
-      text: renderCycle(filled, 0, "forward", capabilities),
+      text: renderCycle(
+        filled,
+        0,
+        "forward",
+        capabilities,
+        options.motif,
+      ),
       style: { color: motifColor(theme, filledTone) },
     },
     {
@@ -284,20 +272,20 @@ export function renderTriangleProgressFrame(
   ], capabilities);
 }
 
-/** Render a full-width labeled section boundary with one triangle marker. */
-export function renderTriangleSectionRule(
+/** Render a full-width labeled section boundary with one motif marker. */
+export function renderMotifSectionRule(
   label: string,
-  options: TriangleSectionRuleOptions,
+  options: MotifSectionRuleOptions,
   capabilities: TerminalCapabilities,
 ): string {
   if (label === "" || label.trim() !== label || /[\p{Cc}\p{Cf}]/u.test(label)) {
     throw new TypeError(
-      "triangle section label must be non-empty, trimmed, and control-free",
+      "motif section label must be non-empty, trimmed, and control-free",
     );
   }
-  assertInteger(options.width, "triangle section-rule width", 1);
+  assertInteger(options.width, "motif section-rule width", 1);
   const phase = options.phase ?? 0;
-  assertInteger(phase, "triangle section-rule phase");
+  assertInteger(phase, "motif section-rule phase");
   const width = Math.min(options.width, capabilities.columns);
   const theme = themeFor(options.theme);
   const gap = " ".repeat(theme.spacing["--discern-space-2"] ?? 1);
@@ -307,6 +295,7 @@ export function renderTriangleSectionRule(
     phase,
     options.direction ?? "forward",
     capabilities,
+    options.motif,
   );
   const treatment = options.treatment ?? "embedded";
   const accentStyle = { color: motifColor(theme, "accent") } as const;
@@ -322,7 +311,7 @@ export function renderTriangleSectionRule(
     const labelWidth = width - measureText(lead) - measureText(gap) - 1;
     if (labelWidth < 1) {
       throw new TypeError(
-        `triangle section-rule width ${width} is too narrow for the embedded treatment`,
+        `motif section-rule width ${width} is too narrow for the embedded treatment`,
       );
     }
     const displayLabel = truncateText(
@@ -343,7 +332,7 @@ export function renderTriangleSectionRule(
   const labelWidth = width - measureText(marker) - measureText(gap);
   if (labelWidth < 1) {
     throw new TypeError(
-      `triangle section-rule width ${width} is too narrow for the ${treatment} treatment`,
+      `motif section-rule width ${width} is too narrow for the ${treatment} treatment`,
     );
   }
   const displayLabel = truncateText(
@@ -373,20 +362,22 @@ export function renderTriangleSectionRule(
 }
 
 function stepMarker(
-  step: TriangleWorkflowStep,
+  step: MotifWorkflowStep,
   index: number,
   capabilities: TerminalCapabilities,
   theme: TerminalTheme,
+  motif: TerminalMotif | undefined,
 ): StyledSpan {
   if (step.status === "active") {
     const phase = step.phase ?? index;
-    assertInteger(phase, `triangle workflow step ${index + 1} phase`);
+    assertInteger(phase, `motif workflow step ${index + 1} phase`);
     const raw = `[${
       stripStyle(
-        renderTriangleSpinnerFrame(phase, {
-          ...capabilities,
-          colorDepth: "none",
-        }),
+        renderMotifSpinnerFrame(
+          phase,
+          { ...capabilities, colorDepth: "none" },
+          motif === undefined ? {} : { motif },
+        ),
       )
     }]`;
     return {
@@ -397,12 +388,7 @@ function stepMarker(
   if (step.status === "complete") {
     return {
       text: ` ${
-        renderCycle(
-          1,
-          verticalTriangleStatusPhase("complete"),
-          "forward",
-          capabilities,
-        )
+        terminalMotifRepertoire(motif, capabilities.unicode).status.complete
       } `,
       style: { color: motifColor(theme, "success") },
     };
@@ -435,14 +421,14 @@ function stripStyle(value: string): string {
   );
 }
 
-/** Render semantic workflow step states on a vertical triangle rail. */
-export function renderTriangleWorkflowStepper(
-  steps: readonly TriangleWorkflowStep[],
+/** Render semantic workflow step states on a vertical motif rail. */
+export function renderMotifWorkflowStepper(
+  steps: readonly MotifWorkflowStep[],
   capabilities: TerminalCapabilities,
-  options: TriangleWorkflowOptions = {},
+  options: MotifWorkflowOptions = {},
 ): string {
   if (steps.length === 0) {
-    throw new TypeError("triangle workflow requires at least one step");
+    throw new TypeError("motif workflow requires at least one step");
   }
   const theme = themeFor(options.theme);
   const gap = " ".repeat(theme.spacing["--discern-space-2"] ?? 1);
@@ -450,10 +436,16 @@ export function renderTriangleWorkflowStepper(
   for (const [index, step] of steps.entries()) {
     if (step.label === "" || /[\p{Cc}\p{Cf}]/u.test(step.label)) {
       throw new TypeError(
-        `triangle workflow step ${index + 1} has an invalid label`,
+        `motif workflow step ${index + 1} has an invalid label`,
       );
     }
-    const marker = stepMarker(step, index, capabilities, theme);
+    const marker = stepMarker(
+      step,
+      index,
+      capabilities,
+      theme,
+      options.motif,
+    );
     const labelWidth = Math.max(
       1,
       capabilities.columns - measureText(marker.text) - measureText(gap),
@@ -485,19 +477,20 @@ export function renderTriangleWorkflowStepper(
 }
 
 /** Render a four-glyph activity packet whose position derives from its phase. */
-export function renderTriangleActivityBeacon(
-  options: TriangleBeaconOptions,
+export function renderMotifActivityBeacon(
+  options: MotifBeaconOptions,
   capabilities: TerminalCapabilities,
 ): string {
-  assertInteger(options.width, "triangle beacon width", 4);
-  assertInteger(options.phase, "triangle beacon phase");
+  assertInteger(options.width, "motif beacon width", 4);
+  assertInteger(options.phase, "motif beacon phase");
   const width = Math.min(options.width, capabilities.columns);
   if (width < 4) {
     throw new TypeError(
-      `terminal width ${capabilities.columns} cannot hold a triangle beacon`,
+      `terminal width ${capabilities.columns} cannot hold a motif beacon`,
     );
   }
-  const maximumOffset = width - DISCERN_TRIANGLE_WEAVE_ORDER.length;
+  const packetWidth = 4;
+  const maximumOffset = width - packetWidth;
   const journey = Math.max(1, maximumOffset * 2);
   const cursor = normalizedIndex(options.phase, journey);
   let offset = cursor <= maximumOffset ? cursor : journey - cursor;
@@ -515,10 +508,11 @@ export function renderTriangleActivityBeacon(
     },
     {
       text: renderCycle(
-        4,
+        packetWidth,
         options.phase,
         options.direction ?? "forward",
         capabilities,
+        options.motif,
       ),
       style: { color: motifColor(theme, "accent") },
     },
