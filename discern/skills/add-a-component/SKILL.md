@@ -36,8 +36,8 @@ Rules that bite:
 
 ## 3. Generate and verify
 
-1. `deno task codegen` — regenerates the registry, React and CLI surfaces, base styles, and catalogue registry. The new component now exists on every declared surface.
-2. `discern prepare` while iterating; `discern done` before calling it done. The Catalogue build type-checks your examples, and every example auto-enrols in the light and dark accessibility scans. Add `export const conformance = [...]` scenarios (see `catalogue/conformance.ts`) when the component has keyboard or focus behaviour worth pinning.
+1. `deno task codegen` — regenerates the committed registry, React and CLI surfaces, and base styles. The build regenerates the ignored Catalogue registry from the same authored sources; never edit either generated surface directly.
+2. `discern prepare` while iterating; `discern done` before calling it done. The Catalogue build generates and type-checks your examples, and every example auto-enrols in the light and dark accessibility scans. Add `export const conformance = [...]` scenarios (see `catalogue/conformance.ts`) when the component has keyboard or focus behaviour worth pinning.
 3. Watch the css standards in the gate output: `css_density` holds emitted bytes per component stylesheet, so a heavy component raises the rate it is judged by, and `docs_selection` budgets the documentation selection. A heavy component is a design smell before it is a budget problem.
 
 ## 4. Ship it

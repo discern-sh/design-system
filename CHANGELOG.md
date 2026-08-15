@@ -4,6 +4,10 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## Unreleased
+
+- Fix clean-checkout verification so the build materializes the ignored Catalogue registry before any type-check or test can import it. Release publication now exercises the same build-before-check ordering as the discern quality gate instead of depending on generated files left by an earlier local build.
+
 ## 0.18.0
 
 - **Breaking:** Replace the triangle-specific CLI foundation with semantic terminal motifs. `renderTrianglePattern`, `renderTriangleSpinnerFrame`, `renderTriangleProgressFrame`, `renderTriangleSectionRule`, `renderTriangleWorkflowStepper`, and `renderTriangleActivityBeacon` become their `renderMotif*` equivalents, their public option types follow the same naming, and the presenter's direct bindings become `motifSpinnerFrame`, `motifSectionRule`, and `motifWorkflowStepper`. The old triangle constants and `verticalTriangleStatusPhase` are removed; callers use `DISCERN_TERMINAL_MOTIF` and its semantic repertoires instead. The CLI Catalogue selector becomes `motifs`.

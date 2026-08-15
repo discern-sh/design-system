@@ -14,6 +14,7 @@ interface DenoConfig {
   readonly name: string;
   readonly version: string;
   readonly exports: Readonly<Record<string, string>>;
+  readonly tasks: Readonly<Record<string, string>>;
 }
 
 const config = JSON.parse(
@@ -330,6 +331,17 @@ Deno.test("every entrypoint and public symbol is documented", async () => {
     }
   }
   assertEquals(problems, [], problems.join("\n"));
+});
+
+Deno.test("release verification builds generated prerequisites first", () => {
+  const verify = config.tasks.verify;
+  assert(verify, "deno.json has no verify task");
+  const stages = verify.split(/\s*&&\s*/u);
+  assertEquals(
+    stages[0],
+    "deno task build",
+    "verify must materialize ignored generated sources before any checking or testing stage",
+  );
 });
 
 Deno.test("release identity stays coherent across config and changelog", async () => {
