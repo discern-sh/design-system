@@ -16,6 +16,8 @@ Table owns ordinary relational data; Comparison table remains the curated two-op
 
 Footnotes owns end-note definitions and their return relationship; an ordinary List does not imply bidirectional references. Browser definitions retain native ordered-list structure, rich React blocks, unique stable ids, and one or more ordered return links. The terminal renderer preserves its original anonymous plain-string item frames, while additive linked-text, semantic-inline, and multi-block items require stable ids, retain paragraphs, Lists, Blockquotes, and Code blocks as separate blocks, and render every repeated return target through the package hyperlink authority with visible no-colour and ASCII fallbacks. Duplicate ids reject; rich content or linked returns without an id reject; resolving a reference whose definition is absent remains the owning document renderer's whole-document responsibility.
 
+Markdown parses its fixed CommonMark, GFM, alert, and footnote dialect once into a private package model before React or terminal projection. The exact parser stack, AST-containment rule, heading ids, alert tones, inert HTML and destination policies, and resource limits are recorded in [ADR-0020](../_adr/0020-parse-markdown-through-mdast.md).
+
 Theme toggle and Theme switcher serve different user goals. Theme toggle is the compact persistent control for an immediate light/dark comfort adjustment; its consumer passes the resolved theme and owns the policy that stores an override or returns to the system preference. Theme switcher belongs in settings and deterministic inspection surfaces where System, Light, and Dark are deliberate visible choices. The Catalogue uses Theme switcher because inspecting each mode is part of its job.
 
 ## Marketing foundations
