@@ -40,6 +40,13 @@ export interface TerminalIO {
   setRawMode(enabled: boolean): void;
   /** Write terminal control or display bytes synchronously. */
   write(value: string): void;
+  /**
+   * Subscribe to terminal viewport changes for the duration of a live
+   * complete-frame interaction. Implementations without a native resize
+   * signal may omit this; request loops still re-check geometry before every
+   * semantic key.
+   */
+  listenResize?(handler: () => void): () => void;
 }
 
 /** Construction options for {@linkcode DenoTerminalIO}. */
@@ -138,5 +145,21 @@ export class DenoTerminalIO implements TerminalIO {
       }
       offset += written;
     }
+  }
+
+  /** Subscribe to SIGWINCH where the host platform exposes it. */
+  listenResize(handler: () => void): () => void {
+    try {
+      Deno.addSignalListener("SIGWINCH", handler);
+    } catch {
+      // Platforms without SIGWINCH still re-check size on every input event.
+      return () => {};
+    }
+    let active = true;
+    return () => {
+      if (!active) return;
+      active = false;
+      Deno.removeSignalListener("SIGWINCH", handler);
+    };
   }
 }

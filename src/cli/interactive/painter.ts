@@ -4,10 +4,18 @@
  * @module
  */
 
+import { measureText } from "../text.ts";
+import { parseStyledSource } from "../styled-sequences.ts";
 import type { TerminalIO } from "./io.ts";
 
 const FIRST_COLUMN = "\x1b[1G";
 const ERASE_TO_SCREEN_END = "\x1b[J";
+
+/** Home the cursor before painting a complete terminal viewport. */
+export const HOME_TERMINAL_CURSOR = "\x1b[H";
+
+/** Erase the complete active terminal display without touching scrollback. */
+export const ERASE_TERMINAL_DISPLAY = "\x1b[2J";
 
 /** Why an inline frame could not be painted without corrupting scrollback. */
 export type InlineFrameRefusalReason =
@@ -121,5 +129,50 @@ export class InlineFramePainter {
     return `${FIRST_COLUMN}${
       linesUp > 0 ? `\x1b[${linesUp}A` : ""
     }${ERASE_TO_SCREEN_END}`;
+  }
+}
+
+function assertClosedStyledLine(line: string): void {
+  const sentinel = "~";
+  const segments = parseStyledSource(`${line}${sentinel}`);
+  const last = segments.at(-1);
+  if (
+    last === undefined || !last.text.endsWith(sentinel) ||
+    last.codes.length > 0 || last.link !== undefined
+  ) {
+    throw new TypeError(
+      "complete terminal frames must close styling and hyperlinks on every line",
+    );
+  }
+}
+
+/**
+ * Paint one complete, already-fitted viewport inside an alternate screen.
+ * This authority does not enter or leave that screen; the lifecycle bracket
+ * owns matching terminal modes.
+ */
+export class CompleteFramePainter {
+  constructor(readonly io: TerminalIO) {}
+
+  /** Validate and redraw one exact viewport from its home cell. */
+  replace(frame: string): void {
+    const size = this.io.size();
+    const lines = frame.split("\n");
+    if (lines.length !== size.rows) {
+      throw new TypeError(
+        `complete frame has ${lines.length} rows for a ${size.rows}-row viewport`,
+      );
+    }
+    for (const line of lines) {
+      assertClosedStyledLine(line);
+      if (measureText(line) > size.columns) {
+        throw new TypeError(
+          `complete frame row exceeds its ${size.columns}-cell viewport`,
+        );
+      }
+    }
+    this.io.write(
+      `${ERASE_TERMINAL_DISPLAY}${HOME_TERMINAL_CURSOR}${lines.join("\r\n")}`,
+    );
   }
 }

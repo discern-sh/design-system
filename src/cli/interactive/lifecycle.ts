@@ -14,6 +14,12 @@ export const HIDE_TERMINAL_CURSOR = "\x1b[?25l";
 /** ANSI sequence that restores the terminal cursor. */
 export const SHOW_TERMINAL_CURSOR = "\x1b[?25h";
 
+/** DECSET 1049: save the normal screen and enter a fresh alternate screen. */
+export const ENTER_TERMINAL_ALTERNATE_SCREEN = "\x1b[?1049h";
+
+/** DECRST 1049: leave the alternate screen and restore the normal screen. */
+export const LEAVE_TERMINAL_ALTERNATE_SCREEN = "\x1b[?1049l";
+
 /** Options accepted by the signal-aware lifecycle brackets. */
 export interface TerminalLifecycleOptions extends TerminalSignalOptions {
   /**
@@ -29,6 +35,8 @@ export interface TerminalLifecycleOptions extends TerminalSignalOptions {
 export interface RawTerminalOptions extends TerminalLifecycleOptions {
   /** Hide and restore the terminal cursor around the operation (default true). */
   readonly hideCursor?: boolean;
+  /** Enter and restore the terminal's alternate screen (default false). */
+  readonly alternateScreen?: boolean;
 }
 
 type Outcome<T> =
@@ -56,26 +64,37 @@ async function withTerminalRestoration<T>(
   io: TerminalIO,
   operation: () => T | Promise<T>,
   options: TerminalLifecycleOptions,
-  features: { readonly raw: boolean; readonly hideCursor: boolean },
+  features: {
+    readonly raw: boolean;
+    readonly hideCursor: boolean;
+    readonly alternateScreen: boolean;
+  },
 ): Promise<T> {
   const cleanupErrors: unknown[] = [];
-  let rawAttempted = false;
-  let rawRestored = false;
-  let cursorAttempted = false;
-  let cursorRestored = false;
+  let rawEnabled = false;
+  let cursorHidden = false;
+  let alternateScreenEntered = false;
   const restoreTerminal = (): void => {
-    if (rawAttempted && !rawRestored) {
-      rawRestored = true;
+    if (cursorHidden) {
+      cursorHidden = false;
       try {
-        io.setRawMode(false);
+        io.write(SHOW_TERMINAL_CURSOR);
       } catch (error) {
         cleanupErrors.push(error);
       }
     }
-    if (cursorAttempted && !cursorRestored) {
-      cursorRestored = true;
+    if (alternateScreenEntered) {
+      alternateScreenEntered = false;
       try {
-        io.write(SHOW_TERMINAL_CURSOR);
+        io.write(LEAVE_TERMINAL_ALTERNATE_SCREEN);
+      } catch (error) {
+        cleanupErrors.push(error);
+      }
+    }
+    if (rawEnabled) {
+      rawEnabled = false;
+      try {
+        io.setRawMode(false);
       } catch (error) {
         cleanupErrors.push(error);
       }
@@ -83,12 +102,22 @@ async function withTerminalRestoration<T>(
   };
   const signals = options.signals ?? denoTerminalSignals;
   let unlisten: () => void = () => {};
+  let listening = true;
+  const stopListening = (): void => {
+    if (!listening) return;
+    listening = false;
+    try {
+      unlisten();
+    } catch (error) {
+      cleanupErrors.push(error);
+    }
+  };
   const interrupted = (): void => {
     if (options.onInterrupt !== undefined) {
       options.onInterrupt();
       return;
     }
-    unlisten();
+    stopListening();
     try {
       options.onSignalRestore?.();
     } catch {
@@ -101,18 +130,22 @@ async function withTerminalRestoration<T>(
   let outcome: Outcome<T>;
   try {
     if (features.raw) {
-      rawAttempted = true;
       io.setRawMode(true);
+      rawEnabled = true;
+    }
+    if (features.alternateScreen) {
+      io.write(ENTER_TERMINAL_ALTERNATE_SCREEN);
+      alternateScreenEntered = true;
     }
     if (features.hideCursor && io.capabilities().ansiControl !== false) {
-      cursorAttempted = true;
       io.write(HIDE_TERMINAL_CURSOR);
+      cursorHidden = true;
     }
     outcome = { ok: true, value: await operation() };
   } catch (error) {
     outcome = { ok: false, error };
   }
-  unlisten();
+  stopListening();
   restoreTerminal();
   if (!outcome.ok) throw outcome.error;
   if (cleanupErrors.length > 0) throw cleanupFailure(cleanupErrors);
@@ -132,6 +165,7 @@ export async function withHiddenTerminalCursor<T>(
   return await withTerminalRestoration(io, operation, options, {
     raw: false,
     hideCursor: true,
+    alternateScreen: false,
   });
 }
 
@@ -149,5 +183,6 @@ export async function withRawTerminal<T>(
   return await withTerminalRestoration(io, operation, options, {
     raw: true,
     hideCursor: options.hideCursor ?? true,
+    alternateScreen: options.alternateScreen ?? false,
   });
 }
