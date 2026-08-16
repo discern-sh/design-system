@@ -143,6 +143,36 @@ console.log(output);
 
 The presenter is the default route when one consumer renders more than one frame: it binds capabilities, theme, terminal motif, and an optional default width once. Component renderers plus motif pattern, progress, and beacon renderers use `present(renderer, props)`. The foundation call shapes that do not fit that signature are bound directly as `box()`, `motifSpinnerFrame()`, `motifSectionRule()`, and `motifWorkflowStepper()`. An explicit per-call theme, motif, or narrower width wins over the presenter; omission falls back to the bound presenter and then the package's discern motif. The raw `(props, capabilities)` renderer APIs remain available when a caller already threads those facts itself.
 
+`renderMarkdownCli` accepts untrusted CommonMark/GFM source and returns one complete document through the package's real terminal Components. Pass capabilities explicitly; the renderer performs no detection, I/O, environment read, or clock read:
+
+```ts
+import {
+  renderMarkdownCli,
+  type TerminalCapabilities,
+} from "@discern-sh/design-system/cli";
+
+const capabilities = {
+  ansiControl: false,
+  colorDepth: "none",
+  columns: 72,
+  hyperlinks: false,
+  unicode: true,
+} satisfies TerminalCapabilities;
+
+const source =
+  "# Report\n\n- Evidence remains complete\n- [Targets stay visible](https://example.test/source)";
+
+const output = renderMarkdownCli({
+  source,
+  theme: "dark",
+  maxWidth: 72,
+}, capabilities);
+
+console.log(output);
+```
+
+The fixed dialect includes CommonMark, GFM tables/task lists/strikethrough/autolinks, GitHub alerts, and footnotes. Raw HTML is inert, comments are omitted, unsafe destinations remain visible but non-clickable, controls become visible notation, duplicate heading fragments are stable, and empty source returns the empty string.
+
 The package supplies one discern-flavoured preset without making triangles part of the generic renderer contract. Define a complete product language with `defineTerminalMotif()`, or replace only selected semantic roles with `deriveTerminalMotif()`:
 
 ```ts
@@ -256,7 +286,7 @@ const html = renderToStaticMarkup(
 );
 ```
 
-Discern uses this adapter at build time only: no React bundle or hydration reaches the browser. Static components need no browser runtime; components whose Metadata declares browser behavior use the selection-scoped `discern.js` emitted beside their CSS. Stateful catalogue examples beyond that published behavior still require a consumer-owned browser strategy outside the catalogue.
+The `Markdown` React Component accepts the same untrusted `source` plus an optional Prose `measure`, composes native document semantics without `dangerouslySetInnerHTML`, and renders no wrapper for empty source. Discern uses this adapter at build time only: no React bundle or hydration reaches the browser. Static components need no browser runtime; components whose Metadata declares browser behavior use the selection-scoped `discern.js` emitted beside their CSS. Stateful catalogue examples beyond that published behavior still require a consumer-owned browser strategy outside the catalogue.
 
 ## Output sizes
 
