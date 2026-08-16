@@ -98,7 +98,7 @@ function DenseTableState() {
 
 function RichCellsTableState() {
   return (
-    <Table caption="Reference coverage" striped>
+    <Table caption="Reference coverage">
       <thead>
         <tr>
           <th scope="col">Topic</th>

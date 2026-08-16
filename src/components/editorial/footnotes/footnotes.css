@@ -43,16 +43,18 @@
   .discern-footnotes li div > :last-child {
     margin-block-end: 0;
   }
-  .discern-footnotes li > a {
-    color: var(--discern-color-ink-faint);
-    text-decoration: none;
-  }
   .discern-footnotes__returns {
     display: inline-flex;
     flex-wrap: wrap;
     gap: var(--discern-space-2);
   }
+  .discern-footnotes li > a,
   .discern-footnotes__returns > a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 24px;
+    min-block-size: 24px;
     color: var(--discern-color-ink-faint);
     text-decoration: none;
   }

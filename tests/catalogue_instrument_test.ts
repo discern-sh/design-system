@@ -185,7 +185,7 @@ Deno.test("Catalogue selection snippets and state fragments derive from the regi
   );
   assertEquals(
     entry(registry, "table").states.map(({ name }) => name),
-    ["default", "dense-overflow"],
+    ["default", "dense-overflow", "rich-cells"],
   );
   assertEquals(
     entry(registry, "task-metadata").states.map(({ name }) => name),
