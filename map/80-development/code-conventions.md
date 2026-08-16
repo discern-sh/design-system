@@ -2,11 +2,11 @@
 
 _The rules the tooling enforces, and the conventions to follow when writing code here._
 
-This doc is the detailed companion to the **Conventions** section of the project guidance (`guidance.md`). The guidance holds the short, agent-facing form; this doc holds the full reasoning and examples. Keep the two in step, and keep both aligned with what the `[capabilities]` in `discern.toml` actually enforce — the written rule and the enforced rule must never disagree.
+This doc is the detailed companion to the **Conventions** section of the project instructions (`instructions.md`). The instructions hold the short, agent-facing form; this doc holds the full reasoning and examples. Keep the two in step, and keep both aligned with what the `[capabilities]` in `discern.toml` actually enforce — the written rule and the enforced rule must never disagree.
 
 ## What the gate enforces
 
-- **Formatting — `deno fmt`** (via `deno task fix` in the fix stage) formats TypeScript, CSS, JSON, and markdown, including this documentation tree. Excluded: `dist/`, `src/generated/`, `catalogue/generated/`, and the three compiled agent files (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`), which discern regenerates from `discern/guidance.md` — edit the source, run `discern refresh`, never the copies.
+- **Formatting — `deno fmt`** (via `deno task fix` in the fix stage) formats TypeScript, CSS, JSON, and markdown, including this documentation tree. Excluded: `dist/`, `src/generated/`, `catalogue/generated/`, and the three compiled agent files (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`), which discern regenerates from `discern/instructions.md` — edit the source, run `discern refresh`, never the copies.
 - **Codegen currency** — the fix stage runs `deno task codegen`, so the committed modules under `src/generated/` match the Metadata. The build stage then regenerates the ignored `catalogue/generated/registry.ts` before any check or test can import it. Hand-edits to either generated surface are overwritten; CI fails stale committed generation independently.
 - **Linting — `deno task lint`** (`deno lint --no-config`, default rule set) over `src`, `catalogue`, `scripts`, `discern/scripts`, and `tests`.
 - **Type-checking — `deno task typecheck`** checks every public entrypoint and the scripts under the strict compiler options in [`deno.json`](../../deno.json): `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `noFallthroughCasesInSwitch`, `noImplicitReturns`, `noUnusedLocals`, `noUnusedParameters`, `useUnknownInCatchVariables`, `verbatimModuleSyntax`. Satisfy the flag, never loosen it. `verbatimModuleSyntax` means type-only imports must say `import type`.

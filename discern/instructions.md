@@ -1,4 +1,4 @@
-# discern-design-system — project guidance
+# discern-design-system — project instructions
 
 The interface system behind [discern.sh](https://discern.sh): a framework-neutral, deterministic package for browser and terminal surfaces in Deno applications, published to JSR as `@discern-sh/design-system` and consumed by the public. Browser consumers select a token-driven CSS runtime and may use the React adapter; terminal consumers use the React-free CLI renderers and optional interactive adapter. Treat every public name and emitted byte contract as API.
 
@@ -8,7 +8,7 @@ The interface system behind [discern.sh](https://discern.sh): a framework-neutra
 
 1. **The product** — discern, the agent-development tool, and the discern.sh site that presents it. They live together in the sibling discern repository; nothing you edit here changes the tool or the site.
 2. **This repo** — the design system those properties consume, and your only subject: the published library under `src/` and its Catalogue under `catalogue/`.
-3. **Your tooling** — this repo dogfoods discern, so the "Working with discern" guidance above describes the tool running your workflow (the gate, worktrees, the `discern_*` verbs), exactly as in any project that installs it. Its footprint — `discern.toml` and the `discern/` directory holding this guidance, skills, scripts, and the TODO ledger — is project configuration, not part of the published package.
+3. **Your tooling** — this repo dogfoods discern, so the "Working with discern" instructions above describe the tool running your workflow (the gate, worktrees, the `discern_*` verbs), exactly as in any project that installs it. Its footprint — `discern.toml` and the `discern/` directory holding these instructions, skills, scripts, and the TODO ledger — is project configuration, not part of the published package.
 
 ## Conventions
 

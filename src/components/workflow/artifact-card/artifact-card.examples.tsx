@@ -20,8 +20,8 @@ export default function ArtifactCardExamples() {
         sourceLink={<a href="#component-registry-source">View source</a>}
       />
       <ArtifactCard
-        name="Project guidance"
-        path="/workspace/guidance.md"
+        name="Project instructions"
+        path="/workspace/instructions.md"
         summary="The project-specific instructions maintained by its authors."
         ownership="project-owned"
         provenance="Written during project setup"
