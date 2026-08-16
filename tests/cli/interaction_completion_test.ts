@@ -30,11 +30,11 @@ const framedOptions = {
   label: "Notice",
   message: "Review the summary.",
 } satisfies AcknowledgementRequestOptions;
-const invalidCompactOptions: CompactAcknowledgementRequestOptions = {
-  presentation: "compact",
-  // @ts-expect-error compact acknowledgement owns no visible label.
-  label: "Dummy label",
-};
+type CompactRejectsVisibleLabel = {
+  readonly presentation: "compact";
+  readonly label: string;
+} extends CompactAcknowledgementRequestOptions ? false : true;
+const compactRejectsVisibleLabel: CompactRejectsVisibleLabel = true;
 
 interface ExtendedAcknowledgementOptions extends AcknowledgementRequestOptions {
   readonly auditId?: string;
@@ -77,7 +77,7 @@ function assertClearWrite(io: FakeTerminalIO): void {
 Deno.test("acknowledgement options discriminate framed and compact forms", () => {
   assertEquals(compactOptions.presentation, "compact");
   assertEquals(framedOptions.message, "Review the summary.");
-  assertEquals(invalidCompactOptions.label, "Dummy label");
+  assertEquals(compactRejectsVisibleLabel, true);
   assertEquals(extendedFramedOptions.auditId, "audit-1");
   assertEquals(publicCompactOptions.presentation, "compact");
   assertEquals(publicFramedOptions.message, "Review the summary.");
