@@ -273,6 +273,9 @@ export async function runMarkdownBrowserRequest<Action>(
               ? { kind: "end-of-input" }
               : received.event.kind === "key"
               ? { kind: "key", key: received.event.key }
+              : received.event.kind === "mouse" && options.mouse === true &&
+                  facts.capabilities.mouseTracking !== false
+              ? received.event
               : undefined;
           if (event === undefined) {
             inputRead = reader.readEvent().then((input) => ({

@@ -157,6 +157,25 @@ Deno.test("link geometry preserves wrapped and repeated logical occurrences thro
   );
   assertEquals(links.at(-1)?.visibility, "below");
 
+  state = transitionMarkdownBrowser(state, {
+    kind: "mouse",
+    action: "wheel",
+    direction: "down",
+    column: 2,
+    row: 2 + state.layout.pickerRows + 1,
+    modifiers: { shift: false, alt: false, control: false },
+  }, capabilities).state;
+  state = transitionMarkdownBrowser(state, {
+    kind: "key",
+    key: { kind: "named", name: "down" },
+  }, capabilities).state;
+  const partiallyVisible =
+    markdownBrowserLinkOccurrences(state, capabilities)[0];
+  if (partiallyVisible === undefined) throw new Error("expected clipped link");
+  assertEquals(partiallyVisible.visibility, "visible");
+  assert(partiallyVisible.documentStartRow - 1 < state.documentScrollOffset);
+  assert(partiallyVisible.documentEndRow - 1 >= state.documentScrollOffset);
+
   state = named(state, "end", capabilities).state;
   links = markdownBrowserLinkOccurrences(state, capabilities);
   assertEquals(links[0]?.visibility, "above");

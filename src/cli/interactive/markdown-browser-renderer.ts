@@ -54,6 +54,15 @@ export interface MarkdownBrowserPickerWindow<Action> {
   readonly selectableCount: number;
 }
 
+/** Semantic pane or entry under one terminal-cell pointer coordinate. */
+export type MarkdownBrowserPointerTarget =
+  | {
+    readonly kind: "picker";
+    readonly entryId?: string;
+    readonly selectable: boolean;
+  }
+  | { readonly kind: "document"; readonly linkId?: string };
+
 function lineCount(value: string): number {
   return value === "" ? 0 : value.split("\n").length;
 }
@@ -551,6 +560,76 @@ export function markdownBrowserLinkOccurrences<Action>(
   capabilities: TerminalCapabilities,
 ): readonly MarkdownBrowserLinkOccurrence[] {
   return markdownBrowserDocumentProjection(state, capabilities).links;
+}
+
+function paneTopRows<Action>(state: MarkdownBrowserState<Action>): {
+  readonly picker?: number;
+  readonly document?: number;
+} {
+  if (state.layout.mode === "split") {
+    return { picker: 2, document: 2 + state.layout.pickerRows };
+  }
+  return state.layout.mode === "picker-only" ? { picker: 2 } : { document: 2 };
+}
+
+/**
+ * Resolve a one-based terminal-cell coordinate against browser pane interiors.
+ * Borders, the heading, and footer hints deliberately return `undefined`.
+ */
+export function markdownBrowserPointerTarget<Action>(
+  state: MarkdownBrowserState<Action>,
+  capabilities: TerminalCapabilities,
+  column: number,
+  row: number,
+): MarkdownBrowserPointerTarget | undefined {
+  if (
+    !Number.isSafeInteger(column) || !Number.isSafeInteger(row) ||
+    column <= 1 || column >= state.columns
+  ) {
+    return undefined;
+  }
+  const tops = paneTopRows(state);
+  const pickerTop = tops.picker;
+  if (
+    pickerTop !== undefined && row > pickerTop &&
+    row < pickerTop + state.layout.pickerRows - 1
+  ) {
+    let entryRow = pickerTop + 2;
+    for (
+      const rendered of markdownBrowserPickerWindow(state, capabilities).entries
+    ) {
+      const end = entryRow + rendered.lines.length - 1;
+      if (row >= entryRow && row <= end) {
+        return {
+          kind: "picker",
+          entryId: rendered.entry.id,
+          selectable: isMarkdownBrowserSelectable(rendered.entry),
+        };
+      }
+      entryRow = end + 1;
+    }
+    return { kind: "picker", selectable: false };
+  }
+  const documentTop = tops.document;
+  if (
+    documentTop !== undefined && row > documentTop &&
+    row < documentTop + state.layout.documentRows - 1
+  ) {
+    const paneRow = row - documentTop;
+    const paneColumn = column - 1;
+    const link = markdownBrowserLinkOccurrences(state, capabilities).find(
+      (occurrence) =>
+        occurrence.regions.some((region) =>
+          region.row === paneRow && paneColumn >= region.startColumn &&
+          paneColumn <= region.endColumn
+        ),
+    );
+    return {
+      kind: "document",
+      ...(link === undefined ? {} : { linkId: link.id }),
+    };
+  }
+  return undefined;
 }
 
 function fragmentId(fragment: string): string | undefined {

@@ -10,7 +10,11 @@ import {
   pageEnabledIndex,
 } from "./choice-navigation.ts";
 import { GraphemeTextEditor } from "./editor.ts";
-import { isNamedKey, type TerminalKey } from "./keys.ts";
+import {
+  isNamedKey,
+  type TerminalKey,
+  type TerminalMouseEvent,
+} from "./keys.ts";
 import {
   isMarkdownBrowserDocument,
   isMarkdownBrowserSelectable,
@@ -32,12 +36,14 @@ import {
   markdownBrowserDocumentVisibleRows,
   markdownBrowserLinkOccurrences,
   markdownBrowserPickerWindow,
+  markdownBrowserPointerTarget,
 } from "./markdown-browser-renderer.ts";
 import type { InteractionEntry } from "./types.ts";
 
 /** Semantic input consumed by the pure Markdown browser transition. */
 export type MarkdownBrowserInputEvent =
   | { readonly kind: "key"; readonly key: TerminalKey }
+  | TerminalMouseEvent
   | { readonly kind: "resize"; readonly columns: number; readonly rows: number }
   | {
     readonly kind: "link-resolution";
@@ -187,10 +193,11 @@ function focusLink<Action>(
   state: MarkdownBrowserState<Action>,
   id: string,
   capabilities: TerminalCapabilities,
+  origin: "keyboard" | "pointer" = "keyboard",
 ): MarkdownBrowserState<Action> {
   let focused = fitMarkdownBrowserState(
     updateMarkdownBrowserState(state, {
-      linkFocus: { id, origin: "keyboard" },
+      linkFocus: { id, origin },
       feedback: null,
     }),
     capabilities,
@@ -220,6 +227,80 @@ function focusLink<Action>(
       : { documentAnchor: anchor }),
   });
   return fitMarkdownBrowserState(focused, capabilities);
+}
+
+function wheelPicker<Action>(
+  state: MarkdownBrowserState<Action>,
+  direction: -1 | 1,
+  capabilities: TerminalCapabilities,
+): MarkdownBrowserState<Action> {
+  let moved = state;
+  for (let index = 0; index < 3; index += 1) {
+    moved = movePicker(moved, capabilities, { kind: "step", direction });
+  }
+  return moved;
+}
+
+function handleMouse<Action>(
+  state: MarkdownBrowserState<Action>,
+  mouse: TerminalMouseEvent,
+  capabilities: TerminalCapabilities,
+): MarkdownBrowserTransition<Action> {
+  const target = markdownBrowserPointerTarget(
+    state,
+    capabilities,
+    mouse.column,
+    mouse.row,
+  );
+  if (target === undefined) return transition(state);
+  if (mouse.action === "wheel") {
+    const direction = mouse.direction === "up" ? -1 : 1;
+    return transition(
+      target.kind === "picker"
+        ? wheelPicker(state, direction, capabilities)
+        : scrollDocument(
+          state,
+          capabilities,
+          state.documentScrollOffset + direction * 3,
+        ),
+    );
+  }
+  if (mouse.action !== "press" || mouse.button !== "left") {
+    return transition(state);
+  }
+  if (target.kind === "picker") {
+    return transition(fitMarkdownBrowserState(
+      updateMarkdownBrowserState(state, {
+        focusedPane: "picker",
+        ...(target.selectable && target.entryId !== undefined
+          ? { highlightedId: target.entryId }
+          : {}),
+        linkFocus: null,
+        feedback: null,
+      }),
+      capabilities,
+    ));
+  }
+  if (target.linkId === undefined) {
+    return transition(fitMarkdownBrowserState(
+      updateMarkdownBrowserState(state, {
+        focusedPane: "document",
+        linkFocus: null,
+        feedback: null,
+      }),
+      capabilities,
+    ));
+  }
+  const focused = focusLink(
+    updateMarkdownBrowserState(state, { focusedPane: "document" }),
+    target.linkId,
+    capabilities,
+    "pointer",
+  );
+  const request = focusedLinkRequest(focused, capabilities);
+  return request === undefined
+    ? transition(updateMarkdownBrowserState(focused, { linkFocus: null }))
+    : transition(focused, undefined, request);
 }
 
 function moveLinkFocus<Action>(
@@ -659,6 +740,9 @@ export function transitionMarkdownBrowser<Action>(
       event.resolution,
       capabilities,
     );
+  }
+  if (event.kind === "mouse") {
+    return handleMouse(state, event, capabilities);
   }
   const key = event.key;
   if (isNamedKey(key, "ctrl-c")) {
