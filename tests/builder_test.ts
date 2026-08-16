@@ -6,6 +6,7 @@ import {
 } from "@std/assert";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { dirname, fromFileUrl, join } from "@std/path";
 import { buildDesignSystem } from "../scripts/build.ts";
 import { packageManifest } from "../src/manifest.ts";
 import { compositionCost } from "../catalogue/builder/cost.ts";
@@ -19,6 +20,7 @@ import {
   BuilderDocumentError,
   documentSelectionSnippet,
   documentToTsx,
+  type ExportNaming,
   parseDocument,
   serializeDocument,
 } from "../catalogue/builder/export.ts";
@@ -27,6 +29,7 @@ import type {
   BuilderNode,
   BuilderSlotChild,
 } from "../catalogue/builder/model.ts";
+import { BUILDER_DOCUMENT_LIMITS } from "../catalogue/builder/policy.ts";
 import {
   ancestorsOf,
   componentCount,
@@ -63,14 +66,55 @@ function slot(
   return { kind: "slot", children };
 }
 
-const naming = {
+const testPropsBySlug = new Map([
+  ["badge", new Set(["tone", "children"])],
+  ["button", new Set(["variant", "children", "rows"])],
+  [
+    "hero-block",
+    new Set([
+      "title",
+      "headingLevel",
+      "raised",
+      "plain",
+      "rows",
+      "actions",
+    ]),
+  ],
+  ["stack", new Set(["gap", "wide", "count", "rows", "value", "children"])],
+]);
+const naming: ExportNaming = {
+  knownSlugs: new Set(["badge", "button", "hero-block", "stack"]),
+  modeledPropsBySlug: testPropsBySlug,
+  reservedPropsBySlug: testPropsBySlug,
   slugToExport: new Map([
     ["badge", "Badge"],
     ["button", "Button"],
     ["hero-block", "HeroBlock"],
     ["stack", "Stack"],
   ]),
+  requiredFunctionPropsBySlug: new Map(),
 };
+
+const PACKAGE_ROOT = dirname(dirname(fromFileUrl(import.meta.url)));
+const decoder = new TextDecoder();
+
+async function runDeno(
+  args: readonly string[],
+  cwd = PACKAGE_ROOT,
+): Promise<void> {
+  const result = await new Deno.Command(Deno.execPath(), {
+    args: [...args],
+    cwd,
+    stdout: "piped",
+    stderr: "piped",
+  }).output();
+  assert(
+    result.success,
+    `${args.join(" ")} failed:\n${decoder.decode(result.stdout)}${
+      decoder.decode(result.stderr)
+    }`,
+  );
+}
 
 Deno.test("builder document operations keep the tree consistent", () => {
   let document = emptyDocument("Test page");
@@ -457,7 +501,7 @@ export function LandingHero() {
   assertEquals(documentToTsx(document, naming), expected);
   assertEquals(documentToTsx(document, naming), expected);
   assertEquals(
-    documentSelectionSnippet(document),
+    documentSelectionSnippet(document, naming),
     'components: ["badge", "button", "stack"],',
   );
 });
@@ -519,14 +563,14 @@ Deno.test("TSX export escapes text, spreads extras, and names slots", () => {
   assertThrows(
     () => documentToTsx(invalidJson, naming),
     BuilderDocumentError,
-    'prop "rows"',
+    ".props.rows.source",
   );
 });
 
 Deno.test("TSX export survives hostile names and lone text roots", () => {
   const emptyName: BuilderDocument = { version: 1, name: "", children: [] };
   assertEquals(
-    parseDocument(serializeDocument(emptyName), new Set()),
+    parseDocument(serializeDocument(emptyName, naming), naming),
     emptyName,
   );
   const emptyOutput = documentToTsx(emptyName, naming);
@@ -608,7 +652,7 @@ Deno.test("newlines in text literals export as explicit line breaks", () => {
 });
 
 Deno.test("documents round-trip through the JSON save format", () => {
-  const knownSlugs = new Set(["stack", "button"]);
+  const policy = naming;
   const document: BuilderDocument = {
     version: 1,
     name: "Saved page",
@@ -623,17 +667,17 @@ Deno.test("documents round-trip through the JSON save format", () => {
     ],
   };
   assertEquals(
-    parseDocument(serializeDocument(document), knownSlugs),
+    parseDocument(serializeDocument(document, policy), policy),
     document,
   );
 
   assertThrows(
-    () => parseDocument("not json", knownSlugs),
+    () => parseDocument("not json", policy),
     BuilderDocumentError,
-    "not valid JSON",
+    "must contain valid JSON",
   );
   assertThrows(
-    () => parseDocument('{"version":2,"name":"x","children":[]}', knownSlugs),
+    () => parseDocument('{"version":2,"name":"x","children":[]}', policy),
     BuilderDocumentError,
     "version",
   );
@@ -645,7 +689,7 @@ Deno.test("documents round-trip through the JSON save format", () => {
           name: "x",
           children: [node("a", "stack"), node("a", "button")],
         }),
-        knownSlugs,
+        policy,
       ),
     BuilderDocumentError,
     "repeats an earlier id",
@@ -658,7 +702,7 @@ Deno.test("documents round-trip through the JSON save format", () => {
           name: "x",
           children: [node("a", "mystery")],
         }),
-        knownSlugs,
+        policy,
       ),
     BuilderDocumentError,
     "unknown component",
@@ -675,11 +719,463 @@ Deno.test("documents round-trip through the JSON save format", () => {
             }),
           ],
         }),
-        knownSlugs,
+        policy,
       ),
     BuilderDocumentError,
     "JSX-safe",
   );
+});
+
+Deno.test("document acceptance rejects React escape hatches and preserves safe additional props", () => {
+  const modeledPropsBySlug = new Map([
+    ["card", new Set(["children", "rows", "raised"])],
+  ]);
+  const policy = {
+    knownSlugs: new Set(["card"]),
+    modeledPropsBySlug,
+    reservedPropsBySlug: new Map([
+      [
+        "card",
+        new Set([
+          ...modeledPropsBySlug.get("card") ?? [],
+          "canonicalCallback",
+        ]),
+      ],
+    ]),
+  };
+  const unsafe = [
+    {
+      extra:
+        '{"children":null,"dangerouslySetInnerHTML":{"__html":"<b>owned</b>"}}',
+      message: "dangerouslySetInnerHTML",
+    },
+    { extra: '{"onFutureAction":"owned"}', message: "onFutureAction" },
+    { extra: '{"ref":"owned"}', message: "ref" },
+    { extra: '{"key":"owned"}', message: "key" },
+    { extra: '{"srcDoc":"<b>owned</b>"}', message: "srcDoc" },
+    { extra: '{"__proto__":{"owned":true}}', message: "__proto__" },
+    { extra: '{"href":" javascript:alert(1)"}', message: "executable href" },
+    { extra: "[]", message: "object" },
+    { extra: '{"children":"override"}', message: "children" },
+    {
+      extra: '{"canonicalCallback":"override"}',
+      message: "cannot override modeled prop",
+    },
+  ] as const;
+  for (const [index, example] of unsafe.entries()) {
+    const document: BuilderDocument = {
+      version: 1,
+      name: "Untrusted",
+      children: [{
+        ...node(`card-${index}`, "card", {
+          children: slot(text(`text-${index}`, "Safe")),
+        }),
+        extra: example.extra,
+      }],
+    };
+    assertThrows(
+      () => parseDocument(JSON.stringify(document), policy),
+      BuilderDocumentError,
+      example.message,
+    );
+  }
+
+  const modeledEscape: BuilderDocument = {
+    version: 1,
+    name: "Modeled escape",
+    children: [node("card", "card", {
+      dangerouslySetInnerHTML: {
+        kind: "json",
+        source: '{"__html":"<b>owned</b>"}',
+      },
+    })],
+  };
+  assertThrows(
+    () => parseDocument(JSON.stringify(modeledEscape), policy),
+    BuilderDocumentError,
+    "dangerouslySetInnerHTML",
+  );
+
+  const modeledCollision: BuilderDocument = {
+    version: 1,
+    name: "Modeled collision",
+    children: [{
+      ...node("card", "card"),
+      extra: '{"raised":true}',
+    }],
+  };
+  assertThrows(
+    () => parseDocument(JSON.stringify(modeledCollision), policy),
+    BuilderDocumentError,
+    "cannot override modeled prop",
+  );
+
+  const nestedPrototype: BuilderDocument = {
+    version: 1,
+    name: "Nested",
+    children: [node("card", "card", {
+      rows: {
+        kind: "json",
+        source: '{"future":{"constructor":{"prototype":{"owned":true}}}}',
+      },
+    })],
+  };
+  assertThrows(
+    () => parseDocument(JSON.stringify(nestedPrototype), policy),
+    BuilderDocumentError,
+    "constructor",
+  );
+
+  const nestedHandler: BuilderDocument = {
+    version: 1,
+    name: "Nested handler",
+    children: [node("card", "card", {
+      rows: {
+        kind: "json",
+        source: '{"widgetOptions":{"onFutureAction":"owned"}}',
+      },
+    })],
+  };
+  assertThrows(
+    () => parseDocument(JSON.stringify(nestedHandler), policy),
+    BuilderDocumentError,
+    "onFutureAction",
+  );
+
+  const safe: BuilderDocument = {
+    version: 1,
+    name: "Safe",
+    children: [{
+      ...node("card", "card"),
+      extra: JSON.stringify({
+        "aria-label": "Safe card",
+        "data-test-id": "card",
+        className: "consumer-card",
+        style: { opacity: 0.8 },
+        title: "Ordinary prop",
+      }),
+    }],
+  };
+  assertEquals(parseDocument(serializeDocument(safe, policy), policy), safe);
+});
+
+Deno.test("document acceptance bounds every recursive and retained resource", () => {
+  const propsBySlug = new Map([
+    ["stack", new Set(["children", "value"])],
+  ]);
+  const policy = {
+    knownSlugs: new Set(["stack"]),
+    modeledPropsBySlug: propsBySlug,
+    reservedPropsBySlug: propsBySlug,
+  };
+  const parse = (
+    document: BuilderDocument,
+    selectedPolicy = policy,
+  ): BuilderDocument => parseDocument(JSON.stringify(document), selectedPolicy);
+  const expectBoundary = (
+    boundary: BuilderDocument,
+    next: BuilderDocument,
+    message: string,
+    selectedPolicy = policy,
+  ): void => {
+    assertEquals(parse(boundary, selectedPolicy), boundary);
+    assertThrows(
+      () => parse(next, selectedPolicy),
+      BuilderDocumentError,
+      message,
+    );
+  };
+
+  expectBoundary(
+    emptyDocument("n".repeat(BUILDER_DOCUMENT_LIMITS.nameBytes)),
+    emptyDocument("n".repeat(BUILDER_DOCUMENT_LIMITS.nameBytes + 1)),
+    "document.name",
+  );
+  expectBoundary(
+    {
+      version: 1,
+      name: "Text",
+      children: [
+        text("text", "x".repeat(BUILDER_DOCUMENT_LIMITS.textBytes)),
+      ],
+    },
+    {
+      version: 1,
+      name: "Text",
+      children: [
+        text("text", "x".repeat(BUILDER_DOCUMENT_LIMITS.textBytes + 1)),
+      ],
+    },
+    ".text",
+  );
+  expectBoundary(
+    {
+      version: 1,
+      name: "Identifier",
+      children: [text(
+        "i".repeat(BUILDER_DOCUMENT_LIMITS.identifierBytes),
+        "x",
+      )],
+    },
+    {
+      version: 1,
+      name: "Identifier",
+      children: [text(
+        "i".repeat(BUILDER_DOCUMENT_LIMITS.identifierBytes + 1),
+        "x",
+      )],
+    },
+    ".id",
+  );
+
+  const childrenDocument = (count: number): BuilderDocument => ({
+    version: 1,
+    name: "Slot",
+    children: Array.from(
+      { length: count },
+      (_, index) => text(`text-${index}`, "x"),
+    ),
+  });
+  expectBoundary(
+    childrenDocument(BUILDER_DOCUMENT_LIMITS.childrenPerSlot),
+    childrenDocument(BUILDER_DOCUMENT_LIMITS.childrenPerSlot + 1),
+    "document.children",
+  );
+
+  const depthDocument = (depth: number): BuilderDocument => {
+    let nested: BuilderSlotChild = text("leaf", "x");
+    for (let layer = 1; layer < depth; layer += 1) {
+      nested = node(`depth-${layer}`, "stack", { children: slot(nested) });
+    }
+    return { version: 1, name: "Depth", children: [nested] };
+  };
+  expectBoundary(
+    depthDocument(BUILDER_DOCUMENT_LIMITS.treeDepth),
+    depthDocument(BUILDER_DOCUMENT_LIMITS.treeDepth + 1),
+    "tree depth",
+  );
+
+  const fullRoots = Array.from(
+    { length: 5 },
+    (_, rootIndex) =>
+      node(`root-${rootIndex}`, "stack", {
+        children: slot(...Array.from(
+          { length: 99 },
+          (_, childIndex) => text(`text-${rootIndex}-${childIndex}`, "x"),
+        )),
+      }),
+  );
+  const exactNodes: BuilderDocument = {
+    version: 1,
+    name: "Nodes",
+    children: fullRoots,
+  };
+  const tooManyNodes: BuilderDocument = {
+    ...exactNodes,
+    children: [...fullRoots, node("one-too-many", "stack")],
+  };
+  expectBoundary(exactNodes, tooManyNodes, "total nodes");
+
+  const scalarDocument = (
+    value: BuilderNode["props"][string],
+  ): BuilderDocument => ({
+    version: 1,
+    name: "Value",
+    children: [node("stack", "stack", { value })],
+  });
+  expectBoundary(
+    scalarDocument({
+      kind: "string",
+      value: "x".repeat(BUILDER_DOCUMENT_LIMITS.stringBytes),
+    }),
+    scalarDocument({
+      kind: "string",
+      value: "x".repeat(BUILDER_DOCUMENT_LIMITS.stringBytes + 1),
+    }),
+    ".value",
+  );
+
+  const rawSource = (bytes: number): string => `"${"x".repeat(bytes - 2)}"`;
+  expectBoundary(
+    scalarDocument({
+      kind: "json",
+      source: rawSource(BUILDER_DOCUMENT_LIMITS.jsonSourceBytes),
+    }),
+    scalarDocument({
+      kind: "json",
+      source: rawSource(BUILDER_DOCUMENT_LIMITS.jsonSourceBytes + 1),
+    }),
+    ".source",
+  );
+
+  const nestedJson = (depth: number): string => {
+    let value: unknown = "x";
+    for (let layer = 0; layer < depth; layer += 1) value = [value];
+    return JSON.stringify(value);
+  };
+  expectBoundary(
+    scalarDocument({
+      kind: "json",
+      source: nestedJson(BUILDER_DOCUMENT_LIMITS.jsonDepth),
+    }),
+    scalarDocument({
+      kind: "json",
+      source: nestedJson(BUILDER_DOCUMENT_LIMITS.jsonDepth + 1),
+    }),
+    "JSON depth",
+  );
+
+  const jsonValues = (count: number): string =>
+    JSON.stringify(Array.from({ length: count - 1 }, () => 0));
+  expectBoundary(
+    scalarDocument({
+      kind: "json",
+      source: jsonValues(BUILDER_DOCUMENT_LIMITS.jsonValues),
+    }),
+    scalarDocument({
+      kind: "json",
+      source: jsonValues(BUILDER_DOCUMENT_LIMITS.jsonValues + 1),
+    }),
+    "JSON values",
+  );
+
+  const jsonObject = (count: number): string =>
+    JSON.stringify(Object.fromEntries(
+      Array.from({ length: count }, (_, index) => [`key${index}`, index]),
+    ));
+  expectBoundary(
+    scalarDocument({
+      kind: "json",
+      source: jsonObject(BUILDER_DOCUMENT_LIMITS.jsonKeysPerObject),
+    }),
+    scalarDocument({
+      kind: "json",
+      source: jsonObject(BUILDER_DOCUMENT_LIMITS.jsonKeysPerObject + 1),
+    }),
+    "JSON keys",
+  );
+  expectBoundary(
+    scalarDocument({
+      kind: "json",
+      source: JSON.stringify({
+        ["k".repeat(BUILDER_DOCUMENT_LIMITS.jsonKeyBytes)]: true,
+      }),
+    }),
+    scalarDocument({
+      kind: "json",
+      source: JSON.stringify({
+        ["k".repeat(BUILDER_DOCUMENT_LIMITS.jsonKeyBytes + 1)]: true,
+      }),
+    }),
+    "bytes",
+  );
+
+  const propNames = Array.from(
+    { length: BUILDER_DOCUMENT_LIMITS.propsPerNode + 1 },
+    (_, index) => `prop${index}`,
+  );
+  const boundedPropsBySlug = new Map([[
+    "stack",
+    new Set(propNames),
+  ]]);
+  const propsPolicy = {
+    knownSlugs: new Set(["stack"]),
+    modeledPropsBySlug: boundedPropsBySlug,
+    reservedPropsBySlug: boundedPropsBySlug,
+  };
+  const propsDocument = (count: number): BuilderDocument => ({
+    version: 1,
+    name: "Props",
+    children: [node(
+      "stack",
+      "stack",
+      Object.fromEntries(
+        propNames.slice(0, count).map((name) => [
+          name,
+          { kind: "boolean", value: true },
+        ]),
+      ),
+    )],
+  });
+  expectBoundary(
+    propsDocument(BUILDER_DOCUMENT_LIMITS.propsPerNode),
+    propsDocument(BUILDER_DOCUMENT_LIMITS.propsPerNode + 1),
+    "props",
+    propsPolicy,
+  );
+
+  const compact = JSON.stringify(emptyDocument("Bytes"));
+  const exactInput = compact.padEnd(BUILDER_DOCUMENT_LIMITS.inputBytes, " ");
+  assertEquals(parseDocument(exactInput, policy), emptyDocument("Bytes"));
+  assertThrows(
+    () => parseDocument(`${exactInput} `, policy),
+    BuilderDocumentError,
+    "input bytes",
+  );
+});
+
+Deno.test("exported component identifiers never collide with imported Components", () => {
+  for (const name of ["Button", "", "123", "☃", "!!!", "按钮"]) {
+    const document: BuilderDocument = {
+      version: 1,
+      name,
+      children: [node("button", "button", {
+        children: slot(text("label", "Go")),
+      })],
+    };
+    const output = documentToTsx(document, naming);
+    assertEquals(documentToTsx(document, naming), output);
+    assertStringIncludes(output, "import { Button }");
+    assert(!output.includes("export function Button()"));
+    assert(/export function [A-Za-z_$][A-Za-z0-9_$]*\(\)/.test(output));
+  }
+});
+
+Deno.test("required callbacks have explicit deterministic consumer wiring", () => {
+  const callbackNaming: ExportNaming = {
+    knownSlugs: new Set(["theme-switcher"]),
+    modeledPropsBySlug: new Map([
+      ["theme-switcher", new Set(["mode"])],
+    ]),
+    reservedPropsBySlug: new Map([
+      ["theme-switcher", new Set(["mode", "onModeChange"])],
+    ]),
+    slugToExport: new Map([["theme-switcher", "ThemeSwitcher"]]),
+    requiredFunctionPropsBySlug: new Map([
+      ["theme-switcher", [{ name: "onModeChange" }]],
+    ]),
+  };
+  const document: BuilderDocument = {
+    version: 1,
+    name: "ComponentProps",
+    children: [
+      node("first", "theme-switcher"),
+      node("second", "theme-switcher"),
+    ],
+  };
+  const output = documentToTsx(document, callbackNaming);
+  assertStringIncludes(output, 'import type { ComponentProps } from "react";');
+  assertStringIncludes(
+    output,
+    "export function ComponentPropsComposition(",
+  );
+  assertStringIncludes(
+    output,
+    "export interface ComponentPropsCompositionCallbacks",
+  );
+  assertStringIncludes(
+    output,
+    'ComponentProps<typeof ThemeSwitcher>["onModeChange"]',
+  );
+  assertStringIncludes(
+    output,
+    "onModeChange={callbacks.themeSwitcherOnModeChange}",
+  );
+  assertStringIncludes(
+    output,
+    "onModeChange={callbacks.themeSwitcherOnModeChange2}",
+  );
+  assert(!output.includes("=> {}"));
 });
 
 Deno.test("composition cost resolves the emitter's dependency closure", () => {
@@ -766,11 +1262,13 @@ Deno.test("the shaped editor keeps a stable scaffold across validity flips", asy
   const valid = renderToStaticMarkup(createElement(ShapedJsonEditor, {
     shape,
     source: '[{"value":"a"}]',
+    label: "Options",
     onSource: () => {},
   }));
   const invalid = renderToStaticMarkup(createElement(ShapedJsonEditor, {
     shape,
     source: "{oops",
+    label: "Options",
     onSource: () => {},
   }));
   assertEquals(scaffold(valid), scaffold(invalid));
@@ -827,12 +1325,12 @@ function builderModules(): Promise<BuiltBuilderModules> {
 
 Deno.test("every catalogue component yields controls, a default instance, and exportable TSX", async () => {
   const { registryIndex } = await builderModules();
+  const generatedRegistry = await import("../catalogue/generated/registry.ts");
   const {
     componentBySlug,
     componentEntries,
     controlsBySlug,
     exportNaming,
-    knownSlugs,
   } = registryIndex;
   assert(componentEntries.length >= 100);
 
@@ -911,19 +1409,88 @@ Deno.test("every catalogue component yields controls, a default instance, and ex
     [["value", "text"], ["label", "text"], ["disabled", "toggle"]],
   );
 
+  const variants = [
+    ...componentEntries.flatMap((entry) => entry.variants),
+    ...generatedRegistry.sharedModuleVariants,
+  ].reduce(
+    (byName, variant) =>
+      byName.has(variant.typeName)
+        ? byName
+        : byName.set(variant.typeName, variant),
+    new Map<string, (typeof generatedRegistry.sharedModuleVariants)[number]>(),
+  );
+  const objectTypes = [
+    ...componentEntries.flatMap((entry) => entry.objectTypes),
+    ...generatedRegistry.sharedModuleObjectTypes,
+  ].reduce(
+    (byName, objectType) =>
+      byName.has(objectType.typeName)
+        ? byName
+        : byName.set(objectType.typeName, objectType),
+    new Map<
+      string,
+      (typeof generatedRegistry.sharedModuleObjectTypes)[number]
+    >(),
+  );
+
   for (const entry of componentEntries) {
     const slug = entry.meta.slug;
     const controls = controlsBySlug(slug);
+    const sourcePropNames = entry.propDocumentation.status === "available"
+      ? entry.propDocumentation.props.map((prop) => prop.name)
+      : [];
+    assertEquals(
+      registryIndex.reservedPropsBySlug.get(slug),
+      new Set([
+        ...controls.map((control) => control.name),
+        ...sourcePropNames,
+      ]),
+      `${slug} additional-prop reservations drifted from source types`,
+    );
 
     if (entry.propDocumentation.status === "available") {
       const controlNames = new Set(controls.map((control) => control.name));
+      const expectedCallbacks = entry.propDocumentation.props.flatMap((prop) =>
+        prop.required && !controlNames.has(prop.name)
+          ? [{ name: prop.name }]
+          : []
+      );
+      assertEquals(
+        registryIndex.requiredFunctionPropsBySlug.get(slug),
+        expectedCallbacks,
+        `${slug} required callback contract drifted from source types`,
+      );
       for (const prop of entry.propDocumentation.props) {
-        if (!prop.required) continue;
-        if (prop.type.includes("=>") || /^on[A-Z]/.test(prop.name)) continue;
-        assert(
-          controlNames.has(prop.name),
-          `${slug} required prop "${prop.name}" has no inspector control`,
-        );
+        const control = controls.find(({ name }) => name === prop.name);
+        if (prop.required && !controlNames.has(prop.name)) {
+          assert(
+            prop.type.includes("=>") || /^on[A-Z]/.test(prop.name),
+            `${slug} required non-function prop "${prop.name}" was omitted from controls`,
+          );
+        }
+        if (prop.required && !prop.type.includes("=>")) {
+          assert(
+            controlNames.has(prop.name),
+            `${slug} required prop "${prop.name}" has no inspector control`,
+          );
+        }
+        const variant = variants.get(prop.type);
+        if (variant !== undefined) {
+          assert(control?.control === "select");
+          assertEquals(
+            control.options,
+            variant.values.map((value) =>
+              /^-?\d+(?:\.\d+)?$/.test(value) ? Number(value) : value
+            ),
+          );
+        }
+        const objectMatch = /^(?:readonly\s+)?([A-Za-z_$][A-Za-z0-9_$]*)\[\]$/
+          .exec(prop.type);
+        const objectName = objectMatch?.[1] ?? prop.type;
+        if (objectTypes.has(objectName)) {
+          assert(control?.control === "json");
+          assertEquals(control.shape?.typeName, objectName);
+        }
       }
     }
 
@@ -938,10 +1505,83 @@ Deno.test("every catalogue component yields controls, a default instance, and ex
     const tsx = documentToTsx(document, exportNaming);
     assertStringIncludes(tsx, `<${entry.reactExport}`);
     assertEquals(
-      parseDocument(serializeDocument(document), knownSlugs),
+      parseDocument(
+        serializeDocument(document, registryIndex.documentPolicy),
+        registryIndex.documentPolicy,
+      ),
       document,
     );
     assert(compositionCost([slug]).resolved.includes(slug));
+  }
+});
+
+Deno.test("every Component class exports formatted, type-correct consumer TSX", async () => {
+  const { registryIndex } = await builderModules();
+  const chunks: (typeof registryIndex.componentEntries)[] = [];
+  for (
+    let index = 0;
+    index < registryIndex.componentEntries.length;
+    index += 70
+  ) {
+    chunks.push(registryIndex.componentEntries.slice(index, index + 70));
+  }
+  assertEquals(
+    chunks.flat().map((entry) => entry.meta.slug),
+    registryIndex.componentEntries.map((entry) => entry.meta.slug),
+  );
+
+  const temporary = await Deno.makeTempDir({
+    dir: join(PACKAGE_ROOT, "catalogue", "builder"),
+    prefix: "builder-export-",
+  });
+  try {
+    for (const [chunkIndex, entries] of chunks.entries()) {
+      const children = entries.map((entry) => {
+        const instance = registryIndex.instantiateComponent(entry.meta.slug);
+        const props = { ...instance.props };
+        for (const control of registryIndex.controlsBySlug(entry.meta.slug)) {
+          if (
+            control.required && control.control === "slot" &&
+            control.elementOnly
+          ) {
+            props[control.name] = {
+              kind: "slot",
+              children: [registryIndex.instantiateComponent("button")],
+            };
+          }
+        }
+        return { ...instance, props };
+      });
+      const firstExport = entries[0]?.reactExport ?? "Composition";
+      const document: BuilderDocument = {
+        version: 1,
+        name: chunkIndex === 0 ? firstExport : "123 ☃ */ punctuation",
+        children,
+      };
+      const source = documentToTsx(document, registryIndex.exportNaming);
+      const file = join(temporary, `composition-${chunkIndex}.tsx`);
+      await Deno.writeTextFile(file, source);
+      await runDeno([
+        "fmt",
+        "--config",
+        join(PACKAGE_ROOT, "deno.json"),
+        file,
+      ]);
+      await runDeno([
+        "check",
+        "--config",
+        join(PACKAGE_ROOT, "deno.json"),
+        file,
+      ]);
+      const formatted = await Deno.readTextFile(file);
+      assert(formatted.endsWith("\n"));
+      assertStringIncludes(
+        formatted,
+        "composed with the Discern interface builder",
+      );
+    }
+  } finally {
+    await Deno.remove(temporary, { recursive: true });
   }
 });
 
@@ -1007,7 +1647,7 @@ Deno.test("the canvas renders newlines in text literals as line breaks", async (
   assertStringIncludes(markup, "One<br/>Two");
 });
 
-Deno.test("lenient rendering tolerates mid-edit invalid JSON", async () => {
+Deno.test("the shared renderer refuses unaccepted JSON", async () => {
   const { registryIndex, render } = await builderModules();
   const { instantiateComponent } = registryIndex;
   const { renderBuilderChild } = render;
@@ -1016,9 +1656,39 @@ Deno.test("lenient rendering tolerates mid-edit invalid JSON", async () => {
   assertThrows(
     () => renderToStaticMarkup(renderBuilderChild(card)),
     BuilderDocumentError,
+    "valid JSON",
   );
-  const markup = renderToStaticMarkup(
-    renderBuilderChild(card, { lenient: true }),
+});
+
+Deno.test("the shared renderer preserves safe passthrough props only", async () => {
+  const { registryIndex, render } = await builderModules();
+  const { instantiateComponent } = registryIndex;
+  const { renderBuilderChild } = render;
+
+  const safe = {
+    ...instantiateComponent("card"),
+    extra: JSON.stringify({
+      "aria-label": "Safe card",
+      "data-test-id": "safe-card",
+      className: "consumer-card",
+      style: { opacity: 0.8 },
+      title: "Ordinary prop",
+    }),
+  };
+  const markup = renderToStaticMarkup(renderBuilderChild(safe));
+  assertStringIncludes(markup, 'aria-label="Safe card"');
+  assertStringIncludes(markup, 'data-test-id="safe-card"');
+  assertStringIncludes(markup, "consumer-card");
+  assertStringIncludes(markup, "opacity:0.8");
+  assertStringIncludes(markup, 'title="Ordinary prop"');
+
+  const unsafe = {
+    ...instantiateComponent("card"),
+    extra: '{"dangerouslySetInnerHTML":{"__html":"<b>owned</b>"}}',
+  };
+  assertThrows(
+    () => renderToStaticMarkup(renderBuilderChild(unsafe)),
+    BuilderDocumentError,
+    "dangerouslySetInnerHTML",
   );
-  assertStringIncludes(markup, "discern-card");
 });

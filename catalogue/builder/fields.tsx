@@ -3,7 +3,7 @@
  * isolation: the auto-growing textarea and the structured object editor.
  * The builder app composes these; tests render them directly.
  */
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { TextareaHTMLAttributes } from "react";
 import { Select } from "../../src/components/forms/select/select.tsx";
 import type { JsonShape, PropControl } from "./controls.ts";
@@ -131,6 +131,8 @@ export function MemberCell({ member, row, onValue }: MemberCellProps) {
 interface ShapedJsonEditorProps {
   readonly shape: JsonShape;
   readonly source: string;
+  readonly label: string;
+  readonly error?: string | null;
   readonly onSource: (source: string) => void;
 }
 
@@ -143,9 +145,10 @@ interface ShapedJsonEditorProps {
  * the source goes invalid so the field being typed in cannot vanish.
  */
 export function ShapedJsonEditor(
-  { shape, source, onSource }: ShapedJsonEditorProps,
+  { shape, source, label, error = null, onSource }: ShapedJsonEditorProps,
 ) {
   const [rawOpen, setRawOpen] = useState(false);
+  const errorId = useId();
   const rows = parseShapedSource(source, shape);
   const invalid = rows === undefined;
   const commit = (
@@ -207,13 +210,20 @@ export function ShapedJsonEditor(
           spellCheck={false}
           value={source}
           placeholder={shape.list ? "[]" : "{}"}
+          aria-label={`${label} JSON`}
+          aria-invalid={invalid || error !== null ? true : undefined}
+          aria-describedby={invalid || error !== null ? errorId : undefined}
           onChange={(event) => onSource(event.currentTarget.value)}
         />
       </details>
-      {invalid
+      {invalid || error !== null
         ? (
-          <small className="discern-builder-control__error">
-            Fix the JSON to edit it as a form.
+          <small
+            className="discern-builder-control__error"
+            id={errorId}
+            role="alert"
+          >
+            {error ?? "Fix the JSON to edit it as a form."}
           </small>
         )
         : null}

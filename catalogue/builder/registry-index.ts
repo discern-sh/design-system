@@ -15,9 +15,10 @@ import {
 } from "../generated/registry.ts";
 import type { PropControl } from "./controls.ts";
 import { defaultProps, deriveControls } from "./controls.ts";
-import type { ExportNaming } from "./export.ts";
+import type { ExportNaming, RequiredFunctionProp } from "./export.ts";
 import type { BuilderNode } from "./model.ts";
 import { newChildId } from "./model.ts";
+import type { BuilderDocumentPolicy } from "./policy.ts";
 
 /** Registry entries in canonical catalogue order (group, then meta order). */
 export const componentEntries: readonly RegistryEntry[] = registry
@@ -36,13 +37,6 @@ export const entryBySlug: ReadonlyMap<string, RegistryEntry> = new Map(
 
 /** Every placeable component slug. */
 export const knownSlugs: ReadonlySet<string> = new Set(entryBySlug.keys());
-
-/** How exported TSX names each slug's React adapter export. */
-export const exportNaming: ExportNaming = {
-  slugToExport: new Map(
-    componentEntries.map((entry) => [entry.meta.slug, entry.reactExport]),
-  ),
-};
 
 const adapterSurface = reactSurface as Record<string, unknown>;
 
@@ -125,6 +119,65 @@ export function controlsBySlug(slug: string): readonly PropControl[] {
   controlsCache.set(slug, controls);
   return controls;
 }
+
+/** Every prop the builder models for each Component, derived from controls. */
+export const modeledPropsBySlug: ReadonlyMap<string, ReadonlySet<string>> =
+  new Map(
+    componentEntries.map((entry) => [
+      entry.meta.slug,
+      new Set(controlsBySlug(entry.meta.slug).map((control) => control.name)),
+    ]),
+  );
+
+/** Required callbacks source documents cannot serialize, derived from types. */
+export const requiredFunctionPropsBySlug: ReadonlyMap<
+  string,
+  readonly RequiredFunctionProp[]
+> = new Map(
+  componentEntries.map((entry) => [
+    entry.meta.slug,
+    entry.propDocumentation.status === "available"
+      ? entry.propDocumentation.props.flatMap((prop) =>
+        prop.required &&
+          !(modeledPropsBySlug.get(entry.meta.slug)?.has(prop.name) ?? false)
+          ? [{ name: prop.name }]
+          : []
+      )
+      : [],
+  ]),
+);
+
+/** Canonical prop names additional JSON may never shadow. */
+export const reservedPropsBySlug: ReadonlyMap<
+  string,
+  ReadonlySet<string>
+> = new Map(
+  componentEntries.map((entry) => [
+    entry.meta.slug,
+    new Set([
+      ...controlsBySlug(entry.meta.slug).map((control) => control.name),
+      ...(entry.propDocumentation.status === "available"
+        ? entry.propDocumentation.props.map((prop) => prop.name)
+        : []),
+    ]),
+  ]),
+);
+
+/** The single registry-derived policy for every accepted builder document. */
+export const documentPolicy: BuilderDocumentPolicy = {
+  knownSlugs,
+  modeledPropsBySlug,
+  reservedPropsBySlug,
+};
+
+/** Registry naming and callback facts for trustworthy TSX generation. */
+export const exportNaming: ExportNaming = {
+  ...documentPolicy,
+  slugToExport: new Map(
+    componentEntries.map((entry) => [entry.meta.slug, entry.reactExport]),
+  ),
+  requiredFunctionPropsBySlug,
+};
 
 /** A fresh instance of a component with its required defaults configured. */
 export function instantiateComponent(slug: string): BuilderNode {

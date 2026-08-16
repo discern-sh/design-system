@@ -4,12 +4,18 @@
  */
 import { Fragment } from "react";
 import type { ReactNode } from "react";
-import { BuilderDocumentError } from "./export.ts";
 import type { BuilderNode, BuilderSlotChild } from "./model.ts";
+import {
+  assertBuilderDocument,
+  parseAdditionalProps,
+  parseBuilderJson,
+} from "./policy.ts";
 import {
   componentBySlug,
   controlsBySlug,
+  documentPolicy,
   entryBySlug,
+  requiredFunctionPropsBySlug,
 } from "./registry-index.ts";
 
 /** Hooks the interactive canvas layers onto the shared renderer. */
@@ -19,39 +25,6 @@ export interface RenderOptions {
     node: BuilderNode,
     props: Record<string, unknown>,
   ) => Record<string, unknown>;
-  /**
-   * Tolerate mid-edit invalid JSON by omitting the value instead of
-   * throwing, so the canvas keeps rendering while the user types. Export
-   * stays strict, so nothing lenient ever leaves the builder.
-   */
-  readonly lenient?: boolean;
-}
-
-const OMITTED = Symbol("invalid-json");
-
-function parsedJson(
-  source: string,
-  spot: string,
-  options: RenderOptions,
-): unknown {
-  try {
-    return JSON.parse(source);
-  } catch {
-    if (options.lenient) return OMITTED;
-    throw new BuilderDocumentError(`${spot} holds invalid JSON.`);
-  }
-}
-
-function requiredFunctionProps(slug: string): readonly string[] {
-  const entry = entryBySlug.get(slug);
-  if (entry === undefined || entry.propDocumentation.status !== "available") {
-    return [];
-  }
-  return entry.propDocumentation.props
-    .filter((prop) =>
-      prop.required && (prop.type.includes("=>") || /^on[A-Z]/.test(prop.name))
-    )
-    .map((prop) => prop.name);
 }
 
 /** Literal text as React children: newlines become explicit line breaks. */
@@ -76,55 +49,59 @@ function slotChildren(
     // (cloneElement consumers) receive the element itself, never an array.
     return only.kind === "text"
       ? textNode(only.id, only.text)
-      : renderBuilderChild(only, options);
+      : renderAcceptedChild(only, options);
   }
   return children.map((child) => (
-    <Fragment key={child.id}>{renderBuilderChild(child, options)}</Fragment>
+    <Fragment key={child.id}>{renderAcceptedChild(child, options)}</Fragment>
   ));
 }
 
-/** Render one placed child — component subtree or literal text — to React. */
-export function renderBuilderChild(
+function renderAcceptedChild(
   child: BuilderSlotChild,
-  options: RenderOptions = {},
+  options: RenderOptions,
 ): ReactNode {
   if (child.kind === "text") return textNode(child.id, child.text);
   const Component = componentBySlug(child.slug);
   const props: Record<string, unknown> = {};
-  for (const name of requiredFunctionProps(child.slug)) {
-    props[name] = noop;
+  for (const required of requiredFunctionPropsBySlug.get(child.slug) ?? []) {
+    props[required.name] = noop;
   }
   for (const [name, value] of Object.entries(child.props)) {
     if (value.kind === "slot") {
       props[name] = slotChildren(value.children, options);
     } else if (value.kind === "json") {
-      const parsed = parsedJson(
+      props[name] = parseBuilderJson(
         value.source,
         `The "${name}" prop of ${labelFor(child)}`,
-        options,
       );
-      if (parsed !== OMITTED) props[name] = parsed;
     } else {
       props[name] = value.value;
     }
   }
   if (child.extra !== undefined) {
-    const extra = parsedJson(
+    const extra = parseAdditionalProps(
       child.extra,
+      documentPolicy.reservedPropsBySlug.get(child.slug) ?? new Set(),
       `The additional props of ${labelFor(child)}`,
-      options,
     );
-    if (
-      extra !== OMITTED && typeof extra === "object" && extra !== null &&
-      !Array.isArray(extra)
-    ) {
-      Object.assign(props, extra);
-    }
+    Object.assign(props, extra);
   }
   const decorated = options.decorate === undefined
     ? props
     : options.decorate(child, props);
   return <Component key={child.id} {...decorated} />;
+}
+
+/** Render one policy-accepted subtree — component or literal text — to React. */
+export function renderBuilderChild(
+  child: BuilderSlotChild,
+  options: RenderOptions = {},
+): ReactNode {
+  assertBuilderDocument(
+    { version: 1, name: "Preview", children: [child] },
+    documentPolicy,
+  );
+  return renderAcceptedChild(child, options);
 }
 
 function labelFor(node: BuilderNode): string {

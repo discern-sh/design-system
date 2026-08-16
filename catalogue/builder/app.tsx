@@ -48,6 +48,7 @@ import {
 import {
   componentEntries,
   controlsBySlug,
+  documentPolicy,
   entryBySlug,
   exportNaming,
   instantiateComponent,
@@ -94,7 +95,7 @@ function loadInitialDocument(): BuilderDocument {
   let raw: string | null = null;
   try {
     raw = localStorage.getItem(DOCUMENT_STORAGE_KEY);
-    if (raw !== null) return parseDocument(raw, knownSlugs);
+    if (raw !== null) return parseDocument(raw, documentPolicy);
   } catch {
     // An unreadable saved document is preserved below, never destroyed:
     // the autosave overwrites the main key on first render.
@@ -364,7 +365,7 @@ function PalettePreview({ slug }: PalettePreviewProps) {
         ? (
           <Boundary fallback={() => glyph}>
             <div className="discern-builder-palette__preview-stage">
-              {renderBuilderChild(instance, { lenient: true })}
+              {renderBuilderChild(instance)}
             </div>
           </Boundary>
         )
@@ -586,6 +587,7 @@ function ControlField({ node, control, onChange }: ControlFieldProps) {
           <ShapedJsonEditor
             shape={control.shape}
             source={source}
+            label={control.label}
             onSource={(next) =>
               onChange(
                 next.trim() === "" ? undefined : { kind: "json", source: next },
@@ -683,7 +685,10 @@ function App() {
   const document = history.present;
 
   useEffect(() => {
-    localStorage.setItem(DOCUMENT_STORAGE_KEY, serializeDocument(document));
+    localStorage.setItem(
+      DOCUMENT_STORAGE_KEY,
+      serializeDocument(document, documentPolicy),
+    );
   }, [document]);
 
   const apply = (update: (current: BuilderDocument) => BuilderDocument): void =>
@@ -852,7 +857,7 @@ function App() {
     try {
       return {
         tsx: documentToTsx(document, exportNaming),
-        selection: documentSelectionSnippet(document),
+        selection: documentSelectionSnippet(document, documentPolicy),
         error: null,
       };
     } catch (error) {
@@ -1097,7 +1102,7 @@ function App() {
               >
                 <CanvasInstance
                   child={child}
-                  options={{ decorate, lenient: true }}
+                  options={{ decorate }}
                 />
               </CanvasBoundary>
             ))}
@@ -1408,7 +1413,9 @@ function App() {
                 <button
                   type="button"
                   onClick={() => {
-                    const blob = new Blob([serializeDocument(document)], {
+                    const blob = new Blob([
+                      serializeDocument(document, documentPolicy),
+                    ], {
                       type: "application/json",
                     });
                     const url = URL.createObjectURL(blob);
@@ -1432,7 +1439,10 @@ function App() {
                       if (file === undefined) return;
                       file.text().then((text) => {
                         try {
-                          const loaded = parseDocument(text, knownSlugs);
+                          const loaded = parseDocument(
+                            text,
+                            documentPolicy,
+                          );
                           apply(() => loaded);
                           setSelection(null);
                         } catch (error) {
