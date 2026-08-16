@@ -14,6 +14,7 @@ interface DenoConfig {
   readonly name: string;
   readonly version: string;
   readonly exports: Readonly<Record<string, string>>;
+  readonly tasks: Readonly<Record<string, string>>;
 }
 
 const config = JSON.parse(
@@ -109,6 +110,57 @@ Deno.test("every exported module graph is inside the publish set", async () => {
   }
 });
 
+const CLI_EXPORTS = [
+  "./cli",
+  "./cli/interactive",
+  "./cli/interactive/testing",
+  "./cli/projection",
+] as const;
+
+Deno.test("the CLI export graphs never resolve React", async () => {
+  for (const exportName of CLI_EXPORTS) {
+    const entry = config.exports[exportName];
+    assert(entry !== undefined, `deno.json has no ${exportName} export`);
+    const { code, output } = await run(PACKAGE_ROOT, [
+      "info",
+      "--json",
+      "--config",
+      "deno.json",
+      entry,
+    ]);
+    assertEquals(code, 0, `deno info failed for ${entry}:\n${output}`);
+    assert(
+      !output.includes("npm:react"),
+      `${exportName} resolved the React package`,
+    );
+    assert(
+      !output.includes("/src/react.ts"),
+      `${exportName} reached the React adapter`,
+    );
+    assert(
+      !output.includes('.tsx"'),
+      `${exportName} reached a TSX component module`,
+    );
+  }
+});
+
+Deno.test("the CLI module graphs import without ambient I/O", async () => {
+  for (const exportName of CLI_EXPORTS) {
+    const entry = config.exports[exportName];
+    assert(entry !== undefined, `deno.json has no ${exportName} export`);
+    const { code, output } = await run(PACKAGE_ROOT, [
+      "run",
+      "--no-prompt",
+      entry,
+    ]);
+    assertEquals(
+      code,
+      0,
+      `importing ${exportName} with no permissions failed:\n${output}`,
+    );
+  }
+});
+
 Deno.test("published modules carry no import attributes", async () => {
   const files = await publishFileSet();
   const offenders: string[] = [];
@@ -167,16 +219,44 @@ Deno.test("the publish-shaped artifact serves the neutral consumer alone", async
     await Deno.writeTextFile(
       join(consumer, "neutral.ts"),
       `import { packageManifest, semanticClass } from "${config.name}";
+import { renderBadgeCli, stripAnsi } from "${config.name}/cli";
+import { requestText, segmentGraphemes } from "${config.name}/cli/interactive";
+import {
+  encodeTerminalKeys,
+  FakeTerminalIO,
+} from "${config.name}/cli/interactive/testing";
+import {
+  projectTerminalHtml,
+  projectTerminalSpans,
+} from "${config.name}/cli/projection";
 import { emitDesignSystemRuntime } from "${config.name}/runtime";
 const result = await emitDesignSystemRuntime({
   outputRoot: new URL("./runtime/", import.meta.url),
   components: ["button"],
   assets: ["fonts"],
 });
+const io = new FakeTerminalIO(
+  ["Ada", encodeTerminalKeys("enter")],
+  { colorDepth: "truecolor", columns: 40 },
+);
+const requested = await requestText({ label: "Name" }, { io });
+const styledBadge = renderBadgeCli(
+  { label: "Ready", dot: true, tone: "success" },
+  { colorDepth: "truecolor", columns: 80, unicode: true },
+);
+const spans = projectTerminalSpans(styledBadge);
 console.log(JSON.stringify({
   className: semanticClass("button"),
+  badge: renderBadgeCli({ label: "Ready", dot: true }, { colorDepth: "none", columns: 80, unicode: true }),
+  graphemes: segmentGraphemes("A👩‍💻B").length,
   files: result.manifest.integrity.files.length,
   package: packageManifest.package,
+  requested,
+  rawModeBalanced: io.rawTransitions.join(","),
+  projectedText: spans.map(({ text }) => text).join(""),
+  projectionMatchesStrip: spans.map(({ text }) => text).join("") ===
+    stripAnsi(styledBadge),
+  htmlShell: projectTerminalHtml(styledBadge).startsWith("<pre style="),
 }));
 `,
     );
@@ -188,7 +268,14 @@ console.log(JSON.stringify({
     ]);
     assertEquals(code, 0, `staged consumer failed:\n${output}`);
     assertStringIncludes(output, `"className":"discern-button"`);
+    assertStringIncludes(output, `"badge":"[● Ready]"`);
+    assertStringIncludes(output, `"graphemes":3`);
     assertStringIncludes(output, `"package":"${config.name}"`);
+    assertStringIncludes(output, `"requested":"Ada"`);
+    assertStringIncludes(output, `"rawModeBalanced":"true,false"`);
+    assertStringIncludes(output, `"projectedText":"[● Ready]"`);
+    assertStringIncludes(output, `"projectionMatchesStrip":true`);
+    assertStringIncludes(output, `"htmlShell":true`);
     const css = await Deno.readTextFile(
       join(consumer, "runtime", "discern.css"),
     );
@@ -228,6 +315,14 @@ Deno.test("every entrypoint and public symbol is documented", async () => {
     const path = relative(PACKAGE_ROOT, fromFileUrl(entry));
     if (!node.module_doc) problems.push(`${path}: missing module doc`);
     for (const symbol of node.symbols ?? []) {
+      if (
+        path === "src/cli/interactive/mod.ts" &&
+        /prompt/iu.test(symbol.name ?? "")
+      ) {
+        problems.push(
+          `${path}: ${symbol.name} uses terminal vocabulary reserved for agent instructions`,
+        );
+      }
       const documented = Boolean(symbol.jsDoc) ||
         (symbol.declarations ?? []).some((dec) => Boolean(dec.jsDoc));
       if (!documented) {
@@ -236,6 +331,17 @@ Deno.test("every entrypoint and public symbol is documented", async () => {
     }
   }
   assertEquals(problems, [], problems.join("\n"));
+});
+
+Deno.test("release verification builds generated prerequisites first", () => {
+  const verify = config.tasks.verify;
+  assert(verify, "deno.json has no verify task");
+  const stages = verify.split(/\s*&&\s*/u);
+  assertEquals(
+    stages[0],
+    "deno task build",
+    "verify must materialize ignored generated sources before any checking or testing stage",
+  );
 });
 
 Deno.test("release identity stays coherent across config and changelog", async () => {
@@ -250,7 +356,16 @@ Deno.test("release identity stays coherent across config and changelog", async (
   );
   const npm = JSON.parse(
     await Deno.readTextFile(join(PACKAGE_ROOT, "package.json")),
-  ) as { readonly version: string; readonly private: boolean };
+  ) as {
+    readonly version: string;
+    readonly private: boolean;
+    readonly exports: Readonly<Record<string, string>>;
+  };
   assertEquals(npm.version, config.version);
   assertEquals(npm.private, true, "npm publication is not a release channel");
+  assertEquals(
+    npm.exports,
+    config.exports,
+    "package manifests disagree on exports",
+  );
 });

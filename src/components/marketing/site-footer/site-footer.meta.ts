@@ -7,6 +7,11 @@ export default {
   order: 140,
   description:
     "Responsive page colophon with product context, grouped navigation, legal copy, and a compact metadata rail.",
+  cli: {
+    stance: "exempt",
+    reason:
+      "This is browser page chrome for grouped site links, legal copy, and a responsive colophon; a CLI owns shell help and exit context instead of rendering a website footer.",
+  },
   purposes: ["marketing-site"],
   accessibility: [
     "Grouped links sit inside a labelled footer navigation landmark.",

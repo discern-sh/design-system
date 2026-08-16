@@ -3,6 +3,7 @@ export const componentGroups = [
   "Core",
   "Layout",
   "Display",
+  "Artwork",
   "Forms",
   "Feedback",
   "Navigation",
@@ -41,6 +42,22 @@ export const componentBehaviorOptIns = {
   "floating-surface": ["tooltip", "hover-card"],
 } as const satisfies Readonly<Record<ComponentBehavior, readonly string[]>>;
 
+/** CLI stance for a component with a package-owned pure renderer. */
+export interface CliRenderedComponentStance {
+  readonly stance: "rendered";
+}
+
+/** CLI stance for a component that intentionally has no terminal equivalent. */
+export interface CliExemptComponentStance {
+  readonly stance: "exempt";
+  readonly reason: string;
+}
+
+/** A component's declared rendered or exempt CLI contract. */
+export type ComponentCliStance =
+  | CliRenderedComponentStance
+  | CliExemptComponentStance;
+
 /** Authored identity, ordering, discovery, and accessibility facts for a component. */
 export interface ComponentMeta {
   readonly name: string;
@@ -54,6 +71,8 @@ export interface ComponentMeta {
   readonly useWhen?: readonly string[];
   /** Concrete situations better served by another component or pattern. */
   readonly notWhen?: readonly string[];
+  /** Required terminal contract: render this Component or record why it is exempt. */
+  readonly cli: ComponentCliStance;
   readonly behaviors?: readonly ComponentBehavior[];
   readonly accessibility?: readonly string[];
 }

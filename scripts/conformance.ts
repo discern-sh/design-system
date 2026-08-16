@@ -7,7 +7,9 @@ import type {
   ConformanceScenario,
   ConformanceStep,
   ConformanceTarget,
-} from "../styleguide/conformance.ts";
+} from "../catalogue/conformance.ts";
+import { catalogueCliCapabilities } from "../catalogue/cli-preview.tsx";
+import { terminalFoundationSheets } from "../catalogue/terminal-foundations.ts";
 import { launchBrowser } from "./browser.ts";
 import { buildDesignSystem } from "./build.ts";
 import { runResilienceConformance } from "./resilience-conformance.ts";
@@ -16,6 +18,7 @@ import { withViewport } from "./viewport.ts";
 
 const OUTPUT_ROOT = new URL("../dist/conformance/", import.meta.url);
 const WIDE_VIEWPORT = { width: 1440, height: 1000 } as const;
+const TERMINAL_REVIEW_VIEWPORT = { width: 1920, height: 1200 } as const;
 const NARROW_VIEWPORT = { width: 390, height: 844 } as const;
 const WCAG_TAGS = [
   "wcag2a",
@@ -37,7 +40,7 @@ function conformanceUrl(
   theme: CatalogueTheme,
   component?: string,
 ): string {
-  const url = new URL("/style-guide/", origin);
+  const url = new URL("/catalogue/", origin);
   url.searchParams.set("conformance", "1");
   url.searchParams.set("theme", theme);
   if (component) url.searchParams.set("component", component);
@@ -622,10 +625,10 @@ async function verifyStateFragmentRestoration(
   origin: string,
 ): Promise<void> {
   await withViewport(page, WIDE_VIEWPORT, async () => {
-    await page.goto(new URL("/style-guide/", origin).href, {
+    await page.goto(new URL("/catalogue/", origin).href, {
       waitUntil: "networkidle",
     });
-    await page.locator("[data-discern-root]").waitFor();
+    await page.locator(".discern-catalogue-shell").waitFor();
     await page.evaluate(() => document.fonts.ready.then(() => undefined));
     const states = await page.locator(
       '.discern-catalogue-example-state[id^="component-"][id*="--"]',
@@ -657,10 +660,10 @@ async function verifyStateFragmentRestoration(
     const state = states[Math.floor(states.length / 2)];
     invariant(state, "Fragment restoration needs a middle Catalogue state");
     const fragment = state.fragment;
-    const url = new URL("/style-guide/", origin);
+    const url = new URL("/catalogue/", origin);
     url.hash = fragment;
     await page.goto(url.href, { waitUntil: "networkidle" });
-    await page.locator("[data-discern-root]").waitFor();
+    await page.locator(".discern-catalogue-shell").waitFor();
     const target = page.locator(`#${fragment}`);
     let position = Number.POSITIVE_INFINITY;
     await eventually(
@@ -701,6 +704,276 @@ async function verifyStateFragmentRestoration(
         targetState.activeElement ?? "nothing"
       }`,
     );
+  });
+}
+
+interface TerminalCatalogueEvidence {
+  readonly layouts: number;
+  readonly profileChecks: number;
+  readonly componentSpecimens: number;
+  readonly foundationSheets: number;
+  readonly foundationSpecimens: number;
+  readonly animationChecks: number;
+}
+
+async function verifyTerminalFoundationEnrollment(
+  page: Page,
+): Promise<
+  {
+    readonly sheets: number;
+    readonly specimens: number;
+    readonly animationChecks: number;
+  }
+> {
+  const expectedSheets = terminalFoundationSheets.map(({ id }) => id);
+  const actualSheets = await page.locator(
+    "[data-discern-terminal-foundation]",
+  ).evaluateAll((nodes) =>
+    nodes.map((node) =>
+      node.getAttribute("data-discern-terminal-foundation") ?? ""
+    )
+  );
+  invariant(
+    JSON.stringify(actualSheets) === JSON.stringify(expectedSheets),
+    `Terminal foundation enrollment differs from its registry.\nExpected: ${
+      expectedSheets.join(", ")
+    }\nActual: ${actualSheets.join(", ")}`,
+  );
+  const navigationSheets = await page.locator(
+    '.discern-catalogue-nav a[href^="#terminal-foundation-"]',
+  ).evaluateAll((nodes) =>
+    nodes.map((node) =>
+      node.getAttribute("href")?.replace("#terminal-foundation-", "") ?? ""
+    )
+  );
+  invariant(
+    JSON.stringify(navigationSheets) === JSON.stringify(expectedSheets),
+    `Terminal foundation navigation differs from its registry.\nExpected: ${
+      expectedSheets.join(", ")
+    }\nActual: ${navigationSheets.join(", ")}`,
+  );
+
+  const expectedSpecimens = terminalFoundationSheets.flatMap((sheet) =>
+    sheet.specimens(catalogueCliCapabilities, { theme: "light" }).map((
+      specimen,
+    ) => `${sheet.id}:${specimen.id}`)
+  );
+  const actualSpecimens = await page.locator(
+    "[data-discern-terminal-foundation-specimen]",
+  ).evaluateAll((nodes) =>
+    nodes.map((node) => {
+      const sheet = node.closest<HTMLElement>(
+        "[data-discern-terminal-foundation]",
+      )?.dataset.discernTerminalFoundation ?? "";
+      const specimen = (node as HTMLElement).dataset
+        .discernTerminalFoundationSpecimen ?? "";
+      return `${sheet}:${specimen}`;
+    })
+  );
+  invariant(
+    JSON.stringify(actualSpecimens) === JSON.stringify(expectedSpecimens),
+    `Terminal foundation specimens differ from their registry.\nExpected: ${
+      expectedSpecimens.join(", ")
+    }\nActual: ${actualSpecimens.join(", ")}`,
+  );
+
+  await page.locator(".discern-catalogue-search").click();
+  const searchDialog = page.getByRole("dialog", {
+    name: "Search the Catalogue",
+  });
+  await searchDialog.locator(".discern-search-palette__input").fill("spinner");
+  const motifResult = searchDialog.locator(
+    '.discern-search-palette__result[href="#terminal-foundation-motifs"]',
+  );
+  invariant(
+    await motifResult.count() === 1,
+    "Spinner search must resolve the Terminal motifs foundation",
+  );
+  invariant(
+    (await motifResult.textContent())?.includes("Terminal foundation") === true,
+    "Spinner search must identify its foundation context",
+  );
+  await motifResult.click();
+  await searchDialog.waitFor({ state: "hidden" });
+
+  const spinner = page.locator(
+    '[data-discern-terminal-foundation="motifs"] ' +
+      '[data-discern-terminal-foundation-specimen="spinner-phases"]',
+  );
+  const animation = spinner.locator("[data-discern-terminal-animation]");
+  invariant(
+    await animation.getAttribute("data-discern-terminal-animation") ===
+      "paused",
+    "Reduced motion must pause terminal foundation animation initially",
+  );
+  const liveOutput = animation.locator(".discern-catalogue-cli-output");
+  const pausedFrame = await liveOutput.textContent();
+  await page.waitForTimeout(180);
+  invariant(
+    await liveOutput.textContent() === pausedFrame,
+    "Reduced-motion terminal animation advanced while paused",
+  );
+  await animation.getByRole("button", { name: "Play animation" }).click();
+  await eventually(
+    async () => await liveOutput.textContent() !== pausedFrame,
+    "Terminal motif animation did not advance after Play",
+  );
+  await animation.getByRole("button", { name: "Pause animation" }).click();
+  const accessibility = await new AxeBuilder({ page })
+    .include("[data-discern-terminal-foundation]")
+    .withTags([...WCAG_TAGS])
+    .analyze();
+  invariant(
+    accessibility.violations.length === 0,
+    `Terminal foundations failed accessibility: ${
+      accessibility.violations.map(({ id }) => id).join(", ")
+    }`,
+  );
+  return {
+    sheets: actualSheets.length,
+    specimens: actualSpecimens.length,
+    animationChecks: 3,
+  };
+}
+
+async function verifyTerminalCatalogue(
+  page: Page,
+  origin: string,
+): Promise<TerminalCatalogueEvidence> {
+  return await withViewport(page, TERMINAL_REVIEW_VIEWPORT, async () => {
+    const url = new URL("/catalogue/", origin);
+    url.searchParams.set("surface", "cli");
+    url.searchParams.set("theme", "light");
+    url.hash = "terminal-layouts";
+    await page.goto(url.href, { waitUntil: "networkidle" });
+    await page.locator(".discern-catalogue-shell").waitFor();
+    await page.evaluate(() => document.fonts.ready.then(() => undefined));
+
+    const foundations = await verifyTerminalFoundationEnrollment(page);
+
+    const layouts = page.locator("[data-discern-cli-composition]");
+    const layoutCount = await layouts.count();
+    invariant(layoutCount > 0, "Terminal Catalogue needs a layout recipe");
+    let profileChecks = 0;
+    for (let layoutIndex = 0; layoutIndex < layoutCount; layoutIndex += 1) {
+      const layout = layouts.nth(layoutIndex);
+      const title = await layout.locator("h3").first().textContent() ??
+        `layout ${layoutIndex + 1}`;
+      const profiles = layout.locator(
+        ".discern-catalogue-terminal-layout__profiles button",
+      );
+      const profileCount = await profiles.count();
+      invariant(profileCount > 0, `${title} needs a viewport profile`);
+      for (
+        let profileIndex = 0;
+        profileIndex < profileCount;
+        profileIndex += 1
+      ) {
+        const profile = profiles.nth(profileIndex);
+        const label = (await profile.textContent())?.trim() ??
+          `profile ${profileIndex + 1}`;
+        await profile.click();
+        const viewport = layout.locator("[data-discern-terminal-viewport]");
+        await viewport.waitFor();
+        const width = await viewport.evaluate((node) => ({
+          client: node.clientWidth,
+          scroll: node.scrollWidth,
+        }));
+        invariant(
+          width.scroll <= width.client,
+          `${title} / ${label} has a redundant horizontal scrollbar: ` +
+            `${width.client}px client / ${width.scroll}px content`,
+        );
+        profileChecks += 1;
+      }
+    }
+
+    const terminalSpecimens = page.locator(
+      ".discern-catalogue-cli-preview",
+    );
+    const componentSpecimens = page.locator(
+      "[data-discern-component] .discern-catalogue-cli-preview",
+    );
+    const componentSpecimenCount = await componentSpecimens.count();
+    invariant(
+      componentSpecimenCount > 0,
+      "Terminal Catalogue needs a rendered Component specimen",
+    );
+    const inspectors = page.locator("[data-discern-terminal-theme]");
+    const allTerminalSurfacesUse = async (
+      theme: CatalogueTheme,
+    ): Promise<boolean> => {
+      const inspectorThemes = await inspectors.evaluateAll((nodes) =>
+        nodes.map((node) => node.getAttribute("data-discern-terminal-theme"))
+      );
+      const surfaceThemes = await terminalSpecimens.evaluateAll((nodes) =>
+        nodes.map((node) => node.getAttribute("data-discern-theme"))
+      );
+      return inspectorThemes.length === layoutCount &&
+        inspectorThemes.every((value) => value === theme) &&
+        surfaceThemes.length === await terminalSpecimens.count() &&
+        surfaceThemes.every((value) => value === theme);
+    };
+    invariant(
+      await allTerminalSurfacesUse("light"),
+      "Light mode did not reach every terminal surface",
+    );
+
+    const headingOutput = page.locator(
+      '[data-discern-component="heading"] .discern-catalogue-cli-preview',
+    ).first();
+    const terminalPalette = async (): Promise<
+      { readonly background: string; readonly foreground: string }
+    > =>
+      await headingOutput.evaluate((node) => {
+        const coloured = node.querySelector<HTMLElement>('[style*="color"]');
+        return {
+          background: getComputedStyle(node).backgroundColor,
+          foreground: coloured === null ? "" : getComputedStyle(coloured).color,
+        };
+      });
+    const lightPalette = await terminalPalette();
+    invariant(
+      lightPalette.foreground !== "",
+      "Heading CLI specimen needs projected colour evidence",
+    );
+
+    await page.locator(
+      '.discern-catalogue-theme input[value="dark"]',
+    ).check();
+    await eventually(
+      async () => await allTerminalSurfacesUse("dark"),
+      "Dark mode did not reach every terminal surface",
+    );
+    const darkPalette = await terminalPalette();
+    invariant(
+      darkPalette.background !== lightPalette.background &&
+        darkPalette.foreground !== lightPalette.foreground,
+      "Dark mode changed terminal labels without re-rendering its palette",
+    );
+
+    await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
+    await page.locator(
+      '.discern-catalogue-theme input[value="system"]',
+    ).check();
+    await eventually(
+      async () => await allTerminalSurfacesUse("light"),
+      "System mode did not follow a light browser preference",
+    );
+    await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
+    await eventually(
+      async () => await allTerminalSurfacesUse("dark"),
+      "System mode did not follow a changed dark browser preference",
+    );
+
+    return {
+      layouts: layoutCount,
+      profileChecks,
+      componentSpecimens: componentSpecimenCount,
+      foundationSheets: foundations.sheets,
+      foundationSpecimens: foundations.specimens,
+      animationChecks: foundations.animationChecks,
+    };
   });
 }
 
@@ -847,6 +1120,23 @@ export async function runConformance(): Promise<void> {
         }`,
       );
     }
+    let terminalCatalogue: TerminalCatalogueEvidence = {
+      layouts: 0,
+      profileChecks: 0,
+      componentSpecimens: 0,
+      foundationSheets: 0,
+      foundationSpecimens: 0,
+      animationChecks: 0,
+    };
+    try {
+      terminalCatalogue = await verifyTerminalCatalogue(page, origin);
+    } catch (error) {
+      failures.push(
+        `terminal Catalogue: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
     const resilience = await runResilienceConformance(
       browser,
       page,
@@ -884,6 +1174,8 @@ export async function runConformance(): Promise<void> {
       `Conformance passed: ${expectedComponents.length} components, ${accessibilityScans} accessibility scans, ${scenarios} interaction scenarios, 1 cold-state-fragment check, ${forcedColorFocusChecks} forced-colour focus checks, and ${
         screenshots + 1
       } review screenshots; ${floatingSurfaces} floating surfaces share the clipping cure. ` +
+        `Terminal Catalogue passed ${terminalCatalogue.profileChecks} profile fits across ${terminalCatalogue.layouts} layouts and re-themed ${terminalCatalogue.componentSpecimens} Component specimens. ` +
+        `It auto-enrolled ${terminalCatalogue.foundationSpecimens} specimens across ${terminalCatalogue.foundationSheets} terminal foundations with ${terminalCatalogue.animationChecks} reduced-motion and playback checks. ` +
         `Journey resilience passed: ${resilience.journeys} journeys, ` +
         `${resilience.journeyStages} ordered stages, ` +
         `${resilience.journeyAxeScans} axe scans, ` +

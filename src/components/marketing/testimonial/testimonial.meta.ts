@@ -7,6 +7,7 @@ export default {
   order: 100,
   description:
     "Editorial customer quote with attribution, optional portrait, and an adjacent measurable outcome.",
+  cli: { stance: "rendered" },
   accessibility: [
     "Quotation and attribution use blockquote and figcaption semantics.",
     "Decorative quote marks and avatars are hidden from assistive technology.",

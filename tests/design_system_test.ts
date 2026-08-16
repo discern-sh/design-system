@@ -26,20 +26,30 @@ import {
   Brand,
   Breadcrumbs,
   Button,
+  CodeListing,
   DestructiveActionNotice,
   Diagnostic,
   type DiagnosticProps,
   GlossaryTerm,
+  Ground,
+  HeroBlock,
   HoverCard,
+  ImpressionGround,
   Logo,
+  LogoCloud,
+  MarketingIntro,
+  MarketingSection,
   Procedure,
   RawOutput,
+  ResonanceGround,
   RetryNotice,
   SiteHeader,
   TableOfContents,
+  Terminal,
   ThemeSwitcher,
   ThemeToggle,
   Tooltip,
+  Window,
 } from "../src/react.ts";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
 import { semanticClass } from "../src/semantic-class.ts";
@@ -275,10 +285,17 @@ Deno.test("package tests and tasks cannot reach above the package root", async (
   assertEquals(violations, []);
 });
 
-Deno.test("component metadata auto-enrols React and runtime surfaces", async () => {
+Deno.test("component metadata auto-enrols React, runtime, and CLI surfaces", async () => {
   const files = await walk(COMPONENT_ROOT);
   const fileSet = new Set(files);
   const metaFiles = files.filter((path) => path.endsWith(".meta.ts"));
+  const cliFiles = files.filter((path) => path.endsWith(".cli.ts"));
+  for (const cliPath of cliFiles) {
+    assert(
+      fileSet.has(cliPath.replace(/\.cli\.ts$/u, ".meta.ts")),
+      `${cliPath} has no matching Component Metadata`,
+    );
+  }
   const identities = new Set<string>();
   const positions = new Set<string>();
   for (const metaPath of metaFiles) {
@@ -307,6 +324,21 @@ Deno.test("component metadata auto-enrols React and runtime surfaces", async () 
       fileSet.has(join(directory, "mod.ts")),
       `${metaPath} is missing mod.ts`,
     );
+    const cliPath = `${stem}.cli.ts`;
+    if (meta.cli.stance === "rendered") {
+      assert(fileSet.has(cliPath), `${metaPath} is missing ${cliPath}`);
+    } else {
+      assert(
+        !fileSet.has(cliPath),
+        `${cliPath} exists without a rendered CLI stance`,
+      );
+    }
+    if (meta.cli.stance === "exempt") {
+      assert(
+        meta.cli.reason.trim() !== "",
+        `${metaPath} has no exemption reason`,
+      );
+    }
   }
   assert(metaFiles.length > 0);
   assertEquals(packageManifest.components.length, metaFiles.length);
@@ -335,6 +367,18 @@ Deno.test("component metadata auto-enrols React and runtime surfaces", async () 
       join(PACKAGE_ROOT, "src", "generated", "react.ts"),
     ),
     generated.react,
+  );
+  assertEquals(
+    await Deno.readTextFile(
+      join(PACKAGE_ROOT, "src", "generated", "cli-registry.ts"),
+    ),
+    generated.cliRegistry,
+  );
+  assertEquals(
+    await Deno.readTextFile(
+      join(PACKAGE_ROOT, "src", "generated", "cli-renderers.ts"),
+    ),
+    generated.cliRenderers,
   );
 });
 
@@ -474,6 +518,56 @@ Deno.test("selection resolves dependencies and excludes unrelated groups", async
   }
 });
 
+Deno.test("artwork selection includes Ground but excludes sibling compositions", async () => {
+  const temp = await Deno.makeTempDir();
+  try {
+    const survey = await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${temp}/`),
+      components: ["survey-ground"],
+    });
+    assertEquals(survey.manifest.selection.resolvedComponents, [
+      "ground",
+      "survey-ground",
+    ]);
+    const surveyCss = await Deno.readTextFile(join(temp, "discern.css"));
+    assertStringIncludes(surveyCss, ".discern-ground");
+    assertStringIncludes(surveyCss, ".discern-survey-ground {");
+    assert(!surveyCss.includes(".discern-impression-ground"));
+    assert(!surveyCss.includes(".discern-envelope-ground"));
+
+    const resonanceRoot = join(temp, "resonance");
+    const resonance = await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${resonanceRoot}/`),
+      components: ["resonance-ground"],
+    });
+    assertEquals(resonance.manifest.selection.resolvedComponents, [
+      "ground",
+      "resonance-ground",
+    ]);
+    const resonanceCss = await Deno.readTextFile(
+      join(resonanceRoot, "discern.css"),
+    );
+    assertStringIncludes(
+      resonanceCss,
+      ".discern-resonance-ground__interval",
+    );
+    assert(!resonanceCss.includes(".discern-survey-ground"));
+    assert(!resonanceCss.includes(".discern-cleave-ground"));
+
+    const hero = await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${temp}/`),
+      components: ["hero-block"],
+    });
+    assertEquals(hero.manifest.selection.resolvedComponents, ["hero-block"]);
+    const heroCss = await Deno.readTextFile(join(temp, "discern.css"));
+    assertStringIncludes(heroCss, ".discern-hero-block__ground");
+    assert(!heroCss.includes(".discern-ground {"));
+    assert(!heroCss.includes(".discern-survey-ground"));
+  } finally {
+    await Deno.remove(temp, { recursive: true });
+  }
+});
+
 Deno.test("floating supplementary surfaces auto-enrol shared browser behavior", async () => {
   const floatingComponents = packageManifest.components.filter(({ id }) =>
     id === "hover-card" || id === "tooltip"
@@ -582,6 +676,12 @@ Deno.test("all selection and repeated emission are byte-for-byte deterministic",
 });
 
 Deno.test("font and grain assets are independent, licensed, and integrity-mapped", async () => {
+  const systemDisplay = baseTokens.find(({ name }) =>
+    name === "--discern-font-display"
+  );
+  assert(systemDisplay !== undefined);
+  assertMatch(systemDisplay.value, /^"Iowan Old Style",/);
+
   const fonts = await Deno.makeTempDir();
   const grain = await Deno.makeTempDir();
   try {
@@ -599,8 +699,9 @@ Deno.test("font and grain assets are independent, licensed, and integrity-mapped
     const fontCss = await Deno.readTextFile(join(fonts, "fonts.css"));
     for (
       const fragment of [
-        '--discern-font-display: "Crimson Pro", "Discern Crimson Fallback Iowan",',
-        '"Discern Crimson Fallback Georgia", "Iowan Old Style", Georgia, serif;',
+        '--discern-font-display: "Iowan Old Style", "Crimson Pro",',
+        '"Discern Crimson Fallback Georgia", "Palatino Linotype", Georgia,',
+        "ui-serif, serif;",
         '--discern-font-body: "Inter", "Discern Inter Fallback Helvetica",',
         '"Discern Inter Fallback Arial", "Helvetica Neue", Arial, system-ui,',
         '--discern-font-ui: "Inter", "Discern Inter Fallback Helvetica",',
@@ -609,6 +710,7 @@ Deno.test("font and grain assets are independent, licensed, and integrity-mapped
     ) {
       assertStringIncludes(fontCss, fragment);
     }
+    assert(!fontCss.includes("Discern Crimson Fallback Iowan"));
     const metricAssets = await Promise.all(
       bundledFontMetricSources().map(async (source) => ({
         source,
@@ -1310,7 +1412,7 @@ Deno.test("default blue and green themes share component CSS and preserve state 
 
 Deno.test("catalogue chrome cannot leak descendant styles into component examples", async () => {
   const source = await Deno.readTextFile(
-    join(PACKAGE_ROOT, "styleguide", "styleguide.css"),
+    join(PACKAGE_ROOT, "catalogue", "catalogue.css"),
   );
   const selectors = [...source.matchAll(/([^{}]+)\{/g)]
     .flatMap((match) => (match[1] ?? "").split(","))
@@ -1330,6 +1432,10 @@ Deno.test("neutral entrypoints work in an external cached-only Deno project", as
     const packageImports = {
       "@discern-sh/design-system":
         new URL("../src/mod.ts", import.meta.url).href,
+      "@discern-sh/design-system/cli": new URL(
+        "../src/cli/mod.ts",
+        import.meta.url,
+      ).href,
       "@discern-sh/design-system/manifest": new URL(
         "../src/manifest.ts",
         import.meta.url,
@@ -1364,6 +1470,7 @@ Deno.test("neutral entrypoints work in an external cached-only Deno project", as
     await Deno.writeTextFile(
       join(temp, "neutral.ts"),
       `import { packageManifest, semanticClass } from "@discern-sh/design-system";
+import { renderBadgeCli } from "@discern-sh/design-system/cli";
 import { emitDesignSystemRuntime } from "@discern-sh/design-system/runtime";
 import { discernTheme } from "@discern-sh/design-system/theme/discern";
 const result = await emitDesignSystemRuntime({
@@ -1372,6 +1479,7 @@ const result = await emitDesignSystemRuntime({
 });
 console.log(JSON.stringify({
   className: semanticClass("button"),
+  badge: renderBadgeCli({ label: "Ready", dot: true }, { colorDepth: "none", columns: 80, unicode: true }),
   components: result.components,
   package: packageManifest.package,
   theme: discernTheme.name,
@@ -1385,6 +1493,7 @@ console.log(JSON.stringify({
       "neutral.ts",
     ]);
     assertStringIncludes(first, '"className":"discern-button"');
+    assertStringIncludes(first, '"badge":"[● Ready]"');
     const cached = await command(temp, [
       "run",
       "--cached-only",
@@ -1482,6 +1591,257 @@ Deno.test("semantic HTML and React adapters share the public class contract", ()
     themeSwitcher,
     /<input(?=[^>]*value="system")(?=[^>]*checked="")[^>]*>/,
   );
+
+  const marketing = renderToStaticMarkup(
+    createElement(MarketingSection, {
+      surface: "contrast",
+      spacing: "spacious",
+      frame: "wide",
+      children: createElement(MarketingIntro, {
+        eyebrow: "Chapter three",
+        title: "A durable marketing hierarchy",
+        description: createElement("p", null, "Supporting context."),
+        scale: "editorial",
+      }),
+    }),
+  );
+  assertMatch(marketing, /^<section/);
+  assertStringIncludes(
+    marketing,
+    "discern-marketing-section--contrast discern-marketing-section--space-spacious discern-marketing-section--frame-wide",
+  );
+  assertStringIncludes(marketing, "discern-marketing-intro--editorial");
+  assertStringIncludes(marketing, "<h2");
+});
+
+Deno.test("Ground fixes decorative semantics and Impression keeps its glyph consumer-owned", () => {
+  const ground = renderToStaticMarkup(
+    createElement(Ground, {
+      motion: "still",
+      presence: 1.25,
+      children: createElement("span", null, "Decoration"),
+    }),
+  );
+  assertMatch(ground, /^<div/);
+  assertStringIncludes(
+    ground,
+    'class="discern-ground discern-ground--still"',
+  );
+  assertStringIncludes(ground, 'aria-hidden="true"');
+  assertStringIncludes(ground, "--discern-ground-presence:1.25");
+
+  const defaultImpression = renderToStaticMarkup(
+    createElement(ImpressionGround),
+  );
+  assertStringIncludes(defaultImpression, "◐");
+  assert(!defaultImpression.includes("◮"));
+  assertStringIncludes(defaultImpression, 'aria-hidden="true"');
+
+  const customImpression = renderToStaticMarkup(
+    createElement(ImpressionGround, { glyph: "✦" }),
+  );
+  assertStringIncludes(customImpression, "✦");
+  assert(!customImpression.includes("◐"));
+
+  const resonance = renderToStaticMarkup(
+    createElement(ResonanceGround, { motion: "still" }),
+  );
+  assertStringIncludes(
+    resonance,
+    "discern-ground discern-ground--still discern-resonance-ground",
+  );
+  assertStringIncludes(resonance, 'aria-hidden="true"');
+  assertStringIncludes(
+    resonance,
+    'class="discern-resonance-ground__interval"',
+  );
+  assertStringIncludes(resonance, 'pathLength="100"');
+
+  const hero = renderToStaticMarkup(
+    createElement(HeroBlock, {
+      title: "A complete foreground",
+      ground: createElement(ImpressionGround, { motion: "still" }),
+    }),
+  );
+  assertStringIncludes(
+    hero,
+    'class="discern-hero-block__ground" aria-hidden="true"',
+  );
+  assert(
+    hero.indexOf("discern-hero-block__ground") <
+      hero.indexOf("discern-hero-block__inner"),
+  );
+});
+
+Deno.test("homepage-derived treatments remain opt-in component variants", () => {
+  const defaults = [
+    renderToStaticMarkup(createElement(SiteHeader, { brand: "Northstar" })),
+    renderToStaticMarkup(createElement(HeroBlock, { title: "Build clearly" })),
+    renderToStaticMarkup(createElement(LogoCloud, {
+      items: [{ name: "Northstar", mark: "N" }],
+    })),
+    renderToStaticMarkup(createElement(Window, { children: "Preview" })),
+    renderToStaticMarkup(createElement(Terminal, { children: "$ verify" })),
+    renderToStaticMarkup(
+      createElement(CodeListing, { code: "const ready = true;" }),
+    ),
+  ];
+  for (const html of defaults) {
+    assert(!/--(?:campaign|showcase|strip|atmospheric)/.test(html));
+  }
+
+  const variants = [
+    renderToStaticMarkup(createElement(SiteHeader, {
+      brand: "Northstar",
+      variant: "campaign",
+    })),
+    renderToStaticMarkup(createElement(HeroBlock, {
+      title: createElement("em", null, "Build boldly"),
+      layout: "showcase",
+      surface: "atmospheric",
+    })),
+    renderToStaticMarkup(createElement(LogoCloud, {
+      items: [{
+        name: "Northstar",
+        mark: "N",
+        markMask: "linear-gradient(black 0 0)",
+      }],
+      variant: "strip",
+    })),
+    renderToStaticMarkup(createElement(Window, {
+      title: "Project",
+      actions: "Ready",
+      variant: "showcase",
+      children: "Preview",
+    })),
+    renderToStaticMarkup(createElement(Terminal, {
+      title: "Result",
+      actions: "Structured",
+      footer: "Bounded context",
+      variant: "showcase",
+      children: "$ verify",
+    })),
+    renderToStaticMarkup(createElement(CodeListing, {
+      code: "const ready = true;",
+      variant: "showcase",
+    })),
+  ].join("\n");
+  for (
+    const className of [
+      "discern-site-header--campaign",
+      "discern-hero-block--showcase",
+      "discern-hero-block--atmospheric",
+      "discern-logo-cloud--strip",
+      "discern-logo-cloud__mark--masked",
+      "discern-window--showcase",
+      "discern-window__actions",
+      "discern-terminal--showcase",
+      "discern-terminal__actions",
+      "discern-terminal__footer",
+      "discern-code-listing--showcase",
+    ]
+  ) {
+    assertStringIncludes(variants, className);
+  }
+  assertStringIncludes(variants, "--discern-logo-cloud-mark-mask");
+});
+
+Deno.test("masked provider-strip marks swap brand artwork for a neutral dark silhouette", async () => {
+  const output = await Deno.makeTempDir();
+  const browser = await launchBrowser();
+  const page = await browser.newPage({ colorScheme: "dark" });
+  try {
+    await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${output}/`),
+      components: ["logo-cloud"],
+      theme: "discern",
+    });
+    const css = await Deno.readTextFile(join(output, "discern.css"));
+    const markup = renderToStaticMarkup(createElement(LogoCloud, {
+      label: "Compatible providers",
+      items: [{
+        name: "Future provider",
+        mark: createElement("img", {
+          alt: "",
+          src:
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='orange'/%3E%3C/svg%3E",
+        }),
+        markMask: "linear-gradient(black 0 0)",
+      }, {
+        name: "Inline provider",
+        mark: createElement(
+          "svg",
+          { viewBox: "0 0 32 32" },
+          createElement("rect", {
+            width: "32",
+            height: "32",
+            fill: "green",
+          }),
+        ),
+        markMask: "linear-gradient(black 0 0)",
+      }, {
+        name: "Unmasked provider",
+        mark: createElement("img", {
+          alt: "",
+          src:
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='purple'/%3E%3C/svg%3E",
+        }),
+      }],
+      variant: "strip",
+    }));
+    await page.setContent(
+      `<style>${css}</style><main data-discern-root>${markup}</main>`,
+    );
+
+    const dark = await page.evaluate(() => {
+      const masked = [...document.querySelectorAll<HTMLElement>(
+        ".discern-logo-cloud__mark--masked",
+      )].map((element) => {
+        const media = element.querySelector<HTMLElement>("img, svg");
+        const item = element.closest("li");
+        if (media === null || item === null) throw new Error("incomplete mark");
+        return {
+          mediaOpacity: getComputedStyle(media).opacity,
+          markColor: getComputedStyle(element).color,
+          itemColor: getComputedStyle(item).color,
+        };
+      });
+      const unmasked = document.querySelector<HTMLElement>(
+        ".discern-logo-cloud__mark:not(.discern-logo-cloud__mark--masked) img",
+      );
+      if (unmasked === null) throw new Error("missing unmasked mark");
+      return {
+        masked,
+        unmaskedOpacity: getComputedStyle(unmasked).opacity,
+      };
+    });
+    const darkViolations = dark.masked.flatMap((mark, index) => [
+      mark.mediaOpacity === "0"
+        ? undefined
+        : `masked source ${index} remains at opacity ${mark.mediaOpacity}`,
+      mark.markColor === mark.itemColor
+        ? undefined
+        : `silhouette ${index} ${mark.markColor} differs from item ${mark.itemColor}`,
+    ]).concat(
+      dark.unmaskedOpacity === "1"
+        ? []
+        : [`unmasked source changed to opacity ${dark.unmaskedOpacity}`],
+    ).filter((violation): violation is string => violation !== undefined);
+    assertEquals(darkViolations, []);
+
+    await page.emulateMedia({ colorScheme: "light" });
+    assertEquals(
+      await page.evaluate(() =>
+        [...document.querySelectorAll<HTMLElement>(
+          ".discern-logo-cloud__mark > :where(img, svg)",
+        )].map((media) => getComputedStyle(media).opacity)
+      ),
+      ["1", "1", "1"],
+    );
+  } finally {
+    await browser.close();
+    await Deno.remove(output, { recursive: true });
+  }
 });
 
 type IsRequired<T, Key extends keyof T> = Partial<Record<Key, never>> extends
@@ -1570,6 +1930,7 @@ Deno.test("branding and hover-card adapters preserve their semantic relationship
   );
   assertStringIncludes(quietToggle, "discern-theme-toggle--quiet");
   assertStringIncludes(quietToggle, 'aria-label="Switch to the dark theme"');
+  assert(!quietToggle.includes("aria-pressed"));
 
   const hoverCard = renderToStaticMarkup(
     createElement(HoverCard, {
@@ -1809,6 +2170,7 @@ Deno.test("monospace is reserved for brand names and code-bearing surfaces", asy
     "src/components/editorial/prose/prose.css::.discern-prose :not(pre) > code",
     "src/components/marketing/site-footer/site-footer.css::.discern-site-footer__brand--mono",
     "src/components/marketing/site-header/site-header.css::.discern-site-header__brand--mono",
+    "src/components/workflow/activity-log/activity-log.css::.discern-activity-log__tail",
     "src/components/workflow/artifact-tree/artifact-tree.css::.discern-artifact-tree__name",
     "src/components/workflow/command/command.css::.discern-command__context code",
     "src/components/workflow/command/command.css::.discern-command__text",
@@ -1818,11 +2180,12 @@ Deno.test("monospace is reserved for brand names and code-bearing surfaces", asy
     "src/components/workflow/path-reference/path-reference.css::.discern-path-reference__path",
     "src/components/workflow/raw-output/raw-output.css::.discern-raw-output__content",
     "src/styles/utilities.css::.discern-mono",
-    "styleguide/styleguide.css::.discern-catalogue-api code",
-    "styleguide/styleguide.css::.discern-catalogue-brand strong",
-    "styleguide/styleguide.css::.discern-catalogue-copyable > code",
-    "styleguide/styleguide.css::.discern-catalogue-token code",
-    "styleguide/styleguide.css::.discern-catalogue-token__value",
+    "catalogue/catalogue.css::.discern-catalogue-api code",
+    "catalogue/catalogue.css::.discern-catalogue-brand strong",
+    "catalogue/catalogue.css::.discern-catalogue-copyable > code",
+    "catalogue/catalogue.css::.discern-catalogue-terminal-layout__source pre",
+    "catalogue/catalogue.css::.discern-catalogue-token code",
+    "catalogue/catalogue.css::.discern-catalogue-token__value",
   ].toSorted();
   assertEquals(
     monospaceTypefaceRules(
@@ -1835,7 +2198,7 @@ Deno.test("monospace is reserved for brand names and code-bearing surfaces", asy
   const stylesheets = [
     ...(await walk(COMPONENT_ROOT)).filter((path) => path.endsWith(".css")),
     join(PACKAGE_ROOT, "src", "styles", "utilities.css"),
-    join(PACKAGE_ROOT, "styleguide", "styleguide.css"),
+    join(PACKAGE_ROOT, "catalogue", "catalogue.css"),
   ];
   const actual: string[] = [];
   for (const stylesheet of stylesheets) {
@@ -1900,7 +2263,7 @@ Deno.test("linked navigation adapters restore a fragment after client mounting",
   }
   assert(enrolled > 0, "no linked navigation adapters enrolled");
   assertStringIncludes(
-    await Deno.readTextFile(join(PACKAGE_ROOT, "styleguide", "app.tsx")),
+    await Deno.readTextFile(join(PACKAGE_ROOT, "catalogue", "app.tsx")),
     "useInitialFragmentTarget();",
   );
 });
@@ -1920,7 +2283,7 @@ Deno.test("component and utility styles stay token-driven across theme modes", a
   }
 });
 
-Deno.test("terminal shares Code listing's theme-responsive surface roles", async () => {
+Deno.test("Terminal and Code listing keep standard and showcase surface roles", async () => {
   const styles = await Promise.all(
     [
       join(COMPONENT_ROOT, "display", "terminal", "terminal.css"),
@@ -1937,7 +2300,11 @@ Deno.test("terminal shares Code listing's theme-responsive surface roles", async
   ) {
     for (const style of styles) assertStringIncludes(style, token);
   }
-  assert(!styles[0]?.includes("--discern-color-inverse-"));
+  for (const style of styles) {
+    assertStringIncludes(style, "--showcase");
+    assertStringIncludes(style, "--discern-color-inverse-surface");
+    assertStringIncludes(style, "--discern-color-inverse-ink");
+  }
 });
 
 function accessibleText(html: string): string {

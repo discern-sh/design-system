@@ -5,6 +5,7 @@ export default {
   slug: "timeline",
   group: "Editorial",
   order: 100,
+  cli: { stance: "rendered" },
   description:
     "Chronological narrative for histories, release stories, investigations, and staged programmes, with optional status and detail.",
   accessibility: [

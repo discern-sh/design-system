@@ -5,6 +5,7 @@ export default {
   slug: "ownership-badge",
   group: "Workflow",
   order: 340,
+  cli: { stance: "rendered" },
   description:
     "Inline authored, generated, project-owned, or tool-owned label that extends the Badge idiom while keeping every ownership relationship explicit in text.",
   purposes: ["building-documentation", "displaying-tool-output"],

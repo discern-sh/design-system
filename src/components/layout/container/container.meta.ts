@@ -6,4 +6,5 @@ export default {
   order: 10,
   description:
     "Centred responsive content boundary with named readable widths.",
+  cli: { stance: "rendered" },
 } satisfies ComponentMeta;

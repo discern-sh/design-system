@@ -4,6 +4,7 @@ export default {
   slug: "avatar-group",
   group: "People",
   order: 20,
+  cli: { stance: "rendered" },
   description:
     "Overlapping stack of Avatars with ring separation and a labelled overflow count for the people it clamps away.",
   accessibility: [

@@ -5,4 +5,5 @@ export default {
   group: "Forms",
   order: 60,
   description: "Native radio option sharing the labelled Choice structure.",
+  cli: { stance: "rendered" },
 } satisfies ComponentMeta;

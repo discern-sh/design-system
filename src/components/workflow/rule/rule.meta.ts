@@ -5,6 +5,7 @@ export default {
   slug: "rule",
   group: "Workflow",
   order: 360,
+  cli: { stance: "rendered" },
   description:
     "One binding project instruction with explicit origin and scope, presented as neutral authority rather than warning or diagnostic chrome.",
   purposes: ["building-documentation", "displaying-tool-output"],

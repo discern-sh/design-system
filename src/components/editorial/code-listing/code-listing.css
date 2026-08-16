@@ -85,4 +85,35 @@
     font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-xs);
   }
+  .discern-code-listing--showcase {
+    margin-block: 0;
+    border-color: color-mix(in oklab,
+      var(--discern-color-inverse-ink) 16%, transparent);
+    border-radius: clamp(1.25rem, 3vw, 2rem);
+    background: var(--discern-color-inverse-surface);
+  }
+  .discern-code-listing--showcase .discern-code-listing__header,
+  .discern-code-listing--showcase figcaption {
+    border-color: color-mix(in oklab,
+      var(--discern-color-inverse-ink) 16%, transparent);
+    background: color-mix(in oklab,
+      var(--discern-color-inverse-ink) 6%,
+      var(--discern-color-inverse-surface));
+    color: color-mix(in oklab,
+      var(--discern-color-inverse-ink) 76%, transparent);
+  }
+  .discern-code-listing--showcase .discern-code-listing__header small,
+  .discern-code-listing--showcase .discern-code-listing__line::before {
+    color: color-mix(in oklab,
+      var(--discern-color-inverse-ink) 58%, transparent);
+  }
+  .discern-code-listing--showcase .discern-code-listing__body {
+    background: var(--discern-color-inverse-surface);
+    color: color-mix(in oklab,
+      var(--discern-color-inverse-ink) 90%, transparent);
+  }
+  .discern-code-listing--showcase .discern-code-listing__line--highlighted {
+    background: color-mix(in oklab,
+      var(--discern-color-accent-500) 17%, transparent);
+  }
 }

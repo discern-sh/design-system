@@ -1,0 +1,64 @@
+@layer discern.components {
+  .discern-marketing-section {
+    --discern-marketing-section-max: var(--discern-page-max);
+    --discern-marketing-section-space: var(--discern-section-space);
+    position: relative;
+    padding-block: var(--discern-marketing-section-space);
+  }
+  .discern-marketing-section--space-spacious {
+    --discern-marketing-section-space: clamp(6rem, 11vw, 10rem);
+  }
+  .discern-marketing-section--frame-wide {
+    --discern-marketing-section-max: 86rem;
+  }
+  .discern-marketing-section--canvas {
+    background: var(--discern-color-canvas);
+    color: var(--discern-color-ink);
+  }
+  .discern-marketing-section--surface {
+    background: var(--discern-color-surface);
+    color: var(--discern-color-ink);
+  }
+  .discern-marketing-section--sunken {
+    background: var(--discern-color-surface-sunken);
+    color: var(--discern-color-ink);
+  }
+  .discern-marketing-section--inherit {
+    color: inherit;
+  }
+  .discern-marketing-section--contrast {
+    --discern-color-canvas: var(--discern-color-inverse-surface);
+    --discern-color-surface: color-mix(in oklab,
+      var(--discern-color-inverse-ink) 7%,
+      var(--discern-color-inverse-surface));
+    --discern-color-surface-sunken: color-mix(in oklab,
+      var(--discern-color-inverse-ink) 3%,
+      var(--discern-color-inverse-surface));
+    --discern-color-ink: var(--discern-color-inverse-ink);
+    --discern-color-ink-muted: color-mix(in oklab,
+      var(--discern-color-inverse-ink) 76%, transparent);
+    --discern-color-ink-faint: color-mix(in oklab,
+      var(--discern-color-inverse-ink) 62%, transparent);
+    --discern-color-border: color-mix(in oklab,
+      var(--discern-color-inverse-ink) 18%, transparent);
+    --discern-color-border-strong: color-mix(in oklab,
+      var(--discern-color-inverse-ink) 30%, transparent);
+    --discern-marketing-accent-ink: var(--discern-color-inverse-ink);
+    background: var(--discern-color-canvas);
+    color: var(--discern-color-ink);
+  }
+  .discern-marketing-section__inner {
+    width: min(100% - 2 * var(--discern-space-6),
+      var(--discern-marketing-section-max));
+    margin-inline: auto;
+  }
+  @media (max-width: 700px) {
+    .discern-marketing-section--space-spacious {
+      --discern-marketing-section-space: clamp(4.75rem, 18vw, 7rem);
+    }
+    .discern-marketing-section__inner {
+      width: min(100% - 2 * var(--discern-space-4),
+        var(--discern-marketing-section-max));
+    }
+  }
+}

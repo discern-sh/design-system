@@ -4,6 +4,7 @@ export default {
   slug: "mention",
   group: "People",
   order: 40,
+  cli: { stance: "rendered" },
   description:
     "Inline person chip for running prose — an @sigil or tiny portrait beside the name, em-scaled so it sits in text at any size.",
   accessibility: [

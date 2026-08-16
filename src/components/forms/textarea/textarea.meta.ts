@@ -6,4 +6,5 @@ export default {
   order: 30,
   description:
     "Resizable multiline input sharing the Field accessibility contract.",
+  cli: { stance: "rendered" },
 } satisfies ComponentMeta;

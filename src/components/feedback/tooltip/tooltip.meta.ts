@@ -6,6 +6,11 @@ export default {
   order: 30,
   description:
     "Hover and focus tooltip that connects its bubble through aria-describedby.",
+  cli: {
+    stance: "exempt",
+    reason:
+      "A tooltip is hidden supplementary text disclosed by browser hover or focus; terminal output has no equivalent trigger-to-bubble interaction and should print essential guidance directly.",
+  },
   behaviors: ["floating-surface"],
   accessibility: [
     "The trigger must remain independently focusable when it represents an action.",

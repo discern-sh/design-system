@@ -2,15 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
-
-/** Preset visual size for the {@linkcode Logo} component. */
-export type LogoSize = "sm" | "md" | "lg" | "xl";
-
-/** Boundary treatment for the {@linkcode Logo} component. */
-export type LogoTreatment = "plain" | "tile";
-
-/** Intrinsic or square layout for the {@linkcode Logo} component. */
-export type LogoShape = "natural" | "square";
+import type { LogoShape, LogoSize, LogoTreatment } from "./logo.types.ts";
 
 /** Props for the {@linkcode Logo} component. */
 export interface LogoProps extends

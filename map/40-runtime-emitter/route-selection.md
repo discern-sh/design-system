@@ -71,6 +71,6 @@ Grain earns its 99,442 bytes on a large hero, image treatment, or composition wh
 
 ## Why repeated declarations remain component-owned
 
-The CSS audit found 126 declaration-block shapes repeated across 109 Component stylesheets, with 425 occurrences. Removing every repeated body would save at most 18,373 of 229,661 authored bytes, or 8.00%, before selector and cascade costs.
+The 0.11.0 CSS audit found 126 declaration-block shapes repeated across the then-current 109 Component stylesheets, with 425 occurrences. Removing every repeated body would save at most 18,373 of 229,661 authored bytes, or 8.00%, before selector and cascade costs.
 
 No extraction is applied. Moving those declarations into the always-emitted foundation would charge a Component selected alone for rules it doesn't use. Combining rules during emission would change cascade order unless a CSS-aware transform proved equivalence. A future remedy must operate only on the resolved Selection, preserve rule order and theme bytes, reduce the representative profiles above, and pass lone-Component byte comparisons. That is an Emitter architecture decision and needs an ADR.

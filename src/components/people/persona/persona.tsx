@@ -3,10 +3,10 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Avatar } from "../avatar/avatar.tsx";
-import type { AvatarPresence } from "../avatar/avatar.tsx";
+import type { AvatarPresence } from "../avatar/avatar.types.ts";
+import type { PersonaSize } from "./persona.types.ts";
 
-/** Size step for the {@linkcode Persona} lockup. */
-export type PersonaSize = "sm" | "md" | "lg";
+export type { PersonaSize } from "./persona.types.ts";
 
 /** Props for the {@linkcode Persona} component. */
 export interface PersonaProps extends HTMLAttributes<HTMLSpanElement> {

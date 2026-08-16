@@ -5,6 +5,7 @@ export default {
   slug: "table-of-contents",
   group: "Editorial",
   order: 30,
+  cli: { stance: "rendered" },
   description:
     "Compact article navigation with numbered sections, unnumbered nested entries, an optional reading-progress note, and a clear current-location state.",
   accessibility: [

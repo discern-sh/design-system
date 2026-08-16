@@ -4,6 +4,7 @@ export default {
   slug: "agent-persona",
   group: "Agents",
   order: 20,
+  cli: { stance: "rendered" },
   description:
     "Identity lockup pairing an Agent avatar with a name and detail line — the row form for fleet views, tables, and activity chrome.",
   accessibility: [

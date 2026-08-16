@@ -5,6 +5,7 @@ export default {
   slug: "docs-nav",
   group: "Docs",
   order: 30,
+  cli: { stance: "rendered" },
   description:
     "Sectioned documentation navigation rail with one explicit current destination.",
   purposes: ["building-documentation"],

@@ -1,4 +1,4 @@
-import type { ConformanceScenario } from "../../../../styleguide/conformance.ts";
+import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
 import { DestructiveActionNotice } from "../destructive-action-notice/destructive-action-notice.tsx";
 import { RetryNotice } from "../retry-notice/retry-notice.tsx";
 import { Procedure } from "./procedure.tsx";

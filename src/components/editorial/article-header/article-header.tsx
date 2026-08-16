@@ -2,6 +2,10 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type {
+  ArticleHeaderHeadingLevel,
+  ArticleHeaderSurface,
+} from "./article-header.types.ts";
 
 /** One article author entry rendered by the Article header component. */
 export interface ArticleAuthor {
@@ -20,8 +24,8 @@ export interface ArticleHeaderProps
   readonly meta?: readonly ReactNode[];
   readonly actions?: ReactNode;
   readonly media?: ReactNode;
-  readonly headingLevel?: 1 | 2;
-  readonly surface?: "canvas" | "sunken" | "accent";
+  readonly headingLevel?: ArticleHeaderHeadingLevel;
+  readonly surface?: ArticleHeaderSurface;
 }
 
 /** Publication-scale opening for essays, reports, guides, and premium long-form pages, with byline, metadata, actions, and optional cover media. */

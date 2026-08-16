@@ -6,6 +6,7 @@ export default {
   order: 10,
   description:
     "Controlled or uncontrolled tab set with roving focus and complete horizontal keyboard navigation.",
+  cli: { stance: "rendered" },
   accessibility: [
     "Arrow keys, Home, End, Enter, and Space follow the ARIA tabs pattern.",
     "Tabs and panels have deterministic labelled relationships.",

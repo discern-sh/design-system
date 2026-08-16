@@ -5,6 +5,7 @@ export default {
   slug: "prerequisite-list",
   group: "Workflow",
   order: 130,
+  cli: { stance: "rendered" },
   description:
     "Requirements named before a procedure begins, distinguishing required, satisfied, and unresolved states in visible text, shape, and semantic list order.",
   purposes: ["building-documentation", "procedural-workflow"],

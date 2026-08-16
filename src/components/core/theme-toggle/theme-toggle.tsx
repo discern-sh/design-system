@@ -2,12 +2,10 @@ import { forwardRef } from "react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
-
-/** The two site theme roles the toggle switches between. */
-export type ThemeToggleTheme = "light" | "dark";
-
-/** Visual treatment for the {@linkcode ThemeToggle} component. */
-export type ThemeToggleVariant = "outlined" | "quiet";
+import type {
+  ThemeToggleTheme,
+  ThemeToggleVariant,
+} from "./theme-toggle.types.ts";
 
 /** Props for the {@linkcode ThemeToggle} component. */
 export interface ThemeToggleProps extends
@@ -15,7 +13,9 @@ export interface ThemeToggleProps extends
     ButtonHTMLAttributes<HTMLButtonElement>,
     "children" | "aria-label" | "onClick"
   > {
+  /** Currently resolved light/dark theme; system resolution remains consumer-owned. */
   readonly theme: ThemeToggleTheme;
+  /** Receives the destination theme; consumers decide whether to store or clear an override. */
   readonly onThemeChange: (theme: ThemeToggleTheme) => void;
   readonly lightGlyph?: ReactNode;
   readonly darkGlyph?: ReactNode;
@@ -24,7 +24,7 @@ export interface ThemeToggleProps extends
   readonly variant?: ThemeToggleVariant;
 }
 
-/** Controlled light/dark theme switch: the consumer owns the theme state and applies it to its root. */
+/** Controlled light/dark comfort adjustment: the consumer owns preference resolution, persistence, and root application. */
 export const ThemeToggle: DiscernComponent<
   HTMLButtonElement,
   ThemeToggleProps

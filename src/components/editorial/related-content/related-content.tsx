@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { RelatedContentSurface } from "./related-content.types.ts";
 
 /** One item entry rendered by the Related content component. */
 export interface RelatedContentItem {
@@ -18,7 +19,7 @@ export interface RelatedContentProps
   readonly eyebrow?: ReactNode;
   readonly title: ReactNode;
   readonly items: readonly RelatedContentItem[];
-  readonly surface?: "canvas" | "sunken";
+  readonly surface?: RelatedContentSurface;
 }
 
 /** Continuation band for related essays, guides, reports, or issues, with enough context to make each next-reading choice meaningful. */

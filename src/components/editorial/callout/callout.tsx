@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { CalloutTone } from "./callout.types.ts";
 
 /** Props for the {@linkcode Callout} component. */
 export interface CalloutProps
@@ -10,7 +11,7 @@ export interface CalloutProps
   readonly title: ReactNode;
   readonly children: ReactNode;
   readonly icon?: ReactNode;
-  readonly tone?: "note" | "insight" | "warning" | "success";
+  readonly tone?: CalloutTone;
 }
 
 /** Inset editorial note for context, interpretation, cautions, and successful outcomes without breaking the reading flow. */

@@ -4,8 +4,9 @@ export default {
   slug: "agent-mention",
   group: "Agents",
   order: 30,
+  cli: { stance: "rendered" },
   description:
-    "Inline agent chip for running prose — a prompt sigil beside the agent name, em-scaled so it sits in text at any size.",
+    "Inline agent chip for running prose — an agent sigil beside the name, em-scaled so it sits in text at any size.",
   accessibility: [
     "With href it renders a real link whose accessible name is exactly the agent's name; the sigil and tile are hidden decoration.",
     "Without href it renders a plain span, so a mention never fakes interactivity it does not have.",

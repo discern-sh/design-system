@@ -5,6 +5,7 @@ export default {
   slug: "footnotes",
   group: "Editorial",
   order: 110,
+  cli: { stance: "rendered" },
   description:
     "End-note section for citations, qualifications, and source detail, with stable anchors and optional return links.",
   accessibility: [

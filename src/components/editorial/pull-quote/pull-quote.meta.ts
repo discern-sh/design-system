@@ -5,6 +5,7 @@ export default {
   slug: "pull-quote",
   group: "Editorial",
   order: 60,
+  cli: { stance: "rendered" },
   description:
     "Typographic quotation treatment that can stay within the reading measure or break wide for a deliberate change of pace.",
   accessibility: [

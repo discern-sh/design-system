@@ -1,5 +1,5 @@
 import { forwardRef } from "react";
-import type { HTMLAttributes, ReactNode } from "react";
+import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
@@ -7,19 +7,33 @@ import { classNames } from "../../class-names.ts";
 export interface LogoCloudItem {
   readonly name: string;
   readonly mark?: ReactNode;
+  /** Optional CSS image that replaces supplied image artwork with a neutral dark-Theme silhouette. */
+  readonly markMask?: string;
 }
+
+/** Visual arrangements available to a Logo cloud. */
+export type LogoCloudVariant = "grid" | "strip";
 
 /** Props for the {@linkcode LogoCloud} component. */
 export interface LogoCloudProps extends HTMLAttributes<HTMLElement> {
   readonly label?: ReactNode;
   readonly items: readonly LogoCloudItem[];
   readonly align?: "start" | "center";
+  /** Divided trust grid or the looser campaign-page provider strip. */
+  readonly variant?: LogoCloudVariant;
 }
 
 /** Quiet trust band for customer, partner, integration, or publication marks without requiring image assets. */
 export const LogoCloud: DiscernComponent<HTMLElement, LogoCloudProps> =
   forwardRef<HTMLElement, LogoCloudProps>(function LogoCloud(
-    { label, items, align = "center", className, ...props },
+    {
+      label,
+      items,
+      align = "center",
+      variant = "grid",
+      className,
+      ...props
+    },
     ref,
   ) {
     return (
@@ -28,6 +42,7 @@ export const LogoCloud: DiscernComponent<HTMLElement, LogoCloudProps> =
         className={classNames(
           "discern-logo-cloud",
           `discern-logo-cloud--${align}`,
+          variant === "strip" && "discern-logo-cloud--strip",
           className,
         )}
         {...props}
@@ -38,7 +53,18 @@ export const LogoCloud: DiscernComponent<HTMLElement, LogoCloudProps> =
             <li key={item.name}>
               {item.mark
                 ? (
-                  <span className="discern-logo-cloud__mark" aria-hidden="true">
+                  <span
+                    className={classNames(
+                      "discern-logo-cloud__mark",
+                      item.markMask && "discern-logo-cloud__mark--masked",
+                    )}
+                    style={item.markMask
+                      ? {
+                        "--discern-logo-cloud-mark-mask": item.markMask,
+                      } as CSSProperties
+                      : undefined}
+                    aria-hidden="true"
+                  >
                     {item.mark}
                   </span>
                 )

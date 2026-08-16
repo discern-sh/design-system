@@ -4,6 +4,7 @@ export default {
   slug: "avatar",
   group: "People",
   order: 10,
+  cli: { stance: "rendered" },
   description:
     "Identity mark for one person: portrait photo or UI monogram in five sizes, with an optional presence badge.",
   accessibility: [

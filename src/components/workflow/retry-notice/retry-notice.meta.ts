@@ -5,6 +5,7 @@ export default {
   slug: "retry-notice",
   group: "Workflow",
   order: 150,
+  cli: { stance: "rendered" },
   description:
     "Compact idempotence statement that says whether an interrupted action is safe to repeat and explains why.",
   purposes: ["building-documentation", "procedural-workflow"],

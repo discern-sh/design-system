@@ -5,6 +5,7 @@ export default {
   slug: "artifact-card",
   group: "Workflow",
   order: 330,
+  cli: { stance: "rendered" },
   description:
     "Whole created or modified artifact with its name, Path reference, one-line summary, Ownership badge, provenance, and optional source-link slot.",
   purposes: ["building-documentation", "displaying-tool-output"],

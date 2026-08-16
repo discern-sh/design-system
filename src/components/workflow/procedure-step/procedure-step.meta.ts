@@ -5,6 +5,7 @@ export default {
   slug: "procedure-step",
   group: "Workflow",
   order: 120,
+  cli: { stance: "rendered" },
   description:
     "One operational action with composed command and expected proof, an optional completion criterion, branch point, and explicitly labelled recovery slot.",
   purposes: ["building-documentation", "procedural-workflow"],

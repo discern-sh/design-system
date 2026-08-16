@@ -2,9 +2,9 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { DestructiveActionNoticeTone } from "./destructive-action-notice.types.ts";
 
-/** Attention level for a {@linkcode DestructiveActionNotice}. */
-export type DestructiveActionNoticeTone = "warning" | "danger";
+export type { DestructiveActionNoticeTone } from "./destructive-action-notice.types.ts";
 
 /** Props for the {@linkcode DestructiveActionNotice} component. */
 export interface DestructiveActionNoticeProps

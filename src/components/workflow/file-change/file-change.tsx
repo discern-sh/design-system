@@ -4,24 +4,16 @@ import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Diffstat } from "../../display/diffstat/diffstat.tsx";
 import { PathReference } from "../path-reference/path-reference.tsx";
+import type {
+  FileChangeMagnitude,
+  FileDisposition,
+} from "./file-change.types.ts";
 
-/** Canonical file dispositions the {@linkcode FileChange} component names. */
-export const fileDispositions = [
-  "added",
-  "updated",
-  "generated",
-  "removed",
-  "unchanged",
-] as const;
-
-/** One canonical file disposition. */
-export type FileDisposition = (typeof fileDispositions)[number];
-
-/** Added and removed line counts shown beside one file change. */
-export interface FileChangeMagnitude {
-  readonly added: number;
-  readonly removed: number;
-}
+export { fileDispositions } from "./file-change.types.ts";
+export type {
+  FileChangeMagnitude,
+  FileDisposition,
+} from "./file-change.types.ts";
 
 /** Props for the {@linkcode FileChange} component. */
 export interface FileChangeProps

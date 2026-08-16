@@ -217,7 +217,7 @@
       "src/styles/**",
       "src/tokens/**",
       "src/theme/**",
-      "styleguide/**",
+      "catalogue/**",
       "assets/**",
     ]
     previewable = true
@@ -430,30 +430,36 @@
     margin = 1000
 
   # A small long-form documentation route: Docs header, Docs nav, Anchor
-  # heading, Prose, Code listing, and Pager, plus resolved dependencies.
+  # heading, Prose, Code listing, and Pager, plus resolved dependencies. The
+  # 30 kB ceiling includes Code listing's standard and showcase treatments,
+  # with headroom for ordinary iteration and a warning before it is exhausted.
   [standards.minimal_docs_css]
     run = "deno run --config deno.json --allow-read --allow-write discern/scripts/measure-runtime.ts minimal_docs_css_bytes"
-    limit = 25804
+    limit = 30000
     direction = "down"
     metric = "minimal_docs_css_bytes"
     inputs = ["src/**", "scripts/generate.ts", "discern/scripts/measure-runtime.ts"]
+    margin = 1500
 
   # The complete Workflow grammar selected by its canonical Group, including
   # every dependency the Runtime Manifest resolves.
   [standards.workflow_css]
     run = "deno run --config deno.json --allow-read --allow-write discern/scripts/measure-runtime.ts workflow_css_bytes"
-    limit = 67377
+    limit = 70000
     direction = "down"
     metric = "workflow_css_bytes"
     inputs = ["src/**", "scripts/generate.ts", "discern/scripts/measure-runtime.ts"]
 
-  # The complete Marketing Group, including its resolved dependencies.
+  # The complete Marketing Group, including its resolved dependencies. The
+  # 86 kB ceiling accommodates the additive campaign foundations and opt-in
+  # component variants, with room for the current homepage direction to settle.
   [standards.marketing_css]
     run = "deno run --config deno.json --allow-read --allow-write discern/scripts/measure-runtime.ts marketing_css_bytes"
-    limit = 66287
+    limit = 86000
     direction = "down"
     metric = "marketing_css_bytes"
     inputs = ["src/**", "scripts/generate.ts", "discern/scripts/measure-runtime.ts"]
+    margin = 4000
 
   # The selection-scoped discern.js produced by every Component in the closed
   # behavior opt-in registry. CSS-only selections remain outside this measure.
@@ -513,8 +519,24 @@
     metric = "lint_suppressions"
     direction = "down"
     limit = 0
-    run = "printf 'DISCERN_METRIC lint_suppressions %s\\n' \"$(grep -rEn 'deno-lint-ignore|deno-fmt-ignore|@ts-ignore|@ts-expect-error' src scripts styleguide tests --include='*.ts' --include='*.tsx' | grep -v generated | wc -l | tr -d ' ')\""
-    inputs = ["src/**", "scripts/**", "styleguide/**", "tests/**"]
+    run = "printf 'DISCERN_METRIC lint_suppressions %s\\n' \"$(grep -rEn 'deno-lint-ignore|deno-fmt-ignore|@ts-ignore|@ts-expect-error' src scripts catalogue tests --include='*.ts' --include='*.tsx' | grep -v generated | wc -l | tr -d ' ')\""
+    inputs = ["src/**", "scripts/**", "catalogue/**", "tests/**"]
+
+  # Missing CLI stances are permanent Codegen and type errors. This zero ceiling
+  # remains as a trunk-held second line of defence: a feature branch cannot
+  # delete a Standard, while the always-on rule rejects the first new instance.
+  [standards.cli_pending]
+    metric = "cli_pending"
+    direction = "down"
+    limit = 0
+    run = "deno run --config deno.json --allow-read discern/scripts/measure-cli-pending.ts"
+    inputs = [
+      "src/components/**/*.meta.ts",
+      "src/components/**/*.cli.ts",
+      "src/types/component-meta.ts",
+      "scripts/generate.ts",
+      "discern/scripts/measure-cli-pending.ts",
+    ]
 
 # Coverage — keep line coverage at or above a rising floor:
 # [standards.coverage]

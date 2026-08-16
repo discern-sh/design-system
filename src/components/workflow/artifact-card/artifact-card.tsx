@@ -2,8 +2,8 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
-import type { ArtifactOwnership } from "../ownership-badge/ownership-badge.tsx";
 import { OwnershipBadge } from "../ownership-badge/ownership-badge.tsx";
+import type { ArtifactOwnership } from "../ownership-badge/ownership-badge.types.ts";
 import { PathReference } from "../path-reference/path-reference.tsx";
 
 /** Props for the {@linkcode ArtifactCard} component. */

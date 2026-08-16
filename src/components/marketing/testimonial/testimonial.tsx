@@ -2,6 +2,9 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { TestimonialLayout } from "./testimonial.types.ts";
+
+export type { TestimonialLayout } from "./testimonial.types.ts";
 
 /** Props for the {@linkcode Testimonial} component. */
 export interface TestimonialProps extends HTMLAttributes<HTMLElement> {
@@ -13,7 +16,7 @@ export interface TestimonialProps extends HTMLAttributes<HTMLElement> {
   readonly metric?: ReactNode;
   readonly metricLabel?: ReactNode;
   readonly mark?: ReactNode;
-  readonly layout?: "wide" | "card";
+  readonly layout?: TestimonialLayout;
 }
 
 /** Editorial customer quote with attribution, optional portrait, and an adjacent measurable outcome. */

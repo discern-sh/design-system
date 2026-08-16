@@ -1,6 +1,6 @@
 # Discern design system
 
-The design system behind [discern.sh](https://discern.sh): an opinionated, framework-neutral visual system for Deno sites. It ships semantic tokens, light/dark themes, scoped component CSS under one `discern` namespace, an optional React adapter for static rendering, and a deterministic runtime emitter that outputs only what a consumer selects.
+The design system behind [discern.sh](https://discern.sh): an opinionated, framework-neutral visual system for Deno sites and terminals. It ships semantic tokens, light/dark themes, scoped component CSS under one `discern` namespace, pure terminal renderers, optional React and interactive-terminal adapters, and a deterministic runtime emitter that outputs only what a consumer selects.
 
 ```sh
 deno add jsr:@discern-sh/design-system
@@ -8,14 +8,18 @@ deno add jsr:@discern-sh/design-system
 
 ## Public imports
 
-| Import                                    | Contract                                                                                  |
-| ----------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `@discern-sh/design-system`               | Token metadata, component/group metadata types, the package manifest, and `semanticClass` |
-| `@discern-sh/design-system/manifest`      | Framework-neutral manifest schema and the complete package ownership manifest             |
-| `@discern-sh/design-system/runtime`       | Deterministic selected-runtime emitter                                                    |
-| `@discern-sh/design-system/tokens`        | Primitive, semantic, and Discern-preset token metadata                                    |
-| `@discern-sh/design-system/theme/discern` | Default branded blue preset                                                               |
-| `@discern-sh/design-system/react`         | Optional React components and their public prop types                                     |
+| Import                                              | Contract                                                                                  |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `@discern-sh/design-system`                         | Token metadata, component/group metadata types, the package manifest, and `semanticClass` |
+| `@discern-sh/design-system/cli`                     | Pure React-free terminal renderers, capabilities, themes, and semantic motif primitives   |
+| `@discern-sh/design-system/cli/interactive`         | Optional Deno terminal driver and typed interaction state machines                        |
+| `@discern-sh/design-system/cli/interactive/testing` | Deterministic fake terminal, named-key scripting, and frame assertions                    |
+| `@discern-sh/design-system/cli/projection`          | Package-output decoding, browser projection, and explicit layout inspection               |
+| `@discern-sh/design-system/manifest`                | Framework-neutral manifest schema and the complete package ownership manifest             |
+| `@discern-sh/design-system/runtime`                 | Deterministic selected-runtime emitter                                                    |
+| `@discern-sh/design-system/tokens`                  | Primitive, semantic, and Discern-preset token metadata                                    |
+| `@discern-sh/design-system/theme/discern`           | Default branded blue preset                                                               |
+| `@discern-sh/design-system/react`                   | Optional React components and their public prop types                                     |
 
 Only `./react` resolves React. The package keeps React and React DOM as catalogue development dependencies and peer dependencies, while its root, manifest, runtime, token, and theme graphs do not import them.
 
@@ -33,7 +37,7 @@ Generated foundations apply only inside an opted-in boundary. Put `data-discern-
 
 Load the emitted `discern.css` before consumer composition styles. Semantic HTML never requires React; most Components remain CSS-only, while Components that declare browser behavior name their emitted script in the Manifest. Public classes, custom properties, data attributes, layers, and keyframes use the `discern` namespace. Consumer styles may add their own composition class, but must not target a Component's `ownedClasses` from `manifest.json`.
 
-Core typography uses documented system fallbacks. Selecting the optional font pack changes the public font-role tokens without changing component CSS. Metric-adjusted Iowan, Georgia, Helvetica Neue, and Arial aliases reduce geometry movement while the intended webfonts load.
+Core typography uses documented system fallbacks. Selecting the optional font pack preserves Iowan Old Style as the display lead and adds bundled Crimson Pro behind it without changing component CSS. Metric-adjusted Georgia, Helvetica Neue, and Arial aliases reduce geometry movement while the downloadable fonts load.
 
 ## Emit a selected runtime
 
@@ -110,6 +114,135 @@ The distinct success hue is deliberate: a green accent must not erase the differ
 
 Inverse surface and ink roles remain dark-on-light in purpose across both site themes; they do not invert with the ordinary canvas and ink roles.
 
+## Terminal rendering and interactions
+
+The pure `./cli` entrypoint exports every rendered Component through the same Metadata-driven registry as the web surfaces. Callers provide truthful terminal facts, and a renderer returns one deterministic, width-bounded string:
+
+```ts
+import {
+  createCliPresenter,
+  detectTerminalCapabilities,
+  renderBadgeCli,
+} from "@discern-sh/design-system/cli";
+
+const isTty = Deno.stdout.isTerminal();
+const capabilities = detectTerminalCapabilities({
+  env: Deno.env.toObject(),
+  isTty,
+  columns: isTty ? Deno.consoleSize().columns : undefined,
+});
+
+const presenter = createCliPresenter(capabilities, { theme: "light" });
+const output = presenter.present(renderBadgeCli, {
+  label: "Passed",
+  tone: "success",
+  dot: true,
+});
+console.log(output);
+```
+
+The presenter is the default route when one consumer renders more than one frame: it binds capabilities, theme, terminal motif, and an optional default width once. Component renderers plus motif pattern, progress, and beacon renderers use `present(renderer, props)`. The foundation call shapes that do not fit that signature are bound directly as `box()`, `motifSpinnerFrame()`, `motifSectionRule()`, and `motifWorkflowStepper()`. An explicit per-call theme, motif, or narrower width wins over the presenter; omission falls back to the bound presenter and then the package's discern motif. The raw `(props, capabilities)` renderer APIs remain available when a caller already threads those facts itself.
+
+The package supplies one discern-flavoured preset without making triangles part of the generic renderer contract. Define a complete product language with `defineTerminalMotif()`, or replace only selected semantic roles with `deriveTerminalMotif()`:
+
+```ts
+import {
+  createCliPresenter,
+  deriveTerminalMotif,
+  DISCERN_TERMINAL_MOTIF,
+} from "@discern-sh/design-system/cli";
+
+const productMotif = deriveTerminalMotif(DISCERN_TERMINAL_MOTIF, {
+  unicode: {
+    spinner: ["◴", "◷", "◶", "◵"],
+    pattern: ["▵", "▹", "▿", "◃"],
+    marker: "◉",
+    status: { complete: "▵", incomplete: "▿" },
+  },
+});
+
+const productPresenter = createCliPresenter(capabilities, {
+  theme: "light",
+  motif: productMotif,
+});
+
+console.log(productPresenter.motifSpinnerFrame(1)); // ◷
+```
+
+Every definition includes Unicode and ASCII repertoires for spinner, repeated pattern, accent marker, and complete/incomplete status roles. Definitions are validated and frozen at construction. Each Unicode glyph must be one visible, non-combining scalar that is one cell under the pinned Unicode 17.0 East Asian Width data; Ambiguous, Wide, and Fullwidth scalars are rejected because their terminal geometry is not portable. Each ASCII fallback is one printable non-space character. For example, the quadrant-circle cycle above is portable under that policy, while `◐` and `◑` are East Asian Width–Ambiguous.
+
+To review a complete static frame as a layout, use the pure projection entrypoint with an explicit terminal viewport:
+
+```ts
+import {
+  inspectTerminalLayout,
+  projectTerminalInspectorHtml,
+} from "@discern-sh/design-system/cli/projection";
+
+const inspection = inspectTerminalLayout(output, { columns: 80, rows: 24 });
+const reviewHtml = projectTerminalInspectorHtml(output, {
+  columns: 80,
+  rows: 24,
+  title: "Status command",
+  showGrid: true,
+});
+
+console.log(inspection.rowsBelowFold, inspection.overflowRows);
+```
+
+The inspection reports visible-cell widths, overflow, content height, and the fold as geometry facts. Consecutive blank rows and repeated exact nonblank rows are advisory review cues, not failures: a Component may own either deliberately. The returned HTML is a self-contained fragment with the real projected styles, row and column rulers, the fold, and optional cell guides; it contains no script and does not emulate cursor-driven terminal sessions.
+
+The optional `./cli/interactive` adapter turns raw terminal input into typed interaction state and renders it through the package's Forms Component renderers. Running an interaction is the effects boundary; importing the module does not mutate the terminal:
+
+```ts
+import { requestSelection } from "@discern-sh/design-system/cli/interactive";
+
+const environment = await requestSelection({
+  label: "Environment",
+  choices: [
+    {
+      kind: "group-heading",
+      id: "recommended-environments",
+      label: "Recommended",
+    },
+    { id: "preview", label: "Preview", value: "preview" },
+    { id: "production", label: "Production", value: "production" },
+  ],
+}, { motif: productMotif });
+```
+
+The `group-heading` entry is semantic interaction structure: it has a stable ID and non-empty label, needs no sentinel value of the caller's generic type, and can never be highlighted, toggled, or returned. Every rendered heading has one empty framed row above it. Disabled choices remain selectable entries with their own visible disabled state. Scrolling Select, Radio, Checkbox, and search frames use all available terminal columns unless an explicit `width` narrows them; wrapped labels keep their marker-aligned hanging indent and styling as the highlight moves. Select and search `visibleCount` plus Textarea `rows` are requested upper bounds: the adapter reduces only the current visible window when terminal height is tight and expands it again after a resize. A quiet lower-border label such as `↑ 2 more · ↓ 7 more` states how many choices remain outside the window, with `^`, `v`, and `|` fallbacks in ASCII. Search accepts `initialId` to restore an enabled provider result by stable ID without inventing a query or keypress.
+
+Full-width section headings use one restrained motif marker rather than a repeated field. The presenter's `motifSectionRule()` binds its theme, motif, and capabilities, defaults to the one-row strong embedded treatment, and also exposes explicit underline and sandwich variants:
+
+```ts
+const heading = presenter.motifSectionRule("Deploying workspace changes", {
+  width: capabilities.columns,
+  treatment: "underline", // "embedded" (default) | "underline" | "sandwich"
+});
+```
+
+The renderer uppercases and truncates the label inside the requested width. Unicode uses heavy `━` and quiet `─` rules; ASCII uses `=` and `-` so the weight distinction survives without colour. Underline and sandwich intentionally occupy two and three rows, while the embedded default remains one row for fixed interaction geometry.
+
+Interactions require TTY stdin and stdout. The adapter brackets raw mode, supported cursor hiding, repainting, validation, cancellation, and cleanup; exceptions and EOF still restore the terminal. Before every live paint, the shared driver reads the current `TerminalIO` rows and fits the complete label, borders, control, grouped structure, hint, and lifecycle footer through the real Component renderer. A downward resize that makes the previous frame unreachable starts a new bounded live region; terminals without ANSI cursor control receive truthful static states, and a terminal below the minimum coherent frame refuses with full restoration. The public `InlineFramePainter.replace()` result remains available to product consumers choosing their own compact or static fallback; its row facts count a trailing newline as an additional occupied row. Renderers derive light and dark colour roles from the same Token metadata as the web system, then degrade through truecolour, ANSI 256, ANSI 16, and plain text. `NO_COLOR` disables ANSI styling without disabling Unicode; `C.UTF-8` and `C.utf8` keep Unicode even with `TERM=dumb`, while exact `C` and `POSIX` locales receive ASCII geometry. Grapheme-aware measurement keeps frames within the declared column count.
+
+Fleet uses compact, width-bounded identity cells by default. Operational views can opt into complete, copyable persona and branch values; when either value cannot fit its cell, the renderer emits an explicit labelled continuation instead of relying on terminal wrapping:
+
+```ts
+import { renderFleetCli } from "@discern-sh/design-system/cli";
+
+console.log(renderFleetCli({
+  identityMode: "lossless",
+  rows: [{
+    persona: "Terminal contract audit",
+    branch: "agent/terminal-contract-audit-with-complete-identities",
+    status: "working",
+  }],
+}, capabilities));
+```
+
+Run `deno task catalogue:cli` to inspect every rendered Component, every recorded exemption, and the shared Terminal motifs and Narration lines foundations. Pass a Component slug or Group name to narrow the output, or `motifs` for the motif sheet alone. The browser Catalogue renders those same foundation registries under Foundations: search for “spinner” to reach live, reduced-motion-safe default and consumer animations beside their complete static phase evidence.
+
 ## Optional React adapter
 
 React consumers import only the explicit adapter and can render the same class contract to static HTML:
@@ -136,13 +269,17 @@ deno install
 deno task verify
 ```
 
-`deno task verify` runs formatting, lint, type-checks, the catalogue build, and the unit and real-browser conformance tests. `deno task serve` builds and serves the local component catalogue. Run `deno task codegen` after changing component metadata, component CSS, component imports, or package assets; do not edit `src/generated/` or `styleguide/generated/` by hand.
+`deno task verify` runs formatting, lint, type-checks, the catalogue build, and the unit and real-browser conformance tests. `deno task serve` builds and serves the local component catalogue. Run `deno task codegen` after changing component metadata, component CSS, component imports, or package assets; do not edit `src/generated/` or `catalogue/generated/` by hand.
 
 `deno task test` creates a temporary external Deno project. Its neutral fixture declares no React dependency, imports only documented package exports, emits a runtime, and is exercised again with `deno run --cached-only`. A second fixture adds the React peer contract and renders static HTML through `./react`. Neither fixture reaches into `dist/`, relies on a global Deno-cache path, uses `--unstable-raw-imports`, or fetches an asset at runtime.
 
 `deno task conformance` builds the Catalogue and opens it in headless Chrome. Every generated example auto-enrols in light and dark WCAG scans; examples may export typed keyboard/focus scenarios beside their fixture. Composition recipes marked as journeys also auto-enrol their declared stage order, heading and landmark integrity, keyboard path, exact command copy, and both-theme WCAG scans.
 
 A mandatory resilience phase discovers rendered disclosures, interactive controls, pointer targets, wide regions, active motion, theme consumers, and semantic focus surfaces from the Catalogue itself. It checks disclosure state and keyboard operation, nested controls, 24-pixel targets with the inline-prose exception, page reflow at 390 CSS pixels and the 320-pixel equivalent of 400% zoom, reduced motion, return to system theme, and focus in ordinary and forced colours. Five review sheets are written under `dist/conformance/`. The task uses an installed Google Chrome by default; set `DISCERN_CHROME_PATH` when Chrome lives at a non-standard path.
+
+### Terminal review surfaces
+
+`deno task catalogue:cli` statically prints every rendered Component example, every recorded exemption, and every sheet in the terminal-foundation registry; the browser Catalogue maps that same registry into searchable Foundation specimens. `deno task playground:cli` is the live terminal counterpart, driving the real interactive adapter. The playground opens a hub of named journeys covering every high-level interaction, activity, and sequential-form API, static-catalogue browsing, and stress cases for width, height, resize, Unicode/ASCII repertoire, colour degradation, and repeated interaction cycles. `deno task playground:cli --list` prints every journey ID without a TTY, `tour` visits them all in recommended order, and a direct `<journey-id>` bypasses the hub menu entirely. These surfaces derive their inventories from the generated Component registries or the shared terminal-foundation registry, so a new member auto-enrols in its applicable review paths; each journey prints the current terminal facts (columns, rows, Unicode, colour depth, ANSI control) before it runs so observations are reproducible. These are development and review instruments for this repository, not published package APIs.
 
 ### Authoring rules
 

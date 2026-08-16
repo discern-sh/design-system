@@ -2,6 +2,9 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { HeroBlockLayout, HeroBlockSurface } from "./hero-block.types.ts";
+
+export type { HeroBlockLayout, HeroBlockSurface } from "./hero-block.types.ts";
 
 /** Props for the {@linkcode HeroBlock} component. */
 export interface HeroBlockProps
@@ -13,8 +16,10 @@ export interface HeroBlockProps
   readonly actions?: ReactNode;
   readonly meta?: ReactNode;
   readonly visual?: ReactNode;
-  readonly layout?: "split" | "centered";
-  readonly surface?: "canvas" | "sunken" | "accent";
+  /** Decorative artwork rendered behind the complete foreground composition. */
+  readonly ground?: ReactNode;
+  readonly layout?: HeroBlockLayout;
+  readonly surface?: HeroBlockSurface;
 }
 
 /** High-impact opening section with split and centered compositions, flexible actions, proof, and visual slots. */
@@ -28,6 +33,7 @@ export const HeroBlock: DiscernComponent<HTMLElement, HeroBlockProps> =
       actions,
       meta,
       visual,
+      ground,
       layout = "split",
       surface = "canvas",
       className,
@@ -48,6 +54,13 @@ export const HeroBlock: DiscernComponent<HTMLElement, HeroBlockProps> =
         )}
         {...props}
       >
+        {ground
+          ? (
+            <div className="discern-hero-block__ground" aria-hidden="true">
+              {ground}
+            </div>
+          )
+          : null}
         <div className="discern-hero-block__inner">
           <div className="discern-hero-block__content">
             {eyebrow

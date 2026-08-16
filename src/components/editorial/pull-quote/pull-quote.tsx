@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { PullQuoteAlign } from "./pull-quote.types.ts";
 
 /** Props for the {@linkcode PullQuote} component. */
 export interface PullQuoteProps extends HTMLAttributes<HTMLElement> {
@@ -9,7 +10,7 @@ export interface PullQuoteProps extends HTMLAttributes<HTMLElement> {
   readonly attribution?: ReactNode;
   readonly citation?: ReactNode;
   readonly citeUrl?: string;
-  readonly align?: "inline" | "wide";
+  readonly align?: PullQuoteAlign;
 }
 
 /** Typographic quotation treatment that can stay within the reading measure or break wide for a deliberate change of pace. */

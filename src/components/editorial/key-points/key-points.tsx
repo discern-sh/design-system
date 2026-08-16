@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { KeyPointsTone } from "./key-points.types.ts";
 
 /** One key point entry rendered by the Key points component. */
 export interface KeyPoint {
@@ -15,7 +16,7 @@ export interface KeyPointsProps
   readonly eyebrow?: ReactNode;
   readonly title: ReactNode;
   readonly items: readonly KeyPoint[];
-  readonly tone?: "accent" | "sunken" | "contrast";
+  readonly tone?: KeyPointsTone;
 }
 
 /** Scannable article summary that turns a small set of central ideas into a numbered editorial brief. */

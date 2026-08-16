@@ -1,5 +1,5 @@
 import { ProcessSteps } from "./process-steps.tsx";
-import type { ConformanceScenario } from "../../../../styleguide/conformance.ts";
+import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
 
 export const conformance = [
   {

@@ -1,4 +1,4 @@
-import type { ConformanceScenario } from "../../../../styleguide/conformance.ts";
+import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
 import { ResultSummary } from "./result-summary.tsx";
 
 const copyTarget = {

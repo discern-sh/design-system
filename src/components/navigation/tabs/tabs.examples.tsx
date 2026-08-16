@@ -1,5 +1,5 @@
 import { fixtureCopy } from "../../../fixtures/content.ts";
-import type { ConformanceScenario } from "../../../../styleguide/conformance.ts";
+import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
 import { Tabs } from "./tabs.tsx";
 
 export const conformance = [{

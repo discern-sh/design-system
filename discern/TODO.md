@@ -42,12 +42,13 @@ _Dead code, N+1s, and known-slow paths worth removing or fixing. Nothing outstan
 
 ## 🟡 Smaller fixes & polish
 
-- [ ] **Builder canvas: root drops append only.** Dropping on empty canvas space appends to the page end; between-sibling insertion needs the outline (drop on a row inserts before it) or the inspector arrows. Pointer-position insertion indicators on the canvas would remove that indirection. Evidence: styleguide/builder/app.tsx canvas `onDropCapture`.
+- [ ] **Builder canvas: root drops append only.** Dropping on empty canvas space appends to the page end; between-sibling insertion needs the outline (drop on a row inserts before it) or the inspector arrows. Pointer-position insertion indicators on the canvas would remove that indirection. Evidence: catalogue/builder/app.tsx canvas `onDropCapture`.
 - [ ] **Builder: shared-module extraction only covers `src/components/`.** Variant unions and object interfaces in shared modules under `src/components/` (e.g. `layout/space.ts`) now reach the builder, but a union living elsewhere (e.g. `src/tokens/tokens.ts`) still would not. Extend `SHARED` discovery in `scripts/build.ts` `discoverComponents` if a prop ever references one. Evidence: scripts/build.ts sharedModules filter.
+- [ ] **Typed sequential-form step constructors that carry `previous` automatically.** A step's prior value arrives only as the untyped `previous` argument to `step.run`; seeding it into the request's initial value is manual wiring each step author must remember, so Ctrl+U back-navigation silently discards typed work whenever it's forgotten. Add per-kind step constructors (text, selection, …) that thread `previous` into the initial value and give it a real type, keeping the general closure form as the escape hatch. Evidence: `src/cli/interactive/sequential-form.ts:118-129`; `tests/cli/interactive_requests_test.ts:175-179` (the manual pattern).
 
 ## 🟢 Test & tooling hygiene
 
-_Test-isolation and tooling debt. Nothing outstanding._
+_Nothing outstanding._
 
 ## 🔵 Unmerged / at-risk work — decide: land or drop
 
@@ -55,4 +56,5 @@ _Work built but not merged, or otherwise at risk of being lost. Nothing outstand
 
 ## ⚪ Explorations / ideas (unscheduled)
 
-_Ideas worth keeping but not yet scheduled. Nothing outstanding._
+- [ ] **A caller-declared non-interactive posture for requests.** Every request refuses on a non-TTY handle, so each consumer rebuilds the same fallback chain (a flag equivalent per question, `--yes` vetoes). Offer a runtime-declared alternative: resolve with the caller-supplied default, still run validation, and throw a typed rejection on failure — the caller supplies the non-interactive fact; the package never reads the environment. Evidence: `src/cli/interactive/lifecycle.ts:26-28`; the consumer chain at discern's `src/lib/terminal_interaction.ts:111-127`.
+- [ ] **A numeric request kind.** Bounded numeric input (minimum/maximum/step, arrow-key stepping, built-in range checks composing with caller validation) has no request kind; `requestText` plus a validator is the only route. Add it when a consumer surface needs one. Evidence: `src/cli/interactive-states.ts` (no numeric frame state).

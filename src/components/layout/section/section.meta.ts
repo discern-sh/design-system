@@ -6,5 +6,6 @@ export default {
   order: 50,
   description:
     "Semantic page section with tokenized surface and vertical rhythm.",
+  cli: { stance: "rendered" },
   purposes: ["marketing-site"],
 } satisfies ComponentMeta;

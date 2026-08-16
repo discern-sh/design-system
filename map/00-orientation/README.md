@@ -17,6 +17,8 @@ Orientation is deliberately small and stable. The subsystem subtrees go deep on 
 
 Once you've read these, return to the [docs front page](../README.md) and pick a subsystem subtree to drill into.
 
+The framework-neutral package also exposes a terminal surface; [`70-cli/`](../70-cli/) describes its capability contract, Token bridge, renderers, and generated Component stances.
+
 ---
 
 ## How the orientation tier relates to the rest

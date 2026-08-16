@@ -1,7 +1,7 @@
 import type {
   CatalogueExampleState,
   ConformanceScenario,
-} from "../../../../styleguide/conformance.ts";
+} from "../../../../catalogue/conformance.ts";
 import { TaskMetadata } from "./task-metadata.tsx";
 
 export const conformance = [{

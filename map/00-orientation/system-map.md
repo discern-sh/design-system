@@ -12,8 +12,8 @@ Bird's-eye view of how discern-design-system fits together. Read this once and t
 │ Tokens        tokens.ts       │    codegen    │ src/generated/               │
 │ Foundations   styles/*.css    │ ────────────► │  Registry (deps, classes)    │
 │ Components    src/components/ │  generate.ts  │  React surface               │
-│  109 folders × (css, tsx,     │               │  base styles · asset tables  │
-│   meta.ts, examples, mod.ts)  │               │ styleguide/generated/        │
+│  120 folders × (css, tsx,     │               │  CLI stances + renderers     │
+│   meta, examples, mod, CLI*)  │               │  base styles · asset tables  │
 │ Preset        theme/discern.ts│               │  example registry            │
 └───────────────────────────────┘               └───────┬──────────────────────┘
                                                         │ resolved through
@@ -21,7 +21,7 @@ Bird's-eye view of how discern-design-system fits together. Read this once and t
                        ▼                                ▼               ▼
         ┌──────────────────────────┐   ┌──────────────────────┐  ┌─────────────────┐
         │ Emitter    runtime.ts    │   │ Adapter   react.ts   │  │ Catalogue       │
-        │ Selection ──► Runtime:   │   │ React 18.3+ (peer)   │  │ styleguide/ +   │
+        │ Selection ──► Runtime:   │   │ React 18.3+ (peer)   │  │ catalogue/ +    │
         │  discern.css             │   │ renders the class    │  │ scripts/build.ts│
         │  conditional discern.js  │   │ contract to static   │  │ + serve.ts      │
         │  manifest.json (SHA-256) │   │ HTML at build time   │  │ + conformance   │
@@ -34,7 +34,14 @@ Bird's-eye view of how discern-design-system fits together. Read this once and t
         │   semantic HTML using discern-* classes             │
         │ — consumer Preset may override public Tokens —      │
         └─────────────────────────────────────────────────────┘
+
+        Tokens + Metadata --> ./cli (pure) --> TERMINAL CONSUMER
+                                  |               (ANSI/string)
+                                  +--> ./cli/interactive
+                                       (Deno input + repaint)
 ```
+
+`CLI*` marks the renderer file present when Component Metadata declares a rendered CLI stance; a Component without that file must declare a reasoned exemption.
 
 The arrows are build-time data flow. The browser receives static HTML and selected CSS plus `discern.js` only when resolved Component Metadata declares browser behavior; no Registry, cache, or third-party host is ever hotlinked.
 
@@ -45,6 +52,7 @@ The arrows are build-time data flow. The browser receives static HTML and select
 - **Everything ships as a library** — the JSR package `@discern-sh/design-system`. There are no services and no persistent state; the only state anywhere is files in the consumer's build output.
 - **The Emitter** runs inside a consumer's build (Deno or Node — it writes via `node:fs/promises`). Under Deno it needs read and write permission for its output directory.
 - **The Adapter** runs in a consumer's build-time React render (`renderToStaticMarkup`); nothing of React reaches the browser.
+- **The CLI surface** runs wherever a consumer renders terminal output. Callers detect capabilities and pass them to pure string renderers. The optional Deno Interactive Adapter performs terminal I/O only while an interaction or activity is running, and renders its semantic state through those Component renderers.
 - **Selection-scoped browser behavior** runs from the emitted `discern.js` only for Components that declare it. The floating-surface behavior progressively promotes Hover card and Tooltip panels to the browser top layer; their static CSS fallback remains usable when the script or Popover API is absent.
 - **Codegen, the Catalogue build, and browser conformance** are repo-local dev processes: `deno task codegen`, `deno task build` (writes `dist/`, gitignored), and `deno task serve` / `deno task watch` (local HTTP on the worktree's deterministic port, `8010` in the main checkout). `deno task conformance` opens every generated example in headless Chrome for accessibility, interaction, forced-colour, and visual checks.
 - **CI** (GitHub Actions) re-runs codegen for currency, the full verify task, and a publish dry run on every push/PR; releases publish to JSR via trusted publishing when a `v*` tag matching `deno.json`'s version is released.
@@ -53,7 +61,7 @@ The arrows are build-time data flow. The browser receives static HTML and select
 
 ## How the map relates to the subtrees
 
-The numbered subtrees are proposed but not yet written — filling them is tracked in [`discern/TODO.md`](../../discern/TODO.md). `80-development/` exists today.
+The `10-…` through `60-…` subtrees are proposed but not yet written — filling them is tracked in [`discern/TODO.md`](../../discern/TODO.md). `70-cli/` and `80-development/` exist today.
 
 | Region of the map             | Documented in            |
 | ----------------------------- | ------------------------ |
@@ -63,4 +71,5 @@ The numbered subtrees are proposed but not yet written — filling them is track
 | Emitter, Selection, Manifest  | `../40-runtime-emitter/` |
 | Adapter                       | `../50-react-adapter/`   |
 | Catalogue, build, serve       | `../60-catalogue/`       |
+| CLI foundation and renderers  | `../70-cli/`             |
 | CI, the gate, working here    | `../80-development/`     |

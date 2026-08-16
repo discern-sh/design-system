@@ -1,0 +1,43 @@
+/**
+ * Shared contracts for pure component CLI renderers and their example frames.
+ *
+ * @module
+ */
+
+import type { TerminalCapabilities } from "./capabilities.ts";
+import type { TerminalMotifOptions } from "./motif.ts";
+import type { TerminalThemeVariant } from "./theme.ts";
+
+/** Theme and motif defaults that can be bound across pure CLI renderers. */
+export interface CliPresentationOptions extends TerminalMotifOptions {
+  readonly theme?: TerminalThemeVariant;
+}
+
+/** Pure renderer signature implemented by every rendered CLI component. */
+export type CliRenderer<Props> = (
+  props: Readonly<Props>,
+  capabilities: TerminalCapabilities,
+) => string;
+
+/** One named, deterministic input frame shown by the CLI catalogue loop. */
+export interface CliExample<Props> {
+  readonly name: string;
+  readonly props: Readonly<Props>;
+}
+
+/** Generated registry entry for a component intentionally absent from CLI. */
+export interface CliExemptRegistryEntry {
+  readonly stance: "exempt";
+  readonly reason: string;
+}
+
+/** Generated registry entry for a component with a pure CLI renderer module. */
+export interface CliRenderedRegistryEntry {
+  readonly stance: "rendered";
+  readonly modulePath: `../components/${string}.cli.ts`;
+}
+
+/** One generated per-component CLI stance. */
+export type CliComponentRegistryEntry =
+  | CliExemptRegistryEntry
+  | CliRenderedRegistryEntry;

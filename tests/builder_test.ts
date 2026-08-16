@@ -8,25 +8,25 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { buildDesignSystem } from "../scripts/build.ts";
 import { packageManifest } from "../src/manifest.ts";
-import { compositionCost } from "../styleguide/builder/cost.ts";
-import type { ControlSource } from "../styleguide/builder/controls.ts";
+import { compositionCost } from "../catalogue/builder/cost.ts";
+import type { ControlSource } from "../catalogue/builder/controls.ts";
 import {
   createNode,
   defaultProps,
   deriveControls,
-} from "../styleguide/builder/controls.ts";
+} from "../catalogue/builder/controls.ts";
 import {
   BuilderDocumentError,
   documentSelectionSnippet,
   documentToTsx,
   parseDocument,
   serializeDocument,
-} from "../styleguide/builder/export.ts";
+} from "../catalogue/builder/export.ts";
 import type {
   BuilderDocument,
   BuilderNode,
   BuilderSlotChild,
-} from "../styleguide/builder/model.ts";
+} from "../catalogue/builder/model.ts";
 import {
   ancestorsOf,
   componentCount,
@@ -43,7 +43,7 @@ import {
   updateTextChild,
   usedSlugs,
   wrapChild,
-} from "../styleguide/builder/model.ts";
+} from "../catalogue/builder/model.ts";
 
 function node(
   id: string,
@@ -308,7 +308,7 @@ Deno.test("shaped JSON sources round-trip through row editing", async () => {
     parseShapedSource,
     serializeShapedRows,
     withRowValue,
-  } = await import("../styleguide/builder/object-editor.ts");
+  } = await import("../catalogue/builder/object-editor.ts");
   const shape = {
     list: true,
     typeName: "SelectOption",
@@ -714,7 +714,7 @@ Deno.test("state updaters never read the synthetic event", async () => {
   // that touches the event crashes on the deferred invocation.
   for (const module of ["app.tsx", "fields.tsx"]) {
     const source = await Deno.readTextFile(
-      new URL(`../styleguide/builder/${module}`, import.meta.url),
+      new URL(`../catalogue/builder/${module}`, import.meta.url),
     );
     for (const [index, chunk] of source.split("apply(").entries()) {
       if (index === 0) continue;
@@ -733,7 +733,7 @@ Deno.test("the shaped editor keeps a stable scaffold across validity flips", asy
   // A structural difference between the valid and invalid states would
   // remount the raw textarea mid-keystroke, dropping focus and caret.
   const { ShapedJsonEditor, MemberCell } = await import(
-    "../styleguide/builder/fields.tsx"
+    "../catalogue/builder/fields.tsx"
   );
   const shape = {
     list: true,
@@ -794,7 +794,7 @@ Deno.test("canvas hover styling never overrides the selection outline", async ()
   // Hover and selection both draw outlines; an unguarded hover rule outranks
   // the selection ring, hiding it exactly while the pointer is over the node.
   const css = await Deno.readTextFile(
-    new URL("../styleguide/builder/builder.css", import.meta.url),
+    new URL("../catalogue/builder/builder.css", import.meta.url),
   );
   const hoverRules = css.match(
     /\[data-discern-builder-node\][^,{]*:hover[^,{]*/g,
@@ -807,8 +807,8 @@ Deno.test("canvas hover styling never overrides the selection outline", async ()
 
 interface BuiltBuilderModules {
   readonly registryIndex:
-    typeof import("../styleguide/builder/registry-index.ts");
-  readonly render: typeof import("../styleguide/builder/render.tsx");
+    typeof import("../catalogue/builder/registry-index.ts");
+  readonly render: typeof import("../catalogue/builder/render.tsx");
 }
 
 let builtModules: Promise<BuiltBuilderModules> | undefined;
@@ -817,9 +817,9 @@ function builderModules(): Promise<BuiltBuilderModules> {
   builtModules ??= (async () => {
     await buildDesignSystem();
     const registryIndex = await import(
-      "../styleguide/builder/registry-index.ts"
+      "../catalogue/builder/registry-index.ts"
     );
-    const render = await import("../styleguide/builder/render.tsx");
+    const render = await import("../catalogue/builder/render.tsx");
     return { registryIndex, render };
   })();
   return builtModules;
@@ -844,7 +844,7 @@ Deno.test("every catalogue component yields controls, a default instance, and ex
     name === "layout"
   );
   assert(layout?.control === "select");
-  assertEquals(layout.options, ["split", "centered"]);
+  assertEquals(layout.options, ["split", "centered", "showcase"]);
 
   // Unions imported from sibling components resolve through shared variants.
   const status = controlsBySlug("agent-persona").find(({ name }) =>

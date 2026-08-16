@@ -5,6 +5,7 @@ export default {
   slug: "data-figure",
   group: "Editorial",
   order: 90,
+  cli: { stance: "rendered" },
   description:
     "Framed figure for charts, diagrams, annotated images, and research evidence, with legend, caption, and source slots.",
   purposes: ["building-documentation"],
