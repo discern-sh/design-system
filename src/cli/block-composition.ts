@@ -26,8 +26,13 @@ const CLI_BLOCK = Symbol("discern.cli-block");
 const CLI_BLOCK_DEPTH = Symbol("discern.cli-block-depth");
 
 type ContextualCapabilities = TerminalCapabilities & {
-  readonly [CLI_BLOCK_DEPTH]?: number;
+  readonly [CLI_BLOCK_DEPTH]?: CliBlockContext;
 };
+
+interface CliBlockContext {
+  readonly depth: number;
+  readonly preservedOverflow: { version: number };
+}
 
 /** Options recorded with a terminal block at creation time. */
 export interface CliBlockOptions {
@@ -124,20 +129,22 @@ export function renderCliBlock(
   const width = Math.min(requestedWidth, capabilities.columns);
   assertWidth(width);
 
-  const parentDepth = (capabilities as ContextualCapabilities)[
+  const parentContext = (capabilities as ContextualCapabilities)[
     CLI_BLOCK_DEPTH
-  ] ?? 0;
-  const depth = parentDepth + 1;
+  ];
+  const depth = (parentContext?.depth ?? 0) + 1;
   if (depth > CLI_BLOCK_MAX_DEPTH) {
     throw new TypeError(
       `CLI block nesting exceeds ${CLI_BLOCK_MAX_DEPTH} levels`,
     );
   }
 
+  const preservedOverflow = parentContext?.preservedOverflow ?? { version: 0 };
+  const preserveVersionBefore = preservedOverflow.version;
   const childCapabilities: ContextualCapabilities = {
     ...capabilities,
     columns: width,
-    [CLI_BLOCK_DEPTH]: depth,
+    [CLI_BLOCK_DEPTH]: { depth, preservedOverflow },
   };
   const output = block.render(childCapabilities);
   assertRenderedBlock(output);
@@ -145,11 +152,11 @@ export function renderCliBlock(
   if (clean === "") {
     throw new TypeError("CLI block renderer produced no visible content");
   }
-  if (block.widthPolicy === "bounded") {
-    const overflow = clean.split("\n").find((line) =>
-      measureText(line) > width
-    );
-    if (overflow !== undefined) {
+  const overflow = clean.split("\n").find((line) => measureText(line) > width);
+  if (overflow !== undefined) {
+    if (block.widthPolicy === "preserve") {
+      preservedOverflow.version += 1;
+    } else if (preservedOverflow.version === preserveVersionBefore) {
       throw new TypeError(
         `bounded CLI block rendered ${
           measureText(overflow)

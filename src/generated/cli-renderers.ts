@@ -185,12 +185,18 @@ export { default as renderProseCli, cliExamples as proseCliExamples } from "../c
 export type { ProseCliProps } from "../components/editorial/prose/prose.cli.ts";
 export { default as renderParagraphCli, cliExamples as paragraphCliExamples } from "../components/editorial/paragraph/paragraph.cli.ts";
 export type { ParagraphCliProps } from "../components/editorial/paragraph/paragraph.cli.ts";
+export { default as renderListCli, cliExamples as listCliExamples } from "../components/editorial/list/list.cli.ts";
+export type { ListCliProps } from "../components/editorial/list/list.cli.ts";
 export { default as renderKeyPointsCli, cliExamples as keyPointsCliExamples } from "../components/editorial/key-points/key-points.cli.ts";
 export type { KeyPointsCliProps } from "../components/editorial/key-points/key-points.cli.ts";
+export { default as renderBlockquoteCli, cliExamples as blockquoteCliExamples } from "../components/editorial/blockquote/blockquote.cli.ts";
+export type { BlockquoteCliProps } from "../components/editorial/blockquote/blockquote.cli.ts";
 export { default as renderPullQuoteCli, cliExamples as pullQuoteCliExamples } from "../components/editorial/pull-quote/pull-quote.cli.ts";
 export type { PullQuoteCliProps } from "../components/editorial/pull-quote/pull-quote.cli.ts";
 export { default as renderCalloutCli, cliExamples as calloutCliExamples } from "../components/editorial/callout/callout.cli.ts";
 export type { CalloutCliProps } from "../components/editorial/callout/callout.cli.ts";
+export { default as renderCodeBlockCli, cliExamples as codeBlockCliExamples } from "../components/editorial/code-block/code-block.cli.ts";
+export type { CodeBlockCliProps } from "../components/editorial/code-block/code-block.cli.ts";
 export { default as renderCodeListingCli, cliExamples as codeListingCliExamples } from "../components/editorial/code-listing/code-listing.cli.ts";
 export type { CodeListingCliProps } from "../components/editorial/code-listing/code-listing.cli.ts";
 export { default as renderDataFigureCli, cliExamples as dataFigureCliExamples } from "../components/editorial/data-figure/data-figure.cli.ts";

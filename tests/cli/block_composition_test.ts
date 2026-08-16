@@ -88,6 +88,38 @@ Deno.test("CLI blocks reject raw strings, foreign controls, and bounded overflow
   );
 });
 
+Deno.test("preserved overflow propagates through ancestors but not siblings", () => {
+  interface CompositeProps {
+    readonly children: readonly CliBlock[];
+  }
+  const renderComposite: CliRenderer<CompositeProps> = (
+    props,
+    capabilities,
+  ) => renderCliBlocks(props.children, capabilities);
+  const capabilities = testTerminalCapabilities({ columns: 8 });
+  const preserved = createCliBlock(
+    renderFixture,
+    { value: "preserved-value" },
+    { widthPolicy: "preserve" },
+  );
+  const ancestor = createCliBlock(renderComposite, {
+    children: [preserved],
+  });
+  assertEquals(renderCliBlock(ancestor, capabilities), "preserved-value");
+
+  const overflowingSibling = createCliBlock(renderFixture, {
+    value: "sibling-overflow",
+  });
+  const siblings = createCliBlock(renderComposite, {
+    children: [preserved, overflowingSibling],
+  });
+  assertThrows(
+    () => renderCliBlock(siblings, capabilities),
+    TypeError,
+    "bounded CLI block",
+  );
+});
+
 Deno.test("CLI block nesting has one deterministic depth ceiling", () => {
   const capabilities = testTerminalCapabilities({ columns: 20 });
   let block = createCliBlock(renderFixture, { value: "leaf" });
