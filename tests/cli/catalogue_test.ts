@@ -96,6 +96,25 @@ Deno.test("CLI catalogue filters one Group or Component without hiding exemption
   );
 });
 
+Deno.test("CLI catalogue honours a Component example's capability posture", async () => {
+  const output = await renderCliCatalogue(
+    "markdown",
+    testTerminalCapabilities({
+      columns: 80,
+      colorDepth: "truecolor",
+      unicode: true,
+      hyperlinks: true,
+    }),
+  );
+  const heading = "#### narrow-ascii-no-colour";
+  const start = output.indexOf(heading);
+  assert(start >= 0);
+  const narrow = output.slice(start);
+  assert(!narrow.includes("\u001b"));
+  assertStringIncludes(narrow, "* Preserve");
+  assert(!narrow.includes("•"));
+});
+
 Deno.test("motif catalogue derives the complete default and custom specimen set", async () => {
   const output = await renderCliCatalogue(
     "motifs",

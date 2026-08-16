@@ -9,7 +9,9 @@ import { fromFileUrl, join } from "@std/path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { stripAnsi } from "../src/cli/ansi.ts";
+import { resolveCliExampleCapabilities } from "../src/cli/contracts.ts";
 import { projectTerminalSpans } from "../src/cli/projection.ts";
+import { measureText } from "../src/cli/text.ts";
 import {
   catalogueCliCapabilities,
   CliComponentPreview,
@@ -97,13 +99,42 @@ Deno.test("browser Catalogue projects every declared CLI stance from disk", () =
 
       const output = entry.cli.render(
         example.props,
-        catalogueCliCapabilities,
+        resolveCliExampleCapabilities(example, catalogueCliCapabilities),
       );
       assert(output.length > 0, `${fragment} rendered an empty frame`);
       const projected = projectTerminalSpans(output).map(({ text }) => text)
         .join("");
       assertEquals(projected, stripAnsi(output), `${fragment} lost text`);
     }
+  }
+});
+
+Deno.test("Markdown Catalogue pins a real narrow ASCII no-colour posture", () => {
+  const markdown = registry.find(({ meta }) => meta.slug === "markdown");
+  assert(markdown !== undefined);
+  assertEquals(markdown.cli.stance, "rendered");
+  if (markdown.cli.stance !== "rendered") return;
+  const example = markdown.cli.examples.find(({ name }) =>
+    name === "narrow-ascii-no-colour"
+  );
+  assert(example !== undefined);
+  const capabilities = resolveCliExampleCapabilities(
+    example,
+    catalogueCliCapabilities,
+  );
+  assertEquals(capabilities, {
+    ansiControl: false,
+    colorDepth: "none",
+    columns: 24,
+    hyperlinks: false,
+    unicode: false,
+  });
+  const output = markdown.cli.render(example.props, capabilities);
+  assertEquals(output, stripAnsi(output));
+  assertStringIncludes(output, "* Preserve");
+  assert(!output.includes("•"));
+  for (const line of output.split("\n")) {
+    assert(measureText(line) <= 24, line);
   }
 });
 

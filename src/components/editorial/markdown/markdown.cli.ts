@@ -120,23 +120,30 @@ Control notation remains visible: [31mred[0m‮.`;
 export const cliExamples: readonly CliExample<MarkdownCliProps>[] = [
   {
     name: "compact-document",
-    props: { source: compactSource, theme: "dark", maxWidth: 68 },
+    props: { source: compactSource, maxWidth: 68 },
   },
   {
     name: "full-dialect",
-    props: { source: fullDialectSource, theme: "dark", maxWidth: 72 },
+    props: { source: fullDialectSource, maxWidth: 72 },
   },
   {
     name: "deep-nesting",
-    props: { source: deepSource, theme: "dark", maxWidth: 52 },
+    props: { source: deepSource, maxWidth: 52 },
   },
   {
     name: "hostile-inert-source",
-    props: { source: hostileSource, theme: "dark", maxWidth: 52 },
+    props: { source: hostileSource, maxWidth: 52 },
   },
   {
     name: "narrow-ascii-no-colour",
-    props: { source: compactSource, theme: "dark", maxWidth: 24 },
+    props: { source: compactSource, maxWidth: 24 },
+    capabilities: {
+      ansiControl: false,
+      colorDepth: "none",
+      columns: 24,
+      hyperlinks: false,
+      unicode: false,
+    },
   },
 ] as const;
 

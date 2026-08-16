@@ -11,6 +11,7 @@
 
 import {
   detectTerminalCapabilities,
+  resolveCliExampleCapabilities,
   type TerminalCapabilities,
 } from "../src/cli/mod.ts";
 import type {
@@ -180,7 +181,10 @@ export async function renderCliComponent(
   }
   const module = await loadRenderedCliModule(slug, entry);
   const specimens = module.examples.map((example) => {
-    const frame = module.render(example.props, capabilities);
+    const frame = module.render(
+      example.props,
+      resolveCliExampleCapabilities(example, capabilities),
+    );
     if (typeof frame !== "string") {
       throw new TypeError(`${slug} renderer returned a non-string frame`);
     }

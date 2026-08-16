@@ -1,4 +1,5 @@
 import type { TerminalCapabilities } from "../src/cli/capabilities.ts";
+import { resolveCliExampleCapabilities } from "../src/cli/contracts.ts";
 import {
   projectTerminalSpans,
   terminalLinkHref,
@@ -124,12 +125,13 @@ export function CliComponentPreview(
 
   return (
     <div className="discern-catalogue-component__canvas">
-      {cli.examples.map(({ name, props }) => {
+      {cli.examples.map((example) => {
+        const { name, props } = example;
         const label = exampleLabel(name);
         const fragmentId = cliFragmentId(meta.slug, name);
         const output = cli.render(
           terminalThemeProps(meta.slug, props, theme),
-          catalogueCliCapabilities,
+          resolveCliExampleCapabilities(example, catalogueCliCapabilities),
         );
         return (
           <section

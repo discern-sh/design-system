@@ -1,6 +1,10 @@
 import { assert, assertEquals, assertThrows } from "@std/assert";
 import { cliComponentRegistry } from "../../src/generated/cli-registry.ts";
 import {
+  type CliExample,
+  resolveCliExampleCapabilities,
+} from "../../src/cli/contracts.ts";
+import {
   validateCliInventory,
   validateCliStance,
 } from "../../scripts/generate.ts";
@@ -13,6 +17,49 @@ const meta = {
   order: 999,
   description: "Synthetic CLI contract fixture.",
 } satisfies Omit<ComponentMeta, "cli">;
+
+Deno.test("CLI examples can pin a validated deterministic capability posture", () => {
+  const base = {
+    ansiControl: true,
+    colorDepth: "truecolor",
+    columns: 80,
+    hyperlinks: true,
+    unicode: true,
+  } as const;
+  assertEquals(
+    resolveCliExampleCapabilities({
+      name: "plain",
+      props: {},
+      capabilities: {
+        ansiControl: false,
+        colorDepth: "none",
+        columns: 24,
+        hyperlinks: false,
+        unicode: false,
+      },
+    }, base),
+    {
+      ansiControl: false,
+      colorDepth: "none",
+      columns: 24,
+      hyperlinks: false,
+      unicode: false,
+    },
+  );
+  assertThrows(
+    () =>
+      resolveCliExampleCapabilities(
+        {
+          name: "invalid",
+          props: {},
+          capabilities: { columns: 0 },
+        } satisfies CliExample<Record<string, never>>,
+        base,
+      ),
+    TypeError,
+    "valid terminal facts",
+  );
+});
 
 Deno.test("CLI stance validation guards metadata and renderer files in both directions", () => {
   validateCliStance(

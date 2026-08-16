@@ -538,6 +538,7 @@ export interface CatalogueSelection {
 export interface CatalogueCliExample {
   readonly name: string;
   readonly props: unknown;
+  readonly capabilities?: Readonly<Partial<TerminalCapabilities>>;
 }
 
 export interface CatalogueCliRenderedPreview {
@@ -569,7 +570,11 @@ function renderedCliPreview<Props>(
     stance: "rendered",
     render: (props, capabilities) =>
       render(props as Readonly<Props>, capabilities),
-    examples: examples.map(({ name, props }) => ({ name, props })),
+    examples: examples.map(({ name, props, capabilities }) => ({
+      name,
+      props,
+      ...(capabilities === undefined ? {} : { capabilities }),
+    })),
   };
 }
 

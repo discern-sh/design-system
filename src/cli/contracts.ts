@@ -23,6 +23,40 @@ export type CliRenderer<Props> = (
 export interface CliExample<Props> {
   readonly name: string;
   readonly props: Readonly<Props>;
+  /** Optional deterministic posture replacing selected Catalogue capabilities. */
+  readonly capabilities?: Readonly<Partial<TerminalCapabilities>>;
+}
+
+/**
+ * Resolve one named example's optional posture against the reviewing terminal.
+ */
+export function resolveCliExampleCapabilities<
+  Example extends {
+    readonly name: string;
+    readonly capabilities?: Readonly<Partial<TerminalCapabilities>>;
+  },
+>(
+  example: Example,
+  capabilities: TerminalCapabilities,
+): TerminalCapabilities {
+  const resolved = example.capabilities === undefined
+    ? capabilities
+    : { ...capabilities, ...example.capabilities };
+  if (
+    ![undefined, true, false].includes(resolved.ansiControl) ||
+    !["none", "ansi16", "ansi256", "truecolor"].includes(
+      resolved.colorDepth,
+    ) ||
+    !Number.isSafeInteger(resolved.columns) ||
+    resolved.columns < 1 ||
+    ![undefined, true, false].includes(resolved.hyperlinks) ||
+    typeof resolved.unicode !== "boolean"
+  ) {
+    throw new TypeError(
+      "CLI example capabilities must be valid terminal facts",
+    );
+  }
+  return resolved;
 }
 
 /** Generated registry entry for a component intentionally absent from CLI. */
