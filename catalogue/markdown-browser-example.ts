@@ -7,7 +7,10 @@ import {
   type MarkdownBrowserOptions,
   type MarkdownBrowserState,
 } from "../src/cli/interactive/markdown-browser-model.ts";
-import { renderMarkdownBrowser } from "../src/cli/interactive/markdown-browser-renderer.ts";
+import {
+  markdownBrowserLinkOccurrences,
+  renderMarkdownBrowser,
+} from "../src/cli/interactive/markdown-browser-renderer.ts";
 
 /** Markdown corpus exercising the browser's document-reading treatment. */
 export const markdownBrowserDocumentSource =
@@ -31,14 +34,28 @@ const state = createState(entries);
 render(state);
 \`\`\`
 
-[Read the reference](https://example.com/reference)
+[Read the reference](#navigation-details), [open note one](../reference/note-1.md#details), or visit the [external reference](https://example.com/reference).
 
 ${
     Array.from(
-      { length: 36 },
+      { length: 12 },
       (_, index) =>
         `Paragraph ${
           index + 1
+        } keeps a stable semantic landmark across terminal rewrapping.`,
+    ).join("\n\n")
+  }
+
+## Navigation details
+
+An internal fragment stays inside the reader and keeps the caller's picker state.
+
+${
+    Array.from(
+      { length: 24 },
+      (_, index) =>
+        `Paragraph ${
+          index + 13
         } keeps a stable semantic landmark across terminal rewrapping.`,
     ).join("\n\n")
   }`;
@@ -49,7 +66,9 @@ const generatedDocuments = Array.from({ length: 18 }, (_, index) => ({
   label: `Reference note ${index + 1}`,
   description: `A supporting note for browser navigation ${index + 1}`,
   path: `reference/note-${index + 1}.md`,
-  source: `# Reference note ${index + 1}\n\nSupporting material ${index + 1}.`,
+  source: `# Reference note ${index + 1}\n\n## Details\n\nSupporting material ${
+    index + 1
+  }.`,
 }));
 
 /** Generic grouped documents and explicit actions shown in the Catalogue. */
@@ -109,7 +128,11 @@ export type MarkdownBrowserCataloguePosture =
   | "initial-picker"
   | "split-reader"
   | "single-document"
-  | "single-picker";
+  | "single-picker"
+  | "keyboard-link"
+  | "pointer-link"
+  | "pointer-picker"
+  | "internal-destination";
 
 /** Construct one deterministic state without reading a process or terminal. */
 export function createMarkdownBrowserCatalogueState(
@@ -136,6 +159,61 @@ export function createMarkdownBrowserCatalogueState(
     state = transitionMarkdownBrowser(state, {
       kind: "key",
       key: { kind: "named", name: "tab" },
+    }, capabilities).state;
+  }
+  if (posture === "pointer-picker") {
+    state = transitionMarkdownBrowser(state, {
+      kind: "mouse",
+      action: "press",
+      button: "left",
+      column: 4,
+      row: 3,
+      modifiers: { shift: false, alt: false, control: false },
+    }, capabilities).state;
+  }
+  if (
+    posture === "keyboard-link" || posture === "pointer-link" ||
+    posture === "internal-destination"
+  ) {
+    state = transitionMarkdownBrowser(state, {
+      kind: "key",
+      key: { kind: "text", text: "]" },
+    }, capabilities).state;
+  }
+  if (posture === "pointer-link") {
+    state = transitionMarkdownBrowser(state, {
+      kind: "key",
+      key: { kind: "named", name: "escape" },
+    }, capabilities).state;
+    const link = markdownBrowserLinkOccurrences(state, capabilities)[0];
+    const region = link?.regions[0];
+    if (region === undefined) {
+      throw new TypeError("Catalogue pointer posture has no visible link");
+    }
+    const documentTop = state.layout.mode === "split"
+      ? 2 + state.layout.pickerRows
+      : 2;
+    state = transitionMarkdownBrowser(state, {
+      kind: "mouse",
+      action: "press",
+      button: "left",
+      column: region.startColumn + 1,
+      row: documentTop + region.row,
+      modifiers: { shift: false, alt: false, control: false },
+    }, capabilities).state;
+  }
+  if (posture === "internal-destination") {
+    const activated = transitionMarkdownBrowser(state, {
+      kind: "key",
+      key: { kind: "named", name: "enter" },
+    }, capabilities);
+    if (activated.linkRequest === undefined) {
+      throw new TypeError("Catalogue fragment posture has no link request");
+    }
+    state = transitionMarkdownBrowser(activated.state, {
+      kind: "link-resolution",
+      request: activated.linkRequest,
+      resolution: { kind: "fragment", fragment: "navigation-details" },
     }, capabilities).state;
   }
   return state;

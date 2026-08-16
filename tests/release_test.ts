@@ -223,16 +223,21 @@ import { renderBadgeCli, renderHeadingCli, stripAnsi } from "${config.name}/cli"
 import {
   type CompactAcknowledgementRequestOptions,
   filterInteractionEntries,
+  type MarkdownBrowserLinkResolution,
   requestAcknowledgement,
   requestMarkdownBrowser,
   requestText,
   segmentGraphemes,
+  TERMINAL_MOUSE_MAX_COORDINATE,
+  TerminalInputReader,
 } from "${config.name}/cli/interactive";
 import {
   encodeTerminalKeys,
+  encodeTerminalMouseEvent,
   FakeTerminalIO,
 } from "${config.name}/cli/interactive/testing";
 import {
+  projectTerminalCellRows,
   projectTerminalHtml,
   projectTerminalSpans,
 } from "${config.name}/cli/projection";
@@ -255,6 +260,16 @@ const acknowledgementIo = new FakeTerminalIO(
   { colorDepth: "truecolor", columns: 40 },
 );
 await requestAcknowledgement(acknowledgement, { io: acknowledgementIo });
+const mouseEvent = {
+  kind: "mouse",
+  action: "wheel",
+  direction: "down",
+  column: 320,
+  row: 240,
+  modifiers: { shift: false, alt: true, control: false },
+} as const;
+const mouseIo = new FakeTerminalIO([encodeTerminalMouseEvent(mouseEvent)]);
+const decodedMouse = await new TerminalInputReader(mouseIo).readEvent();
 const browserIo = new FakeTerminalIO(
   ["online", encodeTerminalKeys("enter")],
   { colorDepth: "truecolor", columns: 40, rows: 24 },
@@ -267,7 +282,7 @@ const browserResult = await requestMarkdownBrowser({
       id: "guide",
       label: "Guide",
       path: "guides/guide.md",
-      source: "# Guide\\n\\nPublished Markdown browser.",
+      source: "# Guide\\n\\n[Next](next.md#details)",
     },
     {
       kind: "action",
@@ -276,6 +291,9 @@ const browserResult = await requestMarkdownBrowser({
       value: "online",
     },
   ],
+  resolveLink(): MarkdownBrowserLinkResolution {
+    return { kind: "unresolved", message: "No admitted document." };
+  },
 }, { io: browserIo });
 const documentMatches = filterInteractionEntries(
   [{
@@ -291,6 +309,7 @@ const styledBadge = renderBadgeCli(
   { colorDepth: "truecolor", columns: 80, unicode: true },
 );
 const spans = projectTerminalSpans(styledBadge);
+const cellRows = projectTerminalCellRows(styledBadge);
 const readingHeading = stripAnsi(renderHeadingCli(
   {
     text: "Reading foundations",
@@ -311,6 +330,9 @@ console.log(JSON.stringify({
   browserRawModeBalanced: browserIo.rawTransitions.join(","),
   browserResizeListeners: browserIo.resizeListenerCount,
   documentMatch: documentMatches[0]?.id,
+  mouseAction: decodedMouse?.kind === "mouse" ? decodedMouse.action : "none",
+  mouseCoordinateBound: TERMINAL_MOUSE_MAX_COORDINATE,
+  projectedColumns: cellRows[0]?.columns,
   headingIncludesReading: readingHeading.includes("Reading foundations"),
   rawModeBalanced: io.rawTransitions.join(","),
   projectedText: spans.map(({ text }) => text).join(""),
@@ -337,6 +359,9 @@ console.log(JSON.stringify({
     assertStringIncludes(output, `"browserRawModeBalanced":"true,false"`);
     assertStringIncludes(output, `"browserResizeListeners":0`);
     assertStringIncludes(output, `"documentMatch":"guide"`);
+    assertStringIncludes(output, `"mouseAction":"wheel"`);
+    assertStringIncludes(output, `"mouseCoordinateBound":1000000`);
+    assertStringIncludes(output, `"projectedColumns":9`);
     assertStringIncludes(output, `"headingIncludesReading":true`);
     assertStringIncludes(output, `"rawModeBalanced":"true,false"`);
     assertStringIncludes(output, `"projectedText":"[● Ready]"`);

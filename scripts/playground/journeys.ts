@@ -299,10 +299,10 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
   },
   {
     id: "markdown-browser",
-    title: "Keyboard Markdown browser",
+    title: "Markdown browser links and mouse",
     section: "Interactive APIs",
     description:
-      "A full-height grouped picker becomes an adaptive split reader; panes scroll independently and returned actions run only after terminal restoration.",
+      "A keyboard-complete adaptive reader follows fragments and admitted documents, optionally tracks pointer input, and returns external actions only after restoration.",
     run: async (runtime) => {
       let result: MarkdownBrowserResult<string>;
       try {
@@ -310,6 +310,20 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
           label: "Documentation library",
           placeholder: "Search titles, descriptions, and paths",
           entries: markdownBrowserEntries,
+          mouse: true,
+          resolveLink({ sourceDocumentId, destination }) {
+            return sourceDocumentId === "getting-started" &&
+                destination === "testing.md#fake-terminal"
+              ? {
+                kind: "document",
+                documentId: "testing",
+                fragment: "fake-terminal",
+              }
+              : {
+                kind: "unresolved",
+                message: "The playground corpus does not admit that document.",
+              };
+          },
         }, { io: runtime.io });
       } catch (error) {
         if (error instanceof MarkdownBrowserRefusalError) {
@@ -321,7 +335,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
         throw error;
       }
       report(runtime, result);
-      if (result.kind === "action") {
+      if (result.kind === "action" || result.kind === "external-link") {
         runtime.print(
           "Caller effect point: the terminal is restored; this playground deliberately opens nothing.",
         );
@@ -1197,6 +1211,18 @@ export const interactiveExportCoverage: Readonly<
   TerminalKeyReader: {
     excluded:
       "Key decoding runs inside every interaction; the playground must not decode keys itself.",
+  },
+  TERMINAL_MOUSE_MAX_COORDINATE: {
+    excluded:
+      "Decoder safety bound exercised through the Markdown browser's typed mouse journey and published test helpers.",
+  },
+  decodeTerminalInputEvent: {
+    excluded:
+      "Semantic mouse classification runs inside the Markdown browser; the playground must not decode controls itself.",
+  },
+  TerminalInputReader: {
+    excluded:
+      "Event decoding runs inside the mouse-enabled Markdown browser journey.",
   },
   isNamedKey: {
     excluded:

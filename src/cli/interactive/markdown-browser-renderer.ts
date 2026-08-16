@@ -1,4 +1,4 @@
-/** Pure adaptive renderer for the keyboard Markdown browser. */
+/** Pure adaptive renderer for the link-aware Markdown browser. */
 
 import { stripAnsi, styleText } from "../ansi.ts";
 import { renderBox } from "../box.ts";

@@ -56,6 +56,26 @@ function assertRestored(io: FakeTerminalIO): void {
   assertEquals(io.resizeListenerCount, 0);
 }
 
+function assertMouseRestored(io: FakeTerminalIO): void {
+  for (
+    const sequence of [
+      ENABLE_TERMINAL_MOUSE_BUTTON_TRACKING,
+      ENABLE_TERMINAL_MOUSE_SGR_MODE,
+      DISABLE_TERMINAL_MOUSE_SGR_MODE,
+      DISABLE_TERMINAL_MOUSE_BUTTON_TRACKING,
+    ]
+  ) {
+    assertEquals(countWrites(io, sequence), 1);
+  }
+  const restored = io.writes.slice(-4);
+  assertEquals(restored, [
+    DISABLE_TERMINAL_MOUSE_SGR_MODE,
+    DISABLE_TERMINAL_MOUSE_BUTTON_TRACKING,
+    SHOW_TERMINAL_CURSOR,
+    LEAVE_TERMINAL_ALTERNATE_SCREEN,
+  ]);
+}
+
 Deno.test("scripted keys and resize events drive the real browser and restore before return", async () => {
   const io = new FakeTerminalIO([], {
     columns: 80,
@@ -143,6 +163,29 @@ Deno.test("mouse-enabled browser requests restore tracking before the normal scr
     LEAVE_TERMINAL_ALTERNATE_SCREEN,
   ]);
   assertRestored(io);
+  assertMouseRestored(io);
+});
+
+Deno.test("mouse-enabled explicit exits restore tracking before return", async () => {
+  const io = new FakeTerminalIO([encodeTerminalKeys("enter")], {
+    columns: 80,
+    rows: 24,
+  });
+  const result = await requestMarkdownBrowser({
+    ...markdownBrowserOptions,
+    mouse: true,
+    initialState: {
+      query: "Quit",
+      queryCursor: 4,
+      highlightedId: "quit",
+      focusedPane: "picker",
+      pickerVisibleStart: 0,
+      documentScrollOffset: 0,
+    },
+  }, { io });
+  assertEquals(result.kind, "exit");
+  assertRestored(io);
+  assertMouseRestored(io);
 });
 
 Deno.test("mouse opt-out and capability refusal emit no tracking controls", async () => {
@@ -183,6 +226,22 @@ Deno.test("mouse opt-out and capability refusal emit no tracking controls", asyn
   }
 });
 
+Deno.test("malformed mouse reports never enter the picker query", async () => {
+  const io = new FakeTerminalIO([
+    "\x1b[<0;0;4M",
+    `Quit${encodeTerminalKeys("enter")}`,
+  ], { columns: 80, rows: 24 });
+  const result = await requestMarkdownBrowser({
+    label: "Malformed mouse",
+    mouse: true,
+    entries: [{ kind: "exit", id: "quit", label: "Quit" }],
+  }, { io });
+  assertEquals(result.kind, "exit");
+  assertEquals(result.state.query, "Quit");
+  assert(!result.state.query.includes("<"));
+  assertMouseRestored(io);
+});
+
 Deno.test("unsupported control and incoherent geometry refuse before any terminal mutation", async () => {
   for (
     const io of [
@@ -196,7 +255,10 @@ Deno.test("unsupported control and incoherent geometry refuse before any termina
     ]
   ) {
     const error = await assertRejects(
-      () => requestMarkdownBrowser(markdownBrowserOptions, { io }),
+      () =>
+        requestMarkdownBrowser({ ...markdownBrowserOptions, mouse: true }, {
+          io,
+        }),
       MarkdownBrowserRefusalError,
     );
     assert(
@@ -241,12 +303,16 @@ Deno.test("Escape, Ctrl+C, and EOF share cancellation and exact restoration", as
       rows: 24,
     });
     const error = await assertRejects(
-      () => requestMarkdownBrowser(markdownBrowserOptions, { io }),
+      () =>
+        requestMarkdownBrowser({ ...markdownBrowserOptions, mouse: true }, {
+          io,
+        }),
       InteractionCancelled,
       reason,
     );
     assertEquals(error.reason, reason);
     assertRestored(io);
+    assertMouseRestored(io);
   }
 });
 
@@ -257,7 +323,10 @@ Deno.test("SIGINT removes readers and restores the alternate screen exactly once
     holdOpen: true,
   });
   const signals = new FakeSignalSource();
-  const pending = requestMarkdownBrowser(markdownBrowserOptions, {
+  const pending = requestMarkdownBrowser({
+    ...markdownBrowserOptions,
+    mouse: true,
+  }, {
     io,
     signals,
   }).catch((error) => error);
@@ -272,6 +341,7 @@ Deno.test("SIGINT removes readers and restores the alternate screen exactly once
   assert(error instanceof InteractionCancelled);
   assertEquals(error.reason, "Input ended.");
   assertRestored(io);
+  assertMouseRestored(io);
 });
 
 Deno.test("renderer, write, and resize-listener failures all restore the terminal", async () => {
@@ -281,7 +351,10 @@ Deno.test("renderer, write, and resize-listener failures all restore the termina
     rows: 24,
   });
   let renders = 0;
-  const rendered = runMarkdownBrowserRequest(markdownBrowserOptions, {
+  const rendered = runMarkdownBrowserRequest({
+    ...markdownBrowserOptions,
+    mouse: true,
+  }, {
     io: renderIo,
   }, {
     render: (state, facts) => {
@@ -292,6 +365,7 @@ Deno.test("renderer, write, and resize-listener failures all restore the termina
   }).catch((error) => error);
   assertEquals(await rendered, renderFailure);
   assertRestored(renderIo);
+  assertMouseRestored(renderIo);
 
   const writeFailure = new Error("frame write failed");
   class FrameWriteFailure extends FakeTerminalIO {
@@ -302,11 +376,14 @@ Deno.test("renderer, write, and resize-listener failures all restore the termina
   }
   const writeIo = new FrameWriteFailure([], { columns: 80, rows: 24 });
   assertEquals(
-    await requestMarkdownBrowser(markdownBrowserOptions, { io: writeIo })
+    await requestMarkdownBrowser({ ...markdownBrowserOptions, mouse: true }, {
+      io: writeIo,
+    })
       .catch((error) => error),
     writeFailure,
   );
   assertRestored(writeIo);
+  assertMouseRestored(writeIo);
 
   const resizeFailure = new Error("resize listener failed");
   class ResizeListenerFailure extends FakeTerminalIO {
@@ -319,11 +396,14 @@ Deno.test("renderer, write, and resize-listener failures all restore the termina
     rows: 24,
   });
   assertEquals(
-    await requestMarkdownBrowser(markdownBrowserOptions, { io: resizeIo })
+    await requestMarkdownBrowser({ ...markdownBrowserOptions, mouse: true }, {
+      io: resizeIo,
+    })
       .catch((error) => error),
     resizeFailure,
   );
   assertRestored(resizeIo);
+  assertMouseRestored(resizeIo);
 });
 
 Deno.test("the original fault wins when restoration also fails", async () => {
@@ -341,7 +421,10 @@ Deno.test("the original fault wins when restoration also fails", async () => {
     rows: 24,
   });
   let renders = 0;
-  const error = await runMarkdownBrowserRequest(markdownBrowserOptions, {
+  const error = await runMarkdownBrowserRequest({
+    ...markdownBrowserOptions,
+    mouse: true,
+  }, {
     io,
   }, {
     render: (state, facts) => {
@@ -352,6 +435,8 @@ Deno.test("the original fault wins when restoration also fails", async () => {
   }).catch((caught) => caught);
   assertEquals(error, renderFailure);
   assertEquals(countWrites(io, LEAVE_TERMINAL_ALTERNATE_SCREEN), 1);
+  assertEquals(countWrites(io, DISABLE_TERMINAL_MOUSE_SGR_MODE), 1);
+  assertEquals(countWrites(io, DISABLE_TERMINAL_MOUSE_BUTTON_TRACKING), 1);
   assertEquals(io.rawTransitions, [true, false]);
   assertEquals(io.resizeListenerCount, 0);
 });
@@ -450,6 +535,7 @@ Deno.test("default fragment resolution stays inside the browser and unresolved f
     `${encodeTerminalKeys("enter")}]${encodeTerminalKeys("enter")}`,
     `q${encodeTerminalKeys("down", "enter")}`,
   ], { columns: 60, rows: 24 });
+  let packageLinkResolverCalls = 0;
   const result = await requestMarkdownBrowser({
     label: "Fragments",
     entries: [{
@@ -463,8 +549,13 @@ Deno.test("default fragment resolution stays inside the browser and unresolved f
       id: "quit",
       label: "Quit",
     }],
+    resolveLink() {
+      packageLinkResolverCalls += 1;
+      return { kind: "unresolved" };
+    },
   }, { io });
   assertEquals(result.kind, "exit");
+  assertEquals(packageLinkResolverCalls, 0);
   assert(
     completeFrames(io).some((frame) => frame.includes("Target")),
     "the default fragment resolver must paint the target before later input",
@@ -493,6 +584,26 @@ Deno.test("default fragment resolution stays inside the browser and unresolved f
       frame.includes("needs a caller resolver")
     ),
   );
+
+  const externalIo = new FakeTerminalIO([
+    `${encodeTerminalKeys("enter")}]${encodeTerminalKeys("enter")}`,
+  ], { columns: 60, rows: 24 });
+  const external = await requestMarkdownBrowser({
+    label: "External",
+    entries: [{
+      kind: "document",
+      id: "guide",
+      label: "Guide",
+      path: "guide.md",
+      source: "# Guide\n\n[Website](https://example.test/guide)",
+    }],
+    resolveLink() {
+      packageLinkResolverCalls += 1;
+      return { kind: "unresolved" };
+    },
+  }, { io: externalIo });
+  assertEquals(external.kind, "external-link");
+  assertEquals(packageLinkResolverCalls, 0);
 });
 
 Deno.test("resolver, decoder, and cooperative cancellation faults restore mouse state", async () => {
@@ -522,11 +633,7 @@ Deno.test("resolver, decoder, and cooperative cancellation faults restore mouse 
     resolverFailure,
   );
   assertRestored(resolverIo);
-  assertEquals(countWrites(resolverIo, DISABLE_TERMINAL_MOUSE_SGR_MODE), 1);
-  assertEquals(
-    countWrites(resolverIo, DISABLE_TERMINAL_MOUSE_BUTTON_TRACKING),
-    1,
-  );
+  assertMouseRestored(resolverIo);
 
   const decoderFailure = new Error("decoder failed");
   const decoderIo = new FakeTerminalIO([], { columns: 80, rows: 24 });
@@ -539,6 +646,7 @@ Deno.test("resolver, decoder, and cooperative cancellation faults restore mouse 
     decoderFailure,
   );
   assertRestored(decoderIo);
+  assertMouseRestored(decoderIo);
 
   const abortIo = new FakeTerminalIO([], {
     columns: 80,
@@ -556,11 +664,7 @@ Deno.test("resolver, decoder, and cooperative cancellation faults restore mouse 
   assert(aborted instanceof InteractionCancelled);
   assertEquals(aborted.reason, "Cancelled.");
   assertRestored(abortIo);
-  assertEquals(countWrites(abortIo, DISABLE_TERMINAL_MOUSE_SGR_MODE), 1);
-  assertEquals(
-    countWrites(abortIo, DISABLE_TERMINAL_MOUSE_BUTTON_TRACKING),
-    1,
-  );
+  assertMouseRestored(abortIo);
 
   const beforeStart = new FakeTerminalIO([], { columns: 80, rows: 24 });
   const alreadyAborted = new AbortController();

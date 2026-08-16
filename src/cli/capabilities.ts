@@ -70,8 +70,8 @@ function supportsUnicode(
  * performs no environment or terminal reads itself, so detection stays
  * independently testable and renderers remain pure. No portable environment
  * fact announces OSC 8 hyperlink support, so detection aligns hyperlinks with
- * styled output; callers holding terminal-specific knowledge state the field
- * directly.
+ * styled output. Mouse tracking has no portable positive detector and remains
+ * omitted; callers holding terminal-specific knowledge state it directly.
  */
 export function detectTerminalCapabilities(
   input: TerminalDetectionInput,

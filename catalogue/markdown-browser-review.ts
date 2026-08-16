@@ -106,7 +106,7 @@ function resizedArtifact(): MarkdownBrowserReviewArtifact {
   });
 }
 
-/** Five required visual-review postures rendered only from explicit facts. */
+/** Nine required visual-review postures rendered only from explicit facts. */
 export function markdownBrowserReviewArtifacts(): readonly MarkdownBrowserReviewArtifact[] {
   return Object.freeze([
     reviewArtifact(
@@ -126,6 +126,38 @@ export function markdownBrowserReviewArtifacts(): readonly MarkdownBrowserReview
       "split-reader",
     ),
     reviewArtifact(
+      "keyboard-link",
+      "Keyboard-focused internal link",
+      80,
+      24,
+      capabilities(80),
+      "keyboard-link",
+    ),
+    reviewArtifact(
+      "pointer-link",
+      "Mouse-targeted document link",
+      80,
+      24,
+      capabilities(80, { mouseTracking: true }),
+      "pointer-link",
+    ),
+    reviewArtifact(
+      "pointer-picker",
+      "Mouse-focused picker pane",
+      80,
+      24,
+      capabilities(80, { mouseTracking: true }),
+      "pointer-picker",
+    ),
+    reviewArtifact(
+      "internal-destination",
+      "Resolved internal fragment destination",
+      80,
+      24,
+      capabilities(80),
+      "internal-destination",
+    ),
+    reviewArtifact(
       "single-pane",
       "Single-pane document fallback",
       40,
@@ -143,7 +175,7 @@ export function markdownBrowserReviewArtifacts(): readonly MarkdownBrowserReview
         hyperlinks: false,
         unicode: false,
       }),
-      "split-reader",
+      "keyboard-link",
     ),
     resizedArtifact(),
   ]);
@@ -180,7 +212,7 @@ export function renderMarkdownBrowserReviewPage(): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Keyboard Markdown browser · CLI review</title>
+  <title>Markdown browser links and mouse · CLI review</title>
   <style>
     :root { color-scheme: dark; font-family: ui-sans-serif, system-ui, sans-serif; background: #111318; color: #f2f4f8; }
     * { box-sizing: border-box; }
@@ -207,8 +239,8 @@ export function renderMarkdownBrowserReviewPage(): string {
   <main id="top">
     <header class="intro">
       <p class="eyebrow">discern Design System · CLI review</p>
-      <h1>Keyboard Markdown browser</h1>
-      <p>Five deterministic terminal postures rendered from the package's real browser state and renderer. Geometry metrics are conformance facts; repeated-line notices are advisory review cues for intentional Markdown spacing.</p>
+      <h1>Markdown browser links and mouse</h1>
+      <p>Nine deterministic terminal postures rendered from the package's real browser state and renderer, including keyboard and pointer link focus. Geometry metrics are conformance facts; repeated-line notices are advisory review cues for intentional Markdown spacing.</p>
       <p><a href="/catalogue/?surface=cli#terminal-layout-markdown-browser">Open the interactive Catalogue recipe</a></p>
     </header>
     ${sections}

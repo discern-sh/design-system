@@ -393,7 +393,10 @@ export class TerminalKeyReader {
   }
 }
 
-const SGR_MOUSE_REPORT = /^\x1b\[<([0-9]+);([0-9]+);([0-9]+)([Mm])$/u;
+const SGR_MOUSE_REPORT = new RegExp(
+  `^${ESCAPE}\\[<([0-9]+);([0-9]+);([0-9]+)([Mm])$`,
+  "u",
+);
 
 function decimalInteger(value: string): number | undefined {
   if (value.length > 16) return undefined;
@@ -416,7 +419,7 @@ function unknownInput(
  */
 export function decodeTerminalInputEvent(key: TerminalKey): TerminalInputEvent {
   if (key.kind !== "unknown") return { kind: "key", key };
-  if (!key.sequence.startsWith("\x1b[<")) {
+  if (!key.sequence.startsWith(`${ESCAPE}[<`)) {
     return unknownInput(key.sequence, "control", "unknown-control");
   }
   const match = SGR_MOUSE_REPORT.exec(key.sequence);

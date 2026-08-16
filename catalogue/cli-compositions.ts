@@ -484,9 +484,9 @@ const output = composeCliBlocks([
 
 const markdownBrowserRecipe: CliCompositionRecipe = {
   id: "markdown-browser",
-  title: "Keyboard Markdown browser",
+  title: "Markdown browser",
   description:
-    "A full-viewport grouped picker and independently scrollable Markdown reader with adaptive pane budgets.",
+    "A keyboard-complete grouped reader with addressable links, caller-owned resolution, and optional terminal-cell pointer input.",
   components: ["Section rule", "Box", "Choice", "Markdown"],
   render: (capabilities, theme = "dark", rows = 24) =>
     renderMarkdownBrowserCatalogueFrame(
@@ -508,7 +508,7 @@ const entries = [
     id: "start",
     label: "Getting started",
     path: "guides/getting-started.md",
-    source: "# Getting started\\n\\nPackage-supplied Markdown.",
+    source: "# Getting started\\n\\n[Details](#details)\\n\\n## Details\\n\\nPackage-supplied Markdown.",
   },
   { kind: "exit", id: "quit", label: "Quit" },
 ] as const;
@@ -520,6 +520,11 @@ let state = createMarkdownBrowserState(
 state = transitionMarkdownBrowser(
   state,
   { kind: "key", key: { kind: "named", name: "enter" } },
+  capabilities,
+).state;
+state = transitionMarkdownBrowser(
+  state,
+  { kind: "key", key: { kind: "text", text: "]" } },
   capabilities,
 ).state;
 

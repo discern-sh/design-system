@@ -50,6 +50,7 @@ export function resolveCliExampleCapabilities<
     !Number.isSafeInteger(resolved.columns) ||
     resolved.columns < 1 ||
     ![undefined, true, false].includes(resolved.hyperlinks) ||
+    ![undefined, true, false].includes(resolved.mouseTracking) ||
     typeof resolved.unicode !== "boolean"
   ) {
     throw new TypeError(

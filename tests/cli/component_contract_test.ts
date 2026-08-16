@@ -24,6 +24,7 @@ Deno.test("CLI examples can pin a validated deterministic capability posture", (
     colorDepth: "truecolor",
     columns: 80,
     hyperlinks: true,
+    mouseTracking: true,
     unicode: true,
   } as const;
   assertEquals(
@@ -35,6 +36,7 @@ Deno.test("CLI examples can pin a validated deterministic capability posture", (
         colorDepth: "none",
         columns: 24,
         hyperlinks: false,
+        mouseTracking: false,
         unicode: false,
       },
     }, base),
@@ -43,6 +45,7 @@ Deno.test("CLI examples can pin a validated deterministic capability posture", (
       colorDepth: "none",
       columns: 24,
       hyperlinks: false,
+      mouseTracking: false,
       unicode: false,
     },
   );

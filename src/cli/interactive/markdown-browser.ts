@@ -1,4 +1,4 @@
-/** Public pure and effectful contracts for keyboard Markdown browsing. */
+/** Public pure and effectful contracts for link-aware Markdown browsing. */
 
 export {
   createMarkdownBrowserState,

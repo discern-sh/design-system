@@ -243,7 +243,7 @@ const environment = await requestSelection({
 
 The `group-heading` entry is semantic interaction structure: it has a stable ID and non-empty label, needs no sentinel value of the caller's generic type, and can never be highlighted, toggled, or returned. Every rendered heading has one empty framed row above it. Disabled choices remain selectable entries with their own visible disabled state. Scrolling Select, Radio, Checkbox, and search frames use all available terminal columns unless an explicit `width` narrows them; wrapped labels keep their marker-aligned hanging indent and styling as the highlight moves. Select and search `visibleCount` plus Textarea `rows` are requested upper bounds: the adapter reduces only the current visible window when terminal height is tight and expands it again after a resize. A quiet lower-border label such as `↑ 2 more · ↓ 7 more` states how many choices remain outside the window, with `^`, `v`, and `|` fallbacks in ASCII. Search accepts `initialId` to restore an enabled provider result by stable ID without inventing a query or keypress.
 
-`requestMarkdownBrowser()` owns a complete keyboard viewport for caller-supplied Markdown. The picker uses the full height until a document opens, then the picker and document receive adaptive, independently scrollable panes; constrained terminals show one focused pane at a time. Documents always pass through the package Markdown renderer, while actions return as typed data after raw mode, cursor visibility, resize observation, and the normal screen have been restored:
+`requestMarkdownBrowser()` owns a complete keyboard viewport for caller-supplied Markdown, with optional SGR mouse input. The picker uses the full height until a document opens, then the picker and document receive adaptive, independently scrollable panes; constrained terminals show one focused pane at a time. Documents always pass through the package Markdown renderer, while actions and safe external links return as typed data after mouse tracking, raw mode, cursor visibility, resize observation, and the normal screen have been restored:
 
 ```ts
 import {
@@ -261,7 +261,15 @@ const result = await requestMarkdownBrowser({
       id: "start",
       label: "Getting started",
       path: "guides/getting-started.md",
-      source: "# Getting started\n\nCaller-supplied Markdown.",
+      source:
+        "# Getting started\n\n[Testing](../reference/testing.md#fake-terminal) · [Website](https://example.test/docs)",
+    },
+    {
+      kind: "document",
+      id: "testing",
+      label: "Testing",
+      path: "reference/testing.md",
+      source: "# Testing\n\n## Fake terminal\n\nScript semantic events.",
     },
     {
       kind: "action",
@@ -271,6 +279,12 @@ const result = await requestMarkdownBrowser({
     },
     { kind: "exit", id: "quit", label: "Quit" },
   ],
+  mouse: true,
+  resolveLink({ destination }) {
+    return destination === "../reference/testing.md#fake-terminal"
+      ? { kind: "document", documentId: "testing", fragment: "fake-terminal" }
+      : { kind: "unresolved", message: "Document is outside this corpus." };
+  },
   ...(resume === undefined ? {} : { initialState: resume }),
 }, { theme: "dark", motif: productMotif });
 
@@ -279,9 +293,15 @@ if (result.kind === "action") {
   // The terminal is restored here; the consumer may now perform its effect.
   console.log(result.value.href);
 }
+if (result.kind === "external-link") {
+  // Opening the URL is still a consumer effect and starts only from here.
+  console.log(result.destination);
+}
 ```
 
-Picker focus owns grapheme-aware typing, Up/Down, Ctrl+P/Ctrl+N, Page Up/Page Down, Home/End, and Enter. Document focus assigns the scrolling keys to Markdown; Tab and Shift+Tab change panes, while Escape or `q` closes the document. Escape in the full picker, Ctrl+C, and EOF use `InteractionCancelled`. `MarkdownBrowserRefusalError` reports unsupported ANSI control or geometry too small for one coherent pane before the initial terminal mutation. Pure `createMarkdownBrowserState()`, `transitionMarkdownBrowser()`, and `renderMarkdownBrowser()` exports support deterministic state and frame tests without terminal effects.
+Picker focus owns grapheme-aware typing, Up/Down, Ctrl+P/Ctrl+N, Page Up/Page Down, Home/End, and Enter. Document focus assigns the scrolling keys to Markdown; `]` and `[` traverse logical link occurrences, Enter follows the focused link, and Escape first returns to ordinary scrolling. Same-document fragments stay inside the reader. Relative and root-relative paths reach `resolveLink`, whose closed result admits a document/fragment, external destination, or bounded unresolved feedback; the package never loads a file or opens a URL. Tab and Shift+Tab change panes, while Escape or `q` closes an unfocused document. Escape in the full picker, Ctrl+C, EOF, and an optional `MarkdownBrowserRuntime.abortSignal` use `InteractionCancelled`. `MarkdownBrowserRefusalError` reports unsupported ANSI control or geometry too small for one coherent pane before the initial terminal mutation. Pure `createMarkdownBrowserState()`, `transitionMarkdownBrowser()`, and `renderMarkdownBrowser()` exports support deterministic state and frame tests without terminal effects.
+
+Mouse tracking is additive and explicit: `mouse: true` requests DECSET 1000 button reports with DECSET 1006 extended coordinates only when the terminal is interactive, ANSI control is available, and `TerminalCapabilities.mouseTracking` has not refused it. Omission leaves the complete keyboard contract and writes no mouse controls. OSC 8 output and mouse input are independent — one never proves support for the other. While tracking is active, unmodified clicks and wheel events go to the application instead of ordinary terminal selection or native link gestures; many terminals use Shift as a temporary bypass, but that modifier is terminal-configurable, so callers needing native selection should leave mouse tracking off.
 
 Full-width section headings use one restrained motif marker rather than a repeated field. The presenter's `motifSectionRule()` binds its theme, motif, and capabilities, defaults to the one-row strong embedded treatment, and also exposes explicit underline and sandwich variants:
 

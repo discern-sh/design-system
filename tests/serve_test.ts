@@ -103,6 +103,10 @@ Deno.test("Catalogue review routes stay outside replaceable build output", async
     const title of [
       "Initial full-height picker",
       "Split picker and Markdown reader",
+      "Keyboard-focused internal link",
+      "Mouse-targeted document link",
+      "Mouse-focused picker pane",
+      "Resolved internal fragment destination",
       "Single-pane document fallback",
       "No-colour ASCII reader",
       "Resize result · 40×24 to 120×30",

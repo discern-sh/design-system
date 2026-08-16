@@ -1,7 +1,7 @@
 /**
  * Deterministic terminal for testing interactive requests against the
- * package's real machinery. Scripted input flows through the real key
- * decoder, interaction state machines, and Component renderers, while writes
+ * package's real machinery. Scripted input flows through the real key and
+ * mouse decoder, interaction state machines, and Component renderers, while writes
  * and raw-mode transitions stay captured for assertion — so a test exercises
  * the production path rather than a simulation of it.
  *
@@ -40,7 +40,7 @@ export interface FakeTerminalIOOptions {
   readonly holdOpen?: boolean;
 }
 
-/** One deterministic input, key, resize, or EOF event for a fake terminal. */
+/** One deterministic text, key, mouse, resize, or EOF event. */
 export type TerminalTestEvent =
   | { readonly kind: "text"; readonly value: string }
   | { readonly kind: "keys"; readonly keys: readonly TerminalKeyName[] }

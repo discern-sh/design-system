@@ -7,6 +7,10 @@ Deno.test("Markdown browser visual review enrolls every required posture", () =>
   assertEquals(artifacts.map(({ id }) => id), [
     "initial-picker",
     "split-reader",
+    "keyboard-link",
+    "pointer-link",
+    "pointer-picker",
+    "internal-destination",
     "single-pane",
     "no-color",
     "resize-result",
@@ -33,5 +37,21 @@ Deno.test("Markdown browser visual review enrolls every required posture", () =>
   assertStringIncludes(
     artifacts.find(({ id }) => id === "resize-result")?.frame ?? "",
     "Paragraph",
+  );
+  assertStringIncludes(
+    artifacts.find(({ id }) => id === "keyboard-link")?.frame ?? "",
+    "›Read the reference",
+  );
+  assertStringIncludes(
+    artifacts.find(({ id }) => id === "pointer-link")?.frame ?? "",
+    "◆Read the reference",
+  );
+  assertStringIncludes(
+    artifacts.find(({ id }) => id === "internal-destination")?.frame ?? "",
+    "Navigation details",
+  );
+  assertStringIncludes(
+    artifacts.find(({ id }) => id === "no-color")?.frame ?? "",
+    ">Read the reference",
   );
 });

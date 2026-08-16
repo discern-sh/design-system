@@ -1,5 +1,5 @@
 /**
- * Immutable data and geometry model for the keyboard Markdown browser.
+ * Immutable data and geometry model for the link-aware Markdown browser.
  *
  * The model is process-free: callers supply corpus data, presentation facts,
  * and terminal geometry. Rendering and terminal effects live in separate

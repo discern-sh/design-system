@@ -1,4 +1,4 @@
-/** Pure keyboard and resize transitions for the Markdown browser. */
+/** Pure key, mouse, resolver, and resize transitions for the Markdown browser. */
 
 import type { TerminalCapabilities } from "../capabilities.ts";
 import { validateSemanticInlineDestination } from "../semantic-inline.ts";
@@ -715,7 +715,7 @@ function resizeState<Action>(
   return fitMarkdownBrowserState(resized, capabilities);
 }
 
-/** Apply one semantic key, resize, or EOF event without reading the process. */
+/** Apply one semantic key, mouse, resolver, resize, or EOF event. */
 export function transitionMarkdownBrowser<Action>(
   source: MarkdownBrowserState<Action>,
   event: MarkdownBrowserInputEvent,

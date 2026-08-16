@@ -1,4 +1,4 @@
-/** Effect adapter for the keyboard Markdown browser. */
+/** Effect adapter for the link-aware Markdown browser. */
 
 import type { TerminalCapabilities } from "../capabilities.ts";
 import { validateSemanticInlineDestination } from "../semantic-inline.ts";
@@ -156,8 +156,10 @@ async function resolveLink(
   request: MarkdownBrowserLinkRequest,
   abort: AbortMailbox,
 ): Promise<MarkdownBrowserLinkResolution> {
-  const pending = options.resolveLink === undefined
-    ? Promise.resolve(defaultLinkResolution(request))
+  const packageResolution = defaultLinkResolution(request);
+  const pending = packageResolution.kind !== "unresolved" ||
+      options.resolveLink === undefined
+    ? Promise.resolve(packageResolution)
     : Promise.resolve(options.resolveLink({
       sourceDocumentId: request.sourceDocumentId,
       sourcePath: request.sourcePath,
@@ -352,9 +354,10 @@ export async function runMarkdownBrowserRequest<Action>(
 
 /**
  * Present a searchable grouped Markdown corpus in an owned terminal viewport.
- * Actions and exits return only after raw mode, cursor visibility, resize
- * observation, and the normal screen have been restored. Ctrl+C, Escape from
- * the picker, and end-of-input raise the established
+ * Actions, exits, and external links return only after mouse tracking, raw
+ * mode, cursor visibility, resize observation, and the normal screen have
+ * been restored. Ctrl+C, Escape from the picker, end-of-input, and cooperative
+ * abort raise the established
  * {@linkcode InteractionCancelled} error.
  */
 export async function requestMarkdownBrowser<Action>(

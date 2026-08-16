@@ -3,6 +3,7 @@ import {
   assertEquals,
   assertNotEquals,
   assertStringIncludes,
+  assertThrows,
 } from "@std/assert";
 import { stripAnsi } from "../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
@@ -324,4 +325,25 @@ Deno.test("typed resolver outcomes navigate fragments and documents or return re
     kind: "unresolved-link",
     message: "No admitted document.",
   });
+  const bounded = transitionMarkdownBrowser(relative.state, {
+    kind: "link-resolution",
+    request: relative.request,
+    resolution: { kind: "unresolved", message: "x".repeat(200) },
+  }, capabilities).state.feedback;
+  assertEquals(bounded?.kind, "unresolved-link");
+  assertEquals(bounded?.message.length, 120);
+
+  assertThrows(
+    () =>
+      transitionMarkdownBrowser(outside.state, {
+        kind: "link-resolution",
+        request: outside.request,
+        resolution: {
+          kind: "external",
+          destination: "javascript:alert(1)",
+        },
+      }, capabilities),
+    TypeError,
+    "unsafe scheme",
+  );
 });

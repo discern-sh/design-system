@@ -122,14 +122,19 @@ Search the grouped picker, then press Enter to open a document.
 - Type to search while the picker has focus.
 - Use **Tab** and **Shift+Tab** to move between panes.
 - Use Page Up, Page Down, Home, and End in the focused pane.
+- Use **]** and **[** to traverse links; Enter follows the focused link.
 - Press Escape or \`q\` in the document to return to the full-height picker.
+
+[Jump to links and mouse](#links-and-mouse), [open the testing guide](testing.md#fake-terminal), or return an [external destination](https://example.test/design-system/reader).
 
 | Terminal | Layout |
 | --- | --- |
 | Ordinary height | Split picker and reader |
 | Constrained height | One focused pane |
 
-[Read the public guide](https://example.com/design-system/reader)
+## Links and mouse
+
+Keyboard access is complete. Optional mouse tracking adds picker clicks, link activation, and pane-local wheel scrolling.
 
 ${
       Array.from(
@@ -147,10 +152,13 @@ ${
     path: "guides/testing.md",
     source: `# Testing the interaction
 
-Drive the real adapter with a fake terminal and semantic resize events.
+## Fake terminal
+
+Drive the real adapter with a fake terminal and semantic resize and mouse events.
 
 \`\`\`ts
 enqueueTerminalEvents(io, events);
+io.enqueueMouse(mouseEvent);
 await requestMarkdownBrowser(options, { io });
 \`\`\`
 
