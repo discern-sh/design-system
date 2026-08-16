@@ -96,12 +96,49 @@ function DenseTableState() {
   );
 }
 
+function RichCellsTableState() {
+  return (
+    <Table caption="Reference coverage" striped>
+      <thead>
+        <tr>
+          <th scope="col">Topic</th>
+          <th scope="col">Evidence</th>
+          <th scope="col">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            Inline <code>semantics</code>
+          </td>
+          <td>
+            <a href="#table">Reference material</a> with <em>context</em>
+          </td>
+          <td>
+            <strong>Covered</strong>
+          </td>
+        </tr>
+        <tr>
+          <td>Optional value</td>
+          <td></td>
+          <td>Intentionally empty</td>
+        </tr>
+      </tbody>
+    </Table>
+  );
+}
+
 export const catalogueStates = [
   { name: "default", label: "Three-column data", Example: DefaultTableState },
   {
     name: "dense-overflow",
     label: "Dense narrow-width overflow",
     Example: DenseTableState,
+  },
+  {
+    name: "rich-cells",
+    label: "Rich and empty cells",
+    Example: RichCellsTableState,
   },
 ] satisfies readonly CatalogueExampleState[];
 
@@ -110,6 +147,7 @@ export default function TableExamples() {
     <div className="discern-example-stack">
       <DefaultTableState />
       <DenseTableState />
+      <RichCellsTableState />
     </div>
   );
 }
