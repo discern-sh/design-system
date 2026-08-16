@@ -92,7 +92,7 @@ Deno.test("List task markers retain checked, unchecked, and ordinary meaning in 
   const unicode = testTerminalCapabilities({ columns: 24 });
   assertExactFrame(
     renderListCli(props, unicode),
-    "☑ Reviewed\n☐ Pending\n•  Context",
+    "☑ Reviewed\n☐ Pending\n• Context",
     unicode,
   );
   const ascii = testTerminalCapabilities({ columns: 24, unicode: false });

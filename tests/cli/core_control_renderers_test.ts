@@ -65,8 +65,8 @@ Deno.test("Theme toggle renders exact narrow, standard, wide, and degraded desti
     renderThemeToggleCli({ theme: "dark" }, capabilities);
   for (
     const [columns, expected] of [
-      [8, "[ ☀ … ]"],
-      [24, "[ ☀ Switch to the li… ]"],
+      [8, "[ ☀ S… ]"],
+      [24, "[ ☀ Switch to the lig… ]"],
       [48, "[ ☀ Switch to the light theme ]"],
     ] as const
   ) {
@@ -75,7 +75,7 @@ Deno.test("Theme toggle renders exact narrow, standard, wide, and degraded desti
   }
   assertCapabilityLevels(
     render,
-    "[ ☀ Switch to the li… ]",
+    "[ ☀ Switch to the lig… ]",
     "[ * Switch to the lig. ]",
   );
 });

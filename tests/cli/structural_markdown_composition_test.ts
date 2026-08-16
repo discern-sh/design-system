@@ -130,7 +130,7 @@ Deno.test("structural nesting is deterministic across every capability posture",
         unicode ? "│ ☑ Reviewed" : "| [x] Reviewed",
       );
       assertStringIncludes(visible, "nested meaning");
-      assertStringIncludes(visible.replaceAll("\n", " "), "its reference");
+      assertStringIncludes(visible.replaceAll(/[\s│|]/gu, ""), "itsreference");
       for (const line of first.split("\n")) {
         assert(measureText(line) <= capabilities.columns, stripAnsi(line));
       }

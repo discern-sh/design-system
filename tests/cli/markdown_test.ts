@@ -61,6 +61,34 @@ Deno.test("Markdown renders exact narrow, standard, and wide Unicode/ASCII frame
   }
 });
 
+Deno.test("Markdown alert task markers preserve the enclosing frame width", () => {
+  const capabilities = testTerminalCapabilities({
+    columns: 40,
+    colorDepth: "none",
+    unicode: true,
+    hyperlinks: false,
+  });
+  const source = [
+    "> [!IMPORTANT]",
+    "> Alerts retain nested content.",
+    ">",
+    "> - [x] Reviewed",
+    "> - [ ] Ready to verify",
+  ].join("\n");
+  assertExactFrame(
+    renderMarkdownCli({ source, maxWidth: 40 }, capabilities),
+    [
+      "┌ Important ───────────────────────────┐",
+      "│ Alerts retain nested content.        │",
+      "│                                      │",
+      "│ ☑ Reviewed                           │",
+      "│ ☐ Ready to verify                    │",
+      "└──────────────────────────────────────┘",
+    ].join("\n"),
+    capabilities,
+  );
+});
+
 function expectedComponentDocument(
   capabilities: TerminalCapabilities,
   theme: "light" | "dark",
