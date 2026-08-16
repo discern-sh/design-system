@@ -10,6 +10,7 @@ export * from "./box.ts";
 export * from "./capabilities.ts";
 export * from "./contracts.ts";
 export * from "./interactive-states.ts";
+export * from "./semantic-inline.ts";
 export * from "./layout.ts";
 export {
   defineTerminalMotif,

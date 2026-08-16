@@ -102,6 +102,40 @@ Deno.test("hyperlink authority gates on capability and never loses the label", (
   );
 });
 
+Deno.test("hyperlink authority preserves a multi-style label as one target", () => {
+  const url = "https://discern.sh/docs";
+  const capabilities = testTerminalCapabilities({ colorDepth: "truecolor" });
+  const linked = styleHyperlink(
+    [
+      { text: "read ", style: { italic: true } },
+      { text: "now", style: { bold: true } },
+    ],
+    url,
+    capabilities,
+  );
+  assertEquals(
+    linked,
+    `${escape}]8;;${url}${escape}\\${escape}[3mread ${escape}[0m${escape}[1mnow${escape}[0m${escape}]8;;${escape}\\`,
+  );
+  assertEquals(stripAnsi(linked), "read now");
+  assertEquals(
+    styleHyperlink(
+      [
+        { text: "read ", style: { italic: true } },
+        { text: "now", style: { bold: true } },
+      ],
+      url,
+      testTerminalCapabilities(),
+    ),
+    `read now (${url})`,
+  );
+  assertThrows(
+    () => styleHyperlink([], url, capabilities),
+    TypeError,
+    "non-empty",
+  );
+});
+
 Deno.test("hyperlink authority rejects control-bearing and non-ASCII input", () => {
   const capabilities = testTerminalCapabilities();
   const url = "https://discern.sh";

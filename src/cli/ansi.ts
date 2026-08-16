@@ -81,7 +81,8 @@ export function styleText(
 /**
  * Compose one terminal hyperlink from a label and URL. This is the only
  * public authority for OSC 8 hyperlinks; consumers never write the envelope
- * bytes themselves.
+ * bytes themselves. A label can be one plain string or package-owned styled
+ * spans when nested semantic text must retain more than one style.
  *
  * Emission is gated by the `hyperlinks` capability fact. When the caller
  * omits that fact, support derives from colour depth, so a stream that
@@ -92,17 +93,33 @@ export function styleText(
  * {@linkcode styleText} in both modes, inside the envelope when one is
  * emitted.
  *
- * Labels must be non-empty and free of control and format characters; URLs
- * must be non-empty printable ASCII, so anything wider is percent-encoded
- * by the caller before composition. Invalid input throws a `TypeError`.
+ * Labels must project to non-empty text free of control and format
+ * characters; URLs must be non-empty printable ASCII, so anything wider is
+ * percent-encoded by the caller before composition. Invalid input throws a
+ * `TypeError`.
  */
 export function styleHyperlink(
   label: string,
   url: string,
   capabilities: TerminalCapabilities,
   style?: TerminalTextStyle,
+): string;
+/** Compose a hyperlink whose label preserves multiple package-owned styles. */
+export function styleHyperlink(
+  label: readonly StyledSpan[],
+  url: string,
+  capabilities: TerminalCapabilities,
+): string;
+export function styleHyperlink(
+  label: string | readonly StyledSpan[],
+  url: string,
+  capabilities: TerminalCapabilities,
+  style?: TerminalTextStyle,
 ): string {
-  if (label === "" || /[\p{Cc}\p{Cf}]/u.test(label)) {
+  const plainLabel = typeof label === "string"
+    ? label
+    : label.map((span) => span.text).join("");
+  if (plainLabel === "" || /[\p{Cc}\p{Cf}]/u.test(plainLabel)) {
     throw new TypeError("hyperlink label must be non-empty and control-free");
   }
   if (!validHyperlinkTarget(url)) {
@@ -112,11 +129,16 @@ export function styleHyperlink(
       }`,
     );
   }
-  const text = style === undefined
-    ? label
-    : styleText(label, style, capabilities);
+  if (typeof label !== "string" && style !== undefined) {
+    throw new TypeError(
+      "a styled hyperlink label cannot also receive one aggregate style",
+    );
+  }
+  const text = typeof label === "string"
+    ? style === undefined ? label : styleText(label, style, capabilities)
+    : renderStyledSpans(label, capabilities);
   if (!(capabilities.hyperlinks ?? capabilities.colorDepth !== "none")) {
-    return label === url ? text : `${text} (${url})`;
+    return plainLabel === url ? text : `${text} (${url})`;
   }
   return `${hyperlinkSequence(url)}${text}${hyperlinkSequence("")}`;
 }
