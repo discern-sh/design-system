@@ -32,7 +32,8 @@ Deno.test("browser Catalogue owns one bare cell-stable CLI projection", async ()
   }
 
   const renderOwners = authoredSources.filter(({ source }) =>
-    source.includes("cli.render(") || source.includes("projectTerminalSpans(")
+    source.includes("cli.render(") ||
+    source.includes("projectTerminalInlineHtml(")
   );
   assertEquals(
     renderOwners.map(({ path }) => path),
@@ -46,6 +47,7 @@ Deno.test("browser Catalogue owns one bare cell-stable CLI projection", async ()
     preview,
     'className="discern-catalogue-cli-output"',
   );
+  assertStringIncludes(preview, "projectTerminalInlineHtml(value)");
   assert(
     !/<Terminal(?:\s|>)/.test(preview),
     "CLI output must not grow window chrome",

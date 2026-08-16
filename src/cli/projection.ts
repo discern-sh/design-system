@@ -24,7 +24,7 @@ import {
   type TerminalRgbColor,
 } from "./ansi-palette.ts";
 import { parseStyledSource, type StyledSegment } from "./styled-sequences.ts";
-import { measureText } from "./text.ts";
+import { graphemeWidth, measureText } from "./text.ts";
 import {
   terminalThemeColor,
   terminalThemes,
@@ -280,6 +280,38 @@ function escapeHtml(value: string): string {
     .replaceAll("'", "&#39;");
 }
 
+const terminalCellSegmenter = new Intl.Segmenter(undefined, {
+  granularity: "grapheme",
+});
+
+function terminalTextHtml(value: string): string {
+  let html = "";
+  let ascii = "";
+  const flushAscii = (): void => {
+    html += escapeHtml(ascii);
+    ascii = "";
+  };
+  for (const { segment } of terminalCellSegmenter.segment(value)) {
+    if ([...segment].every((character) => character.codePointAt(0)! <= 0x7F)) {
+      ascii += segment;
+      continue;
+    }
+    flushAscii();
+    const columns = graphemeWidth(segment);
+    const style = [
+      "display:inline-block",
+      `width:${columns}ch`,
+      "text-align:center",
+      "vertical-align:baseline",
+    ].join(";");
+    html += `<span data-discern-terminal-cell="${columns}" style="${style}">${
+      escapeHtml(segment)
+    }</span>`;
+  }
+  flushAscii();
+  return html;
+}
+
 const CSS_PROPERTY_NAMES = {
   color: "color",
   fontStyle: "font-style",
@@ -296,7 +328,7 @@ function inlineCss(css: TerminalSpanCss): string {
 }
 
 function spanHtml(span: TerminalSpan): string {
-  const text = escapeHtml(span.text);
+  const text = terminalTextHtml(span.text);
   const css = span.style === undefined
     ? undefined
     : inlineCss(terminalSpanCss(span.style));
@@ -312,6 +344,17 @@ function spanHtml(span: TerminalSpan): string {
     }" target="_blank" rel="noopener noreferrer"${styleAttribute}>${text}</a>`;
   }
   return styleAttribute === "" ? text : `<span${styleAttribute}>${text}</span>`;
+}
+
+/**
+ * Project package-emitted terminal output into one safe inline HTML fragment.
+ *
+ * Text is escaped, safe links retain their anchors, and every non-ASCII
+ * grapheme occupies an explicit terminal-cell box so proportional fallback
+ * glyphs cannot shift following cells in a browser.
+ */
+export function projectTerminalInlineHtml(output: string): string {
+  return projectTerminalSpans(output).map(spanHtml).join("");
 }
 
 function assertTerminalLayoutViewport(
@@ -729,7 +772,6 @@ export function projectTerminalHtml(
   output: string,
   options: TerminalHtmlOptions = {},
 ): string {
-  const spans = projectTerminalSpans(output);
   const theme = terminalThemes[options.theme ?? "dark"];
   const canvas = terminalThemeColor(theme, "--discern-color-canvas");
   const ink = terminalThemeColor(theme, "--discern-color-ink");
@@ -744,6 +786,6 @@ export function projectTerminalHtml(
     "overflow-x:auto",
   ].join(";");
   return `<pre style="${escapeHtml(shell)}">${
-    spans.map(spanHtml).join("")
+    projectTerminalInlineHtml(output)
   }</pre>`;
 }

@@ -18,6 +18,7 @@ import {
 import { renderBadgeCli } from "../../src/generated/cli-renderers.ts";
 import {
   projectTerminalHtml,
+  projectTerminalInlineHtml,
   projectTerminalSpans,
   terminalLinkHref,
   TerminalProjectionError,
@@ -318,6 +319,19 @@ Deno.test("projected HTML is self-contained, escaped, and theme-coloured", () =>
     projectTerminalHtml(output, { theme: "light" }),
     `background-color:rgb(${light.red} ${light.green} ${light.blue})`,
   );
+});
+
+Deno.test("projected inline HTML fixes Unicode graphemes to terminal cells", () => {
+  const html = projectTerminalInlineHtml("A◮界🎨e\u0301B");
+  assertEquals(
+    [...html.matchAll(/data-discern-terminal-cell="(\d+)"/gu)].map((match) =>
+      Number(match[1])
+    ),
+    [1, 2, 2, 1],
+  );
+  assertStringIncludes(html, "A");
+  assertStringIncludes(html, "B");
+  assert(!html.includes('data-discern-terminal-cell="1">A'));
 });
 
 Deno.test("projected HTML links safe targets and neutralises unsafe ones", () => {

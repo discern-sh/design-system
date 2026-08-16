@@ -1,10 +1,6 @@
 import type { TerminalCapabilities } from "../src/cli/capabilities.ts";
 import { resolveCliExampleCapabilities } from "../src/cli/contracts.ts";
-import {
-  projectTerminalSpans,
-  terminalLinkHref,
-  terminalSpanCss,
-} from "../src/cli/projection.ts";
+import { projectTerminalInlineHtml } from "../src/cli/projection.ts";
 import type { TerminalThemeVariant } from "../src/cli/theme.ts";
 import type { RegistryEntry } from "./generated/registry.ts";
 
@@ -19,29 +15,6 @@ export const catalogueCliCapabilities = {
 function exampleLabel(name: string): string {
   const label = name.replaceAll("-", " ");
   return `${label.slice(0, 1).toUpperCase()}${label.slice(1)}`;
-}
-
-function TerminalAnsiText({ value }: { readonly value: string }) {
-  return projectTerminalSpans(value).map(({ text, style, link }, index) => {
-    const css = style === undefined ? undefined : terminalSpanCss(style);
-    const href = link === undefined ? undefined : terminalLinkHref(link);
-    if (href !== undefined) {
-      return (
-        <a
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={css}
-          key={index}
-        >
-          {text}
-        </a>
-      );
-    }
-    return css === undefined
-      ? text
-      : <span style={css} key={index}>{text}</span>;
-  });
 }
 
 /** Project one bare terminal frame through the Catalogue's shared ANSI host. */
@@ -59,7 +32,11 @@ export function CliOutputPreview(
       data-discern-theme={theme}
     >
       <pre className="discern-catalogue-cli-output" aria-label={label}>
-        <code><TerminalAnsiText value={value} /></code>
+        <code
+          dangerouslySetInnerHTML={{
+            __html: projectTerminalInlineHtml(value),
+          }}
+        />
       </pre>
     </div>
   );
