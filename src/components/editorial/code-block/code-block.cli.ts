@@ -7,6 +7,7 @@
 import { styleText } from "../../../cli/ansi.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { graphemeWidth, measureText } from "../../../cli/text.ts";
+import { makeSourceControlsVisible } from "../../../cli/visible-text.ts";
 import {
   terminalThemeColor,
   terminalThemes,
@@ -70,22 +71,6 @@ function assertLabel(value: unknown, name: "language" | "info"): void {
       `code block ${name} must be non-empty, trimmed, and control-free`,
     );
   }
-}
-
-function visibleControl(character: string): string {
-  const codePoint = character.codePointAt(0);
-  if (codePoint === undefined) return "";
-  return `\\u{${codePoint.toString(16).toUpperCase()}}`;
-}
-
-function makeControlsVisible(code: string): string {
-  return code.replace(
-    /[\p{Cc}\p{Cf}]/gu,
-    (character) =>
-      character === "\n" || character === "\t"
-        ? character
-        : visibleControl(character),
-  );
 }
 
 /** Expand tabs relative to the source line, independently of the frame rail. */
@@ -165,7 +150,10 @@ const renderCodeBlockCli: CliRenderer<CodeBlockCliProps> = (
   const rail = capabilities.unicode ? "│" : "|";
   const continuation = capabilities.unicode ? "›" : ">";
   const contentWidth = width - 2;
-  const safeLines = makeControlsVisible(props.code).split("\n").map(expandTabs);
+  const safeLines = makeSourceControlsVisible(props.code, {
+    preserveLineFeeds: true,
+    preserveTabs: true,
+  }).split("\n").map(expandTabs);
   const renderedLines = safeLines.flatMap((line) => {
     const chunks = widthPolicy === "preserve"
       ? [line]

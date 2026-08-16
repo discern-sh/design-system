@@ -103,6 +103,31 @@ Deno.test("List task markers retain checked, unchecked, and ordinary meaning in 
   );
 });
 
+Deno.test("List retains ordered task ordinals and block-only or empty items", () => {
+  const capabilities = testTerminalCapabilities({
+    columns: 32,
+    colorDepth: "none",
+    unicode: false,
+  });
+  assertExactFrame(
+    renderListCli({
+      kind: "ordered",
+      start: 3,
+      items: [
+        { content: "Reviewed", checked: true },
+        { checked: false },
+        {
+          blocks: [
+            createCliBlock(renderParagraphCli, { content: "Block only" }),
+          ],
+        },
+      ],
+    }, capabilities),
+    "3. [x] Reviewed\n4. [ ]\n5.\n       Block only",
+    capabilities,
+  );
+});
+
 Deno.test("List preserves rich inline styles and hyperlinks exactly at every colour depth", () => {
   const content = [
     "Keep ",

@@ -78,6 +78,26 @@ Deno.test("List task items use disabled read-only checkboxes while unmarked item
   );
 });
 
+Deno.test("List preserves ordered task starts and structurally empty items", () => {
+  const html = renderToStaticMarkup(
+    <List
+      kind="ordered"
+      start={3}
+      items={[
+        { content: <>Reviewed</>, checked: true },
+        { checked: false },
+        {},
+      ]}
+    />,
+  );
+
+  assertMatch(html, /^<ol /);
+  assertStringIncludes(html, 'start="3"');
+  assertEquals(html.match(/type="checkbox"/g)?.length, 2);
+  assertEquals(html.match(/<li/g)?.length, 3);
+  assert(!html.includes("discern-list__item--task"));
+});
+
 Deno.test("List keeps continuation paragraphs and recursively mixed lists structural", () => {
   const html = renderToStaticMarkup(
     <List
