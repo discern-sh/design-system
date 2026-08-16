@@ -4,6 +4,11 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## Unreleased
+
+- Add the React-free semantic inline content authority to `./cli`: one recursively immutable package vocabulary for text, literal source, nested emphasis/strong/strikethrough, inline code, safe links, textual image fallbacks, soft and hard breaks, and footnote references. Runtime validation rejects parser-shaped extras, controls and Unicode format characters, unsafe destinations, impossible link-label nesting, cycles, and trees deeper than 64 nodes; the single plain projection and Theme-derived renderer preserve meaning through no-colour and ASCII fallbacks, while `wrapSemanticInlineContent` delegates styled geometry to the existing grapheme and styled-sequence authorities. `styleHyperlink` now also accepts package-owned multi-style span labels without changing its existing string-label bytes.
+- Add the Editorial Paragraph Component: a semantic React `<p>` accepting ordinary phrasing children and a pure terminal renderer accepting semantic inline content, Theme, and a capability-bounded measure. Paragraph wraps styles and targets without owning surrounding blank-line rhythm, auto-enrols through Component Metadata into runtime, React, CLI, and Catalogue surfaces, and includes generic rich-inline examples.
+
 ## 0.18.1
 
 - Fix clean-checkout verification so the build materializes the ignored Catalogue registry before any type-check or test can import it. Release publication now exercises the same build-before-check ordering as the discern quality gate instead of depending on generated files left by an earlier local build.
