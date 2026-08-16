@@ -52,6 +52,8 @@ export interface InteractiveChoiceState {
   readonly kind?: "choice";
   readonly id: string;
   readonly label: string;
+  /** Optional control-free secondary text carried from the public choice. */
+  readonly description?: string;
   readonly disabled?: boolean;
 }
 
@@ -60,6 +62,8 @@ export interface InteractiveChoiceGroupHeadingState {
   readonly kind: "group-heading";
   readonly id: string;
   readonly label: string;
+  /** Optional control-free secondary text carried from the public heading. */
+  readonly description?: string;
   /** Group headings are structural rather than disabled choices. */
   readonly disabled?: never;
 }
@@ -68,6 +72,19 @@ export interface InteractiveChoiceGroupHeadingState {
 export type InteractiveChoiceEntryState =
   | InteractiveChoiceState
   | InteractiveChoiceGroupHeadingState;
+
+/** Static or browsing treatment carried by pure choice-frame state. */
+export type InteractiveChoiceFramePresentation =
+  | "idle"
+  | "active"
+  | "browsing"
+  | "filled"
+  | "disabled";
+
+/** Optional presentation carried by pure choice-frame state. */
+export interface InteractiveChoicePresentationState {
+  readonly presentation?: InteractiveChoiceFramePresentation;
+}
 
 /** Choice counts outside the currently rendered scrolling window. */
 export interface InteractiveChoiceOverflowState {

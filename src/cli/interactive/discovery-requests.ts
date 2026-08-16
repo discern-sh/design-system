@@ -29,6 +29,7 @@ import {
   assertChoices,
   choiceVisibleCount,
   choiceVisibleStart,
+  filterInteractionEntries,
   frameChoices,
   isInteractionChoice,
   moveEnabledIndex,
@@ -225,10 +226,21 @@ export type SearchProvider<T> = (
   | readonly InteractionEntry<T>[]
   | Promise<readonly InteractionEntry<T>[]>;
 
+/** Static package-matched entries or a caller-owned synchronous/async provider. */
+export type SearchSource<T> =
+  | readonly InteractionEntry<T>[]
+  | SearchProvider<T>;
+
+function searchProvider<T>(source: SearchSource<T>): SearchProvider<T> {
+  if (typeof source === "function") return source;
+  assertChoices(source);
+  return (query) => filterInteractionEntries(source, query);
+}
+
 /** Options for a query-driven selectable search interaction. */
 export interface SearchRequestOptions<T>
   extends InteractionOptions<T | undefined>, DiscoveryRequestPacing {
-  readonly search: SearchProvider<T>;
+  readonly search: SearchSource<T>;
   /** Stable enabled choice ID highlighted from the initial provider result. */
   readonly initialId?: string;
   readonly placeholder?: string;
@@ -249,7 +261,7 @@ class SearchInteractionMachine<T>
     this.#visibleCount = choiceVisibleCount(options.visibleCount);
     this.#rememberedId = options.initialId;
     this.#calls = new DiscoveryProviderCalls({
-      call: (query, signal) => options.search(query, signal),
+      call: searchProvider(options.search),
       apply: (entries) => this.#apply(entries),
       debounceMs: discoveryDebounceMs(options.debounceMs),
       scheduler: options.scheduler ?? systemDelayScheduler,
@@ -417,7 +429,7 @@ function renderSearchMultiselectFrame(
 /** Options for a query-filtered multiselection over a search provider. */
 export interface SearchSelectionsRequestOptions<T>
   extends InteractionOptions<readonly T[]>, DiscoveryRequestPacing {
-  readonly search: SearchProvider<T>;
+  readonly search: SearchSource<T>;
   /** Stable IDs selected from the first provider resolution, where present and enabled. */
   readonly initialIds?: readonly string[];
   readonly placeholder?: string;
@@ -450,7 +462,7 @@ class SearchSelectionsInteractionMachine<T>
     this.#visibleCount = choiceVisibleCount(options.visibleCount);
     this.#initialIds = options.initialIds;
     this.#calls = new DiscoveryProviderCalls({
-      call: (query, signal) => options.search(query, signal),
+      call: searchProvider(options.search),
       apply: (entries) => this.#apply(entries),
       debounceMs: discoveryDebounceMs(options.debounceMs),
       scheduler: options.scheduler ?? systemDelayScheduler,

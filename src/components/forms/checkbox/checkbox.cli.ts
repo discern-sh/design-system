@@ -24,8 +24,7 @@ import {
   formCliEmptyResultsRow,
   type FormCliPresentation,
   insertFormCliCursor,
-  renderFormCliChoiceHeading,
-  renderFormCliChoiceRow,
+  renderFormCliChoiceEntry,
   renderFormCliFrame,
   renderFormCliQueryChoices,
   styleFormCliSelectedMark,
@@ -253,38 +252,25 @@ function renderMultiselectControl(
   const entries = visibleFormCliChoiceEntries(state);
   if (entries.length === 0) return "No options.";
   return entries.map(({ entry, sourceIndex }) => {
-    if (isInteractiveChoiceGroupHeading(entry)) {
-      return renderFormCliChoiceHeading(
-        entry,
-        {
-          ...(state.theme === undefined ? {} : { theme: state.theme }),
-          ...motifPassthrough(state),
-          width,
-        },
-        capabilities,
-      );
-    }
-    const option = entry;
     const index = sourceIndex;
     const highlighted = active && index === state.highlightedIndex;
     const pointer = highlighted ? capabilities.unicode ? "› " : "> " : "  ";
     const styleOptions = {
       highlighted,
-      disabled: option.disabled === true,
+      disabled: isInteractiveChoice(entry) && entry.disabled === true,
       ...(state.theme === undefined ? {} : { theme: state.theme }),
     };
-    const label = `${option.label}${
-      option.disabled === true ? " (disabled)" : ""
-    }`;
-    return renderFormCliChoiceRow({
+    return renderFormCliChoiceEntry({
+      entry,
       pointer,
       marker: checkboxMark(
-        state.selectedIds.includes(option.id),
+        state.selectedIds.includes(entry.id),
         capabilities,
         styleOptions,
       ),
-      label,
-      ...styleOptions,
+      highlighted,
+      ...(state.theme === undefined ? {} : { theme: state.theme }),
+      ...motifPassthrough(state),
       width,
     }, capabilities);
   }).join("\n");
@@ -320,17 +306,6 @@ function renderSearchMultiselectControl(
   const rows = entries.length === 0
     ? [formCliEmptyResultsRow(state.pending === true, capabilities)]
     : entries.map((entry, index) => {
-      if (isInteractiveChoiceGroupHeading(entry)) {
-        return renderFormCliChoiceHeading(
-          entry,
-          {
-            ...(state.theme === undefined ? {} : { theme: state.theme }),
-            ...motifPassthrough(state),
-            width,
-          },
-          capabilities,
-        );
-      }
       const highlighted = active && index === state.highlightedIndex;
       const pointer = highlighted ? capabilities.unicode ? "› " : "> " : "  ";
       const styleOptions = {
@@ -338,18 +313,17 @@ function renderSearchMultiselectControl(
         disabled: entry.disabled === true,
         ...(state.theme === undefined ? {} : { theme: state.theme }),
       };
-      const label = `${entry.label}${
-        entry.disabled === true ? " (disabled)" : ""
-      }`;
-      return renderFormCliChoiceRow({
+      return renderFormCliChoiceEntry({
+        entry,
         pointer,
         marker: checkboxMark(
           state.selectedIds.includes(entry.id),
           capabilities,
           styleOptions,
         ),
-        label,
-        ...styleOptions,
+        highlighted,
+        ...(state.theme === undefined ? {} : { theme: state.theme }),
+        ...motifPassthrough(state),
         width,
       }, capabilities);
     });

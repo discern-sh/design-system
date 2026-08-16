@@ -9,10 +9,7 @@ import type {
   SearchFrameState,
   SelectFrameState,
 } from "../../../cli/interactive-states.ts";
-import {
-  isInteractiveChoice,
-  isInteractiveChoiceGroupHeading,
-} from "../../../cli/interactive-choice.ts";
+import { isInteractiveChoice } from "../../../cli/interactive-choice.ts";
 import {
   motifPassthrough,
   type TerminalMotifOptions,
@@ -23,8 +20,7 @@ import {
   formCliEmptyResultsRow,
   type FormCliPresentation,
   insertFormCliCursor,
-  renderFormCliChoiceHeading,
-  renderFormCliChoiceRow,
+  renderFormCliChoiceEntry,
   renderFormCliFrame,
   renderFormCliQueryChoices,
   styleFormCliSelectedMark,
@@ -203,21 +199,11 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
       capabilities,
     )]
     : entries.map(({ entry, sourceIndex: index }) => {
-      if (isInteractiveChoiceGroupHeading(entry)) {
-        return renderFormCliChoiceHeading(
-          entry,
-          {
-            ...(props.theme === undefined ? {} : { theme: props.theme }),
-            ...motifPassthrough(props),
-            width,
-          },
-          capabilities,
-        );
-      }
-      const option = entry;
       const selected = state.kind === "search"
-        ? state.lifecycle.status === "submitted" && index === highlightedIndex
-        : option.id === state.selectedId;
+        ? state.lifecycle.status === "submitted" &&
+          index === highlightedIndex &&
+          isInteractiveChoice(entry)
+        : isInteractiveChoice(entry) && entry.id === state.selectedId;
       const markerGlyph = capabilities.unicode
         ? selected ? "◉" : "○"
         : selected
@@ -227,7 +213,7 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
       const pointer = highlighted ? capabilities.unicode ? "› " : "> " : "  ";
       const styleOptions = {
         highlighted,
-        disabled: option.disabled === true,
+        disabled: isInteractiveChoice(entry) && entry.disabled === true,
         ...(props.theme === undefined ? {} : { theme: props.theme }),
       };
       const marker = capabilities.unicode
@@ -245,14 +231,13 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
             capabilities,
           )
         })`;
-      const label = `${option.label}${
-        option.disabled === true ? " (disabled)" : ""
-      }`;
-      return renderFormCliChoiceRow({
+      return renderFormCliChoiceEntry({
+        entry,
         pointer,
         marker,
-        label,
-        ...styleOptions,
+        highlighted,
+        ...(props.theme === undefined ? {} : { theme: props.theme }),
+        ...motifPassthrough(props),
         width,
       }, capabilities);
     });

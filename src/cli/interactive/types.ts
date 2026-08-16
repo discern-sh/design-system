@@ -70,6 +70,8 @@ export interface InteractionChoice<T> {
   readonly kind?: "choice";
   readonly id: string;
   readonly label: string;
+  /** Optional control-free secondary text, such as a filename or destination. */
+  readonly description?: string;
   readonly value: T;
   readonly disabled?: boolean;
 }
@@ -79,6 +81,8 @@ export interface InteractionGroupHeading {
   readonly kind: "group-heading";
   readonly id: string;
   readonly label: string;
+  /** Optional control-free secondary text describing the grouped destination. */
+  readonly description?: string;
   /** Group headings never carry a caller value. */
   readonly value?: never;
   /** Group headings are structural rather than disabled choices. */
