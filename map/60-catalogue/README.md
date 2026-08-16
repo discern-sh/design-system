@@ -2,7 +2,7 @@
 
 The Catalogue is the local browser for every Component example, public Token, terminal foundation sheet, web and terminal composition recipe, and Component selection. Run `deno task serve` and open the worktree's assigned port.
 
-The Catalogue also hosts the [interface builder](interface-builder.md), a drag-and-drop composition surface at `/style-guide/builder/` that renders real Components on a live canvas and exports consumer TSX with its runtime selection.
+The Catalogue also hosts the [interface builder](interface-builder.md), a safe adaptive composition surface at `/catalogue/builder/` that renders real Components on an inert inspection canvas and exports consumer TSX with its runtime selection.
 
 ## Find the right component
 
