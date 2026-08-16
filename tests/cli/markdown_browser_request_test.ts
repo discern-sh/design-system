@@ -377,3 +377,202 @@ Deno.test("failed enter operations emit no unmatched cleanup control", async () 
   assertEquals(io.rawTransitions, [true, false]);
   assertEquals(io.resizeListenerCount, 0);
 });
+
+Deno.test("external link actions expose resolver facts and return after restoration", async () => {
+  let resolverInput: unknown;
+  const io = new FakeTerminalIO([
+    `${encodeTerminalKeys("enter")}]${encodeTerminalKeys("enter")}`,
+  ], {
+    columns: 80,
+    rows: 24,
+    colorDepth: "truecolor",
+    hyperlinks: false,
+    mouseTracking: true,
+  });
+  const result = await requestMarkdownBrowser({
+    label: "Link request",
+    mouse: true,
+    entries: [{
+      kind: "document",
+      id: "guide",
+      label: "Guide",
+      path: "guides/start.md",
+      source: "# Guide\n\n[Read next](../reference/next.md#details)",
+    }, {
+      kind: "document",
+      id: "next",
+      label: "Next",
+      path: "reference/next.md",
+      source: "# Next\n\n## Details\n\nResolved.",
+    }],
+    resolveLink(input) {
+      resolverInput = input;
+      return {
+        kind: "external",
+        destination: "https://example.test/resolved",
+      };
+    },
+  }, { io });
+  assertEquals(resolverInput, {
+    sourceDocumentId: "guide",
+    sourcePath: "guides/start.md",
+    destination: "../reference/next.md#details",
+    availableDocuments: [{
+      id: "guide",
+      label: "Guide",
+      path: "guides/start.md",
+    }, {
+      id: "next",
+      label: "Next",
+      path: "reference/next.md",
+    }],
+  });
+  assertEquals(result.kind, "external-link");
+  if (result.kind !== "external-link") throw new Error("expected link action");
+  assertEquals(result.destination, "https://example.test/resolved");
+  assertEquals(result.sourceDocumentId, "guide");
+  assertEquals(result.state.linkFocus?.origin, "keyboard");
+  assertRestored(io);
+  assertEquals(io.writes.slice(-4), [
+    DISABLE_TERMINAL_MOUSE_SGR_MODE,
+    DISABLE_TERMINAL_MOUSE_BUTTON_TRACKING,
+    SHOW_TERMINAL_CURSOR,
+    LEAVE_TERMINAL_ALTERNATE_SCREEN,
+  ]);
+});
+
+Deno.test("default fragment resolution stays inside the browser and unresolved feedback is visible", async () => {
+  const lead = Array.from(
+    { length: 20 },
+    (_, index) => `Lead paragraph ${index + 1}.`,
+  ).join("\n\n");
+  const io = new FakeTerminalIO([
+    `${encodeTerminalKeys("enter")}]${encodeTerminalKeys("enter")}`,
+    `q${encodeTerminalKeys("down", "enter")}`,
+  ], { columns: 60, rows: 24 });
+  const result = await requestMarkdownBrowser({
+    label: "Fragments",
+    entries: [{
+      kind: "document",
+      id: "guide",
+      label: "Guide",
+      path: "guide.md",
+      source: `# Guide\n\n[Jump](#target)\n\n${lead}\n\n## Target\n\nArrived.`,
+    }, {
+      kind: "exit",
+      id: "quit",
+      label: "Quit",
+    }],
+  }, { io });
+  assertEquals(result.kind, "exit");
+  assert(
+    completeFrames(io).some((frame) => frame.includes("Target")),
+    "the default fragment resolver must paint the target before later input",
+  );
+
+  const unresolvedIo = new FakeTerminalIO([
+    `${encodeTerminalKeys("enter")}]${encodeTerminalKeys("enter")}`,
+    `q${encodeTerminalKeys("down", "enter")}`,
+  ], { columns: 60, rows: 24 });
+  await requestMarkdownBrowser({
+    label: "Unresolved",
+    entries: [{
+      kind: "document",
+      id: "guide",
+      label: "Guide",
+      path: "guide.md",
+      source: "# Guide\n\n[Missing](other.md)",
+    }, {
+      kind: "exit",
+      id: "quit",
+      label: "Quit",
+    }],
+  }, { io: unresolvedIo });
+  assert(
+    completeFrames(unresolvedIo).some((frame) =>
+      frame.includes("needs a caller resolver")
+    ),
+  );
+});
+
+Deno.test("resolver, decoder, and cooperative cancellation faults restore mouse state", async () => {
+  const linkOptions = {
+    label: "Faults",
+    mouse: true,
+    entries: [{
+      kind: "document" as const,
+      id: "guide",
+      label: "Guide",
+      path: "guide.md",
+      source: "# Guide\n\n[Link](relative.md)",
+    }],
+  };
+
+  const resolverFailure = new Error("resolver failed");
+  const resolverIo = new FakeTerminalIO([
+    `${encodeTerminalKeys("enter")}]${encodeTerminalKeys("enter")}`,
+  ], { columns: 80, rows: 24 });
+  assertEquals(
+    await requestMarkdownBrowser({
+      ...linkOptions,
+      resolveLink() {
+        throw resolverFailure;
+      },
+    }, { io: resolverIo }).catch((error) => error),
+    resolverFailure,
+  );
+  assertRestored(resolverIo);
+  assertEquals(countWrites(resolverIo, DISABLE_TERMINAL_MOUSE_SGR_MODE), 1);
+  assertEquals(
+    countWrites(resolverIo, DISABLE_TERMINAL_MOUSE_BUTTON_TRACKING),
+    1,
+  );
+
+  const decoderFailure = new Error("decoder failed");
+  const decoderIo = new FakeTerminalIO([], { columns: 80, rows: 24 });
+  assertEquals(
+    await runMarkdownBrowserRequest(linkOptions, { io: decoderIo }, {
+      createInputReader: () => ({
+        readEvent: () => Promise.reject(decoderFailure),
+      }),
+    }).catch((error) => error),
+    decoderFailure,
+  );
+  assertRestored(decoderIo);
+
+  const abortIo = new FakeTerminalIO([], {
+    columns: 80,
+    rows: 24,
+    holdOpen: true,
+  });
+  const controller = new AbortController();
+  const pending = requestMarkdownBrowser(linkOptions, {
+    io: abortIo,
+    abortSignal: controller.signal,
+  }).catch((error) => error);
+  await until(() => completeFrames(abortIo).length === 1);
+  controller.abort();
+  const aborted = await pending;
+  assert(aborted instanceof InteractionCancelled);
+  assertEquals(aborted.reason, "Cancelled.");
+  assertRestored(abortIo);
+  assertEquals(countWrites(abortIo, DISABLE_TERMINAL_MOUSE_SGR_MODE), 1);
+  assertEquals(
+    countWrites(abortIo, DISABLE_TERMINAL_MOUSE_BUTTON_TRACKING),
+    1,
+  );
+
+  const beforeStart = new FakeTerminalIO([], { columns: 80, rows: 24 });
+  const alreadyAborted = new AbortController();
+  alreadyAborted.abort();
+  await assertRejects(
+    () =>
+      requestMarkdownBrowser(linkOptions, {
+        io: beforeStart,
+        abortSignal: alreadyAborted.signal,
+      }),
+    InteractionCancelled,
+  );
+  assertEquals(beforeStart.writes, []);
+  assertEquals(beforeStart.rawTransitions, []);
+});

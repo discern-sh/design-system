@@ -256,3 +256,36 @@ export function emitStyledLine(segments: readonly StyledSegment[]): string {
   if (link !== undefined) output += hyperlinkSequence("");
   return output;
 }
+
+/**
+ * Rewrite hyperlink targets in package-styled text without changing visible
+ * text or SGR styling. Rows are re-emitted independently, so every style and
+ * hyperlink remains closed at each newline. Returning `undefined` removes an
+ * envelope while preserving its label.
+ */
+export function mapStyledHyperlinks(
+  value: string,
+  mapper: (target: string) => string | undefined,
+): string {
+  const rows: StyledSegment[][] = [[]];
+  for (const segment of parseStyledSource(value)) {
+    const parts = segment.text.split("\n");
+    for (const [index, text] of parts.entries()) {
+      if (text !== "") {
+        const link = segment.link === undefined
+          ? undefined
+          : mapper(segment.link);
+        if (link !== undefined && !validHyperlinkTarget(link)) {
+          throw new TypeError(
+            `mapped hyperlink target must be non-empty printable ASCII; received ${
+              JSON.stringify(link)
+            }`,
+          );
+        }
+        rows.at(-1)?.push({ text, codes: segment.codes, link });
+      }
+      if (index < parts.length - 1) rows.push([]);
+    }
+  }
+  return rows.map(emitStyledLine).join("\n");
+}

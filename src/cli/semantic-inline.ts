@@ -264,6 +264,15 @@ function safeDestination(value: unknown, path: string): string {
   return value;
 }
 
+/**
+ * Validate one URL reference through the semantic-inline safety authority.
+ * Browser resolvers use this for returned external destinations so they
+ * cannot widen the schemes or control repertoire admitted by Markdown.
+ */
+export function validateSemanticInlineDestination(value: unknown): string {
+  return safeDestination(value, "$.destination");
+}
+
 function codeDelimited(text: string): string {
   const longest = Math.max(
     0,

@@ -138,6 +138,12 @@ export type MarkdownBrowserLinkResolver = (
   input: MarkdownBrowserLinkResolverInput,
 ) => MarkdownBrowserLinkResolution | Promise<MarkdownBrowserLinkResolution>;
 
+/** One focused link activation awaiting a caller or default resolution. */
+export interface MarkdownBrowserLinkRequest
+  extends MarkdownBrowserLinkResolverInput {
+  readonly id: string;
+}
+
 /** How the currently addressed link acquired focus. */
 export type MarkdownBrowserLinkFocusOrigin = "keyboard" | "pointer";
 
@@ -166,7 +172,9 @@ export interface MarkdownBrowserLinkOccurrence {
   readonly destination: string;
   readonly sourceDocumentId: string;
   readonly sourcePath: string;
+  /** One-based first rendered row in the complete document projection. */
   readonly documentStartRow: number;
+  /** One-based last rendered row in the complete document projection. */
   readonly documentEndRow: number;
   readonly regions: readonly MarkdownBrowserLinkRegion[];
   readonly visibility: MarkdownBrowserLinkVisibility;
@@ -319,6 +327,7 @@ export interface MarkdownBrowserStatePatch {
   readonly pickerVisibleStart?: number;
   readonly documentScrollOffset?: number;
   readonly documentAnchor?: string | null;
+  readonly linkFocus?: MarkdownBrowserLinkFocus | null;
   readonly columns?: number;
   readonly rows?: number;
   readonly feedback?: MarkdownBrowserFeedback | null;
@@ -613,6 +622,18 @@ function validateAnchor(anchor: string | undefined): void {
   }
 }
 
+function validateLinkFocus(focus: MarkdownBrowserLinkFocus | undefined): void {
+  if (focus === undefined) return;
+  if (
+    focus.id.trim() === "" || /[\p{Cc}\p{Cf}]/u.test(focus.id) ||
+    (focus.origin !== "keyboard" && focus.origin !== "pointer")
+  ) {
+    throw new TypeError(
+      "Markdown browser link focus must have a control-free id and known origin",
+    );
+  }
+}
+
 function configFromOptions<Action>(
   options: MarkdownBrowserOptions<Action>,
   presentation: CliPresentationOptions,
@@ -670,6 +691,7 @@ function stateFrom<Action>(
   }
   validateQuery(resume.query, resume.queryCursor);
   validateAnchor(resume.documentAnchor);
+  validateLinkFocus(resume.linkFocus);
   if (
     resume.focusedPane !== "picker" && resume.focusedPane !== "document"
   ) {
@@ -758,6 +780,9 @@ function stateFrom<Action>(
     ...(resume.documentAnchor === undefined
       ? {}
       : { documentAnchor: resume.documentAnchor }),
+    ...(resume.linkFocus === undefined
+      ? {}
+      : { linkFocus: Object.freeze({ ...resume.linkFocus }) }),
     columns: geometry.columns,
     rows: geometry.rows,
     layout,
@@ -839,6 +864,9 @@ export function markdownBrowserResumableState<Action>(
     ...(state.documentAnchor === undefined
       ? {}
       : { documentAnchor: state.documentAnchor }),
+    ...(state.linkFocus === undefined
+      ? {}
+      : { linkFocus: Object.freeze({ ...state.linkFocus }) }),
   });
 }
 
@@ -868,6 +896,9 @@ export function updateMarkdownBrowserState<Action>(
     (patch.query === undefined
       ? state.queryCursor
       : segmentGraphemes(query).length);
+  const linkFocus = patch.linkFocus === null
+    ? undefined
+    : patch.linkFocus ?? state.linkFocus;
   const resume: MarkdownBrowserResumableState = {
     query,
     queryCursor: cursor,
@@ -884,6 +915,7 @@ export function updateMarkdownBrowserState<Action>(
       : {
         documentAnchor: patch.documentAnchor ?? state.documentAnchor,
       }),
+    ...(linkFocus === undefined ? {} : { linkFocus }),
   };
   return stateFrom(
     configFromState(state),

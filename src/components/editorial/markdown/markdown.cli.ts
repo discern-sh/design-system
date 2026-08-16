@@ -13,11 +13,13 @@ import {
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import type { TerminalMotif } from "../../../cli/motif.ts";
 import { createCliPresenter } from "../../../cli/presenter.ts";
-import type {
-  SemanticInlineContent,
-  SemanticInlineNode,
+import {
+  type SemanticInlineContent,
+  type SemanticInlineNode,
+  semanticInlineText,
 } from "../../../cli/semantic-inline.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
+import { hyperlinkSequence } from "../../../cli/styled-sequences.ts";
 import renderDividerCli from "../../display/divider/divider.cli.ts";
 import renderHeadingCli from "../../display/heading/heading.cli.ts";
 import renderTableCli from "../../display/table/table.cli.ts";
@@ -29,6 +31,7 @@ import renderListCli from "../list/list.cli.ts";
 import renderParagraphCli from "../paragraph/paragraph.cli.ts";
 import {
   type MarkdownBlock,
+  type MarkdownDocument,
   MarkdownParseError,
   parseMarkdown,
 } from "./markdown.model.ts";
@@ -43,6 +46,32 @@ export interface MarkdownCliProps {
   readonly motif?: TerminalMotif;
   /** Maximum document measure in cells, bounded by terminal capabilities. */
   readonly maxWidth?: number;
+}
+
+/** One semantic Markdown link identified before terminal wrapping. */
+export interface MarkdownCliProjectedLink {
+  readonly id: string;
+  readonly destination: string;
+  readonly projectionTarget: string;
+}
+
+/** One neutral Markdown heading identified in projected terminal output. */
+export interface MarkdownCliProjectedHeading {
+  readonly id: string;
+  readonly projectionTarget: string;
+}
+
+/** Browser-specific semantic facts paired with package-rendered Markdown. */
+export interface MarkdownCliProjection {
+  readonly output: string;
+  readonly links: readonly MarkdownCliProjectedLink[];
+  readonly headings: readonly MarkdownCliProjectedHeading[];
+}
+
+/** Focus decoration selected by the interactive Markdown browser. */
+export interface MarkdownCliProjectionOptions {
+  readonly focusedLinkId?: string;
+  readonly focusOrigin?: "keyboard" | "pointer";
 }
 
 /** Closed block registry asserted by Markdown projection tests. */
@@ -182,7 +211,54 @@ function assertNever(value: never): never {
   );
 }
 
-function cliInlineNode(node: SemanticInlineNode): SemanticInlineNode {
+interface MarkdownCliTracking {
+  readonly links: MarkdownCliProjectedLink[];
+  readonly headings: MarkdownCliProjectedHeading[];
+  readonly focusedLinkId: string | undefined;
+  readonly focusOrigin: "keyboard" | "pointer" | undefined;
+  readonly unicode: boolean;
+  readonly textualLinkFallback: boolean;
+}
+
+interface MarkdownCliContext {
+  readonly presentation: MarkdownCliPresentation;
+  readonly tracking?: MarkdownCliTracking;
+}
+
+function trackedTarget(kind: "link" | "heading", index: number): string {
+  return `https://discern.invalid/markdown-browser/${kind}/${index}`;
+}
+
+function decoratedLinkLabel(
+  label: SemanticInlineContent,
+  origin: "keyboard" | "pointer",
+  unicode: boolean,
+): SemanticInlineContent {
+  const [before, after] = origin === "pointer"
+    ? unicode ? ["◆", "◆"] : ["*", "*"]
+    : unicode
+    ? ["›", "‹"]
+    : [">", "<"];
+  return typeof label === "string"
+    ? [before, label, after]
+    : [before, ...label, after];
+}
+
+function fallbackLinkLabel(
+  label: SemanticInlineContent,
+  destination: string,
+): SemanticInlineContent {
+  return semanticInlineText(label) === destination
+    ? label
+    : typeof label === "string"
+    ? [label, ` (${destination})`]
+    : [...label, ` (${destination})`];
+}
+
+function cliInlineNode(
+  node: SemanticInlineNode,
+  context: MarkdownCliContext,
+): SemanticInlineNode {
   switch (node.kind) {
     case "text":
     case "literal":
@@ -194,9 +270,34 @@ function cliInlineNode(node: SemanticInlineNode): SemanticInlineNode {
     case "emphasis":
     case "strong":
     case "strikethrough":
-      return { ...node, content: cliInline(node.content) };
-    case "link":
-      return { ...node, label: cliInline(node.label) };
+      return { ...node, content: cliInline(node.content, context) };
+    case "link": {
+      const label = cliInline(node.label, context);
+      const tracking = context.tracking;
+      if (tracking === undefined) return { ...node, label };
+      const id = `link-${tracking.links.length}`;
+      const projectionTarget = trackedTarget("link", tracking.links.length);
+      tracking.links.push({
+        id,
+        destination: node.destination,
+        projectionTarget,
+      });
+      const focused = tracking.focusedLinkId === id;
+      const projectedLabel = tracking.textualLinkFallback
+        ? fallbackLinkLabel(label, node.destination)
+        : label;
+      return {
+        ...node,
+        label: focused
+          ? decoratedLinkLabel(
+            projectedLabel,
+            tracking.focusOrigin ?? "keyboard",
+            tracking.unicode,
+          )
+          : projectedLabel,
+        destination: projectionTarget,
+      };
+    }
     case "image":
       return node.alt === ""
         ? {
@@ -209,11 +310,14 @@ function cliInlineNode(node: SemanticInlineNode): SemanticInlineNode {
   }
 }
 
-function cliInline(content: SemanticInlineContent): SemanticInlineContent {
+function cliInline(
+  content: SemanticInlineContent,
+  context: MarkdownCliContext,
+): SemanticInlineContent {
   return typeof content === "string"
     ? content
     : content.map((item) =>
-      typeof item === "string" ? item : cliInlineNode(item)
+      typeof item === "string" ? item : cliInlineNode(item, context)
     );
 }
 
@@ -224,23 +328,41 @@ interface MarkdownCliPresentation {
 
 function blockToCli(
   block: MarkdownBlock,
-  presentation: MarkdownCliPresentation,
+  context: MarkdownCliContext,
 ): CliBlock {
+  const { presentation } = context;
   switch (block.kind) {
     case "paragraph":
       return createCliBlock(renderParagraphCli, {
-        content: cliInline(block.content),
+        content: cliInline(block.content, context),
         ...presentation,
       });
-    case "heading":
-      return createCliBlock(renderHeadingCli, {
-        content: cliInline(block.content),
+    case "heading": {
+      const props = {
+        content: cliInline(block.content, context),
         level: block.level,
         overflow: "wrap",
         treatment: "document",
         leadingBlankLines: 0,
         ...presentation,
-      });
+      } as const;
+      const tracking = context.tracking;
+      if (tracking === undefined) {
+        return createCliBlock(renderHeadingCli, props);
+      }
+      const projectionTarget = trackedTarget(
+        "heading",
+        tracking.headings.length,
+      );
+      tracking.headings.push({ id: block.id, projectionTarget });
+      return createCliBlock(
+        (value, capabilities) =>
+          `${hyperlinkSequence(projectionTarget)}${
+            renderHeadingCli(value, capabilities)
+          }${hyperlinkSequence("")}`,
+        props,
+      );
+    }
     case "list":
       return createCliBlock(renderListCli, {
         kind: block.listKind,
@@ -249,28 +371,24 @@ function blockToCli(
         items: block.items.map((item) => ({
           ...(item.content === undefined
             ? {}
-            : { content: cliInline(item.content) }),
+            : { content: cliInline(item.content, context) }),
           ...(item.checked === undefined ? {} : { checked: item.checked }),
           ...(item.blocks.length === 0 ? {} : {
-            blocks: item.blocks.map((child) => blockToCli(child, presentation)),
+            blocks: item.blocks.map((child) => blockToCli(child, context)),
           }),
         })),
         ...presentation,
       });
     case "blockquote":
       return createCliBlock(renderBlockquoteCli, {
-        children: block.children.map((child) =>
-          blockToCli(child, presentation)
-        ),
+        children: block.children.map((child) => blockToCli(child, context)),
         ...presentation,
       });
     case "callout":
       return createCliBlock(renderCalloutCli, {
         title: block.title,
         tone: block.tone,
-        children: block.children.map((child) =>
-          blockToCli(child, presentation)
-        ),
+        children: block.children.map((child) => blockToCli(child, context)),
         ...presentation,
       });
     case "code":
@@ -291,10 +409,12 @@ function blockToCli(
       return createCliBlock(renderTableCli, {
         layout: "responsive",
         columns: block.columns.map((column) => ({
-          header: cliInline(column.header),
+          header: cliInline(column.header, context),
           ...(column.align === undefined ? {} : { align: column.align }),
         })),
-        rows: block.rows.map((row) => row.map(cliInline)),
+        rows: block.rows.map((row) =>
+          row.map((content) => cliInline(content, context))
+        ),
         ...presentation,
       });
     case "footnotes":
@@ -303,14 +423,14 @@ function blockToCli(
           id: item.id,
           content: item.children.length === 1 &&
               item.children[0]?.kind === "paragraph"
-            ? cliInline(item.children[0].content) as readonly (
+            ? cliInline(item.children[0].content, context) as readonly (
               | string
               | SemanticInlineNode
             )[]
             : {
               kind: "blocks" as const,
               children: item.children.map((child) =>
-                blockToCli(child, presentation)
+                blockToCli(child, context)
               ),
             },
           ...(item.returnIds.length === 0 ? {} : {
@@ -327,12 +447,12 @@ function blockToCli(
   }
 }
 
-/** Render one complete Markdown document without I/O or environment reads. */
-const renderMarkdownCli: CliRenderer<MarkdownCliProps> = (
-  props,
+function renderMarkdownDocument(
+  document: MarkdownDocument,
+  props: MarkdownCliProps,
   capabilities: TerminalCapabilities,
-) => {
-  const document = parseMarkdown(props.source);
+  tracking?: MarkdownCliTracking,
+): string {
   if (document.children.length === 0) return "";
   const presenter = createCliPresenter(capabilities, {
     ...(props.theme === undefined ? {} : { theme: props.theme }),
@@ -343,10 +463,59 @@ const renderMarkdownCli: CliRenderer<MarkdownCliProps> = (
     theme: presenter.theme,
     motif: presenter.motif,
   } satisfies MarkdownCliPresentation;
+  const context: MarkdownCliContext = {
+    presentation,
+    ...(tracking === undefined ? {} : { tracking }),
+  };
   return renderCliBlocks(
-    document.children.map((block) => blockToCli(block, presentation)),
+    document.children.map((block) => blockToCli(block, context)),
     presenter.capabilities,
   );
+}
+
+/**
+ * Render Markdown with browser-only synthetic link and heading identities.
+ * The identities travel through the normal Component wrapping path as OSC 8
+ * targets, then the browser's projection authority remaps or removes them
+ * before terminal output. They never reach a caller's terminal unchanged.
+ */
+export function renderMarkdownCliProjection(
+  props: MarkdownCliProps,
+  capabilities: TerminalCapabilities,
+  options: MarkdownCliProjectionOptions = {},
+): MarkdownCliProjection {
+  const document = parseMarkdown(props.source);
+  const links: MarkdownCliProjectedLink[] = [];
+  const headings: MarkdownCliProjectedHeading[] = [];
+  const tracking: MarkdownCliTracking = {
+    links,
+    headings,
+    focusedLinkId: options.focusedLinkId,
+    focusOrigin: options.focusOrigin,
+    unicode: capabilities.unicode,
+    textualLinkFallback: !(capabilities.hyperlinks ??
+      capabilities.colorDepth !== "none"),
+  };
+  const output = renderMarkdownDocument(
+    document,
+    props,
+    { ...capabilities, hyperlinks: true },
+    tracking,
+  );
+  return Object.freeze({
+    output,
+    links: Object.freeze(links),
+    headings: Object.freeze(headings),
+  });
+}
+
+/** Render one complete Markdown document without I/O or environment reads. */
+const renderMarkdownCli: CliRenderer<MarkdownCliProps> = (
+  props,
+  capabilities: TerminalCapabilities,
+) => {
+  const document = parseMarkdown(props.source);
+  return renderMarkdownDocument(document, props, capabilities);
 };
 
 export default renderMarkdownCli;

@@ -10,6 +10,8 @@ import type {
 } from "../interactive-states.ts";
 import { renderMotifSectionRule } from "../motifs.ts";
 import { styleSemanticText } from "../narration.ts";
+import { projectTerminalCellRows } from "../projection.ts";
+import { mapStyledHyperlinks } from "../styled-sequences.ts";
 import {
   measureText,
   padText,
@@ -21,7 +23,7 @@ import {
   terminalThemes,
   terminalToneColor,
 } from "../theme.ts";
-import renderMarkdownCli from "../../components/editorial/markdown/markdown.cli.ts";
+import { renderMarkdownCliProjection } from "../../components/editorial/markdown/markdown.cli.ts";
 import {
   insertFormCliCursor,
   renderFormCliChoiceEntry,
@@ -32,6 +34,7 @@ import {
   isMarkdownBrowserSelectable,
   type MarkdownBrowserEntry,
   markdownBrowserEntry,
+  type MarkdownBrowserLinkOccurrence,
   type MarkdownBrowserState,
   updateMarkdownBrowserState,
 } from "./markdown-browser-model.ts";
@@ -383,22 +386,77 @@ export function markdownBrowserDocumentVisibleRows<Action>(
   return Math.max(1, state.layout.documentRows - 2);
 }
 
-/** Render the opened document into independently valid styled rows. */
-export function markdownBrowserDocumentLines<Action>(
+interface MarkdownBrowserProjectedHeading {
+  readonly id: string;
+  /** Zero-based rendered document row. */
+  readonly row: number;
+}
+
+interface MarkdownBrowserDocumentProjection {
+  readonly lines: readonly string[];
+  readonly links: readonly MarkdownBrowserLinkOccurrence[];
+  readonly headings: readonly MarkdownBrowserProjectedHeading[];
+}
+
+function logicalLinkId(documentId: string, localId: string): string {
+  return `${documentId}:${localId}`;
+}
+
+function supportsHyperlinks(capabilities: TerminalCapabilities): boolean {
+  return capabilities.hyperlinks ?? capabilities.colorDepth !== "none";
+}
+
+/**
+ * Render one opened Markdown document and derive logical links plus cell hit
+ * regions from the same package-styled projection. Synthetic identities are
+ * removed or remapped before `lines` can reach the terminal.
+ */
+function markdownBrowserDocumentProjection<Action>(
   state: MarkdownBrowserState<Action>,
   capabilities: TerminalCapabilities,
-): readonly string[] {
+): MarkdownBrowserDocumentProjection {
   const entry = markdownBrowserEntry(state, state.openedDocumentId);
-  if (entry === undefined || !isMarkdownBrowserDocument(entry)) return [];
+  if (entry === undefined || !isMarkdownBrowserDocument(entry)) {
+    return { lines: [], links: [], headings: [] };
+  }
   const innerWidth = state.columns - 2;
   const measure = Math.min(state.documentMeasure, innerWidth);
-  const documentCapabilities = { ...capabilities, columns: measure };
-  const rendered = renderMarkdownCli({
-    source: entry.source,
-    theme: state.theme,
-    motif: state.motif,
-    maxWidth: measure,
-  }, documentCapabilities);
+  const documentCapabilities = {
+    ...capabilities,
+    columns: measure,
+  };
+  const localFocus = state.linkFocus?.id.startsWith(`${entry.id}:`) === true
+    ? state.linkFocus.id.slice(entry.id.length + 1)
+    : undefined;
+  const projected = renderMarkdownCliProjection(
+    {
+      source: entry.source,
+      theme: state.theme,
+      motif: state.motif,
+      maxWidth: measure,
+    },
+    documentCapabilities,
+    {
+      ...(localFocus === undefined ? {} : { focusedLinkId: localFocus }),
+      ...(state.linkFocus?.origin === undefined
+        ? {}
+        : { focusOrigin: state.linkFocus.origin }),
+    },
+  );
+  const linkByTarget = new Map(
+    projected.links.map((link) => [link.projectionTarget, link] as const),
+  );
+  const headingTargets = new Set(
+    projected.headings.map((heading) => heading.projectionTarget),
+  );
+  const rendered = mapStyledHyperlinks(projected.output, (target) => {
+    const link = linkByTarget.get(target);
+    if (link !== undefined) {
+      return supportsHyperlinks(capabilities) ? link.destination : undefined;
+    }
+    if (headingTargets.has(target)) return undefined;
+    return supportsHyperlinks(capabilities) ? target : undefined;
+  });
   const sourceLines = rendered === ""
     ? [styleSemanticText("Empty document.", {
       role: "annotation",
@@ -406,7 +464,7 @@ export function markdownBrowserDocumentLines<Action>(
     }, documentCapabilities)]
     : rendered.split("\n");
   const indent = " ".repeat(Math.floor((innerWidth - measure) / 2));
-  return Object.freeze(sourceLines.map((line) => {
+  const lines = Object.freeze(sourceLines.map((line) => {
     const value = `${indent}${line}`;
     if (measureText(value) > innerWidth) {
       throw new TypeError(
@@ -415,6 +473,108 @@ export function markdownBrowserDocumentLines<Action>(
     }
     return value;
   }));
+  const cellRows = projectTerminalCellRows(projected.output);
+  const visibleRows = state.layout.documentRows === 0
+    ? 0
+    : markdownBrowserDocumentVisibleRows(state);
+  const viewportStart = state.documentScrollOffset;
+  const viewportEnd = viewportStart + visibleRows;
+  const links = Object.freeze(projected.links.map((link) => {
+    const rowRanges = new Map<
+      number,
+      { readonly start: number; readonly end: number }
+    >();
+    for (const row of cellRows) {
+      for (
+        const span of row.spans.filter((span) =>
+          span.link === link.projectionTarget
+        )
+      ) {
+        const prior = rowRanges.get(row.row);
+        rowRanges.set(row.row, {
+          start: Math.min(prior?.start ?? span.startColumn, span.startColumn),
+          end: Math.max(prior?.end ?? span.endColumn, span.endColumn),
+        });
+      }
+    }
+    const ranges = [...rowRanges.entries()].sort(([left], [right]) =>
+      left - right
+    );
+    const firstRow = (ranges[0]?.[0] ?? 1) - 1;
+    const lastRow = (ranges.at(-1)?.[0] ?? 1) - 1;
+    const regions = Object.freeze(ranges.flatMap(([row, range]) => {
+      const documentRow = row - 1;
+      return documentRow < viewportStart || documentRow >= viewportEnd ? [] : [{
+        row: documentRow - viewportStart + 1,
+        startColumn: indent.length + range.start,
+        endColumn: indent.length + range.end,
+      }];
+    }));
+    const id = logicalLinkId(entry.id, link.id);
+    return Object.freeze({
+      id,
+      destination: link.destination,
+      sourceDocumentId: entry.id,
+      sourcePath: entry.path,
+      documentStartRow: firstRow + 1,
+      documentEndRow: lastRow + 1,
+      regions,
+      visibility: visibleRows > 0 && lastRow >= viewportStart &&
+          firstRow < viewportEnd
+        ? "visible" as const
+        : lastRow < viewportStart
+        ? "above" as const
+        : "below" as const,
+      focused: state.linkFocus?.id === id,
+    });
+  }));
+  const headings = Object.freeze(projected.headings.flatMap((heading) => {
+    const row = cellRows.find((candidate) =>
+      candidate.spans.some((span) => span.link === heading.projectionTarget)
+    );
+    return row === undefined ? [] : [{ id: heading.id, row: row.row - 1 }];
+  }));
+  return Object.freeze({ lines, links, headings });
+}
+
+/** Render the opened document into independently valid styled rows. */
+export function markdownBrowserDocumentLines<Action>(
+  state: MarkdownBrowserState<Action>,
+  capabilities: TerminalCapabilities,
+): readonly string[] {
+  return markdownBrowserDocumentProjection(state, capabilities).lines;
+}
+
+/** Logical link occurrences and visible cell regions for the open document. */
+export function markdownBrowserLinkOccurrences<Action>(
+  state: MarkdownBrowserState<Action>,
+  capabilities: TerminalCapabilities,
+): readonly MarkdownBrowserLinkOccurrence[] {
+  return markdownBrowserDocumentProjection(state, capabilities).links;
+}
+
+function fragmentId(fragment: string): string | undefined {
+  const value = fragment.startsWith("#") ? fragment.slice(1) : fragment;
+  if (value === "") return undefined;
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return undefined;
+  }
+}
+
+/** Resolve a Markdown heading fragment to its zero-based rendered row. */
+export function markdownBrowserDocumentFragmentOffset<Action>(
+  state: MarkdownBrowserState<Action>,
+  capabilities: TerminalCapabilities,
+  fragment: string,
+): number | undefined {
+  const id = fragmentId(fragment);
+  return id === undefined
+    ? undefined
+    : markdownBrowserDocumentProjection(state, capabilities).headings.find(
+      (heading) => heading.id === id,
+    )?.row;
 }
 
 /** Maximum valid top row for the currently opened document. */
@@ -520,8 +680,26 @@ function footerText<Action>(
 ): readonly [string, string] {
   const arrows = capabilities.unicode ? "↑↓" : "Up/Down";
   if (state.focusedPane === "document") {
+    if (state.feedback !== undefined) {
+      return [
+        truncateText(
+          state.feedback.message,
+          state.columns,
+          capabilities.unicode ? "…" : ".",
+        ),
+        state.linkFocus === undefined
+          ? "[/] links  Tab picker  Esc/q close"
+          : "[/] links  Enter  Esc  Tab picker",
+      ];
+    }
+    if (state.linkFocus !== undefined) {
+      return [
+        `${arrows}/Pg  [/] links  Tab picker`,
+        "Enter follow  Esc return to scroll",
+      ];
+    }
     return [
-      `${arrows}/Pg scroll  Home/End edges`,
+      `${arrows}/Pg scroll  Home/End`,
       "Tab picker  Esc/q close",
     ];
   }

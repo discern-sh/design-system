@@ -17,6 +17,7 @@ import {
 } from "../../src/cli/ansi.ts";
 import { renderBadgeCli } from "../../src/generated/cli-renderers.ts";
 import {
+  projectTerminalCellRows,
   projectTerminalHtml,
   projectTerminalInlineHtml,
   projectTerminalSpans,
@@ -241,6 +242,44 @@ Deno.test("projection rejects input outside the emitted repertoire", () => {
 Deno.test("projection accepts newlines and tabs as frame text", () => {
   assertEquals(projectTerminalSpans("one\n\ttwo\n"), [
     { text: "one\n\ttwo\n" },
+  ]);
+});
+
+Deno.test("cell projection addresses styled links across graphemes, tabs, and rows", () => {
+  const accent = terminalToneColor(terminalThemes.dark, "accent");
+  const linked = styleHyperlink(
+    "A界",
+    "https://discern.sh/linked",
+    testTerminalCapabilities({ colorDepth: "truecolor" }),
+    { underline: true, color: accent },
+  );
+  assertEquals(projectTerminalCellRows(`x\t${linked}\nend`), [
+    {
+      row: 1,
+      columns: 11,
+      spans: [
+        { text: "x\t", startColumn: 1, endColumn: 8 },
+        {
+          text: "A界",
+          style: {
+            underline: true,
+            color: {
+              red: accent.red,
+              green: accent.green,
+              blue: accent.blue,
+            },
+          },
+          link: "https://discern.sh/linked",
+          startColumn: 9,
+          endColumn: 11,
+        },
+      ],
+    },
+    {
+      row: 2,
+      columns: 3,
+      spans: [{ text: "end", startColumn: 1, endColumn: 3 }],
+    },
   ]);
 });
 

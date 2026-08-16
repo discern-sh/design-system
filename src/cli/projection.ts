@@ -55,6 +55,20 @@ export interface TerminalSpan {
   readonly link?: string;
 }
 
+/** One projected span placed on an inclusive one-based cell range. */
+export interface TerminalCellSpan extends TerminalSpan {
+  readonly startColumn: number;
+  readonly endColumn: number;
+}
+
+/** One projected terminal row with cell-addressed styled spans. */
+export interface TerminalCellRow {
+  /** One-based row in the projected output. */
+  readonly row: number;
+  readonly columns: number;
+  readonly spans: readonly TerminalCellSpan[];
+}
+
 /** Browser style declarations for one decoded span style. */
 export interface TerminalSpanCss {
   readonly color?: string;
@@ -397,6 +411,53 @@ function projectedTerminalLines(
   return rows.map((row) => ({
     spans: row,
     text: row.map((span) => span.text).join(""),
+  }));
+}
+
+function terminalPartColumns(value: string, current: number): number {
+  let columns = current;
+  for (const { segment } of terminalCellSegmenter.segment(value)) {
+    columns += segment === "\t" ? 8 - columns % 8 : graphemeWidth(segment);
+  }
+  return columns - current;
+}
+
+/**
+ * Project package-emitted output into styled rows with one-based inclusive
+ * terminal-cell ranges. Newlines advance rows, tabs use eight-cell stops,
+ * and grapheme widths come from the same authority as terminal rendering.
+ */
+export function projectTerminalCellRows(
+  output: string,
+): readonly TerminalCellRow[] {
+  const rows: TerminalCellSpan[][] = [[]];
+  let columns = 0;
+  for (const span of projectTerminalSpans(output)) {
+    const parts = span.text.split("\n");
+    for (const [index, text] of parts.entries()) {
+      if (text !== "") {
+        const width = terminalPartColumns(text, columns);
+        if (width > 0) {
+          rows.at(-1)?.push({
+            text,
+            ...(span.style === undefined ? {} : { style: span.style }),
+            ...(span.link === undefined ? {} : { link: span.link }),
+            startColumn: columns + 1,
+            endColumn: columns + width,
+          });
+          columns += width;
+        }
+      }
+      if (index < parts.length - 1) {
+        rows.push([]);
+        columns = 0;
+      }
+    }
+  }
+  return rows.map((spans, index) => ({
+    row: index + 1,
+    columns: spans.at(-1)?.endColumn ?? 0,
+    spans,
   }));
 }
 

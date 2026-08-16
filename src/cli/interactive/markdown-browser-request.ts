@@ -1,9 +1,10 @@
 /** Effect adapter for the keyboard Markdown browser. */
 
 import type { TerminalCapabilities } from "../capabilities.ts";
+import { validateSemanticInlineDestination } from "../semantic-inline.ts";
 import { InteractionCancelled } from "./errors.ts";
 import { DenoTerminalIO, type TerminalIO, type TerminalSize } from "./io.ts";
-import { TerminalKeyReader } from "./keys.ts";
+import { type TerminalInputEvent, TerminalInputReader } from "./keys.ts";
 import { assertInteractiveTerminal, withRawTerminal } from "./lifecycle.ts";
 import {
   type MarkdownBrowserInputEvent,
@@ -11,6 +12,8 @@ import {
 } from "./markdown-browser-machine.ts";
 import {
   createMarkdownBrowserState,
+  type MarkdownBrowserLinkRequest,
+  type MarkdownBrowserLinkResolution,
   type MarkdownBrowserOptions,
   MarkdownBrowserRefusalError,
   type MarkdownBrowserResult,
@@ -29,9 +32,21 @@ type BrowserRenderer = <Action>(
   capabilities: TerminalCapabilities,
 ) => string;
 
+interface BrowserInputReader {
+  readEvent(): Promise<TerminalInputEvent | null>;
+}
+
+/** Runtime effects and optional cooperative cancellation for one browser. */
+export interface MarkdownBrowserRuntime extends InteractionRuntime {
+  /** Cancel an active read or resolver wait; terminal restoration runs first. */
+  readonly abortSignal?: AbortSignal;
+}
+
 /** Internal renderer seam used to prove effect restoration after render faults. */
 export interface MarkdownBrowserRequestServices {
   readonly render?: BrowserRenderer;
+  /** Internal decoder seam used to prove restoration after reader faults. */
+  readonly createInputReader?: (io: TerminalIO) => BrowserInputReader;
 }
 
 interface TerminalFacts {
@@ -92,6 +107,73 @@ class ResizeMailbox {
   }
 }
 
+class AbortMailbox {
+  readonly event: Promise<{ readonly kind: "abort" }>;
+  readonly #signal: AbortSignal | undefined;
+  readonly #notify: (() => void) | undefined;
+
+  constructor(signal: AbortSignal | undefined) {
+    this.#signal = signal;
+    if (signal === undefined) {
+      this.#notify = undefined;
+      this.event = new Promise(() => {});
+      return;
+    }
+    let notify: () => void = () => {};
+    this.event = new Promise((resolve) => {
+      notify = () => resolve({ kind: "abort" });
+    });
+    this.#notify = notify;
+    if (signal.aborted) notify();
+    else signal.addEventListener("abort", notify, { once: true });
+  }
+
+  stop(): void {
+    if (this.#signal !== undefined && this.#notify !== undefined) {
+      this.#signal.removeEventListener("abort", this.#notify);
+    }
+  }
+}
+
+function defaultLinkResolution(
+  request: MarkdownBrowserLinkRequest,
+): MarkdownBrowserLinkResolution {
+  const destination = validateSemanticInlineDestination(request.destination);
+  if (destination.startsWith("#")) {
+    return { kind: "fragment", fragment: destination };
+  }
+  if (/^(?:(?:https?|mailto|file):|\/\/)/iu.test(destination)) {
+    return { kind: "external", destination };
+  }
+  return {
+    kind: "unresolved",
+    message: "This document destination needs a caller resolver.",
+  };
+}
+
+async function resolveLink(
+  options: MarkdownBrowserOptions<unknown>,
+  request: MarkdownBrowserLinkRequest,
+  abort: AbortMailbox,
+): Promise<MarkdownBrowserLinkResolution> {
+  const pending = options.resolveLink === undefined
+    ? Promise.resolve(defaultLinkResolution(request))
+    : Promise.resolve(options.resolveLink({
+      sourceDocumentId: request.sourceDocumentId,
+      sourcePath: request.sourcePath,
+      destination: request.destination,
+      availableDocuments: request.availableDocuments,
+    }));
+  const settled = await Promise.race([
+    pending.then((resolution) => ({ kind: "resolution" as const, resolution })),
+    abort.event,
+  ]);
+  if (settled.kind === "abort") {
+    throw new InteractionCancelled("Cancelled.");
+  }
+  return settled.resolution;
+}
+
 function resizeEvent(facts: TerminalFacts): MarkdownBrowserInputEvent {
   return {
     kind: "resize",
@@ -107,9 +189,12 @@ function resizeEvent(facts: TerminalFacts): MarkdownBrowserInputEvent {
  */
 export async function runMarkdownBrowserRequest<Action>(
   options: MarkdownBrowserOptions<Action>,
-  runtime: InteractionRuntime = {},
+  runtime: MarkdownBrowserRuntime = {},
   services: MarkdownBrowserRequestServices = {},
 ): Promise<MarkdownBrowserResult<Action>> {
+  if (runtime.abortSignal?.aborted === true) {
+    throw new InteractionCancelled("Cancelled.");
+  }
   const io = runtime.io ?? new DenoTerminalIO();
   assertInteractiveTerminal(io);
   const render = services.render ?? renderMarkdownBrowser;
@@ -124,8 +209,10 @@ export async function runMarkdownBrowserRequest<Action>(
   let frame = render(state, facts.capabilities);
 
   const painter = new CompleteFramePainter(io);
-  const reader = new TerminalKeyReader(io);
+  const reader = services.createInputReader?.(io) ??
+    new TerminalInputReader(io);
   const resize = new ResizeMailbox();
+  const abort = new AbortMailbox(runtime.abortSignal);
   let stopResizeListener: () => void = () => {};
   let resizeListening = false;
   const stopResize = (): void => {
@@ -134,86 +221,130 @@ export async function runMarkdownBrowserRequest<Action>(
     stopResizeListener();
   };
 
-  return await withRawTerminal(io, async () => {
-    let outcome: Settled<MarkdownBrowserResult<Action>>;
-    try {
-      stopResizeListener = io.listenResize?.(resize.notify) ?? (() => {});
-      resizeListening = true;
-      painter.replace(frame);
+  try {
+    return await withRawTerminal(io, async () => {
+      let outcome: Settled<MarkdownBrowserResult<Action>>;
+      try {
+        stopResizeListener = io.listenResize?.(resize.notify) ?? (() => {});
+        resizeListening = true;
+        painter.replace(frame);
 
-      let keyRead = reader.readKey().then((key) => ({
-        kind: "key" as const,
-        key,
-      }));
-      let resizeRead = resize.next().then(() => ({
-        kind: "resize" as const,
-      }));
+        let inputRead = reader.readEvent().then((event) => ({
+          kind: "input" as const,
+          event,
+        }));
+        let resizeRead = resize.next().then(() => ({
+          kind: "resize" as const,
+        }));
 
-      while (true) {
-        const received = await Promise.race([keyRead, resizeRead]);
-        if (received.kind === "resize") {
-          resizeRead = resize.next().then(() => ({
-            kind: "resize" as const,
-          }));
-        }
+        while (true) {
+          const received = await Promise.race([
+            inputRead,
+            resizeRead,
+            abort.event,
+          ]);
+          if (received.kind === "abort") {
+            throw new InteractionCancelled("Cancelled.");
+          }
+          if (received.kind === "resize") {
+            resizeRead = resize.next().then(() => ({
+              kind: "resize" as const,
+            }));
+          }
 
-        const currentFacts = terminalFacts(io);
-        if (!sameGeometry(state, currentFacts)) {
-          const resized = transitionMarkdownBrowser(
+          const currentFacts = terminalFacts(io);
+          if (!sameGeometry(state, currentFacts)) {
+            const resized = transitionMarkdownBrowser(
+              state,
+              resizeEvent(currentFacts),
+              currentFacts.capabilities,
+            );
+            state = resized.state;
+            facts = currentFacts;
+            frame = render(state, facts.capabilities);
+            painter.replace(frame);
+          } else {
+            facts = currentFacts;
+          }
+
+          if (received.kind === "resize") continue;
+          const event: MarkdownBrowserInputEvent | undefined =
+            received.event === null
+              ? { kind: "end-of-input" }
+              : received.event.kind === "key"
+              ? { kind: "key", key: received.event.key }
+              : undefined;
+          if (event === undefined) {
+            inputRead = reader.readEvent().then((input) => ({
+              kind: "input" as const,
+              event: input,
+            }));
+            continue;
+          }
+          const next = transitionMarkdownBrowser(
             state,
-            resizeEvent(currentFacts),
-            currentFacts.capabilities,
+            event,
+            facts.capabilities,
           );
-          state = resized.state;
-          facts = currentFacts;
+          state = next.state;
+          let settled = next;
+          if (next.linkRequest !== undefined) {
+            const resolution = await resolveLink(
+              options,
+              next.linkRequest,
+              abort,
+            );
+            const resolvedFacts = terminalFacts(io);
+            if (!sameGeometry(state, resolvedFacts)) {
+              state = transitionMarkdownBrowser(
+                state,
+                resizeEvent(resolvedFacts),
+                resolvedFacts.capabilities,
+              ).state;
+            }
+            facts = resolvedFacts;
+            settled = transitionMarkdownBrowser(state, {
+              kind: "link-resolution",
+              request: next.linkRequest,
+              resolution,
+            }, facts.capabilities);
+            state = settled.state;
+          }
+          if (settled.result?.kind === "cancelled") {
+            throw new InteractionCancelled(settled.result.reason);
+          }
+          if (settled.result !== undefined) {
+            outcome = { ok: true, value: settled.result };
+            break;
+          }
+
           frame = render(state, facts.capabilities);
           painter.replace(frame);
-        } else {
-          facts = currentFacts;
+          inputRead = reader.readEvent().then((input) => ({
+            kind: "input" as const,
+            event: input,
+          }));
         }
-
-        if (received.kind === "resize") continue;
-        const event: MarkdownBrowserInputEvent = received.key === null
-          ? { kind: "end-of-input" }
-          : { kind: "key", key: received.key };
-        const next = transitionMarkdownBrowser(
-          state,
-          event,
-          facts.capabilities,
-        );
-        state = next.state;
-        if (next.result?.kind === "cancelled") {
-          throw new InteractionCancelled(next.result.reason);
-        }
-        if (next.result !== undefined) {
-          outcome = { ok: true, value: next.result };
-          break;
-        }
-
-        frame = render(state, facts.capabilities);
-        painter.replace(frame);
-        keyRead = reader.readKey().then((key) => ({
-          kind: "key" as const,
-          key,
-        }));
+      } catch (error) {
+        outcome = { ok: false, error };
       }
-    } catch (error) {
-      outcome = { ok: false, error };
-    }
 
-    try {
-      stopResize();
-    } catch (cleanupError) {
-      if (outcome.ok) throw cleanupError;
-    }
-    if (!outcome.ok) throw outcome.error;
-    return outcome.value;
-  }, {
-    ...signalPassthrough(runtime),
-    alternateScreen: true,
-    mouseTracking: options.mouse === true,
-    onSignalRestore: stopResize,
-  });
+      try {
+        stopResize();
+      } catch (cleanupError) {
+        if (outcome.ok) throw cleanupError;
+      }
+      if (!outcome.ok) throw outcome.error;
+      return outcome.value;
+    }, {
+      ...signalPassthrough(runtime),
+      alternateScreen: true,
+      mouseTracking: options.mouse === true,
+      onSignalRestore: stopResize,
+    });
+  } finally {
+    abort.stop();
+  }
 }
 
 /**
@@ -225,7 +356,7 @@ export async function runMarkdownBrowserRequest<Action>(
  */
 export async function requestMarkdownBrowser<Action>(
   options: MarkdownBrowserOptions<Action>,
-  runtime: InteractionRuntime = {},
+  runtime: MarkdownBrowserRuntime = {},
 ): Promise<MarkdownBrowserResult<Action>> {
   return await runMarkdownBrowserRequest(options, runtime);
 }

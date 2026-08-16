@@ -24,6 +24,7 @@ export type {
   MarkdownBrowserLinkFocusOrigin,
   MarkdownBrowserLinkOccurrence,
   MarkdownBrowserLinkRegion,
+  MarkdownBrowserLinkRequest,
   MarkdownBrowserLinkResolution,
   MarkdownBrowserLinkResolver,
   MarkdownBrowserLinkResolverInput,
@@ -43,4 +44,5 @@ export type {
   MarkdownBrowserTransitionResult,
 } from "./markdown-browser-machine.ts";
 export { requestMarkdownBrowser } from "./markdown-browser-request.ts";
+export type { MarkdownBrowserRuntime } from "./markdown-browser-request.ts";
 export { renderMarkdownBrowser } from "./markdown-browser-renderer.ts";
