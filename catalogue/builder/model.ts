@@ -171,22 +171,26 @@ function mapChildren(
   children: readonly BuilderSlotChild[],
   transform: (child: BuilderSlotChild) => BuilderSlotChild,
 ): readonly BuilderSlotChild[] {
-  return children.map((child) => {
+  let listChanged = false;
+  const mappedChildren = children.map((child) => {
     const mapped = transform(child);
-    if (mapped.kind !== "component") return mapped;
-    let changed = mapped !== child;
-    const props: Record<string, BuilderPropValue> = {};
+    if (mapped.kind !== "component") {
+      if (mapped !== child) listChanged = true;
+      return mapped;
+    }
+    let props: Record<string, BuilderPropValue> | undefined;
     for (const [name, value] of Object.entries(mapped.props)) {
-      if (value.kind !== "slot") {
-        props[name] = value;
-        continue;
-      }
+      if (value.kind !== "slot") continue;
       const nested = mapChildren(value.children, transform);
-      if (nested !== value.children) changed = true;
+      if (nested === value.children) continue;
+      props ??= { ...mapped.props };
       props[name] = { kind: "slot", children: nested };
     }
-    return changed ? { ...mapped, props } : child;
+    const result = props === undefined ? mapped : { ...mapped, props };
+    if (result !== child) listChanged = true;
+    return result;
   });
+  return listChanged ? mappedChildren : children;
 }
 
 function withChildrenAt(
@@ -197,7 +201,10 @@ function withChildrenAt(
   ) => readonly BuilderSlotChild[],
 ): BuilderDocument {
   if (location.parent === "root") {
-    return { ...document, children: update(document.children) };
+    const children = update(document.children);
+    return children === document.children
+      ? document
+      : { ...document, children };
   }
   const children = mapChildren(document.children, (child) => {
     if (child.kind !== "component" || child.id !== location.nodeId) {
@@ -205,15 +212,29 @@ function withChildrenAt(
     }
     const slot = child.props[location.prop];
     const existing = slot?.kind === "slot" ? slot.children : [];
+    const next = update(existing);
+    if (next === existing) return child;
     return {
       ...child,
       props: {
         ...child.props,
-        [location.prop]: { kind: "slot", children: update(existing) },
+        [location.prop]: { kind: "slot", children: next },
       },
     };
   });
-  return { ...document, children };
+  return children === document.children ? document : { ...document, children };
+}
+
+function childrenAt(
+  document: BuilderDocument,
+  location: BuilderLocation,
+): readonly BuilderSlotChild[] | undefined {
+  if (location.parent === "root") return document.children;
+  const parent = findChild(document, location.nodeId)?.child;
+  if (parent === undefined || parent.kind !== "component") return undefined;
+  const slot = parent.props[location.prop];
+  if (slot === undefined) return [];
+  return slot.kind === "slot" ? slot.children : undefined;
 }
 
 /** Insert a child at an index (clamped) inside a root or slot location. */
@@ -263,12 +284,16 @@ export function moveChild(
     if (isWithinSubtree(document, id, location.nodeId)) return document;
   }
   const sameParent = sameLocation(found.location, location);
+  const destinationChildren = childrenAt(document, location);
+  if (destinationChildren === undefined) return document;
+  const clamped = Math.max(0, Math.min(index, destinationChildren.length));
+  const at = sameParent && found.index < clamped ? clamped - 1 : clamped;
+  if (sameParent && at === found.index) return document;
   const removed = withChildrenAt(
     document,
     found.location,
     (children) => children.filter((child) => child.id !== id),
   );
-  const at = sameParent && found.index < index ? index - 1 : index;
   return insertChild(removed, location, at, found.child);
 }
 
@@ -285,8 +310,10 @@ export function nudgeChild(
 ): BuilderDocument {
   const found = findChild(document, id);
   if (found === undefined) return document;
+  const siblings = childrenAt(document, found.location);
+  if (siblings === undefined) return document;
   const target = found.index + direction;
-  if (target < 0) return document;
+  if (target < 0 || target >= siblings.length) return document;
   return moveChild(
     document,
     id,
@@ -304,12 +331,14 @@ export function updateNodeProp(
 ): BuilderDocument {
   const children = mapChildren(document.children, (child) => {
     if (child.kind !== "component" || child.id !== nodeId) return child;
+    if (value === undefined && child.props[prop] === undefined) return child;
+    if (value !== undefined && child.props[prop] === value) return child;
     const props = { ...child.props };
     if (value === undefined) delete props[prop];
     else props[prop] = value;
     return { ...child, props };
   });
-  return { ...document, children };
+  return children === document.children ? document : { ...document, children };
 }
 
 /** Replace the raw additional-props JSON source on a component node. */
@@ -321,12 +350,14 @@ export function updateNodeExtra(
   const children = mapChildren(document.children, (child) => {
     if (child.kind !== "component" || child.id !== nodeId) return child;
     if (extra.trim() === "") {
+      if (child.extra === undefined) return child;
       const { extra: _removed, ...rest } = child;
       return rest;
     }
+    if (child.extra === extra) return child;
     return { ...child, extra };
   });
-  return { ...document, children };
+  return children === document.children ? document : { ...document, children };
 }
 
 /** Replace the text of a text child. */
@@ -338,9 +369,11 @@ export function updateTextChild(
   const children = mapChildren(
     document.children,
     (child) =>
-      child.kind === "text" && child.id === id ? { ...child, text } : child,
+      child.kind === "text" && child.id === id && child.text !== text
+        ? { ...child, text }
+        : child,
   );
-  return { ...document, children };
+  return children === document.children ? document : { ...document, children };
 }
 
 function cloneWithNewIds(child: BuilderSlotChild): BuilderSlotChild {
