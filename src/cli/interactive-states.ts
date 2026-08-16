@@ -96,7 +96,10 @@ export interface InteractiveChoiceOverflowState {
 
 /** Visual state for selecting exactly one option. */
 export interface SelectFrameState
-  extends InteractiveFrameBase, InteractiveChoiceOverflowState {
+  extends
+    InteractiveFrameBase,
+    InteractiveChoiceOverflowState,
+    InteractiveChoicePresentationState {
   readonly kind: "select";
   readonly options: readonly InteractiveChoiceEntryState[];
   readonly highlightedIndex: number;
@@ -107,7 +110,10 @@ export interface SelectFrameState
 
 /** Visual state for selecting zero or more options. */
 export interface MultiselectFrameState
-  extends InteractiveFrameBase, InteractiveChoiceOverflowState {
+  extends
+    InteractiveFrameBase,
+    InteractiveChoiceOverflowState,
+    InteractiveChoicePresentationState {
   readonly kind: "multiselect";
   readonly options: readonly InteractiveChoiceEntryState[];
   readonly highlightedIndex: number;
@@ -118,7 +124,10 @@ export interface MultiselectFrameState
 
 /** Visual state for a query and its selectable result set. */
 export interface SearchFrameState
-  extends InteractiveFrameBase, InteractiveChoiceOverflowState {
+  extends
+    InteractiveFrameBase,
+    InteractiveChoiceOverflowState,
+    InteractiveChoicePresentationState {
   readonly kind: "search";
   readonly query: string;
   /** Grapheme index at which the query cursor is drawn. */
@@ -136,7 +145,10 @@ export interface SearchFrameState
  * the results — so selection state never silently drops.
  */
 export interface SearchMultiselectFrameState
-  extends InteractiveFrameBase, InteractiveChoiceOverflowState {
+  extends
+    InteractiveFrameBase,
+    InteractiveChoiceOverflowState,
+    InteractiveChoicePresentationState {
   readonly kind: "search-multiselect";
   readonly query: string;
   /** Grapheme index at which the query cursor is drawn. */

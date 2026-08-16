@@ -34,6 +34,7 @@ import {
   isInteractionChoice,
   moveEnabledIndex,
   nearestEnabledIndex,
+  resolveInteractionChoicePresentation,
 } from "./choice-navigation.ts";
 import {
   type InteractionMachine,
@@ -45,6 +46,7 @@ import { isNamedKey, type TerminalKey } from "./keys.ts";
 import type { InteractionFrameViewport } from "./viewport-budget.ts";
 import type {
   InteractionChoice,
+  InteractionChoicePresentation,
   InteractionDelayScheduler,
   InteractionEntry,
   InteractionOptions,
@@ -246,12 +248,15 @@ export interface SearchRequestOptions<T>
   readonly placeholder?: string;
   /** Requested upper bound on result rows; the viewport may reduce it per frame. */
   readonly visibleCount?: number;
+  /** Form lifecycle chrome (default) or a quiet long-lived browsing frame. */
+  readonly presentation?: InteractionChoicePresentation;
 }
 
 class SearchInteractionMachine<T>
   implements InteractionMachine<T | undefined, SearchFrameState> {
   readonly #editor = new GraphemeTextEditor();
   readonly #visibleCount: number;
+  readonly #presentation: "browsing" | undefined;
   readonly #calls: DiscoveryProviderCalls<readonly InteractionEntry<T>[]>;
   #matches: readonly InteractionEntry<T>[] = [];
   #highlighted: number | undefined;
@@ -259,6 +264,9 @@ class SearchInteractionMachine<T>
 
   constructor(readonly options: SearchRequestOptions<T>) {
     this.#visibleCount = choiceVisibleCount(options.visibleCount);
+    this.#presentation = resolveInteractionChoicePresentation(
+      options.presentation,
+    );
     this.#rememberedId = options.initialId;
     this.#calls = new DiscoveryProviderCalls({
       call: searchProvider(options.search),
@@ -364,6 +372,9 @@ class SearchInteractionMachine<T>
       cursor: this.#editor.cursor,
       results: visible.map(({ entry }) => entry),
       ...interactiveChoiceOverflow(choices, start, visibleCount),
+      ...(this.#presentation === undefined
+        ? {}
+        : { presentation: this.#presentation }),
       ...(this.#calls.pending ? { pending: true } : {}),
       ...(highlightedIndex < 0 ? {} : { highlightedIndex }),
       ...(this.options.hint === undefined ? {} : { hint: this.options.hint }),
@@ -435,6 +446,8 @@ export interface SearchSelectionsRequestOptions<T>
   readonly placeholder?: string;
   /** Requested upper bound on entry rows; the viewport may reduce it per frame. */
   readonly visibleCount?: number;
+  /** Form lifecycle chrome (default) or a quiet long-lived browsing frame. */
+  readonly presentation?: InteractionChoicePresentation;
 }
 
 function retainedHeadingId(used: ReadonlySet<string>): string {
@@ -448,6 +461,7 @@ class SearchSelectionsInteractionMachine<T>
   implements InteractionMachine<readonly T[], SearchMultiselectFrameState> {
   readonly #editor = new GraphemeTextEditor();
   readonly #visibleCount: number;
+  readonly #presentation: "browsing" | undefined;
   readonly #calls: DiscoveryProviderCalls<readonly InteractionEntry<T>[]>;
   /** Selected choices by stable ID, in the order the person selected them. */
   readonly #selected = new Map<string, InteractionChoice<T>>();
@@ -460,6 +474,9 @@ class SearchSelectionsInteractionMachine<T>
 
   constructor(readonly options: SearchSelectionsRequestOptions<T>) {
     this.#visibleCount = choiceVisibleCount(options.visibleCount);
+    this.#presentation = resolveInteractionChoicePresentation(
+      options.presentation,
+    );
     this.#initialIds = options.initialIds;
     this.#calls = new DiscoveryProviderCalls({
       call: searchProvider(options.search),
@@ -555,6 +572,9 @@ class SearchSelectionsInteractionMachine<T>
       results: visible.map(({ entry }) => entry),
       selectedIds: [...this.#selected.keys()],
       ...interactiveChoiceOverflow(choices, start, visibleCount),
+      ...(this.#presentation === undefined
+        ? {}
+        : { presentation: this.#presentation }),
       ...(this.#calls.pending ? { pending: true } : {}),
       ...(highlightedIndex < 0 ? {} : { highlightedIndex }),
       ...(this.options.hint === undefined ? {} : { hint: this.options.hint }),

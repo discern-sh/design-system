@@ -4,11 +4,27 @@ import type { InteractiveChoiceEntryState } from "../interactive-states.ts";
 import type { TerminalKey } from "./keys.ts";
 import type {
   InteractionChoice,
+  InteractionChoicePresentation,
   InteractionEntry,
   InteractionGroupHeading,
 } from "./types.ts";
 
 const DEFAULT_VISIBLE_CHOICES = 5;
+
+/** Validate and collapse the source-compatible form default for frame state. */
+export function resolveInteractionChoicePresentation(
+  value: InteractionChoicePresentation | undefined,
+): "browsing" | undefined {
+  const presentation = value ?? "form";
+  if (presentation !== "form" && presentation !== "browsing") {
+    throw new TypeError(
+      `interaction choice presentation must be "form" or "browsing"; received ${
+        JSON.stringify(presentation)
+      }`,
+    );
+  }
+  return presentation === "browsing" ? "browsing" : undefined;
+}
 
 export function isInteractionGroupHeading<T>(
   entry: InteractionEntry<T>,

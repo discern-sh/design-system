@@ -163,7 +163,8 @@ const renderCheckboxCli: CliRenderer<CheckboxCliProps> = (
   capabilities,
 ) => {
   const state = props;
-  const active = props.presentation === undefined &&
+  const active = (props.presentation === undefined ||
+    props.presentation === "browsing") &&
     (state.lifecycle.status === "active" ||
       state.lifecycle.status === "validation-error");
   const choiceWidth = formCliChoiceFrameWidth(props.width, capabilities);

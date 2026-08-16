@@ -58,6 +58,9 @@ export interface FormCliFrameOptions {
 function statusLabel(options: FormCliFrameOptions): string {
   if (options.lifecycle.status === "validation-error") return "error";
   if (options.lifecycle.status !== "active") return options.lifecycle.status;
+  if (options.presentation === "browsing" && options.pending === true) {
+    return "searching";
+  }
   return options.presentation ??
     (options.pending === true ? "searching" : "active");
 }
@@ -67,7 +70,10 @@ function statusTone(
 ): "accent" | "neutral" | "success" | "danger" {
   if (status === "error") return "danger";
   if (status === "submitted") return "success";
-  if (status === "active" || status === "searching" || status === "filled") {
+  if (
+    status === "active" || status === "browsing" || status === "searching" ||
+    status === "filled"
+  ) {
     return "accent";
   }
   return "neutral";
@@ -174,8 +180,10 @@ export function renderFormCliFrame(
   const status = statusLabel(options);
   const tone = statusTone(status);
   const required = options.required === true ? " *" : "";
+  const showStatus = !(options.presentation === "browsing" &&
+    options.lifecycle.status === "active" && options.pending !== true);
   const heading = truncateText(
-    `${options.label}${required} [${status}]`,
+    `${options.label}${required}${showStatus ? ` [${status}]` : ""}`,
     boundedWidth,
     capabilities.unicode ? "…" : ".",
   );

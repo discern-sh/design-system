@@ -26,11 +26,13 @@ import {
   isInteractionChoice,
   moveEnabledIndex,
   pageEnabledIndex,
+  resolveInteractionChoicePresentation,
 } from "./choice-navigation.ts";
 import { type InteractionMachine, runInteraction } from "./driver.ts";
 import { isNamedKey, type TerminalKey } from "./keys.ts";
 import type { InteractionFrameViewport } from "./viewport-budget.ts";
 import type {
+  InteractionChoicePresentation,
   InteractionEntry,
   InteractionOptions,
   InteractionRuntime,
@@ -66,6 +68,8 @@ export interface SelectionRequestOptions<T>
   readonly initialId?: string;
   /** Requested upper bound on choice rows; the viewport may reduce it per frame. */
   readonly visibleCount?: number;
+  /** Form lifecycle chrome (default) or a quiet long-lived browsing frame. */
+  readonly presentation?: InteractionChoicePresentation;
 }
 
 /** Options for selecting zero or more values from a scrollable choice list. */
@@ -76,17 +80,23 @@ export interface SelectionsRequestOptions<T>
   readonly initialIds?: readonly string[];
   /** Requested upper bound on choice rows; the viewport may reduce it per frame. */
   readonly visibleCount?: number;
+  /** Form lifecycle chrome (default) or a quiet long-lived browsing frame. */
+  readonly presentation?: InteractionChoicePresentation;
 }
 
 class SelectionInteractionMachine<T>
   implements InteractionMachine<T | undefined, SelectFrameState> {
   readonly #visibleCount: number;
+  readonly #presentation: "browsing" | undefined;
   #highlighted: number;
   /** The most recently fitted visible window, sizing a paging jump. */
   #pageSize: number;
 
   constructor(readonly options: SelectionRequestOptions<T>) {
     assertChoices(options.choices, options.required !== false);
+    this.#presentation = resolveInteractionChoicePresentation(
+      options.presentation,
+    );
     this.#visibleCount = choiceVisibleCount(options.visibleCount);
     this.#highlighted = initialHighlight(options.choices, options.initialId);
     this.#pageSize = this.#visibleCount;
@@ -168,6 +178,9 @@ class SelectionInteractionMachine<T>
       visibleStart,
       visibleCount,
       ...interactiveChoiceOverflow(options, visibleStart, visibleCount),
+      ...(this.#presentation === undefined
+        ? {}
+        : { presentation: this.#presentation }),
       ...(selected === undefined ? {} : { selectedId: selected.id }),
       ...(this.options.hint === undefined ? {} : { hint: this.options.hint }),
     };
@@ -194,6 +207,7 @@ export async function requestSelection<T>(
 class SelectionsInteractionMachine<T>
   implements InteractionMachine<readonly T[], MultiselectFrameState> {
   readonly #visibleCount: number;
+  readonly #presentation: "browsing" | undefined;
   readonly #selectedIds: Set<string>;
   #highlighted: number;
   /** The most recently fitted visible window, sizing a paging jump. */
@@ -201,6 +215,9 @@ class SelectionsInteractionMachine<T>
 
   constructor(readonly options: SelectionsRequestOptions<T>) {
     assertChoices(options.choices);
+    this.#presentation = resolveInteractionChoicePresentation(
+      options.presentation,
+    );
     this.#visibleCount = choiceVisibleCount(options.visibleCount);
     this.#pageSize = this.#visibleCount;
     const knownIds = new Set(options.choices.map((choice) => choice.id));
@@ -291,6 +308,9 @@ class SelectionsInteractionMachine<T>
       visibleStart,
       visibleCount,
       ...interactiveChoiceOverflow(options, visibleStart, visibleCount),
+      ...(this.#presentation === undefined
+        ? {}
+        : { presentation: this.#presentation }),
       ...(this.options.hint === undefined ? {} : { hint: this.options.hint }),
     };
   }

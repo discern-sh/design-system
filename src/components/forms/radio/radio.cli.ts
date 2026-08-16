@@ -187,7 +187,8 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
       "search state requires a selectable highlighted result",
     );
   }
-  const expanded = props.presentation === undefined &&
+  const expanded = (props.presentation === undefined ||
+    props.presentation === "browsing") &&
     (state.lifecycle.status === "active" ||
       state.lifecycle.status === "validation-error");
   const entries = state.kind === "select"
