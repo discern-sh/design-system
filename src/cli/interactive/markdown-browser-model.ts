@@ -608,6 +608,13 @@ function stateFrom<Action>(
     config.entries,
     resume.query,
   );
+  const resolvedFeedback = feedback ??
+    (filteredEntries.some(isMarkdownBrowserSelectable)
+      ? undefined
+      : Object.freeze({
+        kind: "no-matches" as const,
+        message: "No matches.",
+      }));
   const highlighted = selectableById(
     filteredEntries,
     resume.highlightedId,
@@ -669,7 +676,9 @@ function stateFrom<Action>(
     columns: geometry.columns,
     rows: geometry.rows,
     layout,
-    ...(feedback === undefined ? {} : { feedback: Object.freeze(feedback) }),
+    ...(resolvedFeedback === undefined
+      ? {}
+      : { feedback: Object.freeze(resolvedFeedback) }),
     pickerMinimumRows: config.pickerMinimumRows,
     documentMinimumRows: config.documentMinimumRows,
     documentMeasure: config.documentMeasure,

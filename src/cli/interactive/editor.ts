@@ -49,6 +49,19 @@ export class GraphemeTextEditor {
     this.#cursor = this.#graphemes.length;
   }
 
+  /** Place the cursor at one validated grapheme boundary without editing. */
+  moveCursorTo(cursor: number): void {
+    if (
+      !Number.isSafeInteger(cursor) || cursor < 0 ||
+      cursor > this.#graphemes.length
+    ) {
+      throw new TypeError(
+        `text cursor must be between 0 and ${this.#graphemes.length}; received ${cursor}`,
+      );
+    }
+    this.#cursor = cursor;
+  }
+
   /**
    * Apply one decoded key. Returns true only when the underlying value changes;
    * cursor-only movement returns false.

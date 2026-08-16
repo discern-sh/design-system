@@ -340,10 +340,16 @@ function renderPickerPane<Action>(
   const empty = state.filteredEntries.some(isMarkdownBrowserSelectable)
     ? []
     : [fitStyledLine(
-      styleSemanticText("No matches.", {
-        role: "annotation",
-        theme: state.theme,
-      }, capabilities),
+      styleSemanticText(
+        state.feedback?.kind === "no-matches"
+          ? state.feedback.message
+          : "No matches.",
+        {
+          role: "annotation",
+          theme: state.theme,
+        },
+        capabilities,
+      ),
       state.columns - 2,
       capabilities,
     )];
@@ -370,7 +376,10 @@ function renderPickerPane<Action>(
   }, capabilities);
 }
 
-function documentBodyRows<Action>(state: MarkdownBrowserState<Action>): number {
+/** Visible document content rows inside the current pane border. */
+export function markdownBrowserDocumentVisibleRows<Action>(
+  state: MarkdownBrowserState<Action>,
+): number {
   return Math.max(1, state.layout.documentRows - 2);
 }
 
@@ -416,7 +425,7 @@ export function markdownBrowserDocumentMaximumOffset<Action>(
   return Math.max(
     0,
     markdownBrowserDocumentLines(state, capabilities).length -
-      documentBodyRows(state),
+      markdownBrowserDocumentVisibleRows(state),
   );
 }
 
@@ -450,7 +459,12 @@ export function markdownBrowserOffsetForAnchor(
   for (const [index, line] of lines.entries()) {
     const candidate = normalizedAnchor(line);
     if (candidate === "") continue;
-    if (candidate.includes(wanted) || wanted.includes(candidate)) return index;
+    if (
+      candidate.includes(wanted) || candidate.startsWith(wanted) ||
+      (wanted.startsWith(candidate) && candidate.split(" ").length >= 2)
+    ) {
+      return index;
+    }
     const score = words.filter((word) => candidate.includes(word)).length;
     if (score > (best?.score ?? 0)) best = { index, score };
   }
@@ -468,7 +482,7 @@ function renderDocumentPane<Action>(
     throw new TypeError("Markdown browser document pane has no open document");
   }
   const lines = markdownBrowserDocumentLines(state, capabilities);
-  const bodyRows = documentBodyRows(state);
+  const bodyRows = markdownBrowserDocumentVisibleRows(state);
   const maximum = Math.max(0, lines.length - bodyRows);
   const offset = Math.min(state.documentScrollOffset, maximum);
   const visible = lines.slice(offset, offset + bodyRows).map((line) =>
@@ -540,7 +554,7 @@ export function fitMarkdownBrowserState<Action>(
     : markdownBrowserDocumentLines(state, capabilities);
   const maximum = state.layout.documentRows === 0
     ? Math.max(0, lines.length - 1)
-    : Math.max(0, lines.length - documentBodyRows(state));
+    : Math.max(0, lines.length - markdownBrowserDocumentVisibleRows(state));
   const anchored = markdownBrowserOffsetForAnchor(
     lines,
     state.documentAnchor,
