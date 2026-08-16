@@ -1,0 +1,123 @@
+# ADR 0022: Browse Markdown in a package-owned terminal viewport
+
+**Status**: accepted
+
+## Context
+
+The interactive Adapter currently replaces one complete inline form frame and
+returns one value. A grouped Markdown browser instead remains active while a
+person searches a corpus, opens a document, changes focus, and scrolls the
+picker and document independently. Terminal scrollback cannot preserve two
+independent offsets inside one live viewport: once ordinary output scrolls,
+the package can no longer redraw either pane without guessing which rows are
+still addressable.
+
+The capability is reusable package UI, not a product pager. Callers supply
+group headings, document metadata and Markdown source, typed actions, explicit
+terminal facts, Theme and motif choices, and the existing injectable I/O. The
+package must not read files, resolve links, launch a browser, expose parser
+nodes, accept caller-authored control strings, or weaken the inline form
+painter to make it behave like a screen compositor.
+
+## Decision
+
+`./cli/interactive` publishes `requestMarkdownBrowser` and package-owned
+`MarkdownBrowser*` entry, state, input-event, result, and resumable-state
+contracts. Group headings, documents, return actions, and exit actions remain
+separate discriminated data. Documents carry stable IDs, corpus-relative
+paths, and Markdown source; rendering always enters the existing
+`renderMarkdownCli` authority. The API is Markdown-specific because that
+authority can validate source, bound prose, retain OSC 8 links, and close every
+styled line. An arbitrary rendered-string API would either admit foreign ANSI
+or make the browser responsible for validating a second document grammar.
+
+The implementation has three layers. One immutable browser state owns the
+query and grapheme cursor, complete and filtered grouped entries, highlighted
+entry, opened document, focused pane, picker window, document offset and
+semantic anchor, terminal geometry, adaptive layout, and resumable projection.
+A pure transition consumes a decoded key or resize event and returns the next
+state plus an optional action, exit, or cancellation outcome. A pure renderer
+composes package form-choice, section, Box, motif, Markdown, text, rhythm,
+Theme, width, and styled-sequence authorities into exactly one viewport-sized
+frame. The request Adapter alone reads keys and resize notifications, writes
+frames, and brackets terminal effects.
+
+The browser uses the terminal's alternate screen. Entry is the DECSET 1049
+set sequence (`CSI ? 1049 h`) and exit is its reset (`CSI ? 1049 l`), owned
+beside the existing cursor and lifecycle sequences rather than repeated by the
+browser. A dedicated complete-frame painter homes, clears, and redraws only
+frames already proven to match the reported viewport. The alternate screen
+keeps the caller's normal-screen content and scrollback intact, but browsing
+frames themselves deliberately do not enter normal scrollback. Returning an
+action first restores the normal screen; the consumer performs its effect and
+may re-enter with the returned state.
+
+Alternate-screen entry requires an interactive terminal and explicit ANSI
+cursor control. The initial state and frame are validated and rendered before
+raw mode, cursor hiding, alternate-screen entry, or any display write. Missing
+control support and a viewport too small for one coherent pane raise typed
+browser refusals at that preflight boundary. There is no append-only browser,
+partial frame, cropped pane, or guessed cursor fallback.
+
+With no document open, the picker receives the full usable height. When a
+document opens, ordinary terminals target roughly one third of the pane budget
+for the picker and give the remainder to the document, subject to coherent
+package defaults or caller-supplied minimums. Both offsets remain independent.
+When the split cannot satisfy both minimums, focus selects one full-height
+single pane and Tab or Shift+Tab reveals the other. If even that pane cannot
+fit, the renderer refuses. Markdown stays within the authored readable measure
+on wide terminals. Resize re-renders wrapping and pane budgets while retaining
+the query, stable highlight, open document, focus, picker position, and the
+nearest matching document anchor before falling back to a proportional row.
+
+In the picker, printable input and the existing Emacs editing keys edit the
+query; Up, Down, the established non-printable navigation aliases, paging,
+Home, and End move the highlight. Enter opens a document at row zero and moves
+focus to it, or returns an action/exit result with an immutable resumable state.
+When a document is open, Tab and Shift+Tab change pane focus. In the document
+pane, movement, paging, Home, and End change only the document offset, while
+Escape or printable `q` closes the document and restores the full-height
+picker. Printable `q` in the picker remains query text. Escape, Ctrl+C, and
+end-of-input outside the document pane use the established
+`InteractionCancelled` contract. The focused pane always has a non-colour
+marker, and the footer names only keys valid in the current state.
+
+Raw mode, cursor hiding, alternate-screen entry, SIGINT handling, resize
+subscription, and their matching cleanup live behind one lifecycle boundary.
+Each successful enter operation records its own completion before a matching
+restore may emit. Success, action, exit, cancellation, validation failure,
+EOF, renderer or Markdown failure, write or resize failure, and SIGINT all
+unsubscribe listeners, restore the cursor, leave the alternate screen, and
+restore raw mode at most once. A failed enter emits no unmatched cleanup. If
+the operation and cleanup both fail, the original operation error remains the
+one observed; cleanup failures are raised only when the operation otherwise
+succeeded.
+
+## Consequences
+
+Consumers gain one keyboard reader that can retain corpus context while a
+document scrolls and can suspend safely for product-owned actions. Pure state
+and complete frames are deterministic review artifacts, while scripted keys
+and resize events drive the real Adapter through `./cli/interactive/testing`.
+The existing inline request driver, static projection boundary, Markdown
+parser, and normal-screen scrollback contracts remain unchanged.
+
+The package now owns an alternate-screen lifecycle and a larger public state
+contract. Alternate-screen browsing is intentionally unavailable on
+append-only or control-less terminals, and its transient frames are absent
+from normal scrollback. Consumers needing those environments must choose a
+non-interactive listing or pager outside this operation. Single-pane fallback
+adds one focus-switch step on short terminals, but it remains coherent and
+discoverable instead of compressing both surfaces beyond use.
+
+## Alternatives considered
+
+Two inline frames cannot scroll independently after either crosses the live
+viewport, and teaching `InlineFramePainter` pane semantics would weaken its
+small cursor-safety contract. Printing a document beneath a retained picker
+preserves scrollback but loses picker persistence and independent offsets.
+An external pager owns process, filesystem, and product policy the package is
+forbidden to assume. A caller-rendered pane callback looks flexible but makes
+ANSI safety, width, links, deterministic wrapping, and restoration impossible
+to guarantee. Mouse tracking and link activation remain separate future
+decisions rather than reasons to enlarge this keyboard contract now.

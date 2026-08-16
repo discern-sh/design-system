@@ -4,6 +4,8 @@ The React-free CLI surface has four entrypoints. `./cli` renders deterministic t
 
 [ADR-0011](../_adr/0011-terminal-input-uses-request-vocabulary.md) reserves “prompt” for coding-agent instructions. The terminal Adapter names individual value-producing operations `request*` and names their shared lifecycle and machinery `Interaction*`.
 
+[ADR-0022](../_adr/0022-browse-markdown-in-an-owned-terminal-viewport.md) records why the Markdown browser owns an alternate-screen viewport, pure pane state, adaptive split/single layouts, and resumable action returns instead of extending the inline form painter.
+
 ## Boundary and data flow
 
 [`src/cli/mod.ts`](../../src/cli/mod.ts) is the public entrypoint named by both package manifests. The graph imports [`tokens.ts`](../../src/tokens/tokens.ts), CLI foundation modules, the generated CLI registry and renderer barrel, and rendered Component CLI modules. It imports no `.tsx` module and never resolves React; the release suite checks that graph directly and also runs a publish-shaped neutral consumer.
