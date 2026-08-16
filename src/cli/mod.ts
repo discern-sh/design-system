@@ -7,6 +7,7 @@
 
 export * from "./ansi.ts";
 export * from "./box.ts";
+export * from "./block-composition.ts";
 export * from "./capabilities.ts";
 export * from "./contracts.ts";
 export * from "./interactive-states.ts";
