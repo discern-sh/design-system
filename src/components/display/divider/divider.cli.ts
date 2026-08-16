@@ -16,13 +16,14 @@ import type {
 import {
   type MotifDirection,
   type MotifPatternOrientation,
+  renderMotifDivider,
   renderMotifPattern,
   renderMotifSectionRule,
 } from "../../../cli/motifs.ts";
 import type { DividerSurface } from "./divider.types.ts";
 
 /** Semantic terminal treatments owned by Divider. */
-export type DividerCliTreatment = "rule" | "ribbon" | "field" | "weave";
+export type DividerCliTreatment = "rule" | "ribbon";
 
 /** Inputs accepted by the terminal Divider renderer. */
 export interface DividerCliProps extends TerminalMotifOptions {
@@ -31,7 +32,6 @@ export interface DividerCliProps extends TerminalMotifOptions {
   readonly treatment?: DividerCliTreatment;
   readonly orientation?: MotifPatternOrientation;
   readonly length?: number;
-  readonly thickness?: number;
   readonly phase?: number;
   readonly direction?: MotifDirection;
   readonly tone?: TerminalSemanticTone;
@@ -39,26 +39,14 @@ export interface DividerCliProps extends TerminalMotifOptions {
   readonly width?: number;
 }
 
-const TREATMENT_THICKNESS: Readonly<Record<DividerCliTreatment, number>> = {
-  rule: 1,
-  ribbon: 2,
-  field: 3,
-  weave: 4,
-};
-
 /** Deterministic Divider states rendered by `deno task catalogue:cli divider`. */
 export const cliExamples: readonly CliExample<DividerCliProps>[] = [
   { name: "rule", props: { width: 24 } },
   { name: "labelled", props: { label: "Section", width: 32 } },
   { name: "ribbon", props: { treatment: "ribbon", width: 24 } },
-  { name: "field", props: { treatment: "field", width: 24, phase: 1 } },
-  {
-    name: "vertical-weave",
-    props: { treatment: "weave", orientation: "vertical", length: 6 },
-  },
 ] as const;
 
-/** Render Divider's authoritative motif rules, ribbons, fields, and weaves. */
+/** Render Divider's authoritative quiet rules and alternating motif ribbons. */
 const renderDividerCli: CliRenderer<DividerCliProps> = (
   props,
   capabilities,
@@ -88,13 +76,6 @@ const renderDividerCli: CliRenderer<DividerCliProps> = (
     return renderMotifSectionRule(props.label, options, capabilities);
   }
 
-  const requestedThickness = props.thickness ?? TREATMENT_THICKNESS[treatment];
-  if (!Number.isSafeInteger(requestedThickness) || requestedThickness < 1) {
-    throw new TypeError(
-      `divider thickness must be a positive safe integer; received ${requestedThickness}`,
-    );
-  }
-  const thickness = Math.min(requestedThickness, width);
   const defaultLength = orientation === "horizontal" ? width : 6;
   const requestedLength = props.length ?? defaultLength;
   if (!Number.isSafeInteger(requestedLength) || requestedLength < 1) {
@@ -105,16 +86,25 @@ const renderDividerCli: CliRenderer<DividerCliProps> = (
   const length = orientation === "horizontal"
     ? Math.min(requestedLength, width)
     : requestedLength;
-  const direction = props.direction ??
-    (treatment === "weave" ? "reverse" : "forward");
-  const phase = props.phase ?? (treatment === "weave" ? 1 : 0);
+  const direction = props.direction ?? "forward";
+  const phase = props.phase ?? 0;
   const tone = props.tone ??
     (props.surface === "surface" ? "neutral" : "accent");
+  if (treatment === "rule" && orientation === "horizontal") {
+    return renderMotifDivider(
+      {
+        width: length,
+        tone,
+        ...(props.theme === undefined ? {} : { theme: props.theme }),
+        ...motifPassthrough(props),
+      },
+      capabilities,
+    );
+  }
   return renderMotifPattern(
     {
       length,
       orientation,
-      thickness,
       phase,
       direction,
       tone,

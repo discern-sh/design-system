@@ -3,6 +3,7 @@ import { stripAnsi } from "../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import {
   renderMotifActivityBeacon,
+  renderMotifDivider,
   renderMotifPattern,
   renderMotifProgressFrame,
   renderMotifSectionRule,
@@ -135,6 +136,10 @@ Deno.test("terminal motif factories validate, freeze, and derive semantic roles"
   ]);
   assertEquals(CUSTOM_TERMINAL_MOTIF.unicode.marker, "◉");
   assertEquals(DISCERN_TERMINAL_MOTIF.unicode.marker, "◮");
+  assertEquals(DISCERN_TERMINAL_MOTIF.unicode.status, {
+    complete: "▲",
+    incomplete: "△",
+  });
 });
 
 Deno.test("terminal motif definitions admit narrow-A glyphs and reject unsafe classes", () => {
@@ -205,7 +210,9 @@ Deno.test("the discern glyph repertoire has one production authority", async () 
     for (const source of await terminalSourceFiles(root)) {
       if (source.pathname.endsWith("/src/cli/motif.ts")) continue;
       const text = await Deno.readTextFile(source);
-      for (const glyph of ["◮", "◭", "⧩", "⧨", "◓", "◑", "◒"]) {
+      for (
+        const glyph of ["◮", "◭", "⧩", "⧨", "◓", "◑", "◒", "▲", "△"]
+      ) {
         if (text.includes(glyph)) {
           leaks.push(`${source.pathname}: ${glyph}`);
         }
@@ -238,15 +245,27 @@ Deno.test("one custom motif reaches every semantic renderer role", () => {
       [
         { label: "Done", status: "complete" },
         { label: "Moving", status: "active", phase: 1 },
+        { label: "Pending", status: "pending" },
       ],
       unicode,
       { motif },
     ),
-    " ▵  Done\n │\n[◷] Moving",
+    " ▵  Done\n │\n[◷] Moving\n │\n ▿  Pending",
+  );
+  assertEquals(
+    renderMotifDivider({ width: 9, motif }, unicode),
+    "╶── ◉ ──╴",
+  );
+  assertEquals(
+    renderMotifProgressFrame(
+      { completed: 1, total: 2, width: 12, motif },
+      unicode,
+    ),
+    "[ 50%] ━━◉──",
   );
   assertEquals(
     renderMotifActivityBeacon({ width: 8, phase: 0, motif }, unicode),
-    "▵▹▿◃....",
+    "◉───────",
   );
   assertEquals(
     renderMotifSpinnerFrame(2, ascii, { motif }),
@@ -254,11 +273,38 @@ Deno.test("one custom motif reaches every semantic renderer role", () => {
   );
   assertEquals(
     renderMotifActivityBeacon({ width: 8, phase: 0, motif }, ascii),
-    "abab....",
+    "?-------",
   );
 });
 
-Deno.test("motif patterns preserve horizontal, vertical, thick, phase, and direction contracts", () => {
+Deno.test("motif divider keeps one centred marker across widths and repertoires", () => {
+  const unicode = testTerminalCapabilities({ columns: 20 });
+  for (
+    const [width, expected] of [
+      [1, "◮"],
+      [2, "◮╴"],
+      [3, "╶◮╴"],
+      [4, "╶◮─╴"],
+      [5, "╶ ◮ ╴"],
+      [9, "╶── ◮ ──╴"],
+    ] as const
+  ) {
+    assertExactFrame(renderMotifDivider({ width }, unicode), expected, unicode);
+  }
+  const ascii = testTerminalCapabilities({ columns: 9, unicode: false });
+  assertExactFrame(renderMotifDivider({ width: 9 }, ascii), "--- > ---", ascii);
+  const styled = testTerminalCapabilities({
+    columns: 9,
+    colorDepth: "truecolor",
+  });
+  assertStyledFrame(
+    renderMotifDivider({ width: 9 }, styled),
+    "╶── ◮ ──╴",
+    styled,
+  );
+});
+
+Deno.test("motif patterns preserve horizontal, vertical, phase, and direction contracts", () => {
   const capabilities = testTerminalCapabilities({ columns: 20 });
   assertExactFrame(
     renderMotifPattern({ length: 4 }, capabilities),
@@ -271,16 +317,8 @@ Deno.test("motif patterns preserve horizontal, vertical, thick, phase, and direc
     capabilities,
   );
   assertExactFrame(
-    renderMotifPattern({ length: 4, thickness: 3 }, capabilities),
-    "◮⧩◭⧨\n⧨◮⧩◭\n◮⧩◭⧨",
-    capabilities,
-  );
-  assertExactFrame(
-    renderMotifPattern(
-      { length: 4, thickness: 2, orientation: "vertical" },
-      capabilities,
-    ),
-    "◮⧩\n⧩◭\n◭⧨\n⧨◮",
+    renderMotifPattern({ length: 4, orientation: "vertical" }, capabilities),
+    "◮\n⧩\n◭\n⧨",
     capabilities,
   );
 });
@@ -302,23 +340,23 @@ Deno.test("progress frames are exact at zero, partial, complete, and ASCII degra
   const unicode = testTerminalCapabilities({ columns: 15 });
   assertExactFrame(
     renderMotifProgressFrame({ completed: 0, total: 4, width: 15 }, unicode),
-    "[  0%] ........",
+    "[  0%] ◮───────",
     unicode,
   );
   assertExactFrame(
     renderMotifProgressFrame({ completed: 1, total: 4, width: 15 }, unicode),
-    "[ 25%] ◮⧩......",
+    "[ 25%] ━◮──────",
     unicode,
   );
   assertExactFrame(
     renderMotifProgressFrame({ completed: 4, total: 4, width: 15 }, unicode),
-    "[100%] ◮⧩◭⧨◮⧩◭⧨",
+    "[100%] ━━━━━━━◮",
     unicode,
   );
   const ascii = testTerminalCapabilities({ columns: 12, unicode: false });
   assertExactFrame(
     renderMotifProgressFrame({ completed: 1, total: 2, width: 12 }, ascii),
-    "[ 50%] >v...",
+    "[ 50%] ==>--",
     ascii,
   );
 });
@@ -421,7 +459,7 @@ Deno.test("workflow stepper renders every semantic step state", () => {
       { label: "Failed", status: "error" },
       { label: "Stopped", status: "cancelled" },
     ], capabilities),
-    " ◭  Done\n │\n[◓] Working\n │\n ·  Later\n │\n !  Failed\n │\n ×  Stopped",
+    " ▲  Done\n │\n[◓] Working\n │\n △  Later\n │\n !  Failed\n │\n ×  Stopped",
     capabilities,
   );
 });
@@ -429,7 +467,7 @@ Deno.test("workflow stepper renders every semantic step state", () => {
 Deno.test("workflow motif status follows completion status rather than list index or phase", () => {
   for (const unicode of [true, false]) {
     const capabilities = testTerminalCapabilities({ columns: 32, unicode });
-    const completedMarker = unicode ? " ◭ " : " ^ ";
+    const completedMarker = unicode ? " ▲ " : " ^ ";
     for (const completedIndex of [0, 1, 2]) {
       const steps = Array.from({ length: 3 }, (_, index) => ({
         label: `Step ${index + 1}`,
@@ -447,23 +485,29 @@ Deno.test("workflow motif status follows completion status rather than list inde
   }
 });
 
-Deno.test("activity beacon preserves every phase in its out-and-back journey", () => {
+Deno.test("activity beacon preserves every phase on its out-and-back rail", () => {
   const capabilities = testTerminalCapabilities({ columns: 8 });
   assertEquals(
     Array.from(
-      { length: 8 },
+      { length: 14 },
       (_, phase) =>
         renderMotifActivityBeacon({ width: 8, phase }, capabilities),
     ),
     [
-      "◮⧩◭⧨....",
-      ".⧩◭⧨◮...",
-      "..◭⧨◮⧩..",
-      "...⧨◮⧩◭.",
-      "....◮⧩◭⧨",
-      "...⧩◭⧨◮.",
-      "..◭⧨◮⧩..",
-      ".⧨◮⧩◭...",
+      "◮───────",
+      "─◮──────",
+      "──◮─────",
+      "───◮────",
+      "────◮───",
+      "─────◮──",
+      "──────◮─",
+      "───────◮",
+      "──────◮─",
+      "─────◮──",
+      "────◮───",
+      "───◮────",
+      "──◮─────",
+      "─◮──────",
     ],
   );
   assertExactFrame(
@@ -471,7 +515,7 @@ Deno.test("activity beacon preserves every phase in its out-and-back journey", (
       { width: 8, phase: 0, direction: "reverse" },
       capabilities,
     ),
-    "....⧨◭⧩◮",
+    "───────◮",
     capabilities,
   );
 });
@@ -480,18 +524,18 @@ Deno.test("every motif primitive degrades exactly across the capability matrix",
   const unicodeFrames = [
     "◮⧩◭⧨",
     "◐",
-    "[ 50%] ◮⧩...",
+    "[ 50%] ━━◮──",
     "━━ ◮ GO ━━━━",
-    " ◭  Done\n │\n[◓] Work\n │\n ·  Later\n │\n !  Fail\n │\n ×  Stop",
-    "◮⧩◭⧨....",
+    " ▲  Done\n │\n[◓] Work\n │\n △  Later\n │\n !  Fail\n │\n ×  Stop",
+    "◮───────",
   ];
   const asciiFrames = [
     ">v^<",
     "^",
-    "[ 50%] >v...",
+    "[ 50%] ==>--",
     "== > GO ====",
-    " ^  Done\n |\n[<] Work\n |\n .  Later\n |\n !  Fail\n |\n x  Stop",
-    ">v^<....",
+    " ^  Done\n |\n[<] Work\n |\n v  Later\n |\n !  Fail\n |\n x  Stop",
+    ">-------",
   ];
 
   for (const unicode of [true, false]) {

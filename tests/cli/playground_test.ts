@@ -161,8 +161,8 @@ Deno.test("Timeline and stepper status review has a direct journey", async () =>
     await runJourney(journey("motif-statuses"), testRuntime(io)),
     "completed",
   );
-  assertStringIncludes(io.output(), " ◭  Completed");
-  assertStringIncludes(io.output(), "⧩ Now — Current [current]");
+  assertStringIncludes(io.output(), " ▲  Completed");
+  assertStringIncludes(io.output(), "△ Now — Current [current]");
 });
 
 Deno.test("reading-foundation journeys expose path search and compact cleanup", async () => {

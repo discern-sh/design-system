@@ -13,6 +13,7 @@ import {
   deriveTerminalMotif,
   DISCERN_TERMINAL_MOTIF,
   renderMotifActivityBeacon,
+  renderMotifDivider,
   renderMotifPattern,
   renderMotifProgressFrame,
   renderMotifSectionRule,
@@ -109,7 +110,7 @@ function motifSpecimens(
   const spinnerFrames = repertoire.spinner.map((_glyph, phase) =>
     renderMotifSpinnerFrame(phase, capabilities, appearance)
   );
-  const progress = [0, 25, 100].map((completed) =>
+  const progress = [0, 65, 100].map((completed) =>
     `${completed} percent\n${
       renderMotifProgressFrame({
         completed,
@@ -128,13 +129,13 @@ function motifSpecimens(
     capabilities,
     appearance,
   );
-  const beaconWidth = Math.min(16, width);
-  const beaconExtent = beaconWidth - 4;
+  const beaconWidth = width;
+  const beaconExtent = beaconWidth - 1;
   const beaconPhases = [
     0,
-    Math.floor(beaconExtent / 2),
+    Math.floor(beaconExtent / 3),
+    Math.floor(beaconExtent * 2 / 3),
     beaconExtent,
-    beaconExtent + Math.floor(beaconExtent / 2),
   ];
   const beacons = beaconPhases.map((phase) =>
     `phase ${phase}\n${
@@ -157,8 +158,8 @@ function motifSpecimens(
     {
       id: "horizontal-divider",
       title: "Horizontal divider",
-      output: renderMotifPattern({
-        length: patternLength,
+      output: renderMotifDivider({
+        width,
         ...appearance,
       }, capabilities),
     },
@@ -176,16 +177,6 @@ function motifSpecimens(
       title: "Thick ribbon",
       output: renderMotifPattern({
         length: patternLength,
-        thickness: 2,
-        ...appearance,
-      }, capabilities),
-    },
-    {
-      id: "field-weave",
-      title: "Field / weave",
-      output: renderMotifPattern({
-        length: patternLength,
-        thickness: 4,
         ...appearance,
       }, capabilities),
     },

@@ -95,7 +95,6 @@ const renderSectionCli: CliRenderer<SectionCliProps> = (
     heading.push(renderMotifPattern(
       {
         length: width,
-        thickness: 2,
         ...(props.theme === undefined ? {} : { theme: props.theme }),
         ...motifPassthrough(props),
       },

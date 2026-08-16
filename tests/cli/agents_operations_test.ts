@@ -89,17 +89,17 @@ Deno.test("Fleet renders exact narrow, standard, wide, and capability frames", (
     ],
   } as const;
   const standard =
-    "Fleet\nAGENT            BRANCH              STATE         DRIFT\nCLI 2B           agent/cli-2b        working       ↑5 ↓0\n                                     ..◭⧨◮⧩..\n  Workflow + Agents\nCLI 2A           agent/cli-2a        waiting       ↓1";
+    "Fleet\nAGENT            BRANCH              STATE         DRIFT\nCLI 2B           agent/cli-2b        working       ↑5 ↓0\n                                     ──◮─────\n  Workflow + Agents\nCLI 2A           agent/cli-2a        waiting       ↓1";
   for (
     const [columns, expected] of [
       [
         32,
-        "Fleet\nCLI 2B · working\nBranch: agent/cli-2b\nDrift: ↑5 ↓0\nMeta: Workflow + Agents\n  ..◭⧨◮⧩......\n\nCLI 2A · waiting\nBranch: agent/cli-2a\nDrift: ↓1",
+        "Fleet\nCLI 2B · working\nBranch: agent/cli-2b\nDrift: ↑5 ↓0\nMeta: Workflow + Agents\n  ──◮─────────\n\nCLI 2A · waiting\nBranch: agent/cli-2a\nDrift: ↓1",
       ],
       [60, standard],
       [
         80,
-        "Fleet\nAGENT               BRANCH                               STATE         DRIFT\nCLI 2B              agent/cli-2b                         working       ↑5 ↓0\n                                                         ..◭⧨◮⧩..\n  Workflow + Agents\nCLI 2A              agent/cli-2a                         waiting       ↓1",
+        "Fleet\nAGENT               BRANCH                               STATE         DRIFT\nCLI 2B              agent/cli-2b                         working       ↑5 ↓0\n                                                         ──◮─────\n  Workflow + Agents\nCLI 2A              agent/cli-2a                         waiting       ↓1",
       ],
     ] as const
   ) {
@@ -114,7 +114,7 @@ Deno.test("Fleet renders exact narrow, standard, wide, and capability frames", (
     60,
     (capabilities) => renderFleetCli(props, capabilities),
     standard,
-    "Fleet\nAGENT            BRANCH              STATE         DRIFT\nCLI 2B           agent/cli-2b        working       +5 -0\n                                     ..^<>v..\n  Workflow + Agents\nCLI 2A           agent/cli-2a        waiting       -1",
+    "Fleet\nAGENT            BRANCH              STATE         DRIFT\nCLI 2B           agent/cli-2b        working       +5 -0\n                                     -->-----\n  Workflow + Agents\nCLI 2A           agent/cli-2a        waiting       -1",
   );
 });
 
@@ -163,7 +163,7 @@ Deno.test("Fleet lossless mode preserves long ASCII identities at narrow and wid
   );
   assertEquals(
     narrow,
-    "Fleet\nTerminal contract coordination\nagent · working\nPersona: Terminal contract coordination agent\nBranch: agent/terminal-contract-coordination-with-complete-identity\nDrift: ↑5 ↓2\nMeta: Compatibility evidence\n  ..◭⧨◮⧩......",
+    "Fleet\nTerminal contract coordination\nagent · working\nPersona: Terminal contract coordination agent\nBranch: agent/terminal-contract-coordination-with-complete-identity\nDrift: ↑5 ↓2\nMeta: Compatibility evidence\n  ──◮─────────",
   );
   assertLosslessIdentity(narrow, "Persona", persona);
   assertLosslessIdentity(narrow, "Branch", branch);
@@ -175,13 +175,13 @@ Deno.test("Fleet lossless mode preserves long ASCII identities at narrow and wid
   );
   assertEquals(
     wide,
-    "Fleet\nAGENT            BRANCH              STATE         DRIFT\nTerminal contr…  agent/terminal-co…  working       ↑5 ↓2\n  Persona: Terminal contract coordination agent\n  Branch: agent/terminal-contract-coordination-with-complete-identity\n                                     ..◭⧨◮⧩..\n  Compatibility evidence",
+    "Fleet\nAGENT            BRANCH              STATE         DRIFT\nTerminal contr…  agent/terminal-co…  working       ↑5 ↓2\n  Persona: Terminal contract coordination agent\n  Branch: agent/terminal-contract-coordination-with-complete-identity\n                                     ──◮─────\n  Compatibility evidence",
   );
   assertLosslessIdentity(wide, "Persona", persona);
   assertLosslessIdentity(wide, "Branch", branch);
   assertOnlyIdentitiesExceed(wide, 60);
   assertStringIncludes(wide, "working       ↑5 ↓2");
-  assertStringIncludes(wide, "..◭⧨◮⧩..");
+  assertStringIncludes(wide, "──◮─────");
   assertStringIncludes(wide, "Compatibility evidence");
 });
 
@@ -226,7 +226,7 @@ Deno.test("Fleet lossless identities survive Unicode, ASCII, colour, and no-colo
   );
   assertEquals(
     ascii,
-    "Fleet\nAGENT            BRANCH              STATE         DRIFT\nTerminal contr…  agent/terminal-co…  working       +5 -2\n  Persona: Terminal contract coordination agent\n  Branch: agent/terminal-contract-coordination-with-complete-identity\n                                     ..^<>v..\n  Compatibility evidence",
+    "Fleet\nAGENT            BRANCH              STATE         DRIFT\nTerminal contr…  agent/terminal-co…  working       +5 -2\n  Persona: Terminal contract coordination agent\n  Branch: agent/terminal-contract-coordination-with-complete-identity\n                                     -->-----\n  Compatibility evidence",
   );
   assertLosslessIdentity(ascii, "Persona", asciiPersona);
   assertLosslessIdentity(ascii, "Branch", asciiBranch);
@@ -349,12 +349,12 @@ Deno.test("Worklog renders exact widths, capability levels, and every status", (
     ],
   } as const;
   const standard =
-    "✓ Generate registry [done]\nMeta: 120ms\n..◭⧨◮⧩.. Run exact-frame tests [active]\n  Testing every capability level\n· Accept branch [queued]\n✕ Publish [failed]\n– Notify [skipped]";
+    "✓ Generate registry [done]\nMeta: 120ms\n──◮───── Run exact-frame tests [active]\n  Testing every capability level\n· Accept branch [queued]\n✕ Publish [failed]\n– Notify [skipped]";
   for (
     const [columns, expected] of [
       [
         24,
-        "✓ Generate registry\n  [done]\nMeta: 120ms\n..◭⧨◮⧩.. Run exact-frame\n         tests [active]\n  Testing every\n  capability level\n· Accept branch [queued]\n✕ Publish [failed]\n– Notify [skipped]",
+        "✓ Generate registry\n  [done]\nMeta: 120ms\n──◮───── Run exact-frame\n         tests [active]\n  Testing every\n  capability level\n· Accept branch [queued]\n✕ Publish [failed]\n– Notify [skipped]",
       ],
       [52, standard],
       [80, standard],
@@ -371,16 +371,16 @@ Deno.test("Worklog renders exact widths, capability levels, and every status", (
     52,
     (capabilities) => renderWorklogCli(props, capabilities),
     standard,
-    "+ Generate registry [done]\nMeta: 120ms\n..^<>v.. Run exact-frame tests [active]\n  Testing every capability level\n. Accept branch [queued]\nx Publish [failed]\n- Notify [skipped]",
+    "+ Generate registry [done]\nMeta: 120ms\n-->----- Run exact-frame tests [active]\n  Testing every capability level\n. Accept branch [queued]\nx Publish [failed]\n- Notify [skipped]",
   );
 });
 
 Deno.test("Fleet and Worklog render representative beacon phases at every capability level", () => {
   for (
     const [phase, unicodeBeacon, asciiBeacon] of [
-      [0, "◮⧩◭⧨....", ">v^<...."],
-      [2, "..◭⧨◮⧩..", "..^<>v.."],
-      [4, "....◮⧩◭⧨", "....>v^<"],
+      [0, "◮───────", ">-------"],
+      [2, "──◮─────", "-->-----"],
+      [4, "────◮───", "---->---"],
     ] as const
   ) {
     assertCapabilityLevels(
@@ -415,13 +415,13 @@ Deno.test("Fleet and Worklog inherit a consumer activity motif", () => {
       rows: [{ persona: "Agent", status: "working", beaconPhase: 0 }],
       motif: TEST_TERMINAL_MOTIF,
     }, capabilities),
-    "▵▹▿◃....",
+    "◉───────",
   );
   assertEquals(
     renderWorklogCli({
       entries: [{ label: "Active", status: "active", phase: 0 }],
       motif: TEST_TERMINAL_MOTIF,
     }, capabilities),
-    "▵▹▿◃.... Active [active]",
+    "◉─────── Active [active]",
   );
 });

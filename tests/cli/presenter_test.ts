@@ -51,6 +51,8 @@ const DISCERN_EXCLUSIVE_MOTIF_GLYPHS = [
   "◓",
   "◑",
   "◒",
+  "▲",
+  "△",
 ] as const;
 
 function discernMotifGlyphLeaks(output: string): readonly string[] {

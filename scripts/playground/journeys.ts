@@ -672,7 +672,7 @@ const staticCatalogueJourneys: readonly PlaygroundJourney[] = [
     title: "Timeline and stepper statuses",
     section: "Static catalogue",
     description:
-      "Review semantic status glyphs beside spinner, dot, bang, and cross markers.",
+      "Review filled and outline status glyphs beside spinner, bang, and cross markers.",
     run: (runtime) => {
       const capabilities = runtime.io.capabilities();
       runtime.print("Workflow stepper:");
@@ -685,24 +685,24 @@ const staticCatalogueJourneys: readonly PlaygroundJourney[] = [
       ], capabilities));
       runtime.print("Timeline:");
       runtime.print(renderTimelineCli({
-        title: "Status direction",
+        title: "Status fill",
         items: [
           {
             date: "Done",
             title: "Complete",
-            description: "Completed points up.",
+            description: "Completed uses the filled triangle.",
             status: "complete",
           },
           {
             date: "Now",
             title: "Current",
-            description: "Incomplete points down.",
+            description: "Incomplete uses the outline triangle.",
             status: "current",
           },
           {
             date: "Next",
             title: "Upcoming",
-            description: "Upcoming remains incomplete.",
+            description: "Upcoming remains outlined.",
             status: "upcoming",
           },
         ],

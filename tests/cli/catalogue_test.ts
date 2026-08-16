@@ -125,7 +125,6 @@ Deno.test("motif catalogue derives the complete default and custom specimen set"
       "Horizontal divider",
       "Vertical divider",
       "Thick ribbon",
-      "Field / weave",
       "Spinner phases",
       "Determinate progress",
       "Labeled section rule",
@@ -136,7 +135,8 @@ Deno.test("motif catalogue derives the complete default and custom specimen set"
   ) {
     assertStringIncludes(output, `### ${heading}`);
   }
-  assertStringIncludes(output, "25 percent\n[ 25%]");
+  assertEquals(output.includes("### Field / weave"), false);
+  assertStringIncludes(output, "65 percent\n[ 65%]");
   for (
     const status of ["pending", "active", "complete", "error", "cancelled"]
   ) {
