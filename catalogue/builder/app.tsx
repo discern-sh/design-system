@@ -168,6 +168,8 @@ const CANVAS_FOCUSABLE_SELECTOR = [
   "[tabindex]",
 ].join(",");
 
+const ADDITIONAL_PROPS_PLACEHOLDER = '{"aria-label": "…"}';
+
 function shortcutBelongsToControl(event: KeyboardEvent): boolean {
   return event.composedPath().some((target) =>
     target instanceof Element && target.matches(SHORTCUT_OWNER_SELECTOR)
@@ -784,7 +786,7 @@ function AdditionalPropsField({ node, onChange }: AdditionalPropsFieldProps) {
         rows={2}
         spellCheck={false}
         value={draft}
-        placeholder={'{"aria-label": "…"}'}
+        placeholder={ADDITIONAL_PROPS_PLACEHOLDER}
         aria-invalid={error !== null ? true : undefined}
         aria-describedby={error !== null ? errorId : undefined}
         onChange={(event) => {
