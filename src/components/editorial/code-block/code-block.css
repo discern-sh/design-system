@@ -1,0 +1,29 @@
+@layer discern.components {
+  .discern-code-block {
+    max-width: 100%;
+    margin-block: var(--discern-space-6);
+    overflow: auto;
+    padding: var(--discern-space-4) var(--discern-space-5);
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-surface-sunken);
+    color: var(--discern-color-ink);
+    font: var(--discern-font-size-sm)/var(--discern-leading-body)
+      var(--discern-font-mono);
+    tab-size: 4;
+    white-space: pre;
+  }
+
+  .discern-code-block:first-child {
+    margin-block-start: 0;
+  }
+
+  .discern-code-block:last-child {
+    margin-block-end: 0;
+  }
+
+  .discern-code-block > code {
+    color: inherit;
+    font: inherit;
+  }
+}
