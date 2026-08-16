@@ -137,6 +137,7 @@ export type SemanticInlineBaseRole =
   | "display"
   | "strong"
   | "muted"
+  | "emphasis"
   | "annotation";
 
 type ValidationContext = "content" | "link-label";
@@ -537,6 +538,11 @@ function baseStyle(
         ...theme.typography.muted,
         color: terminalThemeColor(theme, "--discern-color-ink-muted"),
       };
+    case "emphasis":
+      return {
+        ...theme.typography.emphasis,
+        color: terminalThemeColor(theme, "--discern-color-ink-muted"),
+      };
     case "annotation":
       return {
         ...theme.typography.annotation,
@@ -547,6 +553,25 @@ function baseStyle(
 
 function markerSpan(text: string, style: TerminalTextStyle): StyledSpan {
   return { text, style };
+}
+
+function styledCodeText(
+  text: string,
+  capabilities: TerminalCapabilities,
+): string {
+  return capabilities.colorDepth === "none" || !capabilities.unicode
+    ? codeDelimited(text)
+    : text;
+}
+
+function codeStyle(
+  inherited: TerminalTextStyle,
+  theme: TerminalTheme,
+): TerminalTextStyle {
+  return mergedStyle(inherited, {
+    ...theme.typography.strong,
+    color: terminalThemeColor(theme, "--discern-color-ink-muted"),
+  });
 }
 
 function labelSpans(
@@ -591,11 +616,8 @@ function labelSpans(
       }
       case "code":
         return [{
-          text: codeDelimited(item.text),
-          style: mergedStyle(inherited, {
-            ...theme.typography.strong,
-            color: terminalThemeColor(theme, "--discern-color-ink"),
-          }),
+          text: styledCodeText(item.text, capabilities),
+          style: codeStyle(inherited, theme),
         }];
       case "soft-break":
         return [{ text: " ", style: inherited }];
@@ -663,11 +685,8 @@ function renderContent(
       }
       case "code":
         return renderStyledSpans([{
-          text: codeDelimited(item.text),
-          style: mergedStyle(inherited, {
-            ...theme.typography.strong,
-            color: terminalThemeColor(theme, "--discern-color-ink"),
-          }),
+          text: styledCodeText(item.text, capabilities),
+          style: codeStyle(inherited, theme),
         }], capabilities);
       case "link": {
         const style = mergedStyle(inherited, {
@@ -724,7 +743,7 @@ export function renderSemanticInlineContent(
   const role = options.baseRole ?? "body";
   if (
     role !== "body" && role !== "display" && role !== "strong" &&
-    role !== "muted" && role !== "annotation"
+    role !== "muted" && role !== "emphasis" && role !== "annotation"
   ) {
     throw new TypeError(`unknown semantic inline base role: ${role}`);
   }

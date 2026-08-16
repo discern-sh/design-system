@@ -98,6 +98,7 @@ function expectedComponentDocument(
       content: ["Read ", { kind: "strong", content: ["carefully"] }],
       level: 1,
       overflow: "wrap",
+      treatment: "document",
       leadingBlankLines: 0,
       theme,
     }, capabilities),
@@ -143,6 +144,100 @@ Deno.test("Markdown is byte-identical to public Component calls at every termina
           renderMarkdownCli({ source: exactSource, theme }, capabilities),
           expectedComponentDocument(capabilities, theme),
         );
+      }
+    }
+  }
+});
+
+Deno.test("Markdown reading hierarchy and inline code retain meaning across every terminal posture", () => {
+  const source = [
+    "# Boundary",
+    "",
+    "## Section",
+    "",
+    "### Subsection",
+    "",
+    "#### Detail",
+    "",
+    "##### Aside",
+    "",
+    "###### Note",
+    "",
+    "Run `deno task check` before continuing.",
+  ].join("\n");
+
+  for (
+    const colorDepth of [
+      "truecolor",
+      "ansi256",
+      "ansi16",
+      "none",
+    ] as const
+  ) {
+    for (const unicode of [true, false]) {
+      for (const theme of ["light", "dark"] as const) {
+        const capabilities = testTerminalCapabilities({
+          columns: 32,
+          colorDepth,
+          unicode,
+          hyperlinks: true,
+        });
+        const output = renderMarkdownCli({ source, theme }, capabilities);
+        assertEquals(
+          renderMarkdownCli({ source, theme }, capabilities),
+          output,
+        );
+        const visible = stripAnsi(output);
+        const styledDocument = colorDepth !== "none" && unicode;
+        for (
+          const heading of [
+            "Boundary",
+            "Section",
+            "Subsection",
+            "Detail",
+            "Aside",
+            "Note",
+          ]
+        ) {
+          assertStringIncludes(visible, heading);
+        }
+        if (styledDocument) {
+          assert(!visible.includes("#"));
+          assertStringIncludes(visible, "deno task check");
+          assert(!visible.includes("`deno task check`"));
+          const code = projectTerminalSpans(output).find((span) =>
+            span.text === "deno task check"
+          );
+          assertEquals(code?.style?.bold, true);
+          assert(code?.style?.color !== undefined);
+          const aside = projectTerminalSpans(output).find((span) =>
+            span.text === "Aside"
+          );
+          assertEquals(aside?.style?.italic, true);
+          const note = projectTerminalSpans(output).find((span) =>
+            span.text === "Note"
+          );
+          assertEquals(note?.style?.dim, true);
+          assertEquals(note?.style?.italic, true);
+        } else {
+          for (
+            const [level, heading] of [
+              [1, "Boundary"],
+              [2, "Section"],
+              [3, "Subsection"],
+              [4, "Detail"],
+              [5, "Aside"],
+              [6, "Note"],
+            ] as const
+          ) {
+            assertStringIncludes(visible, `${"#".repeat(level)} ${heading}`);
+          }
+          assertStringIncludes(visible, "`deno task check`");
+        }
+        for (const line of output.split("\n")) {
+          assert(measureText(line) <= capabilities.columns, stripAnsi(line));
+          projectTerminalSpans(line);
+        }
       }
     }
   }
@@ -257,6 +352,56 @@ Deno.test("Markdown owns only validated hyperlink envelopes and keeps every targ
     ]
   ) {
     assertStringIncludes(plain, target);
+  }
+});
+
+Deno.test("Markdown wraps safe external, relative, and fragment links without losing OSC 8 targets", () => {
+  const links = [
+    {
+      label: "A deliberately wrapped external reference",
+      target: "https://example.test/reference",
+    },
+    { label: "Relative guide", target: "../guide" },
+    { label: "This section", target: "#this-section" },
+  ] as const;
+  const source = links.map(({ label, target }) => `[${label}](${target})`).join(
+    "\n\n",
+  );
+  const linked = renderMarkdownCli(
+    { source, theme: "dark", maxWidth: 18 },
+    testTerminalCapabilities({
+      columns: 18,
+      colorDepth: "ansi16",
+      hyperlinks: true,
+      unicode: true,
+    }),
+  );
+  const spans = projectTerminalSpans(linked);
+  for (const { label, target } of links) {
+    const targetSpans = spans.filter((span) => span.link === target);
+    assertEquals(targetSpans.map((span) => span.text).join(" "), label);
+    assert(targetSpans.every((span) => span.style?.underline === true));
+  }
+  assert(
+    spans.filter((span) => span.link === "https://example.test/reference")
+      .length > 1,
+  );
+  for (const line of linked.split("\n")) {
+    assert(measureText(line) <= 18, stripAnsi(line));
+    projectTerminalSpans(line);
+  }
+
+  const fallback = stripAnsi(renderMarkdownCli(
+    { source, theme: "dark", maxWidth: 160 },
+    testTerminalCapabilities({
+      columns: 160,
+      colorDepth: "ansi16",
+      hyperlinks: false,
+      unicode: true,
+    }),
+  ));
+  for (const { label, target } of links) {
+    assertStringIncludes(fallback, `${label} (${target})`);
   }
 });
 

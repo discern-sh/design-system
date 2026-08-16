@@ -108,6 +108,20 @@ const deepSource = `> Outer quotation
 >      > literal *source*
 >      > \`\`\``;
 
+const readingHierarchySource = `# Reading foundations
+
+Use \`semanticInlineText()\` when plain output must remain lossless.
+
+## Document boundary
+
+### Section marker
+
+#### Strong subsection
+
+##### Quiet subsection
+
+###### Supporting note`;
+
 const hostileSource = `<script>alert("inert")</script>
 
 [Unsafe link](javascript:alert(1)) and ![unsafe image](data:text/html,boom).
@@ -129,6 +143,21 @@ export const cliExamples: readonly CliExample<MarkdownCliProps>[] = [
   {
     name: "deep-nesting",
     props: { source: deepSource, maxWidth: 52 },
+  },
+  {
+    name: "reading-hierarchy",
+    props: { source: readingHierarchySource, maxWidth: 52 },
+  },
+  {
+    name: "reading-hierarchy-narrow-no-colour",
+    props: { source: readingHierarchySource, maxWidth: 24 },
+    capabilities: {
+      ansiControl: false,
+      colorDepth: "none",
+      columns: 24,
+      hyperlinks: false,
+      unicode: false,
+    },
   },
   {
     name: "hostile-inert-source",
@@ -208,6 +237,7 @@ function blockToCli(
         content: cliInline(block.content),
         level: block.level,
         overflow: "wrap",
+        treatment: "document",
         leadingBlankLines: 0,
         ...presentation,
       });

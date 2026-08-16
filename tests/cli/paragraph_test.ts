@@ -72,13 +72,13 @@ Deno.test("Paragraph renders exact nested styles at every colour depth", () => {
         ...theme.typography.strong,
         color: terminalThemeColor(theme, "--discern-color-ink-muted"),
       }, capabilities) +
-      body(" paragraph keeps"),
-      styleText("`inline`", {
+      body(" paragraph keeps ") +
+      styleText("inline", {
         ...theme.typography.body,
         ...theme.typography.strong,
-        color: terminalThemeColor(theme, "--discern-color-ink"),
-      }, capabilities) +
-      body(" meaning."),
+        color: terminalThemeColor(theme, "--discern-color-ink-muted"),
+      }, capabilities),
+      body("meaning."),
     ].join("\n");
     assertExactFrame(
       renderParagraphCli(paragraphProps, capabilities),
