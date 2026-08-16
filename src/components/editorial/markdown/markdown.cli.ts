@@ -11,6 +11,7 @@ import {
   renderCliBlocks,
 } from "../../../cli/block-composition.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type { TerminalMotif } from "../../../cli/motif.ts";
 import { createCliPresenter } from "../../../cli/presenter.ts";
 import type {
   SemanticInlineContent,
@@ -38,6 +39,8 @@ export interface MarkdownCliProps {
   readonly source: string;
   /** Explicit terminal Theme variant; defaults to dark. */
   readonly theme?: TerminalThemeVariant;
+  /** Optional package-validated terminal motif forwarded to child Components. */
+  readonly motif?: TerminalMotif;
   /** Maximum document measure in cells, bounded by terminal capabilities. */
   readonly maxWidth?: number;
 }
@@ -178,19 +181,20 @@ function cliInline(content: SemanticInlineContent): SemanticInlineContent {
     );
 }
 
-function optionalTheme(theme: TerminalThemeVariant) {
-  return { theme } as const;
+interface MarkdownCliPresentation {
+  readonly theme: TerminalThemeVariant;
+  readonly motif: TerminalMotif;
 }
 
 function blockToCli(
   block: MarkdownBlock,
-  theme: TerminalThemeVariant,
+  presentation: MarkdownCliPresentation,
 ): CliBlock {
   switch (block.kind) {
     case "paragraph":
       return createCliBlock(renderParagraphCli, {
         content: cliInline(block.content),
-        ...optionalTheme(theme),
+        ...presentation,
       });
     case "heading":
       return createCliBlock(renderHeadingCli, {
@@ -198,7 +202,7 @@ function blockToCli(
         level: block.level,
         overflow: "wrap",
         leadingBlankLines: 0,
-        ...optionalTheme(theme),
+        ...presentation,
       });
     case "list":
       return createCliBlock(renderListCli, {
@@ -211,22 +215,26 @@ function blockToCli(
             : { content: cliInline(item.content) }),
           ...(item.checked === undefined ? {} : { checked: item.checked }),
           ...(item.blocks.length === 0 ? {} : {
-            blocks: item.blocks.map((child) => blockToCli(child, theme)),
+            blocks: item.blocks.map((child) => blockToCli(child, presentation)),
           }),
         })),
-        ...optionalTheme(theme),
+        ...presentation,
       });
     case "blockquote":
       return createCliBlock(renderBlockquoteCli, {
-        children: block.children.map((child) => blockToCli(child, theme)),
-        ...optionalTheme(theme),
+        children: block.children.map((child) =>
+          blockToCli(child, presentation)
+        ),
+        ...presentation,
       });
     case "callout":
       return createCliBlock(renderCalloutCli, {
         title: block.title,
         tone: block.tone,
-        children: block.children.map((child) => blockToCli(child, theme)),
-        ...optionalTheme(theme),
+        children: block.children.map((child) =>
+          blockToCli(child, presentation)
+        ),
+        ...presentation,
       });
     case "code":
       return createCliBlock(renderCodeBlockCli, {
@@ -234,13 +242,13 @@ function blockToCli(
         ...(block.language === undefined ? {} : { language: block.language }),
         ...(block.info === undefined ? {} : { info: block.info }),
         widthPolicy: "wrap",
-        ...optionalTheme(theme),
+        ...presentation,
       });
     case "thematic-break":
       return createCliBlock(renderDividerCli, {
         treatment: "rule",
         tone: "neutral",
-        ...optionalTheme(theme),
+        ...presentation,
       });
     case "table":
       return createCliBlock(renderTableCli, {
@@ -250,7 +258,7 @@ function blockToCli(
           ...(column.align === undefined ? {} : { align: column.align }),
         })),
         rows: block.rows.map((row) => row.map(cliInline)),
-        ...optionalTheme(theme),
+        ...presentation,
       });
     case "footnotes":
       return createCliBlock(renderFootnotesCli, {
@@ -264,7 +272,9 @@ function blockToCli(
             )[]
             : {
               kind: "blocks" as const,
-              children: item.children.map((child) => blockToCli(child, theme)),
+              children: item.children.map((child) =>
+                blockToCli(child, presentation)
+              ),
             },
           ...(item.returnIds.length === 0 ? {} : {
             returnReferences: item.returnIds.map((id, index) => ({
@@ -273,7 +283,7 @@ function blockToCli(
             })),
           }),
         })),
-        ...optionalTheme(theme),
+        ...presentation,
       });
     default:
       return assertNever(block);
@@ -289,11 +299,15 @@ const renderMarkdownCli: CliRenderer<MarkdownCliProps> = (
   if (document.children.length === 0) return "";
   const presenter = createCliPresenter(capabilities, {
     ...(props.theme === undefined ? {} : { theme: props.theme }),
+    ...(props.motif === undefined ? {} : { motif: props.motif }),
     ...(props.maxWidth === undefined ? {} : { width: props.maxWidth }),
   });
-  const theme = presenter.theme;
+  const presentation = {
+    theme: presenter.theme,
+    motif: presenter.motif,
+  } satisfies MarkdownCliPresentation;
   return renderCliBlocks(
-    document.children.map((block) => blockToCli(block, theme)),
+    document.children.map((block) => blockToCli(block, presentation)),
     presenter.capabilities,
   );
 };
