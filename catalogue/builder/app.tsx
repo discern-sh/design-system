@@ -1,4 +1,11 @@
-import { Component, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Component,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { CSSProperties, DragEvent, ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { ThemeSwitcher } from "../../src/components/core/theme-switcher/theme-switcher.tsx";
@@ -15,12 +22,17 @@ import { compositionCost } from "./cost.ts";
 import type { PropControl } from "./controls.ts";
 import { AutoGrowTextarea, ShapedJsonEditor } from "./fields.tsx";
 import {
-  BuilderDocumentError,
   documentSelectionSnippet,
   documentToTsx,
-  parseDocument,
   serializeDocument,
 } from "./export.ts";
+import {
+  type BuilderHistoryState,
+  commitHistory,
+  initialHistory,
+  redoHistory,
+  undoHistory,
+} from "./history.ts";
 import type {
   BuilderDocument,
   BuilderLocation,
@@ -52,15 +64,27 @@ import {
   entryBySlug,
   exportNaming,
   instantiateComponent,
-  knownSlugs,
 } from "./registry-index.ts";
 import type { RenderOptions } from "./render.tsx";
 import { renderBuilderChild, rendersFromDefaults } from "./render.tsx";
+import {
+  browserBuilderStorage,
+  persistBuilderDocument,
+  persistBuilderTheme,
+  readBuilderDocumentFile,
+  restoreBuilderSession,
+} from "./persistence.ts";
+import {
+  assertBuilderDocument,
+  BUILDER_DOCUMENT_LIMITS,
+  BuilderDocumentError,
+  builderValueBytes,
+} from "./policy.ts";
+import { rootInsertionFromPointer } from "./placement.ts";
 
-const DOCUMENT_STORAGE_KEY = "discern-builder-document";
-const THEME_STORAGE_KEY = "discern-builder-theme";
 const DRAG_MIME = "application/x-discern-builder";
-const HISTORY_LIMIT = 100;
+const builderStorage = browserBuilderStorage();
+const restoredSession = restoreBuilderSession(builderStorage, documentPolicy);
 
 type DragPayload =
   | { readonly type: "palette"; readonly slug: string }
@@ -71,10 +95,30 @@ interface InsertionPoint {
   readonly index: number;
 }
 
-interface HistoryState {
-  readonly past: readonly BuilderDocument[];
-  readonly present: BuilderDocument;
-  readonly future: readonly BuilderDocument[];
+type DropHint =
+  | { readonly kind: "node"; readonly id: string }
+  | {
+    readonly kind: "root";
+    readonly index: number;
+    readonly offset: number;
+  };
+
+type WorkspacePane = "palette" | "canvas" | "inspector";
+const WORKSPACE_PANES: readonly WorkspacePane[] = [
+  "palette",
+  "canvas",
+  "inspector",
+];
+
+interface BuilderFeedback {
+  readonly kind: "status" | "error";
+  readonly message: string;
+  readonly serial: number;
+}
+
+interface ApplyResult {
+  readonly changed: boolean;
+  readonly error: string | null;
 }
 
 const canvasWidths = {
@@ -85,29 +129,79 @@ const canvasWidths = {
 } as const;
 type CanvasWidth = keyof typeof canvasWidths;
 
-function builderTheme(value: string | null): ThemeSwitcherMode | undefined {
-  return value === "system" || value === "light" || value === "dark"
-    ? value
-    : undefined;
+const SHORTCUT_OWNER_SELECTOR = [
+  "a[href]",
+  "button",
+  "input",
+  "select",
+  "textarea",
+  "summary",
+  "[contenteditable]:not([contenteditable='false'])",
+  "[tabindex]",
+  "[role='button']",
+  "[role='checkbox']",
+  "[role='combobox']",
+  "[role='link']",
+  "[role='menuitem']",
+  "[role='option']",
+  "[role='radio']",
+  "[role='slider']",
+  "[role='spinbutton']",
+  "[role='switch']",
+  "[role='tab']",
+  "audio[controls]",
+  "video[controls]",
+].join(",");
+
+const CANVAS_FOCUSABLE_SELECTOR = [
+  "a[href]",
+  "area[href]",
+  "button",
+  "input",
+  "select",
+  "textarea",
+  "summary",
+  "iframe",
+  "audio[controls]",
+  "video[controls]",
+  "[contenteditable]",
+  "[tabindex]",
+].join(",");
+
+function shortcutBelongsToControl(event: KeyboardEvent): boolean {
+  return event.composedPath().some((target) =>
+    target instanceof Element && target.matches(SHORTCUT_OWNER_SELECTOR)
+  );
 }
 
-function loadInitialDocument(): BuilderDocument {
-  let raw: string | null = null;
+function childrenAt(
+  document: BuilderDocument,
+  location: BuilderLocation,
+): readonly BuilderSlotChild[] {
+  if (location.parent === "root") return document.children;
+  const owner = findChild(document, location.nodeId)?.child;
+  if (owner === undefined || owner.kind !== "component") return [];
+  return slotChildrenOf(owner, location.prop);
+}
+
+function downloadSource(source: string, filename: string): void {
+  let url: string | undefined;
+  let anchor: HTMLAnchorElement | undefined;
   try {
-    raw = localStorage.getItem(DOCUMENT_STORAGE_KEY);
-    if (raw !== null) return parseDocument(raw, documentPolicy);
-  } catch {
-    // An unreadable saved document is preserved below, never destroyed:
-    // the autosave overwrites the main key on first render.
-    if (raw !== null) {
-      try {
-        localStorage.setItem(`${DOCUMENT_STORAGE_KEY}-recovery`, raw);
-      } catch {
-        // With storage unavailable there is nothing left to preserve.
-      }
+    url = URL.createObjectURL(new Blob([source], { type: "application/json" }));
+    anchor = globalThis.document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    globalThis.document.body.append(anchor);
+    anchor.click();
+  } finally {
+    anchor?.remove();
+    if (url !== undefined) {
+      // Keep the object URL alive through the browser's queued navigation.
+      const createdUrl = url;
+      globalThis.setTimeout(() => URL.revokeObjectURL(createdUrl), 0);
     }
   }
-  return emptyDocument("Untitled page");
 }
 
 function fileStem(name: string): string {
@@ -418,14 +512,15 @@ function Palette(
           <ul>
             {groupEntries.map((entry) => (
               <li key={entry.meta.slug}>
+                <PalettePreview slug={entry.meta.slug} />
                 <button
                   type="button"
                   draggable
                   title={entry.meta.description}
+                  aria-label={`Place ${entry.meta.name}`}
                   onClick={() => onPlace(entry.meta.slug)}
                   onDragStart={(event) => onDragStart(entry.meta.slug, event)}
                 >
-                  <PalettePreview slug={entry.meta.slug} />
                   <span>{entry.meta.name}</span>
                   <small>{entry.meta.description}</small>
                 </button>
@@ -485,11 +580,20 @@ const LAYOUT_WRAPPER_SLUGS = [
 interface ControlFieldProps {
   readonly node: BuilderNode;
   readonly control: PropControl;
-  readonly onChange: (value: BuilderPropValue | undefined) => void;
+  readonly onChange: (value: BuilderPropValue | undefined) => string | null;
 }
 
 function ControlField({ node, control, onChange }: ControlFieldProps) {
   const value = node.props[control.name];
+  const acceptedJsonSource = value !== undefined && value.kind === "json"
+    ? value.source
+    : "";
+  const [jsonDraft, setJsonDraft] = useState(acceptedJsonSource);
+  const [jsonError, setJsonError] = useState<string | null>(null);
+  useEffect(() => {
+    setJsonDraft(acceptedJsonSource);
+    setJsonError(null);
+  }, [node.id, control.name, acceptedJsonSource]);
   const inputId = `control-${node.id}-${control.name}`;
   const requirement = control.required
     ? null
@@ -574,9 +678,15 @@ function ControlField({ node, control, onChange }: ControlFieldProps) {
     );
   }
   if (control.control === "json") {
-    const source = value !== undefined && value.kind === "json"
-      ? value.source
-      : "";
+    const commitJsonDraft = (next: string): void => {
+      const error = onChange(
+        next.trim() === "" ? undefined : { kind: "json", source: next },
+      );
+      if (builderValueBytes(next) <= BUILDER_DOCUMENT_LIMITS.jsonSourceBytes) {
+        setJsonDraft(next);
+      }
+      setJsonError(error);
+    };
     if (control.shape !== undefined) {
       return (
         <div className="discern-builder-control">
@@ -586,24 +696,15 @@ function ControlField({ node, control, onChange }: ControlFieldProps) {
           </span>
           <ShapedJsonEditor
             shape={control.shape}
-            source={source}
+            source={jsonDraft}
             label={control.label}
-            onSource={(next) =>
-              onChange(
-                next.trim() === "" ? undefined : { kind: "json", source: next },
-              )}
+            error={jsonError}
+            onSource={commitJsonDraft}
           />
         </div>
       );
     }
-    let jsonError: string | null = null;
-    if (source.trim() !== "") {
-      try {
-        JSON.parse(source);
-      } catch {
-        jsonError = "Invalid JSON.";
-      }
-    }
+    const errorId = `${inputId}-error`;
     return (
       <label className="discern-builder-control" htmlFor={inputId}>
         <span>
@@ -614,21 +715,19 @@ function ControlField({ node, control, onChange }: ControlFieldProps) {
           id={inputId}
           rows={3}
           spellCheck={false}
-          value={source}
+          value={jsonDraft}
           placeholder={control.typeText.includes("[]") ? "[]" : "{}"}
-          onChange={(event) => {
-            const raw = event.currentTarget.value;
-            onChange(
-              raw.trim() === "" ? undefined : {
-                kind: "json",
-                source: raw,
-              },
-            );
-          }}
+          aria-invalid={jsonError !== null ? true : undefined}
+          aria-describedby={jsonError !== null ? errorId : undefined}
+          onChange={(event) => commitJsonDraft(event.currentTarget.value)}
         />
         {jsonError !== null
           ? (
-            <small className="discern-builder-control__error">
+            <small
+              className="discern-builder-control__error"
+              id={errorId}
+              role="alert"
+            >
               {jsonError}
             </small>
           )
@@ -659,17 +758,71 @@ function ControlField({ node, control, onChange }: ControlFieldProps) {
   );
 }
 
+interface AdditionalPropsFieldProps {
+  readonly node: BuilderNode;
+  readonly onChange: (source: string) => string | null;
+}
+
+/** Keeps rejected additional-prop text outside the accepted document. */
+function AdditionalPropsField({ node, onChange }: AdditionalPropsFieldProps) {
+  const acceptedSource = node.extra ?? "";
+  const [draft, setDraft] = useState(acceptedSource);
+  const [error, setError] = useState<string | null>(null);
+  const inputId = `control-${node.id}-additional-props`;
+  const errorId = `${inputId}-error`;
+  useEffect(() => {
+    setDraft(acceptedSource);
+    setError(null);
+  }, [node.id, acceptedSource]);
+  return (
+    <label className="discern-builder-control" htmlFor={inputId}>
+      <span>
+        Additional props <code>JSON object</code>
+      </span>
+      <AutoGrowTextarea
+        id={inputId}
+        rows={2}
+        spellCheck={false}
+        value={draft}
+        placeholder={'{"aria-label": "…"}'}
+        aria-invalid={error !== null ? true : undefined}
+        aria-describedby={error !== null ? errorId : undefined}
+        onChange={(event) => {
+          const source = event.currentTarget.value;
+          const nextError = onChange(source);
+          if (
+            builderValueBytes(source) <=
+              BUILDER_DOCUMENT_LIMITS.jsonSourceBytes
+          ) {
+            setDraft(source);
+          }
+          setError(nextError);
+        }}
+      />
+      {error === null ? null : (
+        <small
+          className="discern-builder-control__error"
+          id={errorId}
+          role="alert"
+        >
+          {error}
+        </small>
+      )}
+    </label>
+  );
+}
+
 function App() {
-  const [history, setHistory] = useState<HistoryState>(() => ({
-    past: [],
-    present: loadInitialDocument(),
-    future: [],
-  }));
+  const [history, setHistory] = useState<BuilderHistoryState>(() =>
+    initialHistory(restoredSession.document)
+  );
+  const historyRef = useRef(history);
+  historyRef.current = history;
   const [selection, setSelection] = useState<string | null>(null);
   const [pendingSlot, setPendingSlot] = useState<
     { readonly nodeId: string; readonly prop: string } | null
   >(null);
-  const [dropHint, setDropHint] = useState<string | null>(null);
+  const [dropHint, setDropHint] = useState<DropHint | null>(null);
   const [dragging, setDragging] = useState(false);
   const [query, setQuery] = useState("");
   const [purpose, setPurpose] = useState<CataloguePurpose | undefined>(
@@ -677,69 +830,213 @@ function App() {
   );
   const [canvasWidth, setCanvasWidth] = useState<CanvasWidth>("fluid");
   const [nameDraft, setNameDraft] = useState<string | null>(null);
-  const [theme, setTheme] = useState<ThemeSwitcherMode>(() =>
-    builderTheme(localStorage.getItem(THEME_STORAGE_KEY)) ?? "system"
-  );
+  const [theme, setTheme] = useState<ThemeSwitcherMode>(restoredSession.theme);
   const [accentHue, setAccentHue] = useState(255);
+  const [activePane, setActivePane] = useState<WorkspacePane>("canvas");
+  const [confirmingNew, setConfirmingNew] = useState(false);
+  const feedbackSerial = useRef(0);
+  const [feedback, setFeedback] = useState<BuilderFeedback | null>(null);
+  const [durableFeedback, setDurableFeedback] = useState<
+    BuilderFeedback | null
+  >(
+    () =>
+      restoredSession.message === undefined ? null : {
+        kind: restoredSession.error ? "error" : "status",
+        message: restoredSession.message,
+        serial: 0,
+      },
+  );
+  const [recoverySource] = useState<string | null>(
+    restoredSession.recoverySource ?? null,
+  );
+  const fileLoadToken = useRef(0);
+  const canvasPageRef = useRef<HTMLDivElement>(null);
+  const inspectorHeadingRef = useRef<HTMLHeadingElement>(null);
+  const compositionHeadingRef = useRef<HTMLHeadingElement>(null);
+  const paletteSearchRef = useRef<HTMLInputElement>(null);
+  const newButtonRef = useRef<HTMLButtonElement>(null);
+  const confirmNewButtonRef = useRef<HTMLButtonElement>(null);
+  const outlineButtonRefs = useRef(new Map<string, HTMLButtonElement>());
+  const focusRequest = useRef<
+    | { readonly kind: "selection"; readonly id: string | null }
+    | { readonly kind: "inspector" }
+    | { readonly kind: "palette" }
+    | null
+  >(null);
 
   const document = history.present;
 
+  const announce = (
+    message: string,
+    kind: BuilderFeedback["kind"] = "status",
+  ): void => {
+    feedbackSerial.current += 1;
+    setFeedback({ kind, message, serial: feedbackSerial.current });
+  };
+
   useEffect(() => {
-    localStorage.setItem(
-      DOCUMENT_STORAGE_KEY,
-      serializeDocument(document, documentPolicy),
+    const result = persistBuilderDocument(
+      builderStorage,
+      document,
+      documentPolicy,
     );
+    if (!result.ok) {
+      setDurableFeedback((current) =>
+        current?.message === result.message
+          ? current
+          : { kind: "error", message: result.message, serial: 0 }
+      );
+    }
   }, [document]);
 
-  const apply = (update: (current: BuilderDocument) => BuilderDocument): void =>
-    setHistory((state) => {
-      const next = update(state.present);
-      if (next === state.present) return state;
-      return {
-        past: [...state.past.slice(-HISTORY_LIMIT), state.present],
-        present: next,
-        future: [],
-      };
+  useLayoutEffect(() => {
+    const page = canvasPageRef.current;
+    if (page === null) return;
+    const suppressCanvasControls = (): void => {
+      for (const element of page.querySelectorAll(CANVAS_FOCUSABLE_SELECTOR)) {
+        if (element.getAttribute("tabindex") !== "-1") {
+          element.setAttribute("tabindex", "-1");
+        }
+        if (
+          element.hasAttribute("contenteditable") &&
+          element.getAttribute("contenteditable") !== "false"
+        ) {
+          element.setAttribute("contenteditable", "false");
+        }
+      }
+    };
+    suppressCanvasControls();
+    const observer = new MutationObserver(suppressCanvasControls);
+    observer.observe(page, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["contenteditable", "controls", "href", "tabindex"],
     });
+    return () => observer.disconnect();
+  }, [document]);
+
+  useEffect(() => {
+    const request = focusRequest.current;
+    if (request === null) return;
+    focusRequest.current = null;
+    globalThis.requestAnimationFrame(() => {
+      if (request.kind === "palette") {
+        paletteSearchRef.current?.focus();
+      } else if (request.kind === "inspector") {
+        (inspectorHeadingRef.current ?? compositionHeadingRef.current)?.focus();
+      } else if (request.id === null) {
+        compositionHeadingRef.current?.focus();
+      } else {
+        outlineButtonRefs.current.get(request.id)?.focus();
+      }
+    });
+  }, [document, selection, activePane]);
+
+  useEffect(() => {
+    if (confirmingNew) confirmNewButtonRef.current?.focus();
+  }, [confirmingNew]);
+
+  const apply = (
+    update: (current: BuilderDocument) => BuilderDocument,
+  ): ApplyResult => {
+    try {
+      const current = historyRef.current;
+      const nextDocument = update(current.present);
+      if (nextDocument === current.present) {
+        return { changed: false, error: null };
+      }
+      assertBuilderDocument(nextDocument, documentPolicy);
+      const nextHistory = commitHistory(current, nextDocument);
+      historyRef.current = nextHistory;
+      setHistory(nextHistory);
+      return { changed: true, error: null };
+    } catch (error) {
+      const message = error instanceof BuilderDocumentError
+        ? error.message
+        : error instanceof Error
+        ? error.message
+        : "The composition could not be changed.";
+      announce(message, "error");
+      return { changed: false, error: message };
+    }
+  };
 
   const commitName = (): void => {
     if (nameDraft === null) return;
     const name = nameDraft;
-    setNameDraft(null);
-    if (name === document.name) return;
-    apply((current) => ({ ...current, name }));
+    if (name === document.name) {
+      setNameDraft(null);
+      return;
+    }
+    if (apply((current) => ({ ...current, name })).changed) {
+      setNameDraft(null);
+      announce(`Renamed composition to ${name}.`);
+    }
   };
 
-  const undo = (): void =>
-    setHistory((state) => {
-      const previous = state.past.at(-1);
-      if (previous === undefined) return state;
-      return {
-        past: state.past.slice(0, -1),
-        present: previous,
-        future: [state.present, ...state.future],
-      };
-    });
+  const travelHistory = (direction: "undo" | "redo"): void => {
+    const current = historyRef.current;
+    const next = direction === "undo"
+      ? undoHistory(current)
+      : redoHistory(current);
+    if (next === current) return;
+    historyRef.current = next;
+    setHistory(next);
+    if (
+      selection !== null && findChild(next.present, selection) === undefined
+    ) {
+      setSelection(null);
+      focusRequest.current = { kind: "selection", id: null };
+    }
+    announce(
+      direction === "undo" ? "Undid the last change." : "Redid the change.",
+    );
+  };
 
-  const redo = (): void =>
-    setHistory((state) => {
-      const [next, ...rest] = state.future;
-      if (next === undefined) return state;
-      return {
-        past: [...state.past, state.present],
-        present: next,
-        future: rest,
-      };
-    });
+  const undo = (): void => travelHistory("undo");
+  const redo = (): void => travelHistory("redo");
 
   const changeTheme = (next: ThemeSwitcherMode): void => {
     setTheme(next);
-    if (next === "system") localStorage.removeItem(THEME_STORAGE_KEY);
-    else localStorage.setItem(THEME_STORAGE_KEY, next);
+    const result = persistBuilderTheme(builderStorage, next);
+    if (!result.ok) {
+      setDurableFeedback((current) =>
+        current?.message === result.message
+          ? current
+          : { kind: "error", message: result.message, serial: 0 }
+      );
+    }
+  };
+
+  const retryStorage = (): void => {
+    builderStorage.retry();
+    const savedDocument = persistBuilderDocument(
+      builderStorage,
+      historyRef.current.present,
+      documentPolicy,
+    );
+    const savedTheme = persistBuilderTheme(builderStorage, theme);
+    if (!savedDocument.ok) {
+      setDurableFeedback({
+        kind: "error",
+        message: savedDocument.message,
+        serial: 0,
+      });
+    } else if (!savedTheme.ok) {
+      setDurableFeedback({
+        kind: "error",
+        message: savedTheme.message,
+        serial: 0,
+      });
+    } else {
+      setDurableFeedback(null);
+      announce("Browser storage is working again. This composition is saved.");
+    }
   };
 
   const placeComponent = (slug: string, at?: InsertionPoint): void => {
-    if (!knownSlugs.has(slug)) return;
+    if (!documentPolicy.knownSlugs.has(slug)) return;
     const armedSlot = pendingSlot !== null &&
         findChild(document, pendingSlot.nodeId)?.child.kind === "component"
       ? pendingSlot
@@ -756,28 +1053,44 @@ function App() {
         }
         : insertionPoint(document, selection));
     const instance = instantiateComponent(slug);
-    apply((current) =>
+    const result = apply((current) =>
       insertChild(current, target.location, target.index, instance)
     );
+    if (!result.changed) return;
     setPendingSlot(null);
     setSelection(instance.id);
+    setActivePane("inspector");
+    focusRequest.current = { kind: "inspector" };
+    announce(`Placed ${childLabel(instance)}.`);
   };
 
   const deleteChild = (id: string): void => {
-    apply((current) => removeChild(current, id));
-    setSelection(null);
+    const found = findChild(historyRef.current.present, id);
+    if (found === undefined) return;
+    const siblings = childrenAt(historyRef.current.present, found.location);
+    const focusId = siblings[found.index + 1]?.id ??
+      siblings[found.index - 1]?.id ??
+      (found.location.parent === "node" ? found.location.nodeId : null);
+    const label = childLabel(found.child);
+    if (!apply((current) => removeChild(current, id)).changed) return;
+    setSelection(focusId);
     setPendingSlot(null);
+    setActivePane("inspector");
+    focusRequest.current = { kind: "selection", id: focusId };
+    announce(`Deleted ${label}.`);
   };
 
   const wrapSelection = (id: string, slug: string): void => {
     if (findChild(document, id) === undefined) return;
     const wrapper = instantiateComponent(slug);
-    apply((current) => wrapChild(current, id, wrapper));
+    if (!apply((current) => wrapChild(current, id, wrapper)).changed) return;
     setSelection(wrapper.id);
+    focusRequest.current = { kind: "inspector" };
+    announce(`Wrapped the selection in ${childLabel(wrapper)}.`);
   };
 
   const wrapTargets = LAYOUT_WRAPPER_SLUGS
-    .filter((slug) => knownSlugs.has(slug))
+    .filter((slug) => documentPolicy.knownSlugs.has(slug))
     .map((slug) => ({
       slug,
       name: entryBySlug.get(slug)?.meta.name ?? slug,
@@ -792,8 +1105,16 @@ function App() {
       placeComponent(payload.slug, { location, index });
       return;
     }
-    apply((current) => moveChild(current, payload.id, location, index));
+    if (
+      !apply((current) => moveChild(current, payload.id, location, index))
+        .changed
+    ) {
+      return;
+    }
+    const moved = findChild(historyRef.current.present, payload.id);
+    if (moved === undefined) return;
     setSelection(payload.id);
+    announce(`Moved ${childLabel(moved.child)}.`);
   };
 
   const dropOnNode = (payload: DragPayload, nodeId: string): void => {
@@ -815,15 +1136,15 @@ function App() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent): void => {
-      const target = event.target;
-      const inField = target instanceof Element &&
-        target.closest("input, textarea, select, [contenteditable]") !== null;
+      if (
+        event.defaultPrevented || event.isComposing ||
+        shortcutBelongsToControl(event)
+      ) return;
       if (event.key === "Escape") {
         setPendingSlot(null);
-        if (!inField) setSelection(null);
+        setSelection(null);
         return;
       }
-      if (inField) return;
       const modifier = event.metaKey || event.ctrlKey;
       if (modifier && event.key.toLowerCase() === "z") {
         event.preventDefault();
@@ -878,7 +1199,9 @@ function App() {
     ...props,
     "data-discern-builder-node": node.id,
     ...(node.id === selection ? { "data-discern-builder-selected": "" } : {}),
-    ...(node.id === dropHint ? { "data-discern-builder-drop": "" } : {}),
+    ...(dropHint?.kind === "node" && node.id === dropHint.id
+      ? { "data-discern-builder-drop": "" }
+      : {}),
     draggable: true,
     onDragStart: (event: DragEvent) => {
       event.stopPropagation();
@@ -895,6 +1218,26 @@ function App() {
     if (!(target instanceof Element)) return null;
     return target.closest("[data-discern-builder-node]")
       ?.getAttribute("data-discern-builder-node") ?? null;
+  };
+
+  const rootInsertionAt = (pointerY: number) => {
+    const page = canvasPageRef.current;
+    if (page === null) return { index: document.children.length, offset: 0 };
+    const rects = [...page.querySelectorAll<HTMLElement>(
+      ":scope > [data-discern-builder-root-child]",
+    )].map((element) => {
+      const range = globalThis.document.createRange();
+      range.selectNodeContents(element);
+      const rangeRect = range.getBoundingClientRect();
+      const elementRect = element.getBoundingClientRect();
+      const rect = rangeRect.height > 0 ? rangeRect : elementRect;
+      return { top: rect.top, bottom: rect.bottom };
+    });
+    return rootInsertionFromPointer(
+      pointerY,
+      rects,
+      page.getBoundingClientRect().top,
+    );
   };
 
   const selectedContext = selection === null
@@ -926,12 +1269,110 @@ function App() {
       ? {}
       : { maxWidth: canvasWidths[canvasWidth].width }),
   };
+  const selectedSiblings = selectedContext === undefined
+    ? []
+    : childrenAt(document, selectedContext.location);
+  const canMoveUp = selectedContext !== undefined && selectedContext.index > 0;
+  const canMoveDown = selectedContext !== undefined &&
+    selectedContext.index < selectedSiblings.length - 1;
+
+  const selectForEditing = (id: string | null): void => {
+    const selected = id === null ? undefined : findChild(document, id)?.child;
+    if (id !== null && selected === undefined) return;
+    setSelection(id);
+    setPendingSlot(null);
+    setActivePane("inspector");
+    focusRequest.current = { kind: "inspector" };
+    announce(
+      selected === undefined
+        ? "Selected the composition."
+        : `Selected ${childLabel(selected)}.`,
+    );
+  };
+
+  const nudgeSelection = (id: string, direction: -1 | 1): void => {
+    const found = findChild(document, id);
+    if (found === undefined) return;
+    if (!apply((current) => nudgeChild(current, id, direction)).changed) return;
+    announce(
+      `Moved ${childLabel(found.child)} ${direction < 0 ? "up" : "down"}.`,
+    );
+  };
+
+  const duplicateSelection = (id: string): void => {
+    const found = findChild(historyRef.current.present, id);
+    if (found === undefined) return;
+    let duplicatedId: string | null = null;
+    const result = apply((current) => {
+      const currentFound = findChild(current, id);
+      if (currentFound === undefined) return current;
+      const next = duplicateChild(current, id);
+      duplicatedId = childrenAt(next, currentFound.location)[
+        currentFound.index + 1
+      ]?.id ?? null;
+      return next;
+    });
+    if (!result.changed || duplicatedId === null) return;
+    setSelection(duplicatedId);
+    focusRequest.current = { kind: "selection", id: duplicatedId };
+    announce(`Duplicated ${childLabel(found.child)}.`);
+  };
+
+  const armComponentSlot = (nodeId: string, prop: string): void => {
+    setPendingSlot({ nodeId, prop });
+    setActivePane("palette");
+    focusRequest.current = { kind: "palette" };
+    announce(`Choose a component for ${prop}.`);
+  };
+
+  const loadFile = async (file: File): Promise<void> => {
+    const token = fileLoadToken.current + 1;
+    fileLoadToken.current = token;
+    announce(`Loading ${file.name}.`);
+    try {
+      const loaded = await readBuilderDocumentFile(file, documentPolicy);
+      if (fileLoadToken.current !== token) return;
+      if (apply(() => loaded).error !== null) return;
+      setSelection(null);
+      setPendingSlot(null);
+      setActivePane("inspector");
+      focusRequest.current = { kind: "selection", id: null };
+      announce(`Loaded ${file.name}.`);
+    } catch (error) {
+      if (fileLoadToken.current !== token) return;
+      announce(
+        error instanceof BuilderDocumentError
+          ? error.message
+          : "The selected file could not be loaded.",
+        "error",
+      );
+    }
+  };
+
+  const cancelNewComposition = (): void => {
+    setConfirmingNew(false);
+    announce("Kept the current composition.");
+    globalThis.requestAnimationFrame(() => newButtonRef.current?.focus());
+  };
+
+  const confirmNewComposition = (): void => {
+    const result = apply(() => emptyDocument("Untitled page"));
+    if (result.error !== null) return;
+    setConfirmingNew(false);
+    setSelection(null);
+    setPendingSlot(null);
+    setActivePane("inspector");
+    focusRequest.current = { kind: "selection", id: null };
+    announce("Started a new composition.");
+  };
 
   return (
     <div
       className="discern-builder-shell"
       data-discern-root
+      data-discern-builder-ready="true"
       data-discern-theme={theme}
+      data-discern-builder-pane={activePane}
       style={shellStyle}
     >
       <header className="discern-builder-toolbar">
@@ -1006,10 +1447,129 @@ function App() {
         <span className="discern-builder-version">v{packageVersion}</span>
       </header>
 
-      <aside className="discern-builder-sidebar">
+      <section
+        className={`discern-builder-status${
+          feedback === null && recoverySource === null &&
+            durableFeedback === null && !builderStorage.blocked
+            ? " discern-builder-status--empty"
+            : ""
+        }`}
+        aria-label="Builder status"
+      >
+        {durableFeedback === null ? null : (
+          <p
+            role={durableFeedback.kind === "error" ? "alert" : "status"}
+            aria-live={durableFeedback.kind === "error"
+              ? "assertive"
+              : "polite"}
+            aria-atomic="true"
+          >
+            {durableFeedback.message}
+          </p>
+        )}
+        <p
+          key={feedback?.serial ?? -1}
+          role={feedback?.kind === "error" ? "alert" : "status"}
+          aria-live={feedback?.kind === "error" ? "assertive" : "polite"}
+          aria-atomic="true"
+        >
+          {feedback?.message ?? ""}
+        </p>
+        {builderStorage.blocked
+          ? (
+            <button type="button" onClick={retryStorage}>
+              Retry browser storage
+            </button>
+          )
+          : null}
+        {recoverySource === null
+          ? null
+          : (
+            <details className="discern-builder-recovery">
+              <summary>Rejected composition recovery source</summary>
+              <textarea
+                readOnly
+                rows={4}
+                value={recoverySource}
+                aria-label="Rejected composition recovery source"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    downloadSource(recoverySource, "composition-recovery.json");
+                    announce("Downloaded the recovery source.");
+                  } catch {
+                    announce(
+                      "The recovery source could not be downloaded.",
+                      "error",
+                    );
+                  }
+                }}
+              >
+                Download recovery source
+              </button>
+            </details>
+          )}
+      </section>
+
+      <div
+        className="discern-builder-pane-tabs"
+        role="tablist"
+        aria-label="Workspace panes"
+      >
+        {WORKSPACE_PANES.map((pane, index) => (
+          <button
+            type="button"
+            role="tab"
+            id={`discern-builder-tab-${pane}`}
+            aria-controls={`discern-builder-pane-${pane}`}
+            aria-selected={activePane === pane}
+            tabIndex={activePane === pane ? 0 : -1}
+            key={pane}
+            onClick={() => setActivePane(pane)}
+            onKeyDown={(event) => {
+              const delta = event.key === "ArrowRight"
+                ? 1
+                : event.key === "ArrowLeft"
+                ? -1
+                : 0;
+              if (delta === 0) return;
+              event.preventDefault();
+              const nextPane = WORKSPACE_PANES[
+                (index + delta + WORKSPACE_PANES.length) %
+                WORKSPACE_PANES.length
+              ];
+              if (nextPane === undefined) return;
+              setActivePane(nextPane);
+              globalThis.requestAnimationFrame(() =>
+                globalThis.document.getElementById(
+                  `discern-builder-tab-${nextPane}`,
+                )?.focus()
+              );
+            }}
+          >
+            {pane === "palette"
+              ? "Palette"
+              : pane === "canvas"
+              ? "Canvas"
+              : "Inspector"}
+          </button>
+        ))}
+      </div>
+
+      <aside
+        className="discern-builder-sidebar"
+        id="discern-builder-pane-palette"
+        role="tabpanel"
+        aria-labelledby="discern-builder-tab-palette"
+        onFocusCapture={() => setActivePane("palette")}
+      >
         <label className="discern-builder-search">
           <span aria-hidden="true">⌕</span>
+          <span className="discern-visually-hidden">Search components</span>
           <input
+            ref={paletteSearchRef}
             type="search"
             value={query}
             placeholder="Search components"
@@ -1055,16 +1615,40 @@ function App() {
         className={`discern-builder-canvas${
           dragging ? " discern-builder-canvas--dragging" : ""
         }`}
+        id="discern-builder-pane-canvas"
+        role="tabpanel"
+        tabIndex={0}
+        aria-labelledby="discern-builder-tab-canvas"
+        aria-description="Rendered components are an inspection surface. Use the outline and inspector to select and edit them."
         onClickCapture={(event) => {
           event.preventDefault();
           event.stopPropagation();
-          setSelection(nodeIdAt(event.target));
+          selectForEditing(nodeIdAt(event.target));
+        }}
+        onFocusCapture={(event) => {
+          if (
+            event.target !== event.currentTarget &&
+            event.target instanceof HTMLElement
+          ) {
+            event.target.blur();
+          }
         }}
         onDragOverCapture={(event) => {
           event.preventDefault();
-          setDropHint(nodeIdAt(event.target));
+          const nodeId = nodeIdAt(event.target);
+          setDropHint(
+            nodeId === null
+              ? { kind: "root", ...rootInsertionAt(event.clientY) }
+              : { kind: "node", id: nodeId },
+          );
         }}
-        onDragLeave={() => setDropHint(null)}
+        onDragLeave={(event) => {
+          if (
+            event.relatedTarget instanceof Node &&
+            event.currentTarget.contains(event.relatedTarget)
+          ) return;
+          setDropHint(null);
+        }}
         onDropCapture={(event) => {
           event.preventDefault();
           event.stopPropagation();
@@ -1077,14 +1661,28 @@ function App() {
             handleDrop(
               payload,
               { parent: "root" },
-              document.children.length,
+              rootInsertionAt(event.clientY).index,
             );
           } else {
             dropOnNode(payload, nodeId);
           }
         }}
       >
-        <div className="discern-builder-canvas__page" style={pageStyle}>
+        <div
+          ref={canvasPageRef}
+          className="discern-builder-canvas__page"
+          style={pageStyle}
+          aria-hidden="true"
+        >
+          {dropHint?.kind === "root" && dragging
+            ? (
+              <div
+                className="discern-builder-root-insertion"
+                data-discern-builder-root-insertion={dropHint.index}
+                style={{ top: dropHint.offset }}
+              />
+            )
+            : null}
           {document.children.length === 0
             ? (
               <div className="discern-builder-empty">
@@ -1095,21 +1693,31 @@ function App() {
                 </p>
               </div>
             )
-            : document.children.map((child) => (
-              <CanvasBoundary
-                key={`${child.id}:${JSON.stringify(child)}`}
-                label={childLabel(child)}
+            : document.children.map((child, index) => (
+              <div
+                className="discern-builder-root-child"
+                data-discern-builder-root-child={child.id}
+                data-discern-builder-root-index={index}
+                key={child.id}
               >
-                <CanvasInstance
-                  child={child}
-                  options={{ decorate }}
-                />
-              </CanvasBoundary>
+                <CanvasBoundary label={childLabel(child)}>
+                  <CanvasInstance
+                    child={child}
+                    options={{ decorate }}
+                  />
+                </CanvasBoundary>
+              </div>
             ))}
         </div>
       </main>
 
-      <aside className="discern-builder-inspector">
+      <aside
+        className="discern-builder-inspector"
+        id="discern-builder-pane-inspector"
+        role="tabpanel"
+        aria-labelledby="discern-builder-tab-inspector"
+        onFocusCapture={() => setActivePane("inspector")}
+      >
         {selectedNode !== undefined && selectedEntry !== undefined
           ? (
             <div className="discern-builder-inspector__body">
@@ -1117,10 +1725,12 @@ function App() {
                 document={document}
                 selectionId={selectedNode.id}
                 currentLabel={selectedEntry.meta.name}
-                onSelect={setSelection}
+                onSelect={selectForEditing}
               />
               <header>
-                <h2>{selectedEntry.meta.name}</h2>
+                <h2 ref={inspectorHeadingRef} tabIndex={-1}>
+                  {selectedEntry.meta.name}
+                </h2>
                 <p>{selectedEntry.meta.description}</p>
               </header>
               <div
@@ -1130,26 +1740,25 @@ function App() {
               >
                 <button
                   type="button"
-                  onClick={() =>
-                    apply((current) =>
-                      nudgeChild(current, selectedNode.id, -1)
-                    )}
+                  aria-label={`Move ${selectedEntry.meta.name} up`}
+                  title="Move up"
+                  disabled={!canMoveUp}
+                  onClick={() => nudgeSelection(selectedNode.id, -1)}
                 >
-                  ↑
+                  <span aria-hidden="true">↑</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() =>
-                    apply((current) => nudgeChild(current, selectedNode.id, 1))}
+                  aria-label={`Move ${selectedEntry.meta.name} down`}
+                  title="Move down"
+                  disabled={!canMoveDown}
+                  onClick={() => nudgeSelection(selectedNode.id, 1)}
                 >
-                  ↓
+                  <span aria-hidden="true">↓</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() =>
-                    apply((current) =>
-                      duplicateChild(current, selectedNode.id)
-                    )}
+                  onClick={() => duplicateSelection(selectedNode.id)}
                 >
                   Duplicate
                 </button>
@@ -1201,17 +1810,14 @@ function App() {
                           <li key={child.id}>
                             <button
                               type="button"
-                              onClick={() => setSelection(child.id)}
+                              onClick={() => selectForEditing(child.id)}
                             >
                               {childLabel(child)}
                             </button>
                             <button
                               type="button"
                               aria-label={`Remove ${childLabel(child)}`}
-                              onClick={() =>
-                                apply((current) =>
-                                  removeChild(current, child.id)
-                                )}
+                              onClick={() => deleteChild(child.id)}
                             >
                               ✕
                             </button>
@@ -1222,23 +1828,31 @@ function App() {
                         {control.elementOnly ? null : (
                           <button
                             type="button"
-                            onClick={() =>
-                              apply((current) =>
-                                insertChild(
-                                  current,
-                                  {
-                                    parent: "node",
-                                    nodeId: selectedNode.id,
-                                    prop: control.name,
-                                  },
-                                  Number.MAX_SAFE_INTEGER,
-                                  {
-                                    kind: "text",
-                                    id: newChildId(),
-                                    text: "Text",
-                                  },
-                                )
-                              )}
+                            onClick={() => {
+                              const textChild: BuilderSlotChild = {
+                                kind: "text",
+                                id: newChildId(),
+                                text: "Text",
+                              };
+                              if (
+                                apply((current) =>
+                                  insertChild(
+                                    current,
+                                    {
+                                      parent: "node",
+                                      nodeId: selectedNode.id,
+                                      prop: control.name,
+                                    },
+                                    Number.MAX_SAFE_INTEGER,
+                                    textChild,
+                                  )
+                                ).changed
+                              ) {
+                                setSelection(textChild.id);
+                                focusRequest.current = { kind: "inspector" };
+                                announce(`Added text to ${control.label}.`);
+                              }
+                            }}
                           >
                             ＋ Text
                           </button>
@@ -1246,10 +1860,7 @@ function App() {
                         <button
                           type="button"
                           onClick={() =>
-                            setPendingSlot({
-                              nodeId: selectedNode.id,
-                              prop: control.name,
-                            })}
+                            armComponentSlot(selectedNode.id, control.name)}
                         >
                           ＋ Component…
                         </button>
@@ -1258,7 +1869,7 @@ function App() {
                   )
                   : (
                     <ControlField
-                      key={control.name}
+                      key={`${selectedNode.id}:${control.name}`}
                       node={selectedNode}
                       control={control}
                       onChange={(value) =>
@@ -1269,27 +1880,18 @@ function App() {
                             control.name,
                             value,
                           )
-                        )}
+                        ).error}
                     />
                   )
               )}
-              <label className="discern-builder-control">
-                <span>
-                  Additional props <code>JSON object</code>
-                </span>
-                <AutoGrowTextarea
-                  rows={2}
-                  spellCheck={false}
-                  value={selectedNode.extra ?? ""}
-                  placeholder='{"aria-label": "…"}'
-                  onChange={(event) => {
-                    const extra = event.currentTarget.value;
-                    apply((current) =>
-                      updateNodeExtra(current, selectedNode.id, extra)
-                    );
-                  }}
-                />
-              </label>
+              <AdditionalPropsField
+                key={selectedNode.id}
+                node={selectedNode}
+                onChange={(source) =>
+                  apply((current) =>
+                    updateNodeExtra(current, selectedNode.id, source)
+                  ).error}
+              />
             </div>
           )
           : selectedText !== undefined
@@ -1299,14 +1901,51 @@ function App() {
                 document={document}
                 selectionId={selectedText.id}
                 currentLabel="Text"
-                onSelect={setSelection}
+                onSelect={selectForEditing}
               />
               <header>
-                <h2>Text</h2>
+                <h2 ref={inspectorHeadingRef} tabIndex={-1}>Text</h2>
                 <p>
                   Literal text placed in a slot. Newlines become line breaks.
                 </p>
               </header>
+              <div
+                className="discern-builder-toolbar__group"
+                role="group"
+                aria-label="Text actions"
+              >
+                <button
+                  type="button"
+                  aria-label="Move text up"
+                  title="Move up"
+                  disabled={!canMoveUp}
+                  onClick={() => nudgeSelection(selectedText.id, -1)}
+                >
+                  <span aria-hidden="true">↑</span>
+                </button>
+                <button
+                  type="button"
+                  aria-label="Move text down"
+                  title="Move down"
+                  disabled={!canMoveDown}
+                  onClick={() => nudgeSelection(selectedText.id, 1)}
+                >
+                  <span aria-hidden="true">↓</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => duplicateSelection(selectedText.id)}
+                >
+                  Duplicate
+                </button>
+                <button
+                  type="button"
+                  className="discern-builder-danger"
+                  onClick={() => deleteChild(selectedText.id)}
+                >
+                  Delete
+                </button>
+              </div>
               <label className="discern-builder-control">
                 <span>Content</span>
                 <AutoGrowTextarea
@@ -1336,19 +1975,12 @@ function App() {
                   </button>
                 ))}
               </div>
-              <button
-                type="button"
-                className="discern-builder-danger"
-                onClick={() => deleteChild(selectedText.id)}
-              >
-                Delete
-              </button>
             </div>
           )
           : (
             <div className="discern-builder-inspector__body">
               <header>
-                <h2>Composition</h2>
+                <h2 ref={compositionHeadingRef} tabIndex={-1}>Composition</h2>
                 <p>
                   {componentCount(document)} component instances ·{" "}
                   {cost.resolved.length} shipped components
@@ -1413,17 +2045,18 @@ function App() {
                 <button
                   type="button"
                   onClick={() => {
-                    const blob = new Blob([
-                      serializeDocument(document, documentPolicy),
-                    ], {
-                      type: "application/json",
-                    });
-                    const url = URL.createObjectURL(blob);
-                    const anchor = globalThis.document.createElement("a");
-                    anchor.href = url;
-                    anchor.download = `${fileStem(document.name)}.json`;
-                    anchor.click();
-                    URL.revokeObjectURL(url);
+                    try {
+                      downloadSource(
+                        serializeDocument(document, documentPolicy),
+                        `${fileStem(document.name)}.json`,
+                      );
+                      announce("Saved the composition file.");
+                    } catch {
+                      announce(
+                        "The composition file could not be saved.",
+                        "error",
+                      );
+                    }
                   }}
                 >
                   Save file
@@ -1437,41 +2070,46 @@ function App() {
                       const file = event.currentTarget.files?.[0];
                       event.currentTarget.value = "";
                       if (file === undefined) return;
-                      file.text().then((text) => {
-                        try {
-                          const loaded = parseDocument(
-                            text,
-                            documentPolicy,
-                          );
-                          apply(() => loaded);
-                          setSelection(null);
-                        } catch (error) {
-                          alert(
-                            error instanceof BuilderDocumentError
-                              ? error.message
-                              : "The file could not be loaded.",
-                          );
-                        }
-                      });
+                      void loadFile(file);
                     }}
                   />
                 </label>
-                <button
-                  type="button"
-                  className="discern-builder-danger"
-                  onClick={() => {
-                    if (
-                      confirm(
-                        "Replace the current composition with an empty one?",
-                      )
-                    ) {
-                      apply(() => emptyDocument("Untitled page"));
-                      setSelection(null);
-                    }
-                  }}
-                >
-                  New
-                </button>
+                {confirmingNew
+                  ? (
+                    <div
+                      className="discern-builder-new-confirmation"
+                      role="group"
+                      aria-label="Confirm new composition"
+                    >
+                      <span>Replace the current composition?</span>
+                      <button
+                        ref={confirmNewButtonRef}
+                        type="button"
+                        className="discern-builder-danger"
+                        onClick={confirmNewComposition}
+                      >
+                        Replace with empty composition
+                      </button>
+                      <button type="button" onClick={cancelNewComposition}>
+                        Keep current composition
+                      </button>
+                    </div>
+                  )
+                  : (
+                    <button
+                      ref={newButtonRef}
+                      type="button"
+                      className="discern-builder-danger"
+                      onClick={() => {
+                        setConfirmingNew(true);
+                        announce(
+                          "Confirm whether to replace the current composition.",
+                        );
+                      }}
+                    >
+                      New
+                    </button>
+                  )}
               </div>
             </div>
           )}
@@ -1483,17 +2121,31 @@ function App() {
               {rows.map((row) => (
                 <li
                   key={row.child.id}
+                  data-discern-builder-outline-id={row.child.id}
                   style={{
                     "--discern-builder-depth": row.depth,
                   } as CSSProperties}
                 >
                   <button
+                    ref={(element) => {
+                      if (element === null) {
+                        outlineButtonRefs.current.delete(row.child.id);
+                      } else {
+                        outlineButtonRefs.current.set(row.child.id, element);
+                      }
+                    }}
                     type="button"
                     draggable
+                    aria-current={row.child.id === selection
+                      ? "true"
+                      : undefined}
                     className={row.child.id === selection
                       ? "discern-builder-outline__row discern-builder-outline__row--selected"
                       : "discern-builder-outline__row"}
-                    onClick={() => setSelection(row.child.id)}
+                    onClick={() => {
+                      setSelection(row.child.id);
+                      announce(`Selected ${childLabel(row.child)}.`);
+                    }}
                     onDragStart={(event) => {
                       event.dataTransfer.setData(
                         DRAG_MIME,

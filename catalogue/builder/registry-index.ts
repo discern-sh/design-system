@@ -179,12 +179,25 @@ export const exportNaming: ExportNaming = {
   requiredFunctionPropsBySlug,
 };
 
+// Table's required ReactNode is native row-group markup that inert documents
+// cannot author. An empty text node satisfies its type without producing an
+// invalid text child inside <table>; raw row markup remains outside the model.
+const EMPTY_TEXT_DEFAULT_SLOTS: ReadonlyMap<string, ReadonlySet<string>> =
+  new Map([["table", new Set(["children"])]]);
+
 /** A fresh instance of a component with its required defaults configured. */
 export function instantiateComponent(slug: string): BuilderNode {
+  const props = { ...defaultProps(controlsBySlug(slug)) };
+  for (const slot of EMPTY_TEXT_DEFAULT_SLOTS.get(slug) ?? []) {
+    props[slot] = {
+      kind: "slot",
+      children: [{ kind: "text", id: newChildId(), text: "" }],
+    };
+  }
   return {
     kind: "component",
     id: newChildId(),
     slug,
-    props: defaultProps(controlsBySlug(slug)),
+    props,
   };
 }

@@ -1433,6 +1433,15 @@ Deno.test("every catalogue component yields controls, a default instance, and ex
     >(),
   );
 
+  const tableDefault = registryIndex.instantiateComponent("table");
+  const tableChildren = tableDefault.props.children;
+  assert(
+    tableChildren?.kind === "slot" &&
+      tableChildren.children[0]?.kind === "text" &&
+      tableChildren.children[0].text === "",
+    "Table defaults must not put an invalid text node inside <table>",
+  );
+
   for (const entry of componentEntries) {
     const slug = entry.meta.slug;
     const controls = controlsBySlug(slug);

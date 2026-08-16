@@ -10,9 +10,14 @@
     display: grid;
     grid-template:
       "toolbar toolbar toolbar" auto
-      "sidebar canvas inspector" 1fr
+      "status status status" auto
+      "pane-tabs pane-tabs pane-tabs" auto
+      "sidebar canvas inspector" minmax(0, 1fr)
       / 280px minmax(0, 1fr) 340px;
     height: 100vh;
+    height: 100dvh;
+    min-width: 0;
+    overflow: hidden;
     background: var(--discern-color-canvas);
     color: var(--discern-color-ink);
     font-family: var(--discern-font-ui);
@@ -23,12 +28,96 @@
   /* Toolbar */
   .discern-builder-toolbar {
     display: flex;
+    flex-wrap: wrap;
     grid-area: toolbar;
     align-items: center;
     gap: 16px;
+    min-width: 0;
     padding: 10px 16px;
     border-bottom: 1px solid var(--discern-color-border);
     background: var(--discern-color-surface);
+  }
+
+  /* Durable workflow feedback and constrained-workspace navigation. */
+  .discern-builder-status {
+    display: flex;
+    flex-wrap: wrap;
+    grid-area: status;
+    gap: 8px;
+    align-items: center;
+    min-width: 0;
+    max-height: 30dvh;
+    padding: 8px 12px;
+    overflow: auto;
+    border-bottom: 1px solid var(--discern-color-border);
+    background: var(--discern-color-surface);
+    font-size: var(--discern-font-size-xs);
+  }
+  .discern-builder-status--empty {
+    display: none;
+  }
+  .discern-builder-status > p {
+    flex: 1;
+    margin: 0;
+  }
+  .discern-builder-status > p[role="alert"] {
+    color: var(--discern-color-danger);
+  }
+  .discern-builder-status button,
+  .discern-builder-recovery summary {
+    padding: 6px 10px;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-canvas);
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+  .discern-builder-recovery {
+    min-width: min(100%, 18rem);
+  }
+  .discern-builder-recovery[open] {
+    flex-basis: 100%;
+  }
+  .discern-builder-recovery textarea {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    max-height: 12rem;
+    margin-block: 8px;
+    overflow: auto;
+    padding: 8px;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-canvas);
+    color: inherit;
+    font-family: var(--discern-font-mono);
+    font-size: var(--discern-font-size-xs);
+    resize: vertical;
+  }
+  .discern-builder-pane-tabs {
+    display: none;
+    grid-area: pane-tabs;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-width: 0;
+    padding: 6px;
+    border-bottom: 1px solid var(--discern-color-border);
+    background: var(--discern-color-surface);
+  }
+  .discern-builder-pane-tabs button {
+    min-height: 40px;
+    border: 1px solid transparent;
+    border-radius: var(--discern-radius-md);
+    background: transparent;
+    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-xs);
+    font-weight: var(--discern-font-weight-strong);
+    cursor: pointer;
+  }
+  .discern-builder-pane-tabs button[aria-selected="true"] {
+    border-color: var(--discern-color-accent-400);
+    background: var(--discern-color-accent-100);
+    color: var(--discern-color-ink);
   }
   .discern-builder-brand {
     display: flex;
@@ -73,6 +162,7 @@
     font-feature-settings: inherit;
   }
   .discern-builder-toolbar__group > button,
+  .discern-builder-new-confirmation > button,
   .discern-builder-file,
   .discern-builder-outline__end {
     padding: 6px 10px;
@@ -84,6 +174,7 @@
     cursor: pointer;
   }
   .discern-builder-toolbar__group > button:hover:not(:disabled),
+  .discern-builder-new-confirmation > button:hover:not(:disabled),
   .discern-builder-file:hover {
     border-color: var(--discern-color-border-strong);
     background: var(--discern-color-surface-sunken);
@@ -91,6 +182,14 @@
   .discern-builder-toolbar__group > button:disabled {
     color: var(--discern-color-ink-faint);
     cursor: default;
+  }
+  .discern-builder-new-confirmation {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-xs);
   }
   .discern-builder-danger {
     color: var(--discern-color-danger);
@@ -119,6 +218,8 @@
     flex-direction: column;
     grid-area: sidebar;
     gap: 10px;
+    min-width: 0;
+    min-height: 0;
     padding: 12px;
     overflow-y: auto;
     border-right: 1px solid var(--discern-color-border);
@@ -168,23 +269,28 @@
     padding: 0;
     list-style: none;
   }
+  .discern-builder-palette li {
+    overflow: hidden;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-canvas);
+  }
   .discern-builder-palette li > button {
     display: flex;
     flex-direction: column;
     gap: 4px;
     width: 100%;
     padding: 8px 10px;
-    border: 1px solid var(--discern-color-border);
-    border-radius: var(--discern-radius-md);
-    background: var(--discern-color-canvas);
+    border: 0;
+    background: transparent;
     color: inherit;
     text-align: start;
     cursor: grab;
   }
   .discern-builder-palette__preview {
     overflow: hidden;
-    align-self: stretch;
     height: 60px;
+    margin: 8px 8px 0;
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-sm);
     background: var(--discern-color-surface);
@@ -205,7 +311,7 @@
     color: var(--discern-color-ink-faint);
     font-size: var(--discern-font-size-lg);
   }
-  .discern-builder-palette li > button:hover {
+  .discern-builder-palette li:has(> button:hover) {
     border-color: var(--discern-color-accent-400);
   }
   .discern-builder-palette li > button > span {
@@ -231,19 +337,44 @@
   /* Canvas */
   .discern-builder-canvas {
     grid-area: canvas;
+    min-width: 0;
+    min-height: 0;
     padding: 24px;
     overflow: auto;
     background: var(--discern-color-surface-sunken);
   }
   .discern-builder-canvas__page {
+    position: relative;
     box-sizing: border-box;
-    min-height: calc(100vh - 140px);
+    width: 100%;
+    min-height: 100%;
     margin-inline: auto;
     padding: 24px;
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-lg);
     background: var(--discern-color-canvas);
     box-shadow: 0 1px 8px var(--discern-color-overlay);
+  }
+  .discern-builder-root-child {
+    display: contents;
+  }
+  .discern-builder-root-insertion {
+    position: absolute;
+    z-index: 2;
+    right: 12px;
+    left: 12px;
+    border-top: 3px solid var(--discern-color-success);
+    pointer-events: none;
+  }
+  .discern-builder-root-insertion::before {
+    position: absolute;
+    top: -6px;
+    left: -1px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--discern-color-success);
+    content: "";
   }
   .discern-builder-canvas--dragging .discern-builder-canvas__page {
     outline: 2px dashed var(--discern-color-accent-400);
@@ -295,6 +426,8 @@
     flex-direction: column;
     grid-area: inspector;
     gap: 16px;
+    min-width: 0;
+    min-height: 0;
     padding: 14px;
     overflow-y: auto;
     border-left: 1px solid var(--discern-color-border);
@@ -696,5 +829,128 @@
     margin: 4px 0;
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-sm);
+  }
+
+  /* Builder chrome always supplies a visible keyboard-focus replacement. */
+  .discern-builder-shell :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 3px solid var(--discern-color-accent-500);
+    outline-offset: 2px;
+  }
+  .discern-builder-search:has(input:focus-visible),
+  .discern-builder-file:has(input:focus-visible) {
+    outline: 3px solid var(--discern-color-accent-500);
+    outline-offset: 2px;
+  }
+
+  /* Intermediate, phone, and 400%-zoom postures use one persistent pane. */
+  @media (max-width: 1180px) {
+    .discern-builder-shell {
+      grid-template:
+        "toolbar" auto
+        "status" auto
+        "pane-tabs" auto
+        "workspace" minmax(0, 1fr)
+        / minmax(0, 1fr);
+    }
+    .discern-builder-pane-tabs {
+      display: grid;
+    }
+    .discern-builder-sidebar,
+    .discern-builder-canvas,
+    .discern-builder-inspector {
+      display: none;
+      grid-area: workspace;
+      border: 0;
+    }
+    .discern-builder-shell[data-discern-builder-pane="palette"] .discern-builder-sidebar,
+    .discern-builder-shell[data-discern-builder-pane="inspector"] .discern-builder-inspector {
+      display: flex;
+    }
+    .discern-builder-shell[data-discern-builder-pane="canvas"] .discern-builder-canvas {
+      display: block;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .discern-builder-toolbar {
+      align-items: center;
+      gap: 8px;
+      max-height: 40dvh;
+      padding: 8px;
+      overflow-y: auto;
+    }
+    .discern-builder-brand small,
+    .discern-builder-version {
+      display: none;
+    }
+    .discern-builder-name {
+      flex: 1 1 10rem;
+      max-width: none;
+    }
+    .discern-builder-width,
+    .discern-builder-accent {
+      flex: 1 1 8rem;
+    }
+    .discern-builder-theme {
+      margin-inline-end: auto;
+    }
+    .discern-builder-status {
+      align-items: stretch;
+    }
+    .discern-builder-status > p,
+    .discern-builder-recovery {
+      flex-basis: 100%;
+    }
+    .discern-builder-pane-tabs {
+      padding: 4px;
+    }
+    .discern-builder-sidebar,
+    .discern-builder-inspector {
+      padding: 10px;
+    }
+    .discern-builder-canvas {
+      padding: 10px;
+    }
+    .discern-builder-canvas__page {
+      padding: 16px;
+      border-radius: var(--discern-radius-md);
+    }
+    .discern-builder-object__cells {
+      flex-direction: column;
+    }
+    .discern-builder-object__cell {
+      flex-basis: 100%;
+    }
+  }
+
+  @media (pointer: coarse) {
+    .discern-builder-shell :where(button, input, select, summary),
+    .discern-builder-file {
+      min-height: 44px;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .discern-builder-shell :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible,
+    .discern-builder-search:has(input:focus-visible),
+    .discern-builder-file:has(input:focus-visible) {
+      outline: 3px solid CanvasText !important;
+      outline-offset: 2px !important;
+    }
+    .discern-builder-pane-tabs button[aria-selected="true"],
+    .discern-builder-outline__row--selected,
+    .discern-builder-canvas [data-discern-builder-selected] {
+      border-color: Highlight;
+      outline-color: Highlight;
+    }
+    .discern-builder-root-insertion {
+      border-color: Highlight;
+    }
+    .discern-builder-root-insertion::before {
+      background: Highlight;
+    }
+    .discern-builder-canvas__page {
+      box-shadow: none;
+    }
   }
 }
