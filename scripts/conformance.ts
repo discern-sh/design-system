@@ -11,7 +11,12 @@ import type {
 import { catalogueCliCapabilities } from "../catalogue/cli-preview.tsx";
 import { terminalFoundationSheets } from "../catalogue/terminal-foundations.ts";
 import { launchBrowser } from "./browser.ts";
+import {
+  addPageFailureListeners,
+  WCAG_TAGS,
+} from "./browser-conformance-support.ts";
 import { buildDesignSystem } from "./build.ts";
+import { runBuilderConformance } from "./builder-conformance.ts";
 import { runResilienceConformance } from "./resilience-conformance.ts";
 import catalogueServer from "./serve.ts";
 import { withViewport } from "./viewport.ts";
@@ -20,13 +25,6 @@ const OUTPUT_ROOT = new URL("../dist/conformance/", import.meta.url);
 const WIDE_VIEWPORT = { width: 1440, height: 1000 } as const;
 const TERMINAL_REVIEW_VIEWPORT = { width: 1920, height: 1200 } as const;
 const NARROW_VIEWPORT = { width: 390, height: 844 } as const;
-const WCAG_TAGS = [
-  "wcag2a",
-  "wcag2aa",
-  "wcag21a",
-  "wcag21aa",
-  "wcag22aa",
-] as const;
 
 type CatalogueTheme = "light" | "dark";
 type AccessibleRole = Parameters<Locator["getByRole"]>[0];
@@ -329,25 +327,6 @@ function parseScenarios(
     );
   }
   return parsed as readonly ConformanceScenario[];
-}
-
-function addPageFailureListeners(page: Page, failures: string[]): void {
-  page.on("pageerror", (error) => {
-    failures.push(`Browser exception: ${error.message}`);
-  });
-  page.on("console", (message) => {
-    if (
-      message.type() === "error" &&
-      !message.text().startsWith("Failed to load resource:")
-    ) {
-      failures.push(`Browser console: ${message.text()}`);
-    }
-  });
-  page.on("response", (response) => {
-    if (response.status() >= 400) {
-      failures.push(`HTTP ${response.status()}: ${response.url()}`);
-    }
-  });
 }
 
 async function assertAutoEnrollment(
@@ -1143,6 +1122,13 @@ export async function runConformance(): Promise<void> {
       origin,
       failures,
     );
+    const builder = await runBuilderConformance({
+      browser,
+      page,
+      origin,
+      failures,
+      outputRoot: OUTPUT_ROOT,
+    });
     const screenshots = await captureReviewSheets(page, origin);
     await context.close();
     const forcedColorFocusChecks = await verifyForcedColors(
@@ -1164,7 +1150,8 @@ export async function runConformance(): Promise<void> {
       !failures.length,
       `Component conformance failed:\n- ${failures.join("\n- ")}\n` +
         `Detector failure counts: ${JSON.stringify(failureCounts)}\n` +
-        `Resilience populations: ${JSON.stringify(resilience)}`,
+        `Resilience populations: ${JSON.stringify(resilience)}\n` +
+        `Builder populations: ${JSON.stringify(builder)}`,
     );
     const coveredFontAliases =
       resilience.fontFallbackAliasesCovered.join(", ") || "none";
@@ -1202,7 +1189,17 @@ export async function runConformance(): Promise<void> {
           resilience.maxFontLineBoxDeltaPixels.toFixed(2)
         }px normal-line residual), and ` +
         `${resilience.semanticFocusTargets} semantic-surface focus targets ` +
-        `across ${resilience.semanticFocusRoles.join(", ")}.`,
+        `across ${resilience.semanticFocusRoles.join(", ")}. ` +
+        `Builder passed ${builder.adaptiveCases} theme/viewport cases, ` +
+        `${builder.paneTransitions} adaptive pane transitions, ` +
+        `${builder.axeScans} axe scans, ` +
+        `${builder.keyboardStops} finite keyboard stops, ` +
+        `${builder.authoringChecks} authoring checks, ` +
+        `${builder.shortcutIsolationChecks} shortcut-isolation checks, ` +
+        `${builder.touchChecks} touch checks, ` +
+        `${builder.containedFailures} contained failure scenarios, ` +
+        `${builder.forcedColourFocusChecks} forced-colour focus checks, and ` +
+        `${builder.screenshots.length} review screenshots.`,
     );
   } finally {
     await browser?.close();

@@ -1,6 +1,6 @@
 import type { Page } from "playwright-core";
 
-interface ViewportSize {
+export interface ViewportSize {
   readonly height: number;
   readonly width: number;
 }

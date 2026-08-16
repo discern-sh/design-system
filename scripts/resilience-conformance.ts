@@ -1,6 +1,10 @@
 import { AxeBuilder } from "@axe-core/playwright";
-import type { Browser, Locator, Page } from "playwright-core";
+import type { Browser, Page } from "playwright-core";
 import { themeTokens } from "../src/tokens/tokens.ts";
+import {
+  visibleEnabledTargets,
+  WCAG_TAGS,
+} from "./browser-conformance-support.ts";
 import {
   auditBundledFontMetricAssets,
   auditFontMetricOverrides,
@@ -14,19 +18,8 @@ const WIDE_VIEWPORT = { width: 1440, height: 1000 } as const;
 const NARROW_VIEWPORT = { width: 390, height: 844 } as const;
 const ZOOMED_REFLOW_VIEWPORT = { width: 320, height: 256 } as const;
 const MINIMUM_TARGET_SIZE = 24;
-const WCAG_TAGS = [
-  "wcag2a",
-  "wcag2aa",
-  "wcag21a",
-  "wcag21aa",
-  "wcag22aa",
-] as const;
 const SURFACE_SELECTOR =
   ".discern-catalogue-component__canvas, [data-discern-journey]";
-const FOCUSABLE_SELECTOR =
-  "a[href], area[href], button, input:not([type='hidden']), select, textarea, " +
-  "summary, audio[controls], video[controls], iframe, object, embed, " +
-  "[tabindex], [contenteditable]";
 const INTERACTIVE_SELECTOR =
   "a[href], button, input:not([type='hidden']), select, textarea, summary, " +
   "[role='button'], [role='link'], [role='checkbox'], [role='radio'], " +
@@ -388,17 +381,6 @@ async function scanJourneyAccessibility(
     }
   }
   return scans;
-}
-
-async function visibleEnabledTargets(root: Locator): Promise<Locator[]> {
-  const candidates = root.locator(FOCUSABLE_SELECTOR);
-  const targets: Locator[] = [];
-  for (let index = 0; index < await candidates.count(); index += 1) {
-    const candidate = candidates.nth(index);
-    if (!await candidate.isVisible() || !await candidate.isEnabled()) continue;
-    targets.push(candidate);
-  }
-  return targets;
 }
 
 async function verifyJourneyKeyboard(

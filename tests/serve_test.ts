@@ -48,6 +48,14 @@ Deno.test("the Catalogue owns one canonical source, bundle, and mounted path", a
     catalogueFilePath("/catalogue/dist/catalogue.js"),
     "./dist/catalogue.js",
   );
+  assertEquals(
+    catalogueFilePath("/catalogue/builder/"),
+    "./catalogue/builder/index.html",
+  );
+  assertEquals(
+    catalogueFilePath("/catalogue/dist/builder.js"),
+    "./dist/builder.js",
+  );
 
   const index = await Deno.readTextFile(
     new URL("../catalogue/index.html", import.meta.url),
@@ -55,4 +63,10 @@ Deno.test("the Catalogue owns one canonical source, bundle, and mounted path", a
   assertStringIncludes(index, 'href="catalogue.css"');
   assertStringIncludes(index, 'src="dist/catalogue.js"');
   assertEquals(index.includes("styleguide"), false);
+
+  const builder = await Deno.readTextFile(
+    new URL("../catalogue/builder/index.html", import.meta.url),
+  );
+  assertStringIncludes(builder, 'href="builder.css"');
+  assertStringIncludes(builder, 'src="../dist/builder.js"');
 });
