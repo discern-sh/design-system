@@ -41,15 +41,16 @@ type PresentableRenderer = CliRenderer<CliPresentationOptions>;
 
 const CUSTOM_MOTIF = TEST_TERMINAL_MOTIF;
 
-// ▸ and ▾ also carry non-motif disclosure semantics in FAQ and Raw output,
-// so only glyphs exclusive to the preset can prove a reset to that preset.
+// ◐ also carries non-motif presence and artwork semantics, so only glyphs
+// exclusive to the preset can prove a reset to that preset.
 const DISCERN_EXCLUSIVE_MOTIF_GLYPHS = [
   "◮",
   "⧩",
   "◭",
   "⧨",
-  "▴",
-  "◂",
+  "◓",
+  "◑",
+  "◒",
 ] as const;
 
 function discernMotifGlyphLeaks(output: string): readonly string[] {
@@ -238,7 +239,7 @@ Deno.test("presenter motifs bind globally, override per call, and reach semantic
     presenter.motifSpinnerFrame(0, {
       motif: DISCERN_TERMINAL_MOTIF,
     }),
-    "▴",
+    "◐",
   );
   assertEquals(
     presenter.present(renderMotifPattern, {

@@ -78,7 +78,7 @@ Deno.test("terminal foundation inventory enrols every sheet and specimen", () =>
   );
   assertEquals(
     spinner?.animation?.frames.map(stripAnsi),
-    ["▴", "◂", "▾", "▸"],
+    ["◐", "◓", "◑", "◒"],
   );
   assertEquals(
     consumer?.animation?.frames.map(stripAnsi),

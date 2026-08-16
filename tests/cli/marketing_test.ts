@@ -222,9 +222,9 @@ Deno.test("Process steps renders exact canonical stepper and beacon frames", () 
       beaconPhase: 2,
     },
     [
-      "Release path\n\n ◭  Build\n │\n[◂] Prove\n │\n ·  Share\n\n..◭⧨◮⧩..........",
-      "Release path\n\n ◭  Build\n │\n[◂] Prove\n │\n ·  Share\n\n..◭⧨◮⧩..............................",
-      "Release path\n\n ◭  Build\n │\n[◂] Prove\n │\n ·  Share\n\n..◭⧨◮⧩..........................................................",
+      "Release path\n\n ◭  Build\n │\n[◓] Prove\n │\n ·  Share\n\n..◭⧨◮⧩..........",
+      "Release path\n\n ◭  Build\n │\n[◓] Prove\n │\n ·  Share\n\n..◭⧨◮⧩..............................",
+      "Release path\n\n ◭  Build\n │\n[◓] Prove\n │\n ·  Share\n\n..◭⧨◮⧩..........................................................",
     ],
     "Release path\n\n ^  Build\n |\n[<] Prove\n |\n .  Share\n\n..^<>v..............................",
   );

@@ -524,7 +524,7 @@ Deno.test("spinner advances every motif phase and restores cursor", async () => 
   }, () => 42);
   assertEquals(result, 42);
   assert(stopped);
-  for (const glyph of ["▴", "▸", "▾", "◂"]) {
+  for (const glyph of ["◐", "◓", "◑", "◒"]) {
     assertStringIncludes(io.output(), glyph);
   }
   assertEquals(io.writes[0], HIDE_TERMINAL_CURSOR);
@@ -599,7 +599,7 @@ Deno.test("no-control terminals keep Unicode and use static interactive frames",
     },
   }, () => undefined);
   assertEquals(scheduled, false);
-  assertEquals(spinnerIo.writes, ["▴ Work\n"]);
+  assertEquals(spinnerIo.writes, ["◐ Work\n"]);
 });
 
 Deno.test("terminals below the coherent frame minimum refuse and restore", async () => {

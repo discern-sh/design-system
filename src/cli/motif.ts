@@ -10,7 +10,6 @@
  * @module
  */
 
-import { eastAsianWidthKind } from "./east-asian-width.ts";
 import { graphemeWidth } from "./text.ts";
 
 const terminalMotifBrand: unique symbol = Symbol("TerminalMotif");
@@ -121,17 +120,7 @@ function assertGlyph(
       `${path} must be one assigned, visible, non-combining Unicode scalar`,
     );
   }
-  const codePoint = glyph.codePointAt(0);
-  if (codePoint === undefined) {
-    throw new TypeError(`${path} must contain one Unicode scalar`);
-  }
-  const eastAsianWidth = eastAsianWidthKind(codePoint);
-  if (eastAsianWidth === "ambiguous") {
-    throw new TypeError(
-      `${path} uses an East Asian Width Ambiguous scalar and may occupy two terminal cells`,
-    );
-  }
-  if (eastAsianWidth === "wide" || graphemeWidth(glyph) !== 1) {
+  if (graphemeWidth(glyph) !== 1) {
     throw new TypeError(`${path} must occupy exactly one terminal cell`);
   }
 }
@@ -179,9 +168,9 @@ function validateRepertoire(
 
 /**
  * Validate and freeze a complete motif definition. Unicode glyphs must each
- * be one assigned, visible scalar whose East Asian Width is neither
- * Ambiguous nor Wide/Fullwidth and whose measured width is one cell. ASCII
- * fallbacks must each be one printable non-space ASCII character.
+ * be one assigned, visible scalar whose width is one cell under the package's
+ * pinned narrow-A measurement policy. ASCII fallbacks must each be one
+ * printable non-space ASCII character.
  */
 export function defineTerminalMotif(
   definition: TerminalMotifDefinition,
@@ -238,13 +227,13 @@ function assertDefinedTerminalMotif(
 }
 
 /**
- * The package's discern-flavoured default. Small solid triangles animate in
- * a centered clockwise cycle; the established half-filled weave, marker,
- * and up/down status grammar remain available to every other motif role.
+ * The package's discern-flavoured default. Half-filled circles animate in a
+ * clockwise cycle; the established half-filled weave, marker, and up/down
+ * status grammar remain available to every other motif role.
  */
 export const DISCERN_TERMINAL_MOTIF: TerminalMotif = defineTerminalMotif({
   unicode: {
-    spinner: ["▴", "◂", "▾", "▸"],
+    spinner: ["◐", "◓", "◑", "◒"],
     pattern: ["◮", "⧩", "◭", "⧨"],
     marker: "◮",
     status: {

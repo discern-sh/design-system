@@ -199,7 +199,7 @@ const productPresenter = createCliPresenter(capabilities, {
 console.log(productPresenter.motifSpinnerFrame(1)); // ◷
 ```
 
-Every definition includes Unicode and ASCII repertoires for spinner, repeated pattern, accent marker, and complete/incomplete status roles. Definitions are validated and frozen at construction. Each Unicode glyph must be one visible, non-combining scalar that is one cell under the pinned Unicode 17.0 East Asian Width data; Ambiguous, Wide, and Fullwidth scalars are rejected because their terminal geometry is not portable. Each ASCII fallback is one printable non-space character. For example, the quadrant-circle cycle above is portable under that policy, while `◐` and `◑` are East Asian Width–Ambiguous.
+Every definition includes Unicode and ASCII repertoires for spinner, repeated pattern, accent marker, and complete/incomplete status roles. Definitions are validated and frozen at construction. Each Unicode glyph must be one assigned, visible, non-combining scalar that occupies one cell under the package's pinned Unicode 17.0 narrow-A geometry: East Asian Width–Ambiguous scalars such as `◐` and `◑` occupy one cell, while Wide/Fullwidth scalars and RGI emoji occupy two and are rejected. Each ASCII fallback is one printable non-space character. This is the same width policy every CLI layout uses; it does not claim support for terminals configured to render Ambiguous scalars as two cells.
 
 To review a complete static frame as a layout, use the pure projection entrypoint with an explicit terminal viewport:
 

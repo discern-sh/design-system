@@ -128,16 +128,16 @@ Deno.test("terminal motif factories validate, freeze, and derive semantic roles"
   assertEquals(Object.isFrozen(defined.unicode.status), true);
 
   assertEquals(DISCERN_TERMINAL_MOTIF.unicode.spinner, [
-    "▴",
-    "◂",
-    "▾",
-    "▸",
+    "◐",
+    "◓",
+    "◑",
+    "◒",
   ]);
   assertEquals(CUSTOM_TERMINAL_MOTIF.unicode.marker, "◉");
   assertEquals(DISCERN_TERMINAL_MOTIF.unicode.marker, "◮");
 });
 
-Deno.test("terminal motif definitions reject every unsafe glyph class", () => {
+Deno.test("terminal motif definitions admit narrow-A glyphs and reject unsafe classes", () => {
   const withUnicodeSpinner = (glyphs: readonly string[]) => ({
     ...VALID_MOTIF_DEFINITION,
     unicode: {
@@ -160,11 +160,11 @@ Deno.test("terminal motif definitions reject every unsafe glyph class", () => {
     TypeError,
     "non-combining",
   );
-  assertThrows(
-    () => defineTerminalMotif(withUnicodeSpinner(["△"])),
-    TypeError,
-    "East Asian Width Ambiguous",
+  const ambiguous = defineTerminalMotif(
+    withUnicodeSpinner(["◐", "◑", "△"]),
   );
+  assertEquals(ambiguous.unicode.spinner, ["◐", "◑", "△"]);
+  assertEquals(ambiguous.unicode.spinner.map(measureText), [1, 1, 1]);
   assertThrows(
     () => defineTerminalMotif(withUnicodeSpinner(["界"])),
     TypeError,
@@ -205,7 +205,7 @@ Deno.test("the discern glyph repertoire has one production authority", async () 
     for (const source of await terminalSourceFiles(root)) {
       if (source.pathname.endsWith("/src/cli/motif.ts")) continue;
       const text = await Deno.readTextFile(source);
-      for (const glyph of ["◮", "◭", "⧩", "⧨", "▴", "◂"]) {
+      for (const glyph of ["◮", "◭", "⧩", "⧨", "◓", "◑", "◒"]) {
         if (text.includes(glyph)) {
           leaks.push(`${source.pathname}: ${glyph}`);
         }
@@ -290,7 +290,7 @@ Deno.test("all spinner phases preserve their Unicode and ASCII orders", () => {
   const ascii = testTerminalCapabilities({ unicode: false });
   assertEquals(
     [0, 1, 2, 3, 4].map((phase) => renderMotifSpinnerFrame(phase, unicode)),
-    ["▴", "◂", "▾", "▸", "▴"],
+    ["◐", "◓", "◑", "◒", "◐"],
   );
   assertEquals(
     [0, 1, 2, 3, 4].map((phase) => renderMotifSpinnerFrame(phase, ascii)),
@@ -421,7 +421,7 @@ Deno.test("workflow stepper renders every semantic step state", () => {
       { label: "Failed", status: "error" },
       { label: "Stopped", status: "cancelled" },
     ], capabilities),
-    " ◭  Done\n │\n[◂] Working\n │\n ·  Later\n │\n !  Failed\n │\n ×  Stopped",
+    " ◭  Done\n │\n[◓] Working\n │\n ·  Later\n │\n !  Failed\n │\n ×  Stopped",
     capabilities,
   );
 });
@@ -479,10 +479,10 @@ Deno.test("activity beacon preserves every phase in its out-and-back journey", (
 Deno.test("every motif primitive degrades exactly across the capability matrix", () => {
   const unicodeFrames = [
     "◮⧩◭⧨",
-    "▴",
+    "◐",
     "[ 50%] ◮⧩...",
     "━━ ◮ GO ━━━━",
-    " ◭  Done\n │\n[◂] Work\n │\n ·  Later\n │\n !  Fail\n │\n ×  Stop",
+    " ◭  Done\n │\n[◓] Work\n │\n ·  Later\n │\n !  Fail\n │\n ×  Stop",
     "◮⧩◭⧨....",
   ];
   const asciiFrames = [

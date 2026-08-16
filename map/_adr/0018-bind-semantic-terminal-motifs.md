@@ -1,6 +1,6 @@
 # ADR 0018: Bind semantic terminal motifs
 
-**Status**: accepted
+**Status**: superseded by [ADR-0023](0023-bind-terminal-motifs-to-narrow-a-geometry.md)
 
 ## Context
 

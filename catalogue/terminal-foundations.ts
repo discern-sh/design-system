@@ -302,7 +302,7 @@ export const terminalFoundationSheets = [
     description:
       "Default and consumer-derived motifs across animation, pattern, progress, status, and narration roles.",
     keywords:
-      "spinner triangle glyph pattern progress stepper activity beacon consumer override Unicode ASCII",
+      "spinner half circle glyph pattern progress stepper activity beacon consumer override Unicode ASCII",
     specimens: motifSpecimens,
   },
   {
