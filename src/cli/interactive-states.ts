@@ -162,11 +162,24 @@ export interface AutocompleteFrameState extends InteractiveFrameBase {
   readonly pending?: boolean;
 }
 
-/** Visual state for a message acknowledged by a single continue action. */
-export interface AcknowledgementFrameState extends InteractiveFrameBase {
+/** Visual state for a framed message acknowledged by a continue action. */
+export interface FramedAcknowledgementFrameState extends InteractiveFrameBase {
   readonly kind: "acknowledgement";
   readonly message: string;
 }
+
+/** Visual state for one compact continuation below caller-owned content. */
+export interface CompactAcknowledgementFrameState {
+  readonly kind: "acknowledgement";
+  readonly presentation: "compact";
+  readonly lifecycle: InteractiveFrameLifecycle;
+  readonly hint: string;
+}
+
+/** Every framed or compact acknowledgement presentation. */
+export type AcknowledgementFrameState =
+  | FramedAcknowledgementFrameState
+  | CompactAcknowledgementFrameState;
 
 /** Visual state for a multi-line editable text area. */
 export interface TextareaFrameState extends InteractiveFrameBase {

@@ -7,7 +7,9 @@
 
 import type {
   AcknowledgementFrameState,
+  CompactAcknowledgementFrameState,
   ConfirmFrameState,
+  FramedAcknowledgementFrameState,
   InteractiveFrameLifecycle,
   MaskedInputFrameState,
   TextInputFrameState,
@@ -15,12 +17,17 @@ import type {
 import type { TerminalCapabilities } from "../capabilities.ts";
 import type { CliPresentationOptions } from "../contracts.ts";
 import renderFieldCli from "../../components/forms/field/field.cli.ts";
+import { assertFormCliContinuationHint } from "../../components/forms/form-frame.ts";
 import renderInputCli from "../../components/forms/input/input.cli.ts";
 import renderSwitchCli from "../../components/forms/switch/switch.cli.ts";
 import { GraphemeTextEditor, segmentGraphemes } from "./editor.ts";
 import { type InteractionMachine, runInteraction } from "./driver.ts";
 import { isNamedKey, type TerminalKey } from "./keys.ts";
-import type { InteractionOptions, InteractionRuntime } from "./types.ts";
+import type {
+  InteractionCompletionPolicy,
+  InteractionOptions,
+  InteractionRuntime,
+} from "./types.ts";
 
 function renderInputFrame(
   state: TextInputFrameState | MaskedInputFrameState,
@@ -228,15 +235,36 @@ function renderAcknowledgementFrame(
   }, capabilities);
 }
 
-/** Options for a message acknowledged with Enter or Space. */
-export interface AcknowledgementRequestOptions extends
-  Pick<
-    InteractionOptions<undefined>,
-    "label" | "hint" | "reservedRows"
-  > {
+/** Source-compatible framed acknowledgement options. */
+export interface AcknowledgementRequestOptions {
+  /** Framed is the source-compatible default presentation. */
+  readonly presentation?: "framed";
+  readonly label: string;
+  readonly hint?: string;
+  readonly reservedRows?: number;
+  /** Optional successful-frame policy; the framed default retains it. */
+  readonly completion?: InteractionCompletionPolicy;
   /** The message to acknowledge; long lines wrap inside the frame. */
   readonly message: string;
 }
+
+/** Compact continuation options below caller-owned content. */
+export interface CompactAcknowledgementRequestOptions {
+  readonly presentation: "compact";
+  /** Continuation copy; defaults to `Press Enter to continue.` */
+  readonly hint?: string;
+  readonly reservedRows?: number;
+  /** Compact acknowledgements always clear successfully through the driver. */
+  readonly completion?: never;
+  /** Compact acknowledgements own no visible field label. */
+  readonly label?: never;
+  /** Compact acknowledgements own no framed message. */
+  readonly message?: never;
+}
+
+type AnyAcknowledgementRequestOptions =
+  | AcknowledgementRequestOptions
+  | CompactAcknowledgementRequestOptions;
 
 function assertAcknowledgementMessage(message: string): void {
   if (message.trim() === "") {
@@ -251,8 +279,12 @@ function assertAcknowledgementMessage(message: string): void {
 
 class AcknowledgementInteractionMachine
   implements InteractionMachine<undefined, AcknowledgementFrameState> {
-  constructor(readonly options: AcknowledgementRequestOptions) {
-    assertAcknowledgementMessage(options.message);
+  constructor(readonly options: AnyAcknowledgementRequestOptions) {
+    if (options.presentation === "compact") {
+      assertFormCliContinuationHint(
+        options.hint ?? "Press Enter to continue.",
+      );
+    } else assertAcknowledgementMessage(options.message);
   }
 
   handle(key: TerminalKey): boolean {
@@ -265,13 +297,23 @@ class AcknowledgementInteractionMachine
   }
 
   frame(lifecycle: InteractiveFrameLifecycle): AcknowledgementFrameState {
-    return {
+    if (this.options.presentation === "compact") {
+      const state: CompactAcknowledgementFrameState = {
+        kind: "acknowledgement",
+        presentation: "compact",
+        lifecycle,
+        hint: this.options.hint ?? "Press Enter to continue.",
+      };
+      return state;
+    }
+    const state: FramedAcknowledgementFrameState = {
       kind: "acknowledgement",
       label: this.options.label,
       lifecycle,
       message: this.options.message,
       hint: this.options.hint ?? "Press Enter to continue.",
     };
+    return state;
   }
 }
 
@@ -280,16 +322,33 @@ class AcknowledgementInteractionMachine
  * Cancellation follows the standard contract: Escape dismisses, Ctrl+C
  * cancels, and end of input ends the request.
  */
-export async function requestAcknowledgement(
+export function requestAcknowledgement(
   options: AcknowledgementRequestOptions,
+  runtime?: InteractionRuntime,
+): Promise<void>;
+export function requestAcknowledgement(
+  options: CompactAcknowledgementRequestOptions,
+  runtime?: InteractionRuntime,
+): Promise<void>;
+export function requestAcknowledgement(
+  options:
+    | AcknowledgementRequestOptions
+    | CompactAcknowledgementRequestOptions,
+  runtime?: InteractionRuntime,
+): Promise<void>;
+export async function requestAcknowledgement(
+  options: AnyAcknowledgementRequestOptions,
   runtime: InteractionRuntime = {},
 ): Promise<void> {
+  const compact = options.presentation === "compact";
   await runInteraction(
     {
-      label: options.label,
       ...(options.reservedRows === undefined
         ? {}
         : { reservedRows: options.reservedRows }),
+      completion: compact
+        ? "clear-frame"
+        : options.completion ?? "retain-frame",
     },
     new AcknowledgementInteractionMachine(options),
     runtime,

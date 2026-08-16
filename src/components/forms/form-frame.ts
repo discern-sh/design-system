@@ -216,6 +216,52 @@ export function renderFormCliFrame(
   ].join("\n");
 }
 
+/** Inputs for a compact continuation line below caller-owned content. */
+export interface FormCliContinuationOptions {
+  readonly lifecycle: InteractiveFrameLifecycle;
+  readonly hint: string;
+  readonly theme?: TerminalThemeVariant;
+  readonly width?: number;
+}
+
+/** Validate continuation copy before an interaction mutates terminal state. */
+export function assertFormCliContinuationHint(value: string): void {
+  if (value.trim() === "" || /[\p{Cc}\p{Cf}]/u.test(value)) {
+    throw new TypeError(
+      "form continuation hint must be non-empty and control-free",
+    );
+  }
+}
+
+/**
+ * Render a compact continuation or its cancellation/error fact without a
+ * labeled field shell. A submitted compact state emits nothing because the
+ * interaction driver owns successful-frame cleanup.
+ */
+export function renderFormCliContinuation(
+  options: FormCliContinuationOptions,
+  capabilities: TerminalCapabilities,
+): string {
+  assertFormCliContinuationHint(options.hint);
+  if (options.lifecycle.status === "submitted") return "";
+  const theme = terminalThemes[options.theme ?? "dark"];
+  const content = options.lifecycle.status === "validation-error"
+    ? `! ${options.lifecycle.message}`
+    : options.lifecycle.status === "cancelled"
+    ? `${capabilities.unicode ? "×" : "x"} ${options.lifecycle.reason}`
+    : options.hint;
+  const tone = options.lifecycle.status === "validation-error"
+    ? "danger"
+    : "neutral";
+  return wrapStyledText(
+    styleText(content, {
+      ...theme.typography.annotation,
+      color: terminalToneColor(theme, tone),
+    }, capabilities),
+    formCliFrameWidth(options.width, capabilities),
+  ).join("\n");
+}
+
 const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
 /** Insert the capability-specific form cursor at one grapheme index. */

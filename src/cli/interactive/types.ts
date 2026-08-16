@@ -16,6 +16,12 @@ export type InteractionValidator<T> = (
 /** Required-value policy with an optional caller-authored error message. */
 export type InteractionRequired = boolean | string;
 
+/** What the interaction driver does with a successfully completed frame. */
+export type InteractionCompletionPolicy = "retain-frame" | "clear-frame";
+
+/** Form-lifecycle or quiet browsing treatment for a choice interaction. */
+export type InteractionChoicePresentation = "form" | "browsing";
+
 /**
  * Synchronous canonicalisation applied to a submitted value before any
  * validation. The transformed value is what the required check and validator
@@ -29,6 +35,12 @@ export interface InteractionOptions<T> {
   readonly label: string;
   readonly hint?: string;
   readonly required?: InteractionRequired;
+  /**
+   * Successful-frame policy. The default retains the submitted frame;
+   * `clear-frame` erases the active frame through the interaction painter
+   * before returning. Validation and cancellation frames are unaffected.
+   */
+  readonly completion?: InteractionCompletionPolicy;
   /**
    * Terminal rows above the frame that the caller's own composition
    * occupies — a board header, a task preamble. Frame fitting targets the
