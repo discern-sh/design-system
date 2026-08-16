@@ -221,6 +221,11 @@ export function tokenizeTerminalKeys(
         rest = rest.slice(unknown.length);
         continue;
       }
+      if (rest.startsWith("\x1b[") || rest.startsWith("\x1bO")) {
+        keys.push({ kind: "unknown", sequence: rest });
+        rest = "";
+        continue;
+      }
       const following = firstGrapheme(rest.slice(1));
       if (following === undefined || following === "\x1b") {
         keys.push(namedKey("escape"));
@@ -385,6 +390,110 @@ export class TerminalKeyReader {
       }
     }
     return this.#pending.shift() ?? null;
+  }
+}
+
+const SGR_MOUSE_REPORT = /^\x1b\[<([0-9]+);([0-9]+);([0-9]+)([Mm])$/u;
+
+function decimalInteger(value: string): number | undefined {
+  if (value.length > 16) return undefined;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) ? parsed : undefined;
+}
+
+function unknownInput(
+  sequence: string,
+  category: TerminalUnknownInputEvent["category"],
+  reason: TerminalUnknownInputEvent["reason"],
+): TerminalUnknownInputEvent {
+  return { kind: "unknown", sequence, category, reason };
+}
+
+/**
+ * Classify one key-decoder token as semantic key, SGR mouse, or unknown
+ * control input. Mouse-shaped controls fail closed: malformed coordinates,
+ * unsupported buttons, and motion reports remain typed non-text events.
+ */
+export function decodeTerminalInputEvent(key: TerminalKey): TerminalInputEvent {
+  if (key.kind !== "unknown") return { kind: "key", key };
+  if (!key.sequence.startsWith("\x1b[<")) {
+    return unknownInput(key.sequence, "control", "unknown-control");
+  }
+  const match = SGR_MOUSE_REPORT.exec(key.sequence);
+  if (match === null) return unknownInput(key.sequence, "mouse", "malformed");
+  const code = decimalInteger(match[1] ?? "");
+  const column = decimalInteger(match[2] ?? "");
+  const row = decimalInteger(match[3] ?? "");
+  const terminator = match[4];
+  if (
+    code === undefined || code < 0 || code > 255 || column === undefined ||
+    column < 1 || column > TERMINAL_MOUSE_MAX_COORDINATE ||
+    row === undefined || row < 1 || row > TERMINAL_MOUSE_MAX_COORDINATE
+  ) {
+    return unknownInput(key.sequence, "mouse", "malformed");
+  }
+
+  const modifiers: TerminalMouseModifiers = {
+    shift: (code & 4) !== 0,
+    alt: (code & 8) !== 0,
+    control: (code & 16) !== 0,
+  };
+  const buttonCode = code & 3;
+  if ((code & 32) !== 0 || (code & 128) !== 0) {
+    return unknownInput(key.sequence, "mouse", "unsupported");
+  }
+  if ((code & 64) !== 0) {
+    if (terminator !== "M" || buttonCode > 1) {
+      return unknownInput(key.sequence, "mouse", "unsupported");
+    }
+    return {
+      kind: "mouse",
+      action: "wheel",
+      direction: buttonCode === 0 ? "up" : "down",
+      column,
+      row,
+      modifiers,
+    };
+  }
+  const button: TerminalMouseButton | undefined = buttonCode === 0
+    ? "left"
+    : buttonCode === 1
+    ? "middle"
+    : buttonCode === 2
+    ? "right"
+    : undefined;
+  if (button === undefined) {
+    return unknownInput(key.sequence, "mouse", "unsupported");
+  }
+  return {
+    kind: "mouse",
+    action: terminator === "m" ? "release" : "press",
+    button,
+    column,
+    row,
+    modifiers,
+  };
+}
+
+/**
+ * Event-aware reader sharing the key reader's incremental UTF-8, split-CSI,
+ * and lone-Escape timing model. Key-only callers keep using
+ * {@linkcode TerminalKeyReader} unchanged.
+ */
+export class TerminalInputReader {
+  readonly #keys: TerminalKeyReader;
+
+  constructor(
+    io: TerminalIO,
+    options: TerminalKeyReaderOptions = {},
+  ) {
+    this.#keys = new TerminalKeyReader(io, options);
+  }
+
+  /** Read one semantic terminal event, or `null` after end-of-input. */
+  async readEvent(): Promise<TerminalInputEvent | null> {
+    const key = await this.#keys.readKey();
+    return key === null ? null : decodeTerminalInputEvent(key);
   }
 }
 

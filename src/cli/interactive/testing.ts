@@ -12,7 +12,12 @@ import { stripAnsi } from "../ansi.ts";
 import type { TerminalCapabilities } from "../capabilities.ts";
 import { measureText } from "../text.ts";
 import type { TerminalIO, TerminalSize } from "./io.ts";
-import type { TerminalKeyName } from "./keys.ts";
+import {
+  TERMINAL_MOUSE_MAX_COORDINATE,
+  type TerminalKeyName,
+  type TerminalMouseButton,
+  type TerminalMouseEvent,
+} from "./keys.ts";
 import type { TerminalSignalSource } from "./signals.ts";
 
 const ESCAPE = "\u001b";
@@ -23,6 +28,8 @@ export interface FakeTerminalIOOptions {
   readonly interactive?: boolean;
   readonly colorDepth?: TerminalCapabilities["colorDepth"];
   readonly columns?: number;
+  readonly hyperlinks?: boolean;
+  readonly mouseTracking?: boolean;
   readonly rows?: number;
   readonly unicode?: boolean;
   /**
@@ -42,6 +49,7 @@ export type TerminalTestEvent =
     readonly columns: number;
     readonly rows?: number;
   }
+  | TerminalMouseEvent
   | { readonly kind: "end-of-input" };
 
 /**
@@ -88,6 +96,36 @@ export function encodeTerminalKeys(
   return names.map((name) => TERMINAL_KEY_SEQUENCES[name]).join("");
 }
 
+function mouseButtonCode(button: TerminalMouseButton): number {
+  return button === "left" ? 0 : button === "middle" ? 1 : 2;
+}
+
+function assertMouseCoordinate(value: number, name: string): void {
+  if (
+    !Number.isSafeInteger(value) || value < 1 ||
+    value > TERMINAL_MOUSE_MAX_COORDINATE
+  ) {
+    throw new TypeError(
+      `${name} must be a positive safe integer no greater than ${TERMINAL_MOUSE_MAX_COORDINATE}; received ${value}`,
+    );
+  }
+}
+
+/** Encode one semantic mouse event as the selected SGR 1006 report. */
+export function encodeTerminalMouseEvent(event: TerminalMouseEvent): string {
+  assertMouseCoordinate(event.column, "mouse column");
+  assertMouseCoordinate(event.row, "mouse row");
+  const modifiers = (event.modifiers.shift ? 4 : 0) |
+    (event.modifiers.alt ? 8 : 0) |
+    (event.modifiers.control ? 16 : 0);
+  const code = event.action === "wheel"
+    ? 64 + (event.direction === "down" ? 1 : 0) + modifiers
+    : mouseButtonCode(event.button) + modifiers;
+  return `${ESCAPE}[<${code};${event.column};${event.row}${
+    event.action === "release" ? "m" : "M"
+  }`;
+}
+
 interface QueuedResize {
   readonly columns: number;
   readonly rows: number | undefined;
@@ -112,6 +150,8 @@ export class FakeTerminalIO implements TerminalIO {
   readonly #queue: (Uint8Array | QueuedResize)[];
   readonly #interactive: boolean;
   readonly #colorDepth: TerminalCapabilities["colorDepth"];
+  readonly #hyperlinks: boolean | undefined;
+  readonly #mouseTracking: boolean | undefined;
   readonly #unicode: boolean;
   readonly #waiters: ((chunk: Uint8Array | null) => void)[] = [];
   readonly #resizeHandlers = new Set<() => void>();
@@ -130,6 +170,8 @@ export class FakeTerminalIO implements TerminalIO {
     this.#ansiControl = options.ansiControl ?? true;
     this.#interactive = options.interactive ?? true;
     this.#colorDepth = options.colorDepth ?? "none";
+    this.#hyperlinks = options.hyperlinks;
+    this.#mouseTracking = options.mouseTracking;
     this.#columns = options.columns ?? 80;
     this.#rows = options.rows ?? 24;
     this.#unicode = options.unicode ?? true;
@@ -147,6 +189,12 @@ export class FakeTerminalIO implements TerminalIO {
       ansiControl: this.#ansiControl,
       colorDepth: this.#colorDepth,
       columns: this.#columns,
+      ...(this.#hyperlinks === undefined
+        ? {}
+        : { hyperlinks: this.#hyperlinks }),
+      ...(this.#mouseTracking === undefined
+        ? {}
+        : { mouseTracking: this.#mouseTracking }),
       unicode: this.#unicode,
     };
   }
@@ -220,6 +268,11 @@ export class FakeTerminalIO implements TerminalIO {
     this.enqueue(encodeTerminalKeys(...names));
   }
 
+  /** Queue one semantic SGR mouse event through the real input decoder. */
+  enqueueMouse(event: TerminalMouseEvent): void {
+    this.enqueue(encodeTerminalMouseEvent(event));
+  }
+
   /**
    * Queue a viewport change that applies when the input queue reaches it,
    * so a resize lands between earlier and later scripted keystrokes. On a
@@ -268,6 +321,9 @@ export function enqueueTerminalEvents(
         break;
       case "resize":
         io.enqueueResize(event.columns, event.rows);
+        break;
+      case "mouse":
+        io.enqueueMouse(event);
         break;
       case "end-of-input":
         io.close();

@@ -7,6 +7,7 @@ import {
 import {
   requestSelection,
   requestText,
+  TerminalInputReader,
   type TerminalKeyName,
   tokenizeTerminalKeys,
 } from "../../src/cli/interactive/mod.ts";
@@ -14,6 +15,8 @@ import {
   assertExactFrame,
   assertStyledFrame,
   encodeTerminalKeys,
+  encodeTerminalMouseEvent,
+  enqueueTerminalEvents,
   FakeTerminalIO,
   TERMINAL_KEY_SEQUENCES,
   testTerminalCapabilities,
@@ -39,6 +42,31 @@ Deno.test("encoded keys compose one chunk in scripted order", () => {
     `${TERMINAL_KEY_SEQUENCES.down}${TERMINAL_KEY_SEQUENCES.down}${TERMINAL_KEY_SEQUENCES.enter}`,
   );
   assertEquals(encodeTerminalKeys(), "");
+});
+
+Deno.test("published mouse helpers script semantic events without CSI literals", async () => {
+  const mouse = {
+    kind: "mouse",
+    action: "press",
+    button: "left",
+    column: 320,
+    row: 240,
+    modifiers: { shift: true, alt: false, control: false },
+  } as const;
+  const io = new FakeTerminalIO([], {
+    hyperlinks: false,
+    mouseTracking: true,
+  });
+  enqueueTerminalEvents(io, [mouse]);
+  assertEquals(await new TerminalInputReader(io).readEvent(), mouse);
+  assertEquals(
+    new TextDecoder().decode(
+      new TextEncoder().encode(encodeTerminalMouseEvent(mouse)),
+    ),
+    "\x1b[<4;320;240M",
+  );
+  assertEquals(io.capabilities().hyperlinks, false);
+  assertEquals(io.capabilities().mouseTracking, true);
 });
 
 Deno.test("scripted named keys drive a real selection to a real value", async () => {

@@ -1,15 +1,22 @@
 import { assertEquals, assertRejects, assertThrows } from "@std/assert";
 import {
   BufferedTerminalKeyDecoder,
+  decodeTerminalInputEvent,
   GraphemeTextEditor,
   HIDE_TERMINAL_CURSOR,
   InlineFramePainter,
   SHOW_TERMINAL_CURSOR,
+  TERMINAL_MOUSE_MAX_COORDINATE,
+  TerminalInputReader,
   TerminalKeyReader,
   tokenizeTerminalKeys,
   withRawTerminal,
 } from "../../src/cli/interactive/mod.ts";
-import { FakeTerminalIO } from "../../src/cli/interactive/testing.ts";
+import {
+  encodeTerminalMouseEvent,
+  enqueueTerminalEvents,
+  FakeTerminalIO,
+} from "../../src/cli/interactive/testing.ts";
 
 Deno.test("interactive key decoding buffers split escape sequences and UTF-8", () => {
   assertEquals(tokenizeTerminalKeys("a\x1b[").keys, [
@@ -55,6 +62,100 @@ Deno.test("Alt and meta chords stay non-printable unknown sequences", () => {
     { kind: "named", name: "escape" },
     { kind: "named", name: "up" },
   ]);
+});
+
+Deno.test("SGR mouse input decodes presses, releases, wheels, coordinates, and modifiers", async () => {
+  const events = [
+    {
+      kind: "mouse",
+      action: "press",
+      button: "left",
+      column: 512,
+      row: 4_096,
+      modifiers: { shift: true, alt: true, control: true },
+    },
+    {
+      kind: "mouse",
+      action: "release",
+      button: "right",
+      column: 300,
+      row: 301,
+      modifiers: { shift: false, alt: false, control: false },
+    },
+    {
+      kind: "mouse",
+      action: "wheel",
+      direction: "up",
+      column: 999,
+      row: 777,
+      modifiers: { shift: false, alt: true, control: false },
+    },
+    {
+      kind: "mouse",
+      action: "wheel",
+      direction: "down",
+      column: 1,
+      row: 1,
+      modifiers: { shift: false, alt: false, control: true },
+    },
+  ] as const;
+  const io = new FakeTerminalIO();
+  enqueueTerminalEvents(io, events);
+  const reader = new TerminalInputReader(io);
+  for (const event of events) assertEquals(await reader.readEvent(), event);
+  assertEquals(await reader.readEvent(), null);
+});
+
+Deno.test("the event reader buffers an SGR mouse report split at every boundary", async () => {
+  const event = {
+    kind: "mouse",
+    action: "press",
+    button: "middle",
+    column: 640,
+    row: 480,
+    modifiers: { shift: true, alt: false, control: true },
+  } as const;
+  const encoded = new TextEncoder().encode(encodeTerminalMouseEvent(event));
+  for (let split = 1; split < encoded.length; split += 1) {
+    const io = new FakeTerminalIO([
+      encoded.slice(0, split),
+      encoded.slice(split),
+    ]);
+    assertEquals(await new TerminalInputReader(io).readEvent(), event);
+  }
+});
+
+Deno.test("malformed and unsupported mouse controls never become text", () => {
+  for (
+    const [sequence, reason] of [
+      ["\x1b[<0;0;1M", "malformed"],
+      [`\x1b[<0;${TERMINAL_MOUSE_MAX_COORDINATE + 1};1M`, "malformed"],
+      ["\x1b[<32;8;9M", "unsupported"],
+      ["\x1b[<66;8;9M", "unsupported"],
+      ["\x1b[<0;;9M", "malformed"],
+    ] as const
+  ) {
+    const token = tokenizeTerminalKeys(sequence, true).keys[0];
+    if (token === undefined) throw new Error("expected one unknown token");
+    assertEquals(decodeTerminalInputEvent(token), {
+      kind: "unknown",
+      sequence,
+      category: "mouse",
+      reason,
+    });
+    assertEquals(
+      tokenizeTerminalKeys(sequence, true).keys.some((key) =>
+        key.kind === "text"
+      ),
+      false,
+    );
+  }
+
+  const incomplete = tokenizeTerminalKeys("\x1b[<0;12;", true);
+  assertEquals(incomplete, {
+    keys: [{ kind: "unknown", sequence: "\x1b[<0;12;" }],
+    rest: "",
+  });
 });
 
 Deno.test("flushLoneEscape delivers only an exactly-lone Escape", () => {
