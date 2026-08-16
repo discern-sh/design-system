@@ -103,7 +103,7 @@ Deno.test("Section renders exact narrow, standard, wide, and degraded labelled r
   );
 });
 
-Deno.test("Section selects the authoritative single-row ribbon treatment", () => {
+Deno.test("Section selects the authoritative leading-marker rule treatment", () => {
   const capabilities = testTerminalCapabilities({ columns: 12 });
   assertExactFrame(
     renderSectionCli(
@@ -116,7 +116,7 @@ Deno.test("Section selects the authoritative single-row ribbon treatment", () =>
       },
       capabilities,
     ),
-    "◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨\nDetails\nBody",
+    "◮  ─────────\nDetails\nBody",
     capabilities,
   );
 });

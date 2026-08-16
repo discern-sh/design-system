@@ -36,7 +36,6 @@ export interface ReceiptCliCheck {
 export interface ReceiptCliProps {
   readonly title: string;
   readonly stamp?: ReceiptStamp;
-  readonly stampLabel?: string;
   readonly meta?: readonly ReceiptCliMeta[];
   readonly checks?: readonly ReceiptCliCheck[];
   readonly summary?: string;
@@ -99,12 +98,6 @@ const renderReceiptCli: CliRenderer<ReceiptCliProps> = (
   const width = agentsCliWidth(props.maxWidth, capabilities, 20);
   const innerWidth = width - 4;
   const body: string[] = [];
-  if (props.stamp !== undefined) {
-    const label = props.stampLabel ??
-      (props.stamp === "pass" ? "PASS" : "FAIL");
-    assertAgentsCliText(label, "receipt stamp label");
-    body.push(`[${label}]`);
-  }
   for (const [index, row] of props.meta?.entries() ?? []) {
     assertAgentsCliText(row.label, `receipt metadata ${index + 1} label`);
     assertAgentsCliText(row.value, `receipt metadata ${index + 1} value`, true);
@@ -141,9 +134,12 @@ const renderReceiptCli: CliRenderer<ReceiptCliProps> = (
     : props.stamp === "fail"
     ? "danger"
     : "neutral";
+  const stamp = props.stamp === undefined
+    ? ""
+    : `[${checkGlyph(props.stamp, capabilities.unicode)}] `;
   return renderBox(
     {
-      title: `Receipt: ${props.title}`,
+      title: `${stamp}${props.title}`,
       body: body.join("\n"),
       width,
       borderStyle: { color: terminalToneColor(theme, tone) },

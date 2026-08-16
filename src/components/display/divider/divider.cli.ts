@@ -46,7 +46,7 @@ export const cliExamples: readonly CliExample<DividerCliProps>[] = [
   { name: "ribbon", props: { treatment: "ribbon", width: 24 } },
 ] as const;
 
-/** Render Divider's authoritative quiet rules and alternating motif ribbons. */
+/** Render Divider's centred and leading-marker rules plus vertical patterns. */
 const renderDividerCli: CliRenderer<DividerCliProps> = (
   props,
   capabilities,
@@ -90,10 +90,11 @@ const renderDividerCli: CliRenderer<DividerCliProps> = (
   const phase = props.phase ?? 0;
   const tone = props.tone ??
     (props.surface === "surface" ? "neutral" : "accent");
-  if (treatment === "rule" && orientation === "horizontal") {
+  if (orientation === "horizontal") {
     return renderMotifDivider(
       {
         width: length,
+        alignment: treatment === "ribbon" ? "start" : "center",
         tone,
         ...(props.theme === undefined ? {} : { theme: props.theme }),
         ...motifPassthrough(props),

@@ -4,16 +4,14 @@
  * @module
  */
 
-import { renderStyledSpans } from "../../../cli/ansi.ts";
+import { renderStyledSpans, styleText } from "../../../cli/ansi.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { withCliHeadingBoundary } from "../../../cli/heading-boundary.ts";
 import {
-  motifPassthrough,
   type TerminalMotifOptions,
   terminalMotifRepertoire,
 } from "../../../cli/motif.ts";
-import { renderMotifPattern } from "../../../cli/motifs.ts";
 import {
   renderSemanticInlineContent,
   type SemanticInlineBaseRole,
@@ -158,14 +156,29 @@ function renderDocumentHeading(
   capabilities: TerminalCapabilities,
 ): string {
   const { accent, content, level, overflow, theme, width } = options;
-  const marker = level === 1 || level === 3
-    ? `${terminalMotifRepertoire(props.motif, true).marker} `
+  const prefix = level === 1
+    ? `${terminalMotifRepertoire(props.motif, capabilities.unicode).marker} `
+    : level === 3
+    ? "╶─ "
     : "";
-  const markerWidth = measureText(marker);
-  const contentWidth = Math.max(1, width - markerWidth);
-  const markerRendered = marker === "" ? "" : renderStyledSpans([{
-    text: marker,
-    style: { color: terminalToneColor(theme, "accent") },
+  const prefixWidth = measureText(prefix);
+  const trailingReserve = level === 3 ? 2 : 0;
+  const minimumWidth = prefixWidth + trailingReserve + 1;
+  if (width < minimumWidth) {
+    throw new TypeError(
+      `document heading level ${level} needs at least ${minimumWidth} cells; received ${width}`,
+    );
+  }
+  const contentWidth = width - prefixWidth - trailingReserve;
+  const quietRuleStyle = {
+    color: terminalThemeColor(theme, "--discern-color-ink-faint"),
+    dim: true,
+  } as const;
+  const prefixRendered = prefix === "" ? "" : renderStyledSpans([{
+    text: prefix,
+    style: level === 3
+      ? quietRuleStyle
+      : { color: terminalToneColor(theme, "accent") },
   }], capabilities);
   const richContent = content === "" ||
       (Array.isArray(content) && content.length === 0)
@@ -185,21 +198,14 @@ function renderDocumentHeading(
 
   let heading: string;
   if (overflow === "wrap") {
-    if (width <= markerWidth) {
-      throw new TypeError(
-        `wrapped document heading level ${level} needs at least ${
-          markerWidth + 1
-        } cells; received ${width}`,
-      );
-    }
     heading = headingLines(
       renderedContent,
-      markerRendered,
-      markerWidth,
+      prefixRendered,
+      prefixWidth,
       contentWidth,
     );
   } else {
-    heading = `${markerRendered}${
+    heading = `${prefixRendered}${
       truncateStyledText(
         renderedContent,
         contentWidth,
@@ -208,22 +214,32 @@ function renderDocumentHeading(
     }`;
   }
 
-  const ruleLength = level === 1
-    ? theme.spacing["--discern-space-24"] ?? 12
-    : theme.spacing["--discern-space-12"] ?? 6;
-  const rule = level <= 2
-    ? renderMotifPattern(
-      {
-        length: Math.min(width, ruleLength),
-        tone: "accent",
-        ...(props.theme === undefined ? {} : { theme: props.theme }),
-        ...motifPassthrough(props),
-      },
+  if (level === 3) {
+    const lines = heading.split("\n");
+    const lastIndex = lines.length - 1;
+    const last = lines[lastIndex] ?? "";
+    const ruleLength = Math.max(1, width - measureText(last) - 1);
+    lines[lastIndex] = `${last}${
+      styleText(` ${"─".repeat(ruleLength)}`, quietRuleStyle, capabilities)
+    }`;
+    return lines.join("\n");
+  }
+  if (level === 1) {
+    const rule = styleText(
+      "━".repeat(width),
+      { color: terminalToneColor(theme, "accent") },
       capabilities,
-    )
-    : "";
-  if (level === 1) return `${rule}\n${heading}`;
-  if (level === 2) return `${heading}\n${rule}`;
+    );
+    return `${heading}\n${rule}`;
+  }
+  if (level === 2) {
+    const rule = styleText(
+      "─".repeat(width),
+      { color: terminalToneColor(theme, "accent") },
+      capabilities,
+    );
+    return `${heading}\n${rule}`;
+  }
   return heading;
 }
 

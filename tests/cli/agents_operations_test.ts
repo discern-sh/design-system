@@ -266,17 +266,17 @@ Deno.test("Receipt renders exact narrow, standard, wide, and capability frames",
     summary: "All required checks passed",
   } as const;
   const standard =
-    "┌ Receipt: Gate proof ─────────────────────────────┐\n│ [PASS]                                           │\n│ Branch: agent/cli-2b                             │\n│ Commit: abc1234                                  │\n│                                                  │\n│ Typecheck ............................... ✓ pass │\n│ Tests ............................... 310 ✓ pass │\n│ Publish ................................. – skip │\n│                                                  │\n│ All required checks passed                       │\n└──────────────────────────────────────────────────┘";
+    "┌ [✓] Gate proof ──────────────────────────────────┐\n│ Branch: agent/cli-2b                             │\n│ Commit: abc1234                                  │\n│                                                  │\n│ Typecheck ............................... ✓ pass │\n│ Tests ............................... 310 ✓ pass │\n│ Publish ................................. – skip │\n│                                                  │\n│ All required checks passed                       │\n└──────────────────────────────────────────────────┘";
   for (
     const [columns, expected] of [
       [
         24,
-        "┌ Receipt: Gate pro… ──┐\n│ [PASS]               │\n│ Branch: agent/cli-2b │\n│ Commit: abc1234      │\n│                      │\n│ Typecheck ... ✓ pass │\n│ Tests ... 310 ✓ pass │\n│ Publish ..... – skip │\n│                      │\n│ All required checks  │\n│ passed               │\n└──────────────────────┘",
+        "┌ [✓] Gate proof ──────┐\n│ Branch: agent/cli-2b │\n│ Commit: abc1234      │\n│                      │\n│ Typecheck ... ✓ pass │\n│ Tests ... 310 ✓ pass │\n│ Publish ..... – skip │\n│                      │\n│ All required checks  │\n│ passed               │\n└──────────────────────┘",
       ],
       [52, standard],
       [
         80,
-        "┌ Receipt: Gate proof ─────────────────────────────────────────────────────────┐\n│ [PASS]                                                                       │\n│ Branch: agent/cli-2b                                                         │\n│ Commit: abc1234                                                              │\n│                                                                              │\n│ Typecheck ........................................................... ✓ pass │\n│ Tests ........................................................... 310 ✓ pass │\n│ Publish ............................................................. – skip │\n│                                                                              │\n│ All required checks passed                                                   │\n└──────────────────────────────────────────────────────────────────────────────┘",
+        "┌ [✓] Gate proof ──────────────────────────────────────────────────────────────┐\n│ Branch: agent/cli-2b                                                         │\n│ Commit: abc1234                                                              │\n│                                                                              │\n│ Typecheck ........................................................... ✓ pass │\n│ Tests ........................................................... 310 ✓ pass │\n│ Publish ............................................................. – skip │\n│                                                                              │\n│ All required checks passed                                                   │\n└──────────────────────────────────────────────────────────────────────────────┘",
       ],
     ] as const
   ) {
@@ -291,7 +291,28 @@ Deno.test("Receipt renders exact narrow, standard, wide, and capability frames",
     52,
     (capabilities) => renderReceiptCli(props, capabilities),
     standard,
-    "+ Receipt: Gate proof -----------------------------+\n| [PASS]                                           |\n| Branch: agent/cli-2b                             |\n| Commit: abc1234                                  |\n|                                                  |\n| Typecheck ............................... + pass |\n| Tests ............................... 310 + pass |\n| Publish ................................. - skip |\n|                                                  |\n| All required checks passed                       |\n+--------------------------------------------------+",
+    "+ [+] Gate proof ----------------------------------+\n| Branch: agent/cli-2b                             |\n| Commit: abc1234                                  |\n|                                                  |\n| Typecheck ............................... + pass |\n| Tests ............................... 310 + pass |\n| Publish ................................. - skip |\n|                                                  |\n| All required checks passed                       |\n+--------------------------------------------------+",
+  );
+});
+
+Deno.test("Receipt titles carry boxed pass and fail outcomes without a redundant body stamp", () => {
+  const unicode = testTerminalCapabilities({ columns: 32 });
+  const ascii = testTerminalCapabilities({ columns: 32, unicode: false });
+  const pass = renderReceiptCli(
+    { title: "Gate proof", stamp: "pass" },
+    unicode,
+  );
+  const fail = renderReceiptCli(
+    { title: "Gate proof", stamp: "fail" },
+    unicode,
+  );
+  assertStringIncludes(pass, "┌ [✓] Gate proof ");
+  assertStringIncludes(fail, "┌ [✕] Gate proof ");
+  assertEquals(pass.includes("[PASS]"), false);
+  assertEquals(fail.includes("[FAIL]"), false);
+  assertStringIncludes(
+    renderReceiptCli({ title: "Gate proof", stamp: "fail" }, ascii),
+    "+ [x] Gate proof ",
   );
 });
 

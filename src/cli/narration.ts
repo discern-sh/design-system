@@ -2,8 +2,8 @@
  * Narration verbs: semantic one-line terminal emitters for output too small
  * to deserve a Component — a success line, an informational note, a warning,
  * a failure, and a lead-in that opens a group of lines. Markers come from the
- * package's established terminal dialect (the bound motif marker and
- * the check/bang/cross marks), colours and spacing come from the token
+ * package's established terminal dialect (the disclosure arrow, bound motif
+ * marker, and check/bang/cross marks), colours and spacing come from the token
  * bridge, and every form keeps its meaning without colour and without
  * Unicode. Each verb is a pure {@linkcode CliRenderer}, so a presenter binds
  * narration exactly as it binds a Component renderer.
@@ -72,7 +72,8 @@ const NARRATION_LINE_SPECS: Readonly<
     heading: false,
   },
   note: {
-    motifMarker: true,
+    unicodeMarker: "▸",
+    asciiMarker: ">",
     tone: "accent",
     heading: false,
   },
@@ -158,7 +159,7 @@ export const renderSuccessLine: CliRenderer<NarrationLineProps> = (
   capabilities,
 ) => renderNarrationLine("success", props, capabilities);
 
-/** Render one informational note behind the accent-toned motif marker. */
+/** Render one informational note behind an accent-toned disclosure arrow. */
 export const renderNoteLine: CliRenderer<NarrationLineProps> = (
   props,
   capabilities,

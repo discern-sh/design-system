@@ -74,6 +74,7 @@ Deno.test("terminal foundation inventory enrols every sheet and specimen", () =>
   const specimens = motifs.specimens(catalogueCliCapabilities);
   assertEquals(specimens.map(({ id }) => id), [
     "horizontal-divider",
+    "left-aligned-divider",
     "vertical-divider",
     "thick-ribbon",
     "spinner-phases",

@@ -156,7 +156,7 @@ Deno.test("FAQ block renders exact open and closed disclosure frames", () => {
   );
 });
 
-Deno.test("Hero block renders exact motif title banners", () => {
+Deno.test("Hero block renders exact leading-marker title banners", () => {
   assertMarketingMatrix(
     renderHeroBlockCli,
     {
@@ -166,11 +166,19 @@ Deno.test("Hero block renders exact motif title banners", () => {
       actions: ["Begin"],
     },
     [
-      "◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨\n┌ Hero ────────┐\n│ New          │\n│              │\n│ Build        │\n│ clearly      │\n│              │\n│ Keep the     │\n│ proof.       │\n│              │\n│ [Begin]      │\n└──────────────┘",
-      "◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨\n┌ Hero ────────────────────────────┐\n│ New                              │\n│                                  │\n│ Build clearly                    │\n│                                  │\n│ Keep the proof.                  │\n│                                  │\n│ [Begin]                          │\n└──────────────────────────────────┘",
-      "◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨\n┌ Hero ────────────────────────────────────────────────────────┐\n│ New                                                          │\n│                                                              │\n│ Build clearly                                                │\n│                                                              │\n│ Keep the proof.                                              │\n│                                                              │\n│ [Begin]                                                      │\n└──────────────────────────────────────────────────────────────┘",
+      `◮  ${
+        "─".repeat(13)
+      }\n┌ Hero ────────┐\n│ New          │\n│              │\n│ Build        │\n│ clearly      │\n│              │\n│ Keep the     │\n│ proof.       │\n│              │\n│ [Begin]      │\n└──────────────┘`,
+      `◮  ${
+        "─".repeat(33)
+      }\n┌ Hero ────────────────────────────┐\n│ New                              │\n│                                  │\n│ Build clearly                    │\n│                                  │\n│ Keep the proof.                  │\n│                                  │\n│ [Begin]                          │\n└──────────────────────────────────┘`,
+      `◮  ${
+        "─".repeat(61)
+      }\n┌ Hero ────────────────────────────────────────────────────────┐\n│ New                                                          │\n│                                                              │\n│ Build clearly                                                │\n│                                                              │\n│ Keep the proof.                                              │\n│                                                              │\n│ [Begin]                                                      │\n└──────────────────────────────────────────────────────────────┘`,
     ],
-    ">v^<>v^<>v^<>v^<>v^<>v^<>v^<>v^<>v^<\n+ Hero ----------------------------+\n| New                              |\n|                                  |\n| Build clearly                    |\n|                                  |\n| Keep the proof.                  |\n|                                  |\n| [Begin]                          |\n+----------------------------------+",
+    `>  ${
+      "-".repeat(33)
+    }\n+ Hero ----------------------------+\n| New                              |\n|                                  |\n| Build clearly                    |\n|                                  |\n| Keep the proof.                  |\n|                                  |\n| [Begin]                          |\n+----------------------------------+`,
   );
 });
 

@@ -104,9 +104,9 @@ Deno.test("Heading retains every semantic level in its exact CLI prefix", () => 
 
 Deno.test("Heading document treatment styles H1 through H6 and degrades to level markers", () => {
   const styledVisible = {
-    1: "◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨\n◮ Level 1",
-    2: "Level 2\n◮⧩◭⧨◮⧩",
-    3: "◮ Level 3",
+    1: `◮ Level 1\n${"━".repeat(32)}`,
+    2: `Level 2\n${"─".repeat(32)}`,
+    3: `╶─ Level 3 ${"─".repeat(21)}`,
     4: "Level 4",
     5: "Level 5",
     6: "Level 6",
@@ -189,12 +189,12 @@ Deno.test("Heading document treatment styles H1 through H6 and degrades to level
       leadingBlankLines: 0,
     }, narrow)),
     [
-      "◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨",
       "◮ A",
       "  deliberately",
       "  long",
       "  document",
       "  boundary",
+      "━".repeat(14),
     ].join("\n"),
   );
 });
@@ -354,7 +354,7 @@ Deno.test("Heading document treatment preserves rich wrapping and hyperlink targ
       "links to the reference",
       "guide across 漢字 and 🚀",
       "tools.",
-      "◮⧩◭⧨◮⧩",
+      "─".repeat(26),
     ].join("\n"),
   );
   const linked = projectTerminalSpans(output).filter((span) =>

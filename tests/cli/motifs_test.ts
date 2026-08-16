@@ -277,7 +277,7 @@ Deno.test("one custom motif reaches every semantic renderer role", () => {
   );
 });
 
-Deno.test("motif divider keeps one centred marker across widths and repertoires", () => {
+Deno.test("motif divider keeps one centred or leading marker across widths and repertoires", () => {
   const unicode = testTerminalCapabilities({ columns: 20 });
   for (
     const [width, expected] of [
@@ -293,6 +293,16 @@ Deno.test("motif divider keeps one centred marker across widths and repertoires"
   }
   const ascii = testTerminalCapabilities({ columns: 9, unicode: false });
   assertExactFrame(renderMotifDivider({ width: 9 }, ascii), "--- > ---", ascii);
+  assertExactFrame(
+    renderMotifDivider({ width: 9, alignment: "start" }, unicode),
+    "◮  ──────",
+    unicode,
+  );
+  assertExactFrame(
+    renderMotifDivider({ width: 9, alignment: "start" }, ascii),
+    ">  ------",
+    ascii,
+  );
   const styled = testTerminalCapabilities({
     columns: 9,
     colorDepth: "truecolor",

@@ -123,6 +123,7 @@ Deno.test("motif catalogue derives the complete default and custom specimen set"
   for (
     const heading of [
       "Horizontal divider",
+      "Left-aligned divider",
       "Vertical divider",
       "Thick ribbon",
       "Spinner phases",
@@ -164,13 +165,13 @@ Deno.test("narration catalogue presents every verb and the composed rhythm", asy
     assertStringIncludes(output, `### ${heading}`);
   }
   assertStringIncludes(output, "✓ Checks passed");
-  assertStringIncludes(output, "◮ Cache already warm");
+  assertStringIncludes(output, "▸ Cache already warm");
   assertStringIncludes(output, "! Two files skipped");
   assertStringIncludes(output, "✕ One frame diverged");
   assertStringIncludes(output, "◮ RELEASE CHECKS");
   assertStringIncludes(
     output,
-    "◮ RELEASE CHECKS\n\n✓ Checks passed\n◮ Cache already warm\n\n! Two files skipped",
+    "◮ RELEASE CHECKS\n\n✓ Checks passed\n▸ Cache already warm\n\n! Two files skipped",
   );
   assert(!output.includes("## Terminal motifs"));
   assert(!output.includes("## Display"));

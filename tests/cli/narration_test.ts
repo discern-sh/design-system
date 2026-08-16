@@ -22,7 +22,7 @@ Deno.test("narration verbs render exact plain frames with Unicode markers", () =
   const capabilities = testTerminalCapabilities();
   const cases = [
     [renderSuccessLine, "Saved the draft", "✓ Saved the draft"],
-    [renderNoteLine, "Cache already warm", "◮ Cache already warm"],
+    [renderNoteLine, "Cache already warm", "▸ Cache already warm"],
     [renderWarningLine, "Two checks need review", "! Two checks need review"],
     [renderFailureLine, "The check refused", "✕ The check refused"],
     [renderLeadLine, "Preflight", "◮ PREFLIGHT"],
@@ -54,7 +54,7 @@ Deno.test("narration markers carry exact Token-derived colour at every depth", (
   );
   assertEquals(
     renderNoteLine({ text: "Cache already warm" }, truecolor),
-    `${ESC}[38;2;150;199;255m◮${ESC}[0m Cache already warm`,
+    `${ESC}[38;2;150;199;255m▸${ESC}[0m Cache already warm`,
   );
   assertEquals(
     renderWarningLine({ text: "Two checks need review" }, truecolor),

@@ -37,14 +37,14 @@ Deno.test("Divider renders exact narrow, standard, wide, and capability-degraded
   );
 });
 
-Deno.test("Divider owns exact single-line ribbon, phased vertical, and ASCII treatments", () => {
+Deno.test("Divider owns exact leading-marker ribbon, phased vertical, and ASCII treatments", () => {
   const unicode = testTerminalCapabilities({ columns: 8 });
   assertExactFrame(
     renderDividerCli(
       { treatment: "ribbon", length: 8, width: 8 },
       unicode,
     ),
-    "◮⧩◭⧨◮⧩◭⧨",
+    "◮  ─────",
     unicode,
   );
   assertExactFrame(

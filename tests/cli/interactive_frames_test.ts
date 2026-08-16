@@ -110,7 +110,7 @@ Deno.test("terminal interactions paint exact real Component frames", async () =>
     ],
     [
       "switch",
-      "Continue [active]\n┌──────────────────────────────┐\n│› No ○──● Yes                 │\n└──────────────────────────────┘\n",
+      "Continue [active]\n┌──────────────────────────────┐\n│› No   ○──● ✓ Yes             │\n└──────────────────────────────┘\n",
     ],
     [
       "select",

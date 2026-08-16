@@ -164,6 +164,15 @@ function motifSpecimens(
       }, capabilities),
     },
     {
+      id: "left-aligned-divider",
+      title: "Left-aligned divider",
+      output: renderMotifDivider({
+        width,
+        alignment: "start",
+        ...appearance,
+      }, capabilities),
+    },
+    {
       id: "vertical-divider",
       title: "Vertical divider",
       output: renderMotifPattern({
@@ -225,7 +234,7 @@ function motifSpecimens(
           { label: "Active", status: "active", phase: 1 },
           { label: "Pending", status: "pending" },
         ]),
-        custom.note("One bound marker reaches narration too"),
+        custom.lead("One bound marker reaches narration too"),
       ].join("\n"),
       animation: {
         label: "Consumer spinner",

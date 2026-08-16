@@ -18,7 +18,7 @@ import {
   type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import {
-  renderMotifPattern,
+  renderMotifDivider,
   renderMotifSectionRule,
 } from "../../../cli/motifs.ts";
 import type { SectionSpacing, SectionSurface } from "./section.types.ts";
@@ -92,9 +92,10 @@ const renderSectionCli: CliRenderer<SectionCliProps> = (
     (props.title === undefined ? "plain" : "rule");
   const heading: string[] = [];
   if (treatment === "ribbon") {
-    heading.push(renderMotifPattern(
+    heading.push(renderMotifDivider(
       {
-        length: width,
+        width,
+        alignment: "start",
         ...(props.theme === undefined ? {} : { theme: props.theme }),
         ...motifPassthrough(props),
       },

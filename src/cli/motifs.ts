@@ -29,6 +29,9 @@ export type MotifPatternOrientation = "horizontal" | "vertical";
 /** Direction in which a motif reads. */
 export type MotifDirection = "forward" | "reverse";
 
+/** Horizontal position of the semantic marker within a motif divider. */
+export type MotifDividerAlignment = "center" | "start";
+
 /** Shared theme and glyph selection for terminal motifs. */
 export interface MotifThemeOptions extends TerminalMotifOptions {
   readonly theme?: TerminalThemeVariant;
@@ -43,11 +46,13 @@ export interface MotifPatternOptions extends MotifThemeOptions {
   readonly tone?: TerminalSemanticTone;
 }
 
-/** Inputs for one quiet horizontal divider with a centred motif marker. */
+/** Inputs for one quiet horizontal divider with a semantic motif marker. */
 export interface MotifDividerOptions extends MotifThemeOptions {
   /** Total visible divider width. */
   readonly width: number;
-  /** Semantic tone for the centred marker; defaults to accent. */
+  /** Marker position; defaults to `center`. */
+  readonly alignment?: MotifDividerAlignment;
+  /** Semantic tone for the marker; defaults to accent. */
   readonly tone?: TerminalSemanticTone;
 }
 
@@ -147,13 +152,17 @@ function motifColor(
   return terminalToneColor(theme, tone);
 }
 
-/** Render a quiet horizontal rule around one centred motif marker. */
+/** Render a quiet horizontal rule around or after one semantic motif marker. */
 export function renderMotifDivider(
   options: MotifDividerOptions,
   capabilities: TerminalCapabilities,
 ): string {
   assertInteger(options.width, "motif divider width", 1);
   const width = Math.min(options.width, capabilities.columns);
+  const alignment = options.alignment ?? "center";
+  if (alignment !== "center" && alignment !== "start") {
+    throw new TypeError(`unknown motif divider alignment: ${alignment}`);
+  }
   const theme = themeFor(options.theme);
   const marker = terminalMotifRepertoire(
     options.motif,
@@ -162,6 +171,25 @@ export function renderMotifDivider(
   const rule = capabilities.unicode ? "─" : "-";
   const leadingEdge = capabilities.unicode ? "╶" : "-";
   const trailingEdge = capabilities.unicode ? "╴" : "-";
+  const ruleStyle = {
+    color: terminalThemeColor(theme, "--discern-color-ink-faint"),
+    dim: true,
+  } as const;
+  const markerSpan = {
+    text: marker,
+    style: { color: motifColor(theme, options.tone ?? "accent") },
+  } as const;
+  if (alignment === "start") {
+    const trailing = width === 1
+      ? ""
+      : width === 2
+      ? " "
+      : `  ${rule.repeat(width - 3)}`;
+    return renderStyledSpans([
+      markerSpan,
+      { text: trailing, style: ruleStyle },
+    ], capabilities);
+  }
   let leading = "";
   let trailing = "";
   if (width === 2) {
@@ -177,16 +205,9 @@ export function renderMotifDivider(
     leading = `${leadingEdge}${rule.repeat(leadingRuleCells)} `;
     trailing = ` ${rule.repeat(ruleCells - leadingRuleCells)}${trailingEdge}`;
   }
-  const ruleStyle = {
-    color: terminalThemeColor(theme, "--discern-color-ink-faint"),
-    dim: true,
-  } as const;
   return renderStyledSpans([
     { text: leading, style: ruleStyle },
-    {
-      text: marker,
-      style: { color: motifColor(theme, options.tone ?? "accent") },
-    },
+    markerSpan,
     { text: trailing, style: ruleStyle },
   ], capabilities);
 }
