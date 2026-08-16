@@ -15,6 +15,7 @@ import {
   renderSectionCli,
   renderSelectCli,
 } from "../src/cli/mod.ts";
+import { renderMarkdownBrowserCatalogueFrame } from "./markdown-browser-example.ts";
 
 /** A complete Catalogue-only CLI recipe built from public package renderers. */
 export interface CliCompositionRecipe {
@@ -25,6 +26,7 @@ export interface CliCompositionRecipe {
   readonly render: (
     capabilities: TerminalCapabilities,
     theme?: TerminalThemeVariant,
+    rows?: number,
   ) => string;
   readonly source: string;
 }
@@ -39,6 +41,7 @@ interface CliRecipeDefinition<Definition> {
     definition: Definition,
     capabilities: TerminalCapabilities,
     theme: TerminalThemeVariant,
+    rows: number,
   ) => string;
   readonly source: (definition: Definition) => string;
 }
@@ -51,8 +54,8 @@ function defineCliRecipe<Definition>(
     title: recipe.title,
     description: recipe.description,
     components: recipe.components,
-    render: (capabilities, theme = "dark") =>
-      recipe.render(recipe.definition, capabilities, theme),
+    render: (capabilities, theme = "dark", rows = 24) =>
+      recipe.render(recipe.definition, capabilities, theme, rows),
     source: recipe.source(recipe.definition),
   };
 }
@@ -479,10 +482,55 @@ const output = composeCliBlocks([
 ]);`,
 });
 
+const markdownBrowserRecipe: CliCompositionRecipe = {
+  id: "markdown-browser",
+  title: "Keyboard Markdown browser",
+  description:
+    "A full-viewport grouped picker and independently scrollable Markdown reader with adaptive pane budgets.",
+  components: ["Section rule", "Box", "Choice", "Markdown"],
+  render: (capabilities, theme = "dark", rows = 24) =>
+    renderMarkdownBrowserCatalogueFrame(
+      capabilities,
+      rows,
+      theme,
+      "split-reader",
+    ),
+  source: `import {
+  createMarkdownBrowserState,
+  renderMarkdownBrowser,
+  transitionMarkdownBrowser,
+} from "@discern-sh/design-system/cli/interactive";
+
+const entries = [
+  { kind: "group-heading", id: "guides", label: "Guides" },
+  {
+    kind: "document",
+    id: "start",
+    label: "Getting started",
+    path: "guides/getting-started.md",
+    source: "# Getting started\\n\\nPackage-supplied Markdown.",
+  },
+  { kind: "exit", id: "quit", label: "Quit" },
+] as const;
+
+let state = createMarkdownBrowserState(
+  { label: "Documentation", entries },
+  { columns: capabilities.columns, rows: 24 },
+);
+state = transitionMarkdownBrowser(
+  state,
+  { kind: "key", key: { kind: "named", name: "enter" } },
+  capabilities,
+).state;
+
+const output = renderMarkdownBrowser(state, capabilities);`,
+};
+
 /** Complete terminal pages shown through the Catalogue layout inspector. */
 export const cliCompositionRecipes: readonly CliCompositionRecipe[] = [
   operationalStatusRecipe,
   failureReportRecipe,
   commandReferenceRecipe,
   guidedChoiceRecipe,
+  markdownBrowserRecipe,
 ];

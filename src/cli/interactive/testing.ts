@@ -33,6 +33,17 @@ export interface FakeTerminalIOOptions {
   readonly holdOpen?: boolean;
 }
 
+/** One deterministic input, key, resize, or EOF event for a fake terminal. */
+export type TerminalTestEvent =
+  | { readonly kind: "text"; readonly value: string }
+  | { readonly kind: "keys"; readonly keys: readonly TerminalKeyName[] }
+  | {
+    readonly kind: "resize";
+    readonly columns: number;
+    readonly rows?: number;
+  }
+  | { readonly kind: "end-of-input" };
+
 /**
  * Canonical byte sequence for every named key the package decodes. Adding a
  * name to {@linkcode TerminalKeyName} does not compile until it is enrolled
@@ -103,6 +114,7 @@ export class FakeTerminalIO implements TerminalIO {
   readonly #colorDepth: TerminalCapabilities["colorDepth"];
   readonly #unicode: boolean;
   readonly #waiters: ((chunk: Uint8Array | null) => void)[] = [];
+  readonly #resizeHandlers = new Set<() => void>();
   #holdOpen: boolean;
   #columns: number;
   #rows: number;
@@ -172,6 +184,22 @@ export class FakeTerminalIO implements TerminalIO {
     this.writes.push(value);
   }
 
+  /** Subscribe to scripted viewport changes. */
+  listenResize(handler: () => void): () => void {
+    this.#resizeHandlers.add(handler);
+    let active = true;
+    return () => {
+      if (!active) return;
+      active = false;
+      this.#resizeHandlers.delete(handler);
+    };
+  }
+
+  /** Number of active scripted resize subscriptions. */
+  get resizeListenerCount(): number {
+    return this.#resizeHandlers.size;
+  }
+
   /** Complete terminal output, including control sequences. */
   output(): string {
     return this.writes.join("");
@@ -215,13 +243,36 @@ export class FakeTerminalIO implements TerminalIO {
 
   /** Change the viewport returned by subsequent size and capability reads. */
   resize(columns: number, rows: number = this.#rows): void {
-    this.#columns = columns;
-    this.#rows = rows;
+    this.#applyResize({ columns, rows });
   }
 
   #applyResize(entry: QueuedResize): void {
     this.#columns = entry.columns;
     this.#rows = entry.rows ?? this.#rows;
+    for (const handler of [...this.#resizeHandlers]) handler();
+  }
+}
+
+/** Queue semantic terminal events in exact order through the real decoder. */
+export function enqueueTerminalEvents(
+  io: FakeTerminalIO,
+  events: readonly TerminalTestEvent[],
+): void {
+  for (const event of events) {
+    switch (event.kind) {
+      case "text":
+        io.enqueue(event.value);
+        break;
+      case "keys":
+        io.enqueueKeys(...event.keys);
+        break;
+      case "resize":
+        io.enqueueResize(event.columns, event.rows);
+        break;
+      case "end-of-input":
+        io.close();
+        break;
+    }
   }
 }
 

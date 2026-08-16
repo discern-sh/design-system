@@ -10,7 +10,7 @@ const viewports = [
 ] as const;
 
 Deno.test("complete CLI compositions stay deterministic and width-safe", () => {
-  assertEquals(cliCompositionRecipes.length, 4);
+  assertEquals(cliCompositionRecipes.length, 5);
   assertEquals(
     new Set(cliCompositionRecipes.map((recipe) => recipe.id)).size,
     cliCompositionRecipes.length,
@@ -29,9 +29,9 @@ Deno.test("complete CLI compositions stay deterministic and width-safe", () => {
         columns: viewport.columns,
         colorDepth: "truecolor",
       });
-      const output = recipe.render(capabilities);
+      const output = recipe.render(capabilities, "dark", viewport.rows);
       assertEquals(
-        recipe.render(capabilities),
+        recipe.render(capabilities, "dark", viewport.rows),
         output,
         `${recipe.id} changed across identical renders`,
       );
