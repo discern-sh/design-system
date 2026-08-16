@@ -47,8 +47,19 @@
     color: var(--discern-color-ink-faint);
     text-decoration: none;
   }
+  .discern-footnotes__returns {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: var(--discern-space-2);
+  }
+  .discern-footnotes__returns > a {
+    color: var(--discern-color-ink-faint);
+    text-decoration: none;
+  }
   .discern-footnotes li > a:hover,
-  .discern-footnotes li > a:focus-visible {
+  .discern-footnotes li > a:focus-visible,
+  .discern-footnotes__returns > a:hover,
+  .discern-footnotes__returns > a:focus-visible {
     color: var(--discern-color-accent-700);
   }
 }
