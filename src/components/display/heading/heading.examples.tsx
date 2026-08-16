@@ -8,6 +8,9 @@ export default function HeadingExamples() {
       <Heading level={3}>
         Consectetur <HeadingAccent>adipiscing</HeadingAccent> elit.
       </Heading>
+      <Heading level={4}>
+        Phasellus <em>viverra</em> keeps <code>inline meaning</code> intact.
+      </Heading>
     </div>
   );
 }

@@ -1,10 +1,26 @@
-import { styleText } from "../../src/cli/ansi.ts";
 import {
+  assert,
+  assertEquals,
+  assertStringIncludes,
+  assertThrows,
+} from "@std/assert";
+import { stripAnsi, styleText } from "../../src/cli/ansi.ts";
+import {
+  composeCliBlocks,
+  createCliBlock,
+  type FootnotesCliProps,
+  renderBlockquoteCli,
+  renderCodeBlockCli,
   renderFootnotesCli,
   renderKeyPointsCli,
+  renderListCli,
+  renderParagraphCli,
   renderRelatedContentCli,
   renderTableOfContentsCli,
 } from "../../src/cli/mod.ts";
+import { projectTerminalSpans } from "../../src/cli/projection.ts";
+import type { SemanticInlineContent } from "../../src/cli/semantic-inline.ts";
+import { measureText } from "../../src/cli/text.ts";
 import {
   terminalThemeColor,
   terminalThemes,
@@ -12,6 +28,7 @@ import {
 } from "../../src/cli/theme.ts";
 import {
   assertExactFrame,
+  assertStyledFrame,
   testTerminalCapabilities,
 } from "../../src/cli/interactive/testing.ts";
 
@@ -149,6 +166,371 @@ Deno.test("Footnotes renders exact width, ASCII, and colour frames", () => {
       expected,
       capabilities,
     );
+  }
+});
+
+const richFootnoteContent = [
+  "A ",
+  { kind: "strong", content: "measured result" },
+  " links to ",
+  {
+    kind: "link",
+    label: "the source",
+    destination: "https://example.test/source",
+  },
+  " beside 界🙂.",
+] as const satisfies SemanticInlineContent;
+
+const richFootnotesProps = {
+  title: "References",
+  items: [{
+    id: "source-note",
+    content: richFootnoteContent,
+    returnLabel: "back",
+    returnReferences: [
+      { href: "#source-ref-a" },
+      { href: "#source-ref-b", label: "other citation" },
+    ],
+  }],
+} as const;
+
+Deno.test("Footnotes rich inline mode is exact, lossless, and capability-aware", () => {
+  const frames = [
+    [
+      24,
+      "† References\n\n[01] A **measured\n     result** links to\n     the source\n     (https://example.te\n     st/source) beside\n     界🙂.\n\n     ↩ back 1\n     (#source-ref-a)\n     ↩ other citation\n     (#source-ref-b)",
+    ],
+    [
+      52,
+      "† References\n\n[01] A **measured result** links to the source\n     (https://example.test/source) beside 界🙂.\n\n     ↩ back 1 (#source-ref-a)\n     ↩ other citation (#source-ref-b)",
+    ],
+    [
+      96,
+      "† References\n\n[01] A **measured result** links to the source (https://example.test/source) beside 界🙂.\n\n     ↩ back 1 (#source-ref-a)\n     ↩ other citation (#source-ref-b)",
+    ],
+  ] as const;
+  for (const [columns, expected] of frames) {
+    const capabilities = testTerminalCapabilities({
+      columns,
+      colorDepth: "none",
+    });
+    assertExactFrame(
+      renderFootnotesCli(richFootnotesProps, capabilities),
+      expected,
+      capabilities,
+    );
+  }
+
+  const ascii = testTerminalCapabilities({
+    columns: 24,
+    colorDepth: "none",
+    unicode: false,
+  });
+  assertExactFrame(
+    renderFootnotesCli(richFootnotesProps, ascii),
+    "+ References\n\n[01] A **measured\n     result** links to\n     the source\n     (https://example.te\n     st/source) beside\n     界🙂.\n\n     <- back 1\n     (#source-ref-a)\n     <- other citation\n     (#source-ref-b)",
+    ascii,
+  );
+
+  const expectedStyled =
+    "† References\n\n[01] A measured result links to the\n     source beside 界🙂.\n\n     ↩ back 1\n     ↩ other citation";
+  for (
+    const colorDepth of ["truecolor", "ansi256", "ansi16"] as const
+  ) {
+    const capabilities = testTerminalCapabilities({
+      columns: 36,
+      colorDepth,
+      hyperlinks: true,
+    });
+    const output = renderFootnotesCli(richFootnotesProps, capabilities);
+    assertStyledFrame(output, expectedStyled, capabilities);
+    const links = projectTerminalSpans(output).filter((span) =>
+      span.link !== undefined
+    );
+    assertEquals(
+      [...new Set(links.map((span) => span.link))],
+      [
+        "https://example.test/source",
+        "#source-ref-a",
+        "#source-ref-b",
+      ],
+    );
+    assertEquals(
+      links.filter((span) => span.link === "https://example.test/source").map((
+        span,
+      ) => span.text).join(" "),
+      "the source",
+    );
+    assertEquals(renderFootnotesCli(richFootnotesProps, capabilities), output);
+  }
+
+  const withoutHyperlinks = testTerminalCapabilities({
+    columns: 52,
+    colorDepth: "truecolor",
+    hyperlinks: false,
+  });
+  const fallback = renderFootnotesCli(richFootnotesProps, withoutHyperlinks);
+  assertStringIncludes(stripAnsi(fallback), "https://example.test/source");
+  assertStringIncludes(stripAnsi(fallback), "back 1 (#source-ref-a)");
+});
+
+Deno.test("Footnotes composes paragraph, list, quotation, and code blocks without flattening", () => {
+  const capabilities = testTerminalCapabilities({
+    columns: 32,
+    colorDepth: "none",
+  });
+  const output = renderFootnotesCli({
+    items: [{
+      id: "multi",
+      content: {
+        kind: "blocks",
+        children: [
+          createCliBlock(
+            renderParagraphCli,
+            {
+              content: [
+                "First ",
+                { kind: "emphasis", content: "paragraph" },
+                ".",
+              ],
+            } as const,
+          ),
+          createCliBlock(renderParagraphCli, {
+            content: "Second paragraph.",
+          }),
+          createCliBlock(renderListCli, {
+            items: [{ content: "Nested item." }],
+          }),
+          createCliBlock(renderBlockquoteCli, {
+            children: [createCliBlock(renderParagraphCli, {
+              content: "Quoted note.",
+            })],
+          }),
+          createCliBlock(renderCodeBlockCli, {
+            code: "alpha\nbeta",
+            language: "text",
+          }),
+        ],
+      },
+    }],
+  }, capabilities);
+
+  assertExactFrame(
+    output,
+    "† Notes & sources\n\n[01] First _paragraph_.\n\n     Second paragraph.\n\n     • Nested item.\n\n     │ Quoted note.\n\n     [text]\n     │ alpha\n     │ beta",
+    capabilities,
+  );
+  assertEquals(
+    renderFootnotesCli({
+      items: [{
+        id: "multi",
+        content: {
+          kind: "blocks",
+          children: [createCliBlock(renderParagraphCli, {
+            content: "Stable body.",
+          })],
+        },
+      }],
+    }, capabilities),
+    renderFootnotesCli({
+      items: [{
+        id: "multi",
+        content: {
+          kind: "blocks",
+          children: [createCliBlock(renderParagraphCli, {
+            content: "Stable body.",
+          })],
+        },
+      }],
+    }, capabilities),
+  );
+});
+
+Deno.test("Footnotes owns one clean boundary when interleaved with structural blocks", () => {
+  const capabilities = testTerminalCapabilities({
+    columns: 40,
+    colorDepth: "none",
+  });
+  const paragraph = renderParagraphCli({ content: "Before." }, capabilities);
+  const footnotes = renderFootnotesCli({
+    items: [{ content: "Definition." }],
+  }, capabilities);
+  const list = renderListCli({
+    items: [{ content: "After." }],
+  }, capabilities);
+  assertEquals(
+    composeCliBlocks([paragraph, footnotes, list]),
+    "Before.\n\n† Notes & sources\n\n[01] Definition.\n\n• After.",
+  );
+});
+
+Deno.test("Footnotes validates identities, linked returns, hostile input, and width", () => {
+  const capabilities = testTerminalCapabilities({ columns: 40 });
+  assertEquals(
+    stripAnsi(renderFootnotesCli({
+      items: [{ content: "Legacy anonymous definition." }],
+    }, capabilities)),
+    "† Notes & sources\n\n[01] Legacy anonymous definition.",
+  );
+  assertThrows(
+    () =>
+      renderFootnotesCli({
+        items: [
+          {
+            content: [{ kind: "strong", content: "Needs identity." }],
+          } as unknown as FootnotesCliProps["items"][number],
+        ],
+      }, capabilities),
+    TypeError,
+    "requires a stable id",
+  );
+  const linkedTextProps = {
+    items: [{
+      id: "linked-text",
+      content: "Plain linked definition.",
+      returnReferences: [{ href: "#linked-text-ref" }],
+    }],
+  } as const satisfies FootnotesCliProps;
+  assertExactFrame(
+    renderFootnotesCli(linkedTextProps, capabilities),
+    "† Notes & sources\n\n[01] Plain linked definition.\n\n     ↩ return (#linked-text-ref)",
+    capabilities,
+  );
+  assertThrows(
+    () =>
+      renderFootnotesCli({
+        items: [
+          {
+            content: "Linked text needs identity.",
+            returnReferences: [{ href: "#missing-id-ref" }],
+          } as unknown as FootnotesCliProps["items"][number],
+        ],
+      }, capabilities),
+    TypeError,
+    "requires a stable id",
+  );
+  assertThrows(
+    () =>
+      renderFootnotesCli({
+        items: [
+          { id: "same", content: "First." },
+          { id: "same", content: "Second." },
+        ],
+      }, capabilities),
+    TypeError,
+    "duplicate footnotes id",
+  );
+  assertThrows(
+    () =>
+      renderFootnotesCli({
+        items: [{
+          id: "unsafe id",
+          content: [{ kind: "text", text: "Definition." }],
+        }],
+      }, capabilities),
+    TypeError,
+    "valid footnote identifier",
+  );
+  assertThrows(
+    () =>
+      renderFootnotesCli({
+        items: [{
+          id: "unsafe-content",
+          content: [{
+            kind: "text",
+            text: "erase\u001b[2J",
+          }],
+        }],
+      }, capabilities),
+    TypeError,
+    "semantic inline content",
+  );
+  assertThrows(
+    () =>
+      renderFootnotesCli({
+        items: [{
+          id: "unsafe-return",
+          content: "Definition.",
+          returnReferences: [{
+            href: "javascript:alert(1)",
+          }],
+        }],
+      }, capabilities),
+    TypeError,
+    "unsafe scheme",
+  );
+  assertThrows(
+    () =>
+      renderFootnotesCli({
+        items: [{
+          id: "empty-blocks",
+          content: { kind: "blocks", children: [] },
+        }],
+      }, capabilities),
+    TypeError,
+    "one or more CLI block",
+  );
+  assertThrows(
+    () =>
+      renderFootnotesCli({
+        items: [{
+          id: "empty-linked-returns",
+          content: "Definition.",
+          returnReferences: [],
+        }],
+      }, capabilities),
+    TypeError,
+    "non-empty array",
+  );
+  const unlinkedReturn = testTerminalCapabilities({
+    columns: 40,
+    colorDepth: "none",
+  });
+  assertExactFrame(
+    renderFootnotesCli({
+      items: [{
+        id: "unlinked-return",
+        content: ["Rich definition."],
+        returnLabel: "return",
+      }],
+    }, unlinkedReturn),
+    "† Notes & sources\n\n[01] Rich definition.\n\n     ↩ return",
+    unlinkedReturn,
+  );
+  assertThrows(
+    () =>
+      renderFootnotesCli(
+        { items: [{ content: "Definition." }], maxWidth: 7 },
+        capabilities,
+      ),
+    TypeError,
+    "at least 8",
+  );
+  assertThrows(
+    () =>
+      renderFootnotesCli(
+        { items: [{ content: "Definition." }], maxWidth: 40 },
+        testTerminalCapabilities({ columns: 7 }),
+      ),
+    TypeError,
+    "terminal columns",
+  );
+
+  for (
+    const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
+  ) {
+    for (const unicode of [true, false]) {
+      const current = testTerminalCapabilities({
+        columns: 24,
+        colorDepth,
+        unicode,
+      });
+      const first = renderFootnotesCli(richFootnotesProps, current);
+      assertEquals(renderFootnotesCli(richFootnotesProps, current), first);
+      for (const line of first.split("\n")) {
+        assert(measureText(line) <= current.columns, stripAnsi(line));
+      }
+    }
   }
 });
 

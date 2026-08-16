@@ -1,11 +1,24 @@
-import { assertEquals, assertThrows } from "@std/assert";
+import {
+  assert,
+  assertEquals,
+  assertStringIncludes,
+  assertThrows,
+} from "@std/assert";
+import { stripAnsi } from "../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import {
+  type HeadingCliProps,
   renderHeadingCli,
   renderKickerCli,
   renderStatCli,
   renderTagCli,
 } from "../../src/cli/mod.ts";
+import { projectTerminalSpans } from "../../src/cli/projection.ts";
+import type { SemanticInlineContent } from "../../src/cli/semantic-inline.ts";
+import {
+  measureText,
+  wrapStyledTextPreservingIndent,
+} from "../../src/cli/text.ts";
 import {
   assertExactFrame,
   assertStyledFrame,
@@ -76,6 +89,229 @@ Deno.test("Heading owns one leading blank line by default and validates explicit
       "leading blank lines",
     );
   }
+});
+
+Deno.test("Heading retains every semantic level in its exact CLI prefix", () => {
+  const capabilities = testTerminalCapabilities({ columns: 32 });
+  for (const level of [1, 2, 3, 4, 5, 6] as const) {
+    assertExactFrame(
+      renderHeadingCli({ text: "Section", level }, capabilities),
+      `\n${"#".repeat(level)} Section`,
+      capabilities,
+    );
+  }
+});
+
+Deno.test("Heading explicit truncation remains byte-identical to its legacy default", () => {
+  const legacy = {
+    text: "Rules that are deliberately long",
+    accent: "travel intact",
+    level: 2,
+    maxWidth: 18,
+  } as const satisfies HeadingCliProps;
+  for (
+    const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
+  ) {
+    for (const unicode of [true, false]) {
+      const capabilities = testTerminalCapabilities({
+        columns: 40,
+        colorDepth,
+        unicode,
+      });
+      assertEquals(
+        renderHeadingCli({ ...legacy, overflow: "truncate" }, capabilities),
+        renderHeadingCli(legacy, capabilities),
+      );
+    }
+  }
+});
+
+Deno.test("Heading lossless policy wraps plain text and accent beneath the content column", () => {
+  const props = {
+    text: "A deliberately long heading",
+    accent: "accent phrase",
+    level: 3,
+    overflow: "wrap",
+    maxWidth: 18,
+    leadingBlankLines: 0,
+  } as const satisfies HeadingCliProps;
+  const expected = "### A deliberately\n    long heading\n    accent phrase";
+
+  for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
+    for (const unicode of [true, false]) {
+      const capabilities = testTerminalCapabilities({
+        columns: 40,
+        colorDepth,
+        unicode,
+      });
+      const output = renderHeadingCli(props, capabilities);
+      assertStyledFrame(output, expected, capabilities);
+      for (const line of output.split("\n")) {
+        assert(measureText(line) <= 18, stripAnsi(line));
+        assertEquals(wrapStyledTextPreservingIndent(line, 18), [line]);
+      }
+    }
+  }
+  for (const unicode of [true, false]) {
+    const capabilities = testTerminalCapabilities({
+      columns: 40,
+      colorDepth: "none",
+      unicode,
+    });
+    assertExactFrame(
+      renderHeadingCli(props, capabilities),
+      expected,
+      capabilities,
+    );
+  }
+});
+
+const richHeadingContent = [
+  "A long ",
+  {
+    kind: "strong",
+    content: [
+      "semantic ",
+      { kind: "emphasis", content: "heading" },
+    ],
+  },
+  " links to ",
+  {
+    kind: "link",
+    label: "the reference guide",
+    destination: "https://example.test/guide",
+  },
+  " across 漢字 and 🚀 tools.",
+] as const satisfies SemanticInlineContent;
+
+Deno.test("Heading rich wrapping preserves nested styles and links on independent lines", () => {
+  const props = {
+    content: richHeadingContent,
+    level: 2,
+    overflow: "wrap",
+    leadingBlankLines: 0,
+  } as const satisfies HeadingCliProps;
+  const expected = [
+    "## A long semantic heading",
+    "   links to the reference",
+    "   guide across 漢字 and",
+    "   🚀 tools.",
+  ].join("\n");
+
+  for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
+    for (const unicode of [true, false]) {
+      const capabilities = testTerminalCapabilities({
+        columns: 26,
+        colorDepth,
+        unicode,
+      });
+      const output = renderHeadingCli(props, capabilities);
+      assertStyledFrame(output, expected, capabilities);
+      assertEquals(renderHeadingCli(props, capabilities), output);
+      assert(!output.startsWith("\n"));
+
+      const lines = output.split("\n");
+      for (const line of lines) {
+        assert(measureText(line) <= 26, stripAnsi(line));
+        assertEquals(wrapStyledTextPreservingIndent(line, 26), [line]);
+      }
+      const linked = lines.flatMap(projectTerminalSpans).filter((span) =>
+        span.link === "https://example.test/guide"
+      );
+      assertEquals(linked.map((span) => span.text), ["the reference", "guide"]);
+      assert(linked.every((span) => span.style?.underline === true));
+      const headingRuns = lines.slice(1).flatMap(projectTerminalSpans).filter(
+        (span) => span.text.trim() !== "",
+      );
+      assert(
+        headingRuns.every((span) => span.style?.bold === true),
+        "each rich continuation must independently retain display styling",
+      );
+    }
+  }
+});
+
+Deno.test("Heading rich no-colour fallback is exact, lossless, and width-bounded", () => {
+  const expected = [
+    "## A long",
+    "   **semantic",
+    "   _heading_**",
+    "   links to the",
+    "   reference guide",
+    "   (https://exampl",
+    "   e.test/guide)",
+    "   across 漢字 and",
+    "   🚀 tools.",
+  ].join("\n");
+  for (const unicode of [true, false]) {
+    const capabilities = testTerminalCapabilities({
+      columns: 18,
+      colorDepth: "none",
+      unicode,
+    });
+    const output = renderHeadingCli(
+      {
+        content: richHeadingContent,
+        level: 2,
+        overflow: "wrap",
+        leadingBlankLines: 0,
+      },
+      capabilities,
+    );
+    assertExactFrame(output, expected, capabilities);
+    assertStringIncludes(
+      output.split("\n").map((line) => line.trimStart()).join(""),
+      "https://example.test/guide",
+    );
+    for (const line of output.split("\n")) {
+      assert(measureText(line) <= 18, line);
+    }
+  }
+});
+
+Deno.test("Heading rich path validates hostile content and impossible wrapped prefixes", () => {
+  const capabilities = testTerminalCapabilities({ columns: 32 });
+  for (const content of ["unsafe\u001btext", "unsafe\u200btext"]) {
+    assertThrows(
+      () =>
+        renderHeadingCli(
+          { content, overflow: "wrap" },
+          capabilities,
+        ),
+      TypeError,
+      "control and format",
+    );
+  }
+  assertThrows(
+    () =>
+      renderHeadingCli(
+        {
+          content: [{
+            kind: "link",
+            label: "unsafe",
+            destination: "javascript:alert(1)",
+          }],
+          overflow: "wrap",
+        },
+        capabilities,
+      ),
+    TypeError,
+    "unsafe scheme",
+  );
+  assertThrows(
+    () =>
+      renderHeadingCli(
+        {
+          text: "No content cell",
+          level: 6,
+          overflow: "wrap",
+          maxWidth: 7,
+        },
+        capabilities,
+      ),
+    TypeError,
+    "needs at least 8 cells",
+  );
 });
 
 Deno.test("Kicker renders exact narrow, standard, wide, and colour-degraded annotations", () => {

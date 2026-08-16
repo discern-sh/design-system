@@ -105,6 +105,52 @@ Deno.test("nested semantic styles and hyperlink targets survive styled rendering
   assertStringIncludes(stripAnsi(output), "Escaped <tag> & decoded.");
 });
 
+Deno.test("semantic base roles restyle the inherited run without weakening nested meaning", () => {
+  const content = [
+    "Heading ",
+    { kind: "emphasis", content: "context" },
+    " and ",
+    {
+      kind: "link",
+      label: "reference",
+      destination: "https://example.test/reference",
+    },
+  ] as const satisfies SemanticInlineContent;
+  const capabilities = testTerminalCapabilities({
+    columns: 80,
+    colorDepth: "truecolor",
+  });
+  const output = renderSemanticInlineContent(content, capabilities, {
+    baseRole: "display",
+  });
+  const spans = projectTerminalSpans(output);
+  assertEquals(
+    spans.find((span) => span.text === "Heading ")?.style?.bold,
+    true,
+  );
+  const emphasis = spans.find((span) => span.text === "context");
+  assertEquals(emphasis?.style?.bold, true);
+  assertEquals(emphasis?.style?.italic, true);
+  const link = spans.find((span) => span.text === "reference");
+  assertEquals(link?.style?.bold, true);
+  assertEquals(link?.style?.underline, true);
+  assertEquals(link?.link, "https://example.test/reference");
+
+  const plain = testTerminalCapabilities({ columns: 80, colorDepth: "none" });
+  assertEquals(
+    renderSemanticInlineContent(content, plain, { baseRole: "display" }),
+    renderSemanticInlineContent(content, plain, { baseRole: "body" }),
+  );
+  assertThrows(
+    () =>
+      renderSemanticInlineContent(content, capabilities, {
+        baseRole: "unknown" as "body",
+      }),
+    TypeError,
+    "base role",
+  );
+});
+
 Deno.test("semantic wrapping keeps every line width-bounded and independently valid", () => {
   const capabilities = testTerminalCapabilities({
     columns: 18,

@@ -4,6 +4,8 @@
 
 **Wave:** 3 — one coordinating session and worktree. Starts only after 2A has landed. If sub-agents are available, fan out one per existing Component inside this worktree after the compatibility rules are fixed; otherwise work in sequence.
 
+**Status:** Complete.
+
 ## Orient, verify dependencies, then re-root
 
 Work in `/Users/jack/Sites/discern-design-system`. Begin with `discern_status`. Verify waves 1A and 2A are present on `main`: the semantic inline API and `renderParagraphCli`, `renderListCli`, `renderBlockquoteCli`, and `renderCodeBlockCli` all resolve through `./cli`, their Components appear in the generated registry, and the content-model ADR is indexed. If any prerequisite is absent, stop and report the missing landing instead of reimplementing it.

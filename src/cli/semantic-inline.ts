@@ -123,7 +123,21 @@ export type SemanticInlineContent =
 /** Theme selection for semantic inline terminal rendering. */
 export interface SemanticInlineRenderOptions {
   readonly theme?: TerminalThemeVariant;
+  /**
+   * Package-owned base typography for otherwise unannotated text. Nested
+   * emphasis, strong text, code, links, images, and references still derive
+   * from this role through the same semantic renderer. Defaults to `body`.
+   */
+  readonly baseRole?: SemanticInlineBaseRole;
 }
+
+/** Safe base typography profiles available to semantic inline consumers. */
+export type SemanticInlineBaseRole =
+  | "body"
+  | "display"
+  | "strong"
+  | "muted"
+  | "annotation";
 
 type ValidationContext = "content" | "link-label";
 type NodeRecord = Record<string, unknown>;
@@ -498,11 +512,37 @@ function mergedStyle(
   return { ...inherited, ...added };
 }
 
-function baseStyle(theme: TerminalTheme): TerminalTextStyle {
-  return {
-    ...theme.typography.body,
-    color: terminalThemeColor(theme, "--discern-color-ink-muted"),
-  };
+function baseStyle(
+  theme: TerminalTheme,
+  role: SemanticInlineBaseRole,
+): TerminalTextStyle {
+  switch (role) {
+    case "body":
+      return {
+        ...theme.typography.body,
+        color: terminalThemeColor(theme, "--discern-color-ink-muted"),
+      };
+    case "display":
+      return {
+        ...theme.typography.display,
+        color: terminalThemeColor(theme, "--discern-color-ink"),
+      };
+    case "strong":
+      return {
+        ...theme.typography.strong,
+        color: terminalThemeColor(theme, "--discern-color-ink"),
+      };
+    case "muted":
+      return {
+        ...theme.typography.muted,
+        color: terminalThemeColor(theme, "--discern-color-ink-muted"),
+      };
+    case "annotation":
+      return {
+        ...theme.typography.annotation,
+        color: terminalThemeColor(theme, "--discern-color-ink-muted"),
+      };
+  }
 }
 
 function markerSpan(text: string, style: TerminalTextStyle): StyledSpan {
@@ -681,7 +721,14 @@ export function renderSemanticInlineContent(
 ): string {
   validateSemanticInlineContent(content);
   const theme = terminalThemes[options.theme ?? "dark"];
-  return renderContent(content, baseStyle(theme), capabilities, theme);
+  const role = options.baseRole ?? "body";
+  if (
+    role !== "body" && role !== "display" && role !== "strong" &&
+    role !== "muted" && role !== "annotation"
+  ) {
+    throw new TypeError(`unknown semantic inline base role: ${role}`);
+  }
+  return renderContent(content, baseStyle(theme, role), capabilities, theme);
 }
 
 /**

@@ -8,6 +8,7 @@ export type { HeadingLevel } from "./heading.types.ts";
 /** Props for the {@linkcode Heading} component. */
 export interface HeadingProps extends HTMLAttributes<HTMLHeadingElement> {
   readonly level?: HeadingLevel;
+  /** Ordinary React phrasing content rendered inside the native heading. */
   readonly children: ReactNode;
 }
 /** Props for the {@linkcode HeadingAccent} component. */
