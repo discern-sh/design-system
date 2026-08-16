@@ -17,6 +17,14 @@ export interface MarkdownBrowserReviewArtifact {
   readonly inspectorHtml: string;
 }
 
+/** Canonical local Catalogue route for the complete Markdown browser review. */
+export const MARKDOWN_BROWSER_REVIEW_PATH =
+  "/catalogue/reviews/markdown-browser/";
+
+/** Historical transient path retained as a redirect for shared review links. */
+export const MARKDOWN_BROWSER_LEGACY_REVIEW_PATH =
+  "/catalogue/dist/markdown-browser-review.html";
+
 function capabilities(
   columns: number,
   options: Partial<TerminalCapabilities> = {},
@@ -139,4 +147,73 @@ export function markdownBrowserReviewArtifacts(): readonly MarkdownBrowserReview
     ),
     resizedArtifact(),
   ]);
+}
+
+function escapeHtml(value: string): string {
+  return value.replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+/** Render the complete self-contained browser review from deterministic frames. */
+export function renderMarkdownBrowserReviewPage(): string {
+  const sections = markdownBrowserReviewArtifacts().map((artifact) =>
+    `<section class="review" id="${escapeHtml(artifact.id)}" aria-labelledby="${
+      escapeHtml(`${artifact.id}-title`)
+    }">
+  <header class="review__header">
+    <div>
+      <h2 id="${escapeHtml(`${artifact.id}-title`)}">${
+      escapeHtml(artifact.title)
+    }</h2>
+      <p>${artifact.columns} × ${artifact.rows}</p>
+    </div>
+    <a href="#top">Back to top</a>
+  </header>
+  ${artifact.inspectorHtml}
+</section>`
+  ).join("\n");
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Keyboard Markdown browser · CLI review</title>
+  <style>
+    :root { color-scheme: dark; font-family: ui-sans-serif, system-ui, sans-serif; background: #111318; color: #f2f4f8; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #111318; }
+    a { color: #9fc4ff; }
+    main { display: grid; gap: 3rem; width: min(100% - 2rem, 78rem); margin: 0 auto; padding: 3rem 0 5rem; }
+    .intro { display: grid; gap: 0.8rem; max-width: 48rem; }
+    .intro p, .review__header p { margin: 0; color: #aeb6c5; }
+    .eyebrow { color: #9fc4ff !important; font: 700 0.75rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0.08em; text-transform: uppercase; }
+    h1, h2 { margin: 0; line-height: 1.15; }
+    h1 { font-size: clamp(2rem, 5vw, 3.5rem); }
+    h2 { font-size: clamp(1.2rem, 3vw, 1.65rem); }
+    .review { display: grid; gap: 1rem; scroll-margin-block-start: 1rem; }
+    .review__header { display: flex; gap: 1rem; align-items: end; justify-content: space-between; }
+    .review__header > div { display: grid; gap: 0.3rem; }
+    .review__header a { font-size: 0.85rem; white-space: nowrap; }
+    @media (max-width: 40rem) {
+      main { width: min(100% - 1rem, 78rem); padding-block-start: 1.5rem; }
+      .review__header { align-items: start; }
+    }
+  </style>
+</head>
+<body>
+  <main id="top">
+    <header class="intro">
+      <p class="eyebrow">discern Design System · CLI review</p>
+      <h1>Keyboard Markdown browser</h1>
+      <p>Five deterministic terminal postures rendered from the package's real browser state and renderer. Geometry metrics are conformance facts; repeated-line notices are advisory review cues for intentional Markdown spacing.</p>
+      <p><a href="/catalogue/?surface=cli#terminal-layout-markdown-browser">Open the interactive Catalogue recipe</a></p>
+    </header>
+    ${sections}
+  </main>
+</body>
+</html>
+`;
 }
