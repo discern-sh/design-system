@@ -3,6 +3,25 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 
+/** Logical alignment supported by rich Table header and data cells. */
+export type TableCellAlignment = "start" | "center" | "end";
+
+/** Namespaced cell hook consumed by Table's own alignment rules. */
+export interface TableCellAlignmentProps {
+  readonly "data-discern-table-align"?: TableCellAlignment;
+}
+
+/**
+ * Project one optional logical alignment into the Table-owned cell contract.
+ */
+export function tableCellAlignmentProps(
+  alignment: TableCellAlignment | undefined,
+): TableCellAlignmentProps {
+  return alignment === undefined
+    ? {}
+    : { "data-discern-table-align": alignment };
+}
+
 /** Props for the {@linkcode Table} component. */
 export interface TableProps extends HTMLAttributes<HTMLDivElement> {
   readonly caption?: ReactNode;

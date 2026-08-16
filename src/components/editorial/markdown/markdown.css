@@ -1,0 +1,24 @@
+@layer discern.components {
+  .discern-markdown {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .discern-markdown :where(img) {
+    max-inline-size: 100%;
+    block-size: auto;
+  }
+
+  .discern-markdown__footnote-reference {
+    line-height: 0;
+  }
+
+  .discern-markdown__footnote-reference > a {
+    display: inline-flex;
+    min-inline-size: 24px;
+    min-block-size: 24px;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--discern-font-size-xs);
+  }
+}

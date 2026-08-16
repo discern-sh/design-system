@@ -184,6 +184,9 @@ const renderHeadingCli: CliRenderer<HeadingCliProps> = (
       [{ text: props.text, style: theme.typography.display }],
       capabilities,
     )
+    : props.content === "" ||
+        (Array.isArray(props.content) && props.content.length === 0)
+    ? ""
     : renderSemanticInlineContent(props.content, capabilities, {
       ...(props.theme === undefined ? {} : { theme: props.theme }),
       baseRole: "display",

@@ -163,6 +163,22 @@ Deno.test("Callout preserves rich Component children inside its owned frame", ()
   );
 });
 
+Deno.test("Callout preserves a marker-only rich note as an empty semantic frame", () => {
+  const capabilities = testTerminalCapabilities({
+    columns: 24,
+    colorDepth: "none",
+  });
+  assertExactFrame(
+    renderCalloutCli({
+      title: "Note",
+      tone: "note",
+      children: [],
+    }, capabilities),
+    "┌ Note ────────────────┐\n│                      │\n└──────────────────────┘",
+    capabilities,
+  );
+});
+
 const codeListingProps = {
   filename: "brief.ts",
   language: "ts",

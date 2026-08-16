@@ -248,7 +248,7 @@ function safeDestination(value: unknown, path: string): string {
   if (value.includes("\\") || ENCODED_CONTROL.test(value)) {
     return validationError(path, "contains an unsafe URL character");
   }
-  const scheme = EXPLICIT_SCHEME.exec(value)?.[1]?.toLocaleLowerCase();
+  const scheme = EXPLICIT_SCHEME.exec(value)?.[1]?.toLowerCase();
   if (scheme !== undefined && !SAFE_DESTINATION_PROTOCOLS.has(`${scheme}:`)) {
     return validationError(
       path,

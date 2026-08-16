@@ -183,6 +183,8 @@ export { default as renderTableOfContentsCli, cliExamples as tableOfContentsCliE
 export type { TableOfContentsCliProps } from "../components/editorial/table-of-contents/table-of-contents.cli.ts";
 export { default as renderProseCli, cliExamples as proseCliExamples } from "../components/editorial/prose/prose.cli.ts";
 export type { ProseCliProps } from "../components/editorial/prose/prose.cli.ts";
+export { default as renderMarkdownCli, cliExamples as markdownCliExamples } from "../components/editorial/markdown/markdown.cli.ts";
+export type { MarkdownCliProps } from "../components/editorial/markdown/markdown.cli.ts";
 export { default as renderParagraphCli, cliExamples as paragraphCliExamples } from "../components/editorial/paragraph/paragraph.cli.ts";
 export type { ParagraphCliProps } from "../components/editorial/paragraph/paragraph.cli.ts";
 export { default as renderListCli, cliExamples as listCliExamples } from "../components/editorial/list/list.cli.ts";

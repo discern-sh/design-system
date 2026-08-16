@@ -116,6 +116,7 @@ export const cliComponentRegistry = {
   "article-layout": { stance: "rendered", modulePath: "../components/editorial/article-layout/article-layout.cli.ts" },
   "table-of-contents": { stance: "rendered", modulePath: "../components/editorial/table-of-contents/table-of-contents.cli.ts" },
   "prose": { stance: "rendered", modulePath: "../components/editorial/prose/prose.cli.ts" },
+  "markdown": { stance: "rendered", modulePath: "../components/editorial/markdown/markdown.cli.ts" },
   "paragraph": { stance: "rendered", modulePath: "../components/editorial/paragraph/paragraph.cli.ts" },
   "list": { stance: "rendered", modulePath: "../components/editorial/list/list.cli.ts" },
   "key-points": { stance: "rendered", modulePath: "../components/editorial/key-points/key-points.cli.ts" },

@@ -269,6 +269,25 @@ Deno.test("Heading rich no-colour fallback is exact, lossless, and width-bounded
   }
 });
 
+Deno.test("Heading preserves structurally empty rich headings", () => {
+  const capabilities = testTerminalCapabilities({
+    columns: 24,
+    colorDepth: "none",
+  });
+  for (const content of ["", []] as const) {
+    assertExactFrame(
+      renderHeadingCli({
+        content,
+        level: 1,
+        overflow: "wrap",
+        leadingBlankLines: 0,
+      }, capabilities),
+      "# ",
+      capabilities,
+    );
+  }
+});
+
 Deno.test("Heading rich path validates hostile content and impossible wrapped prefixes", () => {
   const capabilities = testTerminalCapabilities({ columns: 32 });
   for (const content of ["unsafe\u001btext", "unsafe\u200btext"]) {

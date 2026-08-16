@@ -85,9 +85,6 @@ const renderCalloutCli: CliRenderer<CalloutCliProps> = (
   if (props.title.trim() === "" || (hasBody && props.body.trim() === "")) {
     throw new TypeError("callout title and body must be non-empty");
   }
-  if (hasChildren && props.children.length === 0) {
-    throw new TypeError("callout rich children must be non-empty");
-  }
   const width = props.maxWidth ?? capabilities.columns;
   if (!Number.isSafeInteger(width) || width < 5) {
     throw new TypeError(
@@ -101,6 +98,8 @@ const renderCalloutCli: CliRenderer<CalloutCliProps> = (
     : `${props.eyebrow.toLocaleUpperCase()}: ${props.title}`;
   const body = hasBody
     ? props.body
+    : props.children.length === 0
+    ? ""
     : renderCliBlocks(props.children, capabilities, {
       maxWidth: Math.min(width, capabilities.columns) - 4,
     });

@@ -112,6 +112,7 @@ export * from "../components/editorial/article-header/mod.ts";
 export * from "../components/editorial/article-layout/mod.ts";
 export * from "../components/editorial/table-of-contents/mod.ts";
 export * from "../components/editorial/prose/mod.ts";
+export * from "../components/editorial/markdown/mod.ts";
 export * from "../components/editorial/paragraph/mod.ts";
 export * from "../components/editorial/list/mod.ts";
 export * from "../components/editorial/key-points/mod.ts";
