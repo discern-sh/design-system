@@ -35,6 +35,7 @@ import {
   type PlaygroundJourney,
   type PlaygroundRuntime,
 } from "../../scripts/playground/types.ts";
+import { documentChoices } from "../../scripts/playground/fixtures.ts";
 import {
   createPlaygroundRuntime,
   renderJourneyList,
@@ -162,6 +163,46 @@ Deno.test("Timeline and stepper status review has a direct journey", async () =>
   );
   assertStringIncludes(io.output(), " ◭  Completed");
   assertStringIncludes(io.output(), "⧩ Now — Current [current]");
+});
+
+Deno.test("reading-foundation journeys expose path search and compact cleanup", async () => {
+  const pathMatches = interactiveAdapter.filterInteractionEntries(
+    documentChoices,
+    "design-principles.md",
+  );
+  assertEquals(
+    pathMatches.map(({ id }) => id),
+    ["heading-orientation", "design-principles"],
+  );
+
+  const browsing = new FakeTerminalIO([ENTER], { columns: 60 });
+  assertEquals(
+    await runJourney(journey("browse-documents"), testRuntime(browsing)),
+    "completed",
+  );
+  assertStringIncludes(browsing.output(), "Design principles");
+  assertStringIncludes(browsing.output(), "design-principles.md");
+  assertStringIncludes(
+    browsing.output(),
+    'Result: string "00-orientation/design-principles.md"',
+  );
+  assert(!browsing.output().includes("[active]"));
+  assert(!browsing.output().includes("Submitted"));
+
+  const continuation = new FakeTerminalIO([ENTER], { columns: 60 });
+  assertEquals(
+    await runJourney(
+      journey("acknowledge-compact"),
+      testRuntime(continuation),
+    ),
+    "completed",
+  );
+  assertStringIncludes(continuation.output(), "Press Enter to continue.");
+  assertStringIncludes(
+    continuation.output(),
+    "Result: compact acknowledgement cleared.",
+  );
+  assert(!continuation.output().includes("Submitted"));
 });
 
 Deno.test("--list works without a terminal", async () => {

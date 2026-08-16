@@ -46,6 +46,7 @@ import { describeCapabilities, renderTerminalFacts } from "./banner.ts";
 import { runBrowseJourney } from "./browse.ts";
 import { runHeadingVariantsJourney } from "./heading-variants.ts";
 import {
+  documentChoices,
   longGroupedChoices,
   searchGroupedEntries,
   spacingChoices,
@@ -274,6 +275,25 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
     },
   },
   {
+    id: "browse-documents",
+    title: "Document browsing presentation",
+    section: "Interactive APIs",
+    description:
+      "Titles lead, paths recede, path queries retain their group, and the completed picker clears before its result prints.",
+    run: async (runtime) => {
+      const value = await requestSearch({
+        label: "Browse documents",
+        search: documentChoices,
+        initialId: "design-principles",
+        placeholder: "Type a title or path",
+        hint: "Try design-principles.md; Enter opens the highlighted path.",
+        presentation: "browsing",
+        completion: "clear-frame",
+      }, { io: runtime.io });
+      report(runtime, value);
+    },
+  },
+  {
     id: "multiselect",
     title: "Multiselection",
     section: "Interactive APIs",
@@ -386,6 +406,20 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
         hint: "Press Enter or Space to continue.",
       }, { io: runtime.io });
       runtime.print("Result: acknowledged (void).");
+    },
+  },
+  {
+    id: "acknowledge-compact",
+    title: "Compact acknowledgement",
+    section: "Interactive APIs",
+    description:
+      "One continuation hint below caller-owned output; Enter or Space clears it before returning.",
+    run: async (runtime) => {
+      runtime.print("Caller-owned document content ends here.");
+      await requestAcknowledgement({ presentation: "compact" }, {
+        io: runtime.io,
+      });
+      runtime.print("Result: compact acknowledgement cleared.");
     },
   },
   {
@@ -1072,6 +1106,10 @@ export const interactiveExportCoverage: Readonly<
     excluded:
       "Public cancellation outcome; the journey wrapper catches it on every run.",
   },
+  InteractionFrameCleanupError: {
+    excluded:
+      "Typed clear-frame refusal; the compact acknowledgement and document-browsing journeys exercise successful cleanup.",
+  },
   NonInteractiveTerminalError: {
     excluded:
       "Refusal signal; the playground entry reports it for non-TTY runs.",
@@ -1103,6 +1141,10 @@ export const interactiveExportCoverage: Readonly<
   isNamedKey: {
     excluded:
       "Key predicate for interaction machines; no interactive surface of its own.",
+  },
+  filterInteractionEntries: {
+    excluded:
+      "Pure static choice matcher exercised by the document-browsing journey's title and path source.",
   },
   HIDE_TERMINAL_CURSOR: {
     excluded:

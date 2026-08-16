@@ -6,9 +6,10 @@
  * @module
  */
 
-import type {
-  InteractionChoice,
-  InteractionEntry,
+import {
+  filterInteractionEntries,
+  type InteractionChoice,
+  type InteractionEntry,
 } from "../../src/cli/interactive/mod.ts";
 
 /** Flat swatch list with duplicate visible labels and one disabled entry. */
@@ -50,6 +51,47 @@ export const tokenRoleChoices = [
     id: "inverse",
     label: "Inverse (reserved)",
     value: "inverse",
+    disabled: true,
+  },
+] as const satisfies readonly InteractionEntry<string>[];
+
+/** Document-shaped choices that exercise semantic titles and quieter paths. */
+export const documentChoices = [
+  {
+    kind: "group-heading",
+    id: "heading-orientation",
+    label: "Orientation",
+    description: "00-orientation/",
+  },
+  {
+    id: "design-principles",
+    label: "Design principles",
+    description: "design-principles.md",
+    value: "00-orientation/design-principles.md",
+  },
+  {
+    id: "cli-rendering",
+    label: "CLI rendering",
+    description: "70-cli/README.md",
+    value: "70-cli/README.md",
+  },
+  {
+    kind: "group-heading",
+    id: "heading-decisions",
+    label: "Architecture decisions",
+    description: "_adr/",
+  },
+  {
+    id: "semantic-inline",
+    label: "Own semantic inline content",
+    description: "0019-own-semantic-inline-content.md",
+    value: "_adr/0019-own-semantic-inline-content.md",
+  },
+  {
+    id: "legacy-terminal-contract",
+    label: "Legacy terminal contract",
+    description: "0002-react-free-cli-renderer-contract.md",
+    value: "_adr/0002-react-free-cli-renderer-contract.md",
     disabled: true,
   },
 ] as const satisfies readonly InteractionEntry<string>[];
@@ -156,28 +198,12 @@ export const tokenNameSuggestions = [
 ] as const;
 
 /**
- * Filter grouped entries by a case-insensitive label match, keeping each
- * group heading exactly when at least one of its choices matches.
+ * Keep async Playground providers around the package-owned static matcher,
+ * which matches labels and descriptions while retaining group structure.
  */
 export function searchGroupedEntries<T>(
   entries: readonly InteractionEntry<T>[],
   query: string,
 ): readonly InteractionEntry<T>[] {
-  const needle = query.trim().toLocaleLowerCase();
-  const results: InteractionEntry<T>[] = [];
-  let pendingHeading: InteractionEntry<T> | undefined;
-  for (const entry of entries) {
-    if (entry.kind === "group-heading") {
-      pendingHeading = entry;
-      continue;
-    }
-    if (needle === "" || entry.label.toLocaleLowerCase().includes(needle)) {
-      if (pendingHeading !== undefined) {
-        results.push(pendingHeading);
-        pendingHeading = undefined;
-      }
-      results.push(entry);
-    }
-  }
-  return results;
+  return filterInteractionEntries(entries, query.trim());
 }
