@@ -32,8 +32,8 @@ Everything the builder knows is derived — it adds no authored metadata anywher
 
 ## Where it lives
 
-| Concern                                    | Authority                                                         |
-| ------------------------------------------ | ----------------------------------------------------------------- |
+| Concern                                    | Authority                                                        |
+| ------------------------------------------ | ---------------------------------------------------------------- |
 | Document model and tree operations         | [`model.ts`](../../catalogue/builder/model.ts)                   |
 | Control derivation and default synthesis   | [`controls.ts`](../../catalogue/builder/controls.ts)             |
 | TSX, selection, and JSON export            | [`export.ts`](../../catalogue/builder/export.ts)                 |
@@ -42,4 +42,4 @@ Everything the builder knows is derived — it adds no authored metadata anywher
 | Registry lookups and adapter resolution    | [`registry-index.ts`](../../catalogue/builder/registry-index.ts) |
 | Shared canvas/test renderer                | [`render.tsx`](../../catalogue/builder/render.tsx)               |
 | Builder chrome and interactions            | [`app.tsx`](../../catalogue/builder/app.tsx)                     |
-| Class-level guarantees for every Component | [`builder_test.ts`](../../tests/builder_test.ts)                  |
+| Class-level guarantees for every Component | [`builder_test.ts`](../../tests/builder_test.ts)                 |
