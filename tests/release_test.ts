@@ -224,6 +224,7 @@ import {
   type CompactAcknowledgementRequestOptions,
   filterInteractionEntries,
   requestAcknowledgement,
+  requestMarkdownBrowser,
   requestText,
   segmentGraphemes,
 } from "${config.name}/cli/interactive";
@@ -254,6 +255,28 @@ const acknowledgementIo = new FakeTerminalIO(
   { colorDepth: "truecolor", columns: 40 },
 );
 await requestAcknowledgement(acknowledgement, { io: acknowledgementIo });
+const browserIo = new FakeTerminalIO(
+  ["online", encodeTerminalKeys("enter")],
+  { colorDepth: "truecolor", columns: 40, rows: 24 },
+);
+const browserResult = await requestMarkdownBrowser({
+  label: "Documentation",
+  entries: [
+    {
+      kind: "document",
+      id: "guide",
+      label: "Guide",
+      path: "guides/guide.md",
+      source: "# Guide\\n\\nPublished Markdown browser.",
+    },
+    {
+      kind: "action",
+      id: "online",
+      label: "Read online",
+      value: "online",
+    },
+  ],
+}, { io: browserIo });
 const documentMatches = filterInteractionEntries(
   [{
     id: "guide",
@@ -284,6 +307,9 @@ console.log(JSON.stringify({
   package: packageManifest.package,
   requested,
   compactRawModeBalanced: acknowledgementIo.rawTransitions.join(","),
+  browserKind: browserResult.kind,
+  browserRawModeBalanced: browserIo.rawTransitions.join(","),
+  browserResizeListeners: browserIo.resizeListenerCount,
   documentMatch: documentMatches[0]?.id,
   headingIncludesReading: readingHeading.includes("Reading foundations"),
   rawModeBalanced: io.rawTransitions.join(","),
@@ -307,6 +333,9 @@ console.log(JSON.stringify({
     assertStringIncludes(output, `"package":"${config.name}"`);
     assertStringIncludes(output, `"requested":"Ada"`);
     assertStringIncludes(output, `"compactRawModeBalanced":"true,false"`);
+    assertStringIncludes(output, `"browserKind":"action"`);
+    assertStringIncludes(output, `"browserRawModeBalanced":"true,false"`);
+    assertStringIncludes(output, `"browserResizeListeners":0`);
     assertStringIncludes(output, `"documentMatch":"guide"`);
     assertStringIncludes(output, `"headingIncludesReading":true`);
     assertStringIncludes(output, `"rawModeBalanced":"true,false"`);

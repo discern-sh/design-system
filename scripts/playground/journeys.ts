@@ -11,9 +11,12 @@
 import {
   createSequentialForm,
   InteractionCancelled,
+  MarkdownBrowserRefusalError,
+  type MarkdownBrowserResult,
   requestAcknowledgement,
   requestAutocomplete,
   requestConfirmation,
+  requestMarkdownBrowser,
   requestMaskedText,
   requestSearch,
   requestSearchSelections,
@@ -48,6 +51,7 @@ import { runHeadingVariantsJourney } from "./heading-variants.ts";
 import {
   documentChoices,
   longGroupedChoices,
+  markdownBrowserEntries,
   searchGroupedEntries,
   spacingChoices,
   swatchChoices,
@@ -291,6 +295,37 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
         completion: "clear-frame",
       }, { io: runtime.io });
       report(runtime, value);
+    },
+  },
+  {
+    id: "markdown-browser",
+    title: "Keyboard Markdown browser",
+    section: "Interactive APIs",
+    description:
+      "A full-height grouped picker becomes an adaptive split reader; panes scroll independently and returned actions run only after terminal restoration.",
+    run: async (runtime) => {
+      let result: MarkdownBrowserResult<string>;
+      try {
+        result = await requestMarkdownBrowser({
+          label: "Documentation library",
+          placeholder: "Search titles, descriptions, and paths",
+          entries: markdownBrowserEntries,
+        }, { io: runtime.io });
+      } catch (error) {
+        if (error instanceof MarkdownBrowserRefusalError) {
+          runtime.print(
+            `Result: Markdown browser refused ${error.columns}×${error.rows} (${error.reason}); no frame was drawn.`,
+          );
+          return;
+        }
+        throw error;
+      }
+      report(runtime, result);
+      if (result.kind === "action") {
+        runtime.print(
+          "Caller effect point: the terminal is restored; this playground deliberately opens nothing.",
+        );
+      }
     },
   },
   {
@@ -1084,12 +1119,37 @@ export const interactiveExportCoverage: Readonly<
   requestSearch: { journey: "search" },
   requestSearchSelections: { journey: "search-multiselect" },
   requestAutocomplete: { journey: "autocomplete" },
+  requestMarkdownBrowser: { journey: "markdown-browser" },
   requestTextarea: { journey: "textarea" },
   createSequentialForm: { journey: "form" },
   withSpinner: { journey: "spinner" },
   withDeterminateProgress: { journey: "progress" },
   withActivityLog: { journey: "activity-log" },
   senseTerminalBackground: { journey: "background" },
+  createMarkdownBrowserState: {
+    excluded:
+      "Pure state construction exercised by the Markdown browser journey and Catalogue inspector.",
+  },
+  filterMarkdownBrowserEntries: {
+    excluded:
+      "Pure grouped matcher exercised inside the Markdown browser journey.",
+  },
+  markdownBrowserResumableState: {
+    excluded:
+      "Pure stable-state projection returned by the Markdown browser journey.",
+  },
+  transitionMarkdownBrowser: {
+    excluded:
+      "Pure semantic transition authority driven through requestMarkdownBrowser.",
+  },
+  renderMarkdownBrowser: {
+    excluded:
+      "Pure complete-frame renderer shown by the Catalogue inspector and driven by requestMarkdownBrowser.",
+  },
+  MarkdownBrowserRefusalError: {
+    excluded:
+      "Typed capability and geometry refusal; the journey entry reports it when the live terminal cannot begin safely.",
+  },
   denoTerminalSignals: {
     excluded:
       "Process SIGINT source installed by default inside every lifecycle bracket; the interrupt journeys exercise it live.",

@@ -189,6 +189,23 @@ Deno.test("reading-foundation journeys expose path search and compact cleanup", 
   assert(!browsing.output().includes("[active]"));
   assert(!browsing.output().includes("Submitted"));
 
+  const reader = new FakeTerminalIO(["docs online\r"], {
+    columns: 80,
+    rows: 24,
+  });
+  assertEquals(
+    await runJourney(journey("markdown-browser"), testRuntime(reader)),
+    "completed",
+  );
+  assertStringIncludes(reader.output(), '"kind":"action"');
+  assertStringIncludes(reader.output(), '"value":"read-online"');
+  assertStringIncludes(
+    reader.output(),
+    "Caller effect point: the terminal is restored",
+  );
+  assertEquals(reader.rawTransitions, [true, false]);
+  assertEquals(reader.resizeListenerCount, 0);
+
   const continuation = new FakeTerminalIO([ENTER], { columns: 60 });
   assertEquals(
     await runJourney(

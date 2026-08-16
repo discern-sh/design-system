@@ -10,6 +10,7 @@ import {
   filterInteractionEntries,
   type InteractionChoice,
   type InteractionEntry,
+  type MarkdownBrowserEntry,
 } from "../../src/cli/interactive/mod.ts";
 
 /** Flat swatch list with duplicate visible labels and one disabled entry. */
@@ -95,6 +96,86 @@ export const documentChoices = [
     disabled: true,
   },
 ] as const satisfies readonly InteractionEntry<string>[];
+
+/** Grouped caller-owned Markdown and explicit actions for the reader journey. */
+export const markdownBrowserEntries = [
+  {
+    kind: "group-heading",
+    id: "guides",
+    label: "Guides",
+    description: "Practical package integration guides",
+  },
+  {
+    kind: "document",
+    id: "getting-started",
+    label: "Getting started",
+    description: "A complete keyboard reading walkthrough",
+    path: "guides/getting-started.md",
+    source: `# Getting started
+
+Search the grouped picker, then press Enter to open a document.
+
+> The picker and document keep independent scroll positions.
+
+## Keyboard
+
+- Type to search while the picker has focus.
+- Use **Tab** and **Shift+Tab** to move between panes.
+- Use Page Up, Page Down, Home, and End in the focused pane.
+- Press Escape or \`q\` in the document to return to the full-height picker.
+
+| Terminal | Layout |
+| --- | --- |
+| Ordinary height | Split picker and reader |
+| Constrained height | One focused pane |
+
+[Read the public guide](https://example.com/design-system/reader)
+
+${
+      Array.from(
+        { length: 24 },
+        (_, index) =>
+          `Reading landmark ${index + 1} remains meaningful after rewrapping.`,
+      ).join("\n\n")
+    }`,
+  },
+  {
+    kind: "document",
+    id: "testing",
+    label: "Testing the interaction",
+    description: "Scripted keys, resizes, and restoration",
+    path: "guides/testing.md",
+    source: `# Testing the interaction
+
+Drive the real adapter with a fake terminal and semantic resize events.
+
+\`\`\`ts
+enqueueTerminalEvents(io, events);
+await requestMarkdownBrowser(options, { io });
+\`\`\`
+
+Assert the typed result only after the terminal has been restored.`,
+  },
+  {
+    kind: "group-heading",
+    id: "actions",
+    label: "Actions",
+    description: "Return to the caller before performing an effect",
+  },
+  {
+    kind: "action",
+    id: "read-online",
+    label: "Read the docs online",
+    description: "The playground reports the returned action only",
+    value: "read-online",
+  },
+  {
+    kind: "exit",
+    id: "quit",
+    label: "Quit",
+    description: "Leave the Markdown browser",
+  },
+] as const satisfies readonly MarkdownBrowserEntry<string>[];
 
 /**
  * Long grouped list: 26 selectable entries across four headed groups, with a

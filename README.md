@@ -13,7 +13,7 @@ deno add jsr:@discern-sh/design-system
 | `@discern-sh/design-system`                         | Token metadata, component/group metadata types, the package manifest, and `semanticClass` |
 | `@discern-sh/design-system/cli`                     | Pure React-free terminal renderers, capabilities, themes, and semantic motif primitives   |
 | `@discern-sh/design-system/cli/interactive`         | Optional Deno terminal driver and typed interaction state machines                        |
-| `@discern-sh/design-system/cli/interactive/testing` | Deterministic fake terminal, named-key scripting, and frame assertions                    |
+| `@discern-sh/design-system/cli/interactive/testing` | Deterministic fake terminal, semantic key/resize scripts, and frame assertions            |
 | `@discern-sh/design-system/cli/projection`          | Package-output decoding, browser projection, and explicit layout inspection               |
 | `@discern-sh/design-system/manifest`                | Framework-neutral manifest schema and the complete package ownership manifest             |
 | `@discern-sh/design-system/runtime`                 | Deterministic selected-runtime emitter                                                    |
@@ -242,6 +242,46 @@ const environment = await requestSelection({
 ```
 
 The `group-heading` entry is semantic interaction structure: it has a stable ID and non-empty label, needs no sentinel value of the caller's generic type, and can never be highlighted, toggled, or returned. Every rendered heading has one empty framed row above it. Disabled choices remain selectable entries with their own visible disabled state. Scrolling Select, Radio, Checkbox, and search frames use all available terminal columns unless an explicit `width` narrows them; wrapped labels keep their marker-aligned hanging indent and styling as the highlight moves. Select and search `visibleCount` plus Textarea `rows` are requested upper bounds: the adapter reduces only the current visible window when terminal height is tight and expands it again after a resize. A quiet lower-border label such as `↑ 2 more · ↓ 7 more` states how many choices remain outside the window, with `^`, `v`, and `|` fallbacks in ASCII. Search accepts `initialId` to restore an enabled provider result by stable ID without inventing a query or keypress.
+
+`requestMarkdownBrowser()` owns a complete keyboard viewport for caller-supplied Markdown. The picker uses the full height until a document opens, then the picker and document receive adaptive, independently scrollable panes; constrained terminals show one focused pane at a time. Documents always pass through the package Markdown renderer, while actions return as typed data after raw mode, cursor visibility, resize observation, and the normal screen have been restored:
+
+```ts
+import {
+  type MarkdownBrowserResumableState,
+  requestMarkdownBrowser,
+} from "@discern-sh/design-system/cli/interactive";
+
+let resume: MarkdownBrowserResumableState | undefined;
+const result = await requestMarkdownBrowser({
+  label: "Documentation",
+  entries: [
+    { kind: "group-heading", id: "guides", label: "Guides" },
+    {
+      kind: "document",
+      id: "start",
+      label: "Getting started",
+      path: "guides/getting-started.md",
+      source: "# Getting started\n\nCaller-supplied Markdown.",
+    },
+    {
+      kind: "action",
+      id: "online",
+      label: "Read the docs online",
+      value: { kind: "open", href: "https://example.test/docs" },
+    },
+    { kind: "exit", id: "quit", label: "Quit" },
+  ],
+  ...(resume === undefined ? {} : { initialState: resume }),
+}, { theme: "dark", motif: productMotif });
+
+resume = result.state;
+if (result.kind === "action") {
+  // The terminal is restored here; the consumer may now perform its effect.
+  console.log(result.value.href);
+}
+```
+
+Picker focus owns grapheme-aware typing, Up/Down, Ctrl+P/Ctrl+N, Page Up/Page Down, Home/End, and Enter. Document focus assigns the scrolling keys to Markdown; Tab and Shift+Tab change panes, while Escape or `q` closes the document. Escape in the full picker, Ctrl+C, and EOF use `InteractionCancelled`. `MarkdownBrowserRefusalError` reports unsupported ANSI control or geometry too small for one coherent pane before the initial terminal mutation. Pure `createMarkdownBrowserState()`, `transitionMarkdownBrowser()`, and `renderMarkdownBrowser()` exports support deterministic state and frame tests without terminal effects.
 
 Full-width section headings use one restrained motif marker rather than a repeated field. The presenter's `motifSectionRule()` binds its theme, motif, and capabilities, defaults to the one-row strong embedded treatment, and also exposes explicit underline and sandwich variants:
 
