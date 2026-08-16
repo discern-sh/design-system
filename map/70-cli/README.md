@@ -6,6 +6,8 @@ The React-free CLI surface has four entrypoints. `./cli` renders deterministic t
 
 [ADR-0022](../_adr/0022-browse-markdown-in-an-owned-terminal-viewport.md) records why the Markdown browser owns an alternate-screen viewport, pure pane state, adaptive split/single layouts, and resumable action returns instead of extending the inline form painter.
 
+[ADR-0024](../_adr/0024-address-markdown-links-with-sgr-mouse-events.md) records the additive semantic input model, opt-in SGR mouse lifecycle, projected link identities and cell regions, caller-owned destination resolution, and restoration-before-external-effect boundary.
+
 [ADR-0023](../_adr/0023-bind-terminal-motifs-to-narrow-a-geometry.md) records the package-wide narrow-A geometry, why motif validation follows the shared width authority, and why alternate wide-A terminal support is a separate repo-wide capability.
 
 ## Boundary and data flow

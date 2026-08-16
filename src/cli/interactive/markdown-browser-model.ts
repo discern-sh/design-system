@@ -104,7 +104,74 @@ export interface MarkdownBrowserLayout {
 /** Optional typed feedback presented by a browser frame. */
 export type MarkdownBrowserFeedback =
   | { readonly kind: "no-matches"; readonly message: string }
-  | { readonly kind: "boundary"; readonly message: string };
+  | { readonly kind: "boundary"; readonly message: string }
+  | { readonly kind: "unresolved-link"; readonly message: string };
+
+/** Public resolver fact for one caller-admitted Markdown document. */
+export interface MarkdownBrowserDocumentFact {
+  readonly id: string;
+  readonly label: string;
+  readonly path: string;
+}
+
+/** Context supplied when an admitted Markdown link needs caller resolution. */
+export interface MarkdownBrowserLinkResolverInput {
+  readonly sourceDocumentId: string;
+  readonly sourcePath: string;
+  readonly destination: string;
+  readonly availableDocuments: readonly MarkdownBrowserDocumentFact[];
+}
+
+/** Closed outcomes a caller may return from Markdown link resolution. */
+export type MarkdownBrowserLinkResolution =
+  | {
+    readonly kind: "document";
+    readonly documentId: string;
+    readonly fragment?: string;
+  }
+  | { readonly kind: "fragment"; readonly fragment: string }
+  | { readonly kind: "external"; readonly destination: string }
+  | { readonly kind: "unresolved"; readonly message?: string };
+
+/** Caller-owned, effect-free resolution of one admitted Markdown link. */
+export type MarkdownBrowserLinkResolver = (
+  input: MarkdownBrowserLinkResolverInput,
+) => MarkdownBrowserLinkResolution | Promise<MarkdownBrowserLinkResolution>;
+
+/** How the currently addressed link acquired focus. */
+export type MarkdownBrowserLinkFocusOrigin = "keyboard" | "pointer";
+
+/** Stable focus on one logical link occurrence across its wrapped rows. */
+export interface MarkdownBrowserLinkFocus {
+  readonly id: string;
+  readonly origin: MarkdownBrowserLinkFocusOrigin;
+}
+
+/** One inclusive terminal-cell range occupied by a visible link row. */
+export interface MarkdownBrowserLinkRegion {
+  /** One-based content row inside the document pane. */
+  readonly row: number;
+  /** One-based inclusive column inside the document pane. */
+  readonly startColumn: number;
+  /** One-based inclusive column inside the document pane. */
+  readonly endColumn: number;
+}
+
+/** Position of a logical link occurrence relative to the document viewport. */
+export type MarkdownBrowserLinkVisibility = "visible" | "above" | "below";
+
+/** Addressable occurrence derived from neutral Markdown and cell projection. */
+export interface MarkdownBrowserLinkOccurrence {
+  readonly id: string;
+  readonly destination: string;
+  readonly sourceDocumentId: string;
+  readonly sourcePath: string;
+  readonly documentStartRow: number;
+  readonly documentEndRow: number;
+  readonly regions: readonly MarkdownBrowserLinkRegion[];
+  readonly visibility: MarkdownBrowserLinkVisibility;
+  readonly focused: boolean;
+}
 
 /** Stable state safe to retain while a caller performs an external action. */
 export interface MarkdownBrowserResumableState {
@@ -118,6 +185,7 @@ export interface MarkdownBrowserResumableState {
   readonly documentScrollOffset: number;
   /** Visible-text anchor used to preserve meaning across rewrapping. */
   readonly documentAnchor?: string;
+  readonly linkFocus?: MarkdownBrowserLinkFocus;
 }
 
 /** Public construction options for one Markdown browsing operation. */
@@ -132,6 +200,10 @@ export interface MarkdownBrowserOptions<Action> {
   readonly documentMinimumRows?: number;
   /** Readable Markdown measure; bounded by the document pane. */
   readonly documentMeasure?: number;
+  /** Enable SGR mouse tracking when terminal control has not refused it. */
+  readonly mouse?: boolean;
+  /** Resolve admitted document destinations without performing effects. */
+  readonly resolveLink?: MarkdownBrowserLinkResolver;
 }
 
 /** Explicit terminal dimensions used by pure browser state construction. */
@@ -155,6 +227,7 @@ export interface MarkdownBrowserState<Action> {
   readonly pickerVisibleStart: number;
   readonly documentScrollOffset: number;
   readonly documentAnchor?: string;
+  readonly linkFocus?: MarkdownBrowserLinkFocus;
   readonly columns: number;
   readonly rows: number;
   readonly layout: MarkdownBrowserLayout;
@@ -181,10 +254,22 @@ export interface MarkdownBrowserExitResult {
   readonly state: MarkdownBrowserResumableState;
 }
 
+/** Safe external destination returned only after terminal restoration. */
+export interface MarkdownBrowserExternalLinkResult {
+  readonly kind: "external-link";
+  /** Stable logical link occurrence that produced the external action. */
+  readonly id: string;
+  readonly destination: string;
+  readonly sourceDocumentId: string;
+  readonly sourcePath: string;
+  readonly state: MarkdownBrowserResumableState;
+}
+
 /** Every non-cancellation value returned by `requestMarkdownBrowser`. */
 export type MarkdownBrowserResult<Action> =
   | MarkdownBrowserActionResult<Action>
-  | MarkdownBrowserExitResult;
+  | MarkdownBrowserExitResult
+  | MarkdownBrowserExternalLinkResult;
 
 /** Why browser geometry or terminal control cannot safely begin or continue. */
 export type MarkdownBrowserRefusalReason =

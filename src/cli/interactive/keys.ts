@@ -43,6 +43,73 @@ export type TerminalKey =
   | { readonly kind: "named"; readonly name: TerminalKeyName }
   | { readonly kind: "unknown"; readonly sequence: string };
 
+/** Largest one-based terminal-cell coordinate accepted from mouse input. */
+export const TERMINAL_MOUSE_MAX_COORDINATE = 1_000_000;
+
+/** Modifier bits carried by one SGR mouse report. */
+export interface TerminalMouseModifiers {
+  readonly shift: boolean;
+  readonly alt: boolean;
+  readonly control: boolean;
+}
+
+/** Addressable buttons reported by the selected SGR mouse protocol. */
+export type TerminalMouseButton = "left" | "middle" | "right";
+
+/** One SGR mouse button press at a one-based terminal cell. */
+export interface TerminalMousePressEvent {
+  readonly kind: "mouse";
+  readonly action: "press";
+  readonly button: TerminalMouseButton;
+  readonly column: number;
+  readonly row: number;
+  readonly modifiers: TerminalMouseModifiers;
+}
+
+/** One SGR mouse button release at a one-based terminal cell. */
+export interface TerminalMouseReleaseEvent {
+  readonly kind: "mouse";
+  readonly action: "release";
+  readonly button: TerminalMouseButton;
+  readonly column: number;
+  readonly row: number;
+  readonly modifiers: TerminalMouseModifiers;
+}
+
+/** One vertical SGR mouse wheel event at a one-based terminal cell. */
+export interface TerminalMouseWheelEvent {
+  readonly kind: "mouse";
+  readonly action: "wheel";
+  readonly direction: "up" | "down";
+  readonly column: number;
+  readonly row: number;
+  readonly modifiers: TerminalMouseModifiers;
+}
+
+/** Semantic mouse input admitted by the package decoder. */
+export type TerminalMouseEvent =
+  | TerminalMousePressEvent
+  | TerminalMouseReleaseEvent
+  | TerminalMouseWheelEvent;
+
+/** A complete control report that is not actionable package input. */
+export interface TerminalUnknownInputEvent {
+  readonly kind: "unknown";
+  readonly sequence: string;
+  readonly category: "mouse" | "control";
+  readonly reason: "malformed" | "unsupported" | "unknown-control";
+}
+
+/**
+ * Additive semantic terminal input. Existing key-only callers continue to use
+ * {@linkcode TerminalKeyReader}; event-aware callers use the sibling event
+ * reader so mouse and unknown control reports can never become text.
+ */
+export type TerminalInputEvent =
+  | { readonly kind: "key"; readonly key: TerminalKey }
+  | TerminalMouseEvent
+  | TerminalUnknownInputEvent;
+
 /** Result of tokenizing one decoded terminal text buffer. */
 export interface TerminalKeyTokenization {
   readonly keys: readonly TerminalKey[];

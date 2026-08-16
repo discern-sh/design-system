@@ -27,6 +27,13 @@ export interface TerminalCapabilities {
    * fallback instead.
    */
   readonly hyperlinks?: boolean;
+  /**
+   * Whether SGR mouse tracking may be enabled. `false` is an explicit
+   * refusal; omission means portable detection is unavailable and a
+   * request-level opt-in is the caller's terminal-specific assertion.
+   * This fact is independent of OSC 8 hyperlinks and colour styling.
+   */
+  readonly mouseTracking?: boolean;
   readonly unicode: boolean;
 }
 
