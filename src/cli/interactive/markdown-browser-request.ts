@@ -211,6 +211,7 @@ export async function runMarkdownBrowserRequest<Action>(
   }, {
     ...signalPassthrough(runtime),
     alternateScreen: true,
+    mouseTracking: options.mouse === true,
     onSignalRestore: stopResize,
   });
 }

@@ -2,6 +2,10 @@ import { assert, assertEquals, assertRejects } from "@std/assert";
 import { InteractionCancelled } from "../../src/cli/interactive/errors.ts";
 import type { TerminalIO } from "../../src/cli/interactive/io.ts";
 import {
+  DISABLE_TERMINAL_MOUSE_BUTTON_TRACKING,
+  DISABLE_TERMINAL_MOUSE_SGR_MODE,
+  ENABLE_TERMINAL_MOUSE_BUTTON_TRACKING,
+  ENABLE_TERMINAL_MOUSE_SGR_MODE,
   ENTER_TERMINAL_ALTERNATE_SCREEN,
   HIDE_TERMINAL_CURSOR,
   LEAVE_TERMINAL_ALTERNATE_SCREEN,
@@ -107,6 +111,76 @@ Deno.test("action values resolve only after every terminal effect is restored", 
   assertEquals(result.value, "online");
   assertEquals(result.state.query, "docs online");
   assertRestored(io);
+});
+
+Deno.test("mouse-enabled browser requests restore tracking before the normal screen", async () => {
+  const io = new FakeTerminalIO([encodeTerminalKeys("enter")], {
+    columns: 80,
+    rows: 24,
+  });
+  await requestMarkdownBrowser({
+    ...markdownBrowserOptions,
+    mouse: true,
+    initialState: {
+      query: "docs online",
+      queryCursor: 11,
+      highlightedId: "read-online",
+      focusedPane: "picker",
+      pickerVisibleStart: 0,
+      documentScrollOffset: 0,
+    },
+  }, { io });
+  assertEquals(io.writes.slice(0, 4), [
+    ENTER_TERMINAL_ALTERNATE_SCREEN,
+    ENABLE_TERMINAL_MOUSE_BUTTON_TRACKING,
+    ENABLE_TERMINAL_MOUSE_SGR_MODE,
+    HIDE_TERMINAL_CURSOR,
+  ]);
+  assertEquals(io.writes.slice(-4), [
+    DISABLE_TERMINAL_MOUSE_SGR_MODE,
+    DISABLE_TERMINAL_MOUSE_BUTTON_TRACKING,
+    SHOW_TERMINAL_CURSOR,
+    LEAVE_TERMINAL_ALTERNATE_SCREEN,
+  ]);
+  assertRestored(io);
+});
+
+Deno.test("mouse opt-out and capability refusal emit no tracking controls", async () => {
+  for (
+    const options of [
+      {},
+      { mouse: true, mouseTracking: false },
+    ] as const
+  ) {
+    const io = new FakeTerminalIO([encodeTerminalKeys("enter")], {
+      columns: 80,
+      rows: 24,
+      ...(options.mouseTracking === undefined
+        ? {}
+        : { mouseTracking: options.mouseTracking }),
+    });
+    await requestMarkdownBrowser({
+      ...markdownBrowserOptions,
+      ...(options.mouse === undefined ? {} : { mouse: options.mouse }),
+      initialState: {
+        query: "docs online",
+        queryCursor: 11,
+        highlightedId: "read-online",
+        focusedPane: "picker",
+        pickerVisibleStart: 0,
+        documentScrollOffset: 0,
+      },
+    }, { io });
+    assertEquals(
+      io.writes.some((write) =>
+        write === ENABLE_TERMINAL_MOUSE_BUTTON_TRACKING ||
+        write === ENABLE_TERMINAL_MOUSE_SGR_MODE ||
+        write === DISABLE_TERMINAL_MOUSE_SGR_MODE ||
+        write === DISABLE_TERMINAL_MOUSE_BUTTON_TRACKING
+      ),
+      false,
+    );
+  }
 });
 
 Deno.test("unsupported control and incoherent geometry refuse before any terminal mutation", async () => {

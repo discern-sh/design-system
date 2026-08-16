@@ -20,6 +20,18 @@ export const ENTER_TERMINAL_ALTERNATE_SCREEN = "\x1b[?1049h";
 /** DECRST 1049: leave the alternate screen and restore the normal screen. */
 export const LEAVE_TERMINAL_ALTERNATE_SCREEN = "\x1b[?1049l";
 
+/** DECSET 1000: report button press, release, and wheel input. */
+export const ENABLE_TERMINAL_MOUSE_BUTTON_TRACKING = "\x1b[?1000h";
+
+/** DECRST 1000: return button and wheel input to ordinary terminal handling. */
+export const DISABLE_TERMINAL_MOUSE_BUTTON_TRACKING = "\x1b[?1000l";
+
+/** DECSET 1006: report mouse coordinates in SGR extended form. */
+export const ENABLE_TERMINAL_MOUSE_SGR_MODE = "\x1b[?1006h";
+
+/** DECRST 1006: disable SGR extended mouse reports. */
+export const DISABLE_TERMINAL_MOUSE_SGR_MODE = "\x1b[?1006l";
+
 /** Options accepted by the signal-aware lifecycle brackets. */
 export interface TerminalLifecycleOptions extends TerminalSignalOptions {
   /**
@@ -37,6 +49,8 @@ export interface RawTerminalOptions extends TerminalLifecycleOptions {
   readonly hideCursor?: boolean;
   /** Enter and restore the terminal's alternate screen (default false). */
   readonly alternateScreen?: boolean;
+  /** Enable and restore DECSET 1000 plus 1006 mouse tracking (default false). */
+  readonly mouseTracking?: boolean;
 }
 
 type Outcome<T> =
@@ -68,13 +82,32 @@ async function withTerminalRestoration<T>(
     readonly raw: boolean;
     readonly hideCursor: boolean;
     readonly alternateScreen: boolean;
+    readonly mouseTracking: boolean;
   },
 ): Promise<T> {
   const cleanupErrors: unknown[] = [];
   let rawEnabled = false;
   let cursorHidden = false;
   let alternateScreenEntered = false;
+  let mouseButtonsEnabled = false;
+  let mouseSgrEnabled = false;
   const restoreTerminal = (): void => {
+    if (mouseSgrEnabled) {
+      mouseSgrEnabled = false;
+      try {
+        io.write(DISABLE_TERMINAL_MOUSE_SGR_MODE);
+      } catch (error) {
+        cleanupErrors.push(error);
+      }
+    }
+    if (mouseButtonsEnabled) {
+      mouseButtonsEnabled = false;
+      try {
+        io.write(DISABLE_TERMINAL_MOUSE_BUTTON_TRACKING);
+      } catch (error) {
+        cleanupErrors.push(error);
+      }
+    }
     if (cursorHidden) {
       cursorHidden = false;
       try {
@@ -137,6 +170,12 @@ async function withTerminalRestoration<T>(
       io.write(ENTER_TERMINAL_ALTERNATE_SCREEN);
       alternateScreenEntered = true;
     }
+    if (features.mouseTracking) {
+      io.write(ENABLE_TERMINAL_MOUSE_BUTTON_TRACKING);
+      mouseButtonsEnabled = true;
+      io.write(ENABLE_TERMINAL_MOUSE_SGR_MODE);
+      mouseSgrEnabled = true;
+    }
     if (features.hideCursor && io.capabilities().ansiControl !== false) {
       io.write(HIDE_TERMINAL_CURSOR);
       cursorHidden = true;
@@ -166,6 +205,7 @@ export async function withHiddenTerminalCursor<T>(
     raw: false,
     hideCursor: true,
     alternateScreen: false,
+    mouseTracking: false,
   });
 }
 
@@ -180,9 +220,13 @@ export async function withRawTerminal<T>(
   options: RawTerminalOptions = {},
 ): Promise<T> {
   assertInteractiveTerminal(io);
+  const capabilities = io.capabilities();
   return await withTerminalRestoration(io, operation, options, {
     raw: true,
     hideCursor: options.hideCursor ?? true,
     alternateScreen: options.alternateScreen ?? false,
+    mouseTracking: options.mouseTracking === true &&
+      capabilities.ansiControl !== false &&
+      capabilities.mouseTracking !== false,
   });
 }
