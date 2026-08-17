@@ -12,6 +12,8 @@ import {
   SHOW_TERMINAL_CURSOR,
   type SpinnerScheduler,
 } from "../../src/cli/interactive/mod.ts";
+import { createMarkdownBrowserState } from "../../src/cli/interactive/markdown-browser-model.ts";
+import { renderMarkdownBrowser } from "../../src/cli/interactive/markdown-browser-renderer.ts";
 import { cliComponentRegistry } from "../../src/generated/cli-registry.ts";
 import { componentGroups } from "../../src/types/component-meta.ts";
 import { terminalFoundationSheets } from "../../catalogue/terminal-foundations.ts";
@@ -35,7 +37,10 @@ import {
   type PlaygroundJourney,
   type PlaygroundRuntime,
 } from "../../scripts/playground/types.ts";
-import { documentChoices } from "../../scripts/playground/fixtures.ts";
+import {
+  documentChoices,
+  markdownBrowserEntries,
+} from "../../scripts/playground/fixtures.ts";
 import {
   createPlaygroundRuntime,
   renderJourneyList,
@@ -220,6 +225,44 @@ Deno.test("reading-foundation journeys expose path search and compact cleanup", 
     "Result: compact acknowledgement cleared.",
   );
   assert(!continuation.output().includes("Submitted"));
+});
+
+Deno.test("Markdown playground senses light and dark ground before choosing the reader theme", async () => {
+  const options = {
+    label: "Documentation library",
+    placeholder: "Search titles, descriptions, and paths",
+    entries: markdownBrowserEntries,
+    mouse: true,
+  } as const;
+  const framePrefix = "\x1b[2J\x1b[H";
+  for (
+    const [report, theme] of [
+      ["ffff/ffff/ffff", "light"],
+      ["0000/0000/0000", "dark"],
+    ] as const
+  ) {
+    const io = new FakeTerminalIO([
+      `\x1b]11;rgb:${report}\x1b\\`,
+      `docs online${ENTER}`,
+    ], {
+      columns: 80,
+      rows: 24,
+      colorDepth: "ansi256",
+    });
+    assertEquals(
+      await runJourney(journey("markdown-browser"), testRuntime(io)),
+      "completed",
+    );
+    const frame = io.writes.find((write) => write.startsWith(framePrefix))
+      ?.slice(framePrefix.length).replaceAll("\r\n", "\n");
+    const expected = renderMarkdownBrowser(
+      createMarkdownBrowserState(options, { columns: 80, rows: 24 }, {
+        theme,
+      }),
+      io.capabilities(),
+    );
+    assertEquals(frame, expected, `${theme} ground must select ${theme} ink`);
+  }
 });
 
 Deno.test("--list works without a terminal", async () => {

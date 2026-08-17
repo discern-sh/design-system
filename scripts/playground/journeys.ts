@@ -38,6 +38,7 @@ import {
   renderMotifWorkflowStepper,
   renderTimelineCli,
   type TerminalCapabilities,
+  type TerminalThemeVariant,
 } from "../../src/cli/mod.ts";
 import { defaultTerminalFrameWidth } from "../../src/cli/frame-measure.ts";
 import { renderCliExemptions } from "../cli-inventory.ts";
@@ -89,6 +90,17 @@ function colorfgbgSnapshot(): Readonly<Record<string, string | undefined>> {
   } catch {
     return {};
   }
+}
+
+async function markdownBrowserTheme(
+  runtime: PlaygroundRuntime,
+): Promise<TerminalThemeVariant> {
+  if (runtime.io.capabilities().colorDepth === "none") return "dark";
+  const reading = await senseTerminalBackground({
+    io: runtime.io,
+    environment: colorfgbgSnapshot(),
+  });
+  return reading.ground === "light" ? "light" : "dark";
 }
 
 function describeResult(value: unknown): string {
@@ -304,6 +316,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
     description:
       "A keyboard-complete adaptive reader follows fragments and admitted documents, optionally tracks pointer input, and returns external actions only after restoration.",
     run: async (runtime) => {
+      const theme = await markdownBrowserTheme(runtime);
       let result: MarkdownBrowserResult<string>;
       try {
         result = await requestMarkdownBrowser({
@@ -324,7 +337,7 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
                 message: "The playground corpus does not admit that document.",
               };
           },
-        }, { io: runtime.io });
+        }, { io: runtime.io, theme });
       } catch (error) {
         if (error instanceof MarkdownBrowserRefusalError) {
           runtime.print(
