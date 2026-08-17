@@ -29,13 +29,6 @@ export interface LogoCliProps extends TerminalMotifOptions {
   readonly maxWidth?: number;
 }
 
-const MARK_LENGTHS: Readonly<Record<LogoSize, number>> = {
-  sm: 1,
-  md: 2,
-  lg: 3,
-  xl: 4,
-};
-
 /** Deterministic Logo states rendered by `deno task catalogue:cli logo`. */
 export const cliExamples: readonly CliExample<LogoCliProps>[] = [
   { name: "plain", props: { text: "discern" } },
@@ -55,17 +48,16 @@ const renderLogoCli: CliRenderer<LogoCliProps> = (props, capabilities) => {
     );
   }
   const width = Math.min(requestedWidth, capabilities.columns);
-  const size = props.size ?? "md";
   const treatment = props.treatment ?? "plain";
   const shape = props.shape ?? "natural";
   const theme = terminalThemes[props.theme ?? "dark"];
   const markOptions = props.theme === undefined
     ? {
-      length: Math.min(MARK_LENGTHS[size], Math.max(1, width - 2)),
+      length: 1,
       ...motifPassthrough(props),
     }
     : {
-      length: Math.min(MARK_LENGTHS[size], Math.max(1, width - 2)),
+      length: 1,
       theme: props.theme,
       ...motifPassthrough(props),
     };

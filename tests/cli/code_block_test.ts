@@ -20,9 +20,12 @@ import renderCodeBlockCli, {
 
 Deno.test("Code block wraps losslessly at narrow, standard, and wide measures", () => {
   const frames = [
-    [8, "│ 012345\n› 6789"],
-    [10, "│ 01234567\n› 89"],
-    [24, "│ 0123456789"],
+    [8, "╭──────╮\n│ 01234│\n│›56789│\n╰──────╯"],
+    [10, "╭────────╮\n│ 0123456│\n│›789    │\n╰────────╯"],
+    [
+      24,
+      "╭──────────────────────╮\n│ 0123456789           │\n╰──────────────────────╯",
+    ],
   ] as const;
   for (const [columns, expected] of frames) {
     const capabilities = testTerminalCapabilities({
@@ -50,25 +53,45 @@ Deno.test("Code block exact rails and source styling degrade across every capabi
         unicode,
       });
       const theme = terminalThemes.dark;
+      const railStyle = {
+        ...theme.typography.muted,
+        color: terminalThemeColor(theme, "--discern-color-ink-faint"),
+      };
+      const labelStyle = {
+        ...theme.typography.annotation,
+        color: terminalThemeColor(theme, "--discern-color-ink-muted"),
+      };
+      const codeStyle = {
+        color: terminalThemeColor(theme, "--discern-color-ink"),
+      };
+      const horizontal = unicode ? "─" : "-";
+      const vertical = unicode ? "│" : "|";
+      const topLeft = unicode ? "╭" : "+";
+      const topRight = unicode ? "╮" : "+";
+      const bottomLeft = unicode ? "╰" : "+";
+      const bottomRight = unicode ? "╯" : "+";
+      const continuation = unicode ? "›" : ">";
+      const label = unicode ? "ts · module" : "ts - module";
       const expected = [
-        styleText("[ts] module", {
-          ...theme.typography.annotation,
-          color: terminalThemeColor(theme, "--discern-color-ink-muted"),
-        }, capabilities),
-        `${
-          styleText(unicode ? "│" : "|", {
-            ...theme.typography.muted,
-            color: terminalThemeColor(theme, "--discern-color-ink-faint"),
-          }, capabilities)
-        } ${
-          styleText("let value = 1;", {
-            color: terminalThemeColor(theme, "--discern-color-ink"),
-          }, capabilities)
+        `${styleText(`${topLeft}${horizontal} `, railStyle, capabilities)}${
+          styleText(label, labelStyle, capabilities)
+        }${styleText(` ${topRight}`, railStyle, capabilities)}`,
+        `${styleText(vertical, railStyle, capabilities)} ${
+          styleText("let value = 1", codeStyle, capabilities)
+        }${styleText(vertical, railStyle, capabilities)}`,
+        `${styleText(vertical, railStyle, capabilities)}${
+          styleText(continuation, railStyle, capabilities)
+        }${styleText(";", codeStyle, capabilities)}${" ".repeat(12)}${
+          styleText(vertical, railStyle, capabilities)
         }`,
-        styleText(unicode ? "│" : "|", {
-          ...theme.typography.muted,
-          color: terminalThemeColor(theme, "--discern-color-ink-faint"),
-        }, capabilities),
+        `${styleText(vertical, railStyle, capabilities)}${" ".repeat(14)}${
+          styleText(vertical, railStyle, capabilities)
+        }`,
+        styleText(
+          `${bottomLeft}${horizontal.repeat(14)}${bottomRight}`,
+          railStyle,
+          capabilities,
+        ),
       ].join("\n");
       assertEquals(
         renderCodeBlockCli(
@@ -97,11 +120,13 @@ Deno.test("Code block preserves indentation, blank lines, tabs, and Markdown del
   assertEquals(
     output,
     [
-      "│",
-      "│     *literal*  `code`",
-      "│",
-      "│   value next",
-      "│",
+      "╭──────────────────────────────────────╮",
+      "│                                      │",
+      "│     *literal*  `code`                │",
+      "│                                      │",
+      "│   value next                         │",
+      "│                                      │",
+      "╰──────────────────────────────────────╯",
     ].join("\n"),
   );
   assert(!output.startsWith("\n"));
@@ -115,7 +140,7 @@ Deno.test("Code block hard wrapping preserves long tokens and Unicode graphemes"
   });
   assertEquals(
     renderCodeBlockCli({ code: "界e\u0301🙂" }, narrow),
-    "│ 界e\u0301\n› 🙂",
+    "╭────╮\n│ 界e\u0301│\n│›🙂 │\n╰────╯",
   );
 
   const source = "abcdefghijklmnopqrstuvwxyz";
@@ -123,7 +148,9 @@ Deno.test("Code block hard wrapping preserves long tokens and Unicode graphemes"
     { code: source },
     testTerminalCapabilities({ columns: 9, colorDepth: "none" }),
   );
-  const recovered = output.split("\n").map((line) => line.slice(2)).join("");
+  const recovered = output.split("\n").slice(1, -1).map((line) =>
+    line.slice(2, -1).trimEnd()
+  ).join("");
   assertEquals(recovered, source);
   assert(output.split("\n").every((line) => measureText(line) <= 9));
 });
@@ -139,7 +166,7 @@ Deno.test("Code block renders terminal-control payloads visibly instead of activ
   );
   assertEquals(
     output,
-    "│ \\u{1B}[31m*not styled*\\u{1B}[0m\\u{200E}\\u{D}",
+    "╭──────────────────────────────────────────────────────────────────────────────╮\n│ \\u{1B}[31m*not styled*\\u{1B}[0m\\u{200E}\\u{D}                                 │\n╰──────────────────────────────────────────────────────────────────────────────╯",
   );
   assert(!/[\p{Cc}\p{Cf}]/u.test(output.replaceAll("\n", "")));
   assertEquals(
@@ -165,7 +192,7 @@ Deno.test("Code block preserve mode is the explicit width-overflow contract", ()
     widthPolicy: "preserve",
   } as const satisfies CodeBlockCliProps;
   const output = renderCodeBlockCli(props, capabilities);
-  assertEquals(output, "│ 0123456789");
+  assertEquals(output, "╭───────────╮\n│ 0123456789│\n╰───────────╯");
   assert(measureText(output) > capabilities.columns);
 
   const preserved = createCliBlock(renderCodeBlockCli, props, {
@@ -179,12 +206,15 @@ Deno.test("Code block preserve mode is the explicit width-overflow contract", ()
       ? "preserve"
       : "bounded",
   });
-  assertEquals(renderCliBlock(wrapped, capabilities), "│ 012345\n› 6789");
+  assertEquals(
+    renderCliBlock(wrapped, capabilities),
+    "╭──────╮\n│ 01234│\n│›56789│\n╰──────╯",
+  );
 });
 
 Deno.test("Code block validates width, labels, source, and width policy", () => {
   const capabilities = testTerminalCapabilities({ columns: 40 });
-  for (const maxWidth of [0, 3, 4.5, Number.MAX_SAFE_INTEGER + 1]) {
+  for (const maxWidth of [0, 3, 4, 4.5, Number.MAX_SAFE_INTEGER + 1]) {
     assertThrows(
       () => renderCodeBlockCli({ code: "value", maxWidth }, capabilities),
       TypeError,
@@ -248,7 +278,10 @@ Deno.test("Code block accepts empty source and renders deterministically", () =>
     colorDepth: "ansi256",
   });
   const empty = renderCodeBlockCli({ code: "" }, capabilities);
-  assertEquals(stripAnsi(empty), "│");
+  assertEquals(
+    stripAnsi(empty),
+    "╭──────────────────────────────╮\n│                              │\n╰──────────────────────────────╯",
+  );
   for (const example of cliExamples) {
     const first = renderCodeBlockCli(example.props, capabilities);
     assertEquals(renderCodeBlockCli(example.props, capabilities), first);

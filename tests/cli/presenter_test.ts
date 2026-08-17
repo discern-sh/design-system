@@ -51,6 +51,8 @@ const DISCERN_EXCLUSIVE_MOTIF_GLYPHS = [
   "◓",
   "◑",
   "◒",
+  "▲",
+  "△",
 ] as const;
 
 function discernMotifGlyphLeaks(output: string): readonly string[] {
@@ -222,7 +224,7 @@ Deno.test("presenter motifs bind globally, override per call, and reach semantic
     presenter.present(renderMotifPattern, { length: 4 }),
     "▵▹▿◃",
   );
-  assertEquals(presenter.note("Custom marker"), "◉ Custom marker");
+  assertEquals(presenter.note("Custom marker"), "▸ Custom marker");
   assertStringIncludes(
     presenter.present(renderTimelineCli, {
       title: "Status",

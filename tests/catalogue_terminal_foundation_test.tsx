@@ -72,6 +72,18 @@ Deno.test("terminal foundation inventory enrols every sheet and specimen", () =>
   const motifs = terminalFoundationSheets.find(({ id }) => id === "motifs");
   if (motifs === undefined) throw new TypeError("missing motif foundation");
   const specimens = motifs.specimens(catalogueCliCapabilities);
+  assertEquals(specimens.map(({ id }) => id), [
+    "horizontal-divider",
+    "left-aligned-divider",
+    "vertical-divider",
+    "thick-ribbon",
+    "spinner-phases",
+    "determinate-progress",
+    "labeled-section-rule",
+    "stepper-states",
+    "activity-beacon-phases",
+    "derived-consumer-override",
+  ]);
   const spinner = specimens.find(({ id }) => id === "spinner-phases");
   const consumer = specimens.find(({ id }) =>
     id === "derived-consumer-override"

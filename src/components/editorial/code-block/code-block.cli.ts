@@ -6,7 +6,7 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
-import { graphemeWidth, measureText } from "../../../cli/text.ts";
+import { graphemeWidth, measureText, truncateText } from "../../../cli/text.ts";
 import { makeSourceControlsVisible } from "../../../cli/visible-text.ts";
 import {
   terminalThemeColor,
@@ -105,7 +105,7 @@ function hardWrap(line: string, columns: number): readonly string[] {
   return wrapped;
 }
 
-/** Render literal source without trimming, numbering, executing, or truncating it. */
+/** Render literal source inside a specimen frame without truncating it. */
 const renderCodeBlockCli: CliRenderer<CodeBlockCliProps> = (
   props,
   capabilities,
@@ -123,15 +123,15 @@ const renderCodeBlockCli: CliRenderer<CodeBlockCliProps> = (
     throw new TypeError(`unknown code block theme: ${props.theme}`);
   }
   const requestedWidth = props.maxWidth ?? capabilities.columns;
-  if (!Number.isSafeInteger(requestedWidth) || requestedWidth < 4) {
+  if (!Number.isSafeInteger(requestedWidth) || requestedWidth < 5) {
     throw new TypeError(
-      `code block width must be a safe integer of at least 4; received ${requestedWidth}`,
+      `code block width must be a safe integer of at least 5; received ${requestedWidth}`,
     );
   }
-  const width = Math.min(requestedWidth, capabilities.columns);
-  if (width < 4) {
+  const boundedWidth = Math.min(requestedWidth, capabilities.columns);
+  if (boundedWidth < 5) {
     throw new TypeError(
-      `code block width must be a safe integer of at least 4; received ${width}`,
+      `code block width must be a safe integer of at least 5; received ${boundedWidth}`,
     );
   }
 
@@ -147,36 +147,92 @@ const renderCodeBlockCli: CliRenderer<CodeBlockCliProps> = (
     ...theme.typography.annotation,
     color: terminalThemeColor(theme, "--discern-color-ink-muted"),
   };
-  const rail = capabilities.unicode ? "│" : "|";
-  const continuation = capabilities.unicode ? "›" : ">";
-  const contentWidth = width - 2;
+  const glyphs = capabilities.unicode
+    ? {
+      topLeft: "╭",
+      topRight: "╮",
+      bottomLeft: "╰",
+      bottomRight: "╯",
+      horizontal: "─",
+      vertical: "│",
+    }
+    : {
+      topLeft: "+",
+      topRight: "+",
+      bottomLeft: "+",
+      bottomRight: "+",
+      horizontal: "-",
+      vertical: "|",
+    };
   const safeLines = makeSourceControlsVisible(props.code, {
     preserveLineFeeds: true,
     preserveTabs: true,
   }).split("\n").map(expandTabs);
+  const label = props.language === undefined
+    ? props.info
+    : props.info === undefined
+    ? props.language
+    : `${props.language}${capabilities.unicode ? " · " : " - "}${props.info}`;
+  const preservedSourceWidth = Math.max(
+    1,
+    ...safeLines.map((line) => measureText(line)),
+  );
+  const frameWidth = widthPolicy === "preserve"
+    ? Math.max(
+      boundedWidth,
+      preservedSourceWidth + 3,
+      label === undefined ? 0 : measureText(label) + 5,
+    )
+    : boundedWidth;
+  const contentWidth = frameWidth - 3;
   const renderedLines = safeLines.flatMap((line) => {
     const chunks = widthPolicy === "preserve"
       ? [line]
       : hardWrap(line, contentWidth);
     return chunks.map((chunk, index) => {
-      const marker = index === 0 ? rail : continuation;
-      const prefix = styleText(marker, railStyle, capabilities);
-      return chunk === ""
-        ? prefix
-        : `${prefix} ${styleText(chunk, codeStyle, capabilities)}`;
+      const marker = index === 0 ? " " : capabilities.unicode ? "›" : ">";
+      const markerText = marker === " "
+        ? marker
+        : styleText(marker, railStyle, capabilities);
+      const padding = " ".repeat(contentWidth - measureText(chunk));
+      return `${
+        styleText(glyphs.vertical, railStyle, capabilities)
+      }${markerText}${styleText(chunk, codeStyle, capabilities)}${padding}${
+        styleText(glyphs.vertical, railStyle, capabilities)
+      }`;
     });
   });
-
-  const label = props.language === undefined
-    ? props.info
-    : props.info === undefined
-    ? `[${props.language}]`
-    : `[${props.language}] ${props.info}`;
-  if (label === undefined) return renderedLines.join("\n");
-  const labelLines = hardWrap(label, width).map((line) =>
-    styleText(line, labelStyle, capabilities)
+  const titleCapacity = Math.max(0, frameWidth - 5);
+  const visibleLabel = label === undefined || titleCapacity === 0
+    ? ""
+    : truncateText(
+      label,
+      titleCapacity,
+      capabilities.unicode ? "…" : ".",
+    );
+  const border = (value: string): string =>
+    styleText(value, railStyle, capabilities);
+  const top = visibleLabel === ""
+    ? border(
+      `${glyphs.topLeft}${
+        glyphs.horizontal.repeat(frameWidth - 2)
+      }${glyphs.topRight}`,
+    )
+    : `${border(`${glyphs.topLeft}${glyphs.horizontal} `)}${
+      styleText(visibleLabel, labelStyle, capabilities)
+    }${
+      border(
+        ` ${
+          glyphs.horizontal.repeat(frameWidth - 5 - measureText(visibleLabel))
+        }${glyphs.topRight}`,
+      )
+    }`;
+  const bottom = border(
+    `${glyphs.bottomLeft}${
+      glyphs.horizontal.repeat(frameWidth - 2)
+    }${glyphs.bottomRight}`,
   );
-  return [...labelLines, ...renderedLines].join("\n");
+  return [top, ...renderedLines, bottom].join("\n");
 };
 
 export default renderCodeBlockCli;

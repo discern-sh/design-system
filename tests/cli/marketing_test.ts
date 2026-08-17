@@ -156,7 +156,7 @@ Deno.test("FAQ block renders exact open and closed disclosure frames", () => {
   );
 });
 
-Deno.test("Hero block renders exact motif title banners", () => {
+Deno.test("Hero block renders exact leading-marker title banners", () => {
   assertMarketingMatrix(
     renderHeroBlockCli,
     {
@@ -166,11 +166,19 @@ Deno.test("Hero block renders exact motif title banners", () => {
       actions: ["Begin"],
     },
     [
-      "◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨\n┌ Hero ────────┐\n│ New          │\n│              │\n│ Build        │\n│ clearly      │\n│              │\n│ Keep the     │\n│ proof.       │\n│              │\n│ [Begin]      │\n└──────────────┘",
-      "◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨\n┌ Hero ────────────────────────────┐\n│ New                              │\n│                                  │\n│ Build clearly                    │\n│                                  │\n│ Keep the proof.                  │\n│                                  │\n│ [Begin]                          │\n└──────────────────────────────────┘",
-      "◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨\n┌ Hero ────────────────────────────────────────────────────────┐\n│ New                                                          │\n│                                                              │\n│ Build clearly                                                │\n│                                                              │\n│ Keep the proof.                                              │\n│                                                              │\n│ [Begin]                                                      │\n└──────────────────────────────────────────────────────────────┘",
+      `◮  ${
+        "─".repeat(13)
+      }\n┌ Hero ────────┐\n│ New          │\n│              │\n│ Build        │\n│ clearly      │\n│              │\n│ Keep the     │\n│ proof.       │\n│              │\n│ [Begin]      │\n└──────────────┘`,
+      `◮  ${
+        "─".repeat(33)
+      }\n┌ Hero ────────────────────────────┐\n│ New                              │\n│                                  │\n│ Build clearly                    │\n│                                  │\n│ Keep the proof.                  │\n│                                  │\n│ [Begin]                          │\n└──────────────────────────────────┘`,
+      `◮  ${
+        "─".repeat(61)
+      }\n┌ Hero ────────────────────────────────────────────────────────┐\n│ New                                                          │\n│                                                              │\n│ Build clearly                                                │\n│                                                              │\n│ Keep the proof.                                              │\n│                                                              │\n│ [Begin]                                                      │\n└──────────────────────────────────────────────────────────────┘`,
     ],
-    ">v^<>v^<>v^<>v^<>v^<>v^<>v^<>v^<>v^<\n+ Hero ----------------------------+\n| New                              |\n|                                  |\n| Build clearly                    |\n|                                  |\n| Keep the proof.                  |\n|                                  |\n| [Begin]                          |\n+----------------------------------+",
+    `>  ${
+      "-".repeat(33)
+    }\n+ Hero ----------------------------+\n| New                              |\n|                                  |\n| Build clearly                    |\n|                                  |\n| Keep the proof.                  |\n|                                  |\n| [Begin]                          |\n+----------------------------------+`,
   );
 });
 
@@ -222,11 +230,19 @@ Deno.test("Process steps renders exact canonical stepper and beacon frames", () 
       beaconPhase: 2,
     },
     [
-      "Release path\n\n ◭  Build\n │\n[◓] Prove\n │\n ·  Share\n\n..◭⧨◮⧩..........",
-      "Release path\n\n ◭  Build\n │\n[◓] Prove\n │\n ·  Share\n\n..◭⧨◮⧩..............................",
-      "Release path\n\n ◭  Build\n │\n[◓] Prove\n │\n ·  Share\n\n..◭⧨◮⧩..........................................................",
+      `Release path\n\n ▲  Build\n │\n[◓] Prove\n │\n △  Share\n\n──◮${
+        "─".repeat(13)
+      }`,
+      `Release path\n\n ▲  Build\n │\n[◓] Prove\n │\n △  Share\n\n──◮${
+        "─".repeat(33)
+      }`,
+      `Release path\n\n ▲  Build\n │\n[◓] Prove\n │\n △  Share\n\n──◮${
+        "─".repeat(61)
+      }`,
     ],
-    "Release path\n\n ^  Build\n |\n[<] Prove\n |\n .  Share\n\n..^<>v..............................",
+    `Release path\n\n ^  Build\n |\n[<] Prove\n |\n v  Share\n\n-->${
+      "-".repeat(33)
+    }`,
   );
 });
 
@@ -247,13 +263,13 @@ Deno.test("Process steps covers complete, error, cancelled, and pending states",
   const unicode = testTerminalCapabilities({ columns: 36 });
   assertExactFrame(
     renderProcessStepsCli(props, unicode),
-    "Step states\n\n ◭  Done\n │\n !  Failed\n │\n ×  Stopped\n │\n ·  Waiting\n\n! Proof failed",
+    "Step states\n\n ▲  Done\n │\n !  Failed\n │\n ×  Stopped\n │\n △  Waiting\n\n! Proof failed",
     unicode,
   );
   const ascii = testTerminalCapabilities({ columns: 36, unicode: false });
   assertExactFrame(
     renderProcessStepsCli(props, ascii),
-    "Step states\n\n ^  Done\n |\n !  Failed\n |\n x  Stopped\n |\n .  Waiting\n\n! Proof failed",
+    "Step states\n\n ^  Done\n |\n !  Failed\n |\n x  Stopped\n |\n v  Waiting\n\n! Proof failed",
     ascii,
   );
 });

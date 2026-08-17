@@ -230,7 +230,7 @@ Deno.test("long grouped viewports and submitted frames stay exact", async () => 
     selectFrames[1] ?? "",
     `Pick [active]\n┌──────────────────────────────┐\n│                              │\n│${
       groupRule("Secondary")
-    }│\n│  [ ] Two                     │\n│› [●] Three                   │\n└─────────────────── ↑ 2 more ─┘\n`,
+    }│\n│  [ ] Two                     │\n│› [●] Three                   │\n└────────── ↑ 2 more ──────────┘\n`,
     capabilities,
   );
   assertExactFrame(
@@ -251,7 +251,7 @@ Deno.test("long grouped viewports and submitted frames stay exact", async () => 
       groupRule("Primary")
     }│\n│  [✓] One                     │\n│  [ ] Disabled (disabled)     │\n│                              │\n│${
       groupRule("Secondary")
-    }│\n│  [✓] Two                     │\n└─────────────────── ↓ 1 more ─┘\n✓ Submitted`,
+    }│\n│  [✓] Two                     │\n└────────── ↓ 1 more ──────────┘\n✓ Submitted`,
     capabilities,
   );
 
@@ -269,7 +269,7 @@ Deno.test("long grouped viewports and submitted frames stay exact", async () => 
     searchFrames.at(-1) ?? "",
     `Find [submitted]\n┌──────────────────────────────┐\n│                              │\n│${
       groupRule("Secondary")
-    }│\n│  ○ Two                       │\n│  ◉ Three                     │\n└─────────────────── ↑ 2 more ─┘\n✓ Submitted`,
+    }│\n│  ○ Two                       │\n│  ◉ Three                     │\n└────────── ↑ 2 more ──────────┘\n✓ Submitted`,
     capabilities,
   );
 });

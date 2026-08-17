@@ -110,7 +110,7 @@ Deno.test("terminal interactions paint exact real Component frames", async () =>
     ],
     [
       "switch",
-      "Continue [active]\n┌──────────────────────────────┐\n│› No ○──● Yes                 │\n└──────────────────────────────┘\n",
+      "Continue [active]\n┌──────────────────────────────┐\n│› No   ○──● ✓ Yes             │\n└──────────────────────────────┘\n",
     ],
     [
       "select",
@@ -155,7 +155,7 @@ Deno.test("interactive progress paints exact Meter frames", async () => {
   }, () => undefined);
   assertExactFrame(
     firstInteractionFrame(io),
-    "Work\n[ 25%] ◮⧩◭..........",
+    "Work\n[ 25%] ━━━◮─────────",
     capabilities,
   );
 });
@@ -172,9 +172,9 @@ Deno.test("sequential forms paint exact Process steps frames", async () => {
     .add({ id: "confirm", label: "Confirm", run: () => true })
     .submit();
   assertEquals(io.writes, [
-    "Setup\n\n[◐] Account\n │\n ·  Confirm\n",
-    "Setup\n\n ◭  Account\n │\n[◓] Confirm\n\nAccount: Ada\n",
-    "Setup\n\n ◭  Account\n │\n ◭  Confirm\n\nAccount: Ada\n\n✓ Complete\n",
+    "Setup\n\n[◐] Account\n │\n △  Confirm\n",
+    "Setup\n\n ▲  Account\n │\n[◓] Confirm\n\nAccount: Ada\n",
+    "Setup\n\n ▲  Account\n │\n ▲  Confirm\n\nAccount: Ada\n\n✓ Complete\n",
   ]);
 });
 
@@ -189,7 +189,7 @@ Deno.test("sequential forms pass a consumer motif through every step", async () 
     .add({ id: "confirm", label: "Confirm", run: () => true })
     .submit();
   assertEquals(io.writes, [
-    "Setup\n\n[◴] Account\n │\n ·  Confirm\n",
+    "Setup\n\n[◴] Account\n │\n ▿  Confirm\n",
     "Setup\n\n ▵  Account\n │\n[◷] Confirm\n",
     "Setup\n\n ▵  Account\n │\n ▵  Confirm\n\n✓ Complete\n",
   ]);

@@ -35,12 +35,6 @@ export interface BrandCliProps extends TerminalMotifOptions {
   readonly maxWidth?: number;
 }
 
-const MARK_LENGTHS: Readonly<Record<BrandSize, number>> = {
-  sm: 1,
-  md: 2,
-  lg: 4,
-};
-
 /** Deterministic Brand states rendered by `deno task catalogue:cli brand`. */
 export const cliExamples: readonly CliExample<BrandCliProps>[] = [
   { name: "wordmark", props: { name: "discern" } },
@@ -74,17 +68,16 @@ const renderBrandCli: CliRenderer<BrandCliProps> = (props, capabilities) => {
   }
   const width = Math.min(requestedWidth, capabilities.columns);
   const theme = terminalThemes[props.theme ?? "dark"];
-  const size = props.size ?? "md";
   const markOptions = props.theme === undefined
     ? {
-      length: Math.min(MARK_LENGTHS[size], Math.max(1, width - 2)),
+      length: 1,
       direction: props.markShape === "square"
         ? "reverse" as const
         : "forward" as const,
       ...motifPassthrough(props),
     }
     : {
-      length: Math.min(MARK_LENGTHS[size], Math.max(1, width - 2)),
+      length: 1,
       theme: props.theme,
       direction: props.markShape === "square"
         ? "reverse" as const

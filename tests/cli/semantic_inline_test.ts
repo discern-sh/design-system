@@ -322,6 +322,7 @@ Deno.test("inline code uses one styled treatment and lossless degraded fences", 
       assertEquals(codeSpans.length, 2);
       assert(codeSpans.every((span) => span.style?.bold === true));
       assert(codeSpans.every((span) => span.style?.color !== undefined));
+      assert(codeSpans.every((span) => span.style?.background !== undefined));
     }
   }
 

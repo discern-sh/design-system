@@ -2,6 +2,7 @@ import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { stripAnsi, styleText } from "../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import type { CliExample } from "../../src/cli/contracts.ts";
+import { measureText } from "../../src/cli/text.ts";
 import {
   terminalThemeColor,
   terminalThemes,
@@ -127,7 +128,7 @@ const checkboxFrames = [
   `Roles [active]\n┌──────────────────────────┐\n│re▌                       │\n│› [✓] Render frames       │\n│  [ ] Inspect (disabled)  │\n│                          │\n│${
     sectionRule("Selected", 26)
   }│\n│  [✓] Animate progress    │\n└──────────────────────────┘\n`,
-  "Capabilities [active]\n┌──────────────────────────┐\n│› [ ] Render              │\n│  [ ] Inspect             │\n└─────────────── ↓ 3 more ─┘\n",
+  "Capabilities [active]\n┌──────────────────────────┐\n│› [ ] Render              │\n│  [ ] Inspect             │\n└──────── ↓ 3 more ────────┘\n",
 ] as const;
 
 Deno.test("Checkbox renders every static form state exactly", () => {
@@ -220,7 +221,7 @@ const radioFrames = [
     sectionRule("Preview", 26)
   }│\n│  ○ Charlie (disabled)    │\n└──────────────────────────┘\n`,
   "Channel [searching]\n┌──────────────────────────┐\n│cha▌                      │\n│Searching…                │\n└──────────────────────────┘\n",
-  "Channel [active]\n┌──────────────────────────┐\n│› ○ Alpha                 │\n│  ○ Bravo                 │\n└─────────────── ↓ 3 more ─┘\n",
+  "Channel [active]\n┌──────────────────────────┐\n│› ○ Alpha                 │\n│  ○ Bravo                 │\n└──────── ↓ 3 more ────────┘\n",
 ] as const;
 
 Deno.test("Radio renders every static selection state exactly", () => {
@@ -356,7 +357,7 @@ const selectFrames = [
   }│\n│  [ ] Alpha               │\n│› [●] Bravo               │\n│                          │\n│${
     sectionRule("Other", 26)
   }│\n│  [ ] Charlie (disabled)  │\n└──────────────────────────┘\n`,
-  "Environment [active]\n┌──────────────────────────┐\n│› [ ] A deliberately long │\n│      navigation choice   │\n│      whose continuation  │\n│      stays aligned       │\n│      beneath its label   │\n│  [ ] Bravo               │\n└─────────────── ↓ 3 more ─┘\n",
+  "Environment [active]\n┌──────────────────────────┐\n│› [ ] A deliberately long │\n│      navigation choice   │\n│      whose continuation  │\n│      stays aligned       │\n│      beneath its label   │\n│  [ ] Bravo               │\n└──────── ↓ 3 more ────────┘\n",
 ] as const;
 
 Deno.test("Select renders every static selection state exactly", () => {
@@ -439,13 +440,13 @@ Deno.test("grouped Select, Checkbox, and Radio retain structure in narrow ASCII 
 });
 
 const switchFrames = [
-  "Automatic updates [idle]\n┌──────────────────────────┐\n│Off ●──○ On               │\n└──────────────────────────┘\n",
-  "Automatic updates [active]\n┌──────────────────────────┐\n│› Off ●──○ On             │\n└──────────────────────────┘\n",
-  "Automatic updates [filled]\n┌──────────────────────────┐\n│Off ○──● On               │\n└──────────────────────────┘\n",
-  "Automatic updates [error]\n┌──────────────────────────┐\n│› Off ●──○ On             │\n└──────────────────────────┘\n! Setting is locked",
-  "Automatic updates [disabled]\n┌──────────────────────────┐\n│Off ●──○ On               │\n└──────────────────────────┘\nDisabled",
-  "Automatic updates [submitte…\n┌──────────────────────────┐\n│Off ○──● On               │\n└──────────────────────────┘\n✓ Submitted",
-  "Automatic updates [cancelle…\n┌──────────────────────────┐\n│Off ●──○ On               │\n└──────────────────────────┘\n× Change cancelled",
+  "Automatic updates [idle]\n┌──────────────────────────┐\n│Off × ●──○   On           │\n└──────────────────────────┘\n",
+  "Automatic updates [active]\n┌──────────────────────────┐\n│› Off × ●──○   On         │\n└──────────────────────────┘\n",
+  "Automatic updates [filled]\n┌──────────────────────────┐\n│Off   ○──● ✓ On           │\n└──────────────────────────┘\n",
+  "Automatic updates [error]\n┌──────────────────────────┐\n│› Off × ●──○   On         │\n└──────────────────────────┘\n! Setting is locked",
+  "Automatic updates [disabled]\n┌──────────────────────────┐\n│Off × ●──○   On           │\n└──────────────────────────┘\nDisabled",
+  "Automatic updates [submitte…\n┌──────────────────────────┐\n│Off   ○──● ✓ On           │\n└──────────────────────────┘\n✓ Submitted",
+  "Automatic updates [cancelle…\n┌──────────────────────────┐\n│Off × ●──○   On           │\n└──────────────────────────┘\n× Change cancelled",
 ] as const;
 
 Deno.test("Switch renders every static binary state exactly", () => {
@@ -457,13 +458,71 @@ Deno.test("Switch covers narrow, standard, wide, colour, and ASCII frames", () =
     switchCliExamples,
     renderSwitchCli,
     [
-      "Automatic updat…\n┌──────────────┐\n│Off ○──● On   │\n└──────────────┘\n",
+      "Automatic updat…\n┌──────────────┐\n│Off   ○──● ✓On│\n└──────────────┘\n",
       switchFrames[2],
-      "Automatic updates [filled]\n┌──────────────────────────────────────────────┐\n│Off ○──● On                                   │\n└──────────────────────────────────────────────┘\n",
+      "Automatic updates [filled]\n┌──────────────────────────────────────────────┐\n│Off   ○──● ✓ On                               │\n└──────────────────────────────────────────────┘\n",
     ],
     switchFrames[1],
-    "Automatic updates [active]\n+--------------------------+\n|> Off *--o On             |\n+--------------------------+\n",
+    "Automatic updates [active]\n+--------------------------+\n|> Off x *--o   On         |\n+--------------------------+\n",
   );
+});
+
+Deno.test("Switch renders only the active cross or tick in its semantic tone", () => {
+  const capabilities = testTerminalCapabilities({
+    columns: 28,
+    colorDepth: "truecolor",
+  });
+  const theme = terminalThemes.dark;
+  const props = {
+    kind: "confirm" as const,
+    label: "Automatic updates",
+    yesLabel: "On",
+    noLabel: "Off",
+    lifecycle: { status: "active" as const },
+    width: 28,
+  };
+  const off = renderSwitchCli(
+    { ...props, value: false, presentation: "idle" },
+    capabilities,
+  );
+  const on = renderSwitchCli(
+    { ...props, value: true, presentation: "filled" },
+    capabilities,
+  );
+  assertStringIncludes(
+    off,
+    styleText("×", { color: terminalToneColor(theme, "danger") }, capabilities),
+  );
+  assertStringIncludes(
+    on,
+    styleText(
+      "✓",
+      { color: terminalToneColor(theme, "success") },
+      capabilities,
+    ),
+  );
+  assertEquals(stripAnsi(off).includes("✓"), false);
+  assertEquals(stripAnsi(on).includes("×"), false);
+});
+
+Deno.test("Switch keeps its track and active indicator inside every supported narrow frame", () => {
+  for (let width = 8; width <= 15; width += 1) {
+    const capabilities = testTerminalCapabilities({ columns: width });
+    for (const value of [false, true]) {
+      const output = renderSwitchCli({
+        kind: "confirm",
+        label: "Automatic updates",
+        value,
+        yesLabel: "On",
+        noLabel: "Off",
+        lifecycle: { status: "active" },
+        width,
+      }, capabilities);
+      for (const line of output.split("\n")) {
+        assert(measureText(line) <= width, stripAnsi(line));
+      }
+    }
+  }
 });
 
 Deno.test("choice navigation and selected markers use Token-derived accent while disabled text stays muted", () => {

@@ -558,8 +558,8 @@ Deno.test("spinner and progress operations inherit a consumer motif", async () =
     io: progressIo,
     motif: TEST_TERMINAL_MOTIF,
   }, () => undefined);
-  assertStringIncludes(progressIo.output(), "[ 25%] ▵▹▿");
-  assertStringIncludes(progressIo.output(), "[100%] ▵▹▿◃");
+  assertStringIncludes(progressIo.output(), "[ 25%] ━━━◉");
+  assertStringIncludes(progressIo.output(), "[100%] ━━━━━━━━━━━━◉");
 });
 
 Deno.test("no-control terminals keep Unicode and use static interactive frames", async () => {
