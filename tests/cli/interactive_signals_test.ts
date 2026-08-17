@@ -16,6 +16,7 @@ import {
   SHOW_TERMINAL_CURSOR,
   withHiddenTerminalCursor,
   withRawTerminal,
+  withRawTerminalInputCleanup,
 } from "../../src/cli/interactive/lifecycle.ts";
 import { denoTerminalSignals } from "../../src/cli/interactive/signals.ts";
 import {
@@ -173,6 +174,44 @@ Deno.test("mouse tracking enters and restores in one exact terminal order", asyn
     SHOW_TERMINAL_CURSOR,
     LEAVE_TERMINAL_ALTERNATE_SCREEN,
   ]);
+});
+
+Deno.test("mouse input cleanup runs after both resets and before screen restoration", async () => {
+  const io = new FakeTerminalIO([], { columns: 40 });
+  await withRawTerminalInputCleanup(io, () => undefined, {
+    alternateScreen: true,
+    mouseTracking: true,
+    afterMouseDisable: () => io.write("input-fence"),
+  });
+  assertEquals(io.writes, [
+    ENTER_TERMINAL_ALTERNATE_SCREEN,
+    ENABLE_TERMINAL_MOUSE_BUTTON_TRACKING,
+    ENABLE_TERMINAL_MOUSE_SGR_MODE,
+    HIDE_TERMINAL_CURSOR,
+    DISABLE_TERMINAL_MOUSE_SGR_MODE,
+    DISABLE_TERMINAL_MOUSE_BUTTON_TRACKING,
+    "input-fence",
+    SHOW_TERMINAL_CURSOR,
+    LEAVE_TERMINAL_ALTERNATE_SCREEN,
+  ]);
+});
+
+Deno.test("an operation failure wins over mouse input-cleanup failure", async () => {
+  const operationFailure = new Error("operation failed");
+  const io = new FakeTerminalIO([], { columns: 40 });
+  const error = await withRawTerminalInputCleanup(io, () => {
+    throw operationFailure;
+  }, {
+    alternateScreen: true,
+    mouseTracking: true,
+    afterMouseDisable: () => {
+      throw new Error("input cleanup failed");
+    },
+  }).catch((caught) => caught);
+  assertEquals(error, operationFailure);
+  assertEquals(io.rawTransitions, [true, false]);
+  assertEquals(io.writes.at(-2), SHOW_TERMINAL_CURSOR);
+  assertEquals(io.writes.at(-1), LEAVE_TERMINAL_ALTERNATE_SCREEN);
 });
 
 Deno.test("an explicit mouse capability refusal leaves the keyboard bracket untouched", async () => {

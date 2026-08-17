@@ -106,6 +106,30 @@ Deno.test("SGR mouse input decodes presses, releases, wheels, coordinates, and m
   assertEquals(await reader.readEvent(), null);
 });
 
+Deno.test("the event reader exposes every semantic event from one raw input chunk as one batch", async () => {
+  const mouse = {
+    kind: "mouse",
+    action: "wheel",
+    direction: "down",
+    column: 512,
+    row: 4_096,
+    modifiers: { shift: false, alt: true, control: false },
+  } as const;
+  const io = new FakeTerminalIO([
+    `${encodeTerminalMouseEvent(mouse)}\u0003`,
+    "x",
+  ]);
+  const reader = new TerminalInputReader(io);
+  assertEquals(await reader.readEvents(), [
+    mouse,
+    { kind: "key", key: { kind: "named", name: "ctrl-c" } },
+  ]);
+  assertEquals(await reader.readEvents(), [
+    { kind: "key", key: { kind: "text", text: "x" } },
+  ]);
+  assertEquals(await reader.readEvents(), null);
+});
+
 Deno.test("the event reader buffers an SGR mouse report split at every boundary", async () => {
   const event = {
     kind: "mouse",

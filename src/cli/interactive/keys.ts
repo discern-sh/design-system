@@ -338,10 +338,9 @@ export interface TerminalKeyReaderOptions {
   readonly escapeDelayMs?: number;
 }
 
-/** Buffered one-key-at-a-time reader over a {@linkcode TerminalIO}. */
-export class TerminalKeyReader {
+/** Shared raw-chunk reader behind the key and semantic-event surfaces. */
+class TerminalKeyBatchReader {
   readonly #decoder = new BufferedTerminalKeyDecoder();
-  readonly #pending: TerminalKey[] = [];
   readonly #escapeDelayMs: number;
   #ended = false;
 
@@ -359,13 +358,11 @@ export class TerminalKeyReader {
   }
 
   /**
-   * Read one decoded key, or `null` after all EOF-buffered keys are consumed.
-   * While a lone Escape sits in the buffer, the next read races a short
-   * continuation window: bytes arriving inside it complete the sequence,
-   * and an elapsed window delivers the Escape itself.
+   * Read every key decoded from the next productive raw chunk. Empty chunks
+   * and incomplete sequences remain internal; EOF flushes one final batch.
    */
-  async readKey(): Promise<TerminalKey | null> {
-    while (this.#pending.length === 0 && !this.#ended) {
+  async readKeys(): Promise<readonly TerminalKey[] | null> {
+    while (!this.#ended) {
       const read = adoptTerminalRead(this.io);
       let chunk: Uint8Array | null | typeof LONE_ESCAPE_ELAPSED;
       try {
@@ -378,16 +375,47 @@ export class TerminalKeyReader {
       }
       if (chunk === LONE_ESCAPE_ELAPSED) {
         read.defer();
-        this.#pending.push(...this.#decoder.flushLoneEscape());
+        const keys = this.#decoder.flushLoneEscape();
+        if (keys.length > 0) return keys;
         continue;
       }
       read.release();
       if (chunk === null) {
         this.#ended = true;
-        this.#pending.push(...this.#decoder.finish());
+        const keys = this.#decoder.finish();
+        return keys.length === 0 ? null : keys;
       } else if (chunk.length > 0) {
-        this.#pending.push(...this.#decoder.push(chunk));
+        const keys = this.#decoder.push(chunk);
+        if (keys.length > 0) return keys;
       }
+    }
+    return null;
+  }
+}
+
+/** Buffered one-key-at-a-time reader over a {@linkcode TerminalIO}. */
+export class TerminalKeyReader {
+  readonly #batches: TerminalKeyBatchReader;
+  readonly #pending: TerminalKey[] = [];
+
+  constructor(
+    readonly io: TerminalIO,
+    options: TerminalKeyReaderOptions = {},
+  ) {
+    this.#batches = new TerminalKeyBatchReader(io, options);
+  }
+
+  /**
+   * Read one decoded key, or `null` after all EOF-buffered keys are consumed.
+   * While a lone Escape sits in the buffer, the next read races a short
+   * continuation window: bytes arriving inside it complete the sequence,
+   * and an elapsed window delivers the Escape itself.
+   */
+  async readKey(): Promise<TerminalKey | null> {
+    if (this.#pending.length === 0) {
+      const keys = await this.#batches.readKeys();
+      if (keys === null) return null;
+      this.#pending.push(...keys);
     }
     return this.#pending.shift() ?? null;
   }
@@ -484,19 +512,35 @@ export function decodeTerminalInputEvent(key: TerminalKey): TerminalInputEvent {
  * {@linkcode TerminalKeyReader} unchanged.
  */
 export class TerminalInputReader {
-  readonly #keys: TerminalKeyReader;
+  readonly #keys: TerminalKeyBatchReader;
+  readonly #pending: TerminalInputEvent[] = [];
 
   constructor(
     io: TerminalIO,
     options: TerminalKeyReaderOptions = {},
   ) {
-    this.#keys = new TerminalKeyReader(io, options);
+    this.#keys = new TerminalKeyBatchReader(io, options);
   }
 
   /** Read one semantic terminal event, or `null` after end-of-input. */
   async readEvent(): Promise<TerminalInputEvent | null> {
-    const key = await this.#keys.readKey();
-    return key === null ? null : decodeTerminalInputEvent(key);
+    if (this.#pending.length === 0) {
+      const events = await this.readEvents();
+      if (events === null) return null;
+      this.#pending.push(...events);
+    }
+    return this.#pending.shift() ?? null;
+  }
+
+  /**
+   * Read every semantic event decoded from one raw terminal chunk. This is
+   * the backpressure-aware surface for complete-frame interactions: callers
+   * can apply a burst in order and repaint once without flattening events.
+   */
+  async readEvents(): Promise<readonly TerminalInputEvent[] | null> {
+    if (this.#pending.length > 0) return this.#pending.splice(0);
+    const keys = await this.#keys.readKeys();
+    return keys === null ? null : keys.map(decodeTerminalInputEvent);
   }
 }
 

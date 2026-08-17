@@ -1,6 +1,7 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
 import { InteractionCancelled } from "../../src/cli/interactive/errors.ts";
 import type { TerminalIO } from "../../src/cli/interactive/io.ts";
+import { TerminalInputReader } from "../../src/cli/interactive/keys.ts";
 import {
   DISABLE_TERMINAL_MOUSE_BUTTON_TRACKING,
   DISABLE_TERMINAL_MOUSE_SGR_MODE,
@@ -23,6 +24,7 @@ import {
 } from "../../src/cli/interactive/painter.ts";
 import {
   encodeTerminalKeys,
+  encodeTerminalMouseEvent,
   enqueueTerminalEvents,
   FakeSignalSource,
   FakeTerminalIO,
@@ -314,6 +316,134 @@ Deno.test("Escape, Ctrl+C, and EOF share cancellation and exact restoration", as
     assertRestored(io);
     assertMouseRestored(io);
   }
+});
+
+Deno.test("Ctrl+C pre-empts a wheel burst, paints once, and drains reports queued before mouse restoration", async () => {
+  const wheel = encodeTerminalMouseEvent({
+    kind: "mouse",
+    action: "wheel",
+    direction: "down",
+    column: 4,
+    row: 10,
+    modifiers: { shift: false, alt: false, control: false },
+  });
+  const burst = wheel.repeat(30);
+  const io = new FakeTerminalIO([
+    `${burst}${encodeTerminalKeys("ctrl-c")}`,
+    burst,
+    "x",
+    "\x1b[10;4R",
+  ], {
+    columns: 80,
+    rows: 24,
+    mouseTracking: true,
+  });
+  const error = await requestMarkdownBrowser({
+    label: "Burst cancellation",
+    mouse: true,
+    entries: [{
+      kind: "document",
+      id: "guide",
+      label: "Guide",
+      path: "guides/guide.md",
+      source: `# Guide\n\n${
+        Array.from({ length: 40 }, (_, index) => `Paragraph ${index + 1}.`)
+          .join("\n\n")
+      }`,
+    }],
+    initialState: {
+      query: "",
+      queryCursor: 0,
+      highlightedId: "guide",
+      openedDocumentId: "guide",
+      focusedPane: "document",
+      pickerVisibleStart: 0,
+      documentScrollOffset: 0,
+    },
+  }, { io }).catch((caught) => caught);
+  assert(error instanceof InteractionCancelled);
+  assertEquals(error.reason, "Cancelled.");
+  assertEquals(
+    completeFrames(io).length,
+    1,
+    "a cancellation already present in the raw chunk must beat queued wheel repaint work",
+  );
+
+  const disableSgr = io.writes.indexOf(DISABLE_TERMINAL_MOUSE_SGR_MODE);
+  const disableButtons = io.writes.indexOf(
+    DISABLE_TERMINAL_MOUSE_BUTTON_TRACKING,
+  );
+  const inputFence = io.writes.indexOf("\x1b[6n");
+  const showCursor = io.writes.indexOf(SHOW_TERMINAL_CURSOR);
+  assert(
+    disableSgr < disableButtons && disableButtons < inputFence &&
+      inputFence < showCursor,
+    "queued input must be fenced after both tracking modes disable and before screen restoration",
+  );
+
+  const next = new TerminalInputReader(io);
+  assertEquals(await next.readEvent(), {
+    kind: "key",
+    key: { kind: "text", text: "x" },
+  });
+  assertEquals(await next.readEvent(), null);
+});
+
+Deno.test("a wheel burst applies every tick in order but repaints the complete frame once", async () => {
+  const wheel = encodeTerminalMouseEvent({
+    kind: "mouse",
+    action: "wheel",
+    direction: "down",
+    column: 4,
+    row: 10,
+    modifiers: { shift: false, alt: false, control: false },
+  });
+  const io = new FakeTerminalIO([
+    wheel.repeat(4),
+    encodeTerminalKeys("ctrl-c"),
+    "\x1b[10;4R",
+  ], {
+    columns: 80,
+    rows: 24,
+    mouseTracking: true,
+  });
+  const offsets: number[] = [];
+  const error = await runMarkdownBrowserRequest(
+    {
+      label: "Wheel batching",
+      mouse: true,
+      entries: [{
+        kind: "document",
+        id: "guide",
+        label: "Guide",
+        path: "guides/guide.md",
+        source: `# Guide\n\n${
+          Array.from({ length: 40 }, (_, index) => `Paragraph ${index + 1}.`)
+            .join("\n\n")
+        }`,
+      }],
+      initialState: {
+        query: "",
+        queryCursor: 0,
+        highlightedId: "guide",
+        openedDocumentId: "guide",
+        focusedPane: "document",
+        pickerVisibleStart: 0,
+        documentScrollOffset: 0,
+      },
+    },
+    { io },
+    {
+      render(state, capabilities) {
+        offsets.push(state.documentScrollOffset);
+        return renderMarkdownBrowser(state, capabilities);
+      },
+    },
+  ).catch((caught) => caught);
+
+  assert(error instanceof InteractionCancelled);
+  assertEquals(offsets, [0, 12]);
+  assertEquals(completeFrames(io).length, 2);
 });
 
 Deno.test("SIGINT removes readers and restores the alternate screen exactly once", async () => {

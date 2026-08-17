@@ -4,8 +4,15 @@ import type { TerminalCapabilities } from "../capabilities.ts";
 import { validateSemanticInlineDestination } from "../semantic-inline.ts";
 import { InteractionCancelled } from "./errors.ts";
 import { DenoTerminalIO, type TerminalIO, type TerminalSize } from "./io.ts";
-import { type TerminalInputEvent, TerminalInputReader } from "./keys.ts";
-import { assertInteractiveTerminal, withRawTerminal } from "./lifecycle.ts";
+import {
+  type TerminalInputEvent,
+  TerminalInputReader,
+  type TerminalKey,
+} from "./keys.ts";
+import {
+  assertInteractiveTerminal,
+  withRawTerminalInputCleanup,
+} from "./lifecycle.ts";
 import {
   type MarkdownBrowserInputEvent,
   transitionMarkdownBrowser,
@@ -19,6 +26,7 @@ import {
   type MarkdownBrowserResult,
   type MarkdownBrowserState,
 } from "./markdown-browser-model.ts";
+import { drainTerminalMouseInput } from "./mouse-input.ts";
 import {
   fitMarkdownBrowserState,
   renderMarkdownBrowser,
@@ -32,9 +40,9 @@ type BrowserRenderer = <Action>(
   capabilities: TerminalCapabilities,
 ) => string;
 
-interface BrowserInputReader {
-  readEvent(): Promise<TerminalInputEvent | null>;
-}
+type BrowserInputReader =
+  | { readEvents(): Promise<readonly TerminalInputEvent[] | null> }
+  | { readEvent(): Promise<TerminalInputEvent | null> };
 
 /** Runtime effects and optional cooperative cancellation for one browser. */
 export interface MarkdownBrowserRuntime extends InteractionRuntime {
@@ -184,6 +192,21 @@ function resizeEvent(facts: TerminalFacts): MarkdownBrowserInputEvent {
   };
 }
 
+async function readInputEvents(
+  reader: BrowserInputReader,
+): Promise<readonly TerminalInputEvent[] | null> {
+  if ("readEvents" in reader) return await reader.readEvents();
+  const event = await reader.readEvent();
+  return event === null ? null : [event];
+}
+
+function isControlCancellation(
+  event: TerminalInputEvent,
+): event is { readonly kind: "key"; readonly key: TerminalKey } {
+  return event.kind === "key" && event.key.kind === "named" &&
+    event.key.name === "ctrl-c";
+}
+
 /**
  * Drive the package's real Markdown browser with injectable terminal effects.
  * The internal services parameter exists only for package fault testing;
@@ -217,6 +240,7 @@ export async function runMarkdownBrowserRequest<Action>(
   const abort = new AbortMailbox(runtime.abortSignal);
   let stopResizeListener: () => void = () => {};
   let resizeListening = false;
+  let mouseInputObserved = false;
   const stopResize = (): void => {
     if (!resizeListening) return;
     resizeListening = false;
@@ -224,16 +248,17 @@ export async function runMarkdownBrowserRequest<Action>(
   };
 
   try {
-    return await withRawTerminal(io, async () => {
-      let outcome: Settled<MarkdownBrowserResult<Action>>;
+    return await withRawTerminalInputCleanup(io, async () => {
+      let outcome: Settled<MarkdownBrowserResult<Action>> | undefined;
       try {
         stopResizeListener = io.listenResize?.(resize.notify) ?? (() => {});
         resizeListening = true;
         painter.replace(frame);
+        let paintedState = state;
 
-        let inputRead = reader.readEvent().then((event) => ({
+        let inputRead = readInputEvents(reader).then((events) => ({
           kind: "input" as const,
-          event,
+          events,
         }));
         let resizeRead = resize.next().then(() => ({
           kind: "resize" as const,
@@ -265,73 +290,91 @@ export async function runMarkdownBrowserRequest<Action>(
             facts = currentFacts;
             frame = render(state, facts.capabilities);
             painter.replace(frame);
+            paintedState = state;
           } else {
             facts = currentFacts;
           }
 
           if (received.kind === "resize") continue;
-          const event: MarkdownBrowserInputEvent | undefined =
-            received.event === null
-              ? { kind: "end-of-input" }
-              : received.event.kind === "key"
-              ? { kind: "key", key: received.event.key }
-              : received.event.kind === "mouse" && options.mouse === true &&
-                  facts.capabilities.mouseTracking !== false
-              ? received.event
-              : undefined;
-          if (event === undefined) {
-            inputRead = reader.readEvent().then((input) => ({
-              kind: "input" as const,
-              event: input,
-            }));
-            continue;
+          const receivedEvents = received.events ?? [];
+          if (
+            options.mouse === true &&
+            facts.capabilities.mouseTracking !== false &&
+            receivedEvents.some((event) => event.kind === "mouse")
+          ) {
+            mouseInputObserved = true;
           }
-          const next = transitionMarkdownBrowser(
-            state,
-            event,
-            facts.capabilities,
-          );
-          state = next.state;
-          let settled = next;
-          if (next.linkRequest !== undefined) {
-            const resolution = await resolveLink(
-              options,
-              next.linkRequest,
-              abort,
-            );
-            const resolvedFacts = terminalFacts(io);
-            if (!sameGeometry(state, resolvedFacts)) {
-              state = transitionMarkdownBrowser(
-                state,
-                resizeEvent(resolvedFacts),
-                resolvedFacts.capabilities,
-              ).state;
-            }
-            facts = resolvedFacts;
-            settled = transitionMarkdownBrowser(state, {
-              kind: "link-resolution",
-              request: next.linkRequest,
-              resolution,
-            }, facts.capabilities);
-            state = settled.state;
-          }
-          if (settled.result?.kind === "cancelled") {
-            throw new InteractionCancelled(settled.result.reason);
-          }
-          if (settled.result !== undefined) {
-            outcome = { ok: true, value: settled.result };
-            break;
-          }
+          const cancellation = receivedEvents.find(isControlCancellation);
+          const semanticEvents: readonly MarkdownBrowserInputEvent[] =
+            received.events === null
+              ? [{ kind: "end-of-input" }]
+              : cancellation === undefined
+              ? receivedEvents.flatMap((event): MarkdownBrowserInputEvent[] =>
+                event.kind === "key"
+                  ? [{ kind: "key", key: event.key }]
+                  : event.kind === "mouse" && options.mouse === true &&
+                      facts.capabilities.mouseTracking !== false
+                  ? [event]
+                  : []
+              )
+              : [{ kind: "key", key: cancellation.key }];
 
-          frame = render(state, facts.capabilities);
-          painter.replace(frame);
-          inputRead = reader.readEvent().then((input) => ({
+          for (const event of semanticEvents) {
+            const next = transitionMarkdownBrowser(
+              state,
+              event,
+              facts.capabilities,
+            );
+            state = next.state;
+            let settled = next;
+            if (next.linkRequest !== undefined) {
+              const resolution = await resolveLink(
+                options,
+                next.linkRequest,
+                abort,
+              );
+              const resolvedFacts = terminalFacts(io);
+              if (!sameGeometry(state, resolvedFacts)) {
+                state = transitionMarkdownBrowser(
+                  state,
+                  resizeEvent(resolvedFacts),
+                  resolvedFacts.capabilities,
+                ).state;
+              }
+              facts = resolvedFacts;
+              settled = transitionMarkdownBrowser(state, {
+                kind: "link-resolution",
+                request: next.linkRequest,
+                resolution,
+              }, facts.capabilities);
+              state = settled.state;
+            }
+            if (settled.result?.kind === "cancelled") {
+              throw new InteractionCancelled(settled.result.reason);
+            }
+            if (settled.result !== undefined) {
+              outcome = { ok: true, value: settled.result };
+              break;
+            }
+          }
+          if (outcome !== undefined) break;
+
+          if (state !== paintedState) {
+            frame = render(state, facts.capabilities);
+            painter.replace(frame);
+            paintedState = state;
+          }
+          inputRead = readInputEvents(reader).then((events) => ({
             kind: "input" as const,
-            event: input,
+            events,
           }));
         }
       } catch (error) {
         outcome = { ok: false, error };
+      }
+
+      if (outcome === undefined) {
+        throw new TypeError("Markdown browser ended without a result.");
       }
 
       try {
@@ -345,6 +388,10 @@ export async function runMarkdownBrowserRequest<Action>(
       ...signalPassthrough(runtime),
       alternateScreen: true,
       mouseTracking: options.mouse === true,
+      afterMouseDisable: () => {
+        if (!mouseInputObserved) return;
+        return drainTerminalMouseInput(io);
+      },
       onSignalRestore: stopResize,
     });
   } finally {
