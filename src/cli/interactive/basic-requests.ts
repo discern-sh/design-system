@@ -156,7 +156,9 @@ export async function requestMaskedText(
 export interface ConfirmationRequestOptions
   extends InteractionOptions<boolean> {
   readonly initialValue?: boolean;
+  /** Optional label shown on the on side of the Switch track. */
   readonly yesLabel?: string;
+  /** Optional label shown on the off side of the Switch track. */
   readonly noLabel?: string;
 }
 
@@ -204,8 +206,8 @@ class ConfirmationInteractionMachine
       label: this.options.label,
       lifecycle,
       value: this.#value,
-      yesLabel: this.options.yesLabel ?? "Yes",
-      noLabel: this.options.noLabel ?? "No",
+      yesLabel: this.options.yesLabel ?? "",
+      noLabel: this.options.noLabel ?? "",
       ...(this.options.hint === undefined ? {} : { hint: this.options.hint }),
     };
   }

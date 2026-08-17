@@ -440,13 +440,13 @@ Deno.test("grouped Select, Checkbox, and Radio retain structure in narrow ASCII 
 });
 
 const switchFrames = [
-  "Automatic updates [idle]\n┌──────────────────────────┐\n│Off × ●──○   On           │\n└──────────────────────────┘\n",
-  "Automatic updates [active]\n┌──────────────────────────┐\n│› Off × ●──○   On         │\n└──────────────────────────┘\n",
-  "Automatic updates [filled]\n┌──────────────────────────┐\n│Off   ○──● ✓ On           │\n└──────────────────────────┘\n",
-  "Automatic updates [error]\n┌──────────────────────────┐\n│› Off × ●──○   On         │\n└──────────────────────────┘\n! Setting is locked",
-  "Automatic updates [disabled]\n┌──────────────────────────┐\n│Off × ●──○   On           │\n└──────────────────────────┘\nDisabled",
-  "Automatic updates [submitte…\n┌──────────────────────────┐\n│Off   ○──● ✓ On           │\n└──────────────────────────┘\n✓ Submitted",
-  "Automatic updates [cancelle…\n┌──────────────────────────┐\n│Off × ●──○   On           │\n└──────────────────────────┘\n× Change cancelled",
+  "Automatic updates [idle]\n┌──────────────────────────┐\n│× ●──○                    │\n└──────────────────────────┘\n",
+  "Automatic updates [active]\n┌──────────────────────────┐\n│› × ●──○                  │\n└──────────────────────────┘\n",
+  "Automatic updates [filled]\n┌──────────────────────────┐\n│  ○──● ✓                  │\n└──────────────────────────┘\n",
+  "Automatic updates [error]\n┌──────────────────────────┐\n│› × ●──○                  │\n└──────────────────────────┘\n! Setting is locked",
+  "Automatic updates [disabled]\n┌──────────────────────────┐\n│× ●──○                    │\n└──────────────────────────┘\nDisabled",
+  "Automatic updates [submitte…\n┌──────────────────────────┐\n│  ○──● ✓                  │\n└──────────────────────────┘\n✓ Submitted",
+  "Automatic updates [cancelle…\n┌──────────────────────────┐\n│× ●──○                    │\n└──────────────────────────┘\n× Change cancelled",
 ] as const;
 
 Deno.test("Switch renders every static binary state exactly", () => {
@@ -458,12 +458,12 @@ Deno.test("Switch covers narrow, standard, wide, colour, and ASCII frames", () =
     switchCliExamples,
     renderSwitchCli,
     [
-      "Automatic updat…\n┌──────────────┐\n│Off   ○──● ✓On│\n└──────────────┘\n",
+      "Automatic updat…\n┌──────────────┐\n│  ○──● ✓      │\n└──────────────┘\n",
       switchFrames[2],
-      "Automatic updates [filled]\n┌──────────────────────────────────────────────┐\n│Off   ○──● ✓ On                               │\n└──────────────────────────────────────────────┘\n",
+      "Automatic updates [filled]\n┌──────────────────────────────────────────────┐\n│  ○──● ✓                                      │\n└──────────────────────────────────────────────┘\n",
     ],
     switchFrames[1],
-    "Automatic updates [active]\n+--------------------------+\n|> Off x *--o   On         |\n+--------------------------+\n",
+    "Automatic updates [active]\n+--------------------------+\n|> x *--o                  |\n+--------------------------+\n",
   );
 });
 
@@ -505,21 +505,22 @@ Deno.test("Switch renders only the active cross or tick in its semantic tone", (
   assertEquals(stripAnsi(on).includes("×"), false);
 });
 
-Deno.test("Switch keeps its track and active indicator inside every supported narrow frame", () => {
+Deno.test("Switch keeps labelled and bare tracks inside every supported narrow frame", () => {
   for (let width = 8; width <= 15; width += 1) {
     const capabilities = testTerminalCapabilities({ columns: width });
-    for (const value of [false, true]) {
-      const output = renderSwitchCli({
-        kind: "confirm",
-        label: "Automatic updates",
-        value,
-        yesLabel: "On",
-        noLabel: "Off",
-        lifecycle: { status: "active" },
-        width,
-      }, capabilities);
-      for (const line of output.split("\n")) {
-        assert(measureText(line) <= width, stripAnsi(line));
+    for (const labels of [{}, { yesLabel: "On", noLabel: "Off" }]) {
+      for (const value of [false, true]) {
+        const output = renderSwitchCli({
+          kind: "confirm",
+          label: "Automatic updates",
+          value,
+          ...labels,
+          lifecycle: { status: "active" },
+          width,
+        }, capabilities);
+        for (const line of output.split("\n")) {
+          assert(measureText(line) <= width, stripAnsi(line));
+        }
       }
     }
   }

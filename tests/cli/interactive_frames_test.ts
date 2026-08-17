@@ -45,8 +45,6 @@ Deno.test("terminal interactions paint exact real Component frames", async () =>
   await requestConfirmation({
     label: "Continue",
     initialValue: true,
-    yesLabel: "Yes",
-    noLabel: "No",
   }, { io });
   frames.set("switch", firstInteractionFrame(io));
 
@@ -110,7 +108,7 @@ Deno.test("terminal interactions paint exact real Component frames", async () =>
     ],
     [
       "switch",
-      "Continue [active]\n┌──────────────────────────────┐\n│› No   ○──● ✓ Yes             │\n└──────────────────────────────┘\n",
+      "Continue [active]\n┌──────────────────────────────┐\n│›   ○──● ✓                    │\n└──────────────────────────────┘\n",
     ],
     [
       "select",

@@ -23,7 +23,12 @@ import {
 } from "../form-frame.ts";
 
 /** Inputs accepted by the terminal Switch renderer. */
-export interface SwitchCliProps extends ConfirmFrameState {
+export interface SwitchCliProps
+  extends Omit<ConfirmFrameState, "yesLabel" | "noLabel"> {
+  /** Optional label shown on the off side of the track. */
+  readonly noLabel?: string;
+  /** Optional label shown on the on side of the track. */
+  readonly yesLabel?: string;
   readonly presentation?: FormCliPresentation;
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
@@ -33,8 +38,6 @@ const base = {
   kind: "confirm" as const,
   label: "Automatic updates",
   value: false,
-  yesLabel: "On",
-  noLabel: "Off",
 };
 
 /** Every static Switch state rendered by the CLI catalogue. */
@@ -101,14 +104,18 @@ const renderSwitchCli: CliRenderer<SwitchCliProps> = (props, capabilities) => {
     ...(props.theme === undefined ? {} : { theme: props.theme }),
   };
   const availableWidth = controlWidth - measureText(pointer);
-  const rawNoWidth = measureText(state.noLabel);
-  const rawYesWidth = measureText(state.yesLabel);
+  const rawNoLabel = state.noLabel ?? "";
+  const rawYesLabel = state.yesLabel ?? "";
+  const rawNoWidth = measureText(rawNoLabel);
+  const rawYesWidth = measureText(rawYesLabel);
+  const labelled = rawNoWidth > 0 || rawYesWidth > 0;
+  const bareStructureWidth = 8;
   const fullStructureWidth = 10;
   const compactStructureWidth = 9;
-  let visibleNoLabel = state.noLabel;
-  let visibleYesLabel = state.yesLabel;
-  const compact = availableWidth <
-    rawNoWidth + rawYesWidth + fullStructureWidth;
+  let visibleNoLabel = rawNoLabel;
+  let visibleYesLabel = rawYesLabel;
+  const compact = labelled && availableWidth <
+      rawNoWidth + rawYesWidth + fullStructureWidth;
   if (compact && availableWidth >= compactStructureWidth) {
     const labelBudget = availableWidth - compactStructureWidth;
     let noWidth = Math.min(rawNoWidth, Math.ceil(labelBudget / 2));
@@ -120,9 +127,9 @@ const renderSwitchCli: CliRenderer<SwitchCliProps> = (props, capabilities) => {
     );
     visibleNoLabel = noWidth === 0
       ? ""
-      : truncateText(state.noLabel, noWidth, capabilities.unicode ? "…" : ".");
+      : truncateText(rawNoLabel, noWidth, capabilities.unicode ? "…" : ".");
     visibleYesLabel = yesWidth === 0 ? "" : truncateText(
-      state.yesLabel,
+      rawYesLabel,
       yesWidth,
       capabilities.unicode ? "…" : ".",
     );
@@ -167,7 +174,13 @@ const renderSwitchCli: CliRenderer<SwitchCliProps> = (props, capabilities) => {
   );
   const leftIndicator = state.value ? " " : activeIndicator;
   const rightIndicator = state.value ? activeIndicator : " ";
-  const control = availableWidth < compactStructureWidth
+  const control = !labelled
+    ? availableWidth < bareStructureWidth
+      ? state.value ? `${track} ${rightIndicator}` : `${leftIndicator} ${track}`
+      : state.value
+      ? `  ${track} ${rightIndicator}`
+      : `${leftIndicator} ${track}  `
+    : availableWidth < compactStructureWidth
     ? state.value ? `${track} ${rightIndicator}` : `${leftIndicator} ${track}`
     : compact
     ? `${noLabel} ${leftIndicator} ${track} ${rightIndicator}${yesLabel}`
