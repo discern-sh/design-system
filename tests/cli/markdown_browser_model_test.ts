@@ -18,6 +18,7 @@ import {
 } from "../../src/cli/interactive/markdown-browser-model.ts";
 import {
   fitMarkdownBrowserState,
+  markdownBrowserDocumentAnchor,
   markdownBrowserDocumentLines,
   markdownBrowserDocumentMaximumOffset,
   markdownBrowserOffsetForAnchor,
@@ -265,15 +266,22 @@ Deno.test("resizes preserve the open document and nearest meaningful row", () =>
     { columns: 80, rows: 24 },
   );
   state = key(state, { kind: "named", name: "enter" }).state;
-  for (let index = 0; index < 4; index += 1) {
-    state = key(state, { kind: "named", name: "page-down" }).state;
+  const semanticLandmark = "Paragraph 11";
+  const landmarkRow = markdownBrowserDocumentLines(state, capabilities)
+    .findIndex((line) => stripAnsi(line).includes(semanticLandmark));
+  assert(landmarkRow > 0, "fixture must contain a reflowable semantic row");
+  while (state.documentScrollOffset < landmarkRow) {
+    state = key(state, { kind: "named", name: "down" }).state;
   }
-  const before = stripAnsi(
-    markdownBrowserDocumentLines(state, capabilities)[
-      state.documentScrollOffset
-    ] ?? "",
-  ).trim();
-  assertStringIncludes(before, "Paragraph");
+  const currentAnchor = (
+    browser: MarkdownBrowserState<string>,
+    browserCapabilities: ReturnType<typeof testTerminalCapabilities>,
+  ) =>
+    markdownBrowserDocumentAnchor(
+      markdownBrowserDocumentLines(browser, browserCapabilities),
+      browser.documentScrollOffset,
+    ) ?? "";
+  assertStringIncludes(currentAnchor(state, capabilities), semanticLandmark);
 
   const narrowCapabilities = testTerminalCapabilities({ columns: 40 });
   state = transitionMarkdownBrowser(state, {
@@ -284,12 +292,8 @@ Deno.test("resizes preserve the open document and nearest meaningful row", () =>
   assertEquals(state.openedDocumentId, "reader-guide");
   assertEquals(state.focusedPane, "document");
   assertStringIncludes(
-    stripAnsi(
-      markdownBrowserDocumentLines(state, narrowCapabilities)[
-        state.documentScrollOffset
-      ] ?? "",
-    ),
-    "Paragraph",
+    currentAnchor(state, narrowCapabilities),
+    semanticLandmark,
   );
 
   const wideCapabilities = testTerminalCapabilities({ columns: 120 });
@@ -301,12 +305,8 @@ Deno.test("resizes preserve the open document and nearest meaningful row", () =>
   assertEquals(state.columns, 120);
   assertEquals(state.rows, 30);
   assertStringIncludes(
-    stripAnsi(
-      markdownBrowserDocumentLines(state, wideCapabilities)[
-        state.documentScrollOffset
-      ] ?? "",
-    ),
-    "Paragraph",
+    currentAnchor(state, wideCapabilities),
+    semanticLandmark,
   );
 });
 
