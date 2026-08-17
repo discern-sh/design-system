@@ -19,6 +19,8 @@ import {
 import {
   fitMarkdownBrowserState,
   markdownBrowserDocumentLines,
+  markdownBrowserDocumentMaximumOffset,
+  markdownBrowserOffsetForAnchor,
   markdownBrowserPickerWindow,
 } from "../../src/cli/interactive/markdown-browser-renderer.ts";
 import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
@@ -39,6 +41,7 @@ function key<Action>(
         | "enter"
         | "tab"
         | "shift-tab"
+        | "down"
         | "page-up"
         | "page-down"
         | "home"
@@ -58,6 +61,54 @@ function key<Action>(
     { ...capabilities, columns: state.columns },
   );
 }
+
+Deno.test("steady document scrolling advances every rendered row despite repeated anchors", () => {
+  const columns = 60;
+  const documentCapabilities = testTerminalCapabilities({ columns });
+  const repeated = Array.from(
+    { length: 24 },
+    (_, index) => `Repeated landmark.\n\nDetail ${index + 1}.`,
+  ).join("\n\n");
+  let state = createMarkdownBrowserState({
+    label: "Repeated rows",
+    entries: [{
+      kind: "document",
+      id: "repeated",
+      label: "Repeated",
+      path: "guides/repeated.md",
+      source: `# Repeated rows\n\n${repeated}`,
+    }],
+  }, { columns, rows: 18 });
+  state = key(state, { kind: "named", name: "enter" }).state;
+  const maximum = markdownBrowserDocumentMaximumOffset(
+    state,
+    documentCapabilities,
+  );
+  assert(maximum > 20, "fixture must exceed one document viewport");
+
+  for (let expected = 1; expected <= maximum; expected += 1) {
+    state = key(state, { kind: "named", name: "down" }).state;
+    assertEquals(
+      state.documentScrollOffset,
+      expected,
+      `down from rendered row ${expected - 1} must advance exactly one row`,
+    );
+  }
+  state = key(state, { kind: "named", name: "down" }).state;
+  assertEquals(state.documentScrollOffset, maximum, "only the end may clamp");
+});
+
+Deno.test("reflow anchors choose the repeated occurrence nearest their fallback", () => {
+  const divider = "├────────────────────────────────────┤";
+  assertEquals(
+    markdownBrowserOffsetForAnchor(
+      [divider, "first", divider, "second", divider],
+      divider,
+      4,
+    ),
+    4,
+  );
+});
 
 Deno.test("Markdown browser state is immutable, grouped, searchable, and initially full-height", () => {
   const state = createMarkdownBrowserState(

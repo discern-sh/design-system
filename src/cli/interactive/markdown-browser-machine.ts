@@ -696,6 +696,7 @@ function resizeState<Action>(
     ...(anchor === undefined
       ? { documentAnchor: null }
       : { documentAnchor: anchor }),
+    documentAnchorPending: anchor !== undefined,
   });
   if (state.openedDocumentId !== undefined) {
     const newMaximum = markdownBrowserDocumentMaximumOffset(
@@ -710,6 +711,7 @@ function resizeState<Action>(
       ...(anchor === undefined
         ? { documentAnchor: null }
         : { documentAnchor: anchor }),
+      documentAnchorPending: anchor !== undefined,
     });
   }
   return fitMarkdownBrowserState(resized, capabilities);

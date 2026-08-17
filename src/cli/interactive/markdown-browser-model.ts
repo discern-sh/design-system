@@ -235,6 +235,8 @@ export interface MarkdownBrowserState<Action> {
   readonly pickerVisibleStart: number;
   readonly documentScrollOffset: number;
   readonly documentAnchor?: string;
+  /** Package-owned marker: the persisted anchor still needs one projection fit. */
+  readonly documentAnchorPending?: true;
   readonly linkFocus?: MarkdownBrowserLinkFocus;
   readonly columns: number;
   readonly rows: number;
@@ -327,6 +329,7 @@ export interface MarkdownBrowserStatePatch {
   readonly pickerVisibleStart?: number;
   readonly documentScrollOffset?: number;
   readonly documentAnchor?: string | null;
+  readonly documentAnchorPending?: boolean;
   readonly linkFocus?: MarkdownBrowserLinkFocus | null;
   readonly columns?: number;
   readonly rows?: number;
@@ -684,6 +687,7 @@ function stateFrom<Action>(
   resume: MarkdownBrowserResumableState,
   geometry: MarkdownBrowserGeometry,
   feedback?: MarkdownBrowserFeedback,
+  documentAnchorPending = false,
 ): MarkdownBrowserState<Action> {
   assertGeometry(geometry);
   if (geometry.columns < MARKDOWN_BROWSER_MINIMUM_COLUMNS) {
@@ -780,6 +784,9 @@ function stateFrom<Action>(
     ...(resume.documentAnchor === undefined
       ? {}
       : { documentAnchor: resume.documentAnchor }),
+    ...(documentAnchorPending && resume.documentAnchor !== undefined
+      ? { documentAnchorPending: true as const }
+      : {}),
     ...(resume.linkFocus === undefined
       ? {}
       : { linkFocus: Object.freeze({ ...resume.linkFocus }) }),
@@ -842,7 +849,13 @@ export function createMarkdownBrowserState<Action>(
         pickerVisibleStart: 0,
         documentScrollOffset: 0,
       });
-  return stateFrom(config, resume, geometry);
+  return stateFrom(
+    config,
+    resume,
+    geometry,
+    undefined,
+    initial?.documentAnchor !== undefined,
+  );
 }
 
 /** Project the stable immutable subset returned alongside actions and exits. */
@@ -899,6 +912,12 @@ export function updateMarkdownBrowserState<Action>(
   const linkFocus = patch.linkFocus === null
     ? undefined
     : patch.linkFocus ?? state.linkFocus;
+  const documentAnchor = patch.documentAnchor === null
+    ? undefined
+    : patch.documentAnchor ?? state.documentAnchor;
+  const documentAnchorPending = documentAnchor !== undefined &&
+    (patch.documentAnchorPending ??
+      (state.documentAnchorPending === true));
   const resume: MarkdownBrowserResumableState = {
     query,
     queryCursor: cursor,
@@ -908,13 +927,9 @@ export function updateMarkdownBrowserState<Action>(
     pickerVisibleStart: patch.pickerVisibleStart ?? state.pickerVisibleStart,
     documentScrollOffset: patch.documentScrollOffset ??
       state.documentScrollOffset,
-    ...((patch.documentAnchor === null
-        ? undefined
-        : patch.documentAnchor ?? state.documentAnchor) === undefined
-      ? {}
-      : {
-        documentAnchor: patch.documentAnchor ?? state.documentAnchor,
-      }),
+    ...(documentAnchor === undefined ? {} : {
+      documentAnchor,
+    }),
     ...(linkFocus === undefined ? {} : { linkFocus }),
   };
   return stateFrom(
@@ -925,6 +940,7 @@ export function updateMarkdownBrowserState<Action>(
       rows: patch.rows ?? state.rows,
     },
     patch.feedback === null ? undefined : patch.feedback ?? state.feedback,
+    documentAnchorPending,
   );
 }
 

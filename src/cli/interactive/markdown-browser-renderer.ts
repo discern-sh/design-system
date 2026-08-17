@@ -690,9 +690,10 @@ export function markdownBrowserOffsetForAnchor(
   anchor: string | undefined,
   fallback: number,
 ): number {
-  if (anchor === undefined) return Math.max(0, fallback);
+  const safeFallback = Math.max(0, fallback);
+  if (anchor === undefined) return safeFallback;
   const wanted = normalizedAnchor(anchor);
-  if (wanted === "") return Math.max(0, fallback);
+  if (wanted === "") return safeFallback;
   let best: { readonly index: number; readonly score: number } | undefined;
   const words = wanted.split(" ").filter((word) => word !== "").slice(0, 4);
   for (const [index, line] of lines.entries()) {
@@ -702,14 +703,30 @@ export function markdownBrowserOffsetForAnchor(
       candidate.includes(wanted) || candidate.startsWith(wanted) ||
       (wanted.startsWith(candidate) && candidate.split(" ").length >= 2)
     ) {
-      return index;
+      if (
+        best === undefined || best.score < words.length + 1 ||
+        Math.abs(index - safeFallback) <
+          Math.abs(best.index - safeFallback)
+      ) {
+        best = { index, score: words.length + 1 };
+      }
+      continue;
     }
     const score = words.filter((word) => candidate.includes(word)).length;
-    if (score > (best?.score ?? 0)) best = { index, score };
+    if (
+      score > (best?.score ?? 0) ||
+      (score === best?.score &&
+        Math.abs(index - safeFallback) <
+          Math.abs(best.index - safeFallback))
+    ) {
+      best = { index, score };
+    }
   }
-  return best !== undefined && best.score >= Math.min(2, words.length)
+  return best !== undefined &&
+      (best.score > words.length ||
+        best.score >= Math.min(2, words.length))
     ? best.index
-    : Math.max(0, fallback);
+    : safeFallback;
 }
 
 function renderDocumentPane<Action>(
@@ -812,17 +829,20 @@ export function fitMarkdownBrowserState<Action>(
   const maximum = state.layout.documentRows === 0
     ? Math.max(0, lines.length - 1)
     : Math.max(0, lines.length - markdownBrowserDocumentVisibleRows(state));
-  const anchored = markdownBrowserOffsetForAnchor(
-    lines,
-    state.documentAnchor,
-    state.documentScrollOffset,
-  );
+  const anchored = state.documentAnchorPending === true
+    ? markdownBrowserOffsetForAnchor(
+      lines,
+      state.documentAnchor,
+      state.documentScrollOffset,
+    )
+    : Math.max(0, state.documentScrollOffset);
   const offset = Math.min(anchored, maximum);
   const anchor = markdownBrowserDocumentAnchor(lines, offset);
   if (
     (window?.start ?? state.pickerVisibleStart) === state.pickerVisibleStart &&
     offset === state.documentScrollOffset &&
-    anchor === state.documentAnchor
+    anchor === state.documentAnchor &&
+    state.documentAnchorPending !== true
   ) {
     return state;
   }
@@ -832,6 +852,7 @@ export function fitMarkdownBrowserState<Action>(
     ...(anchor === undefined
       ? { documentAnchor: null }
       : { documentAnchor: anchor }),
+    documentAnchorPending: false,
   });
 }
 
