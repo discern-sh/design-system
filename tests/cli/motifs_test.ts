@@ -201,7 +201,11 @@ Deno.test("terminal motif definitions admit narrow-A glyphs and reject unsafe cl
   );
 });
 
-Deno.test("the discern glyph repertoire has one production authority", async () => {
+Deno.test("every distinctive glyph repertoire has one production authority", async () => {
+  const authorities: readonly [string, readonly string[]][] = [
+    ["/src/cli/motif.ts", ["◮", "◭", "⧩", "⧨", "◓", "◑", "◒"]],
+    ["/src/cli/triangles.ts", ["▲", "△"]],
+  ];
   const roots = [
     new URL("../../src/cli/", import.meta.url),
     new URL("../../src/components/", import.meta.url),
@@ -209,13 +213,13 @@ Deno.test("the discern glyph repertoire has one production authority", async () 
   const leaks: string[] = [];
   for (const root of roots) {
     for (const source of await terminalSourceFiles(root)) {
-      if (source.pathname.endsWith("/src/cli/motif.ts")) continue;
       const text = await Deno.readTextFile(source);
-      for (
-        const glyph of ["◮", "◭", "⧩", "⧨", "◓", "◑", "◒", "▲", "△"]
-      ) {
-        if (text.includes(glyph)) {
-          leaks.push(`${source.pathname}: ${glyph}`);
+      for (const [authority, glyphs] of authorities) {
+        if (source.pathname.endsWith(authority)) continue;
+        for (const glyph of glyphs) {
+          if (text.includes(glyph)) {
+            leaks.push(`${source.pathname}: ${glyph}`);
+          }
         }
       }
     }

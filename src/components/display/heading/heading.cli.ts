@@ -10,6 +10,7 @@ import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { withCliHeadingBoundary } from "../../../cli/heading-boundary.ts";
 import {
   type TerminalMotifOptions,
+  terminalMotifRegisterRoles,
   terminalMotifRepertoire,
 } from "../../../cli/motif.ts";
 import {
@@ -157,7 +158,12 @@ function renderDocumentHeading(
 ): string {
   const { accent, content, level, overflow, theme, width } = options;
   const prefix = level === 1
-    ? `${terminalMotifRepertoire(props.motif, capabilities.unicode).marker} `
+    ? `${
+      terminalMotifRegisterRoles(
+        terminalMotifRepertoire(props.motif, capabilities.unicode),
+        props.register,
+      ).marker
+    } `
     : level === 3
     ? "╶─ "
     : "";

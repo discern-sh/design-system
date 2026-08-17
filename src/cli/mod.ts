@@ -17,14 +17,18 @@ export {
   defineTerminalMotif,
   deriveTerminalMotif,
   DISCERN_TERMINAL_MOTIF,
+  terminalMotifQuietMarker,
+  terminalMotifRegisterRoles,
   terminalMotifRepertoire,
 } from "./motif.ts";
 export type {
   TerminalMotif,
+  TerminalMotifBrandRegister,
   TerminalMotifCycle,
   TerminalMotifDefinition,
   TerminalMotifOptions,
   TerminalMotifOverrides,
+  TerminalMotifRegister,
   TerminalMotifRepertoire,
   TerminalMotifRepertoireDefinition,
   TerminalMotifRepertoireOverrides,

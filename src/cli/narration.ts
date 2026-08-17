@@ -19,7 +19,11 @@ import {
 } from "./ansi.ts";
 import type { TerminalCapabilities } from "./capabilities.ts";
 import type { CliRenderer } from "./contracts.ts";
-import { type TerminalMotifOptions, terminalMotifRepertoire } from "./motif.ts";
+import {
+  type TerminalMotifOptions,
+  terminalMotifRegisterRoles,
+  terminalMotifRepertoire,
+} from "./motif.ts";
 import { measureText, wrapText } from "./text.ts";
 import {
   type TerminalSemanticTone,
@@ -119,7 +123,10 @@ function renderNarrationLine(
   const width = Math.min(requestedWidth, capabilities.columns);
   const theme = terminalThemes[props.theme ?? "dark"];
   const marker = "motifMarker" in spec
-    ? terminalMotifRepertoire(props.motif, capabilities.unicode).marker
+    ? terminalMotifRegisterRoles(
+      terminalMotifRepertoire(props.motif, capabilities.unicode),
+      props.register,
+    ).marker
     : capabilities.unicode
     ? spec.unicodeMarker
     : spec.asciiMarker;

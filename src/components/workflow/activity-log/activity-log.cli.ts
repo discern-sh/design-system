@@ -14,6 +14,7 @@ import type {
 import {
   motifPassthrough,
   type TerminalMotifOptions,
+  terminalMotifRegisterRoles,
   terminalMotifRepertoire,
 } from "../../../cli/motif.ts";
 import {
@@ -159,7 +160,10 @@ const renderActivityLogCli: CliRenderer<ActivityLogCliProps> = (
     ? renderMotifSpinnerFrame(props.phase, capabilities, presentation)
     : props.lifecycle.status === "submitted"
     ? styleText(
-      terminalMotifRepertoire(props.motif, capabilities.unicode).marker,
+      terminalMotifRegisterRoles(
+        terminalMotifRepertoire(props.motif, capabilities.unicode),
+        props.register,
+      ).marker,
       { color: terminalToneColor(theme, "accent") },
       capabilities,
     )
