@@ -96,7 +96,7 @@ function cursorReportAt(input: Uint8Array, start: number): ProtocolSequence {
     : { kind: "invalid" };
 }
 
-/** Strip SGR reports up to the private cursor-position input fence. */
+/** Strip SGR reports up to the cursor-position input fence. */
 function sanitizeUntilFence(
   input: Uint8Array,
   finish = false,

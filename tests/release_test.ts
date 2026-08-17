@@ -270,6 +270,8 @@ const mouseEvent = {
 } as const;
 const mouseIo = new FakeTerminalIO([encodeTerminalMouseEvent(mouseEvent)]);
 const decodedMouse = await new TerminalInputReader(mouseIo).readEvent();
+const mouseBatchIo = new FakeTerminalIO([encodeTerminalMouseEvent(mouseEvent)]);
+const decodedMouseBatch = await new TerminalInputReader(mouseBatchIo).readEvents();
 const browserIo = new FakeTerminalIO(
   ["online", encodeTerminalKeys("enter")],
   { colorDepth: "truecolor", columns: 40, rows: 24 },
@@ -331,6 +333,7 @@ console.log(JSON.stringify({
   browserResizeListeners: browserIo.resizeListenerCount,
   documentMatch: documentMatches[0]?.id,
   mouseAction: decodedMouse?.kind === "mouse" ? decodedMouse.action : "none",
+  mouseBatchSize: decodedMouseBatch?.length,
   mouseCoordinateBound: TERMINAL_MOUSE_MAX_COORDINATE,
   projectedColumns: cellRows[0]?.columns,
   headingIncludesReading: readingHeading.includes("Reading foundations"),
@@ -360,6 +363,7 @@ console.log(JSON.stringify({
     assertStringIncludes(output, `"browserResizeListeners":0`);
     assertStringIncludes(output, `"documentMatch":"guide"`);
     assertStringIncludes(output, `"mouseAction":"wheel"`);
+    assertStringIncludes(output, `"mouseBatchSize":1`);
     assertStringIncludes(output, `"mouseCoordinateBound":1000000`);
     assertStringIncludes(output, `"projectedColumns":9`);
     assertStringIncludes(output, `"headingIncludesReading":true`);
