@@ -75,6 +75,7 @@ Deno.test("terminal foundation inventory enrols every sheet and specimen", () =>
   assertEquals(specimens.map(({ id }) => id), [
     "horizontal-divider",
     "left-aligned-divider",
+    "brand-register-divider",
     "vertical-divider",
     "thick-ribbon",
     "spinner-phases",
