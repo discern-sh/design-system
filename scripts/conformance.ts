@@ -917,9 +917,9 @@ async function verifyTerminalCatalogue(
       await allTerminalLayoutsUse("light"),
       "Light mode did not reach every terminal layout",
     );
-    await page.locator(
-      '.discern-catalogue-theme input[value="dark"]',
-    ).check();
+    await page.getByRole("button", {
+      name: "Switch to the dark theme",
+    }).click();
     await eventually(
       async () => await allTerminalLayoutsUse("dark"),
       "Dark mode did not reach every terminal layout",
@@ -973,9 +973,9 @@ async function verifyTerminalCatalogue(
       "Heading CLI specimen needs projected colour evidence",
     );
 
-    await page.locator(
-      '.discern-catalogue-theme input[value="dark"]',
-    ).check();
+    await page.getByRole("button", {
+      name: "Switch to the dark theme",
+    }).click();
     await eventually(
       async () => await allComponentSurfacesUse("dark"),
       "Dark mode did not reach every terminal Component",
@@ -988,9 +988,13 @@ async function verifyTerminalCatalogue(
     );
 
     await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
-    await page.locator(
-      '.discern-catalogue-theme input[value="system"]',
-    ).check();
+    await page.evaluate(() =>
+      localStorage.removeItem("discern-catalogue-theme")
+    );
+    const systemReviewUrl = new URL(catalogueRoutePaths.review, origin);
+    systemReviewUrl.searchParams.set("scope", "all");
+    systemReviewUrl.searchParams.set("surface", "cli");
+    await loadCataloguePage(page, systemReviewUrl.href);
     await eventually(
       async () => await allComponentSurfacesUse("light"),
       "System mode did not follow a light browser preference",

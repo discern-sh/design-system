@@ -60,7 +60,9 @@
     position: fixed;
     z-index: 20;
     inset: 0 auto 0 0;
+    display: flex;
     width: var(--discern-catalogue-sidebar);
+    flex-direction: column;
     overflow-y: auto;
     border-inline-end: 1px solid var(--discern-color-border);
     background: color-mix(in oklab, var(--discern-color-canvas) 94%,
@@ -122,6 +124,7 @@
     text-transform: uppercase;
   }
   .discern-catalogue-nav {
+    flex: 1 0 auto;
     padding: 18px 14px 36px;
   }
   .discern-catalogue-nav a,
@@ -142,7 +145,7 @@
     background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink);
   }
-  .discern-catalogue-nav a[aria-current="page"] {
+  .discern-catalogue-nav a[aria-current] {
     background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink);
     font-weight: var(--discern-font-weight-strong);
@@ -164,12 +167,38 @@
     padding-inline-start: 22px !important;
     color: var(--discern-color-ink-faint) !important;
   }
+  .discern-catalogue-nav a.discern-catalogue-nav__child[aria-current] {
+    color: var(--discern-color-ink) !important;
+  }
+  .discern-catalogue-nav__back {
+    justify-content: flex-start !important;
+    gap: 8px;
+    margin-block-start: 18px !important;
+    color: var(--discern-color-ink-muted) !important;
+    font-weight: var(--discern-font-weight-strong);
+  }
+  .discern-catalogue-nav__back + .discern-catalogue-nav__heading {
+    margin-block-start: 6px;
+  }
   .discern-catalogue-nav__heading {
     margin-block-start: 18px;
     color: var(--discern-color-ink-faint);
     font: var(--discern-font-size-xs) var(--discern-font-ui);
     letter-spacing: 0.1em;
     text-transform: uppercase;
+  }
+  .discern-catalogue-sidebar__version {
+    position: sticky;
+    z-index: 2;
+    bottom: 0;
+    flex: none;
+    margin: 0;
+    padding: 12px 22px;
+    border-block-start: 1px solid var(--discern-color-border);
+    background: color-mix(in oklab, var(--discern-color-canvas) 92%,
+      var(--discern-color-surface));
+    color: var(--discern-color-ink-faint);
+    font: var(--discern-font-size-xs) var(--discern-font-mono);
   }
   .discern-catalogue-toolbar {
     position: fixed;
@@ -232,6 +261,11 @@
       transparent);
     outline: 0;
   }
+  .discern-catalogue-search > span:first-child {
+    flex: none;
+    font-size: var(--discern-font-size-lg);
+    line-height: 1;
+  }
   .discern-catalogue-search > span:nth-child(2) {
     flex: 1;
     min-width: 0;
@@ -241,13 +275,6 @@
   }
   .discern-catalogue-search .discern-kbd {
     flex: none;
-  }
-  .discern-catalogue-version {
-    flex: none;
-    color: var(--discern-color-ink-faint);
-    font: var(--discern-font-size-xs) var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
-    white-space: nowrap;
   }
   .discern-catalogue-theme {
     margin-inline-start: auto;
@@ -399,6 +426,9 @@
     font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-card-title);
   }
+  .discern-catalogue-route-card > h2:first-child {
+    margin-block-start: 0;
+  }
   .discern-catalogue-route-card p {
     margin: 0;
     color: var(--discern-color-ink-muted);
@@ -525,6 +555,9 @@
     font-family: var(--discern-font-ui);
     font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-card-title);
+  }
+  .discern-catalogue-component-link > h3:first-child {
+    margin-block-start: 0;
   }
   .discern-catalogue-component-link p {
     margin: 0;
@@ -1571,11 +1604,6 @@
       grid-column: 1 / -1;
     }
   }
-  @media (max-width: 1100px) {
-    .discern-catalogue-version > span {
-      display: none;
-    }
-  }
   @media (max-width: 640px) {
     .discern-catalogue-toolbar {
       padding-inline: 12px;
@@ -1586,19 +1614,8 @@
       min-width: 0;
       padding-inline: 8px;
     }
-    .discern-catalogue-theme .discern-theme-switcher__option span {
-      padding-inline: var(--discern-space-2);
-    }
     .discern-catalogue-accent {
       display: none;
-    }
-    .discern-catalogue-accent__label {
-      position: absolute;
-      inline-size: 1px;
-      block-size: 1px;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
     }
     .discern-catalogue-accent input {
       inline-size: 72px;

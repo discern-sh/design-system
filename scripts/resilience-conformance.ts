@@ -1179,16 +1179,24 @@ async function verifyThemeSystem(
           const control = controlSelector === undefined
             ? null
             : consumer.querySelector(controlSelector);
-          const checked = control?.querySelector<HTMLInputElement>(
-            "input:checked",
-          )?.value;
+          const resolved = mode === "system"
+            ? matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light"
+            : mode;
+          const expectedLabel = resolved === "dark"
+            ? "Switch to the light theme"
+            : "Switch to the dark theme";
+          const controlLabel = control?.getAttribute("aria-label");
           const storageKey = consumer.dataset.discernThemeStorageKey;
           const stored = storageKey === undefined
             ? undefined
             : localStorage.getItem(storageKey);
-          if (checked !== mode) {
+          if (control !== null && controlLabel !== expectedLabel) {
             problems.push(
-              `checked theme ${checked ?? "none"} disagrees with root ${mode}`,
+              `theme control names ${
+                controlLabel ?? "nothing"
+              } instead of ${expectedLabel}`,
             );
           }
           if (control === null) {
@@ -1215,7 +1223,7 @@ async function verifyThemeSystem(
         const targets = {
           consumer: document.querySelector("[data-discern-theme-consumer]"),
           control: document.querySelector(
-            "[data-discern-theme-consumer] [data-discern-mode]",
+            "[data-discern-theme-consumer] .discern-theme-toggle",
           ),
           sidebar: document.querySelector(".discern-catalogue-sidebar"),
           toolbar: document.querySelector(".discern-catalogue-toolbar"),
@@ -1254,7 +1262,7 @@ async function verifyThemeSystem(
       throw new Error("Theme consumer has no control selector");
     }
     const control = root.locator(controlSelector);
-    await control.getByRole("radio", { name: "Light", exact: true }).check();
+    await control.click();
     const lightGeometry = await geometry();
     let geometryChecks = 0;
     for (const [name, before] of Object.entries(darkGeometry)) {
@@ -1282,13 +1290,32 @@ async function verifyThemeSystem(
         `Theme system: ${failure}`
       ),
     );
-    await control.getByRole("radio", { name: "System", exact: true }).check();
+    await control.click();
+    failures.push(
+      ...(await inspect()).failures.map((failure) =>
+        `Theme system: ${failure}`
+      ),
+    );
+    await page.evaluate(() =>
+      localStorage.removeItem("discern-catalogue-theme")
+    );
+    await page.reload({ waitUntil: "networkidle" });
+    await root.waitFor();
+    await page.evaluate(() => document.fonts.ready.then(() => undefined));
     failures.push(
       ...(await inspect()).failures.map((failure) =>
         `Theme system: ${failure}`
       ),
     );
     await page.emulateMedia({ colorScheme: "light" });
+    await page.getByRole("button", {
+      name: "Switch to the dark theme",
+    }).waitFor();
+    failures.push(
+      ...(await inspect()).failures.map((failure) =>
+        `Theme system: ${failure}`
+      ),
+    );
     const lightCanvas = await root.evaluate((node) =>
       getComputedStyle(node).getPropertyValue("--discern-color-canvas").trim()
     );
@@ -1467,14 +1494,22 @@ async function verifyThemeSystem(
         const control = selector === undefined
           ? null
           : consumer.querySelector(selector);
-        const checked = control?.querySelector<HTMLInputElement>(
-          "input:checked",
-        )?.value;
+        const resolved = mode === "system"
+          ? matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light"
+          : mode;
+        const expectedLabel = resolved === "dark"
+          ? "Switch to the light theme"
+          : "Switch to the dark theme";
+        const controlLabel = control?.getAttribute("aria-label");
         const key = consumer.dataset.discernThemeStorageKey;
         const stored = key === undefined
           ? undefined
           : localStorage.getItem(key);
-        if (checked !== mode) problems.push("checked/root mismatch");
+        if (controlLabel !== expectedLabel) {
+          problems.push("control/root mismatch");
+        }
         if (key !== undefined && stored !== mode) {
           problems.push("storage/root mismatch");
         }
@@ -1484,11 +1519,10 @@ async function verifyThemeSystem(
       const future = document.createElement("div");
       future.dataset.discernThemeConsumer = "";
       future.dataset.discernTheme = "dark";
-      future.dataset.discernThemeControl = ".discern-theme-switcher";
+      future.dataset.discernThemeControl = ".discern-theme-toggle";
       future.dataset.discernThemeStorageKey = "future-theme";
-      future.innerHTML = "<fieldset class='discern-theme-switcher'>" +
-        "<label><input type='radio' value='system' checked>System</label>" +
-        "</fieldset>";
+      future.innerHTML = "<button class='discern-theme-toggle' " +
+        "aria-label='Switch to the dark theme'></button>";
       localStorage.setItem("future-theme", "light");
       document.body.append(future);
       const caught = failuresFor(future).length === 2;

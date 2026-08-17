@@ -5,6 +5,9 @@ import {
   assertStringIncludes,
 } from "@std/assert";
 import { fromFileUrl, join, relative } from "@std/path";
+import { createElement } from "react";
+import type { ComponentType } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { buildDesignSystem } from "../scripts/build.ts";
 import {
   type CataloguePurpose,
@@ -34,6 +37,7 @@ type PropDocumentation =
 
 interface CatalogueEntry {
   readonly meta: ComponentMeta;
+  readonly Examples: ComponentType;
   readonly states: readonly CatalogueState[];
   readonly reactExport: string;
   readonly selection: {
@@ -72,6 +76,19 @@ function entry(
   assert(found !== undefined, `missing Catalogue entry ${slug}`);
   return found;
 }
+
+Deno.test("Theme Toggle's Catalogue example presents one page-chrome control", async () => {
+  const { registry } = await catalogue();
+  const markup = renderToStaticMarkup(
+    createElement(entry(registry, "theme-toggle").Examples),
+  );
+  const controls = markup.match(
+    /class="[^"]*\bdiscern-theme-toggle\b[^"]*"/g,
+  ) ?? [];
+
+  assertEquals(controls.length, 1);
+  assertEquals(markup.includes("Lorem ipsum"), false);
+});
 
 Deno.test("Catalogue purposes are closed, selective, and guidance-backed", async () => {
   const { registry } = await catalogue();
@@ -337,6 +354,45 @@ Deno.test("Catalogue navigation is contextual while the explorer stays specimen-
   assert(controlsBody !== undefined, "missing explorer controls rule");
   assertStringIncludes(controlsBody, "display: grid;");
   assert(!controlsBody.includes("display: none;"));
+});
+
+Deno.test("Catalogue chrome stays compact and exposes its active hierarchy", async () => {
+  const source = await Deno.readTextFile(
+    join(PACKAGE_ROOT, "catalogue", "app.tsx"),
+  );
+  const css = await Deno.readTextFile(
+    join(PACKAGE_ROOT, "catalogue", "catalogue.css"),
+  );
+
+  assertStringIncludes(source, "<ThemeToggle");
+  assertStringIncludes(source, "theme={terminalTheme}");
+  assert(!/<ThemeSwitcher(?:\s|>)/.test(source));
+  assertStringIncludes(source, 'aria-label="Accent hue"');
+  assert(!source.includes("discern-catalogue-accent__label"));
+  assertStringIncludes(source, "discern-catalogue-sidebar__version");
+  assertStringIncludes(source, "discern-catalogue-nav__back");
+  assertStringIncludes(source, "aria-current={activeGroup === group");
+  assertStringIncludes(source, "aria-current={activePurpose === purpose");
+  assertStringIncludes(source, "aria-current={activeHash ===");
+  assert(!source.includes('eyebrow="Group"'));
+  assert(!source.includes('eyebrow="Purpose"'));
+  assert(!source.includes('eyebrow="Review Group"'));
+  assertStringIncludes(source, 'eyebrow="Browse"');
+  assertStringIncludes(source, "showComponentGroupLabels");
+  assertStringIncludes(source, ").size > 1;");
+
+  assertMatch(
+    css,
+    /\.discern-catalogue-search > span:first-child\s*\{[^}]*font-size:\s*var\(--discern-font-size-lg\);/s,
+  );
+  assertMatch(
+    css,
+    /\.discern-catalogue-sidebar__version\s*\{[^}]*font:\s*var\(--discern-font-size-xs\) var\(--discern-font-mono\);/s,
+  );
+  assertMatch(
+    css,
+    /\.discern-catalogue-nav a\.discern-catalogue-nav__child\[aria-current\]\s*\{[^}]*color:\s*var\(--discern-color-ink\) !important;/s,
+  );
 });
 
 Deno.test("Catalogue search routes directly to generated destinations", async () => {

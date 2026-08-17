@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
-import { ThemeSwitcher } from "../src/components/core/theme-switcher/theme-switcher.tsx";
 import type { ThemeSwitcherMode } from "../src/components/core/theme-switcher/theme-switcher.tsx";
+import { ThemeToggle } from "../src/components/core/theme-toggle/theme-toggle.tsx";
 import { Kicker } from "../src/components/display/kicker/kicker.tsx";
 import { CopyButton } from "../src/components/docs/copy-button/copy-button.tsx";
 import { Kbd } from "../src/components/docs/kbd/kbd.tsx";
@@ -43,6 +43,8 @@ import { TerminalLayoutRecipe } from "./terminal-layout-inspector.tsx";
 import { useCatalogueTerminalTheme } from "./terminal-theme.ts";
 
 type CatalogueSurface = "web" | "cli";
+
+const catalogueLocationChangeEvent = "discern-catalogue-location-change";
 
 interface CatalogueSearchDestination {
   readonly href: string;
@@ -551,7 +553,7 @@ function CatalogueRouteCard(
     count,
   }: {
     readonly href: string;
-    readonly eyebrow: string;
+    readonly eyebrow?: string;
     readonly title: string;
     readonly description: string;
     readonly count?: number | string;
@@ -559,7 +561,7 @@ function CatalogueRouteCard(
 ) {
   return (
     <a className="discern-catalogue-route-card" href={href}>
-      <span>{eyebrow}</span>
+      {eyebrow === undefined ? null : <span>{eyebrow}</span>}
       <h2>{title}</h2>
       <p>{description}</p>
       {count === undefined ? null : <small>{count}</small>}
@@ -815,6 +817,7 @@ function ComponentIndexPage(
       url.searchParams.delete("all");
     }
     globalThis.history.replaceState(null, "", url);
+    globalThis.dispatchEvent(new Event(catalogueLocationChangeEvent));
   };
 
   const normalizedQuery = query.trim().toLowerCase();
@@ -833,6 +836,9 @@ function ComponentIndexPage(
       ...(meta.notWhen ?? []),
     ].join(" ").toLowerCase().includes(normalizedQuery);
   });
+  const showComponentGroupLabels = new Set(
+    filteredComponents.map(({ meta }) => meta.group),
+  ).size > 1;
   const resultsVisible = showAll || group !== undefined ||
     purpose !== undefined || normalizedQuery !== "";
 
@@ -951,7 +957,9 @@ function ComponentIndexPage(
                       href={catalogueComponentPath(meta.slug)}
                       key={meta.slug}
                     >
-                      <span>{meta.group}</span>
+                      {showComponentGroupLabels
+                        ? <span>{meta.group}</span>
+                        : null}
                       <h3>{meta.name}</h3>
                       <p>{meta.description}</p>
                       <small>
@@ -976,7 +984,6 @@ function ComponentIndexPage(
                 ) => (
                   <CatalogueRouteCard
                     href={componentGroupHref(candidate)}
-                    eyebrow="Group"
                     title={candidate}
                     description={entries.slice(0, 4).map(({ meta }) =>
                       meta.name
@@ -999,7 +1006,6 @@ function ComponentIndexPage(
                 {cataloguePurposes.map((candidate) => (
                   <CatalogueRouteCard
                     href={componentPurposeHref(candidate)}
-                    eyebrow="Purpose"
                     title={purposeDetails[candidate].label}
                     description={purposeDetails[candidate].description}
                     count={sortedComponents.filter(({ meta }) =>
@@ -1082,7 +1088,6 @@ function ReviewLanding(
           ) => (
             <CatalogueRouteCard
               href={reviewHref({ group })}
-              eyebrow="Review Group"
               title={group}
               description={"Mount " + entries.length +
                 " complete specimens with their Web and CLI controls."}
@@ -1317,6 +1322,31 @@ function CatalogueSidebar(
     readonly onNavigate: () => void;
   },
 ) {
+  const [navigationUrl, setNavigationUrl] = useState(() =>
+    new URL(globalThis.location.href)
+  );
+  useEffect(() => {
+    const synchronise = (): void => {
+      setNavigationUrl(new URL(globalThis.location.href));
+    };
+    globalThis.addEventListener("hashchange", synchronise);
+    globalThis.addEventListener("popstate", synchronise);
+    globalThis.addEventListener(catalogueLocationChangeEvent, synchronise);
+    return () => {
+      globalThis.removeEventListener("hashchange", synchronise);
+      globalThis.removeEventListener("popstate", synchronise);
+      globalThis.removeEventListener(catalogueLocationChangeEvent, synchronise);
+    };
+  }, []);
+  const activeHash = navigationUrl.hash;
+  const activeGroup = catalogueGroupFromSlug(
+    navigationUrl.searchParams.get("group"),
+  );
+  const activePurpose = cataloguePurpose(
+    navigationUrl.searchParams.get("purpose"),
+  );
+  const completeReviewActive = navigationUrl.searchParams.get("scope") ===
+    "all";
   const componentEntry = route.kind === "component"
     ? sortedComponents.find(({ meta }) => meta.slug === route.slug)
     : undefined;
@@ -1402,6 +1432,9 @@ function CatalogueSidebar(
                 <a
                   className="discern-catalogue-nav__child"
                   href={"#tokens-" + slugify(category)}
+                  aria-current={activeHash === "#tokens-" + slugify(category)
+                    ? "location"
+                    : undefined}
                   onClick={onNavigate}
                   key={category}
                 >
@@ -1412,6 +1445,10 @@ function CatalogueSidebar(
                 <a
                   className="discern-catalogue-nav__child"
                   href={"#terminal-foundation-" + sheet.id}
+                  aria-current={activeHash ===
+                      "#terminal-foundation-" + sheet.id
+                    ? "location"
+                    : undefined}
                   onClick={onNavigate}
                   key={sheet.id}
                 >
@@ -1432,6 +1469,7 @@ function CatalogueSidebar(
                 <a
                   className="discern-catalogue-nav__child"
                   href={componentGroupHref(group)}
+                  aria-current={activeGroup === group ? "location" : undefined}
                   onClick={onNavigate}
                   key={group}
                 >
@@ -1444,6 +1482,9 @@ function CatalogueSidebar(
                 <a
                   className="discern-catalogue-nav__child"
                   href={componentPurposeHref(purpose)}
+                  aria-current={activePurpose === purpose
+                    ? "location"
+                    : undefined}
                   onClick={onNavigate}
                   key={purpose}
                 >
@@ -1456,6 +1497,14 @@ function CatalogueSidebar(
 
         {componentEntry === undefined ? null : (
           <>
+            <a
+              className="discern-catalogue-nav__back"
+              href={componentGroupHref(componentEntry.meta.group)}
+              onClick={onNavigate}
+            >
+              <span aria-hidden="true">←</span>
+              {componentEntry.meta.group} Components
+            </a>
             <span className="discern-catalogue-nav__heading">
               {componentEntry.meta.group}
             </span>
@@ -1464,7 +1513,7 @@ function CatalogueSidebar(
                 className="discern-catalogue-nav__child"
                 href={catalogueComponentPath(meta.slug)}
                 aria-current={meta.slug === componentEntry.meta.slug
-                  ? "page"
+                  ? "location"
                   : undefined}
                 onClick={onNavigate}
                 key={meta.slug}
@@ -1485,6 +1534,9 @@ function CatalogueSidebar(
                 <a
                   className="discern-catalogue-nav__child"
                   href={"#recipe-" + recipe.id}
+                  aria-current={activeHash === "#recipe-" + recipe.id
+                    ? "location"
+                    : undefined}
                   onClick={onNavigate}
                   key={recipe.id}
                 >
@@ -1505,6 +1557,9 @@ function CatalogueSidebar(
                 <a
                   className="discern-catalogue-nav__child"
                   href={"#terminal-layout-" + recipe.id}
+                  aria-current={activeHash === "#terminal-layout-" + recipe.id
+                    ? "location"
+                    : undefined}
                   onClick={onNavigate}
                   key={recipe.id}
                 >
@@ -1527,6 +1582,9 @@ function CatalogueSidebar(
                 <a
                   className="discern-catalogue-nav__child"
                   href={reviewHref({ group })}
+                  aria-current={!completeReviewActive && activeGroup === group
+                    ? "location"
+                    : undefined}
                   onClick={onNavigate}
                   key={group}
                 >
@@ -1537,6 +1595,7 @@ function CatalogueSidebar(
               <a
                 className="discern-catalogue-nav__child"
                 href={reviewHref({ all: true })}
+                aria-current={completeReviewActive ? "location" : undefined}
                 onClick={onNavigate}
               >
                 Complete system
@@ -1546,6 +1605,9 @@ function CatalogueSidebar(
           )
           : null}
       </nav>
+      <p className="discern-catalogue-sidebar__version">
+        @discern-sh/design-system v{packageVersion}
+      </p>
     </>
   );
 }
@@ -1804,7 +1866,7 @@ function App() {
       data-discern-root
       data-discern-theme={theme}
       data-discern-theme-consumer=""
-      data-discern-theme-control=".discern-catalogue-toolbar .discern-theme-switcher"
+      data-discern-theme-control=".discern-catalogue-toolbar .discern-theme-toggle"
       data-discern-theme-storage-key="discern-catalogue-theme"
       style={{ "--discern-accent-hue": accentHue } as CSSProperties}
     >
@@ -1850,21 +1912,16 @@ function App() {
           <span>Search the Catalogue</span>
           <Kbd>/</Kbd>
         </button>
-        <span className="discern-catalogue-version">
-          <span>@discern-sh/design-system</span> v{packageVersion}
-        </span>
-        <ThemeSwitcher
+        <ThemeToggle
           className="discern-catalogue-theme"
-          mode={theme}
-          onModeChange={changeTheme}
-          label="Catalogue colour theme"
+          theme={terminalTheme}
+          onThemeChange={changeTheme}
         />
         <label className="discern-catalogue-accent">
           <span
             className="discern-catalogue-accent__swatch"
             aria-hidden="true"
           />
-          <span className="discern-catalogue-accent__label">Accent</span>
           <input
             type="range"
             min="0"

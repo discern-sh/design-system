@@ -4,41 +4,25 @@ import { ThemeToggle } from "./theme-toggle.tsx";
 import type { ThemeToggleTheme } from "./theme-toggle.types.ts";
 
 export const conformance = [{
-  name: "every variant names its destination and can return to system",
+  name: "the toggle always names its destination theme",
   steps: [
     {
       action: "click",
-      target: {
-        selector: ".discern-theme-toggle:not(.discern-theme-toggle--quiet)",
-      },
+      target: { role: "button", name: "Switch to the dark theme" },
     },
     {
       expect: "attribute",
-      target: {
-        selector: ".discern-theme-toggle:not(.discern-theme-toggle--quiet)",
-      },
-      attribute: "aria-label",
-      value: "Switch to the light theme",
-    },
-    {
-      expect: "attribute",
-      target: { selector: ".discern-theme-toggle--quiet" },
+      target: { role: "button", name: "Switch to the light theme" },
       attribute: "aria-label",
       value: "Switch to the light theme",
     },
     {
       action: "click",
-      target: { selector: ".discern-theme-toggle--quiet" },
+      target: { role: "button", name: "Switch to the light theme" },
     },
     {
       expect: "attribute",
-      target: { selector: ".discern-example-row" },
-      attribute: "data-discern-theme-preference",
-      value: "system",
-    },
-    {
-      expect: "attribute",
-      target: { selector: ".discern-theme-toggle--quiet" },
+      target: { role: "button", name: "Switch to the dark theme" },
       attribute: "aria-label",
       value: "Switch to the dark theme",
     },
@@ -46,30 +30,10 @@ export const conformance = [{
 }] satisfies readonly ConformanceScenario[];
 
 export default function ThemeToggleExamples() {
-  const systemTheme: ThemeToggleTheme = "light";
-  const [themeOverride, setThemeOverride] = useState<
-    ThemeToggleTheme | undefined
-  >();
-  const theme = themeOverride ?? systemTheme;
-  const changeTheme = (next: ThemeToggleTheme): void => {
-    setThemeOverride(next === systemTheme ? undefined : next);
-  };
+  const [theme, setTheme] = useState<ThemeToggleTheme>("light");
   return (
-    <div
-      className="discern-example-row"
-      data-discern-theme-preference={themeOverride ?? "system"}
-    >
-      <ThemeToggle theme={theme} onThemeChange={changeTheme} />
-      <ThemeToggle
-        theme={theme}
-        variant="quiet"
-        onThemeChange={changeTheme}
-      />
-      <span>
-        Lorem ipsum: {theme} is resolved; {themeOverride === undefined
-          ? "following the system"
-          : `${themeOverride} override stored`}.
-      </span>
+    <div className="discern-example-row">
+      <ThemeToggle theme={theme} onThemeChange={setTheme} />
     </div>
   );
 }
