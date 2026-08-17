@@ -173,14 +173,16 @@ function renderPickerEntry<Action>(
     motif: state.motif,
     width: state.columns,
   }, capabilities).split("\n");
-  // A pane boundary and query row already own group separation. Dropping the
-  // form renderer's leading composition blank lets a heading, its description,
-  // and one choice remain coherent in the package-minimum split picker.
-  const compact = entry.kind === "group-heading" && rendered[0] === ""
-    ? rendered.slice(1)
-    : rendered;
+  // Group headings keep the form renderer's composition blank so each main
+  // section divider has breathing room. If only that blank would fit, defer
+  // the complete group rather than painting an orphaned empty row.
+  if (
+    entry.kind === "group-heading" && rendered[0] === "" && maximumRows < 2
+  ) {
+    return [];
+  }
   return limitStyledLines(
-    compact,
+    rendered,
     Math.max(1, Math.min(maximumRows, 3)),
     state.columns - 2,
     capabilities,

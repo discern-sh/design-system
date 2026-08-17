@@ -18,6 +18,9 @@ import {
   testTerminalCapabilities,
 } from "../../src/cli/interactive/testing.ts";
 import {
+  markdownBrowserEntries as playgroundMarkdownBrowserEntries,
+} from "../../scripts/playground/fixtures.ts";
+import {
   inspectTerminalLayout,
   projectTerminalSpans,
 } from "../../src/cli/projection.ts";
@@ -117,6 +120,31 @@ Deno.test("the reader uses Markdown treatment, links, focus cues, and a readable
   assertNotEquals(documentFocused, pickerFocused);
   assertStringIncludes(pickerFocused, "▶ Picker");
   assertStringIncludes(pickerFocused, "Tab document");
+});
+
+Deno.test("picker group dividers retain one breathing row above them", () => {
+  const columns = 120;
+  const capabilities = testTerminalCapabilities({
+    columns,
+    colorDepth: "truecolor",
+  });
+  const state = createMarkdownBrowserState({
+    label: "Documentation library",
+    placeholder: "Search titles, descriptions, and paths",
+    entries: playgroundMarkdownBrowserEntries,
+  }, { columns, rows: 30 });
+  const lines = stripAnsi(renderMarkdownBrowser(state, capabilities)).split(
+    "\n",
+  );
+  for (const label of ["GUIDES", "ACTIONS"]) {
+    const row = lines.findIndex((line) => line.includes(label));
+    assert(row > 0, `picker must render its ${label} divider`);
+    assertEquals(
+      lines[row - 1]?.slice(1, -1).trim(),
+      "",
+      `${label} must retain one empty pane row above its divider`,
+    );
+  }
 });
 
 Deno.test("single-pane fallback makes navigation discoverable without colour or Unicode", () => {

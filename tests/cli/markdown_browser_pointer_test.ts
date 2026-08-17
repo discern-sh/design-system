@@ -69,10 +69,11 @@ const pointerOptions = {
 
 function opened(
   capabilities: TerminalCapabilities,
+  rows = 24,
 ): MarkdownBrowserState<never> {
   const initial = createMarkdownBrowserState<never>(
     pointerOptions,
-    { columns: capabilities.columns, rows: 24 },
+    { columns: capabilities.columns, rows },
   );
   return transitionMarkdownBrowser(initial, {
     kind: "key",
@@ -114,7 +115,7 @@ Deno.test("pointer clicks focus panes, select choices, and activate cell-project
       mouseTracking: true,
       ...profile,
     });
-    let state = opened(capabilities);
+    let state = opened(capabilities, 30);
     const originalHighlight = state.highlightedId;
 
     state = transitionMarkdownBrowser(state, {
@@ -128,15 +129,20 @@ Deno.test("pointer clicks focus panes, select choices, and activate cell-project
     assertEquals(state.focusedPane, "picker");
     assertEquals(state.highlightedId, originalHighlight);
 
+    const selectable = markdownBrowserPickerWindow(state, capabilities).entries
+      .find(({ entry }) =>
+        entry.kind !== "group-heading" && entry.id !== originalHighlight
+      )?.entry;
+    assert(selectable !== undefined, "expected a second visible picker choice");
     state = transitionMarkdownBrowser(state, {
       kind: "mouse",
       action: "press",
       button: "left",
       column: 4,
-      row: pickerEntryRow(state, capabilities, "other-1"),
+      row: pickerEntryRow(state, capabilities, selectable.id),
       modifiers: noModifiers,
     }, capabilities).state;
-    assertEquals(state.highlightedId, "other-1");
+    assertEquals(state.highlightedId, selectable.id);
     assertStringIncludes(
       stripAnsi(renderMarkdownBrowser(state, capabilities)),
       profile.unicode ? "▶ Picker" : "> Picker",
