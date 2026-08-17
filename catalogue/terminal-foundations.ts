@@ -173,6 +173,15 @@ function motifSpecimens(
       }, capabilities),
     },
     {
+      id: "brand-register-divider",
+      title: "Brand-register divider",
+      output: renderMotifDivider({
+        width,
+        register: "brand",
+        ...appearance,
+      }, capabilities),
+    },
+    {
       id: "vertical-divider",
       title: "Vertical divider",
       output: renderMotifPattern({
