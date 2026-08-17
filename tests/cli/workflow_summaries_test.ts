@@ -156,17 +156,17 @@ Deno.test("Standard meter renders exact widths, capability levels, and both limi
     max: 120,
     trend: "improving",
   } as const;
-  const standard = `CLI pending · improving\n[ 65%] ${"━".repeat(28)}◮${
+  const standard = `CLI pending · improving\n[ 65%] ${"━".repeat(28)}▲${
     "─".repeat(16)
   }\nCurrent: 79\nStatus: Within limit\nLimit: ceiling 108\nHeadroom: 29 below ceiling\nDirection: Lower is better`;
-  const wide = `CLI pending · improving\n[ 65%] ${"━".repeat(47)}◮${
+  const wide = `CLI pending · improving\n[ 65%] ${"━".repeat(47)}▲${
     "─".repeat(25)
   }\nCurrent: 79\nStatus: Within limit\nLimit: ceiling 108\nHeadroom: 29 below ceiling\nDirection: Lower is better`;
   for (
     const [columns, expected] of [
       [
         24,
-        `CLI pending · improving\n[ 65%] ${"━".repeat(10)}◮${
+        `CLI pending · improving\n[ 65%] ${"━".repeat(10)}▲${
           "─".repeat(6)
         }\nCurrent: 79\nStatus: Within limit\nLimit: ceiling 108\nHeadroom: 29 below\n          ceiling\nDirection: Lower is\n           better`,
       ],
@@ -184,7 +184,7 @@ Deno.test("Standard meter renders exact widths, capability levels, and both limi
   assertCapabilityLevels(
     (capabilities) => renderStandardMeterCli(props, capabilities),
     standard,
-    `CLI pending - improving\n[ 65%] ${"=".repeat(28)}>${
+    `CLI pending - improving\n[ 65%] ${"=".repeat(28)}^${
       "-".repeat(16)
     }\nCurrent: 79\nStatus: Within limit\nLimit: ceiling 108\nHeadroom: 29 below ceiling\nDirection: Lower is better`,
   );
@@ -203,7 +203,7 @@ Deno.test("Standard meter renders exact widths, capability levels, and both limi
       },
       capabilities,
     ),
-    `Coverage · drifting\n[ 86%] ${"━".repeat(37)}◮${
+    `Coverage · drifting\n[ 86%] ${"━".repeat(37)}▲${
       "─".repeat(7)
     }\nCurrent: 86\nStatus: Outside limit\nLimit: floor 90\nHeadroom: 4 below floor\nDirection: Higher is better`,
     capabilities,

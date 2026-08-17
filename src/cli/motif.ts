@@ -321,14 +321,22 @@ function assertDefinedTerminalMotif(
 
 /**
  * The package's discern-flavoured default. Half-filled circles animate in a
- * clockwise cycle; the established alternating pattern and marker pair with
- * filled and outline triangles for complete and incomplete status.
+ * clockwise cycle; plain triangles speak the everyday register — a filled
+ * lead marker, an outline quiet marker, and an alternating-fill clockwise
+ * pattern — while the ceremonial brand register reserves the half-filled
+ * discern mark and its rotation for the moments a surface wears the brand.
  */
 export const DISCERN_TERMINAL_MOTIF: TerminalMotif = defineTerminalMotif({
   unicode: {
     spinner: ["◐", "◓", "◑", "◒"],
-    pattern: ["◮", "⧩", "◭", "⧨"],
-    marker: "◮",
+    pattern: [
+      TRIANGLES.filled.up.unicode,
+      TRIANGLES.unfilled.right.unicode,
+      TRIANGLES.filled.down.unicode,
+      TRIANGLES.unfilled.left.unicode,
+    ],
+    marker: TRIANGLES.filled.up.unicode,
+    markerQuiet: TRIANGLES.unfilled.up.unicode,
     status: {
       complete: TRIANGLES.filled.up.unicode,
       incomplete: TRIANGLES.unfilled.up.unicode,
@@ -340,8 +348,13 @@ export const DISCERN_TERMINAL_MOTIF: TerminalMotif = defineTerminalMotif({
   },
   ascii: {
     spinner: ["^", "<", "v", ">"],
-    pattern: [">", "v", "^", "<"],
-    marker: ">",
+    pattern: [
+      TRIANGLES.filled.up.ascii,
+      TRIANGLES.unfilled.right.ascii,
+      TRIANGLES.filled.down.ascii,
+      TRIANGLES.unfilled.left.ascii,
+    ],
+    marker: TRIANGLES.filled.up.ascii,
     status: {
       complete: "^",
       incomplete: "v",

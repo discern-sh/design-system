@@ -69,15 +69,15 @@ Deno.test("Window renders exact narrow, standard, wide, and degraded motif frame
   const frames = [
     [
       12,
-      "┌ ◮⧩◭ P… ──┐\n│ Product  │\n│ interfac │\n│ e        │\n└──────────┘",
+      "┌ ▲ Pre… ──┐\n│ Product  │\n│ interfac │\n│ e        │\n└──────────┘",
     ],
     [
       24,
-      "┌ ◮⧩◭ Preview ─────────┐\n│ Product interface    │\n└──────────────────────┘",
+      "┌ ▲ Preview ───────────┐\n│ Product interface    │\n└──────────────────────┘",
     ],
     [
       40,
-      "┌ ◮⧩◭ Preview ─────────────────────────┐\n│ Product interface                    │\n└──────────────────────────────────────┘",
+      "┌ ▲ Preview ───────────────────────────┐\n│ Product interface                    │\n└──────────────────────────────────────┘",
     ],
   ] as const;
   for (const [columns, expected] of frames) {
@@ -86,8 +86,8 @@ Deno.test("Window renders exact narrow, standard, wide, and degraded motif frame
   }
   assertCapabilityLevels(
     render,
-    "┌ ◮⧩◭ Preview ─────────┐\n│ Product interface    │\n└──────────────────────┘",
-    "+ >v^ Preview ---------+\n| Product interface    |\n+----------------------+",
+    "┌ ▲ Preview ───────────┐\n│ Product interface    │\n└──────────────────────┘",
+    "+ ^ Preview -----------+\n| Product interface    |\n+----------------------+",
   );
 });
 
@@ -100,15 +100,15 @@ Deno.test("Terminal renders exact narrow, standard, wide, and degraded session f
   const frames = [
     [
       12,
-      "┌ ⧨◭⧩ S… ──┐\n│ $ verify │\n│ passed   │\n└──────────┘",
+      "┌ ▶ She… ──┐\n│ $ verify │\n│ passed   │\n└──────────┘",
     ],
     [
       24,
-      "┌ ⧨◭⧩ Shell ───────────┐\n│ $ verify             │\n│ passed               │\n└──────────────────────┘",
+      "┌ ▶ Shell ─────────────┐\n│ $ verify             │\n│ passed               │\n└──────────────────────┘",
     ],
     [
       40,
-      "┌ ⧨◭⧩ Shell ───────────────────────────┐\n│ $ verify                             │\n│ passed                               │\n└──────────────────────────────────────┘",
+      "┌ ▶ Shell ─────────────────────────────┐\n│ $ verify                             │\n│ passed                               │\n└──────────────────────────────────────┘",
     ],
   ] as const;
   for (const [columns, expected] of frames) {
@@ -117,7 +117,7 @@ Deno.test("Terminal renders exact narrow, standard, wide, and degraded session f
   }
   assertCapabilityLevels(
     render,
-    "┌ ⧨◭⧩ Shell ───────────┐\n│ $ verify             │\n│ passed               │\n└──────────────────────┘",
-    "+ <^v Shell -----------+\n| $ verify             |\n| passed               |\n+----------------------+",
+    "┌ ▶ Shell ─────────────┐\n│ $ verify             │\n│ passed               │\n└──────────────────────┘",
+    "+ > Shell -------------+\n| $ verify             |\n| passed               |\n+----------------------+",
   );
 });

@@ -74,6 +74,7 @@ const renderBrandCli: CliRenderer<BrandCliProps> = (props, capabilities) => {
       direction: props.markShape === "square"
         ? "reverse" as const
         : "forward" as const,
+      register: "brand" as const,
       ...motifPassthrough(props),
     }
     : {
@@ -82,6 +83,7 @@ const renderBrandCli: CliRenderer<BrandCliProps> = (props, capabilities) => {
       direction: props.markShape === "square"
         ? "reverse" as const
         : "forward" as const,
+      register: "brand" as const,
       ...motifPassthrough(props),
     };
   const mark = props.mark === false

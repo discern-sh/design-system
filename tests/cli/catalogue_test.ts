@@ -168,10 +168,10 @@ Deno.test("narration catalogue presents every verb and the composed rhythm", asy
   assertStringIncludes(output, "▸ Cache already warm");
   assertStringIncludes(output, "! Two files skipped");
   assertStringIncludes(output, "✕ One frame diverged");
-  assertStringIncludes(output, "◮ RELEASE CHECKS");
+  assertStringIncludes(output, "▲ RELEASE CHECKS");
   assertStringIncludes(
     output,
-    "◮ RELEASE CHECKS\n\n✓ Checks passed\n▸ Cache already warm\n\n! Two files skipped",
+    "▲ RELEASE CHECKS\n\n✓ Checks passed\n▸ Cache already warm\n\n! Two files skipped",
   );
   assert(!output.includes("## Terminal motifs"));
   assert(!output.includes("## Display"));
@@ -181,7 +181,7 @@ Deno.test("narration catalogue presents every verb and the composed rhythm", asy
     testTerminalCapabilities({ columns: 80, unicode: false }),
   );
   assertStringIncludes(ascii, "+ Checks passed");
-  assertStringIncludes(ascii, "> RELEASE CHECKS");
+  assertStringIncludes(ascii, "^ RELEASE CHECKS");
 });
 
 Deno.test("NO_COLOR suppresses ANSI throughout catalogue output", async () => {

@@ -531,7 +531,7 @@ Deno.test("spinner advances every motif phase and restores cursor", async () => 
   assertEquals(io.writes.at(-1), SHOW_TERMINAL_CURSOR);
 });
 
-Deno.test("spinner and progress operations inherit a consumer motif", async () => {
+Deno.test("spinners inherit a consumer motif while progress keeps its fixed head", async () => {
   const spinnerIo = new FakeTerminalIO([], { columns: 20 });
   await withSpinner({
     label: "Work",
@@ -558,8 +558,8 @@ Deno.test("spinner and progress operations inherit a consumer motif", async () =
     io: progressIo,
     motif: TEST_TERMINAL_MOTIF,
   }, () => undefined);
-  assertStringIncludes(progressIo.output(), "[ 25%] ━━━◉");
-  assertStringIncludes(progressIo.output(), "[100%] ━━━━━━━━━━━━◉");
+  assertStringIncludes(progressIo.output(), "[ 25%] ━━━▶");
+  assertStringIncludes(progressIo.output(), "[100%] ━━━━━━━━━━━━▶");
 });
 
 Deno.test("no-control terminals keep Unicode and use static interactive frames", async () => {

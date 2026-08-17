@@ -166,17 +166,17 @@ Deno.test("Hero block renders exact leading-marker title banners", () => {
       actions: ["Begin"],
     },
     [
-      `◮  ${
+      `▲  ${
         "─".repeat(13)
       }\n┌ Hero ────────┐\n│ New          │\n│              │\n│ Build        │\n│ clearly      │\n│              │\n│ Keep the     │\n│ proof.       │\n│              │\n│ [Begin]      │\n└──────────────┘`,
-      `◮  ${
+      `▲  ${
         "─".repeat(33)
       }\n┌ Hero ────────────────────────────┐\n│ New                              │\n│                                  │\n│ Build clearly                    │\n│                                  │\n│ Keep the proof.                  │\n│                                  │\n│ [Begin]                          │\n└──────────────────────────────────┘`,
-      `◮  ${
+      `▲  ${
         "─".repeat(61)
       }\n┌ Hero ────────────────────────────────────────────────────────┐\n│ New                                                          │\n│                                                              │\n│ Build clearly                                                │\n│                                                              │\n│ Keep the proof.                                              │\n│                                                              │\n│ [Begin]                                                      │\n└──────────────────────────────────────────────────────────────┘`,
     ],
-    `>  ${
+    `^  ${
       "-".repeat(33)
     }\n+ Hero ----------------------------+\n| New                              |\n|                                  |\n| Build clearly                    |\n|                                  |\n| Keep the proof.                  |\n|                                  |\n| [Begin]                          |\n+----------------------------------+`,
   );
@@ -230,17 +230,17 @@ Deno.test("Process steps renders exact canonical stepper and beacon frames", () 
       beaconPhase: 2,
     },
     [
-      `Release path\n\n ▲  Build\n │\n[◓] Prove\n │\n △  Share\n\n──◮${
+      `Release path\n\n ▲  Build\n │\n[◓] Prove\n │\n △  Share\n\n──▴${
         "─".repeat(13)
       }`,
-      `Release path\n\n ▲  Build\n │\n[◓] Prove\n │\n △  Share\n\n──◮${
+      `Release path\n\n ▲  Build\n │\n[◓] Prove\n │\n △  Share\n\n──▴${
         "─".repeat(33)
       }`,
-      `Release path\n\n ▲  Build\n │\n[◓] Prove\n │\n △  Share\n\n──◮${
+      `Release path\n\n ▲  Build\n │\n[◓] Prove\n │\n △  Share\n\n──▴${
         "─".repeat(61)
       }`,
     ],
-    `Release path\n\n ^  Build\n |\n[<] Prove\n |\n v  Share\n\n-->${
+    `Release path\n\n ^  Build\n |\n[<] Prove\n |\n v  Share\n\n--^${
       "-".repeat(33)
     }`,
   );

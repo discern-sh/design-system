@@ -4,22 +4,17 @@
  * @module
  */
 
-import { stripAnsi } from "../../../cli/ansi.ts";
 import { renderBox } from "../../../cli/box.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
-import {
-  motifPassthrough,
-  type TerminalMotifOptions,
-} from "../../../cli/motif.ts";
 import {
   terminalThemeColor,
   terminalThemes,
   type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
-import { renderMotifPattern } from "../../../cli/motifs.ts";
+import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
 
 /** Inputs accepted by the terminal Terminal renderer. */
-export interface TerminalCliProps extends TerminalMotifOptions {
+export interface TerminalCliProps {
   readonly body: string;
   readonly title?: string;
   readonly theme?: TerminalThemeVariant;
@@ -35,7 +30,7 @@ export const cliExamples: readonly CliExample<TerminalCliProps>[] = [
   { name: "output", props: { body: "ready on http://localhost:8010" } },
 ] as const;
 
-/** Render a reverse-phase, width-bounded Terminal session frame. */
+/** Render a width-bounded Terminal session frame behind its fixed mark. */
 const renderTerminalCli: CliRenderer<TerminalCliProps> = (
   props,
   capabilities,
@@ -52,15 +47,7 @@ const renderTerminalCli: CliRenderer<TerminalCliProps> = (
     );
   }
   const theme = terminalThemes[props.theme ?? "dark"];
-  const motif = stripAnsi(renderMotifPattern(
-    {
-      length: 3,
-      direction: "reverse",
-      ...(props.theme === undefined ? {} : { theme: props.theme }),
-      ...motifPassthrough(props),
-    },
-    capabilities,
-  ));
+  const motif = triangleGlyph(TRIANGLES.filled.right, capabilities.unicode);
   return renderBox(
     {
       body: props.body,

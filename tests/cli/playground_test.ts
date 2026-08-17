@@ -151,9 +151,9 @@ Deno.test("public heading treatments have one direct, concise review journey", a
   for (const id of ["embedded", "underline", "sandwich"]) {
     assertStringIncludes(io.output(), `[${id}]`);
   }
-  assertStringIncludes(io.output(), "━━ ◮ DEPLOYING WORKSPACE CHANGES");
-  assertStringIncludes(io.output(), "◮ DEPLOYING WORKSPACE CHANGES\n━━");
-  assertStringIncludes(io.output(), "──\n◮ DEPLOYING WORKSPACE CHANGES\n──");
+  assertStringIncludes(io.output(), "━━ ▲ DEPLOYING WORKSPACE CHANGES");
+  assertStringIncludes(io.output(), "▲ DEPLOYING WORKSPACE CHANGES\n━━");
+  assertStringIncludes(io.output(), "──\n▲ DEPLOYING WORKSPACE CHANGES\n──");
 });
 
 Deno.test("Timeline and stepper status review has a direct journey", async () => {

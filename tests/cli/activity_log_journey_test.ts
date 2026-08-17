@@ -56,7 +56,7 @@ Deno.test("a slow producer streams partial updates into committed exact frames",
     `${replacePrefix(4)}◓ Weave styles\n└─│ alpha\n  │\n`,
     `${replacePrefix(4)}◑ Weave styles\n└─│ alpha\n  │ beta grows\n`,
     `${replacePrefix(4)}◒ Weave styles\n└─│ alpha\n  │ beta\n`,
-    `${replacePrefix(4)}◮ Weave styles\n`,
+    `${replacePrefix(4)}▲ Weave styles\n`,
     "\n",
     SHOW_TERMINAL_CURSOR,
   ]);
@@ -133,7 +133,7 @@ Deno.test("pinned stable lines persist while the tail scrolls beneath them", asy
     `${
       replacePrefix(5)
     }◒ Run checks\n✓ Format held\n! Lint warned once\n└─│ lint retried\n  │ tests starting\n`,
-    `${replacePrefix(6)}◮ Run checks\n✓ Format held\n! Lint warned once\n`,
+    `${replacePrefix(6)}▲ Run checks\n✓ Format held\n! Lint warned once\n`,
     "\n",
     SHOW_TERMINAL_CURSOR,
   ]);
@@ -176,7 +176,7 @@ Deno.test("a viewport shrink strands the old region and refits; regrowth restore
     "\n",
     "◓ Weave styles\n└─│ alpha\n  │\n  │\n",
     `${replacePrefix(5)}◑ Weave styles\n└─│ alpha\n  │\n  │\n  │\n  │\n  │\n`,
-    `${replacePrefix(8)}◮ Weave styles\n`,
+    `${replacePrefix(8)}▲ Weave styles\n`,
     "\n",
     SHOW_TERMINAL_CURSOR,
   ]);
@@ -281,11 +281,11 @@ Deno.test("a non-interactive terminal renders the same feed append-only", async 
     },
   );
   assertEquals(io.writes, [
-    "◮ WEAVE STYLES\n",
+    "▲ WEAVE STYLES\n",
     "│ alpha\n",
     "│ beta\n",
     "✓ Alpha held\n",
-    "◮ PUBLISH STYLES\n",
+    "▲ PUBLISH STYLES\n",
     "│ gamma\n",
     "│ delta never committed\n",
   ]);
@@ -303,7 +303,7 @@ Deno.test("a refused painter without ANSI control appends from the first fact", 
     },
   );
   assertEquals(io.writes, [
-    "◮ WEAVE STYLES\n",
+    "▲ WEAVE STYLES\n",
     "│ alpha\n",
     "▸ One fact out\n",
   ]);
@@ -324,7 +324,7 @@ Deno.test("ASCII terminals keep the same journey in the fallback repertoire", as
   assertEquals(io.writes.slice(1), [
     "^ Weave styles\n`-|\n  |\n",
     `${replacePrefix(4)}< Weave styles\n+ Held\n\`-| alpha\n  |\n`,
-    `${replacePrefix(5)}> Weave styles\n+ Held\n`,
+    `${replacePrefix(5)}^ Weave styles\n+ Held\n`,
     "\n",
     SHOW_TERMINAL_CURSOR,
   ]);

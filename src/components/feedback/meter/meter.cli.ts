@@ -19,6 +19,7 @@ import {
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import { renderMotifProgressFrame } from "../../../cli/motifs.ts";
+import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
 import type { MeterTone } from "./meter.types.ts";
 
 /** Inputs accepted by the terminal Meter renderer. */
@@ -80,6 +81,7 @@ const renderMeterCli: CliRenderer<MeterCliProps> = (props, capabilities) => {
     completed: state.completed,
     total: state.total,
     width,
+    marker: triangleGlyph(TRIANGLES.filled.right, capabilities.unicode),
     ...(props.theme === undefined ? {} : { theme: props.theme }),
     ...motifPassthrough(props),
   }, capabilities);
