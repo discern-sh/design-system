@@ -54,15 +54,19 @@ function effectiveLocale(
   );
 }
 
-function supportsUnicode(
-  locale: string | undefined,
-  isTty: boolean,
-): boolean {
-  if (locale === undefined) return isTty;
+/**
+ * Character repertoire follows the locale declaration alone. Terminal
+ * attachment governs control behaviour, never which bytes the consumer
+ * decodes, so a pipe or an undeclared locale keeps the modern UTF-8 default;
+ * only exact `C`/`POSIX` or an explicitly declared non-UTF-8 charset selects
+ * ASCII.
+ */
+function supportsUnicode(locale: string | undefined): boolean {
+  if (locale === undefined) return true;
   const normalized = locale.trim();
   if (/^(?:C|POSIX)$/iu.test(normalized)) return false;
   if (/(?:^|\.)UTF-?8(?:@|$)/iu.test(normalized)) return true;
-  return isTty;
+  return !normalized.includes(".");
 }
 
 /**
@@ -72,6 +76,8 @@ function supportsUnicode(
  * fact announces OSC 8 hyperlink support, so detection aligns hyperlinks with
  * styled output. Mouse tracking has no portable positive detector and remains
  * omitted; callers holding terminal-specific knowledge state it directly.
+ * Unicode repertoire derives from the locale declaration alone, independent
+ * of terminal attachment.
  */
 export function detectTerminalCapabilities(
   input: TerminalDetectionInput,
@@ -100,6 +106,6 @@ export function detectTerminalCapabilities(
     colorDepth,
     columns,
     hyperlinks: colorDepth !== "none",
-    unicode: supportsUnicode(locale, input.isTty),
+    unicode: supportsUnicode(locale),
   };
 }

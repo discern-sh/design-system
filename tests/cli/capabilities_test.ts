@@ -80,7 +80,7 @@ Deno.test("terminal control, colour, and Unicode are independent capability fact
       colorDepth: "none",
       columns: 80,
       hyperlinks: false,
-      unicode: false,
+      unicode: true,
     },
   );
 });
@@ -115,8 +115,63 @@ Deno.test("keys with explicitly undefined values detect exactly like absent keys
   );
 });
 
-Deno.test("locale repertoire matrix preserves UTF-8 and exact C/POSIX ASCII fallbacks", () => {
+Deno.test("locale repertoire follows the declaration alone, independent of attachment", () => {
   const cases = [
+    {
+      name: "undeclared locale pipe (agent harness)",
+      env: {},
+      isTty: false,
+      expected: {
+        ansiControl: false,
+        colorDepth: "none",
+        hyperlinks: false,
+        unicode: true,
+      },
+    },
+    {
+      name: "undeclared locale tty",
+      env: { TERM: "xterm-256color" },
+      isTty: true,
+      expected: {
+        ansiControl: true,
+        colorDepth: "ansi256",
+        hyperlinks: true,
+        unicode: true,
+      },
+    },
+    {
+      name: "bare language tag pipe",
+      env: { LANG: "en_GB" },
+      isTty: false,
+      expected: {
+        ansiControl: false,
+        colorDepth: "none",
+        hyperlinks: false,
+        unicode: true,
+      },
+    },
+    {
+      name: "declared legacy charset tty",
+      env: { TERM: "xterm-256color", LANG: "en_US.ISO8859-1" },
+      isTty: true,
+      expected: {
+        ansiControl: true,
+        colorDepth: "ansi256",
+        hyperlinks: true,
+        unicode: false,
+      },
+    },
+    {
+      name: "exact C pipe",
+      env: { LC_ALL: "C" },
+      isTty: false,
+      expected: {
+        ansiControl: false,
+        colorDepth: "none",
+        hyperlinks: false,
+        unicode: false,
+      },
+    },
     {
       name: "Codex C.UTF-8 tty",
       env: { TERM: "dumb", NO_COLOR: "1", LC_ALL: "C.UTF-8" },
