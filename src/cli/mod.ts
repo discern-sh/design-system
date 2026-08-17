@@ -36,5 +36,6 @@ export * from "./result-summary-group.ts";
 export * from "./rhythm.ts";
 export * from "./text.ts";
 export * from "./theme.ts";
+export * from "./triangles.ts";
 export * from "../generated/cli-registry.ts";
 export * from "../generated/cli-renderers.ts";
