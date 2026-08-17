@@ -4,7 +4,7 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
-## Unreleased
+## 0.20.0
 
 - **Breaking:** Make the terminal Switch's default binary control glyph-only: off renders a danger cross before `●──○`, while on renders `○──●` before a success tick, with fixed symmetric spacing and ASCII equivalents. `SwitchCliProps.yesLabel` and `noLabel` remain optional opt-in text, and `requestConfirmation()` no longer inserts implicit `Yes` / `No` labels when callers omit them.
 - Fix the Markdown browser when terminal geometry or ground changes during a live review. Complete-frame paints now refuse stale sampled geometry and re-render against a stable capability/size snapshot instead of faulting during a horizontal resize; the picker restores a blank breathing row above each main group divider. The repository playground asks the existing caller-owned background-sensing authority to select the reader's light or dark Theme on colour terminals, while no-colour sessions avoid the query and an unknown ground retains the established dark default.
