@@ -18,12 +18,13 @@ import {
   type MotifPatternOrientation,
   renderMotifDivider,
   renderMotifPattern,
+  renderMotifPlainDivider,
   renderMotifSectionRule,
 } from "../../../cli/motifs.ts";
 import type { DividerSurface } from "./divider.types.ts";
 
 /** Semantic terminal treatments owned by Divider. */
-export type DividerCliTreatment = "rule" | "ribbon";
+export type DividerCliTreatment = "rule" | "plain" | "ribbon";
 
 /** Inputs accepted by the terminal Divider renderer. */
 export interface DividerCliProps extends TerminalMotifOptions {
@@ -42,6 +43,7 @@ export interface DividerCliProps extends TerminalMotifOptions {
 /** Deterministic Divider states rendered by `deno task catalogue:cli divider`. */
 export const cliExamples: readonly CliExample<DividerCliProps>[] = [
   { name: "rule", props: { width: 24 } },
+  { name: "plain", props: { treatment: "plain", width: 24 } },
   { name: "labelled", props: { label: "Section", width: 32 } },
   { name: "ribbon", props: { treatment: "ribbon", width: 24 } },
 ] as const;
@@ -75,6 +77,9 @@ const renderDividerCli: CliRenderer<DividerCliProps> = (
     };
     return renderMotifSectionRule(props.label, options, capabilities);
   }
+  if (treatment === "plain" && orientation !== "horizontal") {
+    throw new TypeError("plain dividers require horizontal orientation");
+  }
 
   const defaultLength = orientation === "horizontal" ? width : 6;
   const requestedLength = props.length ?? defaultLength;
@@ -91,6 +96,12 @@ const renderDividerCli: CliRenderer<DividerCliProps> = (
   const tone = props.tone ??
     (props.surface === "surface" ? "neutral" : "accent");
   if (orientation === "horizontal") {
+    if (treatment === "plain") {
+      return renderMotifPlainDivider({
+        width: length,
+        ...(props.theme === undefined ? {} : { theme: props.theme }),
+      }, capabilities);
+    }
     return renderMotifDivider(
       {
         width: length,

@@ -24,7 +24,11 @@ import {
   TerminalProjectionError,
   terminalSpanCss,
 } from "../../src/cli/projection.ts";
-import { terminalThemes, terminalToneColor } from "../../src/cli/theme.ts";
+import {
+  terminalThemeColor,
+  terminalThemes,
+  terminalToneColor,
+} from "../../src/cli/theme.ts";
 import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
 
 const ESC = "\u001b";
@@ -46,7 +50,11 @@ function projectedText(output: string): string {
 
 Deno.test("projection round-trips the real emitter at every colour depth", () => {
   const accent = terminalToneColor(terminalThemes.dark, "accent");
-  const style = { bold: true as const, color: accent };
+  const surface = terminalThemeColor(
+    terminalThemes.dark,
+    "--discern-color-surface-sunken",
+  );
+  const style = { bold: true as const, color: accent, background: surface };
 
   const none = styleText("plain", style, testTerminalCapabilities());
   assertEquals(projectTerminalSpans(none), [{ text: "plain" }]);
@@ -58,7 +66,11 @@ Deno.test("projection round-trips the real emitter at every colour depth", () =>
   );
   assertEquals(projectTerminalSpans(ansi16), [{
     text: "sixteen",
-    style: { bold: true, color: paletteEntry(ANSI_16_RGB, accent.ansi16) },
+    style: {
+      bold: true,
+      color: paletteEntry(ANSI_16_RGB, accent.ansi16),
+      background: paletteEntry(ANSI_16_RGB, surface.ansi16),
+    },
   }]);
 
   const ansi256 = styleText(
@@ -68,7 +80,11 @@ Deno.test("projection round-trips the real emitter at every colour depth", () =>
   );
   assertEquals(projectTerminalSpans(ansi256), [{
     text: "extended",
-    style: { bold: true, color: paletteEntry(ANSI_256_RGB, accent.ansi256) },
+    style: {
+      bold: true,
+      color: paletteEntry(ANSI_256_RGB, accent.ansi256),
+      background: paletteEntry(ANSI_256_RGB, surface.ansi256),
+    },
   }]);
 
   const truecolor = styleText(
@@ -81,6 +97,11 @@ Deno.test("projection round-trips the real emitter at every colour depth", () =>
     style: {
       bold: true,
       color: { red: accent.red, green: accent.green, blue: accent.blue },
+      background: {
+        red: surface.red,
+        green: surface.green,
+        blue: surface.blue,
+      },
     },
   }]);
 });
@@ -223,7 +244,9 @@ Deno.test("projection rejects input outside the emitted repertoire", () => {
   rejects(`${ESC}[?25l`, foreign);
   rejects(`${ESC}]0;title${BEL}`, foreign);
   rejects(`${ESC}[39m`, foreign);
-  rejects(`${ESC}[48;2;0;0;0m`, foreign);
+  rejects(`${ESC}[48;2;300;0;0m`, foreign);
+  rejects(`${ESC}[48;5;256m`, foreign);
+  rejects(`${ESC}[48;6;1m`, foreign);
   rejects(`${ESC}[22m`, foreign);
   rejects(`${ESC}[m`, foreign);
   rejects(`${ESC}[1;;3m`, foreign);
@@ -253,8 +276,10 @@ Deno.test("span styles map to the shared browser declarations", () => {
       underline: true,
       strikethrough: true,
       color: { red: 12, green: 34, blue: 56 },
+      background: { red: 65, green: 43, blue: 21 },
     }),
     {
+      backgroundColor: "rgb(65 43 21)",
       color: "rgb(12 34 56)",
       fontStyle: "italic",
       fontWeight: 700,

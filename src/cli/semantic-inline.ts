@@ -571,6 +571,7 @@ function codeStyle(
   return mergedStyle(inherited, {
     ...theme.typography.strong,
     color: terminalThemeColor(theme, "--discern-color-ink-muted"),
+    background: terminalThemeColor(theme, "--discern-color-surface-sunken"),
   });
 }
 

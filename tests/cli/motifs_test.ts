@@ -5,6 +5,7 @@ import {
   renderMotifActivityBeacon,
   renderMotifDivider,
   renderMotifPattern,
+  renderMotifPlainDivider,
   renderMotifProgressFrame,
   renderMotifSectionRule,
   renderMotifSpinnerFrame,
@@ -311,6 +312,16 @@ Deno.test("motif divider keeps one centred or leading marker across widths and r
     renderMotifDivider({ width: 9 }, styled),
     "╶── ◮ ──╴",
     styled,
+  );
+  assertExactFrame(
+    renderMotifPlainDivider({ width: 9 }, unicode),
+    "╶───────╴",
+    unicode,
+  );
+  assertExactFrame(
+    renderMotifPlainDivider({ width: 9 }, ascii),
+    "---------",
+    ascii,
   );
 });
 

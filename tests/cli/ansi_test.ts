@@ -46,6 +46,30 @@ Deno.test("ANSI emission degrades through truecolour, 256, 16, and none", () => 
     styleText("discern", { bold: true, color }, testTerminalCapabilities()),
     "discern",
   );
+  assertEquals(
+    styleText(
+      "discern",
+      { background: color },
+      testTerminalCapabilities({ colorDepth: "truecolor" }),
+    ),
+    `${escape}[48;2;12;34;56mdiscern${escape}[0m`,
+  );
+  assertEquals(
+    styleText(
+      "discern",
+      { background: color },
+      testTerminalCapabilities({ colorDepth: "ansi256" }),
+    ),
+    `${escape}[48;5;24mdiscern${escape}[0m`,
+  );
+  assertEquals(
+    styleText(
+      "discern",
+      { background: color },
+      testTerminalCapabilities({ colorDepth: "ansi16" }),
+    ),
+    `${escape}[46mdiscern${escape}[0m`,
+  );
 });
 
 Deno.test("hyperlink authority gates on capability and never loses the label", () => {

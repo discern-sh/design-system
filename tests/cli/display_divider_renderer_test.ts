@@ -1,3 +1,4 @@
+import { assertThrows } from "@std/assert";
 import { renderDividerCli } from "../../src/cli/mod.ts";
 import {
   assertExactFrame,
@@ -41,6 +42,14 @@ Deno.test("Divider owns exact leading-marker ribbon, phased vertical, and ASCII 
   const unicode = testTerminalCapabilities({ columns: 8 });
   assertExactFrame(
     renderDividerCli(
+      { treatment: "plain", length: 8, width: 8 },
+      unicode,
+    ),
+    "╶──────╴",
+    unicode,
+  );
+  assertExactFrame(
+    renderDividerCli(
       { treatment: "ribbon", length: 8, width: 8 },
       unicode,
     ),
@@ -75,5 +84,14 @@ Deno.test("Divider owns exact leading-marker ribbon, phased vertical, and ASCII 
     ),
     "v\n^\n<\n>",
     ascii,
+  );
+  assertThrows(
+    () =>
+      renderDividerCli(
+        { treatment: "plain", orientation: "vertical", width: 8 },
+        unicode,
+      ),
+    TypeError,
+    "plain dividers require horizontal orientation",
   );
 });

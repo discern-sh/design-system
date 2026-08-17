@@ -128,7 +128,7 @@ const checkboxFrames = [
   `Roles [active]\n┌──────────────────────────┐\n│re▌                       │\n│› [✓] Render frames       │\n│  [ ] Inspect (disabled)  │\n│                          │\n│${
     sectionRule("Selected", 26)
   }│\n│  [✓] Animate progress    │\n└──────────────────────────┘\n`,
-  "Capabilities [active]\n┌──────────────────────────┐\n│› [ ] Render              │\n│  [ ] Inspect             │\n└─────────────── ↓ 3 more ─┘\n",
+  "Capabilities [active]\n┌──────────────────────────┐\n│› [ ] Render              │\n│  [ ] Inspect             │\n└──────── ↓ 3 more ────────┘\n",
 ] as const;
 
 Deno.test("Checkbox renders every static form state exactly", () => {
@@ -221,7 +221,7 @@ const radioFrames = [
     sectionRule("Preview", 26)
   }│\n│  ○ Charlie (disabled)    │\n└──────────────────────────┘\n`,
   "Channel [searching]\n┌──────────────────────────┐\n│cha▌                      │\n│Searching…                │\n└──────────────────────────┘\n",
-  "Channel [active]\n┌──────────────────────────┐\n│› ○ Alpha                 │\n│  ○ Bravo                 │\n└─────────────── ↓ 3 more ─┘\n",
+  "Channel [active]\n┌──────────────────────────┐\n│› ○ Alpha                 │\n│  ○ Bravo                 │\n└──────── ↓ 3 more ────────┘\n",
 ] as const;
 
 Deno.test("Radio renders every static selection state exactly", () => {
@@ -357,7 +357,7 @@ const selectFrames = [
   }│\n│  [ ] Alpha               │\n│› [●] Bravo               │\n│                          │\n│${
     sectionRule("Other", 26)
   }│\n│  [ ] Charlie (disabled)  │\n└──────────────────────────┘\n`,
-  "Environment [active]\n┌──────────────────────────┐\n│› [ ] A deliberately long │\n│      navigation choice   │\n│      whose continuation  │\n│      stays aligned       │\n│      beneath its label   │\n│  [ ] Bravo               │\n└─────────────── ↓ 3 more ─┘\n",
+  "Environment [active]\n┌──────────────────────────┐\n│› [ ] A deliberately long │\n│      navigation choice   │\n│      whose continuation  │\n│      stays aligned       │\n│      beneath its label   │\n│  [ ] Bravo               │\n└──────── ↓ 3 more ────────┘\n",
 ] as const;
 
 Deno.test("Select renders every static selection state exactly", () => {

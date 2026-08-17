@@ -90,6 +90,7 @@ Escapes, &amp; entities, *emphasis*, **strong text**, ~~removed text~~, \`inline
 
 \`\`\`ts module
 const complete = true;
+export { complete };
 \`\`\`
 
 A repeated note[^proof] remains linked[^proof].
@@ -283,7 +284,7 @@ function blockToCli(
       });
     case "thematic-break":
       return createCliBlock(renderDividerCli, {
-        treatment: "rule",
+        treatment: "plain",
         tone: "neutral",
         ...presentation,
       });

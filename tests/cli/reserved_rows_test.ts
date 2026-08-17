@@ -109,7 +109,7 @@ Deno.test("a reservation keeps a full-budget list out of the caller's header ban
   );
   assertExactFrame(
     io.writes[2] ?? "",
-    "Reserved [active]\n┌────────────────────────────────────────┐\n│                                        │\n│━━ ◮ GROUP 1 ━━━━━━━━━━━━━━━━━━━━━━━━━━━│\n│› [●] Choice 1.1                        │\n│  [ ] Choice 1.2                        │\n└──────────────────────────── ↓ 14 more ─┘\n",
+    "Reserved [active]\n┌────────────────────────────────────────┐\n│                                        │\n│━━ ◮ GROUP 1 ━━━━━━━━━━━━━━━━━━━━━━━━━━━│\n│› [●] Choice 1.1                        │\n│  [ ] Choice 1.2                        │\n└────────────── ↓ 14 more ───────────────┘\n",
     testTerminalCapabilities({ columns: 42 }),
   );
 });

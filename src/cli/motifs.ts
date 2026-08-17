@@ -56,6 +56,13 @@ export interface MotifDividerOptions extends MotifThemeOptions {
   readonly tone?: TerminalSemanticTone;
 }
 
+/** Inputs for one quiet, unmarked horizontal divider. */
+export interface MotifPlainDividerOptions {
+  /** Total visible divider width. */
+  readonly width: number;
+  readonly theme?: TerminalThemeVariant;
+}
+
 /** Inputs for one truthful determinate progress frame. */
 export interface MotifProgressOptions extends MotifThemeOptions {
   readonly completed: number;
@@ -210,6 +217,24 @@ export function renderMotifDivider(
     markerSpan,
     { text: trailing, style: ruleStyle },
   ], capabilities);
+}
+
+/** Render a quiet horizontal rule with no semantic motif marker. */
+export function renderMotifPlainDivider(
+  options: MotifPlainDividerOptions,
+  capabilities: TerminalCapabilities,
+): string {
+  assertInteger(options.width, "plain motif divider width", 1);
+  const width = Math.min(options.width, capabilities.columns);
+  const theme = themeFor(options.theme);
+  const rule = capabilities.unicode ? "─" : "-";
+  const raw = capabilities.unicode && width > 1
+    ? `╶${rule.repeat(Math.max(0, width - 2))}╴`
+    : rule.repeat(width);
+  return styleText(raw, {
+    color: terminalThemeColor(theme, "--discern-color-ink-faint"),
+    dim: true,
+  }, capabilities);
 }
 
 /** Render a configurable pattern through the effective motif repertoire. */

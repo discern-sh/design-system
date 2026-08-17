@@ -77,6 +77,10 @@ Deno.test("Paragraph renders exact nested styles at every colour depth", () => {
         ...theme.typography.body,
         ...theme.typography.strong,
         color: terminalThemeColor(theme, "--discern-color-ink-muted"),
+        background: terminalThemeColor(
+          theme,
+          "--discern-color-surface-sunken",
+        ),
       }, capabilities),
       body("meaning."),
     ].join("\n");

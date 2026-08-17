@@ -89,6 +89,37 @@ Deno.test("Markdown alert task markers preserve the enclosing frame width", () =
   );
 });
 
+Deno.test("Markdown uses an unmarked rule and framed language-labelled code", () => {
+  const capabilities = testTerminalCapabilities({
+    columns: 52,
+    colorDepth: "none",
+    unicode: true,
+    hyperlinks: false,
+  });
+  const source = [
+    "---",
+    "",
+    "```ts module",
+    "const complete = true;",
+    "export { complete };",
+    "```",
+  ].join("\n");
+  const first = "const complete = true;";
+  const second = "export { complete };";
+  assertExactFrame(
+    renderMarkdownCli({ source, maxWidth: 52 }, capabilities),
+    [
+      `╶${"─".repeat(50)}╴`,
+      "",
+      `╭─ ts · module ${"─".repeat(36)}╮`,
+      `│ ${first}${" ".repeat(49 - measureText(first))}│`,
+      `│ ${second}${" ".repeat(49 - measureText(second))}│`,
+      `╰${"─".repeat(50)}╯`,
+    ].join("\n"),
+    capabilities,
+  );
+});
+
 function expectedComponentDocument(
   capabilities: TerminalCapabilities,
   theme: "light" | "dark",
@@ -210,6 +241,7 @@ Deno.test("Markdown reading hierarchy and inline code retain meaning across ever
           );
           assertEquals(code?.style?.bold, true);
           assert(code?.style?.color !== undefined);
+          assert(code?.style?.background !== undefined);
           const aside = projectTerminalSpans(output).find((span) =>
             span.text === "Aside"
           );

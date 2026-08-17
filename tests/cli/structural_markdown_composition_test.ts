@@ -36,10 +36,12 @@ Deno.test("List → Blockquote → Code block keeps structure, source, and width
     output,
     [
       "• Quoted source follows.",
-      "  │ │ if (ready) {",
-      "  │ │     publish();",
-      "  │ │ }",
-      "  │ │",
+      `  │ ╭${"─".repeat(24)}╮`,
+      `  │ │ ${"if (ready) {".padEnd(23)}│`,
+      `  │ │ ${"    publish();".padEnd(23)}│`,
+      `  │ │ ${"}".padEnd(23)}│`,
+      `  │ │${" ".repeat(24)}│`,
+      `  │ ╰${"─".repeat(24)}╯`,
     ].join("\n"),
     capabilities,
   );
