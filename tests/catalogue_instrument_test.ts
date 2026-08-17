@@ -305,35 +305,41 @@ Deno.test("Catalogue version and composition source share their authorities", as
   );
 });
 
-Deno.test("Catalogue navigation stays stable while purpose filters the component view", async () => {
+Deno.test("Catalogue navigation is contextual while the explorer stays specimen-free", async () => {
   const source = await Deno.readTextFile(
     join(PACKAGE_ROOT, "catalogue", "app.tsx"),
   );
-  const navStart = source.indexOf(
-    '<nav className="discern-catalogue-nav" aria-label="Catalogue">',
+  const explorerStart = source.indexOf("function ComponentIndexPage");
+  const explorerEnd = source.indexOf("function ComponentDetailPage");
+  assert(
+    explorerStart >= 0 && explorerEnd > explorerStart,
+    "missing Component explorer boundary",
   );
-  const navEnd = source.indexOf("</nav>", navStart);
-  assert(navStart >= 0 && navEnd > navStart, "missing Catalogue navigation");
-  const navigation = source.slice(navStart, navEnd);
+  const explorer = source.slice(explorerStart, explorerEnd);
 
-  assert(!navigation.includes("Purpose collections"));
-  assert(!navigation.includes("discern-catalogue-nav__collection"));
-  assert(!navigation.includes("<button"));
-  assertStringIncludes(navigation, "sidebarGroupedComponents.map");
-  assertStringIncludes(source, "<span>Filter components by purpose</span>");
+  assertStringIncludes(source, "function CatalogueSidebar");
+  assertStringIncludes(source, 'route.kind === "components"');
+  assertStringIncludes(source, "groupComponentEntries(sortedComponents)");
+  assertStringIncludes(source, "cataloguePurposes.map");
+  assertStringIncludes(explorer, "discern-catalogue-component-link");
+  assertStringIncludes(explorer, "Search Components");
+  assert(!explorer.includes("<ComponentPreview"));
+  assertStringIncludes(source, "function ReviewPage");
+  assertStringIncludes(source, "function ComponentDetailPage");
 
   const css = await Deno.readTextFile(
     join(PACKAGE_ROOT, "catalogue", "catalogue.css"),
   );
-  const pickerRule = /\.discern-catalogue-purpose-picker\s*\{(?<body>[^}]*)\}/
-    .exec(css);
-  const pickerBody = pickerRule?.groups?.body;
-  assert(pickerBody !== undefined, "missing purpose picker rule");
-  assertStringIncludes(pickerBody, "display: grid;");
-  assert(!pickerBody.includes("display: none;"));
+  const controlsRule =
+    /\.discern-catalogue-explorer-controls\s*\{(?<body>[^}]*)\}/
+      .exec(css);
+  const controlsBody = controlsRule?.groups?.body;
+  assert(controlsBody !== undefined, "missing explorer controls rule");
+  assertStringIncludes(controlsBody, "display: grid;");
+  assert(!controlsBody.includes("display: none;"));
 });
 
-Deno.test("Catalogue search presents explicit destinations without filtering the page", async () => {
+Deno.test("Catalogue search routes directly to generated destinations", async () => {
   const source = await Deno.readTextFile(
     join(PACKAGE_ROOT, "catalogue", "app.tsx"),
   );
@@ -347,11 +353,39 @@ Deno.test("Catalogue search presents explicit destinations without filtering the
   assertStringIncludes(source, 'aria-haspopup="dialog"');
   assertStringIncludes(source, 'label="Search the Catalogue"');
   assertStringIncludes(source, "<SearchPaletteResult");
-  assertStringIncludes(source, "prepareComponentNavigation");
-  assert(
-    !source.includes("normalizedQuery"),
-    "typing in search must not silently mutate the rendered inventory",
+  assertStringIncludes(
+    source,
+    "href: catalogueComponentPath(meta.slug)",
   );
+  assertStringIncludes(
+    source,
+    "href: catalogueRoutePaths.foundations",
+  );
+  assertStringIncludes(source, "onClick={closeSearch}");
+});
+
+Deno.test("Review mode requires an explicit scope before mounting specimens", async () => {
+  const source = await Deno.readTextFile(
+    join(PACKAGE_ROOT, "catalogue", "app.tsx"),
+  );
+  const reviewStart = source.indexOf("function ReviewPage");
+  const reviewEnd = source.indexOf("function NotFoundPage", reviewStart);
+  assert(
+    reviewStart >= 0 && reviewEnd > reviewStart,
+    "missing Review route boundary",
+  );
+  const review = source.slice(reviewStart, reviewEnd);
+  const scopeGuard = review.indexOf(
+    "if (!all && group === undefined && purpose === undefined)",
+  );
+  const landing = review.indexOf("<ReviewLanding", scopeGuard);
+  const specimen = review.indexOf("<ComponentPreview", landing);
+  assert(
+    scopeGuard >= 0 && landing > scopeGuard && specimen > landing,
+    "Review must return its scope picker before the specimen population",
+  );
+  assertStringIncludes(review, 'parameters.get("scope") === "all"');
+  assertStringIncludes(review, "groupComponentEntries(components)");
 });
 
 Deno.test("Catalogue switches each ordinary Component while conformance stays web-only", async () => {
@@ -377,10 +411,7 @@ Deno.test("Catalogue switches each ordinary Component while conformance stays we
   assertStringIncludes(source, 'aria-label="CLI preview unavailable"');
 
   const conformanceStart = source.indexOf("if (conformanceMode)");
-  const ordinaryStart = source.indexOf(
-    '<div\n      className="discern-catalogue-shell"',
-    conformanceStart,
-  );
+  const ordinaryStart = source.indexOf("const page =", conformanceStart);
   assert(
     conformanceStart >= 0 && ordinaryStart > conformanceStart,
     "missing Catalogue render boundaries",

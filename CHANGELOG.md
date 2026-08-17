@@ -7,6 +7,7 @@ Each release is cut from a green run of the full release gate — formatting, li
 ## Unreleased
 
 - **Breaking:** Make the terminal Switch's default binary control glyph-only: off renders a danger cross before `●──○`, while on renders `○──●` before a success tick, with fixed symmetric spacing and ASCII equivalents. `SwitchCliProps.yesLabel` and `noLabel` remain optional opt-in text, and `requestConfirmation()` no longer inserts implicit `Yes` / `No` labels when callers omit them.
+- Redesign the browser Catalogue as a routed explorer: the overview, Foundations, Component browser and detail, Compositions, terminal layouts, and Review now have canonical paths and contextual navigation. Component discovery mounts compact generated indexes instead of all specimens, while explicit Group, purpose, and complete-system Review scopes retain multi-Component comparison; legacy one-page fragments upgrade to their routed destinations and machine conformance remains exhaustive.
 
 ## 0.20.0
 

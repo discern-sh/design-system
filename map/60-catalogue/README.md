@@ -1,10 +1,24 @@
 # Catalogue
 
-The Catalogue is the local browser for every Component example, public Token, terminal foundation sheet, web and terminal composition recipe, and Component selection. Run `deno task serve` and open the worktree's assigned port.
+The Catalogue is the routed local browser for every Component example, public Token, terminal foundation sheet, web and terminal composition recipe, and Component selection. Run `deno task serve` and open the worktree's assigned port.
+
+Its ordinary routes separate discovery from exhaustive review:
+
+- `/catalogue/` is a small overview rather than a complete inventory.
+- `/catalogue/components/` browses generated Groups and task-oriented collections without mounting Component specimens.
+- `/catalogue/components/<slug>/` mounts one complete Component contract.
+- `/catalogue/foundations/`, `/catalogue/compositions/`, and `/catalogue/terminal/` own their bounded inventories.
+- `/catalogue/review/` asks for a Group, purpose collection, or explicit complete-system scope before mounting comparison sheets.
+
+The server returns the same authored shell for every explorer route. Route facts live in `catalogue/routes.ts`; static assets use mount-absolute `/catalogue/…` URLs so nested detail routes never resolve against the Component slug.
 
 ## Find the right component
 
-The toolbar Search Palette presents explicit destinations across Component names, Groups, descriptions, purposes, usage guidance, Tokens, terminal foundations, and web or terminal composition recipes. Selecting a result closes the palette and moves to that destination; searching never silently removes unrelated Catalogue content. Press `/` outside a form control to open it. The purpose selector in the Components section independently narrows the rendered Catalogue to documentation, tool output, procedural workflow, or marketing work. Every ordinary Component card carries its own Web/CLI surface switch; changing one leaves the other cards in place, while `?surface=cli` starts every rendered card on its terminal specimen for review. The sidebar remains a complete Component index, independent of those controls. `?purpose=<name>` restores the purpose collection on a cold load.
+The toolbar Search Palette presents explicit routed destinations across Component names, Groups, descriptions, purposes, usage guidance, Tokens, terminal foundations, and web or terminal composition recipes. Press `/` outside a form control to open it. Selecting a Component result opens its detail route directly instead of scrolling through an already-mounted inventory.
+
+The Component explorer starts with generated Group and purpose cards. Search, Group, and purpose controls reveal compact Component links; they never mount the full specimen. A detail route carries the ordinary Component card's Web/CLI surface switch and supporting disclosures. Review mode retains the multi-Component surface switch and accepts `?surface=cli` for a reproducible initial posture. Group, purpose, and complete-system review scopes are URL-addressable.
+
+The sidebar is contextual: the explorer lists Groups and purposes, a Component detail lists only its own Group, and each foundation or composition route lists its local anchors. Below the desktop breakpoint it becomes an explicit modal navigation drawer rather than disappearing. The old one-page `#component-*`, `#group-*`, Token, Composition, and terminal-layout fragments upgrade in place to their routed equivalents, preserving Component state fragments and native `:target` highlighting where the detail route still owns the target.
 
 Component Metadata owns purpose membership, `useWhen`, and `notWhen`. Every Workflow Component and each easily confused pair carries that guidance beside its examples.
 
@@ -40,14 +54,17 @@ The toolbar reads the package version from `deno.json`, and conformance sheets r
 
 The automated boundary is the Catalogue's rendered static surfaces and its declared theme consumer. Consumer application routes, product navigation, and manual screen-reader output remain consumer-level acceptance work.
 
-## Initial render
+## Initial render and exhaustive review
 
-Terminal foundations, web and terminal composition recipes, and web examples remain mounted on the initial Catalogue route. The generated CLI modules are statically imported so browser compatibility and complete renderer enrollment fail at build time; individual Component frames are computed only when the CLI surface renders. This local development instrument favours one inspectable inventory over route-level splitting.
+The initial route mounts only the overview shell. Generated CLI modules remain statically imported so browser compatibility and complete renderer enrollment still fail at build time, but ordinary Component frames mount only on a detail route or an explicitly scoped Review sheet. Individual CLI frames are still computed only when their CLI surface renders.
+
+The machine conformance route remains separate and exhaustive: `?conformance=1` mounts every generated web specimen and declared journey without ordinary Catalogue chrome. Human review and machine conformance therefore preserve complete enrollment without making completeness the cost of every browsing visit.
 
 ## Where it lives
 
 | Concern                                                                | Authority                                                                            |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Explorer paths, legacy-link upgrades, and shell route recognition      | [`routes.ts`](../../catalogue/routes.ts)                                             |
 | Purpose vocabulary and usage fields                                    | [`component-meta.ts`](../../src/types/component-meta.ts)                             |
 | Registry, snippets, prop evidence, CLI enrollment, and package version | [`build.ts`](../../scripts/build.ts)                                                 |
 | Search destinations, purpose filtering, surface and state links        | [`app.tsx`](../../catalogue/app.tsx)                                                 |

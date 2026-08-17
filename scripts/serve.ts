@@ -3,6 +3,7 @@ import {
   MARKDOWN_BROWSER_REVIEW_PATH,
   renderMarkdownBrowserReviewPage,
 } from "../catalogue/markdown-browser-review.ts";
+import { canonicalCatalogueShellPathname } from "../catalogue/routes.ts";
 
 const ROOT = new URL("../", import.meta.url);
 const CONTENT_TYPES: Readonly<Record<string, string>> = {
@@ -83,6 +84,14 @@ export default {
     if (url.pathname === "/" || url.pathname === "/catalogue") {
       url.pathname = "/catalogue/";
       return Response.redirect(url, 307);
+    }
+    const shellPathname = canonicalCatalogueShellPathname(url.pathname);
+    if (shellPathname !== null) {
+      if (url.pathname !== shellPathname) {
+        url.pathname = shellPathname;
+        return Response.redirect(url, 307);
+      }
+      url.pathname = "/catalogue/";
     }
     const target = safePath(url);
     if (!target) return new Response("Bad request", { status: 400 });

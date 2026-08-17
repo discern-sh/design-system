@@ -3,6 +3,11 @@ import server, {
   catalogueFilePath,
   catalogueReviewRoutes,
 } from "../scripts/serve.ts";
+import {
+  canonicalCatalogueShellPathname,
+  catalogueComponentPath,
+  catalogueRoutePaths,
+} from "../catalogue/routes.ts";
 
 Deno.test("the serve task resolves the worktree's deterministic port with a fixed fallback", async () => {
   const config = JSON.parse(
@@ -55,9 +60,42 @@ Deno.test("the Catalogue owns one canonical source, bundle, and mounted path", a
   const index = await Deno.readTextFile(
     new URL("../catalogue/index.html", import.meta.url),
   );
-  assertStringIncludes(index, 'href="catalogue.css"');
-  assertStringIncludes(index, 'src="dist/catalogue.js"');
+  assertStringIncludes(index, 'href="/catalogue/catalogue.css"');
+  assertStringIncludes(index, 'src="/catalogue/dist/catalogue.js"');
   assertEquals(index.includes("styleguide"), false);
+});
+
+Deno.test("Catalogue explorer routes serve one canonical shell", async () => {
+  const shellPaths = [
+    ...Object.values(catalogueRoutePaths),
+    catalogueComponentPath("command-group"),
+  ];
+  for (const pathname of shellPaths) {
+    assertEquals(canonicalCatalogueShellPathname(pathname), pathname);
+    const response = await server.fetch(
+      new Request(`http://127.0.0.1:8010${pathname}`),
+    );
+    assertEquals(response.status, 200, pathname);
+    assertStringIncludes(
+      await response.text(),
+      '<div id="root"></div>',
+      pathname,
+    );
+  }
+
+  const redirect = await server.fetch(
+    new Request("http://127.0.0.1:8010/catalogue/components/command-group"),
+  );
+  assertEquals(redirect.status, 307);
+  assertEquals(
+    redirect.headers.get("location"),
+    "http://127.0.0.1:8010/catalogue/components/command-group/",
+  );
+  assertEquals(
+    canonicalCatalogueShellPathname("/catalogue/dist/catalogue.js"),
+    null,
+  );
+  assertEquals(canonicalCatalogueShellPathname("/catalogue/unknown/"), null);
 });
 
 Deno.test("Catalogue review routes stay outside replaceable build output", async () => {
