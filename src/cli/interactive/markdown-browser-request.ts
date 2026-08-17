@@ -67,20 +67,33 @@ type Settled<T> =
   | { readonly ok: false; readonly error: unknown };
 
 function terminalFacts(io: TerminalIO): TerminalFacts {
-  const size = io.size();
-  const capabilities = io.capabilities();
-  if (capabilities.ansiControl === false) {
-    throw new MarkdownBrowserRefusalError(
-      "ansi-control-unavailable",
-      size,
-    );
+  let last: TerminalFacts | undefined;
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const size = io.size();
+    const capabilities = io.capabilities();
+    const confirmed = io.size();
+    last = { size: confirmed, capabilities };
+    if (
+      size.columns !== confirmed.columns || size.rows !== confirmed.rows ||
+      capabilities.columns !== confirmed.columns
+    ) {
+      continue;
+    }
+    if (capabilities.ansiControl === false) {
+      throw new MarkdownBrowserRefusalError(
+        "ansi-control-unavailable",
+        confirmed,
+      );
+    }
+    return { size: confirmed, capabilities };
   }
-  if (capabilities.columns !== size.columns) {
-    throw new TypeError(
-      `Terminal capabilities report ${capabilities.columns} columns for a ${size.columns}-column viewport.`,
-    );
-  }
-  return { size, capabilities };
+  throw new TypeError(
+    `Terminal geometry did not stabilise while sampling its viewport and capabilities${
+      last === undefined
+        ? "."
+        : ` (last saw ${last.size.columns} columns and capability width ${last.capabilities.columns}).`
+    }`,
+  );
 }
 
 function sameGeometry(
@@ -246,6 +259,20 @@ export async function runMarkdownBrowserRequest<Action>(
     resizeListening = false;
     stopResizeListener();
   };
+  const paintLatestFrame = (): void => {
+    while (!painter.replace(frame, facts.size)) {
+      const currentFacts = terminalFacts(io);
+      if (!sameGeometry(state, currentFacts)) {
+        state = transitionMarkdownBrowser(
+          state,
+          resizeEvent(currentFacts),
+          currentFacts.capabilities,
+        ).state;
+        frame = render(state, currentFacts.capabilities);
+      }
+      facts = currentFacts;
+    }
+  };
 
   try {
     return await withRawTerminalInputCleanup(io, async () => {
@@ -253,7 +280,7 @@ export async function runMarkdownBrowserRequest<Action>(
       try {
         stopResizeListener = io.listenResize?.(resize.notify) ?? (() => {});
         resizeListening = true;
-        painter.replace(frame);
+        paintLatestFrame();
         let paintedState = state;
 
         let inputRead = readInputEvents(reader).then((events) => ({
@@ -289,7 +316,7 @@ export async function runMarkdownBrowserRequest<Action>(
             state = resized.state;
             facts = currentFacts;
             frame = render(state, facts.capabilities);
-            painter.replace(frame);
+            paintLatestFrame();
             paintedState = state;
           } else {
             facts = currentFacts;
@@ -361,7 +388,7 @@ export async function runMarkdownBrowserRequest<Action>(
 
           if (state !== paintedState) {
             frame = render(state, facts.capabilities);
-            painter.replace(frame);
+            paintLatestFrame();
             paintedState = state;
           }
           inputRead = readInputEvents(reader).then((events) => ({

@@ -112,6 +112,70 @@ Deno.test("scripted keys and resize events drive the real browser and restore be
   );
 });
 
+Deno.test("a resize between render and paint reflows again instead of faulting", async () => {
+  const io = new FakeTerminalIO([], {
+    columns: 160,
+    rows: 58,
+    colorDepth: "ansi256",
+    holdOpen: true,
+  });
+  const renderedColumns: number[] = [];
+  let settled = false;
+  const pending = runMarkdownBrowserRequest(
+    markdownBrowserOptions,
+    { io },
+    {
+      render(state, capabilities) {
+        renderedColumns.push(state.columns);
+        const frame = renderMarkdownBrowser(state, capabilities);
+        if (state.columns === 159) io.resize(158, 58);
+        return frame;
+      },
+    },
+  ).catch((error) => error).finally(() => {
+    settled = true;
+  });
+
+  await until(() => completeFrames(io).length === 1);
+  io.resize(159, 58);
+  await until(() => settled || completeFrames(io).length === 2);
+  if (!settled) io.enqueueKeys("ctrl-c");
+
+  const result = await pending;
+  assert(result instanceof InteractionCancelled);
+  assertEquals(result.reason, "Cancelled.");
+  assertEquals(renderedColumns, [160, 159, 158]);
+  assertEquals(completeFrames(io).length, 2);
+  assertRestored(io);
+  io.close();
+});
+
+Deno.test("geometry sampling retries a concurrent size and capability change", async () => {
+  class SamplingRaceTerminal extends FakeTerminalIO {
+    #firstSize = true;
+
+    override size() {
+      const sampled = super.size();
+      if (this.#firstSize) {
+        this.#firstSize = false;
+        this.resize(sampled.columns - 1, sampled.rows);
+      }
+      return sampled;
+    }
+  }
+
+  const io = new SamplingRaceTerminal([encodeTerminalKeys("ctrl-c")], {
+    columns: 160,
+    rows: 58,
+    colorDepth: "ansi256",
+  });
+  const result = await requestMarkdownBrowser(markdownBrowserOptions, { io })
+    .catch((error) => error);
+  assert(result instanceof InteractionCancelled);
+  assertEquals(result.reason, "Cancelled.");
+  assertRestored(io);
+});
+
 Deno.test("action values resolve only after every terminal effect is restored", async () => {
   const io = new FakeTerminalIO([encodeTerminalKeys("enter")], {
     columns: 80,

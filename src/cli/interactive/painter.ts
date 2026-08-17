@@ -6,7 +6,7 @@
 
 import { measureText } from "../text.ts";
 import { parseStyledSource } from "../styled-sequences.ts";
-import type { TerminalIO } from "./io.ts";
+import type { TerminalIO, TerminalSize } from "./io.ts";
 
 const FIRST_COLUMN = "\x1b[1G";
 const ERASE_TO_SCREEN_END = "\x1b[J";
@@ -154,9 +154,19 @@ function assertClosedStyledLine(line: string): void {
 export class CompleteFramePainter {
   constructor(readonly io: TerminalIO) {}
 
-  /** Validate and redraw one exact viewport from its home cell. */
-  replace(frame: string): void {
+  /**
+   * Validate and redraw one exact viewport from its home cell. A caller that
+   * rendered against sampled geometry may supply it; a newer viewport then
+   * returns false without writing so the caller can reflow once more.
+   */
+  replace(frame: string, expectedSize?: TerminalSize): boolean {
     const size = this.io.size();
+    if (
+      expectedSize !== undefined &&
+      (size.columns !== expectedSize.columns || size.rows !== expectedSize.rows)
+    ) {
+      return false;
+    }
     const lines = frame.split("\n");
     if (lines.length !== size.rows) {
       throw new TypeError(
@@ -174,5 +184,6 @@ export class CompleteFramePainter {
     this.io.write(
       `${ERASE_TERMINAL_DISPLAY}${HOME_TERMINAL_CURSOR}${lines.join("\r\n")}`,
     );
+    return true;
   }
 }
