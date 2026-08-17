@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import {
@@ -74,11 +75,10 @@ const renderFaqBlockCli: CliRenderer<FaqBlockCliProps> = (
   }
   const body = props.items.map((item, index) => {
     const expanded = open.has(index);
-    const marker = capabilities.unicode
-      ? expanded ? "▾" : "▸"
-      : expanded
-      ? "v"
-      : ">";
+    const marker = triangleGlyph(
+      expanded ? TRIANGLES.filledSmall.down : TRIANGLES.filledSmall.right,
+      capabilities.unicode,
+    );
     return joinVertical([
       `${marker} ${wrapMarketingCliText(item.question, width - 2)}`,
       expanded ? wrapMarketingCliText(item.answer, width - 2) : "",

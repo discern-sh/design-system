@@ -11,6 +11,9 @@ import {
   type TerminalMotif,
   type TerminalMotifCycle,
   type TerminalMotifOptions,
+  terminalMotifQuietMarker,
+  type TerminalMotifRegister,
+  terminalMotifRegisterRoles,
   terminalMotifRepertoire,
 } from "./motif.ts";
 import { measureText, truncateText } from "./text.ts";
@@ -46,7 +49,12 @@ export interface MotifPatternOptions extends MotifThemeOptions {
   readonly tone?: TerminalSemanticTone;
 }
 
-/** Inputs for one quiet horizontal divider with a semantic motif marker. */
+/**
+ * Inputs for one quiet horizontal divider with a semantic motif marker.
+ * Centred rules speak the motif's quiet marker and the leading variant its
+ * everyday marker; the `brand` register selects the ceremonial mark in
+ * either position.
+ */
 export interface MotifDividerOptions extends MotifThemeOptions {
   /** Total visible divider width. */
   readonly width: number;
@@ -69,6 +77,11 @@ export interface MotifProgressOptions extends MotifThemeOptions {
   readonly total: number;
   /** Total visible frame width, including the percentage label. */
   readonly width: number;
+  /**
+   * Explicit one-cell head glyph, already capability-resolved, overriding
+   * the motif marker role when a component's track fixes its own geometry.
+   */
+  readonly marker?: string;
 }
 
 /** Public visual treatments for a labeled terminal section boundary. */
@@ -103,6 +116,11 @@ export interface MotifBeaconOptions extends MotifThemeOptions {
   /** Semantic animation phase; the renderer derives the marker position. */
   readonly phase: number;
   readonly direction?: MotifDirection;
+  /**
+   * Explicit one-cell beacon glyph, already capability-resolved, overriding
+   * the motif marker role when a component fixes its own geometry.
+   */
+  readonly marker?: string;
 }
 
 function assertInteger(value: number, name: string, minimum?: number): void {
@@ -132,8 +150,12 @@ function patternGlyphs(
   motif: TerminalMotif | undefined,
   capabilities: TerminalCapabilities,
   direction: MotifDirection,
+  register: TerminalMotifRegister | undefined,
 ): TerminalMotifCycle {
-  const glyphs = terminalMotifRepertoire(motif, capabilities.unicode).pattern;
+  const glyphs = terminalMotifRegisterRoles(
+    terminalMotifRepertoire(motif, capabilities.unicode),
+    register,
+  ).pattern;
   return direction === "forward"
     ? glyphs
     : [...glyphs].reverse() as unknown as TerminalMotifCycle;
@@ -144,9 +166,14 @@ function renderCycle(
   phase: number,
   direction: MotifDirection,
   capabilities: TerminalCapabilities,
-  motif: TerminalMotif | undefined,
+  options: TerminalMotifOptions,
 ): string {
-  const glyphs = patternGlyphs(motif, capabilities, direction);
+  const glyphs = patternGlyphs(
+    options.motif,
+    capabilities,
+    direction,
+    options.register,
+  );
   return Array.from({ length }, (_, index) => {
     return glyphs[normalizedIndex(phase + index, glyphs.length)] ?? glyphs[0];
   }).join("");
@@ -157,6 +184,27 @@ function motifColor(
   tone: TerminalSemanticTone,
 ): ReturnType<typeof terminalToneColor> {
   return terminalToneColor(theme, tone);
+}
+
+function assertExplicitMarker(marker: string, name: string): void {
+  if (
+    marker.trim() !== marker || /[\p{Cc}\p{Cf}]/u.test(marker) ||
+    measureText(marker) !== 1
+  ) {
+    throw new TypeError(
+      `${name} must be one visible glyph occupying exactly one terminal cell`,
+    );
+  }
+}
+
+function markerRole(
+  options: TerminalMotifOptions,
+  capabilities: TerminalCapabilities,
+): string {
+  return terminalMotifRegisterRoles(
+    terminalMotifRepertoire(options.motif, capabilities.unicode),
+    options.register,
+  ).marker;
 }
 
 /** Render a quiet horizontal rule around or after one semantic motif marker. */
@@ -171,10 +219,15 @@ export function renderMotifDivider(
     throw new TypeError(`unknown motif divider alignment: ${alignment}`);
   }
   const theme = themeFor(options.theme);
-  const marker = terminalMotifRepertoire(
+  const repertoire = terminalMotifRepertoire(
     options.motif,
     capabilities.unicode,
-  ).marker;
+  );
+  const marker = options.register === "brand"
+    ? terminalMotifRegisterRoles(repertoire, "brand").marker
+    : alignment === "center"
+    ? terminalMotifQuietMarker(repertoire)
+    : repertoire.marker;
   const rule = capabilities.unicode ? "─" : "-";
   const leadingEdge = capabilities.unicode ? "╶" : "-";
   const trailingEdge = capabilities.unicode ? "╴" : "-";
@@ -253,7 +306,7 @@ export function renderMotifPattern(
       phase,
       direction,
       capabilities,
-      options.motif,
+      options,
     )
     : Array.from(
       { length: options.length },
@@ -263,7 +316,7 @@ export function renderMotifPattern(
           phase + row,
           direction,
           capabilities,
-          options.motif,
+          options,
         ),
     ).join("\n");
   return styleText(
@@ -341,10 +394,10 @@ export function renderMotifProgressFrame(
   );
   const theme = themeFor(options.theme);
   const filledTone = options.completed === options.total ? "success" : "accent";
-  const repertoire = terminalMotifRepertoire(
-    options.motif,
-    capabilities.unicode,
-  );
+  if (options.marker !== undefined) {
+    assertExplicitMarker(options.marker, "motif progress marker");
+  }
+  const marker = options.marker ?? markerRole(options, capabilities);
   const filledRule = capabilities.unicode ? "━" : "=";
   const remainingRule = capabilities.unicode ? "─" : "-";
   return renderStyledSpans([
@@ -354,7 +407,7 @@ export function renderMotifProgressFrame(
       style: { color: motifColor(theme, filledTone) },
     },
     {
-      text: repertoire.marker,
+      text: marker,
       style: { color: motifColor(theme, filledTone) },
     },
     {
@@ -390,7 +443,7 @@ export function renderMotifSectionRule(
     phase,
     options.direction ?? "forward",
     capabilities,
-    options.motif,
+    options,
   );
   const treatment = options.treatment ?? "embedded";
   const accentStyle = { color: motifColor(theme, "accent") } as const;
@@ -595,10 +648,10 @@ export function renderMotifActivityBeacon(
   }
   const theme = themeFor(options.theme);
   const rail = capabilities.unicode ? "─" : "-";
-  const marker = terminalMotifRepertoire(
-    options.motif,
-    capabilities.unicode,
-  ).marker;
+  if (options.marker !== undefined) {
+    assertExplicitMarker(options.marker, "motif beacon marker");
+  }
+  const marker = options.marker ?? markerRole(options, capabilities);
   const railStyle = {
     color: terminalThemeColor(theme, "--discern-color-ink-faint"),
     dim: true,

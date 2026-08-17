@@ -6,6 +6,7 @@
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
+import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
 import type { DiagnosticSeverity } from "./diagnostic.types.ts";
 import {
   assertWorkflowCliText,
@@ -151,7 +152,11 @@ const renderDiagnosticCli: CliRenderer<DiagnosticCliProps> = (
     assertWorkflowCliText(props.rawDetail, "diagnostic raw detail", true);
     const label = props.rawLabel ?? "Raw output";
     assertWorkflowCliText(label, "diagnostic raw label");
-    lines.push(`${capabilities.unicode ? "▾" : "v"} ${label}`);
+    lines.push(
+      `${
+        triangleGlyph(TRIANGLES.filledSmall.down, capabilities.unicode)
+      } ${label}`,
+    );
     lines.push(...workflowIndentedLines(props.rawDetail, width));
   }
   return lines.join("\n");

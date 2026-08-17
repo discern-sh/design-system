@@ -104,7 +104,7 @@ Deno.test("Heading retains every semantic level in its exact CLI prefix", () => 
 
 Deno.test("Heading document treatment styles H1 through H6 and degrades to level markers", () => {
   const styledVisible = {
-    1: `◮ Level 1\n${"━".repeat(32)}`,
+    1: `▲ Level 1\n${"━".repeat(32)}`,
     2: `Level 2\n${"─".repeat(32)}`,
     3: `╶─ Level 3 ${"─".repeat(21)}`,
     4: "Level 4",
@@ -189,7 +189,7 @@ Deno.test("Heading document treatment styles H1 through H6 and degrades to level
       leadingBlankLines: 0,
     }, narrow)),
     [
-      "◮ A",
+      "▲ A",
       "  deliberately",
       "  long",
       "  document",

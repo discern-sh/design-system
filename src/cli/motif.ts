@@ -4,28 +4,46 @@
  * A motif is semantic rather than geometric: consumers choose the glyphs
  * used for indeterminate motion, repeated patterns, an accent marker, and
  * complete/incomplete status. Renderers ask for those roles and never name
- * a triangle orientation. Every definition includes an ASCII repertoire and
- * is frozen after validation, so a bound presenter remains a pure value.
+ * a triangle orientation. A motif speaks in two registers: the everyday
+ * roles carry ambient accents, while the optional `brand` register reserves
+ * ceremonial glyphs for the moments a surface formally wears its identity.
+ * Every definition includes an ASCII repertoire and is frozen after
+ * validation, so a bound presenter remains a pure value.
  *
  * @module
  */
 
 import { graphemeWidth } from "./text.ts";
+import { TRIANGLES } from "./triangles.ts";
 
 const terminalMotifBrand: unique symbol = Symbol("TerminalMotif");
 
 /** A non-empty immutable cycle used by pattern and spinner roles. */
 export type TerminalMotifCycle = readonly [string, ...string[]];
 
+/**
+ * The ceremonial glyph roles a motif reserves for brand moments. Renderers
+ * select them through the `register` option; when a motif defines no brand
+ * register, the everyday `marker` and `pattern` roles stand in.
+ */
+export interface TerminalMotifBrandRegister {
+  readonly marker: string;
+  readonly pattern: TerminalMotifCycle;
+}
+
 /** Complete glyph roles for one Unicode or ASCII terminal repertoire. */
 export interface TerminalMotifRepertoire {
   readonly spinner: TerminalMotifCycle;
   readonly pattern: TerminalMotifCycle;
   readonly marker: string;
+  /** Subordinate accent marker; falls back to `marker` when absent. */
+  readonly markerQuiet?: string;
   readonly status: {
     readonly complete: string;
     readonly incomplete: string;
   };
+  /** Ceremonial register; the everyday roles stand in when absent. */
+  readonly brand?: TerminalMotifBrandRegister;
 }
 
 /** Input accepted for one complete terminal repertoire. */
@@ -33,9 +51,16 @@ export interface TerminalMotifRepertoireDefinition {
   readonly spinner: readonly string[];
   readonly pattern: readonly string[];
   readonly marker: string;
+  /** Optional subordinate accent marker; omit to reuse `marker`. */
+  readonly markerQuiet?: string;
   readonly status: {
     readonly complete: string;
     readonly incomplete: string;
+  };
+  /** Optional ceremonial register; omit to reuse the everyday roles. */
+  readonly brand?: {
+    readonly marker: string;
+    readonly pattern: readonly string[];
   };
 }
 
@@ -50,9 +75,16 @@ export interface TerminalMotifRepertoireOverrides {
   readonly spinner?: readonly string[];
   readonly pattern?: readonly string[];
   readonly marker?: string;
+  /** Replaces the subordinate accent marker as one atomic value. */
+  readonly markerQuiet?: string;
   readonly status?: {
     readonly complete?: string;
     readonly incomplete?: string;
+  };
+  /** Replaces the ceremonial register as one atomic value. */
+  readonly brand?: {
+    readonly marker: string;
+    readonly pattern: readonly string[];
   };
 }
 
@@ -73,19 +105,57 @@ export interface TerminalMotif {
   readonly [terminalMotifBrand]: true;
 }
 
+/**
+ * The voice a renderer speaks its motif roles in. The everyday `plain`
+ * register is the default; `brand` selects the motif's ceremonial glyphs
+ * for the moments a surface formally wears its identity.
+ */
+export type TerminalMotifRegister = "plain" | "brand";
+
 /** Shared optional motif binding used by renderers and interaction options. */
 export interface TerminalMotifOptions {
   readonly motif?: TerminalMotif;
+  /** Motif voice for this rendering; defaults to `plain`. */
+  readonly register?: TerminalMotifRegister;
 }
 
 /**
- * Forward an optional motif without materialising an absent property. This
- * keeps exact-optional option bags concise across nested renderers.
+ * Forward an optional motif binding without materialising absent
+ * properties. This keeps exact-optional option bags concise across nested
+ * renderers.
  */
 export function motifPassthrough(
   options: TerminalMotifOptions,
 ): TerminalMotifOptions {
-  return options.motif === undefined ? {} : { motif: options.motif };
+  return {
+    ...(options.motif === undefined ? {} : { motif: options.motif }),
+    ...(options.register === undefined ? {} : { register: options.register }),
+  };
+}
+
+/**
+ * Resolve the marker and pattern roles a repertoire speaks in the given
+ * register. The `brand` register falls back to the everyday roles when the
+ * motif defines no ceremonial glyphs.
+ */
+export function terminalMotifRegisterRoles(
+  repertoire: TerminalMotifRepertoire,
+  register: TerminalMotifRegister = "plain",
+): TerminalMotifBrandRegister {
+  if (register === "brand" && repertoire.brand !== undefined) {
+    return repertoire.brand;
+  }
+  return { marker: repertoire.marker, pattern: repertoire.pattern };
+}
+
+/**
+ * Resolve the subordinate accent marker, falling back to the everyday
+ * marker when the repertoire defines no quiet variant.
+ */
+export function terminalMotifQuietMarker(
+  repertoire: TerminalMotifRepertoire,
+): string {
+  return repertoire.markerQuiet ?? repertoire.marker;
 }
 
 type TerminalMotifRepertoireName = "unicode" | "ascii";
@@ -145,6 +215,9 @@ function validateRepertoire(
 ): TerminalMotifRepertoire {
   const prefix = `terminal motif ${name}`;
   assertGlyph(definition.marker, `${prefix}.marker`, name);
+  if (definition.markerQuiet !== undefined) {
+    assertGlyph(definition.markerQuiet, `${prefix}.markerQuiet`, name);
+  }
   assertGlyph(
     definition.status.complete,
     `${prefix}.status.complete`,
@@ -155,13 +228,29 @@ function validateRepertoire(
     `${prefix}.status.incomplete`,
     name,
   );
+  if (definition.brand !== undefined) {
+    assertGlyph(definition.brand.marker, `${prefix}.brand.marker`, name);
+  }
   return Object.freeze({
     spinner: validateCycle(definition.spinner, `${prefix}.spinner`, name),
     pattern: validateCycle(definition.pattern, `${prefix}.pattern`, name),
     marker: definition.marker,
+    ...(definition.markerQuiet === undefined
+      ? {}
+      : { markerQuiet: definition.markerQuiet }),
     status: Object.freeze({
       complete: definition.status.complete,
       incomplete: definition.status.incomplete,
+    }),
+    ...(definition.brand === undefined ? {} : {
+      brand: Object.freeze({
+        marker: definition.brand.marker,
+        pattern: validateCycle(
+          definition.brand.pattern,
+          `${prefix}.brand.pattern`,
+          name,
+        ),
+      }),
     }),
   });
 }
@@ -186,14 +275,18 @@ function mergeRepertoire(
   base: TerminalMotifRepertoire,
   overrides: TerminalMotifRepertoireOverrides | undefined,
 ): TerminalMotifRepertoireDefinition {
+  const markerQuiet = overrides?.markerQuiet ?? base.markerQuiet;
+  const brand = overrides?.brand ?? base.brand;
   return {
     spinner: overrides?.spinner ?? base.spinner,
     pattern: overrides?.pattern ?? base.pattern,
     marker: overrides?.marker ?? base.marker,
+    ...(markerQuiet === undefined ? {} : { markerQuiet }),
     status: {
       complete: overrides?.status?.complete ?? base.status.complete,
       incomplete: overrides?.status?.incomplete ?? base.status.incomplete,
     },
+    ...(brand === undefined ? {} : { brand }),
   };
 }
 
@@ -228,26 +321,47 @@ function assertDefinedTerminalMotif(
 
 /**
  * The package's discern-flavoured default. Half-filled circles animate in a
- * clockwise cycle; the established alternating pattern and marker pair with
- * filled and outline triangles for complete and incomplete status.
+ * clockwise cycle; plain triangles speak the everyday register — a filled
+ * lead marker, an outline quiet marker, and an alternating-fill clockwise
+ * pattern — while the ceremonial brand register reserves the half-filled
+ * discern mark and its rotation for the moments a surface wears the brand.
  */
 export const DISCERN_TERMINAL_MOTIF: TerminalMotif = defineTerminalMotif({
   unicode: {
     spinner: ["◐", "◓", "◑", "◒"],
-    pattern: ["◮", "⧩", "◭", "⧨"],
-    marker: "◮",
+    pattern: [
+      TRIANGLES.filled.up.unicode,
+      TRIANGLES.unfilled.right.unicode,
+      TRIANGLES.filled.down.unicode,
+      TRIANGLES.unfilled.left.unicode,
+    ],
+    marker: TRIANGLES.filled.up.unicode,
+    markerQuiet: TRIANGLES.unfilled.up.unicode,
     status: {
-      complete: "▲",
-      incomplete: "△",
+      complete: TRIANGLES.filled.up.unicode,
+      incomplete: TRIANGLES.unfilled.up.unicode,
+    },
+    brand: {
+      marker: "◮",
+      pattern: ["◮", "⧩", "◭", "⧨"],
     },
   },
   ascii: {
     spinner: ["^", "<", "v", ">"],
-    pattern: [">", "v", "^", "<"],
-    marker: ">",
+    pattern: [
+      TRIANGLES.filled.up.ascii,
+      TRIANGLES.unfilled.right.ascii,
+      TRIANGLES.filled.down.ascii,
+      TRIANGLES.unfilled.left.ascii,
+    ],
+    marker: TRIANGLES.filled.up.ascii,
     status: {
       complete: "^",
       incomplete: "v",
+    },
+    brand: {
+      marker: ">",
+      pattern: [">", "v", "^", "<"],
     },
   },
 });

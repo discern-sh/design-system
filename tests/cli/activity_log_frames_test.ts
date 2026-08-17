@@ -127,8 +127,8 @@ Deno.test("Activity log completion and cancellation frames stay exact", () => {
   };
   assertCapabilityLevels(
     (capabilities) => renderActivityLogCli(summary, capabilities),
-    "◮ Build styles\n✓ Tokens held\n! One warning kept\n",
-    "> Build styles\n+ Tokens held\n! One warning kept\n",
+    "▲ Build styles\n✓ Tokens held\n! One warning kept\n",
+    "^ Build styles\n+ Tokens held\n! One warning kept\n",
   );
   assertCapabilityLevels(
     (capabilities) => renderActivityLogCli(cancelled, capabilities),

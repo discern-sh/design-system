@@ -9,6 +9,7 @@ import type {
   InteractiveChoiceState,
 } from "../interactive-states.ts";
 import { renderMotifSectionRule } from "../motifs.ts";
+import { triangleGlyph, TRIANGLES } from "../triangles.ts";
 import { styleSemanticText } from "../narration.ts";
 import { projectTerminalCellRows } from "../projection.ts";
 import { mapStyledHyperlinks } from "../styled-sequences.ts";
@@ -329,7 +330,9 @@ function paneTitle(
   focused: boolean,
   capabilities: TerminalCapabilities,
 ): string {
-  return focused ? `${capabilities.unicode ? "▶" : ">"} ${label}` : label;
+  return focused
+    ? `${triangleGlyph(TRIANGLES.filled.right, capabilities.unicode)} ${label}`
+    : label;
 }
 
 function paneBorder<Action>(

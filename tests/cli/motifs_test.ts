@@ -55,12 +55,14 @@ const CUSTOM_TERMINAL_MOTIF = deriveTerminalMotif(
       spinner: ["◴", "◷", "◶", "◵"],
       pattern: ["▵", "▹", "▿", "◃"],
       marker: "◉",
+      markerQuiet: "○",
       status: { complete: "▵", incomplete: "▿" },
     },
     ascii: {
       spinner: ["1", "2", "3", "4"],
       pattern: ["a", "b"],
       marker: "?",
+      markerQuiet: ".",
       status: { complete: "Y", incomplete: "N" },
     },
   },
@@ -136,7 +138,7 @@ Deno.test("terminal motif factories validate, freeze, and derive semantic roles"
     "◒",
   ]);
   assertEquals(CUSTOM_TERMINAL_MOTIF.unicode.marker, "◉");
-  assertEquals(DISCERN_TERMINAL_MOTIF.unicode.marker, "◮");
+  assertEquals(DISCERN_TERMINAL_MOTIF.unicode.marker, "▲");
   assertEquals(DISCERN_TERMINAL_MOTIF.unicode.status, {
     complete: "▲",
     incomplete: "△",
@@ -201,7 +203,13 @@ Deno.test("terminal motif definitions admit narrow-A glyphs and reject unsafe cl
   );
 });
 
-Deno.test("the discern glyph repertoire has one production authority", async () => {
+Deno.test("every distinctive glyph repertoire has one production authority", async () => {
+  const authorities: readonly [string, readonly string[]][] = [
+    ["/src/cli/motif.ts", ["◮", "◭", "⧩", "⧨", "◓", "◑", "◒"]],
+    ["/src/cli/triangles.ts", [
+      ..."▲▶▼◀△▷▽◁▴▸▾◂▵▹▿◃",
+    ]],
+  ];
   const roots = [
     new URL("../../src/cli/", import.meta.url),
     new URL("../../src/components/", import.meta.url),
@@ -209,13 +217,13 @@ Deno.test("the discern glyph repertoire has one production authority", async () 
   const leaks: string[] = [];
   for (const root of roots) {
     for (const source of await terminalSourceFiles(root)) {
-      if (source.pathname.endsWith("/src/cli/motif.ts")) continue;
       const text = await Deno.readTextFile(source);
-      for (
-        const glyph of ["◮", "◭", "⧩", "⧨", "◓", "◑", "◒", "▲", "△"]
-      ) {
-        if (text.includes(glyph)) {
-          leaks.push(`${source.pathname}: ${glyph}`);
+      for (const [authority, glyphs] of authorities) {
+        if (source.pathname.endsWith(authority)) continue;
+        for (const glyph of glyphs) {
+          if (text.includes(glyph)) {
+            leaks.push(`${source.pathname}: ${glyph}`);
+          }
         }
       }
     }
@@ -255,7 +263,7 @@ Deno.test("one custom motif reaches every semantic renderer role", () => {
   );
   assertEquals(
     renderMotifDivider({ width: 9, motif }, unicode),
-    "╶── ◉ ──╴",
+    "╶── ○ ──╴",
   );
   assertEquals(
     renderMotifProgressFrame(
@@ -282,26 +290,26 @@ Deno.test("motif divider keeps one centred or leading marker across widths and r
   const unicode = testTerminalCapabilities({ columns: 20 });
   for (
     const [width, expected] of [
-      [1, "◮"],
-      [2, "◮╴"],
-      [3, "╶◮╴"],
-      [4, "╶◮─╴"],
-      [5, "╶ ◮ ╴"],
-      [9, "╶── ◮ ──╴"],
+      [1, "△"],
+      [2, "△╴"],
+      [3, "╶△╴"],
+      [4, "╶△─╴"],
+      [5, "╶ △ ╴"],
+      [9, "╶── △ ──╴"],
     ] as const
   ) {
     assertExactFrame(renderMotifDivider({ width }, unicode), expected, unicode);
   }
   const ascii = testTerminalCapabilities({ columns: 9, unicode: false });
-  assertExactFrame(renderMotifDivider({ width: 9 }, ascii), "--- > ---", ascii);
+  assertExactFrame(renderMotifDivider({ width: 9 }, ascii), "--- ^ ---", ascii);
   assertExactFrame(
     renderMotifDivider({ width: 9, alignment: "start" }, unicode),
-    "◮  ──────",
+    "▲  ──────",
     unicode,
   );
   assertExactFrame(
     renderMotifDivider({ width: 9, alignment: "start" }, ascii),
-    ">  ------",
+    "^  ------",
     ascii,
   );
   const styled = testTerminalCapabilities({
@@ -310,7 +318,7 @@ Deno.test("motif divider keeps one centred or leading marker across widths and r
   });
   assertStyledFrame(
     renderMotifDivider({ width: 9 }, styled),
-    "╶── ◮ ──╴",
+    "╶── △ ──╴",
     styled,
   );
   assertExactFrame(
@@ -329,17 +337,17 @@ Deno.test("motif patterns preserve horizontal, vertical, phase, and direction co
   const capabilities = testTerminalCapabilities({ columns: 20 });
   assertExactFrame(
     renderMotifPattern({ length: 4 }, capabilities),
-    "◮⧩◭⧨",
+    "▲▷▼◁",
     capabilities,
   );
   assertExactFrame(
     renderMotifPattern({ length: 4, direction: "reverse" }, capabilities),
-    "⧨◭⧩◮",
+    "◁▼▷▲",
     capabilities,
   );
   assertExactFrame(
     renderMotifPattern({ length: 4, orientation: "vertical" }, capabilities),
-    "◮\n⧩\n◭\n⧨",
+    "▲\n▷\n▼\n◁",
     capabilities,
   );
 });
@@ -361,23 +369,23 @@ Deno.test("progress frames are exact at zero, partial, complete, and ASCII degra
   const unicode = testTerminalCapabilities({ columns: 15 });
   assertExactFrame(
     renderMotifProgressFrame({ completed: 0, total: 4, width: 15 }, unicode),
-    "[  0%] ◮───────",
+    "[  0%] ▲───────",
     unicode,
   );
   assertExactFrame(
     renderMotifProgressFrame({ completed: 1, total: 4, width: 15 }, unicode),
-    "[ 25%] ━◮──────",
+    "[ 25%] ━▲──────",
     unicode,
   );
   assertExactFrame(
     renderMotifProgressFrame({ completed: 4, total: 4, width: 15 }, unicode),
-    "[100%] ━━━━━━━◮",
+    "[100%] ━━━━━━━▲",
     unicode,
   );
   const ascii = testTerminalCapabilities({ columns: 12, unicode: false });
   assertExactFrame(
     renderMotifProgressFrame({ completed: 1, total: 2, width: 12 }, ascii),
-    "[ 50%] ==>--",
+    "[ 50%] ==^--",
     ascii,
   );
 });
@@ -386,12 +394,12 @@ Deno.test("section rules default to the strong embedded heading treatment", () =
   const capabilities = testTerminalCapabilities({ columns: 17 });
   assertExactFrame(
     renderMotifSectionRule("gate", { width: 16 }, capabilities),
-    "━━ ◮ GATE ━━━━━━",
+    "━━ ▲ GATE ━━━━━━",
     capabilities,
   );
   assertExactFrame(
     renderMotifSectionRule("gate", { width: 17 }, capabilities),
-    "━━ ◮ GATE ━━━━━━━",
+    "━━ ▲ GATE ━━━━━━━",
     capabilities,
   );
 });
@@ -404,7 +412,7 @@ Deno.test("section rules expose strong underline and quiet sandwich treatments",
       { width: 16, treatment: "underline" },
       unicode,
     ),
-    "◮ GATE\n━━━━━━━━━━━━━━━━",
+    "▲ GATE\n━━━━━━━━━━━━━━━━",
     unicode,
   );
   assertExactFrame(
@@ -413,14 +421,14 @@ Deno.test("section rules expose strong underline and quiet sandwich treatments",
       { width: 16, treatment: "sandwich" },
       unicode,
     ),
-    "────────────────\n◮ GATE\n────────────────",
+    "────────────────\n▲ GATE\n────────────────",
     unicode,
   );
 
   const ascii = testTerminalCapabilities({ columns: 16, unicode: false });
   assertExactFrame(
     renderMotifSectionRule("gate", { width: 16 }, ascii),
-    "== > GATE ======",
+    "== ^ GATE ======",
     ascii,
   );
   assertExactFrame(
@@ -429,7 +437,7 @@ Deno.test("section rules expose strong underline and quiet sandwich treatments",
       { width: 16, treatment: "underline" },
       ascii,
     ),
-    "> GATE\n================",
+    "^ GATE\n================",
     ascii,
   );
   assertExactFrame(
@@ -438,7 +446,7 @@ Deno.test("section rules expose strong underline and quiet sandwich treatments",
       { width: 16, treatment: "sandwich" },
       ascii,
     ),
-    "----------------\n> GATE\n----------------",
+    "----------------\n^ GATE\n----------------",
     ascii,
   );
 });
@@ -515,20 +523,20 @@ Deno.test("activity beacon preserves every phase on its out-and-back rail", () =
         renderMotifActivityBeacon({ width: 8, phase }, capabilities),
     ),
     [
-      "◮───────",
-      "─◮──────",
-      "──◮─────",
-      "───◮────",
-      "────◮───",
-      "─────◮──",
-      "──────◮─",
-      "───────◮",
-      "──────◮─",
-      "─────◮──",
-      "────◮───",
-      "───◮────",
-      "──◮─────",
-      "─◮──────",
+      "▲───────",
+      "─▲──────",
+      "──▲─────",
+      "───▲────",
+      "────▲───",
+      "─────▲──",
+      "──────▲─",
+      "───────▲",
+      "──────▲─",
+      "─────▲──",
+      "────▲───",
+      "───▲────",
+      "──▲─────",
+      "─▲──────",
     ],
   );
   assertExactFrame(
@@ -536,27 +544,27 @@ Deno.test("activity beacon preserves every phase on its out-and-back rail", () =
       { width: 8, phase: 0, direction: "reverse" },
       capabilities,
     ),
-    "───────◮",
+    "───────▲",
     capabilities,
   );
 });
 
 Deno.test("every motif primitive degrades exactly across the capability matrix", () => {
   const unicodeFrames = [
-    "◮⧩◭⧨",
+    "▲▷▼◁",
     "◐",
-    "[ 50%] ━━◮──",
-    "━━ ◮ GO ━━━━",
+    "[ 50%] ━━▲──",
+    "━━ ▲ GO ━━━━",
     " ▲  Done\n │\n[◓] Work\n │\n △  Later\n │\n !  Fail\n │\n ×  Stop",
-    "◮───────",
+    "▲───────",
   ];
   const asciiFrames = [
-    ">v^<",
+    "^>v<",
     "^",
-    "[ 50%] ==>--",
-    "== > GO ====",
+    "[ 50%] ==^--",
+    "== ^ GO ====",
     " ^  Done\n |\n[<] Work\n |\n v  Later\n |\n !  Fail\n |\n x  Stop",
-    ">-------",
+    "^-------",
   ];
 
   for (const unicode of [true, false]) {

@@ -153,7 +153,7 @@ Deno.test("interactive progress paints exact Meter frames", async () => {
   }, () => undefined);
   assertExactFrame(
     firstInteractionFrame(io),
-    "Work\n[ 25%] ━━━◮─────────",
+    "Work\n[ 25%] ━━━▶─────────",
     capabilities,
   );
 });

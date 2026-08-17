@@ -116,7 +116,7 @@ Deno.test("Section selects the authoritative leading-marker rule treatment", () 
       },
       capabilities,
     ),
-    "◮  ─────────\nDetails\nBody",
+    "▲  ─────────\nDetails\nBody",
     capabilities,
   );
 });

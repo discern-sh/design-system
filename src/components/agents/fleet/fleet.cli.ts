@@ -11,6 +11,7 @@ import {
 } from "../../../cli/motif.ts";
 import { measureText, padText, truncateText } from "../../../cli/text.ts";
 import { renderMotifActivityBeacon } from "../../../cli/motifs.ts";
+import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
 import type {
   TerminalSemanticTone,
   TerminalThemeVariant,
@@ -189,6 +190,10 @@ const renderFleetCli: CliRenderer<FleetCliProps> = (props, capabilities) => {
             {
               width: Math.min(12, width - 2),
               phase: row.beaconPhase,
+              marker: triangleGlyph(
+                TRIANGLES.filledSmall.up,
+                capabilities.unicode,
+              ),
               ...(props.theme === undefined ? {} : { theme: props.theme }),
               ...motifPassthrough(props),
             },
@@ -253,6 +258,10 @@ const renderFleetCli: CliRenderer<FleetCliProps> = (props, capabilities) => {
           {
             width: 8,
             phase: row.beaconPhase,
+            marker: triangleGlyph(
+              TRIANGLES.filledSmall.up,
+              capabilities.unicode,
+            ),
             ...(props.theme === undefined ? {} : { theme: props.theme }),
             ...motifPassthrough(props),
           },

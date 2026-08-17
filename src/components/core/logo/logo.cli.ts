@@ -54,11 +54,13 @@ const renderLogoCli: CliRenderer<LogoCliProps> = (props, capabilities) => {
   const markOptions = props.theme === undefined
     ? {
       length: 1,
+      register: "brand" as const,
       ...motifPassthrough(props),
     }
     : {
       length: 1,
       theme: props.theme,
+      register: "brand" as const,
       ...motifPassthrough(props),
     };
   const mark = renderMotifPattern(markOptions, capabilities);
