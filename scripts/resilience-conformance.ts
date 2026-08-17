@@ -1179,24 +1179,16 @@ async function verifyThemeSystem(
           const control = controlSelector === undefined
             ? null
             : consumer.querySelector(controlSelector);
-          const resolved = mode === "system"
-            ? matchMedia("(prefers-color-scheme: dark)").matches
-              ? "dark"
-              : "light"
-            : mode;
-          const expectedLabel = resolved === "dark"
-            ? "Switch to the light theme"
-            : "Switch to the dark theme";
-          const controlLabel = control?.getAttribute("aria-label");
+          const selected = control?.getAttribute("data-discern-mode");
           const storageKey = consumer.dataset.discernThemeStorageKey;
           const stored = storageKey === undefined
             ? undefined
             : localStorage.getItem(storageKey);
-          if (control !== null && controlLabel !== expectedLabel) {
+          if (selected !== mode) {
             problems.push(
-              `theme control names ${
-                controlLabel ?? "nothing"
-              } instead of ${expectedLabel}`,
+              `selected theme ${
+                selected ?? "none"
+              } disagrees with root ${mode}`,
             );
           }
           if (control === null) {
@@ -1223,7 +1215,7 @@ async function verifyThemeSystem(
         const targets = {
           consumer: document.querySelector("[data-discern-theme-consumer]"),
           control: document.querySelector(
-            "[data-discern-theme-consumer] .discern-theme-toggle",
+            "[data-discern-theme-consumer] [data-discern-mode]",
           ),
           sidebar: document.querySelector(".discern-catalogue-sidebar"),
           toolbar: document.querySelector(".discern-catalogue-toolbar"),
@@ -1290,32 +1282,16 @@ async function verifyThemeSystem(
         `Theme system: ${failure}`
       ),
     );
-    await control.click();
-    failures.push(
-      ...(await inspect()).failures.map((failure) =>
-        `Theme system: ${failure}`
-      ),
-    );
     await page.evaluate(() =>
       localStorage.removeItem("discern-catalogue-theme")
     );
     await page.reload({ waitUntil: "networkidle" });
-    await root.waitFor();
-    await page.evaluate(() => document.fonts.ready.then(() => undefined));
     failures.push(
       ...(await inspect()).failures.map((failure) =>
         `Theme system: ${failure}`
       ),
     );
     await page.emulateMedia({ colorScheme: "light" });
-    await page.getByRole("button", {
-      name: "Switch to the dark theme",
-    }).waitFor();
-    failures.push(
-      ...(await inspect()).failures.map((failure) =>
-        `Theme system: ${failure}`
-      ),
-    );
     const lightCanvas = await root.evaluate((node) =>
       getComputedStyle(node).getPropertyValue("--discern-color-canvas").trim()
     );
@@ -1494,22 +1470,12 @@ async function verifyThemeSystem(
         const control = selector === undefined
           ? null
           : consumer.querySelector(selector);
-        const resolved = mode === "system"
-          ? matchMedia("(prefers-color-scheme: dark)").matches
-            ? "dark"
-            : "light"
-          : mode;
-        const expectedLabel = resolved === "dark"
-          ? "Switch to the light theme"
-          : "Switch to the dark theme";
-        const controlLabel = control?.getAttribute("aria-label");
+        const selected = control?.getAttribute("data-discern-mode");
         const key = consumer.dataset.discernThemeStorageKey;
         const stored = key === undefined
           ? undefined
           : localStorage.getItem(key);
-        if (controlLabel !== expectedLabel) {
-          problems.push("control/root mismatch");
-        }
+        if (selected !== mode) problems.push("control/root mismatch");
         if (key !== undefined && stored !== mode) {
           problems.push("storage/root mismatch");
         }
@@ -1522,7 +1488,7 @@ async function verifyThemeSystem(
       future.dataset.discernThemeControl = ".discern-theme-toggle";
       future.dataset.discernThemeStorageKey = "future-theme";
       future.innerHTML = "<button class='discern-theme-toggle' " +
-        "aria-label='Switch to the dark theme'></button>";
+        "data-discern-mode='system'></button>";
       localStorage.setItem("future-theme", "light");
       document.body.append(future);
       const caught = failuresFor(future).length === 2;

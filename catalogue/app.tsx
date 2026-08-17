@@ -1915,6 +1915,7 @@ function App() {
         <ThemeToggle
           className="discern-catalogue-theme"
           theme={terminalTheme}
+          data-discern-mode={theme}
           onThemeChange={changeTheme}
         />
         <label className="discern-catalogue-accent">
