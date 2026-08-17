@@ -25,6 +25,7 @@ import {
   terminalMotifRepertoire,
 } from "./motif.ts";
 import { measureText, wrapText } from "./text.ts";
+import { TRIANGLES } from "./triangles.ts";
 import {
   type TerminalSemanticTone,
   type TerminalTextRole,
@@ -76,8 +77,8 @@ const NARRATION_LINE_SPECS: Readonly<
     heading: false,
   },
   note: {
-    unicodeMarker: "▸",
-    asciiMarker: ">",
+    unicodeMarker: TRIANGLES.filledSmall.right.unicode,
+    asciiMarker: TRIANGLES.filledSmall.right.ascii,
     tone: "accent",
     heading: false,
   },

@@ -204,7 +204,9 @@ Deno.test("terminal motif definitions admit narrow-A glyphs and reject unsafe cl
 Deno.test("every distinctive glyph repertoire has one production authority", async () => {
   const authorities: readonly [string, readonly string[]][] = [
     ["/src/cli/motif.ts", ["◮", "◭", "⧩", "⧨", "◓", "◑", "◒"]],
-    ["/src/cli/triangles.ts", ["▲", "△"]],
+    ["/src/cli/triangles.ts", [
+      ..."▲▶▼◀△▷▽◁▴▸▾◂▵▹▿◃",
+    ]],
   ];
   const roots = [
     new URL("../../src/cli/", import.meta.url),
