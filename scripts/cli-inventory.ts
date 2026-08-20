@@ -64,9 +64,12 @@ export interface CliComponentFact {
 
 /** Usage line for the static CLI catalogue command. */
 export function cliCatalogueUsage(): string {
-  return `Usage: deno task catalogue:cli [all|${
+  return `Usage: deno task catalogue:cli [--list|all|${
     terminalFoundationSheets.map(({ id }) => id).join("|")
   }|<group>|<component-slug>]
+  (no argument)  browse one CLI specimen at a time in a real terminal
+  --list         print the compact generated inventory
+  all            print the exhaustive deterministic catalogue
 Groups: ${componentGroups.join(", ")}`;
 }
 

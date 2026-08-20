@@ -13,12 +13,76 @@ import { terminalFoundationSheets } from "../../catalogue/terminal-foundations.t
 import {
   renderCliCatalogue,
   resolveCatalogueSelection,
+  resolveCliCatalogueCommand,
 } from "../../scripts/catalogue-cli.ts";
-import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
+import {
+  catalogueBrowserItems,
+  renderCliCatalogueIndex,
+  runCliCatalogueBrowser,
+} from "../../scripts/catalogue-browser.ts";
+import {
+  FakeTerminalIO,
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 const registry = cliComponentRegistry as Readonly<
   Record<string, CliComponentRegistryEntry>
 >;
+
+Deno.test("CLI catalogue separates browsing, indexing, and exhaustive output", () => {
+  assertEquals(resolveCliCatalogueCommand([], true), { kind: "browse" });
+  assertEquals(resolveCliCatalogueCommand([], false), { kind: "list" });
+  assertEquals(resolveCliCatalogueCommand(["--list"], true), {
+    kind: "list",
+  });
+  assertEquals(resolveCliCatalogueCommand(["all"], true), {
+    kind: "render",
+    selector: "all",
+  });
+  assertEquals(resolveCliCatalogueCommand(["badge"], true), {
+    kind: "render",
+    selector: "badge",
+  });
+});
+
+Deno.test("compact catalogue index and browser auto-enrol every generated member", () => {
+  const index = renderCliCatalogueIndex();
+  const items = catalogueBrowserItems();
+  for (const sheet of terminalFoundationSheets) {
+    assertStringIncludes(index, sheet.id);
+    assert(
+      items.some((item) => item.kind === "foundation" && item.id === sheet.id),
+      `browser omits terminal foundation ${sheet.id}`,
+    );
+  }
+  for (const { meta } of componentRegistry) {
+    assertStringIncludes(index, meta.slug);
+    assert(
+      items.some(
+        (item) => item.kind === "component" && item.fact.slug === meta.slug,
+      ),
+      `browser omits generated Component ${meta.slug}`,
+    );
+  }
+  assert(
+    index.split("\n").length < 80,
+    "compact index regressed into another exhaustive catalogue",
+  );
+});
+
+Deno.test("interactive catalogue searches and reviews one specimen in an alternate screen", async () => {
+  const io = new FakeTerminalIO(["/badge\r", "q"], {
+    columns: 80,
+    rows: 24,
+    ansiControl: true,
+  });
+  await runCliCatalogueBrowser(io);
+  assertStringIncludes(io.output(), "Display / Badge (`badge`)");
+  assertStringIncludes(io.output(), "accent");
+  assertStringIncludes(io.output(), "\x1b[?1049h");
+  assertStringIncludes(io.output(), "\x1b[?1049l");
+  assertEquals(io.rawTransitions, [true, false]);
+});
 
 Deno.test("CLI catalogue resolves all, Group, Component, and motif selectors", () => {
   assertEquals(resolveCatalogueSelection(undefined), { kind: "all" });
