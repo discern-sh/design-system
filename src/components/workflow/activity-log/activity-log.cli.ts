@@ -207,6 +207,10 @@ const renderActivityLogCli: CliRenderer<ActivityLogCliProps> = (
       capabilities,
     );
     const contentWidth = Math.max(1, width - 4);
+    const contentStyle = {
+      ...theme.typography.muted,
+      color: terminalThemeColor(theme, "--discern-color-ink-muted"),
+    } as const;
     const committed = props.tail.flatMap((line) =>
       wrapTextPreservingIndent(line, contentWidth)
     );
@@ -218,7 +222,9 @@ const renderActivityLogCli: CliRenderer<ActivityLogCliProps> = (
     tailRegion.push(
       ...visible.map((row, index) => {
         const prefix = index === 0 ? connector : continuation;
-        return row === "" ? prefix : `${prefix} ${row}`;
+        return row === ""
+          ? prefix
+          : `${prefix} ${styleText(row, contentStyle, capabilities)}`;
       }),
     );
   }

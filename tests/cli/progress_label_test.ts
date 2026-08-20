@@ -58,7 +58,7 @@ Deno.test("progress label changes paint exact Unicode frames at stable geometry"
     "fmt\n[  0%] ▶────────────",
     "lint\n[ 25%] ━━━▶─────────",
     "tests\n[ 75%] ━━━━━━━━━▶───",
-    "tests\n[100%] ━━━━━━━━━━━━▶\n✓ Complete",
+    "tests\n[100%] ━━━━━━━━━━━━▲\n✓ Complete",
   ];
   assertEquals(frames.length, expected.length);
   for (const [index, frame] of frames.entries()) {
@@ -82,7 +82,7 @@ Deno.test("progress label changes paint exact ASCII frames", async () => {
     "fmt\n[  0%] >------------",
     "lint\n[ 25%] ===>---------",
     "tests\n[ 75%] =========>---",
-    "tests\n[100%] ============>\nOK Complete",
+    "tests\n[100%] ============^\nOK Complete",
   ]);
 });
 
@@ -134,7 +134,7 @@ Deno.test("a repeated label repaints nothing and completion stays truthful", asy
   assertEquals(frames, [
     "Work\n[  0%] ▶────────────",
     "Work\n[ 50%] ━━━━━━▶──────",
-    "Work\n[100%] ━━━━━━━━━━━━▶\n✓ Complete",
+    "Work\n[100%] ━━━━━━━━━━━━▲\n✓ Complete",
   ]);
 });
 

@@ -26,7 +26,10 @@ export interface BadgeCliProps {
 /** Deterministic Badge states rendered by `deno task catalogue:cli badge`. */
 export const cliExamples: readonly CliExample<BadgeCliProps>[] = [
   { name: "accent", props: { label: "Active", dot: true } },
-  { name: "neutral", props: { label: "Queued", tone: "neutral" } },
+  {
+    name: "neutral",
+    props: { label: "Queued", tone: "neutral", dot: true },
+  },
   { name: "success", props: { label: "Passed", tone: "success", dot: true } },
   { name: "warning", props: { label: "Review", tone: "warning", dot: true } },
   { name: "danger", props: { label: "Failed", tone: "danger", dot: true } },

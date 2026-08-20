@@ -81,7 +81,12 @@ const renderMeterCli: CliRenderer<MeterCliProps> = (props, capabilities) => {
     completed: state.completed,
     total: state.total,
     width,
-    marker: triangleGlyph(TRIANGLES.filled.right, capabilities.unicode),
+    marker: triangleGlyph(
+      state.completed === state.total
+        ? TRIANGLES.filled.up
+        : TRIANGLES.filled.right,
+      capabilities.unicode,
+    ),
     ...(props.theme === undefined ? {} : { theme: props.theme }),
     ...motifPassthrough(props),
   }, capabilities);

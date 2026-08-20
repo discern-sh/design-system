@@ -22,12 +22,12 @@ Deno.test("Meter renders zero, quarter, and complete at narrow and standard widt
       [12, [
         "Upload\n[  0%] ▶────",
         "Upload\n[ 25%] ━▶───",
-        "Upload\n[100%] ━━━━▶\n✓ Complete",
+        "Upload\n[100%] ━━━━▲\n✓ Complete",
       ]],
       [20, [
         "Upload\n[  0%] ▶────────────",
         "Upload\n[ 25%] ━━━▶─────────",
-        "Upload\n[100%] ━━━━━━━━━━━━▶\n✓ Complete",
+        "Upload\n[100%] ━━━━━━━━━━━━▲\n✓ Complete",
       ]],
     ] as const
   ) {
@@ -57,6 +57,15 @@ Deno.test("Meter uses exact ASCII progress and every colour capability", () => {
       capabilities,
     );
   }
+  const completeAscii = testTerminalCapabilities({
+    columns: 20,
+    unicode: false,
+  });
+  assertExactFrame(
+    renderMeterCli({ ...meter(100, "submitted"), width: 20 }, completeAscii),
+    "Upload\n[100%] ============^\nOK Complete",
+    completeAscii,
+  );
   const wide = testTerminalCapabilities({ columns: 40 });
   assertExactFrame(
     renderMeterCli({ ...meter(25), width: 40 }, wide),

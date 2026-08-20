@@ -60,6 +60,12 @@ Deno.test("Badge catalogue examples all render through the public CLI export", (
     badgeCliExamples.map((example) =>
       renderBadgeCli(example.props, capabilities)
     ),
-    ["[● Active]", "[Queued]", "[● Passed]", "[● Review]", "[● Failed]"],
+    [
+      "[● Active]",
+      "[● Queued]",
+      "[● Passed]",
+      "[● Review]",
+      "[● Failed]",
+    ],
   );
 });
