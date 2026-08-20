@@ -58,6 +58,10 @@ const CTRL_C = "\x03";
 const CTRL_D = "\x04";
 const CTRL_U = "\x15";
 
+function directNavigationCalls(source: string): number {
+  return source.match(/\brequest(?:Search|Selection)\s*\(/gu)?.length ?? 0;
+}
+
 function journey(id: string): PlaygroundJourney {
   const found = journeyById(id);
   if (found === undefined) throw new Error(`missing playground journey ${id}`);
@@ -135,6 +139,29 @@ Deno.test("journey inventory stays unique, sectioned, and fully listed", () => {
   for (const { id, description } of playgroundJourneys) {
     assertStringIncludes(list, id);
     assertStringIncludes(list, description);
+  }
+});
+
+Deno.test("persistent playground navigation stays behind the screen manager", async () => {
+  assertEquals(
+    directNavigationCalls(
+      'await requestSelection({ label: "Unrelated sibling", choices });',
+    ),
+    1,
+    "the guard must reject a freshly named future navigation loop",
+  );
+  for await (const entry of Deno.readDir("scripts/playground")) {
+    if (!entry.isFile || !entry.name.endsWith(".ts")) continue;
+    if (entry.name === "journeys.ts" || entry.name === "navigation.ts") {
+      continue;
+    }
+    const path = `scripts/playground/${entry.name}`;
+    const source = await Deno.readTextFile(path);
+    assertEquals(
+      directNavigationCalls(source),
+      0,
+      `${path} bypasses the shared screen-managed navigation boundary`,
+    );
   }
 });
 
@@ -618,7 +645,7 @@ Deno.test("degraded journeys run through the synthetic environment", async () =>
 
 Deno.test("browse journey reaches the motif sheet and returns to the hub", async () => {
   const io = new FakeTerminalIO(
-    [`${END}${UP}${UP}${UP}${ENTER}`, `${END}${ENTER}`],
+    [`${END}${UP}${UP}${UP}${ENTER}`, ENTER, `${END}${ENTER}`],
     { columns: 80 },
   );
   assertEquals(
@@ -630,7 +657,7 @@ Deno.test("browse journey reaches the motif sheet and returns to the hub", async
 
 Deno.test("browse journey reaches the narration sheet and returns to the hub", async () => {
   const io = new FakeTerminalIO(
-    [`${END}${UP}${UP}${ENTER}`, `${END}${ENTER}`],
+    [`${END}${UP}${UP}${ENTER}`, ENTER, `${END}${ENTER}`],
     { columns: 80 },
   );
   assertEquals(
@@ -662,9 +689,16 @@ Deno.test("browse journey walks Group, component, and example navigation", async
   assertEquals(io.rawTransitions.at(-1), false);
 });
 
-Deno.test("hub runs a journey, returns, and quits on cancellation", async () => {
+Deno.test("hub runs a journey, returns to its section, and quits", async () => {
   const io = new FakeTerminalIO(
-    [`${DOWN}${ENTER}`, `Jo${ENTER}`, CTRL_C],
+    [
+      ENTER,
+      ENTER,
+      `Jo${ENTER}`,
+      ENTER,
+      `${END}${ENTER}`,
+      `${END}${ENTER}`,
+    ],
     { columns: 60 },
   );
   await runHub(testRuntime(io));

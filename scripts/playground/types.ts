@@ -8,6 +8,7 @@ import type {
   SpinnerScheduler,
   TerminalIO,
 } from "../../src/cli/interactive/mod.ts";
+import type { PlaygroundNavigator } from "./navigation.ts";
 
 /** Hub and list sections in recommended review order. */
 export const journeySections = [
@@ -23,6 +24,8 @@ export type JourneySection = (typeof journeySections)[number];
 export interface PlaygroundRuntime {
   /** Terminal every journey interactions and prints through. */
   readonly io: TerminalIO;
+  /** Screen-managed, position-remembering maintainer navigation. */
+  readonly navigator: PlaygroundNavigator;
   /** Write one line of playground narration to the terminal. */
   readonly print: (text: string) => void;
   /** Await a journey pause; deterministic tests inject an instant resolver. */
