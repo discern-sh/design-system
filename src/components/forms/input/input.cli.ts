@@ -27,6 +27,7 @@ export type InputCliProps =
   & {
     readonly presentation?: FormCliPresentation;
     readonly required?: boolean;
+    readonly showStatus?: boolean;
     readonly theme?: TerminalThemeVariant;
     readonly width?: number;
   };
@@ -162,6 +163,7 @@ const renderInputCli: CliRenderer<InputCliProps> = (props, capabilities) => {
       ? {}
       : { presentation: props.presentation }),
     ...(props.required === undefined ? {} : { required: props.required }),
+    ...(props.showStatus === undefined ? {} : { showStatus: props.showStatus }),
     ...(props.theme === undefined ? {} : { theme: props.theme }),
     ...(props.width === undefined ? {} : { width: props.width }),
   }, capabilities);

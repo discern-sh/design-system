@@ -37,9 +37,7 @@ function frameSequence(io: FakeTerminalIO): readonly string[] {
     const frame = write.startsWith(firstColumn) && eraseAt >= 0
       ? write.slice(eraseAt + eraseToEnd.length)
       : write;
-    return /\[(?:active|error|submitted|cancelled)\]/u.test(frame)
-      ? [frame]
-      : [];
+    return /(?:┌|^\+-{3,}\+$)/mu.test(frame) ? [frame] : [];
   });
 }
 
@@ -531,7 +529,7 @@ Deno.test("spinner advances every motif phase and restores cursor", async () => 
   assertEquals(io.writes.at(-1), SHOW_TERMINAL_CURSOR);
 });
 
-Deno.test("spinners inherit a consumer motif while progress keeps its fixed head", async () => {
+Deno.test("spinners inherit a consumer motif while progress keeps component-owned heads", async () => {
   const spinnerIo = new FakeTerminalIO([], { columns: 20 });
   await withSpinner({
     label: "Work",
@@ -559,7 +557,7 @@ Deno.test("spinners inherit a consumer motif while progress keeps its fixed head
     motif: TEST_TERMINAL_MOTIF,
   }, () => undefined);
   assertStringIncludes(progressIo.output(), "[ 25%] ━━━▶");
-  assertStringIncludes(progressIo.output(), "[100%] ━━━━━━━━━━━━▶");
+  assertStringIncludes(progressIo.output(), "[100%] ━━━━━━━━━━━━▲");
 });
 
 Deno.test("no-control terminals keep Unicode and use static interactive frames", async () => {

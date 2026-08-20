@@ -21,6 +21,7 @@ import {
 interface FieldCliOptions {
   readonly presentation?: FormCliPresentation;
   readonly required?: boolean;
+  readonly showStatus?: boolean;
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
@@ -136,6 +137,9 @@ const renderFieldCli: CliRenderer<FieldCliProps> = (props, capabilities) => {
       ? {}
       : { presentation: framed.presentation }),
     ...(framed.required === undefined ? {} : { required: framed.required }),
+    ...(framed.showStatus === undefined
+      ? {}
+      : { showStatus: framed.showStatus }),
     ...(framed.theme === undefined ? {} : { theme: framed.theme }),
     ...(framed.width === undefined ? {} : { width: framed.width }),
   }, capabilities);

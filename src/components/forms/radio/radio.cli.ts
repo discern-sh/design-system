@@ -32,6 +32,7 @@ import {
 interface RadioCliOptions extends TerminalMotifOptions {
   readonly presentation?: FormCliPresentation;
   readonly required?: boolean;
+  readonly showStatus?: boolean;
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
@@ -266,6 +267,7 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
       ? {}
       : { presentation: props.presentation }),
     ...(props.required === undefined ? {} : { required: props.required }),
+    ...(props.showStatus === undefined ? {} : { showStatus: props.showStatus }),
     ...(props.theme === undefined ? {} : { theme: props.theme }),
     width,
     choiceOverflow: state.kind === "select"

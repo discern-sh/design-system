@@ -54,7 +54,6 @@ const renderToastCli: CliRenderer<ToastCliProps> = (props, capabilities) => {
     body: `${props.message}${dismiss}`,
     title: tone[0]?.toLocaleUpperCase() + tone.slice(1),
     width: props.width ?? defaultTerminalFrameWidth(capabilities),
-    padding: 0,
     borderStyle: { color: terminalToneColor(theme, tone) },
   }, capabilities);
 };

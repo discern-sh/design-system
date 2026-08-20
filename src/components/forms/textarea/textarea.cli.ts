@@ -19,6 +19,7 @@ import {
 export interface TextareaCliProps extends TextareaFrameState {
   readonly presentation?: FormCliPresentation;
   readonly required?: boolean;
+  readonly showStatus?: boolean;
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
@@ -144,6 +145,7 @@ const renderTextareaCli: CliRenderer<TextareaCliProps> = (
       ? {}
       : { presentation: props.presentation }),
     ...(props.required === undefined ? {} : { required: props.required }),
+    ...(props.showStatus === undefined ? {} : { showStatus: props.showStatus }),
     ...(props.theme === undefined ? {} : { theme: props.theme }),
     ...(props.width === undefined ? {} : { width: props.width }),
   }, capabilities);

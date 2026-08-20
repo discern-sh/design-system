@@ -30,6 +30,7 @@ export interface SwitchCliProps
   /** Optional label shown on the on side of the track. */
   readonly yesLabel?: string;
   readonly presentation?: FormCliPresentation;
+  readonly showStatus?: boolean;
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
@@ -193,6 +194,7 @@ const renderSwitchCli: CliRenderer<SwitchCliProps> = (props, capabilities) => {
     ...(props.presentation === undefined
       ? {}
       : { presentation: props.presentation }),
+    ...(props.showStatus === undefined ? {} : { showStatus: props.showStatus }),
     ...(props.theme === undefined ? {} : { theme: props.theme }),
     ...(props.width === undefined ? {} : { width: props.width }),
   }, capabilities);

@@ -36,6 +36,7 @@ import {
 interface CheckboxCliOptions extends TerminalMotifOptions {
   readonly presentation?: FormCliPresentation;
   readonly required?: boolean;
+  readonly showStatus?: boolean;
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
@@ -185,6 +186,7 @@ const renderCheckboxCli: CliRenderer<CheckboxCliProps> = (
       ? {}
       : { presentation: props.presentation }),
     ...(props.required === undefined ? {} : { required: props.required }),
+    ...(props.showStatus === undefined ? {} : { showStatus: props.showStatus }),
     ...(props.theme === undefined ? {} : { theme: props.theme }),
     ...(state.kind === "confirm"
       ? props.width === undefined ? {} : { width: props.width }

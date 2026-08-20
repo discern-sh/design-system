@@ -28,6 +28,7 @@ export interface SelectCliProps extends SelectFrameState, TerminalMotifOptions {
   readonly presentation?: FormCliPresentation;
   readonly placeholder?: string;
   readonly required?: boolean;
+  readonly showStatus?: boolean;
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
@@ -231,6 +232,7 @@ const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
       ? {}
       : { presentation: props.presentation }),
     ...(props.required === undefined ? {} : { required: props.required }),
+    ...(props.showStatus === undefined ? {} : { showStatus: props.showStatus }),
     ...(props.theme === undefined ? {} : { theme: props.theme }),
     width,
     ...(expanded
