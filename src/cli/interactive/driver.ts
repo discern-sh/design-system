@@ -135,7 +135,7 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
   const io = runtime.io ?? new DenoTerminalIO();
   assertInteractiveTerminal(io);
   if (
-    completion === "clear-frame" &&
+    (completion === "clear-frame" || runtime.alternateScreen === true) &&
     io.capabilities().ansiControl === false
   ) {
     throw new InteractionFrameCleanupError("ansi-control-unavailable");
@@ -341,6 +341,7 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
     }
   }, {
     ...signalPassthrough(runtime),
+    alternateScreen: runtime.alternateScreen ?? false,
     // An externally delivered SIGINT ends the request exactly as Ctrl+C
     // presents it — a truthful cancelled frame, its live region closed —
     // before the bracket restores the terminal and the signal re-raises.

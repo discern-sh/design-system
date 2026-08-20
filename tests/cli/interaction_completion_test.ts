@@ -12,9 +12,14 @@ import {
   InteractionCancelled,
   InteractionFrameCleanupError,
   requestAcknowledgement,
+  requestSelection,
   requestText,
   SHOW_TERMINAL_CURSOR,
 } from "../../src/cli/interactive/mod.ts";
+import {
+  ENTER_TERMINAL_ALTERNATE_SCREEN,
+  LEAVE_TERMINAL_ALTERNATE_SCREEN,
+} from "../../src/cli/interactive/lifecycle.ts";
 import {
   assertExactFrame,
   assertStyledFrame,
@@ -220,6 +225,29 @@ Deno.test("completion policy retains by default and clears only when selected", 
   assertClearWrite(cleared);
 });
 
+Deno.test("an interaction can own a restored alternate-screen navigation frame", async () => {
+  const io = new FakeTerminalIO(["\r"], {
+    columns: 40,
+    rows: 16,
+    ansiControl: true,
+  });
+  assertEquals(
+    await requestSelection({
+      label: "Navigate",
+      choices: [{ id: "one", label: "One", value: "one" }],
+      completion: "clear-frame",
+      presentation: "browsing",
+    }, { io, alternateScreen: true }),
+    "one",
+  );
+  const entered = io.writes.indexOf(ENTER_TERMINAL_ALTERNATE_SCREEN);
+  const left = io.writes.indexOf(LEAVE_TERMINAL_ALTERNATE_SCREEN);
+  assert(entered >= 0, "navigation never entered the alternate screen");
+  assert(left > entered, "navigation did not restore the normal screen");
+  assert(!io.output().includes("[submitted]"));
+  assertEquals(io.rawTransitions, [true, false]);
+});
+
 Deno.test("validation stays visible until a later successful cleanup", async () => {
   const io = new FakeTerminalIO(["\r", "x\r"], { columns: 32 });
   assertEquals(
@@ -249,12 +277,14 @@ Deno.test("clear-frame cancellation retains the established cancelled frame", as
   assertEquals(io.writes.at(-1), SHOW_TERMINAL_CURSOR);
 });
 
-Deno.test("clear-frame refuses unavailable ANSI control before mutation", async () => {
+Deno.test("control-owned interactions refuse unavailable ANSI before mutation", async () => {
   const runs = [
     (io: FakeTerminalIO) =>
       requestText({ label: "Name", completion: "clear-frame" }, { io }),
     (io: FakeTerminalIO) =>
       requestAcknowledgement({ presentation: "compact" }, { io }),
+    (io: FakeTerminalIO) =>
+      requestText({ label: "Navigate" }, { io, alternateScreen: true }),
   ];
   for (const run of runs) {
     const io = new FakeTerminalIO(["\r"], {

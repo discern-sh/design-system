@@ -72,6 +72,12 @@ export interface InteractionDelayScheduler {
 export interface InteractionRuntime
   extends TerminalSignalOptions, CliPresentationOptions {
   readonly io?: TerminalIO;
+  /**
+   * Own a fresh alternate screen for this interaction and restore the normal
+   * screen before returning. Intended for transient navigation surfaces;
+   * ordinary form interactions remain inline by default.
+   */
+  readonly alternateScreen?: boolean;
   /** Allow Ctrl+U to return control to a sequential form's prior step. */
   readonly canGoBack?: boolean;
 }
