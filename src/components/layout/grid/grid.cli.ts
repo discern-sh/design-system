@@ -12,6 +12,7 @@ import {
   type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import type { SpaceStep } from "../space.ts";
+import { responsiveColumnCount } from "../responsive-columns.ts";
 
 /** Inputs accepted by the terminal Grid renderer. */
 export interface GridCliProps {
@@ -65,12 +66,11 @@ const renderGridCli: CliRenderer<GridCliProps> = (props, capabilities) => {
   const gap = step === 0 ? 0 : terminalThemes[props.theme ?? "dark"].spacing[
     `--discern-space-${step}` as TerminalSpacingTokenName
   ] ?? 1;
-  const columnCount = Math.max(
-    1,
-    Math.min(
-      props.blocks.length,
-      Math.floor((width + gap) / (minimum + gap)),
-    ),
+  const columnCount = responsiveColumnCount(
+    props.blocks.length,
+    width,
+    minimum,
+    gap,
   );
   const rows: string[] = [];
   for (let index = 0; index < props.blocks.length; index += columnCount) {

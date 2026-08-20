@@ -10,6 +10,7 @@ export * from "../components/layout/container/mod.ts";
 export * from "../components/layout/stack/mod.ts";
 export * from "../components/layout/cluster/mod.ts";
 export * from "../components/layout/grid/mod.ts";
+export * from "../components/layout/masonry/mod.ts";
 export * from "../components/layout/section/mod.ts";
 export * from "../components/display/badge/mod.ts";
 export * from "../components/display/card/mod.ts";

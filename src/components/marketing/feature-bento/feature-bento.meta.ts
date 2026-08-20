@@ -6,15 +6,22 @@ export default {
   group: "Marketing",
   order: 50,
   description:
-    "Dense asymmetric feature grid with intentional size, surface, icon, and visual slots.",
+    "Strict rectangular feature matrix with fixed footprints, surfaces, icons, and visual slots.",
   cli: {
     stance: "exempt",
     reason:
-      "Its distinguishing contract is an asymmetric size-and-media composition; flattening it to terminal text would duplicate Audience grid while discarding the component's defining structure.",
+      "Its distinguishing contract is a strict responsive size-and-media matrix; flattening it to terminal text would discard the component's defining structure.",
   },
   purposes: ["marketing-site"],
+  useWhen: [
+    "A curated feature set has an intentional hierarchy and can fill a complete rectangular matrix.",
+  ],
+  notWhen: [
+    "Items have natural unrelated heights or cannot form a complete matrix; use Masonry or Grid instead.",
+  ],
   accessibility: [
-    "The visual grid preserves a simple article sequence in source order.",
+    "Explicit placement preserves article source order and never backfills later items into earlier cells.",
+    "The matrix becomes a single source-order column on narrow viewports.",
     "Icons are decorative; each feature carries a visible heading and description.",
   ],
 } satisfies ComponentMeta;

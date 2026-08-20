@@ -1,3 +1,7 @@
+import type {
+  CatalogueExampleState,
+  ConformanceScenario,
+} from "../../../../catalogue/conformance.ts";
 import { ExampleIcon } from "../../../fixtures/example-icon.tsx";
 import { FeatureBento } from "./feature-bento.tsx";
 
@@ -11,9 +15,22 @@ const visual = (label: string) => (
   </span>
 );
 
-export default function FeatureBentoExamples() {
+export const conformance = [{
+  name: "the lead matrix retains complete populated rows",
+  viewport: { width: 1280, height: 1000 },
+  steps: [{
+    expect: "balanced-rows",
+    target: {
+      selector:
+        "[data-example-feature-bento-lead] .discern-feature-bento__item",
+    },
+  }],
+}] satisfies readonly ConformanceScenario[];
+
+function LeadMatrixState() {
   return (
     <FeatureBento
+      data-example-feature-bento-lead
       eyebrow="Capabilities"
       title="Show the system, not a list of claims."
       description={
@@ -32,7 +49,7 @@ export default function FeatureBentoExamples() {
           ),
           icon: <ExampleIcon name="spark" />,
           visual: visual("primary product visual"),
-          size: "wide",
+          size: "large",
           tone: "accent",
         },
         {
@@ -42,17 +59,16 @@ export default function FeatureBentoExamples() {
           ),
           icon: <ExampleIcon name="check" />,
           visual: visual("focused detail"),
+          size: "wide",
         },
         {
           title: "A second dimension",
           description: (
             <p>
-              Tall tiles create a more editorial, less repetitive feature
-              rhythm.
+              Compact tiles complete the matrix without weakening the primary
+              story.
             </p>
           ),
-          visual: visual("tall visual"),
-          size: "tall",
         },
         {
           title: "A final proof point",
@@ -64,4 +80,53 @@ export default function FeatureBentoExamples() {
       ]}
     />
   );
+}
+
+function VerticalMatrixState() {
+  return (
+    <FeatureBento
+      eyebrow="Perspectives"
+      title="Give each viewpoint a deliberate footprint."
+      description={<p>Pair two vertical narratives with one broad anchor.</p>}
+      items={[
+        {
+          title: "First viewpoint",
+          description: <p>A tall tile carries a longer visual sequence.</p>,
+          visual: visual("vertical evidence"),
+          size: "tall",
+        },
+        {
+          title: "Second viewpoint",
+          description: (
+            <p>
+              A matching footprint keeps the comparison legible.
+            </p>
+          ),
+          visual: visual("parallel evidence"),
+          size: "tall",
+          tone: "sunken",
+        },
+        {
+          title: "Shared conclusion",
+          description: <p>A large tile closes the complete matrix.</p>,
+          visual: visual("combined outcome"),
+          size: "large",
+          tone: "accent",
+        },
+      ]}
+    />
+  );
+}
+
+export const catalogueStates = [
+  { name: "lead-matrix", label: "Lead matrix", Example: LeadMatrixState },
+  {
+    name: "vertical-matrix",
+    label: "Vertical matrix",
+    Example: VerticalMatrixState,
+  },
+] satisfies readonly CatalogueExampleState[];
+
+export default function FeatureBentoExamples() {
+  return <LeadMatrixState />;
 }

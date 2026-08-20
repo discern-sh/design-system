@@ -1,0 +1,23 @@
+@layer discern.components {
+  .discern-masonry {
+    column-width: var(--discern-masonry-min, 16rem);
+    column-gap: var(--discern-masonry-gap, var(--discern-space-5));
+    column-fill: balance;
+  }
+  .discern-masonry__item {
+    display: flow-root;
+    margin-block-end: var(--discern-masonry-gap, var(--discern-space-5));
+    break-inside: avoid;
+  }
+  @supports (display: grid-lanes) {
+    .discern-masonry {
+      display: grid-lanes;
+      grid-template-columns: repeat(auto-fit,
+        minmax(min(100%, var(--discern-masonry-min, 16rem)), 1fr));
+      gap: var(--discern-masonry-gap, var(--discern-space-5));
+    }
+    .discern-masonry__item {
+      margin-block-end: 0;
+    }
+  }
+}
