@@ -120,3 +120,21 @@ Deno.test("Section selects the authoritative leading-marker rule treatment", () 
     capabilities,
   );
 });
+
+Deno.test("Section exposes the shared quiet labelled boundary", () => {
+  const capabilities = testTerminalCapabilities({ columns: 24 });
+  assertExactFrame(
+    renderSectionCli(
+      {
+        title: "Details",
+        body: "Supporting section",
+        treatment: "quiet-rule" as never,
+        spacing: "sm",
+        width: 24,
+      },
+      capabilities,
+    ),
+    "▲ Details ──────────────\nSupporting section",
+    capabilities,
+  );
+});

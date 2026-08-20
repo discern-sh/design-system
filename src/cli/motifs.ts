@@ -88,6 +88,7 @@ export interface MotifProgressOptions extends MotifThemeOptions {
 export type MotifSectionRuleTreatment =
   | "embedded"
   | "underline"
+  | "quiet"
   | "sandwich";
 
 /** Inputs for a labeled motif section boundary. */
@@ -437,7 +438,6 @@ export function renderMotifSectionRule(
   const width = Math.min(options.width, capabilities.columns);
   const theme = themeFor(options.theme);
   const gap = " ".repeat(theme.spacing["--discern-space-2"] ?? 1);
-  const requestedLabel = label.toUpperCase();
   const marker = renderCycle(
     1,
     phase,
@@ -446,6 +446,7 @@ export function renderMotifSectionRule(
     options,
   );
   const treatment = options.treatment ?? "embedded";
+  const requestedLabel = treatment === "quiet" ? label : label.toUpperCase();
   const accentStyle = { color: motifColor(theme, "accent") } as const;
   const headingStyle = {
     ...theme.typography.strong,
@@ -453,6 +454,34 @@ export function renderMotifSectionRule(
   } as const;
   const strongRule = capabilities.unicode ? "━" : "=";
   const quietRule = capabilities.unicode ? "─" : "-";
+
+  if (treatment === "quiet") {
+    const lead = marker + gap;
+    const labelWidth = width - measureText(lead) - measureText(gap) - 1;
+    if (labelWidth < 1) {
+      throw new TypeError(
+        `motif section-rule width ${width} is too narrow for the quiet treatment`,
+      );
+    }
+    const displayLabel = truncateText(
+      requestedLabel,
+      labelWidth,
+      capabilities.unicode ? "…" : ".",
+    );
+    const remaining = width - measureText(lead) - measureText(displayLabel) -
+      measureText(gap);
+    const ruleStyle = {
+      ...theme.typography.muted,
+      color: terminalThemeColor(theme, "--discern-color-ink-faint"),
+    } as const;
+    return renderStyledSpans([
+      { text: marker, style: accentStyle },
+      { text: gap },
+      { text: displayLabel, style: headingStyle },
+      { text: gap },
+      { text: quietRule.repeat(remaining), style: ruleStyle },
+    ], capabilities);
+  }
 
   if (treatment === "embedded") {
     const lead = strongRule.repeat(2) + gap + marker + gap;

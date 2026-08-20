@@ -34,7 +34,11 @@ function assertCapabilityLevels(
 
 function procedureRule(width: number, unicode = true): string {
   const capabilities = testTerminalCapabilities({ columns: width, unicode });
-  return renderMotifSectionRule("Steps", { width }, capabilities);
+  return renderMotifSectionRule(
+    "Steps",
+    { width, treatment: "quiet" as never },
+    capabilities,
+  );
 }
 
 Deno.test("Branch choice renders exact narrow, standard, wide, and capability frames", () => {

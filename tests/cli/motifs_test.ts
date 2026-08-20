@@ -1,5 +1,5 @@
 import { assertEquals, assertStringIncludes, assertThrows } from "@std/assert";
-import { stripAnsi } from "../../src/cli/ansi.ts";
+import { stripAnsi, styleText } from "../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import {
   renderMotifActivityBeacon,
@@ -19,6 +19,7 @@ import {
   type TerminalMotifDefinition,
 } from "../../src/cli/motif.ts";
 import { measureText } from "../../src/cli/text.ts";
+import { terminalThemeColor, terminalThemes } from "../../src/cli/theme.ts";
 import {
   assertExactFrame,
   assertStyledFrame,
@@ -404,8 +405,17 @@ Deno.test("section rules default to the strong embedded heading treatment", () =
   );
 });
 
-Deno.test("section rules expose strong underline and quiet sandwich treatments", () => {
+Deno.test("section rules expose strong underline, quiet label, and sandwich treatments", () => {
   const unicode = testTerminalCapabilities({ columns: 16 });
+  assertExactFrame(
+    renderMotifSectionRule(
+      "Gate review",
+      { width: 16, treatment: "quiet" as never },
+      unicode,
+    ),
+    "▲ Gate review ──",
+    unicode,
+  );
   assertExactFrame(
     renderMotifSectionRule(
       "gate",
@@ -426,6 +436,15 @@ Deno.test("section rules expose strong underline and quiet sandwich treatments",
   );
 
   const ascii = testTerminalCapabilities({ columns: 16, unicode: false });
+  assertExactFrame(
+    renderMotifSectionRule(
+      "Gate review",
+      { width: 16, treatment: "quiet" as never },
+      ascii,
+    ),
+    "^ Gate review --",
+    ascii,
+  );
   assertExactFrame(
     renderMotifSectionRule("gate", { width: 16 }, ascii),
     "== ^ GATE ======",
@@ -451,9 +470,43 @@ Deno.test("section rules expose strong underline and quiet sandwich treatments",
   );
 });
 
+Deno.test("quiet section rules keep the label legible and soften only the trailing rail", () => {
+  const capabilities = testTerminalCapabilities({
+    colorDepth: "truecolor",
+    columns: 24,
+  });
+  const theme = terminalThemes.dark;
+  const rendered = renderMotifSectionRule(
+    "Gate review",
+    { width: 24, treatment: "quiet" },
+    capabilities,
+  );
+  assertStringIncludes(
+    rendered,
+    styleText("Gate review", {
+      ...theme.typography.strong,
+      color: terminalThemeColor(theme, "--discern-color-ink"),
+    }, capabilities),
+  );
+  assertStringIncludes(
+    rendered,
+    styleText("──────────", {
+      ...theme.typography.muted,
+      color: terminalThemeColor(theme, "--discern-color-ink-faint"),
+    }, capabilities),
+  );
+});
+
 Deno.test("every section-rule treatment truncates long headings without overflow", () => {
   const label = "A deliberately long terminal section heading";
-  for (const treatment of ["embedded", "underline", "sandwich"] as const) {
+  for (
+    const treatment of [
+      "embedded",
+      "underline",
+      "quiet",
+      "sandwich",
+    ] as const
+  ) {
     for (const columns of [8, 16, 39, 80, 104]) {
       for (const unicode of [true, false]) {
         for (const colorDepth of ["truecolor", "none"] as const) {
