@@ -59,7 +59,6 @@ import {
   Tooltip,
   Window,
 } from "../src/react.ts";
-import { catalogueStates as resultSummaryCatalogueStates } from "../src/components/workflow/result-summary/result-summary.examples.tsx";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
 import { semanticClass } from "../src/semantic-class.ts";
 import {
@@ -2721,7 +2720,7 @@ Deno.test("table-of-contents numbering excludes nested entries", () => {
   assert(!html.includes("<span>03</span>"));
 });
 
-Deno.test("Result summary states enroll browser labels, Catalogue postures, and CSS treatment", async () => {
+Deno.test("Result summary states enroll browser labels, examples, and CSS treatment", async () => {
   const states: readonly ResultSummaryState[] = RESULT_SUMMARY_STATES;
   const html = states.map((state) =>
     renderToStaticMarkup(
@@ -2732,11 +2731,6 @@ Deno.test("Result summary states enroll browser labels, Catalogue postures, and 
     assertStringIncludes(html, `data-discern-state="${state}"`);
     assertStringIncludes(html, `>${RESULT_SUMMARY_STATE_LABELS[state]}</span>`);
   }
-  assertEquals(
-    resultSummaryCatalogueStates.map(({ name }) => name),
-    [...RESULT_SUMMARY_STATES],
-  );
-
   const css = await Deno.readTextFile(
     join(
       COMPONENT_ROOT,

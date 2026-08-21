@@ -1,10 +1,6 @@
-import type {
-  CatalogueExampleState,
-  ConformanceScenario,
-} from "../../../../catalogue/conformance.ts";
+import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
 import { ResultSummary, type ResultSummaryProps } from "./result-summary.tsx";
 import {
-  RESULT_SUMMARY_STATE_LABELS,
   RESULT_SUMMARY_STATES,
   type ResultSummaryState,
 } from "./result-summary.types.ts";
@@ -92,12 +88,6 @@ function ResultSummaryStateExample(
     />
   );
 }
-
-export const catalogueStates = RESULT_SUMMARY_STATES.map((state) => ({
-  name: state,
-  label: RESULT_SUMMARY_STATE_LABELS[state],
-  Example: () => <ResultSummaryStateExample state={state} />,
-})) satisfies readonly CatalogueExampleState[];
 
 export default function ResultSummaryExamples() {
   return (
