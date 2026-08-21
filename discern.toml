@@ -652,10 +652,15 @@
   #              short rationale. "advise": delivered as an advisory instead;
   #              never blocks.
   #   question  the judgment prose the agent evaluates against the matched
-  #              change. Required for your own checkpoints; a table whose <name>
-  #              is a shipped built-in id inherits its question.
+  #              change. Your own checkpoint sets this or question_file; a
+  #              shipped built-in inherits unless one source overrides it.
+  #   question_file
+  #              repository-relative Markdown question resolved from the
+  #              governing merge-base Git tree; mutually exclusive with
+  #              question, limited to a regular UTF-8 blob of at most 64 KiB
   #   teach      optional lesson prose carried into renderings: why the
   #              question matters and what good looks like.
+  #   reference  optional displayed pointer; discern does not load its content
   # ─────────────────────────────────────────────────────────────────────────────
 
   # Shipped built-ins: referencing an id enables it — the trigger, mode, and
