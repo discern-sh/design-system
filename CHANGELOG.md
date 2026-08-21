@@ -4,6 +4,10 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## 0.23.0
+
+- **Breaking:** Add `declared` to the closed public Result summary state vocabulary so a reported judgment no longer borrows machine-passed, changed, or unchanged semantics. Browser and terminal renderers show the visible label `Declared`; the browser uses neutral surface and ink tokens with a dashed boundary, while the CLI uses the one-cell neutral marker `·` with `.` as its ASCII fallback and the neutral semantic tone. `RESULT_SUMMARY_STATES`, `RESULT_SUMMARY_STATE_LABELS`, and `ResultSummaryState` are available from both `./react` and `./cli`; browser and CLI examples, grouped CLI alignment, forced-colour behavior, and exhaustive state maps all enroll the new member.
+
 ## 0.22.0
 
 - **Breaking:** Polish the terminal Component hierarchy and frame geometry. Toast and every shared Forms frame now keep one balanced cell of horizontal padding; Forms omit routine derived lifecycle tokens from labels, retain `[searching]` when it is the only pending signal, and expose `showStatus` for explicit diagnostic control. Meter points right while progressing and turns its head upward at completion, the neutral Badge specimen retains its circular marker, and Activity log renders streamed tail content in the muted supporting-text role. The public motif section-rule treatments add a single-row `quiet` boundary with a left marker, title-case label, and faint trailing rule; Section exposes it as `quiet-rule`, and Procedure selects it for `Steps`.
