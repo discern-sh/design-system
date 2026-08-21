@@ -42,6 +42,37 @@ const items = [
       "Strict feature hierarchies belong in Feature bento.",
     ],
   },
+  {
+    title: "A practical constraint",
+    paragraphs: [
+      "Every card keeps the height its content actually needs.",
+      "Nothing is stretched merely to complete an artificial row.",
+    ],
+  },
+  {
+    title: "A quick signal",
+    paragraphs: ["Brief material can stay brief."],
+  },
+  {
+    title: "A deeper thread",
+    paragraphs: [
+      "Longer material receives enough room to remain useful.",
+      "Its neighbours continue independently in their own columns.",
+      "The uneven edges make that difference in natural height visible.",
+      "Reading order remains the authored order in the document.",
+    ],
+  },
+  {
+    title: "A measured outcome",
+    paragraphs: [
+      "Repeated variation creates a recognisable masonry rhythm.",
+      "The composition remains responsive without measuring cards in JavaScript.",
+    ],
+  },
+  {
+    title: "A closing note",
+    paragraphs: ["One final compact peer completes the collection."],
+  },
 ] as const;
 
 export default function MasonryExamples() {
