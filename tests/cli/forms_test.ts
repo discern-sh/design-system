@@ -116,7 +116,7 @@ function assertWidthsAndCapabilities<Props extends WidthProps>(
   );
 }
 
-Deno.test("Form frame defaults to balanced padding and opt-in status labels", () => {
+Deno.test("Form frame balances padding and reserves default status for searching", () => {
   const capabilities = testTerminalCapabilities({ columns: 20 });
   const base = {
     label: "Project",
@@ -135,6 +135,19 @@ Deno.test("Form frame defaults to balanced padding and opt-in status labels", ()
       capabilities,
     ),
     "Project [active]\n┌──────────────────┐\n│ atlas            │\n└──────────────────┘\n",
+    capabilities,
+  );
+  assertExactFrame(
+    renderFormCliFrame({ ...base, pending: true }, capabilities),
+    "Project [searching]\n┌──────────────────┐\n│ atlas            │\n└──────────────────┘\n",
+    capabilities,
+  );
+  assertExactFrame(
+    renderFormCliFrame(
+      { ...base, pending: true, showStatus: false },
+      capabilities,
+    ),
+    "Project\n┌──────────────────┐\n│ atlas            │\n└──────────────────┘\n",
     capabilities,
   );
 });
@@ -213,7 +226,7 @@ const inputFrames = [
   "Project name\n┌──────────────────────────┐\n│ atlas                    │\n└──────────────────────────┘\nDisabled",
   "Project name\n┌──────────────────────────┐\n│ atlas                    │\n└──────────────────────────┘\n✓ Submitted",
   "Project name\n┌──────────────────────────┐\n│ my-project               │\n└──────────────────────────┘\n× Input cancelled",
-  "Token reference\n┌──────────────────────────┐\n│ can▌                     │\n└──────────────────────────┘\n",
+  "Token reference [searching]\n┌──────────────────────────┐\n│ can▌                     │\n└──────────────────────────┘\n",
 ] as const;
 
 Deno.test("Input renders idle through cancelled states exactly", () => {
@@ -247,7 +260,7 @@ const radioFrames = [
   } │\n│   ○ Alpha                │\n│ › ◉ Bravo                │\n│                          │\n│ ${
     sectionRule("Preview", 24)
   } │\n│   ○ Charlie (disabled)   │\n└──────────────────────────┘\n`,
-  "Channel\n┌──────────────────────────┐\n│ cha▌                     │\n│ Searching…               │\n└──────────────────────────┘\n",
+  "Channel [searching]\n┌──────────────────────────┐\n│ cha▌                     │\n│ Searching…               │\n└──────────────────────────┘\n",
   "Channel\n┌──────────────────────────┐\n│ › ○ Alpha                │\n│   ○ Bravo                │\n└──────── ↓ 3 more ────────┘\n",
 ] as const;
 
@@ -301,7 +314,7 @@ Deno.test("pending keeps discovery frames honest without moving a row", () => {
   const pending = renderRadioCli({ ...search, pending: true }, capabilities);
   assertExactFrame(
     pending,
-    "Find\n┌──────────────────────┐\n│ al▌                  │\n│ › ○ Alpha            │\n│   ○ Album            │\n└──────────────────────┘\n",
+    "Find [searching]\n┌──────────────────────┐\n│ al▌                  │\n│ › ○ Alpha            │\n│   ○ Album            │\n└──────────────────────┘\n",
     capabilities,
   );
   assertEquals(
@@ -317,7 +330,7 @@ Deno.test("pending keeps discovery frames honest without moving a row", () => {
       { ...unhighlighted, results: [], pending: true },
       ascii,
     ),
-    "Find\n+----------------------+\n| al|                  |\n| Searching...         |\n+----------------------+\n",
+    "Find [searching]\n+----------------------+\n| al|                  |\n| Searching...         |\n+----------------------+\n",
     ascii,
   );
 
@@ -327,7 +340,7 @@ Deno.test("pending keeps discovery frames honest without moving a row", () => {
   });
   assertStyledFrame(
     renderRadioCli({ ...search, pending: true }, styled),
-    "Find\n┌──────────────────────┐\n│ al▌                  │\n│ › ○ Alpha            │\n│   ○ Album            │\n└──────────────────────┘\n",
+    "Find [searching]\n┌──────────────────────┐\n│ al▌                  │\n│ › ○ Alpha            │\n│   ○ Album            │\n└──────────────────────┘\n",
     styled,
   );
 
@@ -348,7 +361,7 @@ Deno.test("pending keeps discovery frames honest without moving a row", () => {
   );
   assertExactFrame(
     autocompletePending,
-    "Token\n┌──────────────────────┐\n│ ca▌nvas              │\n└──────────────────────┘\n",
+    "Token [searching]\n┌──────────────────────┐\n│ ca▌nvas              │\n└──────────────────────┘\n",
     capabilities,
   );
   assertEquals(

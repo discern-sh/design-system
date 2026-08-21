@@ -37,7 +37,7 @@ function longChoiceLines(frame: string): readonly string[] {
     throw new Error("choice frame did not contain the expected long row");
   }
   return lines.slice(start, end).map((line, index) =>
-    index === 0 ? line.replace(/^│./u, "│ ") : line
+    index === 0 ? line.replace(/^│ (?:›| )/u, "│  ") : line
   );
 }
 
@@ -142,7 +142,7 @@ Deno.test("highlight movement preserves every wrapped choice label column and ro
       selectedId: "long",
       width: 30,
     }, capabilities),
-    6,
+    7,
   );
 
   assertStableChoiceGeometry(
@@ -164,7 +164,7 @@ Deno.test("highlight movement preserves every wrapped choice label column and ro
       selectedIds: ["long"],
       width: 30,
     }, capabilities),
-    6,
+    7,
   );
 
   assertStableChoiceGeometry(
@@ -186,7 +186,7 @@ Deno.test("highlight movement preserves every wrapped choice label column and ro
       selectedId: "long",
       width: 30,
     }, capabilities),
-    4,
+    5,
   );
 });
 
@@ -359,7 +359,7 @@ Deno.test("an active choice request expands again after a wider terminal resize"
   }, { io });
   const activeWidths = io.writes.flatMap((write) => {
     const frame = stripAnsi(write);
-    return frame.includes("[active]") ? [widestLine(frame)] : [];
+    return frame.includes("›") ? [widestLine(frame)] : [];
   });
   assertStringIncludes(activeWidths.join(","), "96");
 });

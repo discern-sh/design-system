@@ -35,7 +35,7 @@ Deno.test("browsing options remain additive public types", () => {
   assertEquals(browsingOptions.completion, "clear-frame");
 });
 
-Deno.test("browsing presentation omits only redundant active chrome", () => {
+Deno.test("browsing presentation preserves searching and validation facts", () => {
   const capabilities = testTerminalCapabilities({ columns: 40 });
   const browsing = renderRadioCli({
     kind: "search",
@@ -78,7 +78,7 @@ Deno.test("browsing presentation omits only redundant active chrome", () => {
     results: describedFrameEntries,
     highlightedIndex: 1,
   }, capabilities);
-  assertStringIncludes(invalid, "Documents [error]");
+  assertEquals(invalid.split("\n")[0], "Documents");
   assertStringIncludes(invalid, "Choose a document.");
 });
 
@@ -99,11 +99,10 @@ Deno.test("browsing keeps choice lifecycle errors and clears successful completi
     2,
   );
   assert(!io.output().includes("[active]"));
-  assertStringIncludes(io.output(), "Documents [error]");
   assertStringIncludes(io.output(), "Choose the second document.");
   assertStringIncludes(io.output(), "one.md");
   assertStringIncludes(io.output(), "two.md");
-  assert(!io.output().includes("[submitted]"));
+  assert(!io.output().includes("✓ Submitted"));
   assert(
     io.writes.some((write) =>
       write.startsWith("\x1b[1G") && write.endsWith("\x1b[J")

@@ -128,7 +128,7 @@ const describedSelectState = {
 };
 
 const describedSelectPlain =
-  "Documents [active]\n┌──────────────────────────────┐\n│                              │\n│━━ ▲ ORIENTATION ━━━━━━━━━━━━━│\n│     00-orientation/          │\n│› [●] Design principles       │\n│      design-principles.md    │\n│  [ ] Legacy (disabled)       │\n│      legacy.md               │\n└──────────────────────────────┘\n";
+  "Documents\n┌──────────────────────────────┐\n│                              │\n│ ━━ ▲ ORIENTATION ━━━━━━━━━━━ │\n│      00-orientation/         │\n│ › [●] Design principles      │\n│       design-principles.md   │\n│   [ ] Legacy (disabled)      │\n│       legacy.md              │\n└──────────────────────────────┘\n";
 
 Deno.test("Select renders descriptions exactly in Unicode and ASCII", () => {
   const unicode = testTerminalCapabilities({ columns: 32 });
@@ -140,7 +140,7 @@ Deno.test("Select renders descriptions exactly in Unicode and ASCII", () => {
   const ascii = testTerminalCapabilities({ columns: 32, unicode: false });
   assertExactFrame(
     renderSelectCli(describedSelectState, ascii),
-    "Documents [active]\n+------------------------------+\n|                              |\n|== ^ ORIENTATION =============|\n|     00-orientation/          |\n|> [*] Design principles       |\n|      design-principles.md    |\n|  [ ] Legacy (disabled)       |\n|      legacy.md               |\n+------------------------------+\n",
+    "Documents\n+------------------------------+\n|                              |\n| == ^ ORIENTATION =========== |\n|      00-orientation/         |\n| > [*] Design principles      |\n|       design-principles.md   |\n|   [ ] Legacy (disabled)      |\n|       legacy.md              |\n+------------------------------+\n",
     ascii,
   );
   assertExactFrame(
@@ -148,7 +148,7 @@ Deno.test("Select renders descriptions exactly in Unicode and ASCII", () => {
       ...describedSelectState,
       lifecycle: { status: "submitted" },
     }, unicode),
-    "Documents [submitted]\n┌──────────────────────────────┐\n│Design principles ⌄           │\n│design-principles.md          │\n└──────────────────────────────┘\n✓ Submitted",
+    "Documents\n┌──────────────────────────────┐\n│ Design principles ⌄          │\n│ design-principles.md         │\n└──────────────────────────────┘\n✓ Submitted",
     unicode,
   );
 });
@@ -259,7 +259,7 @@ Deno.test("narrow group headings wrap losslessly beneath the motif lead", () => 
   const unicodeFrame = renderSelectCli(state, unicode);
   assertExactFrame(
     unicodeFrame,
-    "Documents [active]\n┌──────────────────────┐\n│                      │\n│━━ ▲ ORIENTATION AND ━│\n│     DEVELOPMENT      │\n│     00-orientation-an│\n│     d-development/   │\n│› [●] Open            │\n│      open.md         │\n└──────────────────────┘\n",
+    "Documents\n┌──────────────────────┐\n│                      │\n│ ━━ ▲ ORIENTATION ━━━ │\n│      AND             │\n│      DEVELOPMENT     │\n│      00-orientation- │\n│      and-development │\n│      /               │\n│ › [●] Open           │\n│       open.md        │\n└──────────────────────┘\n",
     unicode,
   );
   const inspection = inspectTerminalLayout(unicodeFrame, {
@@ -271,7 +271,7 @@ Deno.test("narrow group headings wrap losslessly beneath the motif lead", () => 
   const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderSelectCli(state, ascii),
-    "Documents [active]\n+----------------------+\n|                      |\n|== ^ ORIENTATION AND =|\n|     DEVELOPMENT      |\n|     00-orientation-an|\n|     d-development/   |\n|> [*] Open            |\n|      open.md         |\n+----------------------+\n",
+    "Documents\n+----------------------+\n|                      |\n| == ^ ORIENTATION === |\n|      AND             |\n|      DEVELOPMENT     |\n|      00-orientation- |\n|      and-development |\n|      /               |\n| > [*] Open           |\n|       open.md        |\n+----------------------+\n",
     ascii,
   );
 });

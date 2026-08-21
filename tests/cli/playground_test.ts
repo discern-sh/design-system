@@ -717,9 +717,10 @@ Deno.test("tour skips a cancelled journey only after explicit consent", async ()
 });
 
 Deno.test("every journey survives every terminal width without throwing", async () => {
-  // 12 columns is the package's own floor: the marketing frame behind
-  // sequential forms rejects anything narrower, so the sweep starts there.
-  for (const columns of [12, 24, 28, 30, 31, 32, 48, 80]) {
+  // 14 columns preserves a ten-column semantic control area after the frame
+  // and its balanced one-cell insets; narrower pure Components are covered by
+  // their focused renderer tests.
+  for (const columns of [14, 24, 28, 30, 31, 32, 48, 80]) {
     for (const entry of playgroundJourneys) {
       const io = new FakeTerminalIO([], { columns });
       const runtime = testRuntime(io, {

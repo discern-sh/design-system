@@ -37,12 +37,12 @@ function paintedFrames(io: FakeTerminalIO): readonly string[] {
     return write.startsWith(firstColumn) && eraseAt >= 0
       ? write.slice(eraseAt + eraseToEnd.length)
       : write;
-  }).filter((write) => /\[(?:active|error|submitted|cancelled)\]/u.test(write));
+  }).filter((write) => write.includes("\n┌"));
 }
 
 function groupRule(label: string): string {
-  const capabilities = testTerminalCapabilities({ columns: 30 });
-  return renderMotifSectionRule(label, { width: 30 }, capabilities);
+  const capabilities = testTerminalCapabilities({ columns: 28 });
+  return renderMotifSectionRule(label, { width: 28 }, capabilities);
 }
 
 Deno.test("grouped select supports every promised movement key", async () => {
@@ -228,14 +228,14 @@ Deno.test("long grouped viewports and submitted frames stay exact", async () => 
   const selectFrames = paintedFrames(io);
   assertExactFrame(
     selectFrames[1] ?? "",
-    `Pick [active]\n┌──────────────────────────────┐\n│                              │\n│${
+    `Pick\n┌──────────────────────────────┐\n│                              │\n│ ${
       groupRule("Secondary")
-    }│\n│  [ ] Two                     │\n│› [●] Three                   │\n└────────── ↑ 2 more ──────────┘\n`,
+    } │\n│   [ ] Two                    │\n│ › [●] Three                  │\n└────────── ↑ 2 more ──────────┘\n`,
     capabilities,
   );
   assertExactFrame(
     selectFrames[2] ?? "",
-    "Pick [submitted]\n┌──────────────────────────────┐\n│Three ⌄                       │\n└──────────────────────────────┘\n✓ Submitted",
+    "Pick\n┌──────────────────────────────┐\n│ Three ⌄                      │\n└──────────────────────────────┘\n✓ Submitted",
     capabilities,
   );
 
@@ -247,11 +247,11 @@ Deno.test("long grouped viewports and submitted frames stay exact", async () => 
   const multiselectFrames = paintedFrames(io);
   assertExactFrame(
     multiselectFrames.at(-1) ?? "",
-    `Pick many [submitted]\n┌──────────────────────────────┐\n│                              │\n│${
+    `Pick many\n┌──────────────────────────────┐\n│                              │\n│ ${
       groupRule("Primary")
-    }│\n│  [✓] One                     │\n│  [ ] Disabled (disabled)     │\n│                              │\n│${
+    } │\n│   [✓] One                    │\n│   [ ] Disabled (disabled)    │\n│                              │\n│ ${
       groupRule("Secondary")
-    }│\n│  [✓] Two                     │\n└────────── ↓ 1 more ──────────┘\n✓ Submitted`,
+    } │\n│   [✓] Two                    │\n└────────── ↓ 1 more ──────────┘\n✓ Submitted`,
     capabilities,
   );
 
@@ -267,9 +267,9 @@ Deno.test("long grouped viewports and submitted frames stay exact", async () => 
   const searchFrames = paintedFrames(io);
   assertExactFrame(
     searchFrames.at(-1) ?? "",
-    `Find [submitted]\n┌──────────────────────────────┐\n│                              │\n│${
+    `Find\n┌──────────────────────────────┐\n│                              │\n│ ${
       groupRule("Secondary")
-    }│\n│  ○ Two                       │\n│  ◉ Three                     │\n└────────── ↑ 2 more ──────────┘\n✓ Submitted`,
+    } │\n│   ○ Two                      │\n│   ◉ Three                    │\n└────────── ↑ 2 more ──────────┘\n✓ Submitted`,
     capabilities,
   );
 });

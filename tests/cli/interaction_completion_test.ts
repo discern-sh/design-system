@@ -210,8 +210,7 @@ Deno.test("compact acknowledgement follows request SIGINT restoration", async ()
 Deno.test("completion policy retains by default and clears only when selected", async () => {
   const retained = new FakeTerminalIO(["ok\r"], { columns: 32 });
   assertEquals(await requestText({ label: "Name" }, { io: retained }), "ok");
-  assertStringIncludes(retained.output(), "[submitted]");
-  assertStringIncludes(retained.output(), "Submitted");
+  assertStringIncludes(retained.output(), "✓ Submitted");
 
   const cleared = new FakeTerminalIO(["ok\r"], { columns: 32 });
   assertEquals(
@@ -220,8 +219,7 @@ Deno.test("completion policy retains by default and clears only when selected", 
     }),
     "ok",
   );
-  assert(!cleared.output().includes("[submitted]"));
-  assert(!cleared.output().includes("Submitted"));
+  assert(!cleared.output().includes("✓ Submitted"));
   assertClearWrite(cleared);
 });
 
@@ -244,7 +242,7 @@ Deno.test("an interaction can own a restored alternate-screen navigation frame",
   const left = io.writes.indexOf(LEAVE_TERMINAL_ALTERNATE_SCREEN);
   assert(entered >= 0, "navigation never entered the alternate screen");
   assert(left > entered, "navigation did not restore the normal screen");
-  assert(!io.output().includes("[submitted]"));
+  assert(!io.output().includes("✓ Submitted"));
   assertEquals(io.rawTransitions, [true, false]);
 });
 
@@ -259,8 +257,7 @@ Deno.test("validation stays visible until a later successful cleanup", async () 
     "x",
   );
   assertStringIncludes(io.output(), "Required.");
-  assertStringIncludes(io.output(), "[error]");
-  assert(!io.output().includes("[submitted]"));
+  assert(!io.output().includes("✓ Submitted"));
   assertClearWrite(io);
 });
 
@@ -271,7 +268,6 @@ Deno.test("clear-frame cancellation retains the established cancelled frame", as
     InteractionCancelled,
     "Dismissed.",
   );
-  assertStringIncludes(io.output(), "[cancelled]");
   assertStringIncludes(io.output(), "Dismissed.");
   assertEquals(io.writes.at(-2), "\n");
   assertEquals(io.writes.at(-1), SHOW_TERMINAL_CURSOR);
@@ -350,7 +346,7 @@ Deno.test("completion cleanup reports control loss after painting", async () => 
     "ansi-control-unavailable",
   );
   assertEquals(error.reason, "ansi-control-unavailable");
-  assertStringIncludes(io.output(), "Name [active]");
+  assertStringIncludes(io.output(), "Name\n┌");
   assertEquals(io.rawTransitions, [true, false]);
   assertEquals(io.writes.at(-1), SHOW_TERMINAL_CURSOR);
 });

@@ -341,12 +341,11 @@ Deno.test("an externally delivered SIGINT mid-request cancels truthfully and res
   const signals = new FakeSignalSource();
   const pending = requestText({ label: "Name" }, { io, signals })
     .catch((error) => error);
-  await until(() => io.writes.some((write) => write.includes("[active]")));
+  await until(() => io.writes.some((write) => write.includes("Name\n┌")));
   signals.deliver();
   assertEquals(signals.raised, 1);
   assertEquals(io.rawTransitions, [true, false]);
   assertEquals(io.writes.at(-1), SHOW_TERMINAL_CURSOR);
-  assert(io.output().includes("[cancelled]"));
   assert(io.output().includes("Cancelled."));
   io.close();
   const outcome = await pending;

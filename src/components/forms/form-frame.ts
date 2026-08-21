@@ -49,7 +49,7 @@ export interface FormCliFrameOptions {
   /** Provider work is scheduled or in flight behind an active frame. */
   readonly pending?: boolean;
   readonly presentation?: FormCliPresentation;
-  /** Include the derived lifecycle token after the label; defaults to false. */
+  /** Include the derived lifecycle token after the label; searching stays visible by default. */
   readonly showStatus?: boolean;
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
@@ -182,10 +182,10 @@ export function renderFormCliFrame(
   const status = statusLabel(options);
   const tone = statusTone(status);
   const required = options.required === true ? " *" : "";
+  const includeStatus = options.showStatus === true ||
+    (options.showStatus === undefined && status === "searching");
   const heading = truncateText(
-    `${options.label}${required}${
-      options.showStatus === true ? ` [${status}]` : ""
-    }`,
+    `${options.label}${required}${includeStatus ? ` [${status}]` : ""}`,
     boundedWidth,
     capabilities.unicode ? "…" : ".",
   );
