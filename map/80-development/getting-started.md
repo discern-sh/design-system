@@ -23,7 +23,7 @@ These work the same regardless of language or framework:
 deno install --frozen
 ```
 
-This populates the cache and `node_modules/` from `deno.lock`. It is also what a fresh worktree runs automatically (`[worktree.setup].ensure` in `discern.toml`), and what the cached-only test fixtures rely on — run it before the first test run.
+This populates the cache and `node_modules/` from `deno.lock`. Every managed checkout runs it followed by `deno task build` through `[repository].ensure` in `discern.toml`, so the generated Catalogue registry is present before checks use it. The cached-only test fixtures rely on the install step too — run it before the first test run.
 
 **Environment.** None. There are no secrets, no `.env` values, and no external services anywhere in this project.
 
