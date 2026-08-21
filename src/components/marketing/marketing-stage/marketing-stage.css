@@ -1,0 +1,74 @@
+@layer discern.components {
+  .discern-marketing-stage {
+    min-inline-size: 0;
+    margin: 0;
+  }
+  .discern-marketing-stage__label {
+    display: flex;
+    align-items: center;
+    min-block-size: 2.75rem;
+    color: var(--discern-color-ink-muted);
+    font-family: var(--discern-font-ui);
+    font-size: var(--discern-font-size-xs);
+    font-weight: var(--discern-font-weight-strong);
+    letter-spacing: 0.08em;
+    line-height: var(--discern-leading-snug);
+    text-transform: uppercase;
+  }
+  .discern-marketing-stage__body {
+    position: relative;
+    display: grid;
+    min-inline-size: 0;
+    overflow: clip;
+  }
+  .discern-marketing-stage--framed {
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-lg);
+    background: var(--discern-color-surface);
+    box-shadow: var(--discern-shadow-window);
+  }
+  .discern-marketing-stage--framed .discern-marketing-stage__label {
+    padding-inline: var(--discern-space-5);
+    border-block-end: 1px solid var(--discern-color-border);
+  }
+  .discern-marketing-stage--framed .discern-marketing-stage__body {
+    padding: clamp(var(--discern-space-5), 4vw, var(--discern-space-10));
+  }
+  .discern-marketing-stage--framed .discern-marketing-stage__caption {
+    padding: 0 var(--discern-space-5) var(--discern-space-4);
+  }
+  .discern-marketing-stage--inset {
+    padding: clamp(var(--discern-space-5), 4vw, var(--discern-space-10));
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-lg);
+    background: var(--discern-color-surface-sunken);
+  }
+  .discern-marketing-stage--inset .discern-marketing-stage__label {
+    min-block-size: auto;
+    margin-block-end: var(--discern-space-5);
+  }
+  .discern-marketing-stage--plain .discern-marketing-stage__label {
+    min-block-size: auto;
+    margin-block-end: var(--discern-space-4);
+  }
+  .discern-marketing-stage__caption {
+    margin-block-start: var(--discern-space-4);
+    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-sm);
+    line-height: var(--discern-leading-body);
+  }
+  .discern-marketing-stage--landscape .discern-marketing-stage__body {
+    aspect-ratio: 16 / 10;
+  }
+  .discern-marketing-stage--square .discern-marketing-stage__body {
+    aspect-ratio: 1;
+  }
+  .discern-marketing-stage--landscape .discern-marketing-stage__body,
+  .discern-marketing-stage--square .discern-marketing-stage__body {
+    place-items: center;
+  }
+  .discern-marketing-stage__body > * {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+}

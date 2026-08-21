@@ -665,6 +665,57 @@ Deno.test("selection resolves dependencies and excludes unrelated groups", async
   }
 });
 
+Deno.test("reading-first Marketing Components share one section authority", () => {
+  const readingFirstIds = [
+    "marketing-stage",
+    "editorial-hero",
+    "narrative-chapter",
+    "journey-overview",
+    "outcome-spotlight",
+    "voice-break",
+    "closing-statement",
+  ] as const;
+  const introIds = new Set([
+    "narrative-chapter",
+    "journey-overview",
+    "outcome-spotlight",
+    "closing-statement",
+  ]);
+  const components = new Map(
+    packageManifest.components.map((component) => [component.id, component]),
+  );
+
+  for (const id of readingFirstIds) {
+    const component = components.get(id);
+    assert(component, `${id} is absent from the generated manifest`);
+    if (id !== "marketing-stage") {
+      assert(
+        component.dependencies.includes("marketing-section"),
+        `${id} bypasses Marketing section`,
+      );
+    }
+    if (introIds.has(id)) {
+      assert(
+        component.dependencies.includes("marketing-intro"),
+        `${id} bypasses Marketing intro`,
+      );
+    }
+    for (const ownedClass of component.ownedClasses) {
+      assert(
+        ownedClass === `discern-${id}` ||
+          ownedClass.startsWith(`discern-${id}__`) ||
+          ownedClass.startsWith(`discern-${id}--`),
+        `${id} claims the foreign class ${ownedClass}`,
+      );
+    }
+  }
+
+  assertEquals(components.get("editorial-hero")?.dependencies, [
+    "marketing-section",
+    "marketing-stage",
+  ]);
+});
+
 Deno.test("artwork selection includes Ground but excludes sibling compositions", async () => {
   const temp = await Deno.makeTempDir();
   try {
