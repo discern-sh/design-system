@@ -70,7 +70,10 @@
   # Post-landing failures are recorded, but later commands still run, as acceptance
   # is a one-way process. Keep worktree-identity-dependent commands under
   # [worktree.setup].ensure instead; those never run in the main checkout.
-  ensure = ["deno install --frozen"]
+  ensure = [
+    "deno install --frozen",
+    "deno task build",
+  ]
 
 # ─────────────────────────────────────────────────────────────────────────────
 # [map] — the project map: discern's agent-maintained documentation tree. This is
