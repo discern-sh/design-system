@@ -7,11 +7,7 @@ import {
   type ResultSummaryCliProps,
   resultSummaryPrefixWidth,
 } from "../components/workflow/result-summary/result-summary.cli.ts";
-export {
-  RESULT_SUMMARY_STATE_LABELS,
-  RESULT_SUMMARY_STATES,
-  type ResultSummaryState,
-} from "../components/workflow/result-summary/result-summary.types.ts";
+export * from "../components/workflow/result-summary/result-summary.types.ts";
 
 /** One Result summary inside a collection-owned alignment group. */
 export type ResultSummaryGroupCliItem = Omit<

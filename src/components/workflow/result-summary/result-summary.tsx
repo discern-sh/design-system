@@ -8,12 +8,6 @@ import {
   type ResultSummaryState,
 } from "./result-summary.types.ts";
 
-export {
-  RESULT_SUMMARY_STATE_LABELS,
-  RESULT_SUMMARY_STATES,
-  type ResultSummaryState,
-} from "./result-summary.types.ts";
-
 /** One supporting count in a {@linkcode ResultSummary}. */
 export interface ResultSummaryCount {
   readonly label: ReactNode;

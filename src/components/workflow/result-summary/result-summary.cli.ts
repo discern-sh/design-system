@@ -85,7 +85,6 @@ export interface ResultSummaryCliProps {
   readonly maxWidth?: number;
 }
 
-/** Deterministic Result summary states rendered by the CLI catalogue. */
 const cliExampleProps = {
   passed: {
     state: "passed",
@@ -122,6 +121,7 @@ const cliExampleProps = {
   Record<ResultSummaryState, ResultSummaryCliProps>
 >;
 
+/** Deterministic Result summary states rendered by the CLI catalogue. */
 export const cliExamples: readonly CliExample<ResultSummaryCliProps>[] =
   RESULT_SUMMARY_STATES.map((state) => ({
     name: state,
