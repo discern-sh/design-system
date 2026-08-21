@@ -3,9 +3,16 @@ import type { HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { CopyButton } from "../../docs/copy-button/copy-button.tsx";
-import type { ResultSummaryState } from "./result-summary.types.ts";
+import {
+  RESULT_SUMMARY_STATE_LABELS,
+  type ResultSummaryState,
+} from "./result-summary.types.ts";
 
-export type { ResultSummaryState } from "./result-summary.types.ts";
+export {
+  RESULT_SUMMARY_STATE_LABELS,
+  RESULT_SUMMARY_STATES,
+  type ResultSummaryState,
+} from "./result-summary.types.ts";
 
 /** One supporting count in a {@linkcode ResultSummary}. */
 export interface ResultSummaryCount {
@@ -26,15 +33,7 @@ export interface ResultSummaryProps
   readonly copiedLabel?: ReactNode;
 }
 
-const stateLabels: Readonly<Record<ResultSummaryState, string>> = {
-  passed: "Passed",
-  failed: "Failed",
-  blocked: "Blocked",
-  changed: "Changed",
-  unchanged: "Unchanged",
-};
-
-/** One outcome stated in text, with supporting figures and an optional next action. */
+/** One result fact stated in text, with supporting figures and an optional next action. */
 export const ResultSummary: DiscernComponent<
   HTMLElement,
   ResultSummaryProps
@@ -66,7 +65,7 @@ export const ResultSummary: DiscernComponent<
           className="discern-result-summary__state"
           data-discern-state={state}
         >
-          {stateLabels[state]}
+          {RESULT_SUMMARY_STATE_LABELS[state]}
         </span>
         <div className="discern-result-summary__fact">{fact}</div>
       </header>

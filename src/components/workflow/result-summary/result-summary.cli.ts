@@ -11,7 +11,11 @@ import type {
   TerminalSemanticTone,
   TerminalThemeVariant,
 } from "../../../cli/theme.ts";
-import type { ResultSummaryState } from "./result-summary.types.ts";
+import {
+  RESULT_SUMMARY_STATE_LABELS,
+  RESULT_SUMMARY_STATES,
+  type ResultSummaryState,
+} from "./result-summary.types.ts";
 import {
   assertWorkflowCliText,
   styleWorkflowHeading,
@@ -20,27 +24,26 @@ import {
   workflowPrefixedLines,
 } from "../workflow-cli.ts";
 
-const stateLabels: Readonly<Record<ResultSummaryState, string>> = {
-  passed: "Passed",
-  failed: "Failed",
-  blocked: "Blocked",
-  changed: "Changed",
-  unchanged: "Unchanged",
-};
+interface ResultSummaryMarker {
+  readonly unicode: string;
+  readonly ascii: string;
+}
+
+const stateMarkers = {
+  passed: { unicode: "✓", ascii: "+" },
+  failed: { unicode: "✕", ascii: "x" },
+  blocked: { unicode: "!", ascii: "!" },
+  changed: { unicode: "◇", ascii: "*" },
+  declared: { unicode: "·", ascii: "." },
+  unchanged: { unicode: "=", ascii: "=" },
+} as const satisfies Readonly<Record<ResultSummaryState, ResultSummaryMarker>>;
 
 function resultSummaryMarker(
   state: ResultSummaryState,
   unicode: boolean,
 ): string {
-  return state === "passed"
-    ? (unicode ? "✓" : "+")
-    : state === "failed"
-    ? (unicode ? "✕" : "x")
-    : state === "blocked"
-    ? "!"
-    : state === "changed"
-    ? (unicode ? "◇" : "*")
-    : "=";
+  const marker = stateMarkers[state];
+  return unicode ? marker.unicode : marker.ascii;
 }
 
 /** Visible prefix width used to align one Result summary collection. */
@@ -50,7 +53,7 @@ export function resultSummaryPrefixWidth(
 ): number {
   return measureText(
     `${resultSummaryMarker(state, capabilities.unicode)} ${
-      stateLabels[state]
+      RESULT_SUMMARY_STATE_LABELS[state]
     }:`,
   );
 }
@@ -60,6 +63,7 @@ const stateTones: Readonly<Record<ResultSummaryState, TerminalSemanticTone>> = {
   failed: "danger",
   blocked: "warning",
   changed: "accent",
+  declared: "neutral",
   unchanged: "neutral",
 };
 
@@ -82,25 +86,47 @@ export interface ResultSummaryCliProps {
 }
 
 /** Deterministic Result summary states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<ResultSummaryCliProps>[] = [
-  {
-    name: "passed",
-    props: {
-      state: "passed",
-      fact: "The full gate passed.",
-      counts: [{ label: "Tests", value: "310" }],
-      duration: "2m 18s",
-      nextAction: "Accept the branch.",
-    },
+const cliExampleProps = {
+  passed: {
+    state: "passed",
+    fact: "All configured checks passed.",
+    counts: [{ label: "Checks", value: "12" }],
+    duration: "48s",
+    nextAction: "Review the recorded changes.",
   },
-  {
-    name: "blocked",
-    props: {
-      state: "blocked",
-      fact: "Landing authority has not arrived.",
-    },
+  failed: {
+    state: "failed",
+    fact: "Two checks did not complete.",
+    counts: [{ label: "Failed", value: "2" }],
+    nextAction: "Open the first diagnostic.",
   },
-] as const;
+  blocked: {
+    state: "blocked",
+    fact: "A required credential is unavailable.",
+    nextAction: "Provide the credential, then retry.",
+  },
+  changed: {
+    state: "changed",
+    fact: "Formatting updated three files.",
+    counts: [{ label: "Files", value: "3" }],
+  },
+  declared: {
+    state: "declared",
+    fact: "The reviewer declared the condition met.",
+  },
+  unchanged: {
+    state: "unchanged",
+    fact: "No tracked files changed.",
+  },
+} as const satisfies Readonly<
+  Record<ResultSummaryState, ResultSummaryCliProps>
+>;
+
+export const cliExamples: readonly CliExample<ResultSummaryCliProps>[] =
+  RESULT_SUMMARY_STATES.map((state) => ({
+    name: state,
+    props: cliExampleProps[state],
+  }));
 
 /** Render one outcome with an optional collection-owned prefix width. */
 export function renderResultSummaryCliWithPrefixWidth(
@@ -112,7 +138,7 @@ export function renderResultSummaryCliWithPrefixWidth(
   const width = workflowCliWidth(props.maxWidth, capabilities);
   const rawPrefix = `${
     resultSummaryMarker(props.state, capabilities.unicode)
-  } ${stateLabels[props.state]}:`;
+  } ${RESULT_SUMMARY_STATE_LABELS[props.state]}:`;
   const resolvedPrefixWidth = prefixWidth ?? measureText(rawPrefix);
   const prefix = `${padText(rawPrefix, resolvedPrefixWidth)} `;
   const lines = [

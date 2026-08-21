@@ -46,6 +46,10 @@ import {
   Procedure,
   RawOutput,
   ResonanceGround,
+  RESULT_SUMMARY_STATE_LABELS,
+  RESULT_SUMMARY_STATES,
+  ResultSummary,
+  type ResultSummaryState,
   RetryNotice,
   SiteHeader,
   TableOfContents,
@@ -55,6 +59,7 @@ import {
   Tooltip,
   Window,
 } from "../src/react.ts";
+import { catalogueStates as resultSummaryCatalogueStates } from "../src/components/workflow/result-summary/result-summary.examples.tsx";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
 import { semanticClass } from "../src/semantic-class.ts";
 import {
@@ -2714,6 +2719,56 @@ Deno.test("table-of-contents numbering excludes nested entries", () => {
   );
   assertStringIncludes(html, "<span>02</span>Second section");
   assert(!html.includes("<span>03</span>"));
+});
+
+Deno.test("Result summary states enroll browser labels, Catalogue postures, and CSS treatment", async () => {
+  const states: readonly ResultSummaryState[] = RESULT_SUMMARY_STATES;
+  const html = states.map((state) =>
+    renderToStaticMarkup(
+      createElement(ResultSummary, { state, fact: `Fact for ${state}` }),
+    )
+  ).join("\n");
+  for (const state of states) {
+    assertStringIncludes(html, `data-discern-state="${state}"`);
+    assertStringIncludes(html, `>${RESULT_SUMMARY_STATE_LABELS[state]}</span>`);
+  }
+  assertEquals(
+    resultSummaryCatalogueStates.map(({ name }) => name),
+    [...RESULT_SUMMARY_STATES],
+  );
+
+  const css = await Deno.readTextFile(
+    join(
+      COMPONENT_ROOT,
+      "workflow",
+      "result-summary",
+      "result-summary.css",
+    ),
+  );
+  for (const state of states) {
+    assertStringIncludes(css, `data-discern-state="${state}"`);
+  }
+  const declaredRule = /data-discern-state="declared"\]\s*\{(?<body>[^}]*)\}/s
+    .exec(css)
+    ?.groups?.body;
+  assert(declaredRule !== undefined, "missing declared Result summary rule");
+  assertStringIncludes(
+    declaredRule,
+    "border-color: var(--discern-color-border-strong);",
+  );
+  assertStringIncludes(
+    declaredRule,
+    "background: var(--discern-color-surface-sunken);",
+  );
+  assertStringIncludes(declaredRule, "color: var(--discern-color-ink);");
+  assert(
+    !/success|danger|warning|accent|ink-muted/u.test(declaredRule),
+    "declared Result summary treatment must remain a distinct neutral fact",
+  );
+  assertMatch(
+    css,
+    /@media \(forced-colors: active\)[\s\S]*\.discern-result-summary__state\s*\{[^}]*border-color:\s*CanvasText;/u,
+  );
 });
 
 Deno.test("every stateful marker joins the accessible text in its example", async () => {
