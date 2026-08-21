@@ -19,6 +19,8 @@ export { default as renderClusterCli, cliExamples as clusterCliExamples } from "
 export type { ClusterCliProps } from "../components/layout/cluster/cluster.cli.ts";
 export { default as renderGridCli, cliExamples as gridCliExamples } from "../components/layout/grid/grid.cli.ts";
 export type { GridCliProps } from "../components/layout/grid/grid.cli.ts";
+export { default as renderMasonryCli, cliExamples as masonryCliExamples } from "../components/layout/masonry/masonry.cli.ts";
+export type { MasonryCliProps } from "../components/layout/masonry/masonry.cli.ts";
 export { default as renderSectionCli, cliExamples as sectionCliExamples } from "../components/layout/section/section.cli.ts";
 export type { SectionCliProps } from "../components/layout/section/section.cli.ts";
 export { default as renderBadgeCli, cliExamples as badgeCliExamples } from "../components/display/badge/badge.cli.ts";

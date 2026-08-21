@@ -3,6 +3,7 @@ import {
   assertEquals,
   assertMatch,
   assertStringIncludes,
+  assertThrows,
 } from "@std/assert";
 import { fromFileUrl, join, relative, toFileUrl } from "@std/path";
 import type { Page } from "playwright-core";
@@ -18,6 +19,7 @@ import {
 } from "../scripts/font-metric-overrides.ts";
 import type { FontMetricOverrideAudit } from "../scripts/font-metric-overrides.ts";
 import { generateSources } from "../scripts/generate.ts";
+import { createFeatureBentoLayout } from "../src/components/marketing/feature-bento/feature-bento-layout.ts";
 import {
   packageManifest,
   RUNTIME_MANIFEST_SCHEMA_VERSION,
@@ -30,6 +32,7 @@ import {
   DestructiveActionNotice,
   Diagnostic,
   type DiagnosticProps,
+  FeatureBento,
   GlossaryTerm,
   Ground,
   HeroBlock,
@@ -39,6 +42,7 @@ import {
   LogoCloud,
   MarketingIntro,
   MarketingSection,
+  Masonry,
   Procedure,
   RawOutput,
   ResonanceGround,
@@ -82,6 +86,13 @@ async function walk(directory: string): Promise<string[]> {
     else files.push(path);
   }
   return files.toSorted();
+}
+
+function assertSourceOrderedGridCss(path: string, source: string): void {
+  assert(
+    !/grid-auto-flow\s*:[^;]*\bdense\b/u.test(source),
+    `${path} uses dense grid auto-placement, which can backfill later semantic content ahead of source order`,
+  );
 }
 
 async function outputPaths(root: string): Promise<string[]> {
@@ -380,6 +391,138 @@ Deno.test("component metadata auto-enrols React, runtime, and CLI surfaces", asy
     ),
     generated.cliRenderers,
   );
+});
+
+Deno.test("Component grids never backfill later semantic content", async () => {
+  const componentStyles = (await walk(COMPONENT_ROOT)).filter((path) =>
+    path.endsWith(".css")
+  );
+  for (const path of componentStyles) {
+    assertSourceOrderedGridCss(path, await Deno.readTextFile(path));
+  }
+  assertThrows(
+    () =>
+      assertSourceOrderedGridCss(
+        "future-packer.css",
+        ".future-packer { display: grid; grid-auto-flow: dense; }",
+      ),
+    Error,
+    "backfill later semantic content",
+  );
+});
+
+Deno.test("Feature bento layouts tile complete source-ordered rectangles", () => {
+  const sizes = ["large", "wide", "standard", "standard"] as const;
+  assertEquals(createFeatureBentoLayout(sizes, 4), {
+    columns: 4,
+    rows: 2,
+    placements: [
+      { column: 1, row: 1, columnSpan: 2, rowSpan: 2 },
+      { column: 3, row: 1, columnSpan: 2, rowSpan: 1 },
+      { column: 3, row: 2, columnSpan: 1, rowSpan: 1 },
+      { column: 4, row: 2, columnSpan: 1, rowSpan: 1 },
+    ],
+  });
+  assertEquals(createFeatureBentoLayout(sizes, 2), {
+    columns: 2,
+    rows: 4,
+    placements: [
+      { column: 1, row: 1, columnSpan: 2, rowSpan: 2 },
+      { column: 1, row: 3, columnSpan: 2, rowSpan: 1 },
+      { column: 1, row: 4, columnSpan: 1, rowSpan: 1 },
+      { column: 2, row: 4, columnSpan: 1, rowSpan: 1 },
+    ],
+  });
+  assertThrows(
+    () =>
+      createFeatureBentoLayout(
+        ["wide", "standard", "tall", "standard"],
+        4,
+      ),
+    TypeError,
+    "does not fill its 4-column rectangle",
+  );
+  assertThrows(
+    () => createFeatureBentoLayout(["standard", "large"], 2),
+    TypeError,
+    "cannot place large at the next source-order cell",
+  );
+});
+
+Deno.test("Feature bento and Masonry emit their complete static layout contracts", async () => {
+  const bento = renderToStaticMarkup(
+    createElement(FeatureBento, {
+      title: "A complete matrix",
+      items: [
+        { title: "Alpha", description: "First", size: "large" },
+        { title: "Beta", description: "Second", size: "wide" },
+        { title: "Gamma", description: "Third" },
+        { title: "Delta", description: "Fourth" },
+      ],
+    }),
+  );
+  assertMatch(bento, /^<section/);
+  assertStringIncludes(bento, "--discern-feature-bento-rows:2");
+  assertStringIncludes(bento, "--discern-feature-bento-compact-rows:4");
+  assertStringIncludes(bento, "--discern-feature-bento-column:3");
+  assertEquals((bento.match(/<article/g) ?? []).length, 4);
+  assert(
+    bento.indexOf("Alpha") < bento.indexOf("Beta") &&
+      bento.indexOf("Beta") < bento.indexOf("Gamma") &&
+      bento.indexOf("Gamma") < bento.indexOf("Delta"),
+    "Feature bento changed semantic source order",
+  );
+  assertThrows(
+    () =>
+      renderToStaticMarkup(
+        createElement(FeatureBento, {
+          title: "Incomplete",
+          items: [
+            { title: "Alpha", description: "First", size: "wide" },
+            { title: "Beta", description: "Second" },
+          ],
+        }),
+      ),
+    TypeError,
+    "does not fill its 4-column rectangle",
+  );
+
+  const masonry = renderToStaticMarkup(
+    createElement(Masonry, {
+      gap: 4,
+      minimum: "12rem",
+      children: [
+        createElement("article", { key: "one" }, "One"),
+        createElement("article", { key: "two" }, "Two"),
+        createElement("article", { key: "three" }, "Three"),
+      ],
+    }),
+  );
+  assertMatch(masonry, /^<div/);
+  assertStringIncludes(masonry, "--discern-masonry-gap:var(--discern-space-4)");
+  assertStringIncludes(masonry, "--discern-masonry-min:12rem");
+  assertEquals(
+    (masonry.match(/class="discern-masonry__item"/g) ?? []).length,
+    3,
+  );
+  assert(
+    masonry.indexOf("One") < masonry.indexOf("Two") &&
+      masonry.indexOf("Two") < masonry.indexOf("Three"),
+    "Masonry changed semantic source order",
+  );
+
+  const masonryCss = await Deno.readTextFile(
+    join(
+      COMPONENT_ROOT,
+      "layout",
+      "masonry",
+      "masonry.css",
+    ),
+  );
+  assertStringIncludes(masonryCss, "column-width:");
+  assertStringIncludes(masonryCss, "break-inside: avoid");
+  assertStringIncludes(masonryCss, "@supports (display: grid-lanes)");
+  assertStringIncludes(masonryCss, "display: grid-lanes");
 });
 
 Deno.test("runtime globals are branded and defaults stay inside the opted-in root", async () => {
