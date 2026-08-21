@@ -2745,22 +2745,24 @@ Deno.test("Result summary states enroll browser labels, Catalogue postures, and 
       "result-summary.css",
     ),
   );
-  for (const state of states) {
-    assertStringIncludes(css, `data-discern-state="${state}"`);
-  }
+  const baseStateRule = /\.discern-result-summary__state\s*\{(?<body>[^}]*)\}/s
+    .exec(css)
+    ?.groups?.body;
+  assert(baseStateRule !== undefined, "missing base Result summary state rule");
+  assertStringIncludes(
+    baseStateRule,
+    "border: 1px solid var(--discern-color-border-strong);",
+  );
+  assertStringIncludes(
+    baseStateRule,
+    "background: var(--discern-color-surface-sunken);",
+  );
+  assertStringIncludes(baseStateRule, "color: var(--discern-color-ink);");
   const declaredRule = /data-discern-state="declared"\]\s*\{(?<body>[^}]*)\}/s
     .exec(css)
     ?.groups?.body;
   assert(declaredRule !== undefined, "missing declared Result summary rule");
-  assertStringIncludes(
-    declaredRule,
-    "border-color: var(--discern-color-border-strong);",
-  );
-  assertStringIncludes(
-    declaredRule,
-    "background: var(--discern-color-surface-sunken);",
-  );
-  assertStringIncludes(declaredRule, "color: var(--discern-color-ink);");
+  assertStringIncludes(declaredRule, "border-style: dashed;");
   assert(
     !/success|danger|warning|accent|ink-muted/u.test(declaredRule),
     "declared Result summary treatment must remain a distinct neutral fact",

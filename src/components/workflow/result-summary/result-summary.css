@@ -43,16 +43,8 @@
     background: var(--discern-color-warning-soft);
     color: var(--discern-color-warning-deep);
   }
-  .discern-result-summary__state[data-discern-state="changed"] {
-    border-color: var(--discern-color-accent-400);
-    background: var(--discern-color-accent-100);
-    color: var(--discern-color-accent-800);
-  }
   .discern-result-summary__state[data-discern-state="declared"] {
-    border-color: var(--discern-color-border-strong);
     border-style: dashed;
-    background: var(--discern-color-surface-sunken);
-    color: var(--discern-color-ink);
   }
   .discern-result-summary__state[data-discern-state="unchanged"] {
     color: var(--discern-color-ink-muted);
