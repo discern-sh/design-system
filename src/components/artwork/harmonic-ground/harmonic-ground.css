@@ -1,0 +1,157 @@
+@layer discern.components {
+  .discern-harmonic-ground {
+    --discern-harmonic-ground-sx: 0px;
+    --discern-harmonic-ground-sy: 0px;
+    --discern-harmonic-ground-bx: 0px;
+    --discern-harmonic-ground-by: 0px;
+    --discern-harmonic-ground-tx: 0px;
+    --discern-harmonic-ground-ty: 0px;
+    color: var(--discern-ground-ink);
+  }
+
+  .discern-harmonic-ground__plate {
+    fill: none;
+    stroke: var(--discern-ground-guide);
+    stroke-width: var(--discern-ground-hairline);
+    opacity: var(--discern-ground-veil-3);
+  }
+
+  .discern-harmonic-ground__driver {
+    fill: var(--discern-ground-accent);
+    opacity: var(--discern-ground-veil-4);
+  }
+
+  .discern-harmonic-ground__field {
+    opacity: var(--discern-ground-veil-3);
+    animation: discern-harmonic-ground-ink calc(var(--discern-ground-beat) * 20)
+      var(--discern-ground-ease-drift)
+      infinite;
+  }
+
+  .discern-harmonic-ground__grain {
+    fill: currentColor;
+    animation: discern-harmonic-ground-migrate calc(var(--discern-ground-beat) *
+      20)
+      var(--discern-ground-ease-settle) infinite;
+  }
+
+  .discern-harmonic-ground__tremble {
+    animation: discern-harmonic-ground-tremble calc(var(--discern-ground-beat) *
+      20) linear infinite;
+  }
+
+  @keyframes discern-harmonic-ground-migrate {
+    0% {
+      transform: translate(0, 0);
+    }
+    12.5% {
+      transform: translate(0, 0);
+      animation-timing-function: var(--discern-ground-ease-drift);
+    }
+    25% {
+      transform: translate(
+        var(--discern-harmonic-ground-sx),
+        var(--discern-harmonic-ground-sy)
+      );
+      animation-timing-function: var(--discern-ground-ease-settle);
+    }
+    37.5% {
+      transform: translate(
+        var(--discern-harmonic-ground-bx),
+        var(--discern-harmonic-ground-by)
+      );
+    }
+    62.5% {
+      transform: translate(
+        var(--discern-harmonic-ground-bx),
+        var(--discern-harmonic-ground-by)
+      );
+      animation-timing-function: var(--discern-ground-ease-drift);
+    }
+    75% {
+      transform: translate(
+        var(--discern-harmonic-ground-sx),
+        var(--discern-harmonic-ground-sy)
+      );
+      animation-timing-function: var(--discern-ground-ease-settle);
+    }
+    87.5% {
+      transform: translate(0, 0);
+    }
+    100% {
+      transform: translate(0, 0);
+    }
+  }
+
+  @keyframes discern-harmonic-ground-tremble {
+    0%,
+    12.5%,
+    15%,
+    17.5%,
+    20%,
+    22.5%,
+    25%,
+    27.5%,
+    30%,
+    32.5%,
+    35%,
+    37.5%,
+    62.5%,
+    65%,
+    67.5%,
+    70%,
+    72.5%,
+    75%,
+    77.5%,
+    80%,
+    82.5%,
+    85%,
+    87.5%,
+    100% {
+      transform: translate(0, 0);
+    }
+    13.75%,
+    16.25%,
+    18.75%,
+    21.25%,
+    23.75%,
+    26.25%,
+    28.75%,
+    31.25%,
+    33.75%,
+    36.25%,
+    63.75%,
+    66.25%,
+    68.75%,
+    71.25%,
+    73.75%,
+    76.25%,
+    78.75%,
+    81.25%,
+    83.75%,
+    86.25% {
+      transform: translate(
+        var(--discern-harmonic-ground-tx),
+        var(--discern-harmonic-ground-ty)
+      );
+    }
+  }
+
+  @keyframes discern-harmonic-ground-ink {
+    0% {
+      opacity: var(--discern-ground-veil-3);
+    }
+    25%,
+    75% {
+      opacity: var(--discern-ground-veil-1);
+    }
+    37.5%,
+    62.5% {
+      opacity: var(--discern-ground-veil-3);
+    }
+    87.5%,
+    100% {
+      opacity: var(--discern-ground-veil-3);
+    }
+  }
+}

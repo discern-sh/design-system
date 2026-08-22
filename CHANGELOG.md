@@ -6,6 +6,7 @@ Each release is cut from a green run of the full release gate — formatting, li
 
 ## 0.24.0
 
+- Add three browser-only Artwork grounds: Tiling traces a continuous route through a quietly reconfiguring Truchet field, Compression conserves the apparent length of a measured ribbon while its centre folds and relaxes, and Harmonic gathers fine grains across two changing nodal modes. All three compose the shared Ground presence, theme, still-motion, reduced-motion, forced-colour, and selection-scoped CSS contracts.
 - Add a complementary reading-first Marketing family without changing the existing launch-page Components. Every member composes the existing Marketing section and Intro authorities where applicable, records an explicit browser-only CLI exemption, exposes generic Catalogue states, and joins a source-backed complete landing-page recipe that alternates explanation, relief, compression, evidence, voice, and action.
 - Add the Marketing `Marketing stage` Component for framing conceptual, atmospheric, or concise evidential visuals without making their presentation another reading assignment.
 - Add the Marketing `Editorial hero` Component for opening a page with selective broad display typography, supporting copy, actions, and consumer-supplied artwork.

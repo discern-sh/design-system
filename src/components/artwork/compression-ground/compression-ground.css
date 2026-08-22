@@ -1,0 +1,162 @@
+@layer discern.components {
+  .discern-compression-ground {
+    --discern-compression-ground-open-x: 1;
+    --discern-compression-ground-open-y: 1;
+    --discern-compression-ground-open-slide: 0px;
+    --discern-compression-ground-closed-x: 1;
+    --discern-compression-ground-closed-y: 1;
+    --discern-compression-ground-closed-slide: 0px;
+    color: var(--discern-ground-guide);
+  }
+
+  .discern-compression-ground__run,
+  .discern-compression-ground__pleats {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: var(--discern-ground-line);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: var(--discern-ground-veil-3);
+  }
+
+  .discern-compression-ground__tick {
+    stroke: currentColor;
+    stroke-width: var(--discern-ground-hairline);
+    opacity: var(--discern-ground-veil-1);
+    animation: discern-compression-ground-drift calc(var(--discern-ground-beat)
+      * 15) var(--discern-ground-ease-drift)
+      infinite;
+  }
+
+  .discern-compression-ground__tick--major {
+    stroke-width: var(--discern-ground-line);
+  }
+
+  .discern-compression-ground__fold {
+    transform-box: view-box;
+    transform-origin: 380px 270px;
+    animation: discern-compression-ground-breathe
+      calc(var(--discern-ground-beat) * 15) var(--discern-ground-ease-drift)
+      infinite;
+  }
+
+  .discern-compression-ground__head {
+    animation: discern-compression-ground-head calc(var(--discern-ground-beat) *
+      15) var(--discern-ground-ease-drift)
+      infinite;
+  }
+
+  .discern-compression-ground__tail {
+    animation: discern-compression-ground-tail calc(var(--discern-ground-beat) *
+      15) var(--discern-ground-ease-drift)
+      infinite;
+  }
+
+  .discern-compression-ground__creases {
+    opacity: var(--discern-ground-veil-3);
+    animation: discern-compression-ground-crease calc(var(--discern-ground-beat)
+      * 15) var(--discern-ground-ease-drift)
+      infinite;
+  }
+
+  .discern-compression-ground__creases path {
+    fill: none;
+    stroke: var(--discern-ground-accent);
+    stroke-width: calc(var(--discern-ground-line) * 1.6);
+    stroke-linecap: round;
+  }
+
+  @keyframes discern-compression-ground-breathe {
+    0%,
+    8% {
+      transform: scale(
+        var(--discern-compression-ground-open-x),
+        var(--discern-compression-ground-open-y)
+      );
+    }
+    42%,
+    58% {
+      transform: scale(
+        var(--discern-compression-ground-closed-x),
+        var(--discern-compression-ground-closed-y)
+      );
+    }
+    92%,
+    100% {
+      transform: scale(
+        var(--discern-compression-ground-open-x),
+        var(--discern-compression-ground-open-y)
+      );
+    }
+  }
+
+  @keyframes discern-compression-ground-head {
+    0%,
+    8% {
+      transform: translateX(
+        var(--discern-compression-ground-open-slide)
+      );
+    }
+    42%,
+    58% {
+      transform: translateX(
+        var(--discern-compression-ground-closed-slide)
+      );
+    }
+    92%,
+    100% {
+      transform: translateX(
+        var(--discern-compression-ground-open-slide)
+      );
+    }
+  }
+
+  @keyframes discern-compression-ground-tail {
+    0%,
+    8% {
+      transform: translateX(
+        calc(var(--discern-compression-ground-open-slide) * -1)
+      );
+    }
+    42%,
+    58% {
+      transform: translateX(
+        calc(var(--discern-compression-ground-closed-slide) * -1)
+      );
+    }
+    92%,
+    100% {
+      transform: translateX(
+        calc(var(--discern-compression-ground-open-slide) * -1)
+      );
+    }
+  }
+
+  @keyframes discern-compression-ground-crease {
+    0%,
+    8% {
+      opacity: var(--discern-ground-veil-3);
+    }
+    42%,
+    58% {
+      opacity: var(--discern-ground-veil-4);
+    }
+    92%,
+    100% {
+      opacity: var(--discern-ground-veil-3);
+    }
+  }
+
+  @keyframes discern-compression-ground-drift {
+    0% {
+      opacity: var(--discern-ground-veil-1);
+    }
+    18% {
+      opacity: var(--discern-ground-veil-2);
+    }
+    40%,
+    100% {
+      opacity: var(--discern-ground-veil-1);
+    }
+  }
+}
