@@ -17,7 +17,7 @@ export interface HeroBlockProps
   readonly meta?: ReactNode;
   readonly visual?: ReactNode;
   /** Decorative artwork rendered behind the complete foreground composition. */
-  readonly ground?: ReactNode;
+  readonly backdrop?: ReactNode;
   readonly layout?: HeroBlockLayout;
   readonly surface?: HeroBlockSurface;
 }
@@ -33,7 +33,7 @@ export const HeroBlock: DiscernComponent<HTMLElement, HeroBlockProps> =
       actions,
       meta,
       visual,
-      ground,
+      backdrop,
       layout = "split",
       surface = "canvas",
       className,
@@ -54,10 +54,10 @@ export const HeroBlock: DiscernComponent<HTMLElement, HeroBlockProps> =
         )}
         {...props}
       >
-        {ground
+        {backdrop
           ? (
-            <div className="discern-hero-block__ground" aria-hidden="true">
-              {ground}
+            <div className="discern-hero-block__backdrop" aria-hidden="true">
+              {backdrop}
             </div>
           )
           : null}

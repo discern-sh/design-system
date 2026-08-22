@@ -1,6 +1,6 @@
 import type { ComponentType, ReactNode } from "react";
 import { Receipt } from "../src/components/agents/receipt/receipt.tsx";
-import { ApproachGround } from "../src/components/artwork/approach-ground/approach-ground.tsx";
+import { ApproachBackdrop } from "../src/components/artwork/approach-backdrop/approach-backdrop.tsx";
 import { Button } from "../src/components/core/button/button.tsx";
 import { ClosingStatement } from "../src/components/marketing/closing-statement/closing-statement.tsx";
 import { EditorialHero } from "../src/components/marketing/editorial-hero/editorial-hero.tsx";
@@ -633,7 +633,7 @@ const readingFirstLandingRecipe = defineRecipe({
         }
         actions={<Button href="#explanation">Begin with the idea</Button>}
         meta="No technical vocabulary is required to start."
-        ground={<ApproachGround />}
+        backdrop={<ApproachBackdrop />}
       />
       <NarrativeChapter
         id="explanation"

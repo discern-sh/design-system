@@ -464,10 +464,10 @@ export const themeTokens: readonly ThemeToken[] = [
     "Motion",
   ),
   themeToken(
-    "--discern-ground-theme-gain",
+    "--discern-backdrop-theme-gain",
     "1",
     "0.78",
-    "Optical opacity correction for decorative grounds across light and dark canvases.",
+    "Optical opacity correction for decorative backdrops across light and dark canvases.",
     "Motion",
   ),
 ];

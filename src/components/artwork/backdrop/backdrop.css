@@ -1,0 +1,51 @@
+@layer discern.components {
+  .discern-backdrop {
+    --discern-backdrop-beat: 2.4s;
+    --discern-backdrop-ease-drift: cubic-bezier(0.37, 0, 0.63, 1);
+    --discern-backdrop-ease-settle: cubic-bezier(0.18, 0.82, 0.22, 1);
+    --discern-backdrop-hairline: 0.75;
+    --discern-backdrop-line: 1.25;
+    --discern-backdrop-gain: calc(var(--discern-backdrop-presence, 1) *
+      var(--discern-backdrop-theme-gain));
+    --discern-backdrop-veil-1: calc(0.05 * var(--discern-backdrop-gain));
+    --discern-backdrop-veil-2: calc(0.09 * var(--discern-backdrop-gain));
+    --discern-backdrop-veil-3: calc(0.16 * var(--discern-backdrop-gain));
+    --discern-backdrop-veil-4: calc(0.26 * var(--discern-backdrop-gain));
+    --discern-backdrop-ink: var(--discern-color-ink);
+    --discern-backdrop-guide: var(--discern-color-border-strong);
+    --discern-backdrop-accent: var(--discern-color-accent-600);
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    overflow: hidden;
+    isolation: isolate;
+    contain: paint;
+    color: var(--discern-backdrop-ink);
+    pointer-events: none;
+  }
+  .discern-backdrop__plate {
+    display: block;
+    width: 100%;
+    height: 100%;
+    shape-rendering: geometricPrecision;
+  }
+  .discern-backdrop--still *,
+  .discern-backdrop--still::before,
+  .discern-backdrop--still::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .discern-backdrop *,
+    .discern-backdrop::before,
+    .discern-backdrop::after {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+  @media (forced-colors: active) {
+    .discern-backdrop {
+      display: none;
+    }
+  }
+}

@@ -10,7 +10,7 @@ export default {
   cli: {
     stance: "exempt",
     reason:
-      "Its distinguishing contract is a browser page-ending chapter with broad editorial scale, centered action layout, and atmospheric ground; terminal flows close with their own prompt or next command.",
+      "Its distinguishing contract is a browser page-ending chapter with broad editorial scale, centered action layout, and atmospheric backdrop; terminal flows close with their own prompt or next command.",
   },
   purposes: ["marketing-site"],
   useWhen: [
@@ -21,7 +21,7 @@ export default {
   ],
   accessibility: [
     "The heading rank is explicit and precedes the action area in source order.",
-    "Decorative ground content is always hidden from assistive technology.",
+    "Decorative backdrop content is always hidden from assistive technology.",
     "Actions remain ordinary consumer-supplied links or buttons and stack without changing order at narrow widths.",
   ],
 } satisfies ComponentMeta;

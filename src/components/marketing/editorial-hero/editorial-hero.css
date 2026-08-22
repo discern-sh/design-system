@@ -4,7 +4,7 @@
     isolation: isolate;
     overflow: clip;
   }
-  .discern-editorial-hero__ground {
+  .discern-editorial-hero__backdrop {
     position: absolute;
     z-index: -1;
     inset: 0;

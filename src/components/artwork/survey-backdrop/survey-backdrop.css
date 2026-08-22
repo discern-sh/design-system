@@ -1,0 +1,56 @@
+@layer discern.components {
+  .discern-survey-backdrop {
+    color: var(--discern-backdrop-guide);
+  }
+
+  .discern-survey-backdrop__minor {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: var(--discern-backdrop-hairline);
+    opacity: var(--discern-backdrop-veil-3);
+  }
+
+  .discern-survey-backdrop__grain {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: var(--discern-backdrop-line);
+    opacity: calc(var(--discern-backdrop-veil-4) * 0.8);
+  }
+
+  .discern-survey-backdrop__major {
+    fill: none;
+    stroke: var(--discern-backdrop-ink);
+    stroke-width: var(--discern-backdrop-line);
+    opacity: var(--discern-backdrop-veil-2);
+  }
+
+  /* The band is wider than the frame in both axes so its own ends never
+   * enter the plate: only its middle ever crosses the ruling. */
+  .discern-survey-backdrop__wash {
+    position: absolute;
+    inset: -30% -70%;
+    background: linear-gradient(
+      101deg,
+      transparent 0 30%,
+      color-mix(in oklab, var(--discern-backdrop-ink)
+      calc(var(--discern-backdrop-veil-2) * 100%),
+      transparent) 50%,
+      transparent 70% 100%
+    );
+    transform: translate3d(-16%, 0, 0);
+    animation: discern-survey-backdrop-wash calc(var(--discern-backdrop-beat) *
+      30)
+      var(--discern-backdrop-ease-drift) infinite;
+  }
+
+  @keyframes discern-survey-backdrop-wash {
+    0%,
+    100% {
+      transform: translate3d(-16%, 0, 0);
+    }
+
+    50% {
+      transform: translate3d(16%, 0, 0);
+    }
+  }
+}

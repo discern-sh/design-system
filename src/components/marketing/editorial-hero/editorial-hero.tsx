@@ -21,7 +21,7 @@ export interface EditorialHeroProps
   readonly visualCaption?: ReactNode;
   readonly visualTreatment?: MarketingStageTreatment;
   /** Decorative artwork rendered behind the complete composition. */
-  readonly ground?: ReactNode;
+  readonly backdrop?: ReactNode;
   readonly surface?: MarketingSectionSurface;
 }
 
@@ -39,7 +39,7 @@ export const EditorialHero: DiscernComponent<HTMLElement, EditorialHeroProps> =
       visualLabel,
       visualCaption,
       visualTreatment = "inset",
-      ground,
+      backdrop,
       surface = "canvas",
       className,
       ...props
@@ -60,10 +60,13 @@ export const EditorialHero: DiscernComponent<HTMLElement, EditorialHeroProps> =
         )}
         {...props}
       >
-        {ground
+        {backdrop
           ? (
-            <div className="discern-editorial-hero__ground" aria-hidden="true">
-              {ground}
+            <div
+              className="discern-editorial-hero__backdrop"
+              aria-hidden="true"
+            >
+              {backdrop}
             </div>
           )
           : null}

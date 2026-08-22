@@ -23,6 +23,6 @@ export default {
   accessibility: [
     "The heading rank is explicit so the component can open a page or a nested campaign.",
     "The visual follows the explanatory copy in source order when the composition collapses.",
-    "Decorative ground content is always hidden from assistive technology.",
+    "Decorative backdrop content is always hidden from assistive technology.",
   ],
 } satisfies ComponentMeta;

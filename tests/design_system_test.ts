@@ -26,6 +26,7 @@ import {
   RUNTIME_MANIFEST_SCHEMA_VERSION,
 } from "../src/manifest.ts";
 import {
+  Backdrop,
   Brand,
   Breadcrumbs,
   Button,
@@ -35,11 +36,10 @@ import {
   type DiagnosticProps,
   FeatureBento,
   GlossaryTerm,
-  Ground,
-  HarmonicGround,
+  HarmonicBackdrop,
   HeroBlock,
   HoverCard,
-  ImpressionGround,
+  ImpressionBackdrop,
   Logo,
   LogoCloud,
   MarketingIntro,
@@ -739,22 +739,28 @@ Deno.test("reading-first Marketing Components share one section authority", () =
   }
 });
 
-Deno.test("artwork selection includes Ground but excludes sibling compositions", async () => {
+Deno.test("artwork selection includes Backdrop but excludes sibling compositions", async () => {
+  assert(
+    !packageManifest.components.some(({ id }) =>
+      id === "ground" || id.endsWith("-ground")
+    ),
+    "legacy Ground component identities must not return",
+  );
   const temp = await Deno.makeTempDir();
   try {
     const survey = await emitDesignSystemRuntime({
       outputRoot: toFileUrl(`${temp}/`),
-      components: ["survey-ground"],
+      components: ["survey-backdrop"],
     });
     assertEquals(survey.manifest.selection.resolvedComponents, [
-      "ground",
-      "survey-ground",
+      "backdrop",
+      "survey-backdrop",
     ]);
     const surveyCss = await Deno.readTextFile(join(temp, "discern.css"));
-    assertStringIncludes(surveyCss, ".discern-ground");
-    assertStringIncludes(surveyCss, ".discern-survey-ground {");
-    assert(!surveyCss.includes(".discern-impression-ground"));
-    assert(!surveyCss.includes(".discern-envelope-ground"));
+    assertStringIncludes(surveyCss, ".discern-backdrop");
+    assertStringIncludes(surveyCss, ".discern-survey-backdrop {");
+    assert(!surveyCss.includes(".discern-impression-backdrop"));
+    assert(!surveyCss.includes(".discern-envelope-backdrop"));
 
     const hero = await emitDesignSystemRuntime({
       outputRoot: toFileUrl(`${temp}/`),
@@ -762,9 +768,9 @@ Deno.test("artwork selection includes Ground but excludes sibling compositions",
     });
     assertEquals(hero.manifest.selection.resolvedComponents, ["hero-block"]);
     const heroCss = await Deno.readTextFile(join(temp, "discern.css"));
-    assertStringIncludes(heroCss, ".discern-hero-block__ground");
-    assert(!heroCss.includes(".discern-ground {"));
-    assert(!heroCss.includes(".discern-survey-ground"));
+    assertStringIncludes(heroCss, ".discern-hero-block__backdrop");
+    assert(!heroCss.includes(".discern-backdrop {"));
+    assert(!heroCss.includes(".discern-survey-backdrop"));
   } finally {
     await Deno.remove(temp, { recursive: true });
   }
@@ -1816,42 +1822,42 @@ Deno.test("semantic HTML and React adapters share the public class contract", ()
   assertStringIncludes(marketing, "<h2");
 });
 
-Deno.test("Ground fixes decorative semantics and Impression keeps its glyph consumer-owned", () => {
-  const ground = renderToStaticMarkup(
-    createElement(Ground, {
+Deno.test("Backdrop fixes decorative semantics and Impression keeps its glyph consumer-owned", () => {
+  const backdrop = renderToStaticMarkup(
+    createElement(Backdrop, {
       motion: "still",
       presence: 1.25,
       children: createElement("span", null, "Decoration"),
     }),
   );
-  assertMatch(ground, /^<div/);
+  assertMatch(backdrop, /^<div/);
   assertStringIncludes(
-    ground,
-    'class="discern-ground discern-ground--still"',
+    backdrop,
+    'class="discern-backdrop discern-backdrop--still"',
   );
-  assertStringIncludes(ground, 'aria-hidden="true"');
-  assertStringIncludes(ground, "--discern-ground-presence:1.25");
+  assertStringIncludes(backdrop, 'aria-hidden="true"');
+  assertStringIncludes(backdrop, "--discern-backdrop-presence:1.25");
 
   const defaultImpression = renderToStaticMarkup(
-    createElement(ImpressionGround),
+    createElement(ImpressionBackdrop),
   );
   assertStringIncludes(defaultImpression, "◐");
   assert(!defaultImpression.includes("◮"));
   assertStringIncludes(defaultImpression, 'aria-hidden="true"');
 
   const customImpression = renderToStaticMarkup(
-    createElement(ImpressionGround, { glyph: "✦" }),
+    createElement(ImpressionBackdrop, { glyph: "✦" }),
   );
   assertStringIncludes(customImpression, "✦");
   assert(!customImpression.includes("◐"));
 
   const harmonic = renderToStaticMarkup(
-    createElement(HarmonicGround, { motion: "still" }),
+    createElement(HarmonicBackdrop, { motion: "still" }),
   );
   assert(!harmonic.includes("<rect"));
   const harmonicPositions = [
     ...harmonic.matchAll(
-      /class="discern-harmonic-ground__grain" cx="([\d.]+)" cy="([\d.]+)"/gu,
+      /class="discern-harmonic-backdrop__grain" cx="([\d.]+)" cy="([\d.]+)"/gu,
     ),
   ].map((match) => ({ x: Number(match[1]), y: Number(match[2]) }));
   assert(harmonicPositions.length >= 700);
@@ -1863,15 +1869,15 @@ Deno.test("Ground fixes decorative semantics and Impression keeps its glyph cons
   const hero = renderToStaticMarkup(
     createElement(HeroBlock, {
       title: "A complete foreground",
-      ground: createElement(ImpressionGround, { motion: "still" }),
+      backdrop: createElement(ImpressionBackdrop, { motion: "still" }),
     }),
   );
   assertStringIncludes(
     hero,
-    'class="discern-hero-block__ground" aria-hidden="true"',
+    'class="discern-hero-block__backdrop" aria-hidden="true"',
   );
   assert(
-    hero.indexOf("discern-hero-block__ground") <
+    hero.indexOf("discern-hero-block__backdrop") <
       hero.indexOf("discern-hero-block__inner"),
   );
 });

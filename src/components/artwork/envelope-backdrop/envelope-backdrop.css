@@ -1,0 +1,55 @@
+@layer discern.components {
+  .discern-envelope-backdrop {
+    color: var(--discern-backdrop-ink);
+  }
+
+  .discern-envelope-backdrop__plate {
+    mask-image: radial-gradient(
+      ellipse 78% 92% at 74% 62%,
+      rgb(0 0 0 / 1) 0%,
+      rgb(0 0 0 / 0.6) 62%,
+      rgb(0 0 0 / 0.28) 100%
+    );
+  }
+
+  .discern-envelope-backdrop__leg line {
+    stroke: var(--discern-backdrop-guide);
+    stroke-width: var(--discern-backdrop-hairline);
+    opacity: var(--discern-backdrop-veil-2);
+  }
+
+  .discern-envelope-backdrop__chord {
+    stroke: currentColor;
+    stroke-width: var(--discern-backdrop-hairline);
+    opacity: var(--discern-backdrop-veil-2);
+  }
+
+  .discern-envelope-backdrop__crest line {
+    stroke: var(--discern-backdrop-accent);
+    stroke-width: var(--discern-backdrop-line);
+    opacity: 0;
+    animation: discern-envelope-backdrop-glance
+      calc(var(--discern-backdrop-beat) *
+      40)
+      var(--discern-backdrop-ease-drift) infinite both;
+    animation-delay: var(--discern-envelope-backdrop-offset, 0s);
+  }
+
+  /* One chord's turn is a tenth of the phrase, so a handful are lit at once
+   * and the crest reads as a point of light sliding along the curve. */
+  @keyframes discern-envelope-backdrop-glance {
+    0%,
+    2% {
+      opacity: 0;
+    }
+
+    6% {
+      opacity: var(--discern-backdrop-veil-4);
+    }
+
+    11%,
+    100% {
+      opacity: 0;
+    }
+  }
+}

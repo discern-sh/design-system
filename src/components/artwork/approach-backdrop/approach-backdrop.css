@@ -1,0 +1,70 @@
+@layer discern.components {
+  .discern-approach-backdrop {
+    color: var(--discern-backdrop-ink);
+  }
+
+  .discern-approach-backdrop__plate {
+    mask-image: linear-gradient(
+      90deg,
+      transparent 0 14%,
+      rgb(0 0 0 / 0.55) 42%,
+      rgb(0 0 0 / 1) 68% 100%
+    );
+  }
+
+  .discern-approach-backdrop__sightline {
+    fill: none;
+    stroke: var(--discern-backdrop-guide);
+    stroke-width: var(--discern-backdrop-hairline);
+    opacity: var(--discern-backdrop-veil-2);
+  }
+
+  .discern-approach-backdrop__ring {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: var(--discern-backdrop-hairline);
+    opacity: var(--discern-backdrop-veil-3);
+  }
+
+  /* The travelling accent. Only opacity animates, so the ring beneath it
+   * stays exactly where it was drawn. */
+  .discern-approach-backdrop__attend {
+    fill: none;
+    stroke: var(--discern-backdrop-accent);
+    stroke-width: var(--discern-backdrop-line);
+    opacity: 0;
+    animation: discern-approach-backdrop-attend
+      calc(var(--discern-backdrop-beat) *
+      45)
+      var(--discern-backdrop-ease-drift) infinite both;
+    animation-delay: var(--discern-approach-backdrop-offset, 0s);
+  }
+
+  .discern-approach-backdrop__station line {
+    stroke: var(--discern-backdrop-accent);
+    stroke-width: var(--discern-backdrop-line);
+    opacity: var(--discern-backdrop-veil-4);
+  }
+
+  /* One ring's turn: in over two beats, held for four, out over two, then
+   * dark for the rest of the phrase while the other eight take theirs. */
+  @keyframes discern-approach-backdrop-attend {
+    0%,
+    100% {
+      opacity: 0;
+    }
+
+    4% {
+      opacity: var(--discern-backdrop-veil-4);
+    }
+
+    9% {
+      opacity: var(--discern-backdrop-veil-4);
+    }
+
+    14%,
+    99% {
+      opacity: 0;
+    }
+  }
+}

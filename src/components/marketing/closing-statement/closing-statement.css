@@ -4,7 +4,7 @@
     isolation: isolate;
     overflow: clip;
   }
-  .discern-closing-statement__ground {
+  .discern-closing-statement__backdrop {
     position: absolute;
     z-index: -1;
     inset: 0;

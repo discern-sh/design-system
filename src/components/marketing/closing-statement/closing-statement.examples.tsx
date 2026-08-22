@@ -1,5 +1,5 @@
 import type { CatalogueExampleState } from "../../../../catalogue/conformance.ts";
-import { FoldGround } from "../../artwork/fold-ground/fold-ground.tsx";
+import { FoldBackdrop } from "../../artwork/fold-backdrop/fold-backdrop.tsx";
 import { Button } from "../../core/button/button.tsx";
 import { ClosingStatement } from "./closing-statement.tsx";
 
@@ -25,7 +25,7 @@ function ContrastClosingState() {
       reassurance={
         <p>No account or specialist knowledge is needed to begin.</p>
       }
-      ground={<FoldGround />}
+      backdrop={<FoldBackdrop />}
     />
   );
 }

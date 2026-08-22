@@ -63,7 +63,7 @@
     margin-inline: auto;
     padding-block: clamp(5rem, 10vw, 8.5rem);
   }
-  .discern-hero-block__ground {
+  .discern-hero-block__backdrop {
     position: absolute;
     z-index: 0;
     inset: 0;

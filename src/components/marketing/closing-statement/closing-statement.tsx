@@ -16,7 +16,7 @@ export interface ClosingStatementProps
   readonly actions: ReactNode;
   readonly reassurance?: ReactNode;
   /** Decorative artwork rendered behind the complete composition. */
-  readonly ground?: ReactNode;
+  readonly backdrop?: ReactNode;
   readonly surface?: MarketingSectionSurface;
 }
 
@@ -32,7 +32,7 @@ export const ClosingStatement: DiscernComponent<
     description,
     actions,
     reassurance,
-    ground,
+    backdrop,
     surface = "contrast",
     className,
     ...props
@@ -48,10 +48,13 @@ export const ClosingStatement: DiscernComponent<
       className={classNames("discern-closing-statement", className)}
       {...props}
     >
-      {ground
+      {backdrop
         ? (
-          <div className="discern-closing-statement__ground" aria-hidden="true">
-            {ground}
+          <div
+            className="discern-closing-statement__backdrop"
+            aria-hidden="true"
+          >
+            {backdrop}
           </div>
         )
         : null}

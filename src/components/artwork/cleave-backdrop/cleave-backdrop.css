@@ -1,0 +1,56 @@
+@layer discern.components {
+  .discern-cleave-backdrop {
+    color: var(--discern-backdrop-ink);
+  }
+
+  .discern-cleave-backdrop__face {
+    stroke: none;
+  }
+
+  .discern-cleave-backdrop__face--left {
+    fill: currentColor;
+    fill-opacity: calc(var(--discern-backdrop-veil-1) * 0.7);
+  }
+
+  .discern-cleave-backdrop__face--right {
+    fill: var(--discern-backdrop-accent);
+    fill-opacity: calc(var(--discern-backdrop-veil-2) * 0.9);
+  }
+
+  .discern-cleave-backdrop__inked {
+    opacity: 1;
+    animation: discern-cleave-backdrop-weather calc(var(--discern-backdrop-beat)
+      *
+      50)
+      var(--discern-backdrop-ease-drift) infinite both;
+  }
+
+  .discern-cleave-backdrop__edge {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: var(--discern-backdrop-line);
+    opacity: var(--discern-backdrop-veil-2);
+  }
+
+  .discern-cleave-backdrop__split {
+    fill: none;
+    stroke: var(--discern-backdrop-accent);
+    stroke-width: var(--discern-backdrop-hairline);
+    opacity: var(--discern-backdrop-veil-3);
+  }
+
+  @keyframes discern-cleave-backdrop-weather {
+    0%,
+    100% {
+      opacity: 0.68;
+    }
+
+    44% {
+      opacity: 1;
+    }
+
+    72% {
+      opacity: 0.84;
+    }
+  }
+}

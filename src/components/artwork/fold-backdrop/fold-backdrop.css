@@ -1,0 +1,44 @@
+@layer discern.components {
+  .discern-fold-backdrop {
+    color: var(--discern-backdrop-ink);
+  }
+
+  .discern-fold-backdrop__facet {
+    fill: currentColor;
+    stroke: currentColor;
+    stroke-width: var(--discern-backdrop-hairline);
+    stroke-opacity: calc(var(--discern-backdrop-veil-1) * 0.45);
+    fill-opacity: calc(var(--discern-fold-backdrop-facet, 0.4) *
+      var(--discern-backdrop-veil-1));
+  }
+
+  .discern-fold-backdrop__facet--accent {
+    fill: var(--discern-backdrop-accent);
+    stroke: var(--discern-backdrop-accent);
+    fill-opacity: var(--discern-backdrop-veil-2);
+    stroke-opacity: var(--discern-backdrop-veil-3);
+  }
+
+  .discern-fold-backdrop__band {
+    opacity: 1;
+    animation: discern-fold-backdrop-light calc(var(--discern-backdrop-beat) *
+      45)
+      var(--discern-backdrop-ease-drift) infinite both;
+    animation-delay: var(--discern-fold-backdrop-offset, 0s);
+  }
+
+  @keyframes discern-fold-backdrop-light {
+    0%,
+    100% {
+      opacity: 0.72;
+    }
+
+    38% {
+      opacity: 1;
+    }
+
+    64% {
+      opacity: 0.86;
+    }
+  }
+}

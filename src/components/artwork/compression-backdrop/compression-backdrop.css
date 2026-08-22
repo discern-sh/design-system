@@ -1,0 +1,170 @@
+@layer discern.components {
+  .discern-compression-backdrop {
+    --discern-compression-backdrop-open-x: 1;
+    --discern-compression-backdrop-open-y: 1;
+    --discern-compression-backdrop-open-slide: 0px;
+    --discern-compression-backdrop-closed-x: 1;
+    --discern-compression-backdrop-closed-y: 1;
+    --discern-compression-backdrop-closed-slide: 0px;
+    color: color-mix(
+      in oklab,
+      var(--discern-backdrop-guide) 78%,
+      var(--discern-backdrop-accent)
+    );
+  }
+
+  .discern-compression-backdrop__run,
+  .discern-compression-backdrop__pleats {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: var(--discern-backdrop-line);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: var(--discern-backdrop-veil-3);
+  }
+
+  .discern-compression-backdrop__tick {
+    stroke: currentColor;
+    stroke-width: var(--discern-backdrop-hairline);
+    opacity: var(--discern-backdrop-veil-1);
+    animation: discern-compression-backdrop-drift
+      calc(var(--discern-backdrop-beat)
+      * 15) var(--discern-backdrop-ease-drift)
+      infinite;
+  }
+
+  .discern-compression-backdrop__tick--major {
+    stroke-width: var(--discern-backdrop-line);
+  }
+
+  .discern-compression-backdrop__fold {
+    transform-box: view-box;
+    transform-origin: 380px 270px;
+    animation: discern-compression-backdrop-breathe
+      calc(var(--discern-backdrop-beat) * 15) var(--discern-backdrop-ease-drift)
+      infinite;
+  }
+
+  .discern-compression-backdrop__head {
+    animation: discern-compression-backdrop-head
+      calc(var(--discern-backdrop-beat) *
+      15) var(--discern-backdrop-ease-drift)
+      infinite;
+  }
+
+  .discern-compression-backdrop__tail {
+    animation: discern-compression-backdrop-tail
+      calc(var(--discern-backdrop-beat) *
+      15) var(--discern-backdrop-ease-drift)
+      infinite;
+  }
+
+  .discern-compression-backdrop__creases {
+    opacity: var(--discern-backdrop-veil-3);
+    animation: discern-compression-backdrop-crease
+      calc(var(--discern-backdrop-beat)
+      * 15) var(--discern-backdrop-ease-drift)
+      infinite;
+  }
+
+  .discern-compression-backdrop__creases path {
+    fill: none;
+    stroke: var(--discern-backdrop-accent);
+    stroke-width: calc(var(--discern-backdrop-line) * 1.6);
+    stroke-linecap: round;
+  }
+
+  @keyframes discern-compression-backdrop-breathe {
+    0%,
+    8% {
+      transform: scale(
+        var(--discern-compression-backdrop-open-x),
+        var(--discern-compression-backdrop-open-y)
+      );
+    }
+    42%,
+    58% {
+      transform: scale(
+        var(--discern-compression-backdrop-closed-x),
+        var(--discern-compression-backdrop-closed-y)
+      );
+    }
+    92%,
+    100% {
+      transform: scale(
+        var(--discern-compression-backdrop-open-x),
+        var(--discern-compression-backdrop-open-y)
+      );
+    }
+  }
+
+  @keyframes discern-compression-backdrop-head {
+    0%,
+    8% {
+      transform: translateX(
+        var(--discern-compression-backdrop-open-slide)
+      );
+    }
+    42%,
+    58% {
+      transform: translateX(
+        var(--discern-compression-backdrop-closed-slide)
+      );
+    }
+    92%,
+    100% {
+      transform: translateX(
+        var(--discern-compression-backdrop-open-slide)
+      );
+    }
+  }
+
+  @keyframes discern-compression-backdrop-tail {
+    0%,
+    8% {
+      transform: translateX(
+        calc(var(--discern-compression-backdrop-open-slide) * -1)
+      );
+    }
+    42%,
+    58% {
+      transform: translateX(
+        calc(var(--discern-compression-backdrop-closed-slide) * -1)
+      );
+    }
+    92%,
+    100% {
+      transform: translateX(
+        calc(var(--discern-compression-backdrop-open-slide) * -1)
+      );
+    }
+  }
+
+  @keyframes discern-compression-backdrop-crease {
+    0%,
+    8% {
+      opacity: var(--discern-backdrop-veil-3);
+    }
+    42%,
+    58% {
+      opacity: var(--discern-backdrop-veil-4);
+    }
+    92%,
+    100% {
+      opacity: var(--discern-backdrop-veil-3);
+    }
+  }
+
+  @keyframes discern-compression-backdrop-drift {
+    0% {
+      opacity: var(--discern-backdrop-veil-1);
+    }
+    18% {
+      opacity: var(--discern-backdrop-veil-2);
+    }
+    40%,
+    100% {
+      opacity: var(--discern-backdrop-veil-1);
+    }
+  }
+}
