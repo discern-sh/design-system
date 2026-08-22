@@ -473,16 +473,18 @@
     metric = "workflow_css_bytes"
     inputs = ["src/**", "scripts/generate.ts", "${scripts.dir}/measure-runtime.ts"]
 
-  # The complete Marketing Group, including its resolved dependencies. The
-  # 86 kB ceiling accommodates the additive campaign foundations and opt-in
-  # component variants, with room for the current homepage direction to settle.
+  # Marketing CSS density: emitted bytes per Marketing component stylesheet.
+  # The complete Group is still measured with resolved dependencies, but its raw
+  # total grows with healthy additions; the rate holds each addition to the same
+  # stable budget.
   [standards.marketing_css]
     run = "deno run --config deno.json --allow-read --allow-write ${scripts.dir}/measure-runtime.ts marketing_css_bytes"
-    limit = 86000
+    limit = 5043.625
     direction = "down"
     metric = "marketing_css_bytes"
+    per = { files = "src/components/marketing/**/*.css" }
     inputs = ["src/**", "scripts/generate.ts", "${scripts.dir}/measure-runtime.ts"]
-    margin = 4000
+    margin = 100
 
   # The selection-scoped discern.js produced by every Component in the closed
   # behavior opt-in registry. CSS-only selections remain outside this measure.

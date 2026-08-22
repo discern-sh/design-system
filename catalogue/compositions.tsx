@@ -1,5 +1,15 @@
 import type { ComponentType, ReactNode } from "react";
 import { Receipt } from "../src/components/agents/receipt/receipt.tsx";
+import { ApproachGround } from "../src/components/artwork/approach-ground/approach-ground.tsx";
+import { Button } from "../src/components/core/button/button.tsx";
+import { ClosingStatement } from "../src/components/marketing/closing-statement/closing-statement.tsx";
+import { EditorialHero } from "../src/components/marketing/editorial-hero/editorial-hero.tsx";
+import { JourneyOverview } from "../src/components/marketing/journey-overview/journey-overview.tsx";
+import { MarketingSection } from "../src/components/marketing/marketing-section/marketing-section.tsx";
+import { MarketingStage } from "../src/components/marketing/marketing-stage/marketing-stage.tsx";
+import { NarrativeChapter } from "../src/components/marketing/narrative-chapter/narrative-chapter.tsx";
+import { OutcomeSpotlight } from "../src/components/marketing/outcome-spotlight/outcome-spotlight.tsx";
+import { VoiceBreak } from "../src/components/marketing/voice-break/voice-break.tsx";
 import { ArtifactCard } from "../src/components/workflow/artifact-card/artifact-card.tsx";
 import { ArtifactTree } from "../src/components/workflow/artifact-tree/artifact-tree.tsx";
 import { BranchChoice } from "../src/components/workflow/branch-choice/branch-choice.tsx";
@@ -517,10 +527,268 @@ const surveyArtifactsRecipe = defineRecipe({
 </div>`,
 });
 
+const readingFirstLanding = {
+  journey: [{
+    title: "Name the outcome",
+    description: "Give the audience a destination before the explanation.",
+    outcome: "The central promise is clear.",
+  }, {
+    title: "Reduce the machinery",
+    description:
+      "Show only the moments that change the reader's understanding.",
+    outcome: "The method feels finite.",
+  }, {
+    title: "Return with evidence",
+    description: "End on the result or decision that matters.",
+    outcome: "The story resolves cleanly.",
+  }],
+  supporting: [{
+    value: "3",
+    label: "plain-language moments",
+  }, {
+    value: "1",
+    label: "conceptual visual",
+  }, {
+    value: "0",
+    label: "extra interfaces to decode",
+  }],
+} as const;
+
+function ReadingFirstLandingVisual() {
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        position: "relative",
+        width: "100%",
+        minHeight: "24rem",
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: "12% 40% 28% 8%",
+          border: "1px solid var(--discern-color-border-strong)",
+          borderRadius: "var(--discern-radius-lg)",
+          background: "var(--discern-color-canvas)",
+          transform: "rotate(-4deg)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          inset: "30% 8% 10% 42%",
+          border: "1px solid var(--discern-color-accent-500)",
+          borderRadius: "var(--discern-radius-lg)",
+          background: "var(--discern-color-surface)",
+          transform: "rotate(3deg)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          inset: "44% auto auto 47%",
+          width: "4rem",
+          aspectRatio: 1,
+          borderRadius: "var(--discern-radius-pill)",
+          background: "var(--discern-color-accent-500)",
+          boxShadow: "var(--discern-shadow-card)",
+        }}
+      />
+    </div>
+  );
+}
+
+const readingFirstLandingRecipe = defineRecipe({
+  id: "reading-first-landing",
+  title: "Reading-first landing page",
+  description:
+    "A complete campaign rhythm that alternates explanation, conceptual relief, compression, evidence, human voice, and one final action.",
+  journey: {
+    stages: [
+      ".discern-editorial-hero",
+      ".discern-narrative-chapter",
+      ".discern-marketing-stage",
+      ".discern-journey-overview",
+      ".discern-outcome-spotlight",
+      ".discern-voice-break",
+      ".discern-closing-statement",
+    ],
+  },
+  definition: readingFirstLanding,
+  render: (definition) => (
+    <div>
+      <EditorialHero
+        eyebrow="A complex idea, clearly introduced"
+        title={
+          <>
+            Make the difficult <em>feel navigable.</em>
+          </>
+        }
+        description={
+          <p>
+            Lead with one promise in ordinary language, then let the rest of the
+            page earn attention one idea at a time.
+          </p>
+        }
+        actions={<Button href="#explanation">Begin with the idea</Button>}
+        meta="No technical vocabulary is required to start."
+        ground={<ApproachGround />}
+      />
+      <NarrativeChapter
+        id="explanation"
+        eyebrow="Explain"
+        title="Give substantial prose a comfortable reading shape."
+        lead={
+          <p>
+            Complex products still need explanation. The design can make the
+            route through that explanation obvious without manufacturing more
+            things to inspect.
+          </p>
+        }
+        aside={
+          <>
+            <span>Reading principle</span>
+            <p>
+              A visual earns its place when it compresses, demonstrates, proves,
+              or creates relief.
+            </p>
+          </>
+        }
+      >
+        <p>
+          Begin with what changes for the audience. Introduce the method only
+          after the destination is understood, and keep the detail in one stable
+          reading flow.
+        </p>
+        <h3>Let each section perform one job</h3>
+        <p>
+          A section can orient, explain, demonstrate, prove, or invite action.
+          When it attempts all five, the reader has to reconstruct the story.
+        </p>
+      </NarrativeChapter>
+      <MarketingSection surface="sunken" spacing="spacious" frame="wide">
+        <MarketingStage
+          treatment="plain"
+          label="Conceptual relief"
+          caption="A quiet relationship replaces another realistic interface."
+          aspect="landscape"
+        >
+          <ReadingFirstLandingVisual />
+        </MarketingStage>
+      </MarketingSection>
+      <JourneyOverview
+        eyebrow="Demonstrate"
+        title="Compress the journey into the moments that matter."
+        description={
+          <p>
+            The complete operational sequence can live elsewhere. This page
+            needs the transformation the audience can remember.
+          </p>
+        }
+        steps={definition.journey.map((step) => ({
+          title: step.title,
+          description: <p>{step.description}</p>,
+          outcome: <span>{step.outcome}</span>,
+        }))}
+      />
+      <OutcomeSpotlight
+        eyebrow="Prove"
+        title="Let one result carry the evidence."
+        value="1"
+        valueLabel="clear outcome to remember after the details have faded."
+        supporting={definition.supporting}
+      />
+      <VoiceBreak
+        eyebrow="A change of voice"
+        quote="We understood the decision before we learned the machinery."
+        attribution="An early reader"
+        context="Encountering an unfamiliar technical product"
+        portrait={<span>ER</span>}
+      />
+      <ClosingStatement
+        eyebrow="One next step"
+        title="End with a decision, not another explanation."
+        description={
+          <p>
+            The story has done its work. The final chapter can now make the next
+            action clear.
+          </p>
+        }
+        actions={
+          <>
+            <Button href="#begin">Begin here</Button>
+            <Button href="#details" variant="secondary">
+              Read the details
+            </Button>
+          </>
+        }
+        reassurance={<p>No specialist knowledge is required to begin.</p>}
+      />
+    </div>
+  ),
+  source: (definition) =>
+    `import {
+  Button,
+  ClosingStatement,
+  EditorialHero,
+  JourneyOverview,
+  MarketingSection,
+  MarketingStage,
+  NarrativeChapter,
+  OutcomeSpotlight,
+  VoiceBreak,
+} from "@discern-sh/design-system/react";
+
+const journey = ${value(definition.journey)};
+
+<div>
+  <EditorialHero
+    eyebrow="A complex idea, clearly introduced"
+    title={<>Make the difficult <em>feel navigable.</em></>}
+    description={<p>Lead with one promise in ordinary language.</p>}
+    actions={<Button href="#explanation">Begin with the idea</Button>}
+  />
+  <NarrativeChapter
+    id="explanation"
+    eyebrow="Explain"
+    title="Give substantial prose a comfortable reading shape."
+    lead={<p>Complex products still need explanation.</p>}
+  >
+    <p>Keep the detail in one stable reading flow.</p>
+  </NarrativeChapter>
+  <MarketingSection surface="sunken" spacing="spacious" frame="wide">
+    <MarketingStage label="Conceptual relief" treatment="plain">
+      {/* Consumer-supplied conceptual artwork */}
+    </MarketingStage>
+  </MarketingSection>
+  <JourneyOverview
+    eyebrow="Demonstrate"
+    title="Compress the journey into the moments that matter."
+    steps={journey}
+  />
+  <OutcomeSpotlight
+    eyebrow="Prove"
+    title="Let one result carry the evidence."
+    value="1"
+    valueLabel="clear outcome to remember"
+  />
+  <VoiceBreak
+    quote="We understood the decision before we learned the machinery."
+    attribution="An early reader"
+  />
+  <ClosingStatement
+    title="End with a decision, not another explanation."
+    actions={<Button href="#begin">Begin here</Button>}
+  />
+</div>`,
+});
+
 export const compositionRecipes: readonly CompositionRecipe[] = [
   documentationTaskRecipe,
   nextActionRecipe,
   failureTriageRecipe,
   handoffReceiptRecipe,
   surveyArtifactsRecipe,
+  readingFirstLandingRecipe,
 ];
