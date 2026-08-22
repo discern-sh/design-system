@@ -19,7 +19,7 @@ import type {
   DiagramShape,
   DiagramText,
 } from "../../src/diagram/scene.ts";
-import { layoutDiagram } from "../../src/diagram/mod.ts";
+import { layoutDiagram } from "../../src/generated/diagram-dispatch.ts";
 import fixtures from "../../src/diagram/kinds/flow/flow.fixtures.ts";
 import type { FlowDiagramSpec } from "../../src/diagram/kinds/flow/flow.spec.ts";
 

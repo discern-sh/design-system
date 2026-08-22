@@ -9,12 +9,14 @@ import {
   describeDiagram,
   diagramAltText,
   DiagramBudgetError,
-  diagramKindCliRegistry,
-  diagramKindRegistry,
   DiagramValidationError,
+} from "../../src/diagram/mod.ts";
+import {
   layoutDiagram,
   validateDiagram,
-} from "../../src/diagram/mod.ts";
+} from "../../src/generated/diagram-dispatch.ts";
+import { diagramKindCliRegistry } from "../../src/generated/diagram-cli-registry.ts";
+import { diagramKindRegistry } from "../../src/generated/diagram-registry.ts";
 import type { FlowDiagramSpec } from "../../src/diagram/kinds/flow/flow.spec.ts";
 
 const minimal = Object.freeze(

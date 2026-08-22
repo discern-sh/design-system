@@ -10,6 +10,34 @@ import type {
   DiagramPaintRole,
 } from "./scene.ts";
 
+/** Public Token name that resolves one projection-neutral paint role. */
+export type DiagramPaintTokenName = `--discern-color-${string}`;
+
+/**
+ * One Token authority for every diagram paint role. Live projections use the
+ * custom-property names; standalone projections resolve the same names to
+ * literal light or dark values.
+ */
+export const DIAGRAM_PAINT_TOKEN_NAMES = Object.freeze(
+  {
+    canvas: "--discern-color-canvas",
+    "node-surface": "--discern-color-surface",
+    "node-border": "--discern-color-border-strong",
+    "node-text": "--discern-color-ink",
+    "quiet-annotation": "--discern-color-ink-muted",
+    accent: "--discern-color-accent-700",
+    focus: "--discern-color-accent-500",
+    success: "--discern-color-success",
+    warning: "--discern-color-warning",
+    "primary-connector": "--discern-color-ink-muted",
+    "secondary-connector": "--discern-color-ink-faint",
+    "return-connector": "--discern-color-accent-700",
+    guide: "--discern-color-border",
+  } as const satisfies Readonly<
+    Record<DiagramPaintRole, DiagramPaintTokenName>
+  >,
+);
+
 /** Paint and non-colour cues that always travel together for a node. */
 export interface DiagramNodeStyleBundle {
   readonly surface: DiagramPaintRole;

@@ -72,6 +72,7 @@ Deno.test("neutral diagram import graph contains no React or external runtime pa
   for (const module of info.modules) {
     assert(module.specifier.startsWith("file:"), module.specifier);
     assert(module.local?.startsWith(`${repositoryRoot}/src/`), module.local);
+    assert(!module.specifier.includes("/src/cli/"), module.specifier);
     assert(!module.specifier.toLocaleLowerCase().includes("react"));
     assert(module.mediaType !== "TSX" && !module.specifier.endsWith(".tsx"));
   }
@@ -79,7 +80,7 @@ Deno.test("neutral diagram import graph contains no React or external runtime pa
 
 Deno.test("neutral entry module imports with no ambient runtime permissions", async () => {
   const source =
-    'const diagram = await import("./src/diagram/mod.ts"); if (typeof diagram.layoutDiagram !== "function") Deno.exit(1);';
+    'const diagram = await import("./src/diagram/mod.ts"); if (typeof diagram.renderDiagramSvg !== "function") Deno.exit(1);';
   const output = await new Deno.Command(Deno.execPath(), {
     args: ["eval", "--no-config", source],
     cwd: repositoryRoot,

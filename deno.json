@@ -4,6 +4,7 @@
   "license": "Apache-2.0",
   "exports": {
     ".": "./src/mod.ts",
+    "./diagram": "./src/diagram/mod.ts",
     "./cli": "./src/cli/mod.ts",
     "./cli/interactive": "./src/cli/interactive/mod.ts",
     "./cli/interactive/testing": "./src/cli/interactive/testing.ts",

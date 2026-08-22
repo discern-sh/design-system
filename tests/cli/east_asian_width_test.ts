@@ -2,7 +2,7 @@ import { assertEquals } from "@std/assert";
 import {
   EAST_ASIAN_WIDTH_UNICODE_VERSION,
   eastAsianWidthKind,
-} from "../../src/cli/east-asian-width.ts";
+} from "../../src/unicode/east-asian-width.ts";
 
 Deno.test("terminal cells use the pinned Unicode width classes", () => {
   assertEquals(EAST_ASIAN_WIDTH_UNICODE_VERSION, "17.0.0");

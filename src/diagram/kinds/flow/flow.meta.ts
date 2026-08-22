@@ -1,8 +1,11 @@
 /** Authored identity, guidance, budgets, and terminal posture for flow. */
 
-import { defineDiagramKindMeta } from "../../kind-meta.ts";
+import {
+  defineDiagramKindMeta,
+  type DiagramKindMeta,
+} from "../../kind-meta.ts";
 
-export default defineDiagramKindMeta(
+const flowKindMeta: DiagramKindMeta = defineDiagramKindMeta(
   {
     name: "Flow",
     slug: "flow",
@@ -96,3 +99,5 @@ export default defineDiagramKindMeta(
     cli: { stance: "description" },
   } as const,
 );
+
+export default flowKindMeta;

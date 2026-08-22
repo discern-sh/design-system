@@ -1,5 +1,5 @@
 /**
- * Unicode East Asian Width classification used by terminal cell geometry.
+ * Unicode East Asian Width classification shared by neutral and terminal geometry.
  *
  * The merged intervals below derive from the Unicode Character Database
  * EastAsianWidth-17.0.0.txt data file. The package deliberately pins the

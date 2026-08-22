@@ -1,8 +1,6 @@
 /**
- * Neutral semantic diagram contracts, generated kind set, and projections.
- *
- * This module remains an internal wave-one seam until the public vertical slice
- * can publish SVG, React, and terminal behavior atomically.
+ * Neutral semantic diagram authoring, description, Metadata, and standalone
+ * SVG projection. This graph imports neither React nor terminal modules.
  *
  * @module
  */
@@ -18,32 +16,14 @@ export {
   DiagramConformanceError,
   DiagramValidationError,
 } from "./errors.ts";
-export type {
-  DiagramBudgetDefinition,
-  DiagramKindCliRegistryEntry,
-  DiagramKindMeta,
-  DiagramKindRegistryEntry,
-} from "./kind-meta.ts";
-export type {
-  DiagramCanvas,
-  DiagramConnector,
-  DiagramConnectorStyleRole,
-  DiagramPaintRole,
-  DiagramPoint,
-  DiagramRect,
-  DiagramScene,
-  DiagramSceneElement,
-  DiagramSceneGroup,
-  DiagramShape,
-  DiagramShapeKind,
-  DiagramText,
-} from "./scene.ts";
+export type { DiagramBudgetDefinition, DiagramKindMeta } from "./kind-meta.ts";
 export type { DiagramSpec } from "../generated/diagram-spec.ts";
-export {
-  describeDiagram,
-  layoutDiagram,
-  validateDiagram,
-} from "../generated/diagram-dispatch.ts";
-export { diagramKindRegistry } from "../generated/diagram-registry.ts";
-export { diagramKindCliRegistry } from "../generated/diagram-cli-registry.ts";
+export { describeDiagram } from "../generated/diagram-dispatch.ts";
+export { diagramKindMetadata } from "./kinds.ts";
+export type {
+  DiagramSvgDocument,
+  DiagramSvgTheme,
+  RenderDiagramSvgOptions,
+} from "./svg.ts";
+export { renderDiagramSvg } from "./svg.ts";
 export * from "../generated/diagram-exports.ts";

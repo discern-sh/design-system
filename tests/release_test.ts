@@ -161,6 +161,40 @@ Deno.test("the CLI module graphs import without ambient I/O", async () => {
   }
 });
 
+Deno.test("the published diagram graph is neutral, local, and permission-free", async () => {
+  const entry = config.exports["./diagram"];
+  assert(entry !== undefined, "deno.json has no ./diagram export");
+  const { code, output } = await run(PACKAGE_ROOT, [
+    "info",
+    "--json",
+    "--config",
+    "deno.json",
+    entry,
+  ]);
+  assertEquals(code, 0, `deno info failed for ${entry}:\n${output}`);
+  const graph = JSON.parse(output) as {
+    readonly modules: readonly { readonly specifier: string }[];
+  };
+  for (const module of graph.modules) {
+    assert(
+      module.specifier.startsWith("file://"),
+      `./diagram resolved an external module: ${module.specifier}`,
+    );
+    assert(
+      !module.specifier.includes("/src/cli/") &&
+        !module.specifier.endsWith(".tsx") &&
+        !module.specifier.toLocaleLowerCase().includes("react"),
+      `./diagram crossed a projection boundary: ${module.specifier}`,
+    );
+  }
+  const imported = await run(PACKAGE_ROOT, ["run", "--no-prompt", entry]);
+  assertEquals(
+    imported.code,
+    0,
+    `importing ./diagram with no permissions failed:\n${imported.output}`,
+  );
+});
+
 Deno.test("published modules carry no import attributes", async () => {
   const files = await publishFileSet();
   const offenders: string[] = [];
@@ -221,6 +255,12 @@ Deno.test("the publish-shaped artifact serves the neutral consumer alone", async
       `import { packageManifest, semanticClass } from "${config.name}";
 import { renderBadgeCli, renderHeadingCli, stripAnsi } from "${config.name}/cli";
 import {
+  diagramAltText,
+  describeDiagram,
+  type FlowDiagramSpec,
+  renderDiagramSvg,
+} from "${config.name}/diagram";
+import {
   type CompactAcknowledgementRequestOptions,
   filterInteractionEntries,
   type MarkdownBrowserLinkResolution,
@@ -242,6 +282,17 @@ import {
   projectTerminalSpans,
 } from "${config.name}/cli/projection";
 import { emitDesignSystemRuntime } from "${config.name}/runtime";
+const flow = {
+  kind: "flow",
+  title: "Publish a guide",
+  summary: "A checked guide progresses from draft to publication.",
+  nodes: [
+    { id: "draft", label: "Draft guide", role: "start" },
+    { id: "publish", label: "Publish guide", role: "end" },
+  ],
+  edges: [{ id: "ready", from: "draft", to: "publish" }],
+} as const satisfies FlowDiagramSpec;
+const diagramSvg = renderDiagramSvg(flow, { theme: "light" });
 const result = await emitDesignSystemRuntime({
   outputRoot: new URL("./runtime/", import.meta.url),
   components: ["button"],
@@ -321,6 +372,10 @@ const readingHeading = stripAnsi(renderHeadingCli(
   { colorDepth: "truecolor", columns: 40, unicode: true },
 ));
 console.log(JSON.stringify({
+  diagramAccessible: diagramSvg.includes('role="img"') &&
+    diagramSvg.includes("<title>Publish a guide</title>"),
+  diagramDescription: describeDiagram(flow).includes("draft to publish"),
+  diagramAlt: diagramAltText(flow),
   className: semanticClass("button"),
   badge: renderBadgeCli({ label: "Ready", dot: true }, { colorDepth: "none", columns: 80, unicode: true }),
   graphemes: segmentGraphemes("A👩‍💻B").length,
@@ -353,6 +408,12 @@ console.log(JSON.stringify({
     ]);
     assertEquals(code, 0, `staged consumer failed:\n${output}`);
     assertStringIncludes(output, `"className":"discern-button"`);
+    assertStringIncludes(output, `"diagramAccessible":true`);
+    assertStringIncludes(output, `"diagramDescription":true`);
+    assertStringIncludes(
+      output,
+      `"diagramAlt":"Publish a guide: A checked guide progresses from draft to publication."`,
+    );
     assertStringIncludes(output, `"badge":"[● Ready]"`);
     assertStringIncludes(output, `"graphemes":3`);
     assertStringIncludes(output, `"package":"${config.name}"`);

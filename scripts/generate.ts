@@ -708,10 +708,16 @@ ${registryEntries.join("\n")}
     return `    case ${JSON.stringify(kind.meta.slug)}:
       return validate${pascal}(spec);`;
   });
-  const layoutCases = kinds.map((kind) => {
+  const projectionCases = kinds.map((kind) => {
     const pascal = pascalIdentifier(kind.meta.slug);
-    return `    case ${JSON.stringify(kind.meta.slug)}:
-      return conformDiagramScene(layout${pascal}(validate${pascal}(spec)));`;
+    return `    case ${JSON.stringify(kind.meta.slug)}: {
+      const validated = validate${pascal}(spec);
+      return {
+        validated,
+        scene: conformDiagramScene(layout${pascal}(validated)),
+        description: describe${pascal}(validated),
+      };
+    }`;
   });
   const descriptionCases = kinds.map((kind) => {
     const pascal = pascalIdentifier(kind.meta.slug);
@@ -744,6 +750,13 @@ function unknownKind(kind: string): never {
   });
 }
 
+/** Internal result shared by projections so one preflight feeds every fact. */
+export interface PreparedDiagram {
+  readonly validated: DiagramSpec;
+  readonly scene: DiagramScene;
+  readonly description: string;
+}
+
 /** Complete preflight through the generated kind authority. */
 export function validateDiagram(spec: unknown): DiagramSpec {
   switch (kindOf(spec)) {
@@ -753,13 +766,18 @@ ${validationCases.join("\n")}
   }
 }
 
-/** Validate, lay out, and universally conform one semantic diagram. */
-export function layoutDiagram(spec: unknown): DiagramScene {
+/** Validate once, then derive the conformant scene and lossless description. */
+export function prepareDiagram(spec: unknown): PreparedDiagram {
   switch (kindOf(spec)) {
-${layoutCases.join("\n")}
+${projectionCases.join("\n")}
     default:
       return unknownKind(kindOf(spec));
   }
+}
+
+/** Validate, lay out, and universally conform one semantic diagram. */
+export function layoutDiagram(spec: unknown): DiagramScene {
+  return prepareDiagram(spec).scene;
 }
 
 /** Validate and preserve every terminal-relevant semantic fact in text. */

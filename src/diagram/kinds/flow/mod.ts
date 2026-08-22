@@ -1,6 +1,5 @@
 /** Flow kind authoring contracts. */
 
-export { default as flowKindMeta } from "./flow.meta.ts";
 export type {
   FlowDiagramSpec,
   FlowDirection,

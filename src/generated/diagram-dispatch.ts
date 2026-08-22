@@ -30,6 +30,13 @@ function unknownKind(kind: string): never {
   });
 }
 
+/** Internal result shared by projections so one preflight feeds every fact. */
+export interface PreparedDiagram {
+  readonly validated: DiagramSpec;
+  readonly scene: DiagramScene;
+  readonly description: string;
+}
+
 /** Complete preflight through the generated kind authority. */
 export function validateDiagram(spec: unknown): DiagramSpec {
   switch (kindOf(spec)) {
@@ -40,14 +47,25 @@ export function validateDiagram(spec: unknown): DiagramSpec {
   }
 }
 
-/** Validate, lay out, and universally conform one semantic diagram. */
-export function layoutDiagram(spec: unknown): DiagramScene {
+/** Validate once, then derive the conformant scene and lossless description. */
+export function prepareDiagram(spec: unknown): PreparedDiagram {
   switch (kindOf(spec)) {
-    case "flow":
-      return conformDiagramScene(layoutFlow(validateFlow(spec)));
+    case "flow": {
+      const validated = validateFlow(spec);
+      return {
+        validated,
+        scene: conformDiagramScene(layoutFlow(validated)),
+        description: describeFlow(validated),
+      };
+    }
     default:
       return unknownKind(kindOf(spec));
   }
+}
+
+/** Validate, lay out, and universally conform one semantic diagram. */
+export function layoutDiagram(spec: unknown): DiagramScene {
+  return prepareDiagram(spec).scene;
 }
 
 /** Validate and preserve every terminal-relevant semantic fact in text. */

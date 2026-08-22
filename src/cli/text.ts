@@ -5,7 +5,7 @@
  */
 
 import { stripAnsi } from "./ansi.ts";
-import { eastAsianWidthKind } from "./east-asian-width.ts";
+import { eastAsianWidthKind } from "../unicode/east-asian-width.ts";
 import {
   emitStyledLine,
   parseStyledSource,

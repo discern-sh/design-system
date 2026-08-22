@@ -8,7 +8,7 @@
  * @module
  */
 
-import { eastAsianWidthKind } from "../cli/east-asian-width.ts";
+import { eastAsianWidthKind } from "../unicode/east-asian-width.ts";
 import { roundDiagramNumber } from "./geometry.ts";
 
 /** Font roles admitted by the first diagram scene vocabulary. */

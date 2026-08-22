@@ -1,6 +1,6 @@
 import { assert, assertEquals } from "@std/assert";
 import { stripAnsi, styleText } from "../../src/cli/ansi.ts";
-import { eastAsianWidthKind } from "../../src/cli/east-asian-width.ts";
+import { eastAsianWidthKind } from "../../src/unicode/east-asian-width.ts";
 import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
 import {
   graphemeWidth,
