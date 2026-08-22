@@ -7,7 +7,14 @@ Each release is cut from a green run of the full release gate — formatting, li
 ## 0.23.0
 
 - **Breaking:** Add `declared` to the closed public Result summary state vocabulary so a reported judgment no longer borrows machine-passed, changed, or unchanged semantics. Browser and terminal renderers show the visible label `Declared`; the browser uses neutral surface and ink tokens with a dashed boundary, while the CLI uses the one-cell neutral marker `·` with `.` as its ASCII fallback and the neutral semantic tone. `RESULT_SUMMARY_STATES`, `RESULT_SUMMARY_STATE_LABELS`, and `ResultSummaryState` are available from both `./react` and `./cli`; browser and CLI examples, grouped CLI alignment, forced-colour behavior, and exhaustive state maps all enroll the new member.
-- Add a complementary reading-first Marketing family without changing the existing launch-page Components. Marketing stage frames conceptual, atmospheric, or concise evidential visuals; Editorial hero reserves broad display typography for the opening; Narrative chapter gives substantial prose a calm parallel introduction and reading measure; Journey overview compresses a process into a few plain-language moments; Outcome spotlight makes one result dominant; Voice break supplies a low-burden human interlude; and Closing statement resolves a page around one action. Every member composes the existing Marketing section and Intro authorities where applicable, records an explicit browser-only CLI exemption, exposes generic Catalogue states, and joins a source-backed complete landing-page recipe that alternates explanation, relief, compression, evidence, voice, and action.
+- Add a complementary reading-first Marketing family without changing the existing launch-page Components. Every member composes the existing Marketing section and Intro authorities where applicable, records an explicit browser-only CLI exemption, exposes generic Catalogue states, and joins a source-backed complete landing-page recipe that alternates explanation, relief, compression, evidence, voice, and action.
+- Add the Marketing `Marketing stage` Component for framing conceptual, atmospheric, or concise evidential visuals without making their presentation another reading assignment.
+- Add the Marketing `Editorial hero` Component for opening a page with selective broad display typography, supporting copy, actions, and consumer-supplied artwork.
+- Add the Marketing `Narrative chapter` Component for giving substantial prose a calm parallel introduction and bounded reading measure.
+- Add the Marketing `Journey overview` Component for compressing a process into a few plain-language moments without code, terminal output, or instrument-panel detail.
+- Add the Marketing `Outcome spotlight` Component for making one numerical or qualitative result dominant, with standard and compact value scales.
+- Add the Marketing `Voice break` Component for a low-burden human interlude with start- or end-aligned quotation emphasis.
+- Add the Marketing `Closing statement` Component for resolving a page around one final thought and action.
 
 ## 0.22.0
 
