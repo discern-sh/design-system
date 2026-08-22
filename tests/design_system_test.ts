@@ -396,6 +396,36 @@ Deno.test("component metadata auto-enrols React, runtime, and CLI surfaces", asy
     ),
     generated.cliRenderers,
   );
+  assertEquals(
+    await Deno.readTextFile(
+      join(PACKAGE_ROOT, "src", "generated", "diagram-registry.ts"),
+    ),
+    generated.diagramRegistry,
+  );
+  assertEquals(
+    await Deno.readTextFile(
+      join(PACKAGE_ROOT, "src", "generated", "diagram-spec.ts"),
+    ),
+    generated.diagramSpec,
+  );
+  assertEquals(
+    await Deno.readTextFile(
+      join(PACKAGE_ROOT, "src", "generated", "diagram-dispatch.ts"),
+    ),
+    generated.diagramDispatch,
+  );
+  assertEquals(
+    await Deno.readTextFile(
+      join(PACKAGE_ROOT, "src", "generated", "diagram-exports.ts"),
+    ),
+    generated.diagramExports,
+  );
+  assertEquals(
+    await Deno.readTextFile(
+      join(PACKAGE_ROOT, "src", "generated", "diagram-cli-registry.ts"),
+    ),
+    generated.diagramCliRegistry,
+  );
 });
 
 Deno.test("Component grids never backfill later semantic content", async () => {
