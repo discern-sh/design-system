@@ -30,6 +30,7 @@ function TextualOutcomeState() {
       title="The outcome does not have to be numerical."
       value="Less to parse"
       valueLabel="A short phrase can carry the evidence when a number would be artificial."
+      valueScale="compact"
       surface="sunken"
     />
   );

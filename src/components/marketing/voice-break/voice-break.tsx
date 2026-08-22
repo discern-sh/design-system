@@ -13,6 +13,8 @@ export interface VoiceBreakProps extends HTMLAttributes<HTMLElement> {
   readonly context?: ReactNode;
   /** Optional decorative portrait or identifying mark. */
   readonly portrait?: ReactNode;
+  /** Text alignment for the eyebrow and quotation. */
+  readonly align?: "start" | "end";
   readonly surface?: MarketingSectionSurface;
 }
 
@@ -25,6 +27,7 @@ export const VoiceBreak: DiscernComponent<HTMLElement, VoiceBreakProps> =
       attribution,
       context,
       portrait,
+      align = "start",
       surface = "canvas",
       className,
       ...props
@@ -37,16 +40,22 @@ export const VoiceBreak: DiscernComponent<HTMLElement, VoiceBreakProps> =
         surface={surface}
         spacing="spacious"
         frame="wide"
-        className={classNames("discern-voice-break", className)}
+        className={classNames(
+          "discern-voice-break",
+          `discern-voice-break--${align}`,
+          className,
+        )}
         {...props}
       >
-        {eyebrow
-          ? <div className="discern-voice-break__eyebrow">{eyebrow}</div>
-          : null}
         <figure className="discern-voice-break__figure">
-          <blockquote className="discern-voice-break__quote">
-            {quote}
-          </blockquote>
+          <div className="discern-voice-break__statement">
+            {eyebrow
+              ? <div className="discern-voice-break__eyebrow">{eyebrow}</div>
+              : null}
+            <blockquote className="discern-voice-break__quote">
+              {quote}
+            </blockquote>
+          </div>
           <figcaption className="discern-voice-break__attribution">
             {portrait
               ? (

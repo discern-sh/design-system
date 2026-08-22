@@ -1,7 +1,9 @@
 @layer discern.components {
+  .discern-voice-break {
+    container-type: inline-size;
+  }
   .discern-voice-break__eyebrow {
-    margin-block-end: clamp(var(--discern-space-10), 7vw,
-      var(--discern-space-16));
+    margin-block-end: var(--discern-space-6);
     color: var(--discern-marketing-accent-ink,
       var(--discern-color-accent-700));
     font-family: var(--discern-font-ui);
@@ -14,9 +16,14 @@
   .discern-voice-break__figure {
     display: grid;
     grid-template-columns: minmax(12rem, 0.38fr) minmax(22rem, 1.62fr);
-    gap: clamp(var(--discern-space-10), 9vw, var(--discern-space-20));
+    gap: clamp(var(--discern-space-10), 9cqi, var(--discern-space-20));
     align-items: end;
     margin: 0;
+  }
+  .discern-voice-break__statement {
+    grid-column: 2;
+    grid-row: 1;
+    min-inline-size: 0;
   }
   .discern-voice-break__attribution {
     grid-column: 1;
@@ -55,14 +62,12 @@
     max-block-size: 100%;
   }
   .discern-voice-break__quote {
-    grid-column: 2;
-    grid-row: 1;
     position: relative;
     max-inline-size: 24ch;
     margin: 0;
     color: var(--discern-color-ink);
     font-family: var(--discern-font-display);
-    font-size: clamp(2.65rem, 5.2vw, 5.75rem);
+    font-size: clamp(2.65rem, 5.2cqi, 5.75rem);
     font-weight: var(--discern-font-weight-display);
     letter-spacing: -0.04em;
     line-height: 0.98;
@@ -79,11 +84,22 @@
     line-height: 1;
     opacity: 0.5;
   }
-  @media (max-width: 760px) {
+  .discern-voice-break--end .discern-voice-break__statement {
+    justify-items: end;
+    padding-inline-end: 0.5em;
+    text-align: end;
+  }
+  .discern-voice-break--end .discern-voice-break__quote {
+    margin-inline-start: auto;
+  }
+  .discern-voice-break--end .discern-voice-break__quote::before {
+    inset-inline: auto -0.42em;
+  }
+  @container (max-width: 760px) {
     .discern-voice-break__figure {
       grid-template-columns: 1fr;
     }
-    .discern-voice-break__quote {
+    .discern-voice-break__statement {
       grid-column: 1;
       grid-row: 1;
     }
@@ -93,9 +109,9 @@
       max-inline-size: 24rem;
     }
   }
-  @media (max-width: 520px) {
+  @container (max-width: 520px) {
     .discern-voice-break__quote {
-      font-size: clamp(2.45rem, 12vw, 4rem);
+      font-size: clamp(2.45rem, 12cqi, 4rem);
     }
   }
 }

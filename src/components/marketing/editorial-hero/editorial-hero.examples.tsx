@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import type { CatalogueExampleState } from "../../../../catalogue/conformance.ts";
-import { ApertureGround } from "../../artwork/aperture-ground/aperture-ground.tsx";
+import { ApproachGround } from "../../artwork/approach-ground/approach-ground.tsx";
 import { Button } from "../../core/button/button.tsx";
 import { EditorialHero } from "./editorial-hero.tsx";
 
@@ -79,7 +79,7 @@ function VisualHeroState() {
       visual={<ConceptVisual />}
       visualLabel="One relationship"
       visualCaption="Two independent planes meet at one deliberate hand-off."
-      ground={<ApertureGround />}
+      ground={<ApproachGround />}
     />
   );
 }

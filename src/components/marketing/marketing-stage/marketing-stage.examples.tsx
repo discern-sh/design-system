@@ -5,7 +5,7 @@ import { MarketingStage } from "./marketing-stage.tsx";
 const flowStyle: CSSProperties = {
   width: "100%",
   display: "grid",
-  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 13rem), 1fr))",
   gap: "var(--discern-space-4)",
   alignItems: "center",
 };
@@ -59,12 +59,14 @@ function InsetStageState() {
       <div
         aria-hidden="true"
         style={{
-          width: "72%",
+          width: "86%",
           aspectRatio: "1.5",
           borderRadius: "50%",
           background:
-            "radial-gradient(circle, var(--discern-color-accent-200), transparent 68%)",
-          opacity: 0.8,
+            "radial-gradient(ellipse, color-mix(in oklab, var(--discern-color-accent-200) 58%, transparent) 0%, color-mix(in oklab, var(--discern-color-accent-200) 24%, transparent) 44%, transparent 78%)",
+          filter: "blur(28px)",
+          opacity: 0.72,
+          transform: "scale(0.86)",
         }}
       />
     </MarketingStage>

@@ -1,5 +1,6 @@
 @layer discern.components {
   .discern-closing-statement {
+    container-type: inline-size;
     isolation: isolate;
     overflow: clip;
   }
@@ -41,7 +42,7 @@
   .discern-closing-statement__reassurance > :last-child {
     margin-block-end: 0;
   }
-  @media (max-width: 520px) {
+  @container (max-width: 520px) {
     .discern-closing-statement__actions {
       align-items: stretch;
       inline-size: 100%;

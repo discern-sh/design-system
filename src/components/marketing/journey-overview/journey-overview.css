@@ -1,4 +1,7 @@
 @layer discern.components {
+  .discern-journey-overview {
+    container-type: inline-size;
+  }
   .discern-journey-overview__intro {
     --discern-marketing-intro-title-size: var(--discern-font-size-display-md);
     --discern-marketing-intro-title-tracking: -0.01em;
@@ -63,7 +66,7 @@
     font-weight: var(--discern-font-weight-strong);
     line-height: var(--discern-leading-body);
   }
-  @media (max-width: 520px) {
+  @container (max-width: 520px) {
     .discern-journey-overview__steps {
       gap: var(--discern-space-10);
     }

@@ -21,6 +21,8 @@ export interface OutcomeSpotlightProps
   readonly description?: ReactNode;
   readonly value: ReactNode;
   readonly valueLabel: ReactNode;
+  /** Display scale for numerical outcomes or longer qualitative phrases. */
+  readonly valueScale?: "standard" | "compact";
   readonly supporting?: readonly OutcomeSpotlightFact[];
   readonly surface?: MarketingSectionSurface;
 }
@@ -37,6 +39,7 @@ export const OutcomeSpotlight: DiscernComponent<
     description,
     value,
     valueLabel,
+    valueScale = "standard",
     supporting = [],
     surface = "contrast",
     className,
@@ -50,7 +53,11 @@ export const OutcomeSpotlight: DiscernComponent<
       surface={surface}
       spacing="spacious"
       frame="wide"
-      className={classNames("discern-outcome-spotlight", className)}
+      className={classNames(
+        "discern-outcome-spotlight",
+        `discern-outcome-spotlight--${valueScale}`,
+        className,
+      )}
       {...props}
     >
       <div className="discern-outcome-spotlight__lead">

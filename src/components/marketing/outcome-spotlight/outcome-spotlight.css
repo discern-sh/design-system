@@ -1,8 +1,11 @@
 @layer discern.components {
+  .discern-outcome-spotlight {
+    container-type: inline-size;
+  }
   .discern-outcome-spotlight__lead {
     display: grid;
     grid-template-columns: minmax(18rem, 0.9fr) minmax(20rem, 1.1fr);
-    gap: clamp(var(--discern-space-10), 8vw, var(--discern-space-20));
+    gap: clamp(var(--discern-space-10), 8cqi, var(--discern-space-20));
     align-items: end;
   }
   .discern-outcome-spotlight__intro {
@@ -25,25 +28,30 @@
     color: var(--discern-marketing-accent-ink,
       var(--discern-color-accent-700));
     font-family: var(--discern-font-display);
-    font-size: clamp(5rem, 12vw, 11rem);
+    font-size: clamp(4rem, 8cqi, 8rem);
     font-weight: var(--discern-font-weight-display);
     letter-spacing: -0.065em;
     line-height: 0.78;
     text-wrap: balance;
+  }
+  .discern-outcome-spotlight--compact .discern-outcome-spotlight__value {
+    max-inline-size: 12ch;
+    font-size: clamp(3.5rem, 6cqi, 5.5rem);
+    line-height: 0.88;
   }
   .discern-outcome-spotlight__label {
     order: 1;
     max-inline-size: 29rem;
     margin-block-start: var(--discern-space-8);
     color: var(--discern-color-ink-muted);
-    font-size: clamp(var(--discern-font-size-md), 1.8vw, 1.3rem);
+    font-size: clamp(var(--discern-font-size-md), 1.8cqi, 1.3rem);
     line-height: var(--discern-leading-body);
   }
   .discern-outcome-spotlight__supporting {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
     gap: var(--discern-space-8);
-    margin-block-start: clamp(var(--discern-space-12), 8vw,
+    margin-block-start: clamp(var(--discern-space-12), 8cqi,
       var(--discern-space-20));
     padding-block-start: var(--discern-space-8);
     border-block-start: 1px solid var(--discern-color-border-strong);
@@ -65,7 +73,7 @@
     font-size: var(--discern-font-size-sm);
     line-height: var(--discern-leading-body);
   }
-  @media (max-width: 760px) {
+  @container (max-width: 760px) {
     .discern-outcome-spotlight__lead {
       grid-template-columns: 1fr;
     }
@@ -73,9 +81,12 @@
       margin-block-start: var(--discern-space-6);
     }
   }
-  @media (max-width: 520px) {
+  @container (max-width: 520px) {
     .discern-outcome-spotlight__value {
-      font-size: clamp(4.8rem, 24vw, 7.5rem);
+      font-size: clamp(3.75rem, 18cqi, 6rem);
+    }
+    .discern-outcome-spotlight--compact .discern-outcome-spotlight__value {
+      font-size: clamp(3.25rem, 15cqi, 4.75rem);
     }
   }
 }

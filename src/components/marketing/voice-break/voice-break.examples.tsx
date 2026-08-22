@@ -20,6 +20,7 @@ function ContrastVoiceState() {
       quote="We understood the decision before we learned the machinery."
       attribution="An early reader"
       context="Reviewing a technical product introduction"
+      align="end"
       surface="contrast"
     />
   );

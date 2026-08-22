@@ -1,5 +1,6 @@
 @layer discern.components {
   .discern-marketing-stage {
+    container-type: inline-size;
     min-inline-size: 0;
     margin: 0;
   }
@@ -32,13 +33,13 @@
     border-block-end: 1px solid var(--discern-color-border);
   }
   .discern-marketing-stage--framed .discern-marketing-stage__body {
-    padding: clamp(var(--discern-space-5), 4vw, var(--discern-space-10));
+    padding: clamp(var(--discern-space-5), 4cqi, var(--discern-space-10));
   }
   .discern-marketing-stage--framed .discern-marketing-stage__caption {
     padding: 0 var(--discern-space-5) var(--discern-space-4);
   }
   .discern-marketing-stage--inset {
-    padding: clamp(var(--discern-space-5), 4vw, var(--discern-space-10));
+    padding: clamp(var(--discern-space-5), 4cqi, var(--discern-space-10));
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-lg);
     background: var(--discern-color-surface-sunken);
@@ -70,5 +71,11 @@
   .discern-marketing-stage__body > * {
     min-inline-size: 0;
     max-inline-size: 100%;
+  }
+  @container (max-width: 520px) {
+    .discern-marketing-stage--landscape .discern-marketing-stage__body,
+    .discern-marketing-stage--square .discern-marketing-stage__body {
+      aspect-ratio: auto;
+    }
   }
 }
