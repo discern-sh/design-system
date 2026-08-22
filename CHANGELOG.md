@@ -4,9 +4,8 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
-## 0.23.0
+## 0.24.0
 
-- **Breaking:** Add `declared` to the closed public Result summary state vocabulary so a reported judgment no longer borrows machine-passed, changed, or unchanged semantics. Browser and terminal renderers show the visible label `Declared`; the browser uses neutral surface and ink tokens with a dashed boundary, while the CLI uses the one-cell neutral marker `·` with `.` as its ASCII fallback and the neutral semantic tone. `RESULT_SUMMARY_STATES`, `RESULT_SUMMARY_STATE_LABELS`, and `ResultSummaryState` are available from both `./react` and `./cli`; browser and CLI examples, grouped CLI alignment, forced-colour behavior, and exhaustive state maps all enroll the new member.
 - Add a complementary reading-first Marketing family without changing the existing launch-page Components. Every member composes the existing Marketing section and Intro authorities where applicable, records an explicit browser-only CLI exemption, exposes generic Catalogue states, and joins a source-backed complete landing-page recipe that alternates explanation, relief, compression, evidence, voice, and action.
 - Add the Marketing `Marketing stage` Component for framing conceptual, atmospheric, or concise evidential visuals without making their presentation another reading assignment.
 - Add the Marketing `Editorial hero` Component for opening a page with selective broad display typography, supporting copy, actions, and consumer-supplied artwork.
@@ -15,6 +14,11 @@ Each release is cut from a green run of the full release gate — formatting, li
 - Add the Marketing `Outcome spotlight` Component for making one numerical or qualitative result dominant, with standard and compact value scales.
 - Add the Marketing `Voice break` Component for a low-burden human interlude with start- or end-aligned quotation emphasis.
 - Add the Marketing `Closing statement` Component for resolving a page around one final thought and action.
+- Add the Catalogue's Beta interface builder at `/catalogue/builder/`: a composition instrument that places real React adapter Components on a themed canvas, saves an inert versioned JSON document, and emits deterministic consumer-ready TSX beside the runtime Component selection and its Component CSS and behaviour-script cost. Every route into live state — file import, storage restoration, inspector edits, history, preview, save, and export — passes one registry-derived policy that rejects raw-HTML props, React identity and refs, executable handler names, prototype-sensitive keys, and executable URL schemes, so a loaded document can never carry behaviour; required function props become a typed callback object the consumer must wire rather than a silent no-op. Components enrol from the generated registry without manual registration. Placement, editing, movement, undo/redo, save, and load are keyboard-complete with drag as an enhancement, and the three-pane workspace collapses to a state-preserving roving tablist at and below 1,180 CSS pixels. The builder link stays after the ordinary Catalogue navigation while its document format is still under evaluation. The published package contract is unchanged by it.
+
+## 0.23.0
+
+- **Breaking:** Add `declared` to the closed public Result summary state vocabulary so a reported judgment no longer borrows machine-passed, changed, or unchanged semantics. Browser and terminal renderers show the visible label `Declared`; the browser uses neutral surface and ink tokens with a dashed boundary, while the CLI uses the one-cell neutral marker `·` with `.` as its ASCII fallback and the neutral semantic tone. `RESULT_SUMMARY_STATES`, `RESULT_SUMMARY_STATE_LABELS`, and `ResultSummaryState` are available from both `./react` and `./cli`; browser and CLI examples, grouped CLI alignment, forced-colour behavior, and exhaustive state maps all enroll the new member.
 
 ## 0.22.0
 
