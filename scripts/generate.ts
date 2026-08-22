@@ -1,4 +1,5 @@
 import type { EmbeddedRuntimeAsset } from "../src/runtime-assets.ts";
+import type { DiagramKindMeta } from "../src/diagram/kind-meta.ts";
 import {
   componentBehaviors,
   componentGroups,
@@ -11,6 +12,7 @@ const ASSET_ROOT = new URL("../assets/", import.meta.url);
 const BEHAVIOR_ROOT = new URL("../assets/behaviors/", import.meta.url);
 const GENERATED_ROOT = new URL("../src/generated/", import.meta.url);
 const STYLE_ROOT = new URL("../src/styles/", import.meta.url);
+const DIAGRAM_KIND_ROOT = new URL("../src/diagram/kinds/", import.meta.url);
 
 export interface ComponentSource {
   readonly metaUrl: URL;
@@ -28,6 +30,25 @@ export interface GeneratedSources {
   readonly cliRegistry: string;
   readonly cliRenderers: string;
   readonly baseStyles: string;
+  readonly diagramRegistry: string;
+  readonly diagramSpec: string;
+  readonly diagramDispatch: string;
+  readonly diagramExports: string;
+  readonly diagramCliRegistry: string;
+}
+
+/** Canonical source anatomy discovered for one diagram kind. */
+export interface DiagramKindSource {
+  readonly directoryUrl: URL;
+  readonly metaUrl: URL;
+  readonly specUrl: URL;
+  readonly validationUrl: URL;
+  readonly layoutUrl: URL;
+  readonly descriptionUrl: URL;
+  readonly fixturesUrl: URL;
+  readonly modUrl: URL;
+  readonly cliUrl: URL;
+  readonly meta: DiagramKindMeta;
 }
 
 type ComponentMetaCandidate =
@@ -139,6 +160,282 @@ export async function loadComponentSources(): Promise<ComponentSource[]> {
     componentGroups.indexOf(a.meta.group) -
       componentGroups.indexOf(b.meta.group) ||
     a.meta.order - b.meta.order || a.meta.slug.localeCompare(b.meta.slug)
+  );
+}
+
+function diagramSourceName(url: URL): string {
+  return decodeURIComponent(url.pathname);
+}
+
+function nonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim() !== "";
+}
+
+/** Enforce complete authored guidance and measurable budgets for one kind. */
+export function validateDiagramKindMeta(
+  candidate: unknown,
+  source: string,
+): asserts candidate is DiagramKindMeta {
+  if (typeof candidate !== "object" || candidate === null) {
+    throw new Error(`${source} must default-export diagram kind Metadata`);
+  }
+  const meta = candidate as Record<string, unknown>;
+  if (
+    !nonEmptyString(meta.name) || !nonEmptyString(meta.slug) ||
+    !/^[a-z][a-z0-9-]*$/u.test(meta.slug) ||
+    !nonEmptyString(meta.description)
+  ) {
+    throw new Error(
+      `${source} has incomplete diagram kind identity or description`,
+    );
+  }
+  if (!Number.isInteger(meta.order) || (meta.order as number) < 0) {
+    throw new Error(`${source} has no non-negative integer kind order`);
+  }
+  for (const field of ["useWhen", "notWhen"] as const) {
+    const guidance = meta[field];
+    if (
+      !Array.isArray(guidance) || guidance.length === 0 ||
+      guidance.some((item) => !nonEmptyString(item))
+    ) {
+      throw new Error(`${source} has incomplete ${field} authoring guidance`);
+    }
+  }
+  if (
+    typeof meta.budgets !== "object" || meta.budgets === null ||
+    Array.isArray(meta.budgets) || Object.keys(meta.budgets).length === 0
+  ) {
+    throw new Error(`${source} has no measurable diagram kind budgets`);
+  }
+  for (
+    const [dimension, value] of Object.entries(
+      meta.budgets as Record<string, unknown>,
+    )
+  ) {
+    if (typeof value !== "object" || value === null || Array.isArray(value)) {
+      throw new Error(`${source} has invalid ${dimension} budget Metadata`);
+    }
+    const budget = value as Record<string, unknown>;
+    if (
+      typeof budget.limit !== "number" || !Number.isFinite(budget.limit) ||
+      budget.limit <= 0 || !nonEmptyString(budget.unit) ||
+      !nonEmptyString(budget.description) ||
+      !["shorten-label", "reduce-tier", "split-overview"].includes(
+        budget.remedy as string,
+      )
+    ) {
+      throw new Error(`${source} has incomplete ${dimension} budget Metadata`);
+    }
+  }
+  if (
+    typeof meta.cli !== "object" || meta.cli === null ||
+    !["description", "enhanced"].includes(
+      (meta.cli as Record<string, unknown>).stance as string,
+    )
+  ) {
+    throw new Error(`${source} has no valid diagram CLI stance`);
+  }
+}
+
+/** Enforce the two-way relationship between kind stance and enhanced module. */
+export function validateDiagramCliStance(
+  meta: DiagramKindMeta,
+  hasEnhancedModule: boolean,
+  source: string,
+): void {
+  if (meta.cli.stance === "enhanced" && !hasEnhancedModule) {
+    throw new Error(
+      `${source} declares enhanced diagram CLI but has no .cli.ts file`,
+    );
+  }
+  if (meta.cli.stance === "description" && hasEnhancedModule) {
+    throw new Error(
+      `${source} has a .cli.ts file but declares description-only CLI`,
+    );
+  }
+}
+
+/** Reject enhanced kind modules without their matching Metadata authority. */
+export function validateDiagramCliInventory(files: readonly URL[]): void {
+  const fileSet = new Set(files.map((url) => url.pathname));
+  for (
+    const cliUrl of files.filter((url) => url.pathname.endsWith(".cli.ts"))
+  ) {
+    const metaPath = cliUrl.pathname.replace(/\.cli\.ts$/u, ".meta.ts");
+    if (!fileSet.has(metaPath)) {
+      throw new Error(
+        `${diagramSourceName(cliUrl)} has no matching diagram .meta.ts file`,
+      );
+    }
+  }
+}
+
+/** Reject partial kind anatomy that lacks a Metadata enrolment authority. */
+export function validateDiagramKindInventory(files: readonly URL[]): void {
+  const fileSet = new Set(files.map((url) => url.pathname));
+  for (const file of files.filter((url) => url.pathname.endsWith(".ts"))) {
+    const directoryUrl = new URL("./", file);
+    const stem = directoryUrl.pathname.split("/").filter(Boolean).at(-1);
+    if (stem === undefined) continue;
+    const metaUrl = new URL(`${stem}.meta.ts`, directoryUrl);
+    if (!fileSet.has(metaUrl.pathname)) {
+      throw new Error(
+        `${diagramSourceName(file)} has no matching diagram .meta.ts file`,
+      );
+    }
+    const fileName = file.pathname.slice(file.pathname.lastIndexOf("/") + 1);
+    const allowed = new Set([
+      `${stem}.meta.ts`,
+      `${stem}.spec.ts`,
+      `${stem}.validation.ts`,
+      `${stem}.layout.ts`,
+      `${stem}.description.ts`,
+      `${stem}.fixtures.ts`,
+      `${stem}.cli.ts`,
+      "mod.ts",
+    ]);
+    if (!allowed.has(fileName)) {
+      throw new Error(
+        `${diagramSourceName(file)} is outside the fixed diagram kind anatomy`,
+      );
+    }
+  }
+}
+
+async function assertDefaultExport(
+  url: URL,
+  expected: "function" | "array",
+): Promise<void> {
+  const module = await import(url.href) as { readonly default?: unknown };
+  const valid = expected === "function"
+    ? typeof module.default === "function"
+    : Array.isArray(module.default);
+  if (!valid) {
+    throw new Error(
+      `${diagramSourceName(url)} must default-export a ${expected}`,
+    );
+  }
+}
+
+/** Discover diagram kinds and reject every incomplete or ambiguous anatomy. */
+export async function loadDiagramKindSources(
+  root: URL = DIAGRAM_KIND_ROOT,
+): Promise<DiagramKindSource[]> {
+  const files = await walk(root);
+  const fileSet = new Set(files.map((url) => url.pathname));
+  validateDiagramCliInventory(files);
+  validateDiagramKindInventory(files);
+  const sources: DiagramKindSource[] = [];
+  for (
+    const metaUrl of files.filter((url) => url.pathname.endsWith(".meta.ts"))
+  ) {
+    const fileName = metaUrl.pathname.slice(
+      metaUrl.pathname.lastIndexOf("/") + 1,
+    );
+    const stem = fileName.slice(0, -".meta.ts".length);
+    const directoryUrl = new URL("./", metaUrl);
+    const directoryName = directoryUrl.pathname.split("/").filter(Boolean).at(
+      -1,
+    );
+    if (directoryName !== stem) {
+      throw new Error(
+        `${diagramSourceName(metaUrl)} must match its kind directory name`,
+      );
+    }
+    const urls = {
+      specUrl: new URL(`${stem}.spec.ts`, directoryUrl),
+      validationUrl: new URL(`${stem}.validation.ts`, directoryUrl),
+      layoutUrl: new URL(`${stem}.layout.ts`, directoryUrl),
+      descriptionUrl: new URL(`${stem}.description.ts`, directoryUrl),
+      fixturesUrl: new URL(`${stem}.fixtures.ts`, directoryUrl),
+      modUrl: new URL("mod.ts", directoryUrl),
+      cliUrl: new URL(`${stem}.cli.ts`, directoryUrl),
+    };
+    for (
+      const [surface, url] of Object.entries(urls).filter(([name]) =>
+        name !== "cliUrl"
+      )
+    ) {
+      if (!fileSet.has(url.pathname)) {
+        throw new Error(
+          `${diagramSourceName(metaUrl)} is missing required ${surface}`,
+        );
+      }
+    }
+    const module = await import(metaUrl.href) as { readonly default?: unknown };
+    validateDiagramKindMeta(module.default, diagramSourceName(metaUrl));
+    if (module.default.slug !== stem) {
+      throw new Error(
+        `${
+          diagramSourceName(metaUrl)
+        } declares slug ${module.default.slug} instead of ${stem}`,
+      );
+    }
+    validateDiagramCliStance(
+      module.default,
+      fileSet.has(urls.cliUrl.pathname),
+      diagramSourceName(metaUrl),
+    );
+    await assertDefaultExport(urls.validationUrl, "function");
+    await assertDefaultExport(urls.layoutUrl, "function");
+    await assertDefaultExport(urls.descriptionUrl, "function");
+    await assertDefaultExport(urls.fixturesUrl, "array");
+    const fixturesModule = await import(urls.fixturesUrl.href) as {
+      readonly default: readonly unknown[];
+    };
+    if (fixturesModule.default.length === 0) {
+      throw new Error(
+        `${
+          diagramSourceName(urls.fixturesUrl)
+        } must contain a representative fixture`,
+      );
+    }
+    for (const [index, fixture] of fixturesModule.default.entries()) {
+      if (
+        typeof fixture !== "object" || fixture === null ||
+        (fixture as { readonly kind?: unknown }).kind !== module.default.slug ||
+        !nonEmptyString((fixture as { readonly title?: unknown }).title) ||
+        !nonEmptyString((fixture as { readonly summary?: unknown }).summary)
+      ) {
+        throw new Error(
+          `${
+            diagramSourceName(urls.fixturesUrl)
+          } fixture ${index} does not identify ${module.default.slug} with accessible context`,
+        );
+      }
+    }
+    if (!/\bexport\b/u.test(await Deno.readTextFile(urls.modUrl))) {
+      throw new Error(
+        `${
+          diagramSourceName(urls.modUrl)
+        } must export the kind authoring surface`,
+      );
+    }
+    if (module.default.cli.stance === "enhanced") {
+      await assertDefaultExport(urls.cliUrl, "function");
+    }
+    sources.push({
+      directoryUrl,
+      metaUrl,
+      ...urls,
+      meta: module.default,
+    });
+  }
+  const slugs = new Set<string>();
+  const orders = new Set<number>();
+  for (const source of sources) {
+    if (slugs.has(source.meta.slug)) {
+      throw new Error(`Duplicate diagram kind slug ${source.meta.slug}`);
+    }
+    if (orders.has(source.meta.order)) {
+      throw new Error(`Duplicate diagram kind order ${source.meta.order}`);
+    }
+    slugs.add(source.meta.slug);
+    orders.add(source.meta.order);
+  }
+  return sources.toSorted((left, right) =>
+    left.meta.order - right.meta.order ||
+    left.meta.slug.localeCompare(right.meta.slug)
   );
 }
 
@@ -326,6 +623,185 @@ ${exports.join("\n")}
 `;
 }
 
+/** Generated source family proving one canonical diagram-kind set. */
+export interface GeneratedDiagramSources {
+  readonly registry: string;
+  readonly spec: string;
+  readonly dispatch: string;
+  readonly exports: string;
+  readonly cliRegistry: string;
+}
+
+/** Render every diagram-kind consumer from one discovered source inventory. */
+export async function generateDiagramKindSources(
+  root: URL = DIAGRAM_KIND_ROOT,
+): Promise<GeneratedDiagramSources> {
+  const kinds = await loadDiagramKindSources(root);
+  if (kinds.length === 0) {
+    throw new Error(`${diagramSourceName(root)} contains no diagram kinds`);
+  }
+  const typeImports = kinds.map((kind) => {
+    const name = pascalIdentifier(kind.meta.slug);
+    return `import type { ${name}DiagramSpec } from ${
+      JSON.stringify(relativeImport(GENERATED_ROOT, kind.specUrl))
+    };`;
+  });
+  const spec = `/* Generated by scripts/generate.ts. Do not edit. */
+${typeImports.join("\n")}
+
+/** Exhaustive built-in diagram authoring union. */
+export type DiagramSpec = ${
+    kinds.map((kind) => `${pascalIdentifier(kind.meta.slug)}DiagramSpec`).join(
+      " | ",
+    )
+  };
+`;
+
+  const registryImports = [
+    'import type { DiagramKindRegistryEntry } from "../diagram/kind-meta.ts";',
+  ];
+  const registryEntries: string[] = [];
+  kinds.forEach((kind, index) => {
+    registryImports.push(
+      `import meta${index} from ${
+        JSON.stringify(relativeImport(GENERATED_ROOT, kind.metaUrl))
+      };`,
+      `import fixtures${index} from ${
+        JSON.stringify(relativeImport(GENERATED_ROOT, kind.fixturesUrl))
+      };`,
+    );
+    registryEntries.push(
+      `  { meta: meta${index}, fixtures: fixtures${index} },`,
+    );
+  });
+  const registry = `/* Generated by scripts/generate.ts. Do not edit. */
+${registryImports.join("\n")}
+
+/** Canonical metadata and representative fixtures for every built-in kind. */
+export const diagramKindRegistry = [
+${registryEntries.join("\n")}
+] satisfies readonly DiagramKindRegistryEntry[];
+`;
+
+  const dispatchImports = [
+    'import { DiagramValidationError } from "../diagram/errors.ts";',
+    'import { conformDiagramScene } from "../diagram/conformance.ts";',
+    'import type { DiagramScene } from "../diagram/scene.ts";',
+    'import type { DiagramSpec } from "./diagram-spec.ts";',
+  ];
+  kinds.forEach((kind) => {
+    const pascal = pascalIdentifier(kind.meta.slug);
+    dispatchImports.push(
+      `import validate${pascal} from ${
+        JSON.stringify(relativeImport(GENERATED_ROOT, kind.validationUrl))
+      };`,
+      `import layout${pascal} from ${
+        JSON.stringify(relativeImport(GENERATED_ROOT, kind.layoutUrl))
+      };`,
+      `import describe${pascal} from ${
+        JSON.stringify(relativeImport(GENERATED_ROOT, kind.descriptionUrl))
+      };`,
+    );
+  });
+  const validationCases = kinds.map((kind) => {
+    const pascal = pascalIdentifier(kind.meta.slug);
+    return `    case ${JSON.stringify(kind.meta.slug)}:
+      return validate${pascal}(spec);`;
+  });
+  const layoutCases = kinds.map((kind) => {
+    const pascal = pascalIdentifier(kind.meta.slug);
+    return `    case ${JSON.stringify(kind.meta.slug)}:
+      return conformDiagramScene(layout${pascal}(validate${pascal}(spec)));`;
+  });
+  const descriptionCases = kinds.map((kind) => {
+    const pascal = pascalIdentifier(kind.meta.slug);
+    return `    case ${JSON.stringify(kind.meta.slug)}:
+      return describe${pascal}(validate${pascal}(spec));`;
+  });
+  const dispatch = `/* Generated by scripts/generate.ts. Do not edit. */
+${dispatchImports.join("\n")}
+
+function kindOf(spec: unknown): string {
+  if (typeof spec === "object" && spec !== null && !Array.isArray(spec) &&
+    typeof (spec as { readonly kind?: unknown }).kind === "string") {
+    return (spec as { readonly kind: string }).kind;
+  }
+  throw new DiagramValidationError({
+    code: "diagram/invalid-spec",
+    message: "Diagram spec must be a data object with a generated kind identity.",
+    path: "spec.kind",
+    remedy: "Author one of the generated built-in DiagramSpec variants.",
+  });
+}
+
+function unknownKind(kind: string): never {
+  throw new DiagramValidationError({
+    code: "diagram/unknown-kind",
+    message: \`Unknown diagram kind \${JSON.stringify(kind)}.\`,
+    path: "spec.kind",
+    facts: { kind },
+    remedy: "Use one of the generated built-in diagram kind identities.",
+  });
+}
+
+/** Complete preflight through the generated kind authority. */
+export function validateDiagram(spec: unknown): DiagramSpec {
+  switch (kindOf(spec)) {
+${validationCases.join("\n")}
+    default:
+      return unknownKind(kindOf(spec));
+  }
+}
+
+/** Validate, lay out, and universally conform one semantic diagram. */
+export function layoutDiagram(spec: unknown): DiagramScene {
+  switch (kindOf(spec)) {
+${layoutCases.join("\n")}
+    default:
+      return unknownKind(kindOf(spec));
+  }
+}
+
+/** Validate and preserve every terminal-relevant semantic fact in text. */
+export function describeDiagram(spec: unknown): string {
+  switch (kindOf(spec)) {
+${descriptionCases.join("\n")}
+    default:
+      return unknownKind(kindOf(spec));
+  }
+}
+`;
+
+  const exports = `/* Generated by scripts/generate.ts. Do not edit. */
+${
+    kinds.map((kind) =>
+      `export * from ${
+        JSON.stringify(relativeImport(GENERATED_ROOT, kind.modUrl))
+      };`
+    ).join("\n")
+  }
+`;
+
+  const cliEntries = kinds.map((kind) => {
+    const value = kind.meta.cli.stance === "description"
+      ? '{ stance: "description" }'
+      : `{ stance: "enhanced", modulePath: ${
+        JSON.stringify(relativeImport(GENERATED_ROOT, kind.cliUrl))
+      } }`;
+    return `  ${JSON.stringify(kind.meta.slug)}: ${value},`;
+  });
+  const cliRegistry = `/* Generated by scripts/generate.ts. Do not edit. */
+import type { DiagramKindCliRegistryEntry } from "../diagram/kind-meta.ts";
+import type { DiagramSpec } from "./diagram-spec.ts";
+
+/** Generated terminal stance keyed exhaustively by diagram kind. */
+export const diagramKindCliRegistry = {
+${cliEntries.join("\n")}
+} as const satisfies Readonly<Record<DiagramSpec["kind"], DiagramKindCliRegistryEntry>>;
+`;
+  return { registry, spec, dispatch, exports, cliRegistry };
+}
+
 function encodeBase64(bytes: Uint8Array): string {
   const chunks: string[] = [];
   for (let offset = 0; offset < bytes.length; offset += 32_768) {
@@ -407,6 +883,7 @@ export const utilitiesCss: string = ${JSON.stringify(utilities)};
 
 /** Generate the stable source modules used by cached package consumers. */
 export async function generateSources(): Promise<GeneratedSources> {
+  const diagrams = await generateDiagramKindSources();
   return {
     registry: await generateComponentRegistry(),
     assets: await generateAssets(),
@@ -415,6 +892,11 @@ export async function generateSources(): Promise<GeneratedSources> {
     cliRegistry: await generateCliRegistry(),
     cliRenderers: await generateCliRenderers(),
     baseStyles: await generateBaseStyles(),
+    diagramRegistry: diagrams.registry,
+    diagramSpec: diagrams.spec,
+    diagramDispatch: diagrams.dispatch,
+    diagramExports: diagrams.exports,
+    diagramCliRegistry: diagrams.cliRegistry,
   };
 }
 
@@ -449,6 +931,26 @@ export async function writeGeneratedSources(): Promise<void> {
   await Deno.writeTextFile(
     new URL("base-styles.ts", GENERATED_ROOT),
     generated.baseStyles,
+  );
+  await Deno.writeTextFile(
+    new URL("diagram-registry.ts", GENERATED_ROOT),
+    generated.diagramRegistry,
+  );
+  await Deno.writeTextFile(
+    new URL("diagram-spec.ts", GENERATED_ROOT),
+    generated.diagramSpec,
+  );
+  await Deno.writeTextFile(
+    new URL("diagram-dispatch.ts", GENERATED_ROOT),
+    generated.diagramDispatch,
+  );
+  await Deno.writeTextFile(
+    new URL("diagram-exports.ts", GENERATED_ROOT),
+    generated.diagramExports,
+  );
+  await Deno.writeTextFile(
+    new URL("diagram-cli-registry.ts", GENERATED_ROOT),
+    generated.diagramCliRegistry,
   );
 }
 
