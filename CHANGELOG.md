@@ -4,7 +4,7 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
-## Unreleased
+## 0.25.0
 
 - **Breaking:** Replace the Artwork `Ground` vocabulary with `Backdrop` end to end. The shared React Component is now `Backdrop`; concrete exports, Component slugs, CSS selectors, custom properties, and Catalogue routes use the `*Backdrop` and `*-backdrop` forms. Hero block, Editorial hero, and Closing statement rename their decorative `ground` prop and wrapper class to `backdrop`. Remove the `Resonance ground` Component; consumers should select another Backdrop.
 - Add three browser-only Artwork Backdrops: Tiling traces a continuous route through a quietly reconfiguring Truchet field, Compression conserves the apparent length of a measured ribbon while its centre folds and relaxes, and Harmonic gathers fine grains across two changing nodal modes. All three compose the shared Backdrop presence, theme, still-motion, reduced-motion, forced-colour, and selection-scoped CSS contracts.
