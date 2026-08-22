@@ -35,7 +35,6 @@ export const cliComponentRegistry = {
   "impression-ground": { stance: "exempt", reason: "Decorative scalable browser artwork has no semantic terminal equivalent." },
   "envelope-ground": { stance: "exempt", reason: "Decorative scalable browser artwork has no semantic terminal equivalent." },
   "cleave-ground": { stance: "exempt", reason: "Decorative scalable browser artwork has no semantic terminal equivalent." },
-  "resonance-ground": { stance: "exempt", reason: "Decorative scalable browser artwork has no semantic terminal equivalent." },
   "tiling-ground": { stance: "exempt", reason: "Decorative scalable browser artwork has no semantic terminal equivalent." },
   "compression-ground": { stance: "exempt", reason: "Decorative scalable browser artwork has no semantic terminal equivalent." },
   "harmonic-ground": { stance: "exempt", reason: "Decorative scalable browser artwork has no semantic terminal equivalent." },

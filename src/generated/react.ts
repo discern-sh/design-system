@@ -31,7 +31,6 @@ export * from "../components/artwork/aperture-ground/mod.ts";
 export * from "../components/artwork/impression-ground/mod.ts";
 export * from "../components/artwork/envelope-ground/mod.ts";
 export * from "../components/artwork/cleave-ground/mod.ts";
-export * from "../components/artwork/resonance-ground/mod.ts";
 export * from "../components/artwork/tiling-ground/mod.ts";
 export * from "../components/artwork/compression-ground/mod.ts";
 export * from "../components/artwork/harmonic-ground/mod.ts";
