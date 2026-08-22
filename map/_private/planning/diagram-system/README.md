@@ -30,6 +30,17 @@ Change one only through an explicit ADR and an update to every unstarted brief.
 | Versioning                 | No implementation brief bumps package versions or publishes. Waves 2–5 add `CHANGELOG.md` entries under **Unreleased**. The owner uses the `release` skill after the shipping lane and adversarial review.                                                                                                                                                                                                                     |
 | Worktree names             | Pass these literal names to `discern_start`: `diagram-1a`, `diagram-2a`, `diagram-3a`, `diagram-4a`, `diagram-5a`, and `diagram-6a`.                                                                                                                                                                                                                                                                                           |
 
+## Implementation consequences
+
+The following sharpen how the fixed contracts are enforced; they do not add a public surface or change the architecture above:
+
+- Diagram kinds are the reference/documentation family: a reader can inspect and revisit their precise relationships. Meaningful intuition-building physical schematics, spatial metaphors, animation, or controls remain consumer-owned; package Artwork remains semantically disposable decoration.
+- A kind's layout is not complete until one shared package-private scene-conformance authority has proved universal bounds, text/arrowhead clearance, connector attachment, and prohibited intersections. Lines terminate at shape boundaries rather than depending on an occluding fill.
+- Kind Metadata follows the existing `useWhen`/`notWhen` convention and owns measurable complexity budgets alongside the CLI stance. Generated author guidance and validation derive from those facts; an over-budget refusal names the exceeded dimension and a practical split/decomposition remedy.
+- Accessible title and summary name and describe the diagram without becoming duplicate visible canvas prose. `DataFigure` or the surrounding document owns visible title, caption, source, and explanation.
+- Semantic scene roles resolve through typed paired style bundles: node/container roles keep surface, border, primary ink, annotation ink, and non-colour cue together; connector roles keep stroke, marker, and line treatment together. Colour communicates meaning rather than authored sequence.
+- Committed font-metric data is deterministic and bound to inspected bundled-font bytes. Browser measurement may calibrate or audit it on demand, but routine codegen and runtime layout never capture host-dependent metrics.
+
 ## Waves and dispatch order
 
 | Key | Brief                                                                                   | Internal parallelism                                                      | Starts when                                                    |
@@ -66,10 +77,14 @@ When a wave reports green, review its branch diff against `main`, verify every d
 - a second scene/model/layout authority hidden inside React, SVG, CLI, or Markdown;
 - hand-authored coordinates or raw SVG presented as an extensibility mechanism;
 - silent truncation, overlap, crossing, or unsupported graph shapes disguised as tasteful output;
+- connectors that cross unrelated nodes or labels, terminate behind an occluding fill, or leave arrowheads outside the scene bounds;
 - accessibility prose, Markdown alt text, and terminal descriptions drifting apart;
+- accessible title/summary facts duplicated as visible canvas prose instead of remaining with `DataFigure` or the surrounding document;
 - a kind that bypasses generated enrolment or omits its CLI stance;
 - CSS variables assumed to cross an external `<img>` boundary;
-- unstable IDs, floating-point serialization, object iteration, font measurement, or environment reads breaking determinism;
+- a node/container or connector treatment that bypasses the one paired role-style authority and assembles mismatched presentation facts;
+- unstable IDs, floating-point serialization, object iteration, host-generated font measurements, or environment reads breaking determinism;
+- density-limit errors that reject without naming the exceeded budget and a practical split/decomposition remedy;
 - enhanced terminal art that drops facts instead of declining to the textual fallback;
 - React or a new dependency entering the neutral/CLI graph;
 - copied algorithms or assets without provenance and compatible licensing;
