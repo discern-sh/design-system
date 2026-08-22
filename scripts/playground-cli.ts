@@ -15,6 +15,7 @@ import {
   type TerminalIO,
 } from "../src/cli/interactive/mod.ts";
 import { runHub, runTour } from "./playground/hub.ts";
+import { createPlaygroundNavigator } from "./playground/navigation.ts";
 import {
   journeyById,
   playgroundJourneys,
@@ -90,6 +91,7 @@ export function createPlaygroundRuntime(
 ): PlaygroundRuntime {
   return {
     io,
+    navigator: overrides.navigator ?? createPlaygroundNavigator(io),
     print: overrides.print ?? ((text) => io.write(`${text}\n`)),
     delay: overrides.delay ??
       ((milliseconds) =>

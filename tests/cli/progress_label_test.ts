@@ -54,11 +54,11 @@ Deno.test("progress label changes paint exact Unicode frames at stable geometry"
   await runLabelledProgress(io);
   const frames = paintedFrames(io);
   const expected = [
-    "Quality gate\n[  0%] .............",
-    "fmt\n[  0%] .............",
-    "lint\n[ 25%] ◮⧩◭..........",
-    "tests\n[ 75%] ◮⧩◭⧨◮⧩◭⧨◮....",
-    "tests\n[100%] ◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮\n✓ Complete",
+    "Quality gate\n[  0%] ▶────────────",
+    "fmt\n[  0%] ▶────────────",
+    "lint\n[ 25%] ━━━▶─────────",
+    "tests\n[ 75%] ━━━━━━━━━▶───",
+    "tests\n[100%] ━━━━━━━━━━━━▲\n✓ Complete",
   ];
   assertEquals(frames.length, expected.length);
   for (const [index, frame] of frames.entries()) {
@@ -78,11 +78,11 @@ Deno.test("progress label changes paint exact ASCII frames", async () => {
   const io = new FakeTerminalIO([], { columns: 20, unicode: false });
   await runLabelledProgress(io);
   assertEquals(paintedFrames(io), [
-    "Quality gate\n[  0%] .............",
-    "fmt\n[  0%] .............",
-    "lint\n[ 25%] >v^..........",
-    "tests\n[ 75%] >v^<>v^<>....",
-    "tests\n[100%] >v^<>v^<>v^<>\nOK Complete",
+    "Quality gate\n[  0%] >------------",
+    "fmt\n[  0%] >------------",
+    "lint\n[ 25%] ===>---------",
+    "tests\n[ 75%] =========>---",
+    "tests\n[100%] ============^\nOK Complete",
   ]);
 });
 
@@ -111,7 +111,7 @@ Deno.test("relabelled progress frames stay byte-equal to Meter at every colour d
       expected,
       `relabelled ${colorDepth} frame must match the Meter renderer byte-for-byte`,
     );
-    assertStyledFrame(relabelled, "grain\n[ 25%] ◮⧩◭..........", {
+    assertStyledFrame(relabelled, "grain\n[ 25%] ━━━▶─────────", {
       ...io.capabilities(),
       colorDepth: "none",
     });
@@ -132,9 +132,9 @@ Deno.test("a repeated label repaints nothing and completion stays truthful", asy
   });
   const frames = paintedFrames(io);
   assertEquals(frames, [
-    "Work\n[  0%] .............",
-    "Work\n[ 50%] ◮⧩◭⧨◮⧩.......",
-    "Work\n[100%] ◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮\n✓ Complete",
+    "Work\n[  0%] ▶────────────",
+    "Work\n[ 50%] ━━━━━━▶──────",
+    "Work\n[100%] ━━━━━━━━━━━━▲\n✓ Complete",
   ]);
 });
 

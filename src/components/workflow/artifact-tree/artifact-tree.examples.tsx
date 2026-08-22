@@ -44,8 +44,8 @@ export default function ArtifactTreeExamples() {
                 annotation: <OwnershipBadge ownership="project-owned" />,
               },
               {
-                name: "guidance.md",
-                path: "/workspace/guidance.md",
+                name: "instructions.md",
+                path: "/workspace/instructions.md",
                 kind: "file",
                 annotation: <OwnershipBadge ownership="authored" />,
               },
@@ -66,8 +66,8 @@ export default function ArtifactTreeExamples() {
                 kind: "directory",
                 annotation: <OwnershipBadge ownership="tool-owned" />,
                 children: [{
-                  name: "agent-guidance.md",
-                  path: "/workspace/generated/agent-guidance.md",
+                  name: "agent-instructions.md",
+                  path: "/workspace/generated/agent-instructions.md",
                   kind: "file",
                   annotation: <OwnershipBadge ownership="generated" />,
                 }],

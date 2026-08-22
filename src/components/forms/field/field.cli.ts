@@ -6,16 +6,22 @@
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import type {
-  AcknowledgementFrameState,
+  CompactAcknowledgementFrameState,
+  FramedAcknowledgementFrameState,
   InteractiveFrameLifecycle,
 } from "../../../cli/interactive-states.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
-import { type FormCliPresentation, renderFormCliFrame } from "../form-frame.ts";
+import {
+  type FormCliPresentation,
+  renderFormCliContinuation,
+  renderFormCliFrame,
+} from "../form-frame.ts";
 
 /** Static presentation options shared by every Field rendering. */
 interface FieldCliOptions {
   readonly presentation?: FormCliPresentation;
   readonly required?: boolean;
+  readonly showStatus?: boolean;
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
@@ -31,7 +37,11 @@ export interface FieldControlCliProps extends FieldCliOptions {
 /** Inputs accepted by the terminal Field renderer. */
 export type FieldCliProps =
   | FieldControlCliProps
-  | (AcknowledgementFrameState & FieldCliOptions);
+  | (FramedAcknowledgementFrameState & FieldCliOptions)
+  | (
+    & CompactAcknowledgementFrameState
+    & Pick<FieldCliOptions, "theme" | "width">
+  );
 
 const base = { label: "Environment", control: "staging" } as const;
 
@@ -96,19 +106,43 @@ export const cliExamples: readonly CliExample<FieldCliProps>[] = [
   },
 ] as const;
 
-/** Render a generic labeled control or acknowledgement with full lifecycle messaging. */
-const renderFieldCli: CliRenderer<FieldCliProps> = (props, capabilities) =>
-  renderFormCliFrame({
-    label: props.label,
-    control: "kind" in props ? props.message : props.control,
-    lifecycle: props.lifecycle,
-    ...(props.hint === undefined ? {} : { hint: props.hint }),
-    ...(props.presentation === undefined
+function isCompactAcknowledgement(
+  props: Readonly<FieldCliProps>,
+): props is Readonly<
+  CompactAcknowledgementFrameState & Pick<FieldCliOptions, "theme" | "width">
+> {
+  return "kind" in props && props.kind === "acknowledgement" &&
+    "presentation" in props && props.presentation === "compact";
+}
+
+/** Render a generic field, framed acknowledgement, or compact continuation. */
+const renderFieldCli: CliRenderer<FieldCliProps> = (props, capabilities) => {
+  if (isCompactAcknowledgement(props)) {
+    return renderFormCliContinuation({
+      lifecycle: props.lifecycle,
+      hint: props.hint,
+      ...(props.theme === undefined ? {} : { theme: props.theme }),
+      ...(props.width === undefined ? {} : { width: props.width }),
+    }, capabilities);
+  }
+  const framed = props as Readonly<
+    FieldControlCliProps | (FramedAcknowledgementFrameState & FieldCliOptions)
+  >;
+  return renderFormCliFrame({
+    label: framed.label,
+    control: "kind" in framed ? framed.message : framed.control,
+    lifecycle: framed.lifecycle,
+    ...(framed.hint === undefined ? {} : { hint: framed.hint }),
+    ...(framed.presentation === undefined
       ? {}
-      : { presentation: props.presentation }),
-    ...(props.required === undefined ? {} : { required: props.required }),
-    ...(props.theme === undefined ? {} : { theme: props.theme }),
-    ...(props.width === undefined ? {} : { width: props.width }),
+      : { presentation: framed.presentation }),
+    ...(framed.required === undefined ? {} : { required: framed.required }),
+    ...(framed.showStatus === undefined
+      ? {}
+      : { showStatus: framed.showStatus }),
+    ...(framed.theme === undefined ? {} : { theme: framed.theme }),
+    ...(framed.width === undefined ? {} : { width: framed.width }),
   }, capabilities);
+};
 
 export default renderFieldCli;

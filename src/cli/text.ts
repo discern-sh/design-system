@@ -27,6 +27,9 @@ function assertColumns(label: string, columns: number, minimum: number): void {
 }
 
 const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+// RGI sequences request emoji presentation; pictographic membership alone
+// still includes ordinary text symbols whose cell width comes from EAW.
+const rgiEmoji = /^\p{RGI_Emoji}$/v;
 
 function graphemes(value: string): readonly string[] {
   return [...segmenter.segment(value)].map((part) => part.segment);
@@ -36,7 +39,7 @@ function graphemes(value: string): readonly string[] {
 export function graphemeWidth(grapheme: string): number {
   if (grapheme === "" || grapheme === "\n" || grapheme === "\r") return 0;
   if (/^[\p{Cc}\p{Cf}\p{Mn}\p{Me}]+$/u.test(grapheme)) return 0;
-  if (/\p{Extended_Pictographic}/u.test(grapheme)) return 2;
+  if (rgiEmoji.test(grapheme)) return 2;
   const base = [...grapheme].find((character) =>
     !/[\p{Mn}\p{Me}\p{Cf}]/u.test(character)
   );

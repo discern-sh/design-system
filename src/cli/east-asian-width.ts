@@ -648,7 +648,7 @@ function rangesInclude(
   return false;
 }
 
-/** Width classes relevant to portable one-cell terminal glyphs. */
+/** Width classes used by the package's pinned terminal-cell measurement. */
 export type EastAsianWidthKind = "ambiguous" | "wide" | "narrow";
 
 /**

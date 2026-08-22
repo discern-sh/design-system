@@ -36,7 +36,7 @@ Deno.test("Enter and Space acknowledge; other keys hold the frame", async () => 
     message: "Review the plan above.",
   }, { io: held });
   const submissions = held.writes.filter((write) =>
-    write.includes("[submitted]")
+    write.includes("✓ Submitted")
   );
   assertEquals(
     submissions.length,
@@ -54,14 +54,14 @@ Deno.test("acknowledgement paints exact active and submitted frames", async () =
   }, { io });
   assertExactFrame(
     io.writes[1] ?? "",
-    "Notice [active]\n┌──────────────────────────────┐\n│Review the plan above.        │\n└──────────────────────────────┘\nPress Enter to continue.",
+    "Notice\n┌──────────────────────────────┐\n│ Review the plan above.       │\n└──────────────────────────────┘\nPress Enter to continue.",
     capabilities,
   );
-  const submitted = io.writes.find((write) => write.includes("[submitted]")) ??
+  const submitted = io.writes.find((write) => write.includes("✓ Submitted")) ??
     "";
   assertExactFrame(
     submitted.slice(submitted.indexOf("\x1b[J") + "\x1b[J".length),
-    "Notice [submitted]\n┌──────────────────────────────┐\n│Review the plan above.        │\n└──────────────────────────────┘\n✓ Submitted",
+    "Notice\n┌──────────────────────────────┐\n│ Review the plan above.       │\n└──────────────────────────────┘\n✓ Submitted",
     capabilities,
   );
 });
@@ -77,13 +77,13 @@ Deno.test("acknowledgement frames hold across widths, depths, and repertoires", 
   const narrow = testTerminalCapabilities({ columns: 20 });
   assertExactFrame(
     renderFieldCli({ ...state, width: 20 }, narrow),
-    "Notice [active]\n┌──────────────────┐\n│Review the plan   │\n│above.            │\n└──────────────────┘\nPress Enter to cont…",
+    "Notice\n┌──────────────────┐\n│ Review the plan  │\n│ above.           │\n└──────────────────┘\nPress Enter to cont…",
     narrow,
   );
   const ascii = testTerminalCapabilities({ columns: 32, unicode: false });
   assertExactFrame(
     renderFieldCli({ ...state, width: 32 }, ascii),
-    "Notice [active]\n+------------------------------+\n|Review the plan above.        |\n+------------------------------+\nPress Enter to continue.",
+    "Notice\n+------------------------------+\n| Review the plan above.       |\n+------------------------------+\nPress Enter to continue.",
     ascii,
   );
   const styled = testTerminalCapabilities({
@@ -92,7 +92,7 @@ Deno.test("acknowledgement frames hold across widths, depths, and repertoires", 
   });
   assertStyledFrame(
     renderFieldCli({ ...state, width: 32 }, styled),
-    "Notice [active]\n┌──────────────────────────────┐\n│Review the plan above.        │\n└──────────────────────────────┘\nPress Enter to continue.",
+    "Notice\n┌──────────────────────────────┐\n│ Review the plan above.       │\n└──────────────────────────────┘\nPress Enter to continue.",
     styled,
   );
 });
@@ -152,7 +152,7 @@ Deno.test("acknowledgement honors caller hints, reservations, and refusals", asy
     const frame = write.startsWith("\x1b[1G") && eraseAt >= 0
       ? write.slice(eraseAt + "\x1b[J".length)
       : write;
-    if (!/\[(?:active|submitted)\]/u.test(frame)) continue;
+    if (!frame.startsWith("Notice\n")) continue;
     const rows = frame.replace(/\n$/u, "").split("\n").length;
     assert(
       rows <= 6,

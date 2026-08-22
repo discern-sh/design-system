@@ -9,6 +9,7 @@ const terminalViewportProfiles = [
   { id: "compact", label: "Compact", columns: 40, rows: 24 },
   { id: "standard", label: "Standard", columns: 80, rows: 24 },
   { id: "wide", label: "Wide", columns: 120, rows: 30 },
+  { id: "tall", label: "Tall", columns: 80, rows: 40 },
 ] as const;
 
 type TerminalViewportProfileId =
@@ -41,13 +42,16 @@ export function TerminalLayoutRecipe(
       ...catalogueCliCapabilities,
       columns: profile.columns,
     };
-    return projectTerminalInspectorHtml(recipe.render(capabilities, theme), {
-      columns: profile.columns,
-      rows: profile.rows,
-      title: `${recipe.title} · ${profile.label}`,
-      showGrid,
-      theme,
-    });
+    return projectTerminalInspectorHtml(
+      recipe.render(capabilities, theme, profile.rows),
+      {
+        columns: profile.columns,
+        rows: profile.rows,
+        title: `${recipe.title} · ${profile.label}`,
+        showGrid,
+        theme,
+      },
+    );
   }, [profile, recipe, showGrid, theme]);
 
   return (

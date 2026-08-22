@@ -36,10 +36,12 @@ Deno.test("List → Blockquote → Code block keeps structure, source, and width
     output,
     [
       "• Quoted source follows.",
-      "  │ │ if (ready) {",
-      "  │ │     publish();",
-      "  │ │ }",
-      "  │ │",
+      `  │ ╭${"─".repeat(24)}╮`,
+      `  │ │ ${"if (ready) {".padEnd(23)}│`,
+      `  │ │ ${"    publish();".padEnd(23)}│`,
+      `  │ │ ${"}".padEnd(23)}│`,
+      `  │ │${" ".repeat(24)}│`,
+      `  │ ╰${"─".repeat(24)}╯`,
     ].join("\n"),
     capabilities,
   );
@@ -130,7 +132,7 @@ Deno.test("structural nesting is deterministic across every capability posture",
         unicode ? "│ ☑ Reviewed" : "| [x] Reviewed",
       );
       assertStringIncludes(visible, "nested meaning");
-      assertStringIncludes(visible.replaceAll("\n", " "), "its reference");
+      assertStringIncludes(visible.replaceAll(/[\s│|]/gu, ""), "itsreference");
       for (const line of first.split("\n")) {
         assert(measureText(line) <= capabilities.columns, stripAnsi(line));
       }

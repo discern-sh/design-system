@@ -5,9 +5,12 @@ import {
 } from "../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import {
+  createCliBlock,
   renderCalloutCli,
   renderCodeListingCli,
   renderDataFigureCli,
+  renderListCli,
+  renderParagraphCli,
 } from "../../src/cli/mod.ts";
 import { measureText, padText, truncateText } from "../../src/cli/text.ts";
 import {
@@ -130,6 +133,50 @@ Deno.test("Callout renders exact width, ASCII, and colour frames", () => {
       capabilities,
     );
   }
+});
+
+Deno.test("Callout preserves rich Component children inside its owned frame", () => {
+  const capabilities = testTerminalCapabilities({
+    columns: 32,
+    colorDepth: "none",
+    unicode: false,
+  });
+  assertExactFrame(
+    renderCalloutCli({
+      title: "Tip",
+      tone: "success",
+      children: [
+        createCliBlock(renderParagraphCli, {
+          content: [
+            "Keep ",
+            { kind: "strong", content: "meaning" },
+            " intact.",
+          ],
+        }),
+        createCliBlock(renderListCli, {
+          items: [{ content: "First fact" }, { content: "Second fact" }],
+        }),
+      ],
+    }, capabilities),
+    "+ Tip -------------------------+\n| Keep **meaning** intact.     |\n|                              |\n| * First fact                 |\n| * Second fact                |\n+------------------------------+",
+    capabilities,
+  );
+});
+
+Deno.test("Callout preserves a marker-only rich note as an empty semantic frame", () => {
+  const capabilities = testTerminalCapabilities({
+    columns: 24,
+    colorDepth: "none",
+  });
+  assertExactFrame(
+    renderCalloutCli({
+      title: "Note",
+      tone: "note",
+      children: [],
+    }, capabilities),
+    "┌ Note ────────────────┐\n│                      │\n└──────────────────────┘",
+    capabilities,
+  );
 });
 
 const codeListingProps = {

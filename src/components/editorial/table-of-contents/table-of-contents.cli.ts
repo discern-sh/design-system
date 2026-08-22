@@ -8,6 +8,7 @@ import { styleText } from "../../../cli/ansi.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { measureText, wrapText } from "../../../cli/text.ts";
+import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
 import {
   terminalThemeColor,
   terminalThemes,
@@ -80,7 +81,7 @@ const renderTableOfContentsCli: CliRenderer<TableOfContentsCliProps> = (
   for (const [index, item] of props.items.entries()) {
     if (item.nested !== true) section += 1;
     const marker = item.current === true
-      ? (capabilities.unicode ? "▶" : ">")
+      ? triangleGlyph(TRIANGLES.filled.right, capabilities.unicode)
       : " ";
     const hasFollowingNestedItem = props.items[index + 1]?.nested === true;
     const branch = capabilities.unicode

@@ -219,13 +219,25 @@ Deno.test("the publish-shaped artifact serves the neutral consumer alone", async
     await Deno.writeTextFile(
       join(consumer, "neutral.ts"),
       `import { packageManifest, semanticClass } from "${config.name}";
-import { renderBadgeCli, stripAnsi } from "${config.name}/cli";
-import { requestText, segmentGraphemes } from "${config.name}/cli/interactive";
+import { renderBadgeCli, renderHeadingCli, stripAnsi } from "${config.name}/cli";
+import {
+  type CompactAcknowledgementRequestOptions,
+  filterInteractionEntries,
+  type MarkdownBrowserLinkResolution,
+  requestAcknowledgement,
+  requestMarkdownBrowser,
+  requestText,
+  segmentGraphemes,
+  TERMINAL_MOUSE_MAX_COORDINATE,
+  TerminalInputReader,
+} from "${config.name}/cli/interactive";
 import {
   encodeTerminalKeys,
+  encodeTerminalMouseEvent,
   FakeTerminalIO,
 } from "${config.name}/cli/interactive/testing";
 import {
+  projectTerminalCellRows,
   projectTerminalHtml,
   projectTerminalSpans,
 } from "${config.name}/cli/projection";
@@ -240,11 +252,74 @@ const io = new FakeTerminalIO(
   { colorDepth: "truecolor", columns: 40 },
 );
 const requested = await requestText({ label: "Name" }, { io });
+const acknowledgement: CompactAcknowledgementRequestOptions = {
+  presentation: "compact",
+};
+const acknowledgementIo = new FakeTerminalIO(
+  [encodeTerminalKeys("enter")],
+  { colorDepth: "truecolor", columns: 40 },
+);
+await requestAcknowledgement(acknowledgement, { io: acknowledgementIo });
+const mouseEvent = {
+  kind: "mouse",
+  action: "wheel",
+  direction: "down",
+  column: 320,
+  row: 240,
+  modifiers: { shift: false, alt: true, control: false },
+} as const;
+const mouseIo = new FakeTerminalIO([encodeTerminalMouseEvent(mouseEvent)]);
+const decodedMouse = await new TerminalInputReader(mouseIo).readEvent();
+const mouseBatchIo = new FakeTerminalIO([encodeTerminalMouseEvent(mouseEvent)]);
+const decodedMouseBatch = await new TerminalInputReader(mouseBatchIo).readEvents();
+const browserIo = new FakeTerminalIO(
+  ["online", encodeTerminalKeys("enter")],
+  { colorDepth: "truecolor", columns: 40, rows: 24 },
+);
+const browserResult = await requestMarkdownBrowser({
+  label: "Documentation",
+  entries: [
+    {
+      kind: "document",
+      id: "guide",
+      label: "Guide",
+      path: "guides/guide.md",
+      source: "# Guide\\n\\n[Next](next.md#details)",
+    },
+    {
+      kind: "action",
+      id: "online",
+      label: "Read online",
+      value: "online",
+    },
+  ],
+  resolveLink(): MarkdownBrowserLinkResolution {
+    return { kind: "unresolved", message: "No admitted document." };
+  },
+}, { io: browserIo });
+const documentMatches = filterInteractionEntries(
+  [{
+    id: "guide",
+    label: "Reading guide",
+    description: "guide.md",
+    value: "guide",
+  }],
+  "guide.md",
+);
 const styledBadge = renderBadgeCli(
   { label: "Ready", dot: true, tone: "success" },
   { colorDepth: "truecolor", columns: 80, unicode: true },
 );
 const spans = projectTerminalSpans(styledBadge);
+const cellRows = projectTerminalCellRows(styledBadge);
+const readingHeading = stripAnsi(renderHeadingCli(
+  {
+    text: "Reading foundations",
+    treatment: "document",
+    leadingBlankLines: 0,
+  },
+  { colorDepth: "truecolor", columns: 40, unicode: true },
+));
 console.log(JSON.stringify({
   className: semanticClass("button"),
   badge: renderBadgeCli({ label: "Ready", dot: true }, { colorDepth: "none", columns: 80, unicode: true }),
@@ -252,6 +327,16 @@ console.log(JSON.stringify({
   files: result.manifest.integrity.files.length,
   package: packageManifest.package,
   requested,
+  compactRawModeBalanced: acknowledgementIo.rawTransitions.join(","),
+  browserKind: browserResult.kind,
+  browserRawModeBalanced: browserIo.rawTransitions.join(","),
+  browserResizeListeners: browserIo.resizeListenerCount,
+  documentMatch: documentMatches[0]?.id,
+  mouseAction: decodedMouse?.kind === "mouse" ? decodedMouse.action : "none",
+  mouseBatchSize: decodedMouseBatch?.length,
+  mouseCoordinateBound: TERMINAL_MOUSE_MAX_COORDINATE,
+  projectedColumns: cellRows[0]?.columns,
+  headingIncludesReading: readingHeading.includes("Reading foundations"),
   rawModeBalanced: io.rawTransitions.join(","),
   projectedText: spans.map(({ text }) => text).join(""),
   projectionMatchesStrip: spans.map(({ text }) => text).join("") ===
@@ -272,6 +357,16 @@ console.log(JSON.stringify({
     assertStringIncludes(output, `"graphemes":3`);
     assertStringIncludes(output, `"package":"${config.name}"`);
     assertStringIncludes(output, `"requested":"Ada"`);
+    assertStringIncludes(output, `"compactRawModeBalanced":"true,false"`);
+    assertStringIncludes(output, `"browserKind":"action"`);
+    assertStringIncludes(output, `"browserRawModeBalanced":"true,false"`);
+    assertStringIncludes(output, `"browserResizeListeners":0`);
+    assertStringIncludes(output, `"documentMatch":"guide"`);
+    assertStringIncludes(output, `"mouseAction":"wheel"`);
+    assertStringIncludes(output, `"mouseBatchSize":1`);
+    assertStringIncludes(output, `"mouseCoordinateBound":1000000`);
+    assertStringIncludes(output, `"projectedColumns":9`);
+    assertStringIncludes(output, `"headingIncludesReading":true`);
     assertStringIncludes(output, `"rawModeBalanced":"true,false"`);
     assertStringIncludes(output, `"projectedText":"[● Ready]"`);
     assertStringIncludes(output, `"projectionMatchesStrip":true`);

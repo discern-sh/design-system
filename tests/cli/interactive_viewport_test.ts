@@ -43,7 +43,7 @@ function displayedFrame(write: string): string | undefined {
   const candidate = write.startsWith(FIRST_COLUMN) && eraseAt >= 0
     ? write.slice(eraseAt + ERASE_TO_END.length)
     : write;
-  if (!/\[(?:active|error|submitted|cancelled)\]/u.test(candidate)) {
+  if (!candidate.includes("\n┌")) {
     return undefined;
   }
   return stripAnsi(
@@ -198,9 +198,7 @@ Deno.test("repeated 16-row interaction cycles do not progressively surrender ter
       choices: groupedChoices,
       visibleCount: 16,
     }, { io });
-    const frames = displayedFrames(io).filter((frame) =>
-      frame.includes("[active]")
-    );
+    const frames = displayedFrames(io).filter((frame) => frame.includes("›"));
     activeHeights.push(frameRows(frames.at(-1) ?? ""));
   }
   assertEquals(new Set(activeHeights).size, 1);
@@ -245,8 +243,7 @@ Deno.test("group headings consume real viewport rows without becoming selectable
     }, { io }),
     "3-3",
   );
-  const active =
-    displayedFrames(io).find((frame) => frame.includes("[active]")) ?? "";
+  const active = displayedFrames(io).find((frame) => frame.includes("›")) ?? "";
   assert(frameRows(active) <= 8);
   assertStringIncludes(active, "GROUP 4");
   assertStringIncludes(active, "Choice 4.4");
@@ -265,7 +262,7 @@ Deno.test("textarea uses requested tall rows and keeps the logical cursor inside
     tallValue,
   );
   const tallActive =
-    displayedFrames(tallIo).find((frame) => frame.includes("[active]")) ?? "";
+    displayedFrames(tallIo).find((frame) => frame.includes("▌")) ?? "";
   assertStringIncludes(tallActive, "Line 8▌");
   assert(frameRows(tallActive) > 7);
 
@@ -282,7 +279,7 @@ Deno.test("textarea uses requested tall rows and keeps the logical cursor inside
     assert(frameRows(frame) <= 8);
   }
   const activeFrames = displayedFrames(boundedIo).filter((frame) =>
-    frame.includes("[active]")
+    frame.includes("▌")
   );
   assert(activeFrames.every((frame) => frame.includes("▌")));
   assertStringIncludes(activeFrames[0] ?? "", "Line 8▌");

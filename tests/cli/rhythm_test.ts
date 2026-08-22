@@ -4,7 +4,7 @@ import { cliBlockBoundary, composeCliBlocks } from "../../src/cli/rhythm.ts";
 const HEADING_BLOCK = "\nRELEASE CHECKS";
 const FRAME_BLOCK = "┌────┐\n│ ok │\n└────┘";
 const LINE_BLOCK = "✓ Saved the draft";
-const TRAILING_BLOCK = "◮ Cache already warm\n\n";
+const TRAILING_BLOCK = "▸ Cache already warm\n\n";
 
 function permutations<T>(items: readonly T[]): readonly (readonly T[])[] {
   if (items.length <= 1) return [items];
@@ -30,7 +30,7 @@ Deno.test("composeCliBlocks normalises boundary-owning and trailing edges", () =
   );
   assertEquals(
     composeCliBlocks([TRAILING_BLOCK, LINE_BLOCK]),
-    "◮ Cache already warm\n\n✓ Saved the draft",
+    "▸ Cache already warm\n\n✓ Saved the draft",
   );
   assertEquals(
     composeCliBlocks(["", "   ", "\n \u001b[2m \u001b[0m\n", LINE_BLOCK]),

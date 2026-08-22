@@ -9,6 +9,10 @@ import type {
   ConformanceTarget,
 } from "../catalogue/conformance.ts";
 import { catalogueCliCapabilities } from "../catalogue/cli-preview.tsx";
+import {
+  catalogueComponentPath,
+  catalogueRoutePaths,
+} from "../catalogue/routes.ts";
 import { terminalFoundationSheets } from "../catalogue/terminal-foundations.ts";
 import { launchBrowser } from "./browser.ts";
 import {
@@ -51,6 +55,12 @@ async function loadConformancePage(
 ): Promise<void> {
   await page.goto(url, { waitUntil: "networkidle" });
   await page.locator('[data-discern-conformance-ready="true"]').waitFor();
+  await page.evaluate(() => document.fonts.ready.then(() => undefined));
+}
+
+async function loadCataloguePage(page: Page, url: string): Promise<void> {
+  await page.goto(url, { waitUntil: "networkidle" });
+  await page.locator(".discern-catalogue-shell").waitFor();
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
 }
 
@@ -604,11 +614,7 @@ async function verifyStateFragmentRestoration(
   origin: string,
 ): Promise<void> {
   await withViewport(page, WIDE_VIEWPORT, async () => {
-    await page.goto(new URL("/catalogue/", origin).href, {
-      waitUntil: "networkidle",
-    });
-    await page.locator(".discern-catalogue-shell").waitFor();
-    await page.evaluate(() => document.fonts.ready.then(() => undefined));
+    await loadConformancePage(page, conformanceUrl(origin, "light"));
     const states = await page.locator(
       '.discern-catalogue-example-state[id^="component-"][id*="--"]',
     ).evaluateAll((nodes) =>
@@ -638,11 +644,20 @@ async function verifyStateFragmentRestoration(
     }
     const state = states[Math.floor(states.length / 2)];
     invariant(state, "Fragment restoration needs a middle Catalogue state");
+    invariant(
+      state.component !== undefined,
+      "Fragment restoration needs a Component-owned state",
+    );
     const fragment = state.fragment;
-    const url = new URL("/catalogue/", origin);
+    const url = new URL(catalogueRoutePaths.overview, origin);
     url.hash = fragment;
-    await page.goto(url.href, { waitUntil: "networkidle" });
-    await page.locator(".discern-catalogue-shell").waitFor();
+    await loadCataloguePage(page, url.href);
+    invariant(
+      new URL(page.url()).pathname === catalogueComponentPath(state.component),
+      `Legacy state link did not upgrade to ${
+        catalogueComponentPath(state.component)
+      }`,
+    );
     const target = page.locator(`#${fragment}`);
     let position = Number.POSITIVE_INFINITY;
     await eventually(
@@ -762,7 +777,7 @@ async function verifyTerminalFoundationEnrollment(
   });
   await searchDialog.locator(".discern-search-palette__input").fill("spinner");
   const motifResult = searchDialog.locator(
-    '.discern-search-palette__result[href="#terminal-foundation-motifs"]',
+    `.discern-search-palette__result[href="${catalogueRoutePaths.foundations}#terminal-foundation-motifs"]`,
   );
   invariant(
     await motifResult.count() === 1,
@@ -820,15 +835,15 @@ async function verifyTerminalCatalogue(
   origin: string,
 ): Promise<TerminalCatalogueEvidence> {
   return await withViewport(page, TERMINAL_REVIEW_VIEWPORT, async () => {
-    const url = new URL("/catalogue/", origin);
-    url.searchParams.set("surface", "cli");
-    url.searchParams.set("theme", "light");
-    url.hash = "terminal-layouts";
-    await page.goto(url.href, { waitUntil: "networkidle" });
-    await page.locator(".discern-catalogue-shell").waitFor();
-    await page.evaluate(() => document.fonts.ready.then(() => undefined));
+    const foundationsUrl = new URL(catalogueRoutePaths.foundations, origin);
+    foundationsUrl.searchParams.set("theme", "light");
+    await loadCataloguePage(page, foundationsUrl.href);
 
     const foundations = await verifyTerminalFoundationEnrollment(page);
+
+    const terminalUrl = new URL(catalogueRoutePaths.terminal, origin);
+    terminalUrl.searchParams.set("theme", "light");
+    await loadCataloguePage(page, terminalUrl.href);
 
     const layouts = page.locator("[data-discern-cli-composition]");
     const layoutCount = await layouts.count();
@@ -867,9 +882,35 @@ async function verifyTerminalCatalogue(
       }
     }
 
-    const terminalSpecimens = page.locator(
-      ".discern-catalogue-cli-preview",
+    const inspectors = page.locator("[data-discern-terminal-theme]");
+    const allTerminalLayoutsUse = async (
+      theme: CatalogueTheme,
+    ): Promise<boolean> => {
+      const inspectorThemes = await inspectors.evaluateAll((nodes) =>
+        nodes.map((node) => node.getAttribute("data-discern-terminal-theme"))
+      );
+      return inspectorThemes.length === layoutCount &&
+        inspectorThemes.every((value) => value === theme);
+    };
+    invariant(
+      await allTerminalLayoutsUse("light"),
+      "Light mode did not reach every terminal layout",
     );
+    await page.getByRole("button", {
+      name: "Switch to the dark theme",
+    }).click();
+    await eventually(
+      async () => await allTerminalLayoutsUse("dark"),
+      "Dark mode did not reach every terminal layout",
+    );
+
+    const reviewUrl = new URL(catalogueRoutePaths.review, origin);
+    reviewUrl.searchParams.set("scope", "all");
+    reviewUrl.searchParams.set("surface", "cli");
+    reviewUrl.searchParams.set("theme", "light");
+    await loadCataloguePage(page, reviewUrl.href);
+
+    const terminalSpecimens = page.locator(".discern-catalogue-cli-preview");
     const componentSpecimens = page.locator(
       "[data-discern-component] .discern-catalogue-cli-preview",
     );
@@ -878,24 +919,18 @@ async function verifyTerminalCatalogue(
       componentSpecimenCount > 0,
       "Terminal Catalogue needs a rendered Component specimen",
     );
-    const inspectors = page.locator("[data-discern-terminal-theme]");
-    const allTerminalSurfacesUse = async (
+    const allComponentSurfacesUse = async (
       theme: CatalogueTheme,
     ): Promise<boolean> => {
-      const inspectorThemes = await inspectors.evaluateAll((nodes) =>
-        nodes.map((node) => node.getAttribute("data-discern-terminal-theme"))
-      );
       const surfaceThemes = await terminalSpecimens.evaluateAll((nodes) =>
         nodes.map((node) => node.getAttribute("data-discern-theme"))
       );
-      return inspectorThemes.length === layoutCount &&
-        inspectorThemes.every((value) => value === theme) &&
-        surfaceThemes.length === await terminalSpecimens.count() &&
+      return surfaceThemes.length === componentSpecimenCount &&
         surfaceThemes.every((value) => value === theme);
     };
     invariant(
-      await allTerminalSurfacesUse("light"),
-      "Light mode did not reach every terminal surface",
+      await allComponentSurfacesUse("light"),
+      "Light mode did not reach every terminal Component",
     );
 
     const headingOutput = page.locator(
@@ -917,12 +952,12 @@ async function verifyTerminalCatalogue(
       "Heading CLI specimen needs projected colour evidence",
     );
 
-    await page.locator(
-      '.discern-catalogue-theme input[value="dark"]',
-    ).check();
+    await page.getByRole("button", {
+      name: "Switch to the dark theme",
+    }).click();
     await eventually(
-      async () => await allTerminalSurfacesUse("dark"),
-      "Dark mode did not reach every terminal surface",
+      async () => await allComponentSurfacesUse("dark"),
+      "Dark mode did not reach every terminal Component",
     );
     const darkPalette = await terminalPalette();
     invariant(
@@ -932,16 +967,20 @@ async function verifyTerminalCatalogue(
     );
 
     await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
-    await page.locator(
-      '.discern-catalogue-theme input[value="system"]',
-    ).check();
+    await page.evaluate(() =>
+      localStorage.removeItem("discern-catalogue-theme")
+    );
+    const systemReviewUrl = new URL(catalogueRoutePaths.review, origin);
+    systemReviewUrl.searchParams.set("scope", "all");
+    systemReviewUrl.searchParams.set("surface", "cli");
+    await loadCataloguePage(page, systemReviewUrl.href);
     await eventually(
-      async () => await allTerminalSurfacesUse("light"),
+      async () => await allComponentSurfacesUse("light"),
       "System mode did not follow a light browser preference",
     );
     await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
     await eventually(
-      async () => await allTerminalSurfacesUse("dark"),
+      async () => await allComponentSurfacesUse("dark"),
       "System mode did not follow a changed dark browser preference",
     );
 

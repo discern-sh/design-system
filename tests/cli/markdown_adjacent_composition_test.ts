@@ -150,8 +150,9 @@ Deno.test("Markdown-adjacent Components compose with wave-2 blocks at exact docu
     "     ↩ return 2",
     "     (#evidence-ref-2)",
     "",
-    "[text]",
-    "│ complete = true",
+    `╭─ text ${"─".repeat(23)}╮`,
+    `│ ${"complete = true".padEnd(29)}│`,
+    `╰${"─".repeat(30)}╯`,
   ].join("\n");
   assertExactFrame(
     renderMarkdownAdjacentDocument(capabilities),

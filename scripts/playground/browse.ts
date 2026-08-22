@@ -24,10 +24,7 @@ import {
   type ComponentGroup,
   componentGroups,
 } from "../../src/types/component-meta.ts";
-import {
-  type InteractionEntry,
-  requestSelection,
-} from "../../src/cli/interactive/mod.ts";
+import { type InteractionEntry } from "../../src/cli/interactive/mod.ts";
 import type { PlaygroundRuntime } from "./types.ts";
 
 type TopTarget =
@@ -38,6 +35,17 @@ type TopTarget =
 type ComponentTarget = CliComponentFact | "back";
 type ExampleTarget = number | "all" | "back";
 type ExampleNavigation = number | "list";
+
+async function pauseAfterSpecimen(
+  key: string,
+  runtime: PlaygroundRuntime,
+): Promise<void> {
+  await runtime.navigator.chooseInline(key, {
+    label: "Specimen review",
+    hint: "The specimen remains above until you return.",
+    choices: [{ id: "back", label: "Back to the catalogue", value: true }],
+  });
+}
 
 /** Top-level browse menu: every canonical Group plus the foundation sheets. */
 export function browseTopChoices(
@@ -83,6 +91,7 @@ async function browseComponent(
   if (fact.entry.stance === "exempt") {
     print("");
     print(await renderCliComponent(fact.slug, fact.name, io.capabilities()));
+    await pauseAfterSpecimen(`exemption-${fact.slug}`, runtime);
     return;
   }
   const module = await loadRenderedCliModule(fact.slug, fact.entry);
@@ -96,14 +105,15 @@ async function browseComponent(
       { id: "all", label: "All examples", value: "all" },
       { id: "back", label: "Back to components", value: "back" },
     ];
-    const target = await requestSelection({
+    const target = await runtime.navigator.choose(`examples-${fact.slug}`, {
       label: `${fact.name} examples`,
       choices,
-    }, { io });
+    });
     if (target === "back" || target === undefined) return;
     if (target === "all") {
       print("");
       print(await renderCliComponent(fact.slug, fact.name, io.capabilities()));
+      await pauseAfterSpecimen(`all-examples-${fact.slug}`, runtime);
       continue;
     }
     await browseExample(fact, module, target, runtime);
@@ -147,10 +157,14 @@ async function browseExample(
       });
     }
     navigation.push({ id: "back", label: "Back to examples", value: "list" });
-    const target = await requestSelection({
-      label: "Example navigation",
-      choices: navigation,
-    }, { io });
+    const target = await runtime.navigator.chooseInline(
+      `example-navigation-${fact.slug}`,
+      {
+        label: "Example navigation",
+        choices: navigation,
+        initialId: next === undefined ? "back" : "next",
+      },
+    );
     if (target === "list" || target === undefined) return;
     index = target;
   }
@@ -160,12 +174,12 @@ async function browseGroup(
   group: ComponentGroup,
   runtime: PlaygroundRuntime,
 ): Promise<void> {
-  const { io } = runtime;
   while (true) {
-    const target = await requestSelection({
+    const target = await runtime.navigator.choose(`components-${group}`, {
       label: `${group} components`,
       choices: browseComponentChoices(group),
-    }, { io });
+      visibleCount: 14,
+    });
     if (target === "back" || target === undefined) return;
     await browseComponent(target, runtime);
   }
@@ -180,20 +194,23 @@ export async function runBrowseJourney(
 ): Promise<void> {
   const { io, print } = runtime;
   while (true) {
-    const target = await requestSelection({
+    const target = await runtime.navigator.choose("catalogue-groups", {
       label: "Static CLI catalogue",
       hint: "Enter opens; Ctrl+C returns to the hub.",
       choices: browseTopChoices(),
-    }, { io });
+      visibleCount: 14,
+    });
     if (target === "back" || target === undefined) return;
     if (typeof target === "object") {
       print("");
       print(renderTerminalFoundationSheet(target, io.capabilities()));
+      await pauseAfterSpecimen(`foundation-${target.id}`, runtime);
       continue;
     }
     if (target === "exemptions") {
       print("");
       print(renderCliExemptions());
+      await pauseAfterSpecimen("catalogue-exemptions", runtime);
       continue;
     }
     await browseGroup(target, runtime);

@@ -18,13 +18,17 @@ import {
   type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import {
-  renderMotifPattern,
+  renderMotifDivider,
   renderMotifSectionRule,
 } from "../../../cli/motifs.ts";
 import type { SectionSpacing, SectionSurface } from "./section.types.ts";
 
 /** Structural treatments available to the terminal Section renderer. */
-export type SectionCliTreatment = "plain" | "rule" | "ribbon";
+export type SectionCliTreatment =
+  | "plain"
+  | "rule"
+  | "quiet-rule"
+  | "ribbon";
 
 /** Inputs accepted by the terminal Section renderer. */
 export interface SectionCliProps extends TerminalMotifOptions {
@@ -56,6 +60,15 @@ export const cliExamples: readonly CliExample<SectionCliProps>[] = [
       title: "Details",
       body: "Supporting section content",
       treatment: "ribbon",
+      width: 24,
+    },
+  },
+  {
+    name: "quiet-labelled-rule",
+    props: {
+      title: "Details",
+      body: "Supporting section content",
+      treatment: "quiet-rule",
       width: 24,
     },
   },
@@ -92,10 +105,10 @@ const renderSectionCli: CliRenderer<SectionCliProps> = (
     (props.title === undefined ? "plain" : "rule");
   const heading: string[] = [];
   if (treatment === "ribbon") {
-    heading.push(renderMotifPattern(
+    heading.push(renderMotifDivider(
       {
-        length: width,
-        thickness: 2,
+        width,
+        alignment: "start",
         ...(props.theme === undefined ? {} : { theme: props.theme }),
         ...motifPassthrough(props),
       },
@@ -103,11 +116,12 @@ const renderSectionCli: CliRenderer<SectionCliProps> = (
     ));
   }
   if (props.title !== undefined && props.title !== "") {
-    if (treatment === "rule") {
+    if (treatment === "rule" || treatment === "quiet-rule") {
       heading.push(renderMotifSectionRule(
         props.title,
         {
           width,
+          ...(treatment === "quiet-rule" ? { treatment: "quiet" } : {}),
           ...(props.theme === undefined ? {} : { theme: props.theme }),
           ...motifPassthrough(props),
         },

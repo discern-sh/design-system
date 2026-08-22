@@ -16,7 +16,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
-import { renderMotifPattern } from "../../../cli/motifs.ts";
+import { renderMotifDivider } from "../../../cli/motifs.ts";
 import type { HeroBlockLayout, HeroBlockSurface } from "./hero-block.types.ts";
 import { marketingCliWidth, wrapMarketingCliText } from "../marketing-frame.ts";
 
@@ -47,7 +47,7 @@ export const cliExamples: readonly CliExample<HeroBlockCliProps>[] = [
   },
 ] as const;
 
-/** Render a terminal title banner beneath the effective motif weave. */
+/** Render a terminal title banner beneath a quiet leading-marker rule. */
 const renderHeroBlockCli: CliRenderer<HeroBlockCliProps> = (
   props,
   capabilities,
@@ -73,8 +73,9 @@ const renderHeroBlockCli: CliRenderer<HeroBlockCliProps> = (
     props.meta === undefined ? "" : wrapMarketingCliText(props.meta, bodyWidth),
   ], { spacing: 1 });
   return joinVertical([
-    renderMotifPattern({
-      length: width,
+    renderMotifDivider({
+      width,
+      alignment: "start",
       tone: semanticTone,
       ...(props.theme === undefined ? {} : { theme: props.theme }),
       ...motifPassthrough(props),

@@ -13,6 +13,7 @@ import {
   deriveTerminalMotif,
   DISCERN_TERMINAL_MOTIF,
   renderMotifActivityBeacon,
+  renderMotifDivider,
   renderMotifPattern,
   renderMotifProgressFrame,
   renderMotifSectionRule,
@@ -109,7 +110,7 @@ function motifSpecimens(
   const spinnerFrames = repertoire.spinner.map((_glyph, phase) =>
     renderMotifSpinnerFrame(phase, capabilities, appearance)
   );
-  const progress = [0, 25, 100].map((completed) =>
+  const progress = [0, 65, 100].map((completed) =>
     `${completed} percent\n${
       renderMotifProgressFrame({
         completed,
@@ -128,13 +129,13 @@ function motifSpecimens(
     capabilities,
     appearance,
   );
-  const beaconWidth = Math.min(16, width);
-  const beaconExtent = beaconWidth - 4;
+  const beaconWidth = width;
+  const beaconExtent = beaconWidth - 1;
   const beaconPhases = [
     0,
-    Math.floor(beaconExtent / 2),
+    Math.floor(beaconExtent / 3),
+    Math.floor(beaconExtent * 2 / 3),
     beaconExtent,
-    beaconExtent + Math.floor(beaconExtent / 2),
   ];
   const beacons = beaconPhases.map((phase) =>
     `phase ${phase}\n${
@@ -157,8 +158,26 @@ function motifSpecimens(
     {
       id: "horizontal-divider",
       title: "Horizontal divider",
-      output: renderMotifPattern({
-        length: patternLength,
+      output: renderMotifDivider({
+        width,
+        ...appearance,
+      }, capabilities),
+    },
+    {
+      id: "left-aligned-divider",
+      title: "Left-aligned divider",
+      output: renderMotifDivider({
+        width,
+        alignment: "start",
+        ...appearance,
+      }, capabilities),
+    },
+    {
+      id: "brand-register-divider",
+      title: "Brand-register divider",
+      output: renderMotifDivider({
+        width,
+        register: "brand",
         ...appearance,
       }, capabilities),
     },
@@ -176,16 +195,6 @@ function motifSpecimens(
       title: "Thick ribbon",
       output: renderMotifPattern({
         length: patternLength,
-        thickness: 2,
-        ...appearance,
-      }, capabilities),
-    },
-    {
-      id: "field-weave",
-      title: "Field / weave",
-      output: renderMotifPattern({
-        length: patternLength,
-        thickness: 4,
         ...appearance,
       }, capabilities),
     },
@@ -234,7 +243,7 @@ function motifSpecimens(
           { label: "Active", status: "active", phase: 1 },
           { label: "Pending", status: "pending" },
         ]),
-        custom.note("One bound marker reaches narration too"),
+        custom.lead("One bound marker reaches narration too"),
       ].join("\n"),
       animation: {
         label: "Consumer spinner",
@@ -302,7 +311,7 @@ export const terminalFoundationSheets = [
     description:
       "Default and consumer-derived motifs across animation, pattern, progress, status, and narration roles.",
     keywords:
-      "spinner triangle glyph pattern progress stepper activity beacon consumer override Unicode ASCII",
+      "spinner half circle glyph pattern progress stepper activity beacon consumer override Unicode ASCII",
     specimens: motifSpecimens,
   },
   {

@@ -6,6 +6,7 @@
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
+import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
 import {
   assertWorkflowCliText,
   styleWorkflowHeading,
@@ -45,9 +46,10 @@ const renderRawOutputCli: CliRenderer<RawOutputCliProps> = (
   assertWorkflowCliText(label, "raw output label");
   const width = workflowCliWidth(props.maxWidth, capabilities);
   const expanded = props.expanded ?? true;
-  const marker = capabilities.unicode
-    ? (expanded ? "▾" : "▸")
-    : (expanded ? "v" : ">");
+  const marker = triangleGlyph(
+    expanded ? TRIANGLES.filledSmall.down : TRIANGLES.filledSmall.right,
+    capabilities.unicode,
+  );
   const heading = styleWorkflowHeading(
     workflowPrefixedLines(`${marker} `, label, width).join("\n"),
     "neutral",

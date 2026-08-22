@@ -41,6 +41,25 @@ type PresentableRenderer = CliRenderer<CliPresentationOptions>;
 
 const CUSTOM_MOTIF = TEST_TERMINAL_MOTIF;
 
+// ◐ also carries non-motif presence and artwork semantics, and the plain
+// triangles are package-owned design geometry any renderer may emit, so
+// only glyphs exclusive to the preset can prove a reset to that preset.
+const DISCERN_EXCLUSIVE_MOTIF_GLYPHS = [
+  "◮",
+  "⧩",
+  "◭",
+  "⧨",
+  "◓",
+  "◑",
+  "◒",
+] as const;
+
+function discernMotifGlyphLeaks(output: string): readonly string[] {
+  return DISCERN_EXCLUSIVE_MOTIF_GLYPHS.filter((glyph) =>
+    output.includes(glyph)
+  );
+}
+
 type StringFunctionKeys<Surface> = {
   [Key in keyof Surface]: Surface[Key] extends (
     ...args: infer _Args
@@ -204,7 +223,7 @@ Deno.test("presenter motifs bind globally, override per call, and reach semantic
     presenter.present(renderMotifPattern, { length: 4 }),
     "▵▹▿◃",
   );
-  assertEquals(presenter.note("Custom marker"), "◉ Custom marker");
+  assertEquals(presenter.note("Custom marker"), "▸ Custom marker");
   assertStringIncludes(
     presenter.present(renderTimelineCli, {
       title: "Status",
@@ -221,14 +240,38 @@ Deno.test("presenter motifs bind globally, override per call, and reach semantic
     presenter.motifSpinnerFrame(0, {
       motif: DISCERN_TERMINAL_MOTIF,
     }),
-    "▴",
+    "◐",
   );
   assertEquals(
     presenter.present(renderMotifPattern, {
       length: 4,
       motif: DISCERN_TERMINAL_MOTIF,
     }),
+    "▲▷▼◁",
+  );
+  assertEquals(
+    presenter.present(renderMotifPattern, {
+      length: 4,
+      motif: DISCERN_TERMINAL_MOTIF,
+      register: "brand",
+    }),
     "◮⧩◭⧨",
+  );
+});
+
+Deno.test("the motif leak guard catches an unrelated renderer that resets the default", () => {
+  const capabilities = testTerminalCapabilities({ columns: 8 });
+  const presenter = createCliPresenter(capabilities, {
+    motif: CUSTOM_MOTIF,
+  });
+  const renderPulse: CliRenderer<CliPresentationOptions> = (
+    _props,
+    terminal,
+  ) => renderMotifSpinnerFrame(1, terminal);
+
+  assertEquals(
+    discernMotifGlyphLeaks(presenter.present(renderPulse, {})),
+    ["◓"],
   );
 });
 
@@ -429,25 +472,20 @@ Deno.test("every rendered component inherits the bound motif without discern gly
     const module = await loadRenderedCliModule(slug, entry);
     const render = module.render as PresentableRenderer;
     for (const example of module.examples) {
-      frames.push(
-        presenter.present(
-          render,
-          example.props as Parameters<PresentableRenderer>[0],
-        ),
+      const frame = presenter.present(
+        render,
+        example.props as Parameters<PresentableRenderer>[0],
       );
+      assertEquals(
+        discernMotifGlyphLeaks(frame),
+        [],
+        `${slug} example ${example.name} leaked the default motif`,
+      );
+      frames.push(frame);
     }
   }
   const output = frames.join("\n");
-  // ▸ and ▾ also carry non-motif disclosure semantics in FAQ and raw-output
-  // Components, so only the repertoire's distinctive glyphs belong here.
-  for (const defaultGlyph of ["◮", "⧩", "◭", "⧨", "▴", "◂"]) {
-    assertEquals(
-      output.includes(defaultGlyph),
-      false,
-      `bound component output leaked default glyph ${defaultGlyph}`,
-    );
-  }
-  for (const customGlyph of ["▵", "▹", "▿", "◃", "◉", "◶"]) {
+  for (const customGlyph of ["▵", "▿", "◉", "◶"]) {
     assertEquals(
       output.includes(customGlyph),
       true,

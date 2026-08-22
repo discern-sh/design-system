@@ -10,6 +10,7 @@ import {
   type TerminalMotifOptions,
 } from "../../../cli/motif.ts";
 import { renderMotifActivityBeacon } from "../../../cli/motifs.ts";
+import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
 import type {
   TerminalSemanticTone,
   TerminalThemeVariant,
@@ -116,6 +117,7 @@ const renderWorklogCli: CliRenderer<WorklogCliProps> = (
         {
           width: 8,
           phase: entry.phase ?? 0,
+          marker: triangleGlyph(TRIANGLES.filledSmall.up, capabilities.unicode),
           ...(props.theme === undefined ? {} : { theme: props.theme }),
           ...motifPassthrough(props),
         },

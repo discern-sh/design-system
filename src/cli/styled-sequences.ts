@@ -76,7 +76,8 @@ function channel(codes: readonly number[], index: number): number | undefined {
 
 interface SgrState {
   readonly attributes: Set<number>;
-  colour: readonly number[] | undefined;
+  foreground: readonly number[] | undefined;
+  background: readonly number[] | undefined;
 }
 
 function applySgr(
@@ -93,15 +94,18 @@ function applySgr(
     if (code === undefined) break;
     if (code === 0) {
       state.attributes.clear();
-      state.colour = undefined;
+      state.foreground = undefined;
+      state.background = undefined;
     } else if (ATTRIBUTE_CODES.some((attribute) => attribute === code)) {
       state.attributes.add(code);
     } else if ((code >= 30 && code <= 37) || (code >= 90 && code <= 97)) {
-      state.colour = [code];
+      state.foreground = [code];
+    } else if ((code >= 40 && code <= 47) || (code >= 100 && code <= 107)) {
+      state.background = [code];
     } else if (code === 38 && codes[index + 1] === 5) {
       const value = channel(codes, index + 2);
       if (value === undefined) reject();
-      state.colour = [38, 5, value];
+      state.foreground = [38, 5, value];
       index += 2;
     } else if (code === 38 && codes[index + 1] === 2) {
       const red = channel(codes, index + 2);
@@ -110,7 +114,21 @@ function applySgr(
       if (red === undefined || green === undefined || blue === undefined) {
         reject();
       }
-      state.colour = [38, 2, red, green, blue];
+      state.foreground = [38, 2, red, green, blue];
+      index += 4;
+    } else if (code === 48 && codes[index + 1] === 5) {
+      const value = channel(codes, index + 2);
+      if (value === undefined) reject();
+      state.background = [48, 5, value];
+      index += 2;
+    } else if (code === 48 && codes[index + 1] === 2) {
+      const red = channel(codes, index + 2);
+      const green = channel(codes, index + 3);
+      const blue = channel(codes, index + 4);
+      if (red === undefined || green === undefined || blue === undefined) {
+        reject();
+      }
+      state.background = [48, 2, red, green, blue];
       index += 4;
     } else {
       reject();
@@ -122,7 +140,8 @@ function applySgr(
 function canonicalCodes(state: SgrState): readonly number[] {
   return [
     ...ATTRIBUTE_CODES.filter((code) => state.attributes.has(code)),
-    ...(state.colour ?? []),
+    ...(state.foreground ?? []),
+    ...(state.background ?? []),
   ];
 }
 
@@ -161,7 +180,7 @@ export function mergeStyledSegments(
  * Parse package-emitted styled text into uniformly styled runs, tracking SGR
  * attributes, colour, and open hyperlink envelopes exactly as a terminal
  * would. Only sequences the package composes are accepted: SGR resets,
- * attribute and foreground-colour codes, and complete ST-ended OSC 8
+ * attribute, foreground- and background-colour codes, and complete ST-ended OSC 8
  * envelopes with printable-ASCII targets. Anything else — foreign controls,
  * unterminated sequences, BEL-ended envelopes — throws a `TypeError` naming
  * the offending bytes. Styling left open at the end of input simply ends
@@ -169,7 +188,11 @@ export function mergeStyledSegments(
  */
 export function parseStyledSource(value: string): readonly StyledSegment[] {
   const segments: StyledSegment[] = [];
-  const state: SgrState = { attributes: new Set(), colour: undefined };
+  const state: SgrState = {
+    attributes: new Set(),
+    foreground: undefined,
+    background: undefined,
+  };
   let link: string | undefined;
   let text = "";
   let index = 0;
@@ -255,4 +278,37 @@ export function emitStyledLine(segments: readonly StyledSegment[]): string {
   }
   if (link !== undefined) output += hyperlinkSequence("");
   return output;
+}
+
+/**
+ * Rewrite hyperlink targets in package-styled text without changing visible
+ * text or SGR styling. Rows are re-emitted independently, so every style and
+ * hyperlink remains closed at each newline. Returning `undefined` removes an
+ * envelope while preserving its label.
+ */
+export function mapStyledHyperlinks(
+  value: string,
+  mapper: (target: string) => string | undefined,
+): string {
+  const rows: StyledSegment[][] = [[]];
+  for (const segment of parseStyledSource(value)) {
+    const parts = segment.text.split("\n");
+    for (const [index, text] of parts.entries()) {
+      if (text !== "") {
+        const link = segment.link === undefined
+          ? undefined
+          : mapper(segment.link);
+        if (link !== undefined && !validHyperlinkTarget(link)) {
+          throw new TypeError(
+            `mapped hyperlink target must be non-empty printable ASCII; received ${
+              JSON.stringify(link)
+            }`,
+          );
+        }
+        rows.at(-1)?.push({ text, codes: segment.codes, link });
+      }
+      if (index < parts.length - 1) rows.push([]);
+    }
+  }
+  return rows.map(emitStyledLine).join("\n");
 }

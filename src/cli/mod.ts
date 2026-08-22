@@ -17,14 +17,18 @@ export {
   defineTerminalMotif,
   deriveTerminalMotif,
   DISCERN_TERMINAL_MOTIF,
+  terminalMotifQuietMarker,
+  terminalMotifRegisterRoles,
   terminalMotifRepertoire,
 } from "./motif.ts";
 export type {
   TerminalMotif,
+  TerminalMotifBrandRegister,
   TerminalMotifCycle,
   TerminalMotifDefinition,
   TerminalMotifOptions,
   TerminalMotifOverrides,
+  TerminalMotifRegister,
   TerminalMotifRepertoire,
   TerminalMotifRepertoireDefinition,
   TerminalMotifRepertoireOverrides,
@@ -36,5 +40,6 @@ export * from "./result-summary-group.ts";
 export * from "./rhythm.ts";
 export * from "./text.ts";
 export * from "./theme.ts";
+export * from "./triangles.ts";
 export * from "../generated/cli-registry.ts";
 export * from "../generated/cli-renderers.ts";

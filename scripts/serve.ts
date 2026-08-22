@@ -1,3 +1,10 @@
+import {
+  MARKDOWN_BROWSER_LEGACY_REVIEW_PATH,
+  MARKDOWN_BROWSER_REVIEW_PATH,
+  renderMarkdownBrowserReviewPage,
+} from "../catalogue/markdown-browser-review.ts";
+import { canonicalCatalogueShellPathname } from "../catalogue/routes.ts";
+
 const ROOT = new URL("../", import.meta.url);
 const CONTENT_TYPES: Readonly<Record<string, string>> = {
   ".css": "text/css; charset=utf-8",
@@ -35,9 +42,35 @@ function safePath(url: URL): URL | null {
   return path === null ? null : new URL(path, ROOT);
 }
 
+/** Source-rendered review routes that must survive replacement of build output. */
+export const catalogueReviewRoutes = Object.freeze([
+  Object.freeze({
+    pathname: MARKDOWN_BROWSER_REVIEW_PATH,
+    render: renderMarkdownBrowserReviewPage,
+  }),
+]);
+
 export default {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
+    if (url.pathname === MARKDOWN_BROWSER_LEGACY_REVIEW_PATH) {
+      url.pathname = MARKDOWN_BROWSER_REVIEW_PATH;
+      return Response.redirect(url, 307);
+    }
+    for (const route of catalogueReviewRoutes) {
+      if (url.pathname === route.pathname.slice(0, -1)) {
+        url.pathname = route.pathname;
+        return Response.redirect(url, 307);
+      }
+      if (url.pathname === route.pathname) {
+        return new Response(route.render(), {
+          headers: {
+            "cache-control": "no-store",
+            "content-type": "text/html; charset=utf-8",
+          },
+        });
+      }
+    }
     for (const legacyMount of ["/style-guide", "/styleguide"] as const) {
       if (
         url.pathname === legacyMount ||
@@ -51,6 +84,14 @@ export default {
     if (url.pathname === "/" || url.pathname === "/catalogue") {
       url.pathname = "/catalogue/";
       return Response.redirect(url, 307);
+    }
+    const shellPathname = canonicalCatalogueShellPathname(url.pathname);
+    if (shellPathname !== null) {
+      if (url.pathname !== shellPathname) {
+        url.pathname = shellPathname;
+        return Response.redirect(url, 307);
+      }
+      url.pathname = "/catalogue/";
     }
     const target = safePath(url);
     if (!target) return new Response("Bad request", { status: 400 });

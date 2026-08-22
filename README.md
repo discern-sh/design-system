@@ -13,7 +13,7 @@ deno add jsr:@discern-sh/design-system
 | `@discern-sh/design-system`                         | Token metadata, component/group metadata types, the package manifest, and `semanticClass` |
 | `@discern-sh/design-system/cli`                     | Pure React-free terminal renderers, capabilities, themes, and semantic motif primitives   |
 | `@discern-sh/design-system/cli/interactive`         | Optional Deno terminal driver and typed interaction state machines                        |
-| `@discern-sh/design-system/cli/interactive/testing` | Deterministic fake terminal, named-key scripting, and frame assertions                    |
+| `@discern-sh/design-system/cli/interactive/testing` | Deterministic fake terminal, semantic key/resize scripts, and frame assertions            |
 | `@discern-sh/design-system/cli/projection`          | Package-output decoding, browser projection, and explicit layout inspection               |
 | `@discern-sh/design-system/manifest`                | Framework-neutral manifest schema and the complete package ownership manifest             |
 | `@discern-sh/design-system/runtime`                 | Deterministic selected-runtime emitter                                                    |
@@ -143,6 +143,36 @@ console.log(output);
 
 The presenter is the default route when one consumer renders more than one frame: it binds capabilities, theme, terminal motif, and an optional default width once. Component renderers plus motif pattern, progress, and beacon renderers use `present(renderer, props)`. The foundation call shapes that do not fit that signature are bound directly as `box()`, `motifSpinnerFrame()`, `motifSectionRule()`, and `motifWorkflowStepper()`. An explicit per-call theme, motif, or narrower width wins over the presenter; omission falls back to the bound presenter and then the package's discern motif. The raw `(props, capabilities)` renderer APIs remain available when a caller already threads those facts itself.
 
+`renderMarkdownCli` accepts untrusted CommonMark/GFM source and returns one complete document through the package's real terminal Components. Pass capabilities explicitly; the renderer performs no detection, I/O, environment read, or clock read:
+
+```ts
+import {
+  renderMarkdownCli,
+  type TerminalCapabilities,
+} from "@discern-sh/design-system/cli";
+
+const capabilities = {
+  ansiControl: false,
+  colorDepth: "none",
+  columns: 72,
+  hyperlinks: false,
+  unicode: true,
+} satisfies TerminalCapabilities;
+
+const source =
+  "# Report\n\n- Evidence remains complete\n- [Targets stay visible](https://example.test/source)";
+
+const output = renderMarkdownCli({
+  source,
+  theme: "dark",
+  maxWidth: 72,
+}, capabilities);
+
+console.log(output);
+```
+
+The fixed dialect includes CommonMark, GFM tables/task lists/strikethrough/autolinks, GitHub alerts, and footnotes. Raw HTML is inert, comments are omitted, unsafe destinations remain visible but non-clickable, controls become visible notation, duplicate heading fragments are stable, and empty source returns the empty string.
+
 The package supplies one discern-flavoured preset without making triangles part of the generic renderer contract. Define a complete product language with `defineTerminalMotif()`, or replace only selected semantic roles with `deriveTerminalMotif()`:
 
 ```ts
@@ -169,7 +199,7 @@ const productPresenter = createCliPresenter(capabilities, {
 console.log(productPresenter.motifSpinnerFrame(1)); // ◷
 ```
 
-Every definition includes Unicode and ASCII repertoires for spinner, repeated pattern, accent marker, and complete/incomplete status roles. Definitions are validated and frozen at construction. Each Unicode glyph must be one visible, non-combining scalar that is one cell under the pinned Unicode 17.0 East Asian Width data; Ambiguous, Wide, and Fullwidth scalars are rejected because their terminal geometry is not portable. Each ASCII fallback is one printable non-space character. For example, the quadrant-circle cycle above is portable under that policy, while `◐` and `◑` are East Asian Width–Ambiguous.
+Every definition includes Unicode and ASCII repertoires for spinner, repeated pattern, accent marker, and complete/incomplete status roles. Definitions are validated and frozen at construction. Each Unicode glyph must be one assigned, visible, non-combining scalar that occupies one cell under the package's pinned Unicode 17.0 narrow-A geometry: East Asian Width–Ambiguous scalars such as `◐` and `◑` occupy one cell, while Wide/Fullwidth scalars and RGI emoji occupy two and are rejected. Each ASCII fallback is one printable non-space character. This is the same width policy every CLI layout uses; it does not claim support for terminals configured to render Ambiguous scalars as two cells.
 
 To review a complete static frame as a layout, use the pure projection entrypoint with an explicit terminal viewport:
 
@@ -213,6 +243,66 @@ const environment = await requestSelection({
 
 The `group-heading` entry is semantic interaction structure: it has a stable ID and non-empty label, needs no sentinel value of the caller's generic type, and can never be highlighted, toggled, or returned. Every rendered heading has one empty framed row above it. Disabled choices remain selectable entries with their own visible disabled state. Scrolling Select, Radio, Checkbox, and search frames use all available terminal columns unless an explicit `width` narrows them; wrapped labels keep their marker-aligned hanging indent and styling as the highlight moves. Select and search `visibleCount` plus Textarea `rows` are requested upper bounds: the adapter reduces only the current visible window when terminal height is tight and expands it again after a resize. A quiet lower-border label such as `↑ 2 more · ↓ 7 more` states how many choices remain outside the window, with `^`, `v`, and `|` fallbacks in ASCII. Search accepts `initialId` to restore an enabled provider result by stable ID without inventing a query or keypress.
 
+`requestMarkdownBrowser()` owns a complete keyboard viewport for caller-supplied Markdown, with optional SGR mouse input. The picker uses the full height until a document opens, then the picker and document receive adaptive, independently scrollable panes; constrained terminals show one focused pane at a time. Documents always pass through the package Markdown renderer, while actions and safe external links return as typed data after mouse tracking, raw mode, cursor visibility, resize observation, and the normal screen have been restored:
+
+```ts
+import {
+  type MarkdownBrowserResumableState,
+  requestMarkdownBrowser,
+} from "@discern-sh/design-system/cli/interactive";
+
+let resume: MarkdownBrowserResumableState | undefined;
+const result = await requestMarkdownBrowser({
+  label: "Documentation",
+  entries: [
+    { kind: "group-heading", id: "guides", label: "Guides" },
+    {
+      kind: "document",
+      id: "start",
+      label: "Getting started",
+      path: "guides/getting-started.md",
+      source:
+        "# Getting started\n\n[Testing](../reference/testing.md#fake-terminal) · [Website](https://example.test/docs)",
+    },
+    {
+      kind: "document",
+      id: "testing",
+      label: "Testing",
+      path: "reference/testing.md",
+      source: "# Testing\n\n## Fake terminal\n\nScript semantic events.",
+    },
+    {
+      kind: "action",
+      id: "online",
+      label: "Read the docs online",
+      value: { kind: "open", href: "https://example.test/docs" },
+    },
+    { kind: "exit", id: "quit", label: "Quit" },
+  ],
+  mouse: true,
+  resolveLink({ destination }) {
+    return destination === "../reference/testing.md#fake-terminal"
+      ? { kind: "document", documentId: "testing", fragment: "fake-terminal" }
+      : { kind: "unresolved", message: "Document is outside this corpus." };
+  },
+  ...(resume === undefined ? {} : { initialState: resume }),
+}, { theme: "dark", motif: productMotif });
+
+resume = result.state;
+if (result.kind === "action") {
+  // The terminal is restored here; the consumer may now perform its effect.
+  console.log(result.value.href);
+}
+if (result.kind === "external-link") {
+  // Opening the URL is still a consumer effect and starts only from here.
+  console.log(result.destination);
+}
+```
+
+Picker focus owns grapheme-aware typing, Up/Down, Ctrl+P/Ctrl+N, Page Up/Page Down, Home/End, and Enter. Document focus assigns the scrolling keys to Markdown; ordinary movement advances rendered rows monotonically, while semantic anchors are consumed only after resume or reflow and repeated anchors choose the occurrence nearest their proportional fallback. `]` and `[` traverse logical link occurrences, Enter follows the focused link, and Escape first returns to ordinary scrolling. Same-document fragments stay inside the reader. Relative and root-relative paths reach `resolveLink`, whose closed result admits a document/fragment, external destination, or bounded unresolved feedback; the package never loads a file or opens a URL. Tab and Shift+Tab change panes, while Escape or `q` closes an unfocused document. Escape in the full picker, Ctrl+C, EOF, and an optional `MarkdownBrowserRuntime.abortSignal` use `InteractionCancelled`. `MarkdownBrowserRefusalError` reports unsupported ANSI control or geometry too small for one coherent pane before the initial terminal mutation. Pure `createMarkdownBrowserState()`, `transitionMarkdownBrowser()`, and `renderMarkdownBrowser()` exports support deterministic state and frame tests without terminal effects.
+
+Mouse tracking is additive and explicit: `mouse: true` requests DECSET 1000 button reports with DECSET 1006 extended coordinates only when the terminal is interactive, ANSI control is available, and `TerminalCapabilities.mouseTracking` has not refused it. Omission leaves the complete keyboard contract and writes no mouse controls. `TerminalInputReader.readEvent()` retains one-event compatibility, while `readEvents()` returns the semantic events decoded from one raw chunk so complete-frame consumers can preserve order and repaint once per burst; the browser gives Ctrl+C priority over queued wheel work. After observed mouse input, browser cleanup disables both tracking modes, drains reports queued before a bounded cursor-position fence while preserving surrounding input, then restores the cursor, normal screen, and raw mode. OSC 8 output and mouse input are independent — one never proves support for the other. While tracking is active, unmodified clicks and wheel events go to the application instead of ordinary terminal selection or native link gestures; many terminals use Shift as a temporary bypass, but that modifier is terminal-configurable, so callers needing native selection should leave mouse tracking off.
+
 Full-width section headings use one restrained motif marker rather than a repeated field. The presenter's `motifSectionRule()` binds its theme, motif, and capabilities, defaults to the one-row strong embedded treatment, and also exposes explicit underline and sandwich variants:
 
 ```ts
@@ -241,7 +331,7 @@ console.log(renderFleetCli({
 }, capabilities));
 ```
 
-Run `deno task catalogue:cli` to inspect every rendered Component, every recorded exemption, and the shared Terminal motifs and Narration lines foundations. Pass a Component slug or Group name to narrow the output, or `motifs` for the motif sheet alone. The browser Catalogue renders those same foundation registries under Foundations: search for “spinner” to reach live, reduced-motion-safe default and consumer animations beside their complete static phase evidence.
+Run `deno task catalogue:cli` in a real terminal to browse one generated CLI specimen at a time without filling scrollback. Search by Component name, slug, or Group; move between Components and examples with the arrow keys; and page through tall specimens. `deno task catalogue:cli --list` prints the compact generated inventory, an exact Component slug, Group, or foundation ID prints that deterministic selection, and `deno task catalogue:cli all` explicitly prints the exhaustive catalogue. The browser Catalogue renders those same foundation registries under Foundations: search for “spinner” to reach live, reduced-motion-safe default and consumer animations beside their complete static phase evidence.
 
 ## Optional React adapter
 
@@ -256,7 +346,7 @@ const html = renderToStaticMarkup(
 );
 ```
 
-Discern uses this adapter at build time only: no React bundle or hydration reaches the browser. Static components need no browser runtime; components whose Metadata declares browser behavior use the selection-scoped `discern.js` emitted beside their CSS. Stateful catalogue examples beyond that published behavior still require a consumer-owned browser strategy outside the catalogue.
+The `Markdown` React Component accepts the same untrusted `source` plus an optional Prose `measure`, composes native document semantics without `dangerouslySetInnerHTML`, and renders no wrapper for empty source. Discern uses this adapter at build time only: no React bundle or hydration reaches the browser. Static components need no browser runtime; components whose Metadata declares browser behavior use the selection-scoped `discern.js` emitted beside their CSS. Stateful catalogue examples beyond that published behavior still require a consumer-owned browser strategy outside the catalogue.
 
 ## Output sizes
 
@@ -279,7 +369,7 @@ A mandatory resilience phase discovers rendered disclosures, interactive control
 
 ### Terminal review surfaces
 
-`deno task catalogue:cli` statically prints every rendered Component example, every recorded exemption, and every sheet in the terminal-foundation registry; the browser Catalogue maps that same registry into searchable Foundation specimens. `deno task playground:cli` is the live terminal counterpart, driving the real interactive adapter. The playground opens a hub of named journeys covering every high-level interaction, activity, and sequential-form API, static-catalogue browsing, and stress cases for width, height, resize, Unicode/ASCII repertoire, colour degradation, and repeated interaction cycles. `deno task playground:cli --list` prints every journey ID without a TTY, `tour` visits them all in recommended order, and a direct `<journey-id>` bypasses the hub menu entirely. These surfaces derive their inventories from the generated Component registries or the shared terminal-foundation registry, so a new member auto-enrols in its applicable review paths; each journey prints the current terminal facts (columns, rows, Unicode, colour depth, ANSI control) before it runs so observations are reproducible. These are development and review instruments for this repository, not published package APIs.
+`deno task catalogue:cli` opens an alternate-screen browser over every rendered Component example, recorded exemption, and terminal-foundation sheet; `--list`, an exact selector, and the explicit `all` dump remain finite or deterministic stdout modes. The browser Catalogue maps that same registry into searchable Foundation specimens. `deno task playground:cli` is the live terminal counterpart, driving the real interactive adapter. Its alternate-screen hub first divides the forty journeys into review sections and offers global search; the menu restores normal scrollback before a journey runs, remembers the previous destination, and pauses after completion with Repeat, Next, Back, and Quit actions. `deno task playground:cli --list` prints every journey ID without a TTY, `tour` visits them all in recommended order, and a direct `<journey-id>` bypasses the hub entirely. These surfaces derive their inventories from the generated Component registries or the shared terminal-foundation registry, so a new member auto-enrols in its applicable review paths; each journey prints the current terminal facts (columns, rows, Unicode, colour depth, ANSI control) before it runs so observations are reproducible. These are development and review instruments for this repository, not published package APIs.
 
 ### Authoring rules
 

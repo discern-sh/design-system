@@ -1,7 +1,7 @@
 /**
  * Deterministic terminal for testing interactive requests against the
- * package's real machinery. Scripted input flows through the real key
- * decoder, interaction state machines, and Component renderers, while writes
+ * package's real machinery. Scripted input flows through the real key and
+ * mouse decoder, interaction state machines, and Component renderers, while writes
  * and raw-mode transitions stay captured for assertion — so a test exercises
  * the production path rather than a simulation of it.
  *
@@ -12,7 +12,12 @@ import { stripAnsi } from "../ansi.ts";
 import type { TerminalCapabilities } from "../capabilities.ts";
 import { measureText } from "../text.ts";
 import type { TerminalIO, TerminalSize } from "./io.ts";
-import type { TerminalKeyName } from "./keys.ts";
+import {
+  TERMINAL_MOUSE_MAX_COORDINATE,
+  type TerminalKeyName,
+  type TerminalMouseButton,
+  type TerminalMouseEvent,
+} from "./keys.ts";
 import type { TerminalSignalSource } from "./signals.ts";
 
 const ESCAPE = "\u001b";
@@ -23,6 +28,8 @@ export interface FakeTerminalIOOptions {
   readonly interactive?: boolean;
   readonly colorDepth?: TerminalCapabilities["colorDepth"];
   readonly columns?: number;
+  readonly hyperlinks?: boolean;
+  readonly mouseTracking?: boolean;
   readonly rows?: number;
   readonly unicode?: boolean;
   /**
@@ -32,6 +39,18 @@ export interface FakeTerminalIOOptions {
    */
   readonly holdOpen?: boolean;
 }
+
+/** One deterministic text, key, mouse, resize, or EOF event. */
+export type TerminalTestEvent =
+  | { readonly kind: "text"; readonly value: string }
+  | { readonly kind: "keys"; readonly keys: readonly TerminalKeyName[] }
+  | {
+    readonly kind: "resize";
+    readonly columns: number;
+    readonly rows?: number;
+  }
+  | TerminalMouseEvent
+  | { readonly kind: "end-of-input" };
 
 /**
  * Canonical byte sequence for every named key the package decodes. Adding a
@@ -77,6 +96,36 @@ export function encodeTerminalKeys(
   return names.map((name) => TERMINAL_KEY_SEQUENCES[name]).join("");
 }
 
+function mouseButtonCode(button: TerminalMouseButton): number {
+  return button === "left" ? 0 : button === "middle" ? 1 : 2;
+}
+
+function assertMouseCoordinate(value: number, name: string): void {
+  if (
+    !Number.isSafeInteger(value) || value < 1 ||
+    value > TERMINAL_MOUSE_MAX_COORDINATE
+  ) {
+    throw new TypeError(
+      `${name} must be a positive safe integer no greater than ${TERMINAL_MOUSE_MAX_COORDINATE}; received ${value}`,
+    );
+  }
+}
+
+/** Encode one semantic mouse event as the selected SGR 1006 report. */
+export function encodeTerminalMouseEvent(event: TerminalMouseEvent): string {
+  assertMouseCoordinate(event.column, "mouse column");
+  assertMouseCoordinate(event.row, "mouse row");
+  const modifiers = (event.modifiers.shift ? 4 : 0) |
+    (event.modifiers.alt ? 8 : 0) |
+    (event.modifiers.control ? 16 : 0);
+  const code = event.action === "wheel"
+    ? 64 + (event.direction === "down" ? 1 : 0) + modifiers
+    : mouseButtonCode(event.button) + modifiers;
+  return `${ESCAPE}[<${code};${event.column};${event.row}${
+    event.action === "release" ? "m" : "M"
+  }`;
+}
+
 interface QueuedResize {
   readonly columns: number;
   readonly rows: number | undefined;
@@ -101,8 +150,11 @@ export class FakeTerminalIO implements TerminalIO {
   readonly #queue: (Uint8Array | QueuedResize)[];
   readonly #interactive: boolean;
   readonly #colorDepth: TerminalCapabilities["colorDepth"];
+  readonly #hyperlinks: boolean | undefined;
+  readonly #mouseTracking: boolean | undefined;
   readonly #unicode: boolean;
   readonly #waiters: ((chunk: Uint8Array | null) => void)[] = [];
+  readonly #resizeHandlers = new Set<() => void>();
   #holdOpen: boolean;
   #columns: number;
   #rows: number;
@@ -118,6 +170,8 @@ export class FakeTerminalIO implements TerminalIO {
     this.#ansiControl = options.ansiControl ?? true;
     this.#interactive = options.interactive ?? true;
     this.#colorDepth = options.colorDepth ?? "none";
+    this.#hyperlinks = options.hyperlinks;
+    this.#mouseTracking = options.mouseTracking;
     this.#columns = options.columns ?? 80;
     this.#rows = options.rows ?? 24;
     this.#unicode = options.unicode ?? true;
@@ -135,6 +189,12 @@ export class FakeTerminalIO implements TerminalIO {
       ansiControl: this.#ansiControl,
       colorDepth: this.#colorDepth,
       columns: this.#columns,
+      ...(this.#hyperlinks === undefined
+        ? {}
+        : { hyperlinks: this.#hyperlinks }),
+      ...(this.#mouseTracking === undefined
+        ? {}
+        : { mouseTracking: this.#mouseTracking }),
       unicode: this.#unicode,
     };
   }
@@ -172,6 +232,22 @@ export class FakeTerminalIO implements TerminalIO {
     this.writes.push(value);
   }
 
+  /** Subscribe to scripted viewport changes. */
+  listenResize(handler: () => void): () => void {
+    this.#resizeHandlers.add(handler);
+    let active = true;
+    return () => {
+      if (!active) return;
+      active = false;
+      this.#resizeHandlers.delete(handler);
+    };
+  }
+
+  /** Number of active scripted resize subscriptions. */
+  get resizeListenerCount(): number {
+    return this.#resizeHandlers.size;
+  }
+
   /** Complete terminal output, including control sequences. */
   output(): string {
     return this.writes.join("");
@@ -190,6 +266,11 @@ export class FakeTerminalIO implements TerminalIO {
   /** Queue named keys as one input chunk through the real key decoder. */
   enqueueKeys(...names: readonly TerminalKeyName[]): void {
     this.enqueue(encodeTerminalKeys(...names));
+  }
+
+  /** Queue one semantic SGR mouse event through the real input decoder. */
+  enqueueMouse(event: TerminalMouseEvent): void {
+    this.enqueue(encodeTerminalMouseEvent(event));
   }
 
   /**
@@ -215,13 +296,39 @@ export class FakeTerminalIO implements TerminalIO {
 
   /** Change the viewport returned by subsequent size and capability reads. */
   resize(columns: number, rows: number = this.#rows): void {
-    this.#columns = columns;
-    this.#rows = rows;
+    this.#applyResize({ columns, rows });
   }
 
   #applyResize(entry: QueuedResize): void {
     this.#columns = entry.columns;
     this.#rows = entry.rows ?? this.#rows;
+    for (const handler of [...this.#resizeHandlers]) handler();
+  }
+}
+
+/** Queue semantic terminal events in exact order through the real decoder. */
+export function enqueueTerminalEvents(
+  io: FakeTerminalIO,
+  events: readonly TerminalTestEvent[],
+): void {
+  for (const event of events) {
+    switch (event.kind) {
+      case "text":
+        io.enqueue(event.value);
+        break;
+      case "keys":
+        io.enqueueKeys(...event.keys);
+        break;
+      case "resize":
+        io.enqueueResize(event.columns, event.rows);
+        break;
+      case "mouse":
+        io.enqueueMouse(event);
+        break;
+      case "end-of-input":
+        io.close();
+        break;
+    }
   }
 }
 

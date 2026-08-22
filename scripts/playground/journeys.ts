@@ -11,9 +11,12 @@
 import {
   createSequentialForm,
   InteractionCancelled,
+  MarkdownBrowserRefusalError,
+  type MarkdownBrowserResult,
   requestAcknowledgement,
   requestAutocomplete,
   requestConfirmation,
+  requestMarkdownBrowser,
   requestMaskedText,
   requestSearch,
   requestSearchSelections,
@@ -35,6 +38,7 @@ import {
   renderMotifWorkflowStepper,
   renderTimelineCli,
   type TerminalCapabilities,
+  type TerminalThemeVariant,
 } from "../../src/cli/mod.ts";
 import { defaultTerminalFrameWidth } from "../../src/cli/frame-measure.ts";
 import { renderCliExemptions } from "../cli-inventory.ts";
@@ -46,7 +50,9 @@ import { describeCapabilities, renderTerminalFacts } from "./banner.ts";
 import { runBrowseJourney } from "./browse.ts";
 import { runHeadingVariantsJourney } from "./heading-variants.ts";
 import {
+  documentChoices,
   longGroupedChoices,
+  markdownBrowserEntries,
   searchGroupedEntries,
   spacingChoices,
   swatchChoices,
@@ -84,6 +90,17 @@ function colorfgbgSnapshot(): Readonly<Record<string, string | undefined>> {
   } catch {
     return {};
   }
+}
+
+async function markdownBrowserTheme(
+  runtime: PlaygroundRuntime,
+): Promise<TerminalThemeVariant> {
+  if (runtime.io.capabilities().colorDepth === "none") return "dark";
+  const reading = await senseTerminalBackground({
+    io: runtime.io,
+    environment: colorfgbgSnapshot(),
+  });
+  return reading.ground === "light" ? "light" : "dark";
 }
 
 function describeResult(value: unknown): string {
@@ -274,6 +291,71 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
     },
   },
   {
+    id: "browse-documents",
+    title: "Document browsing presentation",
+    section: "Interactive APIs",
+    description:
+      "Titles lead, paths recede, path queries retain their group, and the completed picker clears before its result prints.",
+    run: async (runtime) => {
+      const value = await requestSearch({
+        label: "Browse documents",
+        search: documentChoices,
+        initialId: "design-principles",
+        placeholder: "Type a title or path",
+        hint: "Try design-principles.md; Enter opens the highlighted path.",
+        presentation: "browsing",
+        completion: "clear-frame",
+      }, { io: runtime.io });
+      report(runtime, value);
+    },
+  },
+  {
+    id: "markdown-browser",
+    title: "Markdown browser links and mouse",
+    section: "Interactive APIs",
+    description:
+      "A keyboard-complete adaptive reader follows fragments and admitted documents, optionally tracks pointer input, and returns external actions only after restoration.",
+    run: async (runtime) => {
+      const theme = await markdownBrowserTheme(runtime);
+      let result: MarkdownBrowserResult<string>;
+      try {
+        result = await requestMarkdownBrowser({
+          label: "Documentation library",
+          placeholder: "Search titles, descriptions, and paths",
+          entries: markdownBrowserEntries,
+          mouse: true,
+          resolveLink({ sourceDocumentId, destination }) {
+            return sourceDocumentId === "getting-started" &&
+                destination === "testing.md#fake-terminal"
+              ? {
+                kind: "document",
+                documentId: "testing",
+                fragment: "fake-terminal",
+              }
+              : {
+                kind: "unresolved",
+                message: "The playground corpus does not admit that document.",
+              };
+          },
+        }, { io: runtime.io, theme });
+      } catch (error) {
+        if (error instanceof MarkdownBrowserRefusalError) {
+          runtime.print(
+            `Result: Markdown browser refused ${error.columns}×${error.rows} (${error.reason}); no frame was drawn.`,
+          );
+          return;
+        }
+        throw error;
+      }
+      report(runtime, result);
+      if (result.kind === "action" || result.kind === "external-link") {
+        runtime.print(
+          "Caller effect point: the terminal is restored; this playground deliberately opens nothing.",
+        );
+      }
+    },
+  },
+  {
     id: "multiselect",
     title: "Multiselection",
     section: "Interactive APIs",
@@ -386,6 +468,20 @@ const interactiveApiJourneys: readonly PlaygroundJourney[] = [
         hint: "Press Enter or Space to continue.",
       }, { io: runtime.io });
       runtime.print("Result: acknowledged (void).");
+    },
+  },
+  {
+    id: "acknowledge-compact",
+    title: "Compact acknowledgement",
+    section: "Interactive APIs",
+    description:
+      "One continuation hint below caller-owned output; Enter or Space clears it before returning.",
+    run: async (runtime) => {
+      runtime.print("Caller-owned document content ends here.");
+      await requestAcknowledgement({ presentation: "compact" }, {
+        io: runtime.io,
+      });
+      runtime.print("Result: compact acknowledgement cleared.");
     },
   },
   {
@@ -603,7 +699,7 @@ const staticCatalogueJourneys: readonly PlaygroundJourney[] = [
     title: "Timeline and stepper statuses",
     section: "Static catalogue",
     description:
-      "Review semantic status glyphs beside spinner, dot, bang, and cross markers.",
+      "Review filled and outline status glyphs beside spinner, bang, and cross markers.",
     run: (runtime) => {
       const capabilities = runtime.io.capabilities();
       runtime.print("Workflow stepper:");
@@ -616,24 +712,24 @@ const staticCatalogueJourneys: readonly PlaygroundJourney[] = [
       ], capabilities));
       runtime.print("Timeline:");
       runtime.print(renderTimelineCli({
-        title: "Status direction",
+        title: "Status fill",
         items: [
           {
             date: "Done",
             title: "Complete",
-            description: "Completed points up.",
+            description: "Completed uses the filled triangle.",
             status: "complete",
           },
           {
             date: "Now",
             title: "Current",
-            description: "Incomplete points down.",
+            description: "Incomplete uses the outline triangle.",
             status: "current",
           },
           {
             date: "Next",
             title: "Upcoming",
-            description: "Upcoming remains incomplete.",
+            description: "Upcoming remains outlined.",
             status: "upcoming",
           },
         ],
@@ -1050,12 +1146,37 @@ export const interactiveExportCoverage: Readonly<
   requestSearch: { journey: "search" },
   requestSearchSelections: { journey: "search-multiselect" },
   requestAutocomplete: { journey: "autocomplete" },
+  requestMarkdownBrowser: { journey: "markdown-browser" },
   requestTextarea: { journey: "textarea" },
   createSequentialForm: { journey: "form" },
   withSpinner: { journey: "spinner" },
   withDeterminateProgress: { journey: "progress" },
   withActivityLog: { journey: "activity-log" },
   senseTerminalBackground: { journey: "background" },
+  createMarkdownBrowserState: {
+    excluded:
+      "Pure state construction exercised by the Markdown browser journey and Catalogue inspector.",
+  },
+  filterMarkdownBrowserEntries: {
+    excluded:
+      "Pure grouped matcher exercised inside the Markdown browser journey.",
+  },
+  markdownBrowserResumableState: {
+    excluded:
+      "Pure stable-state projection returned by the Markdown browser journey.",
+  },
+  transitionMarkdownBrowser: {
+    excluded:
+      "Pure semantic transition authority driven through requestMarkdownBrowser.",
+  },
+  renderMarkdownBrowser: {
+    excluded:
+      "Pure complete-frame renderer shown by the Catalogue inspector and driven by requestMarkdownBrowser.",
+  },
+  MarkdownBrowserRefusalError: {
+    excluded:
+      "Typed capability and geometry refusal; the journey entry reports it when the live terminal cannot begin safely.",
+  },
   denoTerminalSignals: {
     excluded:
       "Process SIGINT source installed by default inside every lifecycle bracket; the interrupt journeys exercise it live.",
@@ -1071,6 +1192,10 @@ export const interactiveExportCoverage: Readonly<
   InteractionCancelled: {
     excluded:
       "Public cancellation outcome; the journey wrapper catches it on every run.",
+  },
+  InteractionFrameCleanupError: {
+    excluded:
+      "Typed clear-frame refusal; the compact acknowledgement and document-browsing journeys exercise successful cleanup.",
   },
   NonInteractiveTerminalError: {
     excluded:
@@ -1100,9 +1225,25 @@ export const interactiveExportCoverage: Readonly<
     excluded:
       "Key decoding runs inside every interaction; the playground must not decode keys itself.",
   },
+  TERMINAL_MOUSE_MAX_COORDINATE: {
+    excluded:
+      "Decoder safety bound exercised through the Markdown browser's typed mouse journey and published test helpers.",
+  },
+  decodeTerminalInputEvent: {
+    excluded:
+      "Semantic mouse classification runs inside the Markdown browser; the playground must not decode controls itself.",
+  },
+  TerminalInputReader: {
+    excluded:
+      "Event decoding runs inside the mouse-enabled Markdown browser journey.",
+  },
   isNamedKey: {
     excluded:
       "Key predicate for interaction machines; no interactive surface of its own.",
+  },
+  filterInteractionEntries: {
+    excluded:
+      "Pure static choice matcher exercised by the document-browsing journey's title and path source.",
   },
   HIDE_TERMINAL_CURSOR: {
     excluded:

@@ -9,7 +9,7 @@ export type { ListKind, ListSpacing } from "./list.types.ts";
 /** One semantic item rendered by {@linkcode List}. */
 export interface ListItem {
   /** Rich phrasing content that opens the item. */
-  readonly content: ReactNode;
+  readonly content?: ReactNode;
   /** Read-only task state; omit for an ordinary item inside a task list. */
   readonly checked?: boolean;
   /** Continuation paragraphs, nested lists, or other structural blocks. */
@@ -31,12 +31,12 @@ export interface ListProps
 
 function listItems(items: readonly ListItem[], kind: ListKind) {
   return items.map((item, index) => {
-    const task = kind === "task" && item.checked !== undefined;
+    const task = item.checked !== undefined;
     return (
       <li
         className={classNames(
           "discern-list__item",
-          task && "discern-list__item--task",
+          task && kind === "task" && "discern-list__item--task",
         )}
         key={index}
       >
@@ -53,7 +53,7 @@ function listItems(items: readonly ListItem[], kind: ListKind) {
               />
             )
             : null}
-          <span>{item.content}</span>
+          {item.content !== undefined ? <span>{item.content}</span> : null}
         </span>
         {item.blocks !== undefined && item.blocks.length > 0
           ? (
@@ -92,6 +92,8 @@ export const List: DiscernComponent<
   const classes = classNames(
     "discern-list",
     `discern-list--${kind}`,
+    items.some((item) => item.checked !== undefined) &&
+      "discern-list--contains-tasks",
     `discern-list--${spacing}`,
     className,
   );

@@ -105,8 +105,15 @@ export function renderBox(
         capabilities.unicode ? "…" : ".",
       )
     } `;
-  const bottomFill = glyphs.horizontal.repeat(
-    Math.max(0, width - 3 - measureText(bottomLabel)),
+  const bottomFillWidth = Math.max(
+    0,
+    width - 2 - measureText(bottomLabel),
+  );
+  const bottomLeadingFill = glyphs.horizontal.repeat(
+    Math.floor(bottomFillWidth / 2),
+  );
+  const bottomTrailingFill = glyphs.horizontal.repeat(
+    Math.ceil(bottomFillWidth / 2),
   );
   const bottom = bottomLabel === ""
     ? border(
@@ -114,13 +121,13 @@ export function renderBox(
         glyphs.horizontal.repeat(width - 2)
       }${glyphs.bottomRight}`,
     )
-    : `${border(glyphs.bottomLeft)}${border(bottomFill)}${
+    : `${border(glyphs.bottomLeft)}${border(bottomLeadingFill)}${
       styleText(
         bottomLabel,
         options.bottomLabelStyle ?? borderStyle,
         capabilities,
       )
-    }${border(glyphs.horizontal)}${border(glyphs.bottomRight)}`;
+    }${border(bottomTrailingFill)}${border(glyphs.bottomRight)}`;
   const bodyLines = options.body.split("\n").flatMap((line) =>
     wrapBoxLine(line, innerWidth)
   );

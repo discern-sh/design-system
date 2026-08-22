@@ -260,7 +260,7 @@ Deno.test("the reservation and viewport budget bound query-filtered frames", asy
     const frame = write.startsWith("\x1b[1G") && eraseAt >= 0
       ? write.slice(eraseAt + "\x1b[J".length)
       : write;
-    return /\[(?:active|searching|submitted)\]/u.test(frame) ? [frame] : [];
+    return frame.includes("\n┌") ? [frame] : [];
   });
   assert(frames.length > 0);
   for (const frame of frames) {
@@ -288,20 +288,20 @@ Deno.test("query-filtered multiselection journeys paint exact frames", async () 
   );
   assertExactFrame(
     io.writes[1] ?? "",
-    "Tags [searching]\n┌──────────────────────────────┐\n│▌Filter                       │\n│Searching…                    │\n└──────────────────────────────┘\n",
+    "Tags [searching]\n┌──────────────────────────────┐\n│ ▌Filter                      │\n│ Searching…                   │\n└──────────────────────────────┘\n",
     capabilities,
   );
   const resolved = io.writes[2] ?? "";
   assertExactFrame(
     resolved.slice(resolved.indexOf("\x1b[J") + "\x1b[J".length),
-    "Tags [active]\n┌──────────────────────────────┐\n│▌Filter                       │\n│  [ ] One                     │\n│  [ ] Two                     │\n└──────────────────────────────┘\n",
+    "Tags\n┌──────────────────────────────┐\n│ ▌Filter                      │\n│   [ ] One                    │\n│   [ ] Two                    │\n└──────────────────────────────┘\n",
     capabilities,
   );
-  const submitted = io.writes.find((write) => write.includes("[submitted]")) ??
+  const submitted = io.writes.find((write) => write.includes("✓ Submitted")) ??
     "";
   assertExactFrame(
     submitted.slice(submitted.indexOf("\x1b[J") + "\x1b[J".length),
-    "Tags [submitted]\n┌──────────────────────────────┐\n│                              │\n│  [✓] One                     │\n│  [ ] Two                     │\n└──────────────────────────────┘\n✓ Submitted",
+    "Tags\n┌──────────────────────────────┐\n│                              │\n│   [✓] One                    │\n│   [ ] Two                    │\n└──────────────────────────────┘\n✓ Submitted",
     capabilities,
   );
 });
@@ -324,17 +324,17 @@ Deno.test("the renderer holds query-filtered frames across widths, depths, and r
   const narrow = testTerminalCapabilities({ columns: 20 });
   assertExactFrame(
     renderCheckboxCli({ ...state, width: 20 }, narrow),
-    `Roles [active]\n┌──────────────────┐\n│re▌               │\n│› [✓] Render      │\n│                  │\n│${
-      headingRule("Selected", 18)
-    }│\n│  [✓] Animate     │\n└──────────────────┘\n`,
+    `Roles\n┌──────────────────┐\n│ re▌              │\n│ › [✓] Render     │\n│                  │\n│ ${
+      headingRule("Selected", 16)
+    } │\n│   [✓] Animate    │\n└──────────────────┘\n`,
     narrow,
   );
   const ascii = testTerminalCapabilities({ columns: 26, unicode: false });
   assertExactFrame(
     renderCheckboxCli({ ...state, width: 26 }, ascii),
-    `Roles [active]\n+------------------------+\n|re|                     |\n|> [x] Render            |\n|                        |\n|${
-      headingRule("Selected", 24, false)
-    }|\n|  [x] Animate           |\n+------------------------+\n`,
+    `Roles\n+------------------------+\n| re|                    |\n| > [x] Render           |\n|                        |\n| ${
+      headingRule("Selected", 22, false)
+    } |\n|   [x] Animate          |\n+------------------------+\n`,
     ascii,
   );
   const styled = testTerminalCapabilities({
@@ -343,9 +343,9 @@ Deno.test("the renderer holds query-filtered frames across widths, depths, and r
   });
   assertStyledFrame(
     renderCheckboxCli({ ...state, width: 26 }, styled),
-    `Roles [active]\n┌────────────────────────┐\n│re▌                     │\n│› [✓] Render            │\n│                        │\n│${
-      headingRule("Selected", 24)
-    }│\n│  [✓] Animate           │\n└────────────────────────┘\n`,
+    `Roles\n┌────────────────────────┐\n│ re▌                    │\n│ › [✓] Render           │\n│                        │\n│ ${
+      headingRule("Selected", 22)
+    } │\n│   [✓] Animate          │\n└────────────────────────┘\n`,
     styled,
   );
 });

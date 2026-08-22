@@ -1,5 +1,6 @@
 import { assert, assertEquals } from "@std/assert";
 import { stripAnsi, styleText } from "../../src/cli/ansi.ts";
+import { eastAsianWidthKind } from "../../src/cli/east-asian-width.ts";
 import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
 import {
   graphemeWidth,
@@ -19,6 +20,44 @@ Deno.test("terminal width is grapheme-aware and ignores ANSI", () => {
   assertEquals(measureText("👨‍👩‍👧‍👦"), 2);
   assertEquals(measureText("\x1b[31mred\x1b[0m"), 3);
   assertEquals(measureText("short\n界界界"), 6);
+});
+
+Deno.test("terminal width follows emoji presentation rather than pictographic membership", () => {
+  const extendedPictographic = /\p{Extended_Pictographic}/u;
+  const rgiEmoji = /^\p{RGI_Emoji}$/v;
+  let examined = 0;
+  let mismatchCount = 0;
+  const mismatchSamples: string[] = [];
+
+  for (let codePoint = 0; codePoint <= 0x10ffff; codePoint += 1) {
+    if (codePoint >= 0xd800 && codePoint <= 0xdfff) continue;
+    const scalar = String.fromCodePoint(codePoint);
+    if (!extendedPictographic.test(scalar) || rgiEmoji.test(scalar)) continue;
+    examined += 1;
+    const expected = eastAsianWidthKind(codePoint) === "wide" ? 2 : 1;
+    if (graphemeWidth(scalar) !== expected) {
+      mismatchCount += 1;
+      if (mismatchSamples.length < 12) {
+        mismatchSamples.push(`U+${codePoint.toString(16).toUpperCase()}`);
+      }
+    }
+  }
+
+  assert(examined > 0, "the Unicode pictographic detector must enrol members");
+  assertEquals(
+    mismatchCount,
+    0,
+    `text-presentation pictographs measured as emoji: ${
+      mismatchSamples.join(
+        ", ",
+      )
+    }`,
+  );
+  for (
+    const emoji of ["☑️", "©️", "😀", "👩‍💻", "1️⃣", "🇬🇧", "🧑🏽"]
+  ) {
+    assertEquals(graphemeWidth(emoji), 2, emoji);
+  }
 });
 
 Deno.test("wrapping and truncation never split a grapheme", () => {

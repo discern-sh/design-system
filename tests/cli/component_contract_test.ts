@@ -1,5 +1,10 @@
 import { assert, assertEquals, assertThrows } from "@std/assert";
 import { cliComponentRegistry } from "../../src/generated/cli-registry.ts";
+import { componentRegistry } from "../../src/generated/component-registry.ts";
+import {
+  type CliExample,
+  resolveCliExampleCapabilities,
+} from "../../src/cli/contracts.ts";
 import {
   validateCliInventory,
   validateCliStance,
@@ -13,6 +18,72 @@ const meta = {
   order: 999,
   description: "Synthetic CLI contract fixture.",
 } satisfies Omit<ComponentMeta, "cli">;
+
+const cliRegistry = cliComponentRegistry as Readonly<
+  Record<
+    string,
+    (typeof cliComponentRegistry)[keyof typeof cliComponentRegistry]
+  >
+>;
+
+function assertBalancedComponentBoxPadding(
+  source: string,
+  label: string,
+): void {
+  for (const match of source.matchAll(/\bpadding\s*:\s*([^,\n}]+)/gu)) {
+    const value = match[1]?.trim() ?? "";
+    assert(
+      /^[1-9][0-9]*$/u.test(value),
+      `${label} overrides Box padding with non-positive or non-literal ${value}`,
+    );
+  }
+}
+
+Deno.test("CLI examples can pin a validated deterministic capability posture", () => {
+  const base = {
+    ansiControl: true,
+    colorDepth: "truecolor",
+    columns: 80,
+    hyperlinks: true,
+    mouseTracking: true,
+    unicode: true,
+  } as const;
+  assertEquals(
+    resolveCliExampleCapabilities({
+      name: "plain",
+      props: {},
+      capabilities: {
+        ansiControl: false,
+        colorDepth: "none",
+        columns: 24,
+        hyperlinks: false,
+        mouseTracking: false,
+        unicode: false,
+      },
+    }, base),
+    {
+      ansiControl: false,
+      colorDepth: "none",
+      columns: 24,
+      hyperlinks: false,
+      mouseTracking: false,
+      unicode: false,
+    },
+  );
+  assertThrows(
+    () =>
+      resolveCliExampleCapabilities(
+        {
+          name: "invalid",
+          props: {},
+          capabilities: { columns: 0 },
+        } satisfies CliExample<Record<string, never>>,
+        base,
+      ),
+    TypeError,
+    "valid terminal facts",
+  );
+});
 
 Deno.test("CLI stance validation guards metadata and renderer files in both directions", () => {
   validateCliStance(
@@ -97,4 +168,47 @@ Deno.test("generated CLI registry validates every enrolled stance", () => {
       );
     }
   }
+});
+
+Deno.test("Component boxes keep positive balanced padding and Forms share the frame authority", async () => {
+  const generatedRegistryUrl = new URL(
+    "../../src/generated/cli-registry.ts",
+    import.meta.url,
+  );
+  for (const { meta } of componentRegistry) {
+    const entry = cliRegistry[meta.slug];
+    if (entry?.stance !== "rendered") continue;
+    const rendererUrl = new URL(entry.modulePath, generatedRegistryUrl);
+    const source = await Deno.readTextFile(rendererUrl);
+    assertBalancedComponentBoxPadding(source, meta.slug);
+    if (meta.group === "Forms") {
+      assert(
+        source.includes("renderFormCliFrame"),
+        `${meta.slug} bypasses the shared form-frame authority`,
+      );
+      assert(
+        source.includes("showStatus"),
+        `${meta.slug} does not expose the opt-in form status label`,
+      );
+    }
+  }
+
+  const formFrameUrl = new URL(
+    "../../src/components/forms/form-frame.ts",
+    import.meta.url,
+  );
+  assertBalancedComponentBoxPadding(
+    await Deno.readTextFile(formFrameUrl),
+    "form-frame",
+  );
+
+  assertThrows(
+    () =>
+      assertBalancedComponentBoxPadding(
+        "renderBox({ body: content, padding: inset })",
+        "future-sibling",
+      ),
+    Error,
+    "future-sibling",
+  );
 });

@@ -5,6 +5,9 @@ import {
   assertStringIncludes,
 } from "@std/assert";
 import { fromFileUrl, join, relative } from "@std/path";
+import { createElement } from "react";
+import type { ComponentType } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { buildDesignSystem } from "../scripts/build.ts";
 import {
   type CataloguePurpose,
@@ -36,6 +39,7 @@ type PropDocumentation =
 
 interface CatalogueEntry {
   readonly meta: ComponentMeta;
+  readonly Examples: ComponentType;
   readonly states: readonly CatalogueState[];
   readonly reactExport: string;
   readonly selection: {
@@ -74,6 +78,19 @@ function entry(
   assert(found !== undefined, `missing Catalogue entry ${slug}`);
   return found;
 }
+
+Deno.test("Theme Toggle's Catalogue example presents one page-chrome control", async () => {
+  const { registry } = await catalogue();
+  const markup = renderToStaticMarkup(
+    createElement(entry(registry, "theme-toggle").Examples),
+  );
+  const controls = markup.match(
+    /class="[^"]*\bdiscern-theme-toggle\b[^"]*"/g,
+  ) ?? [];
+
+  assertEquals(controls.length, 1);
+  assertEquals(markup.includes("Lorem ipsum"), false);
+});
 
 Deno.test("Catalogue purposes are closed, selective, and guidance-backed", async () => {
   const { registry } = await catalogue();
@@ -287,6 +304,7 @@ Deno.test("Catalogue version and composition source share their authorities", as
       "failure-triage",
       "handoff-receipt",
       "survey-artifacts",
+      "reading-first-landing",
     ],
   );
   for (const recipe of compositionRecipes) {
@@ -308,35 +326,80 @@ Deno.test("Catalogue version and composition source share their authorities", as
   );
 });
 
-Deno.test("Catalogue navigation stays stable while purpose filters the component view", async () => {
+Deno.test("Catalogue navigation is contextual while the explorer stays specimen-free", async () => {
   const source = await Deno.readTextFile(
     join(PACKAGE_ROOT, "catalogue", "app.tsx"),
   );
-  const navStart = source.indexOf(
-    '<nav className="discern-catalogue-nav" aria-label="Catalogue">',
+  const explorerStart = source.indexOf("function ComponentIndexPage");
+  const explorerEnd = source.indexOf("function ComponentDetailPage");
+  assert(
+    explorerStart >= 0 && explorerEnd > explorerStart,
+    "missing Component explorer boundary",
   );
-  const navEnd = source.indexOf("</nav>", navStart);
-  assert(navStart >= 0 && navEnd > navStart, "missing Catalogue navigation");
-  const navigation = source.slice(navStart, navEnd);
+  const explorer = source.slice(explorerStart, explorerEnd);
 
-  assert(!navigation.includes("Purpose collections"));
-  assert(!navigation.includes("discern-catalogue-nav__collection"));
-  assert(!navigation.includes("<button"));
-  assertStringIncludes(navigation, "sidebarGroupedComponents.map");
-  assertStringIncludes(source, "<span>Filter components by purpose</span>");
+  assertStringIncludes(source, "function CatalogueSidebar");
+  assertStringIncludes(source, 'route.kind === "components"');
+  assertStringIncludes(source, "groupComponentEntries(sortedComponents)");
+  assertStringIncludes(source, "cataloguePurposes.map");
+  assertStringIncludes(explorer, "discern-catalogue-component-link");
+  assertStringIncludes(explorer, "Search Components");
+  assert(!explorer.includes("<ComponentPreview"));
+  assertStringIncludes(source, "function ReviewPage");
+  assertStringIncludes(source, "function ComponentDetailPage");
 
   const css = await Deno.readTextFile(
     join(PACKAGE_ROOT, "catalogue", "catalogue.css"),
   );
-  const pickerRule = /\.discern-catalogue-purpose-picker\s*\{(?<body>[^}]*)\}/
-    .exec(css);
-  const pickerBody = pickerRule?.groups?.body;
-  assert(pickerBody !== undefined, "missing purpose picker rule");
-  assertStringIncludes(pickerBody, "display: grid;");
-  assert(!pickerBody.includes("display: none;"));
+  const controlsRule =
+    /\.discern-catalogue-explorer-controls\s*\{(?<body>[^}]*)\}/
+      .exec(css);
+  const controlsBody = controlsRule?.groups?.body;
+  assert(controlsBody !== undefined, "missing explorer controls rule");
+  assertStringIncludes(controlsBody, "display: grid;");
+  assert(!controlsBody.includes("display: none;"));
 });
 
-Deno.test("Catalogue search presents explicit destinations without filtering the page", async () => {
+Deno.test("Catalogue chrome stays compact and exposes its active hierarchy", async () => {
+  const source = await Deno.readTextFile(
+    join(PACKAGE_ROOT, "catalogue", "app.tsx"),
+  );
+  const css = await Deno.readTextFile(
+    join(PACKAGE_ROOT, "catalogue", "catalogue.css"),
+  );
+
+  assertStringIncludes(source, "<ThemeToggle");
+  assertStringIncludes(source, "theme={terminalTheme}");
+  assert(!/<ThemeSwitcher(?:\s|>)/.test(source));
+  assertStringIncludes(source, 'aria-label="Accent hue"');
+  assert(!source.includes("discern-catalogue-accent__label"));
+  assertStringIncludes(source, "discern-catalogue-sidebar__version");
+  assertStringIncludes(source, "discern-catalogue-nav__back");
+  assertStringIncludes(source, "aria-current={activeGroup === group");
+  assertStringIncludes(source, "aria-current={activePurpose === purpose");
+  assertStringIncludes(source, "aria-current={activeHash ===");
+  assert(!source.includes('eyebrow="Group"'));
+  assert(!source.includes('eyebrow="Purpose"'));
+  assert(!source.includes('eyebrow="Review Group"'));
+  assertStringIncludes(source, 'eyebrow="Browse"');
+  assertStringIncludes(source, "showComponentGroupLabels");
+  assertStringIncludes(source, ").size > 1;");
+
+  assertMatch(
+    css,
+    /\.discern-catalogue-search > span:first-child\s*\{[^}]*font-size:\s*var\(--discern-font-size-lg\);/s,
+  );
+  assertMatch(
+    css,
+    /\.discern-catalogue-sidebar__version\s*\{[^}]*font:\s*var\(--discern-font-size-xs\) var\(--discern-font-mono\);/s,
+  );
+  assertMatch(
+    css,
+    /\.discern-catalogue-nav a\.discern-catalogue-nav__child\[aria-current\]\s*\{[^}]*color:\s*var\(--discern-color-ink\) !important;/s,
+  );
+});
+
+Deno.test("Catalogue search routes directly to generated destinations", async () => {
   const source = await Deno.readTextFile(
     join(PACKAGE_ROOT, "catalogue", "app.tsx"),
   );
@@ -350,11 +413,39 @@ Deno.test("Catalogue search presents explicit destinations without filtering the
   assertStringIncludes(source, 'aria-haspopup="dialog"');
   assertStringIncludes(source, 'label="Search the Catalogue"');
   assertStringIncludes(source, "<SearchPaletteResult");
-  assertStringIncludes(source, "prepareComponentNavigation");
-  assert(
-    !source.includes("normalizedQuery"),
-    "typing in search must not silently mutate the rendered inventory",
+  assertStringIncludes(
+    source,
+    "href: catalogueComponentPath(meta.slug)",
   );
+  assertStringIncludes(
+    source,
+    "href: catalogueRoutePaths.foundations",
+  );
+  assertStringIncludes(source, "onClick={closeSearch}");
+});
+
+Deno.test("Review mode requires an explicit scope before mounting specimens", async () => {
+  const source = await Deno.readTextFile(
+    join(PACKAGE_ROOT, "catalogue", "app.tsx"),
+  );
+  const reviewStart = source.indexOf("function ReviewPage");
+  const reviewEnd = source.indexOf("function NotFoundPage", reviewStart);
+  assert(
+    reviewStart >= 0 && reviewEnd > reviewStart,
+    "missing Review route boundary",
+  );
+  const review = source.slice(reviewStart, reviewEnd);
+  const scopeGuard = review.indexOf(
+    "if (!all && group === undefined && purpose === undefined)",
+  );
+  const landing = review.indexOf("<ReviewLanding", scopeGuard);
+  const specimen = review.indexOf("<ComponentPreview", landing);
+  assert(
+    scopeGuard >= 0 && landing > scopeGuard && specimen > landing,
+    "Review must return its scope picker before the specimen population",
+  );
+  assertStringIncludes(review, 'parameters.get("scope") === "all"');
+  assertStringIncludes(review, "groupComponentEntries(components)");
 });
 
 Deno.test("Catalogue switches each ordinary Component while conformance stays web-only", async () => {
@@ -380,10 +471,7 @@ Deno.test("Catalogue switches each ordinary Component while conformance stays we
   assertStringIncludes(source, 'aria-label="CLI preview unavailable"');
 
   const conformanceStart = source.indexOf("if (conformanceMode)");
-  const ordinaryStart = source.indexOf(
-    '<div\n      className="discern-catalogue-shell"',
-    conformanceStart,
-  );
+  const ordinaryStart = source.indexOf("const page =", conformanceStart);
   assert(
     conformanceStart >= 0 && ordinaryStart > conformanceStart,
     "missing Catalogue render boundaries",

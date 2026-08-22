@@ -52,11 +52,11 @@ Deno.test("a slow producer streams partial updates into committed exact frames",
   );
   assertEquals(io.writes, [
     HIDE_TERMINAL_CURSOR,
-    "▴ Weave styles\n│\n│\n",
-    `${replacePrefix(4)}◂ Weave styles\n│ alpha\n│\n`,
-    `${replacePrefix(4)}▾ Weave styles\n│ alpha\n│ beta grows\n`,
-    `${replacePrefix(4)}▸ Weave styles\n│ alpha\n│ beta\n`,
-    `${replacePrefix(4)}◮ Weave styles\n`,
+    "◐ Weave styles\n└─│\n  │\n",
+    `${replacePrefix(4)}◓ Weave styles\n└─│ alpha\n  │\n`,
+    `${replacePrefix(4)}◑ Weave styles\n└─│ alpha\n  │ beta grows\n`,
+    `${replacePrefix(4)}◒ Weave styles\n└─│ alpha\n  │ beta\n`,
+    `${replacePrefix(4)}▲ Weave styles\n`,
     "\n",
     SHOW_TERMINAL_CURSOR,
   ]);
@@ -82,9 +82,9 @@ Deno.test("the activity driver carries a consumer motif through live and stable 
     },
   );
   assertEquals(io.writes.slice(1), [
-    "◴ Build styles\n│\n",
-    `${replacePrefix(3)}◷ Build styles\n◉ Context held\n│ one\n`,
-    `${replacePrefix(4)}◉ Build styles\n◉ Context held\n`,
+    "◴ Build styles\n└─│\n",
+    `${replacePrefix(3)}◷ Build styles\n▸ Context held\n└─│ one\n`,
+    `${replacePrefix(4)}◉ Build styles\n▸ Context held\n`,
     "\n",
     SHOW_TERMINAL_CURSOR,
   ]);
@@ -104,7 +104,7 @@ Deno.test("a fast producer coalesces into one repaint per tick showing the last 
   assertEquals(io.writes.length, 6);
   assertEquals(
     io.writes[2],
-    `${replacePrefix(4)}◂ Weave styles\n│ line 29\n│ line 30\n`,
+    `${replacePrefix(4)}◓ Weave styles\n└─│ line 29\n  │ line 30\n`,
   );
 });
 
@@ -129,11 +129,11 @@ Deno.test("pinned stable lines persist while the tail scrolls beneath them", asy
   assertEquals(io.writes.slice(3), [
     `${
       replacePrefix(4)
-    }▾ Run checks\n✓ Format held\n│ lint starting\n│ lint retried\n`,
+    }◑ Run checks\n✓ Format held\n└─│ lint starting\n  │ lint retried\n`,
     `${
       replacePrefix(5)
-    }▸ Run checks\n✓ Format held\n! Lint warned once\n│ lint retried\n│ tests starting\n`,
-    `${replacePrefix(6)}◮ Run checks\n✓ Format held\n! Lint warned once\n`,
+    }◒ Run checks\n✓ Format held\n! Lint warned once\n└─│ lint retried\n  │ tests starting\n`,
+    `${replacePrefix(6)}▲ Run checks\n✓ Format held\n! Lint warned once\n`,
     "\n",
     SHOW_TERMINAL_CURSOR,
   ]);
@@ -172,11 +172,11 @@ Deno.test("a viewport shrink strands the old region and refits; regrowth restore
     },
   );
   assertEquals(io.writes.slice(1), [
-    "▴ Weave styles\n│\n│\n│\n│\n│\n│\n",
+    "◐ Weave styles\n└─│\n  │\n  │\n  │\n  │\n  │\n",
     "\n",
-    "◂ Weave styles\n│ alpha\n│\n│\n",
-    `${replacePrefix(5)}▾ Weave styles\n│ alpha\n│\n│\n│\n│\n│\n`,
-    `${replacePrefix(8)}◮ Weave styles\n`,
+    "◓ Weave styles\n└─│ alpha\n  │\n  │\n",
+    `${replacePrefix(5)}◑ Weave styles\n└─│ alpha\n  │\n  │\n  │\n  │\n  │\n`,
+    `${replacePrefix(8)}▲ Weave styles\n`,
     "\n",
     SHOW_TERMINAL_CURSOR,
   ]);
@@ -200,7 +200,7 @@ Deno.test("a viewport below the minimum frame degrades to the append-only feed",
   assertEquals(scheduler.stopped, 2);
   assertEquals(io.writes.slice(3), [
     "\n",
-    "◮ Pinned unseen\n",
+    "▸ Pinned unseen\n",
     "│ after the switch\n",
     SHOW_TERMINAL_CURSOR,
   ]);
@@ -281,11 +281,11 @@ Deno.test("a non-interactive terminal renders the same feed append-only", async 
     },
   );
   assertEquals(io.writes, [
-    "◮ WEAVE STYLES\n",
+    "▲ WEAVE STYLES\n",
     "│ alpha\n",
     "│ beta\n",
     "✓ Alpha held\n",
-    "◮ PUBLISH STYLES\n",
+    "▲ PUBLISH STYLES\n",
     "│ gamma\n",
     "│ delta never committed\n",
   ]);
@@ -303,9 +303,9 @@ Deno.test("a refused painter without ANSI control appends from the first fact", 
     },
   );
   assertEquals(io.writes, [
-    "◮ WEAVE STYLES\n",
+    "▲ WEAVE STYLES\n",
     "│ alpha\n",
-    "◮ One fact out\n",
+    "▸ One fact out\n",
   ]);
 });
 
@@ -322,9 +322,9 @@ Deno.test("ASCII terminals keep the same journey in the fallback repertoire", as
     },
   );
   assertEquals(io.writes.slice(1), [
-    "^ Weave styles\n|\n|\n",
-    `${replacePrefix(4)}< Weave styles\n+ Held\n| alpha\n|\n`,
-    `${replacePrefix(5)}> Weave styles\n+ Held\n`,
+    "^ Weave styles\n`-|\n  |\n",
+    `${replacePrefix(4)}< Weave styles\n+ Held\n\`-| alpha\n  |\n`,
+    `${replacePrefix(5)}^ Weave styles\n+ Held\n`,
     "\n",
     SHOW_TERMINAL_CURSOR,
   ]);
@@ -353,7 +353,7 @@ Deno.test("colour depth styles the same visible frame without moving a cell", as
   assert(io.writes[2] !== undefined);
   assertStyledFrame(
     io.writes[2].slice(replacePrefix(4).length),
-    "◂ Weave styles\n✓ Held\n│ alpha\n│\n",
+    "◓ Weave styles\n✓ Held\n└─│ alpha\n  │\n",
     capabilities,
   );
 });
@@ -469,6 +469,6 @@ Deno.test("relabel presents the new headline on the next tick", async () => {
   );
   assertEquals(
     io.writes[3],
-    `${replacePrefix(4)}▾ Second name\n│\n│\n`,
+    `${replacePrefix(4)}◑ Second name\n└─│\n  │\n`,
   );
 });

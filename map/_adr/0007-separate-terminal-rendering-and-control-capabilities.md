@@ -1,6 +1,6 @@
 # ADR 0007: Separate terminal rendering and control capabilities
 
-**Status**: accepted
+**Status**: superseded by [ADR-0025](0025-derive-unicode-repertoire-from-the-locale-declaration-alone.md)
 
 ## Context
 

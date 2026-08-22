@@ -45,7 +45,7 @@ function paintedFrames(io: FakeTerminalIO): readonly string[] {
     const frame = write.startsWith(FIRST_COLUMN) && eraseAt >= 0
       ? write.slice(eraseAt + ERASE_TO_END.length)
       : write;
-    return /\[(?:active|searching|error|submitted|cancelled)\]/u.test(frame)
+    return frame.includes("\n┌")
       ? [frame.endsWith("\n") ? frame.slice(0, -1) : frame]
       : [];
   });
@@ -109,7 +109,7 @@ Deno.test("a reservation keeps a full-budget list out of the caller's header ban
   );
   assertExactFrame(
     io.writes[2] ?? "",
-    "Reserved [active]\n┌────────────────────────────────────────┐\n│                                        │\n│━━ ◮ GROUP 1 ━━━━━━━━━━━━━━━━━━━━━━━━━━━│\n│› [●] Choice 1.1                        │\n│  [ ] Choice 1.2                        │\n└──────────────────────────── ↓ 14 more ─┘\n",
+    "Reserved\n┌────────────────────────────────────────┐\n│                                        │\n│ ━━ ▲ GROUP 1 ━━━━━━━━━━━━━━━━━━━━━━━━━ │\n│ › [●] Choice 1.1                       │\n│   [ ] Choice 1.2                       │\n└────────────── ↓ 14 more ───────────────┘\n",
     testTerminalCapabilities({ columns: 42 }),
   );
 });
@@ -142,9 +142,7 @@ Deno.test("the reservation follows viewport shrink and regrow", async () => {
     const frame = write.startsWith(FIRST_COLUMN) && eraseAt >= 0
       ? write.slice(eraseAt + ERASE_TO_END.length)
       : write;
-    return /\[(?:active|submitted)\]/u.test(frame)
-      ? [{ frame, rows: sizes[index] ?? 0 }]
-      : [];
+    return frame.includes("\n┌") ? [{ frame, rows: sizes[index] ?? 0 }] : [];
   });
   assert(frames.some(({ rows }) => rows === 12), "the shrink never applied");
   assert(frames.some(({ rows }) => rows === 16), "the regrow never applied");

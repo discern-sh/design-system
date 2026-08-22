@@ -2,8 +2,8 @@
  * Narration verbs: semantic one-line terminal emitters for output too small
  * to deserve a Component — a success line, an informational note, a warning,
  * a failure, and a lead-in that opens a group of lines. Markers come from the
- * package's established terminal dialect (the bound motif marker and
- * the check/bang/cross marks), colours and spacing come from the token
+ * package's established terminal dialect (the disclosure arrow, bound motif
+ * marker, and check/bang/cross marks), colours and spacing come from the token
  * bridge, and every form keeps its meaning without colour and without
  * Unicode. Each verb is a pure {@linkcode CliRenderer}, so a presenter binds
  * narration exactly as it binds a Component renderer.
@@ -19,8 +19,13 @@ import {
 } from "./ansi.ts";
 import type { TerminalCapabilities } from "./capabilities.ts";
 import type { CliRenderer } from "./contracts.ts";
-import { type TerminalMotifOptions, terminalMotifRepertoire } from "./motif.ts";
+import {
+  type TerminalMotifOptions,
+  terminalMotifRegisterRoles,
+  terminalMotifRepertoire,
+} from "./motif.ts";
 import { measureText, wrapText } from "./text.ts";
+import { TRIANGLES } from "./triangles.ts";
 import {
   type TerminalSemanticTone,
   type TerminalTextRole,
@@ -72,7 +77,8 @@ const NARRATION_LINE_SPECS: Readonly<
     heading: false,
   },
   note: {
-    motifMarker: true,
+    unicodeMarker: TRIANGLES.filledSmall.right.unicode,
+    asciiMarker: TRIANGLES.filledSmall.right.ascii,
     tone: "accent",
     heading: false,
   },
@@ -118,7 +124,10 @@ function renderNarrationLine(
   const width = Math.min(requestedWidth, capabilities.columns);
   const theme = terminalThemes[props.theme ?? "dark"];
   const marker = "motifMarker" in spec
-    ? terminalMotifRepertoire(props.motif, capabilities.unicode).marker
+    ? terminalMotifRegisterRoles(
+      terminalMotifRepertoire(props.motif, capabilities.unicode),
+      props.register,
+    ).marker
     : capabilities.unicode
     ? spec.unicodeMarker
     : spec.asciiMarker;
@@ -158,7 +167,7 @@ export const renderSuccessLine: CliRenderer<NarrationLineProps> = (
   capabilities,
 ) => renderNarrationLine("success", props, capabilities);
 
-/** Render one informational note behind the accent-toned motif marker. */
+/** Render one informational note behind an accent-toned disclosure arrow. */
 export const renderNoteLine: CliRenderer<NarrationLineProps> = (
   props,
   capabilities,

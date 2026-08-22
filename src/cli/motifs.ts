@@ -11,6 +11,9 @@ import {
   type TerminalMotif,
   type TerminalMotifCycle,
   type TerminalMotifOptions,
+  terminalMotifQuietMarker,
+  type TerminalMotifRegister,
+  terminalMotifRegisterRoles,
   terminalMotifRepertoire,
 } from "./motif.ts";
 import { measureText, truncateText } from "./text.ts";
@@ -29,19 +32,43 @@ export type MotifPatternOrientation = "horizontal" | "vertical";
 /** Direction in which a motif reads. */
 export type MotifDirection = "forward" | "reverse";
 
+/** Horizontal position of the semantic marker within a motif divider. */
+export type MotifDividerAlignment = "center" | "start";
+
 /** Shared theme and glyph selection for terminal motifs. */
 export interface MotifThemeOptions extends TerminalMotifOptions {
   readonly theme?: TerminalThemeVariant;
 }
 
-/** Inputs for a horizontal, vertical, or thick motif tessellation. */
+/** Inputs for one horizontal or vertical motif pattern. */
 export interface MotifPatternOptions extends MotifThemeOptions {
   readonly length: number;
   readonly orientation?: MotifPatternOrientation;
-  readonly thickness?: number;
   readonly phase?: number;
   readonly direction?: MotifDirection;
   readonly tone?: TerminalSemanticTone;
+}
+
+/**
+ * Inputs for one quiet horizontal divider with a semantic motif marker.
+ * Centred rules speak the motif's quiet marker and the leading variant its
+ * everyday marker; the `brand` register selects the ceremonial mark in
+ * either position.
+ */
+export interface MotifDividerOptions extends MotifThemeOptions {
+  /** Total visible divider width. */
+  readonly width: number;
+  /** Marker position; defaults to `center`. */
+  readonly alignment?: MotifDividerAlignment;
+  /** Semantic tone for the marker; defaults to accent. */
+  readonly tone?: TerminalSemanticTone;
+}
+
+/** Inputs for one quiet, unmarked horizontal divider. */
+export interface MotifPlainDividerOptions {
+  /** Total visible divider width. */
+  readonly width: number;
+  readonly theme?: TerminalThemeVariant;
 }
 
 /** Inputs for one truthful determinate progress frame. */
@@ -50,12 +77,18 @@ export interface MotifProgressOptions extends MotifThemeOptions {
   readonly total: number;
   /** Total visible frame width, including the percentage label. */
   readonly width: number;
+  /**
+   * Explicit one-cell head glyph, already capability-resolved, overriding
+   * the motif marker role when a component's track fixes its own geometry.
+   */
+  readonly marker?: string;
 }
 
 /** Public visual treatments for a labeled terminal section boundary. */
 export type MotifSectionRuleTreatment =
   | "embedded"
   | "underline"
+  | "quiet"
   | "sandwich";
 
 /** Inputs for a labeled motif section boundary. */
@@ -81,9 +114,14 @@ export interface MotifWorkflowOptions extends MotifThemeOptions {}
 /** Inputs for one moving motif activity beacon. */
 export interface MotifBeaconOptions extends MotifThemeOptions {
   readonly width: number;
-  /** Semantic animation phase; the renderer derives the packet position. */
+  /** Semantic animation phase; the renderer derives the marker position. */
   readonly phase: number;
   readonly direction?: MotifDirection;
+  /**
+   * Explicit one-cell beacon glyph, already capability-resolved, overriding
+   * the motif marker role when a component fixes its own geometry.
+   */
+  readonly marker?: string;
 }
 
 function assertInteger(value: number, name: string, minimum?: number): void {
@@ -113,8 +151,12 @@ function patternGlyphs(
   motif: TerminalMotif | undefined,
   capabilities: TerminalCapabilities,
   direction: MotifDirection,
+  register: TerminalMotifRegister | undefined,
 ): TerminalMotifCycle {
-  const glyphs = terminalMotifRepertoire(motif, capabilities.unicode).pattern;
+  const glyphs = terminalMotifRegisterRoles(
+    terminalMotifRepertoire(motif, capabilities.unicode),
+    register,
+  ).pattern;
   return direction === "forward"
     ? glyphs
     : [...glyphs].reverse() as unknown as TerminalMotifCycle;
@@ -125,9 +167,14 @@ function renderCycle(
   phase: number,
   direction: MotifDirection,
   capabilities: TerminalCapabilities,
-  motif: TerminalMotif | undefined,
+  options: TerminalMotifOptions,
 ): string {
-  const glyphs = patternGlyphs(motif, capabilities, direction);
+  const glyphs = patternGlyphs(
+    options.motif,
+    capabilities,
+    direction,
+    options.register,
+  );
   return Array.from({ length }, (_, index) => {
     return glyphs[normalizedIndex(phase + index, glyphs.length)] ?? glyphs[0];
   }).join("");
@@ -140,39 +187,137 @@ function motifColor(
   return terminalToneColor(theme, tone);
 }
 
+function assertExplicitMarker(marker: string, name: string): void {
+  if (
+    marker.trim() !== marker || /[\p{Cc}\p{Cf}]/u.test(marker) ||
+    measureText(marker) !== 1
+  ) {
+    throw new TypeError(
+      `${name} must be one visible glyph occupying exactly one terminal cell`,
+    );
+  }
+}
+
+function markerRole(
+  options: TerminalMotifOptions,
+  capabilities: TerminalCapabilities,
+): string {
+  return terminalMotifRegisterRoles(
+    terminalMotifRepertoire(options.motif, capabilities.unicode),
+    options.register,
+  ).marker;
+}
+
+/** Render a quiet horizontal rule around or after one semantic motif marker. */
+export function renderMotifDivider(
+  options: MotifDividerOptions,
+  capabilities: TerminalCapabilities,
+): string {
+  assertInteger(options.width, "motif divider width", 1);
+  const width = Math.min(options.width, capabilities.columns);
+  const alignment = options.alignment ?? "center";
+  if (alignment !== "center" && alignment !== "start") {
+    throw new TypeError(`unknown motif divider alignment: ${alignment}`);
+  }
+  const theme = themeFor(options.theme);
+  const repertoire = terminalMotifRepertoire(
+    options.motif,
+    capabilities.unicode,
+  );
+  const marker = options.register === "brand"
+    ? terminalMotifRegisterRoles(repertoire, "brand").marker
+    : alignment === "center"
+    ? terminalMotifQuietMarker(repertoire)
+    : repertoire.marker;
+  const rule = capabilities.unicode ? "─" : "-";
+  const leadingEdge = capabilities.unicode ? "╶" : "-";
+  const trailingEdge = capabilities.unicode ? "╴" : "-";
+  const ruleStyle = {
+    color: terminalThemeColor(theme, "--discern-color-ink-faint"),
+    dim: true,
+  } as const;
+  const markerSpan = {
+    text: marker,
+    style: { color: motifColor(theme, options.tone ?? "accent") },
+  } as const;
+  if (alignment === "start") {
+    const trailing = width === 1
+      ? ""
+      : width === 2
+      ? " "
+      : `  ${rule.repeat(width - 3)}`;
+    return renderStyledSpans([
+      markerSpan,
+      { text: trailing, style: ruleStyle },
+    ], capabilities);
+  }
+  let leading = "";
+  let trailing = "";
+  if (width === 2) {
+    trailing = trailingEdge;
+  } else if (width >= 3 && width < 5) {
+    const ruleCells = width - 3;
+    const leadingRuleCells = Math.floor(ruleCells / 2);
+    leading = leadingEdge + rule.repeat(leadingRuleCells);
+    trailing = rule.repeat(ruleCells - leadingRuleCells) + trailingEdge;
+  } else if (width >= 5) {
+    const ruleCells = width - 5;
+    const leadingRuleCells = Math.floor(ruleCells / 2);
+    leading = `${leadingEdge}${rule.repeat(leadingRuleCells)} `;
+    trailing = ` ${rule.repeat(ruleCells - leadingRuleCells)}${trailingEdge}`;
+  }
+  return renderStyledSpans([
+    { text: leading, style: ruleStyle },
+    markerSpan,
+    { text: trailing, style: ruleStyle },
+  ], capabilities);
+}
+
+/** Render a quiet horizontal rule with no semantic motif marker. */
+export function renderMotifPlainDivider(
+  options: MotifPlainDividerOptions,
+  capabilities: TerminalCapabilities,
+): string {
+  assertInteger(options.width, "plain motif divider width", 1);
+  const width = Math.min(options.width, capabilities.columns);
+  const theme = themeFor(options.theme);
+  const rule = capabilities.unicode ? "─" : "-";
+  const raw = capabilities.unicode && width > 1
+    ? `╶${rule.repeat(Math.max(0, width - 2))}╴`
+    : rule.repeat(width);
+  return styleText(raw, {
+    color: terminalThemeColor(theme, "--discern-color-ink-faint"),
+    dim: true,
+  }, capabilities);
+}
+
 /** Render a configurable pattern through the effective motif repertoire. */
 export function renderMotifPattern(
   options: MotifPatternOptions,
   capabilities: TerminalCapabilities,
 ): string {
   assertInteger(options.length, "motif pattern length", 1);
-  const thickness = options.thickness ?? 1;
   const phase = options.phase ?? 0;
-  assertInteger(thickness, "motif pattern thickness", 1);
   assertInteger(phase, "motif pattern phase");
   const orientation = options.orientation ?? "horizontal";
   const direction = options.direction ?? "forward";
   const raw = orientation === "horizontal"
-    ? Array.from(
-      { length: thickness },
-      (_, row) =>
-        renderCycle(
-          options.length,
-          phase - (row % 2),
-          direction,
-          capabilities,
-          options.motif,
-        ),
-    ).join("\n")
+    ? renderCycle(
+      options.length,
+      phase,
+      direction,
+      capabilities,
+      options,
+    )
     : Array.from(
       { length: options.length },
       (_, row) =>
         renderCycle(
-          thickness,
+          1,
           phase + row,
           direction,
           capabilities,
-          options.motif,
+          options,
         ),
     ).join("\n");
   return styleText(
@@ -243,27 +388,31 @@ export function renderMotifProgressFrame(
       }; received ${width}`,
     );
   }
-  const filled = proportionalFloor(
+  const markerOffset = proportionalFloor(
     options.completed,
     options.total,
-    trackWidth,
+    trackWidth - 1,
   );
   const theme = themeFor(options.theme);
   const filledTone = options.completed === options.total ? "success" : "accent";
+  if (options.marker !== undefined) {
+    assertExplicitMarker(options.marker, "motif progress marker");
+  }
+  const marker = options.marker ?? markerRole(options, capabilities);
+  const filledRule = capabilities.unicode ? "━" : "=";
+  const remainingRule = capabilities.unicode ? "─" : "-";
   return renderStyledSpans([
     { text: label, style: theme.typography.annotation },
     {
-      text: renderCycle(
-        filled,
-        0,
-        "forward",
-        capabilities,
-        options.motif,
-      ),
+      text: filledRule.repeat(markerOffset),
       style: { color: motifColor(theme, filledTone) },
     },
     {
-      text: ".".repeat(trackWidth - filled),
+      text: marker,
+      style: { color: motifColor(theme, filledTone) },
+    },
+    {
+      text: remainingRule.repeat(trackWidth - markerOffset - 1),
       style: {
         color: terminalThemeColor(theme, "--discern-color-ink-faint"),
         dim: true,
@@ -289,15 +438,15 @@ export function renderMotifSectionRule(
   const width = Math.min(options.width, capabilities.columns);
   const theme = themeFor(options.theme);
   const gap = " ".repeat(theme.spacing["--discern-space-2"] ?? 1);
-  const requestedLabel = label.toUpperCase();
   const marker = renderCycle(
     1,
     phase,
     options.direction ?? "forward",
     capabilities,
-    options.motif,
+    options,
   );
   const treatment = options.treatment ?? "embedded";
+  const requestedLabel = treatment === "quiet" ? label : label.toUpperCase();
   const accentStyle = { color: motifColor(theme, "accent") } as const;
   const headingStyle = {
     ...theme.typography.strong,
@@ -305,6 +454,34 @@ export function renderMotifSectionRule(
   } as const;
   const strongRule = capabilities.unicode ? "━" : "=";
   const quietRule = capabilities.unicode ? "─" : "-";
+
+  if (treatment === "quiet") {
+    const lead = marker + gap;
+    const labelWidth = width - measureText(lead) - measureText(gap) - 1;
+    if (labelWidth < 1) {
+      throw new TypeError(
+        `motif section-rule width ${width} is too narrow for the quiet treatment`,
+      );
+    }
+    const displayLabel = truncateText(
+      requestedLabel,
+      labelWidth,
+      capabilities.unicode ? "…" : ".",
+    );
+    const remaining = width - measureText(lead) - measureText(displayLabel) -
+      measureText(gap);
+    const ruleStyle = {
+      ...theme.typography.muted,
+      color: terminalThemeColor(theme, "--discern-color-ink-faint"),
+    } as const;
+    return renderStyledSpans([
+      { text: marker, style: accentStyle },
+      { text: gap },
+      { text: displayLabel, style: headingStyle },
+      { text: gap },
+      { text: quietRule.repeat(remaining), style: ruleStyle },
+    ], capabilities);
+  }
 
   if (treatment === "embedded") {
     const lead = strongRule.repeat(2) + gap + marker + gap;
@@ -406,7 +583,9 @@ function stepMarker(
     };
   }
   return {
-    text: ` ${capabilities.unicode ? "·" : "."} `,
+    text: ` ${
+      terminalMotifRepertoire(motif, capabilities.unicode).status.incomplete
+    } `,
     style: {
       color: terminalThemeColor(theme, "--discern-color-ink-faint"),
       dim: true,
@@ -476,21 +655,20 @@ export function renderMotifWorkflowStepper(
   return lines.join("\n");
 }
 
-/** Render a four-glyph activity packet whose position derives from its phase. */
+/** Render one accent marker moving along a quiet out-and-back rail. */
 export function renderMotifActivityBeacon(
   options: MotifBeaconOptions,
   capabilities: TerminalCapabilities,
 ): string {
-  assertInteger(options.width, "motif beacon width", 4);
+  assertInteger(options.width, "motif beacon width", 2);
   assertInteger(options.phase, "motif beacon phase");
   const width = Math.min(options.width, capabilities.columns);
-  if (width < 4) {
+  if (width < 2) {
     throw new TypeError(
       `terminal width ${capabilities.columns} cannot hold a motif beacon`,
     );
   }
-  const packetWidth = 4;
-  const maximumOffset = width - packetWidth;
+  const maximumOffset = width - 1;
   const journey = Math.max(1, maximumOffset * 2);
   const cursor = normalizedIndex(options.phase, journey);
   let offset = cursor <= maximumOffset ? cursor : journey - cursor;
@@ -498,30 +676,27 @@ export function renderMotifActivityBeacon(
     offset = maximumOffset - offset;
   }
   const theme = themeFor(options.theme);
+  const rail = capabilities.unicode ? "─" : "-";
+  if (options.marker !== undefined) {
+    assertExplicitMarker(options.marker, "motif beacon marker");
+  }
+  const marker = options.marker ?? markerRole(options, capabilities);
+  const railStyle = {
+    color: terminalThemeColor(theme, "--discern-color-ink-faint"),
+    dim: true,
+  } as const;
   return renderStyledSpans([
     {
-      text: ".".repeat(offset),
-      style: {
-        color: terminalThemeColor(theme, "--discern-color-ink-faint"),
-        dim: true,
-      },
+      text: rail.repeat(offset),
+      style: railStyle,
     },
     {
-      text: renderCycle(
-        packetWidth,
-        options.phase,
-        options.direction ?? "forward",
-        capabilities,
-        options.motif,
-      ),
+      text: marker,
       style: { color: motifColor(theme, "accent") },
     },
     {
-      text: ".".repeat(maximumOffset - offset),
-      style: {
-        color: terminalThemeColor(theme, "--discern-color-ink-faint"),
-        dim: true,
-      },
+      text: rail.repeat(maximumOffset - offset),
+      style: railStyle,
     },
   ], capabilities);
 }

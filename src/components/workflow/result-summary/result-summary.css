@@ -43,6 +43,9 @@
     background: var(--discern-color-warning-soft);
     color: var(--discern-color-warning-deep);
   }
+  .discern-result-summary__state[data-discern-state="declared"] {
+    border-style: dashed;
+  }
   .discern-result-summary__state[data-discern-state="unchanged"] {
     color: var(--discern-color-ink-muted);
   }

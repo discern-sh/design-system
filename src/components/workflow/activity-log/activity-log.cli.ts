@@ -14,6 +14,7 @@ import type {
 import {
   motifPassthrough,
   type TerminalMotifOptions,
+  terminalMotifRegisterRoles,
   terminalMotifRepertoire,
 } from "../../../cli/motif.ts";
 import {
@@ -119,9 +120,9 @@ export const cliExamples: readonly CliExample<ActivityLogCliProps>[] = [
 
 /**
  * Render one activity log frame: a headline naming the work, pinned
- * narration lines, a fixed-height streamed tail behind a muted rail with
- * its in-progress partial line, and the unconditionally reserved footer
- * row.
+ * narration lines, a fixed-height streamed tail behind an indented muted rail
+ * whose first row has an angled connector, its in-progress partial line, and
+ * the unconditionally reserved footer row.
  */
 const renderActivityLogCli: CliRenderer<ActivityLogCliProps> = (
   props,
@@ -159,7 +160,10 @@ const renderActivityLogCli: CliRenderer<ActivityLogCliProps> = (
     ? renderMotifSpinnerFrame(props.phase, capabilities, presentation)
     : props.lifecycle.status === "submitted"
     ? styleText(
-      terminalMotifRepertoire(props.motif, capabilities.unicode).marker,
+      terminalMotifRegisterRoles(
+        terminalMotifRepertoire(props.motif, capabilities.unicode),
+        props.register,
+      ).marker,
       { color: terminalToneColor(theme, "accent") },
       capabilities,
     )
@@ -192,12 +196,21 @@ const renderActivityLogCli: CliRenderer<ActivityLogCliProps> = (
 
   const tailRegion: string[] = [];
   if (props.tailRows > 0) {
-    const rail = styleText(
-      capabilities.unicode ? "│" : "|",
+    const connector = styleText(
+      capabilities.unicode ? "└─│" : "`-|",
       theme.typography.muted,
       capabilities,
     );
-    const contentWidth = Math.max(1, width - 2);
+    const continuation = styleText(
+      capabilities.unicode ? "  │" : "  |",
+      theme.typography.muted,
+      capabilities,
+    );
+    const contentWidth = Math.max(1, width - 4);
+    const contentStyle = {
+      ...theme.typography.muted,
+      color: terminalThemeColor(theme, "--discern-color-ink-muted"),
+    } as const;
     const committed = props.tail.flatMap((line) =>
       wrapTextPreservingIndent(line, contentWidth)
     );
@@ -207,7 +220,12 @@ const renderActivityLogCli: CliRenderer<ActivityLogCliProps> = (
     const visible = rows.slice(-props.tailRows);
     while (visible.length < props.tailRows) visible.push("");
     tailRegion.push(
-      ...visible.map((row) => row === "" ? rail : `${rail} ${row}`),
+      ...visible.map((row, index) => {
+        const prefix = index === 0 ? connector : continuation;
+        return row === ""
+          ? prefix
+          : `${prefix} ${styleText(row, contentStyle, capabilities)}`;
+      }),
     );
   }
 

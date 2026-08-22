@@ -32,7 +32,7 @@ Change one only through an explicit ADR and an update to every unstarted brief.
 | 1A  | [Establish semantic inline content and Paragraph](_done/1a-semantic-content-and-paragraph.md)    | Solo architectural foundation                         | Planning programme has landed |
 | 2A  | [Add List, Blockquote, and Code block](_done/2a-structural-markdown-components.md)               | Up to three Component sub-agents in one worktree      | 1A has landed                 |
 | 3A  | [Upgrade Prose, Heading, Table, and Footnotes](_done/3a-upgrade-markdown-adjacent-components.md) | Up to four Component sub-agents in one worktree       | 2A has landed                 |
-| 4A  | [Ship the top-level Markdown Component](4a-markdown-renderer.md)                                 | One integrating agent; read-only research may fan out | 3A has landed                 |
+| 4A  | [Ship the top-level Markdown Component](_done/4a-markdown-renderer.md)                           | One integrating agent; read-only research may fan out | 3A has landed                 |
 
 This is an independently landed sequence, not a below-trunk branch stack. Do not dispatch a higher wave early. Each higher-wave brief has a trunk dependency guard and starts a normal worktree from the then-current `main`; no branch-name placeholder or manual relay is required.
 

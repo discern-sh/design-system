@@ -26,7 +26,7 @@ import type { ListKind, ListSpacing } from "./list.types.ts";
 /** One framework-neutral terminal List item. */
 export interface ListCliItem {
   /** Package-owned rich inline semantics that open the item. */
-  readonly content: SemanticInlineContent;
+  readonly content?: SemanticInlineContent;
   /** Read-only task state; omit for an ordinary item inside a task list. */
   readonly checked?: boolean;
   /** Re-renderable continuation paragraphs or nested structural Components. */
@@ -91,7 +91,7 @@ function assertListShape(props: Readonly<ListCliProps>): void {
         `list item ${index + 1} checked state must be boolean`,
       );
     }
-    if (kind !== "task" && item.checked !== undefined) {
+    if (kind !== "task" && kind !== "ordered" && item.checked !== undefined) {
       throw new TypeError(
         `list item ${index + 1} carries task state outside a task list`,
       );
@@ -99,7 +99,10 @@ function assertListShape(props: Readonly<ListCliProps>): void {
     if (item.blocks !== undefined && !Array.isArray(item.blocks)) {
       throw new TypeError(`list item ${index + 1} blocks must be an array`);
     }
-    if (semanticInlineText(item.content).trim() === "") {
+    if (
+      item.content !== undefined &&
+      semanticInlineText(item.content).trim() === ""
+    ) {
       throw new TypeError(`list item ${index + 1} content must be non-empty`);
     }
   }
@@ -132,7 +135,11 @@ function markerFor(
   ordinal: number,
   unicode: boolean,
 ): string {
-  if (kind === "ordered") return `${ordinal}.`;
+  if (kind === "ordered") {
+    if (item.checked === undefined) return `${ordinal}.`;
+    const task = item.checked ? unicode ? "☑" : "[x]" : unicode ? "☐" : "[ ]";
+    return `${ordinal}. ${task}`;
+  }
   if (kind === "task" && item.checked !== undefined) {
     if (item.checked) return unicode ? "☑" : "[x]";
     return unicode ? "☐" : "[ ]";
@@ -172,20 +179,28 @@ const renderListCli: CliRenderer<ListCliProps> = (props, capabilities) => {
     const prefix = `${marker}${
       " ".repeat(markerWidth - measureText(marker) + 1)
     }`;
-    const rendered = renderSemanticInlineContent(
-      item.content,
-      capabilities,
-      props.theme === undefined ? {} : { theme: props.theme },
-    );
-    if (stripAnsi(rendered).trim() === "") {
-      throw new TypeError(`list item ${index + 1} content must be non-empty`);
-    }
-    const lines = wrapStyledTextPreservingIndent(rendered, contentWidth);
-    const introduction = lines.map((line, lineIndex) =>
-      line === ""
-        ? ""
-        : `${lineIndex === 0 ? prefix : " ".repeat(contentIndent)}${line}`
-    ).join("\n");
+    const introduction = item.content === undefined
+      ? prefix.trimEnd()
+      : (() => {
+        const rendered = renderSemanticInlineContent(
+          item.content,
+          capabilities,
+          props.theme === undefined ? {} : { theme: props.theme },
+        );
+        if (stripAnsi(rendered).trim() === "") {
+          throw new TypeError(
+            `list item ${index + 1} content must be non-empty`,
+          );
+        }
+        return wrapStyledTextPreservingIndent(rendered, contentWidth).map(
+          (line, lineIndex) =>
+            line === ""
+              ? ""
+              : `${
+                lineIndex === 0 ? prefix : " ".repeat(contentIndent)
+              }${line}`,
+        ).join("\n");
+      })();
     if (item.blocks === undefined || item.blocks.length === 0) {
       return introduction;
     }

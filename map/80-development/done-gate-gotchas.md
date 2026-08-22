@@ -89,14 +89,14 @@ This section is yours to grow. As you build and hit failures the error message a
 - A test-isolation footgun unique to your framework or test runner.
 - A toolchain step a merge can invalidate (a generated file, a native build, a cache) that needs regenerating before the gate is green.
 
-### `deno fmt` reflows a compiled agent file and fights the guidance check
+### `deno fmt` reflows a compiled agent file and fights the instructions check
 
-**Symptom.** The format stage rewrites `CLAUDE.md`, `AGENTS.md`, or `GEMINI.md`, then the gate's guidance-currency check reports them stale (or `discern
+**Symptom.** The format stage rewrites `CLAUDE.md`, `AGENTS.md`, or `GEMINI.md`, then the gate's instructions-currency check reports them stale (or `discern
 refresh` immediately rewrites them back) — the two sides loop forever.
 
-**Cause.** Those three files are compiled outputs of `discern refresh` (built-in guidance + `discern/guidance.md`), but this repo's `deno fmt` also formats markdown. If they are not excluded from fmt, the formatter and the compiler each "correct" the other's output.
+**Cause.** Those three files are compiled outputs of `discern refresh` (built-in instructions + `discern/instructions.md`), but this repo's `deno fmt` also formats markdown. If they are not excluded from fmt, the formatter and the compiler each "correct" the other's output.
 
-**Fix.** Keep all three listed in `fmt.exclude` in [`deno.json`](../../deno.json) (they are, since setup). Edit `discern/guidance.md` (which fmt _does_ format), run `discern refresh`, and never hand-edit or format the compiled copies. Any newly added compiled agent file joins the exclude list in the same change.
+**Fix.** Keep all three listed in `fmt.exclude` in [`deno.json`](../../deno.json) (they are, since setup). Edit `discern/instructions.md` (which fmt _does_ format), run `discern refresh`, and never hand-edit or format the compiled copies. Any newly added compiled agent file joins the exclude list in the same change.
 
 ### The `css_density` standard measures a stale `dist/discern.css`
 

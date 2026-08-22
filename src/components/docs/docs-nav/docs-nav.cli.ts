@@ -8,6 +8,7 @@ import { styleText } from "../../../cli/ansi.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { measureText, wrapText } from "../../../cli/text.ts";
+import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
 import {
   terminalThemeColor,
   terminalThemes,
@@ -105,7 +106,7 @@ const renderDocsNavCli: CliRenderer<DocsNavCliProps> = (
         ? (last ? "└─" : "├─")
         : (last ? "\\-" : "+-");
       const marker = item.current === true
-        ? (capabilities.unicode ? "▶" : ">")
+        ? triangleGlyph(TRIANGLES.filled.right, capabilities.unicode)
         : " ";
       const target = props.showTargets === true ? ` (${item.href})` : "";
       const line = hanging(

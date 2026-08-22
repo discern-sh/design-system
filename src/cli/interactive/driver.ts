@@ -6,13 +6,23 @@ import type {
 } from "../interactive-states.ts";
 import type { TerminalCapabilities } from "../capabilities.ts";
 import type { CliPresentationOptions } from "../contracts.ts";
-import { InteractionCancelled } from "./errors.ts";
+import {
+  InteractionCancelled,
+  InteractionFrameCleanupError,
+} from "./errors.ts";
 import { DenoTerminalIO } from "./io.ts";
 import { isNamedKey, type TerminalKey, TerminalKeyReader } from "./keys.ts";
-import { withRawTerminal } from "./lifecycle.ts";
-import { InlineFramePainter } from "./painter.ts";
+import { assertInteractiveTerminal, withRawTerminal } from "./lifecycle.ts";
+import {
+  InlineFramePainter,
+  type InlineFrameRefusalReason,
+} from "./painter.ts";
 import { signalPassthrough } from "./signals.ts";
-import type { InteractionOptions, InteractionRuntime } from "./types.ts";
+import type {
+  InteractionCompletionPolicy,
+  InteractionOptions,
+  InteractionRuntime,
+} from "./types.ts";
 import {
   fitInteractionFrame,
   type InteractionFrameViewport,
@@ -59,7 +69,7 @@ function isEmpty(value: unknown): boolean {
 }
 
 function requiredMessage<T>(
-  options: InteractionOptions<T>,
+  options: InteractionDriverOptions<T>,
   value: T,
 ): string | undefined {
   if ((options.required ?? false) !== false && isEmpty(value)) {
@@ -76,7 +86,7 @@ function requiredMessage<T>(
  * asynchronous verdict resolves later.
  */
 function validationVerdict<T>(
-  options: InteractionOptions<T>,
+  options: InteractionDriverOptions<T>,
   value: T,
 ): string | undefined | Promise<string | undefined> {
   return requiredMessage(options, value) ?? options.validate?.(value);
@@ -98,17 +108,42 @@ function sameInteractionValue(a: unknown, b: unknown): boolean {
     a.every((item, index) => Object.is(item, b[index]));
 }
 
+type InteractionDriverOptions<T> = Omit<InteractionOptions<T>, "label">;
+
+function interactionCompletionPolicy(
+  value: InteractionCompletionPolicy | undefined,
+): InteractionCompletionPolicy {
+  const policy = value ?? "retain-frame";
+  if (policy !== "retain-frame" && policy !== "clear-frame") {
+    throw new TypeError(
+      `interaction completion policy must be "retain-frame" or "clear-frame"; received ${
+        JSON.stringify(policy)
+      }`,
+    );
+  }
+  return policy;
+}
+
 export async function runInteraction<T, State extends InteractiveFrameState>(
-  options: InteractionOptions<T>,
+  options: InteractionDriverOptions<T>,
   machine: InteractionMachine<T, State>,
   runtime: InteractionRuntime,
   renderFrame: InteractionFrameRenderer<State>,
 ): Promise<T> {
+  const completion = interactionCompletionPolicy(options.completion);
   const reservedRows = interactionReservedRows(options.reservedRows);
   const io = runtime.io ?? new DenoTerminalIO();
+  assertInteractiveTerminal(io);
+  if (
+    (completion === "clear-frame" || runtime.alternateScreen === true) &&
+    io.capabilities().ansiControl === false
+  ) {
+    throw new InteractionFrameCleanupError("ansi-control-unavailable");
+  }
   const painter = new InlineFramePainter(io);
   const reader = new TerminalKeyReader(io);
   let staticMode = false;
+  let staticRefusal: InlineFrameRefusalReason | undefined;
   let finished = false;
   let lastStaticFrame: string | undefined;
   const paint = (lifecycle: InteractiveFrameLifecycle): void => {
@@ -127,14 +162,31 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
     }
     const result = painter.replace(frame);
     if (result.status === "refused") {
+      staticRefusal = result.reason;
       painter.finish();
       if (result.reason === "current-frame-exceeds-viewport") {
         const restarted = painter.replace(frame);
-        if (restarted.status !== "refused") return;
+        if (restarted.status !== "refused") {
+          staticRefusal = undefined;
+          return;
+        }
+        staticRefusal = restarted.reason;
       }
       io.write(`${frame}\n`);
       staticMode = true;
       lastStaticFrame = frame;
+    }
+  };
+
+  const clearCompletedFrame = (): void => {
+    if (staticMode) {
+      throw new InteractionFrameCleanupError(
+        staticRefusal ?? "ansi-control-unavailable",
+      );
+    }
+    const result = painter.replace("");
+    if (result.status === "refused") {
+      throw new InteractionFrameCleanupError(result.reason);
     }
   };
 
@@ -269,8 +321,11 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
           const error = await validationVerdict(options, value);
           if (error === undefined) {
             finished = true;
-            paint({ status: "submitted" });
-            painter.finish();
+            if (completion === "clear-frame") clearCompletedFrame();
+            else {
+              paint({ status: "submitted" });
+              painter.finish();
+            }
             return value;
           }
           latched = true;
@@ -286,6 +341,7 @@ export async function runInteraction<T, State extends InteractiveFrameState>(
     }
   }, {
     ...signalPassthrough(runtime),
+    alternateScreen: runtime.alternateScreen ?? false,
     // An externally delivered SIGINT ends the request exactly as Ctrl+C
     // presents it — a truthful cancelled frame, its live region closed —
     // before the bracket restores the terminal and the signal re-raises.

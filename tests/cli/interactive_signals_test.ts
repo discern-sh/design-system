@@ -6,10 +6,17 @@ import {
 import { requestText } from "../../src/cli/interactive/basic-requests.ts";
 import { InteractionCancelled } from "../../src/cli/interactive/errors.ts";
 import {
+  DISABLE_TERMINAL_MOUSE_BUTTON_TRACKING,
+  DISABLE_TERMINAL_MOUSE_SGR_MODE,
+  ENABLE_TERMINAL_MOUSE_BUTTON_TRACKING,
+  ENABLE_TERMINAL_MOUSE_SGR_MODE,
+  ENTER_TERMINAL_ALTERNATE_SCREEN,
   HIDE_TERMINAL_CURSOR,
+  LEAVE_TERMINAL_ALTERNATE_SCREEN,
   SHOW_TERMINAL_CURSOR,
   withHiddenTerminalCursor,
   withRawTerminal,
+  withRawTerminalInputCleanup,
 } from "../../src/cli/interactive/lifecycle.ts";
 import { denoTerminalSignals } from "../../src/cli/interactive/signals.ts";
 import {
@@ -149,6 +156,101 @@ Deno.test("withRawTerminal can hold raw mode without touching the cursor", async
   assertEquals(io.rawTransitions, [true, false]);
 });
 
+Deno.test("mouse tracking enters and restores in one exact terminal order", async () => {
+  const io = new FakeTerminalIO([], { columns: 40 });
+  const value = await withRawTerminal(io, () => "tracked", {
+    alternateScreen: true,
+    mouseTracking: true,
+  });
+  assertEquals(value, "tracked");
+  assertEquals(io.rawTransitions, [true, false]);
+  assertEquals(io.writes, [
+    ENTER_TERMINAL_ALTERNATE_SCREEN,
+    ENABLE_TERMINAL_MOUSE_BUTTON_TRACKING,
+    ENABLE_TERMINAL_MOUSE_SGR_MODE,
+    HIDE_TERMINAL_CURSOR,
+    DISABLE_TERMINAL_MOUSE_SGR_MODE,
+    DISABLE_TERMINAL_MOUSE_BUTTON_TRACKING,
+    SHOW_TERMINAL_CURSOR,
+    LEAVE_TERMINAL_ALTERNATE_SCREEN,
+  ]);
+});
+
+Deno.test("mouse input cleanup runs after both resets and before screen restoration", async () => {
+  const io = new FakeTerminalIO([], { columns: 40 });
+  await withRawTerminalInputCleanup(io, () => undefined, {
+    alternateScreen: true,
+    mouseTracking: true,
+    afterMouseDisable: () => io.write("input-fence"),
+  });
+  assertEquals(io.writes, [
+    ENTER_TERMINAL_ALTERNATE_SCREEN,
+    ENABLE_TERMINAL_MOUSE_BUTTON_TRACKING,
+    ENABLE_TERMINAL_MOUSE_SGR_MODE,
+    HIDE_TERMINAL_CURSOR,
+    DISABLE_TERMINAL_MOUSE_SGR_MODE,
+    DISABLE_TERMINAL_MOUSE_BUTTON_TRACKING,
+    "input-fence",
+    SHOW_TERMINAL_CURSOR,
+    LEAVE_TERMINAL_ALTERNATE_SCREEN,
+  ]);
+});
+
+Deno.test("an operation failure wins over mouse input-cleanup failure", async () => {
+  const operationFailure = new Error("operation failed");
+  const io = new FakeTerminalIO([], { columns: 40 });
+  const error = await withRawTerminalInputCleanup(io, () => {
+    throw operationFailure;
+  }, {
+    alternateScreen: true,
+    mouseTracking: true,
+    afterMouseDisable: () => {
+      throw new Error("input cleanup failed");
+    },
+  }).catch((caught) => caught);
+  assertEquals(error, operationFailure);
+  assertEquals(io.rawTransitions, [true, false]);
+  assertEquals(io.writes.at(-2), SHOW_TERMINAL_CURSOR);
+  assertEquals(io.writes.at(-1), LEAVE_TERMINAL_ALTERNATE_SCREEN);
+});
+
+Deno.test("an explicit mouse capability refusal leaves the keyboard bracket untouched", async () => {
+  const io = new FakeTerminalIO([], {
+    columns: 40,
+    mouseTracking: false,
+  });
+  await withRawTerminal(io, () => undefined, { mouseTracking: true });
+  assertEquals(io.writes, [HIDE_TERMINAL_CURSOR, SHOW_TERMINAL_CURSOR]);
+  assertEquals(io.rawTransitions, [true, false]);
+});
+
+Deno.test("partial mouse entry cleans only completed modes and preserves the entry error", async () => {
+  const entryError = new Error("SGR mouse enable failed");
+  class PartialMouseFailure extends FakeTerminalIO {
+    override write(value: string): void {
+      if (value === ENABLE_TERMINAL_MOUSE_SGR_MODE) throw entryError;
+      if (value === DISABLE_TERMINAL_MOUSE_BUTTON_TRACKING) {
+        throw new Error("button cleanup failed");
+      }
+      super.write(value);
+    }
+  }
+  const io = new PartialMouseFailure([], { columns: 40 });
+  assertEquals(
+    await withRawTerminal(io, () => undefined, {
+      alternateScreen: true,
+      mouseTracking: true,
+    }).catch((error) => error),
+    entryError,
+  );
+  assertEquals(io.writes, [
+    ENTER_TERMINAL_ALTERNATE_SCREEN,
+    ENABLE_TERMINAL_MOUSE_BUTTON_TRACKING,
+    LEAVE_TERMINAL_ALTERNATE_SCREEN,
+  ]);
+  assertEquals(io.rawTransitions, [true, false]);
+});
+
 Deno.test("a cursor-free raw bracket restores only raw mode under SIGINT", async () => {
   const io = new FakeTerminalIO([], { columns: 40 });
   const signals = new FakeSignalSource();
@@ -239,12 +341,11 @@ Deno.test("an externally delivered SIGINT mid-request cancels truthfully and res
   const signals = new FakeSignalSource();
   const pending = requestText({ label: "Name" }, { io, signals })
     .catch((error) => error);
-  await until(() => io.writes.some((write) => write.includes("[active]")));
+  await until(() => io.writes.some((write) => write.includes("Name\n┌")));
   signals.deliver();
   assertEquals(signals.raised, 1);
   assertEquals(io.rawTransitions, [true, false]);
   assertEquals(io.writes.at(-1), SHOW_TERMINAL_CURSOR);
-  assert(io.output().includes("[cancelled]"));
   assert(io.output().includes("Cancelled."));
   io.close();
   const outcome = await pending;

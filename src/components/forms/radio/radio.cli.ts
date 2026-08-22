@@ -9,10 +9,7 @@ import type {
   SearchFrameState,
   SelectFrameState,
 } from "../../../cli/interactive-states.ts";
-import {
-  isInteractiveChoice,
-  isInteractiveChoiceGroupHeading,
-} from "../../../cli/interactive-choice.ts";
+import { isInteractiveChoice } from "../../../cli/interactive-choice.ts";
 import {
   motifPassthrough,
   type TerminalMotifOptions,
@@ -23,8 +20,7 @@ import {
   formCliEmptyResultsRow,
   type FormCliPresentation,
   insertFormCliCursor,
-  renderFormCliChoiceHeading,
-  renderFormCliChoiceRow,
+  renderFormCliChoiceEntry,
   renderFormCliFrame,
   renderFormCliQueryChoices,
   styleFormCliSelectedMark,
@@ -36,6 +32,7 @@ import {
 interface RadioCliOptions extends TerminalMotifOptions {
   readonly presentation?: FormCliPresentation;
   readonly required?: boolean;
+  readonly showStatus?: boolean;
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
@@ -191,7 +188,8 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
       "search state requires a selectable highlighted result",
     );
   }
-  const expanded = props.presentation === undefined &&
+  const expanded = (props.presentation === undefined ||
+    props.presentation === "browsing") &&
     (state.lifecycle.status === "active" ||
       state.lifecycle.status === "validation-error");
   const entries = state.kind === "select"
@@ -203,21 +201,11 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
       capabilities,
     )]
     : entries.map(({ entry, sourceIndex: index }) => {
-      if (isInteractiveChoiceGroupHeading(entry)) {
-        return renderFormCliChoiceHeading(
-          entry,
-          {
-            ...(props.theme === undefined ? {} : { theme: props.theme }),
-            ...motifPassthrough(props),
-            width,
-          },
-          capabilities,
-        );
-      }
-      const option = entry;
       const selected = state.kind === "search"
-        ? state.lifecycle.status === "submitted" && index === highlightedIndex
-        : option.id === state.selectedId;
+        ? state.lifecycle.status === "submitted" &&
+          index === highlightedIndex &&
+          isInteractiveChoice(entry)
+        : isInteractiveChoice(entry) && entry.id === state.selectedId;
       const markerGlyph = capabilities.unicode
         ? selected ? "◉" : "○"
         : selected
@@ -227,7 +215,7 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
       const pointer = highlighted ? capabilities.unicode ? "› " : "> " : "  ";
       const styleOptions = {
         highlighted,
-        disabled: option.disabled === true,
+        disabled: isInteractiveChoice(entry) && entry.disabled === true,
         ...(props.theme === undefined ? {} : { theme: props.theme }),
       };
       const marker = capabilities.unicode
@@ -245,14 +233,13 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
             capabilities,
           )
         })`;
-      const label = `${option.label}${
-        option.disabled === true ? " (disabled)" : ""
-      }`;
-      return renderFormCliChoiceRow({
+      return renderFormCliChoiceEntry({
+        entry,
         pointer,
         marker,
-        label,
-        ...styleOptions,
+        highlighted,
+        ...(props.theme === undefined ? {} : { theme: props.theme }),
+        ...motifPassthrough(props),
         width,
       }, capabilities);
     });
@@ -280,6 +267,7 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
       ? {}
       : { presentation: props.presentation }),
     ...(props.required === undefined ? {} : { required: props.required }),
+    ...(props.showStatus === undefined ? {} : { showStatus: props.showStatus }),
     ...(props.theme === undefined ? {} : { theme: props.theme }),
     width,
     choiceOverflow: state.kind === "select"

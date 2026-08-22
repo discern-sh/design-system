@@ -12,6 +12,8 @@ import {
   SHOW_TERMINAL_CURSOR,
   type SpinnerScheduler,
 } from "../../src/cli/interactive/mod.ts";
+import { createMarkdownBrowserState } from "../../src/cli/interactive/markdown-browser-model.ts";
+import { renderMarkdownBrowser } from "../../src/cli/interactive/markdown-browser-renderer.ts";
 import { cliComponentRegistry } from "../../src/generated/cli-registry.ts";
 import { componentGroups } from "../../src/types/component-meta.ts";
 import { terminalFoundationSheets } from "../../catalogue/terminal-foundations.ts";
@@ -36,6 +38,10 @@ import {
   type PlaygroundRuntime,
 } from "../../scripts/playground/types.ts";
 import {
+  documentChoices,
+  markdownBrowserEntries,
+} from "../../scripts/playground/fixtures.ts";
+import {
   createPlaygroundRuntime,
   renderJourneyList,
   resolvePlaygroundSelection,
@@ -51,6 +57,10 @@ const CTRL_A = "\x01";
 const CTRL_C = "\x03";
 const CTRL_D = "\x04";
 const CTRL_U = "\x15";
+
+function directNavigationCalls(source: string): number {
+  return source.match(/\brequest(?:Search|Selection)\s*\(/gu)?.length ?? 0;
+}
 
 function journey(id: string): PlaygroundJourney {
   const found = journeyById(id);
@@ -132,6 +142,29 @@ Deno.test("journey inventory stays unique, sectioned, and fully listed", () => {
   }
 });
 
+Deno.test("persistent playground navigation stays behind the screen manager", async () => {
+  assertEquals(
+    directNavigationCalls(
+      'await requestSelection({ label: "Unrelated sibling", choices });',
+    ),
+    1,
+    "the guard must reject a freshly named future navigation loop",
+  );
+  for await (const entry of Deno.readDir("scripts/playground")) {
+    if (!entry.isFile || !entry.name.endsWith(".ts")) continue;
+    if (entry.name === "journeys.ts" || entry.name === "navigation.ts") {
+      continue;
+    }
+    const path = `scripts/playground/${entry.name}`;
+    const source = await Deno.readTextFile(path);
+    assertEquals(
+      directNavigationCalls(source),
+      0,
+      `${path} bypasses the shared screen-managed navigation boundary`,
+    );
+  }
+});
+
 Deno.test("public heading treatments have one direct, concise review journey", async () => {
   assertEquals(resolvePlaygroundSelection(["heading-variants"]), {
     kind: "journey",
@@ -145,9 +178,9 @@ Deno.test("public heading treatments have one direct, concise review journey", a
   for (const id of ["embedded", "underline", "sandwich"]) {
     assertStringIncludes(io.output(), `[${id}]`);
   }
-  assertStringIncludes(io.output(), "━━ ◮ DEPLOYING WORKSPACE CHANGES");
-  assertStringIncludes(io.output(), "◮ DEPLOYING WORKSPACE CHANGES\n━━");
-  assertStringIncludes(io.output(), "──\n◮ DEPLOYING WORKSPACE CHANGES\n──");
+  assertStringIncludes(io.output(), "━━ ▲ DEPLOYING WORKSPACE CHANGES");
+  assertStringIncludes(io.output(), "▲ DEPLOYING WORKSPACE CHANGES\n━━");
+  assertStringIncludes(io.output(), "──\n▲ DEPLOYING WORKSPACE CHANGES\n──");
 });
 
 Deno.test("Timeline and stepper status review has a direct journey", async () => {
@@ -160,8 +193,103 @@ Deno.test("Timeline and stepper status review has a direct journey", async () =>
     await runJourney(journey("motif-statuses"), testRuntime(io)),
     "completed",
   );
-  assertStringIncludes(io.output(), " ◭  Completed");
-  assertStringIncludes(io.output(), "⧩ Now — Current [current]");
+  assertStringIncludes(io.output(), " ▲  Completed");
+  assertStringIncludes(io.output(), "△ Now — Current [current]");
+});
+
+Deno.test("reading-foundation journeys expose path search and compact cleanup", async () => {
+  const pathMatches = interactiveAdapter.filterInteractionEntries(
+    documentChoices,
+    "design-principles.md",
+  );
+  assertEquals(
+    pathMatches.map(({ id }) => id),
+    ["heading-orientation", "design-principles"],
+  );
+
+  const browsing = new FakeTerminalIO([ENTER], { columns: 60 });
+  assertEquals(
+    await runJourney(journey("browse-documents"), testRuntime(browsing)),
+    "completed",
+  );
+  assertStringIncludes(browsing.output(), "Design principles");
+  assertStringIncludes(browsing.output(), "design-principles.md");
+  assertStringIncludes(
+    browsing.output(),
+    'Result: string "00-orientation/design-principles.md"',
+  );
+  assert(!browsing.output().includes("[active]"));
+  assert(!browsing.output().includes("Submitted"));
+
+  const reader = new FakeTerminalIO(["docs online\r"], {
+    columns: 80,
+    rows: 24,
+  });
+  assertEquals(
+    await runJourney(journey("markdown-browser"), testRuntime(reader)),
+    "completed",
+  );
+  assertStringIncludes(reader.output(), '"kind":"action"');
+  assertStringIncludes(reader.output(), '"value":"read-online"');
+  assertStringIncludes(
+    reader.output(),
+    "Caller effect point: the terminal is restored",
+  );
+  assertEquals(reader.rawTransitions, [true, false]);
+  assertEquals(reader.resizeListenerCount, 0);
+
+  const continuation = new FakeTerminalIO([ENTER], { columns: 60 });
+  assertEquals(
+    await runJourney(
+      journey("acknowledge-compact"),
+      testRuntime(continuation),
+    ),
+    "completed",
+  );
+  assertStringIncludes(continuation.output(), "Press Enter to continue.");
+  assertStringIncludes(
+    continuation.output(),
+    "Result: compact acknowledgement cleared.",
+  );
+  assert(!continuation.output().includes("Submitted"));
+});
+
+Deno.test("Markdown playground senses light and dark ground before choosing the reader theme", async () => {
+  const options = {
+    label: "Documentation library",
+    placeholder: "Search titles, descriptions, and paths",
+    entries: markdownBrowserEntries,
+    mouse: true,
+  } as const;
+  const framePrefix = "\x1b[2J\x1b[H";
+  for (
+    const [report, theme] of [
+      ["ffff/ffff/ffff", "light"],
+      ["0000/0000/0000", "dark"],
+    ] as const
+  ) {
+    const io = new FakeTerminalIO([
+      `\x1b]11;rgb:${report}\x1b\\`,
+      `docs online${ENTER}`,
+    ], {
+      columns: 80,
+      rows: 24,
+      colorDepth: "ansi256",
+    });
+    assertEquals(
+      await runJourney(journey("markdown-browser"), testRuntime(io)),
+      "completed",
+    );
+    const frame = io.writes.find((write) => write.startsWith(framePrefix))
+      ?.slice(framePrefix.length).replaceAll("\r\n", "\n");
+    const expected = renderMarkdownBrowser(
+      createMarkdownBrowserState(options, { columns: 80, rows: 24 }, {
+        theme,
+      }),
+      io.capabilities(),
+    );
+    assertEquals(frame, expected, `${theme} ground must select ${theme} ink`);
+  }
 });
 
 Deno.test("--list works without a terminal", async () => {
@@ -517,7 +645,7 @@ Deno.test("degraded journeys run through the synthetic environment", async () =>
 
 Deno.test("browse journey reaches the motif sheet and returns to the hub", async () => {
   const io = new FakeTerminalIO(
-    [`${END}${UP}${UP}${UP}${ENTER}`, `${END}${ENTER}`],
+    [`${END}${UP}${UP}${UP}${ENTER}`, ENTER, `${END}${ENTER}`],
     { columns: 80 },
   );
   assertEquals(
@@ -529,7 +657,7 @@ Deno.test("browse journey reaches the motif sheet and returns to the hub", async
 
 Deno.test("browse journey reaches the narration sheet and returns to the hub", async () => {
   const io = new FakeTerminalIO(
-    [`${END}${UP}${UP}${ENTER}`, `${END}${ENTER}`],
+    [`${END}${UP}${UP}${ENTER}`, ENTER, `${END}${ENTER}`],
     { columns: 80 },
   );
   assertEquals(
@@ -561,9 +689,16 @@ Deno.test("browse journey walks Group, component, and example navigation", async
   assertEquals(io.rawTransitions.at(-1), false);
 });
 
-Deno.test("hub runs a journey, returns, and quits on cancellation", async () => {
+Deno.test("hub runs a journey, returns to its section, and quits", async () => {
   const io = new FakeTerminalIO(
-    [`${DOWN}${ENTER}`, `Jo${ENTER}`, CTRL_C],
+    [
+      ENTER,
+      ENTER,
+      `Jo${ENTER}`,
+      ENTER,
+      `${END}${ENTER}`,
+      `${END}${ENTER}`,
+    ],
     { columns: 60 },
   );
   await runHub(testRuntime(io));
@@ -582,9 +717,10 @@ Deno.test("tour skips a cancelled journey only after explicit consent", async ()
 });
 
 Deno.test("every journey survives every terminal width without throwing", async () => {
-  // 12 columns is the package's own floor: the marketing frame behind
-  // sequential forms rejects anything narrower, so the sweep starts there.
-  for (const columns of [12, 24, 28, 30, 31, 32, 48, 80]) {
+  // 14 columns preserves a ten-column semantic control area after the frame
+  // and its balanced one-cell insets; narrower pure Components are covered by
+  // their focused renderer tests.
+  for (const columns of [14, 24, 28, 30, 31, 32, 48, 80]) {
     for (const entry of playgroundJourneys) {
       const io = new FakeTerminalIO([], { columns });
       const runtime = testRuntime(io, {

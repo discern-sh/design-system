@@ -4,13 +4,16 @@
  * @module
  */
 
-import { styleText } from "../../cli/ansi.ts";
+import { stripAnsi, styleText } from "../../cli/ansi.ts";
 import { renderBox } from "../../cli/box.ts";
 import type { TerminalCapabilities } from "../../cli/capabilities.ts";
 import { defaultTerminalFrameWidth } from "../../cli/frame-measure.ts";
 import type {
+  InteractiveChoiceEntryState,
+  InteractiveChoiceFramePresentation,
   InteractiveChoiceGroupHeadingState,
   InteractiveChoiceOverflowState,
+  InteractiveChoiceState,
   InteractiveFrameLifecycle,
   SelectFrameState,
 } from "../../cli/interactive-states.ts";
@@ -18,6 +21,7 @@ import {
   interactiveChoiceOverflow,
   interactiveChoiceWindow,
   type InteractiveChoiceWindowEntry,
+  isInteractiveChoiceGroupHeading,
 } from "../../cli/interactive-choice.ts";
 import {
   motifPassthrough,
@@ -33,11 +37,7 @@ import {
 import { renderMotifSectionRule } from "../../cli/motifs.ts";
 
 /** Static presentation layered over an active Wave 1 frame. */
-export type FormCliPresentation =
-  | "idle"
-  | "active"
-  | "filled"
-  | "disabled";
+export type FormCliPresentation = InteractiveChoiceFramePresentation;
 
 /** Shared options used to compose one coherent terminal form frame. */
 export interface FormCliFrameOptions {
@@ -49,6 +49,8 @@ export interface FormCliFrameOptions {
   /** Provider work is scheduled or in flight behind an active frame. */
   readonly pending?: boolean;
   readonly presentation?: FormCliPresentation;
+  /** Include the derived lifecycle token after the label; searching stays visible by default. */
+  readonly showStatus?: boolean;
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
   /** Counts of choices beyond a scrolling control's current window. */
@@ -58,6 +60,9 @@ export interface FormCliFrameOptions {
 function statusLabel(options: FormCliFrameOptions): string {
   if (options.lifecycle.status === "validation-error") return "error";
   if (options.lifecycle.status !== "active") return options.lifecycle.status;
+  if (options.presentation === "browsing" && options.pending === true) {
+    return "searching";
+  }
   return options.presentation ??
     (options.pending === true ? "searching" : "active");
 }
@@ -67,7 +72,10 @@ function statusTone(
 ): "accent" | "neutral" | "success" | "danger" {
   if (status === "error") return "danger";
   if (status === "submitted") return "success";
-  if (status === "active" || status === "searching" || status === "filled") {
+  if (
+    status === "active" || status === "browsing" || status === "searching" ||
+    status === "filled"
+  ) {
     return "accent";
   }
   return "neutral";
@@ -114,7 +122,7 @@ export function formCliControlWidth(
   requested: number | undefined,
   capabilities: TerminalCapabilities,
 ): number {
-  return formCliFrameWidth(requested, capabilities) - 2;
+  return formCliFrameWidth(requested, capabilities) - 4;
 }
 
 /**
@@ -174,8 +182,10 @@ export function renderFormCliFrame(
   const status = statusLabel(options);
   const tone = statusTone(status);
   const required = options.required === true ? " *" : "";
+  const includeStatus = options.showStatus === true ||
+    (options.showStatus === undefined && status === "searching");
   const heading = truncateText(
-    `${options.label}${required} [${status}]`,
+    `${options.label}${required}${includeStatus ? ` [${status}]` : ""}`,
     boundedWidth,
     capabilities.unicode ? "…" : ".",
   );
@@ -196,7 +206,6 @@ export function renderFormCliFrame(
     renderBox({
       body: options.control === "" ? " " : options.control,
       width: boundedWidth,
-      padding: 0,
       borderStyle: { color: terminalToneColor(theme, tone) },
       ...(overflowLabel === "" ? {} : {
         bottomLabel: overflowLabel,
@@ -214,6 +223,52 @@ export function renderFormCliFrame(
       color: terminalToneColor(theme, tone),
     }, capabilities),
   ].join("\n");
+}
+
+/** Inputs for a compact continuation line below caller-owned content. */
+export interface FormCliContinuationOptions {
+  readonly lifecycle: InteractiveFrameLifecycle;
+  readonly hint: string;
+  readonly theme?: TerminalThemeVariant;
+  readonly width?: number;
+}
+
+/** Validate continuation copy before an interaction mutates terminal state. */
+export function assertFormCliContinuationHint(value: string): void {
+  if (value.trim() === "" || /[\p{Cc}\p{Cf}]/u.test(value)) {
+    throw new TypeError(
+      "form continuation hint must be non-empty and control-free",
+    );
+  }
+}
+
+/**
+ * Render a compact continuation or its cancellation/error fact without a
+ * labeled field shell. A submitted compact state emits nothing because the
+ * interaction driver owns successful-frame cleanup.
+ */
+export function renderFormCliContinuation(
+  options: FormCliContinuationOptions,
+  capabilities: TerminalCapabilities,
+): string {
+  assertFormCliContinuationHint(options.hint);
+  if (options.lifecycle.status === "submitted") return "";
+  const theme = terminalThemes[options.theme ?? "dark"];
+  const content = options.lifecycle.status === "validation-error"
+    ? `! ${options.lifecycle.message}`
+    : options.lifecycle.status === "cancelled"
+    ? `${capabilities.unicode ? "×" : "x"} ${options.lifecycle.reason}`
+    : options.hint;
+  const tone = options.lifecycle.status === "validation-error"
+    ? "danger"
+    : "neutral";
+  return wrapStyledText(
+    styleText(content, {
+      ...theme.typography.annotation,
+      color: terminalToneColor(theme, tone),
+    }, capabilities),
+    formCliFrameWidth(options.width, capabilities),
+  ).join("\n");
 }
 
 const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
@@ -297,17 +352,69 @@ export function renderFormCliChoiceHeading(
   },
   capabilities: TerminalCapabilities,
 ): string {
-  const width = formCliChoiceFrameWidth(options.width, capabilities) - 2;
-  const theme = terminalThemes[options.theme ?? "dark"];
-  const gap = theme.spacing["--discern-space-2"] ?? 1;
-  const labelWidth = Math.max(1, width - 2 * gap - 2);
-  const label = truncateText(
-    heading.label,
-    labelWidth,
-    capabilities.unicode ? "…" : ".",
-  );
-  return `\n${
+  const width = formCliControlWidth(options.width, capabilities);
+  const ruleOptions = {
+    width,
+    ...(options.theme === undefined ? {} : { theme: options.theme }),
+    ...motifPassthrough(options),
+  };
+  const renderRule = (label: string): string =>
     renderMotifSectionRule(
+      label,
+      ruleOptions,
+      { ...capabilities, columns: width },
+    );
+  const validatedRule = renderRule(heading.label);
+  const geometry = formCliChoiceHeadingGeometry(
+    options,
+    width,
+    capabilities,
+  );
+  const requestedLabel = heading.label.toUpperCase();
+  const labelLines = wrapStyledText(requestedLabel, geometry.labelWidth);
+  const firstLabel = labelLines[0] ?? requestedLabel;
+  const rule = labelLines.length === 1 && firstLabel === requestedLabel
+    ? validatedRule
+    : renderRule(firstLabel);
+  const theme = terminalThemes[options.theme ?? "dark"];
+  const continuations = labelLines.slice(1).map((line) =>
+    `${" ".repeat(geometry.labelColumn)}${
+      styleText(line, {
+        ...theme.typography.strong,
+        color: terminalThemeColor(theme, "--discern-color-ink"),
+      }, capabilities)
+    }`
+  );
+  if (heading.description === undefined) {
+    return ["", rule, ...continuations].join("\n");
+  }
+  assertFormCliChoiceDescription(heading.description);
+  const description = wrapStyledText(
+    styleFormCliChoiceDescription(
+      heading.description,
+      { ...(options.theme === undefined ? {} : { theme: options.theme }) },
+      capabilities,
+    ),
+    Math.max(1, width - geometry.labelColumn),
+  ).map((line) => `${" ".repeat(geometry.labelColumn)}${line}`);
+  return ["", rule, ...continuations, ...description].join("\n");
+}
+
+/**
+ * Derive the embedded motif rule's label column and capacity from the
+ * authority's own rendering. Reference labels locate the semantic lead, and
+ * a bounded fit search discovers the last untruncated label width regardless
+ * of Theme spacing, repertoire, or consumer motif.
+ */
+function formCliChoiceHeadingGeometry(
+  options: TerminalMotifOptions & {
+    readonly theme?: TerminalThemeVariant;
+  },
+  width: number,
+  capabilities: TerminalCapabilities,
+): { readonly labelColumn: number; readonly labelWidth: number } {
+  const renderReference = (label: string): string =>
+    stripAnsi(renderMotifSectionRule(
       label,
       {
         width,
@@ -315,8 +422,24 @@ export function renderFormCliChoiceHeading(
         ...motifPassthrough(options),
       },
       { ...capabilities, columns: width },
-    )
-  }`;
+    ));
+  const first = renderReference("A");
+  const second = renderReference("B");
+  let index = 0;
+  while (index < first.length && first[index] === second[index]) index += 1;
+  const labelColumn = measureText(first.slice(0, index));
+  const fits = (length: number): boolean => {
+    const label = "A".repeat(length);
+    return renderReference(label).startsWith(label, index);
+  };
+  let lower = 1;
+  let upper = width;
+  while (lower < upper) {
+    const candidate = Math.ceil((lower + upper) / 2);
+    if (fits(candidate)) lower = candidate;
+    else upper = candidate - 1;
+  }
+  return { labelColumn, labelWidth: lower };
 }
 
 /** Inputs for one prefix-stable, hanging-indent choice row. */
@@ -326,6 +449,8 @@ export interface FormCliChoiceRowOptions {
   /** Component-specific selection marker, already semantically styled. */
   readonly marker: string;
   readonly label: string;
+  /** Secondary semantic text rendered beneath the label. */
+  readonly description?: string;
   readonly highlighted?: boolean;
   readonly disabled?: boolean;
   readonly theme?: TerminalThemeVariant;
@@ -352,7 +477,7 @@ export function renderFormCliChoiceRow(
     styleFormCliChoiceText(options.pointer, styleOptions, capabilities)
   }${options.marker} `;
   const prefixWidth = measureText(prefix);
-  const controlWidth = formCliChoiceFrameWidth(options.width, capabilities) - 2;
+  const controlWidth = formCliControlWidth(options.width, capabilities);
   if (prefixWidth >= controlWidth) {
     throw new TypeError(
       `choice row prefix requires ${prefixWidth} of ${controlWidth} control columns`,
@@ -362,9 +487,98 @@ export function renderFormCliChoiceRow(
     styleFormCliChoiceText(options.label, styleOptions, capabilities),
     controlWidth - prefixWidth,
   );
-  return lines.map((line, index) =>
+  const semanticLines = options.description === undefined ? lines : [
+    ...lines,
+    ...wrapStyledText(
+      styleFormCliChoiceDescription(
+        options.description,
+        {
+          ...(options.disabled === undefined
+            ? {}
+            : { disabled: options.disabled }),
+          ...(options.theme === undefined ? {} : { theme: options.theme }),
+        },
+        capabilities,
+      ),
+      controlWidth - prefixWidth,
+    ),
+  ];
+  return semanticLines.map((line, index) =>
     index === 0 ? `${prefix}${line}` : `${" ".repeat(prefixWidth)}${line}`
   ).join("\n");
+}
+
+/** Inputs shared by every expanded form-choice entry renderer. */
+export interface FormCliChoiceEntryOptions extends TerminalMotifOptions {
+  readonly entry: InteractiveChoiceEntryState;
+  /** Fixed-width pointer slot for selectable entries. */
+  readonly pointer: string;
+  /** Component-specific selection marker for selectable entries. */
+  readonly marker: string;
+  readonly highlighted?: boolean;
+  readonly theme?: TerminalThemeVariant;
+  readonly width?: number;
+}
+
+/**
+ * Render one semantic choice entry through the shared heading/row geometry.
+ * Labels, descriptions, disabled facts, wrapping, and continuation alignment
+ * therefore cannot drift between Select, Radio, and Checkbox.
+ */
+export function renderFormCliChoiceEntry(
+  options: FormCliChoiceEntryOptions,
+  capabilities: TerminalCapabilities,
+): string {
+  if (isInteractiveChoiceGroupHeading(options.entry)) {
+    return renderFormCliChoiceHeading(options.entry, options, capabilities);
+  }
+  assertFormCliChoiceState(options.entry);
+  return renderFormCliChoiceRow({
+    pointer: options.pointer,
+    marker: options.marker,
+    label: `${options.entry.label}${
+      options.entry.disabled === true ? " (disabled)" : ""
+    }`,
+    ...(options.entry.description === undefined
+      ? {}
+      : { description: options.entry.description }),
+    ...(options.highlighted === undefined
+      ? {}
+      : { highlighted: options.highlighted }),
+    disabled: options.entry.disabled === true,
+    ...(options.theme === undefined ? {} : { theme: options.theme }),
+    ...(options.width === undefined ? {} : { width: options.width }),
+  }, capabilities);
+}
+
+/** Render one collapsed Select value without losing its description. */
+export function renderFormCliChoiceSummary(
+  entry: InteractiveChoiceState,
+  indicator: string,
+  options: {
+    readonly theme?: TerminalThemeVariant;
+    readonly width?: number;
+  },
+  capabilities: TerminalCapabilities,
+): string {
+  assertFormCliChoiceState(entry);
+  const width = formCliControlWidth(options.width, capabilities);
+  const label = `${entry.label} ${indicator}`;
+  if (entry.description === undefined) return label;
+  return [
+    ...wrapStyledText(label, width),
+    ...wrapStyledText(
+      styleFormCliChoiceDescription(
+        entry.description,
+        {
+          ...(entry.disabled === undefined ? {} : { disabled: entry.disabled }),
+          ...(options.theme === undefined ? {} : { theme: options.theme }),
+        },
+        capabilities,
+      ),
+      width,
+    ),
+  ].join("\n");
 }
 
 /** Join a query row to choice rows without doubling an existing group spacer. */
@@ -401,6 +615,39 @@ export function styleFormCliChoiceText(
     }, capabilities);
   }
   return value;
+}
+
+function assertFormCliChoiceDescription(value: string): void {
+  if (value.trim() === "" || /[\p{Cc}\p{Cf}]/u.test(value)) {
+    throw new TypeError(
+      "choice description must be non-empty and control-free",
+    );
+  }
+}
+
+function assertFormCliChoiceState(entry: InteractiveChoiceState): void {
+  if (entry.description !== undefined) {
+    assertFormCliChoiceDescription(entry.description);
+  }
+}
+
+/** Style secondary choice text through the package annotation role. */
+function styleFormCliChoiceDescription(
+  value: string,
+  options: {
+    readonly disabled?: boolean;
+    readonly theme?: TerminalThemeVariant;
+  },
+  capabilities: TerminalCapabilities,
+): string {
+  assertFormCliChoiceDescription(value);
+  const theme = terminalThemes[options.theme ?? "dark"];
+  return styleText(value, {
+    ...(options.disabled === true
+      ? theme.typography.muted
+      : theme.typography.annotation),
+    color: terminalThemeColor(theme, "--discern-color-ink-muted"),
+  }, capabilities);
 }
 
 /** Colour a selected choice mark with the active form-border accent role. */

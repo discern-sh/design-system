@@ -52,6 +52,8 @@ export interface InteractiveChoiceState {
   readonly kind?: "choice";
   readonly id: string;
   readonly label: string;
+  /** Optional control-free secondary text carried from the public choice. */
+  readonly description?: string;
   readonly disabled?: boolean;
 }
 
@@ -60,6 +62,8 @@ export interface InteractiveChoiceGroupHeadingState {
   readonly kind: "group-heading";
   readonly id: string;
   readonly label: string;
+  /** Optional control-free secondary text carried from the public heading. */
+  readonly description?: string;
   /** Group headings are structural rather than disabled choices. */
   readonly disabled?: never;
 }
@@ -68,6 +72,19 @@ export interface InteractiveChoiceGroupHeadingState {
 export type InteractiveChoiceEntryState =
   | InteractiveChoiceState
   | InteractiveChoiceGroupHeadingState;
+
+/** Static or browsing treatment carried by pure choice-frame state. */
+export type InteractiveChoiceFramePresentation =
+  | "idle"
+  | "active"
+  | "browsing"
+  | "filled"
+  | "disabled";
+
+/** Optional presentation carried by pure choice-frame state. */
+export interface InteractiveChoicePresentationState {
+  readonly presentation?: InteractiveChoiceFramePresentation;
+}
 
 /** Choice counts outside the currently rendered scrolling window. */
 export interface InteractiveChoiceOverflowState {
@@ -79,7 +96,10 @@ export interface InteractiveChoiceOverflowState {
 
 /** Visual state for selecting exactly one option. */
 export interface SelectFrameState
-  extends InteractiveFrameBase, InteractiveChoiceOverflowState {
+  extends
+    InteractiveFrameBase,
+    InteractiveChoiceOverflowState,
+    InteractiveChoicePresentationState {
   readonly kind: "select";
   readonly options: readonly InteractiveChoiceEntryState[];
   readonly highlightedIndex: number;
@@ -90,7 +110,10 @@ export interface SelectFrameState
 
 /** Visual state for selecting zero or more options. */
 export interface MultiselectFrameState
-  extends InteractiveFrameBase, InteractiveChoiceOverflowState {
+  extends
+    InteractiveFrameBase,
+    InteractiveChoiceOverflowState,
+    InteractiveChoicePresentationState {
   readonly kind: "multiselect";
   readonly options: readonly InteractiveChoiceEntryState[];
   readonly highlightedIndex: number;
@@ -101,7 +124,10 @@ export interface MultiselectFrameState
 
 /** Visual state for a query and its selectable result set. */
 export interface SearchFrameState
-  extends InteractiveFrameBase, InteractiveChoiceOverflowState {
+  extends
+    InteractiveFrameBase,
+    InteractiveChoiceOverflowState,
+    InteractiveChoicePresentationState {
   readonly kind: "search";
   readonly query: string;
   /** Grapheme index at which the query cursor is drawn. */
@@ -119,7 +145,10 @@ export interface SearchFrameState
  * the results — so selection state never silently drops.
  */
 export interface SearchMultiselectFrameState
-  extends InteractiveFrameBase, InteractiveChoiceOverflowState {
+  extends
+    InteractiveFrameBase,
+    InteractiveChoiceOverflowState,
+    InteractiveChoicePresentationState {
   readonly kind: "search-multiselect";
   readonly query: string;
   /** Grapheme index at which the query cursor is drawn. */
@@ -145,11 +174,24 @@ export interface AutocompleteFrameState extends InteractiveFrameBase {
   readonly pending?: boolean;
 }
 
-/** Visual state for a message acknowledged by a single continue action. */
-export interface AcknowledgementFrameState extends InteractiveFrameBase {
+/** Visual state for a framed message acknowledged by a continue action. */
+export interface FramedAcknowledgementFrameState extends InteractiveFrameBase {
   readonly kind: "acknowledgement";
   readonly message: string;
 }
+
+/** Visual state for one compact continuation below caller-owned content. */
+export interface CompactAcknowledgementFrameState {
+  readonly kind: "acknowledgement";
+  readonly presentation: "compact";
+  readonly lifecycle: InteractiveFrameLifecycle;
+  readonly hint: string;
+}
+
+/** Every framed or compact acknowledgement presentation. */
+export type AcknowledgementFrameState =
+  | FramedAcknowledgementFrameState
+  | CompactAcknowledgementFrameState;
 
 /** Visual state for a multi-line editable text area. */
 export interface TextareaFrameState extends InteractiveFrameBase {

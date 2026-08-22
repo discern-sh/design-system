@@ -16,12 +16,18 @@ Deno.test("Catalogue terminal compositions form one source-backed inventory", ()
       "failure-report",
       "command-reference",
       "guided-choice",
+      "markdown-browser",
     ],
   );
 
   for (const recipe of cliCompositionRecipes) {
-    assertStringIncludes(recipe.source, "composeCliBlocks");
-    assertStringIncludes(recipe.source, "createCliPresenter");
+    if (recipe.id === "markdown-browser") {
+      assertStringIncludes(recipe.source, "renderMarkdownBrowser");
+      assertStringIncludes(recipe.source, "/cli/interactive");
+    } else {
+      assertStringIncludes(recipe.source, "composeCliBlocks");
+      assertStringIncludes(recipe.source, "createCliPresenter");
+    }
     assertStringIncludes(recipe.source, "const output =");
   }
 });
@@ -45,6 +51,7 @@ Deno.test("Catalogue terminal layout recipe starts with inspectable standard geo
   assertStringIncludes(html, "Compact</span><small>40 × 24");
   assertStringIncludes(html, "Standard</span><small>80 × 24");
   assertStringIncludes(html, "Wide</span><small>120 × 30");
+  assertStringIncludes(html, "Tall</span><small>80 × 40");
   assertStringIncludes(html, "Show cell grid");
   assertStringIncludes(html, 'data-discern-terminal-columns="80"');
   assertStringIncludes(html, 'data-discern-terminal-rows="24"');

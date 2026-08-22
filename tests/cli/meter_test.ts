@@ -20,14 +20,14 @@ Deno.test("Meter renders zero, quarter, and complete at narrow and standard widt
   for (
     const [width, expected] of [
       [12, [
-        "Upload\n[  0%] .....",
-        "Upload\n[ 25%] ◮....",
-        "Upload\n[100%] ◮⧩◭⧨◮\n✓ Complete",
+        "Upload\n[  0%] ▶────",
+        "Upload\n[ 25%] ━▶───",
+        "Upload\n[100%] ━━━━▲\n✓ Complete",
       ]],
       [20, [
-        "Upload\n[  0%] .............",
-        "Upload\n[ 25%] ◮⧩◭..........",
-        "Upload\n[100%] ◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮\n✓ Complete",
+        "Upload\n[  0%] ▶────────────",
+        "Upload\n[ 25%] ━━━▶─────────",
+        "Upload\n[100%] ━━━━━━━━━━━━▲\n✓ Complete",
       ]],
     ] as const
   ) {
@@ -53,21 +53,30 @@ Deno.test("Meter uses exact ASCII progress and every colour capability", () => {
     });
     assertExactFrame(
       renderMeterCli({ ...meter(25), width }, capabilities),
-      width === 12 ? "Upload\n[ 25%] >...." : "Upload\n[ 25%] >v^..........",
+      width === 12 ? "Upload\n[ 25%] =>---" : "Upload\n[ 25%] ===>---------",
       capabilities,
     );
   }
+  const completeAscii = testTerminalCapabilities({
+    columns: 20,
+    unicode: false,
+  });
+  assertExactFrame(
+    renderMeterCli({ ...meter(100, "submitted"), width: 20 }, completeAscii),
+    "Upload\n[100%] ============^\nOK Complete",
+    completeAscii,
+  );
   const wide = testTerminalCapabilities({ columns: 40 });
   assertExactFrame(
     renderMeterCli({ ...meter(25), width: 40 }, wide),
-    "Upload\n[ 25%] ◮⧩◭⧨◮⧩◭⧨.........................",
+    `Upload\n[ 25%] ${"━".repeat(8)}▶${"─".repeat(24)}`,
     wide,
   );
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
     const capabilities = testTerminalCapabilities({ colorDepth, columns: 20 });
     assertStyledFrame(
       renderMeterCli({ ...meter(25), width: 20 }, capabilities),
-      "Upload\n[ 25%] ◮⧩◭..........",
+      "Upload\n[ 25%] ━━━▶─────────",
       capabilities,
     );
   }
@@ -81,7 +90,7 @@ Deno.test("Meter renders validation and cancellation lifecycle frames", () => {
       lifecycle: { status: "validation-error", message: "Quota exceeded" },
       width: 20,
     }, capabilities),
-    "Upload\n[ 25%] ◮⧩◭..........\n! Quota exceeded",
+    "Upload\n[ 25%] ━━━▶─────────\n! Quota exceeded",
     capabilities,
   );
   assertExactFrame(
@@ -90,7 +99,7 @@ Deno.test("Meter renders validation and cancellation lifecycle frames", () => {
       lifecycle: { status: "cancelled", reason: "Stopped" },
       width: 20,
     }, capabilities),
-    "Upload\n[ 25%] ◮⧩◭..........\n× Stopped",
+    "Upload\n[ 25%] ━━━▶─────────\n× Stopped",
     capabilities,
   );
 });

@@ -692,7 +692,7 @@ Deno.test("Artifact tree annotations accept inline and flow compositions without
   const ownership = renderToStaticMarkup(
     <ArtifactTree
       nodes={[{
-        name: "guidance.md",
+        name: "instructions.md",
         kind: "file",
         annotation: <OwnershipBadge ownership="authored" />,
       }]}
@@ -701,11 +701,11 @@ Deno.test("Artifact tree annotations accept inline and flow compositions without
   const fileChange = renderToStaticMarkup(
     <ArtifactTree
       nodes={[{
-        name: "guidance.md",
+        name: "instructions.md",
         kind: "file",
         annotation: (
           <FileChange
-            path="/workspace/guidance.md"
+            path="/workspace/instructions.md"
             disposition="updated"
           />
         ),

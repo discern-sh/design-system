@@ -11,44 +11,166 @@ import {
   InteractionCancelled,
   type InteractionEntry,
   requestConfirmation,
-  requestSelection,
 } from "../../src/cli/interactive/mod.ts";
 import { renderTerminalFacts } from "./banner.ts";
 import { journeyById, playgroundJourneys, runJourney } from "./journeys.ts";
 import {
+  type JourneySection,
   journeySections,
   type PlaygroundJourney,
   type PlaygroundRuntime,
 } from "./types.ts";
 
-type HubTarget = string | "tour" | "quit";
+type HubTarget = JourneySection | "search" | "tour" | "quit";
+type SectionTarget = string | "back";
+type JourneyReviewAction = "repeat" | "next" | "back" | "quit";
 
-/** Grouped hub menu: the tour, every journey by section, then quit. */
+function journeysInSection(
+  section: JourneySection,
+): readonly PlaygroundJourney[] {
+  return playgroundJourneys.filter((journey) => journey.section === section);
+}
+
+/** Compact hub: review sections first, then global search and tour modes. */
 export function hubChoices(): readonly InteractionEntry<HubTarget>[] {
-  const entries: InteractionEntry<HubTarget>[] = [
+  return [
+    ...journeySections.map((section) => ({
+      id: `section-${section.toLocaleLowerCase().replaceAll(/[^a-z]+/gu, "-")}`,
+      label: `${section} (${journeysInSection(section).length})`,
+      value: section as HubTarget,
+    })),
+    {
+      id: "search",
+      label: "Search every journey",
+      value: "search" as const,
+    },
     {
       id: "tour",
-      label: "Guided tour (every journey in order)",
-      value: "tour",
+      label: `Guided tour (${playgroundJourneys.length} journeys)`,
+      value: "tour" as const,
     },
+    { id: "quit", label: "Quit the playground", value: "quit" as const },
   ];
-  for (const section of journeySections) {
-    entries.push({
-      kind: "group-heading",
-      id: `section-${section.toLocaleLowerCase().replaceAll(/[^a-z]+/gu, "-")}`,
-      label: section,
-    });
-    for (const journey of playgroundJourneys) {
-      if (journey.section !== section) continue;
-      entries.push({
-        id: `journey-${journey.id}`,
-        label: `${journey.title} (${journey.id})`,
-        value: journey.id,
-      });
+}
+
+/** Named journey choices within one review section. */
+export function sectionChoices(
+  section: JourneySection,
+): readonly InteractionEntry<SectionTarget>[] {
+  return [
+    ...journeysInSection(section).map((journey) => ({
+      id: `journey-${journey.id}`,
+      label: `${journey.title} (${journey.id})`,
+      value: journey.id as SectionTarget,
+    })),
+    { id: "back", label: "Back to review sections", value: "back" },
+  ];
+}
+
+function searchChoices(): readonly InteractionEntry<string>[] {
+  return playgroundJourneys.map((journey) => ({
+    id: `journey-${journey.id}`,
+    label: journey.title,
+    description: `${journey.section} · ${journey.id}`,
+    value: journey.id,
+  }));
+}
+
+function nextJourney(
+  journey: PlaygroundJourney,
+): PlaygroundJourney | undefined {
+  const section = journeysInSection(journey.section);
+  const index = section.findIndex(({ id }) => id === journey.id);
+  return index < 0 ? undefined : section[index + 1];
+}
+
+async function reviewJourney(
+  initial: PlaygroundJourney,
+  runtime: PlaygroundRuntime,
+): Promise<"back" | "quit"> {
+  let journey = initial;
+  while (true) {
+    await runJourney(journey, runtime);
+    const following = nextJourney(journey);
+    const choices: InteractionEntry<JourneyReviewAction>[] = [
+      { id: "repeat", label: "Repeat this journey", value: "repeat" },
+      ...(following === undefined ? [] : [{
+        id: "next",
+        label: `Next in ${journey.section} (${following.title})`,
+        value: "next" as const,
+      }]),
+      { id: "back", label: "Back to journeys", value: "back" },
+      { id: "quit", label: "Quit the playground", value: "quit" },
+    ];
+    let action: JourneyReviewAction | undefined;
+    try {
+      action = await runtime.navigator.chooseInline(
+        `journey-review-${journey.id}`,
+        {
+          label: `Review ${journey.title}`,
+          hint: "The completed result remains above until you continue.",
+          choices,
+          initialId: "back",
+        },
+      );
+    } catch (error) {
+      if (!(error instanceof InteractionCancelled)) throw error;
+      return "back";
     }
+    if (action === "repeat") continue;
+    if (action === "next" && following !== undefined) {
+      journey = following;
+      continue;
+    }
+    return action === "quit" ? "quit" : "back";
   }
-  entries.push({ id: "quit", label: "Quit the playground", value: "quit" });
-  return entries;
+}
+
+async function chooseJourneyInSection(
+  section: JourneySection,
+  runtime: PlaygroundRuntime,
+): Promise<PlaygroundJourney | undefined> {
+  const target = await runtime.navigator.choose(`section-${section}`, {
+    label: section,
+    hint: "Enter opens; Esc returns to the hub.",
+    choices: sectionChoices(section),
+    visibleCount: 14,
+  });
+  return target === undefined || target === "back"
+    ? undefined
+    : journeyById(target);
+}
+
+async function searchForJourney(
+  runtime: PlaygroundRuntime,
+): Promise<PlaygroundJourney | undefined> {
+  const first = playgroundJourneys[0];
+  const target = await runtime.navigator.search("journey-search", {
+    label: "Search playground journeys",
+    placeholder: "Type a title, section, or journey ID",
+    hint: "Type to filter; Enter opens; Esc returns to the hub.",
+    choices: searchChoices(),
+    visibleCount: 14,
+    ...(first === undefined ? {} : { initialId: `journey-${first.id}` }),
+  });
+  return target === undefined ? undefined : journeyById(target);
+}
+
+async function reviewSection(
+  section: JourneySection,
+  runtime: PlaygroundRuntime,
+): Promise<"back" | "quit"> {
+  while (true) {
+    let journey: PlaygroundJourney | undefined;
+    try {
+      journey = await chooseJourneyInSection(section, runtime);
+    } catch (error) {
+      if (!(error instanceof InteractionCancelled)) throw error;
+      return "back";
+    }
+    if (journey === undefined) return "back";
+    if (await reviewJourney(journey, runtime) === "quit") return "quit";
+  }
 }
 
 /** Visit every journey in inventory order, confirming after cancellations. */
@@ -98,12 +220,12 @@ export async function runHub(runtime: PlaygroundRuntime): Promise<void> {
   while (true) {
     let target: HubTarget | undefined;
     try {
-      target = await requestSelection({
+      target = await runtime.navigator.choose("hub", {
         label: "Playground hub",
-        hint: "Ctrl+C quits; direct journey IDs still work.",
+        hint: "Choose a section, search all journeys, or start the tour.",
         choices: hubChoices(),
-        visibleCount: 12,
-      }, { io });
+        visibleCount: 8,
+      });
     } catch (error) {
       if (!(error instanceof InteractionCancelled)) throw error;
       print("Playground closed.");
@@ -117,11 +239,24 @@ export async function runHub(runtime: PlaygroundRuntime): Promise<void> {
       await runTourFromHub(runtime);
       continue;
     }
-    const journey: PlaygroundJourney | undefined = journeyById(target);
-    if (journey === undefined) {
-      print(`Unknown journey ${JSON.stringify(target)}.`);
+    if (target !== "search") {
+      if (await reviewSection(target, runtime) === "quit") {
+        print("Playground closed.");
+        return;
+      }
       continue;
     }
-    await runJourney(journey, runtime);
+    let journey: PlaygroundJourney | undefined;
+    try {
+      journey = await searchForJourney(runtime);
+    } catch (error) {
+      if (!(error instanceof InteractionCancelled)) throw error;
+      continue;
+    }
+    if (journey === undefined) continue;
+    if (await reviewJourney(journey, runtime) === "quit") {
+      print("Playground closed.");
+      return;
+    }
   }
 }

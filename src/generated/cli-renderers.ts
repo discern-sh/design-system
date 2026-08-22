@@ -19,6 +19,8 @@ export { default as renderClusterCli, cliExamples as clusterCliExamples } from "
 export type { ClusterCliProps } from "../components/layout/cluster/cluster.cli.ts";
 export { default as renderGridCli, cliExamples as gridCliExamples } from "../components/layout/grid/grid.cli.ts";
 export type { GridCliProps } from "../components/layout/grid/grid.cli.ts";
+export { default as renderMasonryCli, cliExamples as masonryCliExamples } from "../components/layout/masonry/masonry.cli.ts";
+export type { MasonryCliProps } from "../components/layout/masonry/masonry.cli.ts";
 export { default as renderSectionCli, cliExamples as sectionCliExamples } from "../components/layout/section/section.cli.ts";
 export type { SectionCliProps } from "../components/layout/section/section.cli.ts";
 export { default as renderBadgeCli, cliExamples as badgeCliExamples } from "../components/display/badge/badge.cli.ts";
@@ -183,6 +185,8 @@ export { default as renderTableOfContentsCli, cliExamples as tableOfContentsCliE
 export type { TableOfContentsCliProps } from "../components/editorial/table-of-contents/table-of-contents.cli.ts";
 export { default as renderProseCli, cliExamples as proseCliExamples } from "../components/editorial/prose/prose.cli.ts";
 export type { ProseCliProps } from "../components/editorial/prose/prose.cli.ts";
+export { default as renderMarkdownCli, cliExamples as markdownCliExamples } from "../components/editorial/markdown/markdown.cli.ts";
+export type { MarkdownCliProps } from "../components/editorial/markdown/markdown.cli.ts";
 export { default as renderParagraphCli, cliExamples as paragraphCliExamples } from "../components/editorial/paragraph/paragraph.cli.ts";
 export type { ParagraphCliProps } from "../components/editorial/paragraph/paragraph.cli.ts";
 export { default as renderListCli, cliExamples as listCliExamples } from "../components/editorial/list/list.cli.ts";

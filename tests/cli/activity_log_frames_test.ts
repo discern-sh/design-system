@@ -1,5 +1,7 @@
-import { assertEquals, assertThrows } from "@std/assert";
+import { assert, assertEquals, assertThrows } from "@std/assert";
+import { styleText } from "../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
+import { terminalThemeColor, terminalThemes } from "../../src/cli/theme.ts";
 import type { ActivityLogCliProps } from "../../src/components/workflow/activity-log/activity-log.cli.ts";
 import { renderActivityLogCli } from "../../src/cli/mod.ts";
 import {
@@ -45,15 +47,15 @@ Deno.test("Activity log renders exact narrow, standard, wide, and capability fra
     const [columns, expected] of [
       [
         16,
-        "◂ Build styles\n◮ Tokens held\n│   indented\n│   detail\n│ three now\nCtrl+C stops.",
+        "◓ Build styles\n▸ Tokens held\n└─│   indented\n  │   detail\n  │ three now\nCtrl+C stops.",
       ],
       [
         40,
-        "◂ Build styles\n◮ Tokens held\n│ two words that will wrap on narrow\n│   indented detail\n│ three now\nCtrl+C stops.",
+        "◓ Build styles\n▸ Tokens held\n└─│ two words that will wrap on narrow\n  │   indented detail\n  │ three now\nCtrl+C stops.",
       ],
       [
         80,
-        "◂ Build styles\n◮ Tokens held\n│ two words that will wrap on narrow\n│   indented detail\n│ three now\nCtrl+C stops.",
+        "◓ Build styles\n▸ Tokens held\n└─│ two words that will wrap on narrow\n  │   indented detail\n  │ three now\nCtrl+C stops.",
       ],
     ] as const
   ) {
@@ -66,8 +68,8 @@ Deno.test("Activity log renders exact narrow, standard, wide, and capability fra
   }
   assertCapabilityLevels(
     (capabilities) => renderActivityLogCli(streaming, capabilities),
-    "◂ Build styles\n◮ Tokens held\n│ two words that will wrap on narrow\n│   indented detail\n│ three now\nCtrl+C stops.",
-    "< Build styles\n> Tokens held\n| two words that will wrap on narrow\n|   indented detail\n| three now\nCtrl+C stops.",
+    "◓ Build styles\n▸ Tokens held\n└─│ two words that will wrap on narrow\n  │   indented detail\n  │ three now\nCtrl+C stops.",
+    "< Build styles\n> Tokens held\n`-| two words that will wrap on narrow\n  |   indented detail\n  | three now\nCtrl+C stops.",
   );
 });
 
@@ -89,7 +91,7 @@ Deno.test("Activity log tail rows stay reserved while the stream is empty", () =
       tail: [],
       tailRows: 4,
     }, capabilities),
-    "◂ Build styles\n│\n│\n│\n│\nCtrl+C stops.",
+    "◓ Build styles\n└─│\n  │\n  │\n  │\nCtrl+C stops.",
     capabilities,
   );
 });
@@ -102,9 +104,30 @@ Deno.test("Activity log windows the last rows after width wrapping", () => {
   );
   assertExactFrame(
     rendered,
-    "◂ Build styles\n│   indented\n│   detail\n│ three now\nCtrl+C stops.",
+    "◓ Build styles\n└─│   indented\n  │   detail\n  │ three now\nCtrl+C stops.",
     capabilities,
   );
+});
+
+Deno.test("Activity log styles streamed detail as muted supporting text", () => {
+  const capabilities = testTerminalCapabilities({
+    colorDepth: "truecolor",
+    columns: 40,
+  });
+  const rendered = renderActivityLogCli(streaming, capabilities);
+  const theme = terminalThemes.dark;
+  const mutedStyle = {
+    ...theme.typography.muted,
+    color: terminalThemeColor(theme, "--discern-color-ink-muted"),
+  } as const;
+  assert(
+    rendered.includes(styleText(
+      "two words that will wrap on narrow",
+      mutedStyle,
+      capabilities,
+    )),
+  );
+  assert(rendered.includes(styleText("three now", mutedStyle, capabilities)));
 });
 
 Deno.test("Activity log completion and cancellation frames stay exact", () => {
@@ -127,8 +150,8 @@ Deno.test("Activity log completion and cancellation frames stay exact", () => {
   };
   assertCapabilityLevels(
     (capabilities) => renderActivityLogCli(summary, capabilities),
-    "◮ Build styles\n✓ Tokens held\n! One warning kept\n",
-    "> Build styles\n+ Tokens held\n! One warning kept\n",
+    "▲ Build styles\n✓ Tokens held\n! One warning kept\n",
+    "^ Build styles\n+ Tokens held\n! One warning kept\n",
   );
   assertCapabilityLevels(
     (capabilities) => renderActivityLogCli(cancelled, capabilities),
@@ -145,7 +168,7 @@ Deno.test("Activity log footer row is reserved without a hint", () => {
     tail: ["only"],
     tailRows: 1,
   }, capabilities);
-  assertEquals(rendered, "◂ Build styles\n│ only\n");
+  assertEquals(rendered, "◓ Build styles\n└─│ only\n");
   assertEquals(rendered.split("\n").length, 3);
 });
 

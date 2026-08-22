@@ -1,0 +1,867 @@
+<title>The Terminal Field Guide</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+  :root {
+    --bg: #FBF8F1;
+    --bg-raised: #F4EFE4;
+    --bg-inset: #EFE9DB;
+    --ink: #262119;
+    --ink-soft: #4A4335;
+    --muted: #71685A;
+    --line: #E1D9C7;
+    --line-strong: #C9BFA9;
+    --accent: #A16207;
+    --accent-strong: #86500A;
+    --accent-wash: #F3E5C9;
+    --good: #3F6C33;
+    --warn: #97341B;
+    --display: "Bricolage Grotesque", "Avenir Next", "Helvetica Neue", sans-serif;
+    --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+    --mono: "IBM Plex Mono", "SF Mono", Menlo, Consolas, monospace;
+    /* fixed terminal-window palette — deliberately theme-independent */
+    --t-bg: #14161A;
+    --t-chrome: #1D2026;
+    --t-line: #2A2E36;
+    --t-fg: #ABB2BF;
+    --t-dim: #5F6672;
+    --t-red: #E06C75;
+    --t-green: #98C379;
+    --t-yellow: #E5C07B;
+    --t-blue: #61AFEF;
+    --t-magenta: #C678DD;
+    --t-cyan: #56B6C2;
+    --t-white: #D7DAE0;
+    --t-amber: #FFB454;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #171310;
+      --bg-raised: #201B15;
+      --bg-inset: #14110D;
+      --ink: #EAE2D3;
+      --ink-soft: #CFC5B2;
+      --muted: #9A8F7D;
+      --line: #322B21;
+      --line-strong: #4A4133;
+      --accent: #E3A237;
+      --accent-strong: #F0B85C;
+      --accent-wash: #2C2314;
+      --good: #8FBF7F;
+      --warn: #E58A6B;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #171310;
+    --bg-raised: #201B15;
+    --bg-inset: #14110D;
+    --ink: #EAE2D3;
+    --ink-soft: #CFC5B2;
+    --muted: #9A8F7D;
+    --line: #322B21;
+    --line-strong: #4A4133;
+    --accent: #E3A237;
+    --accent-strong: #F0B85C;
+    --accent-wash: #2C2314;
+    --good: #8FBF7F;
+    --warn: #E58A6B;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 1.0rem;
+    line-height: 1.65;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; padding: 0 24px 96px; }
+
+  a { color: var(--accent); text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent); text-underline-offset: 3px; }
+  a:hover { color: var(--accent-strong); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+  code, pre, kbd { font-family: var(--mono); }
+  code {
+    background: var(--bg-inset);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.08em 0.35em;
+    font-size: 0.86em;
+    white-space: nowrap;
+  }
+  pre {
+    background: var(--bg-inset);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 18px;
+    overflow-x: auto;
+    font-size: 0.84rem;
+    line-height: 1.6;
+  }
+  pre code { background: none; border: 0; padding: 0; white-space: pre; font-size: inherit; }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 72px 0 20px; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 14px;
+  }
+  h1 {
+    font-family: var(--display);
+    font-size: clamp(2.4rem, 6vw, 3.4rem);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 18px;
+    text-wrap: balance;
+  }
+  .lede {
+    font-size: 1.12rem;
+    color: var(--ink-soft);
+    max-width: 60ch;
+    margin: 0 0 36px;
+    text-wrap: pretty;
+  }
+
+  /* ---------- terminal window component ---------- */
+  .term {
+    background: var(--t-bg);
+    border: 1px solid var(--t-line);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 24px 0;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    line-height: 1.65;
+  }
+  .term-bar {
+    background: var(--t-chrome);
+    border-bottom: 1px solid var(--t-line);
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--t-dim);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+  }
+  .term-bar::before {
+    content: "";
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--t-dim);
+    opacity: 0.6;
+    box-shadow: 16px 0 0 var(--t-dim), 32px 0 0 var(--t-dim);
+    margin-right: 32px;
+  }
+  .term-body { padding: 14px 18px; overflow-x: auto; color: var(--t-fg); }
+  .term-body pre { background: none; border: 0; border-radius: 0; padding: 0; margin: 0; font-size: inherit; line-height: inherit; overflow: visible; }
+  .p  { color: var(--t-amber); }   /* prompt */
+  .g  { color: var(--t-green); }
+  .r  { color: var(--t-red); }
+  .y  { color: var(--t-yellow); }
+  .b  { color: var(--t-blue); }
+  .m  { color: var(--t-magenta); }
+  .c  { color: var(--t-cyan); }
+  .w  { color: var(--t-white); }
+  .d  { color: var(--t-dim); }
+  .bold { font-weight: 600; }
+  .ul { text-decoration: underline; text-underline-offset: 2px; }
+
+  /* ---------- table of contents ---------- */
+  .toc {
+    border-top: 1px solid var(--line-strong);
+    border-bottom: 1px solid var(--line-strong);
+    padding: 28px 0;
+    margin: 40px 0 24px;
+  }
+  .toc-title {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 18px;
+  }
+  .toc ol {
+    list-style: none;
+    margin: 0; padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 8px 32px;
+    counter-reset: chapter;
+  }
+  .toc li { counter-increment: chapter; }
+  .toc a {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--ink);
+    padding: 4px 0;
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+  .toc a::before {
+    content: counter(chapter, decimal-leading-zero);
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .toc a:hover { color: var(--accent-strong); }
+
+  /* ---------- chapters ---------- */
+  .chapter { margin-top: 72px; }
+  .ch-eyebrow {
+    font-family: var(--mono);
+    font-size: 0.74rem;
+    letter-spacing: 0.16em;
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+  h2 {
+    font-family: var(--display);
+    font-size: 1.7rem;
+    font-weight: 650;
+    line-height: 1.15;
+    margin: 0 0 16px;
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+  }
+  h3 {
+    font-family: var(--display);
+    font-size: 1.12rem;
+    font-weight: 600;
+    margin: 32px 0 10px;
+  }
+  p { margin: 0 0 16px; max-width: 70ch; text-wrap: pretty; }
+  ul.list, ol.list { margin: 0 0 16px; padding-left: 22px; max-width: 68ch; }
+  ul.list li, ol.list li { margin-bottom: 8px; }
+  strong { font-weight: 600; }
+
+  .takeaway {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-wash);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 24px 0;
+    max-width: 66ch;
+  }
+  .takeaway p { margin: 0; font-size: 0.95rem; }
+  .takeaway .tk-label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent-strong);
+    margin-bottom: 6px;
+  }
+
+  /* ---------- data tables ---------- */
+  .tbl-scroll { overflow-x: auto; margin: 20px 0; border: 1px solid var(--line); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+  th, td { text-align: left; padding: 8px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  th {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    background: var(--bg-raised);
+  }
+  td code { white-space: nowrap; }
+  td.num { font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 0.82rem; }
+
+  /* ---------- stack diagram ---------- */
+  .stack { display: flex; flex-direction: column; gap: 0; margin: 24px 0; max-width: 560px; }
+  .stack-row {
+    display: grid;
+    grid-template-columns: 170px 1fr;
+    gap: 16px;
+    align-items: center;
+    padding: 12px 16px;
+    border: 1px solid var(--line-strong);
+    background: var(--bg-raised);
+  }
+  .stack-row + .stack-row { border-top: 0; }
+  .stack-row:first-child { border-radius: 10px 10px 0 0; }
+  .stack-row:last-child { border-radius: 0 0 10px 10px; }
+  .stack-name { font-family: var(--mono); font-size: 0.8rem; font-weight: 600; color: var(--accent-strong); }
+  .stack-role { font-size: 0.85rem; color: var(--ink-soft); }
+  .stack-gap {
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    padding: 3px 0;
+    letter-spacing: 0.1em;
+  }
+
+  /* ---------- escape anatomy ---------- */
+  .anatomy {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 24px 0;
+    font-family: var(--mono);
+  }
+  .anatomy-part { display: flex; flex-direction: column; gap: 6px; }
+  .anatomy-code {
+    background: var(--t-bg);
+    color: var(--t-white);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 1.05rem;
+    font-weight: 500;
+    text-align: center;
+  }
+  .anatomy-part:nth-child(1) .anatomy-code { color: var(--t-amber); }
+  .anatomy-part:nth-child(2) .anatomy-code { color: var(--t-cyan); }
+  .anatomy-part:nth-child(3) .anatomy-code { color: var(--t-green); }
+  .anatomy-part:nth-child(4) .anatomy-code { color: var(--t-magenta); }
+  .anatomy-label { font-size: 0.68rem; color: var(--muted); text-align: center; max-width: 130px; line-height: 1.4; }
+
+  /* ---------- cell width demo ---------- */
+  .cells { display: flex; gap: 0; margin: 20px 0 8px; overflow-x: auto; padding-bottom: 4px; }
+  .cell {
+    width: 34px; height: 46px;
+    flex: 0 0 34px;
+    border: 1px solid var(--line-strong);
+    border-left: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-size: 1.15rem;
+    background: var(--bg-raised);
+  }
+  .cell:first-child { border-left: 1px solid var(--line-strong); border-radius: 6px 0 0 6px; }
+  .cell:last-child { border-radius: 0 6px 6px 0; }
+  .cell.wide { width: 68px; flex-basis: 68px; background: var(--accent-wash); }
+  .cell-caption { font-size: 0.8rem; color: var(--muted); margin-bottom: 20px; }
+
+  /* ---------- degradation trio ---------- */
+  .trio { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 24px 0; }
+  .trio .term { margin: 0; font-size: 0.72rem; }
+  .trio-label { font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; }
+
+  .footer {
+    margin-top: 88px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .footer p { margin: 0 0 6px; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .caret { animation: blink 1.1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+  }
+</style>
+
+<div class="wrap">
+
+<header class="hero">
+  <p class="eyebrow">A portable reference · no stack required</p>
+  <h1>The Terminal Field Guide</h1>
+  <p class="lede">Everything under a good command-line program: the mental models, wire protocols, and conventions that hold whether you're writing Deno, Rust, Go, or shell. Written for an experienced GUI developer who wants terminal fluency.</p>
+
+  <div class="term" role="img" aria-label="A terminal showing a styled CLI status report">
+    <div class="term-bar">guide — 80×24</div>
+    <div class="term-body"><pre><span class="p">❯</span> <span class="w bold">fieldguide</span> status
+<span class="g">✓</span> streams        <span class="d">stdout is data, stderr is commentary</span>
+<span class="g">✓</span> capabilities   <span class="d">truecolor · utf-8 · 120 columns</span>
+<span class="y">◐</span> unicode width  <span class="d">harder than it looks — see chapter 07</span>
+<span class="p">❯</span> <span class="caret">▌</span></pre></div>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Chapters">
+  <p class="toc-title">Chapters</p>
+  <ol>
+    <li><a href="#ch1">What a terminal actually is</a></li>
+    <li><a href="#ch2">Streams, pipes &amp; exit codes</a></li>
+    <li><a href="#ch3">Is anyone watching? TTY detection</a></li>
+    <li><a href="#ch4">Arguments, flags &amp; environment</a></li>
+    <li><a href="#ch5">Escape sequences: drawing in-band</a></li>
+    <li><a href="#ch6">Color &amp; capability detection</a></li>
+    <li><a href="#ch7">Text width: the hard part</a></li>
+    <li><a href="#ch8">Layout in a grid of cells</a></li>
+    <li><a href="#ch9">Input, raw mode &amp; full-screen apps</a></li>
+    <li><a href="#ch10">Being a good citizen</a></li>
+    <li><a href="#ch11">Testing &amp; determinism</a></li>
+    <li><a href="#cheat">Appendix: the cheatsheet</a></li>
+  </ol>
+</nav>
+
+<!-- ================================================================ -->
+<section class="chapter" id="ch1">
+  <p class="ch-eyebrow">01</p>
+  <h2>What a terminal actually is</h2>
+  <p>The single most useful mental model: <strong>a CLI program is not "in" the terminal.</strong> It reads and writes streams of bytes through file descriptors, and a separate program — the terminal emulator — interprets those bytes and paints pixels. Everything visual (color, bold, cursor movement, "full-screen" apps) travels <em>in-band</em>, as escape sequences mixed into the same byte stream as the text.</p>
+  <p>Four layers are involved, and each one owns a distinct job:</p>
+
+  <div class="stack">
+    <div class="stack-row">
+      <span class="stack-name">terminal emulator</span>
+      <span class="stack-role">iTerm2, Ghostty, Windows Terminal, tmux. Paints pixels, interprets escape codes, turns your keystrokes into bytes.</span>
+    </div>
+    <div class="stack-gap">↕ bytes over a pseudo-terminal (PTY)</div>
+    <div class="stack-row">
+      <span class="stack-name">tty driver</span>
+      <span class="stack-role">Kernel "line discipline": buffers a line until Enter, echoes typed characters, turns Ctrl-C into a signal. Can be switched off (raw mode).</span>
+    </div>
+    <div class="stack-gap">↕ read / write on fds 0, 1, 2</div>
+    <div class="stack-row">
+      <span class="stack-name">shell</span>
+      <span class="stack-role">zsh, bash, fish. Parses the command line, expands globs and <code>$VARS</code>, splits words, sets up pipes — <em>then</em> launches your program.</span>
+    </div>
+    <div class="stack-gap">↕ exec with argv + environment</div>
+    <div class="stack-row">
+      <span class="stack-name">your program</span>
+      <span class="stack-role">Receives an already-parsed argv and an environment. Reads and writes bytes. Never sees quotes, globs, or pixels.</span>
+    </div>
+  </div>
+
+  <p>Two consequences GUI developers trip over:</p>
+  <ul class="list">
+    <li><strong>The shell owns the command line.</strong> By the time your program starts, quoting and glob expansion already happened. There are no quote characters in <code>argv</code>; <code>*.ts</code> either arrived pre-expanded into filenames or (if quoted) as a literal string. When users report "my argument got mangled," the answer is nearly always shell quoting, not your parser.</li>
+    <li><strong>There is no layout engine.</strong> The terminal is a dumb grid of character cells. Nothing reflows, centers, or measures for you. Every alignment, wrap, and truncation is your program's arithmetic — which is why width (chapter 07) matters so much.</li>
+  </ul>
+
+  <div class="takeaway">
+    <span class="tk-label">Carry this</span>
+    <p>Your program's entire universe is: argv in, environment in, three byte streams, one exit code out. Everything else is convention layered on top of those five things.</p>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<section class="chapter" id="ch2">
+  <p class="ch-eyebrow">02</p>
+  <h2>Streams, pipes &amp; exit codes</h2>
+  <p>Every process starts with three open file descriptors, and the entire composability of the Unix world rests on using them correctly:</p>
+
+  <div class="tbl-scroll"><table>
+    <tr><th>fd</th><th>name</th><th>purpose</th></tr>
+    <tr><td class="num">0</td><td><code>stdin</code></td><td>Input. May be a keyboard, a file, or another program's output.</td></tr>
+    <tr><td class="num">1</td><td><code>stdout</code></td><td><strong>Data.</strong> The program's actual product — the thing worth piping into the next command.</td></tr>
+    <tr><td class="num">2</td><td><code>stderr</code></td><td><strong>Commentary.</strong> Progress, warnings, errors, log lines — anything a human should see but a pipe shouldn't swallow.</td></tr>
+  </table></div>
+
+  <p>The data/commentary split is the most-violated rule in CLI design and the one users feel first. <code>yourtool list | wc -l</code> should count results — not results plus a banner, a spinner, and a "fetching…" line. Print the product to stdout; print everything <em>about the process</em> to stderr.</p>
+
+  <h3>Buffering: the classic gotcha</h3>
+  <p>Most runtimes line-buffer stdout when it's a terminal but <em>block-buffer</em> it (≈4–64 KB chunks) when it's a pipe or file. This is why a program prints live in a terminal but sits silent when piped, then dumps everything at exit. If output timing matters — progress, streaming logs — flush explicitly after each meaningful unit.</p>
+
+  <h3>Exit codes</h3>
+  <p>The one-byte return value is your program's machine-readable verdict, and scripts genuinely branch on it (<code>&amp;&amp;</code>, <code>||</code>, <code>set&nbsp;-e</code>, CI steps). Zero means success; everything else is failure. A few values carry convention:</p>
+
+  <div class="tbl-scroll"><table>
+    <tr><th>code</th><th>meaning</th></tr>
+    <tr><td class="num">0</td><td>Success — the only success.</td></tr>
+    <tr><td class="num">1</td><td>General failure.</td></tr>
+    <tr><td class="num">2</td><td>Usage error (bad flags, missing argument) — bash's own convention.</td></tr>
+    <tr><td class="num">64–78</td><td>BSD <code>sysexits.h</code> palette (64 usage, 69 unavailable, 70 internal software error…). Optional, but nice for tools others script against.</td></tr>
+    <tr><td class="num">126</td><td>Found but not executable.</td></tr>
+    <tr><td class="num">127</td><td>Command not found (shell speaking, not you).</td></tr>
+    <tr><td class="num">128 + n</td><td>Killed by signal n — Ctrl-C's SIGINT is 2, so 130.</td></tr>
+  </table></div>
+
+  <h3>SIGPIPE, or: why <code>head</code> kills you</h3>
+  <p>Run <code>yourtool | head -3</code> and after three lines <code>head</code> exits, closing the pipe. Your next write triggers <code>SIGPIPE</code>, which by default terminates the process silently — which is correct and desirable! Languages that trap it instead (Node's <code>EPIPE</code>, Python's <code>BrokenPipeError</code>) make you handle it: exit quietly, don't stack-trace. A pipe closing early is the reader saying "I have enough," not an error.</p>
+
+  <div class="takeaway">
+    <span class="tk-label">Carry this</span>
+    <p>stdout is for the next program; stderr is for the human; the exit code is for the shell. Design all three on purpose and your tool composes into pipelines you never imagined.</p>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<section class="chapter" id="ch3">
+  <p class="ch-eyebrow">03</p>
+  <h2>Is anyone watching? TTY detection</h2>
+  <p>A well-behaved CLI is really two programs: an interactive one for humans and a plain one for pipes, scripts, and CI. The switch between them is one question, asked <em>per stream</em>: is this file descriptor connected to a terminal?</p>
+
+  <div class="tbl-scroll"><table>
+    <tr><th>environment</th><th>check</th></tr>
+    <tr><td>C / POSIX</td><td><code>isatty(fd)</code></td></tr>
+    <tr><td>Node</td><td><code>process.stdout.isTTY</code></td></tr>
+    <tr><td>Deno</td><td><code>Deno.stdout.isTerminal()</code></td></tr>
+    <tr><td>Python</td><td><code>sys.stdout.isatty()</code></td></tr>
+    <tr><td>Go</td><td><code>golang.org/x/term — term.IsTerminal(fd)</code></td></tr>
+    <tr><td>Rust</td><td><code>std::io::IsTerminal — stdout().is_terminal()</code></td></tr>
+    <tr><td>Shell</td><td><code>[ -t 1 ]</code></td></tr>
+  </table></div>
+
+  <p>Note "per stream": in <code>yourtool | less</code>, stdout is a pipe but stderr still faces the human — progress on stderr can stay alive while data flows cleanly. In <code>yourtool 2&gt;log</code>, it's the reverse.</p>
+
+  <h3>What changes when stdout isn't a TTY</h3>
+  <ul class="list">
+    <li><strong>No color or styling</strong> — escape codes become literal garbage like <code>\x1b[32m</code> in files and greps.</li>
+    <li><strong>No spinners, progress bars, or cursor tricks</strong> — anything using <code>\r</code> or cursor movement becomes noise.</li>
+    <li><strong>No prompts</strong> — never block a pipeline waiting for input nobody can give. If interaction is required and stdin isn't a TTY, fail with a clear message (and offer a flag like <code>--yes</code>).</li>
+    <li><strong>Stable, parseable output</strong> — this is the moment users are scripting you; favor one record per line.</li>
+  </ul>
+
+  <h3>The override ladder</h3>
+  <p>Detection is a default, not a verdict. Convention gives users three levers, in rising precedence:</p>
+  <ol class="list">
+    <li><strong>Environment, off:</strong> <code>NO_COLOR</code> set to anything means no color (see <a href="https://no-color.org">no-color.org</a>). <code>TERM=dumb</code> means no styling at all. CI often sets <code>CI=1</code> — many tools treat that as "plain, but keep helpful summaries."</li>
+    <li><strong>Environment, on:</strong> <code>FORCE_COLOR</code> / <code>CLICOLOR_FORCE</code> mean color even when piped — vital because <code>yourtool | less -R</code> and CI log viewers <em>can</em> render color despite not being TTYs.</li>
+    <li><strong>Flags beat everything:</strong> <code>--color=always|never|auto</code> is the user's final word.</li>
+  </ol>
+
+  <div class="takeaway">
+    <span class="tk-label">Carry this</span>
+    <p>Ask <code>isatty()</code> once per stream at startup, fold in the env overrides, and pass the result down as a <em>capabilities value</em>. Code deep in your program should never peek at the environment itself — that's what makes output testable (chapter 11).</p>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<section class="chapter" id="ch4">
+  <p class="ch-eyebrow">04</p>
+  <h2>Arguments, flags &amp; environment</h2>
+  <p>Argument syntax is pure convention — the kernel hands you an array of strings — but the conventions are strong, and users' fingers know them:</p>
+
+  <ul class="list">
+    <li><strong>Short flags</strong> — <code>-v</code> — single dash, single letter, bundleable: <code>-abc</code> ≡ <code>-a -b -c</code>.</li>
+    <li><strong>Long flags</strong> — <code>--verbose</code> — double dash, full words, values as <code>--out file</code> or <code>--out=file</code>.</li>
+    <li><strong>Positional arguments</strong> — bare words, order-significant: <code>cp src dest</code>.</li>
+    <li><strong>Subcommands</strong> — <code>git commit</code>, <code>deno task</code> — verbs first, each with its own flags. The standard shape for multi-purpose tools.</li>
+    <li><strong><code>--</code> ends flag parsing</strong> — everything after is positional, even if it starts with a dash. This is how users operate on a file literally named <code>-rf</code>. Honor it.</li>
+    <li><strong><code>-</code> as a filename</strong> conventionally means stdin/stdout.</li>
+  </ul>
+
+  <p>Every ecosystem has a standard parser that encodes all of this plus help generation — <code>clap</code> (Rust), <code>cobra</code> (Go), <code>argparse</code> (Python), <code>commander</code>/<code>yargs</code> (Node), <code>@std/cli</code> (Deno). Hand-rolling argv loops is how tools end up with flags that can't bundle and no <code>--help</code>.</p>
+
+  <h3>Configuration precedence</h3>
+  <p>When the same knob can come from several places, the widely-agreed order — most specific wins — is:</p>
+  <ol class="list">
+    <li>Command-line flags (this invocation's explicit intent)</li>
+    <li>Environment variables (this session/machine)</li>
+    <li>Project config file, then user config file</li>
+    <li>Built-in defaults</li>
+  </ol>
+
+  <h3>Environment variables your program should respect</h3>
+  <div class="tbl-scroll"><table>
+    <tr><th>variable</th><th>what it tells you</th></tr>
+    <tr><td><code>TERM</code>, <code>COLORTERM</code></td><td>Terminal type and color capability (chapter 06).</td></tr>
+    <tr><td><code>NO_COLOR</code>, <code>FORCE_COLOR</code></td><td>Styling overrides (chapter 03).</td></tr>
+    <tr><td><code>LANG</code>, <code>LC_ALL</code></td><td>Locale and encoding — a value without <code>UTF-8</code> is a hint to stay ASCII.</td></tr>
+    <tr><td><code>PAGER</code>, <code>EDITOR</code> / <code>VISUAL</code></td><td>Which pager/editor to launch when you need one. Don't hardcode <code>less</code> or <code>vim</code>.</td></tr>
+    <tr><td><code>HOME</code>, <code>XDG_CONFIG_HOME</code> &amp; friends</td><td>Where config, cache, and state belong (<code>~/.config/yourtool/</code>, not <code>~/.yourtool</code> dotfile sprawl).</td></tr>
+    <tr><td><code>COLUMNS</code>, <code>LINES</code></td><td>Fallback size when there's no TTY to measure (chapter 08).</td></tr>
+  </table></div>
+
+  <div class="takeaway">
+    <span class="tk-label">Carry this</span>
+    <p>Flags are per-invocation, env is per-session, config files are per-project/user. Use a standard parser, support <code>--</code>, and generate <code>--help</code> — it's the only documentation most users will ever read.</p>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<section class="chapter" id="ch5">
+  <p class="ch-eyebrow">05</p>
+  <h2>Escape sequences: drawing in-band</h2>
+  <p>There is no styling API. To make text green, you print bytes that <em>mean</em> "switch to green" and the terminal obeys until told otherwise. Nearly everything you'll use starts with <code>ESC&nbsp;[</code> (byte 0x1B then <code>[</code>), called <strong>CSI</strong> — Control Sequence Introducer — followed by numeric parameters and one final letter that names the command:</p>
+
+  <div class="anatomy" role="img" aria-label="Anatomy of the escape sequence ESC [ 1;38;5;208 m">
+    <div class="anatomy-part">
+      <span class="anatomy-code">\x1b</span>
+      <span class="anatomy-label">ESC — byte 27, here comes a command</span>
+    </div>
+    <div class="anatomy-part">
+      <span class="anatomy-code">[</span>
+      <span class="anatomy-label">CSI — the common introducer</span>
+    </div>
+    <div class="anatomy-part">
+      <span class="anatomy-code">1;38;5;208</span>
+      <span class="anatomy-label">parameters, semicolon-separated</span>
+    </div>
+    <div class="anatomy-part">
+      <span class="anatomy-code">m</span>
+      <span class="anatomy-label">final byte — m = SGR, "set graphic rendition"</span>
+    </div>
+  </div>
+
+  <p>That example means "bold, then 256-color foreground 208 (orange)." The <code>m</code> family — <strong>SGR</strong> — handles all styling. State is <em>sticky</em>: green stays on until you reset it, including after your program crashes. Hence the golden rule: <strong>every style you open, you close</strong> — usually with <code>\x1b[0m</code> (reset all).</p>
+
+  <div class="term">
+    <div class="term-bar">sgr — the styling codes</div>
+    <div class="term-body"><pre><span class="d"># style toggles</span>
+\x1b[1m  <span class="bold w">bold</span>    \x1b[2m  <span class="d">dim</span>    \x1b[3m  <span style="font-style: italic">italic</span>    \x1b[4m  <span class="ul">underline</span>
+\x1b[7m  <span style="background: var(--t-fg); color: var(--t-bg)">inverse</span>    \x1b[9m  <span style="text-decoration: line-through">strike</span>    \x1b[0m  reset all
+
+<span class="d"># 16-color foregrounds: 30–37, bright 90–97 (+10 for backgrounds)</span>
+<span style="color:#282C34;background:#3E4451">30 black</span>  <span class="r">31 red</span>  <span class="g">32 green</span>  <span class="y">33 yellow</span>  <span class="b">34 blue</span>  <span class="m">35 magenta</span>  <span class="c">36 cyan</span>  <span class="w">37 white</span>
+
+<span class="d"># deeper palettes</span>
+\x1b[38;5;<span class="y">n</span>m       <span class="d">256-color foreground (n = 0–255)</span>
+\x1b[38;2;<span class="y">r;g;b</span>m   <span class="d">24-bit truecolor foreground</span></pre></div>
+  </div>
+
+  <h3>Beyond styling</h3>
+  <p>The same CSI grammar moves the cursor and edits the screen — the building blocks of progress bars and full-screen apps:</p>
+
+  <div class="tbl-scroll"><table>
+    <tr><th>sequence</th><th>effect</th></tr>
+    <tr><td><code>\r</code></td><td>Not an escape at all — carriage return to column 0. Overwrite the line you're on: the whole trick behind single-line progress.</td></tr>
+    <tr><td><code>\x1b[nA</code> / <code>B</code> / <code>C</code> / <code>D</code></td><td>Cursor up / down / right / left by n.</td></tr>
+    <tr><td><code>\x1b[2K</code></td><td>Erase current line (pair with <code>\r</code> before rewriting it).</td></tr>
+    <tr><td><code>\x1b[H</code> · <code>\x1b[2J</code></td><td>Cursor home · clear screen.</td></tr>
+    <tr><td><code>\x1b[?25l</code> / <code>\x1b[?25h</code></td><td>Hide / show cursor (hide during animation; <em>always</em> restore).</td></tr>
+    <tr><td><code>\x1b[?1049h</code> / <code>l</code></td><td>Enter / leave the <strong>alternate screen</strong> — the separate buffer vim and htop use, so quitting restores the user's scrollback.</td></tr>
+    <tr><td><code>\x1b]8;;url\x1b\\text\x1b]8;;\x1b\\</code></td><td>OSC 8 hyperlink — real clickable links in modern terminals.</td></tr>
+  </table></div>
+
+  <p>You'll rarely hand-write these — libraries and terminfo abstract them — but read them fluently and terminal bugs stop being spooky: mangled output is just literal escape bytes; a vanished cursor is an unmatched <code>?25l</code>; a "corrupted" shell after a crash is unreset SGR state (fix: <code>reset</code>).</p>
+
+  <div class="takeaway">
+    <span class="tk-label">Carry this</span>
+    <p>Styling is sticky global state written into the output stream. Open-and-close it in the same breath, and on <em>any</em> exit path — including panic — reset styles, show the cursor, and leave the alternate screen.</p>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<section class="chapter" id="ch6">
+  <p class="ch-eyebrow">06</p>
+  <h2>Color &amp; capability detection</h2>
+  <p>Terminals speak four dialects of color, and you can't query which one directly — you infer it. The practical heuristic, checked in this order:</p>
+
+  <ol class="list">
+    <li><code>NO_COLOR</code> set, <code>TERM=dumb</code>, or stream isn't a TTY (unforced) → <strong>mono</strong>.</li>
+    <li><code>COLORTERM=truecolor</code> (or <code>24bit</code>) → <strong>16.7M colors</strong>. Most modern emulators set this.</li>
+    <li><code>TERM</code> contains <code>256color</code> → <strong>256 colors</strong>: 16 base + a 6×6×6 RGB cube + 24 greys.</li>
+    <li>Otherwise → assume <strong>16 colors</strong>: 8 ANSI hues plus bright variants. Crucially, these are <em>the user's chosen palette</em> — "red" is whatever their theme says red is. Semantic, not literal.</li>
+  </ol>
+
+  <p>The design discipline that follows: <strong>author in semantic roles, not RGB values.</strong> Decide that errors are "danger" and highlights are "accent," then map each role down through every depth — truecolor hex → nearest 256 index → nearest ANSI color → bold/plain at mono. The meaning must survive the bottom rung, which also covers colorblind users and screen readers in one move: <strong>never encode meaning in color alone.</strong> Pair every color with a symbol, word, or weight — <code>✓</code>/<code>✗</code>, "error:", bold.</p>
+
+  <div class="trio">
+    <div>
+      <div class="term"><div class="term-bar"><span class="trio-label">truecolor</span></div>
+      <div class="term-body"><pre><span style="color:#5EC26A">●</span> <span class="w">api</span>      <span style="color:#5EC26A">passing</span>
+<span style="color:#E5533C">●</span> <span class="w">worker</span>   <span style="color:#E5533C">failing</span>
+<span style="color:#D9A03F">●</span> <span class="w">cache</span>    <span style="color:#D9A03F">degraded</span></pre></div></div>
+    </div>
+    <div>
+      <div class="term"><div class="term-bar"><span class="trio-label">16-color</span></div>
+      <div class="term-body"><pre><span class="g">●</span> <span class="w">api</span>      <span class="g">passing</span>
+<span class="r">●</span> <span class="w">worker</span>   <span class="r">failing</span>
+<span class="y">●</span> <span class="w">cache</span>    <span class="y">degraded</span></pre></div></div>
+    </div>
+    <div>
+      <div class="term"><div class="term-bar"><span class="trio-label">mono / ascii</span></div>
+      <div class="term-body"><pre><span class="w">[ok]</span>   api      passing
+<span class="w bold">[!!]</span>   worker   failing
+<span class="w">[~ ]</span>   cache    degraded</pre></div></div>
+    </div>
+  </div>
+  <p class="cell-caption">The same component at three capability levels. Meaning survives every rung because state is carried by symbols and words, with color as reinforcement.</p>
+
+  <p>Historically this inference lives in the <strong>terminfo</strong> database (<code>TERM</code> names a capability record; <code>tput colors</code> queries it). Modern practice leans on the env-var heuristic above — terminfo entries are often stale about truecolor — but it's good to know the formal system exists.</p>
+
+  <div class="takeaway">
+    <span class="tk-label">Carry this</span>
+    <p>Capability detection happens once, at the edge; rendering code receives "depth: mono | 16 | 256 | truecolor" as data. Design palettes as roles that degrade, and let the 16-color tier inherit the user's own theme rather than fighting it.</p>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<section class="chapter" id="ch7">
+  <p class="ch-eyebrow">07</p>
+  <h2>Text width: the hard part</h2>
+  <p>The terminal is a grid, and layout means predicting how many <strong>cells</strong> a string occupies. The trap: bytes, characters (code points), and cells are three different numbers, and <code>string.length</code> reports none of the ones you need.</p>
+
+  <div class="cells" role="img" aria-label="Characters occupying one or two terminal cells">
+    <div class="cell">d</div>
+    <div class="cell">e</div>
+    <div class="cell">v</div>
+    <div class="cell wide">終</div>
+    <div class="cell wide">🚀</div>
+    <div class="cell">é</div>
+  </div>
+  <p class="cell-caption"><code>"dev終🚀é"</code> — 8 cells? No: 6 code points… no: <strong>8 columns</strong> — d, e, v (1 each), 終 (2), 🚀 (2), é (1, even when composed as e + combining accent).</p>
+
+  <p>The rules, roughly in order of how often they'll bite you:</p>
+  <ul class="list">
+    <li><strong>East Asian wide characters</strong> (CJK ideographs, kana, hangul) occupy <strong>2 cells</strong>. Any table or box containing user text must handle this.</li>
+    <li><strong>Most emoji are 2 cells</strong> — and ZWJ sequences like 👩‍💻 are one <em>grapheme</em> built from several code points, which terminals render at inconsistent widths. The safest professional stance: keep emoji out of alignment-critical output.</li>
+    <li><strong>Zero-width characters exist</strong>: combining accents, ZWJ, variation selectors all measure 0.</li>
+    <li><strong>A grapheme is the unit users see</strong>: truncating by code point can slice an emoji in half or orphan an accent. Truncate by grapheme, measure by cells, and account for the ellipsis: fitting into 10 columns means truncating to 9 + "…".</li>
+    <li><strong>Escape sequences measure 0</strong> — strip ANSI before measuring, or measure before styling. Styling a string then padding it by <code>.length</code> is the classic broken-table bug.</li>
+  </ul>
+
+  <p>The measuring function is called <strong><code>wcwidth</code></strong> (per code point) in the C world; every ecosystem has a port (<code>string-width</code> in JS, <code>go-runewidth</code>, <code>unicode-width</code> in Rust, <code>@std/cli/unicode-width</code> in Deno). Use a library — the tables are large, versioned with Unicode itself, and full of "ambiguous width" corners (some symbols are 1 cell in Western terminals, 2 in East Asian contexts).</p>
+
+  <h3>When Unicode itself is a luxury</h3>
+  <p>Check the locale (<code>LC_ALL</code>/<code>LANG</code> containing <code>UTF-8</code>) before emitting box-drawing characters (<code>╭─╮│</code>), and keep an ASCII fallback (<code>+-|</code>) for terminals that can't render them. Same principle as color: design in tiers, degrade without losing meaning.</p>
+
+  <div class="takeaway">
+    <span class="tk-label">Carry this</span>
+    <p>Three different questions: how many <em>bytes</em> (storage), how many <em>graphemes</em> (cursor/truncation), how many <em>cells</em> (layout). Alignment bugs are almost always one of these masquerading as another.</p>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<section class="chapter" id="ch8">
+  <p class="ch-eyebrow">08</p>
+  <h2>Layout in a grid of cells</h2>
+  <p>You get exactly one layout primitive: a W×H grid of cells. Ask the tty for its size (<code>ioctl(TIOCGWINSZ)</code> under the hood; <code>process.stdout.columns</code>, <code>Deno.consoleSize()</code>, <code>shutil.get_terminal_size()</code> at the surface). No TTY? Fall back to the <code>COLUMNS</code>/<code>LINES</code> env vars, then to the ancient default of <strong>80×24</strong> — which survives as a floor: design output to remain legible at 80 columns even if it shines at 160.</p>
+
+  <ul class="list">
+    <li><strong>Wrap on purpose.</strong> The terminal hard-wraps mid-word at the last column with no styling awareness. Any line you didn't wrap yourself is a line the terminal will wrap badly.</li>
+    <li><strong>Size can change mid-run.</strong> A resize delivers <code>SIGWINCH</code>; long-lived interactive programs re-measure and repaint. One-shot tools just measure at startup.</li>
+    <li><strong>Compose like it's 1975:</strong> pad-to-width, truncate-with-ellipsis, join-horizontally, stack-vertically. Those four width-aware operations (built on chapter 07's measurement) are your entire flexbox.</li>
+    <li><strong>Whitespace is your typography.</strong> No fonts or sizes — hierarchy comes from blank lines, indentation, alignment, and restrained styling. Consistent two-space indents and aligned columns are the terminal's grid system.</li>
+  </ul>
+
+  <div class="takeaway">
+    <span class="tk-label">Carry this</span>
+    <p>Treat width as an input to rendering, never a global you peek at mid-paint — a renderer with the signature <em>(data, width, capabilities) → lines</em> is layout you can unit-test at any size.</p>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<section class="chapter" id="ch9">
+  <p class="ch-eyebrow">09</p>
+  <h2>Input, raw mode &amp; full-screen apps</h2>
+  <p>By default the tty driver runs in <strong>canonical (cooked) mode</strong>: it buffers a whole line, provides editing (backspace), echoes keystrokes, and turns Ctrl-C into <code>SIGINT</code> before your program sees anything. Perfect for <code>read line</code> prompts; useless for "press any key" or a TUI.</p>
+  <p><strong>Raw mode</strong> (via termios) switches all that off: bytes arrive one at a time, nothing echoes, and Ctrl-C is just byte <code>0x03</code> — <em>you</em> now implement quitting. And input has its own escape-sequence problem in reverse: special keys arrive as multi-byte sequences (↑ is <code>\x1b[A</code>) that you must parse, with a genuine ambiguity — a lone <code>ESC</code> byte might be the Esc key or the start of a sequence; only a tiny timeout tells you which. This is why every ecosystem has a key-decoding library; use one.</p>
+
+  <h3>Signals worth knowing</h3>
+  <div class="tbl-scroll"><table>
+    <tr><th>signal</th><th>arrives when</th><th>your job</th></tr>
+    <tr><td><code>SIGINT</code></td><td>Ctrl-C (cooked mode)</td><td>Clean up, exit 130. Catchable for graceful shutdown.</td></tr>
+    <tr><td><code>SIGTERM</code></td><td><code>kill</code>, process managers</td><td>Same as SIGINT, politely.</td></tr>
+    <tr><td><code>SIGHUP</code></td><td>Terminal closed</td><td>Exit — or finish critical writes first.</td></tr>
+    <tr><td><code>SIGWINCH</code></td><td>Terminal resized</td><td>Re-measure, repaint.</td></tr>
+    <tr><td><code>SIGTSTP</code> / <code>SIGCONT</code></td><td>Ctrl-Z / <code>fg</code></td><td>TUIs: restore the terminal on suspend, re-enter raw mode and repaint on resume.</td></tr>
+    <tr><td><code>SIGPIPE</code></td><td>Reader closed the pipe</td><td>Die quietly (chapter 02).</td></tr>
+  </table></div>
+
+  <h3>The shape of a TUI</h3>
+  <p>Full-screen apps (vim, htop, lazygit) all share one architecture, and it will look familiar: <strong>it's a game loop, or React for a character grid.</strong></p>
+  <ol class="list">
+    <li><strong>Setup:</strong> enter the alternate screen, enable raw mode, hide the cursor.</li>
+    <li><strong>Loop:</strong> read events (keys, resize, timers) → update state → render state to a frame → <strong>diff against the previous frame and repaint only changed cells</strong> (repainting everything flickers) → write the patch in one flushed batch.</li>
+    <li><strong>Teardown — on every exit path including panic:</strong> show the cursor, disable raw mode, leave the alternate screen. Skipping this is why a crashed TUI leaves the shell unusable-looking (<code>reset</code> recovers it).</li>
+  </ol>
+  <p>Frameworks — <code>ncurses</code>, Bubble Tea (Go), Ratatui (Rust), Textual (Python), Ink (React for CLIs) — own steps 1–3 and the diffing so you write state → view. The state→frame→diff→patch cycle is worth understanding even when a framework does it: it is exactly virtual-DOM rendering, rediscovered for a grid of cells.</p>
+
+  <div class="takeaway">
+    <span class="tk-label">Carry this</span>
+    <p>Interactivity is a mode you enter and must leave: every terminal state you flip (raw mode, alt screen, hidden cursor) is a debt repaid on exit, crash included. Keep the render path pure — events mutate state; state renders to frames.</p>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<section class="chapter" id="ch10">
+  <p class="ch-eyebrow">10</p>
+  <h2>Being a good citizen</h2>
+  <p>The conventions that make a tool feel professional, roughly in the order users will notice:</p>
+  <ul class="list">
+    <li><strong><code>--help</code> and <code>--version</code> always exist</strong>, exit 0, and print to stdout. Help shows usage, flags, and a couple of real examples — examples are the part people read.</li>
+    <li><strong><code>--json</code> (or similar) for machines.</strong> Human output is a UI you may redesign freely; the moment people script against it, it's an API you can't change. A machine-readable mode gives scrapers somewhere better to point, and newline-delimited JSON streams well.</li>
+    <li><strong><code>--quiet</code> and <code>--verbose</code></strong> tune stderr commentary, never stdout data.</li>
+    <li><strong>Errors say what failed and what to do:</strong> <code>error: config not found at ./tool.toml — run 'tool init' to create one</code>. Name the file, name the fix, exit non-zero. No stack traces at users (keep them behind <code>--verbose</code> or a debug env var).</li>
+    <li><strong>Destructive actions confirm on a TTY, require a flag off one</strong> — <code>--force</code>/<code>--yes</code> — so scripts state intent explicitly.</li>
+    <li><strong>Accessibility is the plain path.</strong> Screen readers read the stream linearly: spinners, redrawn progress bars, and heavy box-drawing are hostile to them. Your piped/mono output — plain lines, meaning in words — is also your accessible output; treat it as a first-class rendering target, not a degraded one.</li>
+    <li><strong>Windows is a real terminal now.</strong> Windows Terminal + ConPTY speak ANSI and UTF-8; legacy conhost may need the virtual-terminal mode flag enabled (or just require Windows 10+). Remaining differences live at the edges: path separators, no real SIGINT semantics, CRLF in files (output <code>\n</code> — terminals translate).</li>
+    <li><strong>Performance = batching.</strong> Terminal rendering is fast; syscalls per write aren't. Build each frame or report in a buffer, write once, flush. A flurry of tiny unflushed writes is both slow and flickery.</li>
+  </ul>
+
+  <div class="takeaway">
+    <span class="tk-label">Carry this</span>
+    <p>Design the piped/plain rendering first — it's the accessibility story, the script story, and the CI story in one. The colorful interactive layer is progressive enhancement on top.</p>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<section class="chapter" id="ch11">
+  <p class="ch-eyebrow">11</p>
+  <h2>Testing &amp; determinism</h2>
+  <p>Terminal output looks hard to test — it's stateful bytes aimed at a pseudo-device — but becomes trivially testable with one architectural rule you've now seen three times: <strong>observe the world at the edge, pass it in as data.</strong></p>
+  <ul class="list">
+    <li><strong>Renderers are pure functions:</strong> <em>(props, capabilities) → text</em>, where capabilities carry width, color depth, unicode support, TTY-ness. No env reads, no clock, no <code>isatty()</code> deep in render code — those happened once at startup.</li>
+    <li><strong>Snapshot ("golden") tests</strong> are the workhorse: render a component, compare against a checked-in expected frame. Failures show a visual diff; intentional changes re-record. This only works if renders are deterministic — inject timestamps, sort anything unordered, seed randomness.</li>
+    <li><strong>Test the capability matrix, not one happy path:</strong> the same component at mono/16/256/truecolor, at 40/80/120 columns, unicode and ASCII. The corners are where alignment and meaning break — exactly the bugs chapters 06–08 describe.</li>
+    <li><strong>Assert at the right layer:</strong> strip ANSI when testing content and layout; keep sequences when styling is the contract. For interactive flows, drive the state machine directly (event in → frame out) and save real-PTY end-to-end tests (<code>expect</code>, <code>tmux</code>-driven) for a smoke-test few.</li>
+  </ul>
+
+  <div class="takeaway">
+    <span class="tk-label">Carry this</span>
+    <p>"Hard to test" almost always means "impure." Quarantine I/O, environment, and time at the program's edge, and the other 95% — layout, styling, degradation — becomes plain functions with golden-file coverage.</p>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<section class="chapter" id="cheat">
+  <p class="ch-eyebrow">Appendix</p>
+  <h2>The cheatsheet</h2>
+
+  <h3>Escape sequences</h3>
+  <div class="tbl-scroll"><table>
+    <tr><th>sequence</th><th>meaning</th></tr>
+    <tr><td><code>\x1b[0m</code></td><td>Reset all styling</td></tr>
+    <tr><td><code>\x1b[1m</code> <code>2m</code> <code>3m</code> <code>4m</code> <code>7m</code> <code>9m</code></td><td>Bold · dim · italic · underline · inverse · strike</td></tr>
+    <tr><td><code>\x1b[30–37m</code> / <code>90–97m</code></td><td>Foreground: ANSI · bright ANSI (+10 = background)</td></tr>
+    <tr><td><code>\x1b[38;5;<i>n</i>m</code> / <code>\x1b[38;2;<i>r;g;b</i>m</code></td><td>256-color / truecolor foreground (48 = background)</td></tr>
+    <tr><td><code>\r</code> + <code>\x1b[2K</code></td><td>Return to column 0, erase line — the progress-line idiom</td></tr>
+    <tr><td><code>\x1b[<i>n</i>A/B/C/D</code></td><td>Cursor up / down / right / left</td></tr>
+    <tr><td><code>\x1b[H</code> · <code>\x1b[2J</code></td><td>Cursor home · clear screen</td></tr>
+    <tr><td><code>\x1b[?25l</code> / <code>h</code></td><td>Hide / show cursor</td></tr>
+    <tr><td><code>\x1b[?1049h</code> / <code>l</code></td><td>Enter / leave alternate screen</td></tr>
+  </table></div>
+
+  <h3>Environment variables</h3>
+  <div class="tbl-scroll"><table>
+    <tr><th>variable</th><th>convention</th></tr>
+    <tr><td><code>NO_COLOR</code></td><td>Set (any value) → no color</td></tr>
+    <tr><td><code>FORCE_COLOR</code> / <code>CLICOLOR_FORCE</code></td><td>Color even when piped</td></tr>
+    <tr><td><code>COLORTERM=truecolor</code></td><td>24-bit color supported</td></tr>
+    <tr><td><code>TERM</code></td><td>Terminal type; <code>*-256color</code>, <code>dumb</code>; keys terminfo</td></tr>
+    <tr><td><code>CI</code></td><td>Running in CI — plain output, no prompts</td></tr>
+    <tr><td><code>LANG</code> / <code>LC_ALL</code></td><td>Encoding — no <code>UTF-8</code> → stay ASCII</td></tr>
+    <tr><td><code>PAGER</code> · <code>EDITOR</code> · <code>XDG_*</code> · <code>COLUMNS</code>/<code>LINES</code></td><td>User's pager · editor · config dirs · size fallback</td></tr>
+  </table></div>
+
+  <h3>Exit codes &amp; signals</h3>
+  <div class="tbl-scroll"><table>
+    <tr><th>value</th><th>meaning</th></tr>
+    <tr><td class="num">0 / 1 / 2</td><td>Success / general failure / usage error</td></tr>
+    <tr><td class="num">126 / 127</td><td>Not executable / not found</td></tr>
+    <tr><td class="num">128+n</td><td>Killed by signal n (130 = Ctrl-C)</td></tr>
+    <tr><td><code>SIGINT · SIGTERM · SIGHUP</code></td><td>Interrupt · terminate · terminal closed</td></tr>
+    <tr><td><code>SIGWINCH · SIGPIPE · SIGTSTP/CONT</code></td><td>Resized · reader gone · suspend/resume</td></tr>
+  </table></div>
+
+  <h3>The ten commandments</h3>
+  <ol class="list">
+    <li>stdout is data; stderr is commentary; exit codes are the verdict.</li>
+    <li>Check <code>isatty()</code> per stream; honor <code>NO_COLOR</code>, <code>FORCE_COLOR</code>, <code>--color</code>.</li>
+    <li>Detect capabilities once at the edge; pass them down as data.</li>
+    <li>Author color as semantic roles that degrade to mono without losing meaning.</li>
+    <li>Never encode meaning in color alone — pair with a symbol or word.</li>
+    <li>Measure text in cells, truncate in graphemes, strip ANSI before either.</li>
+    <li>Design for 80 columns; enhance for more; re-measure on <code>SIGWINCH</code>.</li>
+    <li>Every terminal state you flip — raw mode, alt screen, hidden cursor, SGR — is restored on every exit path, crash included.</li>
+    <li>The plain rendering is the accessible, scriptable, CI-safe one: design it first.</li>
+    <li>Keep renderers pure — <em>(data, capabilities) → text</em> — and golden-test the capability matrix.</li>
+  </ol>
+</section>
+
+<footer class="footer">
+  <p>Compiled August 2026. Stack-agnostic by design — the protocols here (POSIX ttys, ECMA-48 escape sequences, Unicode width tables) outlive any framework.</p>
+</footer>
+
+</div>

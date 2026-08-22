@@ -5,7 +5,9 @@ import {
   renderResultSummaryCli,
   renderResultSummaryGroupCli,
   renderStandardMeterCli,
+  RESULT_SUMMARY_STATE_LABELS,
   RESULT_SUMMARY_STATES,
+  type ResultSummaryState,
 } from "../../src/cli/mod.ts";
 import {
   assertExactFrame,
@@ -33,7 +35,7 @@ function assertCapabilityLevels(
   }
 }
 
-Deno.test("Result summary renders exact widths, capability levels, and every outcome", () => {
+Deno.test("Result summary renders exact widths, capability levels, and every state", () => {
   const props = {
     state: "passed",
     fact: "The full gate passed",
@@ -70,30 +72,58 @@ Deno.test("Result summary renders exact widths, capability levels, and every out
     '+ Passed: The full gate passed\nTests: 310   Files: 98   Duration: 2m 18s\nNext: Accept the branch\nData: {"ok":true}',
   );
 
-  const capabilities = testTerminalCapabilities({ columns: 52 });
-  for (
-    const [state, expected] of [
-      ["passed", "✓ Passed: One fact"],
-      ["failed", "✕ Failed: One fact"],
-      ["blocked", "! Blocked: One fact"],
-      ["changed", "◇ Changed: One fact"],
-      ["unchanged", "= Unchanged: One fact"],
-    ] as const
-  ) {
-    assertExactFrame(
-      renderResultSummaryCli({ state, fact: "One fact" }, capabilities),
-      expected,
-      capabilities,
+  const unicodeStates = {
+    passed: "✓ Passed: One fact",
+    failed: "✕ Failed: One fact",
+    blocked: "! Blocked: One fact",
+    changed: "◇ Changed: One fact",
+    declared: "· Declared: One fact",
+    unchanged: "= Unchanged: One fact",
+  } as const satisfies Readonly<Record<ResultSummaryState, string>>;
+  const asciiStates = {
+    passed: "+ Passed: One fact",
+    failed: "x Failed: One fact",
+    blocked: "! Blocked: One fact",
+    changed: "* Changed: One fact",
+    declared: ". Declared: One fact",
+    unchanged: "= Unchanged: One fact",
+  } as const satisfies Readonly<Record<ResultSummaryState, string>>;
+  for (const unicode of [true, false]) {
+    const capabilities = testTerminalCapabilities({ columns: 52, unicode });
+    const expectedStates = unicode ? unicodeStates : asciiStates;
+    for (const state of RESULT_SUMMARY_STATES) {
+      assertExactFrame(
+        renderResultSummaryCli({ state, fact: "One fact" }, capabilities),
+        expectedStates[state],
+        capabilities,
+      );
+    }
+  }
+
+  assertCapabilityLevels(
+    (capabilities) =>
+      renderResultSummaryCli({
+        state: "declared",
+        fact: "The reviewer declared the condition met",
+        maxWidth: 24,
+      }, capabilities),
+    "· Declared: The reviewer\n            declared the\n            condition\n            met",
+    ". Declared: The reviewer\n            declared the\n            condition\n            met",
+  );
+
+  for (const state of RESULT_SUMMARY_STATES) {
+    assertEquals(
+      unicodeStates[state].includes(RESULT_SUMMARY_STATE_LABELS[state]),
+      true,
     );
   }
 });
 
 Deno.test("mixed Result summary groups own one widest visible prefix column", () => {
-  const items = [
-    { state: "changed" as const, fact: "Updated generated inventory" },
-    { state: "unchanged" as const, fact: "Kept the public command intact" },
-    { state: "passed" as const, fact: "All focused tests passed" },
-  ];
+  const items = RESULT_SUMMARY_STATES.map((state) => ({
+    state,
+    fact: `Canonical ${state} result`,
+  }));
   for (const unicode of [true, false]) {
     for (
       const colorDepth of [
@@ -112,14 +142,10 @@ Deno.test("mixed Result summary groups own one widest visible prefix column", ()
         renderResultSummaryGroupCli({ items }, capabilities),
       );
       const factColumns = rendered.split("\n").map((line) =>
-        Math.min(
-          ...items.map(({ fact }) => {
-            const index = line.indexOf(fact);
-            return index < 0 ? Number.POSITIVE_INFINITY : index;
-          }),
-        )
-      ).filter(Number.isFinite);
-      assertEquals(factColumns, [13, 13, 13]);
+        line.indexOf("Canonical")
+      ).filter((column) => column >= 0);
+      assertEquals(factColumns.length, RESULT_SUMMARY_STATES.length);
+      assertEquals(new Set(factColumns), new Set([13]));
     }
   }
 
@@ -130,7 +156,7 @@ Deno.test("mixed Result summary groups own one widest visible prefix column", ()
   const continuation = narrow.split("\n").filter((line) =>
     line.startsWith(" ".repeat(13))
   );
-  assertEquals(continuation.length, 7);
+  assert(continuation.length > RESULT_SUMMARY_STATES.length);
   assert(continuation.every((line) => line.startsWith(" ".repeat(13))));
 
   const canonical = stripAnsi(renderResultSummaryGroupCli({
@@ -156,16 +182,19 @@ Deno.test("Standard meter renders exact widths, capability levels, and both limi
     max: 120,
     trend: "improving",
   } as const;
-  const standard =
-    "CLI pending · improving\n[ 65%] ◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮................\nCurrent: 79\nStatus: Within limit\nLimit: ceiling 108\nHeadroom: 29 below ceiling\nDirection: Lower is better";
-  const wide = `CLI pending · improving\n[ 65%] ${"◮⧩◭⧨".repeat(12)}${
-    ".".repeat(25)
+  const standard = `CLI pending · improving\n[ 65%] ${"━".repeat(28)}▲${
+    "─".repeat(16)
+  }\nCurrent: 79\nStatus: Within limit\nLimit: ceiling 108\nHeadroom: 29 below ceiling\nDirection: Lower is better`;
+  const wide = `CLI pending · improving\n[ 65%] ${"━".repeat(47)}▲${
+    "─".repeat(25)
   }\nCurrent: 79\nStatus: Within limit\nLimit: ceiling 108\nHeadroom: 29 below ceiling\nDirection: Lower is better`;
   for (
     const [columns, expected] of [
       [
         24,
-        "CLI pending · improving\n[ 65%] ◮⧩◭⧨◮⧩◭⧨◮⧩◭......\nCurrent: 79\nStatus: Within limit\nLimit: ceiling 108\nHeadroom: 29 below\n          ceiling\nDirection: Lower is\n           better",
+        `CLI pending · improving\n[ 65%] ${"━".repeat(10)}▲${
+          "─".repeat(6)
+        }\nCurrent: 79\nStatus: Within limit\nLimit: ceiling 108\nHeadroom: 29 below\n          ceiling\nDirection: Lower is\n           better`,
       ],
       [52, standard],
       [80, wide],
@@ -181,7 +210,9 @@ Deno.test("Standard meter renders exact widths, capability levels, and both limi
   assertCapabilityLevels(
     (capabilities) => renderStandardMeterCli(props, capabilities),
     standard,
-    "CLI pending - improving\n[ 65%] >v^<>v^<>v^<>v^<>v^<>v^<>v^<>................\nCurrent: 79\nStatus: Within limit\nLimit: ceiling 108\nHeadroom: 29 below ceiling\nDirection: Lower is better",
+    `CLI pending - improving\n[ 65%] ${"=".repeat(28)}^${
+      "-".repeat(16)
+    }\nCurrent: 79\nStatus: Within limit\nLimit: ceiling 108\nHeadroom: 29 below ceiling\nDirection: Lower is better`,
   );
 
   const capabilities = testTerminalCapabilities({ columns: 52 });
@@ -198,7 +229,9 @@ Deno.test("Standard meter renders exact widths, capability levels, and both limi
       },
       capabilities,
     ),
-    "Coverage · drifting\n[ 86%] ◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨◮⧩.......\nCurrent: 86\nStatus: Outside limit\nLimit: floor 90\nHeadroom: 4 below floor\nDirection: Higher is better",
+    `Coverage · drifting\n[ 86%] ${"━".repeat(37)}▲${
+      "─".repeat(7)
+    }\nCurrent: 86\nStatus: Outside limit\nLimit: floor 90\nHeadroom: 4 below floor\nDirection: Higher is better`,
     capabilities,
   );
 });

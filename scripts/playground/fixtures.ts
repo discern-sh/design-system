@@ -6,9 +6,11 @@
  * @module
  */
 
-import type {
-  InteractionChoice,
-  InteractionEntry,
+import {
+  filterInteractionEntries,
+  type InteractionChoice,
+  type InteractionEntry,
+  type MarkdownBrowserEntry,
 } from "../../src/cli/interactive/mod.ts";
 
 /** Flat swatch list with duplicate visible labels and one disabled entry. */
@@ -53,6 +55,135 @@ export const tokenRoleChoices = [
     disabled: true,
   },
 ] as const satisfies readonly InteractionEntry<string>[];
+
+/** Document-shaped choices that exercise semantic titles and quieter paths. */
+export const documentChoices = [
+  {
+    kind: "group-heading",
+    id: "heading-orientation",
+    label: "Orientation",
+    description: "00-orientation/",
+  },
+  {
+    id: "design-principles",
+    label: "Design principles",
+    description: "design-principles.md",
+    value: "00-orientation/design-principles.md",
+  },
+  {
+    id: "cli-rendering",
+    label: "CLI rendering",
+    description: "70-cli/README.md",
+    value: "70-cli/README.md",
+  },
+  {
+    kind: "group-heading",
+    id: "heading-decisions",
+    label: "Architecture decisions",
+    description: "_adr/",
+  },
+  {
+    id: "semantic-inline",
+    label: "Own semantic inline content",
+    description: "0019-own-semantic-inline-content.md",
+    value: "_adr/0019-own-semantic-inline-content.md",
+  },
+  {
+    id: "legacy-terminal-contract",
+    label: "Legacy terminal contract",
+    description: "0002-react-free-cli-renderer-contract.md",
+    value: "_adr/0002-react-free-cli-renderer-contract.md",
+    disabled: true,
+  },
+] as const satisfies readonly InteractionEntry<string>[];
+
+/** Grouped caller-owned Markdown and explicit actions for the reader journey. */
+export const markdownBrowserEntries = [
+  {
+    kind: "group-heading",
+    id: "guides",
+    label: "Guides",
+    description: "Practical package integration guides",
+  },
+  {
+    kind: "document",
+    id: "getting-started",
+    label: "Getting started",
+    description: "A complete keyboard reading walkthrough",
+    path: "guides/getting-started.md",
+    source: `# Getting started
+
+Search the grouped picker, then press Enter to open a document.
+
+> The picker and document keep independent scroll positions.
+
+## Keyboard
+
+- Type to search while the picker has focus.
+- Use **Tab** and **Shift+Tab** to move between panes.
+- Use Page Up, Page Down, Home, and End in the focused pane.
+- Use **]** and **[** to traverse links; Enter follows the focused link.
+- Press Escape or \`q\` in the document to return to the full-height picker.
+
+[Jump to links and mouse](#links-and-mouse), [open the testing guide](testing.md#fake-terminal), or return an [external destination](https://example.test/design-system/reader).
+
+| Terminal | Layout |
+| --- | --- |
+| Ordinary height | Split picker and reader |
+| Constrained height | One focused pane |
+
+## Links and mouse
+
+Keyboard access is complete. Optional mouse tracking adds picker clicks, link activation, and pane-local wheel scrolling.
+
+${
+      Array.from(
+        { length: 24 },
+        (_, index) =>
+          `Reading landmark ${index + 1} remains meaningful after rewrapping.`,
+      ).join("\n\n")
+    }`,
+  },
+  {
+    kind: "document",
+    id: "testing",
+    label: "Testing the interaction",
+    description: "Scripted keys, resizes, and restoration",
+    path: "guides/testing.md",
+    source: `# Testing the interaction
+
+## Fake terminal
+
+Drive the real adapter with a fake terminal and semantic resize and mouse events.
+
+\`\`\`ts
+enqueueTerminalEvents(io, events);
+io.enqueueMouse(mouseEvent);
+await requestMarkdownBrowser(options, { io });
+\`\`\`
+
+Assert the typed result only after the terminal has been restored.`,
+  },
+  {
+    kind: "group-heading",
+    id: "actions",
+    label: "Actions",
+    description: "Return to the caller before performing an effect",
+  },
+  {
+    kind: "action",
+    id: "read-online",
+    label: "Read the docs online",
+    description: "The playground reports the returned action only",
+    value: "read-online",
+  },
+  {
+    kind: "exit",
+    id: "quit",
+    label: "Quit",
+    description: "Leave the Markdown browser",
+  },
+] as const satisfies readonly MarkdownBrowserEntry<string>[];
 
 /**
  * Long grouped list: 26 selectable entries across four headed groups, with a
@@ -156,28 +287,12 @@ export const tokenNameSuggestions = [
 ] as const;
 
 /**
- * Filter grouped entries by a case-insensitive label match, keeping each
- * group heading exactly when at least one of its choices matches.
+ * Keep async Playground providers around the package-owned static matcher,
+ * which matches labels and descriptions while retaining group structure.
  */
 export function searchGroupedEntries<T>(
   entries: readonly InteractionEntry<T>[],
   query: string,
 ): readonly InteractionEntry<T>[] {
-  const needle = query.trim().toLocaleLowerCase();
-  const results: InteractionEntry<T>[] = [];
-  let pendingHeading: InteractionEntry<T> | undefined;
-  for (const entry of entries) {
-    if (entry.kind === "group-heading") {
-      pendingHeading = entry;
-      continue;
-    }
-    if (needle === "" || entry.label.toLocaleLowerCase().includes(needle)) {
-      if (pendingHeading !== undefined) {
-        results.push(pendingHeading);
-        pendingHeading = undefined;
-      }
-      results.push(entry);
-    }
-  }
-  return results;
+  return filterInteractionEntries(entries, query.trim());
 }

@@ -1,6 +1,6 @@
 # ADR 0010: Use calm full-width CLI heading rules
 
-**Status**: accepted
+**Status**: superseded by [ADR-0026](0026-use-quiet-labelled-rules-for-subordinate-sections.md)
 
 ## Context
 

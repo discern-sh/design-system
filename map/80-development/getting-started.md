@@ -8,7 +8,7 @@ This is the path from a fresh clone to a running project and a first green gate.
 
 These work the same regardless of language or framework:
 
-- **`discern start`** creates an isolated worktree for a change and moves you into it (see the worktree note in the project guidelines).
+- **`discern start`** creates an isolated worktree for a change and moves you into it (see the worktree note in the project instructions).
 - **`discern prepare`** is the fast inner loop — applies the fix-stage capabilities, then the check-stage capabilities; no build, no tests.
 - **`discern done`** is the full gate — (in a worktree) a fail-fast merge check first, then fixers and build, then checks and tests in parallel, then any scope `gate`s that fired. Run it before declaring a change done.
 - **`discern doctor`** verifies the install is sound (dispatcher executable, hooks present, every configured capability resolvable, git worktree support, required tools on PATH).
@@ -23,7 +23,7 @@ These work the same regardless of language or framework:
 deno install --frozen
 ```
 
-This populates the cache and `node_modules/` from `deno.lock`. It is also what a fresh worktree runs automatically (`[worktree.setup].ensure` in `discern.toml`), and what the cached-only test fixtures rely on — run it before the first test run.
+This populates the cache and `node_modules/` from `deno.lock`. Every managed checkout runs it followed by `deno task build` through `[repository].ensure` in `discern.toml`, so the generated Catalogue registry is present before checks use it. The cached-only test fixtures rely on the install step too — run it before the first test run.
 
 **Environment.** None. There are no secrets, no `.env` values, and no external services anywhere in this project.
 

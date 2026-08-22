@@ -45,7 +45,10 @@ const GLYPHS = {
 
 /** Deterministic Icon states rendered by `deno task catalogue:cli icon`. */
 export const cliExamples: readonly CliExample<IconCliProps>[] = [
-  { name: "spark", props: { glyph: "spark", label: "Generate" } },
+  {
+    name: "spark",
+    props: { glyph: "spark", label: "Generate", tone: "warning" },
+  },
   { name: "arrow", props: { glyph: "arrow", label: "Continue" } },
   {
     name: "check",

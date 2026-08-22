@@ -317,7 +317,22 @@ Deno.test("Footnotes composes paragraph, list, quotation, and code blocks withou
 
   assertExactFrame(
     output,
-    "† Notes & sources\n\n[01] First _paragraph_.\n\n     Second paragraph.\n\n     • Nested item.\n\n     │ Quoted note.\n\n     [text]\n     │ alpha\n     │ beta",
+    [
+      "† Notes & sources",
+      "",
+      "[01] First _paragraph_.",
+      "",
+      "     Second paragraph.",
+      "",
+      "     • Nested item.",
+      "",
+      "     │ Quoted note.",
+      "",
+      `     ╭─ text ${"─".repeat(18)}╮`,
+      `     │ ${"alpha".padEnd(24)}│`,
+      `     │ ${"beta".padEnd(24)}│`,
+      `     ╰${"─".repeat(25)}╯`,
+    ].join("\n"),
     capabilities,
   );
   assertEquals(

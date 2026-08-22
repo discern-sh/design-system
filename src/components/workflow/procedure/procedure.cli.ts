@@ -107,6 +107,7 @@ const renderProcedureCli: CliRenderer<ProcedureCliProps> = (
     "",
     renderMotifSectionRule("Steps", {
       width,
+      treatment: "quiet",
       ...(props.theme === undefined ? {} : { theme: props.theme }),
       ...motifPassthrough(props),
     }, capabilities),

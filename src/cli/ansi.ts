@@ -17,6 +17,7 @@ import type { TerminalColor, TerminalTypeStyle } from "./theme.ts";
 /** Visual attributes carried by one terminal text span. */
 export interface TerminalTextStyle extends TerminalTypeStyle {
   readonly color?: TerminalColor;
+  readonly background?: TerminalColor;
   readonly underline?: true;
   readonly strikethrough?: true;
 }
@@ -36,6 +37,10 @@ function ansi16Foreground(index: number): number {
   return index < 8 ? 30 + index : 90 + index - 8;
 }
 
+function ansi16Background(index: number): number {
+  return index < 8 ? 40 + index : 100 + index - 8;
+}
+
 function styleCodes(
   style: TerminalTextStyle,
   capabilities: TerminalCapabilities,
@@ -53,6 +58,19 @@ function styleCodes(
     } else if (capabilities.colorDepth === "ansi256") {
       codes.push(38, 5, style.color.ansi256);
     } else codes.push(ansi16Foreground(style.color.ansi16));
+  }
+  if (style.background !== undefined) {
+    if (capabilities.colorDepth === "truecolor") {
+      codes.push(
+        48,
+        2,
+        style.background.red,
+        style.background.green,
+        style.background.blue,
+      );
+    } else if (capabilities.colorDepth === "ansi256") {
+      codes.push(48, 5, style.background.ansi256);
+    } else codes.push(ansi16Background(style.background.ansi16));
   }
   return codes;
 }

@@ -21,6 +21,7 @@ import {
   renderMotifActivityBeacon,
   renderMotifWorkflowStepper,
 } from "../../../cli/motifs.ts";
+import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
 import {
   marketingCliWidth,
   renderMarketingCliHeader,
@@ -123,6 +124,7 @@ const renderProcessStepsCli: CliRenderer<ProcessStepsCliProps> = (
     props.beaconPhase === undefined ? "" : renderMotifActivityBeacon({
       width,
       phase: props.beaconPhase,
+      marker: triangleGlyph(TRIANGLES.filledSmall.up, capabilities.unicode),
       ...(props.theme === undefined ? {} : { theme: props.theme }),
       ...motifPassthrough(props),
     }, boundedCapabilities),

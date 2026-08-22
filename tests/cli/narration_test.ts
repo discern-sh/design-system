@@ -22,10 +22,10 @@ Deno.test("narration verbs render exact plain frames with Unicode markers", () =
   const capabilities = testTerminalCapabilities();
   const cases = [
     [renderSuccessLine, "Saved the draft", "✓ Saved the draft"],
-    [renderNoteLine, "Cache already warm", "◮ Cache already warm"],
+    [renderNoteLine, "Cache already warm", "▸ Cache already warm"],
     [renderWarningLine, "Two checks need review", "! Two checks need review"],
     [renderFailureLine, "The check refused", "✕ The check refused"],
-    [renderLeadLine, "Preflight", "◮ PREFLIGHT"],
+    [renderLeadLine, "Preflight", "▲ PREFLIGHT"],
   ] as const;
   for (const [render, text, expected] of cases) {
     assertExactFrame(render({ text }, capabilities), expected, capabilities);
@@ -39,7 +39,7 @@ Deno.test("narration verbs keep their meaning through ASCII markers", () => {
     [renderNoteLine, "Cache already warm", "> Cache already warm"],
     [renderWarningLine, "Two checks need review", "! Two checks need review"],
     [renderFailureLine, "The check refused", "x The check refused"],
-    [renderLeadLine, "Preflight", "> PREFLIGHT"],
+    [renderLeadLine, "Preflight", "^ PREFLIGHT"],
   ] as const;
   for (const [render, text, expected] of cases) {
     assertExactFrame(render({ text }, capabilities), expected, capabilities);
@@ -54,7 +54,7 @@ Deno.test("narration markers carry exact Token-derived colour at every depth", (
   );
   assertEquals(
     renderNoteLine({ text: "Cache already warm" }, truecolor),
-    `${ESC}[38;2;150;199;255m◮${ESC}[0m Cache already warm`,
+    `${ESC}[38;2;150;199;255m▸${ESC}[0m Cache already warm`,
   );
   assertEquals(
     renderWarningLine({ text: "Two checks need review" }, truecolor),
@@ -86,7 +86,7 @@ Deno.test("narration lead lines take the strong uppercase title treatment", () =
   const truecolor = testTerminalCapabilities({ colorDepth: "truecolor" });
   assertEquals(
     renderLeadLine({ text: "Preflight" }, truecolor),
-    `${ESC}[38;2;150;199;255m◮${ESC}[0m ${ESC}[1;38;2;231;231;240mPREFLIGHT${ESC}[0m`,
+    `${ESC}[38;2;150;199;255m▲${ESC}[0m ${ESC}[1;38;2;231;231;240mPREFLIGHT${ESC}[0m`,
   );
 });
 
@@ -99,7 +99,7 @@ Deno.test("narration themes move only Token colours, never geometry", () => {
   assertEquals(light, `${ESC}[38;2;12;77;38m✓${ESC}[0m Saved the draft`);
   assertEquals(
     renderLeadLine({ text: "Preflight", theme: "light" }, truecolor),
-    `${ESC}[38;2;0;76;180m◮${ESC}[0m ${ESC}[1;38;2;30;29;45mPREFLIGHT${ESC}[0m`,
+    `${ESC}[38;2;0;76;180m▲${ESC}[0m ${ESC}[1;38;2;30;29;45mPREFLIGHT${ESC}[0m`,
   );
   const dark = renderSuccessLine({ text: "Saved the draft" }, truecolor);
   assertEquals(stripAnsi(light), stripAnsi(dark));
@@ -114,7 +114,7 @@ Deno.test("narration lines wrap inside maxWidth with a hanging indent", () => {
   );
   assertExactFrame(
     renderLeadLine({ text: "release checks", maxWidth: 10 }, capabilities),
-    "◮ RELEASE\n  CHECKS",
+    "▲ RELEASE\n  CHECKS",
     { ...capabilities, columns: 10 },
   );
   const narrow = testTerminalCapabilities({ columns: 12 });

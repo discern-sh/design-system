@@ -1,12 +1,15 @@
 import { assert } from "@std/assert";
 import { renderStyledSpans, stripAnsi, styleText } from "../../src/cli/ansi.ts";
-import { renderPullQuoteCli, renderTimelineCli } from "../../src/cli/mod.ts";
+import {
+  renderPullQuoteCli,
+  renderTimelineCli,
+  terminalMotifRepertoire,
+} from "../../src/cli/mod.ts";
 import {
   terminalThemeColor,
   terminalThemes,
   terminalToneColor,
 } from "../../src/cli/theme.ts";
-import { renderMotifPattern } from "../../src/cli/motifs.ts";
 import {
   assertExactFrame,
   testTerminalCapabilities,
@@ -105,9 +108,9 @@ const timelineProps = {
 
 Deno.test("Timeline renders exact width, ASCII, and colour frames", () => {
   const narrow =
-    "HISTORY\n\nOne decision at a time\n\n◭ Week 01 — Observe\n  [complete]\n│   Name the recurring\n    friction.\n│\n⧩ Week 03 — Constrain\n  [current]\n│   Make the shared\n    boundary executable.\n│\n⧩ Week 06 — Review\n  [upcoming]\n    Compare evidence,\n    not recollections.";
+    "HISTORY\n\nOne decision at a time\n\n▲ Week 01 — Observe\n  [complete]\n│   Name the recurring\n    friction.\n│\n△ Week 03 — Constrain\n  [current]\n│   Make the shared\n    boundary executable.\n│\n△ Week 06 — Review\n  [upcoming]\n    Compare evidence,\n    not recollections.";
   const standard =
-    "HISTORY\n\nOne decision at a time\n\n◭ Week 01 — Observe [complete]\n│   Name the recurring friction.\n│\n⧩ Week 03 — Constrain [current]\n│   Make the shared boundary executable.\n│\n⧩ Week 06 — Review [upcoming]\n    Compare evidence, not recollections.";
+    "HISTORY\n\nOne decision at a time\n\n▲ Week 01 — Observe [complete]\n│   Name the recurring friction.\n│\n△ Week 03 — Constrain [current]\n│   Make the shared boundary executable.\n│\n△ Week 06 — Review [upcoming]\n    Compare evidence, not recollections.";
   for (
     const [columns, expected] of [[24, narrow], [52, standard], [
       96,
@@ -140,14 +143,21 @@ Deno.test("Timeline renders exact width, ASCII, and colour frames", () => {
       ...theme.typography.display,
       color: terminalThemeColor(theme, "--discern-color-ink"),
     }, capabilities);
-    const marker = (phase: number, tone: "success" | "accent" | "neutral") =>
-      renderMotifPattern({ length: 1, phase, tone }, capabilities);
+    const statuses = terminalMotifRepertoire(undefined, capabilities.unicode)
+      .status;
+    const marker = (
+      complete: boolean,
+      tone: "success" | "accent" | "neutral",
+    ) =>
+      styleText(complete ? statuses.complete : statuses.incomplete, {
+        color: terminalToneColor(theme, tone),
+      }, capabilities);
     const events = `${
-      marker(2, "success")
+      marker(true, "success")
     } Week 01 — Observe [complete]\n│   Name the recurring friction.\n│\n${
-      marker(1, "accent")
+      marker(false, "accent")
     } Week 03 — Constrain [current]\n│   Make the shared boundary executable.\n│\n${
-      marker(1, "neutral")
+      marker(false, "neutral")
     } Week 06 — Review [upcoming]\n    Compare evidence, not recollections.`;
     const expected = `${heading}\n\n${title}\n\n${events}`;
     assertExactFrame(
@@ -158,7 +168,7 @@ Deno.test("Timeline renders exact width, ASCII, and colour frames", () => {
   }
 });
 
-Deno.test("Timeline markers point up only for complete events regardless of item order", () => {
+Deno.test("Timeline markers fill only for complete events regardless of item order", () => {
   for (const unicode of [true, false]) {
     const capabilities = testTerminalCapabilities({ columns: 52, unicode });
     const output = stripAnsi(renderTimelineCli({
@@ -188,8 +198,8 @@ Deno.test("Timeline markers point up only for complete events regardless of item
     const current = lines.find((line) => line.includes("Now")) ?? "";
     const complete = lines.find((line) => line.includes("Then")) ?? "";
     const upcoming = lines.find((line) => line.includes("Later")) ?? "";
-    assert(current.startsWith(unicode ? "⧩" : "v"));
-    assert(complete.startsWith(unicode ? "◭" : "^"));
-    assert(upcoming.startsWith(unicode ? "⧩" : "v"));
+    assert(current.startsWith(unicode ? "△" : "v"));
+    assert(complete.startsWith(unicode ? "▲" : "^"));
+    assert(upcoming.startsWith(unicode ? "△" : "v"));
   }
 });

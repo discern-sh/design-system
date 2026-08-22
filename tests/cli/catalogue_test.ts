@@ -13,12 +13,76 @@ import { terminalFoundationSheets } from "../../catalogue/terminal-foundations.t
 import {
   renderCliCatalogue,
   resolveCatalogueSelection,
+  resolveCliCatalogueCommand,
 } from "../../scripts/catalogue-cli.ts";
-import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
+import {
+  catalogueBrowserItems,
+  renderCliCatalogueIndex,
+  runCliCatalogueBrowser,
+} from "../../scripts/catalogue-browser.ts";
+import {
+  FakeTerminalIO,
+  testTerminalCapabilities,
+} from "../../src/cli/interactive/testing.ts";
 
 const registry = cliComponentRegistry as Readonly<
   Record<string, CliComponentRegistryEntry>
 >;
+
+Deno.test("CLI catalogue separates browsing, indexing, and exhaustive output", () => {
+  assertEquals(resolveCliCatalogueCommand([], true), { kind: "browse" });
+  assertEquals(resolveCliCatalogueCommand([], false), { kind: "list" });
+  assertEquals(resolveCliCatalogueCommand(["--list"], true), {
+    kind: "list",
+  });
+  assertEquals(resolveCliCatalogueCommand(["all"], true), {
+    kind: "render",
+    selector: "all",
+  });
+  assertEquals(resolveCliCatalogueCommand(["badge"], true), {
+    kind: "render",
+    selector: "badge",
+  });
+});
+
+Deno.test("compact catalogue index and browser auto-enrol every generated member", () => {
+  const index = renderCliCatalogueIndex();
+  const items = catalogueBrowserItems();
+  for (const sheet of terminalFoundationSheets) {
+    assertStringIncludes(index, sheet.id);
+    assert(
+      items.some((item) => item.kind === "foundation" && item.id === sheet.id),
+      `browser omits terminal foundation ${sheet.id}`,
+    );
+  }
+  for (const { meta } of componentRegistry) {
+    assertStringIncludes(index, meta.slug);
+    assert(
+      items.some(
+        (item) => item.kind === "component" && item.fact.slug === meta.slug,
+      ),
+      `browser omits generated Component ${meta.slug}`,
+    );
+  }
+  assert(
+    index.split("\n").length < 80,
+    "compact index regressed into another exhaustive catalogue",
+  );
+});
+
+Deno.test("interactive catalogue searches and reviews one specimen in an alternate screen", async () => {
+  const io = new FakeTerminalIO(["/badge\r", "q"], {
+    columns: 80,
+    rows: 24,
+    ansiControl: true,
+  });
+  await runCliCatalogueBrowser(io);
+  assertStringIncludes(io.output(), "Display / Badge (`badge`)");
+  assertStringIncludes(io.output(), "accent");
+  assertStringIncludes(io.output(), "\x1b[?1049h");
+  assertStringIncludes(io.output(), "\x1b[?1049l");
+  assertEquals(io.rawTransitions, [true, false]);
+});
 
 Deno.test("CLI catalogue resolves all, Group, Component, and motif selectors", () => {
   assertEquals(resolveCatalogueSelection(undefined), { kind: "all" });
@@ -96,6 +160,25 @@ Deno.test("CLI catalogue filters one Group or Component without hiding exemption
   );
 });
 
+Deno.test("CLI catalogue honours a Component example's capability posture", async () => {
+  const output = await renderCliCatalogue(
+    "markdown",
+    testTerminalCapabilities({
+      columns: 80,
+      colorDepth: "truecolor",
+      unicode: true,
+      hyperlinks: true,
+    }),
+  );
+  const heading = "#### narrow-ascii-no-colour";
+  const start = output.indexOf(heading);
+  assert(start >= 0);
+  const narrow = output.slice(start);
+  assert(!narrow.includes("\u001b"));
+  assertStringIncludes(narrow, "* Preserve");
+  assert(!narrow.includes("•"));
+});
+
 Deno.test("motif catalogue derives the complete default and custom specimen set", async () => {
   const output = await renderCliCatalogue(
     "motifs",
@@ -104,9 +187,9 @@ Deno.test("motif catalogue derives the complete default and custom specimen set"
   for (
     const heading of [
       "Horizontal divider",
+      "Left-aligned divider",
       "Vertical divider",
       "Thick ribbon",
-      "Field / weave",
       "Spinner phases",
       "Determinate progress",
       "Labeled section rule",
@@ -117,7 +200,8 @@ Deno.test("motif catalogue derives the complete default and custom specimen set"
   ) {
     assertStringIncludes(output, `### ${heading}`);
   }
-  assertStringIncludes(output, "25 percent\n[ 25%]");
+  assertEquals(output.includes("### Field / weave"), false);
+  assertStringIncludes(output, "65 percent\n[ 65%]");
   for (
     const status of ["pending", "active", "complete", "error", "cancelled"]
   ) {
@@ -145,13 +229,13 @@ Deno.test("narration catalogue presents every verb and the composed rhythm", asy
     assertStringIncludes(output, `### ${heading}`);
   }
   assertStringIncludes(output, "✓ Checks passed");
-  assertStringIncludes(output, "◮ Cache already warm");
+  assertStringIncludes(output, "▸ Cache already warm");
   assertStringIncludes(output, "! Two files skipped");
   assertStringIncludes(output, "✕ One frame diverged");
-  assertStringIncludes(output, "◮ RELEASE CHECKS");
+  assertStringIncludes(output, "▲ RELEASE CHECKS");
   assertStringIncludes(
     output,
-    "◮ RELEASE CHECKS\n\n✓ Checks passed\n◮ Cache already warm\n\n! Two files skipped",
+    "▲ RELEASE CHECKS\n\n✓ Checks passed\n▸ Cache already warm\n\n! Two files skipped",
   );
   assert(!output.includes("## Terminal motifs"));
   assert(!output.includes("## Display"));
@@ -161,7 +245,7 @@ Deno.test("narration catalogue presents every verb and the composed rhythm", asy
     testTerminalCapabilities({ columns: 80, unicode: false }),
   );
   assertStringIncludes(ascii, "+ Checks passed");
-  assertStringIncludes(ascii, "> RELEASE CHECKS");
+  assertStringIncludes(ascii, "^ RELEASE CHECKS");
 });
 
 Deno.test("NO_COLOR suppresses ANSI throughout catalogue output", async () => {

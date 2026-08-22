@@ -5,6 +5,10 @@
  */
 
 import { renderBox } from "../../../cli/box.ts";
+import {
+  type CliBlock,
+  renderCliBlocks,
+} from "../../../cli/block-composition.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import {
   terminalThemes,
@@ -13,15 +17,29 @@ import {
 } from "../../../cli/theme.ts";
 import type { CalloutTone } from "./callout.types.ts";
 
-/** Inputs accepted by the terminal Callout renderer. */
-export interface CalloutCliProps {
+interface CalloutCliOptions {
   readonly eyebrow?: string;
   readonly title: string;
-  readonly body: string;
   readonly tone?: CalloutTone;
   readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
+
+/** Inputs accepted by the terminal Callout renderer. */
+export type CalloutCliProps =
+  & CalloutCliOptions
+  & (
+    | {
+      /** Legacy plain-text body retained byte-for-byte. */
+      readonly body: string;
+      readonly children?: never;
+    }
+    | {
+      readonly body?: never;
+      /** Rich child Components re-rendered at the Callout's inner measure. */
+      readonly children: readonly CliBlock[];
+    }
+  );
 
 /** Deterministic Callout states rendered by the CLI catalogue. */
 export const cliExamples: readonly CliExample<CalloutCliProps>[] = [
@@ -57,7 +75,14 @@ const renderCalloutCli: CliRenderer<CalloutCliProps> = (
   props,
   capabilities,
 ) => {
-  if (props.title.trim() === "" || props.body.trim() === "") {
+  const hasBody = typeof props.body === "string";
+  const hasChildren = Array.isArray(props.children);
+  if (hasBody === hasChildren) {
+    throw new TypeError(
+      "callout requires exactly one of a plain body or rich children",
+    );
+  }
+  if (props.title.trim() === "" || (hasBody && props.body.trim() === "")) {
     throw new TypeError("callout title and body must be non-empty");
   }
   const width = props.maxWidth ?? capabilities.columns;
@@ -71,8 +96,15 @@ const renderCalloutCli: CliRenderer<CalloutCliProps> = (
   const title = props.eyebrow === undefined
     ? props.title
     : `${props.eyebrow.toLocaleUpperCase()}: ${props.title}`;
+  const body = hasBody
+    ? props.body
+    : props.children.length === 0
+    ? ""
+    : renderCliBlocks(props.children, capabilities, {
+      maxWidth: Math.min(width, capabilities.columns) - 4,
+    });
   return renderBox({
-    body: props.body,
+    body,
     title,
     width,
     borderStyle: {

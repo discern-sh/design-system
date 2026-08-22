@@ -1161,16 +1161,16 @@ async function verifyThemeSystem(
           const control = controlSelector === undefined
             ? null
             : consumer.querySelector(controlSelector);
-          const checked = control?.querySelector<HTMLInputElement>(
-            "input:checked",
-          )?.value;
+          const selected = control?.getAttribute("data-discern-mode");
           const storageKey = consumer.dataset.discernThemeStorageKey;
           const stored = storageKey === undefined
             ? undefined
             : localStorage.getItem(storageKey);
-          if (checked !== mode) {
+          if (selected !== mode) {
             problems.push(
-              `checked theme ${checked ?? "none"} disagrees with root ${mode}`,
+              `selected theme ${
+                selected ?? "none"
+              } disagrees with root ${mode}`,
             );
           }
           if (control === null) {
@@ -1236,7 +1236,7 @@ async function verifyThemeSystem(
       throw new Error("Theme consumer has no control selector");
     }
     const control = root.locator(controlSelector);
-    await control.getByRole("radio", { name: "Light", exact: true }).check();
+    await control.click();
     const lightGeometry = await geometry();
     let geometryChecks = 0;
     for (const [name, before] of Object.entries(darkGeometry)) {
@@ -1264,7 +1264,10 @@ async function verifyThemeSystem(
         `Theme system: ${failure}`
       ),
     );
-    await control.getByRole("radio", { name: "System", exact: true }).check();
+    await page.evaluate(() =>
+      localStorage.removeItem("discern-catalogue-theme")
+    );
+    await page.reload({ waitUntil: "networkidle" });
     failures.push(
       ...(await inspect()).failures.map((failure) =>
         `Theme system: ${failure}`
@@ -1449,14 +1452,12 @@ async function verifyThemeSystem(
         const control = selector === undefined
           ? null
           : consumer.querySelector(selector);
-        const checked = control?.querySelector<HTMLInputElement>(
-          "input:checked",
-        )?.value;
+        const selected = control?.getAttribute("data-discern-mode");
         const key = consumer.dataset.discernThemeStorageKey;
         const stored = key === undefined
           ? undefined
           : localStorage.getItem(key);
-        if (checked !== mode) problems.push("checked/root mismatch");
+        if (selected !== mode) problems.push("control/root mismatch");
         if (key !== undefined && stored !== mode) {
           problems.push("storage/root mismatch");
         }
@@ -1466,11 +1467,10 @@ async function verifyThemeSystem(
       const future = document.createElement("div");
       future.dataset.discernThemeConsumer = "";
       future.dataset.discernTheme = "dark";
-      future.dataset.discernThemeControl = ".discern-theme-switcher";
+      future.dataset.discernThemeControl = ".discern-theme-toggle";
       future.dataset.discernThemeStorageKey = "future-theme";
-      future.innerHTML = "<fieldset class='discern-theme-switcher'>" +
-        "<label><input type='radio' value='system' checked>System</label>" +
-        "</fieldset>";
+      future.innerHTML = "<button class='discern-theme-toggle' " +
+        "data-discern-mode='system'></button>";
       localStorage.setItem("future-theme", "light");
       document.body.append(future);
       const caught = failuresFor(future).length === 2;

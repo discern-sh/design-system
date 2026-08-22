@@ -6,10 +6,7 @@
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import type { SelectFrameState } from "../../../cli/interactive-states.ts";
-import {
-  isInteractiveChoice,
-  isInteractiveChoiceGroupHeading,
-} from "../../../cli/interactive-choice.ts";
+import { isInteractiveChoice } from "../../../cli/interactive-choice.ts";
 import {
   motifPassthrough,
   type TerminalMotifOptions,
@@ -18,8 +15,8 @@ import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
   formCliChoiceFrameWidth,
   type FormCliPresentation,
-  renderFormCliChoiceHeading,
-  renderFormCliChoiceRow,
+  renderFormCliChoiceEntry,
+  renderFormCliChoiceSummary,
   renderFormCliFrame,
   styleFormCliSelectedMark,
   visibleFormCliChoiceEntries,
@@ -31,6 +28,7 @@ export interface SelectCliProps extends SelectFrameState, TerminalMotifOptions {
   readonly presentation?: FormCliPresentation;
   readonly placeholder?: string;
   readonly required?: boolean;
+  readonly showStatus?: boolean;
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
@@ -168,41 +166,32 @@ const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
       "select state requires a selectable highlighted option, or -1 when none exist",
     );
   }
-  const expanded = props.presentation === undefined &&
+  const expanded = (props.presentation === undefined ||
+    props.presentation === "browsing") &&
     (state.lifecycle.status === "active" ||
       state.lifecycle.status === "validation-error");
-  const selected = state.options.find((entry) =>
+  const selectedEntry = state.options.find((entry) =>
     isInteractiveChoice(entry) && entry.id === state.selectedId
   );
+  const selected = selectedEntry !== undefined &&
+      isInteractiveChoice(selectedEntry)
+    ? selectedEntry
+    : undefined;
   const control = expanded
     ? visibleFormCliChoiceEntries(state).map(({ entry, sourceIndex }) => {
-      if (isInteractiveChoiceGroupHeading(entry)) {
-        return renderFormCliChoiceHeading(
-          entry,
-          {
-            ...(props.theme === undefined ? {} : { theme: props.theme }),
-            ...motifPassthrough(props),
-            width,
-          },
-          capabilities,
-        );
-      }
-      const option = entry;
       const absoluteIndex = sourceIndex;
       const isHighlighted = absoluteIndex === state.highlightedIndex;
       const pointer = isHighlighted
         ? `${capabilities.unicode ? "›" : ">"} `
         : "  ";
-      const selected = option.id === state.selectedId;
+      const selected = isInteractiveChoice(entry) &&
+        entry.id === state.selectedId;
       const mark = selected ? capabilities.unicode ? "●" : "*" : " ";
       const styleOptions = {
         highlighted: isHighlighted,
-        disabled: option.disabled === true,
+        disabled: isInteractiveChoice(entry) && entry.disabled === true,
         ...(props.theme === undefined ? {} : { theme: props.theme }),
       };
-      const label = `${option.label}${
-        option.disabled === true ? " (disabled)" : ""
-      }`;
       const marker = `[${
         styleFormCliSelectedMark(
           mark,
@@ -211,17 +200,29 @@ const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
           capabilities,
         )
       }]`;
-      return renderFormCliChoiceRow({
+      return renderFormCliChoiceEntry({
+        entry,
         pointer,
         marker,
-        label,
-        ...styleOptions,
+        highlighted: isHighlighted,
+        ...(props.theme === undefined ? {} : { theme: props.theme }),
+        ...motifPassthrough(props),
         width,
       }, capabilities);
     }).join("\n")
-    : `${selected?.label ?? props.placeholder ?? "Choose an option"} ${
+    : selected === undefined
+    ? `${props.placeholder ?? "Choose an option"} ${
       capabilities.unicode ? "⌄" : "v"
-    }`;
+    }`
+    : renderFormCliChoiceSummary(
+      selected,
+      capabilities.unicode ? "⌄" : "v",
+      {
+        ...(props.theme === undefined ? {} : { theme: props.theme }),
+        width,
+      },
+      capabilities,
+    );
   return renderFormCliFrame({
     label: state.label,
     control,
@@ -231,6 +232,7 @@ const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
       ? {}
       : { presentation: props.presentation }),
     ...(props.required === undefined ? {} : { required: props.required }),
+    ...(props.showStatus === undefined ? {} : { showStatus: props.showStatus }),
     ...(props.theme === undefined ? {} : { theme: props.theme }),
     width,
     ...(expanded

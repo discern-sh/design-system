@@ -4,11 +4,27 @@ import type { InteractiveChoiceEntryState } from "../interactive-states.ts";
 import type { TerminalKey } from "./keys.ts";
 import type {
   InteractionChoice,
+  InteractionChoicePresentation,
   InteractionEntry,
   InteractionGroupHeading,
 } from "./types.ts";
 
 const DEFAULT_VISIBLE_CHOICES = 5;
+
+/** Validate and collapse the source-compatible form default for frame state. */
+export function resolveInteractionChoicePresentation(
+  value: InteractionChoicePresentation | undefined,
+): "browsing" | undefined {
+  const presentation = value ?? "form";
+  if (presentation !== "form" && presentation !== "browsing") {
+    throw new TypeError(
+      `interaction choice presentation must be "form" or "browsing"; received ${
+        JSON.stringify(presentation)
+      }`,
+    );
+  }
+  return presentation === "browsing" ? "browsing" : undefined;
+}
 
 export function isInteractionGroupHeading<T>(
   entry: InteractionEntry<T>,
@@ -46,6 +62,17 @@ export function assertChoices<T>(
         } ${JSON.stringify(entry.id)} has an invalid label`,
       );
     }
+    if (
+      entry.description !== undefined &&
+      (entry.description.trim() === "" ||
+        /[\p{Cc}\p{Cf}]/u.test(entry.description))
+    ) {
+      throw new TypeError(
+        `${
+          isInteractionGroupHeading(entry) ? "choice group heading" : "choice"
+        } ${JSON.stringify(entry.id)} has an invalid description`,
+      );
+    }
     ids.add(entry.id);
   }
   if (requireSelectable && enabledIndices(choices).length === 0) {
@@ -70,14 +97,76 @@ export function frameChoices<T>(
 ): readonly InteractiveChoiceEntryState[] {
   return choices.map((entry) =>
     isInteractionGroupHeading(entry)
-      ? { kind: "group-heading", id: entry.id, label: entry.label }
+      ? {
+        kind: "group-heading",
+        id: entry.id,
+        label: entry.label,
+        ...(entry.description === undefined
+          ? {}
+          : { description: entry.description }),
+      }
       : {
         ...(entry.kind === undefined ? {} : { kind: entry.kind }),
         id: entry.id,
         label: entry.label,
+        ...(entry.description === undefined
+          ? {}
+          : { description: entry.description }),
         ...(entry.disabled === undefined ? {} : { disabled: entry.disabled }),
       }
   );
+}
+
+function entryMatches(
+  entry: InteractionEntry<unknown>,
+  query: string,
+): boolean {
+  const needle = query.trim().toLowerCase();
+  return entry.label.toLowerCase().includes(needle) ||
+    entry.description?.toLowerCase().includes(needle) === true;
+}
+
+/**
+ * Filter one static choice source by label and description while retaining a
+ * matched choice's governing group heading. A matching heading retains its
+ * complete group. Provider-backed search remains caller-owned and untouched.
+ */
+export function filterInteractionEntries<T>(
+  entries: readonly InteractionEntry<T>[],
+  query: string,
+): readonly InteractionEntry<T>[] {
+  assertChoices(entries);
+  if (query.trim() === "") return entries;
+  const filtered: InteractionEntry<T>[] = [];
+  let index = 0;
+  while (index < entries.length) {
+    const entry = entries[index];
+    if (entry === undefined) break;
+    if (!isInteractionGroupHeading(entry)) {
+      if (entryMatches(entry, query)) filtered.push(entry);
+      index += 1;
+      continue;
+    }
+    const heading = entry;
+    const grouped: InteractionChoice<T>[] = [];
+    index += 1;
+    while (index < entries.length) {
+      const candidate = entries[index];
+      if (candidate === undefined || isInteractionGroupHeading(candidate)) {
+        break;
+      }
+      grouped.push(candidate);
+      index += 1;
+    }
+    const headingMatches = entryMatches(heading, query);
+    const matched = headingMatches
+      ? grouped
+      : grouped.filter((candidate) => entryMatches(candidate, query));
+    if (headingMatches || matched.length > 0) {
+      filtered.push(heading, ...matched);
+    }
+  }
+  return filtered;
 }
 
 function enabledIndices<T>(choices: readonly InteractionEntry<T>[]): number[] {

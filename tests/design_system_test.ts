@@ -3,6 +3,7 @@ import {
   assertEquals,
   assertMatch,
   assertStringIncludes,
+  assertThrows,
 } from "@std/assert";
 import { fromFileUrl, join, relative, toFileUrl } from "@std/path";
 import type { Page } from "playwright-core";
@@ -18,6 +19,8 @@ import {
 } from "../scripts/font-metric-overrides.ts";
 import type { FontMetricOverrideAudit } from "../scripts/font-metric-overrides.ts";
 import { generateSources } from "../scripts/generate.ts";
+import { componentRegistry } from "../src/generated/component-registry.ts";
+import { createFeatureBentoLayout } from "../src/components/marketing/feature-bento/feature-bento-layout.ts";
 import {
   packageManifest,
   RUNTIME_MANIFEST_SCHEMA_VERSION,
@@ -30,6 +33,7 @@ import {
   DestructiveActionNotice,
   Diagnostic,
   type DiagnosticProps,
+  FeatureBento,
   GlossaryTerm,
   Ground,
   HeroBlock,
@@ -39,9 +43,14 @@ import {
   LogoCloud,
   MarketingIntro,
   MarketingSection,
+  Masonry,
   Procedure,
   RawOutput,
   ResonanceGround,
+  RESULT_SUMMARY_STATE_LABELS,
+  RESULT_SUMMARY_STATES,
+  ResultSummary,
+  type ResultSummaryState,
   RetryNotice,
   SiteHeader,
   TableOfContents,
@@ -82,6 +91,13 @@ async function walk(directory: string): Promise<string[]> {
     else files.push(path);
   }
   return files.toSorted();
+}
+
+function assertSourceOrderedGridCss(path: string, source: string): void {
+  assert(
+    !/grid-auto-flow\s*:[^;]*\bdense\b/u.test(source),
+    `${path} uses dense grid auto-placement, which can backfill later semantic content ahead of source order`,
+  );
 }
 
 async function outputPaths(root: string): Promise<string[]> {
@@ -382,6 +398,138 @@ Deno.test("component metadata auto-enrols React, runtime, and CLI surfaces", asy
   );
 });
 
+Deno.test("Component grids never backfill later semantic content", async () => {
+  const componentStyles = (await walk(COMPONENT_ROOT)).filter((path) =>
+    path.endsWith(".css")
+  );
+  for (const path of componentStyles) {
+    assertSourceOrderedGridCss(path, await Deno.readTextFile(path));
+  }
+  assertThrows(
+    () =>
+      assertSourceOrderedGridCss(
+        "future-packer.css",
+        ".future-packer { display: grid; grid-auto-flow: dense; }",
+      ),
+    Error,
+    "backfill later semantic content",
+  );
+});
+
+Deno.test("Feature bento layouts tile complete source-ordered rectangles", () => {
+  const sizes = ["large", "wide", "standard", "standard"] as const;
+  assertEquals(createFeatureBentoLayout(sizes, 4), {
+    columns: 4,
+    rows: 2,
+    placements: [
+      { column: 1, row: 1, columnSpan: 2, rowSpan: 2 },
+      { column: 3, row: 1, columnSpan: 2, rowSpan: 1 },
+      { column: 3, row: 2, columnSpan: 1, rowSpan: 1 },
+      { column: 4, row: 2, columnSpan: 1, rowSpan: 1 },
+    ],
+  });
+  assertEquals(createFeatureBentoLayout(sizes, 2), {
+    columns: 2,
+    rows: 4,
+    placements: [
+      { column: 1, row: 1, columnSpan: 2, rowSpan: 2 },
+      { column: 1, row: 3, columnSpan: 2, rowSpan: 1 },
+      { column: 1, row: 4, columnSpan: 1, rowSpan: 1 },
+      { column: 2, row: 4, columnSpan: 1, rowSpan: 1 },
+    ],
+  });
+  assertThrows(
+    () =>
+      createFeatureBentoLayout(
+        ["wide", "standard", "tall", "standard"],
+        4,
+      ),
+    TypeError,
+    "does not fill its 4-column rectangle",
+  );
+  assertThrows(
+    () => createFeatureBentoLayout(["standard", "large"], 2),
+    TypeError,
+    "cannot place large at the next source-order cell",
+  );
+});
+
+Deno.test("Feature bento and Masonry emit their complete static layout contracts", async () => {
+  const bento = renderToStaticMarkup(
+    createElement(FeatureBento, {
+      title: "A complete matrix",
+      items: [
+        { title: "Alpha", description: "First", size: "large" },
+        { title: "Beta", description: "Second", size: "wide" },
+        { title: "Gamma", description: "Third" },
+        { title: "Delta", description: "Fourth" },
+      ],
+    }),
+  );
+  assertMatch(bento, /^<section/);
+  assertStringIncludes(bento, "--discern-feature-bento-rows:2");
+  assertStringIncludes(bento, "--discern-feature-bento-compact-rows:4");
+  assertStringIncludes(bento, "--discern-feature-bento-column:3");
+  assertEquals((bento.match(/<article/g) ?? []).length, 4);
+  assert(
+    bento.indexOf("Alpha") < bento.indexOf("Beta") &&
+      bento.indexOf("Beta") < bento.indexOf("Gamma") &&
+      bento.indexOf("Gamma") < bento.indexOf("Delta"),
+    "Feature bento changed semantic source order",
+  );
+  assertThrows(
+    () =>
+      renderToStaticMarkup(
+        createElement(FeatureBento, {
+          title: "Incomplete",
+          items: [
+            { title: "Alpha", description: "First", size: "wide" },
+            { title: "Beta", description: "Second" },
+          ],
+        }),
+      ),
+    TypeError,
+    "does not fill its 4-column rectangle",
+  );
+
+  const masonry = renderToStaticMarkup(
+    createElement(Masonry, {
+      gap: 4,
+      minimum: "12rem",
+      children: [
+        createElement("article", { key: "one" }, "One"),
+        createElement("article", { key: "two" }, "Two"),
+        createElement("article", { key: "three" }, "Three"),
+      ],
+    }),
+  );
+  assertMatch(masonry, /^<div/);
+  assertStringIncludes(masonry, "--discern-masonry-gap:var(--discern-space-4)");
+  assertStringIncludes(masonry, "--discern-masonry-min:12rem");
+  assertEquals(
+    (masonry.match(/class="discern-masonry__item"/g) ?? []).length,
+    3,
+  );
+  assert(
+    masonry.indexOf("One") < masonry.indexOf("Two") &&
+      masonry.indexOf("Two") < masonry.indexOf("Three"),
+    "Masonry changed semantic source order",
+  );
+
+  const masonryCss = await Deno.readTextFile(
+    join(
+      COMPONENT_ROOT,
+      "layout",
+      "masonry",
+      "masonry.css",
+    ),
+  );
+  assertStringIncludes(masonryCss, "column-width:");
+  assertStringIncludes(masonryCss, "break-inside: avoid");
+  assertStringIncludes(masonryCss, "@supports (display: grid-lanes)");
+  assertStringIncludes(masonryCss, "display: grid-lanes");
+});
+
 Deno.test("runtime globals are branded and defaults stay inside the opted-in root", async () => {
   const temp = await Deno.makeTempDir();
   try {
@@ -515,6 +663,79 @@ Deno.test("selection resolves dependencies and excludes unrelated groups", async
     assert(!glossaryCss.includes(".discern-brand"));
   } finally {
     await Deno.remove(temp, { recursive: true });
+  }
+});
+
+function respondsToItsOwnInlineSize(source: string): boolean {
+  return /container-type\s*:\s*inline-size\s*;/u.test(source) &&
+    !/@media\s*\(\s*max-width\s*:/u.test(source);
+}
+
+Deno.test("reading-first Marketing Components share one section authority", () => {
+  const readingFirstIds = [
+    "marketing-stage",
+    "editorial-hero",
+    "narrative-chapter",
+    "journey-overview",
+    "outcome-spotlight",
+    "voice-break",
+    "closing-statement",
+  ] as const;
+  const introIds = new Set([
+    "narrative-chapter",
+    "journey-overview",
+    "outcome-spotlight",
+    "closing-statement",
+  ]);
+  const components = new Map(
+    packageManifest.components.map((component) => [component.id, component]),
+  );
+
+  for (const id of readingFirstIds) {
+    const component = components.get(id);
+    assert(component, `${id} is absent from the generated manifest`);
+    if (id !== "marketing-stage") {
+      assert(
+        component.dependencies.includes("marketing-section"),
+        `${id} bypasses Marketing section`,
+      );
+    }
+    if (introIds.has(id)) {
+      assert(
+        component.dependencies.includes("marketing-intro"),
+        `${id} bypasses Marketing intro`,
+      );
+    }
+    for (const ownedClass of component.ownedClasses) {
+      assert(
+        ownedClass === `discern-${id}` ||
+          ownedClass.startsWith(`discern-${id}__`) ||
+          ownedClass.startsWith(`discern-${id}--`),
+        `${id} claims the foreign class ${ownedClass}`,
+      );
+    }
+  }
+
+  assertEquals(components.get("editorial-hero")?.dependencies, [
+    "marketing-section",
+    "marketing-stage",
+  ]);
+
+  assert(
+    !respondsToItsOwnInlineSize(
+      ".discern-fresh-section { display: grid; } @media (max-width: 40rem) { .discern-fresh-section { display: block; } }",
+    ),
+    "the fresh viewport-bound section escaped the detector",
+  );
+  const readingFirstComponents = componentRegistry.filter((entry) =>
+    entry.meta.group === "Marketing" && entry.meta.order >= 150
+  );
+  assert(readingFirstComponents.length >= readingFirstIds.length);
+  for (const component of readingFirstComponents) {
+    assert(
+      respondsToItsOwnInlineSize(component.css),
+      `${component.meta.slug} responds to the viewport instead of its own available width`,
+    );
   }
 });
 
@@ -2184,6 +2405,7 @@ Deno.test("monospace is reserved for brand names and code-bearing surfaces", asy
     "catalogue/catalogue.css::.discern-catalogue-api code",
     "catalogue/catalogue.css::.discern-catalogue-brand strong",
     "catalogue/catalogue.css::.discern-catalogue-copyable > code",
+    "catalogue/catalogue.css::.discern-catalogue-sidebar__version",
     "catalogue/catalogue.css::.discern-catalogue-terminal-layout__source pre",
     "catalogue/catalogue.css::.discern-catalogue-token code",
     "catalogue/catalogue.css::.discern-catalogue-token__value",
@@ -2570,6 +2792,53 @@ Deno.test("table-of-contents numbering excludes nested entries", () => {
   );
   assertStringIncludes(html, "<span>02</span>Second section");
   assert(!html.includes("<span>03</span>"));
+});
+
+Deno.test("Result summary states enroll browser labels, examples, and CSS treatment", async () => {
+  const states: readonly ResultSummaryState[] = RESULT_SUMMARY_STATES;
+  const html = states.map((state) =>
+    renderToStaticMarkup(
+      createElement(ResultSummary, { state, fact: `Fact for ${state}` }),
+    )
+  ).join("\n");
+  for (const state of states) {
+    assertStringIncludes(html, `data-discern-state="${state}"`);
+    assertStringIncludes(html, `>${RESULT_SUMMARY_STATE_LABELS[state]}</span>`);
+  }
+  const css = await Deno.readTextFile(
+    join(
+      COMPONENT_ROOT,
+      "workflow",
+      "result-summary",
+      "result-summary.css",
+    ),
+  );
+  const baseStateRule = /\.discern-result-summary__state\s*\{(?<body>[^}]*)\}/s
+    .exec(css)
+    ?.groups?.body;
+  assert(baseStateRule !== undefined, "missing base Result summary state rule");
+  assertStringIncludes(
+    baseStateRule,
+    "border: 1px solid var(--discern-color-border-strong);",
+  );
+  assertStringIncludes(
+    baseStateRule,
+    "background: var(--discern-color-surface-sunken);",
+  );
+  assertStringIncludes(baseStateRule, "color: var(--discern-color-ink);");
+  const declaredRule = /data-discern-state="declared"\]\s*\{(?<body>[^}]*)\}/s
+    .exec(css)
+    ?.groups?.body;
+  assert(declaredRule !== undefined, "missing declared Result summary rule");
+  assertStringIncludes(declaredRule, "border-style: dashed;");
+  assert(
+    !/success|danger|warning|accent|ink-muted/u.test(declaredRule),
+    "declared Result summary treatment must remain a distinct neutral fact",
+  );
+  assertMatch(
+    css,
+    /@media \(forced-colors: active\)[\s\S]*\.discern-result-summary__state\s*\{[^}]*border-color:\s*CanvasText;/u,
+  );
 });
 
 Deno.test("every stateful marker joins the accessible text in its example", async () => {

@@ -7,7 +7,7 @@
  * the same byte grammar the emitters compose with — so the supported input is
  * exactly what this package's CLI renderers emit: plain text with newlines
  * and tabs, the emitted SGR subset (bold, dim, italic, underline,
- * strikethrough, and 16-, 256-, and truecolour foregrounds), and complete
+ * strikethrough, and 16-, 256-, and truecolour foregrounds and backgrounds), and complete
  * ST-ended OSC 8 hyperlink envelopes. The projection is not a terminal
  * emulator: cursor movement, erasure, and every other control sequence found
  * in captured interactive sessions are rejected with
@@ -24,7 +24,7 @@ import {
   type TerminalRgbColor,
 } from "./ansi-palette.ts";
 import { parseStyledSource, type StyledSegment } from "./styled-sequences.ts";
-import { measureText } from "./text.ts";
+import { graphemeWidth, measureText } from "./text.ts";
 import {
   terminalThemeColor,
   terminalThemes,
@@ -45,6 +45,8 @@ export interface TerminalSpanStyle {
   readonly strikethrough?: true;
   /** Foreground colour, resolved to sRGB through the reference palettes. */
   readonly color?: TerminalRgbColor;
+  /** Background colour, resolved to sRGB through the reference palettes. */
+  readonly background?: TerminalRgbColor;
 }
 
 /** One projected run of text with its decoded style and hyperlink target. */
@@ -55,8 +57,23 @@ export interface TerminalSpan {
   readonly link?: string;
 }
 
+/** One projected span placed on an inclusive one-based cell range. */
+export interface TerminalCellSpan extends TerminalSpan {
+  readonly startColumn: number;
+  readonly endColumn: number;
+}
+
+/** One projected terminal row with cell-addressed styled spans. */
+export interface TerminalCellRow {
+  /** One-based row in the projected output. */
+  readonly row: number;
+  readonly columns: number;
+  readonly spans: readonly TerminalCellSpan[];
+}
+
 /** Browser style declarations for one decoded span style. */
 export interface TerminalSpanCss {
+  readonly backgroundColor?: string;
   readonly color?: string;
   readonly fontStyle?: string;
   readonly fontWeight?: number;
@@ -131,6 +148,7 @@ interface MutableSpanStyle {
   underline?: true;
   strikethrough?: true;
   color?: TerminalRgbColor;
+  background?: TerminalRgbColor;
 }
 
 function assertProjectableText(value: string): void {
@@ -176,6 +194,10 @@ function styleFromCodes(
       style.color = paletteColor(ANSI_16_RGB, code - 30);
     } else if (code !== undefined && code >= 90 && code <= 97) {
       style.color = paletteColor(ANSI_16_RGB, code - 90 + 8);
+    } else if (code !== undefined && code >= 40 && code <= 47) {
+      style.background = paletteColor(ANSI_16_RGB, code - 40);
+    } else if (code !== undefined && code >= 100 && code <= 107) {
+      style.background = paletteColor(ANSI_16_RGB, code - 100 + 8);
     } else if (code === 38 && codes[index + 1] === 5) {
       style.color = paletteColor(ANSI_256_RGB, codes[index + 2] ?? -1);
       index += 2;
@@ -189,6 +211,20 @@ function styleFromCodes(
         );
       }
       style.color = { red, green, blue };
+      index += 4;
+    } else if (code === 48 && codes[index + 1] === 5) {
+      style.background = paletteColor(ANSI_256_RGB, codes[index + 2] ?? -1);
+      index += 2;
+    } else if (code === 48 && codes[index + 1] === 2) {
+      const red = codes[index + 2];
+      const green = codes[index + 3];
+      const blue = codes[index + 4];
+      if (red === undefined || green === undefined || blue === undefined) {
+        throw new TerminalProjectionError(
+          "Terminal projection received an incomplete truecolour background code",
+        );
+      }
+      style.background = { red, green, blue };
       index += 4;
     } else {
       throw new TerminalProjectionError(
@@ -236,7 +272,7 @@ export function projectTerminalSpans(output: string): readonly TerminalSpan[] {
  * Map one decoded span style to browser style declarations.
  *
  * The same mapping colours the package's browser Catalogue and the HTML
- * produced by {@linkcode projectTerminalHtml}: truecolour foregrounds become
+ * produced by {@linkcode projectTerminalHtml}: truecolour foregrounds and backgrounds become
  * `rgb()` values, bold maps to weight 700, dim to reduced opacity, and
  * underline and strikethrough to text decorations.
  */
@@ -246,6 +282,10 @@ export function terminalSpanCss(style: TerminalSpanStyle): TerminalSpanCss {
     style.strikethrough === true ? "line-through" : undefined,
   ].filter((value) => value !== undefined).join(" ");
   return {
+    ...(style.background === undefined ? {} : {
+      backgroundColor:
+        `rgb(${style.background.red} ${style.background.green} ${style.background.blue})`,
+    }),
     ...(style.color === undefined ? {} : {
       color: `rgb(${style.color.red} ${style.color.green} ${style.color.blue})`,
     }),
@@ -280,7 +320,40 @@ function escapeHtml(value: string): string {
     .replaceAll("'", "&#39;");
 }
 
+const terminalCellSegmenter = new Intl.Segmenter(undefined, {
+  granularity: "grapheme",
+});
+
+function terminalTextHtml(value: string): string {
+  let html = "";
+  let ascii = "";
+  const flushAscii = (): void => {
+    html += escapeHtml(ascii);
+    ascii = "";
+  };
+  for (const { segment } of terminalCellSegmenter.segment(value)) {
+    if ([...segment].every((character) => character.codePointAt(0)! <= 0x7F)) {
+      ascii += segment;
+      continue;
+    }
+    flushAscii();
+    const columns = graphemeWidth(segment);
+    const style = [
+      "display:inline-block",
+      `width:${columns}ch`,
+      "text-align:center",
+      "vertical-align:baseline",
+    ].join(";");
+    html += `<span data-discern-terminal-cell="${columns}" style="${style}">${
+      escapeHtml(segment)
+    }</span>`;
+  }
+  flushAscii();
+  return html;
+}
+
 const CSS_PROPERTY_NAMES = {
+  backgroundColor: "background-color",
   color: "color",
   fontStyle: "font-style",
   fontWeight: "font-weight",
@@ -296,7 +369,7 @@ function inlineCss(css: TerminalSpanCss): string {
 }
 
 function spanHtml(span: TerminalSpan): string {
-  const text = escapeHtml(span.text);
+  const text = terminalTextHtml(span.text);
   const css = span.style === undefined
     ? undefined
     : inlineCss(terminalSpanCss(span.style));
@@ -312,6 +385,17 @@ function spanHtml(span: TerminalSpan): string {
     }" target="_blank" rel="noopener noreferrer"${styleAttribute}>${text}</a>`;
   }
   return styleAttribute === "" ? text : `<span${styleAttribute}>${text}</span>`;
+}
+
+/**
+ * Project package-emitted terminal output into one safe inline HTML fragment.
+ *
+ * Text is escaped, safe links retain their anchors, and every non-ASCII
+ * grapheme occupies an explicit terminal-cell box so proportional fallback
+ * glyphs cannot shift following cells in a browser.
+ */
+export function projectTerminalInlineHtml(output: string): string {
+  return projectTerminalSpans(output).map(spanHtml).join("");
 }
 
 function assertTerminalLayoutViewport(
@@ -354,6 +438,53 @@ function projectedTerminalLines(
   return rows.map((row) => ({
     spans: row,
     text: row.map((span) => span.text).join(""),
+  }));
+}
+
+function terminalPartColumns(value: string, current: number): number {
+  let columns = current;
+  for (const { segment } of terminalCellSegmenter.segment(value)) {
+    columns += segment === "\t" ? 8 - columns % 8 : graphemeWidth(segment);
+  }
+  return columns - current;
+}
+
+/**
+ * Project package-emitted output into styled rows with one-based inclusive
+ * terminal-cell ranges. Newlines advance rows, tabs use eight-cell stops,
+ * and grapheme widths come from the same authority as terminal rendering.
+ */
+export function projectTerminalCellRows(
+  output: string,
+): readonly TerminalCellRow[] {
+  const rows: TerminalCellSpan[][] = [[]];
+  let columns = 0;
+  for (const span of projectTerminalSpans(output)) {
+    const parts = span.text.split("\n");
+    for (const [index, text] of parts.entries()) {
+      if (text !== "") {
+        const width = terminalPartColumns(text, columns);
+        if (width > 0) {
+          rows.at(-1)?.push({
+            text,
+            ...(span.style === undefined ? {} : { style: span.style }),
+            ...(span.link === undefined ? {} : { link: span.link }),
+            startColumn: columns + 1,
+            endColumn: columns + width,
+          });
+          columns += width;
+        }
+      }
+      if (index < parts.length - 1) {
+        rows.push([]);
+        columns = 0;
+      }
+    }
+  }
+  return rows.map((spans, index) => ({
+    row: index + 1,
+    columns: spans.at(-1)?.endColumn ?? 0,
+    spans,
   }));
 }
 
@@ -729,7 +860,6 @@ export function projectTerminalHtml(
   output: string,
   options: TerminalHtmlOptions = {},
 ): string {
-  const spans = projectTerminalSpans(output);
   const theme = terminalThemes[options.theme ?? "dark"];
   const canvas = terminalThemeColor(theme, "--discern-color-canvas");
   const ink = terminalThemeColor(theme, "--discern-color-ink");
@@ -744,6 +874,6 @@ export function projectTerminalHtml(
     "overflow-x:auto",
   ].join(";");
   return `<pre style="${escapeHtml(shell)}">${
-    spans.map(spanHtml).join("")
+    projectTerminalInlineHtml(output)
   }</pre>`;
 }

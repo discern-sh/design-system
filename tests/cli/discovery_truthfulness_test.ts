@@ -24,9 +24,7 @@ function paintedFrames(io: FakeTerminalIO): readonly string[] {
     const frame = write.startsWith("\x1b[1G") && eraseAt >= 0
       ? write.slice(eraseAt + "\x1b[J".length)
       : write;
-    return /\[(?:active|searching|error|submitted|cancelled)\]/u.test(frame)
-      ? [frame]
-      : [];
+    return /(?:┌|^\+-{3,}\+$)/mu.test(frame) ? [frame] : [];
   });
 }
 
@@ -107,7 +105,7 @@ Deno.test("a slow provider never delays the first frame and pending clears on re
   );
 
   provider.calls[0]?.resolve(choices);
-  await until(() => lastFrame(io).includes("[active]"));
+  await until(() => lastFrame(io).includes("One"));
   assertStringIncludes(lastFrame(io), "One");
   assert(!lastFrame(io).includes("Searching…"));
 
@@ -154,7 +152,7 @@ Deno.test("typing during provider flight stays live and discards superseded reso
     !io.output().includes("StaleRow"),
     "a resolution superseded by a newer query must never paint",
   );
-  assertStringIncludes(lastFrame(io), "[active]");
+  assert(!lastFrame(io).includes("[searching]"));
 
   io.enqueueKeys("enter", "enter");
   assertEquals(await request, "current");
@@ -285,7 +283,9 @@ Deno.test("debounce coalesces rapid edits through the injectable scheduler", asy
 
   scheduler.fireLast();
   assertEquals(seen, ["", "two"]);
-  await until(() => lastFrame(io).includes("[active]"));
+  await until(() =>
+    lastFrame(io).includes("Two") && !lastFrame(io).includes("[searching]")
+  );
   io.enqueueKeys("enter", "enter");
   assertEquals(await request, "two");
 });

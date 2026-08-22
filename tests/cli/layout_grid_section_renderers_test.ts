@@ -1,6 +1,7 @@
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import {
   renderGridCli,
+  renderMasonryCli,
   renderMotifSectionRule,
   renderSectionCli,
 } from "../../src/cli/mod.ts";
@@ -47,6 +48,53 @@ Deno.test("Grid renders exact narrow, standard, wide, and capability-invariant r
       assertExactFrame(
         render(capabilities),
         "Alpha        Beta\n\n\nGamma        Delta",
+        capabilities,
+      );
+    }
+  }
+});
+
+Deno.test("Masonry packs each block into the shortest exact terminal column", () => {
+  const blocks = [
+    "Alpha\nshort",
+    "Beta\nline two\nline three",
+    "Gamma",
+    "Delta\ntwo",
+  ];
+  const render = (capabilities: TerminalCapabilities) =>
+    renderMasonryCli(
+      { blocks, minimum: 10, width: capabilities.columns },
+      capabilities,
+    );
+  for (
+    const [columns, expected] of [
+      [
+        12,
+        "Alpha\nshort\n\n\nBeta\nline two\nline three\n\n\nGamma\n\n\nDelta\ntwo",
+      ],
+      [
+        24,
+        "Alpha        Beta\nshort        line two\n             line three\n\nGamma\n             Delta\n             two",
+      ],
+      [
+        36,
+        "Alpha        Beta         Gamma\nshort        line two\n             line three\n                          Delta\n                          two",
+      ],
+    ] as const
+  ) {
+    const capabilities = testTerminalCapabilities({ columns });
+    assertExactFrame(render(capabilities), expected, capabilities);
+  }
+  for (const colorDepth of ["none", "ansi16", "truecolor"] as const) {
+    for (const unicode of [true, false]) {
+      const capabilities = testTerminalCapabilities({
+        colorDepth,
+        columns: 24,
+        unicode,
+      });
+      assertExactFrame(
+        render(capabilities),
+        "Alpha        Beta\nshort        line two\n             line three\n\nGamma\n             Delta\n             two",
         capabilities,
       );
     }
@@ -103,7 +151,7 @@ Deno.test("Section renders exact narrow, standard, wide, and degraded labelled r
   );
 });
 
-Deno.test("Section selects the authoritative multi-row ribbon treatment", () => {
+Deno.test("Section selects the authoritative leading-marker rule treatment", () => {
   const capabilities = testTerminalCapabilities({ columns: 12 });
   assertExactFrame(
     renderSectionCli(
@@ -116,7 +164,25 @@ Deno.test("Section selects the authoritative multi-row ribbon treatment", () => 
       },
       capabilities,
     ),
-    "◮⧩◭⧨◮⧩◭⧨◮⧩◭⧨\n⧨◮⧩◭⧨◮⧩◭⧨◮⧩◭\nDetails\nBody",
+    "▲  ─────────\nDetails\nBody",
+    capabilities,
+  );
+});
+
+Deno.test("Section exposes the shared quiet labelled boundary", () => {
+  const capabilities = testTerminalCapabilities({ columns: 24 });
+  assertExactFrame(
+    renderSectionCli(
+      {
+        title: "Details",
+        body: "Supporting section",
+        treatment: "quiet-rule" as never,
+        spacing: "sm",
+        width: 24,
+      },
+      capabilities,
+    ),
+    "▲ Details ──────────────\nSupporting section",
     capabilities,
   );
 });

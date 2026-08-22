@@ -1,0 +1,77 @@
+@layer discern.components {
+  .discern-journey-overview {
+    container-type: inline-size;
+  }
+  .discern-journey-overview__intro {
+    --discern-marketing-intro-title-size: var(--discern-font-size-display-md);
+    --discern-marketing-intro-title-tracking: -0.01em;
+    max-inline-size: 56rem;
+  }
+  .discern-journey-overview__steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    gap: var(--discern-space-8);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: discern-journey-overview;
+  }
+  .discern-journey-overview__step {
+    position: relative;
+    min-inline-size: 0;
+    padding-block-start: var(--discern-space-8);
+    border-block-start: 1px solid var(--discern-color-border-strong);
+    counter-increment: discern-journey-overview;
+  }
+  .discern-journey-overview__step::before {
+    display: block;
+    margin-block-end: var(--discern-space-12);
+    color: var(--discern-marketing-accent-ink,
+      var(--discern-color-accent-700));
+    content: counter(discern-journey-overview, decimal-leading-zero);
+    font-family: var(--discern-font-ui);
+    font-size: var(--discern-font-size-xs);
+    font-weight: var(--discern-font-weight-strong);
+    letter-spacing: 0.08em;
+    line-height: var(--discern-leading-snug);
+  }
+  .discern-journey-overview__title {
+    max-inline-size: 16ch;
+    margin: 0;
+    color: var(--discern-color-ink);
+    font-size: var(--discern-font-size-display-sm);
+    line-height: var(--discern-leading-snug);
+    text-wrap: balance;
+  }
+  .discern-journey-overview__description {
+    margin-block-start: var(--discern-space-4);
+    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-sm);
+    line-height: var(--discern-leading-body);
+  }
+  .discern-journey-overview__description > :first-child,
+  .discern-journey-overview__outcome > :first-child {
+    margin-block-start: 0;
+  }
+  .discern-journey-overview__description > :last-child,
+  .discern-journey-overview__outcome > :last-child {
+    margin-block-end: 0;
+  }
+  .discern-journey-overview__outcome {
+    margin-block-start: var(--discern-space-8);
+    padding-inline-start: var(--discern-space-4);
+    border-inline-start: 2px solid var(--discern-color-accent-500);
+    color: var(--discern-color-ink);
+    font-size: var(--discern-font-size-xs);
+    font-weight: var(--discern-font-weight-strong);
+    line-height: var(--discern-leading-body);
+  }
+  @container (max-width: 520px) {
+    .discern-journey-overview__steps {
+      gap: var(--discern-space-10);
+    }
+    .discern-journey-overview__step::before {
+      margin-block-end: var(--discern-space-6);
+    }
+  }
+}

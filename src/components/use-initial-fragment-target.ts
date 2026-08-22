@@ -22,6 +22,14 @@ export function useInitialFragmentTarget(): void {
     const id = fragmentId(hash);
     const target = id ? document.getElementById(id) : null;
     if (!target) return;
+    if (!target.matches(":target")) {
+      history.replaceState(
+        history.state,
+        "",
+        `${location.pathname}${location.search}`,
+      );
+      location.replace(hash);
+    }
     target.scrollIntoView({
       behavior: "instant" as ScrollBehavior,
       block: "start",

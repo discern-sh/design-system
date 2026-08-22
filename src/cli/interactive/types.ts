@@ -16,6 +16,12 @@ export type InteractionValidator<T> = (
 /** Required-value policy with an optional caller-authored error message. */
 export type InteractionRequired = boolean | string;
 
+/** What the interaction driver does with a successfully completed frame. */
+export type InteractionCompletionPolicy = "retain-frame" | "clear-frame";
+
+/** Form-lifecycle or quiet browsing treatment for a choice interaction. */
+export type InteractionChoicePresentation = "form" | "browsing";
+
 /**
  * Synchronous canonicalisation applied to a submitted value before any
  * validation. The transformed value is what the required check and validator
@@ -29,6 +35,12 @@ export interface InteractionOptions<T> {
   readonly label: string;
   readonly hint?: string;
   readonly required?: InteractionRequired;
+  /**
+   * Successful-frame policy. The default retains the submitted frame;
+   * `clear-frame` erases the active frame through the interaction painter
+   * before returning. Validation and cancellation frames are unaffected.
+   */
+  readonly completion?: InteractionCompletionPolicy;
   /**
    * Terminal rows above the frame that the caller's own composition
    * occupies — a board header, a task preamble. Frame fitting targets the
@@ -60,6 +72,12 @@ export interface InteractionDelayScheduler {
 export interface InteractionRuntime
   extends TerminalSignalOptions, CliPresentationOptions {
   readonly io?: TerminalIO;
+  /**
+   * Own a fresh alternate screen for this interaction and restore the normal
+   * screen before returning. Intended for transient navigation surfaces;
+   * ordinary form interactions remain inline by default.
+   */
+  readonly alternateScreen?: boolean;
   /** Allow Ctrl+U to return control to a sequential form's prior step. */
   readonly canGoBack?: boolean;
 }
@@ -70,6 +88,8 @@ export interface InteractionChoice<T> {
   readonly kind?: "choice";
   readonly id: string;
   readonly label: string;
+  /** Optional control-free secondary text, such as a filename or destination. */
+  readonly description?: string;
   readonly value: T;
   readonly disabled?: boolean;
 }
@@ -79,6 +99,8 @@ export interface InteractionGroupHeading {
   readonly kind: "group-heading";
   readonly id: string;
   readonly label: string;
+  /** Optional control-free secondary text describing the grouped destination. */
+  readonly description?: string;
   /** Group headings never carry a caller value. */
   readonly value?: never;
   /** Group headings are structural rather than disabled choices. */

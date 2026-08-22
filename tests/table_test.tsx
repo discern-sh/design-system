@@ -5,7 +5,10 @@ import {
   assertStringIncludes,
 } from "@std/assert";
 import { renderToStaticMarkup } from "react-dom/server";
-import { Table } from "../src/components/display/table/table.tsx";
+import {
+  Table,
+  tableCellAlignmentProps,
+} from "../src/components/display/table/table.tsx";
 import tableMeta from "../src/components/display/table/table.meta.ts";
 
 Deno.test("Table preserves native relational markup and rich phrasing", () => {
@@ -25,8 +28,8 @@ Deno.test("Table preserves native relational markup and rich phrasing", () => {
       <thead>
         <tr>
           <th scope="col">Topic</th>
-          <th scope="col">Evidence</th>
-          <th scope="col">Score</th>
+          <th scope="col" {...tableCellAlignmentProps("center")}>Evidence</th>
+          <th scope="col" {...tableCellAlignmentProps("end")}>Score</th>
         </tr>
       </thead>
       <tbody>
@@ -59,7 +62,9 @@ Deno.test("Table preserves native relational markup and rich phrasing", () => {
     html,
     "<table><caption><strong>Reference</strong> coverage</caption>",
   );
-  assertEquals(html.match(/<th scope="col">/g)?.length, 3);
+  assertEquals(html.match(/<th scope="col"/g)?.length, 3);
+  assertStringIncludes(html, 'data-discern-table-align="center"');
+  assertStringIncludes(html, 'data-discern-table-align="end"');
   assertEquals(html.match(/<tr>/g)?.length, 3);
   assertStringIncludes(html, "Inline <code>semantics</code>");
   assertStringIncludes(html, '<a href="#source">Source</a>');

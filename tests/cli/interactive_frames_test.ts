@@ -45,8 +45,6 @@ Deno.test("terminal interactions paint exact real Component frames", async () =>
   await requestConfirmation({
     label: "Continue",
     initialValue: true,
-    yesLabel: "Yes",
-    noLabel: "No",
   }, { io });
   frames.set("switch", firstInteractionFrame(io));
 
@@ -102,39 +100,39 @@ Deno.test("terminal interactions paint exact real Component frames", async () =>
   const expected = new Map([
     [
       "input",
-      "Name [active]\n┌──────────────────────────────┐\n│Ada▌                          │\n└──────────────────────────────┘\n",
+      "Name\n┌──────────────────────────────┐\n│ Ada▌                         │\n└──────────────────────────────┘\n",
     ],
     [
       "masked input",
-      "Secret [active]\n┌──────────────────────────────┐\n│▌token                        │\n└──────────────────────────────┘\n",
+      "Secret\n┌──────────────────────────────┐\n│ ▌token                       │\n└──────────────────────────────┘\n",
     ],
     [
       "switch",
-      "Continue [active]\n┌──────────────────────────────┐\n│› No ○──● Yes                 │\n└──────────────────────────────┘\n",
+      "Continue\n┌──────────────────────────────┐\n│ ›   ○──● ✓                   │\n└──────────────────────────────┘\n",
     ],
     [
       "select",
-      "Pick [active]\n┌──────────────────────────────┐\n│  [ ] One                     │\n│› [●] Two                     │\n└──────────────────────────────┘\n",
+      "Pick\n┌──────────────────────────────┐\n│   [ ] One                    │\n│ › [●] Two                    │\n└──────────────────────────────┘\n",
     ],
     [
       "checkboxes",
-      "Tags [active]\n┌──────────────────────────────┐\n│› [ ] One                     │\n│  [✓] Two                     │\n└──────────────────────────────┘\n",
+      "Tags\n┌──────────────────────────────┐\n│ › [ ] One                    │\n│   [✓] Two                    │\n└──────────────────────────────┘\n",
     ],
     [
       "radio search pending",
-      "Find [searching]\n┌──────────────────────────────┐\n│▌Search                       │\n│Searching…                    │\n└──────────────────────────────┘\n",
+      "Find [searching]\n┌──────────────────────────────┐\n│ ▌Search                      │\n│ Searching…                   │\n└──────────────────────────────┘\n",
     ],
     [
       "radio search",
-      "Find [active]\n┌──────────────────────────────┐\n│▌Search                       │\n│  ○ One                       │\n│  ○ Two                       │\n└──────────────────────────────┘\n",
+      "Find\n┌──────────────────────────────┐\n│ ▌Search                      │\n│   ○ One                      │\n│   ○ Two                      │\n└──────────────────────────────┘\n",
     ],
     [
       "autocomplete input",
-      "Shell [active]\n┌──────────────────────────────┐\n│z▌sh                          │\n└──────────────────────────────┘\n",
+      "Shell\n┌──────────────────────────────┐\n│ z▌sh                         │\n└──────────────────────────────┘\n",
     ],
     [
       "textarea",
-      "Notes [active]\n┌──────────────────────────────┐\n│ab                            │\n│cd▌                           │\n└──────────────────────────────┘\nCtrl+D to submit",
+      "Notes\n┌──────────────────────────────┐\n│ ab                           │\n│ cd▌                          │\n└──────────────────────────────┘\nCtrl+D to submit",
     ],
   ]);
 
@@ -155,7 +153,7 @@ Deno.test("interactive progress paints exact Meter frames", async () => {
   }, () => undefined);
   assertExactFrame(
     firstInteractionFrame(io),
-    "Work\n[ 25%] ◮⧩◭..........",
+    "Work\n[ 25%] ━━━▶─────────",
     capabilities,
   );
 });
@@ -172,9 +170,9 @@ Deno.test("sequential forms paint exact Process steps frames", async () => {
     .add({ id: "confirm", label: "Confirm", run: () => true })
     .submit();
   assertEquals(io.writes, [
-    "Setup\n\n[▴] Account\n │\n ·  Confirm\n",
-    "Setup\n\n ◭  Account\n │\n[◂] Confirm\n\nAccount: Ada\n",
-    "Setup\n\n ◭  Account\n │\n ◭  Confirm\n\nAccount: Ada\n\n✓ Complete\n",
+    "Setup\n\n[◐] Account\n │\n △  Confirm\n",
+    "Setup\n\n ▲  Account\n │\n[◓] Confirm\n\nAccount: Ada\n",
+    "Setup\n\n ▲  Account\n │\n ▲  Confirm\n\nAccount: Ada\n\n✓ Complete\n",
   ]);
 });
 
@@ -189,7 +187,7 @@ Deno.test("sequential forms pass a consumer motif through every step", async () 
     .add({ id: "confirm", label: "Confirm", run: () => true })
     .submit();
   assertEquals(io.writes, [
-    "Setup\n\n[◴] Account\n │\n ·  Confirm\n",
+    "Setup\n\n[◴] Account\n │\n ▿  Confirm\n",
     "Setup\n\n ▵  Account\n │\n[◷] Confirm\n",
     "Setup\n\n ▵  Account\n │\n ▵  Confirm\n\n✓ Complete\n",
   ]);

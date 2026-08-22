@@ -100,7 +100,8 @@ Deno.test("nested semantic styles and hyperlink targets survive styled rendering
       ?.text,
     "https://example.test/pattern.png",
   );
-  assertStringIncludes(stripAnsi(output), "`git status`");
+  assertStringIncludes(stripAnsi(output), "git status");
+  assert(!stripAnsi(output).includes("`git status`"));
   assertStringIncludes(stripAnsi(output), "[^note-1]");
   assertStringIncludes(stripAnsi(output), "Escaped <tag> & decoded.");
 });
@@ -141,6 +142,13 @@ Deno.test("semantic base roles restyle the inherited run without weakening neste
     renderSemanticInlineContent(content, plain, { baseRole: "display" }),
     renderSemanticInlineContent(content, plain, { baseRole: "body" }),
   );
+  const emphasisBase = projectTerminalSpans(
+    renderSemanticInlineContent("Supporting heading", capabilities, {
+      baseRole: "emphasis",
+    }),
+  )[0];
+  assertEquals(emphasisBase?.style?.italic, true);
+  assert(emphasisBase?.style?.color !== undefined);
   assertThrows(
     () =>
       renderSemanticInlineContent(content, capabilities, {
@@ -198,8 +206,8 @@ Deno.test("nested style, code, and link runs retain exact semantics across wraps
     "beta",
     "gamma",
     "delta",
-    "`tool",
-    "check`",
+    "tool",
+    "check",
     "linked",
     "guide",
   ]);
@@ -228,23 +236,26 @@ Deno.test("colour depth, theme, and character repertoire preserve semantic conte
       testTerminalCapabilities({ colorDepth: "truecolor", columns: 200 }),
     ),
   );
+  const styledAscii = styledPlain.replace("git status", "`git status`");
   for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
     for (const theme of ["light", "dark"] as const) {
-      const capabilities = testTerminalCapabilities({
-        colorDepth,
-        columns: 200,
-        unicode: false,
-      });
-      const first = renderSemanticInlineContent(
-        RICH_CONTENT,
-        capabilities,
-        { theme },
-      );
-      assertEquals(
-        renderSemanticInlineContent(RICH_CONTENT, capabilities, { theme }),
-        first,
-      );
-      assertEquals(stripAnsi(first), styledPlain);
+      for (const unicode of [true, false]) {
+        const capabilities = testTerminalCapabilities({
+          colorDepth,
+          columns: 200,
+          unicode,
+        });
+        const first = renderSemanticInlineContent(
+          RICH_CONTENT,
+          capabilities,
+          { theme },
+        );
+        assertEquals(
+          renderSemanticInlineContent(RICH_CONTENT, capabilities, { theme }),
+          first,
+        );
+        assertEquals(stripAnsi(first), unicode ? styledPlain : styledAscii);
+      }
     }
   }
   for (const unicode of [true, false]) {
@@ -271,6 +282,63 @@ Deno.test("colour depth, theme, and character repertoire preserve semantic conte
     stripAnsi(styledWithoutLinks),
     "the guide (https://example.test/guide)",
   );
+});
+
+Deno.test("inline code uses one styled treatment and lossless degraded fences", () => {
+  const content = [
+    "Run ",
+    { kind: "code", text: "deno task check" },
+    " or read ",
+    {
+      kind: "link",
+      label: [{ kind: "code", text: "the reference" }],
+      destination: "../reference",
+    },
+    ".",
+  ] as const satisfies SemanticInlineContent;
+  const plain = "Run `deno task check` or read `the reference` (../reference).";
+  assertEquals(semanticInlineText(content), plain);
+
+  for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
+    for (const unicode of [true, false]) {
+      const capabilities = testTerminalCapabilities({
+        colorDepth,
+        unicode,
+        hyperlinks: false,
+        columns: 80,
+      });
+      const output = renderSemanticInlineContent(content, capabilities);
+      const visible = stripAnsi(output);
+      assertEquals(
+        visible,
+        unicode
+          ? "Run deno task check or read the reference (../reference)."
+          : plain,
+      );
+      const codeSpans = projectTerminalSpans(output).filter((span) =>
+        span.text.includes("deno task check") ||
+        span.text.includes("the reference")
+      );
+      assertEquals(codeSpans.length, 2);
+      assert(codeSpans.every((span) => span.style?.bold === true));
+      assert(codeSpans.every((span) => span.style?.color !== undefined));
+      assert(codeSpans.every((span) => span.style?.background !== undefined));
+    }
+  }
+
+  for (const unicode of [true, false]) {
+    assertEquals(
+      renderSemanticInlineContent(
+        content,
+        testTerminalCapabilities({
+          colorDepth: "none",
+          hyperlinks: false,
+          unicode,
+        }),
+      ),
+      plain,
+    );
+  }
 });
 
 Deno.test("soft and hard breaks retain distinct projection and wrapping", () => {
@@ -321,6 +389,13 @@ Deno.test("inline code contents remain literal behind an unambiguous fence", () 
     renderSemanticInlineContent(content, testTerminalCapabilities()),
     "`` `literal * punctuation` ``",
   );
+  assertEquals(
+    stripAnsi(renderSemanticInlineContent(
+      content,
+      testTerminalCapabilities({ colorDepth: "truecolor", unicode: true }),
+    )),
+    "`literal * punctuation`",
+  );
 });
 
 Deno.test("safe absolute and relative destinations share one validation policy", () => {
@@ -330,6 +405,7 @@ Deno.test("safe absolute and relative destinations share one validation policy",
       "http://example.test/docs",
       "mailto:reader@example.test",
       "file:///tmp/guide.txt",
+      "FILE:///tmp/guide.txt",
       "/docs/start",
       "../guide",
       "./guide",
