@@ -77,6 +77,7 @@ Deno.test("the Catalogue owns one canonical source, bundle, and mounted path", a
   );
   assertStringIncludes(builder, 'href="builder.css"');
   assertStringIncludes(builder, 'src="../dist/builder.js"');
+  assertStringIncludes(builder, "Discern interface builder — Beta");
 });
 
 Deno.test("Catalogue explorer routes serve one canonical shell", async () => {

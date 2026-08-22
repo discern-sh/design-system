@@ -1,4 +1,4 @@
-# ADR 0020: Keep builder documents inert and export effects as consumer wiring
+# ADR 0027: Keep builder documents inert and export effects as consumer wiring
 
 **Status**: accepted
 
@@ -10,7 +10,7 @@ The builder must preserve useful ordinary Component and DOM props, including `ar
 
 ## Decision
 
-One framework-neutral, registry-derived policy accepts every builder document and authored value before storage, history, preview, runtime selection, or TSX generation. It permits only the modeled props of the placed Component plus a plain additional-props object whose keys cannot override any canonical Component prop or carry React identity, refs, raw HTML, executable handlers, executable URLs, or prototype-sensitive properties. JSON-valued props receive the equivalent recursive policy. One bounded iterative walk validates version, shape, identifiers, byte budgets, tree depth, node and slot populations, and JSON complexity. Rejection identifies the exact document path; there is no lenient preview representation.
+One framework-neutral, registry-derived policy accepts every builder document and authored value before storage, history, preview, runtime selection, or TSX generation. It permits only the modeled props of the placed Component plus a plain additional-props object whose keys cannot override any canonical Component prop or carry React identity, refs, raw HTML, executable handlers, executable URLs, or prototype-sensitive properties. JSON-valued props receive the equivalent recursive policy. URL fields enroll through standard DOM URL-attribute names or the naming suffixes `Href`, `Url`, and `Uri`; the browser URL parser classifies their schemes, and active `javascript:`, `vbscript:`, and `data:` values are rejected at every modeled, additional, and nested route. One bounded iterative walk validates version, shape, identifiers, byte budgets, tree depth, node and slot populations, and JSON complexity. Rejection identifies the exact document path; there is no lenient preview representation.
 
 Function props are never document data. Required function props derive from the generated Component registry and become an explicit typed callback contract on the exported composition function. Every placed instance receives a deterministic callback binding. Preview may provide a Catalogue-local inert function solely so the Component can render, but exported source never supplies a silent no-op and imported data can never provide executable behaviour.
 
@@ -18,7 +18,7 @@ The policy and document model remain under `catalogue/`. They are not added to t
 
 ## Consequences
 
-The same accepted document now means the same prop tree in preview, saved JSON, runtime selection, and generated TSX. Future modeled props and required callbacks join the policy and export contract through the registry inventory, so a new Component cannot silently bypass either boundary. Imported files remain useful for ordinary styling, accessibility attributes, data attributes, and safe structured values without becoming a code or HTML format.
+The same accepted document now means the same prop tree in preview, saved JSON, runtime selection, and generated TSX. Future modeled props and required callbacks join the policy and export contract through the registry inventory, so a new Component cannot silently bypass either boundary. A future URL-bearing field must use the URL naming contract to enroll automatically. Imported files remain useful for ordinary styling, accessibility attributes, data attributes, and safe structured values without becoming a code or HTML format.
 
 Consumers of a composition containing callback-driven Components must pass the generated callback object. That is more work than a self-contained no-op export, but the missing behaviour is visible to TypeScript and to the person integrating the source. Conservative recursive key and resource limits also reject some JSON objects that would be harmless as isolated business data; the builder chooses predictable React/object-literal semantics over arbitrary data transport.
 

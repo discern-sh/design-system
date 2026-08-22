@@ -42,6 +42,7 @@ _Dead code, N+1s, and known-slow paths worth removing or fixing. Nothing outstan
 
 ## 🟡 Smaller fixes & polish
 
+- [ ] **Builder: decide when Beta is ready for primary Catalogue navigation.** Keep the interface builder labeled Beta and after the ordinary Catalogue navigation until sustained consumer use gives the owner confidence in its document, authoring, and export contracts. Evidence: `map/60-catalogue/interface-builder.md`; `catalogue/app.tsx` secondary builder link.
 - [ ] **Builder: shared-module extraction only covers `src/components/`.** Variant unions and object interfaces in shared modules under `src/components/` (e.g. `layout/space.ts`) now reach the builder, but a union living elsewhere (e.g. `src/tokens/tokens.ts`) still would not. Extend `SHARED` discovery in `scripts/build.ts` `discoverComponents` if a prop ever references one. Evidence: scripts/build.ts sharedModules filter.
 - [ ] **Typed sequential-form step constructors that carry `previous` automatically.** A step's prior value arrives only as the untyped `previous` argument to `step.run`; seeding it into the request's initial value is manual wiring each step author must remember, so Ctrl+U back-navigation silently discards typed work whenever it's forgotten. Add per-kind step constructors (text, selection, …) that thread `previous` into the initial value and give it a real type, keeping the general closure form as the escape hatch. Evidence: `src/cli/interactive/sequential-form.ts:118-129`; `tests/cli/interactive_requests_test.ts:175-179` (the manual pattern).
 

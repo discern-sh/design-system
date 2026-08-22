@@ -728,7 +728,17 @@ Deno.test("documents round-trip through the JSON save format", () => {
 
 Deno.test("document acceptance rejects React escape hatches and preserves safe additional props", () => {
   const modeledPropsBySlug = new Map([
-    ["card", new Set(["children", "rows", "raised"])],
+    [
+      "card",
+      new Set([
+        "children",
+        "rows",
+        "raised",
+        "href",
+        "homeHref",
+        "citeUrl",
+      ]),
+    ],
   ]);
   const policy = {
     knownSlugs: new Set(["card"]),
@@ -779,6 +789,97 @@ Deno.test("document acceptance rejects React escape hatches and preserves safe a
       example.message,
     );
   }
+
+  assertEquals(
+    new URL("java\nscript:alert(1)", "https://example.test/").protocol,
+    "javascript:",
+  );
+  const activeUrlDocuments: readonly {
+    readonly label: string;
+    readonly document: BuilderDocument;
+  }[] = [
+    {
+      label: "modeled DOM URL prop",
+      document: {
+        version: 1,
+        name: "Modeled href",
+        children: [node("modeled-href", "card", {
+          href: { kind: "string", value: "javascript:alert(1)" },
+        })],
+      },
+    },
+    {
+      label: "modeled custom URL prop",
+      document: {
+        version: 1,
+        name: "Modeled home href",
+        children: [node("modeled-home-href", "card", {
+          homeHref: { kind: "string", value: "data:text/html,<script />" },
+        })],
+      },
+    },
+    {
+      label: "modeled future URL suffix",
+      document: {
+        version: 1,
+        name: "Modeled citation URL",
+        children: [node("modeled-cite-url", "card", {
+          citeUrl: { kind: "string", value: "\u0000javascript:alert(1)" },
+        })],
+      },
+    },
+    {
+      label: "nested future URL suffix",
+      document: {
+        version: 1,
+        name: "Nested redirect",
+        children: [node("nested-redirect", "card", {
+          rows: {
+            kind: "json",
+            source: '{"futureRedirectUri":"java\\tscript:alert(1)"}',
+          },
+        })],
+      },
+    },
+    {
+      label: "browser-normalized additional DOM URL",
+      document: {
+        version: 1,
+        name: "Additional cite",
+        children: [{
+          ...node("additional-cite", "card"),
+          extra: '{"cite":"java\\nscript:alert(1)"}',
+        }],
+      },
+    },
+    {
+      label: "future additional URL suffix",
+      document: {
+        version: 1,
+        name: "Additional redirect",
+        children: [{
+          ...node("additional-redirect", "card"),
+          extra: '{"futureRedirectUri":"\\u0000javascript:alert(1)"}',
+        }],
+      },
+    },
+  ];
+  const acceptedActiveUrls = activeUrlDocuments.flatMap((example) => {
+    try {
+      parseDocument(JSON.stringify(example.document), policy);
+      return [example.label];
+    } catch (error) {
+      assert(error instanceof BuilderDocumentError);
+      return [];
+    }
+  });
+  assertEquals(
+    acceptedActiveUrls,
+    [],
+    `Executable URL cases crossed the builder boundary: ${
+      acceptedActiveUrls.join(", ")
+    }`,
+  );
 
   const modeledEscape: BuilderDocument = {
     version: 1,
@@ -850,7 +951,9 @@ Deno.test("document acceptance rejects React escape hatches and preserves safe a
       extra: JSON.stringify({
         "aria-label": "Safe card",
         "data-test-id": "card",
+        cite: "https://example.test/source",
         className: "consumer-card",
+        documentation: "A javascript: URL primer",
         style: { opacity: 0.8 },
         title: "Ordinary prop",
       }),
@@ -1301,6 +1404,27 @@ Deno.test("canvas hover styling never overrides the selection outline", async ()
   for (const rule of hoverRules) {
     assertStringIncludes(rule, ":not([data-discern-builder-selected])");
   }
+});
+
+Deno.test("builder font-role changes reset inherited UI OpenType features", async () => {
+  const css = await Deno.readTextFile(
+    new URL("../catalogue/builder/builder.css", import.meta.url),
+  );
+  const incompatibleRules = (source: string): readonly string[] =>
+    (source.match(/[^{}]+\{[^{}]*\}/g) ?? []).filter((rule) =>
+      /font-family:\s*var\(--discern-font-(?:display|mono)\)/.test(rule) &&
+      !/font-feature-settings:\s*normal/.test(rule)
+    );
+
+  const futureSibling = `.future-builder-label {
+    font-family: var(--discern-font-display);
+  }`;
+  assertEquals(incompatibleRules(futureSibling).length, 1);
+  assertEquals(
+    incompatibleRules(css),
+    [],
+    "Every builder display or mono role must reset the shell's UI-only features",
+  );
 });
 
 interface BuiltBuilderModules {

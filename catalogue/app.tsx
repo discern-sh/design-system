@@ -1422,10 +1422,6 @@ function CatalogueSidebar(
             </a>
           );
         })}
-        <a href="/catalogue/builder/" onClick={onNavigate}>
-          Interface builder ↗
-        </a>
-
         {route.kind === "foundations"
           ? (
             <>
@@ -1608,6 +1604,14 @@ function CatalogueSidebar(
             </>
           )
           : null}
+        <a
+          className="discern-catalogue-nav__experimental"
+          href="/catalogue/builder/"
+          onClick={onNavigate}
+        >
+          <span>Interface builder ↗</span>
+          <small>Beta</small>
+        </a>
       </nav>
       <p className="discern-catalogue-sidebar__version">
         @discern-sh/design-system v{packageVersion}

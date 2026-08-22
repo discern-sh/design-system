@@ -1382,7 +1382,12 @@ function App() {
           <span aria-hidden="true">◮</span>
           <span>
             <strong>discern</strong>
-            <small>Interface builder</small>
+            <small>
+              <span className="discern-builder-brand-label">
+                Interface builder
+              </span>
+              <span className="discern-builder-beta">Beta</span>
+            </small>
           </span>
         </a>
         <input

@@ -115,6 +115,33 @@ async function loadBuilderPage(page: Page, origin: string): Promise<void> {
   await page.goto(builderUrl(origin), { waitUntil: "networkidle" });
   await page.locator(BUILDER_READY).waitFor({ timeout: ACTION_TIMEOUT });
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
+  invariant(
+    await page.getByText("Beta", { exact: true }).isVisible(),
+    "builder chrome must identify the interface builder as Beta",
+  );
+  const leakingHeadings = await page.locator(
+    `${BUILDER_SHELL} :is(h1, h2, h3, h4, h5, h6)`,
+  ).evaluateAll((headings) =>
+    headings.flatMap((heading) => {
+      if (
+        heading.closest(
+          ".discern-builder-canvas__page, .discern-builder-palette__preview",
+        ) !== null
+      ) {
+        return [];
+      }
+      const features = getComputedStyle(heading).fontFeatureSettings;
+      return features === "normal"
+        ? []
+        : [`${heading.textContent?.trim() ?? heading.tagName}: ${features}`];
+    })
+  );
+  invariant(
+    leakingHeadings.length === 0,
+    `builder chrome headings inherited UI-only OpenType features: ${
+      leakingHeadings.join(", ")
+    }`,
+  );
 }
 
 async function resetBuilderStorage(page: Page, origin: string): Promise<void> {

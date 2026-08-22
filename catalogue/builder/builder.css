@@ -24,6 +24,13 @@
     font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-sm);
   }
+  .discern-builder-crash h1,
+  .discern-builder-palette section > h3,
+  .discern-builder-empty h2,
+  .discern-builder-inspector :where(h1, h2, h3, h4, h5, h6),
+  .discern-builder-outline > h3 {
+    font-feature-settings: normal;
+  }
 
   /* Toolbar */
   .discern-builder-toolbar {
@@ -92,6 +99,7 @@
     background: var(--discern-color-canvas);
     color: inherit;
     font-family: var(--discern-font-mono);
+    font-feature-settings: normal;
     font-size: var(--discern-font-size-xs);
     resize: vertical;
   }
@@ -138,6 +146,19 @@
   .discern-builder-brand small {
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-xs);
+  }
+  .discern-builder-beta {
+    display: inline-block;
+    margin-inline-start: 6px;
+    padding: 0 5px;
+    border: 1px solid var(--discern-color-border-strong);
+    border-radius: var(--discern-radius-pill);
+    color: var(--discern-color-ink-faint);
+    font-size: 0.625rem;
+    font-weight: var(--discern-font-weight-strong);
+    letter-spacing: 0.06em;
+    line-height: 1.5;
+    text-transform: uppercase;
   }
   .discern-builder-name {
     flex: 1;
@@ -209,6 +230,7 @@
   .discern-builder-version {
     color: var(--discern-color-ink-faint);
     font-family: var(--discern-font-mono);
+    font-feature-settings: normal;
     font-size: var(--discern-font-size-xs);
   }
 
@@ -405,6 +427,7 @@
     margin: 0 0 8px;
     color: var(--discern-color-ink);
     font-family: var(--discern-font-display);
+    font-feature-settings: normal;
     font-size: var(--discern-font-size-display-sm);
     font-weight: var(--discern-font-weight-display);
   }
@@ -471,6 +494,7 @@
     max-width: 160px;
     color: var(--discern-color-ink-faint);
     font-family: var(--discern-font-mono);
+    font-feature-settings: normal;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -488,6 +512,7 @@
     overflow: hidden;
     resize: none;
     font-family: var(--discern-font-mono);
+    font-feature-settings: normal;
     font-size: var(--discern-font-size-xs);
   }
   .discern-builder-control__optional {
@@ -571,6 +596,7 @@
   .discern-builder-cost dd {
     margin: 0;
     font-family: var(--discern-font-mono);
+    font-feature-settings: normal;
   }
   .discern-builder-cost-detail summary {
     color: var(--discern-color-ink-muted);
@@ -594,6 +620,7 @@
   .discern-builder-cost-detail li > span:last-child {
     color: var(--discern-color-ink-faint);
     font-family: var(--discern-font-mono);
+    font-feature-settings: normal;
   }
   .discern-builder-exports {
     display: flex;
@@ -670,6 +697,7 @@
   .discern-builder-outline__row small {
     color: var(--discern-color-ink-faint);
     font-family: var(--discern-font-mono);
+    font-feature-settings: normal;
   }
   .discern-builder-outline__row span {
     overflow: hidden;
@@ -879,9 +907,12 @@
       padding: 8px;
       overflow-y: auto;
     }
-    .discern-builder-brand small,
+    .discern-builder-brand-label,
     .discern-builder-version {
       display: none;
+    }
+    .discern-builder-beta {
+      margin-inline-start: 0;
     }
     .discern-builder-name {
       flex: 1 1 10rem;

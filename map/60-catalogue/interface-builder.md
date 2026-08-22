@@ -1,8 +1,12 @@
 # Interface builder
 
-The interface builder is the Catalogue's local composition instrument. It places real adapter Components on a themed canvas, saves an inert JSON document, and emits consumer-ready TSX plus the runtime Component selection. It is served at `/catalogue/builder/` by the Catalogue's existing `serve` and `watch` tasks.
+The interface builder is the Catalogue's Beta composition instrument. It places real adapter Components on a themed canvas, saves an inert JSON document, and emits consumer-ready TSX plus the runtime Component selection. It is served at `/catalogue/builder/` by the Catalogue's existing `serve` and `watch` tasks.
 
-The security and effect boundary is recorded in [ADR 0020](../_adr/0020-keep-builder-documents-inert.md).
+The security and effect boundary is recorded in [ADR 0027](../_adr/0027-keep-builder-documents-inert.md).
+
+## Product status
+
+The builder is deliberately marked **Beta** in its own chrome and browser title. Its Catalogue link sits after the ordinary route and contextual navigation rather than among the primary destinations. The builder remains available for real composition work, but promotion into the Catalogue's primary navigation is an owner decision after further consumer use; the current document format must not be presented as a public hosted-builder API while that evaluation continues.
 
 ## Document and trust boundary
 
@@ -12,25 +16,9 @@ Every route into live state uses the registry-derived policy in [`policy.ts`](..
 
 Additional props must be a plain JSON object. They may preserve ordinary safe Component and DOM props, including `aria-*`, `data-*`, `class`, `className`, `style`, and safe URLs. They cannot shadow `children` or any canonical source prop, and cannot carry raw-HTML props, React identity or refs, executable handler names, prototype-sensitive keys, `srcDoc`, or executable URL schemes. The same recursive restrictions apply to JSON-valued modeled props, including nested objects. A rejection is a `BuilderDocumentError` naming the exact document path and reason. There is no lenient preview representation.
 
-Validation is iterative and completes before recursive render, export, or history work. The limits are:
+URL-bearing values enroll by the standard DOM URL-attribute names or a field-name suffix of `Href`, `Url`, or `Uri`; future Component data that reaches a navigation or resource sink must follow that naming contract. The browser's URL parser classifies the value, so control-character spellings cannot disguise a scheme. `javascript:`, `vbscript:`, and `data:` are rejected in modeled props, additional props, and nested JSON alike. Ordinary non-URL prose may still mention those strings.
 
-| Resource                       | Limit           |
-| ------------------------------ | --------------- |
-| Input or authored content      | 256 KiB         |
-| Tree depth                     | 32              |
-| Total text and Component nodes | 500             |
-| Children in one root or slot   | 100             |
-| Props on one Component         | 128             |
-| Identifier                     | 128 UTF-8 bytes |
-| Composition name               | 120 UTF-8 bytes |
-| Text or string value           | 16 KiB          |
-| One raw JSON source            | 16 KiB          |
-| JSON depth                     | 16              |
-| Values in one JSON source      | 2,048           |
-| Keys in one JSON object        | 128             |
-| JSON key                       | 128 UTF-8 bytes |
-
-The history authority in [`history.ts`](../../catalogue/builder/history.ts) retains at most 100 total snapshots, including the present document and redo states. At the document ceiling that bounds retained source data to roughly 25 MiB.
+Validation is iterative and completes before recursive render, export, or history work. [`BUILDER_DOCUMENT_LIMITS`](../../catalogue/builder/policy.ts) is the single authority for input, tree, slot, prop, identifier, string, and JSON-complexity ceilings. [`history.ts`](../../catalogue/builder/history.ts) bounds retained accepted snapshots from that same document population. The map records why those ceilings exist; their current numbers stay with the enforcing code and tests.
 
 ## Registry, controls, and preview
 
@@ -62,13 +50,15 @@ Placement, selection, text and prop editing, duplicate, delete, wrap, sibling mo
 
 At widths above 1,180 CSS pixels, Palette, Canvas, and Inspector remain visible as the three-pane workspace. At and below 1,180 pixels—including the 900-pixel intermediate posture, 390-pixel phone, and 320-CSS-pixel/400%-zoom posture—a roving tablist exposes exactly one persistent pane without discarding document, selection, search, or inspector state. Phone chrome wraps and scrolls within bounded regions, the shell uses `100dvh` with a legacy fallback, and coarse pointer controls meet a 44-pixel target. All chrome has token-based `:focus-visible` treatment and explicit forced-colour focus and selection styles.
 
+The shell pairs the UI font with the design system's UI-only OpenType feature token. Every builder-owned switch to display or mono resets that inherited feature set; otherwise discretionary UI alternates can turn ordinary display-font letters into historical forms. A structural unit guard enrolls explicit role changes, and the browser gate checks the computed feature state of rendered builder-chrome headings.
+
 Native drag remains an enhancement. Root empty-space drops use pointer geometry to choose the first, middle, or final sibling boundary and draw a stable insertion line. Node/slot drops, outline-before drops, explicit end-of-page drops, subtree protection, and keyboard move buttons retain their separate semantics.
 
 ## Browser proof
 
 [`builder-conformance.ts`](../../scripts/builder-conformance.ts) composes into the existing build, server, Chromium, axe, viewport, console-error, and screenshot lifecycle in [`conformance.ts`](../../scripts/conformance.ts). It does not create a second harness.
 
-The gate covers light and dark at 1,440, 900, 390, and 320 CSS pixels; every adaptive pane; page overflow; axe WCAG A/AA 2.1/2.2; finite visible keyboard focus; canvas-internal inertness; click and touch placement; selection, edit, move, delete, undo, redo, save, successful and failed load; storage denial, quota, corrupt recovery, and file-read rejection; shortcut isolation; and forced colours. The measured population is 8 theme/viewport cases, 18 pane transitions, 20 builder axe scans, 141 keyboard stops, 20 authoring checks, 12 shortcut-isolation checks, 5 touch checks, 4 contained failure scenarios, and 12 forced-colour focus checks. Review sheets are `dist/conformance/builder-light-wide.png` and `dist/conformance/builder-dark-narrow.png`.
+The gate covers both themes and every supported workspace posture; page overflow; axe WCAG A/AA 2.1/2.2; finite visible keyboard focus; canvas-internal inertness; click and touch placement; selection, edit, move, delete, undo, redo, save, successful and failed load; storage denial, quota, corrupt recovery, and file-read rejection; shortcut isolation; forced colours; the Beta label; and builder-chrome font-role isolation. The conformance summary reports the measured populations on each run instead of duplicating volatile totals in the map. Review sheets remain under `dist/conformance/` for wide light and narrow dark postures.
 
 ## Boundary and authorities
 

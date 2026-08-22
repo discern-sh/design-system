@@ -12,7 +12,7 @@ Its ordinary routes separate discovery from exhaustive review:
 
 The server returns the same authored shell for every explorer route. Route facts live in `catalogue/routes.ts`; static assets use mount-absolute `/catalogue/…` URLs so nested detail routes never resolve against the Component slug.
 
-The Catalogue also hosts the [interface builder](interface-builder.md), a safe adaptive composition surface at `/catalogue/builder/` that renders real Components on an inert inspection canvas and exports consumer TSX with its runtime selection.
+The Catalogue also hosts the [Beta interface builder](interface-builder.md), a safe adaptive composition surface at `/catalogue/builder/` that renders real Components on an inert inspection canvas and exports consumer TSX with its runtime selection. Its link is deliberately secondary to the Catalogue's primary routes while the owner evaluates it through real consumer use.
 
 ## Find the right component
 

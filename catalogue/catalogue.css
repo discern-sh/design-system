@@ -163,6 +163,11 @@
     font: var(--discern-font-size-xs) var(--discern-font-ui);
     text-align: center;
   }
+  .discern-catalogue-nav__experimental {
+    margin-block-start: 24px !important;
+    border: 1px dashed var(--discern-color-border);
+    color: var(--discern-color-ink-faint) !important;
+  }
   .discern-catalogue-nav__child {
     padding-inline-start: 22px !important;
     color: var(--discern-color-ink-faint) !important;

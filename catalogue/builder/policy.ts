@@ -44,15 +44,16 @@ const REACT_ESCAPE_KEYS = new Set([
   "ref",
   "srcDoc",
 ]);
-const URL_PROP_NAMES = new Set([
+const URL_ATTRIBUTE_NAMES = new Set([
   "action",
   "cite",
-  "formAction",
+  "formaction",
   "href",
   "poster",
   "src",
-  "xlinkHref",
+  "xlinkhref",
 ]);
+const ACTIVE_URL_PROTOCOLS = new Set(["data:", "javascript:", "vbscript:"]);
 
 interface DocumentValidationState {
   readonly policy: BuilderDocumentPolicy;
@@ -156,12 +157,22 @@ function safePropName(name: string, path: string): void {
   }
 }
 
+function urlBearingName(name: string): boolean {
+  const normalized = name.toLowerCase();
+  return URL_ATTRIBUTE_NAMES.has(normalized) ||
+    /(?:href|url|uri)$/.test(normalized);
+}
+
 function safeUrlValue(name: string, value: unknown, path: string): void {
-  if (!URL_PROP_NAMES.has(name) || typeof value !== "string") return;
-  if (
-    /^\s*(?:javascript|vbscript):/i.test(value) ||
-    /^\s*data:(?:text\/html|image\/svg\+xml)/i.test(value)
-  ) {
+  if (!urlBearingName(name) || typeof value !== "string") return;
+  let protocol: string;
+  try {
+    protocol = new URL(value, "https://discern.invalid/").protocol
+      .toLowerCase();
+  } catch {
+    return;
+  }
+  if (ACTIVE_URL_PROTOCOLS.has(protocol)) {
     fail(path, `cannot use an executable ${name} URL`);
   }
 }
@@ -303,6 +314,7 @@ export function parseAdditionalProps(
 }
 
 function validatePropValue(
+  name: string,
   value: unknown,
   path: string,
   state: DocumentValidationState,
@@ -321,6 +333,7 @@ function validatePropValue(
         true,
       );
       addAuthoredBytes(state, scalar, `${path}.value`);
+      safeUrlValue(name, scalar, `${path}.value`);
       return;
     }
     case "number":
@@ -343,7 +356,8 @@ function validatePropValue(
         BUILDER_DOCUMENT_LIMITS.jsonSourceBytes,
       );
       addAuthoredBytes(state, source, `${path}.source`);
-      parseBuilderJson(source, `${path}.source`);
+      const parsed = parseBuilderJson(source, `${path}.source`);
+      safeUrlValue(name, parsed, `${path}.source`);
       return;
     }
     case "slot": {
@@ -507,6 +521,7 @@ export function assertBuilderDocument(
       }
       addAuthoredBytes(state, prop, propPath);
       validatePropValue(
+        prop,
         propValue,
         propPath,
         state,
