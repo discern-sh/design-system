@@ -45,7 +45,7 @@ The following sharpen how the fixed contracts are enforced; they do not add a pu
 
 | Key | Brief                                                                                   | Internal parallelism                                                      | Starts when                                                    |
 | --- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| 1A  | [Establish the neutral diagram foundation](1a-neutral-foundation.md)                    | One architectural agent                                                   | This planning package has landed                               |
+| 1A  | [Establish the neutral diagram foundation](_done/1a-neutral-foundation.md)              | One architectural agent                                                   | Complete                                                       |
 | 2A  | [Ship the first complete Diagram surface](2a-shipped-diagram-surface.md)                | One integrating agent                                                     | 1A has landed                                                  |
 | 3A  | [Project diagrams through Markdown and the terminal reader](3a-markdown-integration.md) | One integrating agent                                                     | 2A has landed                                                  |
 | 4A  | [Complete the diagram-kind library](4a-diagram-kind-library.md)                         | One coordinator; up to four disjoint kind sub-agents in the same worktree | 3A has landed                                                  |
