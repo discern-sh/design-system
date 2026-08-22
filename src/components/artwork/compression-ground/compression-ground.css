@@ -6,7 +6,11 @@
     --discern-compression-ground-closed-x: 1;
     --discern-compression-ground-closed-y: 1;
     --discern-compression-ground-closed-slide: 0px;
-    color: var(--discern-ground-guide);
+    color: color-mix(
+      in oklab,
+      var(--discern-ground-guide) 78%,
+      var(--discern-ground-accent)
+    );
   }
 
   .discern-compression-ground__run,

@@ -36,6 +36,7 @@ import {
   FeatureBento,
   GlossaryTerm,
   Ground,
+  HarmonicGround,
   HeroBlock,
   HoverCard,
   ImpressionGround,
@@ -1877,6 +1878,21 @@ Deno.test("Ground fixes decorative semantics and Impression keeps its glyph cons
     'class="discern-resonance-ground__interval"',
   );
   assertStringIncludes(resonance, 'pathLength="100"');
+
+  const harmonic = renderToStaticMarkup(
+    createElement(HarmonicGround, { motion: "still" }),
+  );
+  assert(!harmonic.includes("<rect"));
+  const harmonicPositions = [
+    ...harmonic.matchAll(
+      /class="discern-harmonic-ground__grain" cx="([\d.]+)" cy="([\d.]+)"/gu,
+    ),
+  ].map((match) => ({ x: Number(match[1]), y: Number(match[2]) }));
+  assert(harmonicPositions.length >= 700);
+  const harmonicXs = harmonicPositions.map(({ x }) => x);
+  const harmonicYs = harmonicPositions.map(({ y }) => y);
+  assert(Math.min(...harmonicXs) < 80 && Math.max(...harmonicXs) > 680);
+  assert(Math.min(...harmonicYs) < 70 && Math.max(...harmonicYs) > 470);
 
   const hero = renderToStaticMarkup(
     createElement(HeroBlock, {

@@ -40,7 +40,8 @@ export default function HarmonicGroundExamples() {
         <p
           style={{ maxWidth: "36rem", color: "var(--discern-color-ink-muted)" }}
         >
-          Fine grains disperse and gather across two quiet nodal arrangements.
+          Fine grains begin in motion, then settle across two quiet nodal
+          arrangements that follow the available field.
         </p>
       </div>
     </section>

@@ -12,7 +12,7 @@ interface Point {
   readonly y: number;
 }
 
-/** One vibrational mode of the square plate, as a pair of half-wave counts. */
+/** One vibrational mode of the field, as a pair of half-wave counts. */
 interface HarmonicMode {
   readonly m: number;
   readonly n: number;
@@ -44,15 +44,15 @@ interface HarmonicTremble {
 /** The single proportion authority for the whole plate. */
 const HARMONIC_GEOMETRY = Object.freeze({
   plate: Object.freeze({ width: 760, height: 540 }),
-  /** The square plate, centred, occupying most of the plate's height. */
-  side: 460,
-  grains: 460,
+  /** Quiet breathing room around a field that otherwise fills the plate. */
+  fieldInset: Object.freeze({ x: 20, y: 18 }),
+  grains: 760,
   /**
-   * Two modes of the square plate. Each is the symmetric combination of the
-   * degenerate (m,n) and (n,m) product modes, which is what a real square
-   * plate sounds; its nodal set is where that combination vanishes. The two
-   * share a central ring, so the change of figure reads as one plate
-   * resounding rather than two unrelated pictures.
+   * Two modes of a dimensionless response field. Each is the symmetric
+   * combination of the (m,n) and (n,m) product modes; its nodal set is where
+   * that combination vanishes. Normalised positions are mapped over the whole
+   * rendered plane, so the figure follows the Ground rather than occupying an
+   * inset square.
    */
   modeA: Object.freeze({ m: 2, n: 4 }),
   modeB: Object.freeze({ m: 3, n: 5 }),
@@ -78,16 +78,12 @@ const HARMONIC_GEOMETRY = Object.freeze({
    * in unison. Amplitude is deliberately sub-pixel at plate scale.
    */
   tremble: Object.freeze({ amplitude: 0.42, phases: 8 }),
-  /** The phrase, in seconds. Every delay below is a fraction of it. */
-  phraseSeconds: 48,
-  /** One beat, matching the series metre; also the tremble's period. */
-  beatSeconds: 1.2,
 });
 
-const { side, grains: GRAIN_COUNT, relax, plate } = HARMONIC_GEOMETRY;
-const ORIGIN: Point = Object.freeze({
-  x: (plate.width - side) / 2,
-  y: (plate.height - side) / 2,
+const { fieldInset, grains: GRAIN_COUNT, relax, plate } = HARMONIC_GEOMETRY;
+const FIELD_SIZE: Point = Object.freeze({
+  x: plate.width - fieldInset.x * 2,
+  y: plate.height - fieldInset.y * 2,
 });
 
 /** Trim a derived coordinate to two decimals so the markup stays readable. */
@@ -295,8 +291,8 @@ function evenScatter(count: number, next: () => number): readonly Point[] {
 
 function toPlate(point: Point): Point {
   return {
-    x: ORIGIN.x + point.x * side,
-    y: ORIGIN.y + point.y * side,
+    x: fieldInset.x + point.x * FIELD_SIZE.x,
+    y: fieldInset.y + point.y * FIELD_SIZE.y,
   };
 }
 
@@ -340,7 +336,7 @@ const HARMONIC_GRAINS: readonly HarmonicGrain[] = Object.freeze(
 
     const journey = Math.hypot(loose.x - x, loose.y - y) +
       Math.hypot(away.x - loose.x, away.y - loose.y);
-    const reach = side * 1.4;
+    const reach = Math.hypot(FIELD_SIZE.x, FIELD_SIZE.y);
     const lag = Math.min(1, journey / reach) * HARMONIC_GEOMETRY.arrivalSpread;
 
     return Object.freeze({
@@ -378,12 +374,11 @@ const HARMONIC_TREMBLES: readonly HarmonicTremble[] = Object.freeze(
       return Object.freeze({
         dx: round(Math.cos(angle) * HARMONIC_GEOMETRY.tremble.amplitude),
         dy: round(Math.sin(angle) * HARMONIC_GEOMETRY.tremble.amplitude),
-        delay: `${
+        delay: `calc(var(--discern-ground-beat) * ${
           -Math.round(
-            (index / HARMONIC_GEOMETRY.tremble.phases) *
-              HARMONIC_GEOMETRY.beatSeconds * 1000,
+            (index / HARMONIC_GEOMETRY.tremble.phases) * 1000,
           ) / 1000
-        }s`,
+        })`,
       });
     },
   ),
@@ -423,13 +418,12 @@ function trembleStyle(tremble: HarmonicTremble): TrembleStyle {
 export interface HarmonicGroundProps extends Omit<GroundProps, "children"> {}
 
 /**
- * Grd. XI — harmonic. A square plate carrying four hundred and sixty fine
- * grains. Driven, the grains migrate off the antinodes and collect along the
- * nodal lines of one of the plate's modes, and a figure nobody drew becomes
- * visible; the plate then resounds on a second mode and a different figure
- * appears. Every position is derived from the mode function, so both figures
- * are physically true and correctly symmetric, and the composition exists only
- * as the grains — nothing is drawn between them.
+ * Grd. XI — harmonic. Seven hundred and sixty fine grains occupy the whole
+ * plane. Driven, they migrate off the antinodes and collect along one field's
+ * nodal lines, and a figure nobody drew becomes visible; the field then
+ * resounds on a second mode and a different figure appears. Every position is
+ * derived from the mode function, and the composition exists only as the
+ * grains — nothing is drawn between them.
  */
 export const HarmonicGround: DiscernComponent<
   HTMLDivElement,
@@ -451,15 +445,6 @@ export const HarmonicGround: DiscernComponent<
         focusable="false"
       >
         <g aria-hidden="true">
-          <rect
-            className="discern-harmonic-ground__plate"
-            x={ORIGIN.x}
-            y={ORIGIN.y}
-            width={side}
-            height={side}
-            vectorEffect="non-scaling-stroke"
-          />
-
           <g className="discern-harmonic-ground__field">
             {HARMONIC_TREMBLES.map((tremble, phase) => (
               <g

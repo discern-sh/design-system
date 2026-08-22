@@ -6,7 +6,7 @@ export default {
   group: "Artwork",
   order: 120,
   description:
-    "Fine grains gather, disperse, and settle across two nodal modes of a square plate.",
+    "Fine grains disperse and settle into two nodal modes across the full ground.",
   cli: {
     stance: "exempt",
     reason:
