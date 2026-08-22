@@ -68,6 +68,7 @@ The map records what the code cannot say (boundaries, invariants, intent, where 
 - `00-orientation` — Orientation
 - `10-tokens-themes` — Tokens & themes
 - `20-components` — Components
+- `25-diagrams` — Diagrams
 - `30-codegen` — Codegen
 - `40-runtime-emitter` — Runtime emitter
 - `50-react-adapter` — React adapter
