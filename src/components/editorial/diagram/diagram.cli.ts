@@ -21,12 +21,8 @@ import { prepareDiagramSemantics } from "../../../generated/diagram-dispatch.ts"
 import {
   projectDiagramKindCli,
 } from "../../../generated/diagram-cli-registry.ts";
+import { diagramKindRegistry } from "../../../generated/diagram-registry.ts";
 import type { DiagramSpec } from "../../../generated/diagram-spec.ts";
-import architectureFixtures from "../../../diagram/kinds/architecture/architecture.fixtures.ts";
-import cycleFixtures from "../../../diagram/kinds/cycle/cycle.fixtures.ts";
-import flowFixtures from "../../../diagram/kinds/flow/flow.fixtures.ts";
-import sequenceFixtures from "../../../diagram/kinds/sequence/sequence.fixtures.ts";
-import timelineFixtures from "../../../diagram/kinds/timeline/timeline.fixtures.ts";
 
 /** Stable projection posture for the terminal Diagram renderer. */
 export type DiagramCliMode = "auto" | "description";
@@ -39,56 +35,43 @@ export interface DiagramCliProps {
   readonly maxWidth?: number;
 }
 
-const [decisionFlow, compactFlow] = flowFixtures;
-const [groupedArchitecture] = architectureFixtures;
-const [, learningCycle, denseCycle] = cycleFixtures;
-const [participantSequence, , denseSequence] = sequenceFixtures;
-const [, phasedTimeline] = timelineFixtures;
-
 /** Deterministic Diagram states rendered by the CLI Catalogue. */
-export const cliExamples: readonly CliExample<DiagramCliProps>[] = [
-  {
-    name: "enhanced-compact-flow",
-    props: { spec: compactFlow, mode: "auto", maxWidth: 76 },
-  },
-  {
-    name: "enhanced-decision-return",
-    props: { spec: decisionFlow, mode: "auto", maxWidth: 78 },
-  },
-  {
-    name: "enhanced-learning-cycle",
-    props: { spec: learningCycle, mode: "auto", maxWidth: 100 },
-  },
-  {
-    name: "enhanced-participant-sequence",
-    props: { spec: participantSequence, mode: "auto", maxWidth: 110 },
-  },
-  {
-    name: "architecture-description",
-    props: { spec: groupedArchitecture, mode: "auto", maxWidth: 88 },
-  },
-  {
-    name: "timeline-description",
-    props: { spec: phasedTimeline, mode: "auto", maxWidth: 88 },
-  },
-  {
-    name: "universal-description",
-    props: { spec: compactFlow, mode: "description", maxWidth: 64 },
-  },
-  {
-    name: "narrow-ascii-fallback",
-    props: { spec: decisionFlow, mode: "auto", maxWidth: 34 },
-    capabilities: { columns: 34, colorDepth: "none", unicode: false },
-  },
-  {
-    name: "dense-cycle-fallback",
-    props: { spec: denseCycle, mode: "auto", maxWidth: 100 },
-  },
-  {
-    name: "dense-sequence-fallback",
-    props: { spec: denseSequence, mode: "auto", maxWidth: 110 },
-  },
-] as const;
+export const cliExamples: readonly CliExample<DiagramCliProps>[] = Object
+  .freeze(diagramKindRegistry.flatMap((entry) => {
+    const representative = entry.releaseCorpus.cases.find(({ postures }) =>
+      postures.some((posture) => posture === "representative")
+    )?.spec as DiagramSpec | undefined;
+    const maximum = entry.releaseCorpus.cases.find(({ postures }) =>
+      postures.some((posture) => posture === "maximum-density")
+    )?.spec as DiagramSpec | undefined;
+    if (representative === undefined || maximum === undefined) {
+      throw new TypeError(
+        `${entry.meta.slug} has incomplete CLI release cases`,
+      );
+    }
+    const examples: CliExample<DiagramCliProps>[] = [
+      {
+        name: `${entry.meta.slug}-${entry.meta.cli.stance}`,
+        props: { spec: representative, mode: "auto", maxWidth: 120 },
+      },
+      {
+        name: `${entry.meta.slug}-universal-description`,
+        props: { spec: representative, mode: "description", maxWidth: 72 },
+      },
+      {
+        name: `${entry.meta.slug}-maximum-density`,
+        props: { spec: maximum, mode: "auto", maxWidth: 120 },
+      },
+    ];
+    if (entry.meta.cli.stance === "enhanced") {
+      examples.push({
+        name: `${entry.meta.slug}-narrow-ascii-fallback`,
+        props: { spec: representative, mode: "auto", maxWidth: 34 },
+        capabilities: { columns: 34, colorDepth: "none", unicode: false },
+      });
+    }
+    return examples;
+  }));
 
 function descriptionLineStyle(
   line: string,

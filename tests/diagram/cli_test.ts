@@ -24,6 +24,7 @@ import projectFlowDiagramCli from "../../src/diagram/kinds/flow/flow.cli.ts";
 import fixtures from "../../src/diagram/kinds/flow/flow.fixtures.ts";
 import type { ValidatedFlowDiagram } from "../../src/diagram/kinds/flow/flow.spec.ts";
 import { prepareDiagramSemantics } from "../../src/generated/diagram-dispatch.ts";
+import { diagramKindRegistry } from "../../src/generated/diagram-registry.ts";
 
 const [decisionFlow, compactFlow] = fixtures;
 
@@ -253,7 +254,7 @@ Deno.test("flow CLI keeps validation failures deterministic", () => {
 
 Deno.test("Diagram Catalogue CLI examples cover enhanced, deliberate description, and typed fallback postures", () => {
   const catalogueCapabilities = testTerminalCapabilities({
-    columns: 80,
+    columns: 160,
     colorDepth: "truecolor",
     unicode: true,
   });
@@ -268,16 +269,25 @@ Deno.test("Diagram Catalogue CLI examples cover enhanced, deliberate description
       output.startsWith("Title:") ? "description" : "enhanced",
     ];
   }));
-  assertEquals(postures, {
-    "enhanced-compact-flow": "enhanced",
-    "enhanced-decision-return": "enhanced",
-    "enhanced-learning-cycle": "enhanced",
-    "enhanced-participant-sequence": "enhanced",
-    "architecture-description": "description",
-    "timeline-description": "description",
-    "universal-description": "description",
-    "narrow-ascii-fallback": "description",
-    "dense-cycle-fallback": "description",
-    "dense-sequence-fallback": "description",
-  });
+  for (const entry of diagramKindRegistry) {
+    assertEquals(
+      postures[`${entry.meta.slug}-${entry.meta.cli.stance}`],
+      entry.meta.cli.stance,
+    );
+    assertEquals(
+      postures[`${entry.meta.slug}-universal-description`],
+      "description",
+    );
+    assertEquals(
+      postures[`${entry.meta.slug}-maximum-density`],
+      "description",
+    );
+    if (entry.meta.cli.stance === "enhanced") {
+      assertEquals(
+        postures[`${entry.meta.slug}-narrow-ascii-fallback`],
+        "description",
+      );
+    }
+  }
+  assertEquals(Object.keys(postures).length, 18);
 });

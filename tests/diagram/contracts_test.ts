@@ -20,6 +20,7 @@ import {
 import { diagramKindCliRegistry } from "../../src/generated/diagram-cli-registry.ts";
 import { diagramKindRegistry } from "../../src/generated/diagram-registry.ts";
 import type { FlowDiagramSpec } from "../../src/diagram/kinds/flow/flow.spec.ts";
+import { DIAGRAM_RELEASE_POSTURES } from "../../src/diagram/kind-meta.ts";
 import { assertDiagramKindBudget } from "../../src/diagram/validation.ts";
 
 const minimal = Object.freeze(
@@ -73,7 +74,7 @@ Deno.test("diagram accessibility validates once and derives one concise alternat
   assertEquals(layoutDiagram(minimal).sourceKind, "flow");
 });
 
-Deno.test("generated registry fixtures and terminal stances remain executable", () => {
+Deno.test("generated release corpus enrolls every posture and refusal", () => {
   assert(diagramKindRegistry.length > 0);
   for (const entry of diagramKindRegistry) {
     assert(entry.meta.useWhen.length > 0 && entry.meta.notWhen.length > 0);
@@ -85,11 +86,35 @@ Deno.test("generated registry fixtures and terminal stances remain executable", 
         ?.stance,
       entry.meta.cli.stance,
     );
-    assert(entry.fixtures.length > 0);
-    for (const fixture of entry.fixtures) {
-      assertEquals(layoutDiagram(fixture).sourceKind, entry.meta.slug);
-      assert(describeDiagram(fixture).includes(`Title: ${fixture.title}`));
+    assertEquals(entry.releaseCorpus.kind, entry.meta.slug);
+    assertEquals(entry.fixtures.length, entry.releaseCorpus.cases.length);
+    const postures = new Set(
+      entry.releaseCorpus.cases.flatMap(({ postures }) => postures),
+    );
+    assertEquals(postures, new Set(DIAGRAM_RELEASE_POSTURES));
+    for (const [index, releaseCase] of entry.releaseCorpus.cases.entries()) {
+      assertEquals(entry.fixtures[index], releaseCase.spec);
+      assertEquals(layoutDiagram(releaseCase.spec).sourceKind, entry.meta.slug);
+      assert(
+        describeDiagram(releaseCase.spec).includes(
+          `Title: ${releaseCase.spec.title}`,
+        ),
+      );
+      assert(Object.isFrozen(releaseCase.spec));
     }
+    const refusal = expectDiagramError(
+      () => validateDiagram(entry.releaseCorpus.overBudget.spec),
+      `diagram/budget/${entry.releaseCorpus.overBudget.dimension}`,
+    );
+    assertInstanceOf(refusal, DiagramBudgetError);
+    assertEquals(
+      refusal.authorAction,
+      entry.releaseCorpus.overBudget.authorAction,
+    );
+    for (const invalid of entry.releaseCorpus.invalid) {
+      expectDiagramError(() => validateDiagram(invalid.spec), invalid.code);
+    }
+    assert(Object.isFrozen(entry.releaseCorpus));
   }
 });
 

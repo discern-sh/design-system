@@ -1,118 +1,32 @@
-import type {
-  DiagramSpec,
-  DiagramSvgTheme,
-  FlowDiagramSpec,
-} from "../../../diagram/mod.ts";
+import type { DiagramSvgTheme } from "../../../diagram/mod.ts";
 import { diagramAltText, renderDiagramSvg } from "../../../diagram/mod.ts";
-import architectureFixtures from "../../../diagram/kinds/architecture/architecture.fixtures.ts";
-import cycleFixtures from "../../../diagram/kinds/cycle/cycle.fixtures.ts";
-import sequenceFixtures from "../../../diagram/kinds/sequence/sequence.fixtures.ts";
-import timelineFixtures from "../../../diagram/kinds/timeline/timeline.fixtures.ts";
 import {
   markdownDiagramExampleMarkdown,
   markdownDiagramExampleSpec,
 } from "../../../diagram/markdown.example.ts";
+import { diagramKindRegistry } from "../../../generated/diagram-registry.ts";
+import type { DiagramSpec } from "../../../generated/diagram-spec.ts";
 import { DataFigure } from "../data-figure/data-figure.tsx";
 import { Diagram } from "./diagram.tsx";
 
-const compactFlow = {
-  kind: "flow",
-  title: "Prepare reference material",
-  summary: "A short sequence moves from an outline to a checked reference.",
-  direction: "left-to-right",
-  nodes: [
-    { id: "outline", label: "Outline", role: "start" },
-    { id: "check", label: "Check facts" },
-    { id: "share", label: "Share reference", role: "end" },
-  ],
-  edges: [
-    { id: "drafted", from: "outline", to: "check" },
-    { id: "checked", from: "check", to: "share" },
-  ],
-} as const satisfies FlowDiagramSpec;
+function releaseSpec(
+  kind: string,
+  posture: "minimal" | "representative",
+): DiagramSpec {
+  const entry = diagramKindRegistry.find(({ meta }) => meta.slug === kind);
+  const releaseCase = entry?.releaseCorpus.cases.find(({ postures }) =>
+    postures.some((candidate) => candidate === posture)
+  );
+  if (releaseCase === undefined) {
+    throw new TypeError(`${kind} has no ${posture} release case`);
+  }
+  return releaseCase.spec as DiagramSpec;
+}
+
+const compactFlow = releaseSpec("flow", "minimal");
 
 /** Source-backed defaults for the Catalogue builder's structured spec prop. */
-export const catalogueBuilderDefaults = {
-  spec: compactFlow,
-} as const;
-
-const decisionFlow = {
-  kind: "flow",
-  title: "Review a submission",
-  summary: "Review either accepts a submission or returns it for revision.",
-  nodes: [
-    { id: "submit", label: "Submit material", role: "start" },
-    { id: "review", label: "Review evidence", role: "decision" },
-    {
-      id: "revise",
-      label: "Revise material",
-      annotation: "Address every finding",
-    },
-    { id: "accept", label: "Accept material", role: "end" },
-  ],
-  edges: [
-    { id: "ready", from: "submit", to: "review" },
-    {
-      id: "sufficient",
-      from: "review",
-      to: "accept",
-      label: "Evidence is sufficient",
-    },
-    {
-      id: "changes",
-      from: "review",
-      to: "revise",
-      label: "Changes requested",
-      emphasis: "secondary",
-    },
-    {
-      id: "again",
-      from: "revise",
-      to: "review",
-      label: "Review again",
-      emphasis: "return",
-    },
-  ],
-} as const satisfies FlowDiagramSpec;
-
-const longLabelFlow = {
-  kind: "flow",
-  title: "Preserve detailed labels",
-  summary:
-    "Conservative layout reserves room for longer reference wording without clipping it.",
-  direction: "left-to-right",
-  nodes: [
-    {
-      id: "collect",
-      label: "Collect relevant source observations",
-      annotation: "Keep the original wording available",
-      role: "start",
-    },
-    {
-      id: "compare",
-      label: "Compare against stated criteria",
-    },
-    {
-      id: "record",
-      label: "Record conclusion with context",
-      role: "end",
-    },
-  ],
-  edges: [
-    { id: "collected", from: "collect", to: "compare" },
-    {
-      id: "supported",
-      from: "compare",
-      to: "record",
-    },
-  ],
-} as const satisfies FlowDiagramSpec;
-
-const [groupedArchitecture, minimalArchitecture, stressArchitecture] =
-  architectureFixtures;
-const [minimalCycle, learningCycle, stressCycle] = cycleFixtures;
-const [participantSequence, minimalSequence, stressSequence] = sequenceFixtures;
-const [minimalTimeline, phasedTimeline, stressTimeline] = timelineFixtures;
+export const catalogueBuilderDefaults = { spec: compactFlow } as const;
 
 function svgDataUrl(spec: DiagramSpec, theme: DiagramSvgTheme): string {
   return `data:image/svg+xml;charset=utf-8,${
@@ -120,20 +34,12 @@ function svgDataUrl(spec: DiagramSpec, theme: DiagramSvgTheme): string {
   }`;
 }
 
-function comparison(
-  title: string,
-  minimal: DiagramSpec,
-  representative: DiagramSpec,
-  stress: DiagramSpec,
+function corpusExamples(
+  entry: typeof diagramKindRegistry[number],
 ) {
-  const examples = [
-    { label: "Minimal", spec: minimal },
-    { label: "Representative", spec: representative },
-    { label: "Dense but supported", spec: stress },
-  ] as const;
   return (
-    <section>
-      <h3>{title}</h3>
+    <section key={entry.meta.slug} data-diagram-kind={entry.meta.slug}>
+      <h3>{entry.meta.name}: complete release corpus</h3>
       <div
         style={{
           display: "grid",
@@ -142,10 +48,12 @@ function comparison(
           alignItems: "start",
         }}
       >
-        {examples.map(({ label, spec }) => (
-          <figure key={label} style={{ margin: 0 }}>
-            <Diagram spec={spec} />
-            <figcaption>{label}</figcaption>
+        {entry.releaseCorpus.cases.map((releaseCase) => (
+          <figure key={releaseCase.name} style={{ margin: 0 }}>
+            <Diagram spec={releaseCase.spec as DiagramSpec} />
+            <figcaption>
+              {releaseCase.name}: {releaseCase.postures.join(", ")}
+            </figcaption>
           </figure>
         ))}
       </div>
@@ -154,50 +62,10 @@ function comparison(
 }
 
 export default function DiagramExamples() {
+  const architecture = releaseSpec("architecture", "representative");
   return (
     <div style={{ display: "grid", gap: "3rem" }}>
-      <section>
-        <h3>Compact left-to-right flow</h3>
-        <Diagram spec={compactFlow} />
-      </section>
-
-      <section>
-        <h3>Decision and return flow</h3>
-        <Diagram spec={decisionFlow} />
-      </section>
-
-      <section>
-        <h3>Conservative long-label layout</h3>
-        <Diagram spec={longLabelFlow} />
-      </section>
-
-      {comparison(
-        "Architecture: boundaries and labelled relationships",
-        minimalArchitecture,
-        groupedArchitecture,
-        stressArchitecture,
-      )}
-
-      {comparison(
-        "Cycle: ordered repetition and shared context",
-        minimalCycle,
-        learningCycle,
-        stressCycle,
-      )}
-
-      {comparison(
-        "Sequence: participants and authored messages",
-        minimalSequence,
-        participantSequence,
-        stressSequence,
-      )}
-
-      {comparison(
-        "Timeline: calendar spans and dated gates",
-        minimalTimeline,
-        phasedTimeline,
-        stressTimeline,
-      )}
+      {diagramKindRegistry.map(corpusExamples)}
 
       <section>
         <h3>Standalone SVG palettes</h3>
@@ -209,11 +77,11 @@ export default function DiagramExamples() {
           }}
         >
           {(["light", "dark", "adaptive"] as const).map((theme) => (
-            <figure key={theme} style={{ margin: 0 }}>
+            <figure key={theme} style={{ margin: 0, overflowX: "auto" }}>
               <img
                 src={svgDataUrl(compactFlow, theme)}
                 alt={diagramAltText(compactFlow)}
-                style={{ display: "block", width: "100%", height: "auto" }}
+                style={{ display: "block", maxWidth: "none", height: "auto" }}
               />
               <figcaption>{theme} standalone asset</figcaption>
             </figure>
@@ -238,8 +106,8 @@ export default function DiagramExamples() {
 
       <DataFigure
         eyebrow="System reference"
-        title="Process a submitted record"
-        visual={<Diagram spec={groupedArchitecture} />}
+        title={architecture.title}
+        visual={<Diagram spec={architecture} />}
         caption="The semantic topology remains the visual while the figure owns visible editorial context."
         source="Illustrative architecture specification"
       />

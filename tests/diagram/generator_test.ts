@@ -90,7 +90,22 @@ export interface Validated${slug[0]?.toUpperCase()}${
     ],
     [
       "fixtures",
-      `export default [{ kind: "${slug}", title: "Temporary", summary: "Temporary." }];\n`,
+      `const spec = { kind: "${slug}", title: "Temporary", summary: "Temporary." };
+export const releaseCorpus = {
+  kind: "${slug}",
+  cases: [{
+    name: "complete",
+    postures: ["minimal", "representative", "structural", "long-text", "maximum-density", "semantic-roles"],
+    spec,
+  }],
+  overBudget: {
+    dimension: "entities",
+    authorAction: "${options.budgetRemedy ?? "split-overview"}",
+    spec,
+  },
+  invalid: [{ name: "invalid", code: "diagram/invalid-spec", spec: { ...spec, extra: true } }],
+};
+export default releaseCorpus.cases.map(({ spec }) => spec);\n`,
     ],
     ["mod", "export const temporaryKind = true;\n"],
     [
@@ -230,12 +245,67 @@ Deno.test("kind fixtures must carry accessible context for their own identity", 
     await writeKind(path, "probe");
     await Deno.writeTextFile(
       `${path}/probe/probe.fixtures.ts`,
-      'export default [{ kind: "other", title: "", summary: "Missing." }];\n',
+      `const spec = { kind: "other", title: "", summary: "Missing." };
+export const releaseCorpus = {
+  kind: "probe",
+  cases: [{ name: "bad", postures: ["minimal", "representative", "structural", "long-text", "maximum-density", "semantic-roles"], spec }],
+  overBudget: { dimension: "entities", authorAction: "split-overview", spec },
+  invalid: [{ name: "invalid", code: "diagram/invalid-spec", spec }],
+};
+export default releaseCorpus.cases.map(({ spec }) => spec);\n`,
     );
     await assertRejects(
       () => loadDiagramKindSources(url),
       Error,
       "does not identify probe with accessible context",
+    );
+  });
+});
+
+Deno.test("release corpus enrollment requires every posture and derived fixtures", async () => {
+  for (
+    const posture of [
+      "minimal",
+      "representative",
+      "structural",
+      "long-text",
+      "maximum-density",
+      "semantic-roles",
+    ]
+  ) {
+    await withTemporaryRoot(async (path, url) => {
+      await writeKind(path, "probe");
+      const fixturePath = `${path}/probe/probe.fixtures.ts`;
+      const source = await Deno.readTextFile(fixturePath);
+      await Deno.writeTextFile(
+        fixturePath,
+        source.replace(`"${posture}", `, "").replace(
+          `, "${posture}"`,
+          "",
+        ),
+      );
+      await assertRejects(
+        () => loadDiagramKindSources(url),
+        Error,
+        `missing ${posture} posture`,
+      );
+    });
+  }
+  await withTemporaryRoot(async (path, url) => {
+    await writeKind(path, "probe");
+    const fixturePath = `${path}/probe/probe.fixtures.ts`;
+    const source = await Deno.readTextFile(fixturePath);
+    await Deno.writeTextFile(
+      fixturePath,
+      source.replace(
+        "export default releaseCorpus.cases.map(({ spec }) => spec);",
+        'export default [{ kind: "probe", title: "Temporary", summary: "Temporary." }];',
+      ),
+    );
+    await assertRejects(
+      () => loadDiagramKindSources(url),
+      Error,
+      "default fixtures must derive from releaseCorpus cases",
     );
   });
 });
