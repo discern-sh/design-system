@@ -1,5 +1,10 @@
 import type { BuildSummary } from "../src/runtime.ts";
 import type { ComponentMeta } from "../src/types/component-meta.ts";
+import { renderDiagramSvg } from "../src/diagram/svg.ts";
+import {
+  markdownDiagramExampleSource,
+  markdownDiagramExampleSpec,
+} from "../src/diagram/markdown.example.ts";
 import { stripVTControlCharacters } from "node:util";
 import type {
   CatalogueObjectType,
@@ -19,6 +24,7 @@ const GENERATED_ROOT = new URL(
   `../${DESIGN_SYSTEM_BUILD_OUTPUTS.catalogueRegistry}`,
   import.meta.url,
 );
+const CATALOGUE_ROOT = new URL("../catalogue/", import.meta.url);
 const DIST_ROOT = new URL(
   `../${DESIGN_SYSTEM_BUILD_OUTPUTS.runtime}`,
   import.meta.url,
@@ -975,11 +981,26 @@ async function bundleCatalogue(): Promise<void> {
   }
 }
 
+async function writeCatalogueDiagramAsset(): Promise<void> {
+  const target = new URL(markdownDiagramExampleSource, CATALOGUE_ROOT);
+  if (!target.pathname.startsWith(GENERATED_ROOT.pathname)) {
+    throw new TypeError(
+      "Catalogue Markdown diagram asset must stay under catalogue/generated",
+    );
+  }
+  await Deno.mkdir(new URL("./", target), { recursive: true });
+  await Deno.writeTextFile(
+    target,
+    renderDiagramSvg(markdownDiagramExampleSpec, { theme: "adaptive" }),
+  );
+}
+
 /** Build the React catalogue and its explicit all-component runtime. */
 export async function buildDesignSystem(): Promise<BuildSummary> {
   await writeGeneratedSources();
   const { sources, shared } = await discoverComponents();
   await generateRegistry(sources, shared, await packageVersion());
+  await writeCatalogueDiagramAsset();
   const { emitDesignSystemRuntime } = await import("../src/runtime.ts");
   const summary = await emitDesignSystemRuntime({
     outputRoot: DIST_ROOT,

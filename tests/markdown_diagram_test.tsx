@@ -48,6 +48,10 @@ import {
 } from "../src/diagram/markdown.example.ts";
 
 const markdownDiagramSvg = renderDiagramSvg(markdownDiagramSpec);
+const encodedMarkdownDiagramSource = markdownDiagramSource.replace(
+  "markdown",
+  "%6darkdown",
+);
 
 const wide = testTerminalCapabilities({
   columns: 80,
@@ -142,7 +146,7 @@ Deno.test("diagram promotion is isolated, optional, repeatable, and order indepe
   assertEquals(
     parseMarkdown(imageMarkdown(), {
       diagrams: [{
-        source: "assets/%72eview-change.svg",
+        source: encodedMarkdownDiagramSource,
         spec: markdownDiagramSpec,
       }],
     }).children[0]?.kind,
@@ -229,7 +233,7 @@ Deno.test("diagram resources reject duplicate, unsafe, malformed, and invalid da
         diagrams: [
           markdownDiagramResource,
           {
-            source: "assets/%72eview-change.svg",
+            source: encodedMarkdownDiagramSource,
             spec: markdownDiagramSpec,
           },
         ],

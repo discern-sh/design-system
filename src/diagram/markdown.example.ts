@@ -22,7 +22,8 @@ export const markdownDiagramExampleSpec = Object.freeze(
   } as const satisfies FlowDiagramSpec,
 );
 
-export const markdownDiagramExampleSource = "assets/review-change.svg";
+export const markdownDiagramExampleSource =
+  "generated/markdown-review-change.svg";
 export const markdownDiagramExampleAlt = diagramAltText(
   markdownDiagramExampleSpec,
 );

@@ -9,6 +9,11 @@ import { createElement } from "react";
 import type { ComponentType } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { buildDesignSystem } from "../scripts/build.ts";
+import { renderDiagramSvg } from "../src/diagram/svg.ts";
+import {
+  markdownDiagramExampleSource,
+  markdownDiagramExampleSpec,
+} from "../src/diagram/markdown.example.ts";
 import {
   type CataloguePurpose,
   cataloguePurposes,
@@ -90,6 +95,16 @@ Deno.test("Theme Toggle's Catalogue example presents one page-chrome control", a
 
   assertEquals(controls.length, 1);
   assertEquals(markup.includes("Lorem ipsum"), false);
+});
+
+Deno.test("Catalogue writes its Markdown SVG preview from the typed spec", async () => {
+  await catalogue();
+  assertEquals(
+    await Deno.readTextFile(
+      join(PACKAGE_ROOT, "catalogue", markdownDiagramExampleSource),
+    ),
+    renderDiagramSvg(markdownDiagramExampleSpec, { theme: "adaptive" }),
+  );
 });
 
 Deno.test("Catalogue purposes are closed, selective, and guidance-backed", async () => {

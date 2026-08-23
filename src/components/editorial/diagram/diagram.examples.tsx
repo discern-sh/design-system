@@ -148,7 +148,16 @@ export default function DiagramExamples() {
 
       <section>
         <h3>Ordinary Markdown asset bridge</h3>
-        <pre><code>{markdownDiagramExampleMarkdown}</code></pre>
+        <pre
+          style={{
+            maxWidth: "100%",
+            minWidth: 0,
+            overflowWrap: "anywhere",
+            whiteSpace: "pre-wrap",
+          }}
+        >
+          <code>{markdownDiagramExampleMarkdown}</code>
+        </pre>
         <Diagram spec={markdownDiagramExampleSpec} />
       </section>
 
