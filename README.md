@@ -117,15 +117,24 @@ Inverse surface and ink roles remain dark-on-light in purpose across both site t
 
 ## Semantic diagrams
 
-One typed flow spec feeds the neutral description and standalone SVG, the live-token React Component, and the terminal Component renderer. The neutral `./diagram` graph imports neither React nor terminal modules:
+One typed built-in spec feeds the neutral description and standalone SVG, the live-token React Component, Markdown resource promotion, and the terminal Component renderer. Choose by what the reader must do: `flow` traces steps and returns, `architecture` locates parts and boundaries, `cycle` revisits an ordered repetition, `sequence` follows participants and messages, and `timeline` compares calendar spans and gates. Flow remains sufficient for restrained state-like decisions and returns; custom schematics, spatial metaphors, animation, and interaction remain consumer work rather than escape hatches into a drawing language.
+
+The neutral `./diagram` graph imports neither React nor terminal modules. `diagramKindMetadata` and the generated Markdown string `diagramKindAuthorGuide` expose every kind's purpose, avoidance guidance, numerical budgets, remedies, and CLI stance from the same Metadata that generates the public union and dispatch:
 
 ```ts
 import {
   diagramAltText,
+  diagramKindAuthorGuide,
+  diagramKindMetadata,
   type FlowDiagramSpec,
   type MarkdownDiagramResource,
   renderDiagramSvg,
 } from "@discern-sh/design-system/diagram";
+
+export const supportedDiagramKinds = diagramKindMetadata.map((kind) =>
+  kind.slug
+);
+export const diagramAuthoringReference = diagramKindAuthorGuide;
 
 export const reviewFlow = {
   kind: "flow",
@@ -211,7 +220,7 @@ export function ReviewMarkdown() {
 }
 ```
 
-The pure terminal renderer tries the generated enhanced `flow` projector in `auto` mode. If width, branching, labels, or capabilities cannot carry every fact coherently, it returns the same universal description used by explicit `description` mode:
+The pure terminal renderer tries generated enhanced projectors for `flow`, `cycle`, and `sequence` in `auto` mode. Each uses conservative kind-specific width, density, and wrapping viability; a decline returns the same universal description used by explicit `description` mode. `architecture` is deliberately description-first because grouped boundaries plus routed relationships do not survive normal terminal widths without loss. `timeline` is description-first because exact dates, duration semantics, rows, and gates matter more than a compressed terminal scale:
 
 ```ts
 import {
