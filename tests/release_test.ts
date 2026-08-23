@@ -14,6 +14,7 @@ interface DenoConfig {
   readonly name: string;
   readonly version: string;
   readonly exports: Readonly<Record<string, string>>;
+  readonly imports: Readonly<Record<string, string>>;
   readonly tasks: Readonly<Record<string, string>>;
 }
 
@@ -175,6 +176,7 @@ Deno.test("the published diagram graph is neutral, local, and permission-free", 
   const graph = JSON.parse(output) as {
     readonly modules: readonly { readonly specifier: string }[];
   };
+  assert(graph.modules.length > 1, "./diagram graph was unexpectedly empty");
   for (const module of graph.modules) {
     assert(
       module.specifier.startsWith("file://"),
@@ -187,6 +189,12 @@ Deno.test("the published diagram graph is neutral, local, and permission-free", 
         !module.specifier.toLocaleLowerCase().includes("react"),
       `./diagram crossed a projection boundary: ${module.specifier}`,
     );
+    assert(
+      !/(?:markdown\.model|mdast|micromark|remark|unified)/iu.test(
+        module.specifier,
+      ),
+      `./diagram pulled in the Markdown parser graph: ${module.specifier}`,
+    );
   }
   const imported = await run(PACKAGE_ROOT, ["run", "--no-prompt", entry]);
   assertEquals(
@@ -194,6 +202,26 @@ Deno.test("the published diagram graph is neutral, local, and permission-free", 
     0,
     `importing ./diagram with no permissions failed:\n${imported.output}`,
   );
+});
+
+Deno.test("React remains exclusive to the declared React adapter graph", async () => {
+  for (const [exportName, entry] of Object.entries(config.exports)) {
+    const { code, output } = await run(PACKAGE_ROOT, [
+      "info",
+      "--json",
+      "--config",
+      "deno.json",
+      entry,
+    ]);
+    assertEquals(code, 0, `deno info failed for ${entry}:\n${output}`);
+    const reachesReact = output.includes("npm:react") ||
+      output.includes("/src/react.ts") || output.includes("react-dom");
+    if (exportName === "./react") {
+      assert(reachesReact, "./react no longer reaches its peer adapter");
+    } else {
+      assert(!reachesReact, `${exportName} reached the React adapter graph`);
+    }
+  }
 });
 
 Deno.test("published modules carry no import attributes", async () => {
@@ -239,17 +267,35 @@ Deno.test("the publish-shaped artifact serves the neutral consumer alone", async
       await Deno.mkdir(dirname(target), { recursive: true });
       await Deno.copyFile(join(PACKAGE_ROOT, path), target);
     }
-    const imports = Object.fromEntries(
-      Object.entries(config.exports)
-        .filter(([key]) => key !== "./react")
-        .map(([key, value]) => [
+    const imports = {
+      ...Object.fromEntries(
+        Object.entries(config.exports).map(([key, value]) => [
           key.replace(/^\./, config.name),
           new URL(value, `file://${staged}/`).href,
         ]),
-    );
+      ),
+      ...Object.fromEntries(
+        Object.entries(config.imports).filter(([key]) =>
+          key === "react" || key.startsWith("react/") ||
+          key.startsWith("react-dom/")
+        ),
+      ),
+    };
     await Deno.writeTextFile(
       join(consumer, "deno.json"),
-      JSON.stringify({ nodeModulesDir: "none", imports }, null, 2),
+      JSON.stringify(
+        {
+          nodeModulesDir: "none",
+          imports,
+          compilerOptions: {
+            jsx: "react-jsx",
+            jsxImportSource: "react",
+            strict: true,
+          },
+        },
+        null,
+        2,
+      ),
     );
     await Deno.writeTextFile(
       join(consumer, "neutral.ts"),
@@ -260,6 +306,7 @@ import {
   describeDiagram,
   type FlowDiagramSpec,
   type MarkdownDiagramResource,
+  renderDiagramMarkdownImage,
   renderDiagramSvg,
 } from "${config.name}/diagram";
 import {
@@ -295,6 +342,12 @@ const flow = {
   edges: [{ id: "ready", from: "draft", to: "publish" }],
 } as const satisfies FlowDiagramSpec;
 const diagramSvg = renderDiagramSvg(flow, { theme: "light" });
+const diagramOutput = new URL("./consumer-output/guide.svg", import.meta.url);
+await Deno.mkdir(new URL("./consumer-output/", import.meta.url), {
+  recursive: true,
+});
+await Deno.writeTextFile(diagramOutput, diagramSvg);
+const writtenDiagramSvg = await Deno.readTextFile(diagramOutput);
 const diagramCli = stripAnsi(renderDiagramCli(
   { spec: flow, mode: "description", maxWidth: 48 },
   { colorDepth: "none", columns: 48, unicode: false },
@@ -303,8 +356,12 @@ const diagramResource = {
   source: "assets/guide.svg",
   spec: flow,
 } satisfies MarkdownDiagramResource;
+const diagramMarkdownSource = renderDiagramMarkdownImage(diagramResource);
+const ordinaryMarkdown = stripAnsi(renderMarkdownCli({
+  source: diagramMarkdownSource,
+}, { colorDepth: "none", columns: 48, unicode: false }));
 const markdownDiagram = stripAnsi(renderMarkdownCli({
-  source: "![" + diagramAltText(flow) + "](assets/guide.svg)",
+  source: diagramMarkdownSource,
   diagrams: [diagramResource],
   diagramMode: "description",
 }, { colorDepth: "none", columns: 48, unicode: false }));
@@ -350,7 +407,7 @@ const browserResult = await requestMarkdownBrowser({
       id: "guide",
       label: "Guide",
       path: "guides/guide.md",
-      source: "# Guide\\n\\n![" + diagramAltText(flow) + "](assets/guide.svg)\\n\\n[Next](next.md#details)",
+      source: "# Guide\\n\\n" + diagramMarkdownSource + "\\n\\n[Next](next.md#details)",
       diagrams: [diagramResource],
     },
     {
@@ -388,6 +445,8 @@ const readingHeading = stripAnsi(renderHeadingCli(
   { colorDepth: "truecolor", columns: 40, unicode: true },
 ));
 console.log(JSON.stringify({
+  diagramBytes: writtenDiagramSvg === diagramSvg &&
+    renderDiagramSvg(flow, { theme: "light" }) === diagramSvg,
   diagramAccessible: diagramSvg.includes('role="img"') &&
     diagramSvg.includes("<title>Publish a guide</title>"),
   diagramDescription: describeDiagram(flow).includes("draft to publish"),
@@ -396,6 +455,11 @@ console.log(JSON.stringify({
     diagramCli.includes("draft to publish"),
   markdownDiagram: markdownDiagram.includes("Relationships:") &&
     markdownDiagram.includes("draft to publish"),
+  ordinaryMarkdown: ordinaryMarkdown.replaceAll(/\\s+/gu, " ")
+      .includes(diagramAltText(flow)) &&
+    !ordinaryMarkdown.includes("Relationships:"),
+  standardMarkdown: diagramMarkdownSource.startsWith("![") &&
+    diagramMarkdownSource.includes("assets/guide.svg"),
   className: semanticClass("button"),
   badge: renderBadgeCli({ label: "Ready", dot: true }, { colorDepth: "none", columns: 80, unicode: true }),
   graphemes: segmentGraphemes("A👩‍💻B").length,
@@ -420,6 +484,62 @@ console.log(JSON.stringify({
 }));
 `,
     );
+    await Deno.writeTextFile(
+      join(consumer, "react.tsx"),
+      `import { renderToStaticMarkup } from "react-dom/server";
+import {
+  type FlowDiagramSpec,
+  renderDiagramMarkdownImage,
+} from "${config.name}/diagram";
+import { DataFigure, Diagram, Markdown } from "${config.name}/react";
+const flow = {
+  kind: "flow",
+  title: "Publish a guide",
+  summary: "A checked guide progresses from draft to publication.",
+  nodes: [
+    { id: "draft", label: "Draft guide", role: "start" },
+    { id: "publish", label: "Publish guide", role: "end" },
+  ],
+  edges: [{ id: "ready", from: "draft", to: "publish" }],
+} as const satisfies FlowDiagramSpec;
+const resource = { source: "assets/guide.svg", spec: flow } as const;
+const source = renderDiagramMarkdownImage(resource);
+const diagram = renderToStaticMarkup(<Diagram spec={flow} />);
+const figure = renderToStaticMarkup(
+  <DataFigure
+    title="Publication flow"
+    visual={<Diagram spec={flow} />}
+    caption="A neutral published-artifact composition."
+    source="Consumer-owned reference"
+  />,
+);
+const ordinary = renderToStaticMarkup(<Markdown source={source} />);
+const upgraded = renderToStaticMarkup(
+  <Markdown source={source} diagrams={[resource]} />,
+);
+const repeated = renderToStaticMarkup(
+  <main>
+    <Diagram spec={flow} />
+    <Diagram spec={flow} />
+  </main>,
+);
+const ids = [...repeated.matchAll(/\sid="([^"]+)"/gu)].map((match) => match[1]);
+console.log(JSON.stringify({
+  diagram: diagram.includes('role="img"') &&
+    diagram.includes("<title>Publish a guide</title>"),
+  figure: figure.includes("<figure") &&
+    figure.includes("A neutral published-artifact composition.") &&
+    figure.includes("Consumer-owned reference"),
+  ordinary: ordinary.includes("<img") &&
+    ordinary.includes("Publish a guide") &&
+    !ordinary.includes("<svg"),
+  upgraded: upgraded.includes("<svg") &&
+    upgraded.includes("draft to publish") &&
+    !upgraded.includes("<img"),
+  duplicateIds: ids.some((id, index) => ids.indexOf(id) !== index),
+}));
+`,
+    );
     const { code, output } = await run(consumer, [
       "run",
       "--allow-read",
@@ -428,10 +548,13 @@ console.log(JSON.stringify({
     ]);
     assertEquals(code, 0, `staged consumer failed:\n${output}`);
     assertStringIncludes(output, `"className":"discern-button"`);
+    assertStringIncludes(output, `"diagramBytes":true`);
     assertStringIncludes(output, `"diagramAccessible":true`);
     assertStringIncludes(output, `"diagramDescription":true`);
     assertStringIncludes(output, `"diagramCli":true`);
     assertStringIncludes(output, `"markdownDiagram":true`);
+    assertStringIncludes(output, `"ordinaryMarkdown":true`);
+    assertStringIncludes(output, `"standardMarkdown":true`);
     assertStringIncludes(
       output,
       `"diagramAlt":"Publish a guide: A checked guide progresses from draft to publication."`,
@@ -454,6 +577,22 @@ console.log(JSON.stringify({
     assertStringIncludes(output, `"projectedText":"[● Ready]"`);
     assertStringIncludes(output, `"projectionMatchesStrip":true`);
     assertStringIncludes(output, `"htmlShell":true`);
+    const reactConsumer = await run(consumer, [
+      "run",
+      "--no-prompt",
+      "--allow-env=NODE_ENV",
+      "react.tsx",
+    ]);
+    assertEquals(
+      reactConsumer.code,
+      0,
+      `staged React consumer failed:\n${reactConsumer.output}`,
+    );
+    assertStringIncludes(reactConsumer.output, `"diagram":true`);
+    assertStringIncludes(reactConsumer.output, `"figure":true`);
+    assertStringIncludes(reactConsumer.output, `"ordinary":true`);
+    assertStringIncludes(reactConsumer.output, `"upgraded":true`);
+    assertStringIncludes(reactConsumer.output, `"duplicateIds":false`);
     const css = await Deno.readTextFile(
       join(consumer, "runtime", "discern.css"),
     );

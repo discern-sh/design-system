@@ -272,18 +272,50 @@ interface PackageJson {
   readonly peerDependencies?: Readonly<Record<string, string>>;
 }
 
-async function parserDependencyPackages(): Promise<
+async function resolvedMarkdownParserRoots(): Promise<readonly string[]> {
+  const result = await new Deno.Command(Deno.execPath(), {
+    args: [
+      "info",
+      "--json",
+      "--config",
+      "deno.json",
+      "src/components/editorial/markdown/markdown.model.ts",
+    ],
+    cwd: PACKAGE_ROOT,
+    stdout: "piped",
+    stderr: "piped",
+  }).output();
+  assertEquals(
+    result.code,
+    0,
+    `deno info failed:\n${new TextDecoder().decode(result.stderr)}`,
+  );
+  const graph = JSON.parse(new TextDecoder().decode(result.stdout)) as {
+    readonly modules: readonly { readonly specifier: string }[];
+  };
+  const roots = new Set<string>();
+  for (const { specifier } of graph.modules) {
+    if (!specifier.startsWith("file://")) continue;
+    const path = fromFileUrl(specifier).replaceAll("\\", "/");
+    const marker = "/node_modules/";
+    const start = path.lastIndexOf(marker);
+    if (start < 0) continue;
+    const [first, second] = path.slice(start + marker.length).split("/");
+    if (first === undefined) continue;
+    roots.add(first.startsWith("@") ? `${first}/${second}` : first);
+  }
+  return [...roots].toSorted();
+}
+
+async function parserDependencyPackages(
+  roots: readonly string[],
+): Promise<
   readonly {
     readonly directory: string;
     readonly manifest: PackageJson;
   }[]
 > {
-  const queue = [
-    "mdast-util-from-markdown",
-    "mdast-util-gfm",
-    "micromark-extension-gfm",
-    "@types/mdast",
-  ].map((name) => join(PACKAGE_ROOT, "node_modules", name));
+  const queue = roots.map((name) => join(PACKAGE_ROOT, "node_modules", name));
   const seen = new Set<string>();
   const packages: { directory: string; manifest: PackageJson }[] = [];
   while (queue.length > 0) {
@@ -318,7 +350,14 @@ async function parserDependencyPackages(): Promise<
 }
 
 Deno.test("the complete pinned Markdown parser graph remains MIT licensed", async () => {
-  const packages = await parserDependencyPackages();
+  const roots = await resolvedMarkdownParserRoots();
+  assertEquals(roots, [
+    "@types/mdast",
+    "mdast-util-from-markdown",
+    "mdast-util-gfm",
+    "micromark-extension-gfm",
+  ], "review every resolved parser root change");
+  const packages = await parserDependencyPackages(roots);
   assertEquals(packages.length, 58, "review every parser graph change");
   for (const { directory, manifest } of packages) {
     assertEquals(
