@@ -251,6 +251,48 @@ export const baseTokens: readonly DesignToken[] = [
     "Layout",
     "Section rhythm.",
   ),
+  ...([
+    ["canvas", "--discern-color-canvas", "Diagram canvas."],
+    ["node-surface", "--discern-color-surface", "Diagram node surface."],
+    [
+      "node-border",
+      "--discern-color-border-strong",
+      "Ordinary diagram node border.",
+    ],
+    ["primary-ink", "--discern-color-ink", "Primary diagram label ink."],
+    [
+      "annotation-ink",
+      "--discern-color-ink-muted",
+      "Diagram annotation and connector-label ink.",
+    ],
+    ["accent", "--discern-color-accent-700", "Diagram accent role."],
+    ["focus", "--discern-color-accent-500", "Diagram focus role."],
+    ["success", "--discern-color-success", "Diagram success role."],
+    ["warning", "--discern-color-warning", "Diagram warning role."],
+    [
+      "connector-primary",
+      "--discern-color-ink-muted",
+      "Primary diagram connector.",
+    ],
+    [
+      "connector-secondary",
+      "--discern-color-ink-faint",
+      "Secondary diagram connector.",
+    ],
+    [
+      "connector-return",
+      "--discern-color-accent-700",
+      "Return diagram connector.",
+    ],
+    ["guide", "--discern-color-border", "Diagram layout guide."],
+  ] as const).map(([role, source, description]) =>
+    token(
+      `--discern-diagram-${role}`,
+      `var(${source})`,
+      "Color",
+      description,
+    )
+  ),
 ];
 
 /** Compatibility inventory for catalogue consumers; base and preset stay distinct. */

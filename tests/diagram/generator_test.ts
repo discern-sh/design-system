@@ -116,6 +116,8 @@ Deno.test("one conforming kind enrols every generated consumer together", async 
     await writeKind(path, "probe");
     const generated = await generateDiagramKindSources(url);
     assert(generated.spec.includes("ProbeDiagramSpec"));
+    assert(generated.metadata.includes("probe.meta.ts"));
+    assert(!generated.metadata.includes("fixtures"));
     assert(generated.registry.includes("probe.fixtures.ts"));
     assert(generated.dispatch.includes('case "probe"'));
     assert(generated.dispatch.includes("validateProbe"));
@@ -229,6 +231,10 @@ Deno.test("enhanced CLI stance and module presence are mechanically paired", asy
     const generated = await generateDiagramKindSources(url);
     assert(generated.cliRegistry.includes('stance: "enhanced"'));
     assert(generated.cliRegistry.includes("probe.cli.ts"));
+    assert(generated.cliRegistry.includes("projectProbeDiagramCli"));
+    assert(generated.cliRegistry.includes("projectDiagramKindCli"));
+    assert(generated.cliRegistry.includes("project: projectProbeDiagramCli"));
+    assert(!generated.cliRegistry.includes("modulePath"));
   });
 });
 

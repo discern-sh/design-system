@@ -1,0 +1,94 @@
+@layer discern.components {
+  .discern-diagram {
+    display: block;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    block-size: auto;
+    overflow: visible;
+    background: transparent;
+    shape-rendering: geometricPrecision;
+    text-rendering: optimizeLegibility;
+  }
+  .discern-diagram__canvas {
+    fill: var(--discern-diagram-canvas);
+  }
+  .discern-diagram__node,
+  .discern-diagram__node-cue {
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+  }
+  .discern-diagram__node--ordinary {
+    fill: var(--discern-diagram-node-surface);
+    stroke: var(--discern-diagram-node-border);
+  }
+  .discern-diagram__node--decision {
+    fill: var(--discern-diagram-node-surface);
+    stroke: var(--discern-diagram-focus);
+  }
+  .discern-diagram__node--start {
+    fill: var(--discern-diagram-node-surface);
+    stroke: var(--discern-diagram-accent);
+  }
+  .discern-diagram__node--end {
+    fill: var(--discern-diagram-node-surface);
+    stroke: var(--discern-diagram-success);
+  }
+  .discern-diagram__node--focus {
+    fill: var(--discern-diagram-node-surface);
+    stroke: var(--discern-diagram-focus);
+  }
+  .discern-diagram__node--success {
+    fill: var(--discern-diagram-node-surface);
+    stroke: var(--discern-diagram-success);
+  }
+  .discern-diagram__node--warning {
+    fill: var(--discern-diagram-node-surface);
+    stroke: var(--discern-diagram-warning);
+  }
+  .discern-diagram__node-cue {
+    fill: none;
+  }
+  .discern-diagram__text {
+    fill: var(--discern-diagram-primary-ink);
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+  }
+  .discern-diagram__text--quiet-annotation {
+    fill: var(--discern-diagram-annotation-ink);
+    font-family: var(--discern-font-mono);
+  }
+  .discern-diagram__text--connector-label {
+    fill: var(--discern-diagram-annotation-ink);
+  }
+  .discern-diagram__connector {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .discern-diagram__guide {
+    fill: none;
+    stroke: var(--discern-diagram-guide);
+    vector-effect: non-scaling-stroke;
+  }
+  .discern-diagram__connector--primary {
+    stroke: var(--discern-diagram-connector-primary);
+  }
+  .discern-diagram__arrowhead--primary {
+    fill: var(--discern-diagram-connector-primary);
+  }
+  .discern-diagram__connector--secondary {
+    stroke: var(--discern-diagram-connector-secondary);
+    stroke-dasharray: 8 6;
+  }
+  .discern-diagram__arrowhead--secondary {
+    fill: var(--discern-diagram-connector-secondary);
+  }
+  .discern-diagram__connector--return {
+    stroke: var(--discern-diagram-connector-return);
+    stroke-dasharray: 8 6;
+  }
+  .discern-diagram__arrowhead--return {
+    fill: var(--discern-diagram-connector-return);
+  }
+}

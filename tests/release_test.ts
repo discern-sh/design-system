@@ -183,6 +183,7 @@ Deno.test("the published diagram graph is neutral, local, and permission-free", 
     assert(
       !module.specifier.includes("/src/cli/") &&
         !module.specifier.endsWith(".tsx") &&
+        !module.specifier.endsWith(".fixtures.ts") &&
         !module.specifier.toLocaleLowerCase().includes("react"),
       `./diagram crossed a projection boundary: ${module.specifier}`,
     );
@@ -253,7 +254,7 @@ Deno.test("the publish-shaped artifact serves the neutral consumer alone", async
     await Deno.writeTextFile(
       join(consumer, "neutral.ts"),
       `import { packageManifest, semanticClass } from "${config.name}";
-import { renderBadgeCli, renderHeadingCli, stripAnsi } from "${config.name}/cli";
+import { renderBadgeCli, renderDiagramCli, renderHeadingCli, stripAnsi } from "${config.name}/cli";
 import {
   diagramAltText,
   describeDiagram,
@@ -293,6 +294,10 @@ const flow = {
   edges: [{ id: "ready", from: "draft", to: "publish" }],
 } as const satisfies FlowDiagramSpec;
 const diagramSvg = renderDiagramSvg(flow, { theme: "light" });
+const diagramCli = stripAnsi(renderDiagramCli(
+  { spec: flow, mode: "description", maxWidth: 48 },
+  { colorDepth: "none", columns: 48, unicode: false },
+));
 const result = await emitDesignSystemRuntime({
   outputRoot: new URL("./runtime/", import.meta.url),
   components: ["button"],
@@ -376,6 +381,8 @@ console.log(JSON.stringify({
     diagramSvg.includes("<title>Publish a guide</title>"),
   diagramDescription: describeDiagram(flow).includes("draft to publish"),
   diagramAlt: diagramAltText(flow),
+  diagramCli: diagramCli.includes("Relationships:") &&
+    diagramCli.includes("draft to publish"),
   className: semanticClass("button"),
   badge: renderBadgeCli({ label: "Ready", dot: true }, { colorDepth: "none", columns: 80, unicode: true }),
   graphemes: segmentGraphemes("A👩‍💻B").length,
@@ -410,6 +417,7 @@ console.log(JSON.stringify({
     assertStringIncludes(output, `"className":"discern-button"`);
     assertStringIncludes(output, `"diagramAccessible":true`);
     assertStringIncludes(output, `"diagramDescription":true`);
+    assertStringIncludes(output, `"diagramCli":true`);
     assertStringIncludes(
       output,
       `"diagramAlt":"Publish a guide: A checked guide progresses from draft to publication."`,

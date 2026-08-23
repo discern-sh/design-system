@@ -30,14 +30,6 @@ export type DiagramKindCliStance =
   | DiagramDescriptionCliStance
   | DiagramEnhancedCliStance;
 
-/** Generated terminal projection registration for one kind. */
-export type DiagramKindCliRegistryEntry =
-  | DiagramDescriptionCliStance
-  | {
-    readonly stance: "enhanced";
-    readonly modulePath: string;
-  };
-
 /** Authored identity, guidance, budgets, and terminal posture for one kind. */
 export interface DiagramKindMeta {
   readonly name: string;

@@ -96,7 +96,7 @@ const flowKindMeta: DiagramKindMeta = defineDiagramKindMeta(
         description: "Maximum width or height of the final tight scene.",
       },
     },
-    cli: { stance: "description" },
+    cli: { stance: "enhanced" },
   } as const,
 );
 

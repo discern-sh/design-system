@@ -11,7 +11,7 @@ import type {
 } from "./scene.ts";
 
 /** Public Token name that resolves one projection-neutral paint role. */
-export type DiagramPaintTokenName = `--discern-color-${string}`;
+export type DiagramPaintTokenName = `--discern-diagram-${string}`;
 
 /**
  * One Token authority for every diagram paint role. Live projections use the
@@ -20,19 +20,19 @@ export type DiagramPaintTokenName = `--discern-color-${string}`;
  */
 export const DIAGRAM_PAINT_TOKEN_NAMES = Object.freeze(
   {
-    canvas: "--discern-color-canvas",
-    "node-surface": "--discern-color-surface",
-    "node-border": "--discern-color-border-strong",
-    "node-text": "--discern-color-ink",
-    "quiet-annotation": "--discern-color-ink-muted",
-    accent: "--discern-color-accent-700",
-    focus: "--discern-color-accent-500",
-    success: "--discern-color-success",
-    warning: "--discern-color-warning",
-    "primary-connector": "--discern-color-ink-muted",
-    "secondary-connector": "--discern-color-ink-faint",
-    "return-connector": "--discern-color-accent-700",
-    guide: "--discern-color-border",
+    canvas: "--discern-diagram-canvas",
+    "node-surface": "--discern-diagram-node-surface",
+    "node-border": "--discern-diagram-node-border",
+    "node-text": "--discern-diagram-primary-ink",
+    "quiet-annotation": "--discern-diagram-annotation-ink",
+    accent: "--discern-diagram-accent",
+    focus: "--discern-diagram-focus",
+    success: "--discern-diagram-success",
+    warning: "--discern-diagram-warning",
+    "primary-connector": "--discern-diagram-connector-primary",
+    "secondary-connector": "--discern-diagram-connector-secondary",
+    "return-connector": "--discern-diagram-connector-return",
+    guide: "--discern-diagram-guide",
   } as const satisfies Readonly<
     Record<DiagramPaintRole, DiagramPaintTokenName>
   >,

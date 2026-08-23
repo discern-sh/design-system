@@ -37,11 +37,31 @@ export interface PreparedDiagram {
   readonly description: string;
 }
 
+/** Internal semantic result for projections that do not require geometry. */
+export interface PreparedDiagramSemantics {
+  readonly validated: DiagramSpec;
+  readonly description: string;
+}
+
 /** Complete preflight through the generated kind authority. */
 export function validateDiagram(spec: unknown): DiagramSpec {
   switch (kindOf(spec)) {
     case "flow":
       return validateFlow(spec);
+    default:
+      return unknownKind(kindOf(spec));
+  }
+}
+
+/** Validate once and derive the universal lossless description. */
+export function prepareDiagramSemantics(
+  spec: unknown,
+): PreparedDiagramSemantics {
+  switch (kindOf(spec)) {
+    case "flow": {
+      const validated = validateFlow(spec);
+      return { validated, description: describeFlow(validated) };
+    }
     default:
       return unknownKind(kindOf(spec));
   }
@@ -70,10 +90,5 @@ export function layoutDiagram(spec: unknown): DiagramScene {
 
 /** Validate and preserve every terminal-relevant semantic fact in text. */
 export function describeDiagram(spec: unknown): string {
-  switch (kindOf(spec)) {
-    case "flow":
-      return describeFlow(validateFlow(spec));
-    default:
-      return unknownKind(kindOf(spec));
-  }
+  return prepareDiagramSemantics(spec).description;
 }

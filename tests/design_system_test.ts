@@ -34,6 +34,7 @@ import {
   DestructiveActionNotice,
   Diagnostic,
   type DiagnosticProps,
+  Diagram,
   FeatureBento,
   GlossaryTerm,
   HarmonicBackdrop,
@@ -395,6 +396,12 @@ Deno.test("component metadata auto-enrols React, runtime, and CLI surfaces", asy
       join(PACKAGE_ROOT, "src", "generated", "cli-renderers.ts"),
     ),
     generated.cliRenderers,
+  );
+  assertEquals(
+    await Deno.readTextFile(
+      join(PACKAGE_ROOT, "src", "generated", "diagram-metadata.ts"),
+    ),
+    generated.diagramMetadata,
   );
   assertEquals(
     await Deno.readTextFile(
@@ -1674,6 +1681,10 @@ Deno.test("neutral entrypoints work in an external cached-only Deno project", as
         "../src/cli/mod.ts",
         import.meta.url,
       ).href,
+      "@discern-sh/design-system/diagram": new URL(
+        "../src/diagram/mod.ts",
+        import.meta.url,
+      ).href,
       "@discern-sh/design-system/manifest": new URL(
         "../src/manifest.ts",
         import.meta.url,
@@ -1709,8 +1720,19 @@ Deno.test("neutral entrypoints work in an external cached-only Deno project", as
       join(temp, "neutral.ts"),
       `import { packageManifest, semanticClass } from "@discern-sh/design-system";
 import { renderBadgeCli } from "@discern-sh/design-system/cli";
+import { renderDiagramSvg } from "@discern-sh/design-system/diagram";
 import { emitDesignSystemRuntime } from "@discern-sh/design-system/runtime";
 import { discernTheme } from "@discern-sh/design-system/theme/discern";
+const flow = {
+  kind: "flow",
+  title: "Check a reference",
+  summary: "A draft progresses to a checked reference.",
+  nodes: [
+    { id: "draft", label: "Draft", role: "start" },
+    { id: "checked", label: "Checked", role: "end" },
+  ],
+  edges: [{ id: "ready", from: "draft", to: "checked" }],
+} as const;
 const result = await emitDesignSystemRuntime({
   outputRoot: new URL("./runtime/", import.meta.url),
   components: ["button"],
@@ -1719,6 +1741,7 @@ console.log(JSON.stringify({
   className: semanticClass("button"),
   badge: renderBadgeCli({ label: "Ready", dot: true }, { colorDepth: "none", columns: 80, unicode: true }),
   components: result.components,
+  diagram: renderDiagramSvg(flow).includes('role="img"'),
   package: packageManifest.package,
   theme: discernTheme.name,
 }));
@@ -1732,6 +1755,7 @@ console.log(JSON.stringify({
     ]);
     assertStringIncludes(first, '"className":"discern-button"');
     assertStringIncludes(first, '"badge":"[● Ready]"');
+    assertStringIncludes(first, '"diagram":true');
     const cached = await command(temp, [
       "run",
       "--cached-only",
@@ -1768,8 +1792,21 @@ console.log(JSON.stringify({
       join(temp, "react-consumer.ts"),
       `import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { Button } from "@discern-sh/design-system/react";
-console.log(renderToStaticMarkup(createElement(Button, null, "Continue")));
+import { Button, Diagram } from "@discern-sh/design-system/react";
+const flow = {
+  kind: "flow",
+  title: "Check a reference",
+  summary: "A draft progresses to a checked reference.",
+  nodes: [
+    { id: "draft", label: "Draft", role: "start" },
+    { id: "checked", label: "Checked", role: "end" },
+  ],
+  edges: [{ id: "ready", from: "draft", to: "checked" }],
+} as const;
+console.log(renderToStaticMarkup(createElement("main", null,
+  createElement(Button, null, "Continue"),
+  createElement(Diagram, { spec: flow }),
+)));
 `,
     );
     const rendered = await command(temp, [
@@ -1784,6 +1821,7 @@ console.log(renderToStaticMarkup(createElement(Button, null, "Continue")));
       "react-consumer.ts",
     ]);
     assertStringIncludes(rendered, 'class="discern-button ');
+    assertStringIncludes(rendered, 'class="discern-diagram"');
     assert(!rendered.includes("react"));
     assertEquals(cachedRendered, rendered);
   } finally {
@@ -1805,6 +1843,22 @@ Deno.test("semantic HTML and React adapters share the public class contract", ()
     'class="discern-button discern-button--secondary discern-button--md"',
   );
   assertMatch(html, /^<button/);
+
+  const diagram = renderToStaticMarkup(createElement(Diagram, {
+    spec: {
+      kind: "flow",
+      title: "Check a reference",
+      summary: "A draft progresses to a checked reference.",
+      nodes: [
+        { id: "draft", label: "Draft", role: "start" },
+        { id: "checked", label: "Checked", role: "end" },
+      ],
+      edges: [{ id: "ready", from: "draft", to: "checked" }],
+    },
+  }));
+  assertMatch(diagram, /^<svg/);
+  assertStringIncludes(diagram, 'class="discern-diagram"');
+  assertStringIncludes(diagram, 'role="img"');
 
   const breadcrumbs = renderToStaticMarkup(
     createElement(Breadcrumbs, {
@@ -2407,6 +2461,7 @@ Deno.test("monospace is reserved for brand names and code-bearing surfaces", asy
     "src/components/display/terminal/terminal.css::.discern-terminal__body",
     "src/components/editorial/code-block/code-block.css::.discern-code-block",
     "src/components/editorial/code-listing/code-listing.css::.discern-code-listing__body",
+    "src/components/editorial/diagram/diagram.css::.discern-diagram__text--quiet-annotation",
     "src/components/editorial/prose/prose.css::.discern-prose :not(pre) > code",
     "src/components/marketing/site-footer/site-footer.css::.discern-site-footer__brand--mono",
     "src/components/marketing/site-header/site-header.css::.discern-site-header__brand--mono",
