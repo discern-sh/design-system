@@ -446,7 +446,7 @@ Deno.test("React Diagram browser geometry holds for the generated corpus", async
                 }
               }
               const actualScale = await page.evaluate(() =>
-                window.visualViewport?.scale ?? 1
+                globalThis.visualViewport?.scale ?? 1
               );
               assert(
                 Math.abs(actualScale - pageScale) <= 0.01,

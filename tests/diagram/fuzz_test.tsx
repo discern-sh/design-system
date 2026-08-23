@@ -59,6 +59,7 @@ function errorIdentity(error: unknown): ErrorIdentity {
 function publicBoundaryActions(spec: unknown): readonly (() => unknown)[] {
   const typed = spec as DiagramSpec;
   const resource = { source: "./fuzz-diagram.svg", spec: typed } as const;
+  const markdownSource = '![Fuzz diagram](./fuzz-diagram.svg "Fuzz summary")';
   return [
     () => validateDiagram(spec),
     () => layoutDiagram(spec),
@@ -70,13 +71,13 @@ function publicBoundaryActions(spec: unknown): readonly (() => unknown)[] {
     () => renderToStaticMarkup(<Diagram spec={typed} />),
     () =>
       renderMarkdownCli({
-        source: '![Fuzz diagram](./fuzz-diagram.svg "Fuzz summary")',
+        source: markdownSource,
         diagrams: [resource],
       }, capabilities),
     () =>
       renderToStaticMarkup(
         <Markdown
-          source={'![Fuzz diagram](./fuzz-diagram.svg "Fuzz summary")'}
+          source={markdownSource}
           diagrams={[resource]}
         />,
       ),
