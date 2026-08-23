@@ -1,6 +1,11 @@
 /** Deterministic radial layout for documentation-scale repeating cycles. */
 
-import { DIAGRAM_GEOMETRY, roundDiagramNumber } from "../../geometry.ts";
+import { DiagramValidationError } from "../../errors.ts";
+import {
+  DIAGRAM_GEOMETRY,
+  diagramRectsOverlap,
+  roundDiagramNumber,
+} from "../../geometry.ts";
 import {
   createDiagramConnector,
   createDiagramScene,
@@ -50,9 +55,10 @@ const SPOKE_MAXIMUM_TEXT_WIDTH = 180;
 const MINIMUM_RING_RADIUS = 300;
 const HUB_RING_RADIUS = 340;
 const STAGE_ARC_GAP = 72;
-const LOOP_OUTER_GAP = 76;
 const LOOP_TANGENT_LENGTH = 52;
+const LOOP_TRACK_GAP = 20;
 const SPOKE_LABEL_CLEARANCE = 14;
+const SPOKE_LABEL_SEARCH_DISTANCE = 320;
 
 function measuredText(options: {
   readonly text: string;
@@ -288,7 +294,6 @@ function outerLoopConnector(
   source: StagePlan,
   target: StagePlan,
   center: DiagramPoint,
-  outerRadius: number,
   angularStep: number,
 ): DiagramConnector {
   const sourceTangent = clockwiseTangent(source.angle);
@@ -298,6 +303,18 @@ function outerLoopConnector(
     x: -targetTangent.x,
     y: -targetTangent.y,
   });
+  const sourceExit = add(sourcePort, sourceTangent, LOOP_TANGENT_LENGTH);
+  const targetApproach = add(
+    targetPort,
+    targetTangent,
+    -LOOP_TANGENT_LENGTH,
+  );
+  const radialDistance = (point: DiagramPoint): number =>
+    Math.hypot(point.x - center.x, point.y - center.y);
+  const trackRadius = Math.max(
+    radialDistance(sourceExit),
+    radialDistance(targetApproach),
+  ) + LOOP_TRACK_GAP;
   const midpointAngle = source.angle + angularStep / 2;
   const midpointDirection = unit(midpointAngle);
   return createDiagramConnector({
@@ -309,9 +326,9 @@ function outerLoopConnector(
     routing: "polyline",
     pathWithTip: [
       sourcePort,
-      add(sourcePort, sourceTangent, LOOP_TANGENT_LENGTH),
-      add(center, midpointDirection, outerRadius),
-      add(targetPort, targetTangent, -LOOP_TANGENT_LENGTH),
+      sourceExit,
+      add(center, midpointDirection, trackRadius),
+      targetApproach,
       targetPort,
     ],
     path: `cycle stage ${source.stage.id}`,
@@ -324,30 +341,51 @@ function spokeLabel(
   id: string,
   ownerId: string,
   measured: DiagramMeasuredText,
-  center: DiagramPoint,
-  stageCenter: DiagramPoint,
+  stagePort: DiagramPoint,
+  hubPort: DiagramPoint,
   tangent: DiagramPoint,
+  obstacles: readonly DiagramRect[],
+  occupiedLabels: readonly DiagramRect[],
 ): DiagramText {
-  const dx = stageCenter.x - center.x;
-  const dy = stageCenter.y - center.y;
-  const distance = Math.hypot(dx, dy);
-  const radial = { x: dx / distance, y: dy / distance };
-  const anchor = add(center, radial, distance * 0.58);
+  const anchor = {
+    x: roundDiagramNumber((stagePort.x + hubPort.x) / 2),
+    y: roundDiagramNumber((stagePort.y + hubPort.y) / 2),
+  };
   const projectedHalfExtent = Math.abs(tangent.x) * measured.width / 2 +
     Math.abs(tangent.y) * measured.height / 2;
-  const labelCenter = add(
-    anchor,
-    tangent,
-    projectedHalfExtent + SPOKE_LABEL_CLEARANCE,
-  );
-  return positionDiagramText({
-    id,
-    ownerId,
-    placement: "free",
-    role: "connector-label",
-    measured,
-    centerX: labelCenter.x,
-    top: labelCenter.y - measured.height / 2,
+  const baseOffset = projectedHalfExtent + SPOKE_LABEL_CLEARANCE;
+  for (
+    let additional = 0;
+    additional <= SPOKE_LABEL_SEARCH_DISTANCE;
+    additional += G.rhythm
+  ) {
+    for (const side of [1, -1] as const) {
+      const labelCenter = add(
+        anchor,
+        tangent,
+        side * (baseOffset + additional),
+      );
+      const candidate = positionDiagramText({
+        id,
+        ownerId,
+        placement: "free",
+        role: "connector-label",
+        measured,
+        centerX: labelCenter.x,
+        top: labelCenter.y - measured.height / 2,
+      });
+      const collides = [...obstacles, ...occupiedLabels].some((bounds) =>
+        diagramRectsOverlap(candidate.bounds, bounds, G.text.clearance)
+      );
+      if (!collides) return candidate;
+    }
+  }
+  throw new DiagramValidationError({
+    code: "diagram/layout/edge-label",
+    message: `Hub relationship ${ownerId} has no clear label position.`,
+    path: `spoke ${ownerId} label`,
+    remedy:
+      "Shorten the relationship label or split the cycle into an overview and a focused exchange.",
   });
 }
 
@@ -381,14 +419,11 @@ export default function layoutCycleDiagram(
   const groups: DiagramSceneGroup[] = [];
   const root: string[] = [];
 
-  const maximumHalfExtent = maximumStageExtent / 2;
-  const outerRadius = radius + maximumHalfExtent + LOOP_OUTER_GAP;
   const loopConnectors = stages.map((stage, index) =>
     outerLoopConnector(
       stage,
       stages[(index + 1) % stages.length] as StagePlan,
       center,
-      outerRadius,
       angularStep,
     )
   );
@@ -401,6 +436,11 @@ export default function layoutCycleDiagram(
 
   if (hub !== undefined && spec.spokes.length > 0) {
     const spokeChildren: string[] = [];
+    const shapeObstacles = [
+      ...stages.map((stage) => stage.bounds),
+      hub.bounds,
+    ];
+    const occupiedLabels: DiagramRect[] = [];
     for (const spoke of spec.spokes) {
       const stage = stageById.get(spoke.stageId) as StagePlan;
       const stageCenter = diagramRectCenter(stage.bounds);
@@ -447,10 +487,13 @@ export default function layoutCycleDiagram(
         `spoke-${spoke.id}-label`,
         spoke.id,
         labelMeasure,
-        center,
-        stageCenter,
+        stagePort,
+        hubPort,
         clockwiseTangent(stage.angle),
+        shapeObstacles,
+        occupiedLabels,
       );
+      occupiedLabels.push(label.bounds);
       elements.push(connector, label);
       spokeChildren.push(connector.id, label.id);
     }

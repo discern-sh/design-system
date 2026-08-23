@@ -37,6 +37,7 @@ import type {
 import validateCycleDiagram from "../../src/diagram/kinds/cycle/cycle.validation.ts";
 
 const EPSILON = 0.02;
+const LOOP_RADIAL_DETOUR_LIMIT = 76;
 
 const minimum = {
   kind: "cycle",
@@ -79,6 +80,26 @@ const longLabel = {
       label: "Newly observed evidence",
     },
   ],
+} as const satisfies CycleDiagramSpec;
+
+const horizontalSpokePressure = {
+  kind: "cycle",
+  title: "Keep a horizontal exchange clear",
+  summary:
+    "An unrelated future case keeps a labelled hub exchange outside its endpoint boxes.",
+  stages: [
+    { id: "north", label: "Scan the current inputs" },
+    { id: "east", label: "Inspect the accumulated evidence" },
+    { id: "south", label: "Choose the next question" },
+    { id: "west", label: "Record the resulting lesson" },
+  ],
+  hub: { id: "centre", label: "Common reference" },
+  spokes: [{
+    id: "reference-signal",
+    stageId: "east",
+    direction: "from-hub",
+    label: "Reference signal",
+  }],
 } as const satisfies CycleDiagramSpec;
 
 const denseSupported = fixtures[2];
@@ -191,7 +212,14 @@ Hub relationships:
 });
 
 Deno.test("minimum, representative, long-label, and dense cycles conform", () => {
-  for (const spec of [minimum, ...fixtures, longLabel]) {
+  for (
+    const spec of [
+      minimum,
+      ...fixtures,
+      longLabel,
+      horizontalSpokePressure,
+    ]
+  ) {
     const first = scene(spec);
     assertEquals(first.sourceKind, "cycle");
     assert(first.canvas.bounds.width > 0 && first.canvas.bounds.height > 0);
@@ -280,6 +308,126 @@ Deno.test("outer arrows follow the clockwise tangent and close one loop", () => 
       Math.hypot(arrow.x, arrow.y);
     assert(dot > 0.99, `${connector.semanticId} arrow is not tangent-forward`);
   }
+});
+
+Deno.test("outer loop stays on one compact clockwise track", () => {
+  const detours: string[] = [];
+  for (const spec of [minimum, ...fixtures, longLabel]) {
+    const result = scene(spec);
+    const shapes = result.elements.filter((element): element is DiagramShape =>
+      element.kind === "shape"
+    );
+    const hub = shapes.find((shape) => shape.style === "focus");
+    const stageCenters = shapes.filter((shape) => shape.style !== "focus").map(
+      (shape) => center(shape.bounds),
+    );
+    const loopCenter = hub === undefined
+      ? {
+        x: stageCenters.reduce((sum, point) => sum + point.x, 0) /
+          stageCenters.length,
+        y: stageCenters.reduce((sum, point) => sum + point.y, 0) /
+          stageCenters.length,
+      }
+      : center(hub.bounds);
+    const radialDistance = (point: DiagramPoint): number =>
+      Math.hypot(point.x - loopCenter.x, point.y - loopCenter.y);
+    const loop = result.elements.filter((
+      element,
+    ): element is DiagramConnector =>
+      element.kind === "connector" &&
+      element.semanticId.startsWith("cycle-order-")
+    );
+    for (const connector of loop) {
+      const points = [...connector.points, connector.arrowhead.tip];
+      const endpointRadius = Math.max(
+        radialDistance(points[0] as DiagramPoint),
+        radialDistance(points.at(-1) as DiagramPoint),
+      );
+      const radialDetour = Math.max(...points.map(radialDistance)) -
+        endpointRadius;
+      if (radialDetour > LOOP_RADIAL_DETOUR_LIMIT) {
+        detours.push(
+          `${spec.title}/${connector.semanticId}: ${radialDetour.toFixed(2)}`,
+        );
+      }
+      let previous = Math.atan2(
+        (points[0] as DiagramPoint).y - loopCenter.y,
+        (points[0] as DiagramPoint).x - loopCenter.x,
+      );
+      for (const point of points.slice(1)) {
+        let angle = Math.atan2(
+          point.y - loopCenter.y,
+          point.x - loopCenter.x,
+        );
+        while (angle < previous - EPSILON) angle += Math.PI * 2;
+        assert(angle >= previous - EPSILON);
+        previous = angle;
+      }
+    }
+  }
+  assertEquals(detours, []);
+});
+
+Deno.test("every supported spoke label clears every cycle node", () => {
+  const collisions: string[] = [];
+  const offCenter: string[] = [];
+  for (const spec of [...fixtures, longLabel, horizontalSpokePressure]) {
+    const result = layoutCycleDiagram(validateCycleDiagram(spec));
+    const shapes = result.elements.filter((element): element is DiagramShape =>
+      element.kind === "shape"
+    );
+    const spokeLabels = result.elements.filter((
+      element,
+    ): element is DiagramText =>
+      element.kind === "text" && element.id.startsWith("spoke-")
+    );
+    for (const label of spokeLabels) {
+      for (const shape of shapes) {
+        if (diagramRectsOverlap(label.bounds, shape.bounds, 4)) {
+          collisions.push(
+            `${spec.title}/${label.id}/${shape.semanticId}`,
+          );
+        }
+      }
+      const connector = result.elements.find((element) =>
+        element.kind === "connector" && element.semanticId === label.ownerId
+      );
+      assert(connector?.kind === "connector");
+      const hub = shapes.find((shape) => shape.style === "focus");
+      const stage = shapes.find((shape) =>
+        shape !== hub && (shape.semanticId === connector.sourceId ||
+          shape.semanticId === connector.targetId)
+      );
+      assert(hub !== undefined);
+      assert(stage !== undefined && stage !== hub);
+      const hubCenter = center(hub.bounds);
+      const stageCenter = center(stage.bounds);
+      const distance = Math.hypot(
+        stageCenter.x - hubCenter.x,
+        stageCenter.y - hubCenter.y,
+      );
+      const radial = {
+        x: (stageCenter.x - hubCenter.x) / distance,
+        y: (stageCenter.y - hubCenter.y) / distance,
+      };
+      const spanMidpoint = {
+        x: ((connector.points[0]?.x ?? 0) + connector.arrowhead.tip.x) / 2,
+        y: ((connector.points[0]?.y ?? 0) + connector.arrowhead.tip.y) / 2,
+      };
+      const labelCenter = center(label.bounds);
+      const radialDrift = Math.abs(
+        (labelCenter.x - spanMidpoint.x) * radial.x +
+          (labelCenter.y - spanMidpoint.y) * radial.y,
+      );
+      if (radialDrift > EPSILON) {
+        offCenter.push(
+          `${spec.title}/${label.id}: ${radialDrift.toFixed(2)}`,
+        );
+      }
+    }
+  }
+  assertEquals(collisions, []);
+  assertEquals(offCenter, []);
 });
 
 Deno.test("hub spokes stay inside the ring with clear labels and distinct ports", () => {
