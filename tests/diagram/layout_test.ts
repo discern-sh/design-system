@@ -7,6 +7,7 @@ import {
 import { conformDiagramScene } from "../../src/diagram/conformance.ts";
 import { DiagramConformanceError } from "../../src/diagram/errors.ts";
 import {
+  DIAGRAM_GEOMETRY,
   diagramPointBounds,
   diagramRectBottom,
   diagramRectRight,
@@ -15,6 +16,7 @@ import {
 import {
   createDiagramConnector,
   createDiagramGuide,
+  translateDiagramElement,
 } from "../../src/diagram/layout-authority.ts";
 import type {
   DiagramConnector,
@@ -215,7 +217,7 @@ function syntheticConnector(
 function syntheticScene(
   elements: DiagramScene["elements"],
 ): DiagramScene {
-  const padding = 20;
+  const padding = DIAGRAM_GEOMETRY.canvasPadding;
   const content = diagramRectUnion(elements.map((element) => element.bounds));
   return {
     kind: "diagram-scene",
@@ -443,6 +445,171 @@ Deno.test("shared conformance rejects overlapping relationship runs", () => {
   const error = assertThrows(() => conformDiagramScene(scene));
   assertInstanceOf(error, DiagramConformanceError);
   assert(error.message.includes("overlap"));
+});
+
+Deno.test("shared conformance rejects inverted or detached arrow geometry", () => {
+  const scene = structuredClone(layoutDiagram(fixtures[1])) as DiagramScene;
+  const connector = scene.elements.find((element) =>
+    element.kind === "connector"
+  );
+  assert(connector?.kind === "connector");
+  const tip = connector.arrowhead.tip;
+  const mutable = connector as unknown as {
+    bounds: DiagramRect;
+    arrowhead: {
+      left: DiagramPoint;
+      right: DiagramPoint;
+      bounds: DiagramRect;
+    };
+  };
+  mutable.arrowhead.left = { x: tip.x + 10, y: tip.y - 5 };
+  mutable.arrowhead.right = { x: tip.x + 10, y: tip.y + 5 };
+  mutable.arrowhead.bounds = diagramPointBounds([
+    tip,
+    mutable.arrowhead.left,
+    mutable.arrowhead.right,
+  ]);
+  mutable.bounds = diagramRectUnion([
+    diagramPointBounds(connector.points, connector.lineWidth / 2),
+    mutable.arrowhead.bounds,
+  ]);
+  assertThrows(
+    () => conformDiagramScene(scene),
+    DiagramConformanceError,
+    "arrowhead",
+  );
+});
+
+Deno.test("shared conformance rejects connector re-entry through endpoint fill", () => {
+  const source = syntheticShape("source", 20, 20);
+  const target = syntheticShape("target", 220, 20);
+  const connector = syntheticConnector(
+    "route",
+    "source",
+    "target",
+    [
+      { x: 60, y: 40 },
+      { x: 100, y: 40 },
+      { x: 100, y: 30 },
+      { x: 40, y: 30 },
+      { x: 40, y: 80 },
+      { x: 180, y: 80 },
+      { x: 180, y: 40 },
+      { x: 220, y: 40 },
+    ],
+  );
+  assertThrows(
+    () => conformDiagramScene(syntheticScene([source, target, connector])),
+    DiagramConformanceError,
+    "source fill",
+  );
+});
+
+Deno.test("shared conformance rejects zero-length connector runs", () => {
+  const scene = structuredClone(layoutDiagram(fixtures[1])) as DiagramScene;
+  const connector = scene.elements.find((element) =>
+    element.kind === "connector"
+  );
+  assert(connector?.kind === "connector");
+  const mutable = connector as unknown as {
+    points: DiagramPoint[];
+    bounds: DiagramRect;
+  };
+  mutable.points.splice(1, 0, { ...mutable.points[0] as DiagramPoint });
+  mutable.bounds = diagramRectUnion([
+    diagramPointBounds(mutable.points, connector.lineWidth / 2),
+    connector.arrowhead.bounds,
+  ]);
+  assertThrows(
+    () => conformDiagramScene(scene),
+    DiagramConformanceError,
+    "zero-length run",
+  );
+});
+
+Deno.test("shared conformance rejects same-owner and free-text collisions", () => {
+  const scene = structuredClone(layoutDiagram(fixtures[0])) as DiagramScene;
+  const label = scene.elements.find((element) =>
+    element.kind === "text" && element.id === "node-revise-label"
+  );
+  const annotation = scene.elements.find((element) =>
+    element.kind === "text" && element.id === "node-revise-annotation"
+  );
+  assert(label?.kind === "text" && annotation?.kind === "text");
+  const text = annotation as unknown as {
+    bounds: DiagramRect;
+    lines: Array<{ text: string; x: number; baseline: number; width: number }>;
+  };
+  const dx = label.bounds.x + label.bounds.width / 2 -
+    (annotation.bounds.x + annotation.bounds.width / 2);
+  const dy = label.bounds.y - annotation.bounds.y;
+  text.bounds = {
+    ...annotation.bounds,
+    x: annotation.bounds.x + dx,
+    y: annotation.bounds.y + dy,
+  };
+  text.lines = annotation.lines.map((line) => ({
+    ...line,
+    x: line.x + dx,
+    baseline: line.baseline + dy,
+  }));
+  assertThrows(
+    () => conformDiagramScene(scene),
+    DiagramConformanceError,
+    "collides",
+  );
+
+  const freeScene = syntheticScene([
+    syntheticShape("unrelated", 20, 20),
+    {
+      kind: "text",
+      id: "relationship-label",
+      ownerId: "route",
+      placement: "free",
+      role: "connector-label",
+      fontRole: "interface",
+      fontSize: 13,
+      lineHeight: 17,
+      bounds: { x: 25, y: 25, width: 20, height: 17 },
+      lines: [{ text: "Route", x: 25, baseline: 38, width: 20 }],
+    },
+    syntheticShape("source", 20, 100),
+    syntheticShape("target", 220, 100),
+    syntheticConnector("route", "source", "target", [
+      { x: 60, y: 120 },
+      { x: 220, y: 120 },
+    ]),
+  ]);
+  assertThrows(
+    () => conformDiagramScene(freeScene),
+    DiagramConformanceError,
+    "overlaps unrelated node",
+  );
+});
+
+Deno.test("shared conformance enforces the canonical minimum canvas padding", () => {
+  const scene = structuredClone(layoutDiagram(fixtures[1])) as DiagramScene;
+  const shift = scene.canvas.padding - 1;
+  const mutable = scene as unknown as {
+    canvas: { padding: number; bounds: DiagramRect };
+    elements: DiagramScene["elements"];
+  };
+  const canvas = mutable.canvas;
+  canvas.padding = 1;
+  canvas.bounds = {
+    x: 0,
+    y: 0,
+    width: canvas.bounds.width - shift * 2,
+    height: canvas.bounds.height - shift * 2,
+  };
+  mutable.elements = scene.elements.map((element) =>
+    translateDiagramElement(element, -shift, -shift)
+  );
+  assertThrows(
+    () => conformDiagramScene(scene),
+    DiagramConformanceError,
+    "padding",
+  );
 });
 
 Deno.test("shared regions, guides, and explicit polyline routing conform together", () => {

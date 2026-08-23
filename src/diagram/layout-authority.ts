@@ -129,12 +129,23 @@ export function compactDiagramPoints(
   points: readonly DiagramPoint[],
 ): readonly DiagramPoint[] {
   const compact: DiagramPoint[] = [];
+  const precisionStep = 10 ** -DIAGRAM_GEOMETRY.precision;
   for (const point of points) {
-    const rounded = {
+    let rounded = {
       x: roundDiagramNumber(point.x),
       y: roundDiagramNumber(point.y),
     };
     const previous = compact.at(-1);
+    if (previous !== undefined) {
+      rounded = {
+        x: Math.abs(previous.x - rounded.x) <= precisionStep
+          ? previous.x
+          : rounded.x,
+        y: Math.abs(previous.y - rounded.y) <= precisionStep
+          ? previous.y
+          : rounded.y,
+      };
+    }
     if (
       previous === undefined || previous.x !== rounded.x ||
       previous.y !== rounded.y
@@ -321,12 +332,11 @@ export function createDiagramScene(options: {
   readonly root: readonly string[];
   readonly meta: DiagramKindMeta;
   readonly extentBudget?: string;
-  readonly padding?: number;
 }): DiagramScene {
   const content = diagramRectUnion(
     options.elements.map((element) => element.bounds),
   );
-  const padding = options.padding ?? DIAGRAM_GEOMETRY.canvasPadding;
+  const padding = DIAGRAM_GEOMETRY.canvasPadding;
   const dx = padding - content.x;
   const dy = padding - content.y;
   const elements = options.elements.map((element) =>

@@ -72,6 +72,96 @@ function pointStrictlyInRect(point: DiagramPoint, rect: DiagramRect): boolean {
     point.y < diagramRectBottom(rect) - EPSILON;
 }
 
+function pointStrictlyInShape(
+  point: DiagramPoint,
+  shape: DiagramShape,
+): boolean {
+  if (!pointStrictlyInRect(point, shape.bounds)) return false;
+  const centerX = shape.bounds.x + shape.bounds.width / 2;
+  const centerY = shape.bounds.y + shape.bounds.height / 2;
+  if (shape.shape === "diamond") {
+    return Math.abs(point.x - centerX) / (shape.bounds.width / 2) +
+        Math.abs(point.y - centerY) / (shape.bounds.height / 2) <
+      1 - EPSILON;
+  }
+  const radius = Math.min(
+    shape.radius,
+    shape.bounds.width / 2,
+    shape.bounds.height / 2,
+  );
+  if (radius <= EPSILON) return true;
+  if (
+    point.x >= shape.bounds.x + radius &&
+      point.x <= diagramRectRight(shape.bounds) - radius ||
+    point.y >= shape.bounds.y + radius &&
+      point.y <= diagramRectBottom(shape.bounds) - radius
+  ) return true;
+  const cornerX = point.x < centerX
+    ? shape.bounds.x + radius
+    : diagramRectRight(shape.bounds) - radius;
+  const cornerY = point.y < centerY
+    ? shape.bounds.y + radius
+    : diagramRectBottom(shape.bounds) - radius;
+  return Math.hypot(point.x - cornerX, point.y - cornerY) < radius - EPSILON;
+}
+
+function segmentRectInterval(
+  start: DiagramPoint,
+  end: DiagramPoint,
+  rect: DiagramRect,
+): readonly [number, number] | undefined {
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  let entry = 0;
+  let exit = 1;
+  const boundaries = [
+    [-dx, start.x - rect.x],
+    [dx, diagramRectRight(rect) - start.x],
+    [-dy, start.y - rect.y],
+    [dy, diagramRectBottom(rect) - start.y],
+  ] as const;
+  for (const [direction, distance] of boundaries) {
+    if (Math.abs(direction) <= EPSILON) {
+      if (distance < -EPSILON) return undefined;
+      continue;
+    }
+    const ratio = distance / direction;
+    if (direction < 0) entry = Math.max(entry, ratio);
+    else exit = Math.min(exit, ratio);
+    if (entry > exit + EPSILON) return undefined;
+  }
+  return [entry, exit];
+}
+
+function segmentCrossesShapeInterior(
+  start: DiagramPoint,
+  end: DiagramPoint,
+  shape: DiagramShape,
+): boolean {
+  const interval = segmentRectInterval(start, end, shape.bounds);
+  if (interval === undefined || interval[1] - interval[0] <= EPSILON) {
+    return false;
+  }
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const lengthSquared = dx * dx + dy * dy;
+  if (lengthSquared <= EPSILON) return pointStrictlyInShape(start, shape);
+  const centerX = shape.bounds.x + shape.bounds.width / 2;
+  const centerY = shape.bounds.y + shape.bounds.height / 2;
+  const closest = Math.max(
+    interval[0],
+    Math.min(
+      interval[1],
+      ((centerX - start.x) * dx + (centerY - start.y) * dy) /
+        lengthSquared,
+    ),
+  );
+  return pointStrictlyInShape(
+    { x: start.x + dx * closest, y: start.y + dy * closest },
+    shape,
+  );
+}
+
 function shapeContainsRect(
   shape: DiagramShape,
   rect: DiagramRect,
@@ -148,27 +238,7 @@ function segmentIntersectsRect(
   end: DiagramPoint,
   rect: DiagramRect,
 ): boolean {
-  const dx = end.x - start.x;
-  const dy = end.y - start.y;
-  let entry = 0;
-  let exit = 1;
-  const boundaries = [
-    [-dx, start.x - rect.x],
-    [dx, diagramRectRight(rect) - start.x],
-    [-dy, start.y - rect.y],
-    [dy, diagramRectBottom(rect) - start.y],
-  ] as const;
-  for (const [direction, distance] of boundaries) {
-    if (Math.abs(direction) <= EPSILON) {
-      if (distance < -EPSILON) return false;
-      continue;
-    }
-    const ratio = distance / direction;
-    if (direction < 0) entry = Math.max(entry, ratio);
-    else exit = Math.min(exit, ratio);
-    if (entry > exit + EPSILON) return false;
-  }
-  return true;
+  return segmentRectInterval(start, end, rect) !== undefined;
 }
 
 function pointOnSegment(
@@ -316,7 +386,12 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
   }
   positiveRect(scene.canvas.bounds, "canvas");
   finite(scene.canvas.padding, "canvas.padding");
-  if (scene.canvas.padding <= 0) defect("Canvas padding must be positive.");
+  if (scene.canvas.padding < DIAGRAM_GEOMETRY.canvasPadding) {
+    defect(
+      `Canvas padding must be at least ${DIAGRAM_GEOMETRY.canvasPadding}.`,
+      { padding: scene.canvas.padding },
+    );
+  }
 
   const ids = new Set<string>();
   for (const element of scene.elements) {
@@ -499,10 +574,22 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
       const rightText = texts[right];
       if (
         leftText !== undefined && rightText !== undefined &&
-        leftText.ownerId !== rightText.ownerId &&
         diagramRectsOverlap(leftText.bounds, rightText.bounds, TEXT_CLEARANCE)
       ) {
         defect(`Text ${leftText.id} collides with ${rightText.id}.`);
+      }
+    }
+  }
+  for (const text of texts) {
+    for (const shape of shapes) {
+      if (
+        text.placement === "inside-shape" &&
+        text.ownerId === shape.semanticId
+      ) continue;
+      if (diagramRectsOverlap(text.bounds, shape.bounds, TEXT_CLEARANCE)) {
+        defect(
+          `Text ${text.id} overlaps unrelated node ${shape.semanticId}.`,
+        );
       }
     }
   }
@@ -543,6 +630,72 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
         `Connector ${connector.semanticId} is detached from its target boundary.`,
       );
     }
+    const arrowBase = {
+      x: roundDiagramNumber(
+        (connector.arrowhead.left.x + connector.arrowhead.right.x) / 2,
+      ),
+      y: roundDiagramNumber(
+        (connector.arrowhead.left.y + connector.arrowhead.right.y) / 2,
+      ),
+    };
+    const arrowDx = connector.arrowhead.tip.x - arrowBase.x;
+    const arrowDy = connector.arrowhead.tip.y - arrowBase.y;
+    const wingDx = connector.arrowhead.left.x - connector.arrowhead.right.x;
+    const wingDy = connector.arrowhead.left.y - connector.arrowhead.right.y;
+    if (
+      !equalPoint(arrowBase, last) ||
+      Math.abs(
+          Math.hypot(arrowDx, arrowDy) -
+            DIAGRAM_GEOMETRY.connector.arrowLength,
+        ) > ATTACHMENT_TOLERANCE ||
+      Math.abs(
+          Math.hypot(
+            connector.arrowhead.left.x - arrowBase.x,
+            connector.arrowhead.left.y - arrowBase.y,
+          ) - DIAGRAM_GEOMETRY.connector.arrowHalfWidth,
+        ) > ATTACHMENT_TOLERANCE ||
+      Math.abs(
+          Math.hypot(
+            connector.arrowhead.right.x - arrowBase.x,
+            connector.arrowhead.right.y - arrowBase.y,
+          ) - DIAGRAM_GEOMETRY.connector.arrowHalfWidth,
+        ) > ATTACHMENT_TOLERANCE ||
+      Math.abs(arrowDx * wingDx + arrowDy * wingDy) /
+            (Math.hypot(arrowDx, arrowDy) * Math.hypot(wingDx, wingDy)) >
+        0.005
+    ) {
+      defect(
+        `Connector ${connector.semanticId} has invalid arrowhead geometry.`,
+      );
+    }
+    const beforeBase = connector.points.at(-2);
+    if (beforeBase === undefined) {
+      defect(`Connector ${connector.semanticId} has no arrowhead approach.`);
+    }
+    const approachX = arrowBase.x - beforeBase.x;
+    const approachY = arrowBase.y - beforeBase.y;
+    if (
+      approachX * arrowDx + approachY * arrowDy <= EPSILON ||
+      Math.abs(approachX * arrowDy - approachY * arrowDx) >
+        ATTACHMENT_TOLERANCE * Math.hypot(approachX, approachY)
+    ) {
+      defect(`Connector ${connector.semanticId} arrowhead opposes its body.`);
+    }
+    if (
+      target.kind === "shape" &&
+      [
+        [connector.arrowhead.tip, connector.arrowhead.left],
+        [connector.arrowhead.tip, connector.arrowhead.right],
+        [connector.arrowhead.left, connector.arrowhead.right],
+      ].some(([start, end]) =>
+        start !== undefined && end !== undefined &&
+        segmentCrossesShapeInterior(start, end, target)
+      )
+    ) {
+      defect(
+        `Connector ${connector.semanticId} arrowhead passes behind its target fill.`,
+      );
+    }
     const second = connector.points[1];
     if (
       source.kind === "shape" && second !== undefined &&
@@ -564,6 +717,9 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
       defect(`Connector ${connector.semanticId} declares stale bounds.`);
     }
     for (const [start, end] of connectorSegments(connector)) {
+      if (equalPoint(start, end)) {
+        defect(`Connector ${connector.semanticId} contains a zero-length run.`);
+      }
       if (
         connector.routing === "orthogonal" &&
         Math.abs(start.x - end.x) > EPSILON &&
@@ -574,7 +730,16 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
         );
       }
       for (const shape of shapes) {
-        if (shape === source || shape === target) continue;
+        if (shape === source || shape === target) {
+          if (segmentCrossesShapeInterior(start, end, shape)) {
+            defect(
+              `Connector ${connector.semanticId} passes behind its ${
+                shape === source ? "source" : "target"
+              } fill.`,
+            );
+          }
+          continue;
+        }
         if (
           segmentIntersectsRect(
             start,

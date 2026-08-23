@@ -10,6 +10,7 @@ import {
   diagramAltText,
   DiagramBudgetError,
   DiagramValidationError,
+  renderDiagramSvg,
 } from "../../src/diagram/mod.ts";
 import {
   layoutDiagram,
@@ -212,6 +213,46 @@ Deno.test("flow validation rejects empty, control-bearing, and normalization-hos
     ],
   } as const;
   assertEquals(validateDiagram(visibleMarkup).kind, "flow");
+});
+
+Deno.test("every public diagram preflight contains hostile kind containers", () => {
+  const getter = Object.defineProperty({}, "kind", {
+    enumerable: true,
+    get(): never {
+      throw new Error("ambient getter escaped");
+    },
+  });
+  const revoked = Proxy.revocable({}, {});
+  revoked.revoke();
+
+  for (const hostile of [getter, revoked.proxy]) {
+    for (
+      const projection of [
+        () => validateDiagram(hostile),
+        () => layoutDiagram(hostile),
+        () => describeDiagram(hostile),
+        () => diagramAltText(hostile as FlowDiagramSpec),
+        () => renderDiagramSvg(hostile as FlowDiagramSpec),
+      ]
+    ) {
+      expectDiagramError(projection, "diagram/invalid-spec");
+    }
+  }
+});
+
+Deno.test("diagram text rejects every Unicode format-control class", () => {
+  for (const character of ["\u{13430}", "\u{1BCA0}"]) {
+    const spec = mutableMinimal();
+    const nodes = spec.nodes as Record<string, unknown>[];
+    const first = nodes[0];
+    assert(first !== undefined);
+    first.label = `Draft${character}change`;
+    const error = expectDiagramError(
+      () => validateDiagram(spec),
+      "diagram/invalid-text",
+    );
+    assertEquals(error.path, "spec.nodes[0].label");
+  }
 });
 
 Deno.test("flow validation rejects duplicate and dangling identities", () => {

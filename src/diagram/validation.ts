@@ -31,12 +31,12 @@ function invalidSpec(message: string, path: string): never {
   });
 }
 
-function assertJsonSafeInner(
+function snapshotJsonSafeInner(
   value: unknown,
   path: string,
   depth: number,
   active: Set<object>,
-): void {
+): unknown {
   if (depth > DIAGRAM_COMMON_LIMITS.jsonDepth) {
     throw new DiagramBudgetError({
       dimension: "jsonDepth",
@@ -50,10 +50,10 @@ function assertJsonSafeInner(
   if (
     value === null || typeof value === "string" ||
     typeof value === "boolean"
-  ) return;
+  ) return value;
   if (typeof value === "number") {
     if (!Number.isFinite(value)) invalidSpec(`${path} must be finite.`, path);
-    return;
+    return value;
   }
   if (typeof value !== "object") {
     invalidSpec(`${path} is not JSON-safe.`, path);
@@ -61,6 +61,7 @@ function assertJsonSafeInner(
   const object = value as object;
   if (active.has(object)) invalidSpec(`${path} contains a cycle.`, path);
   active.add(object);
+  let snapshot: unknown;
   if (Array.isArray(value)) {
     const keys = Reflect.ownKeys(value).filter((key) => key !== "length");
     if (
@@ -72,18 +73,28 @@ function assertJsonSafeInner(
         path,
       );
     }
-    value.forEach((item, index) => {
+    const copy: unknown[] = [];
+    for (let index = 0; index < value.length; index += 1) {
       const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
       if (descriptor === undefined || !("value" in descriptor)) {
         invalidSpec(`${path}[${index}] must be an ordinary data value.`, path);
       }
-      assertJsonSafeInner(item, `${path}[${index}]`, depth + 1, active);
-    });
+      copy.push(
+        snapshotJsonSafeInner(
+          descriptor.value,
+          `${path}[${index}]`,
+          depth + 1,
+          active,
+        ),
+      );
+    }
+    snapshot = Object.freeze(copy);
   } else if (isDiagramRecord(value)) {
     const keys = Reflect.ownKeys(value);
     if (keys.some((key) => typeof key !== "string")) {
       invalidSpec(`${path} must not contain symbol-keyed data.`, path);
     }
+    const copy = Object.create(null) as Record<string, unknown>;
     for (const key of (keys as string[]).toSorted()) {
       const descriptor = Object.getOwnPropertyDescriptor(value, key);
       if (
@@ -95,22 +106,42 @@ function assertJsonSafeInner(
           path,
         );
       }
-      assertJsonSafeInner(
-        descriptor.value,
-        `${path}.${key}`,
-        depth + 1,
-        active,
-      );
+      Object.defineProperty(copy, key, {
+        enumerable: true,
+        configurable: false,
+        writable: false,
+        value: snapshotJsonSafeInner(
+          descriptor.value,
+          `${path}.${key}`,
+          depth + 1,
+          active,
+        ),
+      });
     }
+    snapshot = Object.freeze(copy);
   } else {
     invalidSpec(`${path} must be a plain data object.`, path);
   }
   active.delete(object);
+  return snapshot;
 }
 
 /** Reject functions, special objects, cycles, and non-finite JSON numbers. */
 export function assertDiagramJsonSafe(value: unknown): void {
-  assertJsonSafeInner(value, "spec", 0, new Set());
+  snapshotDiagramJsonSafe(value);
+}
+
+/** Inspect once and return an immutable plain-data snapshot for dispatch. */
+export function snapshotDiagramJsonSafe(value: unknown): unknown {
+  try {
+    return snapshotJsonSafeInner(value, "spec", 0, new Set());
+  } catch (error) {
+    if (error instanceof DiagramValidationError) throw error;
+    invalidSpec(
+      "spec could not be inspected as stable JSON-safe data.",
+      "spec",
+    );
+  }
 }
 
 /** Require an object to carry only its kind's declared data fields. */
@@ -129,6 +160,8 @@ export function assertDiagramExactKeys(
     );
   }
 }
+
+const UNSAFE_TEXT_CATEGORY = /[\p{Cc}\p{Cf}]/u;
 
 function isUnsafeTextCodePoint(codePoint: number): boolean {
   return codePoint <= 0x1f || inRange(codePoint, 0x7f, 0x9f) ||
@@ -182,7 +215,9 @@ export function assertDiagramText(
     const codePoint = character.codePointAt(0);
     if (
       codePoint !== undefined &&
-      (isUnsafeTextCodePoint(codePoint) || isUnsupportedWhitespace(codePoint))
+      (UNSAFE_TEXT_CATEGORY.test(character) ||
+        isUnsafeTextCodePoint(codePoint) ||
+        isUnsupportedWhitespace(codePoint))
     ) {
       throw new DiagramValidationError({
         code: "diagram/invalid-text",
