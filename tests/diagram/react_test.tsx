@@ -28,6 +28,11 @@ void rejectsAccessibilityRole;
 
 Deno.test("React Diagram maps the conformant scene to named semantic SVG", () => {
   const html = renderToStaticMarkup(<Diagram spec={compact} />);
+  assertStringIncludes(
+    html,
+    '<div class="discern-diagram__viewport" role="group" aria-label="Scrollable diagram viewport:',
+  );
+  assertStringIncludes(html, 'tabindex="0"');
   assertStringIncludes(html, '<svg class="discern-diagram"');
   assertStringIncludes(html, 'data-discern-diagram-kind="flow"');
   assertStringIncludes(html, 'role="img"');
@@ -114,6 +119,8 @@ Deno.test("Diagram CSS resolves the paired role authority through public Tokens"
     css,
     /(?<!max-)inline-size:\s*100%/u,
   );
+  assertStringIncludes(css, "overflow-x: auto");
+  assertStringIncludes(css, ".discern-diagram__viewport:focus-visible");
   const tokenNames = new Set(
     [...baseTokens, ...themeTokens].map(({ name }) => name),
   );

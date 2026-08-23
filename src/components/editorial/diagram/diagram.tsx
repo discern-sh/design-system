@@ -165,6 +165,7 @@ export const Diagram: DiscernComponent<SVGSVGElement, DiagramProps> =
     DiagramProps
   >(function Diagram({ spec, className, id }, ref) {
     const { validated, scene, description } = prepareDiagram(spec);
+    const alternative = formatDiagramAltText(validated);
     const groups = new Map(scene.groups.map((group) => [group.id, group]));
     const elements = new Map(
       scene.elements.map((element) => [element.id, element]),
@@ -193,32 +194,39 @@ export const Diagram: DiscernComponent<SVGSVGElement, DiagramProps> =
     const height = formatDiagramSvgNumber(bounds.height);
 
     return (
-      <svg
-        ref={ref}
-        id={id}
-        className={classNames("discern-diagram", className)}
-        data-discern-diagram-kind={validated.kind}
-        viewBox={`${formatDiagramSvgNumber(bounds.x)} ${
-          formatDiagramSvgNumber(bounds.y)
-        } ${width} ${height}`}
-        width={width}
-        height={height}
-        preserveAspectRatio="xMidYMid meet"
-        role="img"
-        aria-label={formatDiagramAltText(validated)}
-        aria-description={description.trimEnd()}
-        focusable="false"
+      <div
+        className="discern-diagram__viewport"
+        role="group"
+        aria-label={`Scrollable diagram viewport: ${validated.title}`}
+        tabIndex={0}
       >
-        <title>{validated.title}</title>
-        <desc>{description.trimEnd()}</desc>
-        <rect
-          className="discern-diagram__canvas"
-          x={formatDiagramSvgNumber(bounds.x)}
-          y={formatDiagramSvgNumber(bounds.y)}
+        <svg
+          ref={ref}
+          id={id}
+          className={classNames("discern-diagram", className)}
+          data-discern-diagram-kind={validated.kind}
+          viewBox={`${formatDiagramSvgNumber(bounds.x)} ${
+            formatDiagramSvgNumber(bounds.y)
+          } ${width} ${height}`}
           width={width}
           height={height}
-        />
-        {scene.root.map(renderReference)}
-      </svg>
+          preserveAspectRatio="xMidYMid meet"
+          role="img"
+          aria-label={alternative}
+          aria-description={description.trimEnd()}
+          focusable="false"
+        >
+          <title>{validated.title}</title>
+          <desc>{description.trimEnd()}</desc>
+          <rect
+            className="discern-diagram__canvas"
+            x={formatDiagramSvgNumber(bounds.x)}
+            y={formatDiagramSvgNumber(bounds.y)}
+            width={width}
+            height={height}
+          />
+          {scene.root.map(renderReference)}
+        </svg>
+      </div>
     );
   });

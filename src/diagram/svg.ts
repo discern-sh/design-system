@@ -206,24 +206,18 @@ function shapeMarkup(shape: DiagramShape, indent: string): readonly string[] {
 
 function textMarkup(text: DiagramText, indent: string): readonly string[] {
   const role = text.role;
-  const lines = [
+  const children = text.lines.map((line) =>
+    `<tspan x="${formatDiagramSvgNumber(diagramSvgTextAnchorX(line))}" y="${
+      formatDiagramSvgNumber(line.baseline)
+    }">${escapeXml(line.text)}</tspan>`
+  ).join("");
+  return [
     `${indent}<text class="discern-diagram__text discern-diagram__text--${role}" data-discern-diagram-owner="${
       escapeXml(text.ownerId)
     }" font-size="${
       formatDiagramSvgNumber(text.fontSize)
-    }" text-anchor="middle">`,
+    }" text-anchor="middle">${children}</text>`,
   ];
-  for (const line of text.lines) {
-    lines.push(
-      `${indent}  <tspan x="${
-        formatDiagramSvgNumber(diagramSvgTextAnchorX(line))
-      }" y="${formatDiagramSvgNumber(line.baseline)}">${
-        escapeXml(line.text)
-      }</tspan>`,
-    );
-  }
-  lines.push(`${indent}</text>`);
-  return lines;
 }
 
 function connectorMarkup(

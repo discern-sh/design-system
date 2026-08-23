@@ -42,23 +42,16 @@ export const compactFlowLightSvg =
   </g>
   <g class="discern-diagram__group" data-discern-diagram-group="node-author-group">
     <rect class="discern-diagram__node discern-diagram__node--start" x="24" y="28" width="169.77" height="56" rx="28" />
-    <text class="discern-diagram__text discern-diagram__text--node-text" data-discern-diagram-owner="author" font-size="16" text-anchor="middle">
-      <tspan x="108.89" y="62">Author source</tspan>
-    </text>
+    <text class="discern-diagram__text discern-diagram__text--node-text" data-discern-diagram-owner="author" font-size="16" text-anchor="middle"><tspan x="108.89" y="62">Author source</tspan></text>
   </g>
   <g class="discern-diagram__group" data-discern-diagram-group="node-check-group">
     <rect class="discern-diagram__node discern-diagram__node--ordinary" x="229.77" y="28" width="145.77" height="56" rx="8" />
-    <text class="discern-diagram__text discern-diagram__text--node-text" data-discern-diagram-owner="check" font-size="16" text-anchor="middle">
-      <tspan x="302.66" y="62">Run checks</tspan>
-    </text>
+    <text class="discern-diagram__text discern-diagram__text--node-text" data-discern-diagram-owner="check" font-size="16" text-anchor="middle"><tspan x="302.66" y="62">Run checks</tspan></text>
   </g>
   <g class="discern-diagram__group" data-discern-diagram-group="node-publish-group">
     <rect class="discern-diagram__node discern-diagram__node--end" x="411.54" y="24" width="127.04" height="64" rx="32" />
     <rect class="discern-diagram__node-cue discern-diagram__node--end" x="415.54" y="28" width="119.04" height="56" rx="28" />
-    <text class="discern-diagram__text discern-diagram__text--node-text" data-discern-diagram-owner="publish" font-size="16" text-anchor="middle">
-      <tspan x="475.07" y="52">Publish</tspan>
-      <tspan x="475.06" y="72">reference</tspan>
-    </text>
+    <text class="discern-diagram__text discern-diagram__text--node-text" data-discern-diagram-owner="publish" font-size="16" text-anchor="middle"><tspan x="475.07" y="52">Publish</tspan><tspan x="475.06" y="72">reference</tspan></text>
   </g>
 </svg>
 `;

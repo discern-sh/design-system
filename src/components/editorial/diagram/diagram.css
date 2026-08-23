@@ -1,7 +1,15 @@
 @layer discern.components {
+  .discern-diagram__viewport {
+    max-inline-size: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+  }
+  .discern-diagram__viewport:focus-visible {
+    outline: 2px solid var(--discern-color-focus-ring);
+    outline-offset: 2px;
+  }
   .discern-diagram {
     display: block;
-    max-inline-size: 100%;
     block-size: auto;
     overflow: visible;
     background: transparent;
