@@ -1,6 +1,9 @@
 /** Deterministic dependency-free layered layout for documentation-scale flow. */
 
-import { DiagramValidationError } from "../../errors.ts";
+import {
+  DiagramConformanceError,
+  DiagramValidationError,
+} from "../../errors.ts";
 import {
   DIAGRAM_GEOMETRY,
   diagramPointBounds,
@@ -67,6 +70,13 @@ function layoutFailure(message: string, path: string, remedy: string): never {
     message,
     path,
     remedy,
+  });
+}
+
+function internalLayoutFailure(message: string, edgeId: string): never {
+  throw new DiagramConformanceError(message, {
+    kind: "flow",
+    edgeId,
   });
 }
 
@@ -550,19 +560,17 @@ function routeEdges(
     const source = byId.get(edge.from);
     const target = byId.get(edge.to);
     if (source === undefined || target === undefined) {
-      layoutFailure(
+      internalLayoutFailure(
         `Edge ${edge.id} lost a validated endpoint.`,
-        `edge ${edge.id}`,
-        "Fix the kind layout implementation.",
+        edge.id,
       );
     }
     const sourcePort = ports.get(portKey(edge, "source"));
     const targetPort = ports.get(portKey(edge, "target"));
     if (sourcePort === undefined || targetPort === undefined) {
-      layoutFailure(
+      internalLayoutFailure(
         `Edge ${edge.id} lost a deterministic endpoint port.`,
-        `edge ${edge.id}`,
-        "Fix the kind layout implementation.",
+        edge.id,
       );
     }
     let path: readonly DiagramPoint[];

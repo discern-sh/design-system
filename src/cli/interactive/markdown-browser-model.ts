@@ -617,8 +617,18 @@ function layoutFor(
   );
 }
 
+const QUERY_JOIN_CONTROLS = new Set(["\u200C", "\u200D"]);
+
+/** Remove terminal-control characters while preserving script join controls. */
+export function sanitizeMarkdownBrowserQueryInput(value: string): string {
+  return [...value].filter((character) =>
+    !/[\p{Cc}]/u.test(character) &&
+    (!/[\p{Cf}]/u.test(character) || QUERY_JOIN_CONTROLS.has(character))
+  ).join("");
+}
+
 function validateQuery(query: string, cursor: number): void {
-  if (/[\p{Cc}]/u.test(query)) {
+  if (sanitizeMarkdownBrowserQueryInput(query) !== query) {
     throw new TypeError("Markdown browser query must be single-line text");
   }
   const length = segmentGraphemes(query).length;

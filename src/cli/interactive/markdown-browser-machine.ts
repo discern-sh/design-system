@@ -25,6 +25,7 @@ import {
   type MarkdownBrowserResult,
   markdownBrowserResumableState,
   type MarkdownBrowserState,
+  sanitizeMarkdownBrowserQueryInput,
   updateMarkdownBrowserState,
 } from "./markdown-browser-model.ts";
 import {
@@ -195,38 +196,13 @@ function focusLink<Action>(
   capabilities: TerminalCapabilities,
   origin: "keyboard" | "pointer" = "keyboard",
 ): MarkdownBrowserState<Action> {
-  let focused = fitMarkdownBrowserState(
+  return fitMarkdownBrowserState(
     updateMarkdownBrowserState(state, {
       linkFocus: { id, origin },
       feedback: null,
     }),
     capabilities,
   );
-  const occurrence = markdownBrowserLinkOccurrences(focused, capabilities)
-    .find((link) => link.id === id);
-  if (occurrence === undefined) {
-    return updateMarkdownBrowserState(focused, { linkFocus: null });
-  }
-  const visibleRows = markdownBrowserDocumentVisibleRows(focused);
-  const start = occurrence.documentStartRow - 1;
-  const end = occurrence.documentEndRow - 1;
-  const current = focused.documentScrollOffset;
-  const target = start < current
-    ? start
-    : end >= current + visibleRows
-    ? end - visibleRows + 1
-    : current;
-  const maximum = markdownBrowserDocumentMaximumOffset(focused, capabilities);
-  const offset = Math.max(0, Math.min(target, maximum));
-  const lines = markdownBrowserDocumentLines(focused, capabilities);
-  const anchor = markdownBrowserDocumentAnchor(lines, offset);
-  focused = updateMarkdownBrowserState(focused, {
-    documentScrollOffset: offset,
-    ...(anchor === undefined
-      ? { documentAnchor: null }
-      : { documentAnchor: anchor }),
-  });
-  return fitMarkdownBrowserState(focused, capabilities);
 }
 
 function wheelPicker<Action>(
@@ -612,7 +588,10 @@ function handlePickerEdit<Action>(
 ): MarkdownBrowserState<Action> {
   const editor = new GraphemeTextEditor(state.query);
   editor.moveCursorTo(state.queryCursor);
-  editor.handle(key);
+  const safeKey = key.kind === "text"
+    ? { ...key, text: sanitizeMarkdownBrowserQueryInput(key.text) }
+    : key;
+  editor.handle(safeKey);
   if (editor.value === state.query && editor.cursor === state.queryCursor) {
     return state;
   }

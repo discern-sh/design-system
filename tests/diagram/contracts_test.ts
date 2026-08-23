@@ -9,6 +9,7 @@ import {
   describeDiagram,
   diagramAltText,
   DiagramBudgetError,
+  DiagramConformanceError,
   DiagramValidationError,
   renderDiagramSvg,
 } from "../../src/diagram/mod.ts";
@@ -19,6 +20,7 @@ import {
 import { diagramKindCliRegistry } from "../../src/generated/diagram-cli-registry.ts";
 import { diagramKindRegistry } from "../../src/generated/diagram-registry.ts";
 import type { FlowDiagramSpec } from "../../src/diagram/kinds/flow/flow.spec.ts";
+import { assertDiagramKindBudget } from "../../src/diagram/validation.ts";
 
 const minimal = Object.freeze(
   {
@@ -34,6 +36,17 @@ const minimal = Object.freeze(
     ]),
   } as const satisfies FlowDiagramSpec,
 );
+
+Deno.test("missing package budget metadata is a conformance defect", () => {
+  const registered = diagramKindRegistry[0]?.meta;
+  if (registered === undefined) throw new Error("missing generated kind");
+  const error = assertThrows(
+    () => assertDiagramKindBudget({ ...registered, budgets: {} }, "nodes", 1),
+    DiagramConformanceError,
+    "has no Metadata budget",
+  );
+  assertEquals(error.code, "diagram/conformance");
+});
 
 function mutableMinimal(): Record<string, unknown> {
   return structuredClone(minimal) as unknown as Record<string, unknown>;

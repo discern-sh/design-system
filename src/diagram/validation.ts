@@ -4,7 +4,11 @@
  * @module
  */
 
-import { DiagramBudgetError, DiagramValidationError } from "./errors.ts";
+import {
+  DiagramBudgetError,
+  DiagramConformanceError,
+  DiagramValidationError,
+} from "./errors.ts";
 import { diagramGraphemeCount } from "./font-metrics.ts";
 import type { DiagramKindMeta } from "./kind-meta.ts";
 import { DIAGRAM_COMMON_LIMITS } from "./limits.ts";
@@ -306,12 +310,10 @@ export function assertDiagramKindBudget(
 ): void {
   const budget = meta.budgets[dimension];
   if (budget === undefined) {
-    throw new DiagramValidationError({
-      code: "diagram/invalid-spec",
-      message: `${meta.slug} has no Metadata budget named ${dimension}.`,
-      facts: { kind: meta.slug, dimension },
-      remedy: "Add the measurable budget to the kind Metadata authority.",
-    });
+    throw new DiagramConformanceError(
+      `${meta.slug} has no Metadata budget named ${dimension}.`,
+      { kind: meta.slug, dimension },
+    );
   }
   if (actual > budget.limit) {
     const options = {

@@ -844,21 +844,46 @@ export function fitMarkdownBrowserState<Action>(
     : Math.max(0, state.documentScrollOffset);
   const offset = Math.min(anchored, maximum);
   const anchor = markdownBrowserDocumentAnchor(lines, offset);
+  let fitted = state;
   if (
     (window?.start ?? state.pickerVisibleStart) === state.pickerVisibleStart &&
     offset === state.documentScrollOffset &&
     anchor === state.documentAnchor &&
     state.documentAnchorPending !== true
   ) {
-    return state;
+    fitted = state;
+  } else {
+    fitted = updateMarkdownBrowserState(state, {
+      pickerVisibleStart: window?.start ?? state.pickerVisibleStart,
+      documentScrollOffset: offset,
+      ...(anchor === undefined
+        ? { documentAnchor: null }
+        : { documentAnchor: anchor }),
+      documentAnchorPending: false,
+    });
   }
-  return updateMarkdownBrowserState(state, {
-    pickerVisibleStart: window?.start ?? state.pickerVisibleStart,
-    documentScrollOffset: offset,
-    ...(anchor === undefined
+  if (fitted.linkFocus === undefined) return fitted;
+  const occurrence = markdownBrowserLinkOccurrences(fitted, capabilities)
+    .find((link) => link.id === fitted.linkFocus?.id);
+  if (occurrence === undefined) {
+    return updateMarkdownBrowserState(fitted, { linkFocus: null });
+  }
+  const visibleRows = markdownBrowserDocumentVisibleRows(fitted);
+  const start = occurrence.documentStartRow - 1;
+  const end = occurrence.documentEndRow - 1;
+  const target = start < fitted.documentScrollOffset
+    ? start
+    : end >= fitted.documentScrollOffset + visibleRows
+    ? end - visibleRows + 1
+    : fitted.documentScrollOffset;
+  const bounded = Math.max(0, Math.min(target, maximum));
+  if (bounded === fitted.documentScrollOffset) return fitted;
+  const focusedAnchor = markdownBrowserDocumentAnchor(lines, bounded);
+  return updateMarkdownBrowserState(fitted, {
+    documentScrollOffset: bounded,
+    ...(focusedAnchor === undefined
       ? { documentAnchor: null }
-      : { documentAnchor: anchor }),
-    documentAnchorPending: false,
+      : { documentAnchor: focusedAnchor }),
   });
 }
 

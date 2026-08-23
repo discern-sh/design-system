@@ -1,6 +1,6 @@
 /** Deterministic participant-column layout for authored interaction order. */
 
-import { DiagramValidationError } from "../../errors.ts";
+import { DiagramConformanceError } from "../../errors.ts";
 import {
   DIAGRAM_GEOMETRY,
   diagramRectBottom,
@@ -258,12 +258,10 @@ function requireParticipant(
 ): ParticipantPlan {
   const participant = participants.get(id);
   if (participant === undefined) {
-    throw new DiagramValidationError({
-      code: "diagram/layout/connector",
-      message: `Message ${messageId} lost validated participant ${id}.`,
-      path: `message ${messageId}`,
-      remedy: "Fix the sequence layout implementation.",
-    });
+    throw new DiagramConformanceError(
+      `Message ${messageId} lost validated participant ${id}.`,
+      { kind: "sequence", messageId, participantId: id },
+    );
   }
   return participant;
 }

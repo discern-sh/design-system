@@ -63,6 +63,31 @@ function key<Action>(
   );
 }
 
+Deno.test("browser queries reject resumed and pasted format controls", () => {
+  assertThrows(
+    () =>
+      createMarkdownBrowserState({
+        ...markdownBrowserOptions,
+        initialState: {
+          query: "safe\u202Etxt",
+          queryCursor: 8,
+          focusedPane: "picker",
+          pickerVisibleStart: 0,
+          documentScrollOffset: 0,
+        },
+      }, { columns: 80, rows: 24 }),
+    TypeError,
+    "single-line text",
+  );
+  let state = createMarkdownBrowserState(
+    markdownBrowserOptions,
+    { columns: 80, rows: 24 },
+  );
+  state = key(state, { kind: "text", text: "safe\u202Etxt\u2066" }).state;
+  assertEquals(state.query, "safetxt");
+  assert(!/[\p{Cc}\p{Cf}]/u.test(state.query));
+});
+
 Deno.test("steady document scrolling advances every rendered row despite repeated anchors", () => {
   const columns = 60;
   const documentCapabilities = testTerminalCapabilities({ columns });
