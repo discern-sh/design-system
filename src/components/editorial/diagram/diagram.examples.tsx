@@ -19,6 +19,11 @@ const compactFlow = {
   ],
 } as const satisfies FlowDiagramSpec;
 
+/** Source-backed defaults for the Catalogue builder's structured spec prop. */
+export const catalogueBuilderDefaults = {
+  spec: compactFlow,
+} as const;
+
 const decisionFlow = {
   kind: "flow",
   title: "Review a submission",

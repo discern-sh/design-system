@@ -4,6 +4,10 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## Unreleased
+
+- Add the first complete semantic Diagram surface. The new React-free `./diagram` entrypoint publishes typed `flow` specs, canonical accessible descriptions and kind Metadata, plus deterministic safe standalone SVG in literal light, dark, or self-contained adaptive palettes. The generated Editorial `Diagram` Component projects the same conformant scene directly to live-token SVG and composes as `DataFigure`'s visual without adding visible figure prose. `./cli` adds `renderDiagramCli`: its generated callable kind registry selects a lossless enhanced flow frame only inside a conservative viability envelope and otherwise returns the universal description across widths, colour depths, Unicode, and ASCII.
+
 ## 0.25.0
 
 - **Breaking:** Replace the Artwork `Ground` vocabulary with `Backdrop` end to end. The shared React Component is now `Backdrop`; concrete exports, Component slugs, CSS selectors, custom properties, and Catalogue routes use the `*Backdrop` and `*-backdrop` forms. Hero block, Editorial hero, and Closing statement rename their decorative `ground` prop and wrapper class to `backdrop`. Remove the `Resonance ground` Component; consumers should select another Backdrop.

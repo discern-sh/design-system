@@ -15,6 +15,7 @@ deno add jsr:@discern-sh/design-system
 | `@discern-sh/design-system/cli/interactive`         | Optional Deno terminal driver and typed interaction state machines                        |
 | `@discern-sh/design-system/cli/interactive/testing` | Deterministic fake terminal, semantic key/resize scripts, and frame assertions            |
 | `@discern-sh/design-system/cli/projection`          | Package-output decoding, browser projection, and explicit layout inspection               |
+| `@discern-sh/design-system/diagram`                 | Typed diagram specs, descriptions, kind Metadata, and portable standalone SVG             |
 | `@discern-sh/design-system/manifest`                | Framework-neutral manifest schema and the complete package ownership manifest             |
 | `@discern-sh/design-system/runtime`                 | Deterministic selected-runtime emitter                                                    |
 | `@discern-sh/design-system/tokens`                  | Primitive, semantic, and Discern-preset token metadata                                    |
@@ -113,6 +114,102 @@ Semantic component roles are separate from the default blue preset. The runtime 
 The distinct success hue is deliberate: a green accent must not erase the difference between brand actions and successful outcomes. Automated package tests cover light/dark text contrast, accent/success/warning/danger separation, reduced-motion rules, forced-colour focus outlines, and unchanged component CSS. Manual browser review still checks visible focus shape and status recognition in the consumer's actual type, layout, zoom, and operating-system colour settings.
 
 Inverse surface and ink roles remain dark-on-light in purpose across both site themes; they do not invert with the ordinary canvas and ink roles.
+
+## Semantic diagrams
+
+One typed flow spec feeds the neutral description and standalone SVG, the live-token React Component, and the terminal Component renderer. The neutral `./diagram` graph imports neither React nor terminal modules:
+
+```ts
+import {
+  type FlowDiagramSpec,
+  renderDiagramSvg,
+} from "@discern-sh/design-system/diagram";
+
+export const reviewFlow = {
+  kind: "flow",
+  title: "Review a submission",
+  summary: "Review either accepts a submission or returns it for revision.",
+  nodes: [
+    { id: "submit", label: "Submit material", role: "start" },
+    { id: "review", label: "Review evidence", role: "decision" },
+    { id: "revise", label: "Revise material" },
+    { id: "accept", label: "Accept material", role: "end" },
+  ],
+  edges: [
+    { id: "ready", from: "submit", to: "review" },
+    {
+      id: "accepted",
+      from: "review",
+      to: "accept",
+      label: "Evidence is sufficient",
+    },
+    {
+      id: "changes",
+      from: "review",
+      to: "revise",
+      label: "Changes requested",
+      emphasis: "secondary",
+    },
+    {
+      id: "again",
+      from: "revise",
+      to: "review",
+      label: "Review again",
+      emphasis: "return",
+    },
+  ],
+} as const satisfies FlowDiagramSpec;
+
+// A consumer-owned build step writes the returned bytes wherever its static
+// asset pipeline expects them. The package renderer itself performs no I/O.
+await Deno.writeTextFile(
+  new URL("./public/review-flow.svg", import.meta.url),
+  renderDiagramSvg(reviewFlow, { theme: "adaptive" }),
+);
+```
+
+Standalone SVG accepts `light`, `dark`, or `adaptive`. Each asset contains literal package palette values, its own accessible title and structural description, semantic text, and a deterministic light fallback; `adaptive` adds a self-contained `prefers-color-scheme` dark palette. An external SVG loaded through `<img>` does not inherit custom properties or fonts from its host page.
+
+The React projection maps the same validated scene directly to SVG and takes its live colours from emitted semantic Tokens. Compose it as the visual inside `DataFigure`; the figure owns the visible title, caption, source, and any legend:
+
+```tsx
+import { DataFigure, Diagram } from "@discern-sh/design-system/react";
+import { reviewFlow } from "./review-flow.ts";
+
+export function ReviewFigure() {
+  return (
+    <DataFigure
+      title="Review a submission"
+      visual={<Diagram spec={reviewFlow} />}
+      caption="A submission can return to review after revision."
+      source="Process reference"
+    />
+  );
+}
+```
+
+The pure terminal renderer tries the generated enhanced `flow` projector in `auto` mode. If width, branching, labels, or capabilities cannot carry every fact coherently, it returns the same universal description used by explicit `description` mode:
+
+```ts
+import {
+  renderDiagramCli,
+  type TerminalCapabilities,
+} from "@discern-sh/design-system/cli";
+import { reviewFlow } from "./review-flow.ts";
+
+const capabilities = {
+  colorDepth: "ansi256",
+  columns: 80,
+  unicode: true,
+} satisfies TerminalCapabilities;
+
+console.log(renderDiagramCli({
+  spec: reviewFlow,
+  mode: "auto",
+  theme: "dark",
+  maxWidth: 80,
+}, capabilities));
+```
 
 ## Terminal rendering and interactions
 

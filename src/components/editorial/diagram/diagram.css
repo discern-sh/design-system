@@ -10,7 +10,7 @@
     text-rendering: optimizeLegibility;
   }
   .discern-diagram__canvas {
-    fill: var(--discern-diagram-canvas);
+    fill: var(--discern-color-canvas);
   }
   .discern-diagram__node,
   .discern-diagram__node-cue {
@@ -18,47 +18,47 @@
     vector-effect: non-scaling-stroke;
   }
   .discern-diagram__node--ordinary {
-    fill: var(--discern-diagram-node-surface);
-    stroke: var(--discern-diagram-node-border);
+    fill: var(--discern-color-surface);
+    stroke: var(--discern-color-border-strong);
   }
   .discern-diagram__node--decision {
-    fill: var(--discern-diagram-node-surface);
-    stroke: var(--discern-diagram-focus);
+    fill: var(--discern-color-surface);
+    stroke: var(--discern-color-accent-500);
   }
   .discern-diagram__node--start {
-    fill: var(--discern-diagram-node-surface);
-    stroke: var(--discern-diagram-accent);
+    fill: var(--discern-color-surface);
+    stroke: var(--discern-color-accent-700);
   }
   .discern-diagram__node--end {
-    fill: var(--discern-diagram-node-surface);
-    stroke: var(--discern-diagram-success);
+    fill: var(--discern-color-surface);
+    stroke: var(--discern-color-success);
   }
   .discern-diagram__node--focus {
-    fill: var(--discern-diagram-node-surface);
-    stroke: var(--discern-diagram-focus);
+    fill: var(--discern-color-surface);
+    stroke: var(--discern-color-accent-500);
   }
   .discern-diagram__node--success {
-    fill: var(--discern-diagram-node-surface);
-    stroke: var(--discern-diagram-success);
+    fill: var(--discern-color-surface);
+    stroke: var(--discern-color-success);
   }
   .discern-diagram__node--warning {
-    fill: var(--discern-diagram-node-surface);
-    stroke: var(--discern-diagram-warning);
+    fill: var(--discern-color-surface);
+    stroke: var(--discern-color-warning);
   }
   .discern-diagram__node-cue {
     fill: none;
   }
   .discern-diagram__text {
-    fill: var(--discern-diagram-primary-ink);
+    fill: var(--discern-color-ink);
     font-family: var(--discern-font-ui);
     font-feature-settings: var(--discern-font-features-ui);
   }
   .discern-diagram__text--quiet-annotation {
-    fill: var(--discern-diagram-annotation-ink);
+    fill: var(--discern-color-ink-muted);
     font-family: var(--discern-font-mono);
   }
   .discern-diagram__text--connector-label {
-    fill: var(--discern-diagram-annotation-ink);
+    fill: var(--discern-color-ink-muted);
   }
   .discern-diagram__connector {
     fill: none;
@@ -68,27 +68,27 @@
   }
   .discern-diagram__guide {
     fill: none;
-    stroke: var(--discern-diagram-guide);
+    stroke: var(--discern-color-border);
     vector-effect: non-scaling-stroke;
   }
   .discern-diagram__connector--primary {
-    stroke: var(--discern-diagram-connector-primary);
+    stroke: var(--discern-color-ink-muted);
   }
   .discern-diagram__arrowhead--primary {
-    fill: var(--discern-diagram-connector-primary);
+    fill: var(--discern-color-ink-muted);
   }
   .discern-diagram__connector--secondary {
-    stroke: var(--discern-diagram-connector-secondary);
+    stroke: var(--discern-color-ink-faint);
     stroke-dasharray: 8 6;
   }
   .discern-diagram__arrowhead--secondary {
-    fill: var(--discern-diagram-connector-secondary);
+    fill: var(--discern-color-ink-faint);
   }
   .discern-diagram__connector--return {
-    stroke: var(--discern-diagram-connector-return);
+    stroke: var(--discern-color-accent-700);
     stroke-dasharray: 8 6;
   }
   .discern-diagram__arrowhead--return {
-    fill: var(--discern-diagram-connector-return);
+    fill: var(--discern-color-accent-700);
   }
 }

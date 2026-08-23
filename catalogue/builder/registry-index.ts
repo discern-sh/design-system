@@ -187,7 +187,13 @@ const EMPTY_TEXT_DEFAULT_SLOTS: ReadonlyMap<string, ReadonlySet<string>> =
 
 /** A fresh instance of a component with its required defaults configured. */
 export function instantiateComponent(slug: string): BuilderNode {
-  const props = { ...defaultProps(controlsBySlug(slug)) };
+  const entry = entryBySlug.get(slug);
+  if (entry === undefined) {
+    throw new Error(`Unknown component slug "${slug}".`);
+  }
+  const props = {
+    ...defaultProps(controlsBySlug(slug), entry.builderDefaults),
+  };
   for (const slot of EMPTY_TEXT_DEFAULT_SLOTS.get(slug) ?? []) {
     props[slot] = {
       kind: "slot",

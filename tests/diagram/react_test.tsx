@@ -15,14 +15,14 @@ import {
   DIAGRAM_NODE_STYLE_BUNDLES,
   DIAGRAM_PAINT_TOKEN_NAMES,
 } from "../../src/diagram/roles.ts";
-import { baseTokens } from "../../src/tokens/tokens.ts";
+import { baseTokens, themeTokens } from "../../src/tokens/tokens.ts";
 import fixtures from "../../src/diagram/kinds/flow/flow.fixtures.ts";
 
 const compact = fixtures[1];
 
-// @ts-expect-error Diagram deliberately rejects accessibility-contract overrides.
-const unsafeProps: DiagramProps = { spec: compact, role: "presentation" };
-void unsafeProps;
+const rejectsAccessibilityRole: "role" extends keyof DiagramProps ? false
+  : true = true;
+void rejectsAccessibilityRole;
 
 Deno.test("React Diagram maps the conformant scene to named semantic SVG", () => {
   const html = renderToStaticMarkup(<Diagram spec={compact} />);
@@ -107,7 +107,9 @@ Deno.test("Diagram CSS resolves the paired role authority through public Tokens"
       import.meta.url,
     ),
   );
-  const tokenNames = new Set(baseTokens.map(({ name }) => name));
+  const tokenNames = new Set(
+    [...baseTokens, ...themeTokens].map(({ name }) => name),
+  );
   for (const tokenName of Object.values(DIAGRAM_PAINT_TOKEN_NAMES)) {
     assert(tokenNames.has(tokenName), `${tokenName} is not a public Token`);
     assertStringIncludes(css, `var(${tokenName})`);
@@ -156,5 +158,5 @@ Deno.test("Diagram CSS resolves the paired role authority through public Tokens"
   assert(registered !== undefined);
   assertEquals(registered.dependencies, []);
   assertStringIncludes(registered.css, ".discern-diagram__canvas");
-  assertStringIncludes(registered.css, "--discern-diagram-connector-return");
+  assertStringIncludes(registered.css, "--discern-color-accent-700");
 });

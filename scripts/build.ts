@@ -729,6 +729,8 @@ async function generateRegistry(
         JSON.stringify(source.examplesUrl.pathname)
       }), conformance: scenariosFrom(examples${index}, ${
         JSON.stringify(source.examplesUrl.pathname)
+      }), builderDefaults: builderDefaultsFrom(examples${index}, ${
+        JSON.stringify(source.examplesUrl.pathname)
       }), reactExport: ${
         JSON.stringify(source.reactExport)
       }, selection: selectionFrom(meta${index}, ${
@@ -753,6 +755,23 @@ import type {
   ConformanceScenario,
 } from "../conformance.ts";
 ${imports.join("\n")}
+
+function builderDefaultsFrom(
+  module: object,
+  source: string,
+): Readonly<Record<string, unknown>> {
+  if (!("catalogueBuilderDefaults" in module)) return {};
+  const defaults = module.catalogueBuilderDefaults;
+  if (
+    typeof defaults !== "object" || defaults === null ||
+    Array.isArray(defaults)
+  ) {
+    throw new TypeError(
+      \`\${source} catalogueBuilderDefaults export must be a data object\`,
+    );
+  }
+  return defaults as Readonly<Record<string, unknown>>;
+}
 
 function statesFrom(
   module: object,
@@ -887,6 +906,7 @@ export interface RegistryEntry {
   readonly Examples: ComponentType;
   readonly states: readonly CatalogueExampleState[];
   readonly conformance: readonly ConformanceScenario[];
+  readonly builderDefaults: Readonly<Record<string, unknown>>;
   readonly reactExport: string;
   readonly selection: CatalogueSelection;
   readonly propDocumentation: CataloguePropDocumentation;

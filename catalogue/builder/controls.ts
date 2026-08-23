@@ -92,7 +92,7 @@ function isEventHandlerName(name: string): boolean {
 function looksStructural(typeText: string, source: ControlSource): boolean {
   return typeText.includes("[]") || typeText.includes("{") ||
     typeText.includes("<") || typeText.startsWith("readonly ") ||
-    typeText === "CSSProperties" ||
+    typeText === "CSSProperties" || typeText.endsWith("Spec") ||
     (source.objectTypes?.has(typeText) ?? false);
 }
 
@@ -281,9 +281,31 @@ function defaultScalar(control: PropControl): BuilderPropValue | undefined {
 /** Configured values for every required control; optional props stay unset. */
 export function defaultProps(
   controls: readonly PropControl[],
+  authoredDefaults: Readonly<Record<string, unknown>> = {},
 ): Record<string, BuilderPropValue> {
   const props: Record<string, BuilderPropValue> = {};
+  const controlsByName = new Map(
+    controls.map((control) => [control.name, control]),
+  );
+  for (const name of Object.keys(authoredDefaults)) {
+    const control = controlsByName.get(name);
+    if (control?.control !== "json") {
+      throw new TypeError(
+        `Builder default ${JSON.stringify(name)} must target a JSON control`,
+      );
+    }
+  }
   for (const control of controls) {
+    if (Object.hasOwn(authoredDefaults, control.name)) {
+      const source = JSON.stringify(authoredDefaults[control.name]);
+      if (source === undefined) {
+        throw new TypeError(
+          `Builder default ${JSON.stringify(control.name)} is not JSON data`,
+        );
+      }
+      props[control.name] = { kind: "json", source };
+      continue;
+    }
     if (!control.required) continue;
     const value = defaultScalar(control);
     if (value !== undefined) props[control.name] = value;

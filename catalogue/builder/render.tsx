@@ -112,14 +112,16 @@ function noop(): void {}
 
 /**
  * True when every required control of the slug's component can be satisfied
- * by synthesized defaults that render without real data. Required structural
- * JSON and element-only slots need the user before the instance can render.
+ * by synthesized or source-backed defaults. Required structural JSON and
+ * element-only slots without such a default need the user before rendering.
  */
 export function rendersFromDefaults(slug: string): boolean {
+  const defaults = entryBySlug.get(slug)?.builderDefaults ?? {};
   return controlsBySlug(slug).every(
     (control) =>
       !control.required ||
-      (control.control !== "json" &&
+      ((control.control !== "json" ||
+        Object.hasOwn(defaults, control.name)) &&
         (control.control !== "slot" || !control.elementOnly)),
   );
 }

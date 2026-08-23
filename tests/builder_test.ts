@@ -319,6 +319,39 @@ Deno.test("prop controls derive from documented props and variants", () => {
   assertEquals(defaults.layout, undefined);
 });
 
+Deno.test("opaque specs use source-backed JSON defaults without weakening their prop type", () => {
+  const source: ControlSource = {
+    reactExport: "Diagram",
+    propDocumentation: {
+      status: "available",
+      typeName: "DiagramProps",
+      inheritedTypes: [],
+      props: [{ name: "spec", type: "DiagramSpec", required: true }],
+    },
+    variants: [],
+  };
+  const controls = deriveControls(source);
+  assertEquals(
+    controls.map(({ name, control }) => [name, control]),
+    [["spec", "json"]],
+  );
+  const spec = {
+    kind: "flow",
+    title: "Prepare material",
+    summary: "Material progresses from draft to ready.",
+    nodes: [],
+    edges: [],
+  };
+  assertEquals(defaultProps(controls, { spec }), {
+    spec: { kind: "json", source: JSON.stringify(spec) },
+  });
+  assertThrows(
+    () => defaultProps(controls, { unknown: {} }),
+    TypeError,
+    'Builder default "unknown" must target a JSON control',
+  );
+});
+
 Deno.test("union props components fall back to variant controls and a children slot", () => {
   const source: ControlSource = {
     reactExport: "Button",

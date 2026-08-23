@@ -40,19 +40,19 @@ const [decisionFlow, compactFlow] = fixtures;
 /** Deterministic Diagram states rendered by the CLI Catalogue. */
 export const cliExamples: readonly CliExample<DiagramCliProps>[] = [
   {
-    name: "enhanced compact flow",
+    name: "enhanced-compact-flow",
     props: { spec: compactFlow, mode: "auto", maxWidth: 76 },
   },
   {
-    name: "enhanced decision and return",
+    name: "enhanced-decision-return",
     props: { spec: decisionFlow, mode: "auto", maxWidth: 78 },
   },
   {
-    name: "universal description",
+    name: "universal-description",
     props: { spec: compactFlow, mode: "description", maxWidth: 64 },
   },
   {
-    name: "narrow ASCII fallback",
+    name: "narrow-ascii-fallback",
     props: { spec: decisionFlow, mode: "auto", maxWidth: 34 },
     capabilities: { columns: 34, colorDepth: "none", unicode: false },
   },
