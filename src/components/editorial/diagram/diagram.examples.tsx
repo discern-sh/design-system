@@ -137,7 +137,7 @@ function comparison(
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(18rem, 1fr))",
+          gridTemplateColumns: "minmax(0, 1fr)",
           gap: "1.5rem",
           alignItems: "start",
         }}
