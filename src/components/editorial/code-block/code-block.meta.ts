@@ -18,7 +18,7 @@ export default {
     "Use Raw output for collapsible machine output attached to an operational workflow.",
   ],
   accessibility: [
-    "The React adapter renders native preformatted code and preserves the literal source as one text node.",
+    "The React adapter renders native preformatted code, preserves the literal source as text content, and fixes non-ASCII fallback glyphs to their measured terminal cells.",
     "Language and parser information are exposed through discern-namespaced data hooks without assuming a syntax highlighter.",
     "The terminal renderer expands tabs to four-cell tab stops, makes unsafe control and format characters visible, and marks lossless continuations in its specimen frame without relying on colour.",
   ],

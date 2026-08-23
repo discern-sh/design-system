@@ -21,6 +21,7 @@ import {
   projectTerminalHtml,
   projectTerminalInlineHtml,
   projectTerminalSpans,
+  projectTerminalTextRuns,
   terminalLinkHref,
   TerminalProjectionError,
   terminalSpanCss,
@@ -396,6 +397,16 @@ Deno.test("projected inline HTML fixes Unicode graphemes to terminal cells", () 
   assertStringIncludes(html, "A");
   assertStringIncludes(html, "B");
   assert(!html.includes('data-discern-terminal-cell="1">A'));
+});
+
+Deno.test("plain terminal text projection coalesces ASCII around measured Unicode", () => {
+  assertEquals(projectTerminalTextRuns("AB┌界🎨CD"), [
+    { text: "AB" },
+    { text: "┌", columns: 1 },
+    { text: "界", columns: 2 },
+    { text: "🎨", columns: 2 },
+    { text: "CD" },
+  ]);
 });
 
 Deno.test("projected HTML links safe targets and rejects unsafe envelopes", () => {

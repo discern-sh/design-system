@@ -72,6 +72,13 @@ export interface TerminalCellRow {
   readonly spans: readonly TerminalCellSpan[];
 }
 
+/** One browser text run whose non-ASCII grapheme may need a fixed cell width. */
+export interface TerminalTextRun {
+  readonly text: string;
+  /** Terminal columns to reserve in a browser; absent for coalesced ASCII. */
+  readonly columns?: number;
+}
+
 /** Browser style declarations for one decoded span style. */
 export interface TerminalSpanCss {
   readonly backgroundColor?: string;
@@ -325,32 +332,50 @@ const terminalCellSegmenter = new Intl.Segmenter(undefined, {
   granularity: "grapheme",
 });
 
-function terminalTextHtml(value: string): string {
-  let html = "";
+/**
+ * Project plain terminal-cell text into browser-safe runs.
+ *
+ * Consecutive ASCII stays coalesced as ordinary text. Every non-ASCII
+ * grapheme becomes one run carrying its measured terminal width, so browser
+ * renderers can prevent fallback-font advances from shifting later cells.
+ */
+export function projectTerminalTextRuns(
+  value: string,
+): readonly TerminalTextRun[] {
+  const runs: TerminalTextRun[] = [];
   let ascii = "";
   const flushAscii = (): void => {
-    html += escapeHtml(ascii);
+    if (ascii !== "") runs.push({ text: ascii });
     ascii = "";
   };
   for (const { segment } of terminalCellSegmenter.segment(value)) {
-    if ([...segment].every((character) => character.codePointAt(0)! <= 0x7F)) {
+    const isAscii = [...segment].every((character) =>
+      (character.codePointAt(0) ?? 0) <= 0x7F
+    );
+    if (isAscii) {
       ascii += segment;
       continue;
     }
     flushAscii();
-    const columns = graphemeWidth(segment);
+    runs.push({ text: segment, columns: graphemeWidth(segment) });
+  }
+  flushAscii();
+  return runs;
+}
+
+function terminalTextHtml(value: string): string {
+  return projectTerminalTextRuns(value).map(({ text, columns }) => {
+    if (columns === undefined) return escapeHtml(text);
     const style = [
       "display:inline-block",
       `width:${columns}ch`,
       "text-align:center",
       "vertical-align:baseline",
     ].join(";");
-    html += `<span data-discern-terminal-cell="${columns}" style="${style}">${
-      escapeHtml(segment)
+    return `<span data-discern-terminal-cell="${columns}" style="${style}">${
+      escapeHtml(text)
     }</span>`;
-  }
-  flushAscii();
-  return html;
+  }).join("");
 }
 
 const CSS_PROPERTY_NAMES = {
