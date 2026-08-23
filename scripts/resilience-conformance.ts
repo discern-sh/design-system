@@ -1,9 +1,8 @@
-import { AxeBuilder } from "@axe-core/playwright";
 import type { Browser, Page } from "playwright-core";
 import { themeTokens } from "../src/tokens/tokens.ts";
 import {
+  scanBrowserAccessibility,
   visibleEnabledTargets,
-  WCAG_TAGS,
 } from "./browser-conformance-support.ts";
 import {
   auditBundledFontMetricAssets,
@@ -359,10 +358,10 @@ async function scanJourneyAccessibility(
     );
     for (const id of ids) {
       try {
-        const results = await new AxeBuilder({ page })
-          .include(`[data-discern-journey="${id}"]`)
-          .withTags([...WCAG_TAGS])
-          .analyze();
+        const results = await scanBrowserAccessibility(
+          page,
+          `[data-discern-journey="${id}"]`,
+        );
         scans += 1;
         for (const violation of results.violations) {
           failures.push(

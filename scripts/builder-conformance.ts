@@ -1,4 +1,3 @@
-import { AxeBuilder } from "@axe-core/playwright";
 import { fromFileUrl } from "@std/path";
 import { Buffer } from "node:buffer";
 import type {
@@ -12,8 +11,8 @@ import { BUILDER_STORAGE_KEYS } from "../catalogue/builder/persistence.ts";
 import {
   addPageFailureListeners,
   FOCUSABLE_SELECTOR,
+  scanBrowserAccessibility,
   visibleEnabledTargets,
-  WCAG_TAGS,
 } from "./browser-conformance-support.ts";
 import { type ViewportSize, withViewport } from "./viewport.ts";
 
@@ -258,10 +257,7 @@ async function scanBuilderAccessibility(
   failures: string[],
 ): Promise<void> {
   try {
-    const results = await new AxeBuilder({ page })
-      .include(BUILDER_SHELL)
-      .withTags([...WCAG_TAGS])
-      .analyze();
+    const results = await scanBrowserAccessibility(page, BUILDER_SHELL);
     for (const violation of results.violations) {
       failures.push(
         `Builder axe ${label}: ${violation.id} (${

@@ -1,4 +1,5 @@
 /** Shared failure, accessibility, and keyboard authorities for browser gates. */
+import { AxeBuilder } from "@axe-core/playwright";
 import type { Locator, Page } from "playwright-core";
 
 export const WCAG_TAGS = [
@@ -13,6 +14,29 @@ export const FOCUSABLE_SELECTOR =
   "a[href], area[href], button, input:not([type='hidden']), select, textarea, " +
   "summary, audio[controls], video[controls], iframe, object, embed, " +
   "[tabindex], [contenteditable]";
+
+type AxeResults = Awaited<ReturnType<AxeBuilder["analyze"]>>;
+
+/** Let two browser paints commit appearance changes before reading pixels. */
+export async function waitForPaintedFrames(page: Page): Promise<void> {
+  await page.evaluate(() =>
+    new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+    )
+  );
+}
+
+/** Run one WCAG scan only after theme and layout paint caches have settled. */
+export async function scanBrowserAccessibility(
+  page: Page,
+  selector: string,
+): Promise<AxeResults> {
+  await waitForPaintedFrames(page);
+  return await new AxeBuilder({ page })
+    .include(selector)
+    .withTags([...WCAG_TAGS])
+    .analyze();
+}
 
 /** Collect every uncaught browser, console, and HTTP failure into one gate. */
 export function addPageFailureListeners(page: Page, failures: string[]): void {

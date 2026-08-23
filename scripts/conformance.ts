@@ -1,4 +1,3 @@
-import { AxeBuilder } from "@axe-core/playwright";
 import { fromFileUrl } from "@std/path";
 import { type Browser, type Locator, type Page } from "playwright-core";
 import { packageManifest } from "../src/manifest.ts";
@@ -17,7 +16,7 @@ import { terminalFoundationSheets } from "../catalogue/terminal-foundations.ts";
 import { launchBrowser } from "./browser.ts";
 import {
   addPageFailureListeners,
-  WCAG_TAGS,
+  scanBrowserAccessibility,
 } from "./browser-conformance-support.ts";
 import { buildDesignSystem } from "./build.ts";
 import { runBuilderConformance } from "./builder-conformance.ts";
@@ -526,10 +525,7 @@ async function scanAccessibility(
     const selector =
       `[data-discern-component="${component}"] .discern-catalogue-component__canvas`;
     try {
-      const results = await new AxeBuilder({ page })
-        .include(selector)
-        .withTags([...WCAG_TAGS])
-        .analyze();
+      const results = await scanBrowserAccessibility(page, selector);
       scans += 1;
       for (const violation of results.violations) {
         const targets = violation.nodes.map((node) => {
@@ -813,10 +809,10 @@ async function verifyTerminalFoundationEnrollment(
     "Terminal motif animation did not advance after Play",
   );
   await animation.getByRole("button", { name: "Pause animation" }).click();
-  const accessibility = await new AxeBuilder({ page })
-    .include("[data-discern-terminal-foundation]")
-    .withTags([...WCAG_TAGS])
-    .analyze();
+  const accessibility = await scanBrowserAccessibility(
+    page,
+    "[data-discern-terminal-foundation]",
+  );
   invariant(
     accessibility.violations.length === 0,
     `Terminal foundations failed accessibility: ${

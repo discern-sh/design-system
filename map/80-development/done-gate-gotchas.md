@@ -114,6 +114,14 @@ refresh` immediately rewrites them back) — the two sides loop forever.
 
 **Fix.** For elements whose accessible name comes from content next to hidden decoration, either target by a unique `selector` and pin the decoration's `aria-hidden="true"` with an attribute expectation, or give the scenario's role target the full text including the hidden parts. Also remember `exactlyOne`: any target that matches twice in the example canvas fails, so scope selectors with an attribute (`[aria-label="…"]`, `[href="…"]`) when an example renders several instances.
 
+### An axe contrast scan combines colours from two themes
+
+**Symptom.** Browser conformance intermittently reports `color-contrast` on text whose computed foreground and background have ample contrast. The failure can name the same target in light and dark runs, while an isolated rerun passes.
+
+**Cause.** Axe can begin after an in-page theme attribute changes but before two browser paints have invalidated its appearance caches. It then evaluates the foreground retained from the previous theme against the current background. Waiting for the theme attribute or fonts alone does not establish a painted-frame boundary.
+
+**Fix.** Route every axe scan through `scanBrowserAccessibility` in [`scripts/browser-conformance-support.ts`](../../scripts/browser-conformance-support.ts). That authority waits for two painted frames before analysis; the architecture test rejects any current or future conformance script that imports `@axe-core/playwright` directly. Do not weaken contrast rules or patch the reported element's valid Tokens.
+
 ### The main checkout's `node_modules` lags a landed dependency
 
 **Symptom.** In the **main checkout**, `discern done` fails its typecheck stage with `error: Could not resolve "<package>", but found it in a package.json. Deno
