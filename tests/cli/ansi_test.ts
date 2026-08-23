@@ -126,6 +126,24 @@ Deno.test("hyperlink authority gates on capability and never loses the label", (
   );
 });
 
+Deno.test("hyperlink authority rejects every target outside the shared URL policy", () => {
+  const capabilities = testTerminalCapabilities({ colorDepth: "truecolor" });
+  for (
+    const target of [
+      "javascript:alert(1)",
+      "data:text/html,boom",
+      "widget:future-sibling",
+      "https://example.test/%00",
+    ]
+  ) {
+    assertThrows(
+      () => styleHyperlink("unsafe", target, capabilities),
+      TypeError,
+      "safe non-empty ASCII URL reference",
+    );
+  }
+});
+
 Deno.test("hyperlink authority preserves a multi-style label as one target", () => {
   const url = "https://discern.sh/docs";
   const capabilities = testTerminalCapabilities({ colorDepth: "truecolor" });

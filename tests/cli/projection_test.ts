@@ -398,7 +398,7 @@ Deno.test("projected inline HTML fixes Unicode graphemes to terminal cells", () 
   assert(!html.includes('data-discern-terminal-cell="1">A'));
 });
 
-Deno.test("projected HTML links safe targets and neutralises unsafe ones", () => {
+Deno.test("projected HTML links safe targets and rejects unsafe envelopes", () => {
   const capabilities = testTerminalCapabilities({ colorDepth: "truecolor" });
   const linked = projectTerminalHtml(
     styleHyperlink("docs", "https://discern.sh", capabilities, {
@@ -410,9 +410,12 @@ Deno.test("projected HTML links safe targets and neutralises unsafe ones", () =>
     `<a href="https://discern.sh" target="_blank" rel="noopener noreferrer" style="text-decoration-line:underline">docs</a>`,
   );
 
-  const unsafe = projectTerminalHtml(
-    `${ESC}]8;;javascript:alert(1)${ST}click${ESC}]8;;${ST}`,
+  assertThrows(
+    () =>
+      projectTerminalHtml(
+        `${ESC}]8;;javascript:alert(1)${ST}click${ESC}]8;;${ST}`,
+      ),
+    TerminalProjectionError,
+    "unsupported or unterminated sequence",
   );
-  assert(!unsafe.includes("<a "), "unsafe hyperlink target became an anchor");
-  assertStringIncludes(unsafe, "click");
 });

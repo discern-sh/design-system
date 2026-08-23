@@ -112,9 +112,9 @@ export function styleText(
  * emitted.
  *
  * Labels must project to non-empty text free of control and format
- * characters; URLs must be non-empty printable ASCII, so anything wider is
- * percent-encoded by the caller before composition. Invalid input throws a
- * `TypeError`.
+ * characters; URLs must satisfy the package's safe non-empty ASCII URL
+ * reference policy, so anything wider is percent-encoded by the caller before
+ * composition. Invalid input throws a `TypeError`.
  */
 export function styleHyperlink(
   label: string,
@@ -142,7 +142,7 @@ export function styleHyperlink(
   }
   if (!validHyperlinkTarget(url)) {
     throw new TypeError(
-      `hyperlink url must be non-empty printable ASCII; received ${
+      `hyperlink url must be a safe non-empty ASCII URL reference; received ${
         JSON.stringify(url)
       }`,
     );

@@ -177,11 +177,11 @@ export function mergeStyledSegments(
  * Parse package-emitted styled text into uniformly styled runs, tracking SGR
  * attributes, colour, and open hyperlink envelopes exactly as a terminal
  * would. Only sequences the package composes are accepted: SGR resets,
- * attribute, foreground- and background-colour codes, and complete ST-ended OSC 8
- * envelopes with printable-ASCII targets. Anything else — foreign controls,
- * unterminated sequences, BEL-ended envelopes — throws a `TypeError` naming
- * the offending bytes. Styling left open at the end of input simply ends
- * with the final run.
+ * attribute, foreground- and background-colour codes, and complete ST-ended
+ * OSC 8 envelopes whose targets satisfy the shared safe ASCII URL-reference
+ * policy. Anything else — foreign controls, unterminated sequences, BEL-ended
+ * envelopes — throws a `TypeError` naming the offending bytes. Styling left
+ * open at the end of input simply ends with the final run.
  */
 export function parseStyledSource(value: string): readonly StyledSegment[] {
   const segments: StyledSegment[] = [];
@@ -297,7 +297,7 @@ export function mapStyledHyperlinks(
           : mapper(segment.link);
         if (link !== undefined && !validHyperlinkTarget(link)) {
           throw new TypeError(
-            `mapped hyperlink target must be non-empty printable ASCII; received ${
+            `mapped hyperlink target must be a safe non-empty ASCII URL reference; received ${
               JSON.stringify(link)
             }`,
           );

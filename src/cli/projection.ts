@@ -25,6 +25,7 @@ import {
 } from "./ansi-palette.ts";
 import { parseStyledSource, type StyledSegment } from "./styled-sequences.ts";
 import { graphemeWidth, measureText } from "./text.ts";
+import { inspectSafeAsciiUrlReference } from "../url-reference.ts";
 import {
   terminalThemeColor,
   terminalThemes,
@@ -296,16 +297,16 @@ export function terminalSpanCss(style: TerminalSpanStyle): TerminalSpanCss {
   };
 }
 
-const LINK_PROTOCOLS = new Set(["http:", "https:", "mailto:", "file:"]);
-
 /**
  * Resolve a decoded hyperlink target to a safe `href`, or `undefined` when
  * the target must render as plain text. Only absolute `http:`, `https:`,
  * `mailto:`, and `file:` targets become live anchors in projected HTML.
  */
 export function terminalLinkHref(target: string): string | undefined {
+  if (!inspectSafeAsciiUrlReference(target).ok) return undefined;
   try {
-    return LINK_PROTOCOLS.has(new URL(target).protocol) ? target : undefined;
+    new URL(target);
+    return target;
   } catch {
     return undefined;
   }
@@ -851,9 +852,10 @@ export function projectTerminalInspectorHtml(
  * element, coloured by the package's own derived terminal theme.
  *
  * Every style is inlined, so the returned fragment renders faithfully with no
- * stylesheet. Hyperlink targets outside the safe protocol set render as
- * styled text rather than live anchors. Input outside the documented
- * repertoire throws {@linkcode TerminalProjectionError}, exactly as
+ * stylesheet. Safe relative hyperlink targets render as styled text rather
+ * than live anchors. A raw target outside the shared URL-reference policy is
+ * outside the package-emitted repertoire and throws
+ * {@linkcode TerminalProjectionError}, exactly as
  * {@linkcode projectTerminalSpans} does.
  */
 export function projectTerminalHtml(
