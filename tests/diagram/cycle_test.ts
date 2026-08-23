@@ -669,6 +669,26 @@ Deno.test("cycle enhanced CLI has exact narrow, standard ASCII, and wide frames"
   }
 });
 
+Deno.test("cycle enhanced CLI points every spoke from its named source to target", () => {
+  const validated = validateCycleDiagram(fixtures[1]);
+  for (const unicode of [true, false]) {
+    const result = projection(
+      validated,
+      testTerminalCapabilities({
+        colorDepth: "none",
+        columns: 100,
+        unicode,
+      }),
+    );
+    assertEquals(result.kind, "frame");
+    if (result.kind !== "frame") continue;
+    const toHub = unicode ? "collect ┄┄▷ record" : "collect -.> record";
+    const fromHub = unicode ? "record ┈┈▸ compare" : "record ~~> compare";
+    assert(result.frame.includes(toHub));
+    assert(result.frame.includes(fromHub));
+  }
+});
+
 Deno.test("cycle enhanced CLI preserves exact facts with colour and no colour", () => {
   const validated = validateCycleDiagram(fixtures[0]);
   for (const unicode of [true, false]) {

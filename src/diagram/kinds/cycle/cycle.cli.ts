@@ -7,6 +7,7 @@ import type {
   DiagramKindCliProjection,
   DiagramKindCliProjectorContext,
 } from "../../../cli/diagram-kinds.ts";
+import { diagramTerminalConnectorGlyph } from "../../../cli/diagram-line-treatment.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { composeCliBlocks } from "../../../cli/rhythm.ts";
 import { measureText, wrapText } from "../../../cli/text.ts";
@@ -43,15 +44,10 @@ function directionGlyph(
   direction: CycleSpokeDirection,
   unicode: boolean,
 ): string {
-  const triangle = triangleGlyph(
-    direction === "to-hub"
-      ? TRIANGLES.filledSmall.right
-      : TRIANGLES.filledSmall.left,
+  return diagramTerminalConnectorGlyph(
+    direction === "to-hub" ? "secondary" : "return",
     unicode,
   );
-  return direction === "to-hub"
-    ? `${unicode ? "──" : "--"}${triangle}`
-    : `${triangle}${unicode ? "──" : "--"}`;
 }
 
 function plainStageLines(

@@ -8,6 +8,7 @@ import type {
   DiagramKindCliProjector,
   DiagramKindCliProjectorContext,
 } from "../../../cli/diagram-kinds.ts";
+import { diagramTerminalConnectorGlyph } from "../../../cli/diagram-line-treatment.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { composeCliBlocks } from "../../../cli/rhythm.ts";
 import { measureText, wrapText } from "../../../cli/text.ts";
@@ -56,19 +57,7 @@ function connectorGlyph(
   emphasis: FlowEdgeEmphasis,
   unicode: boolean,
 ): string {
-  if (emphasis === "primary") {
-    return `${unicode ? "──" : "--"}${
-      triangleGlyph(TRIANGLES.filledSmall.right, unicode)
-    }`;
-  }
-  if (emphasis === "secondary") {
-    return `${unicode ? "┄┄" : "-."}${
-      triangleGlyph(TRIANGLES.unfilled.right, unicode)
-    }`;
-  }
-  return `${unicode ? "┈┈" : "~~"}${
-    triangleGlyph(TRIANGLES.filledSmall.right, unicode)
-  }`;
+  return diagramTerminalConnectorGlyph(emphasis, unicode);
 }
 
 function edgeTone(emphasis: FlowEdgeEmphasis): TerminalSemanticTone {

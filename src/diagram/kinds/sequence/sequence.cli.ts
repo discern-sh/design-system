@@ -7,6 +7,7 @@ import type {
   DiagramKindCliProjection,
   DiagramKindCliProjectorContext,
 } from "../../../cli/diagram-kinds.ts";
+import { diagramTerminalConnectorGlyph } from "../../../cli/diagram-line-treatment.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { composeCliBlocks } from "../../../cli/rhythm.ts";
 import { measureText, wrapText } from "../../../cli/text.ts";
@@ -41,13 +42,16 @@ function decline(
 }
 
 function messageGlyph(kind: SequenceMessageKind, unicode: boolean): string {
+  if (kind !== "self") {
+    return diagramTerminalConnectorGlyph(
+      kind === "call" ? "primary" : kind === "signal" ? "secondary" : kind,
+      unicode,
+    );
+  }
   const head = triangleGlyph(
-    kind === "signal" ? TRIANGLES.unfilled.right : TRIANGLES.filledSmall.right,
+    TRIANGLES.filledSmall.right,
     unicode,
   );
-  if (kind === "call") return `${unicode ? "──" : "--"}${head}`;
-  if (kind === "signal") return `${unicode ? "┄┄" : "-."}${head}`;
-  if (kind === "return") return `${unicode ? "┈┈" : "~~"}${head}`;
   return unicode ? `↻${head}` : `[self]${head}`;
 }
 
