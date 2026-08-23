@@ -23,7 +23,7 @@ export const markdownDiagramExampleSpec = Object.freeze(
 );
 
 export const markdownDiagramExampleSource =
-  "generated/markdown-review-change.svg";
+  "/catalogue/generated/markdown-review-change.svg";
 export const markdownDiagramExampleAlt = diagramAltText(
   markdownDiagramExampleSpec,
 );

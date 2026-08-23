@@ -41,16 +41,25 @@ import { Markdown } from "../src/react.ts";
 import { markdownFixtures } from "../src/fixtures/markdown.ts";
 import {
   markdownDiagramExampleAlt as markdownDiagramAlt,
-  markdownDiagramExampleMarkdown as markdownDiagramMarkdown,
-  markdownDiagramExampleResource as markdownDiagramResource,
-  markdownDiagramExampleSource as markdownDiagramSource,
   markdownDiagramExampleSpec as markdownDiagramSpec,
 } from "../src/diagram/markdown.example.ts";
 
+const markdownDiagramSource = "assets/review-change.svg";
+const markdownDiagramMarkdown = [
+  "# Change lifecycle",
+  "",
+  `![${markdownDiagramAlt}](${markdownDiagramSource} \"${markdownDiagramSpec.summary}\")`,
+  "",
+  "Continue with the [review guide](guide.md#review).",
+].join("\n");
+const markdownDiagramResource = Object.freeze({
+  source: markdownDiagramSource,
+  spec: markdownDiagramSpec,
+}) satisfies MarkdownDiagramResource;
 const markdownDiagramSvg = renderDiagramSvg(markdownDiagramSpec);
 const encodedMarkdownDiagramSource = markdownDiagramSource.replace(
-  "markdown",
-  "%6darkdown",
+  "review",
+  "%72eview",
 );
 
 const wide = testTerminalCapabilities({

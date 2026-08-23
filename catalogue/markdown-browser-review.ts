@@ -106,7 +106,7 @@ function resizedArtifact(): MarkdownBrowserReviewArtifact {
   });
 }
 
-/** Nine required visual-review postures rendered only from explicit facts. */
+/** Ten required visual-review postures rendered only from explicit facts. */
 export function markdownBrowserReviewArtifacts(): readonly MarkdownBrowserReviewArtifact[] {
   return Object.freeze([
     reviewArtifact(
@@ -177,6 +177,14 @@ export function markdownBrowserReviewArtifacts(): readonly MarkdownBrowserReview
       }),
       "keyboard-link",
     ),
+    reviewArtifact(
+      "diagram-document",
+      "Resource-upgraded Diagram in the reader",
+      80,
+      24,
+      capabilities(80),
+      "diagram-document",
+    ),
     resizedArtifact(),
   ]);
 }
@@ -240,7 +248,7 @@ export function renderMarkdownBrowserReviewPage(): string {
     <header class="intro">
       <p class="eyebrow">discern Design System · CLI review</p>
       <h1>Markdown browser links and mouse</h1>
-      <p>Nine deterministic terminal postures rendered from the package's real browser state and renderer, including keyboard and pointer link focus. Geometry metrics are conformance facts; repeated-line notices are advisory review cues for intentional Markdown spacing.</p>
+      <p>Ten deterministic terminal postures rendered from the package's real browser state and renderer, including keyboard and pointer link focus plus a resource-upgraded Diagram. Geometry metrics are conformance facts; repeated-line notices are advisory review cues for intentional Markdown spacing.</p>
       <p><a href="/catalogue/?surface=cli#terminal-layout-markdown-browser">Open the interactive Catalogue recipe</a></p>
     </header>
     ${sections}

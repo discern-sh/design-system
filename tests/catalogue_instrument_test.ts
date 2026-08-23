@@ -101,7 +101,7 @@ Deno.test("Catalogue writes its Markdown SVG preview from the typed spec", async
   await catalogue();
   assertEquals(
     await Deno.readTextFile(
-      join(PACKAGE_ROOT, "catalogue", markdownDiagramExampleSource),
+      join(PACKAGE_ROOT, markdownDiagramExampleSource.slice(1)),
     ),
     renderDiagramSvg(markdownDiagramExampleSpec, { theme: "adaptive" }),
   );

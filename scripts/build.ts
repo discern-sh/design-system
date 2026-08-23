@@ -982,7 +982,16 @@ async function bundleCatalogue(): Promise<void> {
 }
 
 async function writeCatalogueDiagramAsset(): Promise<void> {
-  const target = new URL(markdownDiagramExampleSource, CATALOGUE_ROOT);
+  const mount = "/catalogue/";
+  if (!markdownDiagramExampleSource.startsWith(mount)) {
+    throw new TypeError(
+      "Catalogue Markdown diagram source must use the Catalogue mount",
+    );
+  }
+  const target = new URL(
+    markdownDiagramExampleSource.slice(mount.length),
+    CATALOGUE_ROOT,
+  );
   if (!target.pathname.startsWith(GENERATED_ROOT.pathname)) {
     throw new TypeError(
       "Catalogue Markdown diagram asset must stay under catalogue/generated",

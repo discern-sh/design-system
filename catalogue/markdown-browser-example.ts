@@ -6,8 +6,10 @@ import {
   type MarkdownBrowserEntry,
   type MarkdownBrowserOptions,
   type MarkdownBrowserState,
+  updateMarkdownBrowserState,
 } from "../src/cli/interactive/markdown-browser-model.ts";
 import {
+  markdownBrowserDocumentMaximumOffset,
   markdownBrowserLinkOccurrences,
   renderMarkdownBrowser,
 } from "../src/cli/interactive/markdown-browser-renderer.ts";
@@ -139,7 +141,8 @@ export type MarkdownBrowserCataloguePosture =
   | "keyboard-link"
   | "pointer-link"
   | "pointer-picker"
-  | "internal-destination";
+  | "internal-destination"
+  | "diagram-document";
 
 /** Construct one deterministic state without reading a process or terminal. */
 export function createMarkdownBrowserCatalogueState(
@@ -162,6 +165,15 @@ export function createMarkdownBrowserCatalogueState(
     kind: "key",
     key: { kind: "named", name: "enter" },
   }, capabilities).state;
+  if (posture === "diagram-document") {
+    return updateMarkdownBrowserState(state, {
+      focusedPane: "document",
+      documentScrollOffset: markdownBrowserDocumentMaximumOffset(
+        state,
+        capabilities,
+      ),
+    });
+  }
   if (posture === "single-picker") {
     state = transitionMarkdownBrowser(state, {
       kind: "key",

@@ -13,6 +13,7 @@ Deno.test("Markdown browser visual review enrolls every required posture", () =>
     "internal-destination",
     "single-pane",
     "no-color",
+    "diagram-document",
     "resize-result",
   ]);
   for (const artifact of artifacts) {
@@ -53,5 +54,13 @@ Deno.test("Markdown browser visual review enrolls every required posture", () =>
   assertStringIncludes(
     artifacts.find(({ id }) => id === "no-color")?.frame ?? "",
     ">Read the reference",
+  );
+  assertStringIncludes(
+    artifacts.find(({ id }) => id === "diagram-document")?.frame ?? "",
+    "Draft change",
+  );
+  assertStringIncludes(
+    artifacts.find(({ id }) => id === "diagram-document")?.frame ?? "",
+    "Relationships",
   );
 });
