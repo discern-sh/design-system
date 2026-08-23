@@ -121,7 +121,9 @@ One typed flow spec feeds the neutral description and standalone SVG, the live-t
 
 ```ts
 import {
+  diagramAltText,
   type FlowDiagramSpec,
+  type MarkdownDiagramResource,
   renderDiagramSvg,
 } from "@discern-sh/design-system/diagram";
 
@@ -163,18 +165,32 @@ export const reviewFlow = {
 // A consumer-owned build step writes the returned bytes wherever its static
 // asset pipeline expects them. The package renderer itself performs no I/O.
 await Deno.writeTextFile(
-  new URL("./public/review-flow.svg", import.meta.url),
+  new URL("./public/assets/review-flow.svg", import.meta.url),
   renderDiagramSvg(reviewFlow, { theme: "adaptive" }),
 );
+
+export const reviewFlowSource = "assets/review-flow.svg";
+export const reviewFlowMarkdown =
+  `![${diagramAltText(reviewFlow)}](${reviewFlowSource} "${reviewFlow.summary}")`;
+export const reviewFlowResource = {
+  source: reviewFlowSource,
+  spec: reviewFlow,
+} satisfies MarkdownDiagramResource;
 ```
 
 Standalone SVG accepts `light`, `dark`, or `adaptive`. Each asset contains literal package palette values, its own accessible title and structural description, semantic text, and a deterministic light fallback; `adaptive` adds a self-contained `prefers-color-scheme` dark palette. An external SVG loaded through `<img>` does not inherit custom properties or fonts from its host page.
 
+The Markdown remains ordinary image syntax: generic readers show the generated SVG and raw text keeps a meaningful alternative. Package Markdown callers may optionally supply the explicit resource to upgrade only an isolated matching image. Matching happens after the existing safe URL normalization, the alt must equal `diagramAltText(spec)`, and an optional image title must equal `spec.summary`. Valid unused resources are allowed so one collection can serve a complete corpus; duplicate normalized sources reject. The package never reads the asset, resolves the path against a filesystem or browser location, parses SVG, or discovers a registry.
+
 The React projection maps the same validated scene directly to SVG and takes its live colours from emitted semantic Tokens. Compose it as the visual inside `DataFigure`; the figure owns the visible title, caption, source, and any legend:
 
 ```tsx
-import { DataFigure, Diagram } from "@discern-sh/design-system/react";
-import { reviewFlow } from "./review-flow.ts";
+import { DataFigure, Diagram, Markdown } from "@discern-sh/design-system/react";
+import {
+  reviewFlow,
+  reviewFlowMarkdown,
+  reviewFlowResource,
+} from "./review-flow.ts";
 
 export function ReviewFigure() {
   return (
@@ -185,6 +201,10 @@ export function ReviewFigure() {
       source="Process reference"
     />
   );
+}
+
+export function ReviewMarkdown() {
+  return <Markdown source={reviewFlowMarkdown} diagrams={[reviewFlowResource]} />;
 }
 ```
 
@@ -270,6 +290,8 @@ console.log(output);
 
 The fixed dialect includes CommonMark, GFM tables/task lists/strikethrough/autolinks, GitHub alerts, and footnotes. Raw HTML is inert, comments are omitted, unsafe destinations remain visible but non-clickable, controls become visible notation, duplicate heading fragments are stable, and empty source returns the empty string.
 
+Pass `diagrams: [reviewFlowResource]` with `source: reviewFlowMarkdown` to project the same isolated image through `renderDiagramCli`. Its default `diagramMode: "auto"` uses enhanced kind output only when it preserves every fact at the effective nested width; set `diagramMode: "description"` to force the universal semantic description. Unregistered and mixed-phrasing images retain the existing `Image:` fallback and never become links.
+
 The package supplies one discern-flavoured preset without making triangles part of the generic renderer contract. Define a complete product language with `defineTerminalMotif()`, or replace only selected semantic roles with `deriveTerminalMotif()`:
 
 ```ts
@@ -347,6 +369,7 @@ import {
   type MarkdownBrowserResumableState,
   requestMarkdownBrowser,
 } from "@discern-sh/design-system/cli/interactive";
+import { reviewFlowMarkdown, reviewFlowResource } from "./review-flow.ts";
 
 let resume: MarkdownBrowserResumableState | undefined;
 const result = await requestMarkdownBrowser({
@@ -358,8 +381,8 @@ const result = await requestMarkdownBrowser({
       id: "start",
       label: "Getting started",
       path: "guides/getting-started.md",
-      source:
-        "# Getting started\n\n[Testing](../reference/testing.md#fake-terminal) · [Website](https://example.test/docs)",
+      source: `# Getting started\n\n${reviewFlowMarkdown}\n\n[Testing](../reference/testing.md#fake-terminal) · [Website](https://example.test/docs)`,
+      diagrams: [reviewFlowResource],
     },
     {
       kind: "document",
@@ -443,7 +466,7 @@ const html = renderToStaticMarkup(
 );
 ```
 
-The `Markdown` React Component accepts the same untrusted `source` plus an optional Prose `measure`, composes native document semantics without `dangerouslySetInnerHTML`, and renders no wrapper for empty source. Discern uses this adapter at build time only: no React bundle or hydration reaches the browser. Static components need no browser runtime; components whose Metadata declares browser behavior use the selection-scoped `discern.js` emitted beside their CSS. Stateful catalogue examples beyond that published behavior still require a consumer-owned browser strategy outside the catalogue.
+The `Markdown` React Component accepts the same untrusted `source`, an optional Prose `measure`, and optional explicit diagram resources. It composes native document semantics without `dangerouslySetInnerHTML`, dispatches admitted diagram blocks to the public live-token `Diagram`, and renders no wrapper for empty source. Discern uses this adapter at build time only: no React bundle or hydration reaches the browser. Static components need no browser runtime; components whose Metadata declares browser behavior use the selection-scoped `discern.js` emitted beside their CSS. Stateful catalogue examples beyond that published behavior still require a consumer-owned browser strategy outside the catalogue.
 
 ## Output sizes
 

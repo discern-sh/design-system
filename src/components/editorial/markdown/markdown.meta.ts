@@ -11,6 +11,7 @@ export default {
   purposes: ["building-documentation", "displaying-tool-output"],
   useWhen: [
     "A consumer owns Markdown source and needs complete, safe browser or terminal document output without owning parser presentation logic.",
+    "A standard Markdown image names a generated diagram asset and an explicit source-to-spec resource should upgrade it on package-owned surfaces.",
   ],
   notWhen: [
     "Use Prose when the caller already owns semantic React or CLI block structure rather than Markdown source.",
@@ -21,5 +22,6 @@ export default {
     "Native headings, lists, quotations, tables, code, images, and end-note relationships preserve the document hierarchy in source order.",
     "Heading ids are stable and duplicate-safe; footnote references and returns are descriptive keyboard-reachable links.",
     "Raw HTML is inert, unsafe destinations remain visible but non-clickable, and source controls become visible notation.",
+    "Admitted isolated diagram images must use the spec-derived alternative and matching optional summary title; drift rejects the whole document.",
   ],
 } satisfies ComponentMeta;

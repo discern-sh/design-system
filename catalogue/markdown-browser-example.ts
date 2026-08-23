@@ -11,6 +11,10 @@ import {
   markdownBrowserLinkOccurrences,
   renderMarkdownBrowser,
 } from "../src/cli/interactive/markdown-browser-renderer.ts";
+import {
+  markdownDiagramExampleMarkdown,
+  markdownDiagramExampleResource,
+} from "../src/diagram/markdown.example.ts";
 
 /** Markdown corpus exercising the browser's document-reading treatment. */
 export const markdownBrowserDocumentSource =
@@ -58,7 +62,9 @@ ${
           index + 13
         } keeps a stable semantic landmark across terminal rewrapping.`,
     ).join("\n\n")
-  }`;
+  }
+
+${markdownDiagramExampleMarkdown}`;
 
 const generatedDocuments = Array.from({ length: 18 }, (_, index) => ({
   kind: "document" as const,
@@ -86,6 +92,7 @@ export const markdownBrowserEntries = [
     description: "Search, focus, resize, and restoration",
     path: "guides/keyboard-markdown-browser.md",
     source: markdownBrowserDocumentSource,
+    diagrams: [markdownDiagramExampleResource],
   },
   ...generatedDocuments.slice(0, 9),
   {

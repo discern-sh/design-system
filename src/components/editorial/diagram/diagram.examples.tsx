@@ -1,5 +1,9 @@
 import type { FlowDiagramSpec } from "../../../diagram/mod.ts";
 import { diagramAltText, renderDiagramSvg } from "../../../diagram/mod.ts";
+import {
+  markdownDiagramExampleMarkdown,
+  markdownDiagramExampleSpec,
+} from "../../../diagram/markdown.example.ts";
 import { DataFigure } from "../data-figure/data-figure.tsx";
 import { Diagram } from "./diagram.tsx";
 
@@ -140,6 +144,12 @@ export default function DiagramExamples() {
             </figure>
           ))}
         </div>
+      </section>
+
+      <section>
+        <h3>Ordinary Markdown asset bridge</h3>
+        <pre><code>{markdownDiagramExampleMarkdown}</code></pre>
+        <Diagram spec={markdownDiagramExampleSpec} />
       </section>
 
       <DataFigure

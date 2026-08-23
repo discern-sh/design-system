@@ -1,4 +1,8 @@
 import { Markdown } from "./markdown.tsx";
+import {
+  markdownDiagramExampleMarkdown,
+  markdownDiagramExampleResource,
+} from "../../../diagram/markdown.example.ts";
 
 const compact = `# A compact document
 
@@ -65,6 +69,18 @@ export default function MarkdownExamples() {
       <Markdown source={dialect} measure="wide" />
       <Markdown source={nested} />
       <Markdown source={hostile} measure="narrow" />
+      <section>
+        <h3>Ordinary generated image</h3>
+        <Markdown source={markdownDiagramExampleMarkdown} measure="wide" />
+      </section>
+      <section>
+        <h3>Resource-upgraded live Diagram</h3>
+        <Markdown
+          source={markdownDiagramExampleMarkdown}
+          diagrams={[markdownDiagramExampleResource]}
+          measure="wide"
+        />
+      </section>
     </>
   );
 }
