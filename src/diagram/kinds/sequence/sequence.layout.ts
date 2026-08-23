@@ -1,7 +1,11 @@
 /** Deterministic participant-column layout for authored interaction order. */
 
 import { DiagramValidationError } from "../../errors.ts";
-import { DIAGRAM_GEOMETRY, roundDiagramNumber } from "../../geometry.ts";
+import {
+  DIAGRAM_GEOMETRY,
+  diagramRectBottom,
+  roundDiagramNumber,
+} from "../../geometry.ts";
 import {
   createDiagramConnector,
   createDiagramGuide,
@@ -39,12 +43,14 @@ const SEQUENCE_GEOMETRY = Object.freeze({
   noteTextWidth: 176,
   headerToNoteGap: 20,
   participantNoteGap: 8,
+  participantNoteOffset: 16,
   notesToLifelineGap: 28,
   lifelineToFirstMessageGap: 16,
   labelToMessageGap: 14,
   messageToNoteGap: 14,
   messageRowGap: 36,
-  selfWidth: 216,
+  selfMinimumWidth: 96,
+  selfFactPadding: 12,
   selfHeight: 44,
   lifelineTail: 28,
 });
@@ -171,7 +177,6 @@ function participantPlan(
 function participantElements(
   plan: ParticipantPlan,
   notesTop: number,
-  lifelineStart: number,
   lifelineEnd: number,
 ): readonly DiagramSceneElement[] {
   const semanticId = plan.participant.id;
@@ -205,7 +210,7 @@ function participantElements(
       semanticId: lifelineId,
       style: "dashed",
       points: [
-        { x: plan.centerX, y: lifelineStart },
+        { x: plan.centerX, y: diagramRectBottom(plan.bounds) },
         { x: plan.centerX, y: lifelineEnd },
       ],
     }),
@@ -231,7 +236,8 @@ function participantElements(
       placement: "free",
       role: "quiet-annotation",
       measured: text,
-      centerX: plan.centerX,
+      centerX: plan.centerX + SEQUENCE_GEOMETRY.participantNoteOffset +
+        text.width / 2,
       top,
     }));
     top += text.height + SEQUENCE_GEOMETRY.participantNoteGap;
@@ -317,8 +323,16 @@ function messagePlan(
   let messageBottom: number;
   if (message.kind === "self") {
     const side = selfSide(source.participant, participantCount);
+    const widestFact = Math.max(
+      label.width,
+      ...measuredNotes.map(({ text }) => text.width),
+    );
+    const selfWidth = Math.max(
+      SEQUENCE_GEOMETRY.selfMinimumWidth,
+      widestFact + SEQUENCE_GEOMETRY.selfFactPadding * 2,
+    );
     const outsideX = roundDiagramNumber(
-      source.centerX + side * SEQUENCE_GEOMETRY.selfWidth,
+      source.centerX + side * selfWidth,
     );
     const targetY = roundDiagramNumber(
       lineY + SEQUENCE_GEOMETRY.selfHeight,
@@ -417,11 +431,12 @@ export default function layoutSequenceDiagram(
       )
     ),
   );
-  const lifelineStart = roundDiagramNumber(
+  const messageBandStart = roundDiagramNumber(
     notesTop + maximumParticipantNotesHeight +
       SEQUENCE_GEOMETRY.notesToLifelineGap,
   );
-  let cursor = lifelineStart + SEQUENCE_GEOMETRY.lifelineToFirstMessageGap;
+  let cursor = messageBandStart +
+    SEQUENCE_GEOMETRY.lifelineToFirstMessageGap;
   const messageNotes = spec.notes.filter((note) =>
     note.attachment === "message"
   );
@@ -439,14 +454,14 @@ export default function layoutSequenceDiagram(
   }
   const lifelineEnd = roundDiagramNumber(
     Math.max(
-      lifelineStart + 1,
+      messageBandStart + 1,
       cursor - SEQUENCE_GEOMETRY.messageRowGap +
         SEQUENCE_GEOMETRY.lifelineTail,
     ),
   );
 
   const participantElementsValue = participants.flatMap((plan) =>
-    participantElements(plan, notesTop, lifelineStart, lifelineEnd)
+    participantElements(plan, notesTop, lifelineEnd)
   );
   const messageElements = messages.flatMap((plan) => [
     plan.connector,

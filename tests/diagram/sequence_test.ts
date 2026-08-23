@@ -18,6 +18,7 @@ import {
   DiagramValidationError,
 } from "../../src/diagram/errors.ts";
 import {
+  DIAGRAM_GEOMETRY,
   diagramRectBottom,
   diagramRectRight,
 } from "../../src/diagram/geometry.ts";
@@ -36,6 +37,7 @@ import type {
   DiagramGuide,
   DiagramRect,
   DiagramScene,
+  DiagramShape,
   DiagramText,
 } from "../../src/diagram/scene.ts";
 
@@ -328,7 +330,7 @@ Deno.test("sequence layout preserves participant columns and message chronology"
   assertEquals(first.canvas.bounds, {
     x: 0,
     y: 0,
-    width: 725.13,
+    width: 791.68,
     height: 652,
   });
   for (let run = 0; run < 5; run += 1) {
@@ -458,6 +460,149 @@ Deno.test("sequence private lifelines cannot alias authored participant IDs", ()
   assert(connector?.kind === "connector");
   assertEquals(connector.sourceId, "@sequence-lifeline:reader-lifeline");
   assertEquals(connector.targetId, "@sequence-lifeline:reader");
+});
+
+Deno.test("sequence lifelines and self loops stay attached to their visible facts", () => {
+  const futureSibling = {
+    kind: "sequence",
+    title: "Qualify an exchange",
+    summary: "Unrelated actors carry qualifications and one local operation.",
+    participants: [
+      { id: "origin", label: "Origin" },
+      { id: "relay", label: "Relay" },
+      { id: "destination", label: "Destination" },
+    ],
+    messages: [
+      {
+        id: "handoff",
+        source: "origin",
+        target: "relay",
+        label: "Hand off",
+        kind: "call",
+      },
+      {
+        id: "inspect",
+        source: "relay",
+        target: "relay",
+        label: "Inspect",
+        kind: "self",
+      },
+    ],
+    notes: [
+      { id: "origin-note", participantId: "origin", label: "Owns input" },
+      { id: "relay-note", participantId: "relay", label: "Keeps context" },
+      {
+        id: "destination-note",
+        participantId: "destination",
+        label: "Receives output",
+      },
+      {
+        id: "inspection-note",
+        messageId: "inspect",
+        label: "Uses the complete recorded criteria",
+      },
+    ],
+  } as const satisfies SequenceDiagramSpec;
+  const defects: string[] = [];
+  for (const spec of [...fixtures, futureSibling]) {
+    const value = scene(spec);
+    const shapes = value.elements.filter(
+      (element): element is DiagramShape => element.kind === "shape",
+    );
+    const guides = value.elements.filter(
+      (element): element is DiagramGuide => element.kind === "guide",
+    );
+    const texts = value.elements.filter(
+      (element): element is DiagramText => element.kind === "text",
+    );
+    const connectors = value.elements.filter(
+      (element): element is DiagramConnector => element.kind === "connector",
+    );
+    const validated = prepare(spec);
+    for (const participant of validated.participants) {
+      const shape = shapes.find(({ semanticId }) =>
+        semanticId === participant.id
+      );
+      const guide = guides.find(({ semanticId }) =>
+        semanticId === `@sequence-lifeline:${participant.id}`
+      );
+      assert(shape !== undefined && guide !== undefined);
+      const start = guide.points[0];
+      if (
+        start === undefined ||
+        Math.abs(start.x - (shape.bounds.x + shape.bounds.width / 2)) > 0.02 ||
+        Math.abs(start.y - diagramRectBottom(shape.bounds)) > 0.02
+      ) {
+        defects.push(`${spec.title}: detached ${participant.id} lifeline`);
+      }
+    }
+    for (
+      const note of validated.notes.filter(({ attachment }) =>
+        attachment === "participant"
+      )
+    ) {
+      const text = texts.find(({ id }) => id === `note-${note.id}-text`);
+      assert(text !== undefined);
+      for (const guide of guides) {
+        const guideX = guide.points[0]?.x ?? Number.NaN;
+        if (
+          text.bounds.x < guideX + DIAGRAM_GEOMETRY.text.clearance &&
+          diagramRectRight(text.bounds) >
+            guideX - DIAGRAM_GEOMETRY.text.clearance
+        ) {
+          defects.push(
+            `${spec.title}: note ${note.id} occupies ${guide.semanticId}`,
+          );
+        }
+      }
+    }
+    for (
+      const message of validated.messages.filter(({ kind }) => kind === "self")
+    ) {
+      const connector = connectors.find(({ semanticId }) =>
+        semanticId === message.id
+      );
+      const label = texts.find(({ id }) =>
+        id === `message-${message.id}-label`
+      );
+      assert(connector !== undefined && label !== undefined);
+      const noteTexts = validated.notes.filter((note) =>
+        note.attachment === "message" && note.attachmentId === message.id
+      ).map((note) => {
+        const text = texts.find(({ id }) => id === `note-${note.id}-text`);
+        assert(text !== undefined, `${note.id} lost its visible note text`);
+        return text;
+      });
+      const factTexts = [label, ...noteTexts];
+      const factWidth = Math.max(
+        ...factTexts.map((text) => text.bounds.width),
+      );
+      const points = [...connector.points, connector.arrowhead.tip];
+      const loopStart = Math.min(...points.map(({ x }) => x));
+      const loopEnd = Math.max(...points.map(({ x }) => x));
+      const loopCenter = (loopStart + loopEnd) / 2;
+      const span = loopEnd - loopStart;
+      const minimumSpan = Math.max(96, factWidth + 24);
+      if (Math.abs(span - minimumSpan) > 0.02) {
+        defects.push(
+          `${spec.title}: self ${message.id} uses ${span} for ${factWidth} units of facts`,
+        );
+      }
+      for (const text of factTexts) {
+        const textCenter = text.bounds.x + text.bounds.width / 2;
+        if (
+          Math.abs(textCenter - loopCenter) > 0.02 ||
+          text.bounds.x < loopStart + 12 - 0.02 ||
+          diagramRectRight(text.bounds) > loopEnd - 12 + 0.02
+        ) {
+          defects.push(
+            `${spec.title}: ${text.id} is not centred inside self ${message.id}`,
+          );
+        }
+      }
+    }
+  }
+  assertEquals(defects, []);
 });
 
 Deno.test("sequence supports bounded long labels and dense authored order", () => {
