@@ -12,19 +12,31 @@ import { renderDiagramCli, renderMarkdownCli } from "../src/cli/mod.ts";
 import {
   createMarkdownBrowserState,
   type MarkdownBrowserDocument,
+  markdownBrowserResumableState,
 } from "../src/cli/interactive/markdown-browser-model.ts";
 import { transitionMarkdownBrowser } from "../src/cli/interactive/markdown-browser-machine.ts";
 import { requestMarkdownBrowser } from "../src/cli/interactive/markdown-browser-request.ts";
 import {
   fitMarkdownBrowserState,
+  markdownBrowserDocumentAnchor,
   markdownBrowserDocumentLines,
   markdownBrowserDocumentMaximumOffset,
   markdownBrowserLinkOccurrences,
 } from "../src/cli/interactive/markdown-browser-renderer.ts";
 import {
+  enqueueTerminalEvents,
   FakeTerminalIO,
   testTerminalCapabilities,
 } from "../src/cli/interactive/testing.ts";
+import { InteractionCancelled } from "../src/cli/interactive/errors.ts";
+import {
+  ENTER_TERMINAL_ALTERNATE_SCREEN,
+  LEAVE_TERMINAL_ALTERNATE_SCREEN,
+} from "../src/cli/interactive/lifecycle.ts";
+import {
+  ERASE_TERMINAL_DISPLAY,
+  HOME_TERMINAL_CURSOR,
+} from "../src/cli/interactive/painter.ts";
 import {
   MARKDOWN_BLOCK_KINDS,
   MarkdownParseError,
@@ -63,6 +75,20 @@ const markdownDiagramResource = Object.freeze({
   source: markdownDiagramSource,
   spec: markdownDiagramSpec,
 }) satisfies MarkdownDiagramResource;
+const markdownDiagramPostureMarkdown = [
+  "# Diagram threshold postures",
+  ...Array.from(
+    { length: 14 },
+    (_, index) =>
+      `Before landmark ${index + 1}: preparation remains reachable.`,
+  ),
+  renderDiagramMarkdownImage(markdownDiagramResource),
+  ...Array.from(
+    { length: 14 },
+    (_, index) => `After landmark ${index + 1}: follow-up remains reachable.`,
+  ),
+  "Continue with the [review guide](guide.md#review).",
+].join("\n\n");
 const markdownDiagramSvg = renderDiagramSvg(markdownDiagramSpec);
 const encodedMarkdownDiagramSource = markdownDiagramSource.replace(
   "review",
@@ -569,6 +595,197 @@ Deno.test("browser reflow changes Diagram posture while preserving later links a
     ).linkFocus,
     undefined,
   );
+});
+
+Deno.test("browser reflow preserves reader position above, within, and below Diagram", () => {
+  const document: MarkdownBrowserDocument = {
+    kind: "document",
+    id: "diagram-postures",
+    label: "Diagram postures",
+    path: "guides/diagram-postures.md",
+    source: markdownDiagramPostureMarkdown,
+    diagrams: [markdownDiagramResource],
+  };
+  const rows = 18;
+  const wideCapabilities = testTerminalCapabilities({ columns: 120 });
+  const narrowCapabilities = testTerminalCapabilities({ columns: 32 });
+  const openAt = (documentScrollOffset: number) =>
+    createMarkdownBrowserState({
+      label: "Documents",
+      entries: [document],
+      initialState: {
+        query: "",
+        queryCursor: 0,
+        highlightedId: document.id,
+        openedDocumentId: document.id,
+        focusedPane: "document",
+        pickerVisibleStart: 0,
+        documentScrollOffset,
+      },
+    }, { columns: 120, rows });
+  const probe = openAt(0);
+  const wideLines = markdownBrowserDocumentLines(probe, wideCapabilities);
+  const rowContaining = (needle: string): number => {
+    const row = wideLines.findIndex((line) => stripAnsi(line).includes(needle));
+    assert(row >= 0, `reader fixture has no row containing ${needle}`);
+    return row;
+  };
+  const anchor = (
+    state: ReturnType<typeof openAt>,
+    capabilities: ReturnType<typeof testTerminalCapabilities>,
+  ): string =>
+    markdownBrowserDocumentAnchor(
+      markdownBrowserDocumentLines(state, capabilities),
+      state.documentScrollOffset,
+    ) ?? "";
+
+  for (
+    const posture of [
+      {
+        name: "above",
+        row: rowContaining("Before landmark 8"),
+        anchor: "Before landmark 8",
+      },
+      {
+        name: "within",
+        row: rowContaining("┌ Review a change"),
+        anchor: "Review a change",
+      },
+      {
+        name: "below",
+        row: rowContaining("After landmark 4"),
+        anchor: "After landmark 4",
+      },
+    ] as const
+  ) {
+    let state = openAt(posture.row);
+    assertStringIncludes(anchor(state, wideCapabilities), posture.anchor);
+    const initialResume = markdownBrowserResumableState(state);
+    assertEquals(
+      markdownBrowserResumableState(createMarkdownBrowserState({
+        label: "Documents",
+        entries: [document],
+        initialState: initialResume,
+      }, { columns: 120, rows })),
+      initialResume,
+      `${posture.name} posture did not round-trip before resize`,
+    );
+
+    state = transitionMarkdownBrowser(
+      state,
+      { kind: "resize", columns: 32, rows },
+      narrowCapabilities,
+    ).state;
+    assertEquals(state.openedDocumentId, document.id, posture.name);
+    assertEquals(state.focusedPane, "document", posture.name);
+    assertStringIncludes(
+      anchor(state, narrowCapabilities),
+      posture.anchor,
+      `${posture.name} posture lost its semantic row at the narrow fallback`,
+    );
+    const narrowLines = markdownBrowserDocumentLines(
+      state,
+      narrowCapabilities,
+    );
+    const narrowLinks = markdownBrowserLinkOccurrences(
+      state,
+      narrowCapabilities,
+    );
+    assertEquals(
+      narrowLinks.map(({ destination }) => destination),
+      ["guide.md#review"],
+      posture.name,
+    );
+    assert(
+      narrowLinks[0]!.documentEndRow <= narrowLines.length,
+      `${posture.name} link region escaped the reflowed document`,
+    );
+    assert(
+      state.documentScrollOffset <=
+        markdownBrowserDocumentMaximumOffset(state, narrowCapabilities),
+      `${posture.name} scroll offset escaped the reflowed document`,
+    );
+    const narrowResume = markdownBrowserResumableState(state);
+    assertEquals(
+      markdownBrowserResumableState(createMarkdownBrowserState({
+        label: "Documents",
+        entries: [document],
+        initialState: narrowResume,
+      }, { columns: 32, rows })),
+      narrowResume,
+      `${posture.name} posture did not round-trip after resize`,
+    );
+
+    state = transitionMarkdownBrowser(
+      state,
+      { kind: "resize", columns: 120, rows },
+      wideCapabilities,
+    ).state;
+    assertStringIncludes(
+      anchor(state, wideCapabilities),
+      posture.anchor,
+      `${posture.name} posture lost its semantic row after widening`,
+    );
+    const atEnd = transitionMarkdownBrowser(
+      state,
+      { kind: "key", key: { kind: "named", name: "end" } },
+      wideCapabilities,
+    ).state;
+    assertEquals(
+      markdownBrowserLinkOccurrences(atEnd, wideCapabilities)[0]?.visibility,
+      "visible",
+      `${posture.name} could not reach the link after the Diagram`,
+    );
+  }
+});
+
+Deno.test("live Diagram threshold resizes paint complete frames and restore the terminal", async () => {
+  const io = new FakeTerminalIO([], {
+    columns: 120,
+    rows: 18,
+    colorDepth: "truecolor",
+    holdOpen: true,
+  });
+  enqueueTerminalEvents(io, [
+    { kind: "keys", keys: ["enter"] },
+    { kind: "resize", columns: 32, rows: 18 },
+    { kind: "keys", keys: ["page-down"] },
+    { kind: "resize", columns: 120, rows: 18 },
+    { kind: "keys", keys: ["ctrl-c"] },
+  ]);
+  const result = await requestMarkdownBrowser({
+    label: "Documents",
+    entries: [{
+      kind: "document",
+      id: "diagram",
+      label: "Diagram",
+      path: "guides/diagram.md",
+      source: markdownDiagramMarkdown,
+      diagrams: [markdownDiagramResource],
+    }],
+  }, { io }).catch((error) => error);
+  assert(result instanceof InteractionCancelled);
+  assertEquals(result.reason, "Cancelled.");
+  const framePrefix = `${ERASE_TERMINAL_DISPLAY}${HOME_TERMINAL_CURSOR}`;
+  const frames = io.writes.filter((write) => write.startsWith(framePrefix)).map(
+    (write) => write.slice(framePrefix.length).replaceAll("\r\n", "\n"),
+  );
+  assert(
+    frames.some((frame) => stripAnsi(frame).includes("┌ Review a change")),
+    "wide live frame did not use the enhanced Diagram projector",
+  );
+  assert(
+    frames.some((frame) => stripAnsi(frame).includes("Title: Review a change")),
+    "narrow live frame did not use the complete description fallback",
+  );
+  assert(
+    frames.every((frame) => frame.split("\n").length === 18),
+    "a Diagram resize painted an incomplete terminal frame",
+  );
+  assertEquals(io.writes[0], ENTER_TERMINAL_ALTERNATE_SCREEN);
+  assertEquals(io.writes.at(-1), LEAVE_TERMINAL_ALTERNATE_SCREEN);
+  assertEquals(io.rawTransitions, [true, false]);
+  assertEquals(io.resizeListenerCount, 0);
 });
 
 Deno.test("diagram blocks remain enrolled in both exhaustive projections", () => {
