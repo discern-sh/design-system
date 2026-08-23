@@ -1856,9 +1856,13 @@ Deno.test("semantic HTML and React adapters share the public class contract", ()
       edges: [{ id: "ready", from: "draft", to: "checked" }],
     },
   }));
-  assertMatch(diagram, /^<svg/);
+  assertMatch(
+    diagram,
+    /^<div class="discern-diagram__viewport" role="group" aria-label="Scrollable diagram viewport: Check a reference" tabindex="0"><svg/,
+  );
   assertStringIncludes(diagram, 'class="discern-diagram"');
   assertStringIncludes(diagram, 'role="img"');
+  assertStringIncludes(diagram, 'focusable="false"');
 
   const breadcrumbs = renderToStaticMarkup(
     createElement(Breadcrumbs, {

@@ -155,7 +155,9 @@ function renderElement(element: DiagramSceneElement): ReactElement {
 }
 
 /**
- * Token-themed semantic SVG projection of one authored diagram spec.
+ * Horizontally scrollable viewport containing the token-themed semantic SVG
+ * projection of one authored diagram spec. The forwarded ref, consumer id,
+ * and consumer class name address the SVG rather than the viewport wrapper.
  * Visible figure title, caption, source, and legend remain the surrounding
  * document's responsibility, commonly through `DataFigure`.
  */
