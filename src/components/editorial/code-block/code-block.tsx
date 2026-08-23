@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import type { HTMLAttributes } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import { projectTerminalTextRuns } from "../../../cli/projection.ts";
 
 /** Props for the {@linkcode CodeBlock} component. */
 export interface CodeBlockProps
@@ -30,7 +31,24 @@ export const CodeBlock: DiscernComponent<HTMLPreElement, CodeBlockProps> =
           data-discern-code-block-language={language}
           data-discern-code-block-info={info}
         >
-          {code}
+          {projectTerminalTextRuns(code).map((run, index) =>
+            run.columns === undefined
+              ? run.text
+              : (
+                <span
+                  data-discern-terminal-cell={run.columns}
+                  style={{
+                    display: "inline-block",
+                    width: `${run.columns}ch`,
+                    textAlign: "center",
+                    verticalAlign: "baseline",
+                  }}
+                  key={index}
+                >
+                  {run.text}
+                </span>
+              )
+          )}
         </code>
       </pre>
     );

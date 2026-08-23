@@ -42,6 +42,14 @@ Deno.test("Code block keeps empty source and omits absent information hooks", ()
   );
 });
 
+Deno.test("Code block projects non-ASCII graphemes through terminal cells", () => {
+  const html = renderToStaticMarkup(<CodeBlock code="┌─┐\n│界│\n└─┘" />);
+  assertStringIncludes(html, 'data-discern-terminal-cell="1"');
+  assertStringIncludes(html, 'data-discern-terminal-cell="2"');
+  assertStringIncludes(html, "width:1ch");
+  assertStringIncludes(html, "width:2ch");
+});
+
 Deno.test("Code block metadata guards neighbouring source and output semantics", () => {
   assertEquals(codeBlockMeta.order, 75);
   assertEquals(codeBlockMeta.cli, { stance: "rendered" });
