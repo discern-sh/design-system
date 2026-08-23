@@ -10,7 +10,10 @@ import {
 } from "./palette.ts";
 import {
   DIAGRAM_CONNECTOR_STYLE_BUNDLES,
+  DIAGRAM_GUIDE_STYLE_BUNDLES,
+  DIAGRAM_LINE_TREATMENTS,
   DIAGRAM_NODE_STYLE_BUNDLES,
+  DIAGRAM_REGION_STYLE_BUNDLES,
 } from "./roles.ts";
 import type {
   DiagramConnector,
@@ -65,7 +68,8 @@ function connectorRules(
   palette: ReturnType<typeof resolveDiagramPalette>,
 ): readonly string[] {
   const bundle = DIAGRAM_CONNECTOR_STYLE_BUNDLES[role];
-  const dash = bundle.treatment === "dashed" ? " stroke-dasharray: 8 6;" : "";
+  const dashArray = DIAGRAM_LINE_TREATMENTS[bundle.treatment];
+  const dash = dashArray === "" ? "" : ` stroke-dasharray: ${dashArray};`;
   return [
     `  .discern-diagram__connector--${role} { stroke: ${
       palette[bundle.stroke]
@@ -82,6 +86,8 @@ function paletteRules(
   includeGuide: boolean,
 ): readonly string[] {
   const palette = resolveDiagramPalette(variant);
+  const region = DIAGRAM_REGION_STYLE_BUNDLES.boundary;
+  const solidGuide = DIAGRAM_GUIDE_STYLE_BUNDLES.solid;
   return [
     `  .discern-diagram__canvas { fill: ${palette.canvas}; }`,
     ...Object.keys(DIAGRAM_NODE_STYLE_BUNDLES).map((role) =>
@@ -95,12 +101,12 @@ function paletteRules(
     ...(includeRegion
       ? [
         `  .discern-diagram__region { fill: ${
-          palette["node-surface"]
-        }; fill-opacity: 0.42; stroke: ${palette.guide}; }`,
+          palette[region.surface]
+        }; fill-opacity: 0.42; stroke: ${palette[region.border]}; }`,
       ]
       : []),
     ...(includeGuide
-      ? [`  .discern-diagram__guide { stroke: ${palette.guide}; }`]
+      ? [`  .discern-diagram__guide { stroke: ${palette[solidGuide.stroke]}; }`]
       : []),
     ...Object.keys(DIAGRAM_CONNECTOR_STYLE_BUNDLES).flatMap((role) =>
       connectorRules(role as DiagramConnectorStyleRole, palette)
@@ -124,13 +130,21 @@ function standaloneStyle(
     "  .discern-diagram__node, .discern-diagram__node-cue { stroke-width: 2; vector-effect: non-scaling-stroke; }",
     ...(includeRegion
       ? [
-        "  .discern-diagram__region { vector-effect: non-scaling-stroke; stroke-dasharray: 8 6; }",
+        `  .discern-diagram__region { vector-effect: non-scaling-stroke; stroke-dasharray: ${
+          DIAGRAM_LINE_TREATMENTS[
+            DIAGRAM_REGION_STYLE_BUNDLES.boundary.treatment
+          ]
+        }; }`,
       ]
       : []),
     ...(includeGuide
       ? [
         "  .discern-diagram__guide { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }",
-        "  .discern-diagram__guide--dashed { stroke-dasharray: 6 6; }",
+        `  .discern-diagram__guide--dashed { stroke-dasharray: ${
+          DIAGRAM_LINE_TREATMENTS[
+            DIAGRAM_GUIDE_STYLE_BUNDLES.dashed.treatment
+          ]
+        }; }`,
       ]
       : []),
     "  .discern-diagram__connector { fill: none; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }",

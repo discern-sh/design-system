@@ -24,7 +24,7 @@ export const compactFlowLightSvg =
   .discern-diagram__arrowhead--primary { fill: oklch(40% 0.026 285); }
   .discern-diagram__connector--secondary { stroke: oklch(53% 0.02 285); stroke-dasharray: 8 6; }
   .discern-diagram__arrowhead--secondary { fill: oklch(53% 0.02 285); }
-  .discern-diagram__connector--return { stroke: oklch(44% 0.185 255); stroke-dasharray: 8 6; }
+  .discern-diagram__connector--return { stroke: oklch(44% 0.185 255); stroke-dasharray: 2 6; }
   .discern-diagram__arrowhead--return { fill: oklch(44% 0.185 255); }
   </style>
   <rect class="discern-diagram__canvas" x="0" y="0" width="562.58" height="112" />

@@ -1,4 +1,4 @@
-import { forwardRef, Fragment, useId } from "react";
+import { forwardRef, Fragment } from "react";
 import type { ReactElement } from "react";
 import { prepareDiagram } from "../../../generated/diagram-dispatch.ts";
 import type { DiagramSpec } from "../../../generated/diagram-spec.ts";
@@ -164,9 +164,6 @@ export const Diagram: DiscernComponent<SVGSVGElement, DiagramProps> =
     SVGSVGElement,
     DiagramProps
   >(function Diagram({ spec, className, id }, ref) {
-    const descriptionId = `discern-diagram-${
-      useId().replaceAll(":", "")
-    }-description`;
     const { validated, scene, description } = prepareDiagram(spec);
     const groups = new Map(scene.groups.map((group) => [group.id, group]));
     const elements = new Map(
@@ -209,11 +206,11 @@ export const Diagram: DiscernComponent<SVGSVGElement, DiagramProps> =
         preserveAspectRatio="xMidYMid meet"
         role="img"
         aria-label={formatDiagramAltText(validated)}
-        aria-describedby={descriptionId}
+        aria-description={description.trimEnd()}
         focusable="false"
       >
         <title>{validated.title}</title>
-        <desc id={descriptionId}>{description.trimEnd()}</desc>
+        <desc>{description.trimEnd()}</desc>
         <rect
           className="discern-diagram__canvas"
           x={formatDiagramSvgNumber(bounds.x)}

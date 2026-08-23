@@ -1,7 +1,6 @@
 import {
   assert,
   assertEquals,
-  assertMatch,
   assertNotMatch,
   assertStringIncludes,
 } from "@std/assert";
@@ -12,8 +11,11 @@ import { componentRegistry } from "../../src/generated/component-registry.ts";
 import type { FlowDiagramSpec } from "../../src/diagram/mod.ts";
 import {
   DIAGRAM_CONNECTOR_STYLE_BUNDLES,
+  DIAGRAM_GUIDE_STYLE_BUNDLES,
+  DIAGRAM_LINE_TREATMENTS,
   DIAGRAM_NODE_STYLE_BUNDLES,
   DIAGRAM_PAINT_TOKEN_NAMES,
+  DIAGRAM_REGION_STYLE_BUNDLES,
 } from "../../src/diagram/roles.ts";
 import { baseTokens, themeTokens } from "../../src/tokens/tokens.ts";
 import fixtures from "../../src/diagram/kinds/flow/flow.fixtures.ts";
@@ -33,9 +35,10 @@ Deno.test("React Diagram maps the conformant scene to named semantic SVG", () =>
     html,
     'aria-label="Publish reference material: Authoring, checking, and publication progress from left to right."',
   );
-  assertMatch(html, /aria-describedby="discern-diagram-[^"]+-description"/u);
+  assertStringIncludes(html, "aria-description=");
+  assertNotMatch(html, /aria-describedby=/u);
   assertStringIncludes(html, "<title>Publish reference material</title>");
-  assertStringIncludes(html, "<desc id=");
+  assertStringIncludes(html, "<desc>");
   assertStringIncludes(html, "Relationships:");
   assertStringIncludes(html, "<polyline");
   assertStringIncludes(html, "discern-diagram__arrowhead--primary");
@@ -63,22 +66,21 @@ Deno.test("React Diagram escapes authored text instead of injecting markup", () 
   assertNotMatch(html, /\sonload=["']/iu);
 });
 
-Deno.test("React Diagram descriptions remain collision-free across instances", () => {
-  const html = renderToStaticMarkup(
+Deno.test("React Diagram descriptions remain collision-free across roots", () => {
+  const together = renderToStaticMarkup(
     <Fragment>
       <Diagram spec={compact} />
       <Diagram spec={compact} />
     </Fragment>,
   );
-  const references = [...html.matchAll(/aria-describedby="([^"]+)"/gu)].map(
-    (match) => match[1],
-  );
-  const identities = [...html.matchAll(/<desc id="([^"]+)"/gu)].map(
-    (match) => match[1],
-  );
-  assertEquals(references.length, 2);
-  assertEquals(new Set(references).size, 2);
-  assertEquals(identities, references);
+  const separate = `${renderToStaticMarkup(<Diagram spec={compact} />)}${
+    renderToStaticMarkup(<Diagram spec={compact} />)
+  }`;
+  for (const html of [together, separate]) {
+    assertEquals((html.match(/aria-description=/gu) ?? []).length, 2);
+    assertEquals((html.match(/<desc>/gu) ?? []).length, 2);
+    assertNotMatch(html, /<desc\s+id=|aria-describedby=/u);
+  }
 });
 
 Deno.test("Diagram composes as DataFigure visual without visible canvas prose", () => {
@@ -155,6 +157,37 @@ Deno.test("Diagram CSS resolves the paired role authority through public Tokens"
       marker,
       `fill: var(${DIAGRAM_PAINT_TOKEN_NAMES[bundle.marker]})`,
     );
+    const dash = DIAGRAM_LINE_TREATMENTS[bundle.treatment];
+    if (dash === "") assertNotMatch(connector, /stroke-dasharray/u);
+    else assertStringIncludes(connector, `stroke-dasharray: ${dash}`);
+  }
+  const region = DIAGRAM_REGION_STYLE_BUNDLES.boundary;
+  const regionBlock = css.match(
+    /\.discern-diagram__region \{([^}]+)\}/u,
+  )?.[1] ?? "";
+  assertStringIncludes(
+    regionBlock,
+    `fill: var(${DIAGRAM_PAINT_TOKEN_NAMES[region.surface]})`,
+  );
+  assertStringIncludes(
+    regionBlock,
+    `stroke: var(${DIAGRAM_PAINT_TOKEN_NAMES[region.border]})`,
+  );
+  assertStringIncludes(
+    regionBlock,
+    `stroke-dasharray: ${DIAGRAM_LINE_TREATMENTS[region.treatment]}`,
+  );
+  for (const [style, bundle] of Object.entries(DIAGRAM_GUIDE_STYLE_BUNDLES)) {
+    const selector = style === "solid"
+      ? ".discern-diagram__guide {"
+      : `.discern-diagram__guide--${style} {`;
+    assertStringIncludes(css, selector);
+    assertStringIncludes(
+      css,
+      `stroke: var(${DIAGRAM_PAINT_TOKEN_NAMES[bundle.stroke]})`,
+    );
+    const dash = DIAGRAM_LINE_TREATMENTS[bundle.treatment];
+    if (dash !== "") assertStringIncludes(css, `stroke-dasharray: ${dash}`);
   }
 
   const registered = componentRegistry.find(({ meta }) =>

@@ -51,8 +51,33 @@ export interface DiagramNodeStyleBundle {
 export interface DiagramConnectorStyleBundle {
   readonly stroke: DiagramPaintRole;
   readonly marker: DiagramPaintRole;
-  readonly treatment: "solid" | "dashed";
+  readonly treatment: "solid" | "long-dashed" | "dotted";
 }
+
+/** Surface, border, and ink roles that travel with a container boundary. */
+export interface DiagramRegionStyleBundle {
+  readonly surface: DiagramPaintRole;
+  readonly border: DiagramPaintRole;
+  readonly text: DiagramPaintRole;
+  readonly annotation: DiagramPaintRole;
+  readonly treatment: "long-dashed";
+}
+
+/** Stroke and line treatment that travel with a non-directional guide. */
+export interface DiagramGuideStyleBundle {
+  readonly stroke: DiagramPaintRole;
+  readonly treatment: "solid" | "even-dashed";
+}
+
+/** Deterministic non-colour line patterns shared by every projection. */
+export const DIAGRAM_LINE_TREATMENTS = Object.freeze(
+  {
+    solid: "",
+    "long-dashed": "8 6",
+    dotted: "2 6",
+    "even-dashed": "6 6",
+  } as const,
+);
 
 /** One authority for every semantic node-style bundle. */
 export const DIAGRAM_NODE_STYLE_BUNDLES = Object.freeze(
@@ -122,14 +147,37 @@ export const DIAGRAM_CONNECTOR_STYLE_BUNDLES = Object.freeze(
     secondary: Object.freeze({
       stroke: "secondary-connector",
       marker: "secondary-connector",
-      treatment: "dashed",
+      treatment: "long-dashed",
     }),
     return: Object.freeze({
       stroke: "return-connector",
       marker: "return-connector",
-      treatment: "dashed",
+      treatment: "dotted",
     }),
   } as const satisfies Readonly<
     Record<DiagramConnectorStyleRole, DiagramConnectorStyleBundle>
+  >,
+);
+
+/** One authority for the shared region boundary role. */
+export const DIAGRAM_REGION_STYLE_BUNDLES = Object.freeze(
+  {
+    boundary: Object.freeze({
+      surface: "node-surface",
+      border: "guide",
+      text: "node-text",
+      annotation: "quiet-annotation",
+      treatment: "long-dashed",
+    }),
+  } as const satisfies Readonly<Record<"boundary", DiagramRegionStyleBundle>>,
+);
+
+/** One authority for shared solid and dashed guide roles. */
+export const DIAGRAM_GUIDE_STYLE_BUNDLES = Object.freeze(
+  {
+    solid: Object.freeze({ stroke: "guide", treatment: "solid" }),
+    dashed: Object.freeze({ stroke: "guide", treatment: "even-dashed" }),
+  } as const satisfies Readonly<
+    Record<"solid" | "dashed", DiagramGuideStyleBundle>
   >,
 );

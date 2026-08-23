@@ -10,15 +10,22 @@ import {
   type RenderDiagramSvgOptions,
 } from "../../src/diagram/mod.ts";
 import fixtures from "../../src/diagram/kinds/flow/flow.fixtures.ts";
+import architectureFixtures from "../../src/diagram/kinds/architecture/architecture.fixtures.ts";
+import sequenceFixtures from "../../src/diagram/kinds/sequence/sequence.fixtures.ts";
 import { resolveDiagramPalette } from "../../src/diagram/palette.ts";
 import {
   DIAGRAM_CONNECTOR_STYLE_BUNDLES,
+  DIAGRAM_GUIDE_STYLE_BUNDLES,
+  DIAGRAM_LINE_TREATMENTS,
   DIAGRAM_NODE_STYLE_BUNDLES,
+  DIAGRAM_REGION_STYLE_BUNDLES,
 } from "../../src/diagram/roles.ts";
 import { compactFlowLightSvg } from "./snapshots.ts";
 
 const compact = fixtures[1];
 if (compact === undefined) throw new TypeError("Missing compact flow fixture");
+const architecture = architectureFixtures[0];
+const sequence = sequenceFixtures[0];
 
 Deno.test("standalone SVG bytes match the canonical light snapshot", () => {
   assertEquals(
@@ -118,6 +125,21 @@ Deno.test("standalone palettes resolve paired semantic roles as literal styles",
           palette[bundle.marker]
         }; }`,
       ));
+      const dash = DIAGRAM_LINE_TREATMENTS[bundle.treatment];
+      if (dash !== "") assert(svg.includes(`stroke-dasharray: ${dash}`));
+    }
+    const region = DIAGRAM_REGION_STYLE_BUNDLES.boundary;
+    const regionSvg = renderDiagramSvg(architecture, { theme: variant });
+    assert(regionSvg.includes(`fill: ${palette[region.surface]}`));
+    assert(regionSvg.includes(`stroke: ${palette[region.border]}`));
+    assert(regionSvg.includes(
+      `stroke-dasharray: ${DIAGRAM_LINE_TREATMENTS[region.treatment]}`,
+    ));
+    const guideSvg = renderDiagramSvg(sequence, { theme: variant });
+    for (const bundle of Object.values(DIAGRAM_GUIDE_STYLE_BUNDLES)) {
+      assert(guideSvg.includes(`stroke: ${palette[bundle.stroke]}`));
+      const dash = DIAGRAM_LINE_TREATMENTS[bundle.treatment];
+      if (dash !== "") assert(guideSvg.includes(`stroke-dasharray: ${dash}`));
     }
   }
   const adaptive = renderDiagramSvg(compact, { theme: "adaptive" });

@@ -96,7 +96,7 @@
   }
   .discern-diagram__connector--return {
     stroke: var(--discern-color-accent-700);
-    stroke-dasharray: 8 6;
+    stroke-dasharray: 2 6;
   }
   .discern-diagram__arrowhead--return {
     fill: var(--discern-color-accent-700);
