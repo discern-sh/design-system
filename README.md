@@ -170,8 +170,9 @@ await Deno.writeTextFile(
 );
 
 export const reviewFlowSource = "assets/review-flow.svg";
-export const reviewFlowMarkdown =
-  `![${diagramAltText(reviewFlow)}](${reviewFlowSource} "${reviewFlow.summary}")`;
+export const reviewFlowMarkdown = `![${
+  diagramAltText(reviewFlow)
+}](${reviewFlowSource} "${reviewFlow.summary}")`;
 export const reviewFlowResource = {
   source: reviewFlowSource,
   spec: reviewFlow,
@@ -204,7 +205,9 @@ export function ReviewFigure() {
 }
 
 export function ReviewMarkdown() {
-  return <Markdown source={reviewFlowMarkdown} diagrams={[reviewFlowResource]} />;
+  return (
+    <Markdown source={reviewFlowMarkdown} diagrams={[reviewFlowResource]} />
+  );
 }
 ```
 
@@ -381,7 +384,8 @@ const result = await requestMarkdownBrowser({
       id: "start",
       label: "Getting started",
       path: "guides/getting-started.md",
-      source: `# Getting started\n\n${reviewFlowMarkdown}\n\n[Testing](../reference/testing.md#fake-terminal) · [Website](https://example.test/docs)`,
+      source:
+        `# Getting started\n\n${reviewFlowMarkdown}\n\n[Testing](../reference/testing.md#fake-terminal) · [Website](https://example.test/docs)`,
       diagrams: [reviewFlowResource],
     },
     {

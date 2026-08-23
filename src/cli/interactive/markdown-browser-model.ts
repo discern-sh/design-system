@@ -460,7 +460,7 @@ function freezeEntry<Action>(
           ? {}
           : { description: entry.description }),
       });
-    case "document":
+    case "document": {
       if (typeof entry.source !== "string") {
         throw new TypeError(
           "Markdown browser document source must be a string",
@@ -484,6 +484,7 @@ function freezeEntry<Action>(
         source: entry.source,
         ...(diagrams === undefined ? {} : { diagrams }),
       });
+    }
     case "action":
       return Object.freeze({
         kind: entry.kind,
