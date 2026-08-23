@@ -4,6 +4,10 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## 0.26.1
+
+- Fix cross-platform release verification for browser Code block Unicode-cell alignment. The guard now inspects fixed terminal-cell layout boxes rather than font-dependent Range ink bounds.
+
 ## 0.26.0
 
 - Harden the complete Diagram and Markdown delivery surface for release without adding a diagram dependency or widening the authoring API. A generated package-owned corpus now enrols every kind in minimal, representative, structural, long-text, maximum-density, semantic-role, invalid, and actionable over-budget postures and derives Catalogue, SVG, React, CLI, description, and Markdown evidence from those specs. Shared scene conformance proves canonical finite geometry, containment, attachment, clear space, ordering, and prohibited intersections; Chromium checks bundled and system-font fallback, zoom, narrow scrolling, light/dark/forced-colour accessibility, repeated instances, and standalone inline/`<img>` portability. Seeded hostile-boundary tests require safe deterministic output or typed all-or-nothing failures, terminal matrices cover every colour depth and Unicode/ASCII viability transition, and the interactive Markdown reader preserves anchors and link reachability above, within, and below a diagram across enhanced/description reflow. Release guards keep `./diagram` local, permission-free, React-free, and outside the 58-package MIT Markdown parser graph, while a staged published-artifact consumer proves neutral SVG I/O, React `Diagram`/`DataFigure`/`Markdown` composition, ordinary Markdown fallback, registered upgrades, and duplicate-ID safety.
