@@ -6,6 +6,10 @@
  */
 
 export { diagramAltText } from "./accessibility.ts";
+export {
+  canonicalDiagramMarkdownSource,
+  renderDiagramMarkdownImage,
+} from "./markdown.ts";
 export type { MarkdownDiagramResource } from "./markdown.ts";
 export type {
   DiagramBudgetRemedy,

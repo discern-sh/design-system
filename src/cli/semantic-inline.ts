@@ -15,7 +15,6 @@ import {
   styleHyperlink,
   type TerminalTextStyle,
 } from "./ansi.ts";
-import { validHyperlinkTarget } from "./styled-sequences.ts";
 import { wrapStyledText } from "./text.ts";
 import {
   type TerminalTheme,
@@ -25,6 +24,7 @@ import {
   terminalToneColor,
 } from "./theme.ts";
 import type { TerminalCapabilities } from "./capabilities.ts";
+import { inspectSafeAsciiUrlReference } from "../url-reference.ts";
 
 /** Maximum semantic-node nesting accepted at the public rendering boundary. */
 export const SEMANTIC_INLINE_MAX_DEPTH = 64;
@@ -143,15 +143,7 @@ export type SemanticInlineBaseRole =
 type ValidationContext = "content" | "link-label";
 type NodeRecord = Record<string, unknown>;
 
-const SAFE_DESTINATION_PROTOCOLS = new Set([
-  "http:",
-  "https:",
-  "mailto:",
-  "file:",
-]);
 const FORMAT_OR_CONTROL = /[\p{Cc}\p{Cf}]/u;
-const EXPLICIT_SCHEME = /^([a-z][a-z0-9+.-]*):/iu;
-const ENCODED_CONTROL = /%(?:0[0-9a-f]|1[0-9a-f]|7f)/iu;
 const FOOTNOTE_IDENTIFIER = /^[A-Za-z0-9][A-Za-z0-9._:-]*$/u;
 
 function validationError(path: string, message: string): never {
@@ -240,28 +232,33 @@ function safeText(
 }
 
 function safeDestination(value: unknown, path: string): string {
-  if (typeof value !== "string" || !validHyperlinkTarget(value)) {
+  const inspected = inspectSafeAsciiUrlReference(value);
+  if (
+    !inspected.ok &&
+    (inspected.reason === "not-string" ||
+      inspected.reason === "empty-or-non-ascii")
+  ) {
     return validationError(
       path,
       "must be a non-empty printable ASCII URL reference",
     );
   }
-  if (value.includes("\\") || ENCODED_CONTROL.test(value)) {
+  if (!inspected.ok && inspected.reason === "backslash") {
     return validationError(path, "contains an unsafe URL character");
   }
-  const scheme = EXPLICIT_SCHEME.exec(value)?.[1]?.toLowerCase();
-  if (scheme !== undefined && !SAFE_DESTINATION_PROTOCOLS.has(`${scheme}:`)) {
+  if (!inspected.ok && inspected.reason === "encoded-control") {
+    return validationError(path, "contains an unsafe URL character");
+  }
+  if (!inspected.ok && inspected.reason === "unsafe-scheme") {
     return validationError(
       path,
-      `uses unsafe scheme ${JSON.stringify(scheme)}`,
+      `uses unsafe scheme ${JSON.stringify(inspected.scheme)}`,
     );
   }
-  try {
-    new URL(value, "https://semantic-inline.invalid/");
-  } catch {
+  if (!inspected.ok) {
     return validationError(path, "must be a valid URL reference");
   }
-  return value;
+  return inspected.value;
 }
 
 /**

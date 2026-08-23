@@ -16,6 +16,7 @@ import {
 import { transitionMarkdownBrowser } from "../src/cli/interactive/markdown-browser-machine.ts";
 import { requestMarkdownBrowser } from "../src/cli/interactive/markdown-browser-request.ts";
 import {
+  fitMarkdownBrowserState,
   markdownBrowserDocumentLines,
   markdownBrowserDocumentMaximumOffset,
   markdownBrowserLinkOccurrences,
@@ -29,7 +30,10 @@ import {
   MarkdownParseError,
   parseMarkdown,
 } from "../src/components/editorial/markdown/markdown.model.ts";
-import type { MarkdownDiagramResource } from "../src/diagram/markdown.ts";
+import {
+  type MarkdownDiagramResource,
+  renderDiagramMarkdownImage,
+} from "../src/diagram/markdown.ts";
 import { renderMarkdownCliProjection } from "../src/components/editorial/markdown/markdown.cli.ts";
 import {
   describeDiagram,
@@ -48,7 +52,10 @@ const markdownDiagramSource = "assets/review-change.svg";
 const markdownDiagramMarkdown = [
   "# Change lifecycle",
   "",
-  `![${markdownDiagramAlt}](${markdownDiagramSource} \"${markdownDiagramSpec.summary}\")`,
+  renderDiagramMarkdownImage({
+    source: markdownDiagramSource,
+    spec: markdownDiagramSpec,
+  }),
   "",
   "Continue with the [review guide](guide.md#review).",
 ].join("\n");
@@ -309,6 +316,92 @@ Deno.test("diagram resources reject duplicate, unsafe, malformed, and invalid da
     MarkdownParseError,
     "dense data array",
   );
+
+  const revoked = Proxy.revocable([markdownDiagramResource], {});
+  revoked.revoke();
+  assertThrows(
+    () => parseMarkdown("", { diagrams: revoked.proxy }),
+    MarkdownParseError,
+    "inspected safely",
+  );
+  const hostileContainer = new Proxy([markdownDiagramResource], {
+    ownKeys: () => {
+      throw new Error("ambient ownKeys trap");
+    },
+  });
+  assertThrows(
+    () => parseMarkdown("", { diagrams: hostileContainer }),
+    MarkdownParseError,
+    "inspected safely",
+  );
+
+  const descriptorCounts = new Map<PropertyKey, number>();
+  const statefulSpec = new Proxy(markdownDiagramSpec, {
+    getOwnPropertyDescriptor(target, key) {
+      const count = (descriptorCounts.get(key) ?? 0) + 1;
+      descriptorCounts.set(key, count);
+      if (count > 1) throw new Error("post-validation reread");
+      return Reflect.getOwnPropertyDescriptor(target, key);
+    },
+  });
+  assertEquals(
+    parseMarkdown(imageMarkdown(), {
+      diagrams: [{ source: markdownDiagramSource, spec: statefulSpec }],
+    }).children[0]?.kind,
+    "diagram",
+  );
+  assert([...descriptorCounts.values()].every((count) => count === 1));
+});
+
+Deno.test("standard Markdown serialization preserves delimiter-bearing diagram facts", () => {
+  const spec = {
+    ...markdownDiagramSpec,
+    title: String.raw`Review [stage](javascript:run) \\ path`,
+    summary: String.raw`Choose "accept" (or return) without changing syntax.`,
+  } satisfies FlowDiagramSpec;
+  const resource = {
+    source: "assets/review(change).svg",
+    spec,
+  } satisfies MarkdownDiagramResource;
+  const source = renderDiagramMarkdownImage(resource);
+  const ordinary = parseMarkdown(source);
+  const paragraph = ordinary.children[0];
+  assertEquals(paragraph?.kind, "paragraph");
+  const image = (paragraph as {
+    readonly content: readonly {
+      readonly alt?: string;
+      readonly source?: string;
+      readonly title?: string;
+    }[];
+  }).content[0];
+  assertEquals(image?.alt, diagramAltText(spec));
+  assertEquals(image?.title, spec.summary);
+  assertEquals(image?.source, resource.source);
+  assertEquals(
+    parseMarkdown(source, { diagrams: [resource] }).children[0]?.kind,
+    "diagram",
+  );
+  const ordinaryHtml = renderToStaticMarkup(<Markdown source={source} />);
+  assertStringIncludes(
+    ordinaryHtml,
+    `alt="${
+      diagramAltText(spec).replaceAll("&", "&amp;").replaceAll('"', "&quot;")
+    }"`,
+  );
+  const upgraded = renderToStaticMarkup(
+    <Markdown source={source} diagrams={[resource]} />,
+  );
+  assertStringIncludes(upgraded, 'data-discern-diagram-kind="flow"');
+
+  assertThrows(
+    () =>
+      renderDiagramMarkdownImage({
+        source: "javascript:run",
+        spec,
+      }),
+    TypeError,
+    "safe image URL reference",
+  );
 });
 
 Deno.test("matching image accessibility drift rejects every caller before output", async () => {
@@ -412,6 +505,13 @@ Deno.test("browser reflow changes Diagram posture while preserving later links a
 
   state = transitionMarkdownBrowser(
     state,
+    { kind: "key", key: { kind: "text", text: "]" } },
+    testTerminalCapabilities({ columns: 120 }),
+  ).state;
+  assert(wideLinks.some((link) => link.id === state.linkFocus?.id));
+
+  state = transitionMarkdownBrowser(
+    state,
     { kind: "resize", columns: 32, rows: 30 },
     testTerminalCapabilities({ columns: 32 }),
   ).state;
@@ -425,11 +525,50 @@ Deno.test("browser reflow changes Diagram posture while preserving later links a
     "guide.md#review",
   ]);
   assert(narrowLinks[0]!.documentStartRow <= narrowLines.length);
+  assertEquals(
+    narrowLinks.find((link) => link.id === state.linkFocus?.id)?.visibility,
+    "visible",
+  );
   assert(
     markdownBrowserDocumentMaximumOffset(state, narrowCapabilities) >= 0,
   );
   assertEquals(state.openedDocumentId, "diagram");
   assertEquals(state.focusedPane, "document");
+
+  state = transitionMarkdownBrowser(
+    state,
+    { kind: "resize", columns: 120, rows: 30 },
+    testTerminalCapabilities({ columns: 120 }),
+  ).state;
+  assertEquals(
+    markdownBrowserLinkOccurrences(
+      state,
+      testTerminalCapabilities({ columns: 120 }),
+    ).find((link) => link.id === state.linkFocus?.id)?.visibility,
+    "visible",
+  );
+
+  const stale = createMarkdownBrowserState({
+    label: "Documents",
+    entries: [document],
+    initialState: {
+      query: "",
+      queryCursor: 0,
+      highlightedId: "diagram",
+      openedDocumentId: "diagram",
+      focusedPane: "document",
+      pickerVisibleStart: 0,
+      documentScrollOffset: 0,
+      linkFocus: { id: "diagram:missing", origin: "keyboard" },
+    },
+  }, { columns: 120, rows: 30 });
+  assertEquals(
+    fitMarkdownBrowserState(
+      stale,
+      testTerminalCapabilities({ columns: 120 }),
+    ).linkFocus,
+    undefined,
+  );
 });
 
 Deno.test("diagram blocks remain enrolled in both exhaustive projections", () => {

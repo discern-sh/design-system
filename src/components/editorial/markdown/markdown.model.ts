@@ -27,6 +27,8 @@ import {
 import { makeSourceControlsVisible } from "../../../cli/visible-text.ts";
 import type { TerminalAlignment } from "../../../cli/text.ts";
 import { diagramAltText } from "../../../diagram/accessibility.ts";
+import { canonicalDiagramMarkdownSource } from "../../../diagram/markdown.ts";
+import { snapshotDiagramJsonSafe } from "../../../diagram/validation.ts";
 import { validateDiagram } from "../../../generated/diagram-dispatch.ts";
 import type { DiagramSpec } from "../../../generated/diagram-spec.ts";
 import type { HeadingLevel } from "../../display/heading/heading.types.ts";
@@ -261,29 +263,6 @@ function fail(message: string, cause?: unknown): never {
     : new MarkdownParseError(message, { cause });
 }
 
-function ordinaryDataRecord(
-  value: unknown,
-  path: string,
-): Record<string, unknown> {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return fail(`${path} must be an ordinary data object`);
-  }
-  const prototype = Object.getPrototypeOf(value);
-  if (prototype !== Object.prototype && prototype !== null) {
-    return fail(`${path} must be an ordinary data object`);
-  }
-  for (const key of Reflect.ownKeys(value)) {
-    if (typeof key !== "string") {
-      return fail(`${path} must not carry symbol properties`);
-    }
-    const descriptor = Object.getOwnPropertyDescriptor(value, key);
-    if (descriptor?.get !== undefined || descriptor?.set !== undefined) {
-      return fail(`${path}.${key} must be an ordinary data property`);
-    }
-  }
-  return value as Record<string, unknown>;
-}
-
 function exactResourceKeys(
   record: Record<string, unknown>,
   path: string,
@@ -292,20 +271,6 @@ function exactResourceKeys(
   if (keys.length !== 2 || keys[0] !== "source" || keys[1] !== "spec") {
     fail(`${path} must contain exactly source and spec`);
   }
-}
-
-function immutableJsonData(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return Object.freeze(value.map(immutableJsonData));
-  }
-  if (typeof value === "object" && value !== null) {
-    return Object.freeze(Object.fromEntries(
-      Object.entries(value).map((
-        [key, item],
-      ) => [key, immutableJsonData(item)]),
-    ));
-  }
-  return value;
 }
 
 function assertNever(value: never, context: string): never {
@@ -420,20 +385,6 @@ function asciiDestination(value: string): string | undefined {
   return encoded;
 }
 
-const PERCENT_ESCAPE = /%([0-9a-f]{2})/giu;
-const URI_UNRESERVED = /^[A-Za-z0-9._~-]$/u;
-
-function canonicalSource(value: string): string | undefined {
-  const safe = asciiDestination(value);
-  if (safe === undefined) return undefined;
-  return safe.replace(PERCENT_ESCAPE, (_escape, hexadecimal: string) => {
-    const character = String.fromCharCode(Number.parseInt(hexadecimal, 16));
-    return URI_UNRESERVED.test(character)
-      ? character
-      : `%${hexadecimal.toUpperCase()}`;
-  });
-}
-
 /**
  * Validate, normalise, and freeze diagram resources before document matching.
  * Valid unused resources are intentionally accepted for corpus-level reuse.
@@ -441,59 +392,90 @@ function canonicalSource(value: string): string | undefined {
 export function validateMarkdownDiagramResources(
   resources: readonly MarkdownDiagramResource[] | undefined,
 ): readonly ValidatedMarkdownDiagramResource[] {
-  if (resources === undefined) return Object.freeze([]);
-  if (!Array.isArray(resources)) {
-    return fail("Markdown diagram resources must be an array");
-  }
-  const indexes = Reflect.ownKeys(resources).filter((key) => key !== "length");
-  if (
-    indexes.length !== resources.length ||
-    indexes.some((key, index) => key !== String(index))
-  ) {
-    fail("Markdown diagram resources must be a dense data array");
-  }
-  for (let index = 0; index < resources.length; index += 1) {
-    const descriptor = Object.getOwnPropertyDescriptor(
+  try {
+    if (resources === undefined) return Object.freeze([]);
+    if (!Array.isArray(resources)) {
+      return fail("Markdown diagram resources must be an array");
+    }
+    const keys = Reflect.ownKeys(resources);
+    const lengthDescriptor = Object.getOwnPropertyDescriptor(
       resources,
-      String(index),
+      "length",
     );
     if (
-      descriptor === undefined || !("value" in descriptor) ||
-      descriptor.enumerable !== true
+      lengthDescriptor === undefined || !("value" in lengthDescriptor) ||
+      typeof lengthDescriptor.value !== "number"
     ) {
       fail("Markdown diagram resources must be a dense data array");
     }
-  }
-  const normalized: ValidatedMarkdownDiagramResource[] = [];
-  const sources = new Set<string>();
-  for (const [index, value] of resources.entries()) {
-    const path = `Markdown diagram resource ${index + 1}`;
-    const record = ordinaryDataRecord(value, path);
-    exactResourceKeys(record, path);
-    if (typeof record.source !== "string") {
-      fail(`${path} source must be a string`);
+    const length = lengthDescriptor.value;
+    const indexes = keys.filter((key) => key !== "length");
+    if (
+      !Number.isSafeInteger(length) || length < 0 ||
+      indexes.length !== length ||
+      indexes.some((key, index) => key !== String(index))
+    ) {
+      fail("Markdown diagram resources must be a dense data array");
     }
-    const source = canonicalSource(record.source);
-    if (source === undefined) {
-      fail(`${path} source must be a safe Markdown image URL reference`);
-    }
-    if (sources.has(source)) {
-      fail(
-        `Markdown diagram resources contain duplicate source ${
-          JSON.stringify(source)
-        }`,
+    const normalized: ValidatedMarkdownDiagramResource[] = [];
+    const sources = new Set<string>();
+    for (let index = 0; index < length; index += 1) {
+      const path = `Markdown diagram resource ${index + 1}`;
+      const descriptor = Object.getOwnPropertyDescriptor(
+        resources,
+        String(index),
       );
+      if (
+        descriptor === undefined || !("value" in descriptor) ||
+        descriptor.enumerable !== true
+      ) {
+        fail("Markdown diagram resources must be a dense data array");
+      }
+      let snapshot: unknown;
+      try {
+        snapshot = snapshotDiagramJsonSafe(descriptor.value);
+      } catch (cause) {
+        fail(`${path} must be stable JSON-safe data`, cause);
+      }
+      if (
+        typeof snapshot !== "object" || snapshot === null ||
+        Array.isArray(snapshot)
+      ) {
+        fail(`${path} must be an ordinary data object`);
+      }
+      const record = snapshot as Record<string, unknown>;
+      exactResourceKeys(record, path);
+      if (typeof record.source !== "string") {
+        fail(`${path} source must be a string`);
+      }
+      const source = canonicalDiagramMarkdownSource(record.source);
+      if (source === undefined) {
+        fail(`${path} source must be a safe Markdown image URL reference`);
+      }
+      if (sources.has(source)) {
+        fail(
+          `Markdown diagram resources contain duplicate source ${
+            JSON.stringify(source)
+          }`,
+        );
+      }
+      sources.add(source);
+      try {
+        validateDiagram(record.spec);
+      } catch (cause) {
+        fail(`${path} contains an invalid DiagramSpec`, cause);
+      }
+      const spec = record.spec as DiagramSpec;
+      normalized.push(Object.freeze({ source, spec }));
     }
-    sources.add(source);
-    try {
-      validateDiagram(record.spec);
-    } catch (cause) {
-      fail(`${path} contains an invalid DiagramSpec`, cause);
-    }
-    const spec = immutableJsonData(record.spec) as DiagramSpec;
-    normalized.push(Object.freeze({ source, spec }));
+    return Object.freeze(normalized);
+  } catch (cause) {
+    if (cause instanceof MarkdownParseError) throw cause;
+    return fail(
+      "Markdown diagram resources could not be inspected safely",
+      cause,
+    );
   }
-  return Object.freeze(normalized);
 }
 
 function appendInline(
@@ -1040,7 +1022,7 @@ function resolvedDiagram(
 ): MarkdownDiagramBlock | undefined {
   const image = isolatedImage(content);
   if (image === undefined) return undefined;
-  const source = canonicalSource(image.source);
+  const source = canonicalDiagramMarkdownSource(image.source);
   if (source === undefined) return undefined;
   const resource = resources.get(source);
   if (resource === undefined) return undefined;

@@ -128,6 +128,7 @@ import {
   diagramKindMetadata,
   type FlowDiagramSpec,
   type MarkdownDiagramResource,
+  renderDiagramMarkdownImage,
   renderDiagramSvg,
 } from "@discern-sh/design-system/diagram";
 
@@ -179,18 +180,18 @@ await Deno.writeTextFile(
 );
 
 export const reviewFlowSource = "assets/review-flow.svg";
-export const reviewFlowMarkdown = `![${
-  diagramAltText(reviewFlow)
-}](${reviewFlowSource} "${reviewFlow.summary}")`;
 export const reviewFlowResource = {
   source: reviewFlowSource,
   spec: reviewFlow,
 } satisfies MarkdownDiagramResource;
+export const reviewFlowMarkdown = renderDiagramMarkdownImage(
+  reviewFlowResource,
+);
 ```
 
 Standalone SVG accepts `light`, `dark`, or `adaptive`. Each asset contains literal package palette values, its own accessible title and structural description, semantic text, and a deterministic light fallback; `adaptive` adds a self-contained `prefers-color-scheme` dark palette. An external SVG loaded through `<img>` does not inherit custom properties or fonts from its host page.
 
-The Markdown remains ordinary image syntax: generic readers show the generated SVG and raw text keeps a meaningful alternative. Package Markdown callers may optionally supply the explicit resource to upgrade only an isolated matching image. Matching happens after the existing safe URL normalization, the alt must equal `diagramAltText(spec)`, and an optional image title must equal `spec.summary`. Valid unused resources are allowed so one collection can serve a complete corpus; duplicate normalized sources reject. The package never reads the asset, resolves the path against a filesystem or browser location, parses SVG, or discovers a registry.
+The Markdown remains ordinary image syntax: `renderDiagramMarkdownImage` safely escapes the canonical alt, title, and source into CommonMark, so delimiter-bearing author text cannot change the image structure. Generic readers show the generated SVG and raw text keeps a meaningful alternative. Package Markdown callers may optionally supply the explicit resource to upgrade only an isolated matching image. Matching happens after the existing safe URL normalization, the alt must equal `diagramAltText(spec)`, and an optional image title must equal `spec.summary`. Valid unused resources are allowed so one collection can serve a complete corpus; duplicate normalized sources reject. The package never reads the asset, resolves the path against a filesystem or browser location, parses SVG, or discovers a registry.
 
 The React projection maps the same validated scene directly to SVG and takes its live colours from emitted semantic Tokens. Compose it as the visual inside `DataFigure`; the figure owns the visible title, caption, source, and any legend:
 

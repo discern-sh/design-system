@@ -8,6 +8,8 @@
  * @module
  */
 
+import { inspectSafeAsciiUrlReference } from "../url-reference.ts";
+
 const ESCAPE = String.fromCharCode(27);
 const BELL = String.fromCharCode(7);
 
@@ -31,14 +33,9 @@ export function hyperlinkSequence(target: string): string {
   return `${ESCAPE}]8;;${target}${ESCAPE}\\`;
 }
 
-/**
- * Whether a hyperlink target stays inside the printable ASCII repertoire a
- * terminal accepts verbatim inside an OSC 8 envelope. Anything outside it —
- * controls, spaces, or unencoded non-ASCII — must be rejected or
- * percent-encoded by the caller before composition.
- */
+/** Whether an OSC 8 target satisfies the package URL-reference policy. */
 export function validHyperlinkTarget(target: string): boolean {
-  return target !== "" && /^[!-~]+$/u.test(target);
+  return inspectSafeAsciiUrlReference(target).ok;
 }
 
 /** One uniformly styled run of text inside parsed package-styled source. */

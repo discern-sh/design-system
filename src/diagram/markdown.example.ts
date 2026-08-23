@@ -1,6 +1,7 @@
 /** Shared consumer-shaped Markdown diagram example for Catalogue and tests. */
 
 import { diagramAltText } from "./accessibility.ts";
+import { renderDiagramMarkdownImage } from "./markdown.ts";
 import type { FlowDiagramSpec } from "./kinds/flow/flow.spec.ts";
 
 export const markdownDiagramExampleSpec = Object.freeze(
@@ -27,14 +28,14 @@ export const markdownDiagramExampleSource =
 export const markdownDiagramExampleAlt = diagramAltText(
   markdownDiagramExampleSpec,
 );
-export const markdownDiagramExampleMarkdown = [
-  "# Change lifecycle",
-  "",
-  `![${markdownDiagramExampleAlt}](${markdownDiagramExampleSource} \"${markdownDiagramExampleSpec.summary}\")`,
-  "",
-  "Continue with the [review guide](guide.md#review).",
-].join("\n");
 export const markdownDiagramExampleResource = Object.freeze({
   source: markdownDiagramExampleSource,
   spec: markdownDiagramExampleSpec,
 });
+export const markdownDiagramExampleMarkdown = [
+  "# Change lifecycle",
+  "",
+  renderDiagramMarkdownImage(markdownDiagramExampleResource),
+  "",
+  "Continue with the [review guide](guide.md#review).",
+].join("\n");
