@@ -6,7 +6,7 @@ Each release is cut from a green run of the full release gate — formatting, li
 
 ## Unreleased
 
-- Add the first complete semantic Diagram surface. The new React-free `./diagram` entrypoint publishes typed `flow` specs, canonical accessible descriptions and kind Metadata, plus deterministic safe standalone SVG in literal light, dark, or self-contained adaptive palettes. The generated Editorial `Diagram` Component projects the same conformant scene directly to live-token SVG and composes as `DataFigure`'s visual without adding visible figure prose. `./cli` adds `renderDiagramCli`: its generated callable kind registry selects a lossless enhanced flow frame only inside a conservative viability envelope and otherwise returns the universal description across widths, colour depths, Unicode, and ASCII.
+- Add the first complete semantic Diagram surface. The new React-free `./diagram` entrypoint publishes typed `flow` specs, canonical accessible descriptions and kind Metadata, plus deterministic safe standalone SVG in literal light, dark, or self-contained adaptive palettes. React and standalone SVG centre real glyphs within conservative bounds; compact horizontal ranks, distinct ports, and outside return loops prevent scale drift or hidden connector runs. The generated Editorial `Diagram` Component projects the same conformant scene directly to live-token SVG and composes as `DataFigure`'s visual without adding visible figure prose. `./cli` adds `renderDiagramCli`: its generated callable kind registry selects a lossless enhanced flow frame only inside a conservative viability envelope and otherwise returns the universal description across widths, colour depths, Unicode, and ASCII.
 
 ## 0.25.0
 

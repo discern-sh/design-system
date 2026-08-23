@@ -65,7 +65,7 @@ export interface DiagramShape {
   readonly radius: number;
 }
 
-/** One measured text line positioned without a renderer font query. */
+/** One measured text line with a conservative left edge and width. */
 export interface DiagramTextLine {
   readonly text: string;
   readonly x: number;

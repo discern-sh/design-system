@@ -106,6 +106,11 @@ function pointOnShapeBoundary(
       Math.abs(point.y - centerY) / (shape.bounds.height / 2);
     return Math.abs(value - 1) <= ATTACHMENT_TOLERANCE;
   }
+  const radius = Math.min(
+    shape.radius,
+    shape.bounds.width / 2,
+    shape.bounds.height / 2,
+  );
   const onHorizontalSide =
     Math.abs(point.y - shape.bounds.y) <= ATTACHMENT_TOLERANCE ||
     Math.abs(point.y - diagramRectBottom(shape.bounds)) <=
@@ -114,12 +119,26 @@ function pointOnShapeBoundary(
     Math.abs(point.x - shape.bounds.x) <= ATTACHMENT_TOLERANCE ||
     Math.abs(point.x - diagramRectRight(shape.bounds)) <=
       ATTACHMENT_TOLERANCE;
-  return (onHorizontalSide &&
-    point.x >= shape.bounds.x + shape.radius - EPSILON &&
-    point.x <= diagramRectRight(shape.bounds) - shape.radius + EPSILON) ||
+  const onStraightBoundary = (onHorizontalSide &&
+    point.x >= shape.bounds.x + radius - EPSILON &&
+    point.x <= diagramRectRight(shape.bounds) - radius + EPSILON) ||
     (onVerticalSide &&
-      point.y >= shape.bounds.y + shape.radius - EPSILON &&
-      point.y <= diagramRectBottom(shape.bounds) - shape.radius + EPSILON);
+      point.y >= shape.bounds.y + radius - EPSILON &&
+      point.y <= diagramRectBottom(shape.bounds) - radius + EPSILON);
+  if (onStraightBoundary || radius === 0) return onStraightBoundary;
+  const cornerX = point.x < centerX
+    ? shape.bounds.x + radius
+    : diagramRectRight(shape.bounds) - radius;
+  const cornerY = point.y < centerY
+    ? shape.bounds.y + radius
+    : diagramRectBottom(shape.bounds) - radius;
+  const inCorner = Math.abs(point.x - centerX) >=
+      shape.bounds.width / 2 - radius - EPSILON &&
+    Math.abs(point.y - centerY) >=
+      shape.bounds.height / 2 - radius - EPSILON;
+  return inCorner &&
+    Math.abs(Math.hypot(point.x - cornerX, point.y - cornerY) - radius) <=
+      ATTACHMENT_TOLERANCE;
 }
 
 function segmentIntersectsRect(
@@ -160,6 +179,46 @@ function connectorSegments(connector: DiagramConnector): readonly (
     if (start !== undefined && end !== undefined) segments.push([start, end]);
   }
   return segments;
+}
+
+function equalPoint(left: DiagramPoint, right: DiagramPoint): boolean {
+  return Math.abs(left.x - right.x) <= EPSILON &&
+    Math.abs(left.y - right.y) <= EPSILON;
+}
+
+function segmentsOverlap(
+  left: readonly [DiagramPoint, DiagramPoint],
+  right: readonly [DiagramPoint, DiagramPoint],
+): boolean {
+  const [leftStart, leftEnd] = left;
+  const [rightStart, rightEnd] = right;
+  if (
+    Math.abs(leftStart.x - leftEnd.x) <= EPSILON &&
+    Math.abs(rightStart.x - rightEnd.x) <= EPSILON &&
+    Math.abs(leftStart.x - rightStart.x) <= EPSILON
+  ) {
+    return Math.min(
+          Math.max(leftStart.y, leftEnd.y),
+          Math.max(rightStart.y, rightEnd.y),
+        ) - Math.max(
+          Math.min(leftStart.y, leftEnd.y),
+          Math.min(rightStart.y, rightEnd.y),
+        ) > EPSILON;
+  }
+  if (
+    Math.abs(leftStart.y - leftEnd.y) <= EPSILON &&
+    Math.abs(rightStart.y - rightEnd.y) <= EPSILON &&
+    Math.abs(leftStart.y - rightStart.y) <= EPSILON
+  ) {
+    return Math.min(
+          Math.max(leftStart.x, leftEnd.x),
+          Math.max(rightStart.x, rightEnd.x),
+        ) - Math.max(
+          Math.min(leftStart.x, leftEnd.x),
+          Math.min(rightStart.x, rightEnd.x),
+        ) > EPSILON;
+  }
+  return false;
 }
 
 function elementBounds(element: DiagramSceneElement): DiagramRect {
@@ -458,6 +517,68 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
       ) {
         defect(
           `Connector ${connector.semanticId} arrowhead lacks text clearance.`,
+        );
+      }
+    }
+  }
+
+  const ports = connectors.flatMap((connector) => [
+    {
+      nodeId: connector.sourceId,
+      relationshipId: connector.semanticId,
+      point: connector.points[0] as DiagramPoint,
+    },
+    {
+      nodeId: connector.targetId,
+      relationshipId: connector.semanticId,
+      point: connector.arrowhead.tip,
+    },
+  ]);
+  for (let left = 0; left < ports.length; left += 1) {
+    for (let right = left + 1; right < ports.length; right += 1) {
+      const leftPort = ports[left];
+      const rightPort = ports[right];
+      if (
+        leftPort !== undefined && rightPort !== undefined &&
+        leftPort.nodeId === rightPort.nodeId &&
+        equalPoint(leftPort.point, rightPort.point)
+      ) {
+        defect(
+          `Connectors ${leftPort.relationshipId} and ${rightPort.relationshipId} reuse node ${leftPort.nodeId} port.`,
+        );
+      }
+    }
+  }
+  for (let left = 0; left < connectors.length; left += 1) {
+    const leftConnector = connectors[left];
+    if (leftConnector === undefined) continue;
+    const leftSegments = connectorSegments(leftConnector);
+    for (let first = 0; first < leftSegments.length; first += 1) {
+      for (let second = first + 1; second < leftSegments.length; second += 1) {
+        const firstSegment = leftSegments[first];
+        const secondSegment = leftSegments[second];
+        if (
+          firstSegment !== undefined && secondSegment !== undefined &&
+          segmentsOverlap(firstSegment, secondSegment)
+        ) {
+          defect(
+            `Connector ${leftConnector.semanticId} retraces a positive-length run.`,
+          );
+        }
+      }
+    }
+    for (let right = left + 1; right < connectors.length; right += 1) {
+      const rightConnector = connectors[right];
+      if (
+        rightConnector !== undefined &&
+        leftSegments.some((leftSegment) =>
+          connectorSegments(rightConnector).some((rightSegment) =>
+            segmentsOverlap(leftSegment, rightSegment)
+          )
+        )
+      ) {
+        defect(
+          `Connectors ${leftConnector.semanticId} and ${rightConnector.semanticId} overlap along a positive-length run.`,
         );
       }
     }

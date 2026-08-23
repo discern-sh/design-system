@@ -17,6 +17,7 @@ export const DIAGRAM_GEOMETRY = Object.freeze({
   node: Object.freeze({
     minimumWidth: 112,
     maximumTextWidth: 176,
+    horizontalMaximumTextWidth: 160,
     minimumHeight: 56,
     horizontalPadding: 16,
     verticalPadding: 12,
@@ -42,6 +43,7 @@ export const DIAGRAM_GEOMETRY = Object.freeze({
     arrowHalfWidth: 5,
     arrowClearance: 4,
     baseRankGap: 96,
+    horizontalRankGap: 36,
     laneGap: 30,
     labelGap: 8,
     externalGap: 40,

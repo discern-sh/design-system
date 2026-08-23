@@ -1,6 +1,11 @@
 /** Shared exact SVG geometry used by the string and React projections. */
 
-import type { DiagramPoint, DiagramRect, DiagramShape } from "./scene.ts";
+import type {
+  DiagramPoint,
+  DiagramRect,
+  DiagramShape,
+  DiagramTextLine,
+} from "./scene.ts";
 
 /** SVG-ready rectangle geometry. */
 export interface DiagramSvgRectGeometry extends DiagramRect {
@@ -37,6 +42,13 @@ export function formatDiagramSvgPoints(
   return points.map(({ x, y }) =>
     `${formatDiagramSvgNumber(x)},${formatDiagramSvgNumber(y)}`
   ).join(" ");
+}
+
+/** Centre anchor for a conservatively measured scene text line. */
+export function diagramSvgTextAnchorX(
+  line: Pick<DiagramTextLine, "x" | "width">,
+): number {
+  return line.x + line.width / 2;
 }
 
 /** Project one closed scene shape to its exact SVG primitive geometry. */

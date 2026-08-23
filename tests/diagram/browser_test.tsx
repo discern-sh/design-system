@@ -55,6 +55,12 @@ interface DiagramBrowserInspection {
   readonly textFill: string;
 }
 
+interface DiagramProjectionInspection {
+  readonly scales: readonly number[];
+  readonly misalignedLines: readonly string[];
+  readonly documentOverflow: number;
+}
+
 async function inspectBrowserDiagram(
   page: import("playwright-core").Page,
 ): Promise<DiagramBrowserInspection> {
@@ -85,6 +91,7 @@ async function inspectBrowserDiagram(
         element.getAttribute("class") ?? element.tagName,
       box: element.getBBox(),
       text: element.matches("text"),
+      element,
     }));
     const connectorDefects: string[] = [];
     for (
@@ -108,12 +115,15 @@ async function inspectBrowserDiagram(
           const y = start.y + (end.y - start.y) * amount;
           for (const obstacle of obstacles) {
             const inset = obstacle.text ? -0.5 : 1;
-            if (
-              x > obstacle.box.x + inset &&
-              x < obstacle.box.x + obstacle.box.width - inset &&
-              y > obstacle.box.y + inset &&
-              y < obstacle.box.y + obstacle.box.height - inset
-            ) {
+            const crosses = obstacle.text
+              ? x > obstacle.box.x + inset &&
+                x < obstacle.box.x + obstacle.box.width - inset &&
+                y > obstacle.box.y + inset &&
+                y < obstacle.box.y + obstacle.box.height - inset
+              : (obstacle.element as SVGGeometryElement).isPointInFill(
+                new DOMPoint(x, y),
+              );
+            if (crosses) {
               connectorDefects.push(
                 `${relationship} crosses ${obstacle.name} at ${x},${y}`,
               );
@@ -143,6 +153,36 @@ async function inspectBrowserDiagram(
       nodeFill: getComputedStyle(node).fill,
       nodeStroke: getComputedStyle(node).stroke,
       textFill: getComputedStyle(text).fill,
+    };
+  });
+}
+
+async function inspectDiagramProjection(
+  page: import("playwright-core").Page,
+): Promise<DiagramProjectionInspection> {
+  return await page.evaluate(() => {
+    const svgs = [
+      ...document.querySelectorAll<SVGSVGElement>(".discern-diagram"),
+    ];
+    const misalignedLines = svgs.flatMap((svg, diagramIndex) =>
+      [...svg.querySelectorAll<SVGTSpanElement>("tspan")].flatMap((line) => {
+        const anchor = Number(line.getAttribute("x"));
+        const bounds = line.getBBox();
+        const offset = Math.abs(bounds.x + bounds.width / 2 - anchor);
+        return offset <= 0.75 ? [] : [
+          `diagram ${diagramIndex} ${
+            line.textContent ?? "line"
+          } offset ${offset}`,
+        ];
+      })
+    );
+    return {
+      scales: svgs.map((svg) =>
+        svg.getBoundingClientRect().width / svg.viewBox.baseVal.width
+      ),
+      misalignedLines,
+      documentOverflow: document.documentElement.scrollWidth -
+        document.documentElement.clientWidth,
     };
   });
 }
@@ -199,6 +239,34 @@ Deno.test("React Diagram browser geometry holds across themes and viewports", as
       palette.get("980-light")?.textFill,
       palette.get("980-dark")?.textFill,
     );
+
+    const comparisonPage = await browser.newPage({
+      colorScheme: "light",
+      viewport: { width: 820, height: 1_000 },
+    });
+    try {
+      const comparisonMarkup = renderToStaticMarkup(
+        <main data-discern-root data-discern-theme="light">
+          <Diagram spec={fixtures[1]} />
+          <Diagram spec={decisionFlow} />
+          <Diagram spec={longFlow} />
+        </main>,
+      );
+      await comparisonPage.setContent(
+        `<style>html,body{margin:0}main{inline-size:642px}${css}</style>${comparisonMarkup}`,
+      );
+      const projection = await inspectDiagramProjection(comparisonPage);
+      assertEquals(projection.documentOverflow, 0);
+      assertEquals(projection.misalignedLines, []);
+      for (const [index, scale] of projection.scales.entries()) {
+        assert(
+          Math.abs(scale - 1) <= 0.01,
+          `Catalogue-width Diagram ${index} rendered at ${scale} instead of intrinsic scale`,
+        );
+      }
+    } finally {
+      await comparisonPage.close();
+    }
   } finally {
     await browser.close();
     await Deno.remove(output, { recursive: true });

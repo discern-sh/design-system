@@ -7,6 +7,7 @@ import {
 import { conformDiagramScene } from "../../src/diagram/conformance.ts";
 import { DiagramConformanceError } from "../../src/diagram/errors.ts";
 import {
+  diagramPointBounds,
   diagramRectBottom,
   diagramRectRight,
   diagramRectUnion,
@@ -38,9 +39,16 @@ function contains(outer: DiagramRect, inner: DiagramRect): boolean {
     diagramRectBottom(inner) <= diagramRectBottom(outer) + EPSILON;
 }
 
-function cardinalBoundary(point: DiagramPoint, bounds: DiagramRect): boolean {
+function shapeBoundary(point: DiagramPoint, shape: DiagramShape): boolean {
+  const { bounds } = shape;
   const centerX = bounds.x + bounds.width / 2;
   const centerY = bounds.y + bounds.height / 2;
+  if (shape.shape === "diamond") {
+    return Math.abs(
+      Math.abs(point.x - centerX) / (bounds.width / 2) +
+        Math.abs(point.y - centerY) / (bounds.height / 2) - 1,
+    ) <= EPSILON;
+  }
   return (Math.abs(point.x - centerX) <= EPSILON &&
     (Math.abs(point.y - bounds.y) <= EPSILON ||
       Math.abs(point.y - diagramRectBottom(bounds)) <= EPSILON)) ||
@@ -58,6 +66,168 @@ function segments(connector: DiagramConnector): readonly (
       end,
     ] as const
   );
+}
+
+function positiveSegmentOverlap(
+  left: readonly [DiagramPoint, DiagramPoint],
+  right: readonly [DiagramPoint, DiagramPoint],
+): boolean {
+  const [leftStart, leftEnd] = left;
+  const [rightStart, rightEnd] = right;
+  if (
+    Math.abs(leftStart.x - leftEnd.x) <= EPSILON &&
+    Math.abs(rightStart.x - rightEnd.x) <= EPSILON &&
+    Math.abs(leftStart.x - rightStart.x) <= EPSILON
+  ) {
+    return Math.min(
+          Math.max(leftStart.y, leftEnd.y),
+          Math.max(rightStart.y, rightEnd.y),
+        ) - Math.max(
+          Math.min(leftStart.y, leftEnd.y),
+          Math.min(rightStart.y, rightEnd.y),
+        ) > EPSILON;
+  }
+  if (
+    Math.abs(leftStart.y - leftEnd.y) <= EPSILON &&
+    Math.abs(rightStart.y - rightEnd.y) <= EPSILON &&
+    Math.abs(leftStart.y - rightStart.y) <= EPSILON
+  ) {
+    return Math.min(
+          Math.max(leftStart.x, leftEnd.x),
+          Math.max(rightStart.x, rightEnd.x),
+        ) - Math.max(
+          Math.min(leftStart.x, leftEnd.x),
+          Math.min(rightStart.x, rightEnd.x),
+        ) > EPSILON;
+  }
+  return false;
+}
+
+function repeatedPorts(connectors: readonly DiagramConnector[]): string[] {
+  const ports = connectors.flatMap((connector) => [
+    {
+      node: connector.sourceId,
+      relationship: connector.semanticId,
+      point: connector.points[0] as DiagramPoint,
+    },
+    {
+      node: connector.targetId,
+      relationship: connector.semanticId,
+      point: connector.arrowhead.tip,
+    },
+  ]);
+  const repeated: string[] = [];
+  for (let left = 0; left < ports.length; left += 1) {
+    for (let right = left + 1; right < ports.length; right += 1) {
+      const a = ports[left];
+      const b = ports[right];
+      if (
+        a !== undefined && b !== undefined && a.node === b.node &&
+        Math.abs(a.point.x - b.point.x) <= EPSILON &&
+        Math.abs(a.point.y - b.point.y) <= EPSILON
+      ) {
+        repeated.push(`${a.node}: ${a.relationship}/${b.relationship}`);
+      }
+    }
+  }
+  return repeated;
+}
+
+function overlappingRuns(connectors: readonly DiagramConnector[]): string[] {
+  const overlaps: string[] = [];
+  for (let left = 0; left < connectors.length; left += 1) {
+    for (let right = left + 1; right < connectors.length; right += 1) {
+      const a = connectors[left];
+      const b = connectors[right];
+      if (
+        a !== undefined && b !== undefined &&
+        segments(a).some((leftSegment) =>
+          segments(b).some((rightSegment) =>
+            positiveSegmentOverlap(leftSegment, rightSegment)
+          )
+        )
+      ) overlaps.push(`${a.semanticId}/${b.semanticId}`);
+    }
+  }
+  return overlaps;
+}
+
+function syntheticShape(
+  semanticId: string,
+  x: number,
+  y: number,
+): DiagramShape {
+  return {
+    kind: "shape",
+    id: `${semanticId}-shape`,
+    semanticId,
+    shape: "rounded-rectangle",
+    style: "ordinary",
+    bounds: { x, y, width: 40, height: 40 },
+    radius: 0,
+  };
+}
+
+function syntheticConnector(
+  semanticId: string,
+  sourceId: string,
+  targetId: string,
+  pathWithTip: readonly DiagramPoint[],
+): DiagramConnector {
+  const tip = pathWithTip.at(-1) as DiagramPoint;
+  const beforeTip = pathWithTip.at(-2) as DiagramPoint;
+  assertEquals(tip.y, beforeTip.y);
+  const base = { x: tip.x - 10, y: tip.y };
+  const points = [...pathWithTip.slice(0, -1), base];
+  const arrowhead = {
+    tip,
+    left: { x: base.x, y: base.y + 5 },
+    right: { x: base.x, y: base.y - 5 },
+    bounds: diagramPointBounds([
+      tip,
+      { x: base.x, y: base.y + 5 },
+      { x: base.x, y: base.y - 5 },
+    ]),
+  };
+  return {
+    kind: "connector",
+    id: `${semanticId}-connector`,
+    semanticId,
+    sourceId,
+    targetId,
+    style: "primary",
+    lineWidth: 2,
+    points,
+    arrowhead,
+    bounds: diagramRectUnion([
+      diagramPointBounds(points, 1),
+      arrowhead.bounds,
+    ]),
+  };
+}
+
+function syntheticScene(
+  elements: DiagramScene["elements"],
+): DiagramScene {
+  const padding = 20;
+  const content = diagramRectUnion(elements.map((element) => element.bounds));
+  return {
+    kind: "diagram-scene",
+    sourceKind: "synthetic",
+    canvas: {
+      bounds: {
+        x: content.x - padding,
+        y: content.y - padding,
+        width: content.width + padding * 2,
+        height: content.height + padding * 2,
+      },
+      role: "canvas",
+      padding,
+    },
+    root: elements.map((element) => element.id),
+    groups: [],
+    elements,
+  };
 }
 
 function segmentCrossesRect(
@@ -126,9 +296,9 @@ function assertIndependentSceneInvariants(scene: DiagramScene): void {
     );
     assert(source !== undefined && target !== undefined);
     assert(
-      cardinalBoundary(connector.points[0] as DiagramPoint, source.bounds),
+      shapeBoundary(connector.points[0] as DiagramPoint, source),
     );
-    assert(cardinalBoundary(connector.arrowhead.tip, target.bounds));
+    assert(shapeBoundary(connector.arrowhead.tip, target));
     for (const [start, end] of segments(connector)) {
       for (const shape of shapes) {
         if (shape === source || shape === target) continue;
@@ -171,6 +341,102 @@ Deno.test("representative top-to-bottom flow independently satisfies scene invar
   assert(
     Math.min(...returnConnector.points.map((point) => point.x)) < nodeLeft,
   );
+});
+
+Deno.test("flow relationships keep distinct ports and non-overlapping runs", () => {
+  const unrelatedBranch = {
+    kind: "flow",
+    title: "Choose a reference route",
+    summary: "A neutral decision sends one source to either destination.",
+    nodes: [
+      { id: "origin", label: "Begin", role: "start" },
+      { id: "choice", label: "Choose route", role: "decision" },
+      { id: "alpha", label: "First destination", role: "end" },
+      { id: "omega", label: "Second destination", role: "end" },
+    ],
+    edges: [
+      { id: "enter", from: "origin", to: "choice" },
+      { id: "first", from: "choice", to: "alpha", label: "First route" },
+      { id: "second", from: "choice", to: "omega", label: "Second route" },
+    ],
+  } as const satisfies FlowDiagramSpec;
+  for (const spec of [fixtures[0], unrelatedBranch]) {
+    const connectors = layoutDiagram(spec).elements.filter((
+      element,
+    ): element is DiagramConnector => element.kind === "connector");
+    assertEquals(repeatedPorts(connectors), []);
+    assertEquals(overlappingRuns(connectors), []);
+  }
+});
+
+Deno.test("shared conformance rejects a reused semantic node port", () => {
+  const scene = syntheticScene([
+    syntheticShape("junction", 20, 80),
+    syntheticShape("north", 220, 20),
+    syntheticShape("south", 220, 140),
+    syntheticConnector(
+      "upper-route",
+      "junction",
+      "north",
+      [
+        { x: 60, y: 100 },
+        { x: 100, y: 100 },
+        { x: 100, y: 40 },
+        { x: 220, y: 40 },
+      ],
+    ),
+    syntheticConnector(
+      "lower-route",
+      "junction",
+      "south",
+      [
+        { x: 60, y: 100 },
+        { x: 60, y: 160 },
+        { x: 220, y: 160 },
+      ],
+    ),
+  ]);
+  const error = assertThrows(() => conformDiagramScene(scene));
+  assertInstanceOf(error, DiagramConformanceError);
+  assert(error.message.includes("port"));
+});
+
+Deno.test("shared conformance rejects overlapping relationship runs", () => {
+  const scene = syntheticScene([
+    syntheticShape("northwest", 20, 20),
+    syntheticShape("northeast", 220, 20),
+    syntheticShape("southwest", 20, 120),
+    syntheticShape("southeast", 220, 120),
+    syntheticConnector(
+      "upper-passage",
+      "northwest",
+      "northeast",
+      [
+        { x: 60, y: 40 },
+        { x: 100, y: 40 },
+        { x: 100, y: 80 },
+        { x: 180, y: 80 },
+        { x: 180, y: 40 },
+        { x: 220, y: 40 },
+      ],
+    ),
+    syntheticConnector(
+      "lower-passage",
+      "southwest",
+      "southeast",
+      [
+        { x: 60, y: 140 },
+        { x: 100, y: 140 },
+        { x: 100, y: 80 },
+        { x: 180, y: 80 },
+        { x: 180, y: 140 },
+        { x: 220, y: 140 },
+      ],
+    ),
+  ]);
+  const error = assertThrows(() => conformDiagramScene(scene));
+  assertInstanceOf(error, DiagramConformanceError);
+  assert(error.message.includes("overlap"));
 });
 
 Deno.test("left-to-right flow uses the same deterministic semantic scene", () => {

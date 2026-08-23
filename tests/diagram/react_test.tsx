@@ -40,6 +40,7 @@ Deno.test("React Diagram maps the conformant scene to named semantic SVG", () =>
   assertStringIncludes(html, "<polyline");
   assertStringIncludes(html, "discern-diagram__arrowhead--primary");
   assertStringIncludes(html, '<text class="discern-diagram__text');
+  assertStringIncludes(html, 'text-anchor="middle"');
   assertNotMatch(html, /dangerouslySetInnerHTML/iu);
 });
 
@@ -106,6 +107,10 @@ Deno.test("Diagram CSS resolves the paired role authority through public Tokens"
       "../../src/components/editorial/diagram/diagram.css",
       import.meta.url,
     ),
+  );
+  assertNotMatch(
+    css,
+    /(?<!max-)inline-size:\s*100%/u,
   );
   const tokenNames = new Set(
     [...baseTokens, ...themeTokens].map(({ name }) => name),

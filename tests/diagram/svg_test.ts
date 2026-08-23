@@ -74,6 +74,7 @@ Deno.test("standalone SVG escapes semantic text and admits no active or external
   assertNotMatch(svg, /context-stroke/iu);
   assertNotMatch(svg, /<marker\b/iu);
   assertMatch(svg, /<polygon class="discern-diagram__arrowhead/u);
+  assertMatch(svg, /<text\b[^>]* text-anchor="middle">/u);
 });
 
 Deno.test("accessibility context is present without visible canvas headings", () => {

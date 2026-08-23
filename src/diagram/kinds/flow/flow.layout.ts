@@ -53,6 +53,17 @@ interface RoutedEdge {
   readonly connector: DiagramConnector;
 }
 
+type FlowPortSide = "top" | "right" | "bottom" | "left";
+type FlowEndpoint = "source" | "target";
+
+interface FlowPortRequest {
+  readonly edge: ValidatedFlowEdge;
+  readonly endpoint: FlowEndpoint;
+  readonly plan: NodePlan;
+  readonly side: FlowPortSide;
+  readonly peerPosition: number;
+}
+
 const G = DIAGRAM_GEOMETRY;
 
 function layoutFailure(message: string, path: string, remedy: string): never {
@@ -93,10 +104,15 @@ function measuredText(
   };
 }
 
-function measureNode(node: ValidatedFlowNode): NodePlan {
+function measureNode(
+  node: ValidatedFlowNode,
+  direction: ValidatedFlowDiagram["direction"],
+): NodePlan {
   const label = measuredText(
     node.label,
-    G.node.maximumTextWidth,
+    direction === "left-to-right"
+      ? G.node.horizontalMaximumTextWidth
+      : G.node.maximumTextWidth,
     "interface",
     G.text.primarySize,
     G.text.primaryLineHeight,
@@ -152,7 +168,10 @@ function rankGap(
     const target = spec.nodes.find((node) => node.id === edge.to)?.rank ?? 0;
     return source <= boundary && target > boundary;
   }).length;
-  return G.connector.baseRankGap + Math.max(0, crossing - 1) *
+  const base = spec.direction === "left-to-right"
+    ? G.connector.horizontalRankGap
+    : G.connector.baseRankGap;
+  return base + Math.max(0, crossing - 1) *
       G.connector.laneGap;
 }
 
@@ -335,6 +354,177 @@ function centerOf(rect: DiagramRect): DiagramPoint {
   };
 }
 
+function endpointSide(
+  spec: ValidatedFlowDiagram,
+  edge: ValidatedFlowEdge,
+  endpoint: FlowEndpoint,
+): FlowPortSide {
+  if (spec.direction === "top-to-bottom") {
+    if (edge.emphasis === "return") return "left";
+    return endpoint === "source" ? "bottom" : "top";
+  }
+  if (edge.emphasis === "return") return "top";
+  return endpoint === "source" ? "right" : "left";
+}
+
+function portKey(edge: ValidatedFlowEdge, endpoint: FlowEndpoint): string {
+  return `${edge.id}\u0000${endpoint}`;
+}
+
+function nodeRadius(plan: NodePlan): number {
+  if (plan.node.role === "decision") return 0;
+  if (plan.node.role === "start" || plan.node.role === "end") {
+    return Math.min(plan.bounds.width, plan.bounds.height) / 2;
+  }
+  return G.node.radius;
+}
+
+function distributedPortOffset(
+  index: number,
+  count: number,
+  maximumOffset: number,
+): number {
+  if (count <= 1) return 0;
+  const halfSpread = Math.min(
+    maximumOffset,
+    G.connector.laneGap * (count - 1) / 2,
+  );
+  return roundDiagramNumber(
+    -halfSpread + index * halfSpread * 2 / (count - 1),
+  );
+}
+
+function roundedPortPoint(
+  plan: NodePlan,
+  side: FlowPortSide,
+  offset: number,
+): DiagramPoint {
+  const { bounds } = plan;
+  const center = centerOf(bounds);
+  const radius = nodeRadius(plan);
+  if (side === "top" || side === "bottom") {
+    const x = center.x + offset;
+    const leftCurveCenter = bounds.x + radius;
+    const rightCurveCenter = diagramRectRight(bounds) - radius;
+    const curveDistance = x < leftCurveCenter
+      ? leftCurveCenter - x
+      : x > rightCurveCenter
+      ? x - rightCurveCenter
+      : 0;
+    const inset = radius === 0 ? 0 : radius - Math.sqrt(
+      Math.max(0, radius ** 2 - curveDistance ** 2),
+    );
+    return {
+      x: roundDiagramNumber(x),
+      y: roundDiagramNumber(
+        side === "top" ? bounds.y + inset : diagramRectBottom(bounds) - inset,
+      ),
+    };
+  }
+  const y = center.y + offset;
+  const topCurveCenter = bounds.y + radius;
+  const bottomCurveCenter = diagramRectBottom(bounds) - radius;
+  const curveDistance = y < topCurveCenter
+    ? topCurveCenter - y
+    : y > bottomCurveCenter
+    ? y - bottomCurveCenter
+    : 0;
+  const inset = radius === 0 ? 0 : radius - Math.sqrt(
+    Math.max(0, radius ** 2 - curveDistance ** 2),
+  );
+  return {
+    x: roundDiagramNumber(
+      side === "left" ? bounds.x + inset : diagramRectRight(bounds) - inset,
+    ),
+    y: roundDiagramNumber(y),
+  };
+}
+
+function portPoint(
+  request: FlowPortRequest,
+  index: number,
+  count: number,
+): DiagramPoint {
+  const { plan, side } = request;
+  const horizontalSide = side === "top" || side === "bottom";
+  const halfAxis = horizontalSide
+    ? plan.bounds.width / 2
+    : plan.bounds.height / 2;
+  const maximumOffset = Math.max(0, halfAxis - 1);
+  const offset = distributedPortOffset(index, count, maximumOffset);
+  if (plan.node.role !== "decision") {
+    return roundedPortPoint(plan, side, offset);
+  }
+  const center = centerOf(plan.bounds);
+  const radiusX = plan.bounds.width / 2;
+  const radiusY = plan.bounds.height / 2;
+  if (horizontalSide) {
+    const boundaryDistance = radiusY * (1 - Math.abs(offset) / radiusX);
+    return {
+      x: roundDiagramNumber(center.x + offset),
+      y: roundDiagramNumber(
+        side === "top"
+          ? center.y - boundaryDistance
+          : center.y + boundaryDistance,
+      ),
+    };
+  }
+  const boundaryDistance = radiusX * (1 - Math.abs(offset) / radiusY);
+  return {
+    x: roundDiagramNumber(
+      side === "left"
+        ? center.x - boundaryDistance
+        : center.x + boundaryDistance,
+    ),
+    y: roundDiagramNumber(center.y + offset),
+  };
+}
+
+function assignEdgePorts(
+  spec: ValidatedFlowDiagram,
+  plans: readonly NodePlan[],
+): ReadonlyMap<string, DiagramPoint> {
+  const byId = new Map(plans.map((plan) => [plan.node.id, plan]));
+  const grouped = new Map<string, FlowPortRequest[]>();
+  for (const edge of spec.edges) {
+    for (const endpoint of ["source", "target"] as const) {
+      const plan = byId.get(endpoint === "source" ? edge.from : edge.to);
+      const peer = byId.get(endpoint === "source" ? edge.to : edge.from);
+      if (plan === undefined || peer === undefined) continue;
+      const side = endpointSide(spec, edge, endpoint);
+      const peerCenter = centerOf(peer.bounds);
+      const request = {
+        edge,
+        endpoint,
+        plan,
+        side,
+        peerPosition: side === "top" || side === "bottom"
+          ? peerCenter.x
+          : peerCenter.y,
+      } satisfies FlowPortRequest;
+      const key = `${plan.node.id}\u0000${side}`;
+      const requests = grouped.get(key) ?? [];
+      requests.push(request);
+      grouped.set(key, requests);
+    }
+  }
+  const ports = new Map<string, DiagramPoint>();
+  for (const requests of grouped.values()) {
+    requests.sort((left, right) =>
+      left.peerPosition - right.peerPosition ||
+      left.edge.sourceOrder - right.edge.sourceOrder ||
+      left.endpoint.localeCompare(right.endpoint)
+    );
+    requests.forEach((request, index) =>
+      ports.set(
+        portKey(request.edge, request.endpoint),
+        portPoint(request, index, requests.length),
+      )
+    );
+  }
+  return ports;
+}
+
 function compactPoints(
   points: readonly DiagramPoint[],
 ): readonly DiagramPoint[] {
@@ -415,6 +605,7 @@ function routeEdges(
   plans: readonly NodePlan[],
 ): readonly RoutedEdge[] {
   const byId = new Map(plans.map((plan) => [plan.node.id, plan]));
+  const ports = assignEdgePorts(spec, plans);
   const allBounds = diagramRectUnion(plans.map((plan) => plan.bounds));
   const adjacent = spec.edges.filter((edge) =>
     edge.emphasis !== "return" &&
@@ -452,32 +643,35 @@ function routeEdges(
         "Fix the kind layout implementation.",
       );
     }
-    const sourceCenter = centerOf(source.bounds);
-    const targetCenter = centerOf(target.bounds);
+    const sourcePort = ports.get(portKey(edge, "source"));
+    const targetPort = ports.get(portKey(edge, "target"));
+    if (sourcePort === undefined || targetPort === undefined) {
+      layoutFailure(
+        `Edge ${edge.id} lost a deterministic endpoint port.`,
+        `edge ${edge.id}`,
+        "Fix the kind layout implementation.",
+      );
+    }
     let path: readonly DiagramPoint[];
     if (spec.direction === "top-to-bottom") {
       if (edge.emphasis === "return") {
         const index = returns.indexOf(edge);
         const external = allBounds.x - G.connector.externalGap -
           index * G.connector.laneGap;
-        const sourceLane = boundaryAfterRank(spec, plans, source.node.rank - 1);
-        const targetLane = boundaryAfterRank(spec, plans, target.node.rank);
         path = [
-          { x: sourceCenter.x, y: source.bounds.y },
-          { x: sourceCenter.x, y: sourceLane },
-          { x: external, y: sourceLane },
-          { x: external, y: targetLane },
-          { x: targetCenter.x, y: targetLane },
-          { x: targetCenter.x, y: diagramRectBottom(target.bounds) },
+          sourcePort,
+          { x: external, y: sourcePort.y },
+          { x: external, y: targetPort.y },
+          targetPort,
         ];
       } else if (target.node.rank === source.node.rank + 1) {
         const lane = laneByEdge.get(edge.id) ??
           boundaryAfterRank(spec, plans, source.node.rank);
         path = [
-          { x: sourceCenter.x, y: diagramRectBottom(source.bounds) },
-          { x: sourceCenter.x, y: lane },
-          { x: targetCenter.x, y: lane },
-          { x: targetCenter.x, y: target.bounds.y },
+          sourcePort,
+          { x: sourcePort.x, y: lane },
+          { x: targetPort.x, y: lane },
+          targetPort,
         ];
       } else {
         const index = long.indexOf(edge);
@@ -486,36 +680,32 @@ function routeEdges(
         const sourceLane = boundaryAfterRank(spec, plans, source.node.rank);
         const targetLane = boundaryAfterRank(spec, plans, target.node.rank - 1);
         path = [
-          { x: sourceCenter.x, y: diagramRectBottom(source.bounds) },
-          { x: sourceCenter.x, y: sourceLane },
+          sourcePort,
+          { x: sourcePort.x, y: sourceLane },
           { x: external, y: sourceLane },
           { x: external, y: targetLane },
-          { x: targetCenter.x, y: targetLane },
-          { x: targetCenter.x, y: target.bounds.y },
+          { x: targetPort.x, y: targetLane },
+          targetPort,
         ];
       }
     } else if (edge.emphasis === "return") {
       const index = returns.indexOf(edge);
       const external = allBounds.y - G.connector.externalGap -
         index * G.connector.laneGap;
-      const sourceLane = boundaryAfterRank(spec, plans, source.node.rank - 1);
-      const targetLane = boundaryAfterRank(spec, plans, target.node.rank);
       path = [
-        { x: source.bounds.x, y: sourceCenter.y },
-        { x: sourceLane, y: sourceCenter.y },
-        { x: sourceLane, y: external },
-        { x: targetLane, y: external },
-        { x: targetLane, y: targetCenter.y },
-        { x: diagramRectRight(target.bounds), y: targetCenter.y },
+        sourcePort,
+        { x: sourcePort.x, y: external },
+        { x: targetPort.x, y: external },
+        targetPort,
       ];
     } else if (target.node.rank === source.node.rank + 1) {
       const lane = laneByEdge.get(edge.id) ??
         boundaryAfterRank(spec, plans, source.node.rank);
       path = [
-        { x: diagramRectRight(source.bounds), y: sourceCenter.y },
-        { x: lane, y: sourceCenter.y },
-        { x: lane, y: targetCenter.y },
-        { x: target.bounds.x, y: targetCenter.y },
+        sourcePort,
+        { x: lane, y: sourcePort.y },
+        { x: lane, y: targetPort.y },
+        targetPort,
       ];
     } else {
       const index = long.indexOf(edge);
@@ -524,12 +714,12 @@ function routeEdges(
       const sourceLane = boundaryAfterRank(spec, plans, source.node.rank);
       const targetLane = boundaryAfterRank(spec, plans, target.node.rank - 1);
       path = [
-        { x: diagramRectRight(source.bounds), y: sourceCenter.y },
-        { x: sourceLane, y: sourceCenter.y },
+        sourcePort,
+        { x: sourceLane, y: sourcePort.y },
         { x: sourceLane, y: external },
         { x: targetLane, y: external },
-        { x: targetLane, y: targetCenter.y },
-        { x: target.bounds.x, y: targetCenter.y },
+        { x: targetLane, y: targetPort.y },
+        targetPort,
       ];
     }
     return { edge, connector: connectorFromPath(edge, path) };
@@ -723,7 +913,7 @@ function translateElement(
 export default function layoutFlowDiagram(
   spec: ValidatedFlowDiagram,
 ): DiagramScene {
-  const plans = spec.nodes.map(measureNode);
+  const plans = spec.nodes.map((node) => measureNode(node, spec.direction));
   placeNodes(spec, plans);
   const nodes = plans.flatMap(nodeElements);
   const routed = routeEdges(spec, plans);

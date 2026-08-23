@@ -12,6 +12,7 @@ import type {
 import {
   diagramSvgInsetRect,
   diagramSvgShapeGeometry,
+  diagramSvgTextAnchorX,
   formatDiagramSvgNumber,
   formatDiagramSvgPoints,
 } from "../../../diagram/svg-geometry.ts";
@@ -77,11 +78,12 @@ function renderText(text: DiagramText): ReactElement {
       className={`discern-diagram__text discern-diagram__text--${text.role}`}
       data-discern-diagram-owner={text.ownerId}
       fontSize={formatDiagramSvgNumber(text.fontSize)}
+      textAnchor="middle"
     >
       {text.lines.map((line, index) => (
         <tspan
           key={`${text.id}-${index}`}
-          x={formatDiagramSvgNumber(line.x)}
+          x={formatDiagramSvgNumber(diagramSvgTextAnchorX(line))}
           y={formatDiagramSvgNumber(line.baseline)}
         >
           {line.text}
