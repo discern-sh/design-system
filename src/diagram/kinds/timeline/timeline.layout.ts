@@ -288,20 +288,6 @@ function groupElements(plan: GroupPlan): readonly DiagramSceneElement[] {
   return elements;
 }
 
-function clampedLabelCenter(
-  preferred: number,
-  text: DiagramMeasuredText,
-  chartX: number,
-  chartEnd: number,
-): number {
-  return roundDiagramNumber(
-    Math.max(
-      chartX + text.width / 2,
-      Math.min(preferred, chartEnd - text.width / 2),
-    ),
-  );
-}
-
 function taskElements(
   spec: ValidatedTimelineDiagram,
   task: ValidatedTimelineTask,
@@ -318,13 +304,14 @@ function taskElements(
     "itemLabelLines",
     `task ${task.id} label`,
   );
-  const chartEnd = chartX + chartWidth;
   const start = dateX(spec, chartX, chartWidth, task.start.ordinal);
   const end = dateX(spec, chartX, chartWidth, task.end.ordinal);
+  const width = roundDiagramNumber(Math.max(8, end - start));
+  const centerX = roundDiagramNumber((start + end) / 2);
   const bounds = {
-    x: start,
+    x: roundDiagramNumber(centerX - width / 2),
     y: roundDiagramNumber(laneTop + label.height + T.itemGap),
-    width: roundDiagramNumber(Math.max(8, end - start)),
+    width,
     height: T.taskBarHeight,
   };
   const shape: DiagramShape = {
@@ -344,12 +331,7 @@ function taskElements(
       placement: "free",
       role: "node-text",
       measured: label,
-      centerX: clampedLabelCenter(
-        (start + end) / 2,
-        label,
-        chartX,
-        chartEnd,
-      ),
+      centerX: roundDiagramNumber(bounds.x + bounds.width / 2),
       top: laneTop,
     }),
   ];
@@ -399,12 +381,7 @@ function milestoneElements(
       placement: "free",
       role: "node-text",
       measured: label,
-      centerX: clampedLabelCenter(
-        centerX,
-        label,
-        chartX,
-        chartX + chartWidth,
-      ),
+      centerX,
       top: laneTop,
     }),
   ];
@@ -415,12 +392,13 @@ export default function layoutTimelineDiagram(
   spec: ValidatedTimelineDiagram,
 ): DiagramScene {
   const rangeDays = spec.range.end.ordinal - spec.range.start.ordinal;
-  const chartX = T.labelColumnWidth + T.chartGap;
+  const itemLabelMargin = T.itemLabelWidth / 2;
+  const chartX = T.labelColumnWidth + T.chartGap + itemLabelMargin;
   const chartWidth = roundDiagramNumber(
     Math.max(T.minimumChartWidth, rangeDays * dayWidth(rangeDays)),
   );
   const chartEnd = chartX + chartWidth;
-  const plans = planGroups(spec, chartEnd);
+  const plans = planGroups(spec, chartEnd + itemLabelMargin);
   const chartBottom = Math.max(
     ...plans.map((plan) => diagramRectBottom(plan.bounds)),
   );

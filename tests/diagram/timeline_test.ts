@@ -202,6 +202,112 @@ Deno.test("timeline supports adjacent half-open tasks and conservative long labe
   assert(longLabels.every((label) => label.lines.length <= 2));
 });
 
+Deno.test("timeline item labels stay centred on their bars and gates at range edges", () => {
+  const futureSibling = {
+    ...minimum,
+    title: "Schedule an unrelated edge case",
+    tasks: [{
+      id: "opening-work",
+      rowId: "evidence",
+      label: "An independently named opening activity",
+      start: "2028-02-27",
+      end: "2028-03-01",
+    }],
+    milestones: [{
+      id: "closing-marker",
+      rowId: "evidence",
+      label: "A separately named closing marker",
+      date: "2028-03-03",
+    }],
+  } as const satisfies TimelineDiagramSpec;
+  const minimumBarSibling = {
+    ...minimum,
+    title: "Keep a short late-range task aligned",
+    range: { start: "2028-01-01", end: "2028-10-01" },
+    tasks: [{
+      id: "late-check",
+      rowId: "evidence",
+      label: "Inspect one late-range day",
+      start: "2028-09-29",
+      end: "2028-09-30",
+    }],
+  } as const satisfies TimelineDiagramSpec;
+  const openingBarSibling = {
+    ...minimumBarSibling,
+    title: "Separate opening work from its row heading",
+    rows: [{
+      id: "evidence",
+      groupId: "review",
+      label: "Detailed verification row",
+    }],
+    tasks: [{
+      id: "opening-check",
+      rowId: "evidence",
+      label: "Detailed opening-day activity",
+      start: "2028-01-01",
+      end: "2028-01-02",
+    }],
+  } as const satisfies TimelineDiagramSpec;
+
+  for (
+    const fixture of [
+      ...fixtures,
+      futureSibling,
+      minimumBarSibling,
+      openingBarSibling,
+    ]
+  ) {
+    const validated = validateTimelineDiagram(fixture);
+    const scene = sceneFor(fixture);
+    const itemLabels = scene.elements.filter(
+      (element): element is DiagramText =>
+        element.kind === "text" &&
+        (element.id.startsWith("task-") ||
+          element.id.startsWith("milestone-")),
+    );
+    const rowLabels = scene.elements.filter(
+      (element): element is DiagramText =>
+        element.kind === "text" && element.id.startsWith("row-") &&
+        element.id.endsWith("-label"),
+    );
+    for (const item of [...validated.tasks, ...validated.milestones]) {
+      const label = itemLabels.find((candidate) =>
+        candidate.ownerId === item.id
+      );
+      assert(label !== undefined, `${item.id} lost its visible label`);
+      const shape = shapes(scene).find((candidate) =>
+        candidate.semanticId === label.ownerId
+      );
+      assert(shape !== undefined);
+      const labelCenter = label.bounds.x + label.bounds.width / 2;
+      const shapeCenter = shape.bounds.x + shape.bounds.width / 2;
+      assert(
+        Math.abs(labelCenter - shapeCenter) <= 0.01,
+        `${label.id} is offset ${labelCenter - shapeCenter} from its shape`,
+      );
+      const row = validated.rows.find((candidate) =>
+        candidate.id === item.rowId
+      );
+      const region = scene.elements.find(
+        (candidate): candidate is DiagramRegion =>
+          candidate.kind === "region" &&
+          candidate.semanticId === row?.groupId,
+      );
+      assert(region !== undefined);
+      assert(
+        diagramRectContains(region.bounds, label.bounds),
+        `${label.id} leaves its group boundary`,
+      );
+      assert(
+        rowLabels.every((rowLabel) =>
+          !diagramRectsOverlap(label.bounds, rowLabel.bounds, 4)
+        ),
+        `${label.id} enters the row-label column`,
+      );
+    }
+  }
+});
+
 Deno.test("timeline rejects invalid dates, ranges, membership, overlap, and duplicates", () => {
   const cases: readonly TimelineDiagramSpec[] = [
     { ...minimum, range: { start: "2027-02-29", end: "2028-03-04" } },
