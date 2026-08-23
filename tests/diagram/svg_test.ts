@@ -20,6 +20,7 @@ import {
   DIAGRAM_NODE_STYLE_BUNDLES,
   DIAGRAM_REGION_STYLE_BUNDLES,
 } from "../../src/diagram/roles.ts";
+import { diagramKindRegistry } from "../../src/generated/diagram-registry.ts";
 import { compactFlowLightSvg } from "./snapshots.ts";
 
 const compact = fixtures[1];
@@ -82,6 +83,69 @@ Deno.test("standalone SVG escapes semantic text and admits no active or external
   assertNotMatch(svg, /<marker\b/iu);
   assertMatch(svg, /<polygon class="discern-diagram__arrowhead/u);
   assertMatch(svg, /<text\b[^>]* text-anchor="middle">/u);
+});
+
+Deno.test("every generated release asset is intrinsic, namespaced, and standalone-safe", () => {
+  for (const entry of diagramKindRegistry) {
+    for (const releaseCase of entry.releaseCorpus.cases) {
+      for (const theme of ["light", "dark", "adaptive"] as const) {
+        const context = `${entry.meta.slug}/${releaseCase.name}/${theme}`;
+        const svg = renderDiagramSvg(releaseCase.spec, { theme });
+        assertEquals(
+          renderDiagramSvg(structuredClone(releaseCase.spec), { theme }),
+          svg,
+          context,
+        );
+        assertNotMatch(
+          svg,
+          /<(?:script|foreignObject|image|a|use|iframe|audio|video)\b/iu,
+        );
+        assertNotMatch(svg, /\s(?:href|xlink:href|on[a-z]+)=/iu);
+        const structuralMarkup = svg.replaceAll(
+          /<(title|desc|tspan)\b[^>]*>[\s\S]*?<\/\1>/gu,
+          "",
+        );
+        assert(svg.startsWith('<svg xmlns="http://www.w3.org/2000/svg"'));
+        assertNotMatch(
+          structuralMarkup.replace(
+            'xmlns="http://www.w3.org/2000/svg"',
+            "",
+          ),
+          /(?:https?:|data:|url\s*\(|@font-face)/iu,
+        );
+        assertNotMatch(svg, /context-stroke|<marker\b|\sid=/iu);
+        assertNotMatch(svg, /var\(--|data-discern-root|@keyframes/iu);
+        const root = svg.match(
+          /viewBox="([^"]+)" width="([^"]+)" height="([^"]+)"/u,
+        );
+        assert(root !== null, `${context} omitted intrinsic geometry`);
+        const viewBox = root[1]!.split(" ").map(Number);
+        const width = Number(root[2]);
+        const height = Number(root[3]);
+        assert(viewBox.every(Number.isFinite), context);
+        assert(width > 0 && height > 0, context);
+        assertEquals(viewBox.slice(2), [width, height], context);
+        for (const classes of svg.matchAll(/\bclass="([^"]+)"/gu)) {
+          for (const name of classes[1]!.split(" ")) {
+            assert(name.startsWith("discern-"), `${context}: ${name}`);
+          }
+        }
+        for (const attribute of svg.matchAll(/\s(data-[a-z-]+)=/gu)) {
+          assert(
+            attribute[1]!.startsWith("data-discern-"),
+            `${context}: ${attribute[1]}`,
+          );
+        }
+        if (theme === "adaptive") {
+          const media = svg.indexOf("@media (prefers-color-scheme: dark)");
+          const baseCanvas = svg.indexOf(".discern-diagram__canvas");
+          assert(baseCanvas >= 0 && media > baseCanvas, context);
+        } else {
+          assertNotMatch(svg, /prefers-color-scheme/u);
+        }
+      }
+    }
+  }
 });
 
 Deno.test("accessibility context is present without visible canvas headings", () => {

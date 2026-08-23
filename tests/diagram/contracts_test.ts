@@ -13,6 +13,7 @@ import {
   DiagramValidationError,
   renderDiagramSvg,
 } from "../../src/diagram/mod.ts";
+import { conformDiagramScene } from "../../src/diagram/conformance.ts";
 import {
   layoutDiagram,
   validateDiagram,
@@ -94,7 +95,12 @@ Deno.test("generated release corpus enrolls every posture and refusal", () => {
     assertEquals(postures, new Set(DIAGRAM_RELEASE_POSTURES));
     for (const [index, releaseCase] of entry.releaseCorpus.cases.entries()) {
       assertEquals(entry.fixtures[index], releaseCase.spec);
-      assertEquals(layoutDiagram(releaseCase.spec).sourceKind, entry.meta.slug);
+      const scene = layoutDiagram(releaseCase.spec);
+      assertEquals(scene.sourceKind, entry.meta.slug);
+      assertEquals(conformDiagramScene(scene), scene);
+      assert(scene.canvas.bounds.width > 0 && scene.canvas.bounds.height > 0);
+      assert(Number.isFinite(scene.canvas.bounds.width));
+      assert(Number.isFinite(scene.canvas.bounds.height));
       assert(
         describeDiagram(releaseCase.spec).includes(
           `Title: ${releaseCase.spec.title}`,
