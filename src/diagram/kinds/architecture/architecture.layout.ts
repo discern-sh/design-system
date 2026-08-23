@@ -56,12 +56,14 @@ interface ArchitectureRelationshipPlan {
   text?: DiagramText;
 }
 
-type ArchitecturePortSide = "bottom" | "right";
+type ArchitecturePortSide = "bottom" | "left" | "right" | "top";
 
 interface ArchitecturePortRequest {
   readonly relationship: ValidatedArchitectureRelationship;
   readonly endpoint: "source" | "target";
   readonly plan: ArchitectureNodePlan;
+  readonly peerPosition: number;
+  readonly side: ArchitecturePortSide;
 }
 
 const G = DIAGRAM_GEOMETRY;
@@ -71,8 +73,9 @@ const GROUP_PADDING = 20;
 const GROUP_LABEL_GAP = 16;
 const EXTERNAL_GAP = 40;
 const LABEL_GAP = 10;
-const ROUTE_GAP = 42;
+const DIRECT_STANDOFF = 16;
 const PORT_STANDOFF = 32;
+const ROUTE_GAP = 42;
 
 function layoutFailure(message: string, path: string): never {
   throw new DiagramValidationError({
@@ -196,15 +199,53 @@ function laneId(node: ValidatedArchitectureNode): string {
   return node.groupId ?? "architecture:uncontained";
 }
 
+function hasDirectPrimaryCorridor(
+  spec: ValidatedArchitectureDiagram,
+  relationship: ValidatedArchitectureRelationship,
+  nodeById: ReadonlyMap<string, ArchitectureNodePlan>,
+): boolean {
+  const source = nodeById.get(relationship.from);
+  const target = nodeById.get(relationship.to);
+  // A top-to-bottom lane change crosses the target boundary header, so it
+  // remains on the exterior router even when the nodes are authored adjacent.
+  return relationship.emphasis !== "return" && source !== undefined &&
+    target !== undefined &&
+    target.node.sourceOrder === source.node.sourceOrder + 1 &&
+    (spec.direction === "left-to-right" ||
+      laneId(source.node) === laneId(target.node));
+}
+
+function primaryNodeGap(
+  spec: ValidatedArchitectureDiagram,
+  nodes: readonly ArchitectureNodePlan[],
+  relationships: readonly ArchitectureRelationshipPlan[],
+): number {
+  const nodeById = new Map(nodes.map((plan) => [plan.node.id, plan]));
+  const direct = relationships.filter((plan) =>
+    hasDirectPrimaryCorridor(spec, plan.relationship, nodeById)
+  );
+  if (direct.length === 0) return NODE_GAP;
+  const labelExtent = Math.max(
+    ...direct.map((plan) =>
+      spec.direction === "left-to-right" ? plan.label.width : plan.label.height
+    ),
+  );
+  return Math.max(
+    NODE_GAP,
+    labelExtent + (LABEL_GAP + DIRECT_STANDOFF) * 2,
+  );
+}
+
 function placeLeftToRight(
   spec: ValidatedArchitectureDiagram,
   nodes: readonly ArchitectureNodePlan[],
   groups: readonly ArchitectureGroupPlan[],
+  gap: number,
 ): void {
   let x = 0;
   for (const plan of nodes) {
     plan.bounds = { x, y: 0, width: plan.width, height: plan.height };
-    x = roundDiagramNumber(x + plan.width + NODE_GAP);
+    x = roundDiagramNumber(x + plan.width + gap);
   }
   const groupById = new Map(groups.map((plan) => [plan.group.id, plan]));
   let y = 0;
@@ -252,11 +293,12 @@ function placeTopToBottom(
   spec: ValidatedArchitectureDiagram,
   nodes: readonly ArchitectureNodePlan[],
   groups: readonly ArchitectureGroupPlan[],
+  gap: number,
 ): void {
   let y = 0;
   for (const plan of nodes) {
     plan.bounds = { x: 0, y, width: plan.width, height: plan.height };
-    y = roundDiagramNumber(y + plan.height + NODE_GAP);
+    y = roundDiagramNumber(y + plan.height + gap);
   }
   const groupById = new Map(groups.map((plan) => [plan.group.id, plan]));
   let x = 0;
@@ -385,7 +427,7 @@ function portPoint(
   const centerX = plan.bounds.x + plan.bounds.width / 2;
   const centerY = plan.bounds.y + plan.bounds.height / 2;
   const radius = G.node.radius;
-  if (side === "bottom") {
+  if (side === "bottom" || side === "top") {
     const x = centerX + offset;
     const leftCurveCenter = plan.bounds.x + radius;
     const rightCurveCenter = diagramRectRight(plan.bounds) - radius;
@@ -399,7 +441,11 @@ function portPoint(
     );
     return {
       x: roundDiagramNumber(x),
-      y: roundDiagramNumber(diagramRectBottom(plan.bounds) - inset),
+      y: roundDiagramNumber(
+        side === "top"
+          ? plan.bounds.y + inset
+          : diagramRectBottom(plan.bounds) - inset,
+      ),
     };
   }
   const y = centerY + offset;
@@ -414,9 +460,28 @@ function portPoint(
     Math.max(0, radius ** 2 - curveDistance ** 2),
   );
   return {
-    x: roundDiagramNumber(diagramRectRight(plan.bounds) - inset),
+    x: roundDiagramNumber(
+      side === "left"
+        ? plan.bounds.x + inset
+        : diagramRectRight(plan.bounds) - inset,
+    ),
     y: roundDiagramNumber(y),
   };
+}
+
+function endpointSide(
+  spec: ValidatedArchitectureDiagram,
+  relationship: ValidatedArchitectureRelationship,
+  endpoint: "source" | "target",
+  nodeById: ReadonlyMap<string, ArchitectureNodePlan>,
+): ArchitecturePortSide {
+  if (hasDirectPrimaryCorridor(spec, relationship, nodeById)) {
+    if (spec.direction === "left-to-right") {
+      return endpoint === "source" ? "right" : "left";
+    }
+    return endpoint === "source" ? "bottom" : "top";
+  }
+  return spec.direction === "left-to-right" ? "bottom" : "right";
 }
 
 function assignPorts(
@@ -432,22 +497,29 @@ function assignPorts(
         : relationship.to;
       const plan = byId.get(nodeId);
       if (plan === undefined) continue;
-      const values = requests.get(nodeId) ?? [];
-      values.push({ relationship, endpoint, plan });
-      requests.set(nodeId, values);
+      const peer = byId.get(
+        endpoint === "source" ? relationship.to : relationship.from,
+      );
+      if (peer === undefined) continue;
+      const side = endpointSide(spec, relationship, endpoint, byId);
+      const peerPosition = side === "bottom" || side === "top"
+        ? peer.bounds.x + peer.bounds.width / 2
+        : peer.bounds.y + peer.bounds.height / 2;
+      const key = `${nodeId}\u0000${side}`;
+      const values = requests.get(key) ?? [];
+      values.push({ relationship, endpoint, plan, peerPosition, side });
+      requests.set(key, values);
     }
   }
-  const side: ArchitecturePortSide = spec.direction === "left-to-right"
-    ? "bottom"
-    : "right";
   const ports = new Map<string, DiagramPoint>();
   for (const values of requests.values()) {
     values.sort((left, right) =>
+      left.peerPosition - right.peerPosition ||
       left.relationship.sourceOrder - right.relationship.sourceOrder ||
       left.endpoint.localeCompare(right.endpoint)
     );
     values.forEach((request, index) => {
-      const axis = side === "bottom"
+      const axis = request.side === "bottom" || request.side === "top"
         ? request.plan.bounds.width - G.node.radius * 2
         : request.plan.bounds.height -
           G.node.radius * 2;
@@ -455,7 +527,7 @@ function assignPorts(
         `${request.relationship.id}\u0000${request.endpoint}`,
         portPoint(
           request.plan,
-          side,
+          request.side,
           distributedOffset(index, values.length, axis),
         ),
       );
@@ -475,6 +547,7 @@ function routeRelationships(
     ...groups.map((plan) => plan.bounds),
   ]);
   const ports = assignPorts(spec, nodes);
+  const nodeById = new Map(nodes.map((plan) => [plan.node.id, plan]));
   const groupById = new Map(groups.map((plan) => [plan.group.id, plan.bounds]));
   const laneBounds = new Map<string, DiagramRect>();
   for (const id of laneIds(spec)) {
@@ -488,7 +561,6 @@ function routeRelationships(
       laneBounds.set(id, diagramRectUnion(members.map((plan) => plan.bounds)));
     }
   }
-  const nodeById = new Map(nodes.map((plan) => [plan.node.id, plan]));
   const endpointChannel = (
     nodeId: string,
     relationshipIndex: number,
@@ -511,26 +583,81 @@ function routeRelationships(
         : diagramRectRight(bounds)) + PORT_STANDOFF + 8 + slot * 4,
     );
   };
-  if (spec.direction === "left-to-right") {
-    let routeY = diagramRectBottom(structuralBounds) + LANE_GAP + EXTERNAL_GAP;
-    let routeX = diagramRectRight(structuralBounds) + EXTERNAL_GAP;
-    for (const [index, plan] of relationships.entries()) {
-      const source = ports.get(`${plan.relationship.id}\u0000source`);
-      const target = ports.get(`${plan.relationship.id}\u0000target`);
-      if (source === undefined || target === undefined) {
-        layoutFailure(
-          `Relationship ${plan.relationship.id} lost a validated endpoint.`,
-          `relationship ${plan.relationship.id}`,
-        );
+  let routeX = diagramRectRight(structuralBounds) +
+    (spec.direction === "top-to-bottom" ? LANE_GAP : 0) + EXTERNAL_GAP;
+  let routeY = diagramRectBottom(structuralBounds) +
+    (spec.direction === "left-to-right" ? LANE_GAP : 0) + EXTERNAL_GAP;
+  for (const plan of relationships) {
+    const source = ports.get(`${plan.relationship.id}\u0000source`);
+    const target = ports.get(`${plan.relationship.id}\u0000target`);
+    const sourcePlan = nodeById.get(plan.relationship.from);
+    const targetPlan = nodeById.get(plan.relationship.to);
+    if (
+      source === undefined || target === undefined ||
+      sourcePlan === undefined || targetPlan === undefined
+    ) {
+      layoutFailure(
+        `Relationship ${plan.relationship.id} lost a validated endpoint.`,
+        `relationship ${plan.relationship.id}`,
+      );
+    }
+    let path: readonly DiagramPoint[];
+    let labelCenterX: number;
+    let labelTop: number;
+    if (hasDirectPrimaryCorridor(spec, plan.relationship, nodeById)) {
+      if (spec.direction === "left-to-right") {
+        const gapStart = diagramRectRight(sourcePlan.bounds);
+        const gapEnd = targetPlan.bounds.x;
+        const centerX = roundDiagramNumber((gapStart + gapEnd) / 2);
+        if (Math.abs(source.y - target.y) <= 0.02) {
+          path = [source, target];
+          labelCenterX = centerX;
+          labelTop = source.y - LABEL_GAP - plan.label.height;
+        } else {
+          const channelX = roundDiagramNumber(
+            centerX - plan.label.width / 2 - LABEL_GAP,
+          );
+          path = [
+            source,
+            { x: channelX, y: source.y },
+            { x: channelX, y: target.y },
+            target,
+          ];
+          labelCenterX = centerX;
+          labelTop = roundDiagramNumber(
+            (source.y + target.y - plan.label.height) / 2,
+          );
+        }
+      } else {
+        const gapStart = diagramRectBottom(sourcePlan.bounds);
+        const gapEnd = targetPlan.bounds.y;
+        const centerY = roundDiagramNumber((gapStart + gapEnd) / 2);
+        labelTop = roundDiagramNumber(centerY - plan.label.height / 2);
+        if (Math.abs(source.x - target.x) <= 0.02) {
+          path = [source, target];
+          labelCenterX = roundDiagramNumber(
+            source.x + LABEL_GAP + plan.label.width / 2,
+          );
+        } else {
+          const channelY = roundDiagramNumber(labelTop - LABEL_GAP);
+          path = [
+            source,
+            { x: source.x, y: channelY },
+            { x: target.x, y: channelY },
+            target,
+          ];
+          labelCenterX = roundDiagramNumber((source.x + target.x) / 2);
+        }
       }
+    } else if (spec.direction === "left-to-right") {
       const sourceChannel = endpointChannel(
         plan.relationship.from,
-        index,
+        plan.relationship.sourceOrder,
         "source",
       );
       const targetChannel = endpointChannel(
         plan.relationship.to,
-        index,
+        plan.relationship.sourceOrder,
         "target",
       );
       const sourceLane = routeX;
@@ -538,7 +665,7 @@ function routeRelationships(
         ROUTE_GAP,
         plan.label.width + LABEL_GAP * 2,
       );
-      const path = [
+      path = [
         source,
         { x: source.x, y: source.y + PORT_STANDOFF },
         { x: source.x, y: sourceChannel },
@@ -550,71 +677,43 @@ function routeRelationships(
         { x: target.x, y: target.y + PORT_STANDOFF },
         target,
       ];
-      plan.connector = createDiagramConnector({
-        id: `architecture-relationship-${plan.relationship.id}-connector`,
-        semanticId: plan.relationship.id,
-        sourceId: plan.relationship.from,
-        targetId: plan.relationship.to,
-        style: plan.relationship.emphasis,
-        routing: "orthogonal",
-        pathWithTip: path,
-        path: `relationship ${plan.relationship.id}`,
-        remedy:
-          "Split the topology into an overview plus a focused group diagram.",
-      });
-      plan.text = positionDiagramText({
-        id: `architecture-relationship-${plan.relationship.id}-label`,
-        ownerId: plan.relationship.id,
-        placement: "free",
-        role: "connector-label",
-        measured: plan.label,
-        centerX: (sourceLane + targetLane) / 2,
-        top: routeY + LABEL_GAP,
-      });
+      labelCenterX = (sourceLane + targetLane) / 2;
+      labelTop = routeY + LABEL_GAP;
       routeY += plan.label.height + LABEL_GAP * 3;
       routeX = targetLane + ROUTE_GAP;
-    }
-    return;
-  }
-
-  let routeX = diagramRectRight(structuralBounds) + LANE_GAP + EXTERNAL_GAP;
-  let routeY = diagramRectBottom(structuralBounds) + EXTERNAL_GAP;
-  for (const [index, plan] of relationships.entries()) {
-    const source = ports.get(`${plan.relationship.id}\u0000source`);
-    const target = ports.get(`${plan.relationship.id}\u0000target`);
-    if (source === undefined || target === undefined) {
-      layoutFailure(
-        `Relationship ${plan.relationship.id} lost a validated endpoint.`,
-        `relationship ${plan.relationship.id}`,
+    } else {
+      const sourceChannel = endpointChannel(
+        plan.relationship.from,
+        plan.relationship.sourceOrder,
+        "source",
       );
+      const targetChannel = endpointChannel(
+        plan.relationship.to,
+        plan.relationship.sourceOrder,
+        "target",
+      );
+      const sourceLane = routeY;
+      const targetLane = sourceLane + Math.max(
+        ROUTE_GAP,
+        plan.label.height + LABEL_GAP * 2,
+      );
+      path = [
+        source,
+        { x: source.x + PORT_STANDOFF, y: source.y },
+        { x: sourceChannel, y: source.y },
+        { x: sourceChannel, y: sourceLane },
+        { x: routeX, y: sourceLane },
+        { x: routeX, y: targetLane },
+        { x: targetChannel, y: targetLane },
+        { x: targetChannel, y: target.y },
+        { x: target.x + PORT_STANDOFF, y: target.y },
+        target,
+      ];
+      labelCenterX = routeX + LABEL_GAP + plan.label.width / 2;
+      labelTop = (sourceLane + targetLane - plan.label.height) / 2;
+      routeX += plan.label.width + LABEL_GAP * 3;
+      routeY = targetLane + ROUTE_GAP;
     }
-    const sourceChannel = endpointChannel(
-      plan.relationship.from,
-      index,
-      "source",
-    );
-    const targetChannel = endpointChannel(
-      plan.relationship.to,
-      index,
-      "target",
-    );
-    const sourceLane = routeY;
-    const targetLane = sourceLane + Math.max(
-      ROUTE_GAP,
-      plan.label.height + LABEL_GAP * 2,
-    );
-    const path = [
-      source,
-      { x: source.x + PORT_STANDOFF, y: source.y },
-      { x: sourceChannel, y: source.y },
-      { x: sourceChannel, y: sourceLane },
-      { x: routeX, y: sourceLane },
-      { x: routeX, y: targetLane },
-      { x: targetChannel, y: targetLane },
-      { x: targetChannel, y: target.y },
-      { x: target.x + PORT_STANDOFF, y: target.y },
-      target,
-    ];
     plan.connector = createDiagramConnector({
       id: `architecture-relationship-${plan.relationship.id}-connector`,
       semanticId: plan.relationship.id,
@@ -633,11 +732,9 @@ function routeRelationships(
       placement: "free",
       role: "connector-label",
       measured: plan.label,
-      centerX: routeX + LABEL_GAP + plan.label.width / 2,
-      top: (sourceLane + targetLane - plan.label.height) / 2,
+      centerX: labelCenterX,
+      top: labelTop,
     });
-    routeX += plan.label.width + LABEL_GAP * 3;
-    routeY = targetLane + ROUTE_GAP;
   }
 }
 
@@ -648,10 +745,11 @@ export default function layoutArchitectureDiagram(
   const nodePlans = spec.nodes.map(measureNode);
   const groupPlans = spec.groups.map(measureGroup);
   const relationshipPlans = spec.relationships.map(measureRelationship);
+  const gap = primaryNodeGap(spec, nodePlans, relationshipPlans);
   if (spec.direction === "left-to-right") {
-    placeLeftToRight(spec, nodePlans, groupPlans);
+    placeLeftToRight(spec, nodePlans, groupPlans, gap);
   } else {
-    placeTopToBottom(spec, nodePlans, groupPlans);
+    placeTopToBottom(spec, nodePlans, groupPlans, gap);
   }
   routeRelationships(spec, nodePlans, groupPlans, relationshipPlans);
 

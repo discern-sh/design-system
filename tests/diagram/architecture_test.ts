@@ -10,6 +10,7 @@ import {
   DiagramValidationError,
 } from "../../src/diagram/errors.ts";
 import {
+  diagramRectBottom,
   diagramRectContains,
   diagramRectRight,
   diagramRectsOverlap,
@@ -193,21 +194,24 @@ Deno.test("architecture directions preserve authored order on their primary axis
   }
 });
 
-Deno.test("architecture routing is deterministic, exterior, orthogonal, and conformant", () => {
+Deno.test("architecture routing is deterministic, local, orthogonal, and conformant", () => {
   const first = prepare(fixtures[0]);
   const second = prepare(fixtures[0]);
   assertEquals(JSON.stringify(first), JSON.stringify(second));
   const shapes = elementsOfKind(first, "shape");
-  const right = Math.max(
-    ...shapes.map((shape) => diagramRectRight(shape.bounds)),
+  const structuralBottom = Math.max(
+    ...shapes.map((shape) => diagramRectBottom(shape.bounds)),
+    ...elementsOfKind(first, "region").map((region) =>
+      diagramRectBottom(region.bounds)
+    ),
   );
   const connectors = elementsOfKind(first, "connector");
   assert(connectors.every((connector) => connector.routing === "orthogonal"));
-  assert(
-    connectors.every((connector) =>
-      connector.points.some((point) => point.x > right)
-    ),
+  const returnConnector = connectors.find((connector) =>
+    connector.semanticId === "outcome"
   );
+  assert(returnConnector !== undefined);
+  assert(returnConnector.points.some((point) => point.y > structuralBottom));
   for (const connector of connectors) {
     connector.points.slice(1).forEach((end, index) => {
       const start = connector.points[index];
@@ -221,6 +225,129 @@ Deno.test("architecture routing is deterministic, exterior, orthogonal, and conf
       assert(!diagramRectsOverlap(left.bounds, rightShape.bounds))
     )
   );
+});
+
+Deno.test("architecture keeps adjacent forward relationships in the primary gap", () => {
+  const futureSibling = {
+    kind: "architecture",
+    title: "Pass a bounded signal",
+    summary: "Unrelated same-boundary peers pass one signal in authored order.",
+    direction: "top-to-bottom",
+    nodes: [
+      { id: "origin", label: "Origin peer", role: "service" },
+      { id: "destination", label: "Destination peer", role: "store" },
+    ],
+    groups: [{
+      id: "scope",
+      label: "Shared scope",
+      members: ["origin", "destination"],
+    }],
+    relationships: [{
+      id: "signal",
+      from: "origin",
+      to: "destination",
+      label: "Pass signal",
+    }],
+  } as const satisfies ArchitectureDiagramSpec;
+
+  for (const spec of [...fixtures, futureSibling]) {
+    const scene = prepare(spec);
+    const shapes = elementsOfKind(scene, "shape");
+    const connectors = elementsOfKind(scene, "connector");
+    const labels = elementsOfKind(scene, "text").filter((text) =>
+      text.role === "connector-label"
+    );
+    for (const relationship of spec.relationships) {
+      const groups = "groups" in spec ? spec.groups : [];
+      const sourceIndex = spec.nodes.findIndex((node) =>
+        node.id === relationship.from
+      );
+      const targetIndex = spec.nodes.findIndex((node) =>
+        node.id === relationship.to
+      );
+      const sourceLane = groups.find((group) =>
+        group.members.some((member: string) =>
+          member === relationship.from
+        )
+      )?.id ?? "architecture:uncontained";
+      const targetLane = groups.find((group) =>
+        group.members.some((member: string) => member === relationship.to)
+      )?.id ?? "architecture:uncontained";
+      if (
+        ("emphasis" in relationship && relationship.emphasis === "return") ||
+        targetIndex !== sourceIndex + 1 ||
+        (spec.direction === "top-to-bottom" && sourceLane !== targetLane)
+      ) continue;
+      const source = shapes.find((shape) =>
+        shape.semanticId === relationship.from
+      );
+      const target = shapes.find((shape) =>
+        shape.semanticId === relationship.to
+      );
+      const connector = connectors.find((candidate) =>
+        candidate.semanticId === relationship.id
+      );
+      const label = labels.find((candidate) =>
+        candidate.ownerId === relationship.id
+      );
+      assert(source !== undefined);
+      assert(target !== undefined);
+      assert(connector !== undefined);
+      assert(label !== undefined);
+      assert(connector.points.length <= 4);
+
+      if (spec.direction === "top-to-bottom") {
+        const gapStart = diagramRectBottom(source.bounds);
+        const gapEnd = target.bounds.y;
+        assert(gapStart < gapEnd);
+        assert(
+          connector.bounds.y >= gapStart - connector.lineWidth / 2 - 0.01,
+        );
+        assert(
+          diagramRectBottom(connector.bounds) <=
+            gapEnd + connector.lineWidth / 2 + 0.01,
+        );
+        assert(label.bounds.y >= gapStart);
+        assert(diagramRectBottom(label.bounds) <= gapEnd);
+        assert(
+          Math.abs(
+            label.bounds.y + label.bounds.height / 2 -
+              (gapStart + gapEnd) / 2,
+          ) <= 0.01,
+        );
+        const sourceCenterX = source.bounds.x + source.bounds.width / 2;
+        const targetCenterX = target.bounds.x + target.bounds.width / 2;
+        if (Math.abs(sourceCenterX - targetCenterX) <= 0.01) {
+          assertEquals(connector.points.length, 2);
+          assert(label.bounds.x > sourceCenterX);
+        }
+      } else {
+        const gapStart = diagramRectRight(source.bounds);
+        const gapEnd = target.bounds.x;
+        assert(gapStart < gapEnd);
+        assert(
+          connector.bounds.x >= gapStart - connector.lineWidth / 2 - 0.01,
+        );
+        assert(
+          diagramRectRight(connector.bounds) <=
+            gapEnd + connector.lineWidth / 2 + 0.01,
+        );
+        assert(label.bounds.x >= gapStart);
+        assert(diagramRectRight(label.bounds) <= gapEnd);
+        assert(
+          Math.abs(
+            label.bounds.x + label.bounds.width / 2 -
+              (gapStart + gapEnd) / 2,
+          ) <= 0.01,
+        );
+      }
+      assert(
+        shapes.every((shape) =>
+          !diagramRectsOverlap(label.bounds, shape.bounds, 4)
+        ),
+      );
+    }
+  }
 });
 
 Deno.test("architecture wraps long supported labels without clipping", () => {
