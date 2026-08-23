@@ -50,59 +50,49 @@ Deno.test("Markdown code blocks pin Unicode advances to terminal cells", async (
     `);
     await page.evaluate(async () => await document.fonts.ready);
     const facts = await page.locator(".discern-code-block > code").evaluate(
-      (element, expectedLines) => {
-        const text = element.textContent ?? "";
-        const textNodes: Text[] = [];
-        const walker = document.createTreeWalker(
-          element,
-          NodeFilter.SHOW_TEXT,
+      (element, expectedLineCount) => {
+        const rightEdges: Array<number | undefined> = Array.from(
+          { length: expectedLineCount },
+          () => undefined,
         );
-        for (
-          let node = walker.nextNode();
-          node !== null;
-          node = walker.nextNode()
-        ) {
-          textNodes.push(node as Text);
-        }
-        const boundary = (offset: number): { node: Text; offset: number } => {
-          let consumed = 0;
-          for (const node of textNodes) {
-            const next = consumed + node.data.length;
-            if (offset <= next) return { node, offset: offset - consumed };
-            consumed = next;
+        let row = 0;
+        for (const node of element.childNodes) {
+          if (
+            node instanceof HTMLElement &&
+            node.hasAttribute("data-discern-terminal-cell")
+          ) {
+            const right = node.getBoundingClientRect().right;
+            const current = rightEdges[row];
+            rightEdges[row] = current === undefined
+              ? right
+              : Math.max(current, right);
+          } else if (node instanceof Text) {
+            row += node.data.split("\n").length - 1;
           }
-          const finalNode = textNodes.at(-1);
-          if (finalNode === undefined) throw new Error("missing code text");
-          return { node: finalNode, offset: finalNode.data.length };
-        };
-        let start = 0;
-        const widths = expectedLines.map((line) => {
-          const from = boundary(start);
-          const to = boundary(start + line.length);
-          const range = document.createRange();
-          range.setStart(from.node, from.offset);
-          range.setEnd(to.node, to.offset);
-          start += line.length + 1;
-          return range.getBoundingClientRect().width;
-        });
+        }
         return {
-          text,
-          widths,
+          text: element.textContent ?? "",
+          rightEdges,
           cells: element.querySelectorAll("[data-discern-terminal-cell]")
             .length,
         };
       },
-      lines,
+      lines.length,
     );
 
     assertEquals(facts.text, code);
     assert(facts.cells > 0, "Unicode graphemes need explicit cell boxes");
-    for (const [index, width] of facts.widths.entries()) {
+    const firstRight = facts.rightEdges[0];
+    if (firstRight === undefined) throw new Error("missing first code row");
+    for (const [index, right] of facts.rightEdges.entries()) {
+      if (right === undefined) {
+        throw new Error(`missing terminal cell for code row ${index + 1}`);
+      }
       assert(
-        Math.abs(width - (facts.widths[0] ?? 0)) <= 0.5,
-        `logical ${lines[index]?.length}-cell row ${
-          index + 1
-        } drifted to ${width}px`,
+        Math.abs(right - firstRight) <= 0.5,
+        // A Range can include a fallback glyph's ink overhang; the terminal
+        // cell span's border box is the layout geometry that must align.
+        `logical terminal row ${index + 1} ended at ${right}px`,
       );
     }
   } finally {
