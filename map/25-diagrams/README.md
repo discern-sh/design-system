@@ -8,13 +8,13 @@ The diagram subsystem owns semantic, documentation-scale reference diagrams betw
 
 Kinds are reference archetypes, not skins over a graph language. Start with what the reader must do when revisiting the document:
 
-| Reader task | Kind | Semantic boundary | CLI posture |
-| --- | --- | --- | --- |
-| Trace steps, decisions, or an explicit return | `flow` | Ordered process nodes and directed progressions; restrained branches and return edges also cover small state machines | Enhanced while its viability envelope preserves every fact |
-| Locate parts, ownership, and directed dependencies | `architecture` | Stable role-bearing nodes, labelled relationships, and optional one-level ownership boundaries; at most one focal node | Description |
-| Revisit an ordered practice that repeats | `cycle` | Three or more authored stages around one loop, with one optional shared hub and at most one named hub relationship per stage | Enhanced while its viability envelope preserves every fact |
-| Follow who communicates what, and when | `sequence` | Stable participants and authored call, signal, return, or self-message order, with notes attached to one participant or message | Enhanced while its viability envelope preserves every fact |
-| Compare scheduled spans and dated gates | `timeline` | One explicit half-open ISO date range, one-level groups and rows, half-open task bars, and one-date milestones | Description |
+| Reader task                                        | Kind           | Semantic boundary                                                                                                               | CLI posture                                                |
+| -------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Trace steps, decisions, or an explicit return      | `flow`         | Ordered process nodes and directed progressions; restrained branches and return edges also cover small state machines           | Enhanced while its viability envelope preserves every fact |
+| Locate parts, ownership, and directed dependencies | `architecture` | Stable role-bearing nodes, labelled relationships, and optional one-level ownership boundaries; at most one focal node          | Description                                                |
+| Revisit an ordered practice that repeats           | `cycle`        | Three or more authored stages around one loop, with one optional shared hub and at most one named hub relationship per stage    | Enhanced while its viability envelope preserves every fact |
+| Follow who communicates what, and when             | `sequence`     | Stable participants and authored call, signal, return, or self-message order, with notes attached to one participant or message | Enhanced while its viability envelope preserves every fact |
+| Compare scheduled spans and dated gates            | `timeline`     | One explicit half-open ISO date range, one-level groups and rows, half-open task bars, and one-date milestones                  | Description                                                |
 
 Use `flow` when a state-like subject is adequately explained as decisions plus explicit returns; there is no separate state kind. A need for arbitrary nesting, network-scale topology, timing protocols, unconstrained dates, coordinates, ports, custom shapes, or raw SVG means the requested model is outside this library. A meaningful physical schematic, spatial metaphor, animation, control, or bespoke illustration remains consumer-owned; Artwork continues to own only semantically disposable decoration.
 
