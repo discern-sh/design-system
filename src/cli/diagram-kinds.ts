@@ -21,7 +21,16 @@ export type DiagramKindCliDeclineCode =
   | "branching"
   | "return-edges"
   | "node-wrap"
-  | "edge-wrap";
+  | "edge-wrap"
+  | "stage-count"
+  | "spoke-count"
+  | "stage-wrap"
+  | "relationship-wrap"
+  | "participant-count"
+  | "message-count"
+  | "participant-wrap"
+  | "message-wrap"
+  | "note-wrap";
 
 /** Typed, non-error refusal that routes the caller to universal description. */
 export interface DiagramKindCliDecline {
