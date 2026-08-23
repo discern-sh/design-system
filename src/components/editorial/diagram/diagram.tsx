@@ -5,6 +5,8 @@ import type { DiagramSpec } from "../../../generated/diagram-spec.ts";
 import { formatDiagramAltText } from "../../../diagram/accessibility.ts";
 import type {
   DiagramConnector,
+  DiagramGuide,
+  DiagramRegion,
   DiagramSceneElement,
   DiagramShape,
   DiagramText,
@@ -117,9 +119,38 @@ function renderConnector(connector: DiagramConnector): ReactElement {
   );
 }
 
+function renderRegion(region: DiagramRegion): ReactElement {
+  return (
+    <rect
+      key={region.id}
+      className={`discern-diagram__region discern-diagram__region--${region.style}`}
+      x={formatDiagramSvgNumber(region.bounds.x)}
+      y={formatDiagramSvgNumber(region.bounds.y)}
+      width={formatDiagramSvgNumber(region.bounds.width)}
+      height={formatDiagramSvgNumber(region.bounds.height)}
+      rx={formatDiagramSvgNumber(region.radius)}
+      strokeWidth={formatDiagramSvgNumber(region.lineWidth)}
+    />
+  );
+}
+
+function renderGuide(guide: DiagramGuide): ReactElement {
+  return (
+    <polyline
+      key={guide.id}
+      className={`discern-diagram__guide discern-diagram__guide--${guide.style}`}
+      data-discern-diagram-guide={guide.semanticId}
+      points={formatDiagramSvgPoints(guide.points)}
+      strokeWidth={formatDiagramSvgNumber(guide.lineWidth)}
+    />
+  );
+}
+
 function renderElement(element: DiagramSceneElement): ReactElement {
   if (element.kind === "shape") return renderShape(element);
   if (element.kind === "text") return renderText(element);
+  if (element.kind === "region") return renderRegion(element);
+  if (element.kind === "guide") return renderGuide(element);
   return renderConnector(element);
 }
 

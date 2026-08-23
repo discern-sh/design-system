@@ -15,7 +15,9 @@ import {
 import type {
   DiagramConnector,
   DiagramConnectorStyleRole,
+  DiagramGuide,
   DiagramNodeStyleRole,
+  DiagramRegion,
   DiagramScene,
   DiagramSceneElement,
   DiagramShape,
@@ -74,7 +76,11 @@ function connectorRules(
   ];
 }
 
-function paletteRules(variant: DiagramPaletteVariant): readonly string[] {
+function paletteRules(
+  variant: DiagramPaletteVariant,
+  includeRegion: boolean,
+  includeGuide: boolean,
+): readonly string[] {
   const palette = resolveDiagramPalette(variant);
   return [
     `  .discern-diagram__canvas { fill: ${palette.canvas}; }`,
@@ -86,13 +92,27 @@ function paletteRules(variant: DiagramPaletteVariant): readonly string[] {
     `  .discern-diagram__text--quiet-annotation, .discern-diagram__text--connector-label { fill: ${
       palette["quiet-annotation"]
     }; }`,
+    ...(includeRegion
+      ? [
+        `  .discern-diagram__region { fill: ${
+          palette["node-surface"]
+        }; fill-opacity: 0.42; stroke: ${palette.guide}; }`,
+      ]
+      : []),
+    ...(includeGuide
+      ? [`  .discern-diagram__guide { stroke: ${palette.guide}; }`]
+      : []),
     ...Object.keys(DIAGRAM_CONNECTOR_STYLE_BUNDLES).flatMap((role) =>
       connectorRules(role as DiagramConnectorStyleRole, palette)
     ),
   ];
 }
 
-function standaloneStyle(theme: DiagramSvgTheme): string {
+function standaloneStyle(
+  theme: DiagramSvgTheme,
+  includeRegion: boolean,
+  includeGuide: boolean,
+): string {
   const common = [
     "  .discern-diagram { display: block; background: transparent; shape-rendering: geometricPrecision; text-rendering: optimizeLegibility; }",
     `  .discern-diagram__text { font-family: ${
@@ -102,13 +122,29 @@ function standaloneStyle(theme: DiagramSvgTheme): string {
       resolveDiagramFontStack("mono")
     }; }`,
     "  .discern-diagram__node, .discern-diagram__node-cue { stroke-width: 2; vector-effect: non-scaling-stroke; }",
+    ...(includeRegion
+      ? [
+        "  .discern-diagram__region { vector-effect: non-scaling-stroke; stroke-dasharray: 8 6; }",
+      ]
+      : []),
+    ...(includeGuide
+      ? [
+        "  .discern-diagram__guide { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }",
+        "  .discern-diagram__guide--dashed { stroke-dasharray: 6 6; }",
+      ]
+      : []),
     "  .discern-diagram__connector { fill: none; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }",
   ];
-  const light = paletteRules("light");
+  const light = paletteRules("light", includeRegion, includeGuide);
   if (theme !== "adaptive") {
-    return [...common, ...paletteRules(theme)].join("\n");
+    return [
+      ...common,
+      ...paletteRules(theme, includeRegion, includeGuide),
+    ].join("\n");
   }
-  const dark = paletteRules("dark").map((rule) => `  ${rule}`);
+  const dark = paletteRules("dark", includeRegion, includeGuide).map((rule) =>
+    `  ${rule}`
+  );
   return [
     ...common,
     ...light,
@@ -198,12 +234,39 @@ function connectorMarkup(
   ];
 }
 
+function regionMarkup(
+  region: DiagramRegion,
+  indent: string,
+): readonly string[] {
+  return [
+    `${indent}<rect class="discern-diagram__region discern-diagram__region--${region.style}" x="${
+      formatDiagramSvgNumber(region.bounds.x)
+    }" y="${formatDiagramSvgNumber(region.bounds.y)}" width="${
+      formatDiagramSvgNumber(region.bounds.width)
+    }" height="${formatDiagramSvgNumber(region.bounds.height)}" rx="${
+      formatDiagramSvgNumber(region.radius)
+    }" stroke-width="${formatDiagramSvgNumber(region.lineWidth)}" />`,
+  ];
+}
+
+function guideMarkup(guide: DiagramGuide, indent: string): readonly string[] {
+  return [
+    `${indent}<polyline class="discern-diagram__guide discern-diagram__guide--${guide.style}" data-discern-diagram-guide="${
+      escapeXml(guide.semanticId)
+    }" points="${formatDiagramSvgPoints(guide.points)}" stroke-width="${
+      formatDiagramSvgNumber(guide.lineWidth)
+    }" />`,
+  ];
+}
+
 function elementMarkup(
   element: DiagramSceneElement,
   indent: string,
 ): readonly string[] {
   if (element.kind === "shape") return shapeMarkup(element, indent);
   if (element.kind === "text") return textMarkup(element, indent);
+  if (element.kind === "region") return regionMarkup(element, indent);
+  if (element.kind === "guide") return guideMarkup(element, indent);
   return connectorMarkup(element, indent);
 }
 
@@ -262,7 +325,11 @@ export function renderDiagramSvg(
       }`,
     );
   }
-  const style = standaloneStyle(theme);
+  const style = standaloneStyle(
+    theme,
+    scene.elements.some((element) => element.kind === "region"),
+    scene.elements.some((element) => element.kind === "guide"),
+  );
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" class="discern-diagram discern-diagram--standalone" viewBox="${
       formatDiagramSvgNumber(bounds.x)

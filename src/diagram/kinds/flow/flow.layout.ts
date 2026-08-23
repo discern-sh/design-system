@@ -1,7 +1,6 @@
 /** Deterministic dependency-free layered layout for documentation-scale flow. */
 
 import { DiagramValidationError } from "../../errors.ts";
-import { wrapDiagramText } from "../../font-metrics.ts";
 import {
   DIAGRAM_GEOMETRY,
   diagramPointBounds,
@@ -11,6 +10,13 @@ import {
   expandDiagramRect,
   roundDiagramNumber,
 } from "../../geometry.ts";
+import {
+  createDiagramConnector,
+  createDiagramScene,
+  type DiagramMeasuredText,
+  measureDiagramLayoutText,
+  positionDiagramText,
+} from "../../layout-authority.ts";
 import type {
   DiagramConnector,
   DiagramPoint,
@@ -20,9 +26,7 @@ import type {
   DiagramSceneGroup,
   DiagramShape,
   DiagramText,
-  DiagramTextLine,
 } from "../../scene.ts";
-import { assertDiagramKindBudget } from "../../validation.ts";
 import meta from "./flow.meta.ts";
 import type {
   ValidatedFlowDiagram,
@@ -30,21 +34,12 @@ import type {
   ValidatedFlowNode,
 } from "./flow.spec.ts";
 
-interface MeasuredText {
-  readonly lines: readonly { readonly text: string; readonly width: number }[];
-  readonly width: number;
-  readonly height: number;
-  readonly fontRole: "interface" | "mono";
-  readonly fontSize: number;
-  readonly lineHeight: number;
-}
-
 interface NodePlan {
   readonly node: ValidatedFlowNode;
   readonly width: number;
   readonly height: number;
-  readonly label: MeasuredText;
-  readonly annotation?: MeasuredText;
+  readonly label: DiagramMeasuredText;
+  readonly annotation?: DiagramMeasuredText;
   bounds: DiagramRect;
 }
 
@@ -83,25 +78,17 @@ function measuredText(
   lineHeight: number,
   budget: "nodeLabelLines" | "annotationLines" | "edgeLabelLines",
   path: string,
-): MeasuredText {
-  const lines = wrapDiagramText(text, maximumWidth, fontSize, fontRole);
-  assertDiagramKindBudget(meta, budget, lines.length, path);
-  const width = Math.max(...lines.map((line) => line.width));
-  if (!Number.isFinite(width) || width <= 0) {
-    layoutFailure(
-      `${path} cannot be measured as visible text.`,
-      path,
-      "Replace isolated marks with concise visible letters or words.",
-    );
-  }
-  return {
-    lines,
-    width: roundDiagramNumber(width),
-    height: roundDiagramNumber(lines.length * lineHeight),
+): DiagramMeasuredText {
+  return measureDiagramLayoutText({
+    text,
+    maximumWidth,
     fontRole,
     fontSize,
     lineHeight,
-  };
+    meta,
+    budget,
+    path,
+  });
 }
 
 function measureNode(
@@ -261,35 +248,19 @@ function positionedText(
   id: string,
   ownerId: string,
   role: DiagramText["role"],
-  measured: MeasuredText,
+  measured: DiagramMeasuredText,
   centerX: number,
   top: number,
 ): DiagramText {
-  const bounds = {
-    x: roundDiagramNumber(centerX - measured.width / 2),
-    y: roundDiagramNumber(top),
-    width: measured.width,
-    height: measured.height,
-  };
-  const lines: DiagramTextLine[] = measured.lines.map((line, index) => ({
-    text: line.text,
-    x: roundDiagramNumber(centerX - line.width / 2),
-    baseline: roundDiagramNumber(
-      top + index * measured.lineHeight + measured.fontSize,
-    ),
-    width: line.width,
-  }));
-  return {
-    kind: "text",
+  return positionDiagramText({
     id,
     ownerId,
+    placement: role === "connector-label" ? "free" : "inside-shape",
     role,
-    fontRole: measured.fontRole,
-    fontSize: measured.fontSize,
-    lineHeight: measured.lineHeight,
-    bounds,
-    lines,
-  };
+    measured,
+    centerX,
+    top,
+  });
 }
 
 function nodeElements(plan: NodePlan): readonly DiagramSceneElement[] {
@@ -525,79 +496,21 @@ function assignEdgePorts(
   return ports;
 }
 
-function compactPoints(
-  points: readonly DiagramPoint[],
-): readonly DiagramPoint[] {
-  const compact: DiagramPoint[] = [];
-  for (const point of points) {
-    const rounded = {
-      x: roundDiagramNumber(point.x),
-      y: roundDiagramNumber(point.y),
-    };
-    const previous = compact.at(-1);
-    if (
-      previous === undefined || previous.x !== rounded.x ||
-      previous.y !== rounded.y
-    ) compact.push(rounded);
-  }
-  return compact;
-}
-
 function connectorFromPath(
   edge: ValidatedFlowEdge,
   pathWithTip: readonly DiagramPoint[],
 ): DiagramConnector {
-  const path = compactPoints(pathWithTip);
-  const tip = path.at(-1);
-  const beforeTip = path.at(-2);
-  if (tip === undefined || beforeTip === undefined) {
-    layoutFailure(
-      `Edge ${edge.id} has no routable span.`,
-      `edge ${edge.id}`,
-      "Split the overview or simplify the relationship.",
-    );
-  }
-  const dx = tip.x - beforeTip.x;
-  const dy = tip.y - beforeTip.y;
-  const distance = Math.hypot(dx, dy);
-  if (!Number.isFinite(distance) || distance < G.connector.arrowLength + 1) {
-    layoutFailure(
-      `Edge ${edge.id} has insufficient arrow clearance.`,
-      `edge ${edge.id}`,
-      "Reduce node density or split the overview.",
-    );
-  }
-  const unitX = dx / distance;
-  const unitY = dy / distance;
-  const base = {
-    x: roundDiagramNumber(tip.x - unitX * G.connector.arrowLength),
-    y: roundDiagramNumber(tip.y - unitY * G.connector.arrowLength),
-  };
-  const left = {
-    x: roundDiagramNumber(base.x - unitY * G.connector.arrowHalfWidth),
-    y: roundDiagramNumber(base.y + unitX * G.connector.arrowHalfWidth),
-  };
-  const right = {
-    x: roundDiagramNumber(base.x + unitY * G.connector.arrowHalfWidth),
-    y: roundDiagramNumber(base.y - unitX * G.connector.arrowHalfWidth),
-  };
-  const points = compactPoints([...path.slice(0, -1), base]);
-  const arrowBounds = diagramPointBounds([tip, left, right]);
-  return {
-    kind: "connector",
+  return createDiagramConnector({
     id: `edge-${edge.id}-connector`,
     semanticId: edge.id,
     sourceId: edge.from,
     targetId: edge.to,
     style: edge.emphasis,
-    lineWidth: G.connector.lineWidth,
-    points,
-    arrowhead: { tip, left, right, bounds: arrowBounds },
-    bounds: diagramRectUnion([
-      diagramPointBounds(points, G.connector.lineWidth / 2),
-      arrowBounds,
-    ]),
-  };
+    routing: "orthogonal",
+    pathWithTip,
+    path: `edge ${edge.id}`,
+    remedy: "Reduce node density or split the overview.",
+  });
 }
 
 function routeEdges(
@@ -736,7 +649,7 @@ function segmentBounds(
 
 function labelCandidates(
   connector: DiagramConnector,
-  text: MeasuredText,
+  text: DiagramMeasuredText,
 ): readonly DiagramRect[] {
   const segments = connector.points.slice(1).map((end, index) => ({
     start: connector.points[index] as DiagramPoint,
@@ -857,58 +770,6 @@ function placeEdgeLabels(
   return labels;
 }
 
-function translateRect(rect: DiagramRect, dx: number, dy: number): DiagramRect {
-  return {
-    x: roundDiagramNumber(rect.x + dx),
-    y: roundDiagramNumber(rect.y + dy),
-    width: rect.width,
-    height: rect.height,
-  };
-}
-
-function translatePoint(
-  point: DiagramPoint,
-  dx: number,
-  dy: number,
-): DiagramPoint {
-  return {
-    x: roundDiagramNumber(point.x + dx),
-    y: roundDiagramNumber(point.y + dy),
-  };
-}
-
-function translateElement(
-  element: DiagramSceneElement,
-  dx: number,
-  dy: number,
-): DiagramSceneElement {
-  if (element.kind === "shape") {
-    return { ...element, bounds: translateRect(element.bounds, dx, dy) };
-  }
-  if (element.kind === "text") {
-    return {
-      ...element,
-      bounds: translateRect(element.bounds, dx, dy),
-      lines: element.lines.map((line) => ({
-        ...line,
-        x: roundDiagramNumber(line.x + dx),
-        baseline: roundDiagramNumber(line.baseline + dy),
-      })),
-    };
-  }
-  return {
-    ...element,
-    bounds: translateRect(element.bounds, dx, dy),
-    points: element.points.map((point) => translatePoint(point, dx, dy)),
-    arrowhead: {
-      tip: translatePoint(element.arrowhead.tip, dx, dy),
-      left: translatePoint(element.arrowhead.left, dx, dy),
-      right: translatePoint(element.arrowhead.right, dx, dy),
-      bounds: translateRect(element.arrowhead.bounds, dx, dy),
-    },
-  };
-}
-
 /** Lay a validated flow into one projection-neutral scene. */
 export default function layoutFlowDiagram(
   spec: ValidatedFlowDiagram,
@@ -923,26 +784,6 @@ export default function layoutFlowDiagram(
     ...labels,
     ...nodes,
   ];
-  const content = diagramRectUnion(
-    rawElements.map((element) => element.bounds),
-  );
-  const dx = G.canvasPadding - content.x;
-  const dy = G.canvasPadding - content.y;
-  const elements = rawElements.map((element) =>
-    translateElement(element, dx, dy)
-  );
-  const canvasBounds = {
-    x: 0,
-    y: 0,
-    width: roundDiagramNumber(content.width + G.canvasPadding * 2),
-    height: roundDiagramNumber(content.height + G.canvasPadding * 2),
-  };
-  assertDiagramKindBudget(
-    meta,
-    "sceneExtent",
-    Math.max(canvasBounds.width, canvasBounds.height),
-    "scene.canvas",
-  );
   const groups: DiagramSceneGroup[] = [
     ...routed.map(({ edge, connector }) => ({
       id: `edge-${edge.id}-group`,
@@ -961,12 +802,11 @@ export default function layoutFlowDiagram(
       ],
     })),
   ];
-  return {
-    kind: "diagram-scene",
+  return createDiagramScene({
     sourceKind: "flow",
-    canvas: { bounds: canvasBounds, role: "canvas", padding: G.canvasPadding },
-    root: groups.map((group) => group.id),
+    elements: rawElements,
     groups,
-    elements,
-  };
+    root: groups.map((group) => group.id),
+    meta,
+  });
 }

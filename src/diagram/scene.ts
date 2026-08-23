@@ -78,12 +78,36 @@ export interface DiagramText {
   readonly kind: "text";
   readonly id: string;
   readonly ownerId: string;
+  /** Whether conformance contains the text or only checks its clear placement. */
+  readonly placement: "inside-shape" | "inside-region" | "free";
   readonly role: "node-text" | "quiet-annotation" | "connector-label";
   readonly fontRole: "interface" | "mono";
   readonly fontSize: number;
   readonly lineHeight: number;
   readonly bounds: DiagramRect;
   readonly lines: readonly DiagramTextLine[];
+}
+
+/** Shared visible boundary used by grouped architecture and calendar rows. */
+export interface DiagramRegion {
+  readonly kind: "region";
+  readonly id: string;
+  readonly semanticId: string;
+  readonly style: "boundary";
+  readonly bounds: DiagramRect;
+  readonly radius: number;
+  readonly lineWidth: number;
+}
+
+/** Shared non-directional line used for lifelines, scales, and guides. */
+export interface DiagramGuide {
+  readonly kind: "guide";
+  readonly id: string;
+  readonly semanticId: string;
+  readonly style: "solid" | "dashed";
+  readonly lineWidth: number;
+  readonly points: readonly DiagramPoint[];
+  readonly bounds: DiagramRect;
 }
 
 /** Explicit triangular marker terminating a directed connector. */
@@ -94,7 +118,7 @@ export interface DiagramArrowhead {
   readonly bounds: DiagramRect;
 }
 
-/** Orthogonal polyline and arrowhead joining two semantic nodes. */
+/** Restricted polyline and arrowhead joining two scene endpoints. */
 export interface DiagramConnector {
   readonly kind: "connector";
   readonly id: string;
@@ -102,6 +126,8 @@ export interface DiagramConnector {
   readonly sourceId: string;
   readonly targetId: string;
   readonly style: DiagramConnectorStyleRole;
+  /** Flow remains orthogonal; radial and chronological kinds opt into polyline. */
+  readonly routing: "orthogonal" | "polyline";
   readonly lineWidth: number;
   readonly points: readonly DiagramPoint[];
   readonly arrowhead: DiagramArrowhead;
@@ -112,6 +138,8 @@ export interface DiagramConnector {
 export type DiagramSceneElement =
   | DiagramShape
   | DiagramText
+  | DiagramRegion
+  | DiagramGuide
   | DiagramConnector;
 
 /** Ordered group of elements or nested groups. */

@@ -19,8 +19,10 @@ import {
 import type {
   DiagramArrowhead,
   DiagramConnector,
+  DiagramGuide,
   DiagramPoint,
   DiagramRect,
+  DiagramRegion,
   DiagramScene,
   DiagramSceneElement,
   DiagramShape,
@@ -146,27 +148,50 @@ function segmentIntersectsRect(
   end: DiagramPoint,
   rect: DiagramRect,
 ): boolean {
-  if (Math.abs(start.x - end.x) <= EPSILON) {
-    if (
-      start.x < rect.x - EPSILON || start.x > diagramRectRight(rect) + EPSILON
-    ) {
-      return false;
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  let entry = 0;
+  let exit = 1;
+  const boundaries = [
+    [-dx, start.x - rect.x],
+    [dx, diagramRectRight(rect) - start.x],
+    [-dy, start.y - rect.y],
+    [dy, diagramRectBottom(rect) - start.y],
+  ] as const;
+  for (const [direction, distance] of boundaries) {
+    if (Math.abs(direction) <= EPSILON) {
+      if (distance < -EPSILON) return false;
+      continue;
     }
-    const low = Math.min(start.y, end.y);
-    const high = Math.max(start.y, end.y);
-    return high >= rect.y - EPSILON && low <= diagramRectBottom(rect) + EPSILON;
+    const ratio = distance / direction;
+    if (direction < 0) entry = Math.max(entry, ratio);
+    else exit = Math.min(exit, ratio);
+    if (entry > exit + EPSILON) return false;
   }
-  if (Math.abs(start.y - end.y) <= EPSILON) {
-    if (
-      start.y < rect.y - EPSILON || start.y > diagramRectBottom(rect) + EPSILON
-    ) {
-      return false;
-    }
-    const low = Math.min(start.x, end.x);
-    const high = Math.max(start.x, end.x);
-    return high >= rect.x - EPSILON && low <= diagramRectRight(rect) + EPSILON;
-  }
-  defect("Diagram connectors must use deterministic orthogonal segments.");
+  return true;
+}
+
+function pointOnSegment(
+  point: DiagramPoint,
+  start: DiagramPoint,
+  end: DiagramPoint,
+): boolean {
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const length = Math.hypot(dx, dy);
+  if (length <= EPSILON) return equalPoint(point, start);
+  const cross = Math.abs(
+    (point.x - start.x) * dy - (point.y - start.y) * dx,
+  );
+  if (cross > ATTACHMENT_TOLERANCE * length) return false;
+  const projection = (point.x - start.x) * dx + (point.y - start.y) * dy;
+  return projection >= -EPSILON && projection <= length ** 2 + EPSILON;
+}
+
+function pointOnGuide(point: DiagramPoint, guide: DiagramGuide): boolean {
+  return guide.points.slice(1).some((end, index) =>
+    pointOnSegment(point, guide.points[index] as DiagramPoint, end)
+  );
 }
 
 function connectorSegments(connector: DiagramConnector): readonly (
@@ -192,33 +217,26 @@ function segmentsOverlap(
 ): boolean {
   const [leftStart, leftEnd] = left;
   const [rightStart, rightEnd] = right;
+  const leftDx = leftEnd.x - leftStart.x;
+  const leftDy = leftEnd.y - leftStart.y;
+  const rightDx = rightEnd.x - rightStart.x;
+  const rightDy = rightEnd.y - rightStart.y;
+  if (Math.abs(leftDx * rightDy - leftDy * rightDx) > EPSILON) return false;
   if (
-    Math.abs(leftStart.x - leftEnd.x) <= EPSILON &&
-    Math.abs(rightStart.x - rightEnd.x) <= EPSILON &&
-    Math.abs(leftStart.x - rightStart.x) <= EPSILON
-  ) {
-    return Math.min(
-          Math.max(leftStart.y, leftEnd.y),
-          Math.max(rightStart.y, rightEnd.y),
-        ) - Math.max(
-          Math.min(leftStart.y, leftEnd.y),
-          Math.min(rightStart.y, rightEnd.y),
-        ) > EPSILON;
-  }
-  if (
-    Math.abs(leftStart.y - leftEnd.y) <= EPSILON &&
-    Math.abs(rightStart.y - rightEnd.y) <= EPSILON &&
-    Math.abs(leftStart.y - rightStart.y) <= EPSILON
-  ) {
-    return Math.min(
-          Math.max(leftStart.x, leftEnd.x),
-          Math.max(rightStart.x, rightEnd.x),
-        ) - Math.max(
-          Math.min(leftStart.x, leftEnd.x),
-          Math.min(rightStart.x, rightEnd.x),
-        ) > EPSILON;
-  }
-  return false;
+    Math.abs(
+      (rightStart.x - leftStart.x) * leftDy -
+        (rightStart.y - leftStart.y) * leftDx,
+    ) > EPSILON
+  ) return false;
+  const horizontal = Math.abs(leftDx) >= Math.abs(leftDy);
+  const leftValues = horizontal
+    ? [leftStart.x, leftEnd.x]
+    : [leftStart.y, leftEnd.y];
+  const rightValues = horizontal
+    ? [rightStart.x, rightEnd.x]
+    : [rightStart.y, rightEnd.y];
+  return Math.min(Math.max(...leftValues), Math.max(...rightValues)) -
+      Math.max(Math.min(...leftValues), Math.min(...rightValues)) > EPSILON;
 }
 
 function elementBounds(element: DiagramSceneElement): DiagramRect {
@@ -238,6 +256,10 @@ function expectedConnectorBounds(connector: DiagramConnector): DiagramRect {
   ]);
 }
 
+function expectedGuideBounds(guide: DiagramGuide): DiagramRect {
+  return diagramPointBounds(guide.points, guide.lineWidth / 2);
+}
+
 function equalRect(left: DiagramRect, right: DiagramRect): boolean {
   return Math.abs(left.x - right.x) <= EPSILON &&
     Math.abs(left.y - right.y) <= EPSILON &&
@@ -251,7 +273,8 @@ function assertText(text: DiagramText): void {
   finite(text.lineHeight, `text ${text.id}.lineHeight`);
   if (
     text.fontSize <= 0 || text.lineHeight < text.fontSize ||
-    text.lines.length === 0
+    text.lines.length === 0 ||
+    !["inside-shape", "inside-region", "free"].includes(text.placement)
   ) {
     defect(`Text ${text.id} has invalid line geometry.`);
   }
@@ -308,6 +331,34 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
       finite(element.radius, `shape ${element.id}.radius`);
       if (element.radius < 0) {
         defect(`Shape ${element.id} has a negative radius.`);
+      }
+    }
+    if (element.kind === "region") {
+      finite(element.radius, `region ${element.id}.radius`);
+      finite(element.lineWidth, `region ${element.id}.lineWidth`);
+      if (element.radius < 0 || element.lineWidth <= 0) {
+        defect(`Region ${element.id} has invalid boundary geometry.`);
+      }
+    }
+    if (element.kind === "guide") {
+      finite(element.lineWidth, `guide ${element.id}.lineWidth`);
+      if (
+        element.lineWidth <= 0 || element.points.length < 2 ||
+        !equalRect(element.bounds, expectedGuideBounds(element))
+      ) {
+        defect(`Guide ${element.id} has incomplete or stale geometry.`);
+      }
+      for (const point of element.points) {
+        finite(point.x, `guide ${element.id} point x`);
+        finite(point.y, `guide ${element.id} point y`);
+      }
+      for (let index = 1; index < element.points.length; index += 1) {
+        if (
+          equalPoint(
+            element.points[index - 1] as DiagramPoint,
+            element.points[index] as DiagramPoint,
+          )
+        ) defect(`Guide ${element.id} contains a zero-length run.`);
       }
     }
   }
@@ -372,6 +423,12 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
   const texts = scene.elements.filter((element): element is DiagramText =>
     element.kind === "text"
   );
+  const regions = scene.elements.filter((element): element is DiagramRegion =>
+    element.kind === "region"
+  );
+  const guides = scene.elements.filter((element): element is DiagramGuide =>
+    element.kind === "guide"
+  );
   const connectors = scene.elements.filter((
     element,
   ): element is DiagramConnector => element.kind === "connector");
@@ -383,6 +440,14 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
       connectors.length
   ) {
     defect("Scene connector semantic identities must be unique.");
+  }
+  if (
+    new Set(regions.map((region) => region.semanticId)).size !== regions.length
+  ) {
+    defect("Scene region semantic identities must be unique.");
+  }
+  if (new Set(guides.map((guide) => guide.semanticId)).size !== guides.length) {
+    defect("Scene guide semantic identities must be unique.");
   }
   for (let left = 0; left < shapes.length; left += 1) {
     for (let right = left + 1; right < shapes.length; right += 1) {
@@ -398,14 +463,34 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
       }
     }
   }
+  const semanticOwners = new Set([
+    ...shapes.map((shape) => shape.semanticId),
+    ...regions.map((region) => region.semanticId),
+    ...guides.map((guide) => guide.semanticId),
+    ...connectors.map((connector) => connector.semanticId),
+  ]);
   for (const text of texts) {
-    if (text.role === "connector-label") continue;
-    const owner = shapes.find((shape) => shape.semanticId === text.ownerId);
-    if (owner === undefined) {
-      defect(`Text ${text.id} has no owning node shape.`);
+    if (!semanticOwners.has(text.ownerId)) {
+      defect(`Text ${text.id} has no owning semantic scene member.`);
     }
-    if (!shapeContainsRect(owner, text.bounds, TEXT_CLEARANCE)) {
-      defect(`Text ${text.id} lacks clearance inside its actual node shape.`);
+    if (text.placement === "inside-shape") {
+      const owner = shapes.find((shape) => shape.semanticId === text.ownerId);
+      if (owner === undefined) {
+        defect(`Text ${text.id} has no owning node shape.`);
+      }
+      if (!shapeContainsRect(owner, text.bounds, TEXT_CLEARANCE)) {
+        defect(`Text ${text.id} lacks clearance inside its actual node shape.`);
+      }
+    } else if (text.placement === "inside-region") {
+      const owner = regions.find((region) =>
+        region.semanticId === text.ownerId
+      );
+      if (owner === undefined) {
+        defect(`Text ${text.id} has no owning region.`);
+      }
+      if (!diagramRectContains(owner.bounds, text.bounds, TEXT_CLEARANCE)) {
+        defect(`Text ${text.id} lacks clearance inside its region.`);
+      }
     }
   }
   for (let left = 0; left < texts.length; left += 1) {
@@ -422,40 +507,52 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
     }
   }
   for (const connector of connectors) {
-    if (connector.points.length < 2 || connector.lineWidth <= 0) {
+    if (
+      connector.points.length < 2 || connector.lineWidth <= 0 ||
+      !["orthogonal", "polyline"].includes(connector.routing)
+    ) {
       defect(`Connector ${connector.semanticId} has incomplete body geometry.`);
     }
     const source = shapes.find((shape) =>
       shape.semanticId === connector.sourceId
-    );
+    ) ?? guides.find((guide) => guide.semanticId === connector.sourceId);
     const target = shapes.find((shape) =>
       shape.semanticId === connector.targetId
-    );
+    ) ?? guides.find((guide) => guide.semanticId === connector.targetId);
     if (source === undefined || target === undefined) {
-      defect(`Connector ${connector.semanticId} has no scene endpoint shape.`);
+      defect(`Connector ${connector.semanticId} has no scene endpoint.`);
     }
     const first = connector.points[0];
     const last = connector.points.at(-1);
     if (
       first === undefined || last === undefined ||
-      !pointOnShapeBoundary(first, source)
+      !(source.kind === "shape"
+        ? pointOnShapeBoundary(first, source)
+        : pointOnGuide(first, source))
     ) {
       defect(
         `Connector ${connector.semanticId} is detached from its source boundary.`,
       );
     }
-    if (!pointOnShapeBoundary(connector.arrowhead.tip, target)) {
+    if (
+      !(target.kind === "shape"
+        ? pointOnShapeBoundary(connector.arrowhead.tip, target)
+        : pointOnGuide(connector.arrowhead.tip, target))
+    ) {
       defect(
         `Connector ${connector.semanticId} is detached from its target boundary.`,
       );
     }
     const second = connector.points[1];
-    if (second !== undefined && pointStrictlyInRect(second, source.bounds)) {
+    if (
+      source.kind === "shape" && second !== undefined &&
+      pointStrictlyInRect(second, source.bounds)
+    ) {
       defect(
         `Connector ${connector.semanticId} passes behind its source fill.`,
       );
     }
-    if (pointStrictlyInRect(last, target.bounds)) {
+    if (target.kind === "shape" && pointStrictlyInRect(last, target.bounds)) {
       defect(
         `Connector ${connector.semanticId} passes behind its target fill.`,
       );
@@ -467,6 +564,15 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
       defect(`Connector ${connector.semanticId} declares stale bounds.`);
     }
     for (const [start, end] of connectorSegments(connector)) {
+      if (
+        connector.routing === "orthogonal" &&
+        Math.abs(start.x - end.x) > EPSILON &&
+        Math.abs(start.y - end.y) > EPSILON
+      ) {
+        defect(
+          `Orthogonal connector ${connector.semanticId} contains a diagonal segment.`,
+        );
+      }
       for (const shape of shapes) {
         if (shape === source || shape === target) continue;
         if (
@@ -494,7 +600,7 @@ export function conformDiagramScene(scene: DiagramScene): DiagramScene {
       }
     }
     for (const shape of shapes) {
-      if (shape === target) continue;
+      if (target.kind === "shape" && shape === target) continue;
       if (
         diagramRectsOverlap(
           connector.arrowhead.bounds,

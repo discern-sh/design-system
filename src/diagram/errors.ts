@@ -4,11 +4,18 @@
  * @module
  */
 
+/** Canonical author actions attached to measurable diagram-budget refusals. */
+export const DIAGRAM_BUDGET_REMEDIES = [
+  "shorten-label",
+  "reduce-tier",
+  "split-overview",
+  "split-group",
+  "reduce-participants",
+  "shorten-range",
+] as const;
+
 /** Author action attached to a measurable diagram-budget refusal. */
-export type DiagramBudgetRemedy =
-  | "shorten-label"
-  | "reduce-tier"
-  | "split-overview";
+export type DiagramBudgetRemedy = typeof DIAGRAM_BUDGET_REMEDIES[number];
 
 /** Stable machine-readable diagram failure identity. */
 export type DiagramErrorCode =
@@ -23,6 +30,7 @@ export type DiagramErrorCode =
   | "diagram/invalid-flow-role"
   | "diagram/invalid-return-edge"
   | "diagram/layout/edge-label"
+  | "diagram/layout/connector"
   | "diagram/layout/non-finite"
   | "diagram/conformance"
   | `diagram/budget/${string}`;
@@ -59,6 +67,12 @@ const BUDGET_REMEDY_TEXT: Readonly<Record<DiagramBudgetRemedy, string>> = {
     "Reduce one tier of the flow, or move that tier into a linked sub-flow.",
   "split-overview":
     "Split the overview from a smaller detailed sub-flow and link the two.",
+  "split-group":
+    "Split the dense group into a smaller boundary or an overview plus a focused diagram.",
+  "reduce-participants":
+    "Show fewer participants or split the interaction into consecutive sequences.",
+  "shorten-range":
+    "Shorten the calendar range or split the plan into adjacent periods.",
 };
 
 /** Measurable refusal carrying the exceeded limit and prescribed author move. */

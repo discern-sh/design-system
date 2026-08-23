@@ -47,6 +47,13 @@
   .discern-diagram__node-cue {
     fill: none;
   }
+  .discern-diagram__region {
+    fill: var(--discern-color-surface);
+    fill-opacity: 0.42;
+    stroke: var(--discern-color-border);
+    stroke-dasharray: 8 6;
+    vector-effect: non-scaling-stroke;
+  }
   .discern-diagram__text {
     fill: var(--discern-color-ink);
     font-family: var(--discern-font-ui);
@@ -68,7 +75,11 @@
   .discern-diagram__guide {
     fill: none;
     stroke: var(--discern-color-border);
+    stroke-linecap: round;
     vector-effect: non-scaling-stroke;
+  }
+  .discern-diagram__guide--dashed {
+    stroke-dasharray: 6 6;
   }
   .discern-diagram__connector--primary {
     stroke: var(--discern-color-ink-muted);

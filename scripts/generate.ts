@@ -1,5 +1,6 @@
 import type { EmbeddedRuntimeAsset } from "../src/runtime-assets.ts";
 import type { DiagramKindMeta } from "../src/diagram/kind-meta.ts";
+import { DIAGRAM_BUDGET_REMEDIES } from "../src/diagram/errors.ts";
 import {
   componentBehaviors,
   componentGroups,
@@ -221,7 +222,7 @@ export function validateDiagramKindMeta(
       typeof budget.limit !== "number" || !Number.isFinite(budget.limit) ||
       budget.limit <= 0 || !nonEmptyString(budget.unit) ||
       !nonEmptyString(budget.description) ||
-      !["shorten-label", "reduce-tier", "split-overview"].includes(
+      !(DIAGRAM_BUDGET_REMEDIES as readonly string[]).includes(
         budget.remedy as string,
       )
     ) {

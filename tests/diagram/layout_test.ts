@@ -12,10 +12,15 @@ import {
   diagramRectRight,
   diagramRectUnion,
 } from "../../src/diagram/geometry.ts";
+import {
+  createDiagramConnector,
+  createDiagramGuide,
+} from "../../src/diagram/layout-authority.ts";
 import type {
   DiagramConnector,
   DiagramPoint,
   DiagramRect,
+  DiagramRegion,
   DiagramScene,
   DiagramShape,
   DiagramText,
@@ -196,6 +201,7 @@ function syntheticConnector(
     sourceId,
     targetId,
     style: "primary",
+    routing: "orthogonal",
     lineWidth: 2,
     points,
     arrowhead,
@@ -437,6 +443,55 @@ Deno.test("shared conformance rejects overlapping relationship runs", () => {
   const error = assertThrows(() => conformDiagramScene(scene));
   assertInstanceOf(error, DiagramConformanceError);
   assert(error.message.includes("overlap"));
+});
+
+Deno.test("shared regions, guides, and explicit polyline routing conform together", () => {
+  const source = createDiagramGuide({
+    id: "source-guide",
+    semanticId: "source-lifeline",
+    style: "dashed",
+    points: [{ x: 20, y: 20 }, { x: 20, y: 100 }],
+  });
+  const target = createDiagramGuide({
+    id: "target-guide",
+    semanticId: "target-lifeline",
+    points: [{ x: 180, y: 20 }, { x: 180, y: 100 }],
+  });
+  const boundary: DiagramRegion = {
+    kind: "region",
+    id: "shared-boundary",
+    semanticId: "shared-boundary",
+    style: "boundary",
+    bounds: { x: 0, y: 0, width: 200, height: 120 },
+    radius: 8,
+    lineWidth: 2,
+  };
+  const connector = createDiagramConnector({
+    id: "signal-connector",
+    semanticId: "signal",
+    sourceId: source.semanticId,
+    targetId: target.semanticId,
+    style: "secondary",
+    routing: "polyline",
+    pathWithTip: [
+      { x: 20, y: 60 },
+      { x: 100, y: 28 },
+      { x: 180, y: 60 },
+    ],
+  });
+  const scene = syntheticScene([boundary, source, target, connector]);
+  assertEquals(conformDiagramScene(scene).sourceKind, "synthetic");
+
+  const invalid = structuredClone(scene);
+  const mutable = invalid.elements.find((element) =>
+    element.kind === "connector"
+  ) as DiagramConnector;
+  Object.assign(mutable, { routing: "orthogonal" });
+  assertThrows(
+    () => conformDiagramScene(invalid),
+    DiagramConformanceError,
+    "contains a diagonal segment",
+  );
 });
 
 Deno.test("left-to-right flow uses the same deterministic semantic scene", () => {
