@@ -77,9 +77,13 @@ function renderCases(
   return renderToStaticMarkup(
     <main data-discern-root data-discern-theme="light">
       {cases.map(({ label, spec }) => (
-        <section key={label} data-diagram-browser-case={label}>
-          <Diagram spec={spec} />
-        </section>
+        <div key={label} style={{ display: "grid" }}>
+          <section data-diagram-browser-case={label}>
+            <figure style={{ margin: 0 }}>
+              <Diagram spec={spec} />
+            </figure>
+          </section>
+        </div>
       ))}
     </main>,
   );
