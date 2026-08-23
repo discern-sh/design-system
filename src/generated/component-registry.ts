@@ -1126,7 +1126,7 @@ export const componentRegistry = [
   {
     meta: meta123,
     css: "@layer discern.components {\n  .discern-markdown {\n    min-inline-size: 0;\n    overflow-wrap: anywhere;\n  }\n\n  .discern-markdown :where(img) {\n    max-inline-size: 100%;\n    block-size: auto;\n  }\n\n  .discern-markdown__footnote-reference {\n    line-height: 0;\n  }\n\n  .discern-markdown__footnote-reference > a {\n    display: inline-flex;\n    min-inline-size: 24px;\n    min-block-size: 24px;\n    align-items: center;\n    justify-content: center;\n    font-size: var(--discern-font-size-xs);\n  }\n}\n",
-    dependencies: ["divider","heading","table","prose","paragraph","list","blockquote","callout","code-block","footnotes"],
+    dependencies: ["divider","heading","table","prose","paragraph","list","blockquote","callout","code-block","diagram","footnotes"],
     behaviors: [],
     ownedClasses: ["discern-markdown","discern-markdown__footnote-reference"],
     publicTokenNames: ["--discern-font-size-xs"],

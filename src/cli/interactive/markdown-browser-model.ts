@@ -23,6 +23,11 @@ import {
 } from "./choice-navigation.ts";
 import { segmentGraphemes } from "./editor.ts";
 import type { InteractionEntry } from "./types.ts";
+import {
+  parseMarkdown,
+  validateMarkdownDiagramResources,
+} from "../../components/editorial/markdown/markdown.model.ts";
+import type { MarkdownDiagramResource } from "../../diagram/markdown.ts";
 
 /** Smallest width that can retain a query, pane boundary, and usable text. */
 export const MARKDOWN_BROWSER_MINIMUM_COLUMNS = 32;
@@ -57,6 +62,8 @@ export interface MarkdownBrowserDocument {
   readonly path: string;
   /** Untrusted Markdown source rendered by the package Markdown authority. */
   readonly source: string;
+  /** Explicit immutable image resources eligible for Diagram promotion. */
+  readonly diagrams?: readonly MarkdownDiagramResource[];
 }
 
 /** A non-document action returned to the caller after terminal restoration. */
@@ -460,6 +467,12 @@ function freezeEntry<Action>(
         );
       }
       assertCorpusPath(entry.path);
+      const diagrams = entry.diagrams === undefined
+        ? undefined
+        : validateMarkdownDiagramResources(entry.diagrams);
+      if (diagrams !== undefined && diagrams.length > 0) {
+        parseMarkdown(entry.source, { diagrams });
+      }
       return Object.freeze({
         kind: entry.kind,
         id: entry.id,
@@ -469,6 +482,7 @@ function freezeEntry<Action>(
           : { description: entry.description }),
         path: entry.path,
         source: entry.source,
+        ...(diagrams === undefined ? {} : { diagrams }),
       });
     case "action":
       return Object.freeze({

@@ -448,6 +448,7 @@ function markdownBrowserDocumentProjection<Action>(
       theme: state.theme,
       motif: state.motif,
       maxWidth: measure,
+      ...(entry.diagrams === undefined ? {} : { diagrams: entry.diagrams }),
     },
     documentCapabilities,
     {

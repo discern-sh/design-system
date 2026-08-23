@@ -115,6 +115,9 @@ function collectBlockFacts(block: MarkdownBlock, facts: string[]): void {
         }
       }
       break;
+    case "diagram":
+      facts.push(block.source, block.spec.title, block.spec.summary);
+      break;
     default:
       assertNever(block);
   }
@@ -238,6 +241,7 @@ Deno.test("Markdown selection generates every real Component dependency", () => 
     "blockquote",
     "callout",
     "code-block",
+    "diagram",
     "footnotes",
   ]);
 });

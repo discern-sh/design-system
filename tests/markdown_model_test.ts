@@ -42,6 +42,7 @@ function allBlockKinds(blocks: readonly MarkdownBlock[]): Set<string> {
       case "code":
       case "thematic-break":
       case "table":
+      case "diagram":
         break;
     }
   };

@@ -26,9 +26,13 @@ import {
 } from "../../../cli/semantic-inline.ts";
 import { makeSourceControlsVisible } from "../../../cli/visible-text.ts";
 import type { TerminalAlignment } from "../../../cli/text.ts";
+import { diagramAltText } from "../../../diagram/accessibility.ts";
+import { validateDiagram } from "../../../generated/diagram-dispatch.ts";
+import type { DiagramSpec } from "../../../generated/diagram-spec.ts";
 import type { HeadingLevel } from "../../display/heading/heading.types.ts";
 import type { CalloutTone } from "../callout/callout.types.ts";
 import type { ListKind, ListSpacing } from "../list/list.types.ts";
+import type { MarkdownDiagramResource } from "../../../diagram/markdown.ts";
 
 /** Maximum UTF-8 source size accepted by the Markdown parser. */
 export const MARKDOWN_MAX_SOURCE_BYTES = 524_288;
@@ -160,6 +164,13 @@ export interface MarkdownFootnotesBlock {
   readonly items: readonly MarkdownFootnoteItem[];
 }
 
+/** One admitted ordinary image resolved to package-owned diagram semantics. */
+export interface MarkdownDiagramBlock {
+  readonly kind: "diagram";
+  readonly source: string;
+  readonly spec: DiagramSpec;
+}
+
 /** One package-owned Markdown block. */
 export type MarkdownBlock =
   | MarkdownParagraphBlock
@@ -170,7 +181,8 @@ export type MarkdownBlock =
   | MarkdownCodeBlock
   | MarkdownThematicBreakBlock
   | MarkdownTableBlock
-  | MarkdownFootnotesBlock;
+  | MarkdownFootnotesBlock
+  | MarkdownDiagramBlock;
 
 /** One complete package-owned neutral Markdown document. */
 export interface MarkdownDocument {
@@ -189,7 +201,19 @@ export const MARKDOWN_BLOCK_KINDS = [
   "thematic-break",
   "table",
   "footnotes",
+  "diagram",
 ] as const satisfies readonly MarkdownBlock["kind"][];
+
+/** Optional neutral resolution facts applied after Markdown parsing. */
+export interface ParseMarkdownOptions {
+  /** Explicit image-source to DiagramSpec resources; valid unused entries are allowed. */
+  readonly diagrams?: readonly MarkdownDiagramResource[];
+}
+
+interface ValidatedMarkdownDiagramResource {
+  readonly source: string;
+  readonly spec: DiagramSpec;
+}
 
 interface FootnoteRecord {
   readonly sourceIdentifier: string;
@@ -235,6 +259,53 @@ function fail(message: string, cause?: unknown): never {
   throw cause === undefined
     ? new MarkdownParseError(message)
     : new MarkdownParseError(message, { cause });
+}
+
+function ordinaryDataRecord(
+  value: unknown,
+  path: string,
+): Record<string, unknown> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return fail(`${path} must be an ordinary data object`);
+  }
+  const prototype = Object.getPrototypeOf(value);
+  if (prototype !== Object.prototype && prototype !== null) {
+    return fail(`${path} must be an ordinary data object`);
+  }
+  for (const key of Reflect.ownKeys(value)) {
+    if (typeof key !== "string") {
+      return fail(`${path} must not carry symbol properties`);
+    }
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    if (descriptor?.get !== undefined || descriptor?.set !== undefined) {
+      return fail(`${path}.${key} must be an ordinary data property`);
+    }
+  }
+  return value as Record<string, unknown>;
+}
+
+function exactResourceKeys(
+  record: Record<string, unknown>,
+  path: string,
+): void {
+  const keys = Object.getOwnPropertyNames(record).toSorted();
+  if (keys.length !== 2 || keys[0] !== "source" || keys[1] !== "spec") {
+    fail(`${path} must contain exactly source and spec`);
+  }
+}
+
+function immutableJsonData(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return Object.freeze(value.map(immutableJsonData));
+  }
+  if (typeof value === "object" && value !== null) {
+    return Object.freeze(Object.fromEntries(
+      Object.entries(value).map((
+        [key, item],
+      ) => [key, immutableJsonData(item)]),
+    ));
+  }
+  return value;
 }
 
 function assertNever(value: never, context: string): never {
@@ -347,6 +418,82 @@ function asciiDestination(value: string): string | undefined {
     return undefined;
   }
   return encoded;
+}
+
+const PERCENT_ESCAPE = /%([0-9a-f]{2})/giu;
+const URI_UNRESERVED = /^[A-Za-z0-9._~-]$/u;
+
+function canonicalSource(value: string): string | undefined {
+  const safe = asciiDestination(value);
+  if (safe === undefined) return undefined;
+  return safe.replace(PERCENT_ESCAPE, (_escape, hexadecimal: string) => {
+    const character = String.fromCharCode(Number.parseInt(hexadecimal, 16));
+    return URI_UNRESERVED.test(character)
+      ? character
+      : `%${hexadecimal.toUpperCase()}`;
+  });
+}
+
+/**
+ * Validate, normalise, and freeze diagram resources before document matching.
+ * Valid unused resources are intentionally accepted for corpus-level reuse.
+ */
+export function validateMarkdownDiagramResources(
+  resources: readonly MarkdownDiagramResource[] | undefined,
+): readonly ValidatedMarkdownDiagramResource[] {
+  if (resources === undefined) return Object.freeze([]);
+  if (!Array.isArray(resources)) {
+    return fail("Markdown diagram resources must be an array");
+  }
+  const indexes = Reflect.ownKeys(resources).filter((key) => key !== "length");
+  if (
+    indexes.length !== resources.length ||
+    indexes.some((key, index) => key !== String(index))
+  ) {
+    fail("Markdown diagram resources must be a dense data array");
+  }
+  for (let index = 0; index < resources.length; index += 1) {
+    const descriptor = Object.getOwnPropertyDescriptor(
+      resources,
+      String(index),
+    );
+    if (
+      descriptor === undefined || !("value" in descriptor) ||
+      descriptor.enumerable !== true
+    ) {
+      fail("Markdown diagram resources must be a dense data array");
+    }
+  }
+  const normalized: ValidatedMarkdownDiagramResource[] = [];
+  const sources = new Set<string>();
+  for (const [index, value] of resources.entries()) {
+    const path = `Markdown diagram resource ${index + 1}`;
+    const record = ordinaryDataRecord(value, path);
+    exactResourceKeys(record, path);
+    if (typeof record.source !== "string") {
+      fail(`${path} source must be a string`);
+    }
+    const source = canonicalSource(record.source);
+    if (source === undefined) {
+      fail(`${path} source must be a safe Markdown image URL reference`);
+    }
+    if (sources.has(source)) {
+      fail(
+        `Markdown diagram resources contain duplicate source ${
+          JSON.stringify(source)
+        }`,
+      );
+    }
+    sources.add(source);
+    try {
+      validateDiagram(record.spec);
+    } catch (cause) {
+      fail(`${path} contains an invalid DiagramSpec`, cause);
+    }
+    const spec = immutableJsonData(record.spec) as DiagramSpec;
+    normalized.push(Object.freeze({ source, spec }));
+  }
+  return Object.freeze(normalized);
 }
 
 function appendInline(
@@ -868,11 +1015,135 @@ function adaptFootnotes(
   };
 }
 
+function isolatedImage(
+  content: SemanticInlineContent,
+): Extract<SemanticInlineNode, { readonly kind: "image" }> | undefined {
+  const items = inlineArray(content);
+  let image:
+    | Extract<SemanticInlineNode, { readonly kind: "image" }>
+    | undefined;
+  for (const item of items) {
+    if (typeof item === "string") {
+      if (item.trim() !== "") return undefined;
+      continue;
+    }
+    if (item.kind === "soft-break" || item.kind === "hard-break") continue;
+    if (item.kind !== "image" || image !== undefined) return undefined;
+    image = item;
+  }
+  return image;
+}
+
+function resolvedDiagram(
+  content: SemanticInlineContent,
+  resources: ReadonlyMap<string, ValidatedMarkdownDiagramResource>,
+): MarkdownDiagramBlock | undefined {
+  const image = isolatedImage(content);
+  if (image === undefined) return undefined;
+  const source = canonicalSource(image.source);
+  if (source === undefined) return undefined;
+  const resource = resources.get(source);
+  if (resource === undefined) return undefined;
+  const alternative = diagramAltText(resource.spec);
+  if (image.alt !== alternative) {
+    fail(
+      `Markdown diagram image ${JSON.stringify(source)} alt must equal ${
+        JSON.stringify(alternative)
+      }`,
+    );
+  }
+  if (image.title !== undefined && image.title !== resource.spec.summary) {
+    fail(
+      `Markdown diagram image ${JSON.stringify(source)} title must equal ${
+        JSON.stringify(resource.spec.summary)
+      }`,
+    );
+  }
+  return Object.freeze({
+    kind: "diagram",
+    source: resource.source,
+    spec: resource.spec,
+  });
+}
+
+function resolveDiagramBlocks(
+  blocks: readonly MarkdownBlock[],
+  resources: ReadonlyMap<string, ValidatedMarkdownDiagramResource>,
+): readonly MarkdownBlock[] {
+  return Object.freeze(blocks.map((block): MarkdownBlock => {
+    switch (block.kind) {
+      case "paragraph":
+        return resolvedDiagram(block.content, resources) ?? block;
+      case "list":
+        return Object.freeze({
+          ...block,
+          items: Object.freeze(block.items.map((item) => {
+            const diagram = item.content === undefined
+              ? undefined
+              : resolvedDiagram(item.content, resources);
+            const nested = resolveDiagramBlocks(item.blocks, resources);
+            return Object.freeze({
+              ...(diagram === undefined && item.content !== undefined
+                ? { content: item.content }
+                : {}),
+              ...(item.checked === undefined ? {} : { checked: item.checked }),
+              blocks: diagram === undefined
+                ? nested
+                : Object.freeze([diagram, ...nested]),
+            });
+          })),
+        });
+      case "blockquote":
+      case "callout":
+        return Object.freeze({
+          ...block,
+          children: resolveDiagramBlocks(block.children, resources),
+        });
+      case "footnotes":
+        return Object.freeze({
+          ...block,
+          items: Object.freeze(block.items.map((item) =>
+            Object.freeze({
+              ...item,
+              children: resolveDiagramBlocks(item.children, resources),
+            })
+          )),
+        });
+      case "heading":
+      case "code":
+      case "thematic-break":
+      case "table":
+      case "diagram":
+        return block;
+      default:
+        return assertNever(block, "Markdown diagram resolver block");
+    }
+  }));
+}
+
+function resolveMarkdownDiagrams(
+  document: MarkdownDocument,
+  resources: readonly ValidatedMarkdownDiagramResource[],
+): MarkdownDocument {
+  if (resources.length === 0 || document.children.length === 0) return document;
+  const bySource = new Map(
+    resources.map((resource) => [resource.source, resource]),
+  );
+  return Object.freeze({
+    kind: "document",
+    children: resolveDiagramBlocks(document.children, bySource),
+  });
+}
+
 /** Parse untrusted source into the one internal document consumed by both projections. */
-export function parseMarkdown(source: string): MarkdownDocument {
+export function parseMarkdown(
+  source: string,
+  options: ParseMarkdownOptions = {},
+): MarkdownDocument {
   if (typeof source !== "string") {
     return fail("Markdown source must be a string");
   }
+  const diagramResources = validateMarkdownDiagramResources(options.diagrams);
   const bytes = textEncoder.encode(source).byteLength;
   if (bytes > MARKDOWN_MAX_SOURCE_BYTES) {
     return fail(
@@ -900,7 +1171,10 @@ export function parseMarkdown(source: string): MarkdownDocument {
     const children = [...adaptBlocks(root.children, context, 1)];
     const footnotes = adaptFootnotes(context);
     if (footnotes !== null) children.push(footnotes);
-    return { kind: "document", children };
+    return resolveMarkdownDiagrams(
+      { kind: "document", children },
+      diagramResources,
+    );
   } catch (cause) {
     if (cause instanceof MarkdownParseError) throw cause;
     return fail("Markdown parser output could not be adapted safely", cause);

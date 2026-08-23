@@ -254,11 +254,12 @@ Deno.test("the publish-shaped artifact serves the neutral consumer alone", async
     await Deno.writeTextFile(
       join(consumer, "neutral.ts"),
       `import { packageManifest, semanticClass } from "${config.name}";
-import { renderBadgeCli, renderDiagramCli, renderHeadingCli, stripAnsi } from "${config.name}/cli";
+import { renderBadgeCli, renderDiagramCli, renderHeadingCli, renderMarkdownCli, stripAnsi } from "${config.name}/cli";
 import {
   diagramAltText,
   describeDiagram,
   type FlowDiagramSpec,
+  type MarkdownDiagramResource,
   renderDiagramSvg,
 } from "${config.name}/diagram";
 import {
@@ -298,6 +299,15 @@ const diagramCli = stripAnsi(renderDiagramCli(
   { spec: flow, mode: "description", maxWidth: 48 },
   { colorDepth: "none", columns: 48, unicode: false },
 ));
+const diagramResource = {
+  source: "assets/guide.svg",
+  spec: flow,
+} satisfies MarkdownDiagramResource;
+const markdownDiagram = stripAnsi(renderMarkdownCli({
+  source: "![" + diagramAltText(flow) + "](assets/guide.svg)",
+  diagrams: [diagramResource],
+  diagramMode: "description",
+}, { colorDepth: "none", columns: 48, unicode: false }));
 const result = await emitDesignSystemRuntime({
   outputRoot: new URL("./runtime/", import.meta.url),
   components: ["button"],
@@ -340,7 +350,8 @@ const browserResult = await requestMarkdownBrowser({
       id: "guide",
       label: "Guide",
       path: "guides/guide.md",
-      source: "# Guide\\n\\n[Next](next.md#details)",
+      source: "# Guide\\n\\n![" + diagramAltText(flow) + "](assets/guide.svg)\\n\\n[Next](next.md#details)",
+      diagrams: [diagramResource],
     },
     {
       kind: "action",
@@ -383,6 +394,8 @@ console.log(JSON.stringify({
   diagramAlt: diagramAltText(flow),
   diagramCli: diagramCli.includes("Relationships:") &&
     diagramCli.includes("draft to publish"),
+  markdownDiagram: markdownDiagram.includes("Relationships:") &&
+    markdownDiagram.includes("draft to publish"),
   className: semanticClass("button"),
   badge: renderBadgeCli({ label: "Ready", dot: true }, { colorDepth: "none", columns: 80, unicode: true }),
   graphemes: segmentGraphemes("A👩‍💻B").length,
@@ -418,6 +431,7 @@ console.log(JSON.stringify({
     assertStringIncludes(output, `"diagramAccessible":true`);
     assertStringIncludes(output, `"diagramDescription":true`);
     assertStringIncludes(output, `"diagramCli":true`);
+    assertStringIncludes(output, `"markdownDiagram":true`);
     assertStringIncludes(
       output,
       `"diagramAlt":"Publish a guide: A checked guide progresses from draft to publication."`,

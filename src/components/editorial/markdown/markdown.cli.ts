@@ -19,6 +19,10 @@ import {
   semanticInlineText,
 } from "../../../cli/semantic-inline.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
+import {
+  markdownDiagramExampleMarkdown,
+  markdownDiagramExampleResource,
+} from "../../../diagram/markdown.example.ts";
 import { hyperlinkSequence } from "../../../cli/styled-sequences.ts";
 import renderDividerCli from "../../display/divider/divider.cli.ts";
 import renderHeadingCli from "../../display/heading/heading.cli.ts";
@@ -26,6 +30,8 @@ import renderTableCli from "../../display/table/table.cli.ts";
 import renderBlockquoteCli from "../blockquote/blockquote.cli.ts";
 import renderCalloutCli from "../callout/callout.cli.ts";
 import renderCodeBlockCli from "../code-block/code-block.cli.ts";
+import renderDiagramCli from "../diagram/diagram.cli.ts";
+import type { DiagramCliMode } from "../diagram/diagram.cli.ts";
 import renderFootnotesCli from "../footnotes/footnotes.cli.ts";
 import renderListCli from "../list/list.cli.ts";
 import renderParagraphCli from "../paragraph/paragraph.cli.ts";
@@ -35,6 +41,7 @@ import {
   MarkdownParseError,
   parseMarkdown,
 } from "./markdown.model.ts";
+import type { MarkdownDiagramResource } from "../../../diagram/markdown.ts";
 
 /** Inputs accepted by the terminal Markdown renderer. */
 export interface MarkdownCliProps {
@@ -46,6 +53,10 @@ export interface MarkdownCliProps {
   readonly motif?: TerminalMotif;
   /** Maximum document measure in cells, bounded by terminal capabilities. */
   readonly maxWidth?: number;
+  /** Explicit ordinary-image resources eligible for Diagram promotion. */
+  readonly diagrams?: readonly MarkdownDiagramResource[];
+  /** Diagram projection preference; defaults to automatic enhanced fallback. */
+  readonly diagramMode?: DiagramCliMode;
 }
 
 /** One semantic Markdown link identified before terminal wrapping. */
@@ -85,6 +96,7 @@ export const MARKDOWN_CLI_HANDLED_BLOCK_KINDS = {
   "thematic-break": "rendered",
   table: "rendered",
   footnotes: "rendered",
+  diagram: "rendered",
 } as const satisfies Readonly<Record<MarkdownBlock["kind"], "rendered">>;
 
 const compactSource = `# A measured document
@@ -194,6 +206,23 @@ export const cliExamples: readonly CliExample<MarkdownCliProps>[] = [
     props: { source: hostileSource, maxWidth: 52 },
   },
   {
+    name: "diagram-resource-auto",
+    props: {
+      source: markdownDiagramExampleMarkdown,
+      diagrams: [markdownDiagramExampleResource],
+      maxWidth: 76,
+    },
+  },
+  {
+    name: "diagram-resource-description",
+    props: {
+      source: markdownDiagramExampleMarkdown,
+      diagrams: [markdownDiagramExampleResource],
+      diagramMode: "description",
+      maxWidth: 52,
+    },
+  },
+  {
     name: "narrow-ascii-no-colour",
     props: { source: compactSource, maxWidth: 24 },
     capabilities: {
@@ -223,6 +252,7 @@ interface MarkdownCliTracking {
 
 interface MarkdownCliContext {
   readonly presentation: MarkdownCliPresentation;
+  readonly diagramMode: DiagramCliMode;
   readonly tracking?: MarkdownCliTracking;
 }
 
@@ -443,6 +473,12 @@ function blockToCli(
         })),
         ...presentation,
       });
+    case "diagram":
+      return createCliBlock(renderDiagramCli, {
+        spec: block.spec,
+        mode: context.diagramMode,
+        theme: presentation.theme,
+      });
     default:
       return assertNever(block);
   }
@@ -466,6 +502,7 @@ function renderMarkdownDocument(
   } satisfies MarkdownCliPresentation;
   const context: MarkdownCliContext = {
     presentation,
+    diagramMode: props.diagramMode ?? "auto",
     ...(tracking === undefined ? {} : { tracking }),
   };
   return renderCliBlocks(
@@ -485,7 +522,10 @@ export function renderMarkdownCliProjection(
   capabilities: TerminalCapabilities,
   options: MarkdownCliProjectionOptions = {},
 ): MarkdownCliProjection {
-  const document = parseMarkdown(props.source);
+  const document = parseMarkdown(
+    props.source,
+    props.diagrams === undefined ? {} : { diagrams: props.diagrams },
+  );
   const links: MarkdownCliProjectedLink[] = [];
   const headings: MarkdownCliProjectedHeading[] = [];
   const tracking: MarkdownCliTracking = {
@@ -515,7 +555,10 @@ const renderMarkdownCli: CliRenderer<MarkdownCliProps> = (
   props,
   capabilities: TerminalCapabilities,
 ) => {
-  const document = parseMarkdown(props.source);
+  const document = parseMarkdown(
+    props.source,
+    props.diagrams === undefined ? {} : { diagrams: props.diagrams },
+  );
   return renderMarkdownDocument(document, props, capabilities);
 };
 
