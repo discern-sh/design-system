@@ -7,7 +7,10 @@
 
 import type { TerminalCapabilities } from "./capabilities.ts";
 import type { TerminalThemeVariant } from "./theme.ts";
-import type { DiagramSpec } from "../generated/diagram-spec.ts";
+import type {
+  DiagramSpec,
+  ValidatedDiagram,
+} from "../generated/diagram-spec.ts";
 
 /** Stable reason an enhanced projector cannot preserve a spec coherently. */
 export type DiagramKindCliDeclineCode =
@@ -63,7 +66,7 @@ export interface DiagramKindCliProjectorContext {
 export type DiagramKindCliProjector<
   Kind extends DiagramSpec["kind"] = DiagramSpec["kind"],
 > = (
-  spec: Extract<DiagramSpec, { readonly kind: Kind }>,
+  spec: Extract<ValidatedDiagram, { readonly kind: Kind }>,
   context: DiagramKindCliProjectorContext,
 ) => DiagramKindCliProjection;
 

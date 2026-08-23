@@ -20,8 +20,8 @@ export default {
     "Intuition, arbitrary coordinates, rich labels, or custom drawing callbacks would replace a cited or authored reference model.",
   ],
   accessibility: [
-    "The spec's required title and summary name the SVG while the complete structural description preserves every node, annotation, labelled relationship, and direction.",
+    "The spec's required title and summary name the SVG while its kind-specific structural description preserves every authored fact, annotation, relationship, order, boundary, date, and direction.",
     "Title and summary are accessibility context, not visible canvas headings; surrounding document components own visible editorial prose.",
-    "Node and connector roles pair colour with shape, double-border, or line-treatment cues.",
+    "Semantic roles pair colour with labels, shapes, border treatment, or line treatment so colour is never the only distinction.",
   ],
 } satisfies ComponentMeta;

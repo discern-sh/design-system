@@ -84,6 +84,22 @@ const fixtures = [
       },
     ],
   },
+  {
+    kind: "sequence",
+    title: "Relay fourteen messages",
+    summary: "Five participants exchange a bounded authored chronology.",
+    participants: Array.from({ length: 5 }, (_, index) => ({
+      id: `participant-${index + 1}`,
+      label: `Participant ${index + 1}`,
+    })),
+    messages: Array.from({ length: 14 }, (_, index) => ({
+      id: `message-${index + 1}`,
+      source: `participant-${index % 5 + 1}`,
+      target: `participant-${(index + 1) % 5 + 1}`,
+      label: `Message ${index + 1}`,
+      kind: index % 3 === 2 ? "return" as const : "call" as const,
+    })),
+  },
 ] as const satisfies readonly SequenceDiagramSpec[];
 
 export default fixtures;

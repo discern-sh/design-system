@@ -20,7 +20,7 @@ export {
 export type { DiagramBudgetDefinition, DiagramKindMeta } from "./kind-meta.ts";
 export type { DiagramSpec } from "../generated/diagram-spec.ts";
 export { describeDiagram } from "../generated/diagram-dispatch.ts";
-export { diagramKindMetadata } from "./kinds.ts";
+export { diagramKindAuthorGuide, diagramKindMetadata } from "./kinds.ts";
 export type {
   DiagramSvgDocument,
   DiagramSvgTheme,

@@ -1,4 +1,4 @@
-import { assert, assertRejects } from "@std/assert";
+import { assert, assertEquals, assertRejects } from "@std/assert";
 import {
   generateDiagramKindSources,
   loadDiagramKindSources,
@@ -11,6 +11,7 @@ interface FixtureKindOptions {
   readonly include?: readonly string[];
   readonly useWhen?: readonly string[];
   readonly budgetDescription?: string;
+  readonly budgetRemedy?: string;
 }
 
 const REQUIRED = [
@@ -52,7 +53,7 @@ async function writeKind(
     entities: {
       limit: 3,
       unit: "entities",
-      remedy: "split-overview",
+      remedy: "${options.budgetRemedy ?? "split-overview"}",
       description: ${
         JSON.stringify(
           options.budgetDescription ?? "A measurable temporary ceiling.",
@@ -68,7 +69,12 @@ async function writeKind(
       "spec",
       `export interface ${slug[0]?.toUpperCase()}${
         slug.slice(1)
-      }DiagramSpec { readonly kind: "${slug}"; readonly title: string; readonly summary: string; }\n`,
+      }DiagramSpec { readonly kind: "${slug}"; readonly title: string; readonly summary: string; }
+export interface Validated${slug[0]?.toUpperCase()}${
+        slug.slice(1)
+      }Diagram extends ${slug[0]?.toUpperCase()}${
+        slug.slice(1)
+      }DiagramSpec {}\n`,
     ],
     [
       "validation",
@@ -116,7 +122,11 @@ Deno.test("one conforming kind enrols every generated consumer together", async 
     await writeKind(path, "probe");
     const generated = await generateDiagramKindSources(url);
     assert(generated.spec.includes("ProbeDiagramSpec"));
+    assert(generated.spec.includes("ValidatedProbeDiagram"));
     assert(generated.metadata.includes("probe.meta.ts"));
+    assert(generated.metadata.includes("# Built-in Diagram kinds"));
+    assert(generated.metadata.includes("CLI stance: description."));
+    assert(generated.metadata.includes("entities: 3 entities"));
     assert(!generated.metadata.includes("fixtures"));
     assert(generated.registry.includes("probe.fixtures.ts"));
     assert(generated.dispatch.includes('case "probe"'));
@@ -181,6 +191,32 @@ Deno.test("incomplete authoring guidance or budget Metadata fails generation", a
   });
   await withTemporaryRoot(async (path, url) => {
     await writeKind(path, "probe", { budgetDescription: "" });
+    await assertRejects(
+      () => loadDiagramKindSources(url),
+      Error,
+      "incomplete entities budget",
+    );
+  });
+});
+
+Deno.test("budget remedies share one generated validation authority", async () => {
+  for (
+    const remedy of [
+      "shorten-label",
+      "reduce-tier",
+      "split-overview",
+      "split-group",
+      "reduce-participants",
+      "shorten-range",
+    ]
+  ) {
+    await withTemporaryRoot(async (path, url) => {
+      await writeKind(path, "probe", { budgetRemedy: remedy });
+      assertEquals((await loadDiagramKindSources(url)).length, 1);
+    });
+  }
+  await withTemporaryRoot(async (path, url) => {
+    await writeKind(path, "probe", { budgetRemedy: "do-anything" });
     await assertRejects(
       () => loadDiagramKindSources(url),
       Error,

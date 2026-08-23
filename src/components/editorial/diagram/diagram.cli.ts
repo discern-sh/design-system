@@ -22,7 +22,11 @@ import {
   projectDiagramKindCli,
 } from "../../../generated/diagram-cli-registry.ts";
 import type { DiagramSpec } from "../../../generated/diagram-spec.ts";
-import fixtures from "../../../diagram/kinds/flow/flow.fixtures.ts";
+import architectureFixtures from "../../../diagram/kinds/architecture/architecture.fixtures.ts";
+import cycleFixtures from "../../../diagram/kinds/cycle/cycle.fixtures.ts";
+import flowFixtures from "../../../diagram/kinds/flow/flow.fixtures.ts";
+import sequenceFixtures from "../../../diagram/kinds/sequence/sequence.fixtures.ts";
+import timelineFixtures from "../../../diagram/kinds/timeline/timeline.fixtures.ts";
 
 /** Stable projection posture for the terminal Diagram renderer. */
 export type DiagramCliMode = "auto" | "description";
@@ -35,7 +39,11 @@ export interface DiagramCliProps {
   readonly maxWidth?: number;
 }
 
-const [decisionFlow, compactFlow] = fixtures;
+const [decisionFlow, compactFlow] = flowFixtures;
+const [groupedArchitecture] = architectureFixtures;
+const [, learningCycle, denseCycle] = cycleFixtures;
+const [participantSequence, , denseSequence] = sequenceFixtures;
+const [, phasedTimeline] = timelineFixtures;
 
 /** Deterministic Diagram states rendered by the CLI Catalogue. */
 export const cliExamples: readonly CliExample<DiagramCliProps>[] = [
@@ -48,6 +56,22 @@ export const cliExamples: readonly CliExample<DiagramCliProps>[] = [
     props: { spec: decisionFlow, mode: "auto", maxWidth: 78 },
   },
   {
+    name: "enhanced-learning-cycle",
+    props: { spec: learningCycle, mode: "auto", maxWidth: 100 },
+  },
+  {
+    name: "enhanced-participant-sequence",
+    props: { spec: participantSequence, mode: "auto", maxWidth: 110 },
+  },
+  {
+    name: "architecture-description",
+    props: { spec: groupedArchitecture, mode: "auto", maxWidth: 88 },
+  },
+  {
+    name: "timeline-description",
+    props: { spec: phasedTimeline, mode: "auto", maxWidth: 88 },
+  },
+  {
     name: "universal-description",
     props: { spec: compactFlow, mode: "description", maxWidth: 64 },
   },
@@ -55,6 +79,14 @@ export const cliExamples: readonly CliExample<DiagramCliProps>[] = [
     name: "narrow-ascii-fallback",
     props: { spec: decisionFlow, mode: "auto", maxWidth: 34 },
     capabilities: { columns: 34, colorDepth: "none", unicode: false },
+  },
+  {
+    name: "dense-cycle-fallback",
+    props: { spec: denseCycle, mode: "auto", maxWidth: 100 },
+  },
+  {
+    name: "dense-sequence-fallback",
+    props: { spec: denseSequence, mode: "auto", maxWidth: 110 },
   },
 ] as const;
 
@@ -68,7 +100,7 @@ function descriptionLineStyle(
       ...theme.typography.strong,
     };
   }
-  if (line === "Nodes:" || line === "Relationships:") {
+  if (/^[A-Z][A-Za-z ]+:$/u.test(line)) {
     return {
       color: terminalToneColor(theme, "accent"),
       ...theme.typography.strong,
@@ -95,7 +127,7 @@ function renderDiagramDescription(
   const blocks: string[][] = [[]];
   for (const semanticLine of description.trimEnd().split("\n")) {
     if (
-      (semanticLine === "Nodes:" || semanticLine === "Relationships:") &&
+      /^[A-Z][A-Za-z ]+:$/u.test(semanticLine) &&
       (blocks.at(-1)?.length ?? 0) > 0
     ) {
       blocks.push([]);

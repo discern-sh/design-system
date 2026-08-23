@@ -6,6 +6,7 @@ import {
 } from "@std/assert";
 import { stripAnsi } from "../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
+import { resolveCliExampleCapabilities } from "../../src/cli/contracts.ts";
 import { renderDiagramCli } from "../../src/cli/mod.ts";
 import {
   assertExactFrame,
@@ -13,6 +14,7 @@ import {
   testTerminalCapabilities,
 } from "../../src/cli/interactive/testing.ts";
 import { measureText } from "../../src/cli/text.ts";
+import { cliExamples } from "../../src/components/editorial/diagram/diagram.cli.ts";
 import {
   describeDiagram,
   DiagramValidationError,
@@ -159,6 +161,9 @@ function project(
 ) {
   const capabilities = testTerminalCapabilities({ columns });
   const { validated, description } = prepareDiagramSemantics(spec);
+  if (validated.kind !== "flow") {
+    throw new Error("Flow preparation returned a different generated kind.");
+  }
   return projectFlowDiagramCli(validated, {
     capabilities,
     maxWidth: columns,
@@ -244,4 +249,35 @@ Deno.test("flow CLI keeps validation failures deterministic", () => {
   assertInstanceOf(second, DiagramValidationError);
   assertEquals(first.code, second.code);
   assertEquals(first.message, second.message);
+});
+
+Deno.test("Diagram Catalogue CLI examples cover enhanced, deliberate description, and typed fallback postures", () => {
+  const catalogueCapabilities = testTerminalCapabilities({
+    columns: 80,
+    colorDepth: "truecolor",
+    unicode: true,
+  });
+  const postures = Object.fromEntries(cliExamples.map((example) => {
+    const capabilities = resolveCliExampleCapabilities(
+      example,
+      catalogueCapabilities,
+    );
+    const output = stripAnsi(renderDiagramCli(example.props, capabilities));
+    return [
+      example.name,
+      output.startsWith("Title:") ? "description" : "enhanced",
+    ];
+  }));
+  assertEquals(postures, {
+    "enhanced-compact-flow": "enhanced",
+    "enhanced-decision-return": "enhanced",
+    "enhanced-learning-cycle": "enhanced",
+    "enhanced-participant-sequence": "enhanced",
+    "architecture-description": "description",
+    "timeline-description": "description",
+    "universal-description": "description",
+    "narrow-ascii-fallback": "description",
+    "dense-cycle-fallback": "description",
+    "dense-sequence-fallback": "description",
+  });
 });

@@ -17,8 +17,10 @@ const flowKindMeta: DiagramKindMeta = defineDiagramKindMeta(
       "Showing a restrained branch or a clearly marked return to an earlier step.",
     ],
     notWhen: [
-      "Showing system containment or service topology; use the future architecture kind.",
-      "Teaching a repeating lifecycle as the primary idea; use the future cycle kind.",
+      "Showing system containment or service topology; use architecture.",
+      "Teaching a repeating lifecycle as the primary idea; use cycle.",
+      "The reader must follow stable participants and messages; use sequence.",
+      "The reader must compare calendar ranges, tasks, or gates; use timeline.",
       "Coordinates, arbitrary ports, clusters, or unconstrained graph layout are required.",
     ],
     budgets: {

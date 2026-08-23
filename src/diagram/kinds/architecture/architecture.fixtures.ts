@@ -84,6 +84,37 @@ const fixtures = [
       },
     ],
   },
+  {
+    kind: "architecture",
+    title: "Coordinate bounded services",
+    summary:
+      "Two ownership boundaries expose a supported chain of labelled relationships.",
+    direction: "left-to-right",
+    nodes: Array.from({ length: 8 }, (_, index) => ({
+      id: `entity-${index + 1}`,
+      label: `Entity ${index + 1}`,
+      role: index === 3 ? "focal" as const : "service" as const,
+    })),
+    groups: [
+      {
+        id: "boundary-a",
+        label: "First boundary",
+        members: ["entity-1", "entity-3", "entity-5", "entity-7"],
+      },
+      {
+        id: "boundary-b",
+        label: "Second boundary",
+        members: ["entity-2", "entity-4", "entity-6", "entity-8"],
+      },
+    ],
+    relationships: Array.from({ length: 7 }, (_, index) => ({
+      id: `route-${index + 1}`,
+      from: `entity-${index + 1}`,
+      to: `entity-${index + 2}`,
+      label: `Route ${index + 1}`,
+      emphasis: index === 6 ? "secondary" as const : "primary" as const,
+    })),
+  },
 ] as const satisfies readonly ArchitectureDiagramSpec[];
 
 export default fixtures;

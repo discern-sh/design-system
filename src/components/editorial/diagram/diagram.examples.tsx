@@ -1,5 +1,13 @@
-import type { FlowDiagramSpec } from "../../../diagram/mod.ts";
+import type {
+  DiagramSpec,
+  DiagramSvgTheme,
+  FlowDiagramSpec,
+} from "../../../diagram/mod.ts";
 import { diagramAltText, renderDiagramSvg } from "../../../diagram/mod.ts";
+import architectureFixtures from "../../../diagram/kinds/architecture/architecture.fixtures.ts";
+import cycleFixtures from "../../../diagram/kinds/cycle/cycle.fixtures.ts";
+import sequenceFixtures from "../../../diagram/kinds/sequence/sequence.fixtures.ts";
+import timelineFixtures from "../../../diagram/kinds/timeline/timeline.fixtures.ts";
 import {
   markdownDiagramExampleMarkdown,
   markdownDiagramExampleSpec,
@@ -100,10 +108,49 @@ const longLabelFlow = {
   ],
 } as const satisfies FlowDiagramSpec;
 
-function svgDataUrl(spec: FlowDiagramSpec, theme: "light" | "dark"): string {
+const [groupedArchitecture, minimalArchitecture, stressArchitecture] =
+  architectureFixtures;
+const [minimalCycle, learningCycle, stressCycle] = cycleFixtures;
+const [participantSequence, minimalSequence, stressSequence] = sequenceFixtures;
+const [minimalTimeline, phasedTimeline, stressTimeline] = timelineFixtures;
+
+function svgDataUrl(spec: DiagramSpec, theme: DiagramSvgTheme): string {
   return `data:image/svg+xml;charset=utf-8,${
     encodeURIComponent(renderDiagramSvg(spec, { theme }))
   }`;
+}
+
+function comparison(
+  title: string,
+  minimal: DiagramSpec,
+  representative: DiagramSpec,
+  stress: DiagramSpec,
+) {
+  const examples = [
+    { label: "Minimal", spec: minimal },
+    { label: "Representative", spec: representative },
+    { label: "Dense but supported", spec: stress },
+  ] as const;
+  return (
+    <section>
+      <h3>{title}</h3>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(18rem, 1fr))",
+          gap: "1.5rem",
+          alignItems: "start",
+        }}
+      >
+        {examples.map(({ label, spec }) => (
+          <figure key={label} style={{ margin: 0 }}>
+            <Diagram spec={spec} />
+            <figcaption>{label}</figcaption>
+          </figure>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 export default function DiagramExamples() {
@@ -124,6 +171,34 @@ export default function DiagramExamples() {
         <Diagram spec={longLabelFlow} />
       </section>
 
+      {comparison(
+        "Architecture: boundaries and labelled relationships",
+        minimalArchitecture,
+        groupedArchitecture,
+        stressArchitecture,
+      )}
+
+      {comparison(
+        "Cycle: ordered repetition and shared context",
+        minimalCycle,
+        learningCycle,
+        stressCycle,
+      )}
+
+      {comparison(
+        "Sequence: participants and authored messages",
+        minimalSequence,
+        participantSequence,
+        stressSequence,
+      )}
+
+      {comparison(
+        "Timeline: calendar spans and dated gates",
+        minimalTimeline,
+        phasedTimeline,
+        stressTimeline,
+      )}
+
       <section>
         <h3>Standalone SVG palettes</h3>
         <div
@@ -133,7 +208,7 @@ export default function DiagramExamples() {
             gap: "1rem",
           }}
         >
-          {(["light", "dark"] as const).map((theme) => (
+          {(["light", "dark", "adaptive"] as const).map((theme) => (
             <figure key={theme} style={{ margin: 0 }}>
               <img
                 src={svgDataUrl(compactFlow, theme)}
@@ -162,11 +237,11 @@ export default function DiagramExamples() {
       </section>
 
       <DataFigure
-        eyebrow="Process reference"
-        title="Review a submission"
-        visual={<Diagram spec={decisionFlow} />}
-        caption="The semantic diagram remains the visual while the figure owns visible editorial context."
-        source="Illustrative process specification"
+        eyebrow="System reference"
+        title="Process a submitted record"
+        visual={<Diagram spec={groupedArchitecture} />}
+        caption="The semantic topology remains the visual while the figure owns visible editorial context."
+        source="Illustrative architecture specification"
       />
     </div>
   );

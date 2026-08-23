@@ -39,7 +39,7 @@ import type {
   DiagramText,
 } from "../../src/diagram/scene.ts";
 
-const [representative, minimal] = fixtures;
+const [representative, minimal, dense] = fixtures;
 
 function expectDiagramError(
   action: () => unknown,
@@ -497,23 +497,6 @@ Deno.test("sequence supports bounded long labels and dense authored order", () =
   assert(messageLabel?.kind === "text");
   assertEquals(messageLabel.lines.length, 3);
 
-  const participants = Array.from({ length: 5 }, (_, index) => ({
-    id: `participant-${index + 1}`,
-    label: `Participant ${index + 1}`,
-  }));
-  const dense = {
-    kind: "sequence",
-    title: "Relay fourteen messages",
-    summary: "Five participants exchange a bounded authored chronology.",
-    participants,
-    messages: Array.from({ length: 14 }, (_, index) => ({
-      id: `message-${index + 1}`,
-      source: `participant-${index % 5 + 1}`,
-      target: `participant-${(index + 1) % 5 + 1}`,
-      label: `Message ${index + 1}`,
-      kind: index % 3 === 2 ? "return" as const : "call" as const,
-    })),
-  } satisfies SequenceDiagramSpec;
   const denseScene = scene(dense);
   assertEquals(
     denseScene.elements.filter(({ kind }) => kind === "connector").length,

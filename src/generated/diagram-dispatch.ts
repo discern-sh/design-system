@@ -2,10 +2,22 @@
 import { DiagramValidationError } from "../diagram/errors.ts";
 import { conformDiagramScene } from "../diagram/conformance.ts";
 import type { DiagramScene } from "../diagram/scene.ts";
-import type { DiagramSpec } from "./diagram-spec.ts";
+import type { ValidatedDiagram } from "./diagram-spec.ts";
 import validateFlow from "../diagram/kinds/flow/flow.validation.ts";
 import layoutFlow from "../diagram/kinds/flow/flow.layout.ts";
 import describeFlow from "../diagram/kinds/flow/flow.description.ts";
+import validateArchitecture from "../diagram/kinds/architecture/architecture.validation.ts";
+import layoutArchitecture from "../diagram/kinds/architecture/architecture.layout.ts";
+import describeArchitecture from "../diagram/kinds/architecture/architecture.description.ts";
+import validateCycle from "../diagram/kinds/cycle/cycle.validation.ts";
+import layoutCycle from "../diagram/kinds/cycle/cycle.layout.ts";
+import describeCycle from "../diagram/kinds/cycle/cycle.description.ts";
+import validateSequence from "../diagram/kinds/sequence/sequence.validation.ts";
+import layoutSequence from "../diagram/kinds/sequence/sequence.layout.ts";
+import describeSequence from "../diagram/kinds/sequence/sequence.description.ts";
+import validateTimeline from "../diagram/kinds/timeline/timeline.validation.ts";
+import layoutTimeline from "../diagram/kinds/timeline/timeline.layout.ts";
+import describeTimeline from "../diagram/kinds/timeline/timeline.description.ts";
 
 function kindOf(spec: unknown): string {
   if (typeof spec === "object" && spec !== null && !Array.isArray(spec) &&
@@ -32,22 +44,30 @@ function unknownKind(kind: string): never {
 
 /** Internal result shared by projections so one preflight feeds every fact. */
 export interface PreparedDiagram {
-  readonly validated: DiagramSpec;
+  readonly validated: ValidatedDiagram;
   readonly scene: DiagramScene;
   readonly description: string;
 }
 
 /** Internal semantic result for projections that do not require geometry. */
 export interface PreparedDiagramSemantics {
-  readonly validated: DiagramSpec;
+  readonly validated: ValidatedDiagram;
   readonly description: string;
 }
 
 /** Complete preflight through the generated kind authority. */
-export function validateDiagram(spec: unknown): DiagramSpec {
+export function validateDiagram(spec: unknown): ValidatedDiagram {
   switch (kindOf(spec)) {
     case "flow":
       return validateFlow(spec);
+    case "architecture":
+      return validateArchitecture(spec);
+    case "cycle":
+      return validateCycle(spec);
+    case "sequence":
+      return validateSequence(spec);
+    case "timeline":
+      return validateTimeline(spec);
     default:
       return unknownKind(kindOf(spec));
   }
@@ -61,6 +81,22 @@ export function prepareDiagramSemantics(
     case "flow": {
       const validated = validateFlow(spec);
       return { validated, description: describeFlow(validated) };
+    }
+    case "architecture": {
+      const validated = validateArchitecture(spec);
+      return { validated, description: describeArchitecture(validated) };
+    }
+    case "cycle": {
+      const validated = validateCycle(spec);
+      return { validated, description: describeCycle(validated) };
+    }
+    case "sequence": {
+      const validated = validateSequence(spec);
+      return { validated, description: describeSequence(validated) };
+    }
+    case "timeline": {
+      const validated = validateTimeline(spec);
+      return { validated, description: describeTimeline(validated) };
     }
     default:
       return unknownKind(kindOf(spec));
@@ -76,6 +112,38 @@ export function prepareDiagram(spec: unknown): PreparedDiagram {
         validated,
         scene: conformDiagramScene(layoutFlow(validated)),
         description: describeFlow(validated),
+      };
+    }
+    case "architecture": {
+      const validated = validateArchitecture(spec);
+      return {
+        validated,
+        scene: conformDiagramScene(layoutArchitecture(validated)),
+        description: describeArchitecture(validated),
+      };
+    }
+    case "cycle": {
+      const validated = validateCycle(spec);
+      return {
+        validated,
+        scene: conformDiagramScene(layoutCycle(validated)),
+        description: describeCycle(validated),
+      };
+    }
+    case "sequence": {
+      const validated = validateSequence(spec);
+      return {
+        validated,
+        scene: conformDiagramScene(layoutSequence(validated)),
+        description: describeSequence(validated),
+      };
+    }
+    case "timeline": {
+      const validated = validateTimeline(spec);
+      return {
+        validated,
+        scene: conformDiagramScene(layoutTimeline(validated)),
+        description: describeTimeline(validated),
       };
     }
     default:

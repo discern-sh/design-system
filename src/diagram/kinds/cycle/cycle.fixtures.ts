@@ -66,6 +66,23 @@ const fixtures = [
       },
     ],
   },
+  {
+    kind: "cycle",
+    title: "Revisit eight concise stages",
+    summary:
+      "A supported dense loop exchanges one named fact per stage with shared context.",
+    stages: Array.from({ length: 8 }, (_, index) => ({
+      id: `stage-${index + 1}`,
+      label: `Stage ${index + 1}`,
+    })),
+    hub: { id: "shared", label: "Shared context" },
+    spokes: Array.from({ length: 8 }, (_, index) => ({
+      id: `spoke-${index + 1}`,
+      stageId: `stage-${index + 1}`,
+      direction: index % 2 === 0 ? "to-hub" as const : "from-hub" as const,
+      label: `Fact ${index + 1}`,
+    })),
+  },
 ] as const satisfies readonly CycleDiagramSpec[];
 
 export default fixtures;

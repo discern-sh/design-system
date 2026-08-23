@@ -81,22 +81,7 @@ const longLabel = {
   ],
 } as const satisfies CycleDiagramSpec;
 
-const denseSupported = {
-  kind: "cycle",
-  title: "Dense supported cycle",
-  summary: "Eight concise stages remain readable at the documented limit.",
-  stages: Array.from({ length: 8 }, (_, index) => ({
-    id: `stage-${index + 1}`,
-    label: `Stage ${index + 1}`,
-  })),
-  hub: { id: "shared", label: "Shared context" },
-  spokes: Array.from({ length: 8 }, (_, index) => ({
-    id: `spoke-${index + 1}`,
-    stageId: `stage-${index + 1}`,
-    direction: index % 2 === 0 ? "to-hub" : "from-hub",
-    label: `Fact ${index + 1}`,
-  })),
-} as const satisfies CycleDiagramSpec;
+const denseSupported = fixtures[2];
 
 function scene(spec: CycleDiagramSpec): DiagramScene {
   return conformDiagramScene(layoutCycleDiagram(validateCycleDiagram(spec)));
@@ -206,7 +191,7 @@ Hub relationships:
 });
 
 Deno.test("minimum, representative, long-label, and dense cycles conform", () => {
-  for (const spec of [minimum, ...fixtures, longLabel, denseSupported]) {
+  for (const spec of [minimum, ...fixtures, longLabel]) {
     const first = scene(spec);
     assertEquals(first.sourceKind, "cycle");
     assert(first.canvas.bounds.width > 0 && first.canvas.bounds.height > 0);

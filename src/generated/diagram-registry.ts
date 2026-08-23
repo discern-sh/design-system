@@ -2,8 +2,20 @@
 import type { DiagramKindRegistryEntry } from "../diagram/kind-meta.ts";
 import meta0 from "../diagram/kinds/flow/flow.meta.ts";
 import fixtures0 from "../diagram/kinds/flow/flow.fixtures.ts";
+import meta1 from "../diagram/kinds/architecture/architecture.meta.ts";
+import fixtures1 from "../diagram/kinds/architecture/architecture.fixtures.ts";
+import meta2 from "../diagram/kinds/cycle/cycle.meta.ts";
+import fixtures2 from "../diagram/kinds/cycle/cycle.fixtures.ts";
+import meta3 from "../diagram/kinds/sequence/sequence.meta.ts";
+import fixtures3 from "../diagram/kinds/sequence/sequence.fixtures.ts";
+import meta4 from "../diagram/kinds/timeline/timeline.meta.ts";
+import fixtures4 from "../diagram/kinds/timeline/timeline.fixtures.ts";
 
 /** Canonical metadata and representative fixtures for every built-in kind. */
 export const diagramKindRegistry = [
   { meta: meta0, fixtures: fixtures0 },
+  { meta: meta1, fixtures: fixtures1 },
+  { meta: meta2, fixtures: fixtures2 },
+  { meta: meta3, fixtures: fixtures3 },
+  { meta: meta4, fixtures: fixtures4 },
 ] satisfies readonly DiagramKindRegistryEntry[];
