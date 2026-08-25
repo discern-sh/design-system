@@ -27,10 +27,10 @@ import {
 import { makeSourceControlsVisible } from "../../../cli/visible-text.ts";
 import type { TerminalAlignment } from "../../../cli/text.ts";
 import { diagramAltText } from "../../../diagram/accessibility.ts";
-import { canonicalDiagramMarkdownSource } from "../../../diagram/markdown.ts";
 import { snapshotDiagramJsonSafe } from "../../../diagram/validation.ts";
 import { validateDiagram } from "../../../generated/diagram-dispatch.ts";
 import type { DiagramSpec } from "../../../generated/diagram-spec.ts";
+import { canonicalSafeUrlReference } from "../../../url-reference.ts";
 import type { HeadingLevel } from "../../display/heading/heading.types.ts";
 import type { CalloutTone } from "../callout/callout.types.ts";
 import type { ListKind, ListSpacing } from "../list/list.types.ts";
@@ -212,10 +212,55 @@ export interface ParseMarkdownOptions {
   readonly diagrams?: readonly MarkdownDiagramResource[];
 }
 
-interface ValidatedMarkdownDiagramResource {
-  readonly source: string;
-  readonly spec: DiagramSpec;
+/** Smallest spec surface the shared resource resolver reads directly. */
+interface MarkdownResourceSpecContext {
+  readonly summary: string;
 }
+
+/** One validated source-to-spec pair admitted by a family collection. */
+interface ValidatedMarkdownResource<Spec extends MarkdownResourceSpecContext> {
+  readonly source: string;
+  readonly spec: Spec;
+}
+
+/**
+ * One family's typed parameters over the shared resource resolver core.
+ * Matching, URL normalisation, duplicate rejection, isolated-image
+ * detection, and accessibility equality live once in this module; a family
+ * supplies only its spec authority, canonical alternative, block
+ * construction, and refusal nouns (ADR-0031).
+ */
+interface MarkdownResourceFamily<Spec extends MarkdownResourceSpecContext> {
+  /** Lowercase family noun used by every refusal message. */
+  readonly noun: string;
+  /** Public spec type name used by invalid-spec refusals. */
+  readonly specTypeName: string;
+  /** JSON-safe snapshot through the shared internal data-safety authority. */
+  readonly snapshot: (value: unknown) => unknown;
+  /** Complete generated kind validation; throws on an invalid spec. */
+  readonly validateSpec: (spec: unknown) => unknown;
+  /** Canonical short alternative the matching image alt must equal. */
+  readonly altText: (spec: Spec) => string;
+  /** Neutral block produced when an isolated image matches this family. */
+  readonly block: (source: string, spec: Spec) => MarkdownBlock;
+}
+
+/** One admitted source with its precomputed family-neutral matching facts. */
+interface AdmittedMarkdownResource {
+  readonly noun: string;
+  readonly alt: string;
+  readonly summary: string;
+  readonly block: MarkdownBlock;
+}
+
+const DIAGRAM_RESOURCE_FAMILY: MarkdownResourceFamily<DiagramSpec> = {
+  noun: "diagram",
+  specTypeName: "DiagramSpec",
+  snapshot: snapshotDiagramJsonSafe,
+  validateSpec: validateDiagram,
+  altText: diagramAltText,
+  block: (source, spec) => Object.freeze({ kind: "diagram", source, spec }),
+};
 
 interface FootnoteRecord {
   readonly sourceIdentifier: string;
@@ -386,16 +431,22 @@ function asciiDestination(value: string): string | undefined {
 }
 
 /**
- * Validate, normalise, and freeze diagram resources before document matching.
- * Valid unused resources are intentionally accepted for corpus-level reuse.
+ * Validate, normalise, and freeze one family's resource collection before
+ * document matching. Every behavioural fact here — dense-collection
+ * inspection, snapshotting, exact keys, canonical sources, duplicate
+ * rejection — is family-neutral; only the refusal nouns and the spec
+ * authority come from the family.
  */
-export function validateMarkdownDiagramResources(
-  resources: readonly MarkdownDiagramResource[] | undefined,
-): readonly ValidatedMarkdownDiagramResource[] {
+function validateMarkdownResourceCollection<
+  Spec extends MarkdownResourceSpecContext,
+>(
+  family: MarkdownResourceFamily<Spec>,
+  resources: readonly unknown[] | undefined,
+): readonly ValidatedMarkdownResource<Spec>[] {
   try {
     if (resources === undefined) return Object.freeze([]);
     if (!Array.isArray(resources)) {
-      return fail("Markdown diagram resources must be an array");
+      return fail(`Markdown ${family.noun} resources must be an array`);
     }
     const keys = Reflect.ownKeys(resources);
     const lengthDescriptor = Object.getOwnPropertyDescriptor(
@@ -406,7 +457,7 @@ export function validateMarkdownDiagramResources(
       lengthDescriptor === undefined || !("value" in lengthDescriptor) ||
       typeof lengthDescriptor.value !== "number"
     ) {
-      fail("Markdown diagram resources must be a dense data array");
+      fail(`Markdown ${family.noun} resources must be a dense data array`);
     }
     const length = lengthDescriptor.value;
     const indexes = keys.filter((key) => key !== "length");
@@ -415,12 +466,12 @@ export function validateMarkdownDiagramResources(
       indexes.length !== length ||
       indexes.some((key, index) => key !== String(index))
     ) {
-      fail("Markdown diagram resources must be a dense data array");
+      fail(`Markdown ${family.noun} resources must be a dense data array`);
     }
-    const normalized: ValidatedMarkdownDiagramResource[] = [];
+    const normalized: ValidatedMarkdownResource<Spec>[] = [];
     const sources = new Set<string>();
     for (let index = 0; index < length; index += 1) {
-      const path = `Markdown diagram resource ${index + 1}`;
+      const path = `Markdown ${family.noun} resource ${index + 1}`;
       const descriptor = Object.getOwnPropertyDescriptor(
         resources,
         String(index),
@@ -429,11 +480,11 @@ export function validateMarkdownDiagramResources(
         descriptor === undefined || !("value" in descriptor) ||
         descriptor.enumerable !== true
       ) {
-        fail("Markdown diagram resources must be a dense data array");
+        fail(`Markdown ${family.noun} resources must be a dense data array`);
       }
       let snapshot: unknown;
       try {
-        snapshot = snapshotDiagramJsonSafe(descriptor.value);
+        snapshot = family.snapshot(descriptor.value);
       } catch (cause) {
         fail(`${path} must be stable JSON-safe data`, cause);
       }
@@ -448,32 +499,74 @@ export function validateMarkdownDiagramResources(
       if (typeof record.source !== "string") {
         fail(`${path} source must be a string`);
       }
-      const source = canonicalDiagramMarkdownSource(record.source);
+      const source = canonicalSafeUrlReference(record.source);
       if (source === undefined) {
         fail(`${path} source must be a safe Markdown image URL reference`);
       }
       if (sources.has(source)) {
         fail(
-          `Markdown diagram resources contain duplicate source ${
+          `Markdown ${family.noun} resources contain duplicate source ${
             JSON.stringify(source)
           }`,
         );
       }
       sources.add(source);
       try {
-        validateDiagram(record.spec);
+        family.validateSpec(record.spec);
       } catch (cause) {
-        fail(`${path} contains an invalid DiagramSpec`, cause);
+        fail(`${path} contains an invalid ${family.specTypeName}`, cause);
       }
-      const spec = record.spec as DiagramSpec;
+      const spec = record.spec as Spec;
       normalized.push(Object.freeze({ source, spec }));
     }
     return Object.freeze(normalized);
   } catch (cause) {
     if (cause instanceof MarkdownParseError) throw cause;
     return fail(
-      "Markdown diagram resources could not be inspected safely",
+      `Markdown ${family.noun} resources could not be inspected safely`,
       cause,
+    );
+  }
+}
+
+/**
+ * Validate, normalise, and freeze diagram resources before document matching.
+ * Valid unused resources are intentionally accepted for corpus-level reuse.
+ */
+export function validateMarkdownDiagramResources(
+  resources: readonly MarkdownDiagramResource[] | undefined,
+): readonly ValidatedMarkdownResource<DiagramSpec>[] {
+  return validateMarkdownResourceCollection(DIAGRAM_RESOURCE_FAMILY, resources);
+}
+
+/**
+ * Admit one family's validated resources into the shared source-keyed table.
+ * Intra-family duplicates were already rejected per collection, so an
+ * occupied source here is a cross-family duplicate: one image promotes to
+ * at most one block, independent of family evaluation order.
+ */
+function admitMarkdownResources<Spec extends MarkdownResourceSpecContext>(
+  family: MarkdownResourceFamily<Spec>,
+  resources: readonly ValidatedMarkdownResource<Spec>[],
+  admitted: Map<string, AdmittedMarkdownResource>,
+): void {
+  for (const resource of resources) {
+    const existing = admitted.get(resource.source);
+    if (existing !== undefined) {
+      fail(
+        `Markdown ${existing.noun} and ${family.noun} resources contain duplicate source ${
+          JSON.stringify(resource.source)
+        }`,
+      );
+    }
+    admitted.set(
+      resource.source,
+      Object.freeze({
+        noun: family.noun,
+        alt: family.altText(resource.spec),
+        summary: resource.spec.summary,
+        block: family.block(resource.source, resource.spec),
+      }),
     );
   }
 }
@@ -1016,62 +1109,57 @@ function isolatedImage(
   return image;
 }
 
-function resolvedDiagram(
+function resolvedResourceBlock(
   content: SemanticInlineContent,
-  resources: ReadonlyMap<string, ValidatedMarkdownDiagramResource>,
-): MarkdownDiagramBlock | undefined {
+  resources: ReadonlyMap<string, AdmittedMarkdownResource>,
+): MarkdownBlock | undefined {
   const image = isolatedImage(content);
   if (image === undefined) return undefined;
-  const source = canonicalDiagramMarkdownSource(image.source);
+  const source = canonicalSafeUrlReference(image.source);
   if (source === undefined) return undefined;
   const resource = resources.get(source);
   if (resource === undefined) return undefined;
-  const alternative = diagramAltText(resource.spec);
-  if (image.alt !== alternative) {
+  if (image.alt !== resource.alt) {
     fail(
-      `Markdown diagram image ${JSON.stringify(source)} alt must equal ${
-        JSON.stringify(alternative)
-      }`,
+      `Markdown ${resource.noun} image ${
+        JSON.stringify(source)
+      } alt must equal ${JSON.stringify(resource.alt)}`,
     );
   }
-  if (image.title !== undefined && image.title !== resource.spec.summary) {
+  if (image.title !== undefined && image.title !== resource.summary) {
     fail(
-      `Markdown diagram image ${JSON.stringify(source)} title must equal ${
-        JSON.stringify(resource.spec.summary)
-      }`,
+      `Markdown ${resource.noun} image ${
+        JSON.stringify(source)
+      } title must equal ${JSON.stringify(resource.summary)}`,
     );
   }
-  return Object.freeze({
-    kind: "diagram",
-    source: resource.source,
-    spec: resource.spec,
-  });
+  return resource.block;
 }
 
-function resolveDiagramBlocks(
+function resolveResourceBlocks(
   blocks: readonly MarkdownBlock[],
-  resources: ReadonlyMap<string, ValidatedMarkdownDiagramResource>,
+  resources: ReadonlyMap<string, AdmittedMarkdownResource>,
 ): readonly MarkdownBlock[] {
   return Object.freeze(blocks.map((block): MarkdownBlock => {
     switch (block.kind) {
       case "paragraph":
-        return resolvedDiagram(block.content, resources) ?? block;
+        return resolvedResourceBlock(block.content, resources) ?? block;
       case "list":
         return Object.freeze({
           ...block,
           items: Object.freeze(block.items.map((item) => {
-            const diagram = item.content === undefined
+            const promoted = item.content === undefined
               ? undefined
-              : resolvedDiagram(item.content, resources);
-            const nested = resolveDiagramBlocks(item.blocks, resources);
+              : resolvedResourceBlock(item.content, resources);
+            const nested = resolveResourceBlocks(item.blocks, resources);
             return Object.freeze({
-              ...(diagram === undefined && item.content !== undefined
+              ...(promoted === undefined && item.content !== undefined
                 ? { content: item.content }
                 : {}),
               ...(item.checked === undefined ? {} : { checked: item.checked }),
-              blocks: diagram === undefined
+              blocks: promoted === undefined
                 ? nested
-                : Object.freeze([diagram, ...nested]),
+                : Object.freeze([promoted, ...nested]),
             });
           })),
         });
@@ -1079,7 +1167,7 @@ function resolveDiagramBlocks(
       case "callout":
         return Object.freeze({
           ...block,
-          children: resolveDiagramBlocks(block.children, resources),
+          children: resolveResourceBlocks(block.children, resources),
         });
       case "footnotes":
         return Object.freeze({
@@ -1087,7 +1175,7 @@ function resolveDiagramBlocks(
           items: Object.freeze(block.items.map((item) =>
             Object.freeze({
               ...item,
-              children: resolveDiagramBlocks(item.children, resources),
+              children: resolveResourceBlocks(item.children, resources),
             })
           )),
         });
@@ -1098,22 +1186,19 @@ function resolveDiagramBlocks(
       case "diagram":
         return block;
       default:
-        return assertNever(block, "Markdown diagram resolver block");
+        return assertNever(block, "Markdown resource resolver block");
     }
   }));
 }
 
-function resolveMarkdownDiagrams(
+function resolveMarkdownResources(
   document: MarkdownDocument,
-  resources: readonly ValidatedMarkdownDiagramResource[],
+  resources: ReadonlyMap<string, AdmittedMarkdownResource>,
 ): MarkdownDocument {
-  if (resources.length === 0 || document.children.length === 0) return document;
-  const bySource = new Map(
-    resources.map((resource) => [resource.source, resource]),
-  );
+  if (resources.size === 0 || document.children.length === 0) return document;
   return Object.freeze({
     kind: "document",
-    children: resolveDiagramBlocks(document.children, bySource),
+    children: resolveResourceBlocks(document.children, resources),
   });
 }
 
@@ -1125,7 +1210,12 @@ export function parseMarkdown(
   if (typeof source !== "string") {
     return fail("Markdown source must be a string");
   }
-  const diagramResources = validateMarkdownDiagramResources(options.diagrams);
+  const admittedResources = new Map<string, AdmittedMarkdownResource>();
+  admitMarkdownResources(
+    DIAGRAM_RESOURCE_FAMILY,
+    validateMarkdownDiagramResources(options.diagrams),
+    admittedResources,
+  );
   const bytes = textEncoder.encode(source).byteLength;
   if (bytes > MARKDOWN_MAX_SOURCE_BYTES) {
     return fail(
@@ -1153,9 +1243,9 @@ export function parseMarkdown(
     const children = [...adaptBlocks(root.children, context, 1)];
     const footnotes = adaptFootnotes(context);
     if (footnotes !== null) children.push(footnotes);
-    return resolveMarkdownDiagrams(
+    return resolveMarkdownResources(
       { kind: "document", children },
-      diagramResources,
+      admittedResources,
     );
   } catch (cause) {
     if (cause instanceof MarkdownParseError) throw cause;
