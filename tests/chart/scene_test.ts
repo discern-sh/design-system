@@ -1,4 +1,4 @@
-import { assert, assertThrows } from "@std/assert";
+import { assert, assertEquals, assertThrows } from "@std/assert";
 import { measureSceneText } from "../../src/internal/font-metrics.ts";
 import { conformChartScene } from "../../src/chart/conformance.ts";
 import { ChartConformanceError } from "../../src/chart/errors.ts";
@@ -20,6 +20,14 @@ import type {
 } from "../../src/chart/scene.ts";
 
 const PLOT: ChartRect = { x: 60, y: 24, width: 120, height: 96 };
+
+Deno.test("scene coordinates round decimal ties half away from zero", () => {
+  assertEquals(roundChartNumber(1.005), 1.01);
+  assertEquals(roundChartNumber(-1.005), -1.01);
+  assertEquals(roundChartNumber(2.675), 2.68);
+  assertEquals(roundChartNumber(-2.675), -2.68);
+  assertEquals(Object.is(roundChartNumber(-0.001), -0), false);
+});
 
 function mark(
   id: string,

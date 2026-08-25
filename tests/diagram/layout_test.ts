@@ -12,6 +12,7 @@ import {
   diagramRectBottom,
   diagramRectRight,
   diagramRectUnion,
+  roundDiagramNumber,
 } from "../../src/diagram/geometry.ts";
 import {
   createDiagramConnector,
@@ -32,6 +33,11 @@ import fixtures from "../../src/diagram/kinds/flow/flow.fixtures.ts";
 import type { FlowDiagramSpec } from "../../src/diagram/kinds/flow/flow.spec.ts";
 
 const EPSILON = 0.02;
+
+Deno.test("diagram geometry shares symmetric decimal tie rounding", () => {
+  assertEquals(roundDiagramNumber(1.005), 1.01);
+  assertEquals(roundDiagramNumber(-1.005), -1.01);
+});
 
 function overlap(left: DiagramRect, right: DiagramRect): boolean {
   return left.x < diagramRectRight(right) &&

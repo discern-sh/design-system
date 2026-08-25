@@ -26,7 +26,9 @@ export const SCENE_PRECISION = 2;
 /** Round one coordinate to a stable decimal precision, normalizing `-0`. */
 export function roundToPrecision(value: number, precision: number): number {
   const factor = 10 ** precision;
-  const rounded = Math.round((value + Number.EPSILON) * factor) / factor;
+  const sign = value < 0 ? -1 : 1;
+  const rounded = sign *
+    Math.round((Math.abs(value) + Number.EPSILON) * factor) / factor;
   return Object.is(rounded, -0) ? 0 : rounded;
 }
 
