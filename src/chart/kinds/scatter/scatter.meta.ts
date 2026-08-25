@@ -24,7 +24,7 @@ const scatterKindMeta: ChartKindMeta = defineChartKindMeta(
         unit: "series",
         remedy: "reduce-series",
         description:
-          "Maximum simultaneous series, matching the three paired colour-plus-marker bundles (circle, square, diamond); a fourth population would have to differ by colour alone.",
+          "Maximum simultaneous series, matching the three paired colour-plus-marker bundles (circle, square, triangle); a fourth population would have to differ by colour alone.",
       },
       pointsPerSeries: {
         limit: 200,

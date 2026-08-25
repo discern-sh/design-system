@@ -188,16 +188,24 @@ Deno.test("colliding axis labels are refused with an actionable remedy", () => {
 });
 
 Deno.test("the generated registry carries the bar corpus and Metadata", () => {
-  assertEquals(chartKindRegistry.length, 1);
+  assertEquals(
+    chartKindRegistry.map((entry) => entry.meta.slug),
+    ["bar", "line", "distribution", "heatmap", "scatter", "slope"],
+  );
   const entry = chartKindRegistry[0];
   assert(entry !== undefined);
   assertEquals(entry.meta.slug, "bar");
   assertEquals(entry.releaseCorpus.kind, "bar");
   assertEquals(entry.fixtures.length, releaseCorpus.cases.length);
-  const postures = new Set(
-    entry.releaseCorpus.cases.flatMap((kase) => kase.postures),
-  );
-  for (const posture of CHART_RELEASE_POSTURES) {
-    assert(postures.has(posture), `corpus covers ${posture}`);
+  for (const registered of chartKindRegistry) {
+    const postures = new Set(
+      registered.releaseCorpus.cases.flatMap((kase) => kase.postures),
+    );
+    for (const posture of CHART_RELEASE_POSTURES) {
+      assert(
+        postures.has(posture),
+        `${registered.meta.slug} corpus covers ${posture}`,
+      );
+    }
   }
 });

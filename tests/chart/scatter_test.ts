@@ -143,7 +143,7 @@ Deno.test("the scene emits one marker population per series wearing its paired b
   );
   assertEquals(
     populations.map(({ marker }) => marker),
-    ["circle", "square", "diamond"],
+    ["circle", "square", "triangle"],
   );
   for (const population of populations) {
     assert(population.radius > 0, "marker radius stays positive");

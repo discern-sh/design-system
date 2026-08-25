@@ -7,6 +7,21 @@ import type { ValidatedChart } from "./chart-spec.ts";
 import validateBar from "../chart/kinds/bar/bar.validation.ts";
 import layoutBar from "../chart/kinds/bar/bar.layout.ts";
 import describeBar from "../chart/kinds/bar/bar.description.ts";
+import validateLine from "../chart/kinds/line/line.validation.ts";
+import layoutLine from "../chart/kinds/line/line.layout.ts";
+import describeLine from "../chart/kinds/line/line.description.ts";
+import validateDistribution from "../chart/kinds/distribution/distribution.validation.ts";
+import layoutDistribution from "../chart/kinds/distribution/distribution.layout.ts";
+import describeDistribution from "../chart/kinds/distribution/distribution.description.ts";
+import validateHeatmap from "../chart/kinds/heatmap/heatmap.validation.ts";
+import layoutHeatmap from "../chart/kinds/heatmap/heatmap.layout.ts";
+import describeHeatmap from "../chart/kinds/heatmap/heatmap.description.ts";
+import validateScatter from "../chart/kinds/scatter/scatter.validation.ts";
+import layoutScatter from "../chart/kinds/scatter/scatter.layout.ts";
+import describeScatter from "../chart/kinds/scatter/scatter.description.ts";
+import validateSlope from "../chart/kinds/slope/slope.validation.ts";
+import layoutSlope from "../chart/kinds/slope/slope.layout.ts";
+import describeSlope from "../chart/kinds/slope/slope.description.ts";
 
 function preflight(spec: unknown): {
   readonly kind: string;
@@ -53,6 +68,16 @@ export function validateChart(spec: unknown): ValidatedChart {
   switch (input.kind) {
     case "bar":
       return validateBar(input.spec);
+    case "line":
+      return validateLine(input.spec);
+    case "distribution":
+      return validateDistribution(input.spec);
+    case "heatmap":
+      return validateHeatmap(input.spec);
+    case "scatter":
+      return validateScatter(input.spec);
+    case "slope":
+      return validateSlope(input.spec);
     default:
       return unknownKind(input.kind);
   }
@@ -67,6 +92,26 @@ export function prepareChartSemantics(
     case "bar": {
       const validated = validateBar(input.spec);
       return { validated, description: describeBar(validated) };
+    }
+    case "line": {
+      const validated = validateLine(input.spec);
+      return { validated, description: describeLine(validated) };
+    }
+    case "distribution": {
+      const validated = validateDistribution(input.spec);
+      return { validated, description: describeDistribution(validated) };
+    }
+    case "heatmap": {
+      const validated = validateHeatmap(input.spec);
+      return { validated, description: describeHeatmap(validated) };
+    }
+    case "scatter": {
+      const validated = validateScatter(input.spec);
+      return { validated, description: describeScatter(validated) };
+    }
+    case "slope": {
+      const validated = validateSlope(input.spec);
+      return { validated, description: describeSlope(validated) };
     }
     default:
       return unknownKind(input.kind);
@@ -83,6 +128,46 @@ export function prepareChart(spec: unknown): PreparedChart {
         validated,
         scene: conformChartScene(layoutBar(validated)),
         description: describeBar(validated),
+      };
+    }
+    case "line": {
+      const validated = validateLine(input.spec);
+      return {
+        validated,
+        scene: conformChartScene(layoutLine(validated)),
+        description: describeLine(validated),
+      };
+    }
+    case "distribution": {
+      const validated = validateDistribution(input.spec);
+      return {
+        validated,
+        scene: conformChartScene(layoutDistribution(validated)),
+        description: describeDistribution(validated),
+      };
+    }
+    case "heatmap": {
+      const validated = validateHeatmap(input.spec);
+      return {
+        validated,
+        scene: conformChartScene(layoutHeatmap(validated)),
+        description: describeHeatmap(validated),
+      };
+    }
+    case "scatter": {
+      const validated = validateScatter(input.spec);
+      return {
+        validated,
+        scene: conformChartScene(layoutScatter(validated)),
+        description: describeScatter(validated),
+      };
+    }
+    case "slope": {
+      const validated = validateSlope(input.spec);
+      return {
+        validated,
+        scene: conformChartScene(layoutSlope(validated)),
+        description: describeSlope(validated),
       };
     }
     default:

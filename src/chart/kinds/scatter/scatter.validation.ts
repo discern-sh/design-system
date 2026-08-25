@@ -45,7 +45,7 @@ function invalid(
  * three: a fourth population would differ by colour alone.
  */
 function markerForSlot(slot: ChartSeriesPaintSlot): ChartPointMarkerShape {
-  return slot === 1 ? "circle" : slot === 2 ? "square" : "diamond";
+  return slot === 1 ? "circle" : slot === 2 ? "square" : "triangle";
 }
 
 function coordinate(

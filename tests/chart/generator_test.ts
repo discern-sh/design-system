@@ -214,18 +214,37 @@ Deno.test("the shipped terminal surface makes a missing projector fail loudly", 
   }, CHART_PREFIX);
 });
 
-Deno.test("the real bar kind enrols through the canonical chart root", async () => {
+Deno.test("the complete kind library enrols through the canonical chart root", async () => {
   const kinds = await loadChartKindSources();
-  assertEquals(kinds.length, 1);
-  const generated = await generateChartKindSources();
-  assert(generated.cliRegistry.includes("projectBarChartCli"));
-  assert(
-    generated.cliRegistry.includes('"bar": { stance: "enhanced", project:'),
+  assertEquals(
+    kinds.map((kind) => kind.meta.slug),
+    ["bar", "line", "distribution", "heatmap", "scatter", "slope"],
   );
+  const generated = await generateChartKindSources();
+  for (const kind of kinds) {
+    const projector = `project${kind.meta.slug[0]?.toUpperCase()}${
+      kind.meta.slug.slice(1)
+    }ChartCli`;
+    assert(generated.cliRegistry.includes(projector));
+    assert(
+      generated.cliRegistry.includes(
+        `"${kind.meta.slug}": { stance: "enhanced", project:`,
+      ),
+    );
+  }
+  const tiers = Object.fromEntries(
+    kinds.map((kind) => [kind.meta.slug, kind.meta.cli]),
+  );
+  assertEquals(tiers, {
+    bar: { stance: "enhanced", honesty: "exact" },
+    line: { stance: "enhanced", honesty: "faithful" },
+    distribution: { stance: "enhanced", honesty: "exact" },
+    heatmap: { stance: "enhanced", honesty: "faithful" },
+    scatter: { stance: "enhanced", honesty: "faithful" },
+    slope: { stance: "enhanced", honesty: "exact" },
+  });
   const bar = kinds[0];
   assert(bar !== undefined);
-  assertEquals(bar.meta.slug, "bar");
-  assertEquals(bar.meta.cli, { stance: "enhanced", honesty: "exact" });
   assertEquals(bar.meta.budgets.series?.limit, 6);
   assertEquals(bar.meta.budgets.categories?.limit, 12);
   assertEquals(bar.meta.budgets.categoryLabelGraphemes?.limit, 48);

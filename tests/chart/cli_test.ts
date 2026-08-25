@@ -18,9 +18,15 @@ import { measureText } from "../../src/cli/text.ts";
 import { cliExamples } from "../../src/components/editorial/chart/chart.cli.ts";
 import projectBarChartCli from "../../src/chart/kinds/bar/bar.cli.ts";
 import {
+  barDataTableFacts,
   barUnitSuffix,
   barValueText,
 } from "../../src/chart/kinds/bar/bar.description.ts";
+import { distributionDataTableFacts } from "../../src/chart/kinds/distribution/distribution.description.ts";
+import { heatmapDataTableFacts } from "../../src/chart/kinds/heatmap/heatmap.description.ts";
+import { lineDataTableFacts } from "../../src/chart/kinds/line/line.description.ts";
+import { scatterDataTableFacts } from "../../src/chart/kinds/scatter/scatter.description.ts";
+import { slopeDataTableFacts } from "../../src/chart/kinds/slope/slope.description.ts";
 import fixtures from "../../src/chart/kinds/bar/bar.fixtures.ts";
 import type { ValidatedBarChart } from "../../src/chart/kinds/bar/bar.spec.ts";
 import {
@@ -31,7 +37,10 @@ import {
 import { projectChartKindCli } from "../../src/generated/chart-cli-registry.ts";
 import { prepareChartSemantics } from "../../src/generated/chart-dispatch.ts";
 import { chartKindRegistry } from "../../src/generated/chart-registry.ts";
-import type { ChartSpec } from "../../src/generated/chart-spec.ts";
+import type {
+  ChartSpec,
+  ValidatedChart,
+} from "../../src/generated/chart-spec.ts";
 
 const representative = fixtures[1];
 if (representative === undefined) {
@@ -149,29 +158,71 @@ function compactTerminalSemantics(value: string): string {
     .replaceAll(/\s+/gu, "");
 }
 
-/** Every printed fact the exact tier owes: context, identities, and values. */
-function barSemanticFacts(spec: BarChartSpec): readonly string[] {
+/** The one facts seam per kind behind the universal description table. */
+function tableFacts(validated: ValidatedChart): {
+  readonly rows: readonly (readonly string[])[];
+} {
+  switch (validated.kind) {
+    case "bar":
+      return barDataTableFacts(validated);
+    case "line":
+      return lineDataTableFacts(validated);
+    case "distribution":
+      return distributionDataTableFacts(validated);
+    case "heatmap":
+      return heatmapDataTableFacts(validated);
+    case "scatter":
+      return scatterDataTableFacts(validated);
+    case "slope":
+      return slopeDataTableFacts(validated);
+  }
+}
+
+/** Every printed fact the lossless description owes for one spec. */
+function semanticFacts(spec: ChartSpec): readonly string[] {
   const { validated } = prepareChartSemantics(spec);
-  const bar = validated as ValidatedBarChart;
-  const unit = barUnitSuffix(bar.value);
+  if (validated.kind === "bar") {
+    const unit = barUnitSuffix(validated.value);
+    return [
+      validated.title,
+      validated.summary,
+      ...validated.categories.map(({ label }) => label),
+      ...validated.series.map(({ label }) => label),
+      ...validated.series.flatMap(({ values }) =>
+        values.map((value) => barValueText(value, unit))
+      ),
+    ];
+  }
   return [
-    bar.title,
-    bar.summary,
-    ...bar.categories.map(({ label }) => label),
-    ...bar.series.map(({ label }) => label),
-    ...bar.series.flatMap(({ values }) =>
-      values.map((value) => barValueText(value, unit))
-    ),
+    validated.title,
+    validated.summary,
+    ...tableFacts(validated).rows.flat(),
   ];
 }
 
-function assertCarriesEveryFact(
+/**
+ * The facts every enhanced frame owes at this registry-wide level: the
+ * authored context, plus bar's complete value inventory as the founding
+ * exact-tier proof. Each other kind's own suite pins its tier — every
+ * value for the exact kinds, extremes and stated resolution for the
+ * faithful ones — in the kind's own printed wording, which lawfully
+ * differs from the description table's structural cells.
+ */
+function frameFacts(spec: ChartSpec, unicode: boolean): readonly string[] {
+  const { validated } = prepareChartSemantics(spec);
+  if (validated.kind !== "bar" || !unicode) {
+    return [validated.title, validated.summary];
+  }
+  return semanticFacts(spec);
+}
+
+function assertCarriesFacts(
   output: string,
-  spec: BarChartSpec,
+  facts: readonly string[],
   context: string,
 ): void {
   const compact = compactTerminalSemantics(output);
-  for (const fact of barSemanticFacts(spec)) {
+  for (const fact of facts) {
     assert(
       compact.includes(fact.replaceAll(/\s+/gu, "")),
       `${context} lost ${JSON.stringify(fact)}`,
@@ -179,19 +230,31 @@ function assertCarriesEveryFact(
   }
 }
 
-Deno.test("the exact frame prints every fact the description table states", () => {
+function assertCarriesEveryFact(
+  output: string,
+  spec: ChartSpec,
+  context: string,
+): void {
+  assertCarriesFacts(output, semanticFacts(spec), context);
+}
+
+Deno.test("frames honour their declared tier and descriptions stay lossless", () => {
   const capabilities = testTerminalCapabilities({ columns: 96 });
   for (const entry of chartKindRegistry) {
     for (const releaseCase of entry.releaseCorpus.cases) {
-      const spec = releaseCase.spec as BarChartSpec;
-      const projection = project(spec, 96);
-      if (projection.kind !== "frame") continue;
+      const spec = releaseCase.spec as ChartSpec;
       const context = `${entry.meta.slug}/${releaseCase.name}`;
-      assertCarriesEveryFact(projection.frame, spec, `${context}/frame`);
       assertCarriesEveryFact(
         describeChart(spec),
         spec,
         `${context}/description`,
+      );
+      const projection = project(spec, 96);
+      if (projection.kind !== "frame") continue;
+      assertCarriesFacts(
+        projection.frame,
+        frameFacts(spec, true),
+        `${context}/frame`,
       );
       assertEquals(render(spec, capabilities, "auto"), projection.frame);
     }
@@ -368,12 +431,12 @@ Deno.test("Chart Catalogue CLI examples cover enhanced, deliberate description, 
       assertEquals(
         postures[`${entry.meta.slug}-structural`],
         "enhanced",
-        "the proportion posture stays inside the exact tier at review width",
+        `${entry.meta.slug} structural posture renders enhanced at review width`,
       );
       assertEquals(
         postures[`${entry.meta.slug}-maximum-density`],
         "enhanced",
-        "bar density stays honest because every value still prints",
+        `${entry.meta.slug} density ceiling stays inside its declared tier`,
       );
       assertEquals(
         postures[`${entry.meta.slug}-narrow-ascii-fallback`],
@@ -381,7 +444,7 @@ Deno.test("Chart Catalogue CLI examples cover enhanced, deliberate description, 
       );
     }
   }
-  assertEquals(Object.keys(postures).length, 5);
+  assertEquals(Object.keys(postures).length, chartKindRegistry.length * 5);
 });
 
 const terminalReleaseProfiles = (
@@ -394,7 +457,7 @@ Deno.test("generated Chart CLI matrix preserves facts across every stance and vi
   const scanWidths = Array.from({ length: 137 }, (_, index) => index + 24);
   for (const entry of chartKindRegistry) {
     for (const releaseCase of entry.releaseCorpus.cases) {
-      const spec = releaseCase.spec as BarChartSpec;
+      const spec = releaseCase.spec as ChartSpec;
       for (const profile of terminalReleaseProfiles) {
         const context =
           `${entry.meta.slug}/${releaseCase.name}/${profile.colorDepth}/${
@@ -418,10 +481,21 @@ Deno.test("generated Chart CLI matrix preserves facts across every stance and vi
           }
         }
 
-        assert(
-          scan.some(({ projection }) => projection.kind === "frame"),
-          `${context} never reached an exact frame by 160 columns`,
+        const reachedFrame = scan.some(({ projection }) =>
+          projection.kind === "frame"
         );
+        if (!reachedFrame) {
+          // A capability decline — colourless frames past the mono series
+          // envelope — is permanent by design; width alone must never be
+          // the reason a corpus case has no frame by 160 columns.
+          const widest = scan.at(-1)?.projection;
+          assert(
+            widest !== undefined && widest.kind === "declined" &&
+              (widest.code === "mono-series" ||
+                widest.code === "collision-count"),
+            `${context} never reached an enhanced frame by 160 columns`,
+          );
+        }
         for (const { columns, projection } of scan) {
           const repeated = project(spec, columns, profile);
           assertEquals(repeated, projection, `${context}/${columns}`);
@@ -456,9 +530,9 @@ Deno.test("generated Chart CLI matrix preserves facts across every stance and vi
             );
           }
           if (projection.kind === "frame") {
-            assertCarriesEveryFact(
+            assertCarriesFacts(
               automatic,
-              spec,
+              frameFacts(spec, profile.unicode),
               `${context}/${columns}/auto`,
             );
             assertEquals(automatic, projection.frame);

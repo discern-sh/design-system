@@ -24,6 +24,11 @@ import {
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import { barDataTableFacts } from "../../../chart/kinds/bar/bar.description.ts";
+import { distributionDataTableFacts } from "../../../chart/kinds/distribution/distribution.description.ts";
+import { heatmapDataTableFacts } from "../../../chart/kinds/heatmap/heatmap.description.ts";
+import { lineDataTableFacts } from "../../../chart/kinds/line/line.description.ts";
+import { scatterDataTableFacts } from "../../../chart/kinds/scatter/scatter.description.ts";
+import { slopeDataTableFacts } from "../../../chart/kinds/slope/slope.description.ts";
 import { projectChartKindCli } from "../../../generated/chart-cli-registry.ts";
 import { prepareChartSemantics } from "../../../generated/chart-dispatch.ts";
 import { chartKindRegistry } from "../../../generated/chart-registry.ts";
@@ -148,6 +153,16 @@ function chartDataTableFacts(validated: ValidatedChart): ChartDataTableFacts {
   switch (validated.kind) {
     case "bar":
       return barDataTableFacts(validated);
+    case "line":
+      return lineDataTableFacts(validated);
+    case "distribution":
+      return distributionDataTableFacts(validated);
+    case "heatmap":
+      return heatmapDataTableFacts(validated);
+    case "scatter":
+      return scatterDataTableFacts(validated);
+    case "slope":
+      return slopeDataTableFacts(validated);
   }
 }
 

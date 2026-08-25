@@ -94,7 +94,7 @@ export interface ChartDataPath {
  * is each series slot's paired non-colour cue, so two point populations
  * never differ by colour alone.
  */
-export type ChartPointMarkerShape = "circle" | "square" | "diamond";
+export type ChartPointMarkerShape = "circle" | "square" | "triangle";
 
 /** Aggregate point population for one scattered series. */
 export interface ChartDataPoints {

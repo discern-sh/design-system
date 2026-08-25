@@ -1,6 +1,7 @@
 import {
   assert,
   assertEquals,
+  assertMatch,
   assertNotMatch,
   assertStringIncludes,
 } from "@std/assert";
@@ -61,6 +62,8 @@ Deno.test("React Chart maps the conformant scene to named semantic SVG", () => {
 });
 
 Deno.test("React Chart renders the complete release corpus", () => {
+  const dataEncoding =
+    /discern-chart__(?:mark--(?:series|ramp)-\d|path--series-\d|points--series-\d|area--series-\d)/u;
   for (const entry of chartKindRegistry) {
     for (const releaseCase of entry.releaseCorpus.cases) {
       const html = renderToStaticMarkup(
@@ -68,7 +71,7 @@ Deno.test("React Chart renders the complete release corpus", () => {
       );
       const context = `${entry.meta.slug}/${releaseCase.name}`;
       assertStringIncludes(html, 'role="img"', context);
-      assertStringIncludes(html, "discern-chart__mark--series-1", context);
+      assertMatch(html, dataEncoding, context);
       assertNotMatch(html, /\sid="/u);
     }
   }

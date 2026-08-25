@@ -85,8 +85,12 @@ async function inspectBrowserCharts(
           `aspect drifted: ${scale} horizontal vs ${verticalScale} vertical`,
         );
       }
-      const mark = svg.querySelector(".discern-chart__mark");
-      const label_ = svg.querySelector(
+      const filled = svg.querySelector(
+        ".discern-chart__mark, .discern-chart__area, .discern-chart__points > *",
+      );
+      const stroked = svg.querySelector(".discern-chart__path");
+      const anyLabel = svg.querySelector(".discern-chart__label");
+      const plainLabel = svg.querySelector(
         ".discern-chart__label:not(.discern-chart__label--mono)",
       );
       const mono = svg.querySelector(".discern-chart__label--mono");
@@ -97,14 +101,20 @@ async function inspectBrowserCharts(
         kind: svg.getAttribute("data-discern-chart-kind") ?? "",
         scale,
         viewBoxFailures: failures,
-        markCount: svg.querySelectorAll(".discern-chart__mark").length,
+        markCount: svg.querySelectorAll(
+          ".discern-chart__mark, .discern-chart__path, .discern-chart__points, .discern-chart__area",
+        ).length,
         axisCount: svg.querySelectorAll(".discern-chart__axis").length,
         canvasFill: canvas === null ? "" : getComputedStyle(canvas).fill,
-        markFill: mark === null ? "" : getComputedStyle(mark).fill,
-        labelFill: label_ === null ? "" : getComputedStyle(label_).fill,
-        labelFontFamily: label_ === null
+        markFill: filled !== null
+          ? getComputedStyle(filled).fill
+          : stroked !== null
+          ? getComputedStyle(stroked).stroke
+          : "",
+        labelFill: anyLabel === null ? "" : getComputedStyle(anyLabel).fill,
+        labelFontFamily: plainLabel === null
           ? ""
-          : getComputedStyle(label_).fontFamily,
+          : getComputedStyle(plainLabel).fontFamily,
         monoFontFamily: mono === null ? "" : getComputedStyle(mono).fontFamily,
         viewportScrollable: viewport !== null &&
           viewport.scrollWidth > viewport.clientWidth,
@@ -117,6 +127,16 @@ async function inspectBrowserCharts(
     };
   });
 }
+
+/** Hairline axis population each kind's calm canvas declares. */
+const AXIS_POPULATION: Readonly<Record<string, number>> = {
+  bar: 1,
+  line: 1,
+  distribution: 1,
+  heatmap: 0,
+  scatter: 2,
+  slope: 2,
+};
 
 function assertBrowserGeometry(
   inspection: ChartPageInspection,
@@ -135,24 +155,28 @@ function assertBrowserGeometry(
   for (const chart of inspection.charts) {
     const label = `${context}/${chart.label}`;
     assertEquals(chart.viewBoxFailures, [], label);
-    assertEquals(chart.kind, "bar", label);
+    assertEquals(chart.kind, chart.label.split("/")[0], label);
     assert(chart.scale > 0.05, `${label} collapsed to scale ${chart.scale}`);
-    assert(chart.markCount > 0, `${label} rendered no marks`);
-    assertEquals(chart.axisCount, 1, `${label} axis population`);
+    assert(chart.markCount > 0, `${label} rendered no data encoding`);
+    assertEquals(
+      chart.axisCount,
+      AXIS_POPULATION[chart.kind],
+      `${label} axis population`,
+    );
     assert(
       chart.canvasFill !== "" && chart.canvasFill !== "none",
       `${label} canvas fill ${chart.canvasFill}`,
     );
     assert(
       chart.markFill !== "" && chart.markFill !== "none",
-      `${label} mark fill ${chart.markFill}`,
+      `${label} data paint ${chart.markFill}`,
     );
     assert(
       chart.labelFill !== "" && chart.labelFill !== "none",
       `${label} label fill ${chart.labelFill}`,
     );
     assert(
-      chart.monoFontFamily === "" ||
+      chart.monoFontFamily === "" || chart.labelFontFamily === "" ||
         chart.monoFontFamily !== chart.labelFontFamily,
       `${label} mono labels did not select the monospace stack`,
     );

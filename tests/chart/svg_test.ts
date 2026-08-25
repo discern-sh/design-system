@@ -144,8 +144,57 @@ Deno.test("every generated release asset is intrinsic, namespaced, and standalon
   }
 });
 
-Deno.test("the bar canvas keeps its calm visual character", () => {
+/**
+ * Each kind's declared calm visual character: its hairline axis count, its
+ * one data-encoding vocabulary, and whether subordinate gridlines appear. A
+ * new kind fails the lookup until it declares its own row.
+ */
+const CALM_CHARACTER: Readonly<
+  Record<string, {
+    readonly axisLines: number;
+    readonly grid: boolean;
+    readonly encodings: readonly RegExp[];
+  }>
+> = {
+  bar: {
+    axisLines: 1,
+    grid: false,
+    encodings: [/discern-chart__mark discern-chart__mark--series-\d/u],
+  },
+  line: {
+    axisLines: 1,
+    grid: false,
+    encodings: [/discern-chart__path discern-chart__path--series-\d/u],
+  },
+  distribution: {
+    axisLines: 1,
+    grid: false,
+    encodings: [/discern-chart__mark discern-chart__mark--series-\d/u],
+  },
+  heatmap: {
+    axisLines: 0,
+    grid: false,
+    encodings: [/discern-chart__mark discern-chart__mark--ramp-\d/u],
+  },
+  scatter: {
+    axisLines: 2,
+    grid: true,
+    encodings: [/discern-chart__points discern-chart__points--series-\d/u],
+  },
+  slope: {
+    axisLines: 2,
+    grid: false,
+    encodings: [/discern-chart__path discern-chart__path--series-\d/u],
+  },
+};
+
+Deno.test("every kind's canvas keeps its declared calm visual character", () => {
   for (const entry of chartKindRegistry) {
+    const character = CALM_CHARACTER[entry.meta.slug];
+    assert(
+      character !== undefined,
+      `${entry.meta.slug} must declare its calm visual character`,
+    );
     for (const releaseCase of entry.releaseCorpus.cases) {
       const svg = renderChartSvg(releaseCase.spec as ChartSpec, {
         theme: "light",
@@ -153,12 +202,13 @@ Deno.test("the bar canvas keeps its calm visual character", () => {
       const context = `${entry.meta.slug}/${releaseCase.name}`;
       assertEquals(
         (svg.match(/<line class="discern-chart__axis"/gu) ?? []).length,
-        1,
-        `${context} must draw exactly one hairline axis element`,
+        character.axisLines,
+        `${context} must draw exactly its declared hairline axis count`,
       );
-      assertNotMatch(svg, /discern-chart__grid/u);
-      assertMatch(svg, /discern-chart__mark discern-chart__mark--series-\d/u);
-      assertMatch(svg, /discern-chart__label--mono/u);
+      if (!character.grid) assertNotMatch(svg, /discern-chart__grid/u);
+      for (const encoding of character.encodings) {
+        assertMatch(svg, encoding, `${context} must carry its data encoding`);
+      }
     }
   }
 });

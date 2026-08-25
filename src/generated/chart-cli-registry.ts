@@ -2,10 +2,20 @@
 import type { ChartKindCliProjection, ChartKindCliProjectorContext, ChartKindCliRegistry } from "../cli/chart-kinds.ts";
 import type { ValidatedChart } from "./chart-spec.ts";
 import projectBarChartCli from "../chart/kinds/bar/bar.cli.ts";
+import projectLineChartCli from "../chart/kinds/line/line.cli.ts";
+import projectDistributionChartCli from "../chart/kinds/distribution/distribution.cli.ts";
+import projectHeatmapChartCli from "../chart/kinds/heatmap/heatmap.cli.ts";
+import projectScatterChartCli from "../chart/kinds/scatter/scatter.cli.ts";
+import projectSlopeChartCli from "../chart/kinds/slope/slope.cli.ts";
 
 /** Generated terminal stance keyed exhaustively by chart kind. */
 export const chartKindCliRegistry = {
   "bar": { stance: "enhanced", project: projectBarChartCli },
+  "line": { stance: "enhanced", project: projectLineChartCli },
+  "distribution": { stance: "enhanced", project: projectDistributionChartCli },
+  "heatmap": { stance: "enhanced", project: projectHeatmapChartCli },
+  "scatter": { stance: "enhanced", project: projectScatterChartCli },
+  "slope": { stance: "enhanced", project: projectSlopeChartCli },
 } as const satisfies ChartKindCliRegistry;
 
 /** Dispatch an enhanced kind projector, or decline by absence of a projector. */
@@ -16,5 +26,15 @@ export function projectChartKindCli(
   switch (spec.kind) {
     case "bar":
       return projectBarChartCli(spec, context);
+    case "line":
+      return projectLineChartCli(spec, context);
+    case "distribution":
+      return projectDistributionChartCli(spec, context);
+    case "heatmap":
+      return projectHeatmapChartCli(spec, context);
+    case "scatter":
+      return projectScatterChartCli(spec, context);
+    case "slope":
+      return projectSlopeChartCli(spec, context);
   }
 }

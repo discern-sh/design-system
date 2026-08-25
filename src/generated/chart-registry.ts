@@ -3,8 +3,28 @@ import type { ChartKindRegistryEntry } from "../chart/kind-meta.ts";
 import meta0 from "../chart/kinds/bar/bar.meta.ts";
 import fixtures0 from "../chart/kinds/bar/bar.fixtures.ts";
 import { releaseCorpus as releaseCorpus0 } from "../chart/kinds/bar/bar.fixtures.ts";
+import meta1 from "../chart/kinds/line/line.meta.ts";
+import fixtures1 from "../chart/kinds/line/line.fixtures.ts";
+import { releaseCorpus as releaseCorpus1 } from "../chart/kinds/line/line.fixtures.ts";
+import meta2 from "../chart/kinds/distribution/distribution.meta.ts";
+import fixtures2 from "../chart/kinds/distribution/distribution.fixtures.ts";
+import { releaseCorpus as releaseCorpus2 } from "../chart/kinds/distribution/distribution.fixtures.ts";
+import meta3 from "../chart/kinds/heatmap/heatmap.meta.ts";
+import fixtures3 from "../chart/kinds/heatmap/heatmap.fixtures.ts";
+import { releaseCorpus as releaseCorpus3 } from "../chart/kinds/heatmap/heatmap.fixtures.ts";
+import meta4 from "../chart/kinds/scatter/scatter.meta.ts";
+import fixtures4 from "../chart/kinds/scatter/scatter.fixtures.ts";
+import { releaseCorpus as releaseCorpus4 } from "../chart/kinds/scatter/scatter.fixtures.ts";
+import meta5 from "../chart/kinds/slope/slope.meta.ts";
+import fixtures5 from "../chart/kinds/slope/slope.fixtures.ts";
+import { releaseCorpus as releaseCorpus5 } from "../chart/kinds/slope/slope.fixtures.ts";
 
 /** Canonical metadata and release evidence for every built-in kind. */
 export const chartKindRegistry = [
   { meta: meta0, fixtures: fixtures0, releaseCorpus: releaseCorpus0 },
+  { meta: meta1, fixtures: fixtures1, releaseCorpus: releaseCorpus1 },
+  { meta: meta2, fixtures: fixtures2, releaseCorpus: releaseCorpus2 },
+  { meta: meta3, fixtures: fixtures3, releaseCorpus: releaseCorpus3 },
+  { meta: meta4, fixtures: fixtures4, releaseCorpus: releaseCorpus4 },
+  { meta: meta5, fixtures: fixtures5, releaseCorpus: releaseCorpus5 },
 ] satisfies readonly ChartKindRegistryEntry[];

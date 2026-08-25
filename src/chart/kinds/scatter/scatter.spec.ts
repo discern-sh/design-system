@@ -55,7 +55,7 @@ export interface ValidatedScatterChartSeries {
   /** The fixed palette slot this series occupies, in authored order. */
   readonly slot: ChartSeriesPaintSlot;
   /**
-   * The slot's paired non-colour cue — circle, square, or diamond in slot
+   * The slot's paired non-colour cue — circle, square, or triangle in slot
    * order — so two point populations never differ by colour alone.
    */
   readonly marker: ChartPointMarkerShape;

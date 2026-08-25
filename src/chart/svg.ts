@@ -226,12 +226,11 @@ function pointMarkerMarkup(
       formatChartSvgNumber(side)
     }" />`;
   }
-  if (points.marker === "diamond") {
+  if (points.marker === "triangle") {
     const corners: readonly ChartPoint[] = [
       { x: point.x, y: point.y - radius },
-      { x: point.x + radius, y: point.y },
-      { x: point.x, y: point.y + radius },
-      { x: point.x - radius, y: point.y },
+      { x: point.x + radius, y: point.y + radius },
+      { x: point.x - radius, y: point.y + radius },
     ];
     return `    <polygon points="${formatChartSvgPoints(corners)}" />`;
   }
