@@ -23,11 +23,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
-import {
-  barUnitSuffix,
-  barValueText,
-} from "../../../chart/kinds/bar/bar.description.ts";
-import type { ValidatedBarChart } from "../../../chart/kinds/bar/bar.spec.ts";
+import { barDataTableFacts } from "../../../chart/kinds/bar/bar.description.ts";
 import { projectChartKindCli } from "../../../generated/chart-cli-registry.ts";
 import { prepareChartSemantics } from "../../../generated/chart-dispatch.ts";
 import { chartKindRegistry } from "../../../generated/chart-registry.ts";
@@ -96,20 +92,22 @@ export const cliExamples: readonly CliExample<ChartCliProps>[] = Object
     return examples;
   }));
 
+/** One inventory or data heading of the shared description skeleton. */
+function isDescriptionSectionHeader(line: string): boolean {
+  return /^[^:]+ \(\d[^)]*\):$/u.test(line);
+}
+
 function descriptionLineStyle(
   line: string,
   theme: TerminalTheme,
 ): Parameters<typeof styleText>[1] {
-  if (
-    line.startsWith("Title:") || /^Series \(\d+\):$/u.test(line) ||
-    /^Data \(\d+ categor(?:y|ies)\):$/u.test(line)
-  ) {
+  if (line.startsWith("Title:") || isDescriptionSectionHeader(line)) {
     return {
       color: terminalToneColor(theme, "accent"),
       ...theme.typography.strong,
     };
   }
-  if (line.startsWith("Variant:")) {
+  if (/^(?:Variant|Grid|Comparison):/u.test(line)) {
     return {
       color: terminalThemeColor(theme, "--discern-color-ink-faint"),
       ...theme.typography.annotation,
@@ -136,29 +134,38 @@ function styledLines(
   );
 }
 
-function barDataTable(
-  validated: ValidatedBarChart,
+/** The kind-owned data-table facts behind the universal description. */
+interface ChartDataTableFacts {
+  readonly columns: readonly {
+    readonly header: string;
+    readonly numeric: boolean;
+  }[];
+  readonly rows: readonly (readonly string[])[];
+}
+
+/** One exhaustive seam per kind: the exact rows the description states. */
+function chartDataTableFacts(validated: ValidatedChart): ChartDataTableFacts {
+  switch (validated.kind) {
+    case "bar":
+      return barDataTableFacts(validated);
+  }
+}
+
+function dataTable(
+  facts: ChartDataTableFacts,
   width: number,
   theme: TerminalThemeVariant,
   capabilities: TerminalCapabilities,
 ): string {
-  const unit = barUnitSuffix(validated.value);
   return renderTableCli(
     {
       layout: "responsive",
-      columns: [
-        { header: "Category" },
-        ...validated.series.map((series) => ({
-          header: series.label,
-          align: "end" as const,
-        })),
-      ],
-      rows: validated.categories.map((category, index) => [
-        `${category.label} (${category.id})`,
-        ...validated.series.map((series) =>
-          barValueText(series.values[index] ?? null, unit)
-        ),
-      ]),
+      columns: facts.columns.map((column) =>
+        column.numeric
+          ? { header: column.header, align: "end" as const }
+          : { header: column.header }
+      ),
+      rows: facts.rows,
       theme,
       width,
     },
@@ -168,8 +175,10 @@ function barDataTable(
 
 /**
  * Format the universal description for terminal reading: the same facts the
- * one description authority states, with the data section projected as a
- * real aligned table.
+ * one description authority states, split into its heading-led sections,
+ * with the data section's rows projected as a real aligned table. The
+ * splicer is kind-agnostic — every kind's description follows the shared
+ * skeleton, and each kind supplies only its table facts.
  */
 function renderChartDescription(
   validated: ValidatedChart,
@@ -180,26 +189,35 @@ function renderChartDescription(
 ): string {
   const theme = terminalThemes[themeName];
   const lines = description.trimEnd().split("\n");
-  switch (validated.kind) {
-    case "bar": {
-      const seriesEnd = 5 + validated.series.length;
-      const dataEnd = seriesEnd + 1 + validated.categories.length;
-      return composeCliBlocks([
-        styledLines(lines.slice(0, 4), width, theme, capabilities),
-        styledLines(lines.slice(4, seriesEnd), width, theme, capabilities),
-        joinVertical([
-          styledLines(
-            lines.slice(seriesEnd, seriesEnd + 1),
-            width,
-            theme,
-            capabilities,
-          ),
-          barDataTable(validated, width, themeName, capabilities),
-        ]),
-        styledLines(lines.slice(dataEnd), width, theme, capabilities),
-      ]);
+  const facts = chartDataTableFacts(validated);
+  const headerIndexes = lines.flatMap((line, index) =>
+    index > 0 && isDescriptionSectionHeader(line) ? [index] : []
+  );
+  const sectionStarts = [0, ...headerIndexes, lines.length];
+  const blocks: string[] = [];
+  for (let section = 0; section + 1 < sectionStarts.length; section += 1) {
+    const start = sectionStarts[section];
+    const end = sectionStarts[section + 1];
+    if (start === undefined || end === undefined || start >= end) continue;
+    const heading = lines[start];
+    if (heading !== undefined && heading.startsWith("Data (")) {
+      const rowsEnd = start + 1 + facts.rows.length;
+      blocks.push(joinVertical([
+        styledLines(lines.slice(start, start + 1), width, theme, capabilities),
+        dataTable(facts, width, themeName, capabilities),
+      ]));
+      if (rowsEnd < end) {
+        blocks.push(
+          styledLines(lines.slice(rowsEnd, end), width, theme, capabilities),
+        );
+      }
+      continue;
     }
+    blocks.push(
+      styledLines(lines.slice(start, end), width, theme, capabilities),
+    );
   }
+  return composeCliBlocks(blocks);
 }
 
 /**

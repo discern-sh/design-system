@@ -20,6 +20,32 @@ export function barValueText(value: number | null, unitSuffix: string): string {
   return chartValueText(value, unitSuffix);
 }
 
+/**
+ * The universal data-table facts every terminal projection renders: one
+ * category row of exact value texts beneath the series-labelled columns.
+ */
+export function barDataTableFacts(spec: ValidatedBarChart): {
+  readonly columns: readonly {
+    readonly header: string;
+    readonly numeric: boolean;
+  }[];
+  readonly rows: readonly (readonly string[])[];
+} {
+  const unit = barUnitSuffix(spec.value);
+  return {
+    columns: [
+      { header: "Category", numeric: false },
+      ...spec.series.map((series) => ({ header: series.label, numeric: true })),
+    ],
+    rows: spec.categories.map((category, index) => [
+      `${category.label} (${category.id})`,
+      ...spec.series.map((series) =>
+        barValueText(series.values[index] ?? null, unit)
+      ),
+    ]),
+  };
+}
+
 /** Describe every accessible fact and the data table in authored order. */
 export default function describeBarChart(spec: ValidatedBarChart): string {
   const unit = barUnitSuffix(spec.value);
