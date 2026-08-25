@@ -1,6 +1,6 @@
 # ADR 0029: Upgrade Markdown images through explicit diagram resources
 
-**Status**: accepted
+**Status**: accepted — generalised by [ADR-0031](0031-promote-markdown-images-through-one-resource-family.md), which serves this same promotion mechanism to a family of resource kinds
 
 ## Context
 
