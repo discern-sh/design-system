@@ -17,6 +17,7 @@ import {
   chartLogPosition,
   createChartLinearScale,
   createChartLogScale,
+  resolveChartPaddedDomain,
 } from "../../scale.ts";
 import type {
   ChartAxisLine,
@@ -90,9 +91,18 @@ function valueTicks(spec: ValidatedLineChart): readonly LineTick[] {
   if (spec.value.scale === "log") {
     // A flat positive domain pads by one decade in each direction.
     const flat = spec.minimumValue === spec.maximumValue;
+    const domain = flat
+      ? resolveChartPaddedDomain({
+        value: spec.minimumValue,
+        preferredMinimum: spec.minimumValue / 10,
+        preferredMaximum: spec.maximumValue * 10,
+        scale: "log",
+        subject: "Line value axis",
+      })
+      : { minimum: spec.minimumValue, maximum: spec.maximumValue };
     const set = chartLogTicks({
-      minimum: flat ? spec.minimumValue / 10 : spec.minimumValue,
-      maximum: flat ? spec.maximumValue * 10 : spec.maximumValue,
+      minimum: domain.minimum,
+      maximum: domain.maximum,
       subject: "Line value axis",
     });
     return finish(set.ticks);
@@ -103,8 +113,15 @@ function valueTicks(spec: ValidatedLineChart): readonly LineTick[] {
   let maximum = spec.maximumValue;
   if (minimum === maximum) {
     const padding = flatPadding(minimum);
-    minimum -= padding;
-    maximum += padding;
+    const domain = resolveChartPaddedDomain({
+      value: minimum,
+      preferredMinimum: minimum - padding,
+      preferredMaximum: maximum + padding,
+      scale: "linear",
+      subject: "Line value axis",
+    });
+    minimum = domain.minimum;
+    maximum = domain.maximum;
   }
   const set = chartLinearTicks({
     minimum,

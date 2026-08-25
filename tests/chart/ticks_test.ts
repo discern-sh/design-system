@@ -13,6 +13,7 @@ import {
   createChartBandScale,
   createChartLinearScale,
   createChartLogScale,
+  resolveChartPaddedDomain,
 } from "../../src/chart/scale.ts";
 import {
   chartLinearTicks,
@@ -138,6 +139,61 @@ Deno.test("linear tick interval selection never underflows or overflows through 
   assertEquals(
     enormous.ticks.map((tick) => tick.number),
     [-1e308, -5e307, 0, 5e307, 1e308],
+  );
+});
+
+Deno.test("outward ticks clamp to finite binary64 endpoints at both extremes", () => {
+  const linear = chartLinearTicks({
+    minimum: -Number.MAX_VALUE,
+    maximum: Number.MAX_VALUE,
+    targetCount: 5,
+    subject: "Extreme linear",
+  });
+  assertEquals(linear.ticks[0]?.number, -Number.MAX_VALUE);
+  assertEquals(linear.ticks.at(-1)?.number, Number.MAX_VALUE);
+  assert(linear.ticks.every((tick) => Number.isFinite(tick.number)));
+
+  const log = chartLogTicks({
+    minimum: Number.MIN_VALUE,
+    maximum: Number.MAX_VALUE,
+    subject: "Extreme log",
+  });
+  assertEquals(log.ticks[0]?.number, Number.MIN_VALUE);
+  assertEquals(log.ticks.at(-1)?.number, Number.MAX_VALUE);
+  assert(log.ticks.every((tick) => Number.isFinite(tick.number)));
+});
+
+Deno.test("flat-domain padding stays finite at binary64 edges", () => {
+  assertEquals(
+    resolveChartPaddedDomain({
+      value: Number.MAX_VALUE,
+      preferredMinimum: Number.MAX_VALUE - 1e308,
+      preferredMaximum: Number.MAX_VALUE + 1e308,
+      scale: "linear",
+      subject: "Positive edge",
+    }),
+    { minimum: Number.MAX_VALUE - 1e308, maximum: Number.MAX_VALUE },
+  );
+  assertEquals(
+    resolveChartPaddedDomain({
+      value: Number.MIN_VALUE,
+      preferredMinimum: Number.MIN_VALUE / 10,
+      preferredMaximum: Number.MIN_VALUE * 10,
+      scale: "log",
+      subject: "Denormal edge",
+    }),
+    { minimum: Number.MIN_VALUE, maximum: Number.MIN_VALUE * 10 },
+  );
+  const negative = resolveChartPaddedDomain({
+    value: -Number.MAX_VALUE,
+    preferredMinimum: -Number.MAX_VALUE - 1,
+    preferredMaximum: -Number.MAX_VALUE + 1,
+    scale: "linear",
+    subject: "Negative edge",
+  });
+  assertEquals(negative.minimum, -Number.MAX_VALUE);
+  assert(
+    negative.maximum > negative.minimum && Number.isFinite(negative.maximum),
   );
 });
 

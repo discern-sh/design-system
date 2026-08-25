@@ -11,7 +11,11 @@ import {
   roundChartNumber,
 } from "../../geometry.ts";
 import { chartTickLabel } from "../../kind-layout.ts";
-import { chartLinearPosition, createChartLinearScale } from "../../scale.ts";
+import {
+  chartLinearPosition,
+  createChartLinearScale,
+  resolveChartPaddedDomain,
+} from "../../scale.ts";
 import type {
   ChartAxisLine,
   ChartDataPath,
@@ -99,9 +103,18 @@ export default function layoutSlopeChart(
   // labels of such a figure stack at one position and refuse deterministically
   // below rather than crashing the scale.
   const degenerate = spec.minimumValue === spec.maximumValue;
+  const domain = degenerate
+    ? resolveChartPaddedDomain({
+      value: spec.minimumValue,
+      preferredMinimum: spec.minimumValue - 1,
+      preferredMaximum: spec.maximumValue + 1,
+      scale: "linear",
+      subject: "Slope value axis",
+    })
+    : { minimum: spec.minimumValue, maximum: spec.maximumValue };
   const set = chartLinearTicks({
-    minimum: degenerate ? spec.minimumValue - 1 : spec.minimumValue,
-    maximum: degenerate ? spec.maximumValue + 1 : spec.maximumValue,
+    minimum: domain.minimum,
+    maximum: domain.maximum,
     targetCount: G.axis.valueTickTarget,
     subject: "Slope value axis",
   });

@@ -16,6 +16,7 @@ import {
   chartLogPosition,
   createChartLinearScale,
   createChartLogScale,
+  resolveChartPaddedDomain,
 } from "../../scale.ts";
 import type {
   ChartAxisLine,
@@ -85,10 +86,14 @@ function paddedDomain(
   scale: ChartValueScale,
 ): { readonly minimum: number; readonly maximum: number } {
   if (minimum < maximum) return { minimum, maximum };
-  if (scale === "log") return { minimum: minimum / 10, maximum: maximum * 10 };
-  if (minimum === 0) return { minimum: -1, maximum: 1 };
-  const pad = Math.abs(minimum) / 2;
-  return { minimum: minimum - pad, maximum: maximum + pad };
+  const pad = minimum === 0 ? 1 : Math.abs(minimum) / 2;
+  return resolveChartPaddedDomain({
+    value: minimum,
+    preferredMinimum: scale === "log" ? minimum / 10 : minimum - pad,
+    preferredMaximum: scale === "log" ? maximum * 10 : maximum + pad,
+    scale,
+    subject: "Scatter axis",
+  });
 }
 
 function resolveAxis(

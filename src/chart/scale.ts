@@ -7,6 +7,74 @@
  * @module
  */
 
+import { ChartValidationError } from "./errors.ts";
+
+/** One finite upward domain used by a chart scale. */
+export interface ChartResolvedDomain {
+  readonly minimum: number;
+  readonly maximum: number;
+}
+
+/**
+ * Resolve a kind's preferred padding around one flat value without allowing
+ * overflow or underflow to collapse the derived domain. At binary64 edges
+ * the value may sit at one boundary; the alternative would invent a number
+ * beyond the authored finite envelope.
+ */
+export function resolveChartPaddedDomain(options: {
+  readonly value: number;
+  readonly preferredMinimum: number;
+  readonly preferredMaximum: number;
+  readonly scale: "linear" | "log";
+  readonly subject: string;
+}): ChartResolvedDomain {
+  const { value, scale, subject } = options;
+  if (!Number.isFinite(value) || (scale === "log" && value <= 0)) {
+    throw new ChartValidationError({
+      code: "chart/layout/non-finite",
+      message: `${subject} cannot pad a value outside the selected scale.`,
+      facts: { value },
+      remedy: "State a finite value inside the selected scale's domain.",
+    });
+  }
+  const validMinimum = Number.isFinite(options.preferredMinimum) &&
+    options.preferredMinimum < value &&
+    (scale === "linear" || options.preferredMinimum > 0);
+  const validMaximum = Number.isFinite(options.preferredMaximum) &&
+    options.preferredMaximum > value;
+  let minimum = validMinimum
+    ? options.preferredMinimum
+    : scale === "log"
+    ? value
+    : value === 0
+    ? -1
+    : value > 0
+    ? value / 2
+    : value * 2;
+  let maximum = validMaximum
+    ? options.preferredMaximum
+    : value === 0
+    ? 1
+    : value > 0
+    ? value * 2
+    : value / 2;
+  if (!Number.isFinite(minimum) || (scale === "log" && minimum <= 0)) {
+    minimum = value;
+  }
+  if (!Number.isFinite(maximum)) maximum = value;
+  if (minimum >= maximum) {
+    throw new ChartValidationError({
+      code: "chart/layout/non-finite",
+      message:
+        `${subject} could not derive finite upward padding around ${value}.`,
+      facts: { value },
+      remedy:
+        "Split the figure by magnitude so its flat domain has representable room on the selected scale.",
+    });
+  }
+  return { minimum, maximum };
+}
+
 /** Continuous linear mapping from a value domain onto a scene span. */
 export interface ChartLinearScale {
   readonly kind: "linear";
@@ -172,7 +240,9 @@ export function chartLogFraction(
     !Number.isFinite(domainMin) || !Number.isFinite(domainMax) ||
     domainMin <= 0 || domainMin >= domainMax
   ) {
-    throw new TypeError("Chart log domain must be finite, positive, and span upward.");
+    throw new TypeError(
+      "Chart log domain must be finite, positive, and span upward.",
+    );
   }
   if (value === domainMin) return 0;
   if (value === domainMax) return 1;

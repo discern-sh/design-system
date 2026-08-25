@@ -28,6 +28,7 @@ import {
   renderChartDecimal,
   subtractChartDecimals,
 } from "./decimal.ts";
+import { ChartValidationError } from "./errors.ts";
 
 /** The selected nice step: `mantissa × 10^exponent`. */
 export interface ChartTickStep {
@@ -67,6 +68,41 @@ function lessThan(
   exponent: number,
 ): boolean {
   return compareChartDecimals(value, { coefficient, exponent }) < 0;
+}
+
+function exactTick(value: ChartDecimal): ChartTick {
+  return {
+    value,
+    number: chartDecimalToNumber(value),
+    label: renderChartDecimal(value, true),
+  };
+}
+
+/**
+ * Bind an exact tick to a finite binary64 coordinate. An outward nice tick
+ * may sit beyond binary64 even though the authored endpoint is finite; clamp
+ * only that unrepresentable boundary tick to the exact endpoint rather than
+ * leaking Infinity or a zero produced by decimal underflow into geometry.
+ */
+function finiteTick(
+  value: ChartDecimal,
+  minimum: ChartDecimal,
+  maximum: ChartDecimal,
+  subject: string,
+): ChartTick {
+  const tick = exactTick(value);
+  const representable = Number.isFinite(tick.number) &&
+    !(tick.number === 0 && value.coefficient !== 0n);
+  if (representable) return tick;
+  if (compareChartDecimals(value, minimum) <= 0) return exactTick(minimum);
+  if (compareChartDecimals(value, maximum) >= 0) return exactTick(maximum);
+  throw new ChartValidationError({
+    code: "chart/layout/non-finite",
+    message: `${subject} produced an unrepresentable interior tick.`,
+    facts: { tick: tick.label },
+    remedy:
+      "Split the domain by magnitude or choose a scale whose finite tick envelope can state every boundary.",
+  });
 }
 
 /**
@@ -162,11 +198,7 @@ export function chartLinearTicks(options: {
       coefficient: index * BigInt(step.mantissa),
       exponent: step.exponent,
     };
-    ticks.push({
-      value,
-      number: chartDecimalToNumber(value),
-      label: renderChartDecimal(value, true),
-    });
+    ticks.push(finiteTick(value, minimumDecimal, maximumDecimal, subject));
   }
   return {
     step,
@@ -183,13 +215,8 @@ export interface ChartLogTickSet {
   readonly ticks: readonly ChartTick[];
 }
 
-function logTick(coefficient: bigint, exponent: number): ChartTick {
-  const value: ChartDecimal = { coefficient, exponent };
-  return {
-    value,
-    number: chartDecimalToNumber(value),
-    label: renderChartDecimal(value, true),
-  };
+function logTick(coefficient: bigint, exponent: number): ChartDecimal {
+  return { coefficient, exponent };
 }
 
 /**
@@ -229,7 +256,7 @@ export function chartLogTicks(options: {
     ? chartDecimalOrder(high)
     : chartDecimalOrder(high) + 1;
   const subdivided = highOrder - lowOrder + 1 <= 3;
-  const candidates: ChartTick[] = [];
+  const candidates: ChartDecimal[] = [];
   for (let order = lowOrder; order <= highOrder; order += 1) {
     candidates.push(logTick(1n, order));
     if (subdivided) {
@@ -238,18 +265,18 @@ export function chartLogTicks(options: {
   }
   const lastAtOrBelow = candidates.reduce(
     (found, tick, index) =>
-      compareChartDecimals(tick.value, low) <= 0 ? index : found,
+      compareChartDecimals(tick, low) <= 0 ? index : found,
     0,
   );
   const firstAtOrAbove = candidates.findIndex((tick) =>
-    compareChartDecimals(tick.value, high) >= 0
+    compareChartDecimals(tick, high) >= 0
   );
   return {
     subdivided,
     ticks: candidates.slice(
       lastAtOrBelow,
       (firstAtOrAbove === -1 ? candidates.length - 1 : firstAtOrAbove) + 1,
-    ),
+    ).map((tick) => finiteTick(tick, low, high, subject)),
   };
 }
 
