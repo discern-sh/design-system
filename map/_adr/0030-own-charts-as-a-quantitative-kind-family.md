@@ -44,7 +44,7 @@ The costs are accepted deliberately. Two scene grammars must be maintained, and 
 
 ## Alternatives considered
 
-**Enrolling charts as diagram kinds** would reuse the landed scene and conformance wholesale, but every structural premise fails: mandatory arrowheads, middle-only text, a closed relationship paint set, and overlap prohibitions that forbid adjacent bars and underlying gridlines. Bending `DiagramScene` to admit both vocabularies would cost the diagram proofs their strictness — the connector rules are strict *because* the grammar is closed.
+**Enrolling charts as diagram kinds** would reuse the landed scene and conformance wholesale, but every structural premise fails: mandatory arrowheads, middle-only text, a closed relationship paint set, and overlap prohibitions that forbid adjacent bars and underlying gridlines. Bending `DiagramScene` to admit both vocabularies would cost the diagram proofs their strictness — the connector rules are strict _because_ the grammar is closed.
 
 **One merged super-scene grammar** for both families was rejected for the same reason from the other side: a grammar wide enough for marks, axes, arrowheads, and lifelines can prove almost nothing universally, and every projection pays for the union. Two small closed grammars over shared arithmetic keep each family's proofs strong.
 
