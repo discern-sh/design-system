@@ -4,6 +4,10 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## Unreleased
+
+- Render the terminal Data figure losslessly. Over-wide visual lines, titles, and legend labels no longer lose characters behind an ellipsis: the frame composes the shared box authority, so a visual line that fits passes byte-intact while an over-wide line reflows at word boundaries through the styled wrapping authority; a title that no longer fits the top border's slot moves inside the frame as border-styled wrapped rows above a blank separator; and legend labels hang wrapped continuations under the label column. A single grapheme wider than the frame's inner measure now throws a `TypeError` instead of being silently dropped. `DataFigureCliProps` is unchanged; emitted frames change only where content previously truncated.
+
 ## 0.26.1
 
 - Fix cross-platform release verification for browser Code block Unicode-cell alignment. The guard now inspects fixed terminal-cell layout boxes rather than font-dependent Range ink bounds.
