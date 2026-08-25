@@ -1,5 +1,9 @@
 /** React-free standard-Markdown bridge joining image syntax to diagram specs. */
 
+import {
+  escapeMarkdownAlternative,
+  escapeMarkdownTitle,
+} from "../internal/escape.ts";
 import { formatDiagramAltText } from "./accessibility.ts";
 import { DiagramValidationError } from "./errors.ts";
 import { isDiagramRecord, snapshotDiagramJsonSafe } from "./validation.ts";
@@ -30,15 +34,6 @@ function invalidResource(message: string, path: string): never {
     remedy:
       "Provide exactly one safe image source and one built-in DiagramSpec.",
   });
-}
-
-function markdownAlternative(value: string): string {
-  return value.replaceAll("\\", "\\\\").replaceAll("[", "\\[")
-    .replaceAll("]", "\\]");
-}
-
-function markdownTitle(value: string): string {
-  return value.replaceAll("\\", "\\\\").replaceAll('"', '\\"');
 }
 
 /**
@@ -78,6 +73,6 @@ export function renderDiagramMarkdownImage(
   }
   const validated = validateDiagram(snapshot.spec);
   return `![${
-    markdownAlternative(formatDiagramAltText(validated))
-  }](<${source}> \"${markdownTitle(validated.summary)}\")`;
+    escapeMarkdownAlternative(formatDiagramAltText(validated))
+  }](<${source}> \"${escapeMarkdownTitle(validated.summary)}\")`;
 }

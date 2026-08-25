@@ -1,5 +1,6 @@
 /** Deterministic, accessible, standalone SVG projection for diagram specs. */
 
+import { escapeXml } from "../internal/escape.ts";
 import { formatDiagramAltText } from "./accessibility.ts";
 import { prepareDiagram } from "../generated/diagram-dispatch.ts";
 import type { DiagramSpec } from "../generated/diagram-spec.ts";
@@ -46,12 +47,6 @@ export interface RenderDiagramSvgOptions {
 
 /** Complete standalone SVG document returned by {@linkcode renderDiagramSvg}. */
 export type DiagramSvgDocument = string;
-
-function escapeXml(value: string): string {
-  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;").replaceAll('"', "&quot;")
-    .replaceAll("'", "&apos;");
-}
 
 function nodeRule(
   role: DiagramNodeStyleRole,
