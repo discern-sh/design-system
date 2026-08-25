@@ -12,6 +12,10 @@ import {
   type InteractionEntry,
   type MarkdownBrowserEntry,
 } from "../../src/cli/interactive/mod.ts";
+import {
+  markdownChartExampleMarkdown,
+  markdownChartExampleResource,
+} from "../../src/chart/markdown.example.ts";
 
 /** Flat swatch list with duplicate visible labels and one disabled entry. */
 export const swatchChoices = [
@@ -163,6 +167,18 @@ await requestMarkdownBrowser(options, { io });
 \`\`\`
 
 Assert the typed result only after the terminal has been restored.`,
+  },
+  {
+    kind: "document",
+    id: "reading-data",
+    label: "Reading data",
+    description: "A registered chart resource inside ordinary Markdown",
+    path: "guides/reading-data.md",
+    source: `${markdownChartExampleMarkdown}
+
+Narrow the terminal below the frame envelope to watch the chart move to its
+lossless description without dropping a value.`,
+    charts: [markdownChartExampleResource],
   },
   {
     kind: "group-heading",

@@ -185,6 +185,14 @@ export function markdownBrowserReviewArtifacts(): readonly MarkdownBrowserReview
       capabilities(80),
       "diagram-document",
     ),
+    reviewArtifact(
+      "chart-document",
+      "Resource-upgraded Chart in the reader",
+      80,
+      24,
+      capabilities(80),
+      "chart-document",
+    ),
     resizedArtifact(),
   ]);
 }

@@ -1,5 +1,10 @@
 import type { BuildSummary } from "../src/runtime.ts";
 import type { ComponentMeta } from "../src/types/component-meta.ts";
+import { renderChartSvg } from "../src/chart/svg.ts";
+import {
+  markdownChartExampleSource,
+  markdownChartExampleSpec,
+} from "../src/chart/markdown.example.ts";
 import { renderDiagramSvg } from "../src/diagram/svg.ts";
 import {
   markdownDiagramExampleSource,
@@ -981,26 +986,34 @@ async function bundleCatalogue(): Promise<void> {
   }
 }
 
-async function writeCatalogueDiagramAsset(): Promise<void> {
+async function writeCatalogueMarkdownAsset(
+  source: string,
+  svg: string,
+): Promise<void> {
   const mount = "/catalogue/";
-  if (!markdownDiagramExampleSource.startsWith(mount)) {
+  if (!source.startsWith(mount)) {
     throw new TypeError(
-      "Catalogue Markdown diagram source must use the Catalogue mount",
+      "Catalogue Markdown asset source must use the Catalogue mount",
     );
   }
-  const target = new URL(
-    markdownDiagramExampleSource.slice(mount.length),
-    CATALOGUE_ROOT,
-  );
+  const target = new URL(source.slice(mount.length), CATALOGUE_ROOT);
   if (!target.pathname.startsWith(GENERATED_ROOT.pathname)) {
     throw new TypeError(
-      "Catalogue Markdown diagram asset must stay under catalogue/generated",
+      "Catalogue Markdown asset must stay under catalogue/generated",
     );
   }
   await Deno.mkdir(new URL("./", target), { recursive: true });
-  await Deno.writeTextFile(
-    target,
+  await Deno.writeTextFile(target, svg);
+}
+
+async function writeCatalogueMarkdownAssets(): Promise<void> {
+  await writeCatalogueMarkdownAsset(
+    markdownDiagramExampleSource,
     renderDiagramSvg(markdownDiagramExampleSpec, { theme: "adaptive" }),
+  );
+  await writeCatalogueMarkdownAsset(
+    markdownChartExampleSource,
+    renderChartSvg(markdownChartExampleSpec, { theme: "adaptive" }),
   );
 }
 
@@ -1009,7 +1022,7 @@ export async function buildDesignSystem(): Promise<BuildSummary> {
   await writeGeneratedSources();
   const { sources, shared } = await discoverComponents();
   await generateRegistry(sources, shared, await packageVersion());
-  await writeCatalogueDiagramAsset();
+  await writeCatalogueMarkdownAssets();
   const { emitDesignSystemRuntime } = await import("../src/runtime.ts");
   const summary = await emitDesignSystemRuntime({
     outputRoot: DIST_ROOT,

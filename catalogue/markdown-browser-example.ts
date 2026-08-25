@@ -9,10 +9,16 @@ import {
   updateMarkdownBrowserState,
 } from "../src/cli/interactive/markdown-browser-model.ts";
 import {
+  markdownBrowserDocumentLines,
   markdownBrowserDocumentMaximumOffset,
   markdownBrowserLinkOccurrences,
   renderMarkdownBrowser,
 } from "../src/cli/interactive/markdown-browser-renderer.ts";
+import { stripAnsi } from "../src/cli/ansi.ts";
+import {
+  markdownChartExampleMarkdown,
+  markdownChartExampleResource,
+} from "../src/chart/markdown.example.ts";
 import {
   markdownDiagramExampleMarkdown,
   markdownDiagramExampleResource,
@@ -66,7 +72,9 @@ ${
     ).join("\n\n")
   }
 
-${markdownDiagramExampleMarkdown}`;
+${markdownDiagramExampleMarkdown}
+
+${markdownChartExampleMarkdown}`;
 
 const generatedDocuments = Array.from({ length: 18 }, (_, index) => ({
   kind: "document" as const,
@@ -95,6 +103,7 @@ export const markdownBrowserEntries = [
     path: "guides/keyboard-markdown-browser.md",
     source: markdownBrowserDocumentSource,
     diagrams: [markdownDiagramExampleResource],
+    charts: [markdownChartExampleResource],
   },
   ...generatedDocuments.slice(0, 9),
   {
@@ -142,7 +151,8 @@ export type MarkdownBrowserCataloguePosture =
   | "pointer-link"
   | "pointer-picker"
   | "internal-destination"
-  | "diagram-document";
+  | "diagram-document"
+  | "chart-document";
 
 /** Construct one deterministic state without reading a process or terminal. */
 export function createMarkdownBrowserCatalogueState(
@@ -165,13 +175,16 @@ export function createMarkdownBrowserCatalogueState(
     kind: "key",
     key: { kind: "named", name: "enter" },
   }, capabilities).state;
-  if (posture === "diagram-document") {
+  if (posture === "diagram-document" || posture === "chart-document") {
+    const needle = posture === "diagram-document"
+      ? "┌ Review a change"
+      : "┌ Reviews completed by weekday";
+    const row = markdownBrowserDocumentLines(state, capabilities)
+      .findIndex((line) => stripAnsi(line).includes(needle));
+    const maximum = markdownBrowserDocumentMaximumOffset(state, capabilities);
     return updateMarkdownBrowserState(state, {
       focusedPane: "document",
-      documentScrollOffset: markdownBrowserDocumentMaximumOffset(
-        state,
-        capabilities,
-      ),
+      documentScrollOffset: Math.min(row < 0 ? maximum : row, maximum),
     });
   }
   if (posture === "single-picker") {

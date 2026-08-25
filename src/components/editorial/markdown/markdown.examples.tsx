@@ -1,5 +1,9 @@
 import { Markdown } from "./markdown.tsx";
 import {
+  markdownChartExampleMarkdown,
+  markdownChartExampleResource,
+} from "../../../chart/markdown.example.ts";
+import {
   markdownDiagramExampleMarkdown,
   markdownDiagramExampleResource,
 } from "../../../diagram/markdown.example.ts";
@@ -78,6 +82,18 @@ export default function MarkdownExamples() {
         <Markdown
           source={markdownDiagramExampleMarkdown}
           diagrams={[markdownDiagramExampleResource]}
+          measure="wide"
+        />
+      </section>
+      <section>
+        <h3>Ordinary generated chart image</h3>
+        <Markdown source={markdownChartExampleMarkdown} measure="wide" />
+      </section>
+      <section>
+        <h3>Resource-upgraded live Chart</h3>
+        <Markdown
+          source={markdownChartExampleMarkdown}
+          charts={[markdownChartExampleResource]}
           measure="wide"
         />
       </section>

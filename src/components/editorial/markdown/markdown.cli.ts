@@ -20,6 +20,10 @@ import {
 } from "../../../cli/semantic-inline.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
+  markdownChartExampleMarkdown,
+  markdownChartExampleResource,
+} from "../../../chart/markdown.example.ts";
+import {
   markdownDiagramExampleMarkdown,
   markdownDiagramExampleResource,
 } from "../../../diagram/markdown.example.ts";
@@ -227,6 +231,23 @@ export const cliExamples: readonly CliExample<MarkdownCliProps>[] = [
       source: markdownDiagramExampleMarkdown,
       diagrams: [markdownDiagramExampleResource],
       diagramMode: "description",
+      maxWidth: 52,
+    },
+  },
+  {
+    name: "chart-resource-auto",
+    props: {
+      source: markdownChartExampleMarkdown,
+      charts: [markdownChartExampleResource],
+      maxWidth: 76,
+    },
+  },
+  {
+    name: "chart-resource-description",
+    props: {
+      source: markdownChartExampleMarkdown,
+      charts: [markdownChartExampleResource],
+      chartMode: "description",
       maxWidth: 52,
     },
   },
