@@ -9,7 +9,7 @@ export const minimumBarLightSvg =
   .discern-chart__label--mono { font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
   .discern-chart__axis { vector-effect: non-scaling-stroke; }
   .discern-chart__canvas { fill: oklch(98.97% 0.0028 80.72); }
-  .discern-chart__mark--series-1 { fill: oklch(58% 0.11 195); }
+  .discern-chart__mark--series-1 { fill: oklch(66.76% 0.0939 249.4); }
   .discern-chart__axis { stroke: oklch(53% 0.02 285); }
   .discern-chart__label--axis-label { fill: oklch(40% 0.026 285); }
   </style>

@@ -2,6 +2,8 @@
 
 **Status**: accepted
 
+> **Palette amendment:** [ADR-0032](0032-use-the-medium-contrast-series-palette.md) replaces this record's reserved-hue exclusion, original six colours, and incumbent-measurement safety floor. The six-slot family, non-colour cues, and browser-overridable/terminal-fixed boundary remain in force.
+
 ## Context
 
 The dataviz programme adds package-owned charts: typed quantitative specs rendered as deterministic SVG, a React Component, and truthful terminal frames. The diagram programme already landed the architecture this needs — typed spec → validate/layout → closed scene → independent projections, generated kind enrolment, budgeted refusals, description-first accessibility — and the two-family refactor generalized its codegen into a kind-family framework over shared internal authorities in `src/internal/`.

@@ -22,6 +22,6 @@ export default {
   accessibility: [
     "The spec's required title and summary name the SVG while its kind-specific structural description preserves every authored series, category, value, declared gap, and mechanical extreme.",
     "Title and summary are accessibility context, not visible canvas headings; surrounding document components own visible editorial prose.",
-    "Every series slot pairs its colour with a stable non-colour identity — authored order, per-slot marker and fill glyphs, and the machine-checked colour-vision-safe palette — so colour never carries a series alone.",
+    "Every series slot pairs its colour with a stable non-colour identity — authored order, per-slot marker and fill glyphs, and a machine-tested colour-vision separation floor — so colour never carries a series alone.",
   ],
 } satisfies ComponentMeta;
