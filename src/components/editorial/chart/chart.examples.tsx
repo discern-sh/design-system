@@ -67,24 +67,40 @@ export default function ChartExamples() {
 
       <section>
         <h3>Standalone SVG palettes</h3>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(16rem, 1fr))",
-            gap: "1rem",
-          }}
-        >
-          {(["light", "dark", "adaptive"] as const).map((theme) => (
-            <figure key={theme} style={{ margin: 0, overflowX: "auto" }}>
-              <img
-                src={svgDataUrl(minimalBar, theme)}
-                alt={chartAltText(minimalBar)}
-                style={{ display: "block", maxWidth: "none", height: "auto" }}
-              />
-              <figcaption>{theme} standalone asset</figcaption>
-            </figure>
-          ))}
-        </div>
+        {chartKindRegistry.map((entry) => {
+          const minimal = releaseSpec(entry.meta.slug, "minimal");
+          return (
+            <div
+              key={entry.meta.slug}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(16rem, 1fr))",
+                gap: "1rem",
+                marginBlockEnd: "1.5rem",
+              }}
+            >
+              {(["light", "dark", "adaptive"] as const).map((theme) => (
+                <figure
+                  key={theme}
+                  style={{ margin: 0, overflowX: "auto" }}
+                >
+                  <img
+                    src={svgDataUrl(minimal, theme)}
+                    alt={chartAltText(minimal)}
+                    style={{
+                      display: "block",
+                      maxWidth: "none",
+                      height: "auto",
+                    }}
+                  />
+                  <figcaption>
+                    {entry.meta.slug} {theme} standalone asset
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          );
+        })}
       </section>
 
       <DataFigure
