@@ -114,6 +114,62 @@ Deno.test("fractional domains keep exact labels with derived precision", () => {
   );
 });
 
+Deno.test("linear tick interval selection never underflows or overflows through binary arithmetic", () => {
+  const denormal = chartLinearTicks({
+    minimum: 0,
+    maximum: Number.MIN_VALUE,
+    targetCount: 12,
+    subject: "test",
+  });
+  assertEquals(denormal.step, { mantissa: 5, exponent: -324 });
+  assertEquals(
+    denormal.ticks.map((tick) => tick.number),
+    [0, Number.MIN_VALUE],
+  );
+
+  const enormous = chartLinearTicks({
+    minimum: -1e308,
+    maximum: 1e308,
+    targetCount: 5,
+    subject: "test",
+  });
+  assertEquals(enormous.step, { mantissa: 5, exponent: 307 });
+  assertEquals(
+    enormous.ticks.map((tick) => tick.number),
+    [-1e308, -5e307, 0, 5e307, 1e308],
+  );
+});
+
+Deno.test("nice-step thresholds compare the exact decimal span to the integer divisor", () => {
+  assertEquals(
+    chartLinearTicks({
+      minimum: 0,
+      maximum: 6,
+      targetCount: 5,
+      subject: "test",
+    }).step,
+    { mantissa: 2, exponent: 0 },
+  );
+  assertEquals(
+    chartLinearTicks({
+      minimum: 0,
+      maximum: 12,
+      targetCount: 5,
+      subject: "test",
+    }).step,
+    { mantissa: 5, exponent: 0 },
+  );
+  assertEquals(
+    chartLinearTicks({
+      minimum: 0,
+      maximum: 28,
+      targetCount: 5,
+      subject: "test",
+    }).step,
+    { mantissa: 1, exponent: 1 },
+  );
+});
+
 Deno.test("negative domains label through the same integer arithmetic", () => {
   const set = chartLinearTicks({
     minimum: -10,

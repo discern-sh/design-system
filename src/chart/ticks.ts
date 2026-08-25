@@ -26,6 +26,7 @@ import {
   chartDecimalToNumber,
   compareChartDecimals,
   renderChartDecimal,
+  subtractChartDecimals,
 } from "./decimal.ts";
 
 /** The selected nice step: `mantissa × 10^exponent`. */
@@ -72,12 +73,35 @@ function lessThan(
  * Select the nice step nearest one rough interval, by exact decimal
  * comparison against the published 1.5 / 3 / 7 rounding thresholds.
  */
-function niceStep(rough: ChartDecimal): ChartTickStep {
-  const order = chartDecimalOrder(rough);
-  if (lessThan(rough, 15n, order - 1)) return { mantissa: 1, exponent: order };
-  if (lessThan(rough, 3n, order)) return { mantissa: 2, exponent: order };
-  if (lessThan(rough, 7n, order)) return { mantissa: 5, exponent: order };
-  return { mantissa: 1, exponent: order + 1 };
+function niceStep(span: ChartDecimal, divisor: number): ChartTickStep {
+  const denominator = BigInt(divisor);
+  let order = chartDecimalOrder(span);
+  while (lessThan(span, denominator, order)) order -= 1;
+
+  const selected: ChartTickStep = lessThan(
+      span,
+      denominator * 15n,
+      order - 1,
+    )
+    ? { mantissa: 1, exponent: order }
+    : lessThan(span, denominator * 3n, order)
+    ? { mantissa: 2, exponent: order }
+    : lessThan(span, denominator * 7n, order)
+    ? { mantissa: 5, exponent: order }
+    : { mantissa: 1, exponent: order + 1 };
+
+  const selectedDecimal: ChartDecimal = {
+    coefficient: BigInt(selected.mantissa),
+    exponent: selected.exponent,
+  };
+  const minimumNumber = chartDecimalFromNumber(
+    Number.MIN_VALUE,
+    "minimum representable chart tick step",
+  );
+  if (compareChartDecimals(selectedDecimal, minimumNumber) < 0) {
+    return { mantissa: 5, exponent: -324 };
+  }
+  return selected;
 }
 
 /**
@@ -108,21 +132,26 @@ export function chartLinearTicks(options: {
       `${subject} target tick count must be an integer between 2 and 12; received ${targetCount}`,
     );
   }
-  const rough = chartDecimalFromNumber(
-    (maximum - minimum) / (targetCount - 1),
-    `${subject} tick interval`,
+  const minimumDecimal = chartDecimalFromNumber(
+    minimum,
+    `${subject} tick minimum`,
   );
-  const step = niceStep(rough);
+  const maximumDecimal = chartDecimalFromNumber(
+    maximum,
+    `${subject} tick maximum`,
+  );
+  const span = subtractChartDecimals(maximumDecimal, minimumDecimal);
+  const step = niceStep(span, targetCount - 1);
   const stepDecimal: ChartDecimal = {
     coefficient: BigInt(step.mantissa),
     exponent: step.exponent,
   };
   const low = alignChartDecimals(
-    chartDecimalFromNumber(minimum, `${subject} tick minimum`),
+    minimumDecimal,
     stepDecimal,
   );
   const high = alignChartDecimals(
-    chartDecimalFromNumber(maximum, `${subject} tick maximum`),
+    maximumDecimal,
     stepDecimal,
   );
   const first = floorDivide(low.left, low.right);
