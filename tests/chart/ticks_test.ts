@@ -1,11 +1,19 @@
-import { assert, assertEquals, assertThrows } from "@std/assert";
 import {
+  assert,
+  assertAlmostEquals,
+  assertEquals,
+  assertThrows,
+} from "@std/assert";
+import {
+  CHART_LOG_BASE,
   chartBandSegment,
   chartLinearPosition,
+  chartLogPosition,
   createChartBandScale,
   createChartLinearScale,
+  createChartLogScale,
 } from "../../src/chart/scale.ts";
-import { chartLinearTicks } from "../../src/chart/ticks.ts";
+import { chartLinearTicks, chartLogTicks } from "../../src/chart/ticks.ts";
 
 function labels(set: ReturnType<typeof chartLinearTicks>): readonly string[] {
   return set.ticks.map((tick) => tick.label);
@@ -186,6 +194,125 @@ Deno.test("linear scales position values proportionally, including inverted rang
   assertThrows(
     () =>
       createChartLinearScale({
+        domainMin: 10,
+        domainMax: 10,
+        rangeStart: 0,
+        rangeEnd: 100,
+        subject: "test",
+      }),
+    TypeError,
+    "span upward",
+  );
+});
+
+Deno.test("log ticks mark decades outward across wide spans", () => {
+  const set = chartLogTicks({ minimum: 3, maximum: 800, subject: "test" });
+  assertEquals(set.subdivided, false);
+  assertEquals(
+    set.ticks.map((tick) => tick.label),
+    ["1", "10", "100", "1,000"],
+  );
+  const first = set.ticks[0];
+  const last = set.ticks.at(-1);
+  assert(first !== undefined && last !== undefined);
+  assert(first.number <= 3);
+  assert(last.number >= 800);
+});
+
+Deno.test("log ticks subdivide narrow spans at the 2 and 5 mantissas", () => {
+  const set = chartLogTicks({ minimum: 1, maximum: 100, subject: "test" });
+  assertEquals(set.subdivided, true);
+  assertEquals(
+    set.ticks.map((tick) => tick.label),
+    ["1", "2", "5", "10", "20", "50", "100"],
+  );
+});
+
+Deno.test("log ticks keep exact natural precision below one", () => {
+  const set = chartLogTicks({ minimum: 0.05, maximum: 3, subject: "test" });
+  assertEquals(set.subdivided, false);
+  assertEquals(
+    set.ticks.map((tick) => tick.label),
+    ["0.01", "0.1", "1", "10"],
+  );
+  const subdivided = chartLogTicks({
+    minimum: 0.2,
+    maximum: 4,
+    subject: "test",
+  });
+  assertEquals(subdivided.subdivided, true);
+  assertEquals(
+    subdivided.ticks.map((tick) => tick.label),
+    ["0.2", "0.5", "1", "2", "5"],
+  );
+});
+
+Deno.test("equal log domains produce deeply equal tick sets", () => {
+  const options = { minimum: 2.5, maximum: 4_800, subject: "test" } as const;
+  assertEquals(chartLogTicks(options), chartLogTicks(options));
+});
+
+Deno.test("degenerate or non-positive log tick domains are refused", () => {
+  assertThrows(
+    () => chartLogTicks({ minimum: 0, maximum: 10, subject: "test" }),
+    TypeError,
+    "strictly positive",
+  );
+  assertThrows(
+    () => chartLogTicks({ minimum: -1, maximum: 10, subject: "test" }),
+    TypeError,
+    "strictly positive",
+  );
+  assertThrows(
+    () => chartLogTicks({ minimum: 5, maximum: 5, subject: "test" }),
+    TypeError,
+    "span upward",
+  );
+  assertThrows(
+    () =>
+      chartLogTicks({
+        minimum: 1,
+        maximum: Number.POSITIVE_INFINITY,
+        subject: "test",
+      }),
+    TypeError,
+    "finite",
+  );
+});
+
+Deno.test("log scales position decades evenly and refuse non-positive facts", () => {
+  assertEquals(CHART_LOG_BASE, 10);
+  const scale = createChartLogScale({
+    domainMin: 1,
+    domainMax: 1_000,
+    rangeStart: 240,
+    rangeEnd: 0,
+    subject: "test",
+  });
+  assertAlmostEquals(chartLogPosition(scale, 1), 240, 1e-9);
+  assertAlmostEquals(chartLogPosition(scale, 10), 160, 1e-9);
+  assertAlmostEquals(chartLogPosition(scale, 100), 80, 1e-9);
+  assertAlmostEquals(chartLogPosition(scale, 1_000), 0, 1e-9);
+  assertThrows(
+    () => chartLogPosition(scale, 0),
+    TypeError,
+    "strictly positive",
+  );
+  assertThrows(
+    () =>
+      createChartLogScale({
+        domainMin: 0,
+        domainMax: 10,
+        rangeStart: 0,
+        rangeEnd: 100,
+        subject: "test",
+      }),
+    TypeError,
+    "strictly positive",
+  );
+  assertThrows(
+    () =>
+      createChartLogScale({
         domainMin: 10,
         domainMax: 10,
         rangeStart: 0,

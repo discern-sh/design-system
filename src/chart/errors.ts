@@ -20,6 +20,7 @@ export const CHART_BUDGET_REMEDIES = [
   "reduce-series",
   "aggregate-categories",
   "split-figure",
+  "log-scale",
 ] as const;
 
 /** Author action attached to a measurable chart-budget refusal. */
@@ -57,6 +58,8 @@ const BUDGET_REMEDY_TEXT: Readonly<Record<ChartBudgetRemedy, string>> = {
   "aggregate-categories":
     "Aggregate long-tail categories into fewer, broader ones.",
   "split-figure": "Split the data into two or more focused figures.",
+  "log-scale":
+    "Use a log value scale where position encodes the value, or split the data into focused figures.",
 };
 
 /** Measurable refusal carrying the exceeded limit and prescribed author move. */

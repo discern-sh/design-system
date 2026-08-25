@@ -47,7 +47,7 @@ function subResolution(value: number, path: string): never {
     path,
     facts: { value },
     remedy:
-      "Split the figure by magnitude or aggregate the smallest members; a log scale is not yet available.",
+      "Split the figure by magnitude or aggregate the smallest members; bar length keeps its zero baseline, so a log scale belongs to the position-encoding kinds.",
   });
 }
 

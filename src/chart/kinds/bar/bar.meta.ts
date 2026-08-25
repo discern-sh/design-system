@@ -47,9 +47,9 @@ const barKindMeta: ChartKindMeta = defineChartKindMeta(
       valueMagnitudeSpan: {
         limit: 4,
         unit: "decades",
-        remedy: "split-figure",
+        remedy: "log-scale",
         description:
-          "Maximum decimal orders separating the smallest and largest nonzero value magnitudes; the log-scale remedy ships with the log scale.",
+          "Maximum decimal orders separating the smallest and largest nonzero value magnitudes; bar length keeps its zero baseline, so the log scale lives in the position-encoding kinds.",
       },
     },
     cli: { stance: "enhanced", honesty: "exact" },

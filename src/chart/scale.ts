@@ -1,8 +1,8 @@
 /**
- * Deterministic chart scales: linear for measured values and band for
- * ordered categories. Time and logarithmic scales arrive with the kind
- * library, not here. Scales map domain facts to unrounded scene positions;
- * scene emission owns coordinate precision.
+ * Deterministic chart scales: linear for measured values, band for ordered
+ * categories, log for positive multiplicative domains, and time as linear
+ * positioning over proleptic-Gregorian day ordinals. Scales map domain facts
+ * to unrounded scene positions; scene emission owns coordinate precision.
  *
  * @module
  */
@@ -58,6 +58,79 @@ export function chartLinearPosition(
 ): number {
   return scale.rangeStart +
     (value - scale.domainMin) / (scale.domainMax - scale.domainMin) *
+      (scale.rangeEnd - scale.rangeStart);
+}
+
+/**
+ * The one logarithm base a chart log scale may use. A pinned base keeps
+ * every projection's decade arithmetic and tick labels byte-identical, and
+ * base ten is the only base whose ticks read as plain decimal magnitudes.
+ */
+export const CHART_LOG_BASE = 10;
+
+/**
+ * Continuous logarithmic mapping from a strictly positive value domain onto
+ * a scene span. Position, not length, encodes the value: length-encoding
+ * kinds keep their zero baseline and never construct one of these.
+ */
+export interface ChartLogScale {
+  readonly kind: "log";
+  readonly base: typeof CHART_LOG_BASE;
+  readonly domainMin: number;
+  readonly domainMax: number;
+  readonly rangeStart: number;
+  readonly rangeEnd: number;
+}
+
+/** Construct a log scale over a positive, non-degenerate domain and span. */
+export function createChartLogScale(options: {
+  readonly domainMin: number;
+  readonly domainMax: number;
+  readonly rangeStart: number;
+  readonly rangeEnd: number;
+  readonly subject: string;
+}): ChartLogScale {
+  assertFinite(options.domainMin, `${options.subject} domain minimum`);
+  assertFinite(options.domainMax, `${options.subject} domain maximum`);
+  assertFinite(options.rangeStart, `${options.subject} range start`);
+  assertFinite(options.rangeEnd, `${options.subject} range end`);
+  if (options.domainMin <= 0) {
+    throw new TypeError(
+      `${options.subject} log domain must be strictly positive; received ${options.domainMin}`,
+    );
+  }
+  if (options.domainMin >= options.domainMax) {
+    throw new TypeError(
+      `${options.subject} domain must span upward; received ${options.domainMin} to ${options.domainMax}`,
+    );
+  }
+  if (options.rangeStart === options.rangeEnd) {
+    throw new TypeError(`${options.subject} range must have positive extent.`);
+  }
+  return {
+    kind: "log",
+    base: CHART_LOG_BASE,
+    domainMin: options.domainMin,
+    domainMax: options.domainMax,
+    rangeStart: options.rangeStart,
+    rangeEnd: options.rangeEnd,
+  };
+}
+
+/** Position one strictly positive in-domain value along the scale's range. */
+export function chartLogPosition(
+  scale: ChartLogScale,
+  value: number,
+): number {
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new TypeError(
+      `Chart log position needs a strictly positive finite value; received ${value}`,
+    );
+  }
+  const start = Math.log10(scale.domainMin);
+  const extent = Math.log10(scale.domainMax) - start;
+  return scale.rangeStart +
+    (Math.log10(value) - start) / extent *
       (scale.rangeEnd - scale.rangeStart);
 }
 
