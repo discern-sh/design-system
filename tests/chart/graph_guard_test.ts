@@ -1,31 +1,42 @@
 import { assert, assertEquals } from "@std/assert";
 import { fromFileUrl, join, relative } from "@std/path";
+import { chartKindRegistry } from "../../src/generated/chart-registry.ts";
 
 const PACKAGE_ROOT = fromFileUrl(new URL("../..", import.meta.url));
 
 /**
  * The chart graph computes every numeral in scaled-decimal integer space, so
  * locale facilities, float formatting, and ambient clock access are banned
- * from every module the chart root reaches. The first root is the published
- * `./chart` entrypoint; conformance stays a second root because the public
- * boundary deliberately withholds it. The ban is scoped to exactly this
- * graph: the CLI text authority's segmenter use is legitimate and
- * deliberately outside it, and the kind CLI projectors live on the `./cli`
- * graph rather than here.
+ * from every module the chart and terminal projectors reach. The neutral
+ * graph remains a separate boundary proof; the numeral graph adds the
+ * generated CLI registry so every future enhanced kind enrolls without a
+ * hand-maintained folder list.
  */
-const CHART_GRAPH_ROOTS = [
+const NEUTRAL_CHART_GRAPH_ROOTS = [
   "src/chart/mod.ts",
   "src/chart/conformance.ts",
+] as const;
+
+const CHART_NUMERAL_GRAPH_ROOTS = [
+  ...NEUTRAL_CHART_GRAPH_ROOTS,
+  "src/generated/chart-cli-registry.ts",
 ] as const;
 
 const BANNED_SOURCES: readonly {
   readonly name: string;
   readonly pattern: RegExp;
 }[] = [
-  { name: "a locale facility (Intl)", pattern: /\bIntl\s*[.(]/u },
   {
-    name: "locale-dependent conversion (toLocale*)",
-    pattern: /\.\s*toLocale[A-Za-z]*\s*\(/u,
+    name: "locale-dependent number formatting (Intl.NumberFormat)",
+    pattern: /\bIntl\s*\.\s*NumberFormat\s*\(/u,
+  },
+  {
+    name: "locale-dependent date formatting (Intl.DateTimeFormat)",
+    pattern: /\bIntl\s*\.\s*DateTimeFormat\s*\(/u,
+  },
+  {
+    name: "locale-dependent conversion (toLocaleString)",
+    pattern: /\.\s*toLocaleString\s*\(/u,
   },
   { name: "float formatting (toFixed)", pattern: /\.\s*toFixed\s*\(/u },
   {
@@ -35,9 +46,11 @@ const BANNED_SOURCES: readonly {
   },
 ] as const;
 
-async function chartGraphModules(): Promise<readonly string[]> {
+async function graphModules(
+  roots: readonly string[],
+): Promise<readonly string[]> {
   const paths = new Set<string>();
-  for (const root of CHART_GRAPH_ROOTS) {
+  for (const root of roots) {
     const result = await new Deno.Command(Deno.execPath(), {
       args: ["info", "--json", "--config", "deno.json", root],
       cwd: PACKAGE_ROOT,
@@ -68,7 +81,7 @@ async function chartGraphModules(): Promise<readonly string[]> {
 }
 
 Deno.test("the chart graph stays neutral and inside its declared roots", async () => {
-  for (const path of await chartGraphModules()) {
+  for (const path of await graphModules(NEUTRAL_CHART_GRAPH_ROOTS)) {
     assert(
       path.startsWith("src/chart/") || path.startsWith("src/internal/") ||
         path.startsWith("src/unicode/") || path.startsWith("src/tokens/") ||
@@ -89,7 +102,31 @@ Deno.test("the chart graph stays neutral and inside its declared roots", async (
 
 Deno.test("locale, float formatting, and clock access are banned from the chart graph", async () => {
   const offenders: string[] = [];
-  for (const path of await chartGraphModules()) {
+  const modules = await graphModules(CHART_NUMERAL_GRAPH_ROOTS);
+  for (const entry of chartKindRegistry) {
+    for (const suffix of ["validation", "layout", "description", "cli"]) {
+      const expected =
+        `src/chart/kinds/${entry.meta.slug}/${entry.meta.slug}.${suffix}.ts`;
+      assert(
+        modules.includes(expected),
+        `${entry.meta.slug} escaped numeral-graph enrolment at ${expected}`,
+      );
+    }
+  }
+  for (
+    const authority of [
+      "src/chart/decimal.ts",
+      "src/chart/format.ts",
+      "src/chart/scale.ts",
+      "src/chart/svg-geometry.ts",
+      "src/chart/ticks.ts",
+      "src/chart/value-text.ts",
+      "src/cli/glyph-ramps.ts",
+    ]
+  ) {
+    assert(modules.includes(authority), `${authority} escaped the numeral graph`);
+  }
+  for (const path of modules) {
     const source = await Deno.readTextFile(join(PACKAGE_ROOT, path));
     for (const banned of BANNED_SOURCES) {
       if (banned.pattern.test(source)) {
@@ -100,17 +137,33 @@ Deno.test("locale, float formatting, and clock access are banned from the chart 
   assertEquals(offenders, [], offenders.join("\n"));
 });
 
-Deno.test("the ban is scoped: the CLI text authority stays outside the chart graph", async () => {
+Deno.test("the ban keeps the grapheme and interactive-clock exemptions scoped", async () => {
   const textAuthority = "src/cli/text.ts";
-  const modules = await chartGraphModules();
+  const modules = await graphModules(CHART_NUMERAL_GRAPH_ROOTS);
   assert(
-    !modules.includes(textAuthority),
-    "the chart graph must not reach the CLI text authority",
+    modules.includes(textAuthority),
+    "the terminal chart graph must reach its shared text authority",
   );
   const source = await Deno.readTextFile(join(PACKAGE_ROOT, textAuthority));
-  const intl = BANNED_SOURCES[0];
   assert(
-    intl !== undefined && intl.pattern.test(source),
-    "premise: the CLI text authority legitimately uses the segmenter this guard would flag, so its exclusion is load-bearing",
+    /\bIntl\s*\.\s*Segmenter\s*\(/u.test(source),
+    "premise: the CLI text authority still uses the legitimate grapheme segmenter",
+  );
+  assert(
+    BANNED_SOURCES.every(({ pattern }) => !pattern.test(source)),
+    "the scoped grapheme exemption must not admit a banned formatter",
+  );
+
+  const interactiveClock = "src/cli/interactive/background.ts";
+  assert(
+    !modules.includes(interactiveClock),
+    "the pure chart projector graph reached the interactive adapter",
+  );
+  const interactiveSource = await Deno.readTextFile(
+    join(PACKAGE_ROOT, interactiveClock),
+  );
+  assert(
+    /\bDate\s*\.\s*now\s*\(/u.test(interactiveSource),
+    "premise: the interactive adapter still owns legitimate clock access",
   );
 });
