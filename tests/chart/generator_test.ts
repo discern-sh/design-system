@@ -10,6 +10,8 @@ import {
   loadKindFamilySources,
 } from "../../scripts/kind-family.ts";
 import { CHART_RELEASE_POSTURES } from "../../src/chart/kind-meta.ts";
+import { CHART_REFUSED_FORMS } from "../../src/chart/refusals.ts";
+import { chartKindAuthorGuide } from "../../src/chart/kinds.ts";
 import {
   type FamilyVocabulary,
   type FixtureKindOptions,
@@ -229,4 +231,14 @@ Deno.test("the real bar kind enrols through the canonical chart root", async () 
   assertEquals(bar.meta.budgets.categoryLabelGraphemes?.limit, 48);
   assertEquals(bar.meta.budgets.seriesLabelGraphemes?.limit, 32);
   assertEquals(bar.meta.budgets.valueMagnitudeSpan?.limit, 4);
+});
+
+Deno.test("the generated author guide names every refused form with its remedy", () => {
+  assert(chartKindAuthorGuide.includes("## Refused forms"));
+  for (const { form, remedy } of CHART_REFUSED_FORMS) {
+    assert(
+      chartKindAuthorGuide.includes(`- ${form} — ${remedy}`),
+      `author guide must name ${form} with its remedy`,
+    );
+  }
 });

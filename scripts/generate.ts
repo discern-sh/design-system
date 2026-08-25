@@ -11,6 +11,7 @@ import {
   type ChartKindMeta,
 } from "../src/chart/kind-meta.ts";
 import { CHART_BUDGET_REMEDIES } from "../src/chart/errors.ts";
+import { CHART_REFUSED_FORMS } from "../src/chart/refusals.ts";
 import {
   componentBehaviors,
   componentGroups,
@@ -229,6 +230,12 @@ export function chartKindFamily(root: URL): KindFamilyConfig {
     releasePostures: CHART_RELEASE_POSTURES,
     cliStances: ["description", "enhanced"],
     validateCliMeta: validateChartCliMeta,
+    authorGuideAppendix: [
+      "## Refused forms",
+      "",
+      ...CHART_REFUSED_FORMS.map(({ form, remedy }) => `- ${form} — ${remedy}`),
+      "",
+    ],
     cli: {
       moduleStance: "enhanced",
       registryFile: "chart-cli-registry.ts",

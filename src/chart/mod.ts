@@ -43,6 +43,8 @@ export type { ChartSeriesPaintRole, ChartSeriesPaintSlot } from "./scene.ts";
 export type { ChartSpec } from "../generated/chart-spec.ts";
 export { describeChart } from "../generated/chart-dispatch.ts";
 export { chartKindAuthorGuide, chartKindMetadata } from "./kinds.ts";
+export type { ChartRefusedForm } from "./refusals.ts";
+export { CHART_REFUSED_FORMS } from "./refusals.ts";
 export type {
   ChartSvgDocument,
   ChartSvgTheme,
