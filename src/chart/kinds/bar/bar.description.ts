@@ -1,10 +1,11 @@
 /** Stable, colour-independent structural description for bar charts. */
 
 import {
-  chartPlainValue as plain,
+  chartNumberText,
   chartUnitSuffix,
   chartValueText,
 } from "../../value-text.ts";
+import type { ChartNumberFormat } from "../../format.ts";
 import type { BarChartValueAxisSpec, ValidatedBarChart } from "./bar.spec.ts";
 
 /** The exact unit suffix every bar surface appends to a stated value. */
@@ -16,8 +17,12 @@ export function barUnitSuffix(value: BarChartValueAxisSpec): string {
  * Render one bar cell exactly as every surface prints it: the canonical
  * shortest decimal with the authored unit, or the declared-gap wording.
  */
-export function barValueText(value: number | null, unitSuffix: string): string {
-  return chartValueText(value, unitSuffix);
+export function barValueText(
+  value: number | null,
+  unitSuffix: string,
+  format?: ChartNumberFormat,
+): string {
+  return chartValueText(value, unitSuffix, format);
 }
 
 /**
@@ -40,7 +45,7 @@ export function barDataTableFacts(spec: ValidatedBarChart): {
     rows: spec.categories.map((category, index) => [
       `${category.label} (${category.id})`,
       ...spec.series.map((series) =>
-        barValueText(series.values[index] ?? null, unit)
+        barValueText(series.values[index] ?? null, unit, spec.value.format)
       ),
     ]),
   };
@@ -60,7 +65,9 @@ export default function describeBarChart(spec: ValidatedBarChart): string {
         ? "proportion of each category's whole"
         : "grouped comparison"
     }`,
-    `${axisName}: linear scale from 0 to ${plain(spec.maximumValue)}${unit}.`,
+    `${axisName}: linear scale from ${
+      chartNumberText(0, spec.value.format)
+    } to ${chartNumberText(spec.maximumValue, spec.value.format)}${unit}.`,
     `Series (${spec.series.length}):`,
   ];
   spec.series.forEach((series, index) => {
@@ -70,7 +77,11 @@ export default function describeBarChart(spec: ValidatedBarChart): string {
   spec.categories.forEach((category, categoryIndex) => {
     const cells = spec.series.map((series) =>
       `${series.label} ${
-        barValueText(series.values[categoryIndex] ?? null, unit)
+        barValueText(
+          series.values[categoryIndex] ?? null,
+          unit,
+          spec.value.format,
+        )
       }`
     );
     lines.push(`${category.label} (${category.id}): ${cells.join(", ")}`);
@@ -93,10 +104,10 @@ export default function describeBarChart(spec: ValidatedBarChart): string {
   if (largest !== undefined && smallest !== undefined) {
     lines.push(
       `Largest value: ${
-        plain(largest.value)
+        chartNumberText(largest.value, spec.value.format)
       }${unit} (${largest.series} in ${largest.category}).`,
       `Smallest stated value: ${
-        plain(smallest.value)
+        chartNumberText(smallest.value, spec.value.format)
       }${unit} (${smallest.series} in ${smallest.category}).`,
     );
   }

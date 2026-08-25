@@ -75,7 +75,11 @@ function valueText(
   presentation: BarPresentation,
   value: number | null,
 ): string {
-  return barValueText(value, presentation.unit);
+  return barValueText(
+    value,
+    presentation.unit,
+    presentation.spec.value.format,
+  );
 }
 
 /**
@@ -314,7 +318,9 @@ function viability(
       measureText(barValueText(null, "")),
       ...spec.series.flatMap(({ values }) => values)
         .filter((value): value is number => value !== null)
-        .map((value) => measureText(barValueText(value, unit))),
+        .map((value) =>
+          measureText(barValueText(value, unit, spec.value.format))
+        ),
     );
     const minimum = 4 + GROUP_INDENT + 2 + BAR_FIELD_FLOOR + 1 + valueWidth;
     if (width < minimum) return failed(decline("width", width, minimum));
@@ -331,7 +337,7 @@ function viability(
   if (grouped) {
     const valueWidth = Math.max(
       ...spec.series.flatMap(({ values }) => values).map((value) =>
-        measureText(barValueText(value, unit))
+        measureText(barValueText(value, unit, spec.value.format))
       ),
     );
     const minimum = 4 + labelWord + LABEL_GAP + BAR_FIELD_FLOOR + 1 +

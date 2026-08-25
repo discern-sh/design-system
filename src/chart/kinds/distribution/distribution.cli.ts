@@ -36,9 +36,11 @@ import {
 } from "../../../cli/theme.ts";
 import { chartLinearFraction } from "../../scale.ts";
 import { chartValueText } from "../../value-text.ts";
+import type { ChartNumberFormat } from "../../format.ts";
 import {
   distributionCountText,
   distributionRangeText,
+  distributionRecordedValueRows,
   distributionUnitSuffix,
 } from "./distribution.description.ts";
 import type {
@@ -63,6 +65,7 @@ interface DistributionPresentation {
   readonly theme: TerminalTheme;
   readonly capabilities: ChartKindCliProjectorContext["capabilities"];
   readonly unit: string;
+  readonly format: ChartNumberFormat | undefined;
   readonly inner: number;
 }
 
@@ -105,6 +108,7 @@ function rangeText(
       start,
       end,
       presentation.capabilities.unicode ? "–" : "-",
+      presentation.format,
     )
   }${presentation.unit}`;
 }
@@ -236,6 +240,49 @@ interface BoxAnnotations {
   readonly lines: readonly string[];
 }
 
+interface RecordedValueLines {
+  readonly refusal?: ChartKindCliProjection;
+  readonly lines: readonly string[];
+}
+
+/** Every source measurement, indexed and packed in authored order. */
+function recordedValueLines(
+  spec: ValidatedDistributionChart,
+  presentation: DistributionPresentation,
+): RecordedValueLines {
+  const items = distributionRecordedValueRows(spec).map(([index, value]) =>
+    `#${index} ${value}`
+  );
+  for (const item of items) {
+    const width = measureText(item);
+    if (width > presentation.inner) {
+      return {
+        refusal: decline("label-wrap", width, presentation.inner),
+        lines: [],
+      };
+    }
+  }
+  const lines: string[] = [];
+  let current = "";
+  let currentWidth = 0;
+  for (const item of items) {
+    const width = measureText(item);
+    if (current === "") {
+      current = item;
+      currentWidth = width;
+    } else if (currentWidth + 2 + width <= presentation.inner) {
+      current = `${current}, ${item}`;
+      currentWidth += 2 + width;
+    } else {
+      lines.push(current);
+      current = item;
+      currentWidth = width;
+    }
+  }
+  if (current !== "") lines.push(current);
+  return { lines: [mutedText(presentation, "Values:"), ...lines] };
+}
+
 /** The lossless layer: all five labelled numbers, wrapped at item boundaries. */
 function boxAnnotationLines(
   spec: ValidatedDistributionBoxChart,
@@ -253,7 +300,11 @@ function boxAnnotationLines(
     { label: "max", value: five.maximum },
   ];
   const rendered = items.map((item) => {
-    const value = chartValueText(item.value, presentation.unit);
+    const value = chartValueText(
+      item.value,
+      presentation.unit,
+      presentation.format,
+    );
     return {
       rendered: `${mutedText(presentation, item.label)} ${value}`,
       width: measureText(item.label) + 1 + measureText(value),
@@ -354,6 +405,7 @@ const projectDistributionChartCli = (
     theme: terminalThemes[context.theme],
     capabilities: context.capabilities,
     unit: distributionUnitSuffix(spec.value),
+    format: spec.value.format,
     inner: width - 4,
   };
   // The bottom inventory states derived counts, so it joins the width
@@ -371,12 +423,15 @@ const projectDistributionChartCli = (
   if (spec.variant === "histogram") {
     const geometry = histogramGeometry(spec, presentation, width);
     if (geometry.refusal !== undefined) return geometry.refusal;
+    const values = recordedValueLines(spec, presentation);
+    if (values.refusal !== undefined) return values.refusal;
     const titleRefusal = embedTitle();
     if (titleRefusal !== undefined) return titleRefusal;
     return {
       kind: "frame",
       frame: renderFrame(spec, presentation, width, [
         joinVertical([...histogramRows(spec, presentation, geometry)]),
+        joinVertical([...values.lines]),
       ]),
     };
   }
@@ -384,6 +439,8 @@ const projectDistributionChartCli = (
   if (width < minimum) return decline("width", width, minimum);
   const annotations = boxAnnotationLines(spec, presentation);
   if (annotations.refusal !== undefined) return annotations.refusal;
+  const values = recordedValueLines(spec, presentation);
+  if (values.refusal !== undefined) return values.refusal;
   const titleRefusal = embedTitle();
   if (titleRefusal !== undefined) return titleRefusal;
   return {
@@ -391,6 +448,7 @@ const projectDistributionChartCli = (
     frame: renderFrame(spec, presentation, width, [
       boxRow(spec, presentation, presentation.inner),
       joinVertical([...annotations.lines]),
+      joinVertical([...values.lines]),
     ]),
   };
 };

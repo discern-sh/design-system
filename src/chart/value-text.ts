@@ -8,11 +8,22 @@
  */
 
 import { chartDecimalFromNumber, renderChartDecimal } from "./decimal.ts";
+import { type ChartNumberFormat, formatChartNumber } from "./format.ts";
 import type { ChartValueAxisSpec } from "./spec.ts";
 
 /** Render one number as its exact canonical shortest decimal. */
 export function chartPlainValue(value: number): string {
   return renderChartDecimal(chartDecimalFromNumber(value, "chart value"));
+}
+
+/** One number through the authored format, or the canonical exact default. */
+export function chartNumberText(
+  value: number,
+  format?: ChartNumberFormat,
+): string {
+  return format === undefined
+    ? chartPlainValue(value)
+    : formatChartNumber(value, format);
 }
 
 /** The exact unit suffix every surface appends to a stated value. */
@@ -24,8 +35,9 @@ export function chartUnitSuffix(axis: ChartValueAxisSpec): string {
 export function chartValueText(
   value: number | null,
   unitSuffix: string,
+  format?: ChartNumberFormat,
 ): string {
   return value === null
     ? "no stated value"
-    : `${chartPlainValue(value)}${unitSuffix}`;
+    : `${chartNumberText(value, format)}${unitSuffix}`;
 }

@@ -5,7 +5,13 @@ import {
   renderChartDecimal,
   subtractChartDecimals,
 } from "../../decimal.ts";
-import { chartPlainValue as plain, chartUnitSuffix } from "../../value-text.ts";
+import {
+  chartNumberText,
+  chartPlainValue as plain,
+  chartUnitSuffix,
+  chartValueText,
+} from "../../value-text.ts";
+import { type ChartNumberFormat, formatChartDecimal } from "../../format.ts";
 import type {
   DistributionChartValueAxisSpec,
   ValidatedDistributionBin,
@@ -31,8 +37,11 @@ export function distributionRangeText(
   start: number,
   end: number,
   dash = "–",
+  format?: ChartNumberFormat,
 ): string {
-  return `${plain(start)}${dash}${plain(end)}`;
+  return `${chartNumberText(start, format)}${dash}${
+    chartNumberText(end, format)
+  }`;
 }
 
 /** One bin's count exactly as every surface prints it: `12 values` style. */
@@ -45,11 +54,18 @@ export function distributionCountText(count: number): string {
  * spans such as the interquartile range never print a floating-point
  * artifact.
  */
-function exactDifference(left: number, right: number): string {
-  return renderChartDecimal(subtractChartDecimals(
+function exactDifference(
+  left: number,
+  right: number,
+  format?: ChartNumberFormat,
+): string {
+  const difference = subtractChartDecimals(
     chartDecimalFromNumber(left, "distribution difference"),
     chartDecimalFromNumber(right, "distribution difference"),
-  ));
+  );
+  return format === undefined
+    ? renderChartDecimal(difference)
+    : formatChartDecimal(difference, format);
 }
 
 function axisName(spec: ValidatedDistributionChart): string {
@@ -80,15 +96,16 @@ function histogramLines(
   }
   const lines = [
     `Variant: histogram of ${distributionCountText(spec.values.length)}`,
-    `${axisName(spec)}: linear scale from ${plain(first.start)}${unit} to ${
-      plain(last.end)
-    }${unit}.`,
-    `Bins (${spec.bins.length}): ${
+    `${axisName(spec)}: linear scale from ${
+      chartNumberText(first.start, spec.value.format)
+    }${unit} to ${chartNumberText(last.end, spec.value.format)}${unit}.`,
+    ...recordedValueLines(spec),
+    `Bins (${spec.bins.length}):`,
+    `Source: ${
       spec.binsRule === "edges"
         ? "author-declared edges"
         : "Sturges rule over nice-step edges"
     }.`,
-    `Data (${spec.bins.length} bins):`,
     ...spec.bins.map((bin) =>
       `${bin.label}${unit}: ${distributionCountText(bin.count)}`
     ),
@@ -113,18 +130,53 @@ function boxLines(spec: ValidatedDistributionBoxChart): readonly string[] {
   const five = spec.fiveNumberSummary;
   return [
     `Variant: box summary of ${distributionCountText(spec.values.length)}`,
-    `${axisName(spec)}: linear scale from ${plain(five.minimum)}${unit} to ${
-      plain(five.maximum)
-    }${unit}.`,
-    "Data (5 numbers):",
-    `Minimum: ${plain(five.minimum)}${unit}`,
-    `Lower quartile: ${plain(five.lowerQuartile)}${unit}`,
-    `Median: ${plain(five.median)}${unit}`,
-    `Upper quartile: ${plain(five.upperQuartile)}${unit}`,
-    `Maximum: ${plain(five.maximum)}${unit}`,
+    `${axisName(spec)}: linear scale from ${
+      chartNumberText(five.minimum, spec.value.format)
+    }${unit} to ${chartNumberText(five.maximum, spec.value.format)}${unit}.`,
+    ...recordedValueLines(spec),
+    "Five-number summary (5):",
+    `Minimum: ${chartNumberText(five.minimum, spec.value.format)}${unit}`,
+    `Lower quartile: ${
+      chartNumberText(five.lowerQuartile, spec.value.format)
+    }${unit}`,
+    `Median: ${chartNumberText(five.median, spec.value.format)}${unit}`,
+    `Upper quartile: ${
+      chartNumberText(five.upperQuartile, spec.value.format)
+    }${unit}`,
+    `Maximum: ${chartNumberText(five.maximum, spec.value.format)}${unit}`,
     `Interquartile range: ${
-      exactDifference(five.upperQuartile, five.lowerQuartile)
+      exactDifference(
+        five.upperQuartile,
+        five.lowerQuartile,
+        spec.value.format,
+      )
     }${unit}.`,
+  ];
+}
+
+/** Indexed recorded values in authored order, shared by prose and tables. */
+export function distributionRecordedValueRows(
+  spec: ValidatedDistributionChart,
+): readonly (readonly [string, string])[] {
+  const unit = distributionUnitSuffix(spec.value);
+  return Object.freeze(spec.authoredValues.map((value, index) =>
+    Object.freeze(
+      [
+        String(index + 1),
+        chartValueText(value, unit, spec.value.format),
+      ] as const,
+    )
+  ));
+}
+
+function recordedValueLines(
+  spec: ValidatedDistributionChart,
+): readonly string[] {
+  return [
+    `Data (${spec.authoredValues.length} recorded values, authored order):`,
+    ...distributionRecordedValueRows(spec).map(([index, value]) =>
+      `${index}: ${value}`
+    ),
   ];
 }
 
@@ -141,9 +193,9 @@ export default function describeDistributionChart(
 }
 
 /**
- * The description's data lines as table facts, one row per data line in the
- * same order: `Range | Count` for every histogram bin, `Statistic | Value`
- * for the five box numbers.
+ * The description's lossless data lines as table facts: one indexed row per
+ * recorded value in authored order. Derived bins and summary statistics stay
+ * in their own description sections instead of replacing source facts.
  */
 export function distributionDataTableFacts(
   spec: ValidatedDistributionChart,
@@ -154,28 +206,11 @@ export function distributionDataTableFacts(
   }[];
   readonly rows: readonly (readonly string[])[];
 } {
-  const unit = distributionUnitSuffix(spec.value);
-  if (spec.variant === "histogram") {
-    return {
-      columns: [
-        { header: "Range", numeric: false },
-        { header: "Count", numeric: true },
-      ],
-      rows: spec.bins.map((bin) => [`${bin.label}${unit}`, plain(bin.count)]),
-    };
-  }
-  const five = spec.fiveNumberSummary;
   return {
     columns: [
-      { header: "Statistic", numeric: false },
+      { header: "#", numeric: true },
       { header: "Value", numeric: true },
     ],
-    rows: [
-      ["Minimum", `${plain(five.minimum)}${unit}`],
-      ["Lower quartile", `${plain(five.lowerQuartile)}${unit}`],
-      ["Median", `${plain(five.median)}${unit}`],
-      ["Upper quartile", `${plain(five.upperQuartile)}${unit}`],
-      ["Maximum", `${plain(five.maximum)}${unit}`],
-    ],
+    rows: distributionRecordedValueRows(spec),
   };
 }

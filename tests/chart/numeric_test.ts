@@ -9,6 +9,7 @@ import {
 } from "../../src/chart/decimal.ts";
 import {
   type ChartNumberFormat,
+  formatChartDecimal,
   formatChartNumber,
 } from "../../src/chart/format.ts";
 import { chartProportionalCumulativeFractions } from "../../src/chart/proportions.ts";
@@ -149,6 +150,23 @@ Deno.test("the SI format selects ASCII prefixes and carries rounding overflow", 
   assertEquals(formatChartNumber(2e18, si(0)), "2,000P");
 });
 
+Deno.test("already-exact derived decimals use the same formatter authority", () => {
+  assertEquals(
+    formatChartDecimal(
+      { coefficient: 615n, exponent: -3 },
+      { kind: "decimal", decimals: 2 },
+    ),
+    "0.62",
+  );
+  assertEquals(
+    formatChartDecimal(
+      { coefficient: -615n, exponent: -3 },
+      { kind: "decimal", decimals: 2 },
+    ),
+    "-0.62",
+  );
+});
+
 Deno.test("format precision outside the closed contract is refused", () => {
   assertThrows(
     () => formatChartNumber(1, { kind: "decimal", decimals: -1 }),
@@ -172,8 +190,14 @@ Deno.test("the public formatter refuses every runtime escape from its closed voc
     const [format, message] of [
       [null, "must be a chart number format object"],
       [{ kind: "fresh", decimals: 0 }, "kind must be one of"],
-      [{ kind: "decimal", decimals: 0, grouping: "yes" }, "grouping must be a boolean"],
-      [{ kind: "percent", decimals: 0, grouping: true }, "unsupported field grouping"],
+      [
+        { kind: "decimal", decimals: 0, grouping: "yes" },
+        "grouping must be a boolean",
+      ],
+      [
+        { kind: "percent", decimals: 0, grouping: true },
+        "unsupported field grouping",
+      ],
       [{ kind: "si", decimals: 0, extra: true }, "unsupported field extra"],
     ] as const
   ) {

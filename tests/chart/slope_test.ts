@@ -274,9 +274,9 @@ Deno.test("the exact frame prints every item's label, both values, and delta", (
       validated.endpoints.after,
       ...validated.items.flatMap((item) => [
         item.label,
-        slopeValueText(item.before, unit),
-        slopeValueText(item.after, unit),
-        slopeDeltaCell(item, unit),
+        slopeValueText(item.before, unit, validated.value.format),
+        slopeValueText(item.after, unit, validated.value.format),
+        slopeDeltaCell(item, unit, validated.value.format),
       ]),
     ];
     for (const fact of facts) {

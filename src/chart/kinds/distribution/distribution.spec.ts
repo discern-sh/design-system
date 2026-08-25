@@ -72,6 +72,8 @@ interface ValidatedDistributionChartBase extends ValidatedChartSpec {
   readonly kind: "distribution";
   readonly title: string;
   readonly summary: string;
+  /** Recorded measurements in their authored order for lossless projection. */
+  readonly authoredValues: readonly number[];
   /** Recorded measurements as a sorted ascending copy of the authored data. */
   readonly values: readonly number[];
   readonly value: DistributionChartValueAxisSpec;

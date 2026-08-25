@@ -208,6 +208,17 @@ export function formatChartNumber(
   value: number,
   format: ChartNumberFormat,
 ): string {
+  return formatChartDecimal(
+    chartDecimalFromNumber(value, "Chart formatted value"),
+    format,
+  );
+}
+
+/** Format an already-exact decimal through the same public vocabulary. */
+export function formatChartDecimal(
+  decimal: ChartDecimal,
+  format: ChartNumberFormat,
+): string {
   const defect = findChartNumberFormatDefect(format);
   if (defect !== undefined) {
     throw new TypeError(
@@ -215,7 +226,6 @@ export function formatChartNumber(
     );
   }
   assertDecimals(format.decimals);
-  const decimal = chartDecimalFromNumber(value, "Chart formatted value");
   if (format.kind === "percent") {
     const scaled = roundChartDecimal(
       { coefficient: decimal.coefficient, exponent: decimal.exponent + 2 },

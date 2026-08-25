@@ -1,10 +1,11 @@
 /** Stable, colour-independent structural description for line charts. */
 
 import {
-  chartPlainValue as plain,
+  chartNumberText,
   chartUnitSuffix,
   chartValueText,
 } from "../../value-text.ts";
+import type { ChartNumberFormat } from "../../format.ts";
 import type {
   ValidatedLineChart,
   ValidatedLineChartDomain,
@@ -23,8 +24,9 @@ export function lineUnitSuffix(value: ValidatedLineChartValueAxis): string {
 export function lineValueText(
   value: number | null,
   unitSuffix: string,
+  format?: ChartNumberFormat,
 ): string {
-  return chartValueText(value, unitSuffix);
+  return chartValueText(value, unitSuffix, format);
 }
 
 /**
@@ -39,7 +41,9 @@ export function lineDomainText(
   if (value === undefined) {
     throw new TypeError(`line domain has no position ${index}`);
   }
-  return typeof value === "string" ? value : plain(value);
+  return typeof value === "string"
+    ? value
+    : chartNumberText(value, x.kind === "number" ? x.format : undefined);
 }
 
 function domainHeader(x: ValidatedLineChartDomain): string {
@@ -68,7 +72,11 @@ export function lineDataTableFacts(spec: ValidatedLineChart): {
     rows: Array.from({ length: spec.x.values.length }, (_, index) => [
       lineDomainText(spec.x, index),
       ...spec.series.map((series) =>
-        lineValueText(series.values[index] ?? null, unit)
+        lineValueText(
+          series.values[index] ?? null,
+          unit,
+          spec.value.format,
+        )
       ),
     ]),
   };
@@ -87,8 +95,8 @@ export default function describeLineChart(spec: ValidatedLineChart): string {
       spec.x.kind === "date" ? "date" : "numeric"
     } domain`,
     `${axisName}: ${spec.value.scale} scale from ${
-      plain(spec.minimumValue)
-    } to ${plain(spec.maximumValue)}${unit}.`,
+      chartNumberText(spec.minimumValue, spec.value.format)
+    } to ${chartNumberText(spec.maximumValue, spec.value.format)}${unit}.`,
     `Series (${spec.series.length}):`,
   ];
   spec.series.forEach((series, index) => {
@@ -98,7 +106,13 @@ export default function describeLineChart(spec: ValidatedLineChart): string {
   lines.push(`Data (${pointCount} points):`);
   for (let index = 0; index < pointCount; index += 1) {
     const cells = spec.series.map((series) =>
-      `${series.label} ${lineValueText(series.values[index] ?? null, unit)}`
+      `${series.label} ${
+        lineValueText(
+          series.values[index] ?? null,
+          unit,
+          spec.value.format,
+        )
+      }`
     );
     lines.push(`${lineDomainText(spec.x, index)}: ${cells.join(", ")}`);
   }
@@ -122,10 +136,10 @@ export default function describeLineChart(spec: ValidatedLineChart): string {
   if (largest !== undefined && smallest !== undefined) {
     lines.push(
       `Largest value: ${
-        plain(largest.value)
+        chartNumberText(largest.value, spec.value.format)
       }${unit} (${largest.series} at ${largest.position}).`,
       `Smallest stated value: ${
-        plain(smallest.value)
+        chartNumberText(smallest.value, spec.value.format)
       }${unit} (${smallest.series} at ${smallest.position}).`,
     );
   }

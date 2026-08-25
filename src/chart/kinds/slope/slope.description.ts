@@ -1,8 +1,9 @@
 /** Stable, colour-independent structural description for slope charts. */
 
 import { compareChartDecimals } from "../../decimal.ts";
+import { type ChartNumberFormat, formatChartDecimal } from "../../format.ts";
 import {
-  chartPlainValue as plain,
+  chartNumberText,
   chartUnitSuffix,
   chartValueText,
 } from "../../value-text.ts";
@@ -23,8 +24,12 @@ export function slopeUnitSuffix(value: SlopeChartValueAxisSpec): string {
  * Render one stated endpoint value exactly as every surface prints it: the
  * canonical shortest decimal with the authored unit.
  */
-export function slopeValueText(value: number, unitSuffix: string): string {
-  return chartValueText(value, unitSuffix);
+export function slopeValueText(
+  value: number,
+  unitSuffix: string,
+  format?: ChartNumberFormat,
+): string {
+  return chartValueText(value, unitSuffix, format);
 }
 
 /**
@@ -39,8 +44,12 @@ export function slopeDirectionWord(direction: SlopeChartDirection): string {
 export function slopeDeltaCell(
   item: ValidatedSlopeChartItem,
   unitSuffix: string,
+  format?: ChartNumberFormat,
 ): string {
-  return `${item.deltaText}${unitSuffix}`;
+  if (format === undefined) return `${item.deltaText}${unitSuffix}`;
+  const computed = computeSlopeDelta(item.before, item.after);
+  const rendered = formatChartDecimal(computed.delta, format);
+  return `${computed.direction === "up" ? "+" : ""}${rendered}${unitSuffix}`;
 }
 
 /**
@@ -64,9 +73,9 @@ export function slopeDataTableFacts(spec: ValidatedSlopeChart): {
     ],
     rows: spec.items.map((item) => [
       `${item.label} (${item.id})`,
-      slopeValueText(item.before, unit),
-      slopeValueText(item.after, unit),
-      slopeDeltaCell(item, unit),
+      slopeValueText(item.before, unit, spec.value.format),
+      slopeValueText(item.after, unit, spec.value.format),
+      slopeDeltaCell(item, unit, spec.value.format),
     ]),
   };
 }
@@ -105,23 +114,25 @@ export default function describeSlopeChart(
     `Title: ${spec.title}`,
     `Summary: ${spec.summary}`,
     `Comparison: ${spec.endpoints.before} to ${spec.endpoints.after} across ${spec.items.length} items.`,
-    `${axisName}: linear scale from ${plain(spec.minimumValue)} to ${
-      plain(spec.maximumValue)
-    }${unit}.`,
+    `${axisName}: linear scale from ${
+      chartNumberText(spec.minimumValue, spec.value.format)
+    } to ${chartNumberText(spec.maximumValue, spec.value.format)}${unit}.`,
     `Data (${spec.items.length} items):`,
   ];
   for (const item of spec.items) {
     lines.push(
-      `${item.label} (${item.id}): ${slopeValueText(item.before, unit)} to ${
-        slopeValueText(item.after, unit)
-      }, ${slopeDirectionWord(item.direction)} ${slopeDeltaCell(item, unit)}`,
+      `${item.label} (${item.id}): ${
+        slopeValueText(item.before, unit, spec.value.format)
+      } to ${slopeValueText(item.after, unit, spec.value.format)}, ${
+        slopeDirectionWord(item.direction)
+      } ${slopeDeltaCell(item, unit, spec.value.format)}`,
     );
   }
   const largestIncrease = extremeItem(spec.items, "up", 1);
   if (largestIncrease !== undefined) {
     lines.push(
       `Largest increase: ${
-        slopeDeltaCell(largestIncrease, unit)
+        slopeDeltaCell(largestIncrease, unit, spec.value.format)
       } (${largestIncrease.label}).`,
     );
   }
@@ -129,7 +140,7 @@ export default function describeSlopeChart(
   if (largestDecrease !== undefined) {
     lines.push(
       `Largest decrease: ${
-        slopeDeltaCell(largestDecrease, unit)
+        slopeDeltaCell(largestDecrease, unit, spec.value.format)
       } (${largestDecrease.label}).`,
     );
   }

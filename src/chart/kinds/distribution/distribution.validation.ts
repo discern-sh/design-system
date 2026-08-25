@@ -8,6 +8,7 @@ import {
   compareChartDecimals,
 } from "../../decimal.ts";
 import { ChartValidationError } from "../../errors.ts";
+import type { ChartNumberFormat } from "../../format.ts";
 import { chartLinearTicks } from "../../ticks.ts";
 import {
   assertChartExactKeys,
@@ -162,6 +163,7 @@ function binCounts(
 function validatedBins(
   sorted: readonly number[],
   edges: readonly number[],
+  format: ChartNumberFormat | undefined,
 ): readonly ValidatedDistributionBin[] {
   const counts = binCounts(sorted, edges);
   return Object.freeze(counts.map((count, index) => {
@@ -174,7 +176,7 @@ function validatedBins(
       start,
       end,
       count,
-      label: distributionRangeText(start, end),
+      label: distributionRangeText(start, end, "–", format),
     });
   }));
 }
@@ -252,6 +254,7 @@ function authoredEdges(
 function histogramBins(
   bins: unknown,
   sorted: readonly number[],
+  format: ChartNumberFormat | undefined,
 ): {
   readonly binsRule: "edges" | "sturges";
   readonly bins: readonly ValidatedDistributionBin[];
@@ -275,7 +278,7 @@ function histogramBins(
   if (bins.kind === "edges") {
     return {
       binsRule: "edges",
-      bins: validatedBins(sorted, authoredEdges(bins, sorted)),
+      bins: validatedBins(sorted, authoredEdges(bins, sorted), format),
     };
   }
   if (bins.kind === "rule") {
@@ -290,7 +293,7 @@ function histogramBins(
     }
     const edges = sturgesEdges(sorted);
     assertChartKindBudget(meta, "bins", edges.length - 1, "spec.bins");
-    return { binsRule: "sturges", bins: validatedBins(sorted, edges) };
+    return { binsRule: "sturges", bins: validatedBins(sorted, edges, format) };
   }
   invalid(
     "chart/invalid-spec",
@@ -353,6 +356,7 @@ export default function validateDistributionChart(
     }
     return entry;
   });
+  const authoredValues = Object.freeze([...values]);
   const sorted = Object.freeze(values.toSorted((left, right) => left - right));
   const minimum = sorted[0];
   const maximum = sorted[sorted.length - 1];
@@ -392,18 +396,20 @@ export default function validateDistributionChart(
       title: spec.title,
       summary: spec.summary,
       variant,
+      authoredValues,
       values: sorted,
       value,
       fiveNumberSummary: fiveNumberSummary(sorted),
     });
   }
 
-  const derived = histogramBins(spec.bins, sorted);
+  const derived = histogramBins(spec.bins, sorted, value.format);
   return Object.freeze({
     kind: "distribution",
     title: spec.title,
     summary: spec.summary,
     variant,
+    authoredValues,
     values: sorted,
     value,
     binsRule: derived.binsRule,

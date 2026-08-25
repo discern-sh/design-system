@@ -98,14 +98,20 @@ function viability(
   const separator = unicode ? "→" : "->";
   const beforeColumn = Math.max(
     measureText(spec.endpoints.before),
-    ...spec.items.map((item) => measureText(slopeValueText(item.before, unit))),
+    ...spec.items.map((item) =>
+      measureText(slopeValueText(item.before, unit, spec.value.format))
+    ),
   );
   const afterColumn = Math.max(
     measureText(spec.endpoints.after),
-    ...spec.items.map((item) => measureText(slopeValueText(item.after, unit))),
+    ...spec.items.map((item) =>
+      measureText(slopeValueText(item.after, unit, spec.value.format))
+    ),
   );
   const deltaColumn = Math.max(
-    ...spec.items.map((item) => measureText(slopeDeltaCell(item, unit))),
+    ...spec.items.map((item) =>
+      measureText(slopeDeltaCell(item, unit, spec.value.format))
+    ),
   );
   // Row anatomy after the label column: the label gap, both value columns
   // around the spaced separator, then the direction triangle and delta.
@@ -191,20 +197,24 @@ function renderSlopeList(
       capabilities,
     );
     const delta = styleText(
-      padText(slopeDeltaCell(item, columns.unit), columns.deltaColumn, "end"),
+      padText(
+        slopeDeltaCell(item, columns.unit, spec.value.format),
+        columns.deltaColumn,
+        "end",
+      ),
       { color },
       capabilities,
     );
     return [
       `${padText(first, columns.labelColumn)}${" ".repeat(LABEL_GAP)}${
         padText(
-          slopeValueText(item.before, columns.unit),
+          slopeValueText(item.before, columns.unit, spec.value.format),
           columns.beforeColumn,
           "end",
         )
       } ${columns.separator} ${
         padText(
-          slopeValueText(item.after, columns.unit),
+          slopeValueText(item.after, columns.unit, spec.value.format),
           columns.afterColumn,
           "end",
         )

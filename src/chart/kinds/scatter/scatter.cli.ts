@@ -83,10 +83,10 @@ function extremeTexts(spec: ValidatedScatterChart): ScatterExtremeTexts {
   const xUnit = chartUnitSuffix(spec.x);
   const yUnit = chartUnitSuffix(spec.y);
   return {
-    xMinimum: chartValueText(spec.minimumX, xUnit),
-    xMaximum: chartValueText(spec.maximumX, xUnit),
-    yMinimum: chartValueText(spec.minimumY, yUnit),
-    yMaximum: chartValueText(spec.maximumY, yUnit),
+    xMinimum: chartValueText(spec.minimumX, xUnit, spec.x.format),
+    xMaximum: chartValueText(spec.maximumX, xUnit, spec.x.format),
+    yMinimum: chartValueText(spec.minimumY, yUnit, spec.y.format),
+    yMaximum: chartValueText(spec.maximumY, yUnit, spec.y.format),
   };
 }
 

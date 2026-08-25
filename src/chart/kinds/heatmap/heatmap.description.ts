@@ -1,10 +1,11 @@
 /** Stable, colour-independent structural description for heatmap charts. */
 
 import {
-  chartPlainValue as plain,
+  chartNumberText,
   chartUnitSuffix,
   chartValueText,
 } from "../../value-text.ts";
+import type { ChartNumberFormat } from "../../format.ts";
 import type { ChartValueAxisSpec } from "../../spec.ts";
 import type {
   ValidatedHeatmapCell,
@@ -23,8 +24,9 @@ export function heatmapUnitSuffix(value: ChartValueAxisSpec): string {
 export function heatmapValueText(
   value: number | null,
   unitSuffix: string,
+  format?: ChartNumberFormat,
 ): string {
-  return chartValueText(value, unitSuffix);
+  return chartValueText(value, unitSuffix, format);
 }
 
 /**
@@ -37,6 +39,7 @@ export function heatmapValueText(
 export function heatmapBinRangeLabels(
   edges: readonly number[],
   unitSuffix: string,
+  format?: ChartNumberFormat,
 ): readonly string[] {
   const first = edges[0];
   const last = edges[edges.length - 1];
@@ -45,7 +48,7 @@ export function heatmapBinRangeLabels(
       "heatmap bin edges must declare at least one threshold",
     );
   }
-  const labels = [`below ${plain(first)}${unitSuffix}`];
+  const labels = [`below ${chartNumberText(first, format)}${unitSuffix}`];
   for (let index = 1; index < edges.length; index += 1) {
     const lower = edges[index - 1];
     const upper = edges[index];
@@ -53,10 +56,12 @@ export function heatmapBinRangeLabels(
       throw new TypeError("heatmap bin edges are missing a threshold");
     }
     labels.push(
-      `${plain(lower)}${unitSuffix} to below ${plain(upper)}${unitSuffix}`,
+      `${chartNumberText(lower, format)}${unitSuffix} to below ${
+        chartNumberText(upper, format)
+      }${unitSuffix}`,
     );
   }
-  labels.push(`${plain(last)}${unitSuffix} and above`);
+  labels.push(`${chartNumberText(last, format)}${unitSuffix} and above`);
   return Object.freeze(labels);
 }
 
@@ -108,10 +113,10 @@ export function heatmapExtremeLines(
   }
   return Object.freeze([
     `Largest value: ${
-      plain(largest.value)
+      chartNumberText(largest.value, spec.value.format)
     }${unit} (${largest.row}, ${largest.column}).`,
     `Smallest stated value: ${
-      plain(smallest.value)
+      chartNumberText(smallest.value, spec.value.format)
     }${unit} (${smallest.row}, ${smallest.column}).`,
   ]);
 }
@@ -140,7 +145,11 @@ export function heatmapDataTableFacts(spec: ValidatedHeatmapChart): {
     rows: spec.rows.map((row, rowIndex) => [
       `${row.label} (${row.id})`,
       ...spec.columns.map((_column, columnIndex) =>
-        heatmapValueText(heatmapCellAt(spec, rowIndex, columnIndex).value, unit)
+        heatmapValueText(
+          heatmapCellAt(spec, rowIndex, columnIndex).value,
+          unit,
+          spec.value.format,
+        )
       ),
     ]),
   };
@@ -170,7 +179,11 @@ export default function describeHeatmapChart(
   spec.rows.forEach((row, rowIndex) => {
     const cells = spec.columns.map((column, columnIndex) =>
       `${column.label} ${
-        heatmapValueText(heatmapCellAt(spec, rowIndex, columnIndex).value, unit)
+        heatmapValueText(
+          heatmapCellAt(spec, rowIndex, columnIndex).value,
+          unit,
+          spec.value.format,
+        )
       }`
     );
     lines.push(`${row.label} (${row.id}): ${cells.join(", ")}`);

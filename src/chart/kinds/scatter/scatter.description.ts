@@ -1,7 +1,7 @@
 /** Stable, colour-independent structural description for scatter charts. */
 
 import {
-  chartPlainValue as plain,
+  chartNumberText,
   chartUnitSuffix,
   chartValueText,
 } from "../../value-text.ts";
@@ -82,8 +82,8 @@ export function scatterDataTableFacts(
       series.points.map((point) =>
         [
           series.label,
-          chartValueText(point.x, xUnit),
-          chartValueText(point.y, yUnit),
+          chartValueText(point.x, xUnit, spec.x.format),
+          chartValueText(point.y, yUnit, spec.y.format),
         ] as const
       )
     ),
@@ -104,11 +104,11 @@ export default function describeScatterChart(
     `Title: ${spec.title}`,
     `Summary: ${spec.summary}`,
     `${axisTitle("X", spec.x)}: ${spec.x.scale} scale from ${
-      plain(spec.minimumX)
-    } to ${plain(spec.maximumX)}${xUnit}.`,
+      chartNumberText(spec.minimumX, spec.x.format)
+    } to ${chartNumberText(spec.maximumX, spec.x.format)}${xUnit}.`,
     `${axisTitle("Y", spec.y)}: ${spec.y.scale} scale from ${
-      plain(spec.minimumY)
-    } to ${plain(spec.maximumY)}${yUnit}.`,
+      chartNumberText(spec.minimumY, spec.y.format)
+    } to ${chartNumberText(spec.maximumY, spec.y.format)}${yUnit}.`,
     `Series (${spec.series.length}):`,
   ];
   spec.series.forEach((series, index) => {
@@ -122,8 +122,8 @@ export default function describeScatterChart(
   for (const series of spec.series) {
     for (const point of series.points) {
       lines.push(
-        `${series.label}: (${chartValueText(point.x, xUnit)}, ${
-          chartValueText(point.y, yUnit)
+        `${series.label}: (${chartValueText(point.x, xUnit, spec.x.format)}, ${
+          chartValueText(point.y, yUnit, spec.y.format)
         })`,
       );
     }
@@ -132,16 +132,16 @@ export default function describeScatterChart(
   const yExtremes = extremes(spec, (point) => point.y);
   lines.push(
     `Largest x: ${
-      plain(xExtremes.largest.value)
+      chartNumberText(xExtremes.largest.value, spec.x.format)
     }${xUnit} (${xExtremes.largest.series}).`,
     `Smallest x: ${
-      plain(xExtremes.smallest.value)
+      chartNumberText(xExtremes.smallest.value, spec.x.format)
     }${xUnit} (${xExtremes.smallest.series}).`,
     `Largest y: ${
-      plain(yExtremes.largest.value)
+      chartNumberText(yExtremes.largest.value, spec.y.format)
     }${yUnit} (${yExtremes.largest.series}).`,
     `Smallest y: ${
-      plain(yExtremes.smallest.value)
+      chartNumberText(yExtremes.smallest.value, spec.y.format)
     }${yUnit} (${yExtremes.smallest.series}).`,
   );
   return `${lines.join("\n")}\n`;

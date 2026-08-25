@@ -385,8 +385,8 @@ function viability(
   }
   const unit = lineUnitSuffix(spec.value);
   const gutter = Math.max(
-    measureText(lineValueText(spec.maximumValue, unit)),
-    measureText(lineValueText(spec.minimumValue, unit)),
+    measureText(lineValueText(spec.maximumValue, unit, spec.value.format)),
+    measureText(lineValueText(spec.minimumValue, unit, spec.value.format)),
   );
   const points = spec.x.values.length;
   const anyGap = spec.series.some((series) =>
@@ -418,8 +418,16 @@ function renderFaithfulLine(
     unit: lineUnitSuffix(spec.value),
     inner: width - 4,
     gutter,
-    maxText: lineValueText(spec.maximumValue, lineUnitSuffix(spec.value)),
-    minText: lineValueText(spec.minimumValue, lineUnitSuffix(spec.value)),
+    maxText: lineValueText(
+      spec.maximumValue,
+      lineUnitSuffix(spec.value),
+      spec.value.format,
+    ),
+    minText: lineValueText(
+      spec.minimumValue,
+      lineUnitSuffix(spec.value),
+      spec.value.format,
+    ),
     markerMode: capabilities.colorDepth === "none" && spec.series.length > 1,
   };
   const summary = styleText(

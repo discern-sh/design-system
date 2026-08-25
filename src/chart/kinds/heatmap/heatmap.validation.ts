@@ -252,7 +252,11 @@ export default function validateHeatmapChart(
     columns: Object.freeze(columns),
     cells: Object.freeze(cells),
     binEdges: Object.freeze(edges),
-    binRangeLabels: heatmapBinRangeLabels(edges, heatmapUnitSuffix(value)),
+    binRangeLabels: heatmapBinRangeLabels(
+      edges,
+      heatmapUnitSuffix(value),
+      value.format,
+    ),
     value,
   });
 }

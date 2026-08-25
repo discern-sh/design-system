@@ -22,11 +22,19 @@ import {
   barUnitSuffix,
   barValueText,
 } from "../../src/chart/kinds/bar/bar.description.ts";
-import { distributionDataTableFacts } from "../../src/chart/kinds/distribution/distribution.description.ts";
+import {
+  distributionDataTableFacts,
+  distributionRecordedValueRows,
+} from "../../src/chart/kinds/distribution/distribution.description.ts";
 import { heatmapDataTableFacts } from "../../src/chart/kinds/heatmap/heatmap.description.ts";
 import { lineDataTableFacts } from "../../src/chart/kinds/line/line.description.ts";
 import { scatterDataTableFacts } from "../../src/chart/kinds/scatter/scatter.description.ts";
-import { slopeDataTableFacts } from "../../src/chart/kinds/slope/slope.description.ts";
+import {
+  slopeDataTableFacts,
+  slopeDeltaCell,
+  slopeUnitSuffix,
+  slopeValueText,
+} from "../../src/chart/kinds/slope/slope.description.ts";
 import fixtures from "../../src/chart/kinds/bar/bar.fixtures.ts";
 import type { ValidatedBarChart } from "../../src/chart/kinds/bar/bar.spec.ts";
 import {
@@ -181,18 +189,6 @@ function tableFacts(validated: ValidatedChart): {
 /** Every printed fact the lossless description owes for one spec. */
 function semanticFacts(spec: ChartSpec): readonly string[] {
   const { validated } = prepareChartSemantics(spec);
-  if (validated.kind === "bar") {
-    const unit = barUnitSuffix(validated.value);
-    return [
-      validated.title,
-      validated.summary,
-      ...validated.categories.map(({ label }) => label),
-      ...validated.series.map(({ label }) => label),
-      ...validated.series.flatMap(({ values }) =>
-        values.map((value) => barValueText(value, unit))
-      ),
-    ];
-  }
   return [
     validated.title,
     validated.summary,
@@ -208,12 +204,48 @@ function semanticFacts(spec: ChartSpec): readonly string[] {
  * faithful ones — in the kind's own printed wording, which lawfully
  * differs from the description table's structural cells.
  */
-function frameFacts(spec: ChartSpec, unicode: boolean): readonly string[] {
+function frameFacts(spec: ChartSpec, _unicode: boolean): readonly string[] {
   const { validated } = prepareChartSemantics(spec);
-  if (validated.kind !== "bar" || !unicode) {
-    return [validated.title, validated.summary];
+  switch (validated.kind) {
+    case "bar": {
+      const unit = barUnitSuffix(validated.value);
+      return [
+        validated.title,
+        validated.summary,
+        ...validated.categories.map(({ label }) => label),
+        ...validated.series.map(({ label }) => label),
+        ...validated.series.flatMap(({ values }) =>
+          values.map((value) =>
+            barValueText(value, unit, validated.value.format)
+          )
+        ),
+      ];
+    }
+    case "distribution":
+      return [
+        validated.title,
+        validated.summary,
+        ...distributionRecordedValueRows(validated).map(([index, value]) =>
+          `#${index} ${value}`
+        ),
+      ];
+    case "slope": {
+      const unit = slopeUnitSuffix(validated.value);
+      return [
+        validated.title,
+        validated.summary,
+        validated.endpoints.before,
+        validated.endpoints.after,
+        ...validated.items.flatMap((item) => [
+          slopeValueText(item.before, unit, validated.value.format),
+          slopeValueText(item.after, unit, validated.value.format),
+          slopeDeltaCell(item, unit, validated.value.format),
+        ]),
+      ];
+    }
+    default:
+      return [validated.title, validated.summary];
   }
-  return semanticFacts(spec);
 }
 
 function assertCarriesFacts(
@@ -321,7 +353,8 @@ Deno.test("a sub-resolution proportion declines instead of exaggerating a share"
   const skewed: BarChartSpec = {
     kind: "bar",
     title: "Skewed proportion probe",
-    summary: "Tiny shares cannot be represented honestly beside a dominant share.",
+    summary:
+      "Tiny shares cannot be represented honestly beside a dominant share.",
     variant: "proportion",
     categories: [{ id: "all", label: "All" }],
     series: [

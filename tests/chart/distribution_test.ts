@@ -197,6 +197,8 @@ Deno.test("Tukey hinges are pinned on odd and even sample sizes", () => {
     upperQuartile: 6.5,
     maximum: 8,
   });
+  assertEquals(even.authoredValues, [8, 3, 5, 1, 6, 4, 7, 2]);
+  assertEquals(even.values, [1, 2, 3, 4, 5, 6, 7, 8]);
 });
 
 Deno.test("two-value means compute exactly in decimal space", () => {
@@ -218,8 +220,12 @@ Deno.test("the histogram description lists every bin, the largest bin, and empty
   const validated = validateHistogram(spec);
   const description = describeDistributionChart(validated);
   assertStringIncludes(description, "Variant: histogram of 4 values");
-  assertStringIncludes(description, "Bins (4): author-declared edges.");
-  assertStringIncludes(description, "Data (4 bins):");
+  assertStringIncludes(
+    description,
+    "Data (4 recorded values, authored order):",
+  );
+  assertStringIncludes(description, "Bins (4):");
+  assertStringIncludes(description, "Source: author-declared edges.");
   for (const bin of validated.bins) {
     assertStringIncludes(
       description,
@@ -235,7 +241,7 @@ Deno.test("the histogram description lists every bin, the largest bin, and empty
   );
   assertStringIncludes(
     sturges,
-    "Bins (8): Sturges rule over nice-step edges.",
+    "Bins (8):\nSource: Sturges rule over nice-step edges.",
   );
   assertStringIncludes(
     sturges,
@@ -248,7 +254,11 @@ Deno.test("the box description states all five numbers and the exact interquarti
     validateBox(corpusSpec("box-summary")),
   );
   assertStringIncludes(description, "Variant: box summary of 7 values");
-  assertStringIncludes(description, "Data (5 numbers):");
+  assertStringIncludes(
+    description,
+    "Data (7 recorded values, authored order):",
+  );
+  assertStringIncludes(description, "Five-number summary (5):");
   assertStringIncludes(description, "Minimum: 4 hours");
   assertStringIncludes(description, "Lower quartile: 7.5 hours");
   assertStringIncludes(description, "Median: 10 hours");
@@ -262,33 +272,30 @@ Deno.test("data table facts mirror the description's data lines 1:1", () => {
   const histogramFacts = distributionDataTableFacts(histogram);
   assertEquals(
     histogramFacts.columns.map((column) => column.header),
-    ["Range", "Count"],
+    ["#", "Value"],
   );
-  assertEquals(histogramFacts.rows.length, histogram.bins.length);
+  assertEquals(histogramFacts.rows.length, histogram.authoredValues.length);
   const description = describeDistributionChart(histogram);
   histogramFacts.rows.forEach((row, index) => {
-    const bin = histogram.bins[index];
-    assert(bin !== undefined);
-    assertEquals(row[0], `${bin.label} ms`);
-    assertEquals(row[1], String(bin.count));
-    assertStringIncludes(
-      description,
-      `${row[0]}: ${distributionCountText(bin.count)}`,
-    );
+    assertEquals(row[0], String(index + 1));
+    assertEquals(row[1], `${histogram.authoredValues[index]} ms`);
+    assertStringIncludes(description, `${row[0]}: ${row[1]}`);
   });
 
   const box = validateBox(corpusSpec("box-summary"));
   const boxFacts = distributionDataTableFacts(box);
   assertEquals(
     boxFacts.columns.map((column) => column.header),
-    ["Statistic", "Value"],
+    ["#", "Value"],
   );
   assertEquals(boxFacts.rows, [
-    ["Minimum", "4 hours"],
-    ["Lower quartile", "7.5 hours"],
-    ["Median", "10 hours"],
-    ["Upper quartile", "13.5 hours"],
-    ["Maximum", "21 hours"],
+    ["1", "4 hours"],
+    ["2", "7 hours"],
+    ["3", "8 hours"],
+    ["4", "10 hours"],
+    ["5", "12 hours"],
+    ["6", "15 hours"],
+    ["7", "21 hours"],
   ]);
   const boxDescription = describeDistributionChart(box);
   for (const row of boxFacts.rows) {
@@ -308,6 +315,9 @@ Deno.test("the exact histogram frame prints every bin range and every count", ()
     }
     assertStringIncludes(plain, "8 bins");
     assertStringIncludes(plain, "24 values");
+    validated.authoredValues.forEach((value, index) => {
+      assertStringIncludes(plain, `#${index + 1} ${value} ms`);
+    });
   }
 });
 
@@ -323,6 +333,9 @@ Deno.test("the exact box frame prints all five labelled numbers", () => {
     assertStringIncludes(plain, "max 21 hours");
     assertStringIncludes(plain, "5 numbers");
     assertStringIncludes(plain, "7 values");
+    [4, 7, 8, 10, 12, 15, 21].forEach((value, index) => {
+      assertStringIncludes(plain, `#${index + 1} ${value} hours`);
+    });
   }
 });
 
