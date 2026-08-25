@@ -11,4 +11,5 @@
 export * from "./decimal.ts";
 export * from "./format.ts";
 export * from "./scale.ts";
+export * from "./series-palette.ts";
 export * from "./ticks.ts";
