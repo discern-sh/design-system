@@ -12,6 +12,8 @@
  * @module
  */
 
+import { TRIANGLES } from "./triangles.ts";
+
 /** One ramp or series glyph with its single-cell ASCII fallback. */
 export interface TerminalRampGlyph {
   /** The Unicode glyph, one scalar occupying one terminal cell. */
@@ -76,14 +78,15 @@ export const SHADE_RAMP: readonly TerminalRampGlyph[] = Object.freeze([
 /**
  * Series marker glyphs for the six categorical slots, in slot order. The
  * marker is each slot's paired non-colour cue, so two series never differ by
- * colour alone.
+ * colour alone. Triangle-shaped markers come from the triangle authority
+ * rather than a second glyph table.
  */
 export const SERIES_MARKERS: readonly TerminalRampGlyph[] = Object.freeze([
   glyph("●", "o"),
   glyph("■", "#"),
-  glyph("▲", "^"),
+  TRIANGLES.filled.up,
   glyph("◆", "*"),
-  glyph("▼", "v"),
+  TRIANGLES.filled.down,
   glyph("★", "x"),
 ]);
 
