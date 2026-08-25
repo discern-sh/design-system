@@ -1,5 +1,7 @@
+import { assert, assertThrows } from "@std/assert";
 import {
   renderStyledSpans,
+  stripAnsi,
   styleText,
   type TerminalTextStyle,
 } from "../../src/cli/ansi.ts";
@@ -342,4 +344,117 @@ Deno.test("Data figure wraps over-wide title, visual, and legend losslessly", ()
     "+--------------+\n| Q3: Latency  |\n| window       |\n|              |\n| gw-one ##### |\n| 900ms        |\n| gw-two #     |\n| 40ms         |\n+--------------+\n* gateway\n  latency series\nLatency by\ngateway",
     ascii,
   );
+});
+
+/**
+ * Assert every non-whitespace character of the authored value appears in the
+ * stripped output in authored order, so no elision anywhere in the frame can
+ * pass. Wrapping may reflow whitespace; it must never drop a fact.
+ */
+function assertContentSurvives(authored: string, stripped: string): void {
+  let cursor = 0;
+  for (const character of authored) {
+    if (/\s/u.test(character)) continue;
+    const found = stripped.indexOf(character, cursor);
+    assert(
+      found !== -1,
+      `authored character ${JSON.stringify(character)} of ${
+        JSON.stringify(authored)
+      } was dropped or reordered`,
+    );
+    cursor = found + character.length;
+  }
+}
+
+Deno.test("Data figure never elides authored content at any width, charset, or depth", () => {
+  const props = {
+    eyebrow: "AUDIT",
+    title:
+      "GATEWAY LATENCY DISTRIBUTION ACROSS EVERY REGION WINDOW 314159265358979",
+    visual: [
+      "alpha-gw ################################ 987654321ms",
+      "unbrokenrun#########################################98765",
+      "東京都渋谷区ゲートウェイ計測値",
+      "📊📈📉 telemetry stream widequartet 📊",
+    ].join("\n"),
+    legend: [
+      {
+        label: "route66-primary-interconnect-fabric-2468101214161820",
+        tone: "accent",
+      },
+      {
+        label: "overflow-mesh-standby-chain-1357911131517192123",
+        tone: "ink",
+      },
+    ] as const,
+    caption: "Latency by gateway over the audit window",
+    source: "Synthetic audit corpus",
+  } as const;
+  for (const columns of [6, 10, 24, 80]) {
+    for (const unicode of [true, false]) {
+      for (const colorDepth of ["none", "truecolor"] as const) {
+        const capabilities = testTerminalCapabilities({
+          columns,
+          unicode,
+          colorDepth,
+        });
+        const posture = `columns ${columns}, unicode ${unicode}, ${colorDepth}`;
+        const output = stripAnsi(renderDataFigureCli(props, capabilities));
+        for (const line of output.split("\n")) {
+          assert(
+            measureText(line) <= columns,
+            `${posture}: line ${JSON.stringify(line)} escapes the measure`,
+          );
+        }
+        assert(
+          !output.includes("…") && !output.includes("."),
+          `${posture}: the frame introduced an elision marker`,
+        );
+        for (
+          const authored of [
+            props.eyebrow,
+            props.title,
+            props.visual,
+            props.legend[0].label,
+            props.legend[1].label,
+            props.caption,
+            props.source,
+          ]
+        ) {
+          assertContentSurvives(authored, output);
+        }
+      }
+    }
+  }
+});
+
+Deno.test("Data figure refuses an impossible single-grapheme fit instead of eliding it", () => {
+  for (const unicode of [true, false]) {
+    const capabilities = testTerminalCapabilities({ columns: 5, unicode });
+    for (
+      const impossible of [
+        { title: "T", visual: "東", caption: "c" },
+        { title: "T", visual: "📊", caption: "c" },
+        { title: "計測", visual: "ok", caption: "c" },
+      ] as const
+    ) {
+      assertThrows(
+        () => renderDataFigureCli(impossible, capabilities),
+        TypeError,
+        "wider than the frame's inner measure",
+      );
+    }
+    const narrow = stripAnsi(renderDataFigureCli({
+      title: "Top",
+      visual: "ok",
+      caption: "c",
+      legend: [{ label: "東京 series" }],
+    }, capabilities));
+    for (const line of narrow.split("\n")) {
+      assert(measureText(line) <= 5, `${JSON.stringify(line)} escapes width 5`);
+    }
+    for (const authored of ["Top", "ok", "東京 series", "c"]) {
+      assertContentSurvives(authored, narrow);
+    }
+  }
 });
