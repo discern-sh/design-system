@@ -20,11 +20,15 @@ export interface ChartSeriesLegendItem {
  * Derive the series legend for one authoring spec, in authored order. The
  * chart surface exports this data instead of injecting a visible legend, so
  * `DataFigure` framing — where a visible legend lives — stays optional.
+ * Kinds without categorical series slots — single-quantity, ramp-encoded,
+ * or directly labelled kinds — legitimately have no series legend and
+ * return the empty inventory.
  */
 export function chartSeriesLegend(
   spec: unknown,
 ): readonly ChartSeriesLegendItem[] {
   const validated = validateChart(spec);
+  if (!("series" in validated)) return Object.freeze([]);
   return Object.freeze(validated.series.map((series) =>
     Object.freeze({
       id: series.id,
