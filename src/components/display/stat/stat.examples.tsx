@@ -16,6 +16,13 @@ export default function StatExamples() {
         context="Down 18 from last period"
         trend="negative"
       />
+      <Stat
+        label="Adipiscing"
+        value="9.1"
+        context="Up 5.9 from last period"
+        trend="positive"
+        sparkline={[3.2, 4.1, 3.8, 5.5, 7.4, 9.1]}
+      />
     </div>
   );
 }

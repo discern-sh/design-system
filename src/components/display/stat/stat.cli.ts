@@ -15,6 +15,8 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import renderSparklineCli from "../sparkline/sparkline.cli.ts";
+import type { SparklineValue } from "../sparkline/sparkline.shared.ts";
 import type { StatTrend } from "./stat.types.ts";
 
 /** Inputs accepted by the terminal Stat renderer. */
@@ -23,6 +25,8 @@ export interface StatCliProps {
   readonly value: string;
   readonly context?: string;
   readonly trend?: StatTrend;
+  /** Recent movement rendered as an annotated Sparkline beneath the trend. */
+  readonly sparkline?: readonly SparklineValue[];
   readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
@@ -53,6 +57,16 @@ export const cliExamples: readonly CliExample<StatCliProps>[] = [
       value: "2",
       context: "Needs attention",
       trend: "negative",
+    },
+  },
+  {
+    name: "with-sparkline",
+    props: {
+      label: "Throughput",
+      value: "9.1",
+      context: "Up 5.9 from last period",
+      trend: "positive",
+      sparkline: [3.2, 4.1, 3.8, 5.5, 7.4, 9.1],
     },
   },
 ] as const;
@@ -112,6 +126,16 @@ const renderStatCli: CliRenderer<StatCliProps> = (props, capabilities) => {
           : terminalToneColor(theme, contextTone),
       },
     }], capabilities));
+  }
+  if (props.sparkline !== undefined) {
+    blocks.push(renderSparklineCli(
+      {
+        values: props.sparkline,
+        maxWidth: width,
+        ...(props.theme === undefined ? {} : { theme: props.theme }),
+      },
+      capabilities,
+    ));
   }
   return joinVertical(blocks);
 };

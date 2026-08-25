@@ -29,4 +29,7 @@
   .discern-stat__context--negative {
     color: var(--discern-color-danger);
   }
+  .discern-stat__sparkline {
+    justify-self: start;
+  }
 }

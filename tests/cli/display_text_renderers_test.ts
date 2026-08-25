@@ -523,6 +523,31 @@ Deno.test("Stat renders exact narrow, standard, wide, and colour-degraded figure
   );
 });
 
+Deno.test("Stat carries an annotated sparkline beneath its trend line", () => {
+  const render = (capabilities: TerminalCapabilities) =>
+    renderStatCli(
+      {
+        label: "Throughput",
+        value: "9.1",
+        context: "Up 5.9 from last period",
+        trend: "positive",
+        sparkline: [3.2, 4.1, 3.8, 5.5, 7.4, 9.1],
+      },
+      capabilities,
+    );
+  const capabilities = testTerminalCapabilities({ columns: 32 });
+  assertExactFrame(
+    render(capabilities),
+    "THROUGHPUT\n9.1\nUp 5.9 from last period\n▁▂▂▄▆█ 3.2→9.1",
+    capabilities,
+  );
+  assertCapabilityLevels(
+    render,
+    "THROUGHPUT\n9.1\nUp 5.9 from last period\n▁▂▂▄▆█ 3.2→9.1",
+    "THROUGHPUT\n9.1\nUp 5.9 from last period\n___==# 3.2->9.1",
+  );
+});
+
 Deno.test("Tag renders exact narrow, standard, wide, and ASCII-removal frames", () => {
   const render = (capabilities: TerminalCapabilities) =>
     renderTagCli({ label: "selected", removable: true }, capabilities);
