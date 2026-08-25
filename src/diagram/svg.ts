@@ -1,6 +1,7 @@
 /** Deterministic, accessible, standalone SVG projection for diagram specs. */
 
 import { escapeXml } from "../internal/escape.ts";
+import { assembleSvgThemeStyle, renderSvgDocument } from "../internal/svg.ts";
 import { formatDiagramAltText } from "./accessibility.ts";
 import { prepareDiagram } from "../generated/diagram-dispatch.ts";
 import type { DiagramSpec } from "../generated/diagram-spec.ts";
@@ -144,23 +145,11 @@ function standaloneStyle(
       : []),
     "  .discern-diagram__connector { fill: none; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }",
   ];
-  const light = paletteRules("light", includeRegion, includeGuide);
-  if (theme !== "adaptive") {
-    return [
-      ...common,
-      ...paletteRules(theme, includeRegion, includeGuide),
-    ].join("\n");
-  }
-  const dark = paletteRules("dark", includeRegion, includeGuide).map((rule) =>
-    `  ${rule}`
-  );
-  return [
-    ...common,
-    ...light,
-    "  @media (prefers-color-scheme: dark) {",
-    ...dark,
-    "  }",
-  ].join("\n");
+  return assembleSvgThemeStyle({
+    theme,
+    common,
+    variant: (variant) => paletteRules(variant, includeRegion, includeGuide),
+  });
 }
 
 function rectMarkup(
@@ -333,26 +322,21 @@ export function renderDiagramSvg(
     scene.elements.some((element) => element.kind === "region"),
     scene.elements.some((element) => element.kind === "guide"),
   );
-  return [
-    `<svg xmlns="http://www.w3.org/2000/svg" class="discern-diagram discern-diagram--standalone" viewBox="${
-      formatDiagramSvgNumber(bounds.x)
-    } ${
-      formatDiagramSvgNumber(bounds.y)
-    } ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="${
-      escapeXml(altText)
-    }">`,
-    `  <title>${escapeXml(validated.title)}</title>`,
-    `  <desc>${escapeXml(description).replaceAll("\n", "&#10;")}</desc>`,
-    "  <style>",
+  return renderSvgDocument({
+    className: "discern-diagram discern-diagram--standalone",
+    bounds,
+    ariaLabel: altText,
+    title: validated.title,
+    description,
     style,
-    "  </style>",
-    `  <rect class="discern-diagram__canvas" x="${
-      formatDiagramSvgNumber(bounds.x)
-    }" y="${
-      formatDiagramSvgNumber(bounds.y)
-    }" width="${width}" height="${height}" />`,
-    ...sceneMarkup(scene),
-    "</svg>",
-    "",
-  ].join("\n");
+    body: [
+      `  <rect class="discern-diagram__canvas" x="${
+        formatDiagramSvgNumber(bounds.x)
+      }" y="${
+        formatDiagramSvgNumber(bounds.y)
+      }" width="${width}" height="${height}" />`,
+      ...sceneMarkup(scene),
+    ],
+    subject: "Diagram",
+  });
 }

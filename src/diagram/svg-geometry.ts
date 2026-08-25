@@ -1,5 +1,6 @@
 /** Shared exact SVG geometry used by the string and React projections. */
 
+import { formatSvgNumber, formatSvgPoints } from "../internal/svg.ts";
 import type {
   DiagramPoint,
   DiagramRect,
@@ -26,22 +27,14 @@ export type DiagramSvgShapeGeometry =
 
 /** Canonically format one finite scene number for portable SVG bytes. */
 export function formatDiagramSvgNumber(value: number): string {
-  if (!Number.isFinite(value)) {
-    throw new TypeError(
-      `Diagram SVG geometry must be finite; received ${value}`,
-    );
-  }
-  const rounded = Math.round((value + Number.EPSILON) * 100) / 100;
-  return String(Object.is(rounded, -0) ? 0 : rounded);
+  return formatSvgNumber(value, "Diagram");
 }
 
 /** Format an ordered point population for SVG `points`. */
 export function formatDiagramSvgPoints(
   points: readonly DiagramPoint[],
 ): string {
-  return points.map(({ x, y }) =>
-    `${formatDiagramSvgNumber(x)},${formatDiagramSvgNumber(y)}`
-  ).join(" ");
+  return formatSvgPoints(points, "Diagram");
 }
 
 /** Centre anchor for a conservatively measured scene text line. */
