@@ -9,7 +9,10 @@
  */
 
 export * from "./decimal.ts";
+export * from "./errors.ts";
 export * from "./format.ts";
+export * from "./geometry.ts";
 export * from "./scale.ts";
+export * from "./scene.ts";
 export * from "./series-palette.ts";
 export * from "./ticks.ts";

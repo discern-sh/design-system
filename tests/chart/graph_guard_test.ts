@@ -11,7 +11,10 @@ const PACKAGE_ROOT = fromFileUrl(new URL("../..", import.meta.url));
  * deliberately outside it. When the `./chart` entrypoint ships, this guard
  * moves onto that export graph.
  */
-const CHART_GRAPH_ROOT = "src/chart/mod.ts";
+const CHART_GRAPH_ROOTS = [
+  "src/chart/mod.ts",
+  "src/chart/conformance.ts",
+] as const;
 
 const BANNED_SOURCES: readonly {
   readonly name: string;
@@ -31,33 +34,35 @@ const BANNED_SOURCES: readonly {
 ] as const;
 
 async function chartGraphModules(): Promise<readonly string[]> {
-  const result = await new Deno.Command(Deno.execPath(), {
-    args: ["info", "--json", "--config", "deno.json", CHART_GRAPH_ROOT],
-    cwd: PACKAGE_ROOT,
-    stdout: "piped",
-    stderr: "piped",
-  }).output();
-  const output = new TextDecoder().decode(result.stdout);
-  assertEquals(
-    result.code,
-    0,
-    `deno info failed for ${CHART_GRAPH_ROOT}:\n${
-      new TextDecoder().decode(result.stderr)
-    }`,
-  );
-  const graph = JSON.parse(output) as {
-    readonly modules: readonly { readonly specifier: string }[];
-  };
-  const paths: string[] = [];
-  for (const module of graph.modules) {
-    assert(
-      module.specifier.startsWith("file://"),
-      `the chart graph resolved an external module: ${module.specifier}`,
+  const paths = new Set<string>();
+  for (const root of CHART_GRAPH_ROOTS) {
+    const result = await new Deno.Command(Deno.execPath(), {
+      args: ["info", "--json", "--config", "deno.json", root],
+      cwd: PACKAGE_ROOT,
+      stdout: "piped",
+      stderr: "piped",
+    }).output();
+    const output = new TextDecoder().decode(result.stdout);
+    assertEquals(
+      result.code,
+      0,
+      `deno info failed for ${root}:\n${
+        new TextDecoder().decode(result.stderr)
+      }`,
     );
-    paths.push(relative(PACKAGE_ROOT, fromFileUrl(module.specifier)));
+    const graph = JSON.parse(output) as {
+      readonly modules: readonly { readonly specifier: string }[];
+    };
+    for (const module of graph.modules) {
+      assert(
+        module.specifier.startsWith("file://"),
+        `the chart graph resolved an external module: ${module.specifier}`,
+      );
+      paths.add(relative(PACKAGE_ROOT, fromFileUrl(module.specifier)));
+    }
   }
-  assert(paths.length > 1, "the chart graph was unexpectedly empty");
-  return paths;
+  assert(paths.size > 1, "the chart graph was unexpectedly empty");
+  return [...paths];
 }
 
 Deno.test("the chart graph stays neutral and inside its declared roots", async () => {
