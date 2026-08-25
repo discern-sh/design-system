@@ -132,6 +132,7 @@ export * from "../components/editorial/callout/mod.ts";
 export * from "../components/editorial/code-block/mod.ts";
 export * from "../components/editorial/code-listing/mod.ts";
 export * from "../components/editorial/data-figure/mod.ts";
+export * from "../components/editorial/chart/mod.ts";
 export * from "../components/editorial/diagram/mod.ts";
 export * from "../components/editorial/timeline/mod.ts";
 export * from "../components/editorial/footnotes/mod.ts";

@@ -205,6 +205,8 @@ export { default as renderCodeListingCli, cliExamples as codeListingCliExamples 
 export type { CodeListingCliProps } from "../components/editorial/code-listing/code-listing.cli.ts";
 export { default as renderDataFigureCli, cliExamples as dataFigureCliExamples } from "../components/editorial/data-figure/data-figure.cli.ts";
 export type { DataFigureCliProps } from "../components/editorial/data-figure/data-figure.cli.ts";
+export { default as renderChartCli, cliExamples as chartCliExamples } from "../components/editorial/chart/chart.cli.ts";
+export type { ChartCliProps } from "../components/editorial/chart/chart.cli.ts";
 export { default as renderDiagramCli, cliExamples as diagramCliExamples } from "../components/editorial/diagram/diagram.cli.ts";
 export type { DiagramCliProps } from "../components/editorial/diagram/diagram.cli.ts";
 export { default as renderTimelineCli, cliExamples as timelineCliExamples } from "../components/editorial/timeline/timeline.cli.ts";

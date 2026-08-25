@@ -136,6 +136,7 @@ export const cliComponentRegistry = {
   "code-block": { stance: "rendered", modulePath: "../components/editorial/code-block/code-block.cli.ts" },
   "code-listing": { stance: "rendered", modulePath: "../components/editorial/code-listing/code-listing.cli.ts" },
   "data-figure": { stance: "rendered", modulePath: "../components/editorial/data-figure/data-figure.cli.ts" },
+  "chart": { stance: "rendered", modulePath: "../components/editorial/chart/chart.cli.ts" },
   "diagram": { stance: "rendered", modulePath: "../components/editorial/diagram/diagram.cli.ts" },
   "timeline": { stance: "rendered", modulePath: "../components/editorial/timeline/timeline.cli.ts" },
   "footnotes": { stance: "rendered", modulePath: "../components/editorial/footnotes/footnotes.cli.ts" },

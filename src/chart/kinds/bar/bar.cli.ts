@@ -37,18 +37,13 @@ import {
   terminalThemeColor,
   terminalThemes,
 } from "../../../cli/theme.ts";
-import { chartDecimalFromNumber, renderChartDecimal } from "../../decimal.ts";
+import { barUnitSuffix, barValueText } from "./bar.description.ts";
 import type { ValidatedBarChart, ValidatedBarChartSeries } from "./bar.spec.ts";
 
 const LABEL_GAP = 2;
 const GROUP_INDENT = 2;
 const BAR_FIELD_FLOOR = 8;
 const BAR_FIELD_CEILING = 48;
-const NO_STATED_VALUE = "no stated value";
-
-function plain(value: number): string {
-  return renderChartDecimal(chartDecimalFromNumber(value, "bar value"));
-}
 
 function decline(
   code: ChartKindCliDeclineCode,
@@ -79,9 +74,7 @@ function valueText(
   presentation: BarPresentation,
   value: number | null,
 ): string {
-  return value === null
-    ? NO_STATED_VALUE
-    : `${plain(value)}${presentation.unit}`;
+  return barValueText(value, presentation.unit);
 }
 
 /**
@@ -145,7 +138,7 @@ function barWithValue(
   series: ValidatedBarChartSeries,
   value: number | null,
 ): string {
-  if (value === null) return mutedText(presentation, NO_STATED_VALUE);
+  if (value === null) return mutedText(presentation, barValueText(null, ""));
   const bar = styledBar(presentation, series, value);
   const text = valueText(presentation, value);
   return bar === "" ? text : `${bar} ${text}`;
@@ -302,7 +295,7 @@ function viability(
   if (titleWidth > width - 6) {
     return failed(decline("title-width", titleWidth, width - 6));
   }
-  const unit = spec.value.unit === undefined ? "" : ` ${spec.value.unit}`;
+  const unit = barUnitSuffix(spec.value);
   const grouped = spec.variant === "grouped";
   const multiSeries = spec.series.length > 1;
 
@@ -323,10 +316,10 @@ function viability(
       return failed(decline("label-wrap", categoryWord, inner));
     }
     const valueWidth = Math.max(
-      measureText(NO_STATED_VALUE),
+      measureText(barValueText(null, "")),
       ...spec.series.flatMap(({ values }) => values)
         .filter((value): value is number => value !== null)
-        .map((value) => measureText(`${plain(value)}${unit}`)),
+        .map((value) => measureText(barValueText(value, unit))),
     );
     const minimum = 4 + GROUP_INDENT + 2 + BAR_FIELD_FLOOR + 1 + valueWidth;
     if (width < minimum) return failed(decline("width", width, minimum));
@@ -343,9 +336,7 @@ function viability(
   if (grouped) {
     const valueWidth = Math.max(
       ...spec.series.flatMap(({ values }) => values).map((value) =>
-        value === null
-          ? measureText(NO_STATED_VALUE)
-          : measureText(`${plain(value)}${unit}`)
+        measureText(barValueText(value, unit))
       ),
     );
     const minimum = 4 + labelWord + LABEL_GAP + BAR_FIELD_FLOOR + 1 +
@@ -397,7 +388,7 @@ function renderExactBar(
     spec,
     theme,
     capabilities,
-    unit: spec.value.unit === undefined ? "" : ` ${spec.value.unit}`,
+    unit: barUnitSuffix(spec.value),
     inner,
     barField,
     labelColumn,

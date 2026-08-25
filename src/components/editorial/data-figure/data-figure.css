@@ -65,6 +65,40 @@
   .discern-data-figure > header .discern-data-figure__swatch--warning {
     background: var(--discern-color-warning);
   }
+  .discern-data-figure > header .discern-data-figure__swatch--series-1 {
+    border-radius: 50%;
+    background: var(--discern-color-series-1);
+  }
+  .discern-data-figure > header .discern-data-figure__swatch--series-2 {
+    background: var(--discern-color-series-2);
+  }
+  .discern-data-figure > header .discern-data-figure__swatch--series-3 {
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    background: var(--discern-color-series-3);
+  }
+  .discern-data-figure > header .discern-data-figure__swatch--series-4 {
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+    background: var(--discern-color-series-4);
+  }
+  .discern-data-figure > header .discern-data-figure__swatch--series-5 {
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    background: var(--discern-color-series-5);
+  }
+  .discern-data-figure > header .discern-data-figure__swatch--series-6 {
+    clip-path: polygon(
+      50% 0,
+      61% 35%,
+      98% 35%,
+      68% 57%,
+      79% 91%,
+      50% 70%,
+      21% 91%,
+      32% 57%,
+      2% 35%,
+      39% 35%
+    );
+    background: var(--discern-color-series-6);
+  }
   .discern-data-figure__visual {
     min-height: 16rem;
     padding: var(--discern-space-6);

@@ -4,13 +4,15 @@ import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import type {
   DataFigureLegendTone,
+  DataFigureSeriesTone,
   DataFigureSurface,
 } from "./data-figure.types.ts";
 
 /** One legend item entry rendered by the Data figure component. */
 export interface DataFigureLegendItem {
   readonly label: ReactNode;
-  readonly tone?: DataFigureLegendTone;
+  /** Semantic tone, or a chart series tone resolved through series Tokens. */
+  readonly tone?: DataFigureLegendTone | DataFigureSeriesTone;
 }
 
 /** Props for the {@linkcode DataFigure} component. */

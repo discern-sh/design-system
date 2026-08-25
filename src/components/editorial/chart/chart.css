@@ -1,0 +1,56 @@
+@layer discern.components {
+  .discern-chart__viewport {
+    contain: inline-size;
+    max-inline-size: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+  }
+  .discern-chart__viewport:focus-visible {
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: 2px;
+  }
+  .discern-chart {
+    display: block;
+    block-size: auto;
+    overflow: visible;
+    background: transparent;
+    shape-rendering: geometricPrecision;
+    text-rendering: optimizeLegibility;
+  }
+  .discern-chart__canvas {
+    fill: var(--discern-color-canvas);
+  }
+  .discern-chart__mark--series-1 {
+    fill: var(--discern-color-series-1);
+  }
+  .discern-chart__mark--series-2 {
+    fill: var(--discern-color-series-2);
+  }
+  .discern-chart__mark--series-3 {
+    fill: var(--discern-color-series-3);
+  }
+  .discern-chart__mark--series-4 {
+    fill: var(--discern-color-series-4);
+  }
+  .discern-chart__mark--series-5 {
+    fill: var(--discern-color-series-5);
+  }
+  .discern-chart__mark--series-6 {
+    fill: var(--discern-color-series-6);
+  }
+  .discern-chart__axis {
+    stroke: var(--discern-color-ink-faint);
+    vector-effect: non-scaling-stroke;
+  }
+  .discern-chart__label {
+    fill: var(--discern-color-ink-muted);
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+  }
+  .discern-chart__label--annotation {
+    fill: var(--discern-color-ink-faint);
+  }
+  .discern-chart__label--mono {
+    font-family: var(--discern-font-mono);
+  }
+}

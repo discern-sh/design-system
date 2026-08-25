@@ -1,15 +1,28 @@
 /** Stable, colour-independent structural description for bar charts. */
 
 import { chartDecimalFromNumber, renderChartDecimal } from "../../decimal.ts";
-import type { ValidatedBarChart } from "./bar.spec.ts";
+import type { BarChartValueAxisSpec, ValidatedBarChart } from "./bar.spec.ts";
 
 function plain(value: number): string {
   return renderChartDecimal(chartDecimalFromNumber(value, "bar value"));
 }
 
+/** The exact unit suffix every bar surface appends to a stated value. */
+export function barUnitSuffix(value: BarChartValueAxisSpec): string {
+  return value.unit === undefined ? "" : ` ${value.unit}`;
+}
+
+/**
+ * Render one bar cell exactly as every surface prints it: the canonical
+ * shortest decimal with the authored unit, or the declared-gap wording.
+ */
+export function barValueText(value: number | null, unitSuffix: string): string {
+  return value === null ? "no stated value" : `${plain(value)}${unitSuffix}`;
+}
+
 /** Describe every accessible fact and the data table in authored order. */
 export default function describeBarChart(spec: ValidatedBarChart): string {
-  const unit = spec.value.unit === undefined ? "" : ` ${spec.value.unit}`;
+  const unit = barUnitSuffix(spec.value);
   const axisName = spec.value.label === undefined
     ? "Value axis"
     : `Value axis (${spec.value.label})`;
@@ -29,12 +42,9 @@ export default function describeBarChart(spec: ValidatedBarChart): string {
   });
   lines.push(`Data (${spec.categories.length} categories):`);
   spec.categories.forEach((category, categoryIndex) => {
-    const cells = spec.series.map((series) => {
-      const value = series.values[categoryIndex];
-      return value === null || value === undefined
-        ? `${series.label} no stated value`
-        : `${series.label} ${plain(value)}${unit}`;
-    });
+    const cells = spec.series.map((series) =>
+      `${series.label} ${barValueText(series.values[categoryIndex] ?? null, unit)}`
+    );
     lines.push(`${category.label} (${category.id}): ${cells.join(", ")}`);
   });
 

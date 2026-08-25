@@ -29,10 +29,12 @@ import { renderStyledSpans, styleText } from "../../../cli/ansi.ts";
 import { renderBox } from "../../../cli/box.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { rampGlyph, SERIES_MARKERS } from "../../../cli/glyph-ramps.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { measureText, wrapText } from "../../../cli/text.ts";
 import {
   type TerminalColor,
+  type TerminalTheme,
   terminalThemeColor,
   terminalThemes,
   type TerminalThemeVariant,
@@ -40,13 +42,15 @@ import {
 } from "../../../cli/theme.ts";
 import type {
   DataFigureLegendTone,
+  DataFigureSeriesTone,
   DataFigureSurface,
 } from "./data-figure.types.ts";
 
 /** One terminal Data figure legend entry. */
 export interface DataFigureCliLegendItem {
   readonly label: string;
-  readonly tone?: DataFigureLegendTone;
+  /** Semantic tone, or a chart series tone resolved through series Tokens. */
+  readonly tone?: DataFigureLegendTone | DataFigureSeriesTone;
 }
 
 /** Inputs accepted by the terminal Data figure renderer. */
@@ -101,6 +105,42 @@ const LEGEND_TONES = {
   success: "success",
   warning: "warning",
 } as const;
+
+interface LegendMark {
+  readonly glyph: string;
+  readonly color: TerminalColor;
+}
+
+/**
+ * Resolve one legend tone to its marker glyph and colour. A semantic tone
+ * keeps the uniform dot; a series tone takes its slot's paired marker glyph
+ * and derived series Token colour, so series identity never rides on colour
+ * alone at any depth.
+ */
+function legendMark(
+  tone: DataFigureLegendTone | DataFigureSeriesTone,
+  theme: TerminalTheme,
+  unicode: boolean,
+): LegendMark {
+  if (tone.startsWith("series-")) {
+    const slot = Number(tone.slice("series-".length));
+    const marker = SERIES_MARKERS[slot - 1];
+    if (marker === undefined) {
+      throw new TypeError(`legend series tone ${tone} has no marker glyph`);
+    }
+    return {
+      glyph: rampGlyph(marker, unicode),
+      color: terminalThemeColor(theme, `--discern-color-${tone}`),
+    };
+  }
+  return {
+    glyph: unicode ? "●" : "*",
+    color: terminalToneColor(
+      theme,
+      LEGEND_TONES[tone as DataFigureLegendTone],
+    ),
+  };
+}
 
 function wrapLegendLabel(label: string, columns: number): readonly string[] {
   const flattened = label.replaceAll("\n", " ");
@@ -173,23 +213,19 @@ const renderDataFigureCli: CliRenderer<DataFigureCliProps> = (
   );
   const blocks = [frame];
   if ((props.legend?.length ?? 0) > 0) {
-    const marker = capabilities.unicode ? "●" : "*";
     const entries = (props.legend ?? []).flatMap((item) => {
+      const mark = legendMark(
+        item.tone ?? "accent",
+        theme,
+        capabilities.unicode,
+      );
       const [first = "", ...continuations] = wrapLegendLabel(
         item.label,
         Math.max(1, width - 2),
       );
       return [
         renderStyledSpans([
-          {
-            text: marker,
-            style: {
-              color: terminalToneColor(
-                theme,
-                LEGEND_TONES[item.tone ?? "accent"],
-              ),
-            },
-          },
+          { text: mark.glyph, style: { color: mark.color } },
           { text: ` ${first}` },
         ], capabilities),
         ...continuations.map((line) => `  ${line}`),
