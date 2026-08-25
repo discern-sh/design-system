@@ -1,7 +1,10 @@
 import { assert, assertEquals, assertThrows } from "@std/assert";
 import {
   allocateProportionalBlocks,
+  BOX_SUMMARY_GLYPHS,
+  DECLARED_GAP_GLYPH,
   HORIZONTAL_EIGHTH_RAMP,
+  LINE_PATH_GLYPHS,
   rampGlyph,
   rampStepForFraction,
   SERIES_FILLS,
@@ -22,6 +25,15 @@ const TABLES: readonly {
   { name: "shade ramp", glyphs: SHADE_RAMP },
   { name: "series markers", glyphs: SERIES_MARKERS },
   { name: "series fills", glyphs: SERIES_FILLS },
+  {
+    name: "line path glyphs",
+    glyphs: Object.freeze(Object.values(LINE_PATH_GLYPHS)),
+  },
+  {
+    name: "box summary glyphs",
+    glyphs: Object.freeze(Object.values(BOX_SUMMARY_GLYPHS)),
+  },
+  { name: "declared gap", glyphs: Object.freeze([DECLARED_GAP_GLYPH]) },
 ];
 
 Deno.test("every ramp glyph occupies exactly one terminal cell in both repertoires", () => {
@@ -93,6 +105,52 @@ Deno.test("series glyph tables keep six pairwise-distinct cues per repertoire", 
     assertEquals(new Set(glyphs.map((member) => member.unicode)).size, 6);
     assertEquals(new Set(glyphs.map((member) => member.ascii)).size, 6);
   }
+});
+
+Deno.test("line path glyphs keep the asterisk-with-dot ASCII idiom", () => {
+  assert(Object.isFrozen(LINE_PATH_GLYPHS));
+  assertEquals(
+    Object.keys(LINE_PATH_GLYPHS).toSorted(),
+    ["fallFrom", "fallTo", "level", "riseFrom", "riseTo", "run"],
+  );
+  for (const segment of ["level", "riseTo", "fallTo"] as const) {
+    assertEquals(
+      LINE_PATH_GLYPHS[segment].ascii,
+      "*",
+      `${segment} sits on an authored row and pairs with the asterisk`,
+    );
+  }
+  for (const segment of ["riseFrom", "fallFrom", "run"] as const) {
+    assertEquals(
+      LINE_PATH_GLYPHS[segment].ascii,
+      ".",
+      `${segment} only interpolates and pairs with the dot`,
+    );
+  }
+  assertEquals(
+    new Set(Object.values(LINE_PATH_GLYPHS).map(({ unicode }) => unicode))
+      .size,
+    6,
+    "each path segment draws a distinct Unicode glyph",
+  );
+});
+
+Deno.test("box summary glyphs keep the median readable against the body", () => {
+  assert(Object.isFrozen(BOX_SUMMARY_GLYPHS));
+  const { body, median, whisker, capStart, capEnd } = BOX_SUMMARY_GLYPHS;
+  assert(body.unicode !== median.unicode && body.ascii !== median.ascii);
+  assert(whisker.unicode !== body.unicode && whisker.ascii !== body.ascii);
+  assertEquals(capStart.ascii, capEnd.ascii);
+  assert(capStart.unicode !== capEnd.unicode);
+});
+
+Deno.test("the declared gap stays distinct from every vertical ramp step", () => {
+  for (const member of VERTICAL_EIGHTH_RAMP) {
+    assert(member.unicode !== DECLARED_GAP_GLYPH.unicode);
+    assert(member.ascii !== DECLARED_GAP_GLYPH.ascii);
+  }
+  assert(DECLARED_GAP_GLYPH.unicode !== " ");
+  assert(DECLARED_GAP_GLYPH.ascii !== " ");
 });
 
 Deno.test("fraction quantization never hides a nonzero value", () => {

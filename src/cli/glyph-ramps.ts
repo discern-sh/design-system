@@ -104,6 +104,69 @@ export const SERIES_FILLS: readonly TerminalRampGlyph[] = Object.freeze([
 ]);
 
 /**
+ * One cell's role along a terminal line path. `level`, `riseTo`, and
+ * `fallTo` cells sit on an authored value row; `riseFrom`, `fallFrom`, and
+ * `run` cells only connect neighbouring authored rows.
+ */
+export type LinePathSegment =
+  | "level"
+  | "riseFrom"
+  | "riseTo"
+  | "fallFrom"
+  | "fallTo"
+  | "run";
+
+/**
+ * Box-drawing vocabulary for terminal line paths, one column per authored
+ * point. The ASCII pairing is the asterisk-with-dot idiom: a cell on an
+ * authored value row pairs with `*`, and a cell that merely connects two
+ * authored rows pairs with `.` — so even the plainest repertoire keeps
+ * authored points distinguishable from interpolation.
+ */
+export const LINE_PATH_GLYPHS: Readonly<
+  Record<LinePathSegment, TerminalRampGlyph>
+> = Object.freeze({
+  level: glyph("─", "*"),
+  riseFrom: glyph("╯", "."),
+  riseTo: glyph("╭", "*"),
+  fallFrom: glyph("╮", "."),
+  fallTo: glyph("╰", "*"),
+  run: glyph("│", "."),
+});
+
+/** One cell's role along a terminal five-number box summary row. */
+export type BoxSummarySegment =
+  | "capStart"
+  | "whisker"
+  | "body"
+  | "median"
+  | "capEnd";
+
+/**
+ * Glyphs for the terminal box five-number summary: whisker caps at the
+ * minimum and maximum, whisker runs, the interquartile body, and a median
+ * cell dense enough to read against the body in both repertoires. The
+ * drawing stays gestural on purpose — the five printed numbers beneath it
+ * are the lossless layer.
+ */
+export const BOX_SUMMARY_GLYPHS: Readonly<
+  Record<BoxSummarySegment, TerminalRampGlyph>
+> = Object.freeze({
+  capStart: glyph("├", "|"),
+  whisker: glyph("─", "-"),
+  body: glyph("▒", "="),
+  median: glyph("█", "#"),
+  capEnd: glyph("┤", "|"),
+});
+
+/**
+ * The one declared-gap cell: an explicit null renders this glyph, never a
+ * blank and never a zero-height mark, so a gap stays distinct from zero in
+ * every repertoire.
+ */
+export const DECLARED_GAP_GLYPH: TerminalRampGlyph = glyph("·", ".");
+
+/**
  * Resolve one glyph to the form a terminal can display: the Unicode form
  * when `unicode` is true, otherwise its ASCII fallback.
  */
