@@ -1,4 +1,4 @@
-import { assertEquals, assertThrows } from "@std/assert";
+import { assertAlmostEquals, assertEquals, assertThrows } from "@std/assert";
 import {
   chartDecimalFromNumber,
   chartDecimalToNumber,
@@ -11,6 +11,7 @@ import {
   type ChartNumberFormat,
   formatChartNumber,
 } from "../../src/chart/format.ts";
+import { chartProportionalCumulativeFractions } from "../../src/chart/proportions.ts";
 
 Deno.test("decimal parsing reads the canonical shortest form exactly", () => {
   assertEquals(chartDecimalFromNumber(0.1, "test"), {
@@ -194,4 +195,22 @@ Deno.test("the public formatter refuses every runtime escape from its closed voc
     TypeError,
     "must be a chart number format object",
   );
+});
+
+Deno.test("proportional fractions preserve decimal order across digit boundaries", () => {
+  const threeTenths = chartProportionalCumulativeFractions([3, 7]);
+  assertAlmostEquals(threeTenths[0] ?? 0, 0.3, Number.EPSILON);
+  assertEquals(threeTenths[1], 1);
+  const extremes = chartProportionalCumulativeFractions([
+    Number.MAX_VALUE,
+    Number.MAX_VALUE,
+  ]);
+  assertAlmostEquals(extremes[0] ?? 0, 0.5, Number.EPSILON);
+  assertEquals(extremes[1], 1);
+
+  const left = 3.36262778006494e-283;
+  const right = 8.81854767911136e-283;
+  const fractions = chartProportionalCumulativeFractions([left, right]);
+  assertAlmostEquals(fractions[0] ?? 0, left / (left + right), 1e-15);
+  assertEquals(fractions[1], 1);
 });

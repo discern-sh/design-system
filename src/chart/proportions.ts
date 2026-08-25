@@ -69,9 +69,11 @@ function bigintRatio(numerator: bigint, denominator: bigint): number {
   const numeratorDigits = numerator.toString();
   const denominatorDigits = denominator.toString();
   const precision = 16;
-  const numeratorHead = Number(numeratorDigits.slice(0, precision));
-  const denominatorHead = Number(denominatorDigits.slice(0, precision));
-  return numeratorHead / denominatorHead *
+  const mantissa = (digits: string): number => {
+    const head = digits.slice(0, precision);
+    return Number(head) / 10 ** (head.length - 1);
+  };
+  return mantissa(numeratorDigits) / mantissa(denominatorDigits) *
     10 ** (numeratorDigits.length - denominatorDigits.length);
 }
 
