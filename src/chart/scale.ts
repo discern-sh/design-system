@@ -56,9 +56,18 @@ export function chartLinearPosition(
   scale: ChartLinearScale,
   value: number,
 ): number {
-  return scale.rangeStart +
-    (value - scale.domainMin) / (scale.domainMax - scale.domainMin) *
-      (scale.rangeEnd - scale.rangeStart);
+  assertFinite(value, "Chart linear position value");
+  if (value === scale.domainMin) return scale.rangeStart;
+  if (value === scale.domainMax) return scale.rangeEnd;
+
+  const normalizer = Math.max(
+    Math.abs(scale.domainMin),
+    Math.abs(scale.domainMax),
+  );
+  const scaledMinimum = scale.domainMin / normalizer;
+  const fraction = (value / normalizer - scaledMinimum) /
+    (scale.domainMax / normalizer - scaledMinimum);
+  return scale.rangeStart * (1 - fraction) + scale.rangeEnd * fraction;
 }
 
 /**

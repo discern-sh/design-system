@@ -255,6 +255,28 @@ Deno.test("linear scales position values proportionally, including inverted rang
   assertEquals(chartLinearPosition(scale, 0), 240);
   assertEquals(chartLinearPosition(scale, 100), 0);
   assertEquals(chartLinearPosition(scale, 25), 180);
+
+  const enormous = createChartLinearScale({
+    domainMin: -1e308,
+    domainMax: 1e308,
+    rangeStart: 0,
+    rangeEnd: 100,
+    subject: "test",
+  });
+  assertEquals(chartLinearPosition(enormous, -1e308), 0);
+  assertEquals(chartLinearPosition(enormous, 0), 50);
+  assertEquals(chartLinearPosition(enormous, 1e308), 100);
+
+  const denormal = createChartLinearScale({
+    domainMin: -Number.MIN_VALUE,
+    domainMax: Number.MIN_VALUE,
+    rangeStart: 100,
+    rangeEnd: 0,
+    subject: "test",
+  });
+  assertEquals(chartLinearPosition(denormal, -Number.MIN_VALUE), 100);
+  assertEquals(chartLinearPosition(denormal, 0), 50);
+  assertEquals(chartLinearPosition(denormal, Number.MIN_VALUE), 0);
   assertThrows(
     () =>
       createChartLinearScale({
