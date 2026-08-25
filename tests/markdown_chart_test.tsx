@@ -58,6 +58,8 @@ import { Markdown } from "../src/react.ts";
 import { markdownFixtures } from "../src/fixtures/markdown.ts";
 import { markdownChartExampleSpec as markdownChartSpec } from "../src/chart/markdown.example.ts";
 import { markdownDiagramExampleSpec } from "../src/diagram/markdown.example.ts";
+import { chartKindRegistry } from "../src/generated/chart-registry.ts";
+import type { ChartSpec } from "../src/generated/chart-spec.ts";
 
 const markdownChartAlt = chartAltText(markdownChartSpec);
 const markdownChartSource = "assets/reviews-by-weekday.svg";
@@ -865,4 +867,49 @@ Deno.test("chart blocks remain enrolled in both exhaustive projections", () => {
   );
   assertEquals(upgraded.links, ordinary.links);
   assertEquals(upgraded.headings, ordinary.headings);
+});
+
+Deno.test("every registered kind promotes through both Markdown projections", () => {
+  for (const entry of chartKindRegistry) {
+    const spec = entry.releaseCorpus.cases.find(({ postures }) =>
+      postures.some((posture) => posture === "representative")
+    )?.spec as ChartSpec | undefined;
+    assert(spec !== undefined, `${entry.meta.slug} has a representative case`);
+    const resource = Object.freeze({
+      source: `assets/${entry.meta.slug}-representative.svg`,
+      spec,
+    });
+    const markdown = `Before.\n\n${
+      renderChartMarkdownImage(resource)
+    }\n\nAfter.\n`;
+
+    const html = renderToStaticMarkup(
+      <Markdown source={markdown} charts={[resource]} />,
+    );
+    assert(
+      html.includes(`data-discern-chart-kind="${entry.meta.slug}"`),
+      `${entry.meta.slug} browser projection did not mount the live Chart`,
+    );
+
+    const terminal = stripAnsi(
+      renderMarkdownCli({ source: markdown, charts: [resource] }, wide),
+    );
+    assert(
+      terminal.includes(spec.title),
+      `${entry.meta.slug} terminal projection lost the authored title`,
+    );
+    assert(
+      !terminal.includes("Image: "),
+      `${entry.meta.slug} terminal projection kept the ordinary image`,
+    );
+
+    const described = stripAnsi(renderMarkdownCli(
+      { source: markdown, charts: [resource], chartMode: "description" },
+      wide,
+    ));
+    assert(
+      described.includes("Title: "),
+      `${entry.meta.slug} forced description mode did not project the facts`,
+    );
+  }
 });
