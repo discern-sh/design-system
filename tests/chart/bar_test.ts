@@ -125,6 +125,31 @@ Deno.test("proportion segments stack exactly with shared boundaries", () => {
   }
 });
 
+Deno.test("proportion geometry stays complete when finite shares would overflow a binary total", () => {
+  const prepared = prepareChart({
+    kind: "bar",
+    title: "Extreme equal shares",
+    summary: "Two finite extremes still divide one whole equally.",
+    variant: "proportion",
+    categories: [{ id: "whole", label: "Whole" }],
+    series: [
+      { id: "first", label: "First", values: [Number.MAX_VALUE] },
+      { id: "second", label: "Second", values: [Number.MAX_VALUE] },
+    ],
+  });
+  const marks = prepared.scene.elements.filter(
+    (element): element is ChartMark => element.kind === "mark",
+  );
+  assertEquals(marks.length, 2);
+  assertEquals(marks[0]?.bounds.height, marks[1]?.bounds.height);
+  assertEquals(
+    roundChartNumber(
+      (marks[0]?.bounds.height ?? 0) + (marks[1]?.bounds.height ?? 0),
+    ),
+    prepared.scene.plot.height,
+  );
+});
+
 Deno.test("tick labels ride the nice-step authority and the authored format", () => {
   const minimal = prepareChart(corpusSpec("minimum"));
   const minimalLabels = minimal.scene.elements

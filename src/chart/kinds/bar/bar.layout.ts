@@ -28,6 +28,7 @@ import type {
   ChartTickLabel,
 } from "../../scene.ts";
 import { chartLinearTicks } from "../../ticks.ts";
+import { chartProportionalCumulativeFractions } from "../../proportions.ts";
 import type { ValidatedBarChart } from "./bar.spec.ts";
 
 const G = CHART_GEOMETRY;
@@ -173,16 +174,18 @@ function markGeometry(
       });
       return;
     }
-    const total = spec.series.reduce(
-      (sum, series) => sum + (series.values[categoryIndex] ?? 0),
-      0,
+    const shares = spec.series.map((series) =>
+      series.values[categoryIndex] ?? 0
     );
-    let cumulative = 0;
+    const cumulativeFractions = chartProportionalCumulativeFractions(shares);
     let previous = baseline;
     spec.series.forEach((series, seriesIndex) => {
       const value = series.values[categoryIndex];
       if (value === null || value === undefined) return;
-      cumulative += value / total;
+      const cumulative = cumulativeFractions[seriesIndex];
+      if (cumulative === undefined) {
+        throw new TypeError("Proportion layout lost a series boundary.");
+      }
       const position = roundChartNumber(
         chartLinearPosition(valueScale, cumulative),
       );

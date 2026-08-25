@@ -13,6 +13,7 @@
  */
 
 import { TRIANGLES } from "./triangles.ts";
+import { allocateChartProportionalUnits } from "../chart/proportions.ts";
 
 /** One ramp or series glyph with its single-cell ASCII fallback. */
 export interface TerminalRampGlyph {
@@ -211,57 +212,5 @@ export function allocateProportionalBlocks(
   shares: readonly number[],
   blocks: number,
 ): readonly number[] {
-  if (!Number.isSafeInteger(blocks) || blocks < 0) {
-    throw new TypeError(
-      `Block count must be a non-negative safe integer; received ${blocks}`,
-    );
-  }
-  for (const [index, share] of shares.entries()) {
-    if (!Number.isFinite(share) || share < 0) {
-      throw new TypeError(
-        `Share ${index} must be a finite non-negative number; received ${share}`,
-      );
-    }
-  }
-  const total = shares.reduce((sum, share) => sum + share, 0);
-  if (total === 0) return shares.map(() => 0);
-  const nonzero = shares.filter((share) => share > 0).length;
-  if (blocks < nonzero) {
-    throw new TypeError(
-      `${blocks} blocks cannot show ${nonzero} nonzero shares without hiding one; allocate at least ${nonzero}`,
-    );
-  }
-  const quotas = shares.map((share) => share / total * blocks);
-  const counts = quotas.map((quota) => Math.floor(quota));
-  let remaining = blocks - counts.reduce((sum, count) => sum + count, 0);
-  const byRemainder = quotas
-    .map((quota, index) => ({ remainder: quota - Math.floor(quota), index }))
-    .toSorted((left, right) =>
-      right.remainder - left.remainder || left.index - right.index
-    );
-  for (const { index } of byRemainder) {
-    if (remaining === 0) break;
-    const count = counts[index];
-    if (count !== undefined) {
-      counts[index] = count + 1;
-      remaining -= 1;
-    }
-  }
-  for (const [index, share] of shares.entries()) {
-    if (share <= 0 || counts[index] !== 0) continue;
-    let donor = -1;
-    for (const [candidate, count] of counts.entries()) {
-      if (count !== undefined && count >= 2) {
-        if (donor === -1 || count > (counts[donor] ?? 0)) donor = candidate;
-      }
-    }
-    if (donor === -1) {
-      throw new TypeError(
-        `Block allocation cannot honour nonzero share ${index} without a donor; this contradicts the block minimum`,
-      );
-    }
-    counts[donor] = (counts[donor] ?? 0) - 1;
-    counts[index] = 1;
-  }
-  return Object.freeze(counts);
+  return allocateChartProportionalUnits(shares, blocks);
 }

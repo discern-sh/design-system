@@ -117,6 +117,7 @@ Deno.test("locale, float formatting, and clock access are banned from the chart 
     const authority of [
       "src/chart/decimal.ts",
       "src/chart/format.ts",
+      "src/chart/proportions.ts",
       "src/chart/scale.ts",
       "src/chart/svg-geometry.ts",
       "src/chart/ticks.ts",

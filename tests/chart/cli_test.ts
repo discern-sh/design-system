@@ -317,11 +317,11 @@ Deno.test("quantization keeps the honesty invariants at both repertoires", () =>
   );
 });
 
-Deno.test("proportion allocation never rounds a nonzero share away", () => {
+Deno.test("a sub-resolution proportion declines instead of exaggerating a share", () => {
   const skewed: BarChartSpec = {
     kind: "bar",
     title: "Skewed proportion probe",
-    summary: "Tiny shares keep one visible cell beside a dominant share.",
+    summary: "Tiny shares cannot be represented honestly beside a dominant share.",
     variant: "proportion",
     categories: [{ id: "all", label: "All" }],
     series: [
@@ -331,14 +331,20 @@ Deno.test("proportion allocation never rounds a nonzero share away", () => {
     ],
   };
   const projection = project(skewed, 60, { unicode: false });
-  assert(projection.kind === "frame");
-  const plain = stripAnsi(projection.frame);
-  const barLine = plain.split("\n").find((line) => line.includes("All"));
-  assert(barLine !== undefined);
-  assert(barLine.includes("#"), "the first share keeps its fill cell");
-  assert(barLine.includes("@"), "the second share keeps its fill cell");
-  assert(barLine.includes("="), "the dominant share keeps its fill run");
-  assertCarriesEveryFact(projection.frame, skewed, "proportion probe");
+  assertEquals(projection, {
+    kind: "declined",
+    code: "segment-resolution",
+    fact: 100,
+    limit: 48,
+  });
+  const capabilities = testTerminalCapabilities({
+    columns: 60,
+    unicode: false,
+  });
+  assertEquals(
+    render(skewed, capabilities),
+    render(skewed, capabilities, "description"),
+  );
 });
 
 Deno.test("declines carry the exceeded fact and route to the complete table", () => {

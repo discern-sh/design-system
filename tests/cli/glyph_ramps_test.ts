@@ -15,6 +15,7 @@ import {
 } from "../../src/cli/glyph-ramps.ts";
 import { graphemeWidth } from "../../src/cli/text.ts";
 import { allocateDiffstatBlocks } from "../../src/components/display/diffstat/diffstat.shared.ts";
+import { minimumChartProportionalUnits } from "../../src/chart/proportions.ts";
 
 const TABLES: readonly {
   readonly name: string;
@@ -169,15 +170,25 @@ Deno.test("fraction quantization never hides a nonzero value", () => {
 });
 
 Deno.test("proportional allocation preserves totals and every nonzero share", () => {
-  assertEquals(allocateProportionalBlocks([1, 1000, 1000], 10), [1, 4, 5]);
   assertEquals(allocateProportionalBlocks([0, 5, 5], 10), [0, 5, 5]);
   assertEquals(allocateProportionalBlocks([0, 0, 0], 6), [0, 0, 0]);
   assertEquals(allocateProportionalBlocks([2, 1, 1], 8), [4, 2, 2]);
+  assertEquals(
+    allocateProportionalBlocks(
+      [Number.MAX_VALUE, Number.MAX_VALUE],
+      20,
+    ),
+    [10, 10],
+  );
+  assertEquals(
+    allocateProportionalBlocks([Number.MIN_VALUE, Number.MIN_VALUE], 20),
+    [10, 10],
+  );
   for (
     const [shares, blocks] of [
-      [[3, 1, 96], 12],
-      [[1, 1, 1, 97], 8],
-      [[5, 2, 2, 1], 4],
+      [[3, 1, 6], 12],
+      [[1, 1, 1, 1], 8],
+      [[5, 2, 2, 1], 10],
       [[0.5, 0.25, 0.25], 9],
     ] as const
   ) {
@@ -209,7 +220,17 @@ Deno.test("allocation refuses widths that would hide a nonzero share", () => {
   assertThrows(
     () => allocateProportionalBlocks([1, 1, 1], 2),
     TypeError,
-    "cannot show 3 nonzero shares",
+    "cannot render the smallest nonzero share truthfully",
+  );
+  assertThrows(
+    () => allocateProportionalBlocks([1, 1, 98], 48),
+    TypeError,
+    "allocate at least 100",
+  );
+  assertThrows(
+    () => allocateProportionalBlocks([1, 1000, 1000], 10),
+    TypeError,
+    "allocate at least 2001",
   );
   assertThrows(
     () => allocateProportionalBlocks([1, -1], 4),
@@ -223,11 +244,20 @@ Deno.test("allocation refuses widths that would hide a nonzero share", () => {
   );
 });
 
-Deno.test("the two-share Diffstat allocation is the N=2 slice of this authority", () => {
+Deno.test("resolved two-share allocations retain the pinned Diffstat tie rules", () => {
   for (const added of [0, 1, 2, 5, 9, 50]) {
     for (const removed of [0, 1, 3, 7, 41]) {
       for (const blocks of [2, 3, 8, 10]) {
         const legacy = allocateDiffstatBlocks(added, removed, blocks);
+        const required = minimumChartProportionalUnits([added, removed]);
+        if (blocks < required) {
+          assertThrows(
+            () => allocateProportionalBlocks([added, removed], blocks),
+            TypeError,
+            `allocate at least ${required}`,
+          );
+          continue;
+        }
         const counts = allocateProportionalBlocks([added, removed], blocks);
         assertEquals(
           counts[0],

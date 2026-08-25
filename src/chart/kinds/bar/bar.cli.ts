@@ -39,6 +39,7 @@ import {
 } from "../../../cli/theme.ts";
 import { barUnitSuffix, barValueText } from "./bar.description.ts";
 import type { ValidatedBarChart, ValidatedBarChartSeries } from "./bar.spec.ts";
+import { minimumChartProportionalUnits } from "../../proportions.ts";
 
 const LABEL_GAP = 2;
 const GROUP_INDENT = 2;
@@ -347,11 +348,6 @@ function viability(
     return { barField, labelColumn };
   }
 
-  const nonzeroSegments = Math.max(
-    ...spec.categories.map((_category, index) =>
-      spec.series.filter((series) => (series.values[index] ?? 0) > 0).length
-    ),
-  );
   const minimum = 4 + labelWord + LABEL_GAP + BAR_FIELD_FLOOR;
   if (width < minimum) return failed(decline("width", width, minimum));
   const labelColumn = Math.min(
@@ -362,8 +358,17 @@ function viability(
     BAR_FIELD_CEILING,
     inner - labelColumn - LABEL_GAP,
   );
-  if (barField < nonzeroSegments) {
-    return failed(decline("segment-resolution", nonzeroSegments, barField));
+  const requiredResolution = Math.max(
+    ...spec.categories.map((_category, index) =>
+      minimumChartProportionalUnits(
+        spec.series.map((series) => series.values[index] ?? 0),
+      )
+    ),
+  );
+  if (barField < requiredResolution) {
+    return failed(
+      decline("segment-resolution", requiredResolution, barField),
+    );
   }
   return { barField, labelColumn };
 }
