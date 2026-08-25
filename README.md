@@ -289,7 +289,7 @@ export const reviewThroughputMarkdown = renderChartMarkdownImage(
 Generic readers show the generated SVG and raw text keeps the meaningful alternative. Package Markdown callers may optionally register the same resource — `charts` on `Markdown` or `renderMarkdownCli`, or a `MarkdownBrowserDocument`'s `charts` collection — to upgrade only an isolated matching image to the live token-themed `Chart` in the browser and to `renderChartCli` in terminals, where `chartMode: "description"` forces the universal description. Diagrams and charts share one promotion resolver: matching happens after the same safe URL normalization, the alt must equal `chartAltText(spec)`, an optional image title must equal `spec.summary`, valid unused resources are allowed for corpus-level collections, and duplicate normalized sources — including one source admitted by both the `diagrams` and `charts` collections — reject the whole render before partial output. The package never reads the asset, resolves the path, or parses SVG.
 
 ```tsx
-import { DataFigure, Chart, Markdown } from "@discern-sh/design-system/react";
+import { Chart, DataFigure, Markdown } from "@discern-sh/design-system/react";
 import { chartSeriesLegend } from "@discern-sh/design-system/chart";
 import {
   reviewThroughput,
