@@ -21,9 +21,10 @@ import {
   ChartConformanceError,
   ChartValidationError,
 } from "./errors.ts";
+import type { ChartNumberFormat } from "./format.ts";
 import type { ChartKindMeta } from "./kind-meta.ts";
 import { CHART_COMMON_LIMITS } from "./limits.ts";
-import type { ChartCommonSpec } from "./spec.ts";
+import type { ChartCommonSpec, ChartValueAxisSpec } from "./spec.ts";
 
 export { isPlainRecord as isChartRecord } from "../internal/validation.ts";
 
@@ -185,6 +186,110 @@ export function validateChartCommonSpec(
     }
   }
   return value as ChartCommonSpec & Record<string, unknown>;
+}
+
+/** Read one closed-vocabulary field, falling back when it is omitted. */
+export function chartOneOf<T extends string>(
+  value: unknown,
+  allowed: readonly T[],
+  fallback: T,
+  path: string,
+): T {
+  if (value === undefined) return fallback;
+  if (typeof value !== "string" || !allowed.includes(value as T)) {
+    invalidSpec(`${path} must be one of ${allowed.join(", ")}.`, path);
+  }
+  return value as T;
+}
+
+const FORMAT_KINDS = ["decimal", "percent", "si"] as const;
+
+/** Validate one closed chart number format authored on an axis or annotation. */
+export function validateChartNumberFormat(
+  value: unknown,
+  path: string,
+): ChartNumberFormat {
+  if (!isPlainRecord(value)) {
+    throw new ChartValidationError({
+      code: "chart/invalid-spec",
+      message: `${path} must be a chart number format object.`,
+      path,
+      remedy: "Use one of the closed decimal, percent, or si formats.",
+    });
+  }
+  const kind = value.kind;
+  if (
+    typeof kind !== "string" ||
+    !FORMAT_KINDS.includes(kind as typeof FORMAT_KINDS[number])
+  ) {
+    throw new ChartValidationError({
+      code: "chart/invalid-spec",
+      message: `${path}.kind must be one of ${FORMAT_KINDS.join(", ")}.`,
+      path: `${path}.kind`,
+      remedy: "Use one of the closed decimal, percent, or si formats.",
+    });
+  }
+  assertChartExactKeys(
+    value,
+    kind === "decimal" ? ["kind", "decimals", "grouping"] : [
+      "kind",
+      "decimals",
+    ],
+    path,
+  );
+  const decimals = value.decimals;
+  if (
+    typeof decimals !== "number" || !Number.isInteger(decimals) ||
+    decimals < 0 || decimals > 12
+  ) {
+    throw new ChartValidationError({
+      code: "chart/invalid-spec",
+      message: `${path}.decimals must be an integer between 0 and 12.`,
+      path: `${path}.decimals`,
+      remedy: "State the exact fraction digits the labels should carry.",
+    });
+  }
+  if (
+    kind === "decimal" && value.grouping !== undefined &&
+    typeof value.grouping !== "boolean"
+  ) {
+    throw new ChartValidationError({
+      code: "chart/invalid-spec",
+      message: `${path}.grouping must be a boolean when present.`,
+      path: `${path}.grouping`,
+      remedy: "Request canonical thousands grouping with true.",
+    });
+  }
+  return value as unknown as ChartNumberFormat;
+}
+
+/** Validate the optional value-axis facts every quantitative kind shares. */
+export function validateChartValueAxis(
+  value: unknown,
+  path: string,
+): ChartValueAxisSpec {
+  if (value === undefined) return {};
+  if (!isPlainRecord(value)) {
+    invalidSpec(`${path} must be an object.`, path);
+  }
+  assertChartExactKeys(value, ["label", "unit", "format"], path);
+  const axis: {
+    label?: string;
+    unit?: string;
+    format?: ChartNumberFormat;
+  } = {};
+  if (value.label !== undefined) {
+    assertChartText(value.label, `${path}.label`);
+    axis.label = value.label;
+  }
+  if (value.unit !== undefined) {
+    assertChartText(value.unit, `${path}.unit`);
+    axis.unit = value.unit;
+  }
+  if (value.format !== undefined) {
+    axis.format = validateChartNumberFormat(value.format, `${path}.format`);
+  }
+  return Object.freeze(axis);
 }
 
 /** Apply one Metadata-owned kind budget by its declared dimension. */

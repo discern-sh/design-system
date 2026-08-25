@@ -1,9 +1,8 @@
 /** Semantic authoring and validated data contracts for bar charts. */
 
 import type { ValidatedChartSpec } from "../../dispatch.ts";
-import type { ChartNumberFormat } from "../../format.ts";
 import type { ChartSeriesPaintSlot } from "../../scene.ts";
-import type { ChartCommonSpec } from "../../spec.ts";
+import type { ChartCommonSpec, ChartValueAxisSpec } from "../../spec.ts";
 
 /** Comparison form: absolute values side by side, or shares of each whole. */
 export type BarChartVariant = "grouped" | "proportion";
@@ -34,11 +33,7 @@ export interface BarChartSeriesSpec {
 }
 
 /** Value-axis facts: an optional name, unit, and tick label format. */
-export interface BarChartValueAxisSpec {
-  readonly label?: string;
-  readonly unit?: string;
-  readonly format?: ChartNumberFormat;
-}
+export type BarChartValueAxisSpec = ChartValueAxisSpec;
 
 /** JSON-safe documentation-scale bar chart. */
 export interface BarChartSpec extends ChartCommonSpec {

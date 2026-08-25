@@ -2,7 +2,6 @@
 
 import { chartDecimalFromNumber, chartDecimalOrder } from "../../decimal.ts";
 import { ChartValidationError } from "../../errors.ts";
-import type { ChartNumberFormat } from "../../format.ts";
 import type { ChartSeriesPaintSlot } from "../../scene.ts";
 import {
   assertChartExactKeys,
@@ -10,13 +9,14 @@ import {
   assertChartKindBudget,
   assertChartText,
   chartGraphemeCount,
+  chartOneOf,
   isChartRecord,
   validateChartCommonSpec,
+  validateChartValueAxis,
 } from "../../validation.ts";
 import meta from "./bar.meta.ts";
 import type {
   BarChartOrientation,
-  BarChartValueAxisSpec,
   BarChartVariant,
   ValidatedBarChart,
   ValidatedBarChartSeries,
@@ -27,7 +27,6 @@ const ORIENTATIONS: readonly BarChartOrientation[] = [
   "vertical",
   "horizontal",
 ];
-const FORMAT_KINDS = ["decimal", "percent", "si"] as const;
 
 function invalid(
   code:
@@ -45,115 +44,6 @@ function invalid(
   throw new ChartValidationError({ code, message, path, remedy, facts });
 }
 
-function oneOf<T extends string>(
-  value: unknown,
-  allowed: readonly T[],
-  fallback: T,
-  path: string,
-): T {
-  if (value === undefined) return fallback;
-  if (typeof value !== "string" || !allowed.includes(value as T)) {
-    invalid(
-      "chart/invalid-spec",
-      `${path} must be one of ${allowed.join(", ")}.`,
-      path,
-      "Choose one of the kind's authored semantic values.",
-    );
-  }
-  return value as T;
-}
-
-function validateFormat(
-  value: unknown,
-  path: string,
-): ChartNumberFormat {
-  if (!isChartRecord(value)) {
-    invalid(
-      "chart/invalid-spec",
-      `${path} must be a chart number format object.`,
-      path,
-      "Use one of the closed decimal, percent, or si formats.",
-    );
-  }
-  const kind = value.kind;
-  if (
-    typeof kind !== "string" ||
-    !FORMAT_KINDS.includes(kind as typeof FORMAT_KINDS[number])
-  ) {
-    invalid(
-      "chart/invalid-spec",
-      `${path}.kind must be one of ${FORMAT_KINDS.join(", ")}.`,
-      `${path}.kind`,
-      "Use one of the closed decimal, percent, or si formats.",
-    );
-  }
-  assertChartExactKeys(
-    value,
-    kind === "decimal" ? ["kind", "decimals", "grouping"] : [
-      "kind",
-      "decimals",
-    ],
-    path,
-  );
-  const decimals = value.decimals;
-  if (
-    typeof decimals !== "number" || !Number.isInteger(decimals) ||
-    decimals < 0 || decimals > 12
-  ) {
-    invalid(
-      "chart/invalid-spec",
-      `${path}.decimals must be an integer between 0 and 12.`,
-      `${path}.decimals`,
-      "State the exact fraction digits the labels should carry.",
-    );
-  }
-  if (
-    kind === "decimal" && value.grouping !== undefined &&
-    typeof value.grouping !== "boolean"
-  ) {
-    invalid(
-      "chart/invalid-spec",
-      `${path}.grouping must be a boolean when present.`,
-      `${path}.grouping`,
-      "Request canonical thousands grouping with true.",
-    );
-  }
-  return value as unknown as ChartNumberFormat;
-}
-
-function validateValueAxis(
-  value: unknown,
-  path: string,
-): BarChartValueAxisSpec {
-  if (value === undefined) return {};
-  if (!isChartRecord(value)) {
-    invalid(
-      "chart/invalid-spec",
-      `${path} must be an object.`,
-      path,
-      "Use the documented value-axis fields.",
-    );
-  }
-  assertChartExactKeys(value, ["label", "unit", "format"], path);
-  const axis: {
-    label?: string;
-    unit?: string;
-    format?: ChartNumberFormat;
-  } = {};
-  if (value.label !== undefined) {
-    assertChartText(value.label, `${path}.label`);
-    axis.label = value.label;
-  }
-  if (value.unit !== undefined) {
-    assertChartText(value.unit, `${path}.unit`);
-    axis.unit = value.unit;
-  }
-  if (value.format !== undefined) {
-    axis.format = validateFormat(value.format, `${path}.format`);
-  }
-  return Object.freeze(axis);
-}
-
 /** Validate all authored semantics before layout sees the bar chart. */
 export default function validateBarChart(
   input: unknown,
@@ -168,8 +58,13 @@ export default function validateBarChart(
     "series",
     "value",
   ]);
-  const variant = oneOf(spec.variant, VARIANTS, "grouped", "spec.variant");
-  const orientation = oneOf(
+  const variant = chartOneOf(
+    spec.variant,
+    VARIANTS,
+    "grouped",
+    "spec.variant",
+  );
+  const orientation = chartOneOf(
     spec.orientation,
     ORIENTATIONS,
     "vertical",
@@ -355,7 +250,7 @@ export default function validateBarChart(
     orientation,
     categories: Object.freeze(categories),
     series: Object.freeze(series),
-    value: validateValueAxis(spec.value, "spec.value"),
+    value: validateChartValueAxis(spec.value, "spec.value"),
     maximumValue: Math.max(...stated),
   });
 }

@@ -4,6 +4,8 @@
  * @module
  */
 
+import type { ChartNumberFormat } from "./format.ts";
+
 /** Recursively JSON-safe data admitted by chart specs. */
 export type ChartJsonValue =
   | null
@@ -21,4 +23,14 @@ export interface ChartCommonSpec {
   readonly title: string;
   /** Concise accessible explanation of what the chart communicates. */
   readonly summary: string;
+}
+
+/**
+ * Value-axis facts shared by every quantitative axis: an optional name,
+ * unit, and tick label format.
+ */
+export interface ChartValueAxisSpec {
+  readonly label?: string;
+  readonly unit?: string;
+  readonly format?: ChartNumberFormat;
 }
