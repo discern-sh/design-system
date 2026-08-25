@@ -424,6 +424,42 @@ export const themeTokens: readonly ThemeToken[] = [
     "Danger surface.",
   ),
   themeToken(
+    "--discern-color-series-1",
+    "oklch(58% 0.11 195)",
+    "oklch(72% 0.13 195)",
+    "First of the six fixed-order categorical data-series colours (teal). Browser consumers may override these custom properties; terminal series colours stay package-authored because overrides cannot re-run the palette's colour-vision and ANSI safety proofs.",
+  ),
+  themeToken(
+    "--discern-color-series-2",
+    "oklch(46% 0.12 50)",
+    "oklch(62% 0.13 50)",
+    "Second categorical data-series colour (rust); pairs with the second series marker and fill glyph.",
+  ),
+  themeToken(
+    "--discern-color-series-3",
+    "oklch(60% 0.11 225)",
+    "oklch(74% 0.12 225)",
+    "Third categorical data-series colour (sky); pairs with the third series marker and fill glyph.",
+  ),
+  themeToken(
+    "--discern-color-series-4",
+    "oklch(68% 0.12 115)",
+    "oklch(82% 0.14 115)",
+    "Fourth categorical data-series colour (olive); pairs with the fourth series marker and fill glyph.",
+  ),
+  themeToken(
+    "--discern-color-series-5",
+    "oklch(44% 0.13 315)",
+    "oklch(60% 0.15 315)",
+    "Fifth categorical data-series colour (purple); pairs with the fifth series marker and fill glyph.",
+  ),
+  themeToken(
+    "--discern-color-series-6",
+    "oklch(64% 0.13 345)",
+    "oklch(78% 0.14 345)",
+    "Sixth categorical data-series colour (pink); pairs with the sixth series marker and fill glyph.",
+  ),
+  themeToken(
     "--discern-shadow-color",
     "var(--discern-color-ink)",
     "oklch(6% 0.01 var(--discern-ink-hue))",

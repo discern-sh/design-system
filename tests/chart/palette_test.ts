@@ -1,15 +1,6 @@
 import { assert, assertEquals } from "@std/assert";
-import {
-  ANSI_16_RGB,
-  ANSI_256_RGB,
-  nearestPaletteIndex,
-} from "../../src/cli/ansi-palette.ts";
 import { oklchToSrgb, type SrgbColor } from "../../src/internal/oklch.ts";
-import {
-  CHART_SERIES_SLOTS,
-  type ChartSeriesOklch,
-  chartSeriesOklchLiteral,
-} from "../../src/chart/series-palette.ts";
+import { terminalThemes } from "../../src/cli/theme.ts";
 import {
   baseTokens,
   discernThemeTokens,
@@ -19,15 +10,54 @@ import {
 /**
  * Colour-vision-deficiency separation floor in OKLab distance, measured
  * 0.1697 when the palette was authored and pinned just beneath it. This is
- * a hard limit the palette must keep, never an aspiration: a slot edit that
- * lowers any deficiency-simulated adjacent-pair distance below it fails.
+ * a hard limit the palette must keep, never an aspiration: a series-token
+ * edit that lowers any deficiency-simulated adjacent-pair distance below it
+ * fails.
  */
 const CVD_SEPARATION_FLOOR = 0.169;
 
 /** Minimum hue distance from every reserved semantic hue, in degrees. */
 const RESERVED_HUE_CLEARANCE = 18;
 
-function toVariant(value: ChartSeriesOklch): SrgbColor {
+const SERIES_SLOTS = [1, 2, 3, 4, 5, 6] as const;
+
+/**
+ * The exact literal shape the terminal theme derivation parses. The series
+ * tokens are the palette's single source of truth, so each authored value
+ * must stay byte-compatible with this parser.
+ */
+const TOKEN_OKLCH =
+  /^oklch\(\s*([0-9]+(?:\.[0-9]+)?)%\s+([0-9]+(?:\.[0-9]+)?)\s+(-?[0-9]+(?:\.[0-9]+)?)\s*\)$/u;
+
+interface SeriesOklch {
+  readonly lightnessPercent: number;
+  readonly chroma: number;
+  readonly hue: number;
+}
+
+function seriesTokenName(slot: number): `--discern-${string}` {
+  return `--discern-color-series-${slot}`;
+}
+
+function seriesOklch(slot: number, variant: "light" | "dark"): SeriesOklch {
+  const token = themeTokens.find(({ name }) => name === seriesTokenName(slot));
+  assert(token !== undefined, `missing series token for slot ${slot}`);
+  assertEquals(token.category, "Color");
+  const match = token[variant].match(TOKEN_OKLCH);
+  assert(
+    match !== null,
+    `slot ${slot} ${variant} literal ${
+      token[variant]
+    } must parse in the terminal derivation's oklch() form`,
+  );
+  return {
+    lightnessPercent: Number(match[1]),
+    chroma: Number(match[2]),
+    hue: Number(match[3]),
+  };
+}
+
+function toVariant(value: SeriesOklch): SrgbColor {
   return oklchToSrgb(value.lightnessPercent / 100, value.chroma, value.hue);
 }
 
@@ -141,8 +171,10 @@ Deno.test("adjacent slots stay separated under severe protan and deutan simulati
         ["deutan", DEUTAN_SEVERE],
       ] as const
     ) {
-      const simulated = CHART_SERIES_SLOTS.map((slot) =>
-        linearToOklab(simulate(toLinear(toVariant(slot[variant])), matrix))
+      const simulated = SERIES_SLOTS.map((slot) =>
+        linearToOklab(
+          simulate(toLinear(toVariant(seriesOklch(slot, variant))), matrix),
+        )
       );
       for (let index = 0; index < simulated.length - 1; index += 1) {
         const left = simulated[index];
@@ -189,17 +221,34 @@ Deno.test("series hues keep clearance from every reserved semantic hue", () => {
     const difference = Math.abs(left - right) % 360;
     return Math.min(difference, 360 - difference);
   };
-  for (const slot of CHART_SERIES_SLOTS) {
+  for (const slot of SERIES_SLOTS) {
     for (const variant of VARIANTS) {
       for (const hue of reserved) {
-        const distance = hueDistance(slot[variant].hue, hue);
+        const authored = seriesOklch(slot, variant);
+        const distance = hueDistance(authored.hue, hue);
         assert(
           distance >= RESERVED_HUE_CLEARANCE,
-          `slot ${slot.slot} ${variant} hue ${
-            slot[variant].hue
-          } sits ${distance}° from reserved hue ${hue}`,
+          `slot ${slot} ${variant} hue ${authored.hue} sits ${distance}° from reserved hue ${hue}`,
         );
       }
+    }
+  }
+});
+
+Deno.test("the derived terminal themes enrol every series token automatically", () => {
+  for (const variant of VARIANTS) {
+    for (const slot of SERIES_SLOTS) {
+      const color = terminalThemes[variant].colors[seriesTokenName(slot)];
+      assert(
+        color !== undefined,
+        `${variant} terminal theme has no derived slot ${slot} colour`,
+      );
+      const authored = toVariant(seriesOklch(slot, variant));
+      assertEquals(
+        { red: color.red, green: color.green, blue: color.blue },
+        authored,
+        `${variant} slot ${slot} RGB must derive from the authored token`,
+      );
     }
   }
 });
@@ -210,8 +259,8 @@ Deno.test("the six slots stay pairwise distinct through the ANSI 256 derivation"
     dark: [37, 131, 74, 149, 133, 212],
   } as const;
   for (const variant of VARIANTS) {
-    const indices = CHART_SERIES_SLOTS.map((slot) =>
-      nearestPaletteIndex(toVariant(slot[variant]), ANSI_256_RGB)
+    const indices = SERIES_SLOTS.map((slot) =>
+      terminalThemes[variant].colors[seriesTokenName(slot)]?.ansi256
     );
     assertEquals(indices, [...expected[variant]]);
     assertEquals(
@@ -233,8 +282,8 @@ Deno.test("the ANSI 16 collapse is pinned and adjacent slots never collide", () 
     dark: [6, 3, 14, 7, 8, 7],
   } as const;
   for (const variant of VARIANTS) {
-    const indices = CHART_SERIES_SLOTS.map((slot) =>
-      nearestPaletteIndex(toVariant(slot[variant]), ANSI_16_RGB)
+    const indices = SERIES_SLOTS.map((slot) =>
+      terminalThemes[variant].colors[seriesTokenName(slot)]?.ansi16
     );
     assertEquals(indices, [...expected[variant]]);
     for (let index = 0; index < indices.length - 1; index += 1) {
@@ -246,24 +295,4 @@ Deno.test("the ANSI 16 collapse is pinned and adjacent slots never collide", () 
       );
     }
   }
-});
-
-Deno.test("authored literals serialize in the Token layer's oklch() form", () => {
-  // The shape the terminal theme derivation parses today; the 3A move into
-  // tokens.ts must stay byte-compatible with it.
-  const tokenOklch =
-    /^oklch\(\s*([0-9]+(?:\.[0-9]+)?)%\s+([0-9]+(?:\.[0-9]+)?)\s+(-?[0-9]+(?:\.[0-9]+)?)\s*\)$/u;
-  for (const slot of CHART_SERIES_SLOTS) {
-    for (const variant of VARIANTS) {
-      const literal = chartSeriesOklchLiteral(slot[variant]);
-      assert(
-        tokenOklch.test(literal),
-        `slot ${slot.slot} ${variant} literal ${literal} must parse as an authored Token`,
-      );
-    }
-  }
-  assertEquals(
-    chartSeriesOklchLiteral({ lightnessPercent: 58, chroma: 0.11, hue: 195 }),
-    "oklch(58% 0.11 195)",
-  );
 });

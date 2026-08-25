@@ -20,7 +20,6 @@ export * from "./kind-meta.ts";
 export * from "./limits.ts";
 export * from "./scale.ts";
 export * from "./scene.ts";
-export * from "./series-palette.ts";
 export * from "./spec.ts";
 export * from "./ticks.ts";
 export * from "./validation.ts";
