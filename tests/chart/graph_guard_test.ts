@@ -72,7 +72,10 @@ Deno.test("the chart graph stays neutral and inside its declared roots", async (
     assert(
       path.startsWith("src/chart/") || path.startsWith("src/internal/") ||
         path.startsWith("src/unicode/") || path.startsWith("src/tokens/") ||
-        path.startsWith("src/generated/"),
+        path.startsWith("src/generated/") ||
+        // The shared safe-URL authority the Markdown producer bridge
+        // composes; the banned-source scan below still covers it.
+        path === "src/url-reference.ts",
       `the chart graph reached an undeclared root: ${path}`,
     );
     assert(
