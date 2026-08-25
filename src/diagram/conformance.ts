@@ -6,6 +6,12 @@
 
 import { DiagramConformanceError } from "./errors.ts";
 import {
+  scenePointInRect,
+  sceneSegmentIntersectsRect,
+  sceneSegmentRectInterval,
+  sceneSegmentsOverlap,
+} from "../internal/geometry.ts";
+import {
   DIAGRAM_GEOMETRY,
   diagramPointBounds,
   diagramRectBottom,
@@ -59,10 +65,7 @@ function positiveRect(rect: DiagramRect, label: string): void {
 }
 
 function pointInRect(point: DiagramPoint, rect: DiagramRect): boolean {
-  return point.x >= rect.x - EPSILON &&
-    point.x <= diagramRectRight(rect) + EPSILON &&
-    point.y >= rect.y - EPSILON &&
-    point.y <= diagramRectBottom(rect) + EPSILON;
+  return scenePointInRect(point, rect, EPSILON);
 }
 
 function pointStrictlyInRect(point: DiagramPoint, rect: DiagramRect): boolean {
@@ -110,27 +113,7 @@ function segmentRectInterval(
   end: DiagramPoint,
   rect: DiagramRect,
 ): readonly [number, number] | undefined {
-  const dx = end.x - start.x;
-  const dy = end.y - start.y;
-  let entry = 0;
-  let exit = 1;
-  const boundaries = [
-    [-dx, start.x - rect.x],
-    [dx, diagramRectRight(rect) - start.x],
-    [-dy, start.y - rect.y],
-    [dy, diagramRectBottom(rect) - start.y],
-  ] as const;
-  for (const [direction, distance] of boundaries) {
-    if (Math.abs(direction) <= EPSILON) {
-      if (distance < -EPSILON) return undefined;
-      continue;
-    }
-    const ratio = distance / direction;
-    if (direction < 0) entry = Math.max(entry, ratio);
-    else exit = Math.min(exit, ratio);
-    if (entry > exit + EPSILON) return undefined;
-  }
-  return [entry, exit];
+  return sceneSegmentRectInterval(start, end, rect, EPSILON);
 }
 
 function segmentCrossesShapeInterior(
@@ -238,7 +221,7 @@ function segmentIntersectsRect(
   end: DiagramPoint,
   rect: DiagramRect,
 ): boolean {
-  return segmentRectInterval(start, end, rect) !== undefined;
+  return sceneSegmentIntersectsRect(start, end, rect, EPSILON);
 }
 
 function pointOnSegment(
@@ -285,28 +268,7 @@ function segmentsOverlap(
   left: readonly [DiagramPoint, DiagramPoint],
   right: readonly [DiagramPoint, DiagramPoint],
 ): boolean {
-  const [leftStart, leftEnd] = left;
-  const [rightStart, rightEnd] = right;
-  const leftDx = leftEnd.x - leftStart.x;
-  const leftDy = leftEnd.y - leftStart.y;
-  const rightDx = rightEnd.x - rightStart.x;
-  const rightDy = rightEnd.y - rightStart.y;
-  if (Math.abs(leftDx * rightDy - leftDy * rightDx) > EPSILON) return false;
-  if (
-    Math.abs(
-      (rightStart.x - leftStart.x) * leftDy -
-        (rightStart.y - leftStart.y) * leftDx,
-    ) > EPSILON
-  ) return false;
-  const horizontal = Math.abs(leftDx) >= Math.abs(leftDy);
-  const leftValues = horizontal
-    ? [leftStart.x, leftEnd.x]
-    : [leftStart.y, leftEnd.y];
-  const rightValues = horizontal
-    ? [rightStart.x, rightEnd.x]
-    : [rightStart.y, rightEnd.y];
-  return Math.min(Math.max(...leftValues), Math.max(...rightValues)) -
-      Math.max(Math.min(...leftValues), Math.min(...rightValues)) > EPSILON;
+  return sceneSegmentsOverlap(left, right, EPSILON);
 }
 
 function elementBounds(element: DiagramSceneElement): DiagramRect {
