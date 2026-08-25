@@ -38,6 +38,9 @@ if (representative === undefined) {
   throw new TypeError("Missing representative bar fixture");
 }
 
+/** Match complete SGR sequences without a control character in a literal. */
+const SGR_SEQUENCE = new RegExp(String.fromCharCode(27) + "\\[[0-9;]*m", "gu");
+
 function assertClosedAndBounded(
   frame: string,
   capabilities: TerminalCapabilities,
@@ -52,7 +55,7 @@ function assertClosedAndBounded(
   } else {
     assertStyledFrame(frame, plain, capabilities);
     for (const line of frame.split("\n")) {
-      const sequences = line.match(/\u001b\[[0-9;]*m/gu);
+      const sequences = line.match(SGR_SEQUENCE);
       if (sequences !== null) {
         assert(
           sequences.at(-1) === "\u001b[0m",

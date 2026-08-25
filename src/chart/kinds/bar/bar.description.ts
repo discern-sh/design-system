@@ -43,7 +43,9 @@ export default function describeBarChart(spec: ValidatedBarChart): string {
   lines.push(`Data (${spec.categories.length} categories):`);
   spec.categories.forEach((category, categoryIndex) => {
     const cells = spec.series.map((series) =>
-      `${series.label} ${barValueText(series.values[categoryIndex] ?? null, unit)}`
+      `${series.label} ${
+        barValueText(series.values[categoryIndex] ?? null, unit)
+      }`
     );
     lines.push(`${category.label} (${category.id}): ${cells.join(", ")}`);
   });
