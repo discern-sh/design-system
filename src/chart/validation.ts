@@ -24,7 +24,11 @@ import {
 import type { ChartNumberFormat } from "./format.ts";
 import type { ChartKindMeta } from "./kind-meta.ts";
 import { CHART_COMMON_LIMITS } from "./limits.ts";
-import type { ChartCommonSpec, ChartValueAxisSpec } from "./spec.ts";
+import type {
+  ChartCommonSpec,
+  ChartValueAxisSpec,
+  ChartValueScale,
+} from "./spec.ts";
 
 export { isPlainRecord as isChartRecord } from "../internal/validation.ts";
 
@@ -290,6 +294,35 @@ export function validateChartValueAxis(
     axis.format = validateChartNumberFormat(value.format, `${path}.format`);
   }
   return Object.freeze(axis);
+}
+
+const VALUE_SCALES: readonly ChartValueScale[] = ["linear", "log"];
+
+/**
+ * Validate the value-axis facts of a position-encoding kind, normalizing
+ * the closed scale choice to `linear` when the author omits it.
+ */
+export function validateChartScaledValueAxis(
+  value: unknown,
+  path: string,
+): ChartValueAxisSpec & { readonly scale: ChartValueScale } {
+  if (value === undefined) return Object.freeze({ scale: "linear" as const });
+  if (!isPlainRecord(value)) {
+    invalidSpec(`${path} must be an object.`, path);
+  }
+  assertChartExactKeys(value, ["label", "unit", "format", "scale"], path);
+  const scale = chartOneOf(
+    value.scale,
+    VALUE_SCALES,
+    "linear",
+    `${path}.scale`,
+  );
+  const { scale: _scale, ...axisFields } = value;
+  const axis = validateChartValueAxis(
+    Object.keys(axisFields).length === 0 ? undefined : axisFields,
+    path,
+  );
+  return Object.freeze({ ...axis, scale });
 }
 
 /** Apply one Metadata-owned kind budget by its declared dimension. */

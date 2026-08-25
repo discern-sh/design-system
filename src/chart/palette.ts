@@ -25,6 +25,10 @@ export const CHART_PAINT_TOKEN_NAMES = {
   "series-4": "--discern-color-series-4",
   "series-5": "--discern-color-series-5",
   "series-6": "--discern-color-series-6",
+  "ramp-1": "--discern-color-accent-200",
+  "ramp-2": "--discern-color-accent-400",
+  "ramp-3": "--discern-color-accent-600",
+  "ramp-4": "--discern-color-accent-800",
 } as const satisfies Readonly<Record<ChartPaintRole, `--discern-${string}`>>;
 
 /** One public Token name enrolled behind a chart paint role. */

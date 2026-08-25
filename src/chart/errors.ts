@@ -37,6 +37,8 @@ export type ChartErrorCode =
   | "chart/proportion-gap"
   | "chart/zero-total"
   | "chart/degenerate-domain"
+  | "chart/log-domain"
+  | "chart/bin-edges"
   | "chart/sub-resolution"
   | "chart/layout/label-fit"
   | "chart/layout/non-finite"

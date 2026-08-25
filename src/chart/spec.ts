@@ -34,3 +34,14 @@ export interface ChartValueAxisSpec {
   readonly unit?: string;
   readonly format?: ChartNumberFormat;
 }
+
+/**
+ * The closed scale vocabulary a position-encoding value axis may choose.
+ * Length-encoding kinds keep their zero baseline and never admit `log`.
+ */
+export type ChartValueScale = "linear" | "log";
+
+/** Value-axis facts plus the position-encoding scale choice. */
+export interface ChartScaledValueAxisSpec extends ChartValueAxisSpec {
+  readonly scale?: ChartValueScale;
+}

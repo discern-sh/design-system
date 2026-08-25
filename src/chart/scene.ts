@@ -27,6 +27,19 @@ export type ChartSeriesPaintSlot = 1 | 2 | 3 | 4 | 5 | 6;
 /** Series paint role carried by every data-encoding element. */
 export type ChartSeriesPaintRole = `series-${ChartSeriesPaintSlot}`;
 
+/** One of the four fixed sequential magnitude bins. */
+export type ChartRampPaintSlot = 1 | 2 | 3 | 4;
+
+/**
+ * Sequential paint role for one declared magnitude bin. The ramp rides the
+ * accent scale with lightness carrying the value — never a second palette
+ * and never a semantic state tone.
+ */
+export type ChartRampPaintRole = `ramp-${ChartRampPaintSlot}`;
+
+/** Paint role admitted on a value-encoding rectangular mark. */
+export type ChartMarkPaintRole = ChartSeriesPaintRole | ChartRampPaintRole;
+
 /** Semantic paint roles resolved only by a later projection. */
 export type ChartPaintRole =
   | "canvas"
@@ -35,7 +48,8 @@ export type ChartPaintRole =
   | "reference"
   | "axis-label"
   | "annotation"
-  | ChartSeriesPaintRole;
+  | ChartSeriesPaintRole
+  | ChartRampPaintRole;
 
 /**
  * Fixed paint-layer sequence every scene declares by construction:
@@ -54,13 +68,13 @@ export const CHART_LAYER_ORDER = [
 /** One paint layer of the fixed sequence. */
 export type ChartSceneLayer = typeof CHART_LAYER_ORDER[number];
 
-/** One rectangular mark whose length or position encodes a value. */
+/** One rectangular mark whose length, position, or bin encodes a value. */
 export interface ChartMark {
   readonly kind: "mark";
   readonly id: string;
   readonly seriesId: string;
   readonly categoryId: string;
-  readonly paint: ChartSeriesPaintRole;
+  readonly paint: ChartMarkPaintRole;
   readonly bounds: ChartRect;
 }
 
@@ -75,12 +89,21 @@ export interface ChartDataPath {
   readonly bounds: ChartRect;
 }
 
+/**
+ * The closed marker-shape vocabulary a scattered series may wear. The shape
+ * is each series slot's paired non-colour cue, so two point populations
+ * never differ by colour alone.
+ */
+export type ChartPointMarkerShape = "circle" | "square" | "diamond";
+
 /** Aggregate point population for one scattered series. */
 export interface ChartDataPoints {
   readonly kind: "data-points";
   readonly id: string;
   readonly seriesId: string;
   readonly paint: ChartSeriesPaintRole;
+  /** Marker shape inscribed in the radius; omission keeps the circle. */
+  readonly marker?: ChartPointMarkerShape;
   readonly radius: number;
   readonly points: readonly ChartPoint[];
   readonly bounds: ChartRect;

@@ -17,6 +17,8 @@ import type {
   ChartDataPoints,
   ChartGridLine,
   ChartMark,
+  ChartMarkPaintRole,
+  ChartPoint,
   ChartReferenceLine,
   ChartScene,
   ChartSceneElement,
@@ -39,7 +41,7 @@ export type ChartSvgDocument = string;
 
 /** The series paints each data-encoding element kind actually uses. */
 interface SceneInventory {
-  readonly markPaints: readonly ChartSeriesPaintRole[];
+  readonly markPaints: readonly ChartMarkPaintRole[];
   readonly pathPaints: readonly ChartSeriesPaintRole[];
   readonly pointPaints: readonly ChartSeriesPaintRole[];
   readonly areaPaints: readonly ChartSeriesPaintRole[];
@@ -50,14 +52,14 @@ interface SceneInventory {
   readonly hasInterfaceLabel: boolean;
 }
 
-function orderedPaints(
-  paints: ReadonlySet<ChartSeriesPaintRole>,
-): readonly ChartSeriesPaintRole[] {
+function orderedPaints<Role extends string>(
+  paints: ReadonlySet<Role>,
+): readonly Role[] {
   return [...paints].toSorted();
 }
 
 function sceneInventory(scene: ChartScene): SceneInventory {
-  const markPaints = new Set<ChartSeriesPaintRole>();
+  const markPaints = new Set<ChartMarkPaintRole>();
   const pathPaints = new Set<ChartSeriesPaintRole>();
   const pointPaints = new Set<ChartSeriesPaintRole>();
   const areaPaints = new Set<ChartSeriesPaintRole>();
@@ -211,16 +213,39 @@ function pathMarkup(path: ChartDataPath): string {
   }" />`;
 }
 
+function pointMarkerMarkup(
+  points: ChartDataPoints,
+  point: ChartPoint,
+): string {
+  const radius = points.radius;
+  if (points.marker === "square") {
+    const side = radius * Math.SQRT2;
+    return `    <rect x="${formatChartSvgNumber(point.x - side / 2)}" y="${
+      formatChartSvgNumber(point.y - side / 2)
+    }" width="${formatChartSvgNumber(side)}" height="${
+      formatChartSvgNumber(side)
+    }" />`;
+  }
+  if (points.marker === "diamond") {
+    const corners: readonly ChartPoint[] = [
+      { x: point.x, y: point.y - radius },
+      { x: point.x + radius, y: point.y },
+      { x: point.x, y: point.y + radius },
+      { x: point.x - radius, y: point.y },
+    ];
+    return `    <polygon points="${formatChartSvgPoints(corners)}" />`;
+  }
+  return `    <circle cx="${formatChartSvgNumber(point.x)}" cy="${
+    formatChartSvgNumber(point.y)
+  }" r="${formatChartSvgNumber(radius)}" />`;
+}
+
 function pointsMarkup(points: ChartDataPoints): readonly string[] {
   return [
     `  <g class="discern-chart__points discern-chart__points--${points.paint}" data-discern-chart-series="${
       escapeXml(points.seriesId)
     }">`,
-    ...points.points.map((point) =>
-      `    <circle cx="${formatChartSvgNumber(point.x)}" cy="${
-        formatChartSvgNumber(point.y)
-      }" r="${formatChartSvgNumber(points.radius)}" />`
-    ),
+    ...points.points.map((point) => pointMarkerMarkup(points, point)),
     "  </g>",
   ];
 }

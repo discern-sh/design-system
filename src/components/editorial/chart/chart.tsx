@@ -75,6 +75,47 @@ function renderPath(path: ChartDataPath): ReactElement {
   );
 }
 
+function renderPointMarker(
+  points: ChartDataPoints,
+  point: { readonly x: number; readonly y: number },
+  key: string,
+): ReactElement {
+  const radius = points.radius;
+  if (points.marker === "square") {
+    const side = radius * Math.SQRT2;
+    return (
+      <rect
+        key={key}
+        x={formatChartSvgNumber(point.x - side / 2)}
+        y={formatChartSvgNumber(point.y - side / 2)}
+        width={formatChartSvgNumber(side)}
+        height={formatChartSvgNumber(side)}
+      />
+    );
+  }
+  if (points.marker === "diamond") {
+    return (
+      <polygon
+        key={key}
+        points={formatChartSvgPoints([
+          { x: point.x, y: point.y - radius },
+          { x: point.x + radius, y: point.y },
+          { x: point.x, y: point.y + radius },
+          { x: point.x - radius, y: point.y },
+        ])}
+      />
+    );
+  }
+  return (
+    <circle
+      key={key}
+      cx={formatChartSvgNumber(point.x)}
+      cy={formatChartSvgNumber(point.y)}
+      r={formatChartSvgNumber(points.radius)}
+    />
+  );
+}
+
 function renderPoints(points: ChartDataPoints): ReactElement {
   return (
     <g
@@ -82,14 +123,9 @@ function renderPoints(points: ChartDataPoints): ReactElement {
       className={`discern-chart__points discern-chart__points--${points.paint}`}
       data-discern-chart-series={points.seriesId}
     >
-      {points.points.map((point, index) => (
-        <circle
-          key={`${points.id}-${index}`}
-          cx={formatChartSvgNumber(point.x)}
-          cy={formatChartSvgNumber(point.y)}
-          r={formatChartSvgNumber(points.radius)}
-        />
-      ))}
+      {points.points.map((point, index) =>
+        renderPointMarker(points, point, `${points.id}-${index}`)
+      )}
     </g>
   );
 }

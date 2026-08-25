@@ -12,15 +12,18 @@ import type { ChartSpec, ValidatedChart } from "../generated/chart-spec.ts";
 /**
  * Stable reason an enhanced projector cannot stay inside its declared
  * honesty tier: the frame is narrower than the kind's minimum envelope, the
- * title cannot embed, a label would need an incoherent mid-word split, or a
+ * title cannot embed, a label would need an incoherent mid-word split, a
  * proportion segment cannot occupy one whole cell without rounding a stated
- * value away.
+ * value away, a colourless frame cannot keep that many series apart, or a
+ * quantized cell holds more coincident points than one digit can state.
  */
 export type ChartKindCliDeclineCode =
   | "width"
   | "title-width"
   | "label-wrap"
-  | "segment-resolution";
+  | "segment-resolution"
+  | "mono-series"
+  | "collision-count";
 
 /** Typed, non-error refusal that routes the caller to universal description. */
 export interface ChartKindCliDecline {
