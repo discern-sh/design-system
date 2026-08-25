@@ -11,6 +11,7 @@ deno add jsr:@discern-sh/design-system
 | Import                                              | Contract                                                                                  |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | `@discern-sh/design-system`                         | Token metadata, component/group metadata types, the package manifest, and `semanticClass` |
+| `@discern-sh/design-system/chart`                   | Typed chart specs, descriptions, kind Metadata, and portable standalone SVG               |
 | `@discern-sh/design-system/cli`                     | Pure React-free terminal renderers, capabilities, themes, and semantic motif primitives   |
 | `@discern-sh/design-system/cli/interactive`         | Optional Deno terminal driver and typed interaction state machines                        |
 | `@discern-sh/design-system/cli/interactive/testing` | Deterministic fake terminal, semantic key/resize scripts, and frame assertions            |
@@ -193,7 +194,7 @@ export const reviewFlowMarkdown = renderDiagramMarkdownImage(
 
 Standalone SVG accepts `light`, `dark`, or `adaptive`. Choose an explicit theme when the publishing surface knows its background; choose `adaptive` only when the destination should follow `prefers-color-scheme`. Each asset contains literal package palette values, intrinsic `width`/`height` plus a `viewBox`, its own accessible title and structural description, semantic text, and a deterministic light fallback when adaptive media behavior is unavailable. It contains no font payload or external reference. An external SVG loaded through `<img>` does not inherit custom properties or fonts from its host page, so the layout uses conservative package-owned metrics that remain safe under the tested system fallback. Ordinary responsive image CSS can constrain it with `max-width: 100%; height: auto` without changing its intrinsic geometry.
 
-The Markdown remains ordinary image syntax: `renderDiagramMarkdownImage` safely escapes the canonical alt, title, and source into CommonMark, so delimiter-bearing author text cannot change the image structure. `diagramAltText(spec)` is the canonical short alternative formed from the required title and summary; keep those facts concise and do not duplicate them as visible canvas prose. Generic readers show the generated SVG and raw text keeps that meaningful alternative. Package Markdown callers may optionally register the explicit resource on `Markdown`, `renderMarkdownCli`, or a `MarkdownBrowserDocument` to upgrade only an isolated matching image. Matching happens after the existing safe URL normalization, the alt must equal `diagramAltText(spec)`, and an optional image title must equal `spec.summary`. Valid unused resources are allowed so one collection can serve a complete corpus; duplicate normalized sources reject. The package never reads the asset, resolves the path against a filesystem or browser location, parses SVG, or discovers a registry.
+The Markdown remains ordinary image syntax: `renderDiagramMarkdownImage` safely escapes the canonical alt, title, and source into CommonMark, so delimiter-bearing author text cannot change the image structure. `diagramAltText(spec)` is the canonical short alternative formed from the required title and summary; keep those facts concise and do not duplicate them as visible canvas prose. Generic readers show the generated SVG and raw text keeps that meaningful alternative. Package Markdown callers may optionally register the explicit resource on `Markdown`, `renderMarkdownCli`, or a `MarkdownBrowserDocument` to upgrade only an isolated matching image. Matching happens after the existing safe URL normalization, the alt must equal `diagramAltText(spec)`, and an optional image title must equal `spec.summary`. Valid unused resources are allowed so one collection can serve a complete corpus; duplicate normalized sources reject, including a source also admitted by the chart collection — image promotion is one shared mechanism serving both families. The package never reads the asset, resolves the path against a filesystem or browser location, parses SVG, or discovers a registry.
 
 The React projection maps the same validated scene directly to SVG and takes its live colours from emitted semantic Tokens. Its inline-size-contained, focusable viewport preserves the scene's intrinsic geometry and becomes horizontally scrollable when a narrow container cannot contain it, including when Diagram sits inside an intrinsically sized grid or flex item; it never scales text down or widens an ancestor to conceal an over-wide diagram. Compose it as the visual inside `DataFigure`; the figure owns the visible title, caption, source, and any legend, while Diagram does not grow those document-level concerns:
 
@@ -243,6 +244,91 @@ console.log(renderDiagramCli({
   mode: "auto",
   theme: "dark",
   maxWidth: 80,
+}, capabilities));
+```
+
+## Quantitative charts
+
+The React-free `./chart` entrypoint owns quantities on scales the way `./diagram` owns identity and topology: typed JSON-safe specs (currently the `bar` kind with grouped and proportion variants), the lossless `describeChart` structural description, kind Metadata with a generated author guide, a closed locale-free number format vocabulary, spec-derived series legend data via `chartSeriesLegend`, and the deterministic standalone `renderChartSvg` emitter with `light`, `dark`, or `adaptive` palettes. Validation enforces the honesty rules — zero baselines, no negative bars yet, explicit nulls as declared gaps — and refuses with a named remedy rather than distorting. `chartAltText(spec)` is the canonical short alternative formed from the required title and summary only, never data values, so regenerating an asset from refreshed data cannot change it.
+
+One chart stays useful in three forms from one typed spec, exactly like a diagram. Write `renderChartSvg(spec)` to an asset path your build owns, then reference it with ordinary image syntax — `renderChartMarkdownImage` escapes the canonical alt, source, and summary title into CommonMark:
+
+```ts
+import {
+  type BarChartSpec,
+  type MarkdownChartResource,
+  renderChartMarkdownImage,
+  renderChartSvg,
+} from "@discern-sh/design-system/chart";
+
+export const reviewThroughput = {
+  kind: "bar",
+  title: "Reviews completed by weekday",
+  summary: "Midweek days complete the most reviews.",
+  categories: [
+    { id: "mon", label: "Monday" },
+    { id: "wed", label: "Wednesday" },
+    { id: "fri", label: "Friday" },
+  ],
+  series: [{ id: "completed", label: "Completed", values: [4, 9, 6] }],
+} satisfies BarChartSpec;
+
+await Deno.writeTextFile(
+  "assets/reviews-by-weekday.svg",
+  renderChartSvg(reviewThroughput, { theme: "adaptive" }),
+);
+export const reviewThroughputResource = {
+  source: "assets/reviews-by-weekday.svg",
+  spec: reviewThroughput,
+} satisfies MarkdownChartResource;
+export const reviewThroughputMarkdown = renderChartMarkdownImage(
+  reviewThroughputResource,
+);
+```
+
+Generic readers show the generated SVG and raw text keeps the meaningful alternative. Package Markdown callers may optionally register the same resource — `charts` on `Markdown` or `renderMarkdownCli`, or a `MarkdownBrowserDocument`'s `charts` collection — to upgrade only an isolated matching image to the live token-themed `Chart` in the browser and to `renderChartCli` in terminals, where `chartMode: "description"` forces the universal description. Diagrams and charts share one promotion resolver: matching happens after the same safe URL normalization, the alt must equal `chartAltText(spec)`, an optional image title must equal `spec.summary`, valid unused resources are allowed for corpus-level collections, and duplicate normalized sources — including one source admitted by both the `diagrams` and `charts` collections — reject the whole render before partial output. The package never reads the asset, resolves the path, or parses SVG.
+
+```tsx
+import { DataFigure, Chart, Markdown } from "@discern-sh/design-system/react";
+import { chartSeriesLegend } from "@discern-sh/design-system/chart";
+import {
+  reviewThroughput,
+  reviewThroughputMarkdown,
+  reviewThroughputResource,
+} from "./review-throughput.ts";
+
+export function ThroughputFigure() {
+  return (
+    <DataFigure
+      title="Review throughput"
+      visual={<Chart spec={reviewThroughput} />}
+      legend={chartSeriesLegend(reviewThroughput)}
+      source="Team review ledger"
+    />
+  );
+}
+
+export function ThroughputMarkdown() {
+  return (
+    <Markdown
+      source={reviewThroughputMarkdown}
+      charts={[reviewThroughputResource]}
+    />
+  );
+}
+```
+
+The terminal renderer's `auto` mode asks the generated kind registry for an enhanced frame inside its declared honesty tier — `bar` is `exact`: every authored value prints beside its eighth-block bar — and renders the universal description with the data table as a real aligned table on any typed decline, so a narrow terminal changes form without dropping a value:
+
+```ts
+import { renderChartCli } from "@discern-sh/design-system/cli";
+import { reviewThroughput } from "./review-throughput.ts";
+
+console.log(renderChartCli({
+  spec: reviewThroughput,
+  mode: "auto",
+  theme: "dark",
+  maxWidth: 76,
 }, capabilities));
 ```
 
