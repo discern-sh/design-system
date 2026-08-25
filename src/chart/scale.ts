@@ -56,18 +56,36 @@ export function chartLinearPosition(
   scale: ChartLinearScale,
   value: number,
 ): number {
-  assertFinite(value, "Chart linear position value");
-  if (value === scale.domainMin) return scale.rangeStart;
-  if (value === scale.domainMax) return scale.rangeEnd;
-
-  const normalizer = Math.max(
-    Math.abs(scale.domainMin),
-    Math.abs(scale.domainMax),
+  const fraction = chartLinearFraction(
+    scale.domainMin,
+    scale.domainMax,
+    value,
   );
-  const scaledMinimum = scale.domainMin / normalizer;
-  const fraction = (value / normalizer - scaledMinimum) /
-    (scale.domainMax / normalizer - scaledMinimum);
   return scale.rangeStart * (1 - fraction) + scale.rangeEnd * fraction;
+}
+
+/**
+ * Stable zero-to-one position inside a finite linear domain. Normalising
+ * before subtraction prevents opposite extrema from overflowing and
+ * denormal spans from underflowing.
+ */
+export function chartLinearFraction(
+  domainMin: number,
+  domainMax: number,
+  value: number,
+): number {
+  assertFinite(domainMin, "Chart linear domain minimum");
+  assertFinite(domainMax, "Chart linear domain maximum");
+  assertFinite(value, "Chart linear position value");
+  if (domainMin >= domainMax) {
+    throw new TypeError("Chart linear domain must span upward.");
+  }
+  if (value === domainMin) return 0;
+  if (value === domainMax) return 1;
+  const normalizer = Math.max(Math.abs(domainMin), Math.abs(domainMax));
+  const scaledMinimum = domainMin / normalizer;
+  return (value / normalizer - scaledMinimum) /
+    (domainMax / normalizer - scaledMinimum);
 }
 
 /**
@@ -131,16 +149,38 @@ export function chartLogPosition(
   scale: ChartLogScale,
   value: number,
 ): number {
+  const fraction = chartLogFraction(
+    scale.domainMin,
+    scale.domainMax,
+    value,
+  );
+  return scale.rangeStart * (1 - fraction) + scale.rangeEnd * fraction;
+}
+
+/** Stable zero-to-one position inside a positive base-ten log domain. */
+export function chartLogFraction(
+  domainMin: number,
+  domainMax: number,
+  value: number,
+): number {
   if (!Number.isFinite(value) || value <= 0) {
     throw new TypeError(
       `Chart log position needs a strictly positive finite value; received ${value}`,
     );
   }
-  const start = Math.log10(scale.domainMin);
-  const extent = Math.log10(scale.domainMax) - start;
-  return scale.rangeStart +
-    (Math.log10(value) - start) / extent *
-      (scale.rangeEnd - scale.rangeStart);
+  if (
+    !Number.isFinite(domainMin) || !Number.isFinite(domainMax) ||
+    domainMin <= 0 || domainMin >= domainMax
+  ) {
+    throw new TypeError("Chart log domain must be finite, positive, and span upward.");
+  }
+  if (value === domainMin) return 0;
+  if (value === domainMax) return 1;
+  const start = Math.log10(domainMin);
+  const extent = Math.log10(domainMax) - start;
+  return extent === 0
+    ? chartLinearFraction(domainMin, domainMax, value)
+    : (Math.log10(value) - start) / extent;
 }
 
 /**

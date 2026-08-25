@@ -36,6 +36,7 @@ import {
   terminalThemeColor,
   terminalThemes,
 } from "../../../cli/theme.ts";
+import { chartLinearFraction, chartLogFraction } from "../../scale.ts";
 import {
   lineDomainText,
   lineUnitSuffix,
@@ -118,9 +119,8 @@ function plotRow(spec: ValidatedLineChart, value: number): number {
   const high = spec.maximumValue;
   if (low === high) return Math.round((PLOT_ROWS - 1) / 2);
   const fraction = spec.value.scale === "log"
-    ? (Math.log10(value) - Math.log10(low)) /
-      (Math.log10(high) - Math.log10(low))
-    : (value - low) / (high - low);
+    ? chartLogFraction(low, high, value)
+    : chartLinearFraction(low, high, value);
   return Math.min(
     PLOT_ROWS - 1,
     Math.max(0, Math.round(fraction * (PLOT_ROWS - 1))),

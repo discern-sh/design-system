@@ -27,7 +27,10 @@ import validateDistributionChart from "../../src/chart/kinds/distribution/distri
 import { stripAnsi } from "../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import type { ChartKindCliProjection } from "../../src/cli/chart-kinds.ts";
-import { HORIZONTAL_EIGHTH_RAMP } from "../../src/cli/glyph-ramps.ts";
+import {
+  BOX_SUMMARY_GLYPHS,
+  HORIZONTAL_EIGHTH_RAMP,
+} from "../../src/cli/glyph-ramps.ts";
 import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
 import { measureText } from "../../src/cli/text.ts";
 
@@ -321,6 +324,21 @@ Deno.test("the exact box frame prints all five labelled numbers", () => {
     assertStringIncludes(plain, "5 numbers");
     assertStringIncludes(plain, "7 values");
   }
+});
+
+Deno.test("box quantization keeps a visible summary across opposite finite extrema", () => {
+  const projection = project({
+    kind: "distribution",
+    title: "Extreme five-number summary",
+    summary: "Finite binary64 extrema retain the gestural summary.",
+    variant: "box",
+    values: [-Number.MAX_VALUE, -1, 0, 1, Number.MAX_VALUE],
+  }, 900);
+  const plain = framePlain(projection);
+  assert(!plain.includes("NaN") && !plain.includes("Infinity"));
+  assertStringIncludes(plain, BOX_SUMMARY_GLYPHS.median.unicode);
+  assertStringIncludes(plain, BOX_SUMMARY_GLYPHS.capStart.unicode);
+  assertStringIncludes(plain, BOX_SUMMARY_GLYPHS.capEnd.unicode);
 });
 
 Deno.test("a nonzero count never renders empty and zero renders no glyph", () => {

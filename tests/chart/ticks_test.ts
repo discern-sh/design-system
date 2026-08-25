@@ -7,6 +7,7 @@ import {
 import {
   CHART_LOG_BASE,
   chartBandSegment,
+  chartLinearFraction,
   chartLinearPosition,
   chartLogPosition,
   createChartBandScale,
@@ -266,6 +267,7 @@ Deno.test("linear scales position values proportionally, including inverted rang
   assertEquals(chartLinearPosition(enormous, -1e308), 0);
   assertEquals(chartLinearPosition(enormous, 0), 50);
   assertEquals(chartLinearPosition(enormous, 1e308), 100);
+  assertEquals(chartLinearFraction(-1e308, 1e308, 0), 0.5);
 
   const denormal = createChartLinearScale({
     domainMin: -Number.MIN_VALUE,

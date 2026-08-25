@@ -492,6 +492,41 @@ Deno.test("the frame prints exact extremes and states its resolution at every ac
   }
 });
 
+Deno.test("terminal line quantization keeps both finite binary64 extrema", () => {
+  const spec = {
+    kind: "line",
+    title: "Extreme finite movement",
+    summary: "Opposite finite extrema stay on opposite rows.",
+    x: { kind: "number", values: [1, 2, 3] },
+    series: [{
+      id: "value",
+      label: "Value",
+      values: [-Number.MAX_VALUE, 0, Number.MAX_VALUE],
+    }],
+  };
+  const validated = validateLineChart(spec);
+  const projection = project(spec, 700);
+  assert(projection.kind === "frame");
+  const plain = stripAnsi(projection.frame);
+  assert(!plain.includes("NaN") && !plain.includes("Infinity"));
+  assertStringIncludes(
+    plain,
+    lineValueText(validated.minimumValue, lineUnitSuffix(validated.value)),
+  );
+  assertStringIncludes(
+    plain,
+    lineValueText(validated.maximumValue, lineUnitSuffix(validated.value)),
+  );
+  const dataRows = plain.split("\n").filter((line) => line.includes("┤"));
+  assertEquals(dataRows.length, 2);
+  for (const row of dataRows) {
+    assert(
+      /[─╭╰╮╯]/u.test(row),
+      `extreme row lost its authored path cell: ${JSON.stringify(row)}`,
+    );
+  }
+});
+
 Deno.test("every corpus case projects a frame or a typed decline, byte-stably, in both charsets", () => {
   for (const entry of releaseCorpus.cases) {
     for (const unicode of [true, false]) {

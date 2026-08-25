@@ -34,6 +34,7 @@ import {
   terminalThemes,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import { chartLinearFraction } from "../../scale.ts";
 import { chartValueText } from "../../value-text.ts";
 import {
   distributionCountText,
@@ -205,9 +206,10 @@ function boxRow(
   field: number,
 ): string {
   const five = spec.fiveNumberSummary;
-  const span = five.maximum - five.minimum;
   const position = (value: number): number =>
-    Math.round((value - five.minimum) / span * (field - 1));
+    Math.round(
+      chartLinearFraction(five.minimum, five.maximum, value) * (field - 1),
+    );
   const atMinimum = position(five.minimum);
   const atLower = position(five.lowerQuartile);
   const atMedian = position(five.median);
