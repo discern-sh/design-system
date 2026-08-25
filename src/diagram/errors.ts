@@ -1,8 +1,18 @@
 /**
  * Stable diagram failure vocabulary and actionable complexity refusals.
  *
+ * The carrying mechanics live in the shared internal bases in
+ * `src/internal/errors.ts`; these public classes bind the diagram-scoped
+ * code templates, remedy vocabulary, and message subject.
+ *
  * @module
  */
+
+import {
+  kindBudgetDiagnostic,
+  type KindErrorFact,
+  KindValidationError,
+} from "../internal/errors.ts";
 
 /** Canonical author actions attached to measurable diagram-budget refusals. */
 export const DIAGRAM_BUDGET_REMEDIES = [
@@ -36,29 +46,12 @@ export type DiagramErrorCode =
   | `diagram/budget/${string}`;
 
 /** Scalar diagnostic evidence safe to relay in structured results. */
-export type DiagramErrorFact = string | number | boolean;
+export type DiagramErrorFact = KindErrorFact;
 
 /** Deterministic validation or layout refusal at the diagram boundary. */
-export class DiagramValidationError extends TypeError {
+export class DiagramValidationError
+  extends KindValidationError<DiagramErrorCode> {
   override readonly name: string = "DiagramValidationError";
-  readonly code: DiagramErrorCode;
-  readonly path: string | undefined;
-  readonly facts: Readonly<Record<string, DiagramErrorFact>>;
-  readonly remedy: string;
-
-  constructor(options: {
-    readonly code: DiagramErrorCode;
-    readonly message: string;
-    readonly path?: string;
-    readonly facts?: Readonly<Record<string, DiagramErrorFact>>;
-    readonly remedy: string;
-  }) {
-    super(options.message);
-    this.code = options.code;
-    this.path = options.path;
-    this.facts = Object.freeze({ ...options.facts });
-    this.remedy = options.remedy;
-  }
 }
 
 const BUDGET_REMEDY_TEXT: Readonly<Record<DiagramBudgetRemedy, string>> = {
@@ -91,25 +84,19 @@ export class DiagramBudgetError extends DiagramValidationError {
     readonly authorAction: DiagramBudgetRemedy;
     readonly path?: string;
   }) {
-    const remedy = BUDGET_REMEDY_TEXT[options.authorAction];
-    const diagnostic = {
-      code: `diagram/budget/${options.dimension}`,
-      message:
-        `Diagram budget ${options.dimension} allows ${options.limit} ${options.unit}; received ${options.actual}. ${remedy}`,
-      facts: {
-        dimension: options.dimension,
-        limit: options.limit,
-        actual: options.actual,
-        unit: options.unit,
-        authorAction: options.authorAction,
-      },
-      remedy,
-    } as const;
-    super(
-      options.path === undefined
-        ? diagnostic
-        : { ...diagnostic, path: options.path },
-    );
+    const shared = {
+      code: `diagram/budget/${options.dimension}` as const,
+      subject: "Diagram",
+      dimension: options.dimension,
+      limit: options.limit,
+      actual: options.actual,
+      unit: options.unit,
+      authorAction: options.authorAction,
+      remedy: BUDGET_REMEDY_TEXT[options.authorAction],
+    };
+    super(kindBudgetDiagnostic(
+      options.path === undefined ? shared : { ...shared, path: options.path },
+    ));
     this.dimension = options.dimension;
     this.limit = options.limit;
     this.actual = options.actual;
