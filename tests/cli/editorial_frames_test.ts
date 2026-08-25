@@ -261,7 +261,7 @@ Deno.test("Data figure renders exact width, ASCII, and colour frames", () => {
   const frames = [
     [
       24,
-      "┌ SURVEY: Preferred… ──┐\n│ Terminal  ####### 7… │\n│ Browser   ###     3… │\n└──────────────────────┘\n● Terminal\n● Browser\nShare of respondents by\nprimary reading mode.\nSource: Documentation\nsurvey",
+      "┌──────────────────────┐\n│ SURVEY: Preferred    │\n│ reading mode         │\n│                      │\n│ Terminal ####### 70% │\n│ Browser ### 30%      │\n└──────────────────────┘\n● Terminal\n● Browser\nShare of respondents by\nprimary reading mode.\nSource: Documentation\nsurvey",
     ],
     [
       52,
@@ -283,7 +283,7 @@ Deno.test("Data figure renders exact width, ASCII, and colour frames", () => {
   const ascii = testTerminalCapabilities({ columns: 24, unicode: false });
   assertExactFrame(
     renderDataFigureCli(dataFigureProps, ascii),
-    "+ SURVEY: Preferred. --+\n| Terminal  ####### 7. |\n| Browser   ###     3. |\n+----------------------+\n* Terminal\n* Browser\nShare of respondents by\nprimary reading mode.\nSource: Documentation\nsurvey",
+    "+----------------------+\n| SURVEY: Preferred    |\n| reading mode         |\n|                      |\n| Terminal ####### 70% |\n| Browser ### 30%      |\n+----------------------+\n* Terminal\n* Browser\nShare of respondents by\nprimary reading mode.\nSource: Documentation\nsurvey",
     ascii,
   );
   const theme = terminalThemes.dark;
@@ -320,4 +320,26 @@ Deno.test("Data figure renders exact width, ASCII, and colour frames", () => {
       capabilities,
     );
   }
+});
+
+Deno.test("Data figure wraps over-wide title, visual, and legend losslessly", () => {
+  const props = {
+    eyebrow: "Q3",
+    title: "Latency window",
+    visual: "gw-one ##### 900ms\ngw-two # 40ms",
+    legend: [{ label: "gateway latency series", tone: "accent" }],
+    caption: "Latency by gateway",
+  } as const;
+  const unicode = testTerminalCapabilities({ columns: 16 });
+  assertExactFrame(
+    renderDataFigureCli(props, unicode),
+    "┌──────────────┐\n│ Q3: Latency  │\n│ window       │\n│              │\n│ gw-one ##### │\n│ 900ms        │\n│ gw-two #     │\n│ 40ms         │\n└──────────────┘\n● gateway\n  latency series\nLatency by\ngateway",
+    unicode,
+  );
+  const ascii = testTerminalCapabilities({ columns: 16, unicode: false });
+  assertExactFrame(
+    renderDataFigureCli(props, ascii),
+    "+--------------+\n| Q3: Latency  |\n| window       |\n|              |\n| gw-one ##### |\n| 900ms        |\n| gw-two #     |\n| 40ms         |\n+--------------+\n* gateway\n  latency series\nLatency by\ngateway",
+    ascii,
+  );
 });
