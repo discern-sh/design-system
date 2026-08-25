@@ -156,14 +156,17 @@ function diagramKindFamily(root: URL): KindFamilyConfig {
     budgetRemedies: DIAGRAM_BUDGET_REMEDIES,
     releasePostures: DIAGRAM_RELEASE_POSTURES,
     cliStances: ["description", "enhanced"],
-    cliModuleStance: "enhanced",
+    cli: {
+      moduleStance: "enhanced",
+      registryFile: "diagram-cli-registry.ts",
+      contractsModule: "../cli/diagram-kinds.ts",
+    },
     generatedFiles: {
       spec: "diagram-spec.ts",
       metadata: "diagram-metadata.ts",
       registry: "diagram-registry.ts",
       dispatch: "diagram-dispatch.ts",
       exports: "diagram-exports.ts",
-      cliRegistry: "diagram-cli-registry.ts",
     },
     modules: {
       kindMeta: "../diagram/kind-meta.ts",
@@ -171,9 +174,21 @@ function diagramKindFamily(root: URL): KindFamilyConfig {
       conformance: "../diagram/conformance.ts",
       validation: "../diagram/validation.ts",
       scene: "../diagram/scene.ts",
-      cliContracts: "../cli/diagram-kinds.ts",
     },
   };
+}
+
+/** The generated CLI registry a shipped-surface family always carries. */
+function requiredCliRegistry(
+  family: KindFamilyConfig,
+  generated: GeneratedKindFamilySources,
+): string {
+  if (family.cli === undefined || generated.cliRegistry === undefined) {
+    throw new Error(
+      `${family.word} family generation produced no CLI registry`,
+    );
+  }
+  return generated.cliRegistry;
 }
 
 /** Discover diagram kinds and reject every incomplete or ambiguous anatomy. */
@@ -359,16 +374,17 @@ ${exports.join("\n")}
 }
 
 /** Generated source family proving one canonical diagram-kind set. */
-export type GeneratedDiagramSources = GeneratedKindFamilySources;
+export type GeneratedDiagramSources = GeneratedKindFamilySources & {
+  readonly cliRegistry: string;
+};
 
 /** Render every diagram-kind consumer from one discovered source inventory. */
 export async function generateDiagramKindSources(
   root: URL = DIAGRAM_KIND_ROOT,
 ): Promise<GeneratedDiagramSources> {
-  return await generateKindFamilySources(
-    diagramKindFamily(root),
-    GENERATED_ROOT,
-  );
+  const family = diagramKindFamily(root);
+  const generated = await generateKindFamilySources(family, GENERATED_ROOT);
+  return { ...generated, cliRegistry: requiredCliRegistry(family, generated) };
 }
 
 function encodeBase64(bytes: Uint8Array): string {
@@ -473,7 +489,8 @@ export async function generateSources(): Promise<GeneratedSources> {
 /** Refresh generated modules after component metadata, CSS, or assets change. */
 export async function writeGeneratedSources(): Promise<void> {
   const generated = await generateSources();
-  const diagramFiles = diagramKindFamily(DIAGRAM_KIND_ROOT).generatedFiles;
+  const diagramFamily = diagramKindFamily(DIAGRAM_KIND_ROOT);
+  const diagramFiles = diagramFamily.generatedFiles;
   await Deno.mkdir(GENERATED_ROOT, { recursive: true });
   await Deno.writeTextFile(
     new URL("component-registry.ts", GENERATED_ROOT),
@@ -523,10 +540,12 @@ export async function writeGeneratedSources(): Promise<void> {
     new URL(diagramFiles.exports, GENERATED_ROOT),
     generated.diagramExports,
   );
-  await Deno.writeTextFile(
-    new URL(diagramFiles.cliRegistry, GENERATED_ROOT),
-    generated.diagramCliRegistry,
-  );
+  if (diagramFamily.cli !== undefined) {
+    await Deno.writeTextFile(
+      new URL(diagramFamily.cli.registryFile, GENERATED_ROOT),
+      generated.diagramCliRegistry,
+    );
+  }
 }
 
 if (import.meta.main) await writeGeneratedSources();

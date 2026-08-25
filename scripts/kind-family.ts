@@ -59,6 +59,22 @@ function indefiniteArticle(word: string): string {
   return /^[aeiou]/iu.test(word) ? "an" : "a";
 }
 
+/**
+ * A family's shipped terminal projector surface. Until a family declares
+ * one, kind Metadata still records each kind's CLI stance at birth, but kind
+ * CLI modules are forbidden and no CLI registry is generated — nothing can
+ * silently decline. The moment the surface is declared, the two-way stance
+ * pairing makes a missing projector module a generation failure.
+ */
+export interface KindFamilyCliSurface {
+  /** The stance that requires — and alone permits — a kind CLI module. */
+  readonly moduleStance: string;
+  /** Generated CLI registry file name emitted into the generated root. */
+  readonly registryFile: string;
+  /** CLI contracts module as a specifier relative to the generated root. */
+  readonly contractsModule: string;
+}
+
 /** Everything one kind family supplies to enrol in the shared machinery. */
 export interface KindFamilyConfig {
   /** Lowercase family noun used in messages, codes, and generated docs. */
@@ -73,8 +89,13 @@ export interface KindFamilyConfig {
   readonly releasePostures: readonly string[];
   /** Closed CLI stance vocabulary admitted by kind Metadata. */
   readonly cliStances: readonly string[];
-  /** The stance that requires — and alone permits — a kind CLI module. */
-  readonly cliModuleStance: string;
+  /** The family's terminal projector surface, once it has shipped. */
+  readonly cli?: KindFamilyCliSurface;
+  /** Family-specific validation of the whole authored `cli` Metadata value. */
+  readonly validateCliMeta?: (
+    cli: Record<string, unknown>,
+    source: string,
+  ) => void;
   /** Generated file names emitted into the generated root. */
   readonly generatedFiles: {
     readonly spec: string;
@@ -82,7 +103,6 @@ export interface KindFamilyConfig {
     readonly registry: string;
     readonly dispatch: string;
     readonly exports: string;
-    readonly cliRegistry: string;
   };
   /** Family authority modules as specifiers relative to the generated root. */
   readonly modules: {
@@ -91,7 +111,6 @@ export interface KindFamilyConfig {
     readonly conformance: string;
     readonly validation: string;
     readonly scene: string;
-    readonly cliContracts: string;
   };
 }
 
@@ -116,7 +135,8 @@ export interface GeneratedKindFamilySources {
   readonly spec: string;
   readonly dispatch: string;
   readonly exports: string;
-  readonly cliRegistry: string;
+  /** Present only for a family whose terminal surface has shipped. */
+  readonly cliRegistry?: string;
 }
 
 /** Enforce complete authored guidance and measurable budgets for one kind. */
@@ -184,6 +204,7 @@ function validateKindMeta(
   ) {
     throw new Error(`${source} has no valid ${family.word} CLI stance`);
   }
+  family.validateCliMeta?.(meta.cli as Record<string, unknown>, source);
 }
 
 /** Enforce the two-way relationship between kind stance and CLI module. */
@@ -193,12 +214,13 @@ function validateKindCliStance(
   hasCliModule: boolean,
   source: string,
 ): void {
-  if (meta.cli.stance === family.cliModuleStance && !hasCliModule) {
+  if (family.cli === undefined) return;
+  if (meta.cli.stance === family.cli.moduleStance && !hasCliModule) {
     throw new Error(
-      `${source} declares ${family.cliModuleStance} ${family.word} CLI but has no .cli.ts file`,
+      `${source} declares ${family.cli.moduleStance} ${family.word} CLI but has no .cli.ts file`,
     );
   }
-  if (meta.cli.stance !== family.cliModuleStance && hasCliModule) {
+  if (meta.cli.stance !== family.cli.moduleStance && hasCliModule) {
     throw new Error(
       `${source} has a .cli.ts file but declares ${meta.cli.stance}-only CLI`,
     );
@@ -240,6 +262,13 @@ function validateKindInventory(
       );
     }
     const fileName = file.pathname.slice(file.pathname.lastIndexOf("/") + 1);
+    if (fileName === `${stem}.cli.ts` && family.cli === undefined) {
+      throw new Error(
+        `${
+          sourceName(file)
+        } supplies a kind CLI module before the ${family.word} family's terminal surface exists`,
+      );
+    }
     const allowed = new Set([
       `${stem}.meta.ts`,
       `${stem}.spec.ts`,
@@ -247,7 +276,7 @@ function validateKindInventory(
       `${stem}.layout.ts`,
       `${stem}.description.ts`,
       `${stem}.fixtures.ts`,
-      `${stem}.cli.ts`,
+      ...(family.cli === undefined ? [] : [`${stem}.cli.ts`]),
       "mod.ts",
     ]);
     if (!allowed.has(fileName)) {
@@ -464,7 +493,10 @@ export async function loadKindFamilySources(
         `${sourceName(urls.modUrl)} must export the kind authoring surface`,
       );
     }
-    if (module.default.cli.stance === family.cliModuleStance) {
+    if (
+      family.cli !== undefined &&
+      module.default.cli.stance === family.cli.moduleStance
+    ) {
       await assertDefaultExport(urls.cliUrl, "function");
     }
     sources.push({
@@ -764,9 +796,13 @@ ${
   }
 `;
 
+  if (family.cli === undefined) {
+    return { metadata, registry, spec, dispatch, exports };
+  }
+  const cliSurface = family.cli;
   const cliImports = [
     `import type { ${familyType}KindCliProjection, ${familyType}KindCliProjectorContext, ${familyType}KindCliRegistry } from ${
-      JSON.stringify(family.modules.cliContracts)
+      JSON.stringify(cliSurface.contractsModule)
     };`,
     `import type { Validated${familyType} } from ${
       JSON.stringify(`./${family.generatedFiles.spec}`)
@@ -775,7 +811,7 @@ ${
   const cliEntries: string[] = [];
   const cliCases: string[] = [];
   kinds.forEach((kind) => {
-    if (kind.meta.cli.stance !== family.cliModuleStance) {
+    if (kind.meta.cli.stance !== cliSurface.moduleStance) {
       cliEntries.push(
         `  ${JSON.stringify(kind.meta.slug)}: { stance: ${
           JSON.stringify(kind.meta.cli.stance)
@@ -795,7 +831,7 @@ ${
     );
     cliEntries.push(
       `  ${JSON.stringify(kind.meta.slug)}: { stance: ${
-        JSON.stringify(family.cliModuleStance)
+        JSON.stringify(cliSurface.moduleStance)
       }, project: ${projector} },`,
     );
     cliCases.push(`    case ${JSON.stringify(kind.meta.slug)}:
@@ -810,8 +846,8 @@ ${cliEntries.join("\n")}
 } as const satisfies ${familyType}KindCliRegistry;
 
 /** Dispatch ${
-    indefiniteArticle(family.cliModuleStance)
-  } ${family.cliModuleStance} kind projector, or decline by absence of a projector. */
+    indefiniteArticle(cliSurface.moduleStance)
+  } ${cliSurface.moduleStance} kind projector, or decline by absence of a projector. */
 export function project${familyType}KindCli(
   spec: Validated${familyType},
   context: ${familyType}KindCliProjectorContext,

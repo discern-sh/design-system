@@ -8,25 +8,13 @@ import {
   type KindFamilyConfig,
   loadKindFamilySources,
 } from "../../scripts/kind-family.ts";
-
-interface FamilyVocabulary {
-  readonly word: string;
-  readonly typeName: string;
-  readonly postures: readonly string[];
-}
-
-const DIAGRAM_FAMILY: FamilyVocabulary = {
-  word: "diagram",
-  typeName: "Diagram",
-  postures: [
-    "minimal",
-    "representative",
-    "structural",
-    "long-text",
-    "maximum-density",
-    "semantic-roles",
-  ],
-};
+import {
+  type FamilyVocabulary,
+  type FixtureKindOptions,
+  REQUIRED,
+  withTemporaryRoot,
+  writeKind,
+} from "../kind_family_harness.ts";
 
 const SYNTHETIC_FAMILY: FamilyVocabulary = {
   word: "signal",
@@ -42,14 +30,17 @@ function syntheticFamily(root: URL): KindFamilyConfig {
     budgetRemedies: ["trim-lanes"],
     releasePostures: SYNTHETIC_FAMILY.postures,
     cliStances: ["quiet", "projected"],
-    cliModuleStance: "projected",
+    cli: {
+      moduleStance: "projected",
+      registryFile: "signal-cli-registry.ts",
+      contractsModule: "../cli/signal-kinds.ts",
+    },
     generatedFiles: {
       spec: "signal-spec.ts",
       metadata: "signal-metadata.ts",
       registry: "signal-registry.ts",
       dispatch: "signal-dispatch.ts",
       exports: "signal-exports.ts",
-      cliRegistry: "signal-cli-registry.ts",
     },
     modules: {
       kindMeta: "../signal/kind-meta.ts",
@@ -57,137 +48,8 @@ function syntheticFamily(root: URL): KindFamilyConfig {
       conformance: "../signal/conformance.ts",
       validation: "../signal/validation.ts",
       scene: "../signal/scene.ts",
-      cliContracts: "../cli/signal-kinds.ts",
     },
   };
-}
-
-interface FixtureKindOptions {
-  readonly slug?: string;
-  readonly order?: number;
-  readonly stance?: string;
-  readonly include?: readonly string[];
-  readonly useWhen?: readonly string[];
-  readonly budgetDescription?: string;
-  readonly budgetRemedy?: string;
-  readonly family?: FamilyVocabulary;
-}
-
-const REQUIRED = [
-  "meta",
-  "spec",
-  "validation",
-  "layout",
-  "description",
-  "fixtures",
-  "mod",
-] as const;
-
-function rootUrl(path: string): URL {
-  return new URL(`file://${path.endsWith("/") ? path : `${path}/`}`);
-}
-
-async function writeKind(
-  root: string,
-  directory: string,
-  options: FixtureKindOptions = {},
-): Promise<void> {
-  const slug = options.slug ?? directory.split("/").at(-1) ?? "probe";
-  const family = options.family ?? DIAGRAM_FAMILY;
-  const pascal = `${slug[0]?.toUpperCase()}${slug.slice(1)}${family.typeName}`;
-  const include = new Set(options.include ?? REQUIRED);
-  const path = `${root}/${directory}`;
-  await Deno.mkdir(path, { recursive: true });
-  const files = new Map<string, string>([
-    [
-      "meta",
-      `export default {
-  name: "${slug}",
-  slug: "${slug}",
-  order: ${options.order ?? 10},
-  description: "A temporary generator conformance kind.",
-  useWhen: ${
-        JSON.stringify(options.useWhen ?? ["Proving generated enrolment."])
-      },
-  notWhen: ["A real ${family.word} kind is required."],
-  budgets: {
-    entities: {
-      limit: 3,
-      unit: "entities",
-      remedy: "${options.budgetRemedy ?? "split-overview"}",
-      description: ${
-        JSON.stringify(
-          options.budgetDescription ?? "A measurable temporary ceiling.",
-        )
-      },
-    },
-  },
-  cli: { stance: "${options.stance ?? "description"}" },
-} as const;
-`,
-    ],
-    [
-      "spec",
-      `export interface ${pascal}Spec { readonly kind: "${slug}"; readonly title: string; readonly summary: string; }
-export interface Validated${pascal} extends ${pascal}Spec {}\n`,
-    ],
-    [
-      "validation",
-      "export default function validate(value: unknown): unknown { return value; }\n",
-    ],
-    [
-      "layout",
-      "export default function layout(value: unknown): unknown { return value; }\n",
-    ],
-    [
-      "description",
-      'export default function describe(): string { return "temporary"; }\n',
-    ],
-    [
-      "fixtures",
-      `const spec = { kind: "${slug}", title: "Temporary", summary: "Temporary." };
-export const releaseCorpus = {
-  kind: "${slug}",
-  cases: [{
-    name: "complete",
-    postures: [${
-        family.postures.map((posture) => JSON.stringify(posture)).join(", ")
-      }],
-    spec,
-  }],
-  overBudget: {
-    dimension: "entities",
-    authorAction: "${options.budgetRemedy ?? "split-overview"}",
-    spec,
-  },
-  invalid: [{ name: "invalid", code: "${family.word}/invalid-spec", spec: { ...spec, extra: true } }],
-};
-export default releaseCorpus.cases.map(({ spec }) => spec);\n`,
-    ],
-    ["mod", "export const temporaryKind = true;\n"],
-    [
-      "cli",
-      'export default function render(): string { return "temporary"; }\n',
-    ],
-  ]);
-  for (const surface of include) {
-    const source = files.get(surface);
-    assert(source !== undefined);
-    const name = surface === "mod" ? "mod.ts" : `${slug}.${surface}.ts`;
-    await Deno.writeTextFile(`${path}/${name}`, source);
-  }
-}
-
-async function withTemporaryRoot(
-  action: (path: string, url: URL) => Promise<void>,
-  prefix = "diagram-kind-generator-",
-): Promise<void> {
-  const path = await Deno.makeTempDir({ prefix });
-  try {
-    await action(path, rootUrl(path));
-  } finally {
-    await Deno.remove(path, { recursive: true });
-  }
 }
 
 Deno.test("one conforming kind enrols every generated consumer together", async () => {
@@ -473,11 +335,14 @@ Deno.test("a second kind family enrols through the shared machinery as configura
     assert(generated.dispatch.includes('case "pulse"'));
     assert(generated.dispatch.includes("validateSignal"));
     assert(generated.dispatch.includes('from "./signal-spec.ts"'));
-    assert(generated.cliRegistry.includes("signalKindCliRegistry"));
-    assert(generated.cliRegistry.includes('"pulse": { stance: "quiet" }'));
-    assert(generated.cliRegistry.includes("projectSignalKindCli"));
+    const cliRegistry = generated.cliRegistry;
+    assert(cliRegistry !== undefined);
+    assert(cliRegistry.includes("signalKindCliRegistry"));
+    assert(cliRegistry.includes('"pulse": { stance: "quiet" }'));
+    assert(cliRegistry.includes("projectSignalKindCli"));
     assert(generated.exports.includes("pulse/mod.ts"));
     for (const source of Object.values(generated)) {
+      assert(source !== undefined);
       assert(!source.toLocaleLowerCase().includes("diagram"));
     }
   }, SYNTHETIC_PREFIX);
@@ -520,9 +385,34 @@ Deno.test("a second family's stance pairing follows its own vocabulary", async (
       url,
     );
     assert(
-      generated.cliRegistry.includes(
+      generated.cliRegistry?.includes(
         '{ stance: "projected", project: projectPulseSignalCli }',
       ),
+    );
+  }, SYNTHETIC_PREFIX);
+});
+
+Deno.test("a family without a terminal surface admits stances but forbids projector modules", async () => {
+  const pendingFamily = (root: URL): KindFamilyConfig => {
+    const { cli: _cli, ...surface } = syntheticFamily(root);
+    return surface;
+  };
+  await withTemporaryRoot(async (path, url) => {
+    await writeKind(path, "pulse", syntheticKind({ stance: "projected" }));
+    const generated = await generateKindFamilySources(pendingFamily(url), url);
+    assertEquals(generated.cliRegistry, undefined);
+    assert(generated.dispatch.includes('case "pulse"'));
+  }, SYNTHETIC_PREFIX);
+  await withTemporaryRoot(async (path, url) => {
+    await writeKind(
+      path,
+      "pulse",
+      syntheticKind({ stance: "projected", include: [...REQUIRED, "cli"] }),
+    );
+    await assertRejects(
+      () => loadKindFamilySources(pendingFamily(url)),
+      Error,
+      "supplies a kind CLI module before the signal family's terminal surface exists",
     );
   }, SYNTHETIC_PREFIX);
 });
