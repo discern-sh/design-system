@@ -10,12 +10,12 @@ The library is a closed canonical set chosen by the reader's verb; each kind's `
 
 | Kind           | Reader's verb                                     | Tier     | Terminal form                                                                            |
 | -------------- | ------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------- |
-| `bar`          | Compare magnitudes across categories or shares    | exact    | Label, eighth-block bar from a zero baseline, printed value on every row                  |
-| `line`         | Follow a quantity over an ordered or date domain  | faithful | Box-drawing path, one authored point per column, printed extremes and stated resolution   |
-| `distribution` | See how recorded values spread                    | exact    | Bin range, eighth-block bar, printed count per row; box summary with all five numbers     |
-| `heatmap`      | Read one quantity across a grid of two categories | faithful | Shade swatches at Unicode, exact bin-index digits at ASCII, edges stated in the legend    |
-| `scatter`      | Judge the relationship between two quantities     | faithful | Marker-glyph grid with collision counts, corner extremes, exact pairs in the description  |
-| `slope`        | Compare before → after per item                   | exact    | Permanent textual delta list: label, both values, direction triangle, exact signed delta  |
+| `bar`          | Compare magnitudes across categories or shares    | exact    | Label, eighth-block bar from a zero baseline, printed value on every row                 |
+| `line`         | Follow a quantity over an ordered or date domain  | faithful | Box-drawing path, one authored point per column, printed extremes and stated resolution  |
+| `distribution` | See how recorded values spread                    | exact    | Bin range, eighth-block bar, printed count per row; box summary with all five numbers    |
+| `heatmap`      | Read one quantity across a grid of two categories | faithful | Shade swatches at Unicode, exact bin-index digits at ASCII, edges stated in the legend   |
+| `scatter`      | Judge the relationship between two quantities     | faithful | Marker-glyph grid with collision counts, corner extremes, exact pairs in the description |
+| `slope`        | Compare before → after per item                   | exact    | Permanent textual delta list: label, both values, direction triangle, exact signed delta |
 
 Value axes on the position-encoding kinds accept the pinned base-ten log scale; length-encoding kinds keep their zero baseline, and their magnitude-span refusals name the log-scale remedy where position encoding makes it honest. Misleading forms never become kinds: the generated author guide ends with the refused forms and their remedies — pie and donut route to the bar proportion variant, gauges to the Meter Component, dual axes to two figures or common-base indexing, stacked areas to small multiples or the table, while radar, bubbles, 3D, and streaming are refused outright — rendered from [`src/chart/refusals.ts`](../../src/chart/refusals.ts) through codegen.
 
