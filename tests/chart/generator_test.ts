@@ -34,16 +34,10 @@ function chartKind(options: FixtureKindOptions = {}): FixtureKindOptions {
   };
 }
 
-/** The chart family exactly as wave 3A enables its terminal surface. */
-function shippedSurfaceFamily(root: URL): KindFamilyConfig {
-  return {
-    ...chartKindFamily(root),
-    cli: {
-      moduleStance: "enhanced",
-      registryFile: "chart-cli-registry.ts",
-      contractsModule: "../cli/chart-kinds.ts",
-    },
-  };
+/** A family whose terminal surface has not shipped, for the machinery guard. */
+function pendingSurfaceFamily(root: URL): KindFamilyConfig {
+  const { cli: _cli, ...family } = chartKindFamily(root);
+  return family;
 }
 
 Deno.test("one conforming chart kind enrols every generated consumer together", async () => {
@@ -60,11 +54,11 @@ Deno.test("one conforming chart kind enrols every generated consumer together", 
     assert(generated.dispatch.includes("conformChartScene"));
     assert(generated.dispatch.includes('"chart/invalid-spec"'));
     assert(generated.exports.includes("probe/mod.ts"));
-    assertEquals(
-      generated.cliRegistry,
-      undefined,
-      "no chart CLI registry exists before the terminal surface ships",
+    assert(
+      generated.cliRegistry.includes('"probe": { stance: "description" }'),
+      "the shipped terminal surface registers a description-only kind",
     );
+    assert(generated.cliRegistry.includes("projectChartKindCli"));
   }, CHART_PREFIX);
 });
 
@@ -161,13 +155,16 @@ Deno.test("chart kind Metadata declares stance and honesty tier together at birt
     await writeKind(
       path,
       "probe",
-      chartKind({ cliValue: '{ stance: "enhanced", honesty: "exact" }' }),
+      chartKind({
+        cliValue: '{ stance: "enhanced", honesty: "exact" }',
+        include: [...REQUIRED, "cli"],
+      }),
     );
     assertEquals((await loadChartKindSources(url)).length, 1);
   }, CHART_PREFIX);
 });
 
-Deno.test("a chart projector module is refused while the family surface is pending", async () => {
+Deno.test("a kind CLI module is refused while a family surface is pending", async () => {
   await withTemporaryRoot(async (path, url) => {
     await writeKind(
       path,
@@ -178,14 +175,14 @@ Deno.test("a chart projector module is refused while the family surface is pendi
       }),
     );
     await assertRejects(
-      () => loadChartKindSources(url),
+      () => loadKindFamilySources(pendingSurfaceFamily(url)),
       Error,
       "supplies a kind CLI module before the chart family's terminal surface exists",
     );
   }, CHART_PREFIX);
 });
 
-Deno.test("the moment the terminal surface ships, a missing projector fails loudly", async () => {
+Deno.test("the shipped terminal surface makes a missing projector fail loudly", async () => {
   await withTemporaryRoot(async (path, url) => {
     await writeKind(
       path,
@@ -193,7 +190,7 @@ Deno.test("the moment the terminal surface ships, a missing projector fails loud
       chartKind({ cliValue: '{ stance: "enhanced", honesty: "exact" }' }),
     );
     await assertRejects(
-      () => loadKindFamilySources(shippedSurfaceFamily(url)),
+      () => loadChartKindSources(url),
       Error,
       "declares enhanced chart CLI but has no .cli.ts file",
     );
@@ -208,7 +205,7 @@ Deno.test("the moment the terminal surface ships, a missing projector fails loud
       }),
     );
     const generated = await generateKindFamilySources(
-      shippedSurfaceFamily(url),
+      chartKindFamily(url),
       url,
     );
     assert(generated.cliRegistry?.includes("projectProbeChartCli"));
@@ -218,6 +215,11 @@ Deno.test("the moment the terminal surface ships, a missing projector fails loud
 Deno.test("the real bar kind enrols through the canonical chart root", async () => {
   const kinds = await loadChartKindSources();
   assertEquals(kinds.length, 1);
+  const generated = await generateChartKindSources();
+  assert(generated.cliRegistry.includes("projectBarChartCli"));
+  assert(
+    generated.cliRegistry.includes('"bar": { stance: "enhanced", project:'),
+  );
   const bar = kinds[0];
   assert(bar !== undefined);
   assertEquals(bar.meta.slug, "bar");

@@ -64,6 +64,7 @@ export interface GeneratedSources {
   readonly chartSpec: string;
   readonly chartDispatch: string;
   readonly chartExports: string;
+  readonly chartCliRegistry: string;
 }
 
 /** Canonical source anatomy discovered for one diagram kind. */
@@ -228,6 +229,11 @@ export function chartKindFamily(root: URL): KindFamilyConfig {
     releasePostures: CHART_RELEASE_POSTURES,
     cliStances: ["description", "enhanced"],
     validateCliMeta: validateChartCliMeta,
+    cli: {
+      moduleStance: "enhanced",
+      registryFile: "chart-cli-registry.ts",
+      contractsModule: "../cli/chart-kinds.ts",
+    },
     generatedFiles: {
       spec: "chart-spec.ts",
       metadata: "chart-metadata.ts",
@@ -260,13 +266,17 @@ export async function loadChartKindSources(
 }
 
 /** Generated source family proving one canonical chart-kind set. */
-export type GeneratedChartSources = GeneratedKindFamilySources;
+export type GeneratedChartSources = GeneratedKindFamilySources & {
+  readonly cliRegistry: string;
+};
 
 /** Render every chart-kind consumer from one discovered source inventory. */
 export async function generateChartKindSources(
   root: URL = CHART_KIND_ROOT,
 ): Promise<GeneratedChartSources> {
-  return await generateKindFamilySources(chartKindFamily(root), GENERATED_ROOT);
+  const family = chartKindFamily(root);
+  const generated = await generateKindFamilySources(family, GENERATED_ROOT);
+  return { ...generated, cliRegistry: requiredCliRegistry(family, generated) };
 }
 
 /** The generated CLI registry a shipped-surface family always carries. */
@@ -580,6 +590,7 @@ export async function generateSources(): Promise<GeneratedSources> {
     chartSpec: charts.spec,
     chartDispatch: charts.dispatch,
     chartExports: charts.exports,
+    chartCliRegistry: charts.cliRegistry,
   };
 }
 
@@ -643,7 +654,8 @@ export async function writeGeneratedSources(): Promise<void> {
       generated.diagramCliRegistry,
     );
   }
-  const chartFiles = chartKindFamily(CHART_KIND_ROOT).generatedFiles;
+  const chartFamily = chartKindFamily(CHART_KIND_ROOT);
+  const chartFiles = chartFamily.generatedFiles;
   await Deno.writeTextFile(
     new URL(chartFiles.metadata, GENERATED_ROOT),
     generated.chartMetadata,
@@ -664,6 +676,12 @@ export async function writeGeneratedSources(): Promise<void> {
     new URL(chartFiles.exports, GENERATED_ROOT),
     generated.chartExports,
   );
+  if (chartFamily.cli !== undefined) {
+    await Deno.writeTextFile(
+      new URL(chartFamily.cli.registryFile, GENERATED_ROOT),
+      generated.chartCliRegistry,
+    );
+  }
 }
 
 if (import.meta.main) await writeGeneratedSources();
