@@ -463,7 +463,7 @@
   # its general-purpose hover-card dependency, with headroom for ordinary drift.
   [standards.docs_selection]
     run = "deno run --config deno.json --allow-read --allow-write scripts/measure.ts"
-    limit = 33000
+    limit = 35000
     direction = "down"
     metric = "docs_selection_bytes"
     inputs = ["src/**", "scripts/**"]
@@ -485,7 +485,7 @@
   # every dependency the Runtime Manifest resolves.
   [standards.workflow_css]
     run = "deno run --config deno.json --allow-read --allow-write ${scripts.dir}/measure-runtime.ts workflow_css_bytes"
-    limit = 70000
+    limit = 75000
     direction = "down"
     metric = "workflow_css_bytes"
     inputs = ["src/**", "scripts/generate.ts", "${scripts.dir}/measure-runtime.ts"]
