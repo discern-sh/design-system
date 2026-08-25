@@ -14,11 +14,10 @@
 import {
   alignChartDecimals,
   type ChartDecimal,
-  chartDecimalDigits,
   chartDecimalFromNumber,
+  chartDecimalOrder,
   chartDecimalToNumber,
   compareChartDecimals,
-  normalizeChartDecimal,
   renderChartDecimal,
 } from "./decimal.ts";
 
@@ -54,12 +53,6 @@ function ceilDivide(dividend: bigint, divisor: bigint): bigint {
   return dividend % divisor !== 0n && dividend > 0n ? quotient + 1n : quotient;
 }
 
-/** Exact order of magnitude: `10^order ≤ |value| < 10^(order+1)`. */
-function decimalOrder(value: ChartDecimal): number {
-  const normalized = normalizeChartDecimal(value);
-  return chartDecimalDigits(normalized) + normalized.exponent - 1;
-}
-
 function lessThan(
   value: ChartDecimal,
   coefficient: bigint,
@@ -73,7 +66,7 @@ function lessThan(
  * comparison against the published 1.5 / 3 / 7 rounding thresholds.
  */
 function niceStep(rough: ChartDecimal): ChartTickStep {
-  const order = decimalOrder(rough);
+  const order = chartDecimalOrder(rough);
   if (lessThan(rough, 15n, order - 1)) return { mantissa: 1, exponent: order };
   if (lessThan(rough, 3n, order)) return { mantissa: 2, exponent: order };
   if (lessThan(rough, 7n, order)) return { mantissa: 5, exponent: order };

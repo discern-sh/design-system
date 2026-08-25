@@ -11,10 +11,9 @@
 
 import {
   type ChartDecimal,
-  chartDecimalDigits,
   chartDecimalFromNumber,
+  chartDecimalOrder,
   compareChartDecimals,
-  normalizeChartDecimal,
   renderChartDecimal,
   roundChartDecimal,
 } from "./decimal.ts";
@@ -76,15 +75,9 @@ function assertDecimals(decimals: number): void {
   }
 }
 
-/** Order of magnitude of a nonzero decimal: `10^order ≤ |value| < 10^(order+1)`. */
-function decimalOrder(value: ChartDecimal): number {
-  const normalized = normalizeChartDecimal(value);
-  return chartDecimalDigits(normalized) + normalized.exponent - 1;
-}
-
 function siMagnitude(value: ChartDecimal): number {
   if (value.coefficient === 0n) return 0;
-  const magnitude = Math.floor(decimalOrder(value) / 3) * 3;
+  const magnitude = Math.floor(chartDecimalOrder(value) / 3) * 3;
   return Math.min(SI_MAXIMUM, Math.max(SI_MINIMUM, magnitude));
 }
 

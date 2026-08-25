@@ -5,6 +5,13 @@ import {
 } from "../src/diagram/kind-meta.ts";
 import { DIAGRAM_BUDGET_REMEDIES } from "../src/diagram/errors.ts";
 import {
+  CHART_CLI_HONESTY_TIERS,
+  CHART_RELEASE_POSTURES,
+  type ChartCliHonesty,
+  type ChartKindMeta,
+} from "../src/chart/kind-meta.ts";
+import { CHART_BUDGET_REMEDIES } from "../src/chart/errors.ts";
+import {
   componentBehaviors,
   componentGroups,
   type ComponentMeta,
@@ -28,6 +35,7 @@ const BEHAVIOR_ROOT = new URL("../assets/behaviors/", import.meta.url);
 const GENERATED_ROOT = new URL("../src/generated/", import.meta.url);
 const STYLE_ROOT = new URL("../src/styles/", import.meta.url);
 const DIAGRAM_KIND_ROOT = new URL("../src/diagram/kinds/", import.meta.url);
+const CHART_KIND_ROOT = new URL("../src/chart/kinds/", import.meta.url);
 
 export interface ComponentSource {
   readonly metaUrl: URL;
@@ -51,6 +59,11 @@ export interface GeneratedSources {
   readonly diagramDispatch: string;
   readonly diagramExports: string;
   readonly diagramCliRegistry: string;
+  readonly chartMetadata: string;
+  readonly chartRegistry: string;
+  readonly chartSpec: string;
+  readonly chartDispatch: string;
+  readonly chartExports: string;
 }
 
 /** Canonical source anatomy discovered for one diagram kind. */
@@ -176,6 +189,84 @@ function diagramKindFamily(root: URL): KindFamilyConfig {
       scene: "../diagram/scene.ts",
     },
   };
+}
+
+/**
+ * Enforce the chart stance–honesty pairing at generation time: an enhanced
+ * kind declares exactly one honesty tier, and a description kind declares
+ * none.
+ */
+function validateChartCliMeta(
+  cli: Record<string, unknown>,
+  source: string,
+): void {
+  if (cli.stance === "enhanced") {
+    if (
+      !CHART_CLI_HONESTY_TIERS.includes(cli.honesty as ChartCliHonesty) ||
+      Object.keys(cli).toSorted().join(",") !== "honesty,stance"
+    ) {
+      throw new Error(
+        `${source} declares an enhanced chart CLI stance without exactly one valid honesty tier`,
+      );
+    }
+    return;
+  }
+  if (Object.keys(cli).length !== 1) {
+    throw new Error(
+      `${source} declares chart CLI facts beyond its description stance`,
+    );
+  }
+}
+
+/** Family enrolment facts for the built-in chart kind set. */
+export function chartKindFamily(root: URL): KindFamilyConfig {
+  return {
+    word: "chart",
+    typeName: "Chart",
+    kindRoot: root,
+    budgetRemedies: CHART_BUDGET_REMEDIES,
+    releasePostures: CHART_RELEASE_POSTURES,
+    cliStances: ["description", "enhanced"],
+    validateCliMeta: validateChartCliMeta,
+    generatedFiles: {
+      spec: "chart-spec.ts",
+      metadata: "chart-metadata.ts",
+      registry: "chart-registry.ts",
+      dispatch: "chart-dispatch.ts",
+      exports: "chart-exports.ts",
+    },
+    modules: {
+      kindMeta: "../chart/kind-meta.ts",
+      errors: "../chart/errors.ts",
+      conformance: "../chart/conformance.ts",
+      validation: "../chart/validation.ts",
+      scene: "../chart/scene.ts",
+    },
+  };
+}
+
+/** Canonical source anatomy discovered for one chart kind. */
+export interface ChartKindSource extends KindFamilySource {
+  readonly meta: ChartKindMeta;
+}
+
+/** Discover chart kinds and reject every incomplete or ambiguous anatomy. */
+export async function loadChartKindSources(
+  root: URL = CHART_KIND_ROOT,
+): Promise<ChartKindSource[]> {
+  return await loadKindFamilySources(
+    chartKindFamily(root),
+  ) as ChartKindSource[];
+}
+
+/** Generated source family proving one canonical chart-kind set. */
+export type GeneratedChartSources = GeneratedKindFamilySources;
+
+/** Render every chart-kind consumer from one discovered source inventory. */
+export async function generateChartKindSources(
+  root: URL = CHART_KIND_ROOT,
+): Promise<GeneratedChartSources> {
+  return await generateKindFamilySources(chartKindFamily(root), GENERATED_ROOT);
 }
 
 /** The generated CLI registry a shipped-surface family always carries. */
@@ -469,6 +560,7 @@ export const utilitiesCss: string = ${JSON.stringify(utilities)};
 /** Generate the stable source modules used by cached package consumers. */
 export async function generateSources(): Promise<GeneratedSources> {
   const diagrams = await generateDiagramKindSources();
+  const charts = await generateChartKindSources();
   return {
     registry: await generateComponentRegistry(),
     assets: await generateAssets(),
@@ -483,6 +575,11 @@ export async function generateSources(): Promise<GeneratedSources> {
     diagramDispatch: diagrams.dispatch,
     diagramExports: diagrams.exports,
     diagramCliRegistry: diagrams.cliRegistry,
+    chartMetadata: charts.metadata,
+    chartRegistry: charts.registry,
+    chartSpec: charts.spec,
+    chartDispatch: charts.dispatch,
+    chartExports: charts.exports,
   };
 }
 
@@ -546,6 +643,27 @@ export async function writeGeneratedSources(): Promise<void> {
       generated.diagramCliRegistry,
     );
   }
+  const chartFiles = chartKindFamily(CHART_KIND_ROOT).generatedFiles;
+  await Deno.writeTextFile(
+    new URL(chartFiles.metadata, GENERATED_ROOT),
+    generated.chartMetadata,
+  );
+  await Deno.writeTextFile(
+    new URL(chartFiles.registry, GENERATED_ROOT),
+    generated.chartRegistry,
+  );
+  await Deno.writeTextFile(
+    new URL(chartFiles.spec, GENERATED_ROOT),
+    generated.chartSpec,
+  );
+  await Deno.writeTextFile(
+    new URL(chartFiles.dispatch, GENERATED_ROOT),
+    generated.chartDispatch,
+  );
+  await Deno.writeTextFile(
+    new URL(chartFiles.exports, GENERATED_ROOT),
+    generated.chartExports,
+  );
 }
 
 if (import.meta.main) await writeGeneratedSources();

@@ -82,6 +82,15 @@ export function alignChartDecimals(
   };
 }
 
+/** Exact order of magnitude of a nonzero decimal: `10^order ≤ |value| < 10^(order+1)`. */
+export function chartDecimalOrder(value: ChartDecimal): number {
+  if (value.coefficient === 0n) {
+    throw new TypeError("Zero has no decimal order.");
+  }
+  const normalized = normalizeChartDecimal(value);
+  return chartDecimalDigits(normalized) + normalized.exponent - 1;
+}
+
 /** Exact three-way decimal comparison. */
 export function compareChartDecimals(
   left: ChartDecimal,

@@ -8,6 +8,9 @@
  * @module
  */
 
+export type { ChartSpec, ValidatedChart } from "../generated/chart-spec.ts";
+export { describeChart, validateChart } from "../generated/chart-dispatch.ts";
+export * from "../generated/chart-exports.ts";
 export * from "./decimal.ts";
 export * from "./dispatch.ts";
 export * from "./errors.ts";
