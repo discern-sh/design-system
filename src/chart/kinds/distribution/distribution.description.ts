@@ -1,10 +1,9 @@
 /** Stable, colour-independent structural description for distribution charts. */
 
 import {
-  alignChartDecimals,
   chartDecimalFromNumber,
-  normalizeChartDecimal,
   renderChartDecimal,
+  subtractChartDecimals,
 } from "../../decimal.ts";
 import { chartPlainValue as plain, chartUnitSuffix } from "../../value-text.ts";
 import type {
@@ -47,14 +46,10 @@ export function distributionCountText(count: number): string {
  * artifact.
  */
 function exactDifference(left: number, right: number): string {
-  const aligned = alignChartDecimals(
+  return renderChartDecimal(subtractChartDecimals(
     chartDecimalFromNumber(left, "distribution difference"),
     chartDecimalFromNumber(right, "distribution difference"),
-  );
-  return renderChartDecimal(normalizeChartDecimal({
-    coefficient: aligned.left - aligned.right,
-    exponent: aligned.exponent,
-  }));
+  ));
 }
 
 function axisName(spec: ValidatedDistributionChart): string {

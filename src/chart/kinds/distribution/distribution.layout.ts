@@ -6,11 +6,15 @@ import { ChartValidationError } from "../../errors.ts";
 import { type ChartNumberFormat, formatChartNumber } from "../../format.ts";
 import {
   CHART_GEOMETRY,
-  chartPointBounds,
   chartRectsOverlap,
   chartRectUnion,
   roundChartNumber,
 } from "../../geometry.ts";
+import {
+  chartAxisLine,
+  chartReferenceLine,
+  chartTickLabel,
+} from "../../kind-layout.ts";
 import { chartLinearPosition, createChartLinearScale } from "../../scale.ts";
 import type {
   ChartAxisLine,
@@ -83,15 +87,7 @@ function axisLine(
   start: ChartPoint,
   end: ChartPoint,
 ): ChartAxisLine {
-  return {
-    kind: "axis-line",
-    id,
-    axis: "value",
-    lineWidth: G.axis.lineWidth,
-    start,
-    end,
-    bounds: chartPointBounds([start, end], G.axis.lineWidth / 2),
-  };
+  return chartAxisLine(id, "value", start, end);
 }
 
 function referenceLine(
@@ -100,14 +96,7 @@ function referenceLine(
   start: ChartPoint,
   end: ChartPoint,
 ): ChartReferenceLine {
-  return {
-    kind: "reference-line",
-    id,
-    lineWidth,
-    start,
-    end,
-    bounds: chartPointBounds([start, end], lineWidth / 2),
-  };
+  return chartReferenceLine(id, lineWidth, start, end);
 }
 
 function tickLabel(options: {
@@ -119,32 +108,7 @@ function tickLabel(options: {
   readonly x: number;
   readonly baseline: number;
 }): ChartTickLabel {
-  const width = measureSceneText(options.text, G.text.labelSize, "mono");
-  const left = options.anchor === "start"
-    ? options.x
-    : options.anchor === "middle"
-    ? options.x - width / 2
-    : options.x - width;
-  return {
-    kind: "tick-label",
-    id: options.id,
-    axis: options.axis,
-    role: options.role,
-    text: options.text,
-    anchor: options.anchor,
-    x: roundChartNumber(options.x),
-    baseline: roundChartNumber(options.baseline),
-    fontRole: "mono",
-    fontSize: G.text.labelSize,
-    lineHeight: G.text.labelLineHeight,
-    width,
-    bounds: {
-      x: roundChartNumber(left),
-      y: roundChartNumber(options.baseline - G.text.labelSize),
-      width,
-      height: G.text.labelLineHeight,
-    },
-  };
+  return chartTickLabel({ ...options, fontRole: "mono" });
 }
 
 function assertClearLabels(labels: readonly ChartTickLabel[]): void {

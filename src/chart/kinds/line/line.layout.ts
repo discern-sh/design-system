@@ -11,6 +11,7 @@ import {
   chartRectUnion,
   roundChartNumber,
 } from "../../geometry.ts";
+import { chartAxisLine, chartTickLabel } from "../../kind-layout.ts";
 import {
   chartLinearPosition,
   chartLogPosition,
@@ -158,15 +159,7 @@ function axisLine(
   start: ChartPoint,
   end: ChartPoint,
 ): ChartAxisLine {
-  return {
-    kind: "axis-line",
-    id,
-    axis,
-    lineWidth: G.axis.lineWidth,
-    start,
-    end,
-    bounds: chartPointBounds([start, end], G.axis.lineWidth / 2),
-  };
+  return chartAxisLine(id, axis, start, end);
 }
 
 function tickLabel(options: {
@@ -178,36 +171,7 @@ function tickLabel(options: {
   readonly baseline: number;
   readonly fontRole: ChartTickLabel["fontRole"];
 }): ChartTickLabel {
-  const width = measureSceneText(
-    options.text,
-    G.text.labelSize,
-    options.fontRole,
-  );
-  const left = options.anchor === "start"
-    ? options.x
-    : options.anchor === "middle"
-    ? options.x - width / 2
-    : options.x - width;
-  return {
-    kind: "tick-label",
-    id: options.id,
-    axis: options.axis,
-    role: "axis-label",
-    text: options.text,
-    anchor: options.anchor,
-    x: roundChartNumber(options.x),
-    baseline: roundChartNumber(options.baseline),
-    fontRole: options.fontRole,
-    fontSize: G.text.labelSize,
-    lineHeight: G.text.labelLineHeight,
-    width,
-    bounds: {
-      x: roundChartNumber(left),
-      y: roundChartNumber(options.baseline - G.text.labelSize),
-      width,
-      height: G.text.labelLineHeight,
-    },
-  };
+  return chartTickLabel({ ...options, role: "axis-label" });
 }
 
 /** Lay a validated line chart into one projection-neutral scene. */

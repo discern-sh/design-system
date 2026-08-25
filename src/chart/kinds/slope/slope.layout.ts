@@ -10,6 +10,7 @@ import {
   chartRectUnion,
   roundChartNumber,
 } from "../../geometry.ts";
+import { chartTickLabel } from "../../kind-layout.ts";
 import { chartLinearPosition, createChartLinearScale } from "../../scale.ts";
 import type {
   ChartAxisLine,
@@ -86,36 +87,7 @@ function tickLabel(options: {
   readonly baseline: number;
   readonly fontRole: ChartTickLabel["fontRole"];
 }): ChartTickLabel {
-  const width = measureSceneText(
-    options.text,
-    G.text.labelSize,
-    options.fontRole,
-  );
-  const left = options.anchor === "start"
-    ? options.x
-    : options.anchor === "middle"
-    ? options.x - width / 2
-    : options.x - width;
-  return {
-    kind: "tick-label",
-    id: options.id,
-    axis: options.axis,
-    role: options.role,
-    text: options.text,
-    anchor: options.anchor,
-    x: roundChartNumber(options.x),
-    baseline: roundChartNumber(options.baseline),
-    fontRole: options.fontRole,
-    fontSize: G.text.labelSize,
-    lineHeight: G.text.labelLineHeight,
-    width,
-    bounds: {
-      x: roundChartNumber(left),
-      y: roundChartNumber(options.baseline - G.text.labelSize),
-      width,
-      height: G.text.labelLineHeight,
-    },
-  };
+  return chartTickLabel(options);
 }
 
 /** Lay a validated slope chart into one projection-neutral scene. */

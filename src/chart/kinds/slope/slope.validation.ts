@@ -1,12 +1,11 @@
 /** Complete semantic preflight for slope charts. */
 
 import {
-  alignChartDecimals,
   type ChartDecimal,
   chartDecimalFromNumber,
   chartDecimalOrder,
-  normalizeChartDecimal,
   renderChartDecimal,
+  subtractChartDecimals,
 } from "../../decimal.ts";
 import { ChartValidationError } from "../../errors.ts";
 import {
@@ -62,14 +61,10 @@ export function computeSlopeDelta(
   before: number,
   after: number,
 ): SlopeChartDelta {
-  const aligned = alignChartDecimals(
-    chartDecimalFromNumber(before, "slope before value"),
+  const delta = subtractChartDecimals(
     chartDecimalFromNumber(after, "slope after value"),
+    chartDecimalFromNumber(before, "slope before value"),
   );
-  const delta = normalizeChartDecimal({
-    coefficient: aligned.right - aligned.left,
-    exponent: aligned.exponent,
-  });
   if (delta.coefficient === 0n) {
     return { direction: "level", deltaText: "0", delta };
   }

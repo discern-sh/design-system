@@ -91,6 +91,18 @@ export function chartDecimalOrder(value: ChartDecimal): number {
   return chartDecimalDigits(normalized) + normalized.exponent - 1;
 }
 
+/** Exact normalized decimal difference `left − right`. */
+export function subtractChartDecimals(
+  left: ChartDecimal,
+  right: ChartDecimal,
+): ChartDecimal {
+  const aligned = alignChartDecimals(left, right);
+  return normalizeChartDecimal({
+    coefficient: aligned.left - aligned.right,
+    exponent: aligned.exponent,
+  });
+}
+
 /** Exact three-way decimal comparison. */
 export function compareChartDecimals(
   left: ChartDecimal,

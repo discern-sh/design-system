@@ -8,6 +8,7 @@ import {
   chartRectUnion,
   roundChartNumber,
 } from "../../geometry.ts";
+import { chartTickLabel } from "../../kind-layout.ts";
 import { chartBandSegment, createChartBandScale } from "../../scale.ts";
 import type {
   ChartMark,
@@ -50,32 +51,12 @@ function tickLabel(options: {
   readonly x: number;
   readonly baseline: number;
 }): ChartTickLabel {
-  const width = measureSceneText(options.text, G.text.labelSize, "interface");
-  const left = options.anchor === "start"
-    ? options.x
-    : options.anchor === "middle"
-    ? options.x - width / 2
-    : options.x - width;
-  return {
-    kind: "tick-label",
-    id: options.id,
+  return chartTickLabel({
+    ...options,
     axis: "category",
     role: "axis-label",
-    text: options.text,
-    anchor: options.anchor,
-    x: roundChartNumber(options.x),
-    baseline: roundChartNumber(options.baseline),
     fontRole: "interface",
-    fontSize: G.text.labelSize,
-    lineHeight: G.text.labelLineHeight,
-    width,
-    bounds: {
-      x: roundChartNumber(left),
-      y: roundChartNumber(options.baseline - G.text.labelSize),
-      width,
-      height: G.text.labelLineHeight,
-    },
-  };
+  });
 }
 
 /** Lay a validated heatmap chart into one projection-neutral scene. */
