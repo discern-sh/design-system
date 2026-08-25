@@ -34,6 +34,11 @@ export type {
 export { formatChartNumber } from "./format.ts";
 export type { ChartSeriesLegendItem } from "./legend.ts";
 export { chartSeriesLegend } from "./legend.ts";
+export {
+  canonicalChartMarkdownSource,
+  renderChartMarkdownImage,
+} from "./markdown.ts";
+export type { MarkdownChartResource } from "./markdown.ts";
 export type { ChartSeriesPaintRole, ChartSeriesPaintSlot } from "./scene.ts";
 export type { ChartSpec } from "../generated/chart-spec.ts";
 export { describeChart } from "../generated/chart-dispatch.ts";
