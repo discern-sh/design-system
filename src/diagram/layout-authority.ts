@@ -1,7 +1,12 @@
 /** Shared measured-text, connector, and scene construction for diagram kinds. */
 
+import {
+  type MeasuredSceneText,
+  measureSceneLayoutText,
+  positionSceneText,
+} from "../internal/text-layout.ts";
 import { DiagramValidationError } from "./errors.ts";
-import { type DiagramFontRole, wrapDiagramText } from "./font-metrics.ts";
+import type { DiagramFontRole } from "./font-metrics.ts";
 import {
   DIAGRAM_GEOMETRY,
   diagramPointBounds,
@@ -19,19 +24,11 @@ import type {
   DiagramSceneElement,
   DiagramSceneGroup,
   DiagramText,
-  DiagramTextLine,
 } from "./scene.ts";
 import { assertDiagramKindBudget } from "./validation.ts";
 
 /** Conservatively wrapped text before a kind chooses its semantic position. */
-export interface DiagramMeasuredText {
-  readonly lines: readonly { readonly text: string; readonly width: number }[];
-  readonly width: number;
-  readonly height: number;
-  readonly fontRole: DiagramFontRole;
-  readonly fontSize: number;
-  readonly lineHeight: number;
-}
+export type DiagramMeasuredText = MeasuredSceneText;
 
 /** Measure one text fact and apply the owning kind's wrapped-line budget. */
 export function measureDiagramLayoutText(options: {
@@ -44,35 +41,28 @@ export function measureDiagramLayoutText(options: {
   readonly budget: string;
   readonly path: string;
 }): DiagramMeasuredText {
-  const lines = wrapDiagramText(
-    options.text,
-    options.maximumWidth,
-    options.fontSize,
-    options.fontRole,
-  );
-  assertDiagramKindBudget(
-    options.meta,
-    options.budget,
-    lines.length,
-    options.path,
-  );
-  const width = Math.max(...lines.map((line) => line.width));
-  if (!Number.isFinite(width) || width <= 0) {
-    throw new DiagramValidationError({
-      code: "diagram/layout/non-finite",
-      message: `${options.path} cannot be measured as visible text.`,
-      path: options.path,
-      remedy: "Replace isolated marks with concise visible letters or words.",
-    });
-  }
-  return {
-    lines,
-    width: roundDiagramNumber(width),
-    height: roundDiagramNumber(lines.length * options.lineHeight),
+  return measureSceneLayoutText({
+    text: options.text,
+    maximumWidth: options.maximumWidth,
     fontRole: options.fontRole,
     fontSize: options.fontSize,
     lineHeight: options.lineHeight,
-  };
+    assertLineBudget: (lineCount) =>
+      assertDiagramKindBudget(
+        options.meta,
+        options.budget,
+        lineCount,
+        options.path,
+      ),
+    onUnmeasurable: () => {
+      throw new DiagramValidationError({
+        code: "diagram/layout/non-finite",
+        message: `${options.path} cannot be measured as visible text.`,
+        path: options.path,
+        remedy: "Replace isolated marks with concise visible letters or words.",
+      });
+    },
+  });
 }
 
 /** Place a measured text block around one stable horizontal centre. */
@@ -85,23 +75,11 @@ export function positionDiagramText(options: {
   readonly centerX: number;
   readonly top: number;
 }): DiagramText {
-  const bounds = {
-    x: roundDiagramNumber(options.centerX - options.measured.width / 2),
-    y: roundDiagramNumber(options.top),
-    width: options.measured.width,
-    height: options.measured.height,
-  };
-  const lines: DiagramTextLine[] = options.measured.lines.map(
-    (line, index) => ({
-      text: line.text,
-      x: roundDiagramNumber(options.centerX - line.width / 2),
-      baseline: roundDiagramNumber(
-        options.top + index * options.measured.lineHeight +
-          options.measured.fontSize,
-      ),
-      width: line.width,
-    }),
-  );
+  const positioned = positionSceneText({
+    measured: options.measured,
+    centerX: options.centerX,
+    top: options.top,
+  });
   return {
     kind: "text",
     id: options.id,
@@ -111,8 +89,8 @@ export function positionDiagramText(options: {
     fontRole: options.measured.fontRole,
     fontSize: options.measured.fontSize,
     lineHeight: options.measured.lineHeight,
-    bounds,
-    lines,
+    bounds: positioned.bounds,
+    lines: positioned.lines,
   };
 }
 
