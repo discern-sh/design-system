@@ -12,6 +12,10 @@ The emitted Runtime treats the user's system colour scheme as the default. A Roo
 
 Theme roles can carry non-colour presentation values when a Component needs one semantic behavior to switch with the active Theme. `--discern-brand-artwork-opacity` keeps supplied multicolour artwork visible in light Theme and removes it in dark Theme when the Component provides a separate monochrome treatment; it does not affect ordinary artwork by itself.
 
+## Series colour
+
+`--discern-color-series-1..6` are the fixed-order categorical data-series roles consumed by the chart family and `DataFigure` series swatches. Their hues avoid the reserved state, ink, and accent hues, and their safety is machine-checked in [`tests/chart/palette_test.ts`](../../tests/chart/palette_test.ts) — colour-vision-deficiency separation of adjacent pairs at a pinned floor, ANSI 256 distinctness, and a pinned ANSI 16 collapse — through the same terminal derivation every theme token rides. The theming boundary is deliberately asymmetric and permanent: browser consumers may override the custom properties, while terminal series colours stay package-authored because an override cannot re-run those proofs ([ADR-0030](../_adr/0030-own-charts-as-a-quantitative-kind-family.md)). Semantic state tones are never recruited as series colours.
+
 ## Contextual contrast
 
 The inverse surface and ink roles remain stable light-on-dark roles across both Themes. Marketing section's contrast surface uses them to establish a local semantic scope: ordinary canvas, surface, sunken, ink, muted ink, faint ink, and border roles move together for the section's descendants. Terminal and Code listing use the same roles for their opt-in showcase treatments. This is contextual composition rather than a third Theme, and it requires no `data-discern-theme` branch in Component CSS. [ADR-0006](../_adr/0006-homepage-treatments-ship-as-variants.md) records why these recipes remain opt-in Component contracts instead of global Token defaults.
