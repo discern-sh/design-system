@@ -204,6 +204,49 @@ Deno.test("the published diagram graph is neutral, local, and permission-free", 
   );
 });
 
+Deno.test("the published chart graph is neutral, local, and permission-free", async () => {
+  const entry = config.exports["./chart"];
+  assert(entry !== undefined, "deno.json has no ./chart export");
+  const { code, output } = await run(PACKAGE_ROOT, [
+    "info",
+    "--json",
+    "--config",
+    "deno.json",
+    entry,
+  ]);
+  assertEquals(code, 0, `deno info failed for ${entry}:\n${output}`);
+  const graph = JSON.parse(output) as {
+    readonly modules: readonly { readonly specifier: string }[];
+  };
+  assert(graph.modules.length > 1, "./chart graph was unexpectedly empty");
+  for (const module of graph.modules) {
+    assert(
+      module.specifier.startsWith("file://"),
+      `./chart resolved an external module: ${module.specifier}`,
+    );
+    assert(
+      !module.specifier.includes("/src/cli/") &&
+        !module.specifier.includes("/src/diagram/") &&
+        !module.specifier.endsWith(".tsx") &&
+        !module.specifier.endsWith(".fixtures.ts") &&
+        !module.specifier.toLocaleLowerCase().includes("react"),
+      `./chart crossed a projection boundary: ${module.specifier}`,
+    );
+    assert(
+      !/(?:markdown\.model|mdast|micromark|remark|unified)/iu.test(
+        module.specifier,
+      ),
+      `./chart pulled in the Markdown parser graph: ${module.specifier}`,
+    );
+  }
+  const imported = await run(PACKAGE_ROOT, ["run", "--no-prompt", entry]);
+  assertEquals(
+    imported.code,
+    0,
+    `importing ./chart with no permissions failed:\n${imported.output}`,
+  );
+});
+
 Deno.test("React remains exclusive to the declared React adapter graph", async () => {
   for (const [exportName, entry] of Object.entries(config.exports)) {
     const { code, output } = await run(PACKAGE_ROOT, [

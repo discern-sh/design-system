@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/mod.ts",
     "./diagram": "./src/diagram/mod.ts",
+    "./chart": "./src/chart/mod.ts",
     "./cli": "./src/cli/mod.ts",
     "./cli/interactive": "./src/cli/interactive/mod.ts",
     "./cli/interactive/testing": "./src/cli/interactive/testing.ts",

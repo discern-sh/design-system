@@ -6,10 +6,12 @@ const PACKAGE_ROOT = fromFileUrl(new URL("../..", import.meta.url));
 /**
  * The chart graph computes every numeral in scaled-decimal integer space, so
  * locale facilities, float formatting, and ambient clock access are banned
- * from every module the chart root reaches. The ban is scoped to exactly
- * this graph: the CLI text authority's segmenter use is legitimate and
- * deliberately outside it. When the `./chart` entrypoint ships, this guard
- * moves onto that export graph.
+ * from every module the chart root reaches. The first root is the published
+ * `./chart` entrypoint; conformance stays a second root because the public
+ * boundary deliberately withholds it. The ban is scoped to exactly this
+ * graph: the CLI text authority's segmenter use is legitimate and
+ * deliberately outside it, and the kind CLI projectors live on the `./cli`
+ * graph rather than here.
  */
 const CHART_GRAPH_ROOTS = [
   "src/chart/mod.ts",
