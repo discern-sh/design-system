@@ -1,0 +1,25 @@
+import type { ComponentMeta } from "../../../types/component-meta.ts";
+
+export default {
+  name: "Sparkline",
+  slug: "sparkline",
+  group: "Display",
+  order: 92,
+  description:
+    "Compact recent-movement graphic with a mandatory endpoint annotation.",
+  cli: { stance: "rendered" },
+  purposes: ["displaying-tool-output", "marketing-site"],
+  useWhen: [
+    "Showing recent movement beside a headline number, such as a Stat trend.",
+    "Giving a dense list one glanceable direction cue per row.",
+  ],
+  notWhen: [
+    "Reading exact values or intermediate points — a sparkline is lossy by design, and only its endpoint annotation states numbers; use the line chart kind.",
+    "Comparing two series — each sparkline scales to its own extremes, so two sparklines are never comparable.",
+    "Inline terminal prose — the terminal form is a block-context run, never an inline grammar.",
+  ],
+  accessibility: [
+    "The endpoint annotation is visible text carrying the numeric truth, so no reading depends on glyph fidelity or colour.",
+    "The movement graphic is decorative and hidden from assistive technology; the annotation reads in source order.",
+  ],
+} satisfies ComponentMeta;

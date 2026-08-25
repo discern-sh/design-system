@@ -43,6 +43,8 @@ export { default as renderTableCli, cliExamples as tableCliExamples } from "../c
 export type { TableCliProps } from "../components/display/table/table.cli.ts";
 export { default as renderStatCli, cliExamples as statCliExamples } from "../components/display/stat/stat.cli.ts";
 export type { StatCliProps } from "../components/display/stat/stat.cli.ts";
+export { default as renderSparklineCli, cliExamples as sparklineCliExamples } from "../components/display/sparkline/sparkline.cli.ts";
+export type { SparklineCliProps } from "../components/display/sparkline/sparkline.cli.ts";
 export { default as renderDiffstatCli, cliExamples as diffstatCliExamples } from "../components/display/diffstat/diffstat.cli.ts";
 export type { DiffstatCliProps } from "../components/display/diffstat/diffstat.cli.ts";
 export { default as renderFieldCli, cliExamples as fieldCliExamples } from "../components/forms/field/field.cli.ts";

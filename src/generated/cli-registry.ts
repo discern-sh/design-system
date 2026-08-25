@@ -26,6 +26,7 @@ export const cliComponentRegistry = {
   "terminal": { stance: "rendered", modulePath: "../components/display/terminal/terminal.cli.ts" },
   "table": { stance: "rendered", modulePath: "../components/display/table/table.cli.ts" },
   "stat": { stance: "rendered", modulePath: "../components/display/stat/stat.cli.ts" },
+  "sparkline": { stance: "rendered", modulePath: "../components/display/sparkline/sparkline.cli.ts" },
   "diffstat": { stance: "rendered", modulePath: "../components/display/diffstat/diffstat.cli.ts" },
   "backdrop": { stance: "exempt", reason: "Its contract is a decorative viewport-scaled browser layer with no semantic content to translate into terminal output." },
   "survey-backdrop": { stance: "exempt", reason: "Decorative scalable browser artwork has no semantic terminal equivalent." },

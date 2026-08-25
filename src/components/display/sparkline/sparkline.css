@@ -1,0 +1,33 @@
+@layer discern.components {
+  .discern-sparkline {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--discern-space-2);
+    color: var(--discern-color-accent-600);
+    color: light-dark(var(--discern-color-accent-600),
+      var(--discern-color-accent-500));
+  }
+  .discern-sparkline__graphic {
+    display: block;
+    inline-size: var(--discern-space-16);
+    block-size: var(--discern-space-4);
+    overflow: visible;
+  }
+  .discern-sparkline__path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .discern-sparkline__point {
+    fill: currentColor;
+  }
+  .discern-sparkline__annotation {
+    color: var(--discern-color-ink-muted);
+    font-family: var(--discern-font-mono);
+    font-size: var(--discern-font-size-xs);
+    font-variant-numeric: tabular-nums;
+  }
+}

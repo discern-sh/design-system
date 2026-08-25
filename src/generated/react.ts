@@ -22,6 +22,7 @@ export * from "../components/display/window/mod.ts";
 export * from "../components/display/terminal/mod.ts";
 export * from "../components/display/table/mod.ts";
 export * from "../components/display/stat/mod.ts";
+export * from "../components/display/sparkline/mod.ts";
 export * from "../components/display/diffstat/mod.ts";
 export * from "../components/artwork/backdrop/mod.ts";
 export * from "../components/artwork/survey-backdrop/mod.ts";
