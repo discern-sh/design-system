@@ -449,6 +449,7 @@ function markdownBrowserDocumentProjection<Action>(
       motif: state.motif,
       maxWidth: measure,
       ...(entry.diagrams === undefined ? {} : { diagrams: entry.diagrams }),
+      ...(entry.charts === undefined ? {} : { charts: entry.charts }),
     },
     documentCapabilities,
     {

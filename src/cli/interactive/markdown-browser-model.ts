@@ -25,8 +25,10 @@ import { segmentGraphemes } from "./editor.ts";
 import type { InteractionEntry } from "./types.ts";
 import {
   parseMarkdown,
+  validateMarkdownChartResources,
   validateMarkdownDiagramResources,
 } from "../../components/editorial/markdown/markdown.model.ts";
+import type { MarkdownChartResource } from "../../chart/markdown.ts";
 import type { MarkdownDiagramResource } from "../../diagram/markdown.ts";
 
 /** Smallest width that can retain a query, pane boundary, and usable text. */
@@ -64,6 +66,8 @@ export interface MarkdownBrowserDocument {
   readonly source: string;
   /** Explicit immutable image resources eligible for Diagram promotion. */
   readonly diagrams?: readonly MarkdownDiagramResource[];
+  /** Explicit immutable image resources eligible for Chart promotion. */
+  readonly charts?: readonly MarkdownChartResource[];
 }
 
 /** A non-document action returned to the caller after terminal restoration. */
@@ -470,8 +474,17 @@ function freezeEntry<Action>(
       const diagrams = entry.diagrams === undefined
         ? undefined
         : validateMarkdownDiagramResources(entry.diagrams);
-      if (diagrams !== undefined && diagrams.length > 0) {
-        parseMarkdown(entry.source, { diagrams });
+      const charts = entry.charts === undefined
+        ? undefined
+        : validateMarkdownChartResources(entry.charts);
+      if (
+        (diagrams !== undefined && diagrams.length > 0) ||
+        (charts !== undefined && charts.length > 0)
+      ) {
+        parseMarkdown(entry.source, {
+          ...(diagrams === undefined ? {} : { diagrams }),
+          ...(charts === undefined ? {} : { charts }),
+        });
       }
       return Object.freeze({
         kind: entry.kind,
@@ -483,6 +496,7 @@ function freezeEntry<Action>(
         path: entry.path,
         source: entry.source,
         ...(diagrams === undefined ? {} : { diagrams }),
+        ...(charts === undefined ? {} : { charts }),
       });
     }
     case "action":
