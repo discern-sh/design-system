@@ -1,9 +1,20 @@
 /**
  * Shared JSON, identifier, text, and budget validation for diagram kinds.
  *
+ * The data-safety facts live in the shared internal authority
+ * `src/internal/validation.ts`; this facade binds the diagram error classes,
+ * codes, limits, and remedies so every existing name keeps resolving here.
+ *
  * @module
  */
 
+import {
+  findTextDefect,
+  findUnsupportedKey,
+  isPlainRecord,
+  isSafeIdentifier,
+  snapshotJsonSafe,
+} from "../internal/validation.ts";
 import {
   DiagramBudgetError,
   DiagramConformanceError,
@@ -14,16 +25,7 @@ import type { DiagramKindMeta } from "./kind-meta.ts";
 import { DIAGRAM_COMMON_LIMITS } from "./limits.ts";
 import type { DiagramCommonSpec } from "./spec.ts";
 
-/** Whether an unknown value is an ordinary string-keyed record. */
-export function isDiagramRecord(
-  value: unknown,
-): value is Record<string, unknown> {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return false;
-  }
-  const prototype = Object.getPrototypeOf(value);
-  return prototype === Object.prototype || prototype === null;
-}
+export { isPlainRecord as isDiagramRecord } from "../internal/validation.ts";
 
 function invalidSpec(message: string, path: string): never {
   throw new DiagramValidationError({
@@ -35,101 +37,6 @@ function invalidSpec(message: string, path: string): never {
   });
 }
 
-function snapshotJsonSafeInner(
-  value: unknown,
-  path: string,
-  depth: number,
-  active: Set<object>,
-): unknown {
-  if (depth > DIAGRAM_COMMON_LIMITS.jsonDepth) {
-    throw new DiagramBudgetError({
-      dimension: "jsonDepth",
-      limit: DIAGRAM_COMMON_LIMITS.jsonDepth,
-      actual: depth,
-      unit: "levels",
-      authorAction: "reduce-tier",
-      path,
-    });
-  }
-  if (
-    value === null || typeof value === "string" ||
-    typeof value === "boolean"
-  ) return value;
-  if (typeof value === "number") {
-    if (!Number.isFinite(value)) invalidSpec(`${path} must be finite.`, path);
-    return value;
-  }
-  if (typeof value !== "object") {
-    invalidSpec(`${path} is not JSON-safe.`, path);
-  }
-  const object = value as object;
-  if (active.has(object)) invalidSpec(`${path} contains a cycle.`, path);
-  active.add(object);
-  let snapshot: unknown;
-  if (Array.isArray(value)) {
-    const keys = Reflect.ownKeys(value).filter((key) => key !== "length");
-    if (
-      keys.length !== value.length ||
-      keys.some((key, index) => key !== String(index))
-    ) {
-      invalidSpec(
-        `${path} must be a dense JSON array without custom properties.`,
-        path,
-      );
-    }
-    const copy: unknown[] = [];
-    for (let index = 0; index < value.length; index += 1) {
-      const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
-      if (descriptor === undefined || !("value" in descriptor)) {
-        invalidSpec(`${path}[${index}] must be an ordinary data value.`, path);
-      }
-      copy.push(
-        snapshotJsonSafeInner(
-          descriptor.value,
-          `${path}[${index}]`,
-          depth + 1,
-          active,
-        ),
-      );
-    }
-    snapshot = Object.freeze(copy);
-  } else if (isDiagramRecord(value)) {
-    const keys = Reflect.ownKeys(value);
-    if (keys.some((key) => typeof key !== "string")) {
-      invalidSpec(`${path} must not contain symbol-keyed data.`, path);
-    }
-    const copy = Object.create(null) as Record<string, unknown>;
-    for (const key of (keys as string[]).toSorted()) {
-      const descriptor = Object.getOwnPropertyDescriptor(value, key);
-      if (
-        descriptor === undefined || !descriptor.enumerable ||
-        !("value" in descriptor)
-      ) {
-        invalidSpec(
-          `${path}.${key} must be an enumerable data property.`,
-          path,
-        );
-      }
-      Object.defineProperty(copy, key, {
-        enumerable: true,
-        configurable: false,
-        writable: false,
-        value: snapshotJsonSafeInner(
-          descriptor.value,
-          `${path}.${key}`,
-          depth + 1,
-          active,
-        ),
-      });
-    }
-    snapshot = Object.freeze(copy);
-  } else {
-    invalidSpec(`${path} must be a plain data object.`, path);
-  }
-  active.delete(object);
-  return snapshot;
-}
-
 /** Reject functions, special objects, cycles, and non-finite JSON numbers. */
 export function assertDiagramJsonSafe(value: unknown): void {
   snapshotDiagramJsonSafe(value);
@@ -138,7 +45,21 @@ export function assertDiagramJsonSafe(value: unknown): void {
 /** Inspect once and return an immutable plain-data snapshot for dispatch. */
 export function snapshotDiagramJsonSafe(value: unknown): unknown {
   try {
-    return snapshotJsonSafeInner(value, "spec", 0, new Set());
+    return snapshotJsonSafe(value, {
+      rootPath: "spec",
+      maximumDepth: DIAGRAM_COMMON_LIMITS.jsonDepth,
+      onTooDeep: (path, depth) => {
+        throw new DiagramBudgetError({
+          dimension: "jsonDepth",
+          limit: DIAGRAM_COMMON_LIMITS.jsonDepth,
+          actual: depth,
+          unit: "levels",
+          authorAction: "reduce-tier",
+          path,
+        });
+      },
+      onInvalid: invalidSpec,
+    });
   } catch (error) {
     if (error instanceof DiagramValidationError) throw error;
     invalidSpec(
@@ -154,43 +75,13 @@ export function assertDiagramExactKeys(
   allowed: readonly string[],
   path: string,
 ): void {
-  const allowedSet = new Set(allowed);
-  const extra = Object.keys(value).filter((key) => !allowedSet.has(key))
-    .toSorted();
-  if (extra.length > 0) {
+  const extra = findUnsupportedKey(value, allowed);
+  if (extra !== undefined) {
     invalidSpec(
-      `${path} has unsupported field ${JSON.stringify(extra[0])}.`,
+      `${path} has unsupported field ${JSON.stringify(extra)}.`,
       path,
     );
   }
-}
-
-const UNSAFE_TEXT_CATEGORY = /[\p{Cc}\p{Cf}]/u;
-
-function isUnsafeTextCodePoint(codePoint: number): boolean {
-  return codePoint <= 0x1f || inRange(codePoint, 0x7f, 0x9f) ||
-    codePoint === 0xad || codePoint === 0x61c || codePoint === 0x6dd ||
-    codePoint === 0x70f || codePoint === 0x180e || codePoint === 0xfeff ||
-    inRange(codePoint, 0x600, 0x605) || inRange(codePoint, 0x890, 0x891) ||
-    codePoint === 0x8e2 || inRange(codePoint, 0x200b, 0x200f) ||
-    inRange(codePoint, 0x202a, 0x202e) ||
-    inRange(codePoint, 0x2060, 0x206f) ||
-    inRange(codePoint, 0xd800, 0xdfff) ||
-    inRange(codePoint, 0xfdd0, 0xfdef) || (codePoint & 0xffff) >= 0xfffe ||
-    inRange(codePoint, 0xfff9, 0xfffb) || codePoint === 0x110bd ||
-    codePoint === 0x110cd || codePoint === 0xe0001 ||
-    inRange(codePoint, 0xe0020, 0xe007f);
-}
-
-function inRange(value: number, start: number, end: number): boolean {
-  return value >= start && value <= end;
-}
-
-function isUnsupportedWhitespace(codePoint: number): boolean {
-  return codePoint === 0xa0 || codePoint === 0x1680 ||
-    inRange(codePoint, 0x2000, 0x200a) ||
-    inRange(codePoint, 0x2028, 0x2029) || codePoint === 0x202f ||
-    codePoint === 0x205f || codePoint === 0x3000;
 }
 
 /** Validate one normalized, single-line semantic text field. */
@@ -198,7 +89,9 @@ export function assertDiagramText(
   value: unknown,
   path: string,
 ): asserts value is string {
-  if (typeof value !== "string" || value === "" || value.trim() !== value) {
+  const defect = findTextDefect(value);
+  if (defect === undefined) return;
+  if (defect.kind === "not-single-line") {
     throw new DiagramValidationError({
       code: "diagram/invalid-text",
       message: `${path} must be non-empty text without edge whitespace.`,
@@ -206,7 +99,7 @@ export function assertDiagramText(
       remedy: "Use one concise plain-text line.",
     });
   }
-  if (value.includes("  ")) {
+  if (defect.kind === "repeated-spaces") {
     throw new DiagramValidationError({
       code: "diagram/invalid-text",
       message: `${path} contains repeated spaces.`,
@@ -215,24 +108,14 @@ export function assertDiagramText(
         "Use single ordinary spaces so wrapping has one deterministic form.",
     });
   }
-  for (const character of value) {
-    const codePoint = character.codePointAt(0);
-    if (
-      codePoint !== undefined &&
-      (UNSAFE_TEXT_CATEGORY.test(character) ||
-        isUnsafeTextCodePoint(codePoint) ||
-        isUnsupportedWhitespace(codePoint))
-    ) {
-      throw new DiagramValidationError({
-        code: "diagram/invalid-text",
-        message:
-          `${path} contains a control, format, or unsupported whitespace character.`,
-        path,
-        facts: { codePoint: `U+${codePoint.toString(16).toUpperCase()}` },
-        remedy: "Replace it with visible plain text and ordinary spaces.",
-      });
-    }
-  }
+  throw new DiagramValidationError({
+    code: "diagram/invalid-text",
+    message:
+      `${path} contains a control, format, or unsupported whitespace character.`,
+    path,
+    facts: { codePoint: `U+${defect.codePoint.toString(16).toUpperCase()}` },
+    remedy: "Replace it with visible plain text and ordinary spaces.",
+  });
 }
 
 /** Validate one stable printable ASCII semantic identifier. */
@@ -242,8 +125,7 @@ export function assertDiagramIdentifier(
 ): asserts value is string {
   if (
     typeof value !== "string" ||
-    !/^[A-Za-z][A-Za-z0-9._:-]*$/u.test(value) ||
-    value.length > DIAGRAM_COMMON_LIMITS.identifierCharacters
+    !isSafeIdentifier(value, DIAGRAM_COMMON_LIMITS.identifierCharacters)
   ) {
     throw new DiagramValidationError({
       code: "diagram/invalid-identifier",
@@ -263,7 +145,7 @@ export function validateDiagramCommonSpec(
   allowedKeys: readonly string[],
 ): DiagramCommonSpec & Record<string, unknown> {
   assertDiagramJsonSafe(value);
-  if (!isDiagramRecord(value)) invalidSpec("spec must be an object.", "spec");
+  if (!isPlainRecord(value)) invalidSpec("spec must be an object.", "spec");
   assertDiagramExactKeys(value, allowedKeys, "spec");
   if (value.kind !== expectedKind) {
     throw new DiagramValidationError({
