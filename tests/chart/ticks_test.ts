@@ -13,7 +13,15 @@ import {
   createChartLinearScale,
   createChartLogScale,
 } from "../../src/chart/scale.ts";
-import { chartLinearTicks, chartLogTicks } from "../../src/chart/ticks.ts";
+import {
+  chartLinearTicks,
+  chartLogTicks,
+  chartTimeTicks,
+} from "../../src/chart/ticks.ts";
+import {
+  CHART_MAX_DATE_ORDINAL,
+  parseChartIsoDate,
+} from "../../src/chart/dates.ts";
 
 function labels(set: ReturnType<typeof chartLinearTicks>): readonly string[] {
   return set.ticks.map((tick) => tick.label);
@@ -321,6 +329,191 @@ Deno.test("log scales position decades evenly and refuse non-positive facts", ()
       }),
     TypeError,
     "span upward",
+  );
+});
+
+function ordinalOf(iso: string): number {
+  return parseChartIsoDate(iso, "test").ordinal;
+}
+
+function timeLabels(
+  set: ReturnType<typeof chartTimeTicks>,
+): readonly string[] {
+  return set.ticks.map((tick) => tick.label);
+}
+
+Deno.test("time ticks walk single days with full ISO labels", () => {
+  const set = chartTimeTicks({
+    minimumOrdinal: ordinalOf("2024-03-01"),
+    maximumOrdinal: ordinalOf("2024-03-04"),
+    targetCount: 5,
+    subject: "test",
+  });
+  assertEquals(set.unit, "day");
+  assertEquals(set.step, 1);
+  assertEquals(timeLabels(set), [
+    "2024-03-01",
+    "2024-03-02",
+    "2024-03-03",
+    "2024-03-04",
+  ]);
+});
+
+Deno.test("weekly time ticks land on Mondays by construction", () => {
+  const set = chartTimeTicks({
+    minimumOrdinal: ordinalOf("2024-03-05"),
+    maximumOrdinal: ordinalOf("2024-04-02"),
+    targetCount: 6,
+    subject: "test",
+  });
+  assertEquals(set.unit, "day");
+  assertEquals(set.step, 7);
+  assertEquals(timeLabels(set), [
+    "2024-03-04",
+    "2024-03-11",
+    "2024-03-18",
+    "2024-03-25",
+    "2024-04-01",
+    "2024-04-08",
+  ]);
+  for (const tick of set.ticks) assertEquals(tick.ordinal % 7, 0);
+});
+
+Deno.test("month time ticks cover the domain outward at month starts", () => {
+  const set = chartTimeTicks({
+    minimumOrdinal: ordinalOf("2023-11-15"),
+    maximumOrdinal: ordinalOf("2024-03-10"),
+    targetCount: 6,
+    subject: "test",
+  });
+  assertEquals(set.unit, "month");
+  assertEquals(set.step, 1);
+  assertEquals(timeLabels(set), [
+    "2023-11",
+    "2023-12",
+    "2024-01",
+    "2024-02",
+    "2024-03",
+    "2024-04",
+  ]);
+});
+
+Deno.test("half-year time ticks align to January and July", () => {
+  const set = chartTimeTicks({
+    minimumOrdinal: ordinalOf("2023-02-10"),
+    maximumOrdinal: ordinalOf("2024-11-05"),
+    targetCount: 8,
+    subject: "test",
+  });
+  assertEquals(set.unit, "month");
+  assertEquals(set.step, 6);
+  assertEquals(timeLabels(set), [
+    "2023-01",
+    "2023-07",
+    "2024-01",
+    "2024-07",
+    "2025-01",
+  ]);
+});
+
+Deno.test("decade time ticks align to calendar decades", () => {
+  const set = chartTimeTicks({
+    minimumOrdinal: ordinalOf("2013-05-01"),
+    maximumOrdinal: ordinalOf("2047-08-09"),
+    targetCount: 6,
+    subject: "test",
+  });
+  assertEquals(set.unit, "year");
+  assertEquals(set.step, 10);
+  assertEquals(timeLabels(set), ["2010", "2020", "2030", "2040", "2050"]);
+});
+
+Deno.test("time ticks clamp outward coverage at the calendar edge", () => {
+  const set = chartTimeTicks({
+    minimumOrdinal: ordinalOf("9999-03-01"),
+    maximumOrdinal: ordinalOf("9999-12-31"),
+    targetCount: 2,
+    subject: "test",
+  });
+  assertEquals(set.unit, "year");
+  assertEquals(timeLabels(set), ["9999", "9999-12-31"]);
+  assertEquals(set.ticks.at(-1)?.ordinal, CHART_MAX_DATE_ORDINAL);
+});
+
+Deno.test("equal time domains produce deeply equal tick sets", () => {
+  const options = {
+    minimumOrdinal: ordinalOf("2024-01-05"),
+    maximumOrdinal: ordinalOf("2024-09-20"),
+    targetCount: 6,
+    subject: "test",
+  } as const;
+  assertEquals(chartTimeTicks(options), chartTimeTicks(options));
+});
+
+Deno.test("hostile time tick domains are refused", () => {
+  assertThrows(
+    () =>
+      chartTimeTicks({
+        minimumOrdinal: -1,
+        maximumOrdinal: 10,
+        targetCount: 4,
+        subject: "test",
+      }),
+    TypeError,
+    "representable calendar",
+  );
+  assertThrows(
+    () =>
+      chartTimeTicks({
+        minimumOrdinal: 0,
+        maximumOrdinal: CHART_MAX_DATE_ORDINAL + 1,
+        targetCount: 4,
+        subject: "test",
+      }),
+    TypeError,
+    "representable calendar",
+  );
+  assertThrows(
+    () =>
+      chartTimeTicks({
+        minimumOrdinal: 100,
+        maximumOrdinal: 100,
+        targetCount: 4,
+        subject: "test",
+      }),
+    TypeError,
+    "span upward",
+  );
+  assertThrows(
+    () =>
+      chartTimeTicks({
+        minimumOrdinal: 0,
+        maximumOrdinal: 10,
+        targetCount: 1,
+        subject: "test",
+      }),
+    TypeError,
+    "between 2 and 12",
+  );
+});
+
+Deno.test("chart date parsing binds the chart refusal vocabulary", () => {
+  assertEquals(ordinalOf("0001-01-01"), 0);
+  assertEquals(ordinalOf("9999-12-31"), CHART_MAX_DATE_ORDINAL);
+  assertThrows(
+    () => parseChartIsoDate("2024/01/01", "spec.x"),
+    Error,
+    "canonical YYYY-MM-DD",
+  );
+  assertThrows(
+    () => parseChartIsoDate("2023-02-29", "spec.x"),
+    Error,
+    "does not exist",
+  );
+  assertThrows(
+    () => parseChartIsoDate(20240101, "spec.x"),
+    Error,
+    "calendar date string",
   );
 });
 
