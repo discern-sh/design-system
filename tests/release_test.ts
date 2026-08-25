@@ -343,7 +343,14 @@ Deno.test("the publish-shaped artifact serves the neutral consumer alone", async
     await Deno.writeTextFile(
       join(consumer, "neutral.ts"),
       `import { packageManifest, semanticClass } from "${config.name}";
-import { renderBadgeCli, renderDiagramCli, renderHeadingCli, renderMarkdownCli, stripAnsi } from "${config.name}/cli";
+import { renderBadgeCli, renderChartCli, renderDiagramCli, renderHeadingCli, renderMarkdownCli, stripAnsi } from "${config.name}/cli";
+import {
+  type BarChartSpec,
+  chartAltText,
+  chartSeriesLegend,
+  describeChart,
+  renderChartSvg,
+} from "${config.name}/chart";
 import {
   diagramAltText,
   describeDiagram,
@@ -384,6 +391,26 @@ const flow = {
   ],
   edges: [{ id: "ready", from: "draft", to: "publish" }],
 } as const satisfies FlowDiagramSpec;
+const bar = {
+  kind: "bar",
+  title: "Guides per season",
+  summary: "Published guides for two seasons.",
+  categories: [
+    { id: "spring", label: "Spring" },
+    { id: "autumn", label: "Autumn" },
+  ],
+  series: [{ id: "guides", label: "Guides", values: [4, 7] }],
+  value: { unit: "guides" },
+} as const satisfies BarChartSpec;
+const chartSvg = renderChartSvg(bar, { theme: "light" });
+const chartFrame = stripAnsi(renderChartCli(
+  { spec: bar, mode: "auto", maxWidth: 60 },
+  { colorDepth: "none", columns: 60, unicode: true },
+));
+const chartTable = stripAnsi(renderChartCli(
+  { spec: bar, mode: "description", maxWidth: 60 },
+  { colorDepth: "none", columns: 60, unicode: true },
+));
 const diagramSvg = renderDiagramSvg(flow, { theme: "light" });
 const diagramOutput = new URL("./consumer-output/guide.svg", import.meta.url);
 await Deno.mkdir(new URL("./consumer-output/", import.meta.url), {
@@ -488,6 +515,17 @@ const readingHeading = stripAnsi(renderHeadingCli(
   { colorDepth: "truecolor", columns: 40, unicode: true },
 ));
 console.log(JSON.stringify({
+  chartBytes: renderChartSvg(bar, { theme: "light" }) === chartSvg &&
+    chartSvg.includes('role="img"') &&
+    chartSvg.includes("<title>Guides per season</title>"),
+  chartAlt: chartAltText(bar),
+  chartDescription: describeChart(bar).includes("7 guides"),
+  chartLegend: chartSeriesLegend(bar),
+  chartFrame: chartFrame.includes("7 guides") &&
+    chartFrame.startsWith("\\u250c Guides per season"),
+  chartTable: chartTable.includes("Autumn (autumn)") &&
+    chartTable.includes("7 guides") &&
+    !chartTable.includes("\\u250c Guides per season"),
   diagramBytes: writtenDiagramSvg === diagramSvg &&
     renderDiagramSvg(flow, { theme: "light" }) === diagramSvg,
   diagramAccessible: diagramSvg.includes('role="img"') &&
@@ -531,10 +569,32 @@ console.log(JSON.stringify({
       join(consumer, "react.tsx"),
       `import { renderToStaticMarkup } from "react-dom/server";
 import {
+  type BarChartSpec,
+  chartSeriesLegend,
+} from "${config.name}/chart";
+import {
   type FlowDiagramSpec,
   renderDiagramMarkdownImage,
 } from "${config.name}/diagram";
-import { DataFigure, Diagram, Markdown } from "${config.name}/react";
+import { Chart, DataFigure, Diagram, Markdown } from "${config.name}/react";
+const bar = {
+  kind: "bar",
+  title: "Guides per season",
+  summary: "Published guides for two seasons.",
+  categories: [
+    { id: "spring", label: "Spring" },
+    { id: "autumn", label: "Autumn" },
+  ],
+  series: [{ id: "guides", label: "Guides", values: [4, 7] }],
+} as const satisfies BarChartSpec;
+const chartFigure = renderToStaticMarkup(
+  <DataFigure
+    title="Guides per season"
+    legend={chartSeriesLegend(bar)}
+    visual={<Chart spec={bar} />}
+    caption="A neutral published-artifact chart composition."
+  />,
+);
 const flow = {
   kind: "flow",
   title: "Publish a guide",
@@ -568,6 +628,9 @@ const repeated = renderToStaticMarkup(
 );
 const ids = [...repeated.matchAll(/\sid="([^"]+)"/gu)].map((match) => match[1]);
 console.log(JSON.stringify({
+  chartFigure: chartFigure.includes('data-discern-chart-kind="bar"') &&
+    chartFigure.includes("discern-chart__mark--series-1") &&
+    chartFigure.includes("discern-data-figure__swatch--series-1"),
   diagram: diagram.includes('role="img"') &&
     diagram.includes("<title>Publish a guide</title>"),
   figure: figure.includes("<figure") &&
@@ -591,6 +654,18 @@ console.log(JSON.stringify({
     ]);
     assertEquals(code, 0, `staged consumer failed:\n${output}`);
     assertStringIncludes(output, `"className":"discern-button"`);
+    assertStringIncludes(output, `"chartBytes":true`);
+    assertStringIncludes(
+      output,
+      `"chartAlt":"Guides per season: Published guides for two seasons."`,
+    );
+    assertStringIncludes(output, `"chartDescription":true`);
+    assertStringIncludes(
+      output,
+      `"chartLegend":[{"id":"guides","label":"Guides","tone":"series-1"}]`,
+    );
+    assertStringIncludes(output, `"chartFrame":true`);
+    assertStringIncludes(output, `"chartTable":true`);
     assertStringIncludes(output, `"diagramBytes":true`);
     assertStringIncludes(output, `"diagramAccessible":true`);
     assertStringIncludes(output, `"diagramDescription":true`);
@@ -631,6 +706,7 @@ console.log(JSON.stringify({
       0,
       `staged React consumer failed:\n${reactConsumer.output}`,
     );
+    assertStringIncludes(reactConsumer.output, `"chartFigure":true`);
     assertStringIncludes(reactConsumer.output, `"diagram":true`);
     assertStringIncludes(reactConsumer.output, `"figure":true`);
     assertStringIncludes(reactConsumer.output, `"ordinary":true`);

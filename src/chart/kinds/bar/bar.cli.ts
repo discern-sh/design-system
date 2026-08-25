@@ -291,20 +291,14 @@ function viability(
     labelColumn: 0,
   });
   const inner = width - 4;
-  const titleWidth = measureText(spec.title);
-  if (titleWidth > width - 6) {
-    return failed(decline("title-width", titleWidth, width - 6));
-  }
   const unit = barUnitSuffix(spec.value);
   const grouped = spec.variant === "grouped";
   const multiSeries = spec.series.length > 1;
 
-  if (multiSeries) {
-    for (const series of spec.series) {
-      const itemWidth = 2 + measureText(series.label);
-      if (itemWidth > inner) {
-        return failed(decline("label-wrap", itemWidth, inner));
-      }
+  for (const series of spec.series) {
+    const itemWidth = 2 + measureText(series.label);
+    if (itemWidth > inner) {
+      return failed(decline("label-wrap", itemWidth, inner));
     }
   }
 
@@ -409,7 +403,7 @@ function renderExactBar(
     : [joinVertical([...singleSeriesRows(presentation)])];
   const blocks = [
     summary,
-    ...(multiSeries ? [joinVertical([...legendLines(presentation)])] : []),
+    joinVertical([...legendLines(presentation)]),
     ...categories,
   ];
   const separator = capabilities.unicode ? "·" : "|";
@@ -440,6 +434,10 @@ const projectBarChartCli: ChartKindCliProjector<"bar"> = (spec, context) => {
   const width = Math.min(context.maxWidth, context.capabilities.columns);
   const checked = viability(validated, width);
   if (checked.refusal !== undefined) return checked.refusal;
+  const titleWidth = measureText(validated.title);
+  if (titleWidth > width - 6) {
+    return decline("title-width", titleWidth, width - 6);
+  }
   return {
     kind: "frame",
     frame: renderExactBar(
