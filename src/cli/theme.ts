@@ -10,6 +10,7 @@ import {
   nearestPaletteIndex,
   type TerminalRgbColor,
 } from "./ansi-palette.ts";
+import { clampRgbChannel, oklchToSrgb } from "../internal/oklch.ts";
 import {
   baseTokens,
   discernThemeTokens,
@@ -77,42 +78,6 @@ const TONE_TOKENS = {
   Record<TerminalSemanticTone, TerminalColorTokenName>
 >;
 
-function clampChannel(value: number): number {
-  return Math.round(Math.min(255, Math.max(0, value)));
-}
-
-function srgbChannel(linear: number): number {
-  const encoded = linear <= 0.0031308
-    ? 12.92 * linear
-    : 1.055 * Math.pow(linear, 1 / 2.4) - 0.055;
-  return clampChannel(encoded * 255);
-}
-
-function oklchToRgb(
-  lightness: number,
-  chroma: number,
-  hue: number,
-): TerminalRgbColor {
-  const radians = hue * Math.PI / 180;
-  const a = chroma * Math.cos(radians);
-  const b = chroma * Math.sin(radians);
-  const lRoot = lightness + 0.3963377774 * a + 0.2158037573 * b;
-  const mRoot = lightness - 0.1055613458 * a - 0.0638541728 * b;
-  const sRoot = lightness - 0.0894841775 * a - 1.291485548 * b;
-  const l = lRoot ** 3;
-  const m = mRoot ** 3;
-  const s = sRoot ** 3;
-  return {
-    red: srgbChannel(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
-    green: srgbChannel(
-      -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
-    ),
-    blue: srgbChannel(
-      -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
-    ),
-  };
-}
-
 function splitTopLevel(source: string): readonly string[] {
   const parts: string[] = [];
   let depth = 0;
@@ -154,7 +119,7 @@ function mixChannel(
   background: number,
   amount: number,
 ): number {
-  return clampChannel(foreground * amount + background * (1 - amount));
+  return clampRgbChannel(foreground * amount + background * (1 - amount));
 }
 
 function parseColorMix(
@@ -220,7 +185,7 @@ function parseCssColor(
     /^oklch\(\s*([0-9]+(?:\.[0-9]+)?)%\s+([0-9]+(?:\.[0-9]+)?)\s+(-?[0-9]+(?:\.[0-9]+)?)\s*\)$/u,
   );
   if (oklch !== null) {
-    return oklchToRgb(
+    return oklchToSrgb(
       Number(oklch[1]) / 100,
       Number(oklch[2]),
       Number(oklch[3]),
