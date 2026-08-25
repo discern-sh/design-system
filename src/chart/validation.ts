@@ -21,7 +21,10 @@ import {
   ChartConformanceError,
   ChartValidationError,
 } from "./errors.ts";
-import type { ChartNumberFormat } from "./format.ts";
+import {
+  type ChartNumberFormat,
+  findChartNumberFormatDefect,
+} from "./format.ts";
 import type { ChartKindMeta } from "./kind-meta.ts";
 import { CHART_COMMON_LIMITS } from "./limits.ts";
 import type {
@@ -206,62 +209,23 @@ export function chartOneOf<T extends string>(
   return value as T;
 }
 
-const FORMAT_KINDS = ["decimal", "percent", "si"] as const;
-
 /** Validate one closed chart number format authored on an axis or annotation. */
 export function validateChartNumberFormat(
   value: unknown,
   path: string,
 ): ChartNumberFormat {
-  if (!isPlainRecord(value)) {
+  const defect = findChartNumberFormatDefect(value);
+  if (defect !== undefined) {
+    const defectPath = `${path}${defect.path}`;
     throw new ChartValidationError({
       code: "chart/invalid-spec",
-      message: `${path} must be a chart number format object.`,
-      path,
-      remedy: "Use one of the closed decimal, percent, or si formats.",
-    });
-  }
-  const kind = value.kind;
-  if (
-    typeof kind !== "string" ||
-    !FORMAT_KINDS.includes(kind as typeof FORMAT_KINDS[number])
-  ) {
-    throw new ChartValidationError({
-      code: "chart/invalid-spec",
-      message: `${path}.kind must be one of ${FORMAT_KINDS.join(", ")}.`,
-      path: `${path}.kind`,
-      remedy: "Use one of the closed decimal, percent, or si formats.",
-    });
-  }
-  assertChartExactKeys(
-    value,
-    kind === "decimal" ? ["kind", "decimals", "grouping"] : [
-      "kind",
-      "decimals",
-    ],
-    path,
-  );
-  const decimals = value.decimals;
-  if (
-    typeof decimals !== "number" || !Number.isInteger(decimals) ||
-    decimals < 0 || decimals > 12
-  ) {
-    throw new ChartValidationError({
-      code: "chart/invalid-spec",
-      message: `${path}.decimals must be an integer between 0 and 12.`,
-      path: `${path}.decimals`,
-      remedy: "State the exact fraction digits the labels should carry.",
-    });
-  }
-  if (
-    kind === "decimal" && value.grouping !== undefined &&
-    typeof value.grouping !== "boolean"
-  ) {
-    throw new ChartValidationError({
-      code: "chart/invalid-spec",
-      message: `${path}.grouping must be a boolean when present.`,
-      path: `${path}.grouping`,
-      remedy: "Request canonical thousands grouping with true.",
+      message: `${defectPath} ${defect.message}`,
+      path: defectPath,
+      remedy: defect.path === ".decimals"
+        ? "State the exact fraction digits the labels should carry."
+        : defect.path === ".grouping"
+        ? "Request canonical thousands grouping with true."
+        : "Use one of the closed decimal, percent, or si formats.",
     });
   }
   return value as unknown as ChartNumberFormat;

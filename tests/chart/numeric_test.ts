@@ -113,6 +113,8 @@ Deno.test("the decimal format renders fixed precision and canonical grouping", (
   assertEquals(formatChartNumber(-1234.5, decimal(0, true)), "-1,235");
   assertEquals(formatChartNumber(42, decimal(0)), "42");
   assertEquals(formatChartNumber(2.675, decimal(2)), "2.68");
+  assertEquals(formatChartNumber(0.615, decimal(2)), "0.62");
+  assertEquals(formatChartNumber(-0.615, decimal(2)), "-0.62");
 });
 
 Deno.test("the percent format scales by exponent shift, never by multiplication", () => {
@@ -161,5 +163,35 @@ Deno.test("format precision outside the closed contract is refused", () => {
     () => formatChartNumber(Number.NaN, { kind: "decimal", decimals: 0 }),
     TypeError,
     "finite",
+  );
+});
+
+Deno.test("the public formatter refuses every runtime escape from its closed vocabulary", () => {
+  for (
+    const [format, message] of [
+      [null, "must be a chart number format object"],
+      [{ kind: "fresh", decimals: 0 }, "kind must be one of"],
+      [{ kind: "decimal", decimals: 0, grouping: "yes" }, "grouping must be a boolean"],
+      [{ kind: "percent", decimals: 0, grouping: true }, "unsupported field grouping"],
+      [{ kind: "si", decimals: 0, extra: true }, "unsupported field extra"],
+    ] as const
+  ) {
+    assertThrows(
+      () => formatChartNumber(1_234.5, format as unknown as ChartNumberFormat),
+      TypeError,
+      message,
+    );
+  }
+
+  const customPrototype = { kind: "decimal", decimals: 0 };
+  Object.setPrototypeOf(customPrototype, { inherited: true });
+  assertThrows(
+    () =>
+      formatChartNumber(
+        1,
+        customPrototype as unknown as ChartNumberFormat,
+      ),
+    TypeError,
+    "must be a chart number format object",
   );
 });

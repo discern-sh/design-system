@@ -17,6 +17,7 @@ import {
   renderChartDecimal,
   roundChartDecimal,
 } from "./decimal.ts";
+import { isPlainRecord } from "../internal/validation.ts";
 
 /** Plain decimal notation at a fixed precision, optionally grouped. */
 export interface ChartDecimalFormat {
@@ -50,6 +51,96 @@ export type ChartNumberFormat =
   | ChartDecimalFormat
   | ChartPercentFormat
   | ChartSiFormat;
+
+/** One structural defect in a runtime chart-number-format value. */
+export interface ChartNumberFormatDefect {
+  /** Field suffix relative to the caller's format path. */
+  readonly path: "" | ".kind" | ".decimals" | ".grouping";
+  readonly message: string;
+}
+
+/**
+ * Find the first way an untyped runtime value escapes the closed format
+ * vocabulary. Property descriptors are inspected without invoking getters,
+ * so the public formatter and spec validation share one hostile-safe fact.
+ */
+export function findChartNumberFormatDefect(
+  value: unknown,
+): ChartNumberFormatDefect | undefined {
+  try {
+    if (!isPlainRecord(value)) {
+      return {
+        path: "",
+        message: "must be a chart number format object.",
+      };
+    }
+    const keys = Reflect.ownKeys(value);
+    if (keys.some((key) => typeof key !== "string")) {
+      return {
+        path: "",
+        message: "must contain only ordinary string-keyed data.",
+      };
+    }
+    const fields = new Map<string, unknown>();
+    for (const key of keys as string[]) {
+      const descriptor = Object.getOwnPropertyDescriptor(value, key);
+      if (
+        descriptor === undefined || !descriptor.enumerable ||
+        !("value" in descriptor)
+      ) {
+        return {
+          path: "",
+          message: "must contain only ordinary enumerable data properties.",
+        };
+      }
+      fields.set(key, descriptor.value);
+    }
+    const kind = fields.get("kind");
+    if (kind !== "decimal" && kind !== "percent" && kind !== "si") {
+      return {
+        path: ".kind",
+        message: "must be one of decimal, percent, si.",
+      };
+    }
+    const allowed = kind === "decimal"
+      ? new Set(["kind", "decimals", "grouping"])
+      : new Set(["kind", "decimals"]);
+    const unsupported = [...fields.keys()].filter((key) => !allowed.has(key))
+      .toSorted()[0];
+    if (unsupported !== undefined) {
+      return {
+        path: "",
+        message: `has unsupported field ${unsupported}.`,
+      };
+    }
+    const decimals = fields.get("decimals");
+    if (
+      typeof decimals !== "number" || !Number.isInteger(decimals) ||
+      decimals < 0 || decimals > 12
+    ) {
+      return {
+        path: ".decimals",
+        message: "must be an integer between 0 and 12.",
+      };
+    }
+    const grouping = fields.get("grouping");
+    if (
+      kind === "decimal" && grouping !== undefined &&
+      typeof grouping !== "boolean"
+    ) {
+      return {
+        path: ".grouping",
+        message: "must be a boolean when present.",
+      };
+    }
+    return undefined;
+  } catch {
+    return {
+      path: "",
+      message: "could not be inspected as an ordinary data object.",
+    };
+  }
+}
 
 const SI_PREFIXES = new Map<number, string>([
   [-12, "p"],
@@ -117,6 +208,12 @@ export function formatChartNumber(
   value: number,
   format: ChartNumberFormat,
 ): string {
+  const defect = findChartNumberFormatDefect(format);
+  if (defect !== undefined) {
+    throw new TypeError(
+      `Chart number format${defect.path} ${defect.message}`,
+    );
+  }
   assertDecimals(format.decimals);
   const decimal = chartDecimalFromNumber(value, "Chart formatted value");
   if (format.kind === "percent") {
