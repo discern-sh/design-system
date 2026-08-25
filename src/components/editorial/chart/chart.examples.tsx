@@ -80,16 +80,13 @@ export default function ChartExamples() {
               }}
             >
               {(["light", "dark", "adaptive"] as const).map((theme) => (
-                <figure
-                  key={theme}
-                  style={{ margin: 0, overflowX: "auto" }}
-                >
+                <figure key={theme} style={{ margin: 0 }}>
                   <img
                     src={svgDataUrl(minimal, theme)}
                     alt={chartAltText(minimal)}
                     style={{
                       display: "block",
-                      maxWidth: "none",
+                      maxWidth: "100%",
                       height: "auto",
                     }}
                   />
