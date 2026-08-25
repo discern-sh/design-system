@@ -3,8 +3,8 @@ import type { HTMLAttributes } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import {
-  assertSparklineValues,
   sparklineAnnotation,
+  sparklineFractions,
   type SparklineValue,
 } from "./sparkline.shared.ts";
 
@@ -27,9 +27,7 @@ interface SparklineRun {
 function sparklineRuns(
   values: readonly SparklineValue[],
 ): readonly SparklineRun[] {
-  const stated = values.filter((value): value is number => value !== null);
-  const minimum = Math.min(...stated);
-  const maximum = Math.max(...stated);
+  const fractions = sparklineFractions(values);
   const innerHeight = VIEW_HEIGHT - VIEW_PADDING * 2;
   const step = values.length === 1 ? 0 : VIEW_WIDTH / (values.length - 1);
   const runs: SparklineRun[] = [];
@@ -43,14 +41,11 @@ function sparklineRuns(
     });
     current = [];
   };
-  values.forEach((value, index) => {
-    if (value === null) {
+  fractions.forEach((fraction, index) => {
+    if (fraction === null) {
       flush(index);
       return;
     }
-    const fraction = minimum === maximum
-      ? 0.5
-      : (value - minimum) / (maximum - minimum);
     current.push({
       x: index * step,
       y: VIEW_PADDING + (1 - fraction) * innerHeight,
@@ -69,7 +64,6 @@ function sparklineRuns(
 export const Sparkline: DiscernComponent<HTMLSpanElement, SparklineProps> =
   forwardRef<HTMLSpanElement, SparklineProps>(
     function Sparkline({ values, className, ...props }, ref) {
-      assertSparklineValues(values);
       const runs = sparklineRuns(values);
       return (
         <span

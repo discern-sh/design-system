@@ -17,6 +17,7 @@ export default {
     "Reading exact values or intermediate points — a sparkline is lossy by design, and only its endpoint annotation states numbers; use the line chart kind.",
     "Comparing two series — each sparkline scales to its own extremes, so two sparklines are never comparable.",
     "Inline terminal prose — the terminal form is a block-context run, never an inline grammar.",
+    "Showing more than 100 observations — the fixed browser view cannot distinguish a denser run; summarize the period or use the line chart kind.",
   ],
   accessibility: [
     "The endpoint annotation is visible text carrying the numeric truth, so no reading depends on glyph fidelity or colour.",

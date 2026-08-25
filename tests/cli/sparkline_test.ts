@@ -1,5 +1,8 @@
 import { assertEquals, assertThrows } from "@std/assert";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { renderSparklineCli } from "../../src/cli/mod.ts";
+import { Sparkline } from "../../src/react.ts";
 import {
   assertExactFrame,
   assertStyledFrame,
@@ -72,6 +75,15 @@ Deno.test("bucket ties round half-away-from-zero", () => {
   );
 });
 
+Deno.test("Sparkline shares finite overflow-safe geometry across browser and terminal", () => {
+  const values = [-Number.MAX_VALUE, 0, Number.MAX_VALUE] as const;
+  assertEquals(sparklineLevels(values), [1, 5, 8]);
+  const html = renderToStaticMarkup(createElement(Sparkline, { values }));
+  assertEquals(html.includes("NaN"), false);
+  assertEquals(html.includes("Infinity"), false);
+  assertEquals(html.includes("0,29 50,16 100,3"), true);
+});
+
 Deno.test("the annotation prints canonical decimals in every charset", () => {
   assertEquals(
     sparklineAnnotation([0.30000000000000004, 1, 2], true),
@@ -101,6 +113,15 @@ Deno.test("Sparkline refuses series that cannot state truthful movement", () => 
       ),
     TypeError,
     "finite number or an explicit null gap",
+  );
+  assertThrows(
+    () =>
+      renderSparklineCli(
+        { values: Array.from({ length: 101 }, (_, index) => index) },
+        testTerminalCapabilities({ columns: 200 }),
+      ),
+    TypeError,
+    "at most 100 entries",
   );
   assertThrows(
     () =>

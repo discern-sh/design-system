@@ -12,12 +12,16 @@
  */
 
 import { chartPlainValue } from "../../../chart/value-text.ts";
+import { chartLinearFraction } from "../../../chart/scale.ts";
 
 /** The fixed vertical resolution every Sparkline surface quantizes into. */
 export const SPARKLINE_LEVELS = 8;
 
 /** The middle level a flat series maps to, never all-min or all-max. */
 export const SPARKLINE_FLAT_LEVEL = 4;
+
+/** Maximum inventory the fixed 100-unit browser view can distinguish. */
+const SPARKLINE_MAX_ENTRIES = 100;
 
 /** One authored Sparkline entry: a finite value or an explicit gap. */
 export type SparklineValue = number | null;
@@ -29,6 +33,11 @@ export function assertSparklineValues(
   if (!Array.isArray(values) || values.length < 2) {
     throw new TypeError(
       "sparkline values must contain at least two entries of recent movement",
+    );
+  }
+  if (values.length > SPARKLINE_MAX_ENTRIES) {
+    throw new TypeError(
+      `sparkline values may contain at most ${SPARKLINE_MAX_ENTRIES} entries; received ${values.length}`,
     );
   }
   let stated = 0;
@@ -72,16 +81,53 @@ export function sparklineEndpoints(
 export function sparklineLevels(
   values: readonly SparklineValue[],
 ): readonly (number | null)[] {
+  const normalized = normalizeSparkline(values);
+  return normalized.fractions.map((fraction) =>
+    fraction === null
+      ? null
+      : normalized.flat
+      ? SPARKLINE_FLAT_LEVEL
+      : 1 + Math.round(fraction * (SPARKLINE_LEVELS - 1))
+  );
+}
+
+interface NormalizedSparkline {
+  readonly flat: boolean;
+  readonly fractions: readonly (number | null)[];
+}
+
+function normalizeSparkline(
+  values: readonly SparklineValue[],
+): NormalizedSparkline {
   assertSparklineValues(values);
-  const stated = values.filter((value): value is number => value !== null);
-  const minimum = Math.min(...stated);
-  const maximum = Math.max(...stated);
-  return values.map((value) => {
-    if (value === null) return null;
-    if (minimum === maximum) return SPARKLINE_FLAT_LEVEL;
-    const fraction = (value - minimum) / (maximum - minimum);
-    return 1 + Math.round(fraction * (SPARKLINE_LEVELS - 1));
-  });
+  let minimum = Number.POSITIVE_INFINITY;
+  let maximum = Number.NEGATIVE_INFINITY;
+  for (const value of values) {
+    if (value === null) continue;
+    if (value < minimum) minimum = value;
+    if (value > maximum) maximum = value;
+  }
+  const flat = minimum === maximum;
+  return {
+    flat,
+    fractions: Object.freeze(values.map((value) =>
+      value === null
+        ? null
+        : flat
+        ? 0.5
+        : chartLinearFraction(minimum, maximum, value)
+    )),
+  };
+}
+
+/**
+ * Shared normalized geometry for browser and terminal projections. Extrema
+ * are collected in one pass, avoiding spread argument limits.
+ */
+export function sparklineFractions(
+  values: readonly SparklineValue[],
+): readonly (number | null)[] {
+  return normalizeSparkline(values).fractions;
 }
 
 /**
