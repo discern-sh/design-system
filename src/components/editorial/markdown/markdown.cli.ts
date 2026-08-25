@@ -29,6 +29,8 @@ import renderHeadingCli from "../../display/heading/heading.cli.ts";
 import renderTableCli from "../../display/table/table.cli.ts";
 import renderBlockquoteCli from "../blockquote/blockquote.cli.ts";
 import renderCalloutCli from "../callout/callout.cli.ts";
+import renderChartCli from "../chart/chart.cli.ts";
+import type { ChartCliMode } from "../chart/chart.cli.ts";
 import renderCodeBlockCli from "../code-block/code-block.cli.ts";
 import renderDiagramCli from "../diagram/diagram.cli.ts";
 import type { DiagramCliMode } from "../diagram/diagram.cli.ts";
@@ -41,6 +43,7 @@ import {
   MarkdownParseError,
   parseMarkdown,
 } from "./markdown.model.ts";
+import type { MarkdownChartResource } from "../../../chart/markdown.ts";
 import type { MarkdownDiagramResource } from "../../../diagram/markdown.ts";
 
 /** Inputs accepted by the terminal Markdown renderer. */
@@ -57,6 +60,10 @@ export interface MarkdownCliProps {
   readonly diagrams?: readonly MarkdownDiagramResource[];
   /** Diagram projection preference; defaults to automatic enhanced fallback. */
   readonly diagramMode?: DiagramCliMode;
+  /** Explicit ordinary-image resources eligible for Chart promotion. */
+  readonly charts?: readonly MarkdownChartResource[];
+  /** Chart projection preference; defaults to automatic exact-frame fallback. */
+  readonly chartMode?: ChartCliMode;
 }
 
 /** One semantic Markdown link identified before terminal wrapping. */
@@ -97,6 +104,7 @@ export const MARKDOWN_CLI_HANDLED_BLOCK_KINDS = {
   table: "rendered",
   footnotes: "rendered",
   diagram: "rendered",
+  chart: "rendered",
 } as const satisfies Readonly<Record<MarkdownBlock["kind"], "rendered">>;
 
 const compactSource = `# A measured document
@@ -253,6 +261,7 @@ interface MarkdownCliTracking {
 interface MarkdownCliContext {
   readonly presentation: MarkdownCliPresentation;
   readonly diagramMode: DiagramCliMode;
+  readonly chartMode: ChartCliMode;
   readonly tracking?: MarkdownCliTracking;
 }
 
@@ -479,6 +488,12 @@ function blockToCli(
         mode: context.diagramMode,
         theme: presentation.theme,
       });
+    case "chart":
+      return createCliBlock(renderChartCli, {
+        spec: block.spec,
+        mode: context.chartMode,
+        theme: presentation.theme,
+      });
     default:
       return assertNever(block);
   }
@@ -503,6 +518,7 @@ function renderMarkdownDocument(
   const context: MarkdownCliContext = {
     presentation,
     diagramMode: props.diagramMode ?? "auto",
+    chartMode: props.chartMode ?? "auto",
     ...(tracking === undefined ? {} : { tracking }),
   };
   return renderCliBlocks(
@@ -522,10 +538,10 @@ export function renderMarkdownCliProjection(
   capabilities: TerminalCapabilities,
   options: MarkdownCliProjectionOptions = {},
 ): MarkdownCliProjection {
-  const document = parseMarkdown(
-    props.source,
-    props.diagrams === undefined ? {} : { diagrams: props.diagrams },
-  );
+  const document = parseMarkdown(props.source, {
+    ...(props.diagrams === undefined ? {} : { diagrams: props.diagrams }),
+    ...(props.charts === undefined ? {} : { charts: props.charts }),
+  });
   const links: MarkdownCliProjectedLink[] = [];
   const headings: MarkdownCliProjectedHeading[] = [];
   const tracking: MarkdownCliTracking = {
@@ -555,10 +571,10 @@ const renderMarkdownCli: CliRenderer<MarkdownCliProps> = (
   props,
   capabilities: TerminalCapabilities,
 ) => {
-  const document = parseMarkdown(
-    props.source,
-    props.diagrams === undefined ? {} : { diagrams: props.diagrams },
-  );
+  const document = parseMarkdown(props.source, {
+    ...(props.diagrams === undefined ? {} : { diagrams: props.diagrams }),
+    ...(props.charts === undefined ? {} : { charts: props.charts }),
+  });
   return renderMarkdownDocument(document, props, capabilities);
 };
 

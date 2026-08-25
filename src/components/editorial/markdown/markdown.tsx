@@ -11,6 +11,7 @@ import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
 import { Blockquote } from "../blockquote/blockquote.tsx";
 import { Callout } from "../callout/callout.tsx";
+import { Chart } from "../chart/chart.tsx";
 import { CodeBlock } from "../code-block/code-block.tsx";
 import { Footnotes } from "../footnotes/footnotes.tsx";
 import { Diagram } from "../diagram/diagram.tsx";
@@ -24,6 +25,7 @@ import {
   MarkdownParseError,
   parseMarkdown,
 } from "./markdown.model.ts";
+import type { MarkdownChartResource } from "../../../chart/markdown.ts";
 import type { MarkdownDiagramResource } from "../../../diagram/markdown.ts";
 
 export { MarkdownParseError } from "./markdown.model.ts";
@@ -40,6 +42,8 @@ export interface MarkdownProps extends
   readonly measure?: ProseMeasure;
   /** Explicit ordinary-image resources eligible for live Diagram promotion. */
   readonly diagrams?: readonly MarkdownDiagramResource[];
+  /** Explicit ordinary-image resources eligible for live Chart promotion. */
+  readonly charts?: readonly MarkdownChartResource[];
 }
 
 interface ReactProjectionContext {
@@ -60,6 +64,7 @@ export const MARKDOWN_REACT_HANDLED_BLOCK_KINDS = {
   table: "rendered",
   footnotes: "rendered",
   diagram: "rendered",
+  chart: "rendered",
 } as const satisfies Readonly<Record<MarkdownBlock["kind"], "rendered">>;
 
 function assertNever(value: never): never {
@@ -288,6 +293,8 @@ function renderBlock(
       );
     case "diagram":
       return <Diagram spec={block.spec} key={key} />;
+    case "chart":
+      return <Chart spec={block.spec} key={key} />;
     default:
       return assertNever(block);
   }
@@ -306,13 +313,13 @@ function renderDocument(document: MarkdownDocument): readonly ReactNode[] {
  */
 export const Markdown: DiscernComponent<HTMLDivElement, MarkdownProps> =
   forwardRef<HTMLDivElement, MarkdownProps>(function Markdown(
-    { source, measure = "default", diagrams, className, ...props },
+    { source, measure = "default", diagrams, charts, className, ...props },
     ref,
   ) {
-    const document = parseMarkdown(
-      source,
-      diagrams === undefined ? {} : { diagrams },
-    );
+    const document = parseMarkdown(source, {
+      ...(diagrams === undefined ? {} : { diagrams }),
+      ...(charts === undefined ? {} : { charts }),
+    });
     if (document.children.length === 0) return null;
     return (
       <Prose

@@ -26,14 +26,19 @@ import {
 } from "../../../cli/semantic-inline.ts";
 import { makeSourceControlsVisible } from "../../../cli/visible-text.ts";
 import type { TerminalAlignment } from "../../../cli/text.ts";
+import { chartAltText } from "../../../chart/accessibility.ts";
+import { snapshotChartJsonSafe } from "../../../chart/validation.ts";
 import { diagramAltText } from "../../../diagram/accessibility.ts";
 import { snapshotDiagramJsonSafe } from "../../../diagram/validation.ts";
+import { validateChart } from "../../../generated/chart-dispatch.ts";
+import type { ChartSpec } from "../../../generated/chart-spec.ts";
 import { validateDiagram } from "../../../generated/diagram-dispatch.ts";
 import type { DiagramSpec } from "../../../generated/diagram-spec.ts";
 import { canonicalSafeUrlReference } from "../../../url-reference.ts";
 import type { HeadingLevel } from "../../display/heading/heading.types.ts";
 import type { CalloutTone } from "../callout/callout.types.ts";
 import type { ListKind, ListSpacing } from "../list/list.types.ts";
+import type { MarkdownChartResource } from "../../../chart/markdown.ts";
 import type { MarkdownDiagramResource } from "../../../diagram/markdown.ts";
 
 /** Maximum UTF-8 source size accepted by the Markdown parser. */
@@ -173,6 +178,13 @@ export interface MarkdownDiagramBlock {
   readonly spec: DiagramSpec;
 }
 
+/** One admitted ordinary image resolved to package-owned chart semantics. */
+export interface MarkdownChartBlock {
+  readonly kind: "chart";
+  readonly source: string;
+  readonly spec: ChartSpec;
+}
+
 /** One package-owned Markdown block. */
 export type MarkdownBlock =
   | MarkdownParagraphBlock
@@ -184,7 +196,8 @@ export type MarkdownBlock =
   | MarkdownThematicBreakBlock
   | MarkdownTableBlock
   | MarkdownFootnotesBlock
-  | MarkdownDiagramBlock;
+  | MarkdownDiagramBlock
+  | MarkdownChartBlock;
 
 /** One complete package-owned neutral Markdown document. */
 export interface MarkdownDocument {
@@ -204,12 +217,15 @@ export const MARKDOWN_BLOCK_KINDS = [
   "table",
   "footnotes",
   "diagram",
+  "chart",
 ] as const satisfies readonly MarkdownBlock["kind"][];
 
 /** Optional neutral resolution facts applied after Markdown parsing. */
 export interface ParseMarkdownOptions {
   /** Explicit image-source to DiagramSpec resources; valid unused entries are allowed. */
   readonly diagrams?: readonly MarkdownDiagramResource[];
+  /** Explicit image-source to ChartSpec resources; valid unused entries are allowed. */
+  readonly charts?: readonly MarkdownChartResource[];
 }
 
 /** Smallest spec surface the shared resource resolver reads directly. */
@@ -260,6 +276,15 @@ const DIAGRAM_RESOURCE_FAMILY: MarkdownResourceFamily<DiagramSpec> = {
   validateSpec: validateDiagram,
   altText: diagramAltText,
   block: (source, spec) => Object.freeze({ kind: "diagram", source, spec }),
+};
+
+const CHART_RESOURCE_FAMILY: MarkdownResourceFamily<ChartSpec> = {
+  noun: "chart",
+  specTypeName: "ChartSpec",
+  snapshot: snapshotChartJsonSafe,
+  validateSpec: validateChart,
+  altText: chartAltText,
+  block: (source, spec) => Object.freeze({ kind: "chart", source, spec }),
 };
 
 interface FootnoteRecord {
@@ -537,6 +562,16 @@ export function validateMarkdownDiagramResources(
   resources: readonly MarkdownDiagramResource[] | undefined,
 ): readonly ValidatedMarkdownResource<DiagramSpec>[] {
   return validateMarkdownResourceCollection(DIAGRAM_RESOURCE_FAMILY, resources);
+}
+
+/**
+ * Validate, normalise, and freeze chart resources before document matching.
+ * Valid unused resources are intentionally accepted for corpus-level reuse.
+ */
+export function validateMarkdownChartResources(
+  resources: readonly MarkdownChartResource[] | undefined,
+): readonly ValidatedMarkdownResource<ChartSpec>[] {
+  return validateMarkdownResourceCollection(CHART_RESOURCE_FAMILY, resources);
 }
 
 /**
@@ -1184,6 +1219,7 @@ function resolveResourceBlocks(
       case "thematic-break":
       case "table":
       case "diagram":
+      case "chart":
         return block;
       default:
         return assertNever(block, "Markdown resource resolver block");
@@ -1214,6 +1250,11 @@ export function parseMarkdown(
   admitMarkdownResources(
     DIAGRAM_RESOURCE_FAMILY,
     validateMarkdownDiagramResources(options.diagrams),
+    admittedResources,
+  );
+  admitMarkdownResources(
+    CHART_RESOURCE_FAMILY,
+    validateMarkdownChartResources(options.charts),
     admittedResources,
   );
   const bytes = textEncoder.encode(source).byteLength;

@@ -116,6 +116,7 @@ function collectBlockFacts(block: MarkdownBlock, facts: string[]): void {
       }
       break;
     case "diagram":
+    case "chart":
       facts.push(block.source, block.spec.title, block.spec.summary);
       break;
     default:
@@ -241,6 +242,7 @@ Deno.test("Markdown selection generates every real Component dependency", () => 
     "blockquote",
     "callout",
     "code-block",
+    "chart",
     "diagram",
     "footnotes",
   ]);
