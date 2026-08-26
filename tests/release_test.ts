@@ -341,14 +341,80 @@ Deno.test("the publish-shaped artifact serves the neutral consumer alone", async
       ),
     );
     await Deno.writeTextFile(
+      join(consumer, "charts.ts"),
+      `import type { ChartSpec } from "${config.name}/chart";
+export const chartSpecs = [
+  {
+    kind: "bar",
+    title: "Guides per season",
+    summary: "Published guides for two seasons.",
+    categories: [
+      { id: "spring", label: "Spring" },
+      { id: "autumn", label: "Autumn" },
+    ],
+    series: [{ id: "guides", label: "Guides", values: [4, 7] }],
+    value: { unit: "guides" },
+  },
+  {
+    kind: "line",
+    title: "Guides over three releases",
+    summary: "Published guides follow three ordered releases.",
+    x: { kind: "number", values: [1, 2, 3] },
+    series: [{ id: "guides", label: "Guides", values: [4, 7, 6] }],
+  },
+  {
+    kind: "distribution",
+    title: "Spread of review durations",
+    summary: "Four review durations spread across three declared bins.",
+    values: [12, 18, 24, 31],
+    bins: { kind: "edges", values: [10, 20, 30, 40] },
+  },
+  {
+    kind: "heatmap",
+    title: "Guides by season and state",
+    summary: "Guide totals read across two seasons and two states.",
+    rows: [{ id: "published", label: "Published" }],
+    columns: [
+      { id: "spring", label: "Spring" },
+      { id: "autumn", label: "Autumn" },
+    ],
+    values: [[4, 7]],
+    bins: { edges: [5] },
+  },
+  {
+    kind: "scatter",
+    title: "Review time against guide size",
+    summary: "Three guides pair their size with review time.",
+    series: [{
+      id: "guides",
+      label: "Guides",
+      points: [{ x: 2, y: 5 }, { x: 4, y: 9 }, { x: 8, y: 14 }],
+    }],
+  },
+  {
+    kind: "slope",
+    title: "Guide totals before and after",
+    summary: "Two guide groups move between the release endpoints.",
+    items: [
+      { id: "first", label: "First", before: 12, after: 18 },
+      { id: "second", label: "Second", before: 20, after: 14 },
+    ],
+  },
+] as const satisfies readonly ChartSpec[];
+
+export const bar = chartSpecs[0];
+`,
+    );
+    await Deno.writeTextFile(
       join(consumer, "neutral.ts"),
       `import { packageManifest, semanticClass } from "${config.name}";
 import { renderBadgeCli, renderChartCli, renderDiagramCli, renderHeadingCli, renderMarkdownCli, stripAnsi } from "${config.name}/cli";
 import {
-  type BarChartSpec,
   chartAltText,
   chartSeriesLegend,
   describeChart,
+  type MarkdownChartResource,
+  renderChartMarkdownImage,
   renderChartSvg,
 } from "${config.name}/chart";
 import {
@@ -381,6 +447,7 @@ import {
   projectTerminalSpans,
 } from "${config.name}/cli/projection";
 import { emitDesignSystemRuntime } from "${config.name}/runtime";
+import { bar, chartSpecs } from "./charts.ts";
 const flow = {
   kind: "flow",
   title: "Publish a guide",
@@ -391,17 +458,6 @@ const flow = {
   ],
   edges: [{ id: "ready", from: "draft", to: "publish" }],
 } as const satisfies FlowDiagramSpec;
-const bar = {
-  kind: "bar",
-  title: "Guides per season",
-  summary: "Published guides for two seasons.",
-  categories: [
-    { id: "spring", label: "Spring" },
-    { id: "autumn", label: "Autumn" },
-  ],
-  series: [{ id: "guides", label: "Guides", values: [4, 7] }],
-  value: { unit: "guides" },
-} as const satisfies BarChartSpec;
 const chartSvg = renderChartSvg(bar, { theme: "light" });
 const chartFrame = stripAnsi(renderChartCli(
   { spec: bar, mode: "auto", maxWidth: 60 },
@@ -411,6 +467,36 @@ const chartTable = stripAnsi(renderChartCli(
   { spec: bar, mode: "description", maxWidth: 60 },
   { colorDepth: "none", columns: 60, unicode: true },
 ));
+const chartEvidence = chartSpecs.map((spec) => {
+  const svg = renderChartSvg(spec, { theme: "dark" });
+  const description = describeChart(spec);
+  const frame = stripAnsi(renderChartCli(
+    { spec, mode: "auto", maxWidth: 120 },
+    { colorDepth: "ansi16", columns: 120, unicode: false },
+  ));
+  return {
+    kind: spec.kind,
+    complete: svg.includes('class="discern-chart ') &&
+      svg.includes('role="img"') &&
+      svg.includes("<title>") &&
+      chartAltText(spec) === spec.title + ": " + spec.summary &&
+      description.includes("Title: " + spec.title) &&
+      frame.includes(spec.title),
+  };
+});
+const chartResource = {
+  source: "assets/guides-by-season.svg",
+  spec: bar,
+} satisfies MarkdownChartResource;
+const chartMarkdownSource = renderChartMarkdownImage(chartResource);
+const ordinaryChartMarkdown = stripAnsi(renderMarkdownCli({
+  source: chartMarkdownSource,
+}, { colorDepth: "none", columns: 72, unicode: false }));
+const markdownChart = stripAnsi(renderMarkdownCli({
+  source: chartMarkdownSource,
+  charts: [chartResource],
+  chartMode: "description",
+}, { colorDepth: "none", columns: 72, unicode: false }));
 const diagramSvg = renderDiagramSvg(flow, { theme: "light" });
 const diagramOutput = new URL("./consumer-output/guide.svg", import.meta.url);
 await Deno.mkdir(new URL("./consumer-output/", import.meta.url), {
@@ -526,6 +612,17 @@ console.log(JSON.stringify({
   chartTable: chartTable.includes("Autumn (autumn)") &&
     chartTable.includes("7 guides") &&
     !chartTable.includes("\\u250c Guides per season"),
+  chartKinds: chartEvidence.map(({ kind }) => kind).join(","),
+  chartEvidence,
+  allChartSurfaces: chartEvidence.every(({ complete }) => complete),
+  markdownChart: markdownChart.includes("Autumn") &&
+    markdownChart.includes("7 guides") &&
+    !markdownChart.includes("Image:"),
+  ordinaryChartMarkdown: ordinaryChartMarkdown.includes("Guides per season") &&
+    ordinaryChartMarkdown.includes("assets/guides-by-season.svg") &&
+    !ordinaryChartMarkdown.includes("Autumn (autumn)"),
+  standardChartMarkdown: chartMarkdownSource.startsWith("![") &&
+    chartMarkdownSource.includes("assets/guides-by-season.svg"),
   diagramBytes: writtenDiagramSvg === diagramSvg &&
     renderDiagramSvg(flow, { theme: "light" }) === diagramSvg,
   diagramAccessible: diagramSvg.includes('role="img"') &&
@@ -569,24 +666,15 @@ console.log(JSON.stringify({
       join(consumer, "react.tsx"),
       `import { renderToStaticMarkup } from "react-dom/server";
 import {
-  type BarChartSpec,
   chartSeriesLegend,
+  renderChartMarkdownImage,
 } from "${config.name}/chart";
 import {
   type FlowDiagramSpec,
   renderDiagramMarkdownImage,
 } from "${config.name}/diagram";
 import { Chart, DataFigure, Diagram, Markdown } from "${config.name}/react";
-const bar = {
-  kind: "bar",
-  title: "Guides per season",
-  summary: "Published guides for two seasons.",
-  categories: [
-    { id: "spring", label: "Spring" },
-    { id: "autumn", label: "Autumn" },
-  ],
-  series: [{ id: "guides", label: "Guides", values: [4, 7] }],
-} as const satisfies BarChartSpec;
+import { bar, chartSpecs } from "./charts.ts";
 const chartFigure = renderToStaticMarkup(
   <DataFigure
     title="Guides per season"
@@ -594,6 +682,20 @@ const chartFigure = renderToStaticMarkup(
     visual={<Chart spec={bar} />}
     caption="A neutral published-artifact chart composition."
   />,
+);
+const chartLibrary = renderToStaticMarkup(
+  <main>
+    {chartSpecs.map((spec) => <Chart key={spec.kind} spec={spec} />)}
+  </main>,
+);
+const chartResource = {
+  source: "assets/guides-by-season.svg",
+  spec: bar,
+} as const;
+const chartSource = renderChartMarkdownImage(chartResource);
+const ordinaryChart = renderToStaticMarkup(<Markdown source={chartSource} />);
+const upgradedChart = renderToStaticMarkup(
+  <Markdown source={chartSource} charts={[chartResource]} />,
 );
 const flow = {
   kind: "flow",
@@ -631,6 +733,15 @@ console.log(JSON.stringify({
   chartFigure: chartFigure.includes('data-discern-chart-kind="bar"') &&
     chartFigure.includes("discern-chart__mark--series-1") &&
     chartFigure.includes("discern-data-figure__swatch--series-1"),
+  allChartKinds: chartSpecs.every((spec) =>
+    chartLibrary.includes('data-discern-chart-kind="' + spec.kind + '"')
+  ),
+  ordinaryChart: ordinaryChart.includes("<img") &&
+    ordinaryChart.includes("Guides per season") &&
+    !ordinaryChart.includes("<svg"),
+  upgradedChart: upgradedChart.includes("<svg") &&
+    upgradedChart.includes('data-discern-chart-kind="bar"') &&
+    !upgradedChart.includes("<img"),
   diagram: diagram.includes('role="img"') &&
     diagram.includes("<title>Publish a guide</title>"),
   figure: figure.includes("<figure") &&
@@ -666,6 +777,14 @@ console.log(JSON.stringify({
     );
     assertStringIncludes(output, `"chartFrame":true`);
     assertStringIncludes(output, `"chartTable":true`);
+    assertStringIncludes(
+      output,
+      `"chartKinds":"bar,line,distribution,heatmap,scatter,slope"`,
+    );
+    assertStringIncludes(output, `"allChartSurfaces":true`);
+    assertStringIncludes(output, `"markdownChart":true`);
+    assertStringIncludes(output, `"ordinaryChartMarkdown":true`);
+    assertStringIncludes(output, `"standardChartMarkdown":true`);
     assertStringIncludes(output, `"diagramBytes":true`);
     assertStringIncludes(output, `"diagramAccessible":true`);
     assertStringIncludes(output, `"diagramDescription":true`);
@@ -707,6 +826,9 @@ console.log(JSON.stringify({
       `staged React consumer failed:\n${reactConsumer.output}`,
     );
     assertStringIncludes(reactConsumer.output, `"chartFigure":true`);
+    assertStringIncludes(reactConsumer.output, `"allChartKinds":true`);
+    assertStringIncludes(reactConsumer.output, `"ordinaryChart":true`);
+    assertStringIncludes(reactConsumer.output, `"upgradedChart":true`);
     assertStringIncludes(reactConsumer.output, `"diagram":true`);
     assertStringIncludes(reactConsumer.output, `"figure":true`);
     assertStringIncludes(reactConsumer.output, `"ordinary":true`);
