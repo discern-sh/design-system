@@ -4,6 +4,7 @@ The Catalogue is the routed local browser for every Component example, public To
 
 Its ordinary routes separate discovery from exhaustive review:
 
+- `/` is the design system's own landing page (below), not part of the Catalogue explorer.
 - `/catalogue/` is a small overview rather than a complete inventory.
 - `/catalogue/components/` browses generated Groups and task-oriented collections without mounting Component specimens.
 - `/catalogue/components/<slug>/` mounts one complete Component contract.
@@ -14,7 +15,11 @@ The server returns the same authored shell for every explorer route. Route facts
 
 The Catalogue also hosts the [Beta interface builder](interface-builder.md), a safe adaptive composition surface at `/catalogue/builder/` that renders real Components on an inert inspection canvas and exports consumer TSX with its runtime selection. Its link is deliberately secondary to the Catalogue's primary routes while the owner evaluates it through real consumer use.
 
-## Find the right component
+## The landing page
+
+The site root serves the design system's own landing page: a static, script-free document composed entirely from published Components and rendered at build time through the React adapter contract, exactly as the page tells consumers to build. [`catalogue/landing/page.tsx`](../../catalogue/landing/page.tsx) owns the composition, its explicit `landingSelection`, and the document renderer; the build emits that selection-scoped runtime to `dist/landing/` and writes `index.html` from the emission's own manifest facts, so the hero's Receipt pair and every inventory number derive from measured reality rather than authored copy. The page follows the system colour scheme through tokens alone.
+
+Its contract is guarded rather than assumed: [`landing_test.ts`](../../tests/landing_test.ts) holds the render deterministic and script-free, requires every rendered `discern-` class to resolve to a block the page's own emission styles (so a Component used without being selected fails the suite), and refuses dead selection entries; the browser conformance pass adds structural landmarks and axe scans in both colour schemes.
 
 The toolbar Search Palette presents explicit routed destinations across Component names, Groups, descriptions, purposes, usage guidance, Tokens, terminal foundations, and web or terminal composition recipes. Press `/` outside a form control to open it. Selecting a Component result opens its detail route directly instead of scrolling through an already-mounted inventory.
 
@@ -71,6 +76,7 @@ The machine conformance route remains separate and exhaustive: `?conformance=1` 
 | Concern                                                                | Authority                                                                            |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | Explorer paths, legacy-link upgrades, and shell route recognition      | [`routes.ts`](../../catalogue/routes.ts)                                             |
+| Landing page composition, selection, and document renderer             | [`page.tsx`](../../catalogue/landing/page.tsx)                                       |
 | Purpose vocabulary and usage fields                                    | [`component-meta.ts`](../../src/types/component-meta.ts)                             |
 | Registry, snippets, prop evidence, CLI enrollment, and package version | [`build.ts`](../../scripts/build.ts)                                                 |
 | Search destinations, purpose filtering, surface and state links        | [`app.tsx`](../../catalogue/app.tsx)                                                 |

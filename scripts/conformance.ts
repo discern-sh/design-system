@@ -551,6 +551,72 @@ async function scanAccessibility(
   return scans;
 }
 
+/**
+ * The landing page served at the site root must stay script-free static HTML
+ * with one h1, one main landmark, and an accessible document in both colour
+ * schemes.
+ */
+async function verifyLandingPage(
+  page: Page,
+  origin: string,
+  failures: string[],
+): Promise<number> {
+  let scans = 0;
+  for (const scheme of ["light", "dark"] as const) {
+    await page.emulateMedia({ colorScheme: scheme, reducedMotion: "reduce" });
+    await page.goto(`${origin}/`, { waitUntil: "networkidle" });
+    const shape = await page.evaluate(() => ({
+      scripts: document.querySelectorAll("script").length,
+      headings: document.querySelectorAll("h1").length,
+      mains: document.querySelectorAll("main").length,
+      root: document.body.hasAttribute("data-discern-root"),
+    }));
+    if (shape.scripts !== 0) {
+      failures.push(
+        `landing/${scheme}: the landing page must ship no scripts, found ${shape.scripts}`,
+      );
+    }
+    if (shape.headings !== 1) {
+      failures.push(
+        `landing/${scheme}: expected exactly one h1, found ${shape.headings}`,
+      );
+    }
+    if (shape.mains !== 1) {
+      failures.push(
+        `landing/${scheme}: expected exactly one main landmark, found ${shape.mains}`,
+      );
+    }
+    if (!shape.root) {
+      failures.push(`landing/${scheme}: body must carry data-discern-root`);
+    }
+    try {
+      const results = await scanBrowserAccessibility(page, "body");
+      scans += 1;
+      for (const violation of results.violations) {
+        const targets = violation.nodes.map((node) => {
+          const summary = node.failureSummary?.replace(/\s+/g, " ").trim();
+          return `${JSON.stringify(node.target)}${
+            summary ? ` — ${summary}` : ""
+          }`;
+        }).join("; ");
+        failures.push(
+          `landing/${scheme}: ${violation.id} (${
+            violation.impact ?? "unknown impact"
+          }) at ${targets}`,
+        );
+      }
+    } catch (error) {
+      failures.push(
+        `landing/${scheme}: accessibility scan failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+  await page.emulateMedia({ colorScheme: null, reducedMotion: "reduce" });
+  return scans;
+}
+
 async function runInteractionScenarios(
   page: Page,
   origin: string,
@@ -1151,6 +1217,16 @@ export async function runConformance(): Promise<void> {
         }`,
       );
     }
+    let landingAxeScans = 0;
+    try {
+      landingAxeScans = await verifyLandingPage(page, origin, failures);
+    } catch (error) {
+      failures.push(
+        `landing page: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
     const resilience = await runResilienceConformance(
       browser,
       page,
@@ -1198,6 +1274,7 @@ export async function runConformance(): Promise<void> {
       } review screenshots; ${floatingSurfaces} floating surfaces share the clipping cure. ` +
         `Terminal Catalogue passed ${terminalCatalogue.profileChecks} profile fits across ${terminalCatalogue.layouts} layouts and re-themed ${terminalCatalogue.componentSpecimens} Component specimens. ` +
         `It auto-enrolled ${terminalCatalogue.foundationSpecimens} specimens across ${terminalCatalogue.foundationSheets} terminal foundations with ${terminalCatalogue.animationChecks} reduced-motion and playback checks. ` +
+        `The landing page passed ${landingAxeScans} axe scans as script-free static HTML. ` +
         `Journey resilience passed: ${resilience.journeys} journeys, ` +
         `${resilience.journeyStages} ordered stages, ` +
         `${resilience.journeyAxeScans} axe scans, ` +
