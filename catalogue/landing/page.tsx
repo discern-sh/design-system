@@ -3,15 +3,18 @@
  *
  * The page is composed exclusively from published components and rendered to
  * static HTML at build time — the same consumer contract the copy describes.
- * It ships no scripts; every number it presents arrives through
- * {@linkcode LandingFacts} from the build's real emission manifest, never
- * hand-maintained prose.
+ * Its only page-owned behavior applies the controlled Theme toggle's consumer
+ * policy; every number it presents arrives through {@linkcode LandingFacts}
+ * from the real package manifest and landing build, never hand-maintained
+ * prose.
  *
  * @module
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { SurveyBackdrop } from "../../src/components/artwork/survey-backdrop/survey-backdrop.tsx";
 import { Button } from "../../src/components/core/button/button.tsx";
+import { ThemeToggle } from "../../src/components/core/theme-toggle/theme-toggle.tsx";
+import { SkipLink } from "../../src/components/docs/skip-link/skip-link.tsx";
 import { Terminal } from "../../src/components/display/terminal/terminal.tsx";
 import { Window } from "../../src/components/display/window/window.tsx";
 import { CodeListing } from "../../src/components/editorial/code-listing/code-listing.tsx";
@@ -21,10 +24,10 @@ import { FaqBlock } from "../../src/components/marketing/faq-block/faq-block.tsx
 import { FeatureBento } from "../../src/components/marketing/feature-bento/feature-bento.tsx";
 import { HeroBlock } from "../../src/components/marketing/hero-block/hero-block.tsx";
 import { MetricsBand } from "../../src/components/marketing/metrics-band/metrics-band.tsx";
+import { NarrativeChapter } from "../../src/components/marketing/narrative-chapter/narrative-chapter.tsx";
 import { SiteFooter } from "../../src/components/marketing/site-footer/site-footer.tsx";
 import { SiteHeader } from "../../src/components/marketing/site-header/site-header.tsx";
 import { SplitFeature } from "../../src/components/marketing/split-feature/split-feature.tsx";
-import { VoiceBreak } from "../../src/components/marketing/voice-break/voice-break.tsx";
 import {
   Receipt,
   type ReceiptCheck,
@@ -57,13 +60,15 @@ export const landingSelection: readonly string[] = [
   "grid",
   "hero-block",
   "metrics-band",
+  "narrative-chapter",
   "receipt",
   "site-footer",
   "site-header",
+  "skip-link",
   "split-feature",
   "survey-backdrop",
   "terminal",
-  "voice-break",
+  "theme-toggle",
   "window",
 ];
 
@@ -85,7 +90,14 @@ export interface LandingFacts {
     readonly resolvedComponents: number;
     readonly cssBytes: number;
     readonly cssIntegrity: string;
+    readonly scripts: readonly string[];
   };
+  /** Catalogue-owned browser behavior copied into the landing build. */
+  readonly pageScripts: readonly string[];
+}
+
+function landingScripts(facts: LandingFacts): readonly string[] {
+  return [...facts.emission.scripts, ...facts.pageScripts];
 }
 
 function kilobytes(bytes: number): string {
@@ -115,9 +127,10 @@ function landingReceipt(facts: LandingFacts): LandingReceipt {
     ],
     checks: [
       {
-        label: "Components",
+        label: "Selected components",
         state: "pass",
-        value: `${facts.emission.resolvedComponents}`,
+        value:
+          `${facts.emission.resolvedComponents} of ${facts.system.components}`,
       },
       {
         label: "discern.css",
@@ -129,7 +142,13 @@ function landingReceipt(facts: LandingFacts): LandingReceipt {
         state: "pass",
         value: shortIntegrity(facts.emission.cssIntegrity),
       },
-      { label: "JavaScript", state: "pass", value: "none" },
+      {
+        label: "JavaScript",
+        state: "pass",
+        value: landingScripts(facts).length === 0
+          ? "none"
+          : landingScripts(facts).join(", "),
+      },
     ],
   };
 }
@@ -170,7 +189,7 @@ function HeroReceiptPair({ facts }: { readonly facts: LandingFacts }) {
   };
   return (
     <Grid gap={5} minimum="22rem">
-      <Window variant="showcase" title="In the browser">
+      <Window variant="showcase" title="Browser output">
         <Receipt
           title={receipt.title}
           stamp="pass"
@@ -178,7 +197,7 @@ function HeroReceiptPair({ facts }: { readonly facts: LandingFacts }) {
           checks={webChecks}
         />
       </Window>
-      <Terminal variant="showcase" title="The same receipt, in the terminal">
+      <Terminal variant="showcase" title="Terminal output">
         <TerminalFrame
           output={renderReceiptCli(cliProps, HERO_TERMINAL_CAPABILITIES)}
         />
@@ -224,7 +243,7 @@ const WORKLOG_OUTPUT_PROPS = {
 
 function LandingMain({ facts }: { readonly facts: LandingFacts }) {
   return (
-    <main>
+    <main id="main-content">
       <HeroBlock
         layout="showcase"
         surface="atmospheric"
@@ -232,31 +251,34 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
         eyebrow={`${LANDING_PACKAGE} · v${facts.version}`}
         title={
           <>
-            One system, <em>both surfaces</em>.
+            Browser components. <em>Terminal renderers.</em>
           </>
         }
         description={
           <p>
-            A design system for products that live in the browser and the
-            terminal. The same components render as web pages and as terminal
-            output, so both halves of your product feel like one — and every
-            page ships as plain HTML and CSS, no JavaScript required.
+            One package keeps browser interfaces and terminal output aligned
+            through shared tokens, accessibility rules, and deterministic
+            rendering. Use the React adapter at build time or stay
+            framework-free, and emit only what your product selects.
           </p>
         }
         actions={
           <>
-            <Button href={catalogueRoutePaths.overview}>
-              Browse the catalogue
+            <Button href={JSR_URL}>
+              Install from JSR
             </Button>
-            <Button href={JSR_URL} variant="secondary">
-              Get it on JSR
+            <Button href={catalogueRoutePaths.overview} variant="secondary">
+              Browse the catalogue
             </Button>
           </>
         }
         meta={
           <>
-            Below: this page&rsquo;s own build receipt, drawn by the same
-            Receipt component for the browser and for the terminal.
+            <code>deno add jsr:{LANDING_PACKAGE}</code>
+            <span>
+              Below: this page&rsquo;s own build record, rendered for the
+              browser and the terminal from one fact set.
+            </span>
           </>
         }
         visual={<HeroReceiptPair facts={facts} />}
@@ -280,9 +302,11 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
             detail: "real pages in the browser, real text in the terminal",
           },
           {
-            value: "0",
-            label: "scripts on this page",
-            detail: "what you're reading is HTML and CSS",
+            value: `${landingScripts(facts).length}`,
+            label: landingScripts(facts).length === 1
+              ? "behavior script"
+              : "behavior scripts",
+            detail: "page-owned theme preference; no React or hydration",
           },
         ]}
       />
@@ -311,22 +335,6 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
             title: "Safe to drop in",
             description:
               "Every style is discern-prefixed and applies only inside an element you opt in, so your existing CSS is never touched.",
-          },
-          {
-            title: "Accessible by default",
-            description:
-              "Contrast, reduced motion, forced colours, and keyboard access are package tests, not review notes.",
-            size: "wide",
-          },
-          {
-            title: "Rebrand with variables",
-            description:
-              "Light, dark, and your own brand are token overrides. Component styles never fork per theme.",
-          },
-          {
-            title: "Stable releases",
-            description:
-              "Strict TypeScript, documented exports, and immutable SemVer versions on JSR.",
           },
         ]}
       />
@@ -418,12 +426,38 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
         }
         reverse
       />
-      <VoiceBreak
-        eyebrow="The character of the system"
-        quote="Every principle trades a little authoring convenience for a lot of consumer trust."
-        attribution="Design principles"
-        context="The seven rules every change is tested against"
-      />
+      <NarrativeChapter
+        eyebrow="Design principles"
+        title="Strict inside the package. Flexible in your product."
+        lead={
+          <p>
+            The design system carries the maintenance discipline so its
+            consumers do not have to re-solve it in every interface.
+          </p>
+        }
+        aside={
+          <>
+            <strong>Seven tested rules</strong>
+            <p>
+              They constrain how the package is built, not what your product is
+              allowed to look like.
+            </p>
+          </>
+        }
+        asideLabel="How the design principles apply"
+      >
+        <p>
+          Namespacing, deterministic emission, token-only themes, accessibility,
+          and release compatibility are enforced beneath the public API. That
+          work stays in the package instead of leaking into each consumer.
+        </p>
+        <h3>Adopt only the slice you need</h3>
+        <p>
+          Start with one component, one group, or the complete system. The same
+          rules protect every selection, while tokens and ordinary props leave
+          the product-level decisions with you.
+        </p>
+      </NarrativeChapter>
       <FaqBlock
         eyebrow="Before you adopt it"
         title="The questions worth asking a design system."
@@ -507,12 +541,14 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
 export function LandingPage({ facts }: { readonly facts: LandingFacts }) {
   return (
     <>
+      <SkipLink href="#main-content" />
       <SiteHeader
         variant="campaign"
-        brand="discern"
+        brand="discern / design system"
         brandMark="◮"
         brandTypeface="display"
         homeHref="/"
+        collapseNavOnNarrow
         navItems={[
           { label: "Components", href: catalogueRoutePaths.components },
           { label: "Foundations", href: catalogueRoutePaths.foundations },
@@ -520,14 +556,22 @@ export function LandingPage({ facts }: { readonly facts: LandingFacts }) {
           { label: "Terminal", href: catalogueRoutePaths.terminal },
         ]}
         actions={
-          <Button href={catalogueRoutePaths.overview} size="sm">
-            Browse the catalogue
-          </Button>
+          <>
+            <ThemeToggle
+              theme="light"
+              onThemeChange={() => undefined}
+              variant="quiet"
+              data-discern-theme-control=""
+            />
+            <Button href={catalogueRoutePaths.overview} size="sm">
+              Catalogue
+            </Button>
+          </>
         }
       />
       <LandingMain facts={facts} />
       <SiteFooter
-        brand="discern"
+        brand="discern / design system"
         brandMark="◮"
         brandTypeface="display"
         description={
@@ -560,7 +604,7 @@ export function LandingPage({ facts }: { readonly facts: LandingFacts }) {
           },
         ]}
         legal={`Apache-2.0 · ${LANDING_PACKAGE} v${facts.version}`}
-        meta="This page is plain HTML and CSS. It ships no scripts."
+        meta="Static HTML and CSS with one page-owned theme preference; no hydration."
       />
     </>
   );
@@ -569,18 +613,22 @@ export function LandingPage({ facts }: { readonly facts: LandingFacts }) {
 /** Render the complete landing document served at the site root. */
 export function renderLandingHtml(facts: LandingFacts): string {
   const markup = renderToStaticMarkup(<LandingPage facts={facts} />);
+  const scripts = landingScripts(facts).map((script) =>
+    `    <script src="/dist/landing/${script}"></script>`
+  ).join("\n");
   return `<!doctype html>
-<html lang="en">
+<html lang="en" data-discern-root data-discern-theme-storage-key="discern-design-system-theme">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light dark">
-    <meta name="description" content="A design system for products that live in the browser and the terminal: the same components render as web pages and as terminal output, with no JavaScript required.">
+    <meta name="description" content="Browser components and terminal renderers aligned through shared tokens, accessibility rules, and deterministic output.">
     <title>discern design system</title>
+${scripts}
     <link rel="stylesheet" href="/dist/landing/fonts.css">
     <link rel="stylesheet" href="/dist/landing/discern.css">
   </head>
-  <body data-discern-root>${markup}</body>
+  <body>${markup}</body>
 </html>
 `;
 }

@@ -552,9 +552,9 @@ async function scanAccessibility(
 }
 
 /**
- * The landing page served at the site root must stay script-free static HTML
- * with one h1, one main landmark, and an accessible document in both colour
- * schemes.
+ * The landing page served at the site root must carry its one page-owned theme
+ * behavior, one h1, one main landmark, and an accessible document in both
+ * colour schemes.
  */
 async function verifyLandingPage(
   page: Page,
@@ -569,11 +569,19 @@ async function verifyLandingPage(
       scripts: document.querySelectorAll("script").length,
       headings: document.querySelectorAll("h1").length,
       mains: document.querySelectorAll("main").length,
-      root: document.body.hasAttribute("data-discern-root"),
+      root: document.documentElement.hasAttribute("data-discern-root"),
+      themeToggle: document.querySelectorAll(
+        "[data-discern-theme-control]",
+      ).length,
     }));
-    if (shape.scripts !== 0) {
+    if (shape.scripts !== 1) {
       failures.push(
-        `landing/${scheme}: the landing page must ship no scripts, found ${shape.scripts}`,
+        `landing/${scheme}: expected one page-owned theme behavior, found ${shape.scripts} scripts`,
+      );
+    }
+    if (shape.themeToggle !== 1) {
+      failures.push(
+        `landing/${scheme}: expected one theme control, found ${shape.themeToggle}`,
       );
     }
     if (shape.headings !== 1) {
@@ -587,7 +595,7 @@ async function verifyLandingPage(
       );
     }
     if (!shape.root) {
-      failures.push(`landing/${scheme}: body must carry data-discern-root`);
+      failures.push(`landing/${scheme}: html must carry data-discern-root`);
     }
     try {
       const results = await scanBrowserAccessibility(page, "body");
@@ -613,15 +621,78 @@ async function verifyLandingPage(
       );
     }
   }
+  await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
+  await page.goto(`${origin}/`, { waitUntil: "networkidle" });
+  const themeControl = page.locator("[data-discern-theme-control]");
+  const themeBefore = await page.locator("[data-discern-root]").getAttribute(
+    "data-discern-theme",
+  );
+  await themeControl.click();
+  const themeAfter = await page.locator("[data-discern-root]").getAttribute(
+    "data-discern-theme",
+  );
+  const destinationAfter = await themeControl.getAttribute("aria-label");
+  if (themeBefore !== "light" || themeAfter !== "dark") {
+    failures.push(
+      `landing/theme: expected light → dark, observed ${themeBefore} → ${themeAfter}`,
+    );
+  }
+  if (destinationAfter !== "Switch to the light theme") {
+    failures.push(
+      `landing/theme: dark state names ${
+        JSON.stringify(destinationAfter)
+      } instead of the light destination`,
+    );
+  }
+  await page.reload({ waitUntil: "networkidle" });
+  const persistedTheme = await page.locator("[data-discern-root]").getAttribute(
+    "data-discern-theme",
+  );
+  if (persistedTheme !== "dark") {
+    failures.push(
+      `landing/theme: persisted dark preference restored as ${persistedTheme}`,
+    );
+  }
+  await page.evaluate(() =>
+    localStorage.removeItem("discern-design-system-theme")
+  );
   await withViewport(page, NARROW_VIEWPORT, async () => {
     await page.goto(`${origin}/`, { waitUntil: "networkidle" });
-    const overflow = await page.evaluate(() =>
-      document.documentElement.scrollWidth -
-      document.documentElement.clientWidth
-    );
+    const narrow = await page.evaluate(() => ({
+      overflow: document.documentElement.scrollWidth -
+        document.documentElement.clientWidth,
+      navDisplay: getComputedStyle(
+        document.querySelector(".discern-site-header__nav")!,
+      ).display,
+      metricsWidth: document.querySelector(".discern-metrics-band__list")!
+        .getBoundingClientRect().width,
+      metricsInnerWidth: document.querySelector(
+        ".discern-metrics-band__inner",
+      )!.getBoundingClientRect().width,
+      heroDecoration: getComputedStyle(
+        document.querySelector(".discern-hero-block--atmospheric")!,
+        "::before",
+      ).content,
+    }));
+    const overflow = narrow.overflow;
     if (overflow > 0) {
       failures.push(
         `landing/reflow: the document scrolls ${overflow}px horizontally at ${NARROW_VIEWPORT.width}px — wide content must scroll inside its own frame`,
+      );
+    }
+    if (narrow.navDisplay !== "none") {
+      failures.push(
+        `landing/reflow: campaign navigation remains ${narrow.navDisplay} at ${NARROW_VIEWPORT.width}px`,
+      );
+    }
+    if (narrow.metricsWidth < narrow.metricsInnerWidth * 0.95) {
+      failures.push(
+        `landing/reflow: headerless metrics occupy ${narrow.metricsWidth}px of a ${narrow.metricsInnerWidth}px band`,
+      );
+    }
+    if (narrow.heroDecoration !== "none") {
+      failures.push(
+        `landing/reflow: atmospheric hero still paints clipped pseudo-content ${narrow.heroDecoration}`,
       );
     }
   });
@@ -1286,7 +1357,7 @@ export async function runConformance(): Promise<void> {
       } review screenshots; ${floatingSurfaces} floating surfaces share the clipping cure. ` +
         `Terminal Catalogue passed ${terminalCatalogue.profileChecks} profile fits across ${terminalCatalogue.layouts} layouts and re-themed ${terminalCatalogue.componentSpecimens} Component specimens. ` +
         `It auto-enrolled ${terminalCatalogue.foundationSpecimens} specimens across ${terminalCatalogue.foundationSheets} terminal foundations with ${terminalCatalogue.animationChecks} reduced-motion and playback checks. ` +
-        `The landing page passed ${landingAxeScans} axe scans as script-free static HTML. ` +
+        `The landing page passed ${landingAxeScans} axe scans with its page-owned theme preference. ` +
         `Journey resilience passed: ${resilience.journeys} journeys, ` +
         `${resilience.journeyStages} ordered stages, ` +
         `${resilience.journeyAxeScans} axe scans, ` +

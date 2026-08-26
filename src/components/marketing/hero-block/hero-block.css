@@ -34,23 +34,6 @@
       var(--discern-color-canvas)) 76%,
       var(--discern-color-canvas) 100%);
   }
-  .discern-hero-block--atmospheric::before {
-    position: absolute;
-    z-index: -1;
-    inset-block-start: 5rem;
-    inset-inline-start: 50%;
-    inline-size: min(92rem, 118vw);
-    block-size: 39rem;
-    background: linear-gradient(112deg,
-      transparent 5%,
-      color-mix(in oklab, var(--discern-color-canvas) 88%, transparent) 36%,
-      color-mix(in oklab, var(--discern-color-accent-100) 46%, transparent) 58%,
-      transparent 95%);
-    clip-path: polygon(29% 0, 71% 0, 94% 100%, 6% 100%);
-    content: "";
-    transform: translateX(-50%);
-    pointer-events: none;
-  }
   .discern-hero-block__inner {
     position: relative;
     z-index: 1;
@@ -154,10 +137,10 @@
     font-size: var(--discern-font-size-sm);
   }
   .discern-hero-block--showcase .discern-hero-block__title {
-    max-inline-size: 69rem;
-    font-size: clamp(4.6rem, 9vw, 8.7rem);
-    line-height: 0.86;
-    letter-spacing: -0.055em;
+    max-inline-size: 64rem;
+    font-size: clamp(4rem, 7.5vw, 7.25rem);
+    line-height: 0.92;
+    letter-spacing: -0.045em;
   }
   .discern-hero-block--showcase .discern-hero-block__title em {
     color: var(--discern-color-accent-700);
@@ -185,8 +168,15 @@
     margin-block-start: var(--discern-space-3);
   }
   .discern-hero-block--showcase .discern-hero-block__meta {
+    display: grid;
+    gap: var(--discern-space-2);
     max-inline-size: 58rem;
     color: var(--discern-color-ink-muted);
+  }
+  .discern-hero-block--showcase .discern-hero-block__meta code {
+    color: var(--discern-color-ink);
+    font-family: var(--discern-font-mono);
+    font-size: var(--discern-font-size-sm);
   }
   .discern-hero-block--showcase .discern-hero-block__visual {
     width: min(100%, 82rem);
@@ -207,7 +197,7 @@
       padding-block-start: 4.5rem;
     }
     .discern-hero-block--showcase .discern-hero-block__title {
-      font-size: clamp(4.1rem, 20vw, 6.25rem);
+      font-size: clamp(3.35rem, 17vw, 5.25rem);
     }
     .discern-hero-block--showcase .discern-hero-block__description {
       font-size: 1.08rem;

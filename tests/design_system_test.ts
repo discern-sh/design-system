@@ -46,6 +46,7 @@ import {
   MarketingIntro,
   MarketingSection,
   Masonry,
+  MetricsBand,
   Procedure,
   RawOutput,
   RESULT_SUMMARY_STATE_LABELS,
@@ -2043,6 +2044,51 @@ Deno.test("homepage-derived treatments remain opt-in component variants", () => 
   assertStringIncludes(variants, "--discern-logo-cloud-mark-mask");
 });
 
+Deno.test("landing-scale marketing layouts keep optional structure honest", async () => {
+  const header = renderToStaticMarkup(createElement(SiteHeader, {
+    brand: "discern / design system",
+    variant: "campaign",
+    collapseNavOnNarrow: true,
+    navItems: [
+      { label: "Components", href: "/components" },
+      { label: "Foundations", href: "/foundations" },
+      { label: "Compositions", href: "/compositions" },
+      { label: "Terminal", href: "/terminal" },
+    ],
+    actions: createElement("a", { href: "/catalogue" }, "Catalogue"),
+  }));
+  assertStringIncludes(header, "discern-site-header--collapse-nav");
+
+  const metrics = renderToStaticMarkup(createElement(MetricsBand, {
+    items: [{ value: "139", label: "components" }],
+  }));
+  assert(!metrics.includes("discern-metrics-band__header"));
+
+  const headerCss = await Deno.readTextFile(
+    join(COMPONENT_ROOT, "marketing", "site-header", "site-header.css"),
+  );
+  assertMatch(
+    headerCss,
+    /@media \(max-width: 480px\)[\s\S]*\.discern-site-header--collapse-nav \.discern-site-header__nav\s*\{[^}]*display:\s*none;/,
+  );
+
+  const metricsCss = await Deno.readTextFile(
+    join(COMPONENT_ROOT, "marketing", "metrics-band", "metrics-band.css"),
+  );
+  assertMatch(
+    metricsCss,
+    /\.discern-metrics-band__list:only-child\s*\{[^}]*grid-column:\s*1\s*\/\s*-1;/,
+  );
+
+  const heroCss = await Deno.readTextFile(
+    join(COMPONENT_ROOT, "marketing", "hero-block", "hero-block.css"),
+  );
+  assert(
+    !heroCss.includes(".discern-hero-block--atmospheric::before"),
+    "atmospheric heroes must not draw a clipped gradient polygon behind their content",
+  );
+});
+
 Deno.test("masked provider-strip marks swap brand artwork for a neutral dark silhouette", async () => {
   const output = await Deno.makeTempDir();
   const browser = await launchBrowser();
@@ -2227,6 +2273,16 @@ Deno.test("branding and hover-card adapters preserve their semantic relationship
   );
   assertStringIncludes(quietToggle, "discern-theme-toggle--quiet");
   assertStringIncludes(quietToggle, 'aria-label="Switch to the dark theme"');
+  assertStringIncludes(
+    quietToggle,
+    'data-discern-to-light-label="Switch to the light theme"',
+  );
+  assertStringIncludes(
+    quietToggle,
+    'data-discern-to-dark-label="Switch to the dark theme"',
+  );
+  assertStringIncludes(quietToggle, 'data-discern-light-glyph="☀"');
+  assertStringIncludes(quietToggle, 'data-discern-dark-glyph="☾"');
   assert(!quietToggle.includes("aria-pressed"));
 
   const hoverCard = renderToStaticMarkup(

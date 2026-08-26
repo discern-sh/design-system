@@ -53,6 +53,14 @@ export const ThemeToggle: DiscernComponent<
         className,
       )}
       aria-label={dark ? toLightLabel : toDarkLabel}
+      data-discern-to-light-label={toLightLabel}
+      data-discern-to-dark-label={toDarkLabel}
+      data-discern-light-glyph={typeof lightGlyph === "string"
+        ? lightGlyph
+        : undefined}
+      data-discern-dark-glyph={typeof darkGlyph === "string"
+        ? darkGlyph
+        : undefined}
       onClick={() => onThemeChange(dark ? "light" : "dark")}
       {...props}
     >

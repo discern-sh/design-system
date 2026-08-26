@@ -19,7 +19,9 @@ const facts: LandingFacts = {
     resolvedComponents: landingSelection.length,
     cssBytes: 81_234,
     cssIntegrity: "sha256:0123456789abcdef0123456789abcdef",
+    scripts: [],
   },
+  pageScripts: ["theme-preference.js"],
 };
 
 function renderedClasses(html: string): ReadonlySet<string> {
@@ -56,15 +58,29 @@ function blockName(name: string): string {
   );
 }
 
-Deno.test("the landing page is deterministic static HTML with no scripts", () => {
+Deno.test("the landing page is deterministic HTML with one page-owned behavior", () => {
   const html = renderLandingHtml(facts);
   assertEquals(html, renderLandingHtml(facts));
-  assertEquals(/<script/i.test(html), false);
+  assertEquals([...html.matchAll(/<script\b/gi)].length, 1);
+  assert(html.includes('src="/dist/landing/theme-preference.js"'));
   assert(html.startsWith("<!doctype html>"));
-  assert(html.includes('<html lang="en">'));
-  assert(html.includes("<body data-discern-root>"));
+  assert(html.includes('<html lang="en" data-discern-root'));
+  assert(
+    html.includes(
+      'data-discern-theme-storage-key="discern-design-system-theme"',
+    ),
+  );
   assert(html.includes("<title>discern design system</title>"));
   assert(html.includes(`v${facts.version}`));
+  assert(html.includes('class="discern-skip-link" href="#main-content"'));
+  assert(html.includes('<main id="main-content"'));
+  assert(html.includes("discern-theme-toggle"));
+  assert(html.includes("Browser components."));
+  assert(html.includes("Terminal renderers."));
+  assert(html.includes("Selected components"));
+  assert(html.includes(
+    `${facts.emission.resolvedComponents} of ${facts.system.components}`,
+  ));
 });
 
 Deno.test("the landing selection is sorted, unique, and canonical", () => {
@@ -79,6 +95,19 @@ Deno.test("the landing selection is sorted, unique, and canonical", () => {
   }
 });
 
+Deno.test("landing behavior files are the page script inventory", async () => {
+  const scripts: string[] = [];
+  for await (
+    const entry of Deno.readDir(
+      new URL("../catalogue/landing/behaviors/", import.meta.url),
+    )
+  ) {
+    if (entry.isFile && entry.name.endsWith(".js")) scripts.push(entry.name);
+  }
+  scripts.sort();
+  assertEquals(scripts, facts.pageScripts);
+});
+
 Deno.test("every class the landing page renders is styled by its own emission", async () => {
   const outputDirectory = await Deno.makeTempDir({ prefix: "discern-landing" });
   try {
@@ -87,6 +116,11 @@ Deno.test("every class the landing page renders is styled by its own emission", 
       components: landingSelection,
       assets: landingAssets,
     });
+    assertEquals(
+      summary.manifest.outputs.scripts,
+      [],
+      "Theme preference stays a Catalogue consumer policy, not package behavior",
+    );
     const stylesheets = [
       summary.manifest.outputs.css,
       ...summary.manifest.outputs.assets.filter((path) =>

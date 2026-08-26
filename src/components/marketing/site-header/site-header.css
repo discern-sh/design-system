@@ -164,4 +164,9 @@
       width: min(100% - 2 * var(--discern-space-4), 86rem);
     }
   }
+  @media (max-width: 480px) {
+    .discern-site-header--collapse-nav .discern-site-header__nav {
+      display: none;
+    }
+  }
 }

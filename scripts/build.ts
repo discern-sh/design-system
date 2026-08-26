@@ -1018,6 +1018,27 @@ async function writeCatalogueMarkdownAssets(): Promise<void> {
 }
 
 const LANDING_ROOT = new URL("../dist/landing/", import.meta.url);
+const LANDING_BEHAVIORS = new URL(
+  "../catalogue/landing/behaviors/",
+  import.meta.url,
+);
+
+/** Copy every page-owned browser behavior and return the built paths. */
+async function copyLandingBehaviors(): Promise<readonly string[]> {
+  const scripts: string[] = [];
+  for await (const entry of Deno.readDir(LANDING_BEHAVIORS)) {
+    if (!entry.isFile || !entry.name.endsWith(".js")) continue;
+    scripts.push(entry.name);
+  }
+  scripts.sort();
+  for (const script of scripts) {
+    await Deno.copyFile(
+      new URL(script, LANDING_BEHAVIORS),
+      new URL(script, LANDING_ROOT),
+    );
+  }
+  return scripts;
+}
 
 /**
  * Emit the landing page's selection-scoped runtime, then render the static
@@ -1035,6 +1056,7 @@ async function buildLandingPage(version: string): Promise<void> {
     components: landingSelection,
     assets: landingAssets,
   });
+  const pageScripts = await copyLandingBehaviors();
   const css = summary.manifest.integrity.files.find((file) =>
     file.path === "discern.css"
   );
@@ -1055,7 +1077,9 @@ async function buildLandingPage(version: string): Promise<void> {
           .length,
         cssBytes: css.bytes,
         cssIntegrity: css.integrity,
+        scripts: summary.manifest.outputs.scripts,
       },
+      pageScripts,
     }),
   );
 }

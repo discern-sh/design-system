@@ -42,6 +42,9 @@
     grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
     margin: 0;
   }
+  .discern-metrics-band__list:only-child {
+    grid-column: 1 / -1;
+  }
   .discern-metrics-band__list > div {
     display: flex;
     min-width: 0;

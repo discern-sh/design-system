@@ -26,6 +26,8 @@ export interface SiteHeaderProps extends HTMLAttributes<HTMLElement> {
   readonly actions?: ReactNode;
   readonly notice?: ReactNode;
   readonly sticky?: boolean;
+  /** Hide the navigation below the narrow breakpoint when the action remains the compact route into it. */
+  readonly collapseNavOnNarrow?: boolean;
   /** Standard page chrome or the wider, more translucent campaign masthead. */
   readonly variant?: SiteHeaderVariant;
 }
@@ -45,6 +47,7 @@ export const SiteHeader: DiscernComponent<HTMLElement, SiteHeaderProps> =
       actions,
       notice,
       sticky = false,
+      collapseNavOnNarrow = false,
       variant = "standard",
       className,
       ...props
@@ -61,6 +64,7 @@ export const SiteHeader: DiscernComponent<HTMLElement, SiteHeaderProps> =
           "discern-site-header",
           sticky && "discern-site-header--sticky",
           Boolean(notice) && "discern-site-header--with-notice",
+          collapseNavOnNarrow && "discern-site-header--collapse-nav",
           variant === "campaign" && "discern-site-header--campaign",
           className,
         )}
