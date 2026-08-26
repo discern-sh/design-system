@@ -230,6 +230,14 @@ export function chartKindFamily(root: URL): KindFamilyConfig {
     releasePostures: CHART_RELEASE_POSTURES,
     cliStances: ["description", "enhanced"],
     validateCliMeta: validateChartCliMeta,
+    authorGuideCliLine: (cli) => {
+      if (cli.stance !== "enhanced") return `CLI stance: ${cli.stance}.`;
+      const honesty = (cli as Record<string, unknown>).honesty;
+      if (typeof honesty !== "string") {
+        throw new Error("enhanced chart CLI Metadata has no honesty tier");
+      }
+      return `CLI stance: enhanced; honesty tier: ${honesty}.`;
+    },
     authorGuideAppendix: [
       "## Refused forms",
       "",

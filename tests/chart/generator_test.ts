@@ -11,7 +11,10 @@ import {
 } from "../../scripts/kind-family.ts";
 import { CHART_RELEASE_POSTURES } from "../../src/chart/kind-meta.ts";
 import { CHART_REFUSED_FORMS } from "../../src/chart/refusals.ts";
-import { chartKindAuthorGuide } from "../../src/chart/kinds.ts";
+import {
+  chartKindAuthorGuide,
+  chartKindMetadata,
+} from "../../src/chart/kinds.ts";
 import {
   type FamilyVocabulary,
   type FixtureKindOptions,
@@ -92,8 +95,8 @@ Deno.test("missing mandatory chart kind surfaces fail generation", async () => {
   }
 });
 
-Deno.test("a chart release corpus must cover the chart-specific postures", async () => {
-  for (const posture of ["quantization-edge", "formatter-table"]) {
+Deno.test("a chart release corpus must cover every required posture", async () => {
+  for (const posture of CHART_RELEASE_POSTURES) {
     await withTemporaryRoot(async (path, url) => {
       await writeKind(
         path,
@@ -163,6 +166,11 @@ Deno.test("chart kind Metadata declares stance and honesty tier together at birt
       }),
     );
     assertEquals((await loadChartKindSources(url)).length, 1);
+    assert(
+      (await generateChartKindSources(url)).metadata.includes(
+        "CLI stance: enhanced; honesty tier: exact.",
+      ),
+    );
   }, CHART_PREFIX);
 });
 
@@ -258,6 +266,18 @@ Deno.test("the generated author guide names every refused form with its remedy",
     assert(
       chartKindAuthorGuide.includes(`- ${form} — ${remedy}`),
       `author guide must name ${form} with its remedy`,
+    );
+  }
+});
+
+Deno.test("the generated author guide preserves every terminal honesty tier", () => {
+  for (const meta of chartKindMetadata) {
+    const terminal = meta.cli.stance === "enhanced"
+      ? `CLI stance: enhanced; honesty tier: ${meta.cli.honesty}.`
+      : `CLI stance: ${meta.cli.stance}.`;
+    assert(
+      chartKindAuthorGuide.includes(terminal),
+      `${meta.slug} must publish ${terminal}`,
     );
   }
 });

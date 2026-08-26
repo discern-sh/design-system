@@ -97,6 +97,13 @@ export interface KindFamilyConfig {
    * authority rather than hand-edited into the generated file.
    */
   readonly authorGuideAppendix?: readonly string[];
+  /**
+   * Optional family-owned summary of one kind's terminal contract. The
+   * default names only the stance; families with a second terminal
+   * dimension, such as chart honesty, must expose it here rather than let
+   * generated guidance discard it.
+   */
+  readonly authorGuideCliLine?: (cli: FamilyKindMeta["cli"]) => string;
   /** Family-specific validation of the whole authored `cli` Metadata value. */
   readonly validateCliMeta?: (
     cli: Record<string, unknown>,
@@ -595,7 +602,8 @@ export type Validated${familyType} = ${
       "",
       kind.meta.description,
       "",
-      `CLI stance: ${kind.meta.cli.stance}.`,
+      family.authorGuideCliLine?.(kind.meta.cli) ??
+        `CLI stance: ${kind.meta.cli.stance}.`,
       "",
       "Use when:",
       ...kind.meta.useWhen.map((guidance) => `- ${guidance}`),
