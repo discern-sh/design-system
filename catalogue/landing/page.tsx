@@ -185,7 +185,7 @@ const SPLIT_TERMINAL_CAPABILITIES: TerminalCapabilities = {
 
 const SHOWCASE_TERMINAL_CAPABILITIES: TerminalCapabilities = {
   ansiControl: false,
-  colorDepth: "truecolor",
+  colorDepth: "none",
   columns: 72,
   unicode: true,
 };
@@ -320,7 +320,7 @@ function componentCoverageSpec(system: LandingSystemFacts): HeatmapChartSpec {
   };
 }
 
-const MARKDOWN_SHOWCASE_SOURCE = `# Ship a selected system
+const MARKDOWN_SHOWCASE_SOURCE = `## Ship a selected system
 
 Choose only what the product needs. Shared rules keep browser and terminal output aligned.
 
@@ -359,7 +359,10 @@ function TypedDiagramSection() {
           source="One typed FlowDiagramSpec in this page"
           style={{ margin: 0 }}
         />
-        <Terminal title="The same FlowDiagramSpec in a terminal">
+        <Terminal
+          variant="showcase"
+          title="The same FlowDiagramSpec in a terminal"
+        >
           <TerminalFrame
             output={renderDiagramCli(
               {
@@ -403,7 +406,10 @@ function ComponentCoverageSection(
           source="Generated component and CLI stance registries"
           style={{ margin: 0 }}
         />
-        <Terminal title="The same computed heatmap in a terminal">
+        <Terminal
+          variant="showcase"
+          title="The same computed heatmap in a terminal"
+        >
           <TerminalFrame
             output={renderChartCli(
               { spec, theme: "dark", maxWidth: 58 },
@@ -444,7 +450,7 @@ function MarkdownProjectionSection() {
           >
             <Markdown source={MARKDOWN_SHOWCASE_SOURCE} measure="narrow" />
           </Window>
-          <Terminal title="Terminal rendering">
+          <Terminal variant="showcase" title="Terminal rendering">
             <TerminalFrame
               output={renderMarkdownCli(
                 {
