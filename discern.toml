@@ -180,7 +180,9 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 [jobs]
-  test = "deno task test"
+  # The unit suites plus the complete browser conformance pass legitimately
+  # outgrow the default 600s budget; the run is single-shot and always exits.
+  test = { run = "deno task test", timeout = 1500 }
   build = "deno task build && deno task check:catalogue"
   typecheck = "deno task typecheck"
   lint = "deno task lint"
