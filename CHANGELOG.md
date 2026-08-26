@@ -6,6 +6,8 @@ Each release is cut from a green run of the full release gate — formatting, li
 
 ## Unreleased
 
+- Make the scrollable Terminal and Code listing bodies keyboard-accessible, following Chart's focusable-viewport pattern: each `<pre>` body now carries `role="group"`, a derived `Scrollable …` label that includes a string title or filename, `tabIndex={0}`, and a visible `:focus-visible` outline, so keyboard users can scroll overflowing output. The change is additive; existing markup, classes, and props are unchanged.
+
 - Give the design system its own landing page at the dev server's site root. The page is composed entirely from published Marketing, Display, Editorial, Layout, Artwork, and Agents Components and rendered to static HTML at build time through the React adapter contract — it ships no scripts, follows the system colour scheme through tokens alone, and loads a selection-scoped runtime emitted beside it into `dist/landing/`. Its hero presents the page's own emission manifest through the same Receipt Component on the browser and terminal surfaces, and every inventory number on the page derives from the build's package manifest rather than authored copy. Unit tests hold the document to deterministic script-free output whose every rendered class resolves to a block its own emission styles, browser conformance adds structural and axe checks in both colour schemes, and the Catalogue keeps every existing route. The published package contract is unchanged by it.
 
 ## 0.27.0

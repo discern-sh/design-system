@@ -94,6 +94,13 @@ Deno.test("every class the landing page renders is styled by its own emission", 
         path.endsWith(".css")
       ),
     ];
+    const html = renderLandingHtml(facts);
+    for (const stylesheet of stylesheets) {
+      assert(
+        html.includes(`href="/dist/landing/${stylesheet}"`),
+        `landing document must link every emitted stylesheet; missing ${stylesheet}`,
+      );
+    }
     const emitted = new Set<string>();
     for (const stylesheet of stylesheets) {
       for (
@@ -104,7 +111,7 @@ Deno.test("every class the landing page renders is styled by its own emission", 
         emitted.add(name);
       }
     }
-    const unstyled = [...renderedClasses(renderLandingHtml(facts))].filter((
+    const unstyled = [...renderedClasses(html)].filter((
       name,
     ) => !emitted.has(name) && !emitted.has(blockName(name)));
     assertEquals(

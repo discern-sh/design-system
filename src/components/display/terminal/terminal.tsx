@@ -62,7 +62,15 @@ export const Terminal: DiscernComponent<HTMLElement, TerminalProps> =
               ? <span className="discern-terminal__actions">{actions}</span>
               : null}
           </div>
-          <pre className="discern-terminal__body" style={bodyStyle}>
+          <pre
+            className="discern-terminal__body"
+            style={bodyStyle}
+            role="group"
+            aria-label={typeof title === "string"
+              ? `Scrollable terminal output: ${title}`
+              : "Scrollable terminal output"}
+            tabIndex={0}
+          >
           <code>{children}</code>
           </pre>
           {footer

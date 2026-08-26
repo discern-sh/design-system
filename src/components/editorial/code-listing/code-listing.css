@@ -58,6 +58,10 @@
     font: var(--discern-font-size-xs)/1.72 var(--discern-font-mono);
     tab-size: 2;
   }
+  .discern-code-listing__body:focus-visible {
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: -2px;
+  }
   .discern-code-listing__line {
     display: block;
     min-width: max-content;

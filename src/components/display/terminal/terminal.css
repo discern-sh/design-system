@@ -71,6 +71,10 @@
     tab-size: 2;
     white-space: pre;
   }
+  .discern-terminal__body:focus-visible {
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: -2px;
+  }
   .discern-terminal__body code {
     color: inherit;
     font: inherit;

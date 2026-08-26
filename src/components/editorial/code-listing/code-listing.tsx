@@ -59,7 +59,17 @@ export const CodeListing: DiscernComponent<HTMLElement, CodeListingProps> =
             </header>
           )
           : null}
-        <pre className="discern-code-listing__body" data-language={language}>
+        <pre
+          className="discern-code-listing__body"
+          data-language={language}
+          role="group"
+          aria-label={typeof filename === "string" || typeof title === "string"
+            ? `Scrollable code listing: ${
+              typeof filename === "string" ? filename : title
+            }`
+            : "Scrollable code listing"}
+          tabIndex={0}
+        >
           <code>
             {lines.map((line, index) => (
               <span
