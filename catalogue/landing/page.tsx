@@ -37,6 +37,7 @@ import renderReceiptCli, {
 import renderWorklogCli from "../../src/components/agents/worklog/worklog.cli.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import { projectTerminalInlineHtml } from "../../src/cli/projection.ts";
+import type { RuntimeAssetSelection } from "../../src/runtime-assets.ts";
 import { catalogueRoutePaths } from "../routes.ts";
 
 /** Canonical package identity shared by every landing surface. */
@@ -67,6 +68,9 @@ export const landingSelection: readonly string[] = [
   "voice-break",
   "window",
 ];
+
+/** Assets the landing emission carries; the document links only these. */
+export const landingAssets: readonly RuntimeAssetSelection[] = ["fonts"];
 
 /** Build-measured facts the landing page presents instead of authored claims. */
 export interface LandingFacts {
@@ -398,10 +402,10 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
         title="The same system, rendered as text."
         description={
           <p>
-            Every component declares its terminal stance at birth: a typed,
-            pure renderer that derives deterministic frames from props and
-            explicit terminal capabilities — colour depths, widths, Unicode or
-            ASCII — or a recorded reason it stays browser-only.
+            Every component declares its terminal stance at birth: a typed, pure
+            renderer that derives deterministic frames from props and explicit
+            terminal capabilities — colour depths, widths, Unicode or ASCII — or
+            a recorded reason it stays browser-only.
           </p>
         }
         points={[
@@ -608,7 +612,6 @@ export function renderLandingHtml(facts: LandingFacts): string {
     <title>discern design system</title>
     <link rel="stylesheet" href="/dist/landing/fonts.css">
     <link rel="stylesheet" href="/dist/landing/discern.css">
-    <link rel="stylesheet" href="/dist/landing/grain.css">
   </head>
   <body data-discern-root>${markup}</body>
 </html>

@@ -613,6 +613,18 @@ async function verifyLandingPage(
       );
     }
   }
+  await withViewport(page, NARROW_VIEWPORT, async () => {
+    await page.goto(`${origin}/`, { waitUntil: "networkidle" });
+    const overflow = await page.evaluate(() =>
+      document.documentElement.scrollWidth -
+      document.documentElement.clientWidth
+    );
+    if (overflow > 0) {
+      failures.push(
+        `landing/reflow: the document scrolls ${overflow}px horizontally at ${NARROW_VIEWPORT.width}px — wide content must scroll inside its own frame`,
+      );
+    }
+  });
   await page.emulateMedia({ colorScheme: null, reducedMotion: "reduce" });
   return scans;
 }

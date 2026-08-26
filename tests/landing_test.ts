@@ -1,5 +1,6 @@
 import { assert, assertEquals } from "@std/assert";
 import {
+  landingAssets,
   type LandingFacts,
   landingSelection,
   renderLandingHtml,
@@ -72,20 +73,29 @@ Deno.test("the landing selection is sorted, unique, and canonical", () => {
   assertEquals(new Set(landingSelection).size, landingSelection.length);
   const known = new Set(packageManifest.components.map(({ id }) => id));
   for (const slug of landingSelection) {
-    assert(known.has(slug), `landing selection names unknown component ${slug}`);
+    assert(
+      known.has(slug),
+      `landing selection names unknown component ${slug}`,
+    );
   }
 });
 
 Deno.test("every class the landing page renders is styled by its own emission", async () => {
   const outputDirectory = await Deno.makeTempDir({ prefix: "discern-landing" });
   try {
-    await emitDesignSystemRuntime({
+    const summary = await emitDesignSystemRuntime({
       outputRoot: new URL(`file://${outputDirectory}/`),
       components: landingSelection,
-      assets: ["fonts", "grain"],
+      assets: landingAssets,
     });
+    const stylesheets = [
+      summary.manifest.outputs.css,
+      ...summary.manifest.outputs.assets.filter((path) =>
+        path.endsWith(".css")
+      ),
+    ];
     const emitted = new Set<string>();
-    for (const stylesheet of ["discern.css", "fonts.css", "grain.css"]) {
+    for (const stylesheet of stylesheets) {
       for (
         const name of definedClasses(
           await Deno.readTextFile(`${outputDirectory}/${stylesheet}`),

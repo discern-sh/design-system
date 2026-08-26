@@ -1027,13 +1027,13 @@ const LANDING_ROOT = new URL("../dist/landing/", import.meta.url);
 async function buildLandingPage(version: string): Promise<void> {
   const { emitDesignSystemRuntime } = await import("../src/runtime.ts");
   const { packageManifest } = await import("../src/manifest.ts");
-  const { landingSelection, renderLandingHtml } = await import(
+  const { landingAssets, landingSelection, renderLandingHtml } = await import(
     "../catalogue/landing/page.tsx"
   );
   const summary = await emitDesignSystemRuntime({
     outputRoot: LANDING_ROOT,
     components: landingSelection,
-    assets: ["fonts", "grain"],
+    assets: landingAssets,
   });
   const css = summary.manifest.integrity.files.find((file) =>
     file.path === "discern.css"

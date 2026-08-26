@@ -5,6 +5,7 @@ node_modules/
 /.idea/gbrowser_project.xml
 dist/*
 !dist/.gitkeep
+/.claude/launch.json
 catalogue/generated/*
 !catalogue/generated/.gitkeep
 
