@@ -20,6 +20,8 @@ const NEUTRAL_CHART_GRAPH_ROOTS = [
 const CHART_NUMERAL_GRAPH_ROOTS = [
   ...NEUTRAL_CHART_GRAPH_ROOTS,
   "src/generated/chart-cli-registry.ts",
+  "src/components/editorial/chart/chart.cli.ts",
+  "src/components/editorial/chart/chart.tsx",
 ] as const;
 
 const BANNED_SOURCES: readonly {
@@ -28,17 +30,21 @@ const BANNED_SOURCES: readonly {
 }[] = [
   {
     name: "locale-dependent number formatting (Intl.NumberFormat)",
-    pattern: /\bIntl\s*\.\s*NumberFormat\s*\(/u,
+    pattern: /\bIntl\s*(?:\.\s*NumberFormat\b|\[\s*["']NumberFormat["']\s*\])/u,
   },
   {
     name: "locale-dependent date formatting (Intl.DateTimeFormat)",
-    pattern: /\bIntl\s*\.\s*DateTimeFormat\s*\(/u,
+    pattern:
+      /\bIntl\s*(?:\.\s*DateTimeFormat\b|\[\s*["']DateTimeFormat["']\s*\])/u,
   },
   {
     name: "locale-dependent conversion (toLocaleString)",
-    pattern: /\.\s*toLocaleString\s*\(/u,
+    pattern: /(?:\.\s*toLocaleString\b|\[\s*["']toLocaleString["']\s*\])/u,
   },
-  { name: "float formatting (toFixed)", pattern: /\.\s*toFixed\s*\(/u },
+  {
+    name: "float formatting (toFixed)",
+    pattern: /(?:\.\s*toFixed\b|\[\s*["']toFixed["']\s*\])/u,
+  },
   {
     name: "ambient date or clock access (Date)",
     pattern:
@@ -48,6 +54,7 @@ const BANNED_SOURCES: readonly {
 
 async function graphModules(
   roots: readonly string[],
+  rejectExternal = false,
 ): Promise<readonly string[]> {
   const paths = new Set<string>();
   for (const root of roots) {
@@ -69,10 +76,13 @@ async function graphModules(
       readonly modules: readonly { readonly specifier: string }[];
     };
     for (const module of graph.modules) {
-      assert(
-        module.specifier.startsWith("file://"),
-        `the chart graph resolved an external module: ${module.specifier}`,
-      );
+      if (!module.specifier.startsWith("file://")) {
+        assert(
+          !rejectExternal,
+          `the chart graph resolved an external module: ${module.specifier}`,
+        );
+        continue;
+      }
       paths.add(relative(PACKAGE_ROOT, fromFileUrl(module.specifier)));
     }
   }
@@ -81,7 +91,7 @@ async function graphModules(
 }
 
 Deno.test("the chart graph stays neutral and inside its declared roots", async () => {
-  for (const path of await graphModules(NEUTRAL_CHART_GRAPH_ROOTS)) {
+  for (const path of await graphModules(NEUTRAL_CHART_GRAPH_ROOTS, true)) {
     assert(
       path.startsWith("src/chart/") || path.startsWith("src/internal/") ||
         path.startsWith("src/unicode/") || path.startsWith("src/tokens/") ||
@@ -103,6 +113,9 @@ Deno.test("the chart graph stays neutral and inside its declared roots", async (
 Deno.test("locale, float formatting, and clock access are banned from the chart graph", async () => {
   const offenders: string[] = [];
   const modules = await graphModules(CHART_NUMERAL_GRAPH_ROOTS);
+  for (const root of CHART_NUMERAL_GRAPH_ROOTS) {
+    assert(modules.includes(root), `${root} escaped its own graph sweep`);
+  }
   for (const entry of chartKindRegistry) {
     for (const suffix of ["validation", "layout", "description", "cli"]) {
       const expected =
@@ -125,7 +138,10 @@ Deno.test("locale, float formatting, and clock access are banned from the chart 
       "src/cli/glyph-ramps.ts",
     ]
   ) {
-    assert(modules.includes(authority), `${authority} escaped the numeral graph`);
+    assert(
+      modules.includes(authority),
+      `${authority} escaped the numeral graph`,
+    );
   }
   for (const path of modules) {
     const source = await Deno.readTextFile(join(PACKAGE_ROOT, path));
