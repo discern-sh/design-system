@@ -1051,8 +1051,6 @@ async function buildLandingPage(version: string): Promise<void> {
         tokens: packageManifest.publicTokenNames.length,
       },
       emission: {
-        requestedComponents:
-          summary.manifest.selection.requestedComponents.length,
         resolvedComponents: summary.manifest.selection.resolvedComponents
           .length,
         cssBytes: css.bytes,

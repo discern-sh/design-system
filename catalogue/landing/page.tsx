@@ -12,7 +12,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { SurveyBackdrop } from "../../src/components/artwork/survey-backdrop/survey-backdrop.tsx";
 import { Button } from "../../src/components/core/button/button.tsx";
-import { Badge } from "../../src/components/display/badge/badge.tsx";
 import { Terminal } from "../../src/components/display/terminal/terminal.tsx";
 import { Window } from "../../src/components/display/window/window.tsx";
 import { CodeListing } from "../../src/components/editorial/code-listing/code-listing.tsx";
@@ -50,7 +49,6 @@ const JSR_URL = `https://jsr.io/${LANDING_PACKAGE}`;
  * selection does not resolve, or requests a component it never renders.
  */
 export const landingSelection: readonly string[] = [
-  "badge",
   "button",
   "closing-statement",
   "code-listing",
@@ -84,7 +82,6 @@ export interface LandingFacts {
   };
   /** This page's own runtime emission, straight from its `manifest.json`. */
   readonly emission: {
-    readonly requestedComponents: number;
     readonly resolvedComponents: number;
     readonly cssBytes: number;
     readonly cssIntegrity: string;
@@ -107,46 +104,40 @@ interface LandingReceipt {
     readonly state: "pass";
     readonly value: string;
   }[];
-  readonly summary: string;
 }
 
 /** One fact set feeds both hero surfaces, so the frames can never disagree. */
 function landingReceipt(facts: LandingFacts): LandingReceipt {
   return {
-    title: "Landing page emission",
+    title: "This page's build",
     meta: [
       { label: "Package", value: `${LANDING_PACKAGE}@${facts.version}` },
-      {
-        label: "Selection",
-        value: `${facts.emission.requestedComponents} components requested`,
-      },
     ],
     checks: [
       {
-        label: "Components resolved",
+        label: "Components",
         state: "pass",
         value: `${facts.emission.resolvedComponents}`,
       },
       {
-        label: "discern.css emitted",
+        label: "discern.css",
         state: "pass",
         value: kilobytes(facts.emission.cssBytes),
       },
       {
-        label: "Integrity recorded",
+        label: "Integrity",
         state: "pass",
         value: shortIntegrity(facts.emission.cssIntegrity),
       },
-      { label: "Client JavaScript", state: "pass", value: "none" },
+      { label: "JavaScript", state: "pass", value: "none" },
     ],
-    summary: "Byte-for-byte reproducible from the same selection.",
   };
 }
 
 const HERO_TERMINAL_CAPABILITIES: TerminalCapabilities = {
   ansiControl: false,
   colorDepth: "truecolor",
-  columns: 62,
+  columns: 54,
   unicode: true,
 };
 
@@ -175,29 +166,19 @@ function HeroReceiptPair({ facts }: { readonly facts: LandingFacts }) {
     stamp: "pass",
     meta: receipt.meta,
     checks: receipt.checks,
-    summary: receipt.summary,
     theme: "dark",
   };
   return (
     <Grid gap={5} minimum="22rem">
-      <Window
-        variant="showcase"
-        title="Receipt — browser surface"
-        actions={<Badge tone="accent">static HTML</Badge>}
-      >
+      <Window variant="showcase" title="In the browser">
         <Receipt
           title={receipt.title}
           stamp="pass"
           meta={webMeta}
           checks={webChecks}
-          summary={receipt.summary}
         />
       </Window>
-      <Terminal
-        variant="showcase"
-        title="the same Receipt — terminal surface"
-        actions={<Badge tone="accent">deterministic frame</Badge>}
-      >
+      <Terminal variant="showcase" title="The same receipt, in the terminal">
         <TerminalFrame
           output={renderReceiptCli(cliProps, HERO_TERMINAL_CAPABILITIES)}
         />
@@ -224,13 +205,9 @@ const WORKLOG_OUTPUT_PROPS = {
       status: "done",
       statusLabel: "3 components",
     },
+    { label: "Emit discern.css", status: "done" },
     {
-      label: "Emit discern.css",
-      status: "done",
-      statusLabel: "deterministic",
-    },
-    {
-      label: "Record manifest integrity",
+      label: "Record integrity",
       status: "done",
       statusLabel: "sha256",
     },
@@ -260,10 +237,10 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
         }
         description={
           <p>
-            The discern design system renders product interfaces in the browser
-            and the terminal from the same tokens and component contracts —
-            deterministic CSS emission, a React-free core, static HTML output,
-            and typed CLI renderers, published for Deno on JSR.
+            A design system for products that live in the browser and the
+            terminal. The same components render as web pages and as terminal
+            output, so both halves of your product feel like one — and every
+            page ships as plain HTML and CSS, no JavaScript required.
           </p>
         }
         actions={
@@ -278,14 +255,13 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
         }
         meta={
           <>
-            Below: this page&rsquo;s actual emission manifest, presented by the
-            same Receipt component on both of its surfaces.
+            Below: this page&rsquo;s own build receipt, drawn by the same
+            Receipt component for the browser and for the terminal.
           </>
         }
         visual={<HeroReceiptPair facts={facts} />}
       />
       <MetricsBand
-        eyebrow="The inventory"
         tone="contrast"
         items={[
           {
@@ -295,63 +271,62 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
           },
           {
             value: `${facts.system.tokens}`,
-            label: "public design tokens",
-            detail: "one authority for web and terminal",
+            label: "design tokens",
+            detail: "one set of values for both surfaces",
           },
           {
             value: "2",
-            label: "render surfaces",
-            detail: "browser CSS runtime and terminal strings",
+            label: "surfaces",
+            detail: "real pages in the browser, real text in the terminal",
           },
           {
             value: "0",
             label: "scripts on this page",
-            detail: "static HTML and emitted CSS alone",
+            detail: "what you're reading is HTML and CSS",
           },
         ]}
       />
       <FeatureBento
         eyebrow="Guarantees"
-        title="Built on contracts, not conventions."
+        title="Promises a test suite keeps."
         description={
           <p>
-            Every promise below is enforced by package tests, so a regression
-            cannot reach a release.
+            A regression in any of these cannot ship.
           </p>
         }
         items={[
           {
-            title: "Deterministic emission",
+            title: "Same input, same bytes",
             description:
-              "Identical selections emit byte-for-byte identical output, and every file lands in a SHA-256 integrity manifest you can diff and pin.",
+              "Build the same selection twice and the output is byte-for-byte identical, with a SHA-256 manifest you can diff and pin.",
             size: "wide",
             tone: "accent",
           },
           {
-            title: "Selection-scoped runtime",
+            title: "Only what you use",
             description:
-              "Emit only the components a route uses. Dependencies resolve from generated metadata; unrelated groups never reach the page.",
+              "Pick the components a page needs and its stylesheet contains exactly those — dependencies included, nothing else.",
           },
           {
-            title: "Namespaced and rootable",
+            title: "Safe to drop in",
             description:
-              "Every class, token, and keyframe wears the discern prefix and applies only beneath an opted-in root, so existing pages keep their own styles.",
+              "Every style is discern-prefixed and applies only inside an element you opt in, so your existing CSS is never touched.",
           },
           {
-            title: "Accessibility is gated",
+            title: "Accessible by default",
             description:
-              "Contrast, reduced motion, forced colours, and the interface-text floor are package tests, not review notes.",
+              "Contrast, reduced motion, forced colours, and keyboard access are package tests, not review notes.",
             size: "wide",
           },
           {
-            title: "Tokens move themes",
+            title: "Rebrand with variables",
             description:
-              "Light, dark, and consumer branding override public custom properties. Component CSS stays byte-identical in every theme.",
+              "Light, dark, and your own brand are token overrides. Component styles never fork per theme.",
           },
           {
-            title: "A guarded public contract",
+            title: "Stable releases",
             description:
-              "Strict TypeScript throughout, every public symbol documented, and immutable SemVer releases on JSR.",
+              "Strict TypeScript, documented exports, and immutable SemVer versions on JSR.",
           },
         ]}
       />
@@ -360,16 +335,17 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
         title="Ship static HTML. Keep the framework optional."
         description={
           <p>
-            The core never imports React. The optional adapter renders every
-            component to static markup at build time, so consumers serve HTML
-            and CSS — no bundle, no hydration, no runtime dependency.
+            You can use it without React — the core is TypeScript that writes
+            CSS. With React, the adapter runs once at build time, and what you
+            deploy is the HTML and CSS it produced: no bundle, no hydration, no
+            runtime dependency.
           </p>
         }
         points={[
           {
             title: "React-free core",
             description:
-              "The root, CLI, runtime, tokens, and theme graphs resolve no React at all.",
+              "No part of the core resolves React, and release tests keep it that way.",
           },
           {
             title: "Build-time adapter",
@@ -402,27 +378,27 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
         title="The same system, rendered as text."
         description={
           <p>
-            Every component declares its terminal stance at birth: a typed, pure
-            renderer that derives deterministic frames from props and explicit
-            terminal capabilities — colour depths, widths, Unicode or ASCII — or
-            a recorded reason it stays browser-only.
+            Every component ships a terminal renderer, or records why it stays
+            browser-only. A renderer is a pure function: props and terminal
+            capabilities in — width, colour depth, Unicode or ASCII — one exact
+            frame of text out.
           </p>
         }
         points={[
           {
             title: "Pure renderers",
             description:
-              "No I/O, environment, or clock reads — props and capabilities in, one exact frame out.",
+              "No I/O, environment, or clock reads — the same inputs always draw the same frame.",
           },
           {
-            title: "Token-derived palette",
+            title: "One palette",
             description:
-              "Terminal light, dark, and ANSI fallbacks derive from the same public tokens as the web theme.",
+              "Terminal colours derive from the same tokens as the web theme, down to the ANSI fallbacks.",
           },
           {
             title: "Interactive when asked",
             description:
-              "Effects live behind ./cli/interactive and paint the same component frame states.",
+              "Prompts and pickers live behind an optional interactive adapter that paints the same frames.",
           },
         ]}
         actions={
@@ -431,17 +407,7 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
           </Button>
         }
         media={
-          <Terminal
-            variant="showcase"
-            title="deno run build.ts"
-            footer={
-              <>
-                <span>{SPLIT_TERMINAL_CAPABILITIES.columns} columns</span>
-                <span>truecolour</span>
-                <span>same tokens</span>
-              </>
-            }
-          >
+          <Terminal variant="showcase" title="deno run build.ts">
             <TerminalFrame
               output={renderWorklogCli(
                 WORKLOG_OUTPUT_PROPS,
@@ -456,7 +422,7 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
         eyebrow="The character of the system"
         quote="Every principle trades a little authoring convenience for a lot of consumer trust."
         attribution="Design principles"
-        context="The seven binding rules this system is built against"
+        context="The seven rules every change is tested against"
       />
       <FaqBlock
         eyebrow="Before you adopt it"
@@ -512,8 +478,8 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
         title="Select. Emit. Ship."
         description={
           <p>
-            Open the catalogue to inspect every component contract, token, and
-            terminal frame this page is built from.
+            Open the catalogue to inspect every component, token, and terminal
+            frame this page is built from.
           </p>
         }
         actions={
@@ -528,7 +494,8 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
         }
         reassurance={
           <p>
-            Apache-2.0. No runtime dependencies. Versions are immutable on JSR.
+            Apache-2.0. Built for Deno, with no runtime dependencies. Versions
+            are immutable on JSR.
           </p>
         }
       />
@@ -565,8 +532,8 @@ export function LandingPage({ facts }: { readonly facts: LandingFacts }) {
         brandTypeface="display"
         description={
           <p>
-            A framework-neutral design system for products that live in the
-            browser and the terminal.
+            A design system for products that live in the browser and the
+            terminal.
           </p>
         }
         groups={[
@@ -593,7 +560,7 @@ export function LandingPage({ facts }: { readonly facts: LandingFacts }) {
           },
         ]}
         legal={`Apache-2.0 · ${LANDING_PACKAGE} v${facts.version}`}
-        meta="This page is static HTML and selection-scoped emitted CSS. It ships no scripts."
+        meta="This page is plain HTML and CSS. It ships no scripts."
       />
     </>
   );
@@ -608,7 +575,7 @@ export function renderLandingHtml(facts: LandingFacts): string {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light dark">
-    <meta name="description" content="A framework-neutral design system for browser and terminal surfaces: deterministic CSS emission, a React-free core, and typed CLI renderers.">
+    <meta name="description" content="A design system for products that live in the browser and the terminal: the same components render as web pages and as terminal output, with no JavaScript required.">
     <title>discern design system</title>
     <link rel="stylesheet" href="/dist/landing/fonts.css">
     <link rel="stylesheet" href="/dist/landing/discern.css">

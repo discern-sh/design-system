@@ -16,7 +16,6 @@ const facts: LandingFacts = {
     tokens: packageManifest.publicTokenNames.length,
   },
   emission: {
-    requestedComponents: landingSelection.length,
     resolvedComponents: landingSelection.length,
     cssBytes: 81_234,
     cssIntegrity: "sha256:0123456789abcdef0123456789abcdef",
