@@ -110,13 +110,15 @@ function normalizeSparkline(
   const flat = minimum === maximum;
   return {
     flat,
-    fractions: Object.freeze(values.map((value) =>
-      value === null
-        ? null
-        : flat
-        ? 0.5
-        : chartLinearFraction(minimum, maximum, value)
-    )),
+    fractions: Object.freeze(
+      values.map((value) =>
+        value === null
+          ? null
+          : flat
+          ? 0.5
+          : chartLinearFraction(minimum, maximum, value)
+      ),
+    ),
   };
 }
 

@@ -330,7 +330,7 @@ Deno.test("sequence layout preserves participant columns and message chronology"
   assertEquals(first.canvas.bounds, {
     x: 0,
     y: 0,
-    width: 791.68,
+    width: 791.69,
     height: 652,
   });
   for (let run = 0; run < 5; run += 1) {
@@ -349,7 +349,7 @@ Deno.test("sequence layout preserves participant columns and message chronology"
   );
   assertEquals(
     guides.map((guide) => guide.points[0]?.x),
-    [90.24, 350.24, 610.24],
+    [90.25, 350.25, 610.25],
   );
   assert(guides.every(({ style }) => style === "dashed"));
 
@@ -374,7 +374,7 @@ Deno.test("sequence layout preserves participant columns and message chronology"
   assertEquals(self.sourceId, "@sequence-lifeline:worker");
   assertEquals(self.targetId, "@sequence-lifeline:worker");
   assertEquals(self.points.length, 4);
-  assertEquals(self.arrowhead.tip, { x: 610.24, y: 465 });
+  assertEquals(self.arrowhead.tip, { x: 610.25, y: 465 });
 
   for (const connector of connectors) {
     const target = guides.find(({ semanticId }) =>

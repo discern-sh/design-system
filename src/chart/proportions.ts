@@ -27,9 +27,11 @@ function scaledShares(values: readonly number[]): ScaledShares {
     return chartDecimalFromNumber(value, `Share ${index}`);
   });
   const exponent = Math.min(0, ...decimals.map((value) => value.exponent));
-  const shares = Object.freeze(decimals.map((value) =>
-    value.coefficient * 10n ** BigInt(value.exponent - exponent)
-  ));
+  const shares = Object.freeze(
+    decimals.map((value) =>
+      value.coefficient * 10n ** BigInt(value.exponent - exponent)
+    ),
+  );
   return {
     shares,
     total: shares.reduce((sum, share) => sum + share, 0n),
@@ -88,9 +90,7 @@ export function chartProportionalCumulativeFractions(
   let cumulative = 0n;
   return Object.freeze(shares.map((share, index) => {
     cumulative += share;
-    return index === shares.length - 1
-      ? 1
-      : bigintRatio(cumulative, total);
+    return index === shares.length - 1 ? 1 : bigintRatio(cumulative, total);
   }));
 }
 

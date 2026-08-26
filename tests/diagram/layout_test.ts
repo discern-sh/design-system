@@ -37,6 +37,8 @@ const EPSILON = 0.02;
 Deno.test("diagram geometry shares symmetric decimal tie rounding", () => {
   assertEquals(roundDiagramNumber(1.005), 1.01);
   assertEquals(roundDiagramNumber(-1.005), -1.01);
+  assertEquals(roundDiagramNumber(66.245), 66.25);
+  assertEquals(roundDiagramNumber(-66.245), -66.25);
 });
 
 function overlap(left: DiagramRect, right: DiagramRect): boolean {
