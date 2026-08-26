@@ -1047,7 +1047,9 @@ async function copyLandingBehaviors(): Promise<readonly string[]> {
  */
 async function buildLandingPage(version: string): Promise<void> {
   const { emitDesignSystemRuntime } = await import("../src/runtime.ts");
-  const { packageManifest } = await import("../src/manifest.ts");
+  const { landingSystemFacts } = await import(
+    "../catalogue/landing/facts.ts"
+  );
   const { landingAssets, landingSelection, renderLandingHtml } = await import(
     "../catalogue/landing/page.tsx"
   );
@@ -1067,11 +1069,7 @@ async function buildLandingPage(version: string): Promise<void> {
     new URL("index.html", LANDING_ROOT),
     renderLandingHtml({
       version,
-      system: {
-        components: packageManifest.components.length,
-        groups: packageManifest.groups.length,
-        tokens: packageManifest.publicTokenNames.length,
-      },
+      system: landingSystemFacts,
       emission: {
         resolvedComponents: summary.manifest.selection.resolvedComponents
           .length,

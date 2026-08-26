@@ -5,16 +5,18 @@ import {
   landingSelection,
   renderLandingHtml,
 } from "../catalogue/landing/page.tsx";
+import { landingSystemFacts } from "../catalogue/landing/facts.ts";
+import { cliComponentRegistry } from "../src/generated/cli-registry.ts";
 import { packageManifest } from "../src/manifest.ts";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
 
+const cliStances: Readonly<
+  Record<string, { readonly stance: "rendered" | "exempt" }>
+> = cliComponentRegistry;
+
 const facts: LandingFacts = {
   version: "0.0.0-test",
-  system: {
-    components: packageManifest.components.length,
-    groups: packageManifest.groups.length,
-    tokens: packageManifest.publicTokenNames.length,
-  },
+  system: landingSystemFacts,
   emission: {
     resolvedComponents: landingSelection.length,
     cssBytes: 81_234,
@@ -23,6 +25,32 @@ const facts: LandingFacts = {
   },
   pageScripts: ["theme-preference.js"],
 };
+
+Deno.test("landing system facts derive complete browser and terminal coverage", () => {
+  assertEquals(
+    landingSystemFacts.coverage.length,
+    packageManifest.groups.length,
+  );
+  assertEquals(
+    landingSystemFacts.coverage.reduce(
+      (total, group) => total + group.browserComponents,
+      0,
+    ),
+    packageManifest.components.length,
+  );
+  for (const coverage of landingSystemFacts.coverage) {
+    const group = packageManifest.groups.find(({ name }) =>
+      name === coverage.group
+    );
+    assert(group !== undefined);
+    assertEquals(coverage.browserComponents, group.components.length);
+    assertEquals(
+      coverage.terminalComponents,
+      group.components.filter((id) => cliStances[id]?.stance === "rendered")
+        .length,
+    );
+  }
+});
 
 function renderedClasses(html: string): ReadonlySet<string> {
   const classes = new Set<string>();
@@ -58,6 +86,33 @@ function blockName(name: string): string {
   );
 }
 
+function unstyledClasses(
+  rendered: ReadonlySet<string>,
+  defined: ReadonlySet<string>,
+): readonly string[] {
+  const definedBlocks = new Set([...defined].map(blockName));
+  return [...rendered].filter((name) =>
+    !defined.has(name) && !definedBlocks.has(blockName(name))
+  );
+}
+
+Deno.test("landing style coverage recognises an emitted Component block", () => {
+  assertEquals(
+    unstyledClasses(
+      new Set(["discern-future-component"]),
+      new Set(["discern-future-component__part"]),
+    ),
+    [],
+  );
+  assertEquals(
+    unstyledClasses(
+      new Set(["discern-future-component"]),
+      new Set(["discern-unrelated__part"]),
+    ),
+    ["discern-future-component"],
+  );
+});
+
 Deno.test("the landing page is deterministic HTML with one page-owned behavior", () => {
   const html = renderLandingHtml(facts);
   assertEquals(html, renderLandingHtml(facts));
@@ -77,6 +132,11 @@ Deno.test("the landing page is deterministic HTML with one page-owned behavior",
   assert(html.includes("discern-theme-toggle"));
   assert(html.includes("Browser components."));
   assert(html.includes("Terminal renderers."));
+  assert(html.includes("Author the meaning. Let the system draw it."));
+  assert(html.includes("A component inventory that counts itself."));
+  assert(html.includes("Two native renderings. No injected HTML."));
+  assert(html.includes('data-discern-diagram-kind="flow"'));
+  assert(html.includes('data-discern-chart-kind="heatmap"'));
   assert(html.includes("Selected components"));
   assert(html.includes(
     `${facts.emission.resolvedComponents} of ${facts.system.components}`,
@@ -144,9 +204,7 @@ Deno.test("every class the landing page renders is styled by its own emission", 
         emitted.add(name);
       }
     }
-    const unstyled = [...renderedClasses(html)].filter((
-      name,
-    ) => !emitted.has(name) && !emitted.has(blockName(name)));
+    const unstyled = unstyledClasses(renderedClasses(html), emitted);
     assertEquals(
       unstyled,
       [],
