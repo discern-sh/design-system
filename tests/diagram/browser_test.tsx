@@ -2,6 +2,7 @@ import { assert, assertEquals, assertNotEquals } from "@std/assert";
 import { join, toFileUrl } from "@std/path";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
+  browserFontCss,
   scanBrowserAccessibility,
   waitForPaintedFrames,
 } from "../../scripts/browser-conformance-support.ts";
@@ -34,42 +35,6 @@ const browserCases = diagramKindRegistry.map(({ meta, releaseCorpus }) => ({
   spec: (releaseCorpus.cases.find(({ name }) => name === "long-text") ??
     releaseCorpus.cases[0])?.spec as DiagramSpec,
 }));
-
-function encodeBase64(bytes: Uint8Array): string {
-  const chunks: string[] = [];
-  for (let offset = 0; offset < bytes.length; offset += 32_768) {
-    chunks.push(
-      String.fromCharCode(...bytes.subarray(offset, offset + 32_768)),
-    );
-  }
-  return btoa(chunks.join(""));
-}
-
-async function bundledFontCss(): Promise<string> {
-  let css = await Deno.readTextFile("assets/fonts.css");
-  for (
-    const name of [
-      "crimson-pro-roman.woff2",
-      "crimson-pro-italic.woff2",
-      "inter.woff2",
-      "jetbrains-mono.woff2",
-    ]
-  ) {
-    const bytes = await Deno.readFile(join("assets", "fonts", name));
-    css = css.replaceAll(
-      `./fonts/${name}`,
-      `data:font/woff2;base64,${encodeBase64(bytes)}`,
-    );
-  }
-  return css;
-}
-
-const systemFontCss = `
-  :where([data-discern-root]) {
-    --discern-font-ui: system-ui, sans-serif;
-    --discern-font-mono: ui-monospace, monospace;
-  }
-`;
 
 function renderCases(
   cases: readonly { readonly label: string; readonly spec: DiagramSpec }[],
@@ -378,7 +343,7 @@ Deno.test("React Diagram browser geometry holds for the generated corpus", async
       theme: "discern",
     });
     const runtimeCss = await Deno.readTextFile(join(output, "discern.css"));
-    const fontCss = await bundledFontCss();
+    const fontCss = await browserFontCss("bundled");
     const corpusPage = await browser.newPage({
       colorScheme: "light",
       viewport: { width: 1_440, height: 1_000 },
@@ -415,7 +380,7 @@ Deno.test("React Diagram browser geometry holds for the generated corpus", async
               });
               const selectedFontCss = fontMode === "bundled"
                 ? fontCss
-                : systemFontCss;
+                : await browserFontCss("system");
               const markup = renderCases(browserCases).replace(
                 'data-discern-theme="light"',
                 `data-discern-theme="${theme}"`,
@@ -514,7 +479,7 @@ Deno.test("diagram metric approximation is conservative and digest-bound", async
       const page = await browser.newPage();
       try {
         const fontCss = fontMode === "bundled"
-          ? await bundledFontCss()
+          ? await browserFontCss("bundled")
           : "text[data-role=interface]{font-family:system-ui,sans-serif!important}text[data-role=mono]{font-family:ui-monospace,monospace!important}";
         await page.setContent(
           `<style>${fontCss}</style><svg width="1200" height="${

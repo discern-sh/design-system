@@ -46,15 +46,21 @@ export type SvgThemeSelection = SvgPaletteVariant | "adaptive";
 /**
  * Assemble embedded document style for one palette selection: fixed rules
  * plus one variant's literals, or light literals with a self-contained dark
- * prefers-color-scheme rule.
+ * prefers-color-scheme rule. Optional trailing rules sit after every palette
+ * branch so media overrides cannot be shadowed by the selected literals.
  */
 export function assembleSvgThemeStyle(options: {
   readonly theme: SvgThemeSelection;
   readonly common: readonly string[];
   readonly variant: (variant: SvgPaletteVariant) => readonly string[];
+  readonly after?: readonly string[];
 }): string {
   if (options.theme !== "adaptive") {
-    return [...options.common, ...options.variant(options.theme)].join("\n");
+    return [
+      ...options.common,
+      ...options.variant(options.theme),
+      ...(options.after ?? []),
+    ].join("\n");
   }
   const dark = options.variant("dark").map((rule) => `  ${rule}`);
   return [
@@ -63,6 +69,7 @@ export function assembleSvgThemeStyle(options: {
     "  @media (prefers-color-scheme: dark) {",
     ...dark,
     "  }",
+    ...(options.after ?? []),
   ].join("\n");
 }
 

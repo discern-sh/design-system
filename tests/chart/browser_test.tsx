@@ -2,6 +2,8 @@ import { assert, assertEquals, assertNotEquals } from "@std/assert";
 import { join, toFileUrl } from "@std/path";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
+  addPageFailureListeners,
+  browserFontCss,
   scanBrowserAccessibility,
   waitForPaintedFrames,
 } from "../../scripts/browser-conformance-support.ts";
@@ -45,6 +47,7 @@ interface ChartBrowserInspection {
   readonly kind: string;
   readonly scale: number;
   readonly viewBoxFailures: readonly string[];
+  readonly localOverflowReachable: boolean;
   readonly markCount: number;
   readonly axisCount: number;
   readonly canvasFill: string;
@@ -85,6 +88,24 @@ async function inspectBrowserCharts(
           `aspect drifted: ${scale} horizontal vs ${verticalScale} vertical`,
         );
       }
+      for (
+        const element of svg.querySelectorAll<SVGGraphicsElement>(
+          ".discern-chart__mark, .discern-chart__path, .discern-chart__points > *, .discern-chart__area, .discern-chart__axis, .discern-chart__grid, .discern-chart__reference, .discern-chart__label",
+        )
+      ) {
+        const box = element.getBBox();
+        if (
+          box.x < viewBox.x - 0.5 || box.y < viewBox.y - 0.5 ||
+          box.x + box.width > viewBox.x + viewBox.width + 0.5 ||
+          box.y + box.height > viewBox.y + viewBox.height + 0.5
+        ) {
+          failures.push(
+            `${
+              element.getAttribute("class") ?? element.tagName
+            } escaped viewBox`,
+          );
+        }
+      }
       const filled = svg.querySelector(
         ".discern-chart__mark, .discern-chart__area, .discern-chart__points > *",
       );
@@ -96,11 +117,22 @@ async function inspectBrowserCharts(
       const mono = svg.querySelector(".discern-chart__label--mono");
       const canvas = svg.querySelector(".discern-chart__canvas");
       const viewport = svg.closest(".discern-chart__viewport");
+      let localOverflowReachable = true;
+      if (viewport !== null && viewport.scrollWidth > viewport.clientWidth) {
+        viewport.scrollLeft = viewport.scrollWidth;
+        localOverflowReachable = viewport.scrollLeft >=
+          viewport.scrollWidth - viewport.clientWidth - 1;
+        viewport.scrollLeft = 0;
+      }
       return {
         label,
-        kind: svg.getAttribute("data-discern-chart-kind") ?? "",
+        kind: svg.getAttribute("data-discern-chart-kind") ??
+          svg.closest("[data-chart-browser-kind]")?.getAttribute(
+            "data-chart-browser-kind",
+          ) ?? "",
         scale,
         viewBoxFailures: failures,
+        localOverflowReachable,
         markCount: svg.querySelectorAll(
           ".discern-chart__mark, .discern-chart__path, .discern-chart__points, .discern-chart__area",
         ).length,
@@ -157,6 +189,7 @@ function assertBrowserGeometry(
     assertEquals(chart.viewBoxFailures, [], label);
     assertEquals(chart.kind, chart.label.split("/")[0], label);
     assert(chart.scale > 0.05, `${label} collapsed to scale ${chart.scale}`);
+    assert(chart.localOverflowReachable, `${label} overflow was unreachable`);
     assert(chart.markCount > 0, `${label} rendered no data encoding`);
     assertEquals(
       chart.axisCount,
@@ -183,7 +216,7 @@ function assertBrowserGeometry(
   }
 }
 
-Deno.test("React Chart browser geometry and themes hold for the generated corpus", async () => {
+Deno.test("React Chart browser matrix holds for every generated corpus case", async () => {
   const output = await Deno.makeTempDir({ prefix: "chart-browser-" });
   const browser = await launchBrowser();
   try {
@@ -194,45 +227,100 @@ Deno.test("React Chart browser geometry and themes hold for the generated corpus
     });
     const runtimeCss = await Deno.readTextFile(join(output, "discern.css"));
     const palettes = new Map<string, ChartBrowserInspection>();
-    for (const width of [360, 1_440]) {
-      for (const theme of ["light", "dark"] as const) {
-        const page = await browser.newPage({
-          colorScheme: theme,
-          viewport: { width, height: 1_000 },
-        });
-        try {
-          await page.setContent(
-            `<style>html,body{margin:0;max-width:100%}${runtimeCss}</style>${
-              renderCases(releaseCases, theme)
-            }`,
-          );
-          const inspection = await inspectBrowserCharts(page);
-          assertBrowserGeometry(
-            inspection,
-            releaseCases.length,
-            `${width}/${theme}`,
-          );
-          if (width === 360) {
-            assert(
-              inspection.charts.some(({ viewportScrollable }) =>
-                viewportScrollable
-              ),
-              "a wide chart must scroll inside its viewport at 360px",
-            );
+    for (const fontMode of ["bundled", "system"] as const) {
+      const selectedFontCss = await browserFontCss(fontMode);
+      for (const width of [360, 1_440]) {
+        for (const theme of ["light", "dark"] as const) {
+          for (const pageScale of [1, 1.5]) {
+            const browserContext = await browser.newContext({
+              colorScheme: theme,
+              viewport: { width, height: 1_000 },
+            });
+            const page = await browserContext.newPage();
+            const failures: string[] = [];
+            addPageFailureListeners(page, failures);
+            try {
+              const cdp = await page.context().newCDPSession(page);
+              await cdp.send("Emulation.setPageScaleFactor", {
+                pageScaleFactor: pageScale,
+              });
+              await page.setContent(
+                `<style>html,body{margin:0;max-width:100%;font-size:${
+                  pageScale === 1 ? 100 : 125
+                }%}${runtimeCss}${selectedFontCss}</style>${
+                  renderCases(releaseCases, theme)
+                }`,
+              );
+              await page.evaluate(() => document.fonts.ready);
+              const matrixContext =
+                `${fontMode}/${width}/${theme}/${pageScale}`;
+              const inspection = await inspectBrowserCharts(page);
+              assertBrowserGeometry(
+                inspection,
+                releaseCases.length,
+                matrixContext,
+              );
+              if (width === 360) {
+                assert(
+                  inspection.charts.some(({ viewportScrollable }) =>
+                    viewportScrollable
+                  ),
+                  `${matrixContext} must keep wide charts locally scrollable`,
+                );
+              }
+              for (const chart of inspection.charts) {
+                for (
+                  const family of [chart.labelFontFamily, chart.monoFontFamily]
+                ) {
+                  if (family === "") continue;
+                  if (fontMode === "bundled") {
+                    assert(
+                      family.includes("Inter") ||
+                        family.includes("JetBrains Mono"),
+                      `${matrixContext}/${chart.label} missed its bundled font role`,
+                    );
+                  } else {
+                    assert(
+                      !family.includes("Inter") &&
+                        !family.includes("JetBrains Mono"),
+                      `${matrixContext}/${chart.label} missed the system fallback`,
+                    );
+                  }
+                }
+              }
+              const accessibility = await scanBrowserAccessibility(
+                page,
+                "main",
+              );
+              assertEquals(
+                accessibility.violations.map(({ id }) => id),
+                [],
+                matrixContext,
+              );
+              assertEquals(failures, [], matrixContext);
+              const actualScale = await page.evaluate(() =>
+                globalThis.visualViewport?.scale ?? 1
+              );
+              assert(
+                Math.abs(actualScale - pageScale) <= 0.01,
+                `${matrixContext} requested scale ${pageScale}, found ${actualScale}`,
+              );
+              palettes.set(matrixContext, inspection.charts[0]!);
+            } finally {
+              await page.close();
+              await browserContext.close();
+            }
           }
-          palettes.set(`${width}/${theme}`, inspection.charts[0]!);
-        } finally {
-          await page.close();
         }
       }
     }
     assertNotEquals(
-      palettes.get("1440/light")?.canvasFill,
-      palettes.get("1440/dark")?.canvasFill,
+      palettes.get("bundled/1440/light/1")?.canvasFill,
+      palettes.get("bundled/1440/dark/1")?.canvasFill,
     );
     assertNotEquals(
-      palettes.get("1440/light")?.markFill,
-      palettes.get("1440/dark")?.markFill,
+      palettes.get("bundled/1440/light/1")?.markFill,
+      palettes.get("bundled/1440/dark/1")?.markFill,
     );
   } finally {
     await browser.close();
@@ -277,6 +365,8 @@ Deno.test("Chart and DataFigure compositions are Axe-clean in light, dark, and f
         viewport: { width: 1_200, height: 900 },
       });
       const page = await context.newPage();
+      const failures: string[] = [];
+      addPageFailureListeners(page, failures);
       try {
         await page.setContent(`<style>${css}</style>${markup(posture.theme)}`);
         const accessibility = await scanBrowserAccessibility(page, "main");
@@ -287,23 +377,89 @@ Deno.test("Chart and DataFigure compositions are Axe-clean in light, dark, and f
         );
         const facts = await page.evaluate(() => {
           const svgs = [...document.querySelectorAll(".discern-chart")];
+          const cueFailures: string[] = [];
+          const encodingSelector =
+            ".discern-chart__mark, .discern-chart__path, .discern-chart__points, .discern-chart__area";
+          for (const [svgIndex, svg] of svgs.entries()) {
+            const encodings = [
+              ...svg.querySelectorAll<SVGGraphicsElement>(encodingSelector),
+            ];
+            const signature = (element: SVGGraphicsElement): string => {
+              const style = getComputedStyle(element);
+              const shape = element.matches(".discern-chart__points")
+                ? element.firstElementChild?.localName ?? "empty"
+                : element.localName;
+              return `${shape}/${style.strokeDasharray}`;
+            };
+            for (const prefix of ["series", "ramp"] as const) {
+              const cues = new Map<string, string>();
+              for (const element of encodings) {
+                const role = [...element.classList].find((name) =>
+                  name.includes(`--${prefix}-`)
+                )?.split("--")[1];
+                if (role !== undefined && !cues.has(role)) {
+                  cues.set(role, signature(element));
+                }
+              }
+              if (
+                cues.size > 1 && new Set(cues.values()).size !== cues.size
+              ) {
+                cueFailures.push(
+                  `chart ${svgIndex} ${prefix} cues collapsed: ${
+                    JSON.stringify([...cues])
+                  }`,
+                );
+              }
+            }
+          }
+          const swatchCues = new Map<string, string>();
+          for (
+            const swatch of document.querySelectorAll<HTMLElement>(
+              "[class*='discern-data-figure__swatch--series-']",
+            )
+          ) {
+            const role = [...swatch.classList].find((name) =>
+              name.startsWith("discern-data-figure__swatch--series-")
+            );
+            if (role === undefined || swatchCues.has(role)) continue;
+            const style = getComputedStyle(swatch);
+            swatchCues.set(
+              role,
+              `${style.borderRadius}/${style.clipPath}`,
+            );
+          }
           return {
             charts: svgs.length,
             completeNames: svgs.every((svg) =>
               svg.querySelector("title")?.textContent?.trim() !== "" &&
               svg.querySelector("desc")?.textContent?.trim() !== ""
             ),
-            visibleMarks: svgs.every((svg) =>
+            visibleEncodings: svgs.every((svg) =>
               [...svg.querySelectorAll<SVGGraphicsElement>(
-                ".discern-chart__mark",
-              )].every((mark) => {
-                const style = getComputedStyle(mark);
-                return style.fill !== "none" && style.fill !== "transparent";
+                encodingSelector,
+              )].every((encoding) => {
+                const style = getComputedStyle(encoding);
+                return (style.fill !== "none" &&
+                  style.fill !== "transparent") ||
+                  (style.stroke !== "none" && style.stroke !== "transparent");
               })
             ),
+            forcedAdjustment: svgs.every((svg) =>
+              getComputedStyle(svg).forcedColorAdjust === "none"
+            ),
+            cueFailures,
             swatches: document.querySelectorAll(
               "[class*='discern-data-figure__swatch--series-']",
             ).length,
+            swatchCueCount: new Set(swatchCues.values()).size,
+            visibleSwatches: [...document.querySelectorAll<HTMLElement>(
+              "[class*='discern-data-figure__swatch--series-']",
+            )].every((swatch) => {
+              const style = getComputedStyle(swatch);
+              return style.backgroundColor !== "rgba(0, 0, 0, 0)" &&
+                style.backgroundColor !== "transparent" &&
+                style.borderColor !== "transparent";
+            }),
             duplicateIds: [...document.querySelectorAll("[id]")]
               .map((element) => element.id)
               .filter((id, index, ids) => ids.indexOf(id) !== index),
@@ -311,9 +467,16 @@ Deno.test("Chart and DataFigure compositions are Axe-clean in light, dark, and f
         });
         assertEquals(facts.charts, releaseCases.length);
         assert(facts.completeNames);
-        assert(facts.visibleMarks);
+        assert(facts.visibleEncodings);
+        assertEquals(facts.cueFailures, []);
         assert(facts.swatches > 0);
+        if (posture.forcedColors === "active") {
+          assert(facts.forcedAdjustment);
+          assert(facts.visibleSwatches);
+          assertEquals(facts.swatchCueCount, 6);
+        }
         assertEquals(facts.duplicateIds, []);
+        assertEquals(failures, []);
       } finally {
         await page.close();
         await context.close();
@@ -338,27 +501,30 @@ async function imageHash(
     .join("");
 }
 
-Deno.test("every standalone chart theme works inline and through img", async () => {
+Deno.test("every standalone chart case and theme works inline and through img", async () => {
   const browser = await launchBrowser();
   const page = await browser.newPage({
     colorScheme: "light",
     viewport: { width: 2_000, height: 1_000 },
   });
   try {
-    const first = releaseCases[0]!;
-    const assets = (["light", "dark", "adaptive"] as const).map((theme) => ({
-      alt: chartAltText(first.spec),
-      id: `bar-${theme}`,
-      svg: renderChartSvg(first.spec, { theme }),
-      theme,
-    }));
-    const markup = assets.map(({ alt, id, svg }) =>
+    const assets = releaseCases.flatMap(({ label, spec }) =>
+      (["light", "dark", "adaptive"] as const).map((theme) => ({
+        alt: chartAltText(spec),
+        id: `chart-${label.replaceAll("/", "-")}-${theme}`,
+        kind: label.split("/")[0]!,
+        label,
+        svg: renderChartSvg(spec, { theme }),
+        theme,
+      }))
+    );
+    const imageMarkup = assets.map(({ alt, id, svg }) =>
       `<img id="${id}" src="data:image/svg+xml;charset=utf-8,${
         encodeURIComponent(svg)
       }" alt="${alt.replaceAll("&", "&amp;").replaceAll('"', "&quot;")}">`
     ).join("");
     await page.setContent(
-      `<style>html,body{margin:0}main{display:grid;gap:16px}img{display:block;max-width:100%;height:auto}</style><main>${markup}</main>`,
+      `<style>html,body{margin:0}main{display:grid;gap:16px}img{display:block;max-width:100%;height:auto}</style><main>${imageMarkup}</main>`,
     );
     await Promise.all(
       assets.map(({ id }) =>
@@ -388,19 +554,43 @@ Deno.test("every standalone chart theme works inline and through img", async () 
     await waitForPaintedFrames(page);
     const adaptiveDark = await imageHash(adaptive);
     assertNotEquals(adaptiveLight, adaptiveDark);
+    await page.emulateMedia({ colorScheme: "light", forcedColors: "active" });
+    await waitForPaintedFrames(page);
+    const adaptiveForced = await imageHash(adaptive);
+    assert(
+      adaptiveForced.length > 0,
+      "forced-colour image delivery stays painted",
+    );
 
-    for (const { id, svg, theme } of assets) {
-      await page.emulateMedia({
-        colorScheme: theme === "dark" ? "dark" : "light",
-      });
-      await page.setContent(svg);
-      const inspection = await inspectBrowserCharts(page);
-      assertEquals(inspection.charts.length, 1, `standalone/${id}`);
-      assertEquals(inspection.charts[0]?.viewBoxFailures, []);
-      assert(
-        (inspection.charts[0]?.markCount ?? 0) > 0,
-        `standalone/${id} rendered no marks`,
+    await page.emulateMedia({ colorScheme: "light", forcedColors: "none" });
+    const inlineMarkup = assets.map(({ kind, label, svg, theme }) =>
+      `<section class="standalone" data-chart-browser-case="${label}/${theme}" data-chart-browser-kind="${kind}">${svg}</section>`
+    ).join("");
+    await page.setContent(
+      `<style>html,body{margin:0;max-width:100%}main{display:grid;gap:16px}.standalone{max-width:100%;overflow:auto}</style><main>${inlineMarkup}</main>`,
+    );
+    const inlineInspection = await inspectBrowserCharts(page);
+    assertBrowserGeometry(
+      inlineInspection,
+      assets.length,
+      "standalone/inline",
+    );
+    for (const { label } of releaseCases) {
+      const light = inlineInspection.charts.find((chart) =>
+        chart.label === `${label}/light`
       );
+      const dark = inlineInspection.charts.find((chart) =>
+        chart.label === `${label}/dark`
+      );
+      const adaptive = inlineInspection.charts.find((chart) =>
+        chart.label === `${label}/adaptive`
+      );
+      assert(
+        light !== undefined && dark !== undefined && adaptive !== undefined,
+      );
+      assertNotEquals(light.canvasFill, dark.canvasFill, `${label}/canvas`);
+      assertNotEquals(light.markFill, dark.markFill, `${label}/data paint`);
+      assertEquals(adaptive.canvasFill, light.canvasFill, `${label}/adaptive`);
     }
   } finally {
     await page.close();

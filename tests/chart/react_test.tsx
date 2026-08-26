@@ -179,6 +179,9 @@ Deno.test("Chart CSS resolves every paint role through public Tokens", async () 
     `fill: var(${CHART_PAINT_TOKEN_NAMES.annotation})`,
   );
   assertStringIncludes(css, `fill: var(${CHART_PAINT_TOKEN_NAMES.canvas})`);
+  assertStringIncludes(css, "@media (forced-colors: active)");
+  assertStringIncludes(css, "stroke: CanvasText");
+  assertStringIncludes(css, "fill: CanvasText");
 
   const registered = componentRegistry.find(({ meta }) =>
     meta.slug === "chart"
@@ -209,4 +212,7 @@ Deno.test("DataFigure series swatches ride the series Tokens with distinct shape
     4,
     "four series swatches carry polygon marker shapes beside the circle and square",
   );
+  assertStringIncludes(css, "@media (forced-colors: active)");
+  assertStringIncludes(css, "background: CanvasText");
+  assertStringIncludes(css, "forced-color-adjust: none");
 });

@@ -1,6 +1,7 @@
 import { forwardRef } from "react";
 import type { ReactElement } from "react";
 import { formatChartAltText } from "../../../chart/accessibility.ts";
+import { chartPaintStrokeDasharray } from "../../../chart/cues.ts";
 import type {
   ChartAreaFill,
   ChartAxisLine,
@@ -42,6 +43,7 @@ function renderMark(mark: ChartMark): ReactElement {
       y={formatChartSvgNumber(mark.bounds.y)}
       width={formatChartSvgNumber(mark.bounds.width)}
       height={formatChartSvgNumber(mark.bounds.height)}
+      strokeDasharray={chartPaintStrokeDasharray(mark.paint)}
     />
   );
 }
@@ -71,6 +73,7 @@ function renderPath(path: ChartDataPath): ReactElement {
       data-discern-chart-series={path.seriesId}
       points={formatChartSvgPoints(path.points)}
       strokeWidth={formatChartSvgNumber(path.lineWidth)}
+      strokeDasharray={chartPaintStrokeDasharray(path.paint)}
     />
   );
 }
@@ -121,6 +124,7 @@ function renderPoints(points: ChartDataPoints): ReactElement {
       key={points.id}
       className={`discern-chart__points discern-chart__points--${points.paint}`}
       data-discern-chart-series={points.seriesId}
+      strokeDasharray={chartPaintStrokeDasharray(points.paint)}
     >
       {points.points.map((point, index) =>
         renderPointMarker(points, point, `${points.id}-${index}`)
@@ -136,6 +140,7 @@ function renderArea(area: ChartAreaFill): ReactElement {
       className={`discern-chart__area discern-chart__area--${area.paint}`}
       data-discern-chart-series={area.seriesId}
       points={formatChartSvgPoints(area.points)}
+      strokeDasharray={chartPaintStrokeDasharray(area.paint)}
     />
   );
 }

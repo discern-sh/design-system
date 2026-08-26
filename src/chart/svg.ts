@@ -5,6 +5,7 @@ import { assembleSvgThemeStyle, renderSvgDocument } from "../internal/svg.ts";
 import { prepareChart } from "../generated/chart-dispatch.ts";
 import type { ChartSpec } from "../generated/chart-spec.ts";
 import { formatChartAltText } from "./accessibility.ts";
+import { chartPaintStrokeDasharray } from "./cues.ts";
 import {
   type ChartPaletteVariant,
   resolveChartFontStack,
@@ -45,6 +46,7 @@ interface SceneInventory {
   readonly pathPaints: readonly ChartSeriesPaintRole[];
   readonly pointPaints: readonly ChartSeriesPaintRole[];
   readonly areaPaints: readonly ChartSeriesPaintRole[];
+  readonly hasAxis: boolean;
   readonly hasGrid: boolean;
   readonly hasReference: boolean;
   readonly labelRoles: readonly ChartTickLabel["role"][];
@@ -65,6 +67,7 @@ function sceneInventory(scene: ChartScene): SceneInventory {
   const areaPaints = new Set<ChartSeriesPaintRole>();
   const labelRoles = new Set<ChartTickLabel["role"]>();
   let hasGrid = false;
+  let hasAxis = false;
   let hasReference = false;
   let hasMonoLabel = false;
   let hasInterfaceLabel = false;
@@ -94,6 +97,7 @@ function sceneInventory(scene: ChartScene): SceneInventory {
         else hasInterfaceLabel = true;
         break;
       case "axis-line":
+        hasAxis = true;
         break;
     }
   }
@@ -102,6 +106,7 @@ function sceneInventory(scene: ChartScene): SceneInventory {
     pathPaints: orderedPaints(pathPaints),
     pointPaints: orderedPaints(pointPaints),
     areaPaints: orderedPaints(areaPaints),
+    hasAxis,
     hasGrid,
     hasReference,
     labelRoles: [...labelRoles].toSorted(),
@@ -113,31 +118,36 @@ function sceneInventory(scene: ChartScene): SceneInventory {
 function paletteRules(
   variant: ChartPaletteVariant,
   inventory: SceneInventory,
+  root: string,
 ): readonly string[] {
   const palette = resolveChartPalette(variant);
   return [
-    `  .discern-chart__canvas { fill: ${palette.canvas}; }`,
+    `  ${root} .discern-chart__canvas { fill: ${palette.canvas}; }`,
     ...inventory.markPaints.map((paint) =>
-      `  .discern-chart__mark--${paint} { fill: ${palette[paint]}; }`
+      `  ${root} .discern-chart__mark--${paint} { fill: ${
+        palette[paint]
+      }; stroke: ${palette.canvas}; }`
     ),
     ...inventory.pathPaints.map((paint) =>
-      `  .discern-chart__path--${paint} { stroke: ${palette[paint]}; }`
+      `  ${root} .discern-chart__path--${paint} { stroke: ${palette[paint]}; }`
     ),
     ...inventory.pointPaints.map((paint) =>
-      `  .discern-chart__points--${paint} { fill: ${palette[paint]}; }`
+      `  ${root} .discern-chart__points--${paint} { fill: ${palette[paint]}; }`
     ),
     ...inventory.areaPaints.map((paint) =>
-      `  .discern-chart__area--${paint} { fill: ${palette[paint]}; }`
+      `  ${root} .discern-chart__area--${paint} { fill: ${palette[paint]}; }`
     ),
-    `  .discern-chart__axis { stroke: ${palette.axis}; }`,
+    `  ${root} .discern-chart__axis { stroke: ${palette.axis}; }`,
     ...(inventory.hasGrid
-      ? [`  .discern-chart__grid { stroke: ${palette.grid}; }`]
+      ? [`  ${root} .discern-chart__grid { stroke: ${palette.grid}; }`]
       : []),
     ...(inventory.hasReference
-      ? [`  .discern-chart__reference { stroke: ${palette.reference}; }`]
+      ? [
+        `  ${root} .discern-chart__reference { stroke: ${palette.reference}; }`,
+      ]
       : []),
     ...inventory.labelRoles.map((role) =>
-      `  .discern-chart__label--${role} { fill: ${palette[role]}; }`
+      `  ${root} .discern-chart__label--${role} { fill: ${palette[role]}; }`
     ),
   ];
 }
@@ -146,44 +156,115 @@ function standaloneStyle(
   theme: ChartSvgTheme,
   inventory: SceneInventory,
 ): string {
+  const root =
+    `.discern-chart--standalone.discern-chart--theme-${theme}` as const;
+  const select = (selector: string): string => `${root} ${selector}`;
+  const forcedStrokeSelectors = [
+    ...(inventory.pathPaints.length > 0
+      ? [select(".discern-chart__path")]
+      : []),
+    ...(inventory.hasAxis ? [select(".discern-chart__axis")] : []),
+    ...(inventory.hasGrid ? [select(".discern-chart__grid")] : []),
+    ...(inventory.hasReference ? [select(".discern-chart__reference")] : []),
+  ];
   const common = [
-    "  .discern-chart { display: block; background: transparent; shape-rendering: geometricPrecision; text-rendering: optimizeLegibility; }",
+    `  ${root} { display: block; background: transparent; shape-rendering: geometricPrecision; text-rendering: optimizeLegibility; }`,
     ...(inventory.hasInterfaceLabel
       ? [
-        `  .discern-chart__label { font-family: ${
+        `  ${select(".discern-chart__label")} { font-family: ${
           resolveChartFontStack("interface")
         }; }`,
       ]
       : []),
     ...(inventory.hasMonoLabel
       ? [
-        `  .discern-chart__label--mono { font-family: ${
-          resolveChartFontStack("mono")
-        }; }`,
+        `  ${
+          select(".discern-chart__label.discern-chart__label--mono")
+        } { font-family: ${resolveChartFontStack("mono")}; }`,
       ]
       : []),
-    "  .discern-chart__axis { vector-effect: non-scaling-stroke; }",
+    `  ${
+      select(".discern-chart__axis")
+    } { vector-effect: non-scaling-stroke; }`,
     ...(inventory.hasGrid
-      ? ["  .discern-chart__grid { vector-effect: non-scaling-stroke; }"]
+      ? [
+        `  ${
+          select(".discern-chart__grid")
+        } { vector-effect: non-scaling-stroke; }`,
+      ]
       : []),
     ...(inventory.hasReference
-      ? ["  .discern-chart__reference { vector-effect: non-scaling-stroke; }"]
+      ? [
+        `  ${
+          select(".discern-chart__reference")
+        } { vector-effect: non-scaling-stroke; }`,
+      ]
+      : []),
+    ...(inventory.markPaints.length > 0
+      ? [
+        `  ${
+          select(".discern-chart__mark")
+        } { stroke-width: 1; vector-effect: non-scaling-stroke; }`,
+      ]
       : []),
     ...(inventory.pathPaints.length > 0
       ? [
-        "  .discern-chart__path { fill: none; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }",
+        `  ${
+          select(".discern-chart__path")
+        } { fill: none; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }`,
       ]
       : []),
+  ];
+  const forcedColors = [
+    "  @media (forced-colors: active) {",
+    `    ${root} { forced-color-adjust: none; }`,
+    `    ${select(".discern-chart__canvas")} { fill: Canvas; }`,
+    ...(inventory.markPaints.length > 0 || inventory.areaPaints.length > 0
+      ? [
+        `    ${
+          [
+            ...(inventory.markPaints.length > 0
+              ? [select(".discern-chart__mark")]
+              : []),
+            ...(inventory.areaPaints.length > 0
+              ? [select(".discern-chart__area")]
+              : []),
+          ].join(", ")
+        } { fill: Canvas; stroke: CanvasText; stroke-width: 1; vector-effect: non-scaling-stroke; }`,
+      ]
+      : []),
+    ...(inventory.pointPaints.length > 0
+      ? [
+        `    ${
+          select(".discern-chart__points")
+        } { fill: Canvas; stroke: CanvasText; stroke-width: 1.5; vector-effect: non-scaling-stroke; }`,
+      ]
+      : []),
+    ...(forcedStrokeSelectors.length > 0
+      ? [`    ${forcedStrokeSelectors.join(", ")} { stroke: CanvasText; }`]
+      : []),
+    ...(inventory.labelRoles.length > 0
+      ? [`    ${select(".discern-chart__label")} { fill: CanvasText; }`]
+      : []),
+    "  }",
   ];
   return assembleSvgThemeStyle({
     theme,
     common,
-    variant: (variant) => paletteRules(variant, inventory),
+    variant: (variant) => paletteRules(variant, inventory, root),
+    after: forcedColors,
   });
 }
 
+function strokeDasharrayAttribute(paint: ChartMarkPaintRole): string {
+  const dasharray = chartPaintStrokeDasharray(paint);
+  return dasharray === undefined ? "" : ` stroke-dasharray="${dasharray}"`;
+}
+
 function markMarkup(mark: ChartMark): string {
-  return `  <rect class="discern-chart__mark discern-chart__mark--${mark.paint}" data-discern-chart-series="${
+  return `  <rect class="discern-chart__mark discern-chart__mark--${mark.paint}"${
+    strokeDasharrayAttribute(mark.paint)
+  } data-discern-chart-series="${
     escapeXml(mark.seriesId)
   }" data-discern-chart-category="${escapeXml(mark.categoryId)}" x="${
     formatChartSvgNumber(mark.bounds.x)
@@ -206,11 +287,11 @@ function lineMarkup(
 }
 
 function pathMarkup(path: ChartDataPath): string {
-  return `  <polyline class="discern-chart__path discern-chart__path--${path.paint}" data-discern-chart-series="${
-    escapeXml(path.seriesId)
-  }" points="${formatChartSvgPoints(path.points)}" stroke-width="${
-    formatChartSvgNumber(path.lineWidth)
-  }" />`;
+  return `  <polyline class="discern-chart__path discern-chart__path--${path.paint}"${
+    strokeDasharrayAttribute(path.paint)
+  } data-discern-chart-series="${escapeXml(path.seriesId)}" points="${
+    formatChartSvgPoints(path.points)
+  }" stroke-width="${formatChartSvgNumber(path.lineWidth)}" />`;
 }
 
 function pointMarkerMarkup(
@@ -241,18 +322,20 @@ function pointMarkerMarkup(
 
 function pointsMarkup(points: ChartDataPoints): readonly string[] {
   return [
-    `  <g class="discern-chart__points discern-chart__points--${points.paint}" data-discern-chart-series="${
-      escapeXml(points.seriesId)
-    }">`,
+    `  <g class="discern-chart__points discern-chart__points--${points.paint}"${
+      strokeDasharrayAttribute(points.paint)
+    } data-discern-chart-series="${escapeXml(points.seriesId)}">`,
     ...points.points.map((point) => pointMarkerMarkup(points, point)),
     "  </g>",
   ];
 }
 
 function areaMarkup(area: ChartAreaFill): string {
-  return `  <polygon class="discern-chart__area discern-chart__area--${area.paint}" data-discern-chart-series="${
-    escapeXml(area.seriesId)
-  }" points="${formatChartSvgPoints(area.points)}" />`;
+  return `  <polygon class="discern-chart__area discern-chart__area--${area.paint}"${
+    strokeDasharrayAttribute(area.paint)
+  } data-discern-chart-series="${escapeXml(area.seriesId)}" points="${
+    formatChartSvgPoints(area.points)
+  }" />`;
 }
 
 function labelMarkup(label: ChartTickLabel): string {
@@ -314,7 +397,8 @@ export function renderChartSvg(
   }
   const style = standaloneStyle(theme, sceneInventory(scene));
   return renderSvgDocument({
-    className: "discern-chart discern-chart--standalone",
+    className:
+      `discern-chart discern-chart--standalone discern-chart--theme-${theme}`,
     bounds,
     ariaLabel: altText,
     title: validated.title,

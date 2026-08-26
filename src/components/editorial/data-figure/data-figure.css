@@ -123,4 +123,11 @@
       flex-direction: column;
     }
   }
+  @media (forced-colors: active) {
+    .discern-data-figure > header i {
+      border: 1px solid CanvasText;
+      background: CanvasText;
+      forced-color-adjust: none;
+    }
+  }
 }

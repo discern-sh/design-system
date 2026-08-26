@@ -9,6 +9,7 @@ import {
   CHART_PAINT_TOKEN_NAMES,
   resolveChartPalette,
 } from "../../src/chart/palette.ts";
+import { chartPaintStrokeDasharray } from "../../src/chart/cues.ts";
 import {
   renderChartSvg,
   type RenderChartSvgOptions,
@@ -37,7 +38,7 @@ Deno.test("standalone SVG is deterministic, finite, and canonically ordered", ()
   }
   assertMatch(
     first,
-    /^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" class="discern-chart discern-chart--standalone" viewBox="[^"]+" width="[^"]+" height="[^"]+" role="img" aria-label="[^"]+">/u,
+    /^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" class="discern-chart discern-chart--standalone discern-chart--theme-adaptive" viewBox="[^"]+" width="[^"]+" height="[^"]+" role="img" aria-label="[^"]+">/u,
   );
   const root = first.match(
     /viewBox="([^"]+)" width="([^"]+)" height="([^"]+)"/u,
@@ -55,6 +56,56 @@ Deno.test("standalone SVG is deterministic, finite, and canonically ordered", ()
     0 < title && title < description && description < style && style < canvas,
   );
   assert(first.endsWith("</svg>\n"));
+});
+
+Deno.test("series and ramp slots own distinct projection-neutral line treatments", () => {
+  for (const prefix of ["series", "ramp"] as const) {
+    const count = prefix === "series" ? 6 : 4;
+    const treatments = Array.from(
+      { length: count },
+      (_, index) =>
+        chartPaintStrokeDasharray(
+          `${prefix}-${index + 1}` as Parameters<
+            typeof chartPaintStrokeDasharray
+          >[0],
+        ) ?? "solid",
+    );
+    assertEquals(new Set(treatments).size, count, `${prefix} cues are unique`);
+  }
+});
+
+Deno.test("every standalone corpus asset serializes distinct cues before image delivery", () => {
+  for (const entry of chartKindRegistry) {
+    for (const releaseCase of entry.releaseCorpus.cases) {
+      const svg = renderChartSvg(releaseCase.spec as ChartSpec);
+      const cues = new Map<string, string>();
+      for (
+        const match of svg.matchAll(
+          /<(?:rect|polyline|g|polygon)\b[^>]*class="discern-chart__(?:mark|path|points|area)[^"]*--((?:series|ramp)-\d)"[^>]*>/gu,
+        )
+      ) {
+        const tag = match[0];
+        const role = match[1];
+        assert(role !== undefined);
+        const cue = tag.match(/stroke-dasharray="([^"]+)"/u)?.[1] ?? "solid";
+        const existing = cues.get(role);
+        if (existing === undefined) cues.set(role, cue);
+        else assertEquals(cue, existing, `${entry.meta.slug}/${role}`);
+      }
+      for (const prefix of ["series", "ramp"] as const) {
+        const treatments = [...cues]
+          .filter(([role]) => role.startsWith(`${prefix}-`))
+          .map(([, cue]) => cue);
+        if (treatments.length > 1) {
+          assertEquals(
+            new Set(treatments).size,
+            treatments.length,
+            `${entry.meta.slug}/${releaseCase.name}/${prefix}`,
+          );
+        }
+      }
+    }
+  }
 });
 
 Deno.test("standalone SVG escapes semantic text and admits no active or external content", () => {
@@ -240,10 +291,14 @@ Deno.test("standalone palettes resolve paired semantic roles as literal styles",
       `.discern-chart__canvas { fill: ${palette.canvas}; }`,
     ));
     assert(svg.includes(
-      `.discern-chart__mark--series-1 { fill: ${palette["series-1"]}; }`,
+      `.discern-chart__mark--series-1 { fill: ${
+        palette["series-1"]
+      }; stroke: ${palette.canvas}; }`,
     ));
     assert(svg.includes(
-      `.discern-chart__mark--series-2 { fill: ${palette["series-2"]}; }`,
+      `.discern-chart__mark--series-2 { fill: ${
+        palette["series-2"]
+      }; stroke: ${palette.canvas}; }`,
     ));
     assert(svg.includes(
       `.discern-chart__axis { stroke: ${palette.axis}; }`,

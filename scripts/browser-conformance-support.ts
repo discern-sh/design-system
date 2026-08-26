@@ -1,6 +1,7 @@
 /** Shared failure, accessibility, and keyboard authorities for browser gates. */
 import { AxeBuilder } from "@axe-core/playwright";
 import type { Locator, Page } from "playwright-core";
+import { join } from "@std/path";
 
 export const WCAG_TAGS = [
   "wcag2a",
@@ -16,6 +17,49 @@ export const FOCUSABLE_SELECTOR =
   "[tabindex], [contenteditable]";
 
 type AxeResults = Awaited<ReturnType<AxeBuilder["analyze"]>>;
+
+/** Browser font posture used by component conformance matrices. */
+export type BrowserFontPosture = "bundled" | "system";
+
+const SYSTEM_FONT_CSS = `
+  :where([data-discern-root]) {
+    --discern-font-ui: system-ui, sans-serif;
+    --discern-font-mono: ui-monospace, monospace;
+  }
+`;
+
+function encodeBase64(bytes: Uint8Array): string {
+  const chunks: string[] = [];
+  for (let offset = 0; offset < bytes.length; offset += 32_768) {
+    chunks.push(
+      String.fromCharCode(...bytes.subarray(offset, offset + 32_768)),
+    );
+  }
+  return btoa(chunks.join(""));
+}
+
+/** Resolve the bundled-font or explicit system-fallback browser posture. */
+export async function browserFontCss(
+  posture: BrowserFontPosture,
+): Promise<string> {
+  if (posture === "system") return SYSTEM_FONT_CSS;
+  let css = await Deno.readTextFile("assets/fonts.css");
+  for (
+    const name of [
+      "crimson-pro-roman.woff2",
+      "crimson-pro-italic.woff2",
+      "inter.woff2",
+      "jetbrains-mono.woff2",
+    ]
+  ) {
+    const bytes = await Deno.readFile(join("assets", "fonts", name));
+    css = css.replaceAll(
+      `./fonts/${name}`,
+      `data:font/woff2;base64,${encodeBase64(bytes)}`,
+    );
+  }
+  return css;
+}
 
 /** Let two browser paints commit appearance changes before reading pixels. */
 export async function waitForPaintedFrames(page: Page): Promise<void> {

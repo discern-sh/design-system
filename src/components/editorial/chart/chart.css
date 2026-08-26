@@ -133,4 +133,34 @@
   .discern-chart__label--mono {
     font-family: var(--discern-font-mono);
   }
+  @media (forced-colors: active) {
+    .discern-chart {
+      forced-color-adjust: none;
+    }
+    .discern-chart__canvas {
+      fill: Canvas;
+    }
+    .discern-chart__mark,
+    .discern-chart__area {
+      fill: Canvas;
+      stroke: CanvasText;
+      stroke-width: 1;
+      vector-effect: non-scaling-stroke;
+    }
+    .discern-chart__points {
+      fill: Canvas;
+      stroke: CanvasText;
+      stroke-width: 1.5;
+      vector-effect: non-scaling-stroke;
+    }
+    .discern-chart__path,
+    .discern-chart__axis,
+    .discern-chart__grid,
+    .discern-chart__reference {
+      stroke: CanvasText;
+    }
+    .discern-chart__label {
+      fill: CanvasText;
+    }
+  }
 }
