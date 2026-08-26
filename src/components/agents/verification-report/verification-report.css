@@ -1,7 +1,6 @@
 @layer discern.components {
   .discern-verification-report {
-    display: flex;
-    flex-direction: column;
+    display: grid;
     gap: var(--discern-space-4);
     max-inline-size: 100%;
     padding: var(--discern-space-6);
@@ -64,8 +63,7 @@
   }
   .discern-verification-report__meta,
   .discern-verification-report__checks {
-    display: flex;
-    flex-direction: column;
+    display: grid;
     gap: 3px;
     margin: 0;
   }
@@ -90,38 +88,39 @@
   .discern-verification-report__meta dd code {
     font-family: var(--discern-font-mono);
   }
-  .discern-verification-report__checks > div {
-    background:
-      repeating-linear-gradient(
-      to right,
-      var(--discern-color-border-strong) 0 2px,
-      transparent 2px 6px
-    )
-      0 calc(100% - 0.45em) / 100% 1px no-repeat;
-  }
-  .discern-verification-report__checks dt {
-    background: var(--discern-color-surface);
-    padding-inline-end: 4px;
-  }
-  .discern-verification-report__checks dd {
-    background: var(--discern-color-surface);
-    padding-inline-start: 4px;
+  .discern-verification-report__checks {
+    & > div {
+      background:
+        repeating-linear-gradient(
+        to right,
+        var(--discern-color-border-strong) 0 2px,
+        transparent 2px 6px
+      )
+        0 calc(100% - 0.45em) / 100% 1px no-repeat;
+    }
+    & dt {
+      background: var(--discern-color-surface);
+      padding-inline-end: 4px;
+    }
+    & dd {
+      background: var(--discern-color-surface);
+      padding-inline-start: 4px;
+    }
+    & > div[data-discern-state="pass"] .discern-verification-report__glyph {
+      color: var(--discern-color-success);
+    }
+    & > div[data-discern-state="fail"] .discern-verification-report__glyph {
+      color: var(--discern-color-danger);
+    }
+    & > div[data-discern-state="skip"] :is(dt, dd) {
+      color: var(--discern-color-ink-muted);
+    }
   }
   .discern-verification-report__glyph {
     display: inline-block;
     inline-size: 1.1em;
     margin-inline-start: 0.45em;
     text-align: end;
-  }
-  .discern-verification-report__checks > div[data-discern-state="pass"] .discern-verification-report__glyph {
-    color: var(--discern-color-success);
-  }
-  .discern-verification-report__checks > div[data-discern-state="fail"] .discern-verification-report__glyph {
-    color: var(--discern-color-danger);
-  }
-  .discern-verification-report__checks > div[data-discern-state="skip"] dt,
-  .discern-verification-report__checks > div[data-discern-state="skip"] dd {
-    color: var(--discern-color-ink-muted);
   }
   .discern-verification-report__summary {
     font-size: var(--discern-font-size-sm);
