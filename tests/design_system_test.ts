@@ -2525,6 +2525,7 @@ Deno.test("monospace is reserved for brand names and code-bearing surfaces", asy
     "src/components/editorial/code-listing/code-listing.css::.discern-code-listing__body",
     "src/components/editorial/diagram/diagram.css::.discern-diagram__text--quiet-annotation",
     "src/components/editorial/prose/prose.css::.discern-prose :not(pre) > code",
+    "src/components/marketing/hero-block/hero-block.css::.discern-hero-block--showcase .discern-hero-block__meta code",
     "src/components/marketing/site-footer/site-footer.css::.discern-site-footer__brand--mono",
     "src/components/marketing/site-header/site-header.css::.discern-site-header__brand--mono",
     "src/components/workflow/activity-log/activity-log.css::.discern-activity-log__tail",
