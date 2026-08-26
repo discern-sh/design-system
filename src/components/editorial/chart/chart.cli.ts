@@ -11,6 +11,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { chartKindCliDeclineMessage } from "../../../cli/chart-kinds.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
@@ -280,7 +281,17 @@ const renderChartCli: CliRenderer<ChartCliProps> = (
     theme: themeName,
     description,
   });
-  return projection?.kind === "frame" ? projection.frame : fallback();
+  if (projection === undefined) return fallback();
+  if (projection.kind === "frame") return projection.frame;
+  return composeCliBlocks([
+    styledLines(
+      [chartKindCliDeclineMessage(projection)],
+      width,
+      terminalThemes[themeName],
+      capabilities,
+    ),
+    fallback(),
+  ]);
 };
 
 export default renderChartCli;

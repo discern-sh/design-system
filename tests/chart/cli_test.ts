@@ -2,11 +2,19 @@ import {
   assert,
   assertEquals,
   assertInstanceOf,
+  assertStringIncludes,
   assertThrows,
 } from "@std/assert";
 import { stripAnsi } from "../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
-import type { ChartKindCliProjection } from "../../src/cli/chart-kinds.ts";
+import {
+  CHART_KIND_CLI_DECLINE_GUIDANCE,
+  type ChartKindCliDecline,
+  chartKindCliDecline,
+  type ChartKindCliDeclineCode,
+  chartKindCliDeclineMessage,
+  type ChartKindCliProjection,
+} from "../../src/cli/chart-kinds.ts";
 import { resolveCliExampleCapabilities } from "../../src/cli/contracts.ts";
 import { renderChartCli } from "../../src/cli/mod.ts";
 import {
@@ -114,9 +122,19 @@ function project(
 
 Deno.test("bar CLI selects the exact frame or universal description by viability", () => {
   const narrow = testTerminalCapabilities({ columns: 24 });
-  assertEquals(
-    render(representative, narrow, "auto"),
-    render(representative, narrow, "description"),
+  const automatic = render(representative, narrow, "auto");
+  const description = render(representative, narrow, "description");
+  assert(automatic !== description);
+  const decline = project(representative, 24);
+  assert(decline.kind === "declined");
+  assertCarriesFacts(
+    automatic,
+    [chartKindCliDeclineMessage(decline)],
+    "narrow automatic fallback",
+  );
+  assert(
+    automatic.endsWith(description),
+    "typed decline evidence precedes the unchanged lossless table",
   );
   const standard = testTerminalCapabilities({ columns: 80 });
   const enhanced = render(representative, standard, "auto");
@@ -165,6 +183,53 @@ function compactTerminalSemantics(value: string): string {
     .join("")
     .replaceAll(/\s+/gu, "");
 }
+
+function assertDeclineEvidence(
+  output: string,
+  decline: ChartKindCliDecline,
+  context: string,
+): void {
+  assertCarriesFacts(
+    output,
+    [chartKindCliDeclineMessage(decline)],
+    `${context}/decline evidence`,
+  );
+}
+
+function assertExactFrameWidth(
+  frame: string,
+  capabilities: TerminalCapabilities,
+  context: string,
+): void {
+  for (const line of stripAnsi(frame).split("\n")) {
+    assertEquals(
+      measureText(line),
+      capabilities.columns,
+      `${context} must occupy its declared frame width`,
+    );
+    assert(
+      !line.includes("…"),
+      `${context} must not truncate an honesty label`,
+    );
+  }
+}
+
+Deno.test("every typed decline owns complete reader-facing recovery guidance", () => {
+  const codes = Object.keys(
+    CHART_KIND_CLI_DECLINE_GUIDANCE,
+  ) as ChartKindCliDeclineCode[];
+  assertEquals(codes.length, 7);
+  for (const code of codes) {
+    const decline = chartKindCliDecline(code, code === "width" ? 20 : 21, 20);
+    assert(decline.dimension.trim().length > 0, `${code} names its dimension`);
+    assert(decline.remedy.trim().length > 0, `${code} gives a remedy`);
+    const message = chartKindCliDeclineMessage(decline);
+    assertStringIncludes(message, decline.dimension);
+    assertStringIncludes(message, decline.remedy);
+    assertStringIncludes(message, String(decline.fact));
+    assertStringIncludes(message, String(decline.limit));
+  }
+});
 
 /** The one facts seam per kind behind the universal description table. */
 function tableFacts(validated: ValidatedChart): {
@@ -297,34 +362,37 @@ Deno.test("quantization keeps the honesty invariants at both repertoires", () =>
   const halfStep: BarChartSpec = {
     kind: "bar",
     title: "Probe",
-    summary: "One value lands exactly on an eighth-block half boundary.",
+    summary: "Five of 272 lands exactly on an eighth-block half boundary.",
     categories: [
       { id: "a", label: "A" },
       { id: "b", label: "B" },
     ],
-    series: [{ id: "value", label: "Value", values: [2.5, 64] }],
+    series: [{ id: "value", label: "Value", values: [5, 272] }],
   };
-  const projection = project(halfStep, 19);
+  const projection = project(halfStep, 28);
   assert(projection.kind === "frame", "the probe must fit its envelope");
   const plain = stripAnsi(projection.frame);
   assert(
-    plain.includes("A  ▍ 2.5"),
-    "2.5 of 64 across an eight-cell field rounds half away from zero to three eighths",
+    plain.includes("A  ▍ 5"),
+    "five of 272 across a seventeen-cell field rounds 2.5 eighths up to three",
   );
-  assert(plain.includes("B  ████████ 64"), "the maximum fills the field");
+  assert(
+    plain.includes(`B  ${"█".repeat(17)} 272`),
+    "the maximum fills the field",
+  );
 
   const subEighth: BarChartSpec = {
     ...halfStep,
     summary: "A tiny nonzero value never renders empty.",
     series: [{ id: "value", label: "Value", values: [1, 1000] }],
   };
-  const tiny = project(subEighth, 20);
+  const tiny = project(subEighth, 28);
   assert(tiny.kind === "frame");
   assert(
     stripAnsi(tiny.frame).includes("A  ▏ 1"),
     "a nonzero value keeps at least one eighth block",
   );
-  const tinyAscii = project(subEighth, 20, { unicode: false });
+  const tinyAscii = project(subEighth, 28, { unicode: false });
   assert(tinyAscii.kind === "frame");
   assert(
     stripAnsi(tinyAscii.frame).includes("A  # 1"),
@@ -336,7 +404,7 @@ Deno.test("quantization keeps the honesty invariants at both repertoires", () =>
     summary: "Zero renders no bar while its value still prints.",
     series: [{ id: "value", label: "Value", values: [0, 64] }],
   };
-  const zero = project(withZero, 19);
+  const zero = project(withZero, 28);
   assert(zero.kind === "frame");
   const zeroRow = stripAnsi(zero.frame).split("\n").find((line) =>
     line.includes("A  ")
@@ -364,33 +432,30 @@ Deno.test("a sub-resolution proportion declines instead of exaggerating a share"
     ],
   };
   const projection = project(skewed, 60, { unicode: false });
-  assertEquals(projection, {
-    kind: "declined",
-    code: "segment-resolution",
-    fact: 100,
-    limit: 48,
-  });
+  assertEquals(
+    projection,
+    chartKindCliDecline("segment-resolution", 100, 48),
+  );
   const capabilities = testTerminalCapabilities({
     columns: 60,
     unicode: false,
   });
-  assertEquals(
-    render(skewed, capabilities),
-    render(skewed, capabilities, "description"),
-  );
+  const automatic = render(skewed, capabilities);
+  const description = render(skewed, capabilities, "description");
+  assert(projection.kind === "declined");
+  assertDeclineEvidence(automatic, projection, "sub-resolution fallback");
+  assert(automatic.endsWith(description));
 });
 
 Deno.test("declines carry the exceeded fact and route to the complete table", () => {
   const narrow = project(representative, 24);
-  assertEquals(narrow, {
-    kind: "declined",
-    code: "width",
-    fact: 24,
-    limit: 32,
-  });
+  assertEquals(narrow, chartKindCliDecline("width", 24, 28));
   const capabilities = testTerminalCapabilities({ columns: 24 });
   const fallback = render(representative, capabilities, "auto");
-  assertEquals(fallback, render(representative, capabilities, "description"));
+  const description = render(representative, capabilities, "description");
+  assert(narrow.kind === "declined");
+  assertDeclineEvidence(fallback, narrow, "narrow fallback");
+  assert(fallback.endsWith(description));
   // The narrow responsive table wraps cells across interleaved column lines,
   // so contiguous matching happens at a measure where cells stay whole; the
   // Table suite owns the proof that responsive wrapping loses nothing.
@@ -454,7 +519,11 @@ Deno.test("Chart Catalogue CLI examples cover enhanced, deliberate description, 
     const output = stripAnsi(renderChartCli(example.props, capabilities));
     return [
       example.name,
-      output.startsWith("Title:") ? "description" : "enhanced",
+      output.startsWith("Title:")
+        ? "description"
+        : output.includes("Enhanced chart unavailable:")
+        ? "declined"
+        : "enhanced",
     ];
   }));
   for (const entry of chartKindRegistry) {
@@ -474,26 +543,39 @@ Deno.test("Chart Catalogue CLI examples cover enhanced, deliberate description, 
       );
       assertEquals(
         postures[`${entry.meta.slug}-maximum-density`],
-        "enhanced",
-        `${entry.meta.slug} density ceiling stays inside its declared tier`,
+        entry.meta.slug === "line" ? "declined" : "enhanced",
+        `${entry.meta.slug} density ceiling resolves without overstating its tier`,
       );
       assertEquals(
         postures[`${entry.meta.slug}-narrow-ascii-fallback`],
-        "description",
+        "declined",
       );
     }
   }
   assertEquals(Object.keys(postures).length, chartKindRegistry.length * 5);
 });
 
+const TERMINAL_COLOR_DEPTHS = {
+  truecolor: true,
+  ansi256: true,
+  ansi16: true,
+  none: true,
+} as const satisfies Record<TerminalCapabilities["colorDepth"], true>;
+
 const terminalReleaseProfiles = (
-  ["truecolor", "ansi256", "ansi16", "none"] as const
+  Object.keys(TERMINAL_COLOR_DEPTHS) as TerminalCapabilities["colorDepth"][]
 ).flatMap((colorDepth) =>
   [true, false].map((unicode) => ({ colorDepth, unicode }))
 );
 
+function projectionSignature(projection: ChartKindCliProjection): string {
+  return projection.kind === "frame"
+    ? "frame"
+    : `${projection.code}:${projection.limit}`;
+}
+
 Deno.test("generated Chart CLI matrix preserves facts across every stance and viability boundary", () => {
-  const scanWidths = Array.from({ length: 137 }, (_, index) => index + 24);
+  const scanWidths = Array.from({ length: 157 }, (_, index) => index + 4);
   for (const entry of chartKindRegistry) {
     for (const releaseCase of entry.releaseCorpus.cases) {
       const spec = releaseCase.spec as ChartSpec;
@@ -506,13 +588,14 @@ Deno.test("generated Chart CLI matrix preserves facts across every stance and vi
           columns,
           projection: project(spec, columns, profile),
         }));
-        const selectedWidths = new Set([24, 34, 80, 120, 160]);
+        const selectedWidths = new Set([4, 24, 34, 80, 120, 160]);
         for (let index = 1; index < scan.length; index += 1) {
           const before = scan[index - 1];
           const after = scan[index];
           if (
             before !== undefined && after !== undefined &&
-            before.projection.kind !== after.projection.kind
+            projectionSignature(before.projection) !==
+              projectionSignature(after.projection)
           ) {
             selectedWidths.add(before.columns);
             selectedWidths.add(after.columns);
@@ -531,7 +614,8 @@ Deno.test("generated Chart CLI matrix preserves facts across every stance and vi
           assert(
             widest !== undefined && widest.kind === "declined" &&
               (widest.code === "mono-series" ||
-                widest.code === "collision-count"),
+                widest.code === "collision-count" ||
+                widest.code === "mixed-series-collision"),
             `${context} never reached an enhanced frame by 160 columns`,
           );
         }
@@ -544,6 +628,13 @@ Deno.test("generated Chart CLI matrix preserves facts across every stance and vi
             assert(Number.isSafeInteger(projection.limit));
             assert(projection.fact >= 0);
             assert(projection.limit >= 0);
+            assertEquals(
+              {
+                dimension: projection.dimension,
+                remedy: projection.remedy,
+              },
+              CHART_KIND_CLI_DECLINE_GUIDANCE[projection.code],
+            );
           }
         }
 
@@ -576,11 +667,20 @@ Deno.test("generated Chart CLI matrix preserves facts across every stance and vi
             );
             assertEquals(automatic, projection.frame);
             assertClosedAndBounded(projection.frame, capabilities);
+            assertExactFrameWidth(
+              projection.frame,
+              capabilities,
+              `${context}/${columns}/frame`,
+            );
           } else {
-            assertEquals(
+            assertDeclineEvidence(
               automatic,
-              description,
-              `${context}/${columns} did not fall back atomically`,
+              projection,
+              `${context}/${columns}`,
+            );
+            assert(
+              automatic.endsWith(description),
+              `${context}/${columns} did not preserve the full table atomically`,
             );
           }
         }

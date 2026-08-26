@@ -19,6 +19,8 @@ import type {
   ChartKindCliProjector,
   ChartKindCliProjectorContext,
 } from "../../../cli/chart-kinds.ts";
+import { chartKindCliDecline } from "../../../cli/chart-kinds.ts";
+import { chartFrameLabelMinimumWidth } from "../../../cli/chart-frame.ts";
 import { renderBox } from "../../../cli/box.ts";
 import {
   allocateProportionalBlocks,
@@ -51,7 +53,7 @@ function decline(
   fact: number,
   limit: number,
 ): ChartKindCliProjection {
-  return { kind: "declined", code, fact, limit };
+  return chartKindCliDecline(code, fact, limit);
 }
 
 interface BarPresentation {
@@ -289,6 +291,7 @@ interface BarViability {
 function viability(
   spec: ValidatedBarChart,
   width: number,
+  unicode: boolean,
 ): BarViability {
   const failed = (refusal: ChartKindCliProjection): BarViability => ({
     refusal,
@@ -296,6 +299,12 @@ function viability(
     labelColumn: 0,
   });
   const inner = width - 4;
+  const frameMinimum = chartFrameLabelMinimumWidth(
+    barBottomLabel(spec, unicode),
+  );
+  if (width < frameMinimum) {
+    return failed(decline("width", width, frameMinimum));
+  }
   const unit = barUnitSuffix(spec.value);
   const grouped = spec.variant === "grouped";
   const multiSeries = spec.series.length > 1;
@@ -379,6 +388,14 @@ function viability(
   return { barField, labelColumn };
 }
 
+function barBottomLabel(spec: ValidatedBarChart, unicode: boolean): string {
+  const separator = unicode ? "·" : "|";
+  const categoryCount = spec.categories.length === 1
+    ? "1 category"
+    : `${spec.categories.length} categories`;
+  return `${spec.series.length} series ${separator} ${categoryCount}`;
+}
+
 function renderExactBar(
   spec: ValidatedBarChart,
   context: ChartKindCliProjectorContext,
@@ -417,10 +434,6 @@ function renderExactBar(
     joinVertical([...legendLines(presentation)]),
     ...categories,
   ];
-  const separator = capabilities.unicode ? "·" : "|";
-  const categoryCount = spec.categories.length === 1
-    ? "1 category"
-    : `${spec.categories.length} categories`;
   return renderBox(
     {
       title: spec.title,
@@ -429,7 +442,7 @@ function renderExactBar(
       borderStyle: {
         color: terminalThemeColor(theme, "--discern-color-border-strong"),
       },
-      bottomLabel: `${spec.series.length} series ${separator} ${categoryCount}`,
+      bottomLabel: barBottomLabel(spec, capabilities.unicode),
       bottomLabelStyle: {
         color: terminalThemeColor(theme, "--discern-color-ink-faint"),
         ...theme.typography.annotation,
@@ -443,7 +456,7 @@ function renderExactBar(
 const projectBarChartCli: ChartKindCliProjector<"bar"> = (spec, context) => {
   const validated = spec as ValidatedBarChart;
   const width = Math.min(context.maxWidth, context.capabilities.columns);
-  const checked = viability(validated, width);
+  const checked = viability(validated, width, context.capabilities.unicode);
   if (checked.refusal !== undefined) return checked.refusal;
   const titleWidth = measureText(validated.title);
   if (titleWidth > width - 6) {

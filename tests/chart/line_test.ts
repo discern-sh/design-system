@@ -6,7 +6,10 @@ import {
 } from "@std/assert";
 import { stripAnsi } from "../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
-import type { ChartKindCliProjection } from "../../src/cli/chart-kinds.ts";
+import {
+  chartKindCliDecline,
+  type ChartKindCliProjection,
+} from "../../src/cli/chart-kinds.ts";
 import {
   DECLARED_GAP_GLYPH,
   LINE_PATH_GLYPHS,
@@ -536,10 +539,17 @@ Deno.test("every corpus case projects a frame or a typed decline, byte-stably, i
         JSON.stringify(projection),
         `${entry.name} deterministic`,
       );
-      assert(
-        projection.kind === "frame",
-        `${entry.name} frames at 120 columns`,
-      );
+      if (projection.kind === "declined") {
+        assertEquals(
+          entry.name,
+          "maximum-density",
+          `${entry.name} may decline only for a demonstrated honesty boundary`,
+        );
+        assertEquals(projection.code, "mixed-series-collision");
+        assert(projection.fact > 0);
+        assertEquals(projection.limit, 0);
+        continue;
+      }
       const capabilities = testTerminalCapabilities({
         colorDepth: "truecolor",
         columns: 120,
@@ -608,7 +618,7 @@ Deno.test("gaps render visibly distinct from zero in the frame and the descripti
   }
 });
 
-Deno.test("colourless frames keep at most two series and decline past the envelope", () => {
+Deno.test("every capability keeps multi-series line identity and colourless frames cap the series count", () => {
   const threeSeries = {
     ...representative,
     series: [
@@ -617,12 +627,7 @@ Deno.test("colourless frames keep at most two series and decline past the envelo
     ],
   };
   const declined = project(threeSeries, 80, { colorDepth: "none" });
-  assertEquals(declined, {
-    kind: "declined",
-    code: "mono-series",
-    fact: 3,
-    limit: 2,
-  });
+  assertEquals(declined, chartKindCliDecline("mono-series", 3, 2));
 
   const mono = project(representative, 80, { colorDepth: "none" });
   assert(mono.kind === "frame");
@@ -641,13 +646,48 @@ Deno.test("colourless frames keep at most two series and decline past the envelo
   assertEquals(completedMarks, 1 + 6, "legend plus every stated point");
   assertEquals(openMarks, 1 + 5, "legend plus every stated point");
 
-  const colour = project(representative, 80);
-  assert(colour.kind === "frame");
-  assertStringIncludes(
-    stripAnsi(colour.frame),
-    LINE_PATH_GLYPHS.riseTo.unicode,
-    "with colour, multiple series share the path vocabulary",
-  );
+  for (
+    const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
+  ) {
+    const colour = project(representative, 80, { colorDepth });
+    assert(colour.kind === "frame");
+    const plain = stripAnsi(colour.frame);
+    for (const slot of [1, 2]) {
+      const glyph = marker(slot);
+      const authored = representative.series[slot - 1]?.values.filter(
+        (value) => value !== null,
+      ).length;
+      assert(authored !== undefined);
+      assertEquals(
+        Array.from(plain).filter((character) => character === glyph).length,
+        1 + authored,
+        `${colorDepth} preserves slot ${slot} in its legend and every point`,
+      );
+    }
+  }
+});
+
+Deno.test("mixed-series quantized cells decline before glyph ownership can be concealed", () => {
+  const colliding: LineChartSpec = {
+    kind: "line",
+    title: "Shared starting cell",
+    summary: "Two series begin at the same authored value.",
+    x: { kind: "number", values: [1, 2] },
+    series: [
+      { id: "alpha", label: "Alpha", values: [1, 2] },
+      { id: "beta", label: "Beta", values: [1, 3] },
+    ],
+  };
+  for (
+    const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
+  ) {
+    for (const unicode of [true, false]) {
+      assertEquals(
+        project(colliding, 80, { colorDepth, unicode }),
+        chartKindCliDecline("mixed-series-collision", 1, 0),
+      );
+    }
+  }
 });
 
 Deno.test("quantization rounds half away from zero onto the declared row grid", () => {

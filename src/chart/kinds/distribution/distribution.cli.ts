@@ -19,6 +19,8 @@ import type {
   ChartKindCliProjection,
   ChartKindCliProjectorContext,
 } from "../../../cli/chart-kinds.ts";
+import { chartKindCliDecline } from "../../../cli/chart-kinds.ts";
+import { chartFrameLabelMinimumWidth } from "../../../cli/chart-frame.ts";
 import {
   BOX_SUMMARY_GLYPHS,
   HORIZONTAL_EIGHTH_RAMP,
@@ -58,7 +60,7 @@ function decline(
   fact: number,
   limit: number,
 ): ChartKindCliProjection {
-  return { kind: "declined", code, fact, limit };
+  return chartKindCliDecline(code, fact, limit);
 }
 
 interface DistributionPresentation {
@@ -410,7 +412,9 @@ const projectDistributionChartCli = (
   };
   // The bottom inventory states derived counts, so it joins the width
   // envelope: the frame declines rather than letting the border crop it.
-  const inventoryMinimum = measureText(bottomLabel(spec, presentation)) + 5;
+  const inventoryMinimum = chartFrameLabelMinimumWidth(
+    bottomLabel(spec, presentation),
+  );
   if (width < inventoryMinimum) {
     return decline("width", width, inventoryMinimum);
   }

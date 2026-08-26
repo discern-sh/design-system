@@ -20,6 +20,8 @@ import type {
   ChartKindCliProjection,
   ChartKindCliProjectorContext,
 } from "../../../cli/chart-kinds.ts";
+import { chartKindCliDecline } from "../../../cli/chart-kinds.ts";
+import { chartFrameLabelMinimumWidth } from "../../../cli/chart-frame.ts";
 import {
   DECLARED_GAP_GLYPH,
   LINE_PATH_GLYPHS,
@@ -63,7 +65,7 @@ function decline(
   fact: number,
   limit: number,
 ): ChartKindCliProjection {
-  return { kind: "declined", code, fact, limit };
+  return chartKindCliDecline(code, fact, limit);
 }
 
 interface LinePresentation {
@@ -76,7 +78,7 @@ interface LinePresentation {
   readonly gutter: number;
   readonly maxText: string;
   readonly minText: string;
-  /** Colourless multi-series frames draw per-series markers, not paths. */
+  /** Multi-series frames draw per-series markers, never colour-only paths. */
   readonly markerMode: boolean;
 }
 
@@ -125,6 +127,21 @@ function plotRow(spec: ValidatedLineChart, value: number): number {
     PLOT_ROWS - 1,
     Math.max(0, Math.round(fraction * (PLOT_ROWS - 1))),
   );
+}
+
+/** Quantized cells authored by more than one series cannot name ownership. */
+function mixedSeriesCollisionCount(spec: ValidatedLineChart): number {
+  const occupants = new Map<string, Set<number>>();
+  for (const series of spec.series) {
+    series.values.forEach((value, column) => {
+      if (value === null) return;
+      const key = `${column}:${plotRow(spec, value)}`;
+      const slots = occupants.get(key) ?? new Set<number>();
+      slots.add(series.slot);
+      occupants.set(key, slots);
+    });
+  }
+  return [...occupants.values()].filter((slots) => slots.size > 1).length;
 }
 
 function seriesMarker(
@@ -203,10 +220,10 @@ function drawSeriesPath(
 }
 
 /**
- * Colourless multi-series drawing: each series places its paired marker
- * glyph at every authored point and draws no connectors, so two series
- * never differ by colour alone. Later series overwrite a shared cell; the
- * lossless table keeps every coincident value one mode away.
+ * Multi-series drawing: each series places its paired marker glyph at every
+ * authored point and draws no connectors, so two series never differ by
+ * colour alone. Preflight declines any mixed-series quantized cell before
+ * this painter runs, so assignment is never overwritten.
  */
 function drawSeriesMarkers(
   grid: PlotGrid,
@@ -359,6 +376,17 @@ interface LineViability {
   readonly gutter: number;
 }
 
+function lineResolutionLabel(
+  spec: ValidatedLineChart,
+  unicode: boolean,
+): string {
+  const times = unicode ? "×" : "x";
+  const separator = unicode ? "·" : "|";
+  return `${PLOT_ROWS} rows ${times} ${spec.x.values.length} points${
+    spec.value.scale === "log" ? ` ${separator} log scale` : ""
+  }`;
+}
+
 function viability(
   spec: ValidatedLineChart,
   width: number,
@@ -398,7 +426,12 @@ function viability(
     gutter + 1 + domainExtentWidth(spec, capabilities.unicode),
     gapKeyWidth,
   );
-  const minimum = 4 + required;
+  const minimum = Math.max(
+    4 + required,
+    chartFrameLabelMinimumWidth(
+      lineResolutionLabel(spec, capabilities.unicode),
+    ),
+  );
   if (width < minimum) return failed(decline("width", width, minimum));
   return { gutter };
 }
@@ -428,7 +461,7 @@ function renderFaithfulLine(
       lineUnitSuffix(spec.value),
       spec.value.format,
     ),
-    markerMode: capabilities.colorDepth === "none" && spec.series.length > 1,
+    markerMode: spec.series.length > 1,
   };
   const summary = styleText(
     `Summary: ${spec.summary}`,
@@ -458,12 +491,6 @@ function renderFaithfulLine(
     joinVertical([...legendLines(presentation)]),
     joinVertical(plotBlockLines),
   ];
-  const times = capabilities.unicode ? "×" : "x";
-  const separator = capabilities.unicode ? "·" : "|";
-  const resolution =
-    `${PLOT_ROWS} rows ${times} ${spec.x.values.length} points${
-      spec.value.scale === "log" ? ` ${separator} log scale` : ""
-    }`;
   return renderBox(
     {
       title: spec.title,
@@ -472,7 +499,7 @@ function renderFaithfulLine(
       borderStyle: {
         color: terminalThemeColor(theme, "--discern-color-border-strong"),
       },
-      bottomLabel: resolution,
+      bottomLabel: lineResolutionLabel(spec, capabilities.unicode),
       bottomLabelStyle: {
         color: terminalThemeColor(theme, "--discern-color-ink-faint"),
         ...theme.typography.annotation,
@@ -497,6 +524,10 @@ const projectLineChartCli = (
   const titleWidth = measureText(spec.title);
   if (titleWidth > width - 6) {
     return decline("title-width", titleWidth, width - 6);
+  }
+  const mixedCollisions = mixedSeriesCollisionCount(spec);
+  if (mixedCollisions > 0) {
+    return decline("mixed-series-collision", mixedCollisions, 0);
   }
   return {
     kind: "frame",

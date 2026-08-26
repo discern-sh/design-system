@@ -19,6 +19,8 @@ import type {
   ChartKindCliProjection,
   ChartKindCliProjectorContext,
 } from "../../../cli/chart-kinds.ts";
+import { chartKindCliDecline } from "../../../cli/chart-kinds.ts";
+import { chartFrameLabelMinimumWidth } from "../../../cli/chart-frame.ts";
 import { renderBox } from "../../../cli/box.ts";
 import {
   DECLARED_GAP_GLYPH,
@@ -57,7 +59,7 @@ function decline(
   fact: number,
   limit: number,
 ): ChartKindCliProjection {
-  return { kind: "declined", code, fact, limit };
+  return chartKindCliDecline(code, fact, limit);
 }
 
 interface HeatmapPresentation {
@@ -201,6 +203,7 @@ interface HeatmapViability {
 function viability(
   spec: ValidatedHeatmapChart,
   width: number,
+  unicode: boolean,
 ): HeatmapViability {
   const failed = (refusal: ChartKindCliProjection): HeatmapViability => ({
     refusal,
@@ -208,6 +211,12 @@ function viability(
     columnWidths: [],
   });
   const inner = width - 4;
+  const frameMinimum = chartFrameLabelMinimumWidth(
+    heatmapBottomLabel(spec, unicode),
+  );
+  if (width < frameMinimum) {
+    return failed(decline("width", width, frameMinimum));
+  }
   const columnCount = spec.columns.length;
   const minimumGrid = columnCount * CELL_WIDTH +
     (columnCount - 1) * COLUMN_GAP;
@@ -247,6 +256,20 @@ function viability(
   return { labelColumn, columnWidths };
 }
 
+function heatmapBottomLabel(
+  spec: ValidatedHeatmapChart,
+  unicode: boolean,
+): string {
+  const separator = unicode ? "·" : "|";
+  const rowCount = spec.rows.length === 1
+    ? "1 row"
+    : `${spec.rows.length} rows`;
+  const columnCount = spec.columns.length === 1
+    ? "1 column"
+    : `${spec.columns.length} columns`;
+  return `${rowCount} ${separator} ${columnCount}`;
+}
+
 function renderFaithfulHeatmap(
   spec: ValidatedHeatmapChart,
   context: ChartKindCliProjectorContext,
@@ -278,13 +301,6 @@ function renderFaithfulHeatmap(
     joinVertical([...legendLines(presentation)]),
     joinVertical([...heatmapExtremeLines(spec)]),
   ];
-  const separator = capabilities.unicode ? "·" : "|";
-  const rowCount = spec.rows.length === 1
-    ? "1 row"
-    : `${spec.rows.length} rows`;
-  const columnCount = spec.columns.length === 1
-    ? "1 column"
-    : `${spec.columns.length} columns`;
   return renderBox(
     {
       title: spec.title,
@@ -293,7 +309,7 @@ function renderFaithfulHeatmap(
       borderStyle: {
         color: terminalThemeColor(theme, "--discern-color-border-strong"),
       },
-      bottomLabel: `${rowCount} ${separator} ${columnCount}`,
+      bottomLabel: heatmapBottomLabel(spec, capabilities.unicode),
       bottomLabelStyle: {
         color: terminalThemeColor(theme, "--discern-color-ink-faint"),
         ...theme.typography.annotation,
@@ -309,7 +325,7 @@ export default function projectHeatmapChartCli(
   context: ChartKindCliProjectorContext,
 ): ChartKindCliProjection {
   const width = Math.min(context.maxWidth, context.capabilities.columns);
-  const checked = viability(spec, width);
+  const checked = viability(spec, width, context.capabilities.unicode);
   if (checked.refusal !== undefined) return checked.refusal;
   const titleWidth = measureText(spec.title);
   if (titleWidth > width - 6) {

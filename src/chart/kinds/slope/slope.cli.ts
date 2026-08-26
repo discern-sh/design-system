@@ -18,6 +18,8 @@ import type {
   ChartKindCliProjection,
   ChartKindCliProjectorContext,
 } from "../../../cli/chart-kinds.ts";
+import { chartKindCliDecline } from "../../../cli/chart-kinds.ts";
+import { chartFrameLabelMinimumWidth } from "../../../cli/chart-frame.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { composeCliBlocks } from "../../../cli/rhythm.ts";
 import { measureText, padText, wrapText } from "../../../cli/text.ts";
@@ -64,7 +66,7 @@ function decline(
   fact: number,
   limit: number,
 ): ChartKindCliProjection {
-  return { kind: "declined", code, fact, limit };
+  return chartKindCliDecline(code, fact, limit);
 }
 
 /** The fixed column plan one width either accommodates or declines. */
@@ -95,6 +97,22 @@ function viability(
   unicode: boolean,
 ): SlopeViability {
   const unit = slopeUnitSuffix(spec.value);
+  const frameMinimum = chartFrameLabelMinimumWidth(
+    `${spec.items.length} items`,
+  );
+  if (width < frameMinimum) {
+    return {
+      refusal: decline("width", width, frameMinimum),
+      columns: {
+        unit,
+        separator: unicode ? "→" : "->",
+        labelColumn: 0,
+        beforeColumn: 0,
+        afterColumn: 0,
+        deltaColumn: 0,
+      },
+    };
+  }
   const separator = unicode ? "→" : "->";
   const beforeColumn = Math.max(
     measureText(spec.endpoints.before),

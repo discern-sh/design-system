@@ -22,7 +22,10 @@ import heatmapKindMeta from "../../src/chart/kinds/heatmap/heatmap.meta.ts";
 import type { ValidatedHeatmapChart } from "../../src/chart/kinds/heatmap/heatmap.spec.ts";
 import validateHeatmapChart from "../../src/chart/kinds/heatmap/heatmap.validation.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
-import type { ChartKindCliProjection } from "../../src/cli/chart-kinds.ts";
+import {
+  chartKindCliDecline,
+  type ChartKindCliProjection,
+} from "../../src/cli/chart-kinds.ts";
 import { stripAnsi } from "../../src/cli/ansi.ts";
 import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
 import { measureText } from "../../src/cli/text.ts";
@@ -304,18 +307,14 @@ Deno.test("a zero-valued cell renders the first bin, never the gap glyph", () =>
 });
 
 Deno.test("declines carry the exceeded fact and its limit", () => {
-  assertEquals(project(corpusSpec("weekly-activity"), 15), {
-    kind: "declined",
-    code: "width",
-    fact: 15,
-    limit: 18,
-  });
-  assertEquals(project(corpusSpec("weekly-activity"), 24), {
-    kind: "declined",
-    code: "label-wrap",
-    fact: 32,
-    limit: 15,
-  });
+  assertEquals(
+    project(corpusSpec("weekly-activity"), 15),
+    chartKindCliDecline("width", 15, 23),
+  );
+  assertEquals(
+    project(corpusSpec("weekly-activity"), 24),
+    chartKindCliDecline("label-wrap", 32, 15),
+  );
   assertEquals(
     project(
       {
@@ -332,7 +331,7 @@ Deno.test("declines carry the exceeded fact and its limit", () => {
       },
       24,
     ),
-    { kind: "declined", code: "label-wrap", fact: 23, limit: 13 },
+    chartKindCliDecline("label-wrap", 23, 13),
   );
   assertEquals(
     project(
@@ -350,7 +349,7 @@ Deno.test("declines carry the exceeded fact and its limit", () => {
       },
       40,
     ),
-    { kind: "declined", code: "title-width", fact: 35, limit: 34 },
+    chartKindCliDecline("title-width", 35, 34),
   );
 });
 

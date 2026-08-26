@@ -6,7 +6,10 @@ import {
 } from "@std/assert";
 import { stripAnsi } from "../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
-import type { ChartKindCliProjection } from "../../src/cli/chart-kinds.ts";
+import {
+  chartKindCliDecline,
+  type ChartKindCliProjection,
+} from "../../src/cli/chart-kinds.ts";
 import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
 import { measureText } from "../../src/cli/text.ts";
 import { conformChartScene } from "../../src/chart/conformance.ts";
@@ -423,18 +426,14 @@ Deno.test("an all-identical comparison stays valid and keeps its delta list whil
 Deno.test("width declines carry the exceeded fact and its limit", () => {
   // Column plan for the teams corpus case: label 7, both value columns 10,
   // delta 10, separator 1 → one-cell-label minimum 44.
-  assertEquals(project(corpusSpec("teams"), 28), {
-    kind: "declined",
-    code: "width",
-    fact: 28,
-    limit: 44,
-  });
-  assertEquals(project(corpusSpec("teams"), 44), {
-    kind: "declined",
-    code: "label-wrap",
-    fact: 7,
-    limit: 1,
-  });
+  assertEquals(
+    project(corpusSpec("teams"), 28),
+    chartKindCliDecline("width", 28, 44),
+  );
+  assertEquals(
+    project(corpusSpec("teams"), 44),
+    chartKindCliDecline("label-wrap", 7, 1),
+  );
 
   const longTitle = {
     ...corpusSpec("minimum"),

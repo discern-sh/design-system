@@ -7,9 +7,10 @@ import {
 } from "@std/assert";
 import { stripAnsi } from "../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
-import type {
-  ChartKindCliProjection,
-  ChartKindCliProjectorContext,
+import {
+  chartKindCliDecline,
+  type ChartKindCliProjection,
+  type ChartKindCliProjectorContext,
 } from "../../src/cli/chart-kinds.ts";
 import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
 import { measureText } from "../../src/cli/text.ts";
@@ -265,12 +266,40 @@ Deno.test("a cell past nine coincident points declines with the typed collision 
       },
     ],
   };
-  assertEquals(project(dense, 80), {
-    kind: "declined",
-    code: "collision-count",
-    fact: 11,
-    limit: 9,
-  });
+  assertEquals(
+    project(dense, 80),
+    chartKindCliDecline("collision-count", 11, 9),
+  );
+});
+
+Deno.test("a quantized cell shared by series declines before its marker identity is lost", () => {
+  const mixed = {
+    kind: "scatter",
+    title: "Mixed pile-up",
+    summary: "Two named series share one exact observation.",
+    series: [
+      {
+        id: "alpha",
+        label: "Alpha",
+        points: [{ x: 1, y: 1 }, { x: 3, y: 3 }],
+      },
+      {
+        id: "beta",
+        label: "Beta",
+        points: [{ x: 1, y: 1 }, { x: 4, y: 2 }],
+      },
+    ],
+  };
+  for (
+    const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
+  ) {
+    for (const unicode of [true, false]) {
+      assertEquals(
+        project(mixed, 80, { colorDepth, unicode }),
+        chartKindCliDecline("mixed-series-collision", 1, 0),
+      );
+    }
+  }
 });
 
 Deno.test("the frame annotates the exact axis extremes and states its resolution", () => {
@@ -357,12 +386,7 @@ Deno.test("projection is deterministic, bounded, and typed across the width enve
     const first = project(representative, columns);
     assertEquals(project(representative, columns), first);
     if (columns === 30) {
-      assertEquals(first, {
-        kind: "declined",
-        code: "width",
-        fact: 30,
-        limit: 40,
-      });
+      assertEquals(first, chartKindCliDecline("width", 30, 40));
       continue;
     }
     const frame = plainFrame(first);
@@ -401,12 +425,10 @@ Deno.test("legend and title overflow decline with their typed codes", () => {
       },
     ],
   };
-  assertEquals(project(longLabel, 34), {
-    kind: "declined",
-    code: "label-wrap",
-    fact: 34,
-    limit: 30,
-  });
+  assertEquals(
+    project(longLabel, 34),
+    chartKindCliDecline("label-wrap", 34, 30),
+  );
   const longTitle = {
     kind: "scatter",
     title: "This title is far too wide for a forty-four column frame",
@@ -419,10 +441,8 @@ Deno.test("legend and title overflow decline with their typed codes", () => {
       },
     ],
   };
-  assertEquals(project(longTitle, 44), {
-    kind: "declined",
-    code: "title-width",
-    fact: measureText(longTitle.title),
-    limit: 38,
-  });
+  assertEquals(
+    project(longTitle, 44),
+    chartKindCliDecline("title-width", measureText(longTitle.title), 38),
+  );
 });

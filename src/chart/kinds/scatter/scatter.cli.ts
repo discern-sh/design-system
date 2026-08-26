@@ -21,6 +21,8 @@ import type {
   ChartKindCliProjection,
   ChartKindCliProjectorContext,
 } from "../../../cli/chart-kinds.ts";
+import { chartKindCliDecline } from "../../../cli/chart-kinds.ts";
+import { chartFrameLabelMinimumWidth } from "../../../cli/chart-frame.ts";
 import { renderBox } from "../../../cli/box.ts";
 import { rampGlyph, SERIES_MARKERS } from "../../../cli/glyph-ramps.ts";
 import { joinVertical } from "../../../cli/layout.ts";
@@ -68,7 +70,7 @@ function decline(
   fact: number,
   limit: number,
 ): ChartKindCliProjection {
-  return { kind: "declined", code, fact, limit };
+  return chartKindCliDecline(code, fact, limit);
 }
 
 /** The exact corner texts the frame annotates the grid edges with. */
@@ -183,6 +185,8 @@ interface ScatterGrid {
   readonly slots: readonly (ChartSeriesPaintSlot | "mixed" | undefined)[];
   /** The largest single-cell count, for the collision-count envelope. */
   readonly worstCollision: number;
+  /** Cells that contain points from more than one authored series. */
+  readonly mixedCollisions: number;
 }
 
 function buildGrid(
@@ -224,7 +228,8 @@ function buildGrid(
         : "mixed";
     }
   }
-  return { counts, slots, worstCollision };
+  const mixedCollisions = slots.filter((slot) => slot === "mixed").length;
+  return { counts, slots, worstCollision, mixedCollisions };
 }
 
 interface ScatterPresentation {
@@ -384,13 +389,6 @@ function renderFaithfulScatter(
     },
     capabilities,
   );
-  const separator = capabilities.unicode ? "·" : "|";
-  const times = capabilities.unicode ? "×" : "x";
-  const totalPoints = spec.series.reduce(
-    (sum, series) => sum + series.points.length,
-    0,
-  );
-  const pointCount = totalPoints === 1 ? "1 point" : `${totalPoints} points`;
   return renderBox(
     {
       title: spec.title,
@@ -403,8 +401,11 @@ function renderFaithfulScatter(
       borderStyle: {
         color: terminalThemeColor(theme, "--discern-color-border-strong"),
       },
-      bottomLabel:
-        `${spec.series.length} series ${separator} ${pointCount} ${separator} ${checked.columns}${times}${SCATTER_PLOT_ROWS} cells`,
+      bottomLabel: scatterBottomLabel(
+        spec,
+        checked.columns,
+        capabilities.unicode,
+      ),
       bottomLabelStyle: {
         color: terminalThemeColor(theme, "--discern-color-ink-faint"),
         ...theme.typography.annotation,
@@ -412,6 +413,21 @@ function renderFaithfulScatter(
     },
     capabilities,
   );
+}
+
+function scatterBottomLabel(
+  spec: ValidatedScatterChart,
+  columns: number,
+  unicode: boolean,
+): string {
+  const separator = unicode ? "·" : "|";
+  const times = unicode ? "×" : "x";
+  const totalPoints = spec.series.reduce(
+    (sum, series) => sum + series.points.length,
+    0,
+  );
+  const pointCount = totalPoints === 1 ? "1 point" : `${totalPoints} points`;
+  return `${spec.series.length} series ${separator} ${pointCount} ${separator} ${columns}${times}${SCATTER_PLOT_ROWS} cells`;
 }
 
 /** Project one faithful scatter frame, or decline without hiding a point. */
@@ -423,11 +439,18 @@ const projectScatterChartCli: (
   const texts = extremeTexts(spec);
   const checked = viability(spec, width, texts);
   if (checked.refusal !== undefined) return checked.refusal;
+  const frameMinimum = chartFrameLabelMinimumWidth(
+    scatterBottomLabel(spec, checked.columns, context.capabilities.unicode),
+  );
+  if (width < frameMinimum) return decline("width", width, frameMinimum);
   const titleWidth = measureText(spec.title);
   if (titleWidth > width - 6) {
     return decline("title-width", titleWidth, width - 6);
   }
   const grid = buildGrid(spec, checked.columns);
+  if (grid.mixedCollisions > 0) {
+    return decline("mixed-series-collision", grid.mixedCollisions, 0);
+  }
   if (grid.worstCollision > COLLISION_DIGIT_LIMIT) {
     return decline(
       "collision-count",
