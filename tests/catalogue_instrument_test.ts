@@ -150,7 +150,7 @@ Deno.test("Catalogue purposes are closed, selective, and guidance-backed", async
     "procedure",
     "badge",
     "ownership-badge",
-    "receipt",
+    "verification-report",
     "result-summary",
   ]);
   for (const { meta } of registry) {
@@ -317,7 +317,7 @@ Deno.test("Catalogue version and composition source share their authorities", as
       "documentation-task",
       "next-action",
       "failure-triage",
-      "handoff-receipt",
+      "handoff-verification-report",
       "survey-artifacts",
       "reading-first-landing",
     ],

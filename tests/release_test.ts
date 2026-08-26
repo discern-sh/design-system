@@ -8,6 +8,19 @@ import {
 
 const PACKAGE_ROOT = fromFileUrl(new URL("..", import.meta.url));
 
+async function walkAuthoredText(directory: string): Promise<string[]> {
+  const files: string[] = [];
+  for await (const entry of Deno.readDir(directory)) {
+    const path = join(directory, entry.name);
+    if (entry.isDirectory) {
+      files.push(...await walkAuthoredText(path));
+    } else if (/\.(?:css|js|json|md|toml|ts|tsx)$/u.test(entry.name)) {
+      files.push(path);
+    }
+  }
+  return files;
+}
+
 const ANSI_CODES = new RegExp(String.fromCharCode(27) + "\\[[0-9;]*m", "g");
 
 interface DenoConfig {
@@ -297,6 +310,40 @@ Deno.test("browser behavior stays inside the declared component opt-ins", () => 
     new Set(declaredComponents).size,
     declaredComponents.length,
     "a component must not repeat across behavior opt-in sets",
+  );
+});
+
+Deno.test("superseded proof-card vocabulary is absent from project surfaces", async () => {
+  const legacyTerm = ["re", "ceipt"].join("");
+  const roots = ["src", "catalogue", "scripts", "tests", "map", "discern"];
+  const files = (
+    await Promise.all(
+      roots.map((root) => walkAuthoredText(join(PACKAGE_ROOT, root))),
+    )
+  ).flat();
+  files.push(
+    join(PACKAGE_ROOT, "CHANGELOG.md"),
+    join(PACKAGE_ROOT, "README.md"),
+    join(PACKAGE_ROOT, "deno.json"),
+    join(PACKAGE_ROOT, "discern.toml"),
+  );
+  const offenders: string[] = [];
+  for (const path of files) {
+    const projectPath = relative(PACKAGE_ROOT, path);
+    const source = await Deno.readTextFile(path);
+    if (
+      projectPath.toLocaleLowerCase().includes(legacyTerm) ||
+      source.toLocaleLowerCase().includes(legacyTerm)
+    ) {
+      offenders.push(projectPath);
+    }
+  }
+  assertEquals(
+    offenders.toSorted(),
+    [],
+    `rename ${legacyTerm} references to Verification report: ${
+      offenders.join(", ")
+    }`,
   );
 });
 

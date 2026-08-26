@@ -1,5 +1,5 @@
 /**
- * Pure terminal renderer and deterministic example states for Receipt.
+ * Pure terminal renderer and deterministic example states for Verification report.
  *
  * @module
  */
@@ -11,41 +11,44 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
-import type { ReceiptCheckState, ReceiptStamp } from "./receipt.types.ts";
+import type {
+  VerificationReportCheckState,
+  VerificationReportStamp,
+} from "./verification-report.types.ts";
 import {
   agentsCliTheme,
   agentsCliWidth,
   assertAgentsCliText,
 } from "../agents-cli.ts";
 
-/** One framework-neutral metadata row accepted by the terminal Receipt. */
-export interface ReceiptCliMeta {
+/** One framework-neutral metadata row accepted by the terminal Verification report. */
+export interface VerificationReportCliMeta {
   readonly label: string;
   readonly value: string;
 }
 
-/** One framework-neutral check row accepted by the terminal Receipt. */
-export interface ReceiptCliCheck {
+/** One framework-neutral check row accepted by the terminal Verification report. */
+export interface VerificationReportCliCheck {
   readonly label: string;
-  readonly state: ReceiptCheckState;
+  readonly state: VerificationReportCheckState;
   readonly stateLabel?: string;
   readonly value?: string;
 }
 
-/** Inputs accepted by the terminal Receipt renderer. */
-export interface ReceiptCliProps {
+/** Inputs accepted by the terminal Verification report renderer. */
+export interface VerificationReportCliProps {
   readonly title: string;
-  readonly stamp?: ReceiptStamp;
-  readonly meta?: readonly ReceiptCliMeta[];
-  readonly checks?: readonly ReceiptCliCheck[];
+  readonly stamp?: VerificationReportStamp;
+  readonly meta?: readonly VerificationReportCliMeta[];
+  readonly checks?: readonly VerificationReportCliCheck[];
   readonly summary?: string;
   readonly footer?: string;
   readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
-/** Deterministic Receipt states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<ReceiptCliProps>[] = [
+/** Deterministic Verification report states rendered by the CLI catalogue. */
+export const cliExamples: readonly CliExample<VerificationReportCliProps>[] = [
   {
     name: "gate",
     props: {
@@ -64,14 +67,17 @@ export const cliExamples: readonly CliExample<ReceiptCliProps>[] = [
   },
 ] as const;
 
-function checkGlyph(state: ReceiptCheckState, unicode: boolean): string {
+function checkGlyph(
+  state: VerificationReportCheckState,
+  unicode: boolean,
+): string {
   if (state === "pass") return unicode ? "✓" : "+";
   if (state === "fail") return unicode ? "✕" : "x";
   return unicode ? "–" : "-";
 }
 
 function checkLine(
-  check: ReceiptCliCheck,
+  check: VerificationReportCliCheck,
   innerWidth: number,
   unicode: boolean,
 ): string {
@@ -89,45 +95,58 @@ function checkLine(
   return `${label} ${leaders} ${suffix}`;
 }
 
-/** Render one boxed proof-of-work receipt with exact dot leaders. */
-const renderReceiptCli: CliRenderer<ReceiptCliProps> = (
+/** Render one boxed Verification report with exact dot leaders. */
+const renderVerificationReportCli: CliRenderer<VerificationReportCliProps> = (
   props,
   capabilities,
 ) => {
-  assertAgentsCliText(props.title, "receipt title");
+  assertAgentsCliText(props.title, "verification report title");
   const width = agentsCliWidth(props.maxWidth, capabilities, 20);
   const innerWidth = width - 4;
   const body: string[] = [];
   for (const [index, row] of props.meta?.entries() ?? []) {
-    assertAgentsCliText(row.label, `receipt metadata ${index + 1} label`);
-    assertAgentsCliText(row.value, `receipt metadata ${index + 1} value`, true);
+    assertAgentsCliText(
+      row.label,
+      `verification report metadata ${index + 1} label`,
+    );
+    assertAgentsCliText(
+      row.value,
+      `verification report metadata ${index + 1} value`,
+      true,
+    );
     body.push(`${row.label}: ${row.value}`);
   }
   if ((props.meta?.length ?? 0) > 0 && (props.checks?.length ?? 0) > 0) {
     body.push("");
   }
   for (const [index, check] of props.checks?.entries() ?? []) {
-    assertAgentsCliText(check.label, `receipt check ${index + 1} label`);
+    assertAgentsCliText(
+      check.label,
+      `verification report check ${index + 1} label`,
+    );
     if (check.stateLabel !== undefined) {
       assertAgentsCliText(
         check.stateLabel,
-        `receipt check ${index + 1} state label`,
+        `verification report check ${index + 1} state label`,
       );
     }
     if (check.value !== undefined) {
-      assertAgentsCliText(check.value, `receipt check ${index + 1} value`);
+      assertAgentsCliText(
+        check.value,
+        `verification report check ${index + 1} value`,
+      );
     }
     body.push(checkLine(check, innerWidth, capabilities.unicode));
   }
   if (props.summary !== undefined) {
-    assertAgentsCliText(props.summary, "receipt summary", true);
+    assertAgentsCliText(props.summary, "verification report summary", true);
     body.push("", props.summary);
   }
   if (props.footer !== undefined) {
-    assertAgentsCliText(props.footer, "receipt footer", true);
+    assertAgentsCliText(props.footer, "verification report footer", true);
     body.push("", props.footer);
   }
-  if (body.length === 0) body.push("No receipt detail");
+  if (body.length === 0) body.push("No verification detail");
   const theme = agentsCliTheme(props.theme);
   const tone = props.stamp === "pass"
     ? "success"
@@ -148,4 +167,4 @@ const renderReceiptCli: CliRenderer<ReceiptCliProps> = (
   );
 };
 
-export default renderReceiptCli;
+export default renderVerificationReportCli;

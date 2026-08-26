@@ -17,7 +17,7 @@ export default {
     "A command or procedure needs observable proof that tells the reader what success should look like.",
   ],
   notWhen: [
-    "The outcome has already been measured; use Result summary for a run or Receipt for a multi-check record.",
+    "The outcome has already been measured; use Result summary for a run or Verification report for a multi-check record.",
   ],
   accessibility: [
     "The visible label names the excerpt as an expectation rather than verified live status.",

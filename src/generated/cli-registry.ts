@@ -66,7 +66,7 @@ export const cliComponentRegistry = {
   "agent-mention": { stance: "rendered", modulePath: "../components/agents/agent-mention/agent-mention.cli.ts" },
   "worklog": { stance: "rendered", modulePath: "../components/agents/worklog/worklog.cli.ts" },
   "transcript": { stance: "rendered", modulePath: "../components/agents/transcript/transcript.cli.ts" },
-  "receipt": { stance: "rendered", modulePath: "../components/agents/receipt/receipt.cli.ts" },
+  "verification-report": { stance: "rendered", modulePath: "../components/agents/verification-report/verification-report.cli.ts" },
   "fleet": { stance: "rendered", modulePath: "../components/agents/fleet/fleet.cli.ts" },
   "command": { stance: "rendered", modulePath: "../components/workflow/command/command.cli.ts" },
   "command-group": { stance: "rendered", modulePath: "../components/workflow/command-group/command-group.cli.ts" },

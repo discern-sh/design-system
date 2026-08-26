@@ -9,8 +9,8 @@ import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import { measureText } from "../../src/cli/text.ts";
 import {
   renderFleetCli,
-  renderReceiptCli,
   renderTranscriptCli,
+  renderVerificationReportCli,
   renderWorklogCli,
 } from "../../src/cli/mod.ts";
 import {
@@ -250,7 +250,7 @@ Deno.test("Fleet lossless identities survive Unicode, ASCII, colour, and no-colo
   );
 });
 
-Deno.test("Receipt renders exact narrow, standard, wide, and capability frames", () => {
+Deno.test("Verification report renders exact narrow, standard, wide, and capability frames", () => {
   const props = {
     title: "Gate proof",
     stamp: "pass",
@@ -282,27 +282,27 @@ Deno.test("Receipt renders exact narrow, standard, wide, and capability frames",
   ) {
     const capabilities = testTerminalCapabilities({ columns });
     assertExactFrame(
-      renderReceiptCli(props, capabilities),
+      renderVerificationReportCli(props, capabilities),
       expected,
       capabilities,
     );
   }
   assertCapabilityLevels(
     52,
-    (capabilities) => renderReceiptCli(props, capabilities),
+    (capabilities) => renderVerificationReportCli(props, capabilities),
     standard,
     "+ [+] Gate proof ----------------------------------+\n| Branch: agent/cli-2b                             |\n| Commit: abc1234                                  |\n|                                                  |\n| Typecheck ............................... + pass |\n| Tests ............................... 310 + pass |\n| Publish ................................. - skip |\n|                                                  |\n| All required checks passed                       |\n+--------------------------------------------------+",
   );
 });
 
-Deno.test("Receipt titles carry boxed pass and fail outcomes without a redundant body stamp", () => {
+Deno.test("Verification report titles carry boxed pass and fail outcomes without a redundant body stamp", () => {
   const unicode = testTerminalCapabilities({ columns: 32 });
   const ascii = testTerminalCapabilities({ columns: 32, unicode: false });
-  const pass = renderReceiptCli(
+  const pass = renderVerificationReportCli(
     { title: "Gate proof", stamp: "pass" },
     unicode,
   );
-  const fail = renderReceiptCli(
+  const fail = renderVerificationReportCli(
     { title: "Gate proof", stamp: "fail" },
     unicode,
   );
@@ -311,7 +311,10 @@ Deno.test("Receipt titles carry boxed pass and fail outcomes without a redundant
   assertEquals(pass.includes("[PASS]"), false);
   assertEquals(fail.includes("[FAIL]"), false);
   assertStringIncludes(
-    renderReceiptCli({ title: "Gate proof", stamp: "fail" }, ascii),
+    renderVerificationReportCli(
+      { title: "Gate proof", stamp: "fail" },
+      ascii,
+    ),
     "+ [x] Gate proof ",
   );
 });

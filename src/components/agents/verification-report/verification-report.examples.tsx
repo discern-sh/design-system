@@ -1,10 +1,10 @@
-import { Receipt } from "./receipt.tsx";
+import { VerificationReport } from "./verification-report.tsx";
 import { Diffstat } from "../../display/diffstat/diffstat.tsx";
 
-export default function ReceiptExamples() {
+export default function VerificationReportExamples() {
   return (
     <div className="discern-example-stack discern-example-stack--start">
-      <Receipt
+      <VerificationReport
         style={{ width: "min(100%, 22rem)" }}
         title="Checkout refactor"
         stamp="pass"
@@ -26,7 +26,7 @@ export default function ReceiptExamples() {
           </>
         }
       />
-      <Receipt
+      <VerificationReport
         style={{ width: "min(100%, 22rem)" }}
         title="Payment step"
         stamp="fail"

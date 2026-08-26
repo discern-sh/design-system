@@ -1,5 +1,5 @@
 @layer discern.components {
-  .discern-receipt {
+  .discern-verification-report {
     display: flex;
     flex-direction: column;
     gap: var(--discern-space-4);
@@ -24,17 +24,17 @@
     font-size: var(--discern-font-size-xs);
     line-height: 1.6;
   }
-  .discern-receipt > * + * {
+  .discern-verification-report > * + * {
     padding-block-start: var(--discern-space-4);
     border-block-start: 1px dashed var(--discern-color-border-strong);
   }
-  .discern-receipt__header {
+  .discern-verification-report__header {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: var(--discern-space-3);
   }
-  .discern-receipt__title {
+  .discern-verification-report__title {
     overflow: hidden;
     font-size: var(--discern-font-size-sm);
     font-weight: var(--discern-font-weight-strong);
@@ -43,7 +43,7 @@
     text-transform: uppercase;
     white-space: nowrap;
   }
-  .discern-receipt__stamp {
+  .discern-verification-report__stamp {
     flex: none;
     padding-block: 1px;
     padding-inline: 7px;
@@ -54,32 +54,32 @@
     box-shadow: 1px 1px 0 color-mix(in oklab, currentColor 18%, transparent);
     text-transform: uppercase;
   }
-  .discern-receipt__stamp[data-discern-state="pass"] {
+  .discern-verification-report__stamp[data-discern-state="pass"] {
     background: var(--discern-color-success-soft);
     color: var(--discern-color-success-deep);
   }
-  .discern-receipt__stamp[data-discern-state="fail"] {
+  .discern-verification-report__stamp[data-discern-state="fail"] {
     background: var(--discern-color-danger-soft);
     color: var(--discern-color-danger);
   }
-  .discern-receipt__meta,
-  .discern-receipt__checks {
+  .discern-verification-report__meta,
+  .discern-verification-report__checks {
     display: flex;
     flex-direction: column;
     gap: 3px;
     margin: 0;
   }
-  .discern-receipt__meta > div,
-  .discern-receipt__checks > div {
+  .discern-verification-report__meta > div,
+  .discern-verification-report__checks > div {
     display: flex;
     align-items: baseline;
     gap: var(--discern-space-3);
   }
-  .discern-receipt__meta dt {
+  .discern-verification-report__meta dt {
     color: var(--discern-color-ink-muted);
   }
-  .discern-receipt__meta dd,
-  .discern-receipt__checks dd {
+  .discern-verification-report__meta dd,
+  .discern-verification-report__checks dd {
     overflow: hidden;
     margin: 0;
     margin-inline-start: auto;
@@ -87,10 +87,10 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .discern-receipt__meta dd code {
+  .discern-verification-report__meta dd code {
     font-family: var(--discern-font-mono);
   }
-  .discern-receipt__checks > div {
+  .discern-verification-report__checks > div {
     background:
       repeating-linear-gradient(
       to right,
@@ -99,39 +99,39 @@
     )
       0 calc(100% - 0.45em) / 100% 1px no-repeat;
   }
-  .discern-receipt__checks dt {
+  .discern-verification-report__checks dt {
     background: var(--discern-color-surface);
     padding-inline-end: 4px;
   }
-  .discern-receipt__checks dd {
+  .discern-verification-report__checks dd {
     background: var(--discern-color-surface);
     padding-inline-start: 4px;
   }
-  .discern-receipt__glyph {
+  .discern-verification-report__glyph {
     display: inline-block;
     inline-size: 1.1em;
     margin-inline-start: 0.45em;
     text-align: end;
   }
-  .discern-receipt__checks > div[data-discern-state="pass"] .discern-receipt__glyph {
+  .discern-verification-report__checks > div[data-discern-state="pass"] .discern-verification-report__glyph {
     color: var(--discern-color-success);
   }
-  .discern-receipt__checks > div[data-discern-state="fail"] .discern-receipt__glyph {
+  .discern-verification-report__checks > div[data-discern-state="fail"] .discern-verification-report__glyph {
     color: var(--discern-color-danger);
   }
-  .discern-receipt__checks > div[data-discern-state="skip"] dt,
-  .discern-receipt__checks > div[data-discern-state="skip"] dd {
+  .discern-verification-report__checks > div[data-discern-state="skip"] dt,
+  .discern-verification-report__checks > div[data-discern-state="skip"] dd {
     color: var(--discern-color-ink-muted);
   }
-  .discern-receipt__summary {
+  .discern-verification-report__summary {
     font-size: var(--discern-font-size-sm);
     font-weight: var(--discern-font-weight-strong);
   }
-  .discern-receipt__footer {
+  .discern-verification-report__footer {
     color: var(--discern-color-ink-muted);
   }
   @media (forced-colors: active) {
-    .discern-receipt {
+    .discern-verification-report {
       border-color: CanvasText;
     }
   }

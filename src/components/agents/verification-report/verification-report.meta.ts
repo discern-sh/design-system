@@ -1,12 +1,12 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 export default {
-  name: "Receipt",
-  slug: "receipt",
+  name: "Verification report",
+  slug: "verification-report",
   group: "Agents",
   order: 60,
   cli: { stance: "rendered" },
   description:
-    "Proof-of-work card with a stamped title, metadata rows, and dot-leadered check lines recording what ran and how it ended.",
+    "Durable multi-check report with a stamped title, metadata rows, and dot-leadered results recording what was verified and how it ended.",
   purposes: ["displaying-tool-output"],
   useWhen: [
     "A durable handoff must record several checks and their outcomes with branch, commit, timing, or change metadata.",

@@ -2515,7 +2515,7 @@ function monospaceTypefaceRules(path: string, css: string): string[] {
 Deno.test("monospace is reserved for brand names and code-bearing surfaces", async () => {
   const allowed = [
     "src/components/agents/fleet/fleet.css::.discern-fleet__branch",
-    "src/components/agents/receipt/receipt.css::.discern-receipt__meta dd code",
+    "src/components/agents/verification-report/verification-report.css::.discern-verification-report__meta dd code",
     "src/components/core/brand/brand.css::.discern-brand--mono .discern-brand__name",
     "src/components/display/diffstat/diffstat.css::.discern-diffstat__added, .discern-diffstat__removed",
     "src/components/display/sparkline/sparkline.css::.discern-sparkline__annotation",
@@ -2572,13 +2572,13 @@ Deno.test("monospace is reserved for brand names and code-bearing surfaces", asy
   );
 });
 
-Deno.test("Receipt keeps code typography on metadata values, not labels", async () => {
+Deno.test("Verification report keeps code typography on metadata values, not labels", async () => {
   const example = await Deno.readTextFile(
     join(
       COMPONENT_ROOT,
       "agents",
-      "receipt",
-      "receipt.examples.tsx",
+      "verification-report",
+      "verification-report.examples.tsx",
     ),
   );
   assertStringIncludes(

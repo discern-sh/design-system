@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from "react";
-import { Receipt } from "../src/components/agents/receipt/receipt.tsx";
+import { VerificationReport } from "../src/components/agents/verification-report/verification-report.tsx";
 import { ApproachBackdrop } from "../src/components/artwork/approach-backdrop/approach-backdrop.tsx";
 import { Button } from "../src/components/core/button/button.tsx";
 import { ClosingStatement } from "../src/components/marketing/closing-statement/closing-statement.tsx";
@@ -323,9 +323,9 @@ const failureTriageRecipe = defineRecipe({
 </div>`,
 });
 
-const handoffReceipt = {
-  receipt: {
-    title: "Validation receipt",
+const handoffVerificationReport = {
+  report: {
+    title: "Validation report",
     meta: [
       { label: "Run", value: "run-014" },
       { label: "Branch", value: "change/example" },
@@ -345,21 +345,21 @@ const handoffReceipt = {
   },
 } as const;
 
-const handoffReceiptRecipe = defineRecipe({
-  id: "handoff-receipt",
-  title: "Handoff receipt",
+const handoffVerificationReportRecipe = defineRecipe({
+  id: "handoff-verification-report",
+  title: "Handoff verification report",
   description:
-    "A compact proof-of-work receipt paired with the artifact it produced.",
-  definition: handoffReceipt,
+    "A compact multi-check verification report paired with the artifact it produced.",
+  definition: handoffVerificationReport,
   render: (definition) => (
     <div className="discern-example-stack">
-      <Receipt
-        title={definition.receipt.title}
+      <VerificationReport
+        title={definition.report.title}
         stamp="pass"
-        meta={definition.receipt.meta}
-        checks={definition.receipt.checks}
-        summary={definition.receipt.summary}
-        footer={definition.receipt.footer}
+        meta={definition.report.meta}
+        checks={definition.report.checks}
+        summary={definition.report.summary}
+        footer={definition.report.footer}
       />
       <ArtifactCard
         name={definition.artifact.name}
@@ -371,16 +371,16 @@ const handoffReceiptRecipe = defineRecipe({
     </div>
   ),
   source: (definition) =>
-    `import { ArtifactCard, Receipt } from "@discern-sh/design-system/react";
+    `import { ArtifactCard, VerificationReport } from "@discern-sh/design-system/react";
 
 <div className="discern-example-stack">
-  <Receipt
-    title={${value(definition.receipt.title)}}
+  <VerificationReport
+    title={${value(definition.report.title)}}
     stamp="pass"
-    meta={${value(definition.receipt.meta)}}
-    checks={${value(definition.receipt.checks)}}
-    summary={${value(definition.receipt.summary)}}
-    footer={${value(definition.receipt.footer)}}
+    meta={${value(definition.report.meta)}}
+    checks={${value(definition.report.checks)}}
+    summary={${value(definition.report.summary)}}
+    footer={${value(definition.report.footer)}}
   />
   <ArtifactCard
     name={${value(definition.artifact.name)}}
@@ -788,7 +788,7 @@ export const compositionRecipes: readonly CompositionRecipe[] = [
   documentationTaskRecipe,
   nextActionRecipe,
   failureTriageRecipe,
-  handoffReceiptRecipe,
+  handoffVerificationReportRecipe,
   surveyArtifactsRecipe,
   readingFirstLandingRecipe,
 ];

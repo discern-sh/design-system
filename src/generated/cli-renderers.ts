@@ -97,8 +97,8 @@ export { default as renderWorklogCli, cliExamples as worklogCliExamples } from "
 export type { WorklogCliProps } from "../components/agents/worklog/worklog.cli.ts";
 export { default as renderTranscriptCli, cliExamples as transcriptCliExamples } from "../components/agents/transcript/transcript.cli.ts";
 export type { TranscriptCliProps } from "../components/agents/transcript/transcript.cli.ts";
-export { default as renderReceiptCli, cliExamples as receiptCliExamples } from "../components/agents/receipt/receipt.cli.ts";
-export type { ReceiptCliProps } from "../components/agents/receipt/receipt.cli.ts";
+export { default as renderVerificationReportCli, cliExamples as verificationReportCliExamples } from "../components/agents/verification-report/verification-report.cli.ts";
+export type { VerificationReportCliProps } from "../components/agents/verification-report/verification-report.cli.ts";
 export { default as renderFleetCli, cliExamples as fleetCliExamples } from "../components/agents/fleet/fleet.cli.ts";
 export type { FleetCliProps } from "../components/agents/fleet/fleet.cli.ts";
 export { default as renderCommandCli, cliExamples as commandCliExamples } from "../components/workflow/command/command.cli.ts";

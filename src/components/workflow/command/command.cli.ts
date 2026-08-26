@@ -45,7 +45,7 @@ export const cliExamples: readonly CliExample<CommandCliProps>[] = [
     name: "guarded",
     props: {
       command: "discern accept",
-      failureNote: "Keep the worktree and report the receipt.",
+      failureNote: "Keep the worktree and report the verification outcome.",
     },
   },
 ] as const;

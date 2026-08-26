@@ -29,13 +29,13 @@ import { SiteFooter } from "../../src/components/marketing/site-footer/site-foot
 import { SiteHeader } from "../../src/components/marketing/site-header/site-header.tsx";
 import { SplitFeature } from "../../src/components/marketing/split-feature/split-feature.tsx";
 import {
-  Receipt,
-  type ReceiptCheck,
-  type ReceiptMeta,
-} from "../../src/components/agents/receipt/receipt.tsx";
-import renderReceiptCli, {
-  type ReceiptCliProps,
-} from "../../src/components/agents/receipt/receipt.cli.ts";
+  VerificationReport,
+  type VerificationReportCheck,
+  type VerificationReportMeta,
+} from "../../src/components/agents/verification-report/verification-report.tsx";
+import renderVerificationReportCli, {
+  type VerificationReportCliProps,
+} from "../../src/components/agents/verification-report/verification-report.cli.ts";
 import renderWorklogCli from "../../src/components/agents/worklog/worklog.cli.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import { projectTerminalInlineHtml } from "../../src/cli/projection.ts";
@@ -61,7 +61,6 @@ export const landingSelection: readonly string[] = [
   "hero-block",
   "metrics-band",
   "narrative-chapter",
-  "receipt",
   "site-footer",
   "site-header",
   "skip-link",
@@ -69,6 +68,7 @@ export const landingSelection: readonly string[] = [
   "survey-backdrop",
   "terminal",
   "theme-toggle",
+  "verification-report",
   "window",
 ];
 
@@ -108,7 +108,7 @@ function shortIntegrity(integrity: string): string {
   return `${integrity.slice(0, 19)}…`;
 }
 
-interface LandingReceipt {
+interface LandingBuildReport {
   readonly title: string;
   readonly meta: readonly { readonly label: string; readonly value: string }[];
   readonly checks: readonly {
@@ -119,7 +119,7 @@ interface LandingReceipt {
 }
 
 /** One fact set feeds both hero surfaces, so the frames can never disagree. */
-function landingReceipt(facts: LandingFacts): LandingReceipt {
+function landingBuildReport(facts: LandingFacts): LandingBuildReport {
   return {
     title: "This page's build",
     meta: [
@@ -176,22 +176,22 @@ function TerminalFrame({ output }: { readonly output: string }) {
   );
 }
 
-function HeroReceiptPair({ facts }: { readonly facts: LandingFacts }) {
-  const receipt = landingReceipt(facts);
-  const webMeta: readonly ReceiptMeta[] = receipt.meta;
-  const webChecks: readonly ReceiptCheck[] = receipt.checks;
-  const cliProps: ReceiptCliProps = {
-    title: receipt.title,
+function HeroVerificationPair({ facts }: { readonly facts: LandingFacts }) {
+  const report = landingBuildReport(facts);
+  const webMeta: readonly VerificationReportMeta[] = report.meta;
+  const webChecks: readonly VerificationReportCheck[] = report.checks;
+  const cliProps: VerificationReportCliProps = {
+    title: report.title,
     stamp: "pass",
-    meta: receipt.meta,
-    checks: receipt.checks,
+    meta: report.meta,
+    checks: report.checks,
     theme: "dark",
   };
   return (
     <Grid gap={5} minimum="22rem">
       <Window variant="showcase" title="Browser output">
-        <Receipt
-          title={receipt.title}
+        <VerificationReport
+          title={report.title}
           stamp="pass"
           meta={webMeta}
           checks={webChecks}
@@ -199,7 +199,10 @@ function HeroReceiptPair({ facts }: { readonly facts: LandingFacts }) {
       </Window>
       <Terminal variant="showcase" title="Terminal output">
         <TerminalFrame
-          output={renderReceiptCli(cliProps, HERO_TERMINAL_CAPABILITIES)}
+          output={renderVerificationReportCli(
+            cliProps,
+            HERO_TERMINAL_CAPABILITIES,
+          )}
         />
       </Terminal>
     </Grid>
@@ -211,7 +214,7 @@ const RUNTIME_SNIPPET = `import { emitDesignSystemRuntime } from
 
 await emitDesignSystemRuntime({
   outputRoot: new URL("./public/", import.meta.url),
-  components: ["site-header", "receipt"],
+  components: ["site-header", "verification-report"],
   assets: ["fonts"],
 });
 // -> discern.css, manifest.json, fonts.
@@ -281,7 +284,7 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
             </span>
           </>
         }
-        visual={<HeroReceiptPair facts={facts} />}
+        visual={<HeroVerificationPair facts={facts} />}
       />
       <MetricsBand
         tone="contrast"

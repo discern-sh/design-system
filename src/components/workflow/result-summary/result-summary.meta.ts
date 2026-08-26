@@ -17,7 +17,7 @@ export default {
     "One tool result needs a plain-language fact, supporting counts, duration, or next action.",
   ],
   notWhen: [
-    "You need a durable proof card recording several checks and branch or commit metadata; use Receipt.",
+    "You need a durable report recording several checks and branch or commit metadata; use Verification report.",
   ],
   accessibility: [
     "Every state appears as a visible word; semantic colour and markers only reinforce it.",

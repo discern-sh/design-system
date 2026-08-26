@@ -62,7 +62,7 @@ export * from "../components/agents/agent-persona/mod.ts";
 export * from "../components/agents/agent-mention/mod.ts";
 export * from "../components/agents/worklog/mod.ts";
 export * from "../components/agents/transcript/mod.ts";
-export * from "../components/agents/receipt/mod.ts";
+export * from "../components/agents/verification-report/mod.ts";
 export * from "../components/agents/fleet/mod.ts";
 export * from "../components/workflow/command/mod.ts";
 export * from "../components/workflow/command-group/mod.ts";
