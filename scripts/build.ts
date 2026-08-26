@@ -1017,11 +1017,57 @@ async function writeCatalogueMarkdownAssets(): Promise<void> {
   );
 }
 
-/** Build the React catalogue and its explicit all-component runtime. */
+const LANDING_ROOT = new URL("../dist/landing/", import.meta.url);
+
+/**
+ * Emit the landing page's selection-scoped runtime, then render the static
+ * landing document from that emission's own manifest facts. Runs after the
+ * all-component emission because each emission replaces its output root.
+ */
+async function buildLandingPage(version: string): Promise<void> {
+  const { emitDesignSystemRuntime } = await import("../src/runtime.ts");
+  const { packageManifest } = await import("../src/manifest.ts");
+  const { landingSelection, renderLandingHtml } = await import(
+    "../catalogue/landing/page.tsx"
+  );
+  const summary = await emitDesignSystemRuntime({
+    outputRoot: LANDING_ROOT,
+    components: landingSelection,
+    assets: ["fonts", "grain"],
+  });
+  const css = summary.manifest.integrity.files.find((file) =>
+    file.path === "discern.css"
+  );
+  if (css === undefined) {
+    throw new Error("Landing emission recorded no discern.css integrity");
+  }
+  await Deno.writeTextFile(
+    new URL("index.html", LANDING_ROOT),
+    renderLandingHtml({
+      version,
+      system: {
+        components: packageManifest.components.length,
+        groups: packageManifest.groups.length,
+        tokens: packageManifest.publicTokenNames.length,
+      },
+      emission: {
+        requestedComponents:
+          summary.manifest.selection.requestedComponents.length,
+        resolvedComponents: summary.manifest.selection.resolvedComponents
+          .length,
+        cssBytes: css.bytes,
+        cssIntegrity: css.integrity,
+      },
+    }),
+  );
+}
+
+/** Build the React catalogue, its all-component runtime, and the landing page. */
 export async function buildDesignSystem(): Promise<BuildSummary> {
   await writeGeneratedSources();
   const { sources, shared } = await discoverComponents();
-  await generateRegistry(sources, shared, await packageVersion());
+  const version = await packageVersion();
+  await generateRegistry(sources, shared, version);
   await writeCatalogueMarkdownAssets();
   const { emitDesignSystemRuntime } = await import("../src/runtime.ts");
   const summary = await emitDesignSystemRuntime({
@@ -1033,6 +1079,7 @@ export async function buildDesignSystem(): Promise<BuildSummary> {
     throw new Error("Catalogue and runtime component discovery disagree");
   }
   await bundleCatalogue();
+  await buildLandingPage(version);
   return summary;
 }
 

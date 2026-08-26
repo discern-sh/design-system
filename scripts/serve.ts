@@ -18,7 +18,7 @@ const CONTENT_TYPES: Readonly<Record<string, string>> = {
   ".woff2": "font/woff2",
 };
 
-/** Map the mounted Catalogue URL space onto its authored and generated files. */
+/** Map the landing front door and mounted Catalogue URL space onto files. */
 export function catalogueFilePath(rawPathname: string): string | null {
   let pathname: string;
   try {
@@ -27,6 +27,7 @@ export function catalogueFilePath(rawPathname: string): string | null {
     return null;
   }
   if (pathname.includes("..") || pathname.includes("\0")) return null;
+  if (pathname === "/") return "./dist/landing/index.html";
   if (pathname.startsWith("/catalogue/")) {
     const mountedPath = pathname.slice("/catalogue".length);
     pathname = /^\/(?:dist|src|assets)\//.test(mountedPath)
@@ -81,7 +82,7 @@ export default {
         return Response.redirect(url, 307);
       }
     }
-    if (url.pathname === "/" || url.pathname === "/catalogue") {
+    if (url.pathname === "/catalogue") {
       url.pathname = "/catalogue/";
       return Response.redirect(url, 307);
     }
