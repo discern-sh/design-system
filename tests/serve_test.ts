@@ -21,14 +21,6 @@ Deno.test("the serve task resolves the worktree's deterministic port with a fixe
 Deno.test("catalogue entry routes redirect to the canonical Catalogue URL", async () => {
   const cases = [
     {
-      request: "http://127.0.0.1:8010/",
-      location: "http://127.0.0.1:8010/catalogue/",
-    },
-    {
-      request: "https://catalogue.example/?theme=dark",
-      location: "https://catalogue.example/catalogue/?theme=dark",
-    },
-    {
       request: "http://127.0.0.1:8010/catalogue",
       location: "http://127.0.0.1:8010/catalogue/",
     },
@@ -48,6 +40,14 @@ Deno.test("catalogue entry routes redirect to the canonical Catalogue URL", asyn
     assertEquals(response.status, 307, testCase.request);
     assertEquals(response.headers.get("location"), testCase.location);
   }
+});
+
+Deno.test("the site root serves the built landing page directly", () => {
+  assertEquals(catalogueFilePath("/"), "./dist/landing/index.html");
+  assertEquals(
+    catalogueFilePath("/dist/landing/discern.css"),
+    "./dist/landing/discern.css",
+  );
 });
 
 Deno.test("the Catalogue owns one canonical source, bundle, and mounted path", async () => {
