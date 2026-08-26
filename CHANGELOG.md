@@ -4,7 +4,7 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
-## Unreleased
+## 0.27.0
 
 - Harden the complete chart surface for release without widening its API. Decimal-space tick selection, finite extreme-domain positioning, exact cumulative proportions, and one shared formatter now keep repeated scenes and SVG bytes stable and print the same authored numeral in SVG, descriptions, terminal frames, and Markdown projections, including half-away ties, denormals, negative zero, and the `1e21` notation boundary. Shared scene-coordinate ties now round symmetrically for charts and diagrams. Exact terminal kinds retain every authored value; faithful kinds state their resolution and extremes; mixed-series collisions, sub-resolution proportion segments, and every width or capability limit decline with a typed dimension and practical remedy before the unchanged lossless table. Sparkline now shares the same overflow-safe normalized geometry across React and CLI and refuses more than 100 entries, the most its fixed browser view can distinguish.
 
