@@ -1220,7 +1220,6 @@ async function verifyThemeSystem(
           }),
         );
       });
-    const darkGeometry = await geometry();
     const initialMode = await root.getAttribute("data-discern-theme");
     if (initialMode !== "system") {
       failures.push(`Theme system: fresh consumer started in ${initialMode}`);
@@ -1235,6 +1234,16 @@ async function verifyThemeSystem(
       throw new Error("Theme consumer has no control selector");
     }
     const control = root.locator(controlSelector);
+    if (!await control.isVisible()) {
+      const appearance = root.locator(
+        '.discern-catalogue-appearance > summary[aria-label="Change appearance"]',
+      );
+      if (await appearance.count() !== 1) {
+        throw new Error("Hidden Theme control has no Appearance disclosure");
+      }
+      await appearance.click();
+    }
+    const darkGeometry = await geometry();
     await control.click();
     const lightGeometry = await geometry();
     let geometryChecks = 0;

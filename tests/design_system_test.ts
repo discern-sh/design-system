@@ -2538,13 +2538,13 @@ Deno.test("monospace is reserved for brand names and code-bearing surfaces", asy
     "src/components/workflow/path-reference/path-reference.css::.discern-path-reference__path",
     "src/components/workflow/raw-output/raw-output.css::.discern-raw-output__content",
     "src/styles/utilities.css::.discern-mono",
-    "catalogue/catalogue.css::.discern-catalogue-api code",
-    "catalogue/catalogue.css::.discern-catalogue-brand strong",
-    "catalogue/catalogue.css::.discern-catalogue-copyable > code",
-    "catalogue/catalogue.css::.discern-catalogue-sidebar__version",
-    "catalogue/catalogue.css::.discern-catalogue-terminal-layout__source pre",
-    "catalogue/catalogue.css::.discern-catalogue-token code",
-    "catalogue/catalogue.css::.discern-catalogue-token__value",
+    "catalogue/styles/components.css::.discern-catalogue-api code",
+    "catalogue/styles/foundations.css::.discern-catalogue-token code",
+    "catalogue/styles/foundations.css::.discern-catalogue-token__value",
+    "catalogue/styles/shared.css::.discern-catalogue-copyable > code",
+    "catalogue/styles/shell.css::.discern-catalogue-brand strong",
+    "catalogue/styles/shell.css::.discern-catalogue-sidebar__version",
+    "catalogue/styles/terminal.css::.discern-catalogue-terminal-layout__source pre",
   ].toSorted();
   assertEquals(
     monospaceTypefaceRules(
@@ -2557,7 +2557,9 @@ Deno.test("monospace is reserved for brand names and code-bearing surfaces", asy
   const stylesheets = [
     ...(await walk(COMPONENT_ROOT)).filter((path) => path.endsWith(".css")),
     join(PACKAGE_ROOT, "src", "styles", "utilities.css"),
-    join(PACKAGE_ROOT, "catalogue", "catalogue.css"),
+    ...(await walk(join(PACKAGE_ROOT, "catalogue", "styles"))).filter((path) =>
+      path.endsWith(".css")
+    ),
   ];
   const actual: string[] = [];
   for (const stylesheet of stylesheets) {

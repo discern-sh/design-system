@@ -43,7 +43,16 @@ function fakePage(initial: Viewport | null): {
 
 async function trackedTypeScriptPaths(): Promise<readonly string[]> {
   const result = await new Deno.Command("git", {
-    args: ["ls-files", "-z", "--", "*.ts", "*.tsx"],
+    args: [
+      "ls-files",
+      "-z",
+      "--cached",
+      "--others",
+      "--exclude-standard",
+      "--",
+      "*.ts",
+      "*.tsx",
+    ],
     cwd: PACKAGE_ROOT,
     stderr: "piped",
     stdout: "piped",
@@ -60,7 +69,13 @@ Deno.test("temporary viewport changes have one transactional authority", async (
   const violations: string[] = [];
   for (const path of await trackedTypeScriptPaths()) {
     if (path === VIEWPORT_AUTHORITY) continue;
-    const source = await Deno.readTextFile(join(PACKAGE_ROOT, path));
+    let source: string;
+    try {
+      source = await Deno.readTextFile(join(PACKAGE_ROOT, path));
+    } catch (error) {
+      if (error instanceof Deno.errors.NotFound) continue;
+      throw error;
+    }
     source.split("\n").forEach((line, index) => {
       if (line.includes(rawViewportMutation)) {
         violations.push(`${path}:${index + 1}`);

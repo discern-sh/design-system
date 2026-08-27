@@ -5,23 +5,28 @@ import {
   catalogueComponentPath,
   catalogueGroupFromSlug,
   catalogueGroupSlug,
+  catalogueNavigation,
   catalogueRoute,
   catalogueRoutePaths,
 } from "../catalogue/routes.ts";
 
 Deno.test("Catalogue routes resolve every explorer surface and Component detail", () => {
   const cases = [
-    [catalogueRoutePaths.overview, { kind: "overview" }],
-    [catalogueRoutePaths.foundations, { kind: "foundations" }],
-    [catalogueRoutePaths.components, { kind: "components" }],
+    [catalogueRoutePaths.overview, { family: "overview", page: "index" }],
+    [catalogueRoutePaths.components, { family: "components", page: "index" }],
     [catalogueComponentPath("command-group"), {
-      kind: "component",
+      family: "components",
+      page: "detail",
       slug: "command-group",
     }],
-    [catalogueRoutePaths.compositions, { kind: "compositions" }],
-    [catalogueRoutePaths.terminal, { kind: "terminal" }],
-    [catalogueRoutePaths.review, { kind: "review" }],
-    ["/catalogue/unknown/", { kind: "not-found" }],
+    [catalogueRoutePaths.foundations, { family: "foundations", page: "index" }],
+    [catalogueRoutePaths.compositions, {
+      family: "compositions",
+      page: "index",
+    }],
+    [catalogueRoutePaths.terminal, { family: "terminal", page: "index" }],
+    [catalogueRoutePaths.compare, { family: "compare", page: "index" }],
+    ["/catalogue/unknown/", { family: "not-found", page: "not-found" }],
   ] as const;
 
   for (const [pathname, expected] of cases) {
@@ -29,6 +34,41 @@ Deno.test("Catalogue routes resolve every explorer surface and Component detail"
       catalogueRoute(new URL(pathname, "https://catalogue.example")),
       expected,
     );
+  }
+});
+
+Deno.test("Catalogue navigation has one canonical human order and route vocabulary", () => {
+  assertEquals(
+    catalogueNavigation.map(({ id, label, path }) => ({ id, label, path })),
+    [
+      { id: "overview", label: "Overview", path: "/catalogue/" },
+      {
+        id: "components",
+        label: "Components",
+        path: "/catalogue/components/",
+      },
+      {
+        id: "foundations",
+        label: "Foundations",
+        path: "/catalogue/foundations/",
+      },
+      {
+        id: "compositions",
+        label: "Compositions",
+        path: "/catalogue/compositions/",
+      },
+      {
+        id: "terminal",
+        label: "Terminal layouts",
+        path: "/catalogue/terminal/",
+      },
+      { id: "compare", label: "Compare", path: "/catalogue/review/" },
+    ],
+  );
+  assertEquals(catalogueRoutePaths.review, catalogueRoutePaths.compare);
+  for (const descriptor of catalogueNavigation) {
+    assertEquals(descriptor.description.trim().length > 0, true);
+    assertEquals(descriptor.searchTerms.length > 0, true);
   }
 });
 

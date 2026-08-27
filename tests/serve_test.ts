@@ -6,7 +6,7 @@ import server, {
 import {
   canonicalCatalogueShellPathname,
   catalogueComponentPath,
-  catalogueRoutePaths,
+  catalogueNavigation,
 } from "../catalogue/routes.ts";
 
 Deno.test("the serve task resolves the worktree's deterministic port with a fixed fallback", async () => {
@@ -72,6 +72,25 @@ Deno.test("the Catalogue owns one canonical source, bundle, and mounted path", a
   assertStringIncludes(index, 'src="/catalogue/dist/catalogue.js"');
   assertEquals(index.includes("styleguide"), false);
 
+  const stylesheet = await Deno.readTextFile(
+    new URL("../catalogue/catalogue.css", import.meta.url),
+  );
+  const ownedStyles = [...stylesheet.matchAll(/@import url\("([^"]+)"\);/g)]
+    .map((match) => match[1] ?? "");
+  assertEquals(ownedStyles.length > 0, true);
+  for (const pathname of ownedStyles) {
+    assertEquals(pathname.startsWith("/catalogue/styles/"), true, pathname);
+    const response = await server.fetch(
+      new Request(`http://127.0.0.1:8010${pathname}`),
+    );
+    assertEquals(response.status, 200, pathname);
+    assertStringIncludes(
+      response.headers.get("content-type") ?? "",
+      "text/css",
+      pathname,
+    );
+  }
+
   const builder = await Deno.readTextFile(
     new URL("../catalogue/builder/index.html", import.meta.url),
   );
@@ -82,7 +101,7 @@ Deno.test("the Catalogue owns one canonical source, bundle, and mounted path", a
 
 Deno.test("Catalogue explorer routes serve one canonical shell", async () => {
   const shellPaths = [
-    ...Object.values(catalogueRoutePaths),
+    ...catalogueNavigation.map(({ path }) => path),
     catalogueComponentPath("command-group"),
   ];
   for (const pathname of shellPaths) {

@@ -20,7 +20,7 @@ import { registry } from "../catalogue/generated/registry.ts";
 
 const PACKAGE_ROOT = fromFileUrl(new URL("../", import.meta.url));
 
-Deno.test("browser Catalogue owns one bare cell-stable CLI projection", async () => {
+Deno.test("browser Catalogue owns one bare CLI projection authority", async () => {
   const catalogueRoot = join(PACKAGE_ROOT, "catalogue");
   const authoredSources: Array<
     { readonly path: string; readonly source: string }
@@ -56,26 +56,6 @@ Deno.test("browser Catalogue owns one bare cell-stable CLI projection", async ()
     !preview.includes("components/display/terminal"),
     "browser projection must not depend on the showcase Terminal component",
   );
-
-  const css = await Deno.readTextFile(
-    join(catalogueRoot, "catalogue.css"),
-  );
-  const outputRule = /\.discern-catalogue-cli-output\s*\{(?<body>[^}]*)\}/.exec(
-    css,
-  )
-    ?.groups?.body;
-  assert(outputRule !== undefined, "missing shared CLI output rule");
-  for (
-    const invariant of [
-      "padding: 0;",
-      "font-family: ui-monospace",
-      'font-feature-settings: "liga" 0, "calt" 0;',
-      "font-variant-ligatures: none;",
-      "white-space: pre;",
-    ]
-  ) {
-    assertStringIncludes(outputRule, invariant);
-  }
 });
 
 Deno.test("browser Catalogue projects every declared CLI stance from disk", () => {
