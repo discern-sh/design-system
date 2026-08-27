@@ -1,14 +1,15 @@
-import type { CatalogueExampleState } from "../../../../catalogue/conformance.ts";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { Badge } from "../badge/badge.tsx";
+import meta, { componentExampleVocabulary } from "./terminal.meta.ts";
 import { Terminal } from "./terminal.tsx";
 
 function StandardTerminalState() {
   return (
-    <Terminal title="~/project — verify">
+    <Terminal title="~/workspace — check">
       <span className="discern-terminal__command-prefix">$</span>{" "}
-      deno task verify{"\n"}
+      task check{"\n"}
       <span className="discern-terminal__muted">
-        Check formatting, types, catalogue, and tests
+        Check formatting, types, and tests
       </span>
       {"\n"}
       <span className="discern-terminal__success">✓</span> 18 tests passed{"\n"}
@@ -21,7 +22,7 @@ function StandardTerminalState() {
 function ShowcaseTerminalState() {
   return (
     <Terminal
-      title="agent result"
+      title="structured result"
       actions={<Badge tone="accent">structured output</Badge>}
       footer={
         <>
@@ -34,18 +35,22 @@ function ShowcaseTerminalState() {
     >
       {`{
   "ok": false,
-  "error": "behind_trunk",
-  "state": "4 commits behind",
-  "next": "call project_update"
+  "error": "out_of_date",
+  "state": "refresh required",
+  "next": "refresh state"
 }`}
     </Terminal>
   );
 }
 
-export const catalogueStates = [
-  { name: "standard", label: "Standard", Example: StandardTerminalState },
-  { name: "showcase", label: "Showcase", Example: ShowcaseTerminalState },
-] satisfies readonly CatalogueExampleState[];
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "standard", Example: StandardTerminalState },
+    { id: "showcase", Example: ShowcaseTerminalState },
+  ],
+);
 
 export default function TerminalExamples() {
   return (

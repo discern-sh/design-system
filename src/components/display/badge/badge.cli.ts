@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
 import {
@@ -12,6 +13,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./badge.meta.ts";
 import type { BadgeTone } from "./badge.types.ts";
 
 /** Inputs accepted by the terminal Badge renderer. */
@@ -24,16 +26,29 @@ export interface BadgeCliProps {
 }
 
 /** Deterministic Badge states rendered by `deno task catalogue:cli badge`. */
-export const cliExamples: readonly CliExample<BadgeCliProps>[] = [
-  { name: "accent", props: { label: "Active", dot: true } },
-  {
-    name: "neutral",
-    props: { label: "Queued", tone: "neutral", dot: true },
-  },
-  { name: "success", props: { label: "Passed", tone: "success", dot: true } },
-  { name: "warning", props: { label: "Review", tone: "warning", dot: true } },
-  { name: "danger", props: { label: "Failed", tone: "danger", dot: true } },
-] as const;
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { name: "default", props: { label: "Active", dot: true } },
+    {
+      name: "neutral",
+      props: { label: "Queued", tone: "neutral", dot: true },
+    },
+    {
+      name: "success",
+      props: { label: "Passed", tone: "success", dot: true },
+    },
+    {
+      name: "warning",
+      props: { label: "Review", tone: "warning", dot: true },
+    },
+    {
+      name: "danger",
+      props: { label: "Failed", tone: "danger", dot: true },
+    },
+  ] as const satisfies readonly CliExample<BadgeCliProps>[],
+);
 
 /** Render one width-bounded terminal Badge with semantic Token-derived colour. */
 const renderBadgeCli: CliRenderer<BadgeCliProps> = (

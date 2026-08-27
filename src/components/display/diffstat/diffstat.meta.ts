@@ -1,5 +1,6 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
-export default {
+const meta = {
   name: "Diffstat",
   slug: "diffstat",
   group: "Display",
@@ -13,3 +14,15 @@ export default {
     "Direction is carried by the plus and minus signs, never by colour alone.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Mixed changes" },
+    { id: "added", label: "Additions only" },
+    { id: "removed", label: "Removals only" },
+    { id: "empty", label: "No changes" },
+  ],
+);
+
+export default meta;

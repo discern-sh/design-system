@@ -1,5 +1,9 @@
 import { useState } from "react";
-import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
+import {
+  type ConformanceScenario,
+  defineCatalogueExamples,
+} from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./tag.meta.ts";
 import { Tag } from "./tag.tsx";
 
 export const conformance = [{
@@ -15,22 +19,38 @@ export const conformance = [{
   ],
 }] satisfies readonly ConformanceScenario[];
 
-export default function TagExamples() {
+function PlainExample() {
+  return <Tag>Metadata</Tag>;
+}
+
+function RemovableExample() {
   const [showRemovable, setShowRemovable] = useState(true);
+  return showRemovable
+    ? (
+      <Tag
+        onRemove={() => setShowRemovable(false)}
+        removeLabel="Remove ipsum"
+      >
+        Ipsum
+      </Tag>
+    )
+    : null;
+}
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: PlainExample },
+    { id: "removable", Example: RemovableExample },
+  ],
+);
+
+export default function TagExamples() {
   return (
     <div className="discern-example-row">
-      <Tag>Lorem</Tag>
-      {showRemovable
-        ? (
-          <Tag
-            onRemove={() => setShowRemovable(false)}
-            removeLabel="Remove ipsum"
-          >
-            Ipsum
-          </Tag>
-        )
-        : null}
-      <Tag>Dolor sit amet</Tag>
+      <PlainExample />
+      <RemovableExample />
     </div>
   );
 }

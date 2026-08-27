@@ -1,5 +1,6 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
-export default {
+const meta = {
   name: "Card",
   slug: "card",
   group: "Display",
@@ -9,3 +10,14 @@ export default {
   cli: { stance: "rendered" },
   purposes: ["marketing-site"],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Plain" },
+    { id: "raised", label: "Raised" },
+    { id: "dotted", label: "Dotted texture" },
+  ],
+);
+
+export default meta;

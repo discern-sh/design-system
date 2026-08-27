@@ -1,5 +1,6 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
-export default {
+const meta = {
   name: "Heading",
   slug: "heading",
   group: "Display",
@@ -19,3 +20,14 @@ export default {
   ],
   cli: { stance: "rendered" },
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Section heading" },
+    { id: "accent", label: "Accented phrase" },
+    { id: "rich-content", label: "Rich inline content" },
+  ],
+);
+
+export default meta;

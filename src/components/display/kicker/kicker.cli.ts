@@ -5,6 +5,7 @@
  */
 
 import { renderStyledSpans } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
 import {
@@ -13,6 +14,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./kicker.meta.ts";
 
 /** Inputs accepted by the terminal Kicker renderer. */
 export interface KickerCliProps {
@@ -23,10 +25,14 @@ export interface KickerCliProps {
 }
 
 /** Deterministic Kicker states rendered by `deno task catalogue:cli kicker`. */
-export const cliExamples: readonly CliExample<KickerCliProps>[] = [
-  { name: "plain", props: { text: "Foundations" } },
-  { name: "indexed", props: { text: "Working agreement", index: "02" } },
-] as const;
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { name: "default", props: { text: "Foundations" } },
+    { name: "indexed", props: { text: "Working agreement", index: "02" } },
+  ] as const satisfies readonly CliExample<KickerCliProps>[],
+);
 
 /** Render an uppercase terminal annotation label with optional index. */
 const renderKickerCli: CliRenderer<KickerCliProps> = (

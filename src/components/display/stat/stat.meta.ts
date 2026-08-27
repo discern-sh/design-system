@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Stat",
   slug: "stat",
   group: "Display",
@@ -14,3 +15,15 @@ export default {
     "Trend colour is reinforced by the context wording itself, never carried by colour alone.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Neutral" },
+    { id: "positive", label: "Positive trend" },
+    { id: "negative", label: "Negative trend" },
+    { id: "with-sparkline", label: "With sparkline" },
+  ],
+);
+
+export default meta;

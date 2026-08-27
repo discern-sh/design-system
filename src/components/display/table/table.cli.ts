@@ -6,6 +6,7 @@
 
 import { styleText, type TerminalTextStyle } from "../../../cli/ansi.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import {
   renderSemanticInlineContent,
@@ -24,6 +25,7 @@ import {
   terminalThemes,
   type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./table.meta.ts";
 
 /** Terminal Table layout policy. The responsive policy never truncates cells. */
 export type TableCliLayout = "compact" | "responsive";
@@ -78,42 +80,92 @@ export type TableCliProps =
   | TableCliResponsiveProps;
 
 /** Deterministic Table states rendered by `deno task catalogue:cli table`. */
-export const cliExamples: readonly CliExample<TableCliProps>[] = [
-  {
-    name: "status",
-    props: {
-      caption: "Checks",
-      columns: [{ header: "Name" }, { header: "State" }, { header: "Count" }],
-      rows: [["Format", "Passed", "12"], ["Tests", "Queued", "3"]],
-      striped: true,
-      numeric: true,
-      width: 40,
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        caption: "Checks",
+        columns: [
+          { header: "Name" },
+          { header: "State" },
+          { header: "Count" },
+        ],
+        rows: [["Format", "Passed", "12"], ["Tests", "Queued", "3"]],
+        striped: true,
+        numeric: true,
+        width: 40,
+      },
     },
-  },
-  {
-    name: "responsive-rich",
-    props: {
-      caption: "References",
-      columns: [
-        { header: [{ kind: "strong", content: "Topic" }] },
-        { header: "Evidence" },
-        { header: "Score", align: "end" },
-      ],
-      rows: [[
-        ["Inline ", { kind: "code", text: "semantics" }],
-        [{
-          kind: "link",
-          label: "Reference material",
-          destination: "https://example.test/reference",
-        }],
-        "98",
-      ], ["Empty values remain explicit", "", "0"]],
-      striped: true,
-      layout: "responsive",
-      width: 48,
+    {
+      name: "rich-cells",
+      props: {
+        caption: "Reference coverage",
+        columns: [
+          { header: [{ kind: "strong", content: "Topic" }] },
+          { header: "Evidence" },
+          { header: "Status" },
+        ],
+        rows: [[
+          ["Inline ", { kind: "code", text: "semantics" }],
+          [
+            {
+              kind: "link",
+              label: "Reference material",
+              destination: "#reference",
+            },
+            " with ",
+            { kind: "emphasis", content: "context" },
+          ],
+          [{ kind: "strong", content: "Covered" }],
+        ], ["Optional value", "", "Intentionally empty"]],
+        striped: true,
+        layout: "responsive",
+        width: 48,
+      },
     },
-  },
-] as const;
+    {
+      name: "dense-overflow",
+      props: {
+        caption: "Recent survey evidence",
+        columns: [
+          { header: "Survey" },
+          { header: "Region" },
+          { header: "State" },
+          { header: "Last action" },
+          { header: "Duration" },
+          { header: "Files", align: "end" },
+        ],
+        rows: [[
+          "Spring field study",
+          "North",
+          "Complete",
+          "Validated responses",
+          "2m 18s",
+          "14",
+        ], [
+          "Summer field study",
+          "West",
+          "In review",
+          "Checked sample balance",
+          "8m 04s",
+          "3",
+        ], [
+          "Autumn field study",
+          "South",
+          "Updated",
+          "Compared response totals",
+          "43s",
+          "6",
+        ]],
+        layout: "responsive",
+        width: 36,
+      },
+    },
+  ] as const satisfies readonly CliExample<TableCliProps>[],
+);
 
 function allocateWidths(
   natural: readonly number[],

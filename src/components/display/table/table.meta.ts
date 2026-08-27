@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Table",
   slug: "table",
   group: "Display",
@@ -21,3 +22,14 @@ export default {
     "The responsive terminal layout retains every header/value relationship in labelled records when a coherent grid cannot fit, without relying on colour.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Three-column data" },
+    { id: "rich-cells", label: "Rich and empty cells" },
+    { id: "dense-overflow", label: "Dense narrow width" },
+  ],
+);
+
+export default meta;

@@ -6,6 +6,7 @@
 
 import { renderStyledSpans, styleText } from "../../../cli/ansi.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { withCliHeadingBoundary } from "../../../cli/heading-boundary.ts";
 import {
@@ -31,6 +32,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./heading.meta.ts";
 import type { HeadingLevel } from "./heading.types.ts";
 
 /** Width behavior for terminal Heading content. */
@@ -77,50 +79,32 @@ export type HeadingCliProps =
   );
 
 /** Deterministic Heading states rendered by `deno task catalogue:cli heading`. */
-export const cliExamples: readonly CliExample<HeadingCliProps>[] = [
-  { name: "primary", props: { text: "Build with confidence", level: 1 } },
-  { name: "accent", props: { text: "Rules that", accent: "travel", level: 2 } },
-  { name: "minor", props: { text: "Implementation notes", level: 4 } },
-  {
-    name: "nested-boundary",
-    props: { text: "Nested section", level: 3, leadingBlankLines: 0 },
-  },
-  {
-    name: "lossless-rich",
-    props: {
-      content: [
-        "A ",
-        { kind: "strong", content: "complete" },
-        " heading keeps ",
-        {
-          kind: "link",
-          label: "its reference",
-          destination: "#heading-reference",
-        },
-      ],
-      level: 2,
-      overflow: "wrap",
-      maxWidth: 28,
-      leadingBlankLines: 0,
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { name: "default", props: { text: "Build with confidence", level: 2 } },
+    {
+      name: "accent",
+      props: { text: "Rules that", accent: "travel", level: 2 },
     },
-  },
-  {
-    name: "document-heading",
-    props: {
-      content: [
-        "Reading ",
-        { kind: "strong", content: "foundations" },
-        " and ",
-        { kind: "code", text: "semantic links" },
-      ],
-      level: 1,
-      overflow: "wrap",
-      treatment: "document",
-      maxWidth: 36,
-      leadingBlankLines: 0,
+    {
+      name: "rich-content",
+      props: {
+        content: [
+          "A ",
+          { kind: "strong", content: "complete" },
+          " heading keeps ",
+          { kind: "code", text: "inline meaning" },
+        ],
+        level: 3,
+        overflow: "wrap",
+        maxWidth: 32,
+        leadingBlankLines: 0,
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<HeadingCliProps>[],
+);
 
 function headingLines(
   content: string,

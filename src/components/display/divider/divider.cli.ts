@@ -4,6 +4,7 @@
  * @module
  */
 
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import {
   motifPassthrough,
@@ -21,6 +22,7 @@ import {
   renderMotifPlainDivider,
   renderMotifSectionRule,
 } from "../../../cli/motifs.ts";
+import meta, { componentExampleVocabulary } from "./divider.meta.ts";
 import type { DividerSurface } from "./divider.types.ts";
 
 /** Semantic terminal treatments owned by Divider. */
@@ -41,12 +43,14 @@ export interface DividerCliProps extends TerminalMotifOptions {
 }
 
 /** Deterministic Divider states rendered by `deno task catalogue:cli divider`. */
-export const cliExamples: readonly CliExample<DividerCliProps>[] = [
-  { name: "rule", props: { width: 24 } },
-  { name: "plain", props: { treatment: "plain", width: 24 } },
-  { name: "labelled", props: { label: "Section", width: 32 } },
-  { name: "ribbon", props: { treatment: "ribbon", width: 24 } },
-] as const;
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { name: "default", props: { width: 24 } },
+    { name: "labelled", props: { label: "01 — Foundations", width: 32 } },
+  ] as const satisfies readonly CliExample<DividerCliProps>[],
+);
 
 /** Render Divider's centred and leading-marker rules plus vertical patterns. */
 const renderDividerCli: CliRenderer<DividerCliProps> = (

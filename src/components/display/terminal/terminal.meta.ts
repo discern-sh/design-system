@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Terminal",
   slug: "terminal",
   group: "Display",
@@ -22,3 +23,13 @@ export default {
     "Showcase keeps output light-on-dark in both themes while preserving the same preformatted text.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "standard", label: "Standard" },
+    { id: "showcase", label: "Showcase" },
+  ],
+);
+
+export default meta;

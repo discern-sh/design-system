@@ -5,6 +5,7 @@
  */
 
 import { renderStyledSpans } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { truncateText } from "../../../cli/text.ts";
@@ -17,6 +18,7 @@ import {
 } from "../../../cli/theme.ts";
 import renderSparklineCli from "../sparkline/sparkline.cli.ts";
 import type { SparklineValue } from "../sparkline/sparkline.shared.ts";
+import meta, { componentExampleVocabulary } from "./stat.meta.ts";
 import type { StatTrend } from "./stat.types.ts";
 
 /** Inputs accepted by the terminal Stat renderer. */
@@ -32,44 +34,48 @@ export interface StatCliProps {
 }
 
 /** Deterministic Stat states rendered by `deno task catalogue:cli stat`. */
-export const cliExamples: readonly CliExample<StatCliProps>[] = [
-  {
-    name: "neutral",
-    props: {
-      label: "Entries",
-      value: "128",
-      context: "Across four collections",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        label: "Entries",
+        value: "128",
+        context: "Across four collections",
+      },
     },
-  },
-  {
-    name: "positive",
-    props: {
-      label: "Checks",
-      value: "42",
-      context: "+4 this week",
-      trend: "positive",
+    {
+      name: "positive",
+      props: {
+        label: "Checks",
+        value: "42",
+        context: "Up 4 this week",
+        trend: "positive",
+      },
     },
-  },
-  {
-    name: "negative",
-    props: {
-      label: "Failures",
-      value: "2",
-      context: "Needs attention",
-      trend: "negative",
+    {
+      name: "negative",
+      props: {
+        label: "Failures",
+        value: "2",
+        context: "Needs attention",
+        trend: "negative",
+      },
     },
-  },
-  {
-    name: "with-sparkline",
-    props: {
-      label: "Throughput",
-      value: "9.1",
-      context: "Up 5.9 from last period",
-      trend: "positive",
-      sparkline: [3.2, 4.1, 3.8, 5.5, 7.4, 9.1],
+    {
+      name: "with-sparkline",
+      props: {
+        label: "Throughput",
+        value: "9.1",
+        context: "Up 5.9 from last period",
+        trend: "positive",
+        sparkline: [3.2, 4.1, 3.8, 5.5, 7.4, 9.1],
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<StatCliProps>[],
+);
 
 /** Render one labelled terminal figure and semantic context line. */
 const renderStatCli: CliRenderer<StatCliProps> = (props, capabilities) => {

@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
 import {
@@ -12,6 +13,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./tag.meta.ts";
 
 /** Inputs accepted by the terminal Tag renderer. */
 export interface TagCliProps {
@@ -22,10 +24,14 @@ export interface TagCliProps {
 }
 
 /** Deterministic Tag states rendered by `deno task catalogue:cli tag`. */
-export const cliExamples: readonly CliExample<TagCliProps>[] = [
-  { name: "plain", props: { label: "metadata" } },
-  { name: "removable", props: { label: "selected", removable: true } },
-] as const;
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { name: "default", props: { label: "Metadata" } },
+    { name: "removable", props: { label: "Ipsum", removable: true } },
+  ] as const satisfies readonly CliExample<TagCliProps>[],
+);
 
 /** Render a compact terminal metadata chip with an optional remove affordance. */
 const renderTagCli: CliRenderer<TagCliProps> = (props, capabilities) => {

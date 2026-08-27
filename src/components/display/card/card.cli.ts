@@ -5,6 +5,7 @@
  */
 
 import { renderBox } from "../../../cli/box.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import {
   terminalThemeColor,
@@ -12,6 +13,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./card.meta.ts";
 import type { CardPadding, CardTexture } from "./card.types.ts";
 
 /** Inputs accepted by the terminal Card renderer. */
@@ -33,24 +35,28 @@ const PADDING: Readonly<Record<CardPadding, number>> = {
 };
 
 /** Deterministic Card states rendered by `deno task catalogue:cli card`. */
-export const cliExamples: readonly CliExample<CardCliProps>[] = [
-  {
-    name: "plain",
-    props: { title: "Card", body: "Composable terminal surface." },
-  },
-  {
-    name: "raised",
-    props: {
-      title: "Raised",
-      body: "Important grouped content.",
-      raised: true,
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: { title: "Card", body: "Composable terminal surface." },
     },
-  },
-  {
-    name: "dots",
-    props: { body: "Textured supporting content.", texture: "dots" },
-  },
-] as const;
+    {
+      name: "raised",
+      props: {
+        title: "Raised",
+        body: "Important grouped content.",
+        raised: true,
+      },
+    },
+    {
+      name: "dotted",
+      props: { body: "Textured supporting content.", texture: "dots" },
+    },
+  ] as const satisfies readonly CliExample<CardCliProps>[],
+);
 
 /** Render one width-bounded terminal Card with shared padding and texture choices. */
 const renderCardCli: CliRenderer<CardCliProps> = (props, capabilities) => {

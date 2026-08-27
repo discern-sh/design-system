@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Sparkline",
   slug: "sparkline",
   group: "Display",
@@ -24,3 +25,15 @@ export default {
     "The movement graphic is decorative and hidden from assistive technology; the annotation reads in source order.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Movement" },
+    { id: "with-gaps", label: "With gaps" },
+    { id: "flat", label: "Flat" },
+    { id: "decline", label: "Decline" },
+  ],
+);
+
+export default meta;

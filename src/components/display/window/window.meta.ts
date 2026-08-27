@@ -1,5 +1,6 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
-export default {
+const meta = {
   name: "Window",
   slug: "window",
   group: "Display",
@@ -12,3 +13,13 @@ export default {
     "A visual needs recognizable browser-style chrome; use showcase for wide campaign evidence with optional trailing status or actions.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "standard", label: "Standard" },
+    { id: "showcase", label: "Showcase" },
+  ],
+);
+
+export default meta;

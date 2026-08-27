@@ -5,6 +5,7 @@
  */
 
 import { renderBox } from "../../../cli/box.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import {
   terminalThemeColor,
@@ -12,6 +13,7 @@ import {
   type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
+import meta, { componentExampleVocabulary } from "./terminal.meta.ts";
 
 /** Inputs accepted by the terminal Terminal renderer. */
 export interface TerminalCliProps {
@@ -22,13 +24,28 @@ export interface TerminalCliProps {
 }
 
 /** Deterministic Terminal states rendered by `deno task catalogue:cli terminal`. */
-export const cliExamples: readonly CliExample<TerminalCliProps>[] = [
-  {
-    name: "command",
-    props: { title: "Shell", body: "$ deno task verify\nAll checks passed" },
-  },
-  { name: "output", props: { body: "ready on http://localhost:8010" } },
-] as const;
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "standard",
+      props: {
+        title: "~/workspace — check",
+        body:
+          "$ task check\nCheck formatting, types, and tests\n✓ 18 tests passed\n$ ",
+      },
+    },
+    {
+      name: "showcase",
+      props: {
+        title: "structured result",
+        body:
+          'structured output\n{\n  "ok": false,\n  "error": "out_of_date",\n  "state": "refresh required",\n  "next": "refresh state"\n}\nbounded context | explicit state | useful next step',
+      },
+    },
+  ] as const satisfies readonly CliExample<TerminalCliProps>[],
+);
 
 /** Render a width-bounded Terminal session frame behind its fixed mark. */
 const renderTerminalCli: CliRenderer<TerminalCliProps> = (

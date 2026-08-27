@@ -1,5 +1,6 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
-export default {
+const meta = {
   name: "Badge",
   slug: "badge",
   group: "Display",
@@ -14,3 +15,16 @@ export default {
     "The label must distinguish authored, generated, project-owned, or tool-owned provenance; use Ownership badge.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Accent" },
+    { id: "neutral", label: "Neutral" },
+    { id: "success", label: "Success" },
+    { id: "warning", label: "Warning" },
+    { id: "danger", label: "Danger" },
+  ],
+);
+
+export default meta;

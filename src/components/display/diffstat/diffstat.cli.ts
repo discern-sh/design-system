@@ -5,6 +5,7 @@
  */
 
 import { renderStyledSpans, type StyledSpan } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { measureText } from "../../../cli/text.ts";
 import {
@@ -13,6 +14,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./diffstat.meta.ts";
 import { allocateDiffstatBlocks } from "./diffstat.shared.ts";
 
 /** Inputs accepted by the terminal Diffstat renderer. */
@@ -25,12 +27,16 @@ export interface DiffstatCliProps {
 }
 
 /** Deterministic Diffstat states rendered by `deno task catalogue:cli diffstat`. */
-export const cliExamples: readonly CliExample<DiffstatCliProps>[] = [
-  { name: "mixed", props: { added: 14, removed: 5 } },
-  { name: "added", props: { added: 8, removed: 0 } },
-  { name: "removed", props: { added: 0, removed: 6 } },
-  { name: "empty", props: { added: 0, removed: 0 } },
-] as const;
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { name: "default", props: { added: 310, removed: 204 } },
+    { name: "added", props: { added: 12, removed: 0 } },
+    { name: "removed", props: { added: 0, removed: 86 } },
+    { name: "empty", props: { added: 0, removed: 0 } },
+  ] as const satisfies readonly CliExample<DiffstatCliProps>[],
+);
 
 /** Render signed counts beside a proportional, sign-readable terminal bar. */
 const renderDiffstatCli: CliRenderer<DiffstatCliProps> = (

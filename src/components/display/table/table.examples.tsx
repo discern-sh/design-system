@@ -1,7 +1,8 @@
-import type {
-  CatalogueExampleState,
-  ConformanceScenario,
+import {
+  type ConformanceScenario,
+  defineCatalogueExamples,
 } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./table.meta.ts";
 import { Table } from "./table.tsx";
 
 export const conformance = [{
@@ -18,29 +19,24 @@ export const conformance = [{
 
 function DefaultTableState() {
   return (
-    <Table caption="Lorem ipsum dolor sit amet" striped numeric>
+    <Table caption="Checks" striped numeric>
       <thead>
         <tr>
-          <th scope="col">Lorem</th>
-          <th scope="col">Ipsum</th>
-          <th scope="col">Dolor</th>
+          <th scope="col">Name</th>
+          <th scope="col">State</th>
+          <th scope="col">Count</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td>Consectetur</td>
-          <td>Adipiscing elit</td>
-          <td>128</td>
+          <td>Format</td>
+          <td>Passed</td>
+          <td>12</td>
         </tr>
         <tr>
-          <td>Sed do</td>
-          <td>Eiusmod tempor</td>
-          <td>64</td>
-        </tr>
-        <tr>
-          <td>Ut labore</td>
-          <td>Et dolore magna</td>
-          <td>1,024</td>
+          <td>Tests</td>
+          <td>Queued</td>
+          <td>3</td>
         </tr>
       </tbody>
     </Table>
@@ -50,7 +46,7 @@ function DefaultTableState() {
 function DenseTableState() {
   return (
     <Table
-      caption="Recent task evidence"
+      caption="Recent survey evidence"
       className="discern-example-table-dense"
       data-example-table-dense
       striped
@@ -58,8 +54,8 @@ function DenseTableState() {
     >
       <thead>
         <tr>
-          <th scope="col">Task</th>
-          <th scope="col">Branch</th>
+          <th scope="col">Survey</th>
+          <th scope="col">Region</th>
           <th scope="col">State</th>
           <th scope="col">Last action</th>
           <th scope="col">Duration</th>
@@ -68,26 +64,26 @@ function DenseTableState() {
       </thead>
       <tbody>
         <tr>
-          <td>Refresh documentation map</td>
-          <td>agent/map-refresh</td>
+          <td>Spring field study</td>
+          <td>North</td>
           <td>Complete</td>
-          <td>Verified generated references</td>
+          <td>Validated responses</td>
           <td>2m 18s</td>
           <td>14</td>
         </tr>
         <tr>
-          <td>Inspect release boundary</td>
-          <td>agent/release-audit</td>
-          <td>Blocked</td>
-          <td>Requested package-owner review</td>
+          <td>Summer field study</td>
+          <td>West</td>
+          <td>In review</td>
+          <td>Checked sample balance</td>
           <td>8m 04s</td>
           <td>3</td>
         </tr>
         <tr>
-          <td>Regenerate component registry</td>
-          <td>agent/registry-update</td>
-          <td>Changed</td>
-          <td>Compared deterministic output</td>
+          <td>Autumn field study</td>
+          <td>South</td>
+          <td>Updated</td>
+          <td>Compared response totals</td>
           <td>43s</td>
           <td>6</td>
         </tr>
@@ -112,7 +108,7 @@ function RichCellsTableState() {
             Inline <code>semantics</code>
           </td>
           <td>
-            <a href="#table">Reference material</a> with <em>context</em>
+            <a href="#reference">Reference material</a> with <em>context</em>
           </td>
           <td>
             <strong>Covered</strong>
@@ -128,26 +124,22 @@ function RichCellsTableState() {
   );
 }
 
-export const catalogueStates = [
-  { name: "default", label: "Three-column data", Example: DefaultTableState },
-  {
-    name: "dense-overflow",
-    label: "Dense narrow-width overflow",
-    Example: DenseTableState,
-  },
-  {
-    name: "rich-cells",
-    label: "Rich and empty cells",
-    Example: RichCellsTableState,
-  },
-] satisfies readonly CatalogueExampleState[];
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: DefaultTableState },
+    { id: "rich-cells", Example: RichCellsTableState },
+    { id: "dense-overflow", Example: DenseTableState },
+  ],
+);
 
 export default function TableExamples() {
   return (
     <div className="discern-example-stack">
       <DefaultTableState />
-      <DenseTableState />
       <RichCellsTableState />
+      <DenseTableState />
     </div>
   );
 }

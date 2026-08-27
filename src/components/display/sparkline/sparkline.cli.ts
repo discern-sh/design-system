@@ -10,6 +10,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import {
   DECLARED_GAP_GLYPH,
@@ -23,6 +24,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./sparkline.meta.ts";
 import {
   assertSparklineValues,
   sparklineAnnotation,
@@ -39,25 +41,22 @@ export interface SparklineCliProps {
 }
 
 /** Deterministic Sparkline states rendered by the CLI Catalogue. */
-export const cliExamples: readonly CliExample<SparklineCliProps>[] = [
-  {
-    name: "movement",
-    props: { values: [3.2, 4.1, 3.8, 5.5, 7.4, 9.1] },
-  },
-  {
-    name: "with-gaps",
-    props: { values: [12, null, 14, 19, null, 23] },
-  },
-  {
-    name: "flat",
-    props: { values: [5, 5, 5, 5, 5] },
-  },
-  {
-    name: "ascii",
-    props: { values: [3.2, 4.1, 3.8, 5.5, 7.4, 9.1] },
-    capabilities: { colorDepth: "none", unicode: false },
-  },
-] as const;
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: { values: [3.2, 4.1, 3.8, 5.5, 7.4, 9.1] },
+    },
+    {
+      name: "with-gaps",
+      props: { values: [12, null, 14, 19, null, 23] },
+    },
+    { name: "flat", props: { values: [5, 5, 5, 5, 5] } },
+    { name: "decline", props: { values: [41, 38, 36, 39, 31, 28] } },
+  ] as const satisfies readonly CliExample<SparklineCliProps>[],
+);
 
 /** Render one block-context movement run with its endpoint annotation. */
 const renderSparklineCli: CliRenderer<SparklineCliProps> = (
