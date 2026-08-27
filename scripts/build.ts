@@ -779,6 +779,7 @@ import type {
   CatalogueVariant,
   ConformanceScenario,
 } from "../conformance.ts";
+import { validateComponentExampleCaptureDirective } from "../example-images/contract.ts";
 ${imports.join("\n")}
 
 function builderDefaultsFrom(
@@ -814,7 +815,11 @@ function examplesFrom(
     throw new TypeError(\`\${source} catalogueExamples export must be an array\`);
   }
   const ids: string[] = [];
-  const examples: Array<{ readonly id: string; readonly Example: ComponentType }> = [];
+  const examples: Array<{
+    readonly id: string;
+    readonly Example: ComponentType;
+    readonly capture?: CatalogueExample["capture"];
+  }> = [];
   for (const value of implementations) {
     if (typeof value !== "object" || value === null) {
       throw new TypeError(\`\${source} contains a non-object Catalogue example\`);
@@ -837,7 +842,17 @@ function examplesFrom(
       );
     }
     ids.push(example.id);
-    examples.push(example as { readonly id: string; readonly Example: ComponentType });
+    if ("capture" in example && example.capture !== undefined) {
+      validateComponentExampleCaptureDirective(
+        example.capture as NonNullable<CatalogueExample["capture"]>,
+        \`\${meta.slug}/\${example.id}\`,
+      );
+    }
+    examples.push(example as {
+      readonly id: string;
+      readonly Example: ComponentType;
+      readonly capture?: CatalogueExample["capture"];
+    });
   }
   validateComponentExampleImplementations(
     meta,
@@ -852,7 +867,12 @@ function examplesFrom(
     if (definition === undefined) {
       throw new TypeError(\`\${meta.slug} Web example \${example.id} has no canonical definition\`);
     }
-    return { id: definition.id, label: definition.label, Example: example.Example };
+    return {
+      id: definition.id,
+      label: definition.label,
+      Example: example.Example,
+      ...(example.capture === undefined ? {} : { capture: example.capture }),
+    };
   });
 }
 
@@ -1030,6 +1050,10 @@ async function packageVersion(): Promise<string> {
 const CATALOGUE_BUNDLES = [
   { entry: "catalogue/app.tsx", output: "dist/catalogue.js" },
   { entry: "catalogue/builder/app.tsx", output: "dist/builder.js" },
+  {
+    entry: "catalogue/example-images/capture.tsx",
+    output: "dist/example-image-capture.js",
+  },
 ] as const;
 
 async function bundleCatalogue(): Promise<void> {

@@ -73,8 +73,26 @@ export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
   [
-    { id: "default", Example: SourceNotesExample },
-    { id: "rich-multi-block", Example: RichMultiBlockNotesExample },
+    {
+      id: "default",
+      Example: SourceNotesExample,
+      capture: {
+        selectors: [
+          ":scope > .discern-paragraph",
+          ":scope > .discern-footnotes",
+        ],
+      },
+    },
+    {
+      id: "rich-multi-block",
+      Example: RichMultiBlockNotesExample,
+      capture: {
+        selectors: [
+          ":scope > .discern-paragraph",
+          ":scope > .discern-footnotes",
+        ],
+      },
+    },
   ],
 );
 

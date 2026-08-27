@@ -55,8 +55,22 @@ export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
   [
-    { id: "default", Example: DefaultTooltipState },
-    { id: "bottom", Example: BottomTooltipState },
+    {
+      id: "default",
+      Example: DefaultTooltipState,
+      capture: {
+        prepare: [{ action: "focus", selector: "button" }],
+        selectors: [".discern-tooltip", ".discern-tooltip__bubble"],
+      },
+    },
+    {
+      id: "bottom",
+      Example: BottomTooltipState,
+      capture: {
+        prepare: [{ action: "focus", selector: "button" }],
+        selectors: [".discern-tooltip", ".discern-tooltip__bubble"],
+      },
+    },
   ],
 );
 

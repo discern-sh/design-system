@@ -15,9 +15,11 @@ jobs:
       - uses: actions/checkout@v6
       - uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.9.2
+          deno-version: v2.9.5
       - name: Install dependencies
         run: deno install --frozen
+      - name: Install pinned capture browser
+        run: deno run -A npm:playwright@1.61.1 install --with-deps chromium
       - name: Generated output is current
         run: |
           deno task codegen

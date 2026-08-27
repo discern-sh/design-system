@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"
+  viewBox="0 0 320 180" role="img" aria-labelledby="title description">
+  <title id="title">Component example image unavailable</title>
+  <desc
+    id="description">Development placeholder for a missing generated Component example image.</desc>
+  <rect width="319" height="179" x=".5" y=".5" rx="12" fill="#f4f4f1"
+    stroke="#aaa9a2" stroke-dasharray="5 5" />
+  <path d="M136 107h48M160 59v30" stroke="#66655f" stroke-width="3"
+    stroke-linecap="round" />
+  <text x="160" y="135" fill="#55544f" font-family="system-ui, sans-serif"
+    font-size="13" text-anchor="middle">Image unavailable</text>
+</svg>

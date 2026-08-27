@@ -1,0 +1,38 @@
+@layer catalogue {
+  :root {
+    color-scheme: light dark;
+    background: var(--discern-color-canvas);
+  }
+
+  html,
+  body {
+    min-width: 1280px;
+    margin: 0;
+    overflow: visible;
+    background: var(--discern-color-canvas);
+  }
+
+  .discern-example-image-capture {
+    --discern-font-display: "Crimson Pro", serif;
+    --discern-font-body: "Inter", sans-serif;
+    --discern-font-ui: "Inter", sans-serif;
+    --discern-font-mono: "JetBrains Mono", monospace;
+    box-sizing: border-box;
+    width: 960px;
+    min-height: 720px;
+    margin: 160px;
+    background: var(--discern-color-canvas);
+  }
+
+  [data-discern-capture-example] {
+    display: contents;
+  }
+
+  [data-discern-capture-example] *,
+  [data-discern-capture-example] *::before,
+  [data-discern-capture-example] *::after {
+    caret-color: transparent !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -109,9 +109,30 @@ export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
   [
-    { id: "default", Example: DefaultDialogState },
-    { id: "submitted", Example: SubmittedDialogState },
-    { id: "cancelled", Example: CancelledDialogState },
+    {
+      id: "default",
+      Example: DefaultDialogState,
+      capture: {
+        prepare: [{ action: "click", selector: ":scope > .discern-button" }],
+        selectors: [".discern-dialog__panel"],
+      },
+    },
+    {
+      id: "submitted",
+      Example: SubmittedDialogState,
+      capture: {
+        prepare: [{ action: "click", selector: ":scope > .discern-button" }],
+        selectors: [".discern-dialog__panel"],
+      },
+    },
+    {
+      id: "cancelled",
+      Example: CancelledDialogState,
+      capture: {
+        prepare: [{ action: "click", selector: ":scope > .discern-button" }],
+        selectors: [".discern-dialog__panel"],
+      },
+    },
   ],
 );
 

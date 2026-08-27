@@ -8,6 +8,9 @@ dist/*
 /.claude/launch.json
 catalogue/generated/*
 !catalogue/generated/.gitkeep
+!catalogue/generated/example-images/
+!catalogue/generated/example-images/**
+!catalogue/generated/example-images-manifest.ts
 
 # --- discern ---
 # Generated automatically by discern via the bundled .gitignore fragment and provider registry | https://discern.sh

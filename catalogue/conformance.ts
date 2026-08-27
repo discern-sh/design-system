@@ -6,11 +6,15 @@ import type {
 } from "../src/types/component-examples.ts";
 import { validateComponentExampleImplementations } from "../src/types/component-examples.ts";
 import type { ComponentMeta } from "../src/types/component-meta.ts";
+import type { ComponentExampleCaptureDirective } from "./example-images/contract.ts";
+import { validateComponentExampleCaptureDirective } from "./example-images/contract.ts";
 
 /** One Web implementation bound to a canonical Component example id. */
 export interface CatalogueExampleImplementation<Id extends string = string> {
   readonly id: Id;
   readonly Example: ComponentType;
+  /** Exceptional top-layer or multi-root capture posture; ordinary roots omit it. */
+  readonly capture?: ComponentExampleCaptureDirective;
 }
 
 /** Bind React implementations to one neutral Component example vocabulary. */
@@ -30,6 +34,14 @@ export function defineCatalogueExamples<
     "web",
     implementations.map(({ id }) => id),
   );
+  for (const implementation of implementations) {
+    if (implementation.capture !== undefined) {
+      validateComponentExampleCaptureDirective(
+        implementation.capture,
+        `${meta.slug}/${implementation.id}`,
+      );
+    }
+  }
   return implementations;
 }
 
@@ -38,6 +50,7 @@ export interface CatalogueExample {
   readonly id: string;
   readonly label: string;
   readonly Example: ComponentType;
+  readonly capture?: ComponentExampleCaptureDirective;
 }
 
 /** One component-specific prop extracted from its authored TypeScript source. */

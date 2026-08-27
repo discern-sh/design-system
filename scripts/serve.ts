@@ -4,6 +4,10 @@ import {
   renderMarkdownBrowserReviewPage,
 } from "../catalogue/markdown-browser-review.ts";
 import { canonicalCatalogueShellPathname } from "../catalogue/routes.ts";
+import {
+  COMPONENT_EXAMPLE_IMAGE_REVIEW_PATH,
+  renderComponentExampleImageReviewPage,
+} from "../catalogue/example-images/review.ts";
 
 const ROOT = new URL("../", import.meta.url);
 const CONTENT_TYPES: Readonly<Record<string, string>> = {
@@ -45,6 +49,10 @@ function safePath(url: URL): URL | null {
 
 /** Source-rendered review routes that must survive replacement of build output. */
 export const catalogueReviewRoutes = Object.freeze([
+  Object.freeze({
+    pathname: COMPONENT_EXAMPLE_IMAGE_REVIEW_PATH,
+    render: renderComponentExampleImageReviewPage,
+  }),
   Object.freeze({
     pathname: MARKDOWN_BROWSER_REVIEW_PATH,
     render: renderMarkdownBrowserReviewPage,

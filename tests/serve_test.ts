@@ -8,6 +8,7 @@ import {
   catalogueComponentPath,
   catalogueNavigation,
 } from "../catalogue/routes.ts";
+import { componentExampleImageManifest } from "../catalogue/generated/example-images-manifest.ts";
 
 Deno.test("the serve task resolves the worktree's deterministic port with a fixed fallback", async () => {
   const config = JSON.parse(
@@ -64,6 +65,14 @@ Deno.test("the Catalogue owns one canonical source, bundle, and mounted path", a
     catalogueFilePath("/catalogue/dist/builder.js"),
     "./dist/builder.js",
   );
+  assertEquals(
+    catalogueFilePath("/catalogue/example-images/"),
+    "./catalogue/example-images/index.html",
+  );
+  assertEquals(
+    catalogueFilePath("/catalogue/dist/example-image-capture.js"),
+    "./dist/example-image-capture.js",
+  );
 
   const index = await Deno.readTextFile(
     new URL("../catalogue/index.html", import.meta.url),
@@ -97,6 +106,15 @@ Deno.test("the Catalogue owns one canonical source, bundle, and mounted path", a
   assertStringIncludes(builder, 'href="builder.css"');
   assertStringIncludes(builder, 'src="../dist/builder.js"');
   assertStringIncludes(builder, "Discern interface builder — Beta");
+
+  const capture = await Deno.readTextFile(
+    new URL("../catalogue/example-images/index.html", import.meta.url),
+  );
+  assertStringIncludes(
+    capture,
+    'src="/catalogue/dist/example-image-capture.js"',
+  );
+  assertStringIncludes(capture, 'data-discern-capture-status="loading"');
 });
 
 Deno.test("Catalogue explorer routes serve one canonical shell", async () => {
@@ -135,7 +153,10 @@ Deno.test("Catalogue explorer routes serve one canonical shell", async () => {
 Deno.test("Catalogue review routes stay outside replaceable build output", async () => {
   assertEquals(
     catalogueReviewRoutes.map(({ pathname }) => pathname),
-    ["/catalogue/reviews/markdown-browser/"],
+    [
+      "/catalogue/example-images/review/",
+      "/catalogue/reviews/markdown-browser/",
+    ],
   );
   for (const route of catalogueReviewRoutes) {
     assertEquals(
@@ -186,4 +207,26 @@ Deno.test("Catalogue review routes stay outside replaceable build output", async
   ) {
     assertStringIncludes(html, title);
   }
+
+  const imageReview = await server.fetch(
+    new Request(
+      "http://127.0.0.1:8010/catalogue/example-images/review/",
+    ),
+  );
+  assertEquals(imageReview.status, 200);
+  const imageHtml = await imageReview.text();
+  assertStringIncludes(
+    imageHtml,
+    `${componentExampleImageManifest.entries.length} exact-bounds theme entries`,
+  );
+  assertStringIncludes(imageHtml, 'data-representative="true"');
+  assertStringIncludes(imageHtml, "240×150 consumer frame");
+
+  const firstImage = componentExampleImageManifest.entries[0];
+  if (firstImage === undefined) throw new Error("image manifest is empty");
+  const imageResponse = await server.fetch(
+    new Request(`http://127.0.0.1:8010${firstImage.assetUrl}`),
+  );
+  assertEquals(imageResponse.status, 200);
+  assertEquals(imageResponse.headers.get("content-type"), "image/png");
 });

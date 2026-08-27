@@ -120,5 +120,12 @@ export default function SearchPaletteExamples() {
 export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
-  [{ id: "default", Example: SearchPaletteExamples }],
+  [{
+    id: "default",
+    Example: SearchPaletteExamples,
+    capture: {
+      prepare: [{ action: "click", selector: ":scope > .discern-button" }],
+      selectors: [".discern-search-palette"],
+    },
+  }],
 );
