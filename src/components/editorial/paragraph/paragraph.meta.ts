@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Paragraph",
   slug: "paragraph",
   group: "Editorial",
@@ -23,3 +24,10 @@ export default {
     "The terminal renderer retains code delimiters, link targets, image alternatives and sources, and footnote markers without relying on colour.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Rich inline paragraph" }],
+);
+
+export default meta;

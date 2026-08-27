@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Footnotes",
   slug: "footnotes",
   group: "Editorial",
@@ -22,3 +23,13 @@ export default {
     "Terminal definitions retain visible positional labels and return targets in no-colour and ASCII output.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Source notes" },
+    { id: "rich-multi-block", label: "Rich multi-block notes" },
+  ],
+);
+
+export default meta;

@@ -6,6 +6,7 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import {
@@ -19,7 +20,9 @@ import {
   terminalThemeColor,
   terminalThemes,
   type TerminalThemeVariant,
+  terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./code-listing.meta.ts";
 
 /** Inputs accepted by the terminal Code listing renderer. */
 export interface CodeListingCliProps {
@@ -29,23 +32,48 @@ export interface CodeListingCliProps {
   readonly code: string;
   readonly highlightLines?: readonly number[];
   readonly caption?: string;
+  /** Visual emphasis matching the browser listing's standard or showcase posture. */
+  readonly variant?: "standard" | "showcase";
   readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
 /** Deterministic Code listing states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<CodeListingCliProps>[] = [
-  {
-    name: "typescript",
-    props: {
-      filename: "brief.ts",
-      language: "ts",
-      code: 'const brief = {\n  scope: "editorial",\n  status: "ready",\n};',
-      highlightLines: [2],
-      caption: "A small, deterministic input.",
+const example = `const brief = {
+  question: "What must remain true?",
+  evidence: ["tests", "proof"],
+};
+
+await prove(brief);`;
+
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "standard",
+      props: {
+        filename: "example.ts",
+        language: "TypeScript",
+        code: example,
+        highlightLines: [2, 3],
+        caption:
+          "Highlighted lines carry the decision into executable evidence.",
+      },
     },
-  },
-] as const;
+    {
+      name: "showcase",
+      props: {
+        filename: "decision.ts",
+        language: "TypeScript",
+        code: example,
+        highlightLines: [2, 3],
+        caption: "A stable emphatic treatment for consequential source.",
+        variant: "showcase",
+      },
+    },
+  ] as const satisfies readonly CliExample<CodeListingCliProps>[],
+);
 
 function renderListingFrame(
   lines: readonly string[],
@@ -136,11 +164,14 @@ const renderCodeListingCli: CliRenderer<CodeListingCliProps> = (
     .filter((value): value is string => value !== undefined)
     .join(" ");
   const theme = terminalThemes[props.theme ?? "dark"];
+  const showcase = props.variant === "showcase";
   const frame = renderListingFrame(
     body.split("\n"),
     title,
     width,
-    terminalThemeColor(theme, "--discern-color-ink-faint"),
+    showcase
+      ? terminalToneColor(theme, "accent")
+      : terminalThemeColor(theme, "--discern-color-ink-faint"),
     capabilities,
   );
   if (props.caption === undefined) return frame;
@@ -149,8 +180,10 @@ const renderCodeListingCli: CliRenderer<CodeListingCliProps> = (
     styleText(
       wrapText(`Caption: ${props.caption}`, width).join("\n"),
       {
-        ...theme.typography.annotation,
-        color: terminalThemeColor(theme, "--discern-color-ink-muted"),
+        ...(showcase ? theme.typography.strong : theme.typography.annotation),
+        color: showcase
+          ? terminalToneColor(theme, "accent")
+          : terminalThemeColor(theme, "--discern-color-ink-muted"),
       },
       capabilities,
     ),

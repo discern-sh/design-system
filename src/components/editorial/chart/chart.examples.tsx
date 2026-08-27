@@ -1,3 +1,4 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import type { ChartSvgTheme } from "../../../chart/svg.ts";
 import { renderChartSvg } from "../../../chart/svg.ts";
 import { chartAltText } from "../../../chart/accessibility.ts";
@@ -5,11 +6,12 @@ import { chartSeriesLegend } from "../../../chart/legend.ts";
 import { chartKindRegistry } from "../../../generated/chart-registry.ts";
 import type { ChartSpec } from "../../../generated/chart-spec.ts";
 import { DataFigure } from "../data-figure/data-figure.tsx";
+import meta, { componentExampleVocabulary } from "./chart.meta.ts";
 import { Chart } from "./chart.tsx";
 
 function releaseSpec(
   kind: string,
-  posture: "minimal" | "representative" | "structural",
+  posture: "maximum-density" | "minimal" | "representative" | "structural",
 ): ChartSpec {
   const entry = chartKindRegistry.find(({ meta }) => meta.slug === kind);
   const releaseCase = entry?.releaseCorpus.cases.find(({ postures }) =>
@@ -58,6 +60,28 @@ function corpusExamples(
     </section>
   );
 }
+
+function RepresentativeChartExample() {
+  return <Chart spec={releaseSpec("bar", "representative")} />;
+}
+
+function StructuralChartExample() {
+  return <Chart spec={releaseSpec("bar", "structural")} />;
+}
+
+function DenseChartExample() {
+  return <Chart spec={releaseSpec("heatmap", "maximum-density")} />;
+}
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: RepresentativeChartExample },
+    { id: "structural", Example: StructuralChartExample },
+    { id: "dense-data", Example: DenseChartExample },
+  ],
+);
 
 export default function ChartExamples() {
   const representative = releaseSpec("bar", "representative");

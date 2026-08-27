@@ -1,3 +1,5 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./related-content.meta.ts";
 import { RelatedContent } from "./related-content.tsx";
 
 export default function RelatedContentExamples() {
@@ -40,3 +42,9 @@ export default function RelatedContentExamples() {
     />
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: RelatedContentExamples }],
+);

@@ -1,3 +1,5 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./article-layout.meta.ts";
 import { ArticleLayout } from "./article-layout.tsx";
 
 export default function ArticleLayoutExamples() {
@@ -23,3 +25,9 @@ export default function ArticleLayoutExamples() {
     </ArticleLayout>
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: ArticleLayoutExamples }],
+);

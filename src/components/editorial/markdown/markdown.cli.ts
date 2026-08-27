@@ -10,6 +10,7 @@ import {
   createCliBlock,
   renderCliBlocks,
 } from "../../../cli/block-composition.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import type { TerminalMotif } from "../../../cli/motif.ts";
 import { createCliPresenter } from "../../../cli/presenter.ts";
@@ -41,6 +42,14 @@ import type { DiagramCliMode } from "../diagram/diagram.cli.ts";
 import renderFootnotesCli from "../footnotes/footnotes.cli.ts";
 import renderListCli from "../list/list.cli.ts";
 import renderParagraphCli from "../paragraph/paragraph.cli.ts";
+import {
+  markdownCompactExampleSource,
+  markdownDeepNestingExampleSource,
+  markdownFullDialectExampleSource,
+  markdownHostileExampleSource,
+  markdownReadingHierarchyExampleSource,
+} from "./markdown.example-sources.ts";
+import meta, { componentExampleVocabulary } from "./markdown.meta.ts";
 import {
   type MarkdownBlock,
   type MarkdownDocument,
@@ -111,158 +120,60 @@ export const MARKDOWN_CLI_HANDLED_BLOCK_KINDS = {
   chart: "rendered",
 } as const satisfies Readonly<Record<MarkdownBlock["kind"], "rendered">>;
 
-const compactSource = `# A measured document
-
-Use **semantic components** for [safe references](https://example.test/reference).
-
-- Preserve the hierarchy
-- Keep every target visible`;
-
-const fullDialectSource = `# Full dialect
-
-Setext heading
---------------
-
-Escapes, &amp; entities, *emphasis*, **strong text**, ~~removed text~~, \`inline code\`, and an autolink: https://example.test.
-
-> [!IMPORTANT]
-> Alerts retain nested content.
->
-> - [x] Reviewed
-> - [ ] Ready to verify
-
-3. Ordered from three
-4. Second item
-
-| Surface | Alignment |
-| :------ | --------: |
-| Browser | Semantic |
-| CLI | Deterministic |
-
----
-
-\`\`\`ts module
-const complete = true;
-export { complete };
-\`\`\`
-
-A repeated note[^proof] remains linked[^proof].
-
-[^proof]: The definition can contain more than one block.
-
-    > Including a quotation.`;
-
-const deepSource = `> Outer quotation
->
-> 1. Ordered item
->    - Nested item
->      > Inner quotation
->      >
->      > \`\`\`text
->      > literal *source*
->      > \`\`\``;
-
-const readingHierarchySource = `# Reading foundations
-
-Use \`semanticInlineText()\` when plain output must remain lossless.
-
-## Document boundary
-
-### Section marker
-
-#### Strong subsection
-
-##### Quiet subsection
-
-###### Supporting note`;
-
-const hostileSource = `<script>alert("inert")</script>
-
-[Unsafe link](javascript:alert(1)) and ![unsafe image](data:text/html,boom).
-
-<!-- omitted comment -->
-
-Control notation remains visible: [31mred[0m‮.`;
-
-/** Deterministic Markdown documents rendered by the CLI Catalogue. */
-export const cliExamples: readonly CliExample<MarkdownCliProps>[] = [
-  {
-    name: "compact-document",
-    props: { source: compactSource, maxWidth: 68 },
-  },
-  {
-    name: "full-dialect",
-    props: { source: fullDialectSource, maxWidth: 72 },
-  },
-  {
-    name: "deep-nesting",
-    props: { source: deepSource, maxWidth: 52 },
-  },
-  {
-    name: "reading-hierarchy",
-    props: { source: readingHierarchySource, maxWidth: 52 },
-  },
-  {
-    name: "reading-hierarchy-narrow-no-colour",
-    props: { source: readingHierarchySource, maxWidth: 24 },
-    capabilities: {
-      ansiControl: false,
-      colorDepth: "none",
-      columns: 24,
-      hyperlinks: false,
-      unicode: false,
+/** Deterministic human Markdown documents rendered by the CLI Catalogue. */
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: { source: markdownCompactExampleSource, maxWidth: 68 },
     },
-  },
-  {
-    name: "hostile-inert-source",
-    props: { source: hostileSource, maxWidth: 52 },
-  },
-  {
-    name: "diagram-resource-auto",
-    props: {
-      source: markdownDiagramExampleMarkdown,
-      diagrams: [markdownDiagramExampleResource],
-      maxWidth: 76,
+    {
+      name: "full-dialect",
+      props: { source: markdownFullDialectExampleSource, maxWidth: 72 },
     },
-  },
-  {
-    name: "diagram-resource-description",
-    props: {
-      source: markdownDiagramExampleMarkdown,
-      diagrams: [markdownDiagramExampleResource],
-      diagramMode: "description",
-      maxWidth: 52,
+    {
+      name: "deep-nesting",
+      props: { source: markdownDeepNestingExampleSource, maxWidth: 52 },
     },
-  },
-  {
-    name: "chart-resource-auto",
-    props: {
-      source: markdownChartExampleMarkdown,
-      charts: [markdownChartExampleResource],
-      maxWidth: 76,
+    {
+      name: "reading-hierarchy",
+      props: { source: markdownReadingHierarchyExampleSource, maxWidth: 52 },
     },
-  },
-  {
-    name: "chart-resource-description",
-    props: {
-      source: markdownChartExampleMarkdown,
-      charts: [markdownChartExampleResource],
-      chartMode: "description",
-      maxWidth: 52,
+    {
+      name: "diagram-resource",
+      props: {
+        source: markdownDiagramExampleMarkdown,
+        diagrams: [markdownDiagramExampleResource],
+        maxWidth: 76,
+      },
     },
-  },
-  {
-    name: "narrow-ascii-no-colour",
-    props: { source: compactSource, maxWidth: 24 },
-    capabilities: {
-      ansiControl: false,
-      colorDepth: "none",
-      columns: 24,
-      hyperlinks: false,
-      unicode: false,
+    {
+      name: "chart-resource",
+      props: {
+        source: markdownChartExampleMarkdown,
+        charts: [markdownChartExampleResource],
+        maxWidth: 76,
+      },
     },
-  },
-] as const;
+    {
+      name: "hostile-source",
+      props: { source: markdownHostileExampleSource, maxWidth: 52 },
+    },
+    {
+      name: "narrow-fallback",
+      props: { source: markdownCompactExampleSource, maxWidth: 24 },
+      capabilities: {
+        ansiControl: false,
+        colorDepth: "none",
+        columns: 24,
+        hyperlinks: false,
+        unicode: false,
+      },
+    },
+  ] as const satisfies readonly CliExample<MarkdownCliProps>[],
+);
 
 function assertNever(value: never): never {
   throw new MarkdownParseError(

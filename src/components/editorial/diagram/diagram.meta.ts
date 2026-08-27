@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Diagram",
   slug: "diagram",
   group: "Editorial",
@@ -25,3 +26,13 @@ export default {
     "Semantic roles pair colour with labels, shapes, border treatment, or line treatment so colour is never the only distinction.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Representative topology" },
+    { id: "dense-topology", label: "Dense topology" },
+  ],
+);
+
+export default meta;

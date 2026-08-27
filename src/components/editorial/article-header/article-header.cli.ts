@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical, wrapInlineCluster } from "../../../cli/layout.ts";
 import { wrapText } from "../../../cli/text.ts";
@@ -15,6 +16,7 @@ import {
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import { derivedInitials } from "../../initials.ts";
+import meta, { componentExampleVocabulary } from "./article-header.meta.ts";
 import type {
   ArticleHeaderHeadingLevel,
   ArticleHeaderSurface,
@@ -43,9 +45,11 @@ export interface ArticleHeaderCliProps {
 }
 
 /** Deterministic Article header states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<ArticleHeaderCliProps>[] = [
-  {
-    name: "report",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [{
+    name: "default",
     props: {
       eyebrow: "Field notes",
       title: "Designing for the reading path",
@@ -53,8 +57,8 @@ export const cliExamples: readonly CliExample<ArticleHeaderCliProps>[] = [
       authors: [{ name: "Ada Osei", role: "Research" }],
       meta: ["8 min read", "11 August 2026"],
     },
-  },
-] as const;
+  }] as const satisfies readonly CliExample<ArticleHeaderCliProps>[],
+);
 
 function renderWidth(
   requested: number | undefined,

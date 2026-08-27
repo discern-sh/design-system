@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { measureText, wrapText } from "../../../cli/text.ts";
@@ -15,6 +16,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./table-of-contents.meta.ts";
 
 /** One terminal Table of contents destination. */
 export interface TableOfContentsCliItem {
@@ -35,9 +37,11 @@ export interface TableOfContentsCliProps {
 }
 
 /** Deterministic Table of contents states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<TableOfContentsCliProps>[] = [
-  {
-    name: "article",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [{
+    name: "default",
     props: {
       items: [
         { label: "Context", href: "#context" },
@@ -47,8 +51,8 @@ export const cliExamples: readonly CliExample<TableOfContentsCliProps>[] = [
       ],
       progress: "2 of 3 sections",
     },
-  },
-] as const;
+  }] as const satisfies readonly CliExample<TableOfContentsCliProps>[],
+);
 
 function hanging(prefix: string, value: string, width: number): string {
   const lines = wrapText(value, Math.max(1, width - measureText(prefix)));

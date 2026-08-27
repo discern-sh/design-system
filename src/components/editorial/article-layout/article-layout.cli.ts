@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { wrapText } from "../../../cli/text.ts";
@@ -13,6 +14,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./article-layout.meta.ts";
 
 /** Inputs accepted by the terminal Article layout renderer. */
 export interface ArticleLayoutCliProps {
@@ -26,16 +28,18 @@ export interface ArticleLayoutCliProps {
 }
 
 /** Deterministic Article layout states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<ArticleLayoutCliProps>[] = [
-  {
-    name: "with-context",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [{
+    name: "default",
     props: {
       navigation: "01 Context\n02 Decision",
       body: "The main reading column stays first in the terminal flow.",
       rail: "Updated 11 August",
     },
-  },
-] as const;
+  }] as const satisfies readonly CliExample<ArticleLayoutCliProps>[],
+);
 
 function wrapBlock(value: string, width: number): string {
   return value.split("\n").flatMap((line) => wrapText(line, width)).join("\n");

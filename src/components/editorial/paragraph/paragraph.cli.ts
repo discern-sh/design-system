@@ -4,12 +4,14 @@
  * @module
  */
 
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import {
   type SemanticInlineContent,
   wrapSemanticInlineContent,
 } from "../../../cli/semantic-inline.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./paragraph.meta.ts";
 
 /** Inputs accepted by the terminal Paragraph renderer. */
 export interface ParagraphCliProps {
@@ -22,9 +24,11 @@ export interface ParagraphCliProps {
 }
 
 /** Deterministic Paragraph states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<ParagraphCliProps>[] = [
-  {
-    name: "rich-inline",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [{
+    name: "default",
     props: {
       content: [
         "A paragraph can carry ",
@@ -49,8 +53,8 @@ export const cliExamples: readonly CliExample<ParagraphCliProps>[] = [
         { kind: "footnote-reference", identifier: "measure" },
       ],
     },
-  },
-] as const;
+  }] as const satisfies readonly CliExample<ParagraphCliProps>[],
+);
 
 /**
  * Render one rich semantic paragraph without owning a surrounding blank-line

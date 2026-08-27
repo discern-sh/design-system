@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Timeline",
   slug: "timeline",
   group: "Editorial",
@@ -12,3 +13,10 @@ export default {
     "Events remain an ordered list and visual marker status supplements rather than replaces the written content.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Editorial timeline" }],
+);
+
+export default meta;

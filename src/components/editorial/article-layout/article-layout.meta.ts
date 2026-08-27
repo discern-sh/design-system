@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Article layout",
   slug: "article-layout",
   group: "Editorial",
@@ -14,3 +15,10 @@ export default {
     "Source order keeps navigation, article, and supporting context understandable without the visual grid.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Contextual reading layout" }],
+);
+
+export default meta;

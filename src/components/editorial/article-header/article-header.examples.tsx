@@ -1,5 +1,7 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { Button } from "../../core/button/button.tsx";
 import { Badge } from "../../display/badge/badge.tsx";
+import meta, { componentExampleVocabulary } from "./article-header.meta.ts";
 import { ArticleHeader } from "./article-header.tsx";
 
 export default function ArticleHeaderExamples() {
@@ -24,3 +26,9 @@ export default function ArticleHeaderExamples() {
     />
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: ArticleHeaderExamples }],
+);

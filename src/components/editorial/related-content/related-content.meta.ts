@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Related content",
   slug: "related-content",
   group: "Editorial",
@@ -12,3 +13,10 @@ export default {
     "Every recommendation is a headed article and its title is the primary descriptive link.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Related reading" }],
+);
+
+export default meta;

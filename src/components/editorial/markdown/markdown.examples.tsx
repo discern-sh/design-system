@@ -1,4 +1,4 @@
-import { Markdown } from "./markdown.tsx";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import {
   markdownChartExampleMarkdown,
   markdownChartExampleResource,
@@ -7,96 +7,90 @@ import {
   markdownDiagramExampleMarkdown,
   markdownDiagramExampleResource,
 } from "../../../diagram/markdown.example.ts";
+import {
+  markdownCompactExampleSource,
+  markdownDeepNestingExampleSource,
+  markdownFullDialectExampleSource,
+  markdownHostileExampleSource,
+  markdownReadingHierarchyExampleSource,
+} from "./markdown.example-sources.ts";
+import meta, { componentExampleVocabulary } from "./markdown.meta.ts";
+import { Markdown } from "./markdown.tsx";
 
-const compact = `# A compact document
+function CompactDocumentExample() {
+  return <Markdown source={markdownCompactExampleSource} measure="narrow" />;
+}
 
-Meaning stays **clear**, links keep [their targets](https://example.test), and lists retain hierarchy.
+function FullDialectExample() {
+  return <Markdown source={markdownFullDialectExampleSource} measure="wide" />;
+}
 
-- First observation
-- Second observation`;
+function DeepNestingExample() {
+  return <Markdown source={markdownDeepNestingExampleSource} />;
+}
 
-const dialect = `# Full dialect
+function ReadingHierarchyExample() {
+  return <Markdown source={markdownReadingHierarchyExampleSource} />;
+}
 
-Setext heading
---------------
+function DiagramResourceExample() {
+  return (
+    <Markdown
+      source={markdownDiagramExampleMarkdown}
+      diagrams={[markdownDiagramExampleResource]}
+      measure="wide"
+    />
+  );
+}
 
-Use *emphasis*, **strong text**, ~~strikethrough~~, \`inline code\`, reference [links][reference], and images:
+function ChartResourceExample() {
+  return (
+    <Markdown
+      source={markdownChartExampleMarkdown}
+      charts={[markdownChartExampleResource]}
+      measure="wide"
+    />
+  );
+}
 
-![A calm geometric study](https://example.test/study.png)
+function HostileSourceExample() {
+  return <Markdown source={markdownHostileExampleSource} measure="narrow" />;
+}
 
-> [!NOTE]
-> Alerts can contain more than one block.
->
-> - [x] Reviewed
-> - [ ] Pending
+function NarrowFallbackExample() {
+  return (
+    <div style={{ maxWidth: "20rem" }}>
+      <Markdown source={markdownCompactExampleSource} measure="narrow" />
+    </div>
+  );
+}
 
-3. Ordered from three
-4. Another item
-
-| Surface | Output |
-| :------ | -----: |
-| Browser | Semantic |
-| Terminal | Deterministic |
-
-\`\`\`ts module
-const complete = true;
-\`\`\`
-
-A claim carries a note[^evidence].
-
-[^evidence]: Definitions retain **rich content** and return navigation.
-
-[reference]: https://example.test/reference "Reference source"`;
-
-const nested = `> Outer quotation
->
-> 1. Ordered item
->    - Nested item
->      > Inner quotation
->      >
->      > \`\`\`text
->      > literal *source*
->      > \`\`\``;
-
-const hostile = `<script>alert("inert")</script>
-
-[Unsafe destination](javascript:alert(1)) remains visible but cannot execute.
-
-<!-- This comment is omitted. -->
-
-Raw controls are visible: [31mred[0m‮.`;
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: CompactDocumentExample },
+    { id: "full-dialect", Example: FullDialectExample },
+    { id: "deep-nesting", Example: DeepNestingExample },
+    { id: "reading-hierarchy", Example: ReadingHierarchyExample },
+    { id: "diagram-resource", Example: DiagramResourceExample },
+    { id: "chart-resource", Example: ChartResourceExample },
+    { id: "hostile-source", Example: HostileSourceExample },
+    { id: "narrow-fallback", Example: NarrowFallbackExample },
+  ],
+);
 
 export default function MarkdownExamples() {
   return (
-    <>
-      <Markdown source={compact} measure="narrow" />
-      <Markdown source={dialect} measure="wide" />
-      <Markdown source={nested} />
-      <Markdown source={hostile} measure="narrow" />
-      <section>
-        <h3>Ordinary generated image</h3>
-        <Markdown source={markdownDiagramExampleMarkdown} measure="wide" />
-      </section>
-      <section>
-        <h3>Resource-upgraded live Diagram</h3>
-        <Markdown
-          source={markdownDiagramExampleMarkdown}
-          diagrams={[markdownDiagramExampleResource]}
-          measure="wide"
-        />
-      </section>
-      <section>
-        <h3>Ordinary generated chart image</h3>
-        <Markdown source={markdownChartExampleMarkdown} measure="wide" />
-      </section>
-      <section>
-        <h3>Resource-upgraded live Chart</h3>
-        <Markdown
-          source={markdownChartExampleMarkdown}
-          charts={[markdownChartExampleResource]}
-          measure="wide"
-        />
-      </section>
-    </>
+    <div className="discern-example-stack">
+      <CompactDocumentExample />
+      <FullDialectExample />
+      <DeepNestingExample />
+      <ReadingHierarchyExample />
+      <DiagramResourceExample />
+      <ChartResourceExample />
+      <HostileSourceExample />
+      <NarrowFallbackExample />
+    </div>
   );
 }

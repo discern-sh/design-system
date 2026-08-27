@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import {
@@ -18,6 +19,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./timeline.meta.ts";
 import type { TimelineStatus } from "./timeline.types.ts";
 
 /** One terminal Timeline event. */
@@ -40,9 +42,11 @@ export interface TimelineCliProps extends TerminalMotifOptions {
 }
 
 /** Deterministic Timeline states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<TimelineCliProps>[] = [
-  {
-    name: "history",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [{
+    name: "default",
     props: {
       eyebrow: "History",
       title: "One decision at a time",
@@ -66,8 +70,8 @@ export const cliExamples: readonly CliExample<TimelineCliProps>[] = [
         },
       ],
     },
-  },
-] as const;
+  }] as const satisfies readonly CliExample<TimelineCliProps>[],
+);
 
 const STATUS_TONES = {
   complete: "success",

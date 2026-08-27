@@ -10,6 +10,7 @@ import {
   createCliBlock,
   renderCliBlocks,
 } from "../../../cli/block-composition.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { composeCliBlocks } from "../../../cli/rhythm.ts";
@@ -33,6 +34,7 @@ import renderBlockquoteCli from "../blockquote/blockquote.cli.ts";
 import renderCodeBlockCli from "../code-block/code-block.cli.ts";
 import renderListCli from "../list/list.cli.ts";
 import renderParagraphCli from "../paragraph/paragraph.cli.ts";
+import meta, { componentExampleVocabulary } from "./footnotes.meta.ts";
 
 /** A structural Footnotes body made from re-renderable Component blocks. */
 export interface FootnoteCliBlockContent {
@@ -123,52 +125,56 @@ const richExampleParagraph = createCliBlock(
 );
 
 /** Deterministic Footnotes states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<FootnotesCliProps>[] = [
-  {
-    name: "sources",
-    props: {
-      items: [
-        { content: "Terminal widths were measured in character cells." },
-        {
-          content:
-            "Source labels remain plain text when links are unavailable.",
-          returnLabel: "return",
-        },
-      ],
-    },
-  },
-  {
-    name: "rich-multi-block",
-    props: {
-      items: [{
-        id: "measured-result",
-        content: {
-          kind: "blocks",
-          children: [
-            richExampleParagraph,
-            createCliBlock(renderListCli, {
-              items: [{ content: "One supporting observation." }],
-            }),
-            createCliBlock(renderBlockquoteCli, {
-              children: [createCliBlock(renderParagraphCli, {
-                content: "The qualification remains a quotation.",
-              })],
-            }),
-            createCliBlock(renderCodeBlockCli, {
-              language: "text",
-              code: "sample = complete",
-            }),
-          ],
-        },
-        returnLabel: "return",
-        returnReferences: [
-          { href: "#measured-result-ref-1" },
-          { href: "#measured-result-ref-2" },
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        items: [
+          { content: "Terminal widths were measured in character cells." },
+          {
+            content:
+              "Source labels remain plain text when links are unavailable.",
+            returnLabel: "return",
+          },
         ],
-      }],
+      },
     },
-  },
-] as const;
+    {
+      name: "rich-multi-block",
+      props: {
+        items: [{
+          id: "measured-result",
+          content: {
+            kind: "blocks",
+            children: [
+              richExampleParagraph,
+              createCliBlock(renderListCli, {
+                items: [{ content: "One supporting observation." }],
+              }),
+              createCliBlock(renderBlockquoteCli, {
+                children: [createCliBlock(renderParagraphCli, {
+                  content: "The qualification remains a quotation.",
+                })],
+              }),
+              createCliBlock(renderCodeBlockCli, {
+                language: "text",
+                code: "sample = complete",
+              }),
+            ],
+          },
+          returnLabel: "return",
+          returnReferences: [
+            { href: "#measured-result-ref-1" },
+            { href: "#measured-result-ref-2" },
+          ],
+        }],
+      },
+    },
+  ] as const satisfies readonly CliExample<FootnotesCliProps>[],
+);
 
 const MINIMUM_FOOTNOTES_WIDTH = 8;
 

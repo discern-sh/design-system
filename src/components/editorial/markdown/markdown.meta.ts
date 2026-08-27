@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Markdown",
   slug: "markdown",
   group: "Editorial",
@@ -25,3 +26,19 @@ export default {
     "Admitted isolated diagram and chart images must use the spec-derived alternative and matching optional summary title; drift rejects the whole document.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Compact document" },
+    { id: "full-dialect", label: "Full dialect" },
+    { id: "deep-nesting", label: "Deep nesting" },
+    { id: "reading-hierarchy", label: "Reading hierarchy" },
+    { id: "diagram-resource", label: "Diagram resource" },
+    { id: "chart-resource", label: "Chart resource" },
+    { id: "hostile-source", label: "Inert hostile source" },
+    { id: "narrow-fallback", label: "Narrow fallback" },
+  ],
+);
+
+export default meta;

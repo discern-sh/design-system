@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Code listing",
   slug: "code-listing",
   group: "Editorial",
@@ -18,3 +19,13 @@ export default {
     "Showcase keeps the same semantic code and caption while using stable inverse roles in both themes.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "standard", label: "Standard" },
+    { id: "showcase", label: "Showcase" },
+  ],
+);
+
+export default meta;

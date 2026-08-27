@@ -1,3 +1,5 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./pull-quote.meta.ts";
 import { PullQuote } from "./pull-quote.tsx";
 
 export default function PullQuoteExamples() {
@@ -13,3 +15,9 @@ export default function PullQuoteExamples() {
     />
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: PullQuoteExamples }],
+);

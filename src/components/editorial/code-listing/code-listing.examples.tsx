@@ -1,4 +1,5 @@
-import type { CatalogueExampleState } from "../../../../catalogue/conformance.ts";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./code-listing.meta.ts";
 import { CodeListing } from "./code-listing.tsx";
 
 const example = `const brief = {
@@ -33,10 +34,14 @@ function ShowcaseCodeListingState() {
   );
 }
 
-export const catalogueStates = [
-  { name: "standard", label: "Standard", Example: StandardCodeListingState },
-  { name: "showcase", label: "Showcase", Example: ShowcaseCodeListingState },
-] satisfies readonly CatalogueExampleState[];
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "standard", Example: StandardCodeListingState },
+    { id: "showcase", Example: ShowcaseCodeListingState },
+  ],
+);
 
 export default function CodeListingExamples() {
   return (

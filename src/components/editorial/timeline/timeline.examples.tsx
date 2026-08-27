@@ -1,3 +1,5 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./timeline.meta.ts";
 import { Timeline } from "./timeline.tsx";
 
 export default function TimelineExamples() {
@@ -27,3 +29,9 @@ export default function TimelineExamples() {
     />
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: TimelineExamples }],
+);

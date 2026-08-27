@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Blockquote",
   slug: "blockquote",
   group: "Editorial",
@@ -21,3 +22,13 @@ export default {
     "The terminal renderer repeats its capability-aware rail on every line, including intentional blank lines, without relying on colour for quotation meaning.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Composed quotation" },
+    { id: "nested-quotation", label: "Nested quotation" },
+  ],
+);
+
+export default meta;

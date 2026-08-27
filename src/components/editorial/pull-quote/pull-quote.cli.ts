@@ -5,6 +5,7 @@
  */
 
 import { renderStyledSpans, styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { wrapText } from "../../../cli/text.ts";
@@ -14,6 +15,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./pull-quote.meta.ts";
 import type { PullQuoteAlign } from "./pull-quote.types.ts";
 
 /** Inputs accepted by the terminal Pull quote renderer. */
@@ -28,17 +30,19 @@ export interface PullQuoteCliProps {
 }
 
 /** Deterministic Pull quote states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<PullQuoteCliProps>[] = [
-  {
-    name: "attributed",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [{
+    name: "default",
     props: {
       quote:
         "A durable interface leaves the reader with the argument, not the rendering machinery.",
       attribution: "Ada Osei",
       citation: "Field notes",
     },
-  },
-] as const;
+  }] as const satisfies readonly CliExample<PullQuoteCliProps>[],
+);
 
 const ALIGN_COLUMNS: Readonly<Record<PullQuoteAlign, number>> = {
   inline: 64,

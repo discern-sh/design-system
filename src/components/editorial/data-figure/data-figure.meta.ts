@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Data figure",
   slug: "data-figure",
   group: "Editorial",
@@ -14,3 +15,13 @@ export default {
     "Legend labels accompany every colour swatch so colour is never the only key.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Comparison figure" },
+    { id: "narrow-layout", label: "Narrow layout" },
+  ],
+);
+
+export default meta;

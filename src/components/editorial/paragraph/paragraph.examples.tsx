@@ -1,3 +1,5 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./paragraph.meta.ts";
 import { Paragraph } from "./paragraph.tsx";
 
 export default function ParagraphExamples() {
@@ -12,3 +14,9 @@ export default function ParagraphExamples() {
     </Paragraph>
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: ParagraphExamples }],
+);

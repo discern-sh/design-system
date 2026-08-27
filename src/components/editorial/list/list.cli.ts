@@ -7,8 +7,10 @@
 import { stripAnsi } from "../../../cli/ansi.ts";
 import {
   type CliBlock,
+  createCliBlock,
   renderCliBlocks,
 } from "../../../cli/block-composition.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { composeCliBlocks } from "../../../cli/rhythm.ts";
 import {
@@ -21,6 +23,7 @@ import {
   wrapStyledTextPreservingIndent,
 } from "../../../cli/text.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./list.meta.ts";
 import type { ListKind, ListSpacing } from "./list.types.ts";
 
 /** One framework-neutral terminal List item. */
@@ -216,42 +219,47 @@ const renderListCli: CliRenderer<ListCliProps> = (props, capabilities) => {
 };
 
 /** Deterministic List states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<ListCliProps>[] = [
-  {
-    name: "ordered-rich",
-    props: {
-      kind: "ordered",
-      start: 9,
-      spacing: "loose",
-      items: [
-        {
-          content: [
-            "Keep ",
-            { kind: "strong", content: "meaning" },
-            " with the item.",
-          ],
-        },
-        {
-          content: [
-            "Retain ",
-            { kind: "link", label: "the reference", destination: "#list" },
-            ".",
-          ],
-        },
-      ],
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        spacing: "loose",
+        items: [
+          {
+            content: [
+              "Keep ",
+              { kind: "strong", content: "meaning" },
+              " with the item and its supporting detail.",
+            ],
+          },
+          {
+            content: "Record the constraint.",
+            blocks: [createCliBlock(renderListCli, {
+              kind: "ordered",
+              items: [
+                { content: "Name the observation." },
+                { content: "Preserve the evidence." },
+              ],
+            })],
+          },
+        ],
+      },
     },
-  },
-  {
-    name: "task-mixed",
-    props: {
-      kind: "task",
-      items: [
-        { content: "Reviewed source material", checked: true },
-        { content: "Verify the final frame", checked: false },
-        { content: "Context without task state" },
-      ],
+    {
+      name: "task-mixed",
+      props: {
+        kind: "task",
+        items: [
+          { content: "Reviewed source material", checked: true },
+          { content: "Verify the final frame", checked: false },
+          { content: "Context without task state" },
+        ],
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<ListCliProps>[],
+);
 
 export default renderListCli;

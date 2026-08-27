@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Pull quote",
   slug: "pull-quote",
   group: "Editorial",
@@ -13,3 +14,10 @@ export default {
     "The oversized quotation mark is decorative and hidden from assistive technology.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Attributed quotation" }],
+);
+
+export default meta;

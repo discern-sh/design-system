@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { measureText, wrapText } from "../../../cli/text.ts";
@@ -14,6 +15,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./key-points.meta.ts";
 import type { KeyPointsTone } from "./key-points.types.ts";
 
 /** One terminal Key points entry. */
@@ -33,9 +35,11 @@ export interface KeyPointsCliProps {
 }
 
 /** Deterministic Key points states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<KeyPointsCliProps>[] = [
-  {
-    name: "brief",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [{
+    name: "default",
     props: {
       eyebrow: "The brief",
       title: "Ideas to carry into the work",
@@ -50,8 +54,8 @@ export const cliExamples: readonly CliExample<KeyPointsCliProps>[] = [
         },
       ],
     },
-  },
-] as const;
+  }] as const satisfies readonly CliExample<KeyPointsCliProps>[],
+);
 
 const TONES = {
   accent: "accent",

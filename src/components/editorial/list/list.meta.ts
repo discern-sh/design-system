@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "List",
   slug: "list",
   group: "Editorial",
@@ -24,3 +25,13 @@ export default {
     "Terminal task states remain distinct through marker shape in Unicode, ASCII, and no-colour output.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Nested list" },
+    { id: "task-mixed", label: "Mixed task list" },
+  ],
+);
+
+export default meta;

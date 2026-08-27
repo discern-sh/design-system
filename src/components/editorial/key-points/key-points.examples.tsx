@@ -1,3 +1,5 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./key-points.meta.ts";
 import { KeyPoints } from "./key-points.tsx";
 
 export default function KeyPointsExamples() {
@@ -22,3 +24,9 @@ export default function KeyPointsExamples() {
     />
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: KeyPointsExamples }],
+);

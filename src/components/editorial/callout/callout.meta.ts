@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Callout",
   slug: "callout",
   group: "Editorial",
@@ -12,3 +13,13 @@ export default {
     "The callout is exposed as a note landmark with a real heading and never relies on colour alone for meaning.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Insight" },
+    { id: "warning", label: "Warning" },
+  ],
+);
+
+export default meta;

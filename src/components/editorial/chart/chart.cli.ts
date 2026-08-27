@@ -13,6 +13,7 @@
 import { styleText } from "../../../cli/ansi.ts";
 import { chartKindCliDeclineMessage } from "../../../cli/chart-kinds.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { composeCliBlocks } from "../../../cli/rhythm.ts";
@@ -38,6 +39,7 @@ import type {
   ValidatedChart,
 } from "../../../generated/chart-spec.ts";
 import renderTableCli from "../../display/table/table.cli.ts";
+import meta, { componentExampleVocabulary } from "./chart.meta.ts";
 
 /** Stable projection posture for the terminal Chart renderer. */
 export type ChartCliMode = "auto" | "description";
@@ -50,8 +52,22 @@ export interface ChartCliProps {
   readonly maxWidth?: number;
 }
 
-/** Deterministic Chart states rendered by the CLI Catalogue. */
-export const cliExamples: readonly CliExample<ChartCliProps>[] = Object
+function releaseSpec(
+  kind: string,
+  posture: "maximum-density" | "representative" | "structural",
+): ChartSpec {
+  const entry = chartKindRegistry.find(({ meta }) => meta.slug === kind);
+  const releaseCase = entry?.releaseCorpus.cases.find(({ postures }) =>
+    postures.some((candidate) => candidate === posture)
+  );
+  if (releaseCase === undefined) {
+    throw new TypeError(`${kind} has no ${posture} release case`);
+  }
+  return releaseCase.spec as ChartSpec;
+}
+
+/** Exhaustive release-corpus frames retained for renderer contract tests. */
+export const cliReleaseFixtures: readonly CliExample<ChartCliProps>[] = Object
   .freeze(chartKindRegistry.flatMap((entry) => {
     const representative = entry.releaseCorpus.cases.find(({ postures }) =>
       postures.some((posture) => posture === "representative")
@@ -97,6 +113,38 @@ export const cliExamples: readonly CliExample<ChartCliProps>[] = Object
     }
     return examples;
   }));
+
+/** Deliberate human Chart postures shared with the browser Catalogue. */
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        spec: releaseSpec("bar", "representative"),
+        mode: "auto",
+        maxWidth: 76,
+      },
+    },
+    {
+      name: "structural",
+      props: {
+        spec: releaseSpec("bar", "structural"),
+        mode: "auto",
+        maxWidth: 76,
+      },
+    },
+    {
+      name: "dense-data",
+      props: {
+        spec: releaseSpec("heatmap", "maximum-density"),
+        mode: "auto",
+        maxWidth: 76,
+      },
+    },
+  ] as const satisfies readonly CliExample<ChartCliProps>[],
+);
 
 /** One inventory or data heading of the shared description skeleton. */
 function isDescriptionSectionHeader(line: string): boolean {

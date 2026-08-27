@@ -1,3 +1,4 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import type { DiagramSvgTheme } from "../../../diagram/mod.ts";
 import { diagramAltText, renderDiagramSvg } from "../../../diagram/mod.ts";
 import {
@@ -7,11 +8,12 @@ import {
 import { diagramKindRegistry } from "../../../generated/diagram-registry.ts";
 import type { DiagramSpec } from "../../../generated/diagram-spec.ts";
 import { DataFigure } from "../data-figure/data-figure.tsx";
+import meta, { componentExampleVocabulary } from "./diagram.meta.ts";
 import { Diagram } from "./diagram.tsx";
 
 function releaseSpec(
   kind: string,
-  posture: "minimal" | "representative",
+  posture: "maximum-density" | "minimal" | "representative",
 ): DiagramSpec {
   const entry = diagramKindRegistry.find(({ meta }) => meta.slug === kind);
   const releaseCase = entry?.releaseCorpus.cases.find(({ postures }) =>
@@ -60,6 +62,23 @@ function corpusExamples(
     </section>
   );
 }
+
+function RepresentativeTopologyExample() {
+  return <Diagram spec={releaseSpec("architecture", "representative")} />;
+}
+
+function DenseTopologyExample() {
+  return <Diagram spec={releaseSpec("architecture", "maximum-density")} />;
+}
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: RepresentativeTopologyExample },
+    { id: "dense-topology", Example: DenseTopologyExample },
+  ],
+);
 
 export default function DiagramExamples() {
   const architecture = releaseSpec("architecture", "representative");

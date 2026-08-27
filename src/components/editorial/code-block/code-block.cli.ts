@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { graphemeWidth, measureText, truncateText } from "../../../cli/text.ts";
 import { makeSourceControlsVisible } from "../../../cli/visible-text.ts";
@@ -13,6 +14,7 @@ import {
   terminalThemes,
   type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./code-block.meta.ts";
 
 /** Width behavior for preformatted source in a terminal. */
 export type CodeBlockWidthPolicy = "wrap" | "preserve";
@@ -34,25 +36,29 @@ export interface CodeBlockCliProps {
 }
 
 /** Deterministic Code block states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<CodeBlockCliProps>[] = [
-  {
-    name: "typescript",
-    props: {
-      language: "ts",
-      info: "module",
-      code:
-        "const values = [2, 3, 5];\nconst total = values.reduce((sum, value) => sum + value, 0);",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        language: "ts",
+        info: "module",
+        code:
+          "const values = [2, 3, 5];\nconst total = values.reduce((sum, value) => sum + value, 0);",
+      },
     },
-  },
-  {
-    name: "preserved-width",
-    props: {
-      language: "text",
-      code: "one uninterrupted source line remains copyable",
-      widthPolicy: "preserve",
+    {
+      name: "preserved-width",
+      props: {
+        language: "text",
+        code: "one uninterrupted source line remains copyable",
+        widthPolicy: "preserve",
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<CodeBlockCliProps>[],
+);
 
 const graphemeSegmenter = new Intl.Segmenter(undefined, {
   granularity: "grapheme",

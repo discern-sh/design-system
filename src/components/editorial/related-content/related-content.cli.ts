@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { measureText, wrapText } from "../../../cli/text.ts";
@@ -14,6 +15,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./related-content.meta.ts";
 import type { RelatedContentSurface } from "./related-content.types.ts";
 
 /** One terminal Related content entry. */
@@ -36,9 +38,11 @@ export interface RelatedContentCliProps {
 }
 
 /** Deterministic Related content states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<RelatedContentCliProps>[] = [
-  {
-    name: "next-reading",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [{
+    name: "default",
     props: {
       eyebrow: "Continue",
       title: "Related reading",
@@ -52,8 +56,8 @@ export const cliExamples: readonly CliExample<RelatedContentCliProps>[] = [
         },
       ],
     },
-  },
-] as const;
+  }] as const satisfies readonly CliExample<RelatedContentCliProps>[],
+);
 
 function hanging(prefix: string, value: string, width: number): string {
   const lines = wrapText(value, Math.max(1, width - measureText(prefix)));

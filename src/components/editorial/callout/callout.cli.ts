@@ -9,12 +9,14 @@ import {
   type CliBlock,
   renderCliBlocks,
 } from "../../../cli/block-composition.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import {
   terminalThemes,
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./callout.meta.ts";
 import type { CalloutTone } from "./callout.types.ts";
 
 interface CalloutCliOptions {
@@ -42,26 +44,30 @@ export type CalloutCliProps =
   );
 
 /** Deterministic Callout states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<CalloutCliProps>[] = [
-  {
-    name: "insight",
-    props: {
-      eyebrow: "Insight",
-      title: "Keep the evidence close",
-      body:
-        "A terminal note should interrupt the eye without interrupting the argument.",
-      tone: "insight",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        eyebrow: "Insight",
+        title: "Keep the evidence close",
+        body:
+          "A terminal note should interrupt the eye without interrupting the argument.",
+        tone: "insight",
+      },
     },
-  },
-  {
-    name: "warning",
-    props: {
-      title: "Check the boundary",
-      body: "This action changes public output.",
-      tone: "warning",
+    {
+      name: "warning",
+      props: {
+        title: "Check the boundary",
+        body: "This action changes public output.",
+        tone: "warning",
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<CalloutCliProps>[],
+);
 
 const TONE_MAP = {
   note: "neutral",

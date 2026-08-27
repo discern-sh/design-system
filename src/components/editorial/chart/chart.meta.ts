@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Chart",
   slug: "chart",
   group: "Editorial",
@@ -25,3 +26,14 @@ export default {
     "Every series slot pairs its colour with a stable non-colour identity — authored order, per-slot marker and fill glyphs, and a machine-tested colour-vision separation floor — so colour never carries a series alone.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Representative chart" },
+    { id: "structural", label: "Structural variation" },
+    { id: "dense-data", label: "Dense data" },
+  ],
+);
+
+export default meta;

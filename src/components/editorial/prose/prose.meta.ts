@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Prose",
   slug: "prose",
   group: "Editorial",
@@ -22,3 +23,13 @@ export default {
     "The terminal rich path preserves child Component structure, inline meaning, hyperlink targets, hard breaks, and paragraph boundaries without relying on colour.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Lead prose" },
+    { id: "rich-structure", label: "Rich document structure" },
+  ],
+);
+
+export default meta;

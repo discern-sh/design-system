@@ -28,6 +28,7 @@
 import { renderStyledSpans, styleText } from "../../../cli/ansi.ts";
 import { renderBox } from "../../../cli/box.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { rampGlyph, SERIES_MARKERS } from "../../../cli/glyph-ramps.ts";
 import { joinVertical } from "../../../cli/layout.ts";
@@ -40,6 +41,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./data-figure.meta.ts";
 import type {
   DataFigureLegendTone,
   DataFigureSeriesTone,
@@ -67,37 +69,41 @@ export interface DataFigureCliProps {
 }
 
 /** Deterministic Data figure states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<DataFigureCliProps>[] = [
-  {
-    name: "comparison",
-    props: {
-      eyebrow: "Survey",
-      title: "Preferred reading mode",
-      visual: "Terminal  ███████  70%\nBrowser   ███      30%",
-      legend: [
-        { label: "Terminal", tone: "accent" },
-        { label: "Browser", tone: "ink" },
-      ],
-      caption: "Share of respondents by primary reading mode.",
-      source: "Documentation survey",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        eyebrow: "Survey",
+        title: "Preferred reading mode",
+        visual: "Terminal  ███████  70%\nBrowser   ███      30%",
+        legend: [
+          { label: "Terminal", tone: "accent" },
+          { label: "Browser", tone: "ink" },
+        ],
+        caption: "Share of respondents by primary reading mode.",
+        source: "Documentation survey",
+      },
     },
-  },
-  {
-    name: "lossless-narrow",
-    props: {
-      eyebrow: "Survey",
-      title: "Preferred reading mode",
-      visual: "Terminal  ███████  70%\nBrowser   ███      30%",
-      legend: [
-        { label: "Terminal respondents", tone: "accent" },
-        { label: "Browser respondents", tone: "ink" },
-      ],
-      caption: "The same figure at a narrow measure keeps every character.",
-      source: "Documentation survey",
+    {
+      name: "narrow-layout",
+      props: {
+        eyebrow: "Survey",
+        title: "Preferred reading mode",
+        visual: "Terminal  ███████  70%\nBrowser   ███      30%",
+        legend: [
+          { label: "Terminal respondents", tone: "accent" },
+          { label: "Browser respondents", tone: "ink" },
+        ],
+        caption: "The same figure at a narrow measure keeps every character.",
+        source: "Documentation survey",
+      },
+      capabilities: { columns: 24 },
     },
-    capabilities: { columns: 24 },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<DataFigureCliProps>[],
+);
 
 const LEGEND_TONES = {
   accent: "accent",

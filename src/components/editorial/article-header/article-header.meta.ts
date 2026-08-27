@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Article header",
   slug: "article-header",
   group: "Editorial",
@@ -13,3 +14,10 @@ export default {
     "Author information uses address semantics and decorative initials stay hidden from assistive technology.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Article opener" }],
+);
+
+export default meta;

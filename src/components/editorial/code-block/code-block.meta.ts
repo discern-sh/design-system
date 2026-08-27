@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Code block",
   slug: "code-block",
   group: "Editorial",
@@ -23,3 +24,13 @@ export default {
     "The terminal renderer expands tabs to four-cell tab stops, makes unsafe control and format characters visible, and marks lossless continuations in its specimen frame without relying on colour.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "TypeScript source" },
+    { id: "preserved-width", label: "Preserved long line" },
+  ],
+);
+
+export default meta;

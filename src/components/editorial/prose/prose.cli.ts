@@ -11,6 +11,7 @@ import {
   renderCliBlock,
 } from "../../../cli/block-composition.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { composeCliBlocks } from "../../../cli/rhythm.ts";
 import type { SemanticInlineContent } from "../../../cli/semantic-inline.ts";
@@ -22,6 +23,7 @@ import {
 } from "../../../cli/theme.ts";
 import renderListCli from "../list/list.cli.ts";
 import renderParagraphCli from "../paragraph/paragraph.cli.ts";
+import meta, { componentExampleVocabulary } from "./prose.meta.ts";
 import type { ProseMeasure } from "./prose.types.ts";
 
 interface ProseCliOptions {
@@ -63,55 +65,59 @@ export interface ProseSemanticCliProps extends ProseCliOptions {
 export type ProseCliProps = ProseTextCliProps | ProseSemanticCliProps;
 
 /** Deterministic Prose states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<ProseCliProps>[] = [
-  {
-    name: "lead",
-    props: {
-      text:
-        "Good long-form design gives the first paragraph enough presence to open the argument.\n\nThe rest settles into a calm reading measure.",
-      lead: true,
-      dropCap: true,
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        text:
+          "Good long-form design gives the first paragraph enough presence to open the argument.\n\nThe rest settles into a calm reading measure.",
+        lead: true,
+        dropCap: true,
+      },
     },
-  },
-  {
-    name: "rich-blocks",
-    props: {
-      children: [
-        {
-          kind: "paragraph",
-          content: [
-            "A reading context keeps ",
-            { kind: "strong", content: "inline meaning" },
-            " beside ",
-            {
-              kind: "link",
-              label: "its reference",
-              destination: "https://example.test/reference",
-            },
-            ".",
-          ],
-        },
-        {
-          kind: "block",
-          block: createCliBlock(renderListCli, {
-            items: [
-              { content: "Structural children keep their own semantics." },
-              { content: "Prose supplies only measure and rhythm." },
+    {
+      name: "rich-structure",
+      props: {
+        children: [
+          {
+            kind: "paragraph",
+            content: [
+              "A reading context keeps ",
+              { kind: "strong", content: "inline meaning" },
+              " beside ",
+              {
+                kind: "link",
+                label: "its reference",
+                destination: "https://example.test/reference",
+              },
+              ".",
             ],
-          }),
-        },
-        {
-          kind: "paragraph",
-          content: [
-            "A hard break remains intentional.",
-            { kind: "hard-break" },
-            "The next line stays in the same paragraph.",
-          ],
-        },
-      ],
+          },
+          {
+            kind: "block",
+            block: createCliBlock(renderListCli, {
+              items: [
+                { content: "Structural children keep their own semantics." },
+                { content: "Prose supplies only measure and rhythm." },
+              ],
+            }),
+          },
+          {
+            kind: "paragraph",
+            content: [
+              "A hard break remains intentional.",
+              { kind: "hard-break" },
+              "The next line stays in the same paragraph.",
+            ],
+          },
+        ],
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<ProseCliProps>[],
+);
 
 const MEASURE_COLUMNS: Readonly<Record<ProseMeasure, number>> = {
   narrow: 48,

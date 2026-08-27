@@ -1,3 +1,5 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./table-of-contents.meta.ts";
 import { TableOfContents } from "./table-of-contents.tsx";
 
 export default function TableOfContentsExamples() {
@@ -17,3 +19,9 @@ export default function TableOfContentsExamples() {
     />
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: TableOfContentsExamples }],
+);

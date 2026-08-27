@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Table of contents",
   slug: "table-of-contents",
   group: "Editorial",
@@ -13,3 +14,10 @@ export default {
     "Nested entries remain visible text and omit a misleading section number.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Article contents" }],
+);
+
+export default meta;

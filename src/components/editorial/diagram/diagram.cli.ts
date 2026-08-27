@@ -6,6 +6,7 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { composeCliBlocks } from "../../../cli/rhythm.ts";
@@ -23,6 +24,7 @@ import {
 } from "../../../generated/diagram-cli-registry.ts";
 import { diagramKindRegistry } from "../../../generated/diagram-registry.ts";
 import type { DiagramSpec } from "../../../generated/diagram-spec.ts";
+import meta, { componentExampleVocabulary } from "./diagram.meta.ts";
 
 /** Stable projection posture for the terminal Diagram renderer. */
 export type DiagramCliMode = "auto" | "description";
@@ -35,8 +37,22 @@ export interface DiagramCliProps {
   readonly maxWidth?: number;
 }
 
-/** Deterministic Diagram states rendered by the CLI Catalogue. */
-export const cliExamples: readonly CliExample<DiagramCliProps>[] = Object
+function releaseSpec(
+  kind: string,
+  posture: "maximum-density" | "representative",
+): DiagramSpec {
+  const entry = diagramKindRegistry.find(({ meta }) => meta.slug === kind);
+  const releaseCase = entry?.releaseCorpus.cases.find(({ postures }) =>
+    postures.some((candidate) => candidate === posture)
+  );
+  if (releaseCase === undefined) {
+    throw new TypeError(`${kind} has no ${posture} release case`);
+  }
+  return releaseCase.spec as DiagramSpec;
+}
+
+/** Exhaustive release-corpus frames retained for renderer contract tests. */
+export const cliReleaseFixtures: readonly CliExample<DiagramCliProps>[] = Object
   .freeze(diagramKindRegistry.flatMap((entry) => {
     const representative = entry.releaseCorpus.cases.find(({ postures }) =>
       postures.some((posture) => posture === "representative")
@@ -72,6 +88,30 @@ export const cliExamples: readonly CliExample<DiagramCliProps>[] = Object
     }
     return examples;
   }));
+
+/** Deliberate human Diagram postures shared with the browser Catalogue. */
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        spec: releaseSpec("architecture", "representative"),
+        mode: "auto",
+        maxWidth: 120,
+      },
+    },
+    {
+      name: "dense-topology",
+      props: {
+        spec: releaseSpec("architecture", "maximum-density"),
+        mode: "auto",
+        maxWidth: 120,
+      },
+    },
+  ] as const satisfies readonly CliExample<DiagramCliProps>[],
+);
 
 function descriptionLineStyle(
   line: string,
