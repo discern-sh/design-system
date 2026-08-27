@@ -42,82 +42,86 @@ const base = {
   placeholder: "my-project",
 };
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      ...base,
+      lifecycle: { status: "active" },
+      presentation: "idle",
+    },
+  },
+  {
+    name: "active",
+    props: { ...base, lifecycle: { status: "active" } },
+  },
+  {
+    name: "filled",
+    props: {
+      ...base,
+      value: "atlas",
+      cursor: 5,
+      lifecycle: { status: "active" },
+      presentation: "filled",
+    },
+  },
+  {
+    name: "validation-error",
+    props: {
+      ...base,
+      value: "a",
+      cursor: 1,
+      lifecycle: {
+        status: "validation-error",
+        message: "Use at least three characters",
+      },
+    },
+  },
+  {
+    name: "disabled",
+    props: {
+      ...base,
+      value: "atlas",
+      cursor: 5,
+      lifecycle: { status: "active" },
+      presentation: "disabled",
+    },
+  },
+  {
+    name: "submitted",
+    props: {
+      ...base,
+      value: "atlas",
+      cursor: 5,
+      lifecycle: { status: "submitted" },
+    },
+  },
+  {
+    name: "cancelled",
+    props: {
+      ...base,
+      lifecycle: { status: "cancelled", reason: "Input cancelled" },
+    },
+  },
+  {
+    name: "searching",
+    props: {
+      kind: "autocomplete",
+      label: "Country",
+      lifecycle: { status: "active" },
+      value: "can",
+      cursor: 3,
+      suggestions: [],
+      highlightedIndex: 0,
+      pending: true,
+    },
+  },
+] as const satisfies readonly CliExample<InputCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Every static Input state rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: { ...base, lifecycle: { status: "active" }, presentation: "idle" },
-    },
-    {
-      name: "active",
-      props: { ...base, lifecycle: { status: "active" } },
-    },
-    {
-      name: "filled",
-      props: {
-        ...base,
-        value: "atlas",
-        cursor: 5,
-        lifecycle: { status: "active" },
-        presentation: "filled",
-      },
-    },
-    {
-      name: "validation-error",
-      props: {
-        ...base,
-        value: "a",
-        cursor: 1,
-        lifecycle: {
-          status: "validation-error",
-          message: "Use at least three characters",
-        },
-      },
-    },
-    {
-      name: "disabled",
-      props: {
-        ...base,
-        value: "atlas",
-        cursor: 5,
-        lifecycle: { status: "active" },
-        presentation: "disabled",
-      },
-    },
-    {
-      name: "submitted",
-      props: {
-        ...base,
-        value: "atlas",
-        cursor: 5,
-        lifecycle: { status: "submitted" },
-      },
-    },
-    {
-      name: "cancelled",
-      props: {
-        ...base,
-        lifecycle: { status: "cancelled", reason: "Input cancelled" },
-      },
-    },
-    {
-      name: "searching",
-      props: {
-        kind: "autocomplete",
-        label: "Country",
-        lifecycle: { status: "active" },
-        value: "can",
-        cursor: 3,
-        suggestions: [],
-        highlightedIndex: 0,
-        pending: true,
-      },
-    },
-  ] as const satisfies readonly CliExample<InputCliProps>[],
-);
+export const cliExamples: readonly CliExample<InputCliProps>[] =
+  cliExampleImplementations;
 
 function rawValue(
   state: TextInputFrameState | MaskedInputFrameState | AutocompleteFrameState,

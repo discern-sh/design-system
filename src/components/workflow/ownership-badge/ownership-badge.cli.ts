@@ -31,17 +31,17 @@ export interface OwnershipBadgeCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  { name: "authored", props: { ownership: "authored" } },
+  { name: "generated", props: { ownership: "generated" } },
+  { name: "project-owned", props: { ownership: "project-owned" } },
+  { name: "tool-owned", props: { ownership: "tool-owned" } },
+] as const satisfies readonly CliExample<OwnershipBadgeCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Ownership badge states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    { name: "authored", props: { ownership: "authored" } },
-    { name: "generated", props: { ownership: "generated" } },
-    { name: "project-owned", props: { ownership: "project-owned" } },
-    { name: "tool-owned", props: { ownership: "tool-owned" } },
-  ] as const satisfies readonly CliExample<OwnershipBadgeCliProps>[],
-);
+export const cliExamples: readonly CliExample<OwnershipBadgeCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one explicit terminal artifact-ownership chip. */
 const renderOwnershipBadgeCli: CliRenderer<OwnershipBadgeCliProps> = (

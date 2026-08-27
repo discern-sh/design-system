@@ -27,18 +27,16 @@ const meta = {
   ],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "default", label: "Compact document" },
-    { id: "full-dialect", label: "Full dialect" },
-    { id: "deep-nesting", label: "Deep nesting" },
-    { id: "reading-hierarchy", label: "Reading hierarchy" },
-    { id: "diagram-resource", label: "Diagram resource" },
-    { id: "chart-resource", label: "Chart resource" },
-    { id: "hostile-source", label: "Inert hostile source" },
-    { id: "narrow-layout", label: "Narrow layout" },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "default", label: "Compact document" },
+  { id: "full-dialect", label: "Full dialect" },
+  { id: "deep-nesting", label: "Deep nesting" },
+  { id: "reading-hierarchy", label: "Reading hierarchy" },
+  { id: "diagram-resource", label: "Diagram resource" },
+  { id: "chart-resource", label: "Chart resource" },
+  { id: "hostile-source", label: "Inert hostile source" },
+  { id: "narrow-layout", label: "Narrow layout" },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

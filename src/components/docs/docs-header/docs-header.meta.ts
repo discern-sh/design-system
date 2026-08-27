@@ -16,9 +16,10 @@ const meta = {
   ],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [{ id: "default", label: "Documentation header" }],
-);
+export const componentExampleVocabulary = [{
+  id: "default",
+  label: "Documentation header",
+}] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

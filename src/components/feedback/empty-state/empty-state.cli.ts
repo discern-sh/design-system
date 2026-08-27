@@ -25,22 +25,22 @@ export interface EmptyStateCliProps {
   readonly width?: number;
 }
 
-/** Deterministic Empty state states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        title: "Nothing here yet",
-        description: "Create the first item to get started.",
-        action: "Create item",
-      },
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      title: "Nothing here yet",
+      description: "Create the first item to get started.",
+      action: "Create item",
     },
-    { name: "compact", props: { title: "No results" } },
-  ] as const satisfies readonly CliExample<EmptyStateCliProps>[],
-);
+  },
+  { name: "compact", props: { title: "No results" } },
+] as const satisfies readonly CliExample<EmptyStateCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
+/** Deterministic Empty state states rendered by the CLI catalogue. */
+export const cliExamples: readonly CliExample<EmptyStateCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one framed terminal placeholder with an optional next action. */
 const renderEmptyStateCli: CliRenderer<EmptyStateCliProps> = (

@@ -40,33 +40,33 @@ export interface DocsNavCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [{
+  name: "default",
+  props: {
+    sections: [
+      {
+        title: "Orientation",
+        items: [
+          { label: "Overview", href: "#top", current: true },
+          { label: "Getting started", href: "#components" },
+          { label: "Concepts", href: "#group-docs" },
+        ],
+      },
+      {
+        title: "Reference",
+        items: [
+          { label: "Configuration", href: "#component-docs-nav" },
+          { label: "Glossary", href: "#component-pager" },
+        ],
+      },
+    ],
+  },
+}] as const satisfies readonly CliExample<DocsNavCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Docs nav states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [{
-    name: "default",
-    props: {
-      sections: [
-        {
-          title: "Orientation",
-          items: [
-            { label: "Overview", href: "#top", current: true },
-            { label: "Getting started", href: "#components" },
-            { label: "Concepts", href: "#group-docs" },
-          ],
-        },
-        {
-          title: "Reference",
-          items: [
-            { label: "Configuration", href: "#component-docs-nav" },
-            { label: "Glossary", href: "#component-pager" },
-          ],
-        },
-      ],
-    },
-  }] as const satisfies readonly CliExample<DocsNavCliProps>[],
-);
+export const cliExamples: readonly CliExample<DocsNavCliProps>[] =
+  cliExampleImplementations;
 
 function hanging(prefix: string, value: string, width: number): string {
   const lines = wrapText(value, Math.max(1, width - measureText(prefix)));

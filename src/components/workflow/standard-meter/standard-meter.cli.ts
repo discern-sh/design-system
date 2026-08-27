@@ -39,39 +39,39 @@ export interface StandardMeterCliProps extends TerminalMotifOptions {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      label: "Line coverage",
+      value: 92.4,
+      limit: 80,
+      direction: "floor",
+      min: 0,
+      max: 100,
+      trend: "improving",
+      formatValue: (value) => `${value}%`,
+    },
+  },
+  {
+    name: "ceiling",
+    props: {
+      label: "Stylesheet density",
+      value: 2324,
+      limit: 2350,
+      direction: "ceiling",
+      min: 0,
+      max: 2350,
+      trend: "drifting",
+      formatValue: (value) => `${value} B`,
+    },
+  },
+] as const satisfies readonly CliExample<StandardMeterCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Standard meter states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        label: "Line coverage",
-        value: 92.4,
-        limit: 80,
-        direction: "floor",
-        min: 0,
-        max: 100,
-        trend: "improving",
-        formatValue: (value) => `${value}%`,
-      },
-    },
-    {
-      name: "ceiling",
-      props: {
-        label: "Stylesheet density",
-        value: 2324,
-        limit: 2350,
-        direction: "ceiling",
-        min: 0,
-        max: 2350,
-        trend: "drifting",
-        formatValue: (value) => `${value} B`,
-      },
-    },
-  ] as const satisfies readonly CliExample<StandardMeterCliProps>[],
-);
+export const cliExamples: readonly CliExample<StandardMeterCliProps>[] =
+  cliExampleImplementations;
 
 function assertFinite(value: number, name: string): void {
   if (!Number.isFinite(value)) {

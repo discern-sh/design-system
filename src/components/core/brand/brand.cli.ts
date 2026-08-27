@@ -37,26 +37,26 @@ export interface BrandCliProps extends TerminalMotifOptions {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  { name: "default", props: { name: "Waypoint" } },
+  {
+    name: "tagline",
+    props: {
+      name: "Northstar",
+      tagline: "Field guide",
+      size: "lg",
+    },
+  },
+  {
+    name: "name-only",
+    props: { name: "Open Index", mark: false, typeface: "mono" },
+  },
+] as const satisfies readonly CliExample<BrandCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Brand states rendered by `deno task catalogue:cli brand`. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    { name: "default", props: { name: "Waypoint" } },
-    {
-      name: "tagline",
-      props: {
-        name: "Northstar",
-        tagline: "Field guide",
-        size: "lg",
-      },
-    },
-    {
-      name: "name-only",
-      props: { name: "Open Index", mark: false, typeface: "mono" },
-    },
-  ] as const satisfies readonly CliExample<BrandCliProps>[],
-);
+export const cliExamples: readonly CliExample<BrandCliProps>[] =
+  cliExampleImplementations;
 
 /** Render a width-bounded terminal brand lockup with an optional motif mark. */
 const renderBrandCli: CliRenderer<BrandCliProps> = (props, capabilities) => {

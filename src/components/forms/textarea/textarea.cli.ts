@@ -35,76 +35,80 @@ const base = {
   placeholder: "Describe the change",
 };
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      ...base,
+      lifecycle: { status: "active" },
+      presentation: "idle",
+    },
+  },
+  {
+    name: "active",
+    props: { ...base, lifecycle: { status: "active" } },
+  },
+  {
+    name: "filled",
+    props: {
+      ...base,
+      value: "Adds reusable examples.",
+      cursor: 23,
+      lifecycle: { status: "active" },
+      presentation: "filled",
+    },
+  },
+  {
+    name: "validation-error",
+    props: {
+      ...base,
+      value: "Short",
+      cursor: 5,
+      lifecycle: { status: "validation-error", message: "Add more detail" },
+    },
+  },
+  {
+    name: "disabled",
+    props: {
+      ...base,
+      value: "Managed by policy",
+      cursor: 17,
+      lifecycle: { status: "active" },
+      presentation: "disabled",
+    },
+  },
+  {
+    name: "submitted",
+    props: {
+      ...base,
+      value: "Adds reusable examples.",
+      cursor: 23,
+      lifecycle: { status: "submitted" },
+    },
+  },
+  {
+    name: "cancelled",
+    props: {
+      ...base,
+      lifecycle: { status: "cancelled", reason: "Draft discarded" },
+    },
+  },
+  {
+    name: "tall-window",
+    props: {
+      ...base,
+      value: "One\nTwo\nThree\nFour\nFive\nSix\nSeven",
+      cursor: 33,
+      rows: 6,
+      lifecycle: { status: "active" },
+    },
+  },
+] as const satisfies readonly CliExample<TextareaCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Every static Textarea state rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: { ...base, lifecycle: { status: "active" }, presentation: "idle" },
-    },
-    {
-      name: "active",
-      props: { ...base, lifecycle: { status: "active" } },
-    },
-    {
-      name: "filled",
-      props: {
-        ...base,
-        value: "Adds reusable examples.",
-        cursor: 23,
-        lifecycle: { status: "active" },
-        presentation: "filled",
-      },
-    },
-    {
-      name: "validation-error",
-      props: {
-        ...base,
-        value: "Short",
-        cursor: 5,
-        lifecycle: { status: "validation-error", message: "Add more detail" },
-      },
-    },
-    {
-      name: "disabled",
-      props: {
-        ...base,
-        value: "Managed by policy",
-        cursor: 17,
-        lifecycle: { status: "active" },
-        presentation: "disabled",
-      },
-    },
-    {
-      name: "submitted",
-      props: {
-        ...base,
-        value: "Adds reusable examples.",
-        cursor: 23,
-        lifecycle: { status: "submitted" },
-      },
-    },
-    {
-      name: "cancelled",
-      props: {
-        ...base,
-        lifecycle: { status: "cancelled", reason: "Draft discarded" },
-      },
-    },
-    {
-      name: "tall-window",
-      props: {
-        ...base,
-        value: "One\nTwo\nThree\nFour\nFive\nSix\nSeven",
-        cursor: 33,
-        rows: 6,
-        lifecycle: { status: "active" },
-      },
-    },
-  ] as const satisfies readonly CliExample<TextareaCliProps>[],
-);
+export const cliExamples: readonly CliExample<TextareaCliProps>[] =
+  cliExampleImplementations;
 
 function cursorSentinel(value: string): string {
   let marker = "\u{e000}";

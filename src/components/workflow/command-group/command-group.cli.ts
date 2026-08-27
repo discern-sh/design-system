@@ -31,23 +31,23 @@ export interface CommandGroupCliProps {
   readonly maxWidth?: number;
 }
 
-/** Deterministic Command group states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        title: "Choose a verification depth",
-        items: [
-          { label: "Inspect the working tree", command: "git status" },
-          { label: "Run the full test task", command: "deno task test" },
-        ],
-      },
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      title: "Choose a verification depth",
+      items: [
+        { label: "Inspect the working tree", command: "git status" },
+        { label: "Run the full test task", command: "deno task test" },
+      ],
     },
-  ] as const satisfies readonly CliExample<CommandGroupCliProps>[],
-);
+  },
+] as const satisfies readonly CliExample<CommandGroupCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
+/** Deterministic Command group states rendered by the CLI catalogue. */
+export const cliExamples: readonly CliExample<CommandGroupCliProps>[] =
+  cliExampleImplementations;
 
 /** Render ordered, complete terminal command alternatives. */
 const renderCommandGroupCli: CliRenderer<CommandGroupCliProps> = (

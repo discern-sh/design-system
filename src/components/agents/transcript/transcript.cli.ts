@@ -30,26 +30,26 @@ export interface TranscriptCliProps {
   readonly maxWidth?: number;
 }
 
-/** Deterministic Transcript states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        turns: [
-          { speaker: "Maintainer", body: "Run the complete gate." },
-          {
-            speaker: "Agent",
-            aside: "after verification",
-            body: "The gate passed and the proof is recorded.",
-          },
-        ],
-      },
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      turns: [
+        { speaker: "Maintainer", body: "Run the complete gate." },
+        {
+          speaker: "Agent",
+          aside: "after verification",
+          body: "The gate passed and the proof is recorded.",
+        },
+      ],
     },
-  ] as const satisfies readonly CliExample<TranscriptCliProps>[],
-);
+  },
+] as const satisfies readonly CliExample<TranscriptCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
+/** Deterministic Transcript states rendered by the CLI catalogue. */
+export const cliExamples: readonly CliExample<TranscriptCliProps>[] =
+  cliExampleImplementations;
 
 /** Render ordered speaker turns with bodies indented beneath their identity. */
 const renderTranscriptCli: CliRenderer<TranscriptCliProps> = (

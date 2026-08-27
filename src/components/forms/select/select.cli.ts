@@ -54,84 +54,84 @@ const base = {
   highlightedIndex: 0,
 };
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      ...base,
+      lifecycle: { status: "active" },
+      presentation: "idle",
+      placeholder: "Choose an environment",
+    },
+  },
+  {
+    name: "grouped",
+    props: {
+      ...base,
+      options: groupedOptions,
+      highlightedIndex: 2,
+      selectedId: "bravo",
+      lifecycle: { status: "active" },
+    },
+  },
+  {
+    name: "active",
+    props: {
+      ...base,
+      highlightedIndex: 1,
+      lifecycle: { status: "active" },
+    },
+  },
+  {
+    name: "filled",
+    props: {
+      ...base,
+      selectedId: "bravo",
+      lifecycle: { status: "active" },
+      presentation: "filled",
+    },
+  },
+  {
+    name: "validation-error",
+    props: {
+      ...base,
+      lifecycle: {
+        status: "validation-error",
+        message: "Choose an environment",
+      },
+    },
+  },
+  {
+    name: "disabled",
+    props: {
+      ...base,
+      selectedId: "alpha",
+      lifecycle: { status: "active" },
+      presentation: "disabled",
+    },
+  },
+  {
+    name: "submitted",
+    props: {
+      ...base,
+      selectedId: "bravo",
+      lifecycle: { status: "submitted" },
+    },
+  },
+  {
+    name: "cancelled",
+    props: {
+      ...base,
+      lifecycle: { status: "cancelled", reason: "Selection cancelled" },
+      placeholder: "Choose an environment",
+    },
+  },
+] as const satisfies readonly CliExample<SelectCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deliberate human Select postures shared with the browser Catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        ...base,
-        lifecycle: { status: "active" },
-        presentation: "idle",
-        placeholder: "Choose an environment",
-      },
-    },
-    {
-      name: "grouped",
-      props: {
-        ...base,
-        options: groupedOptions,
-        highlightedIndex: 2,
-        selectedId: "bravo",
-        lifecycle: { status: "active" },
-      },
-    },
-    {
-      name: "active",
-      props: {
-        ...base,
-        highlightedIndex: 1,
-        lifecycle: { status: "active" },
-      },
-    },
-    {
-      name: "filled",
-      props: {
-        ...base,
-        selectedId: "bravo",
-        lifecycle: { status: "active" },
-        presentation: "filled",
-      },
-    },
-    {
-      name: "validation-error",
-      props: {
-        ...base,
-        lifecycle: {
-          status: "validation-error",
-          message: "Choose an environment",
-        },
-      },
-    },
-    {
-      name: "disabled",
-      props: {
-        ...base,
-        selectedId: "alpha",
-        lifecycle: { status: "active" },
-        presentation: "disabled",
-      },
-    },
-    {
-      name: "submitted",
-      props: {
-        ...base,
-        selectedId: "bravo",
-        lifecycle: { status: "submitted" },
-      },
-    },
-    {
-      name: "cancelled",
-      props: {
-        ...base,
-        lifecycle: { status: "cancelled", reason: "Selection cancelled" },
-        placeholder: "Choose an environment",
-      },
-    },
-  ] as const satisfies readonly CliExample<SelectCliProps>[],
-);
+export const cliExamples: readonly CliExample<SelectCliProps>[] =
+  cliExampleImplementations;
 
 /** Render a Wave 1 single-selection state as a collapsed or expanded terminal Select. */
 const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {

@@ -115,6 +115,14 @@ Deno.test("component example vocabularies bind every live Web and CLI implementa
       expectedWeb,
       candidate.meta.slug,
     );
+    const webIds = new Set(expectedWeb.map(({ id }) => id));
+    for (const scenario of candidate.conformance) {
+      assert(
+        webIds.has(scenario.example),
+        `${candidate.meta.slug} conformance scenario targets undeclared Web example ${scenario.example}`,
+      );
+      assert(scenario.name.trim().length > 0, candidate.meta.slug);
+    }
     for (const example of candidate.webExamples) {
       assertEquals(
         catalogueWebExample(candidate.meta.slug, example.id),

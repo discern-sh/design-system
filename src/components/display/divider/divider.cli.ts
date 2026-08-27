@@ -42,15 +42,15 @@ export interface DividerCliProps extends TerminalMotifOptions {
   readonly width?: number;
 }
 
+const cliExampleImplementations = [
+  { name: "default", props: { width: 24 } },
+  { name: "labelled", props: { label: "01 — Foundations", width: 32 } },
+] as const satisfies readonly CliExample<DividerCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Divider states rendered by `deno task catalogue:cli divider`. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    { name: "default", props: { width: 24 } },
-    { name: "labelled", props: { label: "01 — Foundations", width: 32 } },
-  ] as const satisfies readonly CliExample<DividerCliProps>[],
-);
+export const cliExamples: readonly CliExample<DividerCliProps>[] =
+  cliExampleImplementations;
 
 /** Render Divider's centred and leading-marker rules plus vertical patterns. */
 const renderDividerCli: CliRenderer<DividerCliProps> = (

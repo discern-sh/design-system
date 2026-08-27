@@ -51,44 +51,44 @@ export interface VerificationReportCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      title: "Checkout refactor",
+      stamp: "pass",
+      meta: [
+        { label: "Branch", value: "agent/checkout-flow" },
+        { label: "Commit", value: "4f2c9d1" },
+      ],
+      checks: [
+        { label: "Format", state: "pass" },
+        { label: "Types", state: "pass" },
+        { label: "Tests", state: "pass", value: "184 passed" },
+      ],
+      summary: "Ready for review",
+    },
+  },
+  {
+    name: "failure",
+    props: {
+      title: "Payment step",
+      stamp: "fail",
+      checks: [
+        { label: "Format", state: "pass" },
+        { label: "Types", state: "pass" },
+        { label: "Tests", state: "fail", value: "2 of 184 failing" },
+        { label: "Preview", state: "skip" },
+      ],
+      footer: "Fix the failing cases before handing off.",
+    },
+  },
+] as const satisfies readonly CliExample<VerificationReportCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Verification report states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        title: "Checkout refactor",
-        stamp: "pass",
-        meta: [
-          { label: "Branch", value: "agent/checkout-flow" },
-          { label: "Commit", value: "4f2c9d1" },
-        ],
-        checks: [
-          { label: "Format", state: "pass" },
-          { label: "Types", state: "pass" },
-          { label: "Tests", state: "pass", value: "184 passed" },
-        ],
-        summary: "Ready for review",
-      },
-    },
-    {
-      name: "failure",
-      props: {
-        title: "Payment step",
-        stamp: "fail",
-        checks: [
-          { label: "Format", state: "pass" },
-          { label: "Types", state: "pass" },
-          { label: "Tests", state: "fail", value: "2 of 184 failing" },
-          { label: "Preview", state: "skip" },
-        ],
-        footer: "Fix the failing cases before handing off.",
-      },
-    },
-  ] as const satisfies readonly CliExample<VerificationReportCliProps>[],
-);
+export const cliExamples: readonly CliExample<VerificationReportCliProps>[] =
+  cliExampleImplementations;
 
 function checkGlyph(
   state: VerificationReportCheckState,

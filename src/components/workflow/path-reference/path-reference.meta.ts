@@ -27,12 +27,10 @@ const meta = {
   ],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "default", label: "Inline path" },
-    { id: "long-path", label: "Long copyable path" },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "default", label: "Inline path" },
+  { id: "long-path", label: "Long copyable path" },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

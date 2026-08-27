@@ -38,30 +38,29 @@ export interface CaseStudyCliProps {
   readonly width?: number;
 }
 
-/** Deterministic Case study states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        eyebrow: "Example case study",
-        title: "From scattered notes to a repeatable review habit.",
-        summary:
-          "A small team gave every review the same clear starting point.",
-        body:
-          "Shared evidence replaced private checklists and made decisions easier to revisit.",
-        stats: [
-          { value: "42%", label: "less review rework" },
-          { value: "11", label: "teams enrolled" },
-          { value: "2 wk", label: "to broad adoption" },
-        ],
-        action: "Read the full story",
-      },
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      eyebrow: "Example case study",
+      title: "From scattered notes to a repeatable review habit.",
+      summary: "A small team gave every review the same clear starting point.",
+      body:
+        "Shared evidence replaced private checklists and made decisions easier to revisit.",
+      stats: [
+        { value: "42%", label: "less review rework" },
+        { value: "11", label: "teams enrolled" },
+        { value: "2 wk", label: "to broad adoption" },
+      ],
+      action: "Read the full story",
     },
-  ] as const satisfies readonly CliExample<CaseStudyCliProps>[],
-);
+  },
+] as const satisfies readonly CliExample<CaseStudyCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
+/** Deterministic Case study states rendered by the CLI catalogue. */
+export const cliExamples: readonly CliExample<CaseStudyCliProps>[] =
+  cliExampleImplementations;
 
 /** Render a framed terminal proof story with compact outcome metrics. */
 const renderCaseStudyCli: CliRenderer<CaseStudyCliProps> = (

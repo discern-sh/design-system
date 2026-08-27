@@ -21,13 +21,11 @@ const meta = {
   cli: { stance: "rendered" },
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "default", label: "Section heading" },
-    { id: "accent", label: "Accented phrase" },
-    { id: "rich-content", label: "Rich inline content" },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "default", label: "Section heading" },
+  { id: "accent", label: "Accented phrase" },
+  { id: "rich-content", label: "Rich inline content" },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

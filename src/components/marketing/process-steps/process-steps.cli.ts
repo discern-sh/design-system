@@ -38,75 +38,75 @@ export interface ProcessStepsCliProps
   readonly width?: number;
 }
 
-/** Deterministic Process steps states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        kind: "sequential-form",
-        label: "A clear path from input to outcome.",
-        description:
-          "Use the sequence to make a new process feel understandable before the reader commits.",
-        lifecycle: { status: "active" },
-        activePhase: 1,
-        beaconPhase: 2,
-        sections: [
-          {
-            id: "connect",
-            label: "Connect",
-            status: "complete",
-            summary: "Complete",
-          },
-          {
-            id: "shape",
-            label: "Shape",
-            status: "active",
-            summary: "In progress",
-          },
-          {
-            id: "build",
-            label: "Build",
-            status: "pending",
-            summary: "Waiting",
-          },
-          {
-            id: "prove",
-            label: "Prove",
-            status: "pending",
-            summary: "Waiting",
-          },
-          {
-            id: "share",
-            label: "Share",
-            status: "pending",
-            summary: "Waiting",
-          },
-        ],
-      },
-    },
-    {
-      name: "error",
-      props: {
-        kind: "sequential-form",
-        label: "Resolve the blocked step before continuing.",
-        description: "The highlighted correction keeps the sequence legible.",
-        lifecycle: {
-          status: "validation-error",
-          message: "Shape needs attention",
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      kind: "sequential-form",
+      label: "A clear path from input to outcome.",
+      description:
+        "Use the sequence to make a new process feel understandable before the reader commits.",
+      lifecycle: { status: "active" },
+      activePhase: 1,
+      beaconPhase: 2,
+      sections: [
+        {
+          id: "connect",
+          label: "Connect",
+          status: "complete",
+          summary: "Complete",
         },
-        activePhase: 1,
-        sections: [
-          { id: "connect", label: "Connect", status: "complete" },
-          { id: "shape", label: "Shape", status: "error" },
-          { id: "build", label: "Build", status: "pending" },
-        ],
-      },
+        {
+          id: "shape",
+          label: "Shape",
+          status: "active",
+          summary: "In progress",
+        },
+        {
+          id: "build",
+          label: "Build",
+          status: "pending",
+          summary: "Waiting",
+        },
+        {
+          id: "prove",
+          label: "Prove",
+          status: "pending",
+          summary: "Waiting",
+        },
+        {
+          id: "share",
+          label: "Share",
+          status: "pending",
+          summary: "Waiting",
+        },
+      ],
     },
-  ] as const satisfies readonly CliExample<ProcessStepsCliProps>[],
-);
+  },
+  {
+    name: "error",
+    props: {
+      kind: "sequential-form",
+      label: "Resolve the blocked step before continuing.",
+      description: "The highlighted correction keeps the sequence legible.",
+      lifecycle: {
+        status: "validation-error",
+        message: "Shape needs attention",
+      },
+      activePhase: 1,
+      sections: [
+        { id: "connect", label: "Connect", status: "complete" },
+        { id: "shape", label: "Shape", status: "error" },
+        { id: "build", label: "Build", status: "pending" },
+      ],
+    },
+  },
+] as const satisfies readonly CliExample<ProcessStepsCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
+/** Deterministic Process steps states rendered by the CLI catalogue. */
+export const cliExamples: readonly CliExample<ProcessStepsCliProps>[] =
+  cliExampleImplementations;
 
 /** Render a sequential frame through the package motif-stepper authority. */
 const renderProcessStepsCli: CliRenderer<ProcessStepsCliProps> = (

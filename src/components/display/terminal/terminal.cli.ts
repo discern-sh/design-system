@@ -23,29 +23,29 @@ export interface TerminalCliProps {
   readonly width?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "standard",
+    props: {
+      title: "~/workspace — check",
+      body:
+        "$ task check\nCheck formatting, types, and tests\n✓ 18 tests passed\n$ ",
+    },
+  },
+  {
+    name: "showcase",
+    props: {
+      title: "structured result",
+      body:
+        'structured output\n{\n  "ok": false,\n  "error": "out_of_date",\n  "state": "refresh required",\n  "next": "refresh state"\n}\nbounded context | explicit state | useful next step',
+    },
+  },
+] as const satisfies readonly CliExample<TerminalCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Terminal states rendered by `deno task catalogue:cli terminal`. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "standard",
-      props: {
-        title: "~/workspace — check",
-        body:
-          "$ task check\nCheck formatting, types, and tests\n✓ 18 tests passed\n$ ",
-      },
-    },
-    {
-      name: "showcase",
-      props: {
-        title: "structured result",
-        body:
-          'structured output\n{\n  "ok": false,\n  "error": "out_of_date",\n  "state": "refresh required",\n  "next": "refresh state"\n}\nbounded context | explicit state | useful next step',
-      },
-    },
-  ] as const satisfies readonly CliExample<TerminalCliProps>[],
-);
+export const cliExamples: readonly CliExample<TerminalCliProps>[] =
+  cliExampleImplementations;
 
 /** Render a width-bounded Terminal session frame behind its fixed mark. */
 const renderTerminalCli: CliRenderer<TerminalCliProps> = (

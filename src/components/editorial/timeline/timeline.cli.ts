@@ -41,37 +41,37 @@ export interface TimelineCliProps extends TerminalMotifOptions {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [{
+  name: "default",
+  props: {
+    eyebrow: "Publication history",
+    title: "A feature from draft to print.",
+    items: [
+      {
+        date: "Week 01",
+        title: "Draft",
+        description: "The initial outline is complete.",
+        status: "complete",
+      },
+      {
+        date: "Week 03",
+        title: "Edit",
+        description: "Supporting details are under review.",
+        status: "current",
+      },
+      {
+        date: "Week 06",
+        title: "Publish",
+        description: "Final copy is scheduled.",
+      },
+    ],
+  },
+}] as const satisfies readonly CliExample<TimelineCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Timeline states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [{
-    name: "default",
-    props: {
-      eyebrow: "Publication history",
-      title: "A feature from draft to print.",
-      items: [
-        {
-          date: "Week 01",
-          title: "Draft",
-          description: "The initial outline is complete.",
-          status: "complete",
-        },
-        {
-          date: "Week 03",
-          title: "Edit",
-          description: "Supporting details are under review.",
-          status: "current",
-        },
-        {
-          date: "Week 06",
-          title: "Publish",
-          description: "Final copy is scheduled.",
-        },
-      ],
-    },
-  }] as const satisfies readonly CliExample<TimelineCliProps>[],
-);
+export const cliExamples: readonly CliExample<TimelineCliProps>[] =
+  cliExampleImplementations;
 
 const STATUS_TONES = {
   complete: "success",

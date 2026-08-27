@@ -4,6 +4,7 @@ import { TaskMetadata } from "./task-metadata.tsx";
 import meta, { componentExampleVocabulary } from "./task-metadata.meta.ts";
 
 export const conformance = [{
+  example: "file-changing",
   name: "all task facts remain contained at a narrow viewport",
   viewport: { width: 390, height: 1400 },
   steps: [{

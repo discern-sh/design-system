@@ -34,43 +34,43 @@ export interface AudienceGridCliProps {
   readonly width?: number;
 }
 
-/** Deterministic Audience grid states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        eyebrow: "Choose your path",
-        title: "One system, three useful points of view.",
-        description:
-          "Start with the outcome that matches the work in front of you.",
-        items: [
-          {
-            eyebrow: "For builders",
-            title: "Move from idea to reliable release.",
-            description:
-              "Compose the pieces you need without giving up a coherent system.",
-            featured: true,
-          },
-          {
-            eyebrow: "For reviewers",
-            title: "See the evidence behind the result.",
-            description:
-              "Turn invisible implementation detail into a reviewable account.",
-          },
-          {
-            eyebrow: "For teams",
-            title: "Give every project the same strong defaults.",
-            description:
-              "Share a standard without forcing every team into the same stack.",
-          },
-        ],
-      },
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      eyebrow: "Choose your path",
+      title: "One system, three useful points of view.",
+      description:
+        "Start with the outcome that matches the work in front of you.",
+      items: [
+        {
+          eyebrow: "For builders",
+          title: "Move from idea to reliable release.",
+          description:
+            "Compose the pieces you need without giving up a coherent system.",
+          featured: true,
+        },
+        {
+          eyebrow: "For reviewers",
+          title: "See the evidence behind the result.",
+          description:
+            "Turn invisible implementation detail into a reviewable account.",
+        },
+        {
+          eyebrow: "For teams",
+          title: "Give every project the same strong defaults.",
+          description:
+            "Share a standard without forcing every team into the same stack.",
+        },
+      ],
     },
-  ] as const satisfies readonly CliExample<AudienceGridCliProps>[],
-);
+  },
+] as const satisfies readonly CliExample<AudienceGridCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
+/** Deterministic Audience grid states rendered by the CLI catalogue. */
+export const cliExamples: readonly CliExample<AudienceGridCliProps>[] =
+  cliExampleImplementations;
 
 /** Render audience cards as an adaptive one- or two-column terminal grid. */
 const renderAudienceGridCli: CliRenderer<AudienceGridCliProps> = (

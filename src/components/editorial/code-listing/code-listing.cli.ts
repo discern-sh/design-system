@@ -38,41 +38,41 @@ export interface CodeListingCliProps {
   readonly maxWidth?: number;
 }
 
-/** Deterministic Code listing states rendered by the CLI catalogue. */
 const example = `function readingTime(words: number): number {
   return Math.ceil(words / 220);
 }
 
 console.log(readingTime(1540));`;
 
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "standard",
-      props: {
-        filename: "reading-time.ts",
-        language: "TypeScript",
-        code: example,
-        highlightLines: [1, 2],
-        caption: "Highlighted lines draw attention to the calculation.",
-      },
+const cliExampleImplementations = [
+  {
+    name: "standard",
+    props: {
+      filename: "reading-time.ts",
+      language: "TypeScript",
+      code: example,
+      highlightLines: [1, 2],
+      caption: "Highlighted lines draw attention to the calculation.",
     },
-    {
-      name: "showcase",
-      props: {
-        filename: "reading-time.ts",
-        language: "TypeScript",
-        code: example,
-        highlightLines: [1, 2],
-        caption:
-          "The showcase treatment gives the same source stronger visual emphasis.",
-        variant: "showcase",
-      },
+  },
+  {
+    name: "showcase",
+    props: {
+      filename: "reading-time.ts",
+      language: "TypeScript",
+      code: example,
+      highlightLines: [1, 2],
+      caption:
+        "The showcase treatment gives the same source stronger visual emphasis.",
+      variant: "showcase",
     },
-  ] as const satisfies readonly CliExample<CodeListingCliProps>[],
-);
+  },
+] as const satisfies readonly CliExample<CodeListingCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
+/** Deterministic Code listing states rendered by the CLI catalogue. */
+export const cliExamples: readonly CliExample<CodeListingCliProps>[] =
+  cliExampleImplementations;
 
 function renderListingFrame(
   lines: readonly string[],

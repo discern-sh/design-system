@@ -53,43 +53,43 @@ export interface WorklogCliProps extends TerminalMotifOptions {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      entries: [
+        { label: "Generate registry", status: "done", meta: "120ms" },
+        {
+          label: "Run exact-frame tests",
+          status: "active",
+          detail: "Testing every capability level.",
+          phase: 2,
+        },
+        { label: "Hand off for review", status: "queued" },
+      ],
+    },
+  },
+  {
+    name: "failure",
+    props: {
+      entries: [
+        { label: "Format and build", status: "done", meta: "11s" },
+        {
+          label: "Run the test suite",
+          status: "failed",
+          detail: "2 of 184 cases failing",
+          meta: "38s",
+        },
+        { label: "Publish the preview", status: "skipped" },
+      ],
+    },
+  },
+] as const satisfies readonly CliExample<WorklogCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Worklog states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        entries: [
-          { label: "Generate registry", status: "done", meta: "120ms" },
-          {
-            label: "Run exact-frame tests",
-            status: "active",
-            detail: "Testing every capability level.",
-            phase: 2,
-          },
-          { label: "Hand off for review", status: "queued" },
-        ],
-      },
-    },
-    {
-      name: "failure",
-      props: {
-        entries: [
-          { label: "Format and build", status: "done", meta: "11s" },
-          {
-            label: "Run the test suite",
-            status: "failed",
-            detail: "2 of 184 cases failing",
-            meta: "38s",
-          },
-          { label: "Publish the preview", status: "skipped" },
-        ],
-      },
-    },
-  ] as const satisfies readonly CliExample<WorklogCliProps>[],
-);
+export const cliExamples: readonly CliExample<WorklogCliProps>[] =
+  cliExampleImplementations;
 
 function staticMarker(
   status: Exclude<WorklogStatus, "active">,

@@ -22,15 +22,15 @@ export interface KbdCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  { name: "default", props: { label: "Enter" } },
+  { name: "key-chord", props: { label: "Ctrl+Shift+P" } },
+] as const satisfies readonly CliExample<KbdCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Kbd states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    { name: "default", props: { label: "Enter" } },
-    { name: "key-chord", props: { label: "Ctrl+Shift+P" } },
-  ] as const satisfies readonly CliExample<KbdCliProps>[],
-);
+export const cliExamples: readonly CliExample<KbdCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one compact terminal keycap chip. */
 const renderKbdCli: CliRenderer<KbdCliProps> = (props, capabilities) => {

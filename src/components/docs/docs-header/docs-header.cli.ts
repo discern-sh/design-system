@@ -30,19 +30,19 @@ export interface DocsHeaderCliProps extends TerminalMotifOptions {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [{
+  name: "default",
+  props: {
+    brand: "Lorem manual",
+    middle: "Search Ctrl+K",
+    actions: ["Consectetur"],
+  },
+}] as const satisfies readonly CliExample<DocsHeaderCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Docs header states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [{
-    name: "default",
-    props: {
-      brand: "Lorem manual",
-      middle: "Search Ctrl+K",
-      actions: ["Consectetur"],
-    },
-  }] as const satisfies readonly CliExample<DocsHeaderCliProps>[],
-);
+export const cliExamples: readonly CliExample<DocsHeaderCliProps>[] =
+  cliExampleImplementations;
 
 /** Render a documentation masthead as a labeled motif rule and context row. */
 const renderDocsHeaderCli: CliRenderer<DocsHeaderCliProps> = (

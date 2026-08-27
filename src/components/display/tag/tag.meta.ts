@@ -10,12 +10,10 @@ const meta = {
   cli: { stance: "rendered" },
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "default", label: "Plain" },
-    { id: "removable", label: "Removable" },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "default", label: "Plain" },
+  { id: "removable", label: "Removable" },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

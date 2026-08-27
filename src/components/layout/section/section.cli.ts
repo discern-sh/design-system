@@ -50,32 +50,32 @@ const SPACING_STEPS: Readonly<Record<SectionSpacing, 0 | 2 | 4 | 6>> = {
   lg: 6,
 };
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      title: "Foundation",
+      body: "Shared design language",
+      surface: "surface",
+      spacing: "sm",
+      width: 32,
+    },
+  },
+  {
+    name: "sunken",
+    props: {
+      body: "Quiet supporting material",
+      surface: "sunken",
+      spacing: "sm",
+      width: 24,
+    },
+  },
+] as const satisfies readonly CliExample<SectionCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deliberate human Section postures shared with the browser Catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        title: "Foundation",
-        body: "Shared design language",
-        surface: "surface",
-        spacing: "sm",
-        width: 32,
-      },
-    },
-    {
-      name: "sunken",
-      props: {
-        body: "Quiet supporting material",
-        surface: "sunken",
-        spacing: "sm",
-        width: 24,
-      },
-    },
-  ] as const satisfies readonly CliExample<SectionCliProps>[],
-);
+export const cliExamples: readonly CliExample<SectionCliProps>[] =
+  cliExampleImplementations;
 
 /** Compose a terminal section from layout primitives and motif treatments. */
 const renderSectionCli: CliRenderer<SectionCliProps> = (

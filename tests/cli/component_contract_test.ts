@@ -176,6 +176,7 @@ Deno.test("canonical example authority and the complete CLI graph remain React-f
       "../../src/types/component-examples.ts",
       "../../src/generated/cli-renderers.ts",
       "../../scripts/generated/component-examples.ts",
+      "../../discern/scripts/measure-cli-pending.ts",
     ]
   ) {
     const output = await new Deno.Command(Deno.execPath(), {

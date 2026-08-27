@@ -33,26 +33,26 @@ const PADDING: Readonly<Record<IconButtonSize, number>> = {
   lg: 2,
 };
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: { icon: "✦", asciiIcon: "*", label: "Generate" },
+  },
+  {
+    name: "outline",
+    props: {
+      icon: "ⓘ",
+      asciiIcon: "i",
+      label: "Information",
+      variant: "outline",
+    },
+  },
+] as const satisfies readonly CliExample<IconButtonCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Icon button states rendered by `deno task catalogue:cli icon-button`. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: { icon: "✦", asciiIcon: "*", label: "Generate" },
-    },
-    {
-      name: "outline",
-      props: {
-        icon: "ⓘ",
-        asciiIcon: "i",
-        label: "Information",
-        variant: "outline",
-      },
-    },
-  ] as const satisfies readonly CliExample<IconButtonCliProps>[],
-);
+export const cliExamples: readonly CliExample<IconButtonCliProps>[] =
+  cliExampleImplementations;
 
 /** Render a labelled terminal icon action with intentional ASCII fallback. */
 const renderIconButtonCli: CliRenderer<IconButtonCliProps> = (

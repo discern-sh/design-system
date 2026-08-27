@@ -45,15 +45,15 @@ const GLYPHS = {
   Record<IconCliGlyph, { readonly unicode: string; readonly ascii: string }>
 >;
 
+const cliExampleImplementations = [{
+  name: "default",
+  props: { glyph: "spark", label: "Generate", tone: "warning" },
+}] as const satisfies readonly CliExample<IconCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Icon states rendered by `deno task catalogue:cli icon`. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [{
-    name: "default",
-    props: { glyph: "spark", label: "Generate", tone: "warning" },
-  }] as const satisfies readonly CliExample<IconCliProps>[],
-);
+export const cliExamples: readonly CliExample<IconCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one named, capability-aware terminal glyph with an optional label. */
 const renderIconCli: CliRenderer<IconCliProps> = (props, capabilities) => {

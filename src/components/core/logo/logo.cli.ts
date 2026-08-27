@@ -31,22 +31,22 @@ export interface LogoCliProps extends TerminalMotifOptions {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  { name: "default", props: { text: "Waypoint" } },
+  {
+    name: "tile",
+    props: { text: "Northstar", treatment: "tile", size: "lg" },
+  },
+  {
+    name: "square",
+    props: { text: "N", shape: "square", treatment: "tile" },
+  },
+] as const satisfies readonly CliExample<LogoCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Logo states rendered by `deno task catalogue:cli logo`. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    { name: "default", props: { text: "Waypoint" } },
-    {
-      name: "tile",
-      props: { text: "Northstar", treatment: "tile", size: "lg" },
-    },
-    {
-      name: "square",
-      props: { text: "N", shape: "square", treatment: "tile" },
-    },
-  ] as const satisfies readonly CliExample<LogoCliProps>[],
-);
+export const cliExamples: readonly CliExample<LogoCliProps>[] =
+  cliExampleImplementations;
 
 /** Render a motif-led terminal wordmark in natural or square form. */
 const renderLogoCli: CliRenderer<LogoCliProps> = (props, capabilities) => {

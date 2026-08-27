@@ -23,15 +23,13 @@ const meta = {
   ],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "default", label: "Updated file" },
-    { id: "added", label: "Added file" },
-    { id: "generated", label: "Generated file" },
-    { id: "removed", label: "Removed file" },
-    { id: "unchanged", label: "Unchanged file" },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "default", label: "Updated file" },
+  { id: "added", label: "Added file" },
+  { id: "generated", label: "Generated file" },
+  { id: "removed", label: "Removed file" },
+  { id: "unchanged", label: "Unchanged file" },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

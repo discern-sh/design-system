@@ -27,21 +27,21 @@ export interface ClusterCliProps {
   readonly width?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: { items: ["Save", "Preview", "Cancel"], width: 24 },
+  },
+  {
+    name: "centred",
+    props: { items: ["One", "Two", "Three"], justify: "center", width: 20 },
+  },
+] as const satisfies readonly CliExample<ClusterCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Cluster states rendered by `deno task catalogue:cli cluster`. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: { items: ["Save", "Preview", "Cancel"], width: 24 },
-    },
-    {
-      name: "centred",
-      props: { items: ["One", "Two", "Three"], justify: "center", width: 20 },
-    },
-  ] as const satisfies readonly CliExample<ClusterCliProps>[],
-);
+export const cliExamples: readonly CliExample<ClusterCliProps>[] =
+  cliExampleImplementations;
 
 /** Wrap terminal items using the foundation Cluster combinator and Token gap. */
 const renderClusterCli: CliRenderer<ClusterCliProps> = (

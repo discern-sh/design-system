@@ -36,39 +36,39 @@ export interface DecisionRecordCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      identifier: "ADR 0012",
+      title: "Generated references have one authored source",
+      status: "accepted",
+      date: "2026-04-14",
+      dateLabel: "14 April 2026",
+      context: "Several generated references repeat the same facts.",
+      decision: "The source schema is their single authored source.",
+      consequences: "Contributors regenerate references after schema edits.",
+    },
+  },
+  {
+    name: "superseded",
+    props: {
+      identifier: "ADR 0007",
+      title: "Routes are registered by hand",
+      status: "superseded",
+      date: "2025-09-03",
+      dateLabel: "3 September 2025",
+      context: "The initial service used a short handwritten route index.",
+      decision: "Each route was added to that index manually.",
+      consequences: "Schema-driven routing replaces the handwritten index.",
+    },
+  },
+] as const satisfies readonly CliExample<DecisionRecordCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Decision record states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        identifier: "ADR 0012",
-        title: "Generated references have one authored source",
-        status: "accepted",
-        date: "2026-04-14",
-        dateLabel: "14 April 2026",
-        context: "Several generated references repeat the same facts.",
-        decision: "The source schema is their single authored source.",
-        consequences: "Contributors regenerate references after schema edits.",
-      },
-    },
-    {
-      name: "superseded",
-      props: {
-        identifier: "ADR 0007",
-        title: "Routes are registered by hand",
-        status: "superseded",
-        date: "2025-09-03",
-        dateLabel: "3 September 2025",
-        context: "The initial service used a short handwritten route index.",
-        decision: "Each route was added to that index manually.",
-        consequences: "Schema-driven routing replaces the handwritten index.",
-      },
-    },
-  ] as const satisfies readonly CliExample<DecisionRecordCliProps>[],
-);
+export const cliExamples: readonly CliExample<DecisionRecordCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one terminal architecture-decision account. */
 const renderDecisionRecordCli: CliRenderer<DecisionRecordCliProps> = (

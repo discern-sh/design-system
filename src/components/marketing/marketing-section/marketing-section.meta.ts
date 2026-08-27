@@ -26,16 +26,14 @@ const meta = {
   ],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "standard", label: "Standard canvas", only: "web" },
-    {
-      id: "spacious-contrast",
-      label: "Wide spacious contrast",
-      only: "web",
-    },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "standard", label: "Standard canvas", only: "web" },
+  {
+    id: "spacious-contrast",
+    label: "Wide spacious contrast",
+    only: "web",
+  },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

@@ -26,22 +26,22 @@ export interface PathReferenceCliProps {
   readonly maxWidth?: number;
 }
 
-/** Deterministic Path reference states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    { name: "default", props: { path: "/path/to/project/deno.json" } },
-    {
-      name: "long-path",
-      props: {
-        path:
-          "/path/to/a/deliberately/long/project/src/components/example/component.tsx",
-        maxWidth: 36,
-      },
+const cliExampleImplementations = [
+  { name: "default", props: { path: "/path/to/project/deno.json" } },
+  {
+    name: "long-path",
+    props: {
+      path:
+        "/path/to/a/deliberately/long/project/src/components/example/component.tsx",
+      maxWidth: 36,
     },
-  ] as const satisfies readonly CliExample<PathReferenceCliProps>[],
-);
+  },
+] as const satisfies readonly CliExample<PathReferenceCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
+/** Deterministic Path reference states rendered by the CLI catalogue. */
+export const cliExamples: readonly CliExample<PathReferenceCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one suffix-preserving terminal path reference. */
 const renderPathReferenceCli: CliRenderer<PathReferenceCliProps> = (

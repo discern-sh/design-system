@@ -22,13 +22,11 @@ const meta = {
   ],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "default", label: "Rich details", only: "web" },
-    { id: "inline", label: "Inline annotation", only: "web" },
-    { id: "overflow", label: "Overflow boundary", only: "web" },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "default", label: "Rich details", only: "web" },
+  { id: "inline", label: "Inline annotation", only: "web" },
+  { id: "overflow", label: "Overflow boundary", only: "web" },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

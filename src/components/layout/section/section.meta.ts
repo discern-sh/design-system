@@ -11,12 +11,10 @@ const meta = {
   purposes: ["marketing-site"],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "default", label: "Labelled section" },
-    { id: "sunken", label: "Sunken" },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "default", label: "Labelled section" },
+  { id: "sunken", label: "Sunken" },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

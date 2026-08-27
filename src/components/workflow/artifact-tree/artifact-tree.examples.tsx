@@ -10,6 +10,7 @@ const stressPath =
   `/workspace/packages/reference/generated/pages/api/${stressFilename}`;
 
 export const conformance = [{
+  example: "deep-tree",
   name:
     "six nested levels and a 60-character filename stay inside a mobile viewport",
   viewport: { width: 390, height: 844 },

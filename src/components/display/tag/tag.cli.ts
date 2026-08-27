@@ -23,15 +23,15 @@ export interface TagCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  { name: "default", props: { label: "Metadata" } },
+  { name: "removable", props: { label: "Ipsum", removable: true } },
+] as const satisfies readonly CliExample<TagCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Tag states rendered by `deno task catalogue:cli tag`. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    { name: "default", props: { label: "Metadata" } },
-    { name: "removable", props: { label: "Ipsum", removable: true } },
-  ] as const satisfies readonly CliExample<TagCliProps>[],
-);
+export const cliExamples: readonly CliExample<TagCliProps>[] =
+  cliExampleImplementations;
 
 /** Render a compact terminal metadata chip with an optional remove affordance. */
 const renderTagCli: CliRenderer<TagCliProps> = (props, capabilities) => {

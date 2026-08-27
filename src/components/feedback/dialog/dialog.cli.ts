@@ -27,38 +27,38 @@ export interface DialogCliProps {
   readonly width?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      kicker: "Confirm",
+      title: "Save changes?",
+      body: "This action makes the update available.",
+      actions: ["Cancel", "Save"],
+    },
+  },
+  {
+    name: "submitted",
+    props: {
+      title: "Changes saved",
+      body: "The update is now available.",
+      status: "submitted",
+    },
+  },
+  {
+    name: "cancelled",
+    props: {
+      title: "Save changes?",
+      body: "No changes were made.",
+      status: "cancelled",
+    },
+  },
+] as const satisfies readonly CliExample<DialogCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Dialog states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        kicker: "Confirm",
-        title: "Save changes?",
-        body: "This action makes the update available.",
-        actions: ["Cancel", "Save"],
-      },
-    },
-    {
-      name: "submitted",
-      props: {
-        title: "Changes saved",
-        body: "The update is now available.",
-        status: "submitted",
-      },
-    },
-    {
-      name: "cancelled",
-      props: {
-        title: "Save changes?",
-        body: "No changes were made.",
-        status: "cancelled",
-      },
-    },
-  ] as const satisfies readonly CliExample<DialogCliProps>[],
-);
+export const cliExamples: readonly CliExample<DialogCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one framed terminal modal block without owning interaction. */
 const renderDialogCli: CliRenderer<DialogCliProps> = (props, capabilities) => {

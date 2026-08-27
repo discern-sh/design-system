@@ -47,35 +47,35 @@ export interface PrerequisiteListCliProps {
   readonly maxWidth?: number;
 }
 
-/** Deterministic Prerequisite list states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        items: [
-          {
-            requirement: "The destination path is known.",
-            state: "required",
-            detail: "Confirm the path before starting the restore.",
-          },
-          {
-            requirement: "A current backup exists outside the source.",
-            state: "satisfied",
-            detail: "Verified by listing its contents.",
-          },
-          {
-            requirement: "The destination path is empty.",
-            state: "unresolved",
-            detail: "Inspect it before starting the restore.",
-          },
-        ],
-      },
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      items: [
+        {
+          requirement: "The destination path is known.",
+          state: "required",
+          detail: "Confirm the path before starting the restore.",
+        },
+        {
+          requirement: "A current backup exists outside the source.",
+          state: "satisfied",
+          detail: "Verified by listing its contents.",
+        },
+        {
+          requirement: "The destination path is empty.",
+          state: "unresolved",
+          detail: "Inspect it before starting the restore.",
+        },
+      ],
     },
-  ] as const satisfies readonly CliExample<PrerequisiteListCliProps>[],
-);
+  },
+] as const satisfies readonly CliExample<PrerequisiteListCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
+/** Deterministic Prerequisite list states rendered by the CLI catalogue. */
+export const cliExamples: readonly CliExample<PrerequisiteListCliProps>[] =
+  cliExampleImplementations;
 
 /** Render text-and-shape prerequisite states without relying on colour. */
 const renderPrerequisiteListCli: CliRenderer<PrerequisiteListCliProps> = (

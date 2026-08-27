@@ -30,24 +30,24 @@ export interface CtaBandCliProps {
   readonly width?: number;
 }
 
-/** Deterministic CTA band states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        eyebrow: "Continue",
-        title: "Make the next step clear.",
-        description:
-          "Pair one direct invitation with a quieter alternative and a short reassurance.",
-        actions: ["Primary action", "Secondary action"],
-        note: "Add a short reassurance when it helps the decision.",
-      },
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      eyebrow: "Continue",
+      title: "Make the next step clear.",
+      description:
+        "Pair one direct invitation with a quieter alternative and a short reassurance.",
+      actions: ["Primary action", "Secondary action"],
+      note: "Add a short reassurance when it helps the decision.",
     },
-  ] as const satisfies readonly CliExample<CtaBandCliProps>[],
-);
+  },
+] as const satisfies readonly CliExample<CtaBandCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
+/** Deterministic CTA band states rendered by the CLI catalogue. */
+export const cliExamples: readonly CliExample<CtaBandCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one high-emphasis boxed terminal call to action. */
 const renderCtaBandCli: CliRenderer<CtaBandCliProps> = (

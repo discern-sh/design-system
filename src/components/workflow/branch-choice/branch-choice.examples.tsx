@@ -4,6 +4,7 @@ import { BranchChoice } from "./branch-choice.tsx";
 import meta, { componentExampleVocabulary } from "./branch-choice.meta.ts";
 
 export const conformance = [{
+  example: "default",
   name: "linked routes follow their visible list order by keyboard",
   steps: [
     {
@@ -28,6 +29,7 @@ export const conformance = [{
     },
   ],
 }, {
+  example: "next-action",
   name: "four next actions remain contained at a narrow viewport",
   viewport: { width: 390, height: 1200 },
   steps: [{

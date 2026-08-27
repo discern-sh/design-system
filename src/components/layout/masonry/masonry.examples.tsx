@@ -7,6 +7,7 @@ import meta, { componentExampleVocabulary } from "./masonry.meta.ts";
 import { Masonry } from "./masonry.tsx";
 
 export const conformance = [{
+  example: "default",
   name: "variable-height peers reflow without horizontal overflow",
   viewport: { width: 390, height: 844 },
   steps: [{
@@ -92,16 +93,8 @@ function MasonryCards(
 
 function DefaultMasonryState() {
   return (
-    <Masonry minimum="14rem" gap={4}>
-      <MasonryCards entries={items.slice(0, 4)} />
-    </Masonry>
-  );
-}
-
-function ConformanceMasonryState() {
-  return (
     <Masonry minimum="14rem" gap={4} data-example-masonry>
-      <MasonryCards entries={items} />
+      <MasonryCards entries={items.slice(0, 4)} />
     </Masonry>
   );
 }
@@ -129,5 +122,5 @@ export const catalogueExamples = defineCatalogueExamples(
 );
 
 export default function MasonryExamples() {
-  return <ConformanceMasonryState />;
+  return <DefaultMasonryState />;
 }

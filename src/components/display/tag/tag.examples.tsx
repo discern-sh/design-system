@@ -7,6 +7,7 @@ import meta, { componentExampleVocabulary } from "./tag.meta.ts";
 import { Tag } from "./tag.tsx";
 
 export const conformance = [{
+  example: "removable",
   name: "the labelled remove action removes its tag",
   steps: [
     { action: "click", target: { role: "button", name: "Remove ipsum" } },

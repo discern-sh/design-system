@@ -68,42 +68,42 @@ export interface DataFigureCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      eyebrow: "Figure 04",
+      title: "Seedling height after four weeks.",
+      visual: "Sunny plot   ███████  14 cm\nShaded plot  █████    10 cm",
+      legend: [
+        { label: "Sunny plot", tone: "accent" },
+        { label: "Shaded plot", tone: "ink" },
+      ],
+      caption: "Average height across two growing conditions.",
+      source: "Illustrative measurements",
+    },
+  },
+  {
+    name: "narrow-layout",
+    props: {
+      eyebrow: "Figure 04",
+      title: "Seedling height after four weeks.",
+      visual: "Sunny plot   ███████  14 cm\nShaded plot  █████    10 cm",
+      legend: [
+        { label: "Sunny plot", tone: "accent" },
+        { label: "Shaded plot", tone: "ink" },
+      ],
+      caption: "The complete figure remains readable at a narrow measure.",
+      source: "Illustrative measurements",
+    },
+    capabilities: { columns: 24 },
+  },
+] as const satisfies readonly CliExample<DataFigureCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Data figure states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        eyebrow: "Figure 04",
-        title: "Seedling height after four weeks.",
-        visual: "Sunny plot   ███████  14 cm\nShaded plot  █████    10 cm",
-        legend: [
-          { label: "Sunny plot", tone: "accent" },
-          { label: "Shaded plot", tone: "ink" },
-        ],
-        caption: "Average height across two growing conditions.",
-        source: "Illustrative measurements",
-      },
-    },
-    {
-      name: "narrow-layout",
-      props: {
-        eyebrow: "Figure 04",
-        title: "Seedling height after four weeks.",
-        visual: "Sunny plot   ███████  14 cm\nShaded plot  █████    10 cm",
-        legend: [
-          { label: "Sunny plot", tone: "accent" },
-          { label: "Shaded plot", tone: "ink" },
-        ],
-        caption: "The complete figure remains readable at a narrow measure.",
-        source: "Illustrative measurements",
-      },
-      capabilities: { columns: 24 },
-    },
-  ] as const satisfies readonly CliExample<DataFigureCliProps>[],
-);
+export const cliExamples: readonly CliExample<DataFigureCliProps>[] =
+  cliExampleImplementations;
 
 const LEGEND_TONES = {
   accent: "accent",

@@ -12,6 +12,7 @@ const copyTarget = {
 } as const;
 
 export const conformance = [{
+  example: "passed",
   name: "machine-readable copy announces completion without moving focus",
   steps: [
     { action: "focus", target: copyTarget },

@@ -34,29 +34,29 @@ const PADDING: Readonly<Record<CardPadding, number>> = {
   lg: 2,
 };
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: { title: "Card", body: "Composable terminal surface." },
+  },
+  {
+    name: "raised",
+    props: {
+      title: "Raised",
+      body: "Important grouped content.",
+      raised: true,
+    },
+  },
+  {
+    name: "dotted",
+    props: { body: "Textured supporting content.", texture: "dots" },
+  },
+] as const satisfies readonly CliExample<CardCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Card states rendered by `deno task catalogue:cli card`. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: { title: "Card", body: "Composable terminal surface." },
-    },
-    {
-      name: "raised",
-      props: {
-        title: "Raised",
-        body: "Important grouped content.",
-        raised: true,
-      },
-    },
-    {
-      name: "dotted",
-      props: { body: "Textured supporting content.", texture: "dots" },
-    },
-  ] as const satisfies readonly CliExample<CardCliProps>[],
-);
+export const cliExamples: readonly CliExample<CardCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one width-bounded terminal Card with shared padding and texture choices. */
 const renderCardCli: CliRenderer<CardCliProps> = (props, capabilities) => {

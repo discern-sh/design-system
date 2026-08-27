@@ -78,33 +78,33 @@ export type HeadingCliProps =
     }
   );
 
+const cliExampleImplementations = [
+  { name: "default", props: { text: "Build with confidence", level: 2 } },
+  {
+    name: "accent",
+    props: { text: "Rules that", accent: "travel", level: 2 },
+  },
+  {
+    name: "rich-content",
+    props: {
+      content: [
+        "A ",
+        { kind: "strong", content: "complete" },
+        " heading keeps ",
+        { kind: "code", text: "inline meaning" },
+      ],
+      level: 3,
+      overflow: "wrap",
+      maxWidth: 32,
+      leadingBlankLines: 0,
+    },
+  },
+] as const satisfies readonly CliExample<HeadingCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Heading states rendered by `deno task catalogue:cli heading`. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    { name: "default", props: { text: "Build with confidence", level: 2 } },
-    {
-      name: "accent",
-      props: { text: "Rules that", accent: "travel", level: 2 },
-    },
-    {
-      name: "rich-content",
-      props: {
-        content: [
-          "A ",
-          { kind: "strong", content: "complete" },
-          " heading keeps ",
-          { kind: "code", text: "inline meaning" },
-        ],
-        level: 3,
-        overflow: "wrap",
-        maxWidth: 32,
-        leadingBlankLines: 0,
-      },
-    },
-  ] as const satisfies readonly CliExample<HeadingCliProps>[],
-);
+export const cliExamples: readonly CliExample<HeadingCliProps>[] =
+  cliExampleImplementations;
 
 function headingLines(
   content: string,

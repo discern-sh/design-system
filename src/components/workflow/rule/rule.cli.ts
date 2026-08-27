@@ -25,30 +25,30 @@ export interface RuleCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      rule:
+        "Commit generated outputs with the authored source that produced them.",
+      origin: "CONTRIBUTING.md",
+      scope: "Generated references",
+    },
+  },
+  {
+    name: "namespaced-styles",
+    props: {
+      rule: "Public classes and custom properties use the project namespace.",
+      origin: "project.toml",
+      scope: "Published styles",
+    },
+  },
+] as const satisfies readonly CliExample<RuleCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Rule states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        rule:
-          "Commit generated outputs with the authored source that produced them.",
-        origin: "CONTRIBUTING.md",
-        scope: "Generated references",
-      },
-    },
-    {
-      name: "namespaced-styles",
-      props: {
-        rule: "Public classes and custom properties use the project namespace.",
-        origin: "project.toml",
-        scope: "Published styles",
-      },
-    },
-  ] as const satisfies readonly CliExample<RuleCliProps>[],
-);
+export const cliExamples: readonly CliExample<RuleCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one binding terminal instruction with origin and scope. */
 const renderRuleCli: CliRenderer<RuleCliProps> = (props, capabilities) => {

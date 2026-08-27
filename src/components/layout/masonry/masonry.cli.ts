@@ -26,38 +26,38 @@ export interface MasonryCliProps {
   readonly width?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      blocks: [
+        "A concise observation\nOne short supporting thought.",
+        "A developed explanation\nNatural content height determines this item's footprint.\nThe next peer packs into the available lane without inventing a row.",
+        "A visual note\nIndependent items can vary without truncation.\nTheir DOM sequence remains unchanged.\nMeaning never depends on which cards happen to become neighbours.",
+        "A compact aside\nAnother deliberately brief item.",
+      ],
+      minimum: 10,
+      width: 36,
+    },
+  },
+  {
+    name: "single-column",
+    props: {
+      blocks: [
+        "A concise observation\nOne short supporting thought.",
+        "A developed explanation\nNatural content height determines this item's footprint.",
+        "A visual note\nIndependent items can vary without truncation.",
+      ],
+      minimum: 12,
+      width: 12,
+    },
+  },
+] as const satisfies readonly CliExample<MasonryCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Masonry states rendered by `deno task catalogue:cli masonry`. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        blocks: [
-          "A concise observation\nOne short supporting thought.",
-          "A developed explanation\nNatural content height determines this item's footprint.\nThe next peer packs into the available lane without inventing a row.",
-          "A visual note\nIndependent items can vary without truncation.\nTheir DOM sequence remains unchanged.\nMeaning never depends on which cards happen to become neighbours.",
-          "A compact aside\nAnother deliberately brief item.",
-        ],
-        minimum: 10,
-        width: 36,
-      },
-    },
-    {
-      name: "single-column",
-      props: {
-        blocks: [
-          "A concise observation\nOne short supporting thought.",
-          "A developed explanation\nNatural content height determines this item's footprint.",
-          "A visual note\nIndependent items can vary without truncation.",
-        ],
-        minimum: 12,
-        width: 12,
-      },
-    },
-  ] as const satisfies readonly CliExample<MasonryCliProps>[],
-);
+export const cliExamples: readonly CliExample<MasonryCliProps>[] =
+  cliExampleImplementations;
 
 /** Pack terminal blocks into the currently shortest responsive column. */
 const renderMasonryCli: CliRenderer<MasonryCliProps> = (

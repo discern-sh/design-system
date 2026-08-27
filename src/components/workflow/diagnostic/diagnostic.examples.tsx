@@ -9,6 +9,7 @@ const rawDetail =
   'TS2322 [ERROR]: Type \'"pending" | "complete"\' is not assignable to type \'"complete"\'.\n    at src/config/loader.ts:118:17\nFound 1 error.';
 
 export const conformance = [{
+  example: "verbose-failure",
   name: "long location and verbose evidence stay contained at narrow width",
   viewport: { width: 390, height: 1400 },
   steps: [{

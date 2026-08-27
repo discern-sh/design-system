@@ -43,31 +43,31 @@ export type CalloutCliProps =
     }
   );
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      eyebrow: "Editor’s note",
+      title: "Keep the qualifier visible.",
+      body: "Readers trust a bounded claim more than a universal one.",
+      tone: "insight",
+    },
+  },
+  {
+    name: "warning",
+    props: {
+      eyebrow: "Caution",
+      title: "Check figures before publication.",
+      body: "A corrected source may change the conclusion.",
+      tone: "warning",
+    },
+  },
+] as const satisfies readonly CliExample<CalloutCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Callout states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        eyebrow: "Editor’s note",
-        title: "Keep the qualifier visible.",
-        body: "Readers trust a bounded claim more than a universal one.",
-        tone: "insight",
-      },
-    },
-    {
-      name: "warning",
-      props: {
-        eyebrow: "Caution",
-        title: "Check figures before publication.",
-        body: "A corrected source may change the conclusion.",
-        tone: "warning",
-      },
-    },
-  ] as const satisfies readonly CliExample<CalloutCliProps>[],
-);
+export const cliExamples: readonly CliExample<CalloutCliProps>[] =
+  cliExampleImplementations;
 
 const TONE_MAP = {
   note: "neutral",

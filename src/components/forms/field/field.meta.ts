@@ -12,18 +12,16 @@ const meta = {
   accessibility: ["Labels and messages use deterministic control IDs."],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "default", label: "Idle" },
-    { id: "active", label: "Active" },
-    { id: "filled", label: "Filled" },
-    { id: "validation-error", label: "Validation error" },
-    { id: "disabled", label: "Disabled" },
-    { id: "submitted", label: "Submitted" },
-    { id: "cancelled", label: "Cancelled" },
-    { id: "acknowledgement", label: "Acknowledgement" },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "default", label: "Idle" },
+  { id: "active", label: "Active" },
+  { id: "filled", label: "Filled" },
+  { id: "validation-error", label: "Validation error" },
+  { id: "disabled", label: "Disabled" },
+  { id: "submitted", label: "Submitted" },
+  { id: "cancelled", label: "Cancelled" },
+  { id: "acknowledgement", label: "Acknowledgement" },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

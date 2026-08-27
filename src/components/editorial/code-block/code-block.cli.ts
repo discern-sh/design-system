@@ -35,31 +35,31 @@ export interface CodeBlockCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      language: "ts",
+      info: "module",
+      code:
+        "function total(values: readonly number[]): number {\n  return values.reduce((sum, value) => sum + value, 0);\n}\n\nconsole.log(total([2, 3, 5]));",
+    },
+  },
+  {
+    name: "preserved-width",
+    props: {
+      language: "text",
+      code:
+        "one uninterrupted source line remains available without truncation even when its natural measure exceeds the surrounding reading column",
+      widthPolicy: "preserve",
+    },
+  },
+] as const satisfies readonly CliExample<CodeBlockCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Code block states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        language: "ts",
-        info: "module",
-        code:
-          "function total(values: readonly number[]): number {\n  return values.reduce((sum, value) => sum + value, 0);\n}\n\nconsole.log(total([2, 3, 5]));",
-      },
-    },
-    {
-      name: "preserved-width",
-      props: {
-        language: "text",
-        code:
-          "one uninterrupted source line remains available without truncation even when its natural measure exceeds the surrounding reading column",
-        widthPolicy: "preserve",
-      },
-    },
-  ] as const satisfies readonly CliExample<CodeBlockCliProps>[],
-);
+export const cliExamples: readonly CliExample<CodeBlockCliProps>[] =
+  cliExampleImplementations;
 
 const graphemeSegmenter = new Intl.Segmenter(undefined, {
   granularity: "grapheme",

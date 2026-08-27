@@ -26,27 +26,27 @@ export interface ExpectedResultCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "output",
+    props: {
+      value: "On branch main\nnothing to commit, working tree clean",
+    },
+  },
+  {
+    name: "state",
+    props: {
+      value:
+        "The test process exits successfully and returns control to the shell.",
+      variant: "state",
+    },
+  },
+] as const satisfies readonly CliExample<ExpectedResultCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Expected result states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "output",
-      props: {
-        value: "On branch main\nnothing to commit, working tree clean",
-      },
-    },
-    {
-      name: "state",
-      props: {
-        value:
-          "The test process exits successfully and returns control to the shell.",
-        variant: "state",
-      },
-    },
-  ] as const satisfies readonly CliExample<ExpectedResultCliProps>[],
-);
+export const cliExamples: readonly CliExample<ExpectedResultCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one observable result or end-state proof. */
 const renderExpectedResultCli: CliRenderer<ExpectedResultCliProps> = (

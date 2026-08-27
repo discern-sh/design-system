@@ -114,37 +114,37 @@ export const cliReleaseFixtures: readonly CliExample<ChartCliProps>[] = Object
     return examples;
   }));
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      spec: releaseSpec("bar", "representative"),
+      mode: "auto",
+      maxWidth: 76,
+    },
+  },
+  {
+    name: "structural",
+    props: {
+      spec: releaseSpec("bar", "structural"),
+      mode: "auto",
+      maxWidth: 76,
+    },
+  },
+  {
+    name: "dense-data",
+    props: {
+      spec: releaseSpec("heatmap", "maximum-density"),
+      mode: "auto",
+      maxWidth: 76,
+    },
+  },
+] as const satisfies readonly CliExample<ChartCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deliberate human Chart postures shared with the browser Catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        spec: releaseSpec("bar", "representative"),
-        mode: "auto",
-        maxWidth: 76,
-      },
-    },
-    {
-      name: "structural",
-      props: {
-        spec: releaseSpec("bar", "structural"),
-        mode: "auto",
-        maxWidth: 76,
-      },
-    },
-    {
-      name: "dense-data",
-      props: {
-        spec: releaseSpec("heatmap", "maximum-density"),
-        mode: "auto",
-        maxWidth: 76,
-      },
-    },
-  ] as const satisfies readonly CliExample<ChartCliProps>[],
-);
+export const cliExamples: readonly CliExample<ChartCliProps>[] =
+  cliExampleImplementations;
 
 /** One inventory or data heading of the shared description skeleton. */
 function isDescriptionSectionHeader(line: string): boolean {

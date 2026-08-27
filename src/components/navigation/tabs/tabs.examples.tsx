@@ -7,6 +7,7 @@ import meta, { componentExampleVocabulary } from "./tabs.meta.ts";
 import { Tabs } from "./tabs.tsx";
 
 export const conformance = [{
+  example: "default",
   name: "arrow keys move focus and selection to the next enabled tab",
   steps: [
     { action: "focus", target: { role: "tab", name: "Overview" } },

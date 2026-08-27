@@ -23,13 +23,11 @@ const meta = {
   ],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "default", label: "Three-column data" },
-    { id: "rich-cells", label: "Rich and empty cells" },
-    { id: "dense-overflow", label: "Dense narrow width" },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "default", label: "Three-column data" },
+  { id: "rich-cells", label: "Rich and empty cells" },
+  { id: "dense-overflow", label: "Dense narrow width" },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

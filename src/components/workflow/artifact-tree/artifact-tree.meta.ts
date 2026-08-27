@@ -23,12 +23,10 @@ const meta = {
   ],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "default", label: "Project tree" },
-    { id: "deep-tree", label: "Deep generated path" },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "default", label: "Project tree" },
+  { id: "deep-tree", label: "Deep generated path" },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

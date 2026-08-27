@@ -37,38 +37,38 @@ export interface MetricsBandCliProps {
   readonly width?: number;
 }
 
-/** Deterministic Metrics band states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        eyebrow: "Current snapshot",
-        title: "Example measures.",
-        tone: "accent",
-        items: [
-          {
-            value: "24",
-            label: "completed items",
-            detail: "Across the sample period",
-          },
-          {
-            value: "8",
-            label: "open reviews",
-            detail: "From open to decision",
-          },
-          {
-            value: "3",
-            label: "pending decisions",
-            detail: "At the latest update",
-          },
-        ],
-      },
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      eyebrow: "Current snapshot",
+      title: "Example measures.",
+      tone: "accent",
+      items: [
+        {
+          value: "24",
+          label: "completed items",
+          detail: "Across the sample period",
+        },
+        {
+          value: "8",
+          label: "open reviews",
+          detail: "From open to decision",
+        },
+        {
+          value: "3",
+          label: "pending decisions",
+          detail: "At the latest update",
+        },
+      ],
     },
-  ] as const satisfies readonly CliExample<MetricsBandCliProps>[],
-);
+  },
+] as const satisfies readonly CliExample<MetricsBandCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
+/** Deterministic Metrics band states rendered by the CLI catalogue. */
+export const cliExamples: readonly CliExample<MetricsBandCliProps>[] =
+  cliExampleImplementations;
 
 /** Render a compact adaptive terminal stat row. */
 const renderMetricsBandCli: CliRenderer<MetricsBandCliProps> = (

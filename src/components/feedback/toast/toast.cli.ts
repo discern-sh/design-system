@@ -25,26 +25,34 @@ export interface ToastCliProps {
   readonly width?: number;
 }
 
+const cliExampleImplementations = [
+  { name: "default", props: { message: "Settings saved." } },
+  {
+    name: "success",
+    props: {
+      message: "Changes saved.",
+      tone: "success",
+      dismissible: true,
+    },
+  },
+  {
+    name: "warning",
+    props: { message: "Connection is slow.", tone: "warning" },
+  },
+  {
+    name: "danger",
+    props: {
+      message: "Could not save.",
+      tone: "danger",
+      dismissible: true,
+    },
+  },
+] as const satisfies readonly CliExample<ToastCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Toast states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    { name: "default", props: { message: "Settings saved." } },
-    {
-      name: "success",
-      props: { message: "Changes saved.", tone: "success", dismissible: true },
-    },
-    {
-      name: "warning",
-      props: { message: "Connection is slow.", tone: "warning" },
-    },
-    {
-      name: "danger",
-      props: { message: "Could not save.", tone: "danger", dismissible: true },
-    },
-  ] as const satisfies readonly CliExample<ToastCliProps>[],
-);
+export const cliExamples: readonly CliExample<ToastCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one compact, toned terminal notification box. */
 const renderToastCli: CliRenderer<ToastCliProps> = (props, capabilities) => {

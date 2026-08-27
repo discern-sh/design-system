@@ -23,38 +23,38 @@ export interface ParagraphCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [{
+  name: "default",
+  props: {
+    content: [
+      "A useful paragraph can combine ",
+      { kind: "strong", content: "clear emphasis" },
+      ", ",
+      { kind: "emphasis", content: "supporting nuance" },
+      ", ",
+      { kind: "strikethrough", content: "superseded wording" },
+      ", inline detail such as ",
+      { kind: "code", text: "measure: 68" },
+      ", and ",
+      {
+        kind: "link",
+        label: "a stable reference",
+        destination: "#paragraph-reference",
+      },
+      ".",
+      {
+        kind: "footnote-reference",
+        identifier: "paragraph-reference",
+        label: "1",
+      },
+    ],
+  },
+}] as const satisfies readonly CliExample<ParagraphCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Paragraph states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [{
-    name: "default",
-    props: {
-      content: [
-        "A useful paragraph can combine ",
-        { kind: "strong", content: "clear emphasis" },
-        ", ",
-        { kind: "emphasis", content: "supporting nuance" },
-        ", ",
-        { kind: "strikethrough", content: "superseded wording" },
-        ", inline detail such as ",
-        { kind: "code", text: "measure: 68" },
-        ", and ",
-        {
-          kind: "link",
-          label: "a stable reference",
-          destination: "#paragraph-reference",
-        },
-        ".",
-        {
-          kind: "footnote-reference",
-          identifier: "paragraph-reference",
-          label: "1",
-        },
-      ],
-    },
-  }] as const satisfies readonly CliExample<ParagraphCliProps>[],
-);
+export const cliExamples: readonly CliExample<ParagraphCliProps>[] =
+  cliExampleImplementations;
 
 /**
  * Render one rich semantic paragraph without owning a surrounding blank-line

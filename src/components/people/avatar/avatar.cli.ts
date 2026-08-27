@@ -33,21 +33,21 @@ export interface AvatarCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: { name: "Morgan Ellis", presence: "online", size: "lg" },
+  },
+  {
+    name: "square",
+    props: { name: "Tomás Vega", shape: "square", size: "lg" },
+  },
+] as const satisfies readonly CliExample<AvatarCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Avatar states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: { name: "Morgan Ellis", presence: "online", size: "lg" },
-    },
-    {
-      name: "square",
-      props: { name: "Tomás Vega", shape: "square", size: "lg" },
-    },
-  ] as const satisfies readonly CliExample<AvatarCliProps>[],
-);
+export const cliExamples: readonly CliExample<AvatarCliProps>[] =
+  cliExampleImplementations;
 
 const PRESENCE_TONES = {
   online: "success",

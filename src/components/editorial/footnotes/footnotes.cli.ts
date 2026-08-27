@@ -124,53 +124,53 @@ const richExampleParagraph = createCliBlock(
   } as const,
 );
 
-/** Deterministic Footnotes states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        items: [{
-          id: "example-source-note",
-          content: "The source remains a distinct, addressable definition.",
-          returnReferences: [{ href: "#example-source-note-ref" }],
-        }],
-      },
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      items: [{
+        id: "example-source-note",
+        content: "The source remains a distinct, addressable definition.",
+        returnReferences: [{ href: "#example-source-note-ref" }],
+      }],
     },
-    {
-      name: "rich-multi-block",
-      props: {
-        items: [{
-          id: "example-rich-note",
-          content: {
-            kind: "blocks",
-            children: [
-              richExampleParagraph,
-              createCliBlock(renderListCli, {
-                items: [{ content: "One supporting observation." }],
-              }),
-              createCliBlock(renderBlockquoteCli, {
-                children: [createCliBlock(renderParagraphCli, {
-                  content: "A qualification remains a quotation.",
-                })],
-              }),
-              createCliBlock(renderCodeBlockCli, {
-                language: "text",
-                code: "sample = complete",
-              }),
-            ],
-          },
-          returnReferences: [
-            { href: "#example-rich-note-ref-1", label: "1" },
-            { href: "#example-rich-note-ref-2", label: "2" },
+  },
+  {
+    name: "rich-multi-block",
+    props: {
+      items: [{
+        id: "example-rich-note",
+        content: {
+          kind: "blocks",
+          children: [
+            richExampleParagraph,
+            createCliBlock(renderListCli, {
+              items: [{ content: "One supporting observation." }],
+            }),
+            createCliBlock(renderBlockquoteCli, {
+              children: [createCliBlock(renderParagraphCli, {
+                content: "A qualification remains a quotation.",
+              })],
+            }),
+            createCliBlock(renderCodeBlockCli, {
+              language: "text",
+              code: "sample = complete",
+            }),
           ],
-        }],
-      },
+        },
+        returnReferences: [
+          { href: "#example-rich-note-ref-1", label: "1" },
+          { href: "#example-rich-note-ref-2", label: "2" },
+        ],
+      }],
     },
-  ] as const satisfies readonly CliExample<FootnotesCliProps>[],
-);
+  },
+] as const satisfies readonly CliExample<FootnotesCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
+/** Deterministic Footnotes states rendered by the CLI catalogue. */
+export const cliExamples: readonly CliExample<FootnotesCliProps>[] =
+  cliExampleImplementations;
 
 const MINIMUM_FOOTNOTES_WIDTH = 8;
 

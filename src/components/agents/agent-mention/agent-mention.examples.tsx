@@ -6,6 +6,7 @@ import { AgentMention } from "./agent-mention.tsx";
 import meta, { componentExampleVocabulary } from "./agent-mention.meta.ts";
 
 export const conformance = [{
+  example: "linked",
   name: "a linked agent mention is focusable and hides its sigil from the name",
   steps: [
     {

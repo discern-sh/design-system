@@ -11,6 +11,7 @@ import type {
 } from "./theme-toggle.types.ts";
 
 export const conformance = [{
+  example: "default",
   name: "the toggle always names its destination theme",
   steps: [
     {

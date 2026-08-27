@@ -39,34 +39,34 @@ export interface ArtifactCardCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      name: "API registry",
+      path: "/workspace/generated/api-registry.ts",
+      summary: "The stable endpoint index consumed by the runtime.",
+      ownership: "generated",
+      provenance: "Generated from /workspace/api-schema.ts",
+      source: "/workspace/api-schema.ts",
+    },
+  },
+  {
+    name: "project-owned",
+    props: {
+      name: "Project instructions",
+      path: "/workspace/instructions.md",
+      summary: "The project-specific instructions maintained by its authors.",
+      ownership: "project-owned",
+      provenance: "Written during project setup",
+    },
+  },
+] as const satisfies readonly CliExample<ArtifactCardCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Artifact card states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        name: "API registry",
-        path: "/workspace/generated/api-registry.ts",
-        summary: "The stable endpoint index consumed by the runtime.",
-        ownership: "generated",
-        provenance: "Generated from /workspace/api-schema.ts",
-        source: "/workspace/api-schema.ts",
-      },
-    },
-    {
-      name: "project-owned",
-      props: {
-        name: "Project instructions",
-        path: "/workspace/instructions.md",
-        summary: "The project-specific instructions maintained by its authors.",
-        ownership: "project-owned",
-        provenance: "Written during project setup",
-      },
-    },
-  ] as const satisfies readonly CliExample<ArtifactCardCliProps>[],
-);
+export const cliExamples: readonly CliExample<ArtifactCardCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one terminal artifact account with ownership and provenance. */
 const renderArtifactCardCli: CliRenderer<ArtifactCardCliProps> = (

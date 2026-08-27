@@ -4,6 +4,7 @@ import { PathReference } from "./path-reference.tsx";
 import meta, { componentExampleVocabulary } from "./path-reference.meta.ts";
 
 export const conformance = [{
+  example: "long-path",
   name: "a long path preserves both visible ends inside a narrow viewport",
   viewport: { width: 390, height: 844 },
   steps: [{

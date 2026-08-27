@@ -25,12 +25,10 @@ const meta = {
   ],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "default", label: "TypeScript source" },
-    { id: "preserved-width", label: "Preserved long line" },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "default", label: "TypeScript source" },
+  { id: "preserved-width", label: "Preserved long line" },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

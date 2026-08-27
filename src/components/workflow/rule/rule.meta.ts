@@ -22,12 +22,10 @@ const meta = {
   ],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "default", label: "Generated-file rule" },
-    { id: "namespaced-styles", label: "Namespaced-style rule" },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "default", label: "Generated-file rule" },
+  { id: "namespaced-styles", label: "Namespaced-style rule" },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

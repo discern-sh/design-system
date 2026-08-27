@@ -365,7 +365,7 @@ Deno.test("List catalogue examples render deterministically at every capability 
         }
         assertStringIncludes(
           stripAnsi(first),
-          example.name === "task-mixed" ? "Reviewed" : "meaning",
+          example.name === "task-mixed" ? "Reviewed" : "strongest",
         );
       }
     }

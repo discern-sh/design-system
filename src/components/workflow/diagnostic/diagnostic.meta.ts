@@ -29,12 +29,10 @@ const meta = {
   ],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "verbose-failure", label: "Verbose failure" },
-    { id: "attention", label: "Attention" },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "verbose-failure", label: "Verbose failure" },
+  { id: "attention", label: "Attention" },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

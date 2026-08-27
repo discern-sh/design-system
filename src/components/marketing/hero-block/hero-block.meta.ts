@@ -21,19 +21,17 @@ const meta = {
   ],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "split", label: "Split accent" },
-    { id: "showcase", label: "Showcase" },
-    {
-      id: "backdrop",
-      label: "Artwork backdrop",
-      only: "web",
-      reason:
-        "Terminal HeroBlock has no background layer or scalable artwork plane; printing decorative browser geometry as text would misrepresent it.",
-    },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "split", label: "Split accent" },
+  { id: "showcase", label: "Showcase" },
+  {
+    id: "backdrop",
+    label: "Artwork backdrop",
+    only: "web",
+    reason:
+      "Terminal HeroBlock has no background layer or scalable artwork plane; printing decorative browser geometry as text would misrepresent it.",
+  },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

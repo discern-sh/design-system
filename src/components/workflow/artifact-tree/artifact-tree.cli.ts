@@ -39,82 +39,86 @@ export interface ArtifactTreeCliProps {
   readonly maxWidth?: number;
 }
 
-/** Deterministic Artifact tree states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        label: "Project files",
-        nodes: [{
-          name: "workspace",
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      label: "Project files",
+      nodes: [{
+        name: "workspace",
+        kind: "directory",
+        children: [
+          {
+            name: "project.toml",
+            kind: "file",
+            annotation: "project-owned",
+          },
+          { name: "instructions.md", kind: "file", annotation: "authored" },
+          {
+            name: "map",
+            kind: "directory",
+            children: [{
+              name: "README.md",
+              kind: "file",
+              annotation: "authored",
+            }],
+          },
+          {
+            name: "generated",
+            kind: "directory",
+            children: [{
+              name: "api-reference.html",
+              kind: "file",
+              annotation: "generated",
+            }],
+          },
+        ],
+      }],
+    },
+  },
+  {
+    name: "deep-tree",
+    props: {
+      label: "Deep generated path",
+      maxWidth: 42,
+      nodes: [{
+        name: "workspace",
+        kind: "directory",
+        children: [{
+          name: "packages",
           kind: "directory",
-          children: [
-            { name: "project.toml", kind: "file", annotation: "project-owned" },
-            { name: "instructions.md", kind: "file", annotation: "authored" },
-            {
-              name: "map",
-              kind: "directory",
-              children: [{
-                name: "README.md",
-                kind: "file",
-                annotation: "authored",
-              }],
-            },
-            {
+          children: [{
+            name: "reference",
+            kind: "directory",
+            children: [{
               name: "generated",
               kind: "directory",
               children: [{
-                name: "api-reference.html",
-                kind: "file",
-                annotation: "generated",
-              }],
-            },
-          ],
-        }],
-      },
-    },
-    {
-      name: "deep-tree",
-      props: {
-        label: "Deep generated path",
-        maxWidth: 42,
-        nodes: [{
-          name: "workspace",
-          kind: "directory",
-          children: [{
-            name: "packages",
-            kind: "directory",
-            children: [{
-              name: "reference",
-              kind: "directory",
-              children: [{
-                name: "generated",
+                name: "pages",
                 kind: "directory",
                 children: [{
-                  name: "pages",
+                  name: "api",
                   kind: "directory",
                   children: [{
-                    name: "api",
-                    kind: "directory",
-                    children: [{
-                      name:
-                        "generated-api-reference-with-a-purposefully-long-filename.html",
-                      kind: "file",
-                      annotation: "generated",
-                    }],
+                    name:
+                      "generated-api-reference-with-a-purposefully-long-filename.html",
+                    kind: "file",
+                    annotation: "generated",
                   }],
                 }],
               }],
             }],
           }],
         }],
-      },
+      }],
     },
-  ] as const satisfies readonly CliExample<ArtifactTreeCliProps>[],
-);
+  },
+] as const satisfies readonly CliExample<ArtifactTreeCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
+/** Deterministic Artifact tree states rendered by the CLI catalogue. */
+export const cliExamples: readonly CliExample<ArtifactTreeCliProps>[] =
+  cliExampleImplementations;
 
 function validateNodes(
   nodes: readonly ArtifactTreeCliNode[],

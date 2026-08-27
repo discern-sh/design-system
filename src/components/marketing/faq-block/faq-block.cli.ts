@@ -39,46 +39,46 @@ export interface FaqBlockCliProps {
   readonly width?: number;
 }
 
-/** Deterministic FAQ block states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        eyebrow: "Questions, answered",
-        title: "The details readers need before they continue.",
-        description:
-          "Use plain answers to remove uncertainty without interrupting the main story.",
-        aside: "Ask another question",
-        items: [
-          {
-            question: "What belongs in this section?",
-            answer:
-              "Include questions that remove a concrete uncertainty from the surrounding story.",
-          },
-          {
-            question: "How long should an answer be?",
-            answer:
-              "Use the shortest explanation that answers the question without creating another one.",
-          },
-          {
-            question: "When should an answer stay closed?",
-            answer:
-              "Keep supporting details collapsed until a reader chooses to inspect them.",
-          },
-          {
-            question: "What should the final answer include?",
-            answer:
-              "State the useful conclusion directly, then add only the context needed to act on it.",
-          },
-        ],
-        openIndices: [0],
-      },
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      eyebrow: "Questions, answered",
+      title: "The details readers need before they continue.",
+      description:
+        "Use plain answers to remove uncertainty without interrupting the main story.",
+      aside: "Ask another question",
+      items: [
+        {
+          question: "What belongs in this section?",
+          answer:
+            "Include questions that remove a concrete uncertainty from the surrounding story.",
+        },
+        {
+          question: "How long should an answer be?",
+          answer:
+            "Use the shortest explanation that answers the question without creating another one.",
+        },
+        {
+          question: "When should an answer stay closed?",
+          answer:
+            "Keep supporting details collapsed until a reader chooses to inspect them.",
+        },
+        {
+          question: "What should the final answer include?",
+          answer:
+            "State the useful conclusion directly, then add only the context needed to act on it.",
+        },
+      ],
+      openIndices: [0],
     },
-  ] as const satisfies readonly CliExample<FaqBlockCliProps>[],
-);
+  },
+] as const satisfies readonly CliExample<FaqBlockCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
+/** Deterministic FAQ block states rendered by the CLI catalogue. */
+export const cliExamples: readonly CliExample<FaqBlockCliProps>[] =
+  cliExampleImplementations;
 
 /** Render static open and closed FAQ disclosure frames. */
 const renderFaqBlockCli: CliRenderer<FaqBlockCliProps> = (

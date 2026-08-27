@@ -23,12 +23,10 @@ const meta = {
   ],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "default", label: "Composed quotation" },
-    { id: "nested-quotation", label: "Nested quotation" },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "default", label: "Composed quotation" },
+  { id: "nested-quotation", label: "Nested quotation" },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

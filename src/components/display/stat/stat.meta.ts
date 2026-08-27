@@ -16,14 +16,12 @@ const meta = {
   ],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "default", label: "Neutral" },
-    { id: "positive", label: "Positive trend" },
-    { id: "negative", label: "Negative trend" },
-    { id: "with-sparkline", label: "With sparkline" },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "default", label: "Neutral" },
+  { id: "positive", label: "Positive trend" },
+  { id: "negative", label: "Negative trend" },
+  { id: "with-sparkline", label: "With sparkline" },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

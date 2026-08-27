@@ -36,23 +36,23 @@ export interface TableOfContentsCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [{
+  name: "default",
+  props: {
+    items: [
+      { label: "The opening scene", href: "#opening", current: true },
+      { label: "A closer look", href: "#closer-look", nested: true },
+      { label: "What changed", href: "#changed" },
+      { label: "Notes and sources", href: "#notes" },
+    ],
+    progress: "12 minute read · 1 of 4",
+  },
+}] as const satisfies readonly CliExample<TableOfContentsCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Table of contents states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [{
-    name: "default",
-    props: {
-      items: [
-        { label: "The opening scene", href: "#opening", current: true },
-        { label: "A closer look", href: "#closer-look", nested: true },
-        { label: "What changed", href: "#changed" },
-        { label: "Notes and sources", href: "#notes" },
-      ],
-      progress: "12 minute read · 1 of 4",
-    },
-  }] as const satisfies readonly CliExample<TableOfContentsCliProps>[],
-);
+export const cliExamples: readonly CliExample<TableOfContentsCliProps>[] =
+  cliExampleImplementations;
 
 function hanging(prefix: string, value: string, width: number): string {
   const lines = wrapText(value, Math.max(1, width - measureText(prefix)));

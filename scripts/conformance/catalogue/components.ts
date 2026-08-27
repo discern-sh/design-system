@@ -322,6 +322,7 @@ function parseScenarios(
   for (const scenario of parsed) {
     invariant(
       typeof scenario === "object" && scenario !== null &&
+        "example" in scenario && typeof scenario.example === "string" &&
         "name" in scenario && typeof scenario.name === "string" &&
         "steps" in scenario && Array.isArray(scenario.steps),
       `${component} has a malformed conformance scenario`,
@@ -577,8 +578,17 @@ async function runInteractionScenarios(
               conformanceUrl(origin, "light", component),
             );
             const root = page.locator(
-              `[data-discern-component="${component}"] .discern-catalogue-component__canvas`,
+              `[data-discern-component="${component}"] [data-discern-example-state="${scenario.example}"] .discern-catalogue-example-state__canvas`,
             );
+            invariant(
+              await root.count() === 1,
+              `${component} conformance scenario ${
+                JSON.stringify(scenario.name)
+              } could not resolve canonical Web example ${
+                JSON.stringify(scenario.example)
+              }`,
+            );
+            await root.scrollIntoViewIfNeeded();
             for (const step of scenario.steps) {
               await performStep(page, root, step);
             }
@@ -647,13 +657,30 @@ async function verifyStateFragmentRestoration(
       }`,
     );
     const target = page.locator(`#${fragment}`);
-    let position = Number.POSITIVE_INFINITY;
+    let placement = {
+      top: Number.POSITIVE_INFINITY,
+      viewportHeight: 0,
+      scrollTop: 0,
+      maxScrollTop: 0,
+    };
     await eventually(
       async () => {
-        position = await target.evaluate((node) =>
-          node.getBoundingClientRect().top
-        );
-        return position >= 0 && position <= 160;
+        placement = await target.evaluate((node) => {
+          const document = node.ownerDocument;
+          const scrollingElement = document.scrollingElement ??
+            document.documentElement;
+          return {
+            top: node.getBoundingClientRect().top,
+            viewportHeight: document.documentElement.clientHeight,
+            scrollTop: scrollingElement.scrollTop,
+            maxScrollTop: scrollingElement.scrollHeight -
+              scrollingElement.clientHeight,
+          };
+        });
+        return placement.top >= 0 &&
+          (placement.top <= 160 ||
+            (placement.top < placement.viewportHeight &&
+              placement.scrollTop >= placement.maxScrollTop - 1));
       },
       `Cold fragment load left #${fragment} outside the viewport`,
     );
@@ -669,8 +696,15 @@ async function verifyStateFragmentRestoration(
           node.ownerDocument.activeElement?.tagName.toLowerCase(),
     }));
     invariant(
-      position >= 0 && position <= 160,
-      `Cold fragment load left #${fragment} at ${position.toFixed(2)}px`,
+      placement.top >= 0 &&
+        (placement.top <= 160 ||
+          (placement.top < placement.viewportHeight &&
+            placement.scrollTop >= placement.maxScrollTop - 1)),
+      `Cold fragment load left #${fragment} at ${
+        placement.top.toFixed(2)
+      }px with scroll ${placement.scrollTop.toFixed(2)}/${
+        placement.maxScrollTop.toFixed(2)
+      }`,
     );
     invariant(
       targetState.component === state.component,
@@ -793,6 +827,11 @@ export async function runComponentContractConformance(
 ): Promise<ComponentContractEvidence> {
   await loadConformancePage(page, conformanceUrl(origin, "light"));
   await assertAutoEnrollment(page, expectedComponents);
+  const autoOpenedModals = page.locator("dialog:modal");
+  invariant(
+    await autoOpenedModals.count() === 0,
+    "Catalogue examples must start quiescent; an auto-open modal makes every unrelated example inert",
+  );
   const floatingSurfaces = await verifyFloatingSurfaceCure(page);
   let accessibilityScans = 0;
   for (const theme of ["light", "dark"] as const) {

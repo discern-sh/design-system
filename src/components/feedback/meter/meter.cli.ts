@@ -33,44 +33,44 @@ export interface MeterCliProps
   readonly width?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      kind: "determinate-progress",
+      label: "Upload",
+      lifecycle: { status: "active" },
+      completed: 0,
+      total: 100,
+    },
+  },
+  {
+    name: "quarter",
+    props: {
+      kind: "determinate-progress",
+      label: "Upload",
+      lifecycle: { status: "active" },
+      completed: 25,
+      total: 100,
+      reading: "25 / 100 files",
+    },
+  },
+  {
+    name: "complete",
+    props: {
+      kind: "determinate-progress",
+      label: "Upload",
+      lifecycle: { status: "submitted" },
+      completed: 100,
+      total: 100,
+    },
+  },
+] as const satisfies readonly CliExample<MeterCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Meter states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        kind: "determinate-progress",
-        label: "Upload",
-        lifecycle: { status: "active" },
-        completed: 0,
-        total: 100,
-      },
-    },
-    {
-      name: "quarter",
-      props: {
-        kind: "determinate-progress",
-        label: "Upload",
-        lifecycle: { status: "active" },
-        completed: 25,
-        total: 100,
-        reading: "25 / 100 files",
-      },
-    },
-    {
-      name: "complete",
-      props: {
-        kind: "determinate-progress",
-        label: "Upload",
-        lifecycle: { status: "submitted" },
-        completed: 100,
-        total: 100,
-      },
-    },
-  ] as const satisfies readonly CliExample<MeterCliProps>[],
-);
+export const cliExamples: readonly CliExample<MeterCliProps>[] =
+  cliExampleImplementations;
 
 /** Render a labeled determinate frame on the package motif track. */
 const renderMeterCli: CliRenderer<MeterCliProps> = (props, capabilities) => {

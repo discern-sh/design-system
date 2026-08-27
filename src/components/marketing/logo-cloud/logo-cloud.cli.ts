@@ -30,39 +30,39 @@ export interface LogoCloudCliProps {
   readonly width?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "grid",
+    props: {
+      label: "Example organisations",
+      items: [
+        "Provider one",
+        "Provider two",
+        "Provider three",
+        "Provider four",
+      ],
+      variant: "grid",
+    },
+  },
+  {
+    name: "strip",
+    props: {
+      label: "Available across example providers",
+      items: [
+        "Provider one",
+        "Provider two",
+        "Provider three",
+        "Provider four",
+      ],
+      variant: "strip",
+    },
+  },
+] as const satisfies readonly CliExample<LogoCloudCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Logo cloud states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "grid",
-      props: {
-        label: "Example organisations",
-        items: [
-          "Provider one",
-          "Provider two",
-          "Provider three",
-          "Provider four",
-        ],
-        variant: "grid",
-      },
-    },
-    {
-      name: "strip",
-      props: {
-        label: "Available across example providers",
-        items: [
-          "Provider one",
-          "Provider two",
-          "Provider three",
-          "Provider four",
-        ],
-        variant: "strip",
-      },
-    },
-  ] as const satisfies readonly CliExample<LogoCloudCliProps>[],
-);
+export const cliExamples: readonly CliExample<LogoCloudCliProps>[] =
+  cliExampleImplementations;
 
 /** Render a wrapping terminal name roll without pretending to reproduce marks. */
 const renderLogoCloudCli: CliRenderer<LogoCloudCliProps> = (

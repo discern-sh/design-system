@@ -8,6 +8,7 @@ import meta, { componentExampleVocabulary } from "./tooltip.meta.ts";
 import { Tooltip } from "./tooltip.tsx";
 
 export const conformance = [{
+  example: "default",
   name: "keyboard focus reveals the described tooltip",
   steps: [
     { action: "focus", target: { role: "button", name: "Information" } },

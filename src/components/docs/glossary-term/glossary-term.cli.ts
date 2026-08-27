@@ -23,19 +23,19 @@ export interface GlossaryTermCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [{
+  name: "default",
+  props: {
+    term: "reading measure",
+    definition:
+      "A line-length boundary that keeps continuous prose comfortable to scan.",
+  },
+}] as const satisfies readonly CliExample<GlossaryTermCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Glossary term states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [{
-    name: "default",
-    props: {
-      term: "reading measure",
-      definition:
-        "A line-length boundary that keeps continuous prose comfortable to scan.",
-    },
-  }] as const satisfies readonly CliExample<GlossaryTermCliProps>[],
-);
+export const cliExamples: readonly CliExample<GlossaryTermCliProps>[] =
+  cliExampleImplementations;
 
 /** Render a marked term followed by its always-visible terminal definition. */
 const renderGlossaryTermCli: CliRenderer<GlossaryTermCliProps> = (

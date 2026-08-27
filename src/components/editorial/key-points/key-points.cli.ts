@@ -34,32 +34,32 @@ export interface KeyPointsCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [{
+  name: "default",
+  props: {
+    eyebrow: "Key points",
+    title: "Three ideas to remember.",
+    items: [
+      {
+        title: "Lead with the main idea",
+        description: "State it before adding supporting detail.",
+      },
+      {
+        title: "Add useful context",
+        description: "Explain what a reader needs to understand it.",
+      },
+      {
+        title: "End with direction",
+        description: "Make the next step easy to find.",
+      },
+    ],
+  },
+}] as const satisfies readonly CliExample<KeyPointsCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Key points states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [{
-    name: "default",
-    props: {
-      eyebrow: "Key points",
-      title: "Three ideas to remember.",
-      items: [
-        {
-          title: "Lead with the main idea",
-          description: "State it before adding supporting detail.",
-        },
-        {
-          title: "Add useful context",
-          description: "Explain what a reader needs to understand it.",
-        },
-        {
-          title: "End with direction",
-          description: "Make the next step easy to find.",
-        },
-      ],
-    },
-  }] as const satisfies readonly CliExample<KeyPointsCliProps>[],
-);
+export const cliExamples: readonly CliExample<KeyPointsCliProps>[] =
+  cliExampleImplementations;
 
 const TONES = {
   accent: "accent",

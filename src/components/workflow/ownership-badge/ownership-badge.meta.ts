@@ -22,14 +22,12 @@ const meta = {
   ],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "authored", label: "Authored" },
-    { id: "generated", label: "Generated" },
-    { id: "project-owned", label: "Project owned" },
-    { id: "tool-owned", label: "Tool owned" },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "authored", label: "Authored" },
+  { id: "generated", label: "Generated" },
+  { id: "project-owned", label: "Project owned" },
+  { id: "tool-owned", label: "Tool owned" },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

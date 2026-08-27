@@ -47,49 +47,49 @@ export interface FileChangeCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      path: "/workspace/project.toml",
+      disposition: "updated",
+      magnitude: { added: 6, removed: 3 },
+    },
+  },
+  {
+    name: "added",
+    props: {
+      path: "/workspace/src/components/example.tsx",
+      disposition: "added",
+      magnitude: { added: 84, removed: 0 },
+    },
+  },
+  {
+    name: "generated",
+    props: {
+      path: "/workspace/generated/component-registry.ts",
+      disposition: "generated",
+      magnitude: { added: 42, removed: 42 },
+    },
+  },
+  {
+    name: "removed",
+    props: {
+      path: "/workspace/src/legacy-adapter.ts",
+      disposition: "removed",
+      magnitude: { added: 0, removed: 96 },
+    },
+  },
+  {
+    name: "unchanged",
+    props: { path: "/workspace/README.md", disposition: "unchanged" },
+  },
+] as const satisfies readonly CliExample<FileChangeCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic File change states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        path: "/workspace/project.toml",
-        disposition: "updated",
-        magnitude: { added: 6, removed: 3 },
-      },
-    },
-    {
-      name: "added",
-      props: {
-        path: "/workspace/src/components/example.tsx",
-        disposition: "added",
-        magnitude: { added: 84, removed: 0 },
-      },
-    },
-    {
-      name: "generated",
-      props: {
-        path: "/workspace/generated/component-registry.ts",
-        disposition: "generated",
-        magnitude: { added: 42, removed: 42 },
-      },
-    },
-    {
-      name: "removed",
-      props: {
-        path: "/workspace/src/legacy-adapter.ts",
-        disposition: "removed",
-        magnitude: { added: 0, removed: 96 },
-      },
-    },
-    {
-      name: "unchanged",
-      props: { path: "/workspace/README.md", disposition: "unchanged" },
-    },
-  ] as const satisfies readonly CliExample<FileChangeCliProps>[],
-);
+export const cliExamples: readonly CliExample<FileChangeCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one file disposition, suffix-preserving path, and optional diffstat. */
 const renderFileChangeCli: CliRenderer<FileChangeCliProps> = (

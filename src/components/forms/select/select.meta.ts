@@ -11,18 +11,16 @@ const meta = {
   cli: { stance: "rendered" },
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "default", label: "Idle" },
-    { id: "grouped", label: "Grouped options" },
-    { id: "active", label: "Active" },
-    { id: "filled", label: "Selected" },
-    { id: "validation-error", label: "Validation error" },
-    { id: "disabled", label: "Disabled" },
-    { id: "submitted", label: "Submitted" },
-    { id: "cancelled", label: "Cancelled" },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "default", label: "Idle" },
+  { id: "grouped", label: "Grouped options" },
+  { id: "active", label: "Active" },
+  { id: "filled", label: "Selected" },
+  { id: "validation-error", label: "Validation error" },
+  { id: "disabled", label: "Disabled" },
+  { id: "submitted", label: "Submitted" },
+  { id: "cancelled", label: "Cancelled" },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

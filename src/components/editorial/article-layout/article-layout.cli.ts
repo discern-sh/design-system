@@ -27,22 +27,22 @@ export interface ArticleLayoutCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [{
+  name: "default",
+  props: {
+    navigation: "01 · Context\n02 · Method",
+    navigationLabel: "On this page",
+    body:
+      "A reading shell with room to think.\nThe central column carries the narrative while optional rails hold orientation and supporting detail without interrupting the argument.",
+    rail: "Filed under\nPractice",
+    railLabel: "Article context",
+  },
+}] as const satisfies readonly CliExample<ArticleLayoutCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Article layout states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [{
-    name: "default",
-    props: {
-      navigation: "01 · Context\n02 · Method",
-      navigationLabel: "On this page",
-      body:
-        "A reading shell with room to think.\nThe central column carries the narrative while optional rails hold orientation and supporting detail without interrupting the argument.",
-      rail: "Filed under\nPractice",
-      railLabel: "Article context",
-    },
-  }] as const satisfies readonly CliExample<ArticleLayoutCliProps>[],
-);
+export const cliExamples: readonly CliExample<ArticleLayoutCliProps>[] =
+  cliExampleImplementations;
 
 function wrapBlock(value: string, width: number): string {
   return value.split("\n").flatMap((line) => wrapText(line, width)).join("\n");

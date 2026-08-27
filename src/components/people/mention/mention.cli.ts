@@ -28,15 +28,15 @@ export interface MentionCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  { name: "default", props: { name: "Morgan Ellis", href: "#morgan" } },
+  { name: "avatar", props: { name: "June Park", avatar: true } },
+] as const satisfies readonly CliExample<MentionCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Mention states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    { name: "default", props: { name: "Morgan Ellis", href: "#morgan" } },
-    { name: "avatar", props: { name: "June Park", avatar: true } },
-  ] as const satisfies readonly CliExample<MentionCliProps>[],
-);
+export const cliExamples: readonly CliExample<MentionCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one inline @mention or initials mention chip. */
 const renderMentionCli: CliRenderer<MentionCliProps> = (

@@ -8,6 +8,7 @@ const copyTarget = {
 } as const;
 
 export const conformance = [{
+  example: "default",
   name: "keyboard copy announces completion without moving focus",
   steps: [
     { action: "focus", target: copyTarget },
@@ -30,6 +31,7 @@ export const conformance = [{
     { expect: "focused", target: copyTarget },
   ],
 }, {
+  example: "overflow",
   name: "a long command stays contained at a narrow viewport",
   viewport: { width: 390, height: 844 },
   steps: [{

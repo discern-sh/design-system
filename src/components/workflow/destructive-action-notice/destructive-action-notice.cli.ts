@@ -31,35 +31,36 @@ export interface DestructiveActionNoticeCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      label: "Owner approval required",
+      scope: "The temporary directory selected for cleanup.",
+      impact: "Its contents will no longer be available from that path.",
+      authority: "Only the directory owner may approve removal.",
+      recovery:
+        "Move the directory to recoverable storage first when its contents have not been independently verified.",
+    },
+  },
+  {
+    name: "danger",
+    props: {
+      label: "Active data will be replaced",
+      scope: "The current destination directory and every file below it.",
+      impact: "Newer destination changes will be overwritten immediately.",
+      recovery:
+        "Stop now and create a dated copy of the destination before replacing it.",
+      tone: "danger",
+    },
+  },
+] as const satisfies readonly CliExample<DestructiveActionNoticeCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Destructive action notice states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        label: "Owner approval required",
-        scope: "The temporary directory selected for cleanup.",
-        impact: "Its contents will no longer be available from that path.",
-        authority: "Only the directory owner may approve removal.",
-        recovery:
-          "Move the directory to recoverable storage first when its contents have not been independently verified.",
-      },
-    },
-    {
-      name: "danger",
-      props: {
-        label: "Active data will be replaced",
-        scope: "The current destination directory and every file below it.",
-        impact: "Newer destination changes will be overwritten immediately.",
-        recovery:
-          "Stop now and create a dated copy of the destination before replacing it.",
-        tone: "danger",
-      },
-    },
-  ] as const satisfies readonly CliExample<DestructiveActionNoticeCliProps>[],
-);
+export const cliExamples: readonly CliExample<
+  DestructiveActionNoticeCliProps
+>[] = cliExampleImplementations;
 
 /** Render explicit destructive scope, impact, authority, and recovery facts. */
 const renderDestructiveActionNoticeCli: CliRenderer<

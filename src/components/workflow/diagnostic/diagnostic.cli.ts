@@ -39,44 +39,44 @@ export interface DiagnosticCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "verbose-failure",
+    props: {
+      title: "Type check failed",
+      impact:
+        "The package cannot be built until the incompatible value is corrected.",
+      correction:
+        'Handle the "pending" case before assigning the value, then rerun the type check.',
+      path: "src/config/loader.ts",
+      line: 118,
+      column: 17,
+      reproductionCommand: "deno task typecheck",
+      evidence:
+        'Type "pending" | "complete" is not assignable to type "complete".',
+      retryCommand: "deno task typecheck --reload",
+      workingDirectory: "/path/to/project",
+      rawDetail:
+        'TS2322 [ERROR]: Type "pending" | "complete" is not assignable to type "complete".\n    at src/config/loader.ts:118:17\nFound 1 error.',
+      maxWidth: 48,
+    },
+  },
+  {
+    name: "attention",
+    props: {
+      title: "Generated output is stale",
+      impact: "The checked-in surface may not match its authored metadata.",
+      correction:
+        "Regenerate the derived files and inspect the resulting diff.",
+      severity: "attention",
+    },
+  },
+] as const satisfies readonly CliExample<DiagnosticCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Diagnostic states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "verbose-failure",
-      props: {
-        title: "Type check failed",
-        impact:
-          "The package cannot be built until the incompatible value is corrected.",
-        correction:
-          'Handle the "pending" case before assigning the value, then rerun the type check.',
-        path: "src/config/loader.ts",
-        line: 118,
-        column: 17,
-        reproductionCommand: "deno task typecheck",
-        evidence:
-          'Type "pending" | "complete" is not assignable to type "complete".',
-        retryCommand: "deno task typecheck --reload",
-        workingDirectory: "/path/to/project",
-        rawDetail:
-          'TS2322 [ERROR]: Type "pending" | "complete" is not assignable to type "complete".\n    at src/config/loader.ts:118:17\nFound 1 error.',
-        maxWidth: 48,
-      },
-    },
-    {
-      name: "attention",
-      props: {
-        title: "Generated output is stale",
-        impact: "The checked-in surface may not match its authored metadata.",
-        correction:
-          "Regenerate the derived files and inspect the resulting diff.",
-        severity: "attention",
-      },
-    },
-  ] as const satisfies readonly CliExample<DiagnosticCliProps>[],
-);
+export const cliExamples: readonly CliExample<DiagnosticCliProps>[] =
+  cliExampleImplementations;
 
 function assertCoordinate(value: number | undefined, name: string): void {
   if (value !== undefined && (!Number.isSafeInteger(value) || value < 1)) {

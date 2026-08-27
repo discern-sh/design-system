@@ -7,6 +7,7 @@ import meta, { componentExampleVocabulary } from "./skip-link.meta.ts";
 import { SkipLink } from "./skip-link.tsx";
 
 export const conformance = [{
+  example: "default",
   name: "the hidden bypass link surfaces on the next keyboard tab stop",
   steps: [
     {

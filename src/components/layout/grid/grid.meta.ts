@@ -12,12 +12,10 @@ const meta = {
   purposes: ["marketing-site"],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "default", label: "Responsive grid" },
-    { id: "single-column", label: "Single column" },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "default", label: "Responsive grid" },
+  { id: "single-column", label: "Single column" },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

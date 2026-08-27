@@ -7,6 +7,7 @@ import meta, { componentExampleVocabulary } from "./glossary-term.meta.ts";
 import { GlossaryTerm } from "./glossary-term.tsx";
 
 export const conformance = [{
+  example: "default",
   name: "keyboard focus reveals and leaves a glossary definition",
   viewport: { width: 390, height: 844 },
   steps: [
@@ -19,16 +20,16 @@ export const conformance = [{
     },
     {
       expect: "visible",
-      target: { role: "group", name: "Reading measure definition" },
+      target: { role: "group", name: "reading measure definition" },
     },
     {
       expect: "within-viewport",
-      target: { role: "group", name: "Reading measure definition" },
+      target: { role: "group", name: "reading measure definition" },
     },
     { action: "press", key: "Tab" },
     {
       expect: "hidden",
-      target: { role: "group", name: "Reading measure definition" },
+      target: { role: "group", name: "reading measure definition" },
     },
   ],
 }] satisfies readonly ConformanceScenario[];

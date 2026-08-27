@@ -23,29 +23,29 @@ export interface WindowCliProps {
   readonly width?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "standard",
+    props: {
+      title: "lorem — ipsum",
+      body:
+        "Example content\nA clear frame\nSupporting content remains owned by the consumer.",
+    },
+  },
+  {
+    name: "showcase",
+    props: {
+      title: "workspace · example",
+      body:
+        "READY\nFeatured evidence\nA wider frame for the consequential view.\nThe body remains consumer-owned while the durable campaign chrome, depth, and status position travel with the component.",
+    },
+  },
+] as const satisfies readonly CliExample<WindowCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Window states rendered by `deno task catalogue:cli window`. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "standard",
-      props: {
-        title: "lorem — ipsum",
-        body:
-          "Example content\nA clear frame\nSupporting content remains owned by the consumer.",
-      },
-    },
-    {
-      name: "showcase",
-      props: {
-        title: "workspace · example",
-        body:
-          "READY\nFeatured evidence\nA wider frame for the consequential view.\nThe body remains consumer-owned while the durable campaign chrome, depth, and status position travel with the component.",
-      },
-    },
-  ] as const satisfies readonly CliExample<WindowCliProps>[],
-);
+export const cliExamples: readonly CliExample<WindowCliProps>[] =
+  cliExampleImplementations;
 
 /** Render a mark-titled presentation Window inside a terminal box. */
 const renderWindowCli: CliRenderer<WindowCliProps> = (props, capabilities) => {

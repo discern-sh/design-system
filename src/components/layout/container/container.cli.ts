@@ -24,25 +24,25 @@ const SIZE_COLUMNS: Readonly<Record<Exclude<ContainerSize, "full">, number>> = {
   lg: 96,
 };
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      body: "Readable content stays centred inside a named measure.",
+      size: "measure",
+      width: 80,
+    },
+  },
+  {
+    name: "full",
+    props: { body: "Full-width content", size: "full", width: 40 },
+  },
+] as const satisfies readonly CliExample<ContainerCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Container states rendered by `deno task catalogue:cli container`. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        body: "Readable content stays centred inside a named measure.",
-        size: "measure",
-        width: 80,
-      },
-    },
-    {
-      name: "full",
-      props: { body: "Full-width content", size: "full", width: 40 },
-    },
-  ] as const satisfies readonly CliExample<ContainerCliProps>[],
-);
+export const cliExamples: readonly CliExample<ContainerCliProps>[] =
+  cliExampleImplementations;
 
 /** Centre and wrap terminal content inside the shared named Container widths. */
 const renderContainerCli: CliRenderer<ContainerCliProps> = (

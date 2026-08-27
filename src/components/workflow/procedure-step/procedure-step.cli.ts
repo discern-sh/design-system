@@ -46,60 +46,60 @@ export interface ProcedureStepCliProps extends TerminalMotifOptions {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      title: "Verify the generated output",
+      status: "pending",
+      action: "Rebuild the output from its authored inputs.",
+      command: { command: "deno task build" },
+      expectedResult: {
+        value: "The build reports no stale generated files.",
+        variant: "state",
+      },
+      completionCriterion: "The derived output matches the authored source.",
+    },
+  },
+  {
+    name: "branch",
+    props: {
+      title: "Choose the verification depth",
+      status: "pending",
+      action:
+        "Select the path that matches the evidence needed for this handoff.",
+      branch: {
+        choices: [
+          {
+            label: "A focused check is enough",
+            path: "Run the affected test",
+          },
+          {
+            label: "The public contract changed",
+            path: "Run the full release gate",
+          },
+        ],
+      },
+    },
+  },
+  {
+    name: "active",
+    props: {
+      title: "Run the verification suite",
+      status: "active",
+      phase: 1,
+      action: "Verify the current changes.",
+      command: { command: "deno task verify" },
+      expectedResult: { value: "Every configured check passes" },
+      completionCriterion: "The verification report records no failures.",
+    },
+  },
+] as const satisfies readonly CliExample<ProcedureStepCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Procedure step states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        title: "Verify the generated output",
-        status: "pending",
-        action: "Rebuild the output from its authored inputs.",
-        command: { command: "deno task build" },
-        expectedResult: {
-          value: "The build reports no stale generated files.",
-          variant: "state",
-        },
-        completionCriterion: "The derived output matches the authored source.",
-      },
-    },
-    {
-      name: "branch",
-      props: {
-        title: "Choose the verification depth",
-        status: "pending",
-        action:
-          "Select the path that matches the evidence needed for this handoff.",
-        branch: {
-          choices: [
-            {
-              label: "A focused check is enough",
-              path: "Run the affected test",
-            },
-            {
-              label: "The public contract changed",
-              path: "Run the full release gate",
-            },
-          ],
-        },
-      },
-    },
-    {
-      name: "active",
-      props: {
-        title: "Run the verification suite",
-        status: "active",
-        phase: 1,
-        action: "Verify the current changes.",
-        command: { command: "deno task verify" },
-        expectedResult: { value: "Every configured check passes" },
-        completionCriterion: "The verification report records no failures.",
-      },
-    },
-  ] as const satisfies readonly CliExample<ProcedureStepCliProps>[],
-);
+export const cliExamples: readonly CliExample<ProcedureStepCliProps>[] =
+  cliExampleImplementations;
 
 function indentFrame(frame: string): string {
   return frame.split("\n").map((line) => `  ${line}`).join("\n");

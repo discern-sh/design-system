@@ -6,6 +6,7 @@ import { Procedure } from "./procedure.tsx";
 import meta, { componentExampleVocabulary } from "./procedure.meta.ts";
 
 export const conformance = [{
+  example: "default",
   name: "branch routes follow document keyboard order",
   steps: [
     {
@@ -23,6 +24,7 @@ export const conformance = [{
     },
   ],
 }, {
+  example: "default",
   name: "the full procedure stays contained at a narrow viewport",
   viewport: { width: 390, height: 5000 },
   steps: [{

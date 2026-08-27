@@ -37,43 +37,43 @@ export interface RelatedContentCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [{
+  name: "default",
+  props: {
+    eyebrow: "Continue reading",
+    title: "The next useful question.",
+    items: [
+      {
+        eyebrow: "Essay",
+        title: "Designing for legibility",
+        description:
+          "How structure turns complexity into something a reader can challenge.",
+        href: "#legibility",
+        meta: "9 min",
+      },
+      {
+        eyebrow: "Guide",
+        title: "Choosing a reading measure",
+        description: "How line length and spacing support sustained reading.",
+        href: "#reading-measure",
+        meta: "14 min",
+      },
+      {
+        eyebrow: "Field note",
+        title: "Editing a complex introduction",
+        description:
+          "A practical account of simplifying the opening without losing context.",
+        href: "#introduction",
+        meta: "6 min",
+      },
+    ],
+  },
+}] as const satisfies readonly CliExample<RelatedContentCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Related content states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [{
-    name: "default",
-    props: {
-      eyebrow: "Continue reading",
-      title: "The next useful question.",
-      items: [
-        {
-          eyebrow: "Essay",
-          title: "Designing for legibility",
-          description:
-            "How structure turns complexity into something a reader can challenge.",
-          href: "#legibility",
-          meta: "9 min",
-        },
-        {
-          eyebrow: "Guide",
-          title: "Choosing a reading measure",
-          description: "How line length and spacing support sustained reading.",
-          href: "#reading-measure",
-          meta: "14 min",
-        },
-        {
-          eyebrow: "Field note",
-          title: "Editing a complex introduction",
-          description:
-            "A practical account of simplifying the opening without losing context.",
-          href: "#introduction",
-          meta: "6 min",
-        },
-      ],
-    },
-  }] as const satisfies readonly CliExample<RelatedContentCliProps>[],
-);
+export const cliExamples: readonly CliExample<RelatedContentCliProps>[] =
+  cliExampleImplementations;
 
 function hanging(prefix: string, value: string, width: number): string {
   const lines = wrapText(value, Math.max(1, width - measureText(prefix)));

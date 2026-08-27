@@ -30,30 +30,30 @@ export interface PersonaCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  { name: "default", props: { name: "Ada Osei", detail: "Research" } },
+  {
+    name: "with-presence",
+    props: {
+      name: "Morgan Ellis",
+      detail: "Engineering lead",
+      presence: "online",
+    },
+  },
+  {
+    name: "long-name",
+    props: {
+      name: "Alexandrine Featherstonehaugh-Cholmondeley",
+      detail: "Research programme coordination across several regions",
+      maxWidth: 24,
+    },
+  },
+] as const satisfies readonly CliExample<PersonaCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Persona states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    { name: "default", props: { name: "Ada Osei", detail: "Research" } },
-    {
-      name: "with-presence",
-      props: {
-        name: "Morgan Ellis",
-        detail: "Engineering lead",
-        presence: "online",
-      },
-    },
-    {
-      name: "long-name",
-      props: {
-        name: "Alexandrine Featherstonehaugh-Cholmondeley",
-        detail: "Research programme coordination across several regions",
-        maxWidth: 24,
-      },
-    },
-  ] as const satisfies readonly CliExample<PersonaCliProps>[],
-);
+export const cliExamples: readonly CliExample<PersonaCliProps>[] =
+  cliExampleImplementations;
 
 /** Render an initials chip, name, detail, and explicit presence lockup. */
 const renderPersonaCli: CliRenderer<PersonaCliProps> = (

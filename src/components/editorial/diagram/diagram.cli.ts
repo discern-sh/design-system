@@ -89,29 +89,29 @@ export const cliReleaseFixtures: readonly CliExample<DiagramCliProps>[] = Object
     return examples;
   }));
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      spec: releaseSpec("architecture", "representative"),
+      mode: "auto",
+      maxWidth: 120,
+    },
+  },
+  {
+    name: "dense-topology",
+    props: {
+      spec: releaseSpec("architecture", "maximum-density"),
+      mode: "auto",
+      maxWidth: 120,
+    },
+  },
+] as const satisfies readonly CliExample<DiagramCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deliberate human Diagram postures shared with the browser Catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        spec: releaseSpec("architecture", "representative"),
-        mode: "auto",
-        maxWidth: 120,
-      },
-    },
-    {
-      name: "dense-topology",
-      props: {
-        spec: releaseSpec("architecture", "maximum-density"),
-        mode: "auto",
-        maxWidth: 120,
-      },
-    },
-  ] as const satisfies readonly CliExample<DiagramCliProps>[],
-);
+export const cliExamples: readonly CliExample<DiagramCliProps>[] =
+  cliExampleImplementations;
 
 function descriptionLineStyle(
   line: string,

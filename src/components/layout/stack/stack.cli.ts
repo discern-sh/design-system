@@ -26,24 +26,24 @@ export interface StackCliProps {
   readonly width?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      blocks: ["First block", "Second block", "Third block"],
+      width: 24,
+    },
+  },
+  {
+    name: "centred",
+    props: { blocks: ["One", "Two"], align: "center", gap: 2, width: 20 },
+  },
+] as const satisfies readonly CliExample<StackCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Stack states rendered by `deno task catalogue:cli stack`. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        blocks: ["First block", "Second block", "Third block"],
-        width: 24,
-      },
-    },
-    {
-      name: "centred",
-      props: { blocks: ["One", "Two"], align: "center", gap: 2, width: 20 },
-    },
-  ] as const satisfies readonly CliExample<StackCliProps>[],
-);
+export const cliExamples: readonly CliExample<StackCliProps>[] =
+  cliExampleImplementations;
 
 /** Join terminal blocks vertically using Token-constrained gaps and alignment. */
 const renderStackCli: CliRenderer<StackCliProps> = (props, capabilities) => {

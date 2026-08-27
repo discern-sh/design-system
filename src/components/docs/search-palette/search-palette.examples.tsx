@@ -27,6 +27,7 @@ const DESTINATIONS = [
 ] as const;
 
 export const conformance = [{
+  example: "default",
   name:
     "opening focuses the field, typing filters, and escaping clears then closes",
   steps: [
@@ -54,6 +55,7 @@ export const conformance = [{
     { expect: "focused", target: { role: "button", name: "Open search" } },
   ],
 }, {
+  example: "default",
   name: "the visible close action dismisses and restores the opener",
   steps: [
     { action: "click", target: { role: "button", name: "Open search" } },

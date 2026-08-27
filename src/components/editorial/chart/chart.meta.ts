@@ -27,13 +27,11 @@ const meta = {
   ],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "default", label: "Representative chart" },
-    { id: "structural", label: "Structural variation" },
-    { id: "dense-data", label: "Dense data" },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "default", label: "Representative chart" },
+  { id: "structural", label: "Structural variation" },
+  { id: "dense-data", label: "Dense data" },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

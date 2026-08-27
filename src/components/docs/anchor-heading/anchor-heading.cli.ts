@@ -39,30 +39,30 @@ export interface AnchorHeadingCliProps extends TerminalMotifOptions {
   readonly leadingBlankLines?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      id: "anchor-heading-lorem",
+      text: "Lorem ipsum dolor",
+      level: 2,
+    },
+  },
+  {
+    name: "nested-heading",
+    props: {
+      id: "anchor-heading-consectetur",
+      text: "Consectetur adipiscing elit",
+      level: 3,
+      leadingBlankLines: 0,
+    },
+  },
+] as const satisfies readonly CliExample<AnchorHeadingCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Anchor heading states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        id: "anchor-heading-lorem",
-        text: "Lorem ipsum dolor",
-        level: 2,
-      },
-    },
-    {
-      name: "nested-heading",
-      props: {
-        id: "anchor-heading-consectetur",
-        text: "Consectetur adipiscing elit",
-        level: 3,
-        leadingBlankLines: 0,
-      },
-    },
-  ] as const satisfies readonly CliExample<AnchorHeadingCliProps>[],
-);
+export const cliExamples: readonly CliExample<AnchorHeadingCliProps>[] =
+  cliExampleImplementations;
 
 /** Render a documentation heading as a labeled package motif rule. */
 const renderAnchorHeadingCli: CliRenderer<AnchorHeadingCliProps> = (

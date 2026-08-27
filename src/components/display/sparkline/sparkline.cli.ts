@@ -40,23 +40,23 @@ export interface SparklineCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: { values: [3.2, 4.1, 3.8, 5.5, 7.4, 9.1] },
+  },
+  {
+    name: "with-gaps",
+    props: { values: [12, null, 14, 19, null, 23] },
+  },
+  { name: "flat", props: { values: [5, 5, 5, 5, 5] } },
+  { name: "decline", props: { values: [41, 38, 36, 39, 31, 28] } },
+] as const satisfies readonly CliExample<SparklineCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Sparkline states rendered by the CLI Catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: { values: [3.2, 4.1, 3.8, 5.5, 7.4, 9.1] },
-    },
-    {
-      name: "with-gaps",
-      props: { values: [12, null, 14, 19, null, 23] },
-    },
-    { name: "flat", props: { values: [5, 5, 5, 5, 5] } },
-    { name: "decline", props: { values: [41, 38, 36, 39, 31, 28] } },
-  ] as const satisfies readonly CliExample<SparklineCliProps>[],
-);
+export const cliExamples: readonly CliExample<SparklineCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one block-context movement run with its endpoint annotation. */
 const renderSparklineCli: CliRenderer<SparklineCliProps> = (

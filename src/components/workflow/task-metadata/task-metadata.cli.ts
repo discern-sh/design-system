@@ -46,40 +46,40 @@ export interface TaskMetadataCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      outcome: "Confirm that a configuration matches its schema.",
+      audience: "Maintainers reviewing a project configuration.",
+      prerequisites: "A local checkout and the validation command.",
+      complexity: "About 5 minutes",
+      fileEffects: "none",
+      retrySafety: "safe",
+      expectedState:
+        "Validation succeeds and the project files remain unchanged.",
+    },
+  },
+  {
+    name: "file-changing",
+    props: {
+      outcome: "Regenerate a derived reference from its source registry.",
+      audience: "Maintainers changing a public contract.",
+      prerequisites:
+        "The source registry is current and the project files have no unrelated changes.",
+      complexity: "About 15 minutes",
+      fileEffects: "changes-files",
+      retrySafety: "check-first",
+      expectedState:
+        "The reference matches its source and only expected files have changed.",
+    },
+  },
+] as const satisfies readonly CliExample<TaskMetadataCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Task metadata states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        outcome: "Confirm that a configuration matches its schema.",
-        audience: "Maintainers reviewing a project configuration.",
-        prerequisites: "A local checkout and the validation command.",
-        complexity: "About 5 minutes",
-        fileEffects: "none",
-        retrySafety: "safe",
-        expectedState:
-          "Validation succeeds and the project files remain unchanged.",
-      },
-    },
-    {
-      name: "file-changing",
-      props: {
-        outcome: "Regenerate a derived reference from its source registry.",
-        audience: "Maintainers changing a public contract.",
-        prerequisites:
-          "The source registry is current and the project files have no unrelated changes.",
-        complexity: "About 15 minutes",
-        fileEffects: "changes-files",
-        retrySafety: "check-first",
-        expectedState:
-          "The reference matches its source and only expected files have changed.",
-      },
-    },
-  ] as const satisfies readonly CliExample<TaskMetadataCliProps>[],
-);
+export const cliExamples: readonly CliExample<TaskMetadataCliProps>[] =
+  cliExampleImplementations;
 
 /** Render quiet terminal orientation facts for one operational task. */
 const renderTaskMetadataCli: CliRenderer<TaskMetadataCliProps> = (

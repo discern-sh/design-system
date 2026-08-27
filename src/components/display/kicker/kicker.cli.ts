@@ -24,15 +24,15 @@ export interface KickerCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  { name: "default", props: { text: "Foundations" } },
+  { name: "indexed", props: { text: "Working agreement", index: "02" } },
+] as const satisfies readonly CliExample<KickerCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Kicker states rendered by `deno task catalogue:cli kicker`. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    { name: "default", props: { text: "Foundations" } },
-    { name: "indexed", props: { text: "Working agreement", index: "02" } },
-  ] as const satisfies readonly CliExample<KickerCliProps>[],
-);
+export const cliExamples: readonly CliExample<KickerCliProps>[] =
+  cliExampleImplementations;
 
 /** Render an uppercase terminal annotation label with optional index. */
 const renderKickerCli: CliRenderer<KickerCliProps> = (

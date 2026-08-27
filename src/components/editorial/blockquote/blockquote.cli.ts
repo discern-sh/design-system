@@ -70,45 +70,45 @@ const renderBlockquoteCli: CliRenderer<BlockquoteCliProps> = (
   return content.split("\n").map((line) => `${rail}${line}`).join("\n");
 };
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      children: [
+        createCliBlock(renderParagraphCli, {
+          content: [
+            "A neutral quotation can carry ordinary prose and ",
+            { kind: "emphasis", content: "inline meaning" },
+            " without inventing an attribution.",
+          ],
+        }),
+        createCliBlock(renderParagraphCli, {
+          content: "A second block stays part of the same quotation.",
+        }),
+      ],
+    },
+  },
+  {
+    name: "nested-quotation",
+    props: {
+      children: [
+        createCliBlock(renderParagraphCli, {
+          content: "An outer quotation can introduce a quoted response.",
+        }),
+        createCliBlock(renderBlockquoteCli, {
+          children: [createCliBlock(renderParagraphCli, {
+            content:
+              "Nested quoted material remains a semantic block of its own.",
+          })],
+        }),
+      ],
+    },
+  },
+] as const satisfies readonly CliExample<BlockquoteCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Blockquote states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        children: [
-          createCliBlock(renderParagraphCli, {
-            content: [
-              "A neutral quotation can carry ordinary prose and ",
-              { kind: "emphasis", content: "inline meaning" },
-              " without inventing an attribution.",
-            ],
-          }),
-          createCliBlock(renderParagraphCli, {
-            content: "A second block stays part of the same quotation.",
-          }),
-        ],
-      },
-    },
-    {
-      name: "nested-quotation",
-      props: {
-        children: [
-          createCliBlock(renderParagraphCli, {
-            content: "An outer quotation can introduce a quoted response.",
-          }),
-          createCliBlock(renderBlockquoteCli, {
-            children: [createCliBlock(renderParagraphCli, {
-              content:
-                "Nested quoted material remains a semantic block of its own.",
-            })],
-          }),
-        ],
-      },
-    },
-  ] as const satisfies readonly CliExample<BlockquoteCliProps>[],
-);
+export const cliExamples: readonly CliExample<BlockquoteCliProps>[] =
+  cliExampleImplementations;
 
 export default renderBlockquoteCli;

@@ -748,9 +748,9 @@ async function generateRegistry(
       cliPreview = `meta${index}.cli`;
     }
     entries.push(
-      `  { meta: meta${index}, canonicalExamples: resolveComponentExampleVocabulary(meta${index}, componentExampleVocabulary${index}), Examples: examples${index}.default, webExamples: examplesFrom(meta${index}, componentExampleVocabulary${index}, examples${index}, ${
+      `  { meta: meta${index}, canonicalExamples: resolveComponentExampleVocabulary(meta${index}, componentExampleVocabulary${index}), webExamples: examplesFrom(meta${index}, componentExampleVocabulary${index}, examples${index}, ${
         JSON.stringify(source.examplesUrl.pathname)
-      }), conformance: scenariosFrom(examples${index}, ${
+      }), conformance: scenariosFrom(meta${index}, componentExampleVocabulary${index}, examples${index}, ${
         JSON.stringify(source.examplesUrl.pathname)
       }), builderDefaults: builderDefaultsFrom(examples${index}, ${
         JSON.stringify(source.examplesUrl.pathname)
@@ -857,12 +857,32 @@ function examplesFrom(
 }
 
 function scenariosFrom(
+  meta: ComponentMeta,
+  vocabulary: readonly ComponentExampleDefinition[],
   module: object,
   source: string,
 ): readonly ConformanceScenario[] {
   const scenarios = "conformance" in module ? module.conformance : [];
   if (!Array.isArray(scenarios)) {
     throw new TypeError(\`\${source} conformance export must be an array\`);
+  }
+  const webIds = new Set(
+    componentExamplesForSurface(meta, vocabulary, "web").map(({ id }) => id),
+  );
+  for (const scenario of scenarios) {
+    if (
+      typeof scenario !== "object" || scenario === null ||
+      !("example" in scenario) || typeof scenario.example !== "string" ||
+      !webIds.has(scenario.example)
+    ) {
+      throw new TypeError(
+        \`\${meta.slug} conformance scenario in \${source} must name one declared Web example; received \${JSON.stringify(
+          typeof scenario === "object" && scenario !== null && "example" in scenario
+            ? scenario.example
+            : undefined,
+        )}\`,
+      );
+    }
   }
   return scenarios as readonly ConformanceScenario[];
 }
@@ -947,7 +967,6 @@ function selectionFrom(
 export interface RegistryEntry {
   readonly meta: ComponentMeta;
   readonly canonicalExamples: readonly ResolvedComponentExampleDefinition[];
-  readonly Examples: ComponentType;
   readonly webExamples: readonly CatalogueExample[];
   readonly conformance: readonly ConformanceScenario[];
   readonly builderDefaults: Readonly<Record<string, unknown>>;

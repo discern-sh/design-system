@@ -29,20 +29,20 @@ export interface ButtonCliProps {
 
 const PADDING: Readonly<Record<ButtonSize, number>> = { sm: 1, md: 2, lg: 3 };
 
+const cliExampleImplementations = [
+  { name: "default", props: { label: "Continue" } },
+  { name: "secondary", props: { label: "Preview", variant: "secondary" } },
+  {
+    name: "ghost",
+    props: { label: "Cancel", variant: "ghost", size: "sm" },
+  },
+  { name: "danger", props: { label: "Delete", variant: "danger" } },
+] as const satisfies readonly CliExample<ButtonCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Button states rendered by `deno task catalogue:cli button`. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    { name: "default", props: { label: "Continue" } },
-    { name: "secondary", props: { label: "Preview", variant: "secondary" } },
-    {
-      name: "ghost",
-      props: { label: "Cancel", variant: "ghost", size: "sm" },
-    },
-    { name: "danger", props: { label: "Delete", variant: "danger" } },
-  ] as const satisfies readonly CliExample<ButtonCliProps>[],
-);
+export const cliExamples: readonly CliExample<ButtonCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one width-bounded terminal action with shared variant and size vocabulary. */
 const renderButtonCli: CliRenderer<ButtonCliProps> = (props, capabilities) => {

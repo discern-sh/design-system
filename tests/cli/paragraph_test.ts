@@ -5,10 +5,12 @@ import {
   assertThrows,
 } from "@std/assert";
 import { stripAnsi, styleText } from "../../src/cli/ansi.ts";
-import { paragraphCliExamples, renderParagraphCli } from "../../src/cli/mod.ts";
 import { projectTerminalSpans } from "../../src/cli/projection.ts";
 import { measureText, wrapStyledText } from "../../src/cli/text.ts";
 import { terminalThemeColor, terminalThemes } from "../../src/cli/theme.ts";
+import renderParagraphCli, {
+  type ParagraphCliProps,
+} from "../../src/components/editorial/paragraph/paragraph.cli.ts";
 import {
   assertExactFrame,
   testTerminalCapabilities,
@@ -23,6 +25,31 @@ const paragraphProps = {
     " meaning.",
   ],
 } as const;
+
+const richRendererFixture = {
+  content: [
+    "A paragraph can carry ",
+    { kind: "strong", content: "clear emphasis" },
+    ", ",
+    { kind: "emphasis", content: "supporting nuance" },
+    ", ",
+    { kind: "code", text: "measure: 68" },
+    ", and ",
+    {
+      kind: "link",
+      label: "a stable reference",
+      destination: "https://example.test/reference",
+    },
+    ". ",
+    {
+      kind: "image",
+      alt: "Measured line diagram",
+      source: "https://example.test/diagram.png",
+    },
+    " ",
+    { kind: "footnote-reference", identifier: "measure" },
+  ],
+} as const satisfies ParagraphCliProps;
 
 Deno.test("Paragraph renders exact capability-bounded measures without blank boundaries", () => {
   const frames = [
@@ -92,9 +119,7 @@ Deno.test("Paragraph renders exact nested styles at every colour depth", () => {
   }
 });
 
-Deno.test("Paragraph rich example preserves links, images, footnotes, and valid lines", () => {
-  const example = paragraphCliExamples[0];
-  if (example === undefined) throw new Error("Paragraph example missing");
+Deno.test("Paragraph rich renderer fixture preserves links, images, footnotes, and valid lines", () => {
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16", "none"] as const
   ) {
@@ -104,8 +129,11 @@ Deno.test("Paragraph rich example preserves links, images, footnotes, and valid 
         colorDepth,
         unicode,
       });
-      const first = renderParagraphCli(example.props, capabilities);
-      assertEquals(renderParagraphCli(example.props, capabilities), first);
+      const first = renderParagraphCli(richRendererFixture, capabilities);
+      assertEquals(
+        renderParagraphCli(richRendererFixture, capabilities),
+        first,
+      );
       assert(!first.startsWith("\n"));
       assert(!first.endsWith("\n"));
       const visible = stripAnsi(first);

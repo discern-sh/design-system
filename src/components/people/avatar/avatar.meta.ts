@@ -15,19 +15,17 @@ const meta = {
   ],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "default", label: "Initials with presence" },
-    {
-      id: "portrait",
-      label: "Portrait",
-      only: "web",
-      reason:
-        "The package's text-cell terminal contract has no raster-image primitive with which to reproduce this portrait.",
-    },
-    { id: "square", label: "Square" },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "default", label: "Initials with presence" },
+  {
+    id: "portrait",
+    label: "Portrait",
+    only: "web",
+    reason:
+      "The package's text-cell terminal contract has no raster-image primitive with which to reproduce this portrait.",
+  },
+  { id: "square", label: "Square" },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

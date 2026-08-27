@@ -26,17 +26,17 @@ export interface DiffstatCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  { name: "default", props: { added: 310, removed: 204 } },
+  { name: "added", props: { added: 12, removed: 0 } },
+  { name: "removed", props: { added: 0, removed: 86 } },
+  { name: "empty", props: { added: 0, removed: 0 } },
+] as const satisfies readonly CliExample<DiffstatCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Diffstat states rendered by `deno task catalogue:cli diffstat`. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    { name: "default", props: { added: 310, removed: 204 } },
-    { name: "added", props: { added: 12, removed: 0 } },
-    { name: "removed", props: { added: 0, removed: 86 } },
-    { name: "empty", props: { added: 0, removed: 0 } },
-  ] as const satisfies readonly CliExample<DiffstatCliProps>[],
-);
+export const cliExamples: readonly CliExample<DiffstatCliProps>[] =
+  cliExampleImplementations;
 
 /** Render signed counts beside a proportional, sign-readable terminal bar. */
 const renderDiffstatCli: CliRenderer<DiffstatCliProps> = (

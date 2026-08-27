@@ -30,42 +30,45 @@ export interface BranchChoiceCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      title: "Match the route to what happened",
+      choices: [
+        { label: "It worked", path: "Continue to verification" },
+        { label: "It failed", path: "Open recovery guidance" },
+        {
+          label: "The outcome is unclear",
+          path: "Review the prerequisite",
+        },
+      ],
+    },
+  },
+  {
+    name: "next-action",
+    props: {
+      title: "Choose what happens next",
+      choices: [
+        {
+          label: "Recommended — it worked",
+          path: "Continue to the next task",
+        },
+        { label: "It failed", path: "Open troubleshooting" },
+        {
+          label: "I need the reference",
+          path: "Read the command reference",
+        },
+        { label: "Hand it to an agent", path: "Open the agent handoff" },
+      ],
+    },
+  },
+] as const satisfies readonly CliExample<BranchChoiceCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Branch choice states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        title: "Match the route to what happened",
-        choices: [
-          { label: "It worked", path: "Continue to verification" },
-          { label: "It failed", path: "Open recovery guidance" },
-          {
-            label: "The outcome is unclear",
-            path: "Review the prerequisite",
-          },
-        ],
-      },
-    },
-    {
-      name: "next-action",
-      props: {
-        title: "Choose what happens next",
-        choices: [
-          {
-            label: "Recommended — it worked",
-            path: "Continue to the next task",
-          },
-          { label: "It failed", path: "Open troubleshooting" },
-          { label: "I need the reference", path: "Read the command reference" },
-          { label: "Hand it to an agent", path: "Open the agent handoff" },
-        ],
-      },
-    },
-  ] as const satisfies readonly CliExample<BranchChoiceCliProps>[],
-);
+export const cliExamples: readonly CliExample<BranchChoiceCliProps>[] =
+  cliExampleImplementations;
 
 /** Render a complete, ordered set of terminal workflow routes. */
 const renderBranchChoiceCli: CliRenderer<BranchChoiceCliProps> = (

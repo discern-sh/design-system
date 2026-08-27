@@ -17,12 +17,10 @@ const meta = {
   ],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "default", label: "Parallel work" },
-    { id: "lossless-identities", label: "Long identities" },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "default", label: "Parallel work" },
+  { id: "lossless-identities", label: "Long identities" },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

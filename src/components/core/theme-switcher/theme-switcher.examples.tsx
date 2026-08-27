@@ -8,6 +8,7 @@ import { ThemeSwitcher } from "./theme-switcher.tsx";
 import type { ThemeSwitcherMode } from "./theme-switcher.tsx";
 
 export const conformance = [{
+  example: "default",
   name: "each labelled choice updates the controlled preference",
   steps: [
     {

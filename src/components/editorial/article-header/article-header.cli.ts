@@ -44,28 +44,28 @@ export interface ArticleHeaderCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [{
+  name: "default",
+  props: {
+    eyebrow: "Field note · Issue 08",
+    title: "A neighbourhood garden through the seasons.",
+    standfirst:
+      "An illustrated account of how planting, weather, and shared care shape one small green space over a year.",
+    authors: [{
+      name: "Morgan Lee",
+      role: "Contributing editor",
+      initials: "ML",
+    }],
+    meta: ["12 min read", "Updated 14 July", "Field notes"],
+    actions: ["Save article"],
+    surface: "accent",
+  },
+}] as const satisfies readonly CliExample<ArticleHeaderCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Article header states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [{
-    name: "default",
-    props: {
-      eyebrow: "Field note · Issue 08",
-      title: "A neighbourhood garden through the seasons.",
-      standfirst:
-        "An illustrated account of how planting, weather, and shared care shape one small green space over a year.",
-      authors: [{
-        name: "Morgan Lee",
-        role: "Contributing editor",
-        initials: "ML",
-      }],
-      meta: ["12 min read", "Updated 14 July", "Field notes"],
-      actions: ["Save article"],
-      surface: "accent",
-    },
-  }] as const satisfies readonly CliExample<ArticleHeaderCliProps>[],
-);
+export const cliExamples: readonly CliExample<ArticleHeaderCliProps>[] =
+  cliExampleImplementations;
 
 function renderWidth(
   requested: number | undefined,

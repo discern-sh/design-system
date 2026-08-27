@@ -120,54 +120,54 @@ export const MARKDOWN_CLI_HANDLED_BLOCK_KINDS = {
   chart: "rendered",
 } as const satisfies Readonly<Record<MarkdownBlock["kind"], "rendered">>;
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: { source: markdownCompactExampleSource, maxWidth: 68 },
+  },
+  {
+    name: "full-dialect",
+    props: { source: markdownFullDialectExampleSource, maxWidth: 72 },
+  },
+  {
+    name: "deep-nesting",
+    props: { source: markdownDeepNestingExampleSource, maxWidth: 52 },
+  },
+  {
+    name: "reading-hierarchy",
+    props: { source: markdownReadingHierarchyExampleSource, maxWidth: 52 },
+  },
+  {
+    name: "diagram-resource",
+    props: {
+      source: markdownDiagramExampleMarkdown,
+      diagrams: [markdownDiagramExampleResource],
+      maxWidth: 76,
+    },
+  },
+  {
+    name: "chart-resource",
+    props: {
+      source: markdownChartExampleMarkdown,
+      charts: [markdownChartExampleResource],
+      maxWidth: 76,
+    },
+  },
+  {
+    name: "hostile-source",
+    props: { source: markdownHostileExampleSource, maxWidth: 52 },
+  },
+  {
+    name: "narrow-layout",
+    props: { source: markdownCompactExampleSource, maxWidth: 24 },
+    capabilities: { columns: 24 },
+  },
+] as const satisfies readonly CliExample<MarkdownCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic human Markdown documents rendered by the CLI Catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: { source: markdownCompactExampleSource, maxWidth: 68 },
-    },
-    {
-      name: "full-dialect",
-      props: { source: markdownFullDialectExampleSource, maxWidth: 72 },
-    },
-    {
-      name: "deep-nesting",
-      props: { source: markdownDeepNestingExampleSource, maxWidth: 52 },
-    },
-    {
-      name: "reading-hierarchy",
-      props: { source: markdownReadingHierarchyExampleSource, maxWidth: 52 },
-    },
-    {
-      name: "diagram-resource",
-      props: {
-        source: markdownDiagramExampleMarkdown,
-        diagrams: [markdownDiagramExampleResource],
-        maxWidth: 76,
-      },
-    },
-    {
-      name: "chart-resource",
-      props: {
-        source: markdownChartExampleMarkdown,
-        charts: [markdownChartExampleResource],
-        maxWidth: 76,
-      },
-    },
-    {
-      name: "hostile-source",
-      props: { source: markdownHostileExampleSource, maxWidth: 52 },
-    },
-    {
-      name: "narrow-layout",
-      props: { source: markdownCompactExampleSource, maxWidth: 24 },
-      capabilities: { columns: 24 },
-    },
-  ] as const satisfies readonly CliExample<MarkdownCliProps>[],
-);
+export const cliExamples: readonly CliExample<MarkdownCliProps>[] =
+  cliExampleImplementations;
 
 function assertNever(value: never): never {
   throw new MarkdownParseError(

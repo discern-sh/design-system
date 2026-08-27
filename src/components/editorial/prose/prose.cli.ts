@@ -65,69 +65,69 @@ export interface ProseSemanticCliProps extends ProseCliOptions {
 /** Inputs accepted by the terminal Prose renderer. */
 export type ProseCliProps = ProseTextCliProps | ProseSemanticCliProps;
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      text:
+        "Good long-form design gives the first paragraph enough presence to open the argument without turning every sentence into display type.\n\nThe rest settles into a calm reading measure.",
+      lead: true,
+      dropCap: true,
+    },
+  },
+  {
+    name: "rich-structure",
+    props: {
+      children: [
+        {
+          kind: "paragraph",
+          content: [
+            "A reading context keeps ",
+            { kind: "strong", content: "inline meaning" },
+            " beside ",
+            {
+              kind: "link",
+              label: "its reference",
+              destination: "#prose-example",
+            },
+            ".",
+          ],
+        },
+        {
+          kind: "block",
+          block: createCliBlock(renderHeadingCli, {
+            text: "A durable reading rhythm",
+            level: 2,
+            overflow: "wrap",
+            leadingBlankLines: 0,
+          }),
+        },
+        {
+          kind: "block",
+          block: createCliBlock(renderListCli, {
+            items: [
+              { content: "Structural children keep their own semantics." },
+              { content: "Prose supplies only measure and rhythm." },
+            ],
+          }),
+        },
+        {
+          kind: "paragraph",
+          content: [
+            "A hard break remains intentional.",
+            { kind: "hard-break" },
+            "The next line stays in the same paragraph.",
+          ],
+        },
+      ],
+    },
+  },
+] as const satisfies readonly CliExample<ProseCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Prose states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        text:
-          "Good long-form design gives the first paragraph enough presence to open the argument without turning every sentence into display type.\n\nThe rest settles into a calm reading measure.",
-        lead: true,
-        dropCap: true,
-      },
-    },
-    {
-      name: "rich-structure",
-      props: {
-        children: [
-          {
-            kind: "paragraph",
-            content: [
-              "A reading context keeps ",
-              { kind: "strong", content: "inline meaning" },
-              " beside ",
-              {
-                kind: "link",
-                label: "its reference",
-                destination: "#prose-example",
-              },
-              ".",
-            ],
-          },
-          {
-            kind: "block",
-            block: createCliBlock(renderHeadingCli, {
-              text: "A durable reading rhythm",
-              level: 2,
-              overflow: "wrap",
-              leadingBlankLines: 0,
-            }),
-          },
-          {
-            kind: "block",
-            block: createCliBlock(renderListCli, {
-              items: [
-                { content: "Structural children keep their own semantics." },
-                { content: "Prose supplies only measure and rhythm." },
-              ],
-            }),
-          },
-          {
-            kind: "paragraph",
-            content: [
-              "A hard break remains intentional.",
-              { kind: "hard-break" },
-              "The next line stays in the same paragraph.",
-            ],
-          },
-        ],
-      },
-    },
-  ] as const satisfies readonly CliExample<ProseCliProps>[],
-);
+export const cliExamples: readonly CliExample<ProseCliProps>[] =
+  cliExampleImplementations;
 
 const MEASURE_COLUMNS: Readonly<Record<ProseMeasure, number>> = {
   narrow: 48,

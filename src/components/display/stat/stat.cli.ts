@@ -33,49 +33,49 @@ export interface StatCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      label: "Entries",
+      value: "128",
+      context: "Across four collections",
+    },
+  },
+  {
+    name: "positive",
+    props: {
+      label: "Checks",
+      value: "42",
+      context: "Up 4 this week",
+      trend: "positive",
+    },
+  },
+  {
+    name: "negative",
+    props: {
+      label: "Failures",
+      value: "2",
+      context: "Needs attention",
+      trend: "negative",
+    },
+  },
+  {
+    name: "with-sparkline",
+    props: {
+      label: "Throughput",
+      value: "9.1",
+      context: "Up 5.9 from last period",
+      trend: "positive",
+      sparkline: [3.2, 4.1, 3.8, 5.5, 7.4, 9.1],
+    },
+  },
+] as const satisfies readonly CliExample<StatCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Stat states rendered by `deno task catalogue:cli stat`. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        label: "Entries",
-        value: "128",
-        context: "Across four collections",
-      },
-    },
-    {
-      name: "positive",
-      props: {
-        label: "Checks",
-        value: "42",
-        context: "Up 4 this week",
-        trend: "positive",
-      },
-    },
-    {
-      name: "negative",
-      props: {
-        label: "Failures",
-        value: "2",
-        context: "Needs attention",
-        trend: "negative",
-      },
-    },
-    {
-      name: "with-sparkline",
-      props: {
-        label: "Throughput",
-        value: "9.1",
-        context: "Up 5.9 from last period",
-        trend: "positive",
-        sparkline: [3.2, 4.1, 3.8, 5.5, 7.4, 9.1],
-      },
-    },
-  ] as const satisfies readonly CliExample<StatCliProps>[],
-);
+export const cliExamples: readonly CliExample<StatCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one labelled terminal figure and semantic context line. */
 const renderStatCli: CliRenderer<StatCliProps> = (props, capabilities) => {

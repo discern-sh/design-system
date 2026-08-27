@@ -32,46 +32,45 @@ export interface CommandCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      command: "git status",
+      workingDirectory: "/path/to/project",
+      explanation:
+        "Shows the current branch and any tracked or untracked changes.",
+      expectedResult: "On branch main\nnothing to commit, working tree clean",
+      platform: "macOS · Linux · WSL2",
+    },
+  },
+  {
+    name: "failure",
+    props: {
+      command: "deno task test",
+      explanation: "Runs the project's configured test task.",
+      expectedResult: "All tests pass and the process exits successfully.",
+      expectedResultVariant: "state",
+      failureNote:
+        "Confirm the task exists and that the test runner has permission to launch its local browser.",
+    },
+  },
+  {
+    name: "overflow",
+    props: {
+      command:
+        "git status --short --branch --untracked-files=all --ignore-submodules=none",
+      workingDirectory: "/path/to/a/project/with/a/deliberately/long/location",
+      explanation: "A long command remains a faithful input at narrow width.",
+      maxWidth: 42,
+    },
+  },
+] as const satisfies readonly CliExample<CommandCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Command states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        command: "git status",
-        workingDirectory: "/path/to/project",
-        explanation:
-          "Shows the current branch and any tracked or untracked changes.",
-        expectedResult: "On branch main\nnothing to commit, working tree clean",
-        platform: "macOS · Linux · WSL2",
-      },
-    },
-    {
-      name: "failure",
-      props: {
-        command: "deno task test",
-        explanation: "Runs the project's configured test task.",
-        expectedResult: "All tests pass and the process exits successfully.",
-        expectedResultVariant: "state",
-        failureNote:
-          "Confirm the task exists and that the test runner has permission to launch its local browser.",
-      },
-    },
-    {
-      name: "overflow",
-      props: {
-        command:
-          "git status --short --branch --untracked-files=all --ignore-submodules=none",
-        workingDirectory:
-          "/path/to/a/project/with/a/deliberately/long/location",
-        explanation: "A long command remains a faithful input at narrow width.",
-        maxWidth: 42,
-      },
-    },
-  ] as const satisfies readonly CliExample<CommandCliProps>[],
-);
+export const cliExamples: readonly CliExample<CommandCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one executable command with context, proof, and failure guidance. */
 const renderCommandCli: CliRenderer<CommandCliProps> = (

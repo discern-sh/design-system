@@ -28,13 +28,11 @@ const meta = {
   ],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "default", label: "Command with context" },
-    { id: "failure", label: "Expected proof and failure guidance" },
-    { id: "overflow", label: "Long command overflow" },
-  ],
-);
+export const componentExampleVocabulary = [
+  { id: "default", label: "Command with context" },
+  { id: "failure", label: "Expected proof and failure guidance" },
+  { id: "overflow", label: "Long command overflow" },
+] as const;
+defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 
 export default meta;

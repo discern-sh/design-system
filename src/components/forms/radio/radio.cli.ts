@@ -56,81 +56,88 @@ const base = {
   highlightedIndex: 0,
 };
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      ...base,
+      lifecycle: { status: "active" },
+      presentation: "idle",
+    },
+  },
+  {
+    name: "grouped",
+    props: {
+      ...base,
+      options: [
+        { kind: "group-heading", id: "stable", label: "Stable" },
+        { id: "alpha", label: "Alpha" },
+        { id: "bravo", label: "Bravo" },
+        { kind: "group-heading", id: "preview", label: "Preview" },
+        { id: "charlie", label: "Charlie", disabled: true },
+      ],
+      highlightedIndex: 2,
+      selectedId: "bravo",
+      lifecycle: { status: "active" },
+    },
+  },
+  {
+    name: "active",
+    props: {
+      ...base,
+      highlightedIndex: 1,
+      lifecycle: { status: "active" },
+    },
+  },
+  {
+    name: "filled",
+    props: {
+      ...base,
+      selectedId: "bravo",
+      lifecycle: { status: "active" },
+      presentation: "filled",
+    },
+  },
+  {
+    name: "validation-error",
+    props: {
+      ...base,
+      lifecycle: {
+        status: "validation-error",
+        message: "Choose a channel",
+      },
+    },
+  },
+  {
+    name: "disabled",
+    props: {
+      ...base,
+      selectedId: "alpha",
+      lifecycle: { status: "active" },
+      presentation: "disabled",
+    },
+  },
+  {
+    name: "submitted",
+    props: {
+      ...base,
+      selectedId: "bravo",
+      lifecycle: { status: "submitted" },
+    },
+  },
+  {
+    name: "cancelled",
+    props: {
+      ...base,
+      lifecycle: { status: "cancelled", reason: "Selection cancelled" },
+    },
+  },
+] as const satisfies readonly CliExample<RadioCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deliberate human Radio postures shared with the browser Catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: { ...base, lifecycle: { status: "active" }, presentation: "idle" },
-    },
-    {
-      name: "grouped",
-      props: {
-        ...base,
-        options: [
-          { kind: "group-heading", id: "stable", label: "Stable" },
-          { id: "alpha", label: "Alpha" },
-          { id: "bravo", label: "Bravo" },
-          { kind: "group-heading", id: "preview", label: "Preview" },
-          { id: "charlie", label: "Charlie", disabled: true },
-        ],
-        highlightedIndex: 2,
-        selectedId: "bravo",
-        lifecycle: { status: "active" },
-      },
-    },
-    {
-      name: "active",
-      props: {
-        ...base,
-        highlightedIndex: 1,
-        lifecycle: { status: "active" },
-      },
-    },
-    {
-      name: "filled",
-      props: {
-        ...base,
-        selectedId: "bravo",
-        lifecycle: { status: "active" },
-        presentation: "filled",
-      },
-    },
-    {
-      name: "validation-error",
-      props: {
-        ...base,
-        lifecycle: { status: "validation-error", message: "Choose a channel" },
-      },
-    },
-    {
-      name: "disabled",
-      props: {
-        ...base,
-        selectedId: "alpha",
-        lifecycle: { status: "active" },
-        presentation: "disabled",
-      },
-    },
-    {
-      name: "submitted",
-      props: {
-        ...base,
-        selectedId: "bravo",
-        lifecycle: { status: "submitted" },
-      },
-    },
-    {
-      name: "cancelled",
-      props: {
-        ...base,
-        lifecycle: { status: "cancelled", reason: "Selection cancelled" },
-      },
-    },
-  ] as const satisfies readonly CliExample<RadioCliProps>[],
-);
+export const cliExamples: readonly CliExample<RadioCliProps>[] =
+  cliExampleImplementations;
 
 /** Render a Wave 1 single-selection state as a terminal radio group. */
 const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {

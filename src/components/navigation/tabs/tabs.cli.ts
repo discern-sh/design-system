@@ -42,24 +42,24 @@ const items = [
   { value: "history", label: "History", disabled: true },
 ] as const;
 
-/** Deterministic Tabs states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    { name: "default", props: { items, activeValue: "overview" } },
-    { name: "details", props: { items, activeValue: "details" } },
-    {
-      name: "manual",
-      props: {
-        items,
-        activeValue: "overview",
-        focusedValue: "details",
-        activationMode: "manual",
-      },
+const cliExampleImplementations = [
+  { name: "default", props: { items, activeValue: "overview" } },
+  { name: "details", props: { items, activeValue: "details" } },
+  {
+    name: "manual",
+    props: {
+      items,
+      activeValue: "overview",
+      focusedValue: "details",
+      activationMode: "manual",
     },
-  ] as const satisfies readonly CliExample<TabsCliProps>[],
-);
+  },
+] as const satisfies readonly CliExample<TabsCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
+/** Deterministic Tabs states rendered by the CLI catalogue. */
+export const cliExamples: readonly CliExample<TabsCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one wrapping terminal tab strip and its selected panel. */
 const renderTabsCli: CliRenderer<TabsCliProps> = (props, capabilities) => {

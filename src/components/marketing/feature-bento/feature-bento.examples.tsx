@@ -17,6 +17,7 @@ const visual = (label: string) => (
 );
 
 export const conformance = [{
+  example: "lead-matrix",
   name: "the lead matrix retains complete populated rows",
   viewport: { width: 1280, height: 1000 },
   steps: [{

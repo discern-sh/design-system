@@ -32,29 +32,29 @@ export interface PagerCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      previous: { label: "Lorem ipsum", href: "#anchor-heading-lorem" },
+      next: {
+        label: "Consectetur adipiscing",
+        href: "#anchor-heading-consectetur",
+      },
+    },
+  },
+  {
+    name: "next-only",
+    props: {
+      next: { label: "Dolor sit amet", href: "#anchor-heading-lorem" },
+    },
+  },
+] as const satisfies readonly CliExample<PagerCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Pager states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        previous: { label: "Lorem ipsum", href: "#anchor-heading-lorem" },
-        next: {
-          label: "Consectetur adipiscing",
-          href: "#anchor-heading-consectetur",
-        },
-      },
-    },
-    {
-      name: "next-only",
-      props: {
-        next: { label: "Dolor sit amet", href: "#anchor-heading-lorem" },
-      },
-    },
-  ] as const satisfies readonly CliExample<PagerCliProps>[],
-);
+export const cliExamples: readonly CliExample<PagerCliProps>[] =
+  cliExampleImplementations;
 
 /** Render adjacent documentation destinations on one line or a narrow stack. */
 const renderPagerCli: CliRenderer<PagerCliProps> = (props, capabilities) => {

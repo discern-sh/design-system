@@ -145,6 +145,8 @@ export type ConformanceStep =
 
 /** A browser path exported beside one component's catalogue example. */
 export interface ConformanceScenario {
+  /** Canonical Web example whose bounded canvas owns every target. */
+  readonly example: string;
   readonly name: string;
   readonly viewport?: {
     readonly width: number;

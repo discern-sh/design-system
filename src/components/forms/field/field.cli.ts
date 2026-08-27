@@ -47,77 +47,77 @@ export type FieldCliProps =
 
 const base = { label: "Environment", control: "staging" } as const;
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      ...base,
+      control: "Choose a value",
+      lifecycle: { status: "active" },
+      presentation: "idle",
+    },
+  },
+  {
+    name: "active",
+    props: {
+      ...base,
+      lifecycle: { status: "active" },
+      hint: "Use a configured environment",
+    },
+  },
+  {
+    name: "filled",
+    props: {
+      ...base,
+      lifecycle: { status: "active" },
+      presentation: "filled",
+    },
+  },
+  {
+    name: "validation-error",
+    props: {
+      ...base,
+      lifecycle: {
+        status: "validation-error",
+        message: "Environment is unavailable",
+      },
+    },
+  },
+  {
+    name: "disabled",
+    props: {
+      ...base,
+      lifecycle: { status: "active" },
+      presentation: "disabled",
+    },
+  },
+  {
+    name: "submitted",
+    props: { ...base, lifecycle: { status: "submitted" } },
+  },
+  {
+    name: "cancelled",
+    props: {
+      ...base,
+      lifecycle: { status: "cancelled", reason: "Selection cancelled" },
+    },
+  },
+  {
+    name: "acknowledgement",
+    props: {
+      kind: "acknowledgement",
+      label: "Heads up",
+      lifecycle: { status: "active" },
+      message: "Review the summary above.",
+      hint: "Press Enter to continue.",
+    },
+  },
+] as const satisfies readonly CliExample<FieldCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Every static Field state rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        ...base,
-        control: "Choose a value",
-        lifecycle: { status: "active" },
-        presentation: "idle",
-      },
-    },
-    {
-      name: "active",
-      props: {
-        ...base,
-        lifecycle: { status: "active" },
-        hint: "Use a configured environment",
-      },
-    },
-    {
-      name: "filled",
-      props: {
-        ...base,
-        lifecycle: { status: "active" },
-        presentation: "filled",
-      },
-    },
-    {
-      name: "validation-error",
-      props: {
-        ...base,
-        lifecycle: {
-          status: "validation-error",
-          message: "Environment is unavailable",
-        },
-      },
-    },
-    {
-      name: "disabled",
-      props: {
-        ...base,
-        lifecycle: { status: "active" },
-        presentation: "disabled",
-      },
-    },
-    {
-      name: "submitted",
-      props: { ...base, lifecycle: { status: "submitted" } },
-    },
-    {
-      name: "cancelled",
-      props: {
-        ...base,
-        lifecycle: { status: "cancelled", reason: "Selection cancelled" },
-      },
-    },
-    {
-      name: "acknowledgement",
-      props: {
-        kind: "acknowledgement",
-        label: "Heads up",
-        lifecycle: { status: "active" },
-        message: "Review the summary above.",
-        hint: "Press Enter to continue.",
-      },
-    },
-  ] as const satisfies readonly CliExample<FieldCliProps>[],
-);
+export const cliExamples: readonly CliExample<FieldCliProps>[] =
+  cliExampleImplementations;
 
 function isCompactAcknowledgement(
   props: Readonly<FieldCliProps>,

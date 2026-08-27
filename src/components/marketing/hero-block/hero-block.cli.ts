@@ -36,43 +36,43 @@ export interface HeroBlockCliProps extends TerminalMotifOptions {
   readonly width?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "split",
+    props: {
+      eyebrow: "New collection",
+      title: "Make the complicated feel inevitable.",
+      description:
+        "A flexible opening composition for a clear promise, an immediate next step, and one memorable piece of evidence.",
+      actions: ["Start exploring", "See the details"],
+      meta: "Primary action · secondary action · optional note",
+      visual:
+        "A useful example view\nFlexible visual slot\nWindows, diagrams, screenshots, code, or editorial artwork.",
+      layout: "split",
+      surface: "accent",
+    },
+  },
+  {
+    name: "showcase",
+    props: {
+      eyebrow: "For people doing consequential work",
+      title: "A bolder way to build.",
+      description:
+        "Give a substantial idea the scale, evidence, and working space it needs without changing the rest of the interface.",
+      actions: ["See it in practice", "Read the method"],
+      meta: "One clear promise · one substantial piece of evidence",
+      visual:
+        "project · ready for review\nevidence ready\nWide visual evidence remains the final word.\nThe showcase layout gives a supporting preview room to breathe beneath the opening promise.",
+      layout: "showcase",
+      surface: "atmospheric",
+    },
+  },
+] as const satisfies readonly CliExample<HeroBlockCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Hero block states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "split",
-      props: {
-        eyebrow: "New collection",
-        title: "Make the complicated feel inevitable.",
-        description:
-          "A flexible opening composition for a clear promise, an immediate next step, and one memorable piece of evidence.",
-        actions: ["Start exploring", "See the details"],
-        meta: "Primary action · secondary action · optional note",
-        visual:
-          "A useful example view\nFlexible visual slot\nWindows, diagrams, screenshots, code, or editorial artwork.",
-        layout: "split",
-        surface: "accent",
-      },
-    },
-    {
-      name: "showcase",
-      props: {
-        eyebrow: "For people doing consequential work",
-        title: "A bolder way to build.",
-        description:
-          "Give a substantial idea the scale, evidence, and working space it needs without changing the rest of the interface.",
-        actions: ["See it in practice", "Read the method"],
-        meta: "One clear promise · one substantial piece of evidence",
-        visual:
-          "project · ready for review\nevidence ready\nWide visual evidence remains the final word.\nThe showcase layout gives a supporting preview room to breathe beneath the opening promise.",
-        layout: "showcase",
-        surface: "atmospheric",
-      },
-    },
-  ] as const satisfies readonly CliExample<HeroBlockCliProps>[],
-);
+export const cliExamples: readonly CliExample<HeroBlockCliProps>[] =
+  cliExampleImplementations;
 
 /** Render a terminal title banner beneath a quiet leading-marker rule. */
 const renderHeroBlockCli: CliRenderer<HeroBlockCliProps> = (

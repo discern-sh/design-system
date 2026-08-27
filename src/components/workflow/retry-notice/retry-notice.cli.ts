@@ -25,31 +25,31 @@ export interface RetryNoticeCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "safe",
+    props: {
+      safeToRetry: true,
+      label: "Read-only check",
+      reason:
+        "The check reads the current state and does not modify its inputs.",
+    },
+  },
+  {
+    name: "unsafe",
+    props: {
+      safeToRetry: false,
+      label: "Inspect state before continuing",
+      reason:
+        "The first run may already have moved the source. Inspect both locations before choosing a recovery path.",
+    },
+  },
+] as const satisfies readonly CliExample<RetryNoticeCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Retry notice states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "safe",
-      props: {
-        safeToRetry: true,
-        label: "Read-only check",
-        reason:
-          "The check reads the current state and does not modify its inputs.",
-      },
-    },
-    {
-      name: "unsafe",
-      props: {
-        safeToRetry: false,
-        label: "Inspect state before continuing",
-        reason:
-          "The first run may already have moved the source. Inspect both locations before choosing a recovery path.",
-      },
-    },
-  ] as const satisfies readonly CliExample<RetryNoticeCliProps>[],
-);
+export const cliExamples: readonly CliExample<RetryNoticeCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one visible retry-safety decision and its reason. */
 const renderRetryNoticeCli: CliRenderer<RetryNoticeCliProps> = (

@@ -7,6 +7,7 @@ import meta, { componentExampleVocabulary } from "./hover-card.meta.ts";
 import { HoverCard } from "./hover-card.tsx";
 
 export const conformance = [{
+  example: "default",
   name: "keyboard focus keeps rich hover-card content reachable",
   steps: [
     { action: "focus", target: { role: "button", name: "Inspect record" } },
@@ -27,6 +28,7 @@ export const conformance = [{
     },
   ],
 }, {
+  example: "overflow",
   name: "top-layer card remains visible outside an overflow region",
   steps: [
     { action: "focus", target: { role: "button", name: "Clipped parent" } },

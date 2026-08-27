@@ -26,27 +26,27 @@ export interface RawOutputCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      output: "error: expected a string\nat src/example.ts:18:7",
+      expanded: false,
+    },
+  },
+  {
+    name: "expanded",
+    props: {
+      label: "Complete response",
+      output: '{\n  "ok": false,\n  "reason": "invalid input"\n}',
+    },
+  },
+] as const satisfies readonly CliExample<RawOutputCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Raw output states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        output: "error: expected a string\nat src/example.ts:18:7",
-        expanded: false,
-      },
-    },
-    {
-      name: "expanded",
-      props: {
-        label: "Complete response",
-        output: '{\n  "ok": false,\n  "reason": "invalid input"\n}',
-      },
-    },
-  ] as const satisfies readonly CliExample<RawOutputCliProps>[],
-);
+export const cliExamples: readonly CliExample<RawOutputCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one explicit open or closed machine-output frame. */
 const renderRawOutputCli: CliRenderer<RawOutputCliProps> = (

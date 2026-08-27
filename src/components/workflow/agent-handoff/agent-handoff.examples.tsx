@@ -17,6 +17,7 @@ const copyTarget = {
 } as const;
 
 export const conformance = [{
+  example: "default",
   name: "keyboard copy writes only the prompt and retains focus",
   steps: [
     { action: "focus", target: copyTarget },
@@ -40,6 +41,7 @@ export const conformance = [{
     { expect: "focused", target: copyTarget },
   ],
 }, {
+  example: "long-prompt",
   name: "a long prose prompt wraps inside a narrow viewport",
   viewport: { width: 390, height: 1200 },
   steps: [{

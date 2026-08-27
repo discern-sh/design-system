@@ -31,18 +31,18 @@ export interface BylineCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [{
+  name: "default",
+  props: {
+    authors: [{ name: "Ada Osei" }, { name: "June Park" }],
+    meta: ["11 August 2026", "8 min read"],
+  },
+}] as const satisfies readonly CliExample<BylineCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Byline states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [{
-    name: "default",
-    props: {
-      authors: [{ name: "Ada Osei" }, { name: "June Park" }],
-      meta: ["11 August 2026", "8 min read"],
-    },
-  }] as const satisfies readonly CliExample<BylineCliProps>[],
-);
+export const cliExamples: readonly CliExample<BylineCliProps>[] =
+  cliExampleImplementations;
 
 function authorList(authors: readonly BylineCliAuthor[]): string {
   const labels = authors.map((author) =>

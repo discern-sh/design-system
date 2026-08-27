@@ -29,16 +29,16 @@ export interface ThemeToggleCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  { name: "default", props: { theme: "light" } },
+  { name: "quiet", props: { theme: "dark", variant: "quiet" } },
+  { name: "from-dark", props: { theme: "dark" } },
+] as const satisfies readonly CliExample<ThemeToggleCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Theme toggle states rendered by `deno task catalogue:cli theme-toggle`. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    { name: "default", props: { theme: "light" } },
-    { name: "quiet", props: { theme: "dark", variant: "quiet" } },
-    { name: "from-dark", props: { theme: "dark" } },
-  ] as const satisfies readonly CliExample<ThemeToggleCliProps>[],
-);
+export const cliExamples: readonly CliExample<ThemeToggleCliProps>[] =
+  cliExampleImplementations;
 
 /** Render the Theme toggle's destination action without owning terminal input. */
 const renderThemeToggleCli: CliRenderer<ThemeToggleCliProps> = (

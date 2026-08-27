@@ -56,76 +56,80 @@ const base = {
   noLabel: "Not included",
 };
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      ...base,
+      lifecycle: { status: "active" },
+      presentation: "idle",
+    },
+  },
+  {
+    name: "grouped",
+    props: {
+      kind: "multiselect",
+      label: "Notifications",
+      lifecycle: { status: "active" },
+      options: [
+        { kind: "group-heading", id: "regular", label: "Regular" },
+        { id: "email", label: "Email updates" },
+        { id: "summary", label: "Weekly summary", disabled: true },
+        { kind: "group-heading", id: "optional", label: "Optional" },
+        { id: "announcements", label: "Announcements" },
+      ],
+      highlightedIndex: 1,
+      selectedIds: ["email"],
+    },
+  },
+  {
+    name: "active",
+    props: { ...base, lifecycle: { status: "active" } },
+  },
+  {
+    name: "filled",
+    props: {
+      ...base,
+      value: true,
+      lifecycle: { status: "active" },
+      presentation: "filled",
+    },
+  },
+  {
+    name: "validation-error",
+    props: {
+      ...base,
+      lifecycle: {
+        status: "validation-error",
+        message: "Choose before continuing",
+      },
+    },
+  },
+  {
+    name: "disabled",
+    props: {
+      ...base,
+      lifecycle: { status: "active" },
+      presentation: "disabled",
+    },
+  },
+  {
+    name: "submitted",
+    props: { ...base, value: true, lifecycle: { status: "submitted" } },
+  },
+  {
+    name: "cancelled",
+    props: {
+      ...base,
+      lifecycle: { status: "cancelled", reason: "Choice cancelled" },
+    },
+  },
+] as const satisfies readonly CliExample<CheckboxCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deliberate human Checkbox postures shared with the browser Catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: { ...base, lifecycle: { status: "active" }, presentation: "idle" },
-    },
-    {
-      name: "grouped",
-      props: {
-        kind: "multiselect",
-        label: "Notifications",
-        lifecycle: { status: "active" },
-        options: [
-          { kind: "group-heading", id: "regular", label: "Regular" },
-          { id: "email", label: "Email updates" },
-          { id: "summary", label: "Weekly summary", disabled: true },
-          { kind: "group-heading", id: "optional", label: "Optional" },
-          { id: "announcements", label: "Announcements" },
-        ],
-        highlightedIndex: 1,
-        selectedIds: ["email"],
-      },
-    },
-    {
-      name: "active",
-      props: { ...base, lifecycle: { status: "active" } },
-    },
-    {
-      name: "filled",
-      props: {
-        ...base,
-        value: true,
-        lifecycle: { status: "active" },
-        presentation: "filled",
-      },
-    },
-    {
-      name: "validation-error",
-      props: {
-        ...base,
-        lifecycle: {
-          status: "validation-error",
-          message: "Choose before continuing",
-        },
-      },
-    },
-    {
-      name: "disabled",
-      props: {
-        ...base,
-        lifecycle: { status: "active" },
-        presentation: "disabled",
-      },
-    },
-    {
-      name: "submitted",
-      props: { ...base, value: true, lifecycle: { status: "submitted" } },
-    },
-    {
-      name: "cancelled",
-      props: {
-        ...base,
-        lifecycle: { status: "cancelled", reason: "Choice cancelled" },
-      },
-    },
-  ] as const satisfies readonly CliExample<CheckboxCliProps>[],
-);
+export const cliExamples: readonly CliExample<CheckboxCliProps>[] =
+  cliExampleImplementations;
 
 /** Render a Wave 1 confirmation state with checkbox semantics. */
 const renderCheckboxCli: CliRenderer<CheckboxCliProps> = (

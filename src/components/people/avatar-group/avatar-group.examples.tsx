@@ -7,6 +7,7 @@ import meta, { componentExampleVocabulary } from "./avatar-group.meta.ts";
 import { AvatarGroup } from "./avatar-group.tsx";
 
 export const conformance = [{
+  example: "default",
   name: "the stack clamps to max and announces the remainder",
   steps: [
     {

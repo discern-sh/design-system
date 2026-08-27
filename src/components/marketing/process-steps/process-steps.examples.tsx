@@ -7,6 +7,7 @@ import { ProcessSteps } from "./process-steps.tsx";
 
 export const conformance = [
   {
+    example: "default",
     name:
       "five steps share one row and keep their footers level when space permits",
     steps: [
@@ -23,6 +24,7 @@ export const conformance = [
     ],
   },
   {
+    example: "default",
     name: "five steps wrap into balanced rows before becoming a single column",
     viewport: { width: 800, height: 1000 },
     steps: [

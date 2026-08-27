@@ -39,19 +39,19 @@ export interface AgentAvatarCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  { name: "default", props: { name: "Release agent" } },
+  {
+    name: "working",
+    props: { name: "Release agent", status: "working" },
+  },
+  { name: "blocked", props: { name: "Review", status: "blocked" } },
+] as const satisfies readonly CliExample<AgentAvatarCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Agent avatar states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    { name: "default", props: { name: "Release agent" } },
-    {
-      name: "working",
-      props: { name: "Release agent", status: "working" },
-    },
-    { name: "blocked", props: { name: "Review", status: "blocked" } },
-  ] as const satisfies readonly CliExample<AgentAvatarCliProps>[],
-);
+export const cliExamples: readonly CliExample<AgentAvatarCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one initials chip with an optional visible activity state. */
 const renderAgentAvatarCli: CliRenderer<AgentAvatarCliProps> = (

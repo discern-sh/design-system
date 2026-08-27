@@ -6,6 +6,7 @@ import meta, { componentExampleVocabulary } from "./table.meta.ts";
 import { Table } from "./table.tsx";
 
 export const conformance = [{
+  example: "dense-overflow",
   name: "a dense table scrolls inside its wrapper at a narrow viewport",
   viewport: { width: 390, height: 844 },
   steps: [{

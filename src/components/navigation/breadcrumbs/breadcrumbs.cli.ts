@@ -31,33 +31,33 @@ export interface BreadcrumbsCliProps {
   readonly width?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      items: [{ label: "Home" }, { label: "Library" }],
+      current: "Navigation",
+    },
+  },
+  {
+    name: "deep",
+    props: {
+      label: "Deep breadcrumb",
+      items: [
+        { label: "Home" },
+        { label: "Documentation" },
+        { label: "Components" },
+        { label: "Navigation" },
+      ],
+      current: "Breadcrumbs",
+    },
+  },
+] as const satisfies readonly CliExample<BreadcrumbsCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Breadcrumbs states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        items: [{ label: "Home" }, { label: "Library" }],
-        current: "Navigation",
-      },
-    },
-    {
-      name: "deep",
-      props: {
-        label: "Deep breadcrumb",
-        items: [
-          { label: "Home" },
-          { label: "Documentation" },
-          { label: "Components" },
-          { label: "Navigation" },
-        ],
-        current: "Breadcrumbs",
-      },
-    },
-  ] as const satisfies readonly CliExample<BreadcrumbsCliProps>[],
-);
+export const cliExamples: readonly CliExample<BreadcrumbsCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one wrapping inline terminal path with an explicit current location. */
 const renderBreadcrumbsCli: CliRenderer<BreadcrumbsCliProps> = (

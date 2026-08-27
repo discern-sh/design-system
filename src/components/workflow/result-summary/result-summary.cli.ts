@@ -135,14 +135,15 @@ const cliExampleProps = {
 >;
 
 /** Deterministic Result summary states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  RESULT_SUMMARY_STATES.map((state) => ({
-    name: state,
-    props: cliExampleProps[state],
-  })) satisfies readonly CliExample<ResultSummaryCliProps>[],
-);
+export const cliExamples: readonly CliExample<ResultSummaryCliProps>[] =
+  defineCliExamples(
+    meta,
+    componentExampleVocabulary,
+    RESULT_SUMMARY_STATES.map((state) => ({
+      name: state,
+      props: cliExampleProps[state],
+    })) satisfies readonly CliExample<ResultSummaryCliProps>[],
+  );
 
 /** Render one outcome with an optional collection-owned prefix width. */
 export function renderResultSummaryCliWithPrefixWidth(

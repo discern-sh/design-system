@@ -34,32 +34,32 @@ export interface ProfileCardCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      name: "Ada Osei",
+      detail: "Research",
+      bio: "Turns field evidence into clear research questions.",
+      links: [{ label: "Field notes", href: "#field-notes" }],
+    },
+  },
+  {
+    name: "landscape",
+    props: {
+      name: "June Park",
+      detail: "Editor at large",
+      bio: "Edits each guide until the next action is clear.",
+      links: [{ label: "From the desk", href: "#from-the-desk" }],
+      layout: "landscape",
+    },
+  },
+] as const satisfies readonly CliExample<ProfileCardCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Profile card states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        name: "Ada Osei",
-        detail: "Research",
-        bio: "Turns field evidence into clear research questions.",
-        links: [{ label: "Field notes", href: "#field-notes" }],
-      },
-    },
-    {
-      name: "landscape",
-      props: {
-        name: "June Park",
-        detail: "Editor at large",
-        bio: "Edits each guide until the next action is clear.",
-        links: [{ label: "From the desk", href: "#from-the-desk" }],
-        layout: "landscape",
-      },
-    },
-  ] as const satisfies readonly CliExample<ProfileCardCliProps>[],
-);
+export const cliExamples: readonly CliExample<ProfileCardCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one framed terminal identity card with visible link destinations. */
 const renderProfileCardCli: CliRenderer<ProfileCardCliProps> = (

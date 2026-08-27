@@ -30,24 +30,24 @@ export interface TestimonialCliProps {
   readonly width?: number;
 }
 
-/** Deterministic Testimonial states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        eyebrow: "Example perspective",
-        quote: "The shared evidence made the final review easier to follow.",
-        author: "Project reviewer",
-        authorRole: "Engineering lead",
-        metric: "One",
-        metricLabel: "clear recommendation",
-      },
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      eyebrow: "Example perspective",
+      quote: "The shared evidence made the final review easier to follow.",
+      author: "Project reviewer",
+      authorRole: "Engineering lead",
+      metric: "One",
+      metricLabel: "clear recommendation",
     },
-  ] as const satisfies readonly CliExample<TestimonialCliProps>[],
-);
+  },
+] as const satisfies readonly CliExample<TestimonialCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
+/** Deterministic Testimonial states rendered by the CLI catalogue. */
+export const cliExamples: readonly CliExample<TestimonialCliProps>[] =
+  cliExampleImplementations;
 
 /** Render an attributed terminal quotation with an optional outcome metric. */
 const renderTestimonialCli: CliRenderer<TestimonialCliProps> = (

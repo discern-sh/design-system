@@ -8,6 +8,7 @@ import meta, { componentExampleVocabulary } from "./toast.meta.ts";
 import { Toast } from "./toast.tsx";
 
 export const conformance = [{
+  example: "success",
   name: "the labelled dismiss action removes its notification",
   steps: [
     {

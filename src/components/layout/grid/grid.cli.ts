@@ -25,25 +25,25 @@ export interface GridCliProps {
   readonly width?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      blocks: ["Alpha", "Beta", "Gamma", "Delta"],
+      minimum: 8,
+      width: 32,
+    },
+  },
+  {
+    name: "single-column",
+    props: { blocks: ["Alpha", "Beta", "Gamma"], minimum: 12, width: 12 },
+  },
+] as const satisfies readonly CliExample<GridCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Grid states rendered by `deno task catalogue:cli grid`. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        blocks: ["Alpha", "Beta", "Gamma", "Delta"],
-        minimum: 8,
-        width: 32,
-      },
-    },
-    {
-      name: "single-column",
-      props: { blocks: ["Alpha", "Beta", "Gamma"], minimum: 12, width: 12 },
-    },
-  ] as const satisfies readonly CliExample<GridCliProps>[],
-);
+export const cliExamples: readonly CliExample<GridCliProps>[] =
+  cliExampleImplementations;
 
 /** Flow terminal blocks through responsive rows using the foundation column layout. */
 const renderGridCli: CliRenderer<GridCliProps> = (props, capabilities) => {

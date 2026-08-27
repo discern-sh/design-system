@@ -24,27 +24,27 @@ export interface BannerCliProps {
   readonly width?: number;
 }
 
+const cliExampleImplementations = [
+  { name: "default", props: { message: "A new version is available." } },
+  {
+    name: "accent",
+    props: { message: "Review the featured change.", tone: "accent" },
+  },
+  {
+    name: "success",
+    props: { message: "Checks passed.", tone: "success" },
+  },
+  {
+    name: "warning",
+    props: { message: "Review the pending changes.", tone: "warning" },
+  },
+  { name: "danger", props: { message: "Build failed.", tone: "danger" } },
+] as const satisfies readonly CliExample<BannerCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Banner states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    { name: "default", props: { message: "A new version is available." } },
-    {
-      name: "accent",
-      props: { message: "Review the featured change.", tone: "accent" },
-    },
-    {
-      name: "success",
-      props: { message: "Checks passed.", tone: "success" },
-    },
-    {
-      name: "warning",
-      props: { message: "Review the pending changes.", tone: "warning" },
-    },
-    { name: "danger", props: { message: "Build failed.", tone: "danger" } },
-  ] as const satisfies readonly CliExample<BannerCliProps>[],
-);
+export const cliExamples: readonly CliExample<BannerCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one width-bounded, semantically toned terminal Banner. */
 const renderBannerCli: CliRenderer<BannerCliProps> = (props, capabilities) => {

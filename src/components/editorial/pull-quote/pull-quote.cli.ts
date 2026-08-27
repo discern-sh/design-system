@@ -29,20 +29,20 @@ export interface PullQuoteCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [{
+  name: "default",
+  props: {
+    quote:
+      "A good reading experience lets the ideas lead and the interface recede.",
+    attribution: "Example contributor",
+    citation: "Collected essays",
+  },
+}] as const satisfies readonly CliExample<PullQuoteCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Pull quote states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [{
-    name: "default",
-    props: {
-      quote:
-        "A good reading experience lets the ideas lead and the interface recede.",
-      attribution: "Example contributor",
-      citation: "Collected essays",
-    },
-  }] as const satisfies readonly CliExample<PullQuoteCliProps>[],
-);
+export const cliExamples: readonly CliExample<PullQuoteCliProps>[] =
+  cliExampleImplementations;
 
 const ALIGN_COLUMNS: Readonly<Record<PullQuoteAlign, number>> = {
   inline: 64,

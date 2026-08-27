@@ -20,6 +20,7 @@ const content = {
 } as const;
 
 export const conformance = [{
+  example: "default",
   name: "native disclosure toggles its content and open state",
   steps: [
     { expect: "hidden", target: content },

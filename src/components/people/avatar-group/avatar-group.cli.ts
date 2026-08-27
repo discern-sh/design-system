@@ -35,39 +35,39 @@ export interface AvatarGroupCliProps {
   readonly maxWidth?: number;
 }
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      label: "Reviewers",
+      people: [
+        { name: "Priya Anand" },
+        { name: "Jonah Reyes" },
+        { name: "Ada Osei" },
+        { name: "Tomás Vega" },
+        { name: "June Park" },
+      ],
+      max: 3,
+    },
+  },
+  {
+    name: "compact",
+    props: {
+      label: "On the call",
+      people: [
+        { name: "Morgan Ellis" },
+        { name: "June Park" },
+        { name: "Ada Osei" },
+      ],
+      size: "sm",
+    },
+  },
+] as const satisfies readonly CliExample<AvatarGroupCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic Avatar group states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        label: "Reviewers",
-        people: [
-          { name: "Priya Anand" },
-          { name: "Jonah Reyes" },
-          { name: "Ada Osei" },
-          { name: "Tomás Vega" },
-          { name: "June Park" },
-        ],
-        max: 3,
-      },
-    },
-    {
-      name: "compact",
-      props: {
-        label: "On the call",
-        people: [
-          { name: "Morgan Ellis" },
-          { name: "June Park" },
-          { name: "Ada Osei" },
-        ],
-        size: "sm",
-      },
-    },
-  ] as const satisfies readonly CliExample<AvatarGroupCliProps>[],
-);
+export const cliExamples: readonly CliExample<AvatarGroupCliProps>[] =
+  cliExampleImplementations;
 
 function wrapStyledItems(items: readonly string[], width: number): string {
   const lines: string[] = [];

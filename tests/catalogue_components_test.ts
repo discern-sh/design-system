@@ -9,8 +9,10 @@ const PACKAGE_ROOT = fromFileUrl(new URL("../", import.meta.url));
 
 Deno.test("Theme Toggle's Catalogue example presents one page-chrome control", async () => {
   const { registry } = await catalogue();
+  const example = catalogueEntry(registry, "theme-toggle").webExamples[0];
+  assert(example !== undefined);
   const markup = renderToStaticMarkup(
-    createElement(catalogueEntry(registry, "theme-toggle").Examples),
+    createElement(example.Example),
   );
   assertEquals(
     markup.match(/class="[^"]*\bdiscern-theme-toggle\b[^"]*"/g)?.length,

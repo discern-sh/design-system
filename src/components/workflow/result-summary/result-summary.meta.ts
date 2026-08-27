@@ -1,5 +1,9 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
+import {
+  RESULT_SUMMARY_STATE_LABELS,
+  RESULT_SUMMARY_STATES,
+} from "./result-summary.types.ts";
 
 const meta = {
   name: "Result summary",
@@ -28,16 +32,15 @@ const meta = {
   ],
 } satisfies ComponentMeta;
 
-export const componentExampleVocabulary = defineComponentExampleVocabulary(
-  meta,
-  [
-    { id: "passed", label: "Passed" },
-    { id: "failed", label: "Failed" },
-    { id: "blocked", label: "Blocked" },
-    { id: "changed", label: "Changed" },
-    { id: "declared", label: "Declared" },
-    { id: "unchanged", label: "Unchanged" },
-  ],
-);
+const resultSummaryExampleVocabulary = RESULT_SUMMARY_STATES.map((id) => ({
+  id,
+  label: RESULT_SUMMARY_STATE_LABELS[id],
+}));
+
+export const componentExampleVocabulary: typeof resultSummaryExampleVocabulary =
+  defineComponentExampleVocabulary(
+    meta,
+    resultSummaryExampleVocabulary,
+  );
 
 export default meta;

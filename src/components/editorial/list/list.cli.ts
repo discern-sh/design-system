@@ -219,50 +219,50 @@ const renderListCli: CliRenderer<ListCliProps> = (props, capabilities) => {
   return spacing === "loose" ? composeCliBlocks(items) : items.join("\n");
 };
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      items: [
+        {
+          content: "Start with the strongest available evidence.",
+        },
+        {
+          content: "Keep supporting detail close to the claim.",
+          blocks: [
+            createCliBlock(renderParagraphCli, {
+              content:
+                "A continuation remains a separate paragraph inside its item.",
+            }),
+            createCliBlock(renderListCli, {
+              kind: "ordered",
+              items: [
+                { content: "Name the observation." },
+                { content: "Record the constraint." },
+              ],
+            }),
+          ],
+        },
+      ],
+    },
+  },
+  {
+    name: "task-mixed",
+    props: {
+      kind: "task",
+      spacing: "loose",
+      items: [
+        { content: "Reviewed source material", checked: true },
+        { content: "Verify the final frame", checked: false },
+        { content: "A contextual note without task state" },
+      ],
+    },
+  },
+] as const satisfies readonly CliExample<ListCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Deterministic List states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        items: [
-          {
-            content: "Start with the strongest available evidence.",
-          },
-          {
-            content: "Keep supporting detail close to the claim.",
-            blocks: [
-              createCliBlock(renderParagraphCli, {
-                content:
-                  "A continuation remains a separate paragraph inside its item.",
-              }),
-              createCliBlock(renderListCli, {
-                kind: "ordered",
-                items: [
-                  { content: "Name the observation." },
-                  { content: "Record the constraint." },
-                ],
-              }),
-            ],
-          },
-        ],
-      },
-    },
-    {
-      name: "task-mixed",
-      props: {
-        kind: "task",
-        spacing: "loose",
-        items: [
-          { content: "Reviewed source material", checked: true },
-          { content: "Verify the final frame", checked: false },
-          { content: "A contextual note without task state" },
-        ],
-      },
-    },
-  ] as const satisfies readonly CliExample<ListCliProps>[],
-);
+export const cliExamples: readonly CliExample<ListCliProps>[] =
+  cliExampleImplementations;
 
 export default renderListCli;

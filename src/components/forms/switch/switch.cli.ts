@@ -43,56 +43,63 @@ const base = {
   value: false,
 };
 
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      ...base,
+      lifecycle: { status: "active" },
+      presentation: "idle",
+    },
+  },
+  {
+    name: "active",
+    props: { ...base, lifecycle: { status: "active" } },
+  },
+  {
+    name: "filled",
+    props: {
+      ...base,
+      value: true,
+      lifecycle: { status: "active" },
+      presentation: "filled",
+    },
+  },
+  {
+    name: "validation-error",
+    props: {
+      ...base,
+      lifecycle: {
+        status: "validation-error",
+        message: "Setting is locked",
+      },
+    },
+  },
+  {
+    name: "disabled",
+    props: {
+      ...base,
+      lifecycle: { status: "active" },
+      presentation: "disabled",
+    },
+  },
+  {
+    name: "submitted",
+    props: { ...base, value: true, lifecycle: { status: "submitted" } },
+  },
+  {
+    name: "cancelled",
+    props: {
+      ...base,
+      lifecycle: { status: "cancelled", reason: "Change cancelled" },
+    },
+  },
+] as const satisfies readonly CliExample<SwitchCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
 /** Every static Switch state rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: { ...base, lifecycle: { status: "active" }, presentation: "idle" },
-    },
-    {
-      name: "active",
-      props: { ...base, lifecycle: { status: "active" } },
-    },
-    {
-      name: "filled",
-      props: {
-        ...base,
-        value: true,
-        lifecycle: { status: "active" },
-        presentation: "filled",
-      },
-    },
-    {
-      name: "validation-error",
-      props: {
-        ...base,
-        lifecycle: { status: "validation-error", message: "Setting is locked" },
-      },
-    },
-    {
-      name: "disabled",
-      props: {
-        ...base,
-        lifecycle: { status: "active" },
-        presentation: "disabled",
-      },
-    },
-    {
-      name: "submitted",
-      props: { ...base, value: true, lifecycle: { status: "submitted" } },
-    },
-    {
-      name: "cancelled",
-      props: {
-        ...base,
-        lifecycle: { status: "cancelled", reason: "Change cancelled" },
-      },
-    },
-  ] as const satisfies readonly CliExample<SwitchCliProps>[],
-);
+export const cliExamples: readonly CliExample<SwitchCliProps>[] =
+  cliExampleImplementations;
 
 /** Render a Wave 1 confirmation state with binary switch semantics. */
 const renderSwitchCli: CliRenderer<SwitchCliProps> = (props, capabilities) => {

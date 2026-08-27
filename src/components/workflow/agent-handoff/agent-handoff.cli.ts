@@ -27,37 +27,37 @@ export interface AgentHandoffCliProps {
   readonly maxWidth?: number;
 }
 
-/** Deterministic Agent handoff states rendered by the CLI catalogue. */
-export const cliExamples = defineCliExamples(
-  meta,
-  componentExampleVocabulary,
-  [
-    {
-      name: "default",
-      props: {
-        title: "Hand this review to an agent",
-        prompt: `Review the configuration change in this project.
+const cliExampleImplementations = [
+  {
+    name: "default",
+    props: {
+      title: "Hand this review to an agent",
+      prompt: `Review the configuration change in this project.
 Run the project checks.
 Report the files changed, the commands run, and any remaining risk.`,
-        description:
-          "The prompt carries the task boundary and the evidence expected back.",
-      },
+      description:
+        "The prompt carries the task boundary and the evidence expected back.",
     },
-    {
-      name: "long-prompt",
-      props: {
-        title: "Hand off a reference update",
-        description:
-          "Long paths and instructions wrap as prose rather than scrolling like a command.",
-        prompt: `Update the generated reference from its source registry.
+  },
+  {
+    name: "long-prompt",
+    props: {
+      title: "Hand off a reference update",
+      description:
+        "Long paths and instructions wrap as prose rather than scrolling like a command.",
+      prompt: `Update the generated reference from its source registry.
 Work only in the assigned project directory and preserve unrelated changes.
 Inspect /path/to/a/deliberately/long/project/reference/source-registry.ts before editing.
 Run the quality gate, then report the resulting files and evidence.`,
-        maxWidth: 42,
-      },
+      maxWidth: 42,
     },
-  ] as const satisfies readonly CliExample<AgentHandoffCliProps>[],
-);
+  },
+] as const satisfies readonly CliExample<AgentHandoffCliProps>[];
+defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
+
+/** Deterministic Agent handoff states rendered by the CLI catalogue. */
+export const cliExamples: readonly CliExample<AgentHandoffCliProps>[] =
+  cliExampleImplementations;
 
 /** Render one self-contained, width-bounded terminal agent prompt. */
 const renderAgentHandoffCli: CliRenderer<AgentHandoffCliProps> = (
