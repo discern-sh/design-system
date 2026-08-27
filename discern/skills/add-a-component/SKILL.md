@@ -3,7 +3,7 @@ name: add-a-component
 description: Add a new component to the design system — scaffold the fixed five-file anatomy, let codegen auto-enrol every surface, and ship it with conformance coverage, a changelog entry, and a Catalogue preview URL. Use when adding any component, block, or element to the catalogue, or when porting a site-local pattern into the package.
 metadata:
   author: "discern-design-system"
-  version: "1.0"
+  version: "1.1"
 ---
 
 # Add a component
@@ -19,25 +19,27 @@ Every component is one folder plus codegen — no manual registration anywhere. 
 
 Five files, always the same shape (crib a small sibling like `src/components/display/kicker/`):
 
-| File                  | Owns                                                                                                                              |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `<slug>.css`          | All component CSS. Every class is `discern-<slug>`-prefixed BEM (`discern-x__part`, `discern-x--variant`); no globals.            |
-| `<slug>.tsx`          | The React adapter: `forwardRef`, typed props, `classNames` helper, type-only imports, JSDoc on every export.                      |
-| `<slug>.meta.ts`      | `export default {...} satisfies ComponentMeta` — name, slug, group, order, description, required CLI stance, accessibility notes. |
-| `<slug>.examples.tsx` | Default-export component rendering representative states with **generic copy** (no product claims, no customer names).            |
-| `mod.ts`              | `export * from "./<slug>.tsx";`                                                                                                   |
+| File                  | Owns                                                                                                                                     |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `<slug>.css`          | All component CSS. Every class is `discern-<slug>`-prefixed BEM (`discern-x__part`, `discern-x--variant`); no globals.                   |
+| `<slug>.tsx`          | The React adapter: `forwardRef`, typed props, `classNames` helper, type-only imports, JSDoc on every export.                             |
+| `<slug>.meta.ts`      | Default `ComponentMeta` plus the named, framework-neutral `componentExampleVocabulary` — one ordered id/label authority for Web and CLI. |
+| `<slug>.examples.tsx` | One bounded `catalogueExamples` renderer per Web-capable canonical entry, plus a default showcase when useful; all copy stays generic.   |
+| `mod.ts`              | `export * from "./<slug>.tsx";`                                                                                                          |
 
 Rules that bite:
 
 - **Decide the CLI stance at birth.** Metadata always declares `cli: { stance: "rendered" }` or `cli: { stance: "exempt", reason: "…" }`. Rendered Components add `<slug>.cli.ts` with a pure default renderer, `<Pascal>CliProps`, and deterministic `cliExamples`; exemptions state the concrete terminal mismatch. Codegen rejects an absent stance, a missing or orphan renderer, and an empty exemption reason.
+- **Define example identity once.** Declare `componentExampleVocabulary` with `defineComponentExampleVocabulary(meta, [...])` beside the default Metadata. Stable kebab-case ids describe meaning rather than transport; labels are the human names on both surfaces; `default`, when present, is first. Shared applicability is the omission-friendly default. Mark an entry `only: "web"` or `only: "cli"` only when the other medium literally cannot represent the fact, and state that specific incompatibility in `reason`. A CLI-exempt Component marks every entry Web-only and inherits the Metadata exemption instead of repeating it.
+- **Bind every applicable implementation.** Export `catalogueExamples = defineCatalogueExamples(meta, componentExampleVocabulary, [...])` from the React examples module and wrap rendered `cliExamples` with the private `defineCliExamples` helper. Each list references every applicable canonical id exactly once and in order. Props and pixels may differ, but one id must preserve one semantic posture. Keep exhaustive renderer-quality fixtures outside the human Catalogue list when they do not teach a distinct example.
 - **Style with tokens, not raw values.** Colors, space, radii, and type come from the public `--discern-*` custom properties; themes must move the component without touching its CSS. Keep interface text at or above `--discern-font-size-xs`.
 - **Depend by importing.** If the component uses another component, import its `.tsx` directly — codegen derives the dependency graph from imports, so the runtime emitter pulls the dependency's CSS automatically.
 - **No client JS.** The adapter renders static HTML at build time. Interactive behaviour must come from the platform (native `<dialog>`, `<details>`, CSS) or stay a consumer concern.
 
 ## 3. Generate and verify
 
-1. `deno task codegen` — regenerates the committed registry, React and CLI surfaces, and base styles. The build regenerates the ignored Catalogue registry from the same authored sources; never edit either generated surface directly.
-2. `discern prepare` while iterating; `discern done` before calling it done. The Catalogue build generates and type-checks your examples, and every example auto-enrols in the light and dark accessibility scans. Add `export const conformance = [...]` scenarios (see `catalogue/conformance.ts`) when the component has keyboard or focus behaviour worth pinning.
+1. `deno task codegen` — validates the complete Web/CLI example parity contract, then regenerates the committed registries, React and CLI surfaces, review-tool example facts, and base styles. The build regenerates the ignored Catalogue registry from the same authored sources; never edit either generated surface directly.
+2. `discern prepare` while iterating; `discern done` before calling it done. The Catalogue build type-checks every bounded example, and every Web-capable entry auto-enrols in light and dark accessibility scans. Add `export const conformance = [...]` scenarios (see `catalogue/conformance.ts`) when the component has keyboard or focus behaviour worth pinning.
 3. Watch the css standards in the gate output: `css_density` holds emitted bytes per component stylesheet, so a heavy component raises the rate it is judged by, and `docs_selection` budgets the documentation selection. A heavy component is a design smell before it is a budget problem.
 
 ## 4. Ship it
@@ -45,3 +47,9 @@ Rules that bite:
 - A new public component is a contract change: record it in `CHANGELOG.md` under the upcoming version.
 - Leave the Catalogue running on the worktree's deterministic port and include the exact URL in your handoff: `deno task serve` then `http://127.0.0.1:<discern identity --port>/`.
 - Update `map/20-components/` if the change alters what the map describes.
+
+## Recovery
+
+- If codegen reports example drift, start with the named Component and fix its authored vocabulary or bound implementation; never patch a generated registry. Missing and reordered entries usually mean one applicable binder is incomplete, while a surface-only error means the vocabulary needs either a truthful implementation on both surfaces or a concrete medium incompatibility.
+- If an exact renderer test needs more frames than the human Catalogue should teach, keep those frames in an explicit test-fixture authority and leave them out of `componentExampleVocabulary`.
+- If an example cannot be expressed honestly on one surface, name the missing browser or terminal primitive in its reason. Different prop shapes, historical fixtures, or implementation effort are not recovery reasons.
