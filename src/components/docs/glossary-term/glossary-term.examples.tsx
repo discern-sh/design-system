@@ -28,7 +28,7 @@ export const conformance = [{
     { action: "press", key: "Tab" },
     {
       expect: "hidden",
-      target: { role: "group", name: "Worktree definition" },
+      target: { role: "group", name: "Reading measure definition" },
     },
   ],
 }] satisfies readonly ConformanceScenario[];
