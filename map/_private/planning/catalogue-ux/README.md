@@ -4,7 +4,7 @@ Briefs for turning the design-system Catalogue into a quiet, highly visual refer
 
 The findings behind this programme came from browsing every major Catalogue route in a real browser and then tracing the visible behaviour back to its authorities. Three facts determine the work shape:
 
-- `catalogue/app.tsx` is currently 2,008 lines and `catalogue/catalogue.css` is 1,703 lines. Page redesigns cannot safely run in parallel until the shared shell, routes, pages, and styles have real ownership seams.
+- The Catalogue shell, route families, pages, search engine, and styles have disjoint named owners. `catalogue/app.tsx` is the bounded composition root and `catalogue/catalogue.css` is the stable ordered stylesheet entrypoint, so later page redesigns work inside their family rather than a shared monolith.
 - All 109 CLI-rendered Components currently expose a different Web and CLI example sequence. Example parity is therefore a repository-wide contract migration with a future-member guard, not a presentational patch in one page.
 - Human recognition needs reusable visual evidence. The live React example renderer can deterministically produce an exact-bounds image for every canonical Web example, but that capture pipeline must be one generated authority rather than page-specific screenshots or hand-maintained thumbnails.
 
@@ -40,7 +40,7 @@ Change one only through a justified programme amendment, and use an ADR when the
 
 | Key | Brief                                                                                              | Parallel shape                                                               | Starts when                      | Landing order               |
 | --- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------- | --------------------------- |
-| 1A  | [Create the Catalogue architecture and humane shell](1a-catalogue-architecture-and-shell.md)       | One architectural worktree                                                   | This planning package has landed | Only stream in wave 1       |
+| 1A  | [Create the Catalogue architecture and humane shell](_done/1a-catalogue-architecture-and-shell.md) | One architectural worktree                                                   | This planning package has landed | Only stream in wave 1       |
 | 2A  | [Make Web and CLI examples one guarded contract](2a-cross-surface-example-contract.md)             | One coordinator; up to four group-bundle sub-agents inside the same worktree | 1A has landed                    | Only stream in wave 2       |
 | 3A  | [Generate deterministic Component example imagery](3a-deterministic-component-example-images.md)   | One capture-pipeline worktree; read-only research may fan out                | 2A has landed                    | Only stream in wave 3       |
 | 4A  | [Unify Component discovery, detail, and comparison](4a-component-discovery-and-comparison.md)      | One Components worktree                                                      | 3A has landed                    | First in wave 4             |
@@ -50,7 +50,7 @@ Change one only through a justified programme amendment, and use an ADR when the
 | 4E  | [Make both Catalogue front doors task-first](4e-catalogue-front-doors.md)                          | One front-door worktree                                                      | 3A has landed                    | Fifth in wave 4             |
 | 5A  | [Run the integrated visual and interaction hardening pass](5a-integrated-visual-qa.md)             | One adversarial browser worktree; read-only audits may fan out               | Every wave-4 stream has landed   | Final implementation stream |
 
-Wave 1 intentionally lands alone. It replaces the monolithic page and stylesheet boundaries with route-family modules and page-owned styles, so later workstreams can be genuinely parallel instead of editing different regions of the same two files.
+Wave 1 supplies the route-family modules and page-owned styles that let later workstreams run in parallel instead of editing different regions of the same two files.
 
 Wave 2 is the repository-wide example contract migration. It can fan out internally across disjoint Component Group bundles after its coordinator has committed the shared authority, but it lands as one coherent branch. No page stream designs against an example contract that is still moving.
 
