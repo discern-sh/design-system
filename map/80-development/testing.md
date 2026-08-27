@@ -12,10 +12,11 @@ The gate's `test` capability is `deno task test`:
 deno task test
 ```
 
-It runs `deno task test:unit`, then `deno task conformance`. Representative cross-cutting suites under [`tests/`](../../tests/) include:
+It runs `deno task test:unit`, verifies the generated Component example images, then runs `deno task conformance`. Representative cross-cutting suites under [`tests/`](../../tests/) include:
 
 - [`artifact_family_test.tsx`](../../tests/artifact_family_test.tsx) — Workflow Artifact ordering, canonical state labels, deep-tree fidelity, and source semantics.
 - `catalogue_*_test.ts` files — shared registry and search authorities plus route-family-owned Component, Composition, Compare, route, terminal, and serving contracts. Each family grows its own file instead of a mixed Catalogue suite.
+- [`component_example_images_test.ts`](../../tests/component_example_images_test.ts) — canonical Web enrollment, Light/Dark manifest coverage, representative derivation, exact PNG facts, future-member cleanup, and publish exclusion.
 - [`design_system_test.ts`](../../tests/design_system_test.ts) — the package contract: namespace scoping, metadata auto-enrolment, Selection resolution, byte-for-byte determinism, asset independence, theme/contrast semantics, and the external consumer fixtures.
 - [`docs_page_furniture_test.ts`](../../tests/docs_page_furniture_test.ts) — Task metadata, Agent handoff, and next-action composition contracts.
 - [`journey_resilience_test.tsx`](../../tests/journey_resilience_test.tsx) — journey enrollment, CSS-free Procedure and Diagnostic grammar, and executable Command markup.
@@ -28,6 +29,8 @@ Cases run sequentially in one process (no `--parallel`), so ordering hazards don
 The broad permissions exist because the suites exercise real artifacts: they spawn Deno subprocesses (`Deno.Command` on `Deno.execPath()`), query the host to launch the font audit's installed browser, and the release suite shells `deno publish --dry-run --allow-dirty`. The external fixtures run `--cached-only`, so tests need a warm cache (`deno install --frozen` first) but **no network at test time** — a test that fetches at runtime is a defect.
 
 The conformance pass builds and serves the real Catalogue on an ephemeral local port, then drives installed Chrome through every generated Component example. Every example is scanned in light and dark against automated WCAG A/AA rules. Typed `conformance` exports beside interactive `*.examples.tsx` modules add keyboard, focus, relationship, state-change, and reusable layout assertions without a second Component manifest. The pass also checks a cold fragment URL, focused controls under forced colours, and writes light/dark narrow/wide plus forced-colour review sheets to `dist/conformance/`.
+
+`deno task catalogue:images --update` is the explicit full-population browser effect. Its `--verify` posture is input-aware: it validates every committed manifest entry and PNG without recapture, then uses the real renderer for a fixed first/middle/last repeat witness. On the pinned byte platform the witness must match committed bytes; other hosts must match committed geometry and reproduce their own bytes. [ADR 0034](../_adr/0034-commit-pinned-png-component-example-images.md) owns that boundary.
 
 [`resilience-conformance.ts`](../../scripts/resilience-conformance.ts) is a mandatory second phase. It discovers journey recipes and rendered Component surfaces from the Catalogue DOM. Its checks cover journey structure and both-theme axe scans, keyboard order and Command copies, disclosures, nested controls, minimum targets, reflow at 390 pixels and 400% zoom, reduced motion, system-theme return, theme geometry, tuned local-font fallbacks, and semantic-surface focus.
 
