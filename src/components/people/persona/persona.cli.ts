@@ -5,6 +5,7 @@
  */
 
 import { renderStyledSpans } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { measureText, wrapText } from "../../../cli/text.ts";
 import {
@@ -14,6 +15,7 @@ import {
 } from "../../../cli/theme.ts";
 import { derivedInitials } from "../../initials.ts";
 import type { AvatarPresence } from "../avatar/avatar.types.ts";
+import meta, { componentExampleVocabulary } from "./persona.meta.ts";
 import type { PersonaSize } from "./persona.types.ts";
 
 /** Inputs accepted by the terminal Persona renderer. */
@@ -29,12 +31,29 @@ export interface PersonaCliProps {
 }
 
 /** Deterministic Persona states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<PersonaCliProps>[] = [
-  {
-    name: "researcher",
-    props: { name: "Ada Osei", detail: "Research", presence: "online" },
-  },
-] as const;
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { name: "default", props: { name: "Ada Osei", detail: "Research" } },
+    {
+      name: "with-presence",
+      props: {
+        name: "Morgan Ellis",
+        detail: "Engineering lead",
+        presence: "online",
+      },
+    },
+    {
+      name: "long-name",
+      props: {
+        name: "Alexandrine Featherstonehaugh-Cholmondeley",
+        detail: "Research programme coordination across several regions",
+        maxWidth: 24,
+      },
+    },
+  ] as const satisfies readonly CliExample<PersonaCliProps>[],
+);
 
 /** Render an initials chip, name, detail, and explicit presence lockup. */
 const renderPersonaCli: CliRenderer<PersonaCliProps> = (

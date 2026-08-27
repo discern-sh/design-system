@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { measureText } from "../../../cli/text.ts";
@@ -16,6 +17,7 @@ import {
 } from "../../../cli/theme.ts";
 import { derivedInitials } from "../../initials.ts";
 import type { AvatarSize } from "../avatar/avatar.types.ts";
+import meta, { componentExampleVocabulary } from "./avatar-group.meta.ts";
 
 /** One person represented in a terminal Avatar group. */
 export interface AvatarGroupCliPerson {
@@ -34,21 +36,38 @@ export interface AvatarGroupCliProps {
 }
 
 /** Deterministic Avatar group states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<AvatarGroupCliProps>[] = [
-  {
-    name: "team",
-    props: {
-      label: "Review team",
-      people: [
-        { name: "Ada Osei" },
-        { name: "June Park" },
-        { name: "Tomás Vega" },
-        { name: "Iris Chen" },
-      ],
-      max: 3,
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        label: "Reviewers",
+        people: [
+          { name: "Priya Anand" },
+          { name: "Jonah Reyes" },
+          { name: "Ada Osei" },
+          { name: "Tomás Vega" },
+          { name: "June Park" },
+        ],
+        max: 3,
+      },
     },
-  },
-] as const;
+    {
+      name: "compact",
+      props: {
+        label: "On the call",
+        people: [
+          { name: "Morgan Ellis" },
+          { name: "June Park" },
+          { name: "Ada Osei" },
+        ],
+        size: "sm",
+      },
+    },
+  ] as const satisfies readonly CliExample<AvatarGroupCliProps>[],
+);
 
 function wrapStyledItems(items: readonly string[], width: number): string {
   const lines: string[] = [];

@@ -1,5 +1,6 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
-export default {
+const meta = {
   name: "Avatar group",
   slug: "avatar-group",
   group: "People",
@@ -13,3 +14,13 @@ export default {
     "Stacking follows DOM order, so reading order and the visual overlap always agree.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Overflowing group" },
+    { id: "compact", label: "Compact group" },
+  ],
+);
+
+export default meta;

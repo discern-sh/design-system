@@ -1,4 +1,8 @@
-import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
+import {
+  type ConformanceScenario,
+  defineCatalogueExamples,
+} from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./avatar.meta.ts";
 import { Avatar } from "./avatar.tsx";
 
 const portrait =
@@ -22,27 +26,34 @@ export const conformance = [{
   ],
 }] satisfies readonly ConformanceScenario[];
 
+function InitialsWithPresenceExample() {
+  return <Avatar name="Morgan Ellis" presence="online" size="lg" />;
+}
+
+function PortraitExample() {
+  return <Avatar name="Ada Osei" src={portrait} size="lg" />;
+}
+
+function SquareExample() {
+  return <Avatar name="Tomás Vega" shape="square" size="lg" />;
+}
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: InitialsWithPresenceExample },
+    { id: "portrait", Example: PortraitExample },
+    { id: "square", Example: SquareExample },
+  ],
+);
+
 export default function AvatarExamples() {
   return (
-    <div className="discern-example-stack">
-      <div className="discern-example-row">
-        <Avatar name="Priya Anand" size="xs" />
-        <Avatar name="Jonah Reyes" size="sm" />
-        <Avatar name="Ada Osei" />
-        <Avatar name="Tomás Vega" size="lg" />
-        <Avatar name="June Park" size="xl" />
-      </div>
-      <div className="discern-example-row">
-        <Avatar name="Ada Osei" src={portrait} size="lg" />
-        <Avatar name="Priya Anand" shape="square" size="lg" />
-        <Avatar name="Jonah Reyes" src={portrait} shape="square" size="lg" />
-      </div>
-      <div className="discern-example-row">
-        <Avatar name="Morgan Ellis" presence="online" size="lg" />
-        <Avatar name="June Park" presence="away" size="lg" />
-        <Avatar name="Tomás Vega" presence="busy" size="lg" />
-        <Avatar name="Ada Osei" presence="offline" size="lg" />
-      </div>
+    <div className="discern-example-row">
+      <InitialsWithPresenceExample />
+      <PortraitExample />
+      <SquareExample />
     </div>
   );
 }

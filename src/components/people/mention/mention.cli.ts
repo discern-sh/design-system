@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { truncateText } from "../../../cli/text.ts";
 import {
@@ -13,6 +14,7 @@ import {
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import { derivedInitials } from "../../initials.ts";
+import meta, { componentExampleVocabulary } from "./mention.meta.ts";
 
 /** Inputs accepted by the terminal Mention renderer. */
 export interface MentionCliProps {
@@ -27,10 +29,14 @@ export interface MentionCliProps {
 }
 
 /** Deterministic Mention states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<MentionCliProps>[] = [
-  { name: "inline", props: { name: "Ada Osei" } },
-  { name: "avatar", props: { name: "June Park", avatar: true } },
-] as const;
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { name: "default", props: { name: "Morgan Ellis", href: "#morgan" } },
+    { name: "avatar", props: { name: "June Park", avatar: true } },
+  ] as const satisfies readonly CliExample<MentionCliProps>[],
+);
 
 /** Render one inline @mention or initials mention chip. */
 const renderMentionCli: CliRenderer<MentionCliProps> = (

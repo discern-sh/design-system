@@ -5,6 +5,7 @@
  */
 
 import { renderStyledSpans, type StyledSpan } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
 import {
@@ -13,6 +14,7 @@ import {
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import { derivedInitials } from "../../initials.ts";
+import meta, { componentExampleVocabulary } from "./avatar.meta.ts";
 import type {
   AvatarPresence,
   AvatarShape,
@@ -32,14 +34,20 @@ export interface AvatarCliProps {
 }
 
 /** Deterministic Avatar states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<AvatarCliProps>[] = [
-  { name: "initials", props: { name: "Ada Osei" } },
-  { name: "online", props: { name: "June Park", presence: "online" } },
-  {
-    name: "square",
-    props: { name: "Tomás Vega", shape: "square", size: "lg" },
-  },
-] as const;
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: { name: "Morgan Ellis", presence: "online", size: "lg" },
+    },
+    {
+      name: "square",
+      props: { name: "Tomás Vega", shape: "square", size: "lg" },
+    },
+  ] as const satisfies readonly CliExample<AvatarCliProps>[],
+);
 
 const PRESENCE_TONES = {
   online: "success",

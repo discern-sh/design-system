@@ -5,6 +5,7 @@
  */
 
 import { renderBox } from "../../../cli/box.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import {
   terminalThemes,
@@ -12,6 +13,7 @@ import {
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import { derivedInitials } from "../../initials.ts";
+import meta, { componentExampleVocabulary } from "./profile-card.meta.ts";
 import type { ProfileCardLayout } from "./profile-card.types.ts";
 
 /** One link printed by a terminal Profile card. */
@@ -33,17 +35,31 @@ export interface ProfileCardCliProps {
 }
 
 /** Deterministic Profile card states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<ProfileCardCliProps>[] = [
-  {
-    name: "portrait",
-    props: {
-      name: "Ada Osei",
-      detail: "Research",
-      bio: "Turns field evidence into the questions a roadmap has to answer.",
-      links: [{ label: "Field notes", href: "/people/ada/notes" }],
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        name: "Ada Osei",
+        detail: "Research",
+        bio: "Turns field evidence into clear research questions.",
+        links: [{ label: "Field notes", href: "#field-notes" }],
+      },
     },
-  },
-] as const;
+    {
+      name: "landscape",
+      props: {
+        name: "June Park",
+        detail: "Editor at large",
+        bio: "Edits each guide until the next action is clear.",
+        links: [{ label: "From the desk", href: "#from-the-desk" }],
+        layout: "landscape",
+      },
+    },
+  ] as const satisfies readonly CliExample<ProfileCardCliProps>[],
+);
 
 /** Render one framed terminal identity card with visible link destinations. */
 const renderProfileCardCli: CliRenderer<ProfileCardCliProps> = (

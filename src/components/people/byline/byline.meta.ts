@@ -1,5 +1,6 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
-export default {
+const meta = {
   name: "Byline",
   slug: "byline",
   group: "People",
@@ -13,3 +14,10 @@ export default {
     "Wrap dates in time elements inside the meta slot so machines read them as machines and people read them as prose.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Article byline" }],
+);
+
+export default meta;

@@ -1,4 +1,8 @@
-import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
+import {
+  type ConformanceScenario,
+  defineCatalogueExamples,
+} from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./mention.meta.ts";
 import { Mention } from "./mention.tsx";
 
 const portrait =
@@ -24,20 +28,37 @@ export const conformance = [{
   ],
 }] satisfies readonly ConformanceScenario[];
 
+function InlineMentionExample() {
+  return (
+    <p style={{ margin: 0, maxWidth: "38rem" }}>
+      The review from <Mention name="Morgan Ellis" href="#morgan" />{" "}
+      landed this morning.
+    </p>
+  );
+}
+
+function AvatarMentionExample() {
+  return (
+    <p style={{ margin: 0, maxWidth: "38rem" }}>
+      The follow-up belongs to <Mention name="June Park" src={portrait} />.
+    </p>
+  );
+}
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: InlineMentionExample },
+    { id: "avatar", Example: AvatarMentionExample },
+  ],
+);
+
 export default function MentionExamples() {
   return (
     <div className="discern-example-stack discern-example-stack--start">
-      <p style={{ margin: 0, maxWidth: "38rem" }}>
-        The review from <Mention name="Morgan Ellis" href="#morgan" />{" "}
-        landed this morning, and <Mention name="Priya Anand" src={portrait} />
-        {" "}
-        picked up the follow-up work after a short handover call with{" "}
-        <Mention name="Ada Osei" />.
-      </p>
-      <p style={{ margin: 0, fontSize: "0.85rem" }}>
-        Smaller running text keeps the chip in scale — thanks{" "}
-        <Mention name="June Park" href="#june" />.
-      </p>
+      <InlineMentionExample />
+      <AvatarMentionExample />
     </div>
   );
 }

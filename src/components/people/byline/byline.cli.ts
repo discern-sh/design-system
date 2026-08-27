@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { measureText, wrapText } from "../../../cli/text.ts";
 import {
@@ -13,6 +14,7 @@ import {
   type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import { derivedInitials } from "../../initials.ts";
+import meta, { componentExampleVocabulary } from "./byline.meta.ts";
 
 /** One author named by a terminal Byline. */
 export interface BylineCliAuthor {
@@ -30,15 +32,17 @@ export interface BylineCliProps {
 }
 
 /** Deterministic Byline states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<BylineCliProps>[] = [
-  {
-    name: "article",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [{
+    name: "default",
     props: {
       authors: [{ name: "Ada Osei" }, { name: "June Park" }],
       meta: ["11 August 2026", "8 min read"],
     },
-  },
-] as const;
+  }] as const satisfies readonly CliExample<BylineCliProps>[],
+);
 
 function authorList(authors: readonly BylineCliAuthor[]): string {
   const labels = authors.map((author) =>

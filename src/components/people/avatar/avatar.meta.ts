@@ -1,5 +1,6 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
-export default {
+const meta = {
   name: "Avatar",
   slug: "avatar",
   group: "People",
@@ -13,3 +14,20 @@ export default {
     "The monogram is aria-hidden decoration derived from the name, so assistive technology hears the name, never the letters.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Initials with presence" },
+    {
+      id: "portrait",
+      label: "Portrait",
+      only: "web",
+      reason:
+        "The package's text-cell terminal contract has no raster-image primitive with which to reproduce this portrait.",
+    },
+    { id: "square", label: "Square" },
+  ],
+);
+
+export default meta;

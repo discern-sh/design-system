@@ -1,5 +1,6 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
-export default {
+const meta = {
   name: "Mention",
   slug: "mention",
   group: "People",
@@ -13,3 +14,13 @@ export default {
     "Accent ink on the accent surface holds contrast in both themes, and the hover state deepens both together.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Inline mention" },
+    { id: "avatar", label: "Avatar mention" },
+  ],
+);
+
+export default meta;

@@ -1,5 +1,6 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
-export default {
+const meta = {
   name: "Profile card",
   slug: "profile-card",
   group: "People",
@@ -13,3 +14,13 @@ export default {
     "The links slot expects real anchors from the consumer; the card adds layout, never click behaviour.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Portrait layout" },
+    { id: "landscape", label: "Landscape layout" },
+  ],
+);
+
+export default meta;

@@ -1,5 +1,6 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
-export default {
+const meta = {
   name: "Persona",
   slug: "persona",
   group: "People",
@@ -13,3 +14,14 @@ export default {
     "Name and detail truncate visually with an ellipsis while the full text stays available to assistive technology.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Identity" },
+    { id: "with-presence", label: "With presence" },
+    { id: "long-name", label: "Long name" },
+  ],
+);
+
+export default meta;
