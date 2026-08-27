@@ -1,5 +1,9 @@
-import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
+import {
+  type ConformanceScenario,
+  defineCatalogueExamples,
+} from "../../../../catalogue/conformance.ts";
 import { Button } from "../../core/button/button.tsx";
+import meta, { componentExampleVocabulary } from "./hover-card.meta.ts";
 import { HoverCard } from "./hover-card.tsx";
 
 export const conformance = [{
@@ -42,59 +46,87 @@ export const conformance = [{
   ],
 }] satisfies readonly ConformanceScenario[];
 
+function DefaultHoverCardState() {
+  return (
+    <HoverCard
+      layout="block"
+      label="Record details"
+      align="start"
+      width="lg"
+      trigger={<Button variant="secondary">Inspect record</Button>}
+    >
+      <div>
+        <h3>Review note</h3>
+        <p>
+          A rich surface can hold structured copy, links, lists, or actions.
+        </p>
+        <a href="#open-record">Open record</a>
+      </div>
+    </HoverCard>
+  );
+}
+
+function InlineHoverCardState() {
+  return (
+    <HoverCard
+      label="Short annotation"
+      placement="bottom"
+      align="start"
+      width="sm"
+      trigger={
+        <button className="discern-dotted-underline" type="button">
+          Annotated text
+        </button>
+      }
+    >
+      <span>Inline cards keep phrasing content valid inside prose.</span>
+    </HoverCard>
+  );
+}
+
+function OverflowHoverCardState() {
+  return (
+    <div
+      style={{
+        inlineSize: "9rem",
+        overflow: "hidden",
+        padding: "var(--discern-space-3)",
+        border: "1px solid var(--discern-color-border)",
+      }}
+    >
+      <HoverCard
+        layout="block"
+        label="Clipping proof"
+        placement="bottom"
+        align="start"
+        width="md"
+        trigger={<Button variant="secondary">Clipped parent</Button>}
+      >
+        <div>
+          <h3>Shared floating surface</h3>
+          <p>This card remains visible beyond its overflow ancestor.</p>
+        </div>
+      </HoverCard>
+    </div>
+  );
+}
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: DefaultHoverCardState },
+    { id: "inline", Example: InlineHoverCardState },
+    { id: "overflow", Example: OverflowHoverCardState },
+  ],
+);
+
 export default function HoverCardExamples() {
   return (
     <div className="discern-example-row">
-      <HoverCard
-        layout="block"
-        label="Record details"
-        align="start"
-        width="lg"
-        trigger={<Button variant="secondary">Inspect record</Button>}
-      >
-        <div>
-          <h3>Review note</h3>
-          <p>
-            A rich surface can hold structured copy, links, lists, or actions.
-          </p>
-          <a href="#open-record">Open record</a>
-        </div>
-      </HoverCard>
-      <HoverCard
-        label="Short annotation"
-        placement="bottom"
-        align="start"
-        width="sm"
-        trigger={
-          <button className="discern-dotted-underline" type="button">
-            Annotated text
-          </button>
-        }
-      >
-        <span>Inline cards keep phrasing content valid inside prose.</span>
-      </HoverCard>
-      <div
-        style={{
-          inlineSize: "9rem",
-          overflow: "hidden",
-          padding: "var(--discern-space-3)",
-          border: "1px solid var(--discern-color-border)",
-        }}
-      >
-        <HoverCard
-          layout="block"
-          label="Clipping proof"
-          placement="bottom"
-          align="start"
-          width="md"
-          trigger={<Button variant="secondary">Clipped parent</Button>}
-        >
-          <div>
-            <h3>Shared floating surface</h3>
-            <p>This card remains visible beyond its overflow ancestor.</p>
-          </div>
-        </HoverCard>
-      </div>
+      <DefaultHoverCardState />
+      <InlineHoverCardState />
+      <OverflowHoverCardState />
     </div>
   );
 }

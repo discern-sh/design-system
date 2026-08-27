@@ -1,5 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
-export default {
+
+const meta = {
   name: "Dialog",
   slug: "dialog",
   group: "Feedback",
@@ -12,3 +14,14 @@ export default {
     "Background scrolling is locked while open.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Open" },
+    { id: "submitted", label: "Submitted" },
+    { id: "cancelled", label: "Cancelled" },
+  ],
+);
+
+export default meta;

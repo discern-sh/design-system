@@ -5,6 +5,7 @@
  */
 
 import { renderBox } from "../../../cli/box.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { defaultTerminalFrameWidth } from "../../../cli/frame-measure.ts";
 import {
@@ -13,6 +14,7 @@ import {
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import type { ToastTone } from "./toast.types.ts";
+import meta, { componentExampleVocabulary } from "./toast.meta.ts";
 
 /** Inputs accepted by the terminal Toast renderer. */
 export interface ToastCliProps {
@@ -24,21 +26,25 @@ export interface ToastCliProps {
 }
 
 /** Deterministic Toast states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<ToastCliProps>[] = [
-  { name: "neutral", props: { message: "Settings saved." } },
-  {
-    name: "success",
-    props: { message: "Release published.", tone: "success" },
-  },
-  {
-    name: "warning",
-    props: { message: "Connection is slow.", tone: "warning" },
-  },
-  {
-    name: "danger",
-    props: { message: "Could not save.", tone: "danger", dismissible: true },
-  },
-] as const;
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { name: "default", props: { message: "Settings saved." } },
+    {
+      name: "success",
+      props: { message: "Changes saved.", tone: "success", dismissible: true },
+    },
+    {
+      name: "warning",
+      props: { message: "Connection is slow.", tone: "warning" },
+    },
+    {
+      name: "danger",
+      props: { message: "Could not save.", tone: "danger", dismissible: true },
+    },
+  ] as const satisfies readonly CliExample<ToastCliProps>[],
+);
 
 /** Render one compact, toned terminal notification box. */
 const renderToastCli: CliRenderer<ToastCliProps> = (props, capabilities) => {

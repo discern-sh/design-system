@@ -6,6 +6,7 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { renderBox } from "../../../cli/box.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import {
@@ -13,6 +14,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./dialog.meta.ts";
 
 /** Inputs accepted by the terminal Dialog renderer. */
 export interface DialogCliProps {
@@ -26,33 +28,37 @@ export interface DialogCliProps {
 }
 
 /** Deterministic Dialog states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<DialogCliProps>[] = [
-  {
-    name: "open",
-    props: {
-      kicker: "Confirm",
-      title: "Publish release?",
-      body: "This action makes the version public.",
-      actions: ["Cancel", "Publish"],
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        kicker: "Confirm",
+        title: "Save changes?",
+        body: "This action makes the update available.",
+        actions: ["Cancel", "Save"],
+      },
     },
-  },
-  {
-    name: "submitted",
-    props: {
-      title: "Release published",
-      body: "The package is now available.",
-      status: "submitted",
+    {
+      name: "submitted",
+      props: {
+        title: "Changes saved",
+        body: "The update is now available.",
+        status: "submitted",
+      },
     },
-  },
-  {
-    name: "cancelled",
-    props: {
-      title: "Publish release?",
-      body: "No changes were made.",
-      status: "cancelled",
+    {
+      name: "cancelled",
+      props: {
+        title: "Save changes?",
+        body: "No changes were made.",
+        status: "cancelled",
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<DialogCliProps>[],
+);
 
 /** Render one framed terminal modal block without owning interaction. */
 const renderDialogCli: CliRenderer<DialogCliProps> = (props, capabilities) => {

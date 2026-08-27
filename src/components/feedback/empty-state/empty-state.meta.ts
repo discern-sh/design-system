@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Empty state",
   slug: "empty-state",
   group: "Feedback",
@@ -13,3 +14,13 @@ export default {
     "Follow-up actions are slotted real controls that keep their own semantics and focus behaviour.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Empty" },
+    { id: "compact", label: "Compact" },
+  ],
+);
+
+export default meta;

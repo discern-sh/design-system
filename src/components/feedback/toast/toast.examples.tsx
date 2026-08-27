@@ -1,6 +1,10 @@
 import { useState } from "react";
+import {
+  type ConformanceScenario,
+  defineCatalogueExamples,
+} from "../../../../catalogue/conformance.ts";
 import { ExampleIcon } from "../../../fixtures/example-icon.tsx";
-import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./toast.meta.ts";
 import { Toast } from "./toast.tsx";
 
 export const conformance = [{
@@ -17,23 +21,50 @@ export const conformance = [{
   ],
 }] satisfies readonly ConformanceScenario[];
 
+function DefaultToastState() {
+  return <Toast>Settings saved.</Toast>;
+}
+
+function SuccessToastState() {
+  const [visible, setVisible] = useState(true);
+  return visible
+    ? (
+      <Toast
+        tone="success"
+        icon={<ExampleIcon name="check" />}
+        onDismiss={() => setVisible(false)}
+      >
+        Changes saved.
+      </Toast>
+    )
+    : null;
+}
+
+function WarningToastState() {
+  return <Toast tone="warning">Connection is slow.</Toast>;
+}
+
+function DangerToastState() {
+  return <Toast tone="danger" onDismiss={() => {}}>Could not save.</Toast>;
+}
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: DefaultToastState },
+    { id: "success", Example: SuccessToastState },
+    { id: "warning", Example: WarningToastState },
+    { id: "danger", Example: DangerToastState },
+  ],
+);
+
 export default function ToastExamples() {
-  const [showSuccess, setShowSuccess] = useState(true);
   return (
     <div className="discern-example-stack discern-example-stack--start">
-      <Toast>Lorem ipsum dolor sit amet.</Toast>
-      {showSuccess
-        ? (
-          <Toast
-            tone="success"
-            icon={<ExampleIcon name="check" />}
-            onDismiss={() => setShowSuccess(false)}
-          >
-            Consectetur adipiscing elit.
-          </Toast>
-        )
-        : null}
-      <Toast tone="danger">Integer posuere erat a ante.</Toast>
+      <DefaultToastState />
+      <SuccessToastState />
+      <DangerToastState />
     </div>
   );
 }

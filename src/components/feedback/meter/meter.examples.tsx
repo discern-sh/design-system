@@ -1,21 +1,29 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./meter.meta.ts";
 import { Meter } from "./meter.tsx";
 
+function DefaultMeterState() {
+  return <Meter label="Upload" value={0} />;
+}
+
+function QuarterMeterState() {
+  return <Meter label="Upload" value={25} reading="25 / 100 files" />;
+}
+
+function CompleteMeterState() {
+  return <Meter label="Upload" value={100} reading="Complete" />;
+}
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: DefaultMeterState },
+    { id: "quarter", Example: QuarterMeterState },
+    { id: "complete", Example: CompleteMeterState },
+  ],
+);
+
 export default function MeterExamples() {
-  return (
-    <div className="discern-example-stack">
-      <Meter label="Lorem ipsum" value={62} reading="62 / 100" />
-      <Meter
-        label="Dolor sit amet"
-        value={87}
-        reading="87%"
-        tone="warning"
-      />
-      <Meter
-        label="Consectetur"
-        value={96}
-        reading="96%"
-        tone="danger"
-      />
-    </div>
-  );
+  return <QuarterMeterState />;
 }

@@ -1,5 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
-export default {
+
+const meta = {
   name: "Toast",
   slug: "toast",
   group: "Feedback",
@@ -12,3 +14,15 @@ export default {
     "Auto-dismiss is opt-in.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Neutral" },
+    { id: "success", label: "Success" },
+    { id: "warning", label: "Warning" },
+    { id: "danger", label: "Danger" },
+  ],
+);
+
+export default meta;

@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { defaultTerminalFrameWidth } from "../../../cli/frame-measure.ts";
 import type { DeterminateProgressFrameState } from "../../../cli/interactive-states.ts";
@@ -21,6 +22,7 @@ import {
 import { renderMotifProgressFrame } from "../../../cli/motifs.ts";
 import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
 import type { MeterTone } from "./meter.types.ts";
+import meta, { componentExampleVocabulary } from "./meter.meta.ts";
 
 /** Inputs accepted by the terminal Meter renderer. */
 export interface MeterCliProps
@@ -32,39 +34,43 @@ export interface MeterCliProps
 }
 
 /** Deterministic Meter states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<MeterCliProps>[] = [
-  {
-    name: "zero",
-    props: {
-      kind: "determinate-progress",
-      label: "Upload",
-      lifecycle: { status: "active" },
-      completed: 0,
-      total: 100,
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        kind: "determinate-progress",
+        label: "Upload",
+        lifecycle: { status: "active" },
+        completed: 0,
+        total: 100,
+      },
     },
-  },
-  {
-    name: "quarter",
-    props: {
-      kind: "determinate-progress",
-      label: "Upload",
-      lifecycle: { status: "active" },
-      completed: 25,
-      total: 100,
-      reading: "25 / 100 files",
+    {
+      name: "quarter",
+      props: {
+        kind: "determinate-progress",
+        label: "Upload",
+        lifecycle: { status: "active" },
+        completed: 25,
+        total: 100,
+        reading: "25 / 100 files",
+      },
     },
-  },
-  {
-    name: "complete",
-    props: {
-      kind: "determinate-progress",
-      label: "Upload",
-      lifecycle: { status: "submitted" },
-      completed: 100,
-      total: 100,
+    {
+      name: "complete",
+      props: {
+        kind: "determinate-progress",
+        label: "Upload",
+        lifecycle: { status: "submitted" },
+        completed: 100,
+        total: 100,
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<MeterCliProps>[],
+);
 
 /** Render a labeled determinate frame on the package motif track. */
 const renderMeterCli: CliRenderer<MeterCliProps> = (props, capabilities) => {

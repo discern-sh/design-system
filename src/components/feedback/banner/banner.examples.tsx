@@ -1,17 +1,48 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { ExampleIcon } from "../../../fixtures/example-icon.tsx";
+import meta, { componentExampleVocabulary } from "./banner.meta.ts";
 import { Banner } from "./banner.tsx";
-export default function BannerExamples() {
+
+function DefaultBannerState() {
   return (
-    <div className="discern-example-stack">
-      <Banner icon={<ExampleIcon name="info" />}>
-        Lorem ipsum dolor sit amet.
-      </Banner>
-      <Banner tone="accent">Consectetur adipiscing elit.</Banner>
-      <Banner tone="success" icon={<ExampleIcon name="check" />}>
-        Integer posuere erat a ante.
-      </Banner>
-      <Banner tone="warning">Vestibulum id ligula porta felis.</Banner>
-      <Banner tone="danger">Donec ullamcorper nulla non metus.</Banner>
-    </div>
+    <Banner icon={<ExampleIcon name="info" />}>
+      A new version is available.
+    </Banner>
   );
+}
+
+function AccentBannerState() {
+  return <Banner tone="accent">Review the featured change.</Banner>;
+}
+
+function SuccessBannerState() {
+  return (
+    <Banner tone="success" icon={<ExampleIcon name="check" />}>
+      Checks passed.
+    </Banner>
+  );
+}
+
+function WarningBannerState() {
+  return <Banner tone="warning">Review the pending changes.</Banner>;
+}
+
+function DangerBannerState() {
+  return <Banner tone="danger">Build failed.</Banner>;
+}
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: DefaultBannerState },
+    { id: "accent", Example: AccentBannerState },
+    { id: "success", Example: SuccessBannerState },
+    { id: "warning", Example: WarningBannerState },
+    { id: "danger", Example: DangerBannerState },
+  ],
+);
+
+export default function BannerExamples() {
+  return <DefaultBannerState />;
 }

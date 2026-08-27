@@ -1,14 +1,31 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { Button } from "../../core/button/button.tsx";
+import meta, { componentExampleVocabulary } from "./empty-state.meta.ts";
 import { EmptyState } from "./empty-state.tsx";
 
-export default function EmptyStateExamples() {
+function DefaultEmptyState() {
   return (
-    <div className="discern-example-stack">
-      <EmptyState
-        title="Nothing here yet"
-        description="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt."
-        actions={<Button variant="secondary">Lorem ipsum</Button>}
-      />
-    </div>
+    <EmptyState
+      title="Nothing here yet"
+      description="Create the first item to get started."
+      actions={<Button variant="secondary">Create item</Button>}
+    />
   );
+}
+
+function CompactEmptyState() {
+  return <EmptyState title="No results" />;
+}
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: DefaultEmptyState },
+    { id: "compact", Example: CompactEmptyState },
+  ],
+);
+
+export default function EmptyStateExamples() {
+  return <DefaultEmptyState />;
 }

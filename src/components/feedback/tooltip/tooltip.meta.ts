@@ -1,5 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
-export default {
+
+const meta = {
   name: "Tooltip",
   slug: "tooltip",
   group: "Feedback",
@@ -17,3 +19,13 @@ export default {
     "The emitted browser behavior promotes supported bubbles to the top layer; the static CSS fallback remains available without JavaScript.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Icon trigger", only: "web" },
+    { id: "bottom", label: "Bottom placement", only: "web" },
+  ],
+);
+
+export default meta;

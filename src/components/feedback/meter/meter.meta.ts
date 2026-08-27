@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Meter",
   slug: "meter",
   group: "Feedback",
@@ -13,3 +14,14 @@ export default {
     "Warning and danger tones pair with the textual reading; the fill colour is never the only signal.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Empty" },
+    { id: "quarter", label: "In progress" },
+    { id: "complete", label: "Complete" },
+  ],
+);
+
+export default meta;

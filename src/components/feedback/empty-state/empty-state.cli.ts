@@ -6,6 +6,7 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { renderBox } from "../../../cli/box.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import {
@@ -13,6 +14,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./empty-state.meta.ts";
 
 /** Inputs accepted by the terminal Empty state renderer. */
 export interface EmptyStateCliProps {
@@ -24,17 +26,21 @@ export interface EmptyStateCliProps {
 }
 
 /** Deterministic Empty state states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<EmptyStateCliProps>[] = [
-  {
-    name: "empty",
-    props: {
-      title: "Nothing here yet",
-      description: "Create the first item to get started.",
-      action: "Create item",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        title: "Nothing here yet",
+        description: "Create the first item to get started.",
+        action: "Create item",
+      },
     },
-  },
-  { name: "compact", props: { title: "No results" } },
-] as const;
+    { name: "compact", props: { title: "No results" } },
+  ] as const satisfies readonly CliExample<EmptyStateCliProps>[],
+);
 
 /** Render one framed terminal placeholder with an optional next action. */
 const renderEmptyStateCli: CliRenderer<EmptyStateCliProps> = (

@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Hover card",
   slug: "hover-card",
   group: "Feedback",
@@ -20,3 +21,14 @@ export default {
     "The emitted browser behavior promotes supported panels to the top layer, keeping them clear of clipping ancestors and inside the viewport; the static CSS fallback remains available without JavaScript.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Rich details", only: "web" },
+    { id: "inline", label: "Inline annotation", only: "web" },
+    { id: "overflow", label: "Overflow boundary", only: "web" },
+  ],
+);
+
+export default meta;

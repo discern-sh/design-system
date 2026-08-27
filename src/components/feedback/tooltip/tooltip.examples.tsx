@@ -1,6 +1,10 @@
+import {
+  type ConformanceScenario,
+  defineCatalogueExamples,
+} from "../../../../catalogue/conformance.ts";
 import { ExampleIcon } from "../../../fixtures/example-icon.tsx";
-import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
 import { IconButton } from "../../core/icon-button/icon-button.tsx";
+import meta, { componentExampleVocabulary } from "./tooltip.meta.ts";
 import { Tooltip } from "./tooltip.tsx";
 
 export const conformance = [{
@@ -24,21 +28,42 @@ export const conformance = [{
   ],
 }] satisfies readonly ConformanceScenario[];
 
+function DefaultTooltipState() {
+  return (
+    <Tooltip label="Lorem ipsum dolor">
+      <IconButton
+        icon={<ExampleIcon name="info" />}
+        label="Information"
+        variant="outline"
+      />
+    </Tooltip>
+  );
+}
+
+function BottomTooltipState() {
+  return (
+    <Tooltip label="Consectetur adipiscing" placement="bottom">
+      <button className="discern-text-trigger" type="button">
+        Focus or hover
+      </button>
+    </Tooltip>
+  );
+}
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: DefaultTooltipState },
+    { id: "bottom", Example: BottomTooltipState },
+  ],
+);
+
 export default function TooltipExamples() {
   return (
     <div className="discern-example-row">
-      <Tooltip label="Lorem ipsum dolor">
-        <IconButton
-          icon={<ExampleIcon name="info" />}
-          label="Information"
-          variant="outline"
-        />
-      </Tooltip>
-      <Tooltip label="Consectetur adipiscing" placement="bottom">
-        <button className="discern-text-trigger" type="button">
-          Focus or hover
-        </button>
-      </Tooltip>
+      <DefaultTooltipState />
+      <BottomTooltipState />
     </div>
   );
 }
