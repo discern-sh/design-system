@@ -58,12 +58,31 @@ function BranchingStepState() {
   );
 }
 
+function ActiveStepState() {
+  return (
+    <ProcedureStep
+      title="Run the verification suite"
+      action={
+        <p>
+          <strong>Current step.</strong>{" "}
+          Verify the rendered output and its source contract.
+        </p>
+      }
+      command={{ command: "deno task verify" }}
+      expectedResult={{ children: "Every configured check passes." }}
+      completionCriterion="The verification report records no failures."
+      aria-current="step"
+    />
+  );
+}
+
 export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
   [
     { id: "default", Example: CommandStepState },
     { id: "branch", Example: BranchingStepState },
+    { id: "active", Example: ActiveStepState },
   ],
 );
 

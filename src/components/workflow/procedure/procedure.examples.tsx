@@ -90,6 +90,36 @@ function InterruptedRecoveryState() {
   );
 }
 
+function ActiveProcedureState() {
+  return (
+    <Procedure
+      title="Publish a documentation update"
+      description="Complete and verify each reviewable stage."
+      steps={[
+        {
+          title: "Prepare the draft",
+          action: "Completed after the source and examples were reviewed.",
+        },
+        {
+          title: "Run the verification suite",
+          action: (
+            <p>
+              <strong>Current step.</strong>{" "}
+              Verify the rendered output and its source contract.
+            </p>
+          ),
+          "aria-current": "step",
+        },
+        {
+          title: "Request final review",
+          action: "Continue after the current verification completes.",
+        },
+      ]}
+      completion="The published page matches the approved source."
+    />
+  );
+}
+
 function LongProcedureState() {
   return (
     <Procedure
@@ -116,6 +146,7 @@ export const catalogueExamples = defineCatalogueExamples(
   [
     { id: "default", Example: BackupAndRestoreState },
     { id: "interrupted", Example: InterruptedRecoveryState },
+    { id: "active", Example: ActiveProcedureState },
     { id: "long-procedure", Example: LongProcedureState },
   ],
 );

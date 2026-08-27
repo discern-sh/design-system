@@ -28,13 +28,7 @@ export const componentExampleVocabulary = defineComponentExampleVocabulary(
   [
     { id: "default", label: "Command step" },
     { id: "branch", label: "Branching step" },
-    {
-      id: "active",
-      label: "Active step",
-      only: "cli",
-      reason:
-        "The browser Procedure step has no lifecycle-status input or active frame to represent terminal step progress.",
-    },
+    { id: "active", label: "Active step" },
   ],
 );
 

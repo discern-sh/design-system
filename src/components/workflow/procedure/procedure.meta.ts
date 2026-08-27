@@ -28,13 +28,7 @@ export const componentExampleVocabulary = defineComponentExampleVocabulary(
   [
     { id: "default", label: "Backup and restore" },
     { id: "interrupted", label: "Interrupted recovery" },
-    {
-      id: "active",
-      label: "Active procedure",
-      only: "cli",
-      reason:
-        "The browser Procedure has no lifecycle-status input or active frame to represent terminal workflow progress.",
-    },
+    { id: "active", label: "Active procedure" },
     { id: "long-procedure", label: "Long procedure" },
   ],
 );
