@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { wrapInlineCluster } from "../../../cli/layout.ts";
 import {
@@ -12,6 +13,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./breadcrumbs.meta.ts";
 
 /** One terminal breadcrumb ancestor. */
 export interface BreadcrumbsCliItem {
@@ -30,27 +32,32 @@ export interface BreadcrumbsCliProps {
 }
 
 /** Deterministic Breadcrumbs states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<BreadcrumbsCliProps>[] = [
-  {
-    name: "compact",
-    props: {
-      items: [{ label: "Home" }, { label: "Library" }],
-      current: "Components",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        items: [{ label: "Home" }, { label: "Library" }],
+        current: "Navigation",
+      },
     },
-  },
-  {
-    name: "deep",
-    props: {
-      label: "Location",
-      items: [
-        { label: "Home" },
-        { label: "Documentation" },
-        { label: "Components" },
-      ],
-      current: "Navigation",
+    {
+      name: "deep",
+      props: {
+        label: "Deep breadcrumb",
+        items: [
+          { label: "Home" },
+          { label: "Documentation" },
+          { label: "Components" },
+          { label: "Navigation" },
+        ],
+        current: "Breadcrumbs",
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<BreadcrumbsCliProps>[],
+);
 
 /** Render one wrapping inline terminal path with an explicit current location. */
 const renderBreadcrumbsCli: CliRenderer<BreadcrumbsCliProps> = (

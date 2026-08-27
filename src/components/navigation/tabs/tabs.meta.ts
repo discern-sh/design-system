@@ -1,5 +1,6 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
-export default {
+const meta = {
   name: "Tabs",
   slug: "tabs",
   group: "Navigation",
@@ -12,3 +13,14 @@ export default {
     "Tabs and panels have deterministic labelled relationships.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Overview selected" },
+    { id: "details", label: "Details selected" },
+    { id: "manual", label: "Manual activation" },
+  ],
+);
+
+export default meta;

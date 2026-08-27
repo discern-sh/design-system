@@ -6,6 +6,7 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { renderBox } from "../../../cli/box.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical, wrapInlineCluster } from "../../../cli/layout.ts";
 import {
@@ -13,6 +14,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./tabs.meta.ts";
 import type { TabsActivationMode } from "./tabs.types.ts";
 
 /** One item in a terminal tab strip. */
@@ -41,19 +43,23 @@ const items = [
 ] as const;
 
 /** Deterministic Tabs states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<TabsCliProps>[] = [
-  { name: "overview", props: { items, activeValue: "overview" } },
-  {
-    name: "focused",
-    props: {
-      items,
-      activeValue: "overview",
-      focusedValue: "details",
-      activationMode: "manual",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { name: "default", props: { items, activeValue: "overview" } },
+    { name: "details", props: { items, activeValue: "details" } },
+    {
+      name: "manual",
+      props: {
+        items,
+        activeValue: "overview",
+        focusedValue: "details",
+        activationMode: "manual",
+      },
     },
-  },
-  { name: "details", props: { items, activeValue: "details" } },
-] as const;
+  ] as const satisfies readonly CliExample<TabsCliProps>[],
+);
 
 /** Render one wrapping terminal tab strip and its selected panel. */
 const renderTabsCli: CliRenderer<TabsCliProps> = (props, capabilities) => {

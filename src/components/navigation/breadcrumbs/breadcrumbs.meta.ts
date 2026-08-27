@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Breadcrumbs",
   slug: "breadcrumbs",
   group: "Navigation",
@@ -13,3 +14,13 @@ export default {
     "Only the final, unlinked item carries aria-current=page; visual separators are hidden from assistive technology.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Compact" },
+    { id: "deep", label: "Deep hierarchy" },
+  ],
+);
+
+export default meta;
