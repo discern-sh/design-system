@@ -1,8 +1,8 @@
 # 3A — Run the integrated Builder authoring and browser hardening pass
 
-**Goal:** Compose every landed Builder feature with the final shared Catalogue search/Appearance contracts, complete realistic authoring journeys with human eyes, cure cross-feature friction, and leave one durable real-browser proof plus an accurate present-tense Builder map.
+**Goal:** Compose every landed Builder feature with the final shared Catalogue and browser-Component search, imagery, Appearance, interaction, motion, and responsive contracts; complete realistic authoring journeys with human eyes; cure cross-feature friction; and leave one durable real-browser proof plus an accurate present-tense Builder map.
 
-**Wave:** 3. This is the final Builder implementation and convergence stream. Start only after Builder 2A–2D and Catalogue UX 5A have landed.
+**Wave:** 3. This is the final Builder implementation and convergence stream. Start only after Builder 2A–2D, Catalogue UX 5A, and Browser polish 3A have landed.
 
 You own `3A` only. Do not relaunch completed streams. Read-only audit sub-agents may inspect disjoint journeys if available, but one coordinating agent must personally reproduce every reported issue, own all edits, reconcile cross-feature judgments, run the browser, and pass the final gate.
 
@@ -11,13 +11,14 @@ You own `3A` only. Do not relaunch completed streams. Read-only audit sub-agents
 From `/Users/jack/Sites/discern-design-system`, call `discern_status`. Verify these markers and behavioural outcomes are on `main`:
 
 - `map/_private/planning/catalogue-ux/_done/5a-integrated-visual-qa.md`: final universal search and reusable Appearance contracts are composed;
+- `map/_private/planning/browser-polish/_done/3a-integrated-browser-polish.md`: the public browser Component interaction, motion, local-responsive, semantic-colour, hierarchy, elevation, metadata-legibility, and review contracts are composed;
 - `map/_private/planning/builder-ux/_done/1a-builder-architecture-and-interaction-seams.md`;
 - `map/_private/planning/builder-ux/_done/2a-preview-viewport-and-interaction.md`;
 - `map/_private/planning/builder-ux/_done/2b-placement-validity-and-layers.md`;
 - `map/_private/planning/builder-ux/_done/2c-discovery-templates-and-defaults.md`;
 - `map/_private/planning/builder-ux/_done/2d-inspector-feedback-and-export.md`.
 
-Verify behaviourally—not by marker alone—that exact iframe widths, Edit/Interact modes, explicit insertion/compatibility, permanent Layers, generated-image/universal-search discovery, meaningful templates/defaults, progressive inspector, saved/error/export trust, and disjoint browser-check modules exist. Stop and report any missing prerequisite.
+Verify behaviourally—not by marker alone—that exact iframe widths, Edit/Interact modes, explicit insertion/compatibility, permanent Layers, generated-image/universal-search discovery, meaningful templates/defaults, progressive inspector, saved/error/export trust, disjoint browser-check modules, and the final public Component review/Appearance contracts exist. Stop and report any missing prerequisite.
 
 Call `discern_start` with the literal name **`builder-3a`**, re-root every operation into the returned absolute `data.path`, and pass it to every discern tool.
 
@@ -25,6 +26,7 @@ After re-rooting, read:
 
 - `AGENTS.md`, this programme README and every completed Builder brief;
 - completed Catalogue 1A, 3A, and 5A briefs plus the final universal search, Appearance, and generated-image authorities;
+- all completed Browser polish briefs plus the final review-posture, motion, local-responsive, semantic-Theme, hierarchy, elevation, and metadata-legibility authorities;
 - all post-wave-2 Builder feature contracts/modules/styles/checks and current `catalogue/builder/app.tsx` composition;
 - `map/60-catalogue/interface-builder.md`, ADR 0027, `scripts/builder-conformance.ts`, its orchestrator call site, and Builder integration tests;
 - `discern/TODO.md` to preserve the explicit named-draft/file-management deferral.
@@ -33,7 +35,7 @@ Use the `browser:control-in-app-browser` skill for the complete audit and `disce
 
 ## Background
 
-Wave 2 intentionally split the experience into four independently coherent vertical slices. That made parallel work safe but creates a final risk: the preview can be truthful while insertion overlays misalign at zoom; compatibility can be correct while discovery hides useful results; defaults can be meaningful while inspector labels remain confusing; persistence can be truthful while Interact events look like unsaved changes.
+Wave 2 intentionally split the experience into four independently coherent vertical slices. That made parallel work safe but creates a final risk: the preview can be truthful while insertion overlays misalign at zoom; compatibility can be correct while discovery hides useful results; defaults can be meaningful while inspector labels remain confusing; persistence can be truthful while Interact events look like unsaved changes; and Builder chrome can counter-style the public Component polish it is meant to present.
 
 This pass exists to judge the Builder as a person uses it, not trust branch summaries. The quality bar is habitual usefulness: the next action should be visible, the result should be trustworthy, and technical evidence should remain available without becoming the primary navigation language.
 
@@ -43,10 +45,11 @@ This is a hardening pass, not a licence to invent another feature family or reop
 
 ### 1. Compose shared authorities and final workspace chrome
 
-Call `discern_update` immediately after starting and follow its exact overlap guidance so the branch includes final Catalogue 5A search/Appearance decisions and all Builder wave-2 landings.
+Call `discern_update` immediately after starting and follow its exact overlap guidance so the branch includes final Catalogue 5A, Browser polish 3A, and all Builder wave-2 landings.
 
 - Ensure Builder discovery consumes the final universal search API and alias/ranking/match-reason vocabulary without compatibility wrappers that duplicate semantics.
 - Ensure Preview Appearance consumes the final shared control/state decision, including whether the accent range is exposed, moved, or hidden. Remove superseded Builder-specific controls rather than presenting two implementations.
+- Ensure public Components inside the preview retain their final interaction, motion, reduced-motion, local-responsive, semantic-colour, and elevation contracts. Remove Builder counter-styles or wrappers that flatten them, and keep editor overlays visually separate rather than changing Component CSS.
 - Ensure generated example images resolve in the current preview Theme and final asset path/manifest contract.
 - Reconcile toolbar, viewport/mode, insertion target, Layers, inspector tabs, persistence, and export navigation so each consequential control names its scope: Workspace, Preview, document, or file.
 - Keep editor selection/focus/insertion chrome stable and recognisable across final Appearance choices.
@@ -95,6 +98,7 @@ Fix inconsistencies visible only after composition:
 - transient toast, inline validation, storage alert, saved state, callback event, and export readiness never sharing a misleading style/lifecycle;
 - exact Preview width/zoom/mode/Appearance controls reading as one scoped group rather than toolbar miscellany;
 - generated image theme/crop, live preview, templates, and Builder defaults representing the same Component/example identity honestly;
+- editor focus/selection/insertion overlays remaining legible across the final Component focus, selection, motion, elevation, and Appearance states without suppressing or imitating them;
 - empty, loading, unavailable, refused, storage-failed, and export-blocked states offering one clear recovery action;
 - focus movement following input modality, no competing outline pile-up, and danger actions looking destructive;
 - index-like discovery density remaining fast with 139+ Components and future growth.
@@ -111,6 +115,7 @@ Cover:
 - Edit/Interact inertness, behaviour, callback witnesses, effect containment, selection restoration, and Appearance separation;
 - explicit insertion/compatibility across every mutation path, contextual compatible search, Layers/direct editing, and history selection;
 - generated image/universal search population, template/default validity, Recent/Favourites failure containment, and palette performance;
+- public Component review-posture witnesses inside exact preview frames, including production/reduced motion, local container behaviour, semantic Appearance, and separation from editor overlays;
 - inspector category/default/path/structured-draft behaviour, stale-error clearance, feedback lifecycles, autosave/recovery/file operations, export/preflight/clipboard, and cost facts;
 - the nine end-to-end journeys, axe, headings/landmarks, keyboard reachability, focus visibility, forced colours, reduced motion, 400% zoom, no document-level overflow, no unexpected console warnings, and screenshot review sheets.
 
@@ -152,7 +157,7 @@ Remove avoidable chrome, duplicated messages, stale status, and explanatory pros
 ## Constraints
 
 - Preserve inert documents, strict accepted policy, deterministic exports, neutral/CLI React-free boundaries, and Catalogue-only Builder status.
-- Consume final shared search, Appearance, canonical-example, and generated-image authorities; never fork them during integration.
+- Consume final shared search, Appearance, canonical-example, generated-image, interaction, motion, local-responsive, and visual-hierarchy authorities; never fork or counter-style them during integration.
 - Preserve feature ownership. Cross-feature fixes belong in the closest authority, not a new app-level patch layer.
 - Keep desktop-class authoring scope. Test canvas preview responsive widths; do not launch a mobile Builder redesign.
 - Named drafts/wider file management remains TODO only.
@@ -168,12 +173,12 @@ Remove avoidable chrome, duplicated messages, stale status, and explanatory pros
 
 ## Definition of done
 
-- All shared Catalogue and Builder completion markers/behaviour are composed; no duplicate search, image, Appearance, policy, registry, cost, or export authority remains.
-- The complete audit matrix and nine core journeys work by sight, pointer, and keyboard at the exact live Builder URL with no hidden placement rule, false viewport, unsafe interaction, stale error/status, buried structure, or blind export.
+- All shared Catalogue, Browser polish, and Builder completion markers/behaviour are composed; no duplicate search, image, Appearance, review, policy, registry, cost, or export authority remains.
+- The complete audit matrix and nine core journeys work by sight, pointer, and keyboard at the exact live Builder URL with no hidden placement rule, false viewport, unsafe interaction, stale error/status, buried structure, blind export, or Builder override that falsifies a public Component posture.
 - Recorded journey evidence shows predictable placement, bounded hops/undo, exact responsive truth, successful interaction, correction, persistence, and export; every high-leverage friction found is cured and guarded.
 - Integrated browser checks cover every cross-feature contract plus accessibility, forced colours, reduced motion, 400% zoom, containment, performance, console, and review screenshots without designing a phone authoring product.
 - `map/60-catalogue/interface-builder.md` accurately describes the final present system and links its authorities; named drafts/file management remains clearly deferred in TODO.
-- The final adversarial pass finds no implementation-language leakage, duplicated matching/image facts, competing editor/consumer accent, stale workflow message, or avoidable visual noise.
+- The final adversarial pass finds no implementation-language leakage, duplicated matching/image/review facts, competing editor/consumer accent, public-Component counter-style, stale workflow message, or avoidable visual noise.
 - Leave `deno task serve` running and report the exact Builder URL plus representative starter, deep-tree, responsive, interactive, invalid, recovery, and export states for owner review.
 - After the last edit run `discern_prepare`, commit every change in focused commits, then run `discern_done` on clean committed HEAD. Fix every diagnostic without loosening tests or standards.
 - Once green, run `discern_accept`. A recorded grant may land; otherwise it must refuse without mutation, after which report the proof line and `builder-3a` branch/worktree and stop for owner review.
