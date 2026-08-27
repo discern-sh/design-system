@@ -47,3 +47,11 @@ export default function CleaveBackdropExamples() {
     </section>
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: CleaveBackdropExamples }],
+);
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./cleave-backdrop.meta.ts";

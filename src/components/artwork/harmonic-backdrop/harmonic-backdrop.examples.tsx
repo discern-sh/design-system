@@ -47,3 +47,11 @@ export default function HarmonicBackdropExamples() {
     </section>
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: HarmonicBackdropExamples }],
+);
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./harmonic-backdrop.meta.ts";

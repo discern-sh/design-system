@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Backdrop",
   slug: "backdrop",
   group: "Artwork",
@@ -10,7 +11,7 @@ export default {
   cli: {
     stance: "exempt",
     reason:
-      "Its contract is a decorative viewport-scaled browser layer with no semantic content to translate into terminal output.",
+      "Backdrop owns viewport-scaled browser positioning and decorative layer presence; terminal output has no background plane or semantic content to render in its place.",
   },
   purposes: ["marketing-site"],
   useWhen: [
@@ -25,3 +26,10 @@ export default {
     "Decorative backdrops disappear in forced-colour modes so they cannot obscure foreground content.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Backdrop layer", only: "web" }],
+);
+
+export default meta;

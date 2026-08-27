@@ -48,3 +48,13 @@ export default function ImpressionBackdropExamples() {
     </section>
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: ImpressionBackdropExamples }],
+);
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, {
+  componentExampleVocabulary,
+} from "./impression-backdrop.meta.ts";

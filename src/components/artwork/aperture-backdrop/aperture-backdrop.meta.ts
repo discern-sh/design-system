@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Aperture backdrop",
   slug: "aperture-backdrop",
   group: "Artwork",
@@ -10,7 +11,7 @@ export default {
   cli: {
     stance: "exempt",
     reason:
-      "Decorative scalable browser artwork has no semantic terminal equivalent.",
+      "Aperture backdrop's off-centre triangular opening and raking light beams require a scalable layered plane that terminal cells cannot represent without inventing semantic content.",
   },
   purposes: ["marketing-site"],
   useWhen: [
@@ -25,3 +26,10 @@ export default {
     "Forced-colour modes omit the decorative layer so foreground content remains unambiguous.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Aperture field", only: "web" }],
+);
+
+export default meta;

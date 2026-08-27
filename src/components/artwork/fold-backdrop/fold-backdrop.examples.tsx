@@ -46,3 +46,11 @@ export default function FoldBackdropExamples() {
     </section>
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: FoldBackdropExamples }],
+);
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./fold-backdrop.meta.ts";

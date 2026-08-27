@@ -47,3 +47,11 @@ export default function ApertureBackdropExamples() {
     </section>
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: ApertureBackdropExamples }],
+);
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./aperture-backdrop.meta.ts";

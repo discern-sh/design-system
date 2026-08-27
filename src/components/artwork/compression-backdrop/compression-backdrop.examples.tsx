@@ -47,3 +47,13 @@ export default function CompressionBackdropExamples() {
     </section>
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: CompressionBackdropExamples }],
+);
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, {
+  componentExampleVocabulary,
+} from "./compression-backdrop.meta.ts";

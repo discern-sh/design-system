@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Cleave backdrop",
   slug: "cleave-backdrop",
   group: "Artwork",
@@ -10,7 +11,7 @@ export default {
   cli: {
     stance: "exempt",
     reason:
-      "Decorative scalable browser artwork has no semantic terminal equivalent.",
+      "Cleave backdrop's oversized low-contrast surfaces must fill a browser plane and meet at a responsive median, a decorative spatial relationship terminal cells cannot preserve.",
   },
   purposes: ["marketing-site"],
   useWhen: [
@@ -25,3 +26,10 @@ export default {
     "Forced-colour modes omit the decorative layer so foreground content remains unambiguous.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Cleave field", only: "web" }],
+);
+
+export default meta;

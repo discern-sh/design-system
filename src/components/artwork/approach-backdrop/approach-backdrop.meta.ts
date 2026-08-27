@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Approach backdrop",
   slug: "approach-backdrop",
   group: "Artwork",
@@ -10,7 +11,7 @@ export default {
   cli: {
     stance: "exempt",
     reason:
-      "Decorative scalable browser artwork has no semantic terminal equivalent.",
+      "Approach backdrop's nested right-anchored triangles and accent moving between visual depths require scalable browser geometry with no honest terminal-cell equivalent.",
   },
   purposes: ["marketing-site"],
   useWhen: [
@@ -25,3 +26,10 @@ export default {
     "Forced-colour modes omit the decorative layer so foreground content remains unambiguous.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Approach field", only: "web" }],
+);
+
+export default meta;

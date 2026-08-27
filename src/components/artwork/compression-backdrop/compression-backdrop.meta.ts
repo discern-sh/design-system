@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Compression backdrop",
   slug: "compression-backdrop",
   group: "Artwork",
@@ -10,7 +11,7 @@ export default {
   cli: {
     stance: "exempt",
     reason:
-      "Decorative scalable browser artwork has no semantic terminal equivalent.",
+      "Compression backdrop's ticked ribbon depends on a scalable concertina fold and continuous flat runs; a terminal frame cannot express that decorative geometry honestly.",
   },
   purposes: ["marketing-site"],
   useWhen: [
@@ -25,3 +26,10 @@ export default {
     "Forced-colour modes omit the decorative layer so foreground content remains unambiguous.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Compression field", only: "web" }],
+);
+
+export default meta;
