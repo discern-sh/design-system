@@ -28,8 +28,6 @@
     border-block-end-color: var(--discern-color-accent-500);
   }
   .discern-search-palette__icon {
-    display: inline-flex;
-    align-items: center;
     color: var(--discern-color-ink-faint);
   }
   .discern-search-palette__input {
@@ -45,6 +43,10 @@
   }
   .discern-search-palette__input::placeholder {
     color: var(--discern-color-ink-faint);
+  }
+  .discern-search-palette__close {
+    font: inherit;
+    cursor: pointer;
   }
   .discern-search-palette__results {
     max-block-size: min(50vh, 24rem);

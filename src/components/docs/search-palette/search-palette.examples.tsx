@@ -49,6 +49,15 @@ export const conformance = [{
     { expect: "hidden", target: { role: "dialog", name: "Search" } },
     { expect: "focused", target: { role: "button", name: "Open search" } },
   ],
+}, {
+  name: "the visible close action dismisses and restores the opener",
+  steps: [
+    { action: "click", target: { role: "button", name: "Open search" } },
+    { expect: "visible", target: { role: "dialog", name: "Search" } },
+    { action: "click", target: { role: "button", name: "Close search" } },
+    { expect: "hidden", target: { role: "dialog", name: "Search" } },
+    { expect: "focused", target: { role: "button", name: "Open search" } },
+  ],
 }] satisfies readonly ConformanceScenario[];
 
 export default function SearchPaletteExamples() {

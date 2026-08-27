@@ -24,6 +24,7 @@ export interface SearchPaletteProps extends
   readonly onValueChange?: (value: string) => void;
   readonly icon?: ReactNode;
   readonly hint?: ReactNode;
+  readonly closeLabel?: string;
   readonly closeOnBackdrop?: boolean;
   readonly inputProps?: Omit<
     InputHTMLAttributes<HTMLInputElement>,
@@ -46,6 +47,7 @@ export const SearchPalette: DiscernComponent<
     onValueChange,
     icon,
     hint,
+    closeLabel = "Close",
     closeOnBackdrop = true,
     inputProps,
     className,
@@ -114,6 +116,14 @@ export const SearchPalette: DiscernComponent<
           autoFocus
           {...inputProps}
         />
+        <button
+          className="discern-search-palette__close"
+          type="button"
+          aria-label={`${closeLabel} ${label.toLowerCase()}`}
+          onClick={() => onOpenChange(false)}
+        >
+          {closeLabel}
+        </button>
       </div>
       <div className="discern-search-palette__results">{children}</div>
       {hint !== undefined && (

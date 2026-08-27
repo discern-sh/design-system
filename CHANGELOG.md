@@ -6,6 +6,8 @@ Each release is cut from a green run of the full release gate — formatting, li
 
 ## Unreleased
 
+- Give Search palette a visible, labelled Close action while retaining native-dialog Escape, backdrop dismissal, focus containment, and focus restoration. The additive `closeLabel` prop customises the action text for consumers that need different task language.
+
 - **Breaking:** Rename the Agents multi-check Component to `VerificationReport` so the reusable record no longer carries terminology inherited from one consumer product. The Component slug and folder are now `verification-report`; browser classes use `.discern-verification-report`; the React types are `VerificationReportProps`, `VerificationReportMeta`, `VerificationReportCheck`, `VerificationReportCheckState`, and `VerificationReportStamp`; and the CLI surface uses the corresponding `VerificationReportCli*` types plus `renderVerificationReportCli`. The Catalogue composition is now `handoff-verification-report`. No compatibility aliases retain the superseded vocabulary.
 
 - Make the scrollable Terminal and Code listing bodies keyboard-accessible, following Chart's focusable-viewport pattern: each `<pre>` body now carries `role="group"`, a derived `Scrollable …` label that includes a string title or filename, `tabIndex={0}`, and a visible `:focus-visible` outline, so keyboard users can scroll overflowing output. The change is additive; existing markup, classes, and props are unchanged.
