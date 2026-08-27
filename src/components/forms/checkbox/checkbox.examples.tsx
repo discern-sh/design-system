@@ -1,14 +1,82 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./checkbox.meta.ts";
 import { Checkbox } from "./checkbox.tsx";
-export default function CheckboxExamples() {
+
+function DefaultCheckboxState() {
+  return <Checkbox label="Include examples" description="Optional" />;
+}
+
+function ActiveCheckboxState() {
+  return <Checkbox label="Include examples" autoFocus />;
+}
+
+function FilledCheckboxState() {
+  return <Checkbox label="Include examples" defaultChecked />;
+}
+
+function ValidationErrorCheckboxState() {
   return (
-    <div className="discern-example-stack">
-      <Checkbox
-        label="Lorem ipsum dolor"
-        description="Consectetur adipiscing elit."
-        defaultChecked
-      />
-      <Checkbox label="Integer posuere erat" />
-      <Checkbox label="Disabled option" disabled />
-    </div>
+    <Checkbox
+      label="Include examples"
+      description="Choose before continuing."
+      aria-invalid="true"
+    />
   );
+}
+
+function DisabledCheckboxState() {
+  return <Checkbox label="Include examples" disabled />;
+}
+
+function SubmittedCheckboxState() {
+  return (
+    <Checkbox
+      label="Include examples"
+      description="Submitted"
+      defaultChecked
+      disabled
+    />
+  );
+}
+
+function CancelledCheckboxState() {
+  return (
+    <Checkbox
+      label="Include examples"
+      description="Choice cancelled"
+      disabled
+    />
+  );
+}
+
+function GroupedCheckboxState() {
+  return (
+    <fieldset className="discern-example-stack">
+      <legend>Notifications</legend>
+      <strong>Regular</strong>
+      <Checkbox label="Email updates" defaultChecked />
+      <Checkbox label="Weekly summary" disabled />
+      <strong>Optional</strong>
+      <Checkbox label="Announcements" />
+    </fieldset>
+  );
+}
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: DefaultCheckboxState },
+    { id: "grouped", Example: GroupedCheckboxState },
+    { id: "active", Example: ActiveCheckboxState },
+    { id: "filled", Example: FilledCheckboxState },
+    { id: "validation-error", Example: ValidationErrorCheckboxState },
+    { id: "disabled", Example: DisabledCheckboxState },
+    { id: "submitted", Example: SubmittedCheckboxState },
+    { id: "cancelled", Example: CancelledCheckboxState },
+  ],
+);
+
+export default function CheckboxExamples() {
+  return <DefaultCheckboxState />;
 }

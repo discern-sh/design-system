@@ -4,6 +4,7 @@
  * @module
  */
 
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import type {
   ConfirmFrameState,
@@ -31,6 +32,7 @@ import {
   visibleFormCliChoiceEntries,
   visibleFormCliChoiceOverflow,
 } from "../form-frame.ts";
+import meta, { componentExampleVocabulary } from "./checkbox.meta.ts";
 
 /** Inputs accepted by the terminal Checkbox renderer. */
 interface CheckboxCliOptions extends TerminalMotifOptions {
@@ -54,109 +56,76 @@ const base = {
   noLabel: "Not included",
 };
 
-/** Every static Checkbox state rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<CheckboxCliProps>[] = [
-  {
-    name: "idle",
-    props: { ...base, lifecycle: { status: "active" }, presentation: "idle" },
-  },
-  {
-    name: "active",
-    props: { ...base, lifecycle: { status: "active" } },
-  },
-  {
-    name: "filled",
-    props: {
-      ...base,
-      value: true,
-      lifecycle: { status: "active" },
-      presentation: "filled",
+/** Deliberate human Checkbox postures shared with the browser Catalogue. */
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: { ...base, lifecycle: { status: "active" }, presentation: "idle" },
     },
-  },
-  {
-    name: "validation-error",
-    props: {
-      ...base,
-      lifecycle: {
-        status: "validation-error",
-        message: "Choose before continuing",
+    {
+      name: "grouped",
+      props: {
+        kind: "multiselect",
+        label: "Notifications",
+        lifecycle: { status: "active" },
+        options: [
+          { kind: "group-heading", id: "regular", label: "Regular" },
+          { id: "email", label: "Email updates" },
+          { id: "summary", label: "Weekly summary", disabled: true },
+          { kind: "group-heading", id: "optional", label: "Optional" },
+          { id: "announcements", label: "Announcements" },
+        ],
+        highlightedIndex: 1,
+        selectedIds: ["email"],
       },
     },
-  },
-  {
-    name: "disabled",
-    props: {
-      ...base,
-      lifecycle: { status: "active" },
-      presentation: "disabled",
+    {
+      name: "active",
+      props: { ...base, lifecycle: { status: "active" } },
     },
-  },
-  {
-    name: "submitted",
-    props: { ...base, value: true, lifecycle: { status: "submitted" } },
-  },
-  {
-    name: "cancelled",
-    props: {
-      ...base,
-      lifecycle: { status: "cancelled", reason: "Choice cancelled" },
+    {
+      name: "filled",
+      props: {
+        ...base,
+        value: true,
+        lifecycle: { status: "active" },
+        presentation: "filled",
+      },
     },
-  },
-  {
-    name: "grouped",
-    props: {
-      kind: "multiselect",
-      label: "Capabilities",
-      lifecycle: { status: "active" },
-      options: [
-        { kind: "group-heading", id: "core", label: "Core" },
-        { id: "render", label: "Render frames" },
-        { id: "inspect", label: "Inspect output", disabled: true },
-        { kind: "group-heading", id: "optional", label: "Optional" },
-        { id: "animate", label: "Animate progress" },
-      ],
-      highlightedIndex: 1,
-      selectedIds: ["render"],
+    {
+      name: "validation-error",
+      props: {
+        ...base,
+        lifecycle: {
+          status: "validation-error",
+          message: "Choose before continuing",
+        },
+      },
     },
-  },
-  {
-    name: "search-filtered",
-    props: {
-      kind: "search-multiselect",
-      label: "Roles",
-      lifecycle: { status: "active" },
-      query: "re",
-      cursor: 2,
-      results: [
-        { id: "render", label: "Render frames" },
-        { id: "inspect", label: "Inspect", disabled: true },
-        { kind: "group-heading", id: "selected", label: "Selected" },
-        { id: "animate", label: "Animate progress" },
-      ],
-      selectedIds: ["render", "animate"],
-      highlightedIndex: 0,
+    {
+      name: "disabled",
+      props: {
+        ...base,
+        lifecycle: { status: "active" },
+        presentation: "disabled",
+      },
     },
-  },
-  {
-    name: "windowed",
-    props: {
-      kind: "multiselect",
-      label: "Capabilities",
-      lifecycle: { status: "active" },
-      options: [
-        { id: "render", label: "Render" },
-        { id: "inspect", label: "Inspect" },
-        { id: "animate", label: "Animate" },
-        { id: "export", label: "Export" },
-        { id: "publish", label: "Publish" },
-      ],
-      highlightedIndex: 0,
-      selectedIds: [],
-      visibleStart: 0,
-      visibleCount: 2,
+    {
+      name: "submitted",
+      props: { ...base, value: true, lifecycle: { status: "submitted" } },
     },
-  },
-] as const;
+    {
+      name: "cancelled",
+      props: {
+        ...base,
+        lifecycle: { status: "cancelled", reason: "Choice cancelled" },
+      },
+    },
+  ] as const satisfies readonly CliExample<CheckboxCliProps>[],
+);
 
 /** Render a Wave 1 confirmation state with checkbox semantics. */
 const renderCheckboxCli: CliRenderer<CheckboxCliProps> = (

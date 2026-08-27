@@ -4,6 +4,7 @@
  * @module
  */
 
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import type {
   AutocompleteFrameState,
@@ -16,6 +17,7 @@ import {
   insertFormCliCursor,
   renderFormCliFrame,
 } from "../form-frame.ts";
+import meta, { componentExampleVocabulary } from "./input.meta.ts";
 
 /** Inputs accepted by the terminal Input renderer. */
 export type InputCliProps =
@@ -41,77 +43,81 @@ const base = {
 };
 
 /** Every static Input state rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<InputCliProps>[] = [
-  {
-    name: "idle",
-    props: { ...base, lifecycle: { status: "active" }, presentation: "idle" },
-  },
-  {
-    name: "active",
-    props: { ...base, lifecycle: { status: "active" } },
-  },
-  {
-    name: "filled",
-    props: {
-      ...base,
-      value: "atlas",
-      cursor: 5,
-      lifecycle: { status: "active" },
-      presentation: "filled",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: { ...base, lifecycle: { status: "active" }, presentation: "idle" },
     },
-  },
-  {
-    name: "validation-error",
-    props: {
-      ...base,
-      value: "a",
-      cursor: 1,
-      lifecycle: {
-        status: "validation-error",
-        message: "Use at least three characters",
+    {
+      name: "active",
+      props: { ...base, lifecycle: { status: "active" } },
+    },
+    {
+      name: "filled",
+      props: {
+        ...base,
+        value: "atlas",
+        cursor: 5,
+        lifecycle: { status: "active" },
+        presentation: "filled",
       },
     },
-  },
-  {
-    name: "disabled",
-    props: {
-      ...base,
-      value: "atlas",
-      cursor: 5,
-      lifecycle: { status: "active" },
-      presentation: "disabled",
+    {
+      name: "validation-error",
+      props: {
+        ...base,
+        value: "a",
+        cursor: 1,
+        lifecycle: {
+          status: "validation-error",
+          message: "Use at least three characters",
+        },
+      },
     },
-  },
-  {
-    name: "submitted",
-    props: {
-      ...base,
-      value: "atlas",
-      cursor: 5,
-      lifecycle: { status: "submitted" },
+    {
+      name: "disabled",
+      props: {
+        ...base,
+        value: "atlas",
+        cursor: 5,
+        lifecycle: { status: "active" },
+        presentation: "disabled",
+      },
     },
-  },
-  {
-    name: "cancelled",
-    props: {
-      ...base,
-      lifecycle: { status: "cancelled", reason: "Input cancelled" },
+    {
+      name: "submitted",
+      props: {
+        ...base,
+        value: "atlas",
+        cursor: 5,
+        lifecycle: { status: "submitted" },
+      },
     },
-  },
-  {
-    name: "searching",
-    props: {
-      kind: "autocomplete",
-      label: "Token reference",
-      lifecycle: { status: "active" },
-      value: "can",
-      cursor: 3,
-      suggestions: [],
-      highlightedIndex: 0,
-      pending: true,
+    {
+      name: "cancelled",
+      props: {
+        ...base,
+        lifecycle: { status: "cancelled", reason: "Input cancelled" },
+      },
     },
-  },
-] as const;
+    {
+      name: "searching",
+      props: {
+        kind: "autocomplete",
+        label: "Country",
+        lifecycle: { status: "active" },
+        value: "can",
+        cursor: 3,
+        suggestions: [],
+        highlightedIndex: 0,
+        pending: true,
+      },
+    },
+  ] as const satisfies readonly CliExample<InputCliProps>[],
+);
 
 function rawValue(
   state: TextInputFrameState | MaskedInputFrameState | AutocompleteFrameState,

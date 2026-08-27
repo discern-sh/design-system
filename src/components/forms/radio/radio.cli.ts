@@ -4,6 +4,7 @@
  * @module
  */
 
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import type {
   SearchFrameState,
@@ -27,6 +28,7 @@ import {
   visibleFormCliChoiceEntries,
   visibleFormCliChoiceOverflow,
 } from "../form-frame.ts";
+import meta, { componentExampleVocabulary } from "./radio.meta.ts";
 
 /** Inputs accepted by the terminal Radio renderer. */
 interface RadioCliOptions extends TerminalMotifOptions {
@@ -54,105 +56,81 @@ const base = {
   highlightedIndex: 0,
 };
 
-/** Every static Radio state rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<RadioCliProps>[] = [
-  {
-    name: "idle",
-    props: { ...base, lifecycle: { status: "active" }, presentation: "idle" },
-  },
-  {
-    name: "active",
-    props: {
-      ...base,
-      highlightedIndex: 1,
-      lifecycle: { status: "active" },
+/** Deliberate human Radio postures shared with the browser Catalogue. */
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: { ...base, lifecycle: { status: "active" }, presentation: "idle" },
     },
-  },
-  {
-    name: "filled",
-    props: {
-      ...base,
-      selectedId: "bravo",
-      lifecycle: { status: "active" },
-      presentation: "filled",
+    {
+      name: "grouped",
+      props: {
+        ...base,
+        options: [
+          { kind: "group-heading", id: "stable", label: "Stable" },
+          { id: "alpha", label: "Alpha" },
+          { id: "bravo", label: "Bravo" },
+          { kind: "group-heading", id: "preview", label: "Preview" },
+          { id: "charlie", label: "Charlie", disabled: true },
+        ],
+        highlightedIndex: 2,
+        selectedId: "bravo",
+        lifecycle: { status: "active" },
+      },
     },
-  },
-  {
-    name: "validation-error",
-    props: {
-      ...base,
-      lifecycle: { status: "validation-error", message: "Choose a channel" },
+    {
+      name: "active",
+      props: {
+        ...base,
+        highlightedIndex: 1,
+        lifecycle: { status: "active" },
+      },
     },
-  },
-  {
-    name: "disabled",
-    props: {
-      ...base,
-      selectedId: "alpha",
-      lifecycle: { status: "active" },
-      presentation: "disabled",
+    {
+      name: "filled",
+      props: {
+        ...base,
+        selectedId: "bravo",
+        lifecycle: { status: "active" },
+        presentation: "filled",
+      },
     },
-  },
-  {
-    name: "submitted",
-    props: {
-      ...base,
-      selectedId: "bravo",
-      lifecycle: { status: "submitted" },
+    {
+      name: "validation-error",
+      props: {
+        ...base,
+        lifecycle: { status: "validation-error", message: "Choose a channel" },
+      },
     },
-  },
-  {
-    name: "cancelled",
-    props: {
-      ...base,
-      lifecycle: { status: "cancelled", reason: "Selection cancelled" },
+    {
+      name: "disabled",
+      props: {
+        ...base,
+        selectedId: "alpha",
+        lifecycle: { status: "active" },
+        presentation: "disabled",
+      },
     },
-  },
-  {
-    name: "grouped",
-    props: {
-      ...base,
-      options: [
-        { kind: "group-heading", id: "stable", label: "Stable" },
-        { id: "alpha", label: "Alpha" },
-        { id: "bravo", label: "Bravo" },
-        { kind: "group-heading", id: "preview", label: "Preview" },
-        { id: "charlie", label: "Charlie", disabled: true },
-      ],
-      highlightedIndex: 2,
-      selectedId: "bravo",
-      lifecycle: { status: "active" },
+    {
+      name: "submitted",
+      props: {
+        ...base,
+        selectedId: "bravo",
+        lifecycle: { status: "submitted" },
+      },
     },
-  },
-  {
-    name: "searching",
-    props: {
-      kind: "search",
-      label: "Channel",
-      lifecycle: { status: "active" },
-      query: "cha",
-      cursor: 3,
-      results: [],
-      pending: true,
+    {
+      name: "cancelled",
+      props: {
+        ...base,
+        lifecycle: { status: "cancelled", reason: "Selection cancelled" },
+      },
     },
-  },
-  {
-    name: "windowed",
-    props: {
-      ...base,
-      options: [
-        { id: "alpha", label: "Alpha" },
-        { id: "bravo", label: "Bravo" },
-        { id: "charlie", label: "Charlie" },
-        { id: "delta", label: "Delta" },
-        { id: "echo", label: "Echo" },
-      ],
-      visibleStart: 0,
-      visibleCount: 2,
-      lifecycle: { status: "active" },
-    },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<RadioCliProps>[],
+);
 
 /** Render a Wave 1 single-selection state as a terminal radio group. */
 const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {

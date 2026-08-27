@@ -1,5 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
-export default {
+
+const meta = {
   name: "Select",
   slug: "select",
   group: "Forms",
@@ -8,3 +10,19 @@ export default {
     "Styled native select with typed options and associated field messaging.",
   cli: { stance: "rendered" },
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Idle" },
+    { id: "grouped", label: "Grouped options" },
+    { id: "active", label: "Active" },
+    { id: "filled", label: "Selected" },
+    { id: "validation-error", label: "Validation error" },
+    { id: "disabled", label: "Disabled" },
+    { id: "submitted", label: "Submitted" },
+    { id: "cancelled", label: "Cancelled" },
+  ],
+);
+
+export default meta;

@@ -4,6 +4,7 @@
  * @module
  */
 
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import type { TextareaFrameState } from "../../../cli/interactive-states.ts";
 import { wrapText } from "../../../cli/text.ts";
@@ -14,6 +15,7 @@ import {
   insertFormCliMarker,
   renderFormCliFrame,
 } from "../form-frame.ts";
+import meta, { componentExampleVocabulary } from "./textarea.meta.ts";
 
 /** Inputs accepted by the terminal Textarea renderer. */
 export interface TextareaCliProps extends TextareaFrameState {
@@ -34,71 +36,75 @@ const base = {
 };
 
 /** Every static Textarea state rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<TextareaCliProps>[] = [
-  {
-    name: "idle",
-    props: { ...base, lifecycle: { status: "active" }, presentation: "idle" },
-  },
-  {
-    name: "active",
-    props: { ...base, lifecycle: { status: "active" } },
-  },
-  {
-    name: "filled",
-    props: {
-      ...base,
-      value: "Adds CLI frames.",
-      cursor: 16,
-      lifecycle: { status: "active" },
-      presentation: "filled",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: { ...base, lifecycle: { status: "active" }, presentation: "idle" },
     },
-  },
-  {
-    name: "tall-window",
-    props: {
-      ...base,
-      value: "One\nTwo\nThree\nFour\nFive\nSix\nSeven",
-      cursor: 33,
-      rows: 6,
-      lifecycle: { status: "active" },
+    {
+      name: "active",
+      props: { ...base, lifecycle: { status: "active" } },
     },
-  },
-  {
-    name: "validation-error",
-    props: {
-      ...base,
-      value: "Short",
-      cursor: 5,
-      lifecycle: { status: "validation-error", message: "Add more detail" },
+    {
+      name: "filled",
+      props: {
+        ...base,
+        value: "Adds reusable examples.",
+        cursor: 23,
+        lifecycle: { status: "active" },
+        presentation: "filled",
+      },
     },
-  },
-  {
-    name: "disabled",
-    props: {
-      ...base,
-      value: "Managed by policy",
-      cursor: 17,
-      lifecycle: { status: "active" },
-      presentation: "disabled",
+    {
+      name: "validation-error",
+      props: {
+        ...base,
+        value: "Short",
+        cursor: 5,
+        lifecycle: { status: "validation-error", message: "Add more detail" },
+      },
     },
-  },
-  {
-    name: "submitted",
-    props: {
-      ...base,
-      value: "Adds CLI frames.",
-      cursor: 16,
-      lifecycle: { status: "submitted" },
+    {
+      name: "disabled",
+      props: {
+        ...base,
+        value: "Managed by policy",
+        cursor: 17,
+        lifecycle: { status: "active" },
+        presentation: "disabled",
+      },
     },
-  },
-  {
-    name: "cancelled",
-    props: {
-      ...base,
-      lifecycle: { status: "cancelled", reason: "Draft discarded" },
+    {
+      name: "submitted",
+      props: {
+        ...base,
+        value: "Adds reusable examples.",
+        cursor: 23,
+        lifecycle: { status: "submitted" },
+      },
     },
-  },
-] as const;
+    {
+      name: "cancelled",
+      props: {
+        ...base,
+        lifecycle: { status: "cancelled", reason: "Draft discarded" },
+      },
+    },
+    {
+      name: "tall-window",
+      props: {
+        ...base,
+        value: "One\nTwo\nThree\nFour\nFive\nSix\nSeven",
+        cursor: 33,
+        rows: 6,
+        lifecycle: { status: "active" },
+      },
+    },
+  ] as const satisfies readonly CliExample<TextareaCliProps>[],
+);
 
 function cursorSentinel(value: string): string {
   let marker = "\u{e000}";

@@ -4,6 +4,7 @@
  * @module
  */
 
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import type { SelectFrameState } from "../../../cli/interactive-states.ts";
 import { isInteractiveChoice } from "../../../cli/interactive-choice.ts";
@@ -22,6 +23,7 @@ import {
   visibleFormCliChoiceEntries,
   visibleFormCliChoiceOverflow,
 } from "../form-frame.ts";
+import meta, { componentExampleVocabulary } from "./select.meta.ts";
 
 /** Inputs accepted by the terminal Select renderer. */
 export interface SelectCliProps extends SelectFrameState, TerminalMotifOptions {
@@ -52,99 +54,84 @@ const base = {
   highlightedIndex: 0,
 };
 
-/** Every static Select state rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<SelectCliProps>[] = [
-  {
-    name: "idle",
-    props: {
-      ...base,
-      lifecycle: { status: "active" },
-      presentation: "idle",
-      placeholder: "Choose an environment",
-    },
-  },
-  {
-    name: "active",
-    props: {
-      ...base,
-      highlightedIndex: 1,
-      lifecycle: { status: "active" },
-    },
-  },
-  {
-    name: "filled",
-    props: {
-      ...base,
-      selectedId: "bravo",
-      lifecycle: { status: "active" },
-      presentation: "filled",
-    },
-  },
-  {
-    name: "validation-error",
-    props: {
-      ...base,
-      lifecycle: {
-        status: "validation-error",
-        message: "Choose an environment",
+/** Deliberate human Select postures shared with the browser Catalogue. */
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        ...base,
+        lifecycle: { status: "active" },
+        presentation: "idle",
+        placeholder: "Choose an environment",
       },
     },
-  },
-  {
-    name: "disabled",
-    props: {
-      ...base,
-      selectedId: "alpha",
-      lifecycle: { status: "active" },
-      presentation: "disabled",
+    {
+      name: "grouped",
+      props: {
+        ...base,
+        options: groupedOptions,
+        highlightedIndex: 2,
+        selectedId: "bravo",
+        lifecycle: { status: "active" },
+      },
     },
-  },
-  {
-    name: "submitted",
-    props: {
-      ...base,
-      selectedId: "bravo",
-      lifecycle: { status: "submitted" },
+    {
+      name: "active",
+      props: {
+        ...base,
+        highlightedIndex: 1,
+        lifecycle: { status: "active" },
+      },
     },
-  },
-  {
-    name: "cancelled",
-    props: {
-      ...base,
-      lifecycle: { status: "cancelled", reason: "Selection cancelled" },
+    {
+      name: "filled",
+      props: {
+        ...base,
+        selectedId: "bravo",
+        lifecycle: { status: "active" },
+        presentation: "filled",
+      },
     },
-  },
-  {
-    name: "grouped",
-    props: {
-      ...base,
-      options: groupedOptions,
-      highlightedIndex: 2,
-      selectedId: "bravo",
-      lifecycle: { status: "active" },
-    },
-  },
-  {
-    name: "windowed",
-    props: {
-      ...base,
-      options: [
-        {
-          id: "alpha",
-          label:
-            "A deliberately long navigation choice whose continuation stays aligned beneath its label",
+    {
+      name: "validation-error",
+      props: {
+        ...base,
+        lifecycle: {
+          status: "validation-error",
+          message: "Choose an environment",
         },
-        { id: "bravo", label: "Bravo" },
-        { id: "charlie", label: "Charlie" },
-        { id: "delta", label: "Delta" },
-        { id: "echo", label: "Echo" },
-      ],
-      visibleStart: 0,
-      visibleCount: 2,
-      lifecycle: { status: "active" },
+      },
     },
-  },
-] as const;
+    {
+      name: "disabled",
+      props: {
+        ...base,
+        selectedId: "alpha",
+        lifecycle: { status: "active" },
+        presentation: "disabled",
+      },
+    },
+    {
+      name: "submitted",
+      props: {
+        ...base,
+        selectedId: "bravo",
+        lifecycle: { status: "submitted" },
+      },
+    },
+    {
+      name: "cancelled",
+      props: {
+        ...base,
+        lifecycle: { status: "cancelled", reason: "Selection cancelled" },
+        placeholder: "Choose an environment",
+      },
+    },
+  ] as const satisfies readonly CliExample<SelectCliProps>[],
+);
 
 /** Render a Wave 1 single-selection state as a collapsed or expanded terminal Select. */
 const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
