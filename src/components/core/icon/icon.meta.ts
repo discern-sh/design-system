@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Icon",
   slug: "icon",
   group: "Core",
@@ -13,3 +14,10 @@ export default {
     "Meaningful icons require a label.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Labelled icon" }],
+);
+
+export default meta;

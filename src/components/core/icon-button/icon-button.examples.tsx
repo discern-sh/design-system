@@ -1,22 +1,36 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { ExampleIcon } from "../../../fixtures/example-icon.tsx";
+import meta, { componentExampleVocabulary } from "./icon-button.meta.ts";
 import { IconButton } from "./icon-button.tsx";
+
+function QuietExample() {
+  return <IconButton icon={<ExampleIcon name="spark" />} label="Generate" />;
+}
+
+function OutlineExample() {
+  return (
+    <IconButton
+      icon={<ExampleIcon name="info" />}
+      label="Information"
+      variant="outline"
+    />
+  );
+}
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: QuietExample },
+    { id: "outline", Example: OutlineExample },
+  ],
+);
 
 export default function IconButtonExamples() {
   return (
     <div className="discern-example-row">
-      <IconButton icon={<ExampleIcon name="moon" />} label="Toggle theme" />
-      <IconButton
-        icon={<ExampleIcon name="info" />}
-        label="More information"
-        variant="outline"
-      />
-      <IconButton icon={<ExampleIcon name="close" />} label="Close" size="sm" />
-      <IconButton
-        icon={<ExampleIcon name="spark" />}
-        label="Generate"
-        size="lg"
-        variant="outline"
-      />
+      <QuietExample />
+      <OutlineExample />
     </div>
   );
 }

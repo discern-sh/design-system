@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Icon button",
   slug: "icon-button",
   group: "Core",
@@ -12,3 +13,13 @@ export default {
     "A text label is required even when only an icon is visible.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Quiet" },
+    { id: "outline", label: "Outline" },
+  ],
+);
+
+export default meta;

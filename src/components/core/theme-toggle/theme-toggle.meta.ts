@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Theme toggle",
   slug: "theme-toggle",
   group: "Core",
@@ -21,3 +22,14 @@ export default {
     "The glyph is decorative and hidden; the component never mutates the document itself, keeping theme application observable by the consumer.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "From light" },
+    { id: "quiet", label: "Quiet" },
+    { id: "from-dark", label: "From dark" },
+  ],
+);
+
+export default meta;

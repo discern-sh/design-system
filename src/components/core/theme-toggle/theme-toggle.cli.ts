@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
 import {
@@ -12,6 +13,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./theme-toggle.meta.ts";
 import type {
   ThemeToggleTheme,
   ThemeToggleVariant,
@@ -28,11 +30,15 @@ export interface ThemeToggleCliProps {
 }
 
 /** Deterministic Theme toggle states rendered by `deno task catalogue:cli theme-toggle`. */
-export const cliExamples: readonly CliExample<ThemeToggleCliProps>[] = [
-  { name: "from-light", props: { theme: "light" } },
-  { name: "from-dark", props: { theme: "dark" } },
-  { name: "quiet", props: { theme: "dark", variant: "quiet" } },
-] as const;
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { name: "default", props: { theme: "light" } },
+    { name: "quiet", props: { theme: "dark", variant: "quiet" } },
+    { name: "from-dark", props: { theme: "dark" } },
+  ] as const satisfies readonly CliExample<ThemeToggleCliProps>[],
+);
 
 /** Render the Theme toggle's destination action without owning terminal input. */
 const renderThemeToggleCli: CliRenderer<ThemeToggleCliProps> = (

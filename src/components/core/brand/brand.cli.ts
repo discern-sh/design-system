@@ -5,6 +5,7 @@
  */
 
 import { renderStyledSpans } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import {
@@ -20,6 +21,7 @@ import {
 } from "../../../cli/theme.ts";
 import { renderMotifPattern } from "../../../cli/motifs.ts";
 import type { LogoShape, LogoTreatment } from "../logo/logo.types.ts";
+import meta, { componentExampleVocabulary } from "./brand.meta.ts";
 import type { BrandSize, BrandTypeface } from "./brand.types.ts";
 
 /** Inputs accepted by the terminal Brand renderer. */
@@ -36,21 +38,25 @@ export interface BrandCliProps extends TerminalMotifOptions {
 }
 
 /** Deterministic Brand states rendered by `deno task catalogue:cli brand`. */
-export const cliExamples: readonly CliExample<BrandCliProps>[] = [
-  { name: "wordmark", props: { name: "discern" } },
-  {
-    name: "tagline",
-    props: {
-      name: "discern",
-      tagline: "Tools that remember the rules",
-      size: "lg",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { name: "default", props: { name: "Waypoint" } },
+    {
+      name: "tagline",
+      props: {
+        name: "Northstar",
+        tagline: "Field guide",
+        size: "lg",
+      },
     },
-  },
-  {
-    name: "name-only",
-    props: { name: "discern", mark: false, typeface: "mono" },
-  },
-] as const;
+    {
+      name: "name-only",
+      props: { name: "Open Index", mark: false, typeface: "mono" },
+    },
+  ] as const satisfies readonly CliExample<BrandCliProps>[],
+);
 
 /** Render a width-bounded terminal brand lockup with an optional motif mark. */
 const renderBrandCli: CliRenderer<BrandCliProps> = (props, capabilities) => {

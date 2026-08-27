@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
 import {
@@ -13,6 +14,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./icon.meta.ts";
 
 /** Package glyph names available to the terminal Icon renderer. */
 export type IconCliGlyph =
@@ -44,20 +46,14 @@ const GLYPHS = {
 >;
 
 /** Deterministic Icon states rendered by `deno task catalogue:cli icon`. */
-export const cliExamples: readonly CliExample<IconCliProps>[] = [
-  {
-    name: "spark",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [{
+    name: "default",
     props: { glyph: "spark", label: "Generate", tone: "warning" },
-  },
-  { name: "arrow", props: { glyph: "arrow", label: "Continue" } },
-  {
-    name: "check",
-    props: { glyph: "check", label: "Complete", tone: "success" },
-  },
-  { name: "information", props: { glyph: "info", label: "Information" } },
-  { name: "moon", props: { glyph: "moon", label: "Dark theme" } },
-  { name: "close", props: { glyph: "close", label: "Close", tone: "danger" } },
-] as const;
+  }] as const satisfies readonly CliExample<IconCliProps>[],
+);
 
 /** Render one named, capability-aware terminal glyph with an optional label. */
 const renderIconCli: CliRenderer<IconCliProps> = (props, capabilities) => {

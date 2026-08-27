@@ -5,6 +5,7 @@
  */
 
 import { renderStyledSpans, styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import {
   motifPassthrough,
@@ -17,6 +18,7 @@ import {
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import { renderMotifPattern } from "../../../cli/motifs.ts";
+import meta, { componentExampleVocabulary } from "./logo.meta.ts";
 import type { LogoShape, LogoSize, LogoTreatment } from "./logo.types.ts";
 
 /** Inputs accepted by the terminal Logo renderer. */
@@ -30,11 +32,21 @@ export interface LogoCliProps extends TerminalMotifOptions {
 }
 
 /** Deterministic Logo states rendered by `deno task catalogue:cli logo`. */
-export const cliExamples: readonly CliExample<LogoCliProps>[] = [
-  { name: "plain", props: { text: "discern" } },
-  { name: "tile", props: { text: "discern", treatment: "tile", size: "lg" } },
-  { name: "square", props: { text: "d", shape: "square", treatment: "tile" } },
-] as const;
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { name: "default", props: { text: "Waypoint" } },
+    {
+      name: "tile",
+      props: { text: "Northstar", treatment: "tile", size: "lg" },
+    },
+    {
+      name: "square",
+      props: { text: "N", shape: "square", treatment: "tile" },
+    },
+  ] as const satisfies readonly CliExample<LogoCliProps>[],
+);
 
 /** Render a motif-led terminal wordmark in natural or square form. */
 const renderLogoCli: CliRenderer<LogoCliProps> = (props, capabilities) => {

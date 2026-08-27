@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Logo",
   slug: "logo",
   group: "Core",
@@ -13,3 +14,14 @@ export default {
     "Injected images should use empty alternative text because the wrapper owns the accessible label.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Plain" },
+    { id: "tile", label: "Tile" },
+    { id: "square", label: "Square" },
+  ],
+);
+
+export default meta;

@@ -1,5 +1,9 @@
 import { useState } from "react";
-import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
+import {
+  type ConformanceScenario,
+  defineCatalogueExamples,
+} from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./theme-switcher.meta.ts";
 import { ThemeSwitcher } from "./theme-switcher.tsx";
 import type { ThemeSwitcherMode } from "./theme-switcher.tsx";
 
@@ -36,3 +40,9 @@ export default function ThemeSwitcherExamples() {
     </div>
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: ThemeSwitcherExamples }],
+);

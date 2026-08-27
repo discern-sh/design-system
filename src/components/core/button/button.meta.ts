@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Button",
   slug: "button",
   group: "Core",
@@ -13,3 +14,15 @@ export default {
     "Visible focus and disabled states are built in.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Primary" },
+    { id: "secondary", label: "Secondary" },
+    { id: "ghost", label: "Ghost" },
+    { id: "danger", label: "Danger" },
+  ],
+);
+
+export default meta;

@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
 import {
@@ -12,6 +13,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./icon-button.meta.ts";
 import type { IconButtonSize, IconButtonVariant } from "./icon-button.types.ts";
 
 /** Inputs accepted by the terminal Icon button renderer. */
@@ -32,18 +34,25 @@ const PADDING: Readonly<Record<IconButtonSize, number>> = {
 };
 
 /** Deterministic Icon button states rendered by `deno task catalogue:cli icon-button`. */
-export const cliExamples: readonly CliExample<IconButtonCliProps>[] = [
-  { name: "quiet", props: { icon: "✦", asciiIcon: "*", label: "Generate" } },
-  {
-    name: "outline",
-    props: {
-      icon: "ⓘ",
-      asciiIcon: "i",
-      label: "Information",
-      variant: "outline",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: { icon: "✦", asciiIcon: "*", label: "Generate" },
     },
-  },
-] as const;
+    {
+      name: "outline",
+      props: {
+        icon: "ⓘ",
+        asciiIcon: "i",
+        label: "Information",
+        variant: "outline",
+      },
+    },
+  ] as const satisfies readonly CliExample<IconButtonCliProps>[],
+);
 
 /** Render a labelled terminal icon action with intentional ASCII fallback. */
 const renderIconButtonCli: CliRenderer<IconButtonCliProps> = (

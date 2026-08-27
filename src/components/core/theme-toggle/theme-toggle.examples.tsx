@@ -1,7 +1,14 @@
 import { useState } from "react";
-import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
+import {
+  type ConformanceScenario,
+  defineCatalogueExamples,
+} from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./theme-toggle.meta.ts";
 import { ThemeToggle } from "./theme-toggle.tsx";
-import type { ThemeToggleTheme } from "./theme-toggle.types.ts";
+import type {
+  ThemeToggleTheme,
+  ThemeToggleVariant,
+} from "./theme-toggle.types.ts";
 
 export const conformance = [{
   name: "the toggle always names its destination theme",
@@ -29,11 +36,46 @@ export const conformance = [{
   ],
 }] satisfies readonly ConformanceScenario[];
 
-export default function ThemeToggleExamples() {
-  const [theme, setTheme] = useState<ThemeToggleTheme>("light");
+function ToggleExample(
+  { initialTheme, variant }: {
+    initialTheme: ThemeToggleTheme;
+    variant?: ThemeToggleVariant;
+  },
+) {
+  const [theme, setTheme] = useState<ThemeToggleTheme>(initialTheme);
   return (
     <div className="discern-example-row">
-      <ThemeToggle theme={theme} onThemeChange={setTheme} />
+      <ThemeToggle
+        theme={theme}
+        onThemeChange={setTheme}
+        {...(variant === undefined ? {} : { variant })}
+      />
     </div>
   );
+}
+
+function FromLightExample() {
+  return <ToggleExample initialTheme="light" />;
+}
+
+function FromDarkExample() {
+  return <ToggleExample initialTheme="dark" />;
+}
+
+function QuietExample() {
+  return <ToggleExample initialTheme="dark" variant="quiet" />;
+}
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: FromLightExample },
+    { id: "quiet", Example: QuietExample },
+    { id: "from-dark", Example: FromDarkExample },
+  ],
+);
+
+export default function ThemeToggleExamples() {
+  return <FromLightExample />;
 }

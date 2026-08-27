@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
 import {
@@ -12,6 +13,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./button.meta.ts";
 import type { ButtonSize, ButtonVariant } from "./button.types.ts";
 
 /** Inputs accepted by the terminal Button renderer. */
@@ -28,12 +30,19 @@ export interface ButtonCliProps {
 const PADDING: Readonly<Record<ButtonSize, number>> = { sm: 1, md: 2, lg: 3 };
 
 /** Deterministic Button states rendered by `deno task catalogue:cli button`. */
-export const cliExamples: readonly CliExample<ButtonCliProps>[] = [
-  { name: "primary", props: { label: "Continue" } },
-  { name: "secondary", props: { label: "Preview", variant: "secondary" } },
-  { name: "ghost", props: { label: "Cancel", variant: "ghost", size: "sm" } },
-  { name: "danger", props: { label: "Delete", variant: "danger" } },
-] as const;
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { name: "default", props: { label: "Continue" } },
+    { name: "secondary", props: { label: "Preview", variant: "secondary" } },
+    {
+      name: "ghost",
+      props: { label: "Cancel", variant: "ghost", size: "sm" },
+    },
+    { name: "danger", props: { label: "Delete", variant: "danger" } },
+  ] as const satisfies readonly CliExample<ButtonCliProps>[],
+);
 
 /** Render one width-bounded terminal action with shared variant and size vocabulary. */
 const renderButtonCli: CliRenderer<ButtonCliProps> = (props, capabilities) => {

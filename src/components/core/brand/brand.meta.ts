@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Brand",
   slug: "brand",
   group: "Core",
@@ -14,3 +15,14 @@ export default {
     "Wrap Brand in the destination link instead of nesting a link inside the lockup.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Wordmark" },
+    { id: "tagline", label: "With tagline" },
+    { id: "name-only", label: "Name only" },
+  ],
+);
+
+export default meta;

@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Theme switcher",
   slug: "theme-switcher",
   group: "Core",
@@ -25,3 +26,10 @@ export default {
     "The consumer owns persistence and applies system, light, or dark to its opted-in root.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Theme preference", only: "web" }],
+);
+
+export default meta;
