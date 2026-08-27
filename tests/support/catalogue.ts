@@ -5,6 +5,10 @@ import { buildDesignSystem } from "../../scripts/build.ts";
 interface GeneratedCatalogue {
   readonly packageVersion: string;
   readonly registry: readonly RegistryEntry[];
+  readonly catalogueWebExample: (
+    slug: string,
+    id: string,
+  ) => RegistryEntry["webExamples"][number];
 }
 
 let generatedCatalogue: Promise<GeneratedCatalogue> | undefined;

@@ -48,6 +48,8 @@ Deno.test("browser Catalogue owns one bare CLI projection authority", async () =
     'className="discern-catalogue-cli-output"',
   );
   assertStringIncludes(preview, "projectTerminalInlineHtml(value)");
+  assert(!preview.includes("exampleLabel("));
+  assertStringIncludes(preview, "const { id, label, props } = example");
   assert(
     !/<Terminal(?:\s|>)/.test(preview),
     "CLI output must not grow window chrome",
@@ -74,8 +76,9 @@ Deno.test("browser Catalogue projects every declared CLI stance from disk", () =
 
     assert(entry.cli.examples.length > 0, `${entry.meta.slug} needs examples`);
     for (const example of entry.cli.examples) {
-      assertMatch(example.name, /^[a-z0-9]+(?:-[a-z0-9]+)*$/);
-      const fragment = `component-${entry.meta.slug}--cli-${example.name}`;
+      assertMatch(example.id, /^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+      assert(example.label.trim().length > 0);
+      const fragment = `component-${entry.meta.slug}--cli-${example.id}`;
       assert(!fragments.has(fragment), `duplicate CLI fragment ${fragment}`);
       fragments.add(fragment);
 
@@ -91,13 +94,13 @@ Deno.test("browser Catalogue projects every declared CLI stance from disk", () =
   }
 });
 
-Deno.test("Markdown Catalogue pins a real narrow ASCII no-colour posture", () => {
+Deno.test("Markdown Catalogue keeps narrow layout separate from capability fallback", () => {
   const markdown = registry.find(({ meta }) => meta.slug === "markdown");
   assert(markdown !== undefined);
   assertEquals(markdown.cli.stance, "rendered");
   if (markdown.cli.stance !== "rendered") return;
-  const example = markdown.cli.examples.find(({ name }) =>
-    name === "narrow-ascii-no-colour"
+  const example = markdown.cli.examples.find(({ id }) =>
+    id === "narrow-layout"
   );
   assert(example !== undefined);
   const capabilities = resolveCliExampleCapabilities(
@@ -105,16 +108,14 @@ Deno.test("Markdown Catalogue pins a real narrow ASCII no-colour posture", () =>
     catalogueCliCapabilities,
   );
   assertEquals(capabilities, {
-    ansiControl: false,
-    colorDepth: "none",
+    ansiControl: true,
+    colorDepth: "truecolor",
     columns: 24,
-    hyperlinks: false,
-    unicode: false,
+    unicode: true,
   });
   const output = markdown.cli.render(example.props, capabilities);
-  assertEquals(output, stripAnsi(output));
-  assertStringIncludes(output, "* Preserve");
-  assert(!output.includes("•"));
+  assertStringIncludes(output, "\u001b[");
+  assertStringIncludes(stripAnsi(output), "• Preserve");
   for (const line of output.split("\n")) {
     assert(measureText(line) <= 24, line);
   }
@@ -132,7 +133,7 @@ Deno.test("browser Catalogue enrols grouped interactions and lossless Fleet iden
     assertEquals(entry.cli.stance, "rendered");
     if (entry.cli.stance !== "rendered") continue;
     assert(
-      entry.cli.examples.some(({ name }) => name === exampleName),
+      entry.cli.examples.some(({ id }) => id === exampleName),
       `${slug} is missing CLI example ${exampleName}`,
     );
   }
@@ -152,6 +153,12 @@ Deno.test("browser CLI specimens follow the resolved Catalogue terminal theme", 
   assertStringIncludes(light, 'data-discern-theme="light"');
   assertStringIncludes(dark, 'data-discern-theme="dark"');
   assertNotEquals(light, dark);
+  assertEquals(
+    [...light.matchAll(/<h5>([^<]+)<\/h5>/g)].map((match) => match[1]),
+    heading.cli.stance === "rendered"
+      ? heading.cli.examples.map(({ label }) => label)
+      : [],
+  );
 });
 
 Deno.test("Theme toggle owns the only semantic collision with terminal theme props", () => {

@@ -170,6 +170,40 @@ Deno.test("generated CLI registry validates every enrolled stance", () => {
   }
 });
 
+Deno.test("canonical example authority and the complete CLI graph remain React-free", async () => {
+  for (
+    const target of [
+      "../../src/types/component-examples.ts",
+      "../../src/generated/cli-renderers.ts",
+      "../../scripts/generated/component-examples.ts",
+    ]
+  ) {
+    const output = await new Deno.Command(Deno.execPath(), {
+      args: [
+        "info",
+        "--config",
+        new URL("../../deno.json", import.meta.url).pathname,
+        "--json",
+        new URL(target, import.meta.url).pathname,
+      ],
+      stdout: "piped",
+      stderr: "piped",
+    }).output();
+    assert(output.success, new TextDecoder().decode(output.stderr));
+    const info = JSON.parse(new TextDecoder().decode(output.stdout)) as {
+      readonly modules?: readonly { readonly specifier?: string }[];
+    };
+    const reactModules = (info.modules ?? []).flatMap(({ specifier }) =>
+      specifier !== undefined &&
+        /(?:^npm:react(?:@|\/)|^npm:react-dom(?:@|\/)|\/react-dom@|\/react@)/u
+          .test(specifier)
+        ? [specifier]
+        : []
+    );
+    assertEquals(reactModules, [], target);
+  }
+});
+
 Deno.test("Component boxes keep positive balanced padding and Forms share the frame authority", async () => {
   const generatedRegistryUrl = new URL(
     "../../src/generated/cli-registry.ts",

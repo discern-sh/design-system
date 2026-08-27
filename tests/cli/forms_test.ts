@@ -10,9 +10,11 @@ import {
 } from "../../src/cli/theme.ts";
 import {
   checkboxCliExamples,
+  type CheckboxCliProps,
   fieldCliExamples,
   inputCliExamples,
   radioCliExamples,
+  type RadioCliProps,
   renderCheckboxCli,
   renderFieldCli,
   renderInputCli,
@@ -22,6 +24,7 @@ import {
   renderSwitchCli,
   renderTextareaCli,
   selectCliExamples,
+  type SelectCliProps,
   switchCliExamples,
   textareaCliExamples,
 } from "../../src/cli/mod.ts";
@@ -154,21 +157,13 @@ Deno.test("Form frame balances padding and reserves default status for searching
 
 const checkboxFrames = [
   "Include examples\n┌──────────────────────────┐\n│ [ ] Not included         │\n└──────────────────────────┘\n",
+  "Notifications\n┌──────────────────────────┐\n│                          │\n│ ━━ ▲ REGULAR ━━━━━━━━━━━ │\n│ › [✓] Email updates      │\n│   [ ] Weekly summary     │\n│       (disabled)         │\n│                          │\n│ ━━ ▲ OPTIONAL ━━━━━━━━━━ │\n│   [ ] Announcements      │\n└──────────────────────────┘\n",
   "Include examples\n┌──────────────────────────┐\n│ › [ ] Not included       │\n└──────────────────────────┘\n",
   "Include examples\n┌──────────────────────────┐\n│ [✓] Included             │\n└──────────────────────────┘\n",
   "Include examples\n┌──────────────────────────┐\n│ › [ ] Not included       │\n└──────────────────────────┘\n! Choose before continuing",
   "Include examples\n┌──────────────────────────┐\n│ [ ] Not included         │\n└──────────────────────────┘\nDisabled",
   "Include examples\n┌──────────────────────────┐\n│ [✓] Included             │\n└──────────────────────────┘\n✓ Submitted",
   "Include examples\n┌──────────────────────────┐\n│ [ ] Not included         │\n└──────────────────────────┘\n× Choice cancelled",
-  `Capabilities\n┌──────────────────────────┐\n│                          │\n│ ${
-    sectionRule("Core", 24)
-  } │\n│ › [✓] Render frames      │\n│   [ ] Inspect output     │\n│       (disabled)         │\n│                          │\n│ ${
-    sectionRule("Optional", 24)
-  } │\n│   [ ] Animate progress   │\n└──────────────────────────┘\n`,
-  `Roles\n┌──────────────────────────┐\n│ re▌                      │\n│ › [✓] Render frames      │\n│   [ ] Inspect (disabled) │\n│                          │\n│ ${
-    sectionRule("Selected", 24)
-  } │\n│   [✓] Animate progress   │\n└──────────────────────────┘\n`,
-  "Capabilities\n┌──────────────────────────┐\n│ › [ ] Render             │\n│   [ ] Inspect            │\n└──────── ↓ 3 more ────────┘\n",
 ] as const;
 
 Deno.test("Checkbox renders every static form state exactly", () => {
@@ -181,11 +176,64 @@ Deno.test("Checkbox covers narrow, standard, wide, colour, and ASCII frames", ()
     renderCheckboxCli,
     [
       "Include examples\n┌──────────────┐\n│ [✓] Included │\n└──────────────┘\n",
-      checkboxFrames[2],
+      checkboxFrames[3],
       "Include examples\n┌──────────────────────────────────────────────┐\n│ [✓] Included                                 │\n└──────────────────────────────────────────────┘\n",
     ],
-    checkboxFrames[1],
+    checkboxFrames[2],
     "Include examples\n+--------------------------+\n| > [ ] Not included       |\n+--------------------------+\n",
+  );
+});
+
+const checkboxRendererFixtures = [
+  {
+    name: "search-filtered",
+    props: {
+      kind: "search-multiselect",
+      label: "Roles",
+      lifecycle: { status: "active" },
+      query: "re",
+      cursor: 2,
+      results: [
+        { id: "render", label: "Render frames" },
+        { id: "inspect", label: "Inspect", disabled: true },
+        { kind: "group-heading", id: "selected", label: "Selected" },
+        { id: "animate", label: "Animate progress" },
+      ],
+      selectedIds: ["render", "animate"],
+      highlightedIndex: 0,
+    },
+  },
+  {
+    name: "windowed",
+    props: {
+      kind: "multiselect",
+      label: "Capabilities",
+      lifecycle: { status: "active" },
+      options: [
+        { id: "render", label: "Render" },
+        { id: "inspect", label: "Inspect" },
+        { id: "animate", label: "Animate" },
+        { id: "export", label: "Export" },
+        { id: "publish", label: "Publish" },
+      ],
+      highlightedIndex: 0,
+      selectedIds: [],
+      visibleStart: 0,
+      visibleCount: 2,
+    },
+  },
+] as const satisfies readonly CliExample<CheckboxCliProps>[];
+
+Deno.test("Checkbox keeps renderer-only search and viewport evidence", () => {
+  assertStateFrames(
+    checkboxRendererFixtures,
+    renderCheckboxCli,
+    [
+      `Roles\n┌──────────────────────────┐\n│ re▌                      │\n│ › [✓] Render frames      │\n│   [ ] Inspect (disabled) │\n│                          │\n│ ${
+        sectionRule("Selected", 24)
+      } │\n│   [✓] Animate progress   │\n└──────────────────────────┘\n`,
+      "Capabilities\n┌──────────────────────────┐\n│ › [ ] Render             │\n│   [ ] Inspect            │\n└──────── ↓ 3 more ────────┘\n",
+    ],
   );
 });
 
@@ -226,7 +274,7 @@ const inputFrames = [
   "Project name\n┌──────────────────────────┐\n│ atlas                    │\n└──────────────────────────┘\nDisabled",
   "Project name\n┌──────────────────────────┐\n│ atlas                    │\n└──────────────────────────┘\n✓ Submitted",
   "Project name\n┌──────────────────────────┐\n│ my-project               │\n└──────────────────────────┘\n× Input cancelled",
-  "Token reference [searching]\n┌──────────────────────────┐\n│ can▌                     │\n└──────────────────────────┘\n",
+  "Country [searching]\n┌──────────────────────────┐\n│ can▌                     │\n└──────────────────────────┘\n",
 ] as const;
 
 Deno.test("Input renders idle through cancelled states exactly", () => {
@@ -249,19 +297,17 @@ Deno.test("Input covers narrow, standard, wide, colour, and ASCII frames", () =>
 
 const radioFrames = [
   "Channel\n┌──────────────────────────┐\n│   ○ Alpha                │\n│   ○ Bravo                │\n│   ○ Charlie (disabled)   │\n└──────────────────────────┘\n",
+  `Channel\n┌──────────────────────────┐\n│                          │\n│ ${
+    sectionRule("Stable", 24)
+  } │\n│   ○ Alpha                │\n│ › ◉ Bravo                │\n│                          │\n│ ${
+    sectionRule("Preview", 24)
+  } │\n│   ○ Charlie (disabled)   │\n└──────────────────────────┘\n`,
   "Channel\n┌──────────────────────────┐\n│   ○ Alpha                │\n│ › ○ Bravo                │\n│   ○ Charlie (disabled)   │\n└──────────────────────────┘\n",
   "Channel\n┌──────────────────────────┐\n│   ○ Alpha                │\n│   ◉ Bravo                │\n│   ○ Charlie (disabled)   │\n└──────────────────────────┘\n",
   "Channel\n┌──────────────────────────┐\n│ › ○ Alpha                │\n│   ○ Bravo                │\n│   ○ Charlie (disabled)   │\n└──────────────────────────┘\n! Choose a channel",
   "Channel\n┌──────────────────────────┐\n│   ◉ Alpha                │\n│   ○ Bravo                │\n│   ○ Charlie (disabled)   │\n└──────────────────────────┘\nDisabled",
   "Channel\n┌──────────────────────────┐\n│   ○ Alpha                │\n│   ◉ Bravo                │\n│   ○ Charlie (disabled)   │\n└──────────────────────────┘\n✓ Submitted",
   "Channel\n┌──────────────────────────┐\n│   ○ Alpha                │\n│   ○ Bravo                │\n│   ○ Charlie (disabled)   │\n└──────────────────────────┘\n× Selection cancelled",
-  `Channel\n┌──────────────────────────┐\n│                          │\n│ ${
-    sectionRule("Stable", 24)
-  } │\n│   ○ Alpha                │\n│ › ◉ Bravo                │\n│                          │\n│ ${
-    sectionRule("Preview", 24)
-  } │\n│   ○ Charlie (disabled)   │\n└──────────────────────────┘\n`,
-  "Channel [searching]\n┌──────────────────────────┐\n│ cha▌                     │\n│ Searching…               │\n└──────────────────────────┘\n",
-  "Channel\n┌──────────────────────────┐\n│ › ○ Alpha                │\n│   ○ Bravo                │\n└──────── ↓ 3 more ────────┘\n",
 ] as const;
 
 Deno.test("Radio renders every static selection state exactly", () => {
@@ -376,28 +422,71 @@ Deno.test("Radio covers narrow, standard, wide, colour, and ASCII frames", () =>
     renderRadioCli,
     [
       "Channel\n┌──────────────┐\n│   ○ Alpha    │\n│   ◉ Bravo    │\n│   ○ Charlie  │\n│     (disable │\n│     d)       │\n└──────────────┘\n",
-      radioFrames[2],
+      radioFrames[3],
       "Channel\n┌──────────────────────────────────────────────┐\n│   ○ Alpha                                    │\n│   ◉ Bravo                                    │\n│   ○ Charlie (disabled)                       │\n└──────────────────────────────────────────────┘\n",
     ],
-    radioFrames[1],
+    radioFrames[2],
     "Channel\n+--------------------------+\n|   ( ) Alpha              |\n| > ( ) Bravo              |\n|   ( ) Charlie (disabled) |\n+--------------------------+\n",
+  );
+});
+
+const radioRendererFixtures = [
+  {
+    name: "searching",
+    props: {
+      kind: "search",
+      label: "Channel",
+      lifecycle: { status: "active" },
+      query: "cha",
+      cursor: 3,
+      results: [],
+      pending: true,
+    },
+  },
+  {
+    name: "windowed",
+    props: {
+      kind: "select",
+      label: "Channel",
+      options: [
+        { id: "alpha", label: "Alpha" },
+        { id: "bravo", label: "Bravo" },
+        { id: "charlie", label: "Charlie" },
+        { id: "delta", label: "Delta" },
+        { id: "echo", label: "Echo" },
+      ],
+      highlightedIndex: 0,
+      visibleStart: 0,
+      visibleCount: 2,
+      lifecycle: { status: "active" },
+    },
+  },
+] as const satisfies readonly CliExample<RadioCliProps>[];
+
+Deno.test("Radio keeps renderer-only search and viewport evidence", () => {
+  assertStateFrames(
+    radioRendererFixtures,
+    renderRadioCli,
+    [
+      "Channel [searching]\n┌──────────────────────────┐\n│ cha▌                     │\n│ Searching…               │\n└──────────────────────────┘\n",
+      "Channel\n┌──────────────────────────┐\n│ › ○ Alpha                │\n│   ○ Bravo                │\n└──────── ↓ 3 more ────────┘\n",
+    ],
   );
 });
 
 const selectFrames = [
   "Environment\n┌──────────────────────────┐\n│ Choose an environment ⌄  │\n└──────────────────────────┘\n",
-  "Environment\n┌──────────────────────────┐\n│   [ ] Alpha              │\n│ › [ ] Bravo              │\n│   [ ] Charlie (disabled) │\n└──────────────────────────┘\n",
-  "Environment\n┌──────────────────────────┐\n│ Bravo ⌄                  │\n└──────────────────────────┘\n",
-  "Environment\n┌──────────────────────────┐\n│ › [ ] Alpha              │\n│   [ ] Bravo              │\n│   [ ] Charlie (disabled) │\n└──────────────────────────┘\n! Choose an environment",
-  "Environment\n┌──────────────────────────┐\n│ Alpha ⌄                  │\n└──────────────────────────┘\nDisabled",
-  "Environment\n┌──────────────────────────┐\n│ Bravo ⌄                  │\n└──────────────────────────┘\n✓ Submitted",
-  "Environment\n┌──────────────────────────┐\n│ Choose an option ⌄       │\n└──────────────────────────┘\n× Selection cancelled",
   `Environment\n┌──────────────────────────┐\n│                          │\n│ ${
     sectionRule("Recommended", 24)
   } │\n│   [ ] Alpha              │\n│ › [●] Bravo              │\n│                          │\n│ ${
     sectionRule("Other", 24)
   } │\n│   [ ] Charlie (disabled) │\n└──────────────────────────┘\n`,
-  "Environment\n┌──────────────────────────┐\n│ › [ ] A deliberately     │\n│       long navigation    │\n│       choice whose       │\n│       continuation stays │\n│       aligned beneath    │\n│       its label          │\n│   [ ] Bravo              │\n└──────── ↓ 3 more ────────┘\n",
+  "Environment\n┌──────────────────────────┐\n│   [ ] Alpha              │\n│ › [ ] Bravo              │\n│   [ ] Charlie (disabled) │\n└──────────────────────────┘\n",
+  "Environment\n┌──────────────────────────┐\n│ Bravo ⌄                  │\n└──────────────────────────┘\n",
+  "Environment\n┌──────────────────────────┐\n│ › [ ] Alpha              │\n│   [ ] Bravo              │\n│   [ ] Charlie (disabled) │\n└──────────────────────────┘\n! Choose an environment",
+  "Environment\n┌──────────────────────────┐\n│ Alpha ⌄                  │\n└──────────────────────────┘\nDisabled",
+  "Environment\n┌──────────────────────────┐\n│ Bravo ⌄                  │\n└──────────────────────────┘\n✓ Submitted",
+  "Environment\n┌──────────────────────────┐\n│ Choose an environment ⌄  │\n└──────────────────────────┘\n× Selection cancelled",
 ] as const;
 
 Deno.test("Select renders every static selection state exactly", () => {
@@ -410,11 +499,46 @@ Deno.test("Select covers narrow, standard, wide, colour, and ASCII frames", () =
     renderSelectCli,
     [
       "Environment\n┌──────────────┐\n│ Bravo ⌄      │\n└──────────────┘\n",
-      selectFrames[2],
+      selectFrames[3],
       "Environment\n┌──────────────────────────────────────────────┐\n│ Bravo ⌄                                      │\n└──────────────────────────────────────────────┘\n",
     ],
-    selectFrames[1],
+    selectFrames[2],
     "Environment\n+--------------------------+\n|   [ ] Alpha              |\n| > [ ] Bravo              |\n|   [ ] Charlie (disabled) |\n+--------------------------+\n",
+  );
+});
+
+const selectRendererFixtures = [
+  {
+    name: "windowed",
+    props: {
+      kind: "select",
+      label: "Environment",
+      options: [
+        {
+          id: "alpha",
+          label:
+            "A deliberately long navigation choice whose continuation stays aligned beneath its label",
+        },
+        { id: "bravo", label: "Bravo" },
+        { id: "charlie", label: "Charlie" },
+        { id: "delta", label: "Delta" },
+        { id: "echo", label: "Echo" },
+      ],
+      highlightedIndex: 0,
+      visibleStart: 0,
+      visibleCount: 2,
+      lifecycle: { status: "active" },
+    },
+  },
+] as const satisfies readonly CliExample<SelectCliProps>[];
+
+Deno.test("Select keeps renderer-only viewport evidence", () => {
+  assertStateFrames(
+    selectRendererFixtures,
+    renderSelectCli,
+    [
+      "Environment\n┌──────────────────────────┐\n│ › [ ] A deliberately     │\n│       long navigation    │\n│       choice whose       │\n│       continuation stays │\n│       aligned beneath    │\n│       its label          │\n│   [ ] Bravo              │\n└──────── ↓ 3 more ────────┘\n",
+    ],
   );
 });
 
@@ -431,16 +555,16 @@ Deno.test("grouped Select, Checkbox, and Radio retain structure in narrow ASCII 
     [
       renderCheckboxCli,
       { ...checkbox.props, width: 20 },
-      `Capabilities\n┌──────────────────┐\n│                  │\n│ ${
-        sectionRule("Core", 16)
-      } │\n│ › [✓] Render     │\n│       frames     │\n│   [ ] Inspect    │\n│       output     │\n│       (disabled) │\n│                  │\n│ ${
+      `Notifications\n┌──────────────────┐\n│                  │\n│ ${
+        sectionRule("Regular", 16)
+      } │\n│ › [✓] Email      │\n│       updates    │\n│   [ ] Weekly     │\n│       summary    │\n│       (disabled) │\n│                  │\n│ ${
         sectionRule("Optional", 16)
-      } │\n│   [ ] Animate    │\n│       progress   │\n└──────────────────┘\n`,
-      `Capabilities\n+------------------+\n|                  |\n| ${
-        sectionRule("Core", 16, false)
-      } |\n| > [x] Render     |\n|       frames     |\n|   [ ] Inspect    |\n|       output     |\n|       (disabled) |\n|                  |\n| ${
+      } │\n│   [ ] Announceme │\n│       nts        │\n└──────────────────┘\n`,
+      `Notifications\n+------------------+\n|                  |\n| ${
+        sectionRule("Regular", 16, false)
+      } |\n| > [x] Email      |\n|       updates    |\n|   [ ] Weekly     |\n|       summary    |\n|       (disabled) |\n|                  |\n| ${
         sectionRule("Optional", 16, false)
-      } |\n|   [ ] Animate    |\n|       progress   |\n+------------------+\n`,
+      } |\n|   [ ] Announceme |\n|       nts        |\n+------------------+\n`,
     ],
     [
       renderRadioCli,
@@ -735,12 +859,12 @@ Deno.test("Switch keeps custom yes and no labels in fixed columns across values 
 const textareaFrames = [
   "Release notes\n┌──────────────────────────┐\n│ Describe the change      │\n│                          │\n│                          │\n└──────────────────────────┘\n",
   "Release notes\n┌──────────────────────────┐\n│ ▌Describe the change     │\n│                          │\n│                          │\n└──────────────────────────┘\n",
-  "Release notes\n┌──────────────────────────┐\n│ Adds CLI frames.         │\n│                          │\n│                          │\n└──────────────────────────┘\n",
-  "Release notes\n┌──────────────────────────┐\n│ Two                      │\n│ Three                    │\n│ Four                     │\n│ Five                     │\n│ Six                      │\n│ Seven▌                   │\n└──────────────────────────┘\n",
+  "Release notes\n┌──────────────────────────┐\n│ Adds reusable examples.  │\n│                          │\n│                          │\n└──────────────────────────┘\n",
   "Release notes\n┌──────────────────────────┐\n│ Short▌                   │\n│                          │\n│                          │\n└──────────────────────────┘\n! Add more detail",
   "Release notes\n┌──────────────────────────┐\n│ Managed by policy        │\n│                          │\n│                          │\n└──────────────────────────┘\nDisabled",
-  "Release notes\n┌──────────────────────────┐\n│ Adds CLI frames.         │\n│                          │\n│                          │\n└──────────────────────────┘\n✓ Submitted",
+  "Release notes\n┌──────────────────────────┐\n│ Adds reusable examples.  │\n│                          │\n│                          │\n└──────────────────────────┘\n✓ Submitted",
   "Release notes\n┌──────────────────────────┐\n│ Describe the change      │\n│                          │\n│                          │\n└──────────────────────────┘\n× Draft discarded",
+  "Release notes\n┌──────────────────────────┐\n│ Two                      │\n│ Three                    │\n│ Four                     │\n│ Five                     │\n│ Six                      │\n│ Seven▌                   │\n└──────────────────────────┘\n",
 ] as const;
 
 Deno.test("Textarea renders idle through cancelled states exactly", () => {
@@ -752,9 +876,9 @@ Deno.test("Textarea covers narrow, standard, wide, colour, and ASCII frames", ()
     textareaCliExamples,
     renderTextareaCli,
     [
-      "Release notes\n┌──────────────┐\n│ Adds CLI     │\n│ frames.      │\n│              │\n└──────────────┘\n",
+      "Release notes\n┌──────────────┐\n│ Adds         │\n│ reusable     │\n│ examples.    │\n└──────────────┘\n",
       textareaFrames[2],
-      "Release notes\n┌──────────────────────────────────────────────┐\n│ Adds CLI frames.                             │\n│                                              │\n│                                              │\n└──────────────────────────────────────────────┘\n",
+      "Release notes\n┌──────────────────────────────────────────────┐\n│ Adds reusable examples.                      │\n│                                              │\n│                                              │\n└──────────────────────────────────────────────┘\n",
     ],
     textareaFrames[1],
     "Release notes\n+--------------------------+\n| |Describe the change     |\n|                          |\n|                          |\n+--------------------------+\n",

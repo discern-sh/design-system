@@ -23,7 +23,7 @@ import {
   testTerminalCapabilities,
 } from "../../src/cli/interactive/testing.ts";
 import { measureText } from "../../src/cli/text.ts";
-import { cliExamples } from "../../src/components/editorial/chart/chart.cli.ts";
+import { cliReleaseFixtures } from "../../src/components/editorial/chart/chart.cli.ts";
 import projectBarChartCli from "../../src/chart/kinds/bar/bar.cli.ts";
 import {
   barDataTableFacts,
@@ -505,13 +505,13 @@ Deno.test("bar CLI keeps validation failures deterministic", () => {
   assertEquals(first.message, second.message);
 });
 
-Deno.test("Chart Catalogue CLI examples cover enhanced, deliberate description, and typed fallback postures", () => {
+Deno.test("Chart release fixtures cover enhanced, deliberate description, and typed fallback postures", () => {
   const catalogueCapabilities = testTerminalCapabilities({
     columns: 160,
     colorDepth: "truecolor",
     unicode: true,
   });
-  const postures = Object.fromEntries(cliExamples.map((example) => {
+  const postures = Object.fromEntries(cliReleaseFixtures.map((example) => {
     const capabilities = resolveCliExampleCapabilities(
       example,
       catalogueCapabilities,

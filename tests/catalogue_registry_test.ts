@@ -54,9 +54,10 @@ Deno.test("Catalogue purposes are closed, selective, and guidance-backed", async
   }
 });
 
-Deno.test("Catalogue selection snippets and state fragments derive from the registry", async () => {
-  const { registry } = await catalogue();
+Deno.test("component example vocabularies bind every live Web and CLI implementation", async () => {
+  const { catalogueWebExample, registry } = await catalogue();
   const fragmentIds = new Set<string>();
+  const surfaceOnlyReasonOwners = new Map<string, Set<string>>();
   for (const candidate of registry) {
     assertEquals(
       candidate.selection.component,
@@ -70,26 +71,104 @@ Deno.test("Catalogue selection snippets and state fragments derive from the regi
       candidate.selection.reactImport,
       `import { ${candidate.reactExport} } from "@discern-sh/design-system/react";`,
     );
-    const stateNames = new Set<string>();
-    assert(candidate.states.length > 0);
-    for (const state of candidate.states) {
-      assertMatch(state.name, /^[a-z0-9]+(?:-[a-z0-9]+)*$/);
-      assert(state.label.trim().length > 0);
-      assert(!stateNames.has(state.name));
-      stateNames.add(state.name);
-      const fragmentId = `component-${candidate.meta.slug}--${state.name}`;
+    assert(candidate.canonicalExamples.length > 0, candidate.meta.slug);
+    const ids = new Set<string>();
+    const labels = new Set<string>();
+    for (const [index, definition] of candidate.canonicalExamples.entries()) {
+      assertMatch(definition.id, /^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+      assert(definition.label.trim().length > 0, candidate.meta.slug);
+      assert(!ids.has(definition.id), candidate.meta.slug);
+      assert(!labels.has(definition.label), candidate.meta.slug);
+      ids.add(definition.id);
+      labels.add(definition.label);
+      if (definition.id === "default") assertEquals(index, 0);
+      assertEquals(
+        [...new Set(definition.surfaces)],
+        definition.surfaces,
+        candidate.meta.slug,
+      );
+      assert(
+        definition.surfaces.length === 1 ||
+          definition.surfaces.length === 2,
+        candidate.meta.slug,
+      );
+      if (definition.surfaces.length === 1) {
+        assert(
+          definition.reason !== undefined &&
+            definition.reason.trim().length >= 24,
+          `${candidate.meta.slug}:${definition.id} needs a specific impossibility reason`,
+        );
+        const reason = definition.reason.trim();
+        const owners = surfaceOnlyReasonOwners.get(reason) ?? new Set<string>();
+        owners.add(candidate.meta.slug);
+        surfaceOnlyReasonOwners.set(reason, owners);
+      } else {
+        assertEquals(definition.reason, undefined, candidate.meta.slug);
+      }
+    }
+
+    const expectedWeb = candidate.canonicalExamples
+      .filter(({ surfaces }) => surfaces.includes("web"))
+      .map(({ id, label }) => ({ id, label }));
+    assertEquals(
+      candidate.webExamples.map(({ id, label }) => ({ id, label })),
+      expectedWeb,
+      candidate.meta.slug,
+    );
+    for (const example of candidate.webExamples) {
+      assertEquals(
+        catalogueWebExample(candidate.meta.slug, example.id),
+        example,
+      );
+      const fragmentId = `component-${candidate.meta.slug}--${example.id}`;
       assert(!fragmentIds.has(fragmentId));
       fragmentIds.add(fragmentId);
     }
+
+    assertEquals(candidate.cli.stance, candidate.meta.cli.stance);
+    if (candidate.cli.stance === "exempt") {
+      assertEquals(
+        candidate.canonicalExamples.some(({ surfaces }) =>
+          surfaces.includes("cli")
+        ),
+        false,
+        candidate.meta.slug,
+      );
+      continue;
+    }
+
+    const expectedCli = candidate.canonicalExamples
+      .filter(({ surfaces }) => surfaces.includes("cli"))
+      .map(({ id, label }) => ({ id, label }));
+    assertEquals(
+      candidate.cli.examples.map(({ id, label }) => ({ id, label })),
+      expectedCli,
+      candidate.meta.slug,
+    );
+    const shared = candidate.canonicalExamples.filter(({ surfaces }) =>
+      surfaces.includes("web") && surfaces.includes("cli")
+    );
+    assert(shared.length > 0, `${candidate.meta.slug} needs a shared example`);
+    const sharedIds = new Set(shared.map(({ id }) => id));
+    assertEquals(
+      candidate.webExamples.filter(({ id }) => sharedIds.has(id)).map(
+        ({ id, label }) => ({ id, label }),
+      ),
+      candidate.cli.examples.filter(({ id }) => sharedIds.has(id)).map(
+        ({ id, label }) => ({ id, label }),
+      ),
+      candidate.meta.slug,
+    );
   }
-  assertEquals(
-    catalogueEntry(registry, "command").states.map(({ name }) => name),
-    ["default", "overflow", "failure"],
-  );
-  assertEquals(
-    catalogueEntry(registry, "table").states.map(({ name }) => name),
-    ["default", "dense-overflow", "rich-cells"],
-  );
+  for (const [reason, owners] of surfaceOnlyReasonOwners) {
+    assertEquals(
+      owners.size,
+      1,
+      `surface-only reason is reused across Components ${
+        [...owners].join(", ")
+      }: ${reason}`,
+    );
+  }
 });
 
 Deno.test("Catalogue prop evidence is source-derived and complete", async () => {

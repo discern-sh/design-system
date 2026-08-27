@@ -21,9 +21,10 @@ Deno.test("Theme Toggle's Catalogue example presents one page-chrome control", a
 
 Deno.test("complete Component panels keep supporting disclosures closed in canonical order", async () => {
   const { registry } = await catalogue();
+  const command = catalogueEntry(registry, "command");
   const markup = renderToStaticMarkup(
     createElement(ComponentPreview, {
-      entry: catalogueEntry(registry, "command"),
+      entry: command,
       surface: "web",
       terminalTheme: "dark",
       onSurfaceChange: () => undefined,
@@ -43,6 +44,14 @@ Deno.test("complete Component panels keep supporting disclosures closed in canon
   assertStringIncludes(markup, "CLI");
   assertStringIncludes(markup, "Open source");
   assertEquals(markup.includes("<footer"), false);
+  assertEquals(
+    [
+      ...markup.matchAll(
+        /<section\b[^>]*\bdata-discern-example-state="[^"]+"[^>]*><header><h5>([^<]+)<\/h5>/g,
+      ),
+    ].map((match) => match[1]),
+    command.webExamples.map(({ label }) => label),
+  );
 });
 
 Deno.test("Command text carries the stronger readable type treatment", async () => {

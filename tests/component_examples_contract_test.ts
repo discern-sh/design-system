@@ -136,6 +136,18 @@ Deno.test("canonical vocabulary validation rejects ambiguous facts", () => {
   assertThrows(
     () =>
       defineComponentExampleVocabulary(renderedMeta, [{
+        id: "web-only",
+        label: "Web only",
+        only: "web",
+        reason:
+          "This example cannot be represented accurately on the other surface.",
+      }]),
+    TypeError,
+    "must name the absent CLI medium",
+  );
+  assertThrows(
+    () =>
+      defineComponentExampleVocabulary(renderedMeta, [{
         id: "terminal-only",
         label: "Terminal only",
         only: "cli",

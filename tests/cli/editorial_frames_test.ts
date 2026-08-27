@@ -247,6 +247,38 @@ Deno.test("Code listing renders exact width, ASCII, and colour frames", () => {
   }
 });
 
+Deno.test("Code listing showcase uses the terminal's emphatic treatment", () => {
+  const capabilities = testTerminalCapabilities({
+    columns: 52,
+    colorDepth: "truecolor",
+  });
+  const theme = terminalThemes.dark;
+  const frame = expectedFrame(
+    "brief.ts [ts]",
+    [
+      " 1 const brief = {",
+      '›2   scope: "editorial",',
+      ' 3   status: "ready",',
+      " 4 };",
+    ],
+    52,
+    { color: terminalToneColor(theme, "accent") },
+    capabilities,
+  );
+  const caption = styleText("Caption: A small, deterministic input.", {
+    ...theme.typography.strong,
+    color: terminalToneColor(theme, "accent"),
+  }, capabilities);
+  assertExactFrame(
+    renderCodeListingCli(
+      { ...codeListingProps, variant: "showcase" },
+      capabilities,
+    ),
+    `${frame}\n${caption}`,
+    capabilities,
+  );
+});
+
 const dataFigureProps = {
   eyebrow: "Survey",
   title: "Preferred reading mode",

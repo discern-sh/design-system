@@ -400,6 +400,12 @@ Deno.test("component metadata auto-enrols React, runtime, and CLI surfaces", asy
   );
   assertEquals(
     await Deno.readTextFile(
+      join(PACKAGE_ROOT, "scripts", "generated", "component-examples.ts"),
+    ),
+    generated.componentExamples,
+  );
+  assertEquals(
+    await Deno.readTextFile(
       join(PACKAGE_ROOT, "src", "generated", "diagram-metadata.ts"),
     ),
     generated.diagramMetadata,

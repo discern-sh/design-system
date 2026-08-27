@@ -4,10 +4,12 @@ import {
   assertStringIncludes,
   assertThrows,
 } from "@std/assert";
+import { stripAnsi } from "../../src/cli/ansi.ts";
 import { detectTerminalCapabilities } from "../../src/cli/capabilities.ts";
 import type { CliComponentRegistryEntry } from "../../src/cli/contracts.ts";
 import { cliComponentRegistry } from "../../src/generated/cli-registry.ts";
 import { componentRegistry } from "../../src/generated/component-registry.ts";
+import type { ResolvedComponentExampleDefinition } from "../../src/types/component-examples.ts";
 import { componentGroups } from "../../src/types/component-meta.ts";
 import { terminalFoundationSheets } from "../../catalogue/terminal-foundations.ts";
 import {
@@ -24,10 +26,22 @@ import {
   FakeTerminalIO,
   testTerminalCapabilities,
 } from "../../src/cli/interactive/testing.ts";
+import { componentExampleRegistry } from "../../scripts/generated/component-examples.ts";
 
 const registry = cliComponentRegistry as Readonly<
   Record<string, CliComponentRegistryEntry>
 >;
+const exampleRegistry = componentExampleRegistry as Readonly<
+  Record<string, readonly ResolvedComponentExampleDefinition[]>
+>;
+
+function cliExampleLabel(slug: string, id: string): string {
+  const example = exampleRegistry[slug]?.find((candidate) =>
+    candidate.id === id && candidate.surfaces.includes("cli")
+  );
+  assert(example !== undefined, `${slug} is missing CLI example ${id}`);
+  return example.label;
+}
 
 Deno.test("CLI catalogue separates browsing, indexing, and exhaustive output", () => {
   assertEquals(resolveCliCatalogueCommand([], true), { kind: "browse" });
@@ -78,7 +92,7 @@ Deno.test("interactive catalogue searches and reviews one specimen in an alterna
   });
   await runCliCatalogueBrowser(io);
   assertStringIncludes(io.output(), "Display / Badge (`badge`)");
-  assertStringIncludes(io.output(), "accent");
+  assertStringIncludes(io.output(), cliExampleLabel("badge", "default"));
   assertStringIncludes(io.output(), "\x1b[?1049h");
   assertStringIncludes(io.output(), "\x1b[?1049l");
   assertEquals(io.rawTransitions, [true, false]);
@@ -121,11 +135,39 @@ Deno.test("complete CLI catalogue renders every registry entry and exemption", a
   for (const group of componentGroups) {
     assertStringIncludes(output, `## ${group}`);
   }
-  for (const { meta } of componentRegistry) {
-    assertStringIncludes(output, `### ${meta.name} (\`${meta.slug}\`)`);
+  for (const [index, { meta }] of componentRegistry.entries()) {
+    const heading = `### ${meta.name} (\`${meta.slug}\`)`;
+    assertStringIncludes(output, heading);
     const entry = registry[meta.slug];
     if (entry?.stance === "exempt") {
       assertStringIncludes(output, entry.reason);
+      continue;
+    }
+    assert(entry?.stance === "rendered");
+    const start = output.indexOf(heading);
+    const next = componentRegistry[index + 1];
+    const nextHeading = next === undefined
+      ? undefined
+      : `### ${next.meta.name} (\`${next.meta.slug}\`)`;
+    const nextComponent = nextHeading === undefined
+      ? -1
+      : output.indexOf(`\n${nextHeading}`, start + heading.length);
+    const end = nextComponent < 0 ? output.length : nextComponent;
+    const componentOutput = output.slice(start, end);
+    const canonicalLabels = (exampleRegistry[meta.slug] ?? [])
+      .filter(({ surfaces }) => surfaces.includes("cli"))
+      .map(({ label }) => label);
+    let cursor = 0;
+    for (const label of canonicalLabels) {
+      const marker = `#### ${label}\n\n`;
+      const position = componentOutput.indexOf(marker, cursor);
+      assert(position >= cursor, `${meta.slug} omits or reorders ${label}`);
+      assertEquals(
+        componentOutput.indexOf(marker, position + marker.length),
+        -1,
+        `${meta.slug} repeats ${label}`,
+      );
+      cursor = position + marker.length;
     }
   }
   const exemptions = Object.values(cliComponentRegistry).filter((entry) =>
@@ -160,7 +202,7 @@ Deno.test("CLI catalogue filters one Group or Component without hiding exemption
   );
 });
 
-Deno.test("CLI catalogue honours a Component example's capability posture", async () => {
+Deno.test("CLI catalogue narrows an example without silently reducing capabilities", async () => {
   const output = await renderCliCatalogue(
     "markdown",
     testTerminalCapabilities({
@@ -170,13 +212,12 @@ Deno.test("CLI catalogue honours a Component example's capability posture", asyn
       hyperlinks: true,
     }),
   );
-  const heading = "#### narrow-ascii-no-colour";
+  const heading = `#### ${cliExampleLabel("markdown", "narrow-layout")}`;
   const start = output.indexOf(heading);
   assert(start >= 0);
   const narrow = output.slice(start);
-  assert(!narrow.includes("\u001b"));
-  assertStringIncludes(narrow, "* Preserve");
-  assert(!narrow.includes("•"));
+  assertStringIncludes(narrow, "\u001b[");
+  assertStringIncludes(stripAnsi(narrow), "• Preserve");
 });
 
 Deno.test("motif catalogue derives the complete default and custom specimen set", async () => {
@@ -266,11 +307,14 @@ Deno.test("NO_COLOR suppresses ANSI throughout catalogue output", async () => {
 Deno.test("consumer-hardening examples enrol through Component CLI registries", async () => {
   const capabilities = testTerminalCapabilities({ columns: 80 });
   const select = await renderCliCatalogue("select", capabilities);
-  assertStringIncludes(select, "#### grouped");
+  assertStringIncludes(select, `#### ${cliExampleLabel("select", "grouped")}`);
   assertStringIncludes(select, "RECOMMENDED");
 
   const fleet = await renderCliCatalogue("fleet", capabilities);
-  assertStringIncludes(fleet, "#### lossless-identities");
+  assertStringIncludes(
+    fleet,
+    `#### ${cliExampleLabel("fleet", "lossless-identities")}`,
+  );
   assertStringIncludes(
     fleet,
     "agent/terminal-contract-audit-with-complete-identities",

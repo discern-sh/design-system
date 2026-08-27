@@ -8,7 +8,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { packageManifest } from "../src/manifest.ts";
 import { AgentHandoff } from "../src/components/workflow/agent-handoff/agent-handoff.tsx";
-import { catalogueStates as branchChoiceStates } from "../src/components/workflow/branch-choice/branch-choice.examples.tsx";
+import { catalogueExamples as branchChoiceExamples } from "../src/components/workflow/branch-choice/branch-choice.examples.tsx";
 import type { ComponentMeta } from "../src/types/component-meta.ts";
 import { compositionRecipes } from "../catalogue/compositions.tsx";
 import {
@@ -145,9 +145,9 @@ Deno.test("next action remains a guarded Branch choice composition", async () =>
     );
   }
 
-  const state = branchChoiceStates.find(({ name }) => name === "next-action");
-  assert(state !== undefined);
-  const stateHtml = renderToStaticMarkup(createElement(state.Example));
+  const example = branchChoiceExamples.find(({ id }) => id === "next-action");
+  assert(example !== undefined);
+  const stateHtml = renderToStaticMarkup(createElement(example.Example));
   assertEquals(
     (stateHtml.match(/class="discern-branch-choice__choice"/g) ?? []).length,
     4,

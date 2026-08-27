@@ -19,7 +19,7 @@ import {
 } from "../../src/chart/kind-meta.ts";
 import { chartKindAuthorGuide } from "../../src/chart/kinds.ts";
 import { conformChartScene } from "../../src/chart/conformance.ts";
-import { cliExamples } from "../../src/components/editorial/chart/chart.cli.ts";
+import { cliReleaseFixtures } from "../../src/components/editorial/chart/chart.cli.ts";
 import ChartExamples from "../../src/components/editorial/chart/chart.examples.tsx";
 import { chartKindCliRegistry } from "../../src/generated/chart-cli-registry.ts";
 import {
@@ -143,7 +143,7 @@ Deno.test("generated chart release corpus enrolls every posture and refusal", ()
 
 Deno.test("every generated chart kind reaches Catalogue, CLI examples, and author guidance", () => {
   const catalogue = renderToStaticMarkup(<ChartExamples />);
-  const exampleNames = new Set(cliExamples.map(({ name }) => name));
+  const exampleNames = new Set(cliReleaseFixtures.map(({ name }) => name));
   for (const entry of chartKindRegistry) {
     const slug = entry.meta.slug;
     assertStringIncludes(catalogue, `data-chart-kind="${slug}"`);
