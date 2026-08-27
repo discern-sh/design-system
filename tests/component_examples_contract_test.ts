@@ -7,7 +7,7 @@ import {
 } from "../src/types/component-examples.ts";
 import type { ComponentMeta } from "../src/types/component-meta.ts";
 import { defineCatalogueExamples } from "../catalogue/conformance.ts";
-import { defineCliExamples } from "../src/cli/contracts.ts";
+import { defineCliExamples } from "../src/cli/component-examples.ts";
 
 const renderedMeta = {
   name: "Future sampler",
