@@ -1,7 +1,46 @@
 /** Shared authored contracts for Catalogue examples and conformance. */
 import type { ComponentType } from "react";
+import type {
+  ComponentExampleDefinition,
+  ComponentExampleIdFor,
+} from "../src/types/component-examples.ts";
+import { validateComponentExampleImplementations } from "../src/types/component-examples.ts";
+import type { ComponentMeta } from "../src/types/component-meta.ts";
 
-/** One stable, linkable state exported by a component examples module. */
+/** One Web implementation bound to a canonical Component example id. */
+export interface CatalogueExampleImplementation<Id extends string = string> {
+  readonly id: Id;
+  readonly Example: ComponentType;
+}
+
+/** Bind React implementations to one neutral Component example vocabulary. */
+export function defineCatalogueExamples<
+  const Vocabulary extends readonly ComponentExampleDefinition[],
+  const Implementations extends readonly CatalogueExampleImplementation<
+    ComponentExampleIdFor<Vocabulary, "web">
+  >[],
+>(
+  meta: ComponentMeta,
+  vocabulary: Vocabulary,
+  implementations: Implementations,
+): Implementations {
+  validateComponentExampleImplementations(
+    meta,
+    vocabulary,
+    "web",
+    implementations.map(({ id }) => id),
+  );
+  return implementations;
+}
+
+/** One stable, labelled Web example in the canonical Catalogue registry. */
+export interface CatalogueExample {
+  readonly id: string;
+  readonly label: string;
+  readonly Example: ComponentType;
+}
+
+/** One stable, linkable state exported by an existing examples module. */
 export interface CatalogueExampleState {
   readonly name: string;
   readonly label: string;

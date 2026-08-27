@@ -7,6 +7,12 @@
 import type { TerminalCapabilities } from "./capabilities.ts";
 import type { TerminalMotifOptions } from "./motif.ts";
 import type { TerminalThemeVariant } from "./theme.ts";
+import type {
+  ComponentExampleDefinition,
+  ComponentExampleIdFor,
+} from "../types/component-examples.ts";
+import { validateComponentExampleImplementations } from "../types/component-examples.ts";
+import type { ComponentMeta } from "../types/component-meta.ts";
 
 /** Theme and motif defaults that can be bound across pure CLI renderers. */
 export interface CliPresentationOptions extends TerminalMotifOptions {
@@ -20,11 +26,32 @@ export type CliRenderer<Props> = (
 ) => string;
 
 /** One named, deterministic input frame shown by the CLI catalogue loop. */
-export interface CliExample<Props> {
-  readonly name: string;
+export interface CliExample<Props, Name extends string = string> {
+  readonly name: Name;
   readonly props: Readonly<Props>;
   /** Optional deterministic posture replacing selected Catalogue capabilities. */
   readonly capabilities?: Readonly<Partial<TerminalCapabilities>>;
+}
+
+/** Bind pure renderer inputs to one neutral Component example vocabulary. */
+export function defineCliExamples<
+  const Vocabulary extends readonly ComponentExampleDefinition[],
+  const Implementations extends readonly CliExample<
+    unknown,
+    ComponentExampleIdFor<Vocabulary, "cli">
+  >[],
+>(
+  meta: ComponentMeta,
+  vocabulary: Vocabulary,
+  implementations: Implementations,
+): Implementations {
+  validateComponentExampleImplementations(
+    meta,
+    vocabulary,
+    "cli",
+    implementations.map(({ name }) => name),
+  );
+  return implementations;
 }
 
 /**
