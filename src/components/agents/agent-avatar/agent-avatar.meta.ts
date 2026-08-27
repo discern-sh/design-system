@@ -1,5 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
-export default {
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
+
+const meta = {
   name: "Agent avatar",
   slug: "agent-avatar",
   group: "Agents",
@@ -13,3 +15,14 @@ export default {
     "The tile speaks Avatar's sizing and ring contract, so Avatar group stacks people and agents together without extra styling.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Identity" },
+    { id: "working", label: "Working" },
+    { id: "blocked", label: "Blocked" },
+  ],
+);
+
+export default meta;

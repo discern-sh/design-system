@@ -1,5 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
-export default {
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
+
+const meta = {
   name: "Worklog",
   slug: "worklog",
   group: "Agents",
@@ -14,3 +16,13 @@ export default {
     "Renders an ordered list, so assistive technology announces the run's length and each step's place in it.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Active run" },
+    { id: "failure", label: "Failed run" },
+  ],
+);
+
+export default meta;

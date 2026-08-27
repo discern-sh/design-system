@@ -5,8 +5,10 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import { truncateText } from "../../../cli/text.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./agent-mention.meta.ts";
 import {
   agentsCliWidth,
   assertAgentsCliText,
@@ -23,13 +25,17 @@ export interface AgentMentionCliProps {
 }
 
 /** Deterministic Agent mention states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<AgentMentionCliProps>[] = [
-  { name: "static", props: { name: "reviewer" } },
-  {
-    name: "linked",
-    props: { name: "release", href: "https://example.test/agents/release" },
-  },
-] as const;
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { name: "default", props: { name: "reviewer" } },
+    {
+      name: "linked",
+      props: { name: "release", href: "https://example.test/agents/release" },
+    },
+  ] as const satisfies readonly CliExample<AgentMentionCliProps>[],
+);
 
 /** Render one sigil-led agent mention with an optional link target. */
 const renderAgentMentionCli: CliRenderer<AgentMentionCliProps> = (

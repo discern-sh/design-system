@@ -5,6 +5,7 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
 import type {
   TerminalSemanticTone,
@@ -12,6 +13,7 @@ import type {
 } from "../../../cli/theme.ts";
 import { derivedInitials } from "../../initials.ts";
 import type { AgentAvatarSize, AgentStatus } from "./agent-avatar.types.ts";
+import meta, { componentExampleVocabulary } from "./agent-avatar.meta.ts";
 import {
   agentsCliWidth,
   assertAgentsCliText,
@@ -38,14 +40,18 @@ export interface AgentAvatarCliProps {
 }
 
 /** Deterministic Agent avatar states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<AgentAvatarCliProps>[] = [
-  { name: "identity", props: { name: "Release agent" } },
-  {
-    name: "working",
-    props: { name: "Release agent", status: "working" },
-  },
-  { name: "blocked", props: { name: "Review", status: "blocked" } },
-] as const;
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { name: "default", props: { name: "Release agent" } },
+    {
+      name: "working",
+      props: { name: "Release agent", status: "working" },
+    },
+    { name: "blocked", props: { name: "Review", status: "blocked" } },
+  ] as const satisfies readonly CliExample<AgentAvatarCliProps>[],
+);
 
 /** Render one initials chip with an optional visible activity state. */
 const renderAgentAvatarCli: CliRenderer<AgentAvatarCliProps> = (

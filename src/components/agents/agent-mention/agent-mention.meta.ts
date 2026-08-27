@@ -1,5 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
-export default {
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
+
+const meta = {
   name: "Agent mention",
   slug: "agent-mention",
   group: "Agents",
@@ -13,3 +15,13 @@ export default {
     "The chip keeps body ink on the sunken surface in both themes; only the decorative sigil carries accent colour.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Static mention" },
+    { id: "linked", label: "Linked mention" },
+  ],
+);
+
+export default meta;

@@ -1,5 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
-export default {
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
+
+const meta = {
   name: "Fleet",
   slug: "fleet",
   group: "Agents",
@@ -14,3 +16,13 @@ export default {
     "The persona and state slots carry their own semantics — compose Agent persona and Badge so identity and status stay announced once each.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Parallel work" },
+    { id: "lossless-identities", label: "Long identities" },
+  ],
+);
+
+export default meta;

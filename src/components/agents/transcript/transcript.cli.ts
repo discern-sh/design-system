@@ -5,7 +5,9 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./transcript.meta.ts";
 import {
   agentsCliWidth,
   agentsIndentedLines,
@@ -29,21 +31,25 @@ export interface TranscriptCliProps {
 }
 
 /** Deterministic Transcript states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<TranscriptCliProps>[] = [
-  {
-    name: "review",
-    props: {
-      turns: [
-        { speaker: "Maintainer", body: "Run the complete gate." },
-        {
-          speaker: "Agent",
-          aside: "after verification",
-          body: "The gate passed and the proof is recorded.",
-        },
-      ],
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        turns: [
+          { speaker: "Maintainer", body: "Run the complete gate." },
+          {
+            speaker: "Agent",
+            aside: "after verification",
+            body: "The gate passed and the proof is recorded.",
+          },
+        ],
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<TranscriptCliProps>[],
+);
 
 /** Render ordered speaker turns with bodies indented beneath their identity. */
 const renderTranscriptCli: CliRenderer<TranscriptCliProps> = (

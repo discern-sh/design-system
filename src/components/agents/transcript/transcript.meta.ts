@@ -1,5 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
-export default {
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
+
+const meta = {
   name: "Transcript",
   slug: "transcript",
   group: "Agents",
@@ -14,3 +16,10 @@ export default {
     "Wrap timestamps in the aside slot in time elements so machines read them as machines and people read them as prose.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Review handoff" }],
+);
+
+export default meta;

@@ -5,10 +5,12 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import renderAgentAvatarCli from "../agent-avatar/agent-avatar.cli.ts";
 import type { AgentStatus } from "../agent-avatar/agent-avatar.types.ts";
 import type { AgentPersonaSize } from "./agent-persona.types.ts";
+import meta, { componentExampleVocabulary } from "./agent-persona.meta.ts";
 import {
   agentsCliWidth,
   agentsIndentedLines,
@@ -29,16 +31,24 @@ export interface AgentPersonaCliProps {
 }
 
 /** Deterministic Agent persona states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<AgentPersonaCliProps>[] = [
-  {
-    name: "working",
-    props: {
-      name: "Release agent",
-      detail: "Runs publication gates",
-      status: "working",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: { name: "Release agent", detail: "Runs publication gates" },
     },
-  },
-] as const;
+    {
+      name: "working",
+      props: {
+        name: "Release agent",
+        detail: "Runs publication gates",
+        status: "working",
+      },
+    },
+  ] as const satisfies readonly CliExample<AgentPersonaCliProps>[],
+);
 
 /** Render one terminal agent identity lockup with detail and status. */
 const renderAgentPersonaCli: CliRenderer<AgentPersonaCliProps> = (

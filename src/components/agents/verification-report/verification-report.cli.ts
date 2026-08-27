@@ -6,6 +6,7 @@
 
 import { renderBox } from "../../../cli/box.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
 import {
   type TerminalThemeVariant,
@@ -15,6 +16,9 @@ import type {
   VerificationReportCheckState,
   VerificationReportStamp,
 } from "./verification-report.types.ts";
+import meta, {
+  componentExampleVocabulary,
+} from "./verification-report.meta.ts";
 import {
   agentsCliTheme,
   agentsCliWidth,
@@ -48,24 +52,42 @@ export interface VerificationReportCliProps {
 }
 
 /** Deterministic Verification report states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<VerificationReportCliProps>[] = [
-  {
-    name: "gate",
-    props: {
-      title: "Gate proof",
-      stamp: "pass",
-      meta: [
-        { label: "Branch", value: "agent/cli-2b" },
-        { label: "Commit", value: "abc1234" },
-      ],
-      checks: [
-        { label: "Typecheck", state: "pass" },
-        { label: "Tests", state: "pass", value: "310" },
-      ],
-      summary: "All required checks passed.",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        title: "Gate proof",
+        stamp: "pass",
+        meta: [
+          { label: "Branch", value: "agent/cli-2b" },
+          { label: "Commit", value: "abc1234" },
+        ],
+        checks: [
+          { label: "Typecheck", state: "pass" },
+          { label: "Tests", state: "pass", value: "310" },
+        ],
+        summary: "All required checks passed.",
+      },
     },
-  },
-] as const;
+    {
+      name: "failure",
+      props: {
+        title: "Payment step",
+        stamp: "fail",
+        checks: [
+          { label: "Format", state: "pass" },
+          { label: "Types", state: "pass" },
+          { label: "Tests", state: "fail", value: "2 of 184 failing" },
+          { label: "Preview", state: "skip" },
+        ],
+        footer: "Fix the failing cases before handing off.",
+      },
+    },
+  ] as const satisfies readonly CliExample<VerificationReportCliProps>[],
+);
 
 function checkGlyph(
   state: VerificationReportCheckState,

@@ -5,6 +5,7 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import {
   motifPassthrough,
   type TerminalMotifOptions,
@@ -17,6 +18,7 @@ import type {
   TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import type { AgentStatus } from "../agent-avatar/agent-avatar.types.ts";
+import meta, { componentExampleVocabulary } from "./fleet.meta.ts";
 import {
   agentsCliWidth,
   agentsFactLines,
@@ -57,47 +59,51 @@ export interface FleetCliProps extends TerminalMotifOptions {
 }
 
 /** Deterministic Fleet states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<FleetCliProps>[] = [
-  {
-    name: "parallel-work",
-    props: {
-      rows: [
-        {
-          persona: "CLI 2B",
-          branch: "agent/cli-2b",
-          status: "working",
-          ahead: 5,
-          behind: 0,
-          meta: "Workflow + Agents",
-          beaconPhase: 2,
-        },
-        {
-          persona: "CLI 2A",
-          branch: "agent/cli-2a",
-          status: "waiting",
-          behind: 1,
-        },
-      ],
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        rows: [
+          {
+            persona: "CLI 2B",
+            branch: "agent/cli-2b",
+            status: "working",
+            ahead: 5,
+            behind: 0,
+            meta: "Workflow + Agents",
+            beaconPhase: 2,
+          },
+          {
+            persona: "CLI 2A",
+            branch: "agent/cli-2a",
+            status: "waiting",
+            behind: 1,
+          },
+        ],
+      },
     },
-  },
-  {
-    name: "lossless-identities",
-    props: {
-      identityMode: "lossless",
-      maxWidth: 60,
-      rows: [
-        {
-          persona: "Terminal contract audit",
-          branch: "agent/terminal-contract-audit-with-complete-identities",
-          status: "working",
-          ahead: 3,
-          meta: "Reviewing compatibility evidence",
-          beaconPhase: 1,
-        },
-      ],
+    {
+      name: "lossless-identities",
+      props: {
+        identityMode: "lossless",
+        maxWidth: 60,
+        rows: [
+          {
+            persona: "Terminal contract audit",
+            branch: "agent/terminal-contract-audit-with-complete-identities",
+            status: "working",
+            ahead: 3,
+            meta: "Reviewing compatibility evidence",
+            beaconPhase: 1,
+          },
+        ],
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<FleetCliProps>[],
+);
 
 function assertCount(value: number | undefined, name: string): void {
   if (value !== undefined && (!Number.isSafeInteger(value) || value < 0)) {

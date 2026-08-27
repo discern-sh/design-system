@@ -1,6 +1,9 @@
-import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
+import {
+  type ConformanceScenario,
+  defineCatalogueExamples,
+} from "../../../../catalogue/conformance.ts";
 import { AgentMention } from "./agent-mention.tsx";
-import { AgentAvatar } from "../agent-avatar/agent-avatar.tsx";
+import meta, { componentExampleVocabulary } from "./agent-mention.meta.ts";
 
 export const conformance = [{
   name: "a linked agent mention is focusable and hides its sigil from the name",
@@ -22,23 +25,36 @@ export const conformance = [{
   ],
 }] satisfies readonly ConformanceScenario[];
 
+function StaticMentionState() {
+  return (
+    <p style={{ margin: 0 }}>
+      The follow-up belongs to <AgentMention name="forge-2" />.
+    </p>
+  );
+}
+
+function LinkedMentionState() {
+  return (
+    <p style={{ margin: 0 }}>
+      Review the work from <AgentMention name="quill" href="#quill" />.
+    </p>
+  );
+}
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: StaticMentionState },
+    { id: "linked", Example: LinkedMentionState },
+  ],
+);
+
 export default function AgentMentionExamples() {
   return (
     <div className="discern-example-stack discern-example-stack--start">
-      <p style={{ margin: 0, maxWidth: "38rem" }}>
-        Overnight <AgentMention name="quill" href="#quill" />{" "}
-        landed the refactor, <AgentMention name="forge-2" />{" "}
-        picked up the follow-up in its own worktree, and{" "}
-        <AgentMention
-          name="atlas-3"
-          avatar={<AgentAvatar name="atlas-3" decorative />}
-        />{" "}
-        is still waiting on review.
-      </p>
-      <p style={{ margin: 0, fontSize: "0.85rem" }}>
-        Smaller running text keeps the chip in scale — nice work,{" "}
-        <AgentMention name="lantern-9" href="#lantern" />.
-      </p>
+      <StaticMentionState />
+      <LinkedMentionState />
     </div>
   );
 }

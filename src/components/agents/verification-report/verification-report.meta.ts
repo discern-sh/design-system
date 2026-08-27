@@ -1,5 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
-export default {
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
+
+const meta = {
   name: "Verification report",
   slug: "verification-report",
   group: "Agents",
@@ -20,3 +22,13 @@ export default {
     "The dot leaders are painted decoration behind the text, invisible to assistive technology and absent in forced-colour modes.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Passing report" },
+    { id: "failure", label: "Failing report" },
+  ],
+);
+
+export default meta;

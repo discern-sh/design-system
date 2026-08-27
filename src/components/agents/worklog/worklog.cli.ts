@@ -5,6 +5,7 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import {
   motifPassthrough,
   type TerminalMotifOptions,
@@ -16,6 +17,7 @@ import type {
   TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import type { WorklogStatus } from "./worklog.types.ts";
+import meta, { componentExampleVocabulary } from "./worklog.meta.ts";
 import {
   agentsCliWidth,
   agentsFactLines,
@@ -52,23 +54,42 @@ export interface WorklogCliProps extends TerminalMotifOptions {
 }
 
 /** Deterministic Worklog states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<WorklogCliProps>[] = [
-  {
-    name: "active",
-    props: {
-      entries: [
-        { label: "Generate registry", status: "done", meta: "120ms" },
-        {
-          label: "Run exact-frame tests",
-          status: "active",
-          detail: "Testing every capability level.",
-          phase: 2,
-        },
-        { label: "Accept branch", status: "queued" },
-      ],
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        entries: [
+          { label: "Generate registry", status: "done", meta: "120ms" },
+          {
+            label: "Run exact-frame tests",
+            status: "active",
+            detail: "Testing every capability level.",
+            phase: 2,
+          },
+          { label: "Accept branch", status: "queued" },
+        ],
+      },
     },
-  },
-] as const;
+    {
+      name: "failure",
+      props: {
+        entries: [
+          { label: "Format and build", status: "done", meta: "11s" },
+          {
+            label: "Run the test suite",
+            status: "failed",
+            detail: "2 of 184 cases failing",
+            meta: "38s",
+          },
+          { label: "Publish the preview", status: "skipped" },
+        ],
+      },
+    },
+  ] as const satisfies readonly CliExample<WorklogCliProps>[],
+);
 
 function staticMarker(
   status: Exclude<WorklogStatus, "active">,
