@@ -1,4 +1,6 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { ExampleIcon } from "../../../fixtures/example-icon.tsx";
+import meta, { componentExampleVocabulary } from "./audience-grid.meta.ts";
 import { AudienceGrid } from "./audience-grid.tsx";
 
 export default function AudienceGridExamples() {
@@ -51,3 +53,9 @@ export default function AudienceGridExamples() {
     />
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: AudienceGridExamples }],
+);

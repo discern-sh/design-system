@@ -1,4 +1,5 @@
-import type { CatalogueExampleState } from "../../../../catalogue/conformance.ts";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./journey-overview.meta.ts";
 import { JourneyOverview } from "./journey-overview.tsx";
 
 const overviewSteps = [
@@ -52,18 +53,14 @@ function CompactState() {
   );
 }
 
-export const catalogueStates = [
-  {
-    name: "three-step",
-    label: "Three moments",
-    Example: ThreeStepState,
-  },
-  {
-    name: "compact",
-    label: "Compact sequence",
-    Example: CompactState,
-  },
-] satisfies readonly CatalogueExampleState[];
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "three-step", Example: ThreeStepState },
+    { id: "compact", Example: CompactState },
+  ],
+);
 
 export default function JourneyOverviewExamples() {
   return (

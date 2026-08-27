@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "FAQ block",
   slug: "faq-block",
   group: "Marketing",
@@ -13,3 +14,10 @@ export default {
     "Keyboard focus receives a visible accent outline.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "First answer open" }],
+);
+
+export default meta;

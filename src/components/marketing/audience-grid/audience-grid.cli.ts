@@ -4,6 +4,7 @@
  * @module
  */
 
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical, layoutColumns } from "../../../cli/layout.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
@@ -12,6 +13,7 @@ import {
   renderMarketingCliHeader,
   wrapMarketingCliText,
 } from "../marketing-frame.ts";
+import meta, { componentExampleVocabulary } from "./audience-grid.meta.ts";
 
 /** One terminal Audience grid card. */
 export interface AudienceGridCliItem {
@@ -33,25 +35,42 @@ export interface AudienceGridCliProps {
 }
 
 /** Deterministic Audience grid states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<AudienceGridCliProps>[] = [
-  {
-    name: "audiences",
-    props: {
-      eyebrow: "For every role",
-      title: "One system, three viewpoints",
-      description: "Keep the same evidence useful to different readers.",
-      items: [
-        { title: "Builders", description: "Move from idea to release." },
-        {
-          title: "Reviewers",
-          description: "See the evidence behind the result.",
-          featured: true,
-        },
-        { title: "Leaders", description: "Share reliable defaults." },
-      ],
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        eyebrow: "Choose your path",
+        title: "One system, three useful points of view.",
+        description:
+          "Start with the outcome that matches the work in front of you.",
+        items: [
+          {
+            eyebrow: "For builders",
+            title: "Move from idea to reliable release.",
+            description:
+              "Compose the pieces you need without giving up a coherent system.",
+            featured: true,
+          },
+          {
+            eyebrow: "For reviewers",
+            title: "See the evidence behind the result.",
+            description:
+              "Turn invisible implementation detail into a reviewable account.",
+          },
+          {
+            eyebrow: "For teams",
+            title: "Give every project the same strong defaults.",
+            description:
+              "Share a standard without forcing every team into the same stack.",
+          },
+        ],
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<AudienceGridCliProps>[],
+);
 
 /** Render audience cards as an adaptive one- or two-column terminal grid. */
 const renderAudienceGridCli: CliRenderer<AudienceGridCliProps> = (

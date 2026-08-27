@@ -5,6 +5,7 @@
  */
 
 import { renderBox } from "../../../cli/box.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical, layoutColumns } from "../../../cli/layout.ts";
 import {
@@ -17,6 +18,7 @@ import {
   renderMarketingCliHeader,
   wrapMarketingCliText,
 } from "../marketing-frame.ts";
+import meta, { componentExampleVocabulary } from "./case-study.meta.ts";
 
 /** One outcome metric in a terminal Case study. */
 export interface CaseStudyCliStat {
@@ -37,23 +39,29 @@ export interface CaseStudyCliProps {
 }
 
 /** Deterministic Case study states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<CaseStudyCliProps>[] = [
-  {
-    name: "proof",
-    props: {
-      eyebrow: "Case study",
-      title: "From surprises to a reviewable release habit",
-      summary: "A small team made each release repeatable.",
-      body: "Shared evidence replaced private checklists.",
-      stats: [
-        { value: "42%", label: "less rework" },
-        { value: "11", label: "teams enrolled" },
-        { value: "2 wk", label: "to adoption" },
-      ],
-      action: "Read the full story",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        eyebrow: "Example case study",
+        title: "From scattered notes to a repeatable review habit.",
+        summary:
+          "A small team gave every review the same clear starting point.",
+        body:
+          "Shared evidence replaced private checklists and made decisions easier to revisit.",
+        stats: [
+          { value: "42%", label: "less review rework" },
+          { value: "11", label: "teams enrolled" },
+          { value: "2 wk", label: "to broad adoption" },
+        ],
+        action: "Read the full story",
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<CaseStudyCliProps>[],
+);
 
 /** Render a framed terminal proof story with compact outcome metrics. */
 const renderCaseStudyCli: CliRenderer<CaseStudyCliProps> = (

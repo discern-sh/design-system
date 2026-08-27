@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Journey overview",
   slug: "journey-overview",
   group: "Marketing",
@@ -24,3 +25,13 @@ export default {
     "Each step keeps its title, explanation, and optional outcome together when the layout collapses.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "three-step", label: "Three-step journey", only: "web" },
+    { id: "compact", label: "Compact journey", only: "web" },
+  ],
+);
+
+export default meta;

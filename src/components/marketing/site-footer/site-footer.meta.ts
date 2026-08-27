@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Site footer",
   slug: "site-footer",
   group: "Marketing",
@@ -18,3 +19,10 @@ export default {
     "Navigation group titles preserve a useful heading outline.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Link groups", only: "web" }],
+);
+
+export default meta;

@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Audience grid",
   slug: "audience-grid",
   group: "Marketing",
@@ -14,3 +15,10 @@ export default {
     "Decorative numerals and icons are hidden from assistive technology.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Audience paths" }],
+);
+
+export default meta;

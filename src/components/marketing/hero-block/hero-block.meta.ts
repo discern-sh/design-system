@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Hero block",
   slug: "hero-block",
   group: "Marketing",
@@ -19,3 +20,20 @@ export default {
     "Showcase emphasis uses real title text and remains readable when gradient clipping is unavailable.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "split", label: "Split accent" },
+    { id: "showcase", label: "Showcase" },
+    {
+      id: "backdrop",
+      label: "Artwork backdrop",
+      only: "web",
+      reason:
+        "Terminal HeroBlock has no background layer or scalable artwork plane; printing decorative browser geometry as text would misrepresent it.",
+    },
+  ],
+);
+
+export default meta;

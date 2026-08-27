@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical, layoutColumns } from "../../../cli/layout.ts";
 import {
@@ -17,6 +18,7 @@ import {
   marketingCliWidth,
   renderMarketingCliHeader,
 } from "../marketing-frame.ts";
+import meta, { componentExampleVocabulary } from "./metrics-band.meta.ts";
 
 /** One value-and-label entry in a terminal Metrics band. */
 export interface MetricsBandCliItem {
@@ -36,21 +38,37 @@ export interface MetricsBandCliProps {
 }
 
 /** Deterministic Metrics band states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<MetricsBandCliProps>[] = [
-  {
-    name: "outcomes",
-    props: {
-      eyebrow: "Measured outcomes",
-      title: "Proof at a glance",
-      tone: "accent",
-      items: [
-        { value: "42%", label: "less rework" },
-        { value: "3.4×", label: "faster review" },
-        { value: "99.9%", label: "successful runs" },
-      ],
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        eyebrow: "Current snapshot",
+        title: "Example measures.",
+        tone: "accent",
+        items: [
+          {
+            value: "24",
+            label: "completed items",
+            detail: "Across the sample period",
+          },
+          {
+            value: "8",
+            label: "open reviews",
+            detail: "From open to decision",
+          },
+          {
+            value: "3",
+            label: "pending decisions",
+            detail: "At the latest update",
+          },
+        ],
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<MetricsBandCliProps>[],
+);
 
 /** Render a compact adaptive terminal stat row. */
 const renderMetricsBandCli: CliRenderer<MetricsBandCliProps> = (

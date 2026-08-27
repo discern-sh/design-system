@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
-import type { CatalogueExampleState } from "../../../../catalogue/conformance.ts";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./marketing-stage.meta.ts";
 import { MarketingStage } from "./marketing-stage.tsx";
 
 const flowStyle: CSSProperties = {
@@ -93,23 +94,15 @@ function PlainStageState() {
   );
 }
 
-export const catalogueStates = [
-  {
-    name: "framed",
-    label: "Framed concept",
-    Example: FramedStageState,
-  },
-  {
-    name: "inset",
-    label: "Inset atmosphere",
-    Example: InsetStageState,
-  },
-  {
-    name: "plain",
-    label: "Plain artwork",
-    Example: PlainStageState,
-  },
-] satisfies readonly CatalogueExampleState[];
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "framed", Example: FramedStageState },
+    { id: "inset", Example: InsetStageState },
+    { id: "plain", Example: PlainStageState },
+  ],
+);
 
 export default function MarketingStageExamples() {
   return (

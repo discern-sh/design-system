@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Site header",
   slug: "site-header",
   group: "Marketing",
@@ -21,3 +22,13 @@ export default {
     "At narrow widths links remain available in a horizontally scrollable row in both variants.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "standard", label: "Standard", only: "web" },
+    { id: "campaign", label: "Campaign", only: "web" },
+  ],
+);
+
+export default meta;

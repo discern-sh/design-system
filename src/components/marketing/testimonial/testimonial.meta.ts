@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Testimonial",
   slug: "testimonial",
   group: "Marketing",
@@ -13,3 +14,10 @@ export default {
     "Decorative quote marks and avatars are hidden from assistive technology.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Wide quote" }],
+);
+
+export default meta;

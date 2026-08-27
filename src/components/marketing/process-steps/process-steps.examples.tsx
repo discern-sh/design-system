@@ -1,5 +1,9 @@
+import {
+  type ConformanceScenario,
+  defineCatalogueExamples,
+} from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./process-steps.meta.ts";
 import { ProcessSteps } from "./process-steps.tsx";
-import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
 
 export const conformance = [
   {
@@ -30,7 +34,42 @@ export const conformance = [
   },
 ] satisfies readonly ConformanceScenario[];
 
-export default function ProcessStepsExamples() {
+const steps = [
+  {
+    title: "Connect",
+    description: <p>Start with the tools and context already in place.</p>,
+    detail: "Complete",
+  },
+  {
+    title: "Shape",
+    description: (
+      <p>
+        Turn the desired outcome into a concrete, reviewable plan with room for
+        constraints, alternatives, and a clear definition of done.
+      </p>
+    ),
+    detail: "In progress",
+  },
+  {
+    title: "Build",
+    description: <p>Carry the work through with the system close at hand.</p>,
+    detail: "Waiting",
+  },
+  {
+    title: "Prove",
+    description: (
+      <p>Finish with evidence someone else can independently inspect.</p>
+    ),
+    detail: "Waiting",
+  },
+  {
+    title: "Share",
+    description: <p>Hand the result back with its evidence attached.</p>,
+    detail: "Waiting",
+  },
+] as const;
+
+function DefaultProcessStepsState() {
   return (
     <ProcessSteps
       eyebrow="How it works"
@@ -41,47 +80,37 @@ export default function ProcessStepsExamples() {
           reader commits.
         </p>
       }
+      steps={steps}
+    />
+  );
+}
+
+function ErrorProcessStepsState() {
+  return (
+    <ProcessSteps
+      eyebrow="Review the process"
+      title="Resolve the blocked step before continuing."
+      description={
+        <p>The highlighted correction keeps the sequence legible.</p>
+      }
       steps={[
-        {
-          title: "Connect",
-          description: (
-            <p>
-              Start with the tools and context already in place.
-            </p>
-          ),
-          detail: "Two-minute setup",
-        },
-        {
-          title: "Shape",
-          description: (
-            <p>
-              Turn the desired outcome into a concrete, reviewable plan with
-              room for constraints, alternatives, and a clear definition of
-              done.
-            </p>
-          ),
-          detail: "Clear defaults",
-        },
-        {
-          title: "Build",
-          description: (
-            <p>Carry the work through with the system close at hand.</p>
-          ),
-          detail: "No stack lock-in",
-        },
-        {
-          title: "Prove",
-          description: (
-            <p>Finish with evidence someone else can independently inspect.</p>
-          ),
-          detail: "Permanent proof",
-        },
-        {
-          title: "Share",
-          description: <p>Hand the result back with its evidence attached.</p>,
-          detail: "Ready for review",
-        },
+        { ...steps[0], detail: "Complete" },
+        { ...steps[1], detail: "Shape needs attention" },
+        { ...steps[2], detail: "Waiting" },
       ]}
     />
   );
+}
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: DefaultProcessStepsState },
+    { id: "error", Example: ErrorProcessStepsState },
+  ],
+);
+
+export default function ProcessStepsExamples() {
+  return <DefaultProcessStepsState />;
 }

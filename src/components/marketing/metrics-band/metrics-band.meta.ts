@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Metrics band",
   slug: "metrics-band",
   group: "Marketing",
@@ -12,3 +13,10 @@ export default {
     "Metrics use a description list so each figure stays paired with its label.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Measured outcomes" }],
+);
+
+export default meta;

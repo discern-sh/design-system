@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Outcome spotlight",
   slug: "outcome-spotlight",
   group: "Marketing",
@@ -25,3 +26,13 @@ export default {
     "Contrast is inherited from Marketing section's complete semantic role remapping.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "focused", label: "Focused outcome", only: "web" },
+    { id: "textual", label: "Textual outcome", only: "web" },
+  ],
+);
+
+export default meta;

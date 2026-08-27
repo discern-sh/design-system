@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Closing statement",
   slug: "closing-statement",
   group: "Marketing",
@@ -25,3 +26,13 @@ export default {
     "Actions remain ordinary consumer-supplied links or buttons and stack without changing order at narrow widths.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "contrast", label: "Contrast close", only: "web" },
+    { id: "quiet", label: "Quiet close", only: "web" },
+  ],
+);
+
+export default meta;

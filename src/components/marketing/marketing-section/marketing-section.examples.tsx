@@ -1,4 +1,5 @@
-import type { CatalogueExampleState } from "../../../../catalogue/conformance.ts";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./marketing-section.meta.ts";
 import { MarketingSection } from "./marketing-section.tsx";
 
 function StandardSectionState() {
@@ -47,18 +48,14 @@ function SpaciousContrastState() {
   );
 }
 
-export const catalogueStates = [
-  {
-    name: "standard",
-    label: "Standard canvas",
-    Example: StandardSectionState,
-  },
-  {
-    name: "spacious-contrast",
-    label: "Wide spacious contrast",
-    Example: SpaciousContrastState,
-  },
-] satisfies readonly CatalogueExampleState[];
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "standard", Example: StandardSectionState },
+    { id: "spacious-contrast", Example: SpaciousContrastState },
+  ],
+);
 
 export default function MarketingSectionExamples() {
   return (

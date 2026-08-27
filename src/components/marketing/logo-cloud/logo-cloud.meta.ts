@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Logo cloud",
   slug: "logo-cloud",
   group: "Marketing",
@@ -17,3 +18,13 @@ export default {
     "An optional mark mask preserves supplied image artwork in light Theme and replaces it completely with a neutral silhouette in dark Theme, without replacing the readable name.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "grid", label: "Trust grid" },
+    { id: "strip", label: "Provider strip" },
+  ],
+);
+
+export default meta;

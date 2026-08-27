@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Narrative chapter",
   slug: "narrative-chapter",
   group: "Marketing",
@@ -25,3 +26,13 @@ export default {
     "The heading rank is explicit so the chapter preserves the surrounding document outline.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "extended", label: "Extended explanation", only: "web" },
+    { id: "concise", label: "Concise explanation", only: "web" },
+  ],
+);
+
+export default meta;

@@ -1,10 +1,12 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./site-footer.meta.ts";
 import { SiteFooter } from "./site-footer.tsx";
 
 export default function SiteFooterExamples() {
   return (
     <SiteFooter
-      brand="Northstar"
-      brandMark="N"
+      brand="Example brand"
+      brandMark="E"
       description={
         <p>A small system for teams doing consequential work with care.</p>
       }
@@ -34,8 +36,14 @@ export default function SiteFooterExamples() {
           ],
         },
       ]}
-      legal="© 2026 Northstar"
+      legal="© 2026 Example brand"
       meta="Built carefully · served simply"
     />
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: SiteFooterExamples }],
+);

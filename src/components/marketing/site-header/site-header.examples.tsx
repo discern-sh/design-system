@@ -1,16 +1,17 @@
-import type { CatalogueExampleState } from "../../../../catalogue/conformance.ts";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { Button } from "../../core/button/button.tsx";
+import meta, { componentExampleVocabulary } from "./site-header.meta.ts";
 import { SiteHeader } from "./site-header.tsx";
 
 function StandardHeaderState() {
   return (
     <SiteHeader
-      brand="Waypoint"
-      brandMark="◮"
+      brand="Example brand"
+      brandMark="E"
       brandTypeface="ui"
       brandMarkTreatment="plain"
       navItems={[
-        { label: "Product", href: "#product" },
+        { label: "Overview", href: "#overview" },
         { label: "Principles", href: "#principles" },
         { label: "Resources", href: "#resources" },
       ]}
@@ -27,8 +28,8 @@ function StandardHeaderState() {
 function CampaignHeaderState() {
   return (
     <SiteHeader
-      brand="Waypoint"
-      brandMark="◮"
+      brand="Example brand"
+      brandMark="E"
       brandTypeface="mono"
       brandMarkTreatment="plain"
       navItems={[
@@ -42,10 +43,14 @@ function CampaignHeaderState() {
   );
 }
 
-export const catalogueStates = [
-  { name: "standard", label: "Standard", Example: StandardHeaderState },
-  { name: "campaign", label: "Campaign", Example: CampaignHeaderState },
-] satisfies readonly CatalogueExampleState[];
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "standard", Example: StandardHeaderState },
+    { id: "campaign", Example: CampaignHeaderState },
+  ],
+);
 
 export default function SiteHeaderExamples() {
   return (

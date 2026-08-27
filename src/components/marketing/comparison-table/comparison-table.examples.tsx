@@ -1,3 +1,5 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./comparison-table.meta.ts";
 import { ComparisonTable } from "./comparison-table.tsx";
 
 export default function ComparisonTableExamples() {
@@ -11,31 +13,37 @@ export default function ComparisonTableExamples() {
           into a sales claim.
         </p>
       }
-      firstLabel="Patchwork"
-      secondLabel="A coherent system"
-      secondBadge="Recommended"
+      firstLabel="Approach A"
+      secondLabel="Approach B"
+      secondBadge="Example choice"
       rows={[
         {
           feature: "Setup",
-          first: "Recreated for each project",
-          second: "One repeatable starting point",
+          first: "Configured separately",
+          second: "Uses a shared starting point",
         },
         {
           feature: "Review",
-          first: "Context gathered by hand",
-          second: "Evidence travels with the work",
+          first: "Context gathered later",
+          second: "Context stays with the work",
         },
         {
           feature: "Quality",
-          first: "Depends on memory",
-          second: "Standards hold automatically",
+          first: "Checked case by case",
+          second: "Checked consistently",
         },
         {
           feature: "Portability",
-          first: "Tied to one workflow",
-          second: "Works across stacks and tools",
+          first: "Designed for one workflow",
+          second: "Designed for several workflows",
         },
       ]}
     />
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: ComparisonTableExamples }],
+);

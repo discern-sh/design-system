@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Marketing intro",
   slug: "marketing-intro",
   group: "Marketing",
@@ -25,3 +26,13 @@ export default {
     "Contrast tone keeps the eyebrow, title, and supporting copy legible on a stable dark surface in either theme.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "editorial", label: "Editorial scale", only: "web" },
+    { id: "contrast", label: "Centred contrast", only: "web" },
+  ],
+);
+
+export default meta;

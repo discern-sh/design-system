@@ -1,11 +1,13 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { Button } from "../../core/button/button.tsx";
+import meta, { componentExampleVocabulary } from "./faq-block.meta.ts";
 import { FaqBlock } from "./faq-block.tsx";
 
 export default function FaqBlockExamples() {
   return (
     <FaqBlock
       eyebrow="Questions, answered"
-      title="The details people need before they commit."
+      title="The details readers need before they continue."
       description={
         <p>
           Use plain answers to remove uncertainty without interrupting the main
@@ -20,38 +22,38 @@ export default function FaqBlockExamples() {
       openFirst
       items={[
         {
-          question: "Can this fit around our existing tools?",
+          question: "What belongs in this section?",
           answer: (
             <p>
-              Yes. The block is designed for systems that add a coherent layer
-              without replacing the underlying stack.
+              Include questions that remove a concrete uncertainty from the
+              surrounding story.
             </p>
           ),
         },
         {
-          question: "How quickly can a team get started?",
+          question: "How long should an answer be?",
           answer: (
             <p>
-              Start with one workflow, prove the value, and broaden the pattern
-              only when the first path is understood.
+              Use the shortest explanation that answers the question without
+              creating another one.
             </p>
           ),
         },
         {
-          question: "What happens when our process changes?",
+          question: "When should an answer stay closed?",
           answer: (
             <p>
-              The source remains explicit and versioned, so the system can
-              evolve with the work rather than becoming hidden convention.
+              Keep supporting details collapsed until a reader chooses to
+              inspect them.
             </p>
           ),
         },
         {
-          question: "Does it work without client-side JavaScript?",
+          question: "What should the final answer include?",
           answer: (
             <p>
-              Yes. Native disclosure semantics keep this section useful in a
-              fully static page.
+              State the useful conclusion directly, then add only the context
+              needed to act on it.
             </p>
           ),
         },
@@ -59,3 +61,9 @@ export default function FaqBlockExamples() {
     />
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: FaqBlockExamples }],
+);

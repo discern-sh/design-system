@@ -1,21 +1,22 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { Button } from "../../core/button/button.tsx";
+import meta, { componentExampleVocabulary } from "./case-study.meta.ts";
 import { CaseStudy } from "./case-study.tsx";
 
 export default function CaseStudyExamples() {
   return (
     <CaseStudy
-      eyebrow="Customer story · Northstar"
-      title="From recurring surprises to a reviewable release habit."
+      eyebrow="Example case study"
+      title="From scattered notes to a repeatable review habit."
       summary={
         <p>
-          A growing product team replaced a patchwork of project-specific checks
-          with one understandable path to done.
+          A small team gave every review the same clear starting point.
         </p>
       }
       body={
         <p>
-          The team kept its existing tools and added a thin shared layer that
-          made expectations and evidence travel together.
+          Shared evidence replaced private checklists and made decisions easier
+          to revisit.
         </p>
       }
       stats={[
@@ -34,7 +35,7 @@ export default function CaseStudyExamples() {
               "radial-gradient(circle, var(--discern-color-accent-200), transparent 60%)",
           }}
         >
-          <strong>Customer evidence or product photography</strong>
+          <strong>Example evidence or photography</strong>
         </div>
       }
       action={
@@ -43,3 +44,9 @@ export default function CaseStudyExamples() {
     />
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: CaseStudyExamples }],
+);

@@ -1,4 +1,5 @@
-import type { CatalogueExampleState } from "../../../../catalogue/conformance.ts";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./outcome-spotlight.meta.ts";
 import { OutcomeSpotlight } from "./outcome-spotlight.tsx";
 
 function FocusedOutcomeState() {
@@ -36,18 +37,14 @@ function TextualOutcomeState() {
   );
 }
 
-export const catalogueStates = [
-  {
-    name: "focused",
-    label: "Focused outcome",
-    Example: FocusedOutcomeState,
-  },
-  {
-    name: "textual",
-    label: "Textual outcome",
-    Example: TextualOutcomeState,
-  },
-] satisfies readonly CatalogueExampleState[];
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "focused", Example: FocusedOutcomeState },
+    { id: "textual", Example: TextualOutcomeState },
+  ],
+);
 
 export default function OutcomeSpotlightExamples() {
   return (

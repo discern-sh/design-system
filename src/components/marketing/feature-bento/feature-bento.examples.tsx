@@ -1,8 +1,9 @@
-import type {
-  CatalogueExampleState,
-  ConformanceScenario,
+import {
+  type ConformanceScenario,
+  defineCatalogueExamples,
 } from "../../../../catalogue/conformance.ts";
 import { ExampleIcon } from "../../../fixtures/example-icon.tsx";
+import meta, { componentExampleVocabulary } from "./feature-bento.meta.ts";
 import { FeatureBento } from "./feature-bento.tsx";
 
 const visual = (label: string) => (
@@ -41,14 +42,14 @@ function LeadMatrixState() {
       }
       items={[
         {
-          title: "A wide product story",
+          title: "A wide featured story",
           description: (
             <p>
               Pair a concise outcome with a substantial interface or diagram.
             </p>
           ),
           icon: <ExampleIcon name="spark" />,
-          visual: visual("primary product visual"),
+          visual: visual("primary visual"),
           size: "large",
           tone: "accent",
         },
@@ -118,14 +119,14 @@ function VerticalMatrixState() {
   );
 }
 
-export const catalogueStates = [
-  { name: "lead-matrix", label: "Lead matrix", Example: LeadMatrixState },
-  {
-    name: "vertical-matrix",
-    label: "Vertical matrix",
-    Example: VerticalMatrixState,
-  },
-] satisfies readonly CatalogueExampleState[];
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "lead-matrix", Example: LeadMatrixState },
+    { id: "vertical-matrix", Example: VerticalMatrixState },
+  ],
+);
 
 export default function FeatureBentoExamples() {
   return <LeadMatrixState />;

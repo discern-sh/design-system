@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Marketing stage",
   slug: "marketing-stage",
   group: "Marketing",
@@ -24,3 +25,14 @@ export default {
     "The component does not infer whether supplied artwork is meaningful or decorative; consumers retain responsibility for the child content's accessible alternative.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "framed", label: "Framed concept", only: "web" },
+    { id: "inset", label: "Inset atmosphere", only: "web" },
+    { id: "plain", label: "Plain artwork", only: "web" },
+  ],
+);
+
+export default meta;

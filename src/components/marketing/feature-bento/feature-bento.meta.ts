@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Feature bento",
   slug: "feature-bento",
   group: "Marketing",
@@ -25,3 +26,13 @@ export default {
     "Icons are decorative; each feature carries a visible heading and description.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "lead-matrix", label: "Lead matrix", only: "web" },
+    { id: "vertical-matrix", label: "Vertical matrix", only: "web" },
+  ],
+);
+
+export default meta;

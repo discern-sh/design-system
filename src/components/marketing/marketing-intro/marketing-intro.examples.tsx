@@ -1,4 +1,5 @@
-import type { CatalogueExampleState } from "../../../../catalogue/conformance.ts";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./marketing-intro.meta.ts";
 import { MarketingIntro } from "./marketing-intro.tsx";
 
 function EditorialIntroState() {
@@ -41,18 +42,14 @@ function ContrastIntroState() {
   );
 }
 
-export const catalogueStates = [
-  {
-    name: "editorial",
-    label: "Editorial scale",
-    Example: EditorialIntroState,
-  },
-  {
-    name: "contrast",
-    label: "Centred contrast",
-    Example: ContrastIntroState,
-  },
-] satisfies readonly CatalogueExampleState[];
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "editorial", Example: EditorialIntroState },
+    { id: "contrast", Example: ContrastIntroState },
+  ],
+);
 
 export default function MarketingIntroExamples() {
   return (

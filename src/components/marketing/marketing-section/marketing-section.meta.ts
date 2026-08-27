@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Marketing section",
   slug: "marketing-section",
   group: "Marketing",
@@ -24,3 +25,17 @@ export default {
     "The component preserves a native section landmark and leaves heading hierarchy to its content.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "standard", label: "Standard canvas", only: "web" },
+    {
+      id: "spacious-contrast",
+      label: "Wide spacious contrast",
+      only: "web",
+    },
+  ],
+);
+
+export default meta;

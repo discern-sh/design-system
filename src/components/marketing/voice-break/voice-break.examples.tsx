@@ -1,4 +1,5 @@
-import type { CatalogueExampleState } from "../../../../catalogue/conformance.ts";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./voice-break.meta.ts";
 import { VoiceBreak } from "./voice-break.tsx";
 
 function CalmVoiceState() {
@@ -6,7 +7,7 @@ function CalmVoiceState() {
     <VoiceBreak
       eyebrow="A change of voice"
       quote="For the first time, the explanation felt shorter than the idea."
-      attribution="A product team"
+      attribution="A review team"
       context="After simplifying a complex launch page"
       portrait={<span>PT</span>}
     />
@@ -19,25 +20,21 @@ function ContrastVoiceState() {
       eyebrow="Pause"
       quote="We understood the decision before we learned the machinery."
       attribution="An early reader"
-      context="Reviewing a technical product introduction"
+      context="Reviewing a technical introduction"
       align="end"
       surface="contrast"
     />
   );
 }
 
-export const catalogueStates = [
-  {
-    name: "calm",
-    label: "Calm voice",
-    Example: CalmVoiceState,
-  },
-  {
-    name: "contrast",
-    label: "Contrast voice",
-    Example: ContrastVoiceState,
-  },
-] satisfies readonly CatalogueExampleState[];
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "calm", Example: CalmVoiceState },
+    { id: "contrast", Example: ContrastVoiceState },
+  ],
+);
 
 export default function VoiceBreakExamples() {
   return (

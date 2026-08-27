@@ -1,4 +1,5 @@
-import type { CatalogueExampleState } from "../../../../catalogue/conformance.ts";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./logo-cloud.meta.ts";
 import { LogoCloud } from "./logo-cloud.tsx";
 
 const triangleMask =
@@ -15,12 +16,12 @@ function ProviderMark({ hue }: { readonly hue: string }) {
 function GridLogoCloudState() {
   return (
     <LogoCloud
-      label="Trusted by teams doing careful work"
+      label="Example organisations"
       items={[
-        { name: "Northstar", mark: "◇" },
-        { name: "Fieldwork", mark: "✦" },
-        { name: "Commonroom", mark: "○" },
-        { name: "Atlas", mark: "△" },
+        { name: "Provider one", mark: "◇" },
+        { name: "Provider two", mark: "✦" },
+        { name: "Provider three", mark: "○" },
+        { name: "Provider four", mark: "△" },
       ]}
     />
   );
@@ -29,25 +30,25 @@ function GridLogoCloudState() {
 function StripLogoCloudState() {
   return (
     <LogoCloud
-      label="One shared practice across the tools you use"
+      label="Available across example providers"
       items={[
         {
-          name: "Northstar",
+          name: "Provider one",
           mark: <ProviderMark hue="oklch(58% 0.19 264)" />,
           markMask: triangleMask,
         },
         {
-          name: "Fieldwork",
+          name: "Provider two",
           mark: <ProviderMark hue="oklch(65% 0.16 152)" />,
           markMask: triangleMask,
         },
         {
-          name: "Commonroom",
+          name: "Provider three",
           mark: <ProviderMark hue="oklch(67% 0.16 35)" />,
           markMask: triangleMask,
         },
         {
-          name: "Atlas",
+          name: "Provider four",
           mark: <ProviderMark hue="oklch(62% 0.18 316)" />,
           markMask: triangleMask,
         },
@@ -57,10 +58,14 @@ function StripLogoCloudState() {
   );
 }
 
-export const catalogueStates = [
-  { name: "grid", label: "Trust grid", Example: GridLogoCloudState },
-  { name: "strip", label: "Provider strip", Example: StripLogoCloudState },
-] satisfies readonly CatalogueExampleState[];
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "grid", Example: GridLogoCloudState },
+    { id: "strip", Example: StripLogoCloudState },
+  ],
+);
 
 export default function LogoCloudExamples() {
   return (

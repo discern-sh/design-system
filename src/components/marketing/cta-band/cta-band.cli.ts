@@ -5,6 +5,7 @@
  */
 
 import { renderBox } from "../../../cli/box.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import {
@@ -14,6 +15,7 @@ import {
 } from "../../../cli/theme.ts";
 import type { CtaBandAlign, CtaBandTone } from "./cta-band.types.ts";
 import { marketingCliWidth, wrapMarketingCliText } from "../marketing-frame.ts";
+import meta, { componentExampleVocabulary } from "./cta-band.meta.ts";
 
 /** Inputs accepted by the terminal CTA band renderer. */
 export interface CtaBandCliProps {
@@ -29,18 +31,23 @@ export interface CtaBandCliProps {
 }
 
 /** Deterministic CTA band states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<CtaBandCliProps>[] = [
-  {
-    name: "accent",
-    props: {
-      eyebrow: "Ready when you are",
-      title: "Turn the next project into the new standard",
-      description: "Start with one workflow and keep the proof.",
-      actions: ["Get started", "Read the guide"],
-      note: "No hidden setup.",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        eyebrow: "Continue",
+        title: "Make the next step clear.",
+        description:
+          "Pair one direct invitation with a quieter alternative and a short reassurance.",
+        actions: ["Primary action", "Secondary action"],
+        note: "Add a short reassurance when it helps the decision.",
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<CtaBandCliProps>[],
+);
 
 /** Render one high-emphasis boxed terminal call to action. */
 const renderCtaBandCli: CliRenderer<CtaBandCliProps> = (

@@ -5,6 +5,7 @@
  */
 
 import { renderBox } from "../../../cli/box.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import {
@@ -14,6 +15,7 @@ import {
 } from "../../../cli/theme.ts";
 import type { TestimonialLayout } from "./testimonial.types.ts";
 import { marketingCliWidth, wrapMarketingCliText } from "../marketing-frame.ts";
+import meta, { componentExampleVocabulary } from "./testimonial.meta.ts";
 
 /** Inputs accepted by the terminal Testimonial renderer. */
 export interface TestimonialCliProps {
@@ -29,19 +31,23 @@ export interface TestimonialCliProps {
 }
 
 /** Deterministic Testimonial states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<TestimonialCliProps>[] = [
-  {
-    name: "wide",
-    props: {
-      eyebrow: "In their words",
-      quote: "The evidence made every review calmer.",
-      author: "A. Reviewer",
-      authorRole: "Engineering lead",
-      metric: "42%",
-      metricLabel: "less rework",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        eyebrow: "Example perspective",
+        quote: "The shared evidence made the final review easier to follow.",
+        author: "Project reviewer",
+        authorRole: "Engineering lead",
+        metric: "One",
+        metricLabel: "clear recommendation",
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<TestimonialCliProps>[],
+);
 
 /** Render an attributed terminal quotation with an optional outcome metric. */
 const renderTestimonialCli: CliRenderer<TestimonialCliProps> = (

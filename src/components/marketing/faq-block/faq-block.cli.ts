@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
@@ -18,6 +19,7 @@ import {
   renderMarketingCliHeader,
   wrapMarketingCliText,
 } from "../marketing-frame.ts";
+import meta, { componentExampleVocabulary } from "./faq-block.meta.ts";
 
 /** One terminal FAQ disclosure. */
 export interface FaqBlockCliItem {
@@ -28,7 +30,9 @@ export interface FaqBlockCliItem {
 /** Inputs accepted by the terminal FAQ block renderer. */
 export interface FaqBlockCliProps {
   readonly title: string;
+  readonly eyebrow?: string;
   readonly description?: string;
+  readonly aside?: string;
   readonly items: readonly FaqBlockCliItem[];
   readonly openIndices?: readonly number[];
   readonly theme?: TerminalThemeVariant;
@@ -36,25 +40,45 @@ export interface FaqBlockCliProps {
 }
 
 /** Deterministic FAQ block states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<FaqBlockCliProps>[] = [
-  {
-    name: "first-open",
-    props: {
-      title: "Questions before you begin",
-      items: [
-        {
-          question: "Can I start small?",
-          answer: "Yes. Begin with one workflow.",
-        },
-        {
-          question: "Can I expand later?",
-          answer: "Add more surfaces when the evidence is clear.",
-        },
-      ],
-      openIndices: [0],
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        eyebrow: "Questions, answered",
+        title: "The details readers need before they continue.",
+        description:
+          "Use plain answers to remove uncertainty without interrupting the main story.",
+        aside: "Ask another question",
+        items: [
+          {
+            question: "What belongs in this section?",
+            answer:
+              "Include questions that remove a concrete uncertainty from the surrounding story.",
+          },
+          {
+            question: "How long should an answer be?",
+            answer:
+              "Use the shortest explanation that answers the question without creating another one.",
+          },
+          {
+            question: "When should an answer stay closed?",
+            answer:
+              "Keep supporting details collapsed until a reader chooses to inspect them.",
+          },
+          {
+            question: "What should the final answer include?",
+            answer:
+              "State the useful conclusion directly, then add only the context needed to act on it.",
+          },
+        ],
+        openIndices: [0],
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<FaqBlockCliProps>[],
+);
 
 /** Render static open and closed FAQ disclosure frames. */
 const renderFaqBlockCli: CliRenderer<FaqBlockCliProps> = (
@@ -88,6 +112,7 @@ const renderFaqBlockCli: CliRenderer<FaqBlockCliProps> = (
   return joinVertical([
     renderMarketingCliHeader({
       title: props.title,
+      ...(props.eyebrow === undefined ? {} : { eyebrow: props.eyebrow }),
       ...(props.description === undefined
         ? {}
         : { description: props.description }),
@@ -99,6 +124,7 @@ const renderFaqBlockCli: CliRenderer<FaqBlockCliProps> = (
       { color: terminalToneColor(theme, "neutral") },
       capabilities,
     ),
+    props.aside === undefined ? "" : `[${props.aside}]`,
   ], { spacing: 1 });
 };
 

@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Editorial hero",
   slug: "editorial-hero",
   group: "Marketing",
@@ -26,3 +27,13 @@ export default {
     "Decorative backdrop content is always hidden from assistive technology.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "visual", label: "Conceptual visual", only: "web" },
+    { id: "text-only", label: "Text only", only: "web" },
+  ],
+);
+
+export default meta;

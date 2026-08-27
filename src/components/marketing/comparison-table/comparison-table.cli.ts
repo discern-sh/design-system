@@ -6,6 +6,7 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { padText, truncateText } from "../../../cli/text.ts";
@@ -19,6 +20,7 @@ import {
   renderMarketingCliHeader,
   wrapMarketingCliText,
 } from "../marketing-frame.ts";
+import meta, { componentExampleVocabulary } from "./comparison-table.meta.ts";
 
 /** One terminal comparison row. */
 export interface ComparisonTableCliRow {
@@ -30,30 +32,58 @@ export interface ComparisonTableCliRow {
 /** Inputs accepted by the terminal Comparison table renderer. */
 export interface ComparisonTableCliProps {
   readonly title: string;
+  readonly eyebrow?: string;
   readonly description?: string;
   readonly featureLabel?: string;
   readonly firstLabel: string;
   readonly secondLabel: string;
+  readonly secondBadge?: string;
   readonly rows: readonly ComparisonTableCliRow[];
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
 /** Deterministic Comparison table states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<ComparisonTableCliProps>[] = [
-  {
-    name: "comparison",
-    props: {
-      title: "Make the trade-off visible",
-      firstLabel: "Manual",
-      secondLabel: "Discern",
-      rows: [
-        { feature: "Evidence", first: "Ad hoc", second: "Attached" },
-        { feature: "Reruns", first: "Risky", second: "Safe" },
-      ],
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        eyebrow: "Compare approaches",
+        title: "Make the trade-off visible.",
+        description:
+          "A good comparison clarifies the decision without turning every row into a sales claim.",
+        firstLabel: "Approach A",
+        secondLabel: "Approach B",
+        secondBadge: "Example choice",
+        rows: [
+          {
+            feature: "Setup",
+            first: "Configured separately",
+            second: "Uses a shared starting point",
+          },
+          {
+            feature: "Review",
+            first: "Context gathered later",
+            second: "Context stays with the work",
+          },
+          {
+            feature: "Quality",
+            first: "Checked case by case",
+            second: "Checked consistently",
+          },
+          {
+            feature: "Portability",
+            first: "Designed for one workflow",
+            second: "Designed for several workflows",
+          },
+        ],
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<ComparisonTableCliProps>[],
+);
 
 function wideTable(
   props: ComparisonTableCliProps,
@@ -71,10 +101,13 @@ function wideTable(
       );
       return index === cells.length - 1 ? value : padText(value, columnWidth);
     }).join(gap);
+  const secondHeading = `${props.secondLabel}${
+    props.secondBadge === undefined ? "" : ` · ${props.secondBadge}`
+  } *`;
   const header = row([
     props.featureLabel ?? "Capability",
     props.firstLabel,
-    `${props.secondLabel} *`,
+    secondHeading,
   ]);
   return [
     header,
@@ -86,11 +119,14 @@ function wideTable(
 }
 
 function narrowTable(props: ComparisonTableCliProps, width: number): string {
+  const secondHeading = `${props.secondLabel}${
+    props.secondBadge === undefined ? "" : ` · ${props.secondBadge}`
+  }*`;
   return props.rows.map((row) =>
     joinVertical([
       wrapMarketingCliText(row.feature, width),
       wrapMarketingCliText(`${props.firstLabel}: ${row.first}`, width),
-      wrapMarketingCliText(`${props.secondLabel}*: ${row.second}`, width),
+      wrapMarketingCliText(`${secondHeading}: ${row.second}`, width),
     ])
   ).join("\n\n");
 }
@@ -111,6 +147,7 @@ const renderComparisonTableCli: CliRenderer<ComparisonTableCliProps> = (
   return joinVertical([
     renderMarketingCliHeader({
       title: props.title,
+      ...(props.eyebrow === undefined ? {} : { eyebrow: props.eyebrow }),
       ...(props.description === undefined
         ? {}
         : { description: props.description }),

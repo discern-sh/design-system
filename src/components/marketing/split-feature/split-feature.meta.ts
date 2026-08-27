@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Split feature",
   slug: "split-feature",
   group: "Marketing",
@@ -17,3 +18,10 @@ export default {
     "Proof points are expressed as a semantic list.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Evidence split", only: "web" }],
+);
+
+export default meta;

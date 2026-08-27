@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "CTA band",
   slug: "cta-band",
   group: "Marketing",
@@ -13,3 +14,10 @@ export default {
     "The call to action remains a headed section and accepts ordinary link or button controls.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Accent call to action" }],
+);
+
+export default meta;

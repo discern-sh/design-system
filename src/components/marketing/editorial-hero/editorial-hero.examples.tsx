@@ -1,7 +1,8 @@
 import type { CSSProperties } from "react";
-import type { CatalogueExampleState } from "../../../../catalogue/conformance.ts";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { ApproachBackdrop } from "../../artwork/approach-backdrop/approach-backdrop.tsx";
 import { Button } from "../../core/button/button.tsx";
+import meta, { componentExampleVocabulary } from "./editorial-hero.meta.ts";
 import { EditorialHero } from "./editorial-hero.tsx";
 
 const visualStyle: CSSProperties = {
@@ -102,18 +103,14 @@ function TextOnlyHeroState() {
   );
 }
 
-export const catalogueStates = [
-  {
-    name: "visual",
-    label: "Conceptual visual",
-    Example: VisualHeroState,
-  },
-  {
-    name: "text-only",
-    label: "Text only",
-    Example: TextOnlyHeroState,
-  },
-] satisfies readonly CatalogueExampleState[];
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "visual", Example: VisualHeroState },
+    { id: "text-only", Example: TextOnlyHeroState },
+  ],
+);
 
 export default function EditorialHeroExamples() {
   return (

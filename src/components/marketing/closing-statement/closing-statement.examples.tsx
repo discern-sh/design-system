@@ -1,6 +1,7 @@
-import type { CatalogueExampleState } from "../../../../catalogue/conformance.ts";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { FoldBackdrop } from "../../artwork/fold-backdrop/fold-backdrop.tsx";
 import { Button } from "../../core/button/button.tsx";
+import meta, { componentExampleVocabulary } from "./closing-statement.meta.ts";
 import { ClosingStatement } from "./closing-statement.tsx";
 
 function ContrastClosingState() {
@@ -42,18 +43,14 @@ function QuietClosingState() {
   );
 }
 
-export const catalogueStates = [
-  {
-    name: "contrast",
-    label: "Contrast close",
-    Example: ContrastClosingState,
-  },
-  {
-    name: "quiet",
-    label: "Quiet close",
-    Example: QuietClosingState,
-  },
-] satisfies readonly CatalogueExampleState[];
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "contrast", Example: ContrastClosingState },
+    { id: "quiet", Example: QuietClosingState },
+  ],
+);
 
 export default function ClosingStatementExamples() {
   return (

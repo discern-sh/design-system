@@ -2,6 +2,9 @@ import { forwardRef } from "react";
 import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { LogoCloudVariant } from "./logo-cloud.types.ts";
+
+export type { LogoCloudVariant } from "./logo-cloud.types.ts";
 
 /** One item entry rendered by the Logo cloud component. */
 export interface LogoCloudItem {
@@ -10,9 +13,6 @@ export interface LogoCloudItem {
   /** Optional CSS image that replaces supplied image artwork with a neutral dark-Theme silhouette. */
   readonly markMask?: string;
 }
-
-/** Visual arrangements available to a Logo cloud. */
-export type LogoCloudVariant = "grid" | "strip";
 
 /** Props for the {@linkcode LogoCloud} component. */
 export interface LogoCloudProps extends HTMLAttributes<HTMLElement> {

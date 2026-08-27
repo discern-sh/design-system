@@ -1,26 +1,34 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { Button } from "../../core/button/button.tsx";
+import meta, { componentExampleVocabulary } from "./cta-band.meta.ts";
 import { CtaBand } from "./cta-band.tsx";
 
 export default function CtaBandExamples() {
   return (
     <CtaBand
-      eyebrow="Ready when you are"
-      title="Turn the next project into the new standard."
+      eyebrow="Continue"
+      title="Make the next step clear."
       description={
         <p>
-          Begin with one useful path today, then let the system grow only where
-          it earns the space.
+          Pair one direct invitation with a quieter alternative and a short
+          reassurance.
         </p>
       }
       actions={
         <>
-          <Button href="#start" size="lg">Start now</Button>
-          <Button href="#talk" size="lg" variant="secondary">
-            Talk it through
+          <Button href="#primary" size="lg">Primary action</Button>
+          <Button href="#secondary" size="lg" variant="secondary">
+            Secondary action
           </Button>
         </>
       }
-      note="No credit card · no migration project · leave whenever you like"
+      note="Add a short reassurance when it helps the decision."
     />
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: CtaBandExamples }],
+);

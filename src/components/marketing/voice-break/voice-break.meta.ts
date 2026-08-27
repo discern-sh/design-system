@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Voice break",
   slug: "voice-break",
   group: "Marketing",
@@ -25,3 +26,13 @@ export default {
     "The quotation precedes its attribution in the narrow visual layout while remaining part of the same figure.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "calm", label: "Calm voice", only: "web" },
+    { id: "contrast", label: "Contrast voice", only: "web" },
+  ],
+);
+
+export default meta;

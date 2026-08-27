@@ -1,4 +1,5 @@
-import type { CatalogueExampleState } from "../../../../catalogue/conformance.ts";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./narrative-chapter.meta.ts";
 import { NarrativeChapter } from "./narrative-chapter.tsx";
 
 function ExtendedNarrativeState() {
@@ -63,18 +64,14 @@ function ConciseNarrativeState() {
   );
 }
 
-export const catalogueStates = [
-  {
-    name: "extended",
-    label: "Extended explanation",
-    Example: ExtendedNarrativeState,
-  },
-  {
-    name: "concise",
-    label: "Concise explanation",
-    Example: ConciseNarrativeState,
-  },
-] satisfies readonly CatalogueExampleState[];
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "extended", Example: ExtendedNarrativeState },
+    { id: "concise", Example: ConciseNarrativeState },
+  ],
+);
 
 export default function NarrativeChapterExamples() {
   return (

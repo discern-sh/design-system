@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Process steps",
   slug: "process-steps",
   group: "Marketing",
@@ -19,3 +20,13 @@ export default {
     "Steps are an ordered list, so sequence remains explicit without the visual connectors.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "In progress" },
+    { id: "error", label: "Validation error" },
+  ],
+);
+
+export default meta;
