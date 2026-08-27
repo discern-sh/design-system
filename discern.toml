@@ -213,7 +213,7 @@
   # ("src/**"), a standard glob ("src/**/*.ext", "src/*"), a "*.ext" suffix at
   # any depth, a "/seg/" segment, or an exact path.
   #   neutral     = true   changes here need no gate (docs, agent instructions)
-  #   previewable = true   a person could see changes here — worth a preview link
+  #   preview = "command" a read-only action an agent can run from the worktree
   #   gate        = "..."  a command `discern done` runs when this scope changed
   #                        (a sub-component with its own self-contained gate)
   #   timeout     = N      seconds; replaces the global [gate].timeout for this
@@ -262,7 +262,7 @@
       "catalogue/**",
       "assets/**",
     ]
-    previewable = true
+    preview = "discern script serve"
 
 # A sub-component with its own self-contained gate:
 # [scopes.native]
