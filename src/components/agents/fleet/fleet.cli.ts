@@ -68,19 +68,21 @@ export const cliExamples = defineCliExamples(
       props: {
         rows: [
           {
-            persona: "CLI 2B",
-            branch: "agent/cli-2b",
+            persona: "quill",
+            branch: "agent/checkout-flow",
             status: "working",
-            ahead: 5,
+            ahead: 4,
             behind: 0,
-            meta: "Workflow + Agents",
+            meta: "Running tests",
             beaconPhase: 2,
           },
           {
-            persona: "CLI 2A",
-            branch: "agent/cli-2a",
+            persona: "forge-2",
+            branch: "agent/payment-step",
             status: "waiting",
-            behind: 1,
+            ahead: 7,
+            behind: 2,
+            meta: "Needs review",
           },
         ],
       },

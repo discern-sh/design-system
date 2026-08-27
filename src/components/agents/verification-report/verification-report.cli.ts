@@ -59,17 +59,18 @@ export const cliExamples = defineCliExamples(
     {
       name: "default",
       props: {
-        title: "Gate proof",
+        title: "Checkout refactor",
         stamp: "pass",
         meta: [
-          { label: "Branch", value: "agent/cli-2b" },
-          { label: "Commit", value: "abc1234" },
+          { label: "Branch", value: "agent/checkout-flow" },
+          { label: "Commit", value: "4f2c9d1" },
         ],
         checks: [
-          { label: "Typecheck", state: "pass" },
-          { label: "Tests", state: "pass", value: "310" },
+          { label: "Format", state: "pass" },
+          { label: "Types", state: "pass" },
+          { label: "Tests", state: "pass", value: "184 passed" },
         ],
-        summary: "All required checks passed.",
+        summary: "Ready for review",
       },
     },
     {

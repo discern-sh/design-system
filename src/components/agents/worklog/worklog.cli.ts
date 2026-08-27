@@ -69,7 +69,7 @@ export const cliExamples = defineCliExamples(
             detail: "Testing every capability level.",
             phase: 2,
           },
-          { label: "Accept branch", status: "queued" },
+          { label: "Hand off for review", status: "queued" },
         ],
       },
     },
