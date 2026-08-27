@@ -5,12 +5,14 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import { wrapInlineCluster } from "../../../cli/layout.ts";
 import { measureText, padText } from "../../../cli/text.ts";
 import type {
   TerminalSemanticTone,
   TerminalThemeVariant,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./result-summary.meta.ts";
 import {
   RESULT_SUMMARY_STATE_LABELS,
   RESULT_SUMMARY_STATES,
@@ -88,45 +90,59 @@ export interface ResultSummaryCliProps {
 const cliExampleProps = {
   passed: {
     state: "passed",
-    fact: "All configured checks passed.",
-    counts: [{ label: "Checks", value: "12" }],
-    duration: "48s",
-    nextAction: "Review the recorded changes.",
+    fact: "All configured checks completed successfully.",
+    counts: [
+      { label: "Checks", value: "12" },
+      { label: "Files", value: "8" },
+      { label: "Findings", value: "0" },
+    ],
+    duration: "48 s",
+    nextAction: "Review the recorded changes before continuing.",
+    machineReadable: '{"ok":true,"checks":12,"files":8,"findings":0}',
   },
   failed: {
     state: "failed",
     fact: "Two checks did not complete.",
-    counts: [{ label: "Failed", value: "2" }],
-    nextAction: "Open the first diagnostic.",
+    counts: [
+      { label: "Passed", value: "10" },
+      { label: "Failed", value: "2" },
+    ],
+    nextAction: "Open the first diagnostic and reproduce the failure.",
   },
   blocked: {
     state: "blocked",
-    fact: "A required credential is unavailable.",
-    nextAction: "Provide the credential, then retry.",
+    fact: "The run stopped because a required credential is unavailable.",
+    nextAction: "Provide the credential, then retry the run.",
   },
   changed: {
     state: "changed",
     fact: "Formatting updated three files.",
     counts: [{ label: "Files", value: "3" }],
+    duration: "2 s",
   },
   declared: {
     state: "declared",
     fact: "The reviewer declared the condition met.",
+    nextAction: "Continue with the recorded judgment.",
   },
   unchanged: {
     state: "unchanged",
     fact: "No tracked files changed.",
+    nextAction: "Continue with the next planned check.",
   },
 } as const satisfies Readonly<
   Record<ResultSummaryState, ResultSummaryCliProps>
 >;
 
 /** Deterministic Result summary states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<ResultSummaryCliProps>[] =
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
   RESULT_SUMMARY_STATES.map((state) => ({
     name: state,
     props: cliExampleProps[state],
-  }));
+  })) satisfies readonly CliExample<ResultSummaryCliProps>[],
+);
 
 /** Render one outcome with an optional collection-owned prefix width. */
 export function renderResultSummaryCliWithPrefixWidth(

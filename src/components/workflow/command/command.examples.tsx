@@ -1,8 +1,7 @@
-import type {
-  CatalogueExampleState,
-  ConformanceScenario,
-} from "../../../../catalogue/conformance.ts";
+import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { Command } from "./command.tsx";
+import meta, { componentExampleVocabulary } from "./command.meta.ts";
 
 const copyTarget = {
   selector: "[data-example-command-copy] .discern-copy-button",
@@ -90,30 +89,22 @@ function FailureCommandState() {
   );
 }
 
-export const catalogueStates = [
-  {
-    name: "default",
-    label: "Command with context",
-    Example: DefaultCommandState,
-  },
-  {
-    name: "overflow",
-    label: "Long command overflow",
-    Example: OverflowCommandState,
-  },
-  {
-    name: "failure",
-    label: "Expected proof and failure guidance",
-    Example: FailureCommandState,
-  },
-] satisfies readonly CatalogueExampleState[];
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: DefaultCommandState },
+    { id: "failure", Example: FailureCommandState },
+    { id: "overflow", Example: OverflowCommandState },
+  ],
+);
 
 export default function CommandExamples() {
   return (
     <div className="discern-example-stack discern-example-stack--start">
       <DefaultCommandState />
-      <OverflowCommandState />
       <FailureCommandState />
+      <OverflowCommandState />
     </div>
   );
 }

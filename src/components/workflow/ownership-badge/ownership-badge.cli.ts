@@ -6,6 +6,7 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import { truncateText } from "../../../cli/text.ts";
 import {
   terminalThemes,
@@ -13,6 +14,7 @@ import {
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import type { ArtifactOwnership } from "./ownership-badge.types.ts";
+import meta, { componentExampleVocabulary } from "./ownership-badge.meta.ts";
 import { workflowCliWidth } from "../workflow-cli.ts";
 
 const labels: Readonly<Record<ArtifactOwnership, string>> = {
@@ -30,12 +32,16 @@ export interface OwnershipBadgeCliProps {
 }
 
 /** Deterministic Ownership badge states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<OwnershipBadgeCliProps>[] = [
-  { name: "authored", props: { ownership: "authored" } },
-  { name: "generated", props: { ownership: "generated" } },
-  { name: "project-owned", props: { ownership: "project-owned" } },
-  { name: "tool-owned", props: { ownership: "tool-owned" } },
-] as const;
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { name: "authored", props: { ownership: "authored" } },
+    { name: "generated", props: { ownership: "generated" } },
+    { name: "project-owned", props: { ownership: "project-owned" } },
+    { name: "tool-owned", props: { ownership: "tool-owned" } },
+  ] as const satisfies readonly CliExample<OwnershipBadgeCliProps>[],
+);
 
 /** Render one explicit terminal artifact-ownership chip. */
 const renderOwnershipBadgeCli: CliRenderer<OwnershipBadgeCliProps> = (

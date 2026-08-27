@@ -1,6 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 
-export default {
+const meta = {
   name: "Decision record",
   slug: "decision-record",
   group: "Workflow",
@@ -21,3 +22,13 @@ export default {
     "Context, decision, and consequences are labelled sections in source order.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Accepted decision" },
+    { id: "superseded", label: "Superseded decision" },
+  ],
+);
+
+export default meta;

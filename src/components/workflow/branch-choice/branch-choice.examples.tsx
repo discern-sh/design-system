@@ -1,8 +1,7 @@
-import type {
-  CatalogueExampleState,
-  ConformanceScenario,
-} from "../../../../catalogue/conformance.ts";
+import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { BranchChoice } from "./branch-choice.tsx";
+import meta, { componentExampleVocabulary } from "./branch-choice.meta.ts";
 
 export const conformance = [{
   name: "linked routes follow their visible list order by keyboard",
@@ -97,15 +96,14 @@ function NextActionState() {
   );
 }
 
-export const catalogueStates = [{
-  name: "default",
-  label: "Procedure fork",
-  Example: ProcedureForkState,
-}, {
-  name: "next-action",
-  label: "End-of-page next action",
-  Example: NextActionState,
-}] satisfies readonly CatalogueExampleState[];
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: ProcedureForkState },
+    { id: "next-action", Example: NextActionState },
+  ],
+);
 
 export default function BranchChoiceExamples() {
   return (

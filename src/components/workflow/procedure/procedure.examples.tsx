@@ -1,7 +1,9 @@
 import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { DestructiveActionNotice } from "../destructive-action-notice/destructive-action-notice.tsx";
 import { RetryNotice } from "../retry-notice/retry-notice.tsx";
 import { Procedure } from "./procedure.tsx";
+import meta, { componentExampleVocabulary } from "./procedure.meta.ts";
 
 export const conformance = [{
   name: "branch routes follow document keyboard order",
@@ -28,6 +30,95 @@ export const conformance = [{
     target: { selector: "[data-example-procedure-full]" },
   }],
 }] satisfies readonly ConformanceScenario[];
+
+function BackupAndRestoreState() {
+  return (
+    <Procedure
+      title="Back up and restore a directory"
+      description="Create a verified archive before restoring into a separate destination."
+      prerequisites={{
+        items: [{
+          requirement: "The source directory is readable.",
+          state: "satisfied",
+        }],
+      }}
+      steps={[
+        {
+          title: "Create the archive",
+          action: "Write a dated archive without changing the source.",
+        },
+        {
+          title: "Choose the next path",
+          action: "Continue from the evidence in the archive listing.",
+          branch: {
+            choices: [{
+              label: "The listing is correct",
+              path: "Restore into a separate directory",
+              href: "#restore-copy",
+            }, {
+              label: "The listing is incomplete",
+              path: "Keep the source and create another backup",
+              href: "#keep-backup",
+            }],
+          },
+        },
+      ]}
+      completion="The archive is readable and the original source remains available."
+      data-example-procedure-full
+    />
+  );
+}
+
+function InterruptedRecoveryState() {
+  return (
+    <Procedure
+      title="Resume an interrupted archive"
+      description="Separate partial output before starting from the unchanged source."
+      steps={[
+        {
+          title: "Separate the partial output",
+          action:
+            "Rename it so a fresh archive cannot be mistaken for a continuation.",
+        },
+        {
+          title: "Create a fresh archive",
+          action: "Write a new archive from the unchanged source.",
+        },
+      ]}
+      completion="The new archive is readable and partial output is clearly named."
+    />
+  );
+}
+
+function LongProcedureState() {
+  return (
+    <Procedure
+      title="Move a large directory in reviewable stages"
+      description="A long sequence keeps its order and command evidence at narrow widths."
+      steps={[
+        { title: "Record the source", action: "Record its canonical path." },
+        { title: "Create the destination", action: "Create an empty target." },
+        { title: "Copy without deleting", action: "Preserve the source." },
+        { title: "Compare sizes", action: "Investigate any difference." },
+        { title: "Open sample files", action: "Read nested outputs." },
+        { title: "Choose retention", action: "Keep the source for review." },
+        { title: "Record the handoff", action: "Name the authority." },
+      ]}
+      completion="Every copied path has been checked and deletion remains separate."
+      data-example-procedure-overflow
+    />
+  );
+}
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: BackupAndRestoreState },
+    { id: "interrupted", Example: InterruptedRecoveryState },
+    { id: "long-procedure", Example: LongProcedureState },
+  ],
+);
 
 export default function ProcedureExamples() {
   return (

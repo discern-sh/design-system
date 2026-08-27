@@ -1,8 +1,7 @@
-import type {
-  CatalogueExampleState,
-  ConformanceScenario,
-} from "../../../../catalogue/conformance.ts";
+import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { PathReference } from "./path-reference.tsx";
+import meta, { componentExampleVocabulary } from "./path-reference.meta.ts";
 
 export const conformance = [{
   name: "a long path preserves both visible ends inside a narrow viewport",
@@ -44,14 +43,14 @@ function OverflowPathState() {
   );
 }
 
-export const catalogueStates = [
-  { name: "default", label: "Inline path", Example: InlinePathState },
-  {
-    name: "long-path",
-    label: "Long copyable path",
-    Example: OverflowPathState,
-  },
-] satisfies readonly CatalogueExampleState[];
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: InlinePathState },
+    { id: "long-path", Example: OverflowPathState },
+  ],
+);
 
 export default function PathReferenceExamples() {
   return (

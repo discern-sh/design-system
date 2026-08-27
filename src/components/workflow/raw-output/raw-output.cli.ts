@@ -5,8 +5,10 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
+import meta, { componentExampleVocabulary } from "./raw-output.meta.ts";
 import {
   assertWorkflowCliText,
   styleWorkflowHeading,
@@ -25,16 +27,26 @@ export interface RawOutputCliProps {
 }
 
 /** Deterministic Raw output states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<RawOutputCliProps>[] = [
-  {
-    name: "expanded",
-    props: { output: "exit_code=0\nchecks=29" },
-  },
-  {
-    name: "collapsed",
-    props: { output: "hidden detail", expanded: false },
-  },
-] as const;
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        output: "error: expected a string\nat src/example.ts:18:7",
+        expanded: false,
+      },
+    },
+    {
+      name: "expanded",
+      props: {
+        label: "Complete response",
+        output: '{\n  "ok": false,\n  "reason": "invalid input"\n}',
+      },
+    },
+  ] as const satisfies readonly CliExample<RawOutputCliProps>[],
+);
 
 /** Render one explicit open or closed machine-output frame. */
 const renderRawOutputCli: CliRenderer<RawOutputCliProps> = (

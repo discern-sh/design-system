@@ -1,6 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 
-export default {
+const meta = {
   name: "Result summary",
   slug: "result-summary",
   group: "Workflow",
@@ -26,3 +27,17 @@ export default {
     "The adapter-only machine-data copy action announces completion politely and leaves focus on the button.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "passed", label: "Passed" },
+    { id: "failed", label: "Failed" },
+    { id: "blocked", label: "Blocked" },
+    { id: "changed", label: "Changed" },
+    { id: "declared", label: "Declared" },
+    { id: "unchanged", label: "Unchanged" },
+  ],
+);
+
+export default meta;

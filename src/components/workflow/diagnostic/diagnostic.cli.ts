@@ -5,9 +5,11 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
 import type { DiagnosticSeverity } from "./diagnostic.types.ts";
+import meta, { componentExampleVocabulary } from "./diagnostic.meta.ts";
 import {
   assertWorkflowCliText,
   styleWorkflowHeading,
@@ -38,29 +40,43 @@ export interface DiagnosticCliProps {
 }
 
 /** Deterministic Diagnostic states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<DiagnosticCliProps>[] = [
-  {
-    name: "failure",
-    props: {
-      title: "Type check failed",
-      impact: "The public CLI export cannot be consumed.",
-      correction: "Export the missing renderer type.",
-      path: "src/generated/cli-renderers.ts",
-      line: 12,
-      column: 4,
-      reproductionCommand: "deno task typecheck",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "verbose-failure",
+      props: {
+        title: "Type check failed",
+        impact:
+          "The package cannot be built until the incompatible value is corrected.",
+        correction:
+          'Handle the "pending" case before assigning the value, then rerun the type check.',
+        path: "src/config/loader.ts",
+        line: 118,
+        column: 17,
+        reproductionCommand: "deno task typecheck",
+        evidence:
+          'Type "pending" | "complete" is not assignable to type "complete".',
+        retryCommand: "deno task typecheck --reload",
+        workingDirectory: "/path/to/project",
+        rawDetail:
+          'TS2322 [ERROR]: Type "pending" | "complete" is not assignable to type "complete".\n    at src/config/loader.ts:118:17\nFound 1 error.',
+        maxWidth: 48,
+      },
     },
-  },
-  {
-    name: "attention",
-    props: {
-      title: "Standard is near its ceiling",
-      impact: "The next change may regress the gate.",
-      correction: "Remove pending CLI stances.",
-      severity: "attention",
+    {
+      name: "attention",
+      props: {
+        title: "Generated output is stale",
+        impact: "The checked-in surface may not match its authored metadata.",
+        correction:
+          "Regenerate the derived files and inspect the resulting diff.",
+        severity: "attention",
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<DiagnosticCliProps>[],
+);
 
 function assertCoordinate(value: number | undefined, name: string): void {
   if (value !== undefined && (!Number.isSafeInteger(value) || value < 1)) {

@@ -1,15 +1,14 @@
-import type {
-  CatalogueExampleState,
-  ConformanceScenario,
-} from "../../../../catalogue/conformance.ts";
+import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { AgentHandoff } from "./agent-handoff.tsx";
+import meta, { componentExampleVocabulary } from "./agent-handoff.meta.ts";
 
-const handoffPrompt = `Review the configuration change in this worktree.
+const handoffPrompt = `Review the configuration change in this project.
 Run the project checks.
 Report the files changed, the commands run, and any remaining risk.`;
 
 const longPrompt = `Update the generated reference from its source registry.
-Work only in the assigned worktree and preserve unrelated changes.
+Work only in the assigned project directory and preserve unrelated changes.
 Inspect /path/to/a/deliberately/long/project/reference/source-registry.ts before editing.
 Run the repository's quality gate, then report the resulting files and evidence.`;
 
@@ -85,15 +84,14 @@ function LongAgentHandoffState() {
   );
 }
 
-export const catalogueStates = [{
-  name: "default",
-  label: "Review handoff",
-  Example: DefaultAgentHandoffState,
-}, {
-  name: "long-prompt",
-  label: "Long wrapping prompt",
-  Example: LongAgentHandoffState,
-}] satisfies readonly CatalogueExampleState[];
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: DefaultAgentHandoffState },
+    { id: "long-prompt", Example: LongAgentHandoffState },
+  ],
+);
 
 export default function AgentHandoffExamples() {
   return (

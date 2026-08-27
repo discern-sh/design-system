@@ -7,12 +7,14 @@
 import { styleText } from "../../../cli/ansi.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import { truncateText } from "../../../cli/text.ts";
 import {
   terminalThemeColor,
   type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import type { ArtifactTreeNodeKind } from "./artifact-tree.types.ts";
+import meta, { componentExampleVocabulary } from "./artifact-tree.meta.ts";
 import {
   assertWorkflowCliText,
   styleWorkflowHeading,
@@ -38,23 +40,81 @@ export interface ArtifactTreeCliProps {
 }
 
 /** Deterministic Artifact tree states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<ArtifactTreeCliProps>[] = [
-  {
-    name: "component",
-    props: {
-      label: "Command component",
-      nodes: [{
-        name: "command",
-        kind: "directory",
-        children: [
-          { name: "command.cli.ts", kind: "file", annotation: "terminal" },
-          { name: "command.tsx", kind: "file", annotation: "web" },
-          { name: "command.meta.ts", kind: "file" },
-        ],
-      }],
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        label: "Project files",
+        nodes: [{
+          name: "workspace",
+          kind: "directory",
+          children: [
+            { name: "project.toml", kind: "file", annotation: "project-owned" },
+            { name: "instructions.md", kind: "file", annotation: "authored" },
+            {
+              name: "map",
+              kind: "directory",
+              children: [{
+                name: "README.md",
+                kind: "file",
+                annotation: "authored",
+              }],
+            },
+            {
+              name: "generated",
+              kind: "directory",
+              children: [{
+                name: "api-reference.html",
+                kind: "file",
+                annotation: "generated",
+              }],
+            },
+          ],
+        }],
+      },
     },
-  },
-] as const;
+    {
+      name: "deep-tree",
+      props: {
+        label: "Deep generated path",
+        maxWidth: 42,
+        nodes: [{
+          name: "workspace",
+          kind: "directory",
+          children: [{
+            name: "packages",
+            kind: "directory",
+            children: [{
+              name: "reference",
+              kind: "directory",
+              children: [{
+                name: "generated",
+                kind: "directory",
+                children: [{
+                  name: "pages",
+                  kind: "directory",
+                  children: [{
+                    name: "api",
+                    kind: "directory",
+                    children: [{
+                      name:
+                        "generated-api-reference-with-a-purposefully-long-filename.html",
+                      kind: "file",
+                      annotation: "generated",
+                    }],
+                  }],
+                }],
+              }],
+            }],
+          }],
+        }],
+      },
+    },
+  ] as const satisfies readonly CliExample<ArtifactTreeCliProps>[],
+);
 
 function validateNodes(
   nodes: readonly ArtifactTreeCliNode[],

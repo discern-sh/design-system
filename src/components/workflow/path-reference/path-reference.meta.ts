@@ -1,6 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 
-export default {
+const meta = {
   name: "Path reference",
   slug: "path-reference",
   group: "Workflow",
@@ -25,3 +26,13 @@ export default {
     "The optional copy action announces its text state and copies the full untruncated path.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Inline path" },
+    { id: "long-path", label: "Long copyable path" },
+  ],
+);
+
+export default meta;

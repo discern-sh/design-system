@@ -5,7 +5,9 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./rule.meta.ts";
 import {
   assertWorkflowCliText,
   styleWorkflowHeading,
@@ -24,16 +26,29 @@ export interface RuleCliProps {
 }
 
 /** Deterministic Rule states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<RuleCliProps>[] = [
-  {
-    name: "generated-files",
-    props: {
-      rule: "Never hand-edit generated surfaces.",
-      origin: "AGENTS.md",
-      scope: "src/generated/ and catalogue/generated/",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        rule:
+          "Commit generated outputs with the authored source that produced them.",
+        origin: "CONTRIBUTING.md",
+        scope: "Generated references",
+      },
     },
-  },
-] as const;
+    {
+      name: "namespaced-styles",
+      props: {
+        rule: "Public classes and custom properties use the project namespace.",
+        origin: "project.toml",
+        scope: "Published styles",
+      },
+    },
+  ] as const satisfies readonly CliExample<RuleCliProps>[],
+);
 
 /** Render one binding terminal instruction with origin and scope. */
 const renderRuleCli: CliRenderer<RuleCliProps> = (props, capabilities) => {

@@ -1,6 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 
-export default {
+const meta = {
   name: "Standard meter",
   slug: "standard-meter",
   group: "Workflow",
@@ -21,3 +22,13 @@ export default {
     "Improving, drifting, and flat trends appear as visible words alongside semantic colour.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Coverage floor" },
+    { id: "ceiling", label: "Density ceiling" },
+  ],
+);
+
+export default meta;

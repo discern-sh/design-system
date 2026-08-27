@@ -1,6 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 
-export default {
+const meta = {
   name: "Agent handoff",
   slug: "agent-handoff",
   group: "Workflow",
@@ -21,3 +22,13 @@ export default {
     "The copy action announces completion politely and retains keyboard focus on its button.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Review handoff" },
+    { id: "long-prompt", label: "Long wrapping prompt" },
+  ],
+);
+
+export default meta;

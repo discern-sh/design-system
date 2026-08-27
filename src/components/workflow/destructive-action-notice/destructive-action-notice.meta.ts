@@ -1,6 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 
-export default {
+const meta = {
   name: "Destructive action notice",
   slug: "destructive-action-notice",
   group: "Workflow",
@@ -21,3 +22,13 @@ export default {
     "Warning uses a static note role by default; danger opts into an alert role and should be reserved for immediate hazards.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Approval warning" },
+    { id: "danger", label: "Immediate danger" },
+  ],
+);
+
+export default meta;

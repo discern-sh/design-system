@@ -5,7 +5,9 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./branch-choice.meta.ts";
 import {
   assertWorkflowCliText,
   styleWorkflowHeading,
@@ -29,17 +31,41 @@ export interface BranchChoiceCliProps {
 }
 
 /** Deterministic Branch choice states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<BranchChoiceCliProps>[] = [
-  {
-    name: "gate",
-    props: {
-      choices: [
-        { label: "Gate passes", path: "Accept the worktree" },
-        { label: "Gate fails", path: "Fix the first diagnostic" },
-      ],
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        title: "Match the route to what happened",
+        choices: [
+          { label: "It worked", path: "Continue to verification" },
+          { label: "It failed", path: "Open recovery guidance" },
+          {
+            label: "The outcome is unclear",
+            path: "Review the prerequisite",
+          },
+        ],
+      },
     },
-  },
-] as const;
+    {
+      name: "next-action",
+      props: {
+        title: "Choose what happens next",
+        choices: [
+          {
+            label: "Recommended — it worked",
+            path: "Continue to the next task",
+          },
+          { label: "It failed", path: "Open troubleshooting" },
+          { label: "I need the reference", path: "Read the command reference" },
+          { label: "Hand it to an agent", path: "Open the agent handoff" },
+        ],
+      },
+    },
+  ] as const satisfies readonly CliExample<BranchChoiceCliProps>[],
+);
 
 /** Render a complete, ordered set of terminal workflow routes. */
 const renderBranchChoiceCli: CliRenderer<BranchChoiceCliProps> = (

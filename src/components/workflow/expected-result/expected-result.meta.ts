@@ -1,6 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 
-export default {
+const meta = {
   name: "Expected result",
   slug: "expected-result",
   group: "Workflow",
@@ -25,3 +26,13 @@ export default {
     "No success colour appears until a consumer has actually verified the outcome.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "output", label: "Expected output" },
+    { id: "state", label: "Expected state" },
+  ],
+);
+
+export default meta;

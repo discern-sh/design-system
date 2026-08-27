@@ -5,7 +5,9 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./command-group.meta.ts";
 import renderCommandCli, {
   type CommandCliProps,
 } from "../command/command.cli.ts";
@@ -30,18 +32,22 @@ export interface CommandGroupCliProps {
 }
 
 /** Deterministic Command group states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<CommandGroupCliProps>[] = [
-  {
-    name: "release",
-    props: {
-      title: "Release commands",
-      items: [
-        { label: "Check", command: "deno publish --dry-run" },
-        { label: "Publish", command: "deno publish" },
-      ],
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        title: "Choose a verification depth",
+        items: [
+          { label: "Inspect the working tree", command: "git status" },
+          { label: "Run the full test task", command: "deno task test" },
+        ],
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<CommandGroupCliProps>[],
+);
 
 /** Render ordered, complete terminal command alternatives. */
 const renderCommandGroupCli: CliRenderer<CommandGroupCliProps> = (

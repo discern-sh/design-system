@@ -1,6 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 
-export default {
+const meta = {
   name: "Activity log",
   slug: "activity-log",
   group: "Workflow",
@@ -24,3 +25,14 @@ export default {
     "All text sizes stay at or above the authored interface floor, including the monospace tail.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Streaming activity" },
+    { id: "complete", label: "Completed activity" },
+    { id: "cancelled", label: "Cancelled activity" },
+  ],
+);
+
+export default meta;

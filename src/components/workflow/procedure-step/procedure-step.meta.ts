@@ -1,6 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 
-export default {
+const meta = {
   name: "Procedure step",
   slug: "procedure-step",
   group: "Workflow",
@@ -21,3 +22,20 @@ export default {
     "Completion, branching, and recovery content each carries a visible text label.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Command step" },
+    { id: "branch", label: "Branching step" },
+    {
+      id: "active",
+      label: "Active step",
+      only: "cli",
+      reason:
+        "The browser Procedure step has no lifecycle-status input or active frame to represent terminal step progress.",
+    },
+  ],
+);
+
+export default meta;

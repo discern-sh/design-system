@@ -1,6 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 
-export default {
+const meta = {
   name: "Rule",
   slug: "rule",
   group: "Workflow",
@@ -20,3 +21,13 @@ export default {
     "The accent edge reinforces authority without carrying meaning on its own.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Generated-file rule" },
+    { id: "namespaced-styles", label: "Namespaced-style rule" },
+  ],
+);
+
+export default meta;

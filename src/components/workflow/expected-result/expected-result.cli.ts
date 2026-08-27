@@ -5,8 +5,10 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import type { ExpectedResultVariant } from "./expected-result.types.ts";
+import meta, { componentExampleVocabulary } from "./expected-result.meta.ts";
 import {
   assertWorkflowCliText,
   styleWorkflowHeading,
@@ -25,13 +27,26 @@ export interface ExpectedResultCliProps {
 }
 
 /** Deterministic Expected result states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<ExpectedResultCliProps>[] = [
-  { name: "output", props: { value: "All checks passed" } },
-  {
-    name: "state",
-    props: { value: "The worktree is clean", variant: "state" },
-  },
-] as const;
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "output",
+      props: {
+        value: "On branch main\nnothing to commit, working tree clean",
+      },
+    },
+    {
+      name: "state",
+      props: {
+        value:
+          "The test process exits successfully and returns control to the shell.",
+        variant: "state",
+      },
+    },
+  ] as const satisfies readonly CliExample<ExpectedResultCliProps>[],
+);
 
 /** Render one observable result or end-state proof. */
 const renderExpectedResultCli: CliRenderer<ExpectedResultCliProps> = (

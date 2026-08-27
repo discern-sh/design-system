@@ -5,11 +5,13 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type {
   TerminalSemanticTone,
   TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import type { PrerequisiteState } from "./prerequisite-list.types.ts";
+import meta, { componentExampleVocabulary } from "./prerequisite-list.meta.ts";
 import {
   assertWorkflowCliText,
   styleWorkflowHeading,
@@ -46,18 +48,34 @@ export interface PrerequisiteListCliProps {
 }
 
 /** Deterministic Prerequisite list states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<PrerequisiteListCliProps>[] = [
-  {
-    name: "mixed",
-    props: {
-      items: [
-        { requirement: "Deno 2", state: "satisfied" },
-        { requirement: "Clean worktree", state: "required" },
-        { requirement: "Landing grant", state: "unresolved" },
-      ],
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        items: [
+          {
+            requirement: "The destination path is known.",
+            state: "required",
+            detail: "Confirm the path before starting the restore.",
+          },
+          {
+            requirement: "A current backup exists outside the source.",
+            state: "satisfied",
+            detail: "Verified by listing its contents.",
+          },
+          {
+            requirement: "The destination path is empty.",
+            state: "unresolved",
+            detail: "Inspect it before starting the restore.",
+          },
+        ],
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<PrerequisiteListCliProps>[],
+);
 
 /** Render text-and-shape prerequisite states without relying on colour. */
 const renderPrerequisiteListCli: CliRenderer<PrerequisiteListCliProps> = (

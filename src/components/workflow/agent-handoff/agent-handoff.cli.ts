@@ -6,10 +6,12 @@
 
 import { renderBox } from "../../../cli/box.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./agent-handoff.meta.ts";
 import {
   assertWorkflowCliText,
   workflowCliTheme,
@@ -26,16 +28,36 @@ export interface AgentHandoffCliProps {
 }
 
 /** Deterministic Agent handoff states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<AgentHandoffCliProps>[] = [
-  {
-    name: "review",
-    props: {
-      title: "Review the CLI frames",
-      prompt: "Inspect the exact frames and report any semantic drift.",
-      description: "A self-contained prompt for the reviewing agent.",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        title: "Hand this review to an agent",
+        prompt: `Review the configuration change in this project.
+Run the project checks.
+Report the files changed, the commands run, and any remaining risk.`,
+        description:
+          "The prompt carries the task boundary and the evidence expected back.",
+      },
     },
-  },
-] as const;
+    {
+      name: "long-prompt",
+      props: {
+        title: "Hand off a reference update",
+        description:
+          "Long paths and instructions wrap as prose rather than scrolling like a command.",
+        prompt: `Update the generated reference from its source registry.
+Work only in the assigned project directory and preserve unrelated changes.
+Inspect /path/to/a/deliberately/long/project/reference/source-registry.ts before editing.
+Run the quality gate, then report the resulting files and evidence.`,
+        maxWidth: 42,
+      },
+    },
+  ] as const satisfies readonly CliExample<AgentHandoffCliProps>[],
+);
 
 /** Render one self-contained, width-bounded terminal agent prompt. */
 const renderAgentHandoffCli: CliRenderer<AgentHandoffCliProps> = (

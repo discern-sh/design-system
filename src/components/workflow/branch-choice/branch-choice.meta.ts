@@ -1,6 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 
-export default {
+const meta = {
   name: "Branch choice",
   slug: "branch-choice",
   group: "Workflow",
@@ -21,3 +22,13 @@ export default {
     "Labels state the condition for each route instead of relying on position, arrow shape, or colour.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Procedure fork" },
+    { id: "next-action", label: "End-of-page next action" },
+  ],
+);
+
+export default meta;

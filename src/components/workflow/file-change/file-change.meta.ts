@@ -1,6 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 
-export default {
+const meta = {
   name: "File change",
   slug: "file-change",
   group: "Workflow",
@@ -21,3 +22,16 @@ export default {
     "The composed Path reference keeps the full path available when the visible middle truncates.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Updated file" },
+    { id: "added", label: "Added file" },
+    { id: "generated", label: "Generated file" },
+    { id: "removed", label: "Removed file" },
+    { id: "unchanged", label: "Unchanged file" },
+  ],
+);
+
+export default meta;

@@ -1,6 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 
-export default {
+const meta = {
   name: "Diagnostic",
   slug: "diagnostic",
   group: "Workflow",
@@ -27,3 +28,13 @@ export default {
     "Suggested correction is required, so a diagnostic never leaves the next action implicit.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "verbose-failure", label: "Verbose failure" },
+    { id: "attention", label: "Attention" },
+  ],
+);
+
+export default meta;

@@ -1,6 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 
-export default {
+const meta = {
   name: "Command group",
   slug: "command-group",
   group: "Workflow",
@@ -21,3 +22,10 @@ export default {
     "Each alternative retains the Command component's complete run context and copy behaviour.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Verification choices" }],
+);
+
+export default meta;

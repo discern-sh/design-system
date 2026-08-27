@@ -1,5 +1,7 @@
 import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { ResultSummary, type ResultSummaryProps } from "./result-summary.tsx";
+import meta, { componentExampleVocabulary } from "./result-summary.meta.ts";
 import {
   RESULT_SUMMARY_STATES,
   type ResultSummaryState,
@@ -88,6 +90,18 @@ function ResultSummaryStateExample(
     />
   );
 }
+
+function exampleForState(state: ResultSummaryState) {
+  return function Example() {
+    return <ResultSummaryStateExample state={state} />;
+  };
+}
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  RESULT_SUMMARY_STATES.map((id) => ({ id, Example: exampleForState(id) })),
+);
 
 export default function ResultSummaryExamples() {
   return (

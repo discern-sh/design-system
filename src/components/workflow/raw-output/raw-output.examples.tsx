@@ -1,5 +1,7 @@
 import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { RawOutput } from "./raw-output.tsx";
+import meta, { componentExampleVocabulary } from "./raw-output.meta.ts";
 
 const collapsedOutput = "error: expected a string\nat src/example.ts:18:7";
 const completeResponse = `{
@@ -32,15 +34,30 @@ export const conformance = [{
   ],
 }] satisfies readonly ConformanceScenario[];
 
+function CollapsedOutputState() {
+  return <RawOutput data-example-raw-output>{collapsedOutput}</RawOutput>;
+}
+
+function ExpandedOutputState() {
+  return (
+    <RawOutput label="Complete response" open>{completeResponse}</RawOutput>
+  );
+}
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: CollapsedOutputState },
+    { id: "expanded", Example: ExpandedOutputState },
+  ],
+);
+
 export default function RawOutputExamples() {
   return (
     <div className="discern-example-stack discern-example-stack--start">
-      <RawOutput data-example-raw-output>
-        {collapsedOutput}
-      </RawOutput>
-      <RawOutput label="Complete response" open>
-        {completeResponse}
-      </RawOutput>
+      <CollapsedOutputState />
+      <ExpandedOutputState />
     </div>
   );
 }

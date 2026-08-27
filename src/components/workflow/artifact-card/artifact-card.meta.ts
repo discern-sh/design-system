@@ -1,6 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 
-export default {
+const meta = {
   name: "Artifact card",
   slug: "artifact-card",
   group: "Workflow",
@@ -21,3 +22,13 @@ export default {
     "The composed Path reference preserves the full path under visible truncation.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Generated artifact" },
+    { id: "project-owned", label: "Project-owned artifact" },
+  ],
+);
+
+export default meta;

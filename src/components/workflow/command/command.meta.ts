@@ -1,6 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 
-export default {
+const meta = {
   name: "Command",
   slug: "command",
   group: "Workflow",
@@ -26,3 +27,14 @@ export default {
     "Failure guidance uses an explicit text label alongside attention colour.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Command with context" },
+    { id: "failure", label: "Expected proof and failure guidance" },
+    { id: "overflow", label: "Long command overflow" },
+  ],
+);
+
+export default meta;

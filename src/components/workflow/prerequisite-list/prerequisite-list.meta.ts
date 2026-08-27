@@ -1,6 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 
-export default {
+const meta = {
   name: "Prerequisite list",
   slug: "prerequisite-list",
   group: "Workflow",
@@ -21,3 +22,10 @@ export default {
     "Success colour is reserved for prerequisites that have actually been verified.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Mixed prerequisites" }],
+);
+
+export default meta;

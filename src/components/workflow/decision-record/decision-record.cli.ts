@@ -5,8 +5,10 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import type { DecisionRecordStatus } from "./decision-record.types.ts";
+import meta, { componentExampleVocabulary } from "./decision-record.meta.ts";
 import {
   assertWorkflowCliText,
   styleWorkflowHeading,
@@ -35,20 +37,38 @@ export interface DecisionRecordCliProps {
 }
 
 /** Deterministic Decision record states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<DecisionRecordCliProps>[] = [
-  {
-    name: "accepted",
-    props: {
-      identifier: "ADR-0002",
-      title: "Keep CLI renderers React-free",
-      status: "accepted",
-      date: "2026-08-03",
-      context: "Terminal consumers do not install React.",
-      decision: "Renderers accept plain state and capabilities.",
-      consequences: "The CLI graph remains framework-neutral.",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        identifier: "ADR 0012",
+        title: "Generated references have one authored source",
+        status: "accepted",
+        date: "2026-04-14",
+        dateLabel: "14 April 2026",
+        context: "Several generated references repeat the same facts.",
+        decision: "The source schema is their single authored source.",
+        consequences: "Contributors regenerate references after schema edits.",
+      },
     },
-  },
-] as const;
+    {
+      name: "superseded",
+      props: {
+        identifier: "ADR 0007",
+        title: "Routes are registered by hand",
+        status: "superseded",
+        date: "2025-09-03",
+        dateLabel: "3 September 2025",
+        context: "The initial service used a short handwritten route index.",
+        decision: "Each route was added to that index manually.",
+        consequences: "Schema-driven routing replaces the handwritten index.",
+      },
+    },
+  ] as const satisfies readonly CliExample<DecisionRecordCliProps>[],
+);
 
 /** Render one terminal architecture-decision account. */
 const renderDecisionRecordCli: CliRenderer<DecisionRecordCliProps> = (

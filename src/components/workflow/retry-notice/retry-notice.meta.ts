@@ -1,6 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 
-export default {
+const meta = {
   name: "Retry notice",
   slug: "retry-notice",
   group: "Workflow",
@@ -21,3 +22,13 @@ export default {
     "Unsafe guidance uses the warning role rather than success or danger decoration.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "safe", label: "Safe to retry" },
+    { id: "unsafe", label: "Inspect before retrying" },
+  ],
+);
+
+export default meta;

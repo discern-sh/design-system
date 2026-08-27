@@ -1,6 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 
-export default {
+const meta = {
   name: "Ownership badge",
   slug: "ownership-badge",
   group: "Workflow",
@@ -20,3 +21,15 @@ export default {
     "Generated and tool-owned are neutral provenance facts rather than warning states.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "authored", label: "Authored" },
+    { id: "generated", label: "Generated" },
+    { id: "project-owned", label: "Project owned" },
+    { id: "tool-owned", label: "Tool owned" },
+  ],
+);
+
+export default meta;

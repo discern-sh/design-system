@@ -1,6 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 
-export default {
+const meta = {
   name: "Artifact tree",
   slug: "artifact-tree",
   group: "Workflow",
@@ -21,3 +22,13 @@ export default {
     "Long names preserve both ends under truncation, and narrow layouts move annotations below the name without page overflow.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Project tree" },
+    { id: "deep-tree", label: "Deep generated path" },
+  ],
+);
+
+export default meta;

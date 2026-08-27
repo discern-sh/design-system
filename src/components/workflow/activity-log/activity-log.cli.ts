@@ -6,6 +6,7 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import { defaultTerminalFrameWidth } from "../../../cli/frame-measure.ts";
 import type {
   ActivityLogFrameState,
@@ -34,6 +35,7 @@ import {
 } from "../../../cli/theme.ts";
 import { renderMotifSpinnerFrame } from "../../../cli/motifs.ts";
 import { workflowCliWidth } from "../workflow-cli.ts";
+import meta, { componentExampleVocabulary } from "./activity-log.meta.ts";
 
 /** Inputs accepted by the terminal Activity log renderer. */
 export interface ActivityLogCliProps
@@ -61,62 +63,66 @@ function assertStreamedLine(value: string, name: string): void {
 }
 
 /** Deterministic Activity log states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<ActivityLogCliProps>[] = [
-  {
-    name: "streaming",
-    props: {
-      kind: "activity-log",
-      label: "Running the checks",
-      lifecycle: { status: "active" },
-      phase: 2,
-      stable: [
-        { text: "Format held every file in place", tone: "success" },
-        { text: "Generated surfaces are current", tone: "success" },
-        { text: "One suite retried before passing", tone: "warning" },
-      ],
-      tail: [
-        "compile step 41 of 58",
-        "compile step 42 of 58",
-        "    cache miss: layout graph rebuilt",
-        "compile step 43 of 58",
-      ],
-      partial: "compile step 44 of 58 · linking",
-      tailRows: 4,
-      hint: "Press Ctrl+C to interrupt.",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        kind: "activity-log",
+        label: "Running the checks",
+        lifecycle: { status: "active" },
+        phase: 2,
+        stable: [
+          { text: "Format held every file in place", tone: "success" },
+          { text: "Generated surfaces are current", tone: "success" },
+          { text: "One suite retried before passing", tone: "warning" },
+        ],
+        tail: [
+          "compile step 41 of 58",
+          "compile step 42 of 58",
+          "    cache miss: layout graph rebuilt",
+          "compile step 43 of 58",
+        ],
+        partial: "compile step 44 of 58 · linking",
+        tailRows: 4,
+        hint: "Press Ctrl+C to interrupt.",
+      },
     },
-  },
-  {
-    name: "summary",
-    props: {
-      kind: "activity-log",
-      label: "Running the checks",
-      lifecycle: { status: "submitted" },
-      phase: 0,
-      stable: [
-        { text: "Format held every file in place", tone: "success" },
-        { text: "58 modules compiled", tone: "success" },
-        { text: "Preview publishing was skipped", tone: "note" },
-      ],
-      tail: [],
-      tailRows: 0,
+    {
+      name: "complete",
+      props: {
+        kind: "activity-log",
+        label: "Running the checks",
+        lifecycle: { status: "submitted" },
+        phase: 0,
+        stable: [
+          { text: "Format held every file in place", tone: "success" },
+          { text: "58 modules compiled", tone: "success" },
+          { text: "Preview publishing was skipped", tone: "note" },
+        ],
+        tail: [],
+        tailRows: 0,
+      },
     },
-  },
-  {
-    name: "interrupted",
-    props: {
-      kind: "activity-log",
-      label: "Running the checks",
-      lifecycle: { status: "cancelled", reason: "Cancelled." },
-      phase: 0,
-      stable: [
-        { text: "Format held every file in place", tone: "success" },
-        { text: "Compilation stopped at step 44", tone: "failure" },
-      ],
-      tail: [],
-      tailRows: 0,
+    {
+      name: "cancelled",
+      props: {
+        kind: "activity-log",
+        label: "Running the checks",
+        lifecycle: { status: "cancelled", reason: "Cancelled." },
+        phase: 0,
+        stable: [
+          { text: "Format held every file in place", tone: "success" },
+          { text: "Compilation stopped at step 44", tone: "failure" },
+        ],
+        tail: [],
+        tailRows: 0,
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<ActivityLogCliProps>[],
+);
 
 /**
  * Render one activity log frame: a headline naming the work, pinned

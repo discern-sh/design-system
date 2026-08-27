@@ -5,8 +5,12 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import type { DestructiveActionNoticeTone } from "./destructive-action-notice.types.ts";
+import meta, {
+  componentExampleVocabulary,
+} from "./destructive-action-notice.meta.ts";
 import {
   assertWorkflowCliText,
   styleWorkflowHeading,
@@ -28,30 +32,34 @@ export interface DestructiveActionNoticeCliProps {
 }
 
 /** Deterministic Destructive action notice states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<
-  DestructiveActionNoticeCliProps
->[] = [
-  {
-    name: "warning",
-    props: {
-      label: "Replace generated output",
-      scope: "src/generated/",
-      impact: "Existing generated files are overwritten.",
-      recovery: "Re-run codegen from the committed metadata.",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        label: "Owner approval required",
+        scope: "The temporary directory selected for cleanup.",
+        impact: "Its contents will no longer be available from that path.",
+        authority: "Only the directory owner may approve removal.",
+        recovery:
+          "Move the directory to recoverable storage first when its contents have not been independently verified.",
+      },
     },
-  },
-  {
-    name: "danger",
-    props: {
-      label: "Delete worktree",
-      scope: "agent/cli-2b",
-      impact: "Uncommitted work is lost.",
-      recovery: "No automatic recovery.",
-      authority: "Repository owner",
-      tone: "danger",
+    {
+      name: "danger",
+      props: {
+        label: "Active data will be replaced",
+        scope: "The current destination directory and every file below it.",
+        impact: "Newer destination changes will be overwritten immediately.",
+        recovery:
+          "Stop now and create a dated copy of the destination before replacing it.",
+        tone: "danger",
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<DestructiveActionNoticeCliProps>[],
+);
 
 /** Render explicit destructive scope, impact, authority, and recovery facts. */
 const renderDestructiveActionNoticeCli: CliRenderer<

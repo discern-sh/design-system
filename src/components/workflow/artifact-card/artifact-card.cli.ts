@@ -6,11 +6,13 @@
 
 import { renderBox } from "../../../cli/box.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import type { ArtifactOwnership } from "../ownership-badge/ownership-badge.types.ts";
+import meta, { componentExampleVocabulary } from "./artifact-card.meta.ts";
 import {
   assertWorkflowCliText,
   workflowCliTheme,
@@ -38,19 +40,33 @@ export interface ArtifactCardCliProps {
 }
 
 /** Deterministic Artifact card states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<ArtifactCardCliProps>[] = [
-  {
-    name: "generated",
-    props: {
-      name: "CLI renderer registry",
-      path: "src/generated/cli-renderers.ts",
-      summary: "Public aliases generated from component metadata.",
-      ownership: "generated",
-      provenance: "deno task codegen",
-      source: "Component metadata",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        name: "API registry",
+        path: "/workspace/generated/api-registry.ts",
+        summary: "The stable endpoint index consumed by the runtime.",
+        ownership: "generated",
+        provenance: "Generated from /workspace/api-schema.ts",
+        source: "/workspace/api-schema.ts",
+      },
     },
-  },
-] as const;
+    {
+      name: "project-owned",
+      props: {
+        name: "Project instructions",
+        path: "/workspace/instructions.md",
+        summary: "The project-specific instructions maintained by its authors.",
+        ownership: "project-owned",
+        provenance: "Written during project setup",
+      },
+    },
+  ] as const satisfies readonly CliExample<ArtifactCardCliProps>[],
+);
 
 /** Render one terminal artifact account with ownership and provenance. */
 const renderArtifactCardCli: CliRenderer<ArtifactCardCliProps> = (

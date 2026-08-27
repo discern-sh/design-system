@@ -1,13 +1,12 @@
-import type {
-  CatalogueExampleState,
-  ConformanceScenario,
-} from "../../../../catalogue/conformance.ts";
+import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { Diagnostic } from "./diagnostic.tsx";
+import meta, { componentExampleVocabulary } from "./diagnostic.meta.ts";
 
 const verboseEvidence =
   'Type \'"pending" | "complete"\' is not assignable to type \'"complete"\'. The value may still be pending when this branch renders.';
 const rawDetail =
-  'TS2322 [ERROR]: Type \'"pending" | "complete"\' is not assignable to type \'"complete"\'.\n    at src/components/workflow/example/example.tsx:118:17\nFound 1 error.';
+  'TS2322 [ERROR]: Type \'"pending" | "complete"\' is not assignable to type \'"complete"\'.\n    at src/config/loader.ts:118:17\nFound 1 error.';
 
 export const conformance = [{
   name: "long location and verbose evidence stay contained at narrow width",
@@ -41,7 +40,7 @@ function VerboseFailureState() {
     <Diagnostic
       title="Type check failed"
       impact="The package cannot be built until the incompatible value is corrected."
-      path="/path/to/a/deliberately/long/project/src/components/workflow/example/example.tsx"
+      path="/path/to/a/deliberately/long/project/src/config/loader.ts"
       line={118}
       column={17}
       pathCopyable
@@ -67,14 +66,14 @@ function AttentionState() {
   );
 }
 
-export const catalogueStates = [
-  {
-    name: "verbose-failure",
-    label: "Verbose failure",
-    Example: VerboseFailureState,
-  },
-  { name: "attention", label: "Attention", Example: AttentionState },
-] satisfies readonly CatalogueExampleState[];
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "verbose-failure", Example: VerboseFailureState },
+    { id: "attention", Example: AttentionState },
+  ],
+);
 
 export default function DiagnosticExamples() {
   return (

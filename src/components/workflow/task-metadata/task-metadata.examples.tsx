@@ -1,8 +1,7 @@
-import type {
-  CatalogueExampleState,
-  ConformanceScenario,
-} from "../../../../catalogue/conformance.ts";
+import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { TaskMetadata } from "./task-metadata.tsx";
+import meta, { componentExampleVocabulary } from "./task-metadata.meta.ts";
 
 export const conformance = [{
   name: "all task facts remain contained at a narrow viewport",
@@ -31,7 +30,7 @@ function ReadOnlyTaskState() {
       complexity="About 5 minutes"
       fileEffects="none"
       retrySafety="safe"
-      expectedState="Validation succeeds and the worktree remains unchanged."
+      expectedState="Validation succeeds and the project files remain unchanged."
     />
   );
 }
@@ -41,7 +40,7 @@ function FileChangingTaskState() {
     <TaskMetadata
       outcome="Regenerate a derived reference from its source registry."
       audience="Maintainers changing a public contract."
-      prerequisites="The source registry is current and the worktree is clean."
+      prerequisites="The source registry is current and the project files have no unrelated changes."
       complexity="About 15 minutes"
       fileEffects="changes-files"
       retrySafety="check-first"
@@ -51,15 +50,14 @@ function FileChangingTaskState() {
   );
 }
 
-export const catalogueStates = [{
-  name: "default",
-  label: "Read-only task",
-  Example: ReadOnlyTaskState,
-}, {
-  name: "file-changing",
-  label: "File-changing task",
-  Example: FileChangingTaskState,
-}] satisfies readonly CatalogueExampleState[];
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: ReadOnlyTaskState },
+    { id: "file-changing", Example: FileChangingTaskState },
+  ],
+);
 
 export default function TaskMetadataExamples() {
   return (

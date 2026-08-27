@@ -5,6 +5,7 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import {
   motifPassthrough,
   type TerminalMotifOptions,
@@ -15,6 +16,7 @@ import type {
   StandardDirection,
   StandardTrend,
 } from "./standard-meter.types.ts";
+import meta, { componentExampleVocabulary } from "./standard-meter.meta.ts";
 import {
   assertWorkflowCliText,
   styleWorkflowHeading,
@@ -38,32 +40,38 @@ export interface StandardMeterCliProps extends TerminalMotifOptions {
 }
 
 /** Deterministic Standard meter states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<StandardMeterCliProps>[] = [
-  {
-    name: "ceiling",
-    props: {
-      label: "CLI pending",
-      value: 79,
-      limit: 108,
-      direction: "ceiling",
-      min: 0,
-      max: 120,
-      trend: "improving",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        label: "Line coverage",
+        value: 92.4,
+        limit: 80,
+        direction: "floor",
+        min: 0,
+        max: 100,
+        trend: "improving",
+        formatValue: (value) => `${value}%`,
+      },
     },
-  },
-  {
-    name: "floor",
-    props: {
-      label: "Coverage",
-      value: 94,
-      limit: 90,
-      direction: "floor",
-      min: 0,
-      max: 100,
-      trend: "flat",
+    {
+      name: "ceiling",
+      props: {
+        label: "Stylesheet density",
+        value: 2324,
+        limit: 2350,
+        direction: "ceiling",
+        min: 0,
+        max: 2350,
+        trend: "drifting",
+        formatValue: (value) => `${value} B`,
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<StandardMeterCliProps>[],
+);
 
 function assertFinite(value: number, name: string): void {
   if (!Number.isFinite(value)) {

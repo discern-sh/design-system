@@ -1,6 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 
-export default {
+const meta = {
   name: "Task metadata",
   slug: "task-metadata",
   group: "Workflow",
@@ -21,3 +22,13 @@ export default {
     "The strip remains in source order and keeps every value visible when component styles are unavailable.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Read-only task" },
+    { id: "file-changing", label: "File-changing task" },
+  ],
+);
+
+export default meta;

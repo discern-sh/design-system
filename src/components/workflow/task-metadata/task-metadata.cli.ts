@@ -5,11 +5,13 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import type {
   TaskFileEffects,
   TaskRetrySafety,
 } from "./task-metadata.types.ts";
+import meta, { componentExampleVocabulary } from "./task-metadata.meta.ts";
 import {
   assertWorkflowCliText,
   styleWorkflowHeading,
@@ -45,20 +47,39 @@ export interface TaskMetadataCliProps {
 }
 
 /** Deterministic Task metadata states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<TaskMetadataCliProps>[] = [
-  {
-    name: "implementation",
-    props: {
-      outcome: "Workflow CLI parity",
-      audience: "Design-system maintainers",
-      prerequisites: "Wave 1 foundation",
-      complexity: "Multi-component",
-      fileEffects: "changes-files",
-      retrySafety: "check-first",
-      expectedState: "All owned CLI stances are decided",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        outcome: "Confirm that a configuration matches its schema.",
+        audience: "Maintainers reviewing a project configuration.",
+        prerequisites: "A local checkout and the validation command.",
+        complexity: "About 5 minutes",
+        fileEffects: "none",
+        retrySafety: "safe",
+        expectedState:
+          "Validation succeeds and the project files remain unchanged.",
+      },
     },
-  },
-] as const;
+    {
+      name: "file-changing",
+      props: {
+        outcome: "Regenerate a derived reference from its source registry.",
+        audience: "Maintainers changing a public contract.",
+        prerequisites:
+          "The source registry is current and the project files have no unrelated changes.",
+        complexity: "About 15 minutes",
+        fileEffects: "changes-files",
+        retrySafety: "check-first",
+        expectedState:
+          "The reference matches its source and only expected files have changed.",
+      },
+    },
+  ] as const satisfies readonly CliExample<TaskMetadataCliProps>[],
+);
 
 /** Render quiet terminal orientation facts for one operational task. */
 const renderTaskMetadataCli: CliRenderer<TaskMetadataCliProps> = (

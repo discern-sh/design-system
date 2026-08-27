@@ -1,6 +1,7 @@
 import type { ComponentMeta } from "../../../types/component-meta.ts";
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 
-export default {
+const meta = {
   name: "Raw output",
   slug: "raw-output",
   group: "Workflow",
@@ -22,3 +23,13 @@ export default {
     "The disclosure marker is hidden decoration, and its motion is removed when reduced motion is requested.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Collapsed output" },
+    { id: "expanded", label: "Expanded output" },
+  ],
+);
+
+export default meta;

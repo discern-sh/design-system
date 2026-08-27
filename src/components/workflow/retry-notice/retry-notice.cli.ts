@@ -5,7 +5,9 @@
  */
 
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./retry-notice.meta.ts";
 import {
   assertWorkflowCliText,
   styleWorkflowHeading,
@@ -24,19 +26,30 @@ export interface RetryNoticeCliProps {
 }
 
 /** Deterministic Retry notice states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<RetryNoticeCliProps>[] = [
-  {
-    name: "safe",
-    props: { safeToRetry: true, reason: "The operation is idempotent." },
-  },
-  {
-    name: "unsafe",
-    props: {
-      safeToRetry: false,
-      reason: "The remote effect may already have happened.",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "safe",
+      props: {
+        safeToRetry: true,
+        label: "Read-only check",
+        reason:
+          "The check reads the current state and does not modify its inputs.",
+      },
     },
-  },
-] as const;
+    {
+      name: "unsafe",
+      props: {
+        safeToRetry: false,
+        label: "Inspect state before continuing",
+        reason:
+          "The first run may already have moved the source. Inspect both locations before choosing a recovery path.",
+      },
+    },
+  ] as const satisfies readonly CliExample<RetryNoticeCliProps>[],
+);
 
 /** Render one visible retry-safety decision and its reason. */
 const renderRetryNoticeCli: CliRenderer<RetryNoticeCliProps> = (
