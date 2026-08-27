@@ -1,0 +1,65 @@
+@layer catalogue {
+  .discern-catalogue-review-controls {
+    display: grid;
+    grid-template-columns: minmax(240px, 1fr) auto auto;
+    gap: 14px;
+    align-items: end;
+    margin-block-end: 42px;
+    padding: 14px;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-lg);
+    background: var(--discern-color-surface-sunken);
+  }
+  .discern-catalogue-review-surfaces {
+    display: inline-flex;
+    min-height: 40px;
+  }
+  .discern-catalogue-review-surfaces a {
+    display: grid;
+    min-width: 54px;
+    place-items: center;
+    border: 1px solid var(--discern-color-border-strong);
+    background: var(--discern-color-surface);
+    color: var(--discern-color-ink-muted);
+    text-decoration: none;
+  }
+  .discern-catalogue-review-surfaces a:first-child {
+    border-radius: var(--discern-radius-sm) 0 0 var(--discern-radius-sm);
+  }
+  .discern-catalogue-review-surfaces a:last-child {
+    margin-inline-start: -1px;
+    border-radius: 0 var(--discern-radius-sm) var(--discern-radius-sm) 0;
+  }
+  .discern-catalogue-review-surfaces a[aria-current="page"] {
+    z-index: 1;
+    border-color: var(--discern-color-accent-500);
+    background: var(--discern-color-accent-100);
+    color: var(--discern-color-accent-800);
+  }
+  .discern-catalogue-review-surfaces a:focus-visible {
+    z-index: 2;
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: 2px;
+  }
+  .discern-catalogue-review-controls__exit {
+    display: grid;
+    min-height: 40px;
+    place-items: center;
+    padding-inline: 12px;
+    border: 1px solid var(--discern-color-border-strong);
+    border-radius: var(--discern-radius-sm);
+    background: var(--discern-color-surface);
+    color: var(--discern-color-ink);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+    text-decoration: none;
+  }
+  @media (max-width: 640px) {
+    .discern-catalogue-review-controls {
+      grid-template-columns: 1fr;
+    }
+    .discern-catalogue-review-controls__exit {
+      justify-self: stretch;
+    }
+  }
+}

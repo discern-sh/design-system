@@ -1,91 +1,55 @@
+/**
+ * Compatibility entrypoint for Catalogue routing. Concrete route patterns and
+ * search projections live with their families under `catalogue/routes/`.
+ */
+
+import { componentGroups } from "../src/types/component-meta.ts";
+import type { ComponentGroup } from "../src/types/component-meta.ts";
 import {
-  type ComponentGroup,
-  componentGroups,
-} from "../src/types/component-meta.ts";
+  catalogueComponentPath,
+  catalogueGroupFromSlug as groupFromSlug,
+  catalogueGroupSlug,
+  componentSearchRecords,
+} from "./routes/components.ts";
+import {
+  canonicalCatalogueShellPathname,
+  catalogueNavigation,
+  catalogueRoute,
+  catalogueRouteFamilies,
+  catalogueRoutePaths,
+  catalogueSearchRecords,
+} from "./routes/registry.ts";
+import type {
+  CatalogueRoute,
+  CatalogueRouteDescriptor,
+  CatalogueRouteFamilyId,
+  CatalogueSearchSources,
+} from "./routes/types.ts";
+import { normalizedCataloguePathname } from "./routes/types.ts";
 
-/** Canonical browser routes for the Catalogue explorer. */
-export const catalogueRoutePaths = Object.freeze({
-  overview: "/catalogue/",
-  foundations: "/catalogue/foundations/",
-  components: "/catalogue/components/",
-  compositions: "/catalogue/compositions/",
-  terminal: "/catalogue/terminal/",
-  review: "/catalogue/review/",
-});
+export {
+  canonicalCatalogueShellPathname,
+  catalogueComponentPath,
+  catalogueGroupSlug,
+  catalogueNavigation,
+  catalogueRoute,
+  catalogueRouteFamilies,
+  catalogueRoutePaths,
+  catalogueSearchRecords,
+  componentSearchRecords,
+};
+export type {
+  CatalogueRoute,
+  CatalogueRouteDescriptor,
+  CatalogueRouteFamilyId,
+  CatalogueSearchSources,
+};
 
-/** One route resolved from the Catalogue's mounted URL space. */
-export type CatalogueRoute =
-  | { readonly kind: "overview" }
-  | { readonly kind: "foundations" }
-  | { readonly kind: "components" }
-  | { readonly kind: "component"; readonly slug: string }
-  | { readonly kind: "compositions" }
-  | { readonly kind: "terminal" }
-  | { readonly kind: "review" }
-  | { readonly kind: "not-found" };
-
-/** Stable URL slug for one metadata-owned Component Group. */
-export function catalogueGroupSlug(group: ComponentGroup): string {
-  return group.toLowerCase();
-}
-
-/** Resolve a URL slug back to the canonical metadata-owned Component Group. */
+/** Resolve a URL slug back to the canonical Metadata-owned Component Group. */
 export function catalogueGroupFromSlug(
   slug: string | null,
 ): ComponentGroup | undefined {
-  return componentGroups.find((group) => catalogueGroupSlug(group) === slug);
-}
-
-/** Canonical detail route for one generated Component entry. */
-export function catalogueComponentPath(slug: string): string {
-  return `${catalogueRoutePaths.components}${encodeURIComponent(slug)}/`;
-}
-
-function normalizedPathname(pathname: string): string {
-  return pathname.endsWith("/") ? pathname : `${pathname}/`;
-}
-
-/** Resolve the current browser URL to one Catalogue explorer route. */
-export function catalogueRoute(url: URL): CatalogueRoute {
-  const pathname = normalizedPathname(url.pathname);
-  for (
-    const [kind, routePath] of Object.entries(
-      catalogueRoutePaths,
-    ) as ReadonlyArray<
-      [Exclude<CatalogueRoute["kind"], "component" | "not-found">, string]
-    >
-  ) {
-    if (pathname === routePath) return { kind };
-  }
-  const component = /^\/catalogue\/components\/([^/]+)\/$/.exec(pathname);
-  if (component?.[1] !== undefined) {
-    try {
-      return { kind: "component", slug: decodeURIComponent(component[1]) };
-    } catch {
-      return { kind: "not-found" };
-    }
-  }
-  return { kind: "not-found" };
-}
-
-/**
- * Return the canonical shell pathname for a routed Catalogue request.
- * Static assets and source-rendered review artifacts deliberately return null.
- */
-export function canonicalCatalogueShellPathname(
-  pathname: string,
-): string | null {
-  const normalized = normalizedPathname(pathname);
-  if (
-    (Object.values(catalogueRoutePaths) as readonly string[]).includes(
-      normalized,
-    )
-  ) return normalized;
-  return /^\/catalogue\/components\/[a-z0-9]+(?:-[a-z0-9]+)*\/$/.test(
-      normalized,
-    )
-    ? normalized
-    : null;
+  return groupFromSlug(slug, componentGroups);
 }
 
 function decodedFragment(hash: string): string {
@@ -97,14 +61,12 @@ function decodedFragment(hash: string): string {
   }
 }
 
-/**
- * Upgrade links from the former one-page inventory to their routed destination.
- * The original fragment is retained when the destination still owns that id.
- */
+/** Upgrade former one-page links to their routed destination. */
 export function canonicalCatalogueLegacyUrl(current: URL): URL {
   const url = new URL(current.href);
   if (
-    normalizedPathname(url.pathname) !== catalogueRoutePaths.overview ||
+    normalizedCataloguePathname(url.pathname) !==
+      catalogueRoutePaths.overview ||
     url.searchParams.get("conformance") === "1"
   ) return url;
 
@@ -147,7 +109,7 @@ export function canonicalCatalogueLegacyUrl(current: URL): URL {
     return url;
   }
   if (url.searchParams.has("surface")) {
-    url.pathname = catalogueRoutePaths.review;
+    url.pathname = catalogueRoutePaths.compare;
     url.searchParams.set("scope", "all");
   }
   return url;

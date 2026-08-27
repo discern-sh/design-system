@@ -619,6 +619,7 @@ const readingFirstLandingRecipe = defineRecipe({
   render: (definition) => (
     <div>
       <EditorialHero
+        headingLevel={2}
         eyebrow="A complex idea, clearly introduced"
         title={
           <>
@@ -744,6 +745,7 @@ const journey = ${value(definition.journey)};
 
 <div>
   <EditorialHero
+    headingLevel={2}
     eyebrow="A complex idea, clearly introduced"
     title={<>Make the difficult <em>feel navigable.</em></>}
     description={<p>Lead with one promise in ordinary language.</p>}
