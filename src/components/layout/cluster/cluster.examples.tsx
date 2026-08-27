@@ -1,11 +1,37 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { Button } from "../../core/button/button.tsx";
+import meta, { componentExampleVocabulary } from "./cluster.meta.ts";
 import { Cluster } from "./cluster.tsx";
-export default function ClusterExamples() {
+
+function DefaultClusterState() {
   return (
     <Cluster gap={3}>
-      <Button>Continue</Button>
-      <Button variant="secondary">Secondary</Button>
+      <Button>Save</Button>
+      <Button variant="secondary">Preview</Button>
       <Button variant="ghost">Cancel</Button>
     </Cluster>
   );
+}
+
+function CentredClusterState() {
+  return (
+    <Cluster gap={3} justify="center">
+      <Button variant="secondary">One</Button>
+      <Button variant="secondary">Two</Button>
+      <Button variant="secondary">Three</Button>
+    </Cluster>
+  );
+}
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: DefaultClusterState },
+    { id: "centred", Example: CentredClusterState },
+  ],
+);
+
+export default function ClusterExamples() {
+  return <DefaultClusterState />;
 }

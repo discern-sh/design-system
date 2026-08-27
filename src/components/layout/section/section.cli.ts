@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical, layoutColumns } from "../../../cli/layout.ts";
 import {
@@ -22,6 +23,7 @@ import {
   renderMotifSectionRule,
 } from "../../../cli/motifs.ts";
 import type { SectionSpacing, SectionSurface } from "./section.types.ts";
+import meta, { componentExampleVocabulary } from "./section.meta.ts";
 
 /** Structural treatments available to the terminal Section renderer. */
 export type SectionCliTreatment =
@@ -48,40 +50,32 @@ const SPACING_STEPS: Readonly<Record<SectionSpacing, 0 | 2 | 4 | 6>> = {
   lg: 6,
 };
 
-/** Deterministic Section states rendered by `deno task catalogue:cli section`. */
-export const cliExamples: readonly CliExample<SectionCliProps>[] = [
-  {
-    name: "labelled-rule",
-    props: { title: "Foundation", body: "Shared design language", width: 32 },
-  },
-  {
-    name: "ribbon",
-    props: {
-      title: "Details",
-      body: "Supporting section content",
-      treatment: "ribbon",
-      width: 24,
+/** Deliberate human Section postures shared with the browser Catalogue. */
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        title: "Foundation",
+        body: "Shared design language",
+        surface: "surface",
+        spacing: "sm",
+        width: 32,
+      },
     },
-  },
-  {
-    name: "quiet-labelled-rule",
-    props: {
-      title: "Details",
-      body: "Supporting section content",
-      treatment: "quiet-rule",
-      width: 24,
+    {
+      name: "sunken",
+      props: {
+        body: "Quiet supporting material",
+        surface: "sunken",
+        spacing: "sm",
+        width: 24,
+      },
     },
-  },
-  {
-    name: "sunken",
-    props: {
-      body: "Quiet supporting material",
-      surface: "sunken",
-      spacing: "sm",
-      width: 24,
-    },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<SectionCliProps>[],
+);
 
 /** Compose a terminal section from layout primitives and motif treatments. */
 const renderSectionCli: CliRenderer<SectionCliProps> = (

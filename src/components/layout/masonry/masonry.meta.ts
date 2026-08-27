@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Masonry",
   slug: "masonry",
   group: "Layout",
@@ -21,3 +22,13 @@ export default {
     "The CSS Columns fallback flows down columns, while native Grid Lanes places each next item in the shortest lane; use only for independent peers whose meaning does not depend on visual adjacency.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Variable height" },
+    { id: "single-column", label: "Single column" },
+  ],
+);
+
+export default meta;

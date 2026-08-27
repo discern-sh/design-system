@@ -4,6 +4,7 @@
  * @module
  */
 
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical, layoutColumns } from "../../../cli/layout.ts";
 import { wrapText } from "../../../cli/text.ts";
@@ -14,6 +15,7 @@ import {
 } from "../../../cli/theme.ts";
 import { responsiveColumnCount } from "../responsive-columns.ts";
 import type { SpaceStep } from "../space.ts";
+import meta, { componentExampleVocabulary } from "./masonry.meta.ts";
 
 /** Inputs accepted by the terminal Masonry renderer. */
 export interface MasonryCliProps {
@@ -25,29 +27,37 @@ export interface MasonryCliProps {
 }
 
 /** Deterministic Masonry states rendered by `deno task catalogue:cli masonry`. */
-export const cliExamples: readonly CliExample<MasonryCliProps>[] = [
-  {
-    name: "variable-height",
-    props: {
-      blocks: [
-        "Alpha\nShort note",
-        "Beta\nA longer explanation\nwith another line",
-        "Gamma",
-        "Delta\nTwo lines",
-      ],
-      minimum: 10,
-      width: 36,
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        blocks: [
+          "A concise observation\nOne short supporting thought.",
+          "A developed explanation\nNatural content height determines this item's footprint.\nThe next peer packs into the available lane without inventing a row.",
+          "A visual note\nIndependent items can vary without truncation.\nTheir DOM sequence remains unchanged.\nMeaning never depends on which cards happen to become neighbours.",
+          "A compact aside\nAnother deliberately brief item.",
+        ],
+        minimum: 10,
+        width: 36,
+      },
     },
-  },
-  {
-    name: "single-column",
-    props: {
-      blocks: ["First", "Second\nwith detail", "Third"],
-      minimum: 12,
-      width: 12,
+    {
+      name: "single-column",
+      props: {
+        blocks: [
+          "A concise observation\nOne short supporting thought.",
+          "A developed explanation\nNatural content height determines this item's footprint.",
+          "A visual note\nIndependent items can vary without truncation.",
+        ],
+        minimum: 12,
+        width: 12,
+      },
     },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<MasonryCliProps>[],
+);
 
 /** Pack terminal blocks into the currently shortest responsive column. */
 const renderMasonryCli: CliRenderer<MasonryCliProps> = (

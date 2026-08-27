@@ -1,5 +1,9 @@
-import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
+import {
+  type ConformanceScenario,
+  defineCatalogueExamples,
+} from "../../../../catalogue/conformance.ts";
 import { Card } from "../../display/card/card.tsx";
+import meta, { componentExampleVocabulary } from "./masonry.meta.ts";
 import { Masonry } from "./masonry.tsx";
 
 export const conformance = [{
@@ -75,16 +79,55 @@ const items = [
   },
 ] as const;
 
-export default function MasonryExamples() {
+function MasonryCards(
+  { entries }: { readonly entries: readonly (typeof items)[number][] },
+) {
+  return entries.map((item) => (
+    <Card key={item.title} raised>
+      <h3>{item.title}</h3>
+      {item.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+    </Card>
+  ));
+}
+
+function DefaultMasonryState() {
+  return (
+    <Masonry minimum="14rem" gap={4}>
+      <MasonryCards entries={items.slice(0, 4)} />
+    </Masonry>
+  );
+}
+
+function ConformanceMasonryState() {
   return (
     <Masonry minimum="14rem" gap={4} data-example-masonry>
-      {items.map((item) => (
+      <MasonryCards entries={items} />
+    </Masonry>
+  );
+}
+
+function SingleColumnMasonryState() {
+  return (
+    <Masonry minimum="100%" gap={4}>
+      {items.slice(0, 3).map((item) => (
         <Card key={item.title} raised>
           <h3>{item.title}</h3>
-          {item.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}
-          </p>)}
+          <p>{item.paragraphs[0]}</p>
         </Card>
       ))}
     </Masonry>
   );
+}
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: DefaultMasonryState },
+    { id: "single-column", Example: SingleColumnMasonryState },
+  ],
+);
+
+export default function MasonryExamples() {
+  return <ConformanceMasonryState />;
 }

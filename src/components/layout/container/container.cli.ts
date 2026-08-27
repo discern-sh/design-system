@@ -4,9 +4,11 @@
  * @module
  */
 
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { layoutColumns } from "../../../cli/layout.ts";
 import type { ContainerSize } from "./container.types.ts";
+import meta, { componentExampleVocabulary } from "./container.meta.ts";
 
 /** Inputs accepted by the terminal Container renderer. */
 export interface ContainerCliProps {
@@ -23,20 +25,24 @@ const SIZE_COLUMNS: Readonly<Record<Exclude<ContainerSize, "full">, number>> = {
 };
 
 /** Deterministic Container states rendered by `deno task catalogue:cli container`. */
-export const cliExamples: readonly CliExample<ContainerCliProps>[] = [
-  {
-    name: "measure",
-    props: {
-      body: "Readable content stays centred inside a named terminal measure.",
-      size: "measure",
-      width: 80,
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        body: "Readable content stays centred inside a named measure.",
+        size: "measure",
+        width: 80,
+      },
     },
-  },
-  {
-    name: "full",
-    props: { body: "Full-width content", size: "full", width: 40 },
-  },
-] as const;
+    {
+      name: "full",
+      props: { body: "Full-width content", size: "full", width: 40 },
+    },
+  ] as const satisfies readonly CliExample<ContainerCliProps>[],
+);
 
 /** Centre and wrap terminal content inside the shared named Container widths. */
 const renderContainerCli: CliRenderer<ContainerCliProps> = (

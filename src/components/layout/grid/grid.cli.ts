@@ -4,6 +4,7 @@
  * @module
  */
 
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical, layoutColumns } from "../../../cli/layout.ts";
 import {
@@ -13,6 +14,7 @@ import {
 } from "../../../cli/theme.ts";
 import type { SpaceStep } from "../space.ts";
 import { responsiveColumnCount } from "../responsive-columns.ts";
+import meta, { componentExampleVocabulary } from "./grid.meta.ts";
 
 /** Inputs accepted by the terminal Grid renderer. */
 export interface GridCliProps {
@@ -24,20 +26,24 @@ export interface GridCliProps {
 }
 
 /** Deterministic Grid states rendered by `deno task catalogue:cli grid`. */
-export const cliExamples: readonly CliExample<GridCliProps>[] = [
-  {
-    name: "responsive",
-    props: {
-      blocks: ["Alpha", "Beta", "Gamma", "Delta"],
-      minimum: 8,
-      width: 32,
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        blocks: ["Alpha", "Beta", "Gamma", "Delta"],
+        minimum: 8,
+        width: 32,
+      },
     },
-  },
-  {
-    name: "single-column",
-    props: { blocks: ["One", "Two", "Three"], minimum: 12, width: 12 },
-  },
-] as const;
+    {
+      name: "single-column",
+      props: { blocks: ["Alpha", "Beta", "Gamma"], minimum: 12, width: 12 },
+    },
+  ] as const satisfies readonly CliExample<GridCliProps>[],
+);
 
 /** Flow terminal blocks through responsive rows using the foundation column layout. */
 const renderGridCli: CliRenderer<GridCliProps> = (props, capabilities) => {

@@ -1,13 +1,34 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import meta, { componentExampleVocabulary } from "./container.meta.ts";
 import { Container } from "./container.tsx";
-export default function ContainerExamples() {
+
+function DefaultContainerState() {
   return (
-    <div className="discern-example-stack">
-      <Container size="measure">
-        <div className="discern-layout-sample">Measure container</div>
-      </Container>
-      <Container size="md">
-        <div className="discern-layout-sample">Medium container</div>
-      </Container>
-    </div>
+    <Container size="measure">
+      <div className="discern-layout-sample">
+        Readable content stays centred inside a named measure.
+      </div>
+    </Container>
   );
+}
+
+function FullContainerState() {
+  return (
+    <Container size="full">
+      <div className="discern-layout-sample">Full-width content</div>
+    </Container>
+  );
+}
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { id: "default", Example: DefaultContainerState },
+    { id: "full", Example: FullContainerState },
+  ],
+);
+
+export default function ContainerExamples() {
+  return <DefaultContainerState />;
 }

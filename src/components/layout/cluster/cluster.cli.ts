@@ -4,6 +4,7 @@
  * @module
  */
 
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { wrapInlineCluster } from "../../../cli/layout.ts";
 import { padText } from "../../../cli/text.ts";
@@ -14,6 +15,7 @@ import {
 } from "../../../cli/theme.ts";
 import type { SpaceStep } from "../space.ts";
 import type { ClusterAlign, ClusterJustify } from "./cluster.types.ts";
+import meta, { componentExampleVocabulary } from "./cluster.meta.ts";
 
 /** Inputs accepted by the terminal Cluster renderer. */
 export interface ClusterCliProps {
@@ -26,16 +28,20 @@ export interface ClusterCliProps {
 }
 
 /** Deterministic Cluster states rendered by `deno task catalogue:cli cluster`. */
-export const cliExamples: readonly CliExample<ClusterCliProps>[] = [
-  {
-    name: "actions",
-    props: { items: ["Save", "Preview", "Cancel"], width: 24 },
-  },
-  {
-    name: "centred",
-    props: { items: ["One", "Two", "Three"], justify: "center", width: 20 },
-  },
-] as const;
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: { items: ["Save", "Preview", "Cancel"], width: 24 },
+    },
+    {
+      name: "centred",
+      props: { items: ["One", "Two", "Three"], justify: "center", width: 20 },
+    },
+  ] as const satisfies readonly CliExample<ClusterCliProps>[],
+);
 
 /** Wrap terminal items using the foundation Cluster combinator and Token gap. */
 const renderClusterCli: CliRenderer<ClusterCliProps> = (

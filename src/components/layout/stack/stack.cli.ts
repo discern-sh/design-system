@@ -4,6 +4,7 @@
  * @module
  */
 
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical, layoutColumns } from "../../../cli/layout.ts";
 import { padText } from "../../../cli/text.ts";
@@ -14,6 +15,7 @@ import {
 } from "../../../cli/theme.ts";
 import type { SpaceStep } from "../space.ts";
 import type { StackAlign } from "./stack.types.ts";
+import meta, { componentExampleVocabulary } from "./stack.meta.ts";
 
 /** Inputs accepted by the terminal Stack renderer. */
 export interface StackCliProps {
@@ -25,19 +27,23 @@ export interface StackCliProps {
 }
 
 /** Deterministic Stack states rendered by `deno task catalogue:cli stack`. */
-export const cliExamples: readonly CliExample<StackCliProps>[] = [
-  {
-    name: "default",
-    props: {
-      blocks: ["First block", "Second block", "Third block"],
-      width: 24,
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        blocks: ["First block", "Second block", "Third block"],
+        width: 24,
+      },
     },
-  },
-  {
-    name: "centred",
-    props: { blocks: ["One", "Two"], align: "center", gap: 2, width: 20 },
-  },
-] as const;
+    {
+      name: "centred",
+      props: { blocks: ["One", "Two"], align: "center", gap: 2, width: 20 },
+    },
+  ] as const satisfies readonly CliExample<StackCliProps>[],
+);
 
 /** Join terminal blocks vertically using Token-constrained gaps and alignment. */
 const renderStackCli: CliRenderer<StackCliProps> = (props, capabilities) => {
