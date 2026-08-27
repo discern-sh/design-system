@@ -6,10 +6,10 @@ export default function TableOfContentsExamples() {
   return (
     <TableOfContents
       items={[
-        { label: "The starting condition", href: "#starting", current: true },
+        { label: "The opening scene", href: "#opening", current: true },
         {
-          label: "A useful constraint",
-          href: "#constraint",
+          label: "A closer look",
+          href: "#closer-look",
           nested: true,
         },
         { label: "What changed", href: "#changed" },

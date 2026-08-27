@@ -37,9 +37,9 @@ export const cliExamples = defineCliExamples(
     name: "default",
     props: {
       quote:
-        "A durable interface leaves the reader with the argument, not the rendering machinery.",
-      attribution: "Ada Osei",
-      citation: "Field notes",
+        "A good reading experience lets the ideas lead and the interface recede.",
+      attribution: "Example contributor",
+      citation: "Collected essays",
     },
   }] as const satisfies readonly CliExample<PullQuoteCliProps>[],
 );

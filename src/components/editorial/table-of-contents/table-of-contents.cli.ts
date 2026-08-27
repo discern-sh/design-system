@@ -44,12 +44,12 @@ export const cliExamples = defineCliExamples(
     name: "default",
     props: {
       items: [
-        { label: "Context", href: "#context" },
-        { label: "Evidence", href: "#evidence", current: true },
-        { label: "Methods", href: "#methods", nested: true },
-        { label: "Decision", href: "#decision" },
+        { label: "The opening scene", href: "#opening", current: true },
+        { label: "A closer look", href: "#closer-look", nested: true },
+        { label: "What changed", href: "#changed" },
+        { label: "Notes and sources", href: "#notes" },
       ],
-      progress: "2 of 3 sections",
+      progress: "12 minute read · 1 of 4",
     },
   }] as const satisfies readonly CliExample<TableOfContentsCliProps>[],
 );

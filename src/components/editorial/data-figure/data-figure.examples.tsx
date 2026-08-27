@@ -3,28 +3,35 @@ import meta, { componentExampleVocabulary } from "./data-figure.meta.ts";
 import { DataFigure } from "./data-figure.tsx";
 
 function ComparisonVisual() {
+  const values = [
+    { label: "Sunny plot", value: 14 },
+    { label: "Shaded plot", value: 10 },
+  ] as const;
   return (
     <div
       style={{
         display: "grid",
-        alignItems: "end",
-        gridTemplateColumns: "repeat(5, 1fr)",
-        gap: "1rem",
-        minHeight: "13rem",
+        gridTemplateColumns: "max-content minmax(0, 1fr) max-content",
+        gap: "0.75rem",
+        alignItems: "center",
       }}
       role="img"
-      aria-label="Example bar chart"
+      aria-label="Sunny plot: 14 centimetres. Shaded plot: 10 centimetres."
     >
-      {[42, 58, 49, 76, 91].map((height, index) => (
-        <span
-          key={index}
-          style={{
-            height: String(height) + "%",
-            background: index === 4
-              ? "var(--discern-color-accent-500)"
-              : "var(--discern-color-accent-200)",
-          }}
-        />
+      {values.map(({ label, value }, index) => (
+        <div key={label} style={{ display: "contents" }}>
+          <span>{label}</span>
+          <span
+            style={{
+              width: `${value / 14 * 100}%`,
+              height: "1rem",
+              background: index === 0
+                ? "var(--discern-color-accent-500)"
+                : "var(--discern-color-accent-200)",
+            }}
+          />
+          <span>{value} cm</span>
+        </div>
       ))}
     </div>
   );
@@ -34,14 +41,14 @@ function ComparisonFigureExample() {
   return (
     <DataFigure
       eyebrow="Figure 04"
-      title="Confidence grows when evidence stays close."
+      title="Seedling height after four weeks."
       legend={[
-        { label: "reviewed", tone: "accent" },
-        { label: "assumed", tone: "ink" },
+        { label: "Sunny plot", tone: "accent" },
+        { label: "Shaded plot", tone: "ink" },
       ]}
       visual={<ComparisonVisual />}
-      caption="A visual slot can hold a chart or diagram while the frame preserves editorial context."
-      source="Illustrative data"
+      caption="Average height across two growing conditions."
+      source="Illustrative measurements"
     />
   );
 }
@@ -51,14 +58,14 @@ function NarrowFigureExample() {
     <div style={{ maxWidth: "20rem" }}>
       <DataFigure
         eyebrow="Figure 04"
-        title="Confidence grows when evidence stays close."
+        title="Seedling height after four weeks."
         legend={[
-          { label: "reviewed evidence", tone: "accent" },
-          { label: "assumed evidence", tone: "ink" },
+          { label: "Sunny plot", tone: "accent" },
+          { label: "Shaded plot", tone: "ink" },
         ]}
         visual={<ComparisonVisual />}
         caption="The complete figure remains readable at a narrow measure."
-        source="Illustrative data"
+        source="Illustrative measurements"
       />
     </div>
   );

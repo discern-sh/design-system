@@ -111,12 +111,12 @@ const richExampleParagraph = createCliBlock(
   renderParagraphCli,
   {
     content: [
-      "The measured result keeps ",
-      { kind: "strong", content: "its emphasis" },
+      "Rich note bodies retain ",
+      { kind: "strong", content: "phrasing" },
       " and ",
       {
         kind: "link",
-        label: "source",
+        label: "source links",
         destination: "https://example.test/source",
       },
       ".",
@@ -132,21 +132,18 @@ export const cliExamples = defineCliExamples(
     {
       name: "default",
       props: {
-        items: [
-          { content: "Terminal widths were measured in character cells." },
-          {
-            content:
-              "Source labels remain plain text when links are unavailable.",
-            returnLabel: "return",
-          },
-        ],
+        items: [{
+          id: "example-source-note",
+          content: "The source remains a distinct, addressable definition.",
+          returnReferences: [{ href: "#example-source-note-ref" }],
+        }],
       },
     },
     {
       name: "rich-multi-block",
       props: {
         items: [{
-          id: "measured-result",
+          id: "example-rich-note",
           content: {
             kind: "blocks",
             children: [
@@ -156,7 +153,7 @@ export const cliExamples = defineCliExamples(
               }),
               createCliBlock(renderBlockquoteCli, {
                 children: [createCliBlock(renderParagraphCli, {
-                  content: "The qualification remains a quotation.",
+                  content: "A qualification remains a quotation.",
                 })],
               }),
               createCliBlock(renderCodeBlockCli, {
@@ -165,10 +162,9 @@ export const cliExamples = defineCliExamples(
               }),
             ],
           },
-          returnLabel: "return",
           returnReferences: [
-            { href: "#measured-result-ref-1" },
-            { href: "#measured-result-ref-2" },
+            { href: "#example-rich-note-ref-1", label: "1" },
+            { href: "#example-rich-note-ref-2", label: "2" },
           ],
         }],
       },

@@ -34,9 +34,12 @@ export const cliExamples = defineCliExamples(
   [{
     name: "default",
     props: {
-      navigation: "01 Context\n02 Decision",
-      body: "The main reading column stays first in the terminal flow.",
-      rail: "Updated 11 August",
+      navigation: "01 · Context\n02 · Method",
+      navigationLabel: "On this page",
+      body:
+        "A reading shell with room to think.\nThe central column carries the narrative while optional rails hold orientation and supporting detail without interrupting the argument.",
+      rail: "Filed under\nPractice",
+      railLabel: "Article context",
     },
   }] as const satisfies readonly CliExample<ArticleLayoutCliProps>[],
 );

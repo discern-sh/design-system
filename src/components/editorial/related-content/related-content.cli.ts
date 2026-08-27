@@ -44,14 +44,30 @@ export const cliExamples = defineCliExamples(
   [{
     name: "default",
     props: {
-      eyebrow: "Continue",
-      title: "Related reading",
+      eyebrow: "Continue reading",
+      title: "The next useful question.",
       items: [
         {
+          eyebrow: "Essay",
+          title: "Designing for legibility",
+          description:
+            "How structure turns complexity into something a reader can challenge.",
+          href: "#legibility",
+          meta: "9 min",
+        },
+        {
           eyebrow: "Guide",
-          title: "Terminal reading patterns",
-          description: "How hierarchy survives capability changes.",
-          href: "/guides/terminal-reading",
+          title: "Choosing a reading measure",
+          description: "How line length and spacing support sustained reading.",
+          href: "#reading-measure",
+          meta: "14 min",
+        },
+        {
+          eyebrow: "Field note",
+          title: "Editing a complex introduction",
+          description:
+            "A practical account of simplifying the opening without losing context.",
+          href: "#introduction",
           meta: "6 min",
         },
       ],

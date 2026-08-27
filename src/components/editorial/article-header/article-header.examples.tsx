@@ -8,19 +8,19 @@ export default function ArticleHeaderExamples() {
   return (
     <ArticleHeader
       eyebrow={<Badge tone="accent">Field note · Issue 08</Badge>}
-      title={<>Building a review habit that survives the busy week.</>}
+      title={<>A neighbourhood garden through the seasons.</>}
       standfirst={
         <p>
-          A practical editorial opener for content that needs authority, pace,
-          and enough context for a reader to decide whether to commit.
+          An illustrated account of how planting, weather, and shared care shape
+          one small green space over a year.
         </p>
       }
       authors={[{
         name: "Morgan Lee",
-        role: "Research editor",
+        role: "Contributing editor",
         initials: "ML",
       }]}
-      meta={["12 min read", "Updated 14 July", "Practice"]}
+      meta={["12 min read", "Updated 14 July", "Field notes"]}
       actions={<Button variant="secondary" size="sm">Save article</Button>}
       surface="accent"
     />

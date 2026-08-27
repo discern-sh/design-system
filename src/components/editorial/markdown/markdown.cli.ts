@@ -162,15 +162,9 @@ export const cliExamples = defineCliExamples(
       props: { source: markdownHostileExampleSource, maxWidth: 52 },
     },
     {
-      name: "narrow-fallback",
+      name: "narrow-layout",
       props: { source: markdownCompactExampleSource, maxWidth: 24 },
-      capabilities: {
-        ansiControl: false,
-        colorDepth: "none",
-        columns: 24,
-        hyperlinks: false,
-        unicode: false,
-      },
+      capabilities: { columns: 24 },
     },
   ] as const satisfies readonly CliExample<MarkdownCliProps>[],
 );

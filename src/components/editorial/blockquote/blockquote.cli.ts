@@ -81,19 +81,13 @@ export const cliExamples = defineCliExamples(
         children: [
           createCliBlock(renderParagraphCli, {
             content: [
-              "A quotation can retain ",
-              { kind: "emphasis", content: "semantic emphasis" },
-              " and ",
-              {
-                kind: "link",
-                label: "a source",
-                destination: "https://example.test/source",
-              },
-              ".",
+              "A neutral quotation can carry ordinary prose and ",
+              { kind: "emphasis", content: "inline meaning" },
+              " without inventing an attribution.",
             ],
           }),
           createCliBlock(renderParagraphCli, {
-            content: "A second block remains part of the quotation.",
+            content: "A second block stays part of the same quotation.",
           }),
         ],
       },
@@ -107,7 +101,8 @@ export const cliExamples = defineCliExamples(
           }),
           createCliBlock(renderBlockquoteCli, {
             children: [createCliBlock(renderParagraphCli, {
-              content: "Nested quoted material remains a block of its own.",
+              content:
+                "Nested quoted material remains a semantic block of its own.",
             })],
           }),
         ],

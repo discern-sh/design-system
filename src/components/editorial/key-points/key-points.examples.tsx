@@ -5,20 +5,20 @@ import { KeyPoints } from "./key-points.tsx";
 export default function KeyPointsExamples() {
   return (
     <KeyPoints
-      eyebrow="The brief"
-      title="Three ideas to carry into the work."
+      eyebrow="Key points"
+      title="Three ideas to remember."
       items={[
         {
-          title: "Begin with evidence",
-          description: <p>Observe the real state before proposing a change.</p>,
+          title: "Lead with the main idea",
+          description: <p>State it before adding supporting detail.</p>,
         },
         {
-          title: "Name the constraint",
-          description: <p>Make the hard edge visible enough to review.</p>,
+          title: "Add useful context",
+          description: <p>Explain what a reader needs to understand it.</p>,
         },
         {
-          title: "Leave a trace",
-          description: <p>Preserve what the next reader will need.</p>,
+          title: "End with direction",
+          description: <p>Make the next step easy to find.</p>,
         },
       ]}
     />

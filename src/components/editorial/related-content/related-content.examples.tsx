@@ -22,20 +22,23 @@ export default function RelatedContentExamples() {
         },
         {
           eyebrow: "Guide",
-          title: "A practical evidence habit",
+          title: "Choosing a reading measure",
           description: (
-            <p>Small techniques for keeping claims close to their proof.</p>
+            <p>How line length and spacing support sustained reading.</p>
           ),
-          href: "#evidence",
+          href: "#reading-measure",
           meta: "14 min",
         },
         {
           eyebrow: "Field note",
-          title: "When the system bends",
+          title: "Editing a complex introduction",
           description: (
-            <p>What exceptions reveal about the boundary you actually need.</p>
+            <p>
+              A practical account of simplifying the opening without losing
+              context.
+            </p>
           ),
-          href: "#exceptions",
+          href: "#introduction",
           meta: "6 min",
         },
       ]}

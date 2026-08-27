@@ -51,11 +51,18 @@ export const cliExamples = defineCliExamples(
   [{
     name: "default",
     props: {
-      eyebrow: "Field notes",
-      title: "Designing for the reading path",
-      standfirst: "A calm hierarchy keeps evidence close to the argument.",
-      authors: [{ name: "Ada Osei", role: "Research" }],
-      meta: ["8 min read", "11 August 2026"],
+      eyebrow: "Field note · Issue 08",
+      title: "A neighbourhood garden through the seasons.",
+      standfirst:
+        "An illustrated account of how planting, weather, and shared care shape one small green space over a year.",
+      authors: [{
+        name: "Morgan Lee",
+        role: "Contributing editor",
+        initials: "ML",
+      }],
+      meta: ["12 min read", "Updated 14 July", "Field notes"],
+      actions: ["Save article"],
+      surface: "accent",
     },
   }] as const satisfies readonly CliExample<ArticleHeaderCliProps>[],
 );

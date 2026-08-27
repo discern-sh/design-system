@@ -57,7 +57,7 @@ function HostileSourceExample() {
   return <Markdown source={markdownHostileExampleSource} measure="narrow" />;
 }
 
-function NarrowFallbackExample() {
+function NarrowLayoutExample() {
   return (
     <div style={{ maxWidth: "20rem" }}>
       <Markdown source={markdownCompactExampleSource} measure="narrow" />
@@ -76,7 +76,7 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "diagram-resource", Example: DiagramResourceExample },
     { id: "chart-resource", Example: ChartResourceExample },
     { id: "hostile-source", Example: HostileSourceExample },
-    { id: "narrow-fallback", Example: NarrowFallbackExample },
+    { id: "narrow-layout", Example: NarrowLayoutExample },
   ],
 );
 
@@ -90,7 +90,7 @@ export default function MarkdownExamples() {
       <DiagramResourceExample />
       <ChartResourceExample />
       <HostileSourceExample />
-      <NarrowFallbackExample />
+      <NarrowLayoutExample />
     </div>
   );
 }

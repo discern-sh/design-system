@@ -7,11 +7,12 @@ export default function PullQuoteExamples() {
     <PullQuote
       quote={
         <p>
-          The useful system is the one that makes its reasoning easy to inspect.
+          A good reading experience lets the ideas lead and the interface
+          recede.
         </p>
       }
       attribution="Example contributor"
-      citation="Field notes, issue 08"
+      citation="Collected essays"
     />
   );
 }

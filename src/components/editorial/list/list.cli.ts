@@ -23,6 +23,7 @@ import {
   wrapStyledTextPreservingIndent,
 } from "../../../cli/text.ts";
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
+import renderParagraphCli from "../paragraph/paragraph.cli.ts";
 import meta, { componentExampleVocabulary } from "./list.meta.ts";
 import type { ListKind, ListSpacing } from "./list.types.ts";
 
@@ -226,24 +227,25 @@ export const cliExamples = defineCliExamples(
     {
       name: "default",
       props: {
-        spacing: "loose",
         items: [
           {
-            content: [
-              "Keep ",
-              { kind: "strong", content: "meaning" },
-              " with the item and its supporting detail.",
-            ],
+            content: "Start with the strongest available evidence.",
           },
           {
-            content: "Record the constraint.",
-            blocks: [createCliBlock(renderListCli, {
-              kind: "ordered",
-              items: [
-                { content: "Name the observation." },
-                { content: "Preserve the evidence." },
-              ],
-            })],
+            content: "Keep supporting detail close to the claim.",
+            blocks: [
+              createCliBlock(renderParagraphCli, {
+                content:
+                  "A continuation remains a separate paragraph inside its item.",
+              }),
+              createCliBlock(renderListCli, {
+                kind: "ordered",
+                items: [
+                  { content: "Name the observation." },
+                  { content: "Record the constraint." },
+                ],
+              }),
+            ],
           },
         ],
       },
@@ -252,10 +254,11 @@ export const cliExamples = defineCliExamples(
       name: "task-mixed",
       props: {
         kind: "task",
+        spacing: "loose",
         items: [
           { content: "Reviewed source material", checked: true },
           { content: "Verify the final frame", checked: false },
-          { content: "Context without task state" },
+          { content: "A contextual note without task state" },
         ],
       },
     },

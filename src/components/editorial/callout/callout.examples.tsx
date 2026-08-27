@@ -6,7 +6,7 @@ function InsightCalloutExample() {
   return (
     <Callout
       eyebrow="Editor’s note"
-      title="Keep the exception visible."
+      title="Keep the qualifier visible."
       icon="i"
       tone="insight"
     >
@@ -19,11 +19,11 @@ function WarningCalloutExample() {
   return (
     <Callout
       eyebrow="Caution"
-      title="This path changes shared state."
+      title="Check figures before publication."
       icon="!"
       tone="warning"
     >
-      <p>Pause at the consequence, not merely at the command.</p>
+      <p>A corrected source may change the conclusion.</p>
     </Callout>
   );
 }

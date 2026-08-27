@@ -5,25 +5,25 @@ import { Timeline } from "./timeline.tsx";
 export default function TimelineExamples() {
   return (
     <Timeline
-      eyebrow="A short history"
-      title="The argument, one decision at a time."
+      eyebrow="Publication history"
+      title="A feature from draft to print."
       items={[
         {
           date: "Week 01",
-          title: "Observe",
-          description: <p>The recurring friction is named.</p>,
+          title: "Draft",
+          description: <p>The initial outline is complete.</p>,
           status: "complete",
         },
         {
           date: "Week 03",
-          title: "Constrain",
-          description: <p>A shared boundary becomes executable.</p>,
+          title: "Edit",
+          description: <p>Supporting details are under review.</p>,
           status: "current",
         },
         {
           date: "Week 06",
-          title: "Review",
-          description: <p>The team compares evidence, not recollections.</p>,
+          title: "Publish",
+          description: <p>Final copy is scheduled.</p>,
         },
       ]}
     />

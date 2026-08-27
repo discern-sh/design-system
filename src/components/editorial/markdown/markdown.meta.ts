@@ -37,7 +37,7 @@ export const componentExampleVocabulary = defineComponentExampleVocabulary(
     { id: "diagram-resource", label: "Diagram resource" },
     { id: "chart-resource", label: "Chart resource" },
     { id: "hostile-source", label: "Inert hostile source" },
-    { id: "narrow-fallback", label: "Narrow fallback" },
+    { id: "narrow-layout", label: "Narrow layout" },
   ],
 );
 

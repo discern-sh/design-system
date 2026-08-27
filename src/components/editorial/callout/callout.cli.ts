@@ -51,18 +51,18 @@ export const cliExamples = defineCliExamples(
     {
       name: "default",
       props: {
-        eyebrow: "Insight",
-        title: "Keep the evidence close",
-        body:
-          "A terminal note should interrupt the eye without interrupting the argument.",
+        eyebrow: "Editor’s note",
+        title: "Keep the qualifier visible.",
+        body: "Readers trust a bounded claim more than a universal one.",
         tone: "insight",
       },
     },
     {
       name: "warning",
       props: {
-        title: "Check the boundary",
-        body: "This action changes public output.",
+        eyebrow: "Caution",
+        title: "Check figures before publication.",
+        body: "A corrected source may change the conclusion.",
         tone: "warning",
       },
     },

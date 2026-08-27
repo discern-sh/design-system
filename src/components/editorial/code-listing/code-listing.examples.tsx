@@ -2,21 +2,20 @@ import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import meta, { componentExampleVocabulary } from "./code-listing.meta.ts";
 import { CodeListing } from "./code-listing.tsx";
 
-const example = `const brief = {
-  question: "What must remain true?",
-  evidence: ["tests", "proof"],
-};
+const example = `function readingTime(words: number): number {
+  return Math.ceil(words / 220);
+}
 
-await prove(brief);`;
+console.log(readingTime(1540));`;
 
 function StandardCodeListingState() {
   return (
     <CodeListing
-      filename="example.ts"
+      filename="reading-time.ts"
       language="TypeScript"
       code={example}
-      highlightLines={[2, 3]}
-      caption="Highlighted lines carry the decision into executable evidence."
+      highlightLines={[1, 2]}
+      caption="Highlighted lines draw attention to the calculation."
     />
   );
 }
@@ -24,11 +23,11 @@ function StandardCodeListingState() {
 function ShowcaseCodeListingState() {
   return (
     <CodeListing
-      filename="decision.ts"
+      filename="reading-time.ts"
       language="TypeScript"
       code={example}
-      highlightLines={[2, 3]}
-      caption="A stable dark treatment for source used as campaign evidence."
+      highlightLines={[1, 2]}
+      caption="The showcase treatment gives the same source stronger visual emphasis."
       variant="showcase"
     />
   );

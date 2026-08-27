@@ -41,16 +41,20 @@ export const cliExamples = defineCliExamples(
   [{
     name: "default",
     props: {
-      eyebrow: "The brief",
-      title: "Ideas to carry into the work",
+      eyebrow: "Key points",
+      title: "Three ideas to remember.",
       items: [
         {
-          title: "Begin with evidence",
-          description: "Observe the real state before proposing a change.",
+          title: "Lead with the main idea",
+          description: "State it before adding supporting detail.",
         },
         {
-          title: "Leave a trace",
-          description: "Preserve what the next reader will need.",
+          title: "Add useful context",
+          description: "Explain what a reader needs to understand it.",
+        },
+        {
+          title: "End with direction",
+          description: "Make the next step easy to find.",
         },
       ],
     },

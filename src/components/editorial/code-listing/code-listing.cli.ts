@@ -39,12 +39,11 @@ export interface CodeListingCliProps {
 }
 
 /** Deterministic Code listing states rendered by the CLI catalogue. */
-const example = `const brief = {
-  question: "What must remain true?",
-  evidence: ["tests", "proof"],
-};
+const example = `function readingTime(words: number): number {
+  return Math.ceil(words / 220);
+}
 
-await prove(brief);`;
+console.log(readingTime(1540));`;
 
 export const cliExamples = defineCliExamples(
   meta,
@@ -53,22 +52,22 @@ export const cliExamples = defineCliExamples(
     {
       name: "standard",
       props: {
-        filename: "example.ts",
+        filename: "reading-time.ts",
         language: "TypeScript",
         code: example,
-        highlightLines: [2, 3],
-        caption:
-          "Highlighted lines carry the decision into executable evidence.",
+        highlightLines: [1, 2],
+        caption: "Highlighted lines draw attention to the calculation.",
       },
     },
     {
       name: "showcase",
       props: {
-        filename: "decision.ts",
+        filename: "reading-time.ts",
         language: "TypeScript",
         code: example,
-        highlightLines: [2, 3],
-        caption: "A stable emphatic treatment for consequential source.",
+        highlightLines: [1, 2],
+        caption:
+          "The showcase treatment gives the same source stronger visual emphasis.",
         variant: "showcase",
       },
     },

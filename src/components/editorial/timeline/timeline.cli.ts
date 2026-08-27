@@ -48,25 +48,25 @@ export const cliExamples = defineCliExamples(
   [{
     name: "default",
     props: {
-      eyebrow: "History",
-      title: "One decision at a time",
+      eyebrow: "Publication history",
+      title: "A feature from draft to print.",
       items: [
         {
           date: "Week 01",
-          title: "Observe",
-          description: "Name the recurring friction.",
+          title: "Draft",
+          description: "The initial outline is complete.",
           status: "complete",
         },
         {
           date: "Week 03",
-          title: "Constrain",
-          description: "Make the shared boundary executable.",
+          title: "Edit",
+          description: "Supporting details are under review.",
           status: "current",
         },
         {
           date: "Week 06",
-          title: "Review",
-          description: "Compare evidence, not recollections.",
+          title: "Publish",
+          description: "Final copy is scheduled.",
         },
       ],
     },

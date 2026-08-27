@@ -46,14 +46,15 @@ export const cliExamples = defineCliExamples(
         language: "ts",
         info: "module",
         code:
-          "const values = [2, 3, 5];\nconst total = values.reduce((sum, value) => sum + value, 0);",
+          "function total(values: readonly number[]): number {\n  return values.reduce((sum, value) => sum + value, 0);\n}\n\nconsole.log(total([2, 3, 5]));",
       },
     },
     {
       name: "preserved-width",
       props: {
         language: "text",
-        code: "one uninterrupted source line remains copyable",
+        code:
+          "one uninterrupted source line remains available without truncation even when its natural measure exceeds the surrounding reading column",
         widthPolicy: "preserve",
       },
     },

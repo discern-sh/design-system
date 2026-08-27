@@ -21,6 +21,7 @@ import {
   terminalThemes,
   type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
+import renderHeadingCli from "../../display/heading/heading.cli.ts";
 import renderListCli from "../list/list.cli.ts";
 import renderParagraphCli from "../paragraph/paragraph.cli.ts";
 import meta, { componentExampleVocabulary } from "./prose.meta.ts";
@@ -73,7 +74,7 @@ export const cliExamples = defineCliExamples(
       name: "default",
       props: {
         text:
-          "Good long-form design gives the first paragraph enough presence to open the argument.\n\nThe rest settles into a calm reading measure.",
+          "Good long-form design gives the first paragraph enough presence to open the argument without turning every sentence into display type.\n\nThe rest settles into a calm reading measure.",
         lead: true,
         dropCap: true,
       },
@@ -91,10 +92,19 @@ export const cliExamples = defineCliExamples(
               {
                 kind: "link",
                 label: "its reference",
-                destination: "https://example.test/reference",
+                destination: "#prose-example",
               },
               ".",
             ],
+          },
+          {
+            kind: "block",
+            block: createCliBlock(renderHeadingCli, {
+              text: "A durable reading rhythm",
+              level: 2,
+              overflow: "wrap",
+              leadingBlankLines: 0,
+            }),
           },
           {
             kind: "block",
