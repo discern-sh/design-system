@@ -1,21 +1,22 @@
-# 3D — Ship OverflowCue and rebuild Terminal layout inspection
+# 4D — Ship OverflowCue and rebuild Terminal layout inspection
 
 **Goal:** Add a reusable public `OverflowCue` Component that truthfully signals scrollable edges on any content, then use it to turn Terminal layouts into focused, URL-reproducible capability labs rather than a long stack of control-heavy inspector cards.
 
-**Wave:** 3. Implement in parallel with 3A, 3B, 3C, and 3E after 2A has landed. Land fourth within wave 3, after 3A–3C.
+**Wave:** 4. Implement in parallel with 4A, 4B, 4C, and 4E after 3A has landed. Land fourth within wave 4, after 4A–4C.
 
-Other wave-3 streams are in flight. You own `3D` only; do not launch, dispatch, or supervise sibling briefs.
+Other wave-4 streams are in flight. You own `4D` only; do not launch, dispatch, or supervise sibling briefs.
 
 ## Orient, verify prerequisites, then re-root
 
-From `/Users/jack/Sites/discern-design-system`, call `discern_status`. Verify the 1A and 2A completion markers are on `main`, the Terminal route/page/style seam exists, and the add-component skill now carries the canonical example convention. Stop if a prerequisite is missing.
+From `/Users/jack/Sites/discern-design-system`, call `discern_status`. Verify the 1A, 2A, and 3A completion markers are on `main`, the Terminal route/page/style seam exists, the deterministic example-image task is live, and the add-component skill carries both canonical example and image-enrolment conventions. Stop if a prerequisite is missing.
 
-Call `discern_start` with the literal name **`catalogue-3d`**, re-root every operation into the returned absolute `data.path`, and pass it to every discern tool.
+Call `discern_start` with the literal name **`catalogue-4d`**, re-root every operation into the returned absolute `data.path`, and pass it to every discern tool.
 
 Then read, in this order:
 
 - `AGENTS.md`, the programme README, `map/00-orientation/design-principles.md`, and `map/60-catalogue/README.md`;
 - the full `add-a-component` skill and follow it for `OverflowCue`;
+- the generated example-image manifest/task and completed 3A brief so the new Component's canonical Web examples enrol without a bespoke screenshot path;
 - `/Users/jack/Sites/macrocosm/resources/js/Components/Macros/Stores/useOverflow.ts` as inspiration only;
 - `src/types/component-meta.ts`, `assets/behaviors/**`, the generated-behaviour pipeline in `scripts/generate.ts`, and the floating-surface behaviour tests as a selection-scoped precedent;
 - the Layout component anatomy and an existing behaviour-owning Component;
@@ -67,7 +68,7 @@ Add Web examples under the canonical example contract for at least:
 
 Keep the Catalogue-worthy examples bounded; use focused tests for the exhaustive state matrix. Add practical real-browser guards in the Terminal/OverflowCue-owned browser-check module for wheel/keyboard/touch-compatible scrolling where automation allows, resize, dynamic content, direction, themes, forced colours, no document overflow, and cue disappearance at each terminal edge. Add an architectural guard that future behaviour metadata auto-enrols the script and that the Component's emitted runtime includes it only when selected. Do not edit shared `scripts/conformance.ts` orchestration in this parallel wave.
 
-Update public exports/generated surfaces through codegen, the closest Component-facing map/documentation authority, and `CHANGELOG.md` under Unreleased. Leave the Catalogue map to wave 4. Never hand-edit generated files.
+Update public exports/generated surfaces through codegen, regenerate deterministic example images/manifest from their source task, update the closest Component-facing map/documentation authority, and add `CHANGELOG.md` under Unreleased. Leave the Catalogue map to wave 5. Never hand-edit generated files or imagery.
 
 ### 3. Split Terminal layouts into index and detail labs
 
@@ -111,6 +112,7 @@ Do not edit landing/Overview or other page-family overflow locations in this str
 Tests must prove:
 
 - a synthetic future `CliCompositionRecipe` joins index, detail route, local navigation, global search, previous/next order, and rendering without page edits;
+- Terminal recipe records consume the universal search authority from 1A rather than maintaining route-specific normalisation, aliases, scoring, or match reasons;
 - presets and custom capability state round-trip through the URL and feed the actual renderer/inspector;
 - raw output copy differs deliberately from source copy and both match their authority;
 - every viewport's inspector reports correct columns/rows/fold/overflow and the document itself does not overflow;
@@ -125,11 +127,12 @@ Run `deno task serve` on the deterministic worktree port and leave it running. U
 
 ## Wave-3 landing order
 
-This branch lands fourth. Before the final gate, confirm 3A, 3B, and 3C brief markers are under `map/_private/planning/catalogue-ux/_done/` on `main`. If not, report implementation-ready state, keep the worktree, and stop for resume. Once present, call `discern_update`, follow its exact overlap/recovery guidance, re-read named files, regenerate from sources, then finish and gate the composed tree.
+This branch lands fourth. Before the final gate, confirm 4A, 4B, and 4C brief markers are under `map/_private/planning/catalogue-ux/_done/` on `main`. If not, report implementation-ready state, keep the worktree, and stop for resume. Once present, call `discern_update`, follow its exact overlap/recovery guidance, re-read named files, regenerate from sources, then finish and gate the composed tree.
 
 ## Constraints
 
 - Follow the add-component skill completely, including anatomy, auto-enrolment, conformance, changelog, and preview.
+- Regenerate and verify `OverflowCue`'s canonical Web example imagery through the wave-3 authority; do not author thumbnails or image metadata in this branch.
 - One framework-neutral overflow measurement/state authority serves emitted behaviour and React; no copied hook logic.
 - Cue presence is based on measurable overflow and remaining scroll distance, not hover or a permanently painted gradient.
 - Keep scrolling native and accessible. Never hide overflow solely to make screenshots clean.
@@ -143,13 +146,14 @@ This branch lands fourth. Before the final gate, confirm 3A, 3B, and 3C brief ma
 - Custom scrollbars, virtualisation, carousel controls, snap points, or auto-scrolling.
 - Rewriting terminal renderers or `projectTerminalInspectorHtml()` geometry.
 - Components/Compare, Foundations, Compositions, Overview, or landing redesign.
-- Broad cross-Catalogue OverflowCue adoption; 4A owns the integrated pass.
+- Broad cross-Catalogue OverflowCue adoption; 5A owns the integrated pass.
 - Interface Builder work or dedicated testing.
 - Publishing a release.
 
 ## Definition of done
 
 - Public `OverflowCue` ships with fixed anatomy, selection-scoped framework-neutral behaviour, truthful block/inline/both and logical-edge states, dynamic/RTL/no-JS/accessibility coverage, generated exports, docs, and Unreleased changelog.
+- Every canonical `OverflowCue` Web example has deterministic generated imagery and manifest coverage without page-specific capture code.
 - The old React hook informed the behaviour but no React-only/manual-sync/white-mask design was copied.
 - Terminal layouts have a light index and one focused detail lab per recipe; the index does not mount all frames.
 - Presets and bounded capability overrides drive the real renderers and inspector, round-trip in the URL, and distinguish preset from Custom state.
@@ -157,6 +161,6 @@ This branch lands fourth. Before the final gate, confirm 3A, 3B, and 3C brief ma
 - All current and synthetic future recipes auto-enrol across routes, navigation, search, rendering, and tests.
 - Every Component/example and Terminal state named above has been visually exercised at exact URLs; the server remains running.
 - No sibling page-family, global muted-metadata, landing, or Interface Builder work appears in the diff.
-- After 3A–3C land, run `discern_update`; after the last edit run `discern_prepare`, commit sources and regenerated outputs, then run `discern_done` on clean committed HEAD.
-- Once green, run `discern_accept`. A recorded grant may land; otherwise it must refuse without mutation, after which report the proof line and `catalogue-3d` branch/worktree and stop.
-- In the final commit, move this brief from `map/_private/planning/catalogue-ux/3d-overflow-cue-and-terminal-layouts.md` to `map/_private/planning/catalogue-ux/_done/3d-overflow-cue-and-terminal-layouts.md` (create `_done/` if needed).
+- After 4A–4C land, run `discern_update`; after the last edit run `discern_prepare`, commit sources and regenerated outputs, then run `discern_done` on clean committed HEAD.
+- Once green, run `discern_accept`. A recorded grant may land; otherwise it must refuse without mutation, after which report the proof line and `catalogue-4d` branch/worktree and stop.
+- In the final commit, move this brief from `map/_private/planning/catalogue-ux/4d-overflow-cue-and-terminal-layouts.md` to `map/_private/planning/catalogue-ux/_done/4d-overflow-cue-and-terminal-layouts.md` (create `_done/` if needed).

@@ -1,10 +1,10 @@
-# 3B — Turn Foundations into a visual explorer
+# 4B — Turn Foundations into a visual explorer
 
 **Goal:** Replace the single long mixed Foundations page with a bounded, searchable visual Token explorer and a distinct terminal-foundations gallery, both projected from the existing authorities and navigable without reading an inventory line by line.
 
-**Wave:** 3. Implement in parallel with 3A, 3C, 3D, and 3E after 2A has landed. Land second within wave 3, after 3A.
+**Wave:** 4. Implement in parallel with 4A, 4C, 4D, and 4E after 3A has landed. Land second within wave 4, after 4A.
 
-Other wave-3 streams are in flight. You own `3B` only; do not launch, dispatch, or supervise sibling briefs.
+Other wave-4 streams are in flight. You own `4B` only; do not launch, dispatch, or supervise sibling briefs.
 
 ## Orient, verify prerequisites, then re-root
 
@@ -12,11 +12,12 @@ Work from `/Users/jack/Sites/discern-design-system`. Call `discern_status`. Veri
 
 - `map/_private/planning/catalogue-ux/_done/1a-catalogue-architecture-and-shell.md`;
 - `map/_private/planning/catalogue-ux/_done/2a-cross-surface-example-contract.md`;
+- `map/_private/planning/catalogue-ux/_done/3a-deterministic-component-example-images.md`;
 - the live tree has a Foundations-owned route module, page module, and stylesheet seam.
 
-If a prerequisite is absent, stop and report it. Call `discern_start` with the literal name **`catalogue-3b`**, re-root every operation into the returned absolute `data.path`, and pass it to discern tools.
+If a prerequisite is absent, stop and report it. Call `discern_start` with the literal name **`catalogue-4b`**, re-root every operation into the returned absolute `data.path`, and pass it to discern tools.
 
-Then read `AGENTS.md`, the programme README, `map/60-catalogue/README.md`, the Foundations route/page/style modules created by 1A, `src/tokens/tokens.ts`, `catalogue/terminal-foundations.ts`, `catalogue/terminal-foundation-preview.tsx`, `tests/catalogue_terminal_foundation_test.tsx`, `tests/catalogue_terminal_theme_test.ts`, and the Foundations-owned browser-check module created by 1A. Verify file locations against the live tree.
+Then read `AGENTS.md`, the programme README, `map/60-catalogue/README.md`, the Foundations route/page/style modules and universal search authority created by 1A, `src/tokens/tokens.ts`, `catalogue/terminal-foundations.ts`, `catalogue/terminal-foundation-preview.tsx`, `tests/catalogue_terminal_foundation_test.tsx`, `tests/catalogue_terminal_theme_test.ts`, and the Foundations-owned browser-check module created by 1A. Verify file locations against the live tree.
 
 ## Background
 
@@ -44,7 +45,7 @@ Project from `allTokens`, `baseTokens`, `discernThemeTokens`, and the existing t
 
 Provide:
 
-- instant search across name, category, description, and value;
+- instant search across name, category, description, and value through the universal search authority. This family owns Token record projection and URL controls, not a second normaliser, alias list, scorer, or match-reason algorithm;
 - a category control that works by recognition and keyboard, with “All” as an explicit option;
 - URL-addressable query/category state with a useful clear/reset action;
 - labelled result count and a helpful empty recovery state;
@@ -103,7 +104,7 @@ Run `deno task serve` on the worktree's deterministic port and leave it running.
 
 ## Wave-3 landing order
 
-Implementation may finish while 3A is still in flight, but this branch lands second. Before the final `discern_prepare`/commit/`discern_done`, confirm `map/_private/planning/catalogue-ux/_done/3a-component-discovery-and-comparison.md` is present on `main`. If it is not, report that 3B is implementation-ready, keep the worktree, and stop for the owner to resume after 3A lands. Once present, call `discern_update`, follow its exact recovery/overlap guidance, re-read any files it names, then finish and gate the composed tree.
+Implementation may finish while 4A is still in flight, but this branch lands second. Before the final `discern_prepare`/commit/`discern_done`, confirm `map/_private/planning/catalogue-ux/_done/4a-component-discovery-and-comparison.md` is present on `main`. If it is not, report that 4B is implementation-ready, keep the worktree, and stop for the owner to resume after 4A lands. Once present, call `discern_update`, follow its exact recovery/overlap guidance, re-read any files it names, then finish and gate the composed tree.
 
 ## Constraints
 
@@ -120,7 +121,7 @@ Implementation may finish while 3A is still in flight, but this branch lands sec
 - Component examples, detail pages, or Compare.
 - Composition patterns or complete Terminal layout recipes.
 - Public landing/overview redesign.
-- `OverflowCue`; 3D owns it. Use existing local containment until 3D lands, and let 4A adopt the public cue here if the integrated audit proves it useful.
+- `OverflowCue`; 4D owns it. Use existing local containment until 4D lands, and let 5A adopt the public cue here if the integrated audit proves it useful.
 - Interface Builder work or dedicated testing.
 - Token-value, theme, or typography retuning.
 
@@ -131,9 +132,10 @@ Implementation may finish while 3A is still in flight, but this branch lands sec
 - Colour, Typography, Spacing/Layout, Shape, and Motion previews communicate their category without requiring the description to be read first.
 - Terminal foundations read as motif/narration galleries, preserve complete registry auto-enrolment and reduced-motion behaviour, and are clearly distinct from full Terminal layouts.
 - Navigation/search contributions derive from the family authorities and do not flood the sidebar.
+- Token and terminal-foundation search consumes the universal matching/alias/match-reason authority rather than maintaining family-specific search semantics.
 - Focused tests cover future Tokens/sheets, URL state, copying, motion, headings, and narrow overflow.
 - No other page family, muted-metadata pass, Token retuning, or Interface Builder work appears in the diff.
 - Exact live URLs have been visually and interactively checked at wide/narrow and light/dark; the server remains running.
-- After 3A has landed, run `discern_update`; after the last edit run `discern_prepare`, commit all changes, then run `discern_done` on clean committed HEAD.
-- Once green, run `discern_accept`. A recorded grant may land; without one it must refuse without mutation, after which report the proof line and `catalogue-3b` branch/worktree and stop.
-- In the final commit, move this brief from `map/_private/planning/catalogue-ux/3b-foundations-explorer.md` to `map/_private/planning/catalogue-ux/_done/3b-foundations-explorer.md` (create `_done/` if needed).
+- After 4A has landed, run `discern_update`; after the last edit run `discern_prepare`, commit all changes, then run `discern_done` on clean committed HEAD.
+- Once green, run `discern_accept`. A recorded grant may land; without one it must refuse without mutation, after which report the proof line and `catalogue-4b` branch/worktree and stop.
+- In the final commit, move this brief from `map/_private/planning/catalogue-ux/4b-foundations-explorer.md` to `map/_private/planning/catalogue-ux/_done/4b-foundations-explorer.md` (create `_done/` if needed).

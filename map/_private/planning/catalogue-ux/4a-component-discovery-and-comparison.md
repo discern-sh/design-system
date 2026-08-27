@@ -1,10 +1,10 @@
-# 3A — Unify Component discovery, detail, and comparison
+# 4A — Unify Component discovery, detail, and comparison
 
 **Goal:** Make Components one coherent human journey—recognise a collection, find a Component, inspect one visual example, then deliberately compare a bounded set—while preserving closed supporting guidance and the exact shared Web/CLI example contract.
 
-**Wave:** 3. Implement in parallel with 3B–3E after 2A has landed. Land first within wave 3.
+**Wave:** 4. Implement in parallel with 4B–4E after 3A has landed. Land first within wave 4.
 
-Other wave-3 streams are in flight. You own `3A` only; do not launch, dispatch, or supervise sibling briefs.
+Other wave-4 streams are in flight. You own `4A` only; do not launch, dispatch, or supervise sibling briefs.
 
 ## Orient, verify prerequisites, then re-root
 
@@ -12,18 +12,19 @@ From `/Users/jack/Sites/discern-design-system`, call `discern_status`. Verify th
 
 - `_done/1a-catalogue-architecture-and-shell.md`: Components and Compare have page/route/style ownership seams;
 - `_done/2a-cross-surface-example-contract.md`: generated registry entries expose one canonical ordered example vocabulary with explicit surface exceptions.
+- `_done/3a-deterministic-component-example-images.md`: every canonical Web example has reusable theme-aware imagery and one derived representative image.
 
-Use the full path `map/_private/planning/catalogue-ux/_done/…`. Stop if either prerequisite is absent or behaviourally incomplete.
+Use the full path `map/_private/planning/catalogue-ux/_done/…`. Stop if any prerequisite is absent or behaviourally incomplete.
 
-Call `discern_start` with the literal name **`catalogue-3a`**, re-root every operation into the returned absolute `data.path`, and pass it to every discern tool.
+Call `discern_start` with the literal name **`catalogue-4a`**, re-root every operation into the returned absolute `data.path`, and pass it to every discern tool.
 
-Then read `AGENTS.md`, the programme README, `map/60-catalogue/README.md`, the Components and Compare route/page/style modules, the shared Component preview module, `catalogue/cli-preview.tsx`, `catalogue/generated/registry.ts` as generated evidence only, the Component-family tests, and the Component/Compare browser-check module created by 1A. Verify live anchors. Use `discern-cure-a-bug` for heading, state restoration, duplicate-directory, or interaction defects.
+Then read `AGENTS.md`, the programme README, `map/60-catalogue/README.md`, the Components and Compare route/page/style modules, the universal search authority created by 1A, the shared Component preview module, the generated example-image manifest and resolver created by 3A, `catalogue/cli-preview.tsx`, `catalogue/generated/registry.ts` as generated evidence only, the Component-family tests, and the Component/Compare browser-check module created by 1A. Verify live anchors. Use `discern-cure-a-bug` for heading, state restoration, duplicate-directory, image, or interaction defects.
 
 ## Background
 
 The current Component explorer begins with Group and purpose cards, then replaces them with filtered Component cards. The separate Review route repeats Group and purpose directories before mounting every complete `ComponentPreview`, including three closed disclosure stacks for each Component. Detail routes render every Web state in sequence or every CLI example in sequence. This is complete for an LLM reading the DOM, but humans experience duplicated choices, long pages, repeated headers, and dense secondary evidence.
 
-Wave 2A has made example identity exact across Web and CLI. This stream turns that contract into a visual interaction: a selected example survives a surface switch and URL refresh, while “view all” and exhaustive comparison remain deliberate secondary modes.
+Wave 2A has made example identity exact across Web and CLI, and wave 3A has captured every Web example into reusable browser imagery. This stream turns those contracts into a visual interaction: discovery uses fast recognisable images without mounting the complete registry, while detail uses the live selected specimen and preserves its identity across surface switches and URL refresh.
 
 The owner's density rule is binding. Guidance and API disclosures were intentionally collapsed because open guidance across multiple Components overwhelmed the specimens. Keep them closed on detail and omit them from ordinary comparison cards. The Catalogue should show the Component before it explains it.
 
@@ -33,10 +34,10 @@ The owner's density rule is binding. Guidance and API disclosures were intention
 
 Keep `/catalogue/components/` as the canonical place to browse Groups, purposes, search results, and “all Components”. Remove the duplicate Group/purpose card directory from the visible Compare landing.
 
-- Group and purpose cards are obviously clickable as whole cards, use labelled counts, and show a compact preview of member names with a truthful `+N more` treatment.
+- Group and purpose cards are obviously clickable as whole cards, use labelled counts, and show a restrained derived mosaic or representative visual from generated member imagery plus a compact preview of member names with a truthful `+N more` treatment. Do not mount live Component populations on the index.
 - Cards provide one clear inspect/browse action and a quiet secondary “Compare this collection” action without nested interactive controls inside an anchor.
-- Component result cards show name, short description, Group only when it disambiguates a mixed result set, and precise surface coverage derived from CLI stance. Use a compact badge/treatment, not tiny prose hidden at the card edge.
-- Search, Group, purpose, “show all”, and result state round-trip through URL parameters. Browser Back/Forward restores both the controls and results. Keep the global Search Palette separate; do not implement a third Component search authority.
+- Component result cards lead with the generated representative image, then show name, short description, Group only when it disambiguates a mixed result set, and precise surface coverage derived from CLI stance. Use intrinsic dimensions and truthful theme selection from the image manifest; no hand-authored thumbnails or per-page representative list.
+- Search, Group, purpose, “show all”, and result state round-trip through URL parameters. Browser Back/Forward restores both the controls and results. Keep the global Search Palette as a separate UI, but consume the universal search engine, aliases, scoring, and match reasons created by 1A rather than implementing a third matching authority.
 - Match and empty states help recover with one action, not an instruction block.
 - “All Components” is explicit and easy to reach, but Group/purpose recognition remains the calm default.
 
@@ -99,6 +100,7 @@ Use History APIs so controls do not unexpectedly reload the whole shell, while r
 Add tests that automatically cover the live registry and prove:
 
 - collection cards/counts/`+N` are derived and direct to browse and Compare;
+- every Component card resolves its representative image from the generated manifest in the active theme, index pages do not mount live specimens, and a future Component enrols without adding a thumbnail;
 - explorer URL state and Back/Forward restoration;
 - detail defaults to one example, preserves canonical id across Web/CLI, exposes honest surface-only reasons, and makes view-all deliberate;
 - disclosures remain closed and ordered on detail and are absent from ordinary Compare items;
@@ -124,7 +126,8 @@ Report exact URLs that reproduce each representative state.
 ## Constraints
 
 - The specimen leads. Guidance and API disclosures stay closed on detail and do not appear in ordinary Compare cards.
-- Consume the wave-2 canonical example authority; never invent display labels or reorder examples in page code.
+- Consume the wave-2 canonical example authority and wave-3 generated image manifest; never invent display labels, representative examples, image paths, or example order in page code.
+- Consume the universal search authority from 1A. This route family owns query/URL controls and record projection, not tokenisation, synonyms, scoring, match reasons, or tie-breaking.
 - Keep Components as the one discovery directory and Compare as the one comparison workspace.
 - Stay within Components/Compare route/page/style modules, the shared Component preview, `catalogue/cli-preview.tsx` only where its projection context needs change, and Components/Compare-owned unit/browser tests. Do not edit Foundations, Compositions, Terminal, landing/Overview, shared shell, or shared conformance-orchestration files.
 - Do not edit generated files or Component example sources.
@@ -136,7 +139,7 @@ Report exact URLs that reproduce each representative state.
 
 - Altering the canonical example contract or migrating Component fixtures.
 - Foundations, Composition, Terminal layout, public landing, or Overview redesign.
-- Adding `OverflowCue`; 3D owns it, and 4A can adopt it in remaining Component overflow locations after all page streams land.
+- Adding `OverflowCue`; 4D owns it, and 5A can adopt it in remaining Component overflow locations after all page streams land.
 - Opening or expanding usage guidance by default.
 - Component visual redesigns, Token changes, or package release.
 
@@ -144,6 +147,7 @@ Report exact URLs that reproduce each representative state.
 
 - Components is the sole Group/purpose discovery directory; Compare no longer duplicates it.
 - A person can browse by recognition, search/filter with shareable state, and understand cards/counts/actions without reading implementation language.
+- Discovery cards use generated representative images in the correct theme without live-mounting the registry; image membership and selection auto-enrol future Components.
 - Detail defaults to one large named specimen; the canonical example identity survives Web/CLI switching and refresh, while View all is deliberate and exceptions are honest.
 - Usage, selection/import, and API evidence remain closed on detail and are absent from ordinary Compare populations.
 - Compare supports Group, purpose, custom, and complete scopes; global Web/CLI, per-item overrides/reset, jump navigation, and URL restoration all work.
@@ -151,5 +155,5 @@ Report exact URLs that reproduce each representative state.
 - Representative journeys have been visually inspected wide/narrow and light/dark at exact URLs, with the server left running.
 - No sibling page, generated/example source, muted-metadata, or Interface Builder work appears in the diff.
 - After the final edit run `discern_prepare`, commit all changes, then run `discern_done` on clean committed HEAD.
-- Once green, run `discern_accept`. A recorded grant may land; otherwise it must refuse without mutation, after which report the proof line and `catalogue-3a` branch/worktree and stop.
-- In the final commit, move this brief from `map/_private/planning/catalogue-ux/3a-component-discovery-and-comparison.md` to `map/_private/planning/catalogue-ux/_done/3a-component-discovery-and-comparison.md` (create `_done/` if needed).
+- Once green, run `discern_accept`. A recorded grant may land; otherwise it must refuse without mutation, after which report the proof line and `catalogue-4a` branch/worktree and stop.
+- In the final commit, move this brief from `map/_private/planning/catalogue-ux/4a-component-discovery-and-comparison.md` to `map/_private/planning/catalogue-ux/_done/4a-component-discovery-and-comparison.md` (create `_done/` if needed).

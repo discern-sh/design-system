@@ -1,10 +1,10 @@
-# 4A — Run the integrated visual and interaction hardening pass
+# 5A — Run the integrated visual and interaction hardening pass
 
 **Goal:** Inspect the complete landed Catalogue with human eyes across routes, themes, widths, keyboard, and shareable states; cure cross-page inconsistencies; adopt the shared overflow cue where it materially helps; and leave real-browser guards plus an accurate Catalogue map.
 
-**Wave:** 4. This is the final implementation and convergence stream. Start only after all five wave-3 streams have landed.
+**Wave:** 5. This is the final implementation and convergence stream. Start only after all five wave-4 streams have landed.
 
-You own `4A` only. Do not relaunch completed streams. Read-only audit sub-agents may inspect disjoint route families if available, but one coordinating agent must personally reproduce every reported issue, own all edits, reconcile cross-page judgments, run the browser, and pass the final gate.
+You own `5A` only. Do not relaunch completed streams. Read-only audit sub-agents may inspect disjoint route families if available, but one coordinating agent must personally reproduce every reported issue, own all edits, reconcile cross-page judgments, run the browser, and pass the final gate.
 
 ## Orient, verify the complete baseline, then re-root
 
@@ -12,17 +12,18 @@ From `/Users/jack/Sites/discern-design-system`, call `discern_status`. Verify al
 
 - `_done/1a-catalogue-architecture-and-shell.md`;
 - `_done/2a-cross-surface-example-contract.md`;
-- `_done/3a-component-discovery-and-comparison.md`;
-- `_done/3b-foundations-explorer.md`;
-- `_done/3c-composition-gallery.md`;
-- `_done/3d-overflow-cue-and-terminal-layouts.md`;
-- `_done/3e-catalogue-front-doors.md`.
+- `_done/3a-deterministic-component-example-images.md`;
+- `_done/4a-component-discovery-and-comparison.md`;
+- `_done/4b-foundations-explorer.md`;
+- `_done/4c-composition-gallery.md`;
+- `_done/4d-overflow-cue-and-terminal-layouts.md`;
+- `_done/4e-catalogue-front-doors.md`.
 
-Verify behaviourally that `OverflowCue` is public, Web/CLI example identity is canonical, and every route family has its new index/detail structure. If any prerequisite is absent or only the marker landed, stop and report it.
+Verify behaviourally that `OverflowCue` is public, Web/CLI example identity is canonical, generated imagery covers every canonical Web example, universal search serves global and family projections, and every route family has its new index/detail structure. If any prerequisite is absent or only the marker landed, stop and report it.
 
-Call `discern_start` with the literal name **`catalogue-4a`**, re-root all operations into the returned absolute `data.path`, and pass it to every discern tool.
+Call `discern_start` with the literal name **`catalogue-5a`**, re-root all operations into the returned absolute `data.path`, and pass it to every discern tool.
 
-After re-rooting, read `AGENTS.md`, the programme README and all completed briefs, `map/60-catalogue/README.md`, the current route descriptor authority, shared shell/search/card/preview modules and styles, `scripts/conformance.ts` plus every family-owned browser-check module, Catalogue integration tests, and the `OverflowCue` contract. Use the `browser:control-in-app-browser` skill for the visual audit and `discern-cure-a-bug` for every defect you fix.
+After re-rooting, read `AGENTS.md`, the programme README and all completed briefs, `map/60-catalogue/README.md`, the current route descriptor authority, universal search and Appearance authorities, generated example-image manifest/resolver and capture contract, shared shell/card/preview modules and styles, `scripts/conformance.ts` plus every family-owned browser-check module, Catalogue integration tests, and the `OverflowCue` contract. Use the `browser:control-in-app-browser` skill for the visual audit and `discern-cure-a-bug` for every defect you fix.
 
 ## Background
 
@@ -65,6 +66,9 @@ Fix inconsistencies that are visible only when routes are compared:
 - one `h1`, sensible Group/Component hierarchy, landmarks, target visibility, and focus order;
 - URL parameter names/default omission/back-forward behaviour across page families;
 - consistent close/reset semantics and control placement.
+- search semantics across global, Components, Foundations, Compositions, and Terminal providers: the same intent, alias, ranking, and match-reason vocabulary must feel coherent even where each UI owns different filters;
+- generated Component imagery: correct canonical example, active theme, crop, intrinsic sizing, loading/failure posture, and visual usefulness at card scale without live-mounting index populations;
+- Appearance placement and state: settle whether accent remains exposed, moved, or hidden, and leave the reusable control/state boundary coherent for later Builder consumption.
 
 Prefer fixing a shared authority when several pages drift. Do not force page-specific content into one generic mega-component merely to make it look identical.
 
@@ -91,6 +95,8 @@ Use keyboard and pointer to complete these journeys without reading hidden instr
 5. Open a Terminal layout, choose a preset, make a custom capability posture, scroll to overflow edges, copy raw output separately from source, reload the URL, and return to the index.
 6. On a narrow screen, use SkipLink, mobile drawer, global search, Appearance, deep navigation, and all local overflow without moving the document sideways.
 
+During journeys 1–3, repeat representative intent queries across global and local search—include “call to action” for CTA Band—and confirm the same matching authority produces understandable ranking and reasons. In Component discovery, inspect generated representative imagery in both themes and compare a sample against its live selected example.
+
 Fix any point where the next action depends on scrutinising a label, remembering an undocumented convention, or guessing whether a control changes the page, specimen, theme, or source.
 
 ### 5. Strengthen real-browser and structural guards
@@ -101,6 +107,8 @@ Cover:
 
 - canonical route projections and bounded index/detail mounting;
 - shell skip link, drawer modal behaviour, search close/recovery/match reason, Appearance, Back/Forward, and focus restoration;
+- universal search provider enrolment, alias/ranking consistency, and one-source match reasons across global and family projections;
+- generated image manifest coverage, active-theme resolution, representative selection, intrinsic sizing, and bounded index mounting;
 - Component canonical example preservation and Compare global/custom controls;
 - Token/Composition/Terminal URL state and future-member enrolment;
 - OverflowCue state at real edges in each adopted class of container;
@@ -112,7 +120,7 @@ Use screenshots as review evidence where helpful, but guard semantic geometry an
 
 ### 6. Update present-tense project knowledge
 
-Rewrite `map/60-catalogue/README.md` to describe the final current route structure, human navigation model, example authority, illustrative Composition status, Token and Terminal explorers, Compare workspace, URL-state contract, `OverflowCue` usage, and where browser conformance lives.
+Rewrite `map/60-catalogue/README.md` to describe the final current route structure, human navigation model, canonical example and generated-image authorities, universal search contract, reusable Appearance boundary, illustrative Composition status, Token and Terminal explorers, Compare workspace, URL-state contract, `OverflowCue` usage, and where browser conformance lives.
 
 Link code authorities instead of copying mechanically derivable route/example inventories. Remove statements made false by the redesign. Do not write a change log into the map.
 
@@ -128,6 +136,7 @@ After fixes and before the gate, browse the entire matrix again from a clean rel
 - Do Web and CLI feel like two projections of one example, not different catalogues?
 - Is any visible copy written for an implementation agent rather than a person?
 - Can every consequential review state be copied as a URL?
+- Does one intent query mean the same thing everywhere, and can I recognise image-backed results before reading descriptions?
 - Is any cue, border, badge, disclosure, or paragraph repeating a fact already visible?
 
 Remove unnecessary visual noise found by this pass. Do **not** respond by globally darkening muted text or enlarging tiny metadata; that pass remains deferred.
@@ -157,6 +166,9 @@ Remove unnecessary visual noise found by this pass. Do **not** respond by global
 - Every major route/state in the audit matrix has been personally inspected in the in-app browser at relevant widths/themes, with no Interface Builder testing.
 - All six end-to-end human journeys complete by keyboard and pointer without hidden conventions, broken Back/Forward, lost URL state, or document-level overflow.
 - Canonical navigation, page rhythm, cards/counts/actions, index/detail density, headings, unavailable states, and source/copy semantics are coherent across page families.
+- Global and local searches consume one matching/alias/ranking/match-reason authority, including the agreed intent-query witnesses, and no family-specific matcher remains.
+- Generated Component imagery is complete, theme-correct, well-cropped, useful at discovery scale, and never substitutes for the live detail specimen or bloats the published package.
+- Appearance is calm and coherent, with a reusable state/control contract ready for the separate Builder programme; the accent range is moved or hidden if the integrated browser evidence supports that choice.
 - `OverflowCue` is used selectively wherever it materially reveals continuing content; no bespoke fades remain and every adoption works at actual start/middle/end edges.
 - Real-browser guards cover shell, examples/Compare, each explorer family, overflow, accessibility, reduced motion/forced colours, narrow containment, front-door emission, and bounded mounting.
 - `map/60-catalogue/README.md` accurately describes the final present system and links its authorities.
@@ -164,5 +176,5 @@ Remove unnecessary visual noise found by this pass. Do **not** respond by global
 - The muted-metadata pass remains untouched, and no Interface Builder or release work appears in the diff.
 - Leave `deno task serve` running and report the exact Catalogue base URL plus a compact set of representative deep links for owner review.
 - After the last edit run `discern_prepare`, commit every rewrite/fix/map change in focused commits, then run `discern_done` on clean committed HEAD. Fix every diagnostic without loosening tests or standards.
-- Once green, run `discern_accept`. A recorded grant may land; otherwise it must refuse without mutation, after which report the proof line and `catalogue-4a` branch/worktree and stop for owner review.
-- In the final commit, move this brief from `map/_private/planning/catalogue-ux/4a-integrated-visual-qa.md` to `map/_private/planning/catalogue-ux/_done/4a-integrated-visual-qa.md` (create `_done/` if needed).
+- Once green, run `discern_accept`. A recorded grant may land; otherwise it must refuse without mutation, after which report the proof line and `catalogue-5a` branch/worktree and stop for owner review.
+- In the final commit, move this brief from `map/_private/planning/catalogue-ux/5a-integrated-visual-qa.md` to `map/_private/planning/catalogue-ux/_done/5a-integrated-visual-qa.md` (create `_done/` if needed).

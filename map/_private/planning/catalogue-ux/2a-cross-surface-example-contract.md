@@ -2,7 +2,7 @@
 
 **Goal:** Give every Component one precise, ordered example vocabulary that Web and CLI share by default, migrate the complete registry to it, and make silent name/order drift impossible for every future Component.
 
-**Wave:** 2. This is the sole wave-2 stream. It starts only after 1A has landed and must land before the five wave-3 UI streams begin.
+**Wave:** 2. This is the sole wave-2 stream. It starts only after 1A has landed and must land before the wave-3 image pipeline or any wave-4 UI stream begins.
 
 Other programme streams will follow. You own `2A` only; do not launch, dispatch, or supervise sibling briefs.
 
@@ -69,6 +69,7 @@ Update the source generators and generated Catalogue types so that build/codegen
 - A rendered CLI example must reference a declared CLI-capable entry exactly once and in canonical order.
 - Undeclared, duplicate, missing, reordered, or silently surface-only examples fail generation with the Component slug and an actionable message.
 - The generated registry exposes the canonical id and label to both preview projections. Remove `catalogue/cli-preview.tsx`'s independent `exampleLabel()` title-casing authority.
+- Every Web-capable canonical entry remains addressable as one bounded renderer input by slug and example id. Wave 3 will capture that exact projection into generated imagery; do not add image metadata or page-specific screenshots here.
 - A new Component or new example automatically joins the guard. No test may enumerate today's 109 rendered slugs by hand.
 - Keep fragment ids stable where an existing id survives. Where migration changes an id, add a deliberate legacy-fragment upgrade only for links known to be part of the Catalogue contract; do not maintain an unbounded alias history.
 
@@ -139,6 +140,7 @@ Run `deno task serve` on this worktree's deterministic port and leave it running
 - Component discovery/detail/Compare layout or control redesign.
 - Foundations, Compositions, Terminal layout, overview, or landing-page UI.
 - Adding the reusable overflow affordance.
+- Capturing or committing Component example images; wave 3A owns the deterministic browser-image pipeline after this contract lands.
 - Raising muted text or tiny metadata prominence.
 - Interface Builder changes or dedicated testing.
 - Publishing a release.
@@ -150,6 +152,7 @@ Run `deno task serve` on this worktree's deterministic port and leave it running
 - No single-surface example exists without a precise, reviewed impossibility reason; convenience or historical fixture shape is not accepted as a reason.
 - Generation fails automatically on a future missing, duplicate, reordered, undeclared, or silently divergent example.
 - CLI preview no longer invents labels, and browser/stdout projections consume the same canonical facts.
+- Every Web-capable example is addressable by stable Component slug plus canonical example id for the next wave's deterministic capture route.
 - Additional renderer test fixtures remain available where needed without bloating the human Catalogue example set.
 - The authored add-component skill teaches the convention and `discern refresh` has materialised it correctly.
 - Representative simple, lifecycle, Workflow, and complex Components have been visually checked on both surfaces at the exact live preview URLs, with the server left running.

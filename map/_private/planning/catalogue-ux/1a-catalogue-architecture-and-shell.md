@@ -17,6 +17,7 @@ Only after re-rooting, read:
 - `AGENTS.md` and `map/00-orientation/design-principles.md`;
 - `map/60-catalogue/README.md` and the programme README beside this brief;
 - `catalogue/app.tsx`, `catalogue/routes.ts`, `catalogue/catalogue.css`, and `catalogue/index.html`;
+- every existing search/filter implementation under `catalogue/**`, plus `src/types/component-meta.ts` and representative Component, Token, Composition, and terminal-foundation records;
 - the Catalogue-related portions of `tests/catalogue_instrument_test.ts`, `tests/catalogue_routes_test.ts`, `tests/serve_test.ts`, and `scripts/conformance.ts`;
 - `src/components/docs/search-palette/**` if the generic component must change to provide an explicit close action.
 
@@ -26,7 +27,9 @@ Verify all anchors against the live tree before editing. Use the `discern-cure-a
 
 The current explorer is source-backed and functionally capable, but almost all routed UI lives in a 2,008-line `catalogue/app.tsx`, while nearly every Catalogue rule lives in a 1,703-line `catalogue/catalogue.css`. Different page redesigns would collide in those two files. Tests compound the problem by parsing exact function names and CSS source fragments rather than guarding user behaviour.
 
-The visible shell also exposes several implementation-shaped choices: navigation order differs between surfaces; route copy speaks about mounting contracts and explicit scopes; the accent slider sits in primary chrome without an Appearance context; the mobile drawer lacks the complete modal interaction model; search depends on users reading result titles without showing why a match occurred; and the explorer has no Catalogue skip link.
+The visible shell also exposes several implementation-shaped choices: navigation order differs between surfaces; route copy speaks about mounting contracts and explicit scopes; the accent slider sits in primary chrome without an Appearance context; the mobile drawer lacks the complete modal interaction model; search depends on users reading result titles without showing why a match occurred; route and local filters each risk growing their own matching conventions; and the explorer has no Catalogue skip link.
+
+Search quality is a shared-system concern. The later Components and Foundations explorers and the separate Interface Builder all need tokenisation, aliases, scoring, and honest match reasons. This stream establishes that pure authority once. It does not edit the Builder or prescribe one search UI everywhere.
 
 The intended posture is quiet and visual. Do not solve discoverability by adding paragraphs. Give people stable places, direct actions, and recognisable affordances.
 
@@ -63,18 +66,27 @@ Remove internal language from shared shell copy. A user should see actions such 
 - Add the package `SkipLink` as the first interactive Catalogue element and a stable main-content target. Confirm one `h1` per routed page and a coherent landmark/heading structure.
 - Keep desktop navigation calm and compact. Active route and active local destination must be distinguishable by more than colour alone without turning every entry into a badge.
 - Turn the narrow navigation into a complete modal drawer: labelled dialog semantics, Escape close, backdrop close, initial focus, focus containment, focus restoration to the menu trigger, background inertness/scroll lock, and no duplicate close announcements. Preserve ordinary navigation when JavaScript or an enhancement is unavailable.
-- Keep Theme readily reachable, but place Theme and accent hue inside one compact **Appearance** control. The hue range retains its accessible name, swatch, numeric feedback, persistence, and token-driven preview; it no longer reads as an unexplained primary-toolbar slider.
+- Keep Theme readily reachable, but place Theme and accent hue inside one compact **Appearance** control. The hue range retains its accessible name, swatch, numeric feedback, persistence, and token-driven preview when it remains exposed; it no longer reads as an unexplained primary-toolbar slider and may be hidden or moved if the browser inspection proves that calmer. Keep the Appearance state and control boundary reusable by later Catalogue preview tools and the separate Builder. Do not hard-code a second Theme/accent model into the shell.
 - Ensure the shell has no document-level horizontal overflow at narrow widths and does not hide access to search, appearance, or navigation.
 
-### 4. Make global search legible without making it verbose
+### 4. Create one universal search authority, then make global search legible
 
-Continue to search route names, Component metadata, Tokens, terminal foundations, and Composition definitions from their real authorities.
+Create a small pure module under a live-tree-appropriate `catalogue/search/**` seam. It owns query normalisation, tokenisation, deterministic scoring, alias/synonym expansion, match reasons, and stable tie-breaking. Search providers contribute source-backed records; the engine knows nothing about React, routes, local storage, or a particular results UI.
+
+- One alias vocabulary covers human intent and established abbreviations—for example “call to action” finding CTA Band—without copying synonyms into global search, Component discovery, Foundations, and the Builder.
+- Records can expose title, slug, Group/category, description, purposes, keywords, and bounded route-specific facts while retaining which field matched.
+- Exact and prefix name matches lead; aliases and supporting descriptions remain useful but cannot make surprising weak matches outrank direct ones.
+- A provider can restrict its population without changing matching semantics. Global search, local route explorers, and the Builder may own different URL/UI state but consume the same search result contract.
+- Add pure future-member and ranking tests, including punctuation, case, abbreviations, multi-token intent, empty/no-result postures, and stable ordering.
+
+Migrate global search to that authority and continue to project route names, Component metadata, Tokens, terminal foundations, and Composition definitions from their real registries.
 
 - Show a concise match reason or highlighted matched field when a result was found through description, purpose, guidance, Group, or keywords rather than its title.
 - For an empty query, show a small set of useful starting destinations derived from the canonical route authority rather than an instruction paragraph.
 - For no results, offer direct recovery actions such as viewing all Components or clearing the query.
 - Provide a conspicuous close action in addition to Escape/backdrop behaviour. If this is generically missing from `SearchPalette`, fix the public Component with focused examples, conformance coverage, and an Unreleased changelog entry; do not bolt a Catalogue-only close button onto its internal DOM.
 - Preserve direct routed results, keyboard focus, Escape behaviour, and focus restoration. Do not build a second search implementation beside `SearchPalette`.
+- Leave an explicit integration contract for later route-family providers and the Builder. Do not edit `catalogue/builder/**` in this stream.
 
 ### 5. Split the Catalogue stylesheet by ownership
 
@@ -92,6 +104,7 @@ Preserve the `discern` namespace and layer rules. Remove dead selectors during t
 Refactor Catalogue tests that currently slice `app.tsx` by function name or regex exact CSS bodies. Keep the underlying invariants, but guard them at the closest behavioural or exported authority:
 
 - canonical route order and descriptors;
+- universal search ranking, aliases, match reasons, stable ordering, and source-backed future enrolment;
 - explorer routes do not mount specimen populations;
 - Compare requires a deliberate scope before exhaustive rendering;
 - supporting Component disclosures are closed by default;
@@ -112,6 +125,7 @@ Run `deno task serve` on this worktree's deterministic `discern identity --port`
 - Preserve one authority per route fact and every generated fact. Never hand-edit `src/generated/**` or `catalogue/generated/**`.
 - Keep all supporting guidance/disclosures closed by default. This architecture pass must not expand the Catalogue into an instruction manual.
 - Keep page modules concrete. Avoid one-caller indirection or a custom page framework.
+- One pure search engine owns matching semantics; page families and the Builder may adapt records and render results, but may not fork normalisation, aliases, scoring, or match-reason logic.
 - Cure each interaction defect as a class and leave a regression guard.
 - If the route-family boundary or a public Search Palette API choice is surprising or hard to reverse, write an ADR under `map/_adr/` and update the map.
 - Commit atomically: architecture seam, shell behaviour, and test migration should review as coherent steps.
@@ -124,14 +138,16 @@ Run `deno task serve` on this worktree's deterministic `discern identity --port`
 - Redesigning Foundations, Compositions, Terminal layouts, or the public landing content.
 - Adding `OverflowCue`; wave 3B owns the public Component and adoption.
 - Raising the prominence of muted explanatory copy or tiny metadata.
-- Editing `catalogue/builder/**` or adding dedicated Builder checks.
+- Editing `catalogue/builder/**` or adding dedicated Builder checks. Supplying the reusable search and Appearance contracts it will later consume is in scope.
 
 ## Definition of done
 
 - `catalogue/app.tsx` is a bounded bootstrap/composition module; routed pages, styles, family tests, and browser checks have disjoint named owners; later programme streams can work without sharing a page file, stylesheet, mixed test file, or conformance body.
 - One tested route descriptor authority supplies the canonical six-destination names/order everywhere this stream owns, while all existing canonical and legacy URLs still resolve.
 - The Catalogue has a working skip link, one `h1` per route, a keyboard-complete modal mobile drawer, a compact Appearance control, and no narrow document overflow.
+- One tested pure search authority supplies normalisation, aliases, scoring, match reasons, and stable ordering to global search and exposes the provider contract later route families and the Builder consume. “Call to action” finds CTA Band without a UI-specific synonym.
 - Search exposes concise match reasons, useful starting/recovery destinations, direct links, an explicit close action, and correct focus restoration.
+- Appearance is compact and visually calm; its Theme/accent state/control boundary is reusable, and the accent range is hidden or moved if browser evidence shows that is clearer.
 - Source-string tests that pinned the old monolith are replaced by guards that fail when the user-facing invariant regresses.
 - Component guidance remains closed and visual density has not increased; the Catalogue reads more clearly with less prose, not more.
 - No muted-metadata pass or Interface Builder work has slipped into the diff.

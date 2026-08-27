@@ -1,18 +1,18 @@
-# 3C — Turn Compositions into an illustrative pattern gallery
+# 4C — Turn Compositions into an illustrative pattern gallery
 
 **Goal:** Present Compositions as a curated gallery of high-quality illustrative patterns, with a light index and focused responsive detail pages that link their constituent Components and clearly distinguish inspiration from package API.
 
-**Wave:** 3. Implement in parallel with 3A, 3B, 3D, and 3E after 2A has landed. Land third within wave 3, after 3A and 3B.
+**Wave:** 4. Implement in parallel with 4A, 4B, 4D, and 4E after 3A has landed. Land third within wave 4, after 4A and 4B.
 
-Other wave-3 streams are in flight. You own `3C` only; do not launch, dispatch, or supervise sibling briefs.
+Other wave-4 streams are in flight. You own `4C` only; do not launch, dispatch, or supervise sibling briefs.
 
 ## Orient, verify prerequisites, then re-root
 
-From `/Users/jack/Sites/discern-design-system`, call `discern_status`. Verify wave 1A and 2A completion markers are on `main` and that the live tree has a Compositions-owned route/page/style seam. If not, stop and report the missing prerequisite.
+From `/Users/jack/Sites/discern-design-system`, call `discern_status`. Verify wave 1A, 2A, and 3A completion markers are on `main` and that the live tree has a Compositions-owned route/page/style seam. If not, stop and report the missing prerequisite.
 
-Call `discern_start` with the literal name **`catalogue-3c`**, re-root every operation into the returned absolute `data.path`, and pass it to every discern tool.
+Call `discern_start` with the literal name **`catalogue-4c`**, re-root every operation into the returned absolute `data.path`, and pass it to every discern tool.
 
-Then read `AGENTS.md`, the programme README, `map/60-catalogue/README.md`, the Compositions route/page/style modules created by 1A, all of `catalogue/compositions.tsx`, the post-1A Composition-family tests, `tests/docs_page_furniture_test.ts`, and the Compositions-owned browser-check module created by 1A. Verify anchors against the live tree.
+Then read `AGENTS.md`, the programme README, `map/60-catalogue/README.md`, the Compositions route/page/style modules and universal search authority created by 1A, all of `catalogue/compositions.tsx`, the post-1A Composition-family tests, `tests/docs_page_furniture_test.ts`, and the Compositions-owned browser-check module created by 1A. Verify anchors against the live tree.
 
 ## Background
 
@@ -65,7 +65,7 @@ Reduce nested card-on-card-on-surface treatment. Use spacing and one clear canva
 
 ### 4. Add gallery navigation and search projection
 
-The Compositions family should contribute its index and detail destinations to local navigation and global search from the recipe registry. Search context says “Illustrative pattern”, not merely “Composition”, and can match constituent Component names without duplicating a keyword list.
+The Compositions family should contribute its index and detail destinations to local navigation and global search from the recipe registry. Search context says “Illustrative pattern”, not merely “Composition”, and can match constituent Component names without duplicating a keyword list. Project those records through the universal search authority from 1A; do not create Composition-specific normalisation, synonyms, scoring, or match reasons.
 
 Keep the sidebar bounded to pattern titles on this route. Deep links, selected width, and current pattern must survive refresh and be shareable.
 
@@ -91,10 +91,10 @@ Run `deno task serve` on the deterministic worktree port and leave it running. I
 
 Implementation may proceed concurrently, but this branch lands third. Before the final gate, confirm both of these markers are present on `main`:
 
-- `_done/3a-component-discovery-and-comparison.md`;
-- `_done/3b-foundations-explorer.md`.
+- `_done/4a-component-discovery-and-comparison.md`;
+- `_done/4b-foundations-explorer.md`.
 
-If either is absent, report that 3C is implementation-ready, keep the worktree, and stop for owner-directed resume. Once both are present, call `discern_update`, follow its exact overlap guidance, re-read named files, then prepare, commit, and gate the composed tree.
+If either is absent, report that 4C is implementation-ready, keep the worktree, and stop for owner-directed resume. Once both are present, call `discern_update`, follow its exact overlap guidance, re-read named files, then prepare, commit, and gate the composed tree.
 
 ## Constraints
 
@@ -111,7 +111,7 @@ If either is absent, report that 3C is implementation-ready, keep the worktree, 
 
 - Promoting a Composition to package exports or adding a Composition component family.
 - Component example migration or Component detail/Compare redesign.
-- CLI complete-layout recipes; 3D owns those.
+- CLI complete-layout recipes; 4D owns those.
 - Public landing or Overview copy.
 - Interface Builder work or dedicated testing.
 - A generic visual editor, recipe DSL, or copy-and-install workflow.
@@ -124,6 +124,6 @@ If either is absent, report that 3C is implementation-ready, keep the worktree, 
 - Recipe identity, order, membership, preview, source, journey, navigation, and search derive from one structured authority with future-member coverage.
 - Every current pattern has been inspected at narrow/wide and light/dark, with exact URLs reported and the server left running.
 - No unrelated page family, muted-metadata pass, package API promotion, or Interface Builder work appears in the diff.
-- After 3A and 3B have landed, run `discern_update`; after the final edit run `discern_prepare`, commit all changes, then run `discern_done` on clean committed HEAD.
-- Once green, run `discern_accept`. A recorded grant may land; otherwise it must refuse without mutation, after which report the proof line and `catalogue-3c` branch/worktree and stop.
-- In the final commit, move this brief from `map/_private/planning/catalogue-ux/3c-composition-gallery.md` to `map/_private/planning/catalogue-ux/_done/3c-composition-gallery.md` (create `_done/` if needed).
+- After 4A and 4B have landed, run `discern_update`; after the final edit run `discern_prepare`, commit all changes, then run `discern_done` on clean committed HEAD.
+- Once green, run `discern_accept`. A recorded grant may land; otherwise it must refuse without mutation, after which report the proof line and `catalogue-4c` branch/worktree and stop.
+- In the final commit, move this brief from `map/_private/planning/catalogue-ux/4c-composition-gallery.md` to `map/_private/planning/catalogue-ux/_done/4c-composition-gallery.md` (create `_done/` if needed).
