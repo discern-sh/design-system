@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Glossary term",
   slug: "glossary-term",
   group: "Docs",
@@ -15,3 +16,10 @@ export default {
     "Definition accepts phrasing content for valid placement inside prose; use Hover card block layout when the supplementary content needs headings, lists, or actions.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Inline definition" }],
+);
+
+export default meta;

@@ -5,6 +5,7 @@
  */
 
 import { renderStyledSpans } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { measureText, truncateText, wrapText } from "../../../cli/text.ts";
 import {
@@ -12,6 +13,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./glossary-term.meta.ts";
 
 /** Inputs accepted by the terminal Glossary term renderer. */
 export interface GlossaryTermCliProps {
@@ -22,15 +24,18 @@ export interface GlossaryTermCliProps {
 }
 
 /** Deterministic Glossary term states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<GlossaryTermCliProps>[] = [
-  {
-    name: "definition",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [{
+    name: "default",
     props: {
-      term: "capability",
-      definition: "A terminal feature supplied explicitly to a pure renderer.",
+      term: "reading measure",
+      definition:
+        "A line-length boundary that keeps continuous prose comfortable to scan.",
     },
-  },
-] as const;
+  }] as const satisfies readonly CliExample<GlossaryTermCliProps>[],
+);
 
 /** Render a marked term followed by its always-visible terminal definition. */
 const renderGlossaryTermCli: CliRenderer<GlossaryTermCliProps> = (

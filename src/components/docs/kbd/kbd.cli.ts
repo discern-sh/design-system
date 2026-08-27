@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { truncateText } from "../../../cli/text.ts";
 import {
@@ -12,6 +13,7 @@ import {
   terminalThemes,
   type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./kbd.meta.ts";
 
 /** Inputs accepted by the terminal Kbd renderer. */
 export interface KbdCliProps {
@@ -21,10 +23,14 @@ export interface KbdCliProps {
 }
 
 /** Deterministic Kbd states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<KbdCliProps>[] = [
-  { name: "key", props: { label: "Enter" } },
-  { name: "chord", props: { label: "Ctrl+K" } },
-] as const;
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    { name: "default", props: { label: "Enter" } },
+    { name: "key-chord", props: { label: "Ctrl+Shift+P" } },
+  ] as const satisfies readonly CliExample<KbdCliProps>[],
+);
 
 /** Render one compact terminal keycap chip. */
 const renderKbdCli: CliRenderer<KbdCliProps> = (props, capabilities) => {

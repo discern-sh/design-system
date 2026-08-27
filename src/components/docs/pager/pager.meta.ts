@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Pager",
   slug: "pager",
   group: "Docs",
@@ -13,3 +14,13 @@ export default {
     "Direction words are real text inside each link, so the announced name carries both direction and destination.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Previous and next" },
+    { id: "next-only", label: "Next page only" },
+  ],
+);
+
+export default meta;

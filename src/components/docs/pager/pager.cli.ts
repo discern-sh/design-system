@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
 import {
@@ -12,6 +13,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./pager.meta.ts";
 
 /** One terminal Pager destination. */
 export interface PagerCliLink {
@@ -31,15 +33,28 @@ export interface PagerCliProps {
 }
 
 /** Deterministic Pager states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<PagerCliProps>[] = [
-  {
-    name: "both",
-    props: {
-      previous: { label: "Capabilities", href: "/cli/capabilities" },
-      next: { label: "Components", href: "/cli/components" },
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        previous: { label: "Lorem ipsum", href: "#anchor-heading-lorem" },
+        next: {
+          label: "Consectetur adipiscing",
+          href: "#anchor-heading-consectetur",
+        },
+      },
     },
-  },
-] as const;
+    {
+      name: "next-only",
+      props: {
+        next: { label: "Dolor sit amet", href: "#anchor-heading-lorem" },
+      },
+    },
+  ] as const satisfies readonly CliExample<PagerCliProps>[],
+);
 
 /** Render adjacent documentation destinations on one line or a narrow stack. */
 const renderPagerCli: CliRenderer<PagerCliProps> = (props, capabilities) => {

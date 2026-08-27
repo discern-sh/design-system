@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import {
@@ -18,6 +19,7 @@ import {
   type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import { renderMotifSectionRule } from "../../../cli/motifs.ts";
+import meta, { componentExampleVocabulary } from "./docs-header.meta.ts";
 
 /** Inputs accepted by the terminal Docs header renderer. */
 export interface DocsHeaderCliProps extends TerminalMotifOptions {
@@ -29,16 +31,18 @@ export interface DocsHeaderCliProps extends TerminalMotifOptions {
 }
 
 /** Deterministic Docs header states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<DocsHeaderCliProps>[] = [
-  {
-    name: "guide",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [{
+    name: "default",
     props: {
-      brand: "discern docs",
-      middle: "Design system / CLI rendering",
-      actions: ["Search", "Theme"],
+      brand: "Lorem manual",
+      middle: "Search Ctrl+K",
+      actions: ["Consectetur"],
     },
-  },
-] as const;
+  }] as const satisfies readonly CliExample<DocsHeaderCliProps>[],
+);
 
 /** Render a documentation masthead as a labeled motif rule and context row. */
 const renderDocsHeaderCli: CliRenderer<DocsHeaderCliProps> = (

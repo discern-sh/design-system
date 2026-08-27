@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Kbd",
   slug: "kbd",
   group: "Docs",
@@ -13,3 +14,13 @@ export default {
     "Keycap text uses the interface face at the interface-text floor size and holds contrast in both themes.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Single key" },
+    { id: "key-chord", label: "Key chord" },
+  ],
+);
+
+export default meta;

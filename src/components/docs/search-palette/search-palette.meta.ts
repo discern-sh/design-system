@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Search palette",
   slug: "search-palette",
   group: "Docs",
@@ -20,3 +21,10 @@ export default {
     "Escape follows the platform search-input convention: it clears a non-empty query first, and closes the palette when the query is empty.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Search dialog", only: "web" }],
+);
+
+export default meta;

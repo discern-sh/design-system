@@ -1,5 +1,9 @@
-import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
+import {
+  type ConformanceScenario,
+  defineCatalogueExamples,
+} from "../../../../catalogue/conformance.ts";
 import { Prose } from "../../editorial/prose/prose.tsx";
+import meta, { componentExampleVocabulary } from "./glossary-term.meta.ts";
 import { GlossaryTerm } from "./glossary-term.tsx";
 
 export const conformance = [{
@@ -15,11 +19,11 @@ export const conformance = [{
     },
     {
       expect: "visible",
-      target: { role: "group", name: "Worktree definition" },
+      target: { role: "group", name: "Reading measure definition" },
     },
     {
       expect: "within-viewport",
-      target: { role: "group", name: "Worktree definition" },
+      target: { role: "group", name: "Reading measure definition" },
     },
     { action: "press", key: "Tab" },
     {
@@ -33,27 +37,21 @@ export default function GlossaryTermExamples() {
   return (
     <Prose>
       <p>
-        Each change begins in a{" "}
-        <GlossaryTerm
-          definition="A separate checkout and branch used for one isolated line of work."
-          data-example-glossary-term
-        >
-          Worktree
-        </GlossaryTerm>
-        , while the shared landing branch stays undisturbed.
-      </p>
-      <p>
         A{" "}
         <GlossaryTerm
-          definition="A recorded quality check tied to one clean commit."
-          placement="bottom"
-          align="start"
-          width="sm"
+          definition="A line-length boundary that keeps continuous prose comfortable to scan."
+          data-example-glossary-term
         >
-          gate proof
+          reading measure
         </GlossaryTerm>{" "}
-        preserves the evidence used at handoff.
+        helps a longer explanation remain readable.
       </p>
     </Prose>
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: GlossaryTermExamples }],
+);

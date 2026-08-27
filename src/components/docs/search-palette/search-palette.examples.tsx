@@ -1,7 +1,11 @@
 import { useState } from "react";
-import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
+import {
+  type ConformanceScenario,
+  defineCatalogueExamples,
+} from "../../../../catalogue/conformance.ts";
 import { Button } from "../../core/button/button.tsx";
 import { Kbd } from "../kbd/kbd.tsx";
+import meta, { componentExampleVocabulary } from "./search-palette.meta.ts";
 import { SearchPalette, SearchPaletteResult } from "./search-palette.tsx";
 
 const DESTINATIONS = [
@@ -110,3 +114,9 @@ export default function SearchPaletteExamples() {
     </>
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: SearchPaletteExamples }],
+);

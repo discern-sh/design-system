@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Anchor heading",
   slug: "anchor-heading",
   group: "Docs",
@@ -14,3 +15,13 @@ export default {
     "The link stays keyboard reachable while visually hidden, becomes visible on focus, and is always visible on hoverless devices.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [
+    { id: "default", label: "Section heading" },
+    { id: "nested-heading", label: "Nested heading" },
+  ],
+);
+
+export default meta;

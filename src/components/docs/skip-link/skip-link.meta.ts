@@ -1,6 +1,7 @@
+import { defineComponentExampleVocabulary } from "../../../types/component-examples.ts";
 import type { ComponentMeta } from "../../../types/component-meta.ts";
 
-export default {
+const meta = {
   name: "Skip link",
   slug: "skip-link",
   group: "Docs",
@@ -17,3 +18,10 @@ export default {
     "On focus it surfaces as the page's topmost element with a visible outline, meeting the bypass-blocks expectation.",
   ],
 } satisfies ComponentMeta;
+
+export const componentExampleVocabulary = defineComponentExampleVocabulary(
+  meta,
+  [{ id: "default", label: "Keyboard bypass", only: "web" }],
+);
+
+export default meta;

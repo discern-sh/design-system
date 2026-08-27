@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { withCliHeadingBoundary } from "../../../cli/heading-boundary.ts";
 import { joinVertical } from "../../../cli/layout.ts";
@@ -21,6 +22,7 @@ import {
   type MotifSectionRuleTreatment,
   renderMotifSectionRule,
 } from "../../../cli/motifs.ts";
+import meta, { componentExampleVocabulary } from "./anchor-heading.meta.ts";
 import type { AnchorHeadingLevel } from "./anchor-heading.types.ts";
 
 /** Inputs accepted by the terminal Anchor heading renderer. */
@@ -38,39 +40,29 @@ export interface AnchorHeadingCliProps extends TerminalMotifOptions {
 }
 
 /** Deterministic Anchor heading states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<AnchorHeadingCliProps>[] = [
-  {
-    name: "strong-embedded",
-    props: { id: "renderer-contract", text: "Renderer contract", level: 2 },
-  },
-  {
-    name: "strong-underline",
-    props: {
-      id: "renderer-contract-underline",
-      text: "Renderer contract",
-      level: 2,
-      treatment: "underline",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      name: "default",
+      props: {
+        id: "anchor-heading-lorem",
+        text: "Lorem ipsum dolor",
+        level: 2,
+      },
     },
-  },
-  {
-    name: "quiet-sandwich",
-    props: {
-      id: "renderer-contract-sandwich",
-      text: "Renderer contract",
-      level: 2,
-      treatment: "sandwich",
+    {
+      name: "nested-heading",
+      props: {
+        id: "anchor-heading-consectetur",
+        text: "Consectetur adipiscing elit",
+        level: 3,
+        leadingBlankLines: 0,
+      },
     },
-  },
-  {
-    name: "nested-boundary",
-    props: {
-      id: "nested-contract",
-      text: "Nested contract",
-      level: 3,
-      leadingBlankLines: 0,
-    },
-  },
-] as const;
+  ] as const satisfies readonly CliExample<AnchorHeadingCliProps>[],
+);
 
 /** Render a documentation heading as a labeled package motif rule. */
 const renderAnchorHeadingCli: CliRenderer<AnchorHeadingCliProps> = (

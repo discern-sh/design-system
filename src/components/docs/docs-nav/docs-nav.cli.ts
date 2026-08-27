@@ -5,6 +5,7 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { measureText, wrapText } from "../../../cli/text.ts";
@@ -15,6 +16,7 @@ import {
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
+import meta, { componentExampleVocabulary } from "./docs-nav.meta.ts";
 
 /** One terminal Docs nav destination. */
 export interface DocsNavCliItem {
@@ -39,26 +41,32 @@ export interface DocsNavCliProps {
 }
 
 /** Deterministic Docs nav states rendered by the CLI catalogue. */
-export const cliExamples: readonly CliExample<DocsNavCliProps>[] = [
-  {
-    name: "sections",
+export const cliExamples = defineCliExamples(
+  meta,
+  componentExampleVocabulary,
+  [{
+    name: "default",
     props: {
       sections: [
         {
-          title: "Foundations",
+          title: "Orientation",
           items: [
-            { label: "Capabilities", href: "/cli/capabilities" },
-            { label: "Text layout", href: "/cli/text", current: true },
+            { label: "Overview", href: "#top", current: true },
+            { label: "Getting started", href: "#components" },
+            { label: "Concepts", href: "#group-docs" },
           ],
         },
         {
-          title: "Components",
-          items: [{ label: "Editorial", href: "/cli/editorial" }],
+          title: "Reference",
+          items: [
+            { label: "Configuration", href: "#component-docs-nav" },
+            { label: "Glossary", href: "#component-pager" },
+          ],
         },
       ],
     },
-  },
-] as const;
+  }] as const satisfies readonly CliExample<DocsNavCliProps>[],
+);
 
 function hanging(prefix: string, value: string, width: number): string {
   const lines = wrapText(value, Math.max(1, width - measureText(prefix)));

@@ -1,5 +1,9 @@
-import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
+import {
+  type ConformanceScenario,
+  defineCatalogueExamples,
+} from "../../../../catalogue/conformance.ts";
 import { Button } from "../../core/button/button.tsx";
+import meta, { componentExampleVocabulary } from "./skip-link.meta.ts";
 import { SkipLink } from "./skip-link.tsx";
 
 export const conformance = [{
@@ -30,3 +34,9 @@ export default function SkipLinkExamples() {
     </div>
   );
 }
+
+export const catalogueExamples = defineCatalogueExamples(
+  meta,
+  componentExampleVocabulary,
+  [{ id: "default", Example: SkipLinkExamples }],
+);
