@@ -81,6 +81,17 @@ function assertSpecificReason(
       } is ${definition.only}-only without a specific impossibility reason`,
     );
   }
+  const absentSurface = definition.only === "web" ? "CLI" : "Web";
+  const namesAbsentSurface = definition.only === "web"
+    ? /\b(?:clis?|terminals?|ansi|text-cell)\b/iu
+    : /\b(?:web|browsers?|html|dom|css)\b/iu;
+  if (!namesAbsentSurface.test(reason)) {
+    throw new TypeError(
+      `${meta.slug} example ${
+        JSON.stringify(definition.id)
+      } is ${definition.only}-only, so its impossibility reason must name the absent ${absentSurface} medium`,
+    );
+  }
   return reason;
 }
 

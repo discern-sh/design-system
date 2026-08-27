@@ -1,5 +1,7 @@
 import type { BuildSummary } from "../src/runtime.ts";
 import type { ComponentMeta } from "../src/types/component-meta.ts";
+import type { ComponentExampleDefinition } from "../src/types/component-examples.ts";
+import { resolveComponentExampleVocabulary } from "../src/types/component-examples.ts";
 import { renderChartSvg } from "../src/chart/svg.ts";
 import {
   markdownChartExampleSource,
@@ -572,7 +574,16 @@ async function enrichComponentSources(
   const metadata = await Promise.all(paths.map(async (source) => {
     const module = await import(source.metaUrl.href) as {
       default: ComponentMeta;
+      componentExampleVocabulary?: unknown;
     };
+    if (!Array.isArray(module.componentExampleVocabulary)) {
+      throw new TypeError(
+        `${source.metaUrl.pathname} must export componentExampleVocabulary`,
+      );
+    }
+    const exampleVocabulary = module
+      .componentExampleVocabulary as readonly ComponentExampleDefinition[];
+    resolveComponentExampleVocabulary(module.default, exampleVocabulary);
     return module.default;
   }));
   const command = new Deno.Command(Deno.execPath(), {
@@ -713,7 +724,7 @@ async function generateRegistry(
   const entries: string[] = [];
   for (const [index, source] of sources.entries()) {
     imports.push(
-      `import meta${index} from ${
+      `import meta${index}, { componentExampleVocabulary as componentExampleVocabulary${index} } from ${
         JSON.stringify(relativeImport(GENERATED_ROOT, source.metaUrl))
       };`,
       `import * as examples${index} from ${
@@ -731,12 +742,13 @@ async function generateRegistry(
           JSON.stringify(relativeImport(GENERATED_ROOT, cliUrl))
         };`,
       );
-      cliPreview = `renderedCliPreview(renderCli${index}, cliExamples${index})`;
+      cliPreview =
+        `renderedCliPreview(meta${index}, componentExampleVocabulary${index}, renderCli${index}, cliExamples${index})`;
     } else {
       cliPreview = `meta${index}.cli`;
     }
     entries.push(
-      `  { meta: meta${index}, Examples: examples${index}.default, states: statesFrom(examples${index}, ${
+      `  { meta: meta${index}, canonicalExamples: resolveComponentExampleVocabulary(meta${index}, componentExampleVocabulary${index}), Examples: examples${index}.default, webExamples: examplesFrom(meta${index}, componentExampleVocabulary${index}, examples${index}, ${
         JSON.stringify(source.examplesUrl.pathname)
       }), conformance: scenariosFrom(examples${index}, ${
         JSON.stringify(source.examplesUrl.pathname)
@@ -757,9 +769,11 @@ async function generateRegistry(
 import type { ComponentType } from "react";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import type { CliExample, CliRenderer } from "../../src/cli/contracts.ts";
+import type { ComponentExampleDefinition, ResolvedComponentExampleDefinition } from "../../src/types/component-examples.ts";
+import { componentExamplesForSurface, resolveComponentExampleVocabulary, validateComponentExampleImplementations } from "../../src/types/component-examples.ts";
 import type { ComponentMeta } from "../../src/types/component-meta.ts";
 import type {
-  CatalogueExampleState,
+  CatalogueExample,
   CatalogueObjectType,
   CataloguePropDocumentation,
   CatalogueVariant,
@@ -784,59 +798,62 @@ function builderDefaultsFrom(
   return defaults as Readonly<Record<string, unknown>>;
 }
 
-function statesFrom(
+function examplesFrom(
+  meta: ComponentMeta,
+  vocabulary: readonly ComponentExampleDefinition[],
   module: object,
   source: string,
-): readonly CatalogueExampleState[] {
-  const states = "catalogueStates" in module
-    ? module.catalogueStates
-    : [{
-      name: "default",
-      label: "Default",
-      Example: "default" in module ? module.default : undefined,
-    }];
-  if (!Array.isArray(states)) {
-    throw new TypeError(\`\${source} catalogueStates export must be an array\`);
+): readonly CatalogueExample[] {
+  if (!("catalogueExamples" in module)) {
+    throw new TypeError(
+      \`\${meta.slug} Web examples in \${source} must export catalogueExamples\`,
+    );
   }
-  const names = new Set<string>();
-  for (const value of states) {
+  const implementations = module.catalogueExamples;
+  if (!Array.isArray(implementations)) {
+    throw new TypeError(\`\${source} catalogueExamples export must be an array\`);
+  }
+  const ids: string[] = [];
+  const examples: Array<{ readonly id: string; readonly Example: ComponentType }> = [];
+  for (const value of implementations) {
     if (typeof value !== "object" || value === null) {
-      throw new TypeError(\`\${source} contains a non-object Catalogue state\`);
+      throw new TypeError(\`\${source} contains a non-object Catalogue example\`);
     }
-    const state = value as {
-      readonly name?: unknown;
-      readonly label?: unknown;
+    const example = value as {
+      readonly id?: unknown;
       readonly Example?: unknown;
     };
-    if (
-      typeof state.name !== "string" ||
-      !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(state.name)
-    ) {
+    if (typeof example.id !== "string") {
       throw new TypeError(
-        \`\${source} Catalogue state names must be stable kebab-case\`,
-      );
-    }
-    if (names.has(state.name)) {
-      throw new TypeError(
-        \`\${source} repeats Catalogue state \${state.name}\`,
-      );
-    }
-    if (typeof state.label !== "string" || !state.label.trim()) {
-      throw new TypeError(
-        \`\${source} Catalogue state \${state.name} needs a label\`,
+        \`\${meta.slug} Web examples in \${source} contain an invalid id\`,
       );
     }
     if (
-      typeof state.Example !== "function" &&
-      (typeof state.Example !== "object" || state.Example === null)
+      typeof example.Example !== "function" &&
+      (typeof example.Example !== "object" || example.Example === null)
     ) {
       throw new TypeError(
-        \`\${source} Catalogue state \${state.name} needs an Example\`,
+        \`\${source} Catalogue example \${example.id} needs an Example\`,
       );
     }
-    names.add(state.name);
+    ids.push(example.id);
+    examples.push(example as { readonly id: string; readonly Example: ComponentType });
   }
-  return states as readonly CatalogueExampleState[];
+  validateComponentExampleImplementations(
+    meta,
+    vocabulary,
+    "web",
+    ids,
+    source,
+  );
+  const canonical = componentExamplesForSurface(meta, vocabulary, "web");
+  return examples.map((example, index) => {
+    const definition = canonical[index];
+    if (definition === undefined) {
+      throw new TypeError(\`\${meta.slug} Web example \${example.id} has no canonical definition\`);
+    }
+    return { id: definition.id, label: definition.label, Example: example.Example };
+  });
 }
 
 function scenariosFrom(
@@ -857,7 +874,8 @@ export interface CatalogueSelection {
 }
 
 export interface CatalogueCliExample {
-  readonly name: string;
+  readonly id: string;
+  readonly label: string;
   readonly props: unknown;
   readonly capabilities?: Readonly<Partial<TerminalCapabilities>>;
 }
@@ -881,21 +899,35 @@ export type CatalogueCliPreview =
   | CatalogueCliExemptPreview;
 
 function renderedCliPreview<Props>(
+  meta: ComponentMeta,
+  vocabulary: readonly ComponentExampleDefinition[],
   render: CliRenderer<Props>,
   examples: readonly CliExample<Props>[],
 ): CatalogueCliRenderedPreview {
-  if (examples.length === 0) {
-    throw new TypeError("Rendered CLI Components need a Catalogue example");
-  }
+  validateComponentExampleImplementations(
+    meta,
+    vocabulary,
+    "cli",
+    examples.map(({ name }) => name),
+    \`\${meta.slug}.cli.ts\`,
+  );
+  const canonical = componentExamplesForSurface(meta, vocabulary, "cli");
   return {
     stance: "rendered",
     render: (props, capabilities) =>
       render(props as Readonly<Props>, capabilities),
-    examples: examples.map(({ name, props, capabilities }) => ({
-      name,
-      props,
-      ...(capabilities === undefined ? {} : { capabilities }),
-    })),
+    examples: examples.map(({ props, capabilities }, index) => {
+      const definition = canonical[index];
+      if (definition === undefined) {
+        throw new TypeError(\`\${meta.slug} CLI example at \${index} has no canonical definition\`);
+      }
+      return {
+        id: definition.id,
+        label: definition.label,
+        props,
+        ...(capabilities === undefined ? {} : { capabilities }),
+      };
+    }),
   };
 }
 
@@ -914,8 +946,9 @@ function selectionFrom(
 
 export interface RegistryEntry {
   readonly meta: ComponentMeta;
+  readonly canonicalExamples: readonly ResolvedComponentExampleDefinition[];
   readonly Examples: ComponentType;
-  readonly states: readonly CatalogueExampleState[];
+  readonly webExamples: readonly CatalogueExample[];
   readonly conformance: readonly ConformanceScenario[];
   readonly builderDefaults: Readonly<Record<string, unknown>>;
   readonly reactExport: string;
@@ -941,6 +974,24 @@ export const sharedModuleObjectTypes: readonly CatalogueObjectType[] = ${
 export const registry: readonly RegistryEntry[] = [
 ${entries.join("\n")}
 ];
+
+/** Resolve one bounded Web renderer by stable Component slug and example id. */
+export function catalogueWebExample(
+  slug: string,
+  id: string,
+): CatalogueExample {
+  const entry = registry.find(({ meta }) => meta.slug === slug);
+  if (entry === undefined) {
+    throw new TypeError(\`Unknown Catalogue Component \${JSON.stringify(slug)}\`);
+  }
+  const example = entry.webExamples.find((candidate) => candidate.id === id);
+  if (example === undefined) {
+    throw new TypeError(
+      \`\${slug} has no Web-capable canonical example \${JSON.stringify(id)}\`,
+    );
+  }
+  return example;
+}
 `;
   await Deno.mkdir(GENERATED_ROOT, { recursive: true });
   await Deno.writeTextFile(new URL("registry.ts", GENERATED_ROOT), registry);

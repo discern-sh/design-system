@@ -60,7 +60,7 @@
     "react-dom/server": "npm:react-dom@18.3.1/server"
   },
   "tasks": {
-    "codegen": "deno run --config deno.json --allow-read --allow-write scripts/generate.ts",
+    "codegen": "deno run --config deno.json --allow-read --allow-write --allow-env=NODE_ENV --allow-run=deno scripts/generate.ts",
     "build": "deno run --config deno.json --allow-read --allow-write --allow-run --allow-env=NODE_ENV scripts/build.ts",
     "catalogue:cli": "deno run --config deno.json --allow-read --allow-env scripts/catalogue-cli.ts",
     "playground:cli": "deno run --config deno.json --allow-read --allow-env scripts/playground-cli.ts",

@@ -320,7 +320,7 @@ async function browserDetail(
   return {
     lines: frame.split("\n"),
     exampleIndex,
-    exampleName: example.name,
+    exampleName: example.label,
     exampleCount: module.examples.length,
   };
 }

@@ -17,7 +17,7 @@ export function ComponentPreview(
 ) {
   const {
     meta,
-    states,
+    webExamples,
     conformance,
     selection,
     propDocumentation,
@@ -108,16 +108,16 @@ export function ComponentPreview(
         ? <CliComponentPreview entry={entry} theme={terminalTheme} />
         : (
           <div className="discern-catalogue-component__canvas">
-            {states.map(({ name, label, Example }) => {
-              const fragmentId = stateFragmentId(meta.slug, name);
+            {webExamples.map(({ id, label, Example }) => {
+              const fragmentId = stateFragmentId(meta.slug, id);
               const showStateHeader = onSurfaceChange === undefined ||
-                states.length !== 1 || name !== "default";
+                webExamples.length !== 1 || id !== "default";
               return (
                 <section
                   className="discern-catalogue-example-state"
                   id={fragmentId}
-                  data-discern-example-state={name}
-                  key={name}
+                  data-discern-example-state={id}
+                  key={id}
                 >
                   {showStateHeader
                     ? (

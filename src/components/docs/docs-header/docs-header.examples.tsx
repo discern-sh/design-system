@@ -11,7 +11,7 @@ function DocumentationHeaderExample() {
       actions={<a href="#components">Consectetur</a>}
     >
       <span>
-        Search <Kbd>⌘</Kbd> <Kbd>K</Kbd>
+        Search <Kbd>Ctrl</Kbd> <Kbd>K</Kbd>
       </span>
     </DocsHeader>
   );

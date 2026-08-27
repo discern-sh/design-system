@@ -40,13 +40,6 @@ export interface CatalogueExample {
   readonly Example: ComponentType;
 }
 
-/** One stable, linkable state exported by an existing examples module. */
-export interface CatalogueExampleState {
-  readonly name: string;
-  readonly label: string;
-  readonly Example: ComponentType;
-}
-
 /** One component-specific prop extracted from its authored TypeScript source. */
 export interface CatalogueProp {
   readonly name: string;

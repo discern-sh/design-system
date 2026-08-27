@@ -17,6 +17,12 @@ import {
   componentGroups,
   type ComponentMeta,
 } from "../src/types/component-meta.ts";
+import type { ComponentExampleDefinition } from "../src/types/component-examples.ts";
+import {
+  componentExamplesForSurface,
+  resolveComponentExampleVocabulary,
+  validateComponentExampleImplementations,
+} from "../src/types/component-examples.ts";
 import { cssClassNames } from "./css-syntax.ts";
 import {
   camelIdentifier,
@@ -34,6 +40,7 @@ const COMPONENT_ROOT = new URL("../src/components/", import.meta.url);
 const ASSET_ROOT = new URL("../assets/", import.meta.url);
 const BEHAVIOR_ROOT = new URL("../assets/behaviors/", import.meta.url);
 const GENERATED_ROOT = new URL("../src/generated/", import.meta.url);
+const SCRIPT_GENERATED_ROOT = new URL("./generated/", import.meta.url);
 const STYLE_ROOT = new URL("../src/styles/", import.meta.url);
 const DIAGRAM_KIND_ROOT = new URL("../src/diagram/kinds/", import.meta.url);
 const CHART_KIND_ROOT = new URL("../src/chart/kinds/", import.meta.url);
@@ -42,8 +49,10 @@ export interface ComponentSource {
   readonly metaUrl: URL;
   readonly implementationUrl: URL;
   readonly cssUrl: URL;
+  readonly examplesUrl: URL;
   readonly cliUrl: URL;
   readonly meta: ComponentMeta;
+  readonly exampleVocabulary: readonly ComponentExampleDefinition[];
 }
 
 export interface GeneratedSources {
@@ -53,6 +62,7 @@ export interface GeneratedSources {
   readonly react: string;
   readonly cliRegistry: string;
   readonly cliRenderers: string;
+  readonly componentExamples: string;
   readonly baseStyles: string;
   readonly diagramMetadata: string;
   readonly diagramRegistry: string;
@@ -114,6 +124,31 @@ export function validateCliInventory(files: readonly URL[]): void {
   }
 }
 
+function exampleImplementationIds(
+  value: unknown,
+  key: "id" | "name",
+  source: string,
+  exportName: "catalogueExamples" | "cliExamples",
+): readonly string[] {
+  if (!Array.isArray(value)) {
+    throw new TypeError(`${source} must export ${exportName} as an array`);
+  }
+  return value.map((candidate, index) => {
+    if (typeof candidate !== "object" || candidate === null) {
+      throw new TypeError(
+        `${source} ${exportName}[${index}] must be an object`,
+      );
+    }
+    const id = (candidate as Readonly<Record<string, unknown>>)[key];
+    if (typeof id !== "string") {
+      throw new TypeError(
+        `${source} ${exportName}[${index}] needs a string ${key}`,
+      );
+    }
+    return id;
+  });
+}
+
 /** Discover the canonical component inventory and validate its fixed anatomy. */
 export async function loadComponentSources(): Promise<ComponentSource[]> {
   const files = await walk(COMPONENT_ROOT);
@@ -131,6 +166,10 @@ export async function loadComponentSources(): Promise<ComponentSource[]> {
       metaUrl.pathname.replace(/\.meta\.ts$/, ".css"),
       metaUrl,
     );
+    const examplesUrl = new URL(
+      metaUrl.pathname.replace(/\.meta\.ts$/, ".examples.tsx"),
+      metaUrl,
+    );
     const cliUrl = new URL(
       metaUrl.pathname.replace(/\.meta\.ts$/, ".cli.ts"),
       metaUrl,
@@ -141,18 +180,69 @@ export async function loadComponentSources(): Promise<ComponentSource[]> {
     if (!fileSet.has(cssUrl.pathname)) {
       throw new Error(`Missing stylesheet for ${metaUrl.pathname}`);
     }
-    const module = await import(metaUrl.href) as { default: ComponentMeta };
+    if (!fileSet.has(examplesUrl.pathname)) {
+      throw new Error(`Missing examples for ${metaUrl.pathname}`);
+    }
+    const module = await import(metaUrl.href) as {
+      default: ComponentMeta;
+      componentExampleVocabulary?: unknown;
+    };
     validateCliStance(
       module.default,
       fileSet.has(cliUrl.pathname),
       decodeURIComponent(metaUrl.pathname),
     );
+    if (!Array.isArray(module.componentExampleVocabulary)) {
+      throw new Error(
+        `${
+          decodeURIComponent(metaUrl.pathname)
+        } must export componentExampleVocabulary`,
+      );
+    }
+    const exampleVocabulary = module
+      .componentExampleVocabulary as readonly ComponentExampleDefinition[];
+    componentExamplesForSurface(module.default, exampleVocabulary, "web");
+    componentExamplesForSurface(module.default, exampleVocabulary, "cli");
+    const examplesModule = await import(examplesUrl.href) as Readonly<
+      Record<string, unknown>
+    >;
+    validateComponentExampleImplementations(
+      module.default,
+      exampleVocabulary,
+      "web",
+      exampleImplementationIds(
+        examplesModule.catalogueExamples,
+        "id",
+        decodeURIComponent(examplesUrl.pathname),
+        "catalogueExamples",
+      ),
+      decodeURIComponent(examplesUrl.pathname),
+    );
+    if (module.default.cli.stance === "rendered") {
+      const cliModule = await import(cliUrl.href) as Readonly<
+        Record<string, unknown>
+      >;
+      validateComponentExampleImplementations(
+        module.default,
+        exampleVocabulary,
+        "cli",
+        exampleImplementationIds(
+          cliModule.cliExamples,
+          "name",
+          decodeURIComponent(cliUrl.pathname),
+          "cliExamples",
+        ),
+        decodeURIComponent(cliUrl.pathname),
+      );
+    }
     sources.push({
       metaUrl,
       implementationUrl,
       cssUrl,
+      examplesUrl,
       cliUrl,
       meta: module.default,
+      exampleVocabulary,
     });
   }
   return sources.toSorted((a, b) =>
@@ -469,6 +559,48 @@ ${entries.join("\n")}
 `;
 }
 
+async function generateComponentExamples(): Promise<string> {
+  const components = await loadComponentSources();
+  const entries = components.map((component) => {
+    const value = JSON.stringify(
+      resolveComponentExampleVocabulary(
+        component.meta,
+        component.exampleVocabulary,
+      ),
+      null,
+      2,
+    ).replaceAll("\n", "\n  ");
+    return `  ${JSON.stringify(component.meta.slug)}: ${value},`;
+  });
+  const source = `/* Generated by scripts/generate.ts. Do not edit. */
+import type { ResolvedComponentExampleDefinition } from "../../src/types/component-examples.ts";
+
+/** Canonical Component example facts for repository-owned review tooling. */
+export const componentExampleRegistry = {
+${entries.join("\n")}
+} as const satisfies Readonly<Record<string, readonly ResolvedComponentExampleDefinition[]>>;
+`;
+  const command = new Deno.Command("deno", {
+    args: ["fmt", "-"],
+    stdin: "piped",
+    stdout: "piped",
+    stderr: "piped",
+  });
+  const child = command.spawn();
+  const writer = child.stdin.getWriter();
+  await writer.write(new TextEncoder().encode(source));
+  await writer.close();
+  const result = await child.output();
+  if (!result.success) {
+    throw new Error(
+      `deno fmt failed for the generated Component example registry:\n${
+        new TextDecoder().decode(result.stderr)
+      }`,
+    );
+  }
+  return new TextDecoder().decode(result.stdout);
+}
+
 async function generateCliRenderers(): Promise<string> {
   const rendered = (await loadComponentSources()).filter((component) =>
     component.meta.cli.stance === "rendered"
@@ -593,6 +725,7 @@ export async function generateSources(): Promise<GeneratedSources> {
     react: await generateReactModule(),
     cliRegistry: await generateCliRegistry(),
     cliRenderers: await generateCliRenderers(),
+    componentExamples: await generateComponentExamples(),
     baseStyles: await generateBaseStyles(),
     diagramMetadata: diagrams.metadata,
     diagramRegistry: diagrams.registry,
@@ -638,6 +771,11 @@ export async function writeGeneratedSources(): Promise<void> {
   await Deno.writeTextFile(
     new URL("cli-renderers.ts", GENERATED_ROOT),
     generated.cliRenderers,
+  );
+  await Deno.mkdir(SCRIPT_GENERATED_ROOT, { recursive: true });
+  await Deno.writeTextFile(
+    new URL("component-examples.ts", SCRIPT_GENERATED_ROOT),
+    generated.componentExamples,
   );
   await Deno.writeTextFile(
     new URL("base-styles.ts", GENERATED_ROOT),

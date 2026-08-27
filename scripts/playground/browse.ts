@@ -98,8 +98,8 @@ async function browseComponent(
   while (true) {
     const choices: InteractionEntry<ExampleTarget>[] = [
       ...module.examples.map((example, index) => ({
-        id: `example-${example.name}`,
-        label: example.name,
+        id: `example-${example.id}`,
+        label: example.label,
         value: index as ExampleTarget,
       })),
       { id: "all", label: "All examples", value: "all" },
@@ -133,7 +133,7 @@ async function browseExample(
     if (example === undefined) return;
     print("");
     print(
-      `${fact.name} · ${example.name} (${
+      `${fact.name} · ${example.label} (${
         index + 1
       } of ${module.examples.length})`,
     );
@@ -144,7 +144,7 @@ async function browseExample(
     if (next !== undefined) {
       navigation.push({
         id: "next",
-        label: `Next example (${next.name})`,
+        label: `Next example (${next.label})`,
         value: index + 1,
       });
     }
@@ -152,7 +152,7 @@ async function browseExample(
     if (previous !== undefined) {
       navigation.push({
         id: "previous",
-        label: `Previous example (${previous.name})`,
+        label: `Previous example (${previous.label})`,
         value: index - 1,
       });
     }

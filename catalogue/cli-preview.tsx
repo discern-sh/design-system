@@ -12,11 +12,6 @@ export const catalogueCliCapabilities = {
   unicode: true,
 } as const satisfies TerminalCapabilities;
 
-function exampleLabel(name: string): string {
-  const label = name.replaceAll("-", " ");
-  return `${label.slice(0, 1).toUpperCase()}${label.slice(1)}`;
-}
-
 /** Project one bare terminal frame through the Catalogue's shared ANSI host. */
 export function CliOutputPreview(
   { value, label, theme }: {
@@ -103,9 +98,8 @@ export function CliComponentPreview(
   return (
     <div className="discern-catalogue-component__canvas">
       {cli.examples.map((example) => {
-        const { name, props } = example;
-        const label = exampleLabel(name);
-        const fragmentId = cliFragmentId(meta.slug, name);
+        const { id, label, props } = example;
+        const fragmentId = cliFragmentId(meta.slug, id);
         const output = cli.render(
           terminalThemeProps(meta.slug, props, theme),
           resolveCliExampleCapabilities(example, catalogueCliCapabilities),
@@ -114,8 +108,8 @@ export function CliComponentPreview(
           <section
             className="discern-catalogue-example-state"
             id={fragmentId}
-            data-discern-cli-example-state={name}
-            key={name}
+            data-discern-cli-example-state={id}
+            key={id}
           >
             <header>
               <h5>{label}</h5>

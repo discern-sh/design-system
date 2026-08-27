@@ -21,10 +21,12 @@ import type {
 } from "../src/cli/contracts.ts";
 import { cliComponentRegistry } from "../src/generated/cli-registry.ts";
 import { componentRegistry } from "../src/generated/component-registry.ts";
+import type { ResolvedComponentExampleDefinition } from "../src/types/component-examples.ts";
 import {
   type ComponentGroup,
   componentGroups,
 } from "../src/types/component-meta.ts";
+import { componentExampleRegistry } from "./generated/component-examples.ts";
 import {
   terminalFoundationSheet,
   terminalFoundationSheets,
@@ -32,6 +34,9 @@ import {
 
 const registry = cliComponentRegistry as Readonly<
   Record<string, CliComponentRegistryEntry>
+>;
+const examplesRegistry = componentExampleRegistry as Readonly<
+  Record<string, readonly ResolvedComponentExampleDefinition[]>
 >;
 const registryModule = new URL(
   "../src/generated/cli-registry.ts",
@@ -51,7 +56,13 @@ export interface LoadedCliModule {
     props: unknown,
     capabilities: TerminalCapabilities,
   ) => string;
-  readonly examples: readonly CliExample<unknown>[];
+  readonly examples: readonly LoadedCliExample[];
+}
+
+/** One renderer input paired with its generated canonical human identity. */
+export interface LoadedCliExample extends CliExample<unknown> {
+  readonly id: string;
+  readonly label: string;
 }
 
 /** Generated stance and identity facts for one component's terminal surface. */
@@ -144,8 +155,16 @@ export async function loadRenderedCliModule(
     throw new TypeError(`${slug} CLI module has no cliExamples`);
   }
   const names = new Set<string>();
-  const examples: CliExample<unknown>[] = [];
-  for (const candidate of module.cliExamples) {
+  const examples: LoadedCliExample[] = [];
+  const canonicalExamples = examplesRegistry[slug]?.filter(({ surfaces }) =>
+    surfaces.includes("cli")
+  );
+  if (canonicalExamples === undefined) {
+    throw new TypeError(
+      `Generated Component example registry has no ${JSON.stringify(slug)}`,
+    );
+  }
+  for (const [index, candidate] of module.cliExamples.entries()) {
     if (typeof candidate !== "object" || candidate === null) {
       throw new TypeError(`${slug} has an invalid CLI example`);
     }
@@ -159,7 +178,32 @@ export async function loadRenderedCliModule(
       );
     }
     names.add(example.name);
-    examples.push(example);
+    const canonical = canonicalExamples[index];
+    if (canonical === undefined) {
+      throw new TypeError(
+        `${slug} CLI module implements undeclared example ${
+          JSON.stringify(example.name)
+        }`,
+      );
+    }
+    if (example.name !== canonical.id) {
+      throw new TypeError(
+        `${slug} CLI examples are reordered or divergent at ${index}; expected ${
+          JSON.stringify(canonical.id)
+        }, received ${JSON.stringify(example.name)}`,
+      );
+    }
+    examples.push({ ...example, id: canonical.id, label: canonical.label });
+  }
+  if (examples.length !== canonicalExamples.length) {
+    const missing = canonicalExamples.slice(examples.length).map(({ id }) =>
+      id
+    );
+    throw new TypeError(
+      `${slug} CLI module omits canonical examples ${
+        missing.map((id) => JSON.stringify(id)).join(", ")
+      }`,
+    );
   }
   return {
     render: module.default as LoadedCliModule["render"],
@@ -191,7 +235,7 @@ export async function renderCliComponent(
     if (typeof frame !== "string") {
       throw new TypeError(`${slug} renderer returned a non-string frame`);
     }
-    return `#### ${example.name}\n\n${frame}`;
+    return `#### ${example.label}\n\n${frame}`;
   });
   return `### ${name} (\`${slug}\`)\n\n${specimens.join("\n\n")}`;
 }
