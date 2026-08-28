@@ -21,6 +21,11 @@ export type CatalogueRoute =
   }
   | { readonly family: "foundations"; readonly page: "index" }
   | { readonly family: "compositions"; readonly page: "index" }
+  | {
+    readonly family: "compositions";
+    readonly page: "detail";
+    readonly slug: string;
+  }
   | { readonly family: "terminal"; readonly page: "index" }
   | { readonly family: "compare"; readonly page: "index" }
   | { readonly family: "not-found"; readonly page: "not-found" };
@@ -46,6 +51,8 @@ export interface CatalogueSearchSources {
     readonly id: string;
     readonly title: string;
     readonly description: string;
+    readonly status: { readonly label: string };
+    readonly components: readonly string[];
   }[];
   readonly terminalLayouts: readonly {
     readonly id: string;
