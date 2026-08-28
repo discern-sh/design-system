@@ -1,4 +1,5 @@
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import meta, { componentExampleVocabulary } from "./input.meta.ts";
 import { Input } from "./input.tsx";
 
@@ -74,6 +75,37 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "cancelled", Example: CancelledInputState },
     { id: "searching", Example: SearchingInputState },
   ],
+);
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      id: "focus-input",
+      label: "Focused input",
+      example: "default",
+      category: "interaction",
+      sequence: [
+        { action: "focus", target: { role: "textbox", name: "Project name" } },
+        { checkpoint: { id: "input-focused", label: "Focus visible" } },
+      ],
+    },
+    {
+      id: "changed-input",
+      label: "Changed input",
+      example: "default",
+      category: "interaction",
+      sequence: [
+        {
+          action: "fill",
+          target: { role: "textbox", name: "Project name" },
+          value: "atlas",
+        },
+        { checkpoint: { id: "input-changed", label: "Changed value" } },
+      ],
+    },
+  ] as const,
 );
 
 export default function InputExamples() {

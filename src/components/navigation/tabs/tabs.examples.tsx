@@ -3,19 +3,26 @@ import {
   type ConformanceScenario,
   defineCatalogueExamples,
 } from "../../../../catalogue/conformance.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import meta, { componentExampleVocabulary } from "./tabs.meta.ts";
 import { Tabs } from "./tabs.tsx";
+
+const focusOverview = {
+  action: "focus",
+  target: { role: "tab", name: "Overview" },
+} as const;
+const selectDetailsByKeyboard = {
+  action: "press",
+  key: "ArrowRight",
+  target: { role: "tab", name: "Overview" },
+} as const;
 
 export const conformance = [{
   example: "default",
   name: "arrow keys move focus and selection to the next enabled tab",
   steps: [
-    { action: "focus", target: { role: "tab", name: "Overview" } },
-    {
-      action: "press",
-      key: "ArrowRight",
-      target: { role: "tab", name: "Overview" },
-    },
+    focusOverview,
+    selectDetailsByKeyboard,
     { expect: "focused", target: { role: "tab", name: "Details" } },
     {
       expect: "attribute",
@@ -74,6 +81,44 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "details", Example: DetailsExample },
     { id: "manual", Example: ManualActivationExample },
   ],
+);
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      id: "pointer-selection",
+      label: "Pointer selection",
+      example: "default",
+      category: "interaction",
+      sequence: [
+        { action: "click", target: { role: "tab", name: "Details" } },
+        {
+          checkpoint: {
+            id: "tabs-pointer-selected",
+            label: "Details selected",
+          },
+        },
+      ],
+    },
+    {
+      id: "keyboard-selection",
+      label: "Keyboard selection",
+      example: "default",
+      category: "interaction",
+      sequence: [
+        focusOverview,
+        selectDetailsByKeyboard,
+        {
+          checkpoint: {
+            id: "tabs-keyboard-selected",
+            label: "Details selected",
+          },
+        },
+      ],
+    },
+  ] as const,
 );
 
 export default function TabsExamples() {

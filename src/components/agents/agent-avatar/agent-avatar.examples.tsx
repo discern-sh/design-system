@@ -1,4 +1,5 @@
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import { AgentAvatar } from "./agent-avatar.tsx";
 import meta, { componentExampleVocabulary } from "./agent-avatar.meta.ts";
 
@@ -28,6 +29,31 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "working", Example: WorkingState },
     { id: "blocked", Example: BlockedState },
   ],
+);
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      id: "working-motion",
+      label: "Working motion",
+      example: "working",
+      category: "motion",
+      sequence: [{ checkpoint: { id: "avatar-working", label: "Working" } }],
+      requirements: { reducedMotion: false },
+    },
+    {
+      id: "working-reduced",
+      label: "Working still",
+      example: "working",
+      category: "motion",
+      sequence: [{
+        checkpoint: { id: "avatar-working-still", label: "Working still" },
+      }],
+      requirements: { reducedMotion: true },
+    },
+  ] as const,
 );
 
 export default function AgentAvatarExamples() {

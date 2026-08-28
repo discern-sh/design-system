@@ -103,8 +103,19 @@ export type ConformanceTarget =
 /** One serializable browser action or observable assertion. */
 export type ConformanceStep =
   | {
-    readonly action: "click" | "focus" | "hover";
+    readonly action: "click";
     readonly target: ConformanceTarget;
+    /** A real navigation that must end an authored review sequence. */
+    readonly terminal?: "navigation";
+  }
+  | {
+    readonly action: "focus" | "hover" | "pointer-down" | "pointer-up";
+    readonly target: ConformanceTarget;
+  }
+  | {
+    readonly action: "fill";
+    readonly target: ConformanceTarget;
+    readonly value: string;
   }
   | {
     readonly action: "press";

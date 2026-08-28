@@ -134,7 +134,12 @@ async function performStep(
     );
     if (step.action === "click") await target.click();
     else if (step.action === "focus") await target.focus();
-    else await target.hover();
+    else if (step.action === "fill") await target.fill(step.value);
+    else if (step.action === "hover") await target.hover();
+    else if (step.action === "pointer-down") {
+      await target.hover();
+      await page.mouse.down();
+    } else await page.mouse.up();
     return;
   }
 
@@ -736,7 +741,7 @@ async function verifyComponentJourneys(
     invariant(detailSlug, "Component detail journey needs one Component");
     const detailUrl = new URL(catalogueComponentPath(detailSlug), origin);
     detailUrl.searchParams.set("theme", "light");
-    detailUrl.searchParams.set("accent", "128");
+    detailUrl.searchParams.set("accent", "300");
     await loadCataloguePage(page, detailUrl.href);
     invariant(
       await page.getByRole("main").getByRole("heading", { level: 1 })
@@ -785,7 +790,7 @@ async function verifyComponentJourneys(
       await exampleSelect.inputValue() === selectedId &&
         new URL(page.url()).searchParams.get("example") === selectedId &&
         new URL(page.url()).searchParams.get("theme") === "light" &&
-        new URL(page.url()).searchParams.get("accent") === "128",
+        new URL(page.url()).searchParams.get("accent") === "300",
       "Web/CLI switching changed canonical example or Appearance identity",
     );
     await page.getByRole("button", { name: "Web", exact: true }).click();
@@ -831,7 +836,7 @@ async function verifyComponentJourneys(
 
     const compareUrl = new URL(catalogueRoutePaths.compare, origin);
     compareUrl.searchParams.set("theme", "dark");
-    compareUrl.searchParams.set("accent", "128");
+    compareUrl.searchParams.set("accent", "300");
     await loadCataloguePage(page, compareUrl.href);
     invariant(
       await page.locator(".discern-catalogue-collection-card").count() === 0 &&
@@ -880,7 +885,7 @@ async function verifyComponentJourneys(
     invariant(
       new URL(page.url()).searchParams.get("surface") === "cli" &&
         new URL(page.url()).searchParams.get("theme") === "dark" &&
-        new URL(page.url()).searchParams.get("accent") === "128",
+        new URL(page.url()).searchParams.get("accent") === "300",
       "Set all to CLI did not enter URL state without losing Appearance",
     );
     await compareItems.first().getByRole("button", {

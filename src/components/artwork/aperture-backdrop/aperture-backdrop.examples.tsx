@@ -1,4 +1,7 @@
+import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import { ApertureBackdrop } from "./aperture-backdrop.tsx";
+import meta, { componentExampleVocabulary } from "./aperture-backdrop.meta.ts";
 
 export default function ApertureBackdropExamples() {
   return (
@@ -53,5 +56,27 @@ export const catalogueExamples = defineCatalogueExamples(
   componentExampleVocabulary,
   [{ id: "default", Example: ApertureBackdropExamples }],
 );
-import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
-import meta, { componentExampleVocabulary } from "./aperture-backdrop.meta.ts";
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      id: "ambient-motion",
+      label: "Ambient motion",
+      example: "default",
+      category: "motion",
+      sequence: [{ checkpoint: { id: "aperture-ambient", label: "Ambient" } }],
+      requirements: { reducedMotion: false, inlineSize: "wide" },
+    },
+    {
+      id: "ambient-reduced",
+      label: "Ambient still",
+      example: "default",
+      category: "motion",
+      sequence: [{
+        checkpoint: { id: "aperture-still", label: "Reduced motion" },
+      }],
+      requirements: { reducedMotion: true, inlineSize: "wide" },
+    },
+  ] as const,
+);

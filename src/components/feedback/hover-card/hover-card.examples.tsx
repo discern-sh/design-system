@@ -2,15 +2,21 @@ import {
   type ConformanceScenario,
   defineCatalogueExamples,
 } from "../../../../catalogue/conformance.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import { Button } from "../../core/button/button.tsx";
 import meta, { componentExampleVocabulary } from "./hover-card.meta.ts";
 import { HoverCard } from "./hover-card.tsx";
+
+const focusRecord = {
+  action: "focus",
+  target: { role: "button", name: "Inspect record" },
+} as const;
 
 export const conformance = [{
   example: "default",
   name: "keyboard focus keeps rich hover-card content reachable",
   steps: [
-    { action: "focus", target: { role: "button", name: "Inspect record" } },
+    focusRecord,
     {
       expect: "visible",
       target: { role: "group", name: "Record details" },
@@ -121,6 +127,24 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "inline", Example: InlineHoverCardState },
     { id: "overflow", Example: OverflowHoverCardState },
   ],
+);
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [{
+    id: "focus-disclosure",
+    label: "Focus disclosure",
+    example: "default",
+    category: "interaction",
+    sequence: [
+      focusRecord,
+      { checkpoint: { id: "hover-card-disclosed", label: "Card visible" } },
+    ],
+    capture: {
+      selectors: [".discern-hover-card", ".discern-hover-card__panel"],
+    },
+  }] as const,
 );
 
 export default function HoverCardExamples() {

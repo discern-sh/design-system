@@ -1,4 +1,5 @@
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import meta, { componentExampleVocabulary } from "./switch.meta.ts";
 import { Switch } from "./switch.tsx";
 
@@ -61,6 +62,39 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "submitted", Example: SubmittedSwitchState },
     { id: "cancelled", Example: CancelledSwitchState },
   ],
+);
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      id: "focus-switch",
+      label: "Focused switch",
+      example: "default",
+      category: "interaction",
+      sequence: [
+        {
+          action: "focus",
+          target: { role: "switch", name: "Automatic updates" },
+        },
+        { checkpoint: { id: "switch-focused", label: "Focus visible" } },
+      ],
+    },
+    {
+      id: "change-switch",
+      label: "Changed switch",
+      example: "default",
+      category: "interaction",
+      sequence: [
+        {
+          action: "click",
+          target: { role: "switch", name: "Automatic updates" },
+        },
+        { checkpoint: { id: "switch-changed", label: "Checked" } },
+      ],
+    },
+  ] as const,
 );
 
 export default function SwitchExamples() {

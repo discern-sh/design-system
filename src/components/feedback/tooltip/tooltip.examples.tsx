@@ -2,16 +2,22 @@ import {
   type ConformanceScenario,
   defineCatalogueExamples,
 } from "../../../../catalogue/conformance.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import { ExampleIcon } from "../../../fixtures/example-icon.tsx";
 import { IconButton } from "../../core/icon-button/icon-button.tsx";
 import meta, { componentExampleVocabulary } from "./tooltip.meta.ts";
 import { Tooltip } from "./tooltip.tsx";
 
+const focusInformation = {
+  action: "focus",
+  target: { role: "button", name: "Information" },
+} as const;
+
 export const conformance = [{
   example: "default",
   name: "keyboard focus reveals the described tooltip",
   steps: [
-    { action: "focus", target: { role: "button", name: "Information" } },
+    focusInformation,
     {
       expect: "visible",
       target: { role: "tooltip", name: "Lorem ipsum dolor" },
@@ -72,6 +78,21 @@ export const catalogueExamples = defineCatalogueExamples(
       },
     },
   ],
+);
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [{
+    id: "focus-disclosure",
+    label: "Focus disclosure",
+    example: "default",
+    category: "interaction",
+    sequence: [
+      focusInformation,
+      { checkpoint: { id: "tooltip-disclosed", label: "Tooltip visible" } },
+    ],
+  }] as const,
 );
 
 export default function TooltipExamples() {

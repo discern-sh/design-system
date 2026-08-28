@@ -1,0 +1,172 @@
+@layer catalogue-review {
+  :where(body) {
+    margin: 0;
+    background: var(--discern-color-canvas);
+  }
+  .discern-review-shell {
+    min-block-size: 100vh;
+    padding: clamp(18px, 3vw, 42px);
+    background: var(--discern-color-canvas);
+    color: var(--discern-color-ink);
+  }
+  .discern-review-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 18px;
+    align-items: end;
+    margin-block-end: 24px;
+  }
+  .discern-review-header h1 {
+    margin: 0 0 6px;
+    font: var(--discern-font-weight-display)
+      var(--discern-font-size-display-lg)/1.02
+      var(--discern-font-display);
+  }
+  .discern-review-header p {
+    max-inline-size: var(--discern-measure);
+    margin: 0;
+    color: var(--discern-color-ink-muted);
+  }
+  .discern-review-viewport {
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-size-xs) var(--discern-font-mono);
+    text-align: end;
+  }
+  .discern-review-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+    gap: 10px;
+    align-items: end;
+    margin-block-end: 24px;
+    padding: 14px;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-lg);
+    background: var(--discern-color-surface-sunken);
+  }
+  .discern-review-filters label {
+    display: grid;
+    gap: 4px;
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+  }
+  .discern-review-filters select,
+  .discern-review-filters button,
+  .discern-review-replay {
+    min-block-size: 38px;
+    padding: 7px 9px;
+    border: 1px solid var(--discern-color-border-strong);
+    border-radius: var(--discern-radius-sm);
+    background: var(--discern-color-surface);
+    color: var(--discern-color-ink);
+    font: inherit;
+  }
+  .discern-review-filters button,
+  .discern-review-replay {
+    cursor: pointer;
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+  }
+  .discern-review-filters :focus-visible,
+  .discern-review-replay:focus-visible {
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: 2px;
+  }
+  .discern-review-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    justify-content: space-between;
+    margin-block-end: 12px;
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+  }
+  .discern-review-contact-sheet {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    gap: 16px;
+    align-items: start;
+  }
+  .discern-review-contact-sheet[data-discern-review-mode="reel"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .discern-review-card {
+    min-inline-size: 0;
+    overflow: hidden;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-lg);
+    background: var(--discern-color-surface);
+    box-shadow: var(--discern-shadow-card);
+  }
+  .discern-review-card > header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: start;
+    padding: 12px 14px;
+    border-block-end: 1px solid var(--discern-color-border);
+  }
+  .discern-review-card h2 {
+    margin: 0;
+    font: var(--discern-font-weight-strong) var(--discern-font-size-sm)
+      var(--discern-font-ui);
+  }
+  .discern-review-card header p {
+    margin: 3px 0 0;
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+  }
+  .discern-review-card header code {
+    color: var(--discern-color-ink-faint);
+    font-size: var(--discern-font-size-xs);
+  }
+  .discern-review-scroller {
+    overflow: auto;
+    padding: 18px;
+    background: var(--discern-color-canvas);
+    overscroll-behavior: contain;
+  }
+  .discern-review-specimen {
+    box-sizing: border-box;
+    max-inline-size: none;
+    min-block-size: 96px;
+    overflow: visible;
+    padding: 16px;
+    border: 1px dashed var(--discern-color-border-strong);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-surface);
+    contain: layout style;
+  }
+  .discern-review-specimen[data-discern-review-motion="reduced"] *,
+  .discern-review-specimen[data-discern-review-motion="reduced"] *::before,
+  .discern-review-specimen[data-discern-review-motion="reduced"] *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0ms !important;
+  }
+  .discern-review-evidence {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    padding: 9px 14px;
+    border-block-start: 1px solid var(--discern-color-border);
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-size-xs) var(--discern-font-mono);
+  }
+  .discern-review-empty {
+    padding: 42px;
+    border: 1px dashed var(--discern-color-border-strong);
+    border-radius: var(--discern-radius-lg);
+    color: var(--discern-color-ink-muted);
+    text-align: center;
+  }
+  @media (max-width: 680px) {
+    .discern-review-header {
+      grid-template-columns: 1fr;
+    }
+    .discern-review-viewport {
+      text-align: start;
+    }
+  }
+}

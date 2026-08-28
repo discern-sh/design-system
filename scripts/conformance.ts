@@ -35,6 +35,7 @@ import { verifyLandingPage } from "./conformance/catalogue/front-doors.ts";
 import { verifyCatalogueShell } from "./conformance/catalogue/shell.ts";
 import type { CatalogueShellEvidence } from "./conformance/catalogue/shell.ts";
 import { verifyTerminalCatalogue } from "./conformance/catalogue/terminal.ts";
+import { verifyComponentReviewInstrument } from "./conformance/catalogue/review.ts";
 import type {
   TerminalCatalogueEvidence,
 } from "./conformance/catalogue/terminal.ts";
@@ -157,6 +158,12 @@ export async function runConformance(): Promise<void> {
       }
     }
 
+    const review = await verifyComponentReviewInstrument(
+      activeBrowser,
+      origin,
+      failures,
+    );
+
     const resilience = await runResilienceConformance(
       activeBrowser,
       page,
@@ -216,6 +223,12 @@ export async function runConformance(): Promise<void> {
         `${compositions.copyChecks} copy checks, and ${compositions.keyboardChecks} ` +
         `keyboard checks. ` +
         `The landing page passed ${landingAxeScans} axe scans. ` +
+        `Posture review exposed ${review.items} bounded contact items, ` +
+        `${review.checkpoints} source-backed checkpoints, ` +
+        `${review.matrixItems} tiered matrix items, ${review.appearanceCases} ` +
+        `Appearance cases, and ${review.accessibilityScans} axe scan; wrote ` +
+        `${review.outputFiles} files / ${review.outputBytes} bytes in ` +
+        `${review.durationMs}ms. ` +
         `Journey resilience passed: ${resilience.journeys} journeys, ` +
         `${resilience.journeyStages} ordered stages, ` +
         `${resilience.journeyAxeScans} axe scans, ` +

@@ -740,6 +740,8 @@ async function generateRegistry(
     entries.push(
       `  { meta: meta${index}, canonicalExamples: resolveComponentExampleVocabulary(meta${index}, componentExampleVocabulary${index}), webExamples: examplesFrom(meta${index}, componentExampleVocabulary${index}, examples${index}, ${
         JSON.stringify(source.examplesUrl.pathname)
+      }), reviewPostures: posturesFrom(meta${index}, componentExampleVocabulary${index}, examples${index}, ${
+        JSON.stringify(source.examplesUrl.pathname)
       }), conformance: scenariosFrom(meta${index}, componentExampleVocabulary${index}, examples${index}, ${
         JSON.stringify(source.examplesUrl.pathname)
       }), builderDefaults: builderDefaultsFrom(examples${index}, ${
@@ -769,6 +771,8 @@ import type {
   CatalogueVariant,
   ConformanceScenario,
 } from "../conformance.ts";
+import type { ComponentReviewPosture, ResolvedComponentReviewPosture } from "../review-postures.ts";
+import { resolveComponentReviewPostures } from "../review-postures.ts";
 import { validateComponentExampleCaptureDirective } from "../example-images/contract.ts";
 ${imports.join("\n")}
 
@@ -897,6 +901,24 @@ function scenariosFrom(
   return scenarios as readonly ConformanceScenario[];
 }
 
+function posturesFrom(
+  meta: ComponentMeta,
+  vocabulary: readonly ComponentExampleDefinition[],
+  module: object,
+  source: string,
+): readonly ResolvedComponentReviewPosture[] {
+  const authored = "reviewPostures" in module ? module.reviewPostures : [];
+  if (!Array.isArray(authored)) {
+    throw new TypeError(\`\${source} reviewPostures export must be an array\`);
+  }
+  return resolveComponentReviewPostures(
+    meta,
+    vocabulary,
+    examplesFrom(meta, vocabulary, module, source),
+    authored as readonly ComponentReviewPosture[],
+  );
+}
+
 export interface CatalogueSelection {
   readonly component: string;
   readonly group: string;
@@ -978,6 +1000,7 @@ export interface RegistryEntry {
   readonly meta: ComponentMeta;
   readonly canonicalExamples: readonly ResolvedComponentExampleDefinition[];
   readonly webExamples: readonly CatalogueExample[];
+  readonly reviewPostures: readonly ResolvedComponentReviewPosture[];
   readonly conformance: readonly ConformanceScenario[];
   readonly builderDefaults: Readonly<Record<string, unknown>>;
   readonly reactExport: string;
@@ -1039,6 +1062,7 @@ async function packageVersion(): Promise<string> {
 
 const CATALOGUE_BUNDLES = [
   { entry: "catalogue/app.tsx", output: "dist/catalogue.js" },
+  { entry: "catalogue/review/app.tsx", output: "dist/component-review.js" },
   { entry: "catalogue/builder/app.tsx", output: "dist/builder.js" },
   {
     entry: "catalogue/example-images/capture.tsx",

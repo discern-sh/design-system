@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assertEquals, assertStringIncludes } from "@std/assert";
 import { componentGroups } from "../src/types/component-meta.ts";
 import {
   canonicalCatalogueLegacyUrl,
@@ -13,6 +13,28 @@ import {
   foundationsPaths,
 } from "../catalogue/routes.ts";
 import { preserveCatalogueAppearanceHref } from "../catalogue/shell/appearance-state.ts";
+import { componentReviewPath } from "../catalogue/review/state.ts";
+import catalogueServer from "../scripts/serve.ts";
+
+Deno.test("local Component review route serves its instrument and canonical slash", async () => {
+  const response = await catalogueServer.fetch(
+    new Request(`https://catalogue.example${componentReviewPath}`),
+  );
+  assertEquals(response.status, 200);
+  assertStringIncludes(
+    await response.text(),
+    "Discern Component posture review",
+  );
+
+  const redirect = await catalogueServer.fetch(
+    new Request(`https://catalogue.example${componentReviewPath.slice(0, -1)}`),
+  );
+  assertEquals(redirect.status, 307);
+  assertEquals(
+    redirect.headers.get("location"),
+    `https://catalogue.example${componentReviewPath}`,
+  );
+});
 
 Deno.test("local Catalogue state transitions preserve valid explicit Appearance", () => {
   const current = new URL(

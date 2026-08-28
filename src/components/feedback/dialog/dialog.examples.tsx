@@ -3,18 +3,21 @@ import {
   type ConformanceScenario,
   defineCatalogueExamples,
 } from "../../../../catalogue/conformance.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import { Button } from "../../core/button/button.tsx";
 import meta, { componentExampleVocabulary } from "./dialog.meta.ts";
 import { Dialog } from "./dialog.tsx";
+
+const openDefaultDialog = {
+  action: "click",
+  target: { role: "button", name: "Open confirmation" },
+} as const;
 
 export const conformance = [{
   example: "default",
   name: "opening and escaping the modal restores focus to its trigger",
   steps: [
-    {
-      action: "click",
-      target: { role: "button", name: "Open confirmation" },
-    },
+    openDefaultDialog,
     {
       expect: "visible",
       target: { role: "dialog", name: "Save changes?" },
@@ -134,6 +137,39 @@ export const catalogueExamples = defineCatalogueExamples(
       },
     },
   ],
+);
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      id: "open-dialog",
+      label: "Open dialog",
+      example: "default",
+      category: "motion",
+      sequence: [
+        openDefaultDialog,
+        { checkpoint: { id: "dialog-open", label: "Open and focused" } },
+      ],
+    },
+    {
+      id: "close-dialog",
+      label: "Close and restore focus",
+      example: "default",
+      category: "motion",
+      sequence: [
+        openDefaultDialog,
+        { action: "press", key: "Escape" },
+        {
+          expect: "focused",
+          target: { role: "button", name: "Open confirmation" },
+        },
+        { checkpoint: { id: "dialog-closed", label: "Closed and restored" } },
+      ],
+      capture: { selectors: [":scope > .discern-button"] },
+    },
+  ] as const,
 );
 
 export default function DialogExamples() {
