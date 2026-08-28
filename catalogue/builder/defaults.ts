@@ -116,6 +116,10 @@ type BuilderComponentSeed = (
  */
 const BUILDER_COMPONENT_SEEDS = Object.freeze(
   {
+    button: (props, id) => ({
+      ...props,
+      children: slot(id, "Button label"),
+    }),
     "hero-block": (props, id) => ({
       ...props,
       title: slot(id, "Page title"),
@@ -127,6 +131,20 @@ const BUILDER_COMPONENT_SEEDS = Object.freeze(
         kind: "slot",
         children: [node(id, "button", {
           children: slot(id, "Primary action"),
+        })],
+      },
+    }),
+    "cta-band": (props, id) => ({
+      ...props,
+      title: slot(id, "Ready for the next step?"),
+      description: slot(
+        id,
+        "Explain the value of continuing in one short sentence.",
+      ),
+      actions: {
+        kind: "slot",
+        children: [node(id, "button", {
+          children: slot(id, "Continue"),
         })],
       },
     }),
