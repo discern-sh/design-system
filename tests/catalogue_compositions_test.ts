@@ -12,7 +12,11 @@ import {
 import { CompositionsNavigation } from "../catalogue/pages/compositions/navigation.tsx";
 import {
   compositionGalleryItems,
+  compositionRecipeNeighbours,
   CompositionsPage,
+  compositionWidthPreset,
+  compositionWidthPresets,
+  compositionWidthUrl,
 } from "../catalogue/pages/compositions/page.tsx";
 import {
   canonicalCompositionUrl,
@@ -227,5 +231,69 @@ Deno.test("former recipe fragments upgrade in place to stable detail routes", ()
   assertEquals(
     canonicalCompositionUrl(legacy).href,
     "https://catalogue.example/catalogue/compositions/next-action/?width=narrow",
+  );
+});
+
+Deno.test("pattern order projects stable previous and next movement", () => {
+  const recipes = [...compositionRecipes, futureRecipe()];
+  for (const [index, recipe] of recipes.entries()) {
+    const neighbours = compositionRecipeNeighbours(recipes, recipe.id);
+    assertEquals(neighbours.previous?.id, recipes[index - 1]?.id);
+    assertEquals(neighbours.next?.id, recipes[index + 1]?.id);
+  }
+});
+
+Deno.test("responsive width state round-trips through the URL and real container contract", () => {
+  const recipe = futureRecipe();
+  for (const preset of compositionWidthPresets) {
+    const current = new URL(
+      `${compositionRecipePath(recipe.id)}?theme=dark`,
+      "https://catalogue.example",
+    );
+    const url = compositionWidthUrl(current, preset.id);
+    assertEquals(url.searchParams.get("theme"), "dark");
+    assertEquals(compositionWidthPreset(url.searchParams.get("width")), preset);
+
+    const html = renderToStaticMarkup(
+      createElement(CompositionsPage, {
+        recipes: [recipe],
+        currentUrl: url,
+      }),
+    );
+    assertStringIncludes(
+      html,
+      `data-discern-pattern-width="${preset.id}"`,
+    );
+    assertStringIncludes(
+      html,
+      `value="${preset.id}"`,
+    );
+    assertEquals((html.match(/checked=""/g) ?? []).length, 1);
+  }
+  assertEquals(compositionWidthPreset("invented").id, "standard");
+});
+
+Deno.test("detail keeps Components secondary and adaptable source closed and copyable", () => {
+  const recipe = compositionRecipes.find(({ id }) => id === "failure-triage")!;
+  const html = renderToStaticMarkup(
+    createElement(CompositionsPage, {
+      recipes: compositionRecipes,
+      currentUrl: new URL(
+        compositionRecipePath(recipe.id),
+        "https://catalogue.example",
+      ),
+    }),
+  );
+
+  for (const slug of recipe.components) {
+    assertStringIncludes(html, `href="/catalogue/components/${slug}/"`);
+  }
+  assertStringIncludes(html, "View adaptable example source");
+  assertStringIncludes(html, "Copy adaptable example source");
+  assertStringIncludes(html, illustrativePatternStatus.sourceGuidance);
+  assertEquals(html.includes("<details open"), false);
+  assertStringIncludes(
+    html,
+    'data-discern-journey-stages="[&quot;.discern-result-summary&quot;',
   );
 });
