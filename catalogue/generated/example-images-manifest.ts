@@ -3,7 +3,7 @@ import type { ComponentExampleImageManifest } from "../example-images/contract.t
 
 export const componentExampleImageManifest: ComponentExampleImageManifest = {
   "captureContractVersion": "2",
-  "sourceHash": "sha256:ee704b1709bcc158c97e8d968d82c7c61bb971b7f12e519beee126c5b960dfbf",
+  "sourceHash": "sha256:1a0e10edc9e6b576ecca5fa862721021efca1bca3b34b6d4ed6ea52054b5c976",
   "entries": [
     {
       "slug": "icon",
@@ -4669,7 +4669,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/profile-card--default--light.png",
       "width": 960,
       "height": 288,
-      "contentHash": "sha256:273e95b426da6068213e2e264a70dedcde5651c25755c90bad9841e95cd0a62c",
+      "contentHash": "sha256:db62a3fbeb543b5f816d092c76f0e941226395e8ae872dc3786f006c02094dfa",
       "captureContractVersion": "2"
     },
     {
