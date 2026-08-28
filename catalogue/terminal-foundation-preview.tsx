@@ -4,6 +4,7 @@ import { catalogueCliCapabilities, CliOutputPreview } from "./cli-preview.tsx";
 import type {
   TerminalFoundationAnimation,
   TerminalFoundationSheet,
+  TerminalFoundationSpecimen,
 } from "./terminal-foundations.ts";
 
 function prefersReducedMotion(): boolean {
@@ -54,7 +55,7 @@ function AnimatedTerminalSpecimen(
       data-discern-terminal-animation={running ? "running" : "paused"}
     >
       <div className="discern-catalogue-terminal-foundation__output-heading">
-        <span>{animation.label} · live</span>
+        <span>{animation.label} · Live preview</span>
         <button type="button" onClick={() => setRunning((current) => !current)}>
           {running ? "Pause animation" : "Play animation"}
         </button>
@@ -70,6 +71,17 @@ function AnimatedTerminalSpecimen(
   );
 }
 
+function groupedSpecimens(specimens: readonly TerminalFoundationSpecimen[]) {
+  const groups = new Map<string, TerminalFoundationSpecimen[]>();
+  for (const specimen of specimens) {
+    const group = specimen.group ?? "Specimens";
+    const members = groups.get(group) ?? [];
+    members.push(specimen);
+    groups.set(group, members);
+  }
+  return [...groups.entries()];
+}
+
 /** Render every specimen declared by one terminal foundation registry entry. */
 export function TerminalFoundationPreview(
   { sheet, theme }: {
@@ -79,52 +91,70 @@ export function TerminalFoundationPreview(
 ) {
   const specimens = sheet.specimens(catalogueCliCapabilities, { theme });
   return (
-    <section
-      className="discern-catalogue-subsection discern-catalogue-terminal-foundation"
+    <div
+      className="discern-catalogue-terminal-foundation"
       id={`terminal-foundation-${sheet.id}`}
       data-discern-terminal-foundation={sheet.id}
     >
-      <div className="discern-catalogue-terminal-foundation__heading">
-        <div>
-          <h3>{sheet.title}</h3>
-          <p>{sheet.description}</p>
-        </div>
-        <span>{specimens.length} specimens</span>
-      </div>
-      <div className="discern-catalogue-terminal-foundation__grid">
-        {specimens.map((specimen) => (
-          <article
-            className="discern-catalogue-terminal-foundation__specimen"
-            id={`terminal-foundation-${sheet.id}-${specimen.id}`}
-            data-discern-terminal-foundation-specimen={specimen.id}
-            key={specimen.id}
-          >
-            <h4>{specimen.title}</h4>
-            {specimen.animation === undefined ? null : (
-              <AnimatedTerminalSpecimen
-                animation={specimen.animation}
-                sheetTitle={sheet.title}
-                specimenTitle={specimen.title}
-                theme={theme}
-              />
-            )}
-            <div className="discern-catalogue-terminal-foundation__static">
-              {specimen.animation === undefined
-                ? null
-                : (
-                  <span className="discern-catalogue-terminal-foundation__label">
-                    Complete static evidence
-                  </span>
-                )}
-              <CliOutputPreview
-                value={specimen.output}
-                label={`${sheet.title}: ${specimen.title} output`}
-                theme={theme}
-              />
-            </div>
-          </article>
-        ))}
-      </div>
-    </section>
+      {groupedSpecimens(specimens).map(([group, members]) => (
+        <section
+          className="discern-catalogue-terminal-foundation__group"
+          key={group}
+        >
+          <div className="discern-catalogue-terminal-foundation__group-heading">
+            <h2>{group}</h2>
+            <span>{members.length} specimens</span>
+          </div>
+          <div className="discern-catalogue-terminal-foundation__grid">
+            {members.map((specimen) => (
+              <article
+                className="discern-catalogue-terminal-foundation__specimen"
+                id={`terminal-foundation-${sheet.id}-${specimen.id}`}
+                data-discern-terminal-foundation-specimen={specimen.id}
+                key={specimen.id}
+              >
+                <div className="discern-catalogue-terminal-foundation__specimen-heading">
+                  <h3>{specimen.title}</h3>
+                  <a
+                    href={`#terminal-foundation-${sheet.id}-${specimen.id}`}
+                    aria-label={`Link to ${specimen.title}`}
+                  >
+                    #
+                  </a>
+                </div>
+                {specimen.animation === undefined
+                  ? (
+                    <CliOutputPreview
+                      value={specimen.output}
+                      label={`${sheet.title}: ${specimen.title} output`}
+                      theme={theme}
+                    />
+                  )
+                  : (
+                    <div className="discern-catalogue-terminal-foundation__evidence-pair">
+                      <AnimatedTerminalSpecimen
+                        animation={specimen.animation}
+                        sheetTitle={sheet.title}
+                        specimenTitle={specimen.title}
+                        theme={theme}
+                      />
+                      <div className="discern-catalogue-terminal-foundation__static">
+                        <span className="discern-catalogue-terminal-foundation__label">
+                          Complete frame set
+                        </span>
+                        <CliOutputPreview
+                          value={specimen.output}
+                          label={`${sheet.title}: ${specimen.title} complete frame set`}
+                          theme={theme}
+                        />
+                      </div>
+                    </div>
+                  )}
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
   );
 }

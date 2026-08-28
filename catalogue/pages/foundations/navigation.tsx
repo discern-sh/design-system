@@ -1,44 +1,136 @@
 import { allTokens } from "../../../src/tokens/tokens.ts";
+import {
+  catalogueTerminalFoundationPath,
+  foundationsPaths,
+  foundationTokenCategories,
+  foundationTokenCategoryPath,
+  foundationTokenExplorerState,
+} from "../../routes/foundations.ts";
+import type { CatalogueRoute } from "../../routes/types.ts";
+import type { TerminalFoundationSheet } from "../../terminal-foundations.ts";
 import { terminalFoundationSheets } from "../../terminal-foundations.ts";
-import { slugify } from "../../routes/foundations.ts";
 import type { LocalNavigationProps } from "../navigation-types.ts";
+
+interface FoundationsNavigationContentProps {
+  readonly route: Extract<CatalogueRoute, { readonly family: "foundations" }>;
+  readonly url: URL;
+  readonly onNavigate: () => void;
+  readonly sheets: readonly TerminalFoundationSheet[];
+}
+
+function NavigationLink(
+  { href, label, current, onNavigate }: {
+    readonly href: string;
+    readonly label: string;
+    readonly current: boolean;
+    readonly onNavigate: () => void;
+  },
+) {
+  return (
+    <a
+      className="discern-catalogue-nav__child"
+      href={href}
+      aria-current={current ? "page" : undefined}
+      onClick={onNavigate}
+    >
+      {label}
+    </a>
+  );
+}
+
+/** Contextual Foundations navigation projected from Token and sheet authorities. */
+export function FoundationsNavigationContent(
+  { route, url, onNavigate, sheets }: FoundationsNavigationContentProps,
+) {
+  if (route.page === "index") {
+    return (
+      <>
+        <span className="discern-catalogue-nav__heading">Explore</span>
+        <NavigationLink
+          href={foundationsPaths.tokens}
+          label="Tokens"
+          current={false}
+          onNavigate={onNavigate}
+        />
+        <NavigationLink
+          href={foundationsPaths.terminal}
+          label="Terminal foundations"
+          current={false}
+          onNavigate={onNavigate}
+        />
+      </>
+    );
+  }
+  if (route.page === "tokens") {
+    const state = foundationTokenExplorerState(url, allTokens);
+    return (
+      <>
+        <NavigationLink
+          href={foundationsPaths.index}
+          label="← Foundations"
+          current={false}
+          onNavigate={onNavigate}
+        />
+        <span className="discern-catalogue-nav__heading">Token categories</span>
+        <NavigationLink
+          href={foundationsPaths.tokens}
+          label="All"
+          current={state.category === undefined}
+          onNavigate={onNavigate}
+        />
+        {foundationTokenCategories(allTokens).map((category) => (
+          <NavigationLink
+            href={foundationTokenCategoryPath(category)}
+            label={category}
+            current={state.category === category}
+            onNavigate={onNavigate}
+            key={category}
+          />
+        ))}
+      </>
+    );
+  }
+  return (
+    <>
+      <NavigationLink
+        href={foundationsPaths.index}
+        label="← Foundations"
+        current={false}
+        onNavigate={onNavigate}
+      />
+      <span className="discern-catalogue-nav__heading">
+        Terminal foundations
+      </span>
+      <NavigationLink
+        href={foundationsPaths.terminal}
+        label="All sheets"
+        current={route.page === "terminal-index"}
+        onNavigate={onNavigate}
+      />
+      {sheets.map((sheet) => (
+        <NavigationLink
+          href={catalogueTerminalFoundationPath(sheet.id)}
+          label={sheet.title}
+          current={route.page === "terminal-detail" &&
+            route.sheetId === sheet.id}
+          onNavigate={onNavigate}
+          key={sheet.id}
+        />
+      ))}
+    </>
+  );
+}
 
 export function FoundationsNavigation(
   { route, url, onNavigate }: LocalNavigationProps,
 ) {
   if (route.family !== "foundations") return null;
-  const categories = [...new Set(allTokens.map(({ category }) => category))];
   return (
-    <>
-      <span className="discern-catalogue-nav__heading">On this page</span>
-      {categories.map((category) => {
-        const hash = `#tokens-${slugify(category)}`;
-        return (
-          <a
-            className="discern-catalogue-nav__child"
-            href={hash}
-            aria-current={url.hash === hash ? "location" : undefined}
-            onClick={onNavigate}
-            key={category}
-          >
-            {category}
-          </a>
-        );
-      })}
-      {terminalFoundationSheets.map((sheet) => {
-        const hash = `#terminal-foundation-${sheet.id}`;
-        return (
-          <a
-            className="discern-catalogue-nav__child"
-            href={hash}
-            aria-current={url.hash === hash ? "location" : undefined}
-            onClick={onNavigate}
-            key={sheet.id}
-          >
-            {sheet.title}
-          </a>
-        );
-      })}
-    </>
+    <FoundationsNavigationContent
+      route={route}
+      url={url}
+      onNavigate={onNavigate}
+      sheets={terminalFoundationSheets}
+    />
   );
 }
