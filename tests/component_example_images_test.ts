@@ -31,9 +31,11 @@ import {
   componentExampleCaptureSourceHash,
   componentExampleContentHash,
   componentExampleScreenshotOptions,
+  isComponentExampleCaptureSourcePath,
   pngChunkTypes,
   pngDimensions,
   validateComponentExampleImageCoverage,
+  validateComponentExampleRepeatGeometry,
   withIsolatedCapturePage,
 } from "../scripts/component-example-images.ts";
 
@@ -58,6 +60,26 @@ function includesBytes(bytes: Uint8Array, needle: string): boolean {
     encoded.every((value, offset) => bytes[start + offset] === value)
   );
 }
+
+Deno.test("raster staleness excludes consumer-only image presentation", () => {
+  assertEquals(
+    isComponentExampleCaptureSourcePath(
+      "catalogue/example-images/review.ts",
+    ),
+    false,
+  );
+  assertEquals(
+    isComponentExampleCaptureSourcePath(
+      "catalogue/example-images/missing.svg",
+    ),
+    false,
+  );
+  assert(
+    isComponentExampleCaptureSourcePath(
+      "catalogue/example-images/future-capture-helper.ts",
+    ),
+  );
+});
 
 Deno.test("canonical Web examples auto-enrol both image themes and no CLI-only fiction", () => {
   const sources = imageSources();
@@ -201,6 +223,26 @@ Deno.test("exact-bounds screenshots retain document-space clips taller than the 
   const options = componentExampleScreenshotOptions(region);
   assertEquals(options.clip, region);
   assertEquals(options.fullPage, true);
+});
+
+Deno.test("repeat witnesses ignore raster-byte noise only while exact geometry holds", () => {
+  validateComponentExampleRepeatGeometry(
+    "future-panel/overview/dark",
+    { width: 320, height: 180 },
+    { width: 320, height: 180 },
+    { width: 320, height: 180 },
+  );
+  assertThrows(
+    () =>
+      validateComponentExampleRepeatGeometry(
+        "future-panel/overview/dark",
+        { width: 320, height: 180 },
+        { width: 321, height: 180 },
+        { width: 320, height: 180 },
+      ),
+    Error,
+    "geometry changed",
+  );
 });
 
 Deno.test("image hashes cover only a Playwright Buffer view, not its pooled backing bytes", async () => {

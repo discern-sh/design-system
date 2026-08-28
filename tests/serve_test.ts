@@ -9,6 +9,7 @@ import {
   catalogueNavigation,
 } from "../catalogue/routes.ts";
 import { componentExampleImageManifest } from "../catalogue/generated/example-images-manifest.ts";
+import { componentExampleImageThemes } from "../catalogue/example-images/contract.ts";
 
 Deno.test("the serve task resolves the worktree's deterministic port with a fixed fallback", async () => {
   const config = JSON.parse(
@@ -221,6 +222,20 @@ Deno.test("Catalogue review routes stay outside replaceable build output", async
   );
   assertStringIncludes(imageHtml, 'data-representative="true"');
   assertStringIncludes(imageHtml, "240×150 consumer frame");
+  assertStringIncludes(
+    imageHtml,
+    "border: 1px solid color-mix(in srgb, CanvasText 24%, transparent); background: Canvas; color: CanvasText; }",
+  );
+  for (const theme of componentExampleImageThemes) {
+    assertStringIncludes(
+      imageHtml,
+      `class="thumbnail" data-theme="${theme}"`,
+    );
+    assertStringIncludes(
+      imageHtml,
+      `.thumbnail[data-theme="${theme}"] { color-scheme: ${theme}; }`,
+    );
+  }
 
   const firstImage = componentExampleImageManifest.entries[0];
   if (firstImage === undefined) throw new Error("image manifest is empty");

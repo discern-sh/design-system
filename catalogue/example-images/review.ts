@@ -30,7 +30,7 @@ export function renderComponentExampleImageReviewPage(): string {
     }" width="${entry.width}" height="${entry.height}" alt="${
       escapeHtml(identity)
     }"></div>
-      <div class="thumbnail"><img src="${
+      <div class="thumbnail" data-theme="${entry.theme}"><img src="${
       escapeHtml(entry.assetUrl)
     }" width="${entry.width}" height="${entry.height}" alt=""><span>240×150 consumer frame</span></div>
     </article>`;
@@ -51,7 +51,9 @@ export function renderComponentExampleImageReviewPage(): string {
     header span { color: color-mix(in srgb, CanvasText 68%, transparent); }
     .natural { overflow: auto; max-height: 720px; background: repeating-conic-gradient(#8882 0 25%, transparent 0 50%) 0 / 16px 16px; }
     .natural img { display: block; width: auto; max-width: none; height: auto; image-rendering: auto; }
-    .thumbnail { display: grid; width: 240px; height: 150px; margin-block-start: 12px; place-items: center; border: 1px solid color-mix(in srgb, CanvasText 24%, transparent); background: Canvas; }
+    .thumbnail { display: grid; width: 240px; height: 150px; margin-block-start: 12px; place-items: center; border: 1px solid color-mix(in srgb, CanvasText 24%, transparent); background: Canvas; color: CanvasText; }
+    .thumbnail[data-theme="light"] { color-scheme: light; }
+    .thumbnail[data-theme="dark"] { color-scheme: dark; }
     .thumbnail img { grid-area: 1 / 1; max-width: 100%; max-height: 100%; object-fit: contain; }
     .thumbnail span { grid-area: 1 / 1; align-self: end; padding: 3px 5px; background: color-mix(in srgb, Canvas 90%, transparent); font-size: 11px; }
   </style>

@@ -7,10 +7,10 @@ export const componentExampleImageThemes = ["light", "dark"] as const;
 export type ComponentExampleImageTheme =
   (typeof componentExampleImageThemes)[number];
 
-/** Stable environment and rendering choices that define capture bytes. */
+/** Stable environment and rendering choices that constrain canonical capture. */
 export const componentExampleCaptureContract = Object.freeze(
   {
-    version: "1",
+    version: "2",
     denoVersion: "2.9.5",
     playwrightVersion: "1.61.1",
     chromiumRevision: "1228",

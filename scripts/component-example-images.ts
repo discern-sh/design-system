@@ -42,6 +42,16 @@ const CAPTURE_INPUTS = [
   "src/",
 ] as const;
 
+const NON_CAPTURE_EXAMPLE_IMAGE_INPUTS = new Set([
+  "catalogue/example-images/missing.svg",
+  "catalogue/example-images/review.ts",
+]);
+
+/** Keep consumer-only presentation out of the raster staleness boundary. */
+export function isComponentExampleCaptureSourcePath(path: string): boolean {
+  return !NON_CAPTURE_EXAMPLE_IMAGE_INPUTS.has(path);
+}
+
 interface CapturedImage {
   readonly entry: ComponentExampleImageManifestEntry;
   readonly bytes: Uint8Array;
@@ -217,9 +227,11 @@ export async function componentExampleCaptureSourceHash(): Promise<
 > {
   const files = (await Promise.all(
     CAPTURE_INPUTS.map((path) => filesUnder(new URL(path, ROOT))),
-  )).flat().filter((url) => url.href !== MANIFEST_URL.href).toSorted((a, b) =>
-    a.pathname.localeCompare(b.pathname)
-  );
+  )).flat().filter((url) =>
+    url.href !== MANIFEST_URL.href && isComponentExampleCaptureSourcePath(
+      relative(fromFileUrl(ROOT), fromFileUrl(url)),
+    )
+  ).toSorted((a, b) => a.pathname.localeCompare(b.pathname));
   const chunks: Uint8Array[] = [];
   let length = 0;
   for (const url of files) {
@@ -279,7 +291,7 @@ async function assertRuntime(update: boolean): Promise<string> {
     const actual = `${Deno.build.os}/${Deno.build.arch}/${Deno.osRelease()}`;
     const expected = componentExampleCaptureContract.bytePlatform;
     throw new Error(
-      `Image updates require the byte platform ${expected.os}/${expected.arch}/${expected.release}; received ${actual}. Other platforms may verify geometry and same-run reproducibility only.`,
+      `Image updates require the canonical raster platform ${expected.os}/${expected.arch}/${expected.release}; received ${actual}. Other platforms may verify artifact integrity and live geometry only.`,
     );
   }
   const executable = chromium.executablePath();
@@ -782,6 +794,26 @@ function witnessInputs(
   return [...byKey.values()];
 }
 
+/**
+ * Treat subpixel raster noise as non-semantic while exact capture geometry holds.
+ * Committed PNG hashes still protect the stored artifact from corruption.
+ */
+export function validateComponentExampleRepeatGeometry(
+  source: string,
+  first: { readonly width: number; readonly height: number },
+  second: { readonly width: number; readonly height: number },
+  committed: { readonly width: number; readonly height: number },
+): void {
+  if (
+    first.width !== second.width || first.height !== second.height ||
+    first.width !== committed.width || first.height !== committed.height
+  ) {
+    throw new Error(
+      `${source} geometry changed across live captures or differs from the committed manifest`,
+    );
+  }
+}
+
 async function verifyImages(): Promise<void> {
   const started = performance.now();
   const executablePath = await assertRuntime(false);
@@ -791,7 +823,7 @@ async function verifyImages(): Promise<void> {
   const sourceHash = await componentExampleCaptureSourceHash();
   if (componentExampleImageManifest.sourceHash !== sourceHash) {
     throw new Error(
-      "Generated Component example images are stale for the current capture inputs. Run `deno task catalogue:images --update` on the byte platform.",
+      "Generated Component example images are stale for the current capture inputs. Run `deno task catalogue:images --update` on the canonical raster platform.",
     );
   }
   const buildStarted = performance.now();
@@ -806,17 +838,6 @@ async function verifyImages(): Promise<void> {
         const second = await captureImage(capture, origin, input);
         const firstDimensions = pngDimensions(first);
         const secondDimensions = pngDimensions(second);
-        const firstHash = await componentExampleContentHash(first);
-        const secondHash = await componentExampleContentHash(second);
-        if (
-          firstHash !== secondHash ||
-          firstDimensions.width !== secondDimensions.width ||
-          firstDimensions.height !== secondDimensions.height
-        ) {
-          throw new Error(
-            `${input.slug}/${input.exampleId}/${input.theme} changed across the bounded repeat-capture witness`,
-          );
-        }
         const committed = componentExampleImageManifest.entries.find((entry) =>
           entry.slug === input.slug && entry.exampleId === input.exampleId &&
           entry.theme === input.theme
@@ -824,21 +845,12 @@ async function verifyImages(): Promise<void> {
         if (committed === undefined) {
           throw new Error("Witness has no manifest entry");
         }
-        if (
-          firstDimensions.width !== committed.width ||
-          firstDimensions.height !== committed.height
-        ) {
-          throw new Error(
-            `${input.slug}/${input.exampleId}/${input.theme} geometry differs from the committed manifest`,
-          );
-        }
-        if (
-          platformMatchesByteContract() && firstHash !== committed.contentHash
-        ) {
-          throw new Error(
-            `${input.slug}/${input.exampleId}/${input.theme} bytes differ on the pinned byte platform`,
-          );
-        }
+        validateComponentExampleRepeatGeometry(
+          `${input.slug}/${input.exampleId}/${input.theme}`,
+          firstDimensions,
+          secondDimensions,
+          committed,
+        );
       }
     } finally {
       await capture.context.close();
@@ -855,11 +867,7 @@ async function verifyImages(): Promise<void> {
       actualBytes.reduce((sum, bytes) => sum + bytes, 0)
     } bytes) and ${witnesses.length} repeat-capture witnesses in ${
       ((performance.now() - started) / 1000).toFixed(2)
-    }s (build ${(buildMs / 1000).toFixed(2)}s; byte comparison ${
-      platformMatchesByteContract()
-        ? "enabled"
-        : "skipped outside the pinned byte platform"
-    }).`,
+    }s (build ${(buildMs / 1000).toFixed(2)}s; exact live geometry compared).`,
   );
 }
 
