@@ -301,22 +301,26 @@
     border-radius: 50%;
     background: var(--discern-color-accent-500);
   }
-  .discern-catalogue-accent input {
+  .discern-catalogue-accent select {
     grid-column: 1 / -1;
     inline-size: 100%;
-    block-size: 18px;
     margin: 0;
-    cursor: ew-resize;
+    padding: 6px 8px;
+    border: 1px solid var(--discern-color-border-strong);
+    border-radius: var(--discern-radius-sm);
+    background: var(--discern-color-surface);
+    color: var(--discern-color-ink);
+    font: inherit;
     accent-color: var(--discern-color-accent-500);
   }
-  .discern-catalogue-accent input:focus-visible {
+  .discern-catalogue-accent select:focus-visible {
     outline: 2px solid var(--discern-color-accent-500);
     outline-offset: 2px;
   }
   .discern-catalogue-accent output {
     grid-column: 3;
     grid-row: 1;
-    inline-size: 4ch;
+    inline-size: 6ch;
     color: var(--discern-color-ink);
     font-variant-numeric: tabular-nums;
     text-align: end;

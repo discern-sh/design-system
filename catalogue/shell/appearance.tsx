@@ -2,16 +2,17 @@ import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import type { ThemeSwitcherMode } from "../../src/components/core/theme-switcher/theme-switcher.tsx";
 import { ThemeToggle } from "../../src/components/core/theme-toggle/theme-toggle.tsx";
-import { discernThemeTokens } from "../../src/tokens/tokens.ts";
 import { useCatalogueTerminalTheme } from "../terminal-theme.ts";
+import {
+  catalogueAppearanceOption,
+  catalogueAppearanceOptions,
+  defaultCatalogueAppearanceOption,
+} from "./appearance-options.ts";
 import { catalogueAccent, catalogueTheme } from "./appearance-state.ts";
 
 const themeStorageKey = "discern-catalogue-theme";
 const accentStorageKey = "discern-catalogue-accent-hue";
-const defaultAccentHue = Number(
-  discernThemeTokens.find(({ name }) => name === "--discern-accent-hue")
-    ?.value ?? "255",
-);
+const defaultAccentHue = defaultCatalogueAppearanceOption.hue;
 
 function updateCatalogueAppearanceUrl(
   theme: ThemeSwitcherMode,
@@ -63,7 +64,7 @@ export function useCatalogueAppearance(url: URL) {
     updateCatalogueAppearanceUrl(next, accentHue);
   };
   const changeAccentHue = (next: number): void => {
-    const accent = Math.max(0, Math.min(360, Math.round(next)));
+    const accent = catalogueAppearanceOption(next)?.hue ?? defaultAccentHue;
     setAccentHue(accent);
     if (accent === defaultAccentHue) localStorage.removeItem(accentStorageKey);
     else localStorage.setItem(accentStorageKey, String(accent));
@@ -119,18 +120,20 @@ export function AppearanceControl(
             className="discern-catalogue-accent__swatch"
             aria-hidden="true"
           />
-          <span>Accent hue</span>
-          <input
-            type="range"
-            min="0"
-            max="360"
-            step="1"
+          <span>Accent</span>
+          <select
             value={accentHue}
-            onInput={(event) =>
-              onAccentHueChange(event.currentTarget.valueAsNumber)}
-            aria-label="Accent hue"
-          />
-          <output>{accentHue}°</output>
+            onChange={(event) =>
+              onAccentHueChange(Number(event.currentTarget.value))}
+            aria-label="Accent preset"
+          >
+            {catalogueAppearanceOptions.map((option) => (
+              <option key={option.id} value={option.hue}>{option.label}</option>
+            ))}
+          </select>
+          <output>
+            {catalogueAppearanceOption(accentHue)?.label ?? "Blue"}
+          </output>
         </label>
       </div>
     </details>

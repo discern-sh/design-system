@@ -16,14 +16,14 @@ import { preserveCatalogueAppearanceHref } from "../catalogue/shell/appearance-s
 
 Deno.test("local Catalogue state transitions preserve valid explicit Appearance", () => {
   const current = new URL(
-    "https://catalogue.example/catalogue/components/table/?theme=dark&accent=128",
+    "https://catalogue.example/catalogue/components/table/?theme=dark&accent=300",
   );
   assertEquals(
     preserveCatalogueAppearanceHref(
       current,
       "/catalogue/components/table/?example=dense-overflow#component-table--dense-overflow",
     ),
-    "/catalogue/components/table/?example=dense-overflow&theme=dark&accent=128#component-table--dense-overflow",
+    "/catalogue/components/table/?example=dense-overflow&theme=dark&accent=300#component-table--dense-overflow",
   );
   assertEquals(
     preserveCatalogueAppearanceHref(

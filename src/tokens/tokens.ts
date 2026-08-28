@@ -53,7 +53,7 @@ export const discernThemeTokens: readonly DesignToken[] = [
     "--discern-accent-hue",
     "255",
     "Color",
-    "Master hue for the default Discern accent family.",
+    "Master hue for the default Discern accent family. Consumer overrides near a semantic role must override that role coherently and re-run contrast and distinction checks.",
   ),
 ];
 

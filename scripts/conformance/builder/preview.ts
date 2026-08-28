@@ -722,9 +722,8 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
       name: "Preview appearance",
     });
     await previewAppearance.locator("summary").click();
-    await previewAppearance.getByRole("slider", { name: "Accent hue" }).fill(
-      "0",
-    );
+    await previewAppearance.getByRole("combobox", { name: "Accent preset" })
+      .selectOption("300");
     await page.waitForTimeout(50);
     invariant(
       await page.locator(BUILDER_SHELL).getAttribute("data-discern-theme") ===
@@ -734,7 +733,7 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
           ) === "dark" &&
         await preview.locator(".discern-builder-frame-document").evaluate(
             (element) => element.style.getPropertyValue("--discern-accent-hue"),
-          ) === "0" &&
+          ) === "300" &&
         await page.locator(BUILDER_SHELL).evaluate((element) =>
             getComputedStyle(element).getPropertyValue(
               "--discern-builder-editor-selection",

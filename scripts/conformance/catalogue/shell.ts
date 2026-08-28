@@ -289,18 +289,21 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
     '.discern-catalogue-appearance > summary[aria-label="Change appearance"]',
   );
   await appearance.click();
-  const range = page.getByRole("slider", { name: "Accent hue" });
-  await range.fill("128");
-  invariant(await range.inputValue() === "128", "Accent hue did not update");
+  const accent = page.getByRole("combobox", { name: "Accent preset" });
+  await accent.selectOption("300");
   invariant(
-    new URL(page.url()).searchParams.get("accent") === "128",
-    "Accent hue did not update the shareable URL",
+    await accent.inputValue() === "300",
+    "Accent preset did not update",
+  );
+  invariant(
+    new URL(page.url()).searchParams.get("accent") === "300",
+    "Accent preset did not update the shareable URL",
   );
   invariant(
     await page.evaluate(() =>
-      localStorage.getItem("discern-catalogue-accent-hue") === "128"
+      localStorage.getItem("discern-catalogue-accent-hue") === "300"
     ),
-    "Accent hue did not persist",
+    "Accent preset did not persist",
   );
   await page.getByRole("button", { name: "Switch to the dark theme" }).click();
   await eventually(
@@ -323,9 +326,9 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
   );
   await appearance.click();
   invariant(
-    await page.getByRole("slider", { name: "Accent hue" }).inputValue() ===
-      "128",
-    "Persisted accent hue did not restore",
+    await page.getByRole("combobox", { name: "Accent preset" }).inputValue() ===
+      "300",
+    "Persisted accent preset did not restore",
   );
 
   await page.evaluate(() => {

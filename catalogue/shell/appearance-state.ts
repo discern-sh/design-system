@@ -1,4 +1,5 @@
 import type { ThemeSwitcherMode } from "../../src/components/core/theme-switcher/theme-switcher.tsx";
+import { catalogueAppearanceOption } from "./appearance-options.ts";
 
 export const catalogueAppearanceParameters = ["theme", "accent"] as const;
 
@@ -11,11 +12,7 @@ export function catalogueTheme(
 }
 
 export function catalogueAccent(value: string | null): number | undefined {
-  if (value === null || value.trim() === "") return undefined;
-  const accent = Number(value);
-  return Number.isFinite(accent) && accent >= 0 && accent <= 360
-    ? Math.round(accent)
-    : undefined;
+  return catalogueAppearanceOption(value)?.hue;
 }
 
 /** Carry valid explicit Appearance state through one local URL transition. */
