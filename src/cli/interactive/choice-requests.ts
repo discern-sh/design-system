@@ -19,14 +19,18 @@ import {
   choiceVisibleCount,
   choiceVisibleStart,
   edgeEnabledIndex,
+  edgeFocusableIndex,
   frameChoices,
   initialHighlight,
   isBackwardChoiceKey,
   isForwardChoiceKey,
   isInteractionChoice,
   moveEnabledIndex,
+  moveFocusableIndex,
   pageEnabledIndex,
+  pageFocusableIndex,
   resolveInteractionChoicePresentation,
+  resolveInteractionSelectionPresentation,
 } from "./choice-navigation.ts";
 import { type InteractionMachine, runInteraction } from "./driver.ts";
 import { isNamedKey, type TerminalKey } from "./keys.ts";
@@ -36,6 +40,7 @@ import type {
   InteractionEntry,
   InteractionOptions,
   InteractionRuntime,
+  InteractionSelectionPresentation,
 } from "./types.ts";
 
 function renderSelectFrame(
@@ -64,12 +69,12 @@ function renderMultiselectFrame(
 export interface SelectionRequestOptions<T>
   extends InteractionOptions<T | undefined> {
   readonly choices: readonly InteractionEntry<T>[];
-  /** Stable ID of the enabled choice highlighted initially. */
+  /** Stable ID highlighted initially; menu presentation may focus an unavailable choice. */
   readonly initialId?: string;
   /** Requested upper bound on choice rows; the viewport may reduce it per frame. */
   readonly visibleCount?: number;
-  /** Form lifecycle chrome (default) or a quiet long-lived browsing frame. */
-  readonly presentation?: InteractionChoicePresentation;
+  /** Form, quiet browsing, or a focus-driven contextual menu. */
+  readonly presentation?: InteractionSelectionPresentation;
 }
 
 /** Options for selecting zero or more values from a scrollable choice list. */
@@ -87,52 +92,68 @@ export interface SelectionsRequestOptions<T>
 class SelectionInteractionMachine<T>
   implements InteractionMachine<T | undefined, SelectFrameState> {
   readonly #visibleCount: number;
-  readonly #presentation: "browsing" | undefined;
+  readonly #presentation: "browsing" | "menu" | undefined;
   #highlighted: number;
   /** The most recently fitted visible window, sizing a paging jump. */
   #pageSize: number;
 
   constructor(readonly options: SelectionRequestOptions<T>) {
     assertChoices(options.choices, options.required !== false);
-    this.#presentation = resolveInteractionChoicePresentation(
+    this.#presentation = resolveInteractionSelectionPresentation(
       options.presentation,
     );
     this.#visibleCount = choiceVisibleCount(options.visibleCount);
-    this.#highlighted = initialHighlight(options.choices, options.initialId);
+    this.#highlighted = initialHighlight(
+      options.choices,
+      options.initialId,
+      this.#presentation === "menu",
+    );
     this.#pageSize = this.#visibleCount;
   }
 
   handle(key: TerminalKey): boolean {
     if (isBackwardChoiceKey(key)) {
-      this.#highlighted = moveEnabledIndex(
-        this.options.choices,
-        this.#highlighted,
-        -1,
-      );
+      this.#highlighted =
+        (this.#presentation === "menu" ? moveFocusableIndex : moveEnabledIndex)(
+          this.options.choices,
+          this.#highlighted,
+          -1,
+        );
     } else if (isForwardChoiceKey(key)) {
-      this.#highlighted = moveEnabledIndex(
-        this.options.choices,
-        this.#highlighted,
-        1,
-      );
+      this.#highlighted =
+        (this.#presentation === "menu" ? moveFocusableIndex : moveEnabledIndex)(
+          this.options.choices,
+          this.#highlighted,
+          1,
+        );
     } else if (isNamedKey(key, "page-up")) {
-      this.#highlighted = pageEnabledIndex(
-        this.options.choices,
-        this.#highlighted,
-        -1,
-        this.#pageSize,
-      );
+      this.#highlighted =
+        (this.#presentation === "menu" ? pageFocusableIndex : pageEnabledIndex)(
+          this.options.choices,
+          this.#highlighted,
+          -1,
+          this.#pageSize,
+        );
     } else if (isNamedKey(key, "page-down")) {
-      this.#highlighted = pageEnabledIndex(
-        this.options.choices,
-        this.#highlighted,
-        1,
-        this.#pageSize,
-      );
+      this.#highlighted =
+        (this.#presentation === "menu" ? pageFocusableIndex : pageEnabledIndex)(
+          this.options.choices,
+          this.#highlighted,
+          1,
+          this.#pageSize,
+        );
     } else if (isNamedKey(key, "home")) {
-      this.#highlighted = edgeEnabledIndex(this.options.choices, "first");
+      this.#highlighted =
+        (this.#presentation === "menu" ? edgeFocusableIndex : edgeEnabledIndex)(
+          this.options.choices,
+          "first",
+        );
     } else if (isNamedKey(key, "end")) {
-      this.#highlighted = edgeEnabledIndex(this.options.choices, "last");
+      this.#highlighted =
+        (this.#presentation === "menu" ? edgeFocusableIndex : edgeEnabledIndex)(
+          this.options.choices,
+          "last",
+        );
     }
     if (!isNamedKey(key, "enter")) return false;
     const entry = this.options.choices[this.#highlighted];
@@ -181,7 +202,12 @@ class SelectionInteractionMachine<T>
       ...(this.#presentation === undefined
         ? {}
         : { presentation: this.#presentation }),
-      ...(selected === undefined ? {} : { selectedId: selected.id }),
+      ...(this.#presentation === "menu"
+        ? { menuDetailLineLimit: Math.min(3, viewport.maximumControlRows) }
+        : {}),
+      ...(selected === undefined || this.#presentation === "menu"
+        ? {}
+        : { selectedId: selected.id }),
       ...(this.options.hint === undefined ? {} : { hint: this.options.hint }),
     };
   }

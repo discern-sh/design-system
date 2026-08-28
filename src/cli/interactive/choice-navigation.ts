@@ -7,6 +7,7 @@ import type {
   InteractionChoicePresentation,
   InteractionEntry,
   InteractionGroupHeading,
+  InteractionSelectionPresentation,
 } from "./types.ts";
 
 const DEFAULT_VISIBLE_CHOICES = 5;
@@ -24,6 +25,24 @@ export function resolveInteractionChoicePresentation(
     );
   }
   return presentation === "browsing" ? "browsing" : undefined;
+}
+
+/** Validate a single-selection presentation without widening multiselect. */
+export function resolveInteractionSelectionPresentation(
+  value: InteractionSelectionPresentation | undefined,
+): "browsing" | "menu" | undefined {
+  const presentation = value ?? "form";
+  if (
+    presentation !== "form" && presentation !== "browsing" &&
+    presentation !== "menu"
+  ) {
+    throw new TypeError(
+      `interaction selection presentation must be "form", "browsing", or "menu"; received ${
+        JSON.stringify(presentation)
+      }`,
+    );
+  }
+  return presentation === "form" ? undefined : presentation;
 }
 
 export function isInteractionGroupHeading<T>(
@@ -175,18 +194,75 @@ function enabledIndices<T>(choices: readonly InteractionEntry<T>[]): number[] {
   );
 }
 
+/** Every focusable value, including unavailable values but never headings. */
+function focusableIndices<T>(
+  choices: readonly InteractionEntry<T>[],
+): number[] {
+  return choices.flatMap((entry, index) =>
+    isInteractionChoice(entry) ? [index] : []
+  );
+}
+
+function navigableIndices<T>(
+  choices: readonly InteractionEntry<T>[],
+  includeDisabled: boolean,
+): number[] {
+  return includeDisabled ? focusableIndices(choices) : enabledIndices(choices);
+}
+
+function moveChoiceIndex<T>(
+  choices: readonly InteractionEntry<T>[],
+  current: number,
+  direction: -1 | 1,
+  includeDisabled: boolean,
+): number {
+  const candidates = navigableIndices(choices, includeDisabled);
+  if (candidates.length === 0) return -1;
+  const position = candidates.indexOf(current);
+  const origin = position < 0 ? (direction === 1 ? -1 : 0) : position;
+  const next = ((origin + direction) % candidates.length + candidates.length) %
+    candidates.length;
+  return candidates[next] ?? candidates[0] ?? 0;
+}
+
 export function moveEnabledIndex<T>(
   choices: readonly InteractionEntry<T>[],
   current: number,
   direction: -1 | 1,
 ): number {
-  const enabled = enabledIndices(choices);
-  if (enabled.length === 0) return -1;
-  const position = enabled.indexOf(current);
-  const origin = position < 0 ? (direction === 1 ? -1 : 0) : position;
-  const next = ((origin + direction) % enabled.length + enabled.length) %
-    enabled.length;
-  return enabled[next] ?? enabled[0] ?? 0;
+  return moveChoiceIndex(choices, current, direction, false);
+}
+
+/** Move menu focus across every value while skipping structural headings. */
+export function moveFocusableIndex<T>(
+  choices: readonly InteractionEntry<T>[],
+  current: number,
+  direction: -1 | 1,
+): number {
+  return moveChoiceIndex(choices, current, direction, true);
+}
+
+function pageChoiceIndex<T>(
+  choices: readonly InteractionEntry<T>[],
+  current: number,
+  direction: -1 | 1,
+  pageSize: number,
+  includeDisabled: boolean,
+): number {
+  const candidates = navigableIndices(choices, includeDisabled);
+  if (candidates.length === 0) return -1;
+  const origin = candidates.includes(current)
+    ? current
+    : direction === 1
+    ? -1
+    : choices.length;
+  const target = origin + direction * Math.max(1, pageSize);
+  if (direction === 1) {
+    return candidates.find((index) => index >= target) ??
+      candidates[candidates.length - 1] ?? 0;
+  }
+  return [...candidates].reverse().find((index) => index <= target) ??
+    candidates[0] ?? 0;
 }
 
 /**
@@ -200,20 +276,17 @@ export function pageEnabledIndex<T>(
   direction: -1 | 1,
   pageSize: number,
 ): number {
-  const enabled = enabledIndices(choices);
-  if (enabled.length === 0) return -1;
-  const origin = enabled.includes(current)
-    ? current
-    : direction === 1
-    ? -1
-    : choices.length;
-  const target = origin + direction * Math.max(1, pageSize);
-  if (direction === 1) {
-    return enabled.find((index) => index >= target) ??
-      enabled[enabled.length - 1] ?? 0;
-  }
-  return [...enabled].reverse().find((index) => index <= target) ??
-    enabled[0] ?? 0;
+  return pageChoiceIndex(choices, current, direction, pageSize, false);
+}
+
+/** Page menu focus across enabled and unavailable values. */
+export function pageFocusableIndex<T>(
+  choices: readonly InteractionEntry<T>[],
+  current: number,
+  direction: -1 | 1,
+  pageSize: number,
+): number {
+  return pageChoiceIndex(choices, current, direction, pageSize, true);
 }
 
 /**
@@ -257,15 +330,27 @@ export function edgeEnabledIndex<T>(
     : enabled[enabled.length - 1] ?? -1;
 }
 
+/** First or last menu-focusable value, including unavailable values. */
+export function edgeFocusableIndex<T>(
+  choices: readonly InteractionEntry<T>[],
+  edge: "first" | "last",
+): number {
+  const focusable = focusableIndices(choices);
+  return edge === "first"
+    ? focusable[0] ?? -1
+    : focusable[focusable.length - 1] ?? -1;
+}
+
 export function initialHighlight<T>(
   choices: readonly InteractionEntry<T>[],
   initialId: string | undefined,
+  includeUnavailable = false,
 ): number {
   const requested = initialId === undefined
     ? -1
     : choices.findIndex((entry) =>
       isInteractionChoice(entry) && entry.id === initialId &&
-      entry.disabled !== true
+      (includeUnavailable || entry.disabled !== true)
     );
   return requested >= 0 ? requested : edgeEnabledIndex(choices, "first");
 }

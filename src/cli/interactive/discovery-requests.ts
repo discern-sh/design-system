@@ -33,8 +33,10 @@ import {
   frameChoices,
   isInteractionChoice,
   moveEnabledIndex,
+  moveFocusableIndex,
   nearestEnabledIndex,
   resolveInteractionChoicePresentation,
+  resolveInteractionSelectionPresentation,
 } from "./choice-navigation.ts";
 import {
   type InteractionMachine,
@@ -51,6 +53,7 @@ import type {
   InteractionEntry,
   InteractionOptions,
   InteractionRuntime,
+  InteractionSelectionPresentation,
 } from "./types.ts";
 
 function renderSearchFrame(
@@ -243,20 +246,20 @@ function searchProvider<T>(source: SearchSource<T>): SearchProvider<T> {
 export interface SearchRequestOptions<T>
   extends InteractionOptions<T | undefined>, DiscoveryRequestPacing {
   readonly search: SearchSource<T>;
-  /** Stable enabled choice ID highlighted from the initial provider result. */
+  /** Stable choice ID highlighted initially; menus may focus an unavailable result. */
   readonly initialId?: string;
   readonly placeholder?: string;
   /** Requested upper bound on result rows; the viewport may reduce it per frame. */
   readonly visibleCount?: number;
-  /** Form lifecycle chrome (default) or a quiet long-lived browsing frame. */
-  readonly presentation?: InteractionChoicePresentation;
+  /** Form, quiet browsing, or a focus-driven contextual menu. */
+  readonly presentation?: InteractionSelectionPresentation;
 }
 
 class SearchInteractionMachine<T>
   implements InteractionMachine<T | undefined, SearchFrameState> {
   readonly #editor = new GraphemeTextEditor();
   readonly #visibleCount: number;
-  readonly #presentation: "browsing" | undefined;
+  readonly #presentation: "browsing" | "menu" | undefined;
   readonly #calls: DiscoveryProviderCalls<readonly InteractionEntry<T>[]>;
   #matches: readonly InteractionEntry<T>[] = [];
   #highlighted: number | undefined;
@@ -264,7 +267,7 @@ class SearchInteractionMachine<T>
 
   constructor(readonly options: SearchRequestOptions<T>) {
     this.#visibleCount = choiceVisibleCount(options.visibleCount);
-    this.#presentation = resolveInteractionChoicePresentation(
+    this.#presentation = resolveInteractionSelectionPresentation(
       options.presentation,
     );
     this.#rememberedId = options.initialId;
@@ -288,8 +291,12 @@ class SearchInteractionMachine<T>
   handle(key: TerminalKey): boolean {
     if (isNamedKey(key, "enter")) {
       if (this.#highlighted === undefined) {
-        const first = moveEnabledIndex(this.#matches, -1, 1);
-        if (first < 0) return this.options.required === false;
+        const first = (this.#presentation === "menu"
+          ? moveFocusableIndex
+          : moveEnabledIndex)(this.#matches, -1, 1);
+        if (first < 0) {
+          return this.options.required === false;
+        }
         this.#highlighted = first;
         this.#rememberHighlighted();
         return false;
@@ -302,11 +309,12 @@ class SearchInteractionMachine<T>
       isNamedKey(key, "up") || isNamedKey(key, "shift-tab") ||
       isNamedKey(key, "ctrl-p")
     ) {
-      const highlighted = moveEnabledIndex(
-        this.#matches,
-        this.#highlighted ?? 0,
-        -1,
-      );
+      const highlighted =
+        (this.#presentation === "menu" ? moveFocusableIndex : moveEnabledIndex)(
+          this.#matches,
+          this.#highlighted ?? 0,
+          -1,
+        );
       this.#highlighted = highlighted < 0 ? undefined : highlighted;
       this.#rememberHighlighted();
       return false;
@@ -315,11 +323,12 @@ class SearchInteractionMachine<T>
       isNamedKey(key, "down") || isNamedKey(key, "tab") ||
       isNamedKey(key, "ctrl-n")
     ) {
-      const highlighted = moveEnabledIndex(
-        this.#matches,
-        this.#highlighted ?? -1,
-        1,
-      );
+      const highlighted =
+        (this.#presentation === "menu" ? moveFocusableIndex : moveEnabledIndex)(
+          this.#matches,
+          this.#highlighted ?? -1,
+          1,
+        );
       this.#highlighted = highlighted < 0 ? undefined : highlighted;
       this.#rememberHighlighted();
       return false;
@@ -371,6 +380,10 @@ class SearchInteractionMachine<T>
       query: this.#editor.value,
       cursor: this.#editor.cursor,
       results: visible.map(({ entry }) => entry),
+      ...(this.#presentation === "menu" ? { menuDetailEntries: choices } : {}),
+      ...(this.#presentation === "menu"
+        ? { menuDetailLineLimit: Math.min(3, viewport.maximumControlRows) }
+        : {}),
       ...interactiveChoiceOverflow(choices, start, visibleCount),
       ...(this.#presentation === undefined
         ? {}
@@ -392,7 +405,7 @@ class SearchInteractionMachine<T>
       ? -1
       : choices.findIndex((entry) =>
         isInteractionChoice(entry) && entry.id === this.#rememberedId &&
-        entry.disabled !== true
+        (this.#presentation === "menu" || entry.disabled !== true)
       );
     this.#highlighted = remembered < 0 ? undefined : remembered;
   }
@@ -402,7 +415,7 @@ class SearchInteractionMachine<T>
     const entry = this.#matches[this.#highlighted];
     if (
       entry !== undefined && isInteractionChoice(entry) &&
-      entry.disabled !== true
+      (this.#presentation === "menu" || entry.disabled !== true)
     ) {
       this.#rememberedId = entry.id;
     }

@@ -15,6 +15,7 @@ import type {
   InteractiveChoiceOverflowState,
   InteractiveChoiceState,
   InteractiveFrameLifecycle,
+  InteractiveSelectionFramePresentation,
   SelectFrameState,
 } from "../../cli/interactive-states.ts";
 import {
@@ -27,7 +28,12 @@ import {
   motifPassthrough,
   type TerminalMotifOptions,
 } from "../../cli/motif.ts";
-import { measureText, truncateText, wrapStyledText } from "../../cli/text.ts";
+import {
+  measureText,
+  truncateText,
+  wrapStyledText,
+  wrapText,
+} from "../../cli/text.ts";
 import {
   terminalThemeColor,
   terminalThemes,
@@ -39,6 +45,10 @@ import { renderMotifSectionRule } from "../../cli/motifs.ts";
 /** Static presentation layered over an active Wave 1 frame. */
 export type FormCliPresentation = InteractiveChoiceFramePresentation;
 
+/** Presentation available to a single-choice form control. */
+export type FormCliSelectionPresentation =
+  InteractiveSelectionFramePresentation;
+
 /** Shared options used to compose one coherent terminal form frame. */
 export interface FormCliFrameOptions {
   readonly label: string;
@@ -48,7 +58,7 @@ export interface FormCliFrameOptions {
   readonly required?: boolean;
   /** Provider work is scheduled or in flight behind an active frame. */
   readonly pending?: boolean;
-  readonly presentation?: FormCliPresentation;
+  readonly presentation?: FormCliSelectionPresentation;
   /** Include the derived lifecycle token after the label; searching stays visible by default. */
   readonly showStatus?: boolean;
   readonly theme?: TerminalThemeVariant;
@@ -73,8 +83,8 @@ function statusTone(
   if (status === "error") return "danger";
   if (status === "submitted") return "success";
   if (
-    status === "active" || status === "browsing" || status === "searching" ||
-    status === "filled"
+    status === "active" || status === "browsing" || status === "menu" ||
+    status === "searching" || status === "filled"
   ) {
     return "accent";
   }
@@ -132,7 +142,11 @@ export function formCliControlWidth(
 export function formCliChoiceFrameWidth(
   requested: number | undefined,
   capabilities: TerminalCapabilities,
+  presentation?: FormCliSelectionPresentation,
 ): number {
+  if (presentation === "menu" && requested === undefined) {
+    return formCliFrameWidth(undefined, capabilities);
+  }
   return formCliFrameWidth(requested ?? capabilities.columns, capabilities);
 }
 
@@ -400,6 +414,132 @@ export function renderFormCliChoiceHeading(
   return ["", rule, ...continuations, ...description].join("\n");
 }
 
+/** Render one compact, non-collapsible group label inside a menu. */
+function renderFormCliMenuHeading(
+  heading: InteractiveChoiceGroupHeadingState,
+  options: {
+    readonly separate?: boolean;
+    readonly theme?: TerminalThemeVariant;
+    readonly width?: number;
+  },
+  capabilities: TerminalCapabilities,
+): string {
+  if (heading.description !== undefined) {
+    assertFormCliChoiceDescription(heading.description);
+  }
+  const theme = terminalThemes[options.theme ?? "dark"];
+  const label = styleText(heading.label.toUpperCase(), {
+    ...theme.typography.strong,
+    color: terminalThemeColor(theme, "--discern-color-ink"),
+  }, capabilities);
+  const lines = wrapStyledText(
+    label,
+    formCliControlWidth(options.width, capabilities),
+  );
+  return [...(options.separate === true ? [""] : []), ...lines].join("\n");
+}
+
+/** Inputs for a focus-driven menu's stable contextual inspector. */
+export interface FormCliMenuDetailOptions {
+  readonly entries: readonly InteractiveChoiceEntryState[];
+  readonly highlightedIndex: number | undefined;
+  /** Optional viewport-derived cap; static frames reserve up to three lines. */
+  readonly maximumLines?: number;
+  /** Complete current result set used only to reserve stable inspector height. */
+  readonly reserveEntries?: readonly InteractiveChoiceEntryState[];
+  readonly theme?: TerminalThemeVariant;
+  readonly width?: number;
+}
+
+function formCliMenuDetails(
+  entries: readonly InteractiveChoiceEntryState[],
+): readonly string[] {
+  let groupDescription: string | undefined;
+  return entries.map((entry) => {
+    if (isInteractiveChoiceGroupHeading(entry)) {
+      groupDescription = entry.description;
+      if (groupDescription !== undefined) {
+        assertFormCliChoiceDescription(groupDescription);
+      }
+      return "";
+    }
+    assertFormCliChoiceState(entry);
+    return [groupDescription, entry.description]
+      .filter((value): value is string => value !== undefined)
+      .join(" ");
+  });
+}
+
+/**
+ * Render the focused menu entry's detail below one quiet divider.
+ *
+ * The inspector reserves the longest detail's height, up to three lines, so
+ * moving focus cannot reflow the surrounding frame. Only the final reserved
+ * line may be ellipsized.
+ */
+export function renderFormCliMenuDetail(
+  options: FormCliMenuDetailOptions,
+  capabilities: TerminalCapabilities,
+): string {
+  const width = formCliControlWidth(options.width, capabilities);
+  const maximumLines = options.maximumLines ?? 3;
+  if (
+    !Number.isSafeInteger(maximumLines) || maximumLines < 1 ||
+    maximumLines > 3
+  ) {
+    throw new TypeError(
+      `menu detail maximum lines must be an integer from 1 to 3; received ${maximumLines}`,
+    );
+  }
+  const details = formCliMenuDetails(options.entries);
+  const wrapped = details.map((detail) =>
+    detail === "" ? [] : wrapText(detail, width)
+  );
+  const reserveWrapped = options.reserveEntries === undefined
+    ? wrapped
+    : formCliMenuDetails(options.reserveEntries).map((detail) =>
+      detail === "" ? [] : wrapText(detail, width)
+    );
+  const rowCount = Math.min(
+    maximumLines,
+    reserveWrapped.reduce(
+      (longest, lines) => Math.max(longest, lines.length),
+      0,
+    ),
+  );
+  if (rowCount === 0) return "";
+
+  const focused = options.highlightedIndex === undefined
+    ? []
+    : wrapped[options.highlightedIndex] ?? [];
+  const visible = focused.length <= rowCount ? [...focused] : [
+    ...focused.slice(0, rowCount - 1),
+    truncateText(
+      focused.slice(rowCount - 1).join(" "),
+      width,
+      capabilities.unicode ? "…" : ".",
+    ),
+  ];
+  while (visible.length < rowCount) visible.push("");
+
+  const theme = terminalThemes[options.theme ?? "dark"];
+  const detailStyle = {
+    ...theme.typography.annotation,
+    color: terminalThemeColor(theme, "--discern-color-ink-muted"),
+  };
+  const divider = styleText(
+    (capabilities.unicode ? "─" : "-").repeat(width),
+    { color: terminalThemeColor(theme, "--discern-color-ink-muted") },
+    capabilities,
+  );
+  return [
+    divider,
+    ...visible.map((line) =>
+      line === "" ? "" : styleText(line, detailStyle, capabilities)
+    ),
+  ].join("\n");
+}
+
 /**
  * Derive the embedded motif rule's label column and capacity from the
  * authority's own rendering. Reference labels locate the semantic lead, and
@@ -453,6 +593,8 @@ export interface FormCliChoiceRowOptions {
   readonly description?: string;
   readonly highlighted?: boolean;
   readonly disabled?: boolean;
+  /** Keep disabled menu text muted without applying a second typographic dim. */
+  readonly menu?: boolean;
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
@@ -471,11 +613,15 @@ export function renderFormCliChoiceRow(
       ? {}
       : { highlighted: options.highlighted }),
     ...(options.disabled === undefined ? {} : { disabled: options.disabled }),
+    ...(options.menu === undefined ? {} : { menu: options.menu }),
     ...(options.theme === undefined ? {} : { theme: options.theme }),
   };
+  const marker = options.menu === true
+    ? styleFormCliChoiceText(options.marker, styleOptions, capabilities)
+    : options.marker;
   const prefix = `${
     styleFormCliChoiceText(options.pointer, styleOptions, capabilities)
-  }${options.marker} `;
+  }${marker} `;
   const prefixWidth = measureText(prefix);
   const controlWidth = formCliControlWidth(options.width, capabilities);
   if (prefixWidth >= controlWidth) {
@@ -516,6 +662,9 @@ export interface FormCliChoiceEntryOptions extends TerminalMotifOptions {
   /** Component-specific selection marker for selectable entries. */
   readonly marker: string;
   readonly highlighted?: boolean;
+  readonly presentation?: FormCliSelectionPresentation;
+  /** Separate this compact heading from a preceding menu group. */
+  readonly separateHeading?: boolean;
   readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
@@ -530,22 +679,33 @@ export function renderFormCliChoiceEntry(
   capabilities: TerminalCapabilities,
 ): string {
   if (isInteractiveChoiceGroupHeading(options.entry)) {
+    if (options.presentation === "menu") {
+      return renderFormCliMenuHeading(options.entry, {
+        ...(options.separateHeading === undefined
+          ? {}
+          : { separate: options.separateHeading }),
+        ...(options.theme === undefined ? {} : { theme: options.theme }),
+        ...(options.width === undefined ? {} : { width: options.width }),
+      }, capabilities);
+    }
     return renderFormCliChoiceHeading(options.entry, options, capabilities);
   }
   assertFormCliChoiceState(options.entry);
+  const menu = options.presentation === "menu";
   return renderFormCliChoiceRow({
     pointer: options.pointer,
     marker: options.marker,
     label: `${options.entry.label}${
-      options.entry.disabled === true ? " (disabled)" : ""
+      options.entry.disabled === true && !menu ? " (disabled)" : ""
     }`,
-    ...(options.entry.description === undefined
+    ...(options.entry.description === undefined || menu
       ? {}
       : { description: options.entry.description }),
     ...(options.highlighted === undefined
       ? {}
       : { highlighted: options.highlighted }),
     disabled: options.entry.disabled === true,
+    ...(menu ? { menu: true } : {}),
     ...(options.theme === undefined ? {} : { theme: options.theme }),
     ...(options.width === undefined ? {} : { width: options.width }),
   }, capabilities);
@@ -597,6 +757,7 @@ export function styleFormCliChoiceText(
   options: {
     readonly highlighted?: boolean;
     readonly disabled?: boolean;
+    readonly menu?: boolean;
     readonly theme?: TerminalThemeVariant;
   },
   capabilities: TerminalCapabilities,
@@ -604,7 +765,7 @@ export function styleFormCliChoiceText(
   const theme = terminalThemes[options.theme ?? "dark"];
   if (options.disabled === true) {
     return styleText(value, {
-      ...theme.typography.muted,
+      ...(options.menu === true ? {} : theme.typography.muted),
       color: terminalThemeColor(theme, "--discern-color-ink-muted"),
     }, capabilities);
   }
