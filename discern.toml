@@ -140,6 +140,15 @@
 
 # ─────────────────────────────────────────────────────────────────────────────
 # [generated.<name>] — committed artifacts wholly owned by one generator.
+#   paths    scope-style globs naming every artifact the generator owns
+#   run      the command, or commands in order, that rewrite those artifacts;
+#            the same tree must produce the same bytes, and the generator removes
+#            artifacts absent from its current output
+#   linguist_generated
+#            optional; true marks only this group's paths as generated for GitHub,
+#            hiding them in diffs by default and excluding them from language stats
+#   timeout  optional seconds for the command; replaces [gate].timeout for this
+#            group only (0 disables the bound)
 # ─────────────────────────────────────────────────────────────────────────────
 
 [generated]
