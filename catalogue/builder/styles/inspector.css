@@ -101,6 +101,10 @@
     flex-direction: column;
     gap: 12px;
   }
+  .discern-builder-inspector__body > header {
+    background: var(--discern-color-surface);
+    color: var(--discern-color-ink);
+  }
   .discern-builder-inspector__body > header h2 {
     margin: 0;
     font-size: var(--discern-font-size-lg);
@@ -687,7 +691,8 @@
     padding: 2px 7px;
     border: 1px solid var(--discern-color-success);
     border-radius: var(--discern-radius-pill);
-    color: var(--discern-color-success);
+    background: var(--discern-color-success-soft);
+    color: var(--discern-color-success-deep);
     font-size: var(--discern-font-size-xs);
   }
   .discern-builder-export__identity {

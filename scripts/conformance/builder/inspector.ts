@@ -261,6 +261,98 @@ export async function verifySaveFile(page: Page): Promise<number> {
   return 12;
 }
 
+/** 2C owns row seeds; the Inspector owns their shaped interaction and focus. */
+export async function verifyStructuredEditing(page: Page): Promise<number> {
+  await placeNamedComponent(page, "Tabs");
+  const inspector = page.locator("#discern-builder-pane-inspector");
+  const object = inspector.locator(".discern-builder-object");
+  const rows = object.locator(".discern-builder-object__row");
+  invariant(
+    await rows.count() === 2,
+    "new Tabs did not expose its two valid Builder-default rows",
+  );
+  const beforeAdd = await documentWitness(page);
+  await object.locator(".discern-builder-object__add").click();
+  await page.waitForFunction(
+    () =>
+      document.querySelectorAll(".discern-builder-object__row").length === 3,
+    undefined,
+    { timeout: ACTION_TIMEOUT },
+  );
+  const added = rows.nth(2);
+  const value = added.locator(
+    '[data-discern-builder-object-member="value"] input',
+  );
+  const label = added.locator(
+    '[data-discern-builder-object-member="label"] input',
+  );
+  const content = added.locator(
+    '[data-discern-builder-object-member="content"] input',
+  );
+  invariant(
+    await value.inputValue() === "tab-3" &&
+      await label.inputValue() === "Tab 3" &&
+      await content.inputValue() === "Content for Tab 3.",
+    "new shaped row did not consume 2C's valid unique seed",
+  );
+  const valueHandle = await value.elementHandle();
+  invariant(valueHandle !== null, "new shaped row has no value input");
+  await page.waitForFunction(
+    (element) => element.ownerDocument.activeElement === element,
+    valueHandle,
+    { timeout: ACTION_TIMEOUT },
+  );
+  await page.waitForTimeout(400);
+  invariant(
+    await documentWitness(page) !== beforeAdd,
+    "valid shaped-row insertion never reached the accepted document",
+  );
+
+  await added.getByRole("button", { name: "Move TabItem 3 up" }).click();
+  const summaries = await rows.locator("summary").allTextContents();
+  invariant(
+    summaries[1]?.includes("Tab 3") === true &&
+      summaries[2]?.includes("Tab 2") === true,
+    `shaped-row reorder was ${summaries.join(" | ")}`,
+  );
+
+  await object.getByText("Edit as JSON", { exact: true }).click();
+  const raw = object.getByRole("textbox", { name: "Tabs JSON" });
+  const acceptedSource = await raw.inputValue();
+  const beforeDraft = await documentWitness(page);
+  await raw.fill("[");
+  await page.waitForTimeout(400);
+  const issue = inspector.getByRole("alert").filter({ hasText: "Tabs › Tabs" });
+  invariant(
+    await issue.count() === 1 &&
+      await raw.evaluate((element) =>
+        element.ownerDocument.activeElement === element
+      ),
+    "invalid shaped JSON lost its draft focus or human-path error",
+  );
+  invariant(
+    await documentWitness(page) === beforeDraft,
+    "invalid shaped JSON replaced the last accepted output",
+  );
+  await raw.fill(acceptedSource);
+  await object.getByRole("button", { name: "Apply JSON" }).click();
+  await page.waitForFunction(
+    () =>
+      document.querySelectorAll(".discern-builder-control__issue").length ===
+        0,
+    undefined,
+    { timeout: ACTION_TIMEOUT },
+  );
+  invariant(
+    await inspector.getByRole("alert").count() === 0,
+    "corrected shaped JSON left stale validation",
+  );
+  await page.getByRole("status").filter({
+    hasText: "Tabs › Tabs is valid again.",
+  }).waitFor({ timeout: ACTION_TIMEOUT });
+  return 10;
+}
+
 export async function verifySuccessfulLoad(page: Page): Promise<number> {
   await selectComposition(page);
   const input = page.locator(

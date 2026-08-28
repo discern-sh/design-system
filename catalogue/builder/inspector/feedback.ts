@@ -23,6 +23,10 @@ export type BuilderFeedback =
     readonly message: string;
   }
   | {
+    readonly kind: "recovery";
+    readonly message: string;
+  }
+  | {
     readonly kind: "persistence";
     readonly state: "saving" | "saved" | "unavailable";
     readonly message: string;
@@ -35,6 +39,7 @@ export interface BuilderFeedbackModel {
   readonly storageFailure:
     | Extract<BuilderFeedback, { kind: "storage-failure" }>
     | null;
+  readonly recovery: Extract<BuilderFeedback, { kind: "recovery" }> | null;
   readonly persistence: Extract<BuilderFeedback, { kind: "persistence" }>;
 }
 
@@ -44,6 +49,7 @@ export function initialBuilderFeedback(): BuilderFeedbackModel {
     live: null,
     toast: null,
     storageFailure: null,
+    recovery: null,
     persistence: {
       kind: "persistence",
       state: "saving",
@@ -112,6 +118,7 @@ export function visibleBuilderFeedback(
   model: BuilderFeedbackModel,
 ): readonly BuilderFeedback[] {
   return [
+    ...(model.recovery === null ? [] : [model.recovery]),
     ...(model.storageFailure === null ? [] : [model.storageFailure]),
     ...(model.toast === null ? [] : [model.toast]),
   ];

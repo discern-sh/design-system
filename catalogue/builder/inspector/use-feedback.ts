@@ -24,13 +24,26 @@ export function useBuilderFeedback(
   restored: RestoredBuilderSession,
 ): BuilderFeedbackController {
   const serial = useRef(0);
-  const toastTimer = useRef<number | undefined>(undefined);
-  const savedTimer = useRef<number | undefined>(undefined);
+  const toastTimer = useRef<
+    ReturnType<typeof globalThis.setTimeout> | undefined
+  >(undefined);
+  const savedTimer = useRef<
+    ReturnType<typeof globalThis.setTimeout> | undefined
+  >(undefined);
   const toastStartedAt = useRef(0);
   const toastRemaining = useRef(TOAST_DURATION_MS);
   const [model, setModel] = useState<BuilderFeedbackModel>(() => {
     const initial = initialBuilderFeedback();
     if (restored.message === undefined) return initial;
+    if (restored.recoverySource !== undefined) {
+      return {
+        ...initial,
+        recovery: {
+          kind: "recovery",
+          message: restored.message,
+        },
+      };
+    }
     return {
       ...initial,
       storageFailure: {

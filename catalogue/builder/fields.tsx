@@ -8,9 +8,12 @@ import type { TextareaHTMLAttributes } from "react";
 import { Select } from "../../src/components/forms/select/select.tsx";
 import type { JsonShape, PropControl } from "./controls.ts";
 import {
+  type BuilderStructuredRowSeed,
+  newBuilderStructuredRow,
+} from "./defaults.ts";
+import {
   editableCell,
   moveShapedRow,
-  newShapedRow,
   parseShapedSource,
   serializeShapedRows,
   summarizeShapedRow,
@@ -54,7 +57,10 @@ export function MemberCell({ member, row, onValue }: MemberCellProps) {
     // Structural members (nested arrays/objects) only edit as raw JSON —
     // a text cell here would store a string where structure belongs.
     return (
-      <label className="discern-builder-object__cell">
+      <label
+        className="discern-builder-object__cell"
+        data-discern-builder-object-member={member.name}
+      >
         <span>{member.label}</span>
         <input type="text" disabled value="(edit as JSON)" />
       </label>
@@ -62,7 +68,10 @@ export function MemberCell({ member, row, onValue }: MemberCellProps) {
   }
   if (member.control === "toggle") {
     return (
-      <label className="discern-builder-object__cell discern-builder-object__cell--row">
+      <label
+        className="discern-builder-object__cell discern-builder-object__cell--row"
+        data-discern-builder-object-member={member.name}
+      >
         <input
           type="checkbox"
           checked={value === true}
@@ -83,7 +92,10 @@ export function MemberCell({ member, row, onValue }: MemberCellProps) {
     const options = member.options;
     const currentIndex = options.findIndex((option) => option === value);
     return (
-      <label className="discern-builder-object__cell">
+      <label
+        className="discern-builder-object__cell"
+        data-discern-builder-object-member={member.name}
+      >
         <span>{member.label}</span>
         <Select
           value={String(currentIndex)}
@@ -102,7 +114,10 @@ export function MemberCell({ member, row, onValue }: MemberCellProps) {
   }
   if (member.control === "number") {
     return (
-      <label className="discern-builder-object__cell">
+      <label
+        className="discern-builder-object__cell"
+        data-discern-builder-object-member={member.name}
+      >
         <span>{member.label}</span>
         <input
           type="number"
@@ -116,7 +131,10 @@ export function MemberCell({ member, row, onValue }: MemberCellProps) {
     );
   }
   return (
-    <label className="discern-builder-object__cell">
+    <label
+      className="discern-builder-object__cell"
+      data-discern-builder-object-member={member.name}
+    >
       <span>{member.label}</span>
       <input
         type="text"
@@ -138,7 +156,9 @@ interface ShapedJsonEditorProps {
   readonly error?: string | null;
   readonly onSource: (source: string) => void;
   readonly onApply?: () => void;
-  readonly createRow?: () => Readonly<Record<string, unknown>>;
+  readonly createRow?: (
+    rows: readonly Readonly<Record<string, unknown>>[],
+  ) => BuilderStructuredRowSeed;
 }
 
 /**
@@ -158,7 +178,7 @@ export function ShapedJsonEditor(
     error = null,
     onSource,
     onApply,
-    createRow = () => newShapedRow(shape),
+    createRow = (rows) => newBuilderStructuredRow(shape, rows),
   }: ShapedJsonEditorProps,
 ) {
   const [rawOpen, setRawOpen] = useState(false);
@@ -182,16 +202,25 @@ export function ShapedJsonEditor(
   const addRow = (): void => {
     if (rows === undefined) return;
     const index = rows.length;
-    commit([...rows, createRow()]);
+    const seed = createRow(rows);
+    commit([...rows, seed.row]);
     setOpenRows((current) => new Set([...current, index]));
     globalThis.requestAnimationFrame(() => {
-      root.current?.querySelector<HTMLInputElement>(
-        `[data-discern-builder-object-row="${
-          String(index)
-        }"] input:not(:disabled), [data-discern-builder-object-row="${
-          String(index)
-        }"] select`,
-      )?.focus();
+      const row = root.current?.querySelector<HTMLElement>(
+        `[data-discern-builder-object-row="${String(index)}"]`,
+      );
+      const preferred = [
+        ...row?.querySelectorAll<HTMLElement>(
+          "[data-discern-builder-object-member]",
+        ) ?? [],
+      ].find((member) =>
+        member.dataset.discernBuilderObjectMember === seed.focusMember
+      );
+      (preferred?.querySelector<HTMLInputElement | HTMLSelectElement>(
+        "input:not(:disabled), select:not(:disabled)",
+      ) ?? row?.querySelector<HTMLInputElement | HTMLSelectElement>(
+        "input:not(:disabled), select:not(:disabled)",
+      ))?.focus();
     });
   };
   return (

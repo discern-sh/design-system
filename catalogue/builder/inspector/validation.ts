@@ -1,7 +1,167 @@
 /** Human projection of strict Builder validation. Technical facts stay intact. */
+import type {
+  BuilderDocument,
+  BuilderNode,
+  BuilderSlotChild,
+} from "../model.ts";
+import { ancestorsOf, findChild } from "../model.ts";
+import { entryBySlug, registryCoreBySlug } from "../registry-core.ts";
+
 export interface ProjectedBuilderIssue {
   readonly message: string;
   readonly technical: string;
+}
+
+function componentName(node: BuilderNode): string {
+  return entryBySlug.get(node.slug)?.meta.name ?? node.slug;
+}
+
+function slotLabel(node: BuilderNode, prop: string): string {
+  return registryCoreBySlug.get(node.slug)?.controls.find((control) =>
+    control.name === prop
+  )?.label ?? prop;
+}
+
+/**
+ * One selection-language path for breadcrumbs, field errors, and preflight.
+ * Ordinary `children` is implicit; named slots stay visible as decisions.
+ */
+export interface HumanBuilderPathSegment {
+  readonly label: string;
+  readonly nodeId?: string;
+}
+
+export function humanBuilderSelectionSegments(
+  document: BuilderDocument,
+  selectionId: string,
+  currentLabel?: string,
+): readonly HumanBuilderPathSegment[] {
+  const selected = findChild(document, selectionId)?.child;
+  if (selected === undefined) {
+    return [{ label: currentLabel ?? "Composition" }];
+  }
+  const lineage = [...ancestorsOf(document, selectionId), selected];
+  const segments: HumanBuilderPathSegment[] = [];
+  for (const [index, child] of lineage.entries()) {
+    const last = index === lineage.length - 1;
+    segments.push({
+      label: last && currentLabel !== undefined
+        ? currentLabel
+        : child.kind === "component"
+        ? componentName(child)
+        : "Text",
+      nodeId: child.id,
+    });
+    if (child.kind !== "component") continue;
+    const next = lineage[index + 1];
+    if (next === undefined) continue;
+    const location = findChild(document, next.id)?.location;
+    if (
+      location?.parent === "node" && location.nodeId === child.id &&
+      location.prop !== "children"
+    ) segments.push({ label: slotLabel(child, location.prop) });
+  }
+  return segments;
+}
+
+export function humanBuilderSelectionPath(
+  document: BuilderDocument,
+  selectionId: string,
+  currentLabel?: string,
+): string {
+  return humanBuilderSelectionSegments(document, selectionId, currentLabel)
+    .map(({ label }) => label).join(" › ");
+}
+
+interface IndexedBuilderNode {
+  readonly node: BuilderNode;
+  readonly technicalPath: string;
+}
+
+function indexedBuilderNodes(
+  document: BuilderDocument,
+): readonly IndexedBuilderNode[] {
+  const indexed: IndexedBuilderNode[] = [];
+  const visit = (child: BuilderSlotChild, technicalPath: string): void => {
+    if (child.kind !== "component") return;
+    indexed.push({ node: child, technicalPath });
+    for (const [prop, value] of Object.entries(child.props)) {
+      if (value.kind !== "slot") continue;
+      for (const [index, nested] of value.children.entries()) {
+        visit(
+          nested,
+          `${technicalPath}.props.${prop}.children[${String(index)}]`,
+        );
+      }
+    }
+  };
+  for (const [index, child] of document.children.entries()) {
+    visit(child, `document.children[${String(index)}]`);
+  }
+  return indexed;
+}
+
+export interface ProjectedBuilderIssueTarget {
+  readonly nodeId: string;
+  readonly controlName?: string;
+  readonly humanPath: string;
+}
+
+/** Resolve an exact policy path back to the deepest affected control. */
+export function projectDocumentIssueTarget(
+  document: BuilderDocument,
+  technical: string,
+): ProjectedBuilderIssueTarget | undefined {
+  const match = indexedBuilderNodes(document)
+    .filter(({ technicalPath }) => technical.startsWith(technicalPath))
+    .sort((left, right) =>
+      right.technicalPath.length - left.technicalPath.length
+    )[0];
+  if (match === undefined) return undefined;
+  const suffix = technical.slice(match.technicalPath.length);
+  const extra = suffix.startsWith(".extra");
+  const prop = /^\.props\.([A-Za-z_$][A-Za-z0-9_$]*)/.exec(suffix)?.[1];
+  const controlName = extra ? "additional-props" : prop;
+  const controlLabel = extra
+    ? "Additional props"
+    : prop === undefined
+    ? undefined
+    : slotLabel(match.node, prop);
+  const selectionPath = humanBuilderSelectionPath(
+    document,
+    match.node.id,
+  );
+  return {
+    nodeId: match.node.id,
+    ...(controlName === undefined ? {} : { controlName }),
+    humanPath: controlLabel === undefined
+      ? selectionPath
+      : `${selectionPath} › ${controlLabel}`,
+  };
+}
+
+/** Match 2B's human-path refusal back to its deepest affected Component. */
+function comparableHumanPath(value: string): string {
+  return value.split("›")
+    .map((segment) => segment.toLocaleLowerCase().replace(/[^a-z0-9]+/gu, ""))
+    .filter((segment) => segment !== "" && segment !== "children")
+    .join("›");
+}
+
+export function builderNodeIdForHumanPath(
+  document: BuilderDocument,
+  humanPath: string,
+): string | undefined {
+  const normalized = comparableHumanPath(humanPath);
+  return indexedBuilderNodes(document)
+    .map(({ node }) => ({
+      id: node.id,
+      path: comparableHumanPath(humanBuilderSelectionPath(document, node.id)),
+    }))
+    .filter(({ path }) =>
+      normalized === path || normalized.startsWith(`${path}›`)
+    )
+    .sort((left, right) => right.path.length - left.path.length)[0]?.id;
 }
 
 function offsetLocation(source: string, offset: number): {

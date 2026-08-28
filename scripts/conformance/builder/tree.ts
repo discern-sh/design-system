@@ -122,12 +122,12 @@ export async function verifyShortcutIsolation(page: Page): Promise<number> {
   await selectComposition(page);
   checks += await assertInteractiveShortcutIsolation(
     page,
-    page.getByLabel("Load file", { exact: true }),
+    page.getByLabel("Import builder JSON", { exact: true }),
     "focused file control",
   );
   checks += await assertInteractiveShortcutIsolation(
     page,
-    page.getByText("Shipped components", { exact: true }),
+    page.locator(".discern-builder-cost-detail > summary"),
     "focused disclosure",
   );
   checks += await verifyStructuralAuthoring(page);
@@ -224,6 +224,10 @@ async function verifyStructuralAuthoring(page: Page): Promise<number> {
     );
     checks += 2;
 
+    await page.locator("#discern-builder-pane-inspector").getByText(
+      "Behaviour",
+      { exact: true },
+    ).click();
     await page.getByRole("textbox", { name: "Href optional", exact: true })
       .fill("/valid-sibling");
     await page.locator(".discern-builder-layers__refusal").waitFor({

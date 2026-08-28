@@ -118,6 +118,47 @@ Deno.test("corrupt saved state starts safely and preserves its exact source", ()
   assert(restored.message?.includes("could not be restored"));
 });
 
+Deno.test("structural recovery retains 2B's human refusal", () => {
+  const memory = new MemoryStorage();
+  const buttonProps = new Map([["button", new Set(["children"])]]);
+  const structuralPolicy = {
+    knownSlugs: new Set(["button"]),
+    modeledPropsBySlug: buttonProps,
+    reservedPropsBySlug: buttonProps,
+    compatibility: builderCompatibility,
+  };
+  const invalid: BuilderDocument = {
+    version: 1,
+    name: "Nested controls",
+    children: [{
+      kind: "component",
+      id: "outer",
+      slug: "button",
+      props: {
+        children: {
+          kind: "slot",
+          children: [{
+            kind: "component",
+            id: "inner",
+            slug: "button",
+            props: {},
+          }],
+        },
+      },
+    }],
+  };
+  const source = JSON.stringify(invalid);
+  memory.values.set(BUILDER_STORAGE_KEYS.document, source);
+  const restored = restoreBuilderSession(
+    new GuardedBuilderStorage(() => memory),
+    structuralPolicy,
+  );
+  assert(restored.error);
+  assert(restored.message?.includes("interactive controls cannot contain"));
+  assertEquals(restored.recoverySource, source);
+  assertEquals(memory.values.get(BUILDER_STORAGE_KEYS.recovery), source);
+});
+
 Deno.test("a prior recovery remains visible after a clean reload", () => {
   const memory = new MemoryStorage();
   memory.values.set(

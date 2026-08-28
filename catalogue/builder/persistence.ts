@@ -139,7 +139,7 @@ export function restoreBuilderSession(
         BUILDER_STORAGE_KEYS.recovery,
         saved.value,
       );
-      const reason = cause instanceof BuilderDocumentError
+      const reason = cause instanceof Error
         ? cause.message
         : "The saved composition is invalid.";
       message = recovery.ok

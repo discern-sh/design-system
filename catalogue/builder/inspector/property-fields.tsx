@@ -29,7 +29,9 @@ function useJsonDraft(
 ): JsonDraftController {
   const [draft, setDraft] = useState(acceptedSource);
   const [issue, setIssue] = useState<ProjectedBuilderIssue | null>(null);
-  const timer = useRef<number | undefined>(undefined);
+  const timer = useRef<ReturnType<typeof globalThis.setTimeout> | undefined>(
+    undefined,
+  );
   const draftRef = useRef(acceptedSource);
   const issueRef = useRef<ProjectedBuilderIssue | null>(null);
   const recoveryPending = useRef(false);

@@ -18,6 +18,7 @@ export function BuilderFeedbackRegion(
   const storageFailure = visible.find((item) =>
     item.kind === "storage-failure"
   );
+  const recovery = visible.find((item) => item.kind === "recovery");
   return (
     <section
       className="discern-builder-status"
@@ -61,6 +62,14 @@ export function BuilderFeedbackRegion(
               </button>
               <a href="#discern-builder-export">Download builder JSON</a>
             </div>
+          </div>
+        )}
+      {recovery === undefined
+        ? null
+        : (
+          <div className="discern-builder-storage-alert" role="alert">
+            <strong>Composition recovery is available.</strong>
+            <p>{recovery.message}</p>
           </div>
         )}
       {recoverySource === null

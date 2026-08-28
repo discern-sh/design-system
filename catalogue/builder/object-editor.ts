@@ -53,36 +53,6 @@ export function serializeShapedRows(
     : JSON.stringify(rows[0] ?? {}, null, 2);
 }
 
-/** A fresh row with every required member holding its neutral value. */
-export function newShapedRow(shape: JsonShape): ObjectEditorRow {
-  const row: Record<string, unknown> = {};
-  for (const member of shape.members) {
-    if (!member.required) continue;
-    switch (member.control) {
-      case "text":
-        row[member.name] = "";
-        break;
-      case "number":
-        row[member.name] = 0;
-        break;
-      case "toggle":
-        row[member.name] = false;
-        break;
-      case "select":
-        if (member.options[0] !== undefined) {
-          row[member.name] = member.options[0];
-        }
-        break;
-      case "json":
-        row[member.name] = member.typeText.includes("[]") ? [] : {};
-        break;
-      default:
-        break;
-    }
-  }
-  return row;
-}
-
 /** Rows with one member of one row replaced; undefined removes the member. */
 export function withRowValue(
   rows: readonly ObjectEditorRow[],

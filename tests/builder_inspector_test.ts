@@ -352,12 +352,14 @@ Deno.test("shaped JSON sources round-trip through row editing", async () => {
   const {
     editableCell,
     moveShapedRow,
-    newShapedRow,
     parseShapedSource,
     serializeShapedRows,
     summarizeShapedRow,
     withRowValue,
   } = await import("../catalogue/builder/object-editor.ts");
+  const { newBuilderStructuredRow } = await import(
+    "../catalogue/builder/defaults.ts"
+  );
   const shape = {
     list: true,
     typeName: "SelectOption",
@@ -395,8 +397,10 @@ Deno.test("shaped JSON sources round-trip through row editing", async () => {
   assertEquals(parseShapedSource('{"value":"a"}', shape), undefined);
   assertEquals(parseShapedSource("[1, 2]", shape), undefined);
 
-  const rows = [...(parseShapedSource("[]", shape) ?? []), newShapedRow(shape)];
-  assertEquals(rows, [{ value: "", label: "" }]);
+  const seed = newBuilderStructuredRow(shape, []);
+  const rows = [...(parseShapedSource("[]", shape) ?? []), seed.row];
+  assertEquals(rows, [{ value: "select-option-1", label: "Select Option 1" }]);
+  assertEquals(seed.focusMember, "value");
   const edited = withRowValue(
     withRowValue(rows, 0, "value", "gb"),
     0,
@@ -437,7 +441,7 @@ Deno.test("shaped JSON sources round-trip through row editing", async () => {
   } as const;
   assert(!editableCell({}, itemsMember));
   assert(!editableCell({ items: [] }, itemsMember));
-  const seeded = newShapedRow({
+  const seeded = newBuilderStructuredRow({
     list: true,
     typeName: "DocsNavSection",
     members: [
@@ -450,8 +454,9 @@ Deno.test("shaped JSON sources round-trip through row editing", async () => {
       },
       itemsMember,
     ],
-  });
-  assertEquals(seeded, { label: "", items: [] });
+  }, []);
+  assertEquals(seeded.row, { label: "Docs Nav Section 1", items: [] });
+  assertEquals(seeded.focusMember, "label");
 
   const single = {
     list: false,
@@ -494,6 +499,58 @@ Deno.test("JSON errors expose a human remedy and retain exact technical detail",
       message: "Fix Tabs › Tabs: enter valid JSON.",
       technical,
     },
+  );
+});
+
+Deno.test("selection and policy errors share one human slot path", async () => {
+  const {
+    builderNodeIdForHumanPath,
+    humanBuilderSelectionPath,
+    humanBuilderSelectionSegments,
+    projectDocumentIssueTarget,
+  } = await import("../catalogue/builder/inspector/validation.ts");
+  const document: BuilderDocument = {
+    version: 1,
+    name: "Human paths",
+    children: [node("hero", "hero-block", {
+      actions: slot(node("action", "button", {
+        children: slot(text("label", "Continue")),
+      })),
+    })],
+  };
+  assertEquals(
+    humanBuilderSelectionPath(document, "action"),
+    "Hero block › Actions › Button",
+  );
+  assertEquals(
+    humanBuilderSelectionSegments(document, "action").map(({ label }) => label),
+    ["Hero block", "Actions", "Button"],
+  );
+  assertEquals(
+    projectDocumentIssueTarget(
+      document,
+      'document.children[0].props.actions.children[0].extra cannot use executable handler prop "onClick".',
+    ),
+    {
+      nodeId: "action",
+      controlName: "additional-props",
+      humanPath: "Hero block › Actions › Button › Additional props",
+    },
+  );
+
+  const nestedButtons: BuilderDocument = {
+    version: 1,
+    name: "Nested",
+    children: [node("outer", "button", {
+      children: slot(node("inner", "button")),
+    })],
+  };
+  assertEquals(
+    builderNodeIdForHumanPath(
+      nestedButtons,
+      "Button › children › Button",
+    ),
+    "inner",
   );
 });
 
@@ -1461,6 +1518,12 @@ Deno.test("the shaped editor keeps a stable scaffold across validity flips", asy
   }));
   assertStringIncludes(cell, "(edit as JSON)");
   assertStringIncludes(cell, "disabled");
+
+  const source = await Deno.readTextFile(
+    new URL("../catalogue/builder/fields.tsx", import.meta.url),
+  );
+  assertStringIncludes(source, "newBuilderStructuredRow(shape, rows)");
+  assert(!source.includes("newShapedRow"));
 });
 
 interface BuiltBuilderModules {
@@ -1718,6 +1781,48 @@ Deno.test("Inspector preflight viewers are exact, lazy emitter projections", asy
     runtime: "export-proof.selection.ts",
     json: "export-proof.builder.json",
   });
+
+  const outer = registryIndex.instantiateComponent("button");
+  const inner = registryIndex.instantiateComponent("button");
+  const structurallyInvalid: BuilderDocument = {
+    version: 1,
+    name: "Blocked export",
+    children: [{
+      ...outer,
+      props: { ...outer.props, children: slot(inner) },
+    }],
+  };
+  const blocked = preflightBuilderDocument(structurallyInvalid);
+  assert(!blocked.ok);
+  assertStringIncludes(blocked.issue.message, "interactive controls");
+  assertEquals(blocked.issue.nodeId, inner.id);
+  assertStringIncludes(blocked.issue.humanPath, "Button");
+  assertStringIncludes(blocked.issue.technical, "interactive posture");
+
+  const unsafeAdditionalProps: BuilderDocument = {
+    version: 1,
+    name: "Blocked prop",
+    children: [{
+      ...registryIndex.instantiateComponent("button"),
+      extra: '{"onClick":"run"}',
+    }],
+  };
+  const rejected = preflightBuilderDocument(unsafeAdditionalProps);
+  assert(!rejected.ok);
+  assertEquals(rejected.issue.controlName, "additional-props");
+  assertStringIncludes(rejected.issue.humanPath, "Additional props");
+  assertStringIncludes(rejected.issue.message, "remove the unsafe React prop");
+
+  const diagram = registryIndex.instantiateComponent("diagram");
+  const missingRequired = preflightBuilderDocument({
+    version: 1,
+    name: "Missing required data",
+    children: [{ ...diagram, props: {} }],
+  });
+  assert(!missingRequired.ok);
+  assertEquals(missingRequired.issue.nodeId, diagram.id);
+  assertEquals(missingRequired.issue.controlName, "spec");
+  assertStringIncludes(missingRequired.issue.message, "Set Spec");
 });
 
 Deno.test("every Component class exports formatted, type-correct consumer TSX", async () => {
@@ -1839,6 +1944,10 @@ Deno.test("feedback lifecycles do not turn field drafts into stale global errors
       kind: "storage-failure",
       message: "Storage failed.",
     },
+    recovery: {
+      kind: "recovery",
+      message: "Rejected source retained.",
+    },
     persistence: {
       kind: "persistence",
       state: "unavailable",
@@ -1847,6 +1956,6 @@ Deno.test("feedback lifecycles do not turn field drafts into stale global errors
   } as const;
   assertEquals(
     visibleBuilderFeedback(complete).map(({ kind }) => kind),
-    ["storage-failure", "toast"],
+    ["recovery", "storage-failure", "toast"],
   );
 });

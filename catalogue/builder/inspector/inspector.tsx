@@ -22,6 +22,7 @@ import {
   instantiateComponent,
 } from "../registry-core.ts";
 import type { BuilderTreeController } from "../tree/controller.ts";
+import { BuilderPlacementError } from "../tree/compatibility.ts";
 import { childLabel, slotChildrenOf } from "../tree/projection.ts";
 import type { AcceptedDocumentStore } from "../workspace/document-store.ts";
 import { copyBuilderSource, downloadBuilderSource } from "./files.ts";
@@ -33,26 +34,16 @@ import {
 import { inspectorControlBySlug } from "./registry.ts";
 import type { BuilderFeedbackController } from "./use-feedback.ts";
 import type { ProjectedBuilderIssue } from "./validation.ts";
-import { projectPolicyIssue } from "./validation.ts";
-import { ancestorsOf } from "../model.ts";
+import {
+  humanBuilderSelectionPath,
+  humanBuilderSelectionSegments,
+  projectPolicyIssue,
+} from "./validation.ts";
 
 function formatBytes(bytes: number): string {
   return bytes >= 1000
     ? `${(bytes / 1000).toFixed(1)} kB`
     : `${String(bytes)} B`;
-}
-
-function humanSelectionPath(
-  document: AcceptedDocumentStore["document"],
-  selectionId: string,
-  currentLabel: string,
-): string {
-  return [
-    ...ancestorsOf(document, selectionId).map((ancestor) =>
-      entryBySlug.get(ancestor.slug)?.meta.name ?? ancestor.slug
-    ),
-    currentLabel,
-  ].join(" › ");
 }
 
 function controlsInSection(
@@ -72,7 +63,11 @@ function InspectorBreadcrumb(
     onSelect: (id: string | null) => void;
   }>,
 ) {
-  const ancestors = ancestorsOf(document, selectionId);
+  const segments = humanBuilderSelectionSegments(
+    document,
+    selectionId,
+    currentLabel,
+  );
   return (
     <nav className="discern-builder-breadcrumb" aria-label="Selection path">
       <button
@@ -82,16 +77,25 @@ function InspectorBreadcrumb(
       >
         Composition
       </button>
-      {ancestors.map((ancestor) => (
-        <button
-          type="button"
-          key={ancestor.id}
-          onClick={() => onSelect(ancestor.id)}
-        >
-          {entryBySlug.get(ancestor.slug)?.meta.name ?? ancestor.slug}
-        </button>
-      ))}
-      <strong aria-current="true">{currentLabel}</strong>
+      {segments.map((segment, index) =>
+        index === segments.length - 1
+          ? (
+            <strong aria-current="true" key={`${segment.label}:${index}`}>
+              {segment.label}
+            </strong>
+          )
+          : segment.nodeId === undefined
+          ? <span key={`${segment.label}:${index}`}>{segment.label}</span>
+          : (
+            <button
+              type="button"
+              key={segment.nodeId}
+              onClick={() => onSelect(segment.nodeId ?? null)}
+            >
+              {segment.label}
+            </button>
+          )
+      )}
     </nav>
   );
 }
@@ -209,7 +213,12 @@ function SlotEditor(
     ? children[0]
     : undefined;
   return (
-    <section className="discern-builder-slot" data-control={control.name}>
+    <section
+      className="discern-builder-slot"
+      data-control={control.name}
+      id={`control-${node.id}-${control.name}`}
+      tabIndex={-1}
+    >
       <header>
         <h4>{control.label}</h4>
         <span>
@@ -324,7 +333,10 @@ const EXPORT_TABS: readonly {
 ];
 
 function ExportWorkspace(
-  { preflight }: Readonly<{ preflight: BuilderPreflightResult }>,
+  { preflight, tree }: Readonly<{
+    preflight: BuilderPreflightResult;
+    tree: BuilderTreeController;
+  }>,
 ) {
   const [active, setActive] = useState<ExportTab>("tsx");
   const [action, setAction] = useState<
@@ -341,6 +353,42 @@ function ExportWorkspace(
   }, [action, paused]);
 
   if (!preflight.ok) {
+    const reviewIssue = (): void => {
+      const issue = preflight.issue;
+      if (issue.nodeId !== undefined) tree.selectForEditing(issue.nodeId);
+      else tree.resetSelection();
+      globalThis.requestAnimationFrame(() => {
+        globalThis.requestAnimationFrame(() => {
+          const control = issue.nodeId === undefined ||
+              issue.controlName === undefined
+            ? null
+            : globalThis.document.getElementById(
+              `control-${issue.nodeId}-${issue.controlName}`,
+            );
+          const disclosure = control?.closest("details");
+          if (disclosure instanceof HTMLDetailsElement) disclosure.open = true;
+          if (control instanceof HTMLElement) {
+            control.focus();
+            control.scrollIntoView({ block: "center" });
+            return;
+          }
+          const layer = issue.nodeId === undefined
+            ? null
+            : [...globalThis.document.querySelectorAll<HTMLElement>(
+              "[data-discern-builder-outline-id]",
+            )].find((candidate) =>
+              candidate.dataset.discernBuilderOutlineId === issue.nodeId
+            ) ?? null;
+          const destination = layer?.querySelector<HTMLElement>(
+            ".discern-builder-layers__select",
+          ) ?? globalThis.document.getElementById(
+            "discern-builder-layers-end",
+          );
+          destination?.focus();
+          destination?.scrollIntoView({ block: "center" });
+        });
+      });
+    };
     return (
       <section
         className="discern-builder-export"
@@ -351,9 +399,16 @@ function ExportWorkspace(
         <p className="discern-builder-control__error" role="alert">
           Export is blocked. Fix the composition issue first.
         </p>
+        <p>{preflight.issue.message}</p>
+        <button type="button" onClick={reviewIssue}>
+          Review {preflight.issue.humanPath}
+        </button>
+        {preflight.issue.suggestions.length === 0
+          ? null
+          : <p>Try {preflight.issue.suggestions.join(", ")}.</p>}
         <details>
           <summary>Technical details</summary>
-          <code>{preflight.message}</code>
+          <code>{preflight.issue.technical}</code>
         </details>
       </section>
     );
@@ -523,7 +578,11 @@ export function BuilderInspector(
   const selectionPath =
     selectedNode === undefined || selectedEntry === undefined
       ? ""
-      : humanSelectionPath(document, selectedNode.id, selectedEntry.meta.name);
+      : humanBuilderSelectionPath(
+        document,
+        selectedNode.id,
+        selectedEntry.meta.name,
+      );
 
   useEffect(() => {
     if (confirmingNew) confirmNewButtonRef.current?.focus();
@@ -543,11 +602,25 @@ export function BuilderInspector(
       feedback.announce(`Imported ${file.name}.`);
     } catch (error) {
       if (fileLoadToken.current !== token) return;
+      if (error instanceof BuilderPlacementError) {
+        setFileIssue({
+          message: error.message,
+          technical: error.failure.technicalDetail,
+          serial: token,
+        });
+        return;
+      }
       const technical = error instanceof Error
         ? error.message
         : "The selected file could not be read.";
       setFileIssue({
-        ...projectPolicyIssue(technical, `Import ${file.name}`),
+        ...(technical.includes("could not be read")
+          ? {
+            message:
+              `Import ${file.name} failed because the file could not be read. Choose it again or try another file.`,
+            technical,
+          }
+          : projectPolicyIssue(technical, `Import ${file.name}`)),
         serial: token,
       });
     }
@@ -867,7 +940,7 @@ export function BuilderInspector(
                 </>
               )
               : null}
-            <ExportWorkspace preflight={preflight} />
+            <ExportWorkspace preflight={preflight} tree={tree} />
             <div className="discern-builder-toolbar__group">
               <label className="discern-builder-file">
                 Import builder JSON

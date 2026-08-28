@@ -5,6 +5,7 @@ import { placeNamedComponent } from "./discovery.ts";
 import {
   verifyMalformedRetry,
   verifySaveFile,
+  verifyStructuredEditing,
   verifySuccessfulLoad,
 } from "./inspector.ts";
 import { findOutlineRow, outlineLabels, selectComposition } from "./tree.ts";
@@ -159,6 +160,7 @@ export async function verifyAuthoringJourney(
     );
     checks += 3;
 
+    checks += await verifyStructuredEditing(page);
     checks += await verifySaveFile(page);
     checks += await verifyMalformedRetry(page);
     checks += await verifySuccessfulLoad(page);
