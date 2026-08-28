@@ -104,6 +104,8 @@ export function BuilderWorkspace() {
       <WorkspacePaneTabs active={activePane} onActive={setActivePane} />
       <BuilderDiscovery
         tree={tree}
+        store={store}
+        theme={preview.previewResolvedTheme}
         onActive={() => setActivePane("palette")}
       />
       <BuilderPreviewCanvas
