@@ -7,6 +7,25 @@ import type {
   TerminalFoundationSpecimen,
 } from "./terminal-foundations.ts";
 
+function TerminalFoundationFrame(
+  { value, label, theme }: {
+    readonly value: string;
+    readonly label: string;
+    readonly theme: TerminalThemeVariant;
+  },
+) {
+  return (
+    <div
+      className="discern-catalogue-terminal-foundation__frame"
+      role="region"
+      aria-label={label}
+      tabIndex={0}
+    >
+      <CliOutputPreview value={value} label={`${label} output`} theme={theme} />
+    </div>
+  );
+}
+
 function prefersReducedMotion(): boolean {
   return typeof globalThis.matchMedia === "function" &&
     globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -61,9 +80,9 @@ function AnimatedTerminalSpecimen(
         </button>
       </div>
       <div aria-live="off">
-        <CliOutputPreview
+        <TerminalFoundationFrame
           value={frame}
-          label={`${sheetTitle}: ${specimenTitle} live animation`}
+          label={`${sheetTitle}: ${specimenTitle} live preview`}
           theme={theme}
         />
       </div>
@@ -124,9 +143,9 @@ export function TerminalFoundationPreview(
                 </div>
                 {specimen.animation === undefined
                   ? (
-                    <CliOutputPreview
+                    <TerminalFoundationFrame
                       value={specimen.output}
-                      label={`${sheet.title}: ${specimen.title} output`}
+                      label={`${sheet.title}: ${specimen.title}`}
                       theme={theme}
                     />
                   )
@@ -142,7 +161,7 @@ export function TerminalFoundationPreview(
                         <span className="discern-catalogue-terminal-foundation__label">
                           Complete frame set
                         </span>
-                        <CliOutputPreview
+                        <TerminalFoundationFrame
                           value={specimen.output}
                           label={`${sheet.title}: ${specimen.title} complete frame set`}
                           theme={theme}

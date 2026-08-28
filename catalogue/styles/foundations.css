@@ -494,15 +494,26 @@
   .discern-catalogue-terminal-foundation__specimen-heading a:hover {
     opacity: 1;
   }
-  .discern-catalogue-terminal-foundation__specimen > .discern-catalogue-cli-preview,
+  .discern-catalogue-terminal-foundation__specimen > .discern-catalogue-terminal-foundation__frame,
   .discern-catalogue-terminal-foundation__animation,
   .discern-catalogue-terminal-foundation__static {
     overflow: hidden;
     border-radius: var(--discern-radius-md);
     background: var(--discern-color-canvas);
   }
-  .discern-catalogue-terminal-foundation__specimen > .discern-catalogue-cli-preview {
+  .discern-catalogue-terminal-foundation__specimen > .discern-catalogue-terminal-foundation__frame {
     min-height: 118px;
+  }
+  .discern-catalogue-terminal-foundation__frame {
+    min-width: 0;
+    overflow: auto;
+  }
+  .discern-catalogue-terminal-foundation__frame:focus-visible {
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: -2px;
+  }
+  .discern-catalogue-terminal-foundation__frame .discern-catalogue-cli-output {
+    overflow: visible;
   }
   .discern-catalogue-terminal-foundation__evidence-pair {
     display: grid;
