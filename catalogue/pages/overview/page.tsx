@@ -9,9 +9,15 @@ import {
   representativeComponentExampleImage,
 } from "../../example-images.ts";
 import { registry } from "../../generated/registry.ts";
-import { catalogueNavigation, catalogueRoutePaths } from "../../routes.ts";
+import { catalogueNavigation } from "../../routes.ts";
+import { componentExplorerHref } from "../components/state.ts";
 
 export const overviewCatalogueDestinations = catalogueNavigation.slice(1);
+
+const findAComponentHref = componentExplorerHref({
+  query: "",
+  showAll: true,
+});
 
 const overviewRouteDetails = {
   components: {
@@ -111,7 +117,7 @@ export function OverviewPage() {
         </p>
         <div className="discern-catalogue-hero__actions">
           <Button
-            href={catalogueRoutePaths.components}
+            href={findAComponentHref}
             data-discern-primary-catalogue-action=""
           >
             Find a Component

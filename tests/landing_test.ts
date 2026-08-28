@@ -13,10 +13,8 @@ import {
   overviewCatalogueDestinations,
   OverviewPage,
 } from "../catalogue/pages/overview/page.tsx";
-import {
-  catalogueNavigation,
-  catalogueRoutePaths,
-} from "../catalogue/routes.ts";
+import { componentExplorerHref } from "../catalogue/pages/components/state.ts";
+import { catalogueNavigation } from "../catalogue/routes.ts";
 import { cliComponentRegistry } from "../src/generated/cli-registry.ts";
 import { packageManifest } from "../src/manifest.ts";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
@@ -205,17 +203,18 @@ Deno.test("both front doors project the canonical Catalogue routes", () => {
 });
 
 Deno.test("both front doors make Find a Component their primary Catalogue action", () => {
+  const searchReadyHref = componentExplorerHref({ query: "", showAll: true });
   const primaryAction =
     /<a(?=[^>]*data-discern-primary-catalogue-action="")(?=[^>]*href="([^"]+)")[^>]*>\s*<span[^>]*>([^<]+)<\/span>\s*<\/a>/;
   const landing = renderLandingHtml(facts).match(primaryAction);
   const overview = renderToStaticMarkup(OverviewPage()).match(primaryAction);
   assertEquals(
     { href: landing?.[1], label: landing?.[2] },
-    { href: catalogueRoutePaths.components, label: "Find a Component" },
+    { href: searchReadyHref, label: "Find a Component" },
   );
   assertEquals(
     { href: overview?.[1], label: overview?.[2] },
-    { href: catalogueRoutePaths.components, label: "Find a Component" },
+    { href: searchReadyHref, label: "Find a Component" },
   );
 });
 

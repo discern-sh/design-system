@@ -54,6 +54,7 @@ import { projectTerminalInlineHtml } from "../../src/cli/projection.ts";
 import type { FlowDiagramSpec } from "../../src/diagram/kinds/flow/flow.spec.ts";
 import type { RuntimeAssetSelection } from "../../src/runtime-assets.ts";
 import { catalogueNavigation, catalogueRoutePaths } from "../routes.ts";
+import { componentExplorerHref } from "../pages/components/state.ts";
 import type { LandingSystemFacts } from "./facts.ts";
 
 /** Canonical package identity shared by every landing surface. */
@@ -99,6 +100,11 @@ export const landingAssets: readonly RuntimeAssetSelection[] = ["fonts"];
 
 /** Canonical Catalogue destinations projected into the public front door. */
 export const landingCatalogueDestinations = catalogueNavigation;
+
+const findAComponentHref = componentExplorerHref({
+  query: "",
+  showAll: true,
+});
 
 /** Page-owned narrative anchors, deliberately separate from Catalogue routes. */
 export const landingPageSections = Object.freeze([
@@ -526,7 +532,7 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
         actions={
           <>
             <Button
-              href={catalogueRoutePaths.components}
+              href={findAComponentHref}
               data-discern-primary-catalogue-action=""
             >
               Find a Component
@@ -798,7 +804,7 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
         }
         actions={
           <>
-            <Button href={catalogueRoutePaths.components}>
+            <Button href={findAComponentHref}>
               Find a Component
             </Button>
             <Button href={JSR_URL} variant="secondary">
@@ -843,7 +849,7 @@ export function LandingPage({ facts }: { readonly facts: LandingFacts }) {
               variant="quiet"
               data-discern-theme-control=""
             />
-            <Button href={catalogueRoutePaths.components} size="sm">
+            <Button href={findAComponentHref} size="sm">
               Find a Component
             </Button>
           </>

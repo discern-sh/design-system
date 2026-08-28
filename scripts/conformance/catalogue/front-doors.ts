@@ -3,6 +3,7 @@ import {
   catalogueNavigation,
   catalogueRoutePaths,
 } from "../../../catalogue/routes.ts";
+import { componentExplorerHref } from "../../../catalogue/pages/components/state.ts";
 import { scanBrowserAccessibility } from "../../browser-conformance-support.ts";
 import { withViewport } from "../../viewport.ts";
 import { CATALOGUE_NARROW_VIEWPORT } from "./support.ts";
@@ -11,6 +12,11 @@ interface LinkProjection {
   readonly label: string;
   readonly path: string;
 }
+
+const findAComponentHref = componentExplorerHref({
+  query: "",
+  showAll: true,
+});
 
 function projectedRoutesEqual(
   actual: readonly LinkProjection[],
@@ -65,7 +71,7 @@ async function verifyLandingOrientation(
       ),
       primary: primary === null ? null : {
         label: primary.textContent?.trim() ?? "",
-        path: primary.pathname,
+        href: `${primary.pathname}${primary.search}`,
         visible: primary.getClientRects().length > 0,
       },
       uniqueIds: new Set(ids).size === ids.length,
@@ -92,7 +98,7 @@ async function verifyLandingOrientation(
   }
   if (
     shape.primary?.label !== "Find a Component" ||
-    shape.primary.path !== catalogueRoutePaths.components ||
+    shape.primary.href !== findAComponentHref ||
     !shape.primary.visible
   ) {
     failures.push(
@@ -183,7 +189,7 @@ async function verifyOverviewDirectory(
     return {
       primary: primary === null ? null : {
         label: primary.textContent?.trim() ?? "",
-        path: primary.pathname,
+        href: `${primary.pathname}${primary.search}`,
         visible: primary.getClientRects().length > 0,
       },
       cards,
@@ -195,7 +201,7 @@ async function verifyOverviewDirectory(
   });
   if (
     shape.primary?.label !== "Find a Component" ||
-    shape.primary.path !== catalogueRoutePaths.components ||
+    shape.primary.href !== findAComponentHref ||
     !shape.primary.visible
   ) {
     failures.push(
@@ -362,7 +368,7 @@ export async function verifyLandingPage(
         "::before",
       ).content,
       compactActionVisible: (document.querySelector<HTMLElement>(
-        '.discern-site-header__actions a[href="/catalogue/components/"]',
+        `.discern-site-header__actions a[href="${findAComponentHref}"]`,
       )?.getClientRects().length ?? 0) > 0,
       footerRouteLinks: [...document.querySelectorAll<HTMLElement>(
         '[data-discern-catalogue-navigation="landing-footer"] .discern-site-footer__nav > div:first-child a',
