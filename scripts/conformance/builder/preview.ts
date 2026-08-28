@@ -253,7 +253,8 @@ export async function focusState(page: Page): Promise<{
     });
     return {
       canvas: active.closest("#discern-builder-pane-canvas") !== null &&
-        active.id !== "discern-builder-pane-canvas",
+        active.id !== "discern-builder-pane-canvas" &&
+        active.closest(".discern-builder-canvas-actions") === null,
       focusVisible: active.matches(":focus-visible"),
       indicator,
       description: active.outerHTML.replace(/\s+/g, " ").slice(0, 180),
@@ -326,7 +327,8 @@ export async function verifyKeyboardTraversal(
     const exposed = await canvasTargets.evaluateAll((nodes) =>
       nodes.flatMap((node) => {
         if (!(node instanceof HTMLElement)) return [];
-        return node.tabIndex >= 0 && node.closest("[inert]") === null
+        return node.tabIndex >= 0 && node.closest("[inert]") === null &&
+            node.closest(".discern-builder-canvas-actions") === null
           ? [node.outerHTML.replace(/\s+/g, " ").slice(0, 180)]
           : [];
       })
@@ -525,7 +527,7 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
     });
     invariant(
       await page.locator(
-        '[data-discern-builder-outline-id="preview-hero"] > button[aria-current="true"]',
+        '[data-discern-builder-outline-id="preview-hero"] .discern-builder-layers__select[aria-current="true"]',
       ).count() === 1,
       "50% pointer mapping did not select the logical Hero node",
     );
@@ -701,7 +703,7 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
     await page.getByRole("button", { name: "Edit", exact: true }).click();
     invariant(
       await page.locator(
-            '[data-discern-builder-outline-id="preview-hero"] > button[aria-current="true"]',
+            '[data-discern-builder-outline-id="preview-hero"] .discern-builder-layers__select[aria-current="true"]',
           ).count() === 1 &&
         await frame.getAttribute("tabindex") === "-1",
       "returning to Edit lost selection or inertness",
