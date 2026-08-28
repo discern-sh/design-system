@@ -347,6 +347,13 @@ async function assertAutoEnrollment(
       expected.join(", ")
     }\nActual: ${actual.join(", ")}`,
   );
+  invariant(
+    await page.locator(".discern-catalogue-example-state").getByRole(
+      "heading",
+      { level: 1 },
+    ).count() === 0,
+    "A specimen-owned document heading escaped its Catalogue heading boundary",
+  );
 }
 
 function componentProvidesBehavior(
@@ -607,6 +614,349 @@ async function runInteractionScenarios(
   return scenariosRun;
 }
 
+async function verifyComponentJourneys(
+  page: Page,
+  origin: string,
+  expectedComponents: readonly string[],
+): Promise<void> {
+  await withViewport(page, WIDE_VIEWPORT, async () => {
+    const discoveryUrl = new URL(catalogueRoutePaths.components, origin);
+    discoveryUrl.searchParams.set("theme", "dark");
+    await loadCataloguePage(page, discoveryUrl.href);
+    invariant(
+      await page.getByRole("main").getByRole("heading", { level: 1 })
+        .count() ===
+        1,
+      "Components discovery needs one h1",
+    );
+    invariant(
+      await page.locator("main [data-discern-component]").count() === 0,
+      "Components discovery mounted live specimens",
+    );
+    const collectionImages = page.locator("[data-discern-collection-image]");
+    invariant(
+      await collectionImages.count() > 0,
+      "Component collections need generated member imagery",
+    );
+    const imageEvidence = await collectionImages.evaluateAll((images) =>
+      images.map((image) => {
+        const element = image as HTMLImageElement;
+        return {
+          source: element.getAttribute("src"),
+          width: element.getAttribute("width"),
+          height: element.getAttribute("height"),
+          visible: getComputedStyle(element).display !== "none",
+          theme: element.dataset.discernImageTheme,
+        };
+      })
+    );
+    invariant(
+      imageEvidence.every(({ source, width, height }) =>
+        source?.includes("/catalogue/generated/example-images/") &&
+        Number(width) > 0 && Number(height) > 0
+      ),
+      "Collection imagery lost generated paths or intrinsic dimensions",
+    );
+    invariant(
+      imageEvidence.some(({ visible, theme }) => visible && theme === "dark") &&
+        !imageEvidence.some(({ visible, theme }) =>
+          visible && theme === "light"
+        ),
+      "Dark discovery did not select the truthful generated image theme",
+    );
+
+    await page.getByRole("button", { name: /All Components \(/ }).click();
+    invariant(
+      new URL(page.url()).searchParams.get("all") === "1",
+      "All Components did not enter URL state",
+    );
+    invariant(
+      await page.locator(".discern-catalogue-component-card").count() ===
+        expectedComponents.length,
+      "All Components did not enrol the complete live registry",
+    );
+    const groupSelect = page.getByLabel("Group");
+    const firstGroup = await groupSelect.locator("option").nth(1).getAttribute(
+      "value",
+    );
+    invariant(firstGroup, "Components needs a first canonical Group option");
+    await groupSelect.selectOption(firstGroup);
+    invariant(
+      new URL(page.url()).searchParams.get("group") === firstGroup,
+      "Group selection did not enter URL state",
+    );
+    await page.goBack();
+    await eventually(
+      async () =>
+        new URL(page.url()).searchParams.get("all") === "1" &&
+        await groupSelect.inputValue() === "",
+      "Back did not restore All Components controls and results",
+    );
+    await page.goForward();
+    await eventually(
+      async () => await groupSelect.inputValue() === firstGroup,
+      "Forward did not restore the selected Component Group",
+    );
+
+    await page.getByRole("button", { name: "Reset directory" }).click();
+    const query = page.getByRole("searchbox", { name: "Search Components" });
+    await query.fill("executable input");
+    invariant(
+      await page.locator(".discern-catalogue-component-card__match").count() >
+        0,
+      "Component explorer discarded the universal engine's match reasons",
+    );
+    await query.fill("future-no-such-component");
+    invariant(
+      new URL(page.url()).searchParams.get("q") ===
+        "future-no-such-component",
+      "Component query did not round-trip through the URL",
+    );
+    invariant(
+      await page.getByRole("button", { name: "Return to collections" })
+        .count() ===
+        1,
+      "Empty Component results need one recovery action",
+    );
+    await page.getByRole("button", { name: "Return to collections" }).click();
+
+    const detailSlug = expectedComponents.includes("command")
+      ? "command"
+      : expectedComponents[0];
+    invariant(detailSlug, "Component detail journey needs one Component");
+    const detailUrl = new URL(catalogueComponentPath(detailSlug), origin);
+    detailUrl.searchParams.set("theme", "light");
+    await loadCataloguePage(page, detailUrl.href);
+    invariant(
+      await page.getByRole("main").getByRole("heading", { level: 1 })
+            .count() ===
+          1 &&
+        await page.locator(
+            "[data-discern-example-state], [data-discern-cli-example-state], [data-discern-example-unavailable]",
+          ).count() === 1,
+      "Component detail must default to one named specimen",
+    );
+    const evidence = page.locator(
+      ".discern-catalogue-component__evidence > details",
+    );
+    invariant(
+      await evidence.count() === 3 &&
+        await page.locator(
+            ".discern-catalogue-component__evidence > details[open]",
+          ).count() === 0,
+      "Detail evidence must stay three ordered, closed disclosures",
+    );
+    invariant(
+      JSON.stringify(await evidence.locator("summary").allTextContents()) ===
+        JSON.stringify([
+          "Usage guidance",
+          "Selection and import",
+          "Props and variants",
+        ]),
+      "Detail disclosure order changed",
+    );
+    for (
+      const [label, suffix] of [
+        ["Open React source", ".tsx"],
+        ["Open metadata", ".meta.ts"],
+      ] as const
+    ) {
+      const source = page.getByRole("link", { name: label });
+      invariant(
+        (await source.getAttribute("href"))?.endsWith(suffix),
+        `${label} does not describe its destination`,
+      );
+    }
+    const exampleSelect = page.getByLabel("Example");
+    const selectedId = await exampleSelect.inputValue();
+    await page.getByRole("button", { name: "CLI", exact: true }).click();
+    invariant(
+      await exampleSelect.inputValue() === selectedId &&
+        new URL(page.url()).searchParams.get("example") === selectedId,
+      "Web/CLI switching changed canonical example identity",
+    );
+    await page.getByRole("button", { name: "Web", exact: true }).click();
+    const viewAll = page.getByRole("button", { name: /View all / });
+    await viewAll.click();
+    invariant(
+      new URL(page.url()).searchParams.get("view") === "all" &&
+        await page.locator("[data-discern-example-state]").count() ===
+          await exampleSelect.locator("option:not([disabled])").count(),
+      "View all examples is not a deliberate ordered gallery",
+    );
+    invariant(
+      await page.locator('nav[aria-label="Component continuation"] a').count() >
+        0,
+      "Detail lacks canonical previous/next or Compare continuation",
+    );
+
+    const allUrl = new URL(catalogueRoutePaths.components, origin);
+    allUrl.searchParams.set("all", "1");
+    await loadCataloguePage(page, allUrl.href);
+    const webOnlyCard = page.locator(".discern-catalogue-component-card")
+      .filter({
+        hasText: "Web only",
+      }).first();
+    invariant(
+      await webOnlyCard.count() === 1,
+      "Registry needs a CLI-exempt Component guard",
+    );
+    const webOnlyHref = await webOnlyCard.locator(
+      ".discern-catalogue-component-card__inspect",
+    ).getAttribute("href");
+    invariant(webOnlyHref, "CLI-exempt result lacks its detail link");
+    const exemptUrl = new URL(webOnlyHref, origin);
+    exemptUrl.searchParams.set("surface", "cli");
+    await loadCataloguePage(page, exemptUrl.href);
+    invariant(
+      await page.locator("[data-discern-example-unavailable]").count() === 1 &&
+        (await page.getByLabel("Example").locator("option:checked")
+          .textContent())
+          ?.includes("unavailable on CLI"),
+      "CLI exemption or surface-only reason silently changed examples",
+    );
+
+    const compareUrl = new URL(catalogueRoutePaths.compare, origin);
+    await loadCataloguePage(page, compareUrl.href);
+    invariant(
+      await page.locator(".discern-catalogue-collection-card").count() === 0 &&
+        await page.locator("[data-discern-compare-item]").count() === 0,
+      "Bare Compare repeated the Components directory or mounted specimens",
+    );
+    const scopeSelect = page.getByLabel("Comparison scope");
+    const firstScope = await scopeSelect.locator("option").nth(1).getAttribute(
+      "value",
+    );
+    invariant(firstScope, "Compare needs a focused scope choice");
+    await scopeSelect.selectOption(firstScope);
+    await eventually(
+      async () => await page.locator("[data-discern-compare-item]").count() > 0,
+      "Compare scope did not mount its bounded population",
+    );
+    const compareItems = page.locator("[data-discern-compare-item]");
+    invariant(
+      await compareItems.locator(
+            ".discern-catalogue-component__evidence",
+          ).count() === 0 &&
+        await page.getByRole("main").getByRole("heading", { level: 1 })
+            .count() ===
+          1 &&
+        await page.getByRole("main").getByRole("heading", { level: 2 })
+            .count() > 0 &&
+        await page.getByRole("main").getByRole("heading", { level: 3 })
+            .count() ===
+          await compareItems.count(),
+      "Compare density or heading hierarchy regressed",
+    );
+    for (let index = 0; index < await compareItems.count(); index += 1) {
+      invariant(
+        await compareItems.nth(index).locator(
+          "[data-discern-example-state], [data-discern-cli-example-state], [data-discern-example-unavailable]",
+        ).count() === 1,
+        "Compare item did not lead with exactly one named specimen",
+      );
+    }
+    invariant(
+      await page.locator(".discern-catalogue-review__jump-list a").count() ===
+        await compareItems.count(),
+      "Compare jump list does not cover its exact population",
+    );
+    await page.getByRole("button", { name: "Set all to CLI" }).click();
+    invariant(
+      new URL(page.url()).searchParams.get("surface") === "cli",
+      "Set all to CLI did not enter URL state",
+    );
+    await compareItems.first().getByRole("button", {
+      name: "Web",
+      exact: true,
+    }).click();
+    invariant(
+      new URL(page.url()).searchParams.has("surfaces"),
+      "Individual Compare surface override did not enter URL state",
+    );
+    await page.getByRole("button", {
+      name: "Reset individual overrides",
+    }).click();
+    invariant(
+      !new URL(page.url()).searchParams.has("surfaces"),
+      "Reset individual overrides left stale URL evidence",
+    );
+
+    const customSlugs = expectedComponents.slice(0, 2);
+    invariant(customSlugs.length === 2, "Custom Compare needs two Components");
+    const customUrl = new URL(catalogueRoutePaths.compare, origin);
+    customUrl.searchParams.set("components", customSlugs.join(","));
+    await loadCataloguePage(page, customUrl.href);
+    invariant(
+      await page.locator("[data-discern-compare-item]").count() === 2,
+      "Custom Compare did not restore its shareable population",
+    );
+    await page.locator("[data-discern-compare-item]").first().getByRole(
+      "button",
+      { name: "Remove" },
+    ).click();
+    invariant(
+      await page.locator("[data-discern-compare-item]").count() === 1 &&
+        new URL(page.url()).searchParams.get("components") === customSlugs[1],
+      "Custom removal lost order-stable URL state",
+    );
+
+    const completeUrl = new URL(catalogueRoutePaths.compare, origin);
+    completeUrl.searchParams.set("scope", "all");
+    await loadCataloguePage(page, completeUrl.href);
+    invariant(
+      await page.locator("[data-discern-compare-item]").count() ===
+          expectedComponents.length &&
+        await page.locator(
+            "[data-discern-compare-item] .discern-catalogue-component__evidence",
+          ).count() === 0 &&
+        await page.getByText(
+            `Complete system · ${expectedComponents.length} live specimens`,
+          ).count() === 1,
+      "Complete-system Compare lost its secondary weight/count posture",
+    );
+  });
+
+  await withViewport(page, NARROW_VIEWPORT, async () => {
+    const dense = expectedComponents.filter((slug) =>
+      slug === "table" || slug === "command"
+    );
+    const slugs = dense.length === 2 ? dense : expectedComponents.slice(0, 2);
+    const url = new URL(catalogueRoutePaths.compare, origin);
+    url.searchParams.set("components", slugs.join(","));
+    if (slugs.includes("table") && slugs.includes("command")) {
+      url.searchParams.set(
+        "examples",
+        "table:dense-overflow,command:overflow",
+      );
+    }
+    await loadCataloguePage(page, url.href);
+    const containment = await page.evaluate(() => ({
+      clientWidth: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+    }));
+    invariant(
+      containment.scrollWidth <= containment.clientWidth + 1,
+      `Narrow Compare overflowed the document (${containment.scrollWidth}/${containment.clientWidth})`,
+    );
+    const scope = page.getByLabel("Comparison scope");
+    await scope.focus();
+    await page.keyboard.press("Tab");
+    const focus = await page.evaluate(() => {
+      const active = document.activeElement as HTMLElement | null;
+      const style = active ? getComputedStyle(active) : undefined;
+      return {
+        tag: active?.tagName.toLowerCase(),
+        outline: Number.parseFloat(style?.outlineWidth ?? "0"),
+      };
+    });
+    invariant(
+      focus.tag !== "body" && focus.outline >= 2,
+      "Keyboard Compare control lost visible focus at narrow width",
+    );
+  });
+}
+
 async function verifyStateFragmentRestoration(
   page: Page,
   origin: string,
@@ -686,7 +1036,9 @@ async function verifyStateFragmentRestoration(
     );
     const targetState = await target.evaluate((node) => ({
       matchesTarget: node.matches(":target"),
-      boxShadow: getComputedStyle(node).boxShadow,
+      highlight: getComputedStyle(
+        node.querySelector(":scope > header") ?? node,
+      ).boxShadow,
       component: node.closest<HTMLElement>("[data-discern-component]")?.dataset
         .discernComponent,
       activeElement: node.ownerDocument.activeElement ===
@@ -711,7 +1063,7 @@ async function verifyStateFragmentRestoration(
       `Cold fragment load targeted a parent instead of #${fragment}`,
     );
     invariant(
-      targetState.matchesTarget && targetState.boxShadow !== "none",
+      targetState.matchesTarget && targetState.highlight !== "none",
       `Cold fragment load did not highlight #${fragment}`,
     );
     invariant(
@@ -849,6 +1201,15 @@ export async function runComponentContractConformance(
     expectedComponents,
     failures,
   );
+  try {
+    await verifyComponentJourneys(page, origin, expectedComponents);
+  } catch (error) {
+    failures.push(
+      `Component/Compare journeys: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+  }
   try {
     await verifyStateFragmentRestoration(page, origin);
   } catch (error) {
