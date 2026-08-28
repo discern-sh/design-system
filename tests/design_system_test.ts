@@ -18,7 +18,7 @@ import {
   bundledFontMetricSources,
 } from "../scripts/font-metric-overrides.ts";
 import type { FontMetricOverrideAudit } from "../scripts/font-metric-overrides.ts";
-import { generateSources } from "../scripts/generate.ts";
+import { generateOutputPlan } from "../scripts/generate.ts";
 import { componentRegistry } from "../src/generated/component-registry.ts";
 import { createFeatureBentoLayout } from "../src/components/marketing/feature-bento/feature-bento-layout.ts";
 import {
@@ -361,85 +361,13 @@ Deno.test("component metadata auto-enrols React, runtime, and CLI surfaces", asy
   assert(metaFiles.length > 0);
   assertEquals(packageManifest.components.length, metaFiles.length);
 
-  const generated = await generateSources();
-  assertEquals(
-    await Deno.readTextFile(
-      join(PACKAGE_ROOT, "src", "generated", "component-registry.ts"),
-    ),
-    generated.registry,
-  );
-  assertEquals(
-    await Deno.readTextFile(
-      join(PACKAGE_ROOT, "src", "generated", "assets.ts"),
-    ),
-    generated.assets,
-  );
-  assertEquals(
-    await Deno.readTextFile(
-      join(PACKAGE_ROOT, "src", "generated", "behaviors.ts"),
-    ),
-    generated.behaviors,
-  );
-  assertEquals(
-    await Deno.readTextFile(
-      join(PACKAGE_ROOT, "src", "generated", "react.ts"),
-    ),
-    generated.react,
-  );
-  assertEquals(
-    await Deno.readTextFile(
-      join(PACKAGE_ROOT, "src", "generated", "cli-registry.ts"),
-    ),
-    generated.cliRegistry,
-  );
-  assertEquals(
-    await Deno.readTextFile(
-      join(PACKAGE_ROOT, "src", "generated", "cli-renderers.ts"),
-    ),
-    generated.cliRenderers,
-  );
-  assertEquals(
-    await Deno.readTextFile(
-      join(PACKAGE_ROOT, "scripts", "generated", "component-examples.ts"),
-    ),
-    generated.componentExamples,
-  );
-  assertEquals(
-    await Deno.readTextFile(
-      join(PACKAGE_ROOT, "src", "generated", "diagram-metadata.ts"),
-    ),
-    generated.diagramMetadata,
-  );
-  assertEquals(
-    await Deno.readTextFile(
-      join(PACKAGE_ROOT, "src", "generated", "diagram-registry.ts"),
-    ),
-    generated.diagramRegistry,
-  );
-  assertEquals(
-    await Deno.readTextFile(
-      join(PACKAGE_ROOT, "src", "generated", "diagram-spec.ts"),
-    ),
-    generated.diagramSpec,
-  );
-  assertEquals(
-    await Deno.readTextFile(
-      join(PACKAGE_ROOT, "src", "generated", "diagram-dispatch.ts"),
-    ),
-    generated.diagramDispatch,
-  );
-  assertEquals(
-    await Deno.readTextFile(
-      join(PACKAGE_ROOT, "src", "generated", "diagram-exports.ts"),
-    ),
-    generated.diagramExports,
-  );
-  assertEquals(
-    await Deno.readTextFile(
-      join(PACKAGE_ROOT, "src", "generated", "diagram-cli-registry.ts"),
-    ),
-    generated.diagramCliRegistry,
-  );
+  for (const output of await generateOutputPlan()) {
+    assertEquals(
+      await Deno.readTextFile(output.target),
+      output.source,
+      output.target.pathname,
+    );
+  }
 });
 
 Deno.test("Component grids never backfill later semantic content", async () => {

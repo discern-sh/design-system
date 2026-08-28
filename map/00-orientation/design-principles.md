@@ -22,7 +22,7 @@ Each component folder owns its `*.meta.ts`, CSS, implementation, examples, `mod.
 
 **Why it matters.** The same component facts feed four surfaces. Hand-editing a generated file forks a fact: the next codegen run silently reverts it, or worse, the surfaces disagree about what components exist and what they depend on.
 
-**How it shows up.** [`generate.ts`](../../scripts/generate.ts) writes `src/generated/` (Runtime Registry, React surface, CLI registry and renderer barrel, assets, base styles) from the `*.meta.ts` files; the test "component metadata auto-enrols React, runtime, and CLI surfaces" proves a new Component folder needs no manual registration; CI fails if `deno task codegen` produces a diff, and the quality gate runs Codegen as a fix stage so the generated files can never go stale on a gated change.
+**How it shows up.** [`generate.ts`](../../scripts/generate.ts) owns `src/generated/` (Runtime Registry, React surface, CLI registry and renderer barrel, assets, base styles) and `scripts/generated/` from the authored inputs; the test "component metadata auto-enrols React, runtime, and CLI surfaces" proves a new Component folder needs no manual registration. The configured discern generated group regenerates and verifies the complete committed output set, while CI independently fails if `deno task codegen` produces a diff.
 
 ## 3. The neutral core and CLI surface never resolve React
 

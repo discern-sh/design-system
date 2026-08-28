@@ -2,16 +2,6 @@ import type { BuildSummary } from "../src/runtime.ts";
 import type { ComponentMeta } from "../src/types/component-meta.ts";
 import type { ComponentExampleDefinition } from "../src/types/component-examples.ts";
 import { resolveComponentExampleVocabulary } from "../src/types/component-examples.ts";
-import { renderChartSvg } from "../src/chart/svg.ts";
-import {
-  markdownChartExampleSource,
-  markdownChartExampleSpec,
-} from "../src/chart/markdown.example.ts";
-import { renderDiagramSvg } from "../src/diagram/svg.ts";
-import {
-  markdownDiagramExampleSource,
-  markdownDiagramExampleSpec,
-} from "../src/diagram/markdown.example.ts";
 import { stripVTControlCharacters } from "node:util";
 import type {
   CatalogueObjectType,
@@ -1101,6 +1091,17 @@ async function writeCatalogueMarkdownAsset(
 }
 
 async function writeCatalogueMarkdownAssets(): Promise<void> {
+  const [
+    { renderDiagramSvg },
+    { markdownDiagramExampleSource, markdownDiagramExampleSpec },
+    { renderChartSvg },
+    { markdownChartExampleSource, markdownChartExampleSpec },
+  ] = await Promise.all([
+    import("../src/diagram/svg.ts"),
+    import("../src/diagram/markdown.example.ts"),
+    import("../src/chart/svg.ts"),
+    import("../src/chart/markdown.example.ts"),
+  ]);
   await writeCatalogueMarkdownAsset(
     markdownDiagramExampleSource,
     renderDiagramSvg(markdownDiagramExampleSpec, { theme: "adaptive" }),

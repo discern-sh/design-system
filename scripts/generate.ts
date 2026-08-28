@@ -41,6 +41,10 @@ const ASSET_ROOT = new URL("../assets/", import.meta.url);
 const BEHAVIOR_ROOT = new URL("../assets/behaviors/", import.meta.url);
 const GENERATED_ROOT = new URL("../src/generated/", import.meta.url);
 const SCRIPT_GENERATED_ROOT = new URL("./generated/", import.meta.url);
+const CODEGEN_LOCK = new URL(
+  "../node_modules/.cache/discern-design-system-codegen.lock",
+  import.meta.url,
+);
 const STYLE_ROOT = new URL("../src/styles/", import.meta.url);
 const DIAGRAM_KIND_ROOT = new URL("../src/diagram/kinds/", import.meta.url);
 const CHART_KIND_ROOT = new URL("../src/chart/kinds/", import.meta.url);
@@ -76,6 +80,24 @@ export interface GeneratedSources {
   readonly chartDispatch: string;
   readonly chartExports: string;
   readonly chartCliRegistry: string;
+}
+
+/** One text artifact wholly owned by codegen. */
+export interface GeneratedOutput {
+  readonly target: URL;
+  readonly source: string;
+}
+
+/** The complete directory roots whose contents codegen owns. */
+export const GENERATED_OUTPUT_ROOTS = [
+  GENERATED_ROOT,
+  SCRIPT_GENERATED_ROOT,
+] as const;
+
+/** Changes made while reconciling one generated output plan. */
+export interface GeneratedReconciliation {
+  readonly removed: readonly URL[];
+  readonly written: readonly URL[];
 }
 
 /** Canonical source anatomy discovered for one diagram kind. */
@@ -804,99 +826,385 @@ export async function generateSources(): Promise<GeneratedSources> {
   };
 }
 
-/** Refresh generated modules after component metadata, CSS, or assets change. */
-export async function writeGeneratedSources(): Promise<void> {
+/** Build the one complete plan for every committed codegen artifact. */
+export async function generateOutputPlan(): Promise<
+  readonly GeneratedOutput[]
+> {
   const generated = await generateSources();
   const diagramFamily = diagramKindFamily(DIAGRAM_KIND_ROOT);
   const diagramFiles = diagramFamily.generatedFiles;
-  await Deno.mkdir(GENERATED_ROOT, { recursive: true });
-  await Deno.writeTextFile(
-    new URL("component-registry.ts", GENERATED_ROOT),
-    generated.registry,
-  );
-  await Deno.writeTextFile(
-    new URL("assets.ts", GENERATED_ROOT),
-    generated.assets,
-  );
-  await Deno.writeTextFile(
-    new URL("behaviors.ts", GENERATED_ROOT),
-    generated.behaviors,
-  );
-  await Deno.writeTextFile(
-    new URL("react.ts", GENERATED_ROOT),
-    generated.react,
-  );
-  await Deno.writeTextFile(
-    new URL("cli-registry.ts", GENERATED_ROOT),
-    generated.cliRegistry,
-  );
-  await Deno.writeTextFile(
-    new URL("cli-renderers.ts", GENERATED_ROOT),
-    generated.cliRenderers,
-  );
-  await Deno.mkdir(SCRIPT_GENERATED_ROOT, { recursive: true });
-  await Deno.writeTextFile(
-    new URL("component-examples.ts", SCRIPT_GENERATED_ROOT),
-    generated.componentExamples,
-  );
-  await Deno.writeTextFile(
-    new URL("base-styles.ts", GENERATED_ROOT),
-    generated.baseStyles,
-  );
-  await Deno.writeTextFile(
-    new URL(diagramFiles.metadata, GENERATED_ROOT),
-    generated.diagramMetadata,
-  );
-  await Deno.writeTextFile(
-    new URL(diagramFiles.registry, GENERATED_ROOT),
-    generated.diagramRegistry,
-  );
-  await Deno.writeTextFile(
-    new URL(diagramFiles.spec, GENERATED_ROOT),
-    generated.diagramSpec,
-  );
-  await Deno.writeTextFile(
-    new URL(diagramFiles.dispatch, GENERATED_ROOT),
-    generated.diagramDispatch,
-  );
-  await Deno.writeTextFile(
-    new URL(diagramFiles.exports, GENERATED_ROOT),
-    generated.diagramExports,
-  );
+  const outputs: GeneratedOutput[] = [
+    {
+      target: new URL("component-registry.ts", GENERATED_ROOT),
+      source: generated.registry,
+    },
+    {
+      target: new URL("assets.ts", GENERATED_ROOT),
+      source: generated.assets,
+    },
+    {
+      target: new URL("behaviors.ts", GENERATED_ROOT),
+      source: generated.behaviors,
+    },
+    {
+      target: new URL("react.ts", GENERATED_ROOT),
+      source: generated.react,
+    },
+    {
+      target: new URL("cli-registry.ts", GENERATED_ROOT),
+      source: generated.cliRegistry,
+    },
+    {
+      target: new URL("cli-renderers.ts", GENERATED_ROOT),
+      source: generated.cliRenderers,
+    },
+    {
+      target: new URL("component-examples.ts", SCRIPT_GENERATED_ROOT),
+      source: generated.componentExamples,
+    },
+    {
+      target: new URL("base-styles.ts", GENERATED_ROOT),
+      source: generated.baseStyles,
+    },
+    {
+      target: new URL(diagramFiles.metadata, GENERATED_ROOT),
+      source: generated.diagramMetadata,
+    },
+    {
+      target: new URL(diagramFiles.registry, GENERATED_ROOT),
+      source: generated.diagramRegistry,
+    },
+    {
+      target: new URL(diagramFiles.spec, GENERATED_ROOT),
+      source: generated.diagramSpec,
+    },
+    {
+      target: new URL(diagramFiles.dispatch, GENERATED_ROOT),
+      source: generated.diagramDispatch,
+    },
+    {
+      target: new URL(diagramFiles.exports, GENERATED_ROOT),
+      source: generated.diagramExports,
+    },
+  ];
   if (diagramFamily.cli !== undefined) {
-    await Deno.writeTextFile(
-      new URL(diagramFamily.cli.registryFile, GENERATED_ROOT),
-      generated.diagramCliRegistry,
-    );
+    outputs.push({
+      target: new URL(diagramFamily.cli.registryFile, GENERATED_ROOT),
+      source: generated.diagramCliRegistry,
+    });
   }
   const chartFamily = chartKindFamily(CHART_KIND_ROOT);
   const chartFiles = chartFamily.generatedFiles;
-  await Deno.writeTextFile(
-    new URL(chartFiles.metadata, GENERATED_ROOT),
-    generated.chartMetadata,
-  );
-  await Deno.writeTextFile(
-    new URL(chartFiles.registry, GENERATED_ROOT),
-    generated.chartRegistry,
-  );
-  await Deno.writeTextFile(
-    new URL(chartFiles.spec, GENERATED_ROOT),
-    generated.chartSpec,
-  );
-  await Deno.writeTextFile(
-    new URL(chartFiles.dispatch, GENERATED_ROOT),
-    generated.chartDispatch,
-  );
-  await Deno.writeTextFile(
-    new URL(chartFiles.exports, GENERATED_ROOT),
-    generated.chartExports,
+  outputs.push(
+    {
+      target: new URL(chartFiles.metadata, GENERATED_ROOT),
+      source: generated.chartMetadata,
+    },
+    {
+      target: new URL(chartFiles.registry, GENERATED_ROOT),
+      source: generated.chartRegistry,
+    },
+    {
+      target: new URL(chartFiles.spec, GENERATED_ROOT),
+      source: generated.chartSpec,
+    },
+    {
+      target: new URL(chartFiles.dispatch, GENERATED_ROOT),
+      source: generated.chartDispatch,
+    },
+    {
+      target: new URL(chartFiles.exports, GENERATED_ROOT),
+      source: generated.chartExports,
+    },
   );
   if (chartFamily.cli !== undefined) {
-    await Deno.writeTextFile(
-      new URL(chartFamily.cli.registryFile, GENERATED_ROOT),
-      generated.chartCliRegistry,
+    outputs.push({
+      target: new URL(chartFamily.cli.registryFile, GENERATED_ROOT),
+      source: generated.chartCliRegistry,
+    });
+  }
+  return outputs;
+}
+
+interface PlannedRemoval {
+  readonly recursive: boolean;
+  readonly target: URL;
+}
+
+interface GeneratedReconciliationPlan {
+  readonly directories: readonly URL[];
+  readonly removals: readonly PlannedRemoval[];
+  readonly writes: readonly GeneratedOutput[];
+}
+
+function generatedChildUrl(
+  directory: URL,
+  name: string,
+  isDirectory: boolean,
+): URL {
+  return new URL(
+    `${encodeURIComponent(name)}${isDirectory ? "/" : ""}`,
+    directory,
+  );
+}
+
+function validateGeneratedPlan(
+  roots: readonly URL[],
+  outputs: readonly GeneratedOutput[],
+): ReadonlyMap<string, ReadonlyMap<string, GeneratedOutput>> {
+  const rootHrefs = new Set<string>();
+  for (const root of roots) {
+    if (
+      root.protocol !== "file:" || !root.pathname.endsWith("/") ||
+      root.search !== "" || root.hash !== ""
+    ) {
+      throw new TypeError(
+        `Generated root must be an unadorned file directory URL: ${root.href}`,
+      );
+    }
+    if (rootHrefs.has(root.href)) {
+      throw new Error(`Duplicate generated root: ${root.href}`);
+    }
+    rootHrefs.add(root.href);
+  }
+  for (const left of roots) {
+    for (const right of roots) {
+      if (left !== right && right.href.startsWith(left.href)) {
+        throw new Error(
+          `Generated roots must not overlap: ${left.href} and ${right.href}`,
+        );
+      }
+    }
+  }
+
+  const byRoot = new Map<string, Map<string, GeneratedOutput>>(
+    roots.map((root) => [root.href, new Map()]),
+  );
+  const outputHrefs = new Set<string>();
+  for (const output of outputs) {
+    if (
+      output.target.protocol !== "file:" ||
+      output.target.pathname.endsWith("/") || output.target.search !== "" ||
+      output.target.hash !== ""
+    ) {
+      throw new TypeError(
+        `Generated output must be an unadorned file URL: ${output.target.href}`,
+      );
+    }
+    if (outputHrefs.has(output.target.href)) {
+      throw new Error(`Duplicate generated output: ${output.target.href}`);
+    }
+    outputHrefs.add(output.target.href);
+    const root = roots.find((candidate) =>
+      output.target.href.startsWith(candidate.href)
+    );
+    if (root === undefined) {
+      throw new Error(
+        `Generated output is outside every generated root: ${output.target.href}`,
+      );
+    }
+    byRoot.get(root.href)?.set(
+      output.target.href.slice(root.href.length),
+      output,
     );
   }
+  return byRoot;
+}
+
+function generatedDirectories(
+  root: URL,
+  expected: ReadonlyMap<string, GeneratedOutput>,
+): ReadonlyMap<string, URL> {
+  const directories = new Map<string, URL>([["", root]]);
+  for (const relative of expected.keys()) {
+    const segments = relative.split("/");
+    segments.pop();
+    let current = "";
+    for (const segment of segments) {
+      current = `${current}${segment}/`;
+      directories.set(current, new URL(current, root));
+    }
+  }
+  return directories;
+}
+
+async function pathKind(
+  target: URL,
+): Promise<"directory" | "missing" | "other"> {
+  try {
+    const info = await Deno.lstat(target);
+    return info.isDirectory && !info.isSymlink ? "directory" : "other";
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) return "missing";
+    throw error;
+  }
+}
+
+async function observeGeneratedDirectory(
+  directory: URL,
+  prefix: string,
+  expected: ReadonlyMap<string, GeneratedOutput>,
+  expectedDirectories: ReadonlyMap<string, URL>,
+  removals: PlannedRemoval[],
+  satisfied: Set<string>,
+): Promise<void> {
+  const entries = [];
+  for await (const entry of Deno.readDir(directory)) entries.push(entry);
+  entries.sort((left, right) => left.name.localeCompare(right.name));
+  for (const entry of entries) {
+    const child = generatedChildUrl(
+      directory,
+      entry.name,
+      entry.isDirectory,
+    );
+    const relative = `${prefix}${encodeURIComponent(entry.name)}`;
+    if (entry.isDirectory) {
+      if (expectedDirectories.has(`${relative}/`)) {
+        await observeGeneratedDirectory(
+          child,
+          `${relative}/`,
+          expected,
+          expectedDirectories,
+          removals,
+          satisfied,
+        );
+      } else {
+        removals.push({ target: child, recursive: true });
+      }
+      continue;
+    }
+    const output = expected.get(relative);
+    if (!entry.isFile || output === undefined) {
+      removals.push({ target: child, recursive: false });
+      continue;
+    }
+    if (await Deno.readTextFile(child) === output.source) {
+      satisfied.add(output.target.href);
+    }
+  }
+}
+
+async function planGeneratedReconciliation(
+  roots: readonly URL[],
+  outputs: readonly GeneratedOutput[],
+): Promise<GeneratedReconciliationPlan> {
+  const outputsByRoot = validateGeneratedPlan(roots, outputs);
+  const removals: PlannedRemoval[] = [];
+  const satisfied = new Set<string>();
+  const directories = new Map<string, URL>();
+
+  for (const root of roots) {
+    const expected = outputsByRoot.get(root.href) ?? new Map();
+    const expectedDirectories = generatedDirectories(root, expected);
+    for (const directory of expectedDirectories.values()) {
+      directories.set(directory.href, directory);
+    }
+    const rootKind = await pathKind(root);
+    if (rootKind === "other") {
+      removals.push({ target: root, recursive: false });
+      continue;
+    }
+    if (rootKind === "missing") continue;
+    await observeGeneratedDirectory(
+      root,
+      "",
+      expected,
+      expectedDirectories,
+      removals,
+      satisfied,
+    );
+  }
+
+  return {
+    directories: [...directories.values()].toSorted((left, right) =>
+      left.href.length - right.href.length ||
+      left.href.localeCompare(right.href)
+    ),
+    removals: removals.toSorted((left, right) =>
+      right.target.href.length - left.target.href.length ||
+      left.target.href.localeCompare(right.target.href)
+    ),
+    writes: outputs.filter((output) => !satisfied.has(output.target.href))
+      .toSorted((left, right) =>
+        left.target.href.localeCompare(right.target.href)
+      ),
+  };
+}
+
+async function writeGeneratedOutput(output: GeneratedOutput): Promise<void> {
+  const directory = new URL("./", output.target);
+  const temporary = new URL(
+    `.discern-codegen-${crypto.randomUUID()}.tmp`,
+    directory,
+  );
+  try {
+    await Deno.writeTextFile(temporary, output.source, {
+      createNew: true,
+      mode: 0o666,
+    });
+    await Deno.rename(temporary, output.target);
+  } catch (writeError) {
+    try {
+      await Deno.remove(temporary);
+    } catch (cleanupError) {
+      if (!(cleanupError instanceof Deno.errors.NotFound)) {
+        throw new AggregateError(
+          [writeError, cleanupError],
+          `Generated output and temporary cleanup both failed: ${output.target.href}`,
+        );
+      }
+    }
+    throw writeError;
+  }
+}
+
+/**
+ * Make owned generated roots equal one complete plan. Hidden and ignored files
+ * are ordinary unplanned entries, so system debris is removed without special
+ * names and a later run automatically handles future variants.
+ */
+export async function reconcileGeneratedOutputs(
+  roots: readonly URL[],
+  outputs: readonly GeneratedOutput[],
+): Promise<GeneratedReconciliation> {
+  const plan = await planGeneratedReconciliation(roots, outputs);
+  for (const removal of plan.removals) {
+    await Deno.remove(removal.target, { recursive: removal.recursive });
+  }
+  for (const directory of plan.directories) {
+    await Deno.mkdir(directory, { recursive: true });
+  }
+  for (const output of plan.writes) await writeGeneratedOutput(output);
+  return {
+    removed: plan.removals.map((removal) => removal.target),
+    written: plan.writes.map((output) => output.target),
+  };
+}
+
+async function withCodegenLock<T>(run: () => Promise<T>): Promise<T> {
+  await Deno.mkdir(new URL("./", CODEGEN_LOCK), { recursive: true });
+  const lock = await Deno.open(CODEGEN_LOCK, {
+    create: true,
+    read: true,
+    write: true,
+  });
+  try {
+    await lock.lock(true);
+    return await run();
+  } finally {
+    await lock.unlock();
+    lock.close();
+  }
+}
+
+/** Refresh generated modules after component metadata, CSS, or assets change. */
+export async function writeGeneratedSources(): Promise<void> {
+  await withCodegenLock(async () => {
+    await reconcileGeneratedOutputs(
+      GENERATED_OUTPUT_ROOTS,
+      await generateOutputPlan(),
+    );
+  });
 }
 
 if (import.meta.main) await writeGeneratedSources();

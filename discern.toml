@@ -139,6 +139,21 @@
   not_applicable = []
 
 # ─────────────────────────────────────────────────────────────────────────────
+# [generated.<name>] — committed artifacts wholly owned by one generator.
+# ─────────────────────────────────────────────────────────────────────────────
+
+[generated]
+
+  [generated.codegen]
+    paths = [
+      "src/generated/**",
+      "scripts/generated/**",
+    ]
+    run = "deno task codegen"
+    linguist_generated = true
+    timeout = 120
+
+# ─────────────────────────────────────────────────────────────────────────────
 # [jobs] — every command the gate runs, in one namespace. Known names derive
 # their gate stage automatically:
 #   format     fix    a formatter/codemod (mutating; runs first, serially)
@@ -194,11 +209,6 @@
   # test      = "npm test"             # or "pytest" or "go test ./..."
   # smoke     = "your-app --version"   # a fast "does it boot?" — a CLI --version,
   #                                    # a framework's inspire/about, a config-load-and-exit
-
-  [jobs.codegen]
-    provides = "generated-registry-currency"
-    run = "deno task codegen"
-    stage = "fix"
 
   # [checks.licenses]
   # stage    = "check"
