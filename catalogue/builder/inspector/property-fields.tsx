@@ -71,14 +71,14 @@ function useJsonDraft(
       rememberIssue(syntax);
       return;
     }
+    const recoveryWasPending = recoveryPending.current;
     const technical = onChangeRef.current(source);
     if (technical !== null) {
       rememberIssue(projectPolicyIssue(technical, humanPath));
       return;
     }
-    const recovered = recoveryPending.current;
     rememberIssue(null);
-    if (recovered) {
+    if (recoveryWasPending) {
       recoveryPending.current = false;
       onRecoveredRef.current?.(`${humanPath} is valid again.`);
     }
@@ -116,14 +116,15 @@ function useJsonDraft(
 }
 
 function ControlHeading(
-  { control, value, inputId, onReset }: Readonly<{
+  { control, value, defaultValue, inputId, onReset }: Readonly<{
     control: PropControl;
     value: BuilderPropValue | undefined;
+    defaultValue: BuilderPropValue | undefined;
     inputId: string;
     onReset: () => void;
   }>,
 ) {
-  const effective = effectiveControlValue(control, value);
+  const effective = effectiveControlValue(control, value, defaultValue);
   return (
     <div className="discern-builder-control__heading">
       <div>
@@ -189,9 +190,18 @@ function ValidationIssue(
 }
 
 export function InspectorControlField(
-  { node, control, humanPath, onChange, onReset, onRecovered }: Readonly<{
+  {
+    node,
+    control,
+    defaultValue,
+    humanPath,
+    onChange,
+    onReset,
+    onRecovered,
+  }: Readonly<{
     node: BuilderNode;
     control: PropControl;
+    defaultValue: BuilderPropValue | undefined;
     humanPath?: string;
     onChange: (value: BuilderPropValue | undefined) => string | null;
     onReset?: () => void;
@@ -216,6 +226,7 @@ export function InspectorControlField(
         <ControlHeading
           control={control}
           value={value}
+          defaultValue={defaultValue}
           inputId={inputId}
           onReset={reset}
         />
@@ -242,6 +253,7 @@ export function InspectorControlField(
         <ControlHeading
           control={control}
           value={value}
+          defaultValue={defaultValue}
           inputId={inputId}
           onReset={reset}
         />
@@ -278,6 +290,7 @@ export function InspectorControlField(
         <ControlHeading
           control={control}
           value={value}
+          defaultValue={defaultValue}
           inputId={inputId}
           onReset={reset}
         />
@@ -315,6 +328,7 @@ export function InspectorControlField(
         <ControlHeading
           control={control}
           value={value}
+          defaultValue={defaultValue}
           inputId={inputId}
           onReset={reset}
         />
@@ -361,6 +375,7 @@ export function InspectorControlField(
       <ControlHeading
         control={control}
         value={value}
+        defaultValue={defaultValue}
         inputId={inputId}
         onReset={reset}
       />

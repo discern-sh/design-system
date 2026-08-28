@@ -295,6 +295,14 @@ Deno.test("registry controls project human sections, labels, and truthful defaul
     effectiveControlValue(activation, { kind: "string", value: "manual" }),
     { value: "Manual", provenance: "overridden", resettable: true },
   );
+  const items = controls[0];
+  assert(items !== undefined);
+  const seededItems = { kind: "json", source: "[]" } as const;
+  assertEquals(effectiveControlValue(items, seededItems, seededItems), {
+    value: "Structured value",
+    provenance: "default",
+    resettable: false,
+  });
   const future = controls[3];
   assert(future !== undefined);
   assertEquals(effectiveControlValue(future, undefined), {
@@ -302,6 +310,40 @@ Deno.test("registry controls project human sections, labels, and truthful defaul
     provenance: "Component default",
     resettable: false,
   });
+
+  const futureAccessible = deriveControls({
+    reactExport: "FutureWidget",
+    propDocumentation: {
+      status: "available",
+      typeName: "FutureWidgetProps",
+      inheritedTypes: [],
+      props: [{
+        name: "label",
+        type: "string",
+        required: true,
+        description: "Required accessible label for assistive technology.",
+      }],
+    },
+    variants: [],
+  });
+  assertEquals(
+    futureAccessible.map(({ label, section }) => [label, section]),
+    [["Accessible label", "Accessibility"]],
+  );
+  const iconButtonLabel = deriveControls({
+    reactExport: "IconButton",
+    propDocumentation: {
+      status: "available",
+      typeName: "IconButtonProps",
+      inheritedTypes: [],
+      props: [{ name: "label", type: "string", required: true }],
+    },
+    variants: [],
+  });
+  assertEquals(
+    iconButtonLabel.map(({ label, section }) => [label, section]),
+    [["Accessible label", "Accessibility"]],
+  );
 });
 
 Deno.test("shaped JSON sources round-trip through row editing", async () => {

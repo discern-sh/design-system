@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { CodeListing } from "../../../src/components/editorial/code-listing/code-listing.tsx";
 import { catalogueComponentPath } from "../../routes/components.ts";
@@ -513,6 +513,13 @@ export function BuilderInspector(
   const selectedRecord = selectedNode === undefined
     ? undefined
     : inspectorControlBySlug(selectedNode.slug);
+  const selectedDefaults = useMemo(
+    () =>
+      selectedNode === undefined
+        ? {}
+        : instantiateComponent(selectedNode.slug).props,
+    [selectedNode?.slug],
+  );
   const selectionPath =
     selectedNode === undefined || selectedEntry === undefined
       ? ""
@@ -642,6 +649,7 @@ export function BuilderInspector(
                         key={`${selectedNode.id}:${control.name}`}
                         node={selectedNode}
                         control={control}
+                        defaultValue={selectedDefaults[control.name]}
                         humanPath={`${selectionPath} › ${control.label}`}
                         onChange={(value) =>
                           store.apply((current) =>
@@ -653,9 +661,7 @@ export function BuilderInspector(
                             )
                           ).error}
                         onReset={() => {
-                          const seeded = instantiateComponent(
-                            selectedNode.slug,
-                          ).props[control.name];
+                          const seeded = selectedDefaults[control.name];
                           store.apply((current) =>
                             updateNodeProp(
                               current,

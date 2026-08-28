@@ -8,7 +8,11 @@ import type {
   CataloguePropDocumentation,
   CatalogueVariant,
 } from "../conformance.ts";
-import type { BuilderNode, BuilderPropValue } from "./model.ts";
+import type {
+  BuilderNode,
+  BuilderPropValue,
+  BuilderSlotChild,
+} from "./model.ts";
 import { newChildId } from "./model.ts";
 
 /** The registry facts control derivation reads for one component. */
@@ -102,6 +106,10 @@ const EXPLICIT_CONTROL_PRESENTATION: Readonly<
   },
   "HeroBlock.layout": { defaultValue: "split" },
   "HeroBlock.surface": { defaultValue: "canvas" },
+  "IconButton.label": {
+    label: "Accessible label",
+    section: "Accessibility",
+  },
   "Tabs.items": { label: "Tabs" },
   "Tabs.activationMode": {
     label: "Activation",
@@ -119,9 +127,12 @@ function derivedSection(
   name: string,
   typeText: string,
   control: PropControl["control"],
+  description?: string,
 ): InspectorSection {
   if (
-    /^(?:aria|alt(?:Text)?$|role$|decorative$|headingLevel$)/i.test(name)
+    /^(?:aria|alt(?:Text)?$|role$|decorative$|headingLevel$)/i.test(name) ||
+    /\b(?:accessible|accessibility|assistive technology|screen reader|aria-)\b/i
+      .test(description ?? "")
   ) return "Accessibility";
   if (
     /(?:className|style|dangerously|html|metadata|spec|config|passthrough)/i
@@ -159,8 +170,15 @@ function controlPresentation(
   const resolvedDescription = explicit?.description ?? description;
   return {
     label: explicit?.label ??
-      (name === "children" ? "Content" : labelFor(name)),
-    section: explicit?.section ?? derivedSection(name, typeText, control),
+      (name === "children"
+        ? "Content"
+        : name === "label" && /\baccessible label\b/i.test(
+            resolvedDescription ?? "",
+          )
+        ? "Accessible label"
+        : labelFor(name)),
+    section: explicit?.section ??
+      derivedSection(name, typeText, control, resolvedDescription),
     ...(explicit?.defaultValue === undefined
       ? {}
       : { defaultValue: explicit.defaultValue }),
@@ -365,10 +383,66 @@ export function humanControlScalar(value: string | number | boolean): string {
   return source.slice(0, 1).toUpperCase() + source.slice(1);
 }
 
+function sameDefaultChild(
+  left: BuilderSlotChild,
+  right: BuilderSlotChild,
+): boolean {
+  if (left.kind !== right.kind) return false;
+  if (left.kind === "text" && right.kind === "text") {
+    return left.text === right.text;
+  }
+  if (left.kind !== "component" || right.kind !== "component") return false;
+  if (left.slug !== right.slug || left.extra !== right.extra) return false;
+  const leftNames = Object.keys(left.props).sort();
+  const rightNames = Object.keys(right.props).sort();
+  return leftNames.length === rightNames.length &&
+    leftNames.every((name, index) =>
+      name === rightNames[index] &&
+      sameDefaultValue(left.props[name], right.props[name])
+    );
+}
+
+function sameDefaultValue(
+  left: BuilderPropValue | undefined,
+  right: BuilderPropValue | undefined,
+): boolean {
+  if (left === undefined || right === undefined) return left === right;
+  if (left.kind !== right.kind) return false;
+  if (left.kind === "slot" && right.kind === "slot") {
+    return left.children.length === right.children.length &&
+      left.children.every((child, index) => {
+        const other = right.children[index];
+        return other !== undefined && sameDefaultChild(child, other);
+      });
+  }
+  if (left.kind === "json" && right.kind === "json") {
+    return left.source === right.source;
+  }
+  if (left.kind === "string" && right.kind === "string") {
+    return left.value === right.value;
+  }
+  if (left.kind === "number" && right.kind === "number") {
+    return left.value === right.value;
+  }
+  return left.kind === "boolean" && right.kind === "boolean" &&
+    left.value === right.value;
+}
+
+function displayedControlValue(value: BuilderPropValue): string {
+  return value.kind === "slot"
+    ? `${String(value.children.length)} content item${
+      value.children.length === 1 ? "" : "s"
+    }`
+    : value.kind === "json"
+    ? "Structured value"
+    : humanControlScalar(value.value);
+}
+
 /** Human value plus provenance for one control without inventing a default. */
 export function effectiveControlValue(
   control: PropControl,
   value: BuilderPropValue | undefined,
+  seededDefault?: BuilderPropValue,
 ): {
   readonly value: string;
   readonly provenance: "default" | "overridden" | "Component default";
@@ -387,13 +461,12 @@ export function effectiveControlValue(
         resettable: false,
       };
   }
-  const displayed = value.kind === "slot"
-    ? `${String(value.children.length)} content item${
-      value.children.length === 1 ? "" : "s"
-    }`
-    : value.kind === "json"
-    ? "Structured value"
-    : humanControlScalar(value.value);
+  const displayed = displayedControlValue(value);
+  if (
+    seededDefault !== undefined && sameDefaultValue(value, seededDefault)
+  ) {
+    return { value: displayed, provenance: "default", resettable: false };
+  }
   return { value: displayed, provenance: "overridden", resettable: true };
 }
 

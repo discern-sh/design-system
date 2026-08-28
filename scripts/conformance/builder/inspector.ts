@@ -105,34 +105,56 @@ export async function verifySaveFile(page: Page): Promise<number> {
       await inspector.getByRole("alert").count() === 0,
       "corrected additional JSON left stale field feedback",
     );
+    await page.getByRole("status").filter({
+      hasText: "Paragraph › Additional props is valid again.",
+    }).waitFor({ timeout: ACTION_TIMEOUT });
   }
-  await selectComposition(page);
+  const dangerStyle = async (name: string) =>
+    await page.getByRole("button", { name, exact: true }).evaluate(
+      (element) => {
+        const style = getComputedStyle(element);
+        return {
+          color: style.color,
+          background: style.backgroundColor,
+          border: style.borderColor,
+        };
+      },
+    );
   for (const theme of ["light", "dark"] as const) {
     await useTheme(page, theme);
-    const danger = await page.getByRole("button", {
-      name: "New / Replace",
+    await selectComposition(page);
+    const newDanger = await dangerStyle("New / Replace");
+    await page.getByRole("button", { name: "New / Replace", exact: true })
+      .click();
+    const replaceDanger = await dangerStyle("Replace locally");
+    await page.getByRole("button", {
+      name: "Keep current composition",
       exact: true,
-    }).evaluate((element) => {
-      const style = getComputedStyle(element);
-      return {
-        color: style.color,
-        background: style.backgroundColor,
-        border: style.borderColor,
-      };
-    });
+    }).click();
     const neutral = await page.locator(".discern-builder-file").evaluate(
       (element) => {
         const style = getComputedStyle(element);
         return { color: style.color, background: style.backgroundColor };
       },
     );
-    invariant(
-      danger.color !== neutral.color &&
-        (danger.background !== neutral.background ||
-          danger.border === danger.color),
-      `${theme} New / Replace action lost resting danger styling`,
-    );
+    await page.locator(OUTLINE_ROW).first().click();
+    const deleteDanger = await dangerStyle("Delete");
+    for (
+      const [label, danger] of [
+        ["Delete", deleteDanger],
+        ["New / Replace", newDanger],
+        ["Replace locally", replaceDanger],
+      ] as const
+    ) {
+      invariant(
+        danger.color !== neutral.color &&
+          (danger.background !== neutral.background ||
+            danger.border === danger.color),
+        `${theme} ${label} action lost resting danger styling`,
+      );
+    }
   }
+  await selectComposition(page);
   await page.evaluate(() => {
     const evidence = {
       created: [] as string[],
@@ -489,6 +511,59 @@ export async function verifyFileReadFailure(
   );
 }
 
+async function verifyForcedColourDanger(
+  browser: Browser,
+  origin: string,
+  failures: string[],
+): Promise<void> {
+  await withAuxiliaryPage(
+    browser,
+    failures,
+    {
+      viewport: WIDE_VIEWPORT,
+      reducedMotion: "reduce",
+      forcedColors: "active",
+    },
+    undefined,
+    async (page) => {
+      await loadBuilderPage(page, origin);
+      await placeNamedComponent(page, "Button");
+      const forcedStyle = async (name: string) =>
+        await page.getByRole("button", { name, exact: true }).evaluate(
+          (element) => {
+            const style = getComputedStyle(element);
+            return {
+              color: style.color,
+              background: style.backgroundColor,
+              borderWidth: style.borderTopWidth,
+              borderStyle: style.borderTopStyle,
+            };
+          },
+        );
+      const deleteDanger = await forcedStyle("Delete");
+      await selectComposition(page);
+      const newDanger = await forcedStyle("New / Replace");
+      await page.getByRole("button", { name: "New / Replace", exact: true })
+        .click();
+      const replaceDanger = await forcedStyle("Replace locally");
+      for (
+        const [label, style] of [
+          ["Delete", deleteDanger],
+          ["New / Replace", newDanger],
+          ["Replace locally", replaceDanger],
+        ] as const
+      ) {
+        invariant(
+          style.borderStyle !== "none" &&
+            Number.parseFloat(style.borderWidth) >= 2 &&
+            style.color !== style.background,
+          `forced colours ${label} action lost its danger boundary`,
+        );
+      }
+    },
+  );
+}
+
 export async function verifyContainedFailures(
   browser: Browser,
   origin: string,
@@ -499,6 +574,7 @@ export async function verifyContainedFailures(
     ["storage read denial", verifyStorageReadDenial],
     ["storage quota", verifyQuotaFailure],
     ["file read rejection", verifyFileReadFailure],
+    ["forced-colour danger", verifyForcedColourDanger],
   ] as const;
   let passed = 0;
   for (const [label, scenario] of scenarios) {
