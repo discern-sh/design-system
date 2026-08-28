@@ -81,9 +81,19 @@ export type InteractiveChoiceFramePresentation =
   | "filled"
   | "disabled";
 
+/** Static, browsing, or focus-driven treatment for single-choice frames. */
+export type InteractiveSelectionFramePresentation =
+  | InteractiveChoiceFramePresentation
+  | "menu";
+
 /** Optional presentation carried by pure choice-frame state. */
 export interface InteractiveChoicePresentationState {
   readonly presentation?: InteractiveChoiceFramePresentation;
+}
+
+/** Optional presentation carried only by single-choice frame state. */
+export interface InteractiveSelectionPresentationState {
+  readonly presentation?: InteractiveSelectionFramePresentation;
 }
 
 /** Choice counts outside the currently rendered scrolling window. */
@@ -99,11 +109,13 @@ export interface SelectFrameState
   extends
     InteractiveFrameBase,
     InteractiveChoiceOverflowState,
-    InteractiveChoicePresentationState {
+    InteractiveSelectionPresentationState {
   readonly kind: "select";
   readonly options: readonly InteractiveChoiceEntryState[];
   readonly highlightedIndex: number;
   readonly selectedId?: string;
+  /** Viewport-derived cap for a menu's stable contextual detail rows. */
+  readonly menuDetailLineLimit?: number;
   readonly visibleStart?: number;
   readonly visibleCount?: number;
 }
@@ -127,12 +139,16 @@ export interface SearchFrameState
   extends
     InteractiveFrameBase,
     InteractiveChoiceOverflowState,
-    InteractiveChoicePresentationState {
+    InteractiveSelectionPresentationState {
   readonly kind: "search";
   readonly query: string;
   /** Grapheme index at which the query cursor is drawn. */
   readonly cursor: number;
   readonly results: readonly InteractiveChoiceEntryState[];
+  /** Complete current menu results used to keep contextual detail height stable. */
+  readonly menuDetailEntries?: readonly InteractiveChoiceEntryState[];
+  /** Viewport-derived cap for a menu's stable contextual detail rows. */
+  readonly menuDetailLineLimit?: number;
   readonly highlightedIndex?: number;
   readonly placeholder?: string;
   /** A provider call is scheduled or in flight; the results shown answer an earlier query. */

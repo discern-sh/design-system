@@ -15,10 +15,11 @@ import {
 import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
   formCliChoiceFrameWidth,
-  type FormCliPresentation,
+  type FormCliSelectionPresentation,
   renderFormCliChoiceEntry,
   renderFormCliChoiceSummary,
   renderFormCliFrame,
+  renderFormCliMenuDetail,
   styleFormCliSelectedMark,
   visibleFormCliChoiceEntries,
   visibleFormCliChoiceOverflow,
@@ -27,7 +28,7 @@ import meta, { componentExampleVocabulary } from "./select.meta.ts";
 
 /** Inputs accepted by the terminal Select renderer. */
 export interface SelectCliProps extends SelectFrameState, TerminalMotifOptions {
-  readonly presentation?: FormCliPresentation;
+  readonly presentation?: FormCliSelectionPresentation;
   readonly placeholder?: string;
   readonly required?: boolean;
   readonly showStatus?: boolean;
@@ -136,7 +137,11 @@ export const cliExamples: readonly CliExample<SelectCliProps>[] =
 /** Render a Wave 1 single-selection state as a collapsed or expanded terminal Select. */
 const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
   const state = props;
-  const width = formCliChoiceFrameWidth(props.width, capabilities);
+  const width = formCliChoiceFrameWidth(
+    props.width,
+    capabilities,
+    props.presentation,
+  );
   const highlighted = state.options[state.highlightedIndex];
   const selectable = state.options.some((entry) =>
     isInteractiveChoice(entry) && entry.disabled !== true
@@ -147,14 +152,14 @@ const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
     (state.highlightedIndex !== -1 &&
       (highlighted === undefined ||
         !isInteractiveChoice(highlighted) ||
-        highlighted.disabled === true))
+        (highlighted.disabled === true && props.presentation !== "menu")))
   ) {
     throw new TypeError(
-      "select state requires a selectable highlighted option, or -1 when none exist",
+      "select state requires a focusable highlighted option, or -1 when none exist",
     );
   }
   const expanded = (props.presentation === undefined ||
-    props.presentation === "browsing") &&
+    props.presentation === "browsing" || props.presentation === "menu") &&
     (state.lifecycle.status === "active" ||
       state.lifecycle.status === "validation-error");
   const selectedEntry = state.options.find((entry) =>
@@ -165,38 +170,67 @@ const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
     ? selectedEntry
     : undefined;
   const control = expanded
-    ? visibleFormCliChoiceEntries(state).map(({ entry, sourceIndex }) => {
-      const absoluteIndex = sourceIndex;
-      const isHighlighted = absoluteIndex === state.highlightedIndex;
-      const pointer = isHighlighted
-        ? `${capabilities.unicode ? "›" : ">"} `
-        : "  ";
-      const selected = isInteractiveChoice(entry) &&
-        entry.id === state.selectedId;
-      const mark = selected ? capabilities.unicode ? "●" : "*" : " ";
-      const styleOptions = {
-        highlighted: isHighlighted,
-        disabled: isInteractiveChoice(entry) && entry.disabled === true,
+    ? (() => {
+      const rows = visibleFormCliChoiceEntries(state).map(
+        ({ entry, sourceIndex }) => {
+          const absoluteIndex = sourceIndex;
+          const isHighlighted = absoluteIndex === state.highlightedIndex;
+          const pointer = isHighlighted
+            ? `${capabilities.unicode ? "›" : ">"} `
+            : "  ";
+          const selected = isInteractiveChoice(entry) &&
+            entry.id === state.selectedId;
+          const mark = props.presentation === "menu" &&
+              isInteractiveChoice(entry) && entry.disabled === true
+            ? capabilities.unicode ? "×" : "x"
+            : selected
+            ? capabilities.unicode ? "●" : "*"
+            : " ";
+          const styleOptions = {
+            highlighted: isHighlighted,
+            disabled: isInteractiveChoice(entry) && entry.disabled === true,
+            ...(props.theme === undefined ? {} : { theme: props.theme }),
+          };
+          const marker = props.presentation === "menu"
+            ? mark
+            : `[${
+              styleFormCliSelectedMark(
+                mark,
+                selected,
+                styleOptions,
+                capabilities,
+              )
+            }]`;
+          return renderFormCliChoiceEntry({
+            entry,
+            pointer,
+            marker,
+            highlighted: isHighlighted,
+            ...(props.presentation === undefined
+              ? {}
+              : { presentation: props.presentation }),
+            ...(props.presentation === "menu" && sourceIndex > 0
+              ? { separateHeading: true }
+              : {}),
+            ...(props.theme === undefined ? {} : { theme: props.theme }),
+            ...motifPassthrough(props),
+            width,
+          }, capabilities);
+        },
+      );
+      const choices = rows.join("\n");
+      if (props.presentation !== "menu") return choices;
+      const detail = renderFormCliMenuDetail({
+        entries: state.options,
+        highlightedIndex: state.highlightedIndex,
+        ...(state.menuDetailLineLimit === undefined
+          ? {}
+          : { maximumLines: state.menuDetailLineLimit }),
         ...(props.theme === undefined ? {} : { theme: props.theme }),
-      };
-      const marker = `[${
-        styleFormCliSelectedMark(
-          mark,
-          selected,
-          styleOptions,
-          capabilities,
-        )
-      }]`;
-      return renderFormCliChoiceEntry({
-        entry,
-        pointer,
-        marker,
-        highlighted: isHighlighted,
-        ...(props.theme === undefined ? {} : { theme: props.theme }),
-        ...motifPassthrough(props),
         width,
       }, capabilities);
-    }).join("\n")
+      return detail === "" ? choices : `${choices}\n${detail}`;
+    })()
     : selected === undefined
     ? `${props.placeholder ?? "Choose an option"} ${
       capabilities.unicode ? "⌄" : "v"

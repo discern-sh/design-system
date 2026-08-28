@@ -409,15 +409,39 @@ const guidedChoice = {
   introduction:
     "Choose the update channel that matches the stability required by this environment.",
   options: [
-    { kind: "group-heading" as const, id: "recommended", label: "Recommended" },
+    {
+      kind: "group-heading" as const,
+      id: "recommended",
+      label: "Recommended",
+      description: "Supported channels for ordinary environments.",
+    },
     {
       id: "stable",
-      label: "Stable — tested releases with the longest support window",
+      label: "Stable",
+      description: "Tested releases with the longest support window.",
     },
-    { id: "preview", label: "Preview — early access to finished features" },
-    { kind: "group-heading" as const, id: "advanced", label: "Advanced" },
-    { id: "nightly", label: "Nightly — latest integration build" },
-    { id: "local", label: "Local artifact", disabled: true },
+    {
+      id: "preview",
+      label: "Preview",
+      description: "Early access to finished features.",
+    },
+    {
+      kind: "group-heading" as const,
+      id: "advanced",
+      label: "Advanced",
+      description: "Channels that require deliberate operational support.",
+    },
+    {
+      id: "nightly",
+      label: "Nightly",
+      description: "The latest integration build for disposable environments.",
+    },
+    {
+      id: "local",
+      label: "Local artifact",
+      description: "Unavailable until a local artifact has been built.",
+      disabled: true,
+    },
   ],
 } as const;
 
@@ -425,7 +449,7 @@ const guidedChoiceRecipe = defineCliRecipe({
   id: "guided-choice",
   title: "Guided choice",
   description:
-    "A complete interactive decision frame that exercises responsive label wrapping, semantic groups, and hidden-choice disclosure.",
+    "A focus-driven menu with compact groups, inspectable unavailable choices, and one stable contextual detail footer.",
   components: ["docs-header", "section", "select"],
   capabilityControls: ["unicode", "colorDepth"],
   definition: guidedChoice,
@@ -446,11 +470,11 @@ const guidedChoiceRecipe = defineCliRecipe({
       presenter.present(renderSelectCli, {
         kind: "select",
         label: "Channel",
+        presentation: "menu",
         options: definition.options,
-        highlightedIndex: 1,
-        selectedId: "stable",
+        highlightedIndex: 5,
         visibleStart: 0,
-        visibleCount: 4,
+        visibleCount: 6,
         lifecycle: { status: "active" },
       }),
     ]);
@@ -482,11 +506,11 @@ const output = composeCliBlocks([
   presenter.present(renderSelectCli, {
     kind: "select",
     label: "Channel",
+    presentation: "menu",
     options: definition.options,
-    highlightedIndex: 1,
-    selectedId: "stable",
+    highlightedIndex: 5,
     visibleStart: 0,
-    visibleCount: 4,
+    visibleCount: 6,
     lifecycle: { status: "active" },
   }),
 ]);`,

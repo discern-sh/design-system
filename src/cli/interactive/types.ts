@@ -23,6 +23,15 @@ export type InteractionCompletionPolicy = "retain-frame" | "clear-frame";
 export type InteractionChoicePresentation = "form" | "browsing";
 
 /**
+ * Presentation for an interaction that returns at most one value. `menu`
+ * treats the highlight as focus, keeps unavailable entries inspectable, and
+ * presents secondary detail in one stable contextual footer.
+ */
+export type InteractionSelectionPresentation =
+  | InteractionChoicePresentation
+  | "menu";
+
+/**
  * Synchronous canonicalisation applied to a submitted value before any
  * validation. The transformed value is what the required check and validator
  * see and what the interaction returns; the frame keeps presenting the value

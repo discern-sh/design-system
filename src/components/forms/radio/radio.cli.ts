@@ -19,10 +19,11 @@ import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
   formCliChoiceFrameWidth,
   formCliEmptyResultsRow,
-  type FormCliPresentation,
+  type FormCliSelectionPresentation,
   insertFormCliCursor,
   renderFormCliChoiceEntry,
   renderFormCliFrame,
+  renderFormCliMenuDetail,
   renderFormCliQueryChoices,
   styleFormCliSelectedMark,
   visibleFormCliChoiceEntries,
@@ -32,7 +33,7 @@ import meta, { componentExampleVocabulary } from "./radio.meta.ts";
 
 /** Inputs accepted by the terminal Radio renderer. */
 interface RadioCliOptions extends TerminalMotifOptions {
-  readonly presentation?: FormCliPresentation;
+  readonly presentation?: FormCliSelectionPresentation;
   readonly required?: boolean;
   readonly showStatus?: boolean;
   readonly theme?: TerminalThemeVariant;
@@ -142,7 +143,11 @@ export const cliExamples: readonly CliExample<RadioCliProps>[] =
 /** Render a Wave 1 single-selection state as a terminal radio group. */
 const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
   const state = props;
-  const width = formCliChoiceFrameWidth(props.width, capabilities);
+  const width = formCliChoiceFrameWidth(
+    props.width,
+    capabilities,
+    props.presentation,
+  );
   const options = state.kind === "search" ? state.results : state.options;
   const highlightedIndex = state.kind === "search"
     ? state.highlightedIndex
@@ -157,7 +162,8 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
       (state.highlightedIndex !== -1 &&
         (options[state.highlightedIndex] === undefined ||
           !isInteractiveChoice(options[state.highlightedIndex]!) ||
-          options[state.highlightedIndex]?.disabled === true)))
+          (options[state.highlightedIndex]?.disabled === true &&
+            props.presentation !== "menu"))))
   ) {
     throw new TypeError(
       "radio state requires a selectable highlighted option, or -1 when none exist",
@@ -167,20 +173,21 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
     state.kind === "search" && highlightedIndex !== undefined &&
     (highlightedIndex < 0 || highlightedIndex >= options.length ||
       !isInteractiveChoice(options[highlightedIndex]!) ||
-      options[highlightedIndex]?.disabled === true)
+      (options[highlightedIndex]?.disabled === true &&
+        props.presentation !== "menu"))
   ) {
     throw new TypeError(
       "search state requires a selectable highlighted result",
     );
   }
   const expanded = (props.presentation === undefined ||
-    props.presentation === "browsing") &&
+    props.presentation === "browsing" || props.presentation === "menu") &&
     (state.lifecycle.status === "active" ||
       state.lifecycle.status === "validation-error");
   const entries = state.kind === "select"
     ? visibleFormCliChoiceEntries(state)
     : options.map((entry, sourceIndex) => ({ entry, sourceIndex }));
-  const choices = entries.length === 0
+  const choiceRows = entries.length === 0
     ? [formCliEmptyResultsRow(
       state.kind === "search" && state.pending === true,
       capabilities,
@@ -191,7 +198,12 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
           index === highlightedIndex &&
           isInteractiveChoice(entry)
         : isInteractiveChoice(entry) && entry.id === state.selectedId;
-      const markerGlyph = capabilities.unicode
+      const markerGlyph = props.presentation === "menu" &&
+          isInteractiveChoice(entry) && entry.disabled === true
+        ? capabilities.unicode ? "×" : "x"
+        : props.presentation === "menu"
+        ? " "
+        : capabilities.unicode
         ? selected ? "◉" : "○"
         : selected
         ? "*"
@@ -203,7 +215,9 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
         disabled: isInteractiveChoice(entry) && entry.disabled === true,
         ...(props.theme === undefined ? {} : { theme: props.theme }),
       };
-      const marker = capabilities.unicode
+      const marker = props.presentation === "menu"
+        ? markerGlyph
+        : capabilities.unicode
         ? styleFormCliSelectedMark(
           markerGlyph,
           selected,
@@ -223,11 +237,33 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
         pointer,
         marker,
         highlighted,
+        ...(props.presentation === undefined
+          ? {}
+          : { presentation: props.presentation }),
+        ...(props.presentation === "menu" && index > 0
+          ? { separateHeading: true }
+          : {}),
         ...(props.theme === undefined ? {} : { theme: props.theme }),
         ...motifPassthrough(props),
         width,
       }, capabilities);
     });
+  const menuDetail = props.presentation === "menu" && expanded &&
+      choiceRows.length > 0
+    ? renderFormCliMenuDetail({
+      entries: options,
+      highlightedIndex,
+      ...(state.menuDetailLineLimit === undefined
+        ? {}
+        : { maximumLines: state.menuDetailLineLimit }),
+      ...(state.kind === "search" && state.menuDetailEntries !== undefined
+        ? { reserveEntries: state.menuDetailEntries }
+        : {}),
+      ...(props.theme === undefined ? {} : { theme: props.theme }),
+      width,
+    }, capabilities)
+    : "";
+  const choices = menuDetail === "" ? choiceRows : [...choiceRows, menuDetail];
   const control = state.kind === "search"
     ? renderFormCliQueryChoices(
       state.lifecycle.status === "submitted"
