@@ -65,6 +65,17 @@ function safeTransientValue(value: unknown): boolean {
     (typeof value === "number" && Number.isFinite(value));
 }
 
+const NON_SUBMITTING_INPUT_TYPES = new Set([
+  "button",
+  "checkbox",
+  "color",
+  "file",
+  "hidden",
+  "radio",
+  "range",
+  "reset",
+]);
+
 function elementNodeId(
   target: Element,
   elements: ReadonlyMap<string, Element>,
@@ -98,6 +109,8 @@ function FrameDocument(
 ) {
   const rootRef = useRef<HTMLDivElement>(null);
   const elements = useRef(new Map<string, Element>());
+  const mode = useRef(snapshot.mode);
+  mode.current = snapshot.mode;
   const [transientProps, setTransientProps] = useState<
     Readonly<Record<string, Readonly<Record<string, unknown>>>>
   >({});
@@ -169,10 +182,36 @@ function FrameDocument(
   }, [snapshot.mode]);
 
   useEffect(() => {
+    const blockSubmission = (
+      event: MouseEvent | KeyboardEvent | SubmitEvent,
+      target: EventTarget | null,
+    ): void => {
+      event.preventDefault();
+      event.stopPropagation();
+      post(builderPreviewEventWitness({
+        kind: "submission-blocked",
+        nodeId: target instanceof Element
+          ? elementNodeId(target, elements.current)
+          : null,
+        prop: null,
+        summary: "Blocked form submission",
+      }));
+    };
     const onClick = (event: MouseEvent): void => {
-      if (snapshot.mode !== "interact") return;
+      if (mode.current !== "interact") return;
       const target = event.target;
       if (!(target instanceof Element)) return;
+      const form = target.closest("form");
+      const submitControl = target.closest("button, input");
+      const submitType = submitControl?.getAttribute("type")?.toLowerCase() ??
+        (submitControl?.tagName === "BUTTON" ? "submit" : "");
+      if (
+        form !== null && submitControl !== null &&
+        (submitType === "submit" || submitType === "image")
+      ) {
+        blockSubmission(event, submitControl);
+        return;
+      }
       const link = target.closest("a[href]");
       if (link === null) return;
       event.preventDefault();
@@ -195,27 +234,40 @@ function FrameDocument(
           : `Blocked link ${JSON.stringify(href)}`,
       }));
     };
-    const onSubmit = (event: SubmitEvent): void => {
-      if (snapshot.mode !== "interact") return;
-      event.preventDefault();
-      event.stopPropagation();
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (
+        mode.current !== "interact" || event.key !== "Enter" ||
+        event.defaultPrevented
+      ) return;
       const target = event.target;
-      post(builderPreviewEventWitness({
-        kind: "submission-blocked",
-        nodeId: target instanceof Element
-          ? elementNodeId(target, elements.current)
-          : null,
-        prop: null,
-        summary: "Blocked form submission",
-      }));
+      if (
+        !(target instanceof Element) ||
+        target.matches("textarea, [contenteditable]") ||
+        target.closest("form") === null
+      ) return;
+      const control = target.closest("button, input");
+      if (control === null) return;
+      const type = control.getAttribute("type")?.toLowerCase() ??
+        (control.tagName === "BUTTON" ? "submit" : "text");
+      const submits = control.tagName === "BUTTON"
+        ? type === "submit"
+        : !NON_SUBMITTING_INPUT_TYPES.has(type);
+      if (!submits) return;
+      blockSubmission(event, target);
+    };
+    const onSubmit = (event: SubmitEvent): void => {
+      if (mode.current !== "interact") return;
+      blockSubmission(event, event.target);
     };
     document.addEventListener("click", onClick, true);
+    document.addEventListener("keydown", onKeyDown, true);
     document.addEventListener("submit", onSubmit, true);
     return () => {
       document.removeEventListener("click", onClick, true);
+      document.removeEventListener("keydown", onKeyDown, true);
       document.removeEventListener("submit", onSubmit, true);
     };
-  }, [post, snapshot.mode]);
+  }, [post]);
 
   const register = (id: string) => (value: unknown): void => {
     if (value instanceof Element) elements.current.set(id, value);
