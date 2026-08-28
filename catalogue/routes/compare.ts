@@ -7,7 +7,7 @@ export const compareRouteFamily: CatalogueRouteFamily = {
     label: "Compare",
     path: "/catalogue/review/",
     description:
-      "Compare a deliberate Component group, purpose, or complete set.",
+      "Compare a focused Component Group, purpose, or the complete system.",
     searchTerms: ["review", "compare", "group", "purpose", "complete"],
   },
   match: (pathname) =>

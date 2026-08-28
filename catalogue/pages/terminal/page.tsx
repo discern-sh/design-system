@@ -46,7 +46,7 @@ export function TerminalIndexPage(
         index="05"
         eyebrow="Terminal layouts"
         title="Choose one complete frame."
-        description="Open a focused capability lab for a source-backed CLI layout."
+        description="Open a focused capability lab for one complete CLI layout."
       />
       <h2 className="discern-visually-hidden">Terminal layout recipes</h2>
       <div className="discern-catalogue-terminal-index">

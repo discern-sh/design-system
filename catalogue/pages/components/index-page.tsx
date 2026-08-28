@@ -9,8 +9,9 @@ import {
   catalogueGroupSlug,
   componentSearchRecords,
 } from "../../routes.ts";
-import { searchRecords, supportingMatchReason } from "../../search/mod.ts";
+import { explanatoryMatchReason, searchRecords } from "../../search/mod.ts";
 import { announceCatalogueLocationChange } from "../../shell/location.ts";
+import { preserveCatalogueAppearanceHref } from "../../shell/appearance-state.ts";
 import {
   CataloguePageHeader,
   cataloguePurpose,
@@ -51,7 +52,10 @@ export function ComponentIndexPage(
   }, []);
 
   const navigate = (next: ComponentExplorerState, replace = false): void => {
-    const href = componentExplorerHref(next);
+    const href = preserveCatalogueAppearanceHref(
+      new URL(globalThis.location.href),
+      componentExplorerHref(next),
+    );
     globalThis.history[replace ? "replaceState" : "pushState"](null, "", href);
     setState(next);
     announceCatalogueLocationChange();
@@ -66,7 +70,7 @@ export function ComponentIndexPage(
       (result) => {
         const entry = result.record.payload;
         if (entry === undefined) return [];
-        const reason = supportingMatchReason(result);
+        const reason = explanatoryMatchReason(result);
         return [{
           entry,
           ...(reason === undefined

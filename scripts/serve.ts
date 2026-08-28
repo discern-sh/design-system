@@ -18,6 +18,8 @@ const CONTENT_TYPES: Readonly<Record<string, string>> = {
   ".map": "application/json; charset=utf-8",
   ".png": "image/png",
   ".svg": "image/svg+xml",
+  ".ts": "text/plain; charset=utf-8",
+  ".tsx": "text/plain; charset=utf-8",
   ".webp": "image/webp",
   ".woff2": "font/woff2",
 };
@@ -45,6 +47,27 @@ export function catalogueFilePath(rawPathname: string): string | null {
 function safePath(url: URL): URL | null {
   const path = catalogueFilePath(url.pathname);
   return path === null ? null : new URL(path, ROOT);
+}
+
+function isCatalogueClientRoute(pathname: string): boolean {
+  if (!pathname.startsWith("/catalogue/") || !pathname.endsWith("/")) {
+    return false;
+  }
+  return ![
+    "/catalogue/builder/",
+    "/catalogue/example-images/",
+    "/catalogue/reviews/",
+  ].some((mount) => pathname.startsWith(mount));
+}
+
+async function fileResponse(target: URL): Promise<Response> {
+  const body = await Deno.readFile(target);
+  const extension = target.pathname.slice(target.pathname.lastIndexOf("."));
+  return new Response(body, {
+    headers: {
+      "content-type": CONTENT_TYPES[extension] ?? "application/octet-stream",
+    },
+  });
 }
 
 /** Source-rendered review routes that must survive replacement of build output. */
@@ -105,15 +128,15 @@ export default {
     const target = safePath(url);
     if (!target) return new Response("Bad request", { status: 400 });
     try {
-      const body = await Deno.readFile(target);
-      const extension = target.pathname.slice(target.pathname.lastIndexOf("."));
-      return new Response(body, {
-        headers: {
-          "content-type": CONTENT_TYPES[extension] ??
-            "application/octet-stream",
-        },
-      });
+      return await fileResponse(target);
     } catch {
+      if (isCatalogueClientRoute(url.pathname)) {
+        try {
+          return await fileResponse(new URL("./catalogue/index.html", ROOT));
+        } catch {
+          // The shell itself is absent; preserve the original missing response.
+        }
+      }
       return new Response("Not found", { status: 404 });
     }
   },

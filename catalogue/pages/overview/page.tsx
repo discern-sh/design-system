@@ -21,8 +21,7 @@ const findAComponentHref = componentExplorerHref({
 
 const overviewRouteDetails = {
   components: {
-    description:
-      "Search by name, Group, or purpose, then inspect one bounded Component.",
+    description: "Search by name, Group, or purpose, then inspect a Component.",
     count: `${registry.length} Components`,
     action: "Find a Component",
   },
@@ -46,7 +45,7 @@ const overviewRouteDetails = {
   },
   compare: {
     description:
-      "Choose a Group, purpose, or complete set and compare Components together.",
+      "Choose a Group, purpose, or the complete system and compare Components together.",
     count: `${componentGroups.length} Component Groups`,
     action: "Compare Components",
   },

@@ -1,5 +1,6 @@
 /** UI-independent fields that may explain why a Catalogue search record matched. */
 export type SearchField =
+  | "alias"
   | "title"
   | "slug"
   | "group"
@@ -87,6 +88,18 @@ export function tokenizeSearchText(value: string): readonly string[] {
   return normalized === "" ? [] : normalized.split(" ");
 }
 
+function matchedSearchAliases(value: string): ReadonlyMap<string, string> {
+  const normalized = normaliseCharacters(value);
+  const matches = new Map<string, string>();
+  for (const [phrase, replacement] of Object.entries(searchAliases)) {
+    const pattern = new RegExp(
+      `(?:^| )${phrase.replaceAll(" ", "\\s+")}(?= |$)`,
+    );
+    if (pattern.test(normalized)) matches.set(replacement, phrase);
+  }
+  return matches;
+}
+
 interface Candidate {
   readonly field: SearchField;
   readonly label: string;
@@ -169,6 +182,7 @@ export function searchRecords<Payload>(
   const normalizedQuery = normalizeSearchText(query);
   const tokens = tokenizeSearchText(query);
   if (tokens.length === 0) return [];
+  const aliases = matchedSearchAliases(query);
 
   const results: SearchResult<Payload>[] = [];
   for (const record of records) {
@@ -198,6 +212,19 @@ export function searchRecords<Payload>(
         value: strongest.candidate.value,
         token,
       });
+      const alias = aliases.get(token);
+      if (
+        alias !== undefined &&
+        (strongest.candidate.field === "title" ||
+          strongest.candidate.field === "slug")
+      ) {
+        reasons.push({
+          field: "alias",
+          label: "Alias",
+          value: alias,
+          token,
+        });
+      }
     }
     if (tiers.length !== tokens.length) continue;
 
@@ -222,6 +249,14 @@ export function supportingMatchReason(
   result: SearchResult,
 ): SearchMatchReason | undefined {
   return result.reasons.find(({ field }) =>
-    field !== "title" && field !== "slug"
+    field !== "alias" && field !== "title" && field !== "slug"
   );
+}
+
+/** Compact human explanation shared by global and family search projections. */
+export function explanatoryMatchReason(
+  result: SearchResult,
+): SearchMatchReason | undefined {
+  return result.reasons.find(({ field }) => field === "alias") ??
+    supportingMatchReason(result);
 }

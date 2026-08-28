@@ -11,8 +11,7 @@ export const componentsRouteFamily: CatalogueRouteFamily = {
     id: "components",
     label: "Components",
     path: "/catalogue/components/",
-    description:
-      "Find a Component and inspect its complete browser and terminal contract.",
+    description: "Find a Component and inspect its Web and CLI examples.",
     searchTerms: ["find", "browse", "groups", "purposes", "ui"],
   },
   match: (pathname) => {

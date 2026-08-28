@@ -4,6 +4,7 @@ import { registry } from "../../generated/registry.ts";
 import type { RegistryEntry } from "../../generated/registry.ts";
 import { catalogueRoutePaths } from "../../routes.ts";
 import { announceCatalogueLocationChange } from "../../shell/location.ts";
+import { preserveCatalogueAppearanceHref } from "../../shell/appearance-state.ts";
 import { catalogueHref, componentGroupHref } from "../shared.tsx";
 import type { CatalogueSurface } from "../shared.tsx";
 import {
@@ -48,7 +49,10 @@ export function ComponentDetailPage(
     globalThis.history.pushState(
       null,
       "",
-      componentDetailHref(entry, next, { anchor }),
+      preserveCatalogueAppearanceHref(
+        new URL(globalThis.location.href),
+        componentDetailHref(entry, next, { anchor }),
+      ),
     );
     setState(next);
     announceCatalogueLocationChange();

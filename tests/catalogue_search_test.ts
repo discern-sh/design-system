@@ -2,6 +2,7 @@ import { assert, assertEquals } from "@std/assert";
 import { registry } from "../catalogue/generated/registry.ts";
 import { componentSearchRecords } from "../catalogue/routes.ts";
 import {
+  explanatoryMatchReason,
   normalizeSearchText,
   searchRecords,
   supportingMatchReason,
@@ -50,6 +51,13 @@ Deno.test("call to action finds CTA band through the shared alias vocabulary", (
   );
   assertEquals(results[0]?.record.title, "CTA band");
   assertEquals(results[0]?.reasons[0]?.field, "title");
+  assertEquals(results[0]?.reasons[1], {
+    field: "alias",
+    label: "Alias",
+    value: "call to action",
+    token: "cta",
+  });
+  assertEquals(explanatoryMatchReason(results[0]!)?.label, "Alias");
 });
 
 Deno.test("multi-token intent may match across fields and reports the supporting field", () => {

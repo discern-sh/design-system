@@ -118,6 +118,26 @@ Deno.test("the Catalogue owns one canonical source, bundle, and mounted path", a
   assertStringIncludes(capture, 'data-discern-capture-status="loading"');
 });
 
+Deno.test("Catalogue source actions open TypeScript as readable browser text", async () => {
+  for (
+    const pathname of [
+      "/catalogue/src/components/workflow/command/command.tsx",
+      "/catalogue/src/components/workflow/command/command.cli.ts",
+    ]
+  ) {
+    const response = await server.fetch(
+      new Request(`http://127.0.0.1:8010${pathname}`),
+    );
+    assertEquals(response.status, 200, pathname);
+    assertEquals(
+      response.headers.get("content-type"),
+      "text/plain; charset=utf-8",
+      pathname,
+    );
+    assertStringIncludes(await response.text(), "Command", pathname);
+  }
+});
+
 Deno.test("Catalogue explorer routes serve one canonical shell", async () => {
   const shellPaths = [
     ...catalogueNavigation.map(({ path }) => path),
@@ -149,6 +169,19 @@ Deno.test("Catalogue explorer routes serve one canonical shell", async () => {
     null,
   );
   assertEquals(canonicalCatalogueShellPathname("/catalogue/unknown/"), null);
+});
+
+Deno.test("unknown Catalogue pages reach the client not-found route without hiding missing assets", async () => {
+  const route = await server.fetch(
+    new Request("http://127.0.0.1:8010/catalogue/unknown/future-page/"),
+  );
+  assertEquals(route.status, 200);
+  assertStringIncludes(await route.text(), '<div id="root"></div>');
+
+  const asset = await server.fetch(
+    new Request("http://127.0.0.1:8010/catalogue/styles/missing.css"),
+  );
+  assertEquals(asset.status, 404);
 });
 
 Deno.test("Catalogue review routes stay outside replaceable build output", async () => {

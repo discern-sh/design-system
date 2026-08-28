@@ -13,7 +13,7 @@ import {
   catalogueRoutePaths,
   catalogueSearchRecords,
 } from "../routes.ts";
-import { searchRecords, supportingMatchReason } from "../search/mod.ts";
+import { explanatoryMatchReason, searchRecords } from "../search/mod.ts";
 import { terminalFoundationSheets } from "../terminal-foundations.ts";
 
 export function GlobalSearch(
@@ -93,7 +93,7 @@ export function GlobalSearch(
         : (
           <ul className="discern-search-palette__list">
             {results.map((result) => {
-              const reason = supportingMatchReason(result);
+              const reason = explanatoryMatchReason(result);
               return (
                 <li key={result.record.id}>
                   <SearchPaletteResult

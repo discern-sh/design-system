@@ -12,6 +12,27 @@ import {
   catalogueTerminalLayoutPath,
   foundationsPaths,
 } from "../catalogue/routes.ts";
+import { preserveCatalogueAppearanceHref } from "../catalogue/shell/appearance-state.ts";
+
+Deno.test("local Catalogue state transitions preserve valid explicit Appearance", () => {
+  const current = new URL(
+    "https://catalogue.example/catalogue/components/table/?theme=dark&accent=128",
+  );
+  assertEquals(
+    preserveCatalogueAppearanceHref(
+      current,
+      "/catalogue/components/table/?example=dense-overflow#component-table--dense-overflow",
+    ),
+    "/catalogue/components/table/?example=dense-overflow&theme=dark&accent=128#component-table--dense-overflow",
+  );
+  assertEquals(
+    preserveCatalogueAppearanceHref(
+      new URL("https://catalogue.example/catalogue/?theme=invalid&accent=999"),
+      "/catalogue/review/?scope=all",
+    ),
+    "/catalogue/review/?scope=all",
+  );
+});
 
 Deno.test("Catalogue routes resolve every explorer surface and Component detail", () => {
   const cases = [

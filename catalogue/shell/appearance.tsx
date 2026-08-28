@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import type { ThemeSwitcherMode } from "../../src/components/core/theme-switcher/theme-switcher.tsx";
 import { ThemeToggle } from "../../src/components/core/theme-toggle/theme-toggle.tsx";
 import { discernThemeTokens } from "../../src/tokens/tokens.ts";
 import { useCatalogueTerminalTheme } from "../terminal-theme.ts";
+import { catalogueAccent, catalogueTheme } from "./appearance-state.ts";
 
 const themeStorageKey = "discern-catalogue-theme";
 const accentStorageKey = "discern-catalogue-accent-hue";
@@ -12,18 +13,16 @@ const defaultAccentHue = Number(
     ?.value ?? "255",
 );
 
-function catalogueTheme(value: string | null): ThemeSwitcherMode | undefined {
-  return value === "system" || value === "light" || value === "dark"
-    ? value
-    : undefined;
-}
-
-function catalogueAccent(value: string | null): number | undefined {
-  if (value === null || value.trim() === "") return undefined;
-  const accent = Number(value);
-  return Number.isFinite(accent) && accent >= 0 && accent <= 360
-    ? Math.round(accent)
-    : undefined;
+function updateCatalogueAppearanceUrl(
+  theme: ThemeSwitcherMode,
+  accentHue: number,
+): void {
+  const current = new URL(globalThis.location.href);
+  if (theme === "system") current.searchParams.delete("theme");
+  else current.searchParams.set("theme", theme);
+  if (accentHue === defaultAccentHue) current.searchParams.delete("accent");
+  else current.searchParams.set("accent", String(accentHue));
+  globalThis.history.replaceState(globalThis.history.state, "", current);
 }
 
 /** Reusable Catalogue appearance state for shell and later preview tools. */
@@ -39,15 +38,36 @@ export function useCatalogueAppearance(url: URL) {
   );
   const terminalTheme = useCatalogueTerminalTheme(theme);
 
+  useEffect(() => {
+    const restoreFromLocation = (): void => {
+      const current = new URL(globalThis.location.href);
+      setTheme(
+        catalogueTheme(current.searchParams.get("theme")) ??
+          catalogueTheme(localStorage.getItem(themeStorageKey)) ?? "system",
+      );
+      setAccentHue(
+        catalogueAccent(current.searchParams.get("accent")) ??
+          catalogueAccent(localStorage.getItem(accentStorageKey)) ??
+          defaultAccentHue,
+      );
+    };
+    globalThis.addEventListener("popstate", restoreFromLocation);
+    return () =>
+      globalThis.removeEventListener("popstate", restoreFromLocation);
+  }, []);
+
   const changeTheme = (next: ThemeSwitcherMode): void => {
     setTheme(next);
     if (next === "system") localStorage.removeItem(themeStorageKey);
     else localStorage.setItem(themeStorageKey, next);
+    updateCatalogueAppearanceUrl(next, accentHue);
   };
   const changeAccentHue = (next: number): void => {
     const accent = Math.max(0, Math.min(360, Math.round(next)));
     setAccentHue(accent);
-    localStorage.setItem(accentStorageKey, String(accent));
+    if (accent === defaultAccentHue) localStorage.removeItem(accentStorageKey);
+    else localStorage.setItem(accentStorageKey, String(accent));
+    updateCatalogueAppearanceUrl(theme, accent);
   };
 
   return {

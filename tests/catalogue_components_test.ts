@@ -25,8 +25,8 @@ import {
 } from "../catalogue/example-images.ts";
 import { componentSearchRecords } from "../catalogue/routes.ts";
 import {
+  explanatoryMatchReason,
   searchRecords,
-  supportingMatchReason,
 } from "../catalogue/search/mod.ts";
 import { catalogue, catalogueEntry } from "./support/catalogue.ts";
 
@@ -140,11 +140,12 @@ Deno.test("Component result cards project the universal engine's match reason", 
   const { registry } = await catalogue();
   const result = searchRecords(
     componentSearchRecords(registry),
-    "executable input",
+    "call to action",
   )[0];
   assert(result?.record.payload !== undefined);
-  const reason = supportingMatchReason(result);
+  const reason = explanatoryMatchReason(result);
   assert(reason !== undefined);
+  assertEquals(result.record.title, "CTA band");
   const markup = renderToStaticMarkup(createElement(ComponentResultCard, {
     entry: result.record.payload,
     showGroup: true,
