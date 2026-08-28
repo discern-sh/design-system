@@ -1,9 +1,7 @@
 import type { Page } from "playwright-core";
-import { catalogueCliCapabilities } from "../../../catalogue/cli-preview.tsx";
 import { catalogueRoutePaths } from "../../../catalogue/routes.ts";
-import { terminalFoundationSheets } from "../../../catalogue/terminal-foundations.ts";
-import { scanBrowserAccessibility } from "../../browser-conformance-support.ts";
 import { withViewport } from "../../viewport.ts";
+import { verifyFoundationsCatalogue } from "./foundations.ts";
 import {
   CATALOGUE_TERMINAL_VIEWPORT,
   eventually,
@@ -60,136 +58,12 @@ async function verifyCliProjectionStyles(page: Page): Promise<void> {
   );
 }
 
-async function verifyTerminalFoundationEnrollment(
-  page: Page,
-): Promise<
-  {
-    readonly sheets: number;
-    readonly specimens: number;
-    readonly animationChecks: number;
-  }
-> {
-  const expectedSheets = terminalFoundationSheets.map(({ id }) => id);
-  const actualSheets = await page.locator(
-    "[data-discern-terminal-foundation]",
-  ).evaluateAll((nodes) =>
-    nodes.map((node) =>
-      node.getAttribute("data-discern-terminal-foundation") ?? ""
-    )
-  );
-  invariant(
-    JSON.stringify(actualSheets) === JSON.stringify(expectedSheets),
-    `Terminal foundation enrollment differs from its registry.\nExpected: ${
-      expectedSheets.join(", ")
-    }\nActual: ${actualSheets.join(", ")}`,
-  );
-  const navigationSheets = await page.locator(
-    '.discern-catalogue-nav a[href^="#terminal-foundation-"]',
-  ).evaluateAll((nodes) =>
-    nodes.map((node) =>
-      node.getAttribute("href")?.replace("#terminal-foundation-", "") ?? ""
-    )
-  );
-  invariant(
-    JSON.stringify(navigationSheets) === JSON.stringify(expectedSheets),
-    `Terminal foundation navigation differs from its registry.\nExpected: ${
-      expectedSheets.join(", ")
-    }\nActual: ${navigationSheets.join(", ")}`,
-  );
-
-  const expectedSpecimens = terminalFoundationSheets.flatMap((sheet) =>
-    sheet.specimens(catalogueCliCapabilities, { theme: "light" }).map((
-      specimen,
-    ) => `${sheet.id}:${specimen.id}`)
-  );
-  const actualSpecimens = await page.locator(
-    "[data-discern-terminal-foundation-specimen]",
-  ).evaluateAll((nodes) =>
-    nodes.map((node) => {
-      const sheet = node.closest<HTMLElement>(
-        "[data-discern-terminal-foundation]",
-      )?.dataset.discernTerminalFoundation ?? "";
-      const specimen = (node as HTMLElement).dataset
-        .discernTerminalFoundationSpecimen ?? "";
-      return `${sheet}:${specimen}`;
-    })
-  );
-  invariant(
-    JSON.stringify(actualSpecimens) === JSON.stringify(expectedSpecimens),
-    `Terminal foundation specimens differ from their registry.\nExpected: ${
-      expectedSpecimens.join(", ")
-    }\nActual: ${actualSpecimens.join(", ")}`,
-  );
-
-  await page.locator(".discern-catalogue-search").click();
-  const searchDialog = page.getByRole("dialog", {
-    name: "Search the Catalogue",
-  });
-  await searchDialog.locator(".discern-search-palette__input").fill("spinner");
-  const motifResult = searchDialog.locator(
-    `.discern-search-palette__result[href="${catalogueRoutePaths.foundations}#terminal-foundation-motifs"]`,
-  );
-  invariant(
-    await motifResult.count() === 1,
-    "Spinner search must resolve the Terminal motifs foundation",
-  );
-  invariant(
-    (await motifResult.textContent())?.includes("Terminal foundation") === true,
-    "Spinner search must identify its foundation context",
-  );
-  await motifResult.click();
-  await searchDialog.waitFor({ state: "hidden" });
-
-  const spinner = page.locator(
-    '[data-discern-terminal-foundation="motifs"] ' +
-      '[data-discern-terminal-foundation-specimen="spinner-phases"]',
-  );
-  const animation = spinner.locator("[data-discern-terminal-animation]");
-  invariant(
-    await animation.getAttribute("data-discern-terminal-animation") ===
-      "paused",
-    "Reduced motion must pause terminal foundation animation initially",
-  );
-  const liveOutput = animation.locator(".discern-catalogue-cli-output");
-  const pausedFrame = await liveOutput.textContent();
-  await page.waitForTimeout(180);
-  invariant(
-    await liveOutput.textContent() === pausedFrame,
-    "Reduced-motion terminal animation advanced while paused",
-  );
-  await animation.getByRole("button", { name: "Play animation" }).click();
-  await eventually(
-    async () => await liveOutput.textContent() !== pausedFrame,
-    "Terminal motif animation did not advance after Play",
-  );
-  await animation.getByRole("button", { name: "Pause animation" }).click();
-  const accessibility = await scanBrowserAccessibility(
-    page,
-    "[data-discern-terminal-foundation]",
-  );
-  invariant(
-    accessibility.violations.length === 0,
-    `Terminal foundations failed accessibility: ${
-      accessibility.violations.map(({ id }) => id).join(", ")
-    }`,
-  );
-  return {
-    sheets: actualSheets.length,
-    specimens: actualSpecimens.length,
-    animationChecks: 3,
-  };
-}
-
 export async function verifyTerminalCatalogue(
   page: Page,
   origin: string,
 ): Promise<TerminalCatalogueEvidence> {
   return await withViewport(page, CATALOGUE_TERMINAL_VIEWPORT, async () => {
-    const foundationsUrl = new URL(catalogueRoutePaths.foundations, origin);
-    foundationsUrl.searchParams.set("theme", "light");
-    await loadCataloguePage(page, foundationsUrl.href);
-
-    const foundations = await verifyTerminalFoundationEnrollment(page);
+    const foundations = await verifyFoundationsCatalogue(page, origin);
 
     const terminalUrl = new URL(catalogueRoutePaths.terminal, origin);
     terminalUrl.searchParams.set("theme", "light");
