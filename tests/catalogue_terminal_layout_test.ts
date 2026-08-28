@@ -6,6 +6,7 @@ import {
 } from "@std/assert";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { stripAnsi } from "../src/cli/ansi.ts";
 import {
   type CliCompositionRecipe,
   cliCompositionRecipes,
@@ -143,6 +144,30 @@ Deno.test("validated capabilities feed the real renderer and inspector authoriti
     'data-discern-terminal-rows="37"',
   );
   assertStringIncludes(projection.inspectorHtml, "repeating-linear-gradient");
+});
+
+Deno.test("guided choice independently demonstrates the contextual menu contract", () => {
+  const recipe = cliCompositionRecipes.find(({ id }) => id === "guided-choice");
+  if (recipe === undefined) throw new TypeError("missing guided-choice recipe");
+  const { state } = parseTerminalLabState(
+    new URLSearchParams("preset=standard"),
+    recipe.capabilityControls,
+  );
+  const output = stripAnsi(
+    projectTerminalLayoutRecipe(recipe, state, "dark").output,
+  );
+
+  assertStringIncludes(recipe.source, 'presentation: "menu"');
+  assertStringIncludes(output, "› × Local artifact");
+  assertStringIncludes(output, "Channels that require deliberate");
+  assertStringIncludes(output, "Unavailable until a local artifact");
+  assertEquals(output.includes("[●]"), false);
+  assertEquals(output.includes("(disabled)"), false);
+  const localRow = output.split("\n").find((line) =>
+    line.includes("Local artifact")
+  );
+  assert(localRow !== undefined);
+  assertEquals(localRow.includes("Unavailable until"), false);
 });
 
 Deno.test("theme changes re-project the same recipe and inspector consistently", () => {

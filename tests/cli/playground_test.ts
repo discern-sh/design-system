@@ -41,6 +41,7 @@ import {
   documentChoices,
   markdownBrowserEntries,
 } from "../../scripts/playground/fixtures.ts";
+import { createPlaygroundNavigator } from "../../scripts/playground/navigation.ts";
 import {
   createPlaygroundRuntime,
   renderJourneyList,
@@ -163,6 +164,50 @@ Deno.test("persistent playground navigation stays behind the screen manager", as
       `${path} bypasses the shared screen-managed navigation boundary`,
     );
   }
+  const navigation = await Deno.readTextFile(
+    "scripts/playground/navigation.ts",
+  );
+  assertStringIncludes(navigation, 'presentation: "menu" as const');
+  assertEquals(navigation.includes('presentation: "browsing"'), false);
+});
+
+Deno.test("playground navigation uses focus-only menus with inspectable unavailable choices", async () => {
+  const io = new FakeTerminalIO([`${DOWN}${ENTER}${DOWN}${ENTER}`], {
+    columns: 70,
+    rows: 20,
+  });
+  const navigator = createPlaygroundNavigator(io);
+  assertEquals(
+    await navigator.choose("contextual-menu", {
+      label: "Choose",
+      choices: [
+        {
+          id: "first",
+          label: "First",
+          description: "The first available route.",
+          value: "first",
+        },
+        {
+          id: "blocked",
+          label: "Blocked",
+          description: "Unavailable until its dependency finishes.",
+          value: "blocked",
+          disabled: true,
+        },
+        {
+          id: "last",
+          label: "Last",
+          description: "The next available route.",
+          value: "last",
+        },
+      ],
+    }),
+    "last",
+  );
+  assertStringIncludes(io.output(), "› × Blocked");
+  assertStringIncludes(io.output(), "Unavailable until its dependency");
+  assertEquals(io.output().includes("[●]"), false);
+  assertEquals(io.output().includes("(disabled)"), false);
 });
 
 Deno.test("public heading treatments have one direct, concise review journey", async () => {

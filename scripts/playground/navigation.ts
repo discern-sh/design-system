@@ -71,7 +71,7 @@ export function createPlaygroundNavigator(io: TerminalIO): PlaygroundNavigator {
     completion: io.capabilities().ansiControl === false
       ? "retain-frame" as const
       : "clear-frame" as const,
-    presentation: "browsing" as const,
+    presentation: "menu" as const,
   };
 
   const choose = async <T>(
