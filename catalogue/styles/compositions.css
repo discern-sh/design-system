@@ -257,7 +257,8 @@
     border-radius: var(--discern-radius-md);
     background: var(--discern-color-canvas);
     color: var(--discern-color-ink);
-    font: var(--discern-font-size-xs)/1.65 var(--discern-font-mono);
+    font-size: var(--discern-font-size-xs);
+    line-height: 1.65;
     tab-size: 2;
     white-space: pre;
   }

@@ -269,7 +269,7 @@ function CompositionDetail(
               copiedLabel="Adaptable example source copied"
             />
           </div>
-          <pre tabIndex={0}><code>{source}</code></pre>
+          <pre className="discern-mono" tabIndex={0}><code>{source}</code></pre>
         </div>
       </details>
       <nav
