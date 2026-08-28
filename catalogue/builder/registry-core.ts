@@ -171,7 +171,7 @@ export const reservedPropsBySlug: ReadonlyMap<
     entry.registry.meta.slug,
     entry.reservedProps,
   ]),
-  );
+);
 
 /** Render/content-model facts derived once from the complete registry core. */
 export const builderCompatibility = deriveBuilderCompatibilityPolicy(
