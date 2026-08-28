@@ -1,15 +1,8 @@
-import { cataloguePurposes } from "../../../src/types/component-meta.ts";
-import {
-  catalogueComponentPath,
-  catalogueGroupFromSlug,
-} from "../../routes.ts";
+import { catalogueGroupFromSlug } from "../../routes.ts";
 import type { LocalNavigationProps } from "../navigation-types.ts";
-import {
-  componentGroupHref,
-  componentPurposeHref,
-  groupComponentEntries,
-  purposeDetails,
-} from "../shared.tsx";
+import { componentGroupHref } from "../shared.tsx";
+import { componentDirectory } from "./collections.ts";
+import { componentDetailHref, parseComponentDetailState } from "./state.ts";
 
 export function ComponentsNavigation(
   { route, url, sortedComponents, onNavigate }: LocalNavigationProps,
@@ -17,14 +10,16 @@ export function ComponentsNavigation(
   if (route.family !== "components") return null;
   const activeGroup = catalogueGroupFromSlug(url.searchParams.get("group"));
   const activePurpose = url.searchParams.get("purpose");
+  const directory = componentDirectory(sortedComponents);
   if (route.page === "detail") {
     const componentEntry = sortedComponents.find(({ meta }) =>
       meta.slug === route.slug
     );
     if (componentEntry === undefined) return null;
-    const groupEntries = sortedComponents.filter(({ meta }) =>
-      meta.group === componentEntry.meta.group
-    );
+    const groupEntries = directory.groups.find(({ group }) =>
+      group === componentEntry.meta.group
+    )?.members ?? [];
+    const detailState = parseComponentDetailState(componentEntry, url, "web");
     return (
       <>
         <a
@@ -38,17 +33,24 @@ export function ComponentsNavigation(
         <span className="discern-catalogue-nav__heading">
           {componentEntry.meta.group}
         </span>
-        {groupEntries.map(({ meta }) => (
+        {groupEntries.map((candidate) => (
           <a
             className="discern-catalogue-nav__child"
-            href={catalogueComponentPath(meta.slug)}
-            aria-current={meta.slug === componentEntry.meta.slug
+            href={componentDetailHref(candidate, {
+              ...detailState,
+              exampleId: candidate.canonicalExamples.some(({ id }) =>
+                  id === detailState.exampleId
+                )
+                ? detailState.exampleId
+                : candidate.canonicalExamples[0]?.id ?? "default",
+            })}
+            aria-current={candidate.meta.slug === componentEntry.meta.slug
               ? "location"
               : undefined}
             onClick={onNavigate}
-            key={meta.slug}
+            key={candidate.meta.slug}
           >
-            {meta.name}
+            {candidate.meta.name}
           </a>
         ))}
       </>
@@ -57,28 +59,29 @@ export function ComponentsNavigation(
   return (
     <>
       <span className="discern-catalogue-nav__heading">Groups</span>
-      {groupComponentEntries(sortedComponents).map(({ group, entries }) => (
+      {directory.groups.map(({ group, members, browseHref }) => (
         <a
           className="discern-catalogue-nav__child"
-          href={componentGroupHref(group)}
+          href={browseHref}
           aria-current={activeGroup === group ? "location" : undefined}
           onClick={onNavigate}
           key={group}
         >
           {group}
-          <small>{entries.length}</small>
+          <small>{members.length}</small>
         </a>
       ))}
       <span className="discern-catalogue-nav__heading">Purposes</span>
-      {cataloguePurposes.map((purpose) => (
+      {directory.purposes.map(({ purpose, label, browseHref, members }) => (
         <a
           className="discern-catalogue-nav__child"
-          href={componentPurposeHref(purpose)}
+          href={browseHref}
           aria-current={activePurpose === purpose ? "location" : undefined}
           onClick={onNavigate}
           key={purpose}
         >
-          {purposeDetails[purpose].label}
+          {label}
+          <small>{members.length}</small>
         </a>
       ))}
     </>

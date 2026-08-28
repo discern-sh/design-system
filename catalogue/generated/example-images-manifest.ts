@@ -3,7 +3,7 @@ import type { ComponentExampleImageManifest } from "../example-images/contract.t
 
 export const componentExampleImageManifest: ComponentExampleImageManifest = {
   "captureContractVersion": "2",
-  "sourceHash": "sha256:c8624e1a130cf0c535df5bc6a85888a73dd4faeea1a76287aca8bda70258d510",
+  "sourceHash": "sha256:337903875e95799dcb6a068e86f5fa46df94b32e435202a6e02c563382097ec6",
   "entries": [
     {
       "slug": "icon",
@@ -3653,9 +3653,9 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "theme": "light",
       "assetPath": "catalogue/generated/example-images/tooltip--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/tooltip--default--light.png",
-      "width": 142,
+      "width": 143,
       "height": 86,
-      "contentHash": "sha256:1df435e962c84c7ed1cd5bf1f668159e9dbae1e5c128d14e99a47e3db840bfe0",
+      "contentHash": "sha256:0c0a9941b2b5dc637dfad941f0a3cb879ec73b48583bea9a1a2777901888aa38",
       "captureContractVersion": "2"
     },
     {
@@ -3681,7 +3681,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/tooltip--bottom--light.png",
       "width": 171,
       "height": 85,
-      "contentHash": "sha256:013b7537d4e4667eeca102141aeba4c7a5fecbf0706d6708551b8a8a1d70030c",
+      "contentHash": "sha256:d09bf5a7685bf9f242f4604c76055efe4d29dc1c103cb20c5b7478826a79b6da",
       "captureContractVersion": "2"
     },
     {
@@ -5917,7 +5917,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/file-change--removed--light.png",
       "width": 960,
       "height": 53,
-      "contentHash": "sha256:908be76044878a3d9257745a05f8bca0e1deb80a4205285dfaa755a5e764eb2c",
+      "contentHash": "sha256:da577f8248659c22f9484f5aef59f89a3bdfc68b81ab6dec8dfb833ce1a6d35a",
       "captureContractVersion": "2"
     },
     {
@@ -5969,7 +5969,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/artifact-card--default--light.png",
       "width": 960,
       "height": 282,
-      "contentHash": "sha256:4b487d8c23c6338db391b4d02fba4e62dc0a6274e98488f49f9b09ca1ea21d99",
+      "contentHash": "sha256:1493fcc9226a66e16ad7416b36ace2db7613b2700a8f591255e5fc5f34237e21",
       "captureContractVersion": "2"
     },
     {

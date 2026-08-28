@@ -1,203 +1,281 @@
-import {
-  type CataloguePurpose,
-  cataloguePurposes,
-  type ComponentGroup,
-  componentGroups,
-} from "../../../src/types/component-meta.ts";
+import { useEffect, useMemo, useState } from "react";
 import type { TerminalThemeVariant } from "../../../src/cli/theme.ts";
 import type { RegistryEntry } from "../../generated/registry.ts";
+import { catalogueRoutePaths } from "../../routes.ts";
+import { announceCatalogueLocationChange } from "../../shell/location.ts";
 import {
-  catalogueGroupFromSlug,
-  catalogueGroupSlug,
-  catalogueRoutePaths,
-} from "../../routes.ts";
-import { ComponentPreview } from "../components/component-preview.tsx";
-import {
-  CataloguePageHeader,
-  cataloguePurpose,
-  CatalogueRouteCard,
-  compareHref,
-  groupComponentEntries,
-  purposeDetails,
-} from "../shared.tsx";
+  ComponentExampleControl,
+  ComponentSpecimen,
+  ComponentSurfaceControl,
+} from "../components/component-preview.tsx";
+import { componentDirectory } from "../components/collections.ts";
+import { componentDetailHref } from "../components/state.ts";
+import { CataloguePageHeader } from "../shared.tsx";
 import type { CatalogueSurface } from "../shared.tsx";
+import {
+  type CompareScope,
+  type CompareState,
+  compareStateHref,
+  parseCompareState,
+  setCompareComponentSurface,
+  setCompareCustomComponents,
+  setCompareGlobalSurface,
+} from "./state.ts";
 
-export type CompareScope =
-  | {
-    readonly kind: "all";
-    readonly title: "Complete system";
-    readonly components: readonly RegistryEntry[];
-  }
-  | {
-    readonly kind: "group";
-    readonly group: ComponentGroup;
-    readonly title: ComponentGroup;
-    readonly components: readonly RegistryEntry[];
-  }
-  | {
-    readonly kind: "purpose";
-    readonly purpose: CataloguePurpose;
-    readonly title: string;
-    readonly components: readonly RegistryEntry[];
-  };
+export { resolveCompareScope } from "./state.ts";
 
-/** Deliberate Compare scope guard, independent of the rendering layer. */
-export function resolveCompareScope(
-  parameters: URLSearchParams,
-  entries: readonly RegistryEntry[],
-): CompareScope | undefined {
-  if (parameters.get("scope") === "all") {
-    return { kind: "all", title: "Complete system", components: entries };
-  }
-  const group = catalogueGroupFromSlug(parameters.get("group"));
-  if (group !== undefined) {
-    return {
-      kind: "group",
-      group,
-      title: group,
-      components: entries.filter(({ meta }) => meta.group === group),
-    };
-  }
-  const purpose = cataloguePurpose(parameters.get("purpose"));
-  if (purpose !== undefined) {
-    return {
-      kind: "purpose",
-      purpose,
-      title: purposeDetails[purpose].label,
-      components: entries.filter(({ meta }) =>
-        meta.purposes?.includes(purpose)
-      ),
-    };
-  }
-  return undefined;
-}
-
-function CompareLanding(
-  { sortedComponents }: { readonly sortedComponents: readonly RegistryEntry[] },
+export function ComparisonItem(
+  {
+    entry,
+    surface,
+    exampleId,
+    terminalTheme,
+    overridden,
+    onSurfaceChange,
+    onExampleChange,
+    onReset,
+    onRemove,
+  }: {
+    readonly entry: RegistryEntry;
+    readonly surface: CatalogueSurface;
+    readonly exampleId: string;
+    readonly terminalTheme: TerminalThemeVariant;
+    readonly overridden: boolean;
+    readonly onSurfaceChange: (surface: CatalogueSurface) => void;
+    readonly onExampleChange: (id: string) => void;
+    readonly onReset?: () => void;
+    readonly onRemove?: () => void;
+  },
 ) {
   return (
-    <div className="discern-catalogue-page">
-      <CataloguePageHeader
-        index="06"
-        eyebrow="Compare"
-        title="Choose what to compare."
-        description="Start with a Group or purpose; choose the complete system only when you need it."
+    <article
+      className="discern-catalogue-compare-item"
+      id={`compare-component-${entry.meta.slug}`}
+      data-discern-component={entry.meta.slug}
+      data-discern-compare-item={entry.meta.slug}
+    >
+      <header>
+        <div>
+          <h3>{entry.meta.name}</h3>
+          <p>{entry.meta.description}</p>
+        </div>
+        <div className="discern-catalogue-compare-item__actions">
+          <a
+            href={componentDetailHref(entry, {
+              surface,
+              exampleId,
+              view: "single",
+            }, { anchor: true })}
+          >
+            Open full detail
+          </a>
+          {onRemove === undefined
+            ? null
+            : <button type="button" onClick={onRemove}>Remove</button>}
+        </div>
+      </header>
+      <div className="discern-catalogue-compare-item__controls">
+        <ComponentSurfaceControl
+          entry={entry}
+          surface={surface}
+          onChange={onSurfaceChange}
+        />
+        <ComponentExampleControl
+          entry={entry}
+          surface={surface}
+          exampleId={exampleId}
+          onChange={onExampleChange}
+        />
+        {overridden && onReset !== undefined
+          ? <button type="button" onClick={onReset}>Use global surface</button>
+          : null}
+      </div>
+      <ComponentSpecimen
+        entry={entry}
+        surface={surface}
+        exampleId={exampleId}
+        view="single"
+        terminalTheme={terminalTheme}
+        headingLevel={4}
       />
-      <section aria-labelledby="compare-groups-title">
-        <div className="discern-catalogue-results-header">
-          <h2 id="compare-groups-title">Compare a Group</h2>
-          <p>Focused sets</p>
-        </div>
-        <div className="discern-catalogue-route-grid">
-          {groupComponentEntries(sortedComponents).map(({ group, entries }) => (
-            <CatalogueRouteCard
-              href={compareHref({ group })}
-              title={group}
-              description={`Compare ${entries.length} Components side by side.`}
-              count={entries.length}
-              key={group}
-            />
-          ))}
-        </div>
-      </section>
-      <section
-        className="discern-catalogue-collections"
-        aria-labelledby="compare-purposes-title"
+    </article>
+  );
+}
+
+function ScopePicker(
+  { state, directory, onChange }: {
+    readonly state: CompareState;
+    readonly directory: ReturnType<typeof componentDirectory>;
+    readonly onChange: (scope: CompareScope) => void;
+  },
+) {
+  const value = (() => {
+    const scope = state.scope;
+    if (scope?.kind === "all") return "all";
+    if (scope?.kind === "custom") return "custom";
+    if (scope?.kind === "group") {
+      return directory.groups.find(({ group }) => group === scope.group)?.id ??
+        "";
+    }
+    if (scope?.kind === "purpose") {
+      return directory.purposes.find(({ purpose }) => purpose === scope.purpose)
+        ?.id ?? "";
+    }
+    return "";
+  })();
+  return (
+    <label className="discern-catalogue-compare-scope">
+      <span>Comparison scope</span>
+      <select
+        value={value}
+        onChange={(event) => {
+          const next = event.currentTarget.value;
+          if (next === "all") {
+            onChange({
+              kind: "all",
+              title: "Complete system",
+              components: directory.components,
+            });
+          } else if (next === "custom") {
+            onChange({
+              kind: "custom",
+              title: "Custom comparison",
+              components: state.scope?.kind === "custom"
+                ? state.scope.components
+                : [],
+            });
+          } else {
+            const collection = [...directory.groups, ...directory.purposes]
+              .find(({ id }) => id === next.toLowerCase());
+            if (collection?.kind === "group") {
+              onChange({
+                kind: "group",
+                group: collection.group,
+                title: collection.label,
+                components: collection.members,
+              });
+            } else if (collection?.kind === "purpose") {
+              onChange({
+                kind: "purpose",
+                purpose: collection.purpose,
+                title: collection.label,
+                components: collection.members,
+              });
+            }
+          }
+        }}
       >
-        <div className="discern-catalogue-results-header">
-          <h2 id="compare-purposes-title">Compare by purpose</h2>
-          <p>Cross-Group collections</p>
-        </div>
-        <div className="discern-catalogue-route-grid">
-          {cataloguePurposes.map((purpose) => {
-            const count = sortedComponents.filter(({ meta }) =>
-              meta.purposes?.includes(purpose)
-            ).length;
-            return (
-              <CatalogueRouteCard
-                href={compareHref({ purpose })}
-                title={purposeDetails[purpose].label}
-                description={purposeDetails[purpose].description}
-                count={count}
-                key={purpose}
-              />
-            );
-          })}
-          <CatalogueRouteCard
-            href={compareHref({ all: true })}
-            eyebrow="Exhaustive"
-            title="Complete system"
-            description="Compare every Component only when a whole-system view is necessary."
-            count={sortedComponents.length}
-          />
-        </div>
-      </section>
-    </div>
+        <option value="" disabled>Choose a focused scope</option>
+        <optgroup label="Groups">
+          {directory.groups.map((collection) => (
+            <option value={collection.id} key={collection.id}>
+              {collection.label} ({collection.members.length})
+            </option>
+          ))}
+        </optgroup>
+        <optgroup label="Purposes">
+          {directory.purposes.map((collection) => (
+            <option value={collection.id} key={collection.id}>
+              {collection.label} ({collection.members.length})
+            </option>
+          ))}
+        </optgroup>
+        <option value="custom">Custom selection</option>
+        <option value="all">
+          Complete system ({directory.components.length})
+        </option>
+      </select>
+    </label>
   );
 }
 
 export function ComparePage(
-  {
-    sortedComponents,
-    defaultSurface,
-    componentSurfaces,
-    terminalTheme,
-    onSurfaceChange,
-  }: {
+  { sortedComponents, defaultSurface, terminalTheme, onSurfaceChange }: {
     readonly sortedComponents: readonly RegistryEntry[];
     readonly defaultSurface: CatalogueSurface;
     readonly componentSurfaces: Readonly<Record<string, CatalogueSurface>>;
     readonly terminalTheme: TerminalThemeVariant;
-    readonly onSurfaceChange: (
-      slug: string,
-      surface: CatalogueSurface,
-    ) => void;
+    readonly onSurfaceChange: (slug: string, surface: CatalogueSurface) => void;
   },
 ) {
-  const scope = resolveCompareScope(
-    new URLSearchParams(globalThis.location.search),
+  const directory = useMemo(() => componentDirectory(sortedComponents), [
     sortedComponents,
-  );
-  if (scope === undefined) {
-    return <CompareLanding sortedComponents={sortedComponents} />;
+  ]);
+  const readState = () => {
+    const parsed = parseCompareState(
+      new URL(globalThis.location.href),
+      sortedComponents,
+    );
+    return parsed.globalSurface === "web" &&
+        !new URL(globalThis.location.href).searchParams.has("surface")
+      ? { ...parsed, globalSurface: defaultSurface }
+      : parsed;
+  };
+  const [state, setState] = useState(readState);
+  useEffect(() => {
+    const restore = () => setState(readState());
+    globalThis.addEventListener("popstate", restore);
+    globalThis.addEventListener("hashchange", restore);
+    return () => {
+      globalThis.removeEventListener("popstate", restore);
+      globalThis.removeEventListener("hashchange", restore);
+    };
+  }, [defaultSurface, sortedComponents]);
+
+  const navigate = (next: CompareState, replace = false): void => {
+    globalThis.history[replace ? "replaceState" : "pushState"](
+      null,
+      "",
+      compareStateHref(next),
+    );
+    setState(next);
+    announceCatalogueLocationChange();
+  };
+  const changeScope = (scope: CompareScope) => {
+    const { current: _current, ...rest } = state;
+    navigate({
+      ...rest,
+      scope,
+      surfaceOverrides: {},
+      exampleOverrides: {},
+    });
+  };
+
+  if (state.scope === undefined) {
+    return (
+      <div className="discern-catalogue-page discern-catalogue-compare-landing">
+        <CataloguePageHeader
+          index="06"
+          eyebrow="Compare"
+          title="Build a deliberate comparison."
+          description="Choose one bounded collection or return to the Components directory."
+        />
+        <div className="discern-catalogue-compare-landing__picker">
+          <ScopePicker
+            state={state}
+            directory={directory}
+            onChange={changeScope}
+          />
+          <a href={catalogueRoutePaths.components}>Return to Components</a>
+        </div>
+        <p className="discern-catalogue-compare-landing__complete">
+          Complete system is secondary: {directory.components.length}{" "}
+          live specimens.
+        </p>
+      </div>
+    );
   }
 
-  const groupedComponents = groupComponentEntries(scope.components);
-  const scopeValue = scope.kind === "all"
-    ? "all"
-    : scope.kind === "group"
-    ? `group:${catalogueGroupSlug(scope.group)}`
-    : `purpose:${scope.purpose}`;
-  const group = scope.kind === "group" ? scope.group : undefined;
-  const purpose = scope.kind === "purpose" ? scope.purpose : undefined;
-  const all = scope.kind === "all";
-
-  const changeScope = (value: string): void => {
-    if (value === "all") {
-      globalThis.location.assign(
-        compareHref({ all: true, surface: defaultSurface }),
-      );
-      return;
-    }
-    const [kind, selection] = value.split(":", 2);
-    if (kind === "group") {
-      const nextGroup = catalogueGroupFromSlug(selection ?? null);
-      if (nextGroup !== undefined) {
-        globalThis.location.assign(compareHref({
-          group: nextGroup,
-          surface: defaultSurface,
-        }));
-      }
-      return;
-    }
-    const nextPurpose = cataloguePurpose(selection ?? null);
-    if (nextPurpose !== undefined) {
-      globalThis.location.assign(compareHref({
-        purpose: nextPurpose,
-        surface: defaultSurface,
-      }));
-    }
-  };
+  const scope = state.scope;
+  const grouped = componentDirectory(scope.components).groups.map((
+    collection,
+  ) => ({ group: collection.group, entries: collection.members }));
+  const custom = scope.kind === "custom";
+  const selected = new Set(scope.components.map(({ meta }) => meta.slug));
+  const remaining = sortedComponents.filter(({ meta }) =>
+    !selected.has(meta.slug)
+  );
+  const resetOverrides = () => navigate({ ...state, surfaceOverrides: {} });
 
   return (
     <div className="discern-catalogue-page discern-catalogue-review">
@@ -205,90 +283,177 @@ export function ComparePage(
         index="06"
         eyebrow="Compare"
         title={scope.title}
-        description={`Comparing ${scope.components.length} Component${
+        description={`${scope.components.length} Component${
           scope.components.length === 1 ? "" : "s"
-        }.`}
+        }, one named specimen each.`}
       />
       <div className="discern-catalogue-review-controls">
-        <label>
-          <span>Comparison scope</span>
-          <select
-            value={scopeValue}
-            onChange={(event) => changeScope(event.currentTarget.value)}
-          >
-            <option value="all">
-              Complete system ({sortedComponents.length})
-            </option>
-            <optgroup label="Groups">
-              {componentGroups.map((candidate) => (
-                <option
-                  value={`group:${catalogueGroupSlug(candidate)}`}
-                  key={candidate}
-                >
-                  {candidate} ({sortedComponents.filter(({ meta }) =>
-                    meta.group === candidate
-                  ).length})
-                </option>
-              ))}
-            </optgroup>
-            <optgroup label="Purposes">
-              {cataloguePurposes.map((candidate) => (
-                <option value={`purpose:${candidate}`} key={candidate}>
-                  {purposeDetails[candidate].label}{" "}
-                  ({sortedComponents.filter(({ meta }) =>
-                    meta.purposes?.includes(candidate)
-                  ).length})
-                </option>
-              ))}
-            </optgroup>
-          </select>
-        </label>
-        <div>
-          <span>Initial surface</span>
+        <ScopePicker
+          state={state}
+          directory={directory}
+          onChange={changeScope}
+        />
+        <fieldset>
+          <legend>Global surface</legend>
           <div className="discern-catalogue-review-surfaces">
-            <a
-              href={compareHref({ group, purpose, all, surface: "web" })}
-              aria-current={defaultSurface === "web" ? "page" : undefined}
+            <button
+              type="button"
+              aria-pressed={state.globalSurface === "web"}
+              onClick={() => navigate(setCompareGlobalSurface(state, "web"))}
             >
-              Web
-            </a>
-            <a
-              href={compareHref({ group, purpose, all, surface: "cli" })}
-              aria-current={defaultSurface === "cli" ? "page" : undefined}
+              Set all to Web
+            </button>
+            <button
+              type="button"
+              aria-pressed={state.globalSurface === "cli"}
+              onClick={() => navigate(setCompareGlobalSurface(state, "cli"))}
             >
-              CLI
-            </a>
+              Set all to CLI
+            </button>
           </div>
-        </div>
-        <a
-          className="discern-catalogue-review-controls__exit"
-          href={catalogueRoutePaths.compare}
+        </fieldset>
+        <button
+          type="button"
+          onClick={resetOverrides}
+          disabled={Object.keys(state.surfaceOverrides).length === 0}
         >
-          Change scope
-        </a>
+          Reset individual overrides
+        </button>
+        {custom
+          ? (
+            <label>
+              <span>Add a Component</span>
+              <select
+                value=""
+                onChange={(event) => {
+                  const slug = event.currentTarget.value;
+                  if (slug) {
+                    navigate(
+                      setCompareCustomComponents(state, [...selected, slug]),
+                    );
+                  }
+                }}
+              >
+                <option value="">Choose Component</option>
+                {remaining.map(({ meta }) => (
+                  <option value={meta.slug} key={meta.slug}>{meta.name}</option>
+                ))}
+              </select>
+            </label>
+          )
+          : null}
       </div>
-      {groupedComponents.map(({ group: candidate, entries }) => (
-        <section
-          className="discern-catalogue-component-group"
-          id={`group-${catalogueGroupSlug(candidate)}`}
-          key={candidate}
-        >
-          <div className="discern-catalogue-subsection__heading">
-            <h2>{candidate}</h2>
-            <span>{entries.length}</span>
+      {scope.kind === "all"
+        ? (
+          <p className="discern-catalogue-review__weight">
+            Complete system · {scope.components.length} live specimens
+          </p>
+        )
+        : null}
+      {scope.components.length === 0
+        ? (
+          <div className="discern-catalogue-empty">
+            <h2>No Components selected</h2>
+            <a href={catalogueRoutePaths.components}>Choose Components</a>
           </div>
-          {entries.map((entry) => (
-            <ComponentPreview
-              entry={entry}
-              surface={componentSurfaces[entry.meta.slug] ?? defaultSurface}
-              terminalTheme={terminalTheme}
-              headingLevel={3}
-              onSurfaceChange={(next) => onSurfaceChange(entry.meta.slug, next)}
-              key={entry.meta.slug}
-            />
-          ))}
-        </section>
-      ))}
+        )
+        : (
+          <div className="discern-catalogue-review__workspace">
+            <nav
+              className="discern-catalogue-review__jump-list"
+              aria-label="Comparison jump list"
+            >
+              {grouped.map(({ group, entries }) => (
+                <div key={group}>
+                  <strong>{group}</strong>
+                  {entries.map(({ meta }) => {
+                    const next = { ...state, current: meta.slug };
+                    return (
+                      <a
+                        href={compareStateHref(next)}
+                        aria-current={state.current === meta.slug
+                          ? "location"
+                          : undefined}
+                        key={meta.slug}
+                      >
+                        {meta.name}
+                      </a>
+                    );
+                  })}
+                </div>
+              ))}
+            </nav>
+            <div className="discern-catalogue-review__population">
+              {grouped.map(({ group, entries }) => (
+                <section
+                  className="discern-catalogue-component-group"
+                  key={group}
+                >
+                  <div className="discern-catalogue-subsection__heading">
+                    <h2>{group}</h2>
+                    <span>{entries.length}</span>
+                  </div>
+                  {entries.map((entry) => {
+                    const itemSurface =
+                      state.surfaceOverrides[entry.meta.slug] ??
+                        state.globalSurface;
+                    const exampleId = state.exampleOverrides[entry.meta.slug] ??
+                      entry.canonicalExamples[0]?.id ?? "default";
+                    return (
+                      <ComparisonItem
+                        entry={entry}
+                        surface={itemSurface}
+                        exampleId={exampleId}
+                        terminalTheme={terminalTheme}
+                        overridden={entry.meta.slug in state.surfaceOverrides}
+                        onSurfaceChange={(surface) => {
+                          onSurfaceChange(entry.meta.slug, surface);
+                          navigate(
+                            setCompareComponentSurface(
+                              state,
+                              entry.meta.slug,
+                              surface,
+                            ),
+                          );
+                        }}
+                        onExampleChange={(id) =>
+                          navigate({
+                            ...state,
+                            exampleOverrides: {
+                              ...state.exampleOverrides,
+                              [entry.meta.slug]: id,
+                            },
+                          })}
+                        onReset={() =>
+                          navigate(
+                            setCompareComponentSurface(
+                              state,
+                              entry.meta.slug,
+                              state.globalSurface,
+                            ),
+                          )}
+                        {...(custom
+                          ? {
+                            onRemove: () =>
+                              navigate(
+                                setCompareCustomComponents(
+                                  state,
+                                  scope.components.filter(({ meta }) =>
+                                    meta.slug !== entry.meta.slug
+                                  ).map(({ meta }) => meta.slug),
+                                ),
+                              ),
+                          }
+                          : {})}
+                        key={entry.meta.slug}
+                      />
+                    );
+                  })}
+                </section>
+              ))}
+            </div>
+          </div>
+        )}
     </div>
   );
 }

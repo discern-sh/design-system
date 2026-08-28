@@ -6,6 +6,7 @@ import {
   assertThrows,
 } from "@std/assert";
 import { encodeHex } from "@std/encoding/hex";
+import { join, toFileUrl } from "@std/path";
 import { Buffer } from "node:buffer";
 import { cliComponentRegistry } from "../src/generated/cli-registry.ts";
 import type { ResolvedComponentExampleDefinition } from "../src/types/component-examples.ts";
@@ -34,6 +35,7 @@ import {
   isComponentExampleCaptureSourcePath,
   pngChunkTypes,
   pngDimensions,
+  repositoryCaptureSourcePaths,
   validateComponentExampleImageCoverage,
   validateComponentExampleRepeatGeometry,
   withIsolatedCapturePage,
@@ -79,6 +81,54 @@ Deno.test("raster staleness excludes consumer-only image presentation", () => {
       "catalogue/example-images/future-capture-helper.ts",
     ),
   );
+});
+
+Deno.test("capture inputs exclude ignored worktree artifacts without losing authored drafts", async () => {
+  const fixture = await Deno.makeTempDir({ prefix: "discern-image-inputs-" });
+  try {
+    const runGit = async (args: readonly string[]): Promise<void> => {
+      const result = await new Deno.Command("git", {
+        args: [...args],
+        cwd: fixture,
+        stdout: "null",
+        stderr: "piped",
+      }).output();
+      if (!result.success) {
+        throw new Error(new TextDecoder().decode(result.stderr));
+      }
+    };
+    await runGit(["init", "--quiet"]);
+    await Deno.mkdir(join(fixture, "capture", "cache-zone"), {
+      recursive: true,
+    });
+    await Deno.writeTextFile(
+      join(fixture, ".gitignore"),
+      "capture/cache-zone/\n",
+    );
+    await Deno.writeTextFile(
+      join(fixture, "capture", "tracked.css"),
+      ".tracked {}\n",
+    );
+    await Deno.writeTextFile(
+      join(fixture, "capture", "authored-draft.css"),
+      ".draft {}\n",
+    );
+    await Deno.writeTextFile(
+      join(fixture, "capture", "cache-zone", "future-local-noise.bin"),
+      "machine-only",
+    );
+    await runGit(["add", ".gitignore", "capture/tracked.css"]);
+
+    assertEquals(
+      await repositoryCaptureSourcePaths(
+        toFileUrl(fixture + "/"),
+        ["capture/"],
+      ),
+      ["capture/authored-draft.css", "capture/tracked.css"],
+    );
+  } finally {
+    await Deno.remove(fixture, { recursive: true });
+  }
 });
 
 Deno.test("canonical Web examples auto-enrol both image themes and no CLI-only fiction", () => {

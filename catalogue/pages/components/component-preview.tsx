@@ -1,188 +1,338 @@
-import { Tooltip } from "../../../src/components/feedback/tooltip/tooltip.tsx";
 import type { TerminalThemeVariant } from "../../../src/cli/theme.ts";
-import { CliComponentPreview } from "../../cli-preview.tsx";
+import { useEffect, useRef } from "react";
+import type { ReactNode } from "react";
+import { CliComponentPreview, CliExamplePreview } from "../../cli-preview.tsx";
 import type { RegistryEntry } from "../../generated/registry.ts";
 import { CopyableCode, stateFragmentId } from "../shared.tsx";
 import type { CatalogueSurface } from "../shared.tsx";
 
-/** Shared complete Component contract used by detail, Compare, and conformance. */
-export function ComponentPreview(
-  { entry, surface, terminalTheme, headingLevel = 4, onSurfaceChange }: {
-    readonly entry: RegistryEntry;
-    readonly surface: CatalogueSurface;
-    readonly terminalTheme: TerminalThemeVariant;
-    readonly headingLevel?: 1 | 3 | 4;
-    readonly onSurfaceChange?: (surface: CatalogueSurface) => void;
+type ExampleHeadingLevel = 2 | 4 | 5;
+
+function exampleHeading(level: ExampleHeadingLevel) {
+  return level === 2 ? "h2" : level === 4 ? "h4" : "h5";
+}
+
+function SpecimenHeadingBoundary(
+  { afterLevel, children }: {
+    readonly afterLevel: ExampleHeadingLevel;
+    readonly children: ReactNode;
   },
 ) {
-  const {
-    meta,
-    webExamples,
-    conformance,
-    selection,
-    propDocumentation,
-    variants,
-  } = entry;
-  const hasGuidance = Boolean(
-    meta.useWhen?.length || meta.notWhen?.length || meta.accessibility?.length,
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const normalize = () => {
+      for (
+        const heading of root.current?.querySelectorAll<HTMLElement>(
+          "h1, h2, h3, h4, h5, h6",
+        ) ?? []
+      ) {
+        const authored = Number(heading.tagName.slice(1));
+        const level = Math.min(6, afterLevel + authored);
+        let proxy = heading.querySelector<HTMLElement>(
+          ":scope > [data-discern-preview-heading-proxy]",
+        );
+        if (proxy === null) {
+          proxy = heading.ownerDocument.createElement("span");
+          proxy.dataset.discernPreviewHeadingProxy = "";
+          heading.dataset.discernPreviewOriginalRole =
+            heading.getAttribute("role") ?? "";
+          heading.dataset.discernPreviewOriginalAriaLevel =
+            heading.getAttribute("aria-level") ?? "";
+        }
+        for (const child of [...heading.childNodes]) {
+          if (child !== proxy) proxy.append(child);
+        }
+        if (proxy.parentNode !== heading) heading.append(proxy);
+        heading.setAttribute("role", "presentation");
+        heading.removeAttribute("aria-level");
+        proxy.setAttribute("role", "heading");
+        proxy.setAttribute("aria-level", String(level));
+        proxy.dataset.discernPreviewHeadingLevel = String(level);
+      }
+    };
+    normalize();
+    const observer = new MutationObserver(normalize);
+    if (root.current) {
+      observer.observe(root.current, { childList: true, subtree: true });
+    }
+    return () => {
+      observer.disconnect();
+      for (
+        const heading of root.current?.querySelectorAll<HTMLElement>(
+          "[data-discern-preview-original-role]",
+        ) ?? []
+      ) {
+        const proxy = heading.querySelector<HTMLElement>(
+          ":scope > [data-discern-preview-heading-proxy]",
+        );
+        if (proxy !== null) {
+          for (const child of [...proxy.childNodes]) {
+            heading.insertBefore(child, proxy);
+          }
+          proxy.remove();
+        }
+        const role = heading.dataset.discernPreviewOriginalRole;
+        const ariaLevel = heading.dataset.discernPreviewOriginalAriaLevel;
+        if (role) heading.setAttribute("role", role);
+        else heading.removeAttribute("role");
+        if (ariaLevel) heading.setAttribute("aria-level", ariaLevel);
+        else heading.removeAttribute("aria-level");
+        delete heading.dataset.discernPreviewOriginalRole;
+        delete heading.dataset.discernPreviewOriginalAriaLevel;
+      }
+    };
+  }, [afterLevel]);
+  return <div ref={root}>{children}</div>;
+}
+
+/** The canonical recorded reason one named example cannot render on a surface. */
+export function componentExampleUnavailableReason(
+  entry: RegistryEntry,
+  exampleId: string,
+  surface: CatalogueSurface,
+): string | undefined {
+  const definition = entry.canonicalExamples.find(({ id }) => id === exampleId);
+  return definition !== undefined && !definition.surfaces.includes(surface)
+    ? definition.reason
+    : undefined;
+}
+
+/** Explicit source destinations; labels never change meaning with preview state. */
+export function ComponentSourceActions(
+  { entry }: { readonly entry: RegistryEntry },
+) {
+  const root =
+    `/catalogue/src/components/${entry.meta.group.toLowerCase()}/${entry.meta.slug}/${entry.meta.slug}`;
+  return (
+    <nav
+      className="discern-catalogue-component__sources"
+      aria-label="Component sources"
+    >
+      <a href={`${root}.tsx`} target="_blank">Open React source</a>
+      {entry.cli.stance === "rendered"
+        ? <a href={`${root}.cli.ts`} target="_blank">Open CLI renderer</a>
+        : null}
+      <a href={`${root}.meta.ts`} target="_blank">Open metadata</a>
+    </nav>
   );
-  const cliUnavailableReason = entry.cli.stance === "exempt"
+}
+
+export function ComponentSurfaceControl(
+  { entry, surface, onChange }: {
+    readonly entry: RegistryEntry;
+    readonly surface: CatalogueSurface;
+    readonly onChange: (surface: CatalogueSurface) => void;
+  },
+) {
+  const cliReason = entry.cli.stance === "exempt"
     ? entry.cli.reason
     : undefined;
-  const resolvedSurface =
-    surface === "cli" && cliUnavailableReason !== undefined ? "web" : surface;
-  const sourceType = resolvedSurface === "web"
-    ? "React"
-    : entry.cli.stance === "rendered"
-    ? "CLI"
-    : "Metadata";
-  const sourceExtension = resolvedSurface === "web"
-    ? "tsx"
-    : entry.cli.stance === "rendered"
-    ? "cli.ts"
-    : "meta.ts";
-  const ComponentHeading = headingLevel === 1
-    ? "h1"
-    : headingLevel === 3
-    ? "h3"
-    : "h4";
   return (
-    <article
-      className="discern-catalogue-component"
-      id={`component-${meta.slug}`}
-      data-discern-component={meta.slug}
-      data-discern-conformance-scenarios={JSON.stringify(conformance)}
+    <fieldset className="discern-catalogue-component__control-group">
+      <legend>Surface</legend>
+      <div className="discern-catalogue-component__surface-picker">
+        {(["web", "cli"] as const).map((candidate) => (
+          <button
+            type="button"
+            aria-pressed={surface === candidate}
+            aria-label={candidate === "cli" && cliReason !== undefined
+              ? `CLI unavailable: ${cliReason}`
+              : candidate === "web"
+              ? "Web"
+              : "CLI"}
+            onClick={() => onChange(candidate)}
+            key={candidate}
+          >
+            {candidate === "web" ? "Web" : "CLI"}
+          </button>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
+export function ComponentExampleControl(
+  { entry, surface, exampleId, onChange }: {
+    readonly entry: RegistryEntry;
+    readonly surface: CatalogueSurface;
+    readonly exampleId: string;
+    readonly onChange: (exampleId: string) => void;
+  },
+) {
+  return (
+    <label className="discern-catalogue-component__example-picker">
+      <span>Example</span>
+      <select
+        value={exampleId}
+        onChange={(event) => onChange(event.currentTarget.value)}
+      >
+        {entry.canonicalExamples.map((example) => {
+          const unavailable = !example.surfaces.includes(surface);
+          return (
+            <option value={example.id} key={example.id}>
+              {example.label}
+              {unavailable
+                ? ` — unavailable on ${surface === "web" ? "Web" : "CLI"}`
+                : ""}
+            </option>
+          );
+        })}
+      </select>
+    </label>
+  );
+}
+
+function WebExample(
+  { entry, exampleId, headingLevel }: {
+    readonly entry: RegistryEntry;
+    readonly exampleId: string;
+    readonly headingLevel: ExampleHeadingLevel;
+  },
+) {
+  const example = entry.webExamples.find(({ id }) => id === exampleId);
+  if (example === undefined) return null;
+  const fragmentId = stateFragmentId(entry.meta.slug, example.id);
+  const Heading = exampleHeading(headingLevel);
+  return (
+    <section
+      className="discern-catalogue-example-state"
+      id={fragmentId}
+      data-discern-example-state={example.id}
     >
       <header>
-        <div className="discern-catalogue-component__identity">
-          <ComponentHeading>{meta.name}</ComponentHeading>
-          <p>{meta.description}</p>
-        </div>
-        <div className="discern-catalogue-component__actions">
-          {onSurfaceChange === undefined ? null : (
-            <div
-              className="discern-catalogue-component__surface-picker"
-              role="group"
-              aria-label={`${meta.name} preview surface`}
-            >
-              {(["web", "cli"] as const).map((candidate) => {
-                if (
-                  candidate === "cli" && cliUnavailableReason !== undefined
-                ) {
-                  return (
-                    <Tooltip
-                      label={cliUnavailableReason}
-                      placement="bottom"
-                      className="discern-catalogue-component__surface-unavailable"
-                      key={candidate}
-                    >
-                      <span tabIndex={0} aria-label="CLI preview unavailable">
-                        <button type="button" disabled>CLI</button>
-                      </span>
-                    </Tooltip>
-                  );
-                }
-                return (
-                  <button
-                    type="button"
-                    aria-pressed={resolvedSurface === candidate}
-                    onClick={() => onSurfaceChange(candidate)}
-                    key={candidate}
-                  >
-                    {candidate === "web" ? "Web" : "CLI"}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-          <a
-            href={`/catalogue/src/components/${meta.group.toLowerCase()}/${meta.slug}/${meta.slug}.${sourceExtension}`}
-            target="_blank"
-            aria-label={`Open ${sourceType} source for ${meta.name}`}
-          >
-            Open source ↗
-          </a>
-        </div>
+        <Heading>{example.label}</Heading>
+        <a
+          href={`#${fragmentId}`}
+          aria-label={`Link to ${entry.meta.name}: ${example.label}`}
+        >
+          #
+        </a>
       </header>
-      {resolvedSurface === "cli"
-        ? <CliComponentPreview entry={entry} theme={terminalTheme} />
-        : (
-          <div className="discern-catalogue-component__canvas">
-            {webExamples.map(({ id, label, Example }) => {
-              const fragmentId = stateFragmentId(meta.slug, id);
-              const showStateHeader = onSurfaceChange === undefined ||
-                webExamples.length !== 1 || id !== "default";
-              return (
-                <section
-                  className="discern-catalogue-example-state"
-                  id={fragmentId}
-                  data-discern-example-state={id}
-                  key={id}
-                >
-                  {showStateHeader
-                    ? (
-                      <header>
-                        <h5>{label}</h5>
-                        <a
-                          href={`#${fragmentId}`}
-                          aria-label={`Link to ${meta.name}: ${label}`}
-                        >
-                          #
-                        </a>
-                      </header>
-                    )
-                    : null}
-                  <div className="discern-catalogue-example-state__canvas">
-                    <Example />
-                  </div>
-                </section>
-              );
-            })}
-          </div>
-        )}
-      {hasGuidance
-        ? (
-          <details className="discern-catalogue-guidance">
-            <summary>Best practices</summary>
-            <div>
-              {meta.useWhen?.length
-                ? (
-                  <div>
-                    <strong>Use when</strong>
-                    <ul>
-                      {meta.useWhen.map((note) => <li key={note}>{note}</li>)}
-                    </ul>
-                  </div>
-                )
-                : null}
-              {meta.notWhen?.length
-                ? (
-                  <div>
-                    <strong>Not when</strong>
-                    <ul>
-                      {meta.notWhen.map((note) => <li key={note}>{note}</li>)}
-                    </ul>
-                  </div>
-                )
-                : null}
-              {meta.accessibility?.length
-                ? (
-                  <div>
-                    <strong>Author responsibilities</strong>
-                    <ul>
-                      {meta.accessibility.map((note) => (
-                        <li key={note}>{note}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )
-                : null}
-            </div>
-          </details>
-        )
-        : null}
+      <div className="discern-catalogue-example-state__canvas">
+        <SpecimenHeadingBoundary afterLevel={headingLevel}>
+          <example.Example />
+        </SpecimenHeadingBoundary>
+      </div>
+    </section>
+  );
+}
+
+/** One named specimen by default; the ordered complete gallery only on request. */
+export function ComponentSpecimen(
+  { entry, surface, exampleId, view, terminalTheme, headingLevel = 5 }: {
+    readonly entry: RegistryEntry;
+    readonly surface: CatalogueSurface;
+    readonly exampleId: string;
+    readonly view: "single" | "all";
+    readonly terminalTheme: TerminalThemeVariant;
+    readonly headingLevel?: ExampleHeadingLevel;
+  },
+) {
+  const definition = entry.canonicalExamples.find(({ id }) => id === exampleId);
+  const reason = componentExampleUnavailableReason(entry, exampleId, surface);
+  const applicable = entry.canonicalExamples.filter(({ surfaces }) =>
+    surfaces.includes(surface)
+  );
+  if (view === "single" && (definition === undefined || reason !== undefined)) {
+    return (
+      <div
+        className="discern-catalogue-component__unavailable"
+        data-discern-example-unavailable={exampleId}
+        role="status"
+      >
+        <strong>
+          {definition?.label ?? exampleId} is unavailable on{" "}
+          {surface === "web" ? "Web" : "CLI"}.
+        </strong>
+        <p>
+          {reason ??
+            "This example is not part of the selected surface contract."}
+        </p>
+      </div>
+    );
+  }
+  const examples = view === "all"
+    ? applicable
+    : definition === undefined
+    ? []
+    : [definition];
+  return (
+    <div
+      className="discern-catalogue-component__canvas"
+      data-discern-specimen-view={view}
+    >
+      {examples.map(({ id }) =>
+        surface === "web"
+          ? (
+            <WebExample
+              entry={entry}
+              exampleId={id}
+              headingLevel={headingLevel}
+              key={id}
+            />
+          )
+          : (
+            <CliExamplePreview
+              entry={entry}
+              exampleId={id}
+              theme={terminalTheme}
+              headingLevel={headingLevel === 4 ? 4 : 5}
+              key={id}
+            />
+          )
+      )}
+    </div>
+  );
+}
+
+/** Closed supporting evidence, ordered from usage to implementation detail. */
+export function ComponentEvidence(
+  { entry }: { readonly entry: RegistryEntry },
+) {
+  const { meta, selection, propDocumentation, variants } = entry;
+  return (
+    <div className="discern-catalogue-component__evidence">
+      <details className="discern-catalogue-guidance">
+        <summary>Usage guidance</summary>
+        <div>
+          {meta.useWhen?.length
+            ? (
+              <div>
+                <strong>Use when</strong>
+                <ul>
+                  {meta.useWhen.map((note) => <li key={note}>{note}</li>)}
+                </ul>
+              </div>
+            )
+            : null}
+          {meta.notWhen?.length
+            ? (
+              <div>
+                <strong>Not when</strong>
+                <ul>
+                  {meta.notWhen.map((note) => <li key={note}>{note}</li>)}
+                </ul>
+              </div>
+            )
+            : null}
+          {meta.accessibility?.length
+            ? (
+              <div>
+                <strong>Author responsibilities</strong>
+                <ul>
+                  {meta.accessibility.map((note) => <li key={note}>{note}</li>)}
+                </ul>
+              </div>
+            )
+            : null}
+          {!meta.useWhen?.length && !meta.notWhen?.length &&
+              !meta.accessibility?.length
+            ? <p>No additional usage guidance is recorded.</p>
+            : null}
+        </div>
+      </details>
       <details className="discern-catalogue-instrument">
-        <summary>Selection and React import</summary>
+        <summary>Selection and import</summary>
         <div>
           <CopyableCode
             label="Component selection"
@@ -238,7 +388,7 @@ export function ComponentPreview(
                       </table>
                     </div>
                   )
-                  : <p>No component-specific props.</p>}
+                  : <p>No Component-specific props.</p>}
               </>
             )
             : <p>{propDocumentation.reason}</p>}
@@ -260,6 +410,59 @@ export function ComponentPreview(
             : null}
         </div>
       </details>
+    </div>
+  );
+}
+
+/** Exhaustive conformance panel retained separately from ordinary human pages. */
+export function ComponentPreview(
+  { entry, surface, terminalTheme, headingLevel = 4, onSurfaceChange }: {
+    readonly entry: RegistryEntry;
+    readonly surface: CatalogueSurface;
+    readonly terminalTheme: TerminalThemeVariant;
+    readonly headingLevel?: 1 | 3 | 4;
+    readonly onSurfaceChange?: (surface: CatalogueSurface) => void;
+  },
+) {
+  const resolvedSurface = surface === "cli" && entry.cli.stance === "exempt"
+    ? "web"
+    : surface;
+  const Heading = headingLevel === 1 ? "h1" : headingLevel === 3 ? "h3" : "h4";
+  return (
+    <article
+      className="discern-catalogue-component"
+      id={`component-${entry.meta.slug}`}
+      data-discern-component={entry.meta.slug}
+      data-discern-conformance-scenarios={JSON.stringify(entry.conformance)}
+    >
+      <header>
+        <div className="discern-catalogue-component__identity">
+          <Heading>{entry.meta.name}</Heading>
+          <p>{entry.meta.description}</p>
+        </div>
+        <div className="discern-catalogue-component__actions">
+          {onSurfaceChange === undefined ? null : (
+            <ComponentSurfaceControl
+              entry={entry}
+              surface={resolvedSurface}
+              onChange={onSurfaceChange}
+            />
+          )}
+          <ComponentSourceActions entry={entry} />
+        </div>
+      </header>
+      {resolvedSurface === "cli"
+        ? <CliComponentPreview entry={entry} theme={terminalTheme} />
+        : (
+          <ComponentSpecimen
+            entry={entry}
+            surface="web"
+            exampleId={entry.canonicalExamples[0]?.id ?? "default"}
+            view="all"
+            terminalTheme={terminalTheme}
+          />
+        )}
+      <ComponentEvidence entry={entry} />
     </article>
   );
 }
