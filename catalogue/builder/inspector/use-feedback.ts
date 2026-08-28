@@ -12,12 +12,6 @@ const TOAST_DURATION_MS = 4800;
 export interface BuilderFeedbackController {
   readonly model: BuilderFeedbackModel;
   announce(message: string, tone?: "status" | "error"): void;
-  /** Compatibility no-op: validation is now owned beside its control. */
-  validation(
-    message: string | null,
-    field?: string,
-    tone?: "status" | "error",
-  ): void;
   storageFailure(message: string | null): void;
   persistence(state: "saving" | "saved" | "unavailable", message: string): void;
   dismissToast(): void;
@@ -86,7 +80,6 @@ export function useBuilderFeedback(
         startTimer(TOAST_DURATION_MS);
       }
     },
-    validation() {},
     storageFailure(message) {
       setModel((current) => ({
         ...current,
