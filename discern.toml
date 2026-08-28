@@ -802,7 +802,7 @@
   # the moment a slot frees. A killed run's slot is released by the operating
   # system, so a crash never blocks the others. 0 (the default) means no cap;
   # 1 runs every suite at full speed, one after another.
-  concurrent_test_runs = 2
+  concurrent_test_runs = 1
 
 # ─────────────────────────────────────────────────────────────────────────────
 # [coupling] — co-change detection: a read-only advisory that mines git history
