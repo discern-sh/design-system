@@ -21,6 +21,7 @@ import {
   catalogueTerminalFoundationPath,
   foundationsPaths,
   foundationsRouteFamily,
+  foundationsUrlChangeEvent,
   type FoundationToken,
   foundationTokenCategories,
   foundationTokenExplorerState,
@@ -297,6 +298,7 @@ function useExplorerState(
       : new URL(globalThis.location.href);
     const url = foundationTokenExplorerUrl(current, next);
     globalThis.history?.replaceState(null, "", `${url.pathname}${url.search}`);
+    globalThis.dispatchEvent(new Event(foundationsUrlChangeEvent));
   };
   return [state, update] as const;
 }

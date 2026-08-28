@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
 import { allTokens } from "../../../src/tokens/tokens.ts";
 import {
   catalogueTerminalFoundationPath,
   foundationsPaths,
+  foundationsUrlChangeEvent,
   foundationTokenCategories,
   foundationTokenCategoryPath,
   foundationTokenExplorerState,
@@ -124,11 +126,23 @@ export function FoundationsNavigationContent(
 export function FoundationsNavigation(
   { route, url, onNavigate }: LocalNavigationProps,
 ) {
+  const [currentUrl, setCurrentUrl] = useState(url);
+  const urlHref = url.href;
+  useEffect(() => setCurrentUrl(new URL(urlHref)), [urlHref]);
+  useEffect(() => {
+    const sync = (): void => setCurrentUrl(new URL(globalThis.location.href));
+    globalThis.addEventListener("popstate", sync);
+    globalThis.addEventListener(foundationsUrlChangeEvent, sync);
+    return () => {
+      globalThis.removeEventListener("popstate", sync);
+      globalThis.removeEventListener(foundationsUrlChangeEvent, sync);
+    };
+  }, []);
   if (route.family !== "foundations") return null;
   return (
     <FoundationsNavigationContent
       route={route}
-      url={url}
+      url={currentUrl}
       onNavigate={onNavigate}
       sheets={terminalFoundationSheets}
     />

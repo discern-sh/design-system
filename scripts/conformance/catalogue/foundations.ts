@@ -114,6 +114,12 @@ async function verifyTokenExplorer(
       )),
     "Typography selection rendered a Token from another category",
   );
+  invariant(
+    await page.locator(
+      `.discern-catalogue-nav a[href="${foundationsPaths.tokens}?category=typography"]`,
+    ).getAttribute("aria-current") === "page",
+    "Foundations navigation did not follow the in-place category URL",
+  );
 
   const search = page.getByRole("search").getByRole("searchbox", {
     name: "Search Tokens",
