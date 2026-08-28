@@ -201,6 +201,9 @@ async function verifyStructuralAuthoring(page: Page): Promise<number> {
       "data-discern-builder-outline-id",
     );
     invariant(nestedId !== null, "nested Button has no stable tree id");
+    const siblingId = await nestedRows.nth(await nestedRows.count() - 2)
+      .getAttribute("data-discern-builder-outline-id");
+    invariant(siblingId !== null, "nested Button has no stable sibling id");
     await nestedButton.getByRole("button", { name: "children", exact: true })
       .click();
     const refusedBefore = await documentWitness(page);
@@ -239,18 +242,28 @@ async function verifyStructuralAuthoring(page: Page): Promise<number> {
     await page.locator(
       `[data-discern-builder-outline-id="${nestedId}"] .discern-builder-layers__select`,
     ).press("Alt+ArrowUp");
-    const keyboardOrder = await outlineLabels(page);
+    const keyboardOrder = await page.locator(OUTLINE_ITEM).evaluateAll(
+      (nodes) =>
+        nodes.map((node) =>
+          node.getAttribute("data-discern-builder-outline-id") ?? ""
+        ),
+    );
     const nestedAfterKeyboard = page.locator(
       `[data-discern-builder-outline-id="${nestedId}"]`,
     );
     await nestedAfterKeyboard.getByLabel("Actions for Button").click();
     await nestedAfterKeyboard.getByRole("button", { name: "Move after" })
       .click();
-    const pointerOrder = await outlineLabels(page);
+    const pointerOrder = await page.locator(OUTLINE_ITEM).evaluateAll(
+      (nodes) =>
+        nodes.map((node) =>
+          node.getAttribute("data-discern-builder-outline-id") ?? ""
+        ),
+    );
     invariant(
-      keyboardOrder.join("|") !== pointerOrder.join("|") &&
-        pointerOrder.at(-1) === "“Text”",
-      "keyboard and pointer reorder did not operate on the same tree",
+      keyboardOrder.indexOf(nestedId) < keyboardOrder.indexOf(siblingId) &&
+        pointerOrder.indexOf(nestedId) > pointerOrder.indexOf(siblingId),
+      `keyboard and pointer reorder did not move ${nestedId} around ${siblingId}`,
     );
     checks += 1;
 
