@@ -21,13 +21,18 @@ import {
   supportingMatchReason,
 } from "../../search/mod.ts";
 import { builderSeededSlugs } from "../defaults.ts";
+import type { BuilderDocument } from "../model.ts";
+import { preflightInsertion } from "../placement.ts";
 import {
   type BuilderRegistryCoreEntry,
   componentEntries,
+  documentPolicy,
+  instantiateComponent,
   registryCoreBySlug,
   registryCoreEntries,
 } from "../registry-core.ts";
 import { rendersFromDefaults } from "../render.tsx";
+import type { InsertionTarget } from "../tree/projection.ts";
 
 /** Generated representative imagery available to discovery UI. */
 export type BuilderDiscoveryImages = Readonly<
@@ -117,6 +122,29 @@ export const builderDiscoveryRecordBySlug: ReadonlyMap<
 export interface BuilderComponentDiscoveryOptions {
   /** Tree-authority compatibility result for an explicitly armed target. */
   readonly compatibleSlugs?: ReadonlySet<string>;
+}
+
+/**
+ * Complete compatible population for an explicit target. Placement preflight
+ * owns every rule; discovery only projects its accepted Component slugs.
+ */
+export function compatibleBuilderDiscoverySlugs(
+  document: BuilderDocument,
+  target: InsertionTarget,
+): ReadonlySet<string> {
+  return new Set(
+    builderDiscoveryRecords.flatMap((record) => {
+      const slug = record.slug;
+      if (slug === undefined) return [];
+      const result = preflightInsertion(
+        document,
+        { kind: "new", child: instantiateComponent(slug) },
+        target,
+        documentPolicy.compatibility,
+      );
+      return result.ok ? [slug] : [];
+    }),
+  );
 }
 
 /**

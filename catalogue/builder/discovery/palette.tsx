@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, DragEvent } from "react";
 import {
   type CataloguePurpose,
@@ -17,6 +17,7 @@ import {
   type BuilderDiscoveryPayload,
   builderDiscoveryRecordById,
   builderPurposeLabel,
+  compatibleBuilderDiscoverySlugs,
   discoverBuilderComponents,
   discoveryImagePresentation,
 } from "./registry.ts";
@@ -286,6 +287,8 @@ export function BuilderDiscovery(
     null,
   );
   const rootRef = useRef<HTMLElement>(null);
+  const contextInvokerRef = useRef<HTMLElement | null>(null);
+  const wasContextualRef = useRef(false);
   const placementRef = useRef<
     {
       readonly id: string;
@@ -294,9 +297,31 @@ export function BuilderDiscovery(
   >(null);
   const pending = tree.pendingInsertionTarget;
   const contextual = pending !== null;
+  const compatibleSlugs = useMemo(
+    () =>
+      pending === null
+        ? undefined
+        : compatibleBuilderDiscoverySlugs(store.document, pending),
+    [store.document, pending],
+  );
   const componentResults = useMemo(
-    () => discoverBuilderComponents(query, contextual ? undefined : purpose),
-    [query, purpose, contextual],
+    () =>
+      discoverBuilderComponents(
+        query,
+        purpose,
+        compatibleSlugs === undefined ? {} : { compatibleSlugs },
+      ),
+    [query, purpose, compatibleSlugs],
+  );
+  const contextualQueryResults = useMemo(
+    () =>
+      contextual && query.trim() !== ""
+        ? discoverBuilderComponents(query, undefined)
+        : [],
+    [contextual, query],
+  );
+  const hiddenContextualMatches = contextualQueryResults.filter(({ record }) =>
+    record.slug !== undefined && !compatibleSlugs?.has(record.slug)
   );
   const templateKind = category === "starters" ? "starter" : "block";
   const templateResults = useMemo(
@@ -337,10 +362,29 @@ export function BuilderDiscovery(
     });
   }, []);
 
+  useLayoutEffect(() => {
+    const wasContextual = wasContextualRef.current;
+    if (contextual && !wasContextual) {
+      const active = globalThis.document.activeElement;
+      contextInvokerRef.current = active instanceof HTMLElement ? active : null;
+    } else if (!contextual && wasContextual) {
+      const invoker = contextInvokerRef.current;
+      if (invoker?.isConnected) invoker.focus();
+      contextInvokerRef.current = null;
+    }
+    wasContextualRef.current = contextual;
+  }, [contextual]);
+
   const componentEntries = componentResults.flatMap((result) => {
     const entry = componentCard(result, query, theme);
     return entry === undefined ? [] : [entry];
   });
+  const incompatibleContextualEntries = hiddenContextualMatches.flatMap(
+    (result) => {
+      const entry = componentCard(result, query, theme);
+      return entry === undefined ? [] : [entry];
+    },
+  );
   const groups = componentGroups.flatMap((group) => {
     const entries = componentEntries.filter((entry) => entry.group === group);
     return entries.length === 0 ? [] : [{ group, entries }];
@@ -447,10 +491,10 @@ export function BuilderDiscovery(
             </strong>
             <span>Showing Components for this explicit target.</span>
             <div>
-              <button type="button" onClick={tree.resetSelection}>
+              <button type="button" onClick={tree.cancelInsertionTarget}>
                 Change target
               </button>
-              <button type="button" onClick={tree.resetSelection}>
+              <button type="button" onClick={tree.cancelInsertionTarget}>
                 Cancel
               </button>
             </div>
@@ -499,6 +543,21 @@ export function BuilderDiscovery(
             />
           </label>
         )}
+      {contextual && hiddenContextualMatches.length > 0
+        ? (
+          <p className="discern-builder-filter-note" role="status">
+            {hiddenContextualMatches.length} matching {hiddenContextualMatches
+                .length === 1
+              ? "Component does"
+              : "Components do"} not fit{" "}
+            {pending?.label}. Compatible matches stay first; change the target
+            to use {hiddenContextualMatches
+                .length === 1
+              ? "it"
+              : "them"}.
+          </p>
+        )
+        : null}
       <div className="discern-builder-discovery-controls">
         {contextual ? null : (
           <nav aria-label="Discovery categories">
@@ -584,6 +643,25 @@ export function BuilderDiscovery(
                     renderCard(entry, contextual)
                   )}
                 </ul>
+                {incompatibleContextualEntries.length === 0 ? null : (
+                  <section
+                    data-discern-builder-incompatible-search-results
+                  >
+                    <h4>
+                      Does not fit target
+                      <span>{incompatibleContextualEntries.length}</span>
+                    </h4>
+                    <p>
+                      Placement is shown for explanation; the tree authority
+                      will refuse it without changing the composition.
+                    </p>
+                    <ul>
+                      {incompatibleContextualEntries.map((entry) =>
+                        renderCard(entry)
+                      )}
+                    </ul>
+                  </section>
+                )}
               </section>
             )
             : groups.map(({ group, entries }) => {
@@ -628,7 +706,11 @@ export function BuilderDiscovery(
         {empty
           ? (
             <div className="discern-builder-empty" role="status">
-              <strong>No discovery results match.</strong>
+              <strong>
+                {contextual
+                  ? "No compatible results match."
+                  : "No discovery results match."}
+              </strong>
               <p>
                 {contextual
                   ? "The current query does not match a Component for this target."

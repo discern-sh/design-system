@@ -247,7 +247,7 @@ function instanceProps(
     if (slot.defaultComponentSlug === undefined) continue;
     props[slot.name] = {
       kind: "slot",
-      children: [instantiateComponent(slot.defaultComponentSlug)],
+      children: [instantiateComponent(slot.defaultComponentSlug, id)],
     };
   }
   return props;

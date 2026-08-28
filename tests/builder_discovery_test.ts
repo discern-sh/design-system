@@ -4,7 +4,9 @@ import { componentGroups } from "../src/types/component-meta.ts";
 import { defaultProps } from "../catalogue/builder/controls.ts";
 import { newBuilderStructuredRow } from "../catalogue/builder/defaults.ts";
 import { documentToTsx } from "../catalogue/builder/export.ts";
+import { emptyDocument, insertChild } from "../catalogue/builder/model.ts";
 import { GuardedBuilderStorage } from "../catalogue/builder/persistence.ts";
+import { armedSlotInsertionTarget } from "../catalogue/builder/tree/projection.ts";
 import {
   BUILDER_RECENT_LIMIT,
   builderPaletteDensities,
@@ -109,18 +111,77 @@ Deno.test("Builder search uses shared intent aliases, source facts, ranking, and
   );
 });
 
-Deno.test("an explicit compatible population suspends unrelated purpose filtering", async () => {
-  const { registry } = await discoveryModules();
+Deno.test("contextual discovery consumes tree preflight and suspends unrelated purpose filtering", async () => {
+  const { registry, core } = await discoveryModules();
   assert(
     !registry.discoverBuilderComponents("Button", "marketing-site")
       .some(({ record }) => record.title === "Button"),
   );
-  assertEquals(
-    registry.discoverBuilderComponents("Button", "marketing-site", {
-      compatibleSlugs: new Set(["button"]),
-    }).map(({ record }) => record.title),
-    ["Button"],
+
+  const hero = core.instantiateComponent(
+    "hero-block",
+    (() => {
+      let index = 0;
+      return () => `hero-${String(++index)}`;
+    })(),
   );
+  const heroDocument = insertChild(
+    emptyDocument("Hero actions"),
+    { parent: "root" },
+    0,
+    hero,
+  );
+  const heroActions = armedSlotInsertionTarget(
+    heroDocument,
+    hero.id,
+    "actions",
+  );
+  assert(heroActions !== undefined);
+  const heroCompatible = registry.compatibleBuilderDiscoverySlugs(
+    heroDocument,
+    heroActions,
+  );
+  assert(heroCompatible.has("button"));
+  const buttonResults = registry.discoverBuilderComponents(
+    "Button",
+    "marketing-site",
+    { compatibleSlugs: heroCompatible },
+  );
+  assertEquals(buttonResults[0]?.record.title, "Button");
+  assert(
+    buttonResults.some(({ record }) => record.title === "Button"),
+  );
+  assert(
+    buttonResults.every(({ record }) =>
+      record.slug !== undefined && heroCompatible.has(record.slug)
+    ),
+  );
+
+  const button = core.instantiateComponent(
+    "button",
+    (() => {
+      let index = 0;
+      return () => `button-${String(++index)}`;
+    })(),
+  );
+  const buttonDocument = insertChild(
+    emptyDocument("Nested interaction"),
+    { parent: "root" },
+    0,
+    button,
+  );
+  const buttonChildren = armedSlotInsertionTarget(
+    buttonDocument,
+    button.id,
+    "children",
+  );
+  assert(buttonChildren !== undefined);
+  const buttonCompatible = registry.compatibleBuilderDiscoverySlugs(
+    buttonDocument,
+    buttonChildren,
+  );
+  assert(!buttonCompatible.has("button"));
+  assert(buttonCompatible.size > 0);
 });
 
 Deno.test("palette source cannot regress to live mounts, dead previews, or unstable images", async () => {
@@ -203,6 +264,16 @@ Deno.test("Builder creation seeds are meaningful while public defaults remain un
     chartCore.registry.builderDefaults,
   ).spec;
   assertEquals(core.instantiateComponent("chart").props.spec, sourceBacked);
+
+  let idIndex = 0;
+  const tooltip = core.instantiateComponent(
+    "tooltip",
+    () => `tooltip-seed-${String(++idIndex)}`,
+  );
+  const trigger = tooltip.props.children;
+  assert(trigger?.kind === "slot");
+  assert(trigger.children[0]?.kind === "component");
+  assertStringIncludes(trigger.children[0].id, "tooltip-seed-");
 });
 
 Deno.test("structured row seeds are valid, unique, human, and focusable by contract", () => {

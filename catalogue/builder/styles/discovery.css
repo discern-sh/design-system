@@ -187,6 +187,29 @@
     list-style: none;
   }
 
+  [data-discern-builder-incompatible-search-results] {
+    margin-block-start: 12px;
+    padding-block-start: 10px;
+    border-top: 1px solid var(--discern-color-border);
+  }
+
+  [data-discern-builder-incompatible-search-results] > h4 {
+    margin: 0 0 4px;
+    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-xs);
+  }
+
+  [data-discern-builder-incompatible-search-results] > h4 > span {
+    margin-inline-start: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  [data-discern-builder-incompatible-search-results] > p {
+    margin: 0 0 8px;
+    color: var(--discern-color-ink-faint);
+    font-size: var(--discern-font-size-xs);
+  }
+
   .discern-builder-card {
     position: relative;
     overflow: hidden;

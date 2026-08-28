@@ -173,7 +173,26 @@ export async function placeNamedComponent(
   if (await components.isVisible()) await components.click();
   const search = page.getByRole("searchbox", { name: "Search components" });
   await search.fill(name);
-  await page.getByRole("button", { name: `Place ${name}`, exact: true }).click({
+  const place = page.getByRole("button", {
+    name: `Place ${name}`,
+    exact: true,
+  });
+  const context = page.locator(".discern-builder-context");
+  if (await context.isVisible()) {
+    invariant(
+      (await context.innerText()).startsWith("Add to "),
+      "Contextual discovery did not name its explicit target",
+    );
+    invariant(
+      await page.locator(".discern-builder-purpose").count() === 0,
+      "Contextual discovery retained an unrelated purpose control",
+    );
+    invariant(
+      (await place.locator("small").innerText()).includes("Fits target"),
+      `${name} did not project the tree authority's positive compatibility`,
+    );
+  }
+  await place.click({
     timeout: ACTION_TIMEOUT,
   });
   await page.waitForFunction(
