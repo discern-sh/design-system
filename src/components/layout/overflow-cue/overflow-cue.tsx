@@ -12,31 +12,19 @@ import { classNames } from "../../class-names.ts";
 /** Logical axes whose remaining scroll distance Overflow cue can signal. */
 export type OverflowCueAxis = (typeof overflowCueAxes)[number];
 
-interface OwnedOverflowCueProps {
-  /** Let Overflow cue create and own the native scroll container. */
-  readonly scrollContainer?: "owned";
+/** Props for the {@linkcode OverflowCue} component. */
+export interface OverflowCueProps
+  extends Omit<HTMLAttributes<HTMLDivElement>, "children"> {
+  /** Logical axes to observe. Defaults to block. */
+  readonly axis?: OverflowCueAxis;
+  /** Own a native viewport, or enhance one namespaced descendant target. */
+  readonly scrollContainer?: "owned" | "descendant";
   /** Accessible name for the owned, keyboard-focusable scroll container. */
   readonly viewportLabel?: string;
   /** Additional class for the owned scroll container. */
   readonly viewportClassName?: string;
+  readonly children: ReactNode;
 }
-
-interface DescendantOverflowCueProps {
-  /** Enhance one descendant carrying `data-discern-overflow-cue-target`. */
-  readonly scrollContainer: "descendant";
-  readonly viewportLabel?: never;
-  readonly viewportClassName?: never;
-}
-
-/** Props for the {@linkcode OverflowCue} component. */
-export type OverflowCueProps =
-  & Omit<HTMLAttributes<HTMLDivElement>, "children">
-  & (OwnedOverflowCueProps | DescendantOverflowCueProps)
-  & {
-    /** Logical axes to observe. Defaults to block. */
-    readonly axis?: OverflowCueAxis;
-    readonly children: ReactNode;
-  };
 
 const initialEdgeState = Object.fromEntries(
   Object.values(overflowCueStateAttributes).map((attribute) => [
@@ -89,11 +77,11 @@ export const OverflowCue: DiscernComponent<HTMLDivElement, OverflowCueProps> =
 
     return (
       <div
+        {...props}
         ref={ref}
         className={classNames("discern-overflow-cue", className)}
         {...rootContract}
         {...{ [overflowCueMarkupAttributes.axis]: axis }}
-        {...props}
       >
         {content}
         {Object.entries(overflowCueEdgeNames).map(([edge, name]) => (

@@ -12,12 +12,12 @@ import type { OverflowCueAxis } from "./overflow-cue.tsx";
 type ScrollPosture = "start" | "middle" | "end";
 
 const viewportStyle = {
-  inlineSize: "19rem",
+  inlineSize: "min(100%, 19rem)",
   blockSize: "10rem",
 } satisfies CSSProperties;
 
 const horizontalStyle = {
-  inlineSize: "19rem",
+  inlineSize: "min(100%, 19rem)",
 } satisfies CSSProperties;
 
 const verticalItems = Array.from(
@@ -129,7 +129,7 @@ function DynamicContentState() {
   return (
     <div
       className="discern-example-stack"
-      style={{ inlineSize: "20rem" }}
+      style={{ inlineSize: "min(100%, 20rem)" }}
     >
       <div className="discern-example-row">
         <button
@@ -192,7 +192,7 @@ function NoOverflowState() {
   return (
     <OverflowCue
       axis="both"
-      style={{ inlineSize: "19rem", blockSize: "8rem" }}
+      style={{ inlineSize: "min(100%, 19rem)", blockSize: "8rem" }}
       viewportLabel="Content that fits"
     >
       <div className="discern-example-stack">
