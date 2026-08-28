@@ -19,11 +19,13 @@ import {
   readBuilderDocumentFile,
   restoreBuilderSession,
 } from "../catalogue/builder/persistence.ts";
+import { builderCompatibility } from "../catalogue/builder/registry-core.ts";
 
 const policy = {
   knownSlugs: new Set<string>(),
   modeledPropsBySlug: new Map<string, ReadonlySet<string>>(),
   reservedPropsBySlug: new Map<string, ReadonlySet<string>>(),
+  compatibility: builderCompatibility,
 };
 
 function document(name: string): BuilderDocument {

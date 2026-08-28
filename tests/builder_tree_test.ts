@@ -22,12 +22,14 @@ import {
 } from "../catalogue/builder/model.ts";
 import { documentPolicy } from "../catalogue/builder/registry-core.ts";
 import {
+  insertionTargetFromNodePointer,
   projectBuilderSelection,
   projectLayers,
   selectionInsertionTarget,
 } from "../catalogue/builder/tree/projection.ts";
 import { initialHistory } from "../catalogue/builder/history.ts";
 import { commitAcceptedDocument } from "../catalogue/builder/workspace/document-store.ts";
+import { reconcileSelection } from "../catalogue/builder/tree/selection.ts";
 
 function node(
   id: string,
@@ -183,19 +185,36 @@ Deno.test("accepted history and insertion projections share one executable autho
   assertEquals(transition.result.error, null);
   const document = transition.history.present;
   const selection = projectBuilderSelection(document, "stack-1");
-  assertEquals(selection.insertionTarget.kind, "slot-end");
-  assertEquals(selection.insertionTarget.location, {
-    parent: "node",
-    nodeId: "stack-1",
-    prop: "children",
-  });
+  assertEquals(selection.insertionTarget.kind, "root");
+  assertEquals(selection.insertionTarget.relation, "end");
+  assertEquals(selection.insertionTarget.location, { parent: "root" });
   assertEquals(projectLayers(document).map(({ child }) => child.id), [
     "stack-1",
     "text-1",
   ]);
   assertEquals(
     selectionInsertionTarget(document, "text-1").kind,
-    "after-selection",
+    "root",
+  );
+  assertEquals(
+    insertionTargetFromNodePointer(document, "stack-1", 0.1)?.relation,
+    "before",
+  );
+  assertEquals(
+    insertionTargetFromNodePointer(document, "stack-1", 0.5)?.relation,
+    "inside",
+  );
+  assertEquals(
+    insertionTargetFromNodePointer(document, "stack-1", 0.9)?.relation,
+    "after",
+  );
+  assertEquals(
+    insertionTargetFromNodePointer(document, "text-1", 0.4)?.relation,
+    "before",
+  );
+  assertEquals(
+    insertionTargetFromNodePointer(document, "text-1", 0.6)?.relation,
+    "after",
   );
 
   const refused = commitAcceptedDocument(
@@ -212,4 +231,71 @@ Deno.test("accepted history and insertion projections share one executable autho
   assert(!refused.result.changed);
   assert(refused.result.error !== null);
   assertEquals(refused.history, transition.history);
+});
+
+Deno.test("selection reconciliation preserves identity and chooses the nearest survivor", () => {
+  const parent = node("parent", "stack", {
+    children: slot(
+      text("first", "First"),
+      text("created", "Created"),
+      text("last", "Last"),
+    ),
+  });
+  const before = insertChild(
+    emptyDocument("Selection"),
+    { parent: "root" },
+    0,
+    parent,
+  );
+  const afterDelete = removeChild(before, "created");
+  assertEquals(
+    reconcileSelection(before, afterDelete, "created"),
+    "last",
+  );
+  assertEquals(reconcileSelection(before, afterDelete, "first"), "first");
+  assertEquals(
+    reconcileSelection(before, removeChild(before, "last"), "last"),
+    "created",
+  );
+
+  const onlyChild = insertChild(
+    emptyDocument("Only child"),
+    { parent: "root" },
+    0,
+    node("only-parent", "stack", {
+      children: slot(text("only", "Only")),
+    }),
+  );
+  assertEquals(
+    reconcileSelection(onlyChild, removeChild(onlyChild, "only"), "only"),
+    "only-parent",
+  );
+  assertEquals(
+    reconcileSelection(
+      onlyChild,
+      removeChild(onlyChild, "only-parent"),
+      "only-parent",
+    ),
+    null,
+  );
+  assertEquals(
+    reconcileSelection(before, afterDelete, "created", "first"),
+    "first",
+  );
+
+  const wrapped = wrapChild(
+    before,
+    "created",
+    node("wrapper", "stack", { children: slot() }),
+  );
+  assertEquals(reconcileSelection(wrapped, before, "wrapper"), "created");
+  assertEquals(reconcileSelection(before, wrapped, "created"), "created");
+
+  const moved = moveChild(
+    before,
+    "created",
+    { parent: "root" },
+    before.children.length,
+  );
+  assertEquals(reconcileSelection(before, moved, "created"), "created");
 });

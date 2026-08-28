@@ -34,6 +34,7 @@ import type {
 } from "../catalogue/builder/model.ts";
 import { BUILDER_DOCUMENT_LIMITS } from "../catalogue/builder/policy.ts";
 import { emptyDocument, insertChild } from "../catalogue/builder/model.ts";
+import { builderCompatibility } from "../catalogue/builder/registry-core.ts";
 
 function node(
   id: string,
@@ -80,6 +81,7 @@ const naming: ExportNaming = {
     ["stack", "Stack"],
   ]),
   requiredFunctionPropsBySlug: new Map(),
+  compatibility: builderCompatibility,
 };
 
 const PACKAGE_ROOT = dirname(dirname(fromFileUrl(import.meta.url)));
@@ -798,6 +800,7 @@ Deno.test("document acceptance rejects React escape hatches and preserves safe a
         ]),
       ],
     ]),
+    compatibility: builderCompatibility,
   };
   const unsafe = [
     {
@@ -1016,6 +1019,7 @@ Deno.test("document acceptance bounds every recursive and retained resource", ()
     knownSlugs: new Set(["stack"]),
     modeledPropsBySlug: propsBySlug,
     reservedPropsBySlug: propsBySlug,
+    compatibility: builderCompatibility,
   };
   const parse = (
     document: BuilderDocument,
@@ -1231,6 +1235,7 @@ Deno.test("document acceptance bounds every recursive and retained resource", ()
     knownSlugs: new Set(["stack"]),
     modeledPropsBySlug: boundedPropsBySlug,
     reservedPropsBySlug: boundedPropsBySlug,
+    compatibility: builderCompatibility,
   };
   const propsDocument = (count: number): BuilderDocument => ({
     version: 1,
@@ -1293,6 +1298,7 @@ Deno.test("required callbacks have explicit deterministic consumer wiring", () =
     requiredFunctionPropsBySlug: new Map([
       ["theme-switcher", [{ name: "onModeChange" }]],
     ]),
+    compatibility: builderCompatibility,
   };
   const document: BuilderDocument = {
     version: 1,
