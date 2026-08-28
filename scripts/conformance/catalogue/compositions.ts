@@ -87,8 +87,7 @@ async function verifyLegacyUpgrade(page: Page, origin: string): Promise<void> {
     `${origin}${compositionsRouteFamily.descriptor.path}?width=narrow#recipe-next-action`,
   );
   await eventually(
-    async () =>
-      new URL(page.url()).pathname === compositionRecipePath("next-action"),
+    () => new URL(page.url()).pathname === compositionRecipePath("next-action"),
     "The former #recipe-* destination did not upgrade to its detail route",
   );
   invariant(
@@ -235,8 +234,7 @@ export async function verifyCompositionsCatalogue(
       await widths.locator('input[value="narrow"]').focus();
       await page.keyboard.press("ArrowRight");
       await eventually(
-        async () =>
-          new URL(page.url()).searchParams.get("width") === "standard",
+        () => new URL(page.url()).searchParams.get("width") === "standard",
         `${recipe.title} width controls were not keyboard-complete`,
       );
       keyboardChecks += 1;
