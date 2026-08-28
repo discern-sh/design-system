@@ -11,6 +11,7 @@ import {
 import { catalogueComponentPath } from "../../../catalogue/routes/components.ts";
 import { scanBrowserAccessibility } from "../../browser-conformance-support.ts";
 import { withViewport } from "../../viewport.ts";
+import { verifyInlineOverflowCueEdges } from "./overflow-cue.ts";
 import {
   CATALOGUE_NARROW_VIEWPORT,
   CATALOGUE_WIDE_VIEWPORT,
@@ -260,6 +261,30 @@ export async function verifyCompositionsCatalogue(
       invariant(
         width.scroll <= width.client,
         "The narrow Composition gallery overflowed the document",
+      );
+
+      const witness = compositionRecipes[0];
+      invariant(witness !== undefined, "Composition cue needs one pattern");
+      const detailUrl = new URL(compositionRecipePath(witness.id), origin);
+      detailUrl.searchParams.set("width", "standard");
+      await loadCataloguePage(page, detailUrl.href);
+      await verifyInlineOverflowCueEdges(
+        page.locator(".discern-catalogue-pattern__canvas-cue"),
+        "Composition preview",
+      );
+      await page.locator(".discern-catalogue-pattern__source > summary")
+        .click();
+      await verifyInlineOverflowCueEdges(
+        page.locator(".discern-catalogue-pattern__source-cue"),
+        "Composition adaptable source",
+      );
+      const detailWidth = await page.evaluate(() => ({
+        client: document.documentElement.clientWidth,
+        scroll: document.documentElement.scrollWidth,
+      }));
+      invariant(
+        detailWidth.scroll <= detailWidth.client,
+        "Composition cues escaped the narrow document",
       );
     });
 

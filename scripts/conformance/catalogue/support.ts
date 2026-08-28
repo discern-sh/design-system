@@ -13,7 +13,7 @@ export function invariant(value: unknown, message: string): asserts value {
 }
 
 export async function eventually(
-  predicate: () => Promise<boolean>,
+  predicate: () => boolean | Promise<boolean>,
   failure: string,
 ): Promise<void> {
   const deadline = Date.now() + 2_000;

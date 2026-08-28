@@ -1272,9 +1272,12 @@ async function verifyThemeSystem(
         `Theme system: ${failure}`
       ),
     );
-    await page.evaluate(() =>
-      localStorage.removeItem("discern-catalogue-theme")
-    );
+    await page.evaluate(() => {
+      localStorage.removeItem("discern-catalogue-theme");
+      const url = new URL(globalThis.location.href);
+      url.searchParams.delete("theme");
+      globalThis.history.replaceState(globalThis.history.state, "", url);
+    });
     await page.reload({ waitUntil: "networkidle" });
     failures.push(
       ...(await inspect()).failures.map((failure) =>

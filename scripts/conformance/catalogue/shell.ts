@@ -263,6 +263,11 @@ async function verifySearch(page: Page, origin: string): Promise<number> {
     }"]`,
   );
   invariant(await cta.count() === 1, "Call to action did not find CTA band");
+  invariant(
+    (await cta.locator(".discern-catalogue-search-match").textContent())
+      ?.includes("Matched alias: call to action") === true,
+    "Global alias match did not explain why call to action found CTA band",
+  );
   await cta.click();
   await page.locator('[data-discern-component="cta-band"] h1').waitFor();
   invariant(
@@ -273,6 +278,10 @@ async function verifySearch(page: Page, origin: string): Promise<number> {
 }
 
 async function verifyAppearance(page: Page, origin: string): Promise<number> {
+  await page.evaluate(() => {
+    localStorage.removeItem("discern-catalogue-accent-hue");
+    localStorage.removeItem("discern-catalogue-theme");
+  });
   const url = new URL(catalogueRoutePaths.overview, origin);
   url.searchParams.set("theme", "light");
   await loadCataloguePage(page, url.href);
@@ -283,6 +292,10 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
   const range = page.getByRole("slider", { name: "Accent hue" });
   await range.fill("128");
   invariant(await range.inputValue() === "128", "Accent hue did not update");
+  invariant(
+    new URL(page.url()).searchParams.get("accent") === "128",
+    "Accent hue did not update the shareable URL",
+  );
   invariant(
     await page.evaluate(() =>
       localStorage.getItem("discern-catalogue-accent-hue") === "128"
@@ -297,18 +310,50 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
       ).then((theme) => theme === "dark"),
     "Appearance Theme control did not update the shell",
   );
+  invariant(
+    new URL(page.url()).searchParams.get("theme") === "dark",
+    "Appearance Theme control left stale URL state",
+  );
   await page.reload({ waitUntil: "networkidle" });
+  invariant(
+    await page.locator(".discern-catalogue-shell").getAttribute(
+      "data-discern-theme",
+    ) === "dark",
+    "Shareable dark Appearance did not survive reload",
+  );
   await appearance.click();
   invariant(
     await page.getByRole("slider", { name: "Accent hue" }).inputValue() ===
       "128",
     "Persisted accent hue did not restore",
   );
+
+  await page.evaluate(() => {
+    const previous = new URL(location.href);
+    previous.searchParams.set("theme", "light");
+    history.pushState(history.state, "", previous);
+    dispatchEvent(new PopStateEvent("popstate"));
+  });
+  await eventually(
+    () =>
+      page.locator(".discern-catalogue-shell").getAttribute(
+        "data-discern-theme",
+      ).then((theme) => theme === "light"),
+    "Appearance did not restore a Back/Forward URL state",
+  );
+  await page.goBack({ waitUntil: "networkidle" });
+  await eventually(
+    () =>
+      page.locator(".discern-catalogue-shell").getAttribute(
+        "data-discern-theme",
+      ).then((theme) => theme === "dark"),
+    "Back did not restore the previous Appearance state",
+  );
   await page.evaluate(() => {
     localStorage.removeItem("discern-catalogue-accent-hue");
     localStorage.removeItem("discern-catalogue-theme");
   });
-  return 4;
+  return 8;
 }
 
 async function verifyPopulationPostures(

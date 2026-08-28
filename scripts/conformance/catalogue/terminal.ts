@@ -11,8 +11,10 @@ import {
 import { projectTerminalLayoutRecipe } from "../../../catalogue/terminal-layout-inspector.tsx";
 import { inspectTerminalLayout } from "../../../src/cli/projection.ts";
 import { withViewport } from "../../viewport.ts";
-import { verifyOverflowCueCatalogue } from "./overflow-cue.ts";
-import { verifyFoundationsCatalogue } from "./foundations.ts";
+import {
+  verifyInlineOverflowCueEdges,
+  verifyOverflowCueCatalogue,
+} from "./overflow-cue.ts";
 import {
   CATALOGUE_NARROW_VIEWPORT,
   CATALOGUE_TERMINAL_VIEWPORT,
@@ -26,9 +28,6 @@ export interface TerminalCatalogueEvidence {
   readonly layouts: number;
   readonly profileChecks: number;
   readonly componentSpecimens: number;
-  readonly foundationSheets: number;
-  readonly foundationSpecimens: number;
-  readonly animationChecks: number;
 }
 
 async function openAppearance(page: Page): Promise<void> {
@@ -75,8 +74,6 @@ export async function verifyTerminalCatalogue(
   origin: string,
 ): Promise<TerminalCatalogueEvidence> {
   return await withViewport(page, CATALOGUE_TERMINAL_VIEWPORT, async () => {
-    const foundations = await verifyFoundationsCatalogue(page, origin);
-
     const terminalUrl = new URL(catalogueRoutePaths.terminal, origin);
     terminalUrl.searchParams.set("theme", "light");
     await loadCataloguePage(page, terminalUrl.href);
@@ -220,6 +217,12 @@ export async function verifyTerminalCatalogue(
     );
     await page.getByText("Adaptable composition source", { exact: true })
       .click();
+    await withViewport(page, CATALOGUE_NARROW_VIEWPORT, async () => {
+      await verifyInlineOverflowCueEdges(
+        page.locator(".discern-catalogue-terminal-lab__source-cue"),
+        "Terminal adaptable source",
+      );
+    });
     await page.getByRole("button", {
       name: "Copy adaptable composition source",
     }).click();
@@ -408,9 +411,6 @@ export async function verifyTerminalCatalogue(
       layouts: layoutCount,
       profileChecks,
       componentSpecimens: componentSpecimenCount,
-      foundationSheets: foundations.sheets,
-      foundationSpecimens: foundations.specimens,
-      animationChecks: foundations.animationChecks,
     };
   });
 }

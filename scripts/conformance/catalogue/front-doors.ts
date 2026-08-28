@@ -6,6 +6,7 @@ import {
 import { componentExplorerHref } from "../../../catalogue/pages/components/state.ts";
 import { scanBrowserAccessibility } from "../../browser-conformance-support.ts";
 import { withViewport } from "../../viewport.ts";
+import { verifyInlineOverflowCueEdges } from "./overflow-cue.ts";
 import { CATALOGUE_NARROW_VIEWPORT } from "./support.ts";
 
 interface LinkProjection {
@@ -244,9 +245,9 @@ async function verifyOverviewDirectory(
 }
 
 /**
- * The landing page served at the site root must carry its one page-owned theme
- * behavior, one h1, one main landmark, and an accessible document in both
- * colour schemes.
+ * The landing page served at the site root must carry its exact selected and
+ * page-owned behaviors, one h1, one main landmark, and an accessible document
+ * in both colour schemes.
  */
 export async function verifyLandingPage(
   page: Page,
@@ -258,17 +259,33 @@ export async function verifyLandingPage(
     await page.emulateMedia({ colorScheme: scheme, reducedMotion: "reduce" });
     await page.goto(`${origin}/`, { waitUntil: "networkidle" });
     const shape = await page.evaluate(() => ({
-      scripts: document.querySelectorAll("script").length,
+      scripts: [...document.querySelectorAll<HTMLScriptElement>("script")]
+        .map((script) => new URL(script.src).pathname),
       headings: document.querySelectorAll("h1").length,
       mains: document.querySelectorAll("main").length,
       root: document.documentElement.hasAttribute("data-discern-root"),
       themeToggle: document.querySelectorAll(
         "[data-discern-theme-control]",
       ).length,
+      overflowCues: document.querySelectorAll(
+        "[data-discern-landing-overflow-target][data-discern-overflow-cue-enhanced]",
+      ).length,
     }));
-    if (shape.scripts !== 1) {
+    const expectedScripts = [
+      "/dist/landing/discern.js",
+      "/dist/landing/overflow-targets.js",
+      "/dist/landing/theme-preference.js",
+    ];
+    if (JSON.stringify(shape.scripts) !== JSON.stringify(expectedScripts)) {
       failures.push(
-        `landing/${scheme}: expected one page-owned theme behavior, found ${shape.scripts} scripts`,
+        `landing/${scheme}: behavior selection differs; expected ${
+          expectedScripts.join(", ")
+        }, found ${shape.scripts.join(", ")}`,
+      );
+    }
+    if (shape.overflowCues !== 8) {
+      failures.push(
+        `landing/${scheme}: expected 8 enhanced wide examples, found ${shape.overflowCues}`,
       );
     }
     if (shape.themeToggle !== 1) {
@@ -405,6 +422,12 @@ export async function verifyLandingPage(
         `landing/reflow: narrow footer exposes ${narrow.footerRouteLinks} of ${catalogueNavigation.length} Catalogue routes`,
       );
     }
+    await verifyInlineOverflowCueEdges(
+      page.locator(
+        '[data-discern-landing-overflow-target="code-listing"]',
+      ).first(),
+      "Landing code example",
+    );
 
     await page.goto(new URL(catalogueRoutePaths.overview, origin).href, {
       waitUntil: "networkidle",

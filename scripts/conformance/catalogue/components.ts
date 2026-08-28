@@ -16,6 +16,7 @@ import {
   scanBrowserAccessibility,
 } from "../../browser-conformance-support.ts";
 import { withViewport } from "../../viewport.ts";
+import { verifyInlineOverflowCueEdges } from "./overflow-cue.ts";
 
 const OUTPUT_ROOT = new URL("../../../dist/conformance/", import.meta.url);
 const WIDE_VIEWPORT = { width: 1440, height: 1000 } as const;
@@ -667,8 +668,9 @@ async function verifyComponentJourneys(
 
     await page.getByRole("button", { name: /All Components \(/ }).click();
     invariant(
-      new URL(page.url()).searchParams.get("all") === "1",
-      "All Components did not enter URL state",
+      new URL(page.url()).searchParams.get("all") === "1" &&
+        new URL(page.url()).searchParams.get("theme") === "dark",
+      "All Components did not enter URL state without losing Appearance",
     );
     invariant(
       await page.locator(".discern-catalogue-component-card").count() ===
@@ -700,11 +702,19 @@ async function verifyComponentJourneys(
 
     await page.getByRole("button", { name: "Reset directory" }).click();
     const query = page.getByRole("searchbox", { name: "Search Components" });
-    await query.fill("executable input");
+    await query.fill("call to action");
+    const ctaResult = page.locator(".discern-catalogue-component-card").filter({
+      has: page.getByRole("heading", {
+        level: 3,
+        name: "CTA band",
+        exact: true,
+      }),
+    });
     invariant(
-      await page.locator(".discern-catalogue-component-card__match").count() >
-        0,
-      "Component explorer discarded the universal engine's match reasons",
+      await ctaResult.count() === 1 &&
+        (await ctaResult.locator(".discern-catalogue-component-card__match")
+            .textContent())?.includes("Matched alias: call to action") === true,
+      "Component explorer disagreed with the global call-to-action alias reason",
     );
     await query.fill("future-no-such-component");
     invariant(
@@ -726,6 +736,7 @@ async function verifyComponentJourneys(
     invariant(detailSlug, "Component detail journey needs one Component");
     const detailUrl = new URL(catalogueComponentPath(detailSlug), origin);
     detailUrl.searchParams.set("theme", "light");
+    detailUrl.searchParams.set("accent", "128");
     await loadCataloguePage(page, detailUrl.href);
     invariant(
       await page.getByRole("main").getByRole("heading", { level: 1 })
@@ -772,8 +783,10 @@ async function verifyComponentJourneys(
     await page.getByRole("button", { name: "CLI", exact: true }).click();
     invariant(
       await exampleSelect.inputValue() === selectedId &&
-        new URL(page.url()).searchParams.get("example") === selectedId,
-      "Web/CLI switching changed canonical example identity",
+        new URL(page.url()).searchParams.get("example") === selectedId &&
+        new URL(page.url()).searchParams.get("theme") === "light" &&
+        new URL(page.url()).searchParams.get("accent") === "128",
+      "Web/CLI switching changed canonical example or Appearance identity",
     );
     await page.getByRole("button", { name: "Web", exact: true }).click();
     const viewAll = page.getByRole("button", { name: /View all / });
@@ -817,6 +830,8 @@ async function verifyComponentJourneys(
     );
 
     const compareUrl = new URL(catalogueRoutePaths.compare, origin);
+    compareUrl.searchParams.set("theme", "dark");
+    compareUrl.searchParams.set("accent", "128");
     await loadCataloguePage(page, compareUrl.href);
     invariant(
       await page.locator(".discern-catalogue-collection-card").count() === 0 &&
@@ -863,8 +878,10 @@ async function verifyComponentJourneys(
     );
     await page.getByRole("button", { name: "Set all to CLI" }).click();
     invariant(
-      new URL(page.url()).searchParams.get("surface") === "cli",
-      "Set all to CLI did not enter URL state",
+      new URL(page.url()).searchParams.get("surface") === "cli" &&
+        new URL(page.url()).searchParams.get("theme") === "dark" &&
+        new URL(page.url()).searchParams.get("accent") === "128",
+      "Set all to CLI did not enter URL state without losing Appearance",
     );
     await compareItems.first().getByRole("button", {
       name: "Web",
@@ -911,7 +928,7 @@ async function verifyComponentJourneys(
             "[data-discern-compare-item] .discern-catalogue-component__evidence",
           ).count() === 0 &&
         await page.getByText(
-            `Complete system · ${expectedComponents.length} live specimens`,
+            `Complete system · ${expectedComponents.length} Component previews`,
           ).count() === 1,
       "Complete-system Compare lost its secondary weight/count posture",
     );
@@ -953,6 +970,46 @@ async function verifyComponentJourneys(
     invariant(
       focus.tag !== "body" && focus.outline >= 2,
       "Keyboard Compare control lost visible focus at narrow width",
+    );
+
+    const tableUrl = new URL(catalogueComponentPath("table"), origin);
+    tableUrl.searchParams.set("example", "dense-overflow");
+    await loadCataloguePage(page, tableUrl.href);
+    await verifyInlineOverflowCueEdges(
+      page.locator("[data-discern-catalogue-specimen-overflow]"),
+      "Web Component specimen",
+    );
+
+    const commandUrl = new URL(catalogueComponentPath("command"), origin);
+    await loadCataloguePage(page, commandUrl.href);
+    await page.getByText("Props and variants", { exact: true }).click();
+    await verifyInlineOverflowCueEdges(
+      page.locator(".discern-catalogue-api__cue"),
+      "Component props table",
+    );
+
+    commandUrl.searchParams.set("surface", "cli");
+    commandUrl.searchParams.set("example", "overflow");
+    await loadCataloguePage(page, commandUrl.href);
+    await verifyInlineOverflowCueEdges(
+      page.locator(".discern-catalogue-cli-preview").first(),
+      "CLI Component preview",
+    );
+
+    const allCompare = new URL(catalogueRoutePaths.compare, origin);
+    allCompare.searchParams.set("scope", "all");
+    await loadCataloguePage(page, allCompare.href);
+    await verifyInlineOverflowCueEdges(
+      page.locator(".discern-catalogue-review__jump-cue"),
+      "Compare jump list",
+    );
+    const completeContainment = await page.evaluate(() => ({
+      clientWidth: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+    }));
+    invariant(
+      completeContainment.scrollWidth <= completeContainment.clientWidth + 1,
+      "Complete Compare cue escaped the narrow document",
     );
   });
 }

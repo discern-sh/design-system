@@ -1,4 +1,5 @@
 import type { Browser } from "playwright-core";
+import { catalogueNavigation } from "../catalogue/routes.ts";
 import { packageManifest } from "../src/manifest.ts";
 import { addPageFailureListeners } from "./browser-conformance-support.ts";
 import { launchBrowser } from "./browser.ts";
@@ -10,6 +11,26 @@ import {
 import type {
   ComponentContractEvidence,
 } from "./conformance/catalogue/components.ts";
+import {
+  assertCatalogueBrowserCheckRunners,
+  assertCatalogueFamilyBrowserCoverage,
+  catalogueBrowserCheckPlan,
+} from "./conformance/catalogue/browser-check-plan.ts";
+import type {
+  CatalogueBrowserCheckId,
+} from "./conformance/catalogue/browser-check-plan.ts";
+import {
+  verifyCompositionsCatalogue,
+} from "./conformance/catalogue/compositions.ts";
+import type {
+  CompositionsCatalogueEvidence,
+} from "./conformance/catalogue/compositions.ts";
+import {
+  verifyFoundationsCatalogue,
+} from "./conformance/catalogue/foundations.ts";
+import type {
+  FoundationsCatalogueEvidence,
+} from "./conformance/catalogue/foundations.ts";
 import { verifyLandingPage } from "./conformance/catalogue/front-doors.ts";
 import { verifyCatalogueShell } from "./conformance/catalogue/shell.ts";
 import type { CatalogueShellEvidence } from "./conformance/catalogue/shell.ts";
@@ -35,9 +56,21 @@ const emptyTerminalEvidence: TerminalCatalogueEvidence = {
   layouts: 0,
   profileChecks: 0,
   componentSpecimens: 0,
-  foundationSheets: 0,
-  foundationSpecimens: 0,
+};
+const emptyFoundationsEvidence: FoundationsCatalogueEvidence = {
+  sheets: 0,
+  specimens: 0,
   animationChecks: 0,
+  tokenChecks: 0,
+  reflowChecks: 0,
+};
+const emptyCompositionsEvidence: CompositionsCatalogueEvidence = {
+  patterns: 0,
+  widthChecks: 0,
+  themeChecks: 0,
+  accessibilityScans: 0,
+  copyChecks: 0,
+  keyboardChecks: 0,
 };
 const emptyShellEvidence: CatalogueShellEvidence = {
   routeShapes: 0,
@@ -64,8 +97,9 @@ export async function runConformance(): Promise<void> {
   let browser: Browser | undefined;
 
   try {
-    browser = await launchBrowser();
-    const context = await browser.newContext({
+    const activeBrowser = await launchBrowser();
+    browser = activeBrowser;
+    const context = await activeBrowser.newContext({
       viewport: WIDE_VIEWPORT,
       reducedMotion: "reduce",
       permissions: ["clipboard-read", "clipboard-write"],
@@ -74,63 +108,63 @@ export async function runConformance(): Promise<void> {
     addPageFailureListeners(page, failures);
 
     let components = emptyComponentEvidence;
-    try {
-      components = await runComponentContractConformance(
-        browser,
-        page,
-        origin,
-        expectedComponents,
-        failures,
-      );
-    } catch (error) {
-      failures.push(
-        `Component contracts: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
-    }
-
+    let foundations = emptyFoundationsEvidence;
+    let compositions = emptyCompositionsEvidence;
     let terminal = emptyTerminalEvidence;
-    try {
-      terminal = await verifyTerminalCatalogue(page, origin);
-    } catch (error) {
-      failures.push(
-        `terminal Catalogue: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
-    }
-
     let shell = emptyShellEvidence;
-    try {
-      shell = await verifyCatalogueShell(page, origin);
-    } catch (error) {
-      failures.push(
-        `Catalogue shell: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
-    }
-
     let landingAxeScans = 0;
-    try {
-      landingAxeScans = await verifyLandingPage(page, origin, failures);
-    } catch (error) {
-      failures.push(
-        `landing page: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
+    const catalogueCheckRunners: Readonly<
+      Record<CatalogueBrowserCheckId, () => Promise<void>>
+    > = {
+      components: async () => {
+        components = await runComponentContractConformance(
+          activeBrowser,
+          page,
+          origin,
+          expectedComponents,
+          failures,
+        );
+      },
+      foundations: async () => {
+        foundations = await verifyFoundationsCatalogue(page, origin);
+      },
+      compositions: async () => {
+        compositions = await verifyCompositionsCatalogue(page, origin);
+      },
+      terminal: async () => {
+        terminal = await verifyTerminalCatalogue(page, origin);
+      },
+      shell: async () => {
+        shell = await verifyCatalogueShell(page, origin);
+      },
+      "front-doors": async () => {
+        landingAxeScans = await verifyLandingPage(page, origin, failures);
+      },
+    };
+    assertCatalogueFamilyBrowserCoverage(catalogueNavigation);
+    assertCatalogueBrowserCheckRunners(
+      Object.keys(catalogueCheckRunners),
+    );
+    for (const check of catalogueBrowserCheckPlan) {
+      try {
+        await catalogueCheckRunners[check.id]();
+      } catch (error) {
+        failures.push(
+          `${check.failureLabel}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
     }
 
     const resilience = await runResilienceConformance(
-      browser,
+      activeBrowser,
       page,
       origin,
       failures,
     );
     const builder = await runBuilderConformance({
-      browser,
+      browser: activeBrowser,
       page,
       origin,
       failures,
@@ -171,9 +205,16 @@ export async function runConformance(): Promise<void> {
         `and ${shell.appearanceChecks} appearance checks. ` +
         `Terminal Catalogue passed ${terminal.profileChecks} profile fits across ` +
         `${terminal.layouts} layouts and re-themed ${terminal.componentSpecimens} ` +
-        `Component specimens. It auto-enrolled ${terminal.foundationSpecimens} ` +
-        `specimens across ${terminal.foundationSheets} terminal foundations with ` +
-        `${terminal.animationChecks} reduced-motion and playback checks. ` +
+        `Component specimens. ` +
+        `Foundations passed ${foundations.tokenChecks} Token checks and auto-enrolled ` +
+        `${foundations.specimens} specimens across ${foundations.sheets} terminal ` +
+        `foundations with ${foundations.animationChecks} reduced-motion and playback ` +
+        `checks plus ${foundations.reflowChecks} reflow checks. ` +
+        `Compositions passed ${compositions.widthChecks} width checks and ` +
+        `${compositions.themeChecks} theme checks across ${compositions.patterns} ` +
+        `patterns, with ${compositions.accessibilityScans} accessibility scans, ` +
+        `${compositions.copyChecks} copy checks, and ${compositions.keyboardChecks} ` +
+        `keyboard checks. ` +
         `The landing page passed ${landingAxeScans} axe scans. ` +
         `Journey resilience passed: ${resilience.journeys} journeys, ` +
         `${resilience.journeyStages} ordered stages, ` +

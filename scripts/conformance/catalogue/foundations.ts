@@ -8,6 +8,7 @@ import { terminalFoundationSheets } from "../../../catalogue/terminal-foundation
 import { allTokens } from "../../../src/tokens/tokens.ts";
 import { scanBrowserAccessibility } from "../../browser-conformance-support.ts";
 import { withViewport } from "../../viewport.ts";
+import { verifyInlineOverflowCueEdges } from "./overflow-cue.ts";
 import {
   CATALOGUE_NARROW_VIEWPORT,
   CATALOGUE_WIDE_VIEWPORT,
@@ -181,6 +182,10 @@ async function verifyTokenExplorer(
       await page.locator("main h1").count() === 1 &&
         await page.locator("main").count() === 1,
       "Token explorer needs one h1 and one main landmark",
+    );
+    await verifyInlineOverflowCueEdges(
+      page.locator(".discern-catalogue-token-categories-cue"),
+      "Token category filters",
     );
     reflowChecks += 1;
   });
