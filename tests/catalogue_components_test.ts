@@ -2,7 +2,27 @@ import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { fromFileUrl, join } from "@std/path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { ComponentPreview } from "../catalogue/pages/components/component-preview.tsx";
+import {
+  ComponentEvidence,
+  componentExampleUnavailableReason,
+  ComponentPreview,
+  ComponentSourceActions,
+  ComponentSpecimen,
+} from "../catalogue/pages/components/component-preview.tsx";
+import {
+  ComponentCollectionCard,
+  ComponentResultCard,
+} from "../catalogue/pages/components/directory-card.tsx";
+import { componentDirectory } from "../catalogue/pages/components/collections.ts";
+import {
+  componentDetailHref,
+  componentExplorerHref,
+  parseComponentDetailState,
+  parseComponentExplorerState,
+} from "../catalogue/pages/components/state.ts";
+import {
+  representativeComponentExampleImage,
+} from "../catalogue/example-images.ts";
 import { catalogue, catalogueEntry } from "./support/catalogue.ts";
 
 const PACKAGE_ROOT = fromFileUrl(new URL("../", import.meta.url));
@@ -36,15 +56,15 @@ Deno.test("complete Component panels keep supporting disclosures closed in canon
     (match) => match[1],
   );
   assertEquals(summaries, [
-    "Best practices",
-    "Selection and React import",
+    "Usage guidance",
+    "Selection and import",
     "Props and variants",
   ]);
   assertEquals([...markup.matchAll(/<details\b/g)].length, summaries.length);
   assert(!/<details\b[^>]*\bopen(?:\s|=|>)/.test(markup));
   assertStringIncludes(markup, "Web");
   assertStringIncludes(markup, "CLI");
-  assertStringIncludes(markup, "Open source");
+  assertStringIncludes(markup, "Open React source");
   assertEquals(markup.includes("<footer"), false);
   assertEquals(
     [
@@ -54,6 +74,175 @@ Deno.test("complete Component panels keep supporting disclosures closed in canon
     ].map((match) => match[1]),
     command.webExamples.map(({ label }) => label),
   );
+});
+
+Deno.test("Component collections derive counts, summaries, imagery, browse, and Compare paths", async () => {
+  const { registry } = await catalogue();
+  const directory = componentDirectory(registry);
+  assertEquals(directory.components, registry);
+  for (const collection of [...directory.groups, ...directory.purposes]) {
+    const markup = renderToStaticMarkup(
+      createElement(ComponentCollectionCard, { collection }),
+    );
+    assertStringIncludes(
+      markup,
+      `${collection.members.length} Component${
+        collection.members.length === 1 ? "" : "s"
+      }`,
+    );
+    assertStringIncludes(markup, `href="${collection.browseHref}`);
+    assertStringIncludes(markup, `href="${collection.compareHref}`);
+    if (collection.members.length > 4) {
+      assertStringIncludes(markup, `+${collection.members.length - 4} more`);
+    }
+    assertEquals(
+      [...markup.matchAll(/data-discern-collection-image=/g)].length,
+      Math.min(3, collection.members.length) * 2,
+    );
+    assertEquals(markup.includes("data-discern-component="), false);
+  }
+});
+
+Deno.test("every Component result card uses generated representative imagery without mounting specimens", async () => {
+  const { registry } = await catalogue();
+  for (const entry of registry) {
+    const markup = renderToStaticMarkup(
+      createElement(ComponentResultCard, {
+        entry,
+        showGroup: true,
+      }),
+    );
+    for (const theme of ["light", "dark"] as const) {
+      const image = representativeComponentExampleImage(
+        entry.meta.slug,
+        theme,
+      );
+      assert(image !== undefined, `${entry.meta.slug}/${theme}`);
+      assertStringIncludes(markup, `src="${image.assetUrl}"`);
+      assertStringIncludes(markup, `width="${image.width}"`);
+      assertStringIncludes(markup, `height="${image.height}"`);
+    }
+    assertStringIncludes(markup, `>${entry.meta.name}</h3>`);
+    assertStringIncludes(
+      markup,
+      entry.cli.stance === "rendered" ? "Web and CLI" : "Web only",
+    );
+    assertEquals(markup.includes("data-discern-component="), false);
+  }
+});
+
+Deno.test("Component explorer and detail URL state round-trip canonical evidence", async () => {
+  const explorer = parseComponentExplorerState(
+    new URL(
+      "https://catalogue.example/catalogue/components/?q=proof&group=workflow&purpose=displaying-tool-output&all=1",
+    ),
+  );
+  assertEquals(
+    componentExplorerHref(explorer),
+    "/catalogue/components/?q=proof&group=workflow&purpose=displaying-tool-output&all=1",
+  );
+
+  const { registry } = await catalogue();
+  const command = catalogueEntry(registry, "command");
+  const detail = parseComponentDetailState(
+    command,
+    new URL(
+      "https://catalogue.example/catalogue/components/command/?surface=cli&example=failure&view=all#component-command--cli-failure",
+    ),
+    "web",
+  );
+  assertEquals(detail, {
+    surface: "cli",
+    exampleId: "failure",
+    view: "all",
+  });
+  assertEquals(
+    componentDetailHref(command, detail, { anchor: true }),
+    "/catalogue/components/command/?surface=cli&example=failure&view=all#component-command--cli-failure",
+  );
+});
+
+Deno.test("detail specimens keep canonical identity across surfaces and make complete review deliberate", async () => {
+  const { registry } = await catalogue();
+  const command = catalogueEntry(registry, "command");
+  const shared = command.canonicalExamples.find(({ surfaces }) =>
+    surfaces.includes("web") && surfaces.includes("cli")
+  );
+  assert(shared !== undefined);
+  for (const surface of ["web", "cli"] as const) {
+    const markup = renderToStaticMarkup(
+      createElement(ComponentSpecimen, {
+        entry: command,
+        surface,
+        exampleId: shared.id,
+        view: "single",
+        terminalTheme: "dark",
+        headingLevel: 2,
+      }),
+    );
+    assertEquals(
+      [...markup.matchAll(/data-discern-(?:cli-)?example-state=/g)].length,
+      1,
+    );
+    assertStringIncludes(markup, shared.label);
+  }
+  const allMarkup = renderToStaticMarkup(
+    createElement(ComponentSpecimen, {
+      entry: command,
+      surface: "web",
+      exampleId: shared.id,
+      view: "all",
+      terminalTheme: "dark",
+      headingLevel: 2,
+    }),
+  );
+  assertEquals(
+    [...allMarkup.matchAll(/data-discern-example-state=/g)].length,
+    command.webExamples.length,
+  );
+
+  const surfaceOnly =
+    registry.flatMap((entry) =>
+      entry.canonicalExamples.filter(({ surfaces }) => surfaces.length === 1)
+        .map((example) => ({ entry, example }))
+    )[0];
+  assert(surfaceOnly !== undefined);
+  const unavailableSurface = surfaceOnly.example.surfaces.includes("web")
+    ? "cli"
+    : "web";
+  assertEquals(
+    componentExampleUnavailableReason(
+      surfaceOnly.entry,
+      surfaceOnly.example.id,
+      unavailableSurface,
+    ),
+    surfaceOnly.example.reason,
+  );
+});
+
+Deno.test("detail evidence stays closed and source labels describe their destinations", async () => {
+  const { registry } = await catalogue();
+  const command = catalogueEntry(registry, "command");
+  const evidence = renderToStaticMarkup(
+    createElement(ComponentEvidence, { entry: command }),
+  );
+  assertEquals(
+    [...evidence.matchAll(/<summary>([^<]+)<\/summary>/g)].map((match) =>
+      match[1]
+    ),
+    ["Usage guidance", "Selection and import", "Props and variants"],
+  );
+  assert(!/<details\b[^>]*\bopen(?:\s|=|>)/.test(evidence));
+
+  const sources = renderToStaticMarkup(
+    createElement(ComponentSourceActions, { entry: command }),
+  );
+  assertStringIncludes(sources, "Open React source");
+  assertStringIncludes(sources, "/command/command.tsx");
+  assertStringIncludes(sources, "Open CLI renderer");
+  assertStringIncludes(sources, "/command/command.cli.ts");
+  assertStringIncludes(sources, "Open metadata");
+  assertStringIncludes(sources, "/command/command.meta.ts");
 });
 
 Deno.test("Command text carries the stronger readable type treatment", async () => {

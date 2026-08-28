@@ -5,7 +5,6 @@ import {
   assertNotEquals,
   assertStringIncludes,
 } from "@std/assert";
-import { fromFileUrl, join } from "@std/path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { stripAnsi } from "../src/cli/ansi.ts";
@@ -15,49 +14,28 @@ import { measureText } from "../src/cli/text.ts";
 import {
   catalogueCliCapabilities,
   CliComponentPreview,
+  CliExamplePreview,
 } from "../catalogue/cli-preview.tsx";
 import { registry } from "../catalogue/generated/registry.ts";
 
-const PACKAGE_ROOT = fromFileUrl(new URL("../", import.meta.url));
-
-Deno.test("browser Catalogue owns one bare CLI projection authority", async () => {
-  const catalogueRoot = join(PACKAGE_ROOT, "catalogue");
-  const authoredSources: Array<
-    { readonly path: string; readonly source: string }
-  > = [];
-  for await (const entry of Deno.readDir(catalogueRoot)) {
-    if (!entry.isFile || !entry.name.endsWith(".tsx")) continue;
-    const path = join(catalogueRoot, entry.name);
-    authoredSources.push({ path, source: await Deno.readTextFile(path) });
-  }
-
-  const renderOwners = authoredSources.filter(({ source }) =>
-    source.includes("cli.render(") ||
-    source.includes("projectTerminalInlineHtml(")
-  );
-  assertEquals(
-    renderOwners.map(({ path }) => path),
-    [join(catalogueRoot, "cli-preview.tsx")],
-    "new browser CLI projection containers must join the shared preview",
-  );
-
-  const preview = renderOwners[0]?.source ?? "";
-  assertStringIncludes(preview, "<pre");
+Deno.test("one named CLI specimen uses the bare shared projection", () => {
+  const entry = registry.find(({ cli }) => cli.stance === "rendered");
+  assert(entry !== undefined && entry.cli.stance === "rendered");
+  const example = entry.cli.examples[0];
+  assert(example !== undefined);
+  const markup = renderToStaticMarkup(createElement(CliExamplePreview, {
+    entry,
+    exampleId: example.id,
+    theme: "dark",
+  }));
   assertStringIncludes(
-    preview,
-    'className="discern-catalogue-cli-output"',
+    markup,
+    `data-discern-cli-example-state="${example.id}"`,
   );
-  assertStringIncludes(preview, "projectTerminalInlineHtml(value)");
-  assert(!preview.includes("exampleLabel("));
-  assertStringIncludes(preview, "const { id, label, props } = example");
-  assert(
-    !/<Terminal(?:\s|>)/.test(preview),
-    "CLI output must not grow window chrome",
-  );
-  assert(
-    !preview.includes("components/display/terminal"),
-    "browser projection must not depend on the showcase Terminal component",
-  );
+  assertStringIncludes(markup, example.label);
+  assertEquals([...markup.matchAll(/<pre\b/g)].length, 1);
+  assertStringIncludes(markup, 'class="discern-catalogue-cli-output"');
+  assertEquals(markup.includes("discern-terminal"), false);
 });
 
 Deno.test("browser Catalogue projects every declared CLI stance from disk", () => {
