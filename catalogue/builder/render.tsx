@@ -12,11 +12,11 @@ import {
 } from "./policy.ts";
 import {
   componentBySlug,
-  controlsBySlug,
   documentPolicy,
   entryBySlug,
+  registryCoreBySlug,
   requiredFunctionPropsBySlug,
-} from "./registry-index.ts";
+} from "./registry-core.ts";
 
 /** Hooks the interactive canvas layers onto the shared renderer. */
 export interface RenderOptions {
@@ -116,8 +116,10 @@ function noop(): void {}
  * element-only slots without such a default need the user before rendering.
  */
 export function rendersFromDefaults(slug: string): boolean {
-  const defaults = entryBySlug.get(slug)?.builderDefaults ?? {};
-  return controlsBySlug(slug).every(
+  const core = registryCoreBySlug.get(slug);
+  if (core === undefined) return false;
+  const defaults = core.registry.builderDefaults;
+  return core.controls.every(
     (control) =>
       !control.required ||
       ((control.control !== "json" ||
