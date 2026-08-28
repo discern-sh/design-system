@@ -22,6 +22,7 @@ import { CodeListing } from "../../src/components/editorial/code-listing/code-li
 import { DataFigure } from "../../src/components/editorial/data-figure/data-figure.tsx";
 import { Diagram } from "../../src/components/editorial/diagram/diagram.tsx";
 import { Markdown } from "../../src/components/editorial/markdown/markdown.tsx";
+import { TableOfContents } from "../../src/components/editorial/table-of-contents/table-of-contents.tsx";
 import { Grid } from "../../src/components/layout/grid/grid.tsx";
 import { Stack } from "../../src/components/layout/stack/stack.tsx";
 import { ClosingStatement } from "../../src/components/marketing/closing-statement/closing-statement.tsx";
@@ -52,7 +53,7 @@ import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import { projectTerminalInlineHtml } from "../../src/cli/projection.ts";
 import type { FlowDiagramSpec } from "../../src/diagram/kinds/flow/flow.spec.ts";
 import type { RuntimeAssetSelection } from "../../src/runtime-assets.ts";
-import { catalogueRoutePaths } from "../routes.ts";
+import { catalogueNavigation, catalogueRoutePaths } from "../routes.ts";
 import type { LandingSystemFacts } from "./facts.ts";
 
 /** Canonical package identity shared by every landing surface. */
@@ -86,6 +87,7 @@ export const landingSelection: readonly string[] = [
   "split-feature",
   "stack",
   "survey-backdrop",
+  "table-of-contents",
   "terminal",
   "theme-toggle",
   "verification-report",
@@ -94,6 +96,19 @@ export const landingSelection: readonly string[] = [
 
 /** Assets the landing emission carries; the document links only these. */
 export const landingAssets: readonly RuntimeAssetSelection[] = ["fonts"];
+
+/** Canonical Catalogue destinations projected into the public front door. */
+export const landingCatalogueDestinations = catalogueNavigation;
+
+/** Page-owned narrative anchors, deliberately separate from Catalogue routes. */
+export const landingPageSections = Object.freeze([
+  { id: "landing-guarantees", label: "Guarantees" },
+  { id: "landing-browser", label: "Browser" },
+  { id: "landing-terminal", label: "Terminal" },
+  { id: "landing-system-evidence", label: "System evidence" },
+  { id: "landing-principles", label: "Design principles" },
+  { id: "landing-adoption", label: "Adoption questions" },
+]);
 
 /** Build-measured facts the landing page presents instead of authored claims. */
 export interface LandingFacts {
@@ -379,6 +394,25 @@ function TypedDiagramSection() {
   );
 }
 
+function LandingPageNavigation() {
+  return (
+    <MarketingSection
+      surface="surface"
+      frame="wide"
+      aria-label="On this page"
+    >
+      <TableOfContents
+        title="On this page"
+        label="On this page"
+        items={landingPageSections.map(({ id, label }) => ({
+          label,
+          href: `#${id}`,
+        }))}
+      />
+    </MarketingSection>
+  );
+}
+
 function ComponentCoverageSection(
   { system }: { readonly system: LandingSystemFacts },
 ) {
@@ -470,7 +504,7 @@ function MarkdownProjectionSection() {
 
 function LandingMain({ facts }: { readonly facts: LandingFacts }) {
   return (
-    <main id="main-content">
+    <main id="main-content" tabIndex={-1}>
       <HeroBlock
         layout="showcase"
         surface="atmospheric"
@@ -491,11 +525,14 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
         }
         actions={
           <>
-            <Button href={JSR_URL}>
-              Install from JSR
+            <Button
+              href={catalogueRoutePaths.components}
+              data-discern-primary-catalogue-action=""
+            >
+              Find a Component
             </Button>
-            <Button href={catalogueRoutePaths.overview} variant="secondary">
-              Browse the catalogue
+            <Button href={JSR_URL} variant="secondary">
+              Install from JSR
             </Button>
           </>
         }
@@ -537,7 +574,10 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
           },
         ]}
       />
+      <LandingPageNavigation />
       <FeatureBento
+        id="landing-guarantees"
+        tabIndex={-1}
         eyebrow="Guarantees"
         title="Promises a test suite keeps."
         description={
@@ -566,6 +606,8 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
         ]}
       />
       <SplitFeature
+        id="landing-browser"
+        tabIndex={-1}
         eyebrow="Browser"
         title="Ship static HTML. Keep the framework optional."
         description={
@@ -595,7 +637,7 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
         ]}
         actions={
           <Button href={catalogueRoutePaths.foundations} variant="secondary">
-            Review the tokens
+            Explore Tokens
           </Button>
         }
         media={
@@ -609,6 +651,8 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
         surface="sunken"
       />
       <SplitFeature
+        id="landing-terminal"
+        tabIndex={-1}
         eyebrow="Terminal"
         title="The same system, rendered as text."
         description={
@@ -653,10 +697,14 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
         }
         reverse
       />
-      <TypedDiagramSection />
-      <ComponentCoverageSection system={facts.system} />
-      <MarkdownProjectionSection />
+      <div id="landing-system-evidence" tabIndex={-1}>
+        <TypedDiagramSection />
+        <ComponentCoverageSection system={facts.system} />
+        <MarkdownProjectionSection />
+      </div>
       <NarrativeChapter
+        id="landing-principles"
+        tabIndex={-1}
         eyebrow="Design principles"
         title="Strict inside the package. Flexible in your product."
         lead={
@@ -689,6 +737,8 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
         </p>
       </NarrativeChapter>
       <FaqBlock
+        id="landing-adoption"
+        tabIndex={-1}
         eyebrow="Before you adopt it"
         title="The questions worth asking a design system."
         items={[
@@ -742,14 +792,14 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
         title="Select. Emit. Ship."
         description={
           <p>
-            Open the catalogue to inspect every component, token, and terminal
-            frame this page is built from.
+            Find the Component you need, then inspect its bounded browser and
+            terminal examples.
           </p>
         }
         actions={
           <>
-            <Button href={catalogueRoutePaths.overview}>
-              Browse the catalogue
+            <Button href={catalogueRoutePaths.components}>
+              Find a Component
             </Button>
             <Button href={JSR_URL} variant="secondary">
               {LANDING_PACKAGE}
@@ -779,12 +829,12 @@ export function LandingPage({ facts }: { readonly facts: LandingFacts }) {
         brandTypeface="display"
         homeHref="/"
         collapseNavOnNarrow
-        navItems={[
-          { label: "Components", href: catalogueRoutePaths.components },
-          { label: "Foundations", href: catalogueRoutePaths.foundations },
-          { label: "Compositions", href: catalogueRoutePaths.compositions },
-          { label: "Terminal", href: catalogueRoutePaths.terminal },
-        ]}
+        navLabel="Catalogue"
+        navItems={landingCatalogueDestinations.map(({ label, path }) => ({
+          label,
+          href: path,
+        }))}
+        data-discern-catalogue-navigation="landing-header"
         actions={
           <>
             <ThemeToggle
@@ -793,8 +843,8 @@ export function LandingPage({ facts }: { readonly facts: LandingFacts }) {
               variant="quiet"
               data-discern-theme-control=""
             />
-            <Button href={catalogueRoutePaths.overview} size="sm">
-              Catalogue
+            <Button href={catalogueRoutePaths.components} size="sm">
+              Find a Component
             </Button>
           </>
         }
@@ -813,17 +863,10 @@ export function LandingPage({ facts }: { readonly facts: LandingFacts }) {
         groups={[
           {
             title: "Catalogue",
-            links: [
-              { label: "Overview", href: catalogueRoutePaths.overview },
-              { label: "Components", href: catalogueRoutePaths.components },
-              { label: "Foundations", href: catalogueRoutePaths.foundations },
-              {
-                label: "Compositions",
-                href: catalogueRoutePaths.compositions,
-              },
-              { label: "Terminal layouts", href: catalogueRoutePaths.terminal },
-              { label: "Review mode", href: catalogueRoutePaths.review },
-            ],
+            links: landingCatalogueDestinations.map(({ label, path }) => ({
+              label,
+              href: path,
+            })),
           },
           {
             title: "Package",
@@ -835,6 +878,7 @@ export function LandingPage({ facts }: { readonly facts: LandingFacts }) {
         ]}
         legal={`Apache-2.0 · ${LANDING_PACKAGE} v${facts.version}`}
         meta="Static HTML and CSS with one page-owned theme preference; no hydration."
+        data-discern-catalogue-navigation="landing-footer"
       />
     </>
   );
