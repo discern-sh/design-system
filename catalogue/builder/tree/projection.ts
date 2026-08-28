@@ -10,35 +10,17 @@ import type {
 import { findChild } from "../model.ts";
 import { entryBySlug, registryCoreBySlug } from "../registry-core.ts";
 
-/** The exact place discovery displays and tree commands execute. */
-export type InsertionTarget =
-  | {
-    readonly kind: "root-end";
-    readonly location: Extract<BuilderLocation, { parent: "root" }>;
-    readonly index: number;
-    readonly label: string;
-  }
-  | {
-    readonly kind: "slot-end" | "armed-slot";
-    readonly location: Extract<BuilderLocation, { parent: "node" }>;
-    readonly index: number;
-    readonly ownerId: string;
-    readonly prop: string;
-    readonly label: string;
-  }
-  | {
-    readonly kind: "after-selection";
-    readonly location: BuilderLocation;
-    readonly index: number;
-    readonly referenceId: string;
-    readonly label: string;
-  }
-  | {
-    readonly kind: "explicit";
-    readonly location: BuilderLocation;
-    readonly index: number;
-    readonly label: string;
-  };
+/** The exact place every pointer, keyboard, palette, and drag command uses. */
+export interface InsertionTarget {
+  readonly kind: "root" | "slot";
+  readonly relation: "end" | "before" | "after" | "inside";
+  readonly location: BuilderLocation;
+  readonly index: number;
+  readonly label: string;
+  readonly referenceId?: string;
+  readonly ownerId?: string;
+  readonly prop?: string;
+}
 
 /** Selection facts shared by preview, tree, discovery, and inspector. */
 export interface BuilderSelectionProjection {
@@ -55,7 +37,11 @@ export interface LayerRow {
   readonly depth: number;
   readonly location: BuilderLocation;
   readonly index: number;
+  readonly siblingCount: number;
   readonly slotName: string | undefined;
+  readonly ancestorIds: readonly string[];
+  readonly hasChildren: boolean;
+  readonly slotNames: readonly string[];
 }
 
 /** Human label for a placed Component or literal text. */
@@ -96,43 +82,50 @@ export function componentHasPrimaryChildrenSlot(node: BuilderNode): boolean {
   ) ?? false;
 }
 
-/** Current selection's placement behavior, made explicit for discovery. */
+/** Generic Add always uses the page cursor, independent of selection. */
 export function selectionInsertionTarget(
   document: BuilderDocument,
-  selectionId: string | null,
+  _selectionId: string | null,
 ): InsertionTarget {
-  const root: InsertionTarget = {
-    kind: "root-end",
+  return {
+    kind: "root",
+    relation: "end",
     location: { parent: "root" },
     index: document.children.length,
     label: "End of composition",
   };
-  if (selectionId === null) return root;
-  const found = findChild(document, selectionId);
-  if (found === undefined) return root;
-  if (
-    found.child.kind === "component" &&
-    componentHasPrimaryChildrenSlot(found.child)
-  ) {
-    const children = slotChildrenOf(found.child, "children");
-    return {
-      kind: "slot-end",
-      location: {
-        parent: "node",
-        nodeId: found.child.id,
-        prop: "children",
-      },
-      index: children.length,
-      ownerId: found.child.id,
-      prop: "children",
-      label: `${childLabel(found.child)} · children`,
-    };
-  }
+}
+
+/** Exact boundary before one existing child. */
+export function insertionTargetBefore(
+  document: BuilderDocument,
+  id: string,
+): InsertionTarget | undefined {
+  const found = findChild(document, id);
+  if (found === undefined) return undefined;
   return {
-    kind: "after-selection",
+    kind: found.location.parent === "root" ? "root" : "slot",
+    relation: "before",
+    location: found.location,
+    index: found.index,
+    referenceId: id,
+    label: `Before ${childLabel(found.child)}`,
+  };
+}
+
+/** Exact boundary after one existing child. */
+export function insertionTargetAfter(
+  document: BuilderDocument,
+  id: string,
+): InsertionTarget | undefined {
+  const found = findChild(document, id);
+  if (found === undefined) return undefined;
+  return {
+    kind: found.location.parent === "root" ? "root" : "slot",
+    relation: "after",
     location: found.location,
     index: found.index + 1,
-    referenceId: found.child.id,
+    referenceId: id,
     label: `After ${childLabel(found.child)}`,
   };
 }
@@ -146,13 +139,82 @@ export function armedSlotInsertionTarget(
   const owner = findChild(document, nodeId)?.child;
   if (owner === undefined || owner.kind !== "component") return undefined;
   return {
-    kind: "armed-slot",
+    kind: "slot",
+    relation: "inside",
     location: { parent: "node", nodeId, prop },
     index: slotChildrenOf(owner, prop).length,
     ownerId: nodeId,
     prop,
     label: `${childLabel(owner)} · ${prop}`,
   };
+}
+
+/** Keep an armed cursor truthful as siblings change around its anchor. */
+export function reconcileInsertionTarget(
+  document: BuilderDocument,
+  target: InsertionTarget,
+): InsertionTarget | undefined {
+  if (target.relation === "before" && target.referenceId !== undefined) {
+    return insertionTargetBefore(document, target.referenceId);
+  }
+  if (target.relation === "after" && target.referenceId !== undefined) {
+    return insertionTargetAfter(document, target.referenceId);
+  }
+  if (
+    target.relation === "inside" && target.ownerId !== undefined &&
+    target.prop !== undefined
+  ) {
+    return armedSlotInsertionTarget(document, target.ownerId, target.prop);
+  }
+  if (target.kind === "root" && target.relation === "end") {
+    return selectionInsertionTarget(document, null);
+  }
+  const children = childrenAt(document, target.location);
+  return { ...target, index: Math.min(target.index, children.length) };
+}
+
+/** Convert one pointer boundary to the same anchored target vocabulary. */
+export function insertionTargetAt(
+  document: BuilderDocument,
+  location: BuilderLocation,
+  index: number,
+): InsertionTarget {
+  const children = childrenAt(document, location);
+  const next = children[Math.max(0, Math.min(index, children.length))];
+  if (next !== undefined) {
+    return insertionTargetBefore(document, next.id) ??
+      selectionInsertionTarget(document, null);
+  }
+  if (location.parent === "root") {
+    return selectionInsertionTarget(document, null);
+  }
+  return armedSlotInsertionTarget(document, location.nodeId, location.prop) ??
+    selectionInsertionTarget(document, null);
+}
+
+/** Resolve a canvas node zone to an explicit before, after, or inside target. */
+export function insertionTargetFromNodePointer(
+  document: BuilderDocument,
+  nodeId: string,
+  relativeBlockPosition: number,
+): InsertionTarget | undefined {
+  const found = findChild(document, nodeId);
+  if (found === undefined) return undefined;
+  if (relativeBlockPosition <= 0.25) {
+    return insertionTargetBefore(document, nodeId);
+  }
+  if (relativeBlockPosition >= 0.75) {
+    return insertionTargetAfter(document, nodeId);
+  }
+  if (
+    found.child.kind === "component" &&
+    componentHasPrimaryChildrenSlot(found.child)
+  ) {
+    return armedSlotInsertionTarget(document, nodeId, "children");
+  }
+  return relativeBlockPosition < 0.5
+    ? insertionTargetBefore(document, nodeId)
+    : insertionTargetAfter(document, nodeId);
 }
 
 /** Complete selection projection from one accepted document. */
@@ -185,9 +247,29 @@ export function projectLayers(
     location: BuilderLocation,
     depth: number,
     slotName: string | undefined,
+    ancestorIds: readonly string[],
   ): void => {
     for (const [index, child] of children.entries()) {
-      rows.push({ child, depth, location, index, slotName });
+      const slotNames = child.kind === "component"
+        ? registryCoreBySlug.get(child.slug)?.controls.flatMap((control) =>
+          control.control === "slot" ? [control.name] : []
+        ) ?? []
+        : [];
+      const hasChildren = child.kind === "component" &&
+        Object.values(child.props).some((value) =>
+          value.kind === "slot" && value.children.length > 0
+        );
+      rows.push({
+        child,
+        depth,
+        location,
+        index,
+        siblingCount: children.length,
+        slotName,
+        ancestorIds,
+        hasChildren,
+        slotNames,
+      });
       if (child.kind !== "component") continue;
       for (const [prop, value] of Object.entries(child.props)) {
         if (value.kind !== "slot") continue;
@@ -196,10 +278,11 @@ export function projectLayers(
           { parent: "node", nodeId: child.id, prop },
           depth + 1,
           prop === "children" ? undefined : prop,
+          [...ancestorIds, child.id],
         );
       }
     }
   };
-  visit(document.children, { parent: "root" }, 0, undefined);
+  visit(document.children, { parent: "root" }, 0, undefined, []);
   return rows;
 }

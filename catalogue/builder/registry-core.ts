@@ -18,6 +18,7 @@ import type { ExportNaming, RequiredFunctionProp } from "./export.ts";
 import type { BuilderNode, BuilderPropValue } from "./model.ts";
 import { newChildId } from "./model.ts";
 import type { BuilderDocumentPolicy } from "./policy.ts";
+import { deriveBuilderCompatibilityPolicy } from "./tree/compatibility.ts";
 
 const adapterSurface = reactSurface as Record<string, unknown>;
 
@@ -170,6 +171,23 @@ export const reservedPropsBySlug: ReadonlyMap<
     entry.registry.meta.slug,
     entry.reservedProps,
   ]),
+  );
+
+/** Render/content-model facts derived once from the complete registry core. */
+export const builderCompatibility = deriveBuilderCompatibilityPolicy(
+  registryCoreEntries.map((entry) => ({
+    slug: entry.registry.meta.slug,
+    name: entry.registry.meta.name,
+    inheritedTypes: entry.registry.propDocumentation.status === "available"
+      ? entry.registry.propDocumentation.inheritedTypes
+      : [],
+    propNames: new Set(
+      entry.registry.propDocumentation.status === "available"
+        ? entry.registry.propDocumentation.props.map(({ name }) => name)
+        : [],
+    ),
+    controls: entry.controls,
+  })),
 );
 
 /** The registry-derived policy shared by every accepted-document boundary. */
@@ -177,6 +195,7 @@ export const documentPolicy: BuilderDocumentPolicy = {
   knownSlugs,
   modeledPropsBySlug,
   reservedPropsBySlug,
+  compatibility: builderCompatibility,
 };
 
 /** Naming and callback facts used by deterministic consumer TSX export. */
@@ -206,6 +225,16 @@ function instanceProps(entry: BuilderRegistryCoreEntry): BuilderNode["props"] {
     props[slot] = {
       kind: "slot",
       children: [{ kind: "text", id: newChildId(), text: "" }],
+    };
+  }
+  const compatibility = builderCompatibility.bySlug.get(
+    entry.registry.meta.slug,
+  );
+  for (const slot of compatibility?.slots.values() ?? []) {
+    if (slot.defaultComponentSlug === undefined) continue;
+    props[slot.name] = {
+      kind: "slot",
+      children: [instantiateComponent(slot.defaultComponentSlug)],
     };
   }
   return props;
