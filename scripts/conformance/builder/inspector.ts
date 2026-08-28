@@ -62,6 +62,77 @@ export async function verifyMalformedRetry(page: Page): Promise<number> {
 
 export async function verifySaveFile(page: Page): Promise<number> {
   await selectComposition(page);
+  const paragraph = await findOutlineRow(page, "Paragraph");
+  if (await paragraph.count() === 1) {
+    await paragraph.click();
+    const inspector = page.locator("#discern-builder-pane-inspector");
+    await inspector.getByText("Advanced", { exact: true }).click();
+    const additional = inspector.getByRole("textbox", {
+      name: "Additional props",
+      exact: true,
+    });
+    const beforeDraft = await documentWitness(page);
+    await additional.fill("{");
+    await page.waitForTimeout(400);
+    const fieldAlert = inspector.getByRole("alert");
+    invariant(
+      await fieldAlert.count() === 1 &&
+        (await fieldAlert.textContent())?.includes(
+            "Paragraph › Additional props: line 1",
+          ) === true,
+      "invalid additional JSON did not project once to its human field",
+    );
+    invariant(
+      await documentWitness(page) === beforeDraft,
+      "invalid additional JSON changed the accepted document",
+    );
+    invariant(
+      await page.getByRole("status").filter({
+        hasText: "document.children",
+      }).count() === 0,
+      "invalid additional JSON leaked a technical global status",
+    );
+    await additional.fill("{}");
+    await inspector.getByRole("button", { name: "Apply JSON" }).click();
+    await page.waitForFunction(
+      () =>
+        document.querySelectorAll(".discern-builder-control__issue").length ===
+          0,
+      undefined,
+      { timeout: ACTION_TIMEOUT },
+    );
+    invariant(
+      await inspector.getByRole("alert").count() === 0,
+      "corrected additional JSON left stale field feedback",
+    );
+  }
+  await selectComposition(page);
+  for (const theme of ["light", "dark"] as const) {
+    await useTheme(page, theme);
+    const danger = await page.getByRole("button", {
+      name: "New / Replace",
+      exact: true,
+    }).evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        color: style.color,
+        background: style.backgroundColor,
+        border: style.borderColor,
+      };
+    });
+    const neutral = await page.locator(".discern-builder-file").evaluate(
+      (element) => {
+        const style = getComputedStyle(element);
+        return { color: style.color, background: style.backgroundColor };
+      },
+    );
+    invariant(
+      danger.color !== neutral.color &&
+        (danger.background !== neutral.background ||
+          danger.border === danger.color),
+      `${theme} New / Replace action lost resting danger styling`,
+    );
+  }
   await page.evaluate(() => {
     const evidence = {
       created: [] as string[],
@@ -93,7 +164,11 @@ export async function verifySaveFile(page: Page): Promise<number> {
       },
     });
   });
-  await page.getByRole("button", { name: "Save file", exact: true }).click();
+  await page.getByRole("tab", { name: "Builder JSON", exact: true }).click();
+  await page.getByRole("button", {
+    name: "Download Builder JSON",
+    exact: true,
+  }).click();
   await page.waitForFunction(() => {
     const scope = globalThis as typeof globalThis & {
       __discernBuilderDownloadEvidence?: {
@@ -115,25 +190,53 @@ export async function verifySaveFile(page: Page): Promise<number> {
     };
     return scope.__discernBuilderDownloadEvidence;
   });
-  invariant(evidence !== undefined, "save-file evidence was not recorded");
+  invariant(evidence !== undefined, "Builder JSON evidence was not recorded");
   invariant(
     evidence.created.length === 1 &&
       evidence.revoked.length === 1 &&
       evidence.created[0] === evidence.revoked[0],
-    `save-file object URL lifecycle was ${JSON.stringify(evidence)}`,
+    `Builder JSON object URL lifecycle was ${JSON.stringify(evidence)}`,
   );
   invariant(
     evidence.downloads.length === 1 &&
-      evidence.downloads[0]?.name === "untitled-page.json",
-    `save-file name was ${JSON.stringify(evidence.downloads)}`,
+      evidence.downloads[0]?.name === "untitled-page.builder.json",
+    `Builder JSON filename was ${JSON.stringify(evidence.downloads)}`,
   );
   invariant(
     await page.getByRole("status").filter({
-      hasText: "Saved the composition file",
+      hasText: "Downloaded untitled-page.builder.json",
     }).count() === 1,
-    "save-file completion was not announced",
+    "Builder JSON download completion was not shown",
   );
-  return 3;
+  await page.evaluate(() => {
+    Object.defineProperty(Navigator.prototype, "clipboard", {
+      configurable: true,
+      get: () => ({
+        writeText: () =>
+          Promise.reject(new DOMException("Denied", "NotAllowedError")),
+      }),
+    });
+  });
+  await page.getByRole("button", {
+    name: "Copy Builder JSON",
+    exact: true,
+  }).click();
+  await page.getByRole("alert").filter({
+    hasText: "Clipboard access was denied",
+  }).waitFor({ timeout: ACTION_TIMEOUT });
+  invariant(
+    await page.getByRole("tabpanel", { name: "Builder JSON" }).getByRole(
+      "group",
+      { name: /Scrollable code listing/ },
+    ).isVisible(),
+    "Builder JSON was not inspectable after clipboard rejection",
+  );
+  invariant(
+    await page.getByRole("status").filter({ hasText: "Saved locally" })
+      .count() === 1,
+    "accepted document did not expose its local persistence state",
+  );
+  return 12;
 }
 
 export async function verifySuccessfulLoad(page: Page): Promise<number> {
@@ -151,7 +254,7 @@ export async function verifySuccessfulLoad(page: Page): Promise<number> {
     })),
   });
   await page.getByRole("status").filter({
-    hasText: "Loaded browser-loaded.json",
+    hasText: "Imported browser-loaded.json",
   }).waitFor({ timeout: ACTION_TIMEOUT });
   invariant(
     await page.getByRole("textbox", { name: "Composition name" })
@@ -163,7 +266,13 @@ export async function verifySuccessfulLoad(page: Page): Promise<number> {
     await page.locator(OUTLINE_ROW).count() === 0,
     "successful empty file load retained previous children",
   );
-  return 3;
+  invariant(
+    await page.getByRole("alert").filter({
+      hasText: "malformed-composition.json",
+    }).count() === 0,
+    "successful import left stale malformed-file feedback",
+  );
+  return 4;
 }
 
 export async function verifyCorruptStorage(

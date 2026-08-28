@@ -15,9 +15,12 @@ import {
   createNode,
   defaultProps,
   deriveControls,
+  effectiveControlValue,
+  INSPECTOR_SECTIONS,
 } from "../catalogue/builder/controls.ts";
 import {
   BuilderDocumentError,
+  builderExportIdentity,
   documentSelectionSnippet,
   documentToTsx,
   type ExportNaming,
@@ -243,12 +246,72 @@ Deno.test("union props components fall back to variant controls and a children s
   assertEquals(children.children.length, 1);
 });
 
+Deno.test("registry controls project human sections, labels, and truthful defaults", () => {
+  const source: ControlSource = {
+    reactExport: "Tabs",
+    propDocumentation: {
+      status: "available",
+      typeName: "TabsProps",
+      inheritedTypes: [],
+      props: [
+        { name: "items", type: "readonly TabItem[]", required: true },
+        {
+          name: "activationMode",
+          type: '"automatic" | "manual"',
+          required: false,
+        },
+        { name: "label", type: "string", required: false },
+        { name: "futureCopy", type: "string", required: false },
+      ],
+    },
+    variants: [],
+  };
+  const controls = deriveControls(source);
+  assertEquals(INSPECTOR_SECTIONS, [
+    "Content",
+    "Appearance",
+    "Layout",
+    "Behaviour",
+    "Accessibility",
+    "Advanced",
+  ]);
+  assertEquals(
+    controls.map(({ name, label, section }) => [name, label, section]),
+    [
+      ["items", "Tabs", "Content"],
+      ["activationMode", "Activation", "Behaviour"],
+      ["label", "Accessible label", "Accessibility"],
+      ["futureCopy", "Future copy", "Content"],
+    ],
+  );
+  const activation = controls[1];
+  assert(activation !== undefined);
+  assertEquals(effectiveControlValue(activation, undefined), {
+    value: "Automatic",
+    provenance: "default",
+    resettable: false,
+  });
+  assertEquals(
+    effectiveControlValue(activation, { kind: "string", value: "manual" }),
+    { value: "Manual", provenance: "overridden", resettable: true },
+  );
+  const future = controls[3];
+  assert(future !== undefined);
+  assertEquals(effectiveControlValue(future, undefined), {
+    value: "Not set",
+    provenance: "Component default",
+    resettable: false,
+  });
+});
+
 Deno.test("shaped JSON sources round-trip through row editing", async () => {
   const {
     editableCell,
+    moveShapedRow,
     newShapedRow,
     parseShapedSource,
     serializeShapedRows,
+    summarizeShapedRow,
     withRowValue,
   } = await import("../catalogue/builder/object-editor.ts");
   const shape = {
@@ -299,6 +362,15 @@ Deno.test("shaped JSON sources round-trip through row editing", async () => {
   assertEquals(
     JSON.parse(serializeShapedRows(edited, shape)),
     [{ value: "gb", label: "United Kingdom" }],
+  );
+  assertEquals(summarizeShapedRow(edited[0] ?? {}, shape), "United Kingdom");
+  assertEquals(
+    moveShapedRow(
+      [{ value: "one", label: "One" }, { value: "two", label: "Two" }],
+      1,
+      -1,
+    ),
+    [{ value: "two", label: "Two" }, { value: "one", label: "One" }],
   );
   const cleared = withRowValue(edited, 0, "disabled", undefined);
   assert(!("disabled" in (cleared[0] ?? {})));
@@ -353,6 +425,31 @@ Deno.test("shaped JSON sources round-trip through row editing", async () => {
   assertEquals(
     serializeShapedRows([{ added: 4 }], single),
     '{\n  "added": 4\n}',
+  );
+});
+
+Deno.test("JSON errors expose a human remedy and retain exact technical detail", async () => {
+  const { projectJsonDraftIssue, projectPolicyIssue } = await import(
+    "../catalogue/builder/inspector/validation.ts"
+  );
+  const syntax = projectJsonDraftIssue(
+    '{\n  "aria-label": "Card",\n  bad\n}',
+    "Hero block › Additional props",
+  );
+  assert(syntax !== null);
+  assertStringIncludes(syntax.message, "Hero block › Additional props");
+  assertStringIncludes(syntax.message, "line 3");
+  assertStringIncludes(syntax.message, "column");
+  assert(!syntax.message.includes("document.children"));
+
+  const technical =
+    "document.children[1].props.items.source must contain valid JSON.";
+  assertEquals(
+    projectPolicyIssue(technical, "Tabs › Tabs"),
+    {
+      message: "Fix Tabs › Tabs: enter valid JSON.",
+      technical,
+    },
   );
 });
 
@@ -474,6 +571,15 @@ Deno.test("TSX export survives hostile names and lone text roots", () => {
   const emptyOutput = documentToTsx(emptyName, naming);
   assertStringIncludes(emptyOutput, "Untitled page");
   assertStringIncludes(emptyOutput, "export function ComposedPage()");
+  assertEquals(builderExportIdentity(emptyName, naming), {
+    componentName: "ComposedPage",
+    callbackContractName: null,
+    filenames: {
+      tsx: "composition.tsx",
+      runtime: "composition.selection.ts",
+      json: "composition.builder.json",
+    },
+  });
 
   const hostileName: BuilderDocument = {
     version: 1,
@@ -1186,6 +1292,17 @@ Deno.test("composition cost resolves the emitter's dependency closure", () => {
   assert(dependent !== undefined);
   const cost = compositionCost([dependent.id, dependent.id]);
   assertEquals(cost.placed, [dependent.id]);
+  assertEquals(cost.instanceCount, 2);
+  assertEquals(cost.uniquePlacedCount, 1);
+  assertEquals(
+    cost.breakdown.find(({ id }) => id === dependent.id)?.instances,
+    2,
+  );
+  assert(
+    cost.breakdown.every(({ name, dependencies }) =>
+      name.length > 0 && Array.isArray(dependencies)
+    ),
+  );
   for (const dependency of dependent.dependencies) {
     assert(cost.resolved.includes(dependency));
   }
@@ -1196,6 +1313,10 @@ Deno.test("composition cost resolves the emitter's dependency closure", () => {
   );
   assert(behaviorComponent !== undefined);
   assert(compositionCost([behaviorComponent.id]).needsBehaviorScript);
+  assertEquals(
+    compositionCost([behaviorComponent.id]).behaviorComponents[0]?.id,
+    behaviorComponent.id,
+  );
 
   const neutral = packageManifest.components.find((component) =>
     component.behaviors.length === 0 && component.dependencies.length === 0
@@ -1204,6 +1325,29 @@ Deno.test("composition cost resolves the emitter's dependency closure", () => {
   assert(!compositionCost([neutral.id]).needsBehaviorScript);
 
   assertThrows(() => compositionCost(["missing"]), Error, "Unknown component");
+});
+
+Deno.test("clipboard failures are explicit results instead of swallowed promises", async () => {
+  const { copyBuilderSource } = await import(
+    "../catalogue/builder/inspector/files.ts"
+  );
+  assertEquals(
+    await copyBuilderSource("source", {
+      writeText: () => Promise.resolve(),
+    }),
+    { ok: true },
+  );
+  assertEquals(
+    await copyBuilderSource("source", {
+      writeText: () =>
+        Promise.reject(new DOMException("Denied", "NotAllowedError")),
+    }),
+    {
+      ok: false,
+      message:
+        "Clipboard access was denied. Select the source and copy it manually.",
+    },
+  );
 });
 
 Deno.test("the shaped editor keeps a stable scaffold across validity flips", async () => {
@@ -1254,9 +1398,11 @@ Deno.test("the shaped editor keeps a stable scaffold across validity flips", asy
   }));
   assertEquals(scaffold(valid), scaffold(invalid));
   // The disclosure forces itself open while the source is invalid, so the
-  // field being typed in cannot vanish behind a collapsed summary.
+  // field being typed in cannot vanish behind a collapsed summary. Validation
+  // remains debounced by its parent instead of announcing each incomplete key.
   assert(/<details[^>]*open/.test(invalid));
-  assertStringIncludes(invalid, "Fix the JSON");
+  assertStringIncludes(invalid, "return to shaped rows");
+  assert(!invalid.includes('role="alert"'));
 
   // Structural members render as read-only cells, never as text inputs
   // that would corrupt the value with the first keystroke.
@@ -1409,6 +1555,12 @@ Deno.test("every catalogue component yields controls, a default instance, and ex
   for (const entry of componentEntries) {
     const slug = entry.meta.slug;
     const controls = controlsBySlug(slug);
+    for (const control of controls) {
+      assert(
+        INSPECTOR_SECTIONS.includes(control.section ?? "Content"),
+        `${slug}.${control.name} did not enrol in a human Inspector section`,
+      );
+    }
     const sourcePropNames = entry.propDocumentation.status === "available"
       ? entry.propDocumentation.props.map((prop) => prop.name)
       : [];
@@ -1488,6 +1640,38 @@ Deno.test("every catalogue component yields controls, a default instance, and ex
   }
 });
 
+Deno.test("Inspector preflight viewers are exact, lazy emitter projections", async () => {
+  const { registryIndex } = await builderModules();
+  const { preflightBuilderDocument } = await import(
+    "../catalogue/builder/inspector/preflight.ts"
+  );
+  const document: BuilderDocument = {
+    version: 1,
+    name: "Export proof",
+    children: [registryIndex.instantiateComponent("button")],
+  };
+  const preflight = preflightBuilderDocument(document);
+  assert(preflight.ok);
+  assertEquals(
+    preflight.tsx,
+    documentToTsx(document, registryIndex.exportNaming),
+  );
+  assertEquals(
+    preflight.selection,
+    documentSelectionSnippet(document, registryIndex.documentPolicy),
+  );
+  assertEquals(
+    preflight.json,
+    serializeDocument(document, registryIndex.documentPolicy),
+  );
+  assertEquals(preflight.identity.componentName, "ExportProof");
+  assertEquals(preflight.identity.filenames, {
+    tsx: "export-proof.tsx",
+    runtime: "export-proof.selection.ts",
+    json: "export-proof.builder.json",
+  });
+});
+
 Deno.test("every Component class exports formatted, type-correct consumer TSX", async () => {
   const { registryIndex } = await builderModules();
   const chunks: (typeof registryIndex.componentEntries)[] = [];
@@ -1558,25 +1742,50 @@ Deno.test("every Component class exports formatted, type-correct consumer TSX", 
   }
 });
 
-Deno.test("feedback lifecycles remain distinct before legacy projection", async () => {
-  const { initialBuilderFeedback, visibleBuilderFeedback } = await import(
+Deno.test("feedback lifecycles do not turn field drafts into stale global errors", async () => {
+  const {
+    announcementFeedback,
+    initialBuilderFeedback,
+    visibleBuilderFeedback,
+  } = await import(
     "../catalogue/builder/inspector/feedback.ts"
   );
   const initial = initialBuilderFeedback();
   assertEquals(initial.persistence.state, "saving");
   assertEquals(visibleBuilderFeedback(initial), []);
+  assertEquals(
+    announcementFeedback(
+      initial,
+      "document.children[0].extra must contain valid JSON.",
+      "error",
+      1,
+    ),
+    initial,
+  );
+  assertEquals(
+    announcementFeedback(initial, "Selected Button.", "status", 2),
+    {
+      ...initial,
+      live: {
+        kind: "live",
+        tone: "status",
+        message: "Selected Button.",
+        serial: 2,
+      },
+    },
+  );
   const complete = {
-    announcement: {
-      kind: "announcement",
+    live: {
+      kind: "live",
       tone: "status",
       message: "Changed.",
       serial: 1,
     },
-    validation: {
-      kind: "validation",
-      field: "options",
-      tone: "error",
-      message: "Options are invalid.",
+    toast: {
+      kind: "toast",
+      tone: "success",
+      message: "Changed.",
+      serial: 1,
     },
     storageFailure: {
       kind: "storage-failure",
@@ -1590,6 +1799,6 @@ Deno.test("feedback lifecycles remain distinct before legacy projection", async 
   } as const;
   assertEquals(
     visibleBuilderFeedback(complete).map(({ kind }) => kind),
-    ["storage-failure", "validation", "announcement"],
+    ["storage-failure", "toast"],
   );
 });

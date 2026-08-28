@@ -86,7 +86,9 @@ Deno.test("quota exhaustion contains autosave and theme writes", () => {
   memory.failWrites = true;
   const storage = new GuardedBuilderStorage(() => memory);
   const active = document("Still editable");
-  assert(!persistBuilderDocument(storage, active, policy).ok);
+  const failed = persistBuilderDocument(storage, active, policy);
+  assert(!failed.ok);
+  assert(failed.message.includes("download Builder JSON"));
   assert(!persistBuilderTheme(storage, "dark").ok);
   assertEquals(memory.writes, 1);
   assertEquals(active, document("Still editable"));
