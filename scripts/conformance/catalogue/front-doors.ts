@@ -352,7 +352,7 @@ export async function verifyLandingPage(
   await verifyOverviewDirectory(page, origin, failures);
   await withViewport(page, CATALOGUE_NARROW_VIEWPORT, async () => {
     await page.goto(`${origin}/`, { waitUntil: "networkidle" });
-    const narrow = await page.evaluate(() => ({
+    const narrow = await page.evaluate((searchReadyHref) => ({
       overflow: document.documentElement.scrollWidth -
         document.documentElement.clientWidth,
       navDisplay: getComputedStyle(
@@ -368,12 +368,12 @@ export async function verifyLandingPage(
         "::before",
       ).content,
       compactActionVisible: (document.querySelector<HTMLElement>(
-        `.discern-site-header__actions a[href="${findAComponentHref}"]`,
+        `.discern-site-header__actions a[href="${searchReadyHref}"]`,
       )?.getClientRects().length ?? 0) > 0,
       footerRouteLinks: [...document.querySelectorAll<HTMLElement>(
         '[data-discern-catalogue-navigation="landing-footer"] .discern-site-footer__nav > div:first-child a',
       )].filter((link) => link.getClientRects().length > 0).length,
-    }));
+    }), findAComponentHref);
     const overflow = narrow.overflow;
     if (overflow > 0) {
       failures.push(
