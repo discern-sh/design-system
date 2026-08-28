@@ -8,8 +8,8 @@ import {
   catalogueNavigation,
   catalogueRoute,
   catalogueRoutePaths,
-  catalogueTerminalLayoutPath,
   catalogueTerminalFoundationPath,
+  catalogueTerminalLayoutPath,
   foundationsPaths,
 } from "../catalogue/routes.ts";
 

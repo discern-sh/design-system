@@ -42,8 +42,8 @@ export {
   catalogueRouteFamilies,
   catalogueRoutePaths,
   catalogueSearchRecords,
-  catalogueTerminalLayoutPath,
   catalogueTerminalFoundationPath,
+  catalogueTerminalLayoutPath,
   componentSearchRecords,
   foundationsPaths,
 };
