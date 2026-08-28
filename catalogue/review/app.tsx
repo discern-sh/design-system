@@ -257,7 +257,7 @@ function ReviewSpecimen({
         const message = error instanceof Error ? error.message : String(error);
         root.dataset.discernReviewError = message;
         setStatus(message);
-        globalThis.__discernComponentReview = {
+        globalThis.window.__discernComponentReview = {
           status: "error",
           itemCount: 0,
           checkpointCount: 0,
@@ -372,7 +372,7 @@ function App() {
     return () => removeEventListener("resize", update);
   }, []);
   useEffect(() => {
-    globalThis.__discernComponentReview = {
+    globalThis.window.__discernComponentReview = {
       status: visibleCards.length === 0 || ready >= visibleCards.length
         ? "ready"
         : "loading",
@@ -381,7 +381,7 @@ function App() {
       pageViewport: viewport,
     };
     document.documentElement.dataset.discernReviewStatus =
-      globalThis.__discernComponentReview.status;
+      globalThis.window.__discernComponentReview.status;
   }, [ready, viewport, visibleCards.length]);
   const onReady = useMemo(() => () => setReady((value) => value + 1), []);
   const width = reviewInlineSizes[parsed.width];
