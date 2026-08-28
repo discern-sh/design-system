@@ -6,7 +6,7 @@ import type { BuilderFeedbackController } from "./use-feedback.ts";
 
 /** Feedback surfaces with distinct visual and temporal roles. */
 export function BuilderFeedbackRegion(
-  { feedback, storage, recoverySource, onRetry }: Readonly<{
+  { feedback, storage: _storage, recoverySource, onRetry }: Readonly<{
     feedback: BuilderFeedbackController;
     storage: GuardedBuilderStorage;
     recoverySource: string | null;
