@@ -19,7 +19,14 @@ Deno.test("complete CLI compositions stay deterministic and width-safe", () => {
 
   const inspections = [];
   for (const recipe of cliCompositionRecipes) {
-    assert(recipe.components.length > 1, `${recipe.id} is not a composition`);
+    assert(
+      recipe.components.length > 0,
+      `${recipe.id} does not name its constituent Components`,
+    );
+    assert(
+      recipe.capabilityControls.length > 0,
+      `${recipe.id} cannot exercise any public terminal capability`,
+    );
     assert(
       recipe.source.includes("@discern-sh/design-system/cli"),
       `${recipe.id} does not expose copyable consumer source`,

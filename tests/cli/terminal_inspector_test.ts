@@ -110,6 +110,9 @@ Deno.test("terminal inspector HTML carries a self-contained viewport and real st
   assertStringIncludes(html, "data-discern-terminal-inspector");
   assertStringIncludes(html, 'data-discern-terminal-theme="dark"');
   assertStringIncludes(html, "data-discern-terminal-viewport");
+  assertStringIncludes(html, "data-discern-overflow-cue-target");
+  assertStringIncludes(html, 'tabindex="0"');
+  assertStringIncludes(html, 'role="region"');
   assertStringIncludes(html, 'data-discern-terminal-columns="12"');
   assertStringIncludes(html, 'data-discern-terminal-rows="4"');
   assertStringIncludes(html, "&lt;Status&gt; &amp; layout");

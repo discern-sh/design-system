@@ -11,6 +11,12 @@ import {
   catalogueGroupSlug,
   componentSearchRecords,
 } from "./routes/components.ts";
+import { catalogueTerminalLayoutPath } from "./routes/terminal.ts";
+import {
+  canonicalFoundationsLegacyUrl,
+  catalogueTerminalFoundationPath,
+  foundationsPaths,
+} from "./routes/foundations.ts";
 import {
   canonicalCatalogueShellPathname,
   catalogueNavigation,
@@ -36,7 +42,10 @@ export {
   catalogueRouteFamilies,
   catalogueRoutePaths,
   catalogueSearchRecords,
+  catalogueTerminalFoundationPath,
+  catalogueTerminalLayoutPath,
   componentSearchRecords,
+  foundationsPaths,
 };
 export type {
   CatalogueRoute,
@@ -64,6 +73,8 @@ function decodedFragment(hash: string): string {
 /** Upgrade former one-page links to their routed destination. */
 export function canonicalCatalogueLegacyUrl(current: URL): URL {
   const url = new URL(current.href);
+  const foundationsUrl = canonicalFoundationsLegacyUrl(url);
+  if (foundationsUrl.href !== url.href) return foundationsUrl;
   if (
     normalizedCataloguePathname(url.pathname) !==
       catalogueRoutePaths.overview ||
@@ -87,13 +98,6 @@ export function canonicalCatalogueLegacyUrl(current: URL): URL {
     url.hash = "";
     return url;
   }
-  if (
-    fragment === "foundations" || fragment.startsWith("tokens-") ||
-    fragment.startsWith("terminal-foundation-")
-  ) {
-    url.pathname = catalogueRoutePaths.foundations;
-    return url;
-  }
   if (fragment === "compositions" || fragment.startsWith("recipe-")) {
     url.pathname = catalogueRoutePaths.compositions;
     return url;
@@ -101,7 +105,11 @@ export function canonicalCatalogueLegacyUrl(current: URL): URL {
   if (
     fragment === "terminal-layouts" || fragment.startsWith("terminal-layout-")
   ) {
-    url.pathname = catalogueRoutePaths.terminal;
+    const recipeId = fragment.slice("terminal-layout-".length);
+    url.pathname = recipeId === ""
+      ? catalogueRoutePaths.terminal
+      : catalogueTerminalLayoutPath(recipeId);
+    url.hash = "";
     return url;
   }
   if (url.searchParams.has("purpose")) {

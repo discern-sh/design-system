@@ -1,0 +1,69 @@
+@layer discern.components {
+  .discern-overflow-cue {
+    position: relative;
+    min-inline-size: 0;
+    min-block-size: 0;
+  }
+  .discern-overflow-cue__viewport,
+  .discern-overflow-cue [data-discern-overflow-cue-target] {
+    box-sizing: border-box;
+    min-inline-size: 0;
+    min-block-size: 0;
+    overflow: auto;
+  }
+  .discern-overflow-cue__viewport {
+    inline-size: inherit;
+    block-size: inherit;
+    max-inline-size: inherit;
+    max-block-size: inherit;
+  }
+  .discern-overflow-cue [data-discern-overflow-cue-target]:focus-visible {
+    outline: 2px solid var(--discern-color-accent-600);
+    outline-offset: -3px;
+  }
+  .discern-overflow-cue__edge {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      var(--discern-overflow-cue-angle),
+      color-mix(in srgb, var(--discern-color-surface) 92%, transparent),
+      transparent
+    );
+  }
+  .discern-overflow-cue__edge--block-start {
+    --discern-overflow-cue-angle: to bottom;
+  }
+  .discern-overflow-cue__edge--block-end {
+    --discern-overflow-cue-angle: to top;
+  }
+  .discern-overflow-cue__edge--inline-start {
+    --discern-overflow-cue-angle: to right;
+  }
+  .discern-overflow-cue__edge--inline-end {
+    --discern-overflow-cue-angle: to left;
+  }
+  .discern-overflow-cue[data-discern-overflow-cue-block-start="true"] > .discern-overflow-cue__edge--block-start,
+  .discern-overflow-cue[data-discern-overflow-cue-block-end="true"] > .discern-overflow-cue__edge--block-end,
+  .discern-overflow-cue[data-discern-overflow-cue-inline-start="true"] > .discern-overflow-cue__edge--inline-start,
+  .discern-overflow-cue[data-discern-overflow-cue-inline-end="true"] > .discern-overflow-cue__edge--inline-end {
+    opacity: 1;
+  }
+  @media (forced-colors: active) {
+    .discern-overflow-cue__edge {
+      background: none;
+    }
+    .discern-overflow-cue__edge--block-start {
+      border-block-start: 2px solid CanvasText;
+    }
+    .discern-overflow-cue__edge--block-end {
+      border-block-end: 2px solid CanvasText;
+    }
+    .discern-overflow-cue__edge--inline-start {
+      border-inline-start: 2px solid CanvasText;
+    }
+    .discern-overflow-cue__edge--inline-end {
+      border-inline-end: 2px solid CanvasText;
+    }
+  }
+}

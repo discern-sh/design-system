@@ -491,6 +491,68 @@ ${entries.join("\n")}
 `;
 }
 
+async function bundleBehaviorModule(
+  url: URL,
+  stack = new Set<string>(),
+): Promise<string> {
+  if (stack.has(url.href)) {
+    throw new Error(`Browser behavior import cycle at ${url.pathname}`);
+  }
+  const nextStack = new Set(stack).add(url.href);
+  let source = await Deno.readTextFile(url);
+  const importPattern = /import\s*\{[^}]+\}\s*from\s*(["'])([^"']+)\1;\s*/u;
+  while (true) {
+    const match = source.match(importPattern);
+    if (match === null) break;
+    const specifier = match[2];
+    if (specifier === undefined || !specifier.startsWith(".")) {
+      throw new Error(
+        `${url.pathname} browser behavior imports a non-relative module`,
+      );
+    }
+    const dependencyUrl = new URL(specifier, url);
+    if (!dependencyUrl.pathname.endsWith(".js")) {
+      throw new Error(
+        `${url.pathname} browser behavior imports a non-JavaScript module`,
+      );
+    }
+    const dependency = await bundleBehaviorModule(dependencyUrl, nextStack);
+    source = source.replace(match[0], `${dependency}\n`);
+  }
+  source = source.replace(
+    /^export\s+(?=(?:const|function|class)\b)/gmu,
+    "",
+  );
+  if (/^\s*(?:import|export)\b/mu.test(source)) {
+    throw new Error(
+      `${url.pathname} browser behavior contains an unsupported module declaration`,
+    );
+  }
+  return source;
+}
+
+async function minifyBehaviorSource(source: string): Promise<string> {
+  const entry = await Deno.makeTempFile({ suffix: ".js" });
+  try {
+    await Deno.writeTextFile(entry, source);
+    const result = await new Deno.Command("deno", {
+      args: ["bundle", "--minify", entry],
+      stdout: "piped",
+      stderr: "piped",
+    }).output();
+    if (!result.success) {
+      throw new Error(
+        `Browser behavior minification failed: ${
+          new TextDecoder().decode(result.stderr).trim()
+        }`,
+      );
+    }
+    return new TextDecoder().decode(result.stdout).trim();
+  } finally {
+    await Deno.remove(entry);
+  }
+}
+
 async function generateBehaviorSources(): Promise<string> {
   const files = (await walk(BEHAVIOR_ROOT)).filter((url) =>
     url.pathname.endsWith(".js")
@@ -499,7 +561,7 @@ async function generateBehaviorSources(): Promise<string> {
     await Promise.all(files.map(async (url) =>
       [
         url.pathname.slice(url.pathname.lastIndexOf("/") + 1, -3),
-        await Deno.readTextFile(url),
+        `{${await minifyBehaviorSource(await bundleBehaviorModule(url))}}`,
       ] as const
     )),
   );

@@ -8,6 +8,9 @@ import {
   catalogueNavigation,
   catalogueRoute,
   catalogueRoutePaths,
+  catalogueTerminalFoundationPath,
+  catalogueTerminalLayoutPath,
+  foundationsPaths,
 } from "../catalogue/routes.ts";
 
 Deno.test("Catalogue routes resolve every explorer surface and Component detail", () => {
@@ -20,11 +23,26 @@ Deno.test("Catalogue routes resolve every explorer surface and Component detail"
       slug: "command-group",
     }],
     [catalogueRoutePaths.foundations, { family: "foundations", page: "index" }],
+    [foundationsPaths.tokens, { family: "foundations", page: "tokens" }],
+    [foundationsPaths.terminal, {
+      family: "foundations",
+      page: "terminal-index",
+    }],
+    [catalogueTerminalFoundationPath("motifs"), {
+      family: "foundations",
+      page: "terminal-detail",
+      sheetId: "motifs",
+    }],
     [catalogueRoutePaths.compositions, {
       family: "compositions",
       page: "index",
     }],
     [catalogueRoutePaths.terminal, { family: "terminal", page: "index" }],
+    [catalogueTerminalLayoutPath("command-reference"), {
+      family: "terminal",
+      page: "detail",
+      recipeId: "command-reference",
+    }],
     [catalogueRoutePaths.compare, { family: "compare", page: "index" }],
     ["/catalogue/unknown/", { family: "not-found", page: "not-found" }],
   ] as const;
@@ -105,7 +123,26 @@ Deno.test("legacy one-page Catalogue links upgrade to routed destinations", () =
     },
     {
       current: "https://catalogue.example/catalogue/#tokens-color",
-      expected: "https://catalogue.example/catalogue/foundations/#tokens-color",
+      expected:
+        "https://catalogue.example/catalogue/foundations/tokens/?category=color",
+    },
+    {
+      current:
+        "https://catalogue.example/catalogue/foundations/#tokens-typography",
+      expected:
+        "https://catalogue.example/catalogue/foundations/tokens/?category=typography",
+    },
+    {
+      current:
+        "https://catalogue.example/catalogue/#terminal-foundation-motifs",
+      expected:
+        "https://catalogue.example/catalogue/foundations/terminal/motifs/#terminal-foundation-motifs",
+    },
+    {
+      current:
+        "https://catalogue.example/catalogue/foundations/#terminal-foundation-narration-success",
+      expected:
+        "https://catalogue.example/catalogue/foundations/terminal/narration/#terminal-foundation-narration-success",
     },
     {
       current: "https://catalogue.example/catalogue/#recipe-next-action",
@@ -116,7 +153,7 @@ Deno.test("legacy one-page Catalogue links upgrade to routed destinations", () =
       current:
         "https://catalogue.example/catalogue/#terminal-layout-command-reference",
       expected:
-        "https://catalogue.example/catalogue/terminal/#terminal-layout-command-reference",
+        "https://catalogue.example/catalogue/terminal/command-reference/",
     },
   ] as const;
 

@@ -1,5 +1,6 @@
 import type { TerminalCapabilities } from "../src/cli/capabilities.ts";
 import type { TerminalThemeVariant } from "../src/cli/theme.ts";
+import type { TerminalLabCapability } from "./terminal-lab-state.ts";
 import {
   composeCliBlocks,
   createCliPresenter,
@@ -22,7 +23,10 @@ export interface CliCompositionRecipe {
   readonly id: string;
   readonly title: string;
   readonly description: string;
+  /** Component slugs assembled by this Catalogue-only recipe. */
   readonly components: readonly string[];
+  /** Capability facts whose changes this recipe can visibly exercise. */
+  readonly capabilityControls: readonly TerminalLabCapability[];
   readonly render: (
     capabilities: TerminalCapabilities,
     theme?: TerminalThemeVariant,
@@ -36,6 +40,7 @@ interface CliRecipeDefinition<Definition> {
   readonly title: string;
   readonly description: string;
   readonly components: readonly string[];
+  readonly capabilityControls: readonly TerminalLabCapability[];
   readonly definition: Definition;
   readonly render: (
     definition: Definition,
@@ -54,6 +59,7 @@ function defineCliRecipe<Definition>(
     title: recipe.title,
     description: recipe.description,
     components: recipe.components,
+    capabilityControls: recipe.capabilityControls,
     render: (capabilities, theme = "dark", rows = 24) =>
       recipe.render(recipe.definition, capabilities, theme, rows),
     source: recipe.source(recipe.definition),
@@ -116,12 +122,13 @@ const operationalStatusRecipe = defineCliRecipe({
   description:
     "A decision brief that moves from overall state to workstreams, checkout facts, and the next valid action.",
   components: [
-    "Docs header",
-    "Result summary",
-    "Fleet",
-    "Section",
-    "Branch choice",
+    "docs-header",
+    "result-summary",
+    "fleet",
+    "section",
+    "branch-choice",
   ],
+  capabilityControls: ["unicode", "colorDepth"],
   definition: operationalStatus,
   render: (definition, capabilities, theme) => {
     const presenter = createCliPresenter(capabilities, { theme });
@@ -225,11 +232,12 @@ const failureReportRecipe = defineCliRecipe({
   description:
     "A failed result, precise diagnostic, correction, and explicit retry decision in reading order.",
   components: [
-    "Docs header",
-    "Result summary",
-    "Diagnostic",
-    "Retry notice",
+    "docs-header",
+    "result-summary",
+    "diagnostic",
+    "retry-notice",
   ],
+  capabilityControls: ["unicode", "colorDepth"],
   definition: failureReport,
   render: (definition, capabilities, theme) => {
     const presenter = createCliPresenter(capabilities, { theme });
@@ -312,12 +320,13 @@ const commandReferenceRecipe = defineCliRecipe({
   description:
     "A compact reference page with context, ordered commands, expected evidence, and adjacent navigation.",
   components: [
-    "Docs header",
-    "Section",
-    "Command group",
-    "Expected result",
-    "Pager",
+    "docs-header",
+    "section",
+    "command-group",
+    "expected-result",
+    "pager",
   ],
+  capabilityControls: ["unicode", "colorDepth", "hyperlinks"],
   definition: commandReference,
   render: (definition, capabilities, theme) => {
     const presenter = createCliPresenter(capabilities, { theme });
@@ -417,7 +426,8 @@ const guidedChoiceRecipe = defineCliRecipe({
   title: "Guided choice",
   description:
     "A complete interactive decision frame that exercises responsive label wrapping, semantic groups, and hidden-choice disclosure.",
-  components: ["Docs header", "Section", "Select"],
+  components: ["docs-header", "section", "select"],
+  capabilityControls: ["unicode", "colorDepth"],
   definition: guidedChoice,
   render: (definition, capabilities, theme) => {
     const presenter = createCliPresenter(capabilities, { theme });
@@ -487,7 +497,8 @@ const markdownBrowserRecipe: CliCompositionRecipe = {
   title: "Markdown browser",
   description:
     "A keyboard-complete grouped reader with addressable links, caller-owned resolution, and optional terminal-cell pointer input.",
-  components: ["Section rule", "Box", "Choice", "Markdown"],
+  components: ["markdown"],
+  capabilityControls: ["unicode", "colorDepth", "hyperlinks"],
   render: (capabilities, theme = "dark", rows = 24) =>
     renderMarkdownBrowserCatalogueFrame(
       capabilities,
