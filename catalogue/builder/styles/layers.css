@@ -1,0 +1,85 @@
+@layer catalogue {
+  .discern-builder-outline > h3 {
+    font-feature-settings: normal;
+  }
+  .discern-builder-outline {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid var(--discern-color-border);
+  }
+  .discern-builder-outline h3 {
+    margin: 0;
+    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .discern-builder-outline p {
+    margin: 0;
+    color: var(--discern-color-ink-faint);
+    font-size: var(--discern-font-size-xs);
+  }
+  .discern-builder-outline ul {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .discern-builder-outline li {
+    padding-inline-start: calc(var(--discern-builder-depth, 0) * 14px);
+  }
+  .discern-builder-outline__row {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    width: 100%;
+    overflow: hidden;
+    padding: 4px 8px;
+    border: 1px solid transparent;
+    border-radius: var(--discern-radius-md);
+    background: none;
+    color: inherit;
+    font-size: var(--discern-font-size-xs);
+    text-align: start;
+    white-space: nowrap;
+    cursor: grab;
+  }
+  .discern-builder-outline__row:hover {
+    background: var(--discern-color-surface-sunken);
+  }
+  .discern-builder-outline__row--selected {
+    border-color: var(--discern-color-accent-400);
+    background: var(--discern-color-accent-100);
+  }
+  .discern-builder-outline__row small {
+    color: var(--discern-color-ink-faint);
+    font-family: var(--discern-font-mono);
+    font-feature-settings: normal;
+  }
+  .discern-builder-outline__row span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .discern-builder-outline__end {
+    padding: 6px 10px;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-surface);
+    color: var(--discern-color-ink-faint);
+    font-size: var(--discern-font-size-xs);
+    text-align: center;
+    cursor: default;
+  }
+
+  @media (forced-colors: active) {
+    .discern-builder-outline__row--selected {
+      border-color: Highlight;
+      outline-color: Highlight;
+    }
+  }
+}
