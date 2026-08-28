@@ -45,6 +45,17 @@ interface RenderContext {
   readonly callbacks: ReadonlyMap<string, CallbackBinding>;
 }
 
+/** Names and proposed files shown before an export effect runs. */
+export interface BuilderExportIdentity {
+  readonly componentName: string;
+  readonly callbackContractName: string | null;
+  readonly filenames: {
+    readonly tsx: string;
+    readonly runtime: string;
+    readonly json: string;
+  };
+}
+
 const REACT_MODULE = "@discern-sh/design-system/react";
 
 function exportName(node: BuilderNode, naming: ExportNaming): string {
@@ -63,6 +74,15 @@ function pascalIdentifier(name: string): string {
     .map((word) => word.slice(0, 1).toUpperCase() + word.slice(1))
     .join("");
   return /^[A-Za-z]/.test(identifier) ? identifier : "ComposedPage";
+}
+
+/** Deterministic lowercase filename stem with a punctuation-only fallback. */
+export function builderFileStem(name: string): string {
+  const stem = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(
+    /^-|-$/g,
+    "",
+  );
+  return stem === "" ? "composition" : stem;
 }
 
 function uniqueIdentifier(
@@ -323,12 +343,17 @@ function importLine(names: readonly string[]): string {
     }\n} from "${REACT_MODULE}";`;
 }
 
-/** Consumer-ready TSX source for the document's component tree. */
-export function documentToTsx(
+interface ExportPlan {
+  readonly names: readonly string[];
+  readonly callbacks: readonly CallbackBinding[];
+  readonly componentName: string;
+  readonly callbacksName: string | undefined;
+}
+
+function planExport(
   document: BuilderDocument,
   naming: ExportNaming,
-): string {
-  assertBuilderDocument(document, naming);
+): ExportPlan {
   const names = collectExportNames(document, naming);
   const callbacks = collectCallbackBindings(document, naming);
   const reserved = new Set(names);
@@ -341,6 +366,40 @@ export function documentToTsx(
   const callbacksName = callbacks.length === 0
     ? undefined
     : uniqueIdentifier(`${componentName}Callbacks`, reserved, "Contract");
+  return { names, callbacks, componentName, callbacksName };
+}
+
+/** Export identity derived from the same naming plan as the TSX emitter. */
+export function builderExportIdentity(
+  document: BuilderDocument,
+  naming: ExportNaming,
+): BuilderExportIdentity {
+  assertBuilderDocument(document, naming);
+  const plan = planExport(document, naming);
+  const stem = builderFileStem(document.name);
+  return {
+    componentName: plan.componentName,
+    callbackContractName: plan.callbacksName ?? null,
+    filenames: {
+      tsx: `${stem}.tsx`,
+      runtime: `${stem}.selection.ts`,
+      json: `${stem}.builder.json`,
+    },
+  };
+}
+
+/** Consumer-ready TSX source for the document's component tree. */
+export function documentToTsx(
+  document: BuilderDocument,
+  naming: ExportNaming,
+): string {
+  assertBuilderDocument(document, naming);
+  const {
+    names,
+    callbacks,
+    componentName,
+    callbacksName,
+  } = planExport(document, naming);
   const callbackMap = new Map(
     callbacks.map((callback) => [
       callbackKey(callback.nodeId, callback.prop),
