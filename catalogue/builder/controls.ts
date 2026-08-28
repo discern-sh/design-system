@@ -22,11 +22,26 @@ export interface ControlSource {
   readonly objectTypes?: ReadonlyMap<string, CatalogueObjectType>;
 }
 
+export const INSPECTOR_SECTIONS = [
+  "Content",
+  "Appearance",
+  "Layout",
+  "Behaviour",
+  "Accessibility",
+  "Advanced",
+] as const;
+
+/** Human decisions used as the progressive Inspector hierarchy. */
+export type InspectorSection = (typeof INSPECTOR_SECTIONS)[number];
+
 interface ControlBase {
   readonly name: string;
   readonly label: string;
   readonly required: boolean;
   readonly typeText: string;
+  readonly section?: InspectorSection;
+  /** A runtime default the source types cannot carry. */
+  readonly defaultValue?: string | number | boolean;
   readonly description?: string;
 }
 
@@ -61,6 +76,98 @@ function labelFor(name: string): string {
     .replace(/[-_]+/g, " ")
     .toLowerCase();
   return spaced.slice(0, 1).toUpperCase() + spaced.slice(1);
+}
+
+interface ExplicitControlPresentation {
+  readonly label?: string;
+  readonly section?: InspectorSection;
+  readonly defaultValue?: string | number | boolean;
+  readonly description?: string;
+}
+
+/**
+ * Facts unavailable from prop names/types alone. Keep this deliberately small:
+ * generic controls still enrol through the heuristics below.
+ */
+const EXPLICIT_CONTROL_PRESENTATION: Readonly<
+  Record<string, ExplicitControlPresentation>
+> = {
+  "Button.variant": { defaultValue: "primary" },
+  "Button.size": { defaultValue: "md" },
+  "Card.padding": { defaultValue: "md" },
+  "HeroBlock.headingLevel": {
+    label: "Heading level",
+    section: "Accessibility",
+    defaultValue: 1,
+  },
+  "HeroBlock.layout": { defaultValue: "split" },
+  "HeroBlock.surface": { defaultValue: "canvas" },
+  "Tabs.items": { label: "Tabs" },
+  "Tabs.activationMode": {
+    label: "Activation",
+    section: "Behaviour",
+    defaultValue: "automatic",
+  },
+  "Tabs.label": {
+    label: "Accessible label",
+    section: "Accessibility",
+    defaultValue: "Tabs",
+  },
+};
+
+function derivedSection(
+  name: string,
+  typeText: string,
+  control: PropControl["control"],
+): InspectorSection {
+  if (
+    /^(?:aria|alt(?:Text)?$|role$|decorative$|headingLevel$)/i.test(name)
+  ) return "Accessibility";
+  if (
+    /(?:className|style|dangerously|html|metadata|spec|config|passthrough)/i
+      .test(name)
+  ) return "Advanced";
+  if (
+    /(?:layout|align|justify|gap|spacing|padding|width|height|columns?|orientation|position|placement|inset|wrap)/i
+      .test(name)
+  ) return "Layout";
+  if (
+    /(?:variant|tone|surface|texture|size|colour|color|theme|icon|raised|plain|emphasis)/i
+      .test(name)
+  ) return "Appearance";
+  if (
+    /(?:disabled|loading|open|active|selected|value|mode|dismiss|copyable|href|target|interactive|collapsible)/i
+      .test(name)
+  ) return "Behaviour";
+  if (control === "json" && !typeText.includes("[]")) return "Advanced";
+  return "Content";
+}
+
+function controlPresentation(
+  source: ControlSource,
+  name: string,
+  typeText: string,
+  control: PropControl["control"],
+  description?: string,
+): Pick<
+  ControlBase,
+  "label" | "section" | "description" | "defaultValue"
+> {
+  const explicit = EXPLICIT_CONTROL_PRESENTATION[
+    `${source.reactExport}.${name}`
+  ];
+  const resolvedDescription = explicit?.description ?? description;
+  return {
+    label: explicit?.label ??
+      (name === "children" ? "Content" : labelFor(name)),
+    section: explicit?.section ?? derivedSection(name, typeText, control),
+    ...(explicit?.defaultValue === undefined
+      ? {}
+      : { defaultValue: explicit.defaultValue }),
+    ...(resolvedDescription === undefined
+      ? {}
+      : { description: resolvedDescription }),
+  };
 }
 
 function literalUnionOptions(
@@ -155,32 +262,37 @@ function controlFor(
   description?: string,
 ): PropControl | undefined {
   if (isEventHandlerName(name) || isFunctionType(typeText)) return undefined;
-  const base = {
+  const baseFor = (control: PropControl["control"]): ControlBase => ({
     name,
-    label: labelFor(name),
     required,
     typeText,
-    ...(description === undefined ? {} : { description }),
-  };
+    ...controlPresentation(source, name, typeText, control, description),
+  });
   if (typeText === "ReactNode") {
-    return { ...base, control: "slot", elementOnly: false };
+    return { ...baseFor("slot"), control: "slot", elementOnly: false };
   }
   if (/^ReactElement\b/.test(typeText)) {
-    return { ...base, control: "slot", elementOnly: true };
+    return { ...baseFor("slot"), control: "slot", elementOnly: true };
   }
   if (typeText === "boolean" || typeText === "true | false") {
-    return { ...base, control: "toggle" };
+    return { ...baseFor("toggle"), control: "toggle" };
   }
-  if (typeText === "string") return { ...base, control: "text" };
-  if (typeText === "number") return { ...base, control: "number" };
+  if (typeText === "string") return { ...baseFor("text"), control: "text" };
+  if (typeText === "number") {
+    return { ...baseFor("number"), control: "number" };
+  }
   const literalOptions = literalUnionOptions(typeText);
   if (literalOptions !== undefined) {
-    return { ...base, control: "select", options: literalOptions };
+    return {
+      ...baseFor("select"),
+      control: "select",
+      options: literalOptions,
+    };
   }
   const variant = variantNamed(typeText, source);
   if (variant !== undefined) {
     return {
-      ...base,
+      ...baseFor("select"),
       control: "select",
       options: variant.values.map((value) =>
         /^-?\d+(?:\.\d+)?$/.test(value) ? Number(value) : value
@@ -190,12 +302,12 @@ function controlFor(
   if (looksStructural(typeText, source)) {
     const shape = jsonShape(typeText, source);
     return {
-      ...base,
+      ...baseFor("json"),
       control: "json",
       ...(shape === undefined ? {} : { shape }),
     };
   }
-  return { ...base, control: "text" };
+  return { ...baseFor("text"), control: "text" };
 }
 
 function variantPropName(
@@ -224,13 +336,65 @@ function fallbackControls(source: ControlSource): readonly PropControl[] {
     ...variantControls,
     {
       name: "children",
-      label: "Children",
+      ...controlPresentation(
+        source,
+        "children",
+        "ReactNode",
+        "slot",
+      ),
       required: true,
       typeText: "ReactNode",
       control: "slot",
       elementOnly: false,
     },
   ];
+}
+
+/** Human display for a primitive control value. */
+export function humanControlScalar(value: string | number | boolean): string {
+  if (typeof value === "boolean") return value ? "On" : "Off";
+  const size = {
+    xs: "Extra small",
+    sm: "Small",
+    md: "Medium",
+    lg: "Large",
+    xl: "Extra large",
+  }[String(value)];
+  if (size !== undefined) return size;
+  const source = String(value).replace(/[-_]+/g, " ");
+  return source.slice(0, 1).toUpperCase() + source.slice(1);
+}
+
+/** Human value plus provenance for one control without inventing a default. */
+export function effectiveControlValue(
+  control: PropControl,
+  value: BuilderPropValue | undefined,
+): {
+  readonly value: string;
+  readonly provenance: "default" | "overridden" | "Component default";
+  readonly resettable: boolean;
+} {
+  if (value === undefined) {
+    return control.defaultValue === undefined
+      ? {
+        value: "Not set",
+        provenance: "Component default",
+        resettable: false,
+      }
+      : {
+        value: humanControlScalar(control.defaultValue),
+        provenance: "default",
+        resettable: false,
+      };
+  }
+  const displayed = value.kind === "slot"
+    ? `${String(value.children.length)} content item${
+      value.children.length === 1 ? "" : "s"
+    }`
+    : value.kind === "json"
+    ? "Structured value"
+    : humanControlScalar(value.value);
+  return { value: displayed, provenance: "overridden", resettable: true };
 }
 
 /** Derive the inspector controls for one component. */

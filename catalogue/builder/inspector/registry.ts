@@ -6,6 +6,8 @@ import { registryCoreBySlug, registryCoreEntries } from "../registry-core.ts";
 /** The control and export facts Inspector may consume for one Component. */
 export interface InspectorControlRecord {
   readonly slug: string;
+  readonly name: string;
+  readonly description: string;
   readonly exportName: string;
   readonly controls: readonly PropControl[];
   readonly builderDefaults: Readonly<Record<string, unknown>>;
@@ -19,6 +21,8 @@ export const inspectorControlRecords: readonly InspectorControlRecord[] = Object
   .freeze(registryCoreEntries.map((entry) =>
     Object.freeze({
       slug: entry.registry.meta.slug,
+      name: entry.registry.meta.name,
+      description: entry.registry.meta.description,
       exportName: entry.registry.reactExport,
       controls: entry.controls,
       builderDefaults: entry.registry.builderDefaults,

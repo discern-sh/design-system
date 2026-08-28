@@ -3,15 +3,17 @@
  * isolation: the auto-growing textarea and the structured object editor.
  * The builder app composes these; tests render them directly.
  */
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { TextareaHTMLAttributes } from "react";
 import { Select } from "../../src/components/forms/select/select.tsx";
 import type { JsonShape, PropControl } from "./controls.ts";
 import {
   editableCell,
+  moveShapedRow,
   newShapedRow,
   parseShapedSource,
   serializeShapedRows,
+  summarizeShapedRow,
   withRowValue,
 } from "./object-editor.ts";
 
@@ -132,8 +134,11 @@ interface ShapedJsonEditorProps {
   readonly shape: JsonShape;
   readonly source: string;
   readonly label: string;
+  readonly inputId?: string;
   readonly error?: string | null;
   readonly onSource: (source: string) => void;
+  readonly onApply?: () => void;
+  readonly createRow?: () => Readonly<Record<string, unknown>>;
 }
 
 /**
@@ -145,22 +150,70 @@ interface ShapedJsonEditorProps {
  * the source goes invalid so the field being typed in cannot vanish.
  */
 export function ShapedJsonEditor(
-  { shape, source, label, error = null, onSource }: ShapedJsonEditorProps,
+  {
+    shape,
+    source,
+    label,
+    inputId,
+    error = null,
+    onSource,
+    onApply,
+    createRow = () => newShapedRow(shape),
+  }: ShapedJsonEditorProps,
 ) {
   const [rawOpen, setRawOpen] = useState(false);
-  const errorId = useId();
+  const [openRows, setOpenRows] = useState<ReadonlySet<number>>(
+    () => new Set(),
+  );
+  const root = useRef<HTMLDivElement>(null);
   const rows = parseShapedSource(source, shape);
   const invalid = rows === undefined;
   const commit = (
     next: readonly Readonly<Record<string, unknown>>[],
   ): void => onSource(serializeShapedRows(next, shape));
+  const toggleRow = (index: number, open: boolean): void => {
+    setOpenRows((current) => {
+      const next = new Set(current);
+      if (open) next.add(index);
+      else next.delete(index);
+      return next;
+    });
+  };
+  const addRow = (): void => {
+    if (rows === undefined) return;
+    const index = rows.length;
+    commit([...rows, createRow()]);
+    setOpenRows((current) => new Set([...current, index]));
+    globalThis.requestAnimationFrame(() => {
+      root.current?.querySelector<HTMLInputElement>(
+        `[data-discern-builder-object-row="${
+          String(index)
+        }"] input:not(:disabled), [data-discern-builder-object-row="${
+          String(index)
+        }"] select`,
+      )?.focus();
+    });
+  };
   return (
-    <div className="discern-builder-object">
+    <div className="discern-builder-object" ref={root}>
       {rows === undefined ? null : (
         <>
           {rows.map((row, index) => (
-            <div className="discern-builder-object__row" key={index}>
-              <div className="discern-builder-object__cells">
+            <details
+              className="discern-builder-object__row"
+              key={index}
+              open={openRows.has(index)}
+              onToggle={(event) => toggleRow(index, event.currentTarget.open)}
+            >
+              <summary>
+                <span>
+                  {String(index + 1)}. {summarizeShapedRow(row, shape)}
+                </span>
+              </summary>
+              <div
+                className="discern-builder-object__cells"
+                data-discern-builder-object-row={index}
+              >
                 {shape.members.map((member) => (
                   <MemberCell
                     key={member.name}
@@ -173,24 +226,48 @@ export function ShapedJsonEditor(
               </div>
               {shape.list
                 ? (
-                  <button
-                    type="button"
-                    aria-label={`Remove ${shape.typeName} ${String(index + 1)}`}
-                    onClick={() =>
-                      commit(rows.filter((_, at) => at !== index))}
-                  >
-                    ✕
-                  </button>
+                  <div className="discern-builder-object__actions">
+                    <button
+                      type="button"
+                      disabled={index === 0}
+                      aria-label={`Move ${shape.typeName} ${
+                        String(index + 1)
+                      } up`}
+                      onClick={() => commit(moveShapedRow(rows, index, -1))}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      disabled={index === rows.length - 1}
+                      aria-label={`Move ${shape.typeName} ${
+                        String(index + 1)
+                      } down`}
+                      onClick={() => commit(moveShapedRow(rows, index, 1))}
+                    >
+                      ↓
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Remove ${shape.typeName} ${
+                        String(index + 1)
+                      }`}
+                      onClick={() =>
+                        commit(rows.filter((_, at) => at !== index))}
+                    >
+                      Remove
+                    </button>
+                  </div>
                 )
                 : null}
-            </div>
+            </details>
           ))}
           {shape.list
             ? (
               <button
                 type="button"
                 className="discern-builder-object__add"
-                onClick={() => commit([...rows, newShapedRow(shape)])}
+                onClick={addRow}
               >
                 ＋ {shape.typeName}
               </button>
@@ -206,24 +283,33 @@ export function ShapedJsonEditor(
       >
         <summary>Edit as JSON</summary>
         <AutoGrowTextarea
+          id={inputId}
           rows={2}
           spellCheck={false}
           value={source}
           placeholder={shape.list ? "[]" : "{}"}
           aria-label={`${label} JSON`}
-          aria-invalid={invalid || error !== null ? true : undefined}
-          aria-describedby={invalid || error !== null ? errorId : undefined}
+          aria-invalid={error !== null ? true : undefined}
+          aria-describedby={error !== null && inputId !== undefined
+            ? `${inputId}-error`
+            : undefined}
+          onBlur={onApply}
           onChange={(event) => onSource(event.currentTarget.value)}
         />
-      </details>
-      {invalid || error !== null
-        ? (
-          <small
-            className="discern-builder-control__error"
-            id={errorId}
-            role="alert"
+        {onApply === undefined ? null : (
+          <button
+            type="button"
+            className="discern-builder-json-apply"
+            onClick={onApply}
           >
-            {error ?? "Fix the JSON to edit it as a form."}
+            Apply JSON
+          </button>
+        )}
+      </details>
+      {invalid && error === null
+        ? (
+          <small className="discern-builder-control__hint">
+            Use an object matching {shape.typeName} to return to shaped rows.
           </small>
         )
         : null}

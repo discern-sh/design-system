@@ -99,6 +99,43 @@ export function withRowValue(
   });
 }
 
+/** Move one row by one place; out-of-range moves are stable no-ops. */
+export function moveShapedRow(
+  rows: readonly ObjectEditorRow[],
+  index: number,
+  direction: -1 | 1,
+): readonly ObjectEditorRow[] {
+  const destination = index + direction;
+  if (
+    index < 0 || index >= rows.length || destination < 0 ||
+    destination >= rows.length
+  ) return rows;
+  const next = [...rows];
+  const moving = next[index];
+  const displaced = next[destination];
+  if (moving === undefined || displaced === undefined) return rows;
+  next[destination] = moving;
+  next[index] = displaced;
+  return next;
+}
+
+/** Compact human summary for a collapsed structured row. */
+export function summarizeShapedRow(
+  row: ObjectEditorRow,
+  shape: JsonShape,
+): string {
+  const members = [...shape.members].sort((left, right) =>
+    Number(/^(?:label|title|name|heading)$/i.test(right.name)) -
+    Number(/^(?:label|title|name|heading)$/i.test(left.name))
+  );
+  for (const member of members) {
+    const value = row[member.name];
+    if (typeof value === "string" && value.trim() !== "") return value.trim();
+    if (typeof value === "number") return `${member.label}: ${String(value)}`;
+  }
+  return `Empty ${shape.typeName}`;
+}
+
 /**
  * True when the member's control is scalar and the row's current value is
  * absent or matches it, so the cell can edit without destroying structure.
