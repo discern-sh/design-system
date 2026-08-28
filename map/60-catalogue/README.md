@@ -30,6 +30,8 @@ The Component index projects Groups, purposes, counts, and result cards from [`p
 
 Generated discovery imagery has its own exact-bounds contract under [`example-images/`](../../catalogue/example-images/). The capture route renders every canonical Web example in Light and Dark; the update task crops the declared root, commits the PNG, and writes the typed generated manifest. [`example-images.ts`](../../catalogue/example-images.ts) is the consumer seam for active-theme resolution, intrinsic dimensions, and the representative rule (`default`, then the first Web example). Detail routes always retain the live specimen. [ADR 0034](../_adr/0034-commit-pinned-png-component-example-images.md) records the committed-image posture.
 
+[Browser visual review](visual-review.md) composes those examples, conformance actions, and capture regions into a local-only posture instrument. Settled defaults auto-enrol; meaningful extras stay beside their example implementation; the tiered ephemeral matrix is evidence rather than a pixel gate.
+
 ## Search, Compare, and source actions
 
 [`catalogue/search/`](../../catalogue/search/) is the only matching authority. It owns normalization, intent aliases, all-token matching, ranking, stable ties, and human match reasons. Global search and family-restricted projections select different populations but consume those exact semantics; an alias such as “call to action” therefore ranks CTA Band and explains the same alias in both places. Route providers contribute source facts without implementing a family matcher.
@@ -48,7 +50,7 @@ Terminal layouts compose public CLI renderers into complete frames. Definitions 
 
 ## Appearance and URL state
 
-Appearance is a reusable consumer boundary, split between pure state in [`shell/appearance-state.ts`](../../catalogue/shell/appearance-state.ts) and the compact control in [`shell/appearance.tsx`](../../catalogue/shell/appearance.tsx). System, Light, and Dark resolve the browser and terminal preview palettes together. Accent remains available inside the closed Appearance disclosure, with its swatch and numeric feedback kept out of the primary toolbar row. Valid explicit `theme` and non-default `accent` parameters are shareable, storage supplies comfort persistence, and Back/Forward restores URL-preferred state. Local Component and Compare controls preserve explicit Appearance parameters.
+Appearance is a reusable consumer boundary, split between the proved presets in [`shell/appearance-options.ts`](../../catalogue/shell/appearance-options.ts), pure state in [`shell/appearance-state.ts`](../../catalogue/shell/appearance-state.ts), and the compact control in [`shell/appearance.tsx`](../../catalogue/shell/appearance.tsx). System, Light, and Dark resolve the browser and terminal preview palettes together. The closed disclosure offers only semantically safe named accents. Valid explicit `theme` and non-default `accent` parameters are shareable, storage supplies comfort persistence, and Back/Forward restores URL-preferred state. Local Component and Compare controls preserve explicit Appearance parameters.
 
 Family state uses stable parameters and omits comfort defaults:
 
@@ -84,13 +86,14 @@ The machine-only `?conformance=1` route remains exhaustive. Ordinary indexes sta
 
 ## Where to start
 
-| Concern                                                       | Authority                                                                                                                                 |
-| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Route vocabulary, matching, local navigation, legacy upgrades | [`catalogue/routes/`](../../catalogue/routes/) and [`routes.ts`](../../catalogue/routes.ts)                                               |
-| Shell, drawer, universal search, Appearance                   | [`catalogue/shell/`](../../catalogue/shell/)                                                                                              |
-| Component discovery, detail, and Compare pages                | [`catalogue/pages/components/`](../../catalogue/pages/components/) and [`catalogue/pages/compare/`](../../catalogue/pages/compare/)       |
-| Canonical examples and generated registry                     | Component Metadata/vocabularies and [`scripts/build.ts`](../../scripts/build.ts)                                                          |
-| Generated example-image contract and resolver                 | [`catalogue/example-images/`](../../catalogue/example-images/) and [`catalogue/example-images.ts`](../../catalogue/example-images.ts)     |
-| Token and terminal-foundation explorers                       | [`routes/foundations.ts`](../../catalogue/routes/foundations.ts) and [`terminal-foundations.ts`](../../catalogue/terminal-foundations.ts) |
-| Illustrative Compositions and terminal layouts                | [`compositions.tsx`](../../catalogue/compositions.tsx) and [`cli-compositions.ts`](../../catalogue/cli-compositions.ts)                   |
-| Browser conformance and family enrolment                      | [`scripts/conformance.ts`](../../scripts/conformance.ts) and [`scripts/conformance/catalogue/`](../../scripts/conformance/catalogue/)     |
+| Concern                                                       | Authority                                                                                                                                                        |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Route vocabulary, matching, local navigation, legacy upgrades | [`catalogue/routes/`](../../catalogue/routes/) and [`routes.ts`](../../catalogue/routes.ts)                                                                      |
+| Shell, drawer, universal search, Appearance                   | [`catalogue/shell/`](../../catalogue/shell/)                                                                                                                     |
+| Component discovery, detail, and Compare pages                | [`catalogue/pages/components/`](../../catalogue/pages/components/) and [`catalogue/pages/compare/`](../../catalogue/pages/compare/)                              |
+| Canonical examples and generated registry                     | Component Metadata/vocabularies and [`scripts/build.ts`](../../scripts/build.ts)                                                                                 |
+| Generated example-image contract and resolver                 | [`catalogue/example-images/`](../../catalogue/example-images/) and [`catalogue/example-images.ts`](../../catalogue/example-images.ts)                            |
+| Visual grammar, postures, and local review                    | [`visual-review.md`](visual-review.md), [`catalogue/review-postures.ts`](../../catalogue/review-postures.ts), and [`catalogue/review/`](../../catalogue/review/) |
+| Token and terminal-foundation explorers                       | [`routes/foundations.ts`](../../catalogue/routes/foundations.ts) and [`terminal-foundations.ts`](../../catalogue/terminal-foundations.ts)                        |
+| Illustrative Compositions and terminal layouts                | [`compositions.tsx`](../../catalogue/compositions.tsx) and [`cli-compositions.ts`](../../catalogue/cli-compositions.ts)                                          |
+| Browser conformance and family enrolment                      | [`scripts/conformance.ts`](../../scripts/conformance.ts) and [`scripts/conformance/catalogue/`](../../scripts/conformance/catalogue/)                            |

@@ -42,11 +42,11 @@ Change one only through a justified programme amendment. Record any hard-to-reve
 
 ## Waves and dispatch order
 
-| Key | Brief                                                                                            | Parallel shape                                                                   | Starts when                  | Landing order               |
-| --- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | ---------------------------- | --------------------------- |
-| 1A  | [Establish the visual grammar and review instrument](1a-visual-grammar-and-review-instrument.md) | One shared-authority worktree                                                    | Catalogue UX 5A has landed   | Sole wave-1 stream          |
-| 2A  | [Polish the complete browser Component surface](2a-component-surface-polish.md)                  | One coordinator worktree; up to four disjoint Group audits may fan out inside it | Browser polish 1A has landed | Sole wave-2 stream          |
-| 3A  | [Run integrated browser polish and perceptual QA](3a-integrated-browser-polish.md)               | One adversarial browser worktree; read-only audits may fan out                   | Browser polish 2A has landed | Final implementation stream |
+| Key | Brief                                                                                                  | Parallel shape                                                                   | Starts when                  | Landing order               |
+| --- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | ---------------------------- | --------------------------- |
+| 1A  | [Establish the visual grammar and review instrument](_done/1a-visual-grammar-and-review-instrument.md) | One shared-authority worktree                                                    | Catalogue UX 5A has landed   | Sole wave-1 stream          |
+| 2A  | [Polish the complete browser Component surface](2a-component-surface-polish.md)                        | One coordinator worktree; up to four disjoint Group audits may fan out inside it | Browser polish 1A has landed | Sole wave-2 stream          |
+| 3A  | [Run integrated browser polish and perceptual QA](3a-integrated-browser-polish.md)                     | One adversarial browser worktree; read-only audits may fan out                   | Browser polish 2A has landed | Final implementation stream |
 
 Expected topology: three owner-dispatched agent sessions and three independently landed worktrees in sequence, with peak user-visible concurrency of one. A later wave is not dispatched until the preceding `_done/` marker and behavioural contract are on `main`; if a session is resumed early while that exact prerequisite branch is still in flight, use `discern-await-the-fleet` rather than polling, then `discern_update` before work continues. Wave 2 can assign its four bundles to sub-agents inside one worktree without creating sibling landing branches; obey the available slot limit (with four total slots, run the coordinator plus three bundles, then the fourth):
 
