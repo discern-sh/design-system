@@ -4,7 +4,7 @@
 
 **Wave:** 2. Implement in parallel with 2B–2D after Builder 1A has landed. Land first within wave 2.
 
-**Decision:** [ADR 0035 — Run Builder previews in a bounded frame realm](../../../../_adr/0035-run-builder-previews-in-a-bounded-frame-realm.md).
+**Decision:** [ADR 0036 — Run Builder previews in a bounded frame realm](../../../../_adr/0036-run-builder-previews-in-a-bounded-frame-realm.md).
 
 Other wave-2 streams are in flight. You own `2A` only; do not launch, dispatch, or supervise sibling briefs.
 
