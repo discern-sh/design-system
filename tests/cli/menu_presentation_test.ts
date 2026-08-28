@@ -17,15 +17,13 @@ import {
 
 const menuPresentation = "menu" satisfies InteractionSelectionPresentation;
 
-// A menu triggers one value. Keeping it out of multi-selection is part of the
-// public type contract, not a runtime convention.
-const invalidMultiselectPresentation = {
-  label: "Many",
-  choices: [{ id: "one", label: "One", value: 1 }],
-  // @ts-expect-error menu is deliberately single-selection only
-  presentation: menuPresentation,
-} satisfies SelectionsRequestOptions<number>;
-void invalidMultiselectPresentation;
+// A menu triggers one value. This assignment stops compiling if a future
+// multi-selection presentation union admits it.
+const menuIsExcludedFromMultiselect: "menu" extends NonNullable<
+  SelectionsRequestOptions<number>["presentation"]
+> ? false
+  : true = true;
+assert(menuIsExcludedFromMultiselect);
 
 const entries = [
   {
