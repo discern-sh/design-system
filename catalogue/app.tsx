@@ -91,7 +91,13 @@ function App() {
       case "compositions":
         return <CompositionsPage />;
       case "terminal":
-        return <TerminalPage terminalTheme={appearance.terminalTheme} />;
+        return (
+          <TerminalPage
+            route={route}
+            currentUrl={currentUrl}
+            terminalTheme={appearance.terminalTheme}
+          />
+        );
       case "compare":
         return (
           <ComparePage

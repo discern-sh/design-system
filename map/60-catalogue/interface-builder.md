@@ -8,11 +8,17 @@ The security and effect boundary is recorded in [ADR 0027](../_adr/0027-keep-bui
 
 The builder is deliberately marked **Beta** in its own chrome and browser title. Its Catalogue link sits after the ordinary route and contextual navigation rather than among the primary destinations. The builder remains available for real composition work, but promotion into the Catalogue's primary navigation is an owner decision after further consumer use; the current document format must not be presented as a public hosted-builder API while that evaluation continues.
 
+## Workspace and feature boundaries
+
+[`app.tsx`](../../catalogue/builder/app.tsx) is only the browser bootstrap. [`workspace/workspace.tsx`](../../catalogue/builder/workspace/workspace.tsx) composes the toolbar, adaptive panes, accepted document, and feature surfaces without re-owning their state transitions. Preview, tree/Layers, discovery, and Inspector each live under their matching `catalogue/builder/` directory; their styles and browser checks follow the same ownership split. Cross-feature behaviour travels through the explicit document store, selection/insertion projection, preview protocol, feedback model, registry projections, and preflight result rather than a shared bag of setters.
+
+[`workspace/document-store.ts`](../../catalogue/builder/workspace/document-store.ts) is the only live accepted-document/history authority. Features submit pure document commands to it; they cannot publish separate documents to preview, persistence, or export. [`tree/projection.ts`](../../catalogue/builder/tree/projection.ts) gives discovery and tree commands the same typed `InsertionTarget` and gives preview, Layers, and Inspector one selection projection.
+
 ## Document and trust boundary
 
 A document is a versioned tree of Component instances and literal text. Component `ReactNode` props hold ordered child slots. The pure tree authority is [`model.ts`](../../catalogue/builder/model.ts); pointer-to-root insertion geometry is isolated in [`placement.ts`](../../catalogue/builder/placement.ts).
 
-Every route into live state uses the registry-derived policy in [`policy.ts`](../../catalogue/builder/policy.ts): file import, browser-storage restoration, inspector edits, history, preview, JSON save, runtime selection, and TSX export. Version `1` is checked explicitly; the parser has one version branch where a future migration can be added, but performs no implicit migration now.
+Every route into live state uses the registry-derived policy assembled in [`registry-core.ts`](../../catalogue/builder/registry-core.ts): file import, browser-storage restoration, inspector edits, history, preview, JSON save, runtime selection, and TSX export. [`policy.ts`](../../catalogue/builder/policy.ts) owns the acceptance rules and limits. Version `1` is checked explicitly; the parser has one version branch where a future migration can be added, but performs no implicit migration now.
 
 Additional props must be a plain JSON object. They may preserve ordinary safe Component and DOM props, including `aria-*`, `data-*`, `class`, `className`, `style`, and safe URLs. They cannot shadow `children` or any canonical source prop, and cannot carry raw-HTML props, React identity or refs, executable handler names, prototype-sensitive keys, `srcDoc`, or executable URL schemes. The same recursive restrictions apply to JSON-valued modeled props, including nested objects. A rejection is a `BuilderDocumentError` naming the exact document path and reason. There is no lenient preview representation.
 
@@ -22,17 +28,19 @@ Validation is iterative and completes before recursive render, export, or histor
 
 ## Registry, controls, and preview
 
-[`registry-index.ts`](../../catalogue/builder/registry-index.ts) derives the known slugs, modeled props, all canonical prop reservations, required function props, adapter exports, and default instances from the generated Catalogue registry. A future Component therefore joins the policy and inventory without manual registration.
+[`registry-core.ts`](../../catalogue/builder/registry-core.ts) is the one Builder projection of generated Component identity, metadata, canonical examples, adapter imports, defaults, policy facts, reservations, callbacks, and export names. [`discovery/registry.ts`](../../catalogue/builder/discovery/registry.ts) adapts that core into shared universal-search records and generated representative-image facts; [`inspector/registry.ts`](../../catalogue/builder/inspector/registry.ts) adapts it into documented controls and export facts. Neither adapter enumerates Components or owns generated facts. [`registry-index.ts`](../../catalogue/builder/registry-index.ts) is only the compatibility export surface for existing non-feature consumers. A future Component therefore joins all projections without manual registration.
 
 Inspector controls derive in [`controls.ts`](../../catalogue/builder/controls.ts) from extracted source props, literal variants, and object shapes. Sibling and shared-module variants under `src/components/` remain part of that vocabulary. Structured objects use the row editor in [`object-editor.ts`](../../catalogue/builder/object-editor.ts) while retaining raw JSON as the stored value. When an opaque required data spec cannot be synthesized generically, its examples module may export `catalogueBuilderDefaults`; the generated registry binds that source-backed JSON into placement, preview, and consumer TSX instead of weakening the Component prop type. Rejected in-progress JSON and additional-prop text stays in local UI draft state; only a policy-accepted document enters history, autosave, preview, or export.
 
-[`render.tsx`](../../catalogue/builder/render.tsx) is the one renderer used by the canvas and pure tests. The canvas supplies only Catalogue-local inspection decoration and inert preview functions for required callbacks. Palette previews are decorative and inert. The Table default is intentionally empty: its native row-group grammar is raw markup, which the inert document model does not author.
+[`render.tsx`](../../catalogue/builder/render.tsx) is the one renderer used by the canvas and pure tests. The canvas supplies only Catalogue-local inspection decoration and inert preview functions for required callbacks. [`preview/protocol.ts`](../../catalogue/builder/preview/protocol.ts) defines the versioned, same-origin data seam for an eventual frame: accepted document, viewport, shared Appearance facts, mode, selection, and inert callback witnesses. It does not execute document-supplied code, and the current host remains the same inert canvas. Palette previews are decorative and inert. The Table default is intentionally empty: its native row-group grammar is raw markup, which the inert document model does not author.
 
 ## Persistence and files
 
 [`persistence.ts`](../../catalogue/builder/persistence.ts) owns guarded access to the document, recovery source, and theme preference in browser storage. A denied read or failed write trips a circuit breaker, leaves the in-memory document editable, and displays a durable alert with an explicit retry. A rejected stored document starts from a safe empty composition and preserves its exact source in memory and, when available, the separate recovery key. A later clean reload still exposes that recovery source.
 
 File size is checked before `File.text()` against the 256 KiB ceiling. Read rejection and parse rejection leave the current document and history unchanged; load tokens prevent an older read from winning a race, and clearing the file input permits the same file to be retried. Save names use a deterministic lowercase slug with `composition.json` as the blank-name fallback. Download anchors and object URLs are cleaned up in a `finally` path. File and storage feedback is inline and announced; the builder opens no blocking alert or confirmation dialog.
+
+[`inspector/feedback.ts`](../../catalogue/builder/inspector/feedback.ts) keeps transient announcements, persistent validation, durable storage failure, and persistence state as distinct lifecycles even where the current status region renders them alike. [`inspector/preflight.ts`](../../catalogue/builder/inspector/preflight.ts) derives cost, TSX, runtime selection, and serialized JSON once from the accepted document; Inspector copy and file export consume that single result.
 
 ## Export contract
 
@@ -56,7 +64,7 @@ Native drag remains an enhancement. Root empty-space drops use pointer geometry 
 
 ## Browser proof
 
-[`builder-conformance.ts`](../../scripts/builder-conformance.ts) composes into the existing build, server, Chromium, axe, viewport, console-error, and screenshot lifecycle in [`conformance.ts`](../../scripts/conformance.ts). It does not create a second harness.
+[`builder-conformance.ts`](../../scripts/builder-conformance.ts) is a bounded orchestrator over feature-owned checks in [`scripts/conformance/builder/`](../../scripts/conformance/builder/). The final authoring and screenshot journeys stay in `journeys.ts`; feature checks own their preview, tree, discovery, Inspector, and workspace assertions. The orchestrator composes into the existing build, server, Chromium, axe, viewport, console-error, and screenshot lifecycle in [`conformance.ts`](../../scripts/conformance.ts). It does not create a second harness.
 
 The gate covers both themes and every supported workspace posture; page overflow; axe WCAG A/AA 2.1/2.2; finite visible keyboard focus; canvas-internal inertness; click and touch placement; selection, edit, move, delete, undo, redo, save, successful and failed load; storage denial, quota, corrupt recovery, and file-read rejection; shortcut isolation; forced colours; the Beta label; and builder-chrome font-role isolation. The conformance summary reports the measured populations on each run instead of duplicating volatile totals in the map. Review sheets remain under `dist/conformance/` for wide light and narrow dark postures.
 
@@ -64,19 +72,25 @@ The gate covers both themes and every supported workspace posture; page overflow
 
 The builder remains Catalogue-only. Nothing under `catalogue/builder/` is in the JSR publish set, and neither the neutral package root nor CLI graph imports React or the builder policy. Source documents are data, not a hosted builder API, HTML format, JSX format, or code-execution surface.
 
-| Concern                                  | Authority                                                                |
-| ---------------------------------------- | ------------------------------------------------------------------------ |
-| Tree and immutable operations            | [`model.ts`](../../catalogue/builder/model.ts)                           |
-| Root pointer geometry                    | [`placement.ts`](../../catalogue/builder/placement.ts)                   |
-| Document/value acceptance and limits     | [`policy.ts`](../../catalogue/builder/policy.ts)                         |
-| Bounded undo/redo                        | [`history.ts`](../../catalogue/builder/history.ts)                       |
-| Storage, recovery, and file reads        | [`persistence.ts`](../../catalogue/builder/persistence.ts)               |
-| Control/default/registry facts           | [`registry-index.ts`](../../catalogue/builder/registry-index.ts)         |
-| Shared canvas/test renderer              | [`render.tsx`](../../catalogue/builder/render.tsx)                       |
-| TSX, selection, and JSON export          | [`export.ts`](../../catalogue/builder/export.ts)                         |
-| Dependency closure and cost              | [`cost.ts`](../../catalogue/builder/cost.ts)                             |
-| Workspace state, focus, and interactions | [`app.tsx`](../../catalogue/builder/app.tsx)                             |
-| Adaptive and focus presentation          | [`builder.css`](../../catalogue/builder/builder.css)                     |
-| Pure class-level guards                  | [`builder_test.ts`](../../tests/builder_test.ts)                         |
-| Persistence and history guards           | [`builder_persistence_test.ts`](../../tests/builder_persistence_test.ts) |
-| Real-browser builder proof               | [`builder-conformance.ts`](../../scripts/builder-conformance.ts)         |
+| Concern                                      | Authority                                                                            |
+| -------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Tree and immutable operations                | [`model.ts`](../../catalogue/builder/model.ts)                                       |
+| Root pointer geometry                        | [`placement.ts`](../../catalogue/builder/placement.ts)                               |
+| Document/value acceptance and limits         | [`policy.ts`](../../catalogue/builder/policy.ts)                                     |
+| Accepted document, bounded history, commands | [`workspace/document-store.ts`](../../catalogue/builder/workspace/document-store.ts) |
+| Selection, insertion target, tree commands   | [`tree/`](../../catalogue/builder/tree/)                                             |
+| Storage, recovery, and file reads            | [`persistence.ts`](../../catalogue/builder/persistence.ts)                           |
+| Generated Builder registry facts             | [`registry-core.ts`](../../catalogue/builder/registry-core.ts)                       |
+| Discovery records                            | [`discovery/registry.ts`](../../catalogue/builder/discovery/registry.ts)             |
+| Inspector controls                           | [`inspector/registry.ts`](../../catalogue/builder/inspector/registry.ts)             |
+| Shared canvas/test renderer                  | [`render.tsx`](../../catalogue/builder/render.tsx)                                   |
+| Preview host and protocol                    | [`preview/`](../../catalogue/builder/preview/)                                       |
+| Feedback and export preflight                | [`inspector/`](../../catalogue/builder/inspector/)                                   |
+| TSX, selection, and JSON emission            | [`export.ts`](../../catalogue/builder/export.ts)                                     |
+| Dependency closure and cost                  | [`cost.ts`](../../catalogue/builder/cost.ts)                                         |
+| Workspace composition and adaptive shell     | [`workspace/`](../../catalogue/builder/workspace/)                                   |
+| Stable stylesheet entrypoint                 | [`builder.css`](../../catalogue/builder/builder.css)                                 |
+| Feature styles                               | [`styles/`](../../catalogue/builder/styles/)                                         |
+| Unit guards                                  | [`tests/builder*_test.ts`](../../tests/)                                             |
+| Real-browser feature checks                  | [`scripts/conformance/builder/`](../../scripts/conformance/builder/)                 |
+| Browser proof orchestration                  | [`builder-conformance.ts`](../../scripts/builder-conformance.ts)                     |

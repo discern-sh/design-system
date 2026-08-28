@@ -11,6 +11,7 @@ import {
   catalogueGroupSlug,
   componentSearchRecords,
 } from "./routes/components.ts";
+import { catalogueTerminalLayoutPath } from "./routes/terminal.ts";
 import {
   canonicalFoundationsLegacyUrl,
   catalogueTerminalFoundationPath,
@@ -42,6 +43,7 @@ export {
   catalogueRoutePaths,
   catalogueSearchRecords,
   catalogueTerminalFoundationPath,
+  catalogueTerminalLayoutPath,
   componentSearchRecords,
   foundationsPaths,
 };
@@ -103,7 +105,11 @@ export function canonicalCatalogueLegacyUrl(current: URL): URL {
   if (
     fragment === "terminal-layouts" || fragment.startsWith("terminal-layout-")
   ) {
-    url.pathname = catalogueRoutePaths.terminal;
+    const recipeId = fragment.slice("terminal-layout-".length);
+    url.pathname = recipeId === ""
+      ? catalogueRoutePaths.terminal
+      : catalogueTerminalLayoutPath(recipeId);
+    url.hash = "";
     return url;
   }
   if (url.searchParams.has("purpose")) {

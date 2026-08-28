@@ -9,6 +9,7 @@ import {
   catalogueRoute,
   catalogueRoutePaths,
   catalogueTerminalFoundationPath,
+  catalogueTerminalLayoutPath,
   foundationsPaths,
 } from "../catalogue/routes.ts";
 
@@ -37,6 +38,11 @@ Deno.test("Catalogue routes resolve every explorer surface and Component detail"
       page: "index",
     }],
     [catalogueRoutePaths.terminal, { family: "terminal", page: "index" }],
+    [catalogueTerminalLayoutPath("command-reference"), {
+      family: "terminal",
+      page: "detail",
+      recipeId: "command-reference",
+    }],
     [catalogueRoutePaths.compare, { family: "compare", page: "index" }],
     ["/catalogue/unknown/", { family: "not-found", page: "not-found" }],
   ] as const;
@@ -147,7 +153,7 @@ Deno.test("legacy one-page Catalogue links upgrade to routed destinations", () =
       current:
         "https://catalogue.example/catalogue/#terminal-layout-command-reference",
       expected:
-        "https://catalogue.example/catalogue/terminal/#terminal-layout-command-reference",
+        "https://catalogue.example/catalogue/terminal/command-reference/",
     },
   ] as const;
 

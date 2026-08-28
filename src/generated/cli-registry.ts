@@ -16,6 +16,7 @@ export const cliComponentRegistry = {
   "grid": { stance: "rendered", modulePath: "../components/layout/grid/grid.cli.ts" },
   "masonry": { stance: "rendered", modulePath: "../components/layout/masonry/masonry.cli.ts" },
   "section": { stance: "rendered", modulePath: "../components/layout/section/section.cli.ts" },
+  "overflow-cue": { stance: "exempt", reason: "Overflow cue is a browser scroll affordance driven by element geometry; terminal renderers expose clipping, folds, and overflow through their own frame facts." },
   "badge": { stance: "rendered", modulePath: "../components/display/badge/badge.cli.ts" },
   "card": { stance: "rendered", modulePath: "../components/display/card/card.cli.ts" },
   "divider": { stance: "rendered", modulePath: "../components/display/divider/divider.cli.ts" },

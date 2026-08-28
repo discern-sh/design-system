@@ -35,6 +35,11 @@ export type CatalogueRoute =
     readonly slug: string;
   }
   | { readonly family: "terminal"; readonly page: "index" }
+  | {
+    readonly family: "terminal";
+    readonly page: "detail";
+    readonly recipeId: string;
+  }
   | { readonly family: "compare"; readonly page: "index" }
   | { readonly family: "not-found"; readonly page: "not-found" };
 

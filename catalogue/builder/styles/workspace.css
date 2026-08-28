@@ -1,0 +1,242 @@
+@layer catalogue {
+  :root {
+    color-scheme: light dark;
+  }
+  body {
+    margin: 0;
+  }
+
+  .discern-builder-shell {
+    display: grid;
+    grid-template:
+      "toolbar toolbar toolbar" auto
+      "status status status" auto
+      "pane-tabs pane-tabs pane-tabs" auto
+      "sidebar canvas inspector" minmax(0, 1fr)
+      / 280px minmax(0, 1fr) 340px;
+    height: 100vh;
+    height: 100dvh;
+    min-width: 0;
+    overflow: hidden;
+    background: var(--discern-color-canvas);
+    color: var(--discern-color-ink);
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+    font-size: var(--discern-font-size-sm);
+  }
+
+  .discern-builder-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    grid-area: toolbar;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--discern-color-border);
+    background: var(--discern-color-surface);
+  }
+  .discern-builder-pane-tabs {
+    display: none;
+    grid-area: pane-tabs;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-width: 0;
+    padding: 6px;
+    border-bottom: 1px solid var(--discern-color-border);
+    background: var(--discern-color-surface);
+  }
+  .discern-builder-pane-tabs button {
+    min-height: 40px;
+    border: 1px solid transparent;
+    border-radius: var(--discern-radius-md);
+    background: transparent;
+    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-xs);
+    font-weight: var(--discern-font-weight-strong);
+    cursor: pointer;
+  }
+  .discern-builder-pane-tabs button[aria-selected="true"] {
+    border-color: var(--discern-color-accent-400);
+    background: var(--discern-color-accent-100);
+    color: var(--discern-color-ink);
+  }
+  .discern-builder-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: inherit;
+    text-decoration: none;
+  }
+  .discern-builder-brand > span:first-child {
+    color: var(--discern-color-accent-500);
+    font-size: 22px;
+  }
+  .discern-builder-brand strong {
+    display: block;
+    font-size: var(--discern-font-size-md);
+    line-height: var(--discern-leading-tight);
+  }
+  .discern-builder-brand small {
+    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-xs);
+  }
+  .discern-builder-beta {
+    display: inline-block;
+    margin-inline-start: 6px;
+    padding: 0 5px;
+    border: 1px solid var(--discern-color-border-strong);
+    border-radius: var(--discern-radius-pill);
+    color: var(--discern-color-ink-faint);
+    font-size: 0.625rem;
+    font-weight: var(--discern-font-weight-strong);
+    letter-spacing: 0.06em;
+    line-height: 1.5;
+    text-transform: uppercase;
+  }
+  .discern-builder-name {
+    flex: 1;
+    min-width: 120px;
+    max-width: 320px;
+    padding: 6px 10px;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-canvas);
+    color: inherit;
+    font: inherit;
+    font-weight: var(--discern-font-weight-strong);
+  }
+  .discern-builder-toolbar__group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+  .discern-builder-shell button {
+    font-family: inherit;
+    font-feature-settings: inherit;
+  }
+  .discern-builder-toolbar__group > button {
+    padding: 6px 10px;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-surface);
+    color: inherit;
+    font-size: var(--discern-font-size-xs);
+    cursor: pointer;
+  }
+  .discern-builder-toolbar__group > button:hover:not(:disabled) {
+    border-color: var(--discern-color-border-strong);
+    background: var(--discern-color-surface-sunken);
+  }
+  .discern-builder-toolbar__group > button:disabled {
+    color: var(--discern-color-ink-faint);
+    cursor: default;
+  }
+  .discern-builder-danger {
+    color: var(--discern-color-danger);
+  }
+  .discern-builder-version {
+    color: var(--discern-color-ink-faint);
+    font-family: var(--discern-font-mono);
+    font-feature-settings: normal;
+    font-size: var(--discern-font-size-xs);
+  }
+
+  .discern-builder-crash {
+    max-width: 480px;
+    margin: 20vh auto 0;
+    padding: 24px;
+    border: 1px solid var(--discern-color-danger);
+    border-radius: var(--discern-radius-lg);
+    background: var(--discern-color-surface);
+    color: var(--discern-color-ink);
+    font-family: var(--discern-font-ui);
+    text-align: center;
+  }
+  .discern-builder-crash h1 {
+    margin: 0 0 8px;
+    font-feature-settings: normal;
+    font-size: var(--discern-font-size-lg);
+  }
+  .discern-builder-crash p {
+    margin: 4px 0;
+    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-sm);
+  }
+
+  /* Builder chrome always supplies a visible keyboard-focus replacement. */
+  .discern-builder-shell :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 3px solid var(--discern-color-accent-500);
+    outline-offset: 2px;
+  }
+
+  /* Intermediate, phone, and 400%-zoom postures use one persistent pane. */
+  @media (max-width: 1180px) {
+    .discern-builder-shell {
+      grid-template:
+        "toolbar" auto
+        "status" auto
+        "pane-tabs" auto
+        "workspace" minmax(0, 1fr)
+        / minmax(0, 1fr);
+    }
+    .discern-builder-pane-tabs {
+      display: grid;
+    }
+    .discern-builder-sidebar,
+    .discern-builder-canvas,
+    .discern-builder-inspector {
+      display: none;
+      grid-area: workspace;
+      border: 0;
+    }
+    .discern-builder-shell[data-discern-builder-pane="palette"] .discern-builder-sidebar,
+    .discern-builder-shell[data-discern-builder-pane="inspector"] .discern-builder-inspector {
+      display: flex;
+    }
+    .discern-builder-shell[data-discern-builder-pane="canvas"] .discern-builder-canvas {
+      display: block;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .discern-builder-toolbar {
+      align-items: center;
+      gap: 8px;
+      max-height: 40dvh;
+      padding: 8px;
+      overflow-y: auto;
+    }
+    .discern-builder-brand-label,
+    .discern-builder-version {
+      display: none;
+    }
+    .discern-builder-beta {
+      margin-inline-start: 0;
+    }
+    .discern-builder-name {
+      flex: 1 1 10rem;
+      max-width: none;
+    }
+    .discern-builder-pane-tabs {
+      padding: 4px;
+    }
+  }
+
+  @media (pointer: coarse) {
+    .discern-builder-shell :where(button, input, select, summary) {
+      min-height: 44px;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .discern-builder-shell :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+      outline: 3px solid CanvasText !important;
+      outline-offset: 2px !important;
+    }
+    .discern-builder-pane-tabs button[aria-selected="true"] {
+      border-color: Highlight;
+      outline-color: Highlight;
+    }
+  }
+}

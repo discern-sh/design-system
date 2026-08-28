@@ -262,6 +262,98 @@ export const componentExampleRegistry = {
       ],
     },
   ],
+  "overflow-cue": [
+    {
+      "id": "vertical-start",
+      "label": "Vertical · start",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "Overflow cue is a browser scroll affordance driven by element geometry; terminal renderers expose clipping, folds, and overflow through their own frame facts.",
+    },
+    {
+      "id": "vertical-middle",
+      "label": "Vertical · middle",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "Overflow cue is a browser scroll affordance driven by element geometry; terminal renderers expose clipping, folds, and overflow through their own frame facts.",
+    },
+    {
+      "id": "vertical-end",
+      "label": "Vertical · end",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "Overflow cue is a browser scroll affordance driven by element geometry; terminal renderers expose clipping, folds, and overflow through their own frame facts.",
+    },
+    {
+      "id": "horizontal-start",
+      "label": "Horizontal · start",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "Overflow cue is a browser scroll affordance driven by element geometry; terminal renderers expose clipping, folds, and overflow through their own frame facts.",
+    },
+    {
+      "id": "horizontal-middle",
+      "label": "Horizontal · middle",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "Overflow cue is a browser scroll affordance driven by element geometry; terminal renderers expose clipping, folds, and overflow through their own frame facts.",
+    },
+    {
+      "id": "horizontal-end",
+      "label": "Horizontal · end",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "Overflow cue is a browser scroll affordance driven by element geometry; terminal renderers expose clipping, folds, and overflow through their own frame facts.",
+    },
+    {
+      "id": "both-axes",
+      "label": "Both axes",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "Overflow cue is a browser scroll affordance driven by element geometry; terminal renderers expose clipping, folds, and overflow through their own frame facts.",
+    },
+    {
+      "id": "dynamic-content",
+      "label": "Dynamic content and size",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "Overflow cue is a browser scroll affordance driven by element geometry; terminal renderers expose clipping, folds, and overflow through their own frame facts.",
+    },
+    {
+      "id": "rtl-inline",
+      "label": "RTL inline overflow",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "Overflow cue is a browser scroll affordance driven by element geometry; terminal renderers expose clipping, folds, and overflow through their own frame facts.",
+    },
+    {
+      "id": "no-overflow",
+      "label": "No overflow",
+      "surfaces": [
+        "web",
+      ],
+      "reason":
+        "Overflow cue is a browser scroll affordance driven by element geometry; terminal renderers expose clipping, folds, and overflow through their own frame facts.",
+    },
+  ],
   "badge": [
     {
       "id": "default",

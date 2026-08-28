@@ -2550,7 +2550,7 @@ Deno.test("monospace is reserved for brand names and code-bearing surfaces", asy
     "catalogue/styles/shared.css::.discern-catalogue-copyable > code",
     "catalogue/styles/shell.css::.discern-catalogue-brand strong",
     "catalogue/styles/shell.css::.discern-catalogue-sidebar__version",
-    "catalogue/styles/terminal.css::.discern-catalogue-terminal-layout__source pre",
+    "catalogue/styles/terminal.css::.discern-catalogue-terminal-lab__source pre",
   ].toSorted();
   assertEquals(
     monospaceTypefaceRules(
