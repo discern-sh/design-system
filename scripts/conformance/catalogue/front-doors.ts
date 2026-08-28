@@ -1,7 +1,240 @@
 import type { Page } from "playwright-core";
+import {
+  catalogueNavigation,
+  catalogueRoutePaths,
+} from "../../../catalogue/routes.ts";
 import { scanBrowserAccessibility } from "../../browser-conformance-support.ts";
 import { withViewport } from "../../viewport.ts";
 import { CATALOGUE_NARROW_VIEWPORT } from "./support.ts";
+
+interface LinkProjection {
+  readonly label: string;
+  readonly path: string;
+}
+
+function projectedRoutesEqual(
+  actual: readonly LinkProjection[],
+  expected: readonly LinkProjection[],
+): boolean {
+  return JSON.stringify(actual) === JSON.stringify(expected);
+}
+
+async function verifyLandingOrientation(
+  page: Page,
+  origin: string,
+  failures: string[],
+): Promise<void> {
+  await page.goto(`${origin}/`, { waitUntil: "networkidle" });
+  const expected = catalogueNavigation.map(({ label, path }) => ({
+    label,
+    path,
+  }));
+  const shape = await page.evaluate(() => {
+    const links = (selector: string) =>
+      [...document.querySelectorAll<HTMLAnchorElement>(selector)].map((
+        link,
+      ) => ({ label: link.textContent?.trim() ?? "", path: link.pathname }));
+    const ids = [...document.querySelectorAll<HTMLElement>("[id]")].map(
+      ({ id }) => id,
+    );
+    const primary = document.querySelector<HTMLAnchorElement>(
+      "main [data-discern-primary-catalogue-action]",
+    );
+    const headings = [...document.querySelectorAll<HTMLElement>(
+      "main h1, main h2, main h3, main h4, main h5, main h6",
+    )].map(({ tagName }) => Number(tagName.slice(1)));
+    const onThisPage = [...document.querySelectorAll<HTMLAnchorElement>(
+      'nav[aria-label="On this page"] a',
+    )].map((link) => {
+      const id = decodeURIComponent(link.hash.slice(1));
+      const target = document.getElementById(id);
+      return {
+        id,
+        label: link.textContent?.replace(/^\d+/, "").trim() ?? "",
+        targetExists: target !== null,
+        targetFocusable: target?.getAttribute("tabindex") === "-1",
+        targetHasHeading: target?.querySelector("h2, h3") !== null,
+      };
+    });
+    return {
+      header: links(
+        '[data-discern-catalogue-navigation="landing-header"] .discern-site-header__nav a',
+      ),
+      footer: links(
+        '[data-discern-catalogue-navigation="landing-footer"] .discern-site-footer__nav > div:first-child a',
+      ),
+      primary: primary === null ? null : {
+        label: primary.textContent?.trim() ?? "",
+        path: primary.pathname,
+        visible: primary.getClientRects().length > 0,
+      },
+      uniqueIds: new Set(ids).size === ids.length,
+      headingHierarchy: headings[0] === 1 &&
+        headings.every((level, index) =>
+          index === 0 || level <= (headings[index - 1] ?? 0) + 1
+        ),
+      onThisPage,
+    };
+  });
+  if (!projectedRoutesEqual(shape.header, expected)) {
+    failures.push(
+      `landing/routes: header differs from canonical order (${
+        shape.header.map(({ label }) => label).join(", ")
+      })`,
+    );
+  }
+  if (!projectedRoutesEqual(shape.footer, expected)) {
+    failures.push(
+      `landing/routes: footer differs from canonical order (${
+        shape.footer.map(({ label }) => label).join(", ")
+      })`,
+    );
+  }
+  if (
+    shape.primary?.label !== "Find a Component" ||
+    shape.primary.path !== catalogueRoutePaths.components ||
+    !shape.primary.visible
+  ) {
+    failures.push(
+      `landing/action: primary Catalogue action is ${
+        JSON.stringify(shape.primary)
+      }`,
+    );
+  }
+  if (!shape.uniqueIds) {
+    failures.push("landing/anchors: document ids are not unique");
+  }
+  if (!shape.headingHierarchy) {
+    failures.push("landing/headings: main heading hierarchy skips a level");
+  }
+  for (const target of shape.onThisPage) {
+    if (
+      !target.targetExists || !target.targetFocusable ||
+      !target.targetHasHeading
+    ) {
+      failures.push(
+        `landing/anchors: ${target.label} points to an incomplete target ${target.id}`,
+      );
+    }
+  }
+
+  const skip = page.getByRole("link", { name: "Skip to content" });
+  await skip.focus();
+  await skip.press("Enter");
+  if (
+    !await page.locator("#main-content").evaluate((node) =>
+      document.activeElement === node
+    )
+  ) {
+    failures.push("landing/anchors: Skip link did not focus main content");
+  }
+
+  const pageLinks = page.locator('nav[aria-label="On this page"] a');
+  for (let index = 0; index < await pageLinks.count(); index += 1) {
+    const link = pageLinks.nth(index);
+    const hash = await link.getAttribute("href");
+    await link.focus();
+    await link.press("Enter");
+    const state = await page.evaluate((href) => {
+      const target = href === null ? null : document.querySelector(href);
+      return {
+        hash: globalThis.location.hash,
+        focused: target !== null && document.activeElement === target,
+      };
+    }, hash);
+    if (hash === null || state.hash !== hash || !state.focused) {
+      failures.push(
+        `landing/anchors: keyboard activation of ${hash} produced ${state.hash} and focused=${state.focused}`,
+      );
+    }
+  }
+}
+
+async function verifyOverviewDirectory(
+  page: Page,
+  origin: string,
+  failures: string[],
+): Promise<void> {
+  await page.goto(new URL(catalogueRoutePaths.overview, origin).href, {
+    waitUntil: "networkidle",
+  });
+  await page.locator(".discern-catalogue-overview h1").waitFor();
+  const expected = catalogueNavigation.slice(1).map(({ label, path }) => ({
+    label,
+    path,
+  }));
+  const shape = await page.evaluate(() => {
+    const primary = document.querySelector<HTMLAnchorElement>(
+      ".discern-catalogue-overview [data-discern-primary-catalogue-action]",
+    );
+    const cards = [...document.querySelectorAll<HTMLAnchorElement>(
+      ".discern-catalogue-overview [data-discern-catalogue-destination]",
+    )].map((card) => ({
+      id: card.dataset.discernCatalogueDestination ?? "",
+      label: card.querySelector("h2")?.textContent?.trim() ?? "",
+      path: card.pathname,
+      count: card.querySelector("small")?.textContent?.trim() ?? "",
+      action: card.querySelector(".discern-catalogue-route-card__action")
+        ?.textContent?.trim() ?? "",
+    }));
+    const image = document.querySelector<HTMLImageElement>(
+      ".discern-catalogue-route-card__image img:not([style*='display: none'])",
+    );
+    return {
+      primary: primary === null ? null : {
+        label: primary.textContent?.trim() ?? "",
+        path: primary.pathname,
+        visible: primary.getClientRects().length > 0,
+      },
+      cards,
+      imageSourceBacked: image?.src.includes(
+        "/catalogue/generated/example-images/",
+      ) === true,
+    };
+  });
+  if (
+    shape.primary?.label !== "Find a Component" ||
+    shape.primary.path !== catalogueRoutePaths.components ||
+    !shape.primary.visible
+  ) {
+    failures.push(
+      `overview/action: primary Catalogue action is ${
+        JSON.stringify(shape.primary)
+      }`,
+    );
+  }
+  if (
+    !projectedRoutesEqual(
+      shape.cards.map(({ label, path }) => ({ label, path })),
+      expected,
+    )
+  ) {
+    failures.push(
+      `overview/routes: cards differ from canonical order (${
+        shape.cards.map(({ label }) => label).join(", ")
+      })`,
+    );
+  }
+  for (const card of shape.cards) {
+    if (!/^\d+\s+\S/.test(card.count)) {
+      failures.push(
+        `overview/routes: ${card.label} count is not labelled (${
+          JSON.stringify(card.count)
+        })`,
+      );
+    }
+    if (card.action === "" || card.path === catalogueRoutePaths.overview) {
+      failures.push(
+        `overview/routes: ${card.label} lacks a direct bounded action`,
+      );
+    }
+  }
+  if (!shape.imageSourceBacked) {
+    failures.push(
+      "overview/images: Components card does not consume generated representative imagery",
+    );
+  }
+}
 
 /**
  * The landing page served at the site root must carry its one page-owned theme
@@ -108,6 +341,8 @@ export async function verifyLandingPage(
   await page.evaluate(() =>
     localStorage.removeItem("discern-design-system-theme")
   );
+  await verifyLandingOrientation(page, origin, failures);
+  await verifyOverviewDirectory(page, origin, failures);
   await withViewport(page, CATALOGUE_NARROW_VIEWPORT, async () => {
     await page.goto(`${origin}/`, { waitUntil: "networkidle" });
     const narrow = await page.evaluate(() => ({
@@ -125,6 +360,12 @@ export async function verifyLandingPage(
         document.querySelector(".discern-hero-block--atmospheric")!,
         "::before",
       ).content,
+      compactActionVisible: (document.querySelector<HTMLElement>(
+        '.discern-site-header__actions a[href="/catalogue/components/"]',
+      )?.getClientRects().length ?? 0) > 0,
+      footerRouteLinks: [...document.querySelectorAll<HTMLElement>(
+        '[data-discern-catalogue-navigation="landing-footer"] .discern-site-footer__nav > div:first-child a',
+      )].filter((link) => link.getClientRects().length > 0).length,
     }));
     const overflow = narrow.overflow;
     if (overflow > 0) {
@@ -145,6 +386,44 @@ export async function verifyLandingPage(
     if (narrow.heroDecoration !== "none") {
       failures.push(
         `landing/reflow: atmospheric hero still paints clipped pseudo-content ${narrow.heroDecoration}`,
+      );
+    }
+    if (!narrow.compactActionVisible) {
+      failures.push(
+        "landing/reflow: narrow header lost its Find a Component action",
+      );
+    }
+    if (narrow.footerRouteLinks !== catalogueNavigation.length) {
+      failures.push(
+        `landing/reflow: narrow footer exposes ${narrow.footerRouteLinks} of ${catalogueNavigation.length} Catalogue routes`,
+      );
+    }
+
+    await page.goto(new URL(catalogueRoutePaths.overview, origin).href, {
+      waitUntil: "networkidle",
+    });
+    await page.locator(".discern-catalogue-overview h1").waitFor();
+    const overviewNarrow = await page.evaluate(() => ({
+      overflow: document.documentElement.scrollWidth -
+        document.documentElement.clientWidth,
+      primaryVisible: (document.querySelector<HTMLElement>(
+        ".discern-catalogue-overview [data-discern-primary-catalogue-action]",
+      )?.getClientRects().length ?? 0) > 0,
+      routeLinks: [...document.querySelectorAll<HTMLElement>(
+        ".discern-catalogue-overview [data-discern-catalogue-destination]",
+      )].filter((link) => link.getClientRects().length > 0).length,
+    }));
+    if (overviewNarrow.overflow > 0) {
+      failures.push(
+        `overview/reflow: the document scrolls ${overviewNarrow.overflow}px horizontally at ${CATALOGUE_NARROW_VIEWPORT.width}px`,
+      );
+    }
+    if (
+      !overviewNarrow.primaryVisible ||
+      overviewNarrow.routeLinks !== catalogueNavigation.length - 1
+    ) {
+      failures.push(
+        `overview/reflow: primary visible=${overviewNarrow.primaryVisible}; route links=${overviewNarrow.routeLinks}`,
       );
     }
   });

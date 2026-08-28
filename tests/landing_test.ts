@@ -1,11 +1,22 @@
 import { assert, assertEquals } from "@std/assert";
+import { renderToStaticMarkup } from "react-dom/server";
 import {
   landingAssets,
+  landingCatalogueDestinations,
   type LandingFacts,
+  landingPageSections,
   landingSelection,
   renderLandingHtml,
 } from "../catalogue/landing/page.tsx";
 import { landingSystemFacts } from "../catalogue/landing/facts.ts";
+import {
+  overviewCatalogueDestinations,
+  OverviewPage,
+} from "../catalogue/pages/overview/page.tsx";
+import {
+  catalogueNavigation,
+  catalogueRoutePaths,
+} from "../catalogue/routes.ts";
 import { cliComponentRegistry } from "../src/generated/cli-registry.ts";
 import { packageManifest } from "../src/manifest.ts";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
@@ -141,6 +152,113 @@ Deno.test("the landing page is deterministic HTML with one page-owned behavior",
   assert(html.includes(
     `${facts.emission.resolvedComponents} of ${facts.system.components}`,
   ));
+});
+
+Deno.test("both front doors project the canonical Catalogue routes", () => {
+  const canonical = catalogueNavigation.map(({ id, label, path }) => ({
+    id,
+    label,
+    path,
+  }));
+  assertEquals(
+    landingCatalogueDestinations.map(({ id, label, path }) => ({
+      id,
+      label,
+      path,
+    })),
+    canonical,
+  );
+  assertEquals(
+    overviewCatalogueDestinations.map(({ id, label, path }) => ({
+      id,
+      label,
+      path,
+    })),
+    canonical.slice(1),
+  );
+
+  const landing = renderLandingHtml(facts);
+  const header = landing.match(
+    /<header[^>]*data-discern-catalogue-navigation="landing-header"[^>]*>(.*?)<\/header>/s,
+  )?.[1] ?? "";
+  const footer = landing.match(
+    /<footer[^>]*data-discern-catalogue-navigation="landing-footer"[^>]*>(.*?)<\/footer>/s,
+  )?.[1] ?? "";
+  const projectedLinks = (markup: string) =>
+    [...markup.matchAll(/<a[^>]*href="([^"]+)"[^>]*>([^<]+)<\/a>/g)]
+      .map(([, href, label]) => ({ href, label }))
+      .filter(({ href }) => canonical.some(({ path }) => path === href));
+  assertEquals(
+    projectedLinks(header),
+    canonical.map(({ path, label }) => ({
+      href: path,
+      label,
+    })),
+  );
+  assertEquals(
+    projectedLinks(footer),
+    canonical.map(({ path, label }) => ({
+      href: path,
+      label,
+    })),
+  );
+});
+
+Deno.test("both front doors make Find a Component their primary Catalogue action", () => {
+  const primaryAction =
+    /<a(?=[^>]*data-discern-primary-catalogue-action="")(?=[^>]*href="([^"]+)")[^>]*>\s*<span[^>]*>([^<]+)<\/span>\s*<\/a>/;
+  const landing = renderLandingHtml(facts).match(primaryAction);
+  const overview = renderToStaticMarkup(OverviewPage()).match(primaryAction);
+  assertEquals(
+    { href: landing?.[1], label: landing?.[2] },
+    { href: catalogueRoutePaths.components, label: "Find a Component" },
+  );
+  assertEquals(
+    { href: overview?.[1], label: overview?.[2] },
+    { href: catalogueRoutePaths.components, label: "Find a Component" },
+  );
+});
+
+Deno.test("Overview route cards are bounded, ordered, labelled destinations", () => {
+  const overview = renderToStaticMarkup(OverviewPage());
+  const cards = [...overview.matchAll(
+    /<a[^>]*data-discern-catalogue-destination="([^"]+)"[^>]*href="([^"]+)"[^>]*>(.*?)<\/a>/gs,
+  )].map(([, id, href, content]) => ({ id, href, content: content ?? "" }));
+  assertEquals(
+    cards.map(({ id, href }) => ({ id, href })),
+    overviewCatalogueDestinations.map(({ id, path }) => ({ id, href: path })),
+  );
+  for (const card of cards) {
+    assert(
+      /<small>\d+ [^<]+<\/small>/.test(card.content),
+      `${card.id} must present a source-backed count with its unit`,
+    );
+    assert(
+      /discern-catalogue-route-card__action/.test(card.content),
+      `${card.id} must name its bounded action`,
+    );
+  }
+  assert(
+    overview.includes("/catalogue/generated/example-images/"),
+    "Overview must consume the generated Component-image authority",
+  );
+});
+
+Deno.test("landing in-page navigation owns unique live targets", () => {
+  const html = renderLandingHtml(facts);
+  const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map(([, id]) => id ?? "");
+  assertEquals(new Set(ids).size, ids.length);
+  for (const { id, label } of landingPageSections) {
+    assertEquals(ids.filter((candidate) => candidate === id).length, 1);
+    assert(
+      html.includes(`href="#${id}"`),
+      `${label} lacks its On this page link`,
+    );
+    assert(
+      html.includes(`id="${id}" tabindex="-1"`),
+      `${label} target must accept programmatic focus`,
+    );
+  }
 });
 
 Deno.test("the landing selection is sorted, unique, and canonical", () => {
