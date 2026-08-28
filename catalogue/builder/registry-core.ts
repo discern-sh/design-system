@@ -14,6 +14,11 @@ import {
 } from "../generated/registry.ts";
 import type { PropControl } from "./controls.ts";
 import { defaultProps, deriveControls } from "./controls.ts";
+import {
+  applyBuilderCreationDefaults,
+  assertBuilderSeedSlugs,
+  type BuilderIdFactory,
+} from "./defaults.ts";
 import type { ExportNaming, RequiredFunctionProp } from "./export.ts";
 import type { BuilderNode, BuilderPropValue } from "./model.ts";
 import { newChildId } from "./model.ts";
@@ -53,6 +58,8 @@ export const entryBySlug: ReadonlyMap<string, RegistryEntry> = new Map(
 
 /** Every placeable Component slug. */
 export const knownSlugs: ReadonlySet<string> = new Set(entryBySlug.keys());
+
+assertBuilderSeedSlugs(knownSlugs);
 
 /** Variant unions visible to controls, first declaration winning per name. */
 export const builderSharedVariants: readonly CatalogueVariant[] = [
@@ -196,31 +203,40 @@ export const exportNaming: ExportNaming = {
 const EMPTY_TEXT_DEFAULT_SLOTS: ReadonlyMap<string, ReadonlySet<string>> =
   new Map([["table", new Set(["children"])]]);
 
-function instanceProps(entry: BuilderRegistryCoreEntry): BuilderNode["props"] {
-  const props: Record<string, BuilderPropValue> = {
-    ...defaultProps(entry.controls, entry.registry.builderDefaults),
-  };
+function instanceProps(
+  entry: BuilderRegistryCoreEntry,
+  id: BuilderIdFactory,
+): BuilderNode["props"] {
+  const props: Record<string, BuilderPropValue> = applyBuilderCreationDefaults(
+    entry.registry.meta.slug,
+    entry.controls,
+    defaultProps(entry.controls, entry.registry.builderDefaults),
+    id,
+  );
   for (
     const slot of EMPTY_TEXT_DEFAULT_SLOTS.get(entry.registry.meta.slug) ?? []
   ) {
     props[slot] = {
       kind: "slot",
-      children: [{ kind: "text", id: newChildId(), text: "" }],
+      children: [{ kind: "text", id: id(), text: "" }],
     };
   }
   return props;
 }
 
 /** A fresh, policy-accepted instance using the core's source-backed defaults. */
-export function instantiateComponent(slug: string): BuilderNode {
+export function instantiateComponent(
+  slug: string,
+  id: BuilderIdFactory = newChildId,
+): BuilderNode {
   const entry = registryCoreBySlug.get(slug);
   if (entry === undefined) {
     throw new Error(`Unknown component slug "${slug}".`);
   }
   return {
     kind: "component",
-    id: newChildId(),
+    id: id(),
     slug,
-    props: instanceProps(entry),
+    props: instanceProps(entry, id),
   };
 }
