@@ -544,6 +544,7 @@
   .discern-catalogue-terminal-foundation .discern-catalogue-cli-preview {
     min-width: 0;
     padding: 16px;
+    overflow: visible;
   }
   .discern-catalogue-terminal-foundation__pager {
     display: grid;
