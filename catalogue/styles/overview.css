@@ -125,14 +125,14 @@
     display: none !important;
   }
   :where([data-discern-theme="dark"]) .discern-catalogue-route-card__image--light {
-    display: none;
+    display: none !important;
   }
   :where([data-discern-theme="dark"]) .discern-catalogue-route-card__image--dark {
     display: block !important;
   }
   @media (prefers-color-scheme: dark) {
     :where([data-discern-theme="system"]) .discern-catalogue-route-card__image--light {
-      display: none;
+      display: none !important;
     }
     :where([data-discern-theme="system"]) .discern-catalogue-route-card__image--dark {
       display: block !important;

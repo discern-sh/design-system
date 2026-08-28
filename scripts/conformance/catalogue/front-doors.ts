@@ -177,9 +177,9 @@ async function verifyOverviewDirectory(
       action: card.querySelector(".discern-catalogue-route-card__action")
         ?.textContent?.trim() ?? "",
     }));
-    const image = document.querySelector<HTMLImageElement>(
-      ".discern-catalogue-route-card__image img:not([style*='display: none'])",
-    );
+    const visibleImages = [...document.querySelectorAll<HTMLImageElement>(
+      ".discern-catalogue-route-card__image img",
+    )].filter((image) => getComputedStyle(image).display !== "none");
     return {
       primary: primary === null ? null : {
         label: primary.textContent?.trim() ?? "",
@@ -187,7 +187,8 @@ async function verifyOverviewDirectory(
         visible: primary.getClientRects().length > 0,
       },
       cards,
-      imageSourceBacked: image?.src.includes(
+      visibleImages: visibleImages.length,
+      imageSourceBacked: visibleImages[0]?.src.includes(
         "/catalogue/generated/example-images/",
       ) === true,
     };
@@ -229,9 +230,9 @@ async function verifyOverviewDirectory(
       );
     }
   }
-  if (!shape.imageSourceBacked) {
+  if (shape.visibleImages !== 1 || !shape.imageSourceBacked) {
     failures.push(
-      "overview/images: Components card does not consume generated representative imagery",
+      `overview/images: expected one generated representative image, found ${shape.visibleImages}`,
     );
   }
 }
