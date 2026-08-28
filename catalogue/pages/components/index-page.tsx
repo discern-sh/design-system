@@ -27,6 +27,11 @@ import {
   parseComponentExplorerState,
 } from "./state.ts";
 
+interface ComponentMatch {
+  readonly entry: RegistryEntry;
+  readonly matchReason?: Readonly<{ label: string; value: string }>;
+}
+
 function currentExplorerState(): ComponentExplorerState {
   return parseComponentExplorerState(new URL(globalThis.location.href));
 }
@@ -55,7 +60,7 @@ export function ComponentIndexPage(
     (state.group === undefined || meta.group === state.group) &&
     (state.purpose === undefined || meta.purposes?.includes(state.purpose))
   );
-  const matches = state.query.trim() === ""
+  const matches: readonly ComponentMatch[] = state.query.trim() === ""
     ? eligible.map((entry) => ({ entry }))
     : searchRecords(componentSearchRecords(eligible), state.query).flatMap(
       (result) => {
@@ -104,12 +109,19 @@ export function ComponentIndexPage(
             value={state.group === undefined
               ? ""
               : catalogueGroupSlug(state.group)}
-            onChange={(event) =>
+            onChange={(event) => {
+              const group = catalogueGroupFromSlug(
+                event.currentTarget.value,
+              );
               navigate({
-                ...state,
-                group: catalogueGroupFromSlug(event.currentTarget.value),
+                query: state.query,
                 showAll: true,
-              })}
+                ...(group === undefined ? {} : { group }),
+                ...(state.purpose === undefined
+                  ? {}
+                  : { purpose: state.purpose }),
+              });
+            }}
           >
             <option value="">All Groups</option>
             {componentGroups.map((group) => (
@@ -123,12 +135,15 @@ export function ComponentIndexPage(
           <span>Purpose</span>
           <select
             value={state.purpose ?? ""}
-            onChange={(event) =>
+            onChange={(event) => {
+              const purpose = cataloguePurpose(event.currentTarget.value);
               navigate({
-                ...state,
-                purpose: cataloguePurpose(event.currentTarget.value),
+                query: state.query,
                 showAll: true,
-              })}
+                ...(state.group === undefined ? {} : { group: state.group }),
+                ...(purpose === undefined ? {} : { purpose }),
+              });
+            }}
           >
             <option value="">All purposes</option>
             {cataloguePurposes.map((purpose) => (
