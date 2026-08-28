@@ -1,38 +1,47 @@
-import { compareHref, groupComponentEntries } from "../shared.tsx";
-import { catalogueGroupFromSlug } from "../../routes.ts";
 import type { LocalNavigationProps } from "../navigation-types.ts";
+import { componentDirectory } from "../components/collections.ts";
+import { parseCompareState } from "./state.ts";
 
 export function CompareNavigation(
   { route, url, sortedComponents, onNavigate }: LocalNavigationProps,
 ) {
   if (route.family !== "compare") return null;
-  const activeGroup = catalogueGroupFromSlug(url.searchParams.get("group"));
-  const complete = url.searchParams.get("scope") === "all";
+  const directory = componentDirectory(sortedComponents);
+  const state = parseCompareState(url, sortedComponents);
   return (
     <>
-      <span className="discern-catalogue-nav__heading">Compare Groups</span>
-      {groupComponentEntries(sortedComponents).map(({ group, entries }) => (
+      <span className="discern-catalogue-nav__heading">Compare a Group</span>
+      {directory.groups.map((collection) => (
         <a
           className="discern-catalogue-nav__child"
-          href={compareHref({ group })}
-          aria-current={!complete && activeGroup === group
+          href={collection.compareHref}
+          aria-current={state.scope?.kind === "group" &&
+              state.scope.group === collection.group
             ? "location"
             : undefined}
           onClick={onNavigate}
-          key={group}
+          key={collection.id}
         >
-          {group}
-          <small>{entries.length}</small>
+          {collection.label}
+          <small>{collection.members.length}</small>
         </a>
       ))}
+      <span className="discern-catalogue-nav__heading">Other scopes</span>
       <a
         className="discern-catalogue-nav__child"
-        href={compareHref({ all: true })}
-        aria-current={complete ? "location" : undefined}
+        href="/catalogue/review/?components="
+        aria-current={state.scope?.kind === "custom" ? "location" : undefined}
         onClick={onNavigate}
       >
-        Complete system
-        <small>{sortedComponents.length}</small>
+        Custom selection
+      </a>
+      <a
+        className="discern-catalogue-nav__child"
+        href="/catalogue/review/?scope=all"
+        aria-current={state.scope?.kind === "all" ? "location" : undefined}
+        onClick={onNavigate}
+      >
+        Complete system<small>{directory.components.length}</small>
       </a>
     </>
   );

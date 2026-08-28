@@ -37,8 +37,51 @@ export function CliOutputPreview(
   );
 }
 
-function cliFragmentId(component: string, state: string): string {
+export function cliFragmentId(component: string, state: string): string {
   return `component-${component}--cli-${state}`;
+}
+
+/** Render one named canonical CLI example, preserving its stable deep link. */
+export function CliExamplePreview(
+  { entry, exampleId, theme, headingLevel = 5 }: {
+    readonly entry: RegistryEntry;
+    readonly exampleId: string;
+    readonly theme: TerminalThemeVariant;
+    readonly headingLevel?: 4 | 5;
+  },
+) {
+  const { cli, meta } = entry;
+  if (cli.stance === "exempt") return null;
+  const example = cli.examples.find(({ id }) => id === exampleId);
+  if (example === undefined) return null;
+  const fragmentId = cliFragmentId(meta.slug, example.id);
+  const output = cli.render(
+    terminalThemeProps(meta.slug, example.props, theme),
+    resolveCliExampleCapabilities(example, catalogueCliCapabilities),
+  );
+  const Heading = headingLevel === 4 ? "h4" : "h5";
+  return (
+    <section
+      className="discern-catalogue-example-state"
+      id={fragmentId}
+      data-discern-cli-example-state={example.id}
+    >
+      <header>
+        <Heading>{example.label}</Heading>
+        <a
+          href={`#${fragmentId}`}
+          aria-label={`Link to ${meta.name}: CLI ${example.label}`}
+        >
+          #
+        </a>
+      </header>
+      <CliOutputPreview
+        value={output}
+        label={`${meta.name}: ${example.label} CLI output`}
+        theme={theme}
+      />
+    </section>
+  );
 }
 
 function terminalThemeProps(
@@ -97,37 +140,14 @@ export function CliComponentPreview(
 
   return (
     <div className="discern-catalogue-component__canvas">
-      {cli.examples.map((example) => {
-        const { id, label, props } = example;
-        const fragmentId = cliFragmentId(meta.slug, id);
-        const output = cli.render(
-          terminalThemeProps(meta.slug, props, theme),
-          resolveCliExampleCapabilities(example, catalogueCliCapabilities),
-        );
-        return (
-          <section
-            className="discern-catalogue-example-state"
-            id={fragmentId}
-            data-discern-cli-example-state={id}
-            key={id}
-          >
-            <header>
-              <h5>{label}</h5>
-              <a
-                href={`#${fragmentId}`}
-                aria-label={`Link to ${meta.name}: CLI ${label}`}
-              >
-                #
-              </a>
-            </header>
-            <CliOutputPreview
-              value={output}
-              label={`${meta.name}: ${label} CLI output`}
-              theme={theme}
-            />
-          </section>
-        );
-      })}
+      {cli.examples.map(({ id }) => (
+        <CliExamplePreview
+          entry={entry}
+          exampleId={id}
+          theme={theme}
+          key={id}
+        />
+      ))}
     </div>
   );
 }

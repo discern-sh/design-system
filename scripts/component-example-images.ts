@@ -1,5 +1,5 @@
 import { encodeHex } from "@std/encoding/hex";
-import { fromFileUrl, relative } from "@std/path";
+import { fromFileUrl } from "@std/path";
 import { chromium } from "playwright-core";
 import type { Browser, BrowserContext, Page } from "playwright-core";
 import { componentExampleImageManifest } from "../catalogue/generated/example-images-manifest.ts";
@@ -209,35 +209,52 @@ async function readIfPresent(url: URL): Promise<Uint8Array | undefined> {
   }
 }
 
-async function filesUnder(url: URL): Promise<URL[]> {
-  const info = await Deno.stat(url);
-  if (info.isFile) return [url];
-  const files: URL[] = [];
-  for await (const entry of Deno.readDir(url)) {
-    const child = new URL(entry.name + (entry.isDirectory ? "/" : ""), url);
-    if (entry.isDirectory) files.push(...await filesUnder(child));
-    else if (entry.isFile) files.push(child);
+/**
+ * Enumerate repository-owned capture inputs from Git's tracked and unignored
+ * working-tree population. Ignored editor, OS, and build artifacts can never
+ * perturb the generated source hash, while a new authored file enrols before
+ * it is staged.
+ */
+export async function repositoryCaptureSourcePaths(
+  root: URL,
+  inputs: readonly string[],
+): Promise<readonly string[]> {
+  const result = await new Deno.Command("git", {
+    args: [
+      "ls-files",
+      "--cached",
+      "--others",
+      "--exclude-standard",
+      "-z",
+      "--",
+      ...inputs,
+    ],
+    cwd: fromFileUrl(root),
+    stdout: "piped",
+    stderr: "piped",
+  }).output();
+  if (!result.success) {
+    throw new Error(
+      `Could not enumerate Component example image inputs: ${
+        new TextDecoder().decode(result.stderr).trim()
+      }`,
+    );
   }
-  return files;
+  return new TextDecoder().decode(result.stdout).split("\0").filter(Boolean)
+    .toSorted((left, right) => left.localeCompare(right));
 }
 
 /** Hash every repository-owned input that can affect capture pixels or facts. */
 export async function componentExampleCaptureSourceHash(): Promise<
   `sha256:${string}`
 > {
-  const files = (await Promise.all(
-    CAPTURE_INPUTS.map((path) => filesUnder(new URL(path, ROOT))),
-  )).flat().filter((url) =>
-    url.href !== MANIFEST_URL.href && isComponentExampleCaptureSourcePath(
-      relative(fromFileUrl(ROOT), fromFileUrl(url)),
-    )
-  ).toSorted((a, b) => a.pathname.localeCompare(b.pathname));
+  const paths = (await repositoryCaptureSourcePaths(ROOT, CAPTURE_INPUTS))
+    .filter(isComponentExampleCaptureSourcePath);
   const chunks: Uint8Array[] = [];
   let length = 0;
-  for (const url of files) {
-    const path = relative(fromFileUrl(ROOT), fromFileUrl(url));
+  for (const path of paths) {
     const pathBytes = encoder.encode(`${path}\0`);
-    const contents = await Deno.readFile(url);
+    const contents = await Deno.readFile(new URL(path, ROOT));
     chunks.push(pathBytes, contents, encoder.encode("\0"));
     length += pathBytes.length + contents.length + 1;
   }

@@ -3,11 +3,11 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { catalogueCliCapabilities } from "../catalogue/cli-preview.tsx";
 import { TerminalFoundationPreview } from "../catalogue/terminal-foundation-preview.tsx";
+import { foundationsSearchRecords } from "../catalogue/routes/foundations.ts";
 import { stripAnsi } from "../src/cli/ansi.ts";
 import { browseTopChoices } from "../scripts/playground/browse.ts";
 import {
   renderTerminalFoundationSheet,
-  terminalFoundationDestinations,
   type TerminalFoundationSheet,
   terminalFoundationSheets,
 } from "../catalogue/terminal-foundations.ts";
@@ -53,6 +53,11 @@ Deno.test("terminal foundation inventory enrols every sheet and specimen", () =>
       );
       specimenIds.add(identity);
       assertEquals(specimen.output.length > 0, true, `${identity} is empty`);
+      assertEquals(
+        specimen.group?.trim().length !== 0,
+        true,
+        `${identity} has an empty browser group`,
+      );
       if (specimen.animation !== undefined) {
         assertEquals(
           specimen.animation.frames.length > 1,
@@ -117,13 +122,11 @@ Deno.test("a fresh terminal foundation sheet auto-enrols in search and browser r
     }],
   } satisfies TerminalFoundationSheet;
 
-  assertEquals(terminalFoundationDestinations([futureSheet]), [{
-    href: "#terminal-foundation-future-surface",
-    title: "Future surface",
-    context: "Terminal foundation",
-    keywords:
-      "Future surface An unrelated future foundation review surface. unrelated kinetic proof",
-  }]);
+  assertEquals(
+    foundationsSearchRecords({ tokens: [], terminalFoundations: [futureSheet] })
+      .find(({ id }) => id === "terminal-foundation:future-surface")?.href,
+    "/catalogue/foundations/terminal/future-surface/",
+  );
   assertEquals(
     browseTopChoices([futureSheet]).some(({ id }) =>
       id === "foundation-future-surface"
@@ -149,7 +152,7 @@ Deno.test("a fresh terminal foundation sheet auto-enrols in search and browser r
     html,
     'data-discern-terminal-foundation-specimen="kinetic-proof"',
   );
-  assertStringIncludes(html, "Future surface");
+  assertStringIncludes(html, "Specimens");
   assertStringIncludes(html, "future frame");
   assertStringIncludes(html, "Future activity");
 });

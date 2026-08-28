@@ -41,6 +41,8 @@ export interface TerminalFoundationAnimation {
 export interface TerminalFoundationSpecimen {
   readonly id: string;
   readonly title: string;
+  /** Browser-gallery grouping; ordering still follows the specimen registry. */
+  readonly group?: string;
   readonly output: string;
   readonly animation?: TerminalFoundationAnimation;
 }
@@ -55,14 +57,6 @@ export interface TerminalFoundationSheet {
     capabilities: TerminalCapabilities,
     presentation?: TerminalFoundationPresentation,
   ) => readonly TerminalFoundationSpecimen[];
-}
-
-/** One browser Search Palette destination derived from a foundation sheet. */
-export interface TerminalFoundationDestination {
-  readonly href: string;
-  readonly title: string;
-  readonly context: "Terminal foundation";
-  readonly keywords: string;
 }
 
 const STEPPER_STATES = [
@@ -158,6 +152,7 @@ function motifSpecimens(
     {
       id: "horizontal-divider",
       title: "Horizontal divider",
+      group: "Dividers and pattern",
       output: renderMotifDivider({
         width,
         ...appearance,
@@ -166,6 +161,7 @@ function motifSpecimens(
     {
       id: "left-aligned-divider",
       title: "Left-aligned divider",
+      group: "Dividers and pattern",
       output: renderMotifDivider({
         width,
         alignment: "start",
@@ -175,6 +171,7 @@ function motifSpecimens(
     {
       id: "brand-register-divider",
       title: "Brand-register divider",
+      group: "Dividers and pattern",
       output: renderMotifDivider({
         width,
         register: "brand",
@@ -184,6 +181,7 @@ function motifSpecimens(
     {
       id: "vertical-divider",
       title: "Vertical divider",
+      group: "Dividers and pattern",
       output: renderMotifPattern({
         length: 5,
         orientation: "vertical",
@@ -193,6 +191,7 @@ function motifSpecimens(
     {
       id: "thick-ribbon",
       title: "Thick ribbon",
+      group: "Dividers and pattern",
       output: renderMotifPattern({
         length: patternLength,
         ...appearance,
@@ -201,6 +200,7 @@ function motifSpecimens(
     {
       id: "spinner-phases",
       title: "Spinner phases",
+      group: "Progress and activity",
       output: spinnerFrames.map((frame, phase) => `phase ${phase}\n${frame}`)
         .join("\n"),
       animation: {
@@ -212,11 +212,13 @@ function motifSpecimens(
     {
       id: "determinate-progress",
       title: "Determinate progress",
+      group: "Progress and activity",
       output: progress,
     },
     {
       id: "labeled-section-rule",
       title: "Labeled section rule",
+      group: "Structure and state",
       output: renderMotifSectionRule("Rule", {
         width,
         ...appearance,
@@ -225,16 +227,19 @@ function motifSpecimens(
     {
       id: "stepper-states",
       title: "Stepper states",
+      group: "Structure and state",
       output: stepper,
     },
     {
       id: "activity-beacon-phases",
       title: "Activity-beacon phases",
+      group: "Structure and state",
       output: beacons,
     },
     {
       id: "derived-consumer-override",
       title: "Derived consumer override",
+      group: "Customisation",
       output: [
         customSpinnerFrames.join(" "),
         custom.motifSectionRule("Consumer override", { width }),
@@ -266,31 +271,37 @@ function narrationSpecimens(
     {
       id: "success",
       title: "Success",
+      group: "Semantic lines",
       output: presenter.success("Checks passed"),
     },
     {
       id: "note",
       title: "Note",
+      group: "Semantic lines",
       output: presenter.note("Cache already warm"),
     },
     {
       id: "warning",
       title: "Warning",
+      group: "Semantic lines",
       output: presenter.warning("Two files skipped"),
     },
     {
       id: "failure",
       title: "Failure",
+      group: "Semantic lines",
       output: presenter.failure("One frame diverged"),
     },
     {
       id: "lead-in",
       title: "Lead-in",
+      group: "Semantic lines",
       output: presenter.lead("Release checks"),
     },
     {
       id: "composed-rhythm",
       title: "Composed rhythm",
+      group: "Composed rhythm",
       output: composeCliBlocks([
         presenter.lead("Release checks"),
         [
@@ -324,18 +335,6 @@ export const terminalFoundationSheets = [
     specimens: narrationSpecimens,
   },
 ] as const satisfies readonly TerminalFoundationSheet[];
-
-/** Derive browser Search Palette destinations from the canonical sheet set. */
-export function terminalFoundationDestinations(
-  sheets: readonly TerminalFoundationSheet[] = terminalFoundationSheets,
-): readonly TerminalFoundationDestination[] {
-  return sheets.map((sheet) => ({
-    href: `#terminal-foundation-${sheet.id}`,
-    title: sheet.title,
-    context: "Terminal foundation",
-    keywords: `${sheet.title} ${sheet.description} ${sheet.keywords}`,
-  }));
-}
 
 /** Resolve one sheet by its stable selector. */
 export function terminalFoundationSheet(
