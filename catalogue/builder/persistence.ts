@@ -28,7 +28,7 @@ export type StorageResult<T> =
 function operationMessage(operation: "read" | "write"): string {
   return operation === "read"
     ? "Browser storage is unavailable. This composition remains editable but will not restore after this tab closes."
-    : "Browser storage could not save this composition. Editing can continue; use Save file or retry storage.";
+    : "Browser storage could not save this composition. Editing can continue; download Builder JSON or retry storage.";
 }
 
 /**
