@@ -27,7 +27,11 @@
     pointer-events: none;
     background: linear-gradient(
       var(--discern-overflow-cue-angle),
-      color-mix(in srgb, var(--discern-color-surface) 92%, transparent),
+      color-mix(
+        in srgb,
+        var(--discern-overflow-cue-color, var(--discern-color-surface)) 92%,
+        transparent
+      ),
       transparent
     );
   }

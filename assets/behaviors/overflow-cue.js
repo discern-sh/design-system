@@ -7,6 +7,7 @@ import {
 (() => {
   const rootSelector = `[${overflowCueMarkupAttributes.root}]`;
   const targetSelector = `[${overflowCueMarkupAttributes.target}]`;
+  const targetAttribute = overflowCueMarkupAttributes.target;
   const enhancedAttribute = overflowCueMarkupAttributes.enhanced;
   const edgeSelector = ":scope>[data-discern-overflow-cue-edge]";
   const liveEntries = new Set();
@@ -42,10 +43,12 @@ import {
     const { root, target, edges } = entry;
     const rootBounds = root.getBoundingClientRect();
     const targetBounds = target.getBoundingClientRect();
-    const top = Math.max(0, targetBounds.top - rootBounds.top);
-    const right = Math.max(0, rootBounds.right - targetBounds.right);
-    const bottom = Math.max(0, rootBounds.bottom - targetBounds.bottom);
-    const left = Math.max(0, targetBounds.left - rootBounds.left);
+    const [top, right, bottom, left] = [
+      targetBounds.top - rootBounds.top,
+      rootBounds.right - targetBounds.right,
+      rootBounds.bottom - targetBounds.bottom,
+      targetBounds.left - rootBounds.left,
+    ].map((value) => Math.max(0, value));
     const gap = "var(--discern-space-2)";
     const size = "var(--discern-space-5)";
     const blockEdge =
@@ -54,24 +57,25 @@ import {
       `top:calc(${top}px + ${gap});bottom:calc(${bottom}px + ${gap});width:${size};`;
     edges[0].style.cssText = `${blockEdge}top:${top}px`;
     edges[1].style.cssText = `${blockEdge}bottom:${bottom}px`;
-    const start = direction === "rtl" ? right : left;
-    const end = direction === "rtl" ? left : right;
+    const [start, end, startAngle, endAngle] = direction === "rtl"
+      ? [right, left, "to left", "to right"]
+      : [left, right, "to right", "to left"];
     edges[2].style.cssText =
-      `${inlineEdge}inset-inline-start:${start}px;--discern-overflow-cue-angle:${
-        direction === "rtl" ? "to left" : "to right"
-      }`;
+      `${inlineEdge}inset-inline-start:${start}px;--discern-overflow-cue-angle:${startAngle}`;
     edges[3].style.cssText =
-      `${inlineEdge}inset-inline-end:${end}px;--discern-overflow-cue-angle:${
-        direction === "rtl" ? "to right" : "to left"
-      }`;
+      `${inlineEdge}inset-inline-end:${end}px;--discern-overflow-cue-angle:${endAngle}`;
+  };
+
+  const release = (entry) => {
+    cancelAnimationFrame(entry.frame);
+    entry.resize?.disconnect();
+    liveEntries.delete(entry);
   };
 
   const measure = (entry) => {
     const { root, target } = entry;
     if (!root.isConnected || !target.isConnected) {
-      cancelAnimationFrame(entry.frame);
-      entry.resize?.disconnect();
-      liveEntries.delete(entry);
+      release(entry);
       return;
     }
     const candidateAxis = root.getAttribute(overflowCueMarkupAttributes.axis);
@@ -82,17 +86,10 @@ import {
       ? "rtl"
       : "ltr";
     const state = measureOverflowCueState(
-      {
-        scrollTop: target.scrollTop,
-        scrollLeft: target.scrollLeft,
-        scrollWidth: target.scrollWidth,
-        scrollHeight: target.scrollHeight,
-        clientWidth: target.clientWidth,
-        clientHeight: target.clientHeight,
-        direction,
-      },
+      target,
       axis,
       detectRtlScrollType(),
+      direction,
     );
     targetInsets(entry, direction);
     for (const [edge, visible] of Object.entries(state)) {
@@ -144,22 +141,30 @@ import {
 
   const enhanceWithin = (node) => {
     if (!node.querySelectorAll) return;
-    if (node instanceof Element && node.matches(rootSelector)) enhance(node);
+    const nearestRoot = node instanceof Element && node.closest(rootSelector);
+    if (nearestRoot) enhance(nearestRoot);
     for (const root of node.querySelectorAll(rootSelector)) enhance(root);
   };
 
   enhanceWithin(document);
   new MutationObserver((records) => {
     for (const record of records) {
+      enhanceWithin(record.target);
       for (const node of record.addedNodes) enhanceWithin(node);
     }
-    for (const entry of liveEntries) {
+    for (const entry of [...liveEntries]) {
+      if (ownedTarget(entry.root) !== entry.target) {
+        release(entry);
+        entry.root.removeAttribute(enhancedAttribute);
+        enhance(entry.root);
+        continue;
+      }
       observeSize(entry);
       schedule(entry);
     }
   }).observe(document.documentElement, {
     attributes: true,
-    attributeFilter: ["class", "dir", "hidden"],
+    attributeFilter: ["class", "dir", "hidden", targetAttribute],
     characterData: true,
     childList: true,
     subtree: true,

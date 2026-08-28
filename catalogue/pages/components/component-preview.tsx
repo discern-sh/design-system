@@ -1,6 +1,7 @@
 import type { TerminalThemeVariant } from "../../../src/cli/theme.ts";
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
+import { OverflowCue } from "../../../src/components/layout/overflow-cue/overflow-cue.tsx";
 import { CliComponentPreview, CliExamplePreview } from "../../cli-preview.tsx";
 import type { RegistryEntry } from "../../generated/registry.ts";
 import { CopyableCode, stateFragmentId } from "../shared.tsx";
@@ -13,12 +14,15 @@ function exampleHeading(level: ExampleHeadingLevel) {
 }
 
 function SpecimenHeadingBoundary(
-  { afterLevel, children }: {
+  { afterLevel, label, observeOverflow, children }: {
     readonly afterLevel: ExampleHeadingLevel;
+    readonly label: string;
+    readonly observeOverflow: boolean;
     readonly children: ReactNode;
   },
 ) {
   const root = useRef<HTMLDivElement>(null);
+  const cueRoot = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const normalize = () => {
       for (
@@ -82,7 +86,100 @@ function SpecimenHeadingBoundary(
       }
     };
   }, [afterLevel]);
-  return <div ref={root}>{children}</div>;
+  useEffect(() => {
+    const boundary = root.current;
+    const cue = cueRoot.current;
+    if (boundary === null || cue === null) return;
+    let target: HTMLElement | undefined;
+    let addedRole = false;
+    let addedLabel = false;
+    let addedTabIndex = false;
+    const selectMaterialOverflow = (): void => {
+      if (target?.isConnected) return;
+      const candidates = [
+        boundary,
+        ...boundary.querySelectorAll<HTMLElement>("*"),
+      ].filter((candidate) => {
+        if (
+          candidate.getClientRects().length === 0 ||
+          candidate.closest("[data-discern-overflow-cue]") !== cue
+        ) return false;
+        const style = getComputedStyle(candidate);
+        const inline = ["auto", "scroll"].includes(style.overflowX) &&
+          candidate.scrollWidth - candidate.clientWidth > 16;
+        const block = ["auto", "scroll"].includes(style.overflowY) &&
+          candidate.scrollHeight - candidate.clientHeight > 16;
+        return inline || block;
+      }).sort((left, right) =>
+        (right.scrollWidth - right.clientWidth) +
+        (right.scrollHeight - right.clientHeight) -
+        (left.scrollWidth - left.clientWidth) -
+        (left.scrollHeight - left.clientHeight)
+      );
+      const selected = candidates[0];
+      if (selected === undefined) return;
+      target = selected;
+      selected.setAttribute("data-discern-overflow-cue-target", "");
+      if (!selected.hasAttribute("role")) {
+        selected.setAttribute("role", "region");
+        addedRole = true;
+      }
+      if (!selected.hasAttribute("aria-label")) {
+        selected.setAttribute("aria-label", label);
+        addedLabel = true;
+      }
+      if (!selected.hasAttribute("tabindex")) {
+        selected.tabIndex = 0;
+        addedTabIndex = true;
+      }
+      let background: HTMLElement | null = selected;
+      while (
+        background !== null &&
+        getComputedStyle(background).backgroundColor === "rgba(0, 0, 0, 0)"
+      ) {
+        background = background.parentElement;
+      }
+      if (background !== null) {
+        cue.style.setProperty(
+          "--discern-overflow-cue-color",
+          getComputedStyle(background).backgroundColor,
+        );
+      }
+    };
+    selectMaterialOverflow();
+    const mutations = new MutationObserver(selectMaterialOverflow);
+    mutations.observe(boundary, { childList: true, subtree: true });
+    const resize = typeof ResizeObserver === "function"
+      ? new ResizeObserver(selectMaterialOverflow)
+      : undefined;
+    resize?.observe(boundary);
+    globalThis.addEventListener("resize", selectMaterialOverflow);
+    return () => {
+      mutations.disconnect();
+      resize?.disconnect();
+      globalThis.removeEventListener("resize", selectMaterialOverflow);
+      if (target !== undefined) {
+        target.removeAttribute("data-discern-overflow-cue-target");
+        if (addedRole) target.removeAttribute("role");
+        if (addedLabel) target.removeAttribute("aria-label");
+        if (addedTabIndex) target.removeAttribute("tabindex");
+      }
+    };
+  }, [label]);
+  const content = <div ref={root}>{children}</div>;
+  return observeOverflow
+    ? (
+      <OverflowCue
+        ref={cueRoot}
+        axis="both"
+        scrollContainer="descendant"
+        className="discern-catalogue-specimen-cue"
+        data-discern-catalogue-specimen-overflow=""
+      >
+        {content}
+      </OverflowCue>
+    )
+    : content;
 }
 
 /** The canonical recorded reason one named example cannot render on a surface. */
@@ -209,7 +306,11 @@ function WebExample(
         </a>
       </header>
       <div className="discern-catalogue-example-state__canvas">
-        <SpecimenHeadingBoundary afterLevel={headingLevel}>
+        <SpecimenHeadingBoundary
+          afterLevel={headingLevel}
+          label={`${entry.meta.name}: ${example.label} scrollable example`}
+          observeOverflow={entry.meta.slug !== "overflow-cue"}
+        >
           <example.Example />
         </SpecimenHeadingBoundary>
       </div>
@@ -360,33 +461,47 @@ export function ComponentEvidence(
                   : null}
                 {propDocumentation.props.length
                   ? (
-                    <div className="discern-catalogue-api__table">
-                      <table>
-                        <thead>
-                          <tr>
-                            <th scope="col">Prop</th>
-                            <th scope="col">Type</th>
-                            <th scope="col">Requirement</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {propDocumentation.props.map((prop) => (
-                            <tr key={prop.name}>
-                              <th scope="row">
-                                <code>{prop.name}</code>
-                                {prop.description
-                                  ? <small>{prop.description}</small>
-                                  : null}
-                              </th>
-                              <td>
-                                <code>{prop.type}</code>
-                              </td>
-                              <td>{prop.required ? "Required" : "Optional"}</td>
+                    <OverflowCue
+                      axis="inline"
+                      scrollContainer="descendant"
+                      className="discern-catalogue-api__cue"
+                    >
+                      <div
+                        className="discern-catalogue-api__table"
+                        role="region"
+                        aria-label={`${meta.name} props`}
+                        tabIndex={0}
+                        data-discern-overflow-cue-target=""
+                      >
+                        <table>
+                          <thead>
+                            <tr>
+                              <th scope="col">Prop</th>
+                              <th scope="col">Type</th>
+                              <th scope="col">Requirement</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                          </thead>
+                          <tbody>
+                            {propDocumentation.props.map((prop) => (
+                              <tr key={prop.name}>
+                                <th scope="row">
+                                  <code>{prop.name}</code>
+                                  {prop.description
+                                    ? <small>{prop.description}</small>
+                                    : null}
+                                </th>
+                                <td>
+                                  <code>{prop.type}</code>
+                                </td>
+                                <td>
+                                  {prop.required ? "Required" : "Optional"}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </OverflowCue>
                   )
                   : <p>No Component-specific props.</p>}
               </>

@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import type { TerminalThemeVariant } from "../../../src/cli/theme.ts";
+import { OverflowCue } from "../../../src/components/layout/overflow-cue/overflow-cue.tsx";
 import type { RegistryEntry } from "../../generated/registry.ts";
 import { catalogueRoutePaths } from "../../routes.ts";
 import { announceCatalogueLocationChange } from "../../shell/location.ts";
+import { preserveCatalogueAppearanceHref } from "../../shell/appearance-state.ts";
 import {
   ComponentExampleControl,
   ComponentSpecimen,
@@ -226,7 +228,10 @@ export function ComparePage(
     globalThis.history[replace ? "replaceState" : "pushState"](
       null,
       "",
-      compareStateHref(next),
+      preserveCatalogueAppearanceHref(
+        new URL(globalThis.location.href),
+        compareStateHref(next),
+      ),
     );
     setState(next);
     announceCatalogueLocationChange();
@@ -248,7 +253,7 @@ export function ComparePage(
           index="06"
           eyebrow="Compare"
           title="Build a deliberate comparison."
-          description="Choose one bounded collection or return to the Components directory."
+          description="Choose one focused collection or return to the Components directory."
         />
         <div className="discern-catalogue-compare-landing__picker">
           <ScopePicker
@@ -260,7 +265,7 @@ export function ComparePage(
         </div>
         <p className="discern-catalogue-compare-landing__complete">
           Complete system is secondary: {directory.components.length}{" "}
-          live specimens.
+          Component previews.
         </p>
       </div>
     );
@@ -346,7 +351,7 @@ export function ComparePage(
       {scope.kind === "all"
         ? (
           <p className="discern-catalogue-review__weight">
-            Complete system · {scope.components.length} live specimens
+            Complete system · {scope.components.length} Component previews
           </p>
         )
         : null}
@@ -359,30 +364,38 @@ export function ComparePage(
         )
         : (
           <div className="discern-catalogue-review__workspace">
-            <nav
-              className="discern-catalogue-review__jump-list"
-              aria-label="Comparison jump list"
+            <OverflowCue
+              axis="both"
+              scrollContainer="descendant"
+              className="discern-catalogue-review__jump-cue"
             >
-              {grouped.map(({ group, entries }) => (
-                <div key={group}>
-                  <strong>{group}</strong>
-                  {entries.map(({ meta }) => {
-                    const next = { ...state, current: meta.slug };
-                    return (
-                      <a
-                        href={compareStateHref(next)}
-                        aria-current={state.current === meta.slug
-                          ? "location"
-                          : undefined}
-                        key={meta.slug}
-                      >
-                        {meta.name}
-                      </a>
-                    );
-                  })}
-                </div>
-              ))}
-            </nav>
+              <nav
+                className="discern-catalogue-review__jump-list"
+                aria-label="Comparison jump list"
+                tabIndex={0}
+                data-discern-overflow-cue-target=""
+              >
+                {grouped.map(({ group, entries }) => (
+                  <div key={group}>
+                    <strong>{group}</strong>
+                    {entries.map(({ meta }) => {
+                      const next = { ...state, current: meta.slug };
+                      return (
+                        <a
+                          href={compareStateHref(next)}
+                          aria-current={state.current === meta.slug
+                            ? "location"
+                            : undefined}
+                          key={meta.slug}
+                        >
+                          {meta.name}
+                        </a>
+                      );
+                    })}
+                  </div>
+                ))}
+              </nav>
+            </OverflowCue>
             <div className="discern-catalogue-review__population">
               {grouped.map(({ group, entries }) => (
                 <section

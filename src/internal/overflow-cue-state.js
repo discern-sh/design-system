@@ -95,9 +95,15 @@ export function logicalInlineScrollOffset(
  * @param {OverflowCueMetrics} metrics
  * @param {OverflowCueAxis} axis
  * @param {RtlScrollType} rtlScrollType
+ * @param {"ltr" | "rtl"} [direction=metrics.direction]
  * @returns {OverflowCueState}
  */
-export function measureOverflowCueState(metrics, axis, rtlScrollType) {
+export function measureOverflowCueState(
+  metrics,
+  axis,
+  rtlScrollType,
+  direction = metrics.direction,
+) {
   const maximumBlock = Math.max(
     0,
     metrics.scrollHeight - metrics.clientHeight,
@@ -110,7 +116,7 @@ export function measureOverflowCueState(metrics, axis, rtlScrollType) {
   const inlineOffset = logicalInlineScrollOffset(
     metrics.scrollLeft,
     maximumInline,
-    metrics.direction,
+    direction,
     rtlScrollType,
   );
   const measuresBlock = axis === "block" || axis === "both";

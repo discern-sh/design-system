@@ -154,6 +154,21 @@ Deno.test("Overflow cue normalises every RTL scrollLeft convention to logical di
         inlineEnd: false,
       },
     );
+
+    assertEquals(
+      measureOverflowCueState(
+        { ...metrics, scrollLeft: testCase.middle, direction: "ltr" },
+        "inline",
+        testCase.type,
+        "rtl",
+      ),
+      {
+        blockStart: false,
+        blockEnd: false,
+        inlineStart: true,
+        inlineEnd: true,
+      },
+    );
   }
 });
 

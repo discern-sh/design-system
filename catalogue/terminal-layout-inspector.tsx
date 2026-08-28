@@ -128,8 +128,8 @@ export function TerminalLayoutLab(
           <div>
             <h2 id="terminal-capability-heading">Capability controls</h2>
             <p>
-              Presets are reproducible review fixtures, not terminal support
-              limits.
+              These viewport examples are reproducible; they do not limit
+              supported terminal sizes.
             </p>
           </div>
           <strong data-discern-terminal-lab-mode>
@@ -293,10 +293,20 @@ export function TerminalLayoutLab(
         <summary>Adaptable composition source</summary>
         <div>
           <p>
-            This Catalogue recipe assembles public renderers; it is not a
-            packaged Component.
+            Use this as an adaptable example; it is not exported as a Component.
           </p>
-          <pre><code>{recipe.source}</code></pre>
+          <OverflowCue
+            axis="both"
+            scrollContainer="descendant"
+            className="discern-catalogue-terminal-lab__source-cue"
+          >
+            <pre
+              role="region"
+              aria-label="Adaptable terminal layout source"
+              tabIndex={0}
+              data-discern-overflow-cue-target=""
+            ><code>{recipe.source}</code></pre>
+          </OverflowCue>
           <CopyButton
             value={recipe.source}
             label="Copy adaptable composition source"

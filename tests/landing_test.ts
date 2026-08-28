@@ -30,9 +30,9 @@ const facts: LandingFacts = {
     resolvedComponents: landingSelection.length,
     cssBytes: 81_234,
     cssIntegrity: "sha256:0123456789abcdef0123456789abcdef",
-    scripts: [],
+    scripts: ["discern.js"],
   },
-  pageScripts: ["theme-preference.js"],
+  pageScripts: ["overflow-targets.js", "theme-preference.js"],
 };
 
 Deno.test("landing system facts derive complete browser and terminal coverage", () => {
@@ -122,10 +122,12 @@ Deno.test("landing style coverage recognises an emitted Component block", () => 
   );
 });
 
-Deno.test("the landing page is deterministic HTML with one page-owned behavior", () => {
+Deno.test("the landing page is deterministic HTML with its exact behavior selection", () => {
   const html = renderLandingHtml(facts);
   assertEquals(html, renderLandingHtml(facts));
-  assertEquals([...html.matchAll(/<script\b/gi)].length, 1);
+  assertEquals([...html.matchAll(/<script\b/gi)].length, 3);
+  assert(html.includes('src="/dist/landing/discern.js"'));
+  assert(html.includes('src="/dist/landing/overflow-targets.js"'));
   assert(html.includes('src="/dist/landing/theme-preference.js"'));
   assert(html.startsWith("<!doctype html>"));
   assert(html.includes('<html lang="en" data-discern-root'));
@@ -147,6 +149,10 @@ Deno.test("the landing page is deterministic HTML with one page-owned behavior",
   assert(html.includes('data-discern-diagram-kind="flow"'));
   assert(html.includes('data-discern-chart-kind="heatmap"'));
   assert(html.includes("Selected components"));
+  assertEquals(
+    [...html.matchAll(/data-discern-landing-overflow-target=/g)].length,
+    8,
+  );
   assert(html.includes(
     `${facts.emission.resolvedComponents} of ${facts.system.components}`,
   ));
@@ -295,8 +301,8 @@ Deno.test("every class the landing page renders is styled by its own emission", 
     });
     assertEquals(
       summary.manifest.outputs.scripts,
-      [],
-      "Theme preference stays a Catalogue consumer policy, not package behavior",
+      ["discern.js"],
+      "OverflowCue must emit its public behavior without widening the landing runtime",
     );
     const stylesheets = [
       summary.manifest.outputs.css,

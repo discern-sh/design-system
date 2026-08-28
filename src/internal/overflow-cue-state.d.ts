@@ -52,4 +52,5 @@ export function measureOverflowCueState(
   metrics: OverflowCueMetrics,
   axis: OverflowCueAxis,
   rtlScrollType: RtlScrollType,
+  direction?: "ltr" | "rtl",
 ): OverflowCueState;

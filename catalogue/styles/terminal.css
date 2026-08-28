@@ -263,6 +263,10 @@
     font: var(--discern-font-size-xs) / 1.55 var(--discern-font-mono);
     white-space: pre;
   }
+  .discern-catalogue-terminal-lab__source-cue {
+    --discern-overflow-cue-color: var(--discern-color-canvas);
+    max-inline-size: 100%;
+  }
   .discern-catalogue-terminal-detail__continuation {
     display: grid;
     grid-template-columns: 1fr auto 1fr;

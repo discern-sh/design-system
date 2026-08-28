@@ -326,6 +326,10 @@
   .discern-catalogue-api__table {
     overflow-x: auto;
   }
+  .discern-catalogue-api__cue,
+  .discern-catalogue-specimen-cue {
+    max-width: 100%;
+  }
   .discern-catalogue-api table {
     width: 100%;
     border-collapse: collapse;
@@ -657,8 +661,7 @@
     font: var(--discern-font-size-xs) var(--discern-font-ui);
   }
   .discern-catalogue-component__canvas,
-  .discern-catalogue-example-state__canvas,
-  .discern-catalogue-cli-preview {
+  .discern-catalogue-example-state__canvas {
     max-width: 100%;
     overflow-x: auto;
   }

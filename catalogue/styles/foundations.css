@@ -132,6 +132,9 @@
     padding: 2px;
     scrollbar-width: thin;
   }
+  .discern-catalogue-token-categories-cue {
+    max-width: 100%;
+  }
   .discern-catalogue-token-categories button,
   .discern-catalogue-token-controls__clear,
   .discern-catalogue-token-empty button,

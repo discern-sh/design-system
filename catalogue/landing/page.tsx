@@ -3,14 +3,16 @@
  *
  * The page is composed exclusively from published components and rendered to
  * static HTML at build time — the same consumer contract the copy describes.
- * Its only page-owned behavior applies the controlled Theme toggle's consumer
- * policy; every number it presents arrives through {@linkcode LandingFacts}
+ * Its page-owned behaviors apply the controlled Theme toggle's consumer
+ * policy and identify existing scroll targets for the public OverflowCue;
+ * every number it presents arrives through {@linkcode LandingFacts}
  * from the real package manifest and landing build, never hand-maintained
  * prose.
  *
  * @module
  */
 import { renderToStaticMarkup } from "react-dom/server";
+import type { CSSProperties, ReactNode } from "react";
 import { SurveyBackdrop } from "../../src/components/artwork/survey-backdrop/survey-backdrop.tsx";
 import { Button } from "../../src/components/core/button/button.tsx";
 import { ThemeToggle } from "../../src/components/core/theme-toggle/theme-toggle.tsx";
@@ -24,6 +26,7 @@ import { Diagram } from "../../src/components/editorial/diagram/diagram.tsx";
 import { Markdown } from "../../src/components/editorial/markdown/markdown.tsx";
 import { TableOfContents } from "../../src/components/editorial/table-of-contents/table-of-contents.tsx";
 import { Grid } from "../../src/components/layout/grid/grid.tsx";
+import { OverflowCue } from "../../src/components/layout/overflow-cue/overflow-cue.tsx";
 import { Stack } from "../../src/components/layout/stack/stack.tsx";
 import { ClosingStatement } from "../../src/components/marketing/closing-statement/closing-statement.tsx";
 import { FaqBlock } from "../../src/components/marketing/faq-block/faq-block.tsx";
@@ -82,6 +85,7 @@ export const landingSelection: readonly string[] = [
   "marketing-section",
   "metrics-band",
   "narrative-chapter",
+  "overflow-cue",
   "site-footer",
   "site-header",
   "skip-link",
@@ -97,6 +101,31 @@ export const landingSelection: readonly string[] = [
 
 /** Assets the landing emission carries; the document links only these. */
 export const landingAssets: readonly RuntimeAssetSelection[] = ["fonts"];
+
+type LandingOverflowTarget = "code-listing" | "diagram" | "terminal";
+
+/** Static-page adapter around a published Component's existing native scroller. */
+function LandingOverflowCue(
+  { target, children }: {
+    readonly target: LandingOverflowTarget;
+    readonly children: ReactNode;
+  },
+) {
+  return (
+    <OverflowCue
+      axis="inline"
+      scrollContainer="descendant"
+      data-discern-landing-overflow-target={target}
+      style={target === "terminal"
+        ? {
+          "--discern-overflow-cue-color": "var(--discern-terminal-surface)",
+        } as CSSProperties
+        : undefined}
+    >
+      {children}
+    </OverflowCue>
+  );
+}
 
 /** Canonical Catalogue destinations projected into the public front door. */
 export const landingCatalogueDestinations = catalogueNavigation;
@@ -241,14 +270,16 @@ function HeroVerificationPair({ facts }: { readonly facts: LandingFacts }) {
           checks={webChecks}
         />
       </Window>
-      <Terminal variant="showcase" title="Terminal output">
-        <TerminalFrame
-          output={renderVerificationReportCli(
-            cliProps,
-            HERO_TERMINAL_CAPABILITIES,
-          )}
-        />
-      </Terminal>
+      <LandingOverflowCue target="terminal">
+        <Terminal variant="showcase" title="Terminal output">
+          <TerminalFrame
+            output={renderVerificationReportCli(
+              cliProps,
+              HERO_TERMINAL_CAPABILITIES,
+            )}
+          />
+        </Terminal>
+      </LandingOverflowCue>
     </Grid>
   );
 }
@@ -375,26 +406,32 @@ function TypedDiagramSection() {
         <DataFigure
           eyebrow="Browser projection"
           title="Select, emit, render"
-          visual={<Diagram spec={DELIVERY_FLOW_SPEC} />}
+          visual={
+            <LandingOverflowCue target="diagram">
+              <Diagram spec={DELIVERY_FLOW_SPEC} />
+            </LandingOverflowCue>
+          }
           caption="The package owns layout, shapes, connectors, and the complete structural description."
           source="One typed FlowDiagramSpec in this page"
           style={{ margin: 0 }}
         />
-        <Terminal
-          variant="showcase"
-          title="The same FlowDiagramSpec in a terminal"
-        >
-          <TerminalFrame
-            output={renderDiagramCli(
-              {
-                spec: DELIVERY_FLOW_SPEC,
-                theme: "dark",
-                maxWidth: 72,
-              },
-              SHOWCASE_TERMINAL_CAPABILITIES,
-            )}
-          />
-        </Terminal>
+        <LandingOverflowCue target="terminal">
+          <Terminal
+            variant="showcase"
+            title="The same FlowDiagramSpec in a terminal"
+          >
+            <TerminalFrame
+              output={renderDiagramCli(
+                {
+                  spec: DELIVERY_FLOW_SPEC,
+                  theme: "dark",
+                  maxWidth: 72,
+                },
+                SHOWCASE_TERMINAL_CAPABILITIES,
+              )}
+            />
+          </Terminal>
+        </LandingOverflowCue>
       </Grid>
     </MarketingSection>
   );
@@ -446,17 +483,19 @@ function ComponentCoverageSection(
           source="Generated component and CLI stance registries"
           style={{ margin: 0 }}
         />
-        <Terminal
-          variant="showcase"
-          title="The same computed heatmap in a terminal"
-        >
-          <TerminalFrame
-            output={renderChartCli(
-              { spec, theme: "dark", maxWidth: 58 },
-              SHOWCASE_TERMINAL_CAPABILITIES,
-            )}
-          />
-        </Terminal>
+        <LandingOverflowCue target="terminal">
+          <Terminal
+            variant="showcase"
+            title="The same computed heatmap in a terminal"
+          >
+            <TerminalFrame
+              output={renderChartCli(
+                { spec, theme: "dark", maxWidth: 58 },
+                SHOWCASE_TERMINAL_CAPABILITIES,
+              )}
+            />
+          </Terminal>
+        </LandingOverflowCue>
       </Grid>
     </MarketingSection>
   );
@@ -477,12 +516,14 @@ function MarkdownProjectionSection() {
         }
       />
       <Stack gap={6}>
-        <CodeListing
-          filename="README.md"
-          language="md"
-          code={MARKDOWN_SHOWCASE_SOURCE}
-          style={{ marginBlock: 0 }}
-        />
+        <LandingOverflowCue target="code-listing">
+          <CodeListing
+            filename="README.md"
+            language="md"
+            code={MARKDOWN_SHOWCASE_SOURCE}
+            style={{ marginBlock: 0 }}
+          />
+        </LandingOverflowCue>
         <Grid gap={6} minimum="30rem">
           <Window
             title="Browser rendering"
@@ -490,18 +531,20 @@ function MarkdownProjectionSection() {
           >
             <Markdown source={MARKDOWN_SHOWCASE_SOURCE} measure="narrow" />
           </Window>
-          <Terminal variant="showcase" title="Terminal rendering">
-            <TerminalFrame
-              output={renderMarkdownCli(
-                {
-                  source: MARKDOWN_SHOWCASE_SOURCE,
-                  theme: "dark",
-                  maxWidth: 52,
-                },
-                SHOWCASE_TERMINAL_CAPABILITIES,
-              )}
-            />
-          </Terminal>
+          <LandingOverflowCue target="terminal">
+            <Terminal variant="showcase" title="Terminal rendering">
+              <TerminalFrame
+                output={renderMarkdownCli(
+                  {
+                    source: MARKDOWN_SHOWCASE_SOURCE,
+                    theme: "dark",
+                    maxWidth: 52,
+                  },
+                  SHOWCASE_TERMINAL_CAPABILITIES,
+                )}
+              />
+            </Terminal>
+          </LandingOverflowCue>
         </Grid>
       </Stack>
     </MarketingSection>
@@ -647,12 +690,14 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
           </Button>
         }
         media={
-          <CodeListing
-            variant="showcase"
-            filename="build.ts"
-            language="ts"
-            code={RUNTIME_SNIPPET}
-          />
+          <LandingOverflowCue target="code-listing">
+            <CodeListing
+              variant="showcase"
+              filename="build.ts"
+              language="ts"
+              code={RUNTIME_SNIPPET}
+            />
+          </LandingOverflowCue>
         }
         surface="sunken"
       />
@@ -692,14 +737,16 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
           </Button>
         }
         media={
-          <Terminal variant="showcase" title="deno run build.ts">
-            <TerminalFrame
-              output={renderWorklogCli(
-                WORKLOG_OUTPUT_PROPS,
-                SPLIT_TERMINAL_CAPABILITIES,
-              )}
-            />
-          </Terminal>
+          <LandingOverflowCue target="terminal">
+            <Terminal variant="showcase" title="deno run build.ts">
+              <TerminalFrame
+                output={renderWorklogCli(
+                  WORKLOG_OUTPUT_PROPS,
+                  SPLIT_TERMINAL_CAPABILITIES,
+                )}
+              />
+            </Terminal>
+          </LandingOverflowCue>
         }
         reverse
       />
@@ -798,8 +845,7 @@ function LandingMain({ facts }: { readonly facts: LandingFacts }) {
         title="Select. Emit. Ship."
         description={
           <p>
-            Find the Component you need, then inspect its bounded browser and
-            terminal examples.
+            Find the Component you need, then inspect its Web and CLI examples.
           </p>
         }
         actions={

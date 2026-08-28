@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { CopyButton } from "../../../src/components/docs/copy-button/copy-button.tsx";
+import { OverflowCue } from "../../../src/components/layout/overflow-cue/overflow-cue.tsx";
 import type { CompositionRecipe } from "../../compositions.tsx";
 import {
   compositionConstituents,
@@ -238,11 +239,23 @@ function CompositionDetail(
             </label>
           ))}
         </fieldset>
-        <div className="discern-catalogue-pattern__canvas">
-          <div className="discern-catalogue-pattern__viewport">
-            <Example />
+        <OverflowCue
+          axis="inline"
+          scrollContainer="descendant"
+          className="discern-catalogue-pattern__canvas-cue"
+        >
+          <div
+            className="discern-catalogue-pattern__canvas"
+            role="region"
+            aria-label={`${title} ${width} preview`}
+            tabIndex={0}
+            data-discern-overflow-cue-target=""
+          >
+            <div className="discern-catalogue-pattern__viewport">
+              <Example />
+            </div>
           </div>
-        </div>
+        </OverflowCue>
       </section>
       <section
         className="discern-catalogue-pattern__components"
@@ -269,7 +282,19 @@ function CompositionDetail(
               copiedLabel="Adaptable example source copied"
             />
           </div>
-          <pre className="discern-mono" tabIndex={0}><code>{source}</code></pre>
+          <OverflowCue
+            axis="both"
+            scrollContainer="descendant"
+            className="discern-catalogue-pattern__source-cue"
+          >
+            <pre
+              className="discern-mono"
+              role="region"
+              aria-label="Adaptable example source"
+              tabIndex={0}
+              data-discern-overflow-cue-target=""
+            ><code>{source}</code></pre>
+          </OverflowCue>
         </div>
       </details>
       <nav

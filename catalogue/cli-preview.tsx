@@ -2,6 +2,7 @@ import type { TerminalCapabilities } from "../src/cli/capabilities.ts";
 import { resolveCliExampleCapabilities } from "../src/cli/contracts.ts";
 import { projectTerminalInlineHtml } from "../src/cli/projection.ts";
 import type { TerminalThemeVariant } from "../src/cli/theme.ts";
+import { OverflowCue } from "../src/components/layout/overflow-cue/overflow-cue.tsx";
 import type { RegistryEntry } from "./generated/registry.ts";
 
 /** Fixed terminal profile used for deterministic Catalogue specimens. */
@@ -21,19 +22,26 @@ export function CliOutputPreview(
   },
 ) {
   return (
-    <div
+    <OverflowCue
+      axis="inline"
+      scrollContainer="descendant"
       className="discern-catalogue-cli-preview"
       data-discern-root
       data-discern-theme={theme}
     >
-      <pre className="discern-catalogue-cli-output" aria-label={label}>
+      <pre
+        className="discern-catalogue-cli-output"
+        aria-label={label}
+        tabIndex={0}
+        data-discern-overflow-cue-target=""
+      >
         <code
           dangerouslySetInnerHTML={{
             __html: projectTerminalInlineHtml(value),
           }}
         />
       </pre>
-    </div>
+    </OverflowCue>
   );
 }
 

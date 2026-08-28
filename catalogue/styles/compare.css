@@ -104,9 +104,12 @@
     gap: 22px;
     align-items: start;
   }
-  .discern-catalogue-review__jump-list {
+  .discern-catalogue-review__jump-cue {
     position: sticky;
     top: 16px;
+    min-width: 0;
+  }
+  .discern-catalogue-review__jump-list {
     display: grid;
     gap: 14px;
     max-height: calc(100vh - 32px);
@@ -208,10 +211,11 @@
     .discern-catalogue-review__workspace {
       grid-template-columns: 1fr;
     }
-    .discern-catalogue-review__jump-list {
-      position: sticky;
+    .discern-catalogue-review__jump-cue {
       z-index: 5;
       top: 0;
+    }
+    .discern-catalogue-review__jump-list {
       display: flex;
       max-height: none;
       overflow-x: auto;

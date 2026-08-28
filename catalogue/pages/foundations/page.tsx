@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { CSSProperties, FormEvent } from "react";
 import type { TerminalThemeVariant } from "../../../src/cli/theme.ts";
 import { CopyButton } from "../../../src/components/docs/copy-button/copy-button.tsx";
+import { OverflowCue } from "../../../src/components/layout/overflow-cue/overflow-cue.tsx";
 import {
   allTokens,
   baseTokens,
@@ -311,29 +312,37 @@ function CategoryControls(
   },
 ) {
   return (
-    <div
-      className="discern-catalogue-token-categories"
-      role="group"
-      aria-label="Filter Tokens by category"
+    <OverflowCue
+      axis="inline"
+      scrollContainer="descendant"
+      className="discern-catalogue-token-categories-cue"
     >
-      <button
-        type="button"
-        aria-pressed={selected === undefined}
-        onClick={() => onSelect(undefined)}
+      <div
+        className="discern-catalogue-token-categories"
+        role="group"
+        aria-label="Filter Tokens by category"
+        tabIndex={0}
+        data-discern-overflow-cue-target=""
       >
-        All
-      </button>
-      {categories.map((category) => (
         <button
           type="button"
-          aria-pressed={selected === category}
-          onClick={() => onSelect(category)}
-          key={category}
+          aria-pressed={selected === undefined}
+          onClick={() => onSelect(undefined)}
         >
-          {category}
+          All
         </button>
-      ))}
-    </div>
+        {categories.map((category) => (
+          <button
+            type="button"
+            aria-pressed={selected === category}
+            onClick={() => onSelect(category)}
+            key={category}
+          >
+            {category}
+          </button>
+        ))}
+      </div>
+    </OverflowCue>
   );
 }
 

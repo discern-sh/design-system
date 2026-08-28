@@ -156,6 +156,11 @@
     border-radius: var(--discern-radius-lg);
     background: var(--discern-color-canvas);
   }
+  .discern-catalogue-pattern__canvas-cue,
+  .discern-catalogue-pattern__source-cue {
+    --discern-overflow-cue-color: var(--discern-color-canvas);
+    max-width: 100%;
+  }
   .discern-catalogue-pattern__viewport {
     box-sizing: border-box;
     inline-size: 720px;
