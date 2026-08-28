@@ -152,7 +152,6 @@
     }
     .discern-catalogue-route-card__image {
       min-height: 148px;
-      order: -1;
     }
   }
 }

@@ -144,13 +144,13 @@ export function OverviewPage() {
                 href={destination.path}
                 key={destination.id}
               >
-                {lead ? <ComponentsRouteImage /> : null}
                 <h2>{destination.label}</h2>
                 <p>{detail.description}</p>
                 <small>{detail.count}</small>
                 <span className="discern-catalogue-route-card__action">
                   {detail.action} <span aria-hidden="true">→</span>
                 </span>
+                {lead ? <ComponentsRouteImage /> : null}
               </a>
             );
           })}
