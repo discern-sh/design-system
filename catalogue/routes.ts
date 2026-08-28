@@ -12,6 +12,11 @@ import {
   componentSearchRecords,
 } from "./routes/components.ts";
 import {
+  canonicalFoundationsLegacyUrl,
+  catalogueTerminalFoundationPath,
+  foundationsPaths,
+} from "./routes/foundations.ts";
+import {
   canonicalCatalogueShellPathname,
   catalogueNavigation,
   catalogueRoute,
@@ -36,7 +41,9 @@ export {
   catalogueRouteFamilies,
   catalogueRoutePaths,
   catalogueSearchRecords,
+  catalogueTerminalFoundationPath,
   componentSearchRecords,
+  foundationsPaths,
 };
 export type {
   CatalogueRoute,
@@ -64,6 +71,8 @@ function decodedFragment(hash: string): string {
 /** Upgrade former one-page links to their routed destination. */
 export function canonicalCatalogueLegacyUrl(current: URL): URL {
   const url = new URL(current.href);
+  const foundationsUrl = canonicalFoundationsLegacyUrl(url);
+  if (foundationsUrl.href !== url.href) return foundationsUrl;
   if (
     normalizedCataloguePathname(url.pathname) !==
       catalogueRoutePaths.overview ||
@@ -85,13 +94,6 @@ export function canonicalCatalogueLegacyUrl(current: URL): URL {
   if (fragment === "components") {
     url.pathname = catalogueRoutePaths.components;
     url.hash = "";
-    return url;
-  }
-  if (
-    fragment === "foundations" || fragment.startsWith("tokens-") ||
-    fragment.startsWith("terminal-foundation-")
-  ) {
-    url.pathname = catalogueRoutePaths.foundations;
     return url;
   }
   if (fragment === "compositions" || fragment.startsWith("recipe-")) {

@@ -8,6 +8,8 @@ import {
   catalogueNavigation,
   catalogueRoute,
   catalogueRoutePaths,
+  catalogueTerminalFoundationPath,
+  foundationsPaths,
 } from "../catalogue/routes.ts";
 
 Deno.test("Catalogue routes resolve every explorer surface and Component detail", () => {
@@ -20,6 +22,16 @@ Deno.test("Catalogue routes resolve every explorer surface and Component detail"
       slug: "command-group",
     }],
     [catalogueRoutePaths.foundations, { family: "foundations", page: "index" }],
+    [foundationsPaths.tokens, { family: "foundations", page: "tokens" }],
+    [foundationsPaths.terminal, {
+      family: "foundations",
+      page: "terminal-index",
+    }],
+    [catalogueTerminalFoundationPath("motifs"), {
+      family: "foundations",
+      page: "terminal-detail",
+      sheetId: "motifs",
+    }],
     [catalogueRoutePaths.compositions, {
       family: "compositions",
       page: "index",
@@ -105,7 +117,26 @@ Deno.test("legacy one-page Catalogue links upgrade to routed destinations", () =
     },
     {
       current: "https://catalogue.example/catalogue/#tokens-color",
-      expected: "https://catalogue.example/catalogue/foundations/#tokens-color",
+      expected:
+        "https://catalogue.example/catalogue/foundations/tokens/?category=color",
+    },
+    {
+      current:
+        "https://catalogue.example/catalogue/foundations/#tokens-typography",
+      expected:
+        "https://catalogue.example/catalogue/foundations/tokens/?category=typography",
+    },
+    {
+      current:
+        "https://catalogue.example/catalogue/#terminal-foundation-motifs",
+      expected:
+        "https://catalogue.example/catalogue/foundations/terminal/motifs/#terminal-foundation-motifs",
+    },
+    {
+      current:
+        "https://catalogue.example/catalogue/foundations/#terminal-foundation-narration-success",
+      expected:
+        "https://catalogue.example/catalogue/foundations/terminal/narration/#terminal-foundation-narration-success",
     },
     {
       current: "https://catalogue.example/catalogue/#recipe-next-action",
