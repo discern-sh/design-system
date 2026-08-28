@@ -21,6 +21,17 @@ import { Procedure } from "../src/components/workflow/procedure/procedure.tsx";
 import { RawOutput } from "../src/components/workflow/raw-output/raw-output.tsx";
 import { ResultSummary } from "../src/components/workflow/result-summary/result-summary.tsx";
 import { RetryNotice } from "../src/components/workflow/retry-notice/retry-notice.tsx";
+import { registry } from "./generated/registry.ts";
+
+/** Catalogue posture shared by every Composition projection. */
+export const illustrativePatternStatus = Object.freeze(
+  {
+    id: "illustrative-pattern",
+    label: "Illustrative pattern",
+    sourceGuidance:
+      "Adapt this example to your context; it is not an exported package API or guaranteed drop-in source.",
+  } as const,
+);
 
 /** Ordered semantic stages a conformance journey must render. */
 export interface JourneyContract {
@@ -32,6 +43,8 @@ export interface CompositionRecipe {
   readonly id: string;
   readonly title: string;
   readonly description: string;
+  readonly status: typeof illustrativePatternStatus;
+  readonly components: readonly string[];
   readonly journey?: JourneyContract;
   readonly Example: ComponentType;
   readonly source: string;
@@ -41,15 +54,78 @@ interface RecipeDefinition<Definition> {
   readonly id: string;
   readonly title: string;
   readonly description: string;
+  readonly components: readonly string[];
   readonly journey?: JourneyContract;
   readonly definition: Definition;
   readonly render: (definition: Definition) => ReactNode;
   readonly source: (definition: Definition) => string;
 }
 
-function defineRecipe<Definition>(
+/** One registry-backed constituent suitable for links and source projection. */
+export interface CompositionConstituent {
+  readonly slug: string;
+  readonly name: string;
+  readonly reactExport: string;
+}
+
+const constituentBySlug = new Map<string, CompositionConstituent>(
+  registry.map(({ meta, reactExport }) => [
+    meta.slug,
+    { slug: meta.slug, name: meta.name, reactExport },
+  ]),
+);
+
+function constituent(slug: string, recipeId: string): CompositionConstituent {
+  const entry = constituentBySlug.get(slug);
+  if (entry === undefined) {
+    throw new TypeError(
+      `Composition ${recipeId} names unknown Component ${JSON.stringify(slug)}`,
+    );
+  }
+  return entry;
+}
+
+/** Resolve deliberate membership through the generated Component registry. */
+export function compositionConstituents(
+  recipe: Pick<CompositionRecipe, "id" | "components">,
+): readonly CompositionConstituent[] {
+  return recipe.components.map((slug) => constituent(slug, recipe.id));
+}
+
+/** Derive the adaptable example import from the same ordered membership. */
+export function compositionExampleImport(
+  recipe: Pick<CompositionRecipe, "id" | "components">,
+): string {
+  const exports = compositionConstituents(recipe).map(({ reactExport }) =>
+    reactExport
+  );
+  if (exports.length <= 2) {
+    return `import { ${
+      exports.join(", ")
+    } } from "@discern-sh/design-system/react";`;
+  }
+  return `import {\n  ${
+    exports.join(",\n  ")
+  },\n} from "@discern-sh/design-system/react";`;
+}
+
+/** Build every Composition projection from one structured recipe definition. */
+export function defineRecipe<Definition>(
   recipe: RecipeDefinition<Definition>,
 ): CompositionRecipe {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(recipe.id)) {
+    throw new TypeError(`Composition id must be kebab-case: ${recipe.id}`);
+  }
+  if (recipe.components.length === 0) {
+    throw new TypeError(`Composition ${recipe.id} needs a Component`);
+  }
+  if (new Set(recipe.components).size !== recipe.components.length) {
+    throw new TypeError(`Composition ${recipe.id} repeats a Component`);
+  }
+  const components = Object.freeze([...recipe.components]);
+  const identity = { id: recipe.id, components };
+  compositionConstituents(identity);
+
   function Example(): ReactNode {
     return recipe.render(recipe.definition);
   }
@@ -58,9 +134,13 @@ function defineRecipe<Definition>(
     id: recipe.id,
     title: recipe.title,
     description: recipe.description,
+    status: illustrativePatternStatus,
+    components,
     ...(recipe.journey === undefined ? {} : { journey: recipe.journey }),
     Example,
-    source: recipe.source(recipe.definition),
+    source: `${compositionExampleImport(identity)}\n\n${
+      recipe.source(recipe.definition).trim()
+    }`,
   };
 }
 
@@ -108,7 +188,8 @@ const documentationTaskRecipe = defineRecipe({
   id: "documentation-task",
   title: "Documentation task",
   description:
-    "A complete operational page with a target path, executable step, and finish condition.",
+    "Guide someone from prerequisites through one executable documentation change to a clear finish.",
+  components: ["procedure", "path-reference"],
   journey: {
     stages: [
       ".discern-procedure__prerequisites",
@@ -143,9 +224,7 @@ const documentationTaskRecipe = defineRecipe({
     />
   ),
   source: (definition) =>
-    `import { PathReference, Procedure } from "@discern-sh/design-system/react";
-
-<Procedure
+    `<Procedure
   title={${value(definition.title)}}
   description={
     <p>
@@ -194,7 +273,8 @@ const nextActionRecipe = defineRecipe({
   id: "next-action",
   title: "Next action",
   description:
-    "An end-of-page recommendation plus condition-labelled alternatives, composed from Branch choice.",
+    "Help someone choose the right next step when one recommendation and several conditions compete.",
+  components: ["branch-choice"],
   definition: nextAction,
   render: (definition) => (
     <BranchChoice
@@ -203,9 +283,7 @@ const nextActionRecipe = defineRecipe({
     />
   ),
   source: (definition) =>
-    `import { BranchChoice } from "@discern-sh/design-system/react";
-
-<BranchChoice
+    `<BranchChoice
   title={${value(definition.title)}}
   choices={${value(definition.choices)}}
 />`,
@@ -245,7 +323,13 @@ const failureTriageRecipe = defineRecipe({
   id: "failure-triage",
   title: "Failure triage",
   description:
-    "A diagnostic account followed by the run-level result and its next action.",
+    "Explain why a run failed, what evidence matters, and when it is safe to try again.",
+  components: [
+    "result-summary",
+    "diagnostic",
+    "raw-output",
+    "retry-notice",
+  ],
   journey: {
     stages: [
       ".discern-result-summary",
@@ -284,14 +368,7 @@ const failureTriageRecipe = defineRecipe({
     </div>
   ),
   source: (definition) =>
-    `import {
-  Diagnostic,
-  RawOutput,
-  ResultSummary,
-  RetryNotice,
-} from "@discern-sh/design-system/react";
-
-<div className="discern-example-stack">
+    `<div className="discern-example-stack">
   <ResultSummary
     state="failed"
     fact={${value(definition.result.fact)}}
@@ -349,7 +426,8 @@ const handoffVerificationReportRecipe = defineRecipe({
   id: "handoff-verification-report",
   title: "Handoff verification report",
   description:
-    "A compact multi-check verification report paired with the artifact it produced.",
+    "Hand off a completed check with compact proof and the artifact another person can inspect.",
+  components: ["verification-report", "artifact-card"],
   definition: handoffVerificationReport,
   render: (definition) => (
     <div className="discern-example-stack">
@@ -371,9 +449,7 @@ const handoffVerificationReportRecipe = defineRecipe({
     </div>
   ),
   source: (definition) =>
-    `import { ArtifactCard, VerificationReport } from "@discern-sh/design-system/react";
-
-<div className="discern-example-stack">
+    `<div className="discern-example-stack">
   <VerificationReport
     title={${value(definition.report.title)}}
     stamp="pass"
@@ -435,7 +511,8 @@ const surveyArtifactsRecipe = defineRecipe({
   id: "survey-artifacts",
   title: "Survey artifacts",
   description:
-    "A project tree followed by changed-file evidence and explicit ownership.",
+    "Make changed files and their ownership legible before a review or handoff.",
+  components: ["artifact-tree", "file-change", "ownership-badge"],
   journey: {
     stages: [
       ".discern-artifact-tree",
@@ -483,13 +560,7 @@ const surveyArtifactsRecipe = defineRecipe({
     </div>
   ),
   source: (definition) =>
-    `import {
-  ArtifactTree,
-  FileChange,
-  OwnershipBadge,
-} from "@discern-sh/design-system/react";
-
-<div className="discern-example-stack">
+    `<div className="discern-example-stack">
   <ArtifactTree label="Project artifacts" nodes={${value(definition.tree)}} />
   <section
     className="discern-artifact-survey__changes"
@@ -603,7 +674,19 @@ const readingFirstLandingRecipe = defineRecipe({
   id: "reading-first-landing",
   title: "Reading-first landing page",
   description:
-    "A complete campaign rhythm that alternates explanation, conceptual relief, compression, evidence, human voice, and one final action.",
+    "Lead readers through an unfamiliar idea with a clear promise, measured evidence, and one final action.",
+  components: [
+    "editorial-hero",
+    "button",
+    "approach-backdrop",
+    "narrative-chapter",
+    "marketing-section",
+    "marketing-stage",
+    "journey-overview",
+    "outcome-spotlight",
+    "voice-break",
+    "closing-statement",
+  ],
   journey: {
     stages: [
       ".discern-editorial-hero",
@@ -729,19 +812,7 @@ const readingFirstLandingRecipe = defineRecipe({
     </div>
   ),
   source: (definition) =>
-    `import {
-  Button,
-  ClosingStatement,
-  EditorialHero,
-  JourneyOverview,
-  MarketingSection,
-  MarketingStage,
-  NarrativeChapter,
-  OutcomeSpotlight,
-  VoiceBreak,
-} from "@discern-sh/design-system/react";
-
-const journey = ${value(definition.journey)};
+    `const journey = ${value(definition.journey)};
 
 <div>
   <EditorialHero
@@ -750,6 +821,7 @@ const journey = ${value(definition.journey)};
     title={<>Make the difficult <em>feel navigable.</em></>}
     description={<p>Lead with one promise in ordinary language.</p>}
     actions={<Button href="#explanation">Begin with the idea</Button>}
+    backdrop={<ApproachBackdrop />}
   />
   <NarrativeChapter
     id="explanation"

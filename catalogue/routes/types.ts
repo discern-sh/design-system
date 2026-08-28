@@ -1,4 +1,5 @@
 import type { ComponentMeta } from "../../src/types/component-meta.ts";
+import type { DesignToken, ThemeToken } from "../../src/tokens/tokens.ts";
 import type { SearchRecord } from "../search/mod.ts";
 
 /** Canonical human-facing Catalogue families. */
@@ -20,7 +21,19 @@ export type CatalogueRoute =
     readonly slug: string;
   }
   | { readonly family: "foundations"; readonly page: "index" }
+  | { readonly family: "foundations"; readonly page: "tokens" }
+  | { readonly family: "foundations"; readonly page: "terminal-index" }
+  | {
+    readonly family: "foundations";
+    readonly page: "terminal-detail";
+    readonly sheetId: string;
+  }
   | { readonly family: "compositions"; readonly page: "index" }
+  | {
+    readonly family: "compositions";
+    readonly page: "detail";
+    readonly slug: string;
+  }
   | { readonly family: "terminal"; readonly page: "index" }
   | { readonly family: "compare"; readonly page: "index" }
   | { readonly family: "not-found"; readonly page: "not-found" };
@@ -37,15 +50,13 @@ export interface CatalogueRouteDescriptor {
 /** Source shapes consumed by route-family search projections. */
 export interface CatalogueSearchSources {
   readonly components: readonly { readonly meta: ComponentMeta }[];
-  readonly tokens: readonly {
-    readonly name: string;
-    readonly category: string;
-    readonly description: string;
-  }[];
+  readonly tokens: readonly (DesignToken | ThemeToken)[];
   readonly compositions: readonly {
     readonly id: string;
     readonly title: string;
     readonly description: string;
+    readonly status: { readonly label: string };
+    readonly components: readonly string[];
   }[];
   readonly terminalLayouts: readonly {
     readonly id: string;
