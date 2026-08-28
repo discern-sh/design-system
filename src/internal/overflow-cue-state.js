@@ -1,3 +1,5 @@
+// @ts-self-types="./overflow-cue-state.d.ts"
+
 /** @typedef {"block" | "inline" | "both"} OverflowCueAxis */
 /** @typedef {"default" | "negative" | "reverse"} RtlScrollType */
 
