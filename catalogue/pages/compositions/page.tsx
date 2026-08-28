@@ -126,9 +126,7 @@ function CompositionsGallery(
             data-discern-composition-card={pattern.id}
             key={pattern.id}
           >
-            <h2>
-              <a href={pattern.href}>{pattern.title}</a>
-            </h2>
+            <h2>{pattern.title}</h2>
             <p>{pattern.description}</p>
             <ComponentSummary names={pattern.componentNames} />
             <a
