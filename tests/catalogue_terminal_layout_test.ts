@@ -1,12 +1,46 @@
 import {
+  assert,
   assertEquals,
   assertNotEquals,
   assertStringIncludes,
 } from "@std/assert";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { cliCompositionRecipes } from "../catalogue/cli-compositions.ts";
-import { TerminalLayoutRecipe } from "../catalogue/terminal-layout-inspector.tsx";
+import {
+  type CliCompositionRecipe,
+  cliCompositionRecipes,
+} from "../catalogue/cli-compositions.ts";
+import { registry } from "../catalogue/generated/registry.ts";
+import { TerminalRecipeNavigation } from "../catalogue/pages/terminal/navigation.tsx";
+import {
+  TerminalDetailPage,
+  TerminalIndexPage,
+  terminalRecipeNeighbors,
+} from "../catalogue/pages/terminal/page.tsx";
+import {
+  catalogueRoute,
+  catalogueTerminalLayoutPath,
+} from "../catalogue/routes.ts";
+import { terminalSearchRecords } from "../catalogue/routes/terminal.ts";
+import { searchRecords } from "../catalogue/search/mod.ts";
+import { projectTerminalLayoutRecipe } from "../catalogue/terminal-layout-inspector.tsx";
+import { parseTerminalLabState } from "../catalogue/terminal-lab-state.ts";
+
+const futureRecipe: CliCompositionRecipe = {
+  id: "future-signal-lab",
+  title: "Future signal lab",
+  description: "Correlates an unrelated future signal with a review frame.",
+  components: ["section"],
+  capabilityControls: ["unicode", "colorDepth"],
+  source: [
+    'import { renderSection } from "@discern-sh/design-system/cli";',
+    'const output = renderSection({ title: "Signal" }, capabilities);',
+  ].join("\n"),
+  render: (capabilities, theme, rows) =>
+    `${theme}:${capabilities.columns}:${rows}:${
+      capabilities.unicode ? "✓" : "ok"
+    }`,
+};
 
 Deno.test("Catalogue terminal compositions form one source-backed inventory", () => {
   assertEquals(
@@ -20,6 +54,7 @@ Deno.test("Catalogue terminal compositions form one source-backed inventory", ()
     ],
   );
 
+  const componentSlugs = new Set(registry.map(({ meta }) => meta.slug));
   for (const recipe of cliCompositionRecipes) {
     if (recipe.id === "markdown-browser") {
       assertStringIncludes(recipe.source, "renderMarkdownBrowser");
@@ -29,47 +64,149 @@ Deno.test("Catalogue terminal compositions form one source-backed inventory", ()
       assertStringIncludes(recipe.source, "createCliPresenter");
     }
     assertStringIncludes(recipe.source, "const output =");
+    for (const slug of recipe.components) {
+      assert(componentSlugs.has(slug), `${recipe.id} names unknown ${slug}`);
+    }
   }
 });
 
-Deno.test("Catalogue terminal layout recipe starts with inspectable standard geometry", () => {
+Deno.test("Terminal index remains light and detail renders one focused URL-backed lab", () => {
+  const index = renderToStaticMarkup(createElement(TerminalIndexPage));
+  assertEquals(
+    index.match(/data-discern-terminal-index-card=/g)?.length,
+    cliCompositionRecipes.length,
+  );
+  assertEquals(index.includes("data-discern-terminal-inspector"), false);
+  assertStringIncludes(index, "Inspect layout");
+  assertStringIncludes(
+    index,
+    catalogueTerminalLayoutPath("operational-status"),
+  );
+  assertStringIncludes(index, "/catalogue/components/docs-header/");
+
   const recipe = cliCompositionRecipes[0];
   if (recipe === undefined) throw new TypeError("missing terminal recipe");
+  const currentUrl = new URL(
+    `${
+      catalogueTerminalLayoutPath(recipe.id)
+    }?preset=wide&columns=96&rows=31&unicode=0&color=ansi16&grid=1`,
+    "https://catalogue.example",
+  );
+  const detail = renderToStaticMarkup(createElement(TerminalDetailPage, {
+    recipe,
+    recipes: cliCompositionRecipes,
+    terminalTheme: "dark",
+    currentUrl,
+  }));
 
-  const html = renderToStaticMarkup(
-    createElement(TerminalLayoutRecipe, { recipe, theme: "dark" }),
+  assertEquals(detail.match(/data-discern-cli-composition=/g)?.length, 1);
+  assertStringIncludes(detail, 'data-discern-terminal-columns="96"');
+  assertStringIncludes(detail, 'data-discern-terminal-rows="31"');
+  assertStringIncludes(detail, "Custom");
+  assertStringIncludes(detail, "Copy raw terminal output");
+  assertStringIncludes(detail, "Copy adaptable composition source");
+  assertStringIncludes(detail, "Copy reproducible lab URL");
+  assertStringIncludes(detail, "data-discern-overflow-cue");
+  assertStringIncludes(detail, "data-discern-overflow-cue-target");
+  assertStringIncludes(detail, "Adaptable composition source");
+  assertEquals(
+    detail.includes('discern-catalogue-terminal-lab__source" open'),
+    false,
   );
-
-  assertStringIncludes(
-    html,
-    'data-discern-cli-composition="operational-status"',
-  );
-  assertStringIncludes(
-    html,
-    'aria-label="Operational status terminal viewport"',
-  );
-  assertStringIncludes(html, "Compact</span><small>40 × 24");
-  assertStringIncludes(html, "Standard</span><small>80 × 24");
-  assertStringIncludes(html, "Wide</span><small>120 × 30");
-  assertStringIncludes(html, "Tall</span><small>80 × 40");
-  assertStringIncludes(html, "Show cell grid");
-  assertStringIncludes(html, 'data-discern-terminal-columns="80"');
-  assertStringIncludes(html, 'data-discern-terminal-rows="24"');
-  assertStringIncludes(html, "Copy composition source");
 });
 
-Deno.test("Catalogue terminal layouts render content and inspector chrome in the resolved theme", () => {
+Deno.test("validated capabilities feed the real renderer and inspector authorities", () => {
   const recipe = cliCompositionRecipes[0];
   if (recipe === undefined) throw new TypeError("missing terminal recipe");
-
-  const light = renderToStaticMarkup(
-    createElement(TerminalLayoutRecipe, { recipe, theme: "light" }),
+  const { state } = parseTerminalLabState(
+    new URLSearchParams(
+      "preset=tall&columns=91&rows=37&unicode=0&color=ansi256&grid=1",
+    ),
+    recipe.capabilityControls,
   );
-  const dark = renderToStaticMarkup(
-    createElement(TerminalLayoutRecipe, { recipe, theme: "dark" }),
+  const projection = projectTerminalLayoutRecipe(recipe, state, "light");
+
+  assertEquals(projection.capabilities.columns, 91);
+  assertEquals(projection.capabilities.unicode, false);
+  assertEquals(projection.capabilities.colorDepth, "ansi256");
+  assertEquals(
+    projection.output,
+    recipe.render(projection.capabilities, "light", 37),
+  );
+  assertNotEquals(projection.output, recipe.source);
+  assertStringIncludes(
+    projection.inspectorHtml,
+    'data-discern-terminal-columns="91"',
+  );
+  assertStringIncludes(
+    projection.inspectorHtml,
+    'data-discern-terminal-rows="37"',
+  );
+  assertStringIncludes(projection.inspectorHtml, "repeating-linear-gradient");
+});
+
+Deno.test("theme changes re-project the same recipe and inspector consistently", () => {
+  const recipe = cliCompositionRecipes[0];
+  if (recipe === undefined) throw new TypeError("missing terminal recipe");
+  const { state } = parseTerminalLabState(
+    new URLSearchParams("preset=standard"),
+    recipe.capabilityControls,
+  );
+  const light = projectTerminalLayoutRecipe(recipe, state, "light");
+  const dark = projectTerminalLayoutRecipe(recipe, state, "dark");
+
+  assertNotEquals(light.output, dark.output);
+  assertNotEquals(light.inspectorHtml, dark.inspectorHtml);
+  assertStringIncludes(
+    light.inspectorHtml,
+    'data-discern-terminal-theme="light"',
+  );
+  assertStringIncludes(
+    dark.inspectorHtml,
+    'data-discern-terminal-theme="dark"',
+  );
+});
+
+Deno.test("a future recipe auto-enrols across routes, pages, search, order, and rendering", () => {
+  const recipes = [...cliCompositionRecipes, futureRecipe];
+  const path = catalogueTerminalLayoutPath(futureRecipe.id);
+  assertEquals(
+    catalogueRoute(new URL(path, "https://catalogue.example")),
+    { family: "terminal", page: "detail", recipeId: futureRecipe.id },
   );
 
-  assertNotEquals(light, dark);
-  assertStringIncludes(light, 'data-discern-terminal-ruler="labels"');
-  assertStringIncludes(light, 'data-discern-terminal-ruler="ticks"');
+  const index = renderToStaticMarkup(
+    createElement(TerminalIndexPage, { recipes }),
+  );
+  const navigation = renderToStaticMarkup(
+    createElement(TerminalRecipeNavigation, {
+      recipes,
+      activeRecipeId: futureRecipe.id,
+      onNavigate: () => undefined,
+    }),
+  );
+  assertStringIncludes(index, futureRecipe.title);
+  assertStringIncludes(index, path);
+  assertStringIncludes(navigation, futureRecipe.title);
+  assertStringIncludes(navigation, 'aria-current="page"');
+
+  const neighbors = terminalRecipeNeighbors(recipes, futureRecipe.id);
+  assertEquals(neighbors.previous?.id, "markdown-browser");
+  assertEquals(neighbors.next, undefined);
+
+  const records = terminalSearchRecords(recipes);
+  const [result] = searchRecords(records, "unrelated signal");
+  assertEquals(result?.record.id, `terminal-layout:${futureRecipe.id}`);
+  assertEquals(result?.reasons.map(({ field }) => field), [
+    "description",
+    "title",
+  ]);
+
+  const { state } = parseTerminalLabState(
+    new URLSearchParams("preset=compact&unicode=1&color=truecolor"),
+    futureRecipe.capabilityControls,
+  );
+  const projection = projectTerminalLayoutRecipe(futureRecipe, state, "dark");
+  assertEquals(projection.output, "dark:40:24:✓");
+  assertStringIncludes(projection.inspectorHtml, "Future signal lab");
 });
