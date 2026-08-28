@@ -360,8 +360,8 @@ export function BuilderPreviewCanvas(
       <div className="discern-builder-preview-status" aria-live="polite">
         <span>
           Logical {layout?.innerWidth ?? logicalWidth}px ×{" "}
-          {PREVIEW_LOGICAL_HEIGHT}px
-          {" · "}DPR {layout?.devicePixelRatio ?? globalThis.devicePixelRatio}
+          {PREVIEW_LOGICAL_HEIGHT}px · DPR{" "}
+          {layout?.devicePixelRatio ?? globalThis.devicePixelRatio}
         </span>
         {events.length === 0
           ? (

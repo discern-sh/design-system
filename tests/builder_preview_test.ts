@@ -12,7 +12,14 @@ import { documentPolicy } from "../catalogue/builder/registry-core.ts";
 import {
   builderPreviewMessageFromEvent,
   builderPreviewSnapshot,
+  formatBuilderPreviewCallbackWitness,
 } from "../catalogue/builder/preview/protocol.ts";
+import {
+  displayRectFromLogical,
+  logicalPointFromDisplay,
+  previewDecorationFlags,
+  previewNodeAtPoint,
+} from "../catalogue/builder/preview/geometry.ts";
 
 interface BuiltBuilderModules {
   readonly registryIndex:
@@ -34,19 +41,17 @@ function builderModules(): Promise<BuiltBuilderModules> {
   return builtModules;
 }
 
-Deno.test("canvas hover styling never overrides the selection outline", async () => {
-  // Hover and selection both draw outlines; an unguarded hover rule outranks
-  // the selection ring, hiding it exactly while the pointer is over the node.
-  const css = await Deno.readTextFile(
-    new URL("../catalogue/builder/styles/preview.css", import.meta.url),
-  );
-  const hoverRules = css.match(
-    /\[data-discern-builder-node\][^,{]*:hover[^,{]*/g,
-  ) ?? [];
-  assert(hoverRules.length > 0);
-  for (const rule of hoverRules) {
-    assertStringIncludes(rule, ":not([data-discern-builder-selected])");
-  }
+Deno.test("canvas hover decoration never overrides the selection outline", () => {
+  assertEquals(previewDecorationFlags("node", "node", "node", null), {
+    selected: true,
+    hovered: false,
+    dropped: false,
+  });
+  assertEquals(previewDecorationFlags("node", null, "node", "node"), {
+    selected: false,
+    hovered: true,
+    dropped: true,
+  });
 });
 
 Deno.test("default instances render real markup through the shared renderer", async () => {
@@ -160,14 +165,17 @@ Deno.test("the shared renderer preserves safe passthrough props only", async () 
 Deno.test("preview messages are same-origin, versioned, and policy-accepted", () => {
   const snapshot = builderPreviewSnapshot({
     document: emptyDocument("Protocol check"),
-    viewport: { id: "fluid", label: "Fluid" },
-    appearance: { theme: "light", accentHue: 255 },
+    documentKey: JSON.stringify(emptyDocument("Protocol check")),
+    viewport: { id: "fluid", label: "Fluid", logicalWidth: 860 },
+    zoom: { id: "fit", scale: 1 },
+    appearance: { theme: "light", resolvedTheme: "light", accentHue: 255 },
     mode: "edit",
     selectionId: null,
+    interactionRevision: 0,
   });
   assertEquals(
     builderPreviewMessageFromEvent(
-      { origin: "https://catalogue.test", data: snapshot },
+      { origin: "https://catalogue.test", data: snapshot, source: null },
       "https://catalogue.test",
       documentPolicy,
     ),
@@ -175,20 +183,142 @@ Deno.test("preview messages are same-origin, versioned, and policy-accepted", ()
   );
   assertEquals(
     builderPreviewMessageFromEvent(
-      { origin: "https://elsewhere.test", data: snapshot },
+      { origin: "https://elsewhere.test", data: snapshot, source: null },
       "https://catalogue.test",
       documentPolicy,
     ),
     undefined,
   );
-  assertThrows(() =>
+  assertEquals(
+    builderPreviewMessageFromEvent(
+      {
+        origin: "https://catalogue.test",
+        data: { ...snapshot, documentKey: "stale-document-identity" },
+        source: null,
+      },
+      "https://catalogue.test",
+      documentPolicy,
+    ),
+    undefined,
+  );
+  assertEquals(
     builderPreviewMessageFromEvent(
       {
         origin: "https://catalogue.test",
         data: { ...snapshot, document: { ...snapshot.document, version: 2 } },
+        source: null,
       },
       "https://catalogue.test",
       documentPolicy,
-    )
+    ),
+    undefined,
   );
+  const sources = new MessageChannel();
+  assertEquals(
+    builderPreviewMessageFromEvent(
+      {
+        origin: "https://catalogue.test",
+        data: snapshot,
+        source: sources.port1,
+      },
+      "https://catalogue.test",
+      documentPolicy,
+      sources.port2,
+    ),
+    undefined,
+  );
+  assertEquals(
+    builderPreviewMessageFromEvent(
+      {
+        origin: "https://catalogue.test",
+        data: {
+          ...snapshot,
+          document: {
+            ...snapshot.document,
+            extra: () => "code cannot cross",
+          },
+        },
+        source: null,
+      },
+      "https://catalogue.test",
+      documentPolicy,
+    ),
+    undefined,
+  );
+});
+
+Deno.test("preview geometry maps logical hit testing independently of visual zoom", () => {
+  assertEquals(
+    logicalPointFromDisplay(
+      { clientX: 174, clientY: 116 },
+      { left: 24, top: 16 },
+      0.5,
+    ),
+    { x: 300, y: 200 },
+  );
+  assertEquals(
+    displayRectFromLogical(
+      { x: 120, y: 80, width: 240, height: 64 },
+      0.75,
+    ),
+    { x: 90, y: 60, width: 180, height: 48 },
+  );
+  assertEquals(
+    previewNodeAtPoint([
+      { id: "parent", rect: { x: 0, y: 0, width: 300, height: 200 } },
+      { id: "child", rect: { x: 80, y: 40, width: 120, height: 60 } },
+    ], { x: 100, y: 50 }),
+    "child",
+  );
+});
+
+Deno.test("callback witnesses are deterministic inert summaries", () => {
+  assertEquals(
+    formatBuilderPreviewCallbackWitness("onValueChange", ["details"]),
+    'onValueChange("details")',
+  );
+  assertEquals(
+    formatBuilderPreviewCallbackWitness("onCommit", [{ z: 1, a: true }]),
+    'onCommit({"a":true,"z":1})',
+  );
+  assertEquals(
+    formatBuilderPreviewCallbackWitness("onOpenChange", [false]),
+    "onOpenChange(false)",
+  );
+});
+
+Deno.test("preview styles preserve a real frame width and stable editor chrome", async () => {
+  const css = await Deno.readTextFile(
+    new URL("../catalogue/builder/styles/preview.css", import.meta.url),
+  );
+  assertStringIncludes(css, ".discern-builder-preview-frame");
+  assertStringIncludes(
+    css,
+    "transform: scale(var(--discern-builder-preview-zoom))",
+  );
+  assertStringIncludes(css, "--discern-builder-editor-selection");
+  assertStringIncludes(css, "@media (prefers-reduced-motion: reduce)");
+  assertStringIncludes(css, "@media (forced-colors: active)");
+  assert(
+    !/\.discern-builder-preview-frame[^}]*max-width/.test(css),
+    "the logical frame must never be silently max-width capped",
+  );
+});
+
+Deno.test("the frame bootstrap admits only the trusted local bundle", async () => {
+  const [canvas, frame] = await Promise.all([
+    Deno.readTextFile(
+      new URL("../catalogue/builder/preview/canvas.tsx", import.meta.url),
+    ),
+    Deno.readTextFile(
+      new URL("../catalogue/builder/preview.html", import.meta.url),
+    ),
+  ]);
+  assertStringIncludes(canvas, 'sandbox="allow-same-origin allow-scripts"');
+  assertStringIncludes(frame, "default-src 'none'");
+  assertStringIncludes(frame, "form-action 'none'");
+  assertStringIncludes(frame, 'src="../dist/builder.js"');
+  assertStringIncludes(frame, 'href="./styles/preview.css"');
+  assert(!frame.includes('href="./builder.css"'));
+  assert(!frame.includes("unsafe-eval"));
 });
