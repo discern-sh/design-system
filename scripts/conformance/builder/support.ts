@@ -19,7 +19,7 @@ export const BUILDER_READY = '[data-discern-builder-ready="true"]';
 export const BUILDER_SHELL = ".discern-builder-shell";
 export const CANVAS_PAGE = ".discern-builder-canvas__page";
 export const OUTLINE_ITEM = "[data-discern-builder-outline-id]";
-export const OUTLINE_ROW = `${OUTLINE_ITEM} > button`;
+export const OUTLINE_ROW = `${OUTLINE_ITEM} .discern-builder-layers__select`;
 
 export type BuilderTheme = "light" | "dark";
 export type BuilderPane = "palette" | "canvas" | "inspector";

@@ -4,6 +4,10 @@
  * through these framework-neutral predicates before they become live data.
  */
 import type { BuilderDocument } from "./model.ts";
+import {
+  assertBuilderStructure,
+  type BuilderCompatibilityPolicy,
+} from "./tree/compatibility.ts";
 
 /** Defendable per-document ceilings, including the 100-snapshot history cost. */
 export const BUILDER_DOCUMENT_LIMITS = {
@@ -34,6 +38,8 @@ export interface BuilderDocumentPolicy {
   readonly modeledPropsBySlug: ReadonlyMap<string, ReadonlySet<string>>;
   /** Every canonical Component prop that additional props may not shadow. */
   readonly reservedPropsBySlug: ReadonlyMap<string, ReadonlySet<string>>;
+  /** Registry-derived rendered semantics shared by mutation/import/export. */
+  readonly compatibility: BuilderCompatibilityPolicy;
 }
 
 const encoder = new TextEncoder();
@@ -546,6 +552,7 @@ export function assertBuilderDocument(
       parseAdditionalProps(extra, reservedProps, `${task.path}.extra`);
     }
   }
+  assertBuilderStructure(value as BuilderDocument, policy.compatibility);
 }
 
 /** Parse a saved source only after its byte ceiling, then validate one walk. */

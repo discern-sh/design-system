@@ -4,6 +4,12 @@ import type { BuilderDocument } from "../model.ts";
 import { rootInsertionFromPointer } from "../placement.ts";
 import { documentPolicy } from "../registry-core.ts";
 import type { BuilderTreeController } from "../tree/controller.ts";
+import { BuilderCanvasActions } from "../tree/canvas-actions.tsx";
+import {
+  type InsertionTarget,
+  insertionTargetAt,
+  insertionTargetFromNodePointer,
+} from "../tree/projection.ts";
 import {
   readBuilderDragPayload,
   writeBuilderDragPayload,
@@ -30,7 +36,12 @@ const PREVIEW_LOGICAL_HEIGHT = 720;
 const PREVIEW_FRAME_URL = "/catalogue/builder/preview.html";
 
 type DropHint =
-  | { readonly kind: "node"; readonly id: string }
+  | {
+    readonly kind: "node";
+    readonly id: string;
+    readonly target: InsertionTarget;
+    readonly rect: BuilderPreviewRect;
+  }
   | { readonly kind: "root"; readonly index: number; readonly offset: number };
 
 function manualZoom(id: BuilderPreviewPreferences["zoomId"]): number {
@@ -189,6 +200,21 @@ export function BuilderPreviewCanvas(
   };
   const nodeAt = (point: BuilderPreviewPoint): string | null =>
     previewNodeAtPoint(layout?.nodes ?? [], point);
+  const nodeDropHint = (
+    point: BuilderPreviewPoint,
+    id: string,
+  ): DropHint | null => {
+    const node = layout?.nodes.find((candidate) => candidate.id === id);
+    if (node === undefined) return null;
+    const target = insertionTargetFromNodePointer(
+      document,
+      id,
+      (point.y - node.rect.y) / Math.max(1, node.rect.height),
+    );
+    return target === undefined
+      ? null
+      : { kind: "node", id, target, rect: node.rect };
+  };
 
   const selectFromPointer = (
     event: Readonly<{ clientX: number; clientY: number }>,
@@ -217,7 +243,9 @@ export function BuilderPreviewCanvas(
       node.id,
       selectionId,
       hoverId,
-      dropHint?.kind === "node" ? dropHint.id : null,
+      dropHint?.kind === "node" && dropHint.target.relation === "inside"
+        ? dropHint.id
+        : null,
     );
     if (!selected && !hovered && !dropped) return [];
     const rect = displayRectFromLogical(node.rect, zoom);
@@ -271,6 +299,12 @@ export function BuilderPreviewCanvas(
                     canvasRef.current?.blur();
                   }
                 }}
+                onDoubleClick={(event) => {
+                  event.preventDefault();
+                  const point = pointFromPointer(event);
+                  const id = point === undefined ? null : nodeAt(point);
+                  if (id !== null) tree.editTextFromCanvas(id);
+                }}
                 onDragStart={(event) => {
                   if (hoverId === null) {
                     event.preventDefault();
@@ -297,7 +331,7 @@ export function BuilderPreviewCanvas(
                           document.children.length,
                         ),
                       }
-                      : { kind: "node", id: nodeId },
+                      : nodeDropHint(point, nodeId),
                   );
                 }}
                 onDragLeave={() => setDropHint(null)}
@@ -311,7 +345,10 @@ export function BuilderPreviewCanvas(
                   if (payload === undefined || point === undefined) return;
                   const nodeId = nodeAt(point);
                   if (nodeId !== null) {
-                    tree.dropOnNode(payload, nodeId);
+                    const hint = nodeDropHint(point, nodeId);
+                    if (hint?.kind === "node") {
+                      tree.drop(payload, hint.target);
+                    }
                     return;
                   }
                   const root = rootInsertionAt(
@@ -319,12 +356,14 @@ export function BuilderPreviewCanvas(
                     layout?.roots ?? [],
                     document.children.length,
                   );
-                  tree.drop(payload, {
-                    kind: "explicit",
-                    location: { parent: "root" },
-                    index: root.index,
-                    label: `Root boundary ${String(root.index)}`,
-                  });
+                  tree.drop(
+                    payload,
+                    insertionTargetAt(
+                      document,
+                      { parent: "root" },
+                      root.index,
+                    ),
+                  );
                 }}
               >
                 {decorated.map(({ node, rect, selected, hovered, dropped }) => (
@@ -352,7 +391,37 @@ export function BuilderPreviewCanvas(
                     />
                   )
                   : null}
+                {dropHint?.kind === "node" && tree.dragging
+                  ? (
+                    <span
+                      className={`discern-builder-node-insertion discern-builder-node-insertion--${dropHint.target.relation}`}
+                      style={{
+                        left: dropHint.rect.x * zoom,
+                        top: dropHint.rect.y * zoom,
+                        width: dropHint.rect.width * zoom,
+                        height: dropHint.rect.height * zoom,
+                      }}
+                    >
+                      <span>{dropHint.target.label}</span>
+                    </span>
+                  )
+                  : null}
               </div>
+            )
+            : null}
+          {preferences.mode === "edit"
+            ? decorated.flatMap(({ node, rect, selected }) =>
+              selected
+                ? [
+                  <BuilderCanvasActions
+                    document={document}
+                    id={node.id}
+                    rect={rect}
+                    tree={tree}
+                    key={node.id}
+                  />,
+                ]
+                : []
             )
             : null}
         </div>
