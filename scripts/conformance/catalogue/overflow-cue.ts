@@ -39,6 +39,7 @@ export async function verifyOverflowCueCatalogue(
   return await withViewport(page, CATALOGUE_WIDE_VIEWPORT, async () => {
     const url = new URL(catalogueComponentPath("overflow-cue"), origin);
     url.searchParams.set("theme", "light");
+    url.searchParams.set("view", "all");
     await loadCataloguePage(page, url.href);
 
     await expectEdge(page, "vertical-start", "block-start", false);
