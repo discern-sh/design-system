@@ -290,7 +290,7 @@
     border-radius: 50%;
     background: var(--discern-color-accent-600);
   }
-  .discern-catalogue-token-preview__motion-track > span[data-replaying] {
+  .discern-catalogue-token-preview__motion-track > span[data-discern-replaying] {
     animation: discern-catalogue-token-motion
       var(--discern-catalogue-motion-duration, 650ms)
       var(--discern-catalogue-motion-easing, var(--discern-ease-in-out)) 1
@@ -558,7 +558,7 @@
     justify-self: end;
   }
   @media (prefers-reduced-motion: reduce) {
-    .discern-catalogue-token-preview__motion-track > span[data-replaying] {
+    .discern-catalogue-token-preview__motion-track > span[data-discern-replaying] {
       animation: none;
     }
   }

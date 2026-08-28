@@ -186,7 +186,7 @@ function MotionPreview({ token }: { readonly token: FoundationToken }) {
     <div className="discern-catalogue-token-preview discern-catalogue-token-preview--motion">
       <span className="discern-catalogue-token-preview__motion-track">
         <span
-          data-replaying={replaying ? "" : undefined}
+          data-discern-replaying={replaying ? "" : undefined}
           style={motionStyle}
           onAnimationEnd={() => setReplaying(false)}
         />
