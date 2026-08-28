@@ -582,7 +582,9 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
           .isVisible(),
       "Interact did not switch Tabs",
     );
-    const disclosure = preview.locator(".discern-raw-output");
+    const disclosure = preview.locator(
+      '[data-discern-builder-frame-root-child="preview-raw"] .discern-raw-output',
+    );
     await disclosure.locator("summary").click();
     invariant(
       await disclosure.getAttribute("open") !== null,
@@ -593,6 +595,19 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
     });
     await tooltipTrigger.focus();
     const tooltip = preview.getByRole("tooltip", { name: "Safe tooltip" });
+    await page.waitForFunction(
+      (selector) => {
+        const iframe = document.querySelector<HTMLIFrameElement>(
+          "iframe[data-discern-builder-preview-frame]",
+        );
+        const element = iframe?.contentDocument?.querySelector(selector);
+        if (element === null || element === undefined) return false;
+        const style = iframe?.contentWindow?.getComputedStyle(element);
+        return style?.visibility !== "hidden" && style?.opacity !== "0";
+      },
+      '[data-discern-builder-frame-root-child="preview-tooltip"] [role="tooltip"]',
+      { timeout: ACTION_TIMEOUT },
+    );
     invariant(
       await tooltip.evaluate((element) =>
         getComputedStyle(element).visibility !== "hidden" &&
@@ -610,30 +625,58 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
     await preview.getByRole("link", { name: "Download link" }).click();
     await preview.locator("body").evaluate((body) => {
       const form = document.createElement("form");
-      const submit = document.createElement("button");
-      submit.type = "submit";
-      form.append(submit);
+      const input = document.createElement("input");
+      input.setAttribute("aria-label", "Submit witness field");
+      form.append(input);
       body.append(form);
-      form.requestSubmit(submit);
-      form.remove();
     });
-    await page.waitForTimeout(50);
+    await preview.getByRole("textbox", { name: "Submit witness field" }).press(
+      "Enter",
+    );
+    const eventLog = page.getByRole("list", { name: "Preview event log" });
+    await eventLog.getByText("Blocked form submission").waitFor({
+      timeout: ACTION_TIMEOUT,
+    });
+    const eventText = await eventLog.innerText();
+    await preview.getByRole("textbox", { name: "Submit witness field" })
+      .evaluate((input) => input.closest("form")?.remove());
     invariant(
       await preview.locator("html").evaluate(() => location.href) ===
           frameUrl &&
         page.url().includes("/catalogue/builder/"),
       "Interact allowed a link to escape or replace the preview",
     );
-    const eventLog = page.getByRole("list", { name: "Preview event log" });
     invariant(
-      (await eventLog.innerText()).includes('onThemeChange("dark")') &&
-        (await eventLog.innerText()).includes("Blocked link") &&
-        (await eventLog.innerText()).includes("Blocked popup") &&
-        (await eventLog.innerText()).includes("Blocked download") &&
-        (await eventLog.innerText()).includes("Blocked form submission"),
+      eventText.includes('onThemeChange("dark")') &&
+        eventText.includes("Blocked link") &&
+        eventText.includes("Blocked popup") &&
+        eventText.includes("Blocked download") &&
+        eventText.includes("Blocked form submission"),
       "Interact did not record callback and containment witnesses",
     );
     await page.getByRole("button", { name: "Reset interactions" }).click();
+    await page.waitForFunction(
+      (selector) => {
+        const iframe = document.querySelector<HTMLIFrameElement>(selector);
+        const frameDocument = iframe?.contentDocument;
+        const overview = [
+          ...frameDocument?.querySelectorAll('[role="tab"]') ??
+            [],
+        ].find((element) => element.textContent?.trim() === "Overview");
+        const disclosure = frameDocument?.querySelector(
+          '[data-discern-builder-frame-root-child="preview-raw"] .discern-raw-output',
+        );
+        const initialThemeToggle = frameDocument?.querySelector(
+          'button[aria-label="Switch to the dark theme"]',
+        );
+        return overview?.getAttribute("aria-selected") === "true" &&
+          disclosure?.hasAttribute("open") === false &&
+          initialThemeToggle !== null &&
+          document.querySelector('[aria-label="Preview event log"]') === null;
+      },
+      selector,
+      { timeout: ACTION_TIMEOUT },
+    );
     invariant(
       await tabs.getByRole("tab", { name: "Overview" }).getAttribute(
             "aria-selected",
@@ -713,14 +756,19 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
     await restoredPreview.locator("dialog[open]").waitFor({
       timeout: ACTION_TIMEOUT,
     });
+    const storedBeforeDialog = await page.evaluate(
+      (key) => localStorage.getItem(key),
+      BUILDER_STORAGE_KEYS.document,
+    );
     invariant(
       await page.getByLabel("Preview width").inputValue() === "desktop" &&
         await page.getByRole("button", { name: "50% preview" }).getAttribute(
             "aria-pressed",
           ) === "true" &&
-        await page.getByRole("button", { name: "Interact" }).getAttribute(
-            "aria-pressed",
-          ) === "true" &&
+        await page.getByRole("button", { name: "Interact", exact: true })
+            .getAttribute(
+              "aria-pressed",
+            ) === "true" &&
         await restoredPreview.locator("html").evaluate(() => innerWidth) ===
           1200,
       "reload confused logical width, zoom, or mode comfort state",
@@ -735,21 +783,36 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
           ) === "hidden",
       "Dialog effects escaped the frame realm",
     );
-    await page.getByRole("button", { name: "100% preview" }).click();
     await restoredPreview.getByRole("button", {
       name: "Close contained dialog",
     }).click();
-    await restoredPreview.locator("dialog:not([open])").waitFor({
-      timeout: ACTION_TIMEOUT,
-    });
+    await page.getByRole("list", { name: "Preview event log" })
+      .getByText("onOpenChange(false)").waitFor({
+        timeout: ACTION_TIMEOUT,
+      });
+    await page.waitForFunction(
+      (selector) => {
+        const dialog = document.querySelector<HTMLIFrameElement>(selector)
+          ?.contentDocument?.querySelector("dialog");
+        return dialog !== null && dialog !== undefined &&
+          !dialog.hasAttribute("open");
+      },
+      selector,
+      { timeout: ACTION_TIMEOUT },
+    );
+    const storedAfterDialog = await page.evaluate(
+      (key) => localStorage.getItem(key),
+      BUILDER_STORAGE_KEYS.document,
+    );
     invariant(
       (await page.getByRole("list", { name: "Preview event log" }).innerText())
-        .includes("onOpenChange(false)") &&
-        await page.evaluate(
-            (key) => localStorage.getItem(key),
-            BUILDER_STORAGE_KEYS.document,
-          ) === JSON.stringify(previewFixture(true)),
-      "Dialog callback witness changed document data",
+        .includes("onOpenChange(false)"),
+      "Dialog close did not record its callback witness",
+    );
+    invariant(
+      storedAfterDialog === storedBeforeDialog &&
+        await page.getByRole("button", { name: /Undo/ }).isDisabled(),
+      "Dialog callback changed persisted document data or Builder history",
     );
   } finally {
     const workspaceTheme = page.getByRole("group", {

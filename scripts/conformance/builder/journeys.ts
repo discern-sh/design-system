@@ -13,7 +13,6 @@ import {
   activatePane,
   assertNoPageOverflow,
   BUILDER_SHELL,
-  CANVAS_PAGE,
   invariant,
   loadBuilderPage,
   NARROW_VIEWPORT,
@@ -22,6 +21,35 @@ import {
   WIDE_VIEWPORT,
   withAuxiliaryPage,
 } from "./support.ts";
+
+async function previewText(page: Page): Promise<string> {
+  return await page
+    .frameLocator("iframe[data-discern-builder-preview-frame]")
+    .locator(".discern-builder-frame-document")
+    .innerText();
+}
+
+async function waitForPreviewText(
+  page: Page,
+  includes: string,
+  excludes?: string,
+): Promise<string> {
+  await page.waitForFunction(
+    ({ includes, excludes }) => {
+      const iframe = document.querySelector<HTMLIFrameElement>(
+        "iframe[data-discern-builder-preview-frame]",
+      );
+      const value = iframe?.contentDocument?.querySelector(
+        ".discern-builder-frame-document",
+      )?.textContent ?? "";
+      return value.includes(includes) &&
+        (excludes === undefined || !value.includes(excludes));
+    },
+    { includes, excludes },
+    { timeout: ACTION_TIMEOUT },
+  );
+  return await previewText(page);
+}
 
 export async function verifyAuthoringJourney(
   page: Page,
@@ -60,7 +88,7 @@ export async function verifyAuthoringJourney(
     const previousText = await content.inputValue();
     await content.fill("Browser proof heading");
     invariant(
-      (await page.locator(CANVAS_PAGE).innerText()).includes(
+      (await waitForPreviewText(page, "Browser proof heading")).includes(
         "Browser proof heading",
       ),
       "Inspector text edit did not reach the canvas",
@@ -68,15 +96,19 @@ export async function verifyAuthoringJourney(
     checks += 1;
 
     await page.getByRole("button", { name: /Undo/ }).click();
+    const undonePreviewText = await waitForPreviewText(
+      page,
+      previousText,
+      "Browser proof heading",
+    );
     invariant(
-      !(await page.locator(CANVAS_PAGE).innerText()).includes(
-        "Browser proof heading",
-      ) && (await page.locator(CANVAS_PAGE).innerText()).includes(previousText),
+      !undonePreviewText.includes("Browser proof heading") &&
+        undonePreviewText.includes(previousText),
       "Undo did not restore the prior text",
     );
     await page.getByRole("button", { name: /Redo/ }).click();
     invariant(
-      (await page.locator(CANVAS_PAGE).innerText()).includes(
+      (await waitForPreviewText(page, "Browser proof heading")).includes(
         "Browser proof heading",
       ),
       "Redo did not restore the edited text",
