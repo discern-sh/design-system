@@ -12,6 +12,7 @@ export * from "../components/layout/cluster/mod.ts";
 export * from "../components/layout/grid/mod.ts";
 export * from "../components/layout/masonry/mod.ts";
 export * from "../components/layout/section/mod.ts";
+export * from "../components/layout/overflow-cue/mod.ts";
 export * from "../components/display/badge/mod.ts";
 export * from "../components/display/card/mod.ts";
 export * from "../components/display/divider/mod.ts";

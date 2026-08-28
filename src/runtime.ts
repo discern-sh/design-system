@@ -13,6 +13,7 @@ import { foundationCss, utilitiesCss } from "./generated/base-styles.ts";
 import { browserBehaviorSources } from "./generated/behaviors.ts";
 import { embeddedRuntimeAssets } from "./generated/assets.ts";
 import { componentRegistry } from "./generated/component-registry.ts";
+import { selectedComponentBehaviors } from "./internal/browser-behavior-selection.ts";
 import {
   type IntegrityFile,
   type ManifestComponent,
@@ -26,8 +27,6 @@ import {
 import { discernThemeCss } from "./theme/discern.ts";
 import { allTokens, baseTokens, themeTokens } from "./tokens/tokens.ts";
 import {
-  type ComponentBehavior,
-  componentBehaviors,
   type ComponentGroup,
   componentGroups,
 } from "./types/component-meta.ts";
@@ -243,14 +242,6 @@ function selectedAssets(
   return runtimeAssetSelections.filter((asset) => requested.includes(asset));
 }
 
-function selectedBehaviors(
-  entries: readonly ComponentRegistryEntry[],
-): ComponentBehavior[] {
-  return componentBehaviors.filter((behavior) =>
-    entries.some((entry) => entry.behaviors.includes(behavior))
-  );
-}
-
 function decodeAsset(
   asset: (typeof embeddedRuntimeAssets)[number],
 ): Uint8Array {
@@ -304,7 +295,7 @@ export async function emitDesignSystemRuntime(
   }
   const selection = resolveSelection(options);
   const assets = selectedAssets(options.assets);
-  const behaviors = selectedBehaviors(selection.entries);
+  const behaviors = selectedComponentBehaviors(selection.entries);
   const theme = options.theme ?? "discern";
   await removeIfPresent(options.outputRoot);
   await mkdir(options.outputRoot, { recursive: true });

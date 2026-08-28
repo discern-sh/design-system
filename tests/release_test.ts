@@ -82,7 +82,7 @@ function isAllowedPublishPath(path: string): boolean {
   if (!path.startsWith("src/")) return false;
   if (path.startsWith("src/fixtures/")) return false;
   if (path.endsWith(".examples.tsx")) return false;
-  return /\.(ts|tsx)$/.test(path);
+  return /\.(js|ts|tsx)$/.test(path);
 }
 
 Deno.test("the publish set contains only allowlisted package files", async () => {
@@ -96,6 +96,34 @@ Deno.test("the publish set contains only allowlisted package files", async () =>
     [],
     `unexpected files in the publish set: ${unexpected.join(", ")}`,
   );
+});
+
+function selfTypesSpecifier(source: string): string | undefined {
+  return source.match(/^\/\/ @ts-self-types="([^"]+\.d\.ts)"$/mu)?.[1];
+}
+
+Deno.test("published JavaScript modules carry published fast types", async () => {
+  assertEquals(
+    selfTypesSpecifier("export const futureUntypedModule = true;"),
+    undefined,
+    "the future untyped JavaScript fixture did not enter the detector",
+  );
+  const files = new Set(await publishFileSet());
+  for (const path of files) {
+    if (!path.endsWith(".js")) continue;
+    const specifier = selfTypesSpecifier(
+      await Deno.readTextFile(join(PACKAGE_ROOT, path)),
+    );
+    assert(specifier !== undefined, `${path} has no @ts-self-types directive`);
+    const declaration = relative(
+      PACKAGE_ROOT,
+      join(PACKAGE_ROOT, dirname(path), specifier),
+    );
+    assert(
+      files.has(declaration),
+      `${path} declares ${declaration}, which is absent from the publish set`,
+    );
+  }
 });
 
 Deno.test("every exported module graph is inside the publish set", async () => {

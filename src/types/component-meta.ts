@@ -30,7 +30,7 @@ export const cataloguePurposes = [
 export type CataloguePurpose = (typeof cataloguePurposes)[number];
 
 /** Browser behaviors a component can ask the runtime emitter to include. */
-export const componentBehaviors = ["floating-surface"] as const;
+export const componentBehaviors = ["floating-surface", "overflow-cue"] as const;
 /** One selection-scoped browser behavior. */
 export type ComponentBehavior = (typeof componentBehaviors)[number];
 
@@ -40,6 +40,7 @@ export type ComponentBehavior = (typeof componentBehaviors)[number];
  */
 export const componentBehaviorOptIns = {
   "floating-surface": ["tooltip", "hover-card"],
+  "overflow-cue": ["overflow-cue"],
 } as const satisfies Readonly<Record<ComponentBehavior, readonly string[]>>;
 
 /** CLI stance for a component with a package-owned pure renderer. */

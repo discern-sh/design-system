@@ -26,6 +26,7 @@ import {
 import { parseStyledSource, type StyledSegment } from "./styled-sequences.ts";
 import { graphemeWidth, measureText } from "./text.ts";
 import { inspectSafeAsciiUrlReference } from "../url-reference.ts";
+import { overflowCueMarkupAttributes } from "../internal/overflow-cue-state.js";
 import {
   terminalThemeColor,
   terminalThemes,
@@ -853,7 +854,9 @@ export function projectTerminalInspectorHtml(
     escapeHtml(title)
   }</strong><span style="display:flex;flex-wrap:wrap;gap:0.4rem">${
     metricParts.join("")
-  }</span></figcaption><div data-discern-terminal-viewport style="overflow:auto;background:${
+  }</span></figcaption><div data-discern-terminal-viewport ${overflowCueMarkupAttributes.target} tabindex="0" role="region" aria-label="${
+    escapeHtml(`${title} scrollable viewport`)
+  }" style="overflow:auto;background:${
     rgb(canvas)
   };padding:0.75rem 1rem 1rem"><div role="group" aria-label="${
     escapeHtml(`${title}, ${options.columns} columns by ${options.rows} rows`)
