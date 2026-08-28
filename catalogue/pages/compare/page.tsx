@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import type { TerminalThemeVariant } from "../../../src/cli/theme.ts";
-import { componentGroups } from "../../../src/types/component-meta.ts";
 import type { RegistryEntry } from "../../generated/registry.ts";
 import { catalogueRoutePaths } from "../../routes.ts";
 import { announceCatalogueLocationChange } from "../../shell/location.ts";
@@ -268,10 +267,9 @@ export function ComparePage(
   }
 
   const scope = state.scope;
-  const grouped = componentGroups.flatMap((group) => {
-    const entries = scope.components.filter(({ meta }) => meta.group === group);
-    return entries.length === 0 ? [] : [{ group, entries }];
-  });
+  const grouped = componentDirectory(scope.components).groups.map((
+    collection,
+  ) => ({ group: collection.group, entries: collection.members }));
   const custom = scope.kind === "custom";
   const selected = new Set(scope.components.map(({ meta }) => meta.slug));
   const remaining = sortedComponents.filter(({ meta }) =>

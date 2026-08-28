@@ -23,6 +23,11 @@ import {
 import {
   representativeComponentExampleImage,
 } from "../catalogue/example-images.ts";
+import { componentSearchRecords } from "../catalogue/routes.ts";
+import {
+  searchRecords,
+  supportingMatchReason,
+} from "../catalogue/search/mod.ts";
 import { catalogue, catalogueEntry } from "./support/catalogue.ts";
 
 const PACKAGE_ROOT = fromFileUrl(new URL("../", import.meta.url));
@@ -129,6 +134,26 @@ Deno.test("every Component result card uses generated representative imagery wit
     );
     assertEquals(markup.includes("data-discern-component="), false);
   }
+});
+
+Deno.test("Component result cards project the universal engine's match reason", async () => {
+  const { registry } = await catalogue();
+  const result = searchRecords(
+    componentSearchRecords(registry),
+    "executable input",
+  )[0];
+  assert(result?.record.payload !== undefined);
+  const reason = supportingMatchReason(result);
+  assert(reason !== undefined);
+  const markup = renderToStaticMarkup(createElement(ComponentResultCard, {
+    entry: result.record.payload,
+    showGroup: true,
+    matchReason: reason,
+  }));
+  assertStringIncludes(
+    markup,
+    `Matched ${reason.label.toLowerCase()}: ${reason.value}`,
+  );
 });
 
 Deno.test("Component explorer and detail URL state round-trip canonical evidence", async () => {
@@ -243,6 +268,21 @@ Deno.test("detail evidence stays closed and source labels describe their destina
   assertStringIncludes(sources, "/command/command.cli.ts");
   assertStringIncludes(sources, "Open metadata");
   assertStringIncludes(sources, "/command/command.meta.ts");
+
+  for (const entry of registry) {
+    const allSources = renderToStaticMarkup(
+      createElement(ComponentSourceActions, { entry }),
+    );
+    const root =
+      `/catalogue/src/components/${entry.meta.group.toLowerCase()}/${entry.meta.slug}/${entry.meta.slug}`;
+    assertStringIncludes(allSources, `href="${root}.tsx"`);
+    assertStringIncludes(allSources, `href="${root}.meta.ts"`);
+    assertEquals(
+      allSources.includes(`href="${root}.cli.ts"`),
+      entry.cli.stance === "rendered",
+      entry.meta.slug,
+    );
+  }
 });
 
 Deno.test("Command text carries the stronger readable type treatment", async () => {

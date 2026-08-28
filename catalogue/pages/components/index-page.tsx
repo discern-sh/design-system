@@ -9,7 +9,7 @@ import {
   catalogueGroupSlug,
   componentSearchRecords,
 } from "../../routes.ts";
-import { searchRecords } from "../../search/mod.ts";
+import { searchRecords, supportingMatchReason } from "../../search/mod.ts";
 import { announceCatalogueLocationChange } from "../../shell/location.ts";
 import {
   CataloguePageHeader,
@@ -56,13 +56,24 @@ export function ComponentIndexPage(
     (state.purpose === undefined || meta.purposes?.includes(state.purpose))
   );
   const matches = state.query.trim() === ""
-    ? eligible
+    ? eligible.map((entry) => ({ entry }))
     : searchRecords(componentSearchRecords(eligible), state.query).flatMap(
-      ({ record }) => record.payload === undefined ? [] : [record.payload],
+      (result) => {
+        const entry = result.record.payload;
+        if (entry === undefined) return [];
+        const reason = supportingMatchReason(result);
+        return [{
+          entry,
+          ...(reason === undefined
+            ? {}
+            : { matchReason: { label: reason.label, value: reason.value } }),
+        }];
+      },
     );
   const resultsVisible = state.showAll || state.group !== undefined ||
     state.purpose !== undefined || state.query.trim() !== "";
-  const mixedGroups = new Set(matches.map(({ meta }) => meta.group)).size > 1;
+  const mixedGroups =
+    new Set(matches.map(({ entry }) => entry.meta.group)).size > 1;
   const reset = () => navigate({ query: "", showAll: false });
 
   return (
@@ -163,10 +174,11 @@ export function ComponentIndexPage(
               )
               : (
                 <div className="discern-catalogue-component-index">
-                  {matches.map((entry) => (
+                  {matches.map(({ entry, matchReason }) => (
                     <ComponentResultCard
                       entry={entry}
                       showGroup={mixedGroups}
+                      {...(matchReason === undefined ? {} : { matchReason })}
                       key={entry.meta.slug}
                     />
                   ))}

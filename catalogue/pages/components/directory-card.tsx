@@ -92,9 +92,10 @@ export function ComponentCollectionCard(
 
 /** Lightweight discovery result: generated pixels, never a live specimen. */
 export function ComponentResultCard(
-  { entry, showGroup }: {
+  { entry, showGroup, matchReason }: {
     readonly entry: RegistryEntry;
     readonly showGroup: boolean;
+    readonly matchReason?: Readonly<{ label: string; value: string }>;
   },
 ) {
   const detailHref = catalogueComponentPath(entry.meta.slug);
@@ -114,6 +115,13 @@ export function ComponentResultCard(
           {showGroup ? <span>{entry.meta.group}</span> : null}
           <h3>{entry.meta.name}</h3>
           <span>{entry.meta.description}</span>
+          {matchReason === undefined
+            ? null
+            : (
+              <span className="discern-catalogue-component-card__match">
+                Matched {matchReason.label.toLowerCase()}: {matchReason.value}
+              </span>
+            )}
           <small>
             {entry.cli.stance === "rendered" ? "Web and CLI" : "Web only"}
           </small>

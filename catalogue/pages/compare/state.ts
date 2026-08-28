@@ -10,6 +10,7 @@ import {
 } from "../../routes.ts";
 import { catalogueHref, cataloguePurpose, purposeDetails } from "../shared.tsx";
 import type { CatalogueSurface } from "../shared.tsx";
+import { componentDirectory } from "../components/collections.ts";
 
 export type CompareScope =
   | {
@@ -56,34 +57,48 @@ export function resolveCompareScope(
   parameters: URLSearchParams,
   entries: readonly RegistryEntry[],
 ): CompareScope | undefined {
+  const directory = componentDirectory(entries);
   if (parameters.has("components")) {
     return {
       kind: "custom",
       title: "Custom comparison",
-      components: customComponents(parameters.get("components"), entries),
+      components: customComponents(
+        parameters.get("components"),
+        directory.components,
+      ),
     };
   }
   if (parameters.get("scope") === "all") {
-    return { kind: "all", title: "Complete system", components: entries };
+    return {
+      kind: "all",
+      title: "Complete system",
+      components: directory.components,
+    };
   }
   const group = catalogueGroupFromSlug(parameters.get("group"));
   if (group !== undefined) {
+    const collection = directory.groups.find((candidate) =>
+      candidate.group === group
+    );
+    if (collection === undefined) return undefined;
     return {
       kind: "group",
       group,
       title: group,
-      components: entries.filter(({ meta }) => meta.group === group),
+      components: collection.members,
     };
   }
   const purpose = cataloguePurpose(parameters.get("purpose"));
   if (purpose !== undefined) {
+    const collection = directory.purposes.find((candidate) =>
+      candidate.purpose === purpose
+    );
+    if (collection === undefined) return undefined;
     return {
       kind: "purpose",
       purpose,
       title: purposeDetails[purpose].label,
-      components: entries.filter(({ meta }) =>
-        meta.purposes?.includes(purpose)
-      ),
+      components: collection.members,
     };
   }
   return undefined;
@@ -145,15 +160,16 @@ export function compareStateHref(state: CompareState): string {
     : undefined;
   const purpose = scope?.kind === "purpose" ? scope.purpose : undefined;
   const all = scope?.kind === "all" ? "all" : undefined;
-  const selected = new Set(scope?.components.map(({ meta }) => meta.slug));
-  const surfacePairs = Object.entries(state.surfaceOverrides).filter((
-    [slug, value],
-  ) => selected.has(slug) && value !== state.globalSurface).map((
-    [slug, value],
-  ) => `${slug}:${value}`).join(",");
-  const examplePairs = Object.entries(state.exampleOverrides).filter(([slug]) =>
-    selected.has(slug)
-  ).map(([slug, value]) => `${slug}:${value}`).join(",");
+  const surfacePairs = (scope?.components ?? []).flatMap(({ meta }) => {
+    const value = state.surfaceOverrides[meta.slug];
+    return value === undefined || value === state.globalSurface
+      ? []
+      : [`${meta.slug}:${value}`];
+  }).join(",");
+  const examplePairs = (scope?.components ?? []).flatMap(({ meta }) => {
+    const value = state.exampleOverrides[meta.slug];
+    return value === undefined ? [] : [`${meta.slug}:${value}`];
+  }).join(",");
   const href = catalogueHref(catalogueRoutePaths.compare, {
     components,
     group,
