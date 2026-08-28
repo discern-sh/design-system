@@ -2,15 +2,13 @@ import {
   measureOverflowCueState,
   overflowCueAxes,
   overflowCueMarkupAttributes,
-  overflowCueStateAttributes,
 } from "../../src/internal/overflow-cue-state.js";
 
 (() => {
   const rootSelector = `[${overflowCueMarkupAttributes.root}]`;
   const targetSelector = `[${overflowCueMarkupAttributes.target}]`;
   const enhancedAttribute = overflowCueMarkupAttributes.enhanced;
-  const directionAttribute = overflowCueMarkupAttributes.direction;
-  const entries = new WeakMap();
+  const edgeSelector = ":scope>[data-discern-overflow-cue-edge]";
   const liveEntries = new Set();
   let rtlScrollType;
 
@@ -40,36 +38,40 @@ import {
       candidate.closest(rootSelector) === root
     );
 
-  const setAttribute = (root, name, value) => {
-    if (root.getAttribute(name) !== value) root.setAttribute(name, value);
-  };
-
-  const targetInsets = (root, target, direction) => {
+  const targetInsets = (entry, direction) => {
+    const { root, target, edges } = entry;
     const rootBounds = root.getBoundingClientRect();
     const targetBounds = target.getBoundingClientRect();
-    root.style.setProperty(
-      "--discern-overflow-cue-target-top",
-      `${Math.max(0, targetBounds.top - rootBounds.top)}px`,
-    );
-    root.style.setProperty(
-      "--discern-overflow-cue-target-right",
-      `${Math.max(0, rootBounds.right - targetBounds.right)}px`,
-    );
-    root.style.setProperty(
-      "--discern-overflow-cue-target-bottom",
-      `${Math.max(0, rootBounds.bottom - targetBounds.bottom)}px`,
-    );
-    root.style.setProperty(
-      "--discern-overflow-cue-target-left",
-      `${Math.max(0, targetBounds.left - rootBounds.left)}px`,
-    );
-    setAttribute(root, directionAttribute, direction);
+    const top = Math.max(0, targetBounds.top - rootBounds.top);
+    const right = Math.max(0, rootBounds.right - targetBounds.right);
+    const bottom = Math.max(0, rootBounds.bottom - targetBounds.bottom);
+    const left = Math.max(0, targetBounds.left - rootBounds.left);
+    const gap = "var(--discern-space-2)";
+    const size = "var(--discern-space-5)";
+    const blockEdge =
+      `right:calc(${right}px + ${gap});left:calc(${left}px + ${gap});height:${size};`;
+    const inlineEdge =
+      `top:calc(${top}px + ${gap});bottom:calc(${bottom}px + ${gap});width:${size};`;
+    edges[0].style.cssText = `${blockEdge}top:${top}px`;
+    edges[1].style.cssText = `${blockEdge}bottom:${bottom}px`;
+    const start = direction === "rtl" ? right : left;
+    const end = direction === "rtl" ? left : right;
+    edges[2].style.cssText =
+      `${inlineEdge}inset-inline-start:${start}px;--discern-overflow-cue-angle:${
+        direction === "rtl" ? "to left" : "to right"
+      }`;
+    edges[3].style.cssText =
+      `${inlineEdge}inset-inline-end:${end}px;--discern-overflow-cue-angle:${
+        direction === "rtl" ? "to right" : "to left"
+      }`;
   };
 
   const measure = (entry) => {
     const { root, target } = entry;
     if (!root.isConnected || !target.isConnected) {
-      entry.destroy();
+      cancelAnimationFrame(entry.frame);
+      entry.resize?.disconnect();
+      liveEntries.delete(entry);
       return;
     }
     const candidateAxis = root.getAttribute(overflowCueMarkupAttributes.axis);
@@ -92,13 +94,16 @@ import {
       axis,
       detectRtlScrollType(),
     );
-    targetInsets(root, target, direction);
-    for (
-      const [edge, attribute] of Object.entries(
-        overflowCueStateAttributes,
-      )
-    ) {
-      setAttribute(root, attribute, state[edge] ? "true" : "false");
+    targetInsets(entry, direction);
+    for (const [edge, visible] of Object.entries(state)) {
+      const suffix = edge.replace(
+        /[SE]/,
+        (letter) => `-${letter.toLowerCase()}`,
+      );
+      root.setAttribute(
+        `${overflowCueMarkupAttributes.root}-${suffix}`,
+        visible ? "true" : "false",
+      );
     }
   };
 
@@ -107,58 +112,38 @@ import {
     entry.frame = requestAnimationFrame(() => measure(entry));
   };
 
+  const observeSize = (entry) => {
+    if (!entry.resize) return;
+    entry.resize.disconnect();
+    entry.resize.observe(entry.root);
+    entry.resize.observe(entry.target);
+    for (const child of entry.target.children) entry.resize.observe(child);
+  };
+
   const enhance = (root) => {
-    if (entries.has(root)) return;
+    if (root.hasAttribute(enhancedAttribute)) return;
     const target = ownedTarget(root);
-    if (!(target instanceof HTMLElement)) return;
+    const edges = root.querySelectorAll(edgeSelector);
+    if (!(target instanceof HTMLElement) || edges.length !== 4) return;
     const entry = {
       root,
       target,
-      frame: undefined,
-      resizeObserver: undefined,
-      contentObserver: undefined,
-      scrollListener: undefined,
-      destroy: undefined,
+      edges,
+      frame: 0,
+      resize: undefined,
     };
-    const observeContentSize = () => {
-      if (entry.resizeObserver === undefined) return;
-      entry.resizeObserver.disconnect();
-      entry.resizeObserver.observe(target);
-      for (const child of target.children) {
-        entry.resizeObserver.observe(child);
-      }
-    };
-    entry.scrollListener = () => schedule(entry);
-    entry.destroy = () => {
-      cancelAnimationFrame(entry.frame);
-      target.removeEventListener("scroll", entry.scrollListener);
-      entry.resizeObserver?.disconnect();
-      entry.contentObserver?.disconnect();
-      liveEntries.delete(entry);
-    };
-    entries.set(root, entry);
     liveEntries.add(entry);
-    target.addEventListener("scroll", entry.scrollListener, { passive: true });
+    target.addEventListener("scroll", () => schedule(entry), { passive: true });
     if (typeof ResizeObserver === "function") {
-      entry.resizeObserver = new ResizeObserver(() => schedule(entry));
-      observeContentSize();
+      entry.resize = new ResizeObserver(() => schedule(entry));
+      observeSize(entry);
     }
-    entry.contentObserver = new MutationObserver(() => {
-      observeContentSize();
-      schedule(entry);
-    });
-    entry.contentObserver.observe(target, {
-      attributes: true,
-      characterData: true,
-      childList: true,
-      subtree: true,
-    });
     root.setAttribute(enhancedAttribute, "");
     schedule(entry);
   };
 
   const enhanceWithin = (node) => {
-    if (!(node instanceof Element || node instanceof Document)) return;
+    if (!node.querySelectorAll) return;
     if (node instanceof Element && node.matches(rootSelector)) enhance(node);
     for (const root of node.querySelectorAll(rootSelector)) enhance(root);
   };
@@ -168,15 +153,15 @@ import {
     for (const record of records) {
       for (const node of record.addedNodes) enhanceWithin(node);
     }
-  }).observe(document.documentElement, { childList: true, subtree: true });
-  new MutationObserver(() => {
-    for (const entry of liveEntries) schedule(entry);
+    for (const entry of liveEntries) {
+      observeSize(entry);
+      schedule(entry);
+    }
   }).observe(document.documentElement, {
     attributes: true,
-    attributeFilter: ["class", "dir"],
+    attributeFilter: ["class", "dir", "hidden"],
+    characterData: true,
+    childList: true,
     subtree: true,
-  });
-  globalThis.addEventListener("resize", () => {
-    for (const entry of liveEntries) schedule(entry);
   });
 })();

@@ -1,23 +1,17 @@
 @layer discern.components {
   .discern-overflow-cue {
-    --discern-overflow-cue-color: var(--discern-color-surface);
     position: relative;
-    display: block;
-    min-width: 0;
-    min-height: 0;
+    min-inline-size: 0;
+    min-block-size: 0;
   }
   .discern-overflow-cue__viewport,
   .discern-overflow-cue [data-discern-overflow-cue-target] {
     box-sizing: border-box;
-    min-width: 0;
-    min-height: 0;
+    min-inline-size: 0;
+    min-block-size: 0;
     overflow: auto;
   }
   .discern-overflow-cue__viewport {
-    width: inherit;
-    height: inherit;
-    max-width: inherit;
-    max-height: inherit;
     inline-size: inherit;
     block-size: inherit;
     max-inline-size: inherit;
@@ -29,91 +23,35 @@
   }
   .discern-overflow-cue__edge {
     position: absolute;
-    z-index: 1;
-    display: block;
     opacity: 0;
     pointer-events: none;
-  }
-  .discern-overflow-cue__edge--block-start,
-  .discern-overflow-cue__edge--block-end {
-    right: calc(
-      var(--discern-overflow-cue-target-right, 0px) + var(--discern-space-2)
+    background: linear-gradient(
+      var(--discern-overflow-cue-angle),
+      color-mix(in srgb, var(--discern-color-surface) 92%, transparent),
+      transparent
     );
-    left: calc(
-      var(--discern-overflow-cue-target-left, 0px) + var(--discern-space-2)
-    );
-    height: var(--discern-space-5);
   }
   .discern-overflow-cue__edge--block-start {
-    top: var(--discern-overflow-cue-target-top, 0px);
-    background: linear-gradient(
-      to bottom,
-      color-mix(in srgb, var(--discern-overflow-cue-color) 92%, transparent),
-      transparent
-    );
+    --discern-overflow-cue-angle: to bottom;
   }
   .discern-overflow-cue__edge--block-end {
-    bottom: var(--discern-overflow-cue-target-bottom, 0px);
-    background: linear-gradient(
-      to top,
-      color-mix(in srgb, var(--discern-overflow-cue-color) 92%, transparent),
-      transparent
-    );
-  }
-  .discern-overflow-cue__edge--inline-start,
-  .discern-overflow-cue__edge--inline-end {
-    top: calc(
-      var(--discern-overflow-cue-target-top, 0px) + var(--discern-space-2)
-    );
-    bottom: calc(
-      var(--discern-overflow-cue-target-bottom, 0px) + var(--discern-space-2)
-    );
-    width: var(--discern-space-5);
+    --discern-overflow-cue-angle: to top;
   }
   .discern-overflow-cue__edge--inline-start {
-    left: var(--discern-overflow-cue-target-left, 0px);
-    background: linear-gradient(
-      to right,
-      color-mix(in srgb, var(--discern-overflow-cue-color) 92%, transparent),
-      transparent
-    );
+    --discern-overflow-cue-angle: to right;
   }
   .discern-overflow-cue__edge--inline-end {
-    right: var(--discern-overflow-cue-target-right, 0px);
-    background: linear-gradient(
-      to left,
-      color-mix(in srgb, var(--discern-overflow-cue-color) 92%, transparent),
-      transparent
-    );
+    --discern-overflow-cue-angle: to left;
   }
-  .discern-overflow-cue[data-discern-overflow-cue-direction="rtl"] .discern-overflow-cue__edge--inline-start {
-    right: var(--discern-overflow-cue-target-right, 0px);
-    left: auto;
-    background: linear-gradient(
-      to left,
-      color-mix(in srgb, var(--discern-overflow-cue-color) 92%, transparent),
-      transparent
-    );
-  }
-  .discern-overflow-cue[data-discern-overflow-cue-direction="rtl"] .discern-overflow-cue__edge--inline-end {
-    right: auto;
-    left: var(--discern-overflow-cue-target-left, 0px);
-    background: linear-gradient(
-      to right,
-      color-mix(in srgb, var(--discern-overflow-cue-color) 92%, transparent),
-      transparent
-    );
-  }
-  .discern-overflow-cue[data-discern-overflow-cue-block-start="true"] .discern-overflow-cue__edge--block-start,
-  .discern-overflow-cue[data-discern-overflow-cue-block-end="true"] .discern-overflow-cue__edge--block-end,
-  .discern-overflow-cue[data-discern-overflow-cue-inline-start="true"] .discern-overflow-cue__edge--inline-start,
-  .discern-overflow-cue[data-discern-overflow-cue-inline-end="true"] .discern-overflow-cue__edge--inline-end {
+  .discern-overflow-cue[data-discern-overflow-cue-block-start="true"] > .discern-overflow-cue__edge--block-start,
+  .discern-overflow-cue[data-discern-overflow-cue-block-end="true"] > .discern-overflow-cue__edge--block-end,
+  .discern-overflow-cue[data-discern-overflow-cue-inline-start="true"] > .discern-overflow-cue__edge--inline-start,
+  .discern-overflow-cue[data-discern-overflow-cue-inline-end="true"] > .discern-overflow-cue__edge--inline-end {
     opacity: 1;
   }
   @media (forced-colors: active) {
     .discern-overflow-cue__edge {
       background: none;
-      forced-color-adjust: auto;
     }
     .discern-overflow-cue__edge--block-start {
       border-block-start: 2px solid CanvasText;

@@ -531,6 +531,28 @@ async function bundleBehaviorModule(
   return source;
 }
 
+async function minifyBehaviorSource(source: string): Promise<string> {
+  const entry = await Deno.makeTempFile({ suffix: ".js" });
+  try {
+    await Deno.writeTextFile(entry, source);
+    const result = await new Deno.Command("deno", {
+      args: ["bundle", "--minify", entry],
+      stdout: "piped",
+      stderr: "piped",
+    }).output();
+    if (!result.success) {
+      throw new Error(
+        `Browser behavior minification failed: ${
+          new TextDecoder().decode(result.stderr).trim()
+        }`,
+      );
+    }
+    return new TextDecoder().decode(result.stdout).trim();
+  } finally {
+    await Deno.remove(entry);
+  }
+}
+
 async function generateBehaviorSources(): Promise<string> {
   const files = (await walk(BEHAVIOR_ROOT)).filter((url) =>
     url.pathname.endsWith(".js")
@@ -539,7 +561,7 @@ async function generateBehaviorSources(): Promise<string> {
     await Promise.all(files.map(async (url) =>
       [
         url.pathname.slice(url.pathname.lastIndexOf("/") + 1, -3),
-        `{\n${await bundleBehaviorModule(url)}\n}`,
+        `{${await minifyBehaviorSource(await bundleBehaviorModule(url))}}`,
       ] as const
     )),
   );

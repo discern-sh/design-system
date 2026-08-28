@@ -33,7 +33,6 @@ export const overflowCueMarkupAttributes = /** @type {const} */ ({
   target: "data-discern-overflow-cue-target",
   axis: "data-discern-overflow-cue-axis",
   enhanced: "data-discern-overflow-cue-enhanced",
-  direction: "data-discern-overflow-cue-direction",
 });
 
 /** Stable logical-edge names used by decorative cue elements. */
