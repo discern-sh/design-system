@@ -1,4 +1,6 @@
 import type { TerminalThemeVariant } from "../../../src/cli/theme.ts";
+import { useEffect, useRef } from "react";
+import type { ReactNode } from "react";
 import { CliComponentPreview, CliExamplePreview } from "../../cli-preview.tsx";
 import type { RegistryEntry } from "../../generated/registry.ts";
 import { CopyableCode, stateFragmentId } from "../shared.tsx";
@@ -8,6 +10,79 @@ type ExampleHeadingLevel = 2 | 4 | 5;
 
 function exampleHeading(level: ExampleHeadingLevel) {
   return level === 2 ? "h2" : level === 4 ? "h4" : "h5";
+}
+
+function SpecimenHeadingBoundary(
+  { afterLevel, children }: {
+    readonly afterLevel: ExampleHeadingLevel;
+    readonly children: ReactNode;
+  },
+) {
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const normalize = () => {
+      for (
+        const heading of root.current?.querySelectorAll<HTMLElement>(
+          "h1, h2, h3, h4, h5, h6",
+        ) ?? []
+      ) {
+        const authored = Number(heading.tagName.slice(1));
+        const level = Math.min(6, afterLevel + authored);
+        let proxy = heading.querySelector<HTMLElement>(
+          ":scope > [data-discern-preview-heading-proxy]",
+        );
+        if (proxy === null) {
+          proxy = heading.ownerDocument.createElement("span");
+          proxy.dataset.discernPreviewHeadingProxy = "";
+          heading.dataset.discernPreviewOriginalRole =
+            heading.getAttribute("role") ?? "";
+          heading.dataset.discernPreviewOriginalAriaLevel =
+            heading.getAttribute("aria-level") ?? "";
+        }
+        for (const child of [...heading.childNodes]) {
+          if (child !== proxy) proxy.append(child);
+        }
+        if (proxy.parentNode !== heading) heading.append(proxy);
+        heading.setAttribute("role", "presentation");
+        heading.removeAttribute("aria-level");
+        proxy.setAttribute("role", "heading");
+        proxy.setAttribute("aria-level", String(level));
+        proxy.dataset.discernPreviewHeadingLevel = String(level);
+      }
+    };
+    normalize();
+    const observer = new MutationObserver(normalize);
+    if (root.current) {
+      observer.observe(root.current, { childList: true, subtree: true });
+    }
+    return () => {
+      observer.disconnect();
+      for (
+        const heading of root.current?.querySelectorAll<HTMLElement>(
+          "[data-discern-preview-original-role]",
+        ) ?? []
+      ) {
+        const proxy = heading.querySelector<HTMLElement>(
+          ":scope > [data-discern-preview-heading-proxy]",
+        );
+        if (proxy !== null) {
+          for (const child of [...proxy.childNodes]) {
+            heading.insertBefore(child, proxy);
+          }
+          proxy.remove();
+        }
+        const role = heading.dataset.discernPreviewOriginalRole;
+        const ariaLevel = heading.dataset.discernPreviewOriginalAriaLevel;
+        if (role) heading.setAttribute("role", role);
+        else heading.removeAttribute("role");
+        if (ariaLevel) heading.setAttribute("aria-level", ariaLevel);
+        else heading.removeAttribute("aria-level");
+        delete heading.dataset.discernPreviewOriginalRole;
+        delete heading.dataset.discernPreviewOriginalAriaLevel;
+      }
+    };
+  }, [afterLevel]);
+  return <div ref={root}>{children}</div>;
 }
 
 /** The canonical recorded reason one named example cannot render on a surface. */
@@ -134,7 +209,9 @@ function WebExample(
         </a>
       </header>
       <div className="discern-catalogue-example-state__canvas">
-        <example.Example />
+        <SpecimenHeadingBoundary afterLevel={headingLevel}>
+          <example.Example />
+        </SpecimenHeadingBoundary>
       </div>
     </section>
   );
