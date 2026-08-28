@@ -42,7 +42,8 @@ export function BuilderFeedbackRegion(
         role="status"
         aria-live="polite"
         aria-atomic="true"
-        data-state={feedback.model.persistence.state}
+        data-discern-builder-persistence-state={feedback.model.persistence
+          .state}
       >
         {feedback.model.persistence.state === "saving"
           ? "Saving…"

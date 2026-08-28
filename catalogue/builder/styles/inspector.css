@@ -556,14 +556,14 @@
     color: var(--discern-color-ink-muted);
     white-space: nowrap;
   }
-  .discern-builder-persistence[data-state="saved"]::before {
+  .discern-builder-persistence[data-discern-builder-persistence-state="saved"]::before {
     content: "✓ ";
     color: var(--discern-color-success);
   }
-  .discern-builder-persistence[data-state="saving"]::before {
+  .discern-builder-persistence[data-discern-builder-persistence-state="saving"]::before {
     content: "… ";
   }
-  .discern-builder-persistence[data-state="unavailable"] {
+  .discern-builder-persistence[data-discern-builder-persistence-state="unavailable"] {
     border-color: var(--discern-color-danger);
     color: var(--discern-color-danger);
   }
