@@ -1,76 +1,316 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { CSSProperties } from "react";
-import type { AppearanceControlProps } from "../../shell/appearance.tsx";
-import { ThemeSwitcher } from "../../../src/components/core/theme-switcher/theme-switcher.tsx";
-import type { ThemeSwitcherMode } from "../../../src/components/core/theme-switcher/theme-switcher.tsx";
-import { Select } from "../../../src/components/forms/select/select.tsx";
 import {
-  type GuardedBuilderStorage,
-  persistBuilderTheme,
-} from "../persistence.ts";
+  AppearanceControl,
+  type AppearanceControlProps,
+  useCatalogueAppearance,
+} from "../../shell/appearance.tsx";
+import { useCatalogueTerminalTheme } from "../../terminal-theme.ts";
+import {
+  ThemeSwitcher,
+  type ThemeSwitcherMode,
+} from "../../../src/components/core/theme-switcher/theme-switcher.tsx";
+import { Select } from "../../../src/components/forms/select/select.tsx";
+import { discernThemeTokens } from "../../../src/tokens/tokens.ts";
 import type {
   BuilderPreviewAppearance,
-  BuilderPreviewViewport,
+  BuilderPreviewMode,
+  BuilderPreviewViewportId,
+  BuilderPreviewZoomId,
 } from "./protocol.ts";
 
-/** The current visual width choices, projected into the preview protocol. */
+export interface BuilderPreviewViewportPreset {
+  readonly id: BuilderPreviewViewportId;
+  readonly label: string;
+  readonly width?: number;
+}
+
+/** Presets name the frame's logical viewport, never a capped element width. */
 export const builderPreviewViewports: Readonly<
-  Record<BuilderPreviewViewport["id"], BuilderPreviewViewport>
+  Record<BuilderPreviewViewportId, BuilderPreviewViewportPreset>
 > = {
   fluid: { id: "fluid", label: "Fluid" },
-  desktop: { id: "desktop", label: "1200px", cssWidth: "1200px" },
-  tablet: { id: "tablet", label: "768px", cssWidth: "768px" },
-  phone: { id: "phone", label: "390px", cssWidth: "390px" },
+  desktop: { id: "desktop", label: "1200px", width: 1200 },
+  tablet: { id: "tablet", label: "768px", width: 768 },
+  phone: { id: "phone", label: "390px", width: 390 },
 };
 
-export interface BuilderPreviewPreferences {
-  readonly viewport: BuilderPreviewViewport;
-  readonly appearance: BuilderPreviewAppearance;
-  readonly style: CSSProperties;
-  readonly setViewport: (id: BuilderPreviewViewport["id"]) => void;
-  readonly setTheme: AppearanceControlProps["onThemeChange"];
-  readonly setAccentHue: AppearanceControlProps["onAccentHueChange"];
+const defaultAccentHue = Number(
+  discernThemeTokens.find(({ name }) => name === "--discern-accent-hue")
+    ?.value ?? "255",
+);
+
+export interface BuilderPreviewMeasurement {
+  readonly logicalWidth: number;
+  readonly zoomPercent: number;
+  readonly devicePixelRatio: number;
 }
 
-/** Builder adapter over the shared Appearance types, retaining legacy chrome. */
-export function useBuilderPreviewPreferences(
-  initialTheme: ThemeSwitcherMode,
-  storage: GuardedBuilderStorage,
-  onStorageFailure: (message: string) => void,
-): BuilderPreviewPreferences {
-  const [viewportId, setViewport] = useState<BuilderPreviewViewport["id"]>(
-    "fluid",
-  );
-  const [theme, setThemeState] = useState<ThemeSwitcherMode>(initialTheme);
-  const [accentHue, setAccentHue] = useState(255);
-  const changeTheme = (next: ThemeSwitcherMode): void => {
-    setThemeState(next);
-    const result = persistBuilderTheme(storage, next);
-    if (!result.ok) onStorageFailure(result.message);
+interface MutableAppearance {
+  readonly theme: ThemeSwitcherMode;
+  readonly accentHue: number;
+}
+
+export interface BuilderPreviewPreferences {
+  readonly viewport: BuilderPreviewViewportPreset;
+  readonly zoomId: BuilderPreviewZoomId;
+  readonly mode: BuilderPreviewMode;
+  readonly previewAppearance: BuilderPreviewAppearance;
+  readonly workspaceAppearance: MutableAppearance;
+  readonly previewResolvedTheme: "light" | "dark";
+  readonly workspaceResolvedTheme: "light" | "dark";
+  readonly workspaceStyle: CSSProperties;
+  readonly measurement: BuilderPreviewMeasurement;
+  readonly resetViewRevision: number;
+  readonly interactionRevision: number;
+  readonly setViewport: (id: BuilderPreviewViewportId) => void;
+  readonly setZoom: (id: BuilderPreviewZoomId) => void;
+  readonly setMode: (mode: BuilderPreviewMode) => void;
+  readonly setPreviewTheme: AppearanceControlProps["onThemeChange"];
+  readonly setPreviewAccentHue: AppearanceControlProps["onAccentHueChange"];
+  readonly setWorkspaceTheme: AppearanceControlProps["onThemeChange"];
+  readonly setWorkspaceAccentHue: AppearanceControlProps["onAccentHueChange"];
+  readonly reportMeasurement: (next: BuilderPreviewMeasurement) => void;
+  readonly resetView: () => void;
+  readonly resetInteractions: () => void;
+}
+
+function previewViewport(value: string | null): BuilderPreviewViewportId {
+  return value === "desktop" || value === "tablet" || value === "phone"
+    ? value
+    : "fluid";
+}
+
+function previewZoom(value: string | null): BuilderPreviewZoomId {
+  return value === "50" || value === "75" || value === "100" ? value : "fit";
+}
+
+function previewMode(value: string | null): BuilderPreviewMode {
+  return value === "interact" ? "interact" : "edit";
+}
+
+function theme(value: string | null, fallback: ThemeSwitcherMode) {
+  return value === "system" || value === "light" || value === "dark"
+    ? value
+    : fallback;
+}
+
+function accent(value: string | null): number {
+  if (value === null || value.trim() === "") return defaultAccentHue;
+  const parsed = Number(value);
+  return Number.isFinite(parsed)
+    ? Math.max(0, Math.min(360, Math.round(parsed)))
+    : defaultAccentHue;
+}
+
+function updateComfortUrl(
+  input: Readonly<{
+    viewport: BuilderPreviewViewportId;
+    zoom: BuilderPreviewZoomId;
+    mode: BuilderPreviewMode;
+    preview: MutableAppearance;
+    workspace: MutableAppearance;
+    initialPreviewTheme: ThemeSwitcherMode;
+  }>,
+): void {
+  const url = new URL(globalThis.location.href);
+  const set = (name: string, value: string, ordinary: string): void => {
+    if (value === ordinary) url.searchParams.delete(name);
+    else url.searchParams.set(name, value);
   };
+  set("previewWidth", input.viewport, "fluid");
+  set("previewZoom", input.zoom, "fit");
+  set("previewMode", input.mode, "edit");
+  set("previewTheme", input.preview.theme, input.initialPreviewTheme);
+  set(
+    "previewAccent",
+    String(input.preview.accentHue),
+    String(defaultAccentHue),
+  );
+  set("theme", input.workspace.theme, "system");
+  set("accent", String(input.workspace.accentHue), String(defaultAccentHue));
+  globalThis.history.replaceState(globalThis.history.state, "", url);
+}
+
+/**
+ * Builder adapter over the shared Appearance control/types. Comfort state is
+ * URL-local and never enters the accepted document or its history.
+ */
+export function useBuilderPreviewPreferences(
+  initialPreviewTheme: ThemeSwitcherMode,
+): BuilderPreviewPreferences {
+  const url = new URL(globalThis.location.href);
+  const [viewportId, setViewport] = useState<BuilderPreviewViewportId>(() =>
+    previewViewport(url.searchParams.get("previewWidth"))
+  );
+  const [zoomId, setZoom] = useState<BuilderPreviewZoomId>(() =>
+    previewZoom(url.searchParams.get("previewZoom"))
+  );
+  const [mode, setMode] = useState<BuilderPreviewMode>(() =>
+    previewMode(url.searchParams.get("previewMode"))
+  );
+  const [previewTheme, setPreviewTheme] = useState<ThemeSwitcherMode>(() =>
+    theme(url.searchParams.get("previewTheme"), initialPreviewTheme)
+  );
+  const [previewAccentHue, setPreviewAccentHue] = useState(() =>
+    accent(url.searchParams.get("previewAccent"))
+  );
+  const [measurement, setMeasurement] = useState<BuilderPreviewMeasurement>({
+    logicalWidth: 0,
+    zoomPercent: 100,
+    devicePixelRatio: 1,
+  });
+  const [resetViewRevision, setResetViewRevision] = useState(0);
+  const [interactionRevision, setInteractionRevision] = useState(0);
+  const workspace = useCatalogueAppearance(url);
+  const previewResolvedTheme = useCatalogueTerminalTheme(previewTheme);
+
+  useEffect(() => {
+    updateComfortUrl({
+      viewport: viewportId,
+      zoom: zoomId,
+      mode,
+      preview: { theme: previewTheme, accentHue: previewAccentHue },
+      workspace: { theme: workspace.theme, accentHue: workspace.accentHue },
+      initialPreviewTheme,
+    });
+  }, [
+    viewportId,
+    zoomId,
+    mode,
+    previewTheme,
+    previewAccentHue,
+    workspace.theme,
+    workspace.accentHue,
+    initialPreviewTheme,
+  ]);
+
+  const reportMeasurement = useCallback((next: BuilderPreviewMeasurement) => {
+    setMeasurement((current) =>
+      current.logicalWidth === next.logicalWidth &&
+        current.zoomPercent === next.zoomPercent &&
+        current.devicePixelRatio === next.devicePixelRatio
+        ? current
+        : next
+    );
+  }, []);
+
   return {
     viewport: builderPreviewViewports[viewportId],
-    appearance: { theme, accentHue },
-    style: { "--discern-accent-hue": accentHue } as CSSProperties,
+    zoomId,
+    mode,
+    previewAppearance: {
+      theme: previewTheme,
+      resolvedTheme: previewResolvedTheme,
+      accentHue: previewAccentHue,
+    },
+    workspaceAppearance: {
+      theme: workspace.theme,
+      accentHue: workspace.accentHue,
+    },
+    previewResolvedTheme,
+    workspaceResolvedTheme: workspace.terminalTheme,
+    workspaceStyle: workspace.style,
+    measurement,
+    resetViewRevision,
+    interactionRevision,
     setViewport,
-    setTheme: changeTheme,
-    setAccentHue,
+    setZoom,
+    setMode,
+    setPreviewTheme,
+    setPreviewAccentHue: (next) => setPreviewAccentHue(accent(String(next))),
+    setWorkspaceTheme: workspace.changeTheme,
+    setWorkspaceAccentHue: workspace.changeAccentHue,
+    reportMeasurement,
+    resetView() {
+      setViewport("fluid");
+      setZoom("fit");
+      setResetViewRevision((current) => current + 1);
+    },
+    resetInteractions() {
+      setInteractionRevision((current) => current + 1);
+    },
   };
 }
 
-/** Existing width, Theme, and accent controls owned by preview. */
+function AppearanceBoundary(
+  { label, appearance, resolvedTheme, onThemeChange, onAccentHueChange }:
+    Readonly<{
+      label: string;
+      appearance: MutableAppearance;
+      resolvedTheme: "light" | "dark";
+      onThemeChange: AppearanceControlProps["onThemeChange"];
+      onAccentHueChange: AppearanceControlProps["onAccentHueChange"];
+    }>,
+) {
+  return (
+    <div
+      className="discern-builder-appearance"
+      role="group"
+      aria-label={`${label} appearance`}
+      style={{ "--discern-accent-hue": appearance.accentHue } as CSSProperties}
+    >
+      <span>{label}</span>
+      <ThemeSwitcher
+        className="discern-builder-appearance__theme"
+        label={label === "Workspace"
+          ? "Builder colour theme"
+          : "Preview colour theme"}
+        mode={appearance.theme}
+        onModeChange={onThemeChange}
+        inputName={`discern-builder-${label.toLowerCase()}-theme`}
+      />
+      <AppearanceControl
+        theme={appearance.theme}
+        resolvedTheme={resolvedTheme}
+        accentHue={appearance.accentHue}
+        onThemeChange={onThemeChange}
+        onAccentHueChange={onAccentHueChange}
+      />
+    </div>
+  );
+}
+
+/** Exact viewport, scale, mode, and separated Appearance controls. */
 export function PreviewToolbarControls(
   { preferences }: Readonly<{ preferences: BuilderPreviewPreferences }>,
 ) {
+  const readout = preferences.measurement.logicalWidth === 0
+    ? "Measuring preview"
+    : `${preferences.measurement.logicalWidth}px · ${
+      preferences.zoomId === "fit" ? "Fit " : ""
+    }${preferences.measurement.zoomPercent}%`;
   return (
     <>
+      <div
+        className="discern-builder-mode"
+        role="group"
+        aria-label="Preview mode"
+      >
+        {(["edit", "interact"] as const).map((mode) => (
+          <button
+            key={mode}
+            type="button"
+            aria-pressed={preferences.mode === mode}
+            onClick={() => preferences.setMode(mode)}
+          >
+            {mode === "edit" ? "Edit" : "Interact"}
+          </button>
+        ))}
+      </div>
+      <span className="discern-builder-mode__consequence" role="status">
+        {preferences.mode === "edit"
+          ? "Edit selects; preview controls stay inert."
+          : "Interact runs local behaviour; external effects stay blocked."}
+      </span>
       <label className="discern-builder-width">
-        <span>Width</span>
+        <span>Viewport</span>
         <Select
+          aria-label="Preview width"
           value={preferences.viewport.id}
           onChange={(event) =>
             preferences.setViewport(
-              event.currentTarget.value as BuilderPreviewViewport["id"],
+              event.currentTarget.value as BuilderPreviewViewportId,
             )}
           options={Object.values(builderPreviewViewports).map((
             { id, label },
@@ -80,25 +320,51 @@ export function PreviewToolbarControls(
           }))}
         />
       </label>
-      <ThemeSwitcher
-        className="discern-builder-theme"
-        mode={preferences.appearance.theme}
-        onModeChange={preferences.setTheme}
-        label="Builder colour theme"
+      <div
+        className="discern-builder-zoom"
+        role="group"
+        aria-label="Preview zoom"
+      >
+        {(["fit", "50", "75", "100"] as const).map((zoom) => (
+          <button
+            key={zoom}
+            type="button"
+            aria-label={zoom === "fit" ? "Fit preview" : `${zoom}% preview`}
+            aria-pressed={preferences.zoomId === zoom}
+            onClick={() => preferences.setZoom(zoom)}
+          >
+            {zoom === "fit" ? "Fit" : `${zoom}%`}
+          </button>
+        ))}
+        <button
+          type="button"
+          aria-label="Reset preview view"
+          onClick={preferences.resetView}
+        >
+          Reset
+        </button>
+      </div>
+      <output
+        className="discern-builder-preview-readout"
+        data-discern-builder-preview-readout=""
+        aria-live="polite"
+      >
+        {readout}
+      </output>
+      <AppearanceBoundary
+        label="Workspace"
+        appearance={preferences.workspaceAppearance}
+        resolvedTheme={preferences.workspaceResolvedTheme}
+        onThemeChange={preferences.setWorkspaceTheme}
+        onAccentHueChange={preferences.setWorkspaceAccentHue}
       />
-      <label className="discern-builder-accent">
-        <span>Accent</span>
-        <input
-          type="range"
-          min="0"
-          max="360"
-          step="1"
-          value={preferences.appearance.accentHue}
-          onInput={(event) =>
-            preferences.setAccentHue(event.currentTarget.valueAsNumber)}
-          aria-label="Accent hue"
-        />
-      </label>
+      <AppearanceBoundary
+        label="Preview"
+        appearance={preferences.previewAppearance}
+        resolvedTheme={preferences.previewResolvedTheme}
+        onThemeChange={preferences.setPreviewTheme}
+        onAccentHueChange={preferences.setPreviewAccentHue}
+      />
     </>
   );
 }

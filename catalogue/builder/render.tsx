@@ -25,6 +25,11 @@ export interface RenderOptions {
     node: BuilderNode,
     props: Record<string, unknown>,
   ) => Record<string, unknown>;
+  /** Supply Catalogue-local witnesses for callbacks inert data cannot hold. */
+  readonly requiredCallback?: (
+    node: BuilderNode,
+    prop: string,
+  ) => (...args: readonly unknown[]) => void;
 }
 
 /** Literal text as React children: newlines become explicit line breaks. */
@@ -64,7 +69,8 @@ function renderAcceptedChild(
   const Component = componentBySlug(child.slug);
   const props: Record<string, unknown> = {};
   for (const required of requiredFunctionPropsBySlug.get(child.slug) ?? []) {
-    props[required.name] = noop;
+    props[required.name] = options.requiredCallback?.(child, required.name) ??
+      noop;
   }
   for (const [name, value] of Object.entries(child.props)) {
     if (value.kind === "slot") {

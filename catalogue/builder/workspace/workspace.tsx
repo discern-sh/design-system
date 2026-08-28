@@ -7,12 +7,10 @@ import { useBuilderFeedback } from "../inspector/use-feedback.ts";
 import {
   browserBuilderStorage,
   persistBuilderDocument,
-  persistBuilderTheme,
   restoreBuilderSession,
 } from "../persistence.ts";
 import { BuilderPreviewCanvas } from "../preview/canvas.tsx";
 import { useBuilderPreviewPreferences } from "../preview/controls.tsx";
-import { builderPreviewSnapshot } from "../preview/protocol.ts";
 import { documentPolicy } from "../registry-core.ts";
 import { useBuilderTreeController } from "../tree/controller.ts";
 import { BuilderLayers } from "../tree/layers.tsx";
@@ -38,8 +36,6 @@ export function BuilderWorkspace() {
   );
   const preview = useBuilderPreviewPreferences(
     restoredSession.theme,
-    builderStorage,
-    feedback.storageFailure,
   );
   const tree = useBuilderTreeController(
     store,
@@ -50,23 +46,6 @@ export function BuilderWorkspace() {
     () => preflightBuilderDocument(store.document),
     [store.document],
   );
-  const previewSnapshot = useMemo(
-    () =>
-      builderPreviewSnapshot({
-        document: store.document,
-        viewport: preview.viewport,
-        appearance: preview.appearance,
-        mode: "edit",
-        selectionId: tree.selection.id,
-      }),
-    [
-      store.document,
-      preview.viewport,
-      preview.appearance,
-      tree.selection.id,
-    ],
-  );
-
   useEffect(() => {
     feedback.persistence("saving", "Saving composition.");
     const result = persistBuilderDocument(
@@ -89,14 +68,8 @@ export function BuilderWorkspace() {
       store.document,
       documentPolicy,
     );
-    const savedTheme = persistBuilderTheme(
-      builderStorage,
-      preview.appearance.theme,
-    );
     if (!savedDocument.ok) {
       feedback.storageFailure(savedDocument.message);
-    } else if (!savedTheme.ok) {
-      feedback.storageFailure(savedTheme.message);
     } else {
       feedback.storageFailure(null);
       feedback.persistence("saved", "Composition saved.");
@@ -111,9 +84,9 @@ export function BuilderWorkspace() {
       className="discern-builder-shell"
       data-discern-root
       data-discern-builder-ready="true"
-      data-discern-theme={preview.appearance.theme}
+      data-discern-theme={preview.workspaceAppearance.theme}
       data-discern-builder-pane={activePane}
-      style={preview.style}
+      style={preview.workspaceStyle}
     >
       <BuilderToolbar
         store={store}
@@ -133,7 +106,12 @@ export function BuilderWorkspace() {
         tree={tree}
         onActive={() => setActivePane("palette")}
       />
-      <BuilderPreviewCanvas snapshot={previewSnapshot} tree={tree} />
+      <BuilderPreviewCanvas
+        document={store.document}
+        selectionId={tree.selection.id}
+        preferences={preview}
+        tree={tree}
+      />
       <BuilderInspector
         store={store}
         tree={tree}
