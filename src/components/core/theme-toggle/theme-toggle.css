@@ -11,6 +11,9 @@
     background: var(--discern-color-surface);
     color: var(--discern-color-ink-muted);
     cursor: pointer;
+    transition: border-color var(--discern-duration-fast), background
+      var(--discern-duration-fast), color var(--discern-duration-fast),
+      transform var(--discern-duration-fast);
   }
   .discern-theme-toggle--quiet {
     inline-size: 1.75rem;
@@ -18,17 +21,31 @@
     border-color: transparent;
     background: transparent;
   }
-  .discern-theme-toggle:hover {
+  .discern-theme-toggle:hover:not(:disabled) {
     border-color: var(--discern-color-accent-500);
     color: var(--discern-color-ink);
   }
-  .discern-theme-toggle--quiet:hover {
+  .discern-theme-toggle--quiet:hover:not(:disabled) {
     border-color: transparent;
+  }
+  .discern-theme-toggle:active:not(:disabled) {
+    background: var(--discern-color-accent-100);
+    transform: translateY(1px);
   }
   .discern-theme-toggle:focus-visible {
     outline: 2px solid var(--discern-color-accent-500);
     outline-offset: 2px;
     color: var(--discern-color-ink);
+  }
+  .discern-theme-toggle:disabled {
+    border-color: var(--discern-color-border);
+    background: var(--discern-color-surface-sunken);
+    color: var(--discern-color-ink-faint);
+    cursor: not-allowed;
+  }
+  .discern-theme-toggle--quiet:disabled {
+    border-color: transparent;
+    background: transparent;
   }
   .discern-theme-toggle__glyph {
     display: inline-flex;

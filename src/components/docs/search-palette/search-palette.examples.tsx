@@ -3,6 +3,7 @@ import {
   type ConformanceScenario,
   defineCatalogueExamples,
 } from "../../../../catalogue/conformance.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import { Button } from "../../core/button/button.tsx";
 import { Kbd } from "../kbd/kbd.tsx";
 import meta, { componentExampleVocabulary } from "./search-palette.meta.ts";
@@ -128,4 +129,79 @@ export const catalogueExamples = defineCatalogueExamples(
       selectors: [".discern-search-palette"],
     },
   }],
+);
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      id: "open-search",
+      label: "Open search",
+      example: "default",
+      category: "motion",
+      sequence: [
+        { action: "click", target: { role: "button", name: "Open search" } },
+        {
+          checkpoint: {
+            id: "search-palette-open",
+            label: "Open and focused",
+          },
+        },
+      ],
+      capture: { selectors: [".discern-search-palette"] },
+    },
+    {
+      id: "press-search-close",
+      label: "Close pointer contact",
+      example: "default",
+      category: "interaction",
+      sequence: [
+        { action: "click", target: { role: "button", name: "Open search" } },
+        {
+          action: "pointer-down",
+          target: { role: "button", name: "Close search" },
+        },
+        {
+          checkpoint: {
+            id: "search-close-pressed",
+            label: "Close pointer held",
+          },
+        },
+        {
+          action: "pointer-up",
+          target: { role: "button", name: "Close search" },
+        },
+      ],
+      capture: { selectors: [".discern-search-palette"] },
+    },
+    {
+      id: "press-search-result",
+      label: "Result pointer contact",
+      example: "default",
+      category: "interaction",
+      sequence: [
+        { action: "click", target: { role: "button", name: "Open search" } },
+        {
+          action: "pointer-down",
+          target: {
+            selector: '.discern-search-palette__result[href="#top"]',
+          },
+        },
+        {
+          checkpoint: {
+            id: "search-result-pressed",
+            label: "Result pointer held",
+          },
+        },
+        {
+          action: "pointer-up",
+          target: {
+            selector: '.discern-search-palette__result[href="#top"]',
+          },
+        },
+      ],
+      capture: { selectors: [".discern-search-palette"] },
+    },
+  ] as const,
 );

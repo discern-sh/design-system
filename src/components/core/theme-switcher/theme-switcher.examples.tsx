@@ -3,6 +3,7 @@ import {
   type ConformanceScenario,
   defineCatalogueExamples,
 } from "../../../../catalogue/conformance.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import meta, { componentExampleVocabulary } from "./theme-switcher.meta.ts";
 import { ThemeSwitcher } from "./theme-switcher.tsx";
 import type { ThemeSwitcherMode } from "./theme-switcher.tsx";
@@ -46,4 +47,35 @@ export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
   [{ id: "default", Example: ThemeSwitcherExamples }],
+);
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [{
+    id: "press-theme-option",
+    label: "Pointer contact",
+    example: "default",
+    category: "interaction",
+    sequence: [
+      {
+        action: "pointer-down",
+        target: {
+          selector: ".discern-theme-switcher__option:last-of-type span",
+        },
+      },
+      {
+        checkpoint: {
+          id: "theme-option-pressed",
+          label: "Pointer held",
+        },
+      },
+      {
+        action: "pointer-up",
+        target: {
+          selector: ".discern-theme-switcher__option:last-of-type span",
+        },
+      },
+    ],
+  }] as const,
 );

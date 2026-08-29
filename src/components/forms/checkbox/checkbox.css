@@ -24,6 +24,7 @@
     display: grid;
     flex: none;
     place-items: center;
+    pointer-events: none;
     inline-size: 18px;
     block-size: 18px;
     margin-block-start: 1px;
@@ -31,7 +32,8 @@
     border-radius: var(--discern-radius-xs);
     background: var(--discern-color-surface);
     transition: border-color var(--discern-duration-fast), background
-      var(--discern-duration-fast), box-shadow var(--discern-duration-fast);
+      var(--discern-duration-fast), box-shadow var(--discern-duration-fast),
+      transform var(--discern-duration-fast);
   }
   .discern-choice__control > span {
     inline-size: 8px;
@@ -53,14 +55,37 @@
       20%,
       transparent);
   }
-  .discern-choice input:disabled + .discern-choice__control,
+  @media (hover: hover) {
+    .discern-choice__label:hover input:not(:disabled) + .discern-choice__control {
+      border-color: var(--discern-color-accent-500);
+    }
+  }
+  .discern-choice__label:active input:not(:disabled) + .discern-choice__control {
+    transform: scale(0.92);
+  }
+  .discern-choice input[aria-invalid="true"]:not(:disabled) + .discern-choice__control,
+  fieldset[aria-invalid="true"] .discern-choice input:not(:disabled) + .discern-choice__control {
+    border-width: 2px;
+    border-color: var(--discern-color-danger);
+  }
+  .discern-choice input:disabled + .discern-choice__control {
+    border-color: var(--discern-color-border);
+    background: var(--discern-color-surface-sunken);
+  }
+  .discern-choice input:disabled:checked + .discern-choice__control {
+    background: var(--discern-color-ink-faint);
+  }
   .discern-choice__label:has(input:disabled) {
     cursor: not-allowed;
-    opacity: 0.5;
+    color: var(--discern-color-ink-muted);
   }
   .discern-choice__description {
     padding-inline-start: 28px;
-    color: var(--discern-color-ink-faint);
+    color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-xs);
+    line-height: var(--discern-leading-snug);
+  }
+  .discern-choice:has(input:disabled) .discern-choice__description {
+    color: var(--discern-color-ink-faint);
   }
 }

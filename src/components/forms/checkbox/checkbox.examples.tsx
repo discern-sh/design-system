@@ -1,4 +1,5 @@
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import meta, { componentExampleVocabulary } from "./checkbox.meta.ts";
 import { Checkbox } from "./checkbox.tsx";
 
@@ -75,6 +76,33 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "submitted", Example: SubmittedCheckboxState },
     { id: "cancelled", Example: CancelledCheckboxState },
   ],
+);
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [{
+    id: "press-checkbox",
+    label: "Pointer contact",
+    example: "default",
+    category: "interaction",
+    sequence: [
+      {
+        action: "pointer-down",
+        target: { selector: ".discern-choice__label" },
+      },
+      {
+        checkpoint: {
+          id: "checkbox-pressed",
+          label: "Pointer held",
+        },
+      },
+      {
+        action: "pointer-up",
+        target: { selector: ".discern-choice__label" },
+      },
+    ],
+  }] as const,
 );
 
 export default function CheckboxExamples() {

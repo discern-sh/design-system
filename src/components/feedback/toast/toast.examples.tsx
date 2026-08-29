@@ -3,6 +3,7 @@ import {
   type ConformanceScenario,
   defineCatalogueExamples,
 } from "../../../../catalogue/conformance.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import { ExampleIcon } from "../../../fixtures/example-icon.tsx";
 import meta, { componentExampleVocabulary } from "./toast.meta.ts";
 import { Toast } from "./toast.tsx";
@@ -58,6 +59,33 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "warning", Example: WarningToastState },
     { id: "danger", Example: DangerToastState },
   ],
+);
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [{
+    id: "press-dismiss",
+    label: "Dismiss pointer contact",
+    example: "danger",
+    category: "interaction",
+    sequence: [
+      {
+        action: "pointer-down",
+        target: { role: "button", name: "Dismiss notification" },
+      },
+      {
+        checkpoint: {
+          id: "toast-dismiss-pressed",
+          label: "Dismiss pointer held",
+        },
+      },
+      {
+        action: "pointer-up",
+        target: { role: "button", name: "Dismiss notification" },
+      },
+    ],
+  }] as const,
 );
 
 export default function ToastExamples() {

@@ -3,6 +3,7 @@ import {
   type ConformanceScenario,
   defineCatalogueExamples,
 } from "../../../../catalogue/conformance.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import meta, { componentExampleVocabulary } from "./theme-toggle.meta.ts";
 import { ThemeToggle } from "./theme-toggle.tsx";
 import type {
@@ -75,6 +76,33 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "quiet", Example: QuietExample },
     { id: "from-dark", Example: FromDarkExample },
   ],
+);
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [{
+    id: "press-theme-toggle",
+    label: "Pointer contact",
+    example: "default",
+    category: "interaction",
+    sequence: [
+      {
+        action: "pointer-down",
+        target: { role: "button", name: "Switch to the dark theme" },
+      },
+      {
+        checkpoint: {
+          id: "theme-toggle-pressed",
+          label: "Pointer held",
+        },
+      },
+      {
+        action: "pointer-up",
+        target: { role: "button", name: "Switch to the dark theme" },
+      },
+    ],
+  }] as const,
 );
 
 export default function ThemeToggleExamples() {

@@ -2,6 +2,7 @@ import { forwardRef, useId } from "react";
 import type { InputHTMLAttributes, ReactNode } from "react";
 import type { DiscernComponent } from "../../component-type.ts";
 import { classNames } from "../../class-names.ts";
+import type { CheckboxProps } from "../checkbox/checkbox.tsx";
 
 /** Props for the {@linkcode Radio} component. */
 export interface RadioProps
@@ -21,7 +22,7 @@ export const Radio: DiscernComponent<HTMLInputElement, RadioProps> = forwardRef<
     className,
     "aria-describedby": ariaDescribedBy,
     ...props
-  },
+  }: RadioProps & Pick<CheckboxProps, "label" | "description">,
   ref,
 ) {
   const generatedId = useId();

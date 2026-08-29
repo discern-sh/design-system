@@ -94,6 +94,28 @@ export const reviewPostures = defineComponentReviewPostures(
         { checkpoint: { id: "switch-changed", label: "Checked" } },
       ],
     },
+    {
+      id: "press-switch",
+      label: "Pointer contact",
+      example: "default",
+      category: "interaction",
+      sequence: [
+        {
+          action: "pointer-down",
+          target: { selector: ".discern-switch__track" },
+        },
+        {
+          checkpoint: {
+            id: "switch-pressed",
+            label: "Pointer held",
+          },
+        },
+        {
+          action: "pointer-up",
+          target: { selector: ".discern-switch__track" },
+        },
+      ],
+    },
   ] as const,
 );
 

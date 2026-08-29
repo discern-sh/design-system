@@ -17,6 +17,8 @@
     font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-xs);
     font-weight: 500;
+    transition: background var(--discern-duration-fast), color
+      var(--discern-duration-fast);
   }
   .discern-tabs__tab::after {
     position: absolute;
@@ -30,7 +32,11 @@
       var(--discern-duration-fast);
   }
   .discern-tabs__tab:hover {
+    background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink);
+  }
+  .discern-tabs__tab:active:not(:disabled) {
+    background: var(--discern-color-accent-100);
   }
   .discern-tabs__tab[aria-selected="true"] {
     color: var(--discern-color-ink);
@@ -45,8 +51,8 @@
     outline-offset: 3px;
   }
   .discern-tabs__tab:disabled {
+    color: var(--discern-color-ink-faint);
     cursor: not-allowed;
-    opacity: 0.4;
   }
   .discern-tabs__panel {
     padding-block-start: var(--discern-space-5);

@@ -1,4 +1,5 @@
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import meta, { componentExampleVocabulary } from "./radio.meta.ts";
 import { Radio } from "./radio.tsx";
 
@@ -104,6 +105,37 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "submitted", Example: SubmittedRadioState },
     { id: "cancelled", Example: CancelledRadioState },
   ],
+);
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [{
+    id: "press-radio",
+    label: "Pointer contact",
+    example: "default",
+    category: "interaction",
+    sequence: [
+      {
+        action: "pointer-down",
+        target: {
+          selector: '.discern-choice__label:has(input[value="alpha"])',
+        },
+      },
+      {
+        checkpoint: {
+          id: "radio-pressed",
+          label: "Pointer held",
+        },
+      },
+      {
+        action: "pointer-up",
+        target: {
+          selector: '.discern-choice__label:has(input[value="alpha"])',
+        },
+      },
+    ],
+  }] as const,
 );
 
 export default function RadioExamples() {

@@ -118,6 +118,28 @@ export const reviewPostures = defineComponentReviewPostures(
         },
       ],
     },
+    {
+      id: "press-tab",
+      label: "Tab pointer contact",
+      example: "default",
+      category: "interaction",
+      sequence: [
+        {
+          action: "pointer-down",
+          target: { role: "tab", name: "Details" },
+        },
+        {
+          checkpoint: {
+            id: "tabs-pointer-pressed",
+            label: "Pointer held",
+          },
+        },
+        {
+          action: "pointer-up",
+          target: { role: "tab", name: "Details" },
+        },
+      ],
+    },
   ] as const,
 );
 

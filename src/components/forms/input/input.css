@@ -27,9 +27,12 @@
       transparent);
   }
   .discern-control:disabled {
+    border-color: var(--discern-color-border);
     cursor: not-allowed;
     background: var(--discern-color-surface-sunken);
-    opacity: 0.62;
+    color: var(--discern-color-ink-muted);
+    opacity: 1;
+    -webkit-text-fill-color: var(--discern-color-ink-muted);
   }
   .discern-control[aria-invalid="true"] {
     border-color: var(--discern-color-danger);

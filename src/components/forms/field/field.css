@@ -16,7 +16,7 @@
     color: var(--discern-color-danger);
   }
   .discern-field__message {
-    color: var(--discern-color-ink-faint);
+    color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-xs);
     line-height: 1.45;
   }

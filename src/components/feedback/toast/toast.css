@@ -23,7 +23,8 @@
     box-shadow: var(--discern-shadow-pop);
     color: var(--discern-color-ink);
     pointer-events: auto;
-    font-size: var(--discern-font-size-xs);
+    font-size: var(--discern-font-size-sm);
+    line-height: var(--discern-leading-snug);
   }
   .discern-toast--success {
     --discern-toast-accent: var(--discern-color-success);
@@ -62,11 +63,20 @@
     color: var(--discern-color-ink-muted);
     cursor: pointer;
     font-size: 1.1rem;
+    transition: background var(--discern-duration-fast), color
+      var(--discern-duration-fast), transform var(--discern-duration-fast);
   }
-  .discern-toast__dismiss:hover,
-  .discern-toast__dismiss:focus-visible {
+  .discern-toast__dismiss:hover {
     background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink);
-    outline: none;
+  }
+  .discern-toast__dismiss:focus-visible {
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: 2px;
+    color: var(--discern-color-ink);
+  }
+  .discern-toast__dismiss:active {
+    background: var(--discern-color-accent-100);
+    transform: translateY(1px);
   }
 }

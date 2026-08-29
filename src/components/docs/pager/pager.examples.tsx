@@ -1,4 +1,5 @@
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import meta, { componentExampleVocabulary } from "./pager.meta.ts";
 import { Pager } from "./pager.tsx";
 
@@ -30,6 +31,33 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "default", Example: AdjacentPagesExample },
     { id: "next-only", Example: NextPageOnlyExample },
   ],
+);
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [{
+    id: "press-previous",
+    label: "Previous pointer contact",
+    example: "default",
+    category: "interaction",
+    sequence: [
+      {
+        action: "pointer-down",
+        target: { selector: ".discern-pager__link--previous" },
+      },
+      {
+        checkpoint: {
+          id: "pager-previous-pressed",
+          label: "Previous pointer held",
+        },
+      },
+      {
+        action: "pointer-up",
+        target: { selector: ".discern-pager__link--previous" },
+      },
+    ],
+  }] as const,
 );
 
 export default function PagerExamples() {

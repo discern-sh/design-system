@@ -169,6 +169,30 @@ export const reviewPostures = defineComponentReviewPostures(
       ],
       capture: { selectors: [":scope > .discern-button"] },
     },
+    {
+      id: "press-dialog-close",
+      label: "Close pointer contact",
+      example: "default",
+      category: "interaction",
+      sequence: [
+        openDefaultDialog,
+        {
+          action: "pointer-down",
+          target: { role: "button", name: "Close dialog" },
+        },
+        {
+          checkpoint: {
+            id: "dialog-close-pressed",
+            label: "Close pointer held",
+          },
+        },
+        {
+          action: "pointer-up",
+          target: { role: "button", name: "Close dialog" },
+        },
+      ],
+      capture: { selectors: [".discern-dialog__panel"] },
+    },
   ] as const,
 );
 

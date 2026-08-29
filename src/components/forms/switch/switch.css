@@ -20,8 +20,9 @@
   .discern-switch__description {
     display: block;
     margin-block-start: 3px;
-    color: var(--discern-color-ink-faint);
+    color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-xs);
+    line-height: var(--discern-leading-snug);
   }
   .discern-switch__track {
     --discern-focus-proxy: 1;
@@ -35,7 +36,8 @@
     border-radius: var(--discern-radius-pill);
     background: var(--discern-color-surface-sunken);
     transition: border-color var(--discern-duration-fast), background
-      var(--discern-duration-fast), box-shadow var(--discern-duration-fast);
+      var(--discern-duration-fast), box-shadow var(--discern-duration-fast),
+      transform var(--discern-duration-fast);
   }
   .discern-switch__track > span {
     inline-size: 16px;
@@ -59,8 +61,32 @@
       20%,
       transparent);
   }
+  @media (hover: hover) {
+    .discern-switch__label:hover input:not(:disabled) + .discern-switch__track {
+      border-color: var(--discern-color-accent-500);
+    }
+  }
+  .discern-switch__label:active input:not(:disabled) + .discern-switch__track {
+    transform: translateY(1px);
+  }
+  .discern-switch input[aria-invalid="true"]:not(:disabled) + .discern-switch__track {
+    border-width: 2px;
+    border-color: var(--discern-color-danger);
+  }
   .discern-switch__label:has(input:disabled) {
     cursor: not-allowed;
-    opacity: 0.5;
+  }
+  .discern-switch__label:has(input:disabled) .discern-switch__text {
+    color: var(--discern-color-ink-muted);
+  }
+  .discern-switch__label:has(input:disabled) .discern-switch__description {
+    color: var(--discern-color-ink-faint);
+  }
+  .discern-switch input:disabled + .discern-switch__track {
+    border-color: var(--discern-color-border);
+    background: var(--discern-color-surface-sunken);
+  }
+  .discern-switch input:disabled:checked + .discern-switch__track {
+    background: var(--discern-color-ink-faint);
   }
 }

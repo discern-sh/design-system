@@ -13,8 +13,9 @@
     font-size: var(--discern-font-size-xs);
     line-height: var(--discern-leading-tight);
     cursor: pointer;
-    transition: border-color var(--discern-duration-fast)
-      var(--discern-ease-out);
+    transition: border-color var(--discern-duration-fast), background
+      var(--discern-duration-fast), color var(--discern-duration-fast),
+      transform var(--discern-duration-fast);
   }
   .discern-copy-button:hover {
     border-color: var(--discern-color-accent-500);
@@ -24,6 +25,16 @@
     outline: 2px solid var(--discern-color-accent-500);
     outline-offset: 2px;
     color: var(--discern-color-ink);
+  }
+  .discern-copy-button:active:not(:disabled) {
+    background: var(--discern-color-accent-100);
+    transform: translateY(1px);
+  }
+  .discern-copy-button:disabled {
+    border-color: var(--discern-color-border);
+    background: var(--discern-color-surface-sunken);
+    color: var(--discern-color-ink-faint);
+    cursor: not-allowed;
   }
   .discern-copy-button__icon {
     display: inline-flex;

@@ -47,6 +47,9 @@
     outline: 2px solid var(--discern-color-accent-500);
     outline-offset: -2px;
   }
+  .discern-docs-nav ul a:active {
+    background: var(--discern-color-accent-200);
+  }
   .discern-docs-nav ul a[aria-current="page"] {
     border-inline-start-color: var(--discern-color-accent-600);
     background: var(--discern-color-accent-100);

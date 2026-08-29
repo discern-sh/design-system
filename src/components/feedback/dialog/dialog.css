@@ -28,6 +28,10 @@
     background: var(--discern-color-surface);
     box-shadow: var(--discern-shadow-pop);
   }
+  .discern-dialog[open] .discern-dialog__panel {
+    animation: discern-dialog-enter var(--discern-duration-medium)
+      var(--discern-ease-out) both;
+  }
   .discern-dialog__header {
     display: flex;
     align-items: flex-start;
@@ -51,12 +55,21 @@
     color: var(--discern-color-ink-muted);
     cursor: pointer;
     font-size: 1.4rem;
+    transition: background var(--discern-duration-fast), color
+      var(--discern-duration-fast), transform var(--discern-duration-fast);
   }
-  .discern-dialog__close:hover,
-  .discern-dialog__close:focus-visible {
+  .discern-dialog__close:hover {
     background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink);
-    outline: none;
+  }
+  .discern-dialog__close:focus-visible {
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: 2px;
+    color: var(--discern-color-ink);
+  }
+  .discern-dialog__close:active {
+    background: var(--discern-color-accent-100);
+    transform: translateY(1px);
   }
   .discern-dialog__body {
     margin-block-start: var(--discern-space-5);
@@ -67,5 +80,11 @@
     justify-content: flex-end;
     gap: var(--discern-space-3);
     margin-block-start: var(--discern-space-6);
+  }
+  @keyframes discern-dialog-enter {
+    from {
+      opacity: 0;
+      translate: 0 var(--discern-space-2);
+    }
   }
 }
