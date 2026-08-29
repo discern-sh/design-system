@@ -1,4 +1,9 @@
-import { assertEquals, assertStringIncludes, assertThrows } from "@std/assert";
+import {
+  assert,
+  assertEquals,
+  assertStringIncludes,
+  assertThrows,
+} from "@std/assert";
 import {
   type ConformanceTarget,
   defineCatalogueExamples,
@@ -84,7 +89,66 @@ Deno.test("every current and synthetic future Web example auto-enrols in settled
   );
 });
 
+Deno.test("settled review does not inherit capture regions that require preparation", () => {
+  const futureVocabulary = defineComponentExampleVocabulary(
+    meta,
+    [
+      { id: "default", label: "Default" },
+      { id: "latent-evidence", label: "Latent evidence" },
+    ] as const,
+  );
+  const futureExamples = defineCatalogueExamples(
+    meta,
+    futureVocabulary,
+    [
+      {
+        id: "default",
+        Example: () => null,
+        capture: { selectors: [".discern-future-sampler"] },
+      },
+      {
+        id: "latent-evidence",
+        Example: () => null,
+        capture: {
+          prepare: [{ action: "focus", selector: "[data-reveal]" }],
+          selectors: ["[data-latent-region]"],
+        },
+      },
+    ] as const,
+  );
+  const postures = defineComponentReviewPostures(
+    meta,
+    futureVocabulary,
+    [{
+      id: "reveal-latent-evidence",
+      label: "Reveal latent evidence",
+      example: "latent-evidence",
+      category: "interaction",
+      sequence: [
+        { action: "focus", target: { selector: "[data-reveal]" } },
+        { checkpoint: { id: "latent-visible", label: "Latent visible" } },
+      ],
+    }] as const,
+  );
+  const resolved = resolveComponentReviewPostures(
+    meta,
+    futureVocabulary,
+    futureExamples,
+    postures,
+  );
+
+  assertEquals(resolved[0]?.capture?.selectors, [
+    ".discern-future-sampler",
+  ]);
+  assertEquals(resolved[1]?.capture, undefined);
+  assertEquals(resolved[2]?.capture, {
+    selectors: ["[data-latent-region]"],
+  });
+});
+
 Deno.test("every current canonical Web example is present in generated settled review", () => {
+  let preparedCaptureExamples = 0;
+  const preparationDependentCaptures: string[] = [];
   for (const entry of registry) {
     for (const example of entry.webExamples) {
       const settled = entry.reviewPostures.filter((posture) =>
@@ -95,8 +159,25 @@ Deno.test("every current canonical Web example is present in generated settled r
         1,
         `${entry.meta.slug}/${example.id} must have exactly one generated settled posture`,
       );
+      if ((example.capture?.prepare?.length ?? 0) > 0) {
+        preparedCaptureExamples += 1;
+        if (settled[0]?.capture !== undefined) {
+          preparationDependentCaptures.push(
+            `${entry.meta.slug}/${example.id}`,
+          );
+        }
+      }
     }
   }
+  assert(
+    preparedCaptureExamples > 0,
+    "The registry needs a preparation-dependent capture witness",
+  );
+  assertEquals(
+    preparationDependentCaptures,
+    [],
+    "Settled review must not inherit preparation-dependent capture regions",
+  );
 });
 
 Deno.test("authored review posture composes canonical example, action, checkpoint, and capture vocabularies", () => {
@@ -201,6 +282,19 @@ Deno.test("malformed review postures fail closed with Component identity", () =>
         sequence: [{ checkpoint: { id: "unsafe", label: "Unsafe" } }],
         requirements: { appearance: "future-green" },
       }], "Appearance option"],
+      [[{
+        id: "duplicate-preparation",
+        label: "Duplicate preparation",
+        example: "default",
+        category: "interaction",
+        sequence: [{
+          checkpoint: { id: "prepared", label: "Prepared" },
+        }],
+        capture: {
+          prepare: [{ action: "focus", selector: "[data-reveal]" }],
+          selectors: ["[data-latent-region]"],
+        },
+      }], "capture preparation belongs in its review sequence"],
     ] as const
   ) {
     const error = assertThrows(() => define(postures as never), TypeError);

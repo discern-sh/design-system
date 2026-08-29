@@ -2,6 +2,8 @@ import { fromFileUrl } from "@std/path";
 import type { Browser, Page } from "playwright-core";
 import { catalogueAppearanceOptions } from "../../../catalogue/shell/appearance-options.ts";
 import { componentReviewPath } from "../../../catalogue/review/state.ts";
+import { registry } from "../../../catalogue/generated/registry.ts";
+import { componentGroups } from "../../../src/types/component-meta.ts";
 import {
   addPageFailureListeners,
   scanBrowserAccessibility,
@@ -179,7 +181,9 @@ function reviewUrl(
 
 async function loadReview(page: Page, url: string): Promise<void> {
   await page.goto(url, { waitUntil: "networkidle" });
-  await page.locator("html[data-discern-review-status]").waitFor();
+  await page.locator(
+    'html[data-discern-review-status="ready"], html[data-discern-review-status="error"]',
+  ).waitFor();
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
   const error = await page.locator("html").getAttribute(
     "data-discern-review-error",
@@ -205,6 +209,37 @@ export async function verifyComponentReviewInstrument(
   let accessibilityScans = 0;
   let items = 0;
   try {
+    for (const group of componentGroups) {
+      await loadReview(
+        page,
+        reviewUrl(origin, {
+          group,
+          width: "medium",
+          theme: "light",
+          appearance: "blue",
+          motion: "ordinary",
+          mode: "contact",
+          speed: "production",
+        }),
+      );
+      const expected = registry.filter((entry) => entry.meta.group === group)
+        .reduce((sum, entry) => sum + entry.webExamples.length, 0);
+      const actual = await page.locator("[data-discern-review-item]").count();
+      invariant(
+        actual === expected,
+        `${group} settled review enrolled ${actual} of ${expected} canonical Web examples`,
+      );
+      items += actual;
+    }
+    const expectedItems = registry.reduce(
+      (sum, entry) => sum + entry.webExamples.length,
+      0,
+    );
+    invariant(
+      items === expectedItems,
+      `Settled review enrolled ${items} of ${expectedItems} canonical Web examples`,
+    );
+
     await loadReview(
       page,
       reviewUrl(origin, {
@@ -218,9 +253,9 @@ export async function verifyComponentReviewInstrument(
       }),
     );
     const cards = page.locator("[data-discern-review-item]");
-    items = await cards.count();
+    const coreItems = await cards.count();
     invariant(
-      items > 0 && items < manifest.components,
+      coreItems > 0 && coreItems < manifest.components,
       "Group review mounted the full population",
     );
     const componentSlugs = await cards.evaluateAll((nodes) =>

@@ -7,6 +7,12 @@ import type { ComponentExampleCaptureDirective } from "./example-images/contract
 import { validateComponentExampleCaptureDirective } from "./example-images/contract.ts";
 import { catalogueAppearanceOption } from "./shell/appearance-options.ts";
 
+/** Review actions own preparation; capture metadata names only visible regions. */
+export type ComponentReviewCaptureDirective = Pick<
+  ComponentExampleCaptureDirective,
+  "selectors"
+>;
+
 /** Deliberately small categories used by stable review filtering. */
 export const reviewStateCategories = [
   "default",
@@ -52,8 +58,8 @@ export interface ComponentReviewPosture<ExampleId extends string = string> {
   readonly category: ReviewStateCategory;
   readonly sequence: readonly ReviewSequenceEntry[];
   readonly requirements?: ReviewPostureRequirements;
-  /** Reuses the exact Catalogue 3A capture-region authority. */
-  readonly capture?: ComponentExampleCaptureDirective;
+  /** Projects visible regions from the Catalogue 3A capture authority. */
+  readonly capture?: ComponentReviewCaptureDirective;
   /** Why an apparently relevant posture cannot be rendered truthfully. */
   readonly unavailableReason?: string;
 }
@@ -185,6 +191,11 @@ function validatePostures(
       ) throw new TypeError(`${identity} names an unknown Appearance option`);
     }
     if (posture.capture !== undefined) {
+      if ("prepare" in posture.capture) {
+        throw new TypeError(
+          `${identity} capture preparation belongs in its review sequence`,
+        );
+      }
       validateComponentExampleCaptureDirective(posture.capture, identity);
     }
   }
@@ -209,6 +220,20 @@ export function defineComponentReviewPostures<
   return postures;
 }
 
+function visibleReviewCapture(
+  capture: ComponentExampleCaptureDirective | undefined,
+): ComponentReviewCaptureDirective | undefined {
+  return capture === undefined ? undefined : { selectors: capture.selectors };
+}
+
+function settledReviewCapture(
+  capture: ComponentExampleCaptureDirective | undefined,
+): ComponentReviewCaptureDirective | undefined {
+  return (capture?.prepare?.length ?? 0) > 0
+    ? undefined
+    : visibleReviewCapture(capture);
+}
+
 /** Derive settled defaults for all Web examples, then append authored meaning. */
 export function resolveComponentReviewPostures(
   meta: ComponentMeta,
@@ -231,6 +256,7 @@ export function resolveComponentReviewPostures(
       );
     }
     const checkpoint = { id: `settled-${definition.id}`, label: "Settled" };
+    const capture = settledReviewCapture(implementation.capture);
     return {
       id: `settled-${definition.id}`,
       label: `${definition.label} settled`,
@@ -238,9 +264,7 @@ export function resolveComponentReviewPostures(
       category: "default",
       sequence: [{ checkpoint }],
       checkpoints: [checkpoint],
-      ...(implementation.capture === undefined
-        ? {}
-        : { capture: implementation.capture }),
+      ...(capture === undefined ? {} : { capture }),
     };
   });
   const allIds = new Set(defaults.map(({ id }) => id));
@@ -255,7 +279,7 @@ export function resolveComponentReviewPostures(
       allIds.add(posture.id);
       const { capture, ...rest } = posture;
       const resolvedCapture = capture ??
-        exampleById.get(posture.example)?.capture;
+        visibleReviewCapture(exampleById.get(posture.example)?.capture);
       return {
         ...rest,
         checkpoints: posture.sequence.flatMap((entry) =>
