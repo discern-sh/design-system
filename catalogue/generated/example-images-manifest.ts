@@ -3,7 +3,7 @@ import type { ComponentExampleImageManifest } from "../example-images/contract.t
 
 export const componentExampleImageManifest: ComponentExampleImageManifest = {
   "captureContractVersion": "2",
-  "sourceHash": "sha256:0587659dbbd20e00f833002a70be40a52366692752a769b07212473fee8ea2fc",
+  "sourceHash": "sha256:b64e6fc563c0931bc5ef22adb98cdf25ab8ad10bc6fcdb23865c70e09a8ee1cf",
   "entries": [
     {
       "slug": "icon",
@@ -39,9 +39,9 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "theme": "light",
       "assetPath": "catalogue/generated/example-images/button--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/button--default--light.png",
-      "width": 134,
+      "width": 506,
       "height": 40,
-      "contentHash": "sha256:acba000fe087ef469ce0ee5b0d5efa1f227b52ac0448b80b57c4e16f9f7f124e",
+      "contentHash": "sha256:ec8d08c10fd223245f6b1764d229f7c3a9451ca7fe85ae245f124df8c2e257cf",
       "captureContractVersion": "2"
     },
     {
@@ -52,9 +52,9 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "theme": "dark",
       "assetPath": "catalogue/generated/example-images/button--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/button--default--dark.png",
-      "width": 134,
+      "width": 506,
       "height": 40,
-      "contentHash": "sha256:074dee0dd9fa6109f1efbb3472f1364b00157666b6bf6ccab1440bf97db5e7cc",
+      "contentHash": "sha256:531ac9f5ed143768368626718d828a92692fad5db83c4fecf4bec0b7e9ce5c87",
       "captureContractVersion": "2"
     },
     {

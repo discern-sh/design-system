@@ -36,7 +36,17 @@ export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
   [
-    { id: "default", Example: PrimaryExample },
+    {
+      id: "default",
+      Example: PrimaryExample,
+      capture: {
+        selectors: [
+          "button.discern-button:not(:disabled)",
+          "a.discern-button",
+          "button.discern-button:disabled",
+        ],
+      },
+    },
     { id: "secondary", Example: SecondaryExample },
     { id: "ghost", Example: GhostExample },
     { id: "danger", Example: DangerExample },
