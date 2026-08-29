@@ -1,5 +1,10 @@
 import { assertEquals } from "@std/assert";
 import { fromFileUrl, join, relative } from "@std/path";
+import {
+  componentReviewInlineSize,
+  componentReviewResponsiveAllocation,
+  componentViewportLayoutPolicies,
+} from "../catalogue/review/responsive-ownership.ts";
 
 const PACKAGE_ROOT = fromFileUrl(new URL("..", import.meta.url));
 const COMPONENT_ROOT = join(PACKAGE_ROOT, "src", "components");
@@ -9,40 +14,12 @@ const COMPONENT_ROOT = join(PACKAGE_ROOT, "src", "components");
  * genuinely page/viewport-scale. Embedded layout belongs to an @container
  * query instead. Reasons keep each exception reviewable.
  */
-const viewportOwnedLayoutPolicies = new Map<string, string>([
-  [
-    "src/components/feedback/hover-card/hover-card.css",
-    "The promoted floating panel is constrained and inset against the viewport and top layer, not its trigger allocation.",
-  ],
-  [
-    "src/components/editorial/article-header/article-header.css",
-    "The publication opener composes optional lead media and its bounded inner grid as a page-scale relationship.",
-  ],
-  [
-    "src/components/editorial/article-layout/article-layout.css",
-    "The page reading shell owns the sticky global-header offset and the table-of-contents, body, and rail relationship.",
-  ],
-  [
-    "src/components/editorial/pull-quote/pull-quote.css",
-    "The public wide alignment deliberately escapes reading measure until the page viewport can no longer hold the breakout.",
-  ],
-  [
-    "src/components/editorial/related-content/related-content.css",
-    "The full-width continuation band owns a bounded multi-story grid whose contract is the surrounding page.",
-  ],
-  [
-    "src/components/marketing/site-header/site-header.css",
-    "The sticky full-site header owns the viewport relationship between its brand, primary navigation, and compact menu trigger.",
-  ],
-  [
-    "src/components/marketing/site-footer/site-footer.css",
-    "The full-site footer owns the page-wide relationship between its brand, navigation columns, and closing legal row.",
-  ],
-  [
-    "src/components/marketing/marketing-section/marketing-section.css",
-    "The broad storytelling section owns page-frame rhythm and its bounded heading-to-content relationship at viewport scale.",
-  ],
-]);
+const viewportOwnedLayoutPolicies = new Map<string, string>(
+  componentViewportLayoutPolicies.map(({ stylesheet, reason }) => [
+    stylesheet,
+    reason,
+  ]),
+);
 
 function viewportWidthQueries(css: string): readonly string[] {
   return [...css.matchAll(/@media\s*([^{}]+)\{/g)]
@@ -138,5 +115,35 @@ Deno.test("a synthetic future embedded Component cannot add a viewport layout qu
       ]]),
     ),
     [],
+  );
+});
+
+Deno.test("page-scale review allocation follows the page while embedded evidence stays local", () => {
+  assertEquals(componentReviewResponsiveAllocation("hover-card"), "local");
+  assertEquals(componentReviewResponsiveAllocation("future-grid"), "local");
+  assertEquals(componentReviewResponsiveAllocation("article-layout"), "page");
+  assertEquals(
+    componentReviewInlineSize({
+      slug: "future-grid",
+      requestedInlineSize: 390,
+      pageViewportWidth: 1440,
+    }),
+    390,
+  );
+  assertEquals(
+    componentReviewInlineSize({
+      slug: "article-layout",
+      requestedInlineSize: 390,
+      pageViewportWidth: 1440,
+    }),
+    1120,
+  );
+  assertEquals(
+    componentReviewInlineSize({
+      slug: "article-layout",
+      requestedInlineSize: 1120,
+      pageViewportWidth: 430,
+    }),
+    430,
   );
 });

@@ -2,6 +2,11 @@ import { fromFileUrl } from "@std/path";
 import type { Browser, Page } from "playwright-core";
 import { catalogueAppearanceOptions } from "../../../catalogue/shell/appearance-options.ts";
 import { componentReviewPath } from "../../../catalogue/review/state.ts";
+import { reviewInlineSizes } from "../../../catalogue/review-postures.ts";
+import {
+  componentReviewInlineSize,
+  componentViewportLayoutPolicies,
+} from "../../../catalogue/review/responsive-ownership.ts";
 import { registry } from "../../../catalogue/generated/registry.ts";
 import { componentGroups } from "../../../src/types/component-meta.ts";
 import {
@@ -449,6 +454,97 @@ export async function verifyComponentReviewInstrument(
         `${reviewCase.component} did not change geometry across its local-width class`,
       );
       responsiveCases += 3;
+    }
+
+    const pageResponsivePolicies = componentViewportLayoutPolicies.filter(
+      ({ reviewAllocation }) => reviewAllocation === "page",
+    );
+    const pageResponsiveGroups = [
+      ...new Set(pageResponsivePolicies.map(
+        ({ slug }) => {
+          const entry = registry.find((candidate) =>
+            candidate.meta.slug === slug
+          );
+          invariant(
+            entry !== undefined,
+            `${slug} page-responsive policy is stale`,
+          );
+          return entry.meta.group;
+        },
+      )),
+    ];
+    for (const pageWidth of [1440, 430] as const) {
+      const requestedWidth = pageWidth === 1440 ? "narrow" : "wide";
+      for (const group of pageResponsiveGroups) {
+        await withViewport(
+          page,
+          { width: pageWidth, height: 1000 },
+          async () => {
+            await loadReview(
+              page,
+              reviewUrl(origin, {
+                group,
+                width: requestedWidth,
+                theme: "light",
+                appearance: "blue",
+                motion: "reduced",
+                mode: "contact",
+                speed: "production",
+              }),
+            );
+            invariant(
+              await page.evaluate(() =>
+                document.documentElement.scrollWidth <=
+                  document.documentElement.clientWidth + 1
+              ),
+              `${group} page-responsive review moved the document sideways at ${pageWidth}px`,
+            );
+            for (
+              const policy of pageResponsivePolicies.filter(({ slug }) =>
+                registry.find((entry) => entry.meta.slug === slug)?.meta
+                  .group ===
+                  group
+              )
+            ) {
+              const card = page.locator(
+                `[data-discern-review-item^="${policy.slug}/"]`,
+              ).first();
+              invariant(
+                await card.count() === 1,
+                `${policy.slug} page-responsive review is not enrolled`,
+              );
+              const specimen = card.locator(
+                '[data-discern-review-responsive-allocation="page"]',
+              );
+              const bounds = await specimen.boundingBox();
+              const expectedWidth = componentReviewInlineSize({
+                slug: policy.slug,
+                requestedInlineSize: reviewInlineSizes[requestedWidth],
+                pageViewportWidth: pageWidth,
+              });
+              invariant(
+                bounds !== null &&
+                  Math.abs(bounds.width - expectedWidth) <= 0.5,
+                `${policy.slug} used the requested local width instead of its ${expectedWidth}px page allocation`,
+              );
+              const root = specimen.locator(`.discern-${policy.slug}`).first();
+              invariant(
+                await root.isVisible(),
+                `${policy.slug} page-responsive witness is not visible`,
+              );
+              const geometry = await root.evaluate((element) => ({
+                clientWidth: (element as HTMLElement).clientWidth,
+                scrollWidth: (element as HTMLElement).scrollWidth,
+              }));
+              invariant(
+                geometry.scrollWidth <= geometry.clientWidth + 1,
+                `${policy.slug} leaked ${geometry.scrollWidth}px through its ${geometry.clientWidth}px page allocation`,
+              );
+              responsiveCases += 1;
+            }
+          },
+        );
+      }
     }
     await loadReview(
       page,

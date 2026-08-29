@@ -16,6 +16,10 @@ import {
 import { captureRegionForReview, inspectReviewGeometry } from "./geometry.ts";
 import { reviewMotionStyle } from "./motion.ts";
 import {
+  componentReviewInlineSize,
+  componentReviewResponsiveAllocation,
+} from "./responsive-ownership.ts";
+import {
   componentReviewHref,
   parseComponentReviewState,
   reviewMotionModes,
@@ -174,6 +178,7 @@ function ReviewSpecimen({
   posture,
   checkpoint,
   width,
+  responsiveAllocation,
   theme,
   appearance,
   motion,
@@ -185,6 +190,7 @@ function ReviewSpecimen({
   readonly posture: ResolvedComponentReviewPosture;
   readonly checkpoint: string;
   readonly width: number;
+  readonly responsiveAllocation: "local" | "page";
   readonly theme: "light" | "dark";
   readonly appearance: string;
   readonly motion: "ordinary" | "reduced";
@@ -307,6 +313,7 @@ function ReviewSpecimen({
           data-discern-theme={theme}
           data-discern-review-motion={motion}
           data-discern-review-speed={speed}
+          data-discern-review-responsive-allocation={responsiveAllocation}
           data-discern-review-identity={identity}
           style={{
             inlineSize: `${width}px`,
@@ -318,7 +325,7 @@ function ReviewSpecimen({
         </div>
       </div>
       <footer className="discern-review-evidence">
-        <span>{width}px local</span>
+        <span>{width}px {responsiveAllocation}</span>
         <span>{theme}</span>
         <span>{option.label}</span>
         <span>{motion}</span>
@@ -418,7 +425,7 @@ function App() {
           data-discern-review-page-viewport
         >
           page viewport {viewport.width}×{viewport.height}px<br />
-          local specimen {width}px
+          embedded request {width}px
         </div>
       </header>
       <form
@@ -552,10 +559,18 @@ function App() {
           >
             {visibleCards.map(({ entry, posture, checkpoint }) => {
               const requirements = posture.requirements;
-              const effectiveWidth =
+              const requestedWidth =
                 typeof requirements?.inlineSize === "number"
                   ? requirements.inlineSize
                   : reviewInlineSizes[requirements?.inlineSize ?? parsed.width];
+              const responsiveAllocation = componentReviewResponsiveAllocation(
+                entry.meta.slug,
+              );
+              const effectiveWidth = componentReviewInlineSize({
+                slug: entry.meta.slug,
+                requestedInlineSize: requestedWidth,
+                pageViewportWidth: viewport.width,
+              });
               return (
                 <ReviewSpecimen
                   key={`${entry.meta.slug}/${posture.id}/${checkpoint}/${replay}`}
@@ -563,6 +578,7 @@ function App() {
                   posture={posture}
                   checkpoint={checkpoint}
                   width={effectiveWidth}
+                  responsiveAllocation={responsiveAllocation}
                   theme={requirements?.theme ?? parsed.theme}
                   appearance={requirements?.appearance ?? parsed.appearance}
                   motion={requirements?.reducedMotion
