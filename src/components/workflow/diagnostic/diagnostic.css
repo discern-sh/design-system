@@ -19,13 +19,19 @@
     gap: var(--discern-space-3);
     align-items: baseline;
   }
+  .discern-diagnostic__severity,
+  .discern-diagnostic__label,
+  .discern-diagnostic__coordinates,
+  .discern-diagnostic__evidence pre,
+  .discern-diagnostic__correction strong {
+    font-size: var(--discern-font-size-xs);
+  }
   .discern-diagnostic__severity {
     flex: none;
     padding: var(--discern-space-1) var(--discern-space-3);
     border-inline-start: 3px solid var(--discern-color-danger);
     background: var(--discern-color-danger-soft);
     color: var(--discern-color-danger);
-    font-size: var(--discern-font-size-xs);
     font-weight: var(--discern-font-weight-strong);
     line-height: var(--discern-leading-snug);
     text-transform: uppercase;
@@ -42,7 +48,6 @@
   }
   .discern-diagnostic__label {
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
     font-weight: var(--discern-font-weight-strong);
     line-height: var(--discern-leading-snug);
     text-transform: uppercase;
@@ -75,7 +80,6 @@
     flex: none;
     color: var(--discern-color-ink-muted);
     font-family: var(--discern-font-mono);
-    font-size: var(--discern-font-size-xs);
   }
   .discern-diagnostic__evidence pre {
     max-inline-size: 100%;
@@ -86,13 +90,8 @@
     background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink);
     font-family: var(--discern-font-mono);
-    font-size: var(--discern-font-size-xs);
     line-height: var(--discern-leading-body);
     white-space: pre;
-  }
-  .discern-diagnostic__evidence pre:focus-visible {
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: -2px;
   }
   .discern-diagnostic__evidence code {
     display: block;
@@ -116,9 +115,6 @@
     color: var(--discern-color-warning-deep);
     font-size: var(--discern-font-size-sm);
     line-height: var(--discern-leading-body);
-  }
-  .discern-diagnostic__correction strong {
-    font-size: var(--discern-font-size-xs);
   }
   @container discern-diagnostic (max-width: 30rem) {
     .discern-diagnostic__correction {

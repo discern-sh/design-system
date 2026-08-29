@@ -27,13 +27,17 @@
     grid-area: persona;
     min-inline-size: 0;
   }
+  .discern-fleet__branch,
+  .discern-fleet__drift,
+  .discern-fleet__meta {
+    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-xs);
+  }
   .discern-fleet__branch {
     grid-area: branch;
     overflow: hidden;
     min-inline-size: 8ch;
-    color: var(--discern-color-ink-muted);
     font-family: var(--discern-font-mono);
-    font-size: var(--discern-font-size-xs);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -44,15 +48,11 @@
   .discern-fleet__drift {
     grid-area: drift;
     justify-self: end;
-    color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
     white-space: nowrap;
   }
   .discern-fleet__meta {
     grid-area: meta;
     justify-self: end;
-    color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
     text-align: end;
   }
   @container discern-fleet (width < 40rem) {

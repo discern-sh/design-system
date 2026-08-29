@@ -10,7 +10,6 @@
     display: block;
     margin-block-end: var(--discern-space-4);
     color: var(--discern-color-ink);
-    font-size: var(--discern-font-size-xs);
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
@@ -47,7 +46,6 @@
   }
   .discern-table-of-contents a span {
     color: var(--discern-color-accent-700);
-    font-size: var(--discern-font-size-xs);
   }
   .discern-table-of-contents__item--nested a {
     grid-template-columns: minmax(0, 1fr);
@@ -60,7 +58,6 @@
     padding-block-start: var(--discern-space-4);
     border-block-start: 1px dashed var(--discern-color-border-strong);
     color: var(--discern-color-ink-faint);
-    font-size: var(--discern-font-size-xs);
   }
   @container discern-table-of-contents (max-width: 45rem) {
     .discern-table-of-contents ol {

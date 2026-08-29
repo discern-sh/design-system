@@ -31,7 +31,8 @@
   .discern-search-palette__field:focus-within {
     border-block-end-color: var(--discern-color-accent-500);
   }
-  .discern-search-palette__icon {
+  .discern-search-palette__icon,
+  .discern-search-palette__input::placeholder {
     color: var(--discern-color-ink-faint);
   }
   .discern-search-palette__input {
@@ -45,9 +46,6 @@
     font-size: var(--discern-font-size-md);
     outline: none;
   }
-  .discern-search-palette__input::placeholder {
-    color: var(--discern-color-ink-faint);
-  }
   .discern-search-palette__close {
     min-block-size: 2rem;
     padding: var(--discern-space-1) var(--discern-space-3);
@@ -57,17 +55,12 @@
     color: var(--discern-color-ink-muted);
     font: inherit;
     cursor: pointer;
-    transition: border-color var(--discern-duration-fast), background
-      var(--discern-duration-fast), color var(--discern-duration-fast),
-      transform var(--discern-duration-fast);
   }
   .discern-search-palette__close:hover {
     border-color: var(--discern-color-accent-500);
     color: var(--discern-color-ink);
   }
   .discern-search-palette__close:focus-visible {
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: 2px;
     color: var(--discern-color-ink);
   }
   .discern-search-palette__close:active {
@@ -94,15 +87,12 @@
     color: var(--discern-color-ink);
     text-decoration: none;
   }
-  .discern-search-palette__result:hover {
+  .discern-search-palette__result:is(:hover, :focus-visible) {
     background: var(--discern-color-accent-100);
     color: var(--discern-color-accent-700);
   }
   .discern-search-palette__result:focus-visible {
-    outline: 2px solid var(--discern-color-accent-500);
     outline-offset: -2px;
-    background: var(--discern-color-accent-100);
-    color: var(--discern-color-accent-700);
   }
   .discern-search-palette__result:active {
     background: var(--discern-color-accent-200);

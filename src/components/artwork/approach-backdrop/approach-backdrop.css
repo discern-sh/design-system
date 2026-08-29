@@ -50,21 +50,15 @@
    * dark for the rest of the phrase while the other eight take theirs. */
   @keyframes discern-approach-backdrop-attend {
     0%,
+    14%,
+    99%,
     100% {
       opacity: 0;
     }
 
-    4% {
-      opacity: var(--discern-backdrop-veil-4);
-    }
-
+    4%,
     9% {
       opacity: var(--discern-backdrop-veil-4);
-    }
-
-    14%,
-    99% {
-      opacity: 0;
     }
   }
 }

@@ -28,20 +28,11 @@
     cursor: pointer;
     font-size: 1rem;
     line-height: 1;
-    transition:
-      background var(--discern-duration-fast) var(--discern-ease-out),
-      color var(--discern-duration-fast) var(--discern-ease-out),
-      transform var(--discern-duration-fast) var(--discern-ease-out);
   }
-  .discern-tag__remove:hover {
-    background: var(--discern-color-border);
-    color: var(--discern-color-ink);
-  }
+  .discern-tag__remove:hover,
   .discern-tag__remove:focus-visible {
     background: var(--discern-color-border);
     color: var(--discern-color-ink);
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: 1px;
   }
   .discern-tag__remove:active {
     background: var(--discern-color-border-strong);

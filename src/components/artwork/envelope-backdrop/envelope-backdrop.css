@@ -39,17 +39,14 @@
    * and the crest reads as a point of light sliding along the curve. */
   @keyframes discern-envelope-backdrop-glance {
     0%,
-    2% {
+    2%,
+    11%,
+    100% {
       opacity: 0;
     }
 
     6% {
       opacity: var(--discern-backdrop-veil-4);
-    }
-
-    11%,
-    100% {
-      opacity: 0;
     }
   }
 }

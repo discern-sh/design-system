@@ -3,6 +3,7 @@ import { fromFileUrl, join, relative } from "@std/path";
 
 const PACKAGE_ROOT = fromFileUrl(new URL("..", import.meta.url));
 const COMPONENT_ROOT = join(PACKAGE_ROOT, "src", "components");
+const FOUNDATION_PATH = join(PACKAGE_ROOT, "src", "styles", "foundation.css");
 
 interface ScrollableRule {
   readonly selector: string;
@@ -98,6 +99,7 @@ function contentViewportViolations(
   relativeCssPath: string,
   css: string,
   componentSource: string,
+  sharedNamedViewportFocus = false,
 ): readonly string[] {
   const violations: string[] = [];
   const seen = new Set<string>();
@@ -119,7 +121,10 @@ function contentViewportViolations(
     if (!/\baria-(?:label|labelledby)=/.test(opening)) {
       violations.push(`${identity} has no accessible name`);
     }
-    if (!css.includes(`${selector}:focus-visible`)) {
+    const usesSharedFocus = sharedNamedViewportFocus &&
+      /\btabIndex=\{0\}/.test(opening) &&
+      /\brole="(?:group|region)"/.test(opening);
+    if (!css.includes(`${selector}:focus-visible`) && !usesSharedFocus) {
       violations.push(`${identity} has no visible focus treatment`);
     }
   }
@@ -147,6 +152,10 @@ async function componentDirectories(
 
 Deno.test("every Component-owned scrollable content body is a named keyboard viewport", async () => {
   const violations: string[] = [];
+  const foundation = await Deno.readTextFile(FOUNDATION_PATH);
+  const sharedNamedViewportFocus =
+    foundation.includes(':where([role="group"], [role="region"])') &&
+    foundation.includes('[tabindex="0"]:focus-visible');
   for (const directory of await componentDirectories(COMPONENT_ROOT)) {
     const slug = directory.split("/").at(-1);
     if (slug === undefined) continue;
@@ -168,6 +177,7 @@ Deno.test("every Component-owned scrollable content body is a named keyboard vie
         relative(PACKAGE_ROOT, cssPath),
         css,
         componentSource,
+        sharedNamedViewportFocus,
       ),
     );
   }
@@ -187,6 +197,7 @@ Deno.test("a synthetic future overflow owner cannot escape the content-focus gua
       "src/components/future/future-output/future-output.css",
       css,
       unfocusable,
+      true,
     ),
     [
       "src/components/future/future-output/future-output.css::.discern-future-output__body is not keyboard focusable",
@@ -201,12 +212,9 @@ Deno.test("a synthetic future overflow owner cannot escape the content-focus gua
   assertEquals(
     contentViewportViolations(
       "src/components/future/future-output/future-output.css",
-      `${css}
-        .discern-future-output__body:focus-visible {
-          outline: 2px solid var(--discern-color-accent-500);
-        }
-      `,
+      css,
       accessible,
+      true,
     ),
     [],
   );

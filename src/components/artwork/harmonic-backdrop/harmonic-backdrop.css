@@ -38,38 +38,28 @@
   }
 
   @keyframes discern-harmonic-backdrop-migrate {
-    0% {
-      transform: translate(
-        var(--discern-harmonic-backdrop-sx),
-        var(--discern-harmonic-backdrop-sy)
-      );
-    }
-    8% {
-      transform: translate(
-        var(--discern-harmonic-backdrop-sx),
-        var(--discern-harmonic-backdrop-sy)
-      );
-      animation-timing-function: var(--discern-backdrop-ease-settle);
-    }
-    25% {
-      transform: translate(0, 0);
-    }
-    38% {
-      transform: translate(0, 0);
-      animation-timing-function: var(--discern-backdrop-ease-drift);
-    }
+    0%,
     50% {
       transform: translate(
         var(--discern-harmonic-backdrop-sx),
         var(--discern-harmonic-backdrop-sy)
       );
     }
+    8%,
     58% {
       transform: translate(
         var(--discern-harmonic-backdrop-sx),
         var(--discern-harmonic-backdrop-sy)
       );
       animation-timing-function: var(--discern-backdrop-ease-settle);
+    }
+    25%,
+    100% {
+      transform: translate(0, 0);
+    }
+    38% {
+      transform: translate(0, 0);
+      animation-timing-function: var(--discern-backdrop-ease-drift);
     }
     75% {
       transform: translate(
@@ -83,9 +73,6 @@
         var(--discern-harmonic-backdrop-by)
       );
       animation-timing-function: var(--discern-backdrop-ease-settle);
-    }
-    100% {
-      transform: translate(0, 0);
     }
   }
 
@@ -104,21 +91,15 @@
 
   @keyframes discern-harmonic-backdrop-ink {
     0%,
-    8% {
-      opacity: var(--discern-backdrop-veil-2);
-    }
-    25%,
-    38% {
-      opacity: var(--discern-backdrop-veil-3);
-    }
+    8%,
     50%,
     58% {
       opacity: var(--discern-backdrop-veil-2);
     }
+    25%,
+    38%,
     75%,
-    88% {
-      opacity: var(--discern-backdrop-veil-3);
-    }
+    88%,
     100% {
       opacity: var(--discern-backdrop-veil-3);
     }

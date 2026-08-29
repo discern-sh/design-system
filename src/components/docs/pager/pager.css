@@ -15,9 +15,6 @@
     border-radius: var(--discern-radius-md);
     color: var(--discern-color-ink);
     text-decoration: none;
-    transition: border-color var(--discern-duration-fast), background
-      var(--discern-duration-fast), color var(--discern-duration-fast),
-      transform var(--discern-duration-fast);
   }
   .discern-pager__link--next {
     text-align: end;
@@ -25,10 +22,6 @@
   .discern-pager__link:hover {
     border-color: var(--discern-color-accent-500);
     color: var(--discern-color-accent-700);
-  }
-  .discern-pager__link:focus-visible {
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: 2px;
   }
   .discern-pager__link:active {
     background: var(--discern-color-accent-100);

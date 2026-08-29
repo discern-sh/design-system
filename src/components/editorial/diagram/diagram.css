@@ -29,7 +29,8 @@
     fill: var(--discern-color-surface);
     stroke: var(--discern-color-border-strong);
   }
-  .discern-diagram__node--decision {
+  .discern-diagram__node--decision,
+  .discern-diagram__node--focus {
     fill: var(--discern-color-surface);
     stroke: var(--discern-color-accent-500);
   }
@@ -37,14 +38,7 @@
     fill: var(--discern-color-surface);
     stroke: var(--discern-color-accent-700);
   }
-  .discern-diagram__node--end {
-    fill: var(--discern-color-surface);
-    stroke: var(--discern-color-success);
-  }
-  .discern-diagram__node--focus {
-    fill: var(--discern-color-surface);
-    stroke: var(--discern-color-accent-500);
-  }
+  .discern-diagram__node--end,
   .discern-diagram__node--success {
     fill: var(--discern-color-surface);
     stroke: var(--discern-color-success);
@@ -72,7 +66,8 @@
     fill: var(--discern-color-ink-muted);
     font-family: var(--discern-font-mono);
   }
-  .discern-diagram__text--connector-label {
+  .discern-diagram__text--connector-label,
+  .discern-diagram__arrowhead--primary {
     fill: var(--discern-color-ink-muted);
   }
   .discern-diagram__connector {
@@ -92,9 +87,6 @@
   }
   .discern-diagram__connector--primary {
     stroke: var(--discern-color-ink-muted);
-  }
-  .discern-diagram__arrowhead--primary {
-    fill: var(--discern-color-ink-muted);
   }
   .discern-diagram__connector--secondary {
     stroke: var(--discern-color-ink-faint);

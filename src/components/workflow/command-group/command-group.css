@@ -4,10 +4,13 @@
     gap: var(--discern-space-4);
     color: var(--discern-color-ink);
   }
-  .discern-command-group__title {
-    color: var(--discern-color-ink);
+  .discern-command-group__title,
+  .discern-command-group__label {
     font-family: var(--discern-font-ui);
     font-feature-settings: var(--discern-font-features-ui);
+  }
+
+  .discern-command-group__title {
     font-size: var(--discern-font-size-md);
     font-weight: var(--discern-font-weight-strong);
     line-height: var(--discern-leading-snug);
@@ -25,8 +28,6 @@
   }
   .discern-command-group__label {
     color: var(--discern-color-ink-muted);
-    font-family: var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-xs);
     font-weight: var(--discern-font-weight-strong);
     line-height: var(--discern-leading-snug);

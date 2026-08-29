@@ -13,8 +13,14 @@
     margin-block-end: 0;
   }
 
-  .discern-list__item {
+  .discern-list__item,
+  .discern-list__content,
+  .discern-list__blocks,
+  .discern-list__block {
     min-inline-size: 0;
+  }
+
+  .discern-list__item {
     padding-inline-start: var(--discern-space-1);
   }
 
@@ -34,7 +40,6 @@
     display: inline-flex;
     gap: var(--discern-space-2);
     align-items: baseline;
-    min-inline-size: 0;
   }
 
   .discern-list__item--task {
@@ -53,17 +58,12 @@
   .discern-list__blocks {
     display: grid;
     gap: var(--discern-space-2);
-    min-inline-size: 0;
     margin-block-start: var(--discern-space-2);
   }
 
   .discern-list--loose > .discern-list__item > .discern-list__blocks {
     gap: var(--discern-space-4);
     margin-block-start: var(--discern-space-4);
-  }
-
-  .discern-list__block {
-    min-inline-size: 0;
   }
 
   .discern-list__block > :where(p, ul, ol, blockquote, pre, .discern-list) {

@@ -17,12 +17,15 @@
     gap: var(--discern-space-2);
     min-inline-size: 0;
   }
+  .discern-procedure-step__title,
+  .discern-procedure-step__slot-label {
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+  }
+
   .discern-procedure-step__title {
     min-inline-size: 0;
     margin: 0;
-    color: var(--discern-color-ink);
-    font-family: var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-lg);
     font-weight: var(--discern-font-weight-strong);
     line-height: var(--discern-leading-snug);
@@ -61,9 +64,6 @@
   }
   .discern-procedure-step__slot-label {
     min-inline-size: 0;
-    color: var(--discern-color-ink);
-    font-family: var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-xs);
     font-weight: var(--discern-font-weight-strong);
     line-height: var(--discern-leading-body);

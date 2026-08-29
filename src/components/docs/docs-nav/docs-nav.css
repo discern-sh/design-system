@@ -36,24 +36,19 @@
     text-decoration: none;
     transform: translateX(-1px);
   }
-  .discern-docs-nav ul a:hover,
-  .discern-docs-nav ul a:focus-visible {
+  .discern-docs-nav ul a:is(:hover, :focus-visible, [aria-current="page"]) {
     border-inline-start-color: var(--discern-color-accent-600);
     background: var(--discern-color-accent-100);
     color: var(--discern-color-ink);
-    outline: none;
   }
   .discern-docs-nav ul a:focus-visible {
-    outline: 2px solid var(--discern-color-accent-500);
     outline-offset: -2px;
   }
   .discern-docs-nav ul a:active {
     background: var(--discern-color-accent-200);
   }
   .discern-docs-nav ul a[aria-current="page"] {
-    border-inline-start-color: var(--discern-color-accent-600);
     background: var(--discern-color-accent-100);
-    color: var(--discern-color-ink);
     font-weight: var(--discern-font-weight-strong);
   }
 }

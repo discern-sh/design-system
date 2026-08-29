@@ -13,17 +13,12 @@
     font-size: var(--discern-font-size-xs);
     line-height: var(--discern-leading-tight);
     cursor: pointer;
-    transition: border-color var(--discern-duration-fast), background
-      var(--discern-duration-fast), color var(--discern-duration-fast),
-      transform var(--discern-duration-fast);
   }
   .discern-copy-button:hover {
     border-color: var(--discern-color-accent-500);
     color: var(--discern-color-ink);
   }
   .discern-copy-button:focus-visible {
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: 2px;
     color: var(--discern-color-ink);
   }
   .discern-copy-button:active:not(:disabled) {

@@ -11,9 +11,6 @@
     background: var(--discern-color-surface);
     color: var(--discern-color-ink-muted);
     cursor: pointer;
-    transition: border-color var(--discern-duration-fast), background
-      var(--discern-duration-fast), color var(--discern-duration-fast),
-      transform var(--discern-duration-fast);
   }
   .discern-theme-toggle--quiet {
     inline-size: 1.75rem;
@@ -33,8 +30,6 @@
     transform: translateY(1px);
   }
   .discern-theme-toggle:focus-visible {
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: 2px;
     color: var(--discern-color-ink);
   }
   .discern-theme-toggle:disabled {

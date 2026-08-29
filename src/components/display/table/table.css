@@ -7,10 +7,6 @@
     font-feature-settings: var(--discern-font-features-ui);
     scrollbar-width: thin;
   }
-  .discern-table:focus-visible {
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: -2px;
-  }
   .discern-table table {
     inline-size: 100%;
     border-collapse: collapse;
@@ -19,7 +15,6 @@
   .discern-table caption {
     margin-block-end: var(--discern-space-2);
     color: var(--discern-color-ink);
-    font-size: var(--discern-font-size-sm);
     font-weight: var(--discern-font-weight-strong);
     text-align: start;
   }

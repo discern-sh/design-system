@@ -18,10 +18,15 @@
     align-items: end;
     margin-block-end: var(--discern-space-8);
   }
-  .discern-related-content__inner > header > span {
-    color: var(--discern-color-accent-700);
+  .discern-related-content__inner > header > span,
+  .discern-related-content article > span,
+  .discern-related-content article footer {
     font-family: var(--discern-font-ui);
     font-feature-settings: var(--discern-font-features-ui);
+  }
+  .discern-related-content__inner > header > span,
+  .discern-related-content article > span {
+    color: var(--discern-color-accent-700);
     font-size: var(--discern-font-size-xs);
     font-weight: var(--discern-font-weight-strong);
   }
@@ -43,13 +48,6 @@
   }
   .discern-related-content article + article {
     border-inline-start: 1px solid var(--discern-color-border-strong);
-  }
-  .discern-related-content article > span {
-    color: var(--discern-color-accent-700);
-    font-family: var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
-    font-size: var(--discern-font-size-xs);
-    font-weight: var(--discern-font-weight-strong);
   }
   .discern-related-content article h3 {
     margin-block: var(--discern-space-5) var(--discern-space-4);
@@ -78,8 +76,6 @@
     margin-block-start: auto;
     padding-block-start: var(--discern-space-6);
     color: var(--discern-color-ink-faint);
-    font-family: var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-xs);
   }
   .discern-related-content article footer > span:last-child {
@@ -87,9 +83,7 @@
     font-weight: var(--discern-font-weight-strong);
   }
   @media (max-width: 760px) {
-    .discern-related-content__inner > header {
-      grid-template-columns: 1fr;
-    }
+    .discern-related-content__inner > header,
     .discern-related-content__grid {
       grid-template-columns: 1fr;
     }

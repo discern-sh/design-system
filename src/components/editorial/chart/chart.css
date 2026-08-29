@@ -20,22 +20,34 @@
   .discern-chart__canvas {
     fill: var(--discern-color-canvas);
   }
-  .discern-chart__mark--series-1 {
+  .discern-chart__mark--series-1,
+  .discern-chart__points--series-1,
+  .discern-chart__area--series-1 {
     fill: var(--discern-color-series-1);
   }
-  .discern-chart__mark--series-2 {
+  .discern-chart__mark--series-2,
+  .discern-chart__points--series-2,
+  .discern-chart__area--series-2 {
     fill: var(--discern-color-series-2);
   }
-  .discern-chart__mark--series-3 {
+  .discern-chart__mark--series-3,
+  .discern-chart__points--series-3,
+  .discern-chart__area--series-3 {
     fill: var(--discern-color-series-3);
   }
-  .discern-chart__mark--series-4 {
+  .discern-chart__mark--series-4,
+  .discern-chart__points--series-4,
+  .discern-chart__area--series-4 {
     fill: var(--discern-color-series-4);
   }
-  .discern-chart__mark--series-5 {
+  .discern-chart__mark--series-5,
+  .discern-chart__points--series-5,
+  .discern-chart__area--series-5 {
     fill: var(--discern-color-series-5);
   }
-  .discern-chart__mark--series-6 {
+  .discern-chart__mark--series-6,
+  .discern-chart__points--series-6,
+  .discern-chart__area--series-6 {
     fill: var(--discern-color-series-6);
   }
   .discern-chart__mark--ramp-1 {
@@ -73,42 +85,6 @@
   }
   .discern-chart__path--series-6 {
     stroke: var(--discern-color-series-6);
-  }
-  .discern-chart__points--series-1 {
-    fill: var(--discern-color-series-1);
-  }
-  .discern-chart__points--series-2 {
-    fill: var(--discern-color-series-2);
-  }
-  .discern-chart__points--series-3 {
-    fill: var(--discern-color-series-3);
-  }
-  .discern-chart__points--series-4 {
-    fill: var(--discern-color-series-4);
-  }
-  .discern-chart__points--series-5 {
-    fill: var(--discern-color-series-5);
-  }
-  .discern-chart__points--series-6 {
-    fill: var(--discern-color-series-6);
-  }
-  .discern-chart__area--series-1 {
-    fill: var(--discern-color-series-1);
-  }
-  .discern-chart__area--series-2 {
-    fill: var(--discern-color-series-2);
-  }
-  .discern-chart__area--series-3 {
-    fill: var(--discern-color-series-3);
-  }
-  .discern-chart__area--series-4 {
-    fill: var(--discern-color-series-4);
-  }
-  .discern-chart__area--series-5 {
-    fill: var(--discern-color-series-5);
-  }
-  .discern-chart__area--series-6 {
-    fill: var(--discern-color-series-6);
   }
   .discern-chart__axis {
     stroke: var(--discern-color-ink-faint);

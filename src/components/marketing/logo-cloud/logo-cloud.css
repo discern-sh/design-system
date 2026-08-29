@@ -6,11 +6,15 @@
     margin-inline: auto;
     padding-block: var(--discern-space-10);
   }
+  .discern-logo-cloud__label,
+  .discern-logo-cloud__list li {
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+  }
+
   .discern-logo-cloud__label {
     margin: 0 0 var(--discern-space-6);
     color: var(--discern-color-ink-faint);
-    font-family: var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-xs);
     text-align: center;
   }
@@ -33,8 +37,6 @@
     min-height: 5rem;
     padding: var(--discern-space-4);
     color: var(--discern-color-ink-muted);
-    font-family: var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-sm);
     font-weight: var(--discern-font-weight-strong);
     text-align: center;

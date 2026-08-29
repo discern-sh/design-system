@@ -18,8 +18,6 @@
     color: var(--discern-color-ink);
     cursor: pointer;
     list-style: none;
-    transition: background var(--discern-duration-fast)
-      var(--discern-ease-out);
   }
   .discern-raw-output__summary::-webkit-details-marker {
     display: none;
@@ -71,10 +69,6 @@
     font-size: var(--discern-font-size-xs);
     line-height: var(--discern-leading-body);
     white-space: pre;
-  }
-  .discern-raw-output__content:focus-visible {
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: -2px;
   }
   .discern-raw-output__content code {
     display: block;

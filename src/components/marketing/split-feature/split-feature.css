@@ -21,14 +21,19 @@
   .discern-split-feature--reverse .discern-split-feature__content {
     order: 2;
   }
-  .discern-split-feature__content {
+  .discern-split-feature__content,
+  .discern-split-feature__media {
     min-width: 0;
   }
+  .discern-split-feature__eyebrow,
+  .discern-split-feature__points strong {
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+  }
+
   .discern-split-feature__eyebrow {
     margin-block-end: var(--discern-space-3);
     color: var(--discern-color-accent-700);
-    font-family: var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-xs);
     font-weight: var(--discern-font-weight-strong);
   }
@@ -70,8 +75,6 @@
     display: block;
   }
   .discern-split-feature__points strong {
-    font-family: var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-sm);
   }
   .discern-split-feature__points li span span {
@@ -84,9 +87,6 @@
     flex-wrap: wrap;
     gap: var(--discern-space-3);
     margin-block-start: var(--discern-space-8);
-  }
-  .discern-split-feature__media {
-    min-width: 0;
   }
   @container discern-split-feature (max-width: 820px) {
     .discern-split-feature__inner {

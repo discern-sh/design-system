@@ -5,10 +5,6 @@
     font-style: inherit;
     cursor: help;
   }
-  .discern-glossary-term__trigger:focus-visible {
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: 2px;
-  }
   .discern-glossary-term__card {
     display: grid;
     gap: var(--discern-space-2);

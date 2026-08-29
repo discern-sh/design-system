@@ -22,9 +22,12 @@
   .discern-standard-meter__header strong {
     font-size: var(--discern-font-size-sm);
   }
+  .discern-standard-meter__trend,
+  .discern-standard-meter__facts {
+    font-size: var(--discern-font-size-xs);
+  }
   .discern-standard-meter__trend {
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
     text-transform: capitalize;
   }
   .discern-standard-meter__trend[data-discern-state="improving"] {
@@ -48,11 +51,9 @@
   }
   .discern-standard-meter__facts dt {
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
   }
   .discern-standard-meter__facts dd {
     margin: 0;
-    font-size: var(--discern-font-size-xs);
     line-height: var(--discern-leading-body);
   }
   .discern-standard-meter__facts > div:not(:first-child) dd {

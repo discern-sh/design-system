@@ -31,9 +31,8 @@
     border: 1.5px solid var(--discern-color-border-strong);
     border-radius: var(--discern-radius-xs);
     background: var(--discern-color-surface);
-    transition: border-color var(--discern-duration-fast), background
-      var(--discern-duration-fast), box-shadow var(--discern-duration-fast),
-      transform var(--discern-duration-fast);
+    transition-property: background, border-color, box-shadow, transform;
+    transition-duration: var(--discern-duration-fast);
   }
   .discern-choice__control > span {
     inline-size: 8px;

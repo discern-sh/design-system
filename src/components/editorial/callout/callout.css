@@ -26,6 +26,13 @@
     --discern-callout-fill: var(--discern-color-success-soft);
     --discern-callout-text: var(--discern-color-success-deep);
   }
+  .discern-callout__icon,
+  .discern-callout__eyebrow,
+  .discern-callout h3 {
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+  }
+
   .discern-callout__icon {
     display: grid;
     place-items: center;
@@ -34,23 +41,17 @@
     border: 1px solid var(--discern-callout-edge);
     border-radius: 50%;
     color: var(--discern-callout-text);
-    font-family: var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-xs);
   }
   .discern-callout__eyebrow {
     display: block;
     margin-block-end: var(--discern-space-1);
     color: var(--discern-callout-text);
-    font-family: var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-xs);
     font-weight: var(--discern-font-weight-strong);
   }
   .discern-callout h3 {
     margin-block-end: var(--discern-space-2);
-    font-family: var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-sm);
   }
   .discern-callout__body {

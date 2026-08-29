@@ -25,31 +25,20 @@
     vertical-align: baseline;
     white-space: nowrap;
   }
-  a.discern-mention {
-    transition:
-      background var(--discern-duration-fast) var(--discern-ease-out),
-      border-color var(--discern-duration-fast) var(--discern-ease-out),
-      color var(--discern-duration-fast) var(--discern-ease-out),
-      transform var(--discern-duration-fast) var(--discern-ease-out);
-  }
   a.discern-mention .discern-mention__name {
     text-decoration: underline;
     text-decoration-color: color-mix(in oklab, currentColor 45%, transparent);
     text-underline-offset: 0.16em;
   }
-  a.discern-mention:hover {
-    border-color: var(--discern-color-accent-400);
+  a.discern-mention:is(:hover, :active) {
     background: var(--discern-color-accent-200);
     color: var(--discern-color-accent-800);
   }
-  a.discern-mention:focus-visible {
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: 1px;
+  a.discern-mention:hover {
+    border-color: var(--discern-color-accent-400);
   }
   a.discern-mention:active {
     border-color: var(--discern-color-accent-500);
-    background: var(--discern-color-accent-200);
-    color: var(--discern-color-accent-800);
     transform: translateY(1px);
   }
   .discern-mention__sigil {

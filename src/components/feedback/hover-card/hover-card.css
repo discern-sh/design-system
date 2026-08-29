@@ -10,9 +10,6 @@
   .discern-hover-card--width-sm {
     --discern-hover-card-width: 16rem;
   }
-  .discern-hover-card--width-md {
-    --discern-hover-card-width: 22rem;
-  }
   .discern-hover-card--width-lg {
     --discern-hover-card-width: 30rem;
   }
@@ -69,19 +66,16 @@
   .discern-hover-card--align-end .discern-hover-card__panel {
     inset-inline-end: 0;
   }
-  .discern-hover-card:hover .discern-hover-card__panel,
-  .discern-hover-card:focus-within .discern-hover-card__panel {
+  .discern-hover-card:is(:hover, :focus-within) .discern-hover-card__panel {
     opacity: 1;
     pointer-events: auto;
     visibility: visible;
     transition-delay: 0s;
   }
-  .discern-hover-card--align-center:hover .discern-hover-card__panel,
-  .discern-hover-card--align-center:focus-within .discern-hover-card__panel {
+  .discern-hover-card--align-center:is(:hover, :focus-within) .discern-hover-card__panel {
     translate: -50% 0;
   }
-  .discern-hover-card:not(.discern-hover-card--align-center):hover .discern-hover-card__panel,
-  .discern-hover-card:not(.discern-hover-card--align-center):focus-within .discern-hover-card__panel {
+  .discern-hover-card:not(.discern-hover-card--align-center):is(:hover, :focus-within) .discern-hover-card__panel {
     translate: 0 0;
   }
   .discern-hover-card__panel::before {
@@ -135,8 +129,7 @@
       inset-block: auto var(--discern-space-4);
       translate: 0 var(--discern-space-1);
     }
-    .discern-hover-card--align-center:hover .discern-hover-card__panel,
-    .discern-hover-card--align-center:focus-within .discern-hover-card__panel {
+    .discern-hover-card--align-center:is(:hover, :focus-within) .discern-hover-card__panel {
       translate: 0 0;
     }
     .discern-hover-card__panel::before {

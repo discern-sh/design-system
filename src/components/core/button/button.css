@@ -2,11 +2,9 @@
   .discern-button {
     --discern-button-fill: var(--discern-color-accent-100);
     --discern-button-fill-hover: var(--discern-color-accent-200);
-    --discern-button-border: var(--discern-color-accent-600);
     --discern-button-border: light-dark(var(--discern-color-accent-600),
       var(--discern-color-accent-500));
     --discern-button-text: var(--discern-color-accent-800);
-    --discern-button-shadow: var(--discern-color-accent-600);
     --discern-button-shadow: light-dark(var(--discern-color-accent-600),
       var(--discern-shadow-color));
     display: inline-flex;
@@ -27,8 +25,8 @@
     font-weight: 600;
     line-height: 1;
     text-decoration: none;
-    transition: background var(--discern-duration-fast), box-shadow
-      var(--discern-duration-fast), transform var(--discern-duration-fast);
+    transition-property: background, box-shadow, transform;
+    transition-duration: var(--discern-duration-fast);
   }
   .discern-button:hover {
     background: var(--discern-button-fill-hover);
@@ -76,7 +74,6 @@
     min-block-size: 32px;
     padding-inline: var(--discern-space-3);
     font-size: var(--discern-font-size-xs);
-    box-shadow: 2px 2px 0 var(--discern-button-shadow);
   }
   .discern-button--lg {
     min-block-size: 48px;

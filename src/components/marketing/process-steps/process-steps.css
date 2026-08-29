@@ -16,11 +16,17 @@
     margin-block-end: var(--discern-space-12);
   }
   .discern-process-steps__eyebrow,
+  .discern-process-steps__step-eyebrow,
+  .discern-process-steps__content h3,
+  .discern-process-steps__detail {
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+  }
+
+  .discern-process-steps__eyebrow,
   .discern-process-steps__step-eyebrow {
     margin-block-end: var(--discern-space-3);
     color: var(--discern-color-accent-700);
-    font-family: var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-xs);
     font-weight: var(--discern-font-weight-strong);
   }
@@ -85,8 +91,6 @@
   }
   .discern-process-steps__content h3 {
     margin-block-end: var(--discern-space-3);
-    font-family: var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-lg);
     font-weight: var(--discern-font-weight-strong);
   }
@@ -95,8 +99,6 @@
     padding-block-start: var(--discern-space-4);
     border-block-start: 1px solid var(--discern-color-border);
     color: var(--discern-color-ink-faint);
-    font-family: var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-xs);
   }
   .discern-process-steps__copy {
@@ -149,14 +151,12 @@
     }
   }
   @container discern-process-steps (max-width: 560px) {
-    .discern-process-steps--horizontal .discern-process-steps__list {
+    .discern-process-steps--horizontal .discern-process-steps__list,
+    .discern-process-steps--horizontal .discern-process-steps__list:has(> :nth-child(5):last-child) {
       grid-template-columns: 1fr;
     }
     .discern-process-steps--horizontal .discern-process-steps__list li::before {
       display: none;
-    }
-    .discern-process-steps--horizontal .discern-process-steps__list:has(> :nth-child(5):last-child) {
-      grid-template-columns: 1fr;
     }
     .discern-process-steps--horizontal .discern-process-steps__list:has(> :nth-child(5):last-child) > li {
       grid-column: 1;

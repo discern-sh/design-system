@@ -16,9 +16,6 @@
   .discern-logo--sm {
     --discern-logo-size: var(--discern-font-size-sm);
   }
-  .discern-logo--md {
-    --discern-logo-size: var(--discern-font-size-display-sm);
-  }
   .discern-logo--lg {
     --discern-logo-size: var(--discern-font-size-display-md);
   }

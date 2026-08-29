@@ -54,6 +54,23 @@
   :where([data-discern-root]) :where(button, input, select, textarea) {
     font: inherit;
   }
+
+  :where([data-discern-root]) :where(a, button, summary) {
+    transition-property: background-color, border-color, box-shadow, color,
+      transform;
+    transition-duration: var(--discern-duration-fast);
+    transition-timing-function: var(--discern-ease-out);
+  }
+
+  :where([data-discern-root]) :where(a, button, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: 2px;
+  }
+
+  :where([data-discern-root]) :where([role="group"], [role="region"])[tabindex="0"]:focus-visible {
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: -2px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

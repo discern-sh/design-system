@@ -92,105 +92,69 @@
     pointer-events: auto;
   }
 
-  .discern-impression-backdrop__sensor:nth-child(2) {
-    inset: 0 auto auto 0;
-  }
-  .discern-impression-backdrop__sensor:nth-child(3) {
-    inset: 0 auto auto 25%;
-  }
-  .discern-impression-backdrop__sensor:nth-child(4) {
-    inset: 0 auto auto 50%;
-  }
-  .discern-impression-backdrop__sensor:nth-child(5) {
-    inset: 0 0 auto auto;
-  }
-  .discern-impression-backdrop__sensor:nth-child(6) {
-    inset: 33.3334% auto auto 0;
-  }
-  .discern-impression-backdrop__sensor:nth-child(7) {
-    inset: 33.3334% auto auto 25%;
-  }
-  .discern-impression-backdrop__sensor:nth-child(8) {
-    inset: 33.3334% auto auto 50%;
-  }
-  .discern-impression-backdrop__sensor:nth-child(9) {
-    inset: 33.3334% 0 auto auto;
-  }
-  .discern-impression-backdrop__sensor:nth-child(10) {
-    inset: auto auto 0 0;
-  }
-  .discern-impression-backdrop__sensor:nth-child(11) {
-    inset: auto auto 0 25%;
-  }
-  .discern-impression-backdrop__sensor:nth-child(12) {
-    inset: auto auto 0 50%;
-  }
-  .discern-impression-backdrop__sensor:nth-child(13) {
-    inset: auto 0 0 auto;
+  .discern-impression-backdrop__sensor:nth-child(-n + 5):where(:nth-child(n + 2)) {
+    top: 0;
+    bottom: auto;
   }
 
-  .discern-impression-backdrop__sensor:nth-child(2):hover ~ .discern-impression-backdrop__field--ink {
+  .discern-impression-backdrop__sensor:nth-child(n + 6):where(:nth-child(-n + 9)) {
+    top: 33.3334%;
+    bottom: auto;
+  }
+
+  .discern-impression-backdrop__sensor:nth-child(n + 10):where(:nth-child(-n + 13)) {
+    top: auto;
+    bottom: 0;
+  }
+
+  .discern-impression-backdrop__sensor:nth-child(4n + 2):where(:nth-child(-n + 13)) {
+    right: auto;
+    left: 0;
+  }
+
+  .discern-impression-backdrop__sensor:nth-child(4n + 3):where(:nth-child(-n + 13)) {
+    right: auto;
+    left: 25%;
+  }
+
+  .discern-impression-backdrop__sensor:nth-child(4n + 4):where(:nth-child(-n + 13)) {
+    right: auto;
+    left: 50%;
+  }
+
+  .discern-impression-backdrop__sensor:nth-child(4n + 5):where(:nth-child(-n + 13)) {
+    right: 0;
+    left: auto;
+  }
+
+  .discern-impression-backdrop__sensor:nth-child(4n + 2):where(:nth-child(-n + 13)):hover ~ .discern-impression-backdrop__field--ink {
     --discern-impression-backdrop-x: 12.5%;
-    --discern-impression-backdrop-y: 16.7%;
   }
 
-  .discern-impression-backdrop__sensor:nth-child(3):hover ~ .discern-impression-backdrop__field--ink {
+  .discern-impression-backdrop__sensor:nth-child(4n + 3):where(:nth-child(-n + 13)):hover ~ .discern-impression-backdrop__field--ink {
     --discern-impression-backdrop-x: 37.5%;
+  }
+
+  .discern-impression-backdrop__sensor:nth-child(4n + 4):where(:nth-child(-n + 13)):hover ~ .discern-impression-backdrop__field--ink {
+    --discern-impression-backdrop-x: 62.5%;
+  }
+
+  .discern-impression-backdrop__sensor:nth-child(4n + 5):where(:nth-child(-n + 13)):hover ~ .discern-impression-backdrop__field--ink {
+    --discern-impression-backdrop-x: 87.5%;
+  }
+
+  .discern-impression-backdrop__sensor:nth-child(-n + 5):where(:nth-child(n + 2)):hover ~ .discern-impression-backdrop__field--ink {
     --discern-impression-backdrop-y: 16.7%;
   }
 
-  .discern-impression-backdrop__sensor:nth-child(4):hover ~ .discern-impression-backdrop__field--ink {
-    --discern-impression-backdrop-x: 62.5%;
-    --discern-impression-backdrop-y: 16.7%;
-  }
-
-  .discern-impression-backdrop__sensor:nth-child(5):hover ~ .discern-impression-backdrop__field--ink {
-    --discern-impression-backdrop-x: 87.5%;
-    --discern-impression-backdrop-y: 16.7%;
-  }
-
-  .discern-impression-backdrop__sensor:nth-child(6):hover ~ .discern-impression-backdrop__field--ink {
-    --discern-impression-backdrop-x: 12.5%;
+  .discern-impression-backdrop__sensor:nth-child(n + 6):where(:nth-child(-n + 9)):hover ~ .discern-impression-backdrop__field--ink {
     --discern-impression-backdrop-y: 50%;
   }
 
-  .discern-impression-backdrop__sensor:nth-child(7):hover ~ .discern-impression-backdrop__field--ink {
-    --discern-impression-backdrop-x: 37.5%;
-    --discern-impression-backdrop-y: 50%;
-  }
-
-  .discern-impression-backdrop__sensor:nth-child(8):hover ~ .discern-impression-backdrop__field--ink {
-    --discern-impression-backdrop-x: 62.5%;
-    --discern-impression-backdrop-y: 50%;
-  }
-
-  .discern-impression-backdrop__sensor:nth-child(9):hover ~ .discern-impression-backdrop__field--ink {
-    --discern-impression-backdrop-x: 87.5%;
-    --discern-impression-backdrop-y: 50%;
-  }
-
-  .discern-impression-backdrop__sensor:nth-child(10):hover ~ .discern-impression-backdrop__field--ink {
-    --discern-impression-backdrop-x: 12.5%;
+  .discern-impression-backdrop__sensor:nth-child(n + 10):where(:nth-child(-n + 13)):hover ~ .discern-impression-backdrop__field--ink {
     --discern-impression-backdrop-y: 83.3%;
   }
 
-  .discern-impression-backdrop__sensor:nth-child(11):hover ~ .discern-impression-backdrop__field--ink {
-    --discern-impression-backdrop-x: 37.5%;
-    --discern-impression-backdrop-y: 83.3%;
-  }
-
-  .discern-impression-backdrop__sensor:nth-child(12):hover ~ .discern-impression-backdrop__field--ink {
-    --discern-impression-backdrop-x: 62.5%;
-    --discern-impression-backdrop-y: 83.3%;
-  }
-
-  .discern-impression-backdrop__sensor:nth-child(13):hover ~ .discern-impression-backdrop__field--ink {
-    --discern-impression-backdrop-x: 87.5%;
-    --discern-impression-backdrop-y: 83.3%;
-  }
-}
-
-@layer discern.components {
   .discern-backdrop--still .discern-impression-backdrop__sensor {
     pointer-events: none;
   }

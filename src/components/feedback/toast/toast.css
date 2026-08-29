@@ -63,16 +63,12 @@
     color: var(--discern-color-ink-muted);
     cursor: pointer;
     font-size: 1.1rem;
-    transition: background var(--discern-duration-fast), color
-      var(--discern-duration-fast), transform var(--discern-duration-fast);
   }
   .discern-toast__dismiss:hover {
     background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink);
   }
   .discern-toast__dismiss:focus-visible {
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: 2px;
     color: var(--discern-color-ink);
   }
   .discern-toast__dismiss:active {

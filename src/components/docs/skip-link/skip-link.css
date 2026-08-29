@@ -25,7 +25,5 @@
     font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-sm);
     text-decoration: none;
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: 2px;
   }
 }

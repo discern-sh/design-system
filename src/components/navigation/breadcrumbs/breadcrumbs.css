@@ -8,9 +8,11 @@
     font-size: var(--discern-font-size-xs);
     scrollbar-width: thin;
   }
-  .discern-breadcrumbs ol {
+  .discern-breadcrumbs :is(ol, li, a) {
     display: inline-flex;
     align-items: center;
+  }
+  .discern-breadcrumbs ol {
     min-inline-size: 100%;
     width: max-content;
     margin: 0;
@@ -18,13 +20,7 @@
     list-style: none;
     white-space: nowrap;
   }
-  .discern-breadcrumbs li {
-    display: inline-flex;
-    align-items: center;
-  }
   .discern-breadcrumbs a {
-    display: inline-flex;
-    align-items: center;
     min-block-size: 24px;
     border-radius: var(--discern-radius-xs);
     color: inherit;
@@ -36,8 +32,6 @@
     text-decoration-color: var(--discern-color-accent-500);
   }
   .discern-breadcrumbs a:focus-visible {
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: 2px;
     color: var(--discern-color-ink);
   }
   .discern-breadcrumbs__separator {

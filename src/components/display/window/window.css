@@ -43,7 +43,6 @@
   }
   .discern-window__body {
     min-block-size: 80px;
-    background: var(--discern-color-surface);
   }
   .discern-window__actions {
     display: inline-flex;

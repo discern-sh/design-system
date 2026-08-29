@@ -10,19 +10,26 @@
     font-family: var(--discern-font-ui);
     font-feature-settings: var(--discern-font-features-ui);
   }
+  .discern-activity-log__headline,
+  .discern-activity-log__stable-line {
+    font-size: var(--discern-font-size-sm);
+  }
+  .discern-activity-log__marker,
+  .discern-activity-log__tail,
+  .discern-activity-log__hint {
+    font-size: var(--discern-font-size-xs);
+  }
   .discern-activity-log__headline {
     display: flex;
     align-items: baseline;
     gap: var(--discern-space-2);
     margin: 0;
     color: var(--discern-color-ink);
-    font-size: var(--discern-font-size-sm);
     font-weight: var(--discern-font-weight-strong);
   }
   .discern-activity-log__marker {
     flex: none;
     color: var(--discern-color-accent-600);
-    font-size: var(--discern-font-size-xs);
   }
   .discern-activity-log[data-discern-status="cancelled"] .discern-activity-log__marker {
     color: var(--discern-color-ink-faint);
@@ -39,7 +46,6 @@
     display: flex;
     align-items: baseline;
     gap: var(--discern-space-2);
-    font-size: var(--discern-font-size-sm);
   }
   .discern-activity-log__stable-marker {
     flex: none;
@@ -59,7 +65,8 @@
   .discern-activity-log__stable-line[data-discern-tone="failure"] .discern-activity-log__stable-marker {
     color: var(--discern-color-danger);
   }
-  .discern-activity-log__stable-text {
+  .discern-activity-log__stable-text,
+  .discern-activity-log__line--partial {
     color: var(--discern-color-ink);
   }
   .discern-activity-log__tail {
@@ -70,15 +77,11 @@
     background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink-muted);
     font-family: var(--discern-font-mono);
-    font-size: var(--discern-font-size-xs);
     line-height: 1.6;
   }
   .discern-activity-log__line {
     overflow-wrap: anywhere;
     white-space: pre-wrap;
-  }
-  .discern-activity-log__line--partial {
-    color: var(--discern-color-ink);
   }
   .discern-activity-log__line--partial::after {
     content: "…";
@@ -87,6 +90,5 @@
   .discern-activity-log__hint {
     margin: 0;
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
   }
 }

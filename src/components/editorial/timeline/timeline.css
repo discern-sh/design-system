@@ -11,23 +11,34 @@
     gap: 0 var(--discern-space-6);
     margin-block-end: var(--discern-space-8);
   }
+  .discern-timeline > header > span,
+  .discern-timeline__content h3 {
+    font-family: var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+  }
+
+  .discern-timeline > header > span,
+  .discern-timeline__date,
+  .discern-timeline__content small {
+    font-size: var(--discern-font-size-xs);
+  }
+
   .discern-timeline > header > span {
     grid-row: span 2;
     color: var(--discern-color-accent-700);
-    font-family: var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
-    font-size: var(--discern-font-size-xs);
     font-weight: var(--discern-font-weight-strong);
   }
   .discern-timeline > header h2 {
     margin-block-end: var(--discern-space-2);
     font-size: var(--discern-font-size-display-md);
   }
-  .discern-timeline > header div {
+  .discern-timeline > header div,
+  .discern-timeline__content > div {
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-sm);
   }
-  .discern-timeline > header div > :last-child {
+  .discern-timeline > header div > :last-child,
+  .discern-timeline__content > div > :last-child {
     margin-block-end: 0;
   }
   .discern-timeline ol {
@@ -44,7 +55,6 @@
   .discern-timeline__date {
     padding-block-start: var(--discern-space-1);
     color: var(--discern-color-ink-faint);
-    font-size: var(--discern-font-size-xs);
     text-align: end;
   }
   .discern-timeline__marker {
@@ -84,22 +94,12 @@
   }
   .discern-timeline__content h3 {
     margin-block-end: var(--discern-space-2);
-    font-family: var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-lg);
-  }
-  .discern-timeline__content > div {
-    color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-sm);
-  }
-  .discern-timeline__content > div > :last-child {
-    margin-block-end: 0;
   }
   .discern-timeline__content small {
     display: block;
     margin-block-start: var(--discern-space-3);
     color: var(--discern-color-accent-700);
-    font-size: var(--discern-font-size-xs);
   }
   @container discern-timeline (max-width: 38.75rem) {
     .discern-timeline > header {

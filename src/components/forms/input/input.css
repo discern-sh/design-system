@@ -11,8 +11,8 @@
     font-family: var(--discern-font-body);
     font-size: var(--discern-font-size-sm);
     line-height: 1.4;
-    transition: border-color var(--discern-duration-fast), box-shadow
-      var(--discern-duration-fast), background var(--discern-duration-fast);
+    transition-property: background, border-color, box-shadow;
+    transition-duration: var(--discern-duration-fast);
   }
   .discern-control::placeholder {
     color: var(--discern-color-ink-faint);

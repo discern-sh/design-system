@@ -19,9 +19,12 @@
     min-inline-size: 0;
     max-inline-size: 100%;
   }
+  .discern-rule__label,
+  .discern-rule__meta {
+    font-size: var(--discern-font-size-xs);
+  }
   .discern-rule__label {
     color: var(--discern-color-accent-700);
-    font-size: var(--discern-font-size-xs);
     font-weight: var(--discern-font-weight-strong);
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -56,14 +59,12 @@
   }
   .discern-rule__meta dt {
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
     font-weight: var(--discern-font-weight-strong);
   }
   .discern-rule__meta dd {
     min-inline-size: 0;
     margin: 0;
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
   }
   @container discern-rule (max-width: 28rem) {
     .discern-rule__layout {

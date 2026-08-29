@@ -5,8 +5,8 @@
     stroke: currentColor;
     stroke-width: var(--discern-backdrop-hairline);
   }
-
-  .discern-tiling-backdrop__column {
+  .discern-tiling-backdrop__column,
+  .discern-tiling-backdrop__tile-arcs {
     opacity: var(--discern-backdrop-veil-2);
     animation: discern-tiling-backdrop-wash calc(var(--discern-backdrop-beat) *
       20)
@@ -20,14 +20,6 @@
     animation: discern-tiling-backdrop-turn calc(var(--discern-backdrop-beat) *
       20)
       var(--discern-backdrop-ease-settle)
-      1;
-  }
-
-  .discern-tiling-backdrop__tile-arcs {
-    opacity: var(--discern-backdrop-veil-2);
-    animation: discern-tiling-backdrop-wash calc(var(--discern-backdrop-beat) *
-      20)
-      var(--discern-backdrop-ease-drift)
       1;
   }
 
@@ -48,7 +40,8 @@
 
   @keyframes discern-tiling-backdrop-turn {
     0%,
-    11% {
+    11%,
+    100% {
       transform: rotate(0deg);
     }
     14%,
@@ -59,41 +52,32 @@
     99.99% {
       transform: rotate(180deg);
     }
-    100% {
-      transform: rotate(0deg);
-    }
   }
 
   @keyframes discern-tiling-backdrop-route {
-    0% {
+    0%,
+    14.375%,
+    100% {
       opacity: 0;
     }
-    0.9375% {
+    0.9375%,
+    13.4375% {
       opacity: calc(var(--discern-backdrop-veil-4) * 0.72);
     }
     1.875%,
     12.5% {
       opacity: var(--discern-backdrop-veil-4);
     }
-    13.4375% {
-      opacity: calc(var(--discern-backdrop-veil-4) * 0.72);
-    }
-    14.375%,
-    100% {
-      opacity: 0;
-    }
   }
 
   @keyframes discern-tiling-backdrop-wash {
-    0% {
+    0%,
+    26%,
+    100% {
       opacity: var(--discern-backdrop-veil-2);
     }
     10% {
       opacity: var(--discern-backdrop-veil-3);
-    }
-    26%,
-    100% {
-      opacity: var(--discern-backdrop-veil-2);
     }
   }
 }

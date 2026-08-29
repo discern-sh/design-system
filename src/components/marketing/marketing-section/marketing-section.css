@@ -4,6 +4,7 @@
     --discern-marketing-section-space: var(--discern-section-space);
     position: relative;
     padding-block: var(--discern-marketing-section-space);
+    color: var(--discern-color-ink);
   }
   .discern-marketing-section--space-spacious {
     --discern-marketing-section-space: clamp(6rem, 11vw, 10rem);
@@ -13,15 +14,12 @@
   }
   .discern-marketing-section--canvas {
     background: var(--discern-color-canvas);
-    color: var(--discern-color-ink);
   }
   .discern-marketing-section--surface {
     background: var(--discern-color-surface);
-    color: var(--discern-color-ink);
   }
   .discern-marketing-section--sunken {
     background: var(--discern-color-surface-sunken);
-    color: var(--discern-color-ink);
   }
   .discern-marketing-section--inherit {
     color: inherit;
@@ -45,7 +43,6 @@
       var(--discern-color-inverse-ink) 30%, transparent);
     --discern-marketing-accent-ink: var(--discern-color-inverse-ink);
     background: var(--discern-color-canvas);
-    color: var(--discern-color-ink);
   }
   .discern-marketing-section__inner {
     width: min(100% - 2 * var(--discern-space-6),

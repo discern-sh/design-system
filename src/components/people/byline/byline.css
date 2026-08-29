@@ -1,8 +1,6 @@
 @layer discern.components {
   .discern-byline {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
     column-gap: var(--discern-space-3);
     row-gap: var(--discern-space-2);
     padding-inline-start: var(--discern-space-3);
@@ -14,21 +12,23 @@
     font-style: normal;
     line-height: 1.4;
   }
+  .discern-byline,
+  .discern-byline__authors,
+  .discern-byline__meta {
+    flex-wrap: wrap;
+    align-items: center;
+  }
   .discern-byline__lede {
     color: var(--discern-color-ink-faint);
   }
   .discern-byline__authors {
     display: inline-flex;
-    flex-wrap: wrap;
-    align-items: center;
     gap: var(--discern-space-2);
     color: var(--discern-color-ink);
     font-weight: var(--discern-font-weight-strong);
   }
   .discern-byline__meta {
     display: inline-flex;
-    flex-wrap: wrap;
-    align-items: center;
     padding-inline-start: var(--discern-space-3);
     border-inline-start: 1px solid var(--discern-color-border-strong);
   }

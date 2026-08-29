@@ -45,8 +45,8 @@
     border-radius: var(--discern-radius-sm);
     line-height: 1;
     white-space: nowrap;
-    transition: background var(--discern-duration-fast), color
-      var(--discern-duration-fast), transform var(--discern-duration-fast);
+    transition-property: background, color, transform;
+    transition-duration: var(--discern-duration-fast);
   }
   .discern-theme-switcher__option:has(input:not(:disabled)):hover span {
     color: var(--discern-color-ink);

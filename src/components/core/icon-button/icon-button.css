@@ -10,9 +10,6 @@
     background: transparent;
     color: var(--discern-color-ink-muted);
     cursor: pointer;
-    transition: background var(--discern-duration-fast), color
-      var(--discern-duration-fast), border-color var(--discern-duration-fast),
-      transform var(--discern-duration-fast);
   }
   .discern-icon-button:hover:not(:disabled) {
     background: var(--discern-color-surface-sunken);
@@ -23,10 +20,6 @@
     background: var(--discern-color-accent-100);
     transform: translateY(1px);
   }
-  .discern-icon-button:focus-visible {
-    outline: 3px solid var(--discern-color-accent-500);
-    outline-offset: 2px;
-  }
   .discern-icon-button:disabled {
     border-color: var(--discern-color-border);
     background: var(--discern-color-surface-sunken);
@@ -36,10 +29,6 @@
   .discern-icon-button--outline {
     border-color: var(--discern-color-border-strong);
     background: var(--discern-color-surface);
-  }
-  .discern-icon-button--outline:disabled {
-    border-color: var(--discern-color-border);
-    background: var(--discern-color-surface-sunken);
   }
   .discern-icon-button--sm {
     inline-size: 32px;
