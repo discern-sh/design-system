@@ -16,12 +16,154 @@ export interface ComponentReviewEvidence {
   readonly checkpoints: number;
   readonly matrixItems: number;
   readonly appearanceCases: number;
+  readonly semanticAppearanceCases: number;
+  readonly responsiveCases: number;
+  readonly scrollFocusCases: number;
+  readonly motionCases: number;
+  readonly coarsePointerCases: number;
   readonly accessibilityScans: number;
   readonly screenshots: readonly string[];
   readonly outputFiles: number;
   readonly outputBytes: number;
   readonly durationMs: number;
 }
+
+interface LocalResponsiveCase {
+  readonly group: string;
+  readonly component: string;
+  readonly example: string;
+  readonly target: string;
+  readonly property: string;
+  readonly comparisonWidth: "medium" | "wide";
+}
+
+const localResponsiveCases: readonly LocalResponsiveCase[] = [
+  {
+    group: "Docs",
+    component: "pager",
+    example: "default",
+    target: ".discern-pager__link--previous",
+    property: "grid-column",
+    comparisonWidth: "wide",
+  },
+  {
+    group: "Agents",
+    component: "fleet",
+    example: "default",
+    target: ".discern-fleet__row",
+    property: "grid-template-columns",
+    comparisonWidth: "wide",
+  },
+  {
+    group: "Workflow",
+    component: "diagnostic",
+    example: "verbose-failure",
+    target: ".discern-diagnostic__correction",
+    property: "grid-template-columns",
+    comparisonWidth: "wide",
+  },
+  {
+    group: "Workflow",
+    component: "rule",
+    example: "default",
+    target: ".discern-rule__layout",
+    property: "grid-template-columns",
+    comparisonWidth: "wide",
+  },
+  {
+    group: "Editorial",
+    component: "data-figure",
+    example: "default",
+    target: ".discern-data-figure > header",
+    property: "flex-direction",
+    comparisonWidth: "wide",
+  },
+  {
+    group: "Editorial",
+    component: "table-of-contents",
+    example: "default",
+    target: ".discern-table-of-contents ol",
+    property: "grid-template-columns",
+    comparisonWidth: "medium",
+  },
+  {
+    group: "Marketing",
+    component: "case-study",
+    example: "default",
+    target: ".discern-case-study__inner",
+    property: "grid-template-columns",
+    comparisonWidth: "wide",
+  },
+  {
+    group: "Marketing",
+    component: "hero-block",
+    example: "split",
+    target: ".discern-hero-block__inner",
+    property: "grid-template-columns",
+    comparisonWidth: "wide",
+  },
+  {
+    group: "Marketing",
+    component: "marketing-intro",
+    example: "editorial",
+    target: ".discern-marketing-intro__title",
+    property: "font-size",
+    comparisonWidth: "wide",
+  },
+];
+
+interface ScrollFocusCase {
+  readonly group: string;
+  readonly component: string;
+  readonly example: string;
+  readonly target: string;
+  readonly mustOverflow: boolean;
+}
+
+const scrollFocusCases: readonly ScrollFocusCase[] = [
+  {
+    group: "Display",
+    component: "table",
+    example: "dense-overflow",
+    target: ".discern-table",
+    mustOverflow: true,
+  },
+  {
+    group: "Editorial",
+    component: "code-block",
+    example: "preserved-width",
+    target: ".discern-code-block",
+    mustOverflow: true,
+  },
+  {
+    group: "Workflow",
+    component: "command",
+    example: "overflow",
+    target: ".discern-command__text",
+    mustOverflow: true,
+  },
+  {
+    group: "Workflow",
+    component: "diagnostic",
+    example: "verbose-failure",
+    target: ".discern-diagnostic__evidence pre",
+    mustOverflow: true,
+  },
+  {
+    group: "Workflow",
+    component: "expected-result",
+    example: "output",
+    target: ".discern-expected-result__output",
+    mustOverflow: false,
+  },
+  {
+    group: "Workflow",
+    component: "raw-output",
+    example: "expanded",
+    target: ".discern-raw-output__content",
+    mustOverflow: false,
+  },
+];
 
 function reviewUrl(
   origin: string,
@@ -117,6 +259,11 @@ export async function verifyComponentReviewInstrument(
     screenshots.push(contactPath);
 
     let appearanceCases = 0;
+    let semanticAppearanceCases = 0;
+    let responsiveCases = 0;
+    let scrollFocusCaseCount = 0;
+    let motionCases = 0;
+    let coarsePointerCases = 0;
     for (const theme of ["light", "dark"] as const) {
       for (const option of catalogueAppearanceOptions) {
         await loadReview(
@@ -143,8 +290,126 @@ export async function verifyComponentReviewInstrument(
           `${theme}/${option.id} Appearance did not reach the specimen`,
         );
         appearanceCases += 1;
+
+        await loadReview(
+          page,
+          reviewUrl(origin, {
+            group: "Forms",
+            component: "radio",
+            example: "validation-error",
+            posture: "settled-validation-error",
+            width: "narrow",
+            theme,
+            appearance: option.id,
+            motion: "ordinary",
+            mode: "reel",
+            speed: "production",
+          }),
+        );
+        const validationColour = await page.locator(
+          'fieldset[aria-invalid="true"] .discern-choice input:not(:disabled) + .discern-choice__control',
+        ).first().evaluate((element) => {
+          const marker = element.ownerDocument.createElement("span");
+          marker.style.position = "absolute";
+          marker.style.color = "var(--discern-color-danger)";
+          element.parentElement?.append(marker);
+          const danger = getComputedStyle(marker).color;
+          marker.style.color = "var(--discern-color-accent-600)";
+          const accent = getComputedStyle(marker).color;
+          marker.remove();
+          const style = getComputedStyle(element);
+          return {
+            accent,
+            border: style.borderColor,
+            borderWidth: Number.parseFloat(style.borderWidth),
+            danger,
+          };
+        });
+        invariant(
+          validationColour.border === validationColour.danger &&
+            validationColour.border !== validationColour.accent &&
+            validationColour.borderWidth >= 2,
+          `${theme}/${option.id} Radio validation followed Appearance instead of danger semantics`,
+        );
+        semanticAppearanceCases += 1;
       }
     }
+
+    const measureResponsiveCase = async (
+      reviewCase: LocalResponsiveCase,
+      localWidth: "narrow" | "medium" | "wide",
+      pageWidth: number,
+    ) => {
+      await page.setViewportSize({ width: pageWidth, height: 1000 });
+      await loadReview(
+        page,
+        reviewUrl(origin, {
+          group: reviewCase.group,
+          component: reviewCase.component,
+          example: reviewCase.example,
+          width: localWidth,
+          theme: "light",
+          appearance: "blue",
+          motion: "reduced",
+          mode: "reel",
+          speed: "production",
+        }),
+      );
+      const root = page.locator(`.discern-${reviewCase.component}`).first();
+      const target = page.locator(reviewCase.target).first();
+      invariant(
+        await root.isVisible() && await target.isVisible(),
+        `${reviewCase.component} responsive witness is not visible`,
+      );
+      const geometry = await root.evaluate((element) => ({
+        clientWidth: (element as HTMLElement).clientWidth,
+        scrollWidth: (element as HTMLElement).scrollWidth,
+      }));
+      invariant(
+        geometry.scrollWidth <= geometry.clientWidth + 1,
+        `${reviewCase.component} leaked ${geometry.scrollWidth}px through a ${geometry.clientWidth}px local allocation`,
+      );
+      return {
+        ...geometry,
+        signature: await target.evaluate(
+          (element, property) =>
+            getComputedStyle(element).getPropertyValue(property),
+          reviewCase.property,
+        ),
+      };
+    };
+
+    for (const reviewCase of localResponsiveCases) {
+      const widePageNarrowLocal = await measureResponsiveCase(
+        reviewCase,
+        "narrow",
+        1440,
+      );
+      const narrowPageNarrowLocal = await measureResponsiveCase(
+        reviewCase,
+        "narrow",
+        430,
+      );
+      invariant(
+        widePageNarrowLocal.signature === narrowPageNarrowLocal.signature &&
+          Math.abs(
+              widePageNarrowLocal.clientWidth -
+                narrowPageNarrowLocal.clientWidth,
+            ) <= 0.5,
+        `${reviewCase.component} changed with page width despite the same local allocation`,
+      );
+      const comparison = await measureResponsiveCase(
+        reviewCase,
+        reviewCase.comparisonWidth,
+        1440,
+      );
+      invariant(
+        comparison.signature !== widePageNarrowLocal.signature,
+        `${reviewCase.component} did not change geometry across its local-width class`,
+      );
+      responsiveCases += 3;
+    }
+    await page.setViewportSize({ width: 1440, height: 1000 });
 
     await loadReview(
       page,
@@ -166,6 +431,13 @@ export async function verifyComponentReviewInstrument(
       await page.getByRole("dialog", { name: "Save changes?" }).isVisible(),
       "Motion reel did not reach its open checkpoint",
     );
+    invariant(
+      await page.locator(".discern-dialog__panel").evaluate((element) =>
+        getComputedStyle(element).animationDuration
+      ) === "0.3s",
+      "Dialog ordinary motion lost its causal entrance duration",
+    );
+    motionCases += 1;
     const reelPath = fromFileUrl(
       new URL("component-review-reel.png", OUTPUT_ROOT),
     );
@@ -198,6 +470,31 @@ export async function verifyComponentReviewInstrument(
       ),
       "Close reel did not restore trigger focus",
     );
+
+    await loadReview(
+      page,
+      reviewUrl(origin, {
+        group: "Feedback",
+        component: "dialog",
+        example: "default",
+        posture: "open-dialog",
+        category: "motion",
+        width: "medium",
+        theme: "dark",
+        appearance: "violet",
+        motion: "reduced",
+        mode: "reel",
+        speed: "production",
+      }),
+    );
+    invariant(
+      await page.getByRole("dialog", { name: "Save changes?" }).isVisible() &&
+        await page.locator(".discern-dialog__panel").evaluate((element) =>
+            getComputedStyle(element).animationDuration
+          ) === "0s",
+      "Dialog reduced motion did not preserve a complete still state",
+    );
+    motionCases += 1;
 
     await loadReview(
       page,
@@ -296,6 +593,91 @@ export async function verifyComponentReviewInstrument(
       "Pressed feedback was not causally visible",
     );
 
+    for (const motion of ["ordinary", "reduced"] as const) {
+      await loadReview(
+        page,
+        reviewUrl(origin, {
+          group: "Docs",
+          component: "search-palette",
+          example: "default",
+          posture: "open-search",
+          category: "motion",
+          width: "medium",
+          theme: "dark",
+          appearance: "violet",
+          motion,
+          mode: "reel",
+          speed: "production",
+        }),
+      );
+      const search = page.getByRole("searchbox", { name: "Search" });
+      invariant(
+        await page.locator(".discern-search-palette[open]").isVisible() &&
+          await search.evaluate((element) =>
+            element.ownerDocument.activeElement === element
+          ),
+        `Search palette ${motion} posture lost its open, focused state`,
+      );
+      invariant(
+        await page.locator(".discern-search-palette[open]").evaluate(
+          (element) => getComputedStyle(element).animationDuration,
+        ) === (motion === "ordinary" ? "0.3s" : "0s"),
+        `Search palette ${motion} duration is not truthful`,
+      );
+      motionCases += 1;
+    }
+
+    for (const scrollCase of scrollFocusCases) {
+      await loadReview(
+        page,
+        reviewUrl(origin, {
+          group: scrollCase.group,
+          component: scrollCase.component,
+          example: scrollCase.example,
+          width: "narrow",
+          theme: "dark",
+          appearance: "rose",
+          motion: "reduced",
+          mode: "reel",
+          speed: "production",
+        }),
+      );
+      const viewport = page.locator(scrollCase.target).first();
+      invariant(
+        await viewport.isVisible(),
+        `${scrollCase.component} scroll viewport is not visible`,
+      );
+      await viewport.focus();
+      const focusState = await viewport.evaluate((element) => {
+        const node = element as HTMLElement;
+        const style = getComputedStyle(node);
+        return {
+          ariaLabel: node.getAttribute("aria-label") ??
+            node.getAttribute("aria-labelledby"),
+          clientWidth: node.clientWidth,
+          focused: node.ownerDocument.activeElement === node,
+          outlineStyle: style.outlineStyle,
+          outlineWidth: Number.parseFloat(style.outlineWidth),
+          role: node.getAttribute("role"),
+          scrollWidth: node.scrollWidth,
+          tabIndex: node.tabIndex,
+        };
+      });
+      invariant(
+        focusState.role === "group" && focusState.tabIndex === 0 &&
+          focusState.ariaLabel !== null && focusState.ariaLabel.trim() !== "" &&
+          focusState.focused && focusState.outlineStyle !== "none" &&
+          focusState.outlineWidth >= 2,
+        `${scrollCase.component} scroll viewport lost role, name, keyboard focus, or visible focus`,
+      );
+      invariant(
+        !scrollCase.mustOverflow ||
+          focusState.scrollWidth > focusState.clientWidth,
+        `${scrollCase.component} stress example no longer exercises local overflow`,
+      );
+      scrollFocusCaseCount += 1;
+    }
+
     await loadReview(
       page,
       reviewUrl(origin, {
@@ -323,6 +705,76 @@ export async function verifyComponentReviewInstrument(
       ) === "0s",
       "Reduced motion retained movement",
     );
+    motionCases += 1;
+
+    const coarseContext = await browser.newContext({
+      viewport: { width: 430, height: 900 },
+      hasTouch: true,
+      isMobile: true,
+      reducedMotion: "reduce",
+    });
+    const coarsePage = await coarseContext.newPage();
+    addPageFailureListeners(coarsePage, failures);
+    try {
+      await loadReview(
+        coarsePage,
+        reviewUrl(origin, {
+          group: "Forms",
+          component: "checkbox",
+          example: "default",
+          posture: "settled-default",
+          width: "narrow",
+          theme: "light",
+          appearance: "blue",
+          motion: "reduced",
+          mode: "reel",
+          speed: "production",
+        }),
+      );
+      invariant(
+        await coarsePage.evaluate(() =>
+          matchMedia("(pointer: coarse)").matches &&
+          matchMedia("(hover: none)").matches
+        ),
+        "Touch review context did not expose coarse/no-hover media",
+      );
+      const checkbox = coarsePage.getByRole("checkbox", {
+        name: "Include examples",
+      });
+      await coarsePage.getByText("Include examples", { exact: true }).click();
+      invariant(
+        await checkbox.isChecked(),
+        "Checkbox lost native activation without hover",
+      );
+      coarsePointerCases += 1;
+
+      await loadReview(
+        coarsePage,
+        reviewUrl(origin, {
+          group: "Navigation",
+          component: "tabs",
+          example: "default",
+          posture: "settled-default",
+          width: "narrow",
+          theme: "dark",
+          appearance: "rose",
+          motion: "reduced",
+          mode: "reel",
+          speed: "production",
+        }),
+      );
+      const detailsTab = coarsePage.getByRole("tab", { name: "Details" });
+      await detailsTab.click();
+      invariant(
+        await detailsTab.getAttribute("aria-selected") === "true" &&
+          await coarsePage.getByRole("tabpanel", { name: "Details" })
+            .isVisible(),
+        "Tabs lost pointer selection without hover",
+      );
+      coarsePointerCases += 1;
+    } finally {
+      await coarseContext.close();
+    }
 
     const outputBytes = manifest.manifestBytes + await screenshots.reduce(
       async (sum, path) => (await sum) + (await Deno.stat(path)).size,
@@ -333,6 +785,11 @@ export async function verifyComponentReviewInstrument(
       checkpoints: manifest.checkpoints,
       matrixItems: manifest.matrixItems,
       appearanceCases,
+      semanticAppearanceCases,
+      responsiveCases,
+      scrollFocusCases: scrollFocusCaseCount,
+      motionCases,
+      coarsePointerCases,
       accessibilityScans,
       screenshots,
       outputFiles: manifest.outputFiles + screenshots.length,

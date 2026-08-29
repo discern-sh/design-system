@@ -227,3 +227,38 @@ Deno.test("production, slowed diagnostic, and reduced motion remain distinct", (
     "--discern-duration-reveal": "0ms",
   });
 });
+
+Deno.test("reduced review motion cannot expose a delayed animation start frame", async () => {
+  const css = await Deno.readTextFile(
+    new URL("../catalogue/review/review.css", import.meta.url),
+  );
+  const reducedRule = css.match(
+    /\.discern-review-specimen\[data-discern-review-motion="reduced"\][^{]*\{([^}]*)\}/s,
+  )?.[1] ?? "";
+  assertStringIncludes(reducedRule, "animation-delay: 0ms !important");
+  assertStringIncludes(reducedRule, "animation-duration: 0ms !important");
+  assertStringIncludes(reducedRule, "animation-iteration-count: 1 !important");
+  assertStringIncludes(reducedRule, "transition-delay: 0ms !important");
+  assertStringIncludes(reducedRule, "transition-duration: 0ms !important");
+  assertStringIncludes(
+    css,
+    '.discern-review-specimen[data-discern-review-motion="reduced"] .discern-backdrop *',
+  );
+  assertStringIncludes(css, "pointer-events: none !important");
+});
+
+Deno.test("review-card chrome cannot restyle headings or prose inside a specimen", async () => {
+  const css = await Deno.readTextFile(
+    new URL("../catalogue/review/review.css", import.meta.url),
+  );
+  for (
+    const selector of [
+      ".discern-review-card > header h2",
+      ".discern-review-card > header p",
+      ".discern-review-card > header code",
+    ]
+  ) {
+    assertStringIncludes(css, selector);
+  }
+  assert(!/\.discern-review-card\s+(?:h2|header\s+(?:p|code))\s*\{/u.test(css));
+});

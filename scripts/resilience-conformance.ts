@@ -22,7 +22,7 @@ const SURFACE_SELECTOR =
 const INTERACTIVE_SELECTOR =
   "a[href], button, input:not([type='hidden']), select, textarea, summary, " +
   "[role='button'], [role='link'], [role='checkbox'], [role='radio'], " +
-  "[role='switch'], [tabindex]:not([tabindex='-1'])";
+  "[role='switch'], [tabindex]:not([tabindex='-1']):not([role='group']):not([role='region'])";
 const TARGET_SELECTOR =
   "a[href], button, input:not([type='hidden']), select, textarea, summary, " +
   "[role='button'], [role='link'], [role='checkbox'], [role='radio'], " +

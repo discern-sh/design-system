@@ -106,17 +106,17 @@
     padding: 12px 14px;
     border-block-end: 1px solid var(--discern-color-border);
   }
-  .discern-review-card h2 {
+  .discern-review-card > header h2 {
     margin: 0;
     font: var(--discern-font-weight-strong) var(--discern-font-size-sm)
       var(--discern-font-ui);
   }
-  .discern-review-card header p {
+  .discern-review-card > header p {
     margin: 3px 0 0;
     color: var(--discern-color-ink-muted);
     font: var(--discern-font-size-xs) var(--discern-font-ui);
   }
-  .discern-review-card header code {
+  .discern-review-card > header code {
     color: var(--discern-color-ink-faint);
     font-size: var(--discern-font-size-xs);
   }
@@ -141,9 +141,14 @@
   .discern-review-specimen[data-discern-review-motion="reduced"] *::before,
   .discern-review-specimen[data-discern-review-motion="reduced"] *::after {
     scroll-behavior: auto !important;
+    animation-delay: 0ms !important;
     animation-duration: 0ms !important;
     animation-iteration-count: 1 !important;
+    transition-delay: 0ms !important;
     transition-duration: 0ms !important;
+  }
+  .discern-review-specimen[data-discern-review-motion="reduced"] .discern-backdrop * {
+    pointer-events: none !important;
   }
   .discern-review-evidence {
     display: flex;

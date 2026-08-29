@@ -226,7 +226,11 @@ export async function runConformance(): Promise<void> {
         `Posture review exposed ${review.items} bounded contact items, ` +
         `${review.checkpoints} source-backed checkpoints, ` +
         `${review.matrixItems} tiered matrix items, ${review.appearanceCases} ` +
-        `Appearance cases, and ${review.accessibilityScans} axe scan; wrote ` +
+        `accent Appearance cases, ${review.semanticAppearanceCases} semantic ` +
+        `Appearance cases, ${review.responsiveCases} local-responsive cases, ` +
+        `${review.scrollFocusCases} scroll-focus cases, ${review.motionCases} ` +
+        `motion cases, ${review.coarsePointerCases} coarse-pointer cases, and ` +
+        `${review.accessibilityScans} axe scan; wrote ` +
         `${review.outputFiles} files / ${review.outputBytes} bytes in ` +
         `${review.durationMs}ms. ` +
         `Journey resilience passed: ${resilience.journeys} journeys, ` +

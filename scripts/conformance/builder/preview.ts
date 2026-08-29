@@ -376,8 +376,11 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
     const responsive: Record<string, {
       readonly innerWidth: number;
       readonly media820: boolean;
+      readonly heroInlineSize: number;
       readonly heroColumns: number;
+      readonly ctaInlineSize: number;
       readonly ctaColumns: number;
+      readonly editorialInlineSize: number;
       readonly editorialColumns: number;
       readonly headerNav: string;
       readonly bodyOverflow: boolean;
@@ -408,11 +411,21 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
           const value = style(selector).gridTemplateColumns;
           return value === "none" ? 0 : value.trim().split(/\s+/).length;
         };
+        const inlineSize = (selector: string): number => {
+          const element = document.querySelector(selector);
+          if (!(element instanceof HTMLElement)) {
+            throw new Error(`Missing responsive witness ${selector}`);
+          }
+          return element.getBoundingClientRect().width;
+        };
         return {
           innerWidth,
           media820: matchMedia("(max-width: 820px)").matches,
+          heroInlineSize: inlineSize(".discern-hero-block"),
           heroColumns: tracks(".discern-hero-block__inner"),
+          ctaInlineSize: inlineSize(".discern-cta-band"),
           ctaColumns: tracks(".discern-cta-band__inner"),
+          editorialInlineSize: inlineSize(".discern-editorial-hero"),
           editorialColumns: tracks(".discern-editorial-hero__lower"),
           headerNav: style(".discern-site-header__nav").display,
           bodyOverflow: document.body.scrollWidth > innerWidth,
@@ -443,21 +456,21 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
       !desktop.media820 && tablet.media820 && phone.media820,
       "frame matchMedia did not follow the selected logical viewport",
     );
-    invariant(
-      desktop.heroColumns === 2 && tablet.heroColumns === 1 &&
-        phone.heroColumns === 1,
-      "Hero did not enter its real 820px viewport rule",
-    );
-    invariant(
-      desktop.ctaColumns === 2 && tablet.ctaColumns === 2 &&
-        phone.ctaColumns === 1,
-      "CTA Band did not enter its real 720px viewport rule",
-    );
-    invariant(
-      desktop.editorialColumns === 2 && tablet.editorialColumns === 1 &&
-        phone.editorialColumns === 1,
-      "Editorial Hero did not enter its real container-query rule",
-    );
+    for (const [preset, result] of Object.entries(responsive)) {
+      invariant(
+        result.heroColumns === (result.heroInlineSize <= 820 ? 1 : 2),
+        `Hero did not follow its allocated ${result.heroInlineSize}px inline size in the ${preset} frame`,
+      );
+      invariant(
+        result.ctaColumns === (result.ctaInlineSize <= 720 ? 1 : 2),
+        `CTA Band did not follow its allocated ${result.ctaInlineSize}px inline size in the ${preset} frame`,
+      );
+      invariant(
+        result.editorialColumns ===
+          (result.editorialInlineSize <= 860 ? 1 : 2),
+        `Editorial Hero did not follow its allocated ${result.editorialInlineSize}px inline size in the ${preset} frame`,
+      );
+    }
     invariant(
       desktop.headerNav !== "none" && tablet.headerNav !== "none" &&
         phone.headerNav === "none",

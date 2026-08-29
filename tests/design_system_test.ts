@@ -638,6 +638,41 @@ Deno.test("selection resolves dependencies and excludes unrelated groups", async
   }
 });
 
+Deno.test("Radio selection carries the shared Choice grammar deterministically", async () => {
+  const first = await Deno.makeTempDir();
+  const second = await Deno.makeTempDir();
+  try {
+    const firstSummary = await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${first}/`),
+      components: ["radio"],
+    });
+    const secondSummary = await emitDesignSystemRuntime({
+      outputRoot: toFileUrl(`${second}/`),
+      components: ["radio"],
+    });
+    assertEquals(firstSummary.manifest.selection.resolvedComponents, [
+      "checkbox",
+      "radio",
+    ]);
+    assertEquals(firstSummary.manifest, secondSummary.manifest);
+    const firstCss = await Deno.readTextFile(join(first, "discern.css"));
+    assertStringIncludes(firstCss, ".discern-choice {");
+    assertStringIncludes(
+      firstCss,
+      'fieldset[aria-invalid="true"] .discern-choice input:not(:disabled) + .discern-choice__control',
+    );
+    assertStringIncludes(firstCss, ".discern-choice--radio");
+    assert(!firstCss.includes(".discern-switch__track"));
+    assertEquals(
+      await Deno.readFile(join(first, "discern.css")),
+      await Deno.readFile(join(second, "discern.css")),
+    );
+  } finally {
+    await Deno.remove(first, { recursive: true });
+    await Deno.remove(second, { recursive: true });
+  }
+});
+
 function respondsToItsOwnInlineSize(source: string): boolean {
   return /container-type\s*:\s*inline-size\s*;/u.test(source) &&
     !/@media\s*\(\s*max-width\s*:/u.test(source);
