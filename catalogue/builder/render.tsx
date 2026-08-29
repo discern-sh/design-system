@@ -14,6 +14,7 @@ import {
   componentBySlug,
   documentPolicy,
   entryBySlug,
+  previewCallbackPropsBySlug,
   registryCoreBySlug,
   requiredFunctionPropsBySlug,
 } from "./registry-core.ts";
@@ -26,7 +27,7 @@ export interface RenderOptions {
     props: Record<string, unknown>,
   ) => Record<string, unknown>;
   /** Supply Catalogue-local witnesses for callbacks inert data cannot hold. */
-  readonly requiredCallback?: (
+  readonly callback?: (
     node: BuilderNode,
     prop: string,
   ) => (...args: readonly unknown[]) => void;
@@ -69,8 +70,13 @@ function renderAcceptedChild(
   const Component = componentBySlug(child.slug);
   const props: Record<string, unknown> = {};
   for (const required of requiredFunctionPropsBySlug.get(child.slug) ?? []) {
-    props[required.name] = options.requiredCallback?.(child, required.name) ??
+    props[required.name] = options.callback?.(child, required.name) ??
       noop;
+  }
+  for (const callback of previewCallbackPropsBySlug.get(child.slug) ?? []) {
+    if (Object.hasOwn(props, callback.name)) continue;
+    const witness = options.callback?.(child, callback.name);
+    if (witness !== undefined) props[callback.name] = witness;
   }
   for (const [name, value] of Object.entries(child.props)) {
     if (value.kind === "slot") {

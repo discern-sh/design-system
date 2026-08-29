@@ -5,13 +5,13 @@ import {
   type AppearanceControlProps,
   useCatalogueAppearance,
 } from "../../shell/appearance.tsx";
-import { useCatalogueTerminalTheme } from "../../terminal-theme.ts";
 import {
-  ThemeSwitcher,
-  type ThemeSwitcherMode,
-} from "../../../src/components/core/theme-switcher/theme-switcher.tsx";
+  catalogueAppearanceOption,
+  defaultCatalogueAppearanceOption,
+} from "../../shell/appearance-options.ts";
+import { useCatalogueTerminalTheme } from "../../terminal-theme.ts";
+import type { ThemeSwitcherMode } from "../../../src/components/core/theme-switcher/theme-switcher.tsx";
 import { Select } from "../../../src/components/forms/select/select.tsx";
-import { discernThemeTokens } from "../../../src/tokens/tokens.ts";
 import type {
   BuilderPreviewAppearance,
   BuilderPreviewMode,
@@ -35,10 +35,7 @@ export const builderPreviewViewports: Readonly<
   phone: { id: "phone", label: "390px", width: 390 },
 };
 
-const defaultAccentHue = Number(
-  discernThemeTokens.find(({ name }) => name === "--discern-accent-hue")
-    ?.value ?? "255",
-);
+const defaultAccentHue = defaultCatalogueAppearanceOption.hue;
 
 export interface BuilderPreviewMeasurement {
   readonly logicalWidth: number;
@@ -95,12 +92,8 @@ function theme(value: string | null, fallback: ThemeSwitcherMode) {
     : fallback;
 }
 
-function accent(value: string | null): number {
-  if (value === null || value.trim() === "") return defaultAccentHue;
-  const parsed = Number(value);
-  return Number.isFinite(parsed)
-    ? Math.max(0, Math.min(360, Math.round(parsed)))
-    : defaultAccentHue;
+export function builderPreviewAccent(value: string | null): number {
+  return catalogueAppearanceOption(value)?.hue ?? defaultAccentHue;
 }
 
 function updateComfortUrl(
@@ -153,7 +146,7 @@ export function useBuilderPreviewPreferences(
     theme(url.searchParams.get("previewTheme"), initialPreviewTheme)
   );
   const [previewAccentHue, setPreviewAccentHue] = useState(() =>
-    accent(url.searchParams.get("previewAccent"))
+    builderPreviewAccent(url.searchParams.get("previewAccent"))
   );
   const [measurement, setMeasurement] = useState<BuilderPreviewMeasurement>({
     logicalWidth: 0,
@@ -218,7 +211,8 @@ export function useBuilderPreviewPreferences(
     setZoom,
     setMode,
     setPreviewTheme,
-    setPreviewAccentHue: (next) => setPreviewAccentHue(accent(String(next))),
+    setPreviewAccentHue: (next) =>
+      setPreviewAccentHue(builderPreviewAccent(String(next))),
     setWorkspaceTheme: workspace.changeTheme,
     setWorkspaceAccentHue: workspace.changeAccentHue,
     reportMeasurement,
@@ -251,16 +245,8 @@ function AppearanceBoundary(
       style={{ "--discern-accent-hue": appearance.accentHue } as CSSProperties}
     >
       <span>{label}</span>
-      <ThemeSwitcher
-        className="discern-builder-appearance__theme"
-        label={label === "Workspace"
-          ? "Builder colour theme"
-          : "Preview colour theme"}
-        mode={appearance.theme}
-        onModeChange={onThemeChange}
-        inputName={`discern-builder-${label.toLowerCase()}-theme`}
-      />
       <AppearanceControl
+        scopeLabel={label}
         theme={appearance.theme}
         resolvedTheme={resolvedTheme}
         accentHue={appearance.accentHue}

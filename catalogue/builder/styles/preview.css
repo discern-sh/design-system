@@ -107,40 +107,6 @@
     background: var(--discern-color-surface);
     box-shadow: var(--discern-shadow-pop);
   }
-  .discern-builder-appearance .discern-catalogue-appearance__theme {
-    display: none;
-  }
-  .discern-builder-appearance__theme {
-    max-inline-size: 13rem;
-  }
-  .discern-builder-appearance__theme .discern-theme-switcher__option span {
-    min-block-size: 1.75rem;
-    padding-inline: var(--discern-space-2);
-  }
-  .discern-builder-appearance .discern-catalogue-accent {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: 8px;
-  }
-  .discern-builder-appearance .discern-catalogue-accent__swatch {
-    inline-size: 12px;
-    block-size: 12px;
-    border: 1px solid var(--discern-color-border-strong);
-    border-radius: 50%;
-    background: var(--discern-color-accent-500);
-  }
-  .discern-builder-appearance .discern-catalogue-accent input {
-    grid-column: 1 / -1;
-    inline-size: 100%;
-    accent-color: var(--discern-color-accent-500);
-  }
-  .discern-builder-appearance .discern-catalogue-accent output {
-    grid-column: 3;
-    grid-row: 1;
-    font-variant-numeric: tabular-nums;
-  }
-
   .discern-builder-canvas {
     grid-area: canvas;
     min-width: 0;
@@ -222,7 +188,7 @@
     z-index: 8;
     bottom: 0;
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
@@ -238,6 +204,10 @@
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-xs);
   }
+  .discern-builder-preview-status > span {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
   .discern-builder-preview-status > button {
     border: 0;
     background: transparent;
@@ -249,14 +219,23 @@
   }
   .discern-builder-event-log {
     display: flex;
-    flex-wrap: wrap;
+    flex: 1 1 18rem;
+    flex-wrap: nowrap;
     gap: 4px 12px;
+    min-inline-size: 0;
     max-inline-size: 42rem;
     margin: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
     padding-inline-start: 1.25rem;
+    scrollbar-gutter: stable;
     color: var(--discern-color-ink);
     font-family: var(--discern-font-mono);
     font-feature-settings: normal;
+    white-space: nowrap;
+  }
+  .discern-builder-event-log > li {
+    flex: 0 0 auto;
   }
 
   /* These rules also load inside the frame; only the frame root matches. */

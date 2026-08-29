@@ -82,6 +82,7 @@ export function useCatalogueAppearance(url: URL) {
 }
 
 export interface AppearanceControlProps {
+  readonly scopeLabel?: string;
   readonly theme: ThemeSwitcherMode;
   readonly resolvedTheme: "light" | "dark";
   readonly accentHue: number;
@@ -92,6 +93,7 @@ export interface AppearanceControlProps {
 /** Compact control boundary for the shared Theme and accent model. */
 export function AppearanceControl(
   {
+    scopeLabel,
     theme,
     resolvedTheme,
     accentHue,
@@ -99,13 +101,16 @@ export function AppearanceControl(
     onAccentHueChange,
   }: AppearanceControlProps,
 ) {
+  const appearanceLabel = scopeLabel === undefined
+    ? "appearance"
+    : `${scopeLabel} appearance`;
   return (
     <details className="discern-catalogue-appearance">
-      <summary aria-label="Change appearance">Appearance</summary>
+      <summary aria-label={`Change ${appearanceLabel}`}>Appearance</summary>
       <div
         className="discern-catalogue-appearance__panel"
         role="group"
-        aria-label="Appearance settings"
+        aria-label={`${appearanceLabel} settings`}
       >
         <div className="discern-catalogue-appearance__theme">
           <span>Theme</span>
@@ -113,6 +118,12 @@ export function AppearanceControl(
             theme={resolvedTheme}
             data-discern-mode={theme}
             onThemeChange={onThemeChange}
+            toLightLabel={scopeLabel === undefined
+              ? "Switch to the light theme"
+              : `Switch to the light ${scopeLabel} theme`}
+            toDarkLabel={scopeLabel === undefined
+              ? "Switch to the dark theme"
+              : `Switch to the dark ${scopeLabel} theme`}
           />
         </div>
         <label className="discern-catalogue-accent">
@@ -125,7 +136,9 @@ export function AppearanceControl(
             value={accentHue}
             onChange={(event) =>
               onAccentHueChange(Number(event.currentTarget.value))}
-            aria-label="Accent preset"
+            aria-label={scopeLabel === undefined
+              ? "Accent preset"
+              : `${scopeLabel} accent preset`}
           >
             {catalogueAppearanceOptions.map((option) => (
               <option key={option.id} value={option.hue}>{option.label}</option>

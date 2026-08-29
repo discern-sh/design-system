@@ -5,10 +5,20 @@ import {
   assertThrows,
 } from "@std/assert";
 import { renderToStaticMarkup } from "react-dom/server";
+import { isValidElement } from "react";
 import { buildDesignSystem } from "../scripts/build.ts";
 import { BuilderDocumentError } from "../catalogue/builder/export.ts";
 import { emptyDocument } from "../catalogue/builder/model.ts";
 import { documentPolicy } from "../catalogue/builder/registry-core.ts";
+import {
+  deriveBuilderCallbackProps,
+  registryCoreBySlug,
+} from "../catalogue/builder/registry-core.ts";
+import { builderPreviewAccent } from "../catalogue/builder/preview/controls.tsx";
+import {
+  catalogueAppearanceOptions,
+  defaultCatalogueAppearanceOption,
+} from "../catalogue/shell/appearance-options.ts";
 import {
   builderPreviewMessageFromEvent,
   builderPreviewSnapshot,
@@ -284,6 +294,64 @@ Deno.test("callback witnesses are deterministic inert summaries", () => {
   assertEquals(
     formatBuilderPreviewCallbackWitness("onOpenChange", [false]),
     "onOpenChange(false)",
+  );
+});
+
+Deno.test("preview callback witnesses enroll optional future interactions without changing export requirements", () => {
+  assertEquals(
+    deriveBuilderCallbackProps([
+      {
+        name: "onFutureChange",
+        type: "(value: string) => void",
+        required: false,
+      },
+      { name: "label", type: "string", required: true },
+    ], new Set()),
+    {
+      preview: [{ name: "onFutureChange" }],
+      required: [],
+    },
+  );
+  assertEquals(
+    registryCoreBySlug.get("tabs")?.previewCallbackProps,
+    [{ name: "onValueChange" }],
+  );
+  assertEquals(
+    registryCoreBySlug.get("tabs")?.requiredFunctionProps,
+    [],
+  );
+});
+
+Deno.test("the shared preview renderer injects optional callback witnesses only when requested", async () => {
+  const { registryIndex, render } = await builderModules();
+  const tabs = registryIndex.instantiateComponent("tabs");
+  const witnessed: string[] = [];
+  const rendered = render.renderBuilderChild(tabs, {
+    callback: (_node, prop) => {
+      witnessed.push(prop);
+      return () => undefined;
+    },
+  });
+  assert(isValidElement<Record<string, unknown>>(rendered));
+  assertEquals(typeof rendered.props.onValueChange, "function");
+  assertEquals(witnessed, ["onValueChange"]);
+  const inert = render.renderBuilderChild(tabs);
+  assert(isValidElement<Record<string, unknown>>(inert));
+  assertEquals(inert.props.onValueChange, undefined);
+});
+
+Deno.test("Builder preview Appearance accepts only the exhaustive shared presets", () => {
+  for (const option of catalogueAppearanceOptions) {
+    assertEquals(builderPreviewAccent(option.id), option.hue);
+    assertEquals(builderPreviewAccent(String(option.hue)), option.hue);
+  }
+  assertEquals(
+    builderPreviewAccent("145"),
+    defaultCatalogueAppearanceOption.hue,
+  );
+  assertEquals(
+    builderPreviewAccent("not-a-preset"),
+    defaultCatalogueAppearanceOption.hue,
   );
 });
 

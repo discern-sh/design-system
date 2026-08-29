@@ -5,7 +5,11 @@
 import type { ComponentType } from "react";
 import * as reactSurface from "../../src/react.ts";
 import { componentGroups } from "../../src/types/component-meta.ts";
-import type { CatalogueObjectType, CatalogueVariant } from "../conformance.ts";
+import type {
+  CatalogueObjectType,
+  CatalogueProp,
+  CatalogueVariant,
+} from "../conformance.ts";
 import type { RegistryEntry } from "../generated/registry.ts";
 import {
   registry,
@@ -96,6 +100,32 @@ export interface BuilderRegistryCoreEntry {
   readonly modeledProps: ReadonlySet<string>;
   readonly reservedProps: ReadonlySet<string>;
   readonly requiredFunctionProps: readonly RequiredFunctionProp[];
+  readonly previewCallbackProps: readonly RequiredFunctionProp[];
+}
+
+function isFunctionProp(prop: CatalogueProp): boolean {
+  return /=>|\bFunction\b/u.test(prop.type);
+}
+
+/** Keep export-required callbacks distinct from every safe preview witness. */
+export function deriveBuilderCallbackProps(
+  props: readonly CatalogueProp[],
+  modeledProps: ReadonlySet<string>,
+): Readonly<{
+  preview: readonly RequiredFunctionProp[];
+  required: readonly RequiredFunctionProp[];
+}> {
+  const functions = props.filter((prop) =>
+    !modeledProps.has(prop.name) && isFunctionProp(prop)
+  );
+  return {
+    preview: functions.flatMap((prop) =>
+      /^on[A-Z]/u.test(prop.name) ? [{ name: prop.name }] : []
+    ),
+    required: functions.flatMap((prop) =>
+      prop.required ? [{ name: prop.name }] : []
+    ),
+  };
 }
 
 function coreEntry(entry: RegistryEntry): BuilderRegistryCoreEntry {
@@ -105,11 +135,9 @@ function coreEntry(entry: RegistryEntry): BuilderRegistryCoreEntry {
     objectTypes: builderObjectTypes,
   });
   const modeledProps = new Set(controls.map(({ name }) => name));
-  const requiredFunctionProps = entry.propDocumentation.status === "available"
-    ? entry.propDocumentation.props.flatMap((prop) =>
-      prop.required && !modeledProps.has(prop.name) ? [{ name: prop.name }] : []
-    )
-    : [];
+  const callbackProps = entry.propDocumentation.status === "available"
+    ? deriveBuilderCallbackProps(entry.propDocumentation.props, modeledProps)
+    : { preview: [], required: [] };
   const reservedProps = new Set([
     ...modeledProps,
     ...(entry.propDocumentation.status === "available"
@@ -122,7 +150,8 @@ function coreEntry(entry: RegistryEntry): BuilderRegistryCoreEntry {
     controls,
     modeledProps,
     reservedProps,
-    requiredFunctionProps,
+    requiredFunctionProps: callbackProps.required,
+    previewCallbackProps: callbackProps.preview,
   });
 }
 
@@ -168,6 +197,24 @@ export const requiredFunctionPropsBySlug: ReadonlyMap<
     entry.requiredFunctionProps,
   ]),
 );
+
+/** Every source-declared event callback the inert preview may witness. */
+export const previewCallbackPropsBySlug: ReadonlyMap<
+  string,
+  readonly RequiredFunctionProp[]
+> = new Map(
+  registryCoreEntries.map((entry) => [
+    entry.registry.meta.slug,
+    entry.previewCallbackProps,
+  ]),
+);
+
+/** Human control language shared by insertion, Layers, and validation. */
+export function builderControlLabel(slug: string, prop: string): string {
+  return registryCoreBySlug.get(slug)?.controls.find((control) =>
+    control.name === prop
+  )?.label ?? prop;
+}
 
 /** Canonical prop reservations additional JSON cannot shadow. */
 export const reservedPropsBySlug: ReadonlyMap<

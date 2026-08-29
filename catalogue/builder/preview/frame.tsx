@@ -276,7 +276,7 @@ function FrameDocument(
   };
 
   const options: RenderOptions = {
-    requiredCallback: (node, prop) => (...args) => {
+    callback: (node, prop) => (...args) => {
       if (snapshot.mode !== "interact") return;
       post(builderPreviewEventWitness({
         kind: "callback",
