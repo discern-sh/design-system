@@ -14,6 +14,7 @@ import {
   FOCUSABLE_SELECTOR,
   invariant,
   type KeyboardSummary,
+  useScopedTheme,
   visibleEnabledTargets,
 } from "./support.ts";
 
@@ -352,9 +353,10 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
     BUILDER_STORAGE_KEYS.document,
   );
   const originalUrl = page.url();
-  const originalWorkspaceTheme = await page.getByRole("group", {
-    name: "Builder colour theme",
-  }).locator("input:checked").inputValue();
+  const originalAppearanceStorage = await page.evaluate(() => ({
+    theme: localStorage.getItem("discern-catalogue-theme"),
+    accent: localStorage.getItem("discern-catalogue-accent-hue"),
+  }));
   try {
     await page.evaluate(
       ({ key, source }) => localStorage.setItem(key, source),
@@ -369,6 +371,11 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
     const frame = page.locator(selector);
     const preview = page.frameLocator(selector);
     invariant(await frame.count() === 1, "builder preview is not a real frame");
+    invariant(
+      await page.locator(".discern-theme-switcher").count() === 0 &&
+        await page.locator(".discern-catalogue-appearance").count() === 2,
+      "Builder forked the shared Appearance control or rendered it twice",
+    );
     await preview.locator(".discern-builder-frame-document").waitFor({
       timeout: ACTION_TIMEOUT,
     });
@@ -587,6 +594,10 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
             .getAttribute("inert") === null,
       "Interact left Edit interception or inertness active",
     );
+    const previewStatus = page.locator(".discern-builder-preview-status");
+    const restingStatusHeight = await previewStatus.evaluate((element) =>
+      element.getBoundingClientRect().height
+    );
     const tabs = preview.getByRole("tablist", { name: "Preview sections" });
     await tabs.getByRole("tab", { name: "Details" }).click();
     invariant(
@@ -630,14 +641,27 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
       ),
       "Interact did not expose Tooltip behaviour on focus",
     );
-    await preview.getByRole("button", { name: "Switch to the dark theme" })
-      .click();
     const frameUrl = await preview.locator("html").evaluate(() =>
       location.href
     );
+    const eventLog = page.getByRole("list", { name: "Preview event log" });
     await preview.getByRole("link", { name: "External link" }).click();
+    await eventLog.getByText("Blocked link").waitFor({
+      timeout: ACTION_TIMEOUT,
+    });
     await preview.getByRole("link", { name: "Popup link" }).click();
+    await eventLog.getByText("Blocked popup").waitFor({
+      timeout: ACTION_TIMEOUT,
+    });
     await preview.getByRole("link", { name: "Download link" }).click();
+    await eventLog.getByText("Blocked download").waitFor({
+      timeout: ACTION_TIMEOUT,
+    });
+    await preview.getByRole("button", { name: "Switch to the dark theme" })
+      .click();
+    await eventLog.getByText('onThemeChange("dark")').waitFor({
+      timeout: ACTION_TIMEOUT,
+    });
     await preview.locator("body").evaluate((body) => {
       const form = document.createElement("form");
       const input = document.createElement("input");
@@ -648,11 +672,13 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
     await preview.getByRole("textbox", { name: "Submit witness field" }).press(
       "Enter",
     );
-    const eventLog = page.getByRole("list", { name: "Preview event log" });
     await eventLog.getByText("Blocked form submission").waitFor({
       timeout: ACTION_TIMEOUT,
     });
     const eventText = await eventLog.innerText();
+    const populatedStatusHeight = await previewStatus.evaluate((element) =>
+      element.getBoundingClientRect().height
+    );
     await preview.getByRole("textbox", { name: "Submit witness field" })
       .evaluate((input) => input.closest("form")?.remove());
     invariant(
@@ -662,12 +688,18 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
       "Interact allowed a link to escape or replace the preview",
     );
     invariant(
-      eventText.includes('onThemeChange("dark")') &&
+      eventText.includes('onValueChange("details")') &&
+        eventText.includes('onThemeChange("dark")') &&
         eventText.includes("Blocked link") &&
         eventText.includes("Blocked popup") &&
         eventText.includes("Blocked download") &&
         eventText.includes("Blocked form submission"),
-      "Interact did not record callback and containment witnesses",
+      `Interact did not record callback and containment witnesses: ${eventText}`,
+    );
+    invariant(
+      populatedStatusHeight <= restingStatusHeight + 12 &&
+        populatedStatusHeight < 64,
+      `Preview events expanded the sticky status from ${restingStatusHeight}px to ${populatedStatusHeight}px and obscured later interactions`,
     );
     await page.getByRole("button", { name: "Reset interactions" }).click();
     await page.waitForFunction(
@@ -727,16 +759,21 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
         "--discern-builder-editor-selection",
       )
     );
-    await page.getByRole("group", { name: "Builder colour theme" })
-      .getByRole("radio", { name: "Light" }).check();
-    await page.getByRole("group", { name: "Preview colour theme" })
-      .getByRole("radio", { name: "Dark" }).check();
+    await useScopedTheme(page, "Workspace", "light");
+    await useScopedTheme(page, "Preview", "dark");
     const previewAppearance = page.getByRole("group", {
       name: "Preview appearance",
     });
-    await previewAppearance.locator("summary").click();
-    await previewAppearance.getByRole("combobox", { name: "Accent preset" })
-      .selectOption("300");
+    const previewAppearanceDetails = previewAppearance.locator(
+      ".discern-catalogue-appearance",
+    );
+    if (await previewAppearanceDetails.getAttribute("open") === null) {
+      await previewAppearanceDetails.locator("summary").click();
+    }
+    await previewAppearance.getByRole("combobox", {
+      name: "Preview accent preset",
+    })
+      .selectOption("300", { timeout: ACTION_TIMEOUT });
     await page.waitForTimeout(50);
     invariant(
       await page.locator(BUILDER_SHELL).getAttribute("data-discern-theme") ===
@@ -751,9 +788,13 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
             getComputedStyle(element).getPropertyValue(
               "--discern-builder-editor-selection",
             )
-          ) === editorColour,
+          ) === editorColour &&
+        (await page.locator(".discern-builder-card img").first().getAttribute(
+            "src",
+          ))?.endsWith("--dark.png") === true,
       "Workspace/Preview Appearance or stable editor chrome crossed boundaries",
     );
+    await previewAppearanceDetails.locator("summary").click();
 
     await page.getByRole("button", { name: "Interact", exact: true }).click();
     await page.getByRole("button", { name: "50% preview" }).click();
@@ -829,24 +870,25 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
       "Dialog callback changed persisted document data or Builder history",
     );
   } finally {
-    const workspaceTheme = page.getByRole("group", {
-      name: "Builder colour theme",
-    });
-    if (await workspaceTheme.count() === 1) {
-      await workspaceTheme.getByRole("radio", {
-        name: originalWorkspaceTheme === "system"
-          ? "System"
-          : originalWorkspaceTheme === "dark"
-          ? "Dark"
-          : "Light",
-      }).check();
-    }
     await page.evaluate(
-      ({ key, source }) => {
+      ({ key, source, appearance }) => {
         if (source === null) localStorage.removeItem(key);
         else localStorage.setItem(key, source);
+        for (
+          const [storageKey, value] of [
+            ["discern-catalogue-theme", appearance.theme],
+            ["discern-catalogue-accent-hue", appearance.accent],
+          ] as const
+        ) {
+          if (value === null) localStorage.removeItem(storageKey);
+          else localStorage.setItem(storageKey, value);
+        }
       },
-      { key: BUILDER_STORAGE_KEYS.document, source: originalSource },
+      {
+        key: BUILDER_STORAGE_KEYS.document,
+        source: originalSource,
+        appearance: originalAppearanceStorage,
+      },
     );
     await page.goto(originalUrl, { waitUntil: "networkidle" });
     await page.locator(BUILDER_READY).waitFor({ timeout: ACTION_TIMEOUT });

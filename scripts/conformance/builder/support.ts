@@ -1,4 +1,7 @@
 import type { Browser, BrowserContext, Locator, Page } from "playwright-core";
+import {
+  BUILDER_DISCOVERY_STORAGE_KEY,
+} from "../../../catalogue/builder/discovery/preferences.ts";
 import { BUILDER_STORAGE_KEYS } from "../../../catalogue/builder/persistence.ts";
 import {
   addPageFailureListeners,
@@ -26,7 +29,10 @@ export type BuilderPane = "palette" | "canvas" | "inspector";
 
 export const PANES: readonly BuilderPane[] = ["palette", "canvas", "inspector"];
 export const THEMES: readonly BuilderTheme[] = ["light", "dark"];
-export const STORAGE_KEYS = Object.values(BUILDER_STORAGE_KEYS);
+export const STORAGE_KEYS = [
+  ...Object.values(BUILDER_STORAGE_KEYS),
+  BUILDER_DISCOVERY_STORAGE_KEY,
+] as const;
 
 export interface AdaptiveCase {
   readonly label: string;
@@ -155,11 +161,7 @@ export async function resetBuilderStorage(
 }
 
 export async function useTheme(page: Page, theme: BuilderTheme): Promise<void> {
-  const switcher = page.getByRole("group", { name: "Builder colour theme" });
-  await switcher.getByRole("radio", {
-    name: theme === "light" ? "Light" : "Dark",
-    exact: true,
-  }).check({ timeout: ACTION_TIMEOUT });
+  await useScopedTheme(page, "Workspace", theme);
   await page.waitForFunction(
     ({ selector, theme }) =>
       document.querySelector(selector)?.getAttribute("data-discern-theme") ===
@@ -167,6 +169,33 @@ export async function useTheme(page: Page, theme: BuilderTheme): Promise<void> {
     { selector: BUILDER_SHELL, theme },
     { timeout: ACTION_TIMEOUT },
   );
+}
+
+/** Drive the shared Appearance authority for one Builder-owned scope. */
+export async function useScopedTheme(
+  page: Page,
+  scope: "Workspace" | "Preview",
+  theme: BuilderTheme,
+): Promise<void> {
+  const group = page.getByRole("group", { name: `${scope} appearance` });
+  const details = group.locator(".discern-catalogue-appearance");
+  const wasOpen = await details.getAttribute("open") !== null;
+  if (!wasOpen) await details.locator("summary").click();
+  try {
+    const toggle = details.locator(".discern-theme-toggle");
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      if (await toggle.getAttribute("data-discern-mode") === theme) return;
+      await toggle.click({ timeout: ACTION_TIMEOUT });
+    }
+    invariant(
+      await toggle.getAttribute("data-discern-mode") === theme,
+      `${scope} Appearance did not resolve to ${theme}`,
+    );
+  } finally {
+    if (!wasOpen && await details.getAttribute("open") !== null) {
+      await details.locator("summary").click();
+    }
+  }
 }
 
 export function paneLocator(page: Page, pane: BuilderPane): Locator {

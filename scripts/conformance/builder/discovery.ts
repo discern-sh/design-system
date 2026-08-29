@@ -191,6 +191,15 @@ export async function placeNamedComponent(
       (await place.locator("small").innerText()).includes("Fits target"),
       `${name} did not project the tree authority's positive compatibility`,
     );
+    const cancellation = context.getByRole("button", {
+      name: "Cancel placement",
+      exact: true,
+    });
+    invariant(
+      await cancellation.count() === 1 &&
+        await context.getByRole("button").count() === 1,
+      "Contextual discovery exposed competing actions for one cancellation",
+    );
   }
   await place.click({
     timeout: ACTION_TIMEOUT,

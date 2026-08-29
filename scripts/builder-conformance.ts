@@ -4,6 +4,7 @@ import { verifyContainedFailures } from "./conformance/builder/inspector.ts";
 import {
   captureBuilderScreenshots,
   verifyAuthoringJourney,
+  verifyIntegratedCompositionJourney,
   verifyTouchWorkflow,
 } from "./conformance/builder/journeys.ts";
 import { verifyKeyboardTraversal } from "./conformance/builder/preview.ts";
@@ -44,6 +45,12 @@ export async function runBuilderConformance(
     "390px authoring journey",
     0,
     () => verifyAuthoringJourney(options.page, options.origin),
+  );
+  const integratedChecks = await attempt(
+    options.failures,
+    "integrated composition journey",
+    0,
+    () => verifyIntegratedCompositionJourney(options.page, options.origin),
   );
   await attempt(
     options.failures,
@@ -107,7 +114,7 @@ export async function runBuilderConformance(
     paneTransitions: adaptive.paneTransitions,
     axeScans: adaptive.axeScans,
     keyboardStops: keyboard.stops,
-    authoringChecks,
+    authoringChecks: authoringChecks + integratedChecks,
     shortcutIsolationChecks,
     touchChecks,
     containedFailures,

@@ -1,5 +1,8 @@
 import { Buffer } from "node:buffer";
 import type { Browser, Dialog, Page } from "playwright-core";
+import {
+  BUILDER_DISCOVERY_STORAGE_KEY,
+} from "../../../catalogue/builder/discovery/preferences.ts";
 import { BUILDER_STORAGE_KEYS } from "../../../catalogue/builder/persistence.ts";
 import { placeNamedComponent } from "./discovery.ts";
 import { documentWitness, findOutlineRow, selectComposition } from "./tree.ts";
@@ -507,16 +510,16 @@ export async function verifyQuotaFailure(
       await loadBuilderPage(page, origin);
       await page.evaluate((keys) => {
         const original = Storage.prototype.setItem;
-        let writes = 0;
+        const writes: Record<string, number> = {};
         Object.defineProperty(globalThis, "__discernBuilderQuotaWrites", {
           configurable: true,
-          get: () => writes,
+          get: () => ({ ...writes }),
         });
         Object.defineProperty(Storage.prototype, "setItem", {
           configurable: true,
           value(this: Storage, key: string, value: string): void {
             if ((keys as readonly string[]).includes(key)) {
-              writes += 1;
+              writes[key] = (writes[key] ?? 0) + 1;
               throw new DOMException("Quota exceeded", "QuotaExceededError");
             }
             original.call(this, key, value);
@@ -534,18 +537,24 @@ export async function verifyQuotaFailure(
       );
       const writes = await page.evaluate(() =>
         (globalThis as typeof globalThis & {
-          __discernBuilderQuotaWrites?: number;
-        }).__discernBuilderQuotaWrites ?? 0
+          __discernBuilderQuotaWrites?: Record<string, number>;
+        }).__discernBuilderQuotaWrites ?? {}
       );
       await page.waitForTimeout(150);
       const laterWrites = await page.evaluate(() =>
         (globalThis as typeof globalThis & {
-          __discernBuilderQuotaWrites?: number;
-        }).__discernBuilderQuotaWrites ?? 0
+          __discernBuilderQuotaWrites?: Record<string, number>;
+        }).__discernBuilderQuotaWrites ?? {}
       );
       invariant(
-        writes === 1 && laterWrites === writes,
-        `quota circuit attempted ${writes} then ${laterWrites} writes`,
+        writes[BUILDER_STORAGE_KEYS.document] === 1 &&
+          writes[BUILDER_DISCOVERY_STORAGE_KEY] === 1 &&
+          Object.values(writes).reduce((total, count) => total + count, 0) ===
+            2 &&
+          JSON.stringify(laterWrites) === JSON.stringify(writes),
+        `quota circuits attempted ${JSON.stringify(writes)} then ${
+          JSON.stringify(laterWrites)
+        } writes`,
       );
     },
   );

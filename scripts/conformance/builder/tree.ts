@@ -111,11 +111,7 @@ export async function verifyShortcutIsolation(page: Page): Promise<number> {
     page.getByRole("button", { name: "Duplicate", exact: true }),
     "focused action button",
   );
-  checks += await assertInteractiveShortcutIsolation(
-    page,
-    await findOutlineRow(page, "Button"),
-    "focused outline button",
-  );
+  checks += await verifyLayerDocumentShortcuts(page);
 
   await activatePane(page, "palette");
   checks += await assertInteractiveShortcutIsolation(
@@ -137,6 +133,59 @@ export async function verifyShortcutIsolation(page: Page): Promise<number> {
   );
   checks += await verifyStructuralAuthoring(page);
   return checks;
+}
+
+async function verifyLayerDocumentShortcuts(page: Page): Promise<number> {
+  const row = await findOutlineRow(page, "Button");
+  await row.click();
+  const item = row.locator(
+    "xpath=ancestor::*[@data-discern-builder-outline-id][1]",
+  );
+  const id = await item.getAttribute("data-discern-builder-outline-id");
+  invariant(id !== null, "focused Button layer has no stable id");
+  await row.press("Delete");
+  await page.locator(`[data-discern-builder-outline-id="${id}"]`).waitFor({
+    state: "detached",
+    timeout: ACTION_TIMEOUT,
+  });
+  const survivor = page.locator(
+    ".discern-builder-layers__select[aria-current='true']",
+  );
+  const survivorId = await survivor.evaluate((element) =>
+    element.closest("[data-discern-builder-outline-id]")?.getAttribute(
+      "data-discern-builder-outline-id",
+    )
+  );
+  invariant(
+    survivorId !== null && survivorId !== undefined &&
+      await survivor.evaluate((element) =>
+        element.ownerDocument.activeElement === element
+      ),
+    "Layers delete did not focus the nearest surviving selection",
+  );
+  await page.keyboard.press("Control+z");
+  const restored = page.locator(
+    `[data-discern-builder-outline-id="${id}"]`,
+  );
+  await restored.waitFor({ state: "visible", timeout: ACTION_TIMEOUT });
+  const selectedAfterUndo = page.locator(
+    `[data-discern-builder-outline-id="${survivorId}"] .discern-builder-layers__select`,
+  );
+  invariant(
+    await selectedAfterUndo.evaluate((element) =>
+      element.ownerDocument.activeElement === element &&
+      element.getAttribute("aria-current") === "true"
+    ),
+    "Layers undo did not preserve the reconciled selection and focus",
+  );
+  await page.keyboard.press("Control+Shift+z");
+  await page.locator(`[data-discern-builder-outline-id="${id}"]`).waitFor({
+    state: "detached",
+    timeout: ACTION_TIMEOUT,
+  });
+  await page.keyboard.press("Control+z");
+  await restored.waitFor({ state: "visible", timeout: ACTION_TIMEOUT });
+  return 4;
 }
 
 async function layerItem(page: Page, label: string): Promise<Locator> {
@@ -181,10 +230,10 @@ async function verifyStructuralAuthoring(page: Page): Promise<number> {
     checks += 1;
 
     const stack = await layerItem(page, "Stack");
-    await stack.getByRole("button", { name: "children", exact: true }).click();
+    await stack.getByRole("button", { name: "Content", exact: true }).click();
     invariant(
       (await page.locator(".discern-builder-layers__cursor").innerText())
-        .includes("Stack · children"),
+        .includes("Stack › Content"),
       "armed Stack target did not name its exact slot",
     );
     await page.getByRole("searchbox", { name: "Search components" }).press(
@@ -197,7 +246,7 @@ async function verifyStructuralAuthoring(page: Page): Promise<number> {
     );
     checks += 2;
 
-    await stack.getByRole("button", { name: "children", exact: true }).click();
+    await stack.getByRole("button", { name: "Content", exact: true }).click();
     await placeNamedComponent(page, "Button");
     const nestedRows = page.locator(`${OUTLINE_ITEM}[aria-level="2"]`);
     invariant(await nestedRows.count() > 0, "Stack did not receive a Button");
@@ -209,7 +258,7 @@ async function verifyStructuralAuthoring(page: Page): Promise<number> {
     const siblingId = await nestedRows.nth(await nestedRows.count() - 2)
       .getAttribute("data-discern-builder-outline-id");
     invariant(siblingId !== null, "nested Button has no stable sibling id");
-    await nestedButton.getByRole("button", { name: "children", exact: true })
+    await nestedButton.getByRole("button", { name: "Content", exact: true })
       .click();
     const refusedBefore = await documentWitness(page);
     await page.getByRole("button", { name: "Place Button", exact: true })
@@ -226,6 +275,33 @@ async function verifyStructuralAuthoring(page: Page): Promise<number> {
       ) &&
         refusal.includes("End of composition"),
       `nested Button refusal lacked cause or valid alternative: ${refusal}`,
+    );
+    checks += 2;
+
+    const paletteSearch = page.getByRole("searchbox", {
+      name: "Search components",
+    });
+    await paletteSearch.press("Escape");
+    await page.locator(".discern-builder-purpose select").selectOption("");
+    await paletteSearch.fill("Button");
+    const draggedBefore = await documentWitness(page);
+    await page.getByRole("button", { name: "Place Button", exact: true })
+      .dragTo(
+        nestedButton.getByRole("button", { name: "Content", exact: true }),
+        { timeout: ACTION_TIMEOUT },
+      );
+    const dragRefusal = await page.locator(
+      ".discern-builder-layers__refusal",
+    ).innerText();
+    invariant(
+      await documentWitness(page) === draggedBefore,
+      "refused palette drag changed document, history, or selection",
+    );
+    invariant(
+      dragRefusal.includes(
+        "interactive controls cannot contain interactive controls",
+      ) && dragRefusal.includes("End of composition"),
+      `nested Button drag refusal lacked cause or valid alternative: ${dragRefusal}`,
     );
     checks += 2;
 
@@ -297,7 +373,7 @@ async function verifyStructuralAuthoring(page: Page): Promise<number> {
       `[data-discern-builder-outline-id="${nestedId}"] .discern-builder-layers__select`,
     ).click();
     await page.getByLabel("Add inside Button", { exact: true }).click();
-    await page.getByRole("button", { name: "Add inside children", exact: true })
+    await page.getByRole("button", { name: "Add inside Content", exact: true })
       .click();
     invariant(
       await page.locator(".discern-builder-canvas-actions details[open]")
@@ -343,24 +419,71 @@ async function verifyStructuralAuthoring(page: Page): Promise<number> {
     const preview = page.frameLocator(
       "iframe[data-discern-builder-preview-frame]",
     );
+    const editLayer = page.locator(".discern-builder-edit-layer");
+    await editLayer.hover();
+    const outerScrollBefore = await page.locator(".discern-builder-canvas")
+      .evaluate((element) => element.scrollTop);
+    await page.mouse.wheel(0, 10_000);
+    await page.waitForFunction(() =>
+      document.querySelector<HTMLIFrameElement>(
+        "iframe[data-discern-builder-preview-frame]",
+      )?.contentWindow?.scrollY !== 0
+    );
+    invariant(
+      await page.locator(".discern-builder-canvas").evaluate((element) =>
+        element.scrollTop
+      ) === outerScrollBefore,
+      "edit-mode frame scrolling also moved the outer canvas",
+    );
     const buttonRect = await preview.locator(".discern-button").last()
       .evaluate((element) => {
         const rect = element.getBoundingClientRect();
         return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
       });
-    await page.locator(".discern-builder-edit-layer").dblclick({
-      position: {
-        x: (buttonRect.x + buttonRect.width / 2) * 0.5,
-        y: (buttonRect.y + buttonRect.height / 2) * 0.5,
-      },
-    });
+    const target = {
+      x: (buttonRect.x + buttonRect.width / 2) * 0.5,
+      y: (buttonRect.y + buttonRect.height / 2) * 0.5,
+    };
+    const frameBox = await page.locator(
+      "iframe[data-discern-builder-preview-frame]",
+    ).boundingBox();
+    invariant(frameBox !== null, "zoomed preview frame has no visible box");
+    const clientPoint = {
+      x: frameBox.x + target.x,
+      y: frameBox.y + target.y,
+    };
+    const editLayerReceivesPoint = await page.evaluate(
+      ({ x, y }) =>
+        document.elementFromPoint(x, y)?.closest(
+          ".discern-builder-edit-layer",
+        ) !== null,
+      clientPoint,
+    );
     invariant(
-      await page.getByRole("heading", { name: "Text", exact: true }).count() ===
-          1 &&
-        await page.locator(
-            ".discern-builder-canvas-actions",
-          ).count() === 0,
-      "zoomed double-click did not route literal text to its direct editor",
+      editLayerReceivesPoint,
+      `zoomed target was outside the scrolled edit layer: ${
+        JSON.stringify({
+          clientPoint,
+          frameBox,
+        })
+      }`,
+    );
+    await page.mouse.dblclick(clientPoint.x, clientPoint.y);
+    const directEditWitness = {
+      textHeading: await page.getByRole("heading", {
+        name: "Text",
+        exact: true,
+      }).count(),
+      canvasActions: await page.locator(
+        ".discern-builder-canvas-actions",
+      ).count(),
+    };
+    invariant(
+      directEditWitness.textHeading === 1 &&
+        directEditWitness.canvasActions === 0,
+      `zoomed double-click did not route literal text to its direct editor: ${
+        JSON.stringify(directEditWitness)
+      }`,
     );
     checks += 1;
 
