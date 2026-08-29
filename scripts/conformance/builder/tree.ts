@@ -1,4 +1,5 @@
 import type { Locator, Page } from "playwright-core";
+import { BUILDER_STORAGE_KEYS } from "../../../catalogue/builder/persistence.ts";
 import { placeNamedComponent } from "./discovery.ts";
 import {
   ACTION_TIMEOUT,
@@ -46,6 +47,10 @@ export async function selectComposition(page: Page): Promise<void> {
 export async function documentWitness(page: Page): Promise<string> {
   const history = page.getByRole("group", { name: "History" });
   return JSON.stringify({
+    acceptedDocument: await page.evaluate(
+      (key) => localStorage.getItem(key),
+      BUILDER_STORAGE_KEYS.document,
+    ),
     name: await page.getByRole("textbox", { name: "Composition name" })
       .inputValue(),
     outline: await page.locator(OUTLINE_ROW).evaluateAll((nodes) =>

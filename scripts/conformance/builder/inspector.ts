@@ -73,8 +73,8 @@ export async function verifySaveFile(page: Page): Promise<number> {
     });
     const beforeDraft = await documentWitness(page);
     await additional.fill("{");
-    await page.waitForTimeout(400);
     const fieldAlert = inspector.getByRole("alert");
+    await fieldAlert.waitFor({ timeout: ACTION_TIMEOUT });
     invariant(
       await fieldAlert.count() === 1 &&
         (await fieldAlert.textContent())?.includes(
@@ -302,9 +302,14 @@ export async function verifyStructuredEditing(page: Page): Promise<number> {
     valueHandle,
     { timeout: ACTION_TIMEOUT },
   );
-  await page.waitForTimeout(400);
+  const documentDeadline = Date.now() + ACTION_TIMEOUT;
+  let afterAdd = await documentWitness(page);
+  while (afterAdd === beforeAdd && Date.now() < documentDeadline) {
+    await page.waitForTimeout(25);
+    afterAdd = await documentWitness(page);
+  }
   invariant(
-    await documentWitness(page) !== beforeAdd,
+    afterAdd !== beforeAdd,
     "valid shaped-row insertion never reached the accepted document",
   );
 
@@ -321,8 +326,8 @@ export async function verifyStructuredEditing(page: Page): Promise<number> {
   const acceptedSource = await raw.inputValue();
   const beforeDraft = await documentWitness(page);
   await raw.fill("[");
-  await page.waitForTimeout(400);
   const issue = inspector.getByRole("alert").filter({ hasText: "Tabs › Tabs" });
+  await issue.waitFor({ timeout: ACTION_TIMEOUT });
   invariant(
     await issue.count() === 1 &&
       await raw.evaluate((element) =>
