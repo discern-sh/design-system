@@ -12,6 +12,7 @@ const meta = {
   purposes: ["building-documentation"],
   accessibility: [
     "A configurable label names the navigation landmark, and each section stays a real list.",
+    "Adjacent destinations form one contiguous pointer run, so moving through a list never leaves the links' hit targets.",
     "The current destination carries aria-current=page and reinforces its highlight with weight, not colour alone.",
   ],
 } satisfies ComponentMeta;

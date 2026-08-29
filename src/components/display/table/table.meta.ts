@@ -19,6 +19,7 @@ const meta = {
   accessibility: [
     "Consumers author real thead/tbody/th markup, so header associations stay native; the wrapper only owns overflow and styling.",
     "Horizontal overflow scrolls inside the wrapper rather than the page, and the optional caption keeps its semantic position.",
+    "Cells retain ordinary word boundaries even when an enclosing prose layout permits emergency wrapping; wide values use the table's local horizontal viewport.",
     "The responsive terminal layout retains every header/value relationship in labelled records when a coherent grid cannot fit, without relying on colour.",
   ],
 } satisfies ComponentMeta;

@@ -89,3 +89,18 @@ Deno.test("Table metadata distinguishes relational data from Comparison table", 
     ),
   );
 });
+
+Deno.test("Table cells keep words readable under an aggressive consumer wrap policy", async () => {
+  const css = await Deno.readTextFile(
+    new URL(
+      "../src/components/display/table/table.css",
+      import.meta.url,
+    ),
+  );
+  assertStringIncludes(
+    css,
+    ".discern-table th,\n  .discern-table td {",
+  );
+  assertStringIncludes(css, "overflow-wrap: normal;");
+  assertStringIncludes(css, "word-break: normal;");
+});

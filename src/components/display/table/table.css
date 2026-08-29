@@ -22,8 +22,10 @@
   .discern-table td {
     padding: var(--discern-space-3) var(--discern-space-4);
     border-block-end: 1px solid var(--discern-color-border);
+    overflow-wrap: normal;
     text-align: start;
     vertical-align: top;
+    word-break: normal;
   }
   .discern-table thead th {
     border-block-end: 1px solid var(--discern-color-border-strong);

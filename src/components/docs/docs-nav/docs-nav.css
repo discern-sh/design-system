@@ -21,7 +21,7 @@
   }
   .discern-docs-nav ul {
     display: grid;
-    gap: var(--discern-space-1);
+    gap: 0;
     margin: 0;
     padding: 0;
     border-inline-start: 1px solid var(--discern-color-border-strong);
