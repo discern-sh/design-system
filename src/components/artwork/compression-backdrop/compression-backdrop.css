@@ -30,7 +30,7 @@
     animation: discern-compression-backdrop-drift
       calc(var(--discern-backdrop-beat)
       * 15) var(--discern-backdrop-ease-drift)
-      infinite;
+      1;
   }
 
   .discern-compression-backdrop__tick--major {
@@ -42,21 +42,21 @@
     transform-origin: 380px 270px;
     animation: discern-compression-backdrop-breathe
       calc(var(--discern-backdrop-beat) * 15) var(--discern-backdrop-ease-drift)
-      infinite;
+      1;
   }
 
   .discern-compression-backdrop__head {
     animation: discern-compression-backdrop-head
       calc(var(--discern-backdrop-beat) *
       15) var(--discern-backdrop-ease-drift)
-      infinite;
+      1;
   }
 
   .discern-compression-backdrop__tail {
     animation: discern-compression-backdrop-tail
       calc(var(--discern-backdrop-beat) *
       15) var(--discern-backdrop-ease-drift)
-      infinite;
+      1;
   }
 
   .discern-compression-backdrop__creases {
@@ -64,7 +64,7 @@
     animation: discern-compression-backdrop-crease
       calc(var(--discern-backdrop-beat)
       * 15) var(--discern-backdrop-ease-drift)
-      infinite;
+      1;
   }
 
   .discern-compression-backdrop__creases path {

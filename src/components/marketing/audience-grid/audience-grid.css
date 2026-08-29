@@ -1,5 +1,6 @@
 @layer discern.components {
   .discern-audience-grid {
+    container: discern-audience-grid / inline-size;
     padding-block: var(--discern-section-space);
     background: var(--discern-color-canvas);
   }
@@ -104,7 +105,7 @@
     font-weight: var(--discern-font-weight-strong);
     text-underline-offset: 0.25em;
   }
-  @media (max-width: 860px) {
+  @container discern-audience-grid (max-width: 860px) {
     .discern-audience-grid__header {
       grid-template-columns: 1fr;
       gap: var(--discern-space-5);

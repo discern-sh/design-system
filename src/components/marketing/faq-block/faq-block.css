@@ -1,12 +1,13 @@
 @layer discern.components {
   .discern-faq-block {
+    container: discern-faq-block / inline-size;
     padding-block: var(--discern-section-space);
     background: var(--discern-color-surface-sunken);
   }
   .discern-faq-block__inner {
     display: grid;
     grid-template-columns: minmax(14rem, 0.55fr) minmax(0, 1fr);
-    gap: clamp(3rem, 8vw, 7rem);
+    gap: clamp(3rem, 8cqi, 7rem);
     align-items: start;
     width: min(100% - 2 * var(--discern-space-6), var(--discern-page-max));
     margin-inline: auto;
@@ -91,7 +92,7 @@
   .discern-faq-block__answer > :last-child {
     margin-block-end: 0;
   }
-  @media (max-width: 760px) {
+  @container discern-faq-block (max-width: 760px) {
     .discern-faq-block__inner {
       grid-template-columns: 1fr;
     }

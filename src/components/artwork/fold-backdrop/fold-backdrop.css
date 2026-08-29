@@ -23,13 +23,12 @@
     opacity: 1;
     animation: discern-fold-backdrop-light calc(var(--discern-backdrop-beat) *
       45)
-      var(--discern-backdrop-ease-drift) infinite both;
+      var(--discern-backdrop-ease-drift) 1 both;
     animation-delay: var(--discern-fold-backdrop-offset, 0s);
   }
 
   @keyframes discern-fold-backdrop-light {
-    0%,
-    100% {
+    0% {
       opacity: 0.72;
     }
 
@@ -39,6 +38,10 @@
 
     64% {
       opacity: 0.86;
+    }
+
+    100% {
+      opacity: 1;
     }
   }
 }

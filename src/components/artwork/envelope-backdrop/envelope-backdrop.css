@@ -31,7 +31,7 @@
     animation: discern-envelope-backdrop-glance
       calc(var(--discern-backdrop-beat) *
       40)
-      var(--discern-backdrop-ease-drift) infinite both;
+      var(--discern-backdrop-ease-drift) 1 both;
     animation-delay: var(--discern-envelope-backdrop-offset, 0s);
   }
 

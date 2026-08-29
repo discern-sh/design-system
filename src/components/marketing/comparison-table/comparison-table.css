@@ -1,5 +1,6 @@
 @layer discern.components {
   .discern-comparison-table {
+    container: discern-comparison-table / inline-size;
     padding-block: var(--discern-section-space);
     background: var(--discern-color-surface-sunken);
   }
@@ -79,7 +80,7 @@
     color: var(--discern-color-accent-800);
     font-size: var(--discern-font-size-xs);
   }
-  @media (max-width: 680px) {
+  @container discern-comparison-table (max-width: 680px) {
     .discern-comparison-table__frame {
       overflow: visible;
       border: 0;

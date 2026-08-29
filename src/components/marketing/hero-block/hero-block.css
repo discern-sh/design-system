@@ -1,5 +1,6 @@
 @layer discern.components {
   .discern-hero-block {
+    container: discern-hero-block / inline-size;
     position: relative;
     isolation: isolate;
     overflow: hidden;
@@ -39,12 +40,12 @@
     z-index: 1;
     display: grid;
     grid-template-columns: minmax(0, 1.05fr) minmax(18rem, 0.95fr);
-    gap: clamp(3rem, 8vw, 7rem);
+    gap: clamp(3rem, 8cqi, 7rem);
     align-items: center;
     width: min(100% - 2 * var(--discern-space-6), var(--discern-page-max));
     min-height: min(760px, calc(100vh - 68px));
     margin-inline: auto;
-    padding-block: clamp(5rem, 10vw, 8.5rem);
+    padding-block: clamp(5rem, 10cqi, 8.5rem);
   }
   .discern-hero-block__backdrop {
     position: absolute;
@@ -55,6 +56,7 @@
   }
   .discern-hero-block__content {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     justify-items: start;
     gap: var(--discern-space-5);
     min-width: 0;
@@ -67,8 +69,10 @@
     font-weight: var(--discern-font-weight-strong);
   }
   .discern-hero-block__title {
+    min-inline-size: 0;
     max-width: 12ch;
     margin: 0;
+    overflow-wrap: anywhere;
   }
   .discern-hero-block__description {
     max-width: 60ch;
@@ -110,10 +114,10 @@
   .discern-hero-block--showcase .discern-hero-block__inner {
     grid-template-columns: minmax(0, 86rem);
     justify-content: center;
-    gap: clamp(4.5rem, 9vw, 8rem);
+    gap: clamp(4.5rem, 9cqi, 8rem);
     width: min(100% - 2 * var(--discern-space-6), 86rem);
     min-height: auto;
-    padding-block: clamp(5rem, 9vw, 8.75rem) clamp(4rem, 8vw, 7rem);
+    padding-block: clamp(5rem, 9cqi, 8.75rem) clamp(4rem, 8cqi, 7rem);
     text-align: center;
   }
   .discern-hero-block--showcase .discern-hero-block__content {
@@ -138,7 +142,7 @@
   }
   .discern-hero-block--showcase .discern-hero-block__title {
     max-inline-size: 64rem;
-    font-size: clamp(4rem, 7.5vw, 7.25rem);
+    font-size: clamp(4rem, 7.5cqi, 7.25rem);
     line-height: 0.92;
     letter-spacing: -0.045em;
   }
@@ -159,7 +163,7 @@
   }
   .discern-hero-block--showcase .discern-hero-block__description {
     max-inline-size: 52rem;
-    font-size: clamp(1.15rem, 2vw, 1.48rem);
+    font-size: clamp(1.15rem, 2cqi, 1.48rem);
     line-height: 1.62;
     text-wrap: pretty;
   }
@@ -183,7 +187,7 @@
     margin-inline: auto;
     text-align: start;
   }
-  @media (max-width: 820px) {
+  @container discern-hero-block (max-width: 820px) {
     .discern-hero-block__inner {
       grid-template-columns: 1fr;
       min-height: auto;
@@ -197,7 +201,7 @@
       padding-block-start: 4.5rem;
     }
     .discern-hero-block--showcase .discern-hero-block__title {
-      font-size: clamp(3.35rem, 17vw, 5.25rem);
+      font-size: clamp(3.35rem, 17cqi, 5.25rem);
     }
     .discern-hero-block--showcase .discern-hero-block__description {
       font-size: 1.08rem;

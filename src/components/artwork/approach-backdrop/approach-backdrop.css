@@ -36,7 +36,7 @@
     animation: discern-approach-backdrop-attend
       calc(var(--discern-backdrop-beat) *
       45)
-      var(--discern-backdrop-ease-drift) infinite both;
+      var(--discern-backdrop-ease-drift) 1 both;
     animation-delay: var(--discern-approach-backdrop-offset, 0s);
   }
 

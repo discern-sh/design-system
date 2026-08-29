@@ -11,7 +11,7 @@
     animation: discern-tiling-backdrop-wash calc(var(--discern-backdrop-beat) *
       20)
       var(--discern-backdrop-ease-drift)
-      infinite;
+      1;
   }
 
   .discern-tiling-backdrop__tile {
@@ -20,7 +20,7 @@
     animation: discern-tiling-backdrop-turn calc(var(--discern-backdrop-beat) *
       20)
       var(--discern-backdrop-ease-settle)
-      infinite;
+      1;
   }
 
   .discern-tiling-backdrop__tile-arcs {
@@ -28,7 +28,7 @@
     animation: discern-tiling-backdrop-wash calc(var(--discern-backdrop-beat) *
       20)
       var(--discern-backdrop-ease-drift)
-      infinite;
+      1;
   }
 
   .discern-tiling-backdrop__route {
@@ -39,7 +39,7 @@
     opacity: 0;
     animation: discern-tiling-backdrop-route calc(var(--discern-backdrop-beat) *
       20)
-      linear infinite;
+      linear 1;
   }
 
   .discern-tiling-backdrop__route--rest {

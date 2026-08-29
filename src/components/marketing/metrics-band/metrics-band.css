@@ -1,6 +1,7 @@
 @layer discern.components {
   .discern-metrics-band {
-    padding-block: clamp(3.5rem, 7vw, 5.5rem);
+    container: discern-metrics-band / inline-size;
+    padding-block: clamp(3.5rem, 7cqi, 5.5rem);
     border-block: 1px solid var(--discern-color-border);
     background: var(--discern-color-surface);
   }
@@ -64,7 +65,7 @@
     color: var(--discern-color-accent-600);
     font-family: var(--discern-font-ui);
     font-feature-settings: var(--discern-font-features-ui);
-    font-size: clamp(2.3rem, 5vw, 3.65rem);
+    font-size: clamp(2.3rem, 5cqi, 3.65rem);
     font-weight: var(--discern-font-weight-strong);
     letter-spacing: -0.04em;
     line-height: 1;
@@ -91,7 +92,7 @@
     color: color-mix(in oklab, var(--discern-color-inverse-ink) 68%,
       transparent);
   }
-  @media (max-width: 760px) {
+  @container discern-metrics-band (max-width: 760px) {
     .discern-metrics-band__inner {
       grid-template-columns: 1fr;
     }

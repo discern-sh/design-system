@@ -1,5 +1,6 @@
 @layer discern.components {
   .discern-cta-band {
+    container: discern-cta-band / inline-size;
     padding: var(--discern-space-6);
     background: var(--discern-color-canvas);
   }
@@ -9,7 +10,7 @@
     overflow: hidden;
     width: min(100%, var(--discern-page-max));
     margin-inline: auto;
-    padding: clamp(3rem, 8vw, 6.5rem);
+    padding: clamp(3rem, 8cqi, 6.5rem);
     border: 1px solid var(--discern-color-accent-300);
     border-radius: var(--discern-radius-lg);
     background:
@@ -88,13 +89,13 @@
   }
   .discern-cta-band__note {
     margin-block-start: var(--discern-space-4);
-    color: var(--discern-color-ink-faint);
+    color: var(--discern-color-ink-muted);
     font-family: var(--discern-font-ui);
     font-feature-settings: var(--discern-font-features-ui);
-    font-size: var(--discern-font-size-xs);
+    font-size: var(--discern-font-size-sm);
   }
   .discern-cta-band--contrast .discern-cta-band__note {
-    color: color-mix(in oklab, var(--discern-color-inverse-ink) 60%,
+    color: color-mix(in oklab, var(--discern-color-inverse-ink) 76%,
       transparent);
   }
   .discern-cta-band--split .discern-cta-band__inner,
@@ -122,7 +123,7 @@
     position: relative;
     min-width: 0;
   }
-  @media (max-width: 720px) {
+  @container discern-cta-band (max-width: 720px) {
     .discern-cta-band--split .discern-cta-band__inner,
     .discern-cta-band--with-visual .discern-cta-band__inner {
       grid-template-columns: 1fr;

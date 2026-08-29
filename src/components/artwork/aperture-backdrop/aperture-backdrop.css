@@ -27,7 +27,7 @@
     animation: discern-aperture-backdrop-lean calc(var(--discern-backdrop-beat)
       *
       35)
-      var(--discern-backdrop-ease-drift) infinite both;
+      var(--discern-backdrop-ease-drift) 1 both;
     animation-delay: var(--discern-aperture-backdrop-offset, 0s);
   }
 

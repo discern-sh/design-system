@@ -40,7 +40,7 @@
     transform: translate3d(-16%, 0, 0);
     animation: discern-survey-backdrop-wash calc(var(--discern-backdrop-beat) *
       30)
-      var(--discern-backdrop-ease-drift) infinite;
+      var(--discern-backdrop-ease-drift) 1;
   }
 
   @keyframes discern-survey-backdrop-wash {

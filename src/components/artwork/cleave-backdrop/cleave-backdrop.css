@@ -22,7 +22,7 @@
     animation: discern-cleave-backdrop-weather calc(var(--discern-backdrop-beat)
       *
       50)
-      var(--discern-backdrop-ease-drift) infinite both;
+      var(--discern-backdrop-ease-drift) 1 both;
   }
 
   .discern-cleave-backdrop__edge {
@@ -40,8 +40,7 @@
   }
 
   @keyframes discern-cleave-backdrop-weather {
-    0%,
-    100% {
+    0% {
       opacity: 0.68;
     }
 
@@ -51,6 +50,10 @@
 
     72% {
       opacity: 0.84;
+    }
+
+    100% {
+      opacity: 1;
     }
   }
 }

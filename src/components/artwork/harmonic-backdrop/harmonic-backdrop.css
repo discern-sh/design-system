@@ -19,7 +19,7 @@
     animation: discern-harmonic-backdrop-ink calc(var(--discern-backdrop-beat) *
       20)
       var(--discern-backdrop-ease-drift)
-      infinite;
+      1;
   }
 
   .discern-harmonic-backdrop__grain {
@@ -27,14 +27,14 @@
     animation: discern-harmonic-backdrop-migrate
       calc(var(--discern-backdrop-beat) *
       20)
-      var(--discern-backdrop-ease-settle) infinite;
+      var(--discern-backdrop-ease-settle) 1;
     animation-fill-mode: backwards;
   }
 
   .discern-harmonic-backdrop__tremble {
     animation: discern-harmonic-backdrop-tremble var(--discern-backdrop-beat)
       linear
-      infinite;
+      1;
   }
 
   @keyframes discern-harmonic-backdrop-migrate {
@@ -82,13 +82,10 @@
         var(--discern-harmonic-backdrop-bx),
         var(--discern-harmonic-backdrop-by)
       );
-      animation-timing-function: var(--discern-backdrop-ease-drift);
+      animation-timing-function: var(--discern-backdrop-ease-settle);
     }
     100% {
-      transform: translate(
-        var(--discern-harmonic-backdrop-sx),
-        var(--discern-harmonic-backdrop-sy)
-      );
+      transform: translate(0, 0);
     }
   }
 
@@ -123,7 +120,7 @@
       opacity: var(--discern-backdrop-veil-3);
     }
     100% {
-      opacity: var(--discern-backdrop-veil-2);
+      opacity: var(--discern-backdrop-veil-3);
     }
   }
 }
