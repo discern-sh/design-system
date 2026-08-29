@@ -234,6 +234,7 @@ function ReviewSpecimen({
         });
         const directive = posture.capture;
         if (directive !== undefined) {
+          const rootBounds = root.getBoundingClientRect();
           const regions = directive.selectors.flatMap((selector) =>
             [...root.querySelectorAll<HTMLElement>(selector)].map((element) =>
               element.getBoundingClientRect()
@@ -241,12 +242,20 @@ function ReviewSpecimen({
           );
           captureRegionForReview(
             regions,
-            {
-              x: 0,
-              y: 0,
-              width: document.documentElement.scrollWidth,
-              height: document.documentElement.scrollHeight,
-            },
+            [
+              {
+                x: rootBounds.x - root.scrollLeft,
+                y: rootBounds.y - root.scrollTop,
+                width: root.scrollWidth,
+                height: root.scrollHeight,
+              },
+              {
+                x: -scrollX,
+                y: -scrollY,
+                width: document.documentElement.scrollWidth,
+                height: document.documentElement.scrollHeight,
+              },
+            ],
             `${entry.meta.slug}/${posture.id}`,
           );
         }

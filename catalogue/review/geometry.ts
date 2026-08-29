@@ -36,14 +36,25 @@ export function inspectReviewGeometry(input: {
 /** Integer union for the existing declared selectors, bounded by one host. */
 export function captureRegionForReview(
   regions: readonly ReviewRect[],
-  host: ReviewRect,
+  host: ReviewRect | readonly ReviewRect[],
   identity: string,
 ): ReviewRect {
+  const hosts: readonly ReviewRect[] = Array.isArray(host) ? host : [host];
   if (
-    !validRect(host) || regions.length === 0 ||
+    hosts.length === 0 || hosts.some((candidate) => !validRect(candidate)) ||
+    regions.length === 0 ||
     regions.some((rect) => !validRect(rect))
   ) {
     throw new TypeError(`${identity} has an empty review capture region`);
+  }
+  const contained = (rect: ReviewRect): boolean =>
+    hosts.some((candidate) =>
+      rect.x >= candidate.x && rect.y >= candidate.y &&
+      rect.x + rect.width <= candidate.x + candidate.width &&
+      rect.y + rect.height <= candidate.y + candidate.height
+    );
+  if (regions.some((rect) => !contained(rect))) {
+    throw new TypeError(`${identity} capture region escapes its example host`);
   }
   const left = Math.floor(Math.min(...regions.map(({ x }) => x)));
   const top = Math.floor(Math.min(...regions.map(({ y }) => y)));
@@ -54,11 +65,5 @@ export function captureRegionForReview(
     Math.max(...regions.map(({ y, height }) => y + height)),
   );
   const region = { x: left, y: top, width: right - left, height: bottom - top };
-  const hostRight = host.x + host.width;
-  const hostBottom = host.y + host.height;
-  if (
-    region.x < host.x || region.y < host.y ||
-    region.x + region.width > hostRight || region.y + region.height > hostBottom
-  ) throw new TypeError(`${identity} capture region escapes its example host`);
   return region;
 }

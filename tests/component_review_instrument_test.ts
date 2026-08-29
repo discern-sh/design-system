@@ -136,6 +136,36 @@ Deno.test("portalled evidence uses the declared multi-root capture union and fai
   }
 });
 
+Deno.test("capture validation accepts contained local overflow and viewport evidence without accepting either outside", () => {
+  assertEquals(
+    captureRegionForReview(
+      [
+        { x: 820, y: 40, width: 160, height: 40 },
+        { x: 120, y: 140, width: 320, height: 220 },
+      ],
+      [
+        { x: 760, y: 20, width: 720, height: 180 },
+        { x: 0, y: 0, width: 800, height: 600 },
+      ],
+      "button-and-portal",
+    ),
+    { x: 120, y: 40, width: 860, height: 320 },
+  );
+  assertThrows(
+    () =>
+      captureRegionForReview(
+        [{ x: 1500, y: 20, width: 80, height: 40 }],
+        [
+          { x: 760, y: 20, width: 720, height: 180 },
+          { x: 0, y: 0, width: 800, height: 600 },
+        ],
+        "outside-both-hosts",
+      ),
+    TypeError,
+    "outside-both-hosts",
+  );
+});
+
 Deno.test("the review matrix covers baseline axes without a Cartesian explosion", () => {
   const matrix = planComponentReviewMatrix(sources);
   const defaults = matrix.filter(({ category }) => category === "default");
