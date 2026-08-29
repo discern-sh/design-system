@@ -77,7 +77,12 @@ export const Command: DiscernComponent<HTMLElement, CommandProps> = forwardRef<
         )
         : null}
       <div className="discern-command__execution">
-        <pre className="discern-command__text" tabIndex={0}>
+        <pre
+          className="discern-command__text"
+          role="group"
+          aria-label={`Scrollable command: ${command}`}
+          tabIndex={0}
+        >
           <code>{command}</code>
         </pre>
         <CopyButton

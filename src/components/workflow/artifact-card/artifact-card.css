@@ -1,11 +1,16 @@
 @layer discern.components {
   .discern-artifact-card {
+    container: discern-artifact-card / inline-size;
     display: flex;
     flex-direction: column;
     gap: var(--discern-space-4);
     min-inline-size: 0;
     max-inline-size: 100%;
-    padding: var(--discern-space-6);
+    padding: clamp(
+      var(--discern-space-4),
+      4%,
+      var(--discern-space-6)
+    );
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-md);
     background: var(--discern-color-surface);
@@ -70,10 +75,7 @@
     align-items: center;
     min-block-size: 24px;
   }
-  @media (max-width: 28rem) {
-    .discern-artifact-card {
-      padding: var(--discern-space-4);
-    }
+  @container discern-artifact-card (max-width: 28rem) {
     .discern-artifact-card__meta > div {
       grid-template-columns: 1fr;
       gap: var(--discern-space-1);

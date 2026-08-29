@@ -1,5 +1,6 @@
 @layer discern.components {
   .discern-result-summary {
+    container: discern-result-summary / inline-size;
     display: grid;
     gap: var(--discern-space-4);
     max-inline-size: 100%;
@@ -99,7 +100,7 @@
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-xs);
   }
-  @media (max-width: 30rem) {
+  @container discern-result-summary (max-width: 30rem) {
     .discern-result-summary__header,
     .discern-result-summary__next {
       grid-template-columns: minmax(0, 1fr);

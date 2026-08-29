@@ -1,7 +1,8 @@
 @layer discern.components {
   .discern-procedure {
+    container: discern-procedure / inline-size;
     display: grid;
-    gap: var(--discern-space-6);
+    gap: clamp(var(--discern-space-5), 4%, var(--discern-space-6));
     min-inline-size: 0;
     margin-block-end: var(--discern-space-8);
     color: var(--discern-color-ink);
@@ -74,10 +75,7 @@
     font-size: var(--discern-font-size-sm);
     line-height: var(--discern-leading-body);
   }
-  @media (max-width: 620px) {
-    .discern-procedure {
-      gap: var(--discern-space-5);
-    }
+  @container discern-procedure (max-width: 38.75rem) {
     .discern-procedure__steps {
       gap: var(--discern-space-5);
       padding-inline-start: var(--discern-space-5);

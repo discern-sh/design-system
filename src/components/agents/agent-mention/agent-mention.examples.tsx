@@ -2,6 +2,7 @@ import {
   type ConformanceScenario,
   defineCatalogueExamples,
 } from "../../../../catalogue/conformance.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import { AgentMention } from "./agent-mention.tsx";
 import meta, { componentExampleVocabulary } from "./agent-mention.meta.ts";
 
@@ -49,6 +50,36 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "default", Example: StaticMentionState },
     { id: "linked", Example: LinkedMentionState },
   ],
+);
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      id: "press-linked-mention",
+      label: "Linked mention pointer contact",
+      example: "linked",
+      category: "interaction",
+      sequence: [
+        {
+          action: "pointer-down",
+          target: { selector: 'a.discern-agent-mention[href="#quill"]' },
+        },
+        {
+          checkpoint: {
+            id: "linked-mention-pressed",
+            label: "Linked mention pointer held",
+          },
+        },
+        {
+          action: "pointer-up",
+          target: { selector: 'a.discern-agent-mention[href="#quill"]' },
+        },
+      ],
+      capture: { selectors: [".discern-agent-mention"] },
+    },
+  ] as const,
 );
 
 export default function AgentMentionExamples() {

@@ -21,18 +21,20 @@ export const Rule: DiscernComponent<HTMLElement, RuleProps> = forwardRef<
       className={classNames("discern-rule", className)}
       {...props}
     >
-      <span className="discern-rule__label">Rule</span>
-      <div className="discern-rule__body">{children}</div>
-      <dl className="discern-rule__meta">
-        <div>
-          <dt>Origin</dt>
-          <dd>{origin}</dd>
-        </div>
-        <div>
-          <dt>Scope</dt>
-          <dd>{scope}</dd>
-        </div>
-      </dl>
+      <div className="discern-rule__layout">
+        <span className="discern-rule__label">Rule</span>
+        <div className="discern-rule__body">{children}</div>
+        <dl className="discern-rule__meta">
+          <div>
+            <dt>Origin</dt>
+            <dd>{origin}</dd>
+          </div>
+          <div>
+            <dt>Scope</dt>
+            <dd>{scope}</dd>
+          </div>
+        </dl>
+      </div>
     </article>
   );
 });

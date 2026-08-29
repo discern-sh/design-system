@@ -80,12 +80,10 @@
     color: var(--discern-color-ink-muted);
   }
   .discern-worklog__detail {
-    overflow: hidden;
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
+    font-size: var(--discern-font-size-sm);
     line-height: 1.4;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
   }
   .discern-worklog__meta {
     flex: none;

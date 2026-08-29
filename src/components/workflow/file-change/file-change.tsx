@@ -52,25 +52,27 @@ export const FileChange: DiscernComponent<HTMLDivElement, FileChangeProps> =
         data-discern-disposition={disposition}
         {...props}
       >
-        <span className="discern-file-change__state">
-          <span className="discern-file-change__marker" aria-hidden="true">
-            {dispositionMarkers[disposition]}
-          </span>
-          {dispositionLabels[disposition]}
-        </span>
-        <span className="discern-file-change__path">
-          <PathReference path={path} />
-        </span>
-        {magnitude
-          ? (
-            <span className="discern-file-change__magnitude">
-              <Diffstat
-                added={magnitude.added}
-                removed={magnitude.removed}
-              />
+        <div className="discern-file-change__layout">
+          <span className="discern-file-change__state">
+            <span className="discern-file-change__marker" aria-hidden="true">
+              {dispositionMarkers[disposition]}
             </span>
-          )
-          : null}
+            {dispositionLabels[disposition]}
+          </span>
+          <span className="discern-file-change__path">
+            <PathReference path={path} />
+          </span>
+          {magnitude
+            ? (
+              <span className="discern-file-change__magnitude">
+                <Diffstat
+                  added={magnitude.added}
+                  removed={magnitude.removed}
+                />
+              </span>
+            )
+            : null}
+        </div>
       </div>
     );
   });

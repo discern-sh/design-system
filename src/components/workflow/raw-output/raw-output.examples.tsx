@@ -1,5 +1,6 @@
 import type { ConformanceScenario } from "../../../../catalogue/conformance.ts";
 import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import { RawOutput } from "./raw-output.tsx";
 import meta, { componentExampleVocabulary } from "./raw-output.meta.ts";
 
@@ -52,6 +53,30 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "default", Example: CollapsedOutputState },
     { id: "expanded", Example: ExpandedOutputState },
   ],
+);
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      id: "press-raw-output",
+      label: "Raw output disclosure pointer contact",
+      example: "default",
+      category: "interaction",
+      sequence: [
+        { action: "pointer-down", target: disclosure },
+        {
+          checkpoint: {
+            id: "raw-output-pressed",
+            label: "Disclosure pointer held",
+          },
+        },
+        { action: "pointer-up", target: disclosure },
+      ],
+      capture: { selectors: ["[data-example-raw-output]"] },
+    },
+  ] as const,
 );
 
 export default function RawOutputExamples() {

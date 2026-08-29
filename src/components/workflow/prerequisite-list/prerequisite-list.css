@@ -1,5 +1,6 @@
 @layer discern.components {
   .discern-prerequisite-list {
+    container: discern-prerequisite-list / inline-size;
     display: grid;
     gap: var(--discern-space-3);
     min-inline-size: 0;
@@ -71,7 +72,7 @@
   [data-discern-state="unresolved"] > :where(.discern-prerequisite-list__marker, .discern-prerequisite-list__state) {
     color: var(--discern-color-warning-deep);
   }
-  @media (max-width: 620px) {
+  @container discern-prerequisite-list (max-width: 38.75rem) {
     .discern-prerequisite-list__item {
       grid-template-columns: max-content minmax(0, 1fr);
     }

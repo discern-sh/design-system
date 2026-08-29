@@ -37,7 +37,14 @@ export const RawOutput: DiscernComponent<HTMLDetailsElement, RawOutputProps> =
             aria-hidden="true"
           />
         </summary>
-        <pre className="discern-raw-output__content">
+        <pre
+          className="discern-raw-output__content"
+          role="group"
+          aria-label={typeof label === "string"
+            ? `Scrollable raw output: ${label}`
+            : "Scrollable raw output"}
+          tabIndex={0}
+        >
           <code>{children}</code>
         </pre>
       </details>

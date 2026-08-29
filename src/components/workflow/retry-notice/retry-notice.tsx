@@ -39,22 +39,24 @@ export const RetryNotice: DiscernComponent<
       role={role}
       {...props}
     >
-      <strong className="discern-retry-notice__label">
-        <span className="discern-retry-notice__state">
-          {safeToRetry ? "Safe to retry" : "Do not retry"}
-        </span>
-        {label !== undefined
-          ? (
-            <>
-              {" — "}
-              <span className="discern-retry-notice__custom-label">
-                {label}
-              </span>
-            </>
-          )
-          : null}
-      </strong>
-      <div className="discern-retry-notice__reason">{reason}</div>
+      <div className="discern-retry-notice__layout">
+        <strong className="discern-retry-notice__label">
+          <span className="discern-retry-notice__state">
+            {safeToRetry ? "Safe to retry" : "Do not retry"}
+          </span>
+          {label !== undefined
+            ? (
+              <>
+                {" — "}
+                <span className="discern-retry-notice__custom-label">
+                  {label}
+                </span>
+              </>
+            )
+            : null}
+        </strong>
+        <div className="discern-retry-notice__reason">{reason}</div>
+      </div>
     </div>
   );
 });

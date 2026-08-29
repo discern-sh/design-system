@@ -1,8 +1,6 @@
 @layer discern.components {
   .discern-retry-notice {
-    display: grid;
-    grid-template-columns: minmax(7rem, max-content) minmax(0, 1fr);
-    gap: var(--discern-space-3);
+    container: discern-retry-notice / inline-size;
     min-inline-size: 0;
     padding: var(--discern-space-3) var(--discern-space-4);
     border: 1px solid var(--discern-color-border);
@@ -10,6 +8,12 @@
     border-radius: var(--discern-radius-md);
     background: var(--discern-color-surface);
     color: var(--discern-color-ink);
+  }
+  .discern-retry-notice__layout {
+    display: grid;
+    grid-template-columns: minmax(7rem, max-content) minmax(0, 1fr);
+    gap: var(--discern-space-3);
+    min-inline-size: 0;
   }
   .discern-retry-notice--unsafe {
     border-inline-start-color: var(--discern-color-warning);
@@ -35,8 +39,8 @@
   .discern-retry-notice__reason > :last-child {
     margin-block-end: 0;
   }
-  @media (max-width: 620px) {
-    .discern-retry-notice {
+  @container discern-retry-notice (max-width: 38.75rem) {
+    .discern-retry-notice__layout {
       grid-template-columns: minmax(0, 1fr);
     }
   }

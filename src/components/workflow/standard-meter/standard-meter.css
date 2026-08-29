@@ -1,5 +1,6 @@
 @layer discern.components {
   .discern-standard-meter {
+    container: discern-standard-meter / inline-size;
     display: grid;
     gap: var(--discern-space-4);
     max-inline-size: 100%;
@@ -57,7 +58,7 @@
   .discern-standard-meter__facts > div:not(:first-child) dd {
     color: var(--discern-color-ink-muted);
   }
-  @media (max-width: 32rem) {
+  @container discern-standard-meter (max-width: 32rem) {
     .discern-standard-meter__facts {
       grid-template-columns: minmax(0, 1fr);
       gap: var(--discern-space-3);

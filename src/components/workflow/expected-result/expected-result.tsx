@@ -41,7 +41,14 @@ export const ExpectedResult: DiscernComponent<
       <span className="discern-expected-result__label">{label}</span>
       {variant === "output"
         ? (
-          <pre className="discern-expected-result__output" tabIndex={0}>
+          <pre
+            className="discern-expected-result__output"
+            role="group"
+            aria-label={typeof label === "string"
+              ? `Scrollable expected result: ${label}`
+              : "Scrollable expected result"}
+            tabIndex={0}
+          >
             <code>{children}</code>
           </pre>
         )

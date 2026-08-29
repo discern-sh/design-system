@@ -1,9 +1,14 @@
 @layer discern.components {
   .discern-procedure-step {
+    container: discern-procedure-step / inline-size;
     display: grid;
     gap: var(--discern-space-4);
     min-inline-size: 0;
-    padding-block-end: var(--discern-space-6);
+    padding-block-end: clamp(
+      var(--discern-space-5),
+      4%,
+      var(--discern-space-6)
+    );
     border-block-end: 1px solid var(--discern-color-border);
     color: var(--discern-color-ink);
   }
@@ -68,10 +73,7 @@
   .discern-procedure-step__recovery .discern-procedure-step__slot-copy {
     color: var(--discern-color-warning-deep);
   }
-  @media (max-width: 620px) {
-    .discern-procedure-step {
-      padding-block-end: var(--discern-space-5);
-    }
+  @container discern-procedure-step (max-width: 38.75rem) {
     .discern-procedure-step__criterion,
     .discern-procedure-step__recovery {
       grid-template-columns: minmax(0, 1fr);

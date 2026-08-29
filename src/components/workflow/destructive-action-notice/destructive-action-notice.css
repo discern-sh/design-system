@@ -1,5 +1,6 @@
 @layer discern.components {
   .discern-destructive-action-notice {
+    container: discern-destructive-action-notice / inline-size;
     display: grid;
     gap: var(--discern-space-4);
     min-inline-size: 0;
@@ -51,7 +52,7 @@
     font-size: var(--discern-font-size-sm);
     line-height: var(--discern-leading-body);
   }
-  @media (max-width: 620px) {
+  @container discern-destructive-action-notice (max-width: 38.75rem) {
     .discern-destructive-action-notice__fact {
       grid-template-columns: minmax(0, 1fr);
       gap: var(--discern-space-1);

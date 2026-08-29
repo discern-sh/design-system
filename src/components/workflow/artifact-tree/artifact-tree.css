@@ -1,4 +1,7 @@
 @layer discern.components {
+  .discern-artifact-tree {
+    container: discern-artifact-tree / inline-size;
+  }
   .discern-artifact-tree__list {
     display: flex;
     flex-direction: column;
@@ -68,7 +71,7 @@
     padding-inline-start: var(--discern-space-3);
     border-inline-start: 1px solid var(--discern-color-border);
   }
-  @media (max-width: 32rem) {
+  @container discern-artifact-tree (max-width: 32rem) {
     .discern-artifact-tree__row {
       grid-template-columns: 1rem minmax(0, 1fr);
     }

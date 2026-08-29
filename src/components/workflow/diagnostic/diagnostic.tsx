@@ -102,7 +102,13 @@ export const Diagnostic: DiscernComponent<HTMLElement, DiagnosticProps> =
           ? (
             <div className="discern-diagnostic__evidence">
               <span className="discern-diagnostic__label">Evidence</span>
-              <pre>
+              <pre
+                role="group"
+                aria-label={typeof title === "string"
+                  ? `Scrollable diagnostic evidence: ${title}`
+                  : "Scrollable diagnostic evidence"}
+                tabIndex={0}
+              >
                 <code>{evidence}</code>
               </pre>
             </div>

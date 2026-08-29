@@ -1,5 +1,6 @@
 @layer discern.components {
   .discern-diagnostic {
+    container: discern-diagnostic / inline-size;
     display: grid;
     gap: var(--discern-space-5);
     max-inline-size: 100%;
@@ -89,6 +90,10 @@
     line-height: var(--discern-leading-body);
     white-space: pre;
   }
+  .discern-diagnostic__evidence pre:focus-visible {
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: -2px;
+  }
   .discern-diagnostic__evidence code {
     display: block;
     inline-size: max-content;
@@ -115,7 +120,7 @@
   .discern-diagnostic__correction strong {
     font-size: var(--discern-font-size-xs);
   }
-  @media (max-width: 30rem) {
+  @container discern-diagnostic (max-width: 30rem) {
     .discern-diagnostic__correction {
       grid-template-columns: minmax(0, 1fr);
     }

@@ -25,7 +25,8 @@
   a.discern-agent-mention {
     transition:
       background var(--discern-duration-fast) var(--discern-ease-out),
-      border-color var(--discern-duration-fast) var(--discern-ease-out);
+      border-color var(--discern-duration-fast) var(--discern-ease-out),
+      box-shadow var(--discern-duration-fast) var(--discern-ease-out);
   }
   a.discern-agent-mention:hover {
     border-color: var(--discern-color-border-strong);
@@ -37,6 +38,12 @@
     outline: 3px solid color-mix(in oklab, var(--discern-color-accent-500) 35%,
       transparent);
     outline-offset: 1px;
+  }
+  a.discern-agent-mention:active {
+    border-color: var(--discern-color-border-strong);
+    background: var(--discern-color-surface-sunken);
+    box-shadow: inset 1px 1px 0 color-mix(in oklab,
+      var(--discern-color-ink) 10%, transparent);
   }
   .discern-agent-mention__sigil {
     color: var(--discern-color-accent-600);

@@ -34,13 +34,12 @@
     gap: var(--discern-space-3);
   }
   .discern-verification-report__title {
-    overflow: hidden;
+    min-inline-size: 0;
     font-size: var(--discern-font-size-sm);
     font-weight: var(--discern-font-weight-strong);
     letter-spacing: 0.06em;
-    text-overflow: ellipsis;
     text-transform: uppercase;
-    white-space: nowrap;
+    overflow-wrap: anywhere;
   }
   .discern-verification-report__stamp {
     flex: none;
@@ -78,10 +77,15 @@
   }
   .discern-verification-report__meta dd,
   .discern-verification-report__checks dd {
-    overflow: hidden;
     margin: 0;
     margin-inline-start: auto;
     text-align: end;
+  }
+  .discern-verification-report__meta dd {
+    overflow-wrap: anywhere;
+  }
+  .discern-verification-report__checks dd {
+    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -128,6 +132,8 @@
   }
   .discern-verification-report__footer {
     color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-sm);
+    line-height: var(--discern-leading-body);
   }
   @media (forced-colors: active) {
     .discern-verification-report {
