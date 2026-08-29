@@ -38,6 +38,10 @@ export const Table: DiscernComponent<HTMLDivElement, TableProps> = forwardRef<
   { caption, striped = false, numeric = false, className, children, ...props },
   ref,
 ) {
+  const accessibleCaption = typeof caption === "string" && caption.trim()
+    ? caption.trim()
+    : undefined;
+
   return (
     <div
       ref={ref}
@@ -47,6 +51,11 @@ export const Table: DiscernComponent<HTMLDivElement, TableProps> = forwardRef<
         numeric && "discern-table--numeric",
         className,
       )}
+      role="group"
+      aria-label={accessibleCaption === undefined
+        ? "Scrollable table viewport"
+        : `Scrollable table viewport: ${accessibleCaption}`}
+      tabIndex={0}
       {...props}
     >
       <table>

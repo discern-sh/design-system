@@ -3,6 +3,7 @@ import {
   type ConformanceScenario,
   defineCatalogueExamples,
 } from "../../../../catalogue/conformance.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import meta, { componentExampleVocabulary } from "./tag.meta.ts";
 import { Tag } from "./tag.tsx";
 
@@ -45,6 +46,56 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "default", Example: PlainExample },
     { id: "removable", Example: RemovableExample },
   ],
+);
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      id: "hover-remove",
+      label: "Remove hover",
+      example: "removable",
+      category: "interaction",
+      sequence: [
+        {
+          action: "hover",
+          target: { role: "button", name: "Remove ipsum" },
+        },
+        { checkpoint: { id: "tag-remove-hovered", label: "Hover feedback" } },
+      ],
+    },
+    {
+      id: "focus-remove",
+      label: "Remove focus",
+      example: "removable",
+      category: "interaction",
+      sequence: [
+        {
+          action: "focus",
+          target: { role: "button", name: "Remove ipsum" },
+        },
+        { checkpoint: { id: "tag-remove-focused", label: "Focus visible" } },
+      ],
+    },
+    {
+      id: "press-remove",
+      label: "Remove pointer contact",
+      example: "removable",
+      category: "interaction",
+      sequence: [
+        {
+          action: "pointer-down",
+          target: { role: "button", name: "Remove ipsum" },
+        },
+        { checkpoint: { id: "tag-remove-pressed", label: "Pointer held" } },
+        {
+          action: "pointer-up",
+          target: { role: "button", name: "Remove ipsum" },
+        },
+      ],
+    },
+  ] as const,
 );
 
 export default function TagExamples() {

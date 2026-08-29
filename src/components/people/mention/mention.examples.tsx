@@ -2,6 +2,7 @@ import {
   type ConformanceScenario,
   defineCatalogueExamples,
 } from "../../../../catalogue/conformance.ts";
+import { defineComponentReviewPostures } from "../../../../catalogue/review-postures.ts";
 import meta, { componentExampleVocabulary } from "./mention.meta.ts";
 import { Mention } from "./mention.tsx";
 
@@ -53,6 +54,56 @@ export const catalogueExamples = defineCatalogueExamples(
     { id: "default", Example: InlineMentionExample },
     { id: "avatar", Example: AvatarMentionExample },
   ],
+);
+
+export const reviewPostures = defineComponentReviewPostures(
+  meta,
+  componentExampleVocabulary,
+  [
+    {
+      id: "hover-link",
+      label: "Mention link hover",
+      example: "default",
+      category: "interaction",
+      sequence: [
+        {
+          action: "hover",
+          target: { selector: 'a.discern-mention[href="#morgan"]' },
+        },
+        { checkpoint: { id: "mention-link-hovered", label: "Hover feedback" } },
+      ],
+    },
+    {
+      id: "focus-link",
+      label: "Mention link focus",
+      example: "default",
+      category: "interaction",
+      sequence: [
+        {
+          action: "focus",
+          target: { selector: 'a.discern-mention[href="#morgan"]' },
+        },
+        { checkpoint: { id: "mention-link-focused", label: "Focus visible" } },
+      ],
+    },
+    {
+      id: "press-link",
+      label: "Mention link pointer contact",
+      example: "default",
+      category: "interaction",
+      sequence: [
+        {
+          action: "pointer-down",
+          target: { selector: 'a.discern-mention[href="#morgan"]' },
+        },
+        { checkpoint: { id: "mention-link-pressed", label: "Pointer held" } },
+        {
+          action: "pointer-up",
+          target: { selector: 'a.discern-mention[href="#morgan"]' },
+        },
+      ],
+    },
+  ] as const,
 );
 
 export default function MentionExamples() {

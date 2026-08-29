@@ -1,5 +1,6 @@
 @layer discern.components {
   .discern-key-points {
+    container: discern-key-points / inline-size;
     margin-block: var(--discern-space-10);
     overflow: hidden;
     border: 1px solid var(--discern-color-border-strong);
@@ -75,7 +76,8 @@
   }
   .discern-key-points li div div {
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
+    font-size: var(--discern-font-size-sm);
+    line-height: var(--discern-leading-body);
   }
   .discern-key-points li div div > :last-child {
     margin-block-end: 0;
@@ -88,7 +90,7 @@
     color: color-mix(in oklab, var(--discern-color-inverse-ink) 72%,
       transparent);
   }
-  @media (max-width: 660px) {
+  @container discern-key-points (max-width: 41.25rem) {
     .discern-key-points > header {
       grid-template-columns: 1fr;
     }

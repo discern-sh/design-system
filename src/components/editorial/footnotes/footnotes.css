@@ -34,7 +34,8 @@
     padding-block-end: var(--discern-space-4);
     border-block-end: 1px solid var(--discern-color-border);
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
+    font-size: var(--discern-font-size-sm);
+    line-height: var(--discern-leading-body);
   }
   .discern-footnotes li > span {
     color: var(--discern-color-accent-700);

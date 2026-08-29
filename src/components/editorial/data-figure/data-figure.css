@@ -1,5 +1,6 @@
 @layer discern.components {
   .discern-data-figure {
+    container: discern-data-figure / inline-size;
     margin-block: var(--discern-space-10);
     overflow: hidden;
     border: 1px solid var(--discern-color-border-strong);
@@ -109,7 +110,8 @@
     padding: var(--discern-space-4) var(--discern-space-6);
     border-block-start: 1px solid var(--discern-color-border);
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
+    font-size: var(--discern-font-size-sm);
+    line-height: var(--discern-leading-body);
   }
   .discern-data-figure figcaption small {
     color: var(--discern-color-ink-faint);
@@ -117,7 +119,7 @@
     font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-xs);
   }
-  @media (max-width: 620px) {
+  @container discern-data-figure (max-width: 38.75rem) {
     .discern-data-figure > header {
       align-items: flex-start;
       flex-direction: column;

@@ -3,6 +3,7 @@
     max-width: 100%;
     margin-block: var(--discern-space-6);
     overflow: auto;
+    overscroll-behavior: contain;
     padding: var(--discern-space-4) var(--discern-space-5);
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-md);
@@ -10,8 +11,14 @@
     color: var(--discern-color-ink);
     font: var(--discern-font-size-sm)/var(--discern-leading-body)
       var(--discern-font-mono);
+    scrollbar-width: thin;
     tab-size: 4;
     white-space: pre;
+  }
+
+  .discern-code-block:focus-visible {
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: -2px;
   }
 
   .discern-code-block:first-child {

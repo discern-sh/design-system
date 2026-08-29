@@ -21,10 +21,19 @@ export const CodeBlock: DiscernComponent<HTMLPreElement, CodeBlockProps> =
     { code, language, info, className, ...props },
     ref,
   ) {
+    const accessibleContext = [language?.trim(), info?.trim()]
+      .filter(Boolean)
+      .join(" · ");
+
     return (
       <pre
         ref={ref}
         className={classNames("discern-code-block", className)}
+        role="group"
+        aria-label={accessibleContext
+          ? `Scrollable code block: ${accessibleContext}`
+          : "Scrollable code block"}
+        tabIndex={0}
         {...props}
       >
         <code

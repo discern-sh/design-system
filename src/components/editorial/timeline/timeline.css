@@ -1,5 +1,6 @@
 @layer discern.components {
   .discern-timeline {
+    container: discern-timeline / inline-size;
     margin-block: var(--discern-space-12);
     padding-block: var(--discern-space-8);
     border-block: 1px solid var(--discern-color-border-strong);
@@ -100,7 +101,7 @@
     color: var(--discern-color-accent-700);
     font-size: var(--discern-font-size-xs);
   }
-  @media (max-width: 620px) {
+  @container discern-timeline (max-width: 38.75rem) {
     .discern-timeline > header {
       grid-template-columns: 1fr;
     }
