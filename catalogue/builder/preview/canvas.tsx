@@ -73,6 +73,7 @@ export function BuilderPreviewCanvas(
   const canvasRef = useRef<HTMLElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLIFrameElement>(null);
+  const editLayerRef = useRef<HTMLDivElement>(null);
   const [frameWindow, setFrameWindow] = useState<Window>();
   const [availableWidth, setAvailableWidth] = useState(1);
   const [layout, setLayout] = useState<BuilderPreviewLayoutMessage>();
@@ -183,7 +184,30 @@ export function BuilderPreviewCanvas(
 
   useEffect(() => {
     canvasRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
-  }, [preferences.resetViewRevision]);
+    frameWindow?.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [frameWindow, preferences.resetViewRevision]);
+
+  useEffect(() => {
+    const editLayer = editLayerRef.current;
+    if (
+      editLayer === null || frameWindow === undefined ||
+      preferences.mode !== "edit"
+    ) return;
+    const forwardWheel = (event: WheelEvent): void => {
+      const scale = event.deltaMode === WheelEvent.DOM_DELTA_LINE
+        ? 16
+        : event.deltaMode === WheelEvent.DOM_DELTA_PAGE
+        ? frameWindow.innerHeight
+        : 1;
+      const before = { x: frameWindow.scrollX, y: frameWindow.scrollY };
+      frameWindow.scrollBy(event.deltaX * scale, event.deltaY * scale);
+      if (
+        frameWindow.scrollX !== before.x || frameWindow.scrollY !== before.y
+      ) event.preventDefault();
+    };
+    editLayer.addEventListener("wheel", forwardWheel, { passive: false });
+    return () => editLayer.removeEventListener("wheel", forwardWheel);
+  }, [frameWindow, preferences.mode]);
 
   useEffect(() => setEvents([]), [preferences.interactionRevision]);
   useEffect(() => setEvents([]), [documentKey]);
@@ -284,6 +308,7 @@ export function BuilderPreviewCanvas(
           {preferences.mode === "edit"
             ? (
               <div
+                ref={editLayerRef}
                 className="discern-builder-edit-layer"
                 aria-hidden="true"
                 draggable={hoverId !== null}
