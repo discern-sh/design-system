@@ -29,6 +29,10 @@ import {
 } from "../catalogue/builder/registry-core.ts";
 import { documentToTsx } from "../catalogue/builder/export.ts";
 import {
+  armedSlotInsertionTarget,
+  projectLayers,
+} from "../catalogue/builder/tree/projection.ts";
+import {
   deriveBuilderCompatibilityPolicy,
   preflightBuilderStructure,
 } from "../catalogue/builder/tree/compatibility.ts";
@@ -373,12 +377,21 @@ Deno.test("valid layout, Hero slots, text, and interactive siblings remain compo
     );
   }
   assertBuilderDocument(valid, documentPolicy);
+  assertEquals(
+    armedSlotInsertionTarget(valid, hero.id, "actions")?.label,
+    "Hero block › Actions",
+  );
+  assertEquals(
+    projectLayers(valid).find(({ child }) => child.id === "hero-action")
+      ?.slotLabel,
+    "Actions",
+  );
 });
 
 Deno.test("synthetic future Components enroll through derived and declarative compatibility facts", () => {
   const slotControl = {
-    name: "children",
-    label: "Children",
+    name: "action",
+    label: "Action",
     required: true,
     typeText: "ReactNode",
     control: "slot",
@@ -394,14 +407,14 @@ Deno.test("synthetic future Components enroll through derived and declarative co
       slug: "future-control",
       name: "Future control",
       inheritedTypes: ["ButtonHTMLAttributes"],
-      propNames: new Set(["children"]),
+      propNames: new Set(["action"]),
       controls: [slotControl],
     },
     {
       slug: "future-clone",
       name: "Future clone",
       inheritedTypes: [],
-      propNames: new Set(["children"]),
+      propNames: new Set(["action"]),
       controls: [elementControl],
       override: { rootContent: "flow", interactive: "never" },
     },
@@ -414,14 +427,14 @@ Deno.test("synthetic future Components enroll through derived and declarative co
       id: "future-outer",
       slug: "future-control",
       props: {
-        children: {
+        action: {
           kind: "slot",
           children: [{
             kind: "component",
             id: "future-inner",
             slug: "future-control",
             props: {
-              children: {
+              action: {
                 kind: "slot",
                 children: [{ kind: "text", id: "future-text", text: "Go" }],
               },
@@ -433,6 +446,8 @@ Deno.test("synthetic future Components enroll through derived and declarative co
   };
   const nesting = preflightBuilderStructure(nestedFuture, compatibility);
   assert(!nesting.ok);
+  assert(nesting.failure.humanPath.includes("Action"));
+  assert(!nesting.failure.humanPath.includes("children"));
   assert(
     nesting.failure.reason.includes(
       "interactive controls cannot contain interactive controls",
@@ -446,7 +461,7 @@ Deno.test("synthetic future Components enroll through derived and declarative co
       kind: "component",
       id: "future-clone",
       slug: "future-clone",
-      props: { children: { kind: "slot", children: [] } },
+      props: { action: { kind: "slot", children: [] } },
     }],
   };
   const clone = preflightBuilderStructure(emptyClone, compatibility);

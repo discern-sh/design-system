@@ -72,7 +72,14 @@ const LAYOUT_WRAPPER_SLUGS = [
 ] as const;
 
 function shortcutBelongsToControl(event: KeyboardEvent): boolean {
-  return event.composedPath().some((target) =>
+  const path = event.composedPath();
+  if (
+    path.some((target) =>
+      target instanceof Element &&
+      target.matches('[data-discern-builder-shortcuts="document"]')
+    )
+  ) return false;
+  return path.some((target) =>
     target instanceof Element && target.matches(SHORTCUT_OWNER_SELECTOR)
   );
 }

@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { CSSProperties, DragEvent } from "react";
 import type { BuilderDocument } from "../model.ts";
 import { isWithinSubtree } from "../model.ts";
+import { builderControlLabel } from "../registry-core.ts";
 import type { BuilderTreeController } from "./controller.ts";
 import { readBuilderDragPayload, writeBuilderDragPayload } from "./drag.ts";
 import {
@@ -12,6 +13,12 @@ import {
   insertionTargetBefore,
   type LayerRow,
 } from "./projection.ts";
+
+function layerSlotLabel(row: LayerRow, slot: string): string {
+  return row.child.kind === "component"
+    ? builderControlLabel(row.child.slug, slot)
+    : slot;
+}
 
 function dropPayload(
   event: DragEvent,
@@ -45,7 +52,7 @@ function RowActions(
             key={slot}
             onClick={() => tree.armComponentSlot(id, slot)}
           >
-            ＋ Add inside {slot}
+            ＋ Add inside {layerSlotLabel(row, slot)}
           </button>
         ))}
         <button
@@ -171,6 +178,7 @@ function LayerEntry(
         <button
           type="button"
           draggable
+          data-discern-builder-shortcuts="document"
           aria-current={selected ? "true" : undefined}
           className={selected
             ? "discern-builder-outline__row discern-builder-outline__row--selected discern-builder-layers__select"
@@ -198,7 +206,7 @@ function LayerEntry(
             data-discern-builder-layer-kind={row.child.kind}
             aria-hidden="true"
           />
-          {row.slotName !== undefined ? <small>{row.slotName}</small> : null}
+          {row.slotLabel !== undefined ? <small>{row.slotLabel}</small> : null}
           <span>{childLabel(row.child)}</span>
         </button>
         <RowActions row={row} tree={tree} />
@@ -225,7 +233,7 @@ function LayerEntry(
                   onDragOver={(event) => event.preventDefault()}
                   onDrop={(event) => dropPayload(event, tree, target)}
                 >
-                  <span aria-hidden="true">＋</span> {slot}
+                  <span aria-hidden="true">＋</span> {layerSlotLabel(row, slot)}
                 </button>
               );
             })}

@@ -37,6 +37,7 @@ export interface BuilderCompatibilitySource {
 
 export interface BuilderSlotCompatibility {
   readonly name: string;
+  readonly label: string;
   readonly required: boolean;
   readonly content: BuilderSlotContent;
   readonly defaultComponentSlug?: string;
@@ -198,6 +199,7 @@ export function deriveBuilderCompatibilityPolicy(
         control.control === "slot"
           ? [{
             name: control.name,
+            label: control.label,
             required: control.required,
             content: derivedSlotContent(control, override),
             ...(override.defaultComponents?.[control.name] === undefined
@@ -263,14 +265,16 @@ function failure(
 
 function childPath(
   ownerPath: string,
-  slot: string,
+  slot: BuilderSlotCompatibility,
   child: BuilderSlotChild,
   policy: BuilderCompatibilityPolicy,
 ): string {
   const label = child.kind === "text"
     ? "Text"
     : policy.bySlug.get(child.slug)?.name ?? child.slug;
-  return `${ownerPath} › ${slot} › ${label}`;
+  return slot.name === "children"
+    ? `${ownerPath} › ${label}`
+    : `${ownerPath} › ${slot.label} › ${label}`;
 }
 
 interface VisitTask {
@@ -326,7 +330,7 @@ export function preflightBuilderStructure(
       if (value.kind !== "slot") continue;
       if (!fact.slots.has(name)) {
         return failure(
-          `${task.path} › ${name}`,
+          `${task.path} › ${fact.slots.get(name)?.label ?? name}`,
           "cannot hold children because the prop is not a Component slot",
           `${fact.slug}.${name} is not a registry-derived ReactNode or ReactElement control`,
         );
@@ -337,7 +341,7 @@ export function preflightBuilderStructure(
       const value = task.node.props[slot.name];
       if (value !== undefined && value.kind !== "slot") {
         return failure(
-          `${task.path} › ${slot.name}`,
+          `${task.path} › ${slot.label}`,
           "must hold Builder children rather than a scalar value",
           `${fact.slug}.${slot.name} is registry-derived as a slot`,
         );
@@ -347,7 +351,7 @@ export function preflightBuilderStructure(
         slot.required && slot.content === "element" && children.length === 0
       ) {
         return failure(
-          `${task.path} › ${slot.name}`,
+          `${task.path} › ${slot.label}`,
           "requires exactly one component",
           `${fact.slug}.${slot.name} is a required ${slot.content} slot`,
         );
@@ -358,7 +362,7 @@ export function preflightBuilderStructure(
           children.some((child) => child.kind !== "component"))
       ) {
         return failure(
-          `${task.path} › ${slot.name}`,
+          `${task.path} › ${slot.label}`,
           "requires exactly one component",
           `${fact.slug}.${slot.name} is derived from ReactElement`,
         );
@@ -379,7 +383,7 @@ export function preflightBuilderStructure(
           const childFact = policy.bySlug.get(child.slug);
           if (childFact?.rootContent !== "phrasing") {
             return failure(
-              childPath(task.path, slot.name, child, policy),
+              childPath(task.path, slot, child, policy),
               `cannot be placed in ${fact.name} because that slot accepts phrasing content only`,
               `${child.slug} has root content ${
                 childFact?.rootContent ?? "missing"
@@ -397,7 +401,7 @@ export function preflightBuilderStructure(
         if (child?.kind !== "component") continue;
         stack.push({
           node: child,
-          path: childPath(task.path, slot.name, child, policy),
+          path: childPath(task.path, slot, child, policy),
           interactiveAncestor: nextInteractive,
         });
       }

@@ -8,7 +8,11 @@ import type {
   BuilderTextChild,
 } from "../model.ts";
 import { findChild } from "../model.ts";
-import { entryBySlug, registryCoreBySlug } from "../registry-core.ts";
+import {
+  builderControlLabel,
+  entryBySlug,
+  registryCoreBySlug,
+} from "../registry-core.ts";
 
 /** The exact place every pointer, keyboard, palette, and drag command uses. */
 export interface InsertionTarget {
@@ -39,6 +43,7 @@ export interface LayerRow {
   readonly index: number;
   readonly siblingCount: number;
   readonly slotName: string | undefined;
+  readonly slotLabel: string | undefined;
   readonly ancestorIds: readonly string[];
   readonly hasChildren: boolean;
   readonly slotNames: readonly string[];
@@ -145,7 +150,7 @@ export function armedSlotInsertionTarget(
     index: slotChildrenOf(owner, prop).length,
     ownerId: nodeId,
     prop,
-    label: `${childLabel(owner)} · ${prop}`,
+    label: `${childLabel(owner)} › ${builderControlLabel(owner.slug, prop)}`,
   };
 }
 
@@ -247,6 +252,7 @@ export function projectLayers(
     location: BuilderLocation,
     depth: number,
     slotName: string | undefined,
+    slotLabel: string | undefined,
     ancestorIds: readonly string[],
   ): void => {
     for (const [index, child] of children.entries()) {
@@ -266,6 +272,7 @@ export function projectLayers(
         index,
         siblingCount: children.length,
         slotName,
+        slotLabel,
         ancestorIds,
         hasChildren,
         slotNames,
@@ -278,11 +285,14 @@ export function projectLayers(
           { parent: "node", nodeId: child.id, prop },
           depth + 1,
           prop === "children" ? undefined : prop,
+          prop === "children"
+            ? undefined
+            : builderControlLabel(child.slug, prop),
           [...ancestorIds, child.id],
         );
       }
     }
   };
-  visit(document.children, { parent: "root" }, 0, undefined, []);
+  visit(document.children, { parent: "root" }, 0, undefined, undefined, []);
   return rows;
 }

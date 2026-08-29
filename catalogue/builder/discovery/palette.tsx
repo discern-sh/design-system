@@ -487,15 +487,12 @@ export function BuilderDiscovery(
         : (
           <header className="discern-builder-context" role="status">
             <strong>
-              Add to {pending.label.replaceAll(" · ", " › ")}
+              Add to {pending.label}
             </strong>
             <span>Showing Components for this explicit target.</span>
             <div>
               <button type="button" onClick={tree.cancelInsertionTarget}>
-                Change target
-              </button>
-              <button type="button" onClick={tree.cancelInsertionTarget}>
-                Cancel
+                Cancel placement
               </button>
             </div>
           </header>

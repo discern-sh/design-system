@@ -5,7 +5,7 @@ import type {
   BuilderSlotChild,
 } from "../model.ts";
 import { ancestorsOf, findChild } from "../model.ts";
-import { entryBySlug, registryCoreBySlug } from "../registry-core.ts";
+import { builderControlLabel, entryBySlug } from "../registry-core.ts";
 
 export interface ProjectedBuilderIssue {
   readonly message: string;
@@ -14,12 +14,6 @@ export interface ProjectedBuilderIssue {
 
 function componentName(node: BuilderNode): string {
   return entryBySlug.get(node.slug)?.meta.name ?? node.slug;
-}
-
-function slotLabel(node: BuilderNode, prop: string): string {
-  return registryCoreBySlug.get(node.slug)?.controls.find((control) =>
-    control.name === prop
-  )?.label ?? prop;
 }
 
 /**
@@ -59,7 +53,7 @@ export function humanBuilderSelectionSegments(
     if (
       location?.parent === "node" && location.nodeId === child.id &&
       location.prop !== "children"
-    ) segments.push({ label: slotLabel(child, location.prop) });
+    ) segments.push({ label: builderControlLabel(child.slug, location.prop) });
   }
   return segments;
 }
@@ -126,7 +120,7 @@ export function projectDocumentIssueTarget(
     ? "Additional props"
     : prop === undefined
     ? undefined
-    : slotLabel(match.node, prop);
+    : builderControlLabel(match.node.slug, prop);
   const selectionPath = humanBuilderSelectionPath(
     document,
     match.node.id,

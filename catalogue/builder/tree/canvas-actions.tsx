@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import type { DragEvent, MouseEvent } from "react";
 import { findChild } from "../model.ts";
 import type { BuilderDocument } from "../model.ts";
+import { builderControlLabel } from "../registry-core.ts";
 import type { BuilderTreeController } from "./controller.ts";
 import { readBuilderDragPayload } from "./drag.ts";
 import { armedSlotInsertionTarget, childLabel } from "./projection.ts";
@@ -76,7 +77,9 @@ export function BuilderCanvasActions(
                     tree.armComponentSlot(id, slot);
                   }}
                 >
-                  Add inside {slot}
+                  Add inside {row.child.kind === "component"
+                    ? builderControlLabel(row.child.slug, slot)
+                    : slot}
                 </button>
               ))}
             </div>
@@ -185,7 +188,9 @@ export function BuilderCanvasActions(
                 }
               }}
             >
-              ＋ {slot}
+              ＋ {row.child.kind === "component"
+                ? builderControlLabel(row.child.slug, slot)
+                : slot}
             </button>
           ))}
         </div>
