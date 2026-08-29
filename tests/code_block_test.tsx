@@ -35,10 +35,10 @@ Deno.test("Code block renders literal source as native preformatted code", () =>
   assertMatch(html, /<pre [^>]*><code [^>]*>[\s\S]*<\/code><\/pre>$/);
 });
 
-Deno.test("Code block keeps empty source and omits absent information hooks", () => {
+Deno.test("Code block keeps empty source in its named keyboard viewport", () => {
   assertEquals(
     renderToStaticMarkup(<CodeBlock code="" />),
-    '<pre class="discern-code-block"><code></code></pre>',
+    '<pre class="discern-code-block" role="group" aria-label="Scrollable code block" tabindex="0"><code></code></pre>',
   );
 });
 

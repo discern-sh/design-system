@@ -197,10 +197,16 @@ A note[^proof].
   assertStringIncludes(html, '<ol class="discern-list discern-list--ordered');
   assertStringIncludes(html, 'start="3"');
   assertStringIncludes(html, 'type="checkbox"');
-  assertStringIncludes(html, '<pre class="discern-code-block"><code');
+  assertStringIncludes(
+    html,
+    '<pre class="discern-code-block" role="group" aria-label="Scrollable code block: ts · module" tabindex="0"><code',
+  );
   assertStringIncludes(html, 'data-discern-code-block-language="ts"');
   assertStringIncludes(html, 'data-discern-code-block-info="module"');
-  assertStringIncludes(html, '<div class="discern-table"><table>');
+  assertStringIncludes(
+    html,
+    '<div class="discern-table" role="group" aria-label="Scrollable table viewport" tabindex="0"><table>',
+  );
   assertStringIncludes(
     html,
     '<th scope="col" data-discern-table-align="start">',

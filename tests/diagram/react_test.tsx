@@ -124,14 +124,21 @@ Deno.test("Diagram CSS resolves the paired role authority through public Tokens"
   const tokenNames = new Set(
     [...baseTokens, ...themeTokens].map(({ name }) => name),
   );
+  const declarationsFor = (selector: string): string => {
+    for (const match of css.matchAll(/([^{}]+)\{([^{}]*)\}/gu)) {
+      const selectors = (match[1] ?? "").split(",").map((value) =>
+        value.trim()
+      );
+      if (selectors.includes(selector)) return match[2] ?? "";
+    }
+    return "";
+  };
   for (const tokenName of Object.values(DIAGRAM_PAINT_TOKEN_NAMES)) {
     assert(tokenNames.has(tokenName), `${tokenName} is not a public Token`);
     assertStringIncludes(css, `var(${tokenName})`);
   }
   for (const [role, bundle] of Object.entries(DIAGRAM_NODE_STYLE_BUNDLES)) {
-    const block = css.match(
-      new RegExp(`\\.discern-diagram__node--${role} \\{([^}]+)\\}`, "u"),
-    )?.[1] ?? "";
+    const block = declarationsFor(`.discern-diagram__node--${role}`);
     assertStringIncludes(
       block,
       `fill: var(${DIAGRAM_PAINT_TOKEN_NAMES[bundle.surface]})`,
@@ -144,18 +151,10 @@ Deno.test("Diagram CSS resolves the paired role authority through public Tokens"
   for (
     const [role, bundle] of Object.entries(DIAGRAM_CONNECTOR_STYLE_BUNDLES)
   ) {
-    const connector = css.match(
-      new RegExp(
-        `\\.discern-diagram__connector--${role} \\{([^}]+)\\}`,
-        "u",
-      ),
-    )?.[1] ?? "";
-    const marker = css.match(
-      new RegExp(
-        `\\.discern-diagram__arrowhead--${role} \\{([^}]+)\\}`,
-        "u",
-      ),
-    )?.[1] ?? "";
+    const connector = declarationsFor(
+      `.discern-diagram__connector--${role}`,
+    );
+    const marker = declarationsFor(`.discern-diagram__arrowhead--${role}`);
     assertStringIncludes(
       connector,
       `stroke: var(${DIAGRAM_PAINT_TOKEN_NAMES[bundle.stroke]})`,
@@ -169,9 +168,7 @@ Deno.test("Diagram CSS resolves the paired role authority through public Tokens"
     else assertStringIncludes(connector, `stroke-dasharray: ${dash}`);
   }
   const region = DIAGRAM_REGION_STYLE_BUNDLES.boundary;
-  const regionBlock = css.match(
-    /\.discern-diagram__region \{([^}]+)\}/u,
-  )?.[1] ?? "";
+  const regionBlock = declarationsFor(".discern-diagram__region");
   assertStringIncludes(
     regionBlock,
     `fill: var(${DIAGRAM_PAINT_TOKEN_NAMES[region.surface]})`,

@@ -158,13 +158,24 @@ Deno.test("Chart CSS resolves every paint role through public Tokens", async () 
   const tokenNames = new Set(
     [...baseTokens, ...themeTokens].map(({ name }) => name),
   );
+  const declarationsFor = (selector: string): string => {
+    for (const match of css.matchAll(/([^{}]+)\{([^{}]*)\}/gu)) {
+      const selectors = (match[1] ?? "").split(",").map((value) =>
+        value.trim()
+      );
+      if (selectors.includes(selector)) return match[2] ?? "";
+    }
+    return "";
+  };
   for (const slot of [1, 2, 3, 4, 5, 6] as const) {
     const tokenName = CHART_PAINT_TOKEN_NAMES[`series-${slot}`];
     assert(tokenNames.has(tokenName), `${tokenName} is not a public Token`);
-    assertStringIncludes(
-      css,
-      `.discern-chart__mark--series-${slot} {\n    fill: var(${tokenName});`,
-    );
+    for (const family of ["mark", "points", "area"] as const) {
+      assertStringIncludes(
+        declarationsFor(`.discern-chart__${family}--series-${slot}`),
+        `fill: var(${tokenName})`,
+      );
+    }
   }
   assertStringIncludes(
     css,

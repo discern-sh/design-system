@@ -7,6 +7,7 @@ import {
   scanBrowserAccessibility,
 } from "../../browser-conformance-support.ts";
 import { writeComponentReviewManifest } from "../../component-review.ts";
+import { withViewport } from "../../viewport.ts";
 import { invariant } from "./support.ts";
 
 const OUTPUT_ROOT = new URL("../../../dist/conformance/", import.meta.url);
@@ -339,45 +340,50 @@ export async function verifyComponentReviewInstrument(
       reviewCase: LocalResponsiveCase,
       localWidth: "narrow" | "medium" | "wide",
       pageWidth: number,
-    ) => {
-      await page.setViewportSize({ width: pageWidth, height: 1000 });
-      await loadReview(
+    ) =>
+      await withViewport(
         page,
-        reviewUrl(origin, {
-          group: reviewCase.group,
-          component: reviewCase.component,
-          example: reviewCase.example,
-          width: localWidth,
-          theme: "light",
-          appearance: "blue",
-          motion: "reduced",
-          mode: "reel",
-          speed: "production",
-        }),
+        { width: pageWidth, height: 1000 },
+        async () => {
+          await loadReview(
+            page,
+            reviewUrl(origin, {
+              group: reviewCase.group,
+              component: reviewCase.component,
+              example: reviewCase.example,
+              width: localWidth,
+              theme: "light",
+              appearance: "blue",
+              motion: "reduced",
+              mode: "reel",
+              speed: "production",
+            }),
+          );
+          const root = page.locator(`.discern-${reviewCase.component}`)
+            .first();
+          const target = page.locator(reviewCase.target).first();
+          invariant(
+            await root.isVisible() && await target.isVisible(),
+            `${reviewCase.component} responsive witness is not visible`,
+          );
+          const geometry = await root.evaluate((element) => ({
+            clientWidth: (element as HTMLElement).clientWidth,
+            scrollWidth: (element as HTMLElement).scrollWidth,
+          }));
+          invariant(
+            geometry.scrollWidth <= geometry.clientWidth + 1,
+            `${reviewCase.component} leaked ${geometry.scrollWidth}px through a ${geometry.clientWidth}px local allocation`,
+          );
+          return {
+            ...geometry,
+            signature: await target.evaluate(
+              (element, property) =>
+                getComputedStyle(element).getPropertyValue(property),
+              reviewCase.property,
+            ),
+          };
+        },
       );
-      const root = page.locator(`.discern-${reviewCase.component}`).first();
-      const target = page.locator(reviewCase.target).first();
-      invariant(
-        await root.isVisible() && await target.isVisible(),
-        `${reviewCase.component} responsive witness is not visible`,
-      );
-      const geometry = await root.evaluate((element) => ({
-        clientWidth: (element as HTMLElement).clientWidth,
-        scrollWidth: (element as HTMLElement).scrollWidth,
-      }));
-      invariant(
-        geometry.scrollWidth <= geometry.clientWidth + 1,
-        `${reviewCase.component} leaked ${geometry.scrollWidth}px through a ${geometry.clientWidth}px local allocation`,
-      );
-      return {
-        ...geometry,
-        signature: await target.evaluate(
-          (element, property) =>
-            getComputedStyle(element).getPropertyValue(property),
-          reviewCase.property,
-        ),
-      };
-    };
 
     for (const reviewCase of localResponsiveCases) {
       const widePageNarrowLocal = await measureResponsiveCase(
@@ -409,8 +415,6 @@ export async function verifyComponentReviewInstrument(
       );
       responsiveCases += 3;
     }
-    await page.setViewportSize({ width: 1440, height: 1000 });
-
     await loadReview(
       page,
       reviewUrl(origin, {
