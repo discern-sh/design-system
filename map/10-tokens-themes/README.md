@@ -12,6 +12,14 @@ The emitted Runtime treats the user's system colour scheme as the default. A Roo
 
 Theme roles can carry non-colour presentation values when a Component needs one semantic behavior to switch with the active Theme. `--discern-brand-artwork-opacity` keeps supplied multicolour artwork visible in light Theme and removes it in dark Theme when the Component provides a separate monochrome treatment; it does not affect ordinary artwork by itself.
 
+## Appearance safety
+
+The Catalogue exposes only the named Appearance presets in [`appearance-options.ts`](../../catalogue/shell/appearance-options.ts). Each option is admitted after accent, focus, success, warning, danger, inverse, categorical-series, and decorative roles remain distinguishable in both Themes; [`catalogue_appearance_options_test.ts`](../../tests/catalogue_appearance_options_test.ts) and browser conformance bind that contract. The public low-level accent hue remains available to coordinated consumer Themes, but an arbitrary hue is not by itself a promise that the unchanged semantic roles are safe.
+
+## Motion and elevation boundaries
+
+The fast, medium, and reveal durations and their easing roles in [`tokens.ts`](../../src/tokens/tokens.ts) are a shared vocabulary, not a universal transition. A Component owns motion only when it explains cause, continuity, progress, or space, and its reduced-motion posture resolves to the same complete state. Card, window, and pop shadows describe containment; they do not license passive lift or another implicit elevation tier. The production-speed and reduced-motion review contract lives in [Browser visual review](../60-catalogue/visual-review.md), while [`browser_polish_contract_test.ts`](../../tests/browser_polish_contract_test.ts) protects the structural boundary.
+
 ## Series colour
 
 `--discern-color-series-1..6` are the fixed-order categorical data-series roles consumed by the chart family and `DataFigure` series swatches. They use the medium-contrast soft-blue, deep-blue, gold, burgundy, ochre, and rose sequence recorded in [ADR-0032](../_adr/0032-use-the-medium-contrast-series-palette.md). [`tests/chart/palette_test.ts`](../../tests/chart/palette_test.ts) pins the selected light and dark references, severe protan/deutan separation of adjacent pairs, ANSI 256 distinctness, and the accepted ANSI 16 collapse through the same terminal derivation every theme token rides; [`tests/cli/glyph_ramps_test.ts`](../../tests/cli/glyph_ramps_test.ts) proves the six non-colour marker and fill cues remain distinct. Browser consumers may override the custom properties, while terminal series colours stay package-authored because an override cannot re-run those proofs. Semantic state tones are never recruited as series colours, even where their hues overlap the categorical palette.
