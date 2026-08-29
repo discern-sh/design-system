@@ -16,6 +16,11 @@ import {
   scanBrowserAccessibility,
 } from "../../browser-conformance-support.ts";
 import { withViewport } from "../../viewport.ts";
+import {
+  CATALOGUE_400_PERCENT_REFLOW_VIEWPORT,
+  verifyDecisionCopyEnrollment,
+  verifyDecisionCopyLegibility,
+} from "./metadata-copy.ts";
 import { verifyInlineOverflowCueEdges } from "./overflow-cue.ts";
 
 const OUTPUT_ROOT = new URL("../../../dist/conformance/", import.meta.url);
@@ -1019,6 +1024,160 @@ async function verifyComponentJourneys(
   });
 }
 
+async function verifyComponentMetadataLegibility(
+  page: Page,
+  origin: string,
+  expectedComponents: readonly string[],
+): Promise<{ readonly roles: number; readonly scans: number }> {
+  let roles = 0;
+  let scans = 0;
+  const verifyPage = async (
+    label: string,
+    { scan = false }: { readonly scan?: boolean } = {},
+  ): Promise<void> => {
+    roles += await verifyDecisionCopyLegibility(page, label);
+    const overflow = await page.evaluate(() =>
+      document.documentElement.scrollWidth -
+      document.documentElement.clientWidth
+    );
+    invariant(
+      overflow <= 0,
+      `${label} moves the document ${overflow}px horizontally`,
+    );
+    if (!scan) return;
+    const accessibility = await scanBrowserAccessibility(
+      page,
+      ".discern-catalogue-shell",
+    );
+    invariant(
+      accessibility.violations.length === 0,
+      `${label} failed accessibility: ${
+        accessibility.violations.map(({ id }) => id).join(", ")
+      }`,
+    );
+    scans += 1;
+  };
+
+  await withViewport(page, WIDE_VIEWPORT, async () => {
+    const collections = new URL(catalogueRoutePaths.components, origin);
+    collections.searchParams.set("theme", "dark");
+    await loadCataloguePage(page, collections.href);
+    await verifyDecisionCopyEnrollment(
+      page,
+      ".discern-catalogue-collection-card__description",
+      "Purpose collection descriptions",
+    );
+    await verifyPage("Component collection metadata/dark");
+
+    const results = new URL(catalogueRoutePaths.components, origin);
+    results.searchParams.set("q", "call to action");
+    results.searchParams.set("theme", "light");
+    await loadCataloguePage(page, results.href);
+    await verifyDecisionCopyEnrollment(
+      page,
+      ".discern-catalogue-component-card__description",
+      "Component result descriptions",
+    );
+    await verifyDecisionCopyEnrollment(
+      page,
+      ".discern-catalogue-component-card__match",
+      "Component result match reasons",
+    );
+    await verifyPage("Component result and match metadata/light", {
+      scan: true,
+    });
+
+    const detailSlug = expectedComponents.includes("command")
+      ? "command"
+      : expectedComponents[0];
+    invariant(detailSlug, "Metadata review needs one Component detail");
+    const detail = new URL(catalogueComponentPath(detailSlug), origin);
+    detail.searchParams.set("theme", "dark");
+    await loadCataloguePage(page, detail.href);
+    await verifyDecisionCopyEnrollment(
+      page,
+      ".discern-catalogue-component--detail > header .discern-catalogue-component__identity > p",
+      "Component detail descriptions",
+    );
+    for (const disclosure of ["Usage guidance", "Props and variants"]) {
+      await page.getByText(disclosure, { exact: true }).click();
+    }
+    await verifyDecisionCopyEnrollment(
+      page,
+      ".discern-catalogue-guidance li, .discern-catalogue-guidance > div p",
+      "Component usage guidance",
+    );
+    await verifyDecisionCopyEnrollment(
+      page,
+      ".discern-catalogue-api p, .discern-catalogue-api th small",
+      "Component API explanations",
+    );
+    await verifyPage("Component detail guidance metadata/dark", {
+      scan: true,
+    });
+
+    const all = new URL(catalogueRoutePaths.components, origin);
+    all.searchParams.set("all", "1");
+    await loadCataloguePage(page, all.href);
+    const webOnly = page.locator(".discern-catalogue-component-card").filter({
+      hasText: "Web only",
+    }).first();
+    const href = await webOnly.locator(
+      ".discern-catalogue-component-card__inspect",
+    ).getAttribute("href");
+    invariant(href, "Metadata review needs one CLI-exempt Component");
+    const exemption = new URL(href, origin);
+    exemption.searchParams.set("surface", "cli");
+    exemption.searchParams.set("theme", "light");
+    await loadCataloguePage(page, exemption.href);
+    await verifyDecisionCopyEnrollment(
+      page,
+      ".discern-catalogue-component__unavailable p",
+      "Selected-surface unavailability explanations",
+    );
+    await verifyPage("CLI exemption metadata/light");
+
+    const compare = new URL(catalogueRoutePaths.compare, origin);
+    compare.searchParams.set("group", "workflow");
+    compare.searchParams.set("theme", "dark");
+    await loadCataloguePage(page, compare.href);
+    await verifyDecisionCopyEnrollment(
+      page,
+      ".discern-catalogue-compare-item > header p",
+      "Compare Component descriptions",
+    );
+    await verifyPage("Compare Component metadata/dark");
+  });
+
+  await withViewport(
+    page,
+    CATALOGUE_400_PERCENT_REFLOW_VIEWPORT,
+    async () => {
+      const results = new URL(catalogueRoutePaths.components, origin);
+      results.searchParams.set("q", "call to action");
+      results.searchParams.set("theme", "dark");
+      await loadCataloguePage(page, results.href);
+      await verifyPage("Component metadata at representative 400% reflow/dark");
+
+      const detail = new URL(catalogueComponentPath("command"), origin);
+      detail.searchParams.set("theme", "light");
+      await loadCataloguePage(page, detail.href);
+      for (const disclosure of ["Usage guidance", "Props and variants"]) {
+        await page.getByText(disclosure, { exact: true }).click();
+      }
+      await verifyPage("Detail metadata at representative 400% reflow/light");
+
+      const compare = new URL(catalogueRoutePaths.compare, origin);
+      compare.searchParams.set("group", "workflow");
+      compare.searchParams.set("theme", "dark");
+      await loadCataloguePage(page, compare.href);
+      await verifyPage("Compare metadata at representative 400% reflow/dark");
+    },
+  );
+
+  return { roles, scans };
+}
+
 async function verifyStateFragmentRestoration(
   page: Page,
   origin: string,
@@ -1230,6 +1389,7 @@ export interface ComponentContractEvidence {
   readonly scenarios: number;
   readonly screenshots: number;
   readonly forcedColorFocusChecks: number;
+  readonly metadataRoleChecks: number;
 }
 
 export async function runComponentContractConformance(
@@ -1241,6 +1401,11 @@ export async function runComponentContractConformance(
 ): Promise<ComponentContractEvidence> {
   await loadConformancePage(page, conformanceUrl(origin, "light"));
   await assertAutoEnrollment(page, expectedComponents);
+  await verifyDecisionCopyEnrollment(
+    page,
+    ".discern-catalogue-component > header .discern-catalogue-component__identity > p",
+    "Complete conformance Component descriptions",
+  );
   const autoOpenedModals = page.locator("dialog:modal");
   invariant(
     await autoOpenedModals.count() === 0,
@@ -1272,6 +1437,12 @@ export async function runComponentContractConformance(
       }`,
     );
   }
+  const metadata = await verifyComponentMetadataLegibility(
+    page,
+    origin,
+    expectedComponents,
+  );
+  accessibilityScans += metadata.scans;
   try {
     await verifyStateFragmentRestoration(page, origin);
   } catch (error) {
@@ -1294,5 +1465,6 @@ export async function runComponentContractConformance(
     scenarios,
     screenshots,
     forcedColorFocusChecks,
+    metadataRoleChecks: metadata.roles,
   };
 }

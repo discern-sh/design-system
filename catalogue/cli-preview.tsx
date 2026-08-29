@@ -4,6 +4,7 @@ import { projectTerminalInlineHtml } from "../src/cli/projection.ts";
 import type { TerminalThemeVariant } from "../src/cli/theme.ts";
 import { OverflowCue } from "../src/components/layout/overflow-cue/overflow-cue.tsx";
 import type { RegistryEntry } from "./generated/registry.ts";
+import { catalogueDecisionCopyProps } from "./metadata-copy.ts";
 
 /** Fixed terminal profile used for deterministic Catalogue specimens. */
 export const catalogueCliCapabilities = {
@@ -138,7 +139,7 @@ export function CliComponentPreview(
             <span aria-hidden="true">—</span>
             <div>
               <strong>No CLI renderer</strong>
-              <p>{cli.reason}</p>
+              <p {...catalogueDecisionCopyProps}>{cli.reason}</p>
             </div>
           </div>
         </section>

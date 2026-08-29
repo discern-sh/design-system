@@ -7,6 +7,10 @@ import {
 import { scanBrowserAccessibility } from "../../browser-conformance-support.ts";
 import { withViewport } from "../../viewport.ts";
 import {
+  verifyDecisionCopyEnrollment,
+  verifyDecisionCopyLegibility,
+} from "./metadata-copy.ts";
+import {
   CATALOGUE_NARROW_VIEWPORT,
   CATALOGUE_WIDE_VIEWPORT,
   eventually,
@@ -21,6 +25,7 @@ export interface CatalogueShellEvidence {
   readonly searchChecks: number;
   readonly appearanceChecks: number;
   readonly reflowChecks: number;
+  readonly metadataRoleChecks: number;
 }
 
 async function verifyRouteShape(page: Page, origin: string): Promise<number> {
@@ -202,7 +207,11 @@ async function verifyDrawer(page: Page, origin: string): Promise<number> {
   });
 }
 
-async function verifySearch(page: Page, origin: string): Promise<number> {
+async function verifySearch(
+  page: Page,
+  origin: string,
+): Promise<{ readonly checks: number; readonly metadataRoles: number }> {
+  let metadataRoles = 0;
   await loadCataloguePage(
     page,
     new URL(catalogueRoutePaths.overview, origin).href,
@@ -234,12 +243,30 @@ async function verifySearch(page: Page, origin: string): Promise<number> {
     (await reason.textContent())?.includes("Matched purpose") === true,
     "Supporting global search match did not explain its purpose field",
   );
+  await verifyDecisionCopyEnrollment(
+    dialog,
+    ".discern-catalogue-search-match",
+    "Global search match reasons",
+  );
+  metadataRoles += await verifyDecisionCopyLegibility(
+    dialog,
+    "Global search match metadata",
+  );
   await input.fill("nothing resembles this query");
   invariant(
     await dialog.getByRole("link", { name: "View all Components" }).count() ===
         1 &&
       await dialog.getByRole("button", { name: "Clear search" }).count() === 1,
     "No-result posture lacks direct recovery actions",
+  );
+  await verifyDecisionCopyEnrollment(
+    dialog,
+    ".discern-catalogue-search-recovery p",
+    "Global search recovery explanation",
+  );
+  metadataRoles += await verifyDecisionCopyLegibility(
+    dialog,
+    "Global search recovery metadata",
   );
   await dialog.getByRole("button", { name: "Clear search" }).click();
   invariant(
@@ -274,7 +301,7 @@ async function verifySearch(page: Page, origin: string): Promise<number> {
     new URL(page.url()).pathname === catalogueComponentPath("cta-band"),
     "Global search did not route directly to CTA band",
   );
-  return 8;
+  return { checks: 8, metadataRoles };
 }
 
 async function verifyAppearance(page: Page, origin: string): Promise<number> {
@@ -410,8 +437,9 @@ export async function verifyCatalogueShell(
     routeShapes,
     axeScans: accessibility.scans,
     drawerChecks,
-    searchChecks,
+    searchChecks: searchChecks.checks,
     appearanceChecks,
     reflowChecks: accessibility.reflow,
+    metadataRoleChecks: searchChecks.metadataRoles,
   };
 }

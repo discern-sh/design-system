@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { TerminalThemeVariant } from "../../../src/cli/theme.ts";
 import { OverflowCue } from "../../../src/components/layout/overflow-cue/overflow-cue.tsx";
 import type { RegistryEntry } from "../../generated/registry.ts";
+import { catalogueDecisionCopyProps } from "../../metadata-copy.ts";
 import { catalogueRoutePaths } from "../../routes.ts";
 import { announceCatalogueLocationChange } from "../../shell/location.ts";
 import { preserveCatalogueAppearanceHref } from "../../shell/appearance-state.ts";
@@ -59,7 +60,7 @@ export function ComparisonItem(
       <header>
         <div>
           <h3>{entry.meta.name}</h3>
-          <p>{entry.meta.description}</p>
+          <p {...catalogueDecisionCopyProps}>{entry.meta.description}</p>
         </div>
         <div className="discern-catalogue-compare-item__actions">
           <a

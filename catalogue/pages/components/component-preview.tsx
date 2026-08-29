@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { OverflowCue } from "../../../src/components/layout/overflow-cue/overflow-cue.tsx";
 import { CliComponentPreview, CliExamplePreview } from "../../cli-preview.tsx";
 import type { RegistryEntry } from "../../generated/registry.ts";
+import { catalogueDecisionCopyProps } from "../../metadata-copy.ts";
 import { CopyableCode, stateFragmentId } from "../shared.tsx";
 import type { CatalogueSurface } from "../shared.tsx";
 
@@ -345,7 +346,7 @@ export function ComponentSpecimen(
           {definition?.label ?? exampleId} is unavailable on{" "}
           {surface === "web" ? "Web" : "CLI"}.
         </strong>
-        <p>
+        <p {...catalogueDecisionCopyProps}>
           {reason ??
             "This example is not part of the selected surface contract."}
         </p>
@@ -401,7 +402,9 @@ export function ComponentEvidence(
               <div>
                 <strong>Use when</strong>
                 <ul>
-                  {meta.useWhen.map((note) => <li key={note}>{note}</li>)}
+                  {meta.useWhen.map((note) => (
+                    <li key={note} {...catalogueDecisionCopyProps}>{note}</li>
+                  ))}
                 </ul>
               </div>
             )
@@ -411,7 +414,9 @@ export function ComponentEvidence(
               <div>
                 <strong>Not when</strong>
                 <ul>
-                  {meta.notWhen.map((note) => <li key={note}>{note}</li>)}
+                  {meta.notWhen.map((note) => (
+                    <li key={note} {...catalogueDecisionCopyProps}>{note}</li>
+                  ))}
                 </ul>
               </div>
             )
@@ -421,14 +426,20 @@ export function ComponentEvidence(
               <div>
                 <strong>Author responsibilities</strong>
                 <ul>
-                  {meta.accessibility.map((note) => <li key={note}>{note}</li>)}
+                  {meta.accessibility.map((note) => (
+                    <li key={note} {...catalogueDecisionCopyProps}>{note}</li>
+                  ))}
                 </ul>
               </div>
             )
             : null}
           {!meta.useWhen?.length && !meta.notWhen?.length &&
               !meta.accessibility?.length
-            ? <p>No additional usage guidance is recorded.</p>
+            ? (
+              <p {...catalogueDecisionCopyProps}>
+                No additional usage guidance is recorded.
+              </p>
+            )
             : null}
         </div>
       </details>
@@ -452,7 +463,7 @@ export function ComponentEvidence(
               <>
                 {propDocumentation.inheritedTypes.length
                   ? (
-                    <p>
+                    <p {...catalogueDecisionCopyProps}>
                       Also accepts{" "}
                       <code>{propDocumentation.inheritedTypes.join(", ")}
                       </code>.
@@ -487,7 +498,11 @@ export function ComponentEvidence(
                                 <th scope="row">
                                   <code>{prop.name}</code>
                                   {prop.description
-                                    ? <small>{prop.description}</small>
+                                    ? (
+                                      <small {...catalogueDecisionCopyProps}>
+                                        {prop.description}
+                                      </small>
+                                    )
                                     : null}
                                 </th>
                                 <td>
@@ -503,10 +518,18 @@ export function ComponentEvidence(
                       </div>
                     </OverflowCue>
                   )
-                  : <p>No Component-specific props.</p>}
+                  : (
+                    <p {...catalogueDecisionCopyProps}>
+                      No Component-specific props.
+                    </p>
+                  )}
               </>
             )
-            : <p>{propDocumentation.reason}</p>}
+            : (
+              <p {...catalogueDecisionCopyProps}>
+                {propDocumentation.reason}
+              </p>
+            )}
           {variants.length
             ? (
               <div className="discern-catalogue-variants">
@@ -553,7 +576,7 @@ export function ComponentPreview(
       <header>
         <div className="discern-catalogue-component__identity">
           <Heading>{entry.meta.name}</Heading>
-          <p>{entry.meta.description}</p>
+          <p {...catalogueDecisionCopyProps}>{entry.meta.description}</p>
         </div>
         <div className="discern-catalogue-component__actions">
           {onSurfaceChange === undefined ? null : (

@@ -8,6 +8,7 @@ import { allTokens } from "../../src/tokens/tokens.ts";
 import { cliCompositionRecipes } from "../cli-compositions.ts";
 import { compositionRecipes } from "../compositions.tsx";
 import { registry } from "../generated/registry.ts";
+import { catalogueDecisionCopyProps } from "../metadata-copy.ts";
 import {
   catalogueNavigation,
   catalogueRoutePaths,
@@ -79,7 +80,7 @@ export function GlobalSearch(
         : results.length === 0
         ? (
           <div className="discern-catalogue-search-recovery">
-            <p>No matches for “{query}”.</p>
+            <p {...catalogueDecisionCopyProps}>No matches for “{query}”.</p>
             <div>
               <a href={catalogueRoutePaths.components} onClick={close}>
                 View all Components
@@ -102,14 +103,14 @@ export function GlobalSearch(
                     context={
                       <>
                         <span>{result.record.context}</span>
-                        {reason === undefined
-                          ? null
-                          : (
-                            <span className="discern-catalogue-search-match">
-                              Matched {reason.label.toLowerCase()}:{" "}
-                              {reason.value}
-                            </span>
-                          )}
+                        {reason === undefined ? null : (
+                          <span
+                            className="discern-catalogue-search-match"
+                            {...catalogueDecisionCopyProps}
+                          >
+                            Matched {reason.label.toLowerCase()}: {reason.value}
+                          </span>
+                        )}
                       </>
                     }
                     onClick={close}

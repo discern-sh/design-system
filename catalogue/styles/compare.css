@@ -173,7 +173,7 @@
     max-width: 70ch;
     margin: 0;
     color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
+    font-size: var(--discern-font-size-sm);
   }
   .discern-catalogue-compare-item__actions {
     display: flex;

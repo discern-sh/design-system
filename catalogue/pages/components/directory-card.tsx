@@ -1,4 +1,5 @@
 import type { RegistryEntry } from "../../generated/registry.ts";
+import { catalogueDecisionCopyProps } from "../../metadata-copy.ts";
 import {
   componentExampleImagePresentation,
   type ComponentExampleImageTheme,
@@ -72,7 +73,16 @@ export function ComponentCollectionCard(
             Component{collection.members.length === 1 ? "" : "s"}
           </span>
           <h3>{collection.label}</h3>
-          <span>{collection.description}</span>
+          {collection.kind === "purpose"
+            ? (
+              <span
+                className="discern-catalogue-collection-card__description"
+                {...catalogueDecisionCopyProps}
+              >
+                {collection.description}
+              </span>
+            )
+            : <span>{collection.description}</span>}
           <span className="discern-catalogue-collection-card__members">
             {visibleNames.map(({ meta }) => meta.name).join(", ")}
             {remaining > 0 ? ` +${remaining} more` : ""}
@@ -102,6 +112,10 @@ export function ComponentResultCard(
   const compareHref = catalogueHref("/catalogue/review/", {
     components: entry.meta.slug,
   });
+  const supplementaryMatchReason = matchReason?.value ===
+      entry.meta.description
+    ? undefined
+    : matchReason;
   return (
     <article className="discern-catalogue-component-card">
       <a
@@ -114,14 +128,21 @@ export function ComponentResultCard(
         <span className="discern-catalogue-component-card__body">
           {showGroup ? <span>{entry.meta.group}</span> : null}
           <h3>{entry.meta.name}</h3>
-          <span>{entry.meta.description}</span>
-          {matchReason === undefined
-            ? null
-            : (
-              <span className="discern-catalogue-component-card__match">
-                Matched {matchReason.label.toLowerCase()}: {matchReason.value}
-              </span>
-            )}
+          <span
+            className="discern-catalogue-component-card__description"
+            {...catalogueDecisionCopyProps}
+          >
+            {entry.meta.description}
+          </span>
+          {supplementaryMatchReason === undefined ? null : (
+            <span
+              className="discern-catalogue-component-card__match"
+              {...catalogueDecisionCopyProps}
+            >
+              Matched {supplementaryMatchReason.label.toLowerCase()}:{" "}
+              {supplementaryMatchReason.value}
+            </span>
+          )}
           <small>
             {entry.cli.stance === "rendered" ? "Web and CLI" : "Web only"}
           </small>

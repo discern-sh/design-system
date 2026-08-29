@@ -330,10 +330,10 @@
     gap: 2px;
   }
   .discern-catalogue-search-match {
-    overflow: hidden;
     color: var(--discern-color-ink-muted);
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-size: var(--discern-font-size-sm);
+    line-height: 1.45;
+    white-space: normal;
   }
   .discern-catalogue-search-recovery {
     display: grid;

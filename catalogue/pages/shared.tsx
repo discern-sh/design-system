@@ -7,6 +7,7 @@ import {
   componentGroups,
 } from "../../src/types/component-meta.ts";
 import type { RegistryEntry } from "../generated/registry.ts";
+import { catalogueDecisionCopyProps } from "../metadata-copy.ts";
 import { catalogueGroupSlug, catalogueRoutePaths } from "../routes.ts";
 
 export type CatalogueSurface = "web" | "cli";
@@ -114,7 +115,7 @@ export function CataloguePageHeader(
     <header className="discern-catalogue-page__header">
       <Kicker index={index}>— {eyebrow}</Kicker>
       <h1>{title}</h1>
-      <p>{description}</p>
+      <p {...catalogueDecisionCopyProps}>{description}</p>
     </header>
   );
 }
@@ -138,7 +139,7 @@ export function CatalogueRouteCard(
     <a className="discern-catalogue-route-card" href={href}>
       {eyebrow === undefined ? null : <span>{eyebrow}</span>}
       <h2>{title}</h2>
-      <p>{description}</p>
+      <p {...catalogueDecisionCopyProps}>{description}</p>
       {count === undefined ? null : <small>{count}</small>}
     </a>
   );

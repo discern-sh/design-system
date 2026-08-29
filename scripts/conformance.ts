@@ -52,6 +52,7 @@ const emptyComponentEvidence: ComponentContractEvidence = {
   scenarios: 0,
   screenshots: 0,
   forcedColorFocusChecks: 0,
+  metadataRoleChecks: 0,
 };
 const emptyTerminalEvidence: TerminalCatalogueEvidence = {
   layouts: 0,
@@ -80,6 +81,7 @@ const emptyShellEvidence: CatalogueShellEvidence = {
   searchChecks: 0,
   appearanceChecks: 0,
   reflowChecks: 0,
+  metadataRoleChecks: 0,
 };
 
 /** Build and exercise every Component and Catalogue family in Chromium. */
@@ -204,6 +206,8 @@ export async function runConformance(): Promise<void> {
         `${components.accessibilityScans} component accessibility scans, ` +
         `${components.scenarios} interaction scenarios, ` +
         `${components.forcedColorFocusChecks} forced-colour focus checks, and ` +
+        `${components.metadataRoleChecks + shell.metadataRoleChecks} ` +
+        `metadata-role checks; ` +
         `${components.screenshots + 1} review screenshots; ` +
         `${components.floatingSurfaces} floating surfaces share the clipping cure. ` +
         `Catalogue shell passed ${shell.routeShapes} route shapes, ` +

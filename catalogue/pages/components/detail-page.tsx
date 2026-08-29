@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { TerminalThemeVariant } from "../../../src/cli/theme.ts";
 import { registry } from "../../generated/registry.ts";
 import type { RegistryEntry } from "../../generated/registry.ts";
+import { catalogueDecisionCopyProps } from "../../metadata-copy.ts";
 import { catalogueRoutePaths } from "../../routes.ts";
 import { announceCatalogueLocationChange } from "../../shell/location.ts";
 import { preserveCatalogueAppearanceHref } from "../../shell/appearance-state.ts";
@@ -96,7 +97,7 @@ export function ComponentDetailPage(
         <header className="discern-catalogue-detail__identity">
           <div className="discern-catalogue-component__identity">
             <h1>{entry.meta.name}</h1>
-            <p>{entry.meta.description}</p>
+            <p {...catalogueDecisionCopyProps}>{entry.meta.description}</p>
           </div>
           <ComponentSourceActions entry={entry} />
         </header>

@@ -49,6 +49,21 @@ Deno.test("browser Catalogue projects every declared CLI stance from disk", () =
       }
       assertEquals(entry.cli.reason, entry.meta.cli.reason);
       assert(entry.cli.reason.trim().length > 0);
+      const markup = renderToStaticMarkup(
+        createElement(CliComponentPreview, { entry, theme: "dark" }),
+      );
+      assertStringIncludes(
+        markup,
+        'class="discern-catalogue-cli-exemption"',
+      );
+      assertStringIncludes(
+        markup,
+        'data-discern-catalogue-copy="decision"',
+      );
+      assertMatch(
+        markup,
+        /<p data-discern-catalogue-copy="decision">[^<]+<\/p>/,
+      );
       continue;
     }
 

@@ -155,6 +155,30 @@ Deno.test("Component result cards project the universal engine's match reason", 
     markup,
     `Matched ${reason.label.toLowerCase()}: ${reason.value}`,
   );
+  assertStringIncludes(
+    markup,
+    'class="discern-catalogue-component-card__description" data-discern-catalogue-copy="decision"',
+  );
+  assertStringIncludes(
+    markup,
+    'class="discern-catalogue-component-card__match" data-discern-catalogue-copy="decision"',
+  );
+
+  const descriptionMatch = renderToStaticMarkup(
+    createElement(ComponentResultCard, {
+      entry: result.record.payload,
+      showGroup: true,
+      matchReason: {
+        label: "Description",
+        value: result.record.payload.meta.description,
+      },
+    }),
+  );
+  assertEquals(
+    descriptionMatch.split(result.record.payload.meta.description).length - 1,
+    1,
+  );
+  assertEquals(descriptionMatch.includes("Matched description:"), false);
 });
 
 Deno.test("Component explorer and detail URL state round-trip canonical evidence", async () => {
