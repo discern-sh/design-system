@@ -3,7 +3,7 @@ import type { ComponentExampleImageManifest } from "../example-images/contract.t
 
 export const componentExampleImageManifest: ComponentExampleImageManifest = {
   "captureContractVersion": "2",
-  "sourceHash": "sha256:b64e6fc563c0931bc5ef22adb98cdf25ab8ad10bc6fcdb23865c70e09a8ee1cf",
+  "sourceHash": "sha256:3e669952c756ba1cbe1f05375daa891fdc8fc0d38b253fd0886b77978f3178c1",
   "entries": [
     {
       "slug": "icon",
@@ -1574,8 +1574,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/table--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/table--default--light.png",
       "width": 960,
-      "height": 174,
-      "contentHash": "sha256:e65ae31541a9cc06387f8d8c085d5ffac3bf2cd8dc6ff548c52efcccba15cf28",
+      "height": 177,
+      "contentHash": "sha256:1aa73dde4895af2025aa283186501503e4a6b3f6c0968b7ef5129733f5cae947",
       "captureContractVersion": "2"
     },
     {
@@ -1587,8 +1587,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/table--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/table--default--dark.png",
       "width": 960,
-      "height": 174,
-      "contentHash": "sha256:a7e9a5e15c578524dce6f6969de80940175b3ee0594e200c7fa7adea8f977959",
+      "height": 177,
+      "contentHash": "sha256:eb00ba77458fe4e6530f08e6b0591042349566e38d8e73a1ed9d063f1b25cd2e",
       "captureContractVersion": "2"
     },
     {
@@ -1600,8 +1600,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/table--rich-cells--light.png",
       "assetUrl": "/catalogue/generated/example-images/table--rich-cells--light.png",
       "width": 960,
-      "height": 175,
-      "contentHash": "sha256:6045fd8933eebd3545db6d4b1adf3bb55f87a8778fc191787d2e630188fe2c95",
+      "height": 178,
+      "contentHash": "sha256:f2d444b549f017cc11e7efec20f3fd911401d004fbd0ed6b9add3d6cf73a3c80",
       "captureContractVersion": "2"
     },
     {
@@ -1613,8 +1613,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/table--rich-cells--dark.png",
       "assetUrl": "/catalogue/generated/example-images/table--rich-cells--dark.png",
       "width": 960,
-      "height": 175,
-      "contentHash": "sha256:726310223d97957cd4599c55f440924530bf2ca2e4ee1032fde0ca7af4b8f01f",
+      "height": 178,
+      "contentHash": "sha256:3c34108f49078bd3edd4bea5962d55717d05c5872b09c2a3b3c13962f32554ae",
       "captureContractVersion": "2"
     },
     {
@@ -1626,8 +1626,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/table--dense-overflow--light.png",
       "assetUrl": "/catalogue/generated/example-images/table--dense-overflow--light.png",
       "width": 960,
-      "height": 223,
-      "contentHash": "sha256:e0c34afe730d964ba3615af4f8b4d4978d8bda1f453021a88a31574ab17760ca",
+      "height": 226,
+      "contentHash": "sha256:9877fd9ad89b6a154f6979fb7d5dc9e0989f5a4a0a6c20f719bf368d6618dd9f",
       "captureContractVersion": "2"
     },
     {
@@ -1639,8 +1639,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/table--dense-overflow--dark.png",
       "assetUrl": "/catalogue/generated/example-images/table--dense-overflow--dark.png",
       "width": 960,
-      "height": 223,
-      "contentHash": "sha256:e1f304c45c7c60f8ed9c48f086a4fc2e492a5f531a6d50e98e7780ff85007dcb",
+      "height": 226,
+      "contentHash": "sha256:c5f48b61fd3b9b9e6cb31c045821875fd37bb1b3057c285549f2d9aafb20bd2d",
       "captureContractVersion": "2"
     },
     {
@@ -2251,7 +2251,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/field--default--light.png",
       "width": 960,
       "height": 93,
-      "contentHash": "sha256:4ac81088656614b4f3ae1057a75edc23155fee3e15eb317b8893d51c7f2632d1",
+      "contentHash": "sha256:15a2e2131092138fdab8b3d634ddee669c8317cfbd3885f52397a6e03930f2b7",
       "captureContractVersion": "2"
     },
     {
@@ -2264,7 +2264,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/field--default--dark.png",
       "width": 960,
       "height": 93,
-      "contentHash": "sha256:7d0f9062fa6282ce93f1bc92dca73206f456c93fbd8294860fd7216e0563b63e",
+      "contentHash": "sha256:8d39e6deb20cf635006c251d67dc84e63ba5a1398a86c303bddc736aaeae44c2",
       "captureContractVersion": "2"
     },
     {
@@ -2277,7 +2277,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/field--active--light.png",
       "width": 960,
       "height": 93,
-      "contentHash": "sha256:08d110bee5ec7b3583d4fb3ecd17329028e4165102ba573eefde1effe9c7f4f1",
+      "contentHash": "sha256:913b6572c05f40912d6d3af75f8e274ed47ffd3241bc600d12212db734168168",
       "captureContractVersion": "2"
     },
     {
@@ -2290,7 +2290,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/field--active--dark.png",
       "width": 960,
       "height": 93,
-      "contentHash": "sha256:6903d7d36ecdecc7bade2a3e8f19e8ea050e6574ce35d19d170c12e71ab1fda3",
+      "contentHash": "sha256:07569eb4bbc66e6859662d30e7902809dc02212e8c67ca9b57ed8bddba321e62",
       "captureContractVersion": "2"
     },
     {
@@ -2355,7 +2355,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/field--disabled--light.png",
       "width": 960,
       "height": 66,
-      "contentHash": "sha256:a1108cd15af41dbcacbe8050096b40c87e8ac45974bcb0c0a945040553faf7d8",
+      "contentHash": "sha256:a614e76e4c34d1ab6a899d1565f9e8d5eeda79bd5b76ceb5b16871a6a1559c95",
       "captureContractVersion": "2"
     },
     {
@@ -2368,7 +2368,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/field--disabled--dark.png",
       "width": 960,
       "height": 66,
-      "contentHash": "sha256:f6c39aa0eb2e81e2ffd205fc57970f46127cd2152e059b40640321a608aa8bb0",
+      "contentHash": "sha256:5cd63a0ac97c1f8d47a0efe19f8d832a71799c1e53c498b6f56d1aa30b42edd2",
       "captureContractVersion": "2"
     },
     {
@@ -2381,7 +2381,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/field--submitted--light.png",
       "width": 960,
       "height": 93,
-      "contentHash": "sha256:c74b0f26501a503e9aa7bf690192bca51cd1a77b1a6f94a6a29c197ba8d803e5",
+      "contentHash": "sha256:a302bc986e74c17fb2ce66a2b7c7e4a51b0c851a343e5d5d122eca74c13e0be4",
       "captureContractVersion": "2"
     },
     {
@@ -2394,7 +2394,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/field--submitted--dark.png",
       "width": 960,
       "height": 93,
-      "contentHash": "sha256:04cd09511d524e0ca00200c0e2da914a814b585ff652f1a31c7a85961caef76a",
+      "contentHash": "sha256:9a88bfbbc09f624d573533312d50de9d46a57a19bc433d5bd481a855b40f7422",
       "captureContractVersion": "2"
     },
     {
@@ -2407,7 +2407,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/field--cancelled--light.png",
       "width": 960,
       "height": 93,
-      "contentHash": "sha256:f1f619cec81eab7c021b9943a49108c1dafe29c147c184c6fe413782990f575a",
+      "contentHash": "sha256:95c4d8fdae1f7f1672cfc3f1fe428ce199c56cddb551cc857ee3c5fe4985bc73",
       "captureContractVersion": "2"
     },
     {
@@ -2420,7 +2420,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/field--cancelled--dark.png",
       "width": 960,
       "height": 93,
-      "contentHash": "sha256:fd73be85d24cd1ac68d8bafc97197a05ccfae601d41b416071c1221245de70a8",
+      "contentHash": "sha256:6c3dce89871a4f8b72fda8640d988f82552cd017059dd2d9ed2e9fef1c884855",
       "captureContractVersion": "2"
     },
     {
@@ -2433,7 +2433,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/field--acknowledgement--light.png",
       "width": 960,
       "height": 93,
-      "contentHash": "sha256:eb7d0b7ba74a6266b3c8f64d7fc662f6cb3e0eac2025688f444cff643a6a6f4c",
+      "contentHash": "sha256:fb3c7fbf0672168775ce2986af859d4825d86bdb003dcb19908bd88a1c399557",
       "captureContractVersion": "2"
     },
     {
@@ -2446,7 +2446,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/field--acknowledgement--dark.png",
       "width": 960,
       "height": 93,
-      "contentHash": "sha256:c9d1d225eb386f7ece7bd39ad3aa8d45eba6a34685b3c0b9eb4a5c2837965a95",
+      "contentHash": "sha256:5abe453f56d97b1619f8d094d0cb3595c252e3ae5522861a1d9bdd425ddee943",
       "captureContractVersion": "2"
     },
     {
@@ -2563,7 +2563,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/input--disabled--light.png",
       "width": 960,
       "height": 66,
-      "contentHash": "sha256:4a1482ad83f1c39ccb2ebfeba661a7bec9589f6f896373f57cd803201182e035",
+      "contentHash": "sha256:c8cda3428b8af85640614c28fda1553b3e49534dc173c437711cd4596e811fcc",
       "captureContractVersion": "2"
     },
     {
@@ -2576,7 +2576,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/input--disabled--dark.png",
       "width": 960,
       "height": 66,
-      "contentHash": "sha256:430fc30cfff9020e1ca8dd0e6f29c1ffaf32d3933671e8ff54f1c47fb7f11c98",
+      "contentHash": "sha256:48d4cedabb4f13cfae2c0260e0ffa663b20fe93da93f43cae3705d54765a7129",
       "captureContractVersion": "2"
     },
     {
@@ -2589,7 +2589,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/input--submitted--light.png",
       "width": 960,
       "height": 93,
-      "contentHash": "sha256:6cfc5279aef64cc6cb27d9c74d4edd838c059506ddc588218740200c2c8fabe7",
+      "contentHash": "sha256:a31c5a639b0e41e5aefb22860c4e0c08d2a3c79db379738b585aaa8eca7adbea",
       "captureContractVersion": "2"
     },
     {
@@ -2602,7 +2602,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/input--submitted--dark.png",
       "width": 960,
       "height": 93,
-      "contentHash": "sha256:31e4480e2fcecdb741fdeb77ec873119c60d89530674f438d517842762706d0a",
+      "contentHash": "sha256:2c42f430cd2f4bacf9feddad561dcc18901ecc51434049b1d52b09281a3b68cf",
       "captureContractVersion": "2"
     },
     {
@@ -2615,7 +2615,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/input--cancelled--light.png",
       "width": 960,
       "height": 93,
-      "contentHash": "sha256:64cee1c339f2097ff809a4550a72ed0f28bc1da46040926b5a5ec4635bfbee34",
+      "contentHash": "sha256:157f50297bb7bc770f7c386a37ffe34696828c6978146b210e8c94c68269e46d",
       "captureContractVersion": "2"
     },
     {
@@ -2628,7 +2628,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/input--cancelled--dark.png",
       "width": 960,
       "height": 93,
-      "contentHash": "sha256:266aca45501d8312bdd5599dff566c69f9b0aafbfd814ba939a90c4682ae021b",
+      "contentHash": "sha256:940fb0fcb135b3ce07460990ead3b8f3b321e8624cd8f7b98a26842794626e9a",
       "captureContractVersion": "2"
     },
     {
@@ -2641,7 +2641,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/input--searching--light.png",
       "width": 960,
       "height": 93,
-      "contentHash": "sha256:cb5ca243584243bff0a54bce1d0d9e4f0e67f2faafc4a8caac54cec18421fbe5",
+      "contentHash": "sha256:c397d1287a22ce098120fb1664fe4aad2bbdaf5298c6f9bde530a23297f25f07",
       "captureContractVersion": "2"
     },
     {
@@ -2654,7 +2654,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/input--searching--dark.png",
       "width": 960,
       "height": 93,
-      "contentHash": "sha256:10651048f8bc6f0545091d9a5d6a394a4b6d14d60d8b0feba4a6cffd3d31e8c4",
+      "contentHash": "sha256:9cef089490237702d7d39e3c05941a3258bae28ac5aa2b3504348945509fcae2",
       "captureContractVersion": "2"
     },
     {
@@ -2771,7 +2771,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/textarea--disabled--light.png",
       "width": 960,
       "height": 132,
-      "contentHash": "sha256:5a689fd63b53936118034d9b604bc076876aa08d300a33b3b8be5e7a31986ed9",
+      "contentHash": "sha256:f5ad96985ab099244cbbd05182b12a6f0f24c1a9c5bdb2adc018cf04c8d5170b",
       "captureContractVersion": "2"
     },
     {
@@ -2784,7 +2784,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/textarea--disabled--dark.png",
       "width": 960,
       "height": 132,
-      "contentHash": "sha256:94e3cc7d9a74ad7740097376c64d618759b8bcfeffe94d761841610d8b36b5d8",
+      "contentHash": "sha256:1f2ed73cd1cdeb176f71af84d5fbdab7ca7861a2eaadcb290a4699e0fb1a919e",
       "captureContractVersion": "2"
     },
     {
@@ -2797,7 +2797,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/textarea--submitted--light.png",
       "width": 960,
       "height": 159,
-      "contentHash": "sha256:0264a044b68bdb6ace85425c211bb9ae7d9be8dcf9342eb39e911876b0fa06cf",
+      "contentHash": "sha256:51343f14357db796d87bd9f93210705e1cbd3029cd3df6a9506a00af9e7cd015",
       "captureContractVersion": "2"
     },
     {
@@ -2810,7 +2810,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/textarea--submitted--dark.png",
       "width": 960,
       "height": 159,
-      "contentHash": "sha256:1b300f196b07acf11e12453d91d9306866df0fd39c2a05dda7fbd532017396da",
+      "contentHash": "sha256:0a3c3650f66d7226ea52e5a693082044bb2a35b0c94490260b7680792d3840a4",
       "captureContractVersion": "2"
     },
     {
@@ -2823,7 +2823,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/textarea--cancelled--light.png",
       "width": 960,
       "height": 159,
-      "contentHash": "sha256:6892a82d670e9f000765d5299a71521c026b0c0688b13d3f3948d29c6e3078cb",
+      "contentHash": "sha256:27917abf2f6493ab90f939e4bfd7e6f854895ad4cb0145190394073e326d9b0f",
       "captureContractVersion": "2"
     },
     {
@@ -2836,7 +2836,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/textarea--cancelled--dark.png",
       "width": 960,
       "height": 159,
-      "contentHash": "sha256:271ab0ffa100d54d8766ed6d3db6951d19d50e28db74c75701a3d3e178f9cd93",
+      "contentHash": "sha256:cff958460b4eaa3b01b7028e6a5345ad548976e33724e0277bab0081c368d1fc",
       "captureContractVersion": "2"
     },
     {
@@ -3005,7 +3005,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/select--disabled--light.png",
       "width": 960,
       "height": 66,
-      "contentHash": "sha256:960a37c4425af03b4db5a6068606e159ec0e5c890d6f52feb165b20c86af282c",
+      "contentHash": "sha256:29e273f4a506266ffd5c70ab9a0dac16b2897e62ead3298a44346fb5782c5fab",
       "captureContractVersion": "2"
     },
     {
@@ -3018,7 +3018,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/select--disabled--dark.png",
       "width": 960,
       "height": 66,
-      "contentHash": "sha256:c1a0bf967667c9a8570e0ca8fd3b5f81a5c62a0be9dc39239019d12f8b27a400",
+      "contentHash": "sha256:26dd747afe1e2ec6c97e5982c5ec1dcc8d18fd8c8c2a6d76f9bc59f26019f5b7",
       "captureContractVersion": "2"
     },
     {
@@ -3031,7 +3031,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/select--submitted--light.png",
       "width": 960,
       "height": 93,
-      "contentHash": "sha256:075bdfd5a6f950532ad67260bf01f3b033bca891bb528909666f48f390819a6b",
+      "contentHash": "sha256:d7b9253876b364c35f52cb1d8e74e936d1890dd104f565b2418558261c197404",
       "captureContractVersion": "2"
     },
     {
@@ -3044,7 +3044,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/select--submitted--dark.png",
       "width": 960,
       "height": 93,
-      "contentHash": "sha256:52aca28115ec3cb6bde87ca227511c7c7d3a17a490cd2706f484611992574edb",
+      "contentHash": "sha256:2cb993fbcc98e47fae44574f6ec0bd0850c0944170ef9efd69c019506d7b3a99",
       "captureContractVersion": "2"
     },
     {
@@ -3057,7 +3057,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/select--cancelled--light.png",
       "width": 960,
       "height": 93,
-      "contentHash": "sha256:09a592fbf3fbc2089464d50b11369c54f7022589f0b94f751c7a2312fe280d3b",
+      "contentHash": "sha256:88abc3242b28f1b11dcb8f507fc868df2695265fcbdbefc6db8bc7298a50331c",
       "captureContractVersion": "2"
     },
     {
@@ -3070,7 +3070,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/select--cancelled--dark.png",
       "width": 960,
       "height": 93,
-      "contentHash": "sha256:4e78a99794f4307d1e628c0b1ad29ec4ff32c3bf2a007e66cff071d7ff4c77df",
+      "contentHash": "sha256:48a42e9e9f18af893ad6cd148bf2303698f5cbdbcd0d58315d1970f078ba78b8",
       "captureContractVersion": "2"
     },
     {
@@ -3082,8 +3082,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/checkbox--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/checkbox--default--light.png",
       "width": 960,
-      "height": 49,
-      "contentHash": "sha256:d45b3172a4b91f8c7f2d78c897aeca305f0a6a8efd662fd162ba1eef4a089dac",
+      "height": 45,
+      "contentHash": "sha256:0749f06a5f925e4a5ab3487bf6629a553274c38c3c26f8f4d113f05df29a9a7c",
       "captureContractVersion": "2"
     },
     {
@@ -3095,8 +3095,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/checkbox--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/checkbox--default--dark.png",
       "width": 960,
-      "height": 49,
-      "contentHash": "sha256:84747bd23fdbf8630de16e294c188253d79823ed36e695f18a47015e00395995",
+      "height": 45,
+      "contentHash": "sha256:a68c22cdcc3b156391101fc1ea2975c35dc9ad387065c70dd0633cc11466a765",
       "captureContractVersion": "2"
     },
     {
@@ -3109,7 +3109,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/checkbox--grouped--light.png",
       "width": 956,
       "height": 234,
-      "contentHash": "sha256:4924fd41d253df64904a5c0a3e26a26d510b74dd7dcaa5e1e9e00e2abfd0ed8f",
+      "contentHash": "sha256:b0489e6d8aeea64d9fda622c3d1f66452a13fff18ee063dd93b99a398486b063",
       "captureContractVersion": "2"
     },
     {
@@ -3122,7 +3122,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/checkbox--grouped--dark.png",
       "width": 956,
       "height": 234,
-      "contentHash": "sha256:7b4fdeaf8766b8392178463972b19140c3e487c3eebf5c2ac08278a26a244ed5",
+      "contentHash": "sha256:fac5e1637c965d84aaac285ddb7ce0e46383b598418ad42e97d74445bd15be5e",
       "captureContractVersion": "2"
     },
     {
@@ -3186,8 +3186,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/checkbox--validation-error--light.png",
       "assetUrl": "/catalogue/generated/example-images/checkbox--validation-error--light.png",
       "width": 960,
-      "height": 49,
-      "contentHash": "sha256:21ed107a55a5c67056199f11808b9b0b7cf78e351700666563b9ed7e6f75c29c",
+      "height": 45,
+      "contentHash": "sha256:2e82d4fb2f4c163830e097f0b5599544d6cfbb37fcdfed0bddeaba221cc0f0af",
       "captureContractVersion": "2"
     },
     {
@@ -3199,8 +3199,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/checkbox--validation-error--dark.png",
       "assetUrl": "/catalogue/generated/example-images/checkbox--validation-error--dark.png",
       "width": 960,
-      "height": 49,
-      "contentHash": "sha256:439200d3fc8d6c535d4553702ef6bbf7cde56f15721ddb53e46a536780b2d9ba",
+      "height": 45,
+      "contentHash": "sha256:063921b2ebdae4c9be83288b28f35ba222eb32e6bf788655accc0b8e159506be",
       "captureContractVersion": "2"
     },
     {
@@ -3213,7 +3213,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/checkbox--disabled--light.png",
       "width": 960,
       "height": 24,
-      "contentHash": "sha256:b142854386a628f3e1e1c1a0178c8237c78283b495b07f23deb79169247ac77e",
+      "contentHash": "sha256:404befbeafc4a1720e1973c0ddc9587b8216e3050f4dbac9b0d1cccc3339c762",
       "captureContractVersion": "2"
     },
     {
@@ -3226,7 +3226,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/checkbox--disabled--dark.png",
       "width": 960,
       "height": 24,
-      "contentHash": "sha256:d7a76274edd64853ee692a5a84e11226db5451fb042af5473b8771a2a50ec317",
+      "contentHash": "sha256:679d483a3749e4e674c4a4cbeb068fd274a6b259174d8fbb8cbc5283a81a73aa",
       "captureContractVersion": "2"
     },
     {
@@ -3238,8 +3238,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/checkbox--submitted--light.png",
       "assetUrl": "/catalogue/generated/example-images/checkbox--submitted--light.png",
       "width": 960,
-      "height": 49,
-      "contentHash": "sha256:b535da899f45278e81f4d6c3e4079c8e4134b5152df355e63379f1577a78885e",
+      "height": 45,
+      "contentHash": "sha256:be684fde35204f0f099821bafad22c0fa56a127cd2b797b9a63dab5c2aad74d6",
       "captureContractVersion": "2"
     },
     {
@@ -3251,8 +3251,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/checkbox--submitted--dark.png",
       "assetUrl": "/catalogue/generated/example-images/checkbox--submitted--dark.png",
       "width": 960,
-      "height": 49,
-      "contentHash": "sha256:3a2f00c8dc44e64b5d6b8e32accda6d091f0bc35b94132e755d17d0e7b870d90",
+      "height": 45,
+      "contentHash": "sha256:e7f1918ccdc9f085119c6d72b4d08bceba8cd15cb08d05a1b32eae5f429f1fdd",
       "captureContractVersion": "2"
     },
     {
@@ -3264,8 +3264,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/checkbox--cancelled--light.png",
       "assetUrl": "/catalogue/generated/example-images/checkbox--cancelled--light.png",
       "width": 960,
-      "height": 49,
-      "contentHash": "sha256:e51c0ac7b241564d28c0274f02583df9150973d545b0938ad37058e186d09406",
+      "height": 45,
+      "contentHash": "sha256:54f2918f9319f567f665aed21040611ed3abbfc5c34e3207efb1d859a8747815",
       "captureContractVersion": "2"
     },
     {
@@ -3277,8 +3277,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/checkbox--cancelled--dark.png",
       "assetUrl": "/catalogue/generated/example-images/checkbox--cancelled--dark.png",
       "width": 960,
-      "height": 49,
-      "contentHash": "sha256:b6ce9b934f19194962bc3296b52cf2df887ac26e507f589420718cf2aa65bf14",
+      "height": 45,
+      "contentHash": "sha256:5eadafd5fc6abec582ba570b43a073a35a047ad05082fe5b34cab5637a8e8fc2",
       "captureContractVersion": "2"
     },
     {
@@ -3291,7 +3291,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/radio--default--light.png",
       "width": 956,
       "height": 149,
-      "contentHash": "sha256:42a49ad7c64e4f0d7b667e882be65191c53190af5c00b0a74fbafb3dee00f7b6",
+      "contentHash": "sha256:01f4ebc782334051b27aafca4d3ea74833e36332991f187dac04cce5d7720d33",
       "captureContractVersion": "2"
     },
     {
@@ -3304,7 +3304,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/radio--default--dark.png",
       "width": 956,
       "height": 149,
-      "contentHash": "sha256:ef804c2ae04e4b068b76ccaff5ce858c13068f7493fc0870a2e51e978f287015",
+      "contentHash": "sha256:7762f627c42f2f897d8ff73132da62fba6d6ffceae385809d6a7e3148e95642e",
       "captureContractVersion": "2"
     },
     {
@@ -3317,7 +3317,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/radio--grouped--light.png",
       "width": 956,
       "height": 234,
-      "contentHash": "sha256:eecd5f78496704dd8d0a93086d5ae31cfb315e05c1e7ac8ed0552f2d94a78f3a",
+      "contentHash": "sha256:998f80a4a3e35ac62dbb0d678e172d794a344ef52226e8e3612403ed9189dfd2",
       "captureContractVersion": "2"
     },
     {
@@ -3330,7 +3330,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/radio--grouped--dark.png",
       "width": 956,
       "height": 234,
-      "contentHash": "sha256:56405d1ef071fc39176e60e31976fa73d268f5a000f8ca5bce0547e6dc014027",
+      "contentHash": "sha256:27381734d7c23e96014fed3913d44222cbc9ff881c7b1a409cc5f23049fae4c8",
       "captureContractVersion": "2"
     },
     {
@@ -3343,7 +3343,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/radio--active--light.png",
       "width": 956,
       "height": 149,
-      "contentHash": "sha256:0ee40d2cd1e3a9105e71f8fc13417f61b88b2f6795dad4aa504af6f9ce3d3ba9",
+      "contentHash": "sha256:3005aaf401c8eac0747ac0e4bb646defdf4c3b1520163e1afeb57f95cb1dd1d7",
       "captureContractVersion": "2"
     },
     {
@@ -3356,7 +3356,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/radio--active--dark.png",
       "width": 956,
       "height": 149,
-      "contentHash": "sha256:5e279d8dcd3d59b1a6e46b197b545ca10210c5228ae85164632d95b54394f1e0",
+      "contentHash": "sha256:c687e12200d9f81b6baa27a59ebc48726eaacc0c0fac707c84bd03420c984a75",
       "captureContractVersion": "2"
     },
     {
@@ -3369,7 +3369,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/radio--filled--light.png",
       "width": 956,
       "height": 149,
-      "contentHash": "sha256:56419da474d3b9956d1a8664bc790895d171c7b0e7bb4a4bfe6e9dedd8f2cfb3",
+      "contentHash": "sha256:cb802a99aa74a4dc8d7cac5590def0c85dc197eacd5e841de566bb1d328fd596",
       "captureContractVersion": "2"
     },
     {
@@ -3382,7 +3382,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/radio--filled--dark.png",
       "width": 956,
       "height": 149,
-      "contentHash": "sha256:bc58f82c1e3b150b83f366d2d5036bfd698409166b5f59470c0f2b47ad32b762",
+      "contentHash": "sha256:6732b3a852bfbb2a3b25d8cf6e653349a05c771dfe25292214545eb2d6aa08cc",
       "captureContractVersion": "2"
     },
     {
@@ -3394,8 +3394,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/radio--validation-error--light.png",
       "assetUrl": "/catalogue/generated/example-images/radio--validation-error--light.png",
       "width": 956,
-      "height": 174,
-      "contentHash": "sha256:b07ae62cd86485cab6837593dde41fa6655219e489ea88a2ede6bea3679d4d86",
+      "height": 170,
+      "contentHash": "sha256:9da38b581db39861dedea61158d8e1fb9160842905d9e99596d62b4e15df4347",
       "captureContractVersion": "2"
     },
     {
@@ -3407,8 +3407,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/radio--validation-error--dark.png",
       "assetUrl": "/catalogue/generated/example-images/radio--validation-error--dark.png",
       "width": 956,
-      "height": 174,
-      "contentHash": "sha256:c9985dfb6fd3df4e894e91bca54bec0e73cc1377bdcf523449d7721d6c12f925",
+      "height": 170,
+      "contentHash": "sha256:79105f7e36bf6d07c2ccc782c9f6f81280afee63f81540f6110ab5a5212cd3ba",
       "captureContractVersion": "2"
     },
     {
@@ -3421,7 +3421,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/radio--disabled--light.png",
       "width": 956,
       "height": 149,
-      "contentHash": "sha256:24b6677d6821f17d68685ed92c3b358fb76ec565413e7f5e228de2637bf2ac71",
+      "contentHash": "sha256:3926c4b28260b03f572cb6228a6c8fbe99cc5a39e5ab45e02cb012fc387da8fd",
       "captureContractVersion": "2"
     },
     {
@@ -3434,7 +3434,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/radio--disabled--dark.png",
       "width": 956,
       "height": 149,
-      "contentHash": "sha256:1a76a2b05b3ba984cb07ea93b0b644efad5a9e2c6bdd92457865da42c147bd24",
+      "contentHash": "sha256:e3434d7cb5e9d4ad5d8e255558f78f2877985d9a360be6adcd2f70774af8f67a",
       "captureContractVersion": "2"
     },
     {
@@ -3447,7 +3447,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/radio--submitted--light.png",
       "width": 956,
       "height": 149,
-      "contentHash": "sha256:2c10e945f33ce1cff0d79b4648bcda17aa8c5c4ed04e2c2f8438028b6d2ce0a7",
+      "contentHash": "sha256:c0963992d16a4f1483d0b31afe3cc48547467d61c495717a6c46a5aecb638815",
       "captureContractVersion": "2"
     },
     {
@@ -3460,7 +3460,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/radio--submitted--dark.png",
       "width": 956,
       "height": 149,
-      "contentHash": "sha256:f0d60678737ed5a9cce3853afeeb845cd1f0d49fbec91d04c677c1c5daac5e75",
+      "contentHash": "sha256:e78e807730e4f56e74f9b26924dc1ab13fa1b339d5443fac727f3c02572cb629",
       "captureContractVersion": "2"
     },
     {
@@ -3473,7 +3473,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/radio--cancelled--light.png",
       "width": 956,
       "height": 149,
-      "contentHash": "sha256:7bf1c784c9d9652685889d687a2e373e41948288809f396f6177220b17cae593",
+      "contentHash": "sha256:908ce00df03a6a5b85ded04ffd8fd40d871010ca5e2fbd266015ea3913afce5f",
       "captureContractVersion": "2"
     },
     {
@@ -3486,7 +3486,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/radio--cancelled--dark.png",
       "width": 956,
       "height": 149,
-      "contentHash": "sha256:f095e29600e9f60d64926d2a25297094889704c5566a600d25fad33d5fd175e9",
+      "contentHash": "sha256:7c856a8f9868988ea76dc66af739cc8fffa4e2a66a3a8fd8967c3be811d54547",
       "captureContractVersion": "2"
     },
     {
@@ -3576,8 +3576,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/switch--validation-error--light.png",
       "assetUrl": "/catalogue/generated/example-images/switch--validation-error--light.png",
       "width": 960,
-      "height": 49,
-      "contentHash": "sha256:55ba053f9830a016800bc92caea026cdf928e058deb03cd9df266f6e9cbf7c98",
+      "height": 45,
+      "contentHash": "sha256:fbbff270f21fcbe15791f4bc9e547ba2a9fabe0eca5c53ed0770b3caa6456ff2",
       "captureContractVersion": "2"
     },
     {
@@ -3589,8 +3589,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/switch--validation-error--dark.png",
       "assetUrl": "/catalogue/generated/example-images/switch--validation-error--dark.png",
       "width": 960,
-      "height": 49,
-      "contentHash": "sha256:b00013cdcc2e9e908c1bd535787f921a01bfcab09722b9b654f582736e106ffa",
+      "height": 45,
+      "contentHash": "sha256:af3f9ae0caeeded2f50e5b44cd603973caa037fba7833feaff9d388930724c71",
       "captureContractVersion": "2"
     },
     {
@@ -3603,7 +3603,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/switch--disabled--light.png",
       "width": 960,
       "height": 25,
-      "contentHash": "sha256:223056a3f07e6f6401eb040d74b45276bfee0371311263c9fab4b90ddadb8881",
+      "contentHash": "sha256:158054b1d7b5f6843634e1f0207f6ce9d3fea63f746794555e2bd6ad7271b775",
       "captureContractVersion": "2"
     },
     {
@@ -3616,7 +3616,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/switch--disabled--dark.png",
       "width": 960,
       "height": 25,
-      "contentHash": "sha256:019e5b1875458cec7853de3110c1e1aa1a1ebed5112b05dc585fc7c3ce3fa5a7",
+      "contentHash": "sha256:97bfcf5fcc485044e8cc3ccdd2adc04e19f3ebee9104e5b9fbc520454d31d665",
       "captureContractVersion": "2"
     },
     {
@@ -3628,8 +3628,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/switch--submitted--light.png",
       "assetUrl": "/catalogue/generated/example-images/switch--submitted--light.png",
       "width": 960,
-      "height": 49,
-      "contentHash": "sha256:370b71064428587ca3bd5bf1acca3c332ed6988e09441f8b4c31d91c228a205b",
+      "height": 45,
+      "contentHash": "sha256:d680131c9408e7ef933a94202ae4cf1ddae427186927cf7725c45fa59ed60c35",
       "captureContractVersion": "2"
     },
     {
@@ -3641,8 +3641,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/switch--submitted--dark.png",
       "assetUrl": "/catalogue/generated/example-images/switch--submitted--dark.png",
       "width": 960,
-      "height": 49,
-      "contentHash": "sha256:4cf9dc03ad5ce69e95c52713fb3086f4447a2aecf9602aef32033db126c62f9f",
+      "height": 45,
+      "contentHash": "sha256:01a917dc07fa89ad3c3b3059507cebb56f5985e469da10bf389f7448a86d08f7",
       "captureContractVersion": "2"
     },
     {
@@ -3654,8 +3654,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/switch--cancelled--light.png",
       "assetUrl": "/catalogue/generated/example-images/switch--cancelled--light.png",
       "width": 960,
-      "height": 49,
-      "contentHash": "sha256:4a1b4ed9eeb5c1c175b965e9c42a2a9e0949bf3344af442e73c10d779188bb58",
+      "height": 45,
+      "contentHash": "sha256:71664cfbfbcff53528637f16ac6866ffc63ccec760d41f83ceafba5c96a7c259",
       "captureContractVersion": "2"
     },
     {
@@ -3667,8 +3667,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/switch--cancelled--dark.png",
       "assetUrl": "/catalogue/generated/example-images/switch--cancelled--dark.png",
       "width": 960,
-      "height": 49,
-      "contentHash": "sha256:19e8abcbb1d1273f5330187cb3b80c58102382a8c23ad3d3380573d0a21efd4f",
+      "height": 45,
+      "contentHash": "sha256:7a5adf9c4256f08afb4d62cb02c3b384c23e3eeb30af1d4da9ae68621b2c9029",
       "captureContractVersion": "2"
     },
     {
@@ -3809,9 +3809,9 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "theme": "light",
       "assetPath": "catalogue/generated/example-images/toast--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/toast--default--light.png",
-      "width": 127,
-      "height": 46,
-      "contentHash": "sha256:85b33dce9e77d00249d9e51f912b9780de1b4d44551a207f9a4f0c6afe2cbc7d",
+      "width": 138,
+      "height": 44,
+      "contentHash": "sha256:bcd9effc0148aa8e7f891bb050ff918b6a85024a2e1f0f6f7b2626f6af626707",
       "captureContractVersion": "2"
     },
     {
@@ -3822,9 +3822,9 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "theme": "dark",
       "assetPath": "catalogue/generated/example-images/toast--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/toast--default--dark.png",
-      "width": 127,
-      "height": 46,
-      "contentHash": "sha256:a859efda2e5ef6e0f2a25bfed20ebbde65fb82ee90890ec1442277dec14abaed",
+      "width": 138,
+      "height": 44,
+      "contentHash": "sha256:ecbb2fdf86a9b374337fe9c146c25815b6fd60263a2e0086c85decc4bb83170f",
       "captureContractVersion": "2"
     },
     {
@@ -3835,9 +3835,9 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "theme": "light",
       "assetPath": "catalogue/generated/example-images/toast--success--light.png",
       "assetUrl": "/catalogue/generated/example-images/toast--success--light.png",
-      "width": 199,
+      "width": 211,
       "height": 50,
-      "contentHash": "sha256:c3c8cc110b9f4015d29c7e18fffe9bf22fdb889127f19701ec1b3e3c5794cc57",
+      "contentHash": "sha256:aa96978f48ffdb684e905ed78b2273a95d11f3a4bdacf4f96594896438e3c102",
       "captureContractVersion": "2"
     },
     {
@@ -3848,9 +3848,9 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "theme": "dark",
       "assetPath": "catalogue/generated/example-images/toast--success--dark.png",
       "assetUrl": "/catalogue/generated/example-images/toast--success--dark.png",
-      "width": 199,
+      "width": 211,
       "height": 50,
-      "contentHash": "sha256:7ac202e7b49cd2141cc9643b9c9cd8d363182154b29fef9a054be1834dcceb4f",
+      "contentHash": "sha256:b4e41de8b1cc976fdd3f36d377ecfdb4ba95a3b924ad28e43cf2a100bba97a05",
       "captureContractVersion": "2"
     },
     {
@@ -3861,9 +3861,9 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "theme": "light",
       "assetPath": "catalogue/generated/example-images/toast--warning--light.png",
       "assetUrl": "/catalogue/generated/example-images/toast--warning--light.png",
-      "width": 153,
-      "height": 46,
-      "contentHash": "sha256:7c7160ab426c424ab30b1f62c12ebce06ef925aa4ea96b257a4365f23559f726",
+      "width": 167,
+      "height": 44,
+      "contentHash": "sha256:91ab79ef5418bf0c7f711bd69dcf98419e3af0bd923bc334436dd6a0957c673c",
       "captureContractVersion": "2"
     },
     {
@@ -3874,9 +3874,9 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "theme": "dark",
       "assetPath": "catalogue/generated/example-images/toast--warning--dark.png",
       "assetUrl": "/catalogue/generated/example-images/toast--warning--dark.png",
-      "width": 153,
-      "height": 46,
-      "contentHash": "sha256:e3bb8388f51ecaab5d7c6092bcad9ac03054718322c0bfa4152d1fea8db0e2de",
+      "width": 167,
+      "height": 44,
+      "contentHash": "sha256:2f58507776629c53ab50fdf2af83dc97aaa1a216eef50b921e42c71cbb189910",
       "captureContractVersion": "2"
     },
     {
@@ -3887,9 +3887,9 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "theme": "light",
       "assetPath": "catalogue/generated/example-images/toast--danger--light.png",
       "assetUrl": "/catalogue/generated/example-images/toast--danger--light.png",
-      "width": 168,
+      "width": 180,
       "height": 50,
-      "contentHash": "sha256:ec6d1195165ac96d4abbffde70941b7344762f2d43df1aacbac48d8b3dfdaf00",
+      "contentHash": "sha256:b927af9cd3cb32355d2fb127993df28ec8eed4d5d129e7ef0f11008d551754d7",
       "captureContractVersion": "2"
     },
     {
@@ -3900,9 +3900,9 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "theme": "dark",
       "assetPath": "catalogue/generated/example-images/toast--danger--dark.png",
       "assetUrl": "/catalogue/generated/example-images/toast--danger--dark.png",
-      "width": 168,
+      "width": 180,
       "height": 50,
-      "contentHash": "sha256:69f8386d902c0fe6e55be6a338ebc7898b311d2b3ac1d1199ef17319826d5d44",
+      "contentHash": "sha256:dac9ecdaef28e5afb7fafd4f59894407cb12a8a8ba702a919e87ef00aaf46d6a",
       "captureContractVersion": "2"
     },
     {
@@ -3915,7 +3915,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/tooltip--default--light.png",
       "width": 142,
       "height": 86,
-      "contentHash": "sha256:1df435e962c84c7ed1cd5bf1f668159e9dbae1e5c128d14e99a47e3db840bfe0",
+      "contentHash": "sha256:28c9a6266f8ebdd15d237dfe1b4ba25c7b72a16d2c32f22cba9fd0cfad8ae60c",
       "captureContractVersion": "2"
     },
     {
@@ -3926,9 +3926,9 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "theme": "dark",
       "assetPath": "catalogue/generated/example-images/tooltip--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/tooltip--default--dark.png",
-      "width": 142,
+      "width": 143,
       "height": 86,
-      "contentHash": "sha256:95c977fd02537f0ebafe45e1174fbbd1efd312320ad23d1bc2c9e135e6638cea",
+      "contentHash": "sha256:9982d119e3e17b109ad95c1bcfb7862325b2a1944c2e553798d3787eccbe8b58",
       "captureContractVersion": "2"
     },
     {
@@ -4045,7 +4045,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/dialog--default--light.png",
       "width": 496,
       "height": 220,
-      "contentHash": "sha256:bb800817d64bfbd9075984f6af133817c90af37360c65e31cbf8d429a54ab14a",
+      "contentHash": "sha256:18aba373cb24e84c414f73cc755fe8c78794285a2042f349fb42dc52fa5151a5",
       "captureContractVersion": "2"
     },
     {
@@ -4058,7 +4058,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/dialog--default--dark.png",
       "width": 496,
       "height": 220,
-      "contentHash": "sha256:22299cf42f2dbaf58acbc846753417590052553ee7eac062d1fba1736511f320",
+      "contentHash": "sha256:e0c09e5b6964c14754336a682e17b0434b0dc82aeee4d51bb2a8847087df052d",
       "captureContractVersion": "2"
     },
     {
@@ -4071,7 +4071,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/dialog--submitted--light.png",
       "width": 496,
       "height": 146,
-      "contentHash": "sha256:823ee7aee558649a9b942757ed543d0ba1d6cf3c0562cc48df083009d54cbc17",
+      "contentHash": "sha256:1242403529766650def28ede0e16239f63eb142c50d1211c2f81ca1afa5cafa7",
       "captureContractVersion": "2"
     },
     {
@@ -4084,7 +4084,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/dialog--submitted--dark.png",
       "width": 496,
       "height": 146,
-      "contentHash": "sha256:3c7a3f5e241ea0eb5fb029a370df9aa6531393e75fb04c6876c719771d2e5e35",
+      "contentHash": "sha256:6773865e343df1c82fa96243e53c46aa4973e0cffabc116be04e0a9bcbe473ec",
       "captureContractVersion": "2"
     },
     {
@@ -4097,7 +4097,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/dialog--cancelled--light.png",
       "width": 496,
       "height": 146,
-      "contentHash": "sha256:b48c16ea80bdcf024fc53f040c5f428ad162be88b8a4cf13722690bbff5dd21a",
+      "contentHash": "sha256:0ea8ab7a95d6b7450ff247beff8b2b73cc1f259dd7e81ecadf76a21490781847",
       "captureContractVersion": "2"
     },
     {
@@ -4110,7 +4110,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/dialog--cancelled--dark.png",
       "width": 496,
       "height": 146,
-      "contentHash": "sha256:290423fad96e23989273af33f6a8a269caf1f302724412b3803c1fc7fbd82e9a",
+      "contentHash": "sha256:c7de6c6d743979baa4d66cb7e6db8131d8ec2598f78c7fccfa625a534f88d221",
       "captureContractVersion": "2"
     },
     {
@@ -4253,7 +4253,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/tabs--default--light.png",
       "width": 960,
       "height": 90,
-      "contentHash": "sha256:6023ddb347a4f024c237ce87b8b07b4a1ba620f834a24bd41bc37ad07d0c2434",
+      "contentHash": "sha256:83b382533ec2b69f75961758438aa071d9cc872b760e30f8a4170b9dd6343166",
       "captureContractVersion": "2"
     },
     {
@@ -4266,7 +4266,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/tabs--default--dark.png",
       "width": 960,
       "height": 90,
-      "contentHash": "sha256:bdf0b491e22296af6bc5d3810c3616523b1474feb22f712e11905294f999d5c6",
+      "contentHash": "sha256:7bb609061df8d32abb742418665cab3d0c8cf11052b484c531d40d67040c8316",
       "captureContractVersion": "2"
     },
     {
@@ -4279,7 +4279,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/tabs--details--light.png",
       "width": 960,
       "height": 90,
-      "contentHash": "sha256:c13de0562d727c5b4cdf19c966d532224025dcefbf878e8b70e3b5d8dbb14c33",
+      "contentHash": "sha256:567b35606d4fef6f29959e37ea37ea4ebc5a3ebc61a6a9eb8b32ccac48daef2b",
       "captureContractVersion": "2"
     },
     {
@@ -4292,7 +4292,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/tabs--details--dark.png",
       "width": 960,
       "height": 90,
-      "contentHash": "sha256:1c484bfa106accb11e32a28ad1329d2a3ece0b03ce37c0fb1180d39cae07e30d",
+      "contentHash": "sha256:f15d784665dbd773db34a3e97b518130837cd2119c19e56e4ef7f05559f60a21",
       "captureContractVersion": "2"
     },
     {
@@ -4305,7 +4305,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/tabs--manual--light.png",
       "width": 960,
       "height": 90,
-      "contentHash": "sha256:f3ba972078637ced59ea98f1b138a105283713cb75394aada9a3d94fb30538db",
+      "contentHash": "sha256:46608438ac360252038c6bc8ed66f668c299df88a9882b421a23c6c430582d91",
       "captureContractVersion": "2"
     },
     {
@@ -4318,7 +4318,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/tabs--manual--dark.png",
       "width": 960,
       "height": 90,
-      "contentHash": "sha256:83d0d3c028c645603e26bff75a70b453dd8c20e39f18fdaffb9164051f29b46f",
+      "contentHash": "sha256:93aae7e2727592a391d4613c3cf6ad0a85cea8e442790dc76af7236ceab0dea5",
       "captureContractVersion": "2"
     },
     {
@@ -4591,7 +4591,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/mention--default--light.png",
       "width": 608,
       "height": 29,
-      "contentHash": "sha256:8ea83309ba00340acfa358a30e9737dc7d81ba12da07bc488b2f5c07fdbb83ba",
+      "contentHash": "sha256:caa10402687146f8376c30eaf210cf55e8d3a720e25db941efe3789ca8e8d23d",
       "captureContractVersion": "2"
     },
     {
@@ -4604,7 +4604,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/mention--default--dark.png",
       "width": 608,
       "height": 29,
-      "contentHash": "sha256:98364621f1ac477cae4100eba74083c18c7d37ef127effd00f7b834a3dc8dbe5",
+      "contentHash": "sha256:2de3b259cbf8576abfa215c722da42cb6f40ee89723a63e646b5866a8c21e34e",
       "captureContractVersion": "2"
     },
     {
@@ -4643,7 +4643,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/byline--default--light.png",
       "width": 960,
       "height": 24,
-      "contentHash": "sha256:18e18ac393cd34b11ae4e96bafe00d85d0855ace29a202db4a25c99413efbd29",
+      "contentHash": "sha256:df9805de54f89fe8ef07eb120c55d40596f00b6661eed47eb3558b0cf9fd27f4",
       "captureContractVersion": "2"
     },
     {
@@ -4656,7 +4656,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/byline--default--dark.png",
       "width": 960,
       "height": 24,
-      "contentHash": "sha256:a138ee8b9144076d5f90e5bae7b54bcf705c281edd9f896c851ba79da3c5deeb",
+      "contentHash": "sha256:c4f8784fff10567c46d64e120125cedb28223094504d687338177e026ed8d6c3",
       "captureContractVersion": "2"
     },
     {
@@ -4902,8 +4902,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/worklog--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/worklog--default--light.png",
       "width": 416,
-      "height": 140,
-      "contentHash": "sha256:da7472ea6017387e7348bdffa3312022e7014ce8185432f49650b695b58b717a",
+      "height": 142,
+      "contentHash": "sha256:a243cfe4901ac6e25a1905a75f428eae46eacc68c1949d3ac42117ffc25f83f2",
       "captureContractVersion": "2"
     },
     {
@@ -4915,8 +4915,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/worklog--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/worklog--default--dark.png",
       "width": 416,
-      "height": 140,
-      "contentHash": "sha256:120befdfd19d5ab83e0e926bf93996dfa22e6e7cf178e6215eb58bdf2d1bf2ef",
+      "height": 142,
+      "contentHash": "sha256:428c7c4faa382cb9d51eeb066a147a9e3b7b29c30342f8975ceeeb835d55d295",
       "captureContractVersion": "2"
     },
     {
@@ -4928,8 +4928,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/worklog--failure--light.png",
       "assetUrl": "/catalogue/generated/example-images/worklog--failure--light.png",
       "width": 416,
-      "height": 140,
-      "contentHash": "sha256:c4d22b97cf25167351e64d94ffa8677ecd075842d3d7b8cadae8d57ff763b0ab",
+      "height": 142,
+      "contentHash": "sha256:ab142cae34d7819d0e4aed1224d9af3dd6bb8d87cce01b66ba3a8455f9a402f6",
       "captureContractVersion": "2"
     },
     {
@@ -4941,8 +4941,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/worklog--failure--dark.png",
       "assetUrl": "/catalogue/generated/example-images/worklog--failure--dark.png",
       "width": 416,
-      "height": 140,
-      "contentHash": "sha256:01826565fa8d282fecfb15d165a81e442fd3d9ad61c59ffe2e4f00ebdef67fd6",
+      "height": 142,
+      "contentHash": "sha256:32b849e63fc3d2bfabad7fa267a96387651b013e917863f61a8bf0fdf1133b4c",
       "captureContractVersion": "2"
     },
     {
@@ -4980,8 +4980,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/verification-report--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/verification-report--default--light.png",
       "width": 352,
-      "height": 372,
-      "contentHash": "sha256:9e1d42d3efdc3e14cae2aa877e1a106f1f8244e3420acbefa313f6902fde10f7",
+      "height": 374,
+      "contentHash": "sha256:74addfb27953c0fc42c8a4194f9f5270ea2ce790bfc1c1d64cf448a8c8d5b047",
       "captureContractVersion": "2"
     },
     {
@@ -4993,8 +4993,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/verification-report--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/verification-report--default--dark.png",
       "width": 352,
-      "height": 372,
-      "contentHash": "sha256:1df622ce76c8c5b0b098d4e8edd0d18efceeace11837e7a578b60e7b56835ee3",
+      "height": 374,
+      "contentHash": "sha256:35d6628081fddbc894e353db4640229a29b4b8226c874101f9c9bed7479b3e40",
       "captureContractVersion": "2"
     },
     {
@@ -5006,8 +5006,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/verification-report--failure--light.png",
       "assetUrl": "/catalogue/generated/example-images/verification-report--failure--light.png",
       "width": 352,
-      "height": 260,
-      "contentHash": "sha256:aac7139f2a7b9ca3648d6911fb0ae46d1ba802018c4a702dd67575135abb2001",
+      "height": 262,
+      "contentHash": "sha256:4cc1c7a6b26f46fe40f93dad95409d9881d1737e0c3fac9011962d654133e16d",
       "captureContractVersion": "2"
     },
     {
@@ -5019,8 +5019,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/verification-report--failure--dark.png",
       "assetUrl": "/catalogue/generated/example-images/verification-report--failure--dark.png",
       "width": 352,
-      "height": 260,
-      "contentHash": "sha256:d71b7bf4a16187b0bb61280dcbcc9f0c012113446e52c7e09b874f85ea740cfb",
+      "height": 262,
+      "contentHash": "sha256:1e51ad5e94c5f2eb94504de344bcc3ac2d29ab4320bcbc8b79a2e85d3a9d4b69",
       "captureContractVersion": "2"
     },
     {
@@ -5292,8 +5292,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/procedure--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/procedure--default--light.png",
       "width": 960,
-      "height": 632,
-      "contentHash": "sha256:49931dcf2660d8f581579e297d10cbf68a2b785998337652775d4664baf0ae4f",
+      "height": 620,
+      "contentHash": "sha256:d87ef23c65f26313035ddb70f111046476fff23a1673c419dc3eb661b171eb53",
       "captureContractVersion": "2"
     },
     {
@@ -5305,8 +5305,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/procedure--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/procedure--default--dark.png",
       "width": 960,
-      "height": 632,
-      "contentHash": "sha256:314b3bcf2476b92deaaad679f57c2c1bd19f72954ac6d55303c56c70a6d88938",
+      "height": 620,
+      "contentHash": "sha256:4c7172d558b43d1e224b11e4c5d988c9b62a0b776aa19e30f6ed27cdb716e790",
       "captureContractVersion": "2"
     },
     {
@@ -5318,8 +5318,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/procedure--interrupted--light.png",
       "assetUrl": "/catalogue/generated/example-images/procedure--interrupted--light.png",
       "width": 960,
-      "height": 379,
-      "contentHash": "sha256:85a99dd6badd33352672f6b6a212faddd62d341060777f6663626ec0f2cd213a",
+      "height": 371,
+      "contentHash": "sha256:3830dbe4a7215af719348caca1e44d48640693440661229053f4ae5e2d621243",
       "captureContractVersion": "2"
     },
     {
@@ -5331,8 +5331,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/procedure--interrupted--dark.png",
       "assetUrl": "/catalogue/generated/example-images/procedure--interrupted--dark.png",
       "width": 960,
-      "height": 379,
-      "contentHash": "sha256:84e7c1340161870da454c4d37fa20c9311f826f8a99d8191d68f5c12433b38a6",
+      "height": 371,
+      "contentHash": "sha256:c95bc935fbc4e500ef62a40d131f263c784fa818e5f36c86c5b8b93c771ec33f",
       "captureContractVersion": "2"
     },
     {
@@ -5344,8 +5344,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/procedure--active--light.png",
       "assetUrl": "/catalogue/generated/example-images/procedure--active--light.png",
       "width": 960,
-      "height": 483,
-      "contentHash": "sha256:951d89b4d2b8a4abd97db8c4d67afa3e70a8a118e4c4ca847212dca2b20755bf",
+      "height": 475,
+      "contentHash": "sha256:015329af55de64175bdaa3c3bad3a7fb89d394e0edf1d21c143099b0c30bc52d",
       "captureContractVersion": "2"
     },
     {
@@ -5357,8 +5357,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/procedure--active--dark.png",
       "assetUrl": "/catalogue/generated/example-images/procedure--active--dark.png",
       "width": 960,
-      "height": 483,
-      "contentHash": "sha256:48f0a919d0ea59eb3bf63aa129b8675cf787bf41cda6d6592f33f43d16a77a44",
+      "height": 475,
+      "contentHash": "sha256:1a88f8012caa46df3464773e3ca2ecb4e118b39efc67cb8ba58de17dbeaf11b4",
       "captureContractVersion": "2"
     },
     {
@@ -5370,8 +5370,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/procedure--long-procedure--light.png",
       "assetUrl": "/catalogue/generated/example-images/procedure--long-procedure--light.png",
       "width": 960,
-      "height": 901,
-      "contentHash": "sha256:316d3d31cc191115c07712b1db728b042e5d9e7041e6f3417856e7a403af90ef",
+      "height": 893,
+      "contentHash": "sha256:02dbf352a092f639466ca96ead3f36bfb438717d4d31019504d05ecded90c0da",
       "captureContractVersion": "2"
     },
     {
@@ -5383,8 +5383,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/procedure--long-procedure--dark.png",
       "assetUrl": "/catalogue/generated/example-images/procedure--long-procedure--dark.png",
       "width": 960,
-      "height": 901,
-      "contentHash": "sha256:fb3b12229f8bc10926a1cf9416555a048cc1b1d8f7638fe01543ab4e1bd73e6c",
+      "height": 893,
+      "contentHash": "sha256:3f9b39b08c8b006c11e33b60936c046301017836c6b67dd87d627c019d07ea32",
       "captureContractVersion": "2"
     },
     {
@@ -5891,7 +5891,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/raw-output--expanded--light.png",
       "width": 960,
       "height": 167,
-      "contentHash": "sha256:ae929e973b0c1c4870d96ea55d5ce1cef61831295b6ad045ab0357afe79bae7b",
+      "contentHash": "sha256:ade3e887e4fa26772358145c5fa9a8fc3ca6e2baa9f2c7d2a17856b786314925",
       "captureContractVersion": "2"
     },
     {
@@ -5904,7 +5904,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/raw-output--expanded--dark.png",
       "width": 960,
       "height": 167,
-      "contentHash": "sha256:fb4adca31f33f1ffa08f1b2dd476cc59d66e12825ff63e208b72647022a30477",
+      "contentHash": "sha256:f5f832f70fd1a9edafeea7c59ca0cfa4d0e8747e5403967a8ce01cf7a2a558f7",
       "captureContractVersion": "2"
     },
     {
@@ -6072,8 +6072,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/artifact-tree--deep-tree--light.png",
       "assetUrl": "/catalogue/generated/example-images/artifact-tree--deep-tree--light.png",
       "width": 390,
-      "height": 224,
-      "contentHash": "sha256:ee7f793e17b329439c076bc9e34681342447a787e6af75525b2620c6619663f5",
+      "height": 256,
+      "contentHash": "sha256:baf079cbb8b8cfd4c0f5a3eff8c04dc3892dcbf03e6b3190532cba9cc8283802",
       "captureContractVersion": "2"
     },
     {
@@ -6085,8 +6085,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/artifact-tree--deep-tree--dark.png",
       "assetUrl": "/catalogue/generated/example-images/artifact-tree--deep-tree--dark.png",
       "width": 390,
-      "height": 224,
-      "contentHash": "sha256:c54301c762ec41f79843d274eb6bb206e90ed3b95605014d6f1253f81b37cddb",
+      "height": 256,
+      "contentHash": "sha256:9ae2e901bcdd4731308985e28409a9cd7e5f89c88dbcb8b4e940b4f588dd86ce",
       "captureContractVersion": "2"
     },
     {
@@ -6216,7 +6216,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/file-change--unchanged--dark.png",
       "width": 960,
       "height": 53,
-      "contentHash": "sha256:c3abfc30db5944e5340ab6ef0347033c183735e0fdf088321d442acd1905ddee",
+      "contentHash": "sha256:bdbf08fd7ceff56322474913a3e63d0c609a7bd143e2076431aa22d6ca58806a",
       "captureContractVersion": "2"
     },
     {
@@ -6384,8 +6384,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/decision-record--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/decision-record--default--light.png",
       "width": 960,
-      "height": 324,
-      "contentHash": "sha256:842e7d4141d385ff8bd9b7f59c8299f25d66b15931abe240f2aa934ffd9fe32c",
+      "height": 312,
+      "contentHash": "sha256:3476600b29ab15ad0335f3d703372ec30a4a8e2c9b6cd766b06f04e28c95e660",
       "captureContractVersion": "2"
     },
     {
@@ -6397,8 +6397,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/decision-record--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/decision-record--default--dark.png",
       "width": 960,
-      "height": 324,
-      "contentHash": "sha256:c609581fc4183f64d2d2c2e11c5e85c347a5d1b3ed44a64113b048c1745a2835",
+      "height": 312,
+      "contentHash": "sha256:c6a91fbd5b0a1b786d275c3cebc6c2813b3b45e0cc51d1a6a52b869a89c40f81",
       "captureContractVersion": "2"
     },
     {
@@ -6410,8 +6410,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/decision-record--superseded--light.png",
       "assetUrl": "/catalogue/generated/example-images/decision-record--superseded--light.png",
       "width": 960,
-      "height": 304,
-      "contentHash": "sha256:e6270a459c8da23cf2195770d6c6b897743208d7f9d283933f953b381e15e278",
+      "height": 292,
+      "contentHash": "sha256:f897bb483fafd0706eb5f5015438efe7bad8c73d3b28747db559cad67c2777a8",
       "captureContractVersion": "2"
     },
     {
@@ -6423,8 +6423,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/decision-record--superseded--dark.png",
       "assetUrl": "/catalogue/generated/example-images/decision-record--superseded--dark.png",
       "width": 960,
-      "height": 304,
-      "contentHash": "sha256:edeae047ea72fea547c73a8e0264627eb6f90003303aca33a6e8a31db72d444b",
+      "height": 292,
+      "contentHash": "sha256:cd9aab689fc929007254ccee7974de764d4a4a954201a7567e329ed5d57b2a86",
       "captureContractVersion": "2"
     },
     {
@@ -6722,8 +6722,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/search-palette--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/search-palette--default--light.png",
       "width": 640,
-      "height": 354,
-      "contentHash": "sha256:2cd9adf211f9651f39e16b1852221f9fde4ddaaf7dfe12fa63d312d1114b7904",
+      "height": 358,
+      "contentHash": "sha256:d7512c59fbb50df401754cf69ee551a2debe942519994ac9a325814452571004",
       "captureContractVersion": "2"
     },
     {
@@ -6735,8 +6735,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/search-palette--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/search-palette--default--dark.png",
       "width": 640,
-      "height": 354,
-      "contentHash": "sha256:978d760903370009b452f184653c875c013fe56b14841e651ba080e55b6e3309",
+      "height": 358,
+      "contentHash": "sha256:96fe11c0ae33f942fba2b1849ae739a44acb31579d7bf4d0594a16b3bda956b1",
       "captureContractVersion": "2"
     },
     {
@@ -7008,8 +7008,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/marketing-intro--editorial--light.png",
       "assetUrl": "/catalogue/generated/example-images/marketing-intro--editorial--light.png",
       "width": 752,
-      "height": 260,
-      "contentHash": "sha256:f5b5ecc46a9031c5e48d9605cd67569a1662444a1ff19f0d2e5227da912aa6d7",
+      "height": 263,
+      "contentHash": "sha256:2f9231366c14042a3523e1c28e3690d733b3a2d0d9c74fb75656d16f8ee9c430",
       "captureContractVersion": "2"
     },
     {
@@ -7021,8 +7021,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/marketing-intro--editorial--dark.png",
       "assetUrl": "/catalogue/generated/example-images/marketing-intro--editorial--dark.png",
       "width": 752,
-      "height": 260,
-      "contentHash": "sha256:4e1efec0816141dfd84c4fecec34b1c4912b8c0be535fd9f003665aa73c11114",
+      "height": 263,
+      "contentHash": "sha256:2549de7550b88dcca50e8cacfe63852bdc3a41c58def80ae7146cda4a2074302",
       "captureContractVersion": "2"
     },
     {
@@ -7034,8 +7034,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/marketing-intro--contrast--light.png",
       "assetUrl": "/catalogue/generated/example-images/marketing-intro--contrast--light.png",
       "width": 960,
-      "height": 526,
-      "contentHash": "sha256:df99caf46f68dda92c32140d9ff5d80e0ffd9a93527df57b6a4fa56a0959f48b",
+      "height": 542,
+      "contentHash": "sha256:2fdc4be817d3fd4dc65434778b042350516da3f2266ca1facc6bd070790c49df",
       "captureContractVersion": "2"
     },
     {
@@ -7047,8 +7047,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/marketing-intro--contrast--dark.png",
       "assetUrl": "/catalogue/generated/example-images/marketing-intro--contrast--dark.png",
       "width": 960,
-      "height": 526,
-      "contentHash": "sha256:5accc44ddb7f92ba81a8bb08e699bd7273c00dd79c9eaf0a3bdd730c796a6bcc",
+      "height": 542,
+      "contentHash": "sha256:b53ce2e12f6c4fa1acdcd45692b69cc828ddb3976d8f6298705c2ee5401c03cd",
       "captureContractVersion": "2"
     },
     {
@@ -7060,8 +7060,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/hero-block--split--light.png",
       "assetUrl": "/catalogue/generated/example-images/hero-block--split--light.png",
       "width": 960,
-      "height": 801,
-      "contentHash": "sha256:0f8d2f41d997deadcd61a823b3ef199976b3bca5eeddaedc0bc3a732b936bd31",
+      "height": 761,
+      "contentHash": "sha256:ecfc0db55a22afec63ec944a20a1ccaf8341b7e570540af046faa7a9f7f40c49",
       "captureContractVersion": "2"
     },
     {
@@ -7073,8 +7073,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/hero-block--split--dark.png",
       "assetUrl": "/catalogue/generated/example-images/hero-block--split--dark.png",
       "width": 960,
-      "height": 801,
-      "contentHash": "sha256:4da28a384caedb0bbea0ab71d02f0a0c0f61155cf33ad025392acc3f313f304e",
+      "height": 761,
+      "contentHash": "sha256:f330e4fd45e76be96b4dbdcf2d9aeeaf6ea1bd35922c2f7108fe09a1aeebac48",
       "captureContractVersion": "2"
     },
     {
@@ -7086,8 +7086,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/hero-block--showcase--light.png",
       "assetUrl": "/catalogue/generated/example-images/hero-block--showcase--light.png",
       "width": 960,
-      "height": 1012,
-      "contentHash": "sha256:4f00578807eea4e29a401aaf21d0032efaa0d14848d5f27a521e06beaa773f80",
+      "height": 803,
+      "contentHash": "sha256:907e9f97dea4cbe834929578f2c90dd33f7977cd22bc76f451c602cfe636bc93",
       "captureContractVersion": "2"
     },
     {
@@ -7099,8 +7099,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/hero-block--showcase--dark.png",
       "assetUrl": "/catalogue/generated/example-images/hero-block--showcase--dark.png",
       "width": 960,
-      "height": 1012,
-      "contentHash": "sha256:cf3fcc058be6555dff42b72a8814d633e43bf87d246b280637de0f1612446b06",
+      "height": 803,
+      "contentHash": "sha256:94124e6dfc75d75cfa113487e2f7f6806ef7ef79c8869275c8022eb2e0df3388",
       "captureContractVersion": "2"
     },
     {
@@ -7165,7 +7165,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/logo-cloud--strip--light.png",
       "width": 912,
       "height": 234,
-      "contentHash": "sha256:182c16ff738ba71570672b3ef20193925cfbc2bd71d5e11f17721d8ae11e1ced",
+      "contentHash": "sha256:bda18e28875e2840fd3ab6829d33f6a4cc6e157e5aa7ecfc1a613a02b3bcff36",
       "captureContractVersion": "2"
     },
     {
@@ -7178,7 +7178,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/logo-cloud--strip--dark.png",
       "width": 912,
       "height": 234,
-      "contentHash": "sha256:b058d29816197fa9ca6ab0ec1253db7b0b5a11bbb33f5dbfd71b99a6c59655ee",
+      "contentHash": "sha256:18c4f3e44d8bf954da24d8e357b2699ba972d38eca6de6214411a2a840386fe7",
       "captureContractVersion": "2"
     },
     {
@@ -7268,8 +7268,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/split-feature--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/split-feature--default--light.png",
       "width": 960,
-      "height": 777,
-      "contentHash": "sha256:42e956f85a9adbbb451396d0585103455c15b3700a72597a6e606af59d4584f8",
+      "height": 748,
+      "contentHash": "sha256:142f91a9179ae0d011d8ab8bd62d1f78978ad89e948ba6eeea7b2454cf2edc14",
       "captureContractVersion": "2"
     },
     {
@@ -7281,8 +7281,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/split-feature--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/split-feature--default--dark.png",
       "width": 960,
-      "height": 777,
-      "contentHash": "sha256:38723ecc68e2e077070070dba1863ff78b94fc79a5eefe4cc0850c2a1f95eee5",
+      "height": 748,
+      "contentHash": "sha256:eaa119c733446ba6dde94b2cdb284371626f9a530763c5e637f3f52b047ad4df",
       "captureContractVersion": "2"
     },
     {
@@ -7346,8 +7346,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/metrics-band--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/metrics-band--default--light.png",
       "width": 960,
-      "height": 320,
-      "contentHash": "sha256:8c49eabaed87e084934d545b35ad6ee14682827936a7914e68d5a57b9a6b7243",
+      "height": 309,
+      "contentHash": "sha256:30486a98dd3c598339cf899adade56b39a912b0f70f07523389230516c873417",
       "captureContractVersion": "2"
     },
     {
@@ -7359,8 +7359,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/metrics-band--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/metrics-band--default--dark.png",
       "width": 960,
-      "height": 320,
-      "contentHash": "sha256:6d8c0a095b2645a8408b36588b903cd22dcffc0b28270f0d51be3c76cb1f447d",
+      "height": 309,
+      "contentHash": "sha256:5328ef56053f673b8a0095352bcc7b88458790533e5b915546d76276fa4d7e85",
       "captureContractVersion": "2"
     },
     {
@@ -7398,8 +7398,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/testimonial--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/testimonial--default--light.png",
       "width": 960,
-      "height": 662,
-      "contentHash": "sha256:3ca46097b0ecbeced85e266b5acc2deb309029bebe6282998ee1370b92878126",
+      "height": 547,
+      "contentHash": "sha256:a7434240eac7aba069a04a939fcbc13d299b903e94e9ad3009df7e096c60c0b2",
       "captureContractVersion": "2"
     },
     {
@@ -7411,8 +7411,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/testimonial--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/testimonial--default--dark.png",
       "width": 960,
-      "height": 662,
-      "contentHash": "sha256:4c4ce62865d737b724d428c37e1114b64e755dc1582f6a6a3fd2e7a7f4e5e513",
+      "height": 547,
+      "contentHash": "sha256:95ce47c5e3aa769587ac9d5965b92aa7370a0df6791889e05a9af4fa6f1ef329",
       "captureContractVersion": "2"
     },
     {
@@ -7425,7 +7425,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/case-study--default--light.png",
       "width": 960,
       "height": 701,
-      "contentHash": "sha256:a7f579237b79c90076e04e038ed49f96282005bcd94106fb762f87757f21e114",
+      "contentHash": "sha256:9c9017d5767a01e71bcd1a055d6983826ee2883c0c1ed9ec7219d45290d8f871",
       "captureContractVersion": "2"
     },
     {
@@ -7438,7 +7438,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/case-study--default--dark.png",
       "width": 960,
       "height": 701,
-      "contentHash": "sha256:024a1c7bdaabea41cb7eac97c15bc3408642d0461900ea4ef6bc91d0b48b7214",
+      "contentHash": "sha256:13eed12eb08a39069c430c6a817d33c89369f57ab5933044c0c96a9a2c65b50e",
       "captureContractVersion": "2"
     },
     {
@@ -7451,7 +7451,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/faq-block--default--light.png",
       "width": 960,
       "height": 633,
-      "contentHash": "sha256:5a86ac1ab2aee101725c284d18bae1e5d03deefb1cc6716b9a817d882a7d671b",
+      "contentHash": "sha256:1312e999a2a8f681150107a54e820e024cefb35eefbbdf4d4d6f7b0c0b79e3bc",
       "captureContractVersion": "2"
     },
     {
@@ -7464,7 +7464,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/faq-block--default--dark.png",
       "width": 960,
       "height": 633,
-      "contentHash": "sha256:3cd68edd749c5add63e119396a557e0ade34ee6f5056ae6b285a3fff16c2d6f9",
+      "contentHash": "sha256:a3ec60ec23d88887861bc5c004566101d043bc068a5b4c49a41dd2e2f4236e99",
       "captureContractVersion": "2"
     },
     {
@@ -7476,8 +7476,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/cta-band--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/cta-band--default--light.png",
       "width": 960,
-      "height": 550,
-      "contentHash": "sha256:53a12276ae18345699bcc84349c54fdc03cc19708d7634805c591a5afd15a17d",
+      "height": 493,
+      "contentHash": "sha256:90b06c572b5fb732a7ca895babfc968a11e3d8aec99a6ccc07f4f016a80feea9",
       "captureContractVersion": "2"
     },
     {
@@ -7489,8 +7489,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/cta-band--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/cta-band--default--dark.png",
       "width": 960,
-      "height": 550,
-      "contentHash": "sha256:3455bbb3235649f0ff7a3e2c9236bd9fa9ec57f28f068850b411757d3d8049df",
+      "height": 493,
+      "contentHash": "sha256:af11d9b9fbabdecc4d35711cbc7afc35f4d24c1383741d1f38d994b51bbde48f",
       "captureContractVersion": "2"
     },
     {
@@ -7659,7 +7659,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/narrative-chapter--extended--light.png",
       "width": 960,
       "height": 778,
-      "contentHash": "sha256:f9eba47cc3582784ddaaa4ee9532a714b8d9e8dee8665c88927d943134efc390",
+      "contentHash": "sha256:be077ac222d355a0d7ffb24da6337708ae5db7a5c7689c76b8336c7ff1abf221",
       "captureContractVersion": "2"
     },
     {
@@ -7672,7 +7672,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/narrative-chapter--extended--dark.png",
       "width": 960,
       "height": 778,
-      "contentHash": "sha256:6603cd704a480d20ece3da93966c06245fde201c6da3ded57920d2bbe3395cfc",
+      "contentHash": "sha256:3238b3d8680a2d27a94b077cee36e13ad7dabd286ff09c956d1b6cb16fb2713a",
       "captureContractVersion": "2"
     },
     {
@@ -7684,8 +7684,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/narrative-chapter--concise--light.png",
       "assetUrl": "/catalogue/generated/example-images/narrative-chapter--concise--light.png",
       "width": 960,
-      "height": 551,
-      "contentHash": "sha256:09976fea1007b9013306fca9ea52a005923aeef40dd9c477324b83941b7d8588",
+      "height": 505,
+      "contentHash": "sha256:e1ab53b45c3e056761b61867ae2460c23e22dac2250ebb289b9b49cb3ff5e330",
       "captureContractVersion": "2"
     },
     {
@@ -7697,8 +7697,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/narrative-chapter--concise--dark.png",
       "assetUrl": "/catalogue/generated/example-images/narrative-chapter--concise--dark.png",
       "width": 960,
-      "height": 551,
-      "contentHash": "sha256:3977681f6a098fc3785f4fee1c38264cbd4d3f48502cf362296d513862e96428",
+      "height": 505,
+      "contentHash": "sha256:421ebdd88f4e0f6db457d20c08326d9d52c79b620df313fd26b5ea85090e1dde",
       "captureContractVersion": "2"
     },
     {
@@ -7710,8 +7710,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/journey-overview--three-step--light.png",
       "assetUrl": "/catalogue/generated/example-images/journey-overview--three-step--light.png",
       "width": 960,
-      "height": 824,
-      "contentHash": "sha256:f6a3f386e893364417de33991c67267acc426c1a8da50e8338245678fa197d99",
+      "height": 799,
+      "contentHash": "sha256:ace511d79ca6cc5b1f80588a83f440ee66f72ef7da73cbf1c527aca827abe157",
       "captureContractVersion": "2"
     },
     {
@@ -7723,8 +7723,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/journey-overview--three-step--dark.png",
       "assetUrl": "/catalogue/generated/example-images/journey-overview--three-step--dark.png",
       "width": 960,
-      "height": 824,
-      "contentHash": "sha256:b70ae27191ab61c68b3ac835554c0bcd3457101f5b1db9872a7c4c0892ab059e",
+      "height": 799,
+      "contentHash": "sha256:142a709d7cfae2f1edfde7b4fb2e5562f9f747d3db3c6a45d34212f47b00d3ed",
       "captureContractVersion": "2"
     },
     {
@@ -7736,8 +7736,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/journey-overview--compact--light.png",
       "assetUrl": "/catalogue/generated/example-images/journey-overview--compact--light.png",
       "width": 960,
-      "height": 711,
-      "contentHash": "sha256:5ea0c3f5577fa83136dc29f9f3149e7e79d9fcf36ba58cd3e46abb5346524053",
+      "height": 695,
+      "contentHash": "sha256:4fea9fae0a67e5425b1b5b16e220b0c73101c40c6a6143ef8b043ea33c5c4da7",
       "captureContractVersion": "2"
     },
     {
@@ -7749,8 +7749,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/journey-overview--compact--dark.png",
       "assetUrl": "/catalogue/generated/example-images/journey-overview--compact--dark.png",
       "width": 960,
-      "height": 711,
-      "contentHash": "sha256:61877b21aed1cef4c045829c44f3a08f313b9dba8316f9d1bba8e73b96b4043e",
+      "height": 695,
+      "contentHash": "sha256:c353df4918047733bce279c4ff71634498d43874a7c7cf4d8d71e90fbcad8250",
       "captureContractVersion": "2"
     },
     {
@@ -7762,8 +7762,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/outcome-spotlight--focused--light.png",
       "assetUrl": "/catalogue/generated/example-images/outcome-spotlight--focused--light.png",
       "width": 960,
-      "height": 731,
-      "contentHash": "sha256:7c6e8de714ad86ce2598c22d51ef90e4e430eb864039ffbf02c89404e1563d35",
+      "height": 679,
+      "contentHash": "sha256:4bb66ca63661f97e73ca4f1a27427f03d5d8afa65e78a67735fae7d95702bb9d",
       "captureContractVersion": "2"
     },
     {
@@ -7775,8 +7775,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/outcome-spotlight--focused--dark.png",
       "assetUrl": "/catalogue/generated/example-images/outcome-spotlight--focused--dark.png",
       "width": 960,
-      "height": 731,
-      "contentHash": "sha256:a4ee78281c7a8d6261e55deb99737f8ff9084d77f774ef2224b899eb5048bf67",
+      "height": 679,
+      "contentHash": "sha256:6b11f72a9a3c8e0d50ac913c2ecaa986e6193c4ea2d60b2797a3d8d4bb2e816a",
       "captureContractVersion": "2"
     },
     {
@@ -7866,8 +7866,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/closing-statement--contrast--light.png",
       "assetUrl": "/catalogue/generated/example-images/closing-statement--contrast--light.png",
       "width": 960,
-      "height": 670,
-      "contentHash": "sha256:1bd58084a66fca52c325a5c71a9e1fb41b14ba5bfe9d49b33acb1c6b0eee11b6",
+      "height": 693,
+      "contentHash": "sha256:e3258624a7e84926087f3d31ee6d0d4ee0a0300eb8c3164dd68d24cc3cb570d7",
       "captureContractVersion": "2"
     },
     {
@@ -7879,8 +7879,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/closing-statement--contrast--dark.png",
       "assetUrl": "/catalogue/generated/example-images/closing-statement--contrast--dark.png",
       "width": 960,
-      "height": 670,
-      "contentHash": "sha256:0e49b657ddfd4b3b7467f86f90006826a7d730899d329a5a87d3bc5eb00ed385",
+      "height": 693,
+      "contentHash": "sha256:cafcb6e7c32da897df71164809158f83b956570329c0b641bc39c19ed4ae75cb",
       "captureContractVersion": "2"
     },
     {
@@ -7892,8 +7892,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/closing-statement--quiet--light.png",
       "assetUrl": "/catalogue/generated/example-images/closing-statement--quiet--light.png",
       "width": 960,
-      "height": 588,
-      "contentHash": "sha256:ab1ea2810954e67fae61b7d1c348512dfe14937801a72d759af31ff6f9692f21",
+      "height": 617,
+      "contentHash": "sha256:083a13b4c1cc31f9e107a09cd36af14d160115b76ceb1cbdb3219adc63c674e8",
       "captureContractVersion": "2"
     },
     {
@@ -7905,8 +7905,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/closing-statement--quiet--dark.png",
       "assetUrl": "/catalogue/generated/example-images/closing-statement--quiet--dark.png",
       "width": 960,
-      "height": 588,
-      "contentHash": "sha256:876118263d95fce921018b5c3bec1e78112582a67f33f827ad458a957b5b41a8",
+      "height": 617,
+      "contentHash": "sha256:8b773fe92cda52ae19b16ce11fd970cf7401840b131dacc484ce328e91a861a1",
       "captureContractVersion": "2"
     },
     {
@@ -8075,7 +8075,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/markdown--full-dialect--light.png",
       "width": 784,
       "height": 1209,
-      "contentHash": "sha256:287350ff3da3172a683336d3d153338cde55033455f4e28c2c490010acc00356",
+      "contentHash": "sha256:84d2b28a612ab3fdc7bf81a772a3939bae883eebbe6280099ee070474cb23564",
       "captureContractVersion": "2"
     },
     {
@@ -8088,7 +8088,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/markdown--full-dialect--dark.png",
       "width": 784,
       "height": 1209,
-      "contentHash": "sha256:291b608e427c9b00a910c538fef70e6b5666dbdc7543df150839a5e11f822a36",
+      "contentHash": "sha256:49054e1c7de2aeb7422f1c651349bbece1bc686e3a46e14a1fe1ad4e47fb60b9",
       "captureContractVersion": "2"
     },
     {
@@ -8101,7 +8101,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/markdown--deep-nesting--light.png",
       "width": 657,
       "height": 293,
-      "contentHash": "sha256:64e0b1feffb7467e148b8a1c0f19fffacbcc58cf9704537405724aa12551baaf",
+      "contentHash": "sha256:b128e528b16958d84f0f5aee3e15d6986838b91e8b7c9ffb076179c1ba53fa9e",
       "captureContractVersion": "2"
     },
     {
@@ -8114,7 +8114,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/markdown--deep-nesting--dark.png",
       "width": 657,
       "height": 293,
-      "contentHash": "sha256:a2083c52354332404af849e32923db39731a9fb08253f98451575eb1ba44e5e2",
+      "contentHash": "sha256:1f54b30791e881fe8f48e44dcb581448ac5ec9450c58279aabd9b6fec81e3b4d",
       "captureContractVersion": "2"
     },
     {
@@ -8334,8 +8334,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/key-points--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/key-points--default--light.png",
       "width": 960,
-      "height": 201,
-      "contentHash": "sha256:72e055170a185472a58a45b62d4839d5c8d5d82cdd7aaba78a41580dcced53a8",
+      "height": 206,
+      "contentHash": "sha256:f518911403dd2cdbca229e211daa754faa21ed873e05f18e1b3658606d0aa5a0",
       "captureContractVersion": "2"
     },
     {
@@ -8347,8 +8347,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/key-points--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/key-points--default--dark.png",
       "width": 960,
-      "height": 201,
-      "contentHash": "sha256:5e9acab600193c7ea01645a189f46ed91ce7c4c21b3a6cc39b5ba83eef7fe0bb",
+      "height": 206,
+      "contentHash": "sha256:7a7d8b97bcde77b5936bbb5361cccce8f5a2672037d67d1213dedac3f7c8d15d",
       "captureContractVersion": "2"
     },
     {
@@ -8438,8 +8438,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/callout--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/callout--default--light.png",
       "width": 960,
-      "height": 122,
-      "contentHash": "sha256:358efdf9ed473b5c9b6394151dc2ea3e352fe4945495ff1b6896c786da04e968",
+      "height": 124,
+      "contentHash": "sha256:7290c5d5e77c5ef918d10489cb89bb489672256eddcaee2440472a842c1f9354",
       "captureContractVersion": "2"
     },
     {
@@ -8451,8 +8451,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/callout--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/callout--default--dark.png",
       "width": 960,
-      "height": 122,
-      "contentHash": "sha256:bfd01823ba07f640129c791252c62b9053efab47bb0c1a41a121cbf9ee85a60a",
+      "height": 124,
+      "contentHash": "sha256:50da21e65140ded7f336ba3ba5ebb0f5f695005cca4a82f49688ad2ded05e906",
       "captureContractVersion": "2"
     },
     {
@@ -8464,8 +8464,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/callout--warning--light.png",
       "assetUrl": "/catalogue/generated/example-images/callout--warning--light.png",
       "width": 960,
-      "height": 122,
-      "contentHash": "sha256:c1bf27cfd285cc3f86852cc6859411103446e974108e7b0e2030113ad4e93840",
+      "height": 124,
+      "contentHash": "sha256:06d5253567667c0535ad9c7fe2c9b466f555ff37337f5ee787c26a9cc139c296",
       "captureContractVersion": "2"
     },
     {
@@ -8477,8 +8477,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/callout--warning--dark.png",
       "assetUrl": "/catalogue/generated/example-images/callout--warning--dark.png",
       "width": 960,
-      "height": 122,
-      "contentHash": "sha256:4a4ff507d982a92485f82326b82917be7bbcbddf6eea7deb29db7a45a9348444",
+      "height": 124,
+      "contentHash": "sha256:71af6c7fd9d385b0206a29eb5c2fc7d284d86fb9b72f4f96c2d48c83552e46b0",
       "captureContractVersion": "2"
     },
     {
@@ -8491,7 +8491,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/code-block--default--light.png",
       "width": 960,
       "height": 155,
-      "contentHash": "sha256:360eb42b9377e6fb91c5e4137009bd3bccb0a6288a364051f2f70867cad42f99",
+      "contentHash": "sha256:0972ce8b3f9a57c7c24224b1541fc0dcdc6c0ec6b521d5765d7e1aea3fbc1c12",
       "captureContractVersion": "2"
     },
     {
@@ -8504,7 +8504,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/code-block--default--dark.png",
       "width": 960,
       "height": 155,
-      "contentHash": "sha256:0ef8b09c778fc6e9616178c34767f963b36053ca2b084012d162e71dbc0850f2",
+      "contentHash": "sha256:d5664c1abc5351ad0d42d1446880859fccc6bac22ad92093e9e25197cb22ddc9",
       "captureContractVersion": "2"
     },
     {
@@ -8542,8 +8542,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/code-listing--standard--light.png",
       "assetUrl": "/catalogue/generated/example-images/code-listing--standard--light.png",
       "width": 880,
-      "height": 241,
-      "contentHash": "sha256:4d2d82dffdfc48f81f8c0027c5e443099a09a7d4a6388380ca759c30f4a19fb5",
+      "height": 244,
+      "contentHash": "sha256:0d117525a3093ff6e438606d37d814a68f93da0c34b7b2966b40307aa4784783",
       "captureContractVersion": "2"
     },
     {
@@ -8555,8 +8555,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/code-listing--standard--dark.png",
       "assetUrl": "/catalogue/generated/example-images/code-listing--standard--dark.png",
       "width": 880,
-      "height": 241,
-      "contentHash": "sha256:53f15122fc4906eaae16df8fb858de321d16141886fd6bf5f6e3c1493de49c20",
+      "height": 244,
+      "contentHash": "sha256:3b0aa196169ab68477776a534797c1937abaa63880664d1d518fbe7d916f97fa",
       "captureContractVersion": "2"
     },
     {
@@ -8568,8 +8568,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/code-listing--showcase--light.png",
       "assetUrl": "/catalogue/generated/example-images/code-listing--showcase--light.png",
       "width": 880,
-      "height": 241,
-      "contentHash": "sha256:f0ab37c992ee7476353e920157544317a435a9cb913d4e71b04c3655b2716ccd",
+      "height": 244,
+      "contentHash": "sha256:a957a124ad208cfc7f7cd7f39c41d061731b7f408f02ecce937794acf57fdc88",
       "captureContractVersion": "2"
     },
     {
@@ -8581,8 +8581,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/code-listing--showcase--dark.png",
       "assetUrl": "/catalogue/generated/example-images/code-listing--showcase--dark.png",
       "width": 880,
-      "height": 241,
-      "contentHash": "sha256:5723d4e84a7633613159cbe10c2c97a85a69b5f9f18660ecfb113f3fac11a9cc",
+      "height": 244,
+      "contentHash": "sha256:00f397b2a67e5d6a210e98b7a916b9c9fe6a59101954c5cea518a01234d21377",
       "captureContractVersion": "2"
     },
     {
@@ -8594,8 +8594,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/data-figure--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/data-figure--default--light.png",
       "width": 880,
-      "height": 424,
-      "contentHash": "sha256:6029e633be930762efed7b21d998fcecebce49f463fcb576a2395f95deca8ae0",
+      "height": 427,
+      "contentHash": "sha256:20c40ef81552151a71a6f865ed875b2dfcce05d1ed512d14222e13c274f3a943",
       "captureContractVersion": "2"
     },
     {
@@ -8607,8 +8607,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/data-figure--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/data-figure--default--dark.png",
       "width": 880,
-      "height": 424,
-      "contentHash": "sha256:20bf0e1eb161f6b4f6831af3ac3ac83e279d62544543810421b7002ddfa9e8bf",
+      "height": 427,
+      "contentHash": "sha256:ced4f5849594f777117237bbf750d828d9f1d7672af16558411a8257b4b78b02",
       "captureContractVersion": "2"
     },
     {
@@ -8620,8 +8620,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/data-figure--narrow-layout--light.png",
       "assetUrl": "/catalogue/generated/example-images/data-figure--narrow-layout--light.png",
       "width": 320,
-      "height": 542,
-      "contentHash": "sha256:c99f390b9101a45443e0cfd24748c071aa24b96a666bfb308f513d3a6e9659f0",
+      "height": 557,
+      "contentHash": "sha256:a44cfcb45de228c2868a24dd4b5d30d56234d51d65f6e5aac65d57b48ff16805",
       "captureContractVersion": "2"
     },
     {
@@ -8633,8 +8633,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/data-figure--narrow-layout--dark.png",
       "assetUrl": "/catalogue/generated/example-images/data-figure--narrow-layout--dark.png",
       "width": 320,
-      "height": 542,
-      "contentHash": "sha256:a0fcdf17bad2f975bf84007bbbc7f3455bfd2358a7bcb30c13fa8ae4d11ae059",
+      "height": 557,
+      "contentHash": "sha256:f1767073d211fcdf32fe622d428bae75314a30799bd98a9e06fa56326ec25f5a",
       "captureContractVersion": "2"
     },
     {
@@ -8829,7 +8829,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/footnotes--rich-multi-block--light.png",
       "width": 960,
       "height": 501,
-      "contentHash": "sha256:b7db4840b627abce4945eca1694d7d37a4194192fe8aa7a656c4a4e4554d549f",
+      "contentHash": "sha256:10188a6f14a839fdc79834358fd4ccfcfa3fb8124cdd122938c6ab9db6dbf455",
       "captureContractVersion": "2"
     },
     {
@@ -8842,7 +8842,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/footnotes--rich-multi-block--dark.png",
       "width": 960,
       "height": 501,
-      "contentHash": "sha256:f54da69a08519183242dc8cfcad3937ee07cb350f9373d55253b9fc3005b5bc4",
+      "contentHash": "sha256:f78301734e7dfb87abf5ab3269800c61b33e4ccd2d9fb2c88cf85b04e78acb5f",
       "captureContractVersion": "2"
     },
     {
