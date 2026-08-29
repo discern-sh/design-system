@@ -3,7 +3,7 @@ import type { ComponentExampleImageManifest } from "../example-images/contract.t
 
 export const componentExampleImageManifest: ComponentExampleImageManifest = {
   "captureContractVersion": "2",
-  "sourceHash": "sha256:5e1b455be25d15e1a4b53f52cfc390019a3f26103915c105e4b6bc9a619fc820",
+  "sourceHash": "sha256:d6a717fd4cf97607d9a9c7a892230fc4c56dca6f986a1f49486b72ed42bcfeb0",
   "entries": [
     {
       "slug": "icon",
@@ -6644,8 +6644,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/docs-nav--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/docs-nav--default--light.png",
       "width": 960,
-      "height": 271,
-      "contentHash": "sha256:cd61a11a9e229f19d03a650341579a6707b47f04571070f0744cc9a693fec0a8",
+      "height": 259,
+      "contentHash": "sha256:5c0dfdd610c4b9d09c47075ba4e5da1c24895c9c9d56b11da0c756256c59bec9",
       "captureContractVersion": "2"
     },
     {
@@ -6657,8 +6657,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/docs-nav--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/docs-nav--default--dark.png",
       "width": 960,
-      "height": 271,
-      "contentHash": "sha256:109b2a78de9c6f5d22004698141f5f623225213a661aa0126cab079410fc39fc",
+      "height": 259,
+      "contentHash": "sha256:0c739da732008129ddf9f5ce786755df0cec428750488c4272b79075714e9371",
       "captureContractVersion": "2"
     },
     {
