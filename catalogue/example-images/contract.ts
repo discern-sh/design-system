@@ -29,7 +29,7 @@ export const componentExampleCaptureContract = Object.freeze(
     }),
     viewport: Object.freeze({ width: 1280, height: 2000 }),
     harness: Object.freeze({ width: 960, minimumHeight: 720, inset: 160 }),
-    capturePages: 4,
+    capturePages: 1,
     deviceScaleFactor: 1,
     locale: "en-GB",
     timezoneId: "UTC",

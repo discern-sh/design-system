@@ -2,8 +2,8 @@
 import type { ComponentExampleImageManifest } from "../example-images/contract.ts";
 
 export const componentExampleImageManifest: ComponentExampleImageManifest = {
-  "captureContractVersion": "2",
-  "sourceHash": "sha256:866723f324f2d35ee268ff244b1c5133fcb1ebd1dce5d86cc83d226fea783a1f",
+  "captureContractVersion": "3",
+  "sourceHash": "sha256:24b495e7aa9ba2c81ffe6408fa163fefcfcfdc26c090d158948dfd6e627c82b9",
   "entries": [
     {
       "slug": "icon",
@@ -16,7 +16,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 24,
       "height": 24,
       "contentHash": "sha256:befc189a3763b4ec81c285d400c95ccd6c8c0d7d5b61a8cfd821f5ea82c1229e",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "icon",
@@ -29,7 +29,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 24,
       "height": 24,
       "contentHash": "sha256:5cd3f4a1e9cd4917852f35071c6b528c30ea6e1265c13acca39bca8162b2ccfd",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "button",
@@ -42,7 +42,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 506,
       "height": 40,
       "contentHash": "sha256:ec8d08c10fd223245f6b1764d229f7c3a9451ca7fe85ae245f124df8c2e257cf",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "button",
@@ -55,7 +55,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 506,
       "height": 40,
       "contentHash": "sha256:531ac9f5ed143768368626718d828a92692fad5db83c4fecf4bec0b7e9ce5c87",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "button",
@@ -68,7 +68,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 103,
       "height": 40,
       "contentHash": "sha256:c4a3f7b23e8757d72be42ba22c70903acbea9b1f2bd35f0b3b6661bd7ef26316",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "button",
@@ -81,7 +81,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 103,
       "height": 40,
       "contentHash": "sha256:2a6b56cfbf97fb4b028a06dfec3ec8b808f38568cd395079fb6c33cace0fd07c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "button",
@@ -94,7 +94,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 119,
       "height": 40,
       "contentHash": "sha256:781d65055828c0a2f5030dfc417eb97f6e71195fdb552f8c8e66e3cf1a960d05",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "button",
@@ -107,7 +107,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 119,
       "height": 40,
       "contentHash": "sha256:22fe24ca4037d71cc1f171d4496f683a57ff68f5d49316e63ba4667dbee4e967",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "button",
@@ -120,7 +120,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 92,
       "height": 40,
       "contentHash": "sha256:1f672b31d8b093abace344f0068c1d7512766205646ec379f4de96ab396ec1cf",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "button",
@@ -133,7 +133,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 92,
       "height": 40,
       "contentHash": "sha256:3fdbdff910e0975aed072c3a17ccce47e6b9c68f53bbb3034faf636861a7db80",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "icon-button",
@@ -146,7 +146,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 40,
       "height": 40,
       "contentHash": "sha256:9e7685ba7ad085fd92062df71635d13e11b67cb453f5588d8656f67fcb866371",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "icon-button",
@@ -159,7 +159,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 40,
       "height": 40,
       "contentHash": "sha256:83efa649ff9429de33d1cfa48d64a82c490b5fa3473acaf288409a318b1e16c3",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "icon-button",
@@ -172,7 +172,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 40,
       "height": 40,
       "contentHash": "sha256:790008ab8f20c23d3847e3a74f21237be84ed5b7e038d00ea60af91ef10a08ee",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "icon-button",
@@ -185,7 +185,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 40,
       "height": 40,
       "contentHash": "sha256:99094f3f95d1dbec5d5ff1e49db0ae423d7c63d6d87329dcb1caf78b40b9c606",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "theme-toggle",
@@ -198,7 +198,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 36,
       "contentHash": "sha256:78e4783133c21b249560216e7970808059e25e0f4c6dd4966f6e52f8cf737716",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "theme-toggle",
@@ -211,7 +211,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 36,
       "contentHash": "sha256:617e967d6016780924336d73d17f405851e816e378de482f424a857aa660f537",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "theme-toggle",
@@ -224,7 +224,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 28,
       "contentHash": "sha256:c9bb136f5807433c5ce08cbd713e70eedfea63bb30956189674c400c9165f569",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "theme-toggle",
@@ -237,7 +237,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 28,
       "contentHash": "sha256:570f846838ecd824aa4d6655012d16c8ecb2d918fb38ceab10674974b46247d6",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "theme-toggle",
@@ -250,7 +250,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 36,
       "contentHash": "sha256:f13d220bb44bf3e0b8e04b089ed91ea9803e6e582931a92100a53233754986e5",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "theme-toggle",
@@ -263,7 +263,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 36,
       "contentHash": "sha256:e639577b8abf835a12cda08aa1b93d0944f1f706f3347bebb6e19aa167861b57",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "theme-switcher",
@@ -276,7 +276,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 38,
       "contentHash": "sha256:77501fce91260b713fda53216b225e4ab269c1378d159bd86535dfc89aa6e77a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "theme-switcher",
@@ -289,7 +289,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 38,
       "contentHash": "sha256:947b78ad993b5b365e73a626049904e377dd89c147d1315c031f1482217d221f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "logo",
@@ -302,7 +302,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 128,
       "height": 25,
       "contentHash": "sha256:d5c78bdb13ae068af20f4b3823c5d47c18b533161196eedb2008c5eef263189f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "logo",
@@ -315,7 +315,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 128,
       "height": 25,
       "contentHash": "sha256:d08991785e796b82ae51f3c021c4b855d5804d30abfa36b2d88f49ec0103db25",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "logo",
@@ -328,7 +328,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 98,
       "height": 25,
       "contentHash": "sha256:137914cc0c885afb07496c298d36d40218e957845d5261770ab555eef089c8a2",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "logo",
@@ -341,7 +341,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 98,
       "height": 25,
       "contentHash": "sha256:1963a43dfb4b6bc49ddc6a99cf0f38ea33ae58b98668a0e069f7cfc32d9ea4df",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "logo",
@@ -354,7 +354,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 24,
       "height": 25,
       "contentHash": "sha256:81360e11be21831fe40d1d5cf50248a51f135e304a4265a965ab4b1a74754590",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "logo",
@@ -367,7 +367,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 24,
       "height": 25,
       "contentHash": "sha256:f80f2689ad8f42157cf0687ce610a4dbd9519e5395f7f7d2eaf79f61bbe30951",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "brand",
@@ -380,7 +380,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 101,
       "height": 25,
       "contentHash": "sha256:036e27fdb39331203195483eb42f49de76b680baa64e7c07d653ddca92932c4f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "brand",
@@ -393,7 +393,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 101,
       "height": 25,
       "contentHash": "sha256:fdd7b9364270d3b1027efe1daf39510e0345d8db3cec5f475799b72be0bbb622",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "brand",
@@ -406,7 +406,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 108,
       "height": 39,
       "contentHash": "sha256:532511143021040370e06af65b6ac6a7aa268546508bb84a550a573bada067b4",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "brand",
@@ -419,7 +419,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 108,
       "height": 39,
       "contentHash": "sha256:91312931bf4f51f5c116e3b086773e24c7c883a0bb1121c52a1ff68a8880bff2",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "brand",
@@ -432,7 +432,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 120,
       "height": 32,
       "contentHash": "sha256:82015d0e788f7629ea69ede0eb00050673a1ff75043da2f4f6dd240873d98b7b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "brand",
@@ -445,7 +445,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 120,
       "height": 32,
       "contentHash": "sha256:c71932fe6f27d6718aa43a7fb772d04dd1ddcd5312489c8baf16e929c8b4da7b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "container",
@@ -458,7 +458,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 658,
       "height": 42,
       "contentHash": "sha256:2a01c5cdac70d432d8779084a2860e2780525cf8731c75cb02b9274b13032cda",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "container",
@@ -471,7 +471,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 658,
       "height": 42,
       "contentHash": "sha256:e3c54f5965df19a5ae98ed6ab2e5d99110c69a51ce39f7d3611db7952a575524",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "container",
@@ -484,7 +484,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 42,
       "contentHash": "sha256:e4e859ee1916311afb311c03e8d9146432cbe1c8ba837f2f9f92da823b195375",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "container",
@@ -497,7 +497,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 42,
       "contentHash": "sha256:0ec5f2ffd65d48d10c86016e282b92d458283a483f972d87ec9b7cf2e8a4ec16",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "stack",
@@ -510,7 +510,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 150,
       "contentHash": "sha256:bae96c04062a5dc4249d09ed87ffc7baa43ddb8ae224934a694aafc34d8c1ccc",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "stack",
@@ -523,7 +523,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 150,
       "contentHash": "sha256:e03b4f0fea9861a3e0b63da33ca116f58ca00f2f237e8c0fe97ad5d3adcd24bd",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "stack",
@@ -536,7 +536,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 92,
       "contentHash": "sha256:6fd368336e219d217adea313a1d4495f412328da90c867a6416f6292d679a8b9",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "stack",
@@ -549,7 +549,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 92,
       "contentHash": "sha256:6e618a8e39b0060295080df89708c47fb9b91f2085ec52441e008707ffe496d3",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "cluster",
@@ -562,7 +562,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 40,
       "contentHash": "sha256:92ac55ca56c277d139d1be42a5bd7421f21f7c5e28a4d8e30708f3d45d24e4e6",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "cluster",
@@ -575,7 +575,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 40,
       "contentHash": "sha256:a110cdfef033b392955803389854d2cfecef0a2cd91d879b29202c28ee36a620",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "cluster",
@@ -588,7 +588,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 40,
       "contentHash": "sha256:6fdc78f4030dee676e4dd08cfeac13c98018b317b539e1fc15666c7d10b1763b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "cluster",
@@ -601,7 +601,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 40,
       "contentHash": "sha256:0694419765458cc5cc83e3d08b8be1d4ff249d0c9a9f5a84f80a0482089e638e",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "grid",
@@ -614,7 +614,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 61,
       "contentHash": "sha256:75b509966691159c1c9eb822f31af10cee5249220d41c196f4514a5ee4b45d8d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "grid",
@@ -627,7 +627,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 61,
       "contentHash": "sha256:4bfffcecd41211499161b07cc11625550ab7a69f3b62f0156a1c355f8a4a7e48",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "grid",
@@ -640,7 +640,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 214,
       "contentHash": "sha256:23861ca233b79861d5741802ce502c082977f2f741a7f01b16028422e0ef4740",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "grid",
@@ -653,7 +653,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 214,
       "contentHash": "sha256:26001db193df792982d570d76c601c929e7a0ef249a772181b70ba1c4b2272b2",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "masonry",
@@ -666,7 +666,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 1047,
       "contentHash": "sha256:cd7102b8c5ad9e4f2ec2eadb20781b68a2b1195b38597775fd42ac2fa05c964e",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "masonry",
@@ -679,7 +679,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 1047,
       "contentHash": "sha256:61f76e5139c4584bfa825e1b6603873ea41bca14f340def876340566991726b2",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "masonry",
@@ -692,7 +692,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 428,
       "contentHash": "sha256:4649613a09e5624487101a482fd77ad314760e5768cb4747afce6057ff9b38ad",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "masonry",
@@ -705,7 +705,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 428,
       "contentHash": "sha256:7dc8fb40781397acb00744be72f2cf6bdb5d12bd253986aef2e94b0ddf39cb13",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "section",
@@ -718,7 +718,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 134,
       "contentHash": "sha256:14ef40828be1092e329fb826e927e01509982446d0a6aff4f52b067b4c342ae1",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "section",
@@ -731,7 +731,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 134,
       "contentHash": "sha256:48f30f0fc0a7ba576b1ef2f729c76d856bc93886d10fb994a8c7851df94406a4",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "section",
@@ -744,7 +744,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 91,
       "contentHash": "sha256:1f12cfff9628667df71dc9253c103d3e5bbf761285027f22356c0dd0611ffc3b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "section",
@@ -757,7 +757,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 91,
       "contentHash": "sha256:2693d24ed838c4151c7561f264a3e77610a9bc570110f5b81f3a5f0a3c267110",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "overflow-cue",
@@ -770,7 +770,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 304,
       "height": 160,
       "contentHash": "sha256:d5bde38703e5cca142bfd239dc41b72e6948c9d3f66a2bb5b4a63dbe82bcd290",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "overflow-cue",
@@ -783,7 +783,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 304,
       "height": 160,
       "contentHash": "sha256:85c6cbdb3c6fdb6e1c303fdf7f0fa02a463965b450c834693b7d9ce604363656",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "overflow-cue",
@@ -796,7 +796,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 304,
       "height": 160,
       "contentHash": "sha256:da69e5c5219a7d98366c5a55100b9c4df5d0e1a8f75ac25f01486c1e550e8209",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "overflow-cue",
@@ -809,7 +809,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 304,
       "height": 160,
       "contentHash": "sha256:8e2da6b3ab0826159e193570eab6f1385e0e1e5b5750062f4bcb6956ae8f0141",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "overflow-cue",
@@ -822,7 +822,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 304,
       "height": 160,
       "contentHash": "sha256:f44891bec865540338696e6e66c052581719f2baec58ff15dc1c5bf482297664",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "overflow-cue",
@@ -835,7 +835,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 304,
       "height": 160,
       "contentHash": "sha256:22ac8c27326e760a958941632d0492150f23c700e04c630430372291c91aa878",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "overflow-cue",
@@ -848,7 +848,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 304,
       "height": 42,
       "contentHash": "sha256:de60b9af32dbe630f37f13ada1c8b57f842b75a38906596ea0d8037f83bde660",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "overflow-cue",
@@ -861,7 +861,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 304,
       "height": 42,
       "contentHash": "sha256:e73e55ebbe1226e9e4b44a10084a63ade648d9a6a7dc9884cd2a71e136084847",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "overflow-cue",
@@ -874,7 +874,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 304,
       "height": 42,
       "contentHash": "sha256:d83c5d8ebc1021a2346de20daed007ef425856c82274db0f3ebadb6986585488",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "overflow-cue",
@@ -887,7 +887,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 304,
       "height": 42,
       "contentHash": "sha256:09b1ca2da3e883d0483430ecf97911134acc720bd7aada07e042e5608c27f101",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "overflow-cue",
@@ -900,7 +900,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 304,
       "height": 42,
       "contentHash": "sha256:24fbd3b8b3a7b94b3ee82f4e930c3881ef8568a958250afdd601ce2e5d0abc24",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "overflow-cue",
@@ -913,7 +913,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 304,
       "height": 42,
       "contentHash": "sha256:f6a75d7fccf8b7105accae5394b8259d955ff2effa9461c5bb7e902310eefe07",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "overflow-cue",
@@ -926,7 +926,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 304,
       "height": 160,
       "contentHash": "sha256:691dc121a612953c23b5bed88e25d35f7db8585de45b9925fd60a7cdf5c79054",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "overflow-cue",
@@ -939,7 +939,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 304,
       "height": 160,
       "contentHash": "sha256:5b0c95b6f6b455e131e67f20612f6dbfd62ee7a922a178ff42ca96340723f992",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "overflow-cue",
@@ -952,7 +952,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 320,
       "height": 200,
       "contentHash": "sha256:524ddfd9d4e62c94011519e1c7a1548640d4d83dec4eee212c09305e784e5c1e",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "overflow-cue",
@@ -965,7 +965,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 320,
       "height": 200,
       "contentHash": "sha256:84bdc340f5e662fc5e31a75e291f3825689a44726d3c2651ec275844f85d685a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "overflow-cue",
@@ -978,7 +978,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 304,
       "height": 42,
       "contentHash": "sha256:4038148730d3756f7a3f67694165f9e577f86c59eab9adc77faaf3211f3be48f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "overflow-cue",
@@ -991,7 +991,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 304,
       "height": 42,
       "contentHash": "sha256:9a70ca4e10bec096c62ff33dc1a83eed06f6c2bbeae6d0ce68f0642cf29dff8b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "overflow-cue",
@@ -1004,7 +1004,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 304,
       "height": 128,
       "contentHash": "sha256:17334b6bda6a314e74e4b3cb5e8e2b99bb4f29423610ad9f305c15a976f46e45",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "overflow-cue",
@@ -1017,7 +1017,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 304,
       "height": 128,
       "contentHash": "sha256:1c67b3cc17491005cd5ef6070803414188b958a8924a6843beb3e1a09b976641",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "badge",
@@ -1030,7 +1030,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 74,
       "height": 24,
       "contentHash": "sha256:a5e486e312bb9ed75eb1b375bdfac153839bc32379d414bfe65ea2fab1447c86",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "badge",
@@ -1043,7 +1043,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 74,
       "height": 24,
       "contentHash": "sha256:997ffcb12834bbbe2b9d0eeffc0f73de646a092db978ac4f11d861ea59973645",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "badge",
@@ -1056,7 +1056,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 84,
       "height": 24,
       "contentHash": "sha256:833b012840cd756db34f76d470875d747b1ab76d50915c6b1ef05299c686766b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "badge",
@@ -1069,7 +1069,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 84,
       "height": 24,
       "contentHash": "sha256:7b947d93b2686d650f50e100c722b02418c84b81f2f07b6cc23d0a98e8ace424",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "badge",
@@ -1082,7 +1082,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 80,
       "height": 24,
       "contentHash": "sha256:acf0b4f5e23b7f78b81320cdbc77304e310cd1df3a873ba52d329296c02ea899",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "badge",
@@ -1095,7 +1095,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 80,
       "height": 24,
       "contentHash": "sha256:e4b175ff095802a50825091584fc9ce3de9d31f11fe6cf1e7a1a41180879c073",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "badge",
@@ -1108,7 +1108,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 80,
       "height": 24,
       "contentHash": "sha256:de26ee2640155d64601484c3d0d886a40864b65711e6456600192a9d8fdb7c9c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "badge",
@@ -1121,7 +1121,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 80,
       "height": 24,
       "contentHash": "sha256:a932912f293992cb993825896c84dc49e9bfae928f63f281c6b49048c34b0d90",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "badge",
@@ -1134,7 +1134,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 72,
       "height": 24,
       "contentHash": "sha256:5e1568f2d9cc0021ee0065a738e5a0e9a731838fb457fbb29f992a0d221f4bad",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "badge",
@@ -1147,7 +1147,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 72,
       "height": 24,
       "contentHash": "sha256:ce82c9998fc3135d575633345460c365ad5bdff8cf8a7f8524acf8d483dbeae6",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "card",
@@ -1160,7 +1160,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 159,
       "contentHash": "sha256:4dfb45db707724b688c5628c359f7f1dca35671c91a82858a5fc4fa5469f7f04",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "card",
@@ -1173,7 +1173,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 159,
       "contentHash": "sha256:e0dd3dbc1d54d221a237887fc55d69c26203bdb39807f794e0fb1e75c0df721a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "card",
@@ -1186,7 +1186,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 159,
       "contentHash": "sha256:4134f26e448871461d358fb2219c91d05cfc3fd89d2b730c894189de5827056f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "card",
@@ -1199,7 +1199,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 159,
       "contentHash": "sha256:322293fe35ef33c0bbfb931ab2bb6097c2fca27918fde3f3ee8461c982028211",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "card",
@@ -1212,7 +1212,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 159,
       "contentHash": "sha256:262fa7b02f54856258c4c2416edb269d7d922403c3c3efabbc8b5ad622e31d58",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "card",
@@ -1225,7 +1225,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 159,
       "contentHash": "sha256:9568f9315470537921f4d840e9d40dfe572702ab9601d529b8d5482757c92979",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "divider",
@@ -1238,7 +1238,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 24,
       "contentHash": "sha256:a41abe31499b23f042cd6f068d338764f49d976594add179f5580689bed0932d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "divider",
@@ -1251,7 +1251,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 24,
       "contentHash": "sha256:8fcc8173fc39b82d093ba1da9b06b8fb43b0cf8e67d055836e22c9bf27ad9ec7",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "divider",
@@ -1264,7 +1264,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 24,
       "contentHash": "sha256:d7b9c7b827d83dfa605e7696ef3f417b0917810771881181376b7b784b186e4c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "divider",
@@ -1277,7 +1277,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 24,
       "contentHash": "sha256:c754e9f00707aca3c9a6ad6916691d43c8b9957974213fafac67ec36023393cf",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "heading",
@@ -1290,7 +1290,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 48,
       "contentHash": "sha256:ae98d47a57b2e0d92964e0e116835fcbd5f5270b3504df74392118d9ca9c1886",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "heading",
@@ -1303,7 +1303,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 48,
       "contentHash": "sha256:3981055353f2ed6a34cd28401f6a5a3ed383357721624a694336de2efdc57ae7",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "heading",
@@ -1316,7 +1316,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 48,
       "contentHash": "sha256:9088a21f1ac080b6bf6bdc973564ea4ebda6ed7df10ad1662cb60533b2fcfc2c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "heading",
@@ -1329,7 +1329,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 48,
       "contentHash": "sha256:08b8b90673d1282bfd406df2917bc3162e296cc567a0a158424bd8b1706f5924",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "heading",
@@ -1342,7 +1342,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 36,
       "contentHash": "sha256:985321972b58d65e4c5bba18c87e3aa07b7f568a5659fbd815e0cb87f5376284",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "heading",
@@ -1355,7 +1355,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 36,
       "contentHash": "sha256:1ebce32bc17db1235c1aaee6e8f995944582f7cf776f6279754ccb53e011c0a3",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "kicker",
@@ -1368,7 +1368,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 116,
       "height": 20,
       "contentHash": "sha256:1e5c1b01f1aab808e140ae31dee524048f88ac3bf69ab1d45112d44aaf8773ed",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "kicker",
@@ -1381,7 +1381,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 116,
       "height": 20,
       "contentHash": "sha256:4d51c70708dffd15acc601b7c20873976414115bdb5881624e861ea78270e417",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "kicker",
@@ -1394,7 +1394,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 210,
       "height": 20,
       "contentHash": "sha256:4311fc21f3a1829f9d3124558157906e4dc86847e93dbec5996f6c2e5a18d1b8",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "kicker",
@@ -1407,7 +1407,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 210,
       "height": 20,
       "contentHash": "sha256:b1a56dc18ae54f2a3e6120d8b739e327fe78e6100f5dad97e892fc4cf4759ed8",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "tag",
@@ -1420,7 +1420,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 79,
       "height": 26,
       "contentHash": "sha256:dd9a1dc22a8382902cf743be35bf369b98a2229d6a34b2782e17fda9dd68074f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "tag",
@@ -1433,7 +1433,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 79,
       "height": 26,
       "contentHash": "sha256:557cc2c1714d8202497010a9e9ed6df6ab9822f0d3f3e0c6de273564275af0f8",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "tag",
@@ -1446,7 +1446,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 84,
       "height": 27,
       "contentHash": "sha256:081215eea2e1300b9c0526f6b0836250fd375eccca649d751f6621696c1d333a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "tag",
@@ -1459,7 +1459,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 84,
       "height": 27,
       "contentHash": "sha256:9fb034bd8610987507e8c45118c7c12d0d67696b291c364f9e32798a928bf1e0",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "window",
@@ -1472,7 +1472,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 207,
       "contentHash": "sha256:cac290777fad1ad6743f19fb9ac7bd635fc2a6ae736560366342c0b59040e88c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "window",
@@ -1485,7 +1485,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 207,
       "contentHash": "sha256:6e86169a8bc7f79eeaa9bd59d6eef79f5cda54b873e57da944e4a8113ff8f150",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "window",
@@ -1498,7 +1498,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 260,
       "contentHash": "sha256:5f27432d43d298ce001030fc75cfa05e64000718fb905dfc6d19668e678e3f82",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "window",
@@ -1511,7 +1511,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 260,
       "contentHash": "sha256:4eea2be7744cda1cde5038165b40aeb955e0a5e203adff6fa0c5ccf6bb12810d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "terminal",
@@ -1524,7 +1524,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 230,
       "contentHash": "sha256:118bf08c76c219d93e4c37dfaa2fff8125f51bde63fcc610ad809470af237b51",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "terminal",
@@ -1537,7 +1537,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 230,
       "contentHash": "sha256:6e66cc038d3aeedf69c64de1a5ca8bc43b6b0c7982da4ca37898949ac88e2d8d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "terminal",
@@ -1550,7 +1550,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 364,
       "contentHash": "sha256:c46bc37e30ad688a9d9d88437ed16691b2b8fb7ac3b9472317b2b60e09ceedff",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "terminal",
@@ -1563,7 +1563,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 364,
       "contentHash": "sha256:bfd0f017bb4dafdf682a7363a55003849fcac32e23df485b5ddb35f7738ac861",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "table",
@@ -1576,7 +1576,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 177,
       "contentHash": "sha256:1aa73dde4895af2025aa283186501503e4a6b3f6c0968b7ef5129733f5cae947",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "table",
@@ -1589,7 +1589,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 177,
       "contentHash": "sha256:eb00ba77458fe4e6530f08e6b0591042349566e38d8e73a1ed9d063f1b25cd2e",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "table",
@@ -1602,7 +1602,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 178,
       "contentHash": "sha256:f2d444b549f017cc11e7efec20f3fd911401d004fbd0ed6b9add3d6cf73a3c80",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "table",
@@ -1615,7 +1615,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 178,
       "contentHash": "sha256:3c34108f49078bd3edd4bea5962d55717d05c5872b09c2a3b3c13962f32554ae",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "table",
@@ -1628,7 +1628,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 226,
       "contentHash": "sha256:9877fd9ad89b6a154f6979fb7d5dc9e0989f5a4a0a6c20f719bf368d6618dd9f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "table",
@@ -1641,7 +1641,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 226,
       "contentHash": "sha256:c5f48b61fd3b9b9e6cb31c045821875fd37bb1b3057c285549f2d9aafb20bd2d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "stat",
@@ -1654,7 +1654,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 77,
       "contentHash": "sha256:5df5373505206f4bd6420f835007d879aa9f1231c0a69089678a5e19631ded1a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "stat",
@@ -1667,7 +1667,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 77,
       "contentHash": "sha256:ba76ff96dd1b9a600b547da545c0f5217b29acd4666f529f465c90266348d3f2",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "stat",
@@ -1680,7 +1680,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 77,
       "contentHash": "sha256:b4efbeb43b18efdfa70452fc627460fab4cd270840195201398a59a098de7cfa",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "stat",
@@ -1693,7 +1693,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 77,
       "contentHash": "sha256:b3dc2f74d035c55cf3fcee4e3457d061d3dd3c86e38629f00aabfb30f0d3f0a4",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "stat",
@@ -1706,7 +1706,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 77,
       "contentHash": "sha256:b6d7ce9f6d6baeed077f54700333142fca3619c1bc6a7f980b5a62ee2678d28e",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "stat",
@@ -1719,7 +1719,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 77,
       "contentHash": "sha256:5428cca6872f360399b62b5561b62b5f97a5992afdb985426a389971a99b745c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "stat",
@@ -1732,7 +1732,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 103,
       "contentHash": "sha256:6045a0ffc10ab5da968dca9aeb75980c334e51b19cb9f431c7de5eb79befbc66",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "stat",
@@ -1745,7 +1745,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 103,
       "contentHash": "sha256:3bb49f8bd6f62330d040519d66b84e4c8e16647f8bf7e7e6ea97cf4f91f47d0b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "sparkline",
@@ -1758,7 +1758,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 130,
       "height": 22,
       "contentHash": "sha256:c8d1d93f1f059cc4f53c8515199d97d1b04f756be8cb94c5504eff5b71c43169",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "sparkline",
@@ -1771,7 +1771,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 130,
       "height": 22,
       "contentHash": "sha256:bf3862752512bf9395f632cce7a9a3e8c6f8d7700b84fb0a0e4b9ae45f3caafc",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "sparkline",
@@ -1784,7 +1784,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 113,
       "height": 22,
       "contentHash": "sha256:9732baa2a12714e5113babfa60213d2c7173d0a00cf1e43fec002f70b6b2224c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "sparkline",
@@ -1797,7 +1797,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 113,
       "height": 22,
       "contentHash": "sha256:dbb9888620fa673b3e2f4d5edce928af3b942619f1a51e8424f8c55f4036127b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "sparkline",
@@ -1810,7 +1810,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 97,
       "height": 22,
       "contentHash": "sha256:b6978534f6ce2467c7349fe6efc3426696aafe063e2fcbd02e39a1e9f5227fb9",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "sparkline",
@@ -1823,7 +1823,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 97,
       "height": 22,
       "contentHash": "sha256:b4f6effccc25512ddcb7a26fdb491119b6048f2faa87a13692b67750723ad4af",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "sparkline",
@@ -1836,7 +1836,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 113,
       "height": 22,
       "contentHash": "sha256:e31307791ebd5c22a6319c399630af8a25cbe8dddbda8a2354fa86ca48590ba1",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "sparkline",
@@ -1849,7 +1849,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 113,
       "height": 22,
       "contentHash": "sha256:94f3c0b4298caa7c41d64dae01ea4d93af6b451b61ed4148a81f9aa41b963618",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "diffstat",
@@ -1862,7 +1862,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 121,
       "height": 17,
       "contentHash": "sha256:b4072a38b3c5f8f4ac01bca850846d9e5edad8fbc74029dc908c34879b1c9921",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "diffstat",
@@ -1875,7 +1875,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 121,
       "height": 17,
       "contentHash": "sha256:9934e136a9852e688b59983bf0f5f16fafe8da83d1cfb02894b08d95db90c443",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "diffstat",
@@ -1888,7 +1888,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 97,
       "height": 17,
       "contentHash": "sha256:02923d30daa1daeab8710f5fd5c6c014da8836a52ea1a089b7265db7d3a05e30",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "diffstat",
@@ -1901,7 +1901,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 97,
       "height": 17,
       "contentHash": "sha256:35de7d82a7c232d18a81e5e54ff0de4e64bdf233d7daad9de590edd8e98f0658",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "diffstat",
@@ -1914,7 +1914,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 97,
       "height": 17,
       "contentHash": "sha256:e1f79b5dfe98cd7784229f9888b303f10f06c0b1ef3e8e6f6a8a69a89a05721e",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "diffstat",
@@ -1927,7 +1927,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 97,
       "height": 17,
       "contentHash": "sha256:534f221cad51bf49b5ca7941277e3ccdf82adc65dc34bacedcd016b27945d560",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "diffstat",
@@ -1940,7 +1940,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 88,
       "height": 17,
       "contentHash": "sha256:3d77ad7301123a8cc60ad3ec12ba763e10f14a365de0e39dfd32e9b164329272",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "diffstat",
@@ -1953,7 +1953,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 88,
       "height": 17,
       "contentHash": "sha256:eb36f36310ff725ea4d8a99558b5b796ba5990f7ba598af24a4a404177f93b12",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "backdrop",
@@ -1966,7 +1966,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 384,
       "contentHash": "sha256:e32f303bd991b210d4bab9c518b457556a73228678d0625f1edb8074bb233235",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "backdrop",
@@ -1979,7 +1979,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 384,
       "contentHash": "sha256:0e963fbf16c33ed7e5cd0e951e0847d126cbff32b46915541d49d183dbcc3b44",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "survey-backdrop",
@@ -1992,7 +1992,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 514,
       "contentHash": "sha256:5b968e01f18a1a87ea39b0fec407da705451a46e51c1514fd423cdc49c6110e6",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "survey-backdrop",
@@ -2005,7 +2005,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 514,
       "contentHash": "sha256:06377e14db279786bb19eec7006ee9ccc475c9f0a85a04f7e0809d1b89d459c0",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "approach-backdrop",
@@ -2018,7 +2018,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 514,
       "contentHash": "sha256:9eeab98373c9886c4192914d2af44cc527758713af4f821f4e0dd40a8b925f0f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "approach-backdrop",
@@ -2031,7 +2031,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 514,
       "contentHash": "sha256:59ee010a0e19513768b6cf7d5ef2ef725f5927d4a8ca453067809aecbacfe915",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "fold-backdrop",
@@ -2044,7 +2044,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 514,
       "contentHash": "sha256:f161fa6f36bbb7b5c9176745f8f31fe43f318b0050961e8b1ca14ef17db44a64",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "fold-backdrop",
@@ -2057,7 +2057,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 514,
       "contentHash": "sha256:01a556d88195fafc5d9d70cfdb5f88cf7ae49d311d3f73195976e06f50a07f70",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "aperture-backdrop",
@@ -2070,7 +2070,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 514,
       "contentHash": "sha256:39989701a9d813776ae0b02139ad6fa2580215cd1a964bfb6c09d5061cd9138c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "aperture-backdrop",
@@ -2083,7 +2083,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 514,
       "contentHash": "sha256:d5b0310e9cbad4b7a6ee49514de362ff3c2d15f1bde3a5cd3a63b5843a175b76",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "impression-backdrop",
@@ -2096,7 +2096,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 514,
       "contentHash": "sha256:90fc3b5b40b4ca22e23a949cea96b63a310792575c8c424c58767675756b9166",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "impression-backdrop",
@@ -2109,7 +2109,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 514,
       "contentHash": "sha256:e334af5be4224ff18e0fad3506944a744fb488750986b3bdcd9a08eae3cdeb51",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "envelope-backdrop",
@@ -2122,7 +2122,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 514,
       "contentHash": "sha256:68890c4c4436359222a9c6c573db7d2ab5ce6f61ea441b91a37af4c6dd9c803a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "envelope-backdrop",
@@ -2135,7 +2135,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 514,
       "contentHash": "sha256:b17bb9d12c02ae853a8e37229ca58781ee32f837070ac5ca5ebad400ab4c572b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "cleave-backdrop",
@@ -2148,7 +2148,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 514,
       "contentHash": "sha256:d069f94a7ac139531bd9d5e019cb95db01d04061306940a2215d0f722d18c785",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "cleave-backdrop",
@@ -2161,7 +2161,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 514,
       "contentHash": "sha256:7defd661552929fe8a33e3a67ef0a61b383656cf0e2c2ae3c34394b7ce6d716d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "tiling-backdrop",
@@ -2174,7 +2174,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 514,
       "contentHash": "sha256:bed0b1159f741e61e6bbed3ccb54637c52bd03a828c4a9cb68e06ba69632cff3",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "tiling-backdrop",
@@ -2187,7 +2187,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 514,
       "contentHash": "sha256:4464ababed109fa00c7a8ae73a63516831ec92bb5a67c18490595811ef95f951",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "compression-backdrop",
@@ -2200,7 +2200,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 514,
       "contentHash": "sha256:1b427a5918f12f23bcd9e442360e20771857d091dfbf03945bc52d20a85a6f2c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "compression-backdrop",
@@ -2213,7 +2213,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 514,
       "contentHash": "sha256:0266abfe415bcaf6a9042cb9fbd366d730e4af91d3206265a2d0b74cde6f4f78",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "harmonic-backdrop",
@@ -2226,7 +2226,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 514,
       "contentHash": "sha256:5857742a5efcfb88d15f848c465b5e88f674e11b228fbc6caae5b4a7de5834bd",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "harmonic-backdrop",
@@ -2239,7 +2239,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 514,
       "contentHash": "sha256:cecf87ad82cbf7d7165e4f1fbd2b154e4ed5e583f2bf4f361b296895d2107e12",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "field",
@@ -2252,7 +2252,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:15a2e2131092138fdab8b3d634ddee669c8317cfbd3885f52397a6e03930f2b7",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "field",
@@ -2265,7 +2265,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:8d39e6deb20cf635006c251d67dc84e63ba5a1398a86c303bddc736aaeae44c2",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "field",
@@ -2278,7 +2278,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:913b6572c05f40912d6d3af75f8e274ed47ffd3241bc600d12212db734168168",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "field",
@@ -2291,7 +2291,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:07569eb4bbc66e6859662d30e7902809dc02212e8c67ca9b57ed8bddba321e62",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "field",
@@ -2304,7 +2304,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 66,
       "contentHash": "sha256:c1781da93108178ff736298686931c8bc85f313b71a35c1f5d8dcdc86890fc82",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "field",
@@ -2317,7 +2317,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 66,
       "contentHash": "sha256:230558f3ed61635da42eb56f6039ddceae31f234be43131f3bf6b8dedbf329b6",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "field",
@@ -2330,7 +2330,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:d1af1f6478681e1636040ad015ca6a3052ff75ee60aa244204ab85d941281476",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "field",
@@ -2343,7 +2343,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:6c48c739c5ef2ef8b832511170b7a3450d2fa576f042a1776f72987e323499d9",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "field",
@@ -2356,7 +2356,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 66,
       "contentHash": "sha256:a614e76e4c34d1ab6a899d1565f9e8d5eeda79bd5b76ceb5b16871a6a1559c95",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "field",
@@ -2369,7 +2369,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 66,
       "contentHash": "sha256:5cd63a0ac97c1f8d47a0efe19f8d832a71799c1e53c498b6f56d1aa30b42edd2",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "field",
@@ -2382,7 +2382,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:a302bc986e74c17fb2ce66a2b7c7e4a51b0c851a343e5d5d122eca74c13e0be4",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "field",
@@ -2395,7 +2395,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:9a88bfbbc09f624d573533312d50de9d46a57a19bc433d5bd481a855b40f7422",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "field",
@@ -2408,7 +2408,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:95c4d8fdae1f7f1672cfc3f1fe428ce199c56cddb551cc857ee3c5fe4985bc73",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "field",
@@ -2421,7 +2421,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:6c3dce89871a4f8b72fda8640d988f82552cd017059dd2d9ed2e9fef1c884855",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "field",
@@ -2434,7 +2434,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:fb3c7fbf0672168775ce2986af859d4825d86bdb003dcb19908bd88a1c399557",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "field",
@@ -2447,7 +2447,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:5abe453f56d97b1619f8d094d0cb3595c252e3ae5522861a1d9bdd425ddee943",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "input",
@@ -2460,7 +2460,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 66,
       "contentHash": "sha256:b2502327d48d1226786441001a4a40c25630067eebcbd6fcb8eeea6b8b51dc93",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "input",
@@ -2473,7 +2473,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 66,
       "contentHash": "sha256:2bf61e83b41a5c12ba9febb1046c3f813a7a9f4626c0ee5140bc7bb0eaae67cb",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "input",
@@ -2486,7 +2486,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 66,
       "contentHash": "sha256:b247905c0d5ee71d76f5e3d1c296cba8755674a876d332a0e90a748f5ea62883",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "input",
@@ -2499,7 +2499,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 66,
       "contentHash": "sha256:7bfec6756ba2da1111e1e4295b38e1b2f2e502f0e31c4b935f02f8475f409bbe",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "input",
@@ -2512,7 +2512,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 66,
       "contentHash": "sha256:8d14164f330c2cced2de50d6ffd446eb48e685baa88265f75f430a6acea80dd0",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "input",
@@ -2525,7 +2525,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 66,
       "contentHash": "sha256:368957b305055dd9a4796140b8fe81e1d13ff3d0b0f2d3c86c85462d63dcef10",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "input",
@@ -2538,7 +2538,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:7aea33f7501cb932c3cde0e644df45dd167c53d71269798b515d5930e41572f7",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "input",
@@ -2551,7 +2551,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:42f4df0921854c6ece98f8d923367c27a69764a9e983024d4b39d2e9bf7d384b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "input",
@@ -2564,7 +2564,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 66,
       "contentHash": "sha256:c8cda3428b8af85640614c28fda1553b3e49534dc173c437711cd4596e811fcc",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "input",
@@ -2577,7 +2577,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 66,
       "contentHash": "sha256:48d4cedabb4f13cfae2c0260e0ffa663b20fe93da93f43cae3705d54765a7129",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "input",
@@ -2590,7 +2590,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:a31c5a639b0e41e5aefb22860c4e0c08d2a3c79db379738b585aaa8eca7adbea",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "input",
@@ -2603,7 +2603,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:2c42f430cd2f4bacf9feddad561dcc18901ecc51434049b1d52b09281a3b68cf",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "input",
@@ -2616,7 +2616,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:157f50297bb7bc770f7c386a37ffe34696828c6978146b210e8c94c68269e46d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "input",
@@ -2629,7 +2629,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:940fb0fcb135b3ce07460990ead3b8f3b321e8624cd8f7b98a26842794626e9a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "input",
@@ -2642,7 +2642,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:c397d1287a22ce098120fb1664fe4aad2bbdaf5298c6f9bde530a23297f25f07",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "input",
@@ -2655,7 +2655,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:9cef089490237702d7d39e3c05941a3258bae28ac5aa2b3504348945509fcae2",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "textarea",
@@ -2668,7 +2668,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 132,
       "contentHash": "sha256:9a697408d5dae7f2cb8b4f47aebdf76a4f1950484c8d8c20ef1115d0d13cb86b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "textarea",
@@ -2681,7 +2681,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 132,
       "contentHash": "sha256:fcec582e2a5aef6e708cd89e7f7400c608120ca11db96f7f78680dfcc69108bf",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "textarea",
@@ -2694,7 +2694,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 132,
       "contentHash": "sha256:dc26876feda9859e9b879cd9d406be3be7cbd27fe707a6dd9266eba02f550e14",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "textarea",
@@ -2707,7 +2707,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 132,
       "contentHash": "sha256:7e5847059576eb83fb17c28b0b082e9685a96bf6f36495cbc686f8b4ea0a4152",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "textarea",
@@ -2720,7 +2720,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 132,
       "contentHash": "sha256:aa5ca39bb2806408bcc6ccd8f4cda00bdfdc4fde6b2707d0bac007b5c1aef73e",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "textarea",
@@ -2733,7 +2733,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 132,
       "contentHash": "sha256:5f39749179700721f63da70f2f9a0ee2429a66d14ff7d977f9f77604372648c7",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "textarea",
@@ -2746,7 +2746,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 159,
       "contentHash": "sha256:47cc5f08a34641aa726c5014cb67e5fa6cd8eb0d8431d5d88769fbc23c5cc1e0",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "textarea",
@@ -2759,7 +2759,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 159,
       "contentHash": "sha256:68c9a7abd577251233cdc774ca00ec9fdc5f246e1e5ad15ce923ffa3728a7a6a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "textarea",
@@ -2772,7 +2772,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 132,
       "contentHash": "sha256:f5ad96985ab099244cbbd05182b12a6f0f24c1a9c5bdb2adc018cf04c8d5170b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "textarea",
@@ -2785,7 +2785,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 132,
       "contentHash": "sha256:1f2ed73cd1cdeb176f71af84d5fbdab7ca7861a2eaadcb290a4699e0fb1a919e",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "textarea",
@@ -2798,7 +2798,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 159,
       "contentHash": "sha256:51343f14357db796d87bd9f93210705e1cbd3029cd3df6a9506a00af9e7cd015",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "textarea",
@@ -2811,7 +2811,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 159,
       "contentHash": "sha256:0a3c3650f66d7226ea52e5a693082044bb2a35b0c94490260b7680792d3840a4",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "textarea",
@@ -2824,7 +2824,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 159,
       "contentHash": "sha256:27917abf2f6493ab90f939e4bfd7e6f854895ad4cb0145190394073e326d9b0f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "textarea",
@@ -2837,7 +2837,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 159,
       "contentHash": "sha256:cff958460b4eaa3b01b7028e6a5345ad548976e33724e0277bab0081c368d1fc",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "textarea",
@@ -2850,7 +2850,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 171,
       "contentHash": "sha256:c761b8e9c7383054e31ef5818f1f7c4948b765ac540910bf1705493e6f049496",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "textarea",
@@ -2863,7 +2863,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 171,
       "contentHash": "sha256:54891aaddb05deccfb459209cfef18df4e076e7a5b744067105c02b3af5cf31d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "select",
@@ -2876,7 +2876,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 66,
       "contentHash": "sha256:c02be286ddddefc8ab72fb1f2c7845d6432f827500e05b4b22849794baf9cac7",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "select",
@@ -2889,7 +2889,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 66,
       "contentHash": "sha256:b0a6f0ecf188b113f583816b4d8d917463632b1d559baaf21ada7d4d4a6763ce",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "select",
@@ -2902,7 +2902,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 66,
       "contentHash": "sha256:d10ed3d3e77d3510748a8cbfbcbbc5197c8e37155dc38d06e5231e55783c69d8",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "select",
@@ -2915,7 +2915,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 66,
       "contentHash": "sha256:ad63404a89df02cb15284e1f7c99411f46fd94391f2cc228244e68ee119782ac",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "select",
@@ -2928,7 +2928,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 66,
       "contentHash": "sha256:957bb2163fbac776366a992bcab6c79063f22f29b4ef48931c4ed6739fc3f6e1",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "select",
@@ -2941,7 +2941,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 66,
       "contentHash": "sha256:44039863c2cdf7bac6b2411590fcaa47c34140606654469c30cd5745063e88c9",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "select",
@@ -2954,7 +2954,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 66,
       "contentHash": "sha256:d10ed3d3e77d3510748a8cbfbcbbc5197c8e37155dc38d06e5231e55783c69d8",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "select",
@@ -2967,7 +2967,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 66,
       "contentHash": "sha256:ad63404a89df02cb15284e1f7c99411f46fd94391f2cc228244e68ee119782ac",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "select",
@@ -2980,7 +2980,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:5b41afdf7ca5ca96bd07ee76dab9098614a174aa840e3811b1eaa5d2fbe06d8c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "select",
@@ -2993,7 +2993,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:7d3b186e407bff65a1b8dada4be25612f66b324fd0026a56ffed664e9fa6bdbe",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "select",
@@ -3006,7 +3006,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 66,
       "contentHash": "sha256:29e273f4a506266ffd5c70ab9a0dac16b2897e62ead3298a44346fb5782c5fab",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "select",
@@ -3019,7 +3019,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 66,
       "contentHash": "sha256:26dd747afe1e2ec6c97e5982c5ec1dcc8d18fd8c8c2a6d76f9bc59f26019f5b7",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "select",
@@ -3032,7 +3032,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:d7b9253876b364c35f52cb1d8e74e936d1890dd104f565b2418558261c197404",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "select",
@@ -3045,7 +3045,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:2cb993fbcc98e47fae44574f6ec0bd0850c0944170ef9efd69c019506d7b3a99",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "select",
@@ -3058,7 +3058,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:88abc3242b28f1b11dcb8f507fc868df2695265fcbdbefc6db8bc7298a50331c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "select",
@@ -3071,7 +3071,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:48a42e9e9f18af893ad6cd148bf2303698f5cbdbcd0d58315d1970f078ba78b8",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "checkbox",
@@ -3084,7 +3084,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 45,
       "contentHash": "sha256:0749f06a5f925e4a5ab3487bf6629a553274c38c3c26f8f4d113f05df29a9a7c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "checkbox",
@@ -3097,7 +3097,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 45,
       "contentHash": "sha256:a68c22cdcc3b156391101fc1ea2975c35dc9ad387065c70dd0633cc11466a765",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "checkbox",
@@ -3110,7 +3110,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 956,
       "height": 234,
       "contentHash": "sha256:b0489e6d8aeea64d9fda622c3d1f66452a13fff18ee063dd93b99a398486b063",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "checkbox",
@@ -3123,7 +3123,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 956,
       "height": 234,
       "contentHash": "sha256:fac5e1637c965d84aaac285ddb7ce0e46383b598418ad42e97d74445bd15be5e",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "checkbox",
@@ -3136,7 +3136,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 24,
       "contentHash": "sha256:e90d304827d1a7d7c28710fba7b517fa5b3bded1613be546886d3b9864fb3346",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "checkbox",
@@ -3149,7 +3149,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 24,
       "contentHash": "sha256:a1687d07f3971fdb99d4d4b0bf7b22a12afa106c6e0095a48e353a1d63fc80c5",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "checkbox",
@@ -3162,7 +3162,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 24,
       "contentHash": "sha256:fa1cd2abe4c1c5e8df4d3633959a44a852e6231fd9cb69c32e8b2771e1801084",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "checkbox",
@@ -3175,7 +3175,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 24,
       "contentHash": "sha256:cf89575e5c5663bc9933210da81823a10133b86224ba5fa773ef1e7e41f6dc79",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "checkbox",
@@ -3188,7 +3188,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 45,
       "contentHash": "sha256:2e82d4fb2f4c163830e097f0b5599544d6cfbb37fcdfed0bddeaba221cc0f0af",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "checkbox",
@@ -3201,7 +3201,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 45,
       "contentHash": "sha256:063921b2ebdae4c9be83288b28f35ba222eb32e6bf788655accc0b8e159506be",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "checkbox",
@@ -3214,7 +3214,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 24,
       "contentHash": "sha256:404befbeafc4a1720e1973c0ddc9587b8216e3050f4dbac9b0d1cccc3339c762",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "checkbox",
@@ -3227,7 +3227,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 24,
       "contentHash": "sha256:679d483a3749e4e674c4a4cbeb068fd274a6b259174d8fbb8cbc5283a81a73aa",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "checkbox",
@@ -3240,7 +3240,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 45,
       "contentHash": "sha256:be684fde35204f0f099821bafad22c0fa56a127cd2b797b9a63dab5c2aad74d6",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "checkbox",
@@ -3253,7 +3253,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 45,
       "contentHash": "sha256:e7f1918ccdc9f085119c6d72b4d08bceba8cd15cb08d05a1b32eae5f429f1fdd",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "checkbox",
@@ -3266,7 +3266,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 45,
       "contentHash": "sha256:54f2918f9319f567f665aed21040611ed3abbfc5c34e3207efb1d859a8747815",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "checkbox",
@@ -3279,7 +3279,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 45,
       "contentHash": "sha256:5eadafd5fc6abec582ba570b43a073a35a047ad05082fe5b34cab5637a8e8fc2",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "radio",
@@ -3292,7 +3292,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 956,
       "height": 149,
       "contentHash": "sha256:01f4ebc782334051b27aafca4d3ea74833e36332991f187dac04cce5d7720d33",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "radio",
@@ -3305,7 +3305,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 956,
       "height": 149,
       "contentHash": "sha256:7762f627c42f2f897d8ff73132da62fba6d6ffceae385809d6a7e3148e95642e",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "radio",
@@ -3318,7 +3318,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 956,
       "height": 234,
       "contentHash": "sha256:998f80a4a3e35ac62dbb0d678e172d794a344ef52226e8e3612403ed9189dfd2",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "radio",
@@ -3331,7 +3331,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 956,
       "height": 234,
       "contentHash": "sha256:27381734d7c23e96014fed3913d44222cbc9ff881c7b1a409cc5f23049fae4c8",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "radio",
@@ -3344,7 +3344,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 956,
       "height": 149,
       "contentHash": "sha256:3005aaf401c8eac0747ac0e4bb646defdf4c3b1520163e1afeb57f95cb1dd1d7",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "radio",
@@ -3357,7 +3357,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 956,
       "height": 149,
       "contentHash": "sha256:c687e12200d9f81b6baa27a59ebc48726eaacc0c0fac707c84bd03420c984a75",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "radio",
@@ -3370,7 +3370,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 956,
       "height": 149,
       "contentHash": "sha256:cb802a99aa74a4dc8d7cac5590def0c85dc197eacd5e841de566bb1d328fd596",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "radio",
@@ -3383,7 +3383,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 956,
       "height": 149,
       "contentHash": "sha256:6732b3a852bfbb2a3b25d8cf6e653349a05c771dfe25292214545eb2d6aa08cc",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "radio",
@@ -3396,7 +3396,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 956,
       "height": 170,
       "contentHash": "sha256:9da38b581db39861dedea61158d8e1fb9160842905d9e99596d62b4e15df4347",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "radio",
@@ -3409,7 +3409,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 956,
       "height": 170,
       "contentHash": "sha256:79105f7e36bf6d07c2ccc782c9f6f81280afee63f81540f6110ab5a5212cd3ba",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "radio",
@@ -3422,7 +3422,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 956,
       "height": 149,
       "contentHash": "sha256:3926c4b28260b03f572cb6228a6c8fbe99cc5a39e5ab45e02cb012fc387da8fd",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "radio",
@@ -3435,7 +3435,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 956,
       "height": 149,
       "contentHash": "sha256:e3434d7cb5e9d4ad5d8e255558f78f2877985d9a360be6adcd2f70774af8f67a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "radio",
@@ -3448,7 +3448,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 956,
       "height": 149,
       "contentHash": "sha256:c0963992d16a4f1483d0b31afe3cc48547467d61c495717a6c46a5aecb638815",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "radio",
@@ -3461,7 +3461,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 956,
       "height": 149,
       "contentHash": "sha256:e78e807730e4f56e74f9b26924dc1ab13fa1b339d5443fac727f3c02572cb629",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "radio",
@@ -3474,7 +3474,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 956,
       "height": 149,
       "contentHash": "sha256:908ce00df03a6a5b85ded04ffd8fd40d871010ca5e2fbd266015ea3913afce5f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "radio",
@@ -3487,7 +3487,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 956,
       "height": 149,
       "contentHash": "sha256:7c856a8f9868988ea76dc66af739cc8fffa4e2a66a3a8fd8967c3be811d54547",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "switch",
@@ -3500,7 +3500,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 25,
       "contentHash": "sha256:693521fb31d842820da15d0639c2e472356871cf63cae3918ede7df66207b374",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "switch",
@@ -3513,7 +3513,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 25,
       "contentHash": "sha256:ff0fb5dacc1c6c11e856a646e5de645c26d8f6974da1ae1a9b22ad451d50d86c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "switch",
@@ -3526,7 +3526,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 25,
       "contentHash": "sha256:1eb7683f7552e23f5730a981b17c9f1b534d3066d55133b21827f015b5525c7f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "switch",
@@ -3539,7 +3539,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 25,
       "contentHash": "sha256:b99df58bd4f43f217ebf283ae06a1f5f79179f9ea89bb913615cb7782c4475cb",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "switch",
@@ -3552,7 +3552,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 25,
       "contentHash": "sha256:552c53f97d6239708ff370bfbb503519d949b8a3ee95cb5c4d74e8b98f67a350",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "switch",
@@ -3565,7 +3565,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 25,
       "contentHash": "sha256:2c025fc85eeadc8ebfee8653077bebb0716ef194587a5f2ecfe10c602f8a7527",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "switch",
@@ -3578,7 +3578,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 45,
       "contentHash": "sha256:fbbff270f21fcbe15791f4bc9e547ba2a9fabe0eca5c53ed0770b3caa6456ff2",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "switch",
@@ -3591,7 +3591,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 45,
       "contentHash": "sha256:af3f9ae0caeeded2f50e5b44cd603973caa037fba7833feaff9d388930724c71",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "switch",
@@ -3604,7 +3604,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 25,
       "contentHash": "sha256:158054b1d7b5f6843634e1f0207f6ce9d3fea63f746794555e2bd6ad7271b775",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "switch",
@@ -3617,7 +3617,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 25,
       "contentHash": "sha256:97bfcf5fcc485044e8cc3ccdd2adc04e19f3ebee9104e5b9fbc520454d31d665",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "switch",
@@ -3630,7 +3630,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 45,
       "contentHash": "sha256:d680131c9408e7ef933a94202ae4cf1ddae427186927cf7725c45fa59ed60c35",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "switch",
@@ -3643,7 +3643,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 45,
       "contentHash": "sha256:01a917dc07fa89ad3c3b3059507cebb56f5985e469da10bf389f7448a86d08f7",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "switch",
@@ -3656,7 +3656,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 45,
       "contentHash": "sha256:71664cfbfbcff53528637f16ac6866ffc63ccec760d41f83ceafba5c96a7c259",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "switch",
@@ -3669,7 +3669,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 45,
       "contentHash": "sha256:7a5adf9c4256f08afb4d62cb02c3b384c23e3eeb30af1d4da9ae68621b2c9029",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "banner",
@@ -3682,7 +3682,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 49,
       "contentHash": "sha256:c452757efc45e6cf17939f3effe7e398ca397d1a34c86168f635f26d43356b69",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "banner",
@@ -3695,7 +3695,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 49,
       "contentHash": "sha256:6357415ac243234a5ab453ac78637ecd331d7a22bbc205727877d2ed1491f087",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "banner",
@@ -3708,7 +3708,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 49,
       "contentHash": "sha256:daffd5aef15687302341aaa74cf03a951925f5016a9936a077de898afe29234a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "banner",
@@ -3721,7 +3721,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 49,
       "contentHash": "sha256:7330cf6ca938d749fb75aee02b6389ff1d1e8d4a7b9cc2c5945bb8bfe9015963",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "banner",
@@ -3734,7 +3734,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 49,
       "contentHash": "sha256:1407bdefa4915297dc26bb620b4a1ac258a92cc1aa7277c84995e289a7f634c5",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "banner",
@@ -3747,7 +3747,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 49,
       "contentHash": "sha256:a2cb373a96adc9f3f512111330a73732d23428dae400c83d36ee58153f9df41e",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "banner",
@@ -3760,7 +3760,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 49,
       "contentHash": "sha256:ee6dd73cea7b86bbd398d0e415c4b594867956d3bc709ba039962cbbd6a86b44",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "banner",
@@ -3773,7 +3773,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 49,
       "contentHash": "sha256:787225c99c18216aea46da43b7c6aaafb14f452f3d696ec1bca2b640f3f0cb0e",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "banner",
@@ -3786,7 +3786,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 49,
       "contentHash": "sha256:e38977da8ed76da7d2585e1494409c71503cc4f6dcd095b526a2a2550cae4fbd",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "banner",
@@ -3799,7 +3799,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 49,
       "contentHash": "sha256:c5a4d62cdc1b3b44eac0994537a7f3b9ccc906b5cbd0133039175b18778f8bf1",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "toast",
@@ -3812,7 +3812,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 138,
       "height": 44,
       "contentHash": "sha256:bcd9effc0148aa8e7f891bb050ff918b6a85024a2e1f0f6f7b2626f6af626707",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "toast",
@@ -3825,7 +3825,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 138,
       "height": 44,
       "contentHash": "sha256:ecbb2fdf86a9b374337fe9c146c25815b6fd60263a2e0086c85decc4bb83170f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "toast",
@@ -3838,7 +3838,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 211,
       "height": 50,
       "contentHash": "sha256:aa96978f48ffdb684e905ed78b2273a95d11f3a4bdacf4f96594896438e3c102",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "toast",
@@ -3851,7 +3851,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 211,
       "height": 50,
       "contentHash": "sha256:b4e41de8b1cc976fdd3f36d377ecfdb4ba95a3b924ad28e43cf2a100bba97a05",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "toast",
@@ -3864,7 +3864,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 167,
       "height": 44,
       "contentHash": "sha256:91ab79ef5418bf0c7f711bd69dcf98419e3af0bd923bc334436dd6a0957c673c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "toast",
@@ -3877,7 +3877,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 167,
       "height": 44,
       "contentHash": "sha256:2f58507776629c53ab50fdf2af83dc97aaa1a216eef50b921e42c71cbb189910",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "toast",
@@ -3890,7 +3890,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 180,
       "height": 50,
       "contentHash": "sha256:b927af9cd3cb32355d2fb127993df28ec8eed4d5d129e7ef0f11008d551754d7",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "toast",
@@ -3903,7 +3903,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 180,
       "height": 50,
       "contentHash": "sha256:dac9ecdaef28e5afb7fafd4f59894407cb12a8a8ba702a919e87ef00aaf46d6a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "tooltip",
@@ -3916,7 +3916,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 142,
       "height": 86,
       "contentHash": "sha256:3ecd8d31b31aa8405dde5e28d06538dd2bcfc700b51626f7c233266bff7f6722",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "tooltip",
@@ -3929,7 +3929,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 142,
       "height": 86,
       "contentHash": "sha256:f909efcc1e92a58aabf01a2e2566e15433e041cbfd624a6931fd8ff7ad52d658",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "tooltip",
@@ -3942,7 +3942,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 171,
       "height": 85,
       "contentHash": "sha256:a5841af32829ba072cfb76c5a0b82c7b4d9885a403fa549ee82fbe2d81d782ff",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "tooltip",
@@ -3955,7 +3955,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 171,
       "height": 85,
       "contentHash": "sha256:369e5b5d505fa6a2a88aef4c2300c465df03f6f13d5de21b4052b8f7f30160fe",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "hover-card",
@@ -3968,7 +3968,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 151,
       "height": 40,
       "contentHash": "sha256:1c2b5462a595c5826c3c7ac3ec5ba2a9b119f35f2518f89fe070972930846852",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "hover-card",
@@ -3981,7 +3981,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 151,
       "height": 40,
       "contentHash": "sha256:9a36987ef4e114ccad505488d77ff2b2f719b4d967e6c6533ec48bb19ffd29dd",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "hover-card",
@@ -3994,7 +3994,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 117,
       "height": 27,
       "contentHash": "sha256:9846400094f57c006d02552d850e6bbeadad94d850f671bc54ef1018a6fa87fa",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "hover-card",
@@ -4007,7 +4007,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 117,
       "height": 27,
       "contentHash": "sha256:436d4d963765f5076738701dca824ee780f32dd6f80081e68875d66b4de011e7",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "hover-card",
@@ -4020,7 +4020,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 144,
       "height": 68,
       "contentHash": "sha256:de20dfc1be10043bbd8582ad3e1ed00bf3f4ac061d1c037f5e2a0b9b944c66b0",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "hover-card",
@@ -4033,7 +4033,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 144,
       "height": 68,
       "contentHash": "sha256:202237b320ce7e52e7ca427206b0921e922b3b45782d82ff3d02d6ca45af9231",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "dialog",
@@ -4045,8 +4045,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/dialog--default--light.png",
       "width": 496,
       "height": 220,
-      "contentHash": "sha256:18aba373cb24e84c414f73cc755fe8c78794285a2042f349fb42dc52fa5151a5",
-      "captureContractVersion": "2"
+      "contentHash": "sha256:8b31da74732d770a298e7674d0914821b124449d46910f38fae7077f9915e0bc",
+      "captureContractVersion": "3"
     },
     {
       "slug": "dialog",
@@ -4058,8 +4058,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/dialog--default--dark.png",
       "width": 496,
       "height": 220,
-      "contentHash": "sha256:e0c09e5b6964c14754336a682e17b0434b0dc82aeee4d51bb2a8847087df052d",
-      "captureContractVersion": "2"
+      "contentHash": "sha256:ed78698d7a57e086cb5039c68ac7709f7a49fa72f2a39f0399e37a5929ee0456",
+      "captureContractVersion": "3"
     },
     {
       "slug": "dialog",
@@ -4071,8 +4071,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/dialog--submitted--light.png",
       "width": 496,
       "height": 146,
-      "contentHash": "sha256:1242403529766650def28ede0e16239f63eb142c50d1211c2f81ca1afa5cafa7",
-      "captureContractVersion": "2"
+      "contentHash": "sha256:98eb80be9ea4e884461c530787b071deefcf2b7b3c6610dd05ee66aae5ed17c2",
+      "captureContractVersion": "3"
     },
     {
       "slug": "dialog",
@@ -4084,8 +4084,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/dialog--submitted--dark.png",
       "width": 496,
       "height": 146,
-      "contentHash": "sha256:6773865e343df1c82fa96243e53c46aa4973e0cffabc116be04e0a9bcbe473ec",
-      "captureContractVersion": "2"
+      "contentHash": "sha256:4a03ed80703426854f3d5a387da69fd7d0a9c43f946308e7ec49431dae6e9798",
+      "captureContractVersion": "3"
     },
     {
       "slug": "dialog",
@@ -4097,8 +4097,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/dialog--cancelled--light.png",
       "width": 496,
       "height": 146,
-      "contentHash": "sha256:0ea8ab7a95d6b7450ff247beff8b2b73cc1f259dd7e81ecadf76a21490781847",
-      "captureContractVersion": "2"
+      "contentHash": "sha256:111bdba255bf224177b60a4abce6463aa079672955e11db42fc2c42d28e6792d",
+      "captureContractVersion": "3"
     },
     {
       "slug": "dialog",
@@ -4110,8 +4110,8 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetUrl": "/catalogue/generated/example-images/dialog--cancelled--dark.png",
       "width": 496,
       "height": 146,
-      "contentHash": "sha256:c7de6c6d743979baa4d66cb7e6db8131d8ec2598f78c7fccfa625a534f88d221",
-      "captureContractVersion": "2"
+      "contentHash": "sha256:68b206367442e9ea4ee35476f4422bc9ea41a0a63fca604225b9c9292ebb2ab0",
+      "captureContractVersion": "3"
     },
     {
       "slug": "meter",
@@ -4124,7 +4124,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 36,
       "contentHash": "sha256:e5025b3f8a0930760c6331337f346faa20fced895f6f1a548ca74528f9d93cac",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "meter",
@@ -4137,7 +4137,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 36,
       "contentHash": "sha256:e22ee448e9ec38d16b093388d0fbe56c1bd58c7084dd08c169bb90422d60e7ba",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "meter",
@@ -4150,7 +4150,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 36,
       "contentHash": "sha256:8dcbd963e3356b6026dcc42ede829efb6fc1a4404cc7ee36cd2b50d77cfba75b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "meter",
@@ -4163,7 +4163,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 36,
       "contentHash": "sha256:812d863683c7d63cd8eb2c29e5fde7661247de270115ccec40f51b8333e2303c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "meter",
@@ -4176,7 +4176,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 36,
       "contentHash": "sha256:5565f091d8539ea82ea18b852d7ac8af1d0e251ff7a42f0f9add8cb00485a270",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "meter",
@@ -4189,7 +4189,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 36,
       "contentHash": "sha256:8fa39aabb7d501d0249dbe82933342984dfc8acba96e6be7ddc611a1ccf385b3",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "empty-state",
@@ -4202,7 +4202,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 201,
       "contentHash": "sha256:f7dff7728ee7762f802948d48034730bdc31e2636085aaf699c96c7926c38f83",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "empty-state",
@@ -4215,7 +4215,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 201,
       "contentHash": "sha256:c22ece6b68df4e19f064d15be56d1052219065ee68c200cef9abe44aa5d834e8",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "empty-state",
@@ -4228,7 +4228,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 109,
       "contentHash": "sha256:bbdeef60c885b7829cc31f364ebebaf154b9699837ddb8749d254c255dddd726",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "empty-state",
@@ -4241,7 +4241,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 109,
       "contentHash": "sha256:b4fecc8c5251ff90790994a8f3d680a707ffe87e5ca48fe8b967491c6d86323d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "tabs",
@@ -4254,7 +4254,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 90,
       "contentHash": "sha256:83b382533ec2b69f75961758438aa071d9cc872b760e30f8a4170b9dd6343166",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "tabs",
@@ -4267,7 +4267,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 90,
       "contentHash": "sha256:7bb609061df8d32abb742418665cab3d0c8cf11052b484c531d40d67040c8316",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "tabs",
@@ -4280,7 +4280,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 90,
       "contentHash": "sha256:567b35606d4fef6f29959e37ea37ea4ebc5a3ebc61a6a9eb8b32ccac48daef2b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "tabs",
@@ -4293,7 +4293,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 90,
       "contentHash": "sha256:f15d784665dbd773db34a3e97b518130837cd2119c19e56e4ef7f05559f60a21",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "tabs",
@@ -4306,7 +4306,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 90,
       "contentHash": "sha256:ca0c90fef33dfd7e21f1a03f8e5914100ebceb5f23be7f0d5b5e91f5ee9c4e00",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "tabs",
@@ -4319,7 +4319,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 90,
       "contentHash": "sha256:a4e6b742d97012e94435e51641f6f3a26adc73b7af46e9e38784a6c5e04acabc",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "breadcrumbs",
@@ -4332,7 +4332,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 40,
       "contentHash": "sha256:3b267654cf925e312964bfb895a3fadfb647774647b9d8a5dd85bf914ded2042",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "breadcrumbs",
@@ -4345,7 +4345,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 40,
       "contentHash": "sha256:178885d0892f88686574a78035dd9db42dafbca2a9383d048e422b8d177d418d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "breadcrumbs",
@@ -4358,7 +4358,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 40,
       "contentHash": "sha256:f3475ab9a2ceeef53294d67070de5f66cec59f94ce0321c9e6066cd8736e1fde",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "breadcrumbs",
@@ -4371,7 +4371,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 40,
       "contentHash": "sha256:64dd232b7da84c43d5f9af209c5615b9bc5337d51d8a6c4c5574e8974ba0196e",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "avatar",
@@ -4384,7 +4384,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 52,
       "height": 52,
       "contentHash": "sha256:4dfb2e111a456a45746e3bd7f4ebb57d6f86ded22793b45658a2380a97478ca9",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "avatar",
@@ -4397,7 +4397,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 52,
       "height": 52,
       "contentHash": "sha256:7894299af15f3638b62618c1cdac7dbdcd37a8a1fc3f436c1dae71a905189e0f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "avatar",
@@ -4410,7 +4410,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 52,
       "height": 52,
       "contentHash": "sha256:6d90be85dc8aed8d04b66fed225886fea2b9213cd9c0e10558096c8c40978943",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "avatar",
@@ -4423,7 +4423,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 52,
       "height": 52,
       "contentHash": "sha256:59ee6d1f09a6ca6f71d0a7e4057145bf038d518b6d20c37c4d0d180ed4ad641b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "avatar",
@@ -4436,7 +4436,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 52,
       "height": 52,
       "contentHash": "sha256:f4837b4eb2ce3bd15fb0305311aa721798b465a93e99d77d7e50158c55d7e600",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "avatar",
@@ -4449,7 +4449,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 52,
       "height": 52,
       "contentHash": "sha256:dae428033a8fb1e32592898e69226e04f810296c87cf384b2af1fd0185f57a95",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "avatar-group",
@@ -4462,7 +4462,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 124,
       "height": 40,
       "contentHash": "sha256:7a70cb0baddc4e2c4afb7beecf1ee34e1e33a6c93a9850bc81ac60b1ffec05b3",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "avatar-group",
@@ -4475,7 +4475,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 124,
       "height": 40,
       "contentHash": "sha256:f7411f2ff27bed89041e6a0a79b5e0d9c20269bed0c6c45342dfc77fbec686df",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "avatar-group",
@@ -4488,7 +4488,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 77,
       "height": 32,
       "contentHash": "sha256:8e50f058f10bcf3098d66905051c1085b84824600757f334dd7d2711852a2753",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "avatar-group",
@@ -4501,7 +4501,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 77,
       "height": 32,
       "contentHash": "sha256:37e85229c31cf19647e5018c965db00cc44b02e8ee0efd15cd0e1b6a72f485e9",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "persona",
@@ -4514,7 +4514,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 118,
       "height": 41,
       "contentHash": "sha256:55955cb08723ed1f072daa52da35a223eb100b417f6cf62a70d56a918304b32c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "persona",
@@ -4527,7 +4527,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 118,
       "height": 41,
       "contentHash": "sha256:767243bced2b608ab95f2c7892b80973e450022d056712da1576122c6928611c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "persona",
@@ -4540,7 +4540,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 161,
       "height": 41,
       "contentHash": "sha256:fe2511e94fffa3ff39822782f3b9675d4667543c04fce168a940704d1f0c8c99",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "persona",
@@ -4553,7 +4553,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 161,
       "height": 41,
       "contentHash": "sha256:42a4b84b2a1f9a459e1ec92e39b3d13e5b5b8c4de27825205160f77c4864a32d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "persona",
@@ -4566,7 +4566,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 224,
       "height": 41,
       "contentHash": "sha256:593d2900c11092596a5d2e58f1eee155a126c4333197d6f789dd41054cdfbbb0",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "persona",
@@ -4579,7 +4579,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 224,
       "height": 41,
       "contentHash": "sha256:d2429525055601d62d6e85d6b0579fb9b90a774a0fa2957a1de90f5c90e77653",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "mention",
@@ -4592,7 +4592,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 608,
       "height": 29,
       "contentHash": "sha256:caa10402687146f8376c30eaf210cf55e8d3a720e25db941efe3789ca8e8d23d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "mention",
@@ -4605,7 +4605,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 608,
       "height": 29,
       "contentHash": "sha256:2de3b259cbf8576abfa215c722da42cb6f40ee89723a63e646b5866a8c21e34e",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "mention",
@@ -4618,7 +4618,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 608,
       "height": 32,
       "contentHash": "sha256:e3461c1404d1b979e84805a59e2049f54e39febf3359607499228850918e9396",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "mention",
@@ -4631,7 +4631,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 608,
       "height": 32,
       "contentHash": "sha256:082aa232db86a58bb3b31b1cd45c3eef367ddac96c289edc95acf4aa37ca9576",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "byline",
@@ -4644,7 +4644,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 24,
       "contentHash": "sha256:df9805de54f89fe8ef07eb120c55d40596f00b6661eed47eb3558b0cf9fd27f4",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "byline",
@@ -4657,7 +4657,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 24,
       "contentHash": "sha256:c4f8784fff10567c46d64e120125cedb28223094504d687338177e026ed8d6c3",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "profile-card",
@@ -4670,7 +4670,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 288,
       "contentHash": "sha256:db62a3fbeb543b5f816d092c76f0e941226395e8ae872dc3786f006c02094dfa",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "profile-card",
@@ -4683,7 +4683,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 288,
       "contentHash": "sha256:0a5f37197c5708463edd06511a97973d8ce6d07711e10f7aa063625e51375d59",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "profile-card",
@@ -4696,7 +4696,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 192,
       "contentHash": "sha256:0ad32ca2d47af2606cc4f789efd40c49f9f8f459eb61cad2597030119d80b4a9",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "profile-card",
@@ -4709,7 +4709,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 192,
       "contentHash": "sha256:99ad60e4d4f0b2d5d77d7a6b6e8cd6feb1d5e2faf9a61f4dbc0e847c8c796bc7",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "agent-avatar",
@@ -4722,7 +4722,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 52,
       "contentHash": "sha256:125acc926bb8faea9f5c36b60adeee3d8604a42c898f7799c3b213e346a86b53",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "agent-avatar",
@@ -4735,7 +4735,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 52,
       "contentHash": "sha256:a18cc57a2d5981a0da432d7b330ce05d5dd0f04a7377f8b1705ebe1dfc3895a8",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "agent-avatar",
@@ -4748,7 +4748,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 40,
       "height": 40,
       "contentHash": "sha256:05192b81f186aa2c1d5ab419adb61feaf1891540cbf14b72674731d382b628fc",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "agent-avatar",
@@ -4761,7 +4761,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 40,
       "height": 40,
       "contentHash": "sha256:f861b574bc441a0ed251ae8300a40168d540b5d0ec96055b0e2d2826b4b17e58",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "agent-avatar",
@@ -4774,7 +4774,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 40,
       "height": 40,
       "contentHash": "sha256:6a5771ae31d0683fe2aa6036e914db815a853e09cc8e639cdcf916de34c13d2b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "agent-avatar",
@@ -4787,7 +4787,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 40,
       "height": 40,
       "contentHash": "sha256:eb11f16ee2743fc2f4dca7031ba2c9929dd1d2b0ea52cd655d38eb8a25481783",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "agent-persona",
@@ -4800,7 +4800,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 189,
       "height": 41,
       "contentHash": "sha256:228d6b66aa63fd6f2e3a6ba6d664117fb17c9414f67ea2c6eef5912bb2d1ec19",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "agent-persona",
@@ -4813,7 +4813,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 189,
       "height": 41,
       "contentHash": "sha256:25bbdc13e7b8404c7327d0b48fb42a704a3f361c5a0cace5a6025a7024d115e6",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "agent-persona",
@@ -4826,7 +4826,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 187,
       "height": 41,
       "contentHash": "sha256:904b31fd3834e5042f67be79456bec398091a0b3fada9819d0b44dc1b1de0813",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "agent-persona",
@@ -4839,7 +4839,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 187,
       "height": 41,
       "contentHash": "sha256:b82339fc3b614fedaea4a25c8984901cf148574822338e1460a28c0c754d5b75",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "agent-mention",
@@ -4852,7 +4852,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 29,
       "contentHash": "sha256:8e851da3559bd518aa83a0c89552754feb396be026646b16d50261b9261ce127",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "agent-mention",
@@ -4865,7 +4865,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 29,
       "contentHash": "sha256:7c5e0837942b87da0523951ff7f1b73820ae3de724f18457f8693cdb58cf2e30",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "agent-mention",
@@ -4878,7 +4878,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 29,
       "contentHash": "sha256:d345f979d4a0c89a154f40da124b4af957bd4bb43b3f1871e338312b4243d646",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "agent-mention",
@@ -4891,7 +4891,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 29,
       "contentHash": "sha256:8c0e485b1ee72815a7c506358961cece23fc35b2406a338813e0f2a1ed24b588",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "worklog",
@@ -4904,7 +4904,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 416,
       "height": 142,
       "contentHash": "sha256:a243cfe4901ac6e25a1905a75f428eae46eacc68c1949d3ac42117ffc25f83f2",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "worklog",
@@ -4917,7 +4917,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 416,
       "height": 142,
       "contentHash": "sha256:428c7c4faa382cb9d51eeb066a147a9e3b7b29c30342f8975ceeeb835d55d295",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "worklog",
@@ -4930,7 +4930,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 416,
       "height": 142,
       "contentHash": "sha256:ab142cae34d7819d0e4aed1224d9af3dd6bb8d87cce01b66ba3a8455f9a402f6",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "worklog",
@@ -4943,7 +4943,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 416,
       "height": 142,
       "contentHash": "sha256:32b849e63fc3d2bfabad7fa267a96387651b013e917863f61a8bf0fdf1133b4c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "transcript",
@@ -4956,7 +4956,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 544,
       "height": 201,
       "contentHash": "sha256:c560b69b5dff605ce07462f8b1aa39152f55c5441b5be7c91f6533a866ad8367",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "transcript",
@@ -4969,7 +4969,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 544,
       "height": 201,
       "contentHash": "sha256:65ec691a8712f167ff63acea47cfdaa1e8f740caaf7c0c831c5ebbba74d59ff9",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "verification-report",
@@ -4982,7 +4982,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 352,
       "height": 374,
       "contentHash": "sha256:74addfb27953c0fc42c8a4194f9f5270ea2ce790bfc1c1d64cf448a8c8d5b047",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "verification-report",
@@ -4995,7 +4995,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 352,
       "height": 374,
       "contentHash": "sha256:35d6628081fddbc894e353db4640229a29b4b8226c874101f9c9bed7479b3e40",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "verification-report",
@@ -5008,7 +5008,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 352,
       "height": 262,
       "contentHash": "sha256:4cc1c7a6b26f46fe40f93dad95409d9881d1737e0c3fac9011962d654133e16d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "verification-report",
@@ -5021,7 +5021,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 352,
       "height": 262,
       "contentHash": "sha256:1e51ad5e94c5f2eb94504de344bcc3ac2d29ab4320bcbc8b79a2e85d3a9d4b69",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "fleet",
@@ -5034,7 +5034,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 640,
       "height": 113,
       "contentHash": "sha256:8605f340c736fe7afbce9f116ffceb9c7acec5ac7809676aff43c9b3407dbbe4",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "fleet",
@@ -5047,7 +5047,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 640,
       "height": 113,
       "contentHash": "sha256:343af372cf4ff8de5c6398b52ba6532aa7ea2f75b3711db1f135db79d0c4b494",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "fleet",
@@ -5060,7 +5060,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 640,
       "height": 56,
       "contentHash": "sha256:8fe7de4163b7c18855d4db5f291a06e40ccac2fdddbf71d04bf3eccf1b8beafc",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "fleet",
@@ -5073,7 +5073,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 640,
       "height": 56,
       "contentHash": "sha256:2fd63a75aa50b93aba85135449c9b96121573a88faab6500d6b544e882d9fa41",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "command",
@@ -5086,7 +5086,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 225,
       "contentHash": "sha256:af362fbb110a5948de17cfb67040aecc1500ca139b2effcf422e1b51fbc45e24",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "command",
@@ -5099,7 +5099,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 225,
       "contentHash": "sha256:d903ea4b05b271a234cbe8877d706c9d583f19c5b12f6e1591af5af7dd9a109c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "command",
@@ -5112,7 +5112,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 242,
       "contentHash": "sha256:8c50ce12d98b71f1e5041d2d2a427686b871f075f3ab235d9e45222340927d63",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "command",
@@ -5125,7 +5125,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 242,
       "contentHash": "sha256:32f6760133444108fb7c821d30b08d7086396971433f5e33e7279b64cbb88012",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "command",
@@ -5138,7 +5138,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 142,
       "contentHash": "sha256:85a91a85906cfc524db47e79d50f15c5f7628c7eb5fafe723015b0514d28aa63",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "command",
@@ -5151,7 +5151,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 142,
       "contentHash": "sha256:e0c3b87b0658ac139c4e614c3a8016e24a52028b3d3b37770d862ed0919402a7",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "command-group",
@@ -5164,7 +5164,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 476,
       "contentHash": "sha256:f6427c540af38ee377ebec47d2455e1fbeca315c03042f31e89b274cc8123502",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "command-group",
@@ -5177,7 +5177,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 476,
       "contentHash": "sha256:29eb5f872a754e2aac02fa6bc97c9e1aefe752896b33ad78343158ce54de599f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "expected-result",
@@ -5190,7 +5190,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:96379f3c20da9cb8a0874f85042b57af2520ae160760d12072ba36a4c397318c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "expected-result",
@@ -5203,7 +5203,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 93,
       "contentHash": "sha256:5ee63fadba8c374db705b7e3f64acaaeda554c67a7b5e8ffabaa7a72074349db",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "expected-result",
@@ -5216,7 +5216,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 74,
       "contentHash": "sha256:8591815b2a84d2dfa480ebcd2a7d527e67dffe0c0bc912300ef5b77c45d10b84",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "expected-result",
@@ -5229,7 +5229,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 74,
       "contentHash": "sha256:6f483480009cdbd76ecdf640b3f0c25da1c3f0e1e2c5d5782612ccec1b754055",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "path-reference",
@@ -5242,7 +5242,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 29,
       "contentHash": "sha256:887f9b3bf3b1dba0add36347c0718b7302e51cc0120b253bfe470b6dff83045e",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "path-reference",
@@ -5255,7 +5255,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 29,
       "contentHash": "sha256:21bffc4397a0580048cc30cbea1ce769a805aa2f525effa2cc801547cce675b3",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "path-reference",
@@ -5268,7 +5268,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 352,
       "height": 29,
       "contentHash": "sha256:d246b03056a3d4ea09c8fe13d31c2e74623d3f0d5dabb7daf73bf8f57cb56505",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "path-reference",
@@ -5281,7 +5281,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 352,
       "height": 29,
       "contentHash": "sha256:519305d879d952fb9d69045050641f15a262cec38da6be46b5524f188760c49f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "procedure",
@@ -5294,7 +5294,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 620,
       "contentHash": "sha256:d87ef23c65f26313035ddb70f111046476fff23a1673c419dc3eb661b171eb53",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "procedure",
@@ -5307,7 +5307,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 620,
       "contentHash": "sha256:4c7172d558b43d1e224b11e4c5d988c9b62a0b776aa19e30f6ed27cdb716e790",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "procedure",
@@ -5320,7 +5320,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 371,
       "contentHash": "sha256:3830dbe4a7215af719348caca1e44d48640693440661229053f4ae5e2d621243",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "procedure",
@@ -5333,7 +5333,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 371,
       "contentHash": "sha256:c95bc935fbc4e500ef62a40d131f263c784fa818e5f36c86c5b8b93c771ec33f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "procedure",
@@ -5346,7 +5346,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 475,
       "contentHash": "sha256:015329af55de64175bdaa3c3bad3a7fb89d394e0edf1d21c143099b0c30bc52d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "procedure",
@@ -5359,7 +5359,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 475,
       "contentHash": "sha256:1a88f8012caa46df3464773e3ca2ecb4e118b39efc67cb8ba58de17dbeaf11b4",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "procedure",
@@ -5372,7 +5372,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 893,
       "contentHash": "sha256:02dbf352a092f639466ca96ead3f36bfb438717d4d31019504d05ecded90c0da",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "procedure",
@@ -5385,7 +5385,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 893,
       "contentHash": "sha256:3f9b39b08c8b006c11e33b60936c046301017836c6b67dd87d627c019d07ea32",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "procedure-step",
@@ -5398,7 +5398,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 439,
       "contentHash": "sha256:2440991b3074a7e482cb6bd3b8d7d7c6eafdb9df6de8e19017ce53daef88f1e8",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "procedure-step",
@@ -5411,7 +5411,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 439,
       "contentHash": "sha256:e33c9c106beb2fdfe6db83507febff11bd4124def95030d1cf7141dcd5bc7df7",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "procedure-step",
@@ -5424,7 +5424,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 204,
       "contentHash": "sha256:f4610a1da9bf3047f3eeddfaaa062cdc69c929dd315df99633b69ee855485208",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "procedure-step",
@@ -5437,7 +5437,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 204,
       "contentHash": "sha256:12431c1a6a775c7315778f0884b5c6e38388c2d7b4283416f9f1240a599e87ed",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "procedure-step",
@@ -5450,7 +5450,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 307,
       "contentHash": "sha256:7f8fb3d3fde1d87cea17ff278ff1a2e38ce2419911077161dccae0f747ff6af6",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "procedure-step",
@@ -5463,7 +5463,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 307,
       "contentHash": "sha256:858b87b1428fbe197dd7adde127a6aaad3dd43dba1e85eaecc016f55084843ff",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "prerequisite-list",
@@ -5476,7 +5476,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 267,
       "contentHash": "sha256:aba0234ae30d1750730cc918db4830d33db62e3f852af19758787b36bb853de8",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "prerequisite-list",
@@ -5489,7 +5489,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 267,
       "contentHash": "sha256:f4d7ab6f1026e18c36b2e87340894ca54a4433576bbaaa7ca9e830a13349f85a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "branch-choice",
@@ -5502,7 +5502,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 108,
       "contentHash": "sha256:fb0edcff684e51449dc0af34d48bf9fc454ec334a355f5717a2e2d2a6f36a077",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "branch-choice",
@@ -5515,7 +5515,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 108,
       "contentHash": "sha256:d6a6f4e746aa1a34e9c22ce13b31d83f791eabbe32ede1df1cb3e2358bb53533",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "branch-choice",
@@ -5528,7 +5528,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 132,
       "contentHash": "sha256:780841e56284b916f62490af221c637c4b3cfd584962ebfb594b3565a3c65e14",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "branch-choice",
@@ -5541,7 +5541,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 132,
       "contentHash": "sha256:d66ca30cea3a06e7b7d97454c0e5410d8424d6451abb76146117f3ee62712d16",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "retry-notice",
@@ -5554,7 +5554,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 51,
       "contentHash": "sha256:8f934a4701d52ba3eaabaa22458ce6bcb7135ff065d305719ec84ecc7a7065d7",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "retry-notice",
@@ -5567,7 +5567,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 51,
       "contentHash": "sha256:1fffb8a68718e18af18d76f4f3887d4612ea8346bc1a576885edbaad3881b3ed",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "retry-notice",
@@ -5580,7 +5580,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 75,
       "contentHash": "sha256:d5646094aabf3f85a4af4319f4633788de2b9566a77a5dd3fe8f2896d9d3dc8f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "retry-notice",
@@ -5593,7 +5593,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 75,
       "contentHash": "sha256:d2398f399807911168a911730c9f929477306204c8ac4568507ce9096b10bac5",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "destructive-action-notice",
@@ -5606,7 +5606,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 254,
       "contentHash": "sha256:9cb96a512644d4ace29cba608da646f2f0c590cda11850805a5f76bb8747fe81",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "destructive-action-notice",
@@ -5619,7 +5619,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 254,
       "contentHash": "sha256:78016ec80aa3f86f5ec7fa429576d228ccd0087c8138b28d71744e642b4b49af",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "destructive-action-notice",
@@ -5632,7 +5632,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 205,
       "contentHash": "sha256:a81728747061121942c0a4917c38ce43986524192b8fcaffc99dac7e6e7e6276",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "destructive-action-notice",
@@ -5645,7 +5645,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 205,
       "contentHash": "sha256:0b71326615abe88cf620c4caa8a6458d808c9ab3362d942c43c2041b00e6c10c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "result-summary",
@@ -5658,7 +5658,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 214,
       "contentHash": "sha256:28707cf07da9feeda38d6423b4c8f5c2666cec0dce7a44e1fa2d2fc3e640ef5f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "result-summary",
@@ -5671,7 +5671,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 214,
       "contentHash": "sha256:f0b592c73fc2ab714c17d60a12ac058f1a4cdec82ce91009b96e338b71004551",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "result-summary",
@@ -5684,7 +5684,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 174,
       "contentHash": "sha256:082f474745d83979702c75a0debe76b8d670537da86826cd924c52a9bf640e20",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "result-summary",
@@ -5697,7 +5697,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 174,
       "contentHash": "sha256:c84c952c0a98ed1447ac215d4c1fe200a605b1575dc2b42d64329c5831d32caf",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "result-summary",
@@ -5710,7 +5710,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 110,
       "contentHash": "sha256:c090f5bb7f06e2ef88b79d353ff99e1255fdad1cdde2167d457fccf8ef4f00da",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "result-summary",
@@ -5723,7 +5723,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 110,
       "contentHash": "sha256:f8e7197d7247546914c8a13133b3aaefdd9a89b534ca1b60274fd6d9570cd62b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "result-summary",
@@ -5736,7 +5736,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 134,
       "contentHash": "sha256:e04333b658d4b07f73ef5a48bf0bfafc6ec437002567485648784acbe6de2462",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "result-summary",
@@ -5749,7 +5749,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 134,
       "contentHash": "sha256:d66ecde62c5fa92a0ce2cf8dd5ac41e4a980adb50746adfcc989c5ebe1c6b775",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "result-summary",
@@ -5762,7 +5762,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 110,
       "contentHash": "sha256:b5daf307bb0d7b5eef5837d7a22b1c068b696c4d86302afe72dd42888b1bb5aa",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "result-summary",
@@ -5775,7 +5775,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 110,
       "contentHash": "sha256:d70008434382ab3c432e9793ea38119c2dd0d4e3dff80277d6643a2693a69ab9",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "result-summary",
@@ -5788,7 +5788,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 110,
       "contentHash": "sha256:aacf775fa252aaf98b183942725541a50066d2ff75477ef516299425d1073db5",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "result-summary",
@@ -5801,7 +5801,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 110,
       "contentHash": "sha256:2bc2009d44092b790a689b504e01520295645e266427549022ef21852d42c024",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "diagnostic",
@@ -5814,7 +5814,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 703,
       "contentHash": "sha256:8c728f58ba343815a1a2f4691270a72aa6090d805ed7270d667e8c46be9cc93a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "diagnostic",
@@ -5827,7 +5827,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 703,
       "contentHash": "sha256:ceddd8bcb97ef2089d89aff81a3080b9867e863ba4db3c6bc863950c4a9fa113",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "diagnostic",
@@ -5840,7 +5840,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 206,
       "contentHash": "sha256:7fd1bbc60fa79c603c0fcf94f45544b7252321bf6c514c332027dfc8db534071",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "diagnostic",
@@ -5853,7 +5853,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 206,
       "contentHash": "sha256:c15eef4d48863237fa17bcd973c2ddf67ae46ea1a15d7c9d8448a6ce604fb8a5",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "raw-output",
@@ -5866,7 +5866,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 48,
       "contentHash": "sha256:c9d49a89ff072045a9df15932c66b6bfdacc5896b43ae7ecc81a3bc80631625a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "raw-output",
@@ -5879,7 +5879,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 48,
       "contentHash": "sha256:1ae287c11a3295167c12331c9f6b83a4d9de92efb864fd5ac20616d9e7b4fea5",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "raw-output",
@@ -5892,7 +5892,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 167,
       "contentHash": "sha256:ade3e887e4fa26772358145c5fa9a8fc3ca6e2baa9f2c7d2a17856b786314925",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "raw-output",
@@ -5905,7 +5905,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 167,
       "contentHash": "sha256:f5f832f70fd1a9edafeea7c59ca0cfa4d0e8747e5403967a8ce01cf7a2a558f7",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "standard-meter",
@@ -5918,7 +5918,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 257,
       "contentHash": "sha256:fe6d22aba6d641a1dfa6f12dbcdda94ef2a1b67014734c9a530fcf7678593beb",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "standard-meter",
@@ -5931,7 +5931,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 257,
       "contentHash": "sha256:cc2ff99d334de2fe490c76fb9ba834c41678623d36061c52005bbdcf45cddce3",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "standard-meter",
@@ -5944,7 +5944,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 257,
       "contentHash": "sha256:812ab73f4231dd792aa057b30b6acdaefb159c1e1ac91a618d4a254a2bfa05ef",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "standard-meter",
@@ -5957,7 +5957,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 257,
       "contentHash": "sha256:8f50bd972ad32657c0caf210672207bf763e5adc55bb45d1850c87e701ca2467",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "activity-log",
@@ -5970,7 +5970,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 544,
       "height": 329,
       "contentHash": "sha256:6ae8abdb0c9665ba3d750ed61eee72a649e73df7d2ac0b7cc2567cbe0f76e994",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "activity-log",
@@ -5983,7 +5983,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 544,
       "height": 329,
       "contentHash": "sha256:69162d8777a7e4d0402b7a7a06ca5eeb26901eaaa9b8fa9f5a94d3d082c557b4",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "activity-log",
@@ -5996,7 +5996,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 544,
       "height": 151,
       "contentHash": "sha256:0199c74efaa0c8ca2d47de26712f6b3981adfee38b4618b166ddc24b8308f38d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "activity-log",
@@ -6009,7 +6009,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 544,
       "height": 151,
       "contentHash": "sha256:32fc40e493658ed283d4a20e80b3c405545476f74b25236d8f3ba48a69da0c20",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "activity-log",
@@ -6022,7 +6022,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 544,
       "height": 156,
       "contentHash": "sha256:25cd17fb035c0f6b98f9a1a3ab2ff9a90c646f730af85d70c0dac7164c9a7d17",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "activity-log",
@@ -6035,7 +6035,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 544,
       "height": 156,
       "contentHash": "sha256:9d36dd108b233065d1dcb9daf45c5dcdcab824476702b4ae8e90baf7472fc667",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "artifact-tree",
@@ -6048,7 +6048,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 224,
       "contentHash": "sha256:568c92775ebfa70fa28f89676159494fb8e9a8812d833363aa72c4a7da7a5643",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "artifact-tree",
@@ -6061,7 +6061,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 224,
       "contentHash": "sha256:7d398a5e9a69ba85e2860eca52060db54f3e60e66b32544fbc5d109d47bce693",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "artifact-tree",
@@ -6074,7 +6074,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 390,
       "height": 256,
       "contentHash": "sha256:baf079cbb8b8cfd4c0f5a3eff8c04dc3892dcbf03e6b3190532cba9cc8283802",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "artifact-tree",
@@ -6087,7 +6087,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 390,
       "height": 256,
       "contentHash": "sha256:9ae2e901bcdd4731308985e28409a9cd7e5f89c88dbcb8b4e940b4f588dd86ce",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "file-change",
@@ -6100,7 +6100,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 53,
       "contentHash": "sha256:f7056deae048ee84c034437fe292f8dd6f03a93ffeb25c39c1f67583e70828a6",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "file-change",
@@ -6113,7 +6113,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 53,
       "contentHash": "sha256:c2325923e7131dc582a0ca56d0c2e49de4a799cddde658eaf6c95d8912faa0e6",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "file-change",
@@ -6126,7 +6126,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 53,
       "contentHash": "sha256:ecab8493b5246b4ba2346f66c3e01273898ec7d1f91709584f009052d0a6c995",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "file-change",
@@ -6139,7 +6139,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 53,
       "contentHash": "sha256:9cf325a4fdaf2761ac287a08ca08a0b3e78937fa52da0fcc02a19816f69494c4",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "file-change",
@@ -6152,7 +6152,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 53,
       "contentHash": "sha256:2dafb7b5167f8d541478be19ea9bbf38f530b4be438770429ef682b41b7fa7d9",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "file-change",
@@ -6165,7 +6165,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 53,
       "contentHash": "sha256:e6c61cd9b209d6f91b525b83330e5a8a79caeef855cc210c5a4aab5cf869939b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "file-change",
@@ -6178,7 +6178,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 53,
       "contentHash": "sha256:908be76044878a3d9257745a05f8bca0e1deb80a4205285dfaa755a5e764eb2c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "file-change",
@@ -6191,7 +6191,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 53,
       "contentHash": "sha256:6581081b35ee904ed306c8577b5ed120cbb8e37ddefc21be38a5a757b11856fd",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "file-change",
@@ -6204,7 +6204,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 53,
       "contentHash": "sha256:7f653b1fb5b79a58b251728fe42df2cdeb47dd38f8534ec26218d1438dec0442",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "file-change",
@@ -6217,7 +6217,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 53,
       "contentHash": "sha256:c3abfc30db5944e5340ab6ef0347033c183735e0fdf088321d442acd1905ddee",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "artifact-card",
@@ -6230,7 +6230,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 282,
       "contentHash": "sha256:4b487d8c23c6338db391b4d02fba4e62dc0a6274e98488f49f9b09ca1ea21d99",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "artifact-card",
@@ -6243,7 +6243,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 282,
       "contentHash": "sha256:5515064250cb3894e7c7b5b36bf82148da426858c489774cc1a37dfb3d637c2b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "artifact-card",
@@ -6256,7 +6256,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 243,
       "contentHash": "sha256:9fab874222554299930736dc34e473af74be0b943b5306a90530912a73cf55c8",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "artifact-card",
@@ -6269,7 +6269,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 243,
       "contentHash": "sha256:2ccaff4b126750ac3e43ed36e981880b6ff55376ce21d24e78b76e5222cab693",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "ownership-badge",
@@ -6282,7 +6282,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 82,
       "height": 25,
       "contentHash": "sha256:10a5be4bb252fadfdb6be19954f244e02ad3ad5a50476a938c76fe0af95998cc",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "ownership-badge",
@@ -6295,7 +6295,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 82,
       "height": 25,
       "contentHash": "sha256:36a35a577a36451c0a609f60980820b08a0b6a920cbb61fc859554f1ad4d68e4",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "ownership-badge",
@@ -6308,7 +6308,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 89,
       "height": 25,
       "contentHash": "sha256:78664cc656c740da31dbaf4c757de61e7c63b8adfe840ee037628cde70f1f78a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "ownership-badge",
@@ -6321,7 +6321,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 89,
       "height": 25,
       "contentHash": "sha256:62c649fc86e23c25c7041caf61080e6d59ff30e94a93a8385267bdc802723c9b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "ownership-badge",
@@ -6334,7 +6334,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 120,
       "height": 25,
       "contentHash": "sha256:ad007168655ca03377db0ac2b02ac5aaa35a830e829a7d34486a90a2bce45bc2",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "ownership-badge",
@@ -6347,7 +6347,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 120,
       "height": 25,
       "contentHash": "sha256:210cda881186d62688b75df0e96ffb815d4fdc65f29b05ae40eb685c245ab74e",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "ownership-badge",
@@ -6360,7 +6360,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 100,
       "height": 25,
       "contentHash": "sha256:823980d55aaf624bcb551877d7a658c9764048b111204c810823c9033e0064c3",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "ownership-badge",
@@ -6373,7 +6373,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 100,
       "height": 25,
       "contentHash": "sha256:73440eaaebf3565cb3cd9bfdf8e9ea635245008dcc2f73833650796340d42505",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "decision-record",
@@ -6386,7 +6386,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 312,
       "contentHash": "sha256:3476600b29ab15ad0335f3d703372ec30a4a8e2c9b6cd766b06f04e28c95e660",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "decision-record",
@@ -6399,7 +6399,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 312,
       "contentHash": "sha256:c6a91fbd5b0a1b786d275c3cebc6c2813b3b45e0cc51d1a6a52b869a89c40f81",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "decision-record",
@@ -6412,7 +6412,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 292,
       "contentHash": "sha256:f897bb483fafd0706eb5f5015438efe7bad8c73d3b28747db559cad67c2777a8",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "decision-record",
@@ -6425,7 +6425,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 292,
       "contentHash": "sha256:cd9aab689fc929007254ccee7974de764d4a4a954201a7567e329ed5d57b2a86",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "rule",
@@ -6438,7 +6438,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 121,
       "contentHash": "sha256:c989f2b8394fdc40b2030fa49a51926be12283a0f680e9ef31fb7369bd48dbab",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "rule",
@@ -6451,7 +6451,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 121,
       "contentHash": "sha256:618fa82a634d53b18b88fed1cf607659a76528665df2a527af77432600f4d11c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "rule",
@@ -6464,7 +6464,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 121,
       "contentHash": "sha256:74e396ad39a7e3020d537eababa74ed925a839e2a3c4a99efdaedae2f49d9070",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "rule",
@@ -6477,7 +6477,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 121,
       "contentHash": "sha256:004198569c8dc8cbfad563a794126ec5696b66f3aae2c1584b3b7f3f938a92d6",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "task-metadata",
@@ -6490,7 +6490,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 238,
       "contentHash": "sha256:d1aae1ec7ae8230317eb82ef11ff9194db4c6b99a19e2af0334e61d931deca3d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "task-metadata",
@@ -6503,7 +6503,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 238,
       "contentHash": "sha256:d3daf934fc0e903abab2a182220c86d85af0f4a8a66cdf0ca60e6c45862412a6",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "task-metadata",
@@ -6516,7 +6516,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 286,
       "contentHash": "sha256:cade33366373d5bd290279a401922f862f19523fd0325f153084e85a668cd9ad",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "task-metadata",
@@ -6529,7 +6529,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 286,
       "contentHash": "sha256:3a93842c61b3f2b57a33be0a3a1cf1344e348f48ae62ed0a0c72961e84f4b88a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "agent-handoff",
@@ -6542,7 +6542,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 213,
       "contentHash": "sha256:7bdc219ac86739b062dd8bff29caed2d755e48fc10b8c8d9f44e22c134013170",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "agent-handoff",
@@ -6555,7 +6555,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 213,
       "contentHash": "sha256:c2f5eef566dad5550bed6691b709ec896767d20c1db61ef140ba128d3332b284",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "agent-handoff",
@@ -6568,7 +6568,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 237,
       "contentHash": "sha256:308f2bf3d5ffe8a785d0ebc8bb2eda74764246a4138899bf654ca0fb08a1ce31",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "agent-handoff",
@@ -6581,7 +6581,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 237,
       "contentHash": "sha256:ce843065b8b31eb52e5017f00f8c3f7233187a51f3bca0cd3c7ffa9265e5b12f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "skip-link",
@@ -6594,7 +6594,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 184,
       "contentHash": "sha256:1b042c75607d0f3e963da432e13041733414016a4e781d64c385667e7f71a821",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "skip-link",
@@ -6607,7 +6607,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 184,
       "contentHash": "sha256:67cc5003bf6a6741033274fb94bc0be91795c55931c594ed1abad374fcaacdd8",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "docs-header",
@@ -6620,7 +6620,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 53,
       "contentHash": "sha256:1136ccd836462d38c3891222767ac5524389c7a2c9a90f304eba9910c9e5e9dd",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "docs-header",
@@ -6633,7 +6633,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 53,
       "contentHash": "sha256:e6ebe5d4c553ab1c6e0adcb46444e4ed861b0f07c891f956a057fc5ee781696b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "docs-nav",
@@ -6646,7 +6646,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 259,
       "contentHash": "sha256:5c0dfdd610c4b9d09c47075ba4e5da1c24895c9c9d56b11da0c756256c59bec9",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "docs-nav",
@@ -6659,7 +6659,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 259,
       "contentHash": "sha256:0c739da732008129ddf9f5ce786755df0cec428750488c4272b79075714e9371",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "pager",
@@ -6672,7 +6672,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 84,
       "contentHash": "sha256:3827cd73db3cbe8a73a7d9386b955ac4ff99e966b30f0a2514c3786a04742042",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "pager",
@@ -6685,7 +6685,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 84,
       "contentHash": "sha256:3bd625d27ee584fabfbde8281dfc83362d68dd18a38e4516e49e1c49ace9e10d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "pager",
@@ -6698,7 +6698,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 84,
       "contentHash": "sha256:61eec78ebe60cc3cfd7066ecc29bdb90582accd54687207e73d2c45e52c501f3",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "pager",
@@ -6711,7 +6711,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 84,
       "contentHash": "sha256:34149aa13d728230d8f0f5499ac41334abbd58e20037c79195a7101632cd82d8",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "search-palette",
@@ -6722,9 +6722,9 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/search-palette--default--light.png",
       "assetUrl": "/catalogue/generated/example-images/search-palette--default--light.png",
       "width": 640,
-      "height": 358,
-      "contentHash": "sha256:d7512c59fbb50df401754cf69ee551a2debe942519994ac9a325814452571004",
-      "captureContractVersion": "2"
+      "height": 357,
+      "contentHash": "sha256:694c70adb243a73d4661b10b38b930588e4e72943936a94b24670a4dd4b607db",
+      "captureContractVersion": "3"
     },
     {
       "slug": "search-palette",
@@ -6735,9 +6735,9 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "assetPath": "catalogue/generated/example-images/search-palette--default--dark.png",
       "assetUrl": "/catalogue/generated/example-images/search-palette--default--dark.png",
       "width": 640,
-      "height": 358,
-      "contentHash": "sha256:96fe11c0ae33f942fba2b1849ae739a44acb31579d7bf4d0594a16b3bda956b1",
-      "captureContractVersion": "2"
+      "height": 357,
+      "contentHash": "sha256:30217dff5c6a4e84d85ee6df20117279e315bdf4b5f42b2e6a8d1659ee33de27",
+      "captureContractVersion": "3"
     },
     {
       "slug": "anchor-heading",
@@ -6750,7 +6750,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 48,
       "contentHash": "sha256:ae407ed41b19eea5fff6a882f1ec5f10fcd8acbceca7561f29dd2d2408576675",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "anchor-heading",
@@ -6763,7 +6763,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 48,
       "contentHash": "sha256:4548e0fd85b2b8b2227084e1a06e280e8c0e0d68f2e9012ca347085172abf251",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "anchor-heading",
@@ -6776,7 +6776,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 35,
       "contentHash": "sha256:a1dd3b7dcd985c3a1ab983d1de49d6f00e727d7f3755bb7bf5ec249eb2ba9230",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "anchor-heading",
@@ -6789,7 +6789,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 35,
       "contentHash": "sha256:7042d6f7768505ea33aef95c1a5b00dc1e2a8f5cdda5b2dc2ed626cf386ea71a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "kbd",
@@ -6802,7 +6802,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 48,
       "height": 22,
       "contentHash": "sha256:53557e4d19acb08d4f46dfc502af8a81374cc049da2f91719444e30e6050b7d3",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "kbd",
@@ -6815,7 +6815,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 48,
       "height": 22,
       "contentHash": "sha256:43c095f6391f78238ecd5557e7ec1fe76e741a6f01c6aa7faa23f61b9478378f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "kbd",
@@ -6828,7 +6828,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 113,
       "height": 20,
       "contentHash": "sha256:5a511ca180c8bbc626042a99e391c024c8f6ac6c806c0c471b882a8dbac62c6b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "kbd",
@@ -6841,7 +6841,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 113,
       "height": 20,
       "contentHash": "sha256:a377403db43875ffb817fd2eb12008f0754408aba1920d9637243f5be9197e3c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "copy-button",
@@ -6854,7 +6854,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 60,
       "height": 25,
       "contentHash": "sha256:30fe9f9b6b357165f592def88d14faaaa2ebd9996bcf425cc258f6c3ae2dd147",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "copy-button",
@@ -6867,7 +6867,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 60,
       "height": 25,
       "contentHash": "sha256:e3b7b34a9761bb8a885e760842c1e67960f751e502f176e58eff07cf1c6a4278",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "glossary-term",
@@ -6880,7 +6880,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 657,
       "height": 27,
       "contentHash": "sha256:4bd7d7ca104c7cf48883ab3d3c1eb2ed97e3e23f0e8a8207251870b08fd5f4a1",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "glossary-term",
@@ -6893,7 +6893,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 657,
       "height": 27,
       "contentHash": "sha256:46440d2a71bd1f584eabe40b0e4fd8f825811e15ebf67fd434f1c600378c4898",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "marketing-section",
@@ -6906,7 +6906,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 384,
       "contentHash": "sha256:e863d29a6136b09c8e4555dc274d35791ec7c20576ebfb519b8af358c2dc216a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "marketing-section",
@@ -6919,7 +6919,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 384,
       "contentHash": "sha256:0769564e1e3a99687233e162f73fe57a8936db92009ac9f3ef169ae7796a8e1d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "marketing-section",
@@ -6932,7 +6932,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 579,
       "contentHash": "sha256:9a23c3742b0c21ec0ab9bb2cf09f923e419990039dc61e5b819803e34b00c96d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "marketing-section",
@@ -6945,7 +6945,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 579,
       "contentHash": "sha256:03148d823063885d298ff6305b35d53f469b120ae51b88e715c1dcaee5793c7d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "site-header",
@@ -6958,7 +6958,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 108,
       "contentHash": "sha256:704a8375f0e1182922d654df6e825f2e0e8924bc8e8dc8f9f87d4e089d4471d0",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "site-header",
@@ -6971,7 +6971,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 108,
       "contentHash": "sha256:ae1e3df6657bd066d1551e61fe064460acf99ebbfcbccb9c8e1a071e12a2e1da",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "site-header",
@@ -6984,7 +6984,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 69,
       "contentHash": "sha256:bf1f75ceba9ac5910195b4c20f83500c99f0954370e0cd8230664e72f9f513b8",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "site-header",
@@ -6997,7 +6997,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 69,
       "contentHash": "sha256:b6f894e4dd11ac6d54466a78462140e1ae74ffb5869a769c59bad2b4022aa909",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "marketing-intro",
@@ -7010,7 +7010,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 752,
       "height": 263,
       "contentHash": "sha256:2f9231366c14042a3523e1c28e3690d733b3a2d0d9c74fb75656d16f8ee9c430",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "marketing-intro",
@@ -7023,7 +7023,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 752,
       "height": 263,
       "contentHash": "sha256:2549de7550b88dcca50e8cacfe63852bdc3a41c58def80ae7146cda4a2074302",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "marketing-intro",
@@ -7036,7 +7036,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 542,
       "contentHash": "sha256:2fdc4be817d3fd4dc65434778b042350516da3f2266ca1facc6bd070790c49df",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "marketing-intro",
@@ -7049,7 +7049,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 542,
       "contentHash": "sha256:b53ce2e12f6c4fa1acdcd45692b69cc828ddb3976d8f6298705c2ee5401c03cd",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "hero-block",
@@ -7062,7 +7062,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 761,
       "contentHash": "sha256:a63aac3027f74a306982e0ed3c2b8df3e3e7ea2f7e73677cf76e9732fd5912df",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "hero-block",
@@ -7075,7 +7075,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 761,
       "contentHash": "sha256:fdac17f6b56dd76872bb4f04574d86f36d234f7e50a93b360dbc1683ab4c7a32",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "hero-block",
@@ -7088,7 +7088,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 803,
       "contentHash": "sha256:dd4d4b140edfd57a0243fe33e61b24f4c877d3907c8ad92dae67036adb38d7d9",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "hero-block",
@@ -7101,7 +7101,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 803,
       "contentHash": "sha256:20f91978efe42bb539e39c48320c2d287317ed02748471a2ddb10ee443c418e9",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "hero-block",
@@ -7114,7 +7114,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 761,
       "contentHash": "sha256:dc87ffa5cef2ed5b7615a776ec644ab14c6f69f8fb1a9e85cb9e932a732cf38b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "hero-block",
@@ -7127,7 +7127,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 761,
       "contentHash": "sha256:854cdb140e4de924140bad0f18af260f25b3b96c002f0000509f5d156581147f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "logo-cloud",
@@ -7140,7 +7140,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 912,
       "height": 208,
       "contentHash": "sha256:90cabc5d4a7f2f251c796bb9b0f5bee68ecc726c33ff9ef370928e77ecb1f6d3",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "logo-cloud",
@@ -7153,7 +7153,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 912,
       "height": 208,
       "contentHash": "sha256:b778a08423fed4ae31bdd3c175fa005822b21edc386f3a62f7f8f4e9e6d7a225",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "logo-cloud",
@@ -7166,7 +7166,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 912,
       "height": 234,
       "contentHash": "sha256:bda18e28875e2840fd3ab6829d33f6a4cc6e157e5aa7ecfc1a613a02b3bcff36",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "logo-cloud",
@@ -7179,7 +7179,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 912,
       "height": 234,
       "contentHash": "sha256:18c4f3e44d8bf954da24d8e357b2699ba972d38eca6de6214411a2a840386fe7",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "audience-grid",
@@ -7192,7 +7192,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 872,
       "contentHash": "sha256:c622a773737aba29ecab9d1fcea991c6639f97e459af0ee721a05750b223b4b2",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "audience-grid",
@@ -7205,7 +7205,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 872,
       "contentHash": "sha256:ac756a7791e0af55c24193b5d865fe43cdf167a4b88085258d399067ba632e00",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "feature-bento",
@@ -7218,7 +7218,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 1195,
       "contentHash": "sha256:03f4c97bb99f7b33dbd3932914385d1a4ade515efc51f439e1981456f26e57bb",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "feature-bento",
@@ -7231,7 +7231,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 1195,
       "contentHash": "sha256:2a71aa8852775de790fd17d25186b680524e340e8c06edf08eb01854b384bcdd",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "feature-bento",
@@ -7244,7 +7244,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 1044,
       "contentHash": "sha256:a4e2a1d85f3fea99fb351be5ba52022aca87bca377c75f9117c61753084ee7e9",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "feature-bento",
@@ -7257,7 +7257,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 1044,
       "contentHash": "sha256:f106f37eb0c21ec473b9e25bd84aa3052bad067e9cb5e0fd34f175abe709ebe0",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "split-feature",
@@ -7270,7 +7270,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 748,
       "contentHash": "sha256:4cac99058be19f68cc8c96d74037d71c5bc41fef2f1672b7abb63f1a98b4121d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "split-feature",
@@ -7283,7 +7283,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 748,
       "contentHash": "sha256:0ce453a8139331544cd0056e3970cddfd4086bcff9d521f88e8cb15edd92be8a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "process-steps",
@@ -7296,7 +7296,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 805,
       "contentHash": "sha256:53506e8f613b0d28f3b536e9d4df2896ae4d4dbbb08a618a282c9fcbdbda89a4",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "process-steps",
@@ -7309,7 +7309,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 805,
       "contentHash": "sha256:aa0c87ac6ca61acf83c9a537703a561c599c53da12695e2c7f6c8bf6f5fa562e",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "process-steps",
@@ -7322,7 +7322,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 773,
       "contentHash": "sha256:ffbed5aedb491c8b1b91d431bb2b61b8c8a22cb391647eb411dd09cf2d5d3eab",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "process-steps",
@@ -7335,7 +7335,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 773,
       "contentHash": "sha256:aadea922c437105c29a65b1d9bd517a458f380417e742a3479ae59a6556a63e4",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "metrics-band",
@@ -7348,7 +7348,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 309,
       "contentHash": "sha256:30486a98dd3c598339cf899adade56b39a912b0f70f07523389230516c873417",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "metrics-band",
@@ -7361,7 +7361,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 309,
       "contentHash": "sha256:5328ef56053f673b8a0095352bcc7b88458790533e5b915546d76276fa4d7e85",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "comparison-table",
@@ -7374,7 +7374,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 722,
       "contentHash": "sha256:ea4ecf7874887face7b4199d054b05a96134835f8ce1e05b94ecd79cede911f6",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "comparison-table",
@@ -7387,7 +7387,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 722,
       "contentHash": "sha256:20fb17cc833ba13d4c004c1adfa37aa4a7fc6ffe1d6cdebb6a65bb0fe345f07b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "testimonial",
@@ -7400,7 +7400,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 547,
       "contentHash": "sha256:a7434240eac7aba069a04a939fcbc13d299b903e94e9ad3009df7e096c60c0b2",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "testimonial",
@@ -7413,7 +7413,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 547,
       "contentHash": "sha256:95ce47c5e3aa769587ac9d5965b92aa7370a0df6791889e05a9af4fa6f1ef329",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "case-study",
@@ -7426,7 +7426,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 701,
       "contentHash": "sha256:9c9017d5767a01e71bcd1a055d6983826ee2883c0c1ed9ec7219d45290d8f871",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "case-study",
@@ -7439,7 +7439,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 701,
       "contentHash": "sha256:13eed12eb08a39069c430c6a817d33c89369f57ab5933044c0c96a9a2c65b50e",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "faq-block",
@@ -7452,7 +7452,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 633,
       "contentHash": "sha256:1312e999a2a8f681150107a54e820e024cefb35eefbbdf4d4d6f7b0c0b79e3bc",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "faq-block",
@@ -7465,7 +7465,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 633,
       "contentHash": "sha256:a3ec60ec23d88887861bc5c004566101d043bc068a5b4c49a41dd2e2f4236e99",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "cta-band",
@@ -7478,7 +7478,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 493,
       "contentHash": "sha256:90b06c572b5fb732a7ca895babfc968a11e3d8aec99a6ccc07f4f016a80feea9",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "cta-band",
@@ -7491,7 +7491,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 493,
       "contentHash": "sha256:af11d9b9fbabdecc4d35711cbc7afc35f4d24c1383741d1f38d994b51bbde48f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "site-footer",
@@ -7504,7 +7504,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 358,
       "contentHash": "sha256:adaab15995dc00018a7d35b56a7133414d51afa7ea14354a9b6c143ca47ffbf6",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "site-footer",
@@ -7517,7 +7517,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 358,
       "contentHash": "sha256:0a6db018342f74921aea6db6e7bc481c528eb0bc7379badc0491cf2c13a75d87",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "marketing-stage",
@@ -7530,7 +7530,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 701,
       "contentHash": "sha256:79bf27c07d58fb3f0b51cdb1e15893babe7d29fb3c3e7859505a5abe37fdbd68",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "marketing-stage",
@@ -7543,7 +7543,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 701,
       "contentHash": "sha256:6894296bda3b3e5dd0c47971264c7bf03b7476980f55fc6bd56614985f6e7c9a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "marketing-stage",
@@ -7556,7 +7556,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 669,
       "contentHash": "sha256:cc1c0a6a00a95c346fd038ed97356856e743b46e59b6aa06996c4823ad9a3905",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "marketing-stage",
@@ -7569,7 +7569,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 669,
       "contentHash": "sha256:69a100c55f4bd933e4799ea78112f5bdc0a89d5a6a69b41bc094169a7244fa84",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "marketing-stage",
@@ -7582,7 +7582,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 266,
       "contentHash": "sha256:2d9272d60cc45c23b3a12491b03b4f704f85ff45c52a8afe1b265f3fa771d334",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "marketing-stage",
@@ -7595,7 +7595,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 266,
       "contentHash": "sha256:18bb66865aa61de09da5ea695770fef56275599779c86ee3ecc3d01be186688f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "editorial-hero",
@@ -7608,7 +7608,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 975,
       "contentHash": "sha256:3e69218b82963256391e67bce4773475e92ef88b53e8a6c8d0c72ca6d05324f9",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "editorial-hero",
@@ -7621,7 +7621,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 975,
       "contentHash": "sha256:19d8bc86962c31da90b90d58a8803f322bf319fd6d38f435017d209e1afce98e",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "editorial-hero",
@@ -7634,7 +7634,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 727,
       "contentHash": "sha256:1f543146c9f37fde948abd65dd724b581c27cb66c471b5404041d0c719e4c612",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "editorial-hero",
@@ -7647,7 +7647,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 727,
       "contentHash": "sha256:0e65faea9fc1859556accaf0c5a3cad3e2b9e103b8bac880b17f5b963296b0b9",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "narrative-chapter",
@@ -7660,7 +7660,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 778,
       "contentHash": "sha256:be077ac222d355a0d7ffb24da6337708ae5db7a5c7689c76b8336c7ff1abf221",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "narrative-chapter",
@@ -7673,7 +7673,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 778,
       "contentHash": "sha256:3238b3d8680a2d27a94b077cee36e13ad7dabd286ff09c956d1b6cb16fb2713a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "narrative-chapter",
@@ -7686,7 +7686,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 505,
       "contentHash": "sha256:e1ab53b45c3e056761b61867ae2460c23e22dac2250ebb289b9b49cb3ff5e330",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "narrative-chapter",
@@ -7699,7 +7699,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 505,
       "contentHash": "sha256:421ebdd88f4e0f6db457d20c08326d9d52c79b620df313fd26b5ea85090e1dde",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "journey-overview",
@@ -7712,7 +7712,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 799,
       "contentHash": "sha256:ace511d79ca6cc5b1f80588a83f440ee66f72ef7da73cbf1c527aca827abe157",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "journey-overview",
@@ -7725,7 +7725,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 799,
       "contentHash": "sha256:142a709d7cfae2f1edfde7b4fb2e5562f9f747d3db3c6a45d34212f47b00d3ed",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "journey-overview",
@@ -7738,7 +7738,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 695,
       "contentHash": "sha256:4fea9fae0a67e5425b1b5b16e220b0c73101c40c6a6143ef8b043ea33c5c4da7",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "journey-overview",
@@ -7751,7 +7751,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 695,
       "contentHash": "sha256:c353df4918047733bce279c4ff71634498d43874a7c7cf4d8d71e90fbcad8250",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "outcome-spotlight",
@@ -7764,7 +7764,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 679,
       "contentHash": "sha256:4bb66ca63661f97e73ca4f1a27427f03d5d8afa65e78a67735fae7d95702bb9d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "outcome-spotlight",
@@ -7777,7 +7777,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 679,
       "contentHash": "sha256:6b11f72a9a3c8e0d50ac913c2ecaa986e6193c4ea2d60b2797a3d8d4bb2e816a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "outcome-spotlight",
@@ -7790,7 +7790,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 419,
       "contentHash": "sha256:ccd6438543085206e44110302b3f5a4d87338949c18b0624138e926b6695d599",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "outcome-spotlight",
@@ -7803,7 +7803,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 419,
       "contentHash": "sha256:559fd5e8fe85cf492d98ff0a73e5463500c33bb1ae712afec764b27da8c7e973",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "voice-break",
@@ -7816,7 +7816,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 471,
       "contentHash": "sha256:414106582f4ed2282d775a6f648cbfa5b704fbb8831bcc86fdabc413f17999cb",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "voice-break",
@@ -7829,7 +7829,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 471,
       "contentHash": "sha256:9de97e58e77c950448fa4ff923cadc869ab4479283e91ab3ef19fffff2a042dc",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "voice-break",
@@ -7842,7 +7842,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 471,
       "contentHash": "sha256:ba67597b9ef506fc07fa7749655a0fb033f1185c058cb4494951ce5e6e0d1208",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "voice-break",
@@ -7855,7 +7855,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 471,
       "contentHash": "sha256:cd99290650e5cf93ba6a2196051d1cd8a7ffc902165bdb75b97e223706a279ad",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "closing-statement",
@@ -7868,7 +7868,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 693,
       "contentHash": "sha256:e3258624a7e84926087f3d31ee6d0d4ee0a0300eb8c3164dd68d24cc3cb570d7",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "closing-statement",
@@ -7881,7 +7881,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 693,
       "contentHash": "sha256:cafcb6e7c32da897df71164809158f83b956570329c0b641bc39c19ed4ae75cb",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "closing-statement",
@@ -7894,7 +7894,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 617,
       "contentHash": "sha256:083a13b4c1cc31f9e107a09cd36af14d160115b76ceb1cbdb3219adc63c674e8",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "closing-statement",
@@ -7907,7 +7907,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 617,
       "contentHash": "sha256:8b773fe92cda52ae19b16ce11fd970cf7401840b131dacc484ce328e91a861a1",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "article-header",
@@ -7920,7 +7920,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 664,
       "contentHash": "sha256:226ce1fea41ab3174c19f4303feb37adb19ce20ca1c7e64bb64056dabcaaef63",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "article-header",
@@ -7933,7 +7933,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 664,
       "contentHash": "sha256:b523fa73ebc2ef34a0730a48a8e07db7d6c9a91f6c31b960449e33e082b2af9b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "article-layout",
@@ -7946,7 +7946,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 912,
       "height": 437,
       "contentHash": "sha256:9db5c8d2f5361c61043325d5d4dc9f7c9d0be7271298a76a20a8eff545108286",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "article-layout",
@@ -7959,7 +7959,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 912,
       "height": 437,
       "contentHash": "sha256:c04d1c0d40fd989b6870e1a563c755f518400b03df1f8413c9789e2d3a535283",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "table-of-contents",
@@ -7972,7 +7972,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 246,
       "contentHash": "sha256:0948f69a5ccc452499311ef863fd777f509125a744b28e04944fd1d37bf59d0c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "table-of-contents",
@@ -7985,7 +7985,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 246,
       "contentHash": "sha256:446a3e9673c5ef23c3b1ca932ca73a5f59e20393331410b75399dbbe04460513",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "prose",
@@ -7998,7 +7998,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 657,
       "height": 141,
       "contentHash": "sha256:f239040c63cd13525b8ea3e0d82fa4a6dc5df55d7adb426cc1c58d80f814f458",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "prose",
@@ -8011,7 +8011,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 657,
       "height": 141,
       "contentHash": "sha256:ed7f4a4ec7f3892596eb55c73702f5ed6e05aa2a7eff118cc2bc745709f01e80",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "prose",
@@ -8024,7 +8024,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 657,
       "height": 318,
       "contentHash": "sha256:98a9ff3fc9f4e3b77fe84503e634cc6d1bdf05c723117226bb88131f6f2ac6ff",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "prose",
@@ -8037,7 +8037,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 657,
       "height": 318,
       "contentHash": "sha256:710f58fe5c3ee312c07b6c13b632545fd352f6a050e4d2aa61691c84f215b7c7",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "markdown",
@@ -8050,7 +8050,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 551,
       "height": 267,
       "contentHash": "sha256:8431ef463faac91d92178ca878efc3310e04c4324149442a37ec6da7c6196890",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "markdown",
@@ -8063,7 +8063,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 551,
       "height": 267,
       "contentHash": "sha256:fee3d4dd6ed19e4c0ef54b4aa96bc185db5b2954360652c9c127524853e7403a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "markdown",
@@ -8076,7 +8076,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 784,
       "height": 1209,
       "contentHash": "sha256:84d2b28a612ab3fdc7bf81a772a3939bae883eebbe6280099ee070474cb23564",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "markdown",
@@ -8089,7 +8089,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 784,
       "height": 1209,
       "contentHash": "sha256:49054e1c7de2aeb7422f1c651349bbece1bc686e3a46e14a1fe1ad4e47fb60b9",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "markdown",
@@ -8102,7 +8102,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 657,
       "height": 293,
       "contentHash": "sha256:b128e528b16958d84f0f5aee3e15d6986838b91e8b7c9ffb076179c1ba53fa9e",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "markdown",
@@ -8115,7 +8115,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 657,
       "height": 293,
       "contentHash": "sha256:1f54b30791e881fe8f48e44dcb581448ac5ec9450c58279aabd9b6fec81e3b4d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "markdown",
@@ -8128,7 +8128,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 657,
       "height": 428,
       "contentHash": "sha256:a6ce15a25334656e3352c0ff0ff7451071929e87540fd9c8b0e5a9e345cfc56a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "markdown",
@@ -8141,7 +8141,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 657,
       "height": 428,
       "contentHash": "sha256:2b337e88e0e1f1bf4a06f18eecf39a8d0542cc046938194b40b9cc499f36bba4",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "markdown",
@@ -8154,7 +8154,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 784,
       "height": 226,
       "contentHash": "sha256:ebdbabde6e024635404ff3a90a6dd78f2d3f2ee338f70c7bdc61dbb06fdde662",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "markdown",
@@ -8167,7 +8167,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 784,
       "height": 226,
       "contentHash": "sha256:bdabfbc5abc7eaa5c1682a8fe15df6b68f5b16d9d66a6cb5ea0cb89cb202bf43",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "markdown",
@@ -8180,7 +8180,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 784,
       "height": 436,
       "contentHash": "sha256:918b39fd3a3d07676b3ba925a1b1f090135d1883fb64d36e1cadb90274d51957",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "markdown",
@@ -8193,7 +8193,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 784,
       "height": 436,
       "contentHash": "sha256:d07780b18851a3f594a779d671534f1bb747efa4b92dfd634f7c1409ac22c6e1",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "markdown",
@@ -8206,7 +8206,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 551,
       "height": 155,
       "contentHash": "sha256:07b7d7c0c78b9006ee3db9ab733ba456290759e027e9a144b3f5aecb0e05f5f1",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "markdown",
@@ -8219,7 +8219,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 551,
       "height": 155,
       "contentHash": "sha256:39bd780e62735a0c8d0bf639f31f407849cb0c457e7d666bc60422929950d946",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "markdown",
@@ -8232,7 +8232,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 320,
       "height": 338,
       "contentHash": "sha256:06d8c5cd4cf3cd48d019a7e91c40eb7ac92991ae21750746752b9cab1b0bb1a6",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "markdown",
@@ -8245,7 +8245,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 320,
       "height": 338,
       "contentHash": "sha256:a4ec33b5ea2649eddd95e21bf7467263fd1b343280c3523bfbb6f148eabfd2f7",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "paragraph",
@@ -8258,7 +8258,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 657,
       "height": 57,
       "contentHash": "sha256:cfe8d6ae8c093a64570f91f2cdfe015903b0340237a9a5f9ae060a44643bcfcf",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "paragraph",
@@ -8271,7 +8271,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 657,
       "height": 57,
       "contentHash": "sha256:b7e4563f3efe6f18ac5f030a8af7b4151db71e1bcf1bc29a90bcbf853dbdf1e0",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "list",
@@ -8284,7 +8284,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 657,
       "height": 157,
       "contentHash": "sha256:cbd6c128971e6a11a87d9fded8b949dcfe3c2319698044c40f1d4543e11bd850",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "list",
@@ -8297,7 +8297,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 657,
       "height": 157,
       "contentHash": "sha256:9f4d67672edebbe332563e34554871adba0e6a639b4a676e69d185885fc9dbd8",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "list",
@@ -8310,7 +8310,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 657,
       "height": 112,
       "contentHash": "sha256:9160e8aa56d9bcf1cb385d41f280fea69377ea8825d2b8c326feb557b5330208",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "list",
@@ -8323,7 +8323,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 657,
       "height": 112,
       "contentHash": "sha256:69c0973d63d8e16b5e26646175435e6e082bc32442b914c2bc386f609b91723b",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "key-points",
@@ -8336,7 +8336,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 206,
       "contentHash": "sha256:f518911403dd2cdbca229e211daa754faa21ed873e05f18e1b3658606d0aa5a0",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "key-points",
@@ -8349,7 +8349,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 206,
       "contentHash": "sha256:7a7d8b97bcde77b5936bbb5361cccce8f5a2672037d67d1213dedac3f7c8d15d",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "blockquote",
@@ -8362,7 +8362,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 657,
       "height": 104,
       "contentHash": "sha256:c5821ecc7248d462d3b89b1484f3a27bbf361ba37e987c9ad30212a28b2d2d39",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "blockquote",
@@ -8375,7 +8375,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 657,
       "height": 104,
       "contentHash": "sha256:e722c0a5dc1db349839696a40cdb7e4be838a7e99603fa259f5ee01865422e6c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "blockquote",
@@ -8388,7 +8388,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 657,
       "height": 86,
       "contentHash": "sha256:81e404353686331947cfcc061b7f2ada64a6cc9493bccde484f8954a4efd2c58",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "blockquote",
@@ -8401,7 +8401,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 657,
       "height": 86,
       "contentHash": "sha256:22e08097305ee40984c725fcd42071235b97cb1ef7c5fea143d3dabf93f95f68",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "pull-quote",
@@ -8414,7 +8414,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 932,
       "height": 200,
       "contentHash": "sha256:856ae7716baa1c4ab77df46b7ccb24813da0c7753afc3737c38a2af3c6b712c5",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "pull-quote",
@@ -8427,7 +8427,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 932,
       "height": 200,
       "contentHash": "sha256:78b2d0163304a420b95182ff65c994df1e619c2990d6e99657701525b8ef5235",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "callout",
@@ -8440,7 +8440,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 124,
       "contentHash": "sha256:7290c5d5e77c5ef918d10489cb89bb489672256eddcaee2440472a842c1f9354",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "callout",
@@ -8453,7 +8453,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 124,
       "contentHash": "sha256:50da21e65140ded7f336ba3ba5ebb0f5f695005cca4a82f49688ad2ded05e906",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "callout",
@@ -8466,7 +8466,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 124,
       "contentHash": "sha256:06d5253567667c0535ad9c7fe2c9b466f555ff37337f5ee787c26a9cc139c296",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "callout",
@@ -8479,7 +8479,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 124,
       "contentHash": "sha256:71af6c7fd9d385b0206a29eb5c2fc7d284d86fb9b72f4f96c2d48c83552e46b0",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "code-block",
@@ -8492,7 +8492,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 155,
       "contentHash": "sha256:0972ce8b3f9a57c7c24224b1541fc0dcdc6c0ec6b521d5765d7e1aea3fbc1c12",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "code-block",
@@ -8505,7 +8505,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 155,
       "contentHash": "sha256:d5664c1abc5351ad0d42d1446880859fccc6bac22ad92093e9e25197cb22ddc9",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "code-block",
@@ -8518,7 +8518,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 59,
       "contentHash": "sha256:394092d7cb17fbbad5730b9f646c3954cb9ea6a0dd464251440fb24f198f1433",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "code-block",
@@ -8531,7 +8531,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 59,
       "contentHash": "sha256:cc8d6caef902437ad633722db9197b7bf2aafc5ad8624c4628911aad1d354bb7",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "code-listing",
@@ -8544,7 +8544,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 880,
       "height": 244,
       "contentHash": "sha256:0d117525a3093ff6e438606d37d814a68f93da0c34b7b2966b40307aa4784783",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "code-listing",
@@ -8557,7 +8557,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 880,
       "height": 244,
       "contentHash": "sha256:3b0aa196169ab68477776a534797c1937abaa63880664d1d518fbe7d916f97fa",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "code-listing",
@@ -8570,7 +8570,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 880,
       "height": 244,
       "contentHash": "sha256:a957a124ad208cfc7f7cd7f39c41d061731b7f408f02ecce937794acf57fdc88",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "code-listing",
@@ -8583,7 +8583,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 880,
       "height": 244,
       "contentHash": "sha256:00f397b2a67e5d6a210e98b7a916b9c9fe6a59101954c5cea518a01234d21377",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "data-figure",
@@ -8596,7 +8596,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 880,
       "height": 427,
       "contentHash": "sha256:20c40ef81552151a71a6f865ed875b2dfcce05d1ed512d14222e13c274f3a943",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "data-figure",
@@ -8609,7 +8609,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 880,
       "height": 427,
       "contentHash": "sha256:ced4f5849594f777117237bbf750d828d9f1d7672af16558411a8257b4b78b02",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "data-figure",
@@ -8622,7 +8622,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 320,
       "height": 557,
       "contentHash": "sha256:a44cfcb45de228c2868a24dd4b5d30d56234d51d65f6e5aac65d57b48ff16805",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "data-figure",
@@ -8635,7 +8635,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 320,
       "height": 557,
       "contentHash": "sha256:f1767073d211fcdf32fe622d428bae75314a30799bd98a9e06fa56326ec25f5a",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "chart",
@@ -8648,7 +8648,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 322,
       "contentHash": "sha256:bb691ff9560ca22006945b2d7f786e7ebdbf1f8e79ed402af56388b02350125c",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "chart",
@@ -8661,7 +8661,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 322,
       "contentHash": "sha256:3844d7a9b3b4a8ec490caa889512e0f613e6ce5891c0a359b89ea954b6abad4e",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "chart",
@@ -8674,7 +8674,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 242,
       "contentHash": "sha256:b96d583ba46014368e117ae5aadc9d541b2769c6aaf5e13952a4053a36f752ea",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "chart",
@@ -8687,7 +8687,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 242,
       "contentHash": "sha256:07ced449386901cb4c5cf51cc9a257c9832fa964d6900883cacf36bd62604047",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "chart",
@@ -8700,7 +8700,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 633,
       "contentHash": "sha256:580a976d83f5e173236f018b5ef91073f8548c7c92d357925605bd2582664e31",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "chart",
@@ -8713,7 +8713,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 633,
       "contentHash": "sha256:84cc7fdce244a72a0f8f8d0492fa427a6a9cea328077671fba3afe8fb8c8a4c1",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "diagram",
@@ -8726,7 +8726,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 695,
       "contentHash": "sha256:88666bccbd46053689de5478cea140c1035367a4e536d3d89dbc915f329f6ab2",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "diagram",
@@ -8739,7 +8739,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 695,
       "contentHash": "sha256:2e650a7cbb1607eded8ca1323ff6930183391815e1181f4b0177ff5811553195",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "diagram",
@@ -8752,7 +8752,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 1144,
       "contentHash": "sha256:7799ee8b120dbc380544a745d379e7427a0e2ad1b1db0170bfae5db088fde900",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "diagram",
@@ -8765,7 +8765,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 1144,
       "contentHash": "sha256:80932170c4278b77b8ce738623a1ecec47ec2a54cddd5731cfae76b1adb9569f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "timeline",
@@ -8778,7 +8778,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 525,
       "contentHash": "sha256:8a59bb540752f0a0f3b8a951370631b046cf1d5053f65d5113158b5261a2a5aa",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "timeline",
@@ -8791,7 +8791,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 525,
       "contentHash": "sha256:b21656147f6216405fd2c3ebb4cb3661929e6926af4d9e0387c71df3a860b395",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "footnotes",
@@ -8804,7 +8804,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 247,
       "contentHash": "sha256:d26088fa1fe0952fbca03168c84eabd7868ed54f98d11c9588a5c89f858c8fd8",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "footnotes",
@@ -8817,7 +8817,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 247,
       "contentHash": "sha256:0f6c28d55609be343912e3c04deddb66c994d4e0b1b4612a02f2df47f29661b1",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "footnotes",
@@ -8830,7 +8830,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 501,
       "contentHash": "sha256:10188a6f14a839fdc79834358fd4ccfcfa3fb8124cdd122938c6ab9db6dbf455",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "footnotes",
@@ -8843,7 +8843,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 501,
       "contentHash": "sha256:f78301734e7dfb87abf5ab3269800c61b33e4ccd2d9fb2c88cf85b04e78acb5f",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "related-content",
@@ -8856,7 +8856,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 633,
       "contentHash": "sha256:e7ad3d04a3a641b6ae51544aa9372bce482a47f73d914091ac3321f56f34bac5",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     },
     {
       "slug": "related-content",
@@ -8869,7 +8869,7 @@ export const componentExampleImageManifest: ComponentExampleImageManifest = {
       "width": 960,
       "height": 633,
       "contentHash": "sha256:1ffe32c22fc2f2d5d4cee4b8bcdebf484e77555937c912b23c2f71c200bc3b32",
-      "captureContractVersion": "2"
+      "captureContractVersion": "3"
     }
   ]
 };
