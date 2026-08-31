@@ -113,65 +113,35 @@ export function componentExampleScreenshotOptions(
 }
 
 /**
- * Open the capture pages once and close every one after success or failure.
+ * Open one capture document, reuse it for the whole run, and always close it.
  *
- * Opening a document costs roughly 700ms against the ~250ms a capture then
- * needs, so each page here is reused across many examples. Reuse is safe only
- * because no capture takes Chromium's beyond-viewport screenshot path, which
- * permanently changes how its page rasterizes text — every capture proves it
- * through `validateComponentExampleCaptureFitsViewport`.
+ * Opening a document costs roughly 700ms against the ~220ms a capture then
+ * needs, so the run reuses a single page. Reuse is safe only because no
+ * capture takes Chromium's beyond-viewport screenshot path, which permanently
+ * changes how its page rasterizes text — every capture proves it through
+ * `validateComponentExampleCaptureFitsViewport`.
+ *
+ * One page, not several. Concurrent pages render four times faster and are not
+ * byte-exact: readiness settles on painted frames, and concurrent renderers
+ * change that cadence, so an example that prepares an interaction can be
+ * measured mid-settle. Across the corpus that moved `tooltip--default` to a
+ * different capture region and `tooltip--bottom` by 774 pixels at a channel
+ * delta of 71, differently on each run. Concurrency needs a readiness protocol
+ * that converges rather than counts frames — see `discern/TODO.md`.
  */
-export async function withCapturePages<
+export async function withCapturePage<
   P extends { close(): Promise<void> },
   T,
 >(
   open: () => Promise<P>,
-  count: number,
-  operation: (pages: readonly P[]) => Promise<T>,
+  operation: (page: P) => Promise<T>,
 ): Promise<T> {
-  if (!Number.isInteger(count) || count < 1) {
-    throw new TypeError(
-      `Capture needs at least one page; received ${JSON.stringify(count)}`,
-    );
-  }
-  const pages: P[] = [];
+  const page = await open();
   try {
-    for (let index = 0; index < count; index += 1) pages.push(await open());
-    return await operation(pages);
+    return await operation(page);
   } finally {
-    await Promise.all(pages.map((page) => page.close()));
+    await page.close();
   }
-}
-
-/**
- * Spread ordered work across the capture pages while preserving plan order.
- *
- * Lanes pull from one shared queue instead of taking a fixed slice, so a slow
- * example delays only its own lane, and every result lands at its input index
- * however the lanes interleave — the manifest order stays the plan order.
- */
-export async function mapCaptureLanes<L, I, O>(
-  inputs: readonly I[],
-  lanes: readonly L[],
-  work: (input: I, lane: L) => Promise<O>,
-): Promise<readonly O[]> {
-  if (lanes.length === 0 && inputs.length > 0) {
-    throw new TypeError("Capture work needs at least one lane");
-  }
-  const queue = [...inputs.entries()];
-  const results = new Array<O>(inputs.length);
-  let cursor = 0;
-  await Promise.all(lanes.map(async (lane) => {
-    for (
-      let taken = queue[cursor++];
-      taken !== undefined;
-      taken = queue[cursor++]
-    ) {
-      const [index, input] = taken;
-      results[index] = await work(input, lane);
-    }
-  }));
-  return results;
 }
 
 /** Read width and height directly from a PNG's mandatory IHDR chunk. */
@@ -799,34 +769,30 @@ async function updateImages(): Promise<void> {
   const sourceHash = await componentExampleCaptureSourceHash();
   let browserMs = 0;
   let captureMs = 0;
-  let captured: readonly CapturedImage[] = [];
+  const captured: CapturedImage[] = [];
   await withCaptureServer(async (origin) => {
     const browserStarted = performance.now();
     const capture = await startCaptureBrowser(executablePath);
     browserMs = performance.now() - browserStarted;
     try {
-      captured = await withCapturePages(
+      await withCapturePage(
         () => openCapturePage(capture, origin),
-        componentExampleCaptureContract.capturePages,
-        async (pages) => {
+        async (target) => {
           const captureStarted = performance.now();
-          const images = await mapCaptureLanes(
-            plan,
-            pages,
-            async (input, target) => {
-              const name = names.get(input.slug);
-              if (name === undefined) {
-                throw new Error(`No source Metadata name for ${input.slug}`);
-              }
-              return await capturedEntry(
+          for (const input of plan) {
+            const name = names.get(input.slug);
+            if (name === undefined) {
+              throw new Error(`No source Metadata name for ${input.slug}`);
+            }
+            captured.push(
+              await capturedEntry(
                 input,
                 name,
                 await captureImage(target, origin, input),
-              );
-            },
-          );
+              ),
+            );
+          }
           captureMs = performance.now() - captureStarted;
-          return images;
         },
       );
     } finally {
@@ -987,11 +953,10 @@ async function verifyImages(): Promise<void> {
   await withCaptureServer(async (origin) => {
     const capture = await startCaptureBrowser(executablePath);
     try {
-      await withCapturePages(
+      await withCapturePage(
         () => openCapturePage(capture, origin),
-        componentExampleCaptureContract.capturePages,
-        (pages) =>
-          mapCaptureLanes(witnesses, pages, async (input, target) => {
+        async (target) => {
+          for (const input of witnesses) {
             const source = `${input.slug}/${input.exampleId}/${input.theme}`;
             const first = await captureImage(target, origin, input);
             const second = await captureImage(target, origin, input);
@@ -1010,7 +975,7 @@ async function verifyImages(): Promise<void> {
               pngDimensions(second),
               committed,
             );
-            if (!canonicalRaster) return;
+            if (!canonicalRaster) continue;
             const committedBytes = await Deno.readFile(
               new URL(committed.assetUrl.slice(1), ROOT),
             );
@@ -1021,7 +986,8 @@ async function verifyImages(): Promise<void> {
                 `${source} no longer rasterizes as the committed image shows, past the declared raster tolerance. Run \`deno task catalogue:images --update\` if the change is intended.`,
               );
             }
-          }),
+          }
+        },
       );
     } finally {
       await capture.context.close();

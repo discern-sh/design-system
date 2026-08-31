@@ -3,7 +3,7 @@ import type { ComponentExampleImageManifest } from "../example-images/contract.t
 
 export const componentExampleImageManifest: ComponentExampleImageManifest = {
   "captureContractVersion": "3",
-  "sourceHash": "sha256:24b495e7aa9ba2c81ffe6408fa163fefcfcfdc26c090d158948dfd6e627c82b9",
+  "sourceHash": "sha256:c6e4b2e16774a438757682158e87711bc3df179621fec58473e89d378ce74fd2",
   "entries": [
     {
       "slug": "icon",

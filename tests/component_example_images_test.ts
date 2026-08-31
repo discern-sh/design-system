@@ -35,13 +35,12 @@ import {
   componentExampleContentHash,
   componentExampleScreenshotOptions,
   isComponentExampleCaptureSourcePath,
-  mapCaptureLanes,
   pngChunkTypes,
   pngDimensions,
   repositoryCaptureSourcePaths,
   validateComponentExampleImageCoverage,
   validateComponentExampleRepeatGeometry,
-  withCapturePages,
+  withCapturePage,
 } from "../scripts/component-example-images.ts";
 import {
   type CanonicalPngRaster,
@@ -314,7 +313,7 @@ Deno.test("image hashes cover only a Playwright Buffer view, not its pooled back
   );
 });
 
-Deno.test("every capture document closes after success or failure", async () => {
+Deno.test("one capture document serves the run and closes either way", async () => {
   let created = 0;
   let closed = 0;
   const open = () => {
@@ -327,51 +326,15 @@ Deno.test("every capture document closes after success or failure", async () => 
     });
   };
   assertEquals(
-    await withCapturePages(open, 3, (pages) => Promise.resolve(pages.length)),
-    3,
+    await withCapturePage(open, () => Promise.resolve("ready")),
+    "ready",
   );
-  assertEquals({ created, closed }, { created: 3, closed: 3 });
   await assertRejects(
-    () => withCapturePages(open, 2, () => Promise.reject(new Error("failed"))),
+    () => withCapturePage(open, () => Promise.reject(new Error("failed"))),
     Error,
     "failed",
   );
-  assertEquals({ created, closed }, { created: 5, closed: 5 });
-  await assertRejects(
-    () => withCapturePages(open, 0, () => Promise.resolve("unreached")),
-    TypeError,
-    "at least one page",
-  );
-});
-
-Deno.test("capture lanes share one queue and still return plan order", async () => {
-  const inputs = ["a", "b", "c", "d", "e"];
-  // One lane stalls on its first item; the others must drain the queue past it.
-  const stalled = Promise.withResolvers<void>();
-  const seen: string[] = [];
-  const work = async (input: string, lane: string) => {
-    if (input === "a") await stalled.promise;
-    seen.push(input);
-    return `${lane}:${input}`;
-  };
-  const running = mapCaptureLanes(inputs, ["one", "two"], work);
-  await Promise.resolve();
-  stalled.resolve();
-  const results = await running;
-  assertEquals(results, [
-    "one:a",
-    "two:b",
-    "two:c",
-    "two:d",
-    "two:e",
-  ]);
-  assertEquals(seen[0], "b", "the stalled lane blocked the whole queue");
-  assertEquals(await mapCaptureLanes([], [], work), []);
-  await assertRejects(
-    () => mapCaptureLanes(inputs, [], work),
-    TypeError,
-    "at least one lane",
-  );
+  assertEquals({ created, closed }, { created: 2, closed: 2 });
 });
 
 Deno.test("captures must fit the viewport that keeps rasterization stable", () => {
