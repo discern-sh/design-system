@@ -105,7 +105,20 @@ export function componentExampleScreenshotOptions(
   };
 }
 
-/** Give every capture a fresh document and close it after success or failure. */
+/**
+ * Give every capture a fresh document and close it after success or failure.
+ *
+ * The fresh page is a correctness requirement, not caution. Opening one costs
+ * roughly 700ms of the ~1300ms each capture takes, so reusing a page across
+ * captures is tempting — and measurably wrong. Some examples permanently
+ * change how the renderer rasterizes text for every later capture on the same
+ * page: after `masonry--default--light`, the `paragraph`, `heading`,
+ * `code-listing`, and `table` examples moved by up to 1,850 pixels at a
+ * channel delta of 183, which is plainly visible and far outside the raster
+ * tolerance. Navigation does not reset it; only a new page does. Reuse and
+ * parallel pages both stay out until that state can be reset or proven
+ * settled — see `discern/TODO.md`.
+ */
 export async function withIsolatedCapturePage<
   P extends { close(): Promise<void> },
   T,

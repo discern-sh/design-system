@@ -18,13 +18,17 @@ An ordinary example exposes exactly one top-level rendered root. Its capture box
 
 SHA-256 records and protects the exact committed PNG; it is an artifact-integrity fact, not a prediction that Chromium will emit those bytes again. Live verification proves manifest and file coverage, source currency, canonical PNG structure, exact geometry across two captures and the committed manifest, and the readiness, font, animation, network, and console invariants. It deliberately does not compare live raster bytes. Component accessibility and semantic conformance remain separate browser gates, and human review remains the visual oracle for discovery imagery.
 
+An update writes an image only when the capture no longer shows what the committed file shows. Identical geometry whose pixels sit inside the declared raster tolerance keeps the committed artifact and its recorded hash, so a rerender that no reader can distinguish produces no diff to review; anything wider, deeper, or resized is written as a real change and named in the run output. This follows from the same boundary: if the bytes were never promised, reproducing them cannot be the test for staleness.
+
 Full population capture is an explicit update. The normal gate performs cheap source, hash, dimension, metadata, stale, and orphan checks, then rebuilds the real capture projection and repeats a bounded first/middle/last witness. PNG serialization is accepted only with canonical `IHDR`, `sRGB`, `IDAT`, and `IEND` chunks, so timestamps, text, EXIF, host paths, and run IDs cannot enter the committed files. The generated directory remains outside the package publish allowlist.
 
 ## Consequences
 
 Catalogue and Builder work can share intrinsic dimensions, labels, hashes, theme coverage, and representative selection without mounting Components or copying example props. New and removed canonical examples join update, verification, and cleanup through the same plan.
 
-The repository carries hundreds of PNG files, and an image update requires the named canonical platform and browser revision. A Component pixel change makes the source hash stale until that explicit update runs. Reviewers may see small byte diffs caused only by raster antialiasing; the generator does not describe those as visual regressions, and intentional visual changes still require image review.
+The repository carries hundreds of PNG files, and an image update requires the named canonical platform and browser revision. A Component pixel change makes the source hash stale until that explicit update runs. A changed PNG in review now means a real visual change, since antialiasing-only rerenders no longer reach the working tree; intentional visual changes still require image review.
+
+The tolerance is a judgment about perception, so it can be wrong in one direction: a real change small enough and shallow enough to sit inside both bounds would be absorbed. The bounds are set an order of magnitude below the smallest real change measured here, and the run names every retained file, so the cost of being wrong is visible rather than silent.
 
 ## Alternatives considered
 
