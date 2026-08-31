@@ -1,6 +1,6 @@
 {
   "name": "@discern-sh/design-system",
-  "version": "0.27.0",
+  "version": "0.28.0",
   "license": "Apache-2.0",
   "exports": {
     ".": "./src/mod.ts",
