@@ -11,6 +11,7 @@ import {
   orphanedComponentExampleImageFiles,
   planComponentExampleImages,
   type PlannedComponentExampleImage,
+  validateComponentExampleCaptureFitsViewport,
 } from "../catalogue/example-images/contract.ts";
 import { componentExampleRegistry } from "./generated/component-examples.ts";
 import {
@@ -65,7 +66,13 @@ interface CapturedImage {
 interface CaptureBrowser {
   readonly browser: Browser;
   readonly context: BrowserContext;
+}
+
+/** One reusable capture document and the off-origin requests it attempted. */
+interface CapturePage {
+  readonly page: Page;
   readonly externalRequests: string[];
+  close(): Promise<void>;
 }
 
 interface CaptureTiming {
@@ -106,32 +113,65 @@ export function componentExampleScreenshotOptions(
 }
 
 /**
- * Give every capture a fresh document and close it after success or failure.
+ * Open the capture pages once and close every one after success or failure.
  *
- * The fresh page is a correctness requirement, not caution. Opening one costs
- * roughly 700ms of the ~1300ms each capture takes, so reusing a page across
- * captures is tempting — and measurably wrong. Some examples permanently
- * change how the renderer rasterizes text for every later capture on the same
- * page: after `masonry--default--light`, the `paragraph`, `heading`,
- * `code-listing`, and `table` examples moved by up to 1,850 pixels at a
- * channel delta of 183, which is plainly visible and far outside the raster
- * tolerance. Navigation does not reset it; only a new page does. Reuse and
- * parallel pages both stay out until that state can be reset or proven
- * settled — see `discern/TODO.md`.
+ * Opening a document costs roughly 700ms against the ~250ms a capture then
+ * needs, so each page here is reused across many examples. Reuse is safe only
+ * because no capture takes Chromium's beyond-viewport screenshot path, which
+ * permanently changes how its page rasterizes text — every capture proves it
+ * through `validateComponentExampleCaptureFitsViewport`.
  */
-export async function withIsolatedCapturePage<
+export async function withCapturePages<
   P extends { close(): Promise<void> },
   T,
 >(
-  factory: { newPage(): Promise<P> },
-  operation: (page: P) => Promise<T>,
+  open: () => Promise<P>,
+  count: number,
+  operation: (pages: readonly P[]) => Promise<T>,
 ): Promise<T> {
-  const page = await factory.newPage();
-  try {
-    return await operation(page);
-  } finally {
-    await page.close();
+  if (!Number.isInteger(count) || count < 1) {
+    throw new TypeError(
+      `Capture needs at least one page; received ${JSON.stringify(count)}`,
+    );
   }
+  const pages: P[] = [];
+  try {
+    for (let index = 0; index < count; index += 1) pages.push(await open());
+    return await operation(pages);
+  } finally {
+    await Promise.all(pages.map((page) => page.close()));
+  }
+}
+
+/**
+ * Spread ordered work across the capture pages while preserving plan order.
+ *
+ * Lanes pull from one shared queue instead of taking a fixed slice, so a slow
+ * example delays only its own lane, and every result lands at its input index
+ * however the lanes interleave — the manifest order stays the plan order.
+ */
+export async function mapCaptureLanes<L, I, O>(
+  inputs: readonly I[],
+  lanes: readonly L[],
+  work: (input: I, lane: L) => Promise<O>,
+): Promise<readonly O[]> {
+  if (lanes.length === 0 && inputs.length > 0) {
+    throw new TypeError("Capture work needs at least one lane");
+  }
+  const queue = [...inputs.entries()];
+  const results = new Array<O>(inputs.length);
+  let cursor = 0;
+  await Promise.all(lanes.map(async (lane) => {
+    for (
+      let taken = queue[cursor++];
+      taken !== undefined;
+      taken = queue[cursor++]
+    ) {
+      const [index, input] = taken;
+      results[index] = await work(input, lane);
+    }
+  }));
+  return results;
 }
 
 /** Read width and height directly from a PNG's mandatory IHDR chunk. */
@@ -367,7 +407,6 @@ async function assertGeneratedExampleRegistryCurrent(): Promise<void> {
 
 async function startCaptureBrowser(
   executablePath: string,
-  origin: string,
 ): Promise<CaptureBrowser> {
   const browser = await chromium.launch({
     executablePath,
@@ -429,8 +468,22 @@ async function startCaptureBrowser(
       randomSeed: componentExampleCaptureContract.randomSeed,
     },
   );
+  return { browser, context };
+}
+
+/**
+ * Open one reusable capture document that records its own blocked requests.
+ *
+ * The route lives on the page rather than the context so that concurrent lanes
+ * cannot attribute one another's off-origin requests to the wrong example.
+ */
+async function openCapturePage(
+  capture: CaptureBrowser,
+  origin: string,
+): Promise<CapturePage> {
+  const page = await capture.context.newPage();
   const externalRequests: string[] = [];
-  await context.route("**/*", async (route) => {
+  await page.route("**/*", async (route) => {
     const url = new URL(route.request().url());
     if (url.origin === origin || url.protocol === "data:") {
       await route.continue();
@@ -439,7 +492,7 @@ async function startCaptureBrowser(
     externalRequests.push(url.href);
     await route.abort("blockedbyclient");
   });
-  return { browser, context, externalRequests };
+  return { page, externalRequests, close: () => page.close() };
 }
 
 function captureUrl(
@@ -454,112 +507,111 @@ function captureUrl(
 }
 
 async function captureImage(
-  capture: CaptureBrowser,
+  target: CapturePage,
   origin: string,
   input: PlannedComponentExampleImage,
 ): Promise<Uint8Array> {
+  const source = `${input.slug}/${input.exampleId}/${input.theme}`;
+  const page = target.page;
   try {
-    return await withIsolatedCapturePage(capture.context, async (page) => {
-      const failures: string[] = [];
-      const consoleListener = (message: { type(): string; text(): string }) => {
-        if (message.type() === "error") {
-          failures.push(`console: ${message.text()}`);
-        }
-      };
-      const pageErrorListener = (error: Error) =>
-        failures.push(`exception: ${error.message}`);
-      const responseListener = (
-        response: { status(): number; url(): string },
-      ) => {
-        if (response.status() >= 400) {
-          failures.push(`HTTP ${response.status()}: ${response.url()}`);
-        }
-      };
-      page.on("console", consoleListener);
-      page.on("pageerror", pageErrorListener);
-      page.on("response", responseListener);
-      const externalStart = capture.externalRequests.length;
-      try {
-        await page.emulateMedia({
-          colorScheme: input.theme,
-          reducedMotion: componentExampleCaptureContract.reducedMotion,
-        });
-        await page.goto(captureUrl(origin, input), {
-          waitUntil: "domcontentloaded",
-        });
-        await page.waitForFunction(() => {
-          const state = (globalThis as typeof globalThis & {
-            __discernExampleCapture?: BrowserCaptureState;
-          }).__discernExampleCapture;
-          return state?.status === "ready" || state?.status === "error";
-        });
-        const state = await page.evaluate(() =>
-          (globalThis as typeof globalThis & {
-            __discernExampleCapture?: BrowserCaptureState;
-          }).__discernExampleCapture
-        );
-        if (state === undefined || state.status === "error") {
-          throw new Error(
-            state === undefined
-              ? "capture route exposed no state"
-              : state.message,
-          );
-        }
-        if (
-          state.contractVersion !== componentExampleCaptureContract.version ||
-          !state.fontsLoaded || state.activeAnimations !== 0
-        ) {
-          throw new Error(
-            `invalid readiness evidence: ${JSON.stringify(state)}`,
-          );
-        }
-        const external = capture.externalRequests.slice(externalStart);
-        if (external.length > 0) {
-          failures.push(`external network: ${external.join(", ")}`);
-        }
-        if (failures.length > 0) throw new Error(failures.join("; "));
-        if (state.region === undefined) {
-          throw new Error("capture readiness exposed no region");
-        }
-        if (
-          state.region.x < 0 || state.region.y < 0 ||
-          state.documentWidth === undefined ||
-          state.documentHeight === undefined ||
-          state.region.x + state.region.width > state.documentWidth ||
-          state.region.y + state.region.height > state.documentHeight
-        ) {
-          throw new Error(
-            `capture region escapes its document: ${JSON.stringify(state)}`,
-          );
-        }
-        const bytes = await page.screenshot(
-          componentExampleScreenshotOptions(state.region),
-        );
-        assertCanonicalPng(
-          bytes,
-          `${input.slug}/${input.exampleId}/${input.theme}`,
-        );
-        const dimensions = pngDimensions(bytes);
-        if (
-          dimensions.width !== state.region.width ||
-          dimensions.height !== state.region.height
-        ) {
-          throw new Error(
-            `PNG ${dimensions.width}×${dimensions.height} differs from capture region ${state.region.width}×${state.region.height}`,
-          );
-        }
-        return bytes;
-      } finally {
-        page.off("console", consoleListener);
-        page.off("pageerror", pageErrorListener);
-        page.off("response", responseListener);
+    const failures: string[] = [];
+    const consoleListener = (message: { type(): string; text(): string }) => {
+      if (message.type() === "error") {
+        failures.push(`console: ${message.text()}`);
       }
-    });
+    };
+    const pageErrorListener = (error: Error) =>
+      failures.push(`exception: ${error.message}`);
+    const responseListener = (
+      response: { status(): number; url(): string },
+    ) => {
+      if (response.status() >= 400) {
+        failures.push(`HTTP ${response.status()}: ${response.url()}`);
+      }
+    };
+    page.on("console", consoleListener);
+    page.on("pageerror", pageErrorListener);
+    page.on("response", responseListener);
+    const externalStart = target.externalRequests.length;
+    try {
+      await page.emulateMedia({
+        colorScheme: input.theme,
+        reducedMotion: componentExampleCaptureContract.reducedMotion,
+      });
+      await page.goto(captureUrl(origin, input), {
+        waitUntil: "domcontentloaded",
+      });
+      await page.waitForFunction(() => {
+        const state = (globalThis as typeof globalThis & {
+          __discernExampleCapture?: BrowserCaptureState;
+        }).__discernExampleCapture;
+        return state?.status === "ready" || state?.status === "error";
+      });
+      const state = await page.evaluate(() =>
+        (globalThis as typeof globalThis & {
+          __discernExampleCapture?: BrowserCaptureState;
+        }).__discernExampleCapture
+      );
+      if (state === undefined || state.status === "error") {
+        throw new Error(
+          state === undefined
+            ? "capture route exposed no state"
+            : state.message,
+        );
+      }
+      if (
+        state.contractVersion !== componentExampleCaptureContract.version ||
+        !state.fontsLoaded || state.activeAnimations !== 0
+      ) {
+        throw new Error(
+          `invalid readiness evidence: ${JSON.stringify(state)}`,
+        );
+      }
+      const external = target.externalRequests.slice(externalStart);
+      if (external.length > 0) {
+        failures.push(`external network: ${external.join(", ")}`);
+      }
+      if (failures.length > 0) throw new Error(failures.join("; "));
+      if (state.region === undefined) {
+        throw new Error("capture readiness exposed no region");
+      }
+      if (
+        state.region.x < 0 || state.region.y < 0 ||
+        state.documentWidth === undefined ||
+        state.documentHeight === undefined ||
+        state.region.x + state.region.width > state.documentWidth ||
+        state.region.y + state.region.height > state.documentHeight
+      ) {
+        throw new Error(
+          `capture region escapes its document: ${JSON.stringify(state)}`,
+        );
+      }
+      validateComponentExampleCaptureFitsViewport(source, {
+        width: state.documentWidth,
+        height: state.documentHeight,
+      });
+      const bytes = await page.screenshot(
+        componentExampleScreenshotOptions(state.region),
+      );
+      assertCanonicalPng(bytes, source);
+      const dimensions = pngDimensions(bytes);
+      if (
+        dimensions.width !== state.region.width ||
+        dimensions.height !== state.region.height
+      ) {
+        throw new Error(
+          `PNG ${dimensions.width}×${dimensions.height} differs from capture region ${state.region.width}×${state.region.height}`,
+        );
+      }
+      return bytes;
+    } finally {
+      page.off("console", consoleListener);
+      page.off("pageerror", pageErrorListener);
+      page.off("response", responseListener);
+    }
   } catch (error) {
     throw new Error(
-      `${input.slug}/${input.exampleId}/${input.theme}: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
+      `${source}: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 }
@@ -747,27 +799,36 @@ async function updateImages(): Promise<void> {
   const sourceHash = await componentExampleCaptureSourceHash();
   let browserMs = 0;
   let captureMs = 0;
-  const captured: CapturedImage[] = [];
+  let captured: readonly CapturedImage[] = [];
   await withCaptureServer(async (origin) => {
     const browserStarted = performance.now();
-    const capture = await startCaptureBrowser(executablePath, origin);
+    const capture = await startCaptureBrowser(executablePath);
     browserMs = performance.now() - browserStarted;
     try {
-      const captureStarted = performance.now();
-      for (const input of plan) {
-        const name = names.get(input.slug);
-        if (name === undefined) {
-          throw new Error(`No source Metadata name for ${input.slug}`);
-        }
-        captured.push(
-          await capturedEntry(
-            input,
-            name,
-            await captureImage(capture, origin, input),
-          ),
-        );
-      }
-      captureMs = performance.now() - captureStarted;
+      captured = await withCapturePages(
+        () => openCapturePage(capture, origin),
+        componentExampleCaptureContract.capturePages,
+        async (pages) => {
+          const captureStarted = performance.now();
+          const images = await mapCaptureLanes(
+            plan,
+            pages,
+            async (input, target) => {
+              const name = names.get(input.slug);
+              if (name === undefined) {
+                throw new Error(`No source Metadata name for ${input.slug}`);
+              }
+              return await capturedEntry(
+                input,
+                name,
+                await captureImage(target, origin, input),
+              );
+            },
+          );
+          captureMs = performance.now() - captureStarted;
+          return images;
+        },
+      );
     } finally {
       await capture.context.close();
       await capture.browser.close();
@@ -922,28 +983,46 @@ async function verifyImages(): Promise<void> {
   await buildDesignSystem();
   const buildMs = performance.now() - buildStarted;
   const witnesses = witnessInputs(plan);
+  const canonicalRaster = platformMatchesByteContract();
   await withCaptureServer(async (origin) => {
-    const capture = await startCaptureBrowser(executablePath, origin);
+    const capture = await startCaptureBrowser(executablePath);
     try {
-      for (const input of witnesses) {
-        const first = await captureImage(capture, origin, input);
-        const second = await captureImage(capture, origin, input);
-        const firstDimensions = pngDimensions(first);
-        const secondDimensions = pngDimensions(second);
-        const committed = componentExampleImageManifest.entries.find((entry) =>
-          entry.slug === input.slug && entry.exampleId === input.exampleId &&
-          entry.theme === input.theme
-        );
-        if (committed === undefined) {
-          throw new Error("Witness has no manifest entry");
-        }
-        validateComponentExampleRepeatGeometry(
-          `${input.slug}/${input.exampleId}/${input.theme}`,
-          firstDimensions,
-          secondDimensions,
-          committed,
-        );
-      }
+      await withCapturePages(
+        () => openCapturePage(capture, origin),
+        componentExampleCaptureContract.capturePages,
+        (pages) =>
+          mapCaptureLanes(witnesses, pages, async (input, target) => {
+            const source = `${input.slug}/${input.exampleId}/${input.theme}`;
+            const first = await captureImage(target, origin, input);
+            const second = await captureImage(target, origin, input);
+            const committed = componentExampleImageManifest.entries.find(
+              (entry) =>
+                entry.slug === input.slug &&
+                entry.exampleId === input.exampleId &&
+                entry.theme === input.theme,
+            );
+            if (committed === undefined) {
+              throw new Error("Witness has no manifest entry");
+            }
+            validateComponentExampleRepeatGeometry(
+              source,
+              pngDimensions(first),
+              pngDimensions(second),
+              committed,
+            );
+            if (!canonicalRaster) return;
+            const committedBytes = await Deno.readFile(
+              new URL(committed.assetUrl.slice(1), ROOT),
+            );
+            if (
+              !await committedRasterStillShows(committedBytes, second, source)
+            ) {
+              throw new Error(
+                `${source} no longer rasterizes as the committed image shows, past the declared raster tolerance. Run \`deno task catalogue:images --update\` if the change is intended.`,
+              );
+            }
+          }),
+      );
     } finally {
       await capture.context.close();
       await capture.browser.close();
@@ -959,7 +1038,9 @@ async function verifyImages(): Promise<void> {
       actualBytes.reduce((sum, bytes) => sum + bytes, 0)
     } bytes) and ${witnesses.length} repeat-capture witnesses in ${
       ((performance.now() - started) / 1000).toFixed(2)
-    }s (build ${(buildMs / 1000).toFixed(2)}s; exact live geometry compared).`,
+    }s (build ${(buildMs / 1000).toFixed(2)}s; exact live geometry compared${
+      canonicalRaster ? ", committed rasters compared within tolerance" : ""
+    }).`,
   );
 }
 

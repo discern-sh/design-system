@@ -10,7 +10,7 @@ export type ComponentExampleImageTheme =
 /** Stable environment and rendering choices that constrain canonical capture. */
 export const componentExampleCaptureContract = Object.freeze(
   {
-    version: "2",
+    version: "3",
     denoVersion: "2.9.5",
     playwrightVersion: "1.61.1",
     chromiumRevision: "1228",
@@ -27,8 +27,9 @@ export const componentExampleCaptureContract = Object.freeze(
       arch: "aarch64",
       release: "25.6.0",
     }),
-    viewport: Object.freeze({ width: 1280, height: 1040 }),
+    viewport: Object.freeze({ width: 1280, height: 2000 }),
     harness: Object.freeze({ width: 960, minimumHeight: 720, inset: 160 }),
+    capturePages: 4,
     deviceScaleFactor: 1,
     locale: "en-GB",
     timezoneId: "UTC",
@@ -39,6 +40,49 @@ export const componentExampleCaptureContract = Object.freeze(
     randomSeed: 1,
   } as const,
 );
+
+/** The rendered document size one capture reports before its screenshot. */
+export interface ComponentExampleCaptureDocumentSize {
+  readonly width: number;
+  readonly height: number;
+}
+
+/**
+ * Keep every capture on Chromium's in-viewport rasterization path.
+ *
+ * A `fullPage` screenshot of a document larger than the viewport permanently
+ * changes how that page rasterizes text, for every later capture it takes:
+ * navigation does not clear the state, only a new page does. So `viewport` is
+ * sized past the tallest example rather than to it, and each capture proves it
+ * still fits. Growing an example past the viewport fails here, loudly, instead
+ * of quietly moving the pixels of whichever examples happen to follow it.
+ */
+export function validateComponentExampleCaptureFitsViewport(
+  source: string,
+  document: ComponentExampleCaptureDocumentSize,
+): void {
+  const { width, height } = componentExampleCaptureContract.viewport;
+  if (document.width <= width && document.height <= height) return;
+  throw new Error(
+    `${source} renders a ${document.width}×${document.height} document past the ${width}×${height} capture viewport; raise componentExampleCaptureContract.viewport past it and recapture`,
+  );
+}
+
+/**
+ * The document height one committed image implies inside the capture harness.
+ *
+ * The harness insets the example on every side and the capture route grows the
+ * document to the example's outer edge, so the document is never shorter than
+ * the viewport and never taller than the inset example filling it. Committed
+ * image heights therefore say, without a browser, how much viewport headroom
+ * the corpus still has before a capture would leave the in-viewport path.
+ */
+export function componentExampleCaptureDocumentHeight(
+  imageHeight: number,
+): number {
+  const { harness, viewport } = componentExampleCaptureContract;
+  return Math.max(viewport.height, 2 * harness.inset + imageHeight);
+}
 
 /** A deterministic interaction needed before one example is visually ready. */
 export interface ComponentExampleCapturePreparation {

@@ -20,12 +20,14 @@ import {
 } from "../catalogue/example-images.ts";
 import {
   componentExampleCaptureContract,
+  componentExampleCaptureDocumentHeight,
   type ComponentExampleImageManifest,
   type ComponentExampleImageSource,
   orphanedComponentExampleImageFiles,
   planComponentExampleImages,
   representativeComponentExampleId,
   validateComponentExampleCaptureDirective,
+  validateComponentExampleCaptureFitsViewport,
 } from "../catalogue/example-images/contract.ts";
 import { componentExampleRegistry } from "../scripts/generated/component-examples.ts";
 import {
@@ -33,12 +35,13 @@ import {
   componentExampleContentHash,
   componentExampleScreenshotOptions,
   isComponentExampleCaptureSourcePath,
+  mapCaptureLanes,
   pngChunkTypes,
   pngDimensions,
   repositoryCaptureSourcePaths,
   validateComponentExampleImageCoverage,
   validateComponentExampleRepeatGeometry,
-  withIsolatedCapturePage,
+  withCapturePages,
 } from "../scripts/component-example-images.ts";
 import {
   type CanonicalPngRaster,
@@ -314,31 +317,109 @@ Deno.test("image hashes cover only a Playwright Buffer view, not its pooled back
 Deno.test("every capture document closes after success or failure", async () => {
   let created = 0;
   let closed = 0;
-  const factory = {
-    newPage() {
-      created += 1;
-      return Promise.resolve({
-        close() {
-          closed += 1;
-          return Promise.resolve();
-        },
-      });
-    },
+  const open = () => {
+    created += 1;
+    return Promise.resolve({
+      close() {
+        closed += 1;
+        return Promise.resolve();
+      },
+    });
   };
   assertEquals(
-    await withIsolatedCapturePage(factory, () => Promise.resolve("ready")),
-    "ready",
+    await withCapturePages(open, 3, (pages) => Promise.resolve(pages.length)),
+    3,
   );
+  assertEquals({ created, closed }, { created: 3, closed: 3 });
   await assertRejects(
+    () => withCapturePages(open, 2, () => Promise.reject(new Error("failed"))),
+    Error,
+    "failed",
+  );
+  assertEquals({ created, closed }, { created: 5, closed: 5 });
+  await assertRejects(
+    () => withCapturePages(open, 0, () => Promise.resolve("unreached")),
+    TypeError,
+    "at least one page",
+  );
+});
+
+Deno.test("capture lanes share one queue and still return plan order", async () => {
+  const inputs = ["a", "b", "c", "d", "e"];
+  // One lane stalls on its first item; the others must drain the queue past it.
+  const stalled = Promise.withResolvers<void>();
+  const seen: string[] = [];
+  const work = async (input: string, lane: string) => {
+    if (input === "a") await stalled.promise;
+    seen.push(input);
+    return `${lane}:${input}`;
+  };
+  const running = mapCaptureLanes(inputs, ["one", "two"], work);
+  await Promise.resolve();
+  stalled.resolve();
+  const results = await running;
+  assertEquals(results, [
+    "one:a",
+    "two:b",
+    "two:c",
+    "two:d",
+    "two:e",
+  ]);
+  assertEquals(seen[0], "b", "the stalled lane blocked the whole queue");
+  assertEquals(await mapCaptureLanes([], [], work), []);
+  await assertRejects(
+    () => mapCaptureLanes(inputs, [], work),
+    TypeError,
+    "at least one lane",
+  );
+});
+
+Deno.test("captures must fit the viewport that keeps rasterization stable", () => {
+  const { viewport } = componentExampleCaptureContract;
+  validateComponentExampleCaptureFitsViewport("future-panel/overview/light", {
+    width: viewport.width,
+    height: viewport.height,
+  });
+  assertThrows(
     () =>
-      withIsolatedCapturePage(
-        factory,
-        () => Promise.reject(new Error("capture failed")),
+      validateComponentExampleCaptureFitsViewport(
+        "future-panel/overview/light",
+        { width: viewport.width, height: viewport.height + 1 },
       ),
     Error,
-    "capture failed",
+    "past the",
   );
-  assertEquals({ created, closed }, { created: 2, closed: 2 });
+  assertThrows(
+    () =>
+      validateComponentExampleCaptureFitsViewport(
+        "future-panel/overview/light",
+        { width: viewport.width + 1, height: viewport.height },
+      ),
+    Error,
+    "past the",
+  );
+});
+
+Deno.test("the capture viewport clears every committed image without a browser", () => {
+  const { harness, viewport } = componentExampleCaptureContract;
+  const tallest = componentExampleImageManifest.entries.reduce((tall, entry) =>
+    entry.height > tall.height ? entry : tall
+  );
+  assertEquals(
+    componentExampleCaptureDocumentHeight(0),
+    viewport.height,
+    "a short example still renders one viewport of document",
+  );
+  assertEquals(
+    componentExampleCaptureDocumentHeight(viewport.height),
+    2 * harness.inset + viewport.height,
+  );
+  assert(
+    componentExampleCaptureDocumentHeight(tallest.height) <= viewport.height,
+    `${tallest.assetPath} implies a ${
+      componentExampleCaptureDocumentHeight(tallest.height)
+    }px document, past the ${viewport.height}px capture viewport. Raising the viewport keeps captures off Chromium's beyond-viewport screenshot path, which permanently changes how a page rasterizes text.`,
+  );
 });
 
 Deno.test("the generated manifest and exact-bounds PNG population match every current input", async () => {
