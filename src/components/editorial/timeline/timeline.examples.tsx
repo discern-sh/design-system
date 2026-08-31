@@ -33,5 +33,13 @@ export default function TimelineExamples() {
 export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
-  [{ id: "default", Example: TimelineExamples }],
+  [{
+    id: "default",
+    Example: TimelineExamples,
+    capture: {
+      selectors: [".discern-timeline"],
+      // Transformed markers remain inside the Timeline allocation.
+      paintBleed: 0,
+    },
+  }],
 );

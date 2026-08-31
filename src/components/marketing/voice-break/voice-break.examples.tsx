@@ -2,6 +2,12 @@ import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import meta, { componentExampleVocabulary } from "./voice-break.meta.ts";
 import { VoiceBreak } from "./voice-break.tsx";
 
+const voiceBreakCapture = {
+  selectors: [".discern-voice-break"],
+  // Hanging quotation marks remain inside the VoiceBreak section allocation.
+  paintBleed: 0,
+} as const;
+
 function CalmVoiceState() {
   return (
     <VoiceBreak
@@ -31,8 +37,8 @@ export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
   [
-    { id: "calm", Example: CalmVoiceState },
-    { id: "contrast", Example: ContrastVoiceState },
+    { id: "calm", Example: CalmVoiceState, capture: voiceBreakCapture },
+    { id: "contrast", Example: ContrastVoiceState, capture: voiceBreakCapture },
   ],
 );
 

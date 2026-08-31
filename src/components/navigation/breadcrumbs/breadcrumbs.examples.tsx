@@ -30,12 +30,16 @@ function DeepHierarchyExample() {
   );
 }
 
+const breadcrumbsCapture = {
+  selectors: [".discern-breadcrumbs li"],
+} as const;
+
 export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
   [
-    { id: "default", Example: CompactExample },
-    { id: "deep", Example: DeepHierarchyExample },
+    { id: "default", Example: CompactExample, capture: breadcrumbsCapture },
+    { id: "deep", Example: DeepHierarchyExample, capture: breadcrumbsCapture },
   ],
 );
 

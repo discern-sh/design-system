@@ -473,6 +473,7 @@ function captureUrl(
   url.searchParams.set("component", input.slug);
   url.searchParams.set("example", input.exampleId);
   url.searchParams.set("theme", input.theme);
+  url.searchParams.set("representative", input.representative ? "1" : "0");
   return url.href;
 }
 

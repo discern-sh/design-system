@@ -27,7 +27,11 @@ export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
   [
-    { id: "default", Example: DefaultClusterState },
+    {
+      id: "default",
+      Example: DefaultClusterState,
+      capture: { selectors: [".discern-cluster > .discern-button"] },
+    },
     { id: "centred", Example: CentredClusterState },
   ],
 );

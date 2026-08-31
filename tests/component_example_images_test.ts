@@ -21,6 +21,11 @@ import {
 import {
   componentExampleCaptureContract,
   componentExampleCaptureDocumentHeight,
+  componentExampleCapturePaintInsets,
+  componentExampleCapturePositionedBoxContained,
+  componentExampleCapturePositionedPaintContainedOrClipped,
+  componentExampleCaptureRegion,
+  componentExampleCaptureSubjectRegions,
   type ComponentExampleImageManifest,
   type ComponentExampleImageSource,
   orphanedComponentExampleImageFiles,
@@ -28,6 +33,7 @@ import {
   representativeComponentExampleId,
   validateComponentExampleCaptureDirective,
   validateComponentExampleCaptureFitsViewport,
+  validateRepresentativeComponentExampleFraming,
 } from "../catalogue/example-images/contract.ts";
 import { componentExampleRegistry } from "../scripts/generated/component-examples.ts";
 import {
@@ -275,10 +281,291 @@ Deno.test("exceptional capture regions fail closed before browser automation", (
     TypeError,
     "must name a selector",
   );
+  assertThrows(
+    () =>
+      validateComponentExampleCaptureDirective(
+        {
+          selectors: [".future-layout"],
+          framing: { mode: "allocation", reason: " " },
+        },
+        "future-panel/overview",
+      ),
+    TypeError,
+    "reason",
+  );
+  assertThrows(
+    () =>
+      validateComponentExampleCaptureDirective(
+        {
+          selectors: [".future-layout"],
+          paintBleed: { bottom: -1 },
+        },
+        "future-panel/overview",
+      ),
+    TypeError,
+    "paint bleed",
+  );
+});
+
+Deno.test("paint-safe capture geometry includes computed effects without blanket padding", () => {
+  const hardOffset = componentExampleCapturePaintInsets({
+    boxShadow: "rgb(0 0 0 / 0.4) 2px 2px 0px 0px",
+    textShadow: "none",
+    outlineStyle: "none",
+    outlineWidth: "0px",
+    outlineOffset: "0px",
+    filter: "none",
+  });
+  assertEquals(hardOffset, { top: 0, right: 2, bottom: 2, left: 0 });
+  assertEquals(
+    componentExampleCapturePaintInsets(
+      {
+        boxShadow: "rgb(0 0 0 / 0.4) 10px 10px 0px 0px",
+        textShadow: "none",
+        outlineStyle: "none",
+        outlineWidth: "0px",
+        outlineOffset: "0px",
+        filter: "none",
+      },
+      1,
+    ),
+    { top: 1, right: 10, bottom: 10, left: 1 },
+    "authored bleed cannot hide a larger effect the strict grammar proves",
+  );
+
+  const layered = componentExampleCapturePaintInsets({
+    boxShadow:
+      "rgb(0 0 0 / 0.2) -3px 4px 2px 1px, inset rgb(0 0 0 / 0.1) 0px 1px 0px 0px",
+    textShadow: "none",
+    outlineStyle: "solid",
+    outlineWidth: "2px",
+    outlineOffset: "4px",
+    filter: "none",
+  });
+  assertEquals(layered, { top: 6, right: 6, bottom: 8, left: 7 });
+
+  assertEquals(
+    componentExampleCaptureRegion([
+      {
+        bounds: { left: 10.2, top: 20.8, right: 110.2, bottom: 60.8 },
+        paint: hardOffset,
+      },
+      {
+        bounds: { left: 126.2, top: 20.8, right: 226.2, bottom: 60.8 },
+        paint: hardOffset,
+      },
+    ]),
+    { x: 10, y: 20, width: 219, height: 43 },
+  );
+
+  assertThrows(
+    () =>
+      componentExampleCapturePaintInsets({
+        boxShadow: "rgb(0 0 0 / 0.4) 2px 2px var(--unknown)",
+        textShadow: "none",
+        outlineStyle: "none",
+        outlineWidth: "0px",
+        outlineOffset: "0px",
+        filter: "none",
+      }),
+    TypeError,
+    "paintBleed",
+  );
+  assertThrows(
+    () =>
+      componentExampleCapturePaintInsets({
+        boxShadow: "none",
+        textShadow: "none",
+        outlineStyle: "none",
+        outlineWidth: "0px",
+        outlineOffset: "0px",
+        filter: "blur(2px)",
+      }),
+    TypeError,
+    "paintBleed",
+  );
+
+  assertEquals(
+    componentExampleCapturePositionedBoxContained(
+      {
+        top: "0px",
+        right: "0px",
+        bottom: "auto",
+        left: "0px",
+        width: "auto",
+        height: "3px",
+        transform: "none",
+      },
+      { width: 320, height: 180 },
+    ),
+    true,
+  );
+  assertEquals(
+    componentExampleCapturePositionedBoxContained(
+      {
+        top: "-12px",
+        right: "auto",
+        bottom: "auto",
+        left: "-8px",
+        width: "24px",
+        height: "24px",
+        transform: "none",
+      },
+      { width: 320, height: 180 },
+    ),
+    false,
+    "negative positioned pseudo paint requires an explicit bleed declaration",
+  );
+  assertEquals(
+    componentExampleCapturePositionedBoxContained(
+      {
+        top: "0px",
+        right: "auto",
+        bottom: "auto",
+        left: "0px",
+        width: "24px",
+        height: "24px",
+        transform: "matrix(1, 0, 0, 1, 4, 0)",
+      },
+      { width: 320, height: 180 },
+    ),
+    false,
+    "transformed pseudo paint cannot be proven from allocation geometry",
+  );
+  const clippedDecoration = {
+    top: "auto",
+    right: "-64px",
+    bottom: "-112px",
+    left: "auto",
+    width: "288px",
+    height: "288px",
+    transform: "none",
+  };
+  assertEquals(
+    componentExampleCapturePositionedPaintContainedOrClipped(
+      clippedDecoration,
+      { width: 800, height: 500 },
+      { x: "hidden", y: "hidden" },
+    ),
+    true,
+    "self-clipped pseudo paint cannot escape the selected allocation",
+  );
+  assertEquals(
+    componentExampleCapturePositionedPaintContainedOrClipped(
+      clippedDecoration,
+      { width: 800, height: 500 },
+      { x: "visible", y: "hidden" },
+    ),
+    false,
+    "every escaping axis must either fit or be clipped",
+  );
+});
+
+Deno.test("representative framing rejects sparse allocation at the versioned boundary", () => {
+  const allocation = { x: 0, y: 0, width: 960, height: 40 };
+  const boundaryWidth = allocation.width *
+    componentExampleCaptureContract.framing.minimumSubjectAreaRatio;
+
+  validateRepresentativeComponentExampleFraming(
+    "future-layout/default/light",
+    allocation,
+    { x: 0, y: 0, width: boundaryWidth, height: allocation.height },
+  );
+  assertThrows(
+    () =>
+      validateRepresentativeComponentExampleFraming(
+        "future-layout/default/light",
+        allocation,
+        {
+          x: 0,
+          y: 0,
+          width: boundaryWidth - 1,
+          height: allocation.height,
+        },
+      ),
+    Error,
+    "pathologically sparse",
+  );
+  validateRepresentativeComponentExampleFraming(
+    "future-layout/default/light",
+    allocation,
+    { x: 0, y: 0, width: 1, height: 1 },
+    {
+      mode: "allocation",
+      reason: "The empty measure demonstrates intentional end alignment.",
+    },
+  );
+
+  const explicitAllocation = {
+    selectors: [".future-layout"],
+    framing: {
+      mode: "allocation" as const,
+      reason: "The empty measure is the layout evidence.",
+    },
+  };
+  validateComponentExampleCaptureDirective(
+    explicitAllocation,
+    "future-layout/default",
+  );
+  assertThrows(
+    () =>
+      validateRepresentativeComponentExampleFraming(
+        "future-layout/explicit-without-intent/light",
+        allocation,
+        { x: 0, y: 0, width: 1, height: 1 },
+      ),
+    Error,
+    "pathologically sparse",
+  );
+  validateRepresentativeComponentExampleFraming(
+    "future-layout/explicit-with-intent/light",
+    allocation,
+    { x: 0, y: 0, width: 1, height: 1 },
+    explicitAllocation.framing,
+  );
+
+  const subjects = componentExampleCaptureSubjectRegions([{
+    region: allocation,
+    paintsOwnBox: false,
+    children: [{
+      region: allocation,
+      paintsOwnBox: false,
+      children: [{
+        region: { x: 0, y: 0, width: 240, height: 40 },
+        paintsOwnBox: true,
+        children: [],
+      }],
+    }],
+  }]);
+  assertEquals(subjects, [{ x: 0, y: 0, width: 240, height: 40 }]);
+  assertThrows(
+    () =>
+      validateRepresentativeComponentExampleFraming(
+        "future-layout/transparent-wrapper/light",
+        allocation,
+        componentExampleCaptureRegion(subjects.map((region) => ({
+          bounds: {
+            left: region.x,
+            top: region.y,
+            right: region.x + region.width,
+            bottom: region.y + region.height,
+          },
+          paint: { top: 0, right: 0, bottom: 0, left: 0 },
+        }))),
+      ),
+    Error,
+    "pathologically sparse",
+  );
 });
 
 Deno.test("exact-bounds screenshots retain document-space clips taller than the viewport", () => {
-  const region = { x: 160, y: 160, width: 960, height: 1047 };
+  const { harness } = componentExampleCaptureContract;
+  const region = {
+    x: harness.inset,
+    y: harness.inset,
+    width: harness.width,
+    height: 1047,
+  };
   const options = componentExampleScreenshotOptions(region);
   assertEquals(options.clip, region);
   assertEquals(options.fullPage, true);

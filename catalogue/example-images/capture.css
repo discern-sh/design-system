@@ -6,7 +6,6 @@
 
   html,
   body {
-    min-width: 1280px;
     margin: 0;
     overflow: visible;
     background: var(--discern-color-canvas);
@@ -18,9 +17,6 @@
     --discern-font-ui: "Inter", sans-serif;
     --discern-font-mono: "JetBrains Mono", monospace;
     box-sizing: border-box;
-    width: 960px;
-    min-height: 720px;
-    margin: 160px;
     background: var(--discern-color-canvas);
   }
 

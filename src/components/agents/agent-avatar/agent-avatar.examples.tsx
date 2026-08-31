@@ -25,7 +25,11 @@ export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
   [
-    { id: "default", Example: IdentityState },
+    {
+      id: "default",
+      Example: IdentityState,
+      capture: { selectors: [".discern-agent-avatar"] },
+    },
     { id: "working", Example: WorkingState },
     { id: "blocked", Example: BlockedState },
   ],

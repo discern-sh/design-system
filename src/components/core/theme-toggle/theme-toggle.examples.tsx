@@ -72,7 +72,11 @@ export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
   [
-    { id: "default", Example: FromLightExample },
+    {
+      id: "default",
+      Example: FromLightExample,
+      capture: { selectors: [".discern-theme-toggle"] },
+    },
     { id: "quiet", Example: QuietExample },
     { id: "from-dark", Example: FromDarkExample },
   ],

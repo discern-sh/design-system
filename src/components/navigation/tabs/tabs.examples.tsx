@@ -73,13 +73,22 @@ function ManualActivationExample() {
   );
 }
 
+const tabsCapture = {
+  selectors: [".discern-tabs"],
+  paintBleed: 1,
+} as const;
+
 export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
   [
-    { id: "default", Example: OverviewExample },
-    { id: "details", Example: DetailsExample },
-    { id: "manual", Example: ManualActivationExample },
+    {
+      id: "default",
+      Example: OverviewExample,
+      capture: tabsCapture,
+    },
+    { id: "details", Example: DetailsExample, capture: tabsCapture },
+    { id: "manual", Example: ManualActivationExample, capture: tabsCapture },
   ],
 );
 

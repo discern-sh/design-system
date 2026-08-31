@@ -40,11 +40,7 @@ export const catalogueExamples = defineCatalogueExamples(
       id: "default",
       Example: PrimaryExample,
       capture: {
-        selectors: [
-          "button.discern-button:not(:disabled)",
-          "a.discern-button",
-          "button.discern-button:disabled",
-        ],
+        selectors: [".discern-example-row > .discern-button"],
       },
     },
     { id: "secondary", Example: SecondaryExample },

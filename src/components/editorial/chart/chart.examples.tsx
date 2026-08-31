@@ -9,6 +9,8 @@ import { DataFigure } from "../data-figure/data-figure.tsx";
 import meta, { componentExampleVocabulary } from "./chart.meta.ts";
 import { Chart } from "./chart.tsx";
 
+const chartCapture = { selectors: [".discern-chart"] } as const;
+
 function releaseSpec(
   kind: string,
   posture: "maximum-density" | "minimal" | "representative" | "structural",
@@ -77,9 +79,21 @@ export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
   [
-    { id: "default", Example: RepresentativeChartExample },
-    { id: "structural", Example: StructuralChartExample },
-    { id: "dense-data", Example: DenseChartExample },
+    {
+      id: "default",
+      Example: RepresentativeChartExample,
+      capture: chartCapture,
+    },
+    {
+      id: "structural",
+      Example: StructuralChartExample,
+      capture: chartCapture,
+    },
+    {
+      id: "dense-data",
+      Example: DenseChartExample,
+      capture: chartCapture,
+    },
   ],
 );
 

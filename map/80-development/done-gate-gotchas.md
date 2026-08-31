@@ -142,7 +142,7 @@ expects the node_modules/ directory to be up to date. Did you forget to run
 
 ### A tall example refuses to capture
 
-**Symptom.** A new or grown example fails its capture with "renders a 1280×2140 document past the 1280×2000 capture viewport". Nothing is wrong with the example, and it renders correctly in the Catalogue.
+**Symptom.** A new or grown example fails its capture because its document renders past the versioned capture viewport. Nothing is wrong with the example, and it renders correctly in the Catalogue.
 
 **Cause.** The capture viewport is deliberately taller than the tallest example. A `fullPage` screenshot of a document larger than the viewport permanently changes how that Chromium page rasterizes text, for every later capture it takes, and navigation does not clear it — so a single tall example would silently move the pixels of whichever examples followed it. Because the run reuses one page, the viewport must stay clear of every document, and `validateComponentExampleCaptureFitsViewport` refuses rather than let that happen.
 

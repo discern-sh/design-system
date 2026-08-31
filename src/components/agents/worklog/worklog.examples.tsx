@@ -2,6 +2,12 @@ import { defineCatalogueExamples } from "../../../../catalogue/conformance.ts";
 import { Worklog } from "./worklog.tsx";
 import meta, { componentExampleVocabulary } from "./worklog.meta.ts";
 
+const worklogCapture = {
+  selectors: [".discern-worklog"],
+  // Entry connectors escape their rows but remain inside the Worklog allocation.
+  paintBleed: 0,
+} as const;
+
 function ActiveRunState() {
   return (
     <Worklog
@@ -41,8 +47,8 @@ export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
   [
-    { id: "default", Example: ActiveRunState },
-    { id: "failure", Example: FailedRunState },
+    { id: "default", Example: ActiveRunState, capture: worklogCapture },
+    { id: "failure", Example: FailedRunState, capture: worklogCapture },
   ],
 );
 

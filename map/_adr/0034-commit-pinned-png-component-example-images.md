@@ -1,6 +1,6 @@
 # ADR 0034: Commit pinned PNG Component example images
 
-**Status**: accepted
+**Status**: superseded by [ADR-0038](0038-frame-component-images-by-subject-and-paint.md)
 
 ## Context
 

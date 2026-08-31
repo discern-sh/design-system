@@ -22,7 +22,18 @@ export const catalogueExamples = defineCatalogueExamples(
   meta,
   componentExampleVocabulary,
   [
-    { id: "default", Example: QuietExample },
+    {
+      id: "default",
+      Example: QuietExample,
+      capture: {
+        selectors: [".discern-icon-button"],
+        framing: {
+          mode: "allocation",
+          reason:
+            "The quiet Icon button's transparent square is its minimum pointer target and visible alignment contract.",
+        },
+      },
+    },
     { id: "outline", Example: OutlineExample },
   ],
 );

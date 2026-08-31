@@ -99,7 +99,15 @@ export const catalogueExamples = defineCatalogueExamples(
   componentExampleVocabulary,
   [
     { id: "framed", Example: FramedStageState },
-    { id: "inset", Example: InsetStageState },
+    {
+      id: "inset",
+      Example: InsetStageState,
+      capture: {
+        selectors: [".discern-marketing-stage"],
+        // The stage body clips the blurred atmosphere to its own allocation.
+        paintBleed: 0,
+      },
+    },
     { id: "plain", Example: PlainStageState },
   ],
 );
