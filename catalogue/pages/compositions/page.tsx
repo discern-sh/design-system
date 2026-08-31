@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { CopyButton } from "../../../src/components/docs/copy-button/copy-button.tsx";
+import { Tag } from "../../../src/components/display/tag/tag.tsx";
 import { OverflowCue } from "../../../src/components/layout/overflow-cue/overflow-cue.tsx";
 import type { CompositionRecipe } from "../../compositions.tsx";
 import {
@@ -14,7 +15,7 @@ import {
   compositionsRouteFamily,
 } from "../../routes/compositions.ts";
 import { catalogueComponentPath } from "../../routes/components.ts";
-import { CataloguePageHeader } from "../shared.tsx";
+import { CatalogueIndexCard, CataloguePageHeader } from "../shared.tsx";
 
 export interface CompositionGalleryItem {
   readonly id: string;
@@ -96,13 +97,13 @@ function ComponentSummary(
   const visible = names.slice(0, 3);
   const remaining = names.length - visible.length;
   return (
-    <p
-      className="discern-catalogue-pattern-card__components"
+    <div
+      className="discern-catalogue-index-card__tags"
       aria-label={`Components: ${names.join(", ")}`}
     >
-      {visible.join(" · ")}
-      {remaining > 0 ? <span>+{remaining} more</span> : null}
-    </p>
+      {visible.map((name) => <Tag key={name}>{name}</Tag>)}
+      {remaining > 0 ? <Tag>+{remaining} more</Tag> : null}
+    </div>
   );
 }
 
@@ -122,22 +123,16 @@ function CompositionsGallery(
       </p>
       <div className="discern-catalogue-pattern-grid">
         {compositionGalleryItems(recipes).map((pattern) => (
-          <article
-            className="discern-catalogue-pattern-card"
+          <CatalogueIndexCard
+            href={pattern.href}
+            title={pattern.title}
+            description={pattern.description}
+            action="View pattern"
+            metadata={<ComponentSummary names={pattern.componentNames} />}
             data-discern-composition-card={pattern.id}
             key={pattern.id}
-          >
-            <h2>{pattern.title}</h2>
-            <p>{pattern.description}</p>
-            <ComponentSummary names={pattern.componentNames} />
-            <a
-              className="discern-catalogue-pattern-card__action"
-              href={pattern.href}
-              aria-label={`View ${pattern.title} pattern`}
-            >
-              View pattern <span aria-hidden="true">→</span>
-            </a>
-          </article>
+            primaryAriaLabel={`View ${pattern.title} pattern`}
+          />
         ))}
       </div>
     </div>
@@ -251,7 +246,10 @@ function CompositionDetail(
             tabIndex={0}
             data-discern-overflow-cue-target=""
           >
-            <div className="discern-catalogue-pattern__viewport">
+            <div
+              className="discern-catalogue-pattern__viewport"
+              data-discern-pattern-stage={recipe.stage}
+            >
               <Example />
             </div>
           </div>

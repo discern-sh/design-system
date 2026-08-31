@@ -10,7 +10,7 @@ An integer sweep of the existing Token formulae in both Themes, using the existi
 
 ## Decision
 
-Catalogue Appearance exposes one source-owned set of named, tested presets: Sky (235°), Blue (255°, the default), Violet (300°), and Rose (335°). URL, storage, shell, Builder preview, and visual review state all consume the same option authority. Unknown or colliding values fail closed instead of being rounded into the apparent range.
+Catalogue Appearance exposes one source-owned ordered set of named, tested presets with exactly one declared default. URL, storage, shell, Builder preview, and visual review state all consume the same option authority. Unknown or colliding values fail closed instead of being rounded into the apparent range. The authority may admit more named values from the proved integer safe islands without changing this decision; its exhaustive validation remains the admission gate.
 
 The proof evaluates every exposed option in light and dark Themes for accent text contrast, focus contrast across accent, success, warning, and danger soft surfaces, and pairwise distinction between accent, success, warning, and danger roles. The roles retain their own labels and non-colour witnesses; selecting an accent never recolours success.
 

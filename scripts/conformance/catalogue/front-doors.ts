@@ -1,8 +1,10 @@
 import type { Page } from "playwright-core";
 import {
   catalogueNavigation,
+  catalogueRouteFamilies,
   catalogueRoutePaths,
 } from "../../../catalogue/routes.ts";
+import type { CatalogueRouteFamilyId } from "../../../catalogue/routes.ts";
 import { componentExplorerHref } from "../../../catalogue/pages/components/state.ts";
 import { scanBrowserAccessibility } from "../../browser-conformance-support.ts";
 import { withViewport } from "../../viewport.ts";
@@ -18,6 +20,12 @@ const findAComponentHref = componentExplorerHref({
   query: "",
   showAll: true,
 });
+
+const catalogueIndexCardExemptions: Partial<
+  Record<CatalogueRouteFamilyId, string>
+> = {
+  compare: "Compare is a focused workspace rather than a route index.",
+};
 
 function projectedRoutesEqual(
   actual: readonly LinkProjection[],
@@ -174,18 +182,26 @@ async function verifyOverviewDirectory(
     const primary = document.querySelector<HTMLAnchorElement>(
       ".discern-catalogue-overview [data-discern-primary-catalogue-action]",
     );
-    const cards = [...document.querySelectorAll<HTMLAnchorElement>(
+    const cards = [...document.querySelectorAll<HTMLElement>(
       ".discern-catalogue-overview [data-discern-catalogue-destination]",
-    )].map((card) => ({
-      id: card.dataset.discernCatalogueDestination ?? "",
-      label: card.querySelector("h2")?.textContent?.trim() ?? "",
-      path: card.pathname,
-      count: card.querySelector("small")?.textContent?.trim() ?? "",
-      action: card.querySelector(".discern-catalogue-route-card__action")
-        ?.textContent?.trim() ?? "",
-    }));
+    )].map((card) => {
+      const cardPrimary = card.querySelector<HTMLAnchorElement>(
+        "[data-discern-catalogue-index-card-primary]",
+      );
+      return {
+        id: card.dataset.discernCatalogueDestination ?? "",
+        label: card.querySelector("h2")?.textContent?.trim() ?? "",
+        path: cardPrimary?.pathname ?? "",
+        count: card.querySelector(".discern-catalogue-index-card__metadata")
+          ?.textContent?.trim() ?? "",
+        action: card.querySelector(".discern-catalogue-index-card__action")
+          ?.textContent?.trim() ?? "",
+        enrolled: card.matches("[data-discern-catalogue-index-card]") &&
+          cardPrimary !== null,
+      };
+    });
     const visibleImages = [...document.querySelectorAll<HTMLImageElement>(
-      ".discern-catalogue-route-card__image img",
+      ".discern-catalogue-index-card__media img",
     )].filter((image) => getComputedStyle(image).display !== "none");
     return {
       primary: primary === null ? null : {
@@ -224,6 +240,11 @@ async function verifyOverviewDirectory(
     );
   }
   for (const card of shape.cards) {
+    if (!card.enrolled) {
+      failures.push(
+        `overview/routes: ${card.label} bypassed the shared index-card authority`,
+      );
+    }
     if (!/^\d+\s+\S/.test(card.count)) {
       failures.push(
         `overview/routes: ${card.label} count is not labelled (${
@@ -241,6 +262,156 @@ async function verifyOverviewDirectory(
     failures.push(
       `overview/images: expected one generated representative image, found ${shape.visibleImages}`,
     );
+  }
+}
+
+async function verifyIndexCardEnrollment(
+  page: Page,
+  origin: string,
+  failures: string[],
+): Promise<void> {
+  const registeredIds = new Set(
+    catalogueRouteFamilies.map(({ descriptor }) => descriptor.id),
+  );
+  for (const [id, reason] of Object.entries(catalogueIndexCardExemptions)) {
+    if (!registeredIds.has(id as CatalogueRouteFamilyId)) {
+      failures.push(
+        `index-cards/exemptions: ${id} is exempt but is not a registered route family`,
+      );
+    }
+    if (reason.trim() === "") {
+      failures.push(
+        `index-cards/exemptions: ${id} needs a non-empty reason`,
+      );
+    }
+  }
+
+  for (const { descriptor } of catalogueRouteFamilies) {
+    const url = new URL(descriptor.path, origin);
+    url.searchParams.set("theme", "light");
+    await page.goto(url.href, { waitUntil: "networkidle" });
+    await page.locator(".discern-catalogue-shell").waitFor();
+    const cards = page.locator("[data-discern-catalogue-index-card]");
+    const cardCount = await cards.count();
+    const exemption = catalogueIndexCardExemptions[descriptor.id];
+    if (exemption !== undefined) {
+      if (cardCount !== 0) {
+        failures.push(
+          `index-cards/${descriptor.id}: exemption is stale; the workspace now exposes ${cardCount} shared card(s)`,
+        );
+      }
+      continue;
+    }
+    if (cardCount === 0) {
+      failures.push(
+        `index-cards/${descriptor.id}: registered index bypassed the shared card authority`,
+      );
+      continue;
+    }
+
+    const firstCard = cards.first();
+    await firstCard.scrollIntoViewIfNeeded();
+    const contracts = await cards.evaluateAll((nodes) =>
+      nodes.map((card, index) => {
+        const primaryLinks = card.querySelectorAll<HTMLElement>(
+          "[data-discern-catalogue-index-card-primary]",
+        );
+        const primary = primaryLinks[0];
+        const secondaryLinks = [...card.querySelectorAll<HTMLElement>(
+          "[data-discern-catalogue-index-card-secondary]",
+        )];
+        const stretched = primary === undefined
+          ? null
+          : getComputedStyle(primary, "::after");
+        const cardBox = card.getBoundingClientRect();
+        const hit = index === 0
+          ? document.elementFromPoint(
+            cardBox.left + Math.min(12, cardBox.width / 2),
+            cardBox.top + Math.min(12, cardBox.height / 2),
+          )
+          : null;
+        return {
+          publicCard: card.querySelector(":scope > .discern-card") !== null,
+          primaryLinks: primaryLinks.length,
+          nestedInteractive: primary?.querySelector(
+            "a, button, input, select, textarea, summary",
+          ) !== null,
+          secondaryLinks: secondaryLinks.length,
+          secondarySiblings: secondaryLinks.every((link) =>
+            primary !== undefined && !primary.contains(link)
+          ),
+          stretched: stretched?.position === "absolute" &&
+            stretched.top === "0px" && stretched.right === "0px" &&
+            stretched.bottom === "0px" && stretched.left === "0px",
+          surfaceActivatesPrimary: index !== 0 ||
+            (primary !== undefined &&
+              (hit === primary ||
+                hit?.closest(
+                    "[data-discern-catalogue-index-card-primary]",
+                  ) === primary)),
+        };
+      })
+    );
+    if (
+      contracts.some((contract) =>
+        !contract.publicCard || contract.primaryLinks !== 1 ||
+        contract.nestedInteractive || !contract.secondarySiblings ||
+        !contract.stretched || !contract.surfaceActivatesPrimary
+      )
+    ) {
+      failures.push(
+        `index-cards/${descriptor.id}: a card lost its public Card surface, single stretched primary link, or sibling secondary-action contract`,
+      );
+    }
+
+    const primary = firstCard.locator(
+      "[data-discern-catalogue-index-card-primary]",
+    );
+    await page.keyboard.press("Tab");
+    await primary.focus();
+    const focusContract = await firstCard.evaluate((card) => {
+      const surface = card.querySelector<HTMLElement>(".discern-card");
+      const arrow = card.querySelector<HTMLElement>(
+        ".discern-catalogue-index-card__action-arrow",
+      );
+      const outline = surface === null ? null : getComputedStyle(surface);
+      const motion = arrow === null ? null : getComputedStyle(arrow);
+      return {
+        primaryFocused: document.activeElement === card.querySelector(
+          "[data-discern-catalogue-index-card-primary]",
+        ),
+        focusVisible: outline !== null && outline.outlineStyle !== "none" &&
+          Number.parseFloat(outline.outlineWidth) >= 2,
+        reducedMotion: motion !== null &&
+          motion.transitionDuration.split(",").every((duration) =>
+            Number.parseFloat(duration) <= 0.00001 + Number.EPSILON
+          ) && motion.transform === "none",
+      };
+    });
+    if (
+      !focusContract.primaryFocused || !focusContract.focusVisible ||
+      !focusContract.reducedMotion
+    ) {
+      failures.push(
+        `index-cards/${descriptor.id}: keyboard focus or reduced-motion behavior is incomplete: ${
+          JSON.stringify(focusContract)
+        }`,
+      );
+    }
+
+    const secondary = firstCard.locator(
+      "[data-discern-catalogue-index-card-secondary]",
+    ).first();
+    if (await secondary.count() > 0) {
+      await secondary.focus();
+      if (
+        !await secondary.evaluate((link) => document.activeElement === link)
+      ) {
+        failures.push(
+          `index-cards/${descriptor.id}: secondary action is not independently focusable`,
+        );
+      }
+    }
   }
 }
 
@@ -367,6 +538,7 @@ export async function verifyLandingPage(
   );
   await verifyLandingOrientation(page, origin, failures);
   await verifyOverviewDirectory(page, origin, failures);
+  await verifyIndexCardEnrollment(page, origin, failures);
   await withViewport(page, CATALOGUE_NARROW_VIEWPORT, async () => {
     await page.goto(`${origin}/`, { waitUntil: "networkidle" });
     const narrow = await page.evaluate((searchReadyHref) => ({

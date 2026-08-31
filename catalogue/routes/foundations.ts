@@ -25,8 +25,6 @@ export const foundationsPaths = Object.freeze({
   terminal: `${foundationsRouteDescriptor.path}terminal/`,
 });
 
-export const foundationsUrlChangeEvent = "discern:foundations-url-change";
-
 export function catalogueTerminalFoundationPath(id: string): string {
   return `${foundationsPaths.terminal}${encodeURIComponent(id)}/`;
 }

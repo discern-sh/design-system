@@ -213,7 +213,7 @@ Deno.test("a future recipe auto-enrols across routes, pages, search, order, and 
   assertStringIncludes(index, futureRecipe.title);
   assertStringIncludes(index, path);
   assertStringIncludes(navigation, futureRecipe.title);
-  assertStringIncludes(navigation, 'aria-current="page"');
+  assertStringIncludes(navigation, 'aria-current="location"');
 
   const neighbors = terminalRecipeNeighbors(recipes, futureRecipe.id);
   assertEquals(neighbors.previous?.id, "markdown-browser");

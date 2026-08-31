@@ -8,9 +8,30 @@ import { Masonry } from "./masonry.tsx";
 
 export const conformance = [{
   example: "default",
-  name: "variable-height peers reflow without horizontal overflow",
+  name: "variable-height peers occupy multiple wide columns",
+  viewport: { width: 1440, height: 1000 },
+  steps: [{
+    expect: "x-position-count",
+    target: {
+      selector: "[data-example-masonry] > .discern-masonry__item",
+    },
+    minimum: 2,
+  }, {
+    expect: "contained-x",
+    target: { selector: "[data-example-masonry]" },
+  }],
+}, {
+  example: "default",
+  name: "variable-height peers collapse to one narrow column",
   viewport: { width: 390, height: 844 },
   steps: [{
+    expect: "x-position-count",
+    target: {
+      selector: "[data-example-masonry] > .discern-masonry__item",
+    },
+    minimum: 1,
+    maximum: 1,
+  }, {
     expect: "contained-x",
     target: { selector: "[data-example-masonry]" },
   }],
@@ -80,9 +101,7 @@ const items = [
   },
 ] as const;
 
-function MasonryCards(
-  { entries }: { readonly entries: readonly (typeof items)[number][] },
-) {
+function masonryCards(entries: readonly (typeof items)[number][]) {
   return entries.map((item) => (
     <Card key={item.title} raised>
       <h3>{item.title}</h3>
@@ -94,7 +113,7 @@ function MasonryCards(
 function DefaultMasonryState() {
   return (
     <Masonry minimum="14rem" gap={4} data-example-masonry>
-      <MasonryCards entries={items.slice(0, 4)} />
+      {masonryCards(items.slice(0, 4))}
     </Masonry>
   );
 }

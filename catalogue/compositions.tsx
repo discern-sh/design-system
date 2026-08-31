@@ -38,12 +38,16 @@ export interface JourneyContract {
   readonly stages: readonly string[];
 }
 
+/** Intentional presentation boundary for a Composition demonstration. */
+export type CompositionStage = "inset" | "full-bleed";
+
 /** A Catalogue-only composition with a preview and source built from one definition. */
 export interface CompositionRecipe {
   readonly id: string;
   readonly title: string;
   readonly description: string;
   readonly status: typeof illustrativePatternStatus;
+  readonly stage: CompositionStage;
   readonly components: readonly string[];
   readonly journey?: JourneyContract;
   readonly Example: ComponentType;
@@ -56,6 +60,7 @@ interface RecipeDefinition<Definition> {
   readonly description: string;
   readonly components: readonly string[];
   readonly journey?: JourneyContract;
+  readonly stage?: CompositionStage;
   readonly definition: Definition;
   readonly render: (definition: Definition) => ReactNode;
   readonly source: (definition: Definition) => string;
@@ -135,6 +140,7 @@ export function defineRecipe<Definition>(
     title: recipe.title,
     description: recipe.description,
     status: illustrativePatternStatus,
+    stage: recipe.stage ?? "inset",
     components,
     ...(recipe.journey === undefined ? {} : { journey: recipe.journey }),
     Example,
@@ -675,6 +681,7 @@ const readingFirstLandingRecipe = defineRecipe({
   title: "Reading-first landing page",
   description:
     "Lead readers through an unfamiliar idea with a clear promise, measured evidence, and one final action.",
+  stage: "full-bleed",
   components: [
     "editorial-hero",
     "button",

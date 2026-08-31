@@ -58,9 +58,38 @@ async function verifyGallery(page: Page, origin: string): Promise<void> {
   );
   invariant(
     await page.locator(
-      "[data-discern-composition-card] > a[href]",
+      "[data-discern-composition-card][data-discern-catalogue-index-card] [data-discern-catalogue-index-card-primary]",
     ).count() === compositionRecipes.length,
-    "Composition cards must expose one unambiguous View pattern link each",
+    "Composition cards must enrol through the shared whole-card authority",
+  );
+  const cardContracts = await page.locator("[data-discern-composition-card]")
+    .evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const primary = node.querySelector<HTMLElement>(
+          "[data-discern-catalogue-index-card-primary]",
+        );
+        const stretched = primary === null
+          ? null
+          : getComputedStyle(primary, "::after");
+        return {
+          primaryLinks: node.querySelectorAll(
+            "[data-discern-catalogue-index-card-primary]",
+          ).length,
+          nestedInteractive: primary?.querySelector(
+            "a, button, input, select, textarea, summary",
+          ) !== null,
+          stretched: stretched?.position === "absolute" &&
+            stretched.top === "0px" && stretched.right === "0px" &&
+            stretched.bottom === "0px" && stretched.left === "0px",
+        };
+      })
+    );
+  invariant(
+    cardContracts.every((contract) =>
+      contract.primaryLinks === 1 && !contract.nestedInteractive &&
+      contract.stretched
+    ),
+    "Composition cards lost their single stretched primary link contract",
   );
 
   await page.locator(".discern-catalogue-search").click();
@@ -157,6 +186,23 @@ export async function verifyCompositionsCatalogue(
           invariant(
             Math.abs(actualWidth - width.pixels) < 0.5,
             `${recipe.title} / ${width.label} scaled to ${actualWidth}px instead of rendering at ${width.pixels}px`,
+          );
+          const stage = await detail.locator(
+            ".discern-catalogue-pattern__viewport",
+          ).evaluate((node) => {
+            const style = getComputedStyle(node);
+            return {
+              mode: node.getAttribute("data-discern-pattern-stage"),
+              paddingBlock: Number.parseFloat(style.paddingBlockStart),
+              paddingInline: Number.parseFloat(style.paddingInlineStart),
+            };
+          });
+          invariant(
+            stage.mode === recipe.stage &&
+              (recipe.stage === "inset"
+                ? stage.paddingBlock > 0 && stage.paddingInline > 0
+                : stage.paddingBlock === 0 && stage.paddingInline === 0),
+            `${recipe.title} did not render its ${recipe.stage} stage contract`,
           );
           invariant(
             await detail.locator(`input[value="${width.id}"]`).isChecked(),

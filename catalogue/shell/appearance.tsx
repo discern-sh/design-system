@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import type { CSSProperties } from "react";
 import type { ThemeSwitcherMode } from "../../src/components/core/theme-switcher/theme-switcher.tsx";
 import { ThemeToggle } from "../../src/components/core/theme-toggle/theme-toggle.tsx";
+import { Select } from "../../src/components/forms/select/select.tsx";
 import { useCatalogueTerminalTheme } from "../terminal-theme.ts";
 import {
   catalogueAppearanceOption,
@@ -104,6 +105,7 @@ export function AppearanceControl(
   const appearanceLabel = scopeLabel === undefined
     ? "appearance"
     : `${scopeLabel} appearance`;
+  const guidanceId = useId();
   return (
     <details className="discern-catalogue-appearance">
       <summary aria-label={`Change ${appearanceLabel}`}>Appearance</summary>
@@ -131,22 +133,30 @@ export function AppearanceControl(
             className="discern-catalogue-accent__swatch"
             aria-hidden="true"
           />
-          <span>Accent</span>
-          <select
+          <span>Accent review</span>
+          <Select
             value={accentHue}
             onChange={(event) =>
               onAccentHueChange(Number(event.currentTarget.value))}
             aria-label={scopeLabel === undefined
-              ? "Accent preset"
-              : `${scopeLabel} accent preset`}
-          >
-            {catalogueAppearanceOptions.map((option) => (
-              <option key={option.id} value={option.hue}>{option.label}</option>
-            ))}
-          </select>
+              ? "Accent review preset"
+              : `${scopeLabel} accent review preset`}
+            aria-describedby={guidanceId}
+            options={catalogueAppearanceOptions.map((option) => ({
+              value: String(option.hue),
+              label: option.label,
+            }))}
+          />
           <output>
             {catalogueAppearanceOption(accentHue)?.label ?? "Blue"}
           </output>
+          <small
+            className="discern-catalogue-accent__guidance"
+            id={guidanceId}
+          >
+            Safe Catalogue presets. Consumer themes can coordinate semantic
+            roles across the full colour spectrum.
+          </small>
         </label>
       </div>
     </details>

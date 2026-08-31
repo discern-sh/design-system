@@ -85,6 +85,43 @@ export async function verifyTerminalCatalogue(
       "Terminal layout index differs from its recipe authority",
     );
     invariant(
+      await indexCards.locator(
+        "[data-discern-catalogue-index-card-primary]",
+      ).count() === cliCompositionRecipes.length,
+      "Terminal layouts bypassed the shared whole-card authority",
+    );
+    const indexContracts = await indexCards.evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const primary = node.querySelector<HTMLElement>(
+          "[data-discern-catalogue-index-card-primary]",
+        );
+        const stretched = primary === null
+          ? null
+          : getComputedStyle(primary, "::after");
+        const action = node.querySelector<HTMLElement>(
+          ".discern-catalogue-index-card__action",
+        );
+        return {
+          nestedInteractive: primary?.querySelector(
+            "a, button, input, select, textarea, summary",
+          ) !== null,
+          stretched: stretched?.position === "absolute" &&
+            stretched.top === "0px" && stretched.right === "0px" &&
+            stretched.bottom === "0px" && stretched.left === "0px",
+          actionBackground: action === null
+            ? "missing"
+            : getComputedStyle(action).backgroundColor,
+        };
+      })
+    );
+    invariant(
+      indexContracts.every((contract) =>
+        !contract.nestedInteractive && contract.stretched &&
+        contract.actionBackground === "rgba(0, 0, 0, 0)"
+      ),
+      "Terminal cards lost their stretched link or restored the bespoke blue CTA",
+    );
+    invariant(
       await page.locator("[data-discern-terminal-inspector]").count() === 0,
       "Terminal layout index must not mount every complete inspector",
     );
@@ -198,6 +235,25 @@ export async function verifyTerminalCatalogue(
         await page.getByRole("spinbutton", { name: "Rows" }).inputValue() ===
           "33",
       "Custom URL geometry did not populate the lab controls",
+    );
+    const compactControls = await page.locator(
+      ".discern-catalogue-terminal-lab__fields :is(input, select)",
+    ).evaluateAll((nodes) =>
+      nodes.map((node) => ({
+        height: node.getBoundingClientRect().height,
+        publicSelect: node.tagName !== "SELECT" ||
+          (node.classList.contains("discern-control") &&
+            node.parentElement?.classList.contains("discern-select") === true),
+      }))
+    );
+    invariant(
+      compactControls.length >= 4 &&
+        compactControls.every((control) =>
+          Math.abs(control.height - 42) <= 0.5 && control.publicSelect
+        ),
+      `Terminal lab controls diverged from the 42px public control row: ${
+        JSON.stringify(compactControls)
+      }`,
     );
 
     await page.getByRole("button", { name: "Copy raw terminal output" })

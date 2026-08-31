@@ -78,6 +78,7 @@ const emptyShellEvidence: CatalogueShellEvidence = {
   routeShapes: 0,
   axeScans: 0,
   drawerChecks: 0,
+  navigationChecks: 0,
   searchChecks: 0,
   appearanceChecks: 0,
   reflowChecks: 0,
@@ -212,7 +213,8 @@ export async function runConformance(): Promise<void> {
         `${components.floatingSurfaces} floating surfaces share the clipping cure. ` +
         `Catalogue shell passed ${shell.routeShapes} route shapes, ` +
         `${shell.axeScans} axe scans, ${shell.reflowChecks} reflow checks, ` +
-        `${shell.drawerChecks} drawer checks, ${shell.searchChecks} search checks, ` +
+        `${shell.drawerChecks} drawer checks, ${shell.navigationChecks} navigation checks, ` +
+        `${shell.searchChecks} search checks, ` +
         `and ${shell.appearanceChecks} appearance checks. ` +
         `Terminal Catalogue passed ${terminal.profileChecks} profile fits across ` +
         `${terminal.layouts} layouts and re-themed ${terminal.componentSpecimens} ` +

@@ -22,10 +22,89 @@ export interface CatalogueShellEvidence {
   readonly routeShapes: number;
   readonly axeScans: number;
   readonly drawerChecks: number;
+  readonly navigationChecks: number;
   readonly searchChecks: number;
   readonly appearanceChecks: number;
   readonly reflowChecks: number;
   readonly metadataRoleChecks: number;
+}
+
+async function verifyNavigationState(
+  page: Page,
+  origin: string,
+): Promise<number> {
+  const url = new URL(catalogueRoutePaths.components, origin);
+  url.searchParams.set("group", "layout");
+  await loadCataloguePage(page, url.href);
+  const state = await page.evaluate(() => {
+    const navigation = document.querySelector<HTMLElement>(
+      'nav[aria-label="Catalogue"]',
+    );
+    const primary = navigation?.querySelector<HTMLElement>(
+      'a[href="/catalogue/components/"]',
+    );
+    const local = navigation?.querySelector<HTMLElement>(
+      'a[href*="group=layout"]',
+    );
+    const badge = local?.querySelector<HTMLElement>("small");
+    const visual = (node: HTMLElement | null | undefined) => {
+      if (node == null) return undefined;
+      const style = getComputedStyle(node);
+      return {
+        background: style.backgroundColor,
+        borderWidth: style.borderInlineStartWidth,
+        color: style.color,
+        fontWeight: style.fontWeight,
+        textDecoration: style.textDecorationLine,
+      };
+    };
+    return {
+      sharedComponent: navigation?.classList.contains("discern-docs-nav") ??
+        false,
+      primaryCurrent: primary?.getAttribute("aria-current"),
+      localCurrent: local?.getAttribute("aria-current"),
+      primary: visual(primary),
+      local: visual(local),
+      badgeDecoration: badge == null
+        ? undefined
+        : getComputedStyle(badge).textDecorationLine,
+    };
+  });
+  invariant(
+    state.sharedComponent,
+    "Catalogue navigation bypassed the public DocsNav component",
+  );
+  invariant(
+    state.primaryCurrent === "page" && state.localCurrent === "location",
+    `Catalogue navigation lost page/location semantics: ${
+      JSON.stringify(state)
+    }`,
+  );
+  invariant(
+    state.primary !== undefined && state.local !== undefined &&
+      state.primary.background === state.local.background &&
+      state.primary.color === state.local.color &&
+      state.primary.fontWeight === state.local.fontWeight,
+    `Catalogue current rows do not share one visual state: ${
+      JSON.stringify(state)
+    }`,
+  );
+  invariant(
+    state.primary?.borderWidth === "0px" &&
+      state.local?.borderWidth === "0px",
+    `Catalogue current rows restored an active border rail: ${
+      JSON.stringify(state)
+    }`,
+  );
+  invariant(
+    state.primary?.textDecoration === "none" &&
+      state.local?.textDecoration === "none" &&
+      state.badgeDecoration === "none",
+    `Catalogue current rows restored an underlined label or badge: ${
+      JSON.stringify(state)
+    }`,
+  );
+  return 5;
 }
 
 async function verifyRouteShape(page: Page, origin: string): Promise<number> {
@@ -316,7 +395,33 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
     '.discern-catalogue-appearance > summary[aria-label="Change appearance"]',
   );
   await appearance.click();
-  const accent = page.getByRole("combobox", { name: "Accent preset" });
+  const accent = page.getByRole("combobox", {
+    name: "Accent review preset",
+  });
+  invariant(
+    await accent.locator("option").count() >= 10,
+    "Appearance does not expose a representative safe preset range",
+  );
+  invariant(
+    await page.getByText(/full colour spectrum/i).count() === 1,
+    "Appearance does not explain full-spectrum coordinated consumer themes",
+  );
+  const accentStyle = await accent.evaluate((node) => {
+    const style = getComputedStyle(node);
+    return {
+      appearance: style.appearance,
+      height: node.getBoundingClientRect().height,
+      publicControl: node.classList.contains("discern-control") &&
+        node.parentElement?.classList.contains("discern-select") === true,
+    };
+  });
+  invariant(
+    accentStyle.publicControl && accentStyle.appearance === "none" &&
+      accentStyle.height >= 42,
+    `Appearance bypassed the public Select contract: ${
+      JSON.stringify(accentStyle)
+    }`,
+  );
   await accent.selectOption("300");
   invariant(
     await accent.inputValue() === "300",
@@ -353,7 +458,9 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
   );
   await appearance.click();
   invariant(
-    await page.getByRole("combobox", { name: "Accent preset" }).inputValue() ===
+    await page.getByRole("combobox", {
+      name: "Accent review preset",
+    }).inputValue() ===
       "300",
     "Persisted accent preset did not restore",
   );
@@ -383,7 +490,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
     localStorage.removeItem("discern-catalogue-accent-hue");
     localStorage.removeItem("discern-catalogue-theme");
   });
-  return 8;
+  return 11;
 }
 
 async function verifyPopulationPostures(
@@ -430,6 +537,7 @@ export async function verifyCatalogueShell(
   const accessibility = await verifyReflowAndAccessibility(page, origin);
   await verifySkipLink(page, origin);
   const drawerChecks = await verifyDrawer(page, origin);
+  const navigationChecks = await verifyNavigationState(page, origin);
   const searchChecks = await verifySearch(page, origin);
   const appearanceChecks = await verifyAppearance(page, origin);
   await verifyPopulationPostures(page, origin);
@@ -437,6 +545,7 @@ export async function verifyCatalogueShell(
     routeShapes,
     axeScans: accessibility.scans,
     drawerChecks,
+    navigationChecks,
     searchChecks: searchChecks.checks,
     appearanceChecks,
     reflowChecks: accessibility.reflow,

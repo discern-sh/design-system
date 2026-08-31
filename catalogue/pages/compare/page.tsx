@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { TerminalThemeVariant } from "../../../src/cli/theme.ts";
+import { Select } from "../../../src/components/forms/select/select.tsx";
 import { OverflowCue } from "../../../src/components/layout/overflow-cue/overflow-cue.tsx";
 import type { RegistryEntry } from "../../generated/registry.ts";
 import { catalogueDecisionCopyProps } from "../../metadata-copy.ts";
@@ -129,7 +130,7 @@ function ScopePicker(
   return (
     <label className="discern-catalogue-compare-scope">
       <span>Comparison scope</span>
-      <select
+      <Select
         value={value}
         onChange={(event) => {
           const next = event.currentTarget.value;
@@ -187,7 +188,7 @@ function ScopePicker(
         <option value="all">
           Complete system ({directory.components.length})
         </option>
-      </select>
+      </Select>
     </label>
   );
 }
@@ -329,7 +330,7 @@ export function ComparePage(
           ? (
             <label>
               <span>Add a Component</span>
-              <select
+              <Select
                 value=""
                 onChange={(event) => {
                   const slug = event.currentTarget.value;
@@ -344,7 +345,7 @@ export function ComparePage(
                 {remaining.map(({ meta }) => (
                   <option value={meta.slug} key={meta.slug}>{meta.name}</option>
                 ))}
-              </select>
+              </Select>
             </label>
           )
           : null}

@@ -12,7 +12,7 @@
     background: var(--discern-color-surface-sunken);
   }
   .discern-catalogue-explorer-controls > button {
-    min-height: 40px;
+    min-height: 42px;
     padding-inline: 13px;
     border: 1px solid var(--discern-color-border-strong);
     border-radius: var(--discern-radius-sm);
@@ -483,31 +483,6 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
   }
-  .discern-catalogue-collection-card,
-  .discern-catalogue-component-card {
-    position: relative;
-    min-width: 0;
-    overflow: hidden;
-    border: 1px solid var(--discern-color-border);
-    border-radius: var(--discern-radius-lg);
-    background: var(--discern-color-surface);
-    box-shadow: var(--discern-shadow-card);
-  }
-  .discern-catalogue-collection-card__browse,
-  .discern-catalogue-component-card__inspect {
-    display: grid;
-    color: var(--discern-color-ink);
-    text-decoration: none;
-  }
-  .discern-catalogue-collection-card__browse:hover,
-  .discern-catalogue-component-card__inspect:hover {
-    background: color-mix(in oklab, var(--discern-color-surface) 94%,
-      var(--discern-color-accent-100));
-  }
-  .discern-catalogue-collection-card__browse:focus-visible,
-  .discern-catalogue-component-card__inspect:focus-visible,
-  .discern-catalogue-collection-card__compare:focus-visible,
-  .discern-catalogue-component-card__compare:focus-visible,
   .discern-catalogue-component__sources a:focus-visible,
   .discern-catalogue-detail__view-all:focus-visible {
     position: relative;
@@ -517,103 +492,44 @@
   }
   .discern-catalogue-collection-card__mosaic {
     display: grid;
-    min-height: 132px;
+    width: 100%;
+    min-height: 168px;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1px;
     overflow: hidden;
-    border-block-end: 1px solid var(--discern-color-border);
     background: var(--discern-color-border);
   }
   .discern-catalogue-collection-card__mosaic > span,
   .discern-catalogue-component-card__image {
     display: grid;
     min-width: 0;
+    height: 100%;
     place-items: center;
     padding: 16px;
     background: var(--discern-color-canvas);
   }
-  .discern-catalogue-themed-image {
-    display: block;
+  .discern-catalogue-collection-card__mosaic .discern-catalogue-index-card__theme-image {
     max-width: 100%;
-    height: auto;
     max-height: 112px;
-    object-fit: contain;
-  }
-  .discern-catalogue-themed-image[data-discern-image-theme="dark"] {
-    display: none;
-  }
-  [data-discern-theme="dark"] .discern-catalogue-themed-image[data-discern-image-theme="light"] {
-    display: none;
-  }
-  [data-discern-theme="dark"] .discern-catalogue-themed-image[data-discern-image-theme="dark"] {
-    display: block;
-  }
-  .discern-catalogue-collection-card__identity,
-  .discern-catalogue-component-card__body {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-    padding: 16px 18px 18px;
-  }
-  .discern-catalogue-collection-card__identity h3,
-  .discern-catalogue-component-card__body h3 {
-    margin: 5px 0 6px;
-    font: 700 var(--discern-font-size-card-title) var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
-  }
-  .discern-catalogue-collection-card__identity > span,
-  .discern-catalogue-component-card__body > span {
-    color: var(--discern-color-ink-muted);
-    font-size: var(--discern-font-size-xs);
   }
   .discern-catalogue-collection-card__count,
-  .discern-catalogue-component-card__body > span:first-child,
-  .discern-catalogue-component-card__body small {
+  .discern-catalogue-collection-card__members {
     color: var(--discern-color-ink-faint);
     font: var(--discern-font-size-xs) var(--discern-font-ui);
     font-feature-settings: var(--discern-font-features-ui);
   }
-  .discern-catalogue-component-card__body > .discern-catalogue-component-card__match {
-    margin-block-start: 9px;
+  .discern-catalogue-component-card__match {
+    margin: 0;
     color: var(--discern-color-accent-700);
-  }
-  .discern-catalogue-collection-card__identity > .discern-catalogue-collection-card__description,
-  .discern-catalogue-component-card__body > .discern-catalogue-component-card__description,
-  .discern-catalogue-component-card__body > .discern-catalogue-component-card__match {
     font-size: var(--discern-font-size-sm);
     line-height: 1.5;
   }
   .discern-catalogue-collection-card__members {
-    min-height: 2.7em;
-    margin-block-start: 12px;
-  }
-  .discern-catalogue-collection-card__identity strong,
-  .discern-catalogue-component-card__body strong {
-    margin-block-start: 14px;
-    color: var(--discern-color-accent-700);
-    font: 650 var(--discern-font-size-xs) var(--discern-font-ui);
-  }
-  .discern-catalogue-collection-card__compare,
-  .discern-catalogue-component-card__compare {
     display: block;
-    padding: 9px 18px;
-    border-block-start: 1px solid var(--discern-color-border);
-    color: var(--discern-color-ink-muted);
-    font: var(--discern-font-size-xs) var(--discern-font-ui);
-    text-decoration: none;
   }
   .discern-catalogue-component-card__image {
+    width: 100%;
     min-height: 180px;
-  }
-  .discern-catalogue-component-card__image .discern-catalogue-themed-image {
-    max-height: 148px;
-  }
-  .discern-catalogue-component-card__body {
-    min-height: 168px;
-  }
-  .discern-catalogue-component-card__body small {
-    margin-block-start: auto;
-    padding-block-start: 12px;
   }
   .discern-catalogue-detail__identity {
     align-items: flex-start !important;
@@ -658,9 +574,6 @@
     color: var(--discern-color-ink-faint);
     font-size: var(--discern-font-size-xs);
   }
-  .discern-catalogue-component__example-picker select {
-    width: 100%;
-  }
   .discern-catalogue-detail__view-all {
     min-height: 40px;
     padding-inline: 13px;
@@ -695,14 +608,6 @@
     font-feature-settings: var(--discern-font-features-ui);
     letter-spacing: 0.06em;
     text-transform: uppercase;
-  }
-  @media (prefers-color-scheme: dark) {
-    [data-discern-theme="system"] .discern-catalogue-themed-image[data-discern-image-theme="light"] {
-      display: none;
-    }
-    [data-discern-theme="system"] .discern-catalogue-themed-image[data-discern-image-theme="dark"] {
-      display: block;
-    }
   }
   @media (forced-colors: active) {
     .discern-catalogue-example-state:target > header {

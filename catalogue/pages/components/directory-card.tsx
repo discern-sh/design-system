@@ -1,12 +1,13 @@
 import type { RegistryEntry } from "../../generated/registry.ts";
 import { catalogueDecisionCopyProps } from "../../metadata-copy.ts";
+import { Tag } from "../../../src/components/display/tag/tag.tsx";
 import {
   componentExampleImagePresentation,
   type ComponentExampleImageTheme,
   representativeComponentExampleImage,
 } from "../../example-images.ts";
 import { catalogueComponentPath } from "../../routes.ts";
-import { catalogueHref } from "../shared.tsx";
+import { catalogueHref, CatalogueIndexCard } from "../shared.tsx";
 import type { ComponentCollection } from "./collections.ts";
 
 function ThemedRepresentativeImage(
@@ -26,7 +27,7 @@ function ThemedRepresentativeImage(
         const presentation = componentExampleImagePresentation(image);
         return (
           <img
-            className="discern-catalogue-themed-image"
+            className="discern-catalogue-index-card__theme-image"
             data-discern-image-theme={theme}
             data-discern-collection-image={collection
               ? entry.meta.slug
@@ -51,12 +52,22 @@ export function ComponentCollectionCard(
   const visibleNames = collection.members.slice(0, 4);
   const remaining = collection.members.length - visibleNames.length;
   return (
-    <article className="discern-catalogue-collection-card">
-      <a
-        className="discern-catalogue-collection-card__browse"
-        href={collection.browseHref}
-        aria-label={`Browse ${collection.label}, ${collection.members.length} Components`}
-      >
+    <CatalogueIndexCard
+      className="discern-catalogue-collection-card"
+      href={collection.browseHref}
+      title={collection.label}
+      description={collection.description}
+      action="Browse collection"
+      headingLevel={3}
+      primaryAriaLabel={`Browse ${collection.label}, ${collection.members.length} Components`}
+      primaryClassName="discern-catalogue-collection-card__browse"
+      {...(collection.kind === "purpose"
+        ? {
+          descriptionClassName:
+            "discern-catalogue-collection-card__description",
+        }
+        : {})}
+      media={
         <span
           className="discern-catalogue-collection-card__mosaic"
           aria-hidden="true"
@@ -67,36 +78,26 @@ export function ComponentCollectionCard(
             </span>
           ))}
         </span>
-        <span className="discern-catalogue-collection-card__identity">
+      }
+      metadata={
+        <>
           <span className="discern-catalogue-collection-card__count">
             {collection.members.length}{" "}
             Component{collection.members.length === 1 ? "" : "s"}
           </span>
-          <h3>{collection.label}</h3>
-          {collection.kind === "purpose"
-            ? (
-              <span
-                className="discern-catalogue-collection-card__description"
-                {...catalogueDecisionCopyProps}
-              >
-                {collection.description}
-              </span>
-            )
-            : <span>{collection.description}</span>}
           <span className="discern-catalogue-collection-card__members">
             {visibleNames.map(({ meta }) => meta.name).join(", ")}
             {remaining > 0 ? ` +${remaining} more` : ""}
           </span>
-          <strong>Browse collection</strong>
-        </span>
-      </a>
-      <a
-        className="discern-catalogue-collection-card__compare"
-        href={collection.compareHref}
-      >
-        Compare this collection
-      </a>
-    </article>
+        </>
+      }
+      secondaryActions={[{
+        href: collection.compareHref,
+        label: "Compare this collection",
+        ariaLabel: `Compare ${collection.label}`,
+        className: "discern-catalogue-collection-card__compare",
+      }]}
+    />
   );
 }
 
@@ -117,45 +118,44 @@ export function ComponentResultCard(
     ? undefined
     : matchReason;
   return (
-    <article className="discern-catalogue-component-card">
-      <a
-        className="discern-catalogue-component-card__inspect"
-        href={detailHref}
-      >
+    <CatalogueIndexCard
+      className="discern-catalogue-component-card"
+      href={detailHref}
+      title={entry.meta.name}
+      description={entry.meta.description}
+      descriptionClassName="discern-catalogue-component-card__description"
+      action="Inspect Component"
+      headingLevel={3}
+      eyebrow={showGroup ? entry.meta.group : undefined}
+      primaryClassName="discern-catalogue-component-card__inspect"
+      media={
         <span className="discern-catalogue-component-card__image">
           <ThemedRepresentativeImage entry={entry} />
         </span>
-        <span className="discern-catalogue-component-card__body">
-          {showGroup ? <span>{entry.meta.group}</span> : null}
-          <h3>{entry.meta.name}</h3>
-          <span
-            className="discern-catalogue-component-card__description"
-            {...catalogueDecisionCopyProps}
-          >
-            {entry.meta.description}
-          </span>
+      }
+      metadata={
+        <>
           {supplementaryMatchReason === undefined ? null : (
-            <span
+            <p
               className="discern-catalogue-component-card__match"
               {...catalogueDecisionCopyProps}
             >
               Matched {supplementaryMatchReason.label.toLowerCase()}:{" "}
               {supplementaryMatchReason.value}
-            </span>
+            </p>
           )}
-          <small>
+          <Tag>
             {entry.cli.stance === "rendered" ? "Web and CLI" : "Web only"}
-          </small>
-          <strong>Inspect Component</strong>
-        </span>
-      </a>
-      <a
-        className="discern-catalogue-component-card__compare"
-        href={compareHref}
-      >
-        Compare
-      </a>
-    </article>
+          </Tag>
+        </>
+      }
+      secondaryActions={[{
+        href: compareHref,
+        label: "Compare",
+        ariaLabel: `Compare ${entry.meta.name}`,
+        className: "discern-catalogue-component-card__compare",
+      }]}
+    />
   );
 }
 

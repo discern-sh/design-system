@@ -771,7 +771,7 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
       await previewAppearanceDetails.locator("summary").click();
     }
     await previewAppearance.getByRole("combobox", {
-      name: "Preview accent preset",
+      name: "Preview accent review preset",
     })
       .selectOption("300", { timeout: ACTION_TIMEOUT });
     await page.waitForTimeout(50);

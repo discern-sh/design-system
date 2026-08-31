@@ -32,11 +32,7 @@ export default function ThemeSwitcherExamples() {
       <ThemeSwitcher
         mode={mode}
         onModeChange={setMode}
-        systemLabel={
-          <>
-            <strong>Use this device</strong> preference
-          </>
-        }
+        systemLabel="Auto"
       />
       <span>Lorem ipsum: the {mode} preference is selected.</span>
     </div>

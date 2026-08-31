@@ -22,7 +22,6 @@ import {
   catalogueTerminalFoundationPath,
   foundationsPaths,
   foundationsRouteFamily,
-  foundationsUrlChangeEvent,
   type FoundationToken,
   foundationTokenCategories,
   foundationTokenExplorerState,
@@ -30,7 +29,8 @@ import {
   foundationTokenFragment,
   matchingFoundationTokens,
 } from "../../routes/foundations.ts";
-import { CataloguePageHeader } from "../shared.tsx";
+import { announceCatalogueLocationChange } from "../../shell/location.ts";
+import { CatalogueIndexCard, CataloguePageHeader } from "../shared.tsx";
 
 function isThemed(token: FoundationToken): token is FoundationToken & {
   readonly light: string;
@@ -299,7 +299,7 @@ function useExplorerState(
       : new URL(globalThis.location.href);
     const url = foundationTokenExplorerUrl(current, next);
     globalThis.history?.replaceState(null, "", `${url.pathname}${url.search}`);
-    globalThis.dispatchEvent(new Event(foundationsUrlChangeEvent));
+    announceCatalogueLocationChange();
   };
   return [state, update] as const;
 }
@@ -457,35 +457,43 @@ function FoundationsIndex(
         description="Choose the visual language or its terminal primitives."
       />
       <div className="discern-catalogue-foundations-index">
-        <a href={foundationsPaths.tokens}>
-          <div
-            className="discern-catalogue-foundations-index__tokens"
-            aria-hidden="true"
-          >
-            <span />
-            <strong>Aa</strong>
-            <i />
-          </div>
-          <h2>Tokens</h2>
-          <p>Colour, type, scale, shape, and motion.</p>
-          <small>{tokens.length} Tokens</small>
-        </a>
-        <a href={foundationsPaths.terminal}>
-          <div className="discern-catalogue-foundations-index__terminal">
-            {firstSheet === undefined || firstSpecimen === undefined
-              ? null
-              : (
-                <CliOutputPreview
-                  value={firstSpecimen.output}
-                  label={`${firstSheet.title} preview`}
-                  theme={terminalTheme}
-                />
-              )}
-          </div>
-          <h2>Terminal foundations</h2>
-          <p>Motifs and narration primitives.</p>
-          <small>{sheets.length} sheets</small>
-        </a>
+        <CatalogueIndexCard
+          href={foundationsPaths.tokens}
+          title="Tokens"
+          description="Colour, type, scale, shape, and motion."
+          action="Explore Tokens"
+          metadata={<span>{tokens.length} Tokens</span>}
+          media={
+            <div
+              className="discern-catalogue-foundations-index__tokens"
+              aria-hidden="true"
+            >
+              <span />
+              <strong>Aa</strong>
+              <i />
+            </div>
+          }
+        />
+        <CatalogueIndexCard
+          href={foundationsPaths.terminal}
+          title="Terminal foundations"
+          description="Motifs and narration primitives."
+          action="Browse terminal foundations"
+          metadata={<span>{sheets.length} sheets</span>}
+          media={
+            <div className="discern-catalogue-foundations-index__terminal">
+              {firstSheet === undefined || firstSpecimen === undefined
+                ? null
+                : (
+                  <CliOutputPreview
+                    value={firstSpecimen.output}
+                    label={`${firstSheet.title} preview`}
+                    theme={terminalTheme}
+                  />
+                )}
+            </div>
+          }
+        />
       </div>
     </div>
   );
@@ -521,24 +529,25 @@ function TerminalFoundationsIndex(
           });
           const representative = specimens[0];
           return (
-            <a
+            <CatalogueIndexCard
               href={catalogueTerminalFoundationPath(sheet.id)}
+              title={sheet.title}
+              description={sheet.description}
+              action="View foundation"
+              variant="compact"
+              metadata={<span>{specimens.length} specimens</span>}
+              media={representative === undefined
+                ? undefined
+                : (
+                  <CliOutputPreview
+                    value={representative.output}
+                    label={`${sheet.title} preview`}
+                    theme={terminalTheme}
+                  />
+                )}
               data-discern-terminal-foundation-card={sheet.id}
               key={sheet.id}
-            >
-              {representative === undefined ? null : (
-                <CliOutputPreview
-                  value={representative.output}
-                  label={`${sheet.title} preview`}
-                  theme={terminalTheme}
-                />
-              )}
-              <div>
-                <h2>{sheet.title}</h2>
-                <p>{sheet.description}</p>
-                <small>{specimens.length} specimens</small>
-              </div>
-            </a>
+            />
           );
         })}
       </div>

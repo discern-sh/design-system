@@ -18,10 +18,18 @@ Deno.test("every exposed Appearance option passes both Theme semantic proofs", (
   assertEquals(
     catalogueAppearanceOptions.map(({ id, hue }) => [id, hue]),
     [
+      ["red", 2],
+      ["green", 120],
       ["sky", 235],
+      ["azure", 245],
       ["blue", 255],
+      ["indigo", 270],
+      ["purple", 285],
       ["violet", 300],
+      ["magenta", 315],
+      ["fuchsia", 325],
       ["rose", 335],
+      ["crimson", 350],
     ],
   );
   assertEquals(defaultCatalogueAppearanceOption.id, "blue");
@@ -48,6 +56,17 @@ Deno.test("unsafe arbitrary and synthetic future Appearance choices fail closed"
   );
   assertStringIncludes(error.message, "future-green");
   assertStringIncludes(error.message, "success");
+
+  assertThrows(
+    () =>
+      assertCatalogueAppearanceOptions(
+        catalogueAppearanceOptions.map(({ default: _default, ...option }) =>
+          option
+        ),
+      ),
+    TypeError,
+    "exactly one default",
+  );
 });
 
 Deno.test("the complete low-level hue range is swept before presets claim safety", () => {

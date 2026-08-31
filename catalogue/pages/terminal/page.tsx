@@ -12,7 +12,7 @@ import {
 import type { CatalogueRoute } from "../../routes.ts";
 import { TerminalLayoutLab } from "../../terminal-layout-inspector.tsx";
 import { NotFoundPage } from "../not-found/page.tsx";
-import { CataloguePageHeader } from "../shared.tsx";
+import { CatalogueIndexCard, CataloguePageHeader } from "../shared.tsx";
 
 function componentName(slug: string): string {
   return registry.find(({ meta }) => meta.slug === slug)?.meta.name ?? slug;
@@ -51,32 +51,27 @@ export function TerminalIndexPage(
       <h2 className="discern-visually-hidden">Terminal layout recipes</h2>
       <div className="discern-catalogue-terminal-index">
         {recipes.map((recipe) => (
-          <article
-            className="discern-catalogue-terminal-index__card"
+          <CatalogueIndexCard
+            variant="compact"
+            href={catalogueTerminalLayoutPath(recipe.id)}
+            title={recipe.title}
+            description={recipe.description}
+            action="Inspect layout"
+            metadata={
+              <span>
+                {recipe.components.length}{" "}
+                Component{recipe.components.length === 1 ? "" : "s"}
+              </span>
+            }
+            secondaryActions={recipe.components.map((slug) => ({
+              href: catalogueComponentPath(slug),
+              label: componentName(slug),
+              ariaLabel: `Inspect ${componentName(slug)} Component`,
+              className: "discern-catalogue-terminal-index__component",
+            }))}
             data-discern-terminal-index-card={recipe.id}
             key={recipe.id}
-          >
-            <div>
-              <h2>{recipe.title}</h2>
-              <p>{recipe.description}</p>
-            </div>
-            <div
-              className="discern-catalogue-terminal-index__components"
-              aria-label={`${recipe.title} components`}
-            >
-              {recipe.components.map((slug) => (
-                <a href={catalogueComponentPath(slug)} key={slug}>
-                  {componentName(slug)}
-                </a>
-              ))}
-            </div>
-            <a
-              className="discern-catalogue-terminal-index__action"
-              href={catalogueTerminalLayoutPath(recipe.id)}
-            >
-              Inspect layout
-            </a>
-          </article>
+          />
         ))}
       </div>
     </div>

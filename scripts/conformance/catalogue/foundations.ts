@@ -118,7 +118,7 @@ async function verifyTokenExplorer(
   invariant(
     await page.locator(
       `.discern-catalogue-nav a[href="${foundationsPaths.tokens}?category=typography"]`,
-    ).getAttribute("aria-current") === "page",
+    ).getAttribute("aria-current") === "location",
     "Foundations navigation did not follow the in-place category URL",
   );
 
@@ -215,6 +215,12 @@ async function verifyTerminalFoundations(
   invariant(
     JSON.stringify(gallerySheets) === JSON.stringify(expectedSheets),
     "Terminal foundation gallery differs from its registry",
+  );
+  invariant(
+    await page.locator(
+      '[data-discern-terminal-foundation-card][data-discern-catalogue-index-card="compact"] [data-discern-catalogue-index-card-primary]',
+    ).count() === expectedSheets.length,
+    "Terminal foundation cards bypassed the shared compact-card authority",
   );
   invariant(
     await page.locator("[data-discern-terminal-foundation-specimen]")
@@ -359,6 +365,12 @@ export async function verifyFoundationsCatalogue(
             `[data-discern-foundations-page="index"] a[href="${foundationsPaths.terminal}"]`,
           ).count() === 1,
       "Foundations index must make its two bounded choices explicit",
+    );
+    invariant(
+      await page.locator(
+        '[data-discern-foundations-page="index"] [data-discern-catalogue-index-card="visual"] [data-discern-catalogue-index-card-primary]',
+      ).count() === 2,
+      "Foundations choices bypassed the shared visual-card authority",
     );
     const tokens = await verifyTokenExplorer(page, origin);
     const terminal = await verifyTerminalFoundations(page, origin);

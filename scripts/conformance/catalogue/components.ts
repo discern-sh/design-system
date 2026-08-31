@@ -210,6 +210,34 @@ async function performStep(
     );
     return;
   }
+  if (step.expect === "x-position-count") {
+    const positions = await target.evaluateAll((nodes) =>
+      nodes.map((node) => node.getBoundingClientRect().left)
+    );
+    invariant(
+      positions.length >= step.minimum,
+      `Expected at least ${step.minimum} horizontal-position targets but found ${positions.length}: ${
+        JSON.stringify(step.target)
+      }`,
+    );
+    const tolerance = step.tolerance ?? 1;
+    const distinct: number[] = [];
+    for (const position of positions.toSorted((left, right) => left - right)) {
+      if (!distinct.some((known) => Math.abs(known - position) <= tolerance)) {
+        distinct.push(position);
+      }
+    }
+    invariant(
+      distinct.length >= step.minimum &&
+        (step.maximum === undefined || distinct.length <= step.maximum),
+      `Expected ${step.minimum}${
+        step.maximum === undefined ? "+" : `–${step.maximum}`
+      } horizontal positions within ${tolerance}px but found ${distinct.length} at ${
+        distinct.map((position) => position.toFixed(2)).join(", ")
+      }: ${JSON.stringify(step.target)}`,
+    );
+    return;
+  }
   if (step.expect === "scrollable-x") {
     const element = await exactlyOne(target, step.target);
     const overflow = await element.evaluate((node) => {
@@ -687,7 +715,10 @@ async function verifyComponentJourneys(
         expectedComponents.length,
       "All Components did not enrol the complete live registry",
     );
-    const groupSelect = page.getByLabel("Group");
+    const groupSelect = page.getByRole("combobox", {
+      name: "Group",
+      exact: true,
+    });
     const firstGroup = await groupSelect.locator("option").nth(1).getAttribute(
       "value",
     );

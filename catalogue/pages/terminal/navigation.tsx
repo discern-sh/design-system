@@ -1,3 +1,5 @@
+import { DocsNav } from "../../../src/components/docs/docs-nav/docs-nav.tsx";
+import type { DocsNavItem } from "../../../src/components/docs/docs-nav/docs-nav.tsx";
 import {
   type CliCompositionRecipe,
   cliCompositionRecipes,
@@ -6,9 +8,23 @@ import {
   catalogueRoutePaths,
   catalogueTerminalLayoutPath,
 } from "../../routes.ts";
-import type { LocalNavigationProps } from "../navigation-types.ts";
+import type {
+  CatalogueNavigationSections,
+  LocalNavigationProps,
+} from "../navigation-types.ts";
 
-/** Recipe links projected from the same source-backed inventory as the pages. */
+function terminalRecipeNavigationItems(
+  recipes: readonly CliCompositionRecipe[],
+  activeRecipeId: string | undefined,
+): readonly DocsNavItem[] {
+  return recipes.map((recipe) => ({
+    label: recipe.title,
+    href: catalogueTerminalLayoutPath(recipe.id),
+    current: activeRecipeId === recipe.id ? "location" as const : false,
+  }));
+}
+
+/** Standalone projection retained for source-enrolment tests. */
 export function TerminalRecipeNavigation(
   { recipes, activeRecipeId, onNavigate }: {
     readonly recipes: readonly CliCompositionRecipe[];
@@ -17,42 +33,32 @@ export function TerminalRecipeNavigation(
   },
 ) {
   return (
-    <>
-      {recipes.map((recipe) => (
-        <a
-          className="discern-catalogue-nav__child"
-          href={catalogueTerminalLayoutPath(recipe.id)}
-          aria-current={activeRecipeId === recipe.id ? "page" : undefined}
-          onClick={onNavigate}
-          key={recipe.id}
-        >
-          {recipe.title}
-        </a>
-      ))}
-    </>
+    <DocsNav
+      sections={[{
+        items: terminalRecipeNavigationItems(recipes, activeRecipeId),
+      }]}
+      onClick={onNavigate}
+    />
   );
 }
 
-export function TerminalNavigation(
-  { route, onNavigate }: LocalNavigationProps,
-) {
-  if (route.family !== "terminal") return null;
-  return (
-    <>
-      <span className="discern-catalogue-nav__heading">Layouts</span>
-      <a
-        className="discern-catalogue-nav__child"
-        href={catalogueRoutePaths.terminal}
-        aria-current={route.page === "index" ? "page" : undefined}
-        onClick={onNavigate}
-      >
-        All layouts
-      </a>
-      <TerminalRecipeNavigation
-        recipes={cliCompositionRecipes}
-        activeRecipeId={route.page === "detail" ? route.recipeId : undefined}
-        onNavigate={onNavigate}
-      />
-    </>
-  );
+/** Source-backed terminal layout destinations projected into shared DocsNav. */
+export function terminalNavigationSections(
+  { route }: LocalNavigationProps,
+): CatalogueNavigationSections {
+  if (route.family !== "terminal") return [];
+  return [{
+    title: "Layouts",
+    items: [
+      {
+        label: "All layouts",
+        href: catalogueRoutePaths.terminal,
+        current: route.page === "index" ? "location" : false,
+      },
+      ...terminalRecipeNavigationItems(
+        cliCompositionRecipes,
+        route.page === "detail" ? route.recipeId : undefined,
+      ),
+    ],
+  }];
 }

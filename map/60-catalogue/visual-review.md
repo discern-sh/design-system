@@ -25,6 +25,6 @@ The settled contact sheet defaults to one Group and mounts only the selected pop
 
 ## Appearance
 
-[`shell/appearance-options.ts`](../../catalogue/shell/appearance-options.ts) is the reusable project-facing authority for Sky, Blue, Violet, and Rose. Every option is exhaustively proved in Light and Dark for text contrast, focus contrast on all semantic soft surfaces, and accent/success/warning/danger separation. Unknown values fail closed. [ADR 0037](../_adr/0037-expose-only-semantically-safe-appearance-presets.md) records why the Catalogue no longer presents the public low-level hue Token as an unrestricted safe range.
+[`shell/appearance-options.ts`](../../catalogue/shell/appearance-options.ts) is the reusable project-facing authority for the ordered named review presets and their single default. Every option is exhaustively proved in Light and Dark for text contrast, focus contrast on all semantic soft surfaces, and accent/success/warning/danger separation. Unknown values fail closed. [ADR 0037](../_adr/0037-expose-only-semantically-safe-appearance-presets.md) records why the Catalogue does not present the public low-level hue Token as an unrestricted safe range.
 
 Consumer Themes can still override `--discern-accent-hue`; a hue near a semantic role must coordinate that role as the green fixture demonstrates. Success remains distinct from accent.

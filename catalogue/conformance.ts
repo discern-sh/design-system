@@ -163,6 +163,14 @@ export type ConformanceStep =
     readonly tolerance?: number;
   }
   | {
+    /** Number of distinct horizontal lanes occupied by matching peers. */
+    readonly expect: "x-position-count";
+    readonly target: ConformanceTarget;
+    readonly minimum: number;
+    readonly maximum?: number;
+    readonly tolerance?: number;
+  }
+  | {
     readonly expect: "scrollable-x";
     readonly target: ConformanceTarget;
   };

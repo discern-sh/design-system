@@ -3,6 +3,7 @@ import {
   cataloguePurposes,
   componentGroups,
 } from "../../../src/types/component-meta.ts";
+import { Select } from "../../../src/components/forms/select/select.tsx";
 import type { RegistryEntry } from "../../generated/registry.ts";
 import {
   catalogueGroupFromSlug,
@@ -109,7 +110,7 @@ export function ComponentIndexPage(
         </label>
         <label>
           <span>Group</span>
-          <select
+          <Select
             value={state.group === undefined
               ? ""
               : catalogueGroupSlug(state.group)}
@@ -133,11 +134,11 @@ export function ComponentIndexPage(
                 {group}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         <label>
           <span>Purpose</span>
-          <select
+          <Select
             value={state.purpose ?? ""}
             onChange={(event) => {
               const purpose = cataloguePurpose(event.currentTarget.value);
@@ -155,7 +156,7 @@ export function ComponentIndexPage(
                 {purposeDetails[purpose].label}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
         {resultsVisible
           ? <button type="button" onClick={reset}>Reset directory</button>

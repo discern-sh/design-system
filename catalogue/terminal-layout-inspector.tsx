@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { CopyButton } from "../src/components/docs/copy-button/copy-button.tsx";
+import { Select } from "../src/components/forms/select/select.tsx";
 import { OverflowCue } from "../src/components/layout/overflow-cue/overflow-cue.tsx";
 import type { TerminalCapabilities } from "../src/cli/capabilities.ts";
 import { projectTerminalInspectorHtml } from "../src/cli/projection.ts";
@@ -208,7 +209,7 @@ export function TerminalLayoutLab(
           {hasCapability("unicode") && (
             <label>
               <span>Character set</span>
-              <select
+              <Select
                 value={state.unicode ? "unicode" : "ascii"}
                 onChange={(event) =>
                   update({
@@ -218,13 +219,13 @@ export function TerminalLayoutLab(
               >
                 <option value="unicode">Unicode</option>
                 <option value="ascii">ASCII</option>
-              </select>
+              </Select>
             </label>
           )}
           {hasCapability("colorDepth") && (
             <label>
               <span>Colour depth</span>
-              <select
+              <Select
                 value={state.colorDepth}
                 onChange={(event) =>
                   update({
@@ -237,7 +238,7 @@ export function TerminalLayoutLab(
                 <option value="ansi256">ANSI 256</option>
                 <option value="ansi16">ANSI 16</option>
                 <option value="none">No colour</option>
-              </select>
+              </Select>
             </label>
           )}
         </div>

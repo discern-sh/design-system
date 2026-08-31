@@ -1,24 +1,30 @@
-import { CompareNavigation } from "./compare/navigation.tsx";
-import { ComponentsNavigation } from "./components/navigation.tsx";
-import { CompositionsNavigation } from "./compositions/navigation.tsx";
-import { FoundationsNavigation } from "./foundations/navigation.tsx";
-import type { LocalNavigationProps } from "./navigation-types.ts";
-import { TerminalNavigation } from "./terminal/navigation.tsx";
+import { compareNavigationSections } from "./compare/navigation.tsx";
+import { componentsNavigationSections } from "./components/navigation.tsx";
+import { compositionNavigationSections } from "./compositions/navigation.tsx";
+import { foundationsNavigationSections } from "./foundations/navigation.tsx";
+import type {
+  CatalogueNavigationSections,
+  LocalNavigationProps,
+} from "./navigation-types.ts";
+import { terminalNavigationSections } from "./terminal/navigation.tsx";
 
-export function LocalNavigation(props: LocalNavigationProps) {
+/** Project current route-family facts into the shared DocsNav authority. */
+export function localNavigationSections(
+  props: LocalNavigationProps,
+): CatalogueNavigationSections {
   switch (props.route.family) {
     case "components":
-      return <ComponentsNavigation {...props} />;
+      return componentsNavigationSections(props);
     case "foundations":
-      return <FoundationsNavigation {...props} />;
+      return foundationsNavigationSections(props);
     case "compositions":
-      return <CompositionsNavigation {...props} />;
+      return compositionNavigationSections(props);
     case "terminal":
-      return <TerminalNavigation {...props} />;
+      return terminalNavigationSections(props);
     case "compare":
-      return <CompareNavigation {...props} />;
+      return compareNavigationSections(props);
     case "overview":
     case "not-found":
-      return null;
+      return [];
   }
 }

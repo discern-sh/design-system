@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { DocsNav } from "../../../src/components/docs/docs-nav/docs-nav.tsx";
+import type { DocsNavItem } from "../../../src/components/docs/docs-nav/docs-nav.tsx";
 import { allTokens } from "../../../src/tokens/tokens.ts";
 import {
   catalogueTerminalFoundationPath,
   foundationsPaths,
-  foundationsUrlChangeEvent,
   foundationTokenCategories,
   foundationTokenCategoryPath,
   foundationTokenExplorerState,
@@ -11,7 +11,10 @@ import {
 import type { CatalogueRoute } from "../../routes/types.ts";
 import type { TerminalFoundationSheet } from "../../terminal-foundations.ts";
 import { terminalFoundationSheets } from "../../terminal-foundations.ts";
-import type { LocalNavigationProps } from "../navigation-types.ts";
+import type {
+  CatalogueNavigationSections,
+  LocalNavigationProps,
+} from "../navigation-types.ts";
 
 interface FoundationsNavigationContentProps {
   readonly route: Extract<CatalogueRoute, { readonly family: "foundations" }>;
@@ -20,131 +23,94 @@ interface FoundationsNavigationContentProps {
   readonly sheets: readonly TerminalFoundationSheet[];
 }
 
-function NavigationLink(
-  { href, label, current, onNavigate }: {
-    readonly href: string;
-    readonly label: string;
-    readonly current: boolean;
-    readonly onNavigate: () => void;
-  },
-) {
-  return (
-    <a
-      className="discern-catalogue-nav__child"
-      href={href}
-      aria-current={current ? "page" : undefined}
-      onClick={onNavigate}
-    >
-      {label}
-    </a>
-  );
+function navigationItem(
+  href: string,
+  label: string,
+  current = false,
+): DocsNavItem {
+  return { label, href, current: current ? "location" : false };
 }
 
-/** Contextual Foundations navigation projected from Token and sheet authorities. */
-export function FoundationsNavigationContent(
-  { route, url, onNavigate, sheets }: FoundationsNavigationContentProps,
-) {
+function sourceBackedSections(
+  { route, url, sheets }: Omit<FoundationsNavigationContentProps, "onNavigate">,
+): CatalogueNavigationSections {
   if (route.page === "index") {
-    return (
-      <>
-        <span className="discern-catalogue-nav__heading">Explore</span>
-        <NavigationLink
-          href={foundationsPaths.tokens}
-          label="Tokens"
-          current={false}
-          onNavigate={onNavigate}
-        />
-        <NavigationLink
-          href={foundationsPaths.terminal}
-          label="Terminal foundations"
-          current={false}
-          onNavigate={onNavigate}
-        />
-      </>
-    );
+    return [{
+      title: "Explore",
+      items: [
+        navigationItem(foundationsPaths.tokens, "Tokens"),
+        navigationItem(
+          foundationsPaths.terminal,
+          "Terminal foundations",
+        ),
+      ],
+    }];
   }
   if (route.page === "tokens") {
     const state = foundationTokenExplorerState(url, allTokens);
-    return (
-      <>
-        <NavigationLink
-          href={foundationsPaths.index}
-          label="← Foundations"
-          current={false}
-          onNavigate={onNavigate}
-        />
-        <span className="discern-catalogue-nav__heading">Token categories</span>
-        <NavigationLink
-          href={foundationsPaths.tokens}
-          label="All"
-          current={state.category === undefined}
-          onNavigate={onNavigate}
-        />
-        {foundationTokenCategories(allTokens).map((category) => (
-          <NavigationLink
-            href={foundationTokenCategoryPath(category)}
-            label={category}
-            current={state.category === category}
-            onNavigate={onNavigate}
-            key={category}
-          />
-        ))}
-      </>
-    );
+    return [
+      {
+        items: [navigationItem(foundationsPaths.index, "← Foundations")],
+      },
+      {
+        title: "Token categories",
+        items: [
+          navigationItem(
+            foundationsPaths.tokens,
+            "All",
+            state.category === undefined,
+          ),
+          ...foundationTokenCategories(allTokens).map((category) =>
+            navigationItem(
+              foundationTokenCategoryPath(category),
+              category,
+              state.category === category,
+            )
+          ),
+        ],
+      },
+    ];
   }
-  return (
-    <>
-      <NavigationLink
-        href={foundationsPaths.index}
-        label="← Foundations"
-        current={false}
-        onNavigate={onNavigate}
-      />
-      <span className="discern-catalogue-nav__heading">
-        Terminal foundations
-      </span>
-      <NavigationLink
-        href={foundationsPaths.terminal}
-        label="All sheets"
-        current={route.page === "terminal-index"}
-        onNavigate={onNavigate}
-      />
-      {sheets.map((sheet) => (
-        <NavigationLink
-          href={catalogueTerminalFoundationPath(sheet.id)}
-          label={sheet.title}
-          current={route.page === "terminal-detail" &&
-            route.sheetId === sheet.id}
-          onNavigate={onNavigate}
-          key={sheet.id}
-        />
-      ))}
-    </>
-  );
+  return [
+    {
+      items: [navigationItem(foundationsPaths.index, "← Foundations")],
+    },
+    {
+      title: "Terminal foundations",
+      items: [
+        navigationItem(
+          foundationsPaths.terminal,
+          "All sheets",
+          route.page === "terminal-index",
+        ),
+        ...sheets.map((sheet) =>
+          navigationItem(
+            catalogueTerminalFoundationPath(sheet.id),
+            sheet.title,
+            route.page === "terminal-detail" && route.sheetId === sheet.id,
+          )
+        ),
+      ],
+    },
+  ];
 }
 
-export function FoundationsNavigation(
-  { route, url, onNavigate }: LocalNavigationProps,
+/** Source-backed Foundations destinations projected into the shared DocsNav. */
+export function foundationsNavigationSections(
+  { route, url }: LocalNavigationProps,
+): CatalogueNavigationSections {
+  if (route.family !== "foundations") return [];
+  return sourceBackedSections({ route, url, sheets: terminalFoundationSheets });
+}
+
+/** Standalone projection retained for source-enrolment tests. */
+export function FoundationsNavigationContent(
+  props: FoundationsNavigationContentProps,
 ) {
-  const [currentUrl, setCurrentUrl] = useState(url);
-  const urlHref = url.href;
-  useEffect(() => setCurrentUrl(new URL(urlHref)), [urlHref]);
-  useEffect(() => {
-    const sync = (): void => setCurrentUrl(new URL(globalThis.location.href));
-    globalThis.addEventListener("popstate", sync);
-    globalThis.addEventListener(foundationsUrlChangeEvent, sync);
-    return () => {
-      globalThis.removeEventListener("popstate", sync);
-      globalThis.removeEventListener(foundationsUrlChangeEvent, sync);
-    };
-  }, []);
-  if (route.family !== "foundations") return null;
   return (
-    <FoundationsNavigationContent
-      route={route}
-      url={currentUrl}
-      onNavigate={onNavigate}
-      sheets={terminalFoundationSheets}
+    <DocsNav
+      sections={sourceBackedSections(props)}
+      onClick={props.onNavigate}
     />
   );
 }

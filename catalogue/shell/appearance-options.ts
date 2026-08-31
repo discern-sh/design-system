@@ -5,6 +5,7 @@ export interface CatalogueAppearanceOption {
   readonly id: string;
   readonly label: string;
   readonly hue: number;
+  readonly default?: true;
 }
 
 type ThemeMode = "light" | "dark";
@@ -135,6 +136,7 @@ export function assertCatalogueAppearanceOptions(
 ): void {
   const ids = new Set<string>();
   const hues = new Set<number>();
+  let defaults = 0;
   for (const option of options) {
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(option.id)) {
       throw new TypeError(
@@ -152,6 +154,7 @@ export function assertCatalogueAppearanceOptions(
     }
     ids.add(option.id);
     hues.add(option.hue);
+    if (option.default === true) defaults += 1;
     const failures = catalogueAppearanceHueFailures(option.hue);
     if (failures.length > 0) {
       throw new TypeError(
@@ -162,14 +165,28 @@ export function assertCatalogueAppearanceOptions(
   if (options.length === 0) {
     throw new TypeError("Appearance needs at least one option");
   }
+  if (defaults !== 1) {
+    throw new TypeError(
+      `Appearance needs exactly one default option, received ${defaults}`,
+    );
+  }
 }
 
-const authoredCatalogueAppearanceOptions = [
-  { id: "sky", label: "Sky", hue: 235 },
-  { id: "blue", label: "Blue", hue: 255 },
-  { id: "violet", label: "Violet", hue: 300 },
-  { id: "rose", label: "Rose", hue: 335 },
-] as const satisfies readonly CatalogueAppearanceOption[];
+const authoredCatalogueAppearanceOptions: readonly CatalogueAppearanceOption[] =
+  [
+    { id: "red", label: "Red", hue: 2 },
+    { id: "green", label: "Green", hue: 120 },
+    { id: "sky", label: "Sky", hue: 235 },
+    { id: "azure", label: "Azure", hue: 245 },
+    { id: "blue", label: "Blue", hue: 255, default: true },
+    { id: "indigo", label: "Indigo", hue: 270 },
+    { id: "purple", label: "Purple", hue: 285 },
+    { id: "violet", label: "Violet", hue: 300 },
+    { id: "magenta", label: "Magenta", hue: 315 },
+    { id: "fuchsia", label: "Fuchsia", hue: 325 },
+    { id: "rose", label: "Rose", hue: 335 },
+    { id: "crimson", label: "Crimson", hue: 350 },
+  ];
 
 assertCatalogueAppearanceOptions(authoredCatalogueAppearanceOptions);
 
@@ -179,7 +196,9 @@ export const catalogueAppearanceOptions = Object.freeze(
 );
 
 /** The default project Appearance, matching the authored public Token value. */
-export const defaultCatalogueAppearanceOption = catalogueAppearanceOptions[1];
+export const defaultCatalogueAppearanceOption = catalogueAppearanceOptions.find(
+  (option) => option.default === true,
+)!;
 
 /** Resolve a stable option id or its exact hue; arbitrary hues are not choices. */
 export function catalogueAppearanceOption(

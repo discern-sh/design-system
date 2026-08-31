@@ -215,12 +215,12 @@ Deno.test("local navigation uses stable detail paths and current-pattern state",
     }),
   );
   assertEquals(
-    (html.match(/class="discern-catalogue-nav__child"/g) ?? []).length,
+    (html.match(/<li><a /g) ?? []).length,
     recipes.length,
   );
   assertStringIncludes(
     html,
-    `href="${compositionRecipePath(current.id)}" aria-current="page"`,
+    `href="${compositionRecipePath(current.id)}" aria-current="location"`,
   );
 });
 

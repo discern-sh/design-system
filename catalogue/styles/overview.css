@@ -61,97 +61,9 @@
     color: var(--discern-color-ink-faint);
     font-size: var(--discern-font-size-xs);
   }
-  .discern-catalogue-route-card__action {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-block-start: 10px;
-    color: var(--discern-color-accent-700);
-    font: var(--discern-font-size-xs) var(--discern-font-ui);
-    font-feature-settings: var(--discern-font-features-ui);
-    letter-spacing: 0.04em;
-    text-transform: none;
-  }
-  .discern-catalogue-route-card__action > span {
-    font-size: var(--discern-font-size-md);
-    line-height: 1;
-    transition: transform var(--discern-duration-fast)
-      var(--discern-ease-out);
-  }
-  .discern-catalogue-route-card:hover .discern-catalogue-route-card__action > span {
-    transform: translateX(3px);
-  }
-  .discern-catalogue-route-card--lead {
-    display: grid;
-    grid-template-areas:
-      "title image"
-      "description image"
-      "count image"
-      "action image";
-    grid-template-columns: minmax(0, 1fr) minmax(260px, 42%);
-    grid-template-rows: auto auto 1fr auto;
-    column-gap: 28px;
-    grid-column: 1 / -1;
-  }
-  .discern-catalogue-route-card--lead h2 {
-    grid-area: title;
-  }
-  .discern-catalogue-route-card--lead > p {
-    grid-area: description;
-  }
-  .discern-catalogue-route-card--lead > small {
-    grid-area: count;
-  }
-  .discern-catalogue-route-card--lead > .discern-catalogue-route-card__action {
-    grid-area: action;
-  }
-  .discern-catalogue-route-card__image {
-    display: grid;
-    overflow: hidden;
-    min-height: 180px;
-    place-items: center;
-    grid-area: image;
-    border: 1px solid var(--discern-color-border);
-    border-radius: var(--discern-radius-md);
-    background: var(--discern-color-canvas);
-  }
-  .discern-catalogue-route-card__image img {
-    display: block;
-    max-width: calc(100% - 28px);
-    max-height: 160px;
-    object-fit: contain;
-  }
-  .discern-catalogue-route-card__image--dark {
-    display: none !important;
-  }
-  :where([data-discern-theme="dark"]) .discern-catalogue-route-card__image--light {
-    display: none !important;
-  }
-  :where([data-discern-theme="dark"]) .discern-catalogue-route-card__image--dark {
-    display: block !important;
-  }
-  @media (prefers-color-scheme: dark) {
-    :where([data-discern-theme="system"]) .discern-catalogue-route-card__image--light {
-      display: none !important;
-    }
-    :where([data-discern-theme="system"]) .discern-catalogue-route-card__image--dark {
-      display: block !important;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .discern-catalogue-route-card__action > span {
-      transition: none;
-    }
-  }
   @media (max-width: 640px) {
     .discern-catalogue-section__header {
       grid-template-columns: 1fr;
-    }
-    .discern-catalogue-route-card--lead {
-      display: flex;
-    }
-    .discern-catalogue-route-card__image {
-      min-height: 148px;
     }
   }
 }

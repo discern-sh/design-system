@@ -11,6 +11,7 @@ import {
 import { registry } from "../../generated/registry.ts";
 import { catalogueNavigation } from "../../routes.ts";
 import { componentExplorerHref } from "../components/state.ts";
+import { CatalogueIndexCard } from "../shared.tsx";
 
 export const overviewCatalogueDestinations = catalogueNavigation.slice(1);
 
@@ -80,22 +81,24 @@ function ComponentsRouteImage() {
   const light = componentExampleImagePresentation(representativeImages.light);
   const dark = componentExampleImagePresentation(representativeImages.dark);
   return (
-    <span className="discern-catalogue-route-card__image" aria-hidden="true">
+    <>
       <img
-        className="discern-catalogue-route-card__image--light"
+        className="discern-catalogue-index-card__theme-image"
+        data-discern-image-theme="light"
         src={light.src}
         width={light.width}
         height={light.height}
         alt=""
       />
       <img
-        className="discern-catalogue-route-card__image--dark"
+        className="discern-catalogue-index-card__theme-image"
+        data-discern-image-theme="dark"
         src={dark.src}
         width={dark.width}
         height={dark.height}
         alt=""
       />
-    </span>
+    </>
   );
 }
 
@@ -141,22 +144,16 @@ export function OverviewPage() {
             const detail = overviewRouteDetails[destination.id];
             const lead = destination.id === "components";
             return (
-              <a
-                className={`discern-catalogue-route-card${
-                  lead ? " discern-catalogue-route-card--lead" : ""
-                }`}
+              <CatalogueIndexCard
                 data-discern-catalogue-destination={destination.id}
                 href={destination.path}
+                title={destination.label}
+                description={detail.description}
+                action={detail.action}
+                metadata={<span>{detail.count}</span>}
+                media={lead ? <ComponentsRouteImage /> : undefined}
                 key={destination.id}
-              >
-                <h2>{destination.label}</h2>
-                <p>{detail.description}</p>
-                <small>{detail.count}</small>
-                <span className="discern-catalogue-route-card__action">
-                  {detail.action} <span aria-hidden="true">→</span>
-                </span>
-                {lead ? <ComponentsRouteImage /> : null}
-              </a>
+              />
             );
           })}
         </div>

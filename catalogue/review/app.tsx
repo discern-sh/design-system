@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
+import { Select } from "../../src/components/forms/select/select.tsx";
 import { componentGroups } from "../../src/types/component-meta.ts";
 import type { ConformanceStep, ConformanceTarget } from "../conformance.ts";
 import { registry } from "../generated/registry.ts";
@@ -12,6 +13,7 @@ import type { ResolvedComponentReviewPosture } from "../review-postures.ts";
 import {
   catalogueAppearanceOption,
   catalogueAppearanceOptions,
+  defaultCatalogueAppearanceOption,
 } from "../shell/appearance-options.ts";
 import { captureRegionForReview, inspectReviewGeometry } from "./geometry.ts";
 import { reviewMotionStyle } from "./motion.ts";
@@ -201,7 +203,7 @@ function ReviewSpecimen({
   const [status, setStatus] = useState("Preparing");
   const example = entry.webExamples.find(({ id }) => id === posture.example);
   const option = catalogueAppearanceOption(appearance) ??
-    catalogueAppearanceOptions[1];
+    defaultCatalogueAppearanceOption;
   useEffect(() => {
     const root = document.querySelector<HTMLElement>(
       `[data-discern-review-identity="${
@@ -402,7 +404,7 @@ function App() {
   const onReady = useMemo(() => () => setReady((value) => value + 1), []);
   const width = reviewInlineSizes[parsed.width];
   const option = catalogueAppearanceOption(parsed.appearance) ??
-    catalogueAppearanceOptions[1];
+    defaultCatalogueAppearanceOption;
   const canonical = componentReviewHref({ ...parsed, group });
 
   return (
@@ -434,12 +436,12 @@ function App() {
         action="/catalogue/reviews/components/"
       >
         <label>
-          Group<select name="group" defaultValue={group}>
+          Group<Select name="group" defaultValue={group}>
             {groups.map((value) => <option key={value}>{value}</option>)}
-          </select>
+          </Select>
         </label>
         <label>
-          Component<select
+          Component<Select
             name="component"
             defaultValue={parsed.component ?? ""}
           >
@@ -448,10 +450,10 @@ function App() {
               { meta },
             ) => <option key={meta.slug} value={meta.slug}>{meta.name}
             </option>)}
-          </select>
+          </Select>
         </label>
         <label>
-          Example<select
+          Example<Select
             name="example"
             defaultValue={parsed.example ?? ""}
             disabled={selectedEntry === undefined}
@@ -460,10 +462,10 @@ function App() {
             {(selectedEntry?.webExamples ?? []).map(({ id, label }) => (
               <option key={id} value={id}>{label}</option>
             ))}
-          </select>
+          </Select>
         </label>
         <label>
-          Posture<select
+          Posture<Select
             name="posture"
             defaultValue={parsed.posture ?? ""}
             disabled={selectedEntry === undefined}
@@ -472,56 +474,56 @@ function App() {
             {(selectedEntry?.reviewPostures ?? []).map(({ id, label }) => (
               <option key={id} value={id}>{label}</option>
             ))}
-          </select>
+          </Select>
         </label>
         <label>
-          Category<select name="category" defaultValue={parsed.category ?? ""}>
+          Category<Select name="category" defaultValue={parsed.category ?? ""}>
             <option value="">Relevant</option>
             {reviewStateCategories.map((value) => (
               <option key={value}>{value}</option>
             ))}
-          </select>
+          </Select>
         </label>
         <label>
-          Local width<select name="width" defaultValue={parsed.width}>
+          Local width<Select name="width" defaultValue={parsed.width}>
             {Object.entries(reviewInlineSizes).map(([name, pixels]) => (
               <option key={name} value={name}>{name} · {pixels}px</option>
             ))}
-          </select>
+          </Select>
         </label>
         <label>
-          Theme<select name="theme" defaultValue={parsed.theme}>
+          Theme<Select name="theme" defaultValue={parsed.theme}>
             <option>light</option>
             <option>dark</option>
-          </select>
+          </Select>
         </label>
         <label>
-          Appearance<select name="appearance" defaultValue={parsed.appearance}>
+          Appearance<Select name="appearance" defaultValue={parsed.appearance}>
             {catalogueAppearanceOptions.map(({ id, label }) => (
               <option key={id} value={id}>{label}</option>
             ))}
-          </select>
+          </Select>
         </label>
         <label>
-          Motion<select name="motion" defaultValue={parsed.motion}>
+          Motion<Select name="motion" defaultValue={parsed.motion}>
             {reviewMotionModes.map((value) => (
               <option key={value}>{value}</option>
             ))}
-          </select>
+          </Select>
         </label>
         <label>
-          View<select name="mode" defaultValue={parsed.mode}>
+          View<Select name="mode" defaultValue={parsed.mode}>
             {reviewSurfaceModes.map((value) => (
               <option key={value}>{value}</option>
             ))}
-          </select>
+          </Select>
         </label>
         <label>
-          Timing<select name="speed" defaultValue={parsed.speed}>
+          Timing<Select name="speed" defaultValue={parsed.speed}>
             {reviewTimingModes.map((value) => (
               <option key={value}>{value}</option>
             ))}
-          </select>
+          </Select>
         </label>
         <button type="submit">Apply review</button>
       </form>

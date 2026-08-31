@@ -17,7 +17,7 @@
   .discern-catalogue-compare-item__actions button,
   .discern-catalogue-compare-item__controls > button {
     display: grid;
-    min-height: 40px;
+    min-height: 42px;
     place-items: center;
     padding-inline: 13px;
     border: 1px solid var(--discern-color-border-strong);
@@ -42,9 +42,6 @@
     color: var(--discern-color-ink-muted);
     font: var(--discern-font-size-xs) var(--discern-font-ui);
   }
-  .discern-catalogue-compare-scope select {
-    width: 100%;
-  }
   .discern-catalogue-review-controls {
     display: grid;
     grid-template-columns: minmax(230px, 1fr) auto auto minmax(190px, 0.6fr);
@@ -68,7 +65,7 @@
   }
   .discern-catalogue-review-surfaces {
     display: inline-flex;
-    min-height: 40px;
+    min-height: 42px;
   }
   .discern-catalogue-review-surfaces button {
     min-width: 104px;

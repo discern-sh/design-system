@@ -220,6 +220,6 @@ Deno.test("a synthetic terminal sheet joins route, index, detail, navigation, an
     }),
   );
   assertStringIncludes(navigationHtml, `href="${path}"`);
-  assertStringIncludes(navigationHtml, 'aria-current="page"');
+  assertStringIncludes(navigationHtml, 'aria-current="location"');
   assert(navigationHtml.includes("Future surface"));
 });

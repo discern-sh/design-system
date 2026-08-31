@@ -1,6 +1,7 @@
 import type { TerminalThemeVariant } from "../../../src/cli/theme.ts";
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
+import { Select } from "../../../src/components/forms/select/select.tsx";
 import { OverflowCue } from "../../../src/components/layout/overflow-cue/overflow-cue.tsx";
 import { CliComponentPreview, CliExamplePreview } from "../../cli-preview.tsx";
 import type { RegistryEntry } from "../../generated/registry.ts";
@@ -260,7 +261,7 @@ export function ComponentExampleControl(
   return (
     <label className="discern-catalogue-component__example-picker">
       <span>Example</span>
-      <select
+      <Select
         value={exampleId}
         onChange={(event) => onChange(event.currentTarget.value)}
       >
@@ -275,7 +276,7 @@ export function ComponentExampleControl(
             </option>
           );
         })}
-      </select>
+      </Select>
     </label>
   );
 }

@@ -1,4 +1,4 @@
-import { assert, assertEquals } from "@std/assert";
+import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   landingAssets,
@@ -226,21 +226,39 @@ Deno.test("both front doors make Find a Component their primary Catalogue action
 
 Deno.test("Overview route cards are bounded, ordered, labelled destinations", () => {
   const overview = renderToStaticMarkup(OverviewPage());
-  const cards = [...overview.matchAll(
-    /<a[^>]*data-discern-catalogue-destination="([^"]+)"[^>]*href="([^"]+)"[^>]*>(.*?)<\/a>/gs,
-  )].map(([, id, href, content]) => ({ id, href, content: content ?? "" }));
   assertEquals(
-    cards.map(({ id, href }) => ({ id, href })),
-    overviewCatalogueDestinations.map(({ id, path }) => ({ id, href: path })),
+    (overview.match(/data-discern-catalogue-index-card="visual"/g) ?? [])
+      .length,
+    overviewCatalogueDestinations.length,
   );
-  for (const card of cards) {
+  let previousIndex = -1;
+  for (const destination of overviewCatalogueDestinations) {
+    const marker = `data-discern-catalogue-destination="${destination.id}"`;
+    const index = overview.indexOf(marker);
     assert(
-      /<small>\d+ [^<]+<\/small>/.test(card.content),
-      `${card.id} must present a source-backed count with its unit`,
+      index > previousIndex,
+      `${destination.id} must keep canonical order`,
+    );
+    previousIndex = index;
+    const nextMarker = overview.indexOf(
+      "data-discern-catalogue-destination=",
+      index + marker.length,
+    );
+    const card = overview.slice(
+      index,
+      nextMarker === -1 ? overview.length : nextMarker,
+    );
+    assertStringIncludes(card, `href="${destination.path}"`);
+    assert(
+      /discern-catalogue-index-card__metadata[^>]*><span>\d+ [^<]+<\/span>/
+        .test(
+          card,
+        ),
+      `${destination.id} must present a source-backed count with its unit`,
     );
     assert(
-      /discern-catalogue-route-card__action/.test(card.content),
-      `${card.id} must name its bounded action`,
+      /discern-catalogue-index-card__action/.test(card),
+      `${destination.id} must name its bounded action`,
     );
   }
   assert(

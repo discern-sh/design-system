@@ -1,48 +1,50 @@
-import type { LocalNavigationProps } from "../navigation-types.ts";
+import type {
+  CatalogueNavigationSections,
+  LocalNavigationProps,
+} from "../navigation-types.ts";
+import { catalogueNavigationLabel } from "../navigation-types.ts";
 import { componentDirectory } from "../components/collections.ts";
 import { parseCompareState } from "./state.ts";
 
-export function CompareNavigation(
-  { route, url, sortedComponents, onNavigate }: LocalNavigationProps,
-) {
-  if (route.family !== "compare") return null;
+/** Source-backed Compare destinations projected into the shared DocsNav. */
+export function compareNavigationSections(
+  { route, url, sortedComponents }: LocalNavigationProps,
+): CatalogueNavigationSections {
+  if (route.family !== "compare") return [];
   const directory = componentDirectory(sortedComponents);
   const state = parseCompareState(url, sortedComponents);
-  return (
-    <>
-      <span className="discern-catalogue-nav__heading">Compare a Group</span>
-      {directory.groups.map((collection) => (
-        <a
-          className="discern-catalogue-nav__child"
-          href={collection.compareHref}
-          aria-current={state.scope?.kind === "group" &&
-              state.scope.group === collection.group
-            ? "location"
-            : undefined}
-          onClick={onNavigate}
-          key={collection.id}
-        >
-          {collection.label}
-          <small>{collection.members.length}</small>
-        </a>
-      ))}
-      <span className="discern-catalogue-nav__heading">Other scopes</span>
-      <a
-        className="discern-catalogue-nav__child"
-        href="/catalogue/review/?components="
-        aria-current={state.scope?.kind === "custom" ? "location" : undefined}
-        onClick={onNavigate}
-      >
-        Custom selection
-      </a>
-      <a
-        className="discern-catalogue-nav__child"
-        href="/catalogue/review/?scope=all"
-        aria-current={state.scope?.kind === "all" ? "location" : undefined}
-        onClick={onNavigate}
-      >
-        Complete system<small>{directory.components.length}</small>
-      </a>
-    </>
-  );
+  return [
+    {
+      title: "Compare a Group",
+      items: directory.groups.map((collection) => ({
+        label: catalogueNavigationLabel(
+          collection.label,
+          collection.members.length,
+        ),
+        href: collection.compareHref,
+        current: state.scope?.kind === "group" &&
+            state.scope.group === collection.group
+          ? "location" as const
+          : false,
+      })),
+    },
+    {
+      title: "Other scopes",
+      items: [
+        {
+          label: "Custom selection",
+          href: "/catalogue/review/?components=",
+          current: state.scope?.kind === "custom" ? "location" : false,
+        },
+        {
+          label: catalogueNavigationLabel(
+            "Complete system",
+            directory.components.length,
+          ),
+          href: "/catalogue/review/?scope=all",
+          current: state.scope?.kind === "all" ? "location" : false,
+        },
+      ],
+    },
+  ];
 }

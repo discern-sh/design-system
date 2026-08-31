@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { DocsNav } from "../../src/components/docs/docs-nav/docs-nav.tsx";
 import type { RegistryEntry } from "../generated/registry.ts";
 import { packageVersion } from "../generated/registry.ts";
-import { LocalNavigation } from "../pages/local-navigation.tsx";
+import { localNavigationSections } from "../pages/local-navigation.tsx";
+import { catalogueNavigationLabel } from "../pages/navigation-types.ts";
 import type { CatalogueRoute } from "../routes.ts";
 import { catalogueNavigation, catalogueRoutePaths } from "../routes.ts";
 import { catalogueLocationChangeEvent } from "./location.ts";
@@ -34,6 +36,28 @@ export function CatalogueNavigation(
     };
   }, []);
 
+  const sections = [
+    {
+      items: catalogueNavigation.map((item) => ({
+        label: item.label,
+        href: item.path,
+        current: route.family === item.id,
+      })),
+    },
+    ...localNavigationSections({
+      route,
+      url: navigationUrl,
+      sortedComponents,
+    }),
+    {
+      title: "More",
+      items: [{
+        label: catalogueNavigationLabel("Interface builder ↗", "Beta"),
+        href: "/catalogue/builder/",
+      }],
+    },
+  ];
+
   return (
     <>
       <div className="discern-catalogue-sidebar__header">
@@ -65,35 +89,17 @@ export function CatalogueNavigation(
           ×
         </button>
       </div>
-      <nav className="discern-catalogue-nav" aria-label="Catalogue">
-        {catalogueNavigation.map((item) => {
-          const active = route.family === item.id;
-          return (
-            <a
-              href={item.path}
-              aria-current={active ? "page" : undefined}
-              onClick={onNavigate}
-              key={item.id}
-            >
-              {item.label}
-            </a>
-          );
-        })}
-        <LocalNavigation
-          route={route}
-          url={navigationUrl}
-          sortedComponents={sortedComponents}
-          onNavigate={onNavigate}
-        />
-        <a
-          className="discern-catalogue-nav__experimental"
-          href="/catalogue/builder/"
-          onClick={onNavigate}
-        >
-          <span>Interface builder ↗</span>
-          <small>Beta</small>
-        </a>
-      </nav>
+      <DocsNav
+        className="discern-catalogue-nav"
+        label="Catalogue"
+        sections={sections}
+        onClick={(event) => {
+          if (
+            event.target instanceof Element &&
+            event.target.closest("a[href]") !== null
+          ) onNavigate();
+        }}
+      />
       <p className="discern-catalogue-sidebar__version">
         @discern-sh/design-system v{packageVersion}
       </p>
