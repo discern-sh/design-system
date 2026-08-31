@@ -34,11 +34,11 @@ The **deferred-work ledger**: the agent-maintained record of outstanding work �
 
 ## 🔴 Performance & correctness
 
-_Verified defects and correctness risks. Nothing outstanding._
+- [ ] **Component example capture treats invisible Chromium raster noise as a real change.** Repeated captures of identical source can differ in sub-pixel and transparency detail no human can perceive — GPU/compositor variation, not a code change — so the byte-exact manifest reports staleness that carries no meaning. The current contract already pins Deno, Playwright, Chromium revision, browser arguments, viewport, scale, locale, timezone, colour profile, clock, and seed, so further environment pinning is unlikely to be the answer; the open question is whether the staleness oracle should stay byte-exact at all, or move to a perceptual/structural comparison with an explicit tolerance. Decide the oracle before touching the capture pipeline. Evidence: `catalogue/example-images/contract.ts`; `scripts/component-example-images.ts` (`componentExampleCaptureSourceHash`, `verifyImages`); `map/80-development/done-gate-gotchas.md`.
 
 ## 🟠 Cleanup — known dead or slow code
 
-_Dead code, N+1s, and known-slow paths worth removing or fixing. Nothing outstanding._
+- [ ] **Component example recapture is slow enough to distort ordinary work.** `deno task catalogue:images --update` walks the whole corpus in a real browser and exceeds ten minutes, and the verify path additionally captures each witness twice for a geometry check, so it lands inside the gate's test stage on every release. Investigate before changing anything: capture concurrency across pages/contexts, reusing one browser and build across the run, recapturing only the entries whose own inputs moved rather than the whole corpus on any source-hash change, and how much of the cost is the build versus the captures. Any per-entry input scoping must stay conservative — the current whole-file hash is deliberately over-broad. Evidence: `scripts/component-example-images.ts` (`CAPTURE_INPUTS`, `verifyImages`, `withCaptureServer`); `deno.json` `catalogue:images` and `test` tasks.
 
 ## 🟡 Smaller fixes & polish
 

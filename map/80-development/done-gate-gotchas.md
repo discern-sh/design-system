@@ -131,3 +131,11 @@ expects the node_modules/ directory to be up to date. Did you forget to run
 **Cause.** Worktrees converge dependencies on every pass — `[worktree.setup].ensure` runs `deno install --frozen` at creation, on session-start re-entry, and after `discern update`. The main checkout has no such pass: landing a branch that added an npm dependency fast-forwards `main` without installing anything, so the main checkout's `node_modules/` no longer matches the lockfile. This is the main-checkout variant of "A merge pulled in a new dependency" above.
 
 **Fix.** Run `deno install --frozen` in the main checkout, then re-run the gate. Any time `main` moves under you (a landed branch, a pull), reinstall before gating.
+
+### A version bump makes every Component example image stale
+
+**Symptom.** A commit that changes nothing but the release version fails the test stage on `tests/component_example_images_test.ts` — "the generated manifest and exact-bounds PNG population match every current input" — with two `sha256:` values that differ. Nothing about the change could plausibly move a pixel.
+
+**Cause.** `CAPTURE_INPUTS` in [`component-example-images.ts`](../../scripts/component-example-images.ts) lists `deno.json` and `package.json`, so `componentExampleCaptureSourceHash()` covers the `version` field. The boundary is deliberately conservative — it hashes whole files rather than guessing which keys reach a capture — so a version bump invalidates the recorded `sourceHash` in [`example-images-manifest.ts`](../../catalogue/generated/example-images-manifest.ts) even though every PNG is byte-identical.
+
+**Fix.** Run `deno task catalogue:images --update` and commit the manifest beside the bump. Do not read a moved PNG as evidence that your change moved it: repeated captures of identical source can differ in sub-pixel and transparency detail that no reviewer can see, so a recapture commit routinely carries raster churn unrelated to the version. Budget for this in every release: the recapture walks the whole corpus in a real browser and takes several minutes. Both the churn and the cost are open items in [`discern/TODO.md`](../../discern/TODO.md).
