@@ -40,6 +40,13 @@ import {
   validateComponentExampleRepeatGeometry,
   withIsolatedCapturePage,
 } from "../scripts/component-example-images.ts";
+import {
+  type CanonicalPngRaster,
+  compareCanonicalPngRasters,
+  componentExampleRasterTolerance,
+  decodeCanonicalPngRaster,
+  rasterDifferenceIsImperceptible,
+} from "../scripts/png-raster.ts";
 
 const ROOT = new URL("../", import.meta.url);
 
@@ -424,5 +431,154 @@ Deno.test("Catalogue-only generated images cannot enter the JSR publish set", as
       entry.assetPath.startsWith("catalogue/generated/example-images/")
     ),
     true,
+  );
+});
+
+function committedImageUrl(index: number): URL {
+  const entry = componentExampleImageManifest.entries[index];
+  assert(entry !== undefined, `no manifest entry at ${index}`);
+  return new URL(entry.assetUrl.slice(1), ROOT);
+}
+
+/** Move one channel by `delta` without wrapping past the 8-bit range. */
+function perturb(
+  raster: CanonicalPngRaster,
+  pixels: number,
+  delta: number,
+): CanonicalPngRaster {
+  const copy = new Uint8Array(raster.pixels);
+  for (let pixel = 0; pixel < pixels; pixel += 1) {
+    const offset = pixel * 3;
+    const current = copy[offset] ?? 0;
+    copy[offset] = current > 127 ? current - delta : current + delta;
+  }
+  return { width: raster.width, height: raster.height, pixels: copy };
+}
+
+Deno.test("the raster decoder reads the committed capture output", async () => {
+  const total = componentExampleImageManifest.entries.length;
+  const sampled = [
+    0,
+    Math.floor(total / 3),
+    Math.floor((total * 2) / 3),
+    total - 1,
+  ];
+  for (const index of sampled) {
+    const entry = componentExampleImageManifest.entries[index];
+    assert(entry !== undefined);
+    const raster = await decodeCanonicalPngRaster(
+      await Deno.readFile(committedImageUrl(index)),
+      entry.assetPath,
+    );
+    assertEquals(
+      { width: raster.width, height: raster.height },
+      { width: entry.width, height: entry.height },
+      entry.assetPath,
+    );
+    assertEquals(raster.pixels.length, entry.width * entry.height * 3);
+  }
+});
+
+Deno.test("the declared raster tolerance stays at its evidenced bounds", () => {
+  // Observed noise reaches 38 changed pixels at delta 2; the smallest real
+  // change measured 105 changed pixels at delta 71. Loosening either bound
+  // past that evidence would start absorbing real visual changes.
+  assertEquals(componentExampleRasterTolerance, {
+    maxChannelDelta: 2,
+    maxChangedPixels: 64,
+  });
+});
+
+Deno.test("raster comparison separates imperceptible variation from a real change", async () => {
+  const entry = componentExampleImageManifest.entries[0];
+  assert(entry !== undefined);
+  const committed = await decodeCanonicalPngRaster(
+    await Deno.readFile(committedImageUrl(0)),
+    entry.assetPath,
+  );
+  const { maxChangedPixels, maxChannelDelta } = componentExampleRasterTolerance;
+
+  const same = compareCanonicalPngRasters(committed, committed);
+  assertEquals(same, { kind: "identical" });
+  assert(rasterDifferenceIsImperceptible(same));
+
+  const noise = compareCanonicalPngRasters(
+    committed,
+    perturb(committed, maxChangedPixels, maxChannelDelta),
+  );
+  assertEquals(noise, {
+    kind: "differs",
+    changedPixels: maxChangedPixels,
+    maxChannelDelta,
+  });
+  assert(
+    rasterDifferenceIsImperceptible(noise),
+    "variation at both bounds must keep the committed artifact",
+  );
+
+  const tooManyPixels = compareCanonicalPngRasters(
+    committed,
+    perturb(committed, maxChangedPixels + 1, 1),
+  );
+  assertEquals(tooManyPixels, {
+    kind: "differs",
+    changedPixels: maxChangedPixels + 1,
+    maxChannelDelta: 1,
+  });
+  assert(
+    !rasterDifferenceIsImperceptible(tooManyPixels),
+    "a change wider than the pixel bound must be written",
+  );
+
+  const tooDeep = compareCanonicalPngRasters(
+    committed,
+    perturb(committed, 1, maxChannelDelta + 1),
+  );
+  assertEquals(tooDeep, {
+    kind: "differs",
+    changedPixels: 1,
+    maxChannelDelta: maxChannelDelta + 1,
+  });
+  assert(
+    !rasterDifferenceIsImperceptible(tooDeep),
+    "a change deeper than the channel bound must be written",
+  );
+
+  const resized = compareCanonicalPngRasters(committed, {
+    width: committed.width,
+    height: committed.height - 1,
+    pixels: committed.pixels.subarray(0, committed.width * 3),
+  });
+  assertEquals(resized, { kind: "geometry" });
+  assert(
+    !rasterDifferenceIsImperceptible(resized),
+    "a resized example is always a real change",
+  );
+});
+
+Deno.test("the raster decoder refuses images outside the canonical capture shape", async () => {
+  const original = await Deno.readFile(committedImageUrl(0));
+  const rejected = [
+    ["bit depth", 24, 16],
+    ["colour type", 25, 6],
+    ["interlace", 28, 1],
+  ] as const;
+  for (const [label, offset, value] of rejected) {
+    const patched = new Uint8Array(original);
+    patched[offset] = value;
+    await assertRejects(
+      () => decodeCanonicalPngRaster(patched, label),
+      TypeError,
+      "8-bit non-interlaced RGB",
+    );
+  }
+  await assertRejects(
+    () => decodeCanonicalPngRaster(original.subarray(0, 12), "truncated"),
+    TypeError,
+  );
+  await assertRejects(
+    () => decodeCanonicalPngRaster(new Uint8Array(40), "not a png"),
+    TypeError,
+    "is not a PNG",
   );
 });

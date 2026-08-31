@@ -13,6 +13,11 @@ import {
   type PlannedComponentExampleImage,
 } from "../catalogue/example-images/contract.ts";
 import { componentExampleRegistry } from "./generated/component-examples.ts";
+import {
+  compareCanonicalPngRasters,
+  decodeCanonicalPngRaster,
+  rasterDifferenceIsImperceptible,
+} from "./png-raster.ts";
 import { buildDesignSystem } from "./build.ts";
 import { generateSources, loadComponentSources } from "./generate.ts";
 import catalogueServer from "./serve.ts";
@@ -562,17 +567,51 @@ async function atomicWrite(url: URL, bytes: Uint8Array): Promise<void> {
   await Deno.rename(temporary, url);
 }
 
+/**
+ * Decide whether the committed bytes still show what this capture rendered.
+ *
+ * Chromium re-rasterizes identical source with occasional variation below the
+ * perceptual floor. Rewriting the file for that produces reviewable churn that
+ * carries no meaning, so a difference inside the declared raster tolerance
+ * keeps the committed artifact and its recorded hash.
+ */
+async function committedRasterStillShows(
+  committedBytes: Uint8Array,
+  capturedBytes: Uint8Array,
+  source: string,
+): Promise<boolean> {
+  const committed = await decodeCanonicalPngRaster(
+    committedBytes,
+    `${source} (committed)`,
+  );
+  const captured = await decodeCanonicalPngRaster(
+    capturedBytes,
+    `${source} (captured)`,
+  );
+  return rasterDifferenceIsImperceptible(
+    compareCanonicalPngRasters(committed, captured),
+  );
+}
+
 async function applyUpdate(
   plan: readonly PlannedComponentExampleImage[],
   captured: readonly CapturedImage[],
-  manifest: ComponentExampleImageManifest,
-): Promise<{ readonly changed: number; readonly removed: number }> {
+  sourceHash: `sha256:${string}`,
+): Promise<{
+  readonly changed: number;
+  readonly removed: number;
+  readonly retained: readonly string[];
+  readonly totalBytes: number;
+}> {
   await Deno.mkdir(IMAGE_ROOT, { recursive: true });
   const current = [];
   for await (const entry of Deno.readDir(IMAGE_ROOT)) {
     if (entry.isFile) current.push(entry.name);
   }
   let changed = 0;
+  let totalBytes = 0;
+  const retained: string[] = [];
+  const entries: ComponentExampleImageManifestEntry[] = [];
   for (const image of captured) {
     const target = new URL(
       image.entry.assetPath.replace(/^catalogue\//u, ""),
@@ -580,17 +619,43 @@ async function applyUpdate(
     );
     const existing = await readIfPresent(target);
     if (
-      existing === undefined ||
-      await componentExampleContentHash(existing) !== image.entry.contentHash
+      existing !== undefined &&
+      await componentExampleContentHash(existing) === image.entry.contentHash
     ) {
-      await atomicWrite(target, image.bytes);
-      changed += 1;
+      entries.push(image.entry);
+      totalBytes += existing.length;
+      continue;
     }
+    if (
+      existing !== undefined &&
+      await committedRasterStillShows(
+        existing,
+        image.bytes,
+        image.entry.assetPath,
+      )
+    ) {
+      entries.push({
+        ...image.entry,
+        contentHash: await componentExampleContentHash(existing),
+      });
+      retained.push(image.entry.assetPath);
+      totalBytes += existing.length;
+      continue;
+    }
+    await atomicWrite(target, image.bytes);
+    entries.push(image.entry);
+    totalBytes += image.bytes.length;
+    changed += 1;
   }
   const orphans = orphanedComponentExampleImageFiles(plan, current);
   for (const filename of orphans) {
     await Deno.remove(new URL(filename, IMAGE_ROOT));
   }
+  const manifest: ComponentExampleImageManifest = {
+    captureContractVersion: componentExampleCaptureContract.version,
+    sourceHash,
+    entries,
+  };
   const nextManifest = encoder.encode(manifestSource(manifest));
   const currentManifest = await readIfPresent(MANIFEST_URL);
   if (
@@ -601,7 +666,7 @@ async function applyUpdate(
     await atomicWrite(MANIFEST_URL, nextManifest);
     changed += 1;
   }
-  return { changed, removed: orphans.length };
+  return { changed, removed: orphans.length, retained, totalBytes };
 }
 
 async function componentNames(): Promise<ReadonlyMap<string, string>> {
@@ -700,13 +765,7 @@ async function updateImages(): Promise<void> {
       "Capture inputs changed while images were rendering; rerun the update",
     );
   }
-  const manifest: ComponentExampleImageManifest = {
-    captureContractVersion: componentExampleCaptureContract.version,
-    sourceHash,
-    entries: captured.map(({ entry }) => entry),
-  };
-  const applied = await applyUpdate(plan, captured, manifest);
-  const totalBytes = captured.reduce((sum, { bytes }) => sum + bytes.length, 0);
+  const applied = await applyUpdate(plan, captured, sourceHash);
   const timing: CaptureTiming = {
     buildMs,
     browserMs,
@@ -714,13 +773,16 @@ async function updateImages(): Promise<void> {
     totalMs: performance.now() - started,
   };
   console.log(
-    `Updated ${captured.length} Component example images (${totalBytes} bytes); ${applied.changed} files changed and ${applied.removed} orphans removed. ` +
+    `Updated ${captured.length} Component example images (${applied.totalBytes} bytes); ${applied.changed} files changed, ${applied.retained.length} retained through imperceptible raster variation, and ${applied.removed} orphans removed. ` +
       `Build ${(timing.buildMs / 1000).toFixed(2)}s, browser ${
         (timing.browserMs / 1000).toFixed(2)
       }s, capture ${(timing.captureMs / 1000).toFixed(2)}s (${
         (timing.captureMs / captured.length).toFixed(1)
       }ms/image), total ${(timing.totalMs / 1000).toFixed(2)}s.`,
   );
+  for (const assetPath of applied.retained) {
+    console.log(`  retained ${assetPath}`);
+  }
 }
 
 async function imageFiles(): Promise<string[]> {
