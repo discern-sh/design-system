@@ -8,7 +8,8 @@ import { useInitialFragmentTarget } from "../../use-initial-fragment-target.ts";
 export interface DocsNavItem {
   readonly label: ReactNode;
   readonly href: string;
-  readonly current?: boolean;
+  /** `true` means the current page; use `location` for an in-page or filtered location. */
+  readonly current?: boolean | "page" | "location";
 }
 
 /** One titled run of destinations rendered by the Docs nav component. */
@@ -24,7 +25,7 @@ export interface DocsNavProps
   readonly label?: string;
 }
 
-/** Sectioned documentation navigation rail with one explicit current destination. */
+/** Sectioned documentation navigation with explicit current page or location semantics. */
 export const DocsNav: DiscernComponent<HTMLElement, DocsNavProps> = forwardRef<
   HTMLElement,
   DocsNavProps
@@ -52,7 +53,9 @@ export const DocsNav: DiscernComponent<HTMLElement, DocsNavProps> = forwardRef<
               <li key={itemIndex}>
                 <a
                   href={item.href}
-                  aria-current={item.current ? "page" : undefined}
+                  aria-current={item.current === true
+                    ? "page"
+                    : item.current || undefined}
                 >
                   {item.label}
                 </a>

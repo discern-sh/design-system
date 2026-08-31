@@ -24,31 +24,30 @@
     gap: 0;
     margin: 0;
     padding: 0;
-    border-inline-start: 1px solid var(--discern-color-border-strong);
     list-style: none;
   }
   .discern-docs-nav ul a {
     display: block;
     padding: var(--discern-space-2) var(--discern-space-3);
-    border-inline-start: 2px solid transparent;
+    border-radius: var(--discern-radius-sm);
     color: inherit;
     line-height: 1.35;
     text-decoration: none;
-    transform: translateX(-1px);
   }
-  .discern-docs-nav ul a:is(:hover, :focus-visible, [aria-current="page"]) {
-    border-inline-start-color: var(--discern-color-accent-600);
-    background: var(--discern-color-accent-100);
+  .discern-docs-nav ul a:is(:hover, :focus-visible) {
+    background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink);
   }
   .discern-docs-nav ul a:focus-visible {
-    outline-offset: -2px;
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: 1px;
   }
   .discern-docs-nav ul a:active {
     background: var(--discern-color-accent-200);
   }
-  .discern-docs-nav ul a[aria-current="page"] {
+  .discern-docs-nav ul a[aria-current] {
     background: var(--discern-color-accent-100);
+    color: var(--discern-color-ink);
     font-weight: var(--discern-font-weight-strong);
   }
 }

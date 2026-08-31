@@ -8,12 +8,12 @@ const meta = {
   order: 30,
   cli: { stance: "rendered" },
   description:
-    "Sectioned documentation navigation rail with one explicit current destination.",
+    "Sectioned documentation navigation with explicit current page or location semantics.",
   purposes: ["building-documentation"],
   accessibility: [
     "A configurable label names the navigation landmark, and each section stays a real list.",
     "Adjacent destinations form one contiguous pointer run, so moving through a list never leaves the links' hit targets.",
-    "The current destination carries aria-current=page and reinforces its highlight with weight, not colour alone.",
+    "Each current destination carries the appropriate page or location value and reinforces its highlight with weight, not colour alone.",
   ],
 } satisfies ComponentMeta;
 
