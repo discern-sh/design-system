@@ -132,14 +132,6 @@ expects the node_modules/ directory to be up to date. Did you forget to run
 
 **Fix.** Run `deno install --frozen` in the main checkout, then re-run the gate. Any time `main` moves under you (a landed branch, a pull), reinstall before gating.
 
-### A version bump makes every Component example image stale
-
-**Symptom.** A commit that changes nothing but the release version fails the test stage on `tests/component_example_images_test.ts` — "the generated manifest and exact-bounds PNG population match every current input" — with two `sha256:` values that differ. Nothing about the change could plausibly move a pixel.
-
-**Cause.** `CAPTURE_INPUTS` in [`component-example-images.ts`](../../scripts/component-example-images.ts) lists `deno.json` and `package.json`, so `componentExampleCaptureSourceHash()` covers the `version` field. The boundary is deliberately conservative — it hashes whole files rather than guessing which keys reach a capture — so a version bump invalidates the recorded `sourceHash` in [`example-images-manifest.ts`](../../catalogue/generated/example-images-manifest.ts) even though every PNG is byte-identical.
-
-**Fix.** Run `deno task catalogue:images --update` and commit the manifest beside the bump. Expect the `sourceHash` line alone to move: the update keeps any image whose capture differs only within the raster tolerance, and names each one it retained. A PNG that does change is a real visual change and deserves review. Budget about two and a half minutes for the recapture — it walks the whole corpus in a real browser, and recapturing only the entries whose own inputs moved is an open item in [`discern/TODO.md`](../../discern/TODO.md).
-
 ### A tall example refuses to capture
 
 **Symptom.** A new or grown example fails its capture because its document renders past the versioned capture viewport. Nothing is wrong with the example, and it renders correctly in the Catalogue.

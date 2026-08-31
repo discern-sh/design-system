@@ -1,6 +1,7 @@
 import {
   assert,
   assertEquals,
+  assertNotEquals,
   assertRejects,
   assertStringIncludes,
   assertThrows,
@@ -37,6 +38,7 @@ import {
 } from "../catalogue/example-images/contract.ts";
 import { componentExampleRegistry } from "../scripts/generated/component-examples.ts";
 import {
+  componentExampleCaptureInputHash,
   componentExampleCaptureSourceHash,
   componentExampleContentHash,
   componentExampleScreenshotOptions,
@@ -95,6 +97,55 @@ Deno.test("raster staleness excludes consumer-only image presentation", () => {
     isComponentExampleCaptureSourcePath(
       "catalogue/example-images/future-capture-helper.ts",
     ),
+  );
+});
+
+Deno.test("capture source hashing excludes release identity but retains executable configuration", async () => {
+  const source = [{
+    path: "src/example.tsx",
+    contents: new TextEncoder().encode("export const example = true;\n"),
+  }];
+  const deno = {
+    name: "@discern-sh/design-system",
+    version: "0.28.0",
+    compilerOptions: { jsx: "react-jsx", jsxImportSource: "react" },
+    imports: { react: "npm:react@18.3.1" },
+  };
+  const packageJson = {
+    name: "discern-design-system",
+    version: "0.28.0",
+    type: "module",
+    devDependencies: { "playwright-core": "1.61.1" },
+  };
+  const baseline = await componentExampleCaptureInputHash(
+    source,
+    deno,
+    packageJson,
+  );
+
+  assertEquals(
+    await componentExampleCaptureInputHash(source, {
+      ...deno,
+      version: "0.29.0",
+    }, {
+      ...packageJson,
+      version: "0.29.0",
+    }),
+    baseline,
+  );
+  assertNotEquals(
+    await componentExampleCaptureInputHash(source, {
+      ...deno,
+      compilerOptions: { ...deno.compilerOptions, jsxImportSource: "preact" },
+    }, packageJson),
+    baseline,
+  );
+  assertNotEquals(
+    await componentExampleCaptureInputHash(source, deno, {
+      ...packageJson,
+      devDependencies: { "playwright-core": "1.62.0" },
+    }),
+    baseline,
   );
 });
 

@@ -39,9 +39,7 @@ const CAPTURE_INPUTS = [
   "catalogue/conformance.ts",
   "catalogue/example-images/",
   "catalogue/styles/components.css",
-  "deno.json",
   "deno.lock",
-  "package.json",
   "scripts/build.ts",
   "scripts/component-example-images.ts",
   "scripts/generate.ts",
@@ -228,6 +226,83 @@ export async function componentExampleContentHash(
   return `sha256:${encodeHex(digest)}`;
 }
 
+type CaptureSourceInput = {
+  readonly path: string;
+  readonly contents: Uint8Array;
+};
+
+function jsonRecord(value: unknown): Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+}
+
+function canonicalJson(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalJson);
+  if (typeof value !== "object" || value === null) return value;
+  return Object.fromEntries(
+    Object.entries(value).toSorted(([left], [right]) =>
+      left.localeCompare(right)
+    ).map(([key, child]) => [key, canonicalJson(child)]),
+  );
+}
+
+/**
+ * Capture inputs include executable configuration but exclude package identity.
+ * A release version cannot change a rendered example, whereas all other config
+ * remains enrolled so new compiler, resolver, or runtime settings are hashed.
+ */
+export function componentExampleCaptureConfiguration(
+  denoJson: unknown,
+  packageJson: unknown,
+): unknown {
+  const withoutReleaseIdentity = (value: unknown): Record<string, unknown> => {
+    const { name: _name, version: _version, ...configuration } = jsonRecord(
+      value,
+    );
+    return configuration;
+  };
+  return canonicalJson({
+    deno: withoutReleaseIdentity(denoJson),
+    package: withoutReleaseIdentity(packageJson),
+  });
+}
+
+/** Hash source bytes with the capture-relevant portion of repository config. */
+export async function componentExampleCaptureInputHash(
+  sources: readonly CaptureSourceInput[],
+  denoJson: unknown,
+  packageJson: unknown,
+): Promise<`sha256:${string}`> {
+  const chunks: Uint8Array[] = [];
+  let length = 0;
+  const append = (path: string, contents: Uint8Array): void => {
+    const pathBytes = encoder.encode(`${path}\0`);
+    chunks.push(pathBytes, contents, encoder.encode("\0"));
+    length += pathBytes.length + contents.length + 1;
+  };
+  for (
+    const source of sources.toSorted((left, right) =>
+      left.path.localeCompare(right.path)
+    )
+  ) {
+    append(source.path, source.contents);
+  }
+  append(
+    "<capture-configuration>",
+    encoder.encode(JSON.stringify(
+      componentExampleCaptureConfiguration(denoJson, packageJson),
+    )),
+  );
+  const joined = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of chunks) {
+    joined.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return await componentExampleContentHash(joined);
+}
+
 async function readIfPresent(url: URL): Promise<Uint8Array | undefined> {
   try {
     return await Deno.readFile(url);
@@ -278,21 +353,19 @@ export async function componentExampleCaptureSourceHash(): Promise<
 > {
   const paths = (await repositoryCaptureSourcePaths(ROOT, CAPTURE_INPUTS))
     .filter(isComponentExampleCaptureSourcePath);
-  const chunks: Uint8Array[] = [];
-  let length = 0;
-  for (const path of paths) {
-    const pathBytes = encoder.encode(`${path}\0`);
-    const contents = await Deno.readFile(new URL(path, ROOT));
-    chunks.push(pathBytes, contents, encoder.encode("\0"));
-    length += pathBytes.length + contents.length + 1;
-  }
-  const joined = new Uint8Array(length);
-  let offset = 0;
-  for (const chunk of chunks) {
-    joined.set(chunk, offset);
-    offset += chunk.length;
-  }
-  return await componentExampleContentHash(joined);
+  const [sources, denoJson, packageJson] = await Promise.all([
+    Promise.all(paths.map(async (path) => ({
+      path,
+      contents: await Deno.readFile(new URL(path, ROOT)),
+    }))),
+    Deno.readTextFile(new URL("../deno.json", import.meta.url)).then(
+      JSON.parse,
+    ),
+    Deno.readTextFile(new URL("../package.json", import.meta.url)).then(
+      JSON.parse,
+    ),
+  ]);
+  return await componentExampleCaptureInputHash(sources, denoJson, packageJson);
 }
 
 function imageSources(): readonly ComponentExampleImageSource[] {
