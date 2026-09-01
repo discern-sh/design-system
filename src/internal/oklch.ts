@@ -25,6 +25,25 @@ function srgbChannel(linear: number): number {
   return clampRgbChannel(encoded * 255);
 }
 
+/** Convert one OKLab colour to unclamped linear-light sRGB channels. */
+export function oklabToLinearRgb(
+  lightness: number,
+  aAxis: number,
+  bAxis: number,
+): readonly [number, number, number] {
+  const lRoot = lightness + 0.3963377774 * aAxis + 0.2158037573 * bAxis;
+  const mRoot = lightness - 0.1055613458 * aAxis - 0.0638541728 * bAxis;
+  const sRoot = lightness - 0.0894841775 * aAxis - 1.291485548 * bAxis;
+  const l = lRoot ** 3;
+  const m = mRoot ** 3;
+  const s = sRoot ** 3;
+  return [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ];
+}
+
 /** Convert one authored OKLCH colour to gamut-clamped sRGB channels. */
 export function oklchToSrgb(
   lightness: number,
@@ -32,21 +51,14 @@ export function oklchToSrgb(
   hue: number,
 ): SrgbColor {
   const radians = hue * Math.PI / 180;
-  const a = chroma * Math.cos(radians);
-  const b = chroma * Math.sin(radians);
-  const lRoot = lightness + 0.3963377774 * a + 0.2158037573 * b;
-  const mRoot = lightness - 0.1055613458 * a - 0.0638541728 * b;
-  const sRoot = lightness - 0.0894841775 * a - 1.291485548 * b;
-  const l = lRoot ** 3;
-  const m = mRoot ** 3;
-  const s = sRoot ** 3;
+  const [red, green, blue] = oklabToLinearRgb(
+    lightness,
+    chroma * Math.cos(radians),
+    chroma * Math.sin(radians),
+  );
   return {
-    red: srgbChannel(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
-    green: srgbChannel(
-      -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
-    ),
-    blue: srgbChannel(
-      -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
-    ),
+    red: srgbChannel(red),
+    green: srgbChannel(green),
+    blue: srgbChannel(blue),
   };
 }

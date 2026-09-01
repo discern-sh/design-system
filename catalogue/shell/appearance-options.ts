@@ -1,3 +1,4 @@
+import { oklabToLinearRgb } from "../../src/internal/oklch.ts";
 import { themeTokens } from "../../src/tokens/tokens.ts";
 
 /** One project-facing Appearance choice backed by the public hue primitive. */
@@ -42,23 +43,10 @@ function parseOklch(value: string): Oklab {
   return { l, a: chroma * Math.cos(radians), b: chroma * Math.sin(radians) };
 }
 
-function linearRgb(color: Oklab): readonly [number, number, number] {
-  const lRoot = color.l + 0.3963377774 * color.a + 0.2158037573 * color.b;
-  const mRoot = color.l - 0.1055613458 * color.a - 0.0638541728 * color.b;
-  const sRoot = color.l - 0.0894841775 * color.a - 1.291485548 * color.b;
-  const l = lRoot ** 3;
-  const m = mRoot ** 3;
-  const s = sRoot ** 3;
-  return [
-    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
-    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
-    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
-  ];
-}
-
 function luminance(value: string): number {
-  const [red, green, blue] = linearRgb(parseOklch(value)).map((channel) =>
-    Math.max(0, Math.min(1, channel))
+  const color = parseOklch(value);
+  const [red, green, blue] = oklabToLinearRgb(color.l, color.a, color.b).map(
+    (channel) => Math.max(0, Math.min(1, channel)),
   ) as [number, number, number];
   return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
 }
