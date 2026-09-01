@@ -422,18 +422,18 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
       JSON.stringify(accentStyle)
     }`,
   );
-  await accent.selectOption("300");
+  await accent.selectOption("violet");
   invariant(
-    await accent.inputValue() === "300",
+    await accent.inputValue() === "violet",
     "Accent preset did not update",
   );
   invariant(
-    new URL(page.url()).searchParams.get("accent") === "300",
+    new URL(page.url()).searchParams.get("accent") === "violet",
     "Accent preset did not update the shareable URL",
   );
   invariant(
     await page.evaluate(() =>
-      localStorage.getItem("discern-catalogue-accent-hue") === "300"
+      localStorage.getItem("discern-catalogue-accent-hue") === "violet"
     ),
     "Accent preset did not persist",
   );
@@ -461,7 +461,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
     await page.getByRole("combobox", {
       name: "Accent review preset",
     }).inputValue() ===
-      "300",
+      "violet",
     "Persisted accent preset did not restore",
   );
 

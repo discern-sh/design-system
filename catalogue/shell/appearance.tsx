@@ -4,26 +4,32 @@ import type { ThemeSwitcherMode } from "../../src/components/core/theme-switcher
 import { ThemeToggle } from "../../src/components/core/theme-toggle/theme-toggle.tsx";
 import { Select } from "../../src/components/forms/select/select.tsx";
 import { useCatalogueTerminalTheme } from "../terminal-theme.ts";
+import type { CatalogueAppearanceOption } from "./appearance-options.ts";
 import {
   catalogueAppearanceOption,
   catalogueAppearanceOptions,
+  catalogueAppearanceStyle,
   defaultCatalogueAppearanceOption,
 } from "./appearance-options.ts";
-import { catalogueAccent, catalogueTheme } from "./appearance-state.ts";
+import { catalogueTheme } from "./appearance-state.ts";
 
 const themeStorageKey = "discern-catalogue-theme";
 const accentStorageKey = "discern-catalogue-accent-hue";
-const defaultAccentHue = defaultCatalogueAppearanceOption.hue;
+
+function accentChoice(value: string | null): string | undefined {
+  return catalogueAppearanceOption(value)?.id;
+}
 
 function updateCatalogueAppearanceUrl(
   theme: ThemeSwitcherMode,
-  accentHue: number,
+  accentId: string,
 ): void {
   const current = new URL(globalThis.location.href);
   if (theme === "system") current.searchParams.delete("theme");
   else current.searchParams.set("theme", theme);
-  if (accentHue === defaultAccentHue) current.searchParams.delete("accent");
-  else current.searchParams.set("accent", String(accentHue));
+  if (accentId === defaultCatalogueAppearanceOption.id) {
+    current.searchParams.delete("accent");
+  } else current.searchParams.set("accent", accentId);
   globalThis.history.replaceState(globalThis.history.state, "", current);
 }
 
@@ -33,11 +39,13 @@ export function useCatalogueAppearance(url: URL) {
     catalogueTheme(url.searchParams.get("theme")) ??
       catalogueTheme(localStorage.getItem(themeStorageKey)) ?? "system"
   );
-  const [accentHue, setAccentHue] = useState<number>(() =>
-    catalogueAccent(url.searchParams.get("accent")) ??
-      catalogueAccent(localStorage.getItem(accentStorageKey)) ??
-      defaultAccentHue
+  const [accentId, setAccentId] = useState<string>(() =>
+    accentChoice(url.searchParams.get("accent")) ??
+      accentChoice(localStorage.getItem(accentStorageKey)) ??
+      defaultCatalogueAppearanceOption.id
   );
+  const accent = catalogueAppearanceOption(accentId) ??
+    defaultCatalogueAppearanceOption;
   const terminalTheme = useCatalogueTerminalTheme(theme);
 
   useEffect(() => {
@@ -47,10 +55,10 @@ export function useCatalogueAppearance(url: URL) {
         catalogueTheme(current.searchParams.get("theme")) ??
           catalogueTheme(localStorage.getItem(themeStorageKey)) ?? "system",
       );
-      setAccentHue(
-        catalogueAccent(current.searchParams.get("accent")) ??
-          catalogueAccent(localStorage.getItem(accentStorageKey)) ??
-          defaultAccentHue,
+      setAccentId(
+        accentChoice(current.searchParams.get("accent")) ??
+          accentChoice(localStorage.getItem(accentStorageKey)) ??
+          defaultCatalogueAppearanceOption.id,
       );
     };
     globalThis.addEventListener("popstate", restoreFromLocation);
@@ -62,23 +70,25 @@ export function useCatalogueAppearance(url: URL) {
     setTheme(next);
     if (next === "system") localStorage.removeItem(themeStorageKey);
     else localStorage.setItem(themeStorageKey, next);
-    updateCatalogueAppearanceUrl(next, accentHue);
+    updateCatalogueAppearanceUrl(next, accentId);
   };
-  const changeAccentHue = (next: number): void => {
-    const accent = catalogueAppearanceOption(next)?.hue ?? defaultAccentHue;
-    setAccentHue(accent);
-    if (accent === defaultAccentHue) localStorage.removeItem(accentStorageKey);
-    else localStorage.setItem(accentStorageKey, String(accent));
-    updateCatalogueAppearanceUrl(theme, accent);
+  const changeAccent = (next: string): void => {
+    const option = catalogueAppearanceOption(next) ??
+      defaultCatalogueAppearanceOption;
+    setAccentId(option.id);
+    if (option.id === defaultCatalogueAppearanceOption.id) {
+      localStorage.removeItem(accentStorageKey);
+    } else localStorage.setItem(accentStorageKey, option.id);
+    updateCatalogueAppearanceUrl(theme, option.id);
   };
 
   return {
     theme,
     terminalTheme,
-    accentHue,
+    accent,
     changeTheme,
-    changeAccentHue,
-    style: { "--discern-accent-hue": accentHue } as CSSProperties,
+    changeAccent,
+    style: catalogueAppearanceStyle(accent, terminalTheme) as CSSProperties,
   } as const;
 }
 
@@ -86,9 +96,9 @@ export interface AppearanceControlProps {
   readonly scopeLabel?: string;
   readonly theme: ThemeSwitcherMode;
   readonly resolvedTheme: "light" | "dark";
-  readonly accentHue: number;
+  readonly accent: CatalogueAppearanceOption;
   readonly onThemeChange: (theme: ThemeSwitcherMode) => void;
-  readonly onAccentHueChange: (hue: number) => void;
+  readonly onAccentChange: (id: string) => void;
 }
 
 /** Compact control boundary for the shared Theme and accent model. */
@@ -97,9 +107,9 @@ export function AppearanceControl(
     scopeLabel,
     theme,
     resolvedTheme,
-    accentHue,
+    accent,
     onThemeChange,
-    onAccentHueChange,
+    onAccentChange,
   }: AppearanceControlProps,
 ) {
   const appearanceLabel = scopeLabel === undefined
@@ -135,20 +145,19 @@ export function AppearanceControl(
           />
           <span>Accent review</span>
           <Select
-            value={accentHue}
-            onChange={(event) =>
-              onAccentHueChange(Number(event.currentTarget.value))}
+            value={accent.id}
+            onChange={(event) => onAccentChange(event.currentTarget.value)}
             aria-label={scopeLabel === undefined
               ? "Accent review preset"
               : `${scopeLabel} accent review preset`}
             aria-describedby={guidanceId}
             options={catalogueAppearanceOptions.map((option) => ({
-              value: String(option.hue),
+              value: option.id,
               label: option.label,
             }))}
           />
           <output>
-            {catalogueAppearanceOption(accentHue)?.label ?? "Blue"}
+            {accent.label}
           </output>
           <small
             className="discern-catalogue-accent__guidance"

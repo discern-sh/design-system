@@ -6,6 +6,11 @@ import {
   useState,
 } from "react";
 import type { CSSProperties, ReactNode } from "react";
+import {
+  catalogueAppearanceOption,
+  catalogueAppearanceStyle,
+  defaultCatalogueAppearanceOption,
+} from "../../shell/appearance-options.ts";
 import type { BuilderSlotChild } from "../model.ts";
 import type { RenderOptions } from "../render.tsx";
 import { renderBuilderChild } from "../render.tsx";
@@ -312,9 +317,11 @@ function FrameDocument(
       data-discern-theme-preference={snapshot.appearance.theme}
       data-discern-builder-preview-mode={snapshot.mode}
       aria-hidden={snapshot.mode === "edit" ? "true" : undefined}
-      style={{
-        "--discern-accent-hue": snapshot.appearance.accentHue,
-      } as CSSProperties}
+      style={catalogueAppearanceStyle(
+        catalogueAppearanceOption(snapshot.appearance.accent) ??
+          defaultCatalogueAppearanceOption,
+        snapshot.appearance.resolvedTheme,
+      ) as CSSProperties}
     >
       {snapshot.document.children.length === 0
         ? (

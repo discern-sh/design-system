@@ -178,7 +178,7 @@ Deno.test("preview messages are same-origin, versioned, and policy-accepted", ()
     documentKey: JSON.stringify(emptyDocument("Protocol check")),
     viewport: { id: "fluid", label: "Fluid", logicalWidth: 860 },
     zoom: { id: "fit", scale: 1 },
-    appearance: { theme: "light", resolvedTheme: "light", accentHue: 255 },
+    appearance: { theme: "light", resolvedTheme: "light", accent: "blue" },
     mode: "edit",
     selectionId: null,
     interactionRevision: 0,
@@ -342,16 +342,18 @@ Deno.test("the shared preview renderer injects optional callback witnesses only 
 
 Deno.test("Builder preview Appearance accepts only the exhaustive shared presets", () => {
   for (const option of catalogueAppearanceOptions) {
-    assertEquals(builderPreviewAccent(option.id), option.hue);
-    assertEquals(builderPreviewAccent(String(option.hue)), option.hue);
+    assertEquals(builderPreviewAccent(option.id), option);
+    if (option.kind === "hue") {
+      assertEquals(builderPreviewAccent(String(option.hue)), option);
+    }
   }
   assertEquals(
     builderPreviewAccent("145"),
-    defaultCatalogueAppearanceOption.hue,
+    defaultCatalogueAppearanceOption,
   );
   assertEquals(
     builderPreviewAccent("not-a-preset"),
-    defaultCatalogueAppearanceOption.hue,
+    defaultCatalogueAppearanceOption,
   );
 });
 

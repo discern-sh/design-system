@@ -9,14 +9,25 @@ import {
   catalogueAppearanceHueFailures,
   catalogueAppearanceOption,
   catalogueAppearanceOptions,
+  catalogueAppearanceStyle,
   defaultCatalogueAppearanceOption,
 } from "../catalogue/shell/appearance-options.ts";
-import { catalogueAccent } from "../catalogue/shell/appearance-state.ts";
+import type { ThemeToken } from "../src/tokens/tokens.ts";
 import { discernThemeTokens } from "../src/tokens/tokens.ts";
+
+function testToken(
+  name: ThemeToken["name"],
+  light: string,
+  dark: string,
+): ThemeToken {
+  return { name, light, dark, category: "Color", description: "Test value." };
+}
 
 Deno.test("every exposed Appearance option passes both Theme semantic proofs", () => {
   assertEquals(
-    catalogueAppearanceOptions.map(({ id, hue }) => [id, hue]),
+    catalogueAppearanceOptions.map((option) =>
+      option.kind === "hue" ? [option.id, option.hue] : [option.id, option.kind]
+    ),
     [
       ["red", 2],
       ["green", 120],
@@ -36,21 +47,27 @@ Deno.test("every exposed Appearance option passes both Theme semantic proofs", (
   assertCatalogueAppearanceOptions(catalogueAppearanceOptions);
   for (const option of catalogueAppearanceOptions) {
     assertEquals(catalogueAppearanceOption(option.id), option);
-    assertEquals(catalogueAppearanceOption(String(option.hue)), option);
-    assertEquals(catalogueAccent(String(option.hue)), option.hue);
+    if (option.kind === "hue") {
+      assertEquals(catalogueAppearanceOption(String(option.hue)), option);
+      assertEquals(catalogueAppearanceStyle(option, "light"), {
+        "--discern-accent-hue": String(option.hue),
+      });
+      assertEquals(catalogueAppearanceStyle(option, "dark"), {
+        "--discern-accent-hue": String(option.hue),
+      });
+    }
   }
 });
 
 Deno.test("unsafe arbitrary and synthetic future Appearance choices fail closed", () => {
   for (const hue of [20, 128, 145, 200]) {
-    assertEquals(catalogueAccent(String(hue)), undefined);
     assertEquals(catalogueAppearanceOption(String(hue)), undefined);
   }
   const error = assertThrows(
     () =>
       assertCatalogueAppearanceOptions([
         ...catalogueAppearanceOptions,
-        { id: "future-green", label: "Future green", hue: 145 },
+        { kind: "hue", id: "future-green", label: "Future green", hue: 145 },
       ]),
     TypeError,
   );
@@ -69,6 +86,87 @@ Deno.test("unsafe arbitrary and synthetic future Appearance choices fail closed"
   );
 });
 
+Deno.test("unsafe synthetic role presets fail closed before exposure", () => {
+  const collision = assertThrows(
+    () =>
+      assertCatalogueAppearanceOptions([
+        ...catalogueAppearanceOptions,
+        {
+          kind: "preset",
+          id: "future-preset",
+          label: "Future preset",
+          overrides: [
+            testToken(
+              "--discern-color-accent-600",
+              "oklch(54% 0.19 28)",
+              "oklch(70% 0.17 28)",
+            ),
+          ],
+        },
+      ]),
+    TypeError,
+  );
+  assertStringIncludes(collision.message, "future-preset");
+  assertStringIncludes(collision.message, "accent collides with danger");
+
+  const translucent = assertThrows(
+    () =>
+      assertCatalogueAppearanceOptions([
+        ...catalogueAppearanceOptions,
+        {
+          kind: "preset",
+          id: "future-glass",
+          label: "Future glass",
+          overrides: [
+            testToken(
+              "--discern-color-canvas",
+              "oklch(100% 0 0 / 0.5)",
+              "oklch(25% 0.018 285)",
+            ),
+          ],
+        },
+      ]),
+    TypeError,
+  );
+  assertStringIncludes(translucent.message, "canvas must be opaque");
+
+  assertThrows(
+    () =>
+      assertCatalogueAppearanceOptions([
+        ...catalogueAppearanceOptions,
+        {
+          kind: "preset",
+          id: "future-unknown",
+          label: "Future unknown",
+          overrides: [
+            testToken(
+              "--discern-color-imaginary",
+              "oklch(50% 0 0)",
+              "oklch(50% 0 0)",
+            ),
+          ],
+        },
+      ]),
+    TypeError,
+    "unknown Theme Token",
+  );
+
+  assertThrows(
+    () =>
+      assertCatalogueAppearanceOptions([
+        ...catalogueAppearanceOptions,
+        {
+          kind: "preset",
+          id: "future-empty",
+          label: "Future empty",
+          overrides: [],
+        },
+      ]),
+    TypeError,
+    "overrides no Theme Tokens",
+  );
+});
+
 Deno.test("the complete low-level hue range is swept before presets claim safety", () => {
   const safeHues = Array.from(
     { length: 361 },
@@ -76,8 +174,8 @@ Deno.test("the complete low-level hue range is swept before presets claim safety
   ).filter((hue) => catalogueAppearanceHueFailures(hue).length === 0);
   assert(safeHues.length > 0);
   assert(safeHues.length < 361);
-  for (const { hue } of catalogueAppearanceOptions) {
-    assert(safeHues.includes(hue));
+  for (const option of catalogueAppearanceOptions) {
+    if (option.kind === "hue") assert(safeHues.includes(option.hue));
   }
   assert(
     catalogueAppearanceHueFailures(20).some((failure) =>

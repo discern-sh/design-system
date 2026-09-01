@@ -6,7 +6,9 @@ import {
   useCatalogueAppearance,
 } from "../../shell/appearance.tsx";
 import {
+  type CatalogueAppearanceOption,
   catalogueAppearanceOption,
+  catalogueAppearanceStyle,
   defaultCatalogueAppearanceOption,
 } from "../../shell/appearance-options.ts";
 import { useCatalogueTerminalTheme } from "../../terminal-theme.ts";
@@ -35,8 +37,6 @@ export const builderPreviewViewports: Readonly<
   phone: { id: "phone", label: "390px", width: 390 },
 };
 
-const defaultAccentHue = defaultCatalogueAppearanceOption.hue;
-
 export interface BuilderPreviewMeasurement {
   readonly logicalWidth: number;
   readonly zoomPercent: number;
@@ -45,7 +45,7 @@ export interface BuilderPreviewMeasurement {
 
 interface MutableAppearance {
   readonly theme: ThemeSwitcherMode;
-  readonly accentHue: number;
+  readonly accent: CatalogueAppearanceOption;
 }
 
 export interface BuilderPreviewPreferences {
@@ -53,6 +53,7 @@ export interface BuilderPreviewPreferences {
   readonly zoomId: BuilderPreviewZoomId;
   readonly mode: BuilderPreviewMode;
   readonly previewAppearance: BuilderPreviewAppearance;
+  readonly previewAccent: CatalogueAppearanceOption;
   readonly workspaceAppearance: MutableAppearance;
   readonly previewResolvedTheme: "light" | "dark";
   readonly workspaceResolvedTheme: "light" | "dark";
@@ -64,9 +65,9 @@ export interface BuilderPreviewPreferences {
   readonly setZoom: (id: BuilderPreviewZoomId) => void;
   readonly setMode: (mode: BuilderPreviewMode) => void;
   readonly setPreviewTheme: AppearanceControlProps["onThemeChange"];
-  readonly setPreviewAccentHue: AppearanceControlProps["onAccentHueChange"];
+  readonly setPreviewAccent: AppearanceControlProps["onAccentChange"];
   readonly setWorkspaceTheme: AppearanceControlProps["onThemeChange"];
-  readonly setWorkspaceAccentHue: AppearanceControlProps["onAccentHueChange"];
+  readonly setWorkspaceAccent: AppearanceControlProps["onAccentChange"];
   readonly reportMeasurement: (next: BuilderPreviewMeasurement) => void;
   readonly resetView: () => void;
   readonly resetInteractions: () => void;
@@ -92,8 +93,10 @@ function theme(value: string | null, fallback: ThemeSwitcherMode) {
     : fallback;
 }
 
-export function builderPreviewAccent(value: string | null): number {
-  return catalogueAppearanceOption(value)?.hue ?? defaultAccentHue;
+export function builderPreviewAccent(
+  value: string | null,
+): CatalogueAppearanceOption {
+  return catalogueAppearanceOption(value) ?? defaultCatalogueAppearanceOption;
 }
 
 function updateComfortUrl(
@@ -117,11 +120,15 @@ function updateComfortUrl(
   set("previewTheme", input.preview.theme, input.initialPreviewTheme);
   set(
     "previewAccent",
-    String(input.preview.accentHue),
-    String(defaultAccentHue),
+    input.preview.accent.id,
+    defaultCatalogueAppearanceOption.id,
   );
   set("theme", input.workspace.theme, "system");
-  set("accent", String(input.workspace.accentHue), String(defaultAccentHue));
+  set(
+    "accent",
+    input.workspace.accent.id,
+    defaultCatalogueAppearanceOption.id,
+  );
   globalThis.history.replaceState(globalThis.history.state, "", url);
 }
 
@@ -145,9 +152,9 @@ export function useBuilderPreviewPreferences(
   const [previewTheme, setPreviewTheme] = useState<ThemeSwitcherMode>(() =>
     theme(url.searchParams.get("previewTheme"), initialPreviewTheme)
   );
-  const [previewAccentHue, setPreviewAccentHue] = useState(() =>
-    builderPreviewAccent(url.searchParams.get("previewAccent"))
-  );
+  const [previewAccent, setPreviewAccent] = useState<
+    CatalogueAppearanceOption
+  >(() => builderPreviewAccent(url.searchParams.get("previewAccent")));
   const [measurement, setMeasurement] = useState<BuilderPreviewMeasurement>({
     logicalWidth: 0,
     zoomPercent: 100,
@@ -163,8 +170,8 @@ export function useBuilderPreviewPreferences(
       viewport: viewportId,
       zoom: zoomId,
       mode,
-      preview: { theme: previewTheme, accentHue: previewAccentHue },
-      workspace: { theme: workspace.theme, accentHue: workspace.accentHue },
+      preview: { theme: previewTheme, accent: previewAccent },
+      workspace: { theme: workspace.theme, accent: workspace.accent },
       initialPreviewTheme,
     });
   }, [
@@ -172,9 +179,9 @@ export function useBuilderPreviewPreferences(
     zoomId,
     mode,
     previewTheme,
-    previewAccentHue,
+    previewAccent,
     workspace.theme,
-    workspace.accentHue,
+    workspace.accent,
     initialPreviewTheme,
   ]);
 
@@ -195,11 +202,12 @@ export function useBuilderPreviewPreferences(
     previewAppearance: {
       theme: previewTheme,
       resolvedTheme: previewResolvedTheme,
-      accentHue: previewAccentHue,
+      accent: previewAccent.id,
     },
+    previewAccent,
     workspaceAppearance: {
       theme: workspace.theme,
-      accentHue: workspace.accentHue,
+      accent: workspace.accent,
     },
     previewResolvedTheme,
     workspaceResolvedTheme: workspace.terminalTheme,
@@ -211,10 +219,9 @@ export function useBuilderPreviewPreferences(
     setZoom,
     setMode,
     setPreviewTheme,
-    setPreviewAccentHue: (next) =>
-      setPreviewAccentHue(builderPreviewAccent(String(next))),
+    setPreviewAccent: (next) => setPreviewAccent(builderPreviewAccent(next)),
     setWorkspaceTheme: workspace.changeTheme,
-    setWorkspaceAccentHue: workspace.changeAccentHue,
+    setWorkspaceAccent: workspace.changeAccent,
     reportMeasurement,
     resetView() {
       setViewport("fluid");
@@ -228,30 +235,34 @@ export function useBuilderPreviewPreferences(
 }
 
 function AppearanceBoundary(
-  { label, appearance, resolvedTheme, onThemeChange, onAccentHueChange }:
-    Readonly<{
+  { label, appearance, resolvedTheme, onThemeChange, onAccentChange }: Readonly<
+    {
       label: string;
       appearance: MutableAppearance;
       resolvedTheme: "light" | "dark";
       onThemeChange: AppearanceControlProps["onThemeChange"];
-      onAccentHueChange: AppearanceControlProps["onAccentHueChange"];
-    }>,
+      onAccentChange: AppearanceControlProps["onAccentChange"];
+    }
+  >,
 ) {
   return (
     <div
       className="discern-builder-appearance"
       role="group"
       aria-label={`${label} appearance`}
-      style={{ "--discern-accent-hue": appearance.accentHue } as CSSProperties}
+      style={catalogueAppearanceStyle(
+        appearance.accent,
+        resolvedTheme,
+      ) as CSSProperties}
     >
       <span>{label}</span>
       <AppearanceControl
         scopeLabel={label}
         theme={appearance.theme}
         resolvedTheme={resolvedTheme}
-        accentHue={appearance.accentHue}
+        accent={appearance.accent}
         onThemeChange={onThemeChange}
-        onAccentHueChange={onAccentHueChange}
+        onAccentChange={onAccentChange}
       />
     </div>
   );
@@ -342,14 +353,17 @@ export function PreviewToolbarControls(
         appearance={preferences.workspaceAppearance}
         resolvedTheme={preferences.workspaceResolvedTheme}
         onThemeChange={preferences.setWorkspaceTheme}
-        onAccentHueChange={preferences.setWorkspaceAccentHue}
+        onAccentChange={preferences.setWorkspaceAccent}
       />
       <AppearanceBoundary
         label="Preview"
-        appearance={preferences.previewAppearance}
+        appearance={{
+          theme: preferences.previewAppearance.theme,
+          accent: preferences.previewAccent,
+        }}
         resolvedTheme={preferences.previewResolvedTheme}
         onThemeChange={preferences.setPreviewTheme}
-        onAccentHueChange={preferences.setPreviewAccentHue}
+        onAccentChange={preferences.setPreviewAccent}
       />
     </>
   );

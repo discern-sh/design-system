@@ -120,9 +120,9 @@ function App() {
       appearance={{
         theme: appearance.theme,
         resolvedTheme: appearance.terminalTheme,
-        accentHue: appearance.accentHue,
+        accent: appearance.accent,
         onThemeChange: appearance.changeTheme,
-        onAccentHueChange: appearance.changeAccentHue,
+        onAccentChange: appearance.changeAccent,
       }}
       style={appearance.style}
     >

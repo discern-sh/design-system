@@ -117,7 +117,7 @@ export function BuilderPreviewCanvas(
       preferences.zoomId,
       preferences.previewAppearance.theme,
       preferences.previewAppearance.resolvedTheme,
-      preferences.previewAppearance.accentHue,
+      preferences.previewAppearance.accent,
       preferences.mode,
       preferences.interactionRevision,
       selectionId,

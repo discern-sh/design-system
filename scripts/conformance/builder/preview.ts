@@ -773,7 +773,7 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
     await previewAppearance.getByRole("combobox", {
       name: "Preview accent review preset",
     })
-      .selectOption("300", { timeout: ACTION_TIMEOUT });
+      .selectOption("violet", { timeout: ACTION_TIMEOUT });
     await page.waitForTimeout(50);
     invariant(
       await page.locator(BUILDER_SHELL).getAttribute("data-discern-theme") ===

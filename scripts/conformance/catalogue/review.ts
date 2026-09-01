@@ -1,6 +1,9 @@
 import { fromFileUrl } from "@std/path";
 import type { Browser, Page } from "playwright-core";
-import { catalogueAppearanceOptions } from "../../../catalogue/shell/appearance-options.ts";
+import {
+  catalogueAppearanceOptions,
+  catalogueAppearanceStyle,
+} from "../../../catalogue/shell/appearance-options.ts";
 import { componentReviewPath } from "../../../catalogue/review/state.ts";
 import { reviewInlineSizes } from "../../../catalogue/review-postures.ts";
 import {
@@ -324,10 +327,13 @@ export async function verifyComponentReviewInstrument(
         );
         invariant(
           await page.locator("[data-discern-review-identity]").evaluate(
-            (element) =>
-              getComputedStyle(element).getPropertyValue("--discern-accent-hue")
-                .trim(),
-          ) === String(option.hue),
+            (element, expected: readonly (readonly [string, string])[]) =>
+              expected.every(([property, value]) =>
+                getComputedStyle(element).getPropertyValue(property).trim() ===
+                  value
+              ),
+            Object.entries(catalogueAppearanceStyle(option, theme)),
+          ),
           `${theme}/${option.id} Appearance did not reach the specimen`,
         );
         appearanceCases += 1;

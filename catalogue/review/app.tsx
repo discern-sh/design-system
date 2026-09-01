@@ -13,6 +13,7 @@ import type { ResolvedComponentReviewPosture } from "../review-postures.ts";
 import {
   catalogueAppearanceOption,
   catalogueAppearanceOptions,
+  catalogueAppearanceStyle,
   defaultCatalogueAppearanceOption,
 } from "../shell/appearance-options.ts";
 import { captureRegionForReview, inspectReviewGeometry } from "./geometry.ts";
@@ -319,7 +320,7 @@ function ReviewSpecimen({
           data-discern-review-identity={identity}
           style={{
             inlineSize: `${width}px`,
-            "--discern-accent-hue": option.hue,
+            ...catalogueAppearanceStyle(option, theme),
             ...reviewMotionStyle(motion, speed),
           } as CSSProperties}
         >
@@ -412,7 +413,7 @@ function App() {
       className="discern-review-shell"
       data-discern-root
       data-discern-theme={parsed.theme}
-      style={{ "--discern-accent-hue": option.hue } as CSSProperties}
+      style={catalogueAppearanceStyle(option, parsed.theme) as CSSProperties}
     >
       <header className="discern-review-header">
         <div>
