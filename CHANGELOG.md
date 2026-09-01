@@ -4,6 +4,10 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## Unreleased
+
+- Broaden Catalogue Appearance options into a union of hue-backed and role-override presets behind one shared style authority. The admission proof composites translucent `oklch()` values over the opaque canvas in gamma sRGB and now also proves ink/muted/faint legibility, the inverse pair, pairwise semantic-role separation, and categorical-series visibility and distinction for every option; all twelve hue presets pass the extended floors unchanged and unsafe synthetic presets fail closed. Appearance state, URLs, and storage carry option ids (legacy hue values still resolve), and the Builder preview protocol carries the option id at version 3. Recorded in [ADR 0039](map/_adr/0039-admit-role-override-appearance-presets.md).
+
 ## 0.29.0
 
 - Give Docs nav explicit `page` and `location` current semantics while retaining boolean compatibility, one calm full-row current treatment, and a visible focus outline without decorative rails, translation, or underlined badges. The Catalogue now projects both its primary and contextual navigation through that public Component.
