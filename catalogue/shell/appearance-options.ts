@@ -300,13 +300,6 @@ export function catalogueAppearanceHueFailures(hue: number): readonly string[] {
   });
 }
 
-/** Evaluate one Appearance option, hue- or preset-backed, against the same promise. */
-export function catalogueAppearanceOptionFailures(
-  option: CatalogueAppearanceOption,
-): readonly string[] {
-  return optionFailures(option);
-}
-
 /** Fail closed unless a complete project-facing option set is semantically safe. */
 export function assertCatalogueAppearanceOptions(
   options: readonly CatalogueAppearanceOption[],
