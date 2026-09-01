@@ -38,7 +38,9 @@ export async function verifyMalformedRetry(page: Page): Promise<number> {
       buffer: Buffer.from("{not valid json"),
     };
     await input.setInputFiles(payload);
-    const firstAlert = page.getByRole("alert").last();
+    const firstAlert = page.getByRole("alert").filter({
+      hasText: payload.name,
+    }).last();
     await firstAlert.waitFor({ timeout: ACTION_TIMEOUT });
     const firstHandle = await firstAlert.elementHandle();
     invariant(firstHandle !== null, "malformed load alert has no DOM handle");

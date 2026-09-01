@@ -84,7 +84,16 @@ export async function assertInteractiveShortcutIsolation(
 ): Promise<number> {
   invariant(await target.isVisible(), `${label} shortcut witness is hidden`);
   const before = await documentWitness(page);
+  await page.evaluate(() =>
+    new Promise((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(resolve))
+    )
+  );
   await target.focus();
+  invariant(
+    await target.evaluate((node) => document.activeElement === node),
+    `${label} shortcut witness did not take focus`,
+  );
   await page.keyboard.press("Delete");
   invariant(
     await documentWitness(page) === before,

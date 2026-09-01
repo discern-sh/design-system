@@ -225,10 +225,11 @@ async function verifyDrawer(page: Page, origin: string): Promise<number> {
       }).count() === 1,
       "Drawer must expose one announced close action",
     );
-    invariant(
-      await page.getByRole("button", {
-        name: "Close Catalogue navigation",
-      }).evaluate((node) => document.activeElement === node),
+    await eventually(
+      () =>
+        page.getByRole("button", {
+          name: "Close Catalogue navigation",
+        }).evaluate((node) => document.activeElement === node),
       "Drawer did not place initial focus on its Close action",
     );
     const modalState = await page.evaluate(() => ({
