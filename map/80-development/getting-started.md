@@ -15,7 +15,7 @@ These work the same regardless of language or framework:
 
 ## Setting up
 
-**Prerequisites.** Deno 2.9.x is the only requirement — CI pins v2.9.2. No Node.js toolchain is needed: React and its type packages arrive through Deno's npm support, and the runtime emitter's `node:fs/promises` writes work under Deno.
+**Prerequisites.** Deno 2.9.x is the only requirement — CI and the example-image capture contract pin one exact patch release, recorded in [`ci.yml`](../../.github/workflows/ci.yml) and [`contract.ts`](../../catalogue/example-images/contract.ts). No Node.js toolchain is needed: React and its type packages arrive through Deno's npm support, and the runtime emitter's `node:fs/promises` writes work under Deno.
 
 **Install dependencies.**
 

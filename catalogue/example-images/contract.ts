@@ -11,7 +11,7 @@ export type ComponentExampleImageTheme =
 export const componentExampleCaptureContract = Object.freeze(
   {
     version: "4",
-    denoVersion: "2.9.5",
+    denoVersion: "2.9.6",
     playwrightVersion: "1.61.1",
     chromiumRevision: "1228",
     chromiumVersion: "149.0.7827.55",
