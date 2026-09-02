@@ -13,6 +13,11 @@ import {
   type ThemeToken,
   themeTokens,
 } from "../../src/tokens/tokens.ts";
+import {
+  evaluateFieldExpression,
+  type FieldPoint,
+  fieldPolarityExpression,
+} from "../../src/tokens/field.ts";
 
 interface CatalogueAppearanceOptionBase {
   readonly id: string;
@@ -57,6 +62,29 @@ interface ProofSample {
   readonly label: string;
   readonly field: boolean;
   readonly color: (name: `--discern-${string}`) => ProofColor;
+}
+
+/** One numerical floor evaluated by the shared Catalogue admission proof. */
+export interface CatalogueFieldProofCheck {
+  readonly label: string;
+  readonly observed: number;
+  readonly floor: number;
+  readonly margin: number;
+  readonly unit: "opacity" | "contrast" | "OKLab";
+  readonly pass: boolean;
+  readonly failure?: string;
+}
+
+/** Complete browser-safe verdict for one field point. */
+export interface CatalogueFieldProof {
+  readonly accepted: boolean;
+  readonly checks: readonly CatalogueFieldProofCheck[];
+  readonly failures: readonly string[];
+}
+
+/** Structural point shape accepted without coupling Appearance to UI state. */
+export interface CatalogueProofFieldSelection extends FieldPoint {
+  readonly preset: "mono" | "blue";
 }
 
 const semanticRoles = ["success", "warning", "danger"] as const;
@@ -152,6 +180,40 @@ function poleColor(
   );
 }
 
+function fieldPointColor(
+  selection: CatalogueProofFieldSelection,
+  mode: ThemeMode,
+  name: `--discern-${string}`,
+): ProofColor {
+  const field = evaluateField(selection);
+  const override = selection.preset === "blue"
+    ? blueThemeRoleTokens.find((candidate) => candidate.name === name)
+    : undefined;
+  const fieldValue = field[name as keyof typeof field];
+  const series = name.match(/^--discern-color-series-([1-6])$/)?.[1];
+  const seriesValue = series === undefined
+    ? undefined
+    : resolveChartPaletteAtField(selection.darkness)[
+      `series-${series}` as keyof ReturnType<typeof resolveChartPaletteAtField>
+    ];
+  const value = override?.[mode] ?? fieldValue ?? seriesValue ??
+    themeToken(name)[mode];
+  return parseOklch(
+    value.replaceAll("var(--discern-accent-hue)", String(authoredAccentHue)),
+  );
+}
+
+function fieldPointSample(
+  selection: CatalogueProofFieldSelection,
+  mode: ThemeMode,
+): ProofSample {
+  return {
+    label: `field ${selection.darkness}`,
+    field: true,
+    color: (name) => fieldPointColor(selection, mode, name),
+  };
+}
+
 function optionSamples(
   option: CatalogueAppearanceOption,
 ): readonly ProofSample[] {
@@ -169,13 +231,36 @@ function optionSamples(
   }));
 }
 
-function optionFailures(option: CatalogueAppearanceOption): readonly string[] {
-  const failures: string[] = [];
-  for (const sample of optionSamples(option)) {
+function samplesProof(samples: readonly ProofSample[]): CatalogueFieldProof {
+  const checks: CatalogueFieldProofCheck[] = [];
+  const record = (
+    label: string,
+    observed: number,
+    floor: number,
+    unit: CatalogueFieldProofCheck["unit"],
+    failure?: string,
+  ): void => {
+    checks.push({
+      label,
+      observed,
+      floor,
+      margin: observed - floor,
+      unit,
+      pass: failure === undefined,
+      ...(failure === undefined ? {} : { failure }),
+    });
+  };
+  for (const sample of samples) {
     const canvasColor = sample.color("--discern-color-canvas");
-    if (canvasColor.alpha !== 1) {
-      failures.push(`${sample.label} canvas must be opaque`);
-    }
+    record(
+      `${sample.label} canvas opacity`,
+      canvasColor.alpha,
+      1,
+      "opacity",
+      canvasColor.alpha === 1
+        ? undefined
+        : `${sample.label} canvas must be opaque`,
+    );
     const canvas = canvasColor.color;
     const resolve = (name: `--discern-${string}`): OklabColor =>
       over(sample.color(name), canvas);
@@ -186,11 +271,15 @@ function optionFailures(option: CatalogueAppearanceOption): readonly string[] {
     for (const [name, authoredFloor] of FIELD_INK_CONTRAST_FLOORS) {
       const floor = Math.min(authoredFloor, maximumInkContrast);
       const ratio = oklabContrast(resolve(name), canvas);
-      if (ratio < floor) {
-        failures.push(
-          `${sample.label} ${name} on canvas ${ratio.toFixed(2)}:1`,
-        );
-      }
+      record(
+        `${sample.label} ${name} on canvas`,
+        ratio,
+        floor,
+        "contrast",
+        ratio >= floor
+          ? undefined
+          : `${sample.label} ${name} on canvas ${ratio.toFixed(2)}:1`,
+      );
     }
 
     for (
@@ -199,9 +288,16 @@ function optionFailures(option: CatalogueAppearanceOption): readonly string[] {
         ["--discern-color-inverse-surface", "inverse"],
       ] as const
     ) {
-      if (sample.color(name).alpha !== 1) {
-        failures.push(`${sample.label} ${label} surface must be opaque`);
-      }
+      const alpha = sample.color(name).alpha;
+      record(
+        `${sample.label} ${label} surface opacity`,
+        alpha,
+        1,
+        "opacity",
+        alpha === 1
+          ? undefined
+          : `${sample.label} ${label} surface must be opaque`,
+      );
     }
     const inverseSurface = resolve("--discern-color-inverse-surface");
     const inverseInk = over(
@@ -209,20 +305,28 @@ function optionFailures(option: CatalogueAppearanceOption): readonly string[] {
       inverseSurface,
     );
     const inverseRatio = oklabContrast(inverseInk, inverseSurface);
-    if (inverseRatio < 4.5) {
-      failures.push(
-        `${sample.label} inverse ink ${inverseRatio.toFixed(2)}:1`,
-      );
-    }
+    record(
+      `${sample.label} inverse ink`,
+      inverseRatio,
+      4.5,
+      "contrast",
+      inverseRatio >= 4.5
+        ? undefined
+        : `${sample.label} inverse ink ${inverseRatio.toFixed(2)}:1`,
+    );
 
     const action = resolve("--discern-color-action");
     const onAction = over(sample.color("--discern-color-on-action"), action);
     const actionRatio = oklabContrast(onAction, action);
-    if (actionRatio < 4.5) {
-      failures.push(
-        `${sample.label} action pair ${actionRatio.toFixed(2)}:1`,
-      );
-    }
+    record(
+      `${sample.label} action pair`,
+      actionRatio,
+      4.5,
+      "contrast",
+      actionRatio >= 4.5
+        ? undefined
+        : `${sample.label} action pair ${actionRatio.toFixed(2)}:1`,
+    );
 
     const soft = resolve("--discern-color-accent-100");
     for (const ink of ["700", "800"] as const) {
@@ -230,11 +334,15 @@ function optionFailures(option: CatalogueAppearanceOption): readonly string[] {
         over(sample.color(`--discern-color-accent-${ink}`), soft),
         soft,
       );
-      if (ratio < 4.5) {
-        failures.push(
-          `${sample.label} accent-${ink} text ${ratio.toFixed(2)}:1`,
-        );
-      }
+      record(
+        `${sample.label} accent-${ink} text`,
+        ratio,
+        4.5,
+        "contrast",
+        ratio >= 4.5
+          ? undefined
+          : `${sample.label} accent-${ink} text ${ratio.toFixed(2)}:1`,
+      );
     }
 
     for (const role of ["accent", ...semanticRoles] as const) {
@@ -245,11 +353,15 @@ function optionFailures(option: CatalogueAppearanceOption): readonly string[] {
         over(sample.color("--discern-color-accent-500"), roleSurface),
         roleSurface,
       );
-      if (ratio < 3) {
-        failures.push(
-          `${sample.label} focus on ${role} ${ratio.toFixed(2)}:1`,
-        );
-      }
+      record(
+        `${sample.label} focus on ${role}`,
+        ratio,
+        3,
+        "contrast",
+        ratio >= 3
+          ? undefined
+          : `${sample.label} focus on ${role} ${ratio.toFixed(2)}:1`,
+      );
     }
 
     const accent = resolve("--discern-color-accent-600");
@@ -258,24 +370,32 @@ function optionFailures(option: CatalogueAppearanceOption): readonly string[] {
     );
     for (const [role, value] of semantic) {
       const separation = oklabDistance(accent, value);
-      if (separation < semanticDistanceFloor) {
-        failures.push(
-          `${sample.label} accent collides with ${role} (${
+      record(
+        `${sample.label} accent to ${role}`,
+        separation,
+        semanticDistanceFloor,
+        "OKLab",
+        separation >= semanticDistanceFloor
+          ? undefined
+          : `${sample.label} accent collides with ${role} (${
             separation.toFixed(3)
           } OKLab)`,
-        );
-      }
+      );
     }
     for (const [index, [firstRole, firstValue]] of semantic.entries()) {
       for (const [secondRole, secondValue] of semantic.slice(index + 1)) {
         const separation = oklabDistance(firstValue, secondValue);
-        if (separation < semanticDistanceFloor) {
-          failures.push(
-            `${sample.label} ${firstRole} collides with ${secondRole} (${
+        record(
+          `${sample.label} ${firstRole} to ${secondRole}`,
+          separation,
+          semanticDistanceFloor,
+          "OKLab",
+          separation >= semanticDistanceFloor
+            ? undefined
+            : `${sample.label} ${firstRole} collides with ${secondRole} (${
               separation.toFixed(3)
             } OKLab)`,
-          );
-        }
+        );
       }
     }
 
@@ -284,28 +404,59 @@ function optionFailures(option: CatalogueAppearanceOption): readonly string[] {
     );
     for (const [step, value] of series) {
       const ratio = oklabContrast(value, canvas);
-      if (ratio < seriesCanvasContrastFloor) {
-        failures.push(
-          `${sample.label} series-${step} vanishes on canvas ${
+      record(
+        `${sample.label} series-${step} on canvas`,
+        ratio,
+        seriesCanvasContrastFloor,
+        "contrast",
+        ratio >= seriesCanvasContrastFloor
+          ? undefined
+          : `${sample.label} series-${step} vanishes on canvas ${
             ratio.toFixed(2)
           }:1`,
-        );
-      }
+      );
     }
     for (const [index, [firstStep, firstValue]] of series.entries()) {
       for (const [secondStep, secondValue] of series.slice(index + 1)) {
         const separation = oklabDistance(firstValue, secondValue);
-        if (separation < seriesDistanceFloor) {
-          failures.push(
-            `${sample.label} series-${firstStep} collides with series-${secondStep} (${
+        record(
+          `${sample.label} series-${firstStep} to series-${secondStep}`,
+          separation,
+          seriesDistanceFloor,
+          "OKLab",
+          separation >= seriesDistanceFloor
+            ? undefined
+            : `${sample.label} series-${firstStep} collides with series-${secondStep} (${
               separation.toFixed(3)
             } OKLab)`,
-          );
-        }
+        );
       }
     }
   }
-  return failures;
+  const failures = checks.flatMap(({ failure }) =>
+    failure === undefined ? [] : [failure]
+  );
+  return { accepted: failures.length === 0, checks, failures };
+}
+
+function optionFailures(option: CatalogueAppearanceOption): readonly string[] {
+  return samplesProof(optionSamples(option)).failures;
+}
+
+/**
+ * Evaluate one arbitrary field point with the same floor loop that admits
+ * every named Catalogue Appearance option.
+ */
+export function catalogueFieldPointProof(
+  selection: CatalogueProofFieldSelection,
+  mode: ThemeMode = evaluateFieldExpression(
+      fieldPolarityExpression,
+      selection,
+    ) === 1
+    ? "dark"
+    : "light",
+): CatalogueFieldProof {
+  return samplesProof([fieldPointSample(selection, mode)]);
 }
 
 /** Evaluate one blue-family hue against the complete project-facing promise. */

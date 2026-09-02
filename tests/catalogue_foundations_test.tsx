@@ -4,6 +4,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { FoundationsNavigationContent } from "../catalogue/pages/foundations/navigation.tsx";
 import { FoundationsPage } from "../catalogue/pages/foundations/page.tsx";
 import {
+  FieldPage,
+  type FieldPageProps,
+} from "../catalogue/pages/foundations/field-page.tsx";
+import { fieldPoleTerminalProjections } from "../catalogue/pages/foundations/field-terminal.ts";
+import {
   catalogueTerminalFoundationPath,
   foundationsPaths,
   foundationsRouteFamily,
@@ -35,7 +40,7 @@ function renderFoundations(
   );
 }
 
-Deno.test("Foundations family owns bounded index, Token, and terminal sheet routes", () => {
+Deno.test("Foundations family owns bounded Field, Token, and terminal sheet routes", () => {
   assertEquals(foundationsRouteFamily.match(foundationsPaths.index), {
     family: "foundations",
     page: "index",
@@ -43,6 +48,10 @@ Deno.test("Foundations family owns bounded index, Token, and terminal sheet rout
   assertEquals(foundationsRouteFamily.match(foundationsPaths.tokens), {
     family: "foundations",
     page: "tokens",
+  });
+  assertEquals(foundationsRouteFamily.match(foundationsPaths.field), {
+    family: "foundations",
+    page: "field",
   });
   assertEquals(foundationsRouteFamily.match(foundationsPaths.terminal), {
     family: "foundations",
@@ -59,6 +68,7 @@ Deno.test("Foundations family owns bounded index, Token, and terminal sheet rout
   for (
     const pathname of [
       foundationsPaths.index,
+      foundationsPaths.field,
       foundationsPaths.tokens,
       foundationsPaths.terminal,
       ...terminalFoundationSheets.map(({ id }) =>
@@ -135,6 +145,7 @@ Deno.test("Foundations index and terminal gallery stay bounded and source-backed
   const indexHtml = renderFoundations(foundationsPaths.index);
   assertEquals((indexHtml.match(/<h1/g) ?? []).length, 1);
   assertStringIncludes(indexHtml, `href="${foundationsPaths.tokens}"`);
+  assertStringIncludes(indexHtml, `href="${foundationsPaths.field}"`);
   assertStringIncludes(indexHtml, `href="${foundationsPaths.terminal}"`);
   assertStringIncludes(indexHtml, `${publicTokens.length} Tokens`);
   assertStringIncludes(indexHtml, `${terminalFoundationSheets.length} sheets`);
@@ -158,6 +169,63 @@ Deno.test("Foundations index and terminal gallery stay bounded and source-backed
   assertEquals(
     terminalHtml.includes("data-discern-terminal-foundation-specimen"),
     false,
+  );
+});
+
+Deno.test("Field page dogfoods public controls and paints every field role", () => {
+  const html = renderFoundations(foundationsPaths.field);
+  assertStringIncludes(html, 'data-discern-foundations-page="field"');
+  for (const axis of ["darkness", "structure", "emphasis", "density"]) {
+    assertStringIncludes(html, `id="discern-catalogue-field-${axis}"`);
+    assertStringIncludes(html, 'type="range"');
+  }
+  assertStringIncludes(html, "Blue preset");
+  assertStringIncludes(html, "Token polarity is");
+  assertStringIncludes(html, 'data-discern-field-proof="accepted"');
+  assertStringIncludes(html, "Admission proof");
+  assertStringIncludes(html, "margin +");
+  assertStringIncludes(html, "Copy consumer field snippet");
+  assertStringIncludes(html, 'data-discern-field-terminal-pole="light"');
+  assertStringIncludes(html, 'data-discern-field-terminal-pole="dark"');
+  assertStringIncludes(
+    html,
+    'data-discern-field-role="--discern-color-canvas"',
+  );
+  assertStringIncludes(html, 'data-discern-field-role="--discern-color-ink"');
+});
+
+Deno.test("Field terminal sheet uses the existing inspector at both poles", () => {
+  const projections = fieldPoleTerminalProjections();
+  assertEquals(projections.map(({ theme }) => theme), ["light", "dark"]);
+  for (const projection of projections) {
+    assertStringIncludes(projection.output, "--discern-color-ink-muted");
+    assertStringIncludes(
+      projection.inspectorHtml,
+      `${projection.theme === "light" ? "Light" : "Dark"} field pole`,
+    );
+    assertStringIncludes(
+      projection.inspectorHtml,
+      "data-discern-terminal-inspector",
+    );
+  }
+});
+
+Deno.test("Field proof renders shared refusal reasons verbatim", () => {
+  const html = renderToStaticMarkup(
+    createElement<FieldPageProps>(FieldPage, {
+      field: {
+        darkness: 0.6,
+        structure: 1.2,
+        emphasis: 0.8,
+        density: 1.1,
+        preset: "mono",
+      },
+    }),
+  );
+  assertStringIncludes(html, 'data-discern-field-proof="refused"');
+  assertStringIncludes(
+    html,
+    "field 0.6 accent collides with danger (0.074 OKLab)",
   );
 });
 

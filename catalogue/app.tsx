@@ -87,7 +87,14 @@ function App() {
         );
       }
       case "foundations":
-        return <FoundationsPage terminalTheme={appearance.terminalTheme} />;
+        return (
+          <FoundationsPage
+            terminalTheme={appearance.terminalTheme}
+            field={appearance.field}
+            fieldScheme={appearance.fieldScheme}
+            onFieldChange={appearance.changeField}
+          />
+        );
       case "compositions":
         return <CompositionsPage />;
       case "terminal":
@@ -121,6 +128,7 @@ function App() {
         theme: appearance.theme,
         resolvedTheme: appearance.terminalTheme,
         accent: appearance.accent,
+        field: appearance.field,
         onThemeChange: appearance.changeTheme,
         onAccentChange: appearance.changeAccent,
       }}
