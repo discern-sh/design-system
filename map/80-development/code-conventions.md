@@ -24,3 +24,17 @@ The load-bearing rules live in the [design principles](../00-orientation/design-
 - **Examples stay generic.** Product claims, customer names, routes, commands, and bespoke artwork belong to consumers and enter through props or slots.
 - **Error handling:** the Emitter validates its inputs (e.g. `outputRoot` must end in `/`) and throws typed `Error`s with actionable messages; catch clauses type errors as `unknown` (`useUnknownInCatchVariables`) and narrow before use.
 - **No new runtime dependencies.** The package graph imports only the standard library (`@std/*`) in tests/scripts and React solely behind `./react`. A new dependency in the neutral graph is a contract event, not a convenience.
+
+## Structure and witness censuses
+
+Three falling ceilings keep the monochrome field's legacy population from growing. `raw_spacing` counts non-zero `px`, `rem`, and `em` literals in Component spacing and offset declarations; the replacement is the public spacing scale. `untokenised_structure` counts Component borders and outlines whose paint bypasses `--discern-color-*` or `--discern-shadow-*`, and shadows that bypass a shadow role or `--discern-shadow-color`. `missing_witnesses` statically renders every canonical Web example through the React registry and counts tone- or status-bearing elements without visible state text or an accessibly named icon.
+
+List every current hit from the repository root:
+
+```sh
+deno run --config deno.json --allow-read discern/scripts/measure-raw-spacing.ts --verbose
+deno run --config deno.json --allow-read discern/scripts/measure-untokenised-structure.ts --verbose
+NODE_ENV=production deno run --config deno.json --allow-read --allow-env=NODE_ENV discern/scripts/measure-missing-witnesses.ts --verbose
+```
+
+The monochrome-field Component sweep in wave 3 drives all three counts to zero. At zero, each detector becomes a permanent first-instance gate rule and its transitional Standard table is retired.
