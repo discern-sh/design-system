@@ -87,6 +87,7 @@
       "dist/",
       "src/generated/",
       "catalogue/generated/",
+      "skills/use-discern-design-system/evals/",
       "CLAUDE.md",
       "AGENTS.md",
       "GEMINI.md"

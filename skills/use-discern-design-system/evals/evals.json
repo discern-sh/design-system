@@ -1,0 +1,1630 @@
+{
+  "skill_name": "use-discern-design-system",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Situation: A persistent page-chrome control should make an immediate light/dark comfort adjustment.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Theme toggle (`theme-toggle`) and authors it as `ThemeToggle` from ./react or `renderThemeToggleCli` from ./cli after emitting a runtime that selects `theme-toggle`. Reference image: catalogue/generated/example-images/theme-toggle--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Theme toggle as the primary choice, naming its slug `theme-toggle` or its React adapter `ThemeToggle`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Theme toggle by targeting its owned `discern-theme-toggle` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Theme toggle — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Situation: A settings surface lets users make an explicit future-facing appearance preference.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Theme switcher (`theme-switcher`) and authors it as `ThemeSwitcher` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `theme-switcher`. Reference image: catalogue/generated/example-images/theme-switcher--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Theme switcher as the primary choice, naming its slug `theme-switcher` or its React adapter `ThemeSwitcher`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Theme switcher by targeting its owned `discern-theme-switcher` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Theme switcher — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Situation: Independent peer cards or media have useful natural heights and should pack without row alignment.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Masonry (`masonry`) and authors it as `Masonry` from ./react or `renderMasonryCli` from ./cli after emitting a runtime that selects `masonry`. Reference image: catalogue/generated/example-images/masonry--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Masonry as the primary choice, naming its slug `masonry` or its React adapter `Masonry`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Masonry by targeting its owned `discern-masonry` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Masonry — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Situation: A bounded region can scroll and its continuation is otherwise easy to miss.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Overflow cue (`overflow-cue`) and authors it as `OverflowCue` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `overflow-cue`. Reference image: catalogue/generated/example-images/overflow-cue--vertical-start--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Overflow cue as the primary choice, naming its slug `overflow-cue` or its React adapter `OverflowCue`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Overflow cue by targeting its owned `discern-overflow-cue` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Overflow cue — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Situation: A compact visible label communicates status, category, or arbitrary metadata.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Badge (`badge`) and authors it as `Badge` from ./react or `renderBadgeCli` from ./cli after emitting a runtime that selects `badge`. Reference image: catalogue/generated/example-images/badge--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Badge as the primary choice, naming its slug `badge` or its React adapter `Badge`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Badge by targeting its owned `discern-badge` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Badge — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Situation: A titled section needs a real heading level in the document outline.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Heading (`heading`) and authors it as `Heading` from ./react or `renderHeadingCli` from ./cli after emitting a runtime that selects `heading`. Reference image: catalogue/generated/example-images/heading--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Heading as the primary choice, naming its slug `heading` or its React adapter `Heading`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Heading by targeting its owned `discern-heading` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Heading — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Situation: A visual needs recognizable browser-style chrome; use showcase for wide campaign evidence with optional trailing status or actions.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Window (`window`) and authors it as `Window` from ./react or `renderWindowCli` from ./cli after emitting a runtime that selects `window`. Reference image: catalogue/generated/example-images/window--standard--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Window as the primary choice, naming its slug `window` or its React adapter `Window`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Window by targeting its owned `discern-window` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Window — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Situation: You need to reproduce a terminal session or present interleaved commands and output as one framed surface.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Terminal (`terminal`) and authors it as `Terminal` from ./react or `renderTerminalCli` from ./cli after emitting a runtime that selects `terminal`. Reference image: catalogue/generated/example-images/terminal--standard--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Terminal as the primary choice, naming its slug `terminal` or its React adapter `Terminal`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Terminal by targeting its owned `discern-terminal` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Terminal — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Situation: Headers define relationships across ordinary relational data, including rich phrasing, empty values, or content that must remain complete at narrow terminal widths.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Table (`table`) and authors it as `Table` from ./react or `renderTableCli` from ./cli after emitting a runtime that selects `table`. Reference image: catalogue/generated/example-images/table--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Table as the primary choice, naming its slug `table` or its React adapter `Table`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Table by targeting its owned `discern-table` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Table — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "Situation: Showing recent movement beside a headline number, such as a Stat trend.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Sparkline (`sparkline`) and authors it as `Sparkline` from ./react or `renderSparklineCli` from ./cli after emitting a runtime that selects `sparkline`. Reference image: catalogue/generated/example-images/sparkline--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Sparkline as the primary choice, naming its slug `sparkline` or its React adapter `Sparkline`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Sparkline by targeting its owned `discern-sparkline` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Sparkline — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "Situation: A section needs token-driven decorative artwork behind complete foreground content.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Backdrop (`backdrop`) and authors it as `Backdrop` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `backdrop`. Reference image: catalogue/generated/example-images/backdrop--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Backdrop as the primary choice, naming its slug `backdrop` or its React adapter `Backdrop`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Backdrop by targeting its owned `discern-backdrop` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Backdrop — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "Situation: A broad field needs quiet measurement, registration, and a slow directional wash.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Survey backdrop (`survey-backdrop`) and authors it as `SurveyBackdrop` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `survey-backdrop`. Reference image: catalogue/generated/example-images/survey-backdrop--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Survey backdrop as the primary choice, naming its slug `survey-backdrop` or its React adapter `SurveyBackdrop`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Survey backdrop by targeting its owned `discern-survey-backdrop` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Survey backdrop — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "Situation: Foreground copy needs a clear column while a constructed focal point gathers at the edge.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Approach backdrop (`approach-backdrop`) and authors it as `ApproachBackdrop` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `approach-backdrop`. Reference image: catalogue/generated/example-images/approach-backdrop--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Approach backdrop as the primary choice, naming its slug `approach-backdrop` or its React adapter `ApproachBackdrop`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Approach backdrop by targeting its owned `discern-approach-backdrop` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Approach backdrop — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 14,
+      "prompt": "Situation: A full-bleed surface needs low-contrast material depth behind short foreground copy.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Fold backdrop (`fold-backdrop`) and authors it as `FoldBackdrop` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `fold-backdrop`. Reference image: catalogue/generated/example-images/fold-backdrop--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Fold backdrop as the primary choice, naming its slug `fold-backdrop` or its React adapter `FoldBackdrop`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Fold backdrop by targeting its owned `discern-fold-backdrop` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Fold backdrop — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 15,
+      "prompt": "Situation: A section needs an atmospheric incident concentrated across its upper band.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Aperture backdrop (`aperture-backdrop`) and authors it as `ApertureBackdrop` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `aperture-backdrop`. Reference image: catalogue/generated/example-images/aperture-backdrop--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Aperture backdrop as the primary choice, naming its slug `aperture-backdrop` or its React adapter `ApertureBackdrop`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Aperture backdrop by targeting its owned `discern-aperture-backdrop` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Aperture backdrop — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 16,
+      "prompt": "Situation: A typographic field should respond softly to pointer position while remaining complete when still.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Impression backdrop (`impression-backdrop`) and authors it as `ImpressionBackdrop` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `impression-backdrop`. Reference image: catalogue/generated/example-images/impression-backdrop--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Impression backdrop as the primary choice, naming its slug `impression-backdrop` or its React adapter `ImpressionBackdrop`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Impression backdrop by targeting its owned `discern-impression-backdrop` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Impression backdrop — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 17,
+      "prompt": "Situation: A corner or broad canvas needs mathematical density with no filled surface.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Envelope backdrop (`envelope-backdrop`) and authors it as `EnvelopeBackdrop` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `envelope-backdrop`. Reference image: catalogue/generated/example-images/envelope-backdrop--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Envelope backdrop as the primary choice, naming its slug `envelope-backdrop` or its React adapter `EnvelopeBackdrop`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Envelope backdrop by targeting its owned `discern-envelope-backdrop` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Envelope backdrop — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 18,
+      "prompt": "Situation: A restrained full-bleed field needs area and tension rather than repeated linework.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Cleave backdrop (`cleave-backdrop`) and authors it as `CleaveBackdrop` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `cleave-backdrop`. Reference image: catalogue/generated/example-images/cleave-backdrop--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Cleave backdrop as the primary choice, naming its slug `cleave-backdrop` or its React adapter `CleaveBackdrop`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Cleave backdrop by targeting its owned `discern-cleave-backdrop` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Cleave backdrop — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 19,
+      "prompt": "Situation: A broad field needs quiet repetition with a sparse route that changes without breaking.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Tiling backdrop (`tiling-backdrop`) and authors it as `TilingBackdrop` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `tiling-backdrop`. Reference image: catalogue/generated/example-images/tiling-backdrop--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Tiling backdrop as the primary choice, naming its slug `tiling-backdrop` or its React adapter `TilingBackdrop`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Tiling backdrop by targeting its owned `discern-tiling-backdrop` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Tiling backdrop — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 20,
+      "prompt": "Situation: A wide surface needs one measured linear gesture with slow, material movement.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Compression backdrop (`compression-backdrop`) and authors it as `CompressionBackdrop` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `compression-backdrop`. Reference image: catalogue/generated/example-images/compression-backdrop--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Compression backdrop as the primary choice, naming its slug `compression-backdrop` or its React adapter `CompressionBackdrop`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Compression backdrop by targeting its owned `discern-compression-backdrop` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Compression backdrop — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 21,
+      "prompt": "Situation: A broad canvas needs a fine atmospheric field whose motion periodically resolves into structure.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Harmonic backdrop (`harmonic-backdrop`) and authors it as `HarmonicBackdrop` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `harmonic-backdrop`. Reference image: catalogue/generated/example-images/harmonic-backdrop--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Harmonic backdrop as the primary choice, naming its slug `harmonic-backdrop` or its React adapter `HarmonicBackdrop`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Harmonic backdrop by targeting its owned `discern-harmonic-backdrop` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Harmonic backdrop — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 22,
+      "prompt": "Situation: A page or region needs a concise announcement whose meaning is complete without reproduction details.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Banner (`banner`) and authors it as `Banner` from ./react or `renderBannerCli` from ./cli after emitting a runtime that selects `banner`. Reference image: catalogue/generated/example-images/banner--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Banner as the primary choice, naming its slug `banner` or its React adapter `Banner`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Banner by targeting its owned `discern-banner` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Banner — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 23,
+      "prompt": "Situation: A durable handoff must record several checks and their outcomes with branch, commit, timing, or change metadata.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Verification report (`verification-report`) and authors it as `VerificationReport` from ./react or `renderVerificationReportCli` from ./cli after emitting a runtime that selects `verification-report`. Reference image: catalogue/generated/example-images/verification-report--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Verification report as the primary choice, naming its slug `verification-report` or its React adapter `VerificationReport`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Verification report by targeting its owned `discern-verification-report` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Verification report — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 24,
+      "prompt": "Situation: A reader must run one exact command with its working directory, platform, expected proof, or failure guidance beside it.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Command (`command`) and authors it as `Command` from ./react or `renderCommandCli` from ./cli after emitting a runtime that selects `command`. Reference image: catalogue/generated/example-images/command--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Command as the primary choice, naming its slug `command` or its React adapter `Command`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Command by targeting its owned `discern-command` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Command — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 25,
+      "prompt": "Situation: Readers need labelled command alternatives for different platforms or equivalent tools.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Command group (`command-group`) and authors it as `CommandGroup` from ./react or `renderCommandGroupCli` from ./cli after emitting a runtime that selects `command-group`. Reference image: catalogue/generated/example-images/command-group--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Command group as the primary choice, naming its slug `command-group` or its React adapter `CommandGroup`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Command group by targeting its owned `discern-command-group` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Command group — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 26,
+      "prompt": "Situation: A command or procedure needs observable proof that tells the reader what success should look like.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Expected result (`expected-result`) and authors it as `ExpectedResult` from ./react or `renderExpectedResultCli` from ./cli after emitting a runtime that selects `expected-result`. Reference image: catalogue/generated/example-images/expected-result--output--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Expected result as the primary choice, naming its slug `expected-result` or its React adapter `ExpectedResult`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Expected result by targeting its owned `discern-expected-result` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Expected result — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 27,
+      "prompt": "Situation: Prose, a command, or a diagnostic must identify one exact file or directory without losing either end of a long path.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Path reference (`path-reference`) and authors it as `PathReference` from ./react or `renderPathReferenceCli` from ./cli after emitting a runtime that selects `path-reference`. Reference image: catalogue/generated/example-images/path-reference--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Path reference as the primary choice, naming its slug `path-reference` or its React adapter `PathReference`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Path reference by targeting its owned `discern-path-reference` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Path reference — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 28,
+      "prompt": "Situation: A reader must carry out an ordered operational task with prerequisites, branches, recovery, and completion evidence.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Procedure (`procedure`) and authors it as `Procedure` from ./react or `renderProcedureCli` from ./cli after emitting a runtime that selects `procedure`. Reference image: catalogue/generated/example-images/procedure--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Procedure as the primary choice, naming its slug `procedure` or its React adapter `Procedure`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Procedure by targeting its owned `discern-procedure` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Procedure — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 29,
+      "prompt": "Situation: One ordered Procedure step needs an action, command, expected proof, completion criterion, branch, or recovery route.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Procedure step (`procedure-step`) and authors it as `ProcedureStep` from ./react or `renderProcedureStepCli` from ./cli after emitting a runtime that selects `procedure-step`. Reference image: catalogue/generated/example-images/procedure-step--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Procedure step as the primary choice, naming its slug `procedure-step` or its React adapter `ProcedureStep`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Procedure step by targeting its owned `discern-procedure-step` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Procedure step — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 30,
+      "prompt": "Situation: Readers must verify requirements before starting an operational procedure.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Prerequisite list (`prerequisite-list`) and authors it as `PrerequisiteList` from ./react or `renderPrerequisiteListCli` from ./cli after emitting a runtime that selects `prerequisite-list`. Reference image: catalogue/generated/example-images/prerequisite-list--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Prerequisite list as the primary choice, naming its slug `prerequisite-list` or its React adapter `PrerequisiteList`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Prerequisite list by targeting its owned `discern-prerequisite-list` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Prerequisite list — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 31,
+      "prompt": "Situation: A procedure or end-of-page next action has condition-labelled routes that readers must choose between.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Branch choice (`branch-choice`) and authors it as `BranchChoice` from ./react or `renderBranchChoiceCli` from ./cli after emitting a runtime that selects `branch-choice`. Reference image: catalogue/generated/example-images/branch-choice--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Branch choice as the primary choice, naming its slug `branch-choice` or its React adapter `BranchChoice`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Branch choice by targeting its owned `discern-branch-choice` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Branch choice — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 32,
+      "prompt": "Situation: A retry instruction must state whether repeating an interrupted action is safe and why.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Retry notice (`retry-notice`) and authors it as `RetryNotice` from ./react or `renderRetryNoticeCli` from ./cli after emitting a runtime that selects `retry-notice`. Reference image: catalogue/generated/example-images/retry-notice--safe--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Retry notice as the primary choice, naming its slug `retry-notice` or its React adapter `RetryNotice`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Retry notice by targeting its owned `discern-retry-notice` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Retry notice — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 33,
+      "prompt": "Situation: An irreversible or owner-only action needs explicit scope, impact, authority, and recovery information.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Destructive action notice (`destructive-action-notice`) and authors it as `DestructiveActionNotice` from ./react or `renderDestructiveActionNoticeCli` from ./cli after emitting a runtime that selects `destructive-action-notice`. Reference image: catalogue/generated/example-images/destructive-action-notice--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Destructive action notice as the primary choice, naming its slug `destructive-action-notice` or its React adapter `DestructiveActionNotice`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Destructive action notice by targeting its owned `discern-destructive-action-notice` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Destructive action notice — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 34,
+      "prompt": "Situation: One tool result needs a plain-language fact, supporting counts, duration, or next action.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Result summary (`result-summary`) and authors it as `ResultSummary` from ./react or `renderResultSummaryCli` from ./cli after emitting a runtime that selects `result-summary`. Reference image: catalogue/generated/example-images/result-summary--passed--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Result summary as the primary choice, naming its slug `result-summary` or its React adapter `ResultSummary`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Result summary by targeting its owned `discern-result-summary` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Result summary — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 35,
+      "prompt": "Situation: A specific failure needs its impact, location, evidence, reproduction, correction, and retry path kept together.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Diagnostic (`diagnostic`) and authors it as `Diagnostic` from ./react or `renderDiagnosticCli` from ./cli after emitting a runtime that selects `diagnostic`. Reference image: catalogue/generated/example-images/diagnostic--verbose-failure--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Diagnostic as the primary choice, naming its slug `diagnostic` or its React adapter `Diagnostic`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Diagnostic by targeting its owned `discern-diagnostic` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Diagnostic — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 36,
+      "prompt": "Situation: Machine-oriented detail should remain available without competing with the human-readable result or diagnostic.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Raw output (`raw-output`) and authors it as `RawOutput` from ./react or `renderRawOutputCli` from ./cli after emitting a runtime that selects `raw-output`. Reference image: catalogue/generated/example-images/raw-output--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Raw output as the primary choice, naming its slug `raw-output` or its React adapter `RawOutput`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Raw output by targeting its owned `discern-raw-output` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Raw output — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 37,
+      "prompt": "Situation: A quality measure must be read against an explicit rising floor or falling ceiling with visible headroom.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Standard meter (`standard-meter`) and authors it as `StandardMeter` from ./react or `renderStandardMeterCli` from ./cli after emitting a runtime that selects `standard-meter`. Reference image: catalogue/generated/example-images/standard-meter--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Standard meter as the primary choice, naming its slug `standard-meter` or its React adapter `StandardMeter`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Standard meter by targeting its owned `discern-standard-meter` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Standard meter — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 38,
+      "prompt": "Situation: Minutes-long work should keep its results visible while raw detail streams beneath them.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Activity log (`activity-log`) and authors it as `ActivityLog` from ./react or `renderActivityLogCli` from ./cli after emitting a runtime that selects `activity-log`. Reference image: catalogue/generated/example-images/activity-log--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Activity log as the primary choice, naming its slug `activity-log` or its React adapter `ActivityLog`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Activity log by targeting its owned `discern-activity-log` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Activity log — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 39,
+      "prompt": "Situation: A project or output structure must show nested files and directories with full paths and annotations.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Artifact tree (`artifact-tree`) and authors it as `ArtifactTree` from ./react or `renderArtifactTreeCli` from ./cli after emitting a runtime that selects `artifact-tree`. Reference image: catalogue/generated/example-images/artifact-tree--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Artifact tree as the primary choice, naming its slug `artifact-tree` or its React adapter `ArtifactTree`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Artifact tree by targeting its owned `discern-artifact-tree` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Artifact tree — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 40,
+      "prompt": "Situation: A changed-file list needs an explicit disposition, full path, and optional change magnitude for each file.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects File change (`file-change`) and authors it as `FileChange` from ./react or `renderFileChangeCli` from ./cli after emitting a runtime that selects `file-change`. Reference image: catalogue/generated/example-images/file-change--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends File change as the primary choice, naming its slug `file-change` or its React adapter `FileChange`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style File change by targeting its owned `discern-file-change` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for File change — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 41,
+      "prompt": "Situation: One created or modified artifact needs its path, summary, ownership, provenance, and source link presented together.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Artifact card (`artifact-card`) and authors it as `ArtifactCard` from ./react or `renderArtifactCardCli` from ./cli after emitting a runtime that selects `artifact-card`. Reference image: catalogue/generated/example-images/artifact-card--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Artifact card as the primary choice, naming its slug `artifact-card` or its React adapter `ArtifactCard`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Artifact card by targeting its owned `discern-artifact-card` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Artifact card — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 42,
+      "prompt": "Situation: An artifact needs an explicit authored, generated, project-owned, or tool-owned provenance label.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Ownership badge (`ownership-badge`) and authors it as `OwnershipBadge` from ./react or `renderOwnershipBadgeCli` from ./cli after emitting a runtime that selects `ownership-badge`. Reference image: catalogue/generated/example-images/ownership-badge--authored--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Ownership badge as the primary choice, naming its slug `ownership-badge` or its React adapter `OwnershipBadge`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Ownership badge by targeting its owned `discern-ownership-badge` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Ownership badge — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 43,
+      "prompt": "Situation: A significant decision needs its status, date, context, chosen direction, and consequences recorded together.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Decision record (`decision-record`) and authors it as `DecisionRecord` from ./react or `renderDecisionRecordCli` from ./cli after emitting a runtime that selects `decision-record`. Reference image: catalogue/generated/example-images/decision-record--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Decision record as the primary choice, naming its slug `decision-record` or its React adapter `DecisionRecord`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Decision record by targeting its owned `discern-decision-record` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Decision record — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 44,
+      "prompt": "Situation: A binding instruction must state its origin and scope as neutral project authority.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Rule (`rule`) and authors it as `Rule` from ./react or `renderRuleCli` from ./cli after emitting a runtime that selects `rule`. Reference image: catalogue/generated/example-images/rule--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Rule as the primary choice, naming its slug `rule` or its React adapter `Rule`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Rule by targeting its owned `discern-rule` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Rule — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 45,
+      "prompt": "Situation: An operational page must orient the reader before its procedure with a complete set of task facts.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Task metadata (`task-metadata`) and authors it as `TaskMetadata` from ./react or `renderTaskMetadataCli` from ./cli after emitting a runtime that selects `task-metadata`. Reference image: catalogue/generated/example-images/task-metadata--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Task metadata as the primary choice, naming its slug `task-metadata` or its React adapter `TaskMetadata`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Task metadata by targeting its owned `discern-task-metadata` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Task metadata — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 46,
+      "prompt": "Situation: A task page must provide complete plain-text instructions that a reader can inspect and paste into an agent session unchanged.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Agent handoff (`agent-handoff`) and authors it as `AgentHandoff` from ./react or `renderAgentHandoffCli` from ./cli after emitting a runtime that selects `agent-handoff`. Reference image: catalogue/generated/example-images/agent-handoff--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Agent handoff as the primary choice, naming its slug `agent-handoff` or its React adapter `AgentHandoff`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Agent handoff by targeting its owned `discern-agent-handoff` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Agent handoff — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 47,
+      "prompt": "Situation: A campaign or landing page needs a repeatable wide frame, generous section rhythm, or a stable dark contrast chapter.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Marketing section (`marketing-section`) and authors it as `MarketingSection` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `marketing-section`. Reference image: catalogue/generated/example-images/marketing-section--standard--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Marketing section as the primary choice, naming its slug `marketing-section` or its React adapter `MarketingSection`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Marketing section by targeting its owned `discern-marketing-section` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Marketing section — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 48,
+      "prompt": "Situation: A public page needs persistent brand, section navigation, and a primary action; use the campaign variant for a wider translucent launch-page masthead.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Site header (`site-header`) and authors it as `SiteHeader` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `site-header`. Reference image: catalogue/generated/example-images/site-header--standard--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Site header as the primary choice, naming its slug `site-header` or its React adapter `SiteHeader`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Site header by targeting its owned `discern-site-header` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Site header — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 49,
+      "prompt": "Situation: A marketing section needs a repeatable eyebrow, headline, and standfirst hierarchy at ordinary or campaign scale.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Marketing intro (`marketing-intro`) and authors it as `MarketingIntro` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `marketing-intro`. Reference image: catalogue/generated/example-images/marketing-intro--editorial--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Marketing intro as the primary choice, naming its slug `marketing-intro` or its React adapter `MarketingIntro`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Marketing intro by targeting its owned `discern-marketing-intro` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Marketing intro — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 50,
+      "prompt": "Situation: A campaign needs one opening promise with actions and optional visual evidence; use showcase with the atmospheric surface for publication-scale launches.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Hero block (`hero-block`) and authors it as `HeroBlock` from ./react or `renderHeroBlockCli` from ./cli after emitting a runtime that selects `hero-block`. Reference image: catalogue/generated/example-images/hero-block--split--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Hero block as the primary choice, naming its slug `hero-block` or its React adapter `HeroBlock`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Hero block by targeting its owned `discern-hero-block` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Hero block — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 51,
+      "prompt": "Situation: A page needs readable organization names beside optional decorative marks; use strip for a lighter provider or integration line.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Logo cloud (`logo-cloud`) and authors it as `LogoCloud` from ./react or `renderLogoCloudCli` from ./cli after emitting a runtime that selects `logo-cloud`. Reference image: catalogue/generated/example-images/logo-cloud--grid--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Logo cloud as the primary choice, naming its slug `logo-cloud` or its React adapter `LogoCloud`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Logo cloud by targeting its owned `discern-logo-cloud` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Logo cloud — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 52,
+      "prompt": "Situation: A curated feature set has an intentional hierarchy and can fill a complete rectangular matrix.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Feature bento (`feature-bento`) and authors it as `FeatureBento` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `feature-bento`. Reference image: catalogue/generated/example-images/feature-bento--lead-matrix--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Feature bento as the primary choice, naming its slug `feature-bento` or its React adapter `FeatureBento`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Feature bento by targeting its owned `discern-feature-bento` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Feature bento — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 53,
+      "prompt": "Situation: A marketing or onboarding page needs to explain a high-level journey or methodology.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Process steps (`process-steps`) and authors it as `ProcessSteps` from ./react or `renderProcessStepsCli` from ./cli after emitting a runtime that selects `process-steps`. Reference image: catalogue/generated/example-images/process-steps--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Process steps as the primary choice, naming its slug `process-steps` or its React adapter `ProcessSteps`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Process steps by targeting its owned `discern-process-steps` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Process steps — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 54,
+      "prompt": "Situation: A marketing composition needs one restrained frame for artwork, a diagram, media, or a concise piece of evidence.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Marketing stage (`marketing-stage`) and authors it as `MarketingStage` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `marketing-stage`. Reference image: catalogue/generated/example-images/marketing-stage--framed--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Marketing stage as the primary choice, naming its slug `marketing-stage` or its React adapter `MarketingStage`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Marketing stage by targeting its owned `discern-marketing-stage` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Marketing stage — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 55,
+      "prompt": "Situation: A page needs one decisive opening statement whose supporting visual compresses or relieves the copy rather than adding another body of text.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Editorial hero (`editorial-hero`) and authors it as `EditorialHero` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `editorial-hero`. Reference image: catalogue/generated/example-images/editorial-hero--visual--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Editorial hero as the primary choice, naming its slug `editorial-hero` or its React adapter `EditorialHero`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Editorial hero by targeting its owned `discern-editorial-hero` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Editorial hero — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 56,
+      "prompt": "Situation: A landing page must explain a complex idea in several paragraphs and needs hierarchy, measure, and relief more than another product visual.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Narrative chapter (`narrative-chapter`) and authors it as `NarrativeChapter` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `narrative-chapter`. Reference image: catalogue/generated/example-images/narrative-chapter--extended--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Narrative chapter as the primary choice, naming its slug `narrative-chapter` or its React adapter `NarrativeChapter`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Narrative chapter by targeting its owned `discern-narrative-chapter` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Narrative chapter — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 57,
+      "prompt": "Situation: A complex process can be honestly summarized into a few audience-facing moments with one clear outcome each.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Journey overview (`journey-overview`) and authors it as `JourneyOverview` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `journey-overview`. Reference image: catalogue/generated/example-images/journey-overview--three-step--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Journey overview as the primary choice, naming its slug `journey-overview` or its React adapter `JourneyOverview`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Journey overview by targeting its owned `discern-journey-overview` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Journey overview — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 58,
+      "prompt": "Situation: One result deserves to carry the section and no more than a few short facts genuinely strengthen it.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Outcome spotlight (`outcome-spotlight`) and authors it as `OutcomeSpotlight` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `outcome-spotlight`. Reference image: catalogue/generated/example-images/outcome-spotlight--focused--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Outcome spotlight as the primary choice, naming its slug `outcome-spotlight` or its React adapter `OutcomeSpotlight`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Outcome spotlight by targeting its owned `discern-outcome-spotlight` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Outcome spotlight — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 59,
+      "prompt": "Situation: A text-heavy page needs a brief human perspective or memorable sentence before returning to explanation.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Voice break (`voice-break`) and authors it as `VoiceBreak` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `voice-break`. Reference image: catalogue/generated/example-images/voice-break--calm--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Voice break as the primary choice, naming its slug `voice-break` or its React adapter `VoiceBreak`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Voice break by targeting its owned `discern-voice-break` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Voice break — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 60,
+      "prompt": "Situation: A long page should resolve into one proposition and one obvious action without introducing another feature list.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Closing statement (`closing-statement`) and authors it as `ClosingStatement` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `closing-statement`. Reference image: catalogue/generated/example-images/closing-statement--contrast--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Closing statement as the primary choice, naming its slug `closing-statement` or its React adapter `ClosingStatement`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Closing statement by targeting its owned `discern-closing-statement` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Closing statement — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 61,
+      "prompt": "Situation: Several paragraphs, headings, lists, quotations, or code blocks need one readable long-form measure and optional opening treatment.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Prose (`prose`) and authors it as `Prose` from ./react or `renderProseCli` from ./cli after emitting a runtime that selects `prose`. Reference image: catalogue/generated/example-images/prose--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Prose as the primary choice, naming its slug `prose` or its React adapter `Prose`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Prose by targeting its owned `discern-prose` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Prose — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 62,
+      "prompt": "Situation: A consumer owns Markdown source and needs complete, safe browser or terminal document output without owning parser presentation logic.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Markdown (`markdown`) and authors it as `Markdown` from ./react or `renderMarkdownCli` from ./cli after emitting a runtime that selects `markdown`. Reference image: catalogue/generated/example-images/markdown--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Markdown as the primary choice, naming its slug `markdown` or its React adapter `Markdown`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Markdown by targeting its owned `discern-markdown` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Markdown — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 63,
+      "prompt": "Situation: One prose paragraph is the semantic unit, including rich phrasing such as emphasis, links, and inline code.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Paragraph (`paragraph`) and authors it as `Paragraph` from ./react or `renderParagraphCli` from ./cli after emitting a runtime that selects `paragraph`. Reference image: catalogue/generated/example-images/paragraph--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Paragraph as the primary choice, naming its slug `paragraph` or its React adapter `Paragraph`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Paragraph by targeting its owned `discern-paragraph` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Paragraph — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 64,
+      "prompt": "Situation: Content is an ordinary unordered, ordered, mixed, nested, or read-only task list without a narrower editorial or workflow meaning.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects List (`list`) and authors it as `List` from ./react or `renderListCli` from ./cli after emitting a runtime that selects `list`. Reference image: catalogue/generated/example-images/list--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends List as the primary choice, naming its slug `list` or its React adapter `List`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style List by targeting its owned `discern-list` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for List — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 65,
+      "prompt": "Situation: Quoted material contains one or more ordinary semantic blocks, including nested lists, headings, code, or quotations.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Blockquote (`blockquote`) and authors it as `Blockquote` from ./react or `renderBlockquoteCli` from ./cli after emitting a runtime that selects `blockquote`. Reference image: catalogue/generated/example-images/blockquote--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Blockquote as the primary choice, naming its slug `blockquote` or its React adapter `Blockquote`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Blockquote by targeting its owned `discern-blockquote` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Blockquote — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 66,
+      "prompt": "Situation: Source whitespace and every code character must remain available without line numbers, a caption, or an executable terminal session.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Code block (`code-block`) and authors it as `CodeBlock` from ./react or `renderCodeBlockCli` from ./cli after emitting a runtime that selects `code-block`. Reference image: catalogue/generated/example-images/code-block--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Code block as the primary choice, naming its slug `code-block` or its React adapter `CodeBlock`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Code block by targeting its owned `discern-code-block` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Code block — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 67,
+      "prompt": "Situation: A reader needs source with stable line references; use showcase when the listing is visual evidence inside a campaign page.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Code listing (`code-listing`) and authors it as `CodeListing` from ./react or `renderCodeListingCli` from ./cli after emitting a runtime that selects `code-listing`. Reference image: catalogue/generated/example-images/code-listing--standard--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Code listing as the primary choice, naming its slug `code-listing` or its React adapter `CodeListing`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Code listing by targeting its owned `discern-code-listing` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Code listing — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 68,
+      "prompt": "Situation: Measured quantities on scales are meaningful reference information that must survive browser, standalone SVG, and terminal projections.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Chart (`chart`) and authors it as `Chart` from ./react or `renderChartCli` from ./cli after emitting a runtime that selects `chart`. Reference image: catalogue/generated/example-images/chart--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Chart as the primary choice, naming its slug `chart` or its React adapter `Chart`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Chart by targeting its owned `discern-chart` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Chart — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 69,
+      "prompt": "Situation: The relationships between authored entities are meaningful reference information that must survive browser, standalone SVG, and terminal projections.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Diagram (`diagram`) and authors it as `Diagram` from ./react or `renderDiagramCli` from ./cli after emitting a runtime that selects `diagram`. Reference image: catalogue/generated/example-images/diagram--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Diagram as the primary choice, naming its slug `diagram` or its React adapter `Diagram`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Diagram by targeting its owned `discern-diagram` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Diagram — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 70,
+      "prompt": "Situation: Definitions complete inline footnote references and may contain rich phrasing, paragraphs, lists, quotations, or code.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.",
+      "expected_output": "Selects Footnotes (`footnotes`) and authors it as `Footnotes` from ./react or `renderFootnotesCli` from ./cli after emitting a runtime that selects `footnotes`. Reference image: catalogue/generated/example-images/footnotes--default--light.png",
+      "files": [],
+      "expectations": [
+        "Recommends Footnotes as the primary choice, naming its slug `footnotes` or its React adapter `Footnotes`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/react, /cli, /runtime, /manifest, /tokens, /theme/discern, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Footnotes by targeting its owned `discern-footnotes` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Footnotes — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 71,
+      "prompt": "Situation: Use Theme switcher in a settings or inspection surface where System, Light, and Dark are deliberate choices.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Theme toggle Component (`theme-toggle`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Theme toggle (`theme-toggle`) for this situation and routes to the alternative the Metadata names: Use Theme switcher in a settings or inspection surface where System, Light, and Dark are deliberate choices.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Theme toggle (`theme-toggle`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Theme toggle is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 72,
+      "prompt": "Situation: Use Theme toggle for a persistent header or footer control whose job is an immediate comfort adjustment.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Theme switcher Component (`theme-switcher`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Theme switcher (`theme-switcher`) for this situation and routes to the alternative the Metadata names: Use Theme toggle for a persistent header or footer control whose job is an immediate comfort adjustment.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Theme switcher (`theme-switcher`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Theme switcher is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 73,
+      "prompt": "Situation: Items form an ordered procedure, ranked result set, comparison, or focus-heavy navigation sequence.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Masonry Component (`masonry`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Masonry (`masonry`) for this situation and routes to the alternative the Metadata names: Items form an ordered procedure, ranked result set, comparison, or focus-heavy navigation sequence.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Masonry (`masonry`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Masonry is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 74,
+      "prompt": "Situation: Content fits without scrolling or the interface needs pagination, virtualisation, or carousel controls.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Overflow cue Component (`overflow-cue`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Overflow cue (`overflow-cue`) for this situation and routes to the alternative the Metadata names: Content fits without scrolling or the interface needs pagination, virtualisation, or carousel controls.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Overflow cue (`overflow-cue`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Overflow cue is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 75,
+      "prompt": "Situation: The label must distinguish authored, generated, project-owned, or tool-owned provenance; use Ownership badge.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Badge Component (`badge`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Badge (`badge`) for this situation and routes to the alternative the Metadata names: The label must distinguish authored, generated, project-owned, or tool-owned provenance; use Ownership badge.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Badge (`badge`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Badge is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 76,
+      "prompt": "Situation: Use Kicker or ordinary lead text when the copy labels content without establishing a section.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Heading Component (`heading`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Heading (`heading`) for this situation and routes to the alternative the Metadata names: Use Kicker or ordinary lead text when the copy labels content without establishing a section.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Heading (`heading`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Heading is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 77,
+      "prompt": "Situation: A reader must copy and run one exact command with working-directory, expected-result, or failure context; use Command.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Terminal Component (`terminal`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Terminal (`terminal`) for this situation and routes to the alternative the Metadata names: A reader must copy and run one exact command with working-directory, expected-result, or failure context; use Command.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Terminal (`terminal`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Terminal is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 78,
+      "prompt": "Situation: Use Comparison table for a curated two-option marketing comparison with a title and feature narrative.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Table Component (`table`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Table (`table`) for this situation and routes to the alternative the Metadata names: Use Comparison table for a curated two-option marketing comparison with a title and feature narrative.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Table (`table`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Table is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 79,
+      "prompt": "Situation: Reading exact values or intermediate points — a sparkline is lossy by design, and only its endpoint annotation states numbers; use the line chart kind.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Sparkline Component (`sparkline`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Sparkline (`sparkline`) for this situation and routes to the alternative the Metadata names: Reading exact values or intermediate points — a sparkline is lossy by design, and only its endpoint annotation states numbers; use the line chart kind.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Sparkline (`sparkline`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Sparkline is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 80,
+      "prompt": "Situation: The visual communicates evidence or meaning; use a semantic figure with alternative text instead.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Backdrop Component (`backdrop`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Backdrop (`backdrop`) for this situation and routes to the alternative the Metadata names: The visual communicates evidence or meaning; use a semantic figure with alternative text instead.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Backdrop (`backdrop`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Backdrop is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 81,
+      "prompt": "Situation: The composition needs a clear focal object rather than an even field.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Survey backdrop Component (`survey-backdrop`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Survey backdrop (`survey-backdrop`) for this situation and routes to the alternative the Metadata names: The composition needs a clear focal object rather than an even field.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Survey backdrop (`survey-backdrop`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Survey backdrop is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 82,
+      "prompt": "Situation: The decorative field must remain even across the complete canvas.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Approach backdrop Component (`approach-backdrop`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Approach backdrop (`approach-backdrop`) for this situation and routes to the alternative the Metadata names: The decorative field must remain even across the complete canvas.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Approach backdrop (`approach-backdrop`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Approach backdrop is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 83,
+      "prompt": "Situation: CSS payload must be minimal; this is the densest backdrop in the family.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Fold backdrop Component (`fold-backdrop`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Fold backdrop (`fold-backdrop`) for this situation and routes to the alternative the Metadata names: CSS payload must be minimal; this is the densest backdrop in the family.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Fold backdrop (`fold-backdrop`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Fold backdrop is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 84,
+      "prompt": "Situation: The visual must cover the full height with an even texture.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Aperture backdrop Component (`aperture-backdrop`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Aperture backdrop (`aperture-backdrop`) for this situation and routes to the alternative the Metadata names: The visual must cover the full height with an even texture.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Aperture backdrop (`aperture-backdrop`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Aperture backdrop is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 85,
+      "prompt": "Situation: The repeated mark carries semantic meaning or needs to be announced.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Impression backdrop Component (`impression-backdrop`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Impression backdrop (`impression-backdrop`) for this situation and routes to the alternative the Metadata names: The repeated mark carries semantic meaning or needs to be announced.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Impression backdrop (`impression-backdrop`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Impression backdrop is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 86,
+      "prompt": "Situation: The foreground needs a uniformly quiet field with no directional incident.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Envelope backdrop Component (`envelope-backdrop`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Envelope backdrop (`envelope-backdrop`) for this situation and routes to the alternative the Metadata names: The foreground needs a uniformly quiet field with no directional incident.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Envelope backdrop (`envelope-backdrop`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Envelope backdrop is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 87,
+      "prompt": "Situation: The section needs an intricate texture or strongly animated focal point.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Cleave backdrop Component (`cleave-backdrop`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Cleave backdrop (`cleave-backdrop`) for this situation and routes to the alternative the Metadata names: The section needs an intricate texture or strongly animated focal point.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Cleave backdrop (`cleave-backdrop`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Cleave backdrop is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 88,
+      "prompt": "Situation: The visual must explain a real network, path, or routing decision.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Tiling backdrop Component (`tiling-backdrop`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Tiling backdrop (`tiling-backdrop`) for this situation and routes to the alternative the Metadata names: The visual must explain a real network, path, or routing decision.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Tiling backdrop (`tiling-backdrop`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Tiling backdrop is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 89,
+      "prompt": "Situation: The background needs an even texture across the complete canvas.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Compression backdrop Component (`compression-backdrop`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Compression backdrop (`compression-backdrop`) for this situation and routes to the alternative the Metadata names: The background needs an even texture across the complete canvas.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Compression backdrop (`compression-backdrop`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Compression backdrop is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 90,
+      "prompt": "Situation: The grain positions would be read as measured evidence or a physical simulation.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Harmonic backdrop Component (`harmonic-backdrop`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Harmonic backdrop (`harmonic-backdrop`) for this situation and routes to the alternative the Metadata names: The grain positions would be read as measured evidence or a physical simulation.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Harmonic backdrop (`harmonic-backdrop`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Harmonic backdrop is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 91,
+      "prompt": "Situation: A specific failure needs location, evidence, reproduction, correction, and retry guidance; use Diagnostic.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Banner Component (`banner`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Banner (`banner`) for this situation and routes to the alternative the Metadata names: A specific failure needs location, evidence, reproduction, correction, and retry guidance; use Diagnostic.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Banner (`banner`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Banner is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 92,
+      "prompt": "Situation: You need the plain-language outcome and next action for one tool run; use Result summary.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Verification report Component (`verification-report`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Verification report (`verification-report`) for this situation and routes to the alternative the Metadata names: You need the plain-language outcome and next action for one tool run; use Result summary.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Verification report (`verification-report`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Verification report is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 93,
+      "prompt": "Situation: You need to reproduce a whole terminal session or interleave commands with output; use Terminal.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Command Component (`command`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Command (`command`) for this situation and routes to the alternative the Metadata names: You need to reproduce a whole terminal session or interleave commands with output; use Terminal.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Command (`command`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Command is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 94,
+      "prompt": "Situation: The commands must run in sequence; place Command components inside Procedure steps.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Command group Component (`command-group`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Command group (`command-group`) for this situation and routes to the alternative the Metadata names: The commands must run in sequence; place Command components inside Procedure steps.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Command group (`command-group`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Command group is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 95,
+      "prompt": "Situation: The outcome has already been measured; use Result summary for a run or Verification report for a multi-check record.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Expected result Component (`expected-result`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Expected result (`expected-result`) for this situation and routes to the alternative the Metadata names: The outcome has already been measured; use Result summary for a run or Verification report for a multi-check record.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Expected result (`expected-result`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Expected result is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 96,
+      "prompt": "Situation: You need to summarise a created or changed artifact with ownership and provenance; use Artifact card.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Path reference Component (`path-reference`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Path reference (`path-reference`) for this situation and routes to the alternative the Metadata names: You need to summarise a created or changed artifact with ownership and provenance; use Artifact card.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Path reference (`path-reference`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Path reference is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 97,
+      "prompt": "Situation: The sequence explains a high-level journey or methodology without executable actions; use Process steps.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Procedure Component (`procedure`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Procedure (`procedure`) for this situation and routes to the alternative the Metadata names: The sequence explains a high-level journey or methodology without executable actions; use Process steps.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Procedure (`procedure`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Procedure is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 98,
+      "prompt": "Situation: The action stands alone and has no sequence context; use Command or ordinary prose.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Procedure step Component (`procedure-step`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Procedure step (`procedure-step`) for this situation and routes to the alternative the Metadata names: The action stands alone and has no sequence context; use Command or ordinary prose.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Procedure step (`procedure-step`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Procedure step is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 99,
+      "prompt": "Situation: The items are actions to perform in order; use Procedure steps.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Prerequisite list Component (`prerequisite-list`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Prerequisite list (`prerequisite-list`) for this situation and routes to the alternative the Metadata names: The items are actions to perform in order; use Procedure steps.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Prerequisite list (`prerequisite-list`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Prerequisite list is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 100,
+      "prompt": "Situation: The reader is moving linearly between adjacent pages (use Pager) or following ordered steps (use Procedure).\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Branch choice Component (`branch-choice`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Branch choice (`branch-choice`) for this situation and routes to the alternative the Metadata names: The reader is moving linearly between adjacent pages (use Pager) or following ordered steps (use Procedure).",
+      "files": [],
+      "expectations": [
+        "Does not recommend Branch choice (`branch-choice`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Branch choice is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 101,
+      "prompt": "Situation: The message is a general warning or live failure without an idempotence decision.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Retry notice Component (`retry-notice`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Retry notice (`retry-notice`) for this situation and routes to the alternative the Metadata names: The message is a general warning or live failure without an idempotence decision.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Retry notice (`retry-notice`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Retry notice is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 102,
+      "prompt": "Situation: The content is an ordinary caution, page-level announcement, or recoverable validation message.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Destructive action notice Component (`destructive-action-notice`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Destructive action notice (`destructive-action-notice`) for this situation and routes to the alternative the Metadata names: The content is an ordinary caution, page-level announcement, or recoverable validation message.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Destructive action notice (`destructive-action-notice`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Destructive action notice is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 103,
+      "prompt": "Situation: You need a durable report recording several checks and branch or commit metadata; use Verification report.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Result summary Component (`result-summary`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Result summary (`result-summary`) for this situation and routes to the alternative the Metadata names: You need a durable report recording several checks and branch or commit metadata; use Verification report.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Result summary (`result-summary`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Result summary is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 104,
+      "prompt": "Situation: You need a short page-level announcement without reproduction or correction detail; use Banner.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Diagnostic Component (`diagnostic`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Diagnostic (`diagnostic`) for this situation and routes to the alternative the Metadata names: You need a short page-level announcement without reproduction or correction detail; use Banner.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Diagnostic (`diagnostic`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Diagnostic is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 105,
+      "prompt": "Situation: The output is the primary content readers need to compare or act on; show it directly with Terminal, Table, or Diagnostic.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Raw output Component (`raw-output`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Raw output (`raw-output`) for this situation and routes to the alternative the Metadata names: The output is the primary content readers need to compare or act on; show it directly with Terminal, Table, or Diagnostic.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Raw output (`raw-output`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Raw output is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 106,
+      "prompt": "Situation: The value is generic progress without a defended limit; use Meter or Stat.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Standard meter Component (`standard-meter`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Standard meter (`standard-meter`) for this situation and routes to the alternative the Metadata names: The value is generic progress without a defended limit; use Meter or Stat.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Standard meter (`standard-meter`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Standard meter is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 107,
+      "prompt": "Situation: The output is a finished artifact to read in full; show it with Raw output or Terminal.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Activity log Component (`activity-log`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Activity log (`activity-log`) for this situation and routes to the alternative the Metadata names: The output is a finished artifact to read in full; show it with Raw output or Terminal.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Activity log (`activity-log`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Activity log is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 108,
+      "prompt": "Situation: The hierarchy is site navigation or the reader needs details for one artifact only.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Artifact tree Component (`artifact-tree`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Artifact tree (`artifact-tree`) for this situation and routes to the alternative the Metadata names: The hierarchy is site navigation or the reader needs details for one artifact only.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Artifact tree (`artifact-tree`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Artifact tree is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 109,
+      "prompt": "Situation: Readers need the file contents, raw diff, or whole-artifact provenance.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the File change Component (`file-change`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses File change (`file-change`) for this situation and routes to the alternative the Metadata names: Readers need the file contents, raw diff, or whole-artifact provenance.",
+      "files": [],
+      "expectations": [
+        "Does not recommend File change (`file-change`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why File change is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 110,
+      "prompt": "Situation: You need a compact row in a changed-file list or a nested project structure.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Artifact card Component (`artifact-card`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Artifact card (`artifact-card`) for this situation and routes to the alternative the Metadata names: You need a compact row in a changed-file list or a nested project structure.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Artifact card (`artifact-card`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Artifact card is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 111,
+      "prompt": "Situation: The label describes status, category, or arbitrary metadata rather than ownership; use Badge.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Ownership badge Component (`ownership-badge`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Ownership badge (`ownership-badge`) for this situation and routes to the alternative the Metadata names: The label describes status, category, or arbitrary metadata rather than ownership; use Badge.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Ownership badge (`ownership-badge`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Ownership badge is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 112,
+      "prompt": "Situation: The content is a binding instruction without decision history; use Rule.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Decision record Component (`decision-record`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Decision record (`decision-record`) for this situation and routes to the alternative the Metadata names: The content is a binding instruction without decision history; use Rule.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Decision record (`decision-record`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Decision record is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 113,
+      "prompt": "Situation: The content explains why a direction was chosen; use Decision record.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Rule Component (`rule`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Rule (`rule`) for this situation and routes to the alternative the Metadata names: The content explains why a direction was chosen; use Decision record.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Rule (`rule`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Rule is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 114,
+      "prompt": "Situation: The task has already run and the page needs to summarize its outcome, counts, or duration; use Result summary.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Task metadata Component (`task-metadata`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Task metadata (`task-metadata`) for this situation and routes to the alternative the Metadata names: The task has already run and the page needs to summarize its outcome, counts, or duration; use Result summary.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Task metadata (`task-metadata`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Task metadata is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 115,
+      "prompt": "Situation: The copied input is a shell command to run or machine-readable output from a completed tool invocation.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Agent handoff Component (`agent-handoff`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Agent handoff (`agent-handoff`) for this situation and routes to the alternative the Metadata names: The copied input is a shell command to run or machine-readable output from a completed tool invocation.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Agent handoff (`agent-handoff`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Agent handoff is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 116,
+      "prompt": "Situation: An application or ordinary editorial page only needs a semantic surface and standard spacing; use Section with Container.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Marketing section Component (`marketing-section`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Marketing section (`marketing-section`) for this situation and routes to the alternative the Metadata names: An application or ordinary editorial page only needs a semantic surface and standard spacing; use Section with Container.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Marketing section (`marketing-section`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Marketing section is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 117,
+      "prompt": "Situation: The composition opens a page with actions or a visual; use Hero block.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Marketing intro Component (`marketing-intro`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Marketing intro (`marketing-intro`) for this situation and routes to the alternative the Metadata names: The composition opens a page with actions or a visual; use Hero block.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Marketing intro (`marketing-intro`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Marketing intro is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 118,
+      "prompt": "Situation: Items have natural unrelated heights or cannot form a complete matrix; use Masonry or Grid instead.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Feature bento Component (`feature-bento`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Feature bento (`feature-bento`) for this situation and routes to the alternative the Metadata names: Items have natural unrelated heights or cannot form a complete matrix; use Masonry or Grid instead.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Feature bento (`feature-bento`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Feature bento is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 119,
+      "prompt": "Situation: Readers must perform executable, ordered actions with prerequisites, branches, recovery, and proof; use Procedure.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Process steps Component (`process-steps`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Process steps (`process-steps`) for this situation and routes to the alternative the Metadata names: Readers must perform executable, ordered actions with prerequisites, branches, recovery, and proof; use Procedure.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Process steps (`process-steps`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Process steps is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 120,
+      "prompt": "Situation: The supplied content is primarily prose or a long terminal transcript; keep it in the reading flow instead of presenting it as imagery.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Marketing stage Component (`marketing-stage`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Marketing stage (`marketing-stage`) for this situation and routes to the alternative the Metadata names: The supplied content is primarily prose or a long terminal transcript; keep it in the reading flow instead of presenting it as imagery.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Marketing stage (`marketing-stage`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Marketing stage is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 121,
+      "prompt": "Situation: The composition sits midway through a page or needs ordinary heading scale; use Narrative chapter or Marketing intro.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Editorial hero Component (`editorial-hero`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Editorial hero (`editorial-hero`) for this situation and routes to the alternative the Metadata names: The composition sits midway through a page or needs ordinary heading scale; use Narrative chapter or Marketing intro.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Editorial hero (`editorial-hero`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Editorial hero is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 122,
+      "prompt": "Situation: The section can be understood as a short sequence, comparison, or single outcome; use a component that compresses the information instead.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Narrative chapter Component (`narrative-chapter`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Narrative chapter (`narrative-chapter`) for this situation and routes to the alternative the Metadata names: The section can be understood as a short sequence, comparison, or single outcome; use a component that compresses the information instead.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Narrative chapter (`narrative-chapter`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Narrative chapter is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 123,
+      "prompt": "Situation: Readers must execute detailed instructions, inspect technical state, or recover from branches; use Procedure or a dedicated workflow component instead.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Journey overview Component (`journey-overview`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Journey overview (`journey-overview`) for this situation and routes to the alternative the Metadata names: Readers must execute detailed instructions, inspect technical state, or recover from branches; use Procedure or a dedicated workflow component instead.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Journey overview (`journey-overview`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Journey overview is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 124,
+      "prompt": "Situation: All figures have equal importance or require detailed qualification; use Metrics band, Table, or prose instead.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Outcome spotlight Component (`outcome-spotlight`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Outcome spotlight (`outcome-spotlight`) for this situation and routes to the alternative the Metadata names: All figures have equal importance or require detailed qualification; use Metrics band, Table, or prose instead.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Outcome spotlight (`outcome-spotlight`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Outcome spotlight is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 125,
+      "prompt": "Situation: The quotation needs a metric, long customer story, or substantial evidence; use Testimonial or Case study instead.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Voice break Component (`voice-break`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Voice break (`voice-break`) for this situation and routes to the alternative the Metadata names: The quotation needs a metric, long customer story, or substantial evidence; use Testimonial or Case study instead.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Voice break (`voice-break`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Voice break is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 126,
+      "prompt": "Situation: The invitation needs multiple offers, pricing choices, or a substantial visual; use a dedicated decision or comparison component instead.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Closing statement Component (`closing-statement`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Closing statement (`closing-statement`) for this situation and routes to the alternative the Metadata names: The invitation needs multiple offers, pricing choices, or a substantial visual; use a dedicated decision or comparison component instead.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Closing statement (`closing-statement`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Closing statement is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 127,
+      "prompt": "Situation: Use Paragraph when one semantic unit of body prose is the complete content.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Prose Component (`prose`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Prose (`prose`) for this situation and routes to the alternative the Metadata names: Use Paragraph when one semantic unit of body prose is the complete content.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Prose (`prose`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Prose is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 128,
+      "prompt": "Situation: Use Prose when the caller already owns semantic React or CLI block structure rather than Markdown source.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Markdown Component (`markdown`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Markdown (`markdown`) for this situation and routes to the alternative the Metadata names: Use Prose when the caller already owns semantic React or CLI block structure rather than Markdown source.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Markdown (`markdown`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Markdown is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 129,
+      "prompt": "Situation: Use Prose when several paragraphs, headings, and lists need one long-form reading context.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Paragraph Component (`paragraph`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Paragraph (`paragraph`) for this situation and routes to the alternative the Metadata names: Use Prose when several paragraphs, headings, and lists need one long-form reading context.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Paragraph (`paragraph`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Paragraph is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 130,
+      "prompt": "Situation: Use Procedure for executable operational steps with completion evidence.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the List Component (`list`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses List (`list`) for this situation and routes to the alternative the Metadata names: Use Procedure for executable operational steps with completion evidence.",
+      "files": [],
+      "expectations": [
+        "Does not recommend List (`list`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why List is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 131,
+      "prompt": "Situation: Use Pull quote when the quotation needs authored quote marks, attribution, citation, or a display treatment.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Blockquote Component (`blockquote`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Blockquote (`blockquote`) for this situation and routes to the alternative the Metadata names: Use Pull quote when the quotation needs authored quote marks, attribution, citation, or a display treatment.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Blockquote (`blockquote`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Blockquote is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 132,
+      "prompt": "Situation: Use Code listing when source needs an editorial figure, filename, caption, highlighted lines, or stable line references.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Code block Component (`code-block`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Code block (`code-block`) for this situation and routes to the alternative the Metadata names: Use Code listing when source needs an editorial figure, filename, caption, highlighted lines, or stable line references.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Code block (`code-block`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Code block is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 133,
+      "prompt": "Situation: A surrounding title, caption, source, or legend is required; compose Chart as DataFigure's visual with its spec-derived series legend instead of duplicating figure semantics.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Chart Component (`chart`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Chart (`chart`) for this situation and routes to the alternative the Metadata names: A surrounding title, caption, source, or legend is required; compose Chart as DataFigure's visual with its spec-derived series legend instead of duplicating figure semantics.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Chart (`chart`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Chart is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 134,
+      "prompt": "Situation: A surrounding title, caption, source, or legend is required; compose Diagram as DataFigure's visual instead of duplicating figure semantics.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Diagram Component (`diagram`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Diagram (`diagram`) for this situation and routes to the alternative the Metadata names: A surrounding title, caption, source, or legend is required; compose Diagram as DataFigure's visual instead of duplicating figure semantics.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Diagram (`diagram`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Diagram is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 135,
+      "prompt": "Situation: Use List for an ordinary sequence whose items do not define bidirectional document references.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Footnotes Component (`footnotes`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Footnotes (`footnotes`) for this situation and routes to the alternative the Metadata names: Use List for an ordinary sequence whose items do not define bidirectional document references.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Footnotes (`footnotes`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Footnotes is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    }
+  ]
+}

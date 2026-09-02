@@ -157,6 +157,7 @@
     paths = [
       "src/generated/**",
       "scripts/generated/**",
+      "skills/use-discern-design-system/evals/**",
     ]
     run = "deno task codegen"
     linguist_generated = true
