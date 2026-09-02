@@ -98,6 +98,14 @@ refresh` immediately rewrites them back) — the two sides loop forever.
 
 **Fix.** Keep all three listed in `fmt.exclude` in [`deno.json`](../../deno.json) (they are, since setup). Edit `discern/instructions.md` (which fmt _does_ format), run `discern refresh`, and never hand-edit or format the compiled copies. Any newly added compiled agent file joins the exclude list in the same change.
 
+### Builder shortcut isolation reports that a focused control changed the document
+
+**Symptom.** Browser conformance intermittently fails its first interactive shortcut-isolation target with `focused link Delete shortcut changed the document` and reports `shortcutIsolationChecks: 0`; an unchanged rerun passes.
+
+**Cause.** The preceding placement helper used the existence of any matching Layers label as its completion witness. When the composition already contained a Component with that name, the helper could return before the newly placed layer, canvas, and selection rendered. Shortcut isolation then sampled that in-flight document projection and blamed the subsequent Delete press when the projection settled. A keydown captured during diagnosis still targeted the focused link; the Builder's document-shortcut handler correctly ignored it.
+
+**Fix.** Keep `placeNamedComponent` in [`scripts/conformance/builder/discovery.ts`](../../scripts/conformance/builder/discovery.ts) waiting for the exact matching Layers population to grow by one. Shortcut isolation drains deferred frames before taking its document witness and presses through the target Locator so the tested event is owned by that control. Do not replace either precondition with an existence wait or a fixed delay.
+
 ### The `css_density` standard measures a stale `dist/discern.css`
 
 **Symptom.** The `css_density` number does not move when you expected it to (or a standalone `discern standards` run reports a size that ignores your change).
