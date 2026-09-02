@@ -10,6 +10,8 @@ import {
   evaluateField,
   evaluateFieldShadows,
   FIELD_SPACING_UNIT_PX,
+  fieldAxes,
+  type FieldAxisName,
   fieldColorRoleLaws,
   fieldShadowRoleLaws,
 } from "./field.ts";
@@ -57,8 +59,28 @@ const themeToken = (
   category: TokenCategory = "Color",
 ): ThemeToken => ({ name, light, dark, category, description });
 
+const fieldAxisTokenCategories = {
+  darkness: "Color",
+  structure: "Color",
+  emphasis: "Color",
+  density: "Spacing",
+} as const satisfies Readonly<Record<FieldAxisName, TokenCategory>>;
+
+/** Registered field-axis Tokens exposed as numeric author controls. */
+export const fieldAxisTokens: readonly DesignToken[] = Object.freeze(
+  (Object.keys(fieldAxes) as FieldAxisName[]).map((axis) =>
+    token(
+      `--discern-${axis}`,
+      String(fieldAxes[axis].default),
+      fieldAxisTokenCategories[axis],
+      fieldAxes[axis].description,
+    )
+  ),
+);
+
 /** Framework-neutral primitives and system-font defaults shared by every theme. */
 export const baseTokens: readonly DesignToken[] = [
+  ...fieldAxisTokens,
   token(
     "--discern-font-display",
     '"Iowan Old Style", "Palatino Linotype", Georgia, ui-serif, serif',

@@ -26,6 +26,11 @@ import {
 } from "./runtime-assets.ts";
 import { publicTokens } from "./token-inventory.ts";
 import { blueThemeCss } from "./theme/blue.ts";
+import {
+  FIELD_LIVE_CSS_SUPPORTS,
+  fieldLiveCssDeclarations,
+  generateFieldAxisRegistrationCss,
+} from "./tokens/field-css.ts";
 import { baseTokens, themeTokens } from "./tokens/tokens.ts";
 import {
   type ComponentGroup,
@@ -56,6 +61,7 @@ export interface BuildSummary {
 }
 
 function generateTokenCss(): string {
+  const fieldDeclarations = fieldLiveCssDeclarations();
   const primitiveDeclarations = baseTokens.map(({ name, value }) =>
     `${name}: ${value};`
   ).join(" ");
@@ -65,23 +71,34 @@ function generateTokenCss(): string {
   const darkDeclarations = themeTokens.map(({ name, dark }) =>
     `${name}: ${dark};`
   ).join(" ");
-  return `@layer discern.tokens {
+  const liveDeclarations = fieldDeclarations.map(({ name, value }) =>
+    `${name}: ${value};`
+  ).join(" ");
+  return `${generateFieldAxisRegistrationCss()}
+
+@layer discern.tokens {
   :where([data-discern-root]) {
     color-scheme: light dark; ${primitiveDeclarations} ${lightDeclarations}
   }
 
   :where([data-discern-root][data-discern-theme="light"]) {
-    color-scheme: light;
+    color-scheme: light; --discern-darkness: 0;
   }
 
   :where([data-discern-root][data-discern-theme="dark"]) {
-    color-scheme: dark; ${darkDeclarations}
+    color-scheme: dark; --discern-darkness: 1; ${darkDeclarations}
   }
 
   @media (prefers-color-scheme: dark) {
     :where([data-discern-root]:not([data-discern-theme])),
     :where([data-discern-root][data-discern-theme="system"]) {
-      color-scheme: dark; ${darkDeclarations}
+      color-scheme: dark; --discern-darkness: 1; ${darkDeclarations}
+    }
+  }
+
+  @supports ${FIELD_LIVE_CSS_SUPPORTS} {
+    :where([data-discern-root]) {
+      ${liveDeclarations}
     }
   }
 }`;

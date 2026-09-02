@@ -139,6 +139,7 @@ interface PublicCssGlobals {
   readonly customProperties: ReadonlySet<string>;
   readonly dataAttributes: ReadonlySet<string>;
   readonly keyframes: ReadonlySet<string>;
+  readonly registeredProperties: ReadonlySet<string>;
 }
 
 function publicCssGlobals(source: string): PublicCssGlobals {
@@ -162,6 +163,10 @@ function publicCssGlobals(source: string): PublicCssGlobals {
     ),
     keyframes: new Set(
       [...css.matchAll(/@keyframes\s+([_a-zA-Z][-_a-zA-Z0-9]*)/g)]
+        .map((match) => match[1] ?? ""),
+    ),
+    registeredProperties: new Set(
+      [...css.matchAll(/@property\s+(--[_a-zA-Z][-_a-zA-Z0-9]*)/g)]
         .map((match) => match[1] ?? ""),
     ),
   };
@@ -522,6 +527,7 @@ Deno.test("runtime globals are branded and the default runtime stays monochrome"
       (path) => path.endsWith(".css"),
     );
     const violations: string[] = [];
+    const registeredProperties = new Set<string>();
     for (const path of runtimeCss) {
       const source = await Deno.readTextFile(path);
       const globals = publicCssGlobals(source);
@@ -545,8 +551,25 @@ Deno.test("runtime globals are branded and the default runtime stays monochrome"
           violations.push(`${path}: @keyframes ${value}`);
         }
       }
+      for (const value of globals.registeredProperties) {
+        registeredProperties.add(value);
+        if (!value.startsWith("--discern-")) {
+          violations.push(`${path}: @property ${value}`);
+        }
+      }
     }
     assertEquals(violations, []);
+    assertEquals(
+      [...registeredProperties].toSorted(),
+      [
+        "--discern-emphasis",
+        "--discern-density",
+        "--discern-darkness",
+        "--discern-impression-backdrop-x",
+        "--discern-impression-backdrop-y",
+        "--discern-structure",
+      ].toSorted(),
+    );
     const output = await Deno.readTextFile(join(temp, "discern.css"));
     assert(!output.includes("--discern-accent-hue: 255;"));
     assertMatch(
@@ -554,6 +577,15 @@ Deno.test("runtime globals are branded and the default runtime stays monochrome"
       /@layer discern\.tokens \{\s*:where\(\[data-discern-root\]\)/,
     );
     assertStringIncludes(output, "color-scheme: light dark;");
+    assertStringIncludes(
+      output,
+      ':where([data-discern-root][data-discern-theme="light"]) {\n    color-scheme: light; --discern-darkness: 0;',
+    );
+    assertStringIncludes(
+      output,
+      ':where([data-discern-root][data-discern-theme="dark"]) {\n    color-scheme: dark; --discern-darkness: 1;',
+    );
+    assertStringIncludes(output, "@supports (color: oklch(");
     assertStringIncludes(output, "\n  @media (prefers-color-scheme: dark)");
     const systemDark = output.slice(
       output.indexOf("@media (prefers-color-scheme: dark)"),
