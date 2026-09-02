@@ -1,4 +1,9 @@
-import { assert, assertEquals, assertStringIncludes } from "@std/assert";
+import {
+  assert,
+  assertEquals,
+  assertStringIncludes,
+  assertThrows,
+} from "@std/assert";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
@@ -35,6 +40,12 @@ function attributeCount(markup: string, attribute: string): number {
   return (markup.match(new RegExp(`${attribute}=`, "g")) ?? []).length;
 }
 
+function classTokenCount(markup: string, token: string): number {
+  return [...markup.matchAll(/class="([^"]*)"/g)].filter((match) =>
+    (match[1] ?? "").split(/\s+/).includes(token)
+  ).length;
+}
+
 function assertSharedCards(
   markup: string,
   expected: number,
@@ -52,6 +63,11 @@ function assertSharedCards(
   assertEquals(
     attributeCount(markup, "data-discern-catalogue-index-card-primary"),
     expected,
+  );
+  assertEquals(
+    classTokenCount(markup, "discern-card"),
+    expected,
+    "a route-index Card bypassed CatalogueIndexCard",
   );
 }
 
@@ -94,6 +110,16 @@ Deno.test("CatalogueIndexCard keeps one stretched primary action and sibling sec
     (markup.slice(primaryStart, primaryEnd).match(/<a\b/g) ?? []).length,
     0,
   );
+  assertThrows(
+    () =>
+      assertSharedCards(
+        `${markup}<div class="discern-card">future route</div>`,
+        1,
+        "compact",
+      ),
+    Error,
+    "bypassed CatalogueIndexCard",
+  );
 });
 
 Deno.test("every source-backed Catalogue index population uses the shared card authority", () => {
@@ -124,7 +150,7 @@ Deno.test("every source-backed Catalogue index population uses the shared card a
     terminalTheme: "light",
     url: new URL(foundationsPaths.index, "https://catalogue.example"),
   }));
-  assertSharedCards(foundations, 2, "visual");
+  assertSharedCards(foundations, 3, "visual");
   const terminalFoundations = renderToStaticMarkup(
     createElement(FoundationsPage, {
       terminalTheme: "light",

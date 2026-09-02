@@ -453,7 +453,6 @@
   }
   .discern-catalogue-field-axis output {
     color: var(--discern-color-accent-700);
-    font-family: var(--discern-font-mono);
   }
   .discern-catalogue-field-axis input[type="range"] {
     width: 100%;
@@ -514,7 +513,7 @@
     border-radius: var(--discern-radius-md);
     background: var(--discern-color-danger-soft);
     color: var(--discern-color-danger-deep);
-    font: var(--discern-font-size-sm) var(--discern-font-mono);
+    font: var(--discern-font-size-sm) var(--discern-font-ui);
   }
   .discern-catalogue-field__proof-grid {
     display: grid;
@@ -541,7 +540,8 @@
   .discern-catalogue-field__proof-grid span,
   .discern-catalogue-field__proof-grid output {
     color: var(--discern-color-ink-muted);
-    font: var(--discern-font-size-xs) var(--discern-font-mono);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+    font-variant-numeric: tabular-nums;
     overflow-wrap: anywhere;
   }
   .discern-catalogue-field__proof-grid output {
