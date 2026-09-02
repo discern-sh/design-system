@@ -1,7 +1,17 @@
 import { assert, assertEquals } from "@std/assert";
-import { oklchToSrgb, type SrgbColor } from "../../src/internal/oklch.ts";
+import {
+  type OklabColor,
+  oklabContrast,
+  oklchToSrgb,
+  type SrgbColor,
+} from "../../src/internal/oklch.ts";
 import { terminalThemes } from "../../src/cli/theme.ts";
-import { themeTokens } from "../../src/tokens/tokens.ts";
+import {
+  evaluateField,
+  FIELD_CONTRAST_SAMPLE_DARKNESSES,
+  themeTokens,
+} from "../../src/tokens/tokens.ts";
+import { resolveChartPaletteAtField } from "../../src/chart/palette.ts";
 
 /**
  * Minimum adjacent-series distance under the package's severe dichromacy
@@ -9,6 +19,7 @@ import { themeTokens } from "../../src/tokens/tokens.ts";
  * collapse neighbouring colours below this deliberately rounded floor.
  */
 const CVD_SEPARATION_FLOOR = 0.09;
+const SERIES_CANVAS_CONTRAST_FLOOR = 1.25;
 
 const SERIES_SLOTS = [1, 2, 3, 4, 5, 6] as const;
 
@@ -46,6 +57,22 @@ function seriesOklch(slot: number, variant: "light" | "dark"): SeriesOklch {
     chroma: Number(match[2]),
     hue: Number(match[3]),
   };
+}
+
+function asOklab(value: SeriesOklch): OklabColor {
+  const radians = value.hue * Math.PI / 180;
+  return {
+    lightness: value.lightnessPercent / 100,
+    a: value.chroma * Math.cos(radians),
+    b: value.chroma * Math.sin(radians),
+  };
+}
+
+function fieldCanvas(darkness: number): OklabColor {
+  const value = evaluateField({ darkness })["--discern-color-canvas"];
+  const match = value.match(/^oklch\(([\d.]+)%\s+0\s+0\)$/);
+  assert(match !== null, `field canvas ${value} is not opaque neutral OKLCH`);
+  return { lightness: Number(match[1]) / 100, a: 0, b: 0 };
 }
 
 function toVariant(value: SeriesOklch): SrgbColor {
@@ -189,6 +216,35 @@ Deno.test("the authored OKLCH values reproduce the selected medium-contrast pale
         toVariant(seriesOklch(slot, variant)),
         EXPECTED_SERIES_RGB[variant][slot - 1],
         `${variant} slot ${slot} drifted from the selected palette`,
+      );
+    }
+  }
+});
+
+Deno.test("every authored series colour clears every sampled field canvas", () => {
+  assert(
+    oklabContrast(fieldCanvas(0.25), fieldCanvas(0.25)) <
+      SERIES_CANVAS_CONTRAST_FLOOR,
+    "the detector control no longer rejects an indistinguishable future colour",
+  );
+  for (const darkness of FIELD_CONTRAST_SAMPLE_DARKNESSES) {
+    const canvas = fieldCanvas(darkness);
+    const palette = resolveChartPaletteAtField(darkness);
+    for (const slot of SERIES_SLOTS) {
+      const selected = palette[`series-${slot}`];
+      const match = selected.match(TOKEN_OKLCH);
+      assert(match !== null, `field ${darkness} series ${slot} is not OKLCH`);
+      const ratio = oklabContrast(
+        asOklab({
+          lightnessPercent: Number(match[1]),
+          chroma: Number(match[2]),
+          hue: Number(match[3]),
+        }),
+        canvas,
+      );
+      assert(
+        ratio >= SERIES_CANVAS_CONTRAST_FLOOR,
+        `field ${darkness} series ${slot} measures ${ratio}:1, below ${SERIES_CANVAS_CONTRAST_FLOOR}:1`,
       );
     }
   }

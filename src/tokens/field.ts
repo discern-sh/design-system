@@ -270,12 +270,13 @@ export const fieldColorRoleLaws = Object.freeze(
       curve([0.5, 0.56, 0.6, 0.6, 0.55]),
       false,
     ),
-    role("--discern-color-canvas", "Opaque page canvas.", "canvas", {
-      kind: "lerp",
-      from: zero,
-      to: one,
-      position: axisNodes.darkness,
-    }, false),
+    role(
+      "--discern-color-canvas",
+      "Opaque page canvas.",
+      "canvas",
+      { kind: "lerp", from: zero, to: one, position: axisNodes.darkness },
+      false,
+    ),
     role(
       "--discern-color-surface",
       "Opaque raised surface, composited once over canvas.",
