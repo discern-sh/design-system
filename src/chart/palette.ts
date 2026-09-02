@@ -82,7 +82,9 @@ export function resolveChartPaletteAtField(
   darkness: number,
 ): Readonly<Record<ChartPaintRole, string>> {
   const field = evaluateField({ darkness });
-  const canvas = parseOklch(field["--discern-color-canvas"]);
+  const canvasValue = field["--discern-color-canvas"];
+  if (canvasValue === undefined) throw new TypeError("Field has no canvas");
+  const canvas = parseOklch(canvasValue);
   return Object.freeze(Object.fromEntries(
     Object.entries(CHART_PAINT_TOKEN_NAMES).map(([role, tokenName]) => {
       const fieldValue = field[tokenName as keyof typeof field];

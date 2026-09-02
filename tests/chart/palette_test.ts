@@ -70,6 +70,7 @@ function asOklab(value: SeriesOklch): OklabColor {
 
 function fieldCanvas(darkness: number): OklabColor {
   const value = evaluateField({ darkness })["--discern-color-canvas"];
+  assert(value !== undefined, `field ${darkness} has no canvas`);
   const match = value.match(/^oklch\(([\d.]+)%\s+0\s+0\)$/);
   assert(match !== null, `field canvas ${value} is not opaque neutral OKLCH`);
   return { lightness: Number(match[1]) / 100, a: 0, b: 0 };

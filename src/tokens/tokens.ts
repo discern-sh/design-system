@@ -58,8 +58,6 @@ const themeToken = (
   category: TokenCategory = "Color",
 ): ThemeToken => ({ name, light, dark, category, description });
 
-export { blueThemeTokens } from "../theme/blue.ts";
-
 /** Framework-neutral primitives and system-font defaults shared by every theme. */
 export const baseTokens: readonly DesignToken[] = [
   token(
@@ -255,11 +253,22 @@ const darkField = evaluateField({ darkness: 1 });
 const lightShadows = evaluateFieldShadows({ darkness: 0 });
 const darkShadows = evaluateFieldShadows({ darkness: 1 });
 
+function requiredProjectedValue(
+  values: Readonly<Record<`--discern-${string}`, string>>,
+  name: `--discern-${string}`,
+): string {
+  const value = values[name];
+  if (value === undefined) {
+    throw new TypeError(`Missing projected Token ${name}`);
+  }
+  return value;
+}
+
 const fieldThemeTokens: readonly ThemeToken[] = fieldColorRoleLaws.map((law) =>
   themeToken(
     law.name,
-    lightField[law.name],
-    darkField[law.name],
+    requiredProjectedValue(lightField, law.name),
+    requiredProjectedValue(darkField, law.name),
     law.description,
   )
 );
@@ -308,8 +317,8 @@ const shadowThemeTokens: readonly ThemeToken[] = fieldShadowRoleLaws.map((
 ) =>
   themeToken(
     law.name,
-    lightShadows[law.name],
-    darkShadows[law.name],
+    requiredProjectedValue(lightShadows, law.name),
+    requiredProjectedValue(darkShadows, law.name),
     law.description,
     "Shape",
   )

@@ -165,6 +165,11 @@ export function deriveTerminalTheme(
     const source = token.name in fieldValues
       ? fieldValues[token.name as FieldColorRoleName]
       : token[variant];
+    if (source === undefined) {
+      throw new TypeError(
+        `Field did not evaluate terminal colour ${token.name}`,
+      );
+    }
     const color = parseCssColor(source);
     if (color === undefined) {
       throw new TypeError(

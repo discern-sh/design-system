@@ -77,11 +77,19 @@ Deno.test("one ordered expression tree owns every non-series colour role", () =>
 Deno.test("the field preserves alpha only for backdrop-owned roles", () => {
   for (const darkness of FIELD_CONTRAST_SAMPLE_DARKNESSES) {
     const values = evaluateField({ darkness });
-    assert(!values["--discern-color-canvas"].includes(" / "));
-    assert(!values["--discern-color-surface"].includes(" / "));
-    assert(!values["--discern-color-inverse-surface"].includes(" / "));
-    assert(!values["--discern-color-action"].includes(" / "));
-    assert(values["--discern-color-surface-sunken"].includes(" / "));
+    const value = (name: `--discern-${string}`): string => {
+      const result = values[name];
+      assert(
+        result !== undefined,
+        `field ${darkness} did not evaluate ${name}`,
+      );
+      return result;
+    };
+    assert(!value("--discern-color-canvas").includes(" / "));
+    assert(!value("--discern-color-surface").includes(" / "));
+    assert(!value("--discern-color-inverse-surface").includes(" / "));
+    assert(!value("--discern-color-action").includes(" / "));
+    assert(value("--discern-color-surface-sunken").includes(" / "));
   }
 });
 

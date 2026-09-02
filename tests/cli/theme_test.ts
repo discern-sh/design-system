@@ -40,7 +40,9 @@ Deno.test("terminal field colours are opaque pole evaluations without the blue p
   for (const [variant, darkness] of [["light", 0], ["dark", 1]] as const) {
     const field = evaluateOpaqueField({ darkness });
     for (const law of fieldColorRoleLaws) {
-      const match = field[law.name].match(
+      const value = field[law.name];
+      assert(value !== undefined, `${variant} ${law.name} was not evaluated`);
+      const match = value.match(
         /^oklch\(([\d.]+)%\s+([\d.]+)\s+(-?[\d.]+)\)$/,
       );
       assert(match !== null, `${variant} ${law.name} retained alpha`);

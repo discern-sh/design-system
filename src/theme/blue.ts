@@ -5,11 +5,7 @@
  * @module
  */
 
-import {
-  type BluePresetRoleName,
-  evaluateField,
-  fieldColorRoleLaws,
-} from "../tokens/field.ts";
+import { evaluateField, fieldColorRoleLaws } from "../tokens/field.ts";
 import type { DesignToken, ThemeToken } from "../tokens/tokens.ts";
 
 /** Name selected by runtime consumers that opt into the blue preset. */
@@ -31,7 +27,7 @@ interface BlueRolePair {
   readonly dark: string;
 }
 
-const blueRoleValues = Object.freeze(
+const blueRoleValues: Readonly<Record<string, BlueRolePair>> = Object.freeze(
   {
     "--discern-color-action": {
       light: "oklch(96.2% 0.019 var(--discern-accent-hue))",
@@ -105,28 +101,33 @@ const blueRoleValues = Object.freeze(
       light: "oklch(96% 0.035 28)",
       dark: "oklch(29% 0.055 28)",
     },
-  } as const satisfies Readonly<Record<BluePresetRoleName, BlueRolePair>>,
+  },
 );
 
 const blueRoleLaws = fieldColorRoleLaws.filter((law) => law.bluePreset);
 const blueRoleNames = blueRoleLaws.map((law) => law.name);
-const valueNames = Object.keys(blueRoleValues) as BluePresetRoleName[];
+const valueNames: string[] = Object.keys(blueRoleValues);
+const blueRoleNameSet = new Set<string>(blueRoleNames);
+const valueNameSet = new Set<string>(valueNames);
 if (
-  blueRoleNames.some((name) => !valueNames.includes(name)) ||
-  valueNames.some((name) => !blueRoleNames.includes(name))
+  blueRoleNames.some((name) => !valueNameSet.has(name)) ||
+  valueNames.some((name) => !blueRoleNameSet.has(name))
 ) {
   throw new TypeError("Blue preset values do not match field-role metadata");
 }
 
-/** Chromatic Theme Token overrides, enrolled from the field-role metadata. */
 /** One blue preset override enrolled by field-role metadata. */
 export interface BlueThemeRoleToken extends ThemeToken {
-  readonly name: BluePresetRoleName;
+  readonly name: `--discern-${string}`;
 }
 
+/** Chromatic Theme Token overrides, enrolled from the field-role metadata. */
 export const blueThemeRoleTokens: readonly BlueThemeRoleToken[] = Object.freeze(
   blueRoleLaws.map((law) => {
-    const pair = blueRoleValues[law.name as BluePresetRoleName];
+    const pair = blueRoleValues[law.name];
+    if (pair === undefined) {
+      throw new TypeError(`Blue preset has no value for ${law.name}`);
+    }
     return {
       name: law.name,
       light: pair.light,
@@ -161,11 +162,11 @@ function declarations(mode: "light" | "dark"): string {
   return [...primitiveDeclarations, ...roleDeclarations].join("\n");
 }
 
-const lightDeclarations = declarations("light");
-const darkDeclarations = declarations("dark");
+const lightDeclarations: string = declarations("light");
+const darkDeclarations: string = declarations("dark");
 
 /** Root-scoped CSS for consumers that select the optional blue preset. */
-export const blueThemeCss = `@layer discern.theme {
+export const blueThemeCss: string = `@layer discern.theme {
   :where([data-discern-root]) {
 ${lightDeclarations}
   }

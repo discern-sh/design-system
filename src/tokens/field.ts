@@ -139,10 +139,10 @@ function numberNode(value: number): FieldNumberExpression {
   return node;
 }
 
-const zero = numberNode(0);
-const one = numberNode(1);
-const quarter = numberNode(0.25);
-const roundingInterval = numberNode(0.0001);
+const zero: FieldNumberExpression = numberNode(0);
+const one: FieldNumberExpression = numberNode(1);
+const quarter: FieldNumberExpression = numberNode(0.25);
+const roundingInterval: FieldNumberExpression = numberNode(0.0001);
 const axisNodes = Object.freeze(
   {
     darkness: { kind: "axis", axis: "darkness" },
@@ -247,7 +247,7 @@ const role = <
  * Ordered field law population. Every non-series colour Theme Token derives
  * from this table; `bluePreset` is metadata, not a second value authority.
  */
-export const fieldColorRoleLaws = Object.freeze(
+export const fieldColorRoleLaws: readonly FieldColorRoleLaw[] = Object.freeze(
   [
     role(
       "--discern-color-ink",
@@ -472,12 +472,6 @@ export const fieldColorRoleLaws = Object.freeze(
 /** Public field colour-role name. */
 export type FieldColorRoleName = typeof fieldColorRoleLaws[number]["name"];
 
-/** Metadata-derived role names the blue preset must override exhaustively. */
-export type BluePresetRoleName = Extract<
-  typeof fieldColorRoleLaws[number],
-  { readonly bluePreset: true }
->["name"];
-
 /** One shadow role whose opacity follows the field's structure axis. */
 export interface FieldShadowRoleLaw {
   readonly name: `--discern-${string}`;
@@ -487,7 +481,7 @@ export interface FieldShadowRoleLaw {
 }
 
 /** Shadow geometry and alpha laws retained as Shape Theme Tokens. */
-export const fieldShadowRoleLaws = Object.freeze(
+export const fieldShadowRoleLaws: readonly FieldShadowRoleLaw[] = Object.freeze(
   [
     {
       name: "--discern-shadow-card",
@@ -673,13 +667,27 @@ function formatOklch({ color, alpha }: EvaluatedFieldColor): string {
   return alpha === 1 ? `${base})` : `${base} / ${formattedNumber(alpha)})`;
 }
 
+function requiredFieldValue<Value>(
+  values: Readonly<Record<FieldColorRoleName, Value>>,
+  name: FieldColorRoleName,
+): Value {
+  const value = values[name];
+  if (value === undefined) {
+    throw new TypeError(`Field did not evaluate ${name}`);
+  }
+  return value;
+}
+
 /** Evaluate every field role, preserving alpha only for backdrop-owned washes. */
 export function evaluateField(
   point: Partial<FieldPoint> = {},
 ): Readonly<Record<FieldColorRoleName, string>> {
   const values = evaluateStructuredField(point);
   return Object.freeze(Object.fromEntries(
-    fieldColorRoleLaws.map((law) => [law.name, formatOklch(values[law.name])]),
+    fieldColorRoleLaws.map((law) => [
+      law.name,
+      formatOklch(requiredFieldValue(values, law.name)),
+    ]),
   ) as Record<FieldColorRoleName, string>);
 }
 
@@ -688,9 +696,12 @@ export function evaluateOpaqueField(
   point: Partial<FieldPoint> = {},
 ): Readonly<Record<FieldColorRoleName, string>> {
   const values = evaluateStructuredField(point);
-  const canvas = values["--discern-color-canvas"].color;
+  const canvas = requiredFieldValue(
+    values,
+    "--discern-color-canvas",
+  ).color;
   return Object.freeze(Object.fromEntries(fieldColorRoleLaws.map((law) => {
-    const value = values[law.name];
+    const value = requiredFieldValue(values, law.name);
     return [
       law.name,
       formatOklch({
@@ -728,10 +739,13 @@ export function fieldContrastMargin(): number {
   let minimum = Number.POSITIVE_INFINITY;
   for (const darkness of FIELD_CONTRAST_SAMPLE_DARKNESSES) {
     const values = evaluateStructuredField({ darkness });
-    const canvas = values["--discern-color-canvas"].color;
+    const canvas = requiredFieldValue(
+      values,
+      "--discern-color-canvas",
+    ).color;
     const maximum = oklabContrast(activePigments(canvas).active, canvas);
     for (const [name, floor] of FIELD_INK_CONTRAST_FLOORS) {
-      const value = values[name];
+      const value = requiredFieldValue(values, name);
       const opaque = compositeOklab(value.color, value.alpha, canvas);
       minimum = Math.min(
         minimum,
