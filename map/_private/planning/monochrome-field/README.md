@@ -2,6 +2,8 @@
 
 Briefs for landing [ADR 0040](../../../_adr/0040-derive-the-theme-from-a-monochrome-field.md): every colour role derived from a monochrome field of two pigments and numeric axes, light and dark as the field's poles, inversion as the primary-action treatment, opaque raised surfaces, colour reserved for data, and mono as the package identity with the blue accent demoted to a preset. The result must hold every existing accessibility and determinism contract, reach the terminal and the charts through the same authority as the browser, and give the Catalogue an instrument that shows the system as one rule rather than two palettes.
 
+The completed package sweep exposed usability defects in the deferred static Blue and terminal boundaries. The dedicated [field-appearance programme](../field-appearance/README.md) now intervenes between wave 3 and this programme's cross-repository 4A. It replaces the Blue-only table with a hue-parameterised Accent projection across the full `0–360` circle, retains Blue only as the hue-255 compatibility preset, and restores explicit terminal opt-in while preserving the achromatic default, axes, inversion, opacity, witnesses, and one-law authority. Do not dispatch 4A until that programme is complete and included in the release selected for site adoption.
+
 Every brief is a complete prompt for a fresh agent. The programme slug is `field`; each brief names its literal worktree name. Wave 0 is a throwaway proof of concept for the maintainer's eye and never lands. Waves 1 and 3 each run two streams in parallel on disjoint territory; waves 2 and 4 are single streams.
 
 ## Why a programme, and why the proof of concept comes first
@@ -39,19 +41,21 @@ Change one only through a justified amendment to ADR 0040 or a new record.
 
 ## Waves and dispatch order
 
-| Key | Brief                                                                                           | Parallel shape                                                         | Starts when                                                     | Lands                                                   |
-| --- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------- |
-| 0A  | [Mock the field for maintainer sign-off](0a-proof-of-concept-signoff.md)                        | One throwaway worktree                                                 | This package is on `main`                                       | Never. Its findings file is read by 1A by absolute path |
-| 1A  | [Build the field authority with pole emission](1a-field-authority.md)                           | One architectural agent                                                | The maintainer has signed off 0A and supplied its findings path | Second in wave 1; runs `discern_update` after 1B lands  |
-| 1B  | [Add structure and witness detectors with falling ceilings](1b-structure-and-witness-guards.md) | One focused agent                                                      | This package is on `main`; may run beside 0A                    | First in wave 1                                         |
-| 2A  | [Derive roles live in the browser](2a-live-browser-derivation.md)                               | One architectural agent                                                | 1A and 1B have landed                                           | Sole wave-2 stream                                      |
-| 3A  | [Sweep every component onto the field](3a-component-field-sweep.md)                             | One coordinator; up to four disjoint Group bundles inside one worktree | 2A has landed                                                   | Second in wave 3; runs `discern_update` after 3B lands  |
-| 3B  | [Make the Catalogue the field instrument](3b-catalogue-field-instrument.md)                     | One Catalogue agent                                                    | 2A has landed                                                   | First in wave 3                                         |
-| 4A  | [Adopt the field on discern.sh and the homepage](4a-site-adoption-and-homepage.md)              | One agent in the discern repository                                    | A release containing 3A and 3B is published and pinned          | In the sibling repository under its own gate            |
+| Key | Brief                                                                                                 | Parallel shape                                                         | Starts when                                                                                       | Lands                                                   |
+| --- | ----------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| 0A  | [Mock the field for maintainer sign-off](0a-proof-of-concept-signoff.md)                              | One throwaway worktree                                                 | This package is on `main`                                                                         | Never. Its findings file is read by 1A by absolute path |
+| 1A  | [Build the field authority with pole emission](_done/1a-field-authority.md)                           | One architectural agent                                                | The maintainer has signed off 0A and supplied its findings path                                   | Second in wave 1; runs `discern_update` after 1B lands  |
+| 1B  | [Add structure and witness detectors with falling ceilings](_done/1b-structure-and-witness-guards.md) | One focused agent                                                      | This package is on `main`; may run beside 0A                                                      | First in wave 1                                         |
+| 2A  | [Derive roles live in the browser](_done/2a-live-browser-derivation.md)                               | One architectural agent                                                | 1A and 1B have landed                                                                             | Sole wave-2 stream                                      |
+| 3A  | [Sweep every component onto the field](_done/3a-component-field-sweep.md)                             | One coordinator; up to four disjoint Group bundles inside one worktree | 2A has landed                                                                                     | Second in wave 3; runs `discern_update` after 3B lands  |
+| 3B  | [Make the Catalogue the field instrument](_done/3b-catalogue-field-instrument.md)                     | One Catalogue agent                                                    | 2A has landed                                                                                     | First in wave 3                                         |
+| 4A  | [Adopt the field on discern.sh and the homepage](4a-site-adoption-and-homepage.md)                    | One agent in the discern repository                                    | A release containing 3A, 3B, and the completed field-appearance programme is published and pinned | In the sibling repository under its own gate            |
 
 This is an independently landed sequence, not a below-trunk stack. Wave 1 and wave 3 each hold two streams on disjoint files; the smaller stream lands first and the larger runs `discern_update` before its final gate. Each brief verifies its prerequisite behaviourally on the then-current `main` and stops with a report if it is missing. Wave 0 is dispatched first and gates wave 1 on a human decision: the maintainer reviews the mock-ups at their reported URLs and either signs off or asks the 0A agent for adjustments in the same session. Wave 4 runs in `/Users/jack/Sites/discern` and needs a published release of this package first.
 
 Expected topology: seven owner-dispatched sessions, six landing worktrees plus one throwaway, peak concurrency of two. Wave 3A may fan its four Group bundles out to sub-agents inside its own worktree; generated output, shared authorities, integration, commits, and the gate stay coordinator-owned.
+
+That topology describes this programme itself. The four intervening field-appearance sessions are dispatched and landed separately before 4A.
 
 ## Ownership seams
 
@@ -89,7 +93,7 @@ This planning package must land before any brief is dispatched. Each landing str
 
 ## Decisions the maintainer still holds
 
-- Whether the terminal identity going achromatic by default is acceptable for discern's own CLI, or whether the discern repository should carry a terminal accent of its own. ADR 0040 says achromatic; 1A implements it; 4A is where it becomes visible.
+- Whether discern's own CLI opts into the package's chromatic terminal appearance remains a product decision for the sibling repository. The package default stays achromatic; the field-appearance programme restores an explicit per-presenter and per-renderer opt-in rather than forcing either identity.
 - Whether the blue preset accepts achromatic neutrals, or whether neutral hue and chroma join the field as axes later.
 - The final rung numbers. 0A proposes them from the eye; 1A pins them from the arithmetic; the maintainer signs off between the two.
 
