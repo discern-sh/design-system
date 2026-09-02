@@ -65,6 +65,14 @@ Deno.test("local Catalogue state transitions preserve valid explicit Appearance"
   );
 });
 
+Deno.test("live Appearance URL updates announce link-state changes", async () => {
+  const source = await Deno.readTextFile(
+    new URL("../catalogue/shell/appearance.tsx", import.meta.url),
+  );
+  assertStringIncludes(source, "announceCatalogueLocationChange();");
+  assertStringIncludes(source, "history.replaceState");
+});
+
 Deno.test("Catalogue routes resolve every explorer surface and Component detail", () => {
   const cases = [
     [catalogueRoutePaths.overview, { family: "overview", page: "index" }],

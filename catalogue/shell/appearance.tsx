@@ -4,6 +4,7 @@ import type { ThemeSwitcherMode } from "../../src/components/core/theme-switcher
 import { ThemeToggle } from "../../src/components/core/theme-toggle/theme-toggle.tsx";
 import { Select } from "../../src/components/forms/select/select.tsx";
 import { useCatalogueTerminalTheme } from "../terminal-theme.ts";
+import { announceCatalogueLocationChange } from "./location.ts";
 import type { CatalogueAppearanceOption } from "./appearance-options.ts";
 import {
   catalogueAppearanceOption,
@@ -51,6 +52,7 @@ function updateCatalogueAppearanceUrl(
     current.searchParams.delete("accent");
   } else current.searchParams.set("accent", accentId);
   globalThis.history.replaceState(globalThis.history.state, "", current);
+  announceCatalogueLocationChange();
 }
 
 /** Reusable Catalogue appearance state for shell and later preview tools. */

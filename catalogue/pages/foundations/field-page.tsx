@@ -17,6 +17,7 @@ import {
   catalogueFieldPolarity,
   catalogueFieldStyle,
   defaultCatalogueFieldSelection,
+  serializeCatalogueFieldSelection,
 } from "../../shell/field-state.ts";
 import { CataloguePageHeader } from "../shared.tsx";
 import { catalogueFieldConsumerSnippet } from "./field-export.ts";
@@ -100,6 +101,11 @@ export function FieldPage(
   );
   const consumerSnippet = catalogueFieldConsumerSnippet(selection);
   const terminalPoles = fieldPoleTerminalProjections();
+  const foundationsHref = `/catalogue/foundations/?${
+    new URLSearchParams({
+      field: serializeCatalogueFieldSelection(selection),
+    }).toString()
+  }`;
 
   useEffect(() => {
     if (field === undefined && onFieldChange !== undefined) {
@@ -139,7 +145,7 @@ export function FieldPage(
     >
       <a
         className="discern-catalogue-foundations__back"
-        href="/catalogue/foundations/"
+        href={foundationsHref}
       >
         ← Foundations
       </a>
@@ -194,7 +200,8 @@ export function FieldPage(
               Token polarity is{" "}
               <strong>{polarity}</strong>. The token model has no hysteresis;
               the live control holds native colour scheme briefly around the
-              crossover.
+              crossover. Control colour scheme is{" "}
+              <strong>{fieldScheme ?? polarity}</strong>.
             </p>
           </div>
           <div className="discern-catalogue-field__pair">
