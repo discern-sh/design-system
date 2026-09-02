@@ -19,7 +19,7 @@ deno add jsr:@discern-sh/design-system
 | `@discern-sh/design-system/diagram`                 | Typed diagram specs, descriptions, kind Metadata, and portable standalone SVG             |
 | `@discern-sh/design-system/manifest`                | Framework-neutral manifest schema and the complete package ownership manifest             |
 | `@discern-sh/design-system/runtime`                 | Deterministic selected-runtime emitter                                                    |
-| `@discern-sh/design-system/tokens`                  | Field/Accent evaluation, admission, scopes, and primitive/semantic pole metadata           |
+| `@discern-sh/design-system/tokens`                  | Field/Accent evaluation, admission, scopes, and primitive/semantic pole metadata          |
 | `@discern-sh/design-system/theme/blue`              | Generated hue-255 Accent compatibility preset                                             |
 | `@discern-sh/design-system/react`                   | Optional React components and their public prop types                                     |
 
