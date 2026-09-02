@@ -44,7 +44,8 @@ function formattedNumber(value: number): string {
 }
 
 function foldedNumber(value: number): string {
-  return formattedNumber(Number(value.toFixed(12)));
+  const scale = 1_000_000_000_000;
+  return formattedNumber(Math.round(value * scale) / scale);
 }
 
 function isNumber(

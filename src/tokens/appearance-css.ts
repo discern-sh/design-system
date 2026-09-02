@@ -164,4 +164,4 @@ ${live}
 }
 
 /** Generated symmetric appearance-scope stylesheet. */
-export const appearanceScopeCss = generateAppearanceScopeCss();
+export const appearanceScopeCss: string = generateAppearanceScopeCss();
