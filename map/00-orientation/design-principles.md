@@ -26,7 +26,7 @@ Each component folder owns its `*.meta.ts`, CSS, implementation, examples, `mod.
 
 ## 3. The neutral core and CLI surface never resolve React
 
-The root, `./cli`, `./cli/interactive`, `./manifest`, `./runtime`, `./tokens`, and `./theme/discern` module graphs import no React. React lives only behind the optional `./react` Adapter, as an 18.3+ peer contract, and is a build-time renderer: consumers ship static HTML and CSS or terminal strings, never a React bundle or hydration.
+The root, `./cli`, `./cli/interactive`, `./manifest`, `./runtime`, `./tokens`, and `./theme/blue` module graphs import no React. React lives only behind the optional `./react` Adapter, as an 18.3+ peer contract, and is a build-time renderer: consumers ship static HTML and CSS or terminal strings, never a React bundle or hydration.
 
 **Why it matters.** The package's promise is framework-neutrality. One stray React import in the neutral graph forces every non-React consumer to install React just to emit CSS — a contract break that type-checks fine locally and only explodes in a consumer's project.
 
@@ -48,9 +48,9 @@ Semantic roles (canvas, ink, accent, success, warning, danger, and the deliberat
 
 **Why it matters.** The moment a theme forks a component stylesheet, every component fix must land per-theme and themes drift apart. Token-only theming is also what keeps role semantics intact — a green-branded consumer must still be able to tell "brand action" from "successful outcome".
 
-**How it shows up.** Roles live in [`tokens.ts`](../../src/tokens/tokens.ts); the Preset in [`theme/discern.ts`](../../src/theme/discern.ts) sets only public Tokens; [`cli/theme.ts`](../../src/cli/theme.ts) derives terminal light/dark and ANSI values from those same Tokens; [`green-theme.css`](../../tests/fixtures/green-theme.css) re-brands without touching Component CSS, and tests fail a theme that forks, a terminal colour that escapes Token enrollment, or an accent that swallows success.
+**How it shows up.** [`field.ts`](../../src/tokens/field.ts) is the one authority for every non-series colour role; [`tokens.ts`](../../src/tokens/tokens.ts) projects its light and dark poles into the public pair shape. The optional Preset in [`theme/blue.ts`](../../src/theme/blue.ts) overrides only metadata-enrolled public roles; [`cli/theme.ts`](../../src/cli/theme.ts) derives terminal and ANSI values from opaque field poles without the Preset. [`green-theme.css`](../../tests/fixtures/green-theme.css) re-brands blue, while [`mono-consumer-theme.css`](../../tests/fixtures/mono-consumer-theme.css) adds one semantic hue family over the field. Tests fail a theme that forks Component CSS, a field role that is restated, a terminal colour that escapes Token enrollment, or an accent that swallows success.
 
-[ADR-0040](../_adr/0040-derive-the-theme-from-a-monochrome-field.md) records the decision to derive every colour role from a monochrome field, with light and dark as its poles and the blue accent as a preset; the programme that lands it is planned under `map/_private/planning/monochrome-field/`.
+[ADR-0040](../_adr/0040-derive-the-theme-from-a-monochrome-field.md) records the field, its poles, and the blue preset boundary.
 
 ## 6. Accessibility invariants are tested contract, not garnish
 

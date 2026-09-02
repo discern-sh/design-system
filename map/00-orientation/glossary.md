@@ -82,7 +82,7 @@ The system/light/dark role assignment chosen per Root. A Root without `data-disc
 
 ### Preset
 
-A branded Token layer. The default blue Preset lives in [`theme/discern.ts`](../../src/theme/discern.ts) and is applied unless a consumer requests `theme: "none"`; a consumer Preset overrides public Tokens in its own cascade layer.
+A branded Token layer over the default monochrome field. The optional blue Preset lives in [`theme/blue.ts`](../../src/theme/blue.ts) and is applied when a consumer selects `theme: "blue"`; selecting no Preset is `theme: "none"`. A consumer Preset overrides public Tokens in its own cascade layer.
 
 ### Adapter
 

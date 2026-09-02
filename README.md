@@ -19,8 +19,8 @@ deno add jsr:@discern-sh/design-system
 | `@discern-sh/design-system/diagram`                 | Typed diagram specs, descriptions, kind Metadata, and portable standalone SVG             |
 | `@discern-sh/design-system/manifest`                | Framework-neutral manifest schema and the complete package ownership manifest             |
 | `@discern-sh/design-system/runtime`                 | Deterministic selected-runtime emitter                                                    |
-| `@discern-sh/design-system/tokens`                  | Primitive, semantic, and Discern-preset token metadata                                    |
-| `@discern-sh/design-system/theme/discern`           | Default branded blue preset                                                               |
+| `@discern-sh/design-system/tokens`                  | Field authority plus primitive and semantic pole metadata                                 |
+| `@discern-sh/design-system/theme/blue`              | Optional branded blue preset                                                              |
 | `@discern-sh/design-system/react`                   | Optional React components and their public prop types                                     |
 
 Only `./react` resolves React. The package keeps React and React DOM as catalogue development dependencies and peer dependencies, while its root, manifest, runtime, token, and theme graphs do not import them.
@@ -93,7 +93,7 @@ Component CSS has no hidden texture dependency. The core `.discern-grain-wash` u
 
 ## Custom themes
 
-Semantic component roles are separate from the default blue preset. The runtime uses that preset unless `theme: "none"` is requested. A consumer can override public tokens in its own layer without forking a component stylesheet:
+Semantic component roles derive from the monochrome field by default. Select `theme: "blue"` to add the optional blue preset; omission and `theme: "none"` both keep the field identity. A consumer can override public tokens in its own layer without forking a component stylesheet. This example layers green semantic overrides over the blue preset:
 
 ```css
 @layer discern.consumer {
