@@ -15,6 +15,12 @@ import {
   fieldColorRoleLaws,
   fieldShadowRoleLaws,
 } from "./field.ts";
+import {
+  type AppearanceAdmissionProof,
+  type AppearanceSeriesPair,
+  proveAppearanceAdmission,
+} from "./appearance-admission.ts";
+export * from "./appearance-admission.ts";
 export * from "./appearance-css.ts";
 export * from "./field.ts";
 
@@ -334,6 +340,19 @@ const seriesThemeTokens: readonly ThemeToken[] = [
   ),
 ];
 
+const appearanceSeriesPairs: readonly AppearanceSeriesPair[] = Object.freeze(
+  seriesThemeTokens.map((series) => {
+    if (!/^--discern-color-series-[1-6]$/u.test(series.name)) {
+      throw new TypeError(`Appearance admission received ${series.name}`);
+    }
+    return {
+      name: series.name as AppearanceSeriesPair["name"],
+      light: series.light,
+      dark: series.dark,
+    };
+  }),
+);
+
 const shadowThemeTokens: readonly ThemeToken[] = fieldShadowRoleLaws.map((
   law,
 ) =>
@@ -376,3 +395,8 @@ export const allTokens: readonly (DesignToken | ThemeToken)[] = [
   ...designTokens,
   ...themeTokens,
 ];
+
+/** Exhaustive package-level proof for Field, Accent, and fixed series roles. */
+export function appearanceAdmission(): AppearanceAdmissionProof {
+  return proveAppearanceAdmission(appearanceSeriesPairs);
+}
