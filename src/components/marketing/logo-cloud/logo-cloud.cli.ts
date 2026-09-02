@@ -6,26 +6,25 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import {
   joinVertical,
   layoutColumns,
   wrapInlineCluster,
 } from "../../../cli/layout.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import { marketingCliWidth, wrapMarketingCliText } from "../marketing-frame.ts";
 import type { LogoCloudVariant } from "./logo-cloud.types.ts";
 import meta, { componentExampleVocabulary } from "./logo-cloud.meta.ts";
 
 /** Inputs accepted by the terminal Logo cloud renderer. */
-export interface LogoCloudCliProps {
+export interface LogoCloudCliProps extends CliPresentationOptions {
   readonly label?: string;
   readonly items: readonly string[];
-  readonly theme?: TerminalThemeVariant;
   readonly variant?: LogoCloudVariant;
   readonly width?: number;
 }
@@ -75,7 +74,7 @@ const renderLogoCloudCli: CliRenderer<LogoCloudCliProps> = (
     throw new TypeError("logo cloud requires non-empty item names");
   }
   const width = marketingCliWidth(props.width, capabilities);
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const mark = capabilities.unicode ? "◆" : "*";
   const entries = props.items.map((item) => `${mark} ${item}`);
   const variant = props.variant ?? "strip";

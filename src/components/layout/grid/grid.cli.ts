@@ -5,23 +5,25 @@
  */
 
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical, layoutColumns } from "../../../cli/layout.ts";
 import {
+  resolveTerminalTheme,
   type TerminalSpacingTokenName,
-  terminalThemes,
-  type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import type { SpaceStep } from "../space.ts";
 import { responsiveColumnCount } from "../responsive-columns.ts";
 import meta, { componentExampleVocabulary } from "./grid.meta.ts";
 
 /** Inputs accepted by the terminal Grid renderer. */
-export interface GridCliProps {
+export interface GridCliProps extends CliPresentationOptions {
   readonly blocks: readonly string[];
   readonly gap?: SpaceStep;
   readonly minimum?: number;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -69,7 +71,7 @@ const renderGridCli: CliRenderer<GridCliProps> = (props, capabilities) => {
     );
   }
   const step = props.gap ?? 5;
-  const gap = step === 0 ? 0 : terminalThemes[props.theme ?? "dark"].spacing[
+  const gap = step === 0 ? 0 : resolveTerminalTheme(props).spacing[
     `--discern-space-${step}` as TerminalSpacingTokenName
   ] ?? 1;
   const columnCount = responsiveColumnCount(

@@ -5,25 +5,27 @@
  */
 
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { wrapInlineCluster } from "../../../cli/layout.ts";
 import { padText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   type TerminalSpacingTokenName,
-  terminalThemes,
-  type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import type { SpaceStep } from "../space.ts";
 import type { ClusterAlign, ClusterJustify } from "./cluster.types.ts";
 import meta, { componentExampleVocabulary } from "./cluster.meta.ts";
 
 /** Inputs accepted by the terminal Cluster renderer. */
-export interface ClusterCliProps {
+export interface ClusterCliProps extends CliPresentationOptions {
   readonly items: readonly string[];
   readonly gap?: SpaceStep;
   readonly align?: ClusterAlign;
   readonly justify?: ClusterJustify;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -59,7 +61,7 @@ const renderClusterCli: CliRenderer<ClusterCliProps> = (
   }
   const width = Math.min(requestedWidth, capabilities.columns);
   const step = props.gap ?? 3;
-  const gap = step === 0 ? 0 : terminalThemes[props.theme ?? "dark"].spacing[
+  const gap = step === 0 ? 0 : resolveTerminalTheme(props).spacing[
     `--discern-space-${step}` as TerminalSpacingTokenName
   ] ?? 1;
   const wrapped = wrapInlineCluster(props.items, { columns: width, gap });

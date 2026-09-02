@@ -6,13 +6,14 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
-import { joinVertical, layoutColumns } from "../../../cli/layout.ts";
 import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
+import { joinVertical, layoutColumns } from "../../../cli/layout.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import type { MetricsBandTone } from "./metrics-band.types.ts";
 import {
   marketingCliWidth,
@@ -28,12 +29,11 @@ export interface MetricsBandCliItem {
 }
 
 /** Inputs accepted by the terminal Metrics band renderer. */
-export interface MetricsBandCliProps {
+export interface MetricsBandCliProps extends CliPresentationOptions {
   readonly title?: string;
   readonly eyebrow?: string;
   readonly items: readonly MetricsBandCliItem[];
   readonly tone?: MetricsBandTone;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -91,14 +91,14 @@ const renderMetricsBandCli: CliRenderer<MetricsBandCliProps> = (
   const metrics = width >= 48
     ? layoutColumns(blocks, { columns: width, gap: 2 })
     : joinVertical(blocks, { spacing: 1 });
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const heading = props.title === undefined
     ? props.eyebrow ?? "Metrics"
     : renderMarketingCliHeader({
       title: props.title,
       ...(props.eyebrow === undefined ? {} : { eyebrow: props.eyebrow }),
       tone: semanticTone,
-      ...(props.theme === undefined ? {} : { theme: props.theme }),
+      ...cliPresentationPassthrough(props),
       width,
     }, capabilities);
   return joinVertical([

@@ -6,17 +6,17 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical, layoutColumns } from "../../../cli/layout.ts";
 import {
-  motifPassthrough,
-  type TerminalMotifOptions,
-} from "../../../cli/motif.ts";
-import {
+  resolveTerminalTheme,
   type TerminalSpacingTokenName,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import {
   renderMotifDivider,
@@ -33,13 +33,12 @@ export type SectionCliTreatment =
   | "ribbon";
 
 /** Inputs accepted by the terminal Section renderer. */
-export interface SectionCliProps extends TerminalMotifOptions {
+export interface SectionCliProps extends CliPresentationOptions {
   readonly body: string;
   readonly title?: string;
   readonly surface?: SectionSurface;
   readonly spacing?: SectionSpacing;
   readonly treatment?: SectionCliTreatment;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -94,7 +93,7 @@ const renderSectionCli: CliRenderer<SectionCliProps> = (
     );
   }
   const width = Math.min(requestedWidth, capabilities.columns);
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const treatment = props.treatment ??
     (props.title === undefined ? "plain" : "rule");
   const heading: string[] = [];
@@ -103,8 +102,7 @@ const renderSectionCli: CliRenderer<SectionCliProps> = (
       {
         width,
         alignment: "start",
-        ...(props.theme === undefined ? {} : { theme: props.theme }),
-        ...motifPassthrough(props),
+        ...cliPresentationPassthrough(props),
       },
       capabilities,
     ));
@@ -116,8 +114,7 @@ const renderSectionCli: CliRenderer<SectionCliProps> = (
         {
           width,
           ...(treatment === "quiet-rule" ? { treatment: "quiet" } : {}),
-          ...(props.theme === undefined ? {} : { theme: props.theme }),
-          ...motifPassthrough(props),
+          ...cliPresentationPassthrough(props),
         },
         capabilities,
       ));

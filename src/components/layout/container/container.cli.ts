@@ -5,13 +5,17 @@
  */
 
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { layoutColumns } from "../../../cli/layout.ts";
 import type { ContainerSize } from "./container.types.ts";
 import meta, { componentExampleVocabulary } from "./container.meta.ts";
 
 /** Inputs accepted by the terminal Container renderer. */
-export interface ContainerCliProps {
+export interface ContainerCliProps extends CliPresentationOptions {
   readonly body: string;
   readonly size?: ContainerSize;
   readonly width?: number;

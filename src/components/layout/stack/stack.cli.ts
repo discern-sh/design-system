@@ -5,24 +5,26 @@
  */
 
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical, layoutColumns } from "../../../cli/layout.ts";
 import { padText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   type TerminalSpacingTokenName,
-  terminalThemes,
-  type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import type { SpaceStep } from "../space.ts";
 import type { StackAlign } from "./stack.types.ts";
 import meta, { componentExampleVocabulary } from "./stack.meta.ts";
 
 /** Inputs accepted by the terminal Stack renderer. */
-export interface StackCliProps {
+export interface StackCliProps extends CliPresentationOptions {
   readonly blocks: readonly string[];
   readonly gap?: SpaceStep;
   readonly align?: StackAlign;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -70,7 +72,7 @@ const renderStackCli: CliRenderer<StackCliProps> = (props, capabilities) => {
     ).join("\n")
   );
   const step = props.gap ?? 4;
-  const cells = step === 0 ? 0 : terminalThemes[props.theme ?? "dark"].spacing[
+  const cells = step === 0 ? 0 : resolveTerminalTheme(props).spacing[
     `--discern-space-${step}` as TerminalSpacingTokenName
   ] ?? 1;
   return joinVertical(blocks, { spacing: Math.max(0, cells - 1) });

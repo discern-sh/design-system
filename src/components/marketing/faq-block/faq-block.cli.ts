@@ -7,13 +7,14 @@
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
 import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
-import { joinVertical } from "../../../cli/layout.ts";
 import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
+import { joinVertical } from "../../../cli/layout.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import {
   marketingCliWidth,
   renderMarketingCliHeader,
@@ -28,14 +29,13 @@ export interface FaqBlockCliItem {
 }
 
 /** Inputs accepted by the terminal FAQ block renderer. */
-export interface FaqBlockCliProps {
+export interface FaqBlockCliProps extends CliPresentationOptions {
   readonly title: string;
   readonly eyebrow?: string;
   readonly description?: string;
   readonly aside?: string;
   readonly items: readonly FaqBlockCliItem[];
   readonly openIndices?: readonly number[];
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -108,7 +108,7 @@ const renderFaqBlockCli: CliRenderer<FaqBlockCliProps> = (
       expanded ? wrapMarketingCliText(item.answer, width - 2) : "",
     ]);
   }).join("\n\n");
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   return joinVertical([
     renderMarketingCliHeader({
       title: props.title,
@@ -116,7 +116,7 @@ const renderFaqBlockCli: CliRenderer<FaqBlockCliProps> = (
       ...(props.description === undefined
         ? {}
         : { description: props.description }),
-      ...(props.theme === undefined ? {} : { theme: props.theme }),
+      ...cliPresentationPassthrough(props),
       width,
     }, capabilities),
     styleText(

@@ -6,19 +6,19 @@
 
 import { renderBox } from "../../../cli/box.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import type { CtaBandAlign, CtaBandTone } from "./cta-band.types.ts";
 import { marketingCliWidth, wrapMarketingCliText } from "../marketing-frame.ts";
 import meta, { componentExampleVocabulary } from "./cta-band.meta.ts";
 
 /** Inputs accepted by the terminal CTA band renderer. */
-export interface CtaBandCliProps {
+export interface CtaBandCliProps extends CliPresentationOptions {
   readonly title: string;
   readonly description?: string;
   readonly eyebrow?: string;
@@ -26,7 +26,6 @@ export interface CtaBandCliProps {
   readonly note?: string;
   readonly tone?: CtaBandTone;
   readonly align?: CtaBandAlign;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -60,7 +59,7 @@ const renderCtaBandCli: CliRenderer<CtaBandCliProps> = (
   const width = marketingCliWidth(props.width, capabilities);
   const tone = props.tone ?? "accent";
   const semanticTone = tone === "sunken" ? "neutral" : "accent";
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const bodyWidth = width - 4;
   const body = joinVertical([
     props.eyebrow === undefined

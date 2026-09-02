@@ -7,14 +7,15 @@
 import { styleText } from "../../../cli/ansi.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { padText, truncateText } from "../../../cli/text.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import {
   marketingCliWidth,
   renderMarketingCliHeader,
@@ -30,7 +31,7 @@ export interface ComparisonTableCliRow {
 }
 
 /** Inputs accepted by the terminal Comparison table renderer. */
-export interface ComparisonTableCliProps {
+export interface ComparisonTableCliProps extends CliPresentationOptions {
   readonly title: string;
   readonly eyebrow?: string;
   readonly description?: string;
@@ -39,7 +40,6 @@ export interface ComparisonTableCliProps {
   readonly secondLabel: string;
   readonly secondBadge?: string;
   readonly rows: readonly ComparisonTableCliRow[];
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -143,7 +143,7 @@ const renderComparisonTableCli: CliRenderer<ComparisonTableCliProps> = (
   const table = width >= 42
     ? wideTable(props, width, capabilities)
     : narrowTable(props, width);
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   return joinVertical([
     renderMarketingCliHeader({
       title: props.title,
@@ -151,7 +151,7 @@ const renderComparisonTableCli: CliRenderer<ComparisonTableCliProps> = (
       ...(props.description === undefined
         ? {}
         : { description: props.description }),
-      ...(props.theme === undefined ? {} : { theme: props.theme }),
+      ...cliPresentationPassthrough(props),
       width,
     }, capabilities),
     styleText(table, {

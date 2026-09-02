@@ -5,24 +5,26 @@
  */
 
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical, layoutColumns } from "../../../cli/layout.ts";
 import { wrapText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   type TerminalSpacingTokenName,
-  terminalThemes,
-  type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import { responsiveColumnCount } from "../responsive-columns.ts";
 import type { SpaceStep } from "../space.ts";
 import meta, { componentExampleVocabulary } from "./masonry.meta.ts";
 
 /** Inputs accepted by the terminal Masonry renderer. */
-export interface MasonryCliProps {
+export interface MasonryCliProps extends CliPresentationOptions {
   readonly blocks: readonly string[];
   readonly gap?: SpaceStep;
   readonly minimum?: number;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -88,7 +90,7 @@ const renderMasonryCli: CliRenderer<MasonryCliProps> = (
     );
   }
   const step = props.gap ?? 5;
-  const gap = step === 0 ? 0 : terminalThemes[props.theme ?? "dark"].spacing[
+  const gap = step === 0 ? 0 : resolveTerminalTheme(props).spacing[
     `--discern-space-${step}` as TerminalSpacingTokenName
   ] ?? 1;
   const columnCount = responsiveColumnCount(

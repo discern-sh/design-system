@@ -6,18 +6,15 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import type { SequentialFormFrameState } from "../../../cli/interactive-states.ts";
 import { joinVertical } from "../../../cli/layout.ts";
-import {
-  motifPassthrough,
-  type TerminalMotifOptions,
-} from "../../../cli/motif.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import {
   renderMotifActivityBeacon,
   renderMotifWorkflowStepper,
@@ -32,9 +29,8 @@ import meta, { componentExampleVocabulary } from "./process-steps.meta.ts";
 
 /** Inputs accepted by the terminal Process steps renderer. */
 export interface ProcessStepsCliProps
-  extends SequentialFormFrameState, TerminalMotifOptions {
+  extends SequentialFormFrameState, CliPresentationOptions {
   readonly description?: string;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -125,7 +121,7 @@ const renderProcessStepsCli: CliRenderer<ProcessStepsCliProps> = (
       ? []
       : [wrapMarketingCliText(`${section.label}: ${section.summary}`, width)]
   ).join("\n");
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const lifecycle = props.lifecycle.status === "validation-error"
     ? `! ${props.lifecycle.message}`
     : props.lifecycle.status === "submitted"
@@ -139,22 +135,20 @@ const renderProcessStepsCli: CliRenderer<ProcessStepsCliProps> = (
       ...(props.description === undefined
         ? {}
         : { description: props.description }),
-      ...(props.theme === undefined ? {} : { theme: props.theme }),
+      ...cliPresentationPassthrough(props),
       width,
     }, capabilities),
     steps.length === 0
       ? "No applicable steps."
       : renderMotifWorkflowStepper(steps, boundedCapabilities, {
-        ...(props.theme === undefined ? {} : { theme: props.theme }),
-        ...motifPassthrough(props),
+        ...cliPresentationPassthrough(props),
       }),
     summaries,
     props.beaconPhase === undefined ? "" : renderMotifActivityBeacon({
       width,
       phase: props.beaconPhase,
       marker: triangleGlyph(TRIANGLES.filledSmall.up, capabilities.unicode),
-      ...(props.theme === undefined ? {} : { theme: props.theme }),
-      ...motifPassthrough(props),
+      ...cliPresentationPassthrough(props),
     }, boundedCapabilities),
     lifecycle === "" ? "" : styleText(lifecycle, {
       color: terminalToneColor(

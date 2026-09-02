@@ -6,24 +6,21 @@
 
 import { renderBox } from "../../../cli/box.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
-import {
-  motifPassthrough,
-  type TerminalMotifOptions,
-} from "../../../cli/motif.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import { renderMotifDivider } from "../../../cli/motifs.ts";
 import type { HeroBlockLayout, HeroBlockSurface } from "./hero-block.types.ts";
 import { marketingCliWidth, wrapMarketingCliText } from "../marketing-frame.ts";
 import meta, { componentExampleVocabulary } from "./hero-block.meta.ts";
 
 /** Inputs accepted by the terminal Hero block renderer. */
-export interface HeroBlockCliProps extends TerminalMotifOptions {
+export interface HeroBlockCliProps extends CliPresentationOptions {
   readonly title: string;
   readonly eyebrow?: string;
   readonly description?: string;
@@ -32,7 +29,6 @@ export interface HeroBlockCliProps extends TerminalMotifOptions {
   readonly visual?: string;
   readonly layout?: HeroBlockLayout;
   readonly surface?: HeroBlockSurface;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -83,7 +79,7 @@ const renderHeroBlockCli: CliRenderer<HeroBlockCliProps> = (
     throw new TypeError("hero block title must be non-empty");
   }
   const width = marketingCliWidth(props.width, capabilities);
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const semanticTone = props.surface === "sunken" ? "neutral" : "accent";
   const bodyWidth = width - 4;
   const body = joinVertical([
@@ -124,8 +120,7 @@ const renderHeroBlockCli: CliRenderer<HeroBlockCliProps> = (
       width,
       alignment: "start",
       tone: semanticTone,
-      ...(props.theme === undefined ? {} : { theme: props.theme }),
-      ...motifPassthrough(props),
+      ...cliPresentationPassthrough(props),
     }, { ...capabilities, columns: width }),
     joinVertical([hero, evidence], { spacing: evidence === "" ? 0 : 1 }),
   ]);

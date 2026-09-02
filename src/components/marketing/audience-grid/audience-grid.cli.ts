@@ -5,9 +5,13 @@
  */
 
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical, layoutColumns } from "../../../cli/layout.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
   marketingCliWidth,
   renderMarketingCliHeader,
@@ -25,12 +29,11 @@ export interface AudienceGridCliItem {
 }
 
 /** Inputs accepted by the terminal Audience grid renderer. */
-export interface AudienceGridCliProps {
+export interface AudienceGridCliProps extends CliPresentationOptions {
   readonly title: string;
   readonly eyebrow?: string;
   readonly description?: string;
   readonly items: readonly AudienceGridCliItem[];
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -107,7 +110,7 @@ const renderAudienceGridCli: CliRenderer<AudienceGridCliProps> = (
       ...(props.description === undefined
         ? {}
         : { description: props.description }),
-      ...(props.theme === undefined ? {} : { theme: props.theme }),
+      ...cliPresentationPassthrough(props),
       width,
     }, capabilities),
     joinVertical(rows, { spacing: 1 }),
