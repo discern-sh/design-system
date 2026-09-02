@@ -1688,7 +1688,7 @@ Deno.test("neutral entrypoints work in an external cached-only Deno project", as
     );
     await Deno.writeTextFile(
       join(temp, "neutral.ts"),
-      `import { packageManifest, semanticClass } from "@discern-sh/design-system";
+      `import { componentAuthorGuide, componentMetadata, packageManifest, semanticClass } from "@discern-sh/design-system";
 import { renderBadgeCli } from "@discern-sh/design-system/cli";
 import { renderDiagramSvg } from "@discern-sh/design-system/diagram";
 import { emitDesignSystemRuntime } from "@discern-sh/design-system/runtime";
@@ -1712,6 +1712,8 @@ console.log(JSON.stringify({
   badge: renderBadgeCli({ label: "Ready", dot: true }, { colorDepth: "none", columns: 80, unicode: true }),
   components: result.components,
   diagram: renderDiagramSvg(flow).includes('role="img"'),
+  guide: componentAuthorGuide.includes("### Button (\`button\`)"),
+  metadata: componentMetadata.length === packageManifest.components.length,
   package: packageManifest.package,
   theme: discernTheme.name,
 }));
@@ -1726,6 +1728,8 @@ console.log(JSON.stringify({
     assertStringIncludes(first, '"className":"discern-button"');
     assertStringIncludes(first, '"badge":"[● Ready]"');
     assertStringIncludes(first, '"diagram":true');
+    assertStringIncludes(first, '"guide":true');
+    assertStringIncludes(first, '"metadata":true');
     const cached = await command(temp, [
       "run",
       "--cached-only",
