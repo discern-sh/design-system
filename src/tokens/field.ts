@@ -477,6 +477,41 @@ export type BluePresetRoleName = Extract<
   { readonly bluePreset: true }
 >["name"];
 
+/** One shadow role whose opacity follows the field's structure axis. */
+export interface FieldShadowRoleLaw {
+  readonly name: `--discern-${string}`;
+  readonly description: string;
+  readonly offset: string;
+  readonly expression: FieldExpression;
+}
+
+/** Shadow geometry and alpha laws retained as Shape Theme Tokens. */
+export const fieldShadowRoleLaws = Object.freeze(
+  [
+    {
+      name: "--discern-shadow-card",
+      description: "Quiet hard-offset card shadow.",
+      offset: "4px 4px 0",
+      expression: scaledCurve([0.06, 0.08, 0.12, 0.15, 0.16], "structure"),
+    },
+    {
+      name: "--discern-shadow-window",
+      description: "Hard-offset presentation window shadow.",
+      offset: "8px 10px 0",
+      expression: scaledCurve([0.06, 0.1, 0.16, 0.2, 0.2], "structure"),
+    },
+    {
+      name: "--discern-shadow-pop",
+      description: "Raised overlay shadow.",
+      offset: "6px 6px 0",
+      expression: scaledCurve([0.12, 0.16, 0.22, 0.28, 0.28], "structure"),
+    },
+  ] as const satisfies readonly FieldShadowRoleLaw[],
+);
+
+/** Public field-derived shadow-role name. */
+export type FieldShadowRoleName = typeof fieldShadowRoleLaws[number]["name"];
+
 /** Field samples signed off by the monochrome-field proof of concept. */
 export const FIELD_CONTRAST_SAMPLE_DARKNESSES = [
   0,
@@ -589,7 +624,11 @@ function evaluateStructuredField(
   point: Partial<FieldPoint>,
 ): Readonly<Record<FieldColorRoleName, EvaluatedFieldColor>> {
   const resolved = resolveFieldPoint(point);
-  const canvas = interpolatePigment(resolved.darkness);
+  const canvasLaw = fieldColorRoleLaws.find((law) => law.paint === "canvas");
+  if (canvasLaw === undefined) throw new TypeError("Field has no canvas law");
+  const canvas = interpolatePigment(
+    evaluateFieldExpression(canvasLaw.expression, resolved),
+  );
   const { active, opposite } = activePigments(canvas);
   return Object.freeze(Object.fromEntries(fieldColorRoleLaws.map((law) => {
     const amount = evaluateFieldExpression(law.expression, resolved);
@@ -664,6 +703,21 @@ export function evaluateFieldSpacingUnit(
   point: Partial<FieldPoint> = {},
 ): number {
   return FIELD_SPACING_UNIT_PX * resolveFieldPoint(point).density;
+}
+
+/** Evaluate field-derived shadows without restating their alpha ladder. */
+export function evaluateFieldShadows(
+  point: Partial<FieldPoint> = {},
+): Readonly<Record<FieldShadowRoleName, string>> {
+  return Object.freeze(Object.fromEntries(fieldShadowRoleLaws.map((law) => {
+    const alpha = evaluateFieldExpression(law.expression, point);
+    return [
+      law.name,
+      `${law.offset} color-mix(in oklab, var(--discern-shadow-color) ${
+        formattedNumber(alpha * 100)
+      }%, transparent)`,
+    ];
+  })) as Record<FieldShadowRoleName, string>);
 }
 
 /** Minimum sampled contrast headroom over the field's three ink-rung floors. */

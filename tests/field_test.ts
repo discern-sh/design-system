@@ -3,6 +3,7 @@ import {
   defaultFieldPoint,
   evaluateField,
   evaluateFieldExpression,
+  evaluateFieldShadows,
   evaluateFieldSpacingUnit,
   FIELD_CONTRAST_SAMPLE_DARKNESSES,
   FIELD_SPACING_UNIT_PX,
@@ -11,6 +12,7 @@ import {
   fieldContrastMargin,
   type FieldExpression,
 } from "../src/tokens/field.ts";
+import { themeTokens } from "../src/tokens/tokens.ts";
 
 Deno.test("the field expression vocabulary evaluates every CSS-compatible node", () => {
   const number = (value: number): FieldExpression => ({
@@ -85,4 +87,30 @@ Deno.test("the field preserves alpha only for backdrop-owned roles", () => {
 
 Deno.test("sampled field rungs hold every attainable contrast floor", () => {
   assert(fieldContrastMargin() >= 0, `field margin ${fieldContrastMargin()}`);
+});
+
+Deno.test("theme Token poles pin representative field emission", () => {
+  const pairs = Object.fromEntries(
+    themeTokens.map((token) => [token.name, [token.light, token.dark]]),
+  );
+  assertEquals(pairs["--discern-color-canvas"], [
+    "oklch(100% 0 0)",
+    "oklch(0% 0 0)",
+  ]);
+  assertEquals(pairs["--discern-color-ink-muted"], [
+    "oklch(0% 0 0 / 0.66)",
+    "oklch(100% 0 0 / 0.72)",
+  ]);
+  assertEquals(pairs["--discern-color-surface"], [
+    "oklch(100% 0 0)",
+    "oklch(18.1521% 0 0)",
+  ]);
+  assertEquals(pairs["--discern-color-action"], [
+    "oklch(0% 0 0)",
+    "oklch(100% 0 0)",
+  ]);
+  assertEquals(
+    evaluateFieldShadows({ darkness: 1 })["--discern-shadow-pop"],
+    "6px 6px 0 color-mix(in oklab, var(--discern-shadow-color) 28%, transparent)",
+  );
 });
