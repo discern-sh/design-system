@@ -85,6 +85,7 @@ export function BuilderWorkspace() {
       data-discern-root
       data-discern-builder-ready="true"
       data-discern-theme={preview.workspaceAppearance.theme}
+      data-discern-appearance={preview.workspaceAppearance.appearance}
       data-discern-builder-pane={activePane}
       style={preview.workspaceStyle}
     >

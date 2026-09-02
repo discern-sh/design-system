@@ -17,7 +17,6 @@ import {
 import { builderPreviewAccent } from "../catalogue/builder/preview/controls.tsx";
 import {
   catalogueAppearanceOptions,
-  defaultCatalogueAppearanceOption,
 } from "../catalogue/shell/appearance-options.ts";
 import {
   builderPreviewMessageFromEvent,
@@ -181,13 +180,13 @@ Deno.test("preview messages are same-origin, versioned, and policy-accepted", ()
     appearance: {
       theme: "light",
       resolvedTheme: "dark",
-      accent: "field",
+      appearance: "accent",
+      accentHue: 145.5,
       field: {
         darkness: 0.6,
         structure: 1.2,
         emphasis: 0.8,
         density: 1.1,
-        preset: "blue",
       },
     },
     mode: "edit",
@@ -369,21 +368,14 @@ Deno.test("the shared preview renderer injects optional callback witnesses only 
   assertEquals(inert.props.onValueChange, undefined);
 });
 
-Deno.test("Builder preview Appearance accepts only the exhaustive shared presets", () => {
+Deno.test("Builder preview Appearance accepts named and arbitrary numeric hues", () => {
   for (const option of catalogueAppearanceOptions) {
-    assertEquals(builderPreviewAccent(option.id), option);
-    if (option.kind === "hue") {
-      assertEquals(builderPreviewAccent(String(option.hue)), option);
-    }
+    assertEquals(builderPreviewAccent(option.id), option.hue);
+    assertEquals(builderPreviewAccent(String(option.hue)), option.hue);
   }
-  assertEquals(
-    builderPreviewAccent("145"),
-    defaultCatalogueAppearanceOption,
-  );
-  assertEquals(
-    builderPreviewAccent("not-a-preset"),
-    defaultCatalogueAppearanceOption,
-  );
+  assertEquals(builderPreviewAccent("145.5"), 145.5);
+  assertEquals(builderPreviewAccent("360"), 0);
+  assertEquals(builderPreviewAccent("not-a-preset"), 255);
 });
 
 Deno.test("preview styles preserve a real frame width and stable editor chrome", async () => {
