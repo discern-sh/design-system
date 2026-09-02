@@ -50,6 +50,8 @@ Semantic roles (canvas, ink, accent, success, warning, danger, and the deliberat
 
 **How it shows up.** Roles live in [`tokens.ts`](../../src/tokens/tokens.ts); the Preset in [`theme/discern.ts`](../../src/theme/discern.ts) sets only public Tokens; [`cli/theme.ts`](../../src/cli/theme.ts) derives terminal light/dark and ANSI values from those same Tokens; [`green-theme.css`](../../tests/fixtures/green-theme.css) re-brands without touching Component CSS, and tests fail a theme that forks, a terminal colour that escapes Token enrollment, or an accent that swallows success.
 
+[ADR-0040](../_adr/0040-derive-the-theme-from-a-monochrome-field.md) records the decision to derive every colour role from a monochrome field, with light and dark as its poles and the blue accent as a preset; the programme that lands it is planned under `map/_private/planning/monochrome-field/`.
+
 ## 6. Accessibility invariants are tested contract, not garnish
 
 Light and dark text contrast, accent/success/warning/danger distinguishability, reduced-motion behaviour, forced-colours focus visibility, and the `--discern-font-size-xs` interface-text floor are package tests. A change that regresses one does not ship.
