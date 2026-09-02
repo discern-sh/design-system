@@ -80,9 +80,13 @@ The consumer-marked boundary element carrying `data-discern-root`. All generated
 
 The system/light/dark role assignment chosen per Root. A Root without `data-discern-theme` follows `prefers-color-scheme`; `data-discern-theme="system"` makes that preference explicit, while `"light"` and `"dark"` force an override. Themes move Tokens only — component CSS is byte-identical across Themes.
 
+### Appearance
+
+The colour projection applied at a Root or subtree. `field` is the achromatic default; `accent` projects the same role graph through an inherited finite hue from `0` through `360`. Browser scopes use `data-discern-appearance`, while pure evaluators receive the explicit Field or Accent identity. Appearance changes no Field axis by itself.
+
 ### Preset
 
-A branded Token layer over the default monochrome field. The optional blue Preset lives in [`theme/blue.ts`](../../src/theme/blue.ts) and is applied when a consumer selects `theme: "blue"`; selecting no Preset is `theme: "none"`. A consumer Preset overrides public Tokens in its own cascade layer.
+A branded Token layer over the default Field. The optional Blue compatibility Preset lives in [`theme/blue.ts`](../../src/theme/blue.ts) and is the generated Accent projection at hue `255`; it is applied when a consumer selects `theme: "blue"`, while selecting no Preset is `theme: "none"`. A consumer Preset overrides public Tokens in its own cascade layer.
 
 ### Adapter
 
