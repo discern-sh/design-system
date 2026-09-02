@@ -2079,7 +2079,7 @@ Deno.test("landing-scale marketing layouts keep optional structure honest", asyn
   );
   assertMatch(
     headerCss,
-    /@media \(max-width: 480px\)[\s\S]*\.discern-site-header--collapse-nav \.discern-site-header__nav\s*\{[^}]*display:\s*none;/,
+    /@media \(max-width: 30rem\)[\s\S]*\.discern-site-header--collapse-nav \.discern-site-header__nav\s*\{[^}]*display:\s*none;/,
   );
 
   const metricsCss = await Deno.readTextFile(
@@ -2409,7 +2409,7 @@ Deno.test("quiet header actions and logo marks keep their shared visual roles", 
   );
   assertMatch(
     toggle,
-    /\.discern-theme-toggle--quiet\s*\{[^}]*inline-size:\s*1\.75rem;[^}]*block-size:\s*1\.75rem;[^}]*border-color:\s*transparent;[^}]*background:\s*transparent;/s,
+    /\.discern-theme-toggle--quiet\s*\{[^}]*inline-size:\s*1\.75rem;[^}]*block-size:\s*1\.75rem;[^}]*border-color:\s*color-mix\(in oklab,\s*var\(--discern-color-border\) 0%,\s*transparent\);[^}]*background:\s*transparent;/s,
   );
   const cloud = await Deno.readTextFile(
     join(COMPONENT_ROOT, "marketing", "logo-cloud", "logo-cloud.css"),
@@ -2985,9 +2985,24 @@ Deno.test("Result summary states enroll browser labels, examples, and CSS treatm
     !/success|danger|warning|accent|ink-muted/u.test(declaredRule),
     "declared Result summary treatment must remain a distinct neutral fact",
   );
-  assertMatch(
-    css,
-    /@media \(forced-colors: active\)[\s\S]*\.discern-result-summary__state\s*\{[^}]*border-color:\s*CanvasText;/u,
+  for (
+    const [state, role] of [
+      ["passed", "success"],
+      ["failed", "danger"],
+      ["blocked", "warning"],
+    ] as const
+  ) {
+    assertMatch(
+      css,
+      new RegExp(
+        `data-discern-state="${state}"\\]\\s*\\{[^}]*border-color:\\s*var\\(--discern-color-${role}\\);`,
+        "su",
+      ),
+    );
+  }
+  assert(
+    !css.includes("forced-color-adjust: none"),
+    "Result summary lets the user agent map its token-backed witnesses in forced colours",
   );
 });
 

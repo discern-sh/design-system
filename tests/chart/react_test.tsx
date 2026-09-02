@@ -191,8 +191,15 @@ Deno.test("Chart CSS resolves every paint role through public Tokens", async () 
   );
   assertStringIncludes(css, `fill: var(${CHART_PAINT_TOKEN_NAMES.canvas})`);
   assertStringIncludes(css, "@media (forced-colors: active)");
-  assertStringIncludes(css, "stroke: CanvasText");
-  assertStringIncludes(css, "fill: CanvasText");
+  assertMatch(
+    css,
+    /@media \(forced-colors: active\)[\s\S]*stroke:\s*var\(--discern-color-ink\);/u,
+  );
+  assertMatch(
+    css,
+    /@media \(forced-colors: active\)[\s\S]*fill:\s*var\(--discern-color-ink\);/u,
+  );
+  assertNotMatch(css, /\bCanvasText\b/u);
 
   const registered = componentRegistry.find(({ meta }) =>
     meta.slug === "chart"
@@ -224,6 +231,10 @@ Deno.test("DataFigure series swatches ride the series Tokens with distinct shape
     "four series swatches carry polygon marker shapes beside the circle and square",
   );
   assertStringIncludes(css, "@media (forced-colors: active)");
-  assertStringIncludes(css, "background: CanvasText");
-  assertStringIncludes(css, "forced-color-adjust: none");
+  assertMatch(
+    css,
+    /@media \(forced-colors: active\)[\s\S]*background:\s*var\(--discern-color-ink\);/u,
+  );
+  assertNotMatch(css, /\bCanvasText\b/u);
+  assertNotMatch(css, /forced-color-adjust:\s*none/u);
 });

@@ -17,7 +17,7 @@
     box-shadow: var(--discern-shadow-card);
   }
   .discern-card--dots {
-    background-color: var(--discern-color-surface-sunken);
+    background: var(--discern-color-surface-sunken);
     background-image: radial-gradient(var(--discern-color-border-strong)
       0.05rem,
       transparent 0.05rem);
