@@ -14,6 +14,14 @@ export interface ToastProps extends HTMLAttributes<HTMLDivElement> {
   readonly dismissLabel?: string;
   readonly children: ReactNode;
 }
+
+const toneGlyphs: Readonly<Record<ToastTone, string>> = {
+  neutral: "i",
+  success: "✓",
+  warning: "!",
+  danger: "×",
+};
+
 /** Transient status message plus a labelled live-region container. */
 export const Toast: DiscernComponent<HTMLDivElement, ToastProps> = forwardRef<
   HTMLDivElement,
@@ -38,6 +46,7 @@ export const Toast: DiscernComponent<HTMLDivElement, ToastProps> = forwardRef<
     return () => globalThis.clearTimeout(timer);
   }, [duration, onDismiss]);
   const semanticRole = role ?? (tone === "danger" ? "alert" : "status");
+  const toneLabel = tone[0]?.toLocaleUpperCase() + tone.slice(1);
   return (
     <div
       ref={ref}
@@ -48,14 +57,16 @@ export const Toast: DiscernComponent<HTMLDivElement, ToastProps> = forwardRef<
         className,
       )}
       {...props}
+      data-discern-floating-surface="surface"
+      data-discern-tone={tone}
     >
-      {icon
-        ? (
-          <span className="discern-toast__icon" aria-hidden="true">
-            {icon}
-          </span>
-        )
-        : null}
+      <span
+        className="discern-toast__icon"
+        role="img"
+        aria-label={toneLabel}
+      >
+        {icon ?? toneGlyphs[tone]}
+      </span>
       <span className="discern-toast__content">{children}</span>
       {onDismiss
         ? (

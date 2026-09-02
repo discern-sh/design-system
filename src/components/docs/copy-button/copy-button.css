@@ -23,7 +23,7 @@
   }
   .discern-copy-button:active:not(:disabled) {
     background: var(--discern-color-accent-100);
-    transform: translateY(1px);
+    transform: translateY(0.0625rem);
   }
   .discern-copy-button:disabled {
     border-color: var(--discern-color-border);

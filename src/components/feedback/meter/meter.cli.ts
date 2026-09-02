@@ -65,6 +65,30 @@ const cliExampleImplementations = [
       total: 100,
     },
   },
+  {
+    name: "warning",
+    props: {
+      kind: "determinate-progress",
+      label: "Storage",
+      lifecycle: { status: "active" },
+      completed: 82,
+      total: 100,
+      reading: "82% used",
+      tone: "warning",
+    },
+  },
+  {
+    name: "danger",
+    props: {
+      kind: "determinate-progress",
+      label: "Storage",
+      lifecycle: { status: "active" },
+      completed: 96,
+      total: 100,
+      reading: "96% used",
+      tone: "danger",
+    },
+  },
 ] as const satisfies readonly CliExample<MeterCliProps>[];
 defineCliExamples(meta, componentExampleVocabulary, cliExampleImplementations);
 

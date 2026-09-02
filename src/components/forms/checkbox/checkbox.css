@@ -1,13 +1,13 @@
 @layer discern.components {
   .discern-choice {
     display: grid;
-    gap: 3px;
+    gap: var(--discern-space-1);
   }
   .discern-choice__label {
     display: inline-flex;
     align-items: flex-start;
-    gap: 10px;
-    min-block-size: 24px;
+    gap: var(--discern-space-3);
+    min-block-size: 1.5rem;
     color: var(--discern-color-ink);
     cursor: pointer;
     font-size: var(--discern-font-size-sm);
@@ -15,8 +15,8 @@
   }
   .discern-choice__label input {
     position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
+    inline-size: 0.0625rem;
+    block-size: 0.0625rem;
     opacity: 0;
   }
   .discern-choice__control {
@@ -25,34 +25,33 @@
     flex: none;
     place-items: center;
     pointer-events: none;
-    inline-size: 18px;
-    block-size: 18px;
-    margin-block-start: 1px;
-    border: 1.5px solid var(--discern-color-border-strong);
+    inline-size: 1.125rem;
+    block-size: 1.125rem;
+    margin-block-start: calc(var(--discern-space-1) / 4);
+    border: 0.09375rem solid var(--discern-color-border-strong);
     border-radius: var(--discern-radius-xs);
     background: var(--discern-color-surface);
     transition-property: background, border-color, box-shadow, transform;
     transition-duration: var(--discern-duration-fast);
   }
   .discern-choice__control > span {
-    inline-size: 8px;
-    block-size: 4px;
-    border-inline-start: 2px solid transparent;
-    border-block-end: 2px solid transparent;
+    inline-size: 0.5rem;
+    block-size: 0.25rem;
+    border: 0;
     rotate: -45deg;
     translate: 0 -1px;
   }
   .discern-choice input:checked + .discern-choice__control {
-    border-color: var(--discern-color-accent-600);
-    background: var(--discern-color-accent-600);
+    border-color: var(--discern-color-action);
+    background: var(--discern-color-action);
   }
-  .discern-choice input:checked + .discern-choice__control > span {
-    border-color: white;
+  .discern-choice:not(.discern-choice--radio) input:checked + .discern-choice__control > span {
+    border-inline-start: 0.125rem solid var(--discern-color-on-action);
+    border-block-end: 0.125rem solid var(--discern-color-on-action);
   }
   .discern-choice input:focus-visible + .discern-choice__control {
-    box-shadow: 0 0 0 3px color-mix(in oklab, var(--discern-color-accent-500)
-      20%,
-      transparent);
+    outline: 0.125rem solid var(--discern-color-accent-500);
+    outline-offset: calc(var(--discern-space-1) / 2);
   }
   @media (hover: hover) {
     .discern-choice__label:hover input:not(:disabled) + .discern-choice__control {
@@ -64,7 +63,7 @@
   }
   .discern-choice input[aria-invalid="true"]:not(:disabled) + .discern-choice__control,
   fieldset[aria-invalid="true"] .discern-choice input:not(:disabled) + .discern-choice__control {
-    border-width: 2px;
+    border-width: 0.125rem;
     border-color: var(--discern-color-danger);
   }
   .discern-choice input:disabled + .discern-choice__control {
@@ -79,7 +78,7 @@
     color: var(--discern-color-ink-muted);
   }
   .discern-choice__description {
-    padding-inline-start: 28px;
+    padding-inline-start: calc(var(--discern-space-6) + var(--discern-space-1));
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-xs);
     line-height: var(--discern-leading-snug);

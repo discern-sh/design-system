@@ -1,7 +1,7 @@
 @layer discern.components {
   .discern-field {
     display: grid;
-    gap: 7px;
+    gap: var(--discern-space-2);
     min-inline-size: 0;
   }
   .discern-field__label {

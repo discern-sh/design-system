@@ -47,6 +47,7 @@ export const Tooltip: DiscernComponent<HTMLSpanElement, TooltipProps> =
           role="tooltip"
           className="discern-tooltip__bubble"
           data-discern-floating-panel=""
+          data-discern-floating-surface="inverse-surface"
         >
           {label}
         </span>

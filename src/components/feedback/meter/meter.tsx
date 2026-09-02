@@ -37,6 +37,9 @@ export const Meter: DiscernComponent<HTMLDivElement, MeterProps> = forwardRef<
   const span = max - min;
   const fraction = span > 0 ? (value - min) / span : 0;
   const percent = Math.min(100, Math.max(0, fraction * 100));
+  const toneLabel = tone === "neutral"
+    ? undefined
+    : tone[0]?.toLocaleUpperCase() + tone.slice(1);
   return (
     <div
       ref={ref}
@@ -47,12 +50,18 @@ export const Meter: DiscernComponent<HTMLDivElement, MeterProps> = forwardRef<
         className,
       )}
       {...props}
+      data-discern-tone={toneLabel === undefined ? undefined : tone}
     >
       <div className="discern-meter__row">
         <span className="discern-meter__label">{label}</span>
-        {reading !== undefined && (
-          <span className="discern-meter__reading">{reading}</span>
-        )}
+        <span className="discern-meter__summary">
+          {toneLabel !== undefined && (
+            <span className="discern-meter__tone">{toneLabel}</span>
+          )}
+          {reading !== undefined && (
+            <span className="discern-meter__reading">{reading}</span>
+          )}
+        </span>
       </div>
       <div
         className="discern-meter__track"

@@ -5,16 +5,16 @@
   }
   .discern-select .discern-control {
     appearance: none;
-    padding-inline-end: 38px;
+    padding-inline-end: var(--discern-space-10);
   }
   .discern-select__chevron {
     position: absolute;
     top: 50%;
-    right: 14px;
-    inline-size: 8px;
-    block-size: 8px;
-    border-inline-end: 1.5px solid var(--discern-color-ink-muted);
-    border-block-end: 1.5px solid var(--discern-color-ink-muted);
+    right: var(--discern-space-4);
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-inline-end: 0.09375rem solid var(--discern-color-ink-muted);
+    border-block-end: 0.09375rem solid var(--discern-color-ink-muted);
     pointer-events: none;
     rotate: 45deg;
     translate: 0 -70%;

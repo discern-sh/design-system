@@ -15,7 +15,8 @@
   .discern-theme-toggle--quiet {
     inline-size: 1.75rem;
     block-size: 1.75rem;
-    border-color: transparent;
+    border-color: color-mix(in oklab, var(--discern-color-border) 0%,
+      transparent);
     background: transparent;
   }
   .discern-theme-toggle:hover:not(:disabled) {
@@ -23,11 +24,12 @@
     color: var(--discern-color-ink);
   }
   .discern-theme-toggle--quiet:hover:not(:disabled) {
-    border-color: transparent;
+    border-color: color-mix(in oklab, var(--discern-color-border) 0%,
+      transparent);
   }
   .discern-theme-toggle:active:not(:disabled) {
     background: var(--discern-color-accent-100);
-    transform: translateY(1px);
+    transform: translateY(0.0625rem);
   }
   .discern-theme-toggle:focus-visible {
     color: var(--discern-color-ink);
@@ -39,7 +41,8 @@
     cursor: not-allowed;
   }
   .discern-theme-toggle--quiet:disabled {
-    border-color: transparent;
+    border-color: color-mix(in oklab, var(--discern-color-border) 0%,
+      transparent);
     background: transparent;
   }
   .discern-theme-toggle__glyph {

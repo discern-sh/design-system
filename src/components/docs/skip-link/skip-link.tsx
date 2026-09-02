@@ -21,6 +21,7 @@ export const SkipLink: DiscernComponent<HTMLAnchorElement, SkipLinkProps> =
         className={classNames("discern-skip-link", className)}
         href={href}
         {...props}
+        data-discern-floating-surface="surface"
       >
         {children}
       </a>

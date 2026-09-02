@@ -5,9 +5,9 @@
   .discern-anchor-heading__anchor {
     display: inline-grid;
     place-items: center;
-    min-inline-size: 24px;
-    min-block-size: 24px;
-    margin-inline-start: 0.35em;
+    min-inline-size: 1.5rem;
+    min-block-size: 1.5rem;
+    margin-inline-start: var(--discern-space-2);
     color: var(--discern-color-accent-600);
     font-weight: var(--discern-font-weight-body);
     text-decoration: none;

@@ -10,7 +10,7 @@ export interface DocsHeaderProps extends HTMLAttributes<HTMLElement> {
   readonly children?: ReactNode;
 }
 
-/** Sticky translucent documentation top bar with brand, middle, and action regions. */
+/** Sticky opaque documentation top bar with brand, middle, and action regions. */
 export const DocsHeader: DiscernComponent<HTMLElement, DocsHeaderProps> =
   forwardRef<HTMLElement, DocsHeaderProps>(function DocsHeader(
     { brand, actions, className, children, ...props },
@@ -21,6 +21,7 @@ export const DocsHeader: DiscernComponent<HTMLElement, DocsHeaderProps> =
         ref={ref}
         className={classNames("discern-docs-header", className)}
         {...props}
+        data-discern-floating-surface="surface"
       >
         <div className="discern-docs-header__inner">
           <div className="discern-docs-header__brand">{brand}</div>

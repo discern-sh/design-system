@@ -85,6 +85,7 @@ export const HoverCard: DiscernComponent<HTMLElement, HoverCardProps> =
             aria-label={label}
             className="discern-hover-card__panel"
             data-discern-floating-panel=""
+            data-discern-floating-surface="surface"
           >
             {children}
           </div>
@@ -107,6 +108,7 @@ export const HoverCard: DiscernComponent<HTMLElement, HoverCardProps> =
           aria-label={label}
           className="discern-hover-card__panel"
           data-discern-floating-panel=""
+          data-discern-floating-surface="surface"
         >
           {children}
         </span>

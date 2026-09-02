@@ -2,9 +2,9 @@
   .discern-theme-switcher {
     display: inline-grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 2px;
+    gap: calc(var(--discern-space-1) / 2);
     margin: 0;
-    padding: 2px;
+    padding: calc(var(--discern-space-1) / 2);
     border: 1px solid var(--discern-color-border-strong);
     border-radius: var(--discern-radius-md);
     background: var(--discern-color-surface-sunken);
@@ -15,9 +15,9 @@
   }
   .discern-theme-switcher__legend {
     position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
-    margin: -1px;
+    inline-size: 0.0625rem;
+    block-size: 0.0625rem;
+    margin: 0;
     overflow: hidden;
     padding: 0;
     border: 0;
@@ -31,8 +31,8 @@
   }
   .discern-theme-switcher__option input {
     position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
+    inline-size: 0.0625rem;
+    block-size: 0.0625rem;
     opacity: 0;
   }
   .discern-theme-switcher__option span {
@@ -53,17 +53,18 @@
   }
   .discern-theme-switcher__option:has(input:not(:disabled)):active span {
     background: var(--discern-color-accent-100);
-    transform: translateY(1px);
+    transform: translateY(0.0625rem);
   }
   .discern-theme-switcher__option input:checked + span {
     background: var(--discern-color-surface);
-    box-shadow: 0 1px 0 color-mix(in oklab, var(--discern-shadow-color) 12%,
+    box-shadow: 0 0.0625rem 0 color-mix(in oklab, var(--discern-shadow-color)
+      12%,
       transparent);
     color: var(--discern-color-ink);
   }
   .discern-theme-switcher__option input:focus-visible + span {
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: 1px;
+    outline: 0.125rem solid var(--discern-color-accent-500);
+    outline-offset: 0.0625rem;
   }
   .discern-theme-switcher:disabled .discern-theme-switcher__option {
     cursor: not-allowed;
