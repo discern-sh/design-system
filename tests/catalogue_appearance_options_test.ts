@@ -1,37 +1,25 @@
 import {
   assert,
   assertEquals,
+  assertNotEquals,
   assertStringIncludes,
-  assertThrows,
 } from "@std/assert";
 import {
-  assertCatalogueAppearanceOptions,
-  catalogueAppearanceHueFailures,
+  catalogueAccentHue,
+  catalogueAccentHueLabel,
   catalogueAppearanceOption,
   catalogueAppearanceOptions,
   catalogueAppearanceStyle,
-  catalogueFieldFailures,
-  catalogueFieldPointProof,
   defaultCatalogueAppearanceOption,
 } from "../catalogue/shell/appearance-options.ts";
-import { blueThemeRoleTokens, blueThemeTokens } from "../src/theme/blue.ts";
-import type { ThemeToken } from "../src/tokens/tokens.ts";
+import { accentAppearance, evaluateAppearance } from "../src/tokens/field.ts";
+import { appearanceAdmission } from "../src/tokens/tokens.ts";
+import { blueThemeTokens } from "../src/theme/blue.ts";
 
-function testToken(
-  name: ThemeToken["name"],
-  light: string,
-  dark: string,
-): ThemeToken {
-  return { name, light, dark, category: "Color", description: "Test value." };
-}
-
-Deno.test("every exposed Appearance option passes both Theme semantic proofs", () => {
+Deno.test("named Accent choices are numeric conveniences, with Blue at hue 255", () => {
   assertEquals(
-    catalogueAppearanceOptions.map((option) =>
-      option.kind === "hue" ? [option.id, option.hue] : [option.id, option.kind]
-    ),
+    catalogueAppearanceOptions.map(({ id, hue }) => [id, hue]),
     [
-      ["field", "field"],
       ["red", 2],
       ["green", 120],
       ["sky", 235],
@@ -46,188 +34,76 @@ Deno.test("every exposed Appearance option passes both Theme semantic proofs", (
       ["crimson", 350],
     ],
   );
-  assertEquals(defaultCatalogueAppearanceOption.id, "field");
-  assertEquals(catalogueFieldFailures(), []);
-  assertCatalogueAppearanceOptions(catalogueAppearanceOptions);
+  assertEquals(defaultCatalogueAppearanceOption.id, "blue");
   for (const option of catalogueAppearanceOptions) {
     assertEquals(catalogueAppearanceOption(option.id), option);
-    if (option.kind === "field") {
-      assertEquals(catalogueAppearanceStyle(option, "light"), {});
-      assertEquals(catalogueAppearanceStyle(option, "dark"), {});
-    } else if (option.kind === "hue") {
-      assertEquals(catalogueAppearanceOption(String(option.hue)), option);
-      assertEquals(catalogueAppearanceStyle(option, "light"), {
-        "--discern-accent-hue": String(option.hue),
-        ...Object.fromEntries(
-          blueThemeRoleTokens.map((token) => [token.name, token.light]),
-        ),
-      });
-      assertEquals(catalogueAppearanceStyle(option, "dark"), {
-        "--discern-accent-hue": String(option.hue),
-        ...Object.fromEntries(
-          blueThemeRoleTokens.map((token) => [token.name, token.dark]),
-        ),
-      });
-    }
+    assertEquals(catalogueAppearanceOption(option.hue), option);
+    assertEquals(catalogueAccentHue(option.id), option.hue);
+    assertEquals(
+      catalogueAccentHueLabel(option.hue),
+      `${option.label} ${option.hue}`,
+    );
   }
 });
 
-Deno.test("one detailed authority supplies browser margins and test refusals", () => {
-  const proof = catalogueFieldPointProof({
-    darkness: 0.6,
-    structure: 1.2,
-    emphasis: 0.8,
-    density: 1.1,
-    preset: "mono",
-  });
-  assertEquals(proof.accepted, true);
-  assertEquals(proof.failures, []);
-  assert(proof.checks.length > 30);
-  assert(
-    proof.checks.every((check) =>
-      check.margin === check.observed - check.floor
-    ),
-  );
-  assert(
-    proof.checks.some(({ label }) => label.includes("action pair")),
-  );
-  assert(
-    proof.checks.some(({ label }) => label.includes("series-1 to series-2")),
+Deno.test("the complete numeric hue primitive admits named and unnamed fractions", () => {
+  for (const hue of [0, 2, 20, 128, 145.5, 200, 359.999, 360]) {
+    assertEquals(catalogueAccentHue(hue), hue === 360 ? 0 : hue);
+  }
+  assertEquals(catalogueAccentHue(-0.1), undefined);
+  assertEquals(catalogueAccentHue(360.1), undefined);
+  assertEquals(catalogueAccentHue(Number.NaN), undefined);
+  assertEquals(catalogueAccentHue("invented"), undefined);
+  assertEquals(catalogueAppearanceOption(145.5), undefined);
+  assertEquals(
+    (catalogueAppearanceStyle(145.5) as Record<string, unknown>)[
+      "--discern-accent-hue"
+    ],
+    145.5,
   );
   assertEquals(
-    catalogueFieldPointProof({
-      darkness: 0,
-      structure: 1,
-      emphasis: 1,
-      density: 1,
-      preset: "mono",
-    }).accepted,
-    true,
+    (catalogueAppearanceStyle(360) as Record<string, unknown>)[
+      "--discern-accent-hue"
+    ],
+    0,
   );
 });
 
-Deno.test("the pre-2B picker stays named while full-domain future hues admit", () => {
-  for (const hue of [20, 128, 145, 200]) {
-    assertEquals(catalogueAppearanceOption(String(hue)), undefined);
-  }
-  assertCatalogueAppearanceOptions([
-    ...catalogueAppearanceOptions,
-    { kind: "hue", id: "future-green", label: "Future green", hue: 145 },
-  ]);
+Deno.test("Catalogue defers full-domain admission and role projection to the package", () => {
+  const proof = appearanceAdmission();
+  assertEquals(proof.accepted, true);
+  assertEquals(proof.failures, []);
+  assert(proof.appearances > 361);
+  assert(proof.points >= 11);
+  assert(proof.checks > 100_000);
 
-  assertThrows(
-    () =>
-      assertCatalogueAppearanceOptions(
-        catalogueAppearanceOptions.map(({ default: _default, ...option }) =>
-          option
-        ),
-      ),
-    TypeError,
-    "exactly one default",
+  const appearance = accentAppearance(145.5);
+  const lightQuiet = evaluateAppearance(appearance, {
+    darkness: 0.2,
+    structure: 1,
+    emphasis: 0.6,
+    density: 1,
+  });
+  const darkQuiet = evaluateAppearance(appearance, {
+    darkness: 0.8,
+    structure: 1,
+    emphasis: 0.6,
+    density: 1,
+  });
+  const darkStrong = evaluateAppearance(appearance, {
+    darkness: 0.8,
+    structure: 1,
+    emphasis: 1.4,
+    density: 1,
+  });
+  assertNotEquals(
+    lightQuiet["--discern-color-accent-500"],
+    darkQuiet["--discern-color-accent-500"],
   );
-  assertThrows(
-    () =>
-      assertCatalogueAppearanceOptions([
-        ...catalogueAppearanceOptions,
-        { kind: "hue", id: "invalid", label: "Invalid", hue: 361 },
-      ]),
-    TypeError,
-    "invalid hue",
+  assertNotEquals(
+    darkQuiet["--discern-color-accent-100"],
+    darkStrong["--discern-color-accent-100"],
   );
-});
-
-Deno.test("unsafe synthetic role presets fail closed before exposure", () => {
-  const collision = assertThrows(
-    () =>
-      assertCatalogueAppearanceOptions([
-        ...catalogueAppearanceOptions,
-        {
-          kind: "preset",
-          id: "future-preset",
-          label: "Future preset",
-          overrides: [
-            testToken(
-              "--discern-color-accent-600",
-              "oklch(0% 0 0)",
-              "oklch(100% 0 0)",
-            ),
-          ],
-        },
-      ]),
-    TypeError,
-  );
-  assertStringIncludes(collision.message, "future-preset");
-  assertStringIncludes(collision.message, "accent collides with danger");
-
-  const translucent = assertThrows(
-    () =>
-      assertCatalogueAppearanceOptions([
-        ...catalogueAppearanceOptions,
-        {
-          kind: "preset",
-          id: "future-glass",
-          label: "Future glass",
-          overrides: [
-            testToken(
-              "--discern-color-canvas",
-              "oklch(100% 0 0 / 0.5)",
-              "oklch(25% 0.018 285)",
-            ),
-          ],
-        },
-      ]),
-    TypeError,
-  );
-  assertStringIncludes(translucent.message, "canvas must be opaque");
-
-  assertThrows(
-    () =>
-      assertCatalogueAppearanceOptions([
-        ...catalogueAppearanceOptions,
-        {
-          kind: "preset",
-          id: "future-unknown",
-          label: "Future unknown",
-          overrides: [
-            testToken(
-              "--discern-color-imaginary",
-              "oklch(50% 0 0)",
-              "oklch(50% 0 0)",
-            ),
-          ],
-        },
-      ]),
-    TypeError,
-    "unknown Theme Token",
-  );
-
-  assertThrows(
-    () =>
-      assertCatalogueAppearanceOptions([
-        ...catalogueAppearanceOptions,
-        {
-          kind: "preset",
-          id: "future-empty",
-          label: "Future empty",
-          overrides: [],
-        },
-      ]),
-    TypeError,
-    "overrides no Theme Tokens",
-  );
-});
-
-Deno.test("the complete low-level hue range is swept before presets claim safety", () => {
-  const safeHues = Array.from(
-    { length: 361 },
-    (_, hue) => hue,
-  ).filter((hue) => catalogueAppearanceHueFailures(hue).length === 0);
-  assertEquals(safeHues.length, 361);
-  for (const option of catalogueAppearanceOptions) {
-    if (option.kind === "hue") assert(safeHues.includes(option.hue));
-  }
-  assertEquals(catalogueAppearanceHueFailures(20), []);
-  assertEquals(catalogueAppearanceHueFailures(145), []);
 });
 
 Deno.test("the blue compatibility primitive documents the generic hue domain", async () => {
@@ -244,13 +120,5 @@ Deno.test("the blue compatibility primitive documents the generic hue domain", a
   assertStringIncludes(fixture, "--discern-accent-hue: 145");
   for (const role of ["success", "success-soft", "success-deep"]) {
     assertStringIncludes(fixture, `--discern-color-${role}:`);
-  }
-
-  const monoFixture = await Deno.readTextFile(
-    new URL("fixtures/mono-consumer-theme.css", import.meta.url),
-  );
-  assert(!monoFixture.includes("--discern-accent-hue"));
-  for (const role of ["success", "success-soft", "success-deep"]) {
-    assertStringIncludes(monoFixture, `--discern-color-${role}:`);
   }
 });
