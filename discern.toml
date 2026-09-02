@@ -601,6 +601,16 @@
       "${scripts.dir}/measure-cli-pending.ts",
     ]
 
+  # Minimum signed contrast margin across the field's five admission samples
+  # and canonical 7/4.5/3 ink-rung floors. At the polarity crossover, primary
+  # ink is measured against the maximum contrast the pigment pair can attain.
+  [standards.field_contrast_margin]
+    metric = "field_contrast_margin"
+    direction = "up"
+    limit = 0
+    run = "deno eval --config deno.json 'import { fieldContrastMargin } from \"./src/tokens/field.ts\"; console.log(\"DISCERN_METRIC field_contrast_margin \" + fieldContrastMargin())'"
+    inputs = ["src/tokens/**"]
+
   # Coverage — keep line coverage at or above a rising floor:
   # [standards.coverage]
   # direction = "up"
