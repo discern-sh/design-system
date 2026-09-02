@@ -580,7 +580,9 @@ export function evaluateFieldExpression(
         return Math.abs(evaluate(node.value));
       case "round": {
         const interval = evaluate(node.interval);
-        return Math.round(evaluate(node.value) / interval) * interval;
+        return Number(
+          (Math.round(evaluate(node.value) / interval) * interval).toFixed(12),
+        );
       }
       case "lerp": {
         const position = evaluate(node.position);
