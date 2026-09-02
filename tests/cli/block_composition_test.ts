@@ -1,5 +1,6 @@
-import { assertEquals, assertThrows } from "@std/assert";
+import { assertEquals, assertNotEquals, assertThrows } from "@std/assert";
 import { styleHyperlink, styleText } from "../../src/cli/ansi.ts";
+import { accentAppearance, fieldAppearance } from "../../src/tokens/tokens.ts";
 import {
   CLI_BLOCK_MAX_DEPTH,
   type CliBlock,
@@ -7,17 +8,26 @@ import {
   renderCliBlock,
   renderCliBlocks,
 } from "../../src/cli/block-composition.ts";
-import type { CliRenderer } from "../../src/cli/contracts.ts";
+import {
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../src/cli/contracts.ts";
 import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
+import { styleSemanticText } from "../../src/cli/narration.ts";
 
-interface FixtureProps {
+interface FixtureProps extends CliPresentationOptions {
   readonly value: string;
   readonly child?: CliBlock;
 }
 
 const renderFixture: CliRenderer<FixtureProps> = (props, capabilities) => {
   if (props.child !== undefined) {
-    return renderCliBlock(props.child, capabilities);
+    return renderCliBlock(
+      props.child,
+      capabilities,
+      cliPresentationPassthrough(props),
+    );
   }
   return props.value;
 };
@@ -25,7 +35,7 @@ const renderFixture: CliRenderer<FixtureProps> = (props, capabilities) => {
 Deno.test("CLI blocks re-render at the parent measure and own one boundary", () => {
   const capabilities = testTerminalCapabilities({ columns: 40 });
   const widths: number[] = [];
-  const measured: CliRenderer<Record<never, never>> = (_props, current) => {
+  const measured: CliRenderer<CliPresentationOptions> = (_props, current) => {
     widths.push(current.columns);
     return "measured";
   };
@@ -89,13 +99,18 @@ Deno.test("CLI blocks reject raw strings, foreign controls, and bounded overflow
 });
 
 Deno.test("preserved overflow propagates through ancestors but not siblings", () => {
-  interface CompositeProps {
+  interface CompositeProps extends CliPresentationOptions {
     readonly children: readonly CliBlock[];
   }
   const renderComposite: CliRenderer<CompositeProps> = (
     props,
     capabilities,
-  ) => renderCliBlocks(props.children, capabilities);
+  ) =>
+    renderCliBlocks(
+      props.children,
+      capabilities,
+      cliPresentationPassthrough(props),
+    );
   const capabilities = testTerminalCapabilities({ columns: 8 });
   const preserved = createCliBlock(
     renderFixture,
@@ -118,6 +133,68 @@ Deno.test("preserved overflow propagates through ancestors but not siblings", ()
     TypeError,
     "bounded CLI block",
   );
+});
+
+Deno.test("CLI blocks inherit appearance and allow local overrides in both directions", () => {
+  interface ToneProps extends CliPresentationOptions {
+    readonly label: string;
+  }
+  interface CompositeProps extends CliPresentationOptions {
+    readonly children: readonly CliBlock[];
+  }
+  const renderTone: CliRenderer<ToneProps> = (props, capabilities) =>
+    styleSemanticText(
+      props.label,
+      { ...props, tone: "accent" },
+      capabilities,
+    );
+  const renderComposite: CliRenderer<CompositeProps> = (
+    props,
+    capabilities,
+  ) =>
+    renderCliBlocks(props.children, capabilities, {
+      ...cliPresentationPassthrough(props),
+    });
+  const capabilities = testTerminalCapabilities({
+    columns: 40,
+    colorDepth: "truecolor",
+  });
+
+  const inherited = createCliBlock(renderTone, { label: "Inherited" });
+  const fieldChild = createCliBlock(renderTone, {
+    label: "Field",
+    appearance: fieldAppearance,
+  });
+  const blueChild = createCliBlock(renderTone, {
+    label: "Blue",
+    appearance: accentAppearance(255),
+  });
+  const greenChild = createCliBlock(renderTone, {
+    label: "Green",
+    appearance: accentAppearance(120),
+  });
+  const violetChild = createCliBlock(renderTone, {
+    label: "Violet",
+    appearance: accentAppearance(245),
+  });
+
+  const fieldTree = createCliBlock(renderComposite, {
+    children: [inherited, blueChild, greenChild, inherited],
+    appearance: fieldAppearance,
+  });
+  const fieldOutput = renderCliBlock(fieldTree, capabilities).split("\n\n");
+  assertEquals(fieldOutput[0], fieldOutput[3]);
+  assertNotEquals(fieldOutput[0], fieldOutput[1]);
+  assertNotEquals(fieldOutput[1], fieldOutput[2]);
+
+  const accentTree = createCliBlock(renderComposite, {
+    children: [inherited, fieldChild, violetChild, inherited],
+    appearance: accentAppearance(335),
+  });
+  const accentOutput = renderCliBlock(accentTree, capabilities).split("\n\n");
+  assertEquals(accentOutput[0], accentOutput[3]);
+  assertNotEquals(accentOutput[0], accentOutput[1]);
+  assertNotEquals(accentOutput[0], accentOutput[2]);
 });
 
 Deno.test("CLI block nesting has one deterministic depth ceiling", () => {

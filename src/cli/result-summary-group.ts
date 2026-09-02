@@ -1,7 +1,10 @@
 /** Public collection renderer for prefix-aligned Result summaries. */
 
 import type { TerminalCapabilities } from "./capabilities.ts";
-import type { TerminalThemeVariant } from "./theme.ts";
+import {
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+} from "./contracts.ts";
 import {
   renderResultSummaryCliWithPrefixWidth,
   type ResultSummaryCliProps,
@@ -12,13 +15,12 @@ export * from "../components/workflow/result-summary/result-summary.types.ts";
 /** One Result summary inside a collection-owned alignment group. */
 export type ResultSummaryGroupCliItem = Omit<
   ResultSummaryCliProps,
-  "theme" | "maxWidth"
+  "maxWidth"
 >;
 
 /** Inputs for a collection of Result summaries sharing one label column. */
-export interface ResultSummaryGroupCliProps {
+export interface ResultSummaryGroupCliProps extends CliPresentationOptions {
   readonly items: readonly ResultSummaryGroupCliItem[];
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -38,8 +40,8 @@ export function renderResultSummaryGroupCli(
   return props.items.map((item) =>
     renderResultSummaryCliWithPrefixWidth(
       {
+        ...cliPresentationPassthrough(props),
         ...item,
-        ...(props.theme === undefined ? {} : { theme: props.theme }),
         ...(props.maxWidth === undefined ? {} : { maxWidth: props.maxWidth }),
       },
       capabilities,

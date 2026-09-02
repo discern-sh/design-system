@@ -11,7 +11,11 @@
  */
 
 import type { TerminalCapabilities } from "./capabilities.ts";
-import type { CliRenderer } from "./contracts.ts";
+import {
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "./contracts.ts";
 import { composeCliBlocks } from "./rhythm.ts";
 import { parseStyledSource } from "./styled-sequences.ts";
 import { measureText } from "./text.ts";
@@ -41,7 +45,7 @@ export interface CliBlockOptions {
 }
 
 /** Options supplied by a structural parent when rendering child blocks. */
-export interface CliBlockRenderOptions {
+export interface CliBlockRenderOptions extends CliPresentationOptions {
   /** Maximum child measure in cells, bounded by terminal columns. */
   readonly maxWidth?: number;
 }
@@ -56,6 +60,7 @@ export interface CliBlock {
   readonly [CLI_BLOCK]: true;
   readonly render: (
     capabilities: TerminalCapabilities,
+    presentation?: CliPresentationOptions,
   ) => string;
   readonly widthPolicy: CliBlockWidthPolicy;
 }
@@ -99,8 +104,17 @@ export function createCliBlock<Props>(
   }
   const block: CliBlock = Object.freeze({
     [CLI_BLOCK]: true as const,
-    render: (capabilities: TerminalCapabilities) =>
-      renderer(props, capabilities),
+    render: (
+      capabilities: TerminalCapabilities,
+      presentation: CliPresentationOptions = {},
+    ) =>
+      renderer(
+        {
+          ...cliPresentationPassthrough(presentation),
+          ...props,
+        } as Readonly<Props>,
+        capabilities,
+      ),
     widthPolicy,
   });
   knownBlocks.add(block);
@@ -146,7 +160,10 @@ export function renderCliBlock(
     columns: width,
     [CLI_BLOCK_DEPTH]: { depth, preservedOverflow },
   };
-  const output = block.render(childCapabilities);
+  const output = block.render(
+    childCapabilities,
+    cliPresentationPassthrough(options),
+  );
   assertRenderedBlock(output);
   const clean = composeCliBlocks([output]);
   if (clean === "") {

@@ -17,10 +17,10 @@ import {
 } from "./ansi.ts";
 import { wrapStyledText } from "./text.ts";
 import {
+  resolveTerminalTheme,
   type TerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
+  type TerminalThemeOptions,
   terminalToneColor,
 } from "./theme.ts";
 import type { TerminalCapabilities } from "./capabilities.ts";
@@ -121,8 +121,7 @@ export type SemanticInlineContent =
   | readonly (string | SemanticInlineNode)[];
 
 /** Theme selection for semantic inline terminal rendering. */
-export interface SemanticInlineRenderOptions {
-  readonly theme?: TerminalThemeVariant;
+export interface SemanticInlineRenderOptions extends TerminalThemeOptions {
   /**
    * Package-owned base typography for otherwise unannotated text. Nested
    * emphasis, strong text, code, links, images, and references still derive
@@ -746,7 +745,7 @@ export function renderSemanticInlineContent(
   options: SemanticInlineRenderOptions = {},
 ): string {
   validateSemanticInlineContent(content);
-  const theme = terminalThemes[options.theme ?? "dark"];
+  const theme = resolveTerminalTheme(options);
   const role = options.baseRole ?? "body";
   if (
     role !== "body" && role !== "display" && role !== "strong" &&

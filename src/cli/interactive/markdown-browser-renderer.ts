@@ -3,6 +3,7 @@
 import { stripAnsi, styleText } from "../ansi.ts";
 import { renderBox } from "../box.ts";
 import type { TerminalCapabilities } from "../capabilities.ts";
+import { cliPresentationPassthrough } from "../contracts.ts";
 import type {
   InteractiveChoiceEntryState,
   InteractiveChoiceGroupHeadingState,
@@ -20,8 +21,8 @@ import {
   truncateText,
 } from "../text.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
   terminalToneColor,
 } from "../theme.ts";
 import { renderMarkdownCliProjection } from "../../components/editorial/markdown/markdown.cli.ts";
@@ -151,7 +152,7 @@ function markerFor<Action>(
   return styleFormCliSelectedMark(
     glyph,
     opened,
-    { theme: state.theme },
+    cliPresentationPassthrough(state),
     capabilities,
   );
 }
@@ -170,8 +171,7 @@ function renderPickerEntry<Action>(
     pointer: highlighted ? capabilities.unicode ? "› " : "> " : "  ",
     marker: markerFor(entry, opened, state, capabilities),
     highlighted,
-    theme: state.theme,
-    motif: state.motif,
+    ...cliPresentationPassthrough(state),
     width: state.columns,
   }, capabilities).split("\n");
   // Group headings keep the form renderer's composition blank so each main
@@ -298,6 +298,7 @@ function pickerQueryLine<Action>(
   const prefix = styleSemanticText("Search: ", {
     role: "strong",
     theme: state.theme,
+    appearance: state.appearance,
   }, capabilities);
   const empty = state.query === "";
   const source = empty ? state.placeholder : state.query;
@@ -308,6 +309,7 @@ function pickerQueryLine<Action>(
     ? styleSemanticText(visible, {
       role: "annotation",
       theme: state.theme,
+      appearance: state.appearance,
     }, capabilities)
     : visible;
   return fitStyledLine(`${prefix}${query}`, state.columns - 2, capabilities);
@@ -339,7 +341,7 @@ function paneBorder<Action>(
   state: MarkdownBrowserState<Action>,
   focused: boolean,
 ) {
-  const theme = terminalThemes[state.theme];
+  const theme = resolveTerminalTheme(state);
   return {
     color: focused
       ? terminalToneColor(theme, "accent")
@@ -364,6 +366,7 @@ function renderPickerPane<Action>(
         {
           role: "annotation",
           theme: state.theme,
+          appearance: state.appearance,
         },
         capabilities,
       ),
@@ -372,7 +375,7 @@ function renderPickerPane<Action>(
     )];
   const body = [pickerQueryLine(state, capabilities), ...entryRows, ...empty];
   while (body.length < bodyRows) body.push(" ".repeat(state.columns - 2));
-  const theme = terminalThemes[state.theme];
+  const theme = resolveTerminalTheme(state);
   return renderBox({
     body: body.slice(0, bodyRows).join("\n"),
     title: paneTitle("Picker", state.focusedPane === "picker", capabilities),
@@ -445,8 +448,7 @@ function markdownBrowserDocumentProjection<Action>(
   const projected = renderMarkdownCliProjection(
     {
       source: entry.source,
-      theme: state.theme,
-      motif: state.motif,
+      ...cliPresentationPassthrough(state),
       maxWidth: measure,
       ...(entry.diagrams === undefined ? {} : { diagrams: entry.diagrams }),
       ...(entry.charts === undefined ? {} : { charts: entry.charts }),
@@ -477,6 +479,7 @@ function markdownBrowserDocumentProjection<Action>(
     ? [styleSemanticText("Empty document.", {
       role: "annotation",
       theme: state.theme,
+      appearance: state.appearance,
     }, documentCapabilities)]
     : rendered.split("\n");
   const indent = " ".repeat(Math.floor((innerWidth - measure) / 2));
@@ -758,7 +761,7 @@ function renderDocumentPane<Action>(
   const position = lines.length === 0
     ? "Empty"
     : `${offset + 1}-${end}/${lines.length}`;
-  const theme = terminalThemes[state.theme];
+  const theme = resolveTerminalTheme(state);
   return renderBox({
     body: visible.join("\n"),
     title: paneTitle(
@@ -901,8 +904,7 @@ export function renderMarkdownBrowser<Action>(
   const state = fitMarkdownBrowserState(source, capabilities);
   const header = renderMotifSectionRule(state.label, {
     width: state.columns,
-    theme: state.theme,
-    motif: state.motif,
+    ...cliPresentationPassthrough(state),
   }, capabilities);
   if (lineCount(header) !== 1) {
     throw new TypeError("Markdown browser heading must render as one row");
@@ -915,12 +917,13 @@ export function renderMarkdownBrowser<Action>(
     : state.layout.mode === "picker-only"
     ? [renderPickerPane(state, capabilities)]
     : [renderDocumentPane(state, capabilities)];
+  const theme = resolveTerminalTheme(state);
   const footer = footerText(state, capabilities).map((line) =>
     fitStyledLine(
       styleText(line, {
-        ...terminalThemes[state.theme].typography.annotation,
+        ...theme.typography.annotation,
         color: terminalThemeColor(
-          terminalThemes[state.theme],
+          theme,
           "--discern-color-ink-muted",
         ),
       }, capabilities),

@@ -32,7 +32,11 @@ import {
   type TerminalMotif,
   terminalMotifRepertoire,
 } from "./motif.ts";
-import type { TerminalThemeVariant } from "./theme.ts";
+import {
+  type Appearance,
+  resolveTerminalTheme,
+  type TerminalThemeVariant,
+} from "./theme.ts";
 import {
   type MotifSectionRuleOptions,
   type MotifThemeOptions,
@@ -45,8 +49,6 @@ import {
 
 /** Presentation defaults a presenter binds once for every later call. */
 export interface CliPresenterOptions extends CliPresentationOptions {
-  /** Theme variant supplied to every renderer; defaults to `"dark"`. */
-  readonly theme?: TerminalThemeVariant;
   /**
    * Default frame width in character cells. Bound calls receive effective
    * capabilities whose columns are the narrower of this width and the real
@@ -65,6 +67,8 @@ export interface CliPresenter {
   readonly capabilities: TerminalCapabilities;
   /** The bound theme variant injected wherever props leave it unset. */
   readonly theme: TerminalThemeVariant;
+  /** The bound Field-or-Accent input injected wherever props leave it unset. */
+  readonly appearance: Appearance;
   /** The bound motif injected wherever props leave it unset. */
   readonly motif: TerminalMotif;
   /**
@@ -129,10 +133,9 @@ export function createCliPresenter(
   capabilities: TerminalCapabilities,
   options: CliPresenterOptions = {},
 ): CliPresenter {
-  const theme = options.theme ?? "dark";
-  if (theme !== "light" && theme !== "dark") {
-    throw new TypeError(`unknown terminal theme variant ${theme}`);
-  }
+  const selectedTheme = resolveTerminalTheme(options);
+  const theme = selectedTheme.variant;
+  const appearance = selectedTheme.appearance;
   const width = options.width;
   if (width !== undefined && (!Number.isSafeInteger(width) || width < 1)) {
     throw new TypeError(
@@ -148,7 +151,10 @@ export function createCliPresenter(
     renderer: CliRenderer<Props>,
     props: Readonly<Props>,
   ): string =>
-    renderer({ theme, motif, ...props } as Readonly<Props>, effective);
+    renderer(
+      { theme, appearance, motif, ...props } as Readonly<Props>,
+      effective,
+    );
   const line =
     (renderer: CliRenderer<NarrationLineProps>) =>
     (text: string, overrides: CliPresenterLineOptions = {}): string =>
@@ -156,6 +162,7 @@ export function createCliPresenter(
   return {
     capabilities: effective,
     theme,
+    appearance,
     motif,
     present,
     box(options: TerminalBoxOptions): string {
@@ -167,6 +174,7 @@ export function createCliPresenter(
     ): string {
       return renderMotifSpinnerFrame(phase, effective, {
         theme,
+        appearance,
         motif,
         ...overrides,
       });
@@ -177,7 +185,7 @@ export function createCliPresenter(
     ): string {
       return renderMotifSectionRule(
         label,
-        { theme, motif, ...overrides },
+        { theme, appearance, motif, ...overrides },
         effective,
       );
     },
@@ -187,6 +195,7 @@ export function createCliPresenter(
     ): string {
       return renderMotifWorkflowStepper(steps, effective, {
         theme,
+        appearance,
         motif,
         ...overrides,
       });
@@ -194,6 +203,7 @@ export function createCliPresenter(
     with(overrides: CliPresenterOptions): CliPresenter {
       return createCliPresenter(capabilities, {
         theme,
+        appearance,
         motif,
         ...(width === undefined ? {} : { width }),
         ...overrides,
@@ -205,7 +215,11 @@ export function createCliPresenter(
     failure: line(renderFailureLine),
     lead: line(renderLeadLine),
     style(text: string, overrides: SemanticTextOptions = {}): string {
-      return styleSemanticText(text, { theme, ...overrides }, effective);
+      return styleSemanticText(
+        text,
+        { theme, appearance, ...overrides },
+        effective,
+      );
     },
   };
 }

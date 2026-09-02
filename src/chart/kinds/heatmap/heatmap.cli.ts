@@ -31,9 +31,9 @@ import { joinVertical } from "../../../cli/layout.ts";
 import { composeCliBlocks } from "../../../cli/rhythm.ts";
 import { measureText, padText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   type TerminalTheme,
   terminalThemeColor,
-  terminalThemes,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import { heatmapExtremeLines } from "./heatmap.description.ts";
@@ -278,7 +278,7 @@ function renderFaithfulHeatmap(
   columnWidths: readonly number[],
 ): string {
   const { capabilities } = context;
-  const theme = terminalThemes[context.theme];
+  const theme = resolveTerminalTheme(context);
   const presentation: HeatmapPresentation = {
     spec,
     theme,

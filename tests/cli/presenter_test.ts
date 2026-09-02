@@ -6,6 +6,7 @@ import {
   assertThrows,
 } from "@std/assert";
 import { stripAnsi } from "../../src/cli/ansi.ts";
+import { accentAppearance, fieldAppearance } from "../../src/tokens/tokens.ts";
 import { renderBox } from "../../src/cli/box.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import type {
@@ -318,6 +319,52 @@ Deno.test("bound theme and width defaults replace the consumer shims", () => {
       ...capabilities,
       columns: 48,
     }),
+  );
+});
+
+Deno.test("presenters bind and locally override Field-or-Accent appearance", () => {
+  const capabilities = testTerminalCapabilities({
+    columns: 80,
+    colorDepth: "truecolor",
+  });
+  const renderTone: CliRenderer<CliPresentationOptions> = (
+    props,
+    terminal,
+  ) => styleSemanticText("Tone", { ...props, tone: "accent" }, terminal);
+  const field = createCliPresenter(capabilities);
+  const fieldBefore = field.present(renderTone, {});
+  const blue = field.present(renderTone, {
+    appearance: accentAppearance(255),
+  });
+  const green = field.present(renderTone, {
+    appearance: accentAppearance(120),
+  });
+  assertEquals(field.appearance, fieldAppearance);
+  assertEquals(
+    blue,
+    renderTone(
+      { theme: "dark", appearance: accentAppearance(255) },
+      capabilities,
+    ),
+  );
+  assertNotEquals(blue, green);
+  assertEquals(field.present(renderTone, {}), fieldBefore);
+
+  const accent = createCliPresenter(capabilities, {
+    appearance: accentAppearance(335),
+  });
+  const inherited = accent.present(renderTone, {});
+  const neutral = accent.present(renderTone, { appearance: fieldAppearance });
+  const changed = accent.present(renderTone, {
+    appearance: accentAppearance(245),
+  });
+  assertEquals(accent.appearance, accentAppearance(335));
+  assertNotEquals(inherited, neutral);
+  assertNotEquals(inherited, changed);
+  assertEquals(accent.present(renderTone, {}), inherited);
+  assertEquals(
+    accent.with({ appearance: fieldAppearance }).present(renderTone, {}),
+    fieldBefore,
   );
 });
 

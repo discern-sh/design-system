@@ -18,27 +18,25 @@ import {
   type TerminalTextStyle,
 } from "./ansi.ts";
 import type { TerminalCapabilities } from "./capabilities.ts";
-import type { CliRenderer } from "./contracts.ts";
+import type { CliPresentationOptions, CliRenderer } from "./contracts.ts";
 import {
-  type TerminalMotifOptions,
   terminalMotifRegisterRoles,
   terminalMotifRepertoire,
 } from "./motif.ts";
 import { measureText, wrapText } from "./text.ts";
 import { TRIANGLES } from "./triangles.ts";
 import {
+  resolveTerminalTheme,
   type TerminalSemanticTone,
   type TerminalTextRole,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
+  type TerminalThemeOptions,
   terminalToneColor,
 } from "./theme.ts";
 /** Inputs accepted by every narration line verb. */
-export interface NarrationLineProps extends TerminalMotifOptions {
+export interface NarrationLineProps extends CliPresentationOptions {
   /** One trimmed, control-free line of narration. */
   readonly text: string;
-  readonly theme?: TerminalThemeVariant;
   /** Upper bound on the rendered width; wrapped lines hang under the text. */
   readonly maxWidth?: number;
 }
@@ -122,7 +120,7 @@ function renderNarrationLine(
     );
   }
   const width = Math.min(requestedWidth, capabilities.columns);
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const marker = "motifMarker" in spec
     ? terminalMotifRegisterRoles(
       terminalMotifRepertoire(props.motif, capabilities.unicode),
@@ -207,10 +205,9 @@ export const narrationLineRenderers: Readonly<
 };
 
 /** Semantic inline styling resolved through one derived terminal theme. */
-export interface SemanticTextOptions {
+export interface SemanticTextOptions extends TerminalThemeOptions {
   readonly role?: TerminalTextRole;
   readonly tone?: TerminalSemanticTone;
-  readonly theme?: TerminalThemeVariant;
 }
 
 /**
@@ -224,7 +221,7 @@ export function styleSemanticText(
   options: SemanticTextOptions,
   capabilities: TerminalCapabilities,
 ): string {
-  const theme = terminalThemes[options.theme ?? "dark"];
+  const theme = resolveTerminalTheme(options);
   const role = options.role === undefined
     ? undefined
     : theme.typography[options.role];

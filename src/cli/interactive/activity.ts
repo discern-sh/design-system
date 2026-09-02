@@ -16,14 +16,17 @@ import type {
 } from "../interactive-states.ts";
 import { stripAnsi, styleText } from "../ansi.ts";
 import type { TerminalCapabilities } from "../capabilities.ts";
-import type { CliPresentationOptions } from "../contracts.ts";
+import {
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+} from "../contracts.ts";
 import {
   type NarrationLineKind,
   narrationLineRenderers,
 } from "../narration.ts";
 import { graphemeWidth, measureText, truncateText } from "../text.ts";
-import { motifPassthrough, terminalMotifRepertoire } from "../motif.ts";
-import { terminalThemes } from "../theme.ts";
+import { terminalMotifRepertoire } from "../motif.ts";
+import { resolveTerminalTheme } from "../theme.ts";
 import { renderMotifSpinnerFrame } from "../motifs.ts";
 import renderActivityLogCli from "../../components/workflow/activity-log/activity-log.cli.ts";
 import renderMeterCli from "../../components/feedback/meter/meter.cli.ts";
@@ -101,7 +104,7 @@ function renderSpinner(
   capabilities: TerminalCapabilities,
   presentation: CliPresentationOptions,
 ): string {
-  const selectedTheme = terminalThemes[presentation.theme ?? "dark"];
+  const selectedTheme = resolveTerminalTheme(presentation);
   const gap = " ".repeat(
     selectedTheme.spacing["--discern-space-2"] ?? 1,
   );
@@ -298,10 +301,7 @@ class ProgressController implements DeterminateProgressController {
     };
     const frame = renderMeterCli({
       ...state,
-      ...(this.options.theme === undefined
-        ? {}
-        : { theme: this.options.theme }),
-      ...motifPassthrough(this.options),
+      ...cliPresentationPassthrough(this.options),
       width: defaultTerminalFrameWidth(this.io.capabilities()),
     }, this.io.capabilities());
     if (this.#staticMode) {
@@ -672,10 +672,7 @@ class ActivityLogRun implements ActivityLogController {
   #render(state: ActivityLogFrameState): string {
     return renderActivityLogCli({
       ...state,
-      ...(this.options.theme === undefined
-        ? {}
-        : { theme: this.options.theme }),
-      ...motifPassthrough(this.options),
+      ...cliPresentationPassthrough(this.options),
     }, this.io.capabilities());
   }
 
@@ -696,10 +693,7 @@ class ActivityLogRun implements ActivityLogController {
     return narrationLineRenderers[kind]({
       text,
       maxWidth: defaultTerminalFrameWidth(capabilities),
-      ...(this.options.theme === undefined
-        ? {}
-        : { theme: this.options.theme }),
-      ...motifPassthrough(this.options),
+      ...cliPresentationPassthrough(this.options),
     }, capabilities);
   }
 
@@ -778,7 +772,7 @@ class ActivityLogRun implements ActivityLogController {
 
   #writeRailLine(line: string): void {
     const capabilities = this.io.capabilities();
-    const theme = terminalThemes[this.options.theme ?? "dark"];
+    const theme = resolveTerminalTheme(this.options);
     const rail = styleText(
       capabilities.unicode ? "│" : "|",
       theme.typography.muted,

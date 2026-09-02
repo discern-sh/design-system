@@ -11,9 +11,11 @@ import type {
   SequentialStepStatus,
 } from "../interactive-states.ts";
 import renderProcessStepsCli from "../../components/marketing/process-steps/process-steps.cli.ts";
-import type { CliPresentationOptions } from "../contracts.ts";
+import {
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+} from "../contracts.ts";
 import { defaultTerminalFrameWidth } from "../frame-measure.ts";
-import { motifPassthrough } from "../motif.ts";
 import { InteractionCancelled } from "./errors.ts";
 import { InteractionBackNavigation } from "./driver.ts";
 import { DenoTerminalIO, type TerminalIO } from "./io.ts";
@@ -113,10 +115,7 @@ export class SequentialFormBuilder {
       const runtime: InteractionRuntime = {
         io: this.#io,
         canGoBack: previousIndex >= 0,
-        ...(this.options.theme === undefined
-          ? {}
-          : { theme: this.options.theme }),
-        ...motifPassthrough(this.options),
+        ...cliPresentationPassthrough(this.options),
         ...signalPassthrough(this.options),
       };
       try {
@@ -231,10 +230,7 @@ export class SequentialFormBuilder {
     this.#io.write(`${
       renderProcessStepsCli({
         ...frame,
-        ...(this.options.theme === undefined
-          ? {}
-          : { theme: this.options.theme }),
-        ...motifPassthrough(this.options),
+        ...cliPresentationPassthrough(this.options),
         width: defaultTerminalFrameWidth(this.#io.capabilities()),
       }, this.#io.capabilities())
     }\n`);

@@ -6,7 +6,7 @@
  */
 
 import type { TerminalCapabilities } from "./capabilities.ts";
-import type { TerminalThemeVariant } from "./theme.ts";
+import type { Appearance, TerminalThemeVariant } from "./theme.ts";
 import type {
   DiagramSpec,
   ValidatedDiagram,
@@ -59,6 +59,7 @@ export interface DiagramKindCliProjectorContext {
   readonly capabilities: TerminalCapabilities;
   readonly maxWidth: number;
   readonly theme: TerminalThemeVariant;
+  readonly appearance?: Appearance;
   readonly description: string;
 }
 

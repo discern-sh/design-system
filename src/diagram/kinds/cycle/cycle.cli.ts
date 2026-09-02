@@ -12,8 +12,8 @@ import { joinVertical } from "../../../cli/layout.ts";
 import { composeCliBlocks } from "../../../cli/rhythm.ts";
 import { measureText, wrapText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
@@ -152,7 +152,7 @@ function renderEnhancedCycle(
 ): string {
   const { capabilities } = context;
   const width = Math.min(context.maxWidth, capabilities.columns);
-  const theme = terminalThemes[context.theme];
+  const theme = resolveTerminalTheme(context);
   const marker = triangleGlyph(
     TRIANGLES.filledSmall.right,
     capabilities.unicode,

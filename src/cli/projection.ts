@@ -28,9 +28,9 @@ import { graphemeWidth, measureText } from "./text.ts";
 import { inspectSafeAsciiUrlReference } from "../url-reference.ts";
 import { overflowCueMarkupAttributes } from "../internal/overflow-cue-state.js";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
+  type TerminalThemeOptions,
 } from "./theme.ts";
 
 /** Raised when projection input leaves the package's emitted repertoire. */
@@ -91,10 +91,7 @@ export interface TerminalSpanCss {
 }
 
 /** Options for {@linkcode projectTerminalHtml}. */
-export interface TerminalHtmlOptions {
-  /** Package terminal theme colouring the rendered shell. Defaults to dark. */
-  readonly theme?: TerminalThemeVariant;
-}
+export interface TerminalHtmlOptions extends TerminalThemeOptions {}
 
 /** Fixed terminal geometry against which a static frame is inspected. */
 export interface TerminalLayoutViewport {
@@ -141,9 +138,8 @@ export interface TerminalLayoutInspection extends TerminalLayoutViewport {
 }
 
 /** Options for {@linkcode projectTerminalInspectorHtml}. */
-export interface TerminalInspectorHtmlOptions extends TerminalLayoutViewport {
-  /** Package terminal theme colouring the inspector. Defaults to dark. */
-  readonly theme?: TerminalThemeVariant;
+export interface TerminalInspectorHtmlOptions
+  extends TerminalLayoutViewport, TerminalThemeOptions {
   /** Inspector caption. Defaults to "Terminal layout inspection". */
   readonly title?: string;
   /** Draw one-character-cell guides over the terminal viewport. */
@@ -682,7 +678,7 @@ export function projectTerminalInspectorHtml(
   const spans = projectTerminalSpans(output);
   const projected = projectedTerminalLines(spans);
   const inspection = inspectProjectedTerminalLayout(projected, options);
-  const theme = terminalThemes[options.theme ?? "dark"];
+  const theme = resolveTerminalTheme(options);
   const canvas = terminalThemeColor(theme, "--discern-color-canvas");
   const surface = terminalThemeColor(theme, "--discern-color-surface");
   const sunken = terminalThemeColor(theme, "--discern-color-surface-sunken");
@@ -890,7 +886,7 @@ export function projectTerminalHtml(
   output: string,
   options: TerminalHtmlOptions = {},
 ): string {
-  const theme = terminalThemes[options.theme ?? "dark"];
+  const theme = resolveTerminalTheme(options);
   const canvas = terminalThemeColor(theme, "--discern-color-canvas");
   const ink = terminalThemeColor(theme, "--discern-color-ink");
   const shell = [

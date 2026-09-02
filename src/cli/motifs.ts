@@ -6,6 +6,7 @@
 
 import { renderStyledSpans, type StyledSpan, styleText } from "./ansi.ts";
 import type { TerminalCapabilities } from "./capabilities.ts";
+import type { CliPresentationOptions } from "./contracts.ts";
 import type { SequentialStepStatus } from "./interactive-states.ts";
 import {
   type TerminalMotif,
@@ -18,11 +19,11 @@ import {
 } from "./motif.ts";
 import { measureText, truncateText } from "./text.ts";
 import {
+  resolveTerminalTheme,
   type TerminalSemanticTone,
   type TerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
+  type TerminalThemeOptions,
   terminalToneColor,
 } from "./theme.ts";
 
@@ -36,9 +37,7 @@ export type MotifDirection = "forward" | "reverse";
 export type MotifDividerAlignment = "center" | "start";
 
 /** Shared theme and glyph selection for terminal motifs. */
-export interface MotifThemeOptions extends TerminalMotifOptions {
-  readonly theme?: TerminalThemeVariant;
-}
+export interface MotifThemeOptions extends CliPresentationOptions {}
 
 /** Inputs for one horizontal or vertical motif pattern. */
 export interface MotifPatternOptions extends MotifThemeOptions {
@@ -65,10 +64,9 @@ export interface MotifDividerOptions extends MotifThemeOptions {
 }
 
 /** Inputs for one quiet, unmarked horizontal divider. */
-export interface MotifPlainDividerOptions {
+export interface MotifPlainDividerOptions extends TerminalThemeOptions {
   /** Total visible divider width. */
   readonly width: number;
-  readonly theme?: TerminalThemeVariant;
 }
 
 /** Inputs for one truthful determinate progress frame. */
@@ -143,8 +141,8 @@ function unknownSectionRuleTreatment(value: never): never {
   throw new TypeError(`unknown motif section-rule treatment: ${value}`);
 }
 
-function themeFor(variant: TerminalThemeVariant | undefined): TerminalTheme {
-  return terminalThemes[variant ?? "dark"];
+function themeFor(options: TerminalThemeOptions): TerminalTheme {
+  return resolveTerminalTheme(options);
 }
 
 function patternGlyphs(
@@ -219,7 +217,7 @@ export function renderMotifDivider(
   if (alignment !== "center" && alignment !== "start") {
     throw new TypeError(`unknown motif divider alignment: ${alignment}`);
   }
-  const theme = themeFor(options.theme);
+  const theme = themeFor(options);
   const repertoire = terminalMotifRepertoire(
     options.motif,
     capabilities.unicode,
@@ -280,7 +278,7 @@ export function renderMotifPlainDivider(
 ): string {
   assertInteger(options.width, "plain motif divider width", 1);
   const width = Math.min(options.width, capabilities.columns);
-  const theme = themeFor(options.theme);
+  const theme = themeFor(options);
   const rule = capabilities.unicode ? "─" : "-";
   const raw = capabilities.unicode && width > 1
     ? `╶${rule.repeat(Math.max(0, width - 2))}╴`
@@ -322,7 +320,7 @@ export function renderMotifPattern(
     ).join("\n");
   return styleText(
     raw,
-    { color: motifColor(themeFor(options.theme), options.tone ?? "accent") },
+    { color: motifColor(themeFor(options), options.tone ?? "accent") },
     capabilities,
   );
 }
@@ -341,7 +339,7 @@ export function renderMotifSpinnerFrame(
   const glyph = spinner[normalizedIndex(phase, spinner.length)] ?? spinner[0];
   return styleText(
     glyph,
-    { color: motifColor(themeFor(options.theme), "accent") },
+    { color: motifColor(themeFor(options), "accent") },
     capabilities,
   );
 }
@@ -393,7 +391,7 @@ export function renderMotifProgressFrame(
     options.total,
     trackWidth - 1,
   );
-  const theme = themeFor(options.theme);
+  const theme = themeFor(options);
   const filledTone = options.completed === options.total ? "success" : "accent";
   if (options.marker !== undefined) {
     assertExplicitMarker(options.marker, "motif progress marker");
@@ -436,7 +434,7 @@ export function renderMotifSectionRule(
   const phase = options.phase ?? 0;
   assertInteger(phase, "motif section-rule phase");
   const width = Math.min(options.width, capabilities.columns);
-  const theme = themeFor(options.theme);
+  const theme = themeFor(options);
   const gap = " ".repeat(theme.spacing["--discern-space-2"] ?? 1);
   const marker = renderCycle(
     1,
@@ -609,7 +607,7 @@ export function renderMotifWorkflowStepper(
   if (steps.length === 0) {
     throw new TypeError("motif workflow requires at least one step");
   }
-  const theme = themeFor(options.theme);
+  const theme = themeFor(options);
   const gap = " ".repeat(theme.spacing["--discern-space-2"] ?? 1);
   const lines: string[] = [];
   for (const [index, step] of steps.entries()) {
@@ -675,7 +673,7 @@ export function renderMotifActivityBeacon(
   if ((options.direction ?? "forward") === "reverse") {
     offset = maximumOffset - offset;
   }
-  const theme = themeFor(options.theme);
+  const theme = themeFor(options);
   const rail = capabilities.unicode ? "─" : "-";
   if (options.marker !== undefined) {
     assertExplicitMarker(options.marker, "motif beacon marker");

@@ -1,13 +1,22 @@
-import { assert, assertEquals, assertNotEquals } from "@std/assert";
+import {
+  assert,
+  assertEquals,
+  assertNotEquals,
+  assertStrictEquals,
+  assertThrows,
+} from "@std/assert";
 import { oklchToSrgb } from "../../src/internal/oklch.ts";
 import {
+  accentAppearance,
   baseTokens,
+  evaluateOpaqueAppearance,
   evaluateOpaqueField,
   fieldColorRoleLaws,
   themeTokens,
 } from "../../src/tokens/tokens.ts";
 import {
   deriveTerminalTheme,
+  resolveTerminalTheme,
   terminalThemeColor,
   terminalThemes,
 } from "../../src/cli/theme.ts";
@@ -58,6 +67,68 @@ Deno.test("terminal field colours are opaque pole evaluations without the blue p
         expected,
       );
     }
+  }
+});
+
+Deno.test("terminal palette authority projects the complete Accent hue domain", () => {
+  const hues = [
+    ...Array.from({ length: 361 }, (_, hue) => hue),
+    0.25,
+    74.5,
+    151.75,
+    335.5,
+    359.75,
+  ];
+  for (const [variant, darkness] of [["light", 0], ["dark", 1]] as const) {
+    for (const hue of hues) {
+      const appearance = accentAppearance(hue);
+      const expected = evaluateOpaqueAppearance(appearance, { darkness });
+      const actual = resolveTerminalTheme({ theme: variant, appearance });
+      for (const law of fieldColorRoleLaws) {
+        const value = expected[law.name];
+        assert(value !== undefined, `${law.name} was not evaluated`);
+        const match = value.match(
+          /^oklch\(([\d.]+)%\s+([\d.]+)\s+(-?[\d.]+)\)$/,
+        );
+        assert(match !== null, `${variant} ${hue} ${law.name} retained alpha`);
+        const rgb = oklchToSrgb(
+          Number(match[1]) / 100,
+          Number(match[2]),
+          Number(match[3]),
+        );
+        assertEquals(
+          {
+            red: actual.colors[law.name]?.red,
+            green: actual.colors[law.name]?.green,
+            blue: actual.colors[law.name]?.blue,
+          },
+          rgb,
+          `${variant} Accent(${hue}) ${law.name}`,
+        );
+      }
+    }
+  }
+});
+
+Deno.test("terminal appearance defaults to cached Field poles and validates Accent", () => {
+  assertStrictEquals(resolveTerminalTheme(), terminalThemes.dark);
+  assertStrictEquals(
+    resolveTerminalTheme({ theme: "light", appearance: { name: "field" } }),
+    terminalThemes.light,
+  );
+  assertEquals(
+    resolveTerminalTheme({ appearance: accentAppearance(360) }).colors,
+    resolveTerminalTheme({ appearance: accentAppearance(0) }).colors,
+  );
+  for (const hue of [-0.01, 360.01, Number.NaN, Number.POSITIVE_INFINITY]) {
+    assertThrows(
+      () =>
+        resolveTerminalTheme({
+          appearance: { name: "accent", hue },
+        }),
+      TypeError,
+      "outside the finite [0, 360] domain",
+    );
   }
 });
 
