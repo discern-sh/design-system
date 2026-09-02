@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Input } from "../../../src/components/forms/input/input.tsx";
 import { Switch } from "../../../src/components/forms/switch/switch.tsx";
+import { CopyButton } from "../../../src/components/docs/copy-button/copy-button.tsx";
 import {
   catalogueFieldPointProof,
   type CatalogueFieldProofCheck,
@@ -18,6 +19,7 @@ import {
   defaultCatalogueFieldSelection,
 } from "../../shell/field-state.ts";
 import { CataloguePageHeader } from "../shared.tsx";
+import { catalogueFieldConsumerSnippet } from "./field-export.ts";
 
 function axisLabel(axis: FieldAxisName): string {
   return (axis[0]?.toUpperCase() ?? "") + axis.slice(1);
@@ -95,6 +97,7 @@ export function FieldPage(
     selection,
     fieldScheme ?? polarity,
   );
+  const consumerSnippet = catalogueFieldConsumerSnippet(selection);
 
   useEffect(() => {
     if (field === undefined && onFieldChange !== undefined) {
@@ -255,6 +258,25 @@ export function FieldPage(
             </article>
           ))}
         </div>
+      </section>
+
+      <section
+        className="discern-catalogue-field__export"
+        aria-labelledby="discern-catalogue-field-export-heading"
+      >
+        <div>
+          <h2 id="discern-catalogue-field-export-heading">Take this point</h2>
+          <p>
+            Copy the same Root declaration documented by the Token map. Nothing
+            is downloaded or sent from this page.
+          </p>
+        </div>
+        <pre><code>{consumerSnippet}</code></pre>
+        <CopyButton
+          value={consumerSnippet}
+          label="Copy consumer field snippet"
+          copiedLabel="Consumer field snippet copied"
+        />
       </section>
 
       <section

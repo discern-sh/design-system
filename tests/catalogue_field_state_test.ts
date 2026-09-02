@@ -1,5 +1,6 @@
 import { assertEquals } from "@std/assert";
 import { FIELD_POLARITY_CROSSOVER_DARKNESS } from "../src/tokens/field.ts";
+import { catalogueFieldConsumerSnippet } from "../catalogue/pages/foundations/field-export.ts";
 import {
   CATALOGUE_FIELD_HYSTERESIS,
   catalogueFieldControlScheme,
@@ -86,4 +87,24 @@ Deno.test("a field style writes all real axes and the implied scheme", () => {
   assertEquals(style["--discern-emphasis" as keyof typeof style], 0.75);
   assertEquals(style["--discern-density" as keyof typeof style], 0.8);
   assertEquals(style.colorScheme, "dark");
+});
+
+Deno.test("consumer export reproduces axes, scheme, and optional blue import", () => {
+  const mono = catalogueFieldConsumerSnippet({ ...point, preset: "mono" });
+  assertEquals(
+    mono,
+    `<main
+  data-discern-root
+  style="--discern-darkness: 0.6; --discern-structure: 1.25; --discern-emphasis: 0.75; --discern-density: 0.8; color-scheme: dark"
+>
+  <!-- Page content -->
+</main>`,
+  );
+  assertEquals(
+    catalogueFieldConsumerSnippet(point),
+    `import { BLUE_THEME_NAME } from "@discern-sh/design-system/theme/blue";
+
+// Pass theme: BLUE_THEME_NAME to emitDesignSystemRuntime.
+${mono}`,
+  );
 });

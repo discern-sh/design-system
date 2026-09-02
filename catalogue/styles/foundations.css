@@ -413,7 +413,8 @@
   .discern-catalogue-field__controls,
   .discern-catalogue-field__reading,
   .discern-catalogue-field__roles,
-  .discern-catalogue-field__proof {
+  .discern-catalogue-field__proof,
+  .discern-catalogue-field__export {
     display: grid;
     align-content: start;
     gap: 22px;
@@ -547,6 +548,24 @@
   }
   .discern-catalogue-field__proof-grid article[data-discern-field-check="fail"] output {
     color: var(--discern-color-danger-deep);
+  }
+  .discern-catalogue-field__export {
+    justify-items: start;
+  }
+  .discern-catalogue-field__export pre {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 18px;
+    overflow: auto;
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-inverse-surface);
+    color: var(--discern-color-inverse-ink);
+    font: var(--discern-font-size-sm) / 1.55 var(--discern-font-mono);
+  }
+  .discern-catalogue-field__export .discern-copy-button {
+    min-height: 40px;
   }
   .discern-catalogue-field__role-grid {
     display: grid;

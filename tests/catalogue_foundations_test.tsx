@@ -183,6 +183,7 @@ Deno.test("Field page dogfoods public controls and paints every field role", () 
   assertStringIncludes(html, 'data-discern-field-proof="accepted"');
   assertStringIncludes(html, "Admission proof");
   assertStringIncludes(html, "margin +");
+  assertStringIncludes(html, "Copy consumer field snippet");
   assertStringIncludes(
     html,
     'data-discern-field-role="--discern-color-canvas"',

@@ -45,7 +45,8 @@ export function isCatalogueFieldSelection(
     );
 }
 
-function compact(value: number): string {
+/** Canonical number rendering shared by links, labels, and consumer snippets. */
+export function formatCatalogueFieldNumber(value: number): string {
   return String(Number(value.toFixed(4)));
 }
 
@@ -54,10 +55,10 @@ export function serializeCatalogueFieldSelection(
   selection: CatalogueFieldSelection,
 ): string {
   return [
-    compact(selection.darkness),
-    compact(selection.structure),
-    compact(selection.emphasis),
-    compact(selection.density),
+    formatCatalogueFieldNumber(selection.darkness),
+    formatCatalogueFieldNumber(selection.structure),
+    formatCatalogueFieldNumber(selection.emphasis),
+    formatCatalogueFieldNumber(selection.density),
     selection.preset,
   ].join(",");
 }
@@ -138,9 +139,9 @@ export function catalogueFieldStyle(
 export function catalogueFieldLabel(
   selection: CatalogueFieldSelection,
 ): string {
-  return `Field ${compact(selection.darkness)} · ${
-    compact(selection.structure)
-  } · ${compact(selection.emphasis)} · ${compact(selection.density)}${
-    selection.preset === "blue" ? " · blue" : ""
-  }`;
+  return `Field ${formatCatalogueFieldNumber(selection.darkness)} · ${
+    formatCatalogueFieldNumber(selection.structure)
+  } · ${formatCatalogueFieldNumber(selection.emphasis)} · ${
+    formatCatalogueFieldNumber(selection.density)
+  }${selection.preset === "blue" ? " · blue" : ""}`;
 }
