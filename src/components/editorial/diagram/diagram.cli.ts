@@ -7,15 +7,18 @@
 import { styleText } from "../../../cli/ansi.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { composeCliBlocks } from "../../../cli/rhythm.ts";
 import { wrapText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   type TerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import { prepareDiagramSemantics } from "../../../generated/diagram-dispatch.ts";
@@ -30,10 +33,9 @@ import meta, { componentExampleVocabulary } from "./diagram.meta.ts";
 export type DiagramCliMode = "auto" | "description";
 
 /** Inputs accepted by the terminal Diagram renderer. */
-export interface DiagramCliProps {
+export interface DiagramCliProps extends CliPresentationOptions {
   readonly spec: DiagramSpec;
   readonly mode?: DiagramCliMode;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -195,7 +197,7 @@ const renderDiagramCli: CliRenderer<DiagramCliProps> = (
       `diagram CLI theme must be light or dark; received ${String(themeName)}`,
     );
   }
-  const theme = terminalThemes[themeName];
+  const theme = resolveTerminalTheme(props);
   const { validated, description } = prepareDiagramSemantics(props.spec);
   const fallback = (): string =>
     renderDiagramDescription(description, width, theme, capabilities);
@@ -204,7 +206,8 @@ const renderDiagramCli: CliRenderer<DiagramCliProps> = (
   const projection = projectDiagramKindCli(validated, {
     capabilities,
     maxWidth: width,
-    theme: themeName,
+    theme: theme.variant,
+    appearance: theme.appearance,
     description,
   });
   return projection?.kind === "frame" ? projection.frame : fallback();

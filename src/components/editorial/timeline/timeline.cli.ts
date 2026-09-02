@@ -6,17 +6,17 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
-import {
-  type TerminalMotifOptions,
-  terminalMotifRepertoire,
-} from "../../../cli/motif.ts";
+import { terminalMotifRepertoire } from "../../../cli/motif.ts";
 import { measureText, wrapText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./timeline.meta.ts";
@@ -32,12 +32,11 @@ export interface TimelineCliItem {
 }
 
 /** Inputs accepted by the terminal Timeline renderer. */
-export interface TimelineCliProps extends TerminalMotifOptions {
+export interface TimelineCliProps extends CliPresentationOptions {
   readonly eyebrow?: string;
   readonly title: string;
   readonly description?: string;
   readonly items: readonly TimelineCliItem[];
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -105,7 +104,7 @@ const renderTimelineCli: CliRenderer<TimelineCliProps> = (
     );
   }
   const width = Math.min(requested, capabilities.columns);
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const blocks: string[] = [];
   if (props.eyebrow !== undefined) {
     blocks.push(styleText(props.eyebrow.toLocaleUpperCase(), {

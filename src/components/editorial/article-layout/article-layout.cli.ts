@@ -6,24 +6,23 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { wrapText } from "../../../cli/text.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./article-layout.meta.ts";
 
 /** Inputs accepted by the terminal Article layout renderer. */
-export interface ArticleLayoutCliProps {
+export interface ArticleLayoutCliProps extends CliPresentationOptions {
   readonly body: string;
   readonly navigation?: string;
   readonly navigationLabel?: string;
   readonly rail?: string;
   readonly railLabel?: string;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -63,7 +62,7 @@ const renderArticleLayoutCli: CliRenderer<ArticleLayoutCliProps> = (
     throw new TypeError("article layout body must be non-empty");
   }
   const width = Math.min(requested, capabilities.columns);
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const labelled = (label: string, value: string): string =>
     joinVertical([
       styleText(`[${label}]`, {

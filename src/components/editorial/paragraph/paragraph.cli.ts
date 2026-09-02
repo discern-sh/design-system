@@ -5,20 +5,22 @@
  */
 
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import {
   type SemanticInlineContent,
   wrapSemanticInlineContent,
 } from "../../../cli/semantic-inline.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./paragraph.meta.ts";
 
 /** Inputs accepted by the terminal Paragraph renderer. */
-export interface ParagraphCliProps {
+export interface ParagraphCliProps extends CliPresentationOptions {
   /** Package-owned rich inline semantics; plain text is a shorthand. */
   readonly content: SemanticInlineContent;
-  /** Terminal Theme variant; defaults to dark. */
-  readonly theme?: TerminalThemeVariant;
   /** Maximum paragraph measure in cells, bounded by terminal columns. */
   readonly maxWidth?: number;
 }
@@ -74,7 +76,7 @@ const renderParagraphCli: CliRenderer<ParagraphCliProps> = (
     props.content,
     requested,
     capabilities,
-    props.theme === undefined ? {} : { theme: props.theme },
+    cliPresentationPassthrough(props),
   ).join("\n");
 };
 

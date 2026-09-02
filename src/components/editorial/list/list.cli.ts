@@ -11,7 +11,12 @@ import {
   renderCliBlocks,
 } from "../../../cli/block-composition.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import { composeCliBlocks } from "../../../cli/rhythm.ts";
 import {
   renderSemanticInlineContent,
@@ -22,7 +27,6 @@ import {
   measureText,
   wrapStyledTextPreservingIndent,
 } from "../../../cli/text.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import renderParagraphCli from "../paragraph/paragraph.cli.ts";
 import meta, { componentExampleVocabulary } from "./list.meta.ts";
 import type { ListKind, ListSpacing } from "./list.types.ts";
@@ -38,7 +42,7 @@ export interface ListCliItem {
 }
 
 /** Inputs accepted by the terminal List renderer. */
-export interface ListCliProps {
+export interface ListCliProps extends CliPresentationOptions {
   /** Semantic list form; defaults to unordered. */
   readonly kind?: ListKind;
   /** First ordinal for an ordered list. */
@@ -47,8 +51,6 @@ export interface ListCliProps {
   readonly items: readonly ListCliItem[];
   /** Vertical rhythm between items and their continuation blocks. */
   readonly spacing?: ListSpacing;
-  /** Terminal Theme variant; defaults to dark. */
-  readonly theme?: TerminalThemeVariant;
   /** Maximum list measure in cells, bounded by terminal columns. */
   readonly maxWidth?: number;
 }
@@ -189,7 +191,7 @@ const renderListCli: CliRenderer<ListCliProps> = (props, capabilities) => {
         const rendered = renderSemanticInlineContent(
           item.content,
           capabilities,
-          props.theme === undefined ? {} : { theme: props.theme },
+          cliPresentationPassthrough(props),
         );
         if (stripAnsi(rendered).trim() === "") {
           throw new TypeError(
@@ -209,7 +211,10 @@ const renderListCli: CliRenderer<ListCliProps> = (props, capabilities) => {
       return introduction;
     }
     const continuations = indentBlock(
-      renderCliBlocks(item.blocks, capabilities, { maxWidth: contentWidth }),
+      renderCliBlocks(item.blocks, capabilities, {
+        ...cliPresentationPassthrough(props),
+        maxWidth: contentWidth,
+      }),
       contentIndent,
     );
     return spacing === "loose"

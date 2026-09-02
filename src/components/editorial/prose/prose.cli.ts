@@ -12,14 +12,18 @@ import {
 } from "../../../cli/block-composition.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import { composeCliBlocks } from "../../../cli/rhythm.ts";
 import type { SemanticInlineContent } from "../../../cli/semantic-inline.ts";
 import { wrapText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import renderHeadingCli from "../../display/heading/heading.cli.ts";
 import renderListCli from "../list/list.cli.ts";
@@ -27,11 +31,10 @@ import renderParagraphCli from "../paragraph/paragraph.cli.ts";
 import meta, { componentExampleVocabulary } from "./prose.meta.ts";
 import type { ProseMeasure } from "./prose.types.ts";
 
-interface ProseCliOptions {
+interface ProseCliOptions extends CliPresentationOptions {
   readonly dropCap?: boolean;
   readonly lead?: boolean;
   readonly measure?: ProseMeasure;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -166,7 +169,7 @@ function renderPlainProse(
     throw new TypeError("prose text must be non-empty");
   }
   const lines = wrapText(text, width);
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   if (lines.length === 0) return "";
   const first = lines[0] ?? "";
   const renderedFirst = props.dropCap === true && first !== ""
@@ -221,22 +224,29 @@ const renderProseCli: CliRenderer<ProseCliProps> = (props, capabilities) => {
         (props.lead === true || props.dropCap === true)
       ) {
         renderParagraphCli(
-          { content: child.content, maxWidth: width },
+          {
+            ...cliPresentationPassthrough(props),
+            content: child.content,
+            maxWidth: width,
+          },
           capabilities,
         );
         return renderPlainProse(child.content, props, capabilities, width);
       }
       return renderParagraphCli(
         {
+          ...cliPresentationPassthrough(props),
           content: child.content,
           maxWidth: width,
-          ...(props.theme === undefined ? {} : { theme: props.theme }),
         },
         capabilities,
       );
     }
     if (child.kind === "block") {
-      return renderCliBlock(child.block, capabilities, { maxWidth: width });
+      return renderCliBlock(child.block, capabilities, {
+        ...cliPresentationPassthrough(props),
+        maxWidth: width,
+      });
     }
     throw new TypeError(
       `unknown prose child kind: ${String((child as { kind?: unknown }).kind)}`,

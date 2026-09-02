@@ -6,13 +6,13 @@
 
 import { renderStyledSpans, type StyledSpan } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import { derivedInitials } from "../../initials.ts";
 import meta, { componentExampleVocabulary } from "./avatar.meta.ts";
 import type {
@@ -22,14 +22,13 @@ import type {
 } from "./avatar.types.ts";
 
 /** Inputs accepted by the terminal Avatar renderer. */
-export interface AvatarCliProps {
+export interface AvatarCliProps extends CliPresentationOptions {
   readonly name: string;
   readonly initials?: string;
   readonly size?: AvatarSize;
   readonly shape?: AvatarShape;
   readonly presence?: AvatarPresence;
   readonly presenceLabel?: string;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -90,7 +89,7 @@ const renderAvatarCli: CliRenderer<AvatarCliProps> = (props, capabilities) => {
   if (monogram === "") throw new TypeError("avatar initials must be non-empty");
   const padded = size === "lg" || size === "xl" ? ` ${monogram} ` : monogram;
   const chip = props.shape === "square" ? `[${padded}]` : `(${padded})`;
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const spans: StyledSpan[] = [{
     text: chip,
     style: {

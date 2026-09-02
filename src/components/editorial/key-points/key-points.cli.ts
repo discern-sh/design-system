@@ -6,13 +6,16 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { measureText, wrapText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./key-points.meta.ts";
@@ -25,12 +28,11 @@ export interface KeyPointCliItem {
 }
 
 /** Inputs accepted by the terminal Key points renderer. */
-export interface KeyPointsCliProps {
+export interface KeyPointsCliProps extends CliPresentationOptions {
   readonly eyebrow?: string;
   readonly title: string;
   readonly items: readonly KeyPointCliItem[];
   readonly tone?: KeyPointsTone;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -90,7 +92,7 @@ const renderKeyPointsCli: CliRenderer<KeyPointsCliProps> = (
     );
   }
   const width = Math.min(requested, capabilities.columns);
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const semanticTone = TONES[props.tone ?? "accent"];
   const blocks: string[] = [];
   if (props.eyebrow !== undefined) {

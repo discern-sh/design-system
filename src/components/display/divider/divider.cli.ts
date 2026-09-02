@@ -5,15 +5,13 @@
  */
 
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import {
-  motifPassthrough,
-  type TerminalMotifOptions,
-} from "../../../cli/motif.ts";
-import type {
-  TerminalSemanticTone,
-  TerminalThemeVariant,
-} from "../../../cli/theme.ts";
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
+import type { TerminalSemanticTone } from "../../../cli/theme.ts";
 import {
   type MotifDirection,
   type MotifPatternOrientation,
@@ -29,7 +27,7 @@ import type { DividerSurface } from "./divider.types.ts";
 export type DividerCliTreatment = "rule" | "plain" | "ribbon";
 
 /** Inputs accepted by the terminal Divider renderer. */
-export interface DividerCliProps extends TerminalMotifOptions {
+export interface DividerCliProps extends CliPresentationOptions {
   readonly label?: string;
   readonly surface?: DividerSurface;
   readonly treatment?: DividerCliTreatment;
@@ -38,7 +36,6 @@ export interface DividerCliProps extends TerminalMotifOptions {
   readonly phase?: number;
   readonly direction?: MotifDirection;
   readonly tone?: TerminalSemanticTone;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -76,8 +73,7 @@ const renderDividerCli: CliRenderer<DividerCliProps> = (
       width,
       ...(props.phase === undefined ? {} : { phase: props.phase }),
       ...(props.direction === undefined ? {} : { direction: props.direction }),
-      ...(props.theme === undefined ? {} : { theme: props.theme }),
-      ...motifPassthrough(props),
+      ...cliPresentationPassthrough(props),
     };
     return renderMotifSectionRule(props.label, options, capabilities);
   }
@@ -103,7 +99,7 @@ const renderDividerCli: CliRenderer<DividerCliProps> = (
     if (treatment === "plain") {
       return renderMotifPlainDivider({
         width: length,
-        ...(props.theme === undefined ? {} : { theme: props.theme }),
+        ...cliPresentationPassthrough(props),
       }, capabilities);
     }
     return renderMotifDivider(
@@ -111,8 +107,7 @@ const renderDividerCli: CliRenderer<DividerCliProps> = (
         width: length,
         alignment: treatment === "ribbon" ? "start" : "center",
         tone,
-        ...(props.theme === undefined ? {} : { theme: props.theme }),
-        ...motifPassthrough(props),
+        ...cliPresentationPassthrough(props),
       },
       capabilities,
     );
@@ -124,8 +119,7 @@ const renderDividerCli: CliRenderer<DividerCliProps> = (
       phase,
       direction,
       tone,
-      ...(props.theme === undefined ? {} : { theme: props.theme }),
-      ...motifPassthrough(props),
+      ...cliPresentationPassthrough(props),
     },
     capabilities,
   );

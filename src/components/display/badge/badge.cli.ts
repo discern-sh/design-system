@@ -6,22 +6,21 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./badge.meta.ts";
 import type { BadgeTone } from "./badge.types.ts";
 
 /** Inputs accepted by the terminal Badge renderer. */
-export interface BadgeCliProps {
+export interface BadgeCliProps extends CliPresentationOptions {
   readonly label: string;
   readonly tone?: BadgeTone;
   readonly dot?: boolean;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -84,7 +83,7 @@ const renderBadgeCli: CliRenderer<BadgeCliProps> = (
     labelWidth,
     capabilities.unicode ? "…" : ".",
   );
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const frame = `[${prefix}${label}]`;
   return styleText(
     frame,

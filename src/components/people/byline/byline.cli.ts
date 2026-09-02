@@ -6,12 +6,15 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { measureText, wrapText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import { derivedInitials } from "../../initials.ts";
 import meta, { componentExampleVocabulary } from "./byline.meta.ts";
@@ -23,11 +26,10 @@ export interface BylineCliAuthor {
 }
 
 /** Inputs accepted by the terminal Byline renderer. */
-export interface BylineCliProps {
+export interface BylineCliProps extends CliPresentationOptions {
   readonly authors: readonly BylineCliAuthor[];
   readonly lede?: string;
   readonly meta?: readonly string[];
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -76,7 +78,7 @@ const renderBylineCli: CliRenderer<BylineCliProps> = (props, capabilities) => {
     wrapText(authors, width).join("\n"),
     ...(meta === "" ? [] : [wrapText(meta, width).join("\n")]),
   ].join("\n");
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   return styleText(value, {
     ...theme.typography.strong,
     color: terminalThemeColor(theme, "--discern-color-ink"),

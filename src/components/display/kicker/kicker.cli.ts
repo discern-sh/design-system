@@ -6,21 +6,23 @@
 
 import { renderStyledSpans } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./kicker.meta.ts";
 
 /** Inputs accepted by the terminal Kicker renderer. */
-export interface KickerCliProps {
+export interface KickerCliProps extends CliPresentationOptions {
   readonly text: string;
   readonly index?: string;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -60,7 +62,7 @@ const renderKickerCli: CliRenderer<KickerCliProps> = (
     Math.max(0, width - measureText(prefix)),
     capabilities.unicode ? "…" : ".",
   );
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   return renderStyledSpans([
     ...(prefix === "" ? [] : [{
       text: prefix,

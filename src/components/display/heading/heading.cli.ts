@@ -7,10 +7,14 @@
 import { renderStyledSpans, styleText } from "../../../cli/ansi.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import { withCliHeadingBoundary } from "../../../cli/heading-boundary.ts";
 import {
-  type TerminalMotifOptions,
   terminalMotifRegisterRoles,
   terminalMotifRepertoire,
 } from "../../../cli/motif.ts";
@@ -26,10 +30,9 @@ import {
   wrapStyledText,
 } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   type TerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./heading.meta.ts";
@@ -41,10 +44,9 @@ export type HeadingCliOverflowPolicy = "truncate" | "wrap";
 /** Visual treatments available to terminal Heading callers. */
 export type HeadingCliTreatment = "default" | "document";
 
-interface HeadingCliOptions extends TerminalMotifOptions {
+interface HeadingCliOptions extends CliPresentationOptions {
   readonly accent?: string;
   readonly level?: HeadingLevel;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
   /**
    * Keep the legacy single-line allocation or wrap every content cell without
@@ -174,7 +176,7 @@ function renderDocumentHeading(
       (Array.isArray(content) && content.length === 0)
     ? ""
     : renderSemanticInlineContent(content, capabilities, {
-      ...(props.theme === undefined ? {} : { theme: props.theme }),
+      ...cliPresentationPassthrough(props),
       baseRole: documentBaseRole(level),
     });
   const accentRendered = accent === "" ? "" : renderStyledSpans([{
@@ -271,7 +273,7 @@ const renderHeadingCli: CliRenderer<HeadingCliProps> = (
   const accent = props.accent === undefined || props.accent === ""
     ? ""
     : ` ${props.accent}`;
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const prefixStyle = {
     ...theme.typography.muted,
     color: terminalThemeColor(theme, "--discern-color-ink-faint"),
@@ -337,7 +339,7 @@ const renderHeadingCli: CliRenderer<HeadingCliProps> = (
         (Array.isArray(props.content) && props.content.length === 0)
     ? ""
     : renderSemanticInlineContent(props.content, capabilities, {
-      ...(props.theme === undefined ? {} : { theme: props.theme }),
+      ...cliPresentationPassthrough(props),
       baseRole: "display",
     });
   const renderedContent = accent === ""

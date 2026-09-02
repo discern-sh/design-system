@@ -6,24 +6,26 @@
 
 import { renderBox } from "../../../cli/box.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./card.meta.ts";
 import type { CardPadding, CardTexture } from "./card.types.ts";
 
 /** Inputs accepted by the terminal Card renderer. */
-export interface CardCliProps {
+export interface CardCliProps extends CliPresentationOptions {
   readonly body: string;
   readonly title?: string;
   readonly raised?: boolean;
   readonly texture?: CardTexture;
   readonly padding?: CardPadding;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -77,7 +79,7 @@ const renderCardCli: CliRenderer<CardCliProps> = (props, capabilities) => {
       }; received ${requestedWidth}`,
     );
   }
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const marker = capabilities.unicode ? "· " : ". ";
   const body = props.texture === "dots"
     ? props.body.split("\n").map((line) => `${marker}${line}`).join("\n")

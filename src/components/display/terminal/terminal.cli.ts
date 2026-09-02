@@ -6,20 +6,22 @@
 
 import { renderBox } from "../../../cli/box.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
 import meta, { componentExampleVocabulary } from "./terminal.meta.ts";
 
 /** Inputs accepted by the terminal Terminal renderer. */
-export interface TerminalCliProps {
+export interface TerminalCliProps extends CliPresentationOptions {
   readonly body: string;
   readonly title?: string;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -63,7 +65,7 @@ const renderTerminalCli: CliRenderer<TerminalCliProps> = (
       `terminal width must be a safe integer of at least 5; received ${requestedWidth}`,
     );
   }
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const motif = triangleGlyph(TRIANGLES.filled.right, capabilities.unicode);
   return renderBox(
     {

@@ -6,13 +6,16 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical, wrapInlineCluster } from "../../../cli/layout.ts";
 import { wrapText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import { derivedInitials } from "../../initials.ts";
@@ -30,7 +33,7 @@ export interface ArticleHeaderCliAuthor {
 }
 
 /** Inputs accepted by the terminal Article header renderer. */
-export interface ArticleHeaderCliProps {
+export interface ArticleHeaderCliProps extends CliPresentationOptions {
   readonly eyebrow?: string;
   readonly title: string;
   readonly standfirst: string;
@@ -40,7 +43,6 @@ export interface ArticleHeaderCliProps {
   readonly mediaDescription?: string;
   readonly headingLevel?: ArticleHeaderHeadingLevel;
   readonly surface?: ArticleHeaderSurface;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -98,7 +100,7 @@ const renderArticleHeaderCli: CliRenderer<ArticleHeaderCliProps> = (
     );
   }
   const width = renderWidth(props.maxWidth, capabilities.columns);
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const divider = capabilities.unicode ? " · " : " | ";
   const blocks: string[] = [];
   if (props.eyebrow !== undefined) {

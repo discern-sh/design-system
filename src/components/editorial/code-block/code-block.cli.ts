@@ -6,13 +6,16 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { graphemeWidth, measureText, truncateText } from "../../../cli/text.ts";
 import { makeSourceControlsVisible } from "../../../cli/visible-text.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./code-block.meta.ts";
 
@@ -20,7 +23,7 @@ import meta, { componentExampleVocabulary } from "./code-block.meta.ts";
 export type CodeBlockWidthPolicy = "wrap" | "preserve";
 
 /** Inputs accepted by the terminal Code block renderer. */
-export interface CodeBlockCliProps {
+export interface CodeBlockCliProps extends CliPresentationOptions {
   /** Literal source text. Newlines and tabs retain preformatted meaning. */
   readonly code: string;
   /** Optional source-language label. */
@@ -29,8 +32,6 @@ export interface CodeBlockCliProps {
   readonly info?: string;
   /** Wrap losslessly to the requested measure or preserve source-line width. */
   readonly widthPolicy?: CodeBlockWidthPolicy;
-  /** Terminal Theme variant; defaults to dark. */
-  readonly theme?: TerminalThemeVariant;
   /** Available measure in cells, bounded by terminal columns. */
   readonly maxWidth?: number;
 }
@@ -126,7 +127,10 @@ const renderCodeBlockCli: CliRenderer<CodeBlockCliProps> = (
   if (widthPolicy !== "wrap" && widthPolicy !== "preserve") {
     throw new TypeError(`unknown code block width policy: ${widthPolicy}`);
   }
-  if (props.theme !== undefined && !(props.theme in terminalThemes)) {
+  if (
+    props.theme !== undefined && props.theme !== "light" &&
+    props.theme !== "dark"
+  ) {
     throw new TypeError(`unknown code block theme: ${props.theme}`);
   }
   const requestedWidth = props.maxWidth ?? capabilities.columns;
@@ -142,7 +146,7 @@ const renderCodeBlockCli: CliRenderer<CodeBlockCliProps> = (
     );
   }
 
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const railStyle = {
     ...theme.typography.muted,
     color: terminalThemeColor(theme, "--discern-color-ink-faint"),
