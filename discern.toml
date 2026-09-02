@@ -616,7 +616,7 @@
   [standards.raw_spacing]
     metric = "raw_spacing"
     direction = "down"
-    limit = 116
+    limit = 0
     run = "deno run --config deno.json --allow-read ${scripts.dir}/measure-raw-spacing.ts"
     inputs = [
       "src/components/**/*.css",
@@ -629,7 +629,7 @@
   [standards.untokenised_structure]
     metric = "untokenised_structure"
     direction = "down"
-    limit = 60
+    limit = 0
     run = "deno run --config deno.json --allow-read ${scripts.dir}/measure-untokenised-structure.ts"
     inputs = [
       "src/components/**/*.css",
@@ -643,7 +643,7 @@
   [standards.missing_witnesses]
     metric = "missing_witnesses"
     direction = "down"
-    limit = 22
+    limit = 0
     run = "NODE_ENV=production deno run --config deno.json --allow-read --allow-env=NODE_ENV ${scripts.dir}/measure-missing-witnesses.ts"
     inputs = [
       "src/components/**/*.tsx",
