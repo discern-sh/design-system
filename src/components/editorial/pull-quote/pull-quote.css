@@ -5,13 +5,14 @@
     margin-inline: 0;
     padding: var(--discern-space-8) var(--discern-space-8)
       var(--discern-space-8)
-      clamp(2.5rem, 7vw, 5rem);
+      clamp(var(--discern-space-10), 7vw, var(--discern-space-20));
     border-block: 1px solid var(--discern-color-border-strong);
     color: var(--discern-color-ink);
   }
   .discern-pull-quote--wide {
     width: min(calc(100% + 8rem), calc(var(--discern-page-max) - 8rem));
-    margin-inline: max(-4rem, calc((100% - var(--discern-page-max)) / 2));
+    margin-inline: max(calc(var(--discern-space-16) * -1),
+      calc((100% - var(--discern-page-max)) / 2));
   }
   .discern-pull-quote__mark {
     position: absolute;

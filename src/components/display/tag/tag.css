@@ -2,9 +2,9 @@
   .discern-tag {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
+    gap: var(--discern-space-2);
     min-block-size: 25px;
-    padding-inline: 8px;
+    padding-inline: var(--discern-space-2);
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-xs);
     background: var(--discern-color-surface-sunken);
@@ -19,7 +19,7 @@
     place-items: center;
     inline-size: 24px;
     block-size: 24px;
-    margin-inline-end: -5px;
+    margin-inline-end: calc(var(--discern-space-1) * -1.25);
     padding: 0;
     border: 0;
     border-radius: var(--discern-radius-xs);

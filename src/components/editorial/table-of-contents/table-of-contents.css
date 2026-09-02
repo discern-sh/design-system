@@ -26,7 +26,7 @@
     grid-template-columns: 1.65rem minmax(0, 1fr);
     gap: var(--discern-space-2);
     padding: var(--discern-space-2) var(--discern-space-3);
-    border-inline-start: 2px solid transparent;
+    border-inline-start: 2px solid var(--discern-color-border);
     color: inherit;
     line-height: 1.35;
     text-decoration: none;
@@ -50,7 +50,8 @@
   .discern-table-of-contents__item--nested a {
     grid-template-columns: minmax(0, 1fr);
     padding-inline-start: calc(
-      var(--discern-space-3) + 1.65rem + var(--discern-space-2)
+      var(--discern-space-3) + var(--discern-space-6) +
+      var(--discern-space-2)
     );
   }
   .discern-table-of-contents__progress {

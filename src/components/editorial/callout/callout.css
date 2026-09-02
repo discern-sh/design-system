@@ -1,6 +1,5 @@
 @layer discern.components {
   .discern-callout {
-    --discern-callout-edge: var(--discern-color-accent-500);
     --discern-callout-fill: var(--discern-color-accent-100);
     --discern-callout-text: var(--discern-color-accent-700);
     display: grid;
@@ -9,7 +8,7 @@
     margin-block: var(--discern-space-8);
     padding: var(--discern-space-6);
     border: 1px solid var(--discern-color-border-strong);
-    border-inline-start: 4px solid var(--discern-callout-edge);
+    border-inline-start: 4px solid var(--discern-color-accent-500);
     border-radius: var(--discern-radius-md);
     background: var(--discern-callout-fill);
   }
@@ -17,14 +16,14 @@
     --discern-callout-fill: var(--discern-color-surface-sunken);
   }
   .discern-callout--warning {
-    --discern-callout-edge: var(--discern-color-warning);
     --discern-callout-fill: var(--discern-color-warning-soft);
     --discern-callout-text: var(--discern-color-warning-deep);
+    border-inline-start-color: var(--discern-color-warning);
   }
   .discern-callout--success {
-    --discern-callout-edge: var(--discern-color-success);
     --discern-callout-fill: var(--discern-color-success-soft);
     --discern-callout-text: var(--discern-color-success-deep);
+    border-inline-start-color: var(--discern-color-success);
   }
   .discern-callout__icon,
   .discern-callout__eyebrow,
@@ -38,10 +37,16 @@
     place-items: center;
     inline-size: 2.25rem;
     block-size: 2.25rem;
-    border: 1px solid var(--discern-callout-edge);
+    border: 1px solid var(--discern-color-accent-500);
     border-radius: 50%;
     color: var(--discern-callout-text);
     font-size: var(--discern-font-size-xs);
+  }
+  .discern-callout--warning .discern-callout__icon {
+    border-color: var(--discern-color-warning);
+  }
+  .discern-callout--success .discern-callout__icon {
+    border-color: var(--discern-color-success);
   }
   .discern-callout__eyebrow {
     display: block;

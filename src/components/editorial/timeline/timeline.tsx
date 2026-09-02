@@ -40,20 +40,28 @@ export const Timeline: DiscernComponent<HTMLElement, TimelineProps> =
           {description ? <div>{description}</div> : null}
         </header>
         <ol>
-          {items.map((item, index) => (
-            <li
-              className={`discern-timeline__item--${item.status ?? "upcoming"}`}
-              key={index}
-            >
-              <div className="discern-timeline__date">{item.date}</div>
-              <span className="discern-timeline__marker" aria-hidden="true" />
-              <div className="discern-timeline__content">
-                <h3>{item.title}</h3>
-                <div>{item.description}</div>
-                {item.detail ? <small>{item.detail}</small> : null}
-              </div>
-            </li>
-          ))}
+          {items.map((item, index) => {
+            const status = item.status ?? "upcoming";
+            return (
+              <li
+                className={`discern-timeline__item--${status}`}
+                data-discern-status={status}
+                key={index}
+              >
+                <div className="discern-timeline__date">{item.date}</div>
+                <span
+                  className="discern-timeline__marker"
+                  role="img"
+                  aria-label={status}
+                />
+                <div className="discern-timeline__content">
+                  <h3>{item.title}</h3>
+                  <div>{item.description}</div>
+                  {item.detail ? <small>{item.detail}</small> : null}
+                </div>
+              </li>
+            );
+          })}
         </ol>
       </section>
     );

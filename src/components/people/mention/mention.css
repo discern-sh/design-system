@@ -2,11 +2,13 @@
   .discern-mention {
     display: inline-flex;
     align-items: center;
-    gap: 0.3em;
+    gap: var(--discern-space-1);
     max-inline-size: 100%;
     min-block-size: 24px;
-    padding-block: 0.09em 0.13em;
-    padding-inline: 0.52em 0.6em;
+    padding-block: calc(var(--discern-space-1) * 0.375)
+      calc(var(--discern-space-1) / 2);
+    padding-inline: var(--discern-space-2)
+      calc(var(--discern-space-1) * 2.5);
     border: 1px solid color-mix(in oklab, var(--discern-color-accent-300) 68%,
       transparent);
     border-radius: var(--discern-radius-pill);
@@ -51,7 +53,7 @@
   }
   .discern-mention .discern-mention__avatar.discern-avatar {
     --discern-avatar-size: 1.35em;
-    margin-inline-start: -0.34em;
+    margin-inline-start: calc(var(--discern-space-1) * -1.5);
     box-shadow: none;
   }
 }

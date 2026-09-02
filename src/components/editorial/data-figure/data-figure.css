@@ -130,9 +130,8 @@
   }
   @media (forced-colors: active) {
     .discern-data-figure > header i {
-      border: 1px solid CanvasText;
-      background: CanvasText;
-      forced-color-adjust: none;
+      border: 1px solid var(--discern-color-ink);
+      background: var(--discern-color-ink);
     }
   }
 }

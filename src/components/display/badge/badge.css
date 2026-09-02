@@ -1,14 +1,14 @@
 @layer discern.components {
   .discern-badge {
     --discern-badge-bg: var(--discern-color-accent-100);
-    --discern-badge-border: color-mix(in oklab, var(--discern-color-accent-400) 50%, transparent);
     --discern-badge-text: var(--discern-color-accent-800);
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: calc(var(--discern-space-1) * 1.5);
     min-block-size: 24px;
-    padding-inline: 9px;
-    border: 1px solid var(--discern-badge-border);
+    padding-inline: calc(var(--discern-space-1) * 2.25);
+    border: 1px solid color-mix(in oklab,
+      var(--discern-color-accent-400) 50%, transparent);
     border-radius: var(--discern-radius-pill);
     background: var(--discern-badge-bg);
     color: var(--discern-badge-text);
@@ -26,22 +26,25 @@
   }
   .discern-badge--neutral {
     --discern-badge-bg: var(--discern-color-surface-sunken);
-    --discern-badge-border: var(--discern-color-border);
     --discern-badge-text: var(--discern-color-ink-muted);
+    border-color: var(--discern-color-border);
   }
   .discern-badge--success {
     --discern-badge-bg: var(--discern-color-success-soft);
-    --discern-badge-border: color-mix(in oklab, var(--discern-color-success) 50%, transparent);
     --discern-badge-text: var(--discern-color-success-deep);
+    border-color: color-mix(in oklab,
+      var(--discern-color-success) 50%, transparent);
   }
   .discern-badge--warning {
     --discern-badge-bg: var(--discern-color-warning-soft);
-    --discern-badge-border: color-mix(in oklab, var(--discern-color-warning) 42%, transparent);
     --discern-badge-text: var(--discern-color-warning-deep);
+    border-color: color-mix(in oklab,
+      var(--discern-color-warning) 42%, transparent);
   }
   .discern-badge--danger {
     --discern-badge-bg: var(--discern-color-danger-soft);
-    --discern-badge-border: color-mix(in oklab, var(--discern-color-danger) 42%, transparent);
     --discern-badge-text: var(--discern-color-danger);
+    border-color: color-mix(in oklab,
+      var(--discern-color-danger) 42%, transparent);
   }
 }
