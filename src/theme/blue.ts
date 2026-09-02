@@ -37,6 +37,41 @@ const blueRoleValues: Readonly<Record<string, BlueRolePair>> = Object.freeze(
       light: "oklch(34% 0.13 var(--discern-accent-hue))",
       dark: "oklch(90% 0.06 var(--discern-accent-hue))",
     },
+    "--discern-color-accent-ink": {
+      light: "var(--discern-color-accent-600)",
+      dark: "var(--discern-color-accent-500)",
+    },
+    "--discern-color-brand-artwork-mask": {
+      light: "transparent",
+      dark: "currentColor",
+    },
+    "--discern-color-brand-artwork-ink": {
+      light: "var(--discern-color-accent-700)",
+      dark: "var(--discern-color-ink-muted)",
+    },
+    "--discern-color-action-edge": {
+      light: "var(--discern-color-accent-600)",
+      dark: "var(--discern-color-accent-500)",
+    },
+    "--discern-color-action-shadow": {
+      light: "var(--discern-color-accent-600)",
+      dark: "var(--discern-shadow-color)",
+    },
+    "--discern-color-avatar-highlight": {
+      light: "var(--discern-color-surface)",
+      dark: "var(--discern-color-accent-300)",
+    },
+    "--discern-color-avatar-fill-start": {
+      light: "var(--discern-color-accent-100)",
+      dark:
+        "color-mix(in oklab, var(--discern-color-accent-200) 68%, var(--discern-color-accent-100))",
+    },
+    "--discern-color-avatar-fill-end": {
+      light:
+        "color-mix(in oklab, var(--discern-color-accent-200) 62%, var(--discern-color-accent-100))",
+      dark:
+        "color-mix(in oklab, var(--discern-color-accent-300) 52%, var(--discern-color-accent-200))",
+    },
     "--discern-color-accent-100": {
       light: "oklch(96.2% 0.019 var(--discern-accent-hue))",
       dark: "oklch(35% 0.055 var(--discern-accent-hue))",

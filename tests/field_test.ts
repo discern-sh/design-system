@@ -255,3 +255,54 @@ Deno.test("theme Token poles pin representative field emission", () => {
     "6px 6px 0 color-mix(in oklab, var(--discern-shadow-color) 28%, transparent)",
   );
 });
+
+Deno.test("derived component-intent roles preserve every current pole pair", () => {
+  const pairs = Object.fromEntries(
+    themeTokens.map((token) => [token.name, [token.light, token.dark]]),
+  ) as Readonly<Record<string, readonly [string, string]>>;
+  const pair = (name: string): readonly [string, string] => {
+    const value = pairs[name];
+    assert(value !== undefined, `missing Theme Token ${name}`);
+    return value;
+  };
+  assertEquals(pair("--discern-color-accent-ink"), [
+    pair("--discern-color-accent-600")[0],
+    pair("--discern-color-accent-500")[1],
+  ]);
+  assertEquals(pair("--discern-color-brand-artwork-mask"), [
+    "oklch(100% 0 0 / 0)",
+    pair("--discern-color-ink-muted")[1],
+  ]);
+  assertEquals(pair("--discern-color-brand-artwork-ink"), [
+    pair("--discern-color-accent-700")[0],
+    pair("--discern-color-ink-muted")[1],
+  ]);
+  assertEquals(
+    pair("--discern-color-action-edge"),
+    pair("--discern-color-accent-ink"),
+  );
+  assertEquals(pair("--discern-color-action-shadow"), [
+    pair("--discern-color-accent-600")[0],
+    pair("--discern-shadow-color")[1],
+  ]);
+  assertEquals(pair("--discern-color-neutral-edge"), [
+    pair("--discern-color-ink")[0],
+    pair("--discern-color-border-strong")[1],
+  ]);
+  assertEquals(pair("--discern-color-neutral-shadow"), [
+    pair("--discern-color-ink")[0],
+    pair("--discern-shadow-color")[1],
+  ]);
+  assertEquals(pair("--discern-color-avatar-highlight"), [
+    pair("--discern-color-surface")[0],
+    pair("--discern-color-accent-300")[1],
+  ]);
+  assertEquals(pair("--discern-color-avatar-fill-start"), [
+    "oklch(0% 0 0 / 0.05)",
+    "oklch(100% 0 0 / 0.0872)",
+  ]);
+  assertEquals(pair("--discern-color-avatar-fill-end"), [
+    "oklch(0% 0 0 / 0.0748)",
+    "oklch(100% 0 0 / 0.1416)",
+  ]);
+});

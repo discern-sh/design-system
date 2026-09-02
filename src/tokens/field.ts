@@ -313,6 +313,87 @@ const role = <
   bluePreset: Blue,
 ) => ({ name, description, paint, expression, bluePreset } as const);
 
+const polaritySelection = (
+  light: FieldExpression,
+  dark: FieldExpression,
+): FieldExpression => ({
+  kind: "lerp",
+  from: light,
+  to: dark,
+  position: fieldPolarityExpression,
+});
+const weightedMix = (
+  from: FieldExpression,
+  to: FieldExpression,
+  toWeight: number,
+): FieldExpression => ({
+  kind: "lerp",
+  from,
+  to,
+  position: numberNode(toWeight),
+});
+
+const inkExpression = curve([0.87, 0.84, 1, 0.96, 0.92]);
+const inkMutedExpression = curve([0.66, 0.72, 0.82, 0.78, 0.72]);
+const accent100Expression = scaledCurve(
+  [0.05, 0.07, 0.12, 0.08, 0.06],
+  "emphasis",
+);
+const accent200Expression = scaledCurve(
+  [0.09, 0.12, 0.18, 0.13, 0.1],
+  "emphasis",
+);
+const accent300Expression = scaledCurve(
+  [0.17, 0.22, 0.28, 0.22, 0.18],
+  "emphasis",
+);
+const accent500Expression = scaledCurve(
+  [0.52, 0.68, 0.8, 0.66, 0.55],
+  "emphasis",
+);
+const accent600Expression = scaledCurve(
+  [0.82, 0.86, 0.82, 0.86, 0.85],
+  "emphasis",
+);
+const accent700Expression = scaledCurve(
+  [0.93, 0.96, 1, 0.96, 0.94],
+  "emphasis",
+);
+const borderStrongExpression = scaledCurve(
+  [0.3, 0.34, 0.4, 0.35, 0.32],
+  "structure",
+);
+const accentInkExpression = polaritySelection(
+  accent600Expression,
+  accent500Expression,
+);
+const brandArtworkMaskExpression = polaritySelection(
+  zero,
+  inkMutedExpression,
+);
+const brandArtworkInkExpression = polaritySelection(
+  accent700Expression,
+  inkMutedExpression,
+);
+const actionShadowExpression = polaritySelection(accent600Expression, one);
+const neutralEdgeExpression = polaritySelection(
+  inkExpression,
+  borderStrongExpression,
+);
+const neutralShadowExpression = polaritySelection(inkExpression, one);
+const avatarHighlightExpression = polaritySelection(
+  one,
+  accent300Expression,
+);
+const avatarFillStartExpression = polaritySelection(
+  accent100Expression,
+  weightedMix(accent100Expression, accent200Expression, 0.68),
+);
+const avatarFillEndExpression = polaritySelection(
+  weightedMix(accent100Expression, accent200Expression, 0.62),
+  weightedMix(accent200Expression, accent300Expression, 0.52),
+);
+
 /**
  * Ordered field law population. Every non-series colour Theme Token derives
  * from this table; `bluePreset` is metadata, not a second value authority.
@@ -323,14 +404,14 @@ export const fieldColorRoleLaws: readonly FieldColorRoleLaw[] = Object.freeze(
       "--discern-color-ink",
       "Primary ink.",
       "active-ink",
-      curve([0.87, 0.84, 1, 0.96, 0.92]),
+      inkExpression,
       false,
     ),
     role(
       "--discern-color-ink-muted",
       "Secondary ink.",
       "active-ink",
-      curve([0.66, 0.72, 0.82, 0.78, 0.72]),
+      inkMutedExpression,
       false,
     ),
     role(
@@ -393,21 +474,21 @@ export const fieldColorRoleLaws: readonly FieldColorRoleLaw[] = Object.freeze(
       "--discern-color-accent-100",
       "Subtlest translucent emphasis wash.",
       "active-ink",
-      scaledCurve([0.05, 0.07, 0.12, 0.08, 0.06], "emphasis"),
+      accent100Expression,
       true,
     ),
     role(
       "--discern-color-accent-200",
       "Quiet translucent emphasis wash.",
       "active-ink",
-      scaledCurve([0.09, 0.12, 0.18, 0.13, 0.1], "emphasis"),
+      accent200Expression,
       true,
     ),
     role(
       "--discern-color-accent-300",
       "Soft emphasis fill.",
       "active-ink",
-      scaledCurve([0.17, 0.22, 0.28, 0.22, 0.18], "emphasis"),
+      accent300Expression,
       true,
     ),
     role(
@@ -421,21 +502,21 @@ export const fieldColorRoleLaws: readonly FieldColorRoleLaw[] = Object.freeze(
       "--discern-color-accent-500",
       "Strong emphasis fill.",
       "active-ink",
-      scaledCurve([0.52, 0.68, 0.8, 0.66, 0.55], "emphasis"),
+      accent500Expression,
       true,
     ),
     role(
       "--discern-color-accent-600",
       "Default emphasis action.",
       "active-ink",
-      scaledCurve([0.82, 0.86, 0.82, 0.86, 0.85], "emphasis"),
+      accent600Expression,
       true,
     ),
     role(
       "--discern-color-accent-700",
       "Strong emphasis text.",
       "active-ink",
-      scaledCurve([0.93, 0.96, 1, 0.96, 0.94], "emphasis"),
+      accent700Expression,
       true,
     ),
     role(
@@ -456,7 +537,7 @@ export const fieldColorRoleLaws: readonly FieldColorRoleLaw[] = Object.freeze(
       "--discern-color-border-strong",
       "Emphasised structural ink.",
       "active-ink",
-      scaledCurve([0.3, 0.34, 0.4, 0.35, 0.32], "structure"),
+      borderStrongExpression,
       false,
     ),
     role(
@@ -535,6 +616,76 @@ export const fieldColorRoleLaws: readonly FieldColorRoleLaw[] = Object.freeze(
       "ink-pigment",
       curve([0.38, 0.44, 0.5, 0.56, 0.62]),
       false,
+    ),
+    role(
+      "--discern-color-accent-ink",
+      "Polarity-responsive accent ink for concise emphasis and data marks.",
+      "active-ink",
+      accentInkExpression,
+      true,
+    ),
+    role(
+      "--discern-color-brand-artwork-mask",
+      "Paper-pigment silhouette revealed only on dark-polarity canvases.",
+      "paper-pigment",
+      brandArtworkMaskExpression,
+      true,
+    ),
+    role(
+      "--discern-color-brand-artwork-ink",
+      "Contrast ink for branded artwork and its monochrome silhouette.",
+      "active-ink",
+      brandArtworkInkExpression,
+      true,
+    ),
+    role(
+      "--discern-color-action-edge",
+      "Polarity-responsive edge for an emphasised action.",
+      "active-ink",
+      accentInkExpression,
+      true,
+    ),
+    role(
+      "--discern-color-action-shadow",
+      "Polarity-responsive hard shadow for an emphasised action.",
+      "active-ink",
+      actionShadowExpression,
+      true,
+    ),
+    role(
+      "--discern-color-neutral-edge",
+      "Polarity-responsive edge for a neutral control.",
+      "active-ink",
+      neutralEdgeExpression,
+      false,
+    ),
+    role(
+      "--discern-color-neutral-shadow",
+      "Polarity-responsive hard shadow for a neutral control.",
+      "active-ink",
+      neutralShadowExpression,
+      false,
+    ),
+    role(
+      "--discern-color-avatar-highlight",
+      "Paper-pigment highlight for an illustrated identity fill.",
+      "paper-pigment",
+      avatarHighlightExpression,
+      true,
+    ),
+    role(
+      "--discern-color-avatar-fill-start",
+      "Opening stop of the illustrated identity fill.",
+      "active-ink",
+      avatarFillStartExpression,
+      true,
+    ),
+    role(
+      "--discern-color-avatar-fill-end",
+      "Closing stop of the illustrated identity fill.",
+      "active-ink",
+      avatarFillEndExpression,
+      true,
     ),
   ] as const satisfies readonly FieldColorRoleLaw[],
 );
