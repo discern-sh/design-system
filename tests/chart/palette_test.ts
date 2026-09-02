@@ -250,6 +250,21 @@ Deno.test("every authored series colour clears every sampled field canvas", () =
   }
 });
 
+Deno.test("the sequential chart ramp is the field's ordered ink-alpha ladder", () => {
+  for (const darkness of FIELD_CONTRAST_SAMPLE_DARKNESSES) {
+    const palette = resolveChartPaletteAtField(darkness);
+    const alphas = ([1, 2, 3, 4] as const).map((step) => {
+      const value = palette[`ramp-${step}`];
+      const match = value.match(
+        /^oklch\((?:0|100)%\s+0\s+0(?:\s+\/\s+([\d.]+))?\)$/,
+      );
+      assert(match !== null, `field ${darkness} ramp ${step} is not neutral`);
+      return match[1] === undefined ? 1 : Number(match[1]);
+    });
+    assertEquals(alphas, alphas.toSorted((left, right) => left - right));
+  }
+});
+
 Deno.test("adjacent slots stay separated under severe protan and deutan simulation", () => {
   for (const variant of VARIANTS) {
     for (
