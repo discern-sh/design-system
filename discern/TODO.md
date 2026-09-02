@@ -52,6 +52,10 @@ _Nothing outstanding._
 
 _Work built but not merged, or otherwise at risk of being lost. Nothing outstanding._
 
+## 🟣 Programmes — dispatch from the planning tree
+
+- [ ] **Land the monochrome field programme.** ADR 0040 derives every colour role from a monochrome field; the briefs for its seven streams, their waves, and the maintainer sign-off that gates wave 1 live in `map/_private/planning/monochrome-field/README.md`. Dispatch 1B and 0A first, then 1A after sign-off. Delete this line when 4A lands. Evidence: `map/_adr/0040-derive-the-theme-from-a-monochrome-field.md`.
+
 ## ⚪ Explorations / ideas (unscheduled)
 
 - [ ] **Chart: interactive behaviours are deferred by decision, not omission.** The shipped Chart surface is strictly static — SVG, React output, and terminal frames carry no tooltips, zooming, or hover states — because the `behavior_script` standard's ceiling cannot fit chart interactivity. Revisiting that ceiling is an owner decision that precedes any interactive chart work. Evidence: `discern.toml` `[standards.behavior_script]`; `map/_adr/0030-own-charts-as-a-quantitative-kind-family.md` (static-first).
