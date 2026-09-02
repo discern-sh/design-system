@@ -158,6 +158,7 @@ export async function verifyDiscoverySurface(
   };
 }
 
+/** Place one additional named Component and wait for its new layer to render. */
 export async function placeNamedComponent(
   page: Page,
   name: string,
@@ -201,15 +202,24 @@ export async function placeNamedComponent(
       "Contextual discovery exposed competing actions for one cancellation",
     );
   }
+  const matchingLayersBefore = await page.locator(OUTLINE_ROW).evaluateAll(
+    (nodes, label) =>
+      nodes.filter((node) => node.textContent?.trim() === label).length,
+    name,
+  );
   await place.click({
     timeout: ACTION_TIMEOUT,
   });
   await page.waitForFunction(
-    ({ selector, name }) =>
-      [...document.querySelectorAll(selector)].some((element) =>
+    ({ selector, name, expectedCount }) =>
+      [...document.querySelectorAll(selector)].filter((element) =>
         element.textContent?.trim() === name
-      ),
-    { selector: OUTLINE_ROW, name },
+      ).length === expectedCount,
+    {
+      selector: OUTLINE_ROW,
+      name,
+      expectedCount: matchingLayersBefore + 1,
+    },
     { timeout: ACTION_TIMEOUT },
   );
 }
