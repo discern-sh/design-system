@@ -1,5 +1,6 @@
 import {
   type CataloguePurpose,
+  cataloguePurposeDetails,
   cataloguePurposes,
   type ComponentGroup,
   componentGroups,
@@ -9,7 +10,6 @@ import {
   compareHref,
   componentGroupHref,
   componentPurposeHref,
-  purposeDetails,
 } from "../shared.tsx";
 
 export type ComponentCollection =
@@ -73,8 +73,8 @@ export function componentDirectory(
         kind: "purpose" as const,
         id: `purpose:${purpose}` as const,
         purpose,
-        label: purposeDetails[purpose].label,
-        description: purposeDetails[purpose].description,
+        label: cataloguePurposeDetails[purpose].label,
+        description: cataloguePurposeDetails[purpose].description,
         members,
         browseHref: componentPurposeHref(purpose),
         compareHref: compareHref({ purpose }),

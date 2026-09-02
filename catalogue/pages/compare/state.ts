@@ -1,6 +1,7 @@
-import type {
-  CataloguePurpose,
-  ComponentGroup,
+import {
+  type CataloguePurpose,
+  cataloguePurposeDetails,
+  type ComponentGroup,
 } from "../../../src/types/component-meta.ts";
 import type { RegistryEntry } from "../../generated/registry.ts";
 import {
@@ -8,7 +9,7 @@ import {
   catalogueGroupSlug,
   catalogueRoutePaths,
 } from "../../routes.ts";
-import { catalogueHref, cataloguePurpose, purposeDetails } from "../shared.tsx";
+import { catalogueHref, cataloguePurpose } from "../shared.tsx";
 import type { CatalogueSurface } from "../shared.tsx";
 import { componentDirectory } from "../components/collections.ts";
 
@@ -97,7 +98,7 @@ export function resolveCompareScope(
     return {
       kind: "purpose",
       purpose,
-      title: purposeDetails[purpose].label,
+      title: cataloguePurposeDetails[purpose].label,
       components: collection.members,
     };
   }

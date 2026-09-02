@@ -11,7 +11,7 @@ import type {
   ComponentExampleImageManifestEntry,
   ComponentExampleImageTheme,
 } from "../../example-images/contract.ts";
-import { purposeDetails } from "../../pages/shared.tsx";
+import { cataloguePurposeDetails } from "../../../src/types/component-meta.ts";
 import { componentSearchRecords } from "../../routes.ts";
 import {
   normalizeSearchText,
@@ -189,7 +189,7 @@ export function discoveryImagePresentation(
 
 /** Shared human purpose labels; stable values remain metadata facts. */
 export function builderPurposeLabel(purpose: CataloguePurpose): string {
-  return purposeDetails[purpose].label;
+  return cataloguePurposeDetails[purpose].label;
 }
 
 /** Concise UI projection of the engine's strongest truthful match reason. */

@@ -5,7 +5,7 @@ import {
   type SearchResult,
 } from "../../search/mod.ts";
 import type { ComponentExampleImageTheme } from "../../example-images/contract.ts";
-import { purposeDetails } from "../../pages/shared.tsx";
+import { cataloguePurposeDetails } from "../../../src/types/component-meta.ts";
 import type {
   BuilderDocument,
   BuilderNode,
@@ -100,7 +100,9 @@ export function defineBuilderTemplate(
     context: definition.kind === "starter" ? "Starter" : "Block",
     slug: definition.id,
     description: definition.description,
-    purposes: [...purposes].map((purpose) => purposeDetails[purpose].label),
+    purposes: [...purposes].map((purpose) =>
+      cataloguePurposeDetails[purpose].label
+    ),
     keywords: components.flatMap((slug) => {
       const entry = entryBySlug.get(slug);
       return entry === undefined ? [slug] : [slug, entry.meta.name];

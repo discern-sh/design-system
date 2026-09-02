@@ -14,28 +14,6 @@ import { catalogueGroupSlug, catalogueRoutePaths } from "../routes.ts";
 
 export type CatalogueSurface = "web" | "cli";
 
-export const purposeDetails = {
-  "building-documentation": {
-    label: "Building documentation",
-    description: "Long-form guidance, reference, and documentation chrome.",
-  },
-  "displaying-tool-output": {
-    label: "Displaying tool output",
-    description: "Runs, diagnostics, artifacts, and machine evidence.",
-  },
-  "procedural-workflow": {
-    label: "Procedural workflow",
-    description: "Executable steps, choices, recovery, and proof.",
-  },
-  "marketing-site": {
-    label: "Marketing site",
-    description: "Product narrative, trust, comparison, and conversion.",
-  },
-} satisfies Record<
-  CataloguePurpose,
-  { readonly label: string; readonly description: string }
->;
-
 export function cataloguePurpose(
   value: string | null,
 ): CataloguePurpose | undefined {

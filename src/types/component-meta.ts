@@ -29,6 +29,32 @@ export const cataloguePurposes = [
 /** One task-oriented Catalogue collection. */
 export type CataloguePurpose = (typeof cataloguePurposes)[number];
 
+/** Human label and one-line scope for one Catalogue purpose collection. */
+export interface CataloguePurposeDetail {
+  readonly label: string;
+  readonly description: string;
+}
+
+/** Label and scope copy for every Catalogue purpose collection. */
+export const cataloguePurposeDetails = {
+  "building-documentation": {
+    label: "Building documentation",
+    description: "Long-form guidance, reference, and documentation chrome.",
+  },
+  "displaying-tool-output": {
+    label: "Displaying tool output",
+    description: "Runs, diagnostics, artifacts, and machine evidence.",
+  },
+  "procedural-workflow": {
+    label: "Procedural workflow",
+    description: "Executable steps, choices, recovery, and proof.",
+  },
+  "marketing-site": {
+    label: "Marketing site",
+    description: "Product narrative, trust, comparison, and conversion.",
+  },
+} as const satisfies Readonly<Record<CataloguePurpose, CataloguePurposeDetail>>;
+
 /** Browser behaviors a component can ask the runtime emitter to include. */
 export const componentBehaviors = ["floating-surface", "overflow-cue"] as const;
 /** One selection-scoped browser behavior. */

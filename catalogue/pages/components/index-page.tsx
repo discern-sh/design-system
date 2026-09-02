@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  cataloguePurposeDetails,
   cataloguePurposes,
   componentGroups,
 } from "../../../src/types/component-meta.ts";
@@ -13,11 +14,7 @@ import {
 import { explanatoryMatchReason, searchRecords } from "../../search/mod.ts";
 import { announceCatalogueLocationChange } from "../../shell/location.ts";
 import { preserveCatalogueAppearanceHref } from "../../shell/appearance-state.ts";
-import {
-  CataloguePageHeader,
-  cataloguePurpose,
-  purposeDetails,
-} from "../shared.tsx";
+import { CataloguePageHeader, cataloguePurpose } from "../shared.tsx";
 import { componentDirectory } from "./collections.ts";
 import {
   ComponentCollectionCard,
@@ -153,7 +150,7 @@ export function ComponentIndexPage(
             <option value="">All purposes</option>
             {cataloguePurposes.map((purpose) => (
               <option value={purpose} key={purpose}>
-                {purposeDetails[purpose].label}
+                {cataloguePurposeDetails[purpose].label}
               </option>
             ))}
           </Select>
@@ -177,7 +174,7 @@ export function ComponentIndexPage(
               <h2 id="component-results-title">
                 {state.group ?? (state.purpose === undefined
                   ? "Component results"
-                  : purposeDetails[state.purpose].label)}
+                  : cataloguePurposeDetails[state.purpose].label)}
               </h2>
               <p aria-live="polite">
                 {matches.length} Component{matches.length === 1 ? "" : "s"}
