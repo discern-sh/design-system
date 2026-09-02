@@ -18,8 +18,8 @@
     max-block-size: inherit;
   }
   .discern-overflow-cue [data-discern-overflow-cue-target]:focus-visible {
-    outline: 2px solid var(--discern-color-accent-600);
-    outline-offset: -3px;
+    outline: 0.125rem solid var(--discern-color-accent-600);
+    outline-offset: calc(-1 * var(--discern-space-1));
   }
   .discern-overflow-cue__edge {
     position: absolute;
@@ -58,16 +58,16 @@
       background: none;
     }
     .discern-overflow-cue__edge--block-start {
-      border-block-start: 2px solid CanvasText;
+      border-block-start: 0.125rem solid var(--discern-color-border-strong);
     }
     .discern-overflow-cue__edge--block-end {
-      border-block-end: 2px solid CanvasText;
+      border-block-end: 0.125rem solid var(--discern-color-border-strong);
     }
     .discern-overflow-cue__edge--inline-start {
-      border-inline-start: 2px solid CanvasText;
+      border-inline-start: 0.125rem solid var(--discern-color-border-strong);
     }
     .discern-overflow-cue__edge--inline-end {
-      border-inline-end: 2px solid CanvasText;
+      border-inline-end: 0.125rem solid var(--discern-color-border-strong);
     }
   }
 }

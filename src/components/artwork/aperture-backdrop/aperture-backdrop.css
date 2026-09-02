@@ -6,8 +6,8 @@
   .discern-aperture-backdrop__plate {
     mask-image: linear-gradient(
       170deg,
-      rgb(0 0 0 / 1) 0 40%,
-      rgb(0 0 0 / 0.5) 72%,
+      var(--discern-color-ink) 0 40%,
+      color-mix(in srgb, var(--discern-color-ink) 50%, transparent) 72%,
       transparent 100%
     );
   }
@@ -23,7 +23,7 @@
     stroke: none;
     opacity: var(--discern-backdrop-veil-2);
     transform-box: view-box;
-    transform-origin: 1210px -150px;
+    transform-origin: 75.625rem -9.375rem;
     animation: discern-aperture-backdrop-lean calc(var(--discern-backdrop-beat)
       *
       35)

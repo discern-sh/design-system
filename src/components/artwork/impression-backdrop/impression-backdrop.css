@@ -12,8 +12,8 @@
 
 @layer discern.components {
   .discern-impression-backdrop {
-    --discern-impression-backdrop-cell: 70px;
-    --discern-impression-backdrop-size: 26px;
+    --discern-impression-backdrop-cell: 4.375rem;
+    --discern-impression-backdrop-size: 1.625rem;
     --discern-impression-backdrop-reach-x: 24%;
     --discern-impression-backdrop-reach-y: 38%;
   }
@@ -66,8 +66,8 @@
       var(--discern-impression-backdrop-reach-y)
       at var(--discern-impression-backdrop-x)
       var(--discern-impression-backdrop-y),
-      rgb(0 0 0 / 1) 0%,
-      rgb(0 0 0 / 0.4) 52%,
+      var(--discern-color-ink) 0%,
+      color-mix(in srgb, var(--discern-color-ink) 40%, transparent) 52%,
       transparent 100%
     );
     transition:

@@ -106,7 +106,7 @@
     font-weight: var(--discern-font-weight-strong);
     text-underline-offset: 0.25em;
   }
-  @container discern-audience-grid (max-width: 860px) {
+  @container discern-audience-grid (max-width: 53.75rem) {
     .discern-audience-grid__header {
       grid-template-columns: 1fr;
       gap: var(--discern-space-5);

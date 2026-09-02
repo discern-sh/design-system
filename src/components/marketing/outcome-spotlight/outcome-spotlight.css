@@ -73,7 +73,7 @@
     font-size: var(--discern-font-size-sm);
     line-height: var(--discern-leading-body);
   }
-  @container (max-width: 760px) {
+  @container (max-width: 47.5rem) {
     .discern-outcome-spotlight__lead {
       grid-template-columns: 1fr;
     }
@@ -81,7 +81,7 @@
       margin-block-start: var(--discern-space-6);
     }
   }
-  @container (max-width: 520px) {
+  @container (max-width: 32.5rem) {
     .discern-outcome-spotlight__value {
       font-size: clamp(3.75rem, 18cqi, 6rem);
     }
