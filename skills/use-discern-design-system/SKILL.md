@@ -69,7 +69,7 @@ deno doc --config <checkout>/deno.json <checkout>/src/cli/mod.ts --filter render
 Then use the surface the output needs:
 
 - **Runtime CSS**: `emitDesignSystemRuntime({ outputRoot, components: ["stat"], groups: ["Editorial"], assets: ["fonts"] })` from `@discern-sh/design-system/runtime` writes `discern.css`, `manifest.json`, and — only when a selected Component declares browser behavior — `discern.js`. Dependencies resolve from generated metadata; never hand-add them. Load the CSS inside an element carrying `data-discern-root` and `data-discern-theme="light"` or `"dark"`.
-- **React**: `import { Stat } from "@discern-sh/design-system/react"`, rendered at build time with `renderToStaticMarkup`. The adapter produces static HTML; there is no client bundle or hydration.
+- **React**: `import { Stat } from "@discern-sh/design-system/react"`, rendered at build time with `renderToStaticMarkup`. The adapter produces static HTML; there is no client bundle or hydration. Rendering reads `NODE_ENV`, so grant `--allow-env=NODE_ENV`. Type-checking adapter code needs the consumer config to carry `lib` with `dom` and, when it uses `nodeModulesDir: "none"`, `jsxImportSourceTypes: "@types/react"` with `@types/react` mapped in its imports, because `npm:react` ships no types; add those to the project's own config instead of a side config.
 - **Terminal**: `renderStatCli(props, capabilities)` from `@discern-sh/design-system/cli` is pure and takes explicit capabilities (columns, colour depth, Unicode). Interaction lives behind `./cli/interactive`.
 - **Semantic HTML**: `semanticClass("stat", { element: "value" })` from the package root builds the documented `discern-stat__value` class for hand-authored markup.
 

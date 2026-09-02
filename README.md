@@ -595,6 +595,8 @@ const html = renderToStaticMarkup(
 );
 ```
 
+Rendering through the adapter reads `NODE_ENV`, so a Deno consumer grants `--allow-env=NODE_ENV`. Type-checking adapter usage needs the DOM library and React's types in the consumer's `compilerOptions`: `lib` including `dom`, and, with `nodeModulesDir: "none"`, `jsxImportSourceTypes: "@types/react"` beside an `@types/react` entry in `imports`, because `npm:react` ships no types of its own.
+
 The `Markdown` React Component accepts the same untrusted `source`, an optional Prose `measure`, and optional explicit diagram resources. It composes native document semantics without `dangerouslySetInnerHTML`, dispatches admitted diagram blocks to the public live-token `Diagram`, and renders no wrapper for empty source. Discern uses this adapter at build time only: no React bundle or hydration reaches the browser. Static components need no browser runtime; components whose Metadata declares browser behavior use the selection-scoped `discern.js` emitted beside their CSS. Stateful catalogue examples beyond that published behavior still require a consumer-owned browser strategy outside the catalogue.
 
 ## Output sizes
