@@ -28,6 +28,7 @@ import {
   matchingFoundationTokens,
 } from "../../routes/foundations.ts";
 import { announceCatalogueLocationChange } from "../../shell/location.ts";
+import type { CatalogueFieldSelection } from "../../shell/field-state.ts";
 import { CatalogueIndexCard, CataloguePageHeader } from "../shared.tsx";
 import { FieldPage } from "./field-page.tsx";
 
@@ -628,6 +629,11 @@ function TerminalFoundationDetail(
 
 export interface FoundationsPageProps {
   readonly terminalTheme: TerminalThemeVariant;
+  readonly field?: CatalogueFieldSelection | undefined;
+  readonly fieldScheme?: "light" | "dark" | undefined;
+  readonly onFieldChange?:
+    | ((field: CatalogueFieldSelection) => void)
+    | undefined;
   readonly url?: URL;
   readonly tokens?: readonly FoundationToken[];
   readonly sheets?: readonly TerminalFoundationSheet[];
@@ -636,6 +642,9 @@ export interface FoundationsPageProps {
 export function FoundationsPage(
   {
     terminalTheme,
+    field,
+    fieldScheme,
+    onFieldChange,
     url = new URL(globalThis.location.href),
     tokens = publicTokens,
     sheets = terminalFoundationSheets,
@@ -657,7 +666,15 @@ export function FoundationsPage(
   if (route.page === "tokens") {
     return <TokenExplorer url={url} tokens={tokens} />;
   }
-  if (route.page === "field") return <FieldPage />;
+  if (route.page === "field") {
+    return (
+      <FieldPage
+        field={field}
+        fieldScheme={fieldScheme}
+        onFieldChange={onFieldChange}
+      />
+    );
+  }
   if (route.page === "terminal-index") {
     return (
       <TerminalFoundationsIndex terminalTheme={terminalTheme} sheets={sheets} />

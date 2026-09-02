@@ -1,54 +1,19 @@
 import { useEffect, useRef, useState } from "react";
-import type { CSSProperties } from "react";
 import { Input } from "../../../src/components/forms/input/input.tsx";
 import { Switch } from "../../../src/components/forms/switch/switch.tsx";
 import {
-  defaultFieldPoint,
   evaluateField,
-  evaluateFieldExpression,
   fieldAxes,
   type FieldAxisName,
   fieldColorRoleLaws,
-  type FieldPoint,
-  fieldPolarityExpression,
 } from "../../../src/tokens/field.ts";
+import type { CatalogueFieldSelection } from "../../shell/field-state.ts";
 import {
-  catalogueAppearanceOption,
-  catalogueAppearanceStyle,
-} from "../../shell/appearance-options.ts";
+  catalogueFieldPolarity,
+  catalogueFieldStyle,
+  defaultCatalogueFieldSelection,
+} from "../../shell/field-state.ts";
 import { CataloguePageHeader } from "../shared.tsx";
-
-type FieldPreset = "mono" | "blue";
-
-interface LocalFieldSelection extends FieldPoint {
-  readonly preset: FieldPreset;
-}
-
-const defaultSelection: LocalFieldSelection = {
-  ...defaultFieldPoint,
-  preset: "mono",
-};
-
-function pointPolarity(point: FieldPoint): "light" | "dark" {
-  return evaluateFieldExpression(fieldPolarityExpression, point) === 1
-    ? "dark"
-    : "light";
-}
-
-function fieldStyle(selection: LocalFieldSelection): CSSProperties {
-  const polarity = pointPolarity(selection);
-  const blue = catalogueAppearanceOption("blue");
-  return {
-    "--discern-darkness": selection.darkness,
-    "--discern-structure": selection.structure,
-    "--discern-emphasis": selection.emphasis,
-    "--discern-density": selection.density,
-    colorScheme: polarity,
-    ...(selection.preset === "blue" && blue !== undefined
-      ? catalogueAppearanceStyle(blue, polarity)
-      : {}),
-  } as CSSProperties;
-}
 
 function axisLabel(axis: FieldAxisName): string {
   return (axis[0]?.toUpperCase() ?? "") + axis.slice(1);
@@ -66,6 +31,7 @@ function FieldAxisControl(
   },
 ) {
   const definition = fieldAxes[axis];
+  const descriptionId = `discern-catalogue-field-${axis}-description`;
   return (
     <div className="discern-catalogue-field-axis">
       <div>
@@ -83,23 +49,42 @@ function FieldAxisControl(
         max={definition.maximum}
         step="0.01"
         value={value}
-        aria-description={definition.description}
+        aria-describedby={descriptionId}
         onChange={(event) => onChange(event.currentTarget.valueAsNumber)}
       />
-      <small>{definition.description}</small>
+      <small id={descriptionId}>{definition.description}</small>
     </div>
   );
 }
 
+export interface FieldPageProps {
+  readonly field?: CatalogueFieldSelection | undefined;
+  readonly fieldScheme?: "light" | "dark" | undefined;
+  readonly onFieldChange?:
+    | ((field: CatalogueFieldSelection) => void)
+    | undefined;
+}
+
 /** Live browser instrument for the four public field axes. */
-export function FieldPage() {
-  const [selection, setSelection] = useState(defaultSelection);
+export function FieldPage(
+  { field, fieldScheme, onFieldChange }: FieldPageProps = {},
+) {
+  const [localSelection, setLocalSelection] = useState(
+    defaultCatalogueFieldSelection,
+  );
+  const selection = field ?? localSelection;
   const [computedRoles, setComputedRoles] = useState<
     Readonly<Record<string, string>>
   >({});
   const pageRef = useRef<HTMLDivElement>(null);
   const evaluated = evaluateField(selection);
-  const polarity = pointPolarity(selection);
+  const polarity = catalogueFieldPolarity(selection);
+
+  useEffect(() => {
+    if (field === undefined && onFieldChange !== undefined) {
+      onFieldChange(defaultCatalogueFieldSelection);
+    }
+  }, [field, onFieldChange]);
 
   useEffect(() => {
     const root = pageRef.current;
@@ -112,10 +97,14 @@ export function FieldPage() {
         ]),
     );
     setComputedRoles(roles);
-  }, [selection]);
+  }, [selection, fieldScheme]);
 
+  const changeSelection = (next: CatalogueFieldSelection): void => {
+    if (onFieldChange === undefined) setLocalSelection(next);
+    else onFieldChange(next);
+  };
   const changeAxis = (axis: FieldAxisName, value: number): void => {
-    setSelection((current) => ({ ...current, [axis]: value }));
+    changeSelection({ ...selection, [axis]: value });
   };
 
   return (
@@ -123,7 +112,9 @@ export function FieldPage() {
       ref={pageRef}
       className="discern-catalogue-page discern-catalogue-field"
       data-discern-foundations-page="field"
-      style={fieldStyle(selection)}
+      style={onFieldChange === undefined
+        ? catalogueFieldStyle(selection, fieldScheme)
+        : undefined}
     >
       <a
         className="discern-catalogue-foundations__back"
@@ -165,10 +156,10 @@ export function FieldPage() {
             label="Blue preset"
             description="Layer the optional chromatic preset over this field point."
             onChange={(event) =>
-              setSelection((current) => ({
-                ...current,
+              changeSelection({
+                ...selection,
                 preset: event.currentTarget.checked ? "blue" : "mono",
-              }))}
+              })}
           />
         </section>
 
@@ -181,7 +172,7 @@ export function FieldPage() {
             <p>
               Token polarity is{" "}
               <strong>{polarity}</strong>. The token model has no hysteresis;
-              the live control will hold native colour scheme briefly around the
+              the live control holds native colour scheme briefly around the
               crossover.
             </p>
           </div>

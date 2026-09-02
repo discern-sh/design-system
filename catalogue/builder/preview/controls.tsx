@@ -11,6 +11,13 @@ import {
   catalogueAppearanceStyle,
   defaultCatalogueAppearanceOption,
 } from "../../shell/appearance-options.ts";
+import type { CatalogueFieldSelection } from "../../shell/field-state.ts";
+import {
+  catalogueFieldPolarity,
+  catalogueFieldStyle,
+  parseCatalogueFieldSelection,
+  serializeCatalogueFieldSelection,
+} from "../../shell/field-state.ts";
 import { useCatalogueTerminalTheme } from "../../terminal-theme.ts";
 import type { ThemeSwitcherMode } from "../../../src/components/core/theme-switcher/theme-switcher.tsx";
 import { Select } from "../../../src/components/forms/select/select.tsx";
@@ -46,6 +53,7 @@ export interface BuilderPreviewMeasurement {
 interface MutableAppearance {
   readonly theme: ThemeSwitcherMode;
   readonly accent: CatalogueAppearanceOption;
+  readonly field?: CatalogueFieldSelection;
 }
 
 export interface BuilderPreviewPreferences {
@@ -118,12 +126,27 @@ function updateComfortUrl(
   set("previewZoom", input.zoom, "fit");
   set("previewMode", input.mode, "edit");
   set("previewTheme", input.preview.theme, input.initialPreviewTheme);
+  if (input.preview.field === undefined) {
+    url.searchParams.delete("previewField");
+  } else {
+    url.searchParams.set(
+      "previewField",
+      serializeCatalogueFieldSelection(input.preview.field),
+    );
+  }
   set(
     "previewAccent",
     input.preview.accent.id,
     defaultCatalogueAppearanceOption.id,
   );
   set("theme", input.workspace.theme, "system");
+  if (input.workspace.field === undefined) url.searchParams.delete("field");
+  else {
+    url.searchParams.set(
+      "field",
+      serializeCatalogueFieldSelection(input.workspace.field),
+    );
+  }
   set(
     "accent",
     input.workspace.accent.id,
@@ -155,6 +178,9 @@ export function useBuilderPreviewPreferences(
   const [previewAccent, setPreviewAccent] = useState<
     CatalogueAppearanceOption
   >(() => builderPreviewAccent(url.searchParams.get("previewAccent")));
+  const [previewField, setPreviewField] = useState<
+    CatalogueFieldSelection | undefined
+  >(() => parseCatalogueFieldSelection(url.searchParams.get("previewField")));
   const [measurement, setMeasurement] = useState<BuilderPreviewMeasurement>({
     logicalWidth: 0,
     zoomPercent: 100,
@@ -163,15 +189,26 @@ export function useBuilderPreviewPreferences(
   const [resetViewRevision, setResetViewRevision] = useState(0);
   const [interactionRevision, setInteractionRevision] = useState(0);
   const workspace = useCatalogueAppearance(url);
-  const previewResolvedTheme = useCatalogueTerminalTheme(previewTheme);
+  const selectedPreviewTheme = useCatalogueTerminalTheme(previewTheme);
+  const previewResolvedTheme = previewField === undefined
+    ? selectedPreviewTheme
+    : catalogueFieldPolarity(previewField);
 
   useEffect(() => {
     updateComfortUrl({
       viewport: viewportId,
       zoom: zoomId,
       mode,
-      preview: { theme: previewTheme, accent: previewAccent },
-      workspace: { theme: workspace.theme, accent: workspace.accent },
+      preview: {
+        theme: previewTheme,
+        accent: previewAccent,
+        ...(previewField === undefined ? {} : { field: previewField }),
+      },
+      workspace: {
+        theme: workspace.theme,
+        accent: workspace.accent,
+        ...(workspace.field === undefined ? {} : { field: workspace.field }),
+      },
       initialPreviewTheme,
     });
   }, [
@@ -180,8 +217,10 @@ export function useBuilderPreviewPreferences(
     mode,
     previewTheme,
     previewAccent,
+    previewField,
     workspace.theme,
     workspace.accent,
+    workspace.field,
     initialPreviewTheme,
   ]);
 
@@ -203,11 +242,13 @@ export function useBuilderPreviewPreferences(
       theme: previewTheme,
       resolvedTheme: previewResolvedTheme,
       accent: previewAccent.id,
+      ...(previewField === undefined ? {} : { field: previewField }),
     },
     previewAccent,
     workspaceAppearance: {
       theme: workspace.theme,
       accent: workspace.accent,
+      ...(workspace.field === undefined ? {} : { field: workspace.field }),
     },
     previewResolvedTheme,
     workspaceResolvedTheme: workspace.terminalTheme,
@@ -219,7 +260,10 @@ export function useBuilderPreviewPreferences(
     setZoom,
     setMode,
     setPreviewTheme,
-    setPreviewAccent: (next) => setPreviewAccent(builderPreviewAccent(next)),
+    setPreviewAccent: (next) => {
+      setPreviewField(undefined);
+      setPreviewAccent(builderPreviewAccent(next));
+    },
     setWorkspaceTheme: workspace.changeTheme,
     setWorkspaceAccent: workspace.changeAccent,
     reportMeasurement,
@@ -250,10 +294,9 @@ function AppearanceBoundary(
       className="discern-builder-appearance"
       role="group"
       aria-label={`${label} appearance`}
-      style={catalogueAppearanceStyle(
-        appearance.accent,
-        resolvedTheme,
-      ) as CSSProperties}
+      style={(appearance.field === undefined
+        ? catalogueAppearanceStyle(appearance.accent, resolvedTheme)
+        : catalogueFieldStyle(appearance.field)) as CSSProperties}
     >
       <span>{label}</span>
       <AppearanceControl
@@ -261,6 +304,7 @@ function AppearanceBoundary(
         theme={appearance.theme}
         resolvedTheme={resolvedTheme}
         accent={appearance.accent}
+        field={appearance.field}
         onThemeChange={onThemeChange}
         onAccentChange={onAccentChange}
       />
@@ -360,6 +404,9 @@ export function PreviewToolbarControls(
         appearance={{
           theme: preferences.previewAppearance.theme,
           accent: preferences.previewAccent,
+          ...(preferences.previewAppearance.field === undefined
+            ? {}
+            : { field: preferences.previewAppearance.field }),
         }}
         resolvedTheme={preferences.previewResolvedTheme}
         onThemeChange={preferences.setPreviewTheme}

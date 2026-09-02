@@ -6,6 +6,11 @@ import {
   reviewInlineSizes,
   reviewStateCategories,
 } from "../review-postures.ts";
+import type { CatalogueFieldSelection } from "../shell/field-state.ts";
+import {
+  parseCatalogueFieldSelection,
+  serializeCatalogueFieldSelection,
+} from "../shell/field-state.ts";
 import type {
   ReviewInlineSize,
   ReviewStateCategory,
@@ -25,6 +30,7 @@ export interface ComponentReviewState {
   readonly width: ReviewInlineSize;
   readonly theme: "light" | "dark";
   readonly appearance: string;
+  readonly field?: CatalogueFieldSelection;
   readonly motion: (typeof reviewMotionModes)[number];
   readonly mode: (typeof reviewSurfaceModes)[number];
   readonly speed: (typeof reviewTimingModes)[number];
@@ -52,6 +58,7 @@ export function parseComponentReviewState(url: URL): ComponentReviewState {
   const example = identifier(parameters.get("example"));
   const posture = identifier(parameters.get("posture"));
   const category = oneOf(parameters.get("category"), reviewStateCategories);
+  const field = parseCatalogueFieldSelection(parameters.get("field"));
   return {
     ...(group === undefined ? {} : { group }),
     ...(component === undefined ? {} : { component }),
@@ -65,6 +72,7 @@ export function parseComponentReviewState(url: URL): ComponentReviewState {
     theme: oneOf(parameters.get("theme"), ["light", "dark"] as const) ??
       "light",
     appearance: appearance?.id ?? defaultCatalogueAppearanceOption.id,
+    ...(field === undefined ? {} : { field }),
     motion: oneOf(parameters.get("motion"), reviewMotionModes) ?? "ordinary",
     mode: oneOf(parameters.get("mode"), reviewSurfaceModes) ?? "contact",
     speed: oneOf(parameters.get("speed"), reviewTimingModes) ?? "production",
@@ -84,6 +92,12 @@ export function componentReviewHref(state: ComponentReviewState): string {
       ["width", state.width],
       ["theme", state.theme],
       ["appearance", state.appearance],
+      [
+        "field",
+        state.field === undefined
+          ? undefined
+          : serializeCatalogueFieldSelection(state.field),
+      ],
       ["motion", state.motion],
       ["mode", state.mode],
       ["speed", state.speed],

@@ -49,6 +49,15 @@ Deno.test("local Catalogue state transitions preserve valid explicit Appearance"
   );
   assertEquals(
     preserveCatalogueAppearanceHref(
+      new URL(
+        "https://catalogue.example/catalogue/foundations/field/?field=0.6,1,0.8,1.2,blue",
+      ),
+      "/catalogue/components/card/",
+    ),
+    "/catalogue/components/card/?field=0.6%2C1%2C0.8%2C1.2%2Cblue",
+  );
+  assertEquals(
+    preserveCatalogueAppearanceHref(
       new URL("https://catalogue.example/catalogue/?theme=invalid&accent=999"),
       "/catalogue/review/?scope=all",
     ),

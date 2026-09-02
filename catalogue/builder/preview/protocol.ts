@@ -1,6 +1,8 @@
 /** Versioned same-origin data boundary for the isolated Builder preview. */
 import type { ThemeSwitcherMode } from "../../../src/components/core/theme-switcher/theme-switcher.tsx";
 import { catalogueAppearanceOption } from "../../shell/appearance-options.ts";
+import type { CatalogueFieldSelection } from "../../shell/field-state.ts";
+import { isCatalogueFieldSelection } from "../../shell/field-state.ts";
 import type { BuilderDocument } from "../model.ts";
 import {
   assertBuilderDocument,
@@ -10,7 +12,7 @@ import {
 import type { BuilderPreviewRect } from "./geometry.ts";
 
 export const BUILDER_PREVIEW_PROTOCOL = "discern-builder-preview";
-export const BUILDER_PREVIEW_PROTOCOL_VERSION = 3 as const;
+export const BUILDER_PREVIEW_PROTOCOL_VERSION = 4 as const;
 
 export type BuilderPreviewMode = "edit" | "interact";
 export type BuilderPreviewViewportId =
@@ -38,6 +40,7 @@ export interface BuilderPreviewAppearance {
   readonly theme: ThemeSwitcherMode;
   readonly resolvedTheme: "light" | "dark";
   readonly accent: string;
+  readonly field?: CatalogueFieldSelection;
 }
 
 /** Complete accepted state sent from the Builder into the frame. */
@@ -283,6 +286,8 @@ export function builderPreviewMessageFromEvent(
         appearance.resolvedTheme !== "dark") ||
       typeof appearance.accent !== "string" ||
       catalogueAppearanceOption(appearance.accent) === undefined ||
+      !(appearance.field === undefined ||
+        isCatalogueFieldSelection(appearance.field)) ||
       (snapshot.mode !== "edit" && snapshot.mode !== "interact") ||
       !(snapshot.selectionId === null ||
         typeof snapshot.selectionId === "string") ||
