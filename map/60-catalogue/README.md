@@ -56,18 +56,18 @@ Terminal layouts compose public CLI renderers into complete frames. Definitions 
 
 Appearance is a reusable consumer boundary, split between the proved presets and detailed admission loop in [`shell/appearance-options.ts`](../../catalogue/shell/appearance-options.ts), bounded field state in [`shell/field-state.ts`](../../catalogue/shell/field-state.ts), pure URL preservation in [`shell/appearance-state.ts`](../../catalogue/shell/appearance-state.ts), and the compact control in [`shell/appearance.tsx`](../../catalogue/shell/appearance.tsx). System, Light, and Dark resolve the browser and terminal preview palettes together. The public Select keeps the source-owned semantically safe named presets as quick choices and displays a selected field point when one is active.
 
-The canonical `field` parameter and `discern-catalogue-field` storage value carry all four axes plus the mono/blue choice. URL state wins on load; storage supplies comfort persistence; Back/Forward restores URL-preferred state; and every live replacement announces the new location so navigation links carry the current point rather than its starting value. Any Catalogue or Component route can therefore reproduce one field point directly. The Component review instrument accepts the same point and names light/dark pole links; Builder protocol v4 carries an independent Preview point across the frame while the workspace consumes ordinary Catalogue Appearance state.
+The canonical `field` parameter and Catalogue-owned storage value carry all four axes plus the mono/blue choice. URL state wins on load; storage supplies comfort persistence; Back/Forward restores URL-preferred state; and every live replacement announces the new location so navigation links carry the current point rather than its starting value. Any Catalogue or Component route can therefore reproduce one field point directly. The Component review instrument accepts the same point and names light/dark pole links; Builder protocol v4 carries an independent Preview point across the frame while the workspace consumes ordinary Catalogue Appearance state.
 
 Family state uses stable parameters and omits comfort defaults:
 
-| Family                  | Consequential URL state                                                    |
-| ----------------------- | -------------------------------------------------------------------------- |
-| Components index        | query, Group, purpose, explicit All, field                                  |
-| Component detail        | surface, canonical example, deliberate View all, field                     |
+| Family                  | Consequential URL state                                                           |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| Components index        | query, Group, purpose, explicit All, field                                        |
+| Component detail        | surface, canonical example, deliberate View all, field                            |
 | Compare                 | scope, global surface, overrides, examples, custom membership, jump target, field |
-| Foundations Field       | darkness, structure, emphasis, density, mono/blue                           |
-| Tokens and Compositions | query/category and responsive width, plus shared field                      |
-| Terminal layouts        | preset/custom capabilities and grid, plus shared field                      |
+| Foundations Field       | darkness, structure, emphasis, density, mono/blue                                 |
+| Tokens and Compositions | query/category and responsive width, plus shared field                            |
+| Terminal layouts        | preset/custom capabilities and grid, plus shared field                            |
 
 Invalid values fall back to bounded canonical defaults. Components and Compare use native history for consequential selection changes; the filter-style Token, Composition width, Terminal capability, and Appearance controls replace their current entry. Reload and Back/Forward reconstruct visible controls from the URL rather than hidden component state.
 
@@ -101,6 +101,6 @@ The machine-only `?conformance=1` route remains exhaustive. Ordinary indexes sta
 | Canonical examples and generated registry                     | Component Metadata/vocabularies and [`scripts/build.ts`](../../scripts/build.ts)                                                                                                                                                              |
 | Generated example-image contract and resolver                 | [`catalogue/example-images/`](../../catalogue/example-images/) and [`catalogue/example-images.ts`](../../catalogue/example-images.ts)                                                                                                         |
 | Visual grammar, postures, and local review                    | [`visual-review.md`](visual-review.md), [`catalogue/review-postures.ts`](../../catalogue/review-postures.ts), [`catalogue/review/`](../../catalogue/review/), and [`responsive-ownership.ts`](../../catalogue/review/responsive-ownership.ts) |
-| Field, Token, and terminal-foundation explorers                | [`pages/foundations/field-page.tsx`](../../catalogue/pages/foundations/field-page.tsx), [`routes/foundations.ts`](../../catalogue/routes/foundations.ts), and [`terminal-foundations.ts`](../../catalogue/terminal-foundations.ts)                                                                              |
+| Field, Token, and terminal-foundation explorers               | [`pages/foundations/field-page.tsx`](../../catalogue/pages/foundations/field-page.tsx), [`routes/foundations.ts`](../../catalogue/routes/foundations.ts), and [`terminal-foundations.ts`](../../catalogue/terminal-foundations.ts)            |
 | Illustrative Compositions and terminal layouts                | [`compositions.tsx`](../../catalogue/compositions.tsx) and [`cli-compositions.ts`](../../catalogue/cli-compositions.ts)                                                                                                                       |
 | Browser conformance and family enrolment                      | [`scripts/conformance.ts`](../../scripts/conformance.ts) and [`scripts/conformance/catalogue/`](../../scripts/conformance/catalogue/)                                                                                                         |
