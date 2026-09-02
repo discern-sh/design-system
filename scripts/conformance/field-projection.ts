@@ -338,27 +338,30 @@ export async function verifyFieldProjection(
             root.style.colorScheme = sample.scheme;
           }
 
-          const probe = document.createElement("span");
-          root.append(probe);
-          const roles = roleNames.map((name) => {
+          const roleProbes = roleNames.map((name) => {
+            const probe = document.createElement("span");
             probe.style.color = `var(${name})`;
-            const computed = getComputedStyle(probe).color;
-            return {
-              name,
-              computed,
-            };
+            return { name, probe };
           });
-          probe.remove();
+          root.append(...roleProbes.map(({ probe }) => probe));
+          const roles = roleProbes.map(({ name, probe }) => ({
+            name,
+            computed: getComputedStyle(probe).color,
+          }));
+          for (const { probe } of roleProbes) probe.remove();
 
-          const spacingProbe = document.createElement("span");
-          spacingProbe.style.cssText =
-            "position:absolute;display:block;box-sizing:border-box";
-          root.append(spacingProbe);
-          const spacing = spacingNames.map((name) => {
-            spacingProbe.style.width = `var(${name})`;
-            return { name, pixels: spacingProbe.getBoundingClientRect().width };
+          const spacingProbes = spacingNames.map((name) => {
+            const probe = document.createElement("span");
+            probe.style.cssText =
+              `position:absolute;display:block;box-sizing:border-box;width:var(${name})`;
+            return { name, probe };
           });
-          spacingProbe.remove();
+          root.append(...spacingProbes.map(({ probe }) => probe));
+          const spacing = spacingProbes.map(({ name, probe }) => ({
+            name,
+            pixels: probe.getBoundingClientRect().width,
+          }));
+          for (const { probe } of spacingProbes) probe.remove();
 
           const rootStyle = getComputedStyle(root);
           return {

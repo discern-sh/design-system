@@ -330,6 +330,11 @@ export async function verifyComponentReviewInstrument(
         ).evaluate(
           (element, expected: readonly (readonly [string, string])[]) => {
             const reference = document.createElement("div");
+            reference.setAttribute("data-discern-root", "");
+            reference.setAttribute(
+              "data-discern-theme",
+              element.getAttribute("data-discern-theme") ?? "system",
+            );
             for (const [property, value] of expected) {
               reference.style.setProperty(property, value);
             }
