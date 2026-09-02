@@ -41,6 +41,11 @@
   .discern-table :where(th, td)[data-discern-table-align="end"] {
     text-align: end;
   }
+  .discern-table :where(th, td) a {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 1.5rem;
+  }
   .discern-table--striped tbody tr:nth-child(odd) {
     background: var(--discern-color-stripe);
   }

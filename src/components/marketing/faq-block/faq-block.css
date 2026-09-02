@@ -7,14 +7,15 @@
   .discern-faq-block__inner {
     display: grid;
     grid-template-columns: minmax(14rem, 0.55fr) minmax(0, 1fr);
-    gap: clamp(3rem, 8cqi, 7rem);
+    gap: clamp(var(--discern-space-12), 8cqi,
+      calc(var(--discern-space-24) + var(--discern-space-4)));
     align-items: start;
     width: min(100% - 2 * var(--discern-space-6), var(--discern-page-max));
     margin-inline: auto;
   }
   .discern-faq-block__header {
     position: sticky;
-    top: 7rem;
+    top: calc(var(--discern-space-24) + var(--discern-space-4));
   }
   .discern-faq-block__eyebrow,
   .discern-faq-block summary {
@@ -64,8 +65,8 @@
     display: none;
   }
   .discern-faq-block summary:focus-visible {
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: 4px;
+    outline: 0.125rem solid var(--discern-color-accent-500);
+    outline-offset: var(--discern-space-1);
   }
   .discern-faq-block__toggle {
     position: relative;
@@ -77,7 +78,7 @@
   .discern-faq-block__toggle::after {
     position: absolute;
     inset: 50% 0 auto;
-    border-block-start: 1px solid currentColor;
+    border-block-start: 1px solid var(--discern-color-border-strong);
     content: "";
     transition: rotate var(--discern-duration-fast) var(--discern-ease-out);
   }
@@ -92,7 +93,7 @@
     padding: 0 var(--discern-space-10) var(--discern-space-6) 0;
     color: var(--discern-color-ink-muted);
   }
-  @container discern-faq-block (max-width: 760px) {
+  @container discern-faq-block (max-width: 47.5rem) {
     .discern-faq-block__inner {
       grid-template-columns: 1fr;
     }

@@ -43,7 +43,7 @@
   }
   .discern-prose--drop-cap > p:first-child::first-letter {
     float: left;
-    margin: 0 0.12em 0 0;
+    margin: 0 calc(var(--discern-space-1) / 2) 0 0;
     color: var(--discern-color-accent-700);
     font-family: var(--discern-font-display);
     font-size: 4.4em;
@@ -51,7 +51,7 @@
     line-height: 0.72;
   }
   .discern-prose :where(ul, ol) {
-    padding-inline-start: 1.4em;
+    padding-inline-start: var(--discern-space-6);
   }
   .discern-prose li {
     padding-inline-start: var(--discern-space-2);
@@ -73,7 +73,8 @@
     text-decoration-color: currentColor;
   }
   .discern-prose :not(pre) > code {
-    padding: 0.12em 0.35em;
+    padding: calc(var(--discern-space-1) / 2)
+      calc(var(--discern-space-1) * 1.5);
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-xs);
     background: var(--discern-color-surface-sunken);

@@ -1,5 +1,7 @@
 # 3B — Make the Catalogue the field instrument
 
+**Status:** Complete.
+
 **Goal:** Give the Catalogue a Field page whose sliders drive the live axes on the real emitted CSS, deep-link any point, run the admission proof at that point in the browser, export a consumer snippet, and let every component page and the review instrument render at a chosen field point.
 
 **Wave:** 3. Runs beside 3A on disjoint files and lands first.

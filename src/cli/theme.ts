@@ -10,10 +10,11 @@ import {
   nearestPaletteIndex,
   type TerminalRgbColor,
 } from "./ansi-palette.ts";
-import { clampRgbChannel, oklchToSrgb } from "../internal/oklch.ts";
+import { oklchToSrgb } from "../internal/oklch.ts";
 import {
   baseTokens,
-  discernThemeTokens,
+  evaluateOpaqueField,
+  type FieldColorRoleName,
   themeTokens,
 } from "../tokens/tokens.ts";
 
@@ -78,109 +79,10 @@ const TONE_TOKENS = {
   Record<TerminalSemanticTone, TerminalColorTokenName>
 >;
 
-function splitTopLevel(source: string): readonly string[] {
-  const parts: string[] = [];
-  let depth = 0;
-  let start = 0;
-  for (let index = 0; index < source.length; index += 1) {
-    const character = source[index];
-    if (character === "(") depth += 1;
-    else if (character === ")") depth -= 1;
-    else if (character === "," && depth === 0) {
-      parts.push(source.slice(start, index).trim());
-      start = index + 1;
-    }
-  }
-  parts.push(source.slice(start).trim());
-  return parts;
-}
-
-interface WeightedColor {
-  readonly color: TerminalRgbColor | undefined;
-  readonly weight: number;
-}
-
-function parseWeightedColor(
-  source: string,
-  canvas: TerminalRgbColor,
-): WeightedColor | undefined {
-  const match = source.match(/^(.*?)(?:\s+([0-9]+(?:\.[0-9]+)?)%)?$/u);
-  if (match === null) return undefined;
-  const value = match[1]?.trim() ?? "";
-  const weight = Number(match[2] ?? "50") / 100;
-  if (!Number.isFinite(weight) || weight < 0 || weight > 1) return undefined;
-  if (value === "transparent") return { color: undefined, weight };
-  const color = parseCssColor(value, canvas);
-  return color === undefined ? undefined : { color, weight };
-}
-
-function mixChannel(
-  foreground: number,
-  background: number,
-  amount: number,
-): number {
-  return clampRgbChannel(foreground * amount + background * (1 - amount));
-}
-
-function parseColorMix(
-  source: string,
-  canvas: TerminalRgbColor,
-): TerminalRgbColor | undefined {
-  if (!source.startsWith("color-mix(") || !source.endsWith(")")) {
-    return undefined;
-  }
-  const parts = splitTopLevel(source.slice("color-mix(".length, -1));
-  if (parts.length !== 3 || !parts[0]?.startsWith("in ")) return undefined;
-  const first = parseWeightedColor(parts[1] ?? "", canvas);
-  const second = parseWeightedColor(parts[2] ?? "", canvas);
-  if (first === undefined || second === undefined) return undefined;
-
-  if (first.color === undefined && second.color === undefined) return canvas;
-  if (first.color === undefined) {
-    const color = second.color ?? canvas;
-    return {
-      red: mixChannel(color.red, canvas.red, second.weight),
-      green: mixChannel(color.green, canvas.green, second.weight),
-      blue: mixChannel(color.blue, canvas.blue, second.weight),
-    };
-  }
-  if (second.color === undefined) {
-    return {
-      red: mixChannel(first.color.red, canvas.red, first.weight),
-      green: mixChannel(first.color.green, canvas.green, first.weight),
-      blue: mixChannel(first.color.blue, canvas.blue, first.weight),
-    };
-  }
-  const total = first.weight + second.weight;
-  const firstAmount = total === 0 ? 0.5 : first.weight / total;
-  return {
-    red: mixChannel(first.color.red, second.color.red, firstAmount),
-    green: mixChannel(first.color.green, second.color.green, firstAmount),
-    blue: mixChannel(first.color.blue, second.color.blue, firstAmount),
-  };
-}
-
 function parseCssColor(
   source: string,
-  canvas: TerminalRgbColor,
 ): TerminalRgbColor | undefined {
   const value = source.trim();
-  const shortHex = value.match(/^#([0-9a-f])([0-9a-f])([0-9a-f])$/iu);
-  if (shortHex !== null) {
-    return {
-      red: Number.parseInt(`${shortHex[1]}${shortHex[1]}`, 16),
-      green: Number.parseInt(`${shortHex[2]}${shortHex[2]}`, 16),
-      blue: Number.parseInt(`${shortHex[3]}${shortHex[3]}`, 16),
-    };
-  }
-  const longHex = value.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/iu);
-  if (longHex !== null) {
-    return {
-      red: Number.parseInt(longHex[1] ?? "0", 16),
-      green: Number.parseInt(longHex[2] ?? "0", 16),
-      blue: Number.parseInt(longHex[3] ?? "0", 16),
-    };
-  }
   const oklch = value.match(
     /^oklch\(\s*([0-9]+(?:\.[0-9]+)?)%\s+([0-9]+(?:\.[0-9]+)?)\s+(-?[0-9]+(?:\.[0-9]+)?)\s*\)$/u,
   );
@@ -191,7 +93,7 @@ function parseCssColor(
       Number(oklch[3]),
     );
   }
-  return parseColorMix(value, canvas);
+  return undefined;
 }
 
 function terminalColor(color: TerminalRgbColor): TerminalColor {
@@ -200,36 +102,6 @@ function terminalColor(color: TerminalRgbColor): TerminalColor {
     ansi256: nearestPaletteIndex(color, ANSI_256_RGB),
     ansi16: nearestPaletteIndex(color, ANSI_16_RGB),
   };
-}
-
-function rawTokenValues(
-  variant: TerminalThemeVariant,
-): ReadonlyMap<string, string> {
-  return new Map([
-    ...baseTokens.map((token) => [token.name, token.value] as const),
-    ...discernThemeTokens.map((token) => [token.name, token.value] as const),
-    ...themeTokens.map((token) => [token.name, token[variant]] as const),
-  ]);
-}
-
-function resolveTokenValue(
-  name: string,
-  values: ReadonlyMap<string, string>,
-  stack: ReadonlySet<string> = new Set(),
-): string {
-  if (stack.has(name)) {
-    throw new TypeError(`Circular Token reference at ${name}`);
-  }
-  const source = values.get(name);
-  if (source === undefined) {
-    throw new TypeError(`Unknown Token reference ${name}`);
-  }
-  const nextStack = new Set(stack).add(name);
-  return source.replace(
-    /var\(\s*(--discern-[a-z0-9-]+)\s*\)/giu,
-    (_match, dependency: string) =>
-      resolveTokenValue(dependency, values, nextStack),
-  );
 }
 
 function numericToken(name: string): number {
@@ -281,20 +153,24 @@ function deriveTypography(): Readonly<
 export function deriveTerminalTheme(
   variant: TerminalThemeVariant,
 ): TerminalTheme {
-  const values = rawTokenValues(variant);
-  const canvasSource = resolveTokenValue("--discern-color-canvas", values);
-  const canvas = parseCssColor(canvasSource, { red: 0, green: 0, blue: 0 });
-  if (canvas === undefined) {
-    throw new TypeError(`Cannot resolve terminal canvas from ${canvasSource}`);
-  }
+  const fieldValues = evaluateOpaqueField({
+    darkness: variant === "light" ? 0 : 1,
+  });
   const colors: Partial<Record<TerminalColorTokenName, TerminalColor>> = {};
   for (
     const token of themeTokens.filter((candidate) =>
       candidate.category === "Color"
     )
   ) {
-    const source = resolveTokenValue(token.name, values);
-    const color = parseCssColor(source, canvas);
+    const source = token.name in fieldValues
+      ? fieldValues[token.name as FieldColorRoleName]
+      : token[variant];
+    if (source === undefined) {
+      throw new TypeError(
+        `Field did not evaluate terminal colour ${token.name}`,
+      );
+    }
+    const color = parseCssColor(source);
     if (color === undefined) {
       throw new TypeError(
         `Cannot derive terminal colour ${token.name} from ${source}`,

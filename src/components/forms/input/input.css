@@ -1,8 +1,8 @@
 @layer discern.components {
   .discern-control {
     inline-size: 100%;
-    min-block-size: 42px;
-    padding: 9px 12px;
+    min-block-size: 2.625rem;
+    padding: var(--discern-space-2) var(--discern-space-3);
     border: 1px solid var(--discern-color-border-strong);
     border-radius: var(--discern-radius-sm);
     outline: none;
@@ -22,9 +22,8 @@
   }
   .discern-control:focus-visible {
     border-color: var(--discern-color-accent-500);
-    box-shadow: 0 0 0 3px color-mix(in oklab, var(--discern-color-accent-500)
-      18%,
-      transparent);
+    outline: 0.125rem solid var(--discern-color-accent-500);
+    outline-offset: calc(var(--discern-space-1) / 2);
   }
   .discern-control:disabled {
     border-color: var(--discern-color-border);
@@ -36,7 +35,8 @@
   }
   .discern-control[aria-invalid="true"] {
     border-color: var(--discern-color-danger);
-    box-shadow: 0 0 0 3px color-mix(in oklab, var(--discern-color-danger) 14%,
-      transparent);
+  }
+  .discern-control[aria-invalid="true"]:focus-visible {
+    outline-color: var(--discern-color-accent-500);
   }
 }

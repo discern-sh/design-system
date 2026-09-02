@@ -6,6 +6,24 @@
  * @module
  */
 
+import {
+  evaluateField,
+  evaluateFieldShadows,
+  FIELD_SPACING_UNIT_PX,
+  fieldAxes,
+  type FieldAxisName,
+  fieldColorRoleLaws,
+  fieldShadowRoleLaws,
+} from "./field.ts";
+import {
+  type AppearanceAdmissionProof,
+  type AppearanceSeriesPair,
+  proveAppearanceAdmission,
+} from "./appearance-admission.ts";
+export * from "./appearance-admission.ts";
+export * from "./appearance-css.ts";
+export * from "./field.ts";
+
 /** Catalogue category a design token belongs to. */
 export type TokenCategory =
   | "Color"
@@ -47,30 +65,28 @@ const themeToken = (
   category: TokenCategory = "Color",
 ): ThemeToken => ({ name, light, dark, category, description });
 
-/** Public values owned by the default blue preset, not by the semantic base. */
-export const discernThemeTokens: readonly DesignToken[] = [
-  token(
-    "--discern-accent-hue",
-    "255",
-    "Color",
-    "Master hue for the default Discern accent family. Consumer overrides near a semantic role must override that role coherently and re-run contrast and distinction checks.",
+const fieldAxisTokenCategories = {
+  darkness: "Color",
+  structure: "Color",
+  emphasis: "Color",
+  density: "Spacing",
+} as const satisfies Readonly<Record<FieldAxisName, TokenCategory>>;
+
+/** Registered field-axis Tokens exposed as numeric author controls. */
+export const fieldAxisTokens: readonly DesignToken[] = Object.freeze(
+  (Object.keys(fieldAxes) as FieldAxisName[]).map((axis) =>
+    token(
+      `--discern-${axis}`,
+      String(fieldAxes[axis].default),
+      fieldAxisTokenCategories[axis],
+      fieldAxes[axis].description,
+    )
   ),
-];
+);
 
 /** Framework-neutral primitives and system-font defaults shared by every theme. */
 export const baseTokens: readonly DesignToken[] = [
-  token(
-    "--discern-ink-hue",
-    "285",
-    "Color",
-    "Master hue for cool ink neutrals.",
-  ),
-  token(
-    "--discern-canvas-hue",
-    "80.72",
-    "Color",
-    "Master hue for canvas neutrals.",
-  ),
+  ...fieldAxisTokens,
   token(
     "--discern-font-display",
     '"Iowan Old Style", "Palatino Linotype", Georgia, ui-serif, serif',
@@ -105,7 +121,7 @@ export const baseTokens: readonly DesignToken[] = [
     "--discern-font-size-xs",
     "0.85rem",
     "Typography",
-    "Fine print and compact labels.",
+    "Authored interface-text floor for fine print and compact labels; density never scales font size.",
   ),
   token(
     "--discern-font-size-sm",
@@ -179,9 +195,13 @@ export const baseTokens: readonly DesignToken[] = [
   ...([1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24] as const).map((step) =>
     token(
       `--discern-space-${step}`,
-      `${step * 4}px`,
+      `${step * FIELD_SPACING_UNIT_PX}px`,
       "Spacing",
-      `${step * 4}px spacing step.`,
+      step === 1
+        ? `${FIELD_SPACING_UNIT_PX}px spacing unit. Density scales spacing only and never font size; interface-text and component-owned touch-target floors do not shrink.`
+        : `${
+          step * FIELD_SPACING_UNIT_PX
+        }px authored spacing step; browser emission multiplies it by density.`,
     )
   ),
   token("--discern-radius-xs", "4px", "Shape", "Fine control radius."),
@@ -253,176 +273,35 @@ export const baseTokens: readonly DesignToken[] = [
   ),
 ];
 
-/** Compatibility inventory for catalogue consumers; base and preset stay distinct. */
-export const designTokens: readonly DesignToken[] = [
-  ...baseTokens,
-  ...discernThemeTokens,
-];
+/** Theme-independent Tokens shared by every emitted identity. */
+export const designTokens: readonly DesignToken[] = baseTokens;
 
-/** Semantic light/dark role tokens shared by every theme. */
-export const themeTokens: readonly ThemeToken[] = [
+const lightField = evaluateField({ darkness: 0 });
+const darkField = evaluateField({ darkness: 1 });
+const lightShadows = evaluateFieldShadows({ darkness: 0 });
+const darkShadows = evaluateFieldShadows({ darkness: 1 });
+
+function requiredProjectedValue(
+  values: Readonly<Record<`--discern-${string}`, string>>,
+  name: `--discern-${string}`,
+): string {
+  const value = values[name];
+  if (value === undefined) {
+    throw new TypeError(`Missing projected Token ${name}`);
+  }
+  return value;
+}
+
+const fieldThemeTokens: readonly ThemeToken[] = fieldColorRoleLaws.map((law) =>
   themeToken(
-    "--discern-color-ink",
-    "oklch(24% 0.03 var(--discern-ink-hue))",
-    "oklch(93% 0.012 var(--discern-ink-hue))",
-    "Primary ink.",
-  ),
-  themeToken(
-    "--discern-color-ink-muted",
-    "oklch(40% 0.026 var(--discern-ink-hue))",
-    "oklch(85% 0.016 var(--discern-ink-hue))",
-    "Secondary ink.",
-  ),
-  themeToken(
-    "--discern-color-ink-faint",
-    "oklch(53% 0.02 var(--discern-ink-hue))",
-    "oklch(75% 0.018 var(--discern-ink-hue))",
-    "Tertiary ink.",
-  ),
-  themeToken(
-    "--discern-color-canvas",
-    "oklch(98.97% 0.0028 var(--discern-canvas-hue))",
-    "oklch(25% 0.018 var(--discern-ink-hue))",
-    "Page canvas.",
-  ),
-  themeToken(
-    "--discern-color-surface",
-    "#fff",
-    "oklch(28.5% 0.018 var(--discern-ink-hue))",
-    "Raised surface.",
-  ),
-  themeToken(
-    "--discern-color-surface-sunken",
-    "oklch(96.5% 0.004 var(--discern-canvas-hue))",
-    "oklch(22% 0.018 var(--discern-ink-hue))",
-    "Inset surface.",
-  ),
-  themeToken(
-    "--discern-color-inverse-surface",
-    "oklch(24% 0.03 var(--discern-ink-hue))",
-    "oklch(14.5% 0.018 var(--discern-ink-hue))",
-    "Stable dark surface for inverse and contrast treatments.",
-  ),
-  themeToken(
-    "--discern-color-inverse-ink",
-    "oklch(98.97% 0.0028 var(--discern-canvas-hue))",
-    "oklch(98.97% 0.0028 var(--discern-canvas-hue))",
-    "Readable light ink on inverse surfaces.",
-  ),
-  themeToken(
-    "--discern-color-accent-100",
-    "oklch(96.2% 0.019 var(--discern-accent-hue))",
-    "oklch(35% 0.055 var(--discern-accent-hue))",
-    "Subtlest accent surface.",
-  ),
-  themeToken(
-    "--discern-color-accent-200",
-    "oklch(92% 0.045 var(--discern-accent-hue))",
-    "oklch(40% 0.08 var(--discern-accent-hue))",
-    "Quiet accent surface.",
-  ),
-  themeToken(
-    "--discern-color-accent-300",
-    "oklch(85% 0.082 var(--discern-accent-hue))",
-    "oklch(46% 0.115 var(--discern-accent-hue))",
-    "Soft accent fill.",
-  ),
-  themeToken(
-    "--discern-color-accent-400",
-    "oklch(73% 0.128 var(--discern-accent-hue))",
-    "oklch(58% 0.15 var(--discern-accent-hue))",
-    "Mid accent fill.",
-  ),
-  themeToken(
-    "--discern-color-accent-500",
-    "oklch(61% 0.185 var(--discern-accent-hue))",
-    "oklch(67% 0.165 var(--discern-accent-hue))",
-    "Strong accent fill.",
-  ),
-  themeToken(
-    "--discern-color-accent-600",
-    "oklch(52% 0.208 var(--discern-accent-hue))",
-    "oklch(74% 0.14 var(--discern-accent-hue))",
-    "Default accent action.",
-  ),
-  themeToken(
-    "--discern-color-accent-700",
-    "oklch(44% 0.185 var(--discern-accent-hue))",
-    "oklch(82% 0.105 var(--discern-accent-hue))",
-    "Strong accent text.",
-  ),
-  themeToken(
-    "--discern-color-accent-800",
-    "oklch(34% 0.13 var(--discern-accent-hue))",
-    "oklch(90% 0.06 var(--discern-accent-hue))",
-    "Deepest accent text.",
-  ),
-  themeToken(
-    "--discern-color-border",
-    "oklch(89.5% 0.012 var(--discern-canvas-hue))",
-    "oklch(31% 0.022 var(--discern-ink-hue))",
-    "Hairline border.",
-  ),
-  themeToken(
-    "--discern-color-border-strong",
-    "oklch(81% 0.016 var(--discern-canvas-hue))",
-    "oklch(42% 0.026 var(--discern-ink-hue))",
-    "Emphasised border.",
-  ),
-  themeToken(
-    "--discern-color-stripe",
-    "oklch(92% 0.014 var(--discern-canvas-hue))",
-    "oklch(33% 0.022 var(--discern-ink-hue))",
-    "Decorative hatch and window-chrome pigment.",
-  ),
-  themeToken(
-    "--discern-color-success",
-    "oklch(64% 0.165 152)",
-    "oklch(70% 0.155 152)",
-    "Successful outcome.",
-  ),
-  themeToken(
-    "--discern-color-success-soft",
-    "oklch(95% 0.05 152)",
-    "oklch(29% 0.06 152)",
-    "Successful outcome surface.",
-  ),
-  themeToken(
-    "--discern-color-success-deep",
-    "oklch(37% 0.09 152)",
-    "oklch(88% 0.1 152)",
-    "Successful outcome text on a tinted surface.",
-  ),
-  themeToken(
-    "--discern-color-warning",
-    "oklch(61% 0.14 74)",
-    "oklch(76% 0.13 82)",
-    "Warning state.",
-  ),
-  themeToken(
-    "--discern-color-warning-soft",
-    "oklch(96% 0.045 82)",
-    "oklch(30% 0.055 82)",
-    "Warning surface.",
-  ),
-  themeToken(
-    "--discern-color-warning-deep",
-    "oklch(50% 0.12 74)",
-    "oklch(86% 0.1 82)",
-    "Warning text on a tinted surface.",
-  ),
-  themeToken(
-    "--discern-color-danger",
-    "oklch(54% 0.19 28)",
-    "oklch(70% 0.17 28)",
-    "Danger and invalid state.",
-  ),
-  themeToken(
-    "--discern-color-danger-soft",
-    "oklch(96% 0.035 28)",
-    "oklch(29% 0.055 28)",
-    "Danger surface.",
-  ),
+    law.name,
+    requiredProjectedValue(lightField, law.name),
+    requiredProjectedValue(darkField, law.name),
+    law.description,
+  )
+);
+
+const seriesThemeTokens: readonly ThemeToken[] = [
   themeToken(
     "--discern-color-series-1",
     "oklch(66.76% 0.0939 249.4)",
@@ -459,39 +338,34 @@ export const themeTokens: readonly ThemeToken[] = [
     "oklch(83.8% 0.0682 7.1)",
     "Sixth categorical data-series colour (rose); pairs with the sixth series marker and fill glyph.",
   ),
+];
+
+const appearanceSeriesPairs: readonly AppearanceSeriesPair[] = Object.freeze(
+  seriesThemeTokens.map((series) => {
+    if (!/^--discern-color-series-[1-6]$/u.test(series.name)) {
+      throw new TypeError(`Appearance admission received ${series.name}`);
+    }
+    return {
+      name: series.name as AppearanceSeriesPair["name"],
+      light: series.light,
+      dark: series.dark,
+    };
+  }),
+);
+
+const shadowThemeTokens: readonly ThemeToken[] = fieldShadowRoleLaws.map((
+  law,
+) =>
   themeToken(
-    "--discern-shadow-color",
-    "var(--discern-color-ink)",
-    "oklch(6% 0.01 var(--discern-ink-hue))",
-    "Shadow pigment.",
-  ),
-  themeToken(
-    "--discern-shadow-card",
-    "4px 4px 0 color-mix(in oklab, var(--discern-shadow-color) 6%, transparent)",
-    "4px 4px 0 color-mix(in oklab, var(--discern-shadow-color) 40%, transparent)",
-    "Quiet hard-offset card shadow.",
+    law.name,
+    requiredProjectedValue(lightShadows, law.name),
+    requiredProjectedValue(darkShadows, law.name),
+    law.description,
     "Shape",
-  ),
-  themeToken(
-    "--discern-shadow-window",
-    "8px 10px 0 color-mix(in oklab, var(--discern-shadow-color) 6%, transparent)",
-    "8px 10px 0 color-mix(in oklab, var(--discern-shadow-color) 40%, transparent)",
-    "Hard-offset presentation window shadow.",
-    "Shape",
-  ),
-  themeToken(
-    "--discern-shadow-pop",
-    "6px 6px 0 color-mix(in oklab, var(--discern-shadow-color) 12%, transparent)",
-    "6px 6px 0 color-mix(in oklab, var(--discern-shadow-color) 55%, transparent)",
-    "Raised overlay shadow.",
-    "Shape",
-  ),
-  themeToken(
-    "--discern-color-overlay",
-    "color-mix(in oklab, var(--discern-color-ink) 34%, transparent)",
-    "color-mix(in oklab, #000 58%, transparent)",
-    "Modal backdrop.",
-  ),
+  )
+);
+
+const presentationThemeTokens: readonly ThemeToken[] = [
   themeToken(
     "--discern-brand-artwork-opacity",
     "1",
@@ -508,8 +382,21 @@ export const themeTokens: readonly ThemeToken[] = [
   ),
 ];
 
-/** Every public token: primitives, presets, and theme roles together. */
+/** Semantic light/dark role Tokens projected from the field's two poles. */
+export const themeTokens: readonly ThemeToken[] = [
+  ...fieldThemeTokens,
+  ...seriesThemeTokens,
+  ...shadowThemeTokens,
+  ...presentationThemeTokens,
+];
+
+/** Every token in the neutral field identity. Optional presets stay separate. */
 export const allTokens: readonly (DesignToken | ThemeToken)[] = [
   ...designTokens,
   ...themeTokens,
 ];
+
+/** Exhaustive package-level proof for Field, Accent, and fixed series roles. */
+export function appearanceAdmission(): AppearanceAdmissionProof {
+  return proveAppearanceAdmission(appearanceSeriesPairs);
+}

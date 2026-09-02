@@ -10,7 +10,9 @@
     position: relative;
   }
   .discern-avatar-group > * + * {
-    margin-inline-start: calc(var(--discern-avatar-size, 2.5rem) * -0.3);
+    margin-inline-start: calc(
+      var(--discern-avatar-size, var(--discern-avatar-size-md)) * -0.3
+    );
   }
   .discern-avatar-group .discern-avatar-group__overflow {
     z-index: 1;

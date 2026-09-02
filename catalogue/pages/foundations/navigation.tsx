@@ -1,6 +1,6 @@
 import { DocsNav } from "../../../src/components/docs/docs-nav/docs-nav.tsx";
 import type { DocsNavItem } from "../../../src/components/docs/docs-nav/docs-nav.tsx";
-import { allTokens } from "../../../src/tokens/tokens.ts";
+import { publicTokens } from "../../../src/token-inventory.ts";
 import {
   catalogueTerminalFoundationPath,
   foundationsPaths,
@@ -38,6 +38,7 @@ function sourceBackedSections(
     return [{
       title: "Explore",
       items: [
+        navigationItem(foundationsPaths.field, "Field"),
         navigationItem(foundationsPaths.tokens, "Tokens"),
         navigationItem(
           foundationsPaths.terminal,
@@ -47,7 +48,7 @@ function sourceBackedSections(
     }];
   }
   if (route.page === "tokens") {
-    const state = foundationTokenExplorerState(url, allTokens);
+    const state = foundationTokenExplorerState(url, publicTokens);
     return [
       {
         items: [navigationItem(foundationsPaths.index, "← Foundations")],
@@ -60,7 +61,7 @@ function sourceBackedSections(
             "All",
             state.category === undefined,
           ),
-          ...foundationTokenCategories(allTokens).map((category) =>
+          ...foundationTokenCategories(publicTokens).map((category) =>
             navigationItem(
               foundationTokenCategoryPath(category),
               category,
@@ -70,6 +71,14 @@ function sourceBackedSections(
         ],
       },
     ];
+  }
+  if (route.page === "field") {
+    return [{
+      items: [
+        navigationItem(foundationsPaths.index, "← Foundations"),
+        navigationItem(foundationsPaths.field, "Field", true),
+      ],
+    }];
   }
   return [
     {

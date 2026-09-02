@@ -30,7 +30,14 @@ export const catalogueExamples = defineCatalogueExamples(
     {
       id: "default",
       Example: DefaultClusterState,
-      capture: { selectors: [".discern-cluster > .discern-button"] },
+      capture: {
+        selectors: [".discern-cluster > .discern-button"],
+        framing: {
+          mode: "allocation",
+          reason:
+            "The ghost action's interactive allocation completes the primary, secondary, and ghost comparison.",
+        },
+      },
     },
     { id: "centred", Example: CentredClusterState },
   ],

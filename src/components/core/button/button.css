@@ -1,22 +1,26 @@
 @layer discern.components {
   .discern-button {
-    --discern-button-fill: var(--discern-color-accent-100);
-    --discern-button-fill-hover: var(--discern-color-accent-200);
-    --discern-button-border: light-dark(var(--discern-color-accent-600),
-      var(--discern-color-accent-500));
-    --discern-button-text: var(--discern-color-accent-800);
-    --discern-button-shadow: light-dark(var(--discern-color-accent-600),
-      var(--discern-shadow-color));
+    --discern-button-fill: var(--discern-color-action);
+    --discern-button-fill-hover: color-mix(in oklab,
+      var(--discern-color-action) 88%, var(--discern-color-on-action));
+    --discern-color-button-edge: var(--discern-color-action-edge);
+    --discern-button-text: var(--discern-color-on-action);
+    --discern-shadow-button: calc(var(--discern-space-1) / 2)
+      calc(var(--discern-space-1) / 2) 0
+      var(--discern-color-action-shadow);
+    --discern-shadow-button-pressed: calc(var(--discern-space-1) / 4)
+      calc(var(--discern-space-1) / 4) 0
+      var(--discern-color-action-shadow);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: var(--discern-space-2);
-    min-block-size: 40px;
+    min-block-size: 2.5rem;
     padding: 0 var(--discern-space-5);
-    border: 2px solid var(--discern-button-border);
+    border: 0.125rem solid var(--discern-color-button-edge);
     border-radius: var(--discern-radius-md);
     background: var(--discern-button-fill);
-    box-shadow: 2px 2px 0 var(--discern-button-shadow);
+    box-shadow: var(--discern-shadow-button);
     color: var(--discern-button-text);
     cursor: pointer;
     font-family: var(--discern-font-ui);
@@ -32,12 +36,15 @@
     background: var(--discern-button-fill-hover);
   }
   .discern-button:active {
-    transform: translate(2px, 2px);
-    box-shadow: 1px 1px 0 var(--discern-button-shadow);
+    transform: translate(
+      calc(var(--discern-space-1) / 2),
+      calc(var(--discern-space-1) / 2)
+    );
+    box-shadow: var(--discern-shadow-button-pressed);
   }
   .discern-button:focus-visible {
-    outline: 3px solid var(--discern-color-accent-500);
-    outline-offset: 3px;
+    outline: 0.125rem solid var(--discern-color-accent-500);
+    outline-offset: var(--discern-space-1);
   }
   .discern-button:disabled {
     cursor: not-allowed;
@@ -48,35 +55,41 @@
   .discern-button--secondary {
     --discern-button-fill: var(--discern-color-surface);
     --discern-button-fill-hover: color-mix(in oklab, var(--discern-color-accent-100) 55%, var(--discern-color-surface));
-    --discern-button-border: var(--discern-color-ink);
-    --discern-button-border: light-dark(var(--discern-color-ink),
-      var(--discern-color-border-strong));
+    --discern-color-button-edge: var(--discern-color-neutral-edge);
     --discern-button-text: var(--discern-color-ink);
-    --discern-button-shadow: var(--discern-color-ink);
-    --discern-button-shadow: light-dark(var(--discern-color-ink),
-      var(--discern-shadow-color));
+    --discern-shadow-button: calc(var(--discern-space-1) / 2)
+      calc(var(--discern-space-1) / 2) 0
+      var(--discern-color-neutral-shadow);
+    --discern-shadow-button-pressed: calc(var(--discern-space-1) / 4)
+      calc(var(--discern-space-1) / 4) 0
+      var(--discern-color-neutral-shadow);
   }
   .discern-button--ghost {
     --discern-button-fill: transparent;
     --discern-button-fill-hover: color-mix(in oklab, var(--discern-color-accent-100) 70%, transparent);
-    --discern-button-border: transparent;
-    --discern-button-shadow: transparent;
+    --discern-color-button-edge: color-mix(in oklab,
+      var(--discern-color-border) 0%, transparent);
+    --discern-shadow-button: none;
+    --discern-shadow-button-pressed: none;
     --discern-button-text: var(--discern-color-accent-600);
   }
   .discern-button--danger {
     --discern-button-fill: var(--discern-color-danger-soft);
     --discern-button-fill-hover: color-mix(in oklab, var(--discern-color-danger-soft) 78%, var(--discern-color-danger));
-    --discern-button-border: var(--discern-color-danger);
-    --discern-button-shadow: var(--discern-color-danger);
+    --discern-color-button-edge: var(--discern-color-danger);
+    --discern-shadow-button: calc(var(--discern-space-1) / 2)
+      calc(var(--discern-space-1) / 2) 0 var(--discern-color-danger);
+    --discern-shadow-button-pressed: calc(var(--discern-space-1) / 4)
+      calc(var(--discern-space-1) / 4) 0 var(--discern-color-danger);
     --discern-button-text: var(--discern-color-danger);
   }
   .discern-button--sm {
-    min-block-size: 32px;
+    min-block-size: 2rem;
     padding-inline: var(--discern-space-3);
     font-size: var(--discern-font-size-xs);
   }
   .discern-button--lg {
-    min-block-size: 48px;
+    min-block-size: 3rem;
     padding-inline: var(--discern-space-6);
     font-size: 1.0625rem;
   }

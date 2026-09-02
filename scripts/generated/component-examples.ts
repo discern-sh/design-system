@@ -1417,6 +1417,22 @@ export const componentExampleRegistry = {
         "cli",
       ],
     },
+    {
+      "id": "warning",
+      "label": "Warning",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
+    {
+      "id": "danger",
+      "label": "Danger",
+      "surfaces": [
+        "web",
+        "cli",
+      ],
+    },
   ],
   "empty-state": [
     {

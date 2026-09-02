@@ -50,35 +50,35 @@ Deno.test("narration markers carry exact Token-derived colour at every depth", (
   const truecolor = testTerminalCapabilities({ colorDepth: "truecolor" });
   assertEquals(
     renderSuccessLine({ text: "Saved the draft" }, truecolor),
-    `${ESC}[38;2;165;235;183m✓${ESC}[0m Saved the draft`,
+    `${ESC}[38;2;229;229;229m✓${ESC}[0m Saved the draft`,
   );
   assertEquals(
     renderNoteLine({ text: "Cache already warm" }, truecolor),
-    `${ESC}[38;2;150;199;255m▸${ESC}[0m Cache already warm`,
+    `${ESC}[38;2;240;240;240m▸${ESC}[0m Cache already warm`,
   );
   assertEquals(
     renderWarningLine({ text: "Two checks need review" }, truecolor),
-    `${ESC}[38;2;242;203;131m!${ESC}[0m Two checks need review`,
+    `${ESC}[38;2;219;219;219m!${ESC}[0m Two checks need review`,
   );
   assertEquals(
     renderFailureLine({ text: "The check refused" }, truecolor),
-    `${ESC}[38;2;246;110;96m✕${ESC}[0m The check refused`,
+    `${ESC}[38;2;255;255;255m✕${ESC}[0m The check refused`,
   );
   assertEquals(
     renderSuccessLine(
       { text: "Saved the draft" },
       testTerminalCapabilities({ colorDepth: "ansi256" }),
     ),
-    `${ESC}[38;5;151m✓${ESC}[0m Saved the draft`,
+    `${ESC}[38;5;254m✓${ESC}[0m Saved the draft`,
   );
   const ansi16 = testTerminalCapabilities({ colorDepth: "ansi16" });
   assertEquals(
     renderSuccessLine({ text: "Saved the draft" }, ansi16),
-    `${ESC}[37m✓${ESC}[0m Saved the draft`,
+    `${ESC}[97m✓${ESC}[0m Saved the draft`,
   );
   assertEquals(
     renderFailureLine({ text: "The check refused" }, ansi16),
-    `${ESC}[90m✕${ESC}[0m The check refused`,
+    `${ESC}[97m✕${ESC}[0m The check refused`,
   );
 });
 
@@ -86,7 +86,7 @@ Deno.test("narration lead lines take the strong uppercase title treatment", () =
   const truecolor = testTerminalCapabilities({ colorDepth: "truecolor" });
   assertEquals(
     renderLeadLine({ text: "Preflight" }, truecolor),
-    `${ESC}[38;2;150;199;255m▲${ESC}[0m ${ESC}[1;38;2;231;231;240mPREFLIGHT${ESC}[0m`,
+    `${ESC}[38;2;240;240;240m▲${ESC}[0m ${ESC}[1;38;2;235;235;235mPREFLIGHT${ESC}[0m`,
   );
 });
 
@@ -96,10 +96,10 @@ Deno.test("narration themes move only Token colours, never geometry", () => {
     { text: "Saved the draft", theme: "light" },
     truecolor,
   );
-  assertEquals(light, `${ESC}[38;2;12;77;38m✓${ESC}[0m Saved the draft`);
+  assertEquals(light, `${ESC}[38;2;46;46;46m✓${ESC}[0m Saved the draft`);
   assertEquals(
     renderLeadLine({ text: "Preflight", theme: "light" }, truecolor),
-    `${ESC}[38;2;0;76;180m▲${ESC}[0m ${ESC}[1;38;2;30;29;45mPREFLIGHT${ESC}[0m`,
+    `${ESC}[38;2;18;18;18m▲${ESC}[0m ${ESC}[1;38;2;33;33;33mPREFLIGHT${ESC}[0m`,
   );
   const dark = renderSuccessLine({ text: "Saved the draft" }, truecolor);
   assertEquals(stripAnsi(light), stripAnsi(dark));
@@ -177,11 +177,11 @@ Deno.test("styleSemanticText resolves roles and tones from the theme bridge", ()
   );
   assertEquals(
     styleSemanticText("Done", { role: "strong", tone: "success" }, truecolor),
-    `${ESC}[1;38;2;165;235;183mDone${ESC}[0m`,
+    `${ESC}[1;38;2;229;229;229mDone${ESC}[0m`,
   );
   assertEquals(
     styleSemanticText("Done", { tone: "success", theme: "light" }, truecolor),
-    `${ESC}[38;2;12;77;38mDone${ESC}[0m`,
+    `${ESC}[38;2;46;46;46mDone${ESC}[0m`,
   );
   assertEquals(styleSemanticText("bare", {}, truecolor), "bare");
   assertEquals(

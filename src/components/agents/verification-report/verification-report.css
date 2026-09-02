@@ -43,27 +43,28 @@
   }
   .discern-verification-report__stamp {
     flex: none;
-    padding-block: 1px;
-    padding-inline: 7px;
-    border: 1px solid currentColor;
+    padding-block: calc(var(--discern-space-1) * 0.25);
+    padding-inline: var(--discern-space-2);
+    border: 1px solid var(--discern-color-border-strong);
     border-radius: var(--discern-radius-xs);
     font-weight: var(--discern-font-weight-strong);
     letter-spacing: 0.08em;
-    box-shadow: 1px 1px 0 color-mix(in oklab, currentColor 18%, transparent);
     text-transform: uppercase;
   }
   .discern-verification-report__stamp[data-discern-state="pass"] {
+    border-color: var(--discern-color-success);
     background: var(--discern-color-success-soft);
     color: var(--discern-color-success-deep);
   }
   .discern-verification-report__stamp[data-discern-state="fail"] {
+    border-color: var(--discern-color-danger);
     background: var(--discern-color-danger-soft);
     color: var(--discern-color-danger);
   }
   .discern-verification-report__meta,
   .discern-verification-report__checks {
     display: grid;
-    gap: 3px;
+    gap: calc(var(--discern-space-1) * 0.75);
     margin: 0;
   }
   .discern-verification-report__meta > div,
@@ -97,18 +98,19 @@
       background:
         repeating-linear-gradient(
         to right,
-        var(--discern-color-border-strong) 0 2px,
-        transparent 2px 6px
+        var(--discern-color-border-strong) 0 calc(var(--discern-space-1) * 0.5),
+        transparent calc(var(--discern-space-1) * 0.5)
+        calc(var(--discern-space-1) * 1.5)
       )
-        0 calc(100% - 0.45em) / 100% 1px no-repeat;
+        0 calc(100% - var(--discern-space-2)) / 100% 1px no-repeat;
     }
     & dt {
       background: var(--discern-color-surface);
-      padding-inline-end: 4px;
+      padding-inline-end: var(--discern-space-1);
     }
     & dd {
       background: var(--discern-color-surface);
-      padding-inline-start: 4px;
+      padding-inline-start: var(--discern-space-1);
     }
     & > div[data-discern-state="pass"] .discern-verification-report__glyph {
       color: var(--discern-color-success);
@@ -123,7 +125,7 @@
   .discern-verification-report__glyph {
     display: inline-block;
     inline-size: 1.1em;
-    margin-inline-start: 0.45em;
+    margin-inline-start: var(--discern-space-2);
     text-align: end;
   }
   .discern-verification-report__summary {
@@ -134,10 +136,5 @@
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-sm);
     line-height: var(--discern-leading-body);
-  }
-  @media (forced-colors: active) {
-    .discern-verification-report {
-      border-color: CanvasText;
-    }
   }
 }

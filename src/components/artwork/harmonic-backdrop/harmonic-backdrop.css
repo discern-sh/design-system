@@ -1,11 +1,11 @@
 @layer discern.components {
   .discern-harmonic-backdrop {
-    --discern-harmonic-backdrop-sx: 0px;
-    --discern-harmonic-backdrop-sy: 0px;
-    --discern-harmonic-backdrop-bx: 0px;
-    --discern-harmonic-backdrop-by: 0px;
-    --discern-harmonic-backdrop-tx: 0px;
-    --discern-harmonic-backdrop-ty: 0px;
+    --discern-harmonic-backdrop-sx: 0;
+    --discern-harmonic-backdrop-sy: 0;
+    --discern-harmonic-backdrop-bx: 0;
+    --discern-harmonic-backdrop-by: 0;
+    --discern-harmonic-backdrop-tx: 0;
+    --discern-harmonic-backdrop-ty: 0;
     color: var(--discern-backdrop-ink);
   }
 

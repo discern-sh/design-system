@@ -6,8 +6,8 @@
     overscroll-behavior-inline: contain;
   }
   .discern-diagram__viewport:focus-visible {
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: 2px;
+    outline: 0.125rem solid var(--discern-color-accent-500);
+    outline-offset: 0.125rem;
   }
   .discern-diagram {
     display: block;

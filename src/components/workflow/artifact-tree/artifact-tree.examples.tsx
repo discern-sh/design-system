@@ -85,7 +85,7 @@ function DeepTreeState() {
   return (
     <div
       data-example-artifact-tree-stress
-      style={{ width: "100%", maxWidth: "390px" }}
+      style={{ width: "100%", maxWidth: "24.375rem" }}
     >
       <ArtifactTree
         label="Deep generated path"

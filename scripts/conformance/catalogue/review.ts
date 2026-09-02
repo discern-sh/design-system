@@ -325,16 +325,41 @@ export async function verifyComponentReviewInstrument(
             speed: "production",
           }),
         );
+        const appearanceMismatches = await page.locator(
+          "[data-discern-review-identity]",
+        ).evaluate(
+          (element, expected: readonly (readonly [string, string])[]) => {
+            const reference = document.createElement("div");
+            reference.setAttribute("data-discern-root", "");
+            reference.setAttribute(
+              "data-discern-theme",
+              element.getAttribute("data-discern-theme") ?? "system",
+            );
+            for (const [property, value] of expected) {
+              reference.style.setProperty(property, value);
+            }
+            document.body.append(reference);
+            const computed = getComputedStyle(element);
+            const computedReference = getComputedStyle(reference);
+            const mismatches = expected.flatMap(([property]) => {
+              const expectedValue = computedReference.getPropertyValue(
+                property,
+              ).trim();
+              const actualValue = computed.getPropertyValue(property).trim();
+              return actualValue === expectedValue ? [] : [
+                `${property}: expected ${expectedValue}, found ${actualValue}`,
+              ];
+            });
+            reference.remove();
+            return mismatches;
+          },
+          Object.entries(catalogueAppearanceStyle(option, theme)),
+        );
         invariant(
-          await page.locator("[data-discern-review-identity]").evaluate(
-            (element, expected: readonly (readonly [string, string])[]) =>
-              expected.every(([property, value]) =>
-                getComputedStyle(element).getPropertyValue(property).trim() ===
-                  value
-              ),
-            Object.entries(catalogueAppearanceStyle(option, theme)),
-          ),
-          `${theme}/${option.id} Appearance did not reach the specimen`,
+          appearanceMismatches.length === 0,
+          `${theme}/${option.id} Appearance did not reach the specimen: ${
+            appearanceMismatches.join("; ")
+          }`,
         );
         appearanceCases += 1;
 

@@ -21,6 +21,7 @@ export const foundationsRouteDescriptor = {
 
 export const foundationsPaths = Object.freeze({
   index: foundationsRouteDescriptor.path,
+  field: `${foundationsRouteDescriptor.path}field/`,
   tokens: `${foundationsRouteDescriptor.path}tokens/`,
   terminal: `${foundationsRouteDescriptor.path}terminal/`,
 });
@@ -67,6 +68,9 @@ export const foundationsRouteFamily: CatalogueRouteFamily = {
     if (pathname === foundationsPaths.tokens) {
       return { family: "foundations", page: "tokens" };
     }
+    if (pathname === foundationsPaths.field) {
+      return { family: "foundations", page: "field" };
+    }
     if (pathname === foundationsPaths.terminal) {
       return { family: "foundations", page: "terminal-index" };
     }
@@ -77,6 +81,7 @@ export const foundationsRouteFamily: CatalogueRouteFamily = {
   },
   ownsShellPath: (pathname) =>
     pathname === foundationsPaths.index ||
+    pathname === foundationsPaths.field ||
     pathname === foundationsPaths.tokens ||
     pathname === foundationsPaths.terminal ||
     terminalSheetIdFromPath(pathname) !== undefined,
@@ -161,6 +166,15 @@ export function foundationsSearchRecords(
 ): readonly SearchRecord[] {
   return [
     routeDescriptorSearchRecord(foundationsRouteDescriptor),
+    {
+      id: "foundations:field",
+      href: foundationsPaths.field,
+      title: "Field",
+      context: "Foundations",
+      description:
+        "Place the live design system at one continuous field point.",
+      keywords: ["darkness", "structure", "emphasis", "density", "proof"],
+    },
     {
       id: "foundations:tokens",
       href: foundationsPaths.tokens,

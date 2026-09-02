@@ -3,8 +3,8 @@
     border-radius: 50%;
   }
   .discern-choice--radio .discern-choice__control > span {
-    inline-size: 7px;
-    block-size: 7px;
+    inline-size: 0.4375rem;
+    block-size: 0.4375rem;
     border: 0;
     border-radius: 50%;
     background: transparent;
@@ -12,6 +12,6 @@
     translate: none;
   }
   .discern-choice--radio input:checked + .discern-choice__control > span {
-    background: white;
+    background: var(--discern-color-on-action);
   }
 }

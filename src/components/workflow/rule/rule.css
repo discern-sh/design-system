@@ -5,7 +5,7 @@
     max-inline-size: 100%;
     padding: var(--discern-space-5);
     border: 1px solid var(--discern-color-border);
-    border-inline-start: 3px solid var(--discern-color-accent-500);
+    border-inline-start: 0.1875rem solid var(--discern-color-accent-500);
     border-radius: var(--discern-radius-xs);
     background: var(--discern-color-surface);
     color: var(--discern-color-ink);

@@ -36,6 +36,12 @@ function visibleValidationProxyViolations(
   stylesheets: ReadonlyMap<string, string>,
   validationCapablePaths: ReadonlySet<string> = new Set(stylesheets.keys()),
 ): readonly string[] {
+  const carriesEmphaticBorderWidth = (body: string): boolean => {
+    const match = /border-width\s*:\s*(\d*\.?\d+)(px|rem)\b/.exec(body);
+    if (match === null) return false;
+    const value = Number(match[1]);
+    return match[2] === "rem" ? value * 16 >= 2 : value >= 2;
+  };
   const violations: string[] = [];
   for (const [path, css] of stylesheets) {
     if (!validationCapablePaths.has(path)) continue;
@@ -54,7 +60,7 @@ function visibleValidationProxyViolations(
           const body = match[2] ?? "";
           return selectors.includes('[aria-invalid="true"]') &&
             selectors.includes(`.${proxyClass}`) &&
-            /border-width\s*:\s*(?:2|[3-9]|[1-9][0-9]+)px\b/.test(body) &&
+            carriesEmphaticBorderWidth(body) &&
             /border(?:-color)?\s*:\s*var\(--discern-color-danger\)/.test(body);
         });
       if (!hasSemanticInvalidRule) {
@@ -195,7 +201,7 @@ Deno.test("a synthetic future control proxy cannot hide validation", () => {
         `
       ${unguarded.get(path)}
       .discern-future-choice input[aria-invalid="true"] + .discern-future-choice__proxy {
-        border-width: 2px;
+        border-width: 0.125rem;
         border-color: var(--discern-color-danger);
       }
     `,

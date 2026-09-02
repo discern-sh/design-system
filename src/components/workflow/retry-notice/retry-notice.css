@@ -4,7 +4,7 @@
     min-inline-size: 0;
     padding: var(--discern-space-3) var(--discern-space-4);
     border: 1px solid var(--discern-color-border);
-    border-inline-start: 2px solid var(--discern-color-border-strong);
+    border-inline-start: 0.125rem solid var(--discern-color-border-strong);
     border-radius: var(--discern-radius-md);
     background: var(--discern-color-surface);
     color: var(--discern-color-ink);

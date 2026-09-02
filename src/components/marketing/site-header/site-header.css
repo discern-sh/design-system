@@ -2,9 +2,7 @@
   .discern-site-header {
     z-index: 30;
     border-block-end: 1px solid var(--discern-color-border);
-    background: color-mix(in oklab, var(--discern-color-canvas) 92%,
-      transparent);
-    backdrop-filter: blur(14px);
+    background: var(--discern-color-surface);
   }
   .discern-site-header--sticky {
     position: sticky;
@@ -12,11 +10,8 @@
   }
   .discern-site-header--campaign {
     z-index: 50;
-    border-block-end-color: color-mix(in oklab,
-      var(--discern-color-border-strong) 62%, transparent);
-    background: color-mix(in oklab, var(--discern-color-canvas) 84%,
-      transparent);
-    backdrop-filter: blur(20px) saturate(135%);
+    border-block-end-color: var(--discern-color-border-strong);
+    background: var(--discern-color-surface);
   }
   .discern-site-header__notice,
   .discern-site-header__brand--ui,
@@ -34,16 +29,19 @@
     text-align: center;
   }
   .discern-site-header__notice a {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 1.5rem;
     color: inherit;
     font-weight: var(--discern-font-weight-strong);
-    outline-width: 2px;
+    outline-width: 0.125rem;
   }
   .discern-site-header__inner {
     display: flex;
     align-items: center;
     gap: var(--discern-space-6);
     width: min(100% - 2 * var(--discern-space-6), var(--discern-page-max));
-    min-height: 68px;
+    min-height: 4.25rem;
     margin-inline: auto;
   }
   .discern-site-header--campaign .discern-site-header__inner {
@@ -92,7 +90,7 @@
     border: 1px solid var(--discern-color-accent-600);
     border-radius: var(--discern-radius-sm);
     background: var(--discern-color-accent-200);
-    box-shadow: 3px 3px 0 var(--discern-color-accent-600);
+    box-shadow: var(--discern-shadow-card);
     color: var(--discern-color-accent-800);
   }
   .discern-site-header__mark--plain {
@@ -122,7 +120,7 @@
   .discern-site-header__nav a {
     display: inline-flex;
     align-items: center;
-    min-block-size: 24px;
+    min-block-size: 1.5rem;
     padding-block: var(--discern-space-2);
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-xs);
@@ -140,7 +138,7 @@
     align-items: center;
     gap: var(--discern-space-2);
   }
-  @media (max-width: 720px) {
+  @media (max-width: 45rem) {
     .discern-site-header__inner {
       flex-wrap: wrap;
       gap: var(--discern-space-3);
@@ -165,7 +163,7 @@
       width: min(100% - 2 * var(--discern-space-4), 86rem);
     }
   }
-  @media (max-width: 480px) {
+  @media (max-width: 30rem) {
     .discern-site-header--collapse-nav .discern-site-header__nav {
       display: none;
     }

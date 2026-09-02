@@ -10,7 +10,8 @@
     overflow: hidden;
     width: min(100%, var(--discern-page-max));
     margin-inline: auto;
-    padding: clamp(3rem, 8cqi, 6.5rem);
+    padding: clamp(var(--discern-space-12), 8cqi,
+      calc(var(--discern-space-24) + var(--discern-space-2)));
     border: 1px solid var(--discern-color-accent-300);
     border-radius: var(--discern-radius-lg);
     background:
@@ -24,21 +25,18 @@
     background: var(--discern-color-surface-sunken);
   }
   .discern-cta-band--contrast .discern-cta-band__inner {
-    border-color: transparent;
-    background:
-      radial-gradient(circle at 100% 0%, color-mix(in oklab,
-      var(--discern-color-accent-500) 32%, transparent), transparent 42%),
-      var(--discern-color-inverse-surface);
-    color: var(--discern-color-inverse-ink);
+    border-color: var(--discern-color-action-edge);
+    background: var(--discern-color-action);
+    color: var(--discern-color-on-action);
   }
   .discern-cta-band__inner::after {
     position: absolute;
     z-index: -1;
-    right: -4rem;
-    bottom: -7rem;
+    right: calc(-1 * var(--discern-space-16));
+    bottom: calc(-1 * (var(--discern-space-24) + var(--discern-space-4)));
     inline-size: 18rem;
     block-size: 18rem;
-    border: 1px dashed currentColor;
+    border: 1px dashed var(--discern-color-border-strong);
     border-radius: 50%;
     content: "";
     opacity: 0.12;
@@ -63,7 +61,7 @@
     font-weight: var(--discern-font-weight-strong);
   }
   .discern-cta-band--contrast .discern-cta-band__eyebrow {
-    color: var(--discern-color-inverse-ink);
+    color: var(--discern-color-on-action);
   }
   .discern-cta-band__content h2 {
     max-width: 14ch;
@@ -79,8 +77,11 @@
   }
   .discern-cta-band--contrast .discern-cta-band__description,
   .discern-cta-band--contrast .discern-cta-band__note {
-    color: color-mix(in oklab, var(--discern-color-inverse-ink) 76%,
+    color: color-mix(in oklab, var(--discern-color-on-action) 76%,
       transparent);
+  }
+  .discern-cta-band--contrast .discern-cta-band__inner::after {
+    border-color: var(--discern-color-action-edge);
   }
   .discern-cta-band__description > :last-child {
     margin-block-end: 0;
@@ -118,7 +119,7 @@
     position: relative;
     min-width: 0;
   }
-  @container discern-cta-band (max-width: 720px) {
+  @container discern-cta-band (max-width: 45rem) {
     :is(.discern-cta-band--split, .discern-cta-band--with-visual) .discern-cta-band__inner {
       grid-template-columns: 1fr;
     }

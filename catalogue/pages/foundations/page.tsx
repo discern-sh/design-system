@@ -3,12 +3,10 @@ import type { CSSProperties, FormEvent } from "react";
 import type { TerminalThemeVariant } from "../../../src/cli/theme.ts";
 import { CopyButton } from "../../../src/components/docs/copy-button/copy-button.tsx";
 import { OverflowCue } from "../../../src/components/layout/overflow-cue/overflow-cue.tsx";
-import {
-  allTokens,
-  baseTokens,
-  discernThemeTokens,
-} from "../../../src/tokens/tokens.ts";
+import { publicTokens } from "../../../src/token-inventory.ts";
+import { baseTokens } from "../../../src/tokens/tokens.ts";
 import type { TokenCategory } from "../../../src/tokens/tokens.ts";
+import { blueThemeTokens } from "../../../src/theme/blue.ts";
 import {
   catalogueCliCapabilities,
   CliOutputPreview,
@@ -30,7 +28,9 @@ import {
   matchingFoundationTokens,
 } from "../../routes/foundations.ts";
 import { announceCatalogueLocationChange } from "../../shell/location.ts";
+import type { CatalogueFieldSelection } from "../../shell/field-state.ts";
 import { CatalogueIndexCard, CataloguePageHeader } from "../shared.tsx";
+import { FieldPage } from "./field-page.tsx";
 
 function isThemed(token: FoundationToken): token is FoundationToken & {
   readonly light: string;
@@ -41,10 +41,10 @@ function isThemed(token: FoundationToken): token is FoundationToken & {
 
 function tokenSource(token: FoundationToken): string {
   if (baseTokens.some((candidate) => candidate === token)) return "Base Token";
-  if (discernThemeTokens.some((candidate) => candidate === token)) {
-    return "Discern theme Token";
+  if (blueThemeTokens.some((candidate) => candidate === token)) {
+    return "Blue preset Token";
   }
-  return "Semantic theme Token";
+  return "Field Token";
 }
 
 function previewVariable(name: string, value: string): CSSProperties {
@@ -458,6 +458,24 @@ function FoundationsIndex(
       />
       <div className="discern-catalogue-foundations-index">
         <CatalogueIndexCard
+          href={foundationsPaths.field}
+          title="Field"
+          description="Drive the live axes and inspect the result."
+          action="Open the Field instrument"
+          metadata={<span>4 continuous axes</span>}
+          media={
+            <div
+              className="discern-catalogue-foundations-index__field"
+              aria-hidden="true"
+            >
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+          }
+        />
+        <CatalogueIndexCard
           href={foundationsPaths.tokens}
           title="Tokens"
           description="Colour, type, scale, shape, and motion."
@@ -611,6 +629,11 @@ function TerminalFoundationDetail(
 
 export interface FoundationsPageProps {
   readonly terminalTheme: TerminalThemeVariant;
+  readonly field?: CatalogueFieldSelection | undefined;
+  readonly fieldScheme?: "light" | "dark" | undefined;
+  readonly onFieldChange?:
+    | ((field: CatalogueFieldSelection) => void)
+    | undefined;
   readonly url?: URL;
   readonly tokens?: readonly FoundationToken[];
   readonly sheets?: readonly TerminalFoundationSheet[];
@@ -619,8 +642,11 @@ export interface FoundationsPageProps {
 export function FoundationsPage(
   {
     terminalTheme,
+    field,
+    fieldScheme,
+    onFieldChange,
     url = new URL(globalThis.location.href),
-    tokens = allTokens,
+    tokens = publicTokens,
     sheets = terminalFoundationSheets,
   }: FoundationsPageProps,
 ) {
@@ -639,6 +665,15 @@ export function FoundationsPage(
   }
   if (route.page === "tokens") {
     return <TokenExplorer url={url} tokens={tokens} />;
+  }
+  if (route.page === "field") {
+    return (
+      <FieldPage
+        field={field}
+        fieldScheme={fieldScheme}
+        onFieldChange={onFieldChange}
+      />
+    );
   }
   if (route.page === "terminal-index") {
     return (

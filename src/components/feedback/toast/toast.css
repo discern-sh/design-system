@@ -10,14 +10,15 @@
     pointer-events: none;
   }
   .discern-toast {
-    --discern-toast-accent: var(--discern-color-border-strong);
+    --discern-color-toast-accent: var(--discern-color-border-strong);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--discern-space-3);
     width: fit-content;
     max-inline-size: min(30rem, 100%);
-    padding: 11px 12px 11px 14px;
-    border: 1px solid var(--discern-toast-accent);
+    padding: var(--discern-space-3) var(--discern-space-3)
+      var(--discern-space-3) var(--discern-space-4);
+    border: 1px solid var(--discern-color-toast-accent);
     border-radius: var(--discern-radius-md);
     background: var(--discern-color-surface);
     box-shadow: var(--discern-shadow-pop);
@@ -27,21 +28,21 @@
     line-height: var(--discern-leading-snug);
   }
   .discern-toast--success {
-    --discern-toast-accent: var(--discern-color-success);
+    --discern-color-toast-accent: var(--discern-color-success);
   }
   .discern-toast--warning {
-    --discern-toast-accent: var(--discern-color-warning);
+    --discern-color-toast-accent: var(--discern-color-warning);
   }
   .discern-toast--danger {
-    --discern-toast-accent: var(--discern-color-danger);
+    --discern-color-toast-accent: var(--discern-color-danger);
   }
   .discern-toast__icon {
     display: grid;
     flex: none;
     place-items: center;
-    inline-size: 17px;
-    block-size: 17px;
-    color: var(--discern-toast-accent);
+    inline-size: 1.0625rem;
+    block-size: 1.0625rem;
+    color: var(--discern-color-toast-accent);
   }
   .discern-toast__icon > :where(svg, img) {
     inline-size: 100%;
@@ -53,9 +54,9 @@
   .discern-toast__dismiss {
     display: grid;
     place-items: center;
-    inline-size: 26px;
-    block-size: 26px;
-    margin-inline-start: 4px;
+    inline-size: 1.625rem;
+    block-size: 1.625rem;
+    margin-inline-start: var(--discern-space-1);
     padding: 0;
     border: 0;
     border-radius: var(--discern-radius-xs);
@@ -73,6 +74,6 @@
   }
   .discern-toast__dismiss:active {
     background: var(--discern-color-accent-100);
-    transform: translateY(1px);
+    transform: translateY(calc(var(--discern-space-1) / 4));
   }
 }

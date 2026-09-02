@@ -46,15 +46,18 @@ export const Worklog: DiscernComponent<HTMLOListElement, WorklogProps> =
             data-discern-status={entry.status}
             key={index}
           >
-            <span className="discern-worklog__marker" aria-hidden="true">
+            <span
+              className="discern-worklog__marker"
+              role="img"
+              aria-label={entry.statusLabel === undefined
+                ? entry.status
+                : `${entry.statusLabel}, ${entry.status}`}
+            >
               {markers[entry.status]}
             </span>
             <span className="discern-worklog__body">
               <span className="discern-worklog__label">
                 {entry.label}
-                <span className="discern-visually-hidden">
-                  {`, ${entry.statusLabel ?? entry.status}`}
-                </span>
               </span>
               {entry.detail !== undefined && entry.detail !== null
                 ? (

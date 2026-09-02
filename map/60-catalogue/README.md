@@ -9,7 +9,7 @@ The site root and Catalogue have distinct jobs:
 - `/` is the design system's static landing page.
 - `/catalogue/` is the small Catalogue overview.
 - `/catalogue/components/` owns Component discovery; its slug routes own live detail specimens.
-- `/catalogue/foundations/` owns Token and terminal-foundation explorers.
+- `/catalogue/foundations/` owns the continuous Field instrument, Token explorer, and terminal-foundation explorer.
 - `/catalogue/compositions/` owns illustrative browser patterns.
 - `/catalogue/terminal/` owns complete terminal-layout capability labs.
 - `/catalogue/review/` is the deliberate Compare workspace.
@@ -44,7 +44,9 @@ Component detail source actions name their destination: React source, CLI render
 
 ## Explorers
 
-The Foundations index leads to two distinct review modes. The Token explorer shows recognisable previews before expandable values and copy actions; query and category filters share the URL and the category row uses a selective inline overflow cue when needed. The terminal-foundation registry in [`terminal-foundations.ts`](../../catalogue/terminal-foundations.ts) enrols each sheet in stdout, browser navigation, search, preview, and conformance. Animated motifs honour reduced motion and retain an explicit Play/Pause action.
+The Foundations index leads to three distinct review modes. The Field page at `/catalogue/foundations/field/` writes darkness, structure, emphasis, and density to the real Catalogue Root, applies the optional blue Preset, and reads the emitted roles back from the browser. Its control-only polarity hysteresis holds native colour scheme inside the crossover band without changing the exact Token model. The page runs the same detailed admission proof as the named Appearance tests, reports every numerical margin and exact refusal, copies a consumer Root declaration, and projects both CLI pole palettes through the public terminal inspector. Public Input, Switch, Select, and Copy button Components supply the available controls; no slider exception is needed because Input owns the native range type.
+
+The Token explorer shows recognisable previews before expandable values and copy actions; query and category filters share the URL and the category row uses a selective inline overflow cue when needed. The terminal-foundation registry in [`terminal-foundations.ts`](../../catalogue/terminal-foundations.ts) enrols each sheet in stdout, browser navigation, search, preview, and conformance. Animated motifs honour reduced motion and retain an explicit Play/Pause action.
 
 Compositions are illustrative Catalogue patterns, not exported package APIs. Each definition in [`compositions.tsx`](../../catalogue/compositions.tsx) drives its index card, responsive preview, constituent links, adaptable source, and one explicit stage posture. The ordinary `inset` stage provides both canvas margin and inner breathing room; a genuinely self-framing composition declares `full-bleed`. Detail routes expose Narrow, Standard, and Wide review widths in URL state and label copied source as adaptable rather than drop-in API.
 
@@ -52,17 +54,20 @@ Terminal layouts compose public CLI renderers into complete frames. Definitions 
 
 ## Appearance and URL state
 
-Appearance is a reusable consumer boundary, split between the proved presets in [`shell/appearance-options.ts`](../../catalogue/shell/appearance-options.ts), pure state in [`shell/appearance-state.ts`](../../catalogue/shell/appearance-state.ts), and the compact control in [`shell/appearance.tsx`](../../catalogue/shell/appearance.tsx). System, Light, and Dark resolve the browser and terminal preview palettes together. The public Select offers the source-owned set of semantically safe named review accents and explains that coordinated consumer Themes can cover the full colour spectrum. Valid explicit `theme` and non-default `accent` parameters are shareable, storage supplies comfort persistence, and Back/Forward restores URL-preferred state. Local Component and Compare controls preserve explicit Appearance parameters.
+Appearance is a reusable consumer boundary, split between the proved presets and detailed admission loop in [`shell/appearance-options.ts`](../../catalogue/shell/appearance-options.ts), bounded field state in [`shell/field-state.ts`](../../catalogue/shell/field-state.ts), pure URL preservation in [`shell/appearance-state.ts`](../../catalogue/shell/appearance-state.ts), and the compact control in [`shell/appearance.tsx`](../../catalogue/shell/appearance.tsx). System, Light, and Dark resolve the browser and terminal preview palettes together. The public Select keeps the source-owned semantically safe named presets as quick choices and displays a selected field point when one is active.
+
+The canonical `field` parameter and Catalogue-owned storage value carry all four axes plus the mono/blue choice. URL state wins on load; storage supplies comfort persistence; Back/Forward restores URL-preferred state; and every live replacement announces the new location so navigation links carry the current point rather than its starting value. Any Catalogue or Component route can therefore reproduce one field point directly. The Component review instrument accepts the same point and names light/dark pole links; Builder protocol v4 carries an independent Preview point across the frame while the workspace consumes ordinary Catalogue Appearance state.
 
 Family state uses stable parameters and omits comfort defaults:
 
-| Family                  | Consequential URL state                                                    |
-| ----------------------- | -------------------------------------------------------------------------- |
-| Components index        | query, Group, purpose, explicit All                                        |
-| Component detail        | surface, canonical example, deliberate View all                            |
-| Compare                 | scope, global surface, overrides, examples, custom membership, jump target |
-| Tokens and Compositions | query/category and responsive width                                        |
-| Terminal layouts        | preset/custom capabilities and grid                                        |
+| Family                  | Consequential URL state                                                           |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| Components index        | query, Group, purpose, explicit All, field                                        |
+| Component detail        | surface, canonical example, deliberate View all, field                            |
+| Compare                 | scope, global surface, overrides, examples, custom membership, jump target, field |
+| Foundations Field       | darkness, structure, emphasis, density, mono/blue                                 |
+| Tokens and Compositions | query/category and responsive width, plus shared field                            |
+| Terminal layouts        | preset/custom capabilities and grid, plus shared field                            |
 
 Invalid values fall back to bounded canonical defaults. Components and Compare use native history for consequential selection changes; the filter-style Token, Composition width, Terminal capability, and Appearance controls replace their current entry. Reload and Back/Forward reconstruct visible controls from the URL rather than hidden component state.
 
@@ -96,6 +101,6 @@ The machine-only `?conformance=1` route remains exhaustive. Ordinary indexes sta
 | Canonical examples and generated registry                     | Component Metadata/vocabularies and [`scripts/build.ts`](../../scripts/build.ts)                                                                                                                                                              |
 | Generated example-image contract and resolver                 | [`catalogue/example-images/`](../../catalogue/example-images/) and [`catalogue/example-images.ts`](../../catalogue/example-images.ts)                                                                                                         |
 | Visual grammar, postures, and local review                    | [`visual-review.md`](visual-review.md), [`catalogue/review-postures.ts`](../../catalogue/review-postures.ts), [`catalogue/review/`](../../catalogue/review/), and [`responsive-ownership.ts`](../../catalogue/review/responsive-ownership.ts) |
-| Token and terminal-foundation explorers                       | [`routes/foundations.ts`](../../catalogue/routes/foundations.ts) and [`terminal-foundations.ts`](../../catalogue/terminal-foundations.ts)                                                                                                     |
+| Field, Token, and terminal-foundation explorers               | [`pages/foundations/field-page.tsx`](../../catalogue/pages/foundations/field-page.tsx), [`routes/foundations.ts`](../../catalogue/routes/foundations.ts), and [`terminal-foundations.ts`](../../catalogue/terminal-foundations.ts)            |
 | Illustrative Compositions and terminal layouts                | [`compositions.tsx`](../../catalogue/compositions.tsx) and [`cli-compositions.ts`](../../catalogue/cli-compositions.ts)                                                                                                                       |
 | Browser conformance and family enrolment                      | [`scripts/conformance.ts`](../../scripts/conformance.ts) and [`scripts/conformance/catalogue/`](../../scripts/conformance/catalogue/)                                                                                                         |

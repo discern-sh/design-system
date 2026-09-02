@@ -5,7 +5,7 @@
     align-items: center;
     justify-content: center;
     gap: var(--discern-space-3);
-    min-block-size: 24px;
+    min-block-size: 1.5rem;
   }
   .discern-divider::before,
   .discern-divider::after {
@@ -44,8 +44,8 @@
     line-height: 1.2;
   }
   .discern-divider__label::before {
-    inline-size: 6px;
-    block-size: 6px;
+    inline-size: 0.375rem;
+    block-size: 0.375rem;
     border: 1px solid var(--discern-color-accent-500);
     background: var(--discern-color-accent-100);
     content: "";

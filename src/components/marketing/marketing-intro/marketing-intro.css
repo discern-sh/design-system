@@ -6,7 +6,8 @@
     container: discern-marketing-intro / inline-size;
     inline-size: 100%;
     max-inline-size: 47rem;
-    margin-block-end: clamp(2.5rem, 6cqi, 4.75rem);
+    margin-block-end: clamp(var(--discern-space-10), 6cqi,
+      calc(var(--discern-space-16) + var(--discern-space-3)));
     color: var(--discern-color-ink);
   }
   .discern-marketing-intro--editorial {

@@ -7,6 +7,7 @@ import { catalogueNavigationLabel } from "../pages/navigation-types.ts";
 import type { CatalogueRoute } from "../routes.ts";
 import { catalogueNavigation, catalogueRoutePaths } from "../routes.ts";
 import { catalogueLocationChangeEvent } from "./location.ts";
+import { preserveCatalogueAppearanceHref } from "./appearance-state.ts";
 
 export function CatalogueNavigation(
   {
@@ -56,14 +57,23 @@ export function CatalogueNavigation(
         href: "/catalogue/builder/",
       }],
     },
-  ];
+  ].map((section) => ({
+    ...section,
+    items: section.items.map((item) => ({
+      ...item,
+      href: preserveCatalogueAppearanceHref(navigationUrl, item.href),
+    })),
+  }));
 
   return (
     <>
       <div className="discern-catalogue-sidebar__header">
         <a
           className="discern-catalogue-brand"
-          href={catalogueRoutePaths.overview}
+          href={preserveCatalogueAppearanceHref(
+            navigationUrl,
+            catalogueRoutePaths.overview,
+          )}
           onClick={onNavigate}
         >
           <span className="discern-catalogue-brand__mark" aria-hidden="true">

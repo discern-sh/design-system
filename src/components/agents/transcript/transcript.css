@@ -35,7 +35,7 @@
     padding-block: var(--discern-space-3);
     padding-inline: var(--discern-space-4);
     border: 1px solid var(--discern-color-border);
-    border-inline-start: 3px solid var(--discern-color-accent-300);
+    border-inline-start: 0.1875rem solid var(--discern-color-accent-300);
     border-radius: var(--discern-radius-xs) var(--discern-radius-md)
       var(--discern-radius-md) var(--discern-radius-md);
     background: color-mix(

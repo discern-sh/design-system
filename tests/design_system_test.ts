@@ -22,6 +22,12 @@ import { generateOutputPlan } from "../scripts/generate.ts";
 import { componentRegistry } from "../src/generated/component-registry.ts";
 import { createFeatureBentoLayout } from "../src/components/marketing/feature-bento/feature-bento-layout.ts";
 import {
+  compositeOklab,
+  type OklabColor,
+  oklabContrast,
+  oklabDistance,
+} from "../src/internal/oklch.ts";
+import {
   packageManifest,
   RUNTIME_MANIFEST_SCHEMA_VERSION,
 } from "../src/manifest.ts";
@@ -64,16 +70,20 @@ import {
 } from "../src/react.ts";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
 import { semanticClass } from "../src/semantic-class.ts";
-import {
-  baseTokens,
-  discernThemeTokens,
-  themeTokens,
-} from "../src/tokens/tokens.ts";
+import { blueThemeRoleTokens, blueThemeTokens } from "../src/theme/blue.ts";
+import { baseTokens, themeTokens } from "../src/tokens/tokens.ts";
 import type { ComponentMeta } from "../src/types/component-meta.ts";
 
 const PACKAGE_ROOT_URL = new URL("../", import.meta.url);
 const PACKAGE_ROOT = fromFileUrl(PACKAGE_ROOT_URL);
 const COMPONENT_ROOT = join(PACKAGE_ROOT, "src", "components");
+
+function compactTokenDeclaration(name: string, value: string): string {
+  return `${name}: ${value};`
+    .replaceAll(/: /gu, ":")
+    .replaceAll(/\s*([{},;])\s*/gu, "$1")
+    .replaceAll(/ \* /gu, "*");
+}
 
 async function auditFontMetricCss(
   page: Page,
@@ -136,6 +146,7 @@ interface PublicCssGlobals {
   readonly customProperties: ReadonlySet<string>;
   readonly dataAttributes: ReadonlySet<string>;
   readonly keyframes: ReadonlySet<string>;
+  readonly registeredProperties: ReadonlySet<string>;
 }
 
 function publicCssGlobals(source: string): PublicCssGlobals {
@@ -161,58 +172,54 @@ function publicCssGlobals(source: string): PublicCssGlobals {
       [...css.matchAll(/@keyframes\s+([_a-zA-Z][-_a-zA-Z0-9]*)/g)]
         .map((match) => match[1] ?? ""),
     ),
+    registeredProperties: new Set(
+      [...css.matchAll(/@property\s+(--[_a-zA-Z][-_a-zA-Z0-9]*)/g)]
+        .map((match) => match[1] ?? ""),
+    ),
   };
 }
 
-interface Oklab {
-  readonly l: number;
-  readonly a: number;
-  readonly b: number;
+interface ProofColor {
+  readonly color: OklabColor;
+  readonly alpha: number;
 }
 
-function parseOklch(value: string): Oklab {
+function parseOklch(value: string): ProofColor {
+  if (value === "#fff") {
+    return { color: { lightness: 1, a: 0, b: 0 }, alpha: 1 };
+  }
   const match = value.match(
-    /oklch\(([\d.]+)%\s+([\d.]+)\s+([\d.]+)\)/,
+    /^oklch\(([\d.]+)%\s+([\d.]+)\s+(-?[\d.]+)(?:\s+\/\s+([\d.]+))?\)$/,
   );
   assert(match !== null, `expected concrete oklch(), received ${value}`);
-  const l = Number(match[1]) / 100;
+  const lightness = Number(match[1]) / 100;
   const chroma = Number(match[2]);
   const radians = Number(match[3]) * Math.PI / 180;
-  return { l, a: chroma * Math.cos(radians), b: chroma * Math.sin(radians) };
-}
-
-function linearRgb(color: Oklab): readonly [number, number, number] {
-  const lRoot = color.l + 0.3963377774 * color.a + 0.2158037573 * color.b;
-  const mRoot = color.l - 0.1055613458 * color.a - 0.0638541728 * color.b;
-  const sRoot = color.l - 0.0894841775 * color.a - 1.291485548 * color.b;
-  const l = lRoot ** 3;
-  const m = mRoot ** 3;
-  const s = sRoot ** 3;
-  return [
-    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
-    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
-    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
-  ];
-}
-
-function luminance(value: string): number {
-  if (value === "#fff") return 1;
-  const [red, green, blue] = linearRgb(parseOklch(value))
-    .map((channel) => Math.max(0, Math.min(1, channel))) as [
-      number,
-      number,
-      number,
-    ];
-  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+  return {
+    color: {
+      lightness,
+      a: chroma * Math.cos(radians),
+      b: chroma * Math.sin(radians),
+    },
+    alpha: match[4] === undefined ? 1 : Number(match[4]),
+  };
 }
 
 function contrast(first: string, second: string): number {
-  const values = [luminance(first), luminance(second)].toSorted((a, b) =>
-    b - a
+  const background = parseOklch(second);
+  const canvas = background.color.lightness < 0.5
+    ? { lightness: 1, a: 0, b: 0 }
+    : { lightness: 0, a: 0, b: 0 };
+  const opaqueBackground = compositeOklab(
+    background.color,
+    background.alpha,
+    canvas,
   );
-  const lighter = values[0] ?? 0;
-  const darker = values[1] ?? 0;
-  return (lighter + 0.05) / (darker + 0.05);
+  const foreground = parseOklch(first);
+  return oklabContrast(
+    compositeOklab(foreground.color, foreground.alpha, opaqueBackground),
+    opaqueBackground,
+  );
 }
 
 function focusSurfaceFailures(
@@ -227,29 +234,24 @@ function focusSurfaceFailures(
   ) => name);
 }
 
-function distance(first: Oklab, second: Oklab): number {
-  return Math.hypot(
-    first.l - second.l,
-    first.a - second.a,
-    first.b - second.b,
-  );
-}
-
 function themeValue(
   name: string,
   mode: "light" | "dark",
   overrides: ReadonlyMap<string, string>,
 ): string {
   const override = overrides.get(`${mode}:${name}`) ?? overrides.get(name);
+  const preset = blueThemeRoleTokens.find((candidate) =>
+    candidate.name === name
+  );
   const token = themeTokens.find((candidate) => candidate.name === name);
   assert(
-    override !== undefined || token !== undefined,
+    override !== undefined || preset !== undefined || token !== undefined,
     `unknown token ${name}`,
   );
-  const raw = override ?? (mode === "light" ? token?.light : token?.dark) ?? "";
+  const raw = override ?? preset?.[mode] ?? token?.[mode] ?? "";
   const values = new Map([
     ...baseTokens.map((item) => [item.name, item.value] as const),
-    ...discernThemeTokens.map((item) => [item.name, item.value] as const),
+    ...blueThemeTokens.map((item) => [item.name, item.value] as const),
     ...[...overrides.entries()].filter(([key]) => !key.includes(":")),
   ]);
   return raw.replace(
@@ -502,14 +504,15 @@ Deno.test("Feature bento and Masonry emit their complete static layout contracts
   assertStringIncludes(masonryCss, "display: grid-lanes");
 });
 
-Deno.test("runtime globals are branded and defaults stay inside the opted-in root", async () => {
+Deno.test("runtime globals are branded and the default runtime stays monochrome", async () => {
   const temp = await Deno.makeTempDir();
   try {
-    await emitDesignSystemRuntime({
+    const summary = await emitDesignSystemRuntime({
       outputRoot: toFileUrl(`${temp}/`),
       all: true,
       assets: ["fonts", "grain"],
     });
+    assertEquals(summary.manifest.selection.theme, "none");
     const authoredSources = (await walk(PACKAGE_ROOT)).filter((path) => {
       const packagePath = relative(PACKAGE_ROOT, path);
       return !packagePath.startsWith("tests/") &&
@@ -531,6 +534,7 @@ Deno.test("runtime globals are branded and defaults stay inside the opted-in roo
       (path) => path.endsWith(".css"),
     );
     const violations: string[] = [];
+    const registeredProperties = new Set<string>();
     for (const path of runtimeCss) {
       const source = await Deno.readTextFile(path);
       const globals = publicCssGlobals(source);
@@ -554,17 +558,56 @@ Deno.test("runtime globals are branded and defaults stay inside the opted-in roo
           violations.push(`${path}: @keyframes ${value}`);
         }
       }
+      for (const value of globals.registeredProperties) {
+        registeredProperties.add(value);
+        if (!value.startsWith("--discern-")) {
+          violations.push(`${path}: @property ${value}`);
+        }
+      }
     }
     assertEquals(violations, []);
-    const output = await Deno.readTextFile(join(temp, "discern.css"));
-    assertMatch(
-      output,
-      /@layer discern\.tokens \{\s*:where\(\[data-discern-root\]\)/,
+    assertEquals(
+      [...registeredProperties].toSorted(),
+      [
+        "--discern-emphasis",
+        "--discern-accent-hue",
+        "--discern-density",
+        "--discern-darkness",
+        "--discern-impression-backdrop-x",
+        "--discern-impression-backdrop-y",
+        "--discern-structure",
+      ].toSorted(),
     );
-    assertStringIncludes(output, "color-scheme: light dark;");
-    assertStringIncludes(output, "\n  @media (prefers-color-scheme: dark)");
+    const output = await Deno.readTextFile(join(temp, "discern.css"));
+    assert(!output.includes("--discern-accent-hue: 255;"));
+    assertStringIncludes(
+      output,
+      "@layer discern.tokens{:where([data-discern-root])",
+    );
+    assertStringIncludes(output, "color-scheme:light dark;");
+    assertStringIncludes(
+      output,
+      ':where([data-discern-root][data-discern-theme="light"]){color-scheme:light;--discern-darkness:0;',
+    );
+    assertStringIncludes(
+      output,
+      ':where([data-discern-root][data-discern-theme="dark"]){color-scheme:dark;--discern-darkness:1;',
+    );
+    assertStringIncludes(output, "@supports (color:oklch(");
+    for (
+      const token of baseTokens.filter(({ name }) =>
+        name.startsWith("--discern-space-")
+      )
+    ) {
+      assertStringIncludes(output, `${token.name}:${token.value};`);
+      assertStringIncludes(
+        output,
+        `${token.name}:calc(${token.value}*var(--discern-density));`,
+      );
+    }
+    assertStringIncludes(output, "@media (prefers-color-scheme:dark)");
     const systemDark = output.slice(
-      output.indexOf("@media (prefers-color-scheme: dark)"),
+      output.indexOf("@media (prefers-color-scheme:dark)"),
     );
     assertStringIncludes(
       systemDark,
@@ -573,7 +616,7 @@ Deno.test("runtime globals are branded and defaults stay inside the opted-in roo
     for (const token of themeTokens) {
       assertStringIncludes(
         systemDark,
-        `${token.name}: ${token.dark};`,
+        compactTokenDeclaration(token.name, token.dark),
       );
     }
     assert(!output.includes("\n  :root {"));
@@ -615,11 +658,17 @@ Deno.test("selection resolves dependencies and excludes unrelated groups", async
     const branding = await emitDesignSystemRuntime({
       outputRoot: toFileUrl(`${temp}/`),
       components: ["brand"],
+      theme: "blue",
     });
     assertEquals(branding.manifest.selection.resolvedComponents, [
       "logo",
       "brand",
     ]);
+    assertEquals(branding.manifest.selection.theme, "blue");
+    assertStringIncludes(
+      await Deno.readTextFile(join(temp, "discern.css")),
+      "--discern-accent-hue: 255;",
+    );
 
     const glossary = await emitDesignSystemRuntime({
       outputRoot: toFileUrl(`${temp}/`),
@@ -1538,7 +1587,7 @@ Deno.test("font metric audit enrolls future aliases and rejects malformed faces"
   }
 });
 
-Deno.test("default blue and green themes share component CSS and preserve state semantics", async () => {
+Deno.test("blue and green themes share component CSS and preserve state semantics", async () => {
   const fixture = await Deno.readTextFile(
     join(PACKAGE_ROOT, "tests", "fixtures", "green-theme.css"),
   );
@@ -1558,24 +1607,24 @@ Deno.test("default blue and green themes share component CSS and preserve state 
   assertEquals(semanticFocusSurfaces.length, 4);
   for (const mode of ["light", "dark"] as const) {
     const pairs = [
-      ["--discern-color-ink", "--discern-color-canvas"],
-      ["--discern-color-ink-muted", "--discern-color-canvas"],
-      ["--discern-color-ink-faint", "--discern-color-canvas"],
-      ["--discern-color-ink-faint", "--discern-color-surface"],
-      ["--discern-color-ink-faint", "--discern-color-surface-sunken"],
-      ["--discern-color-ink-faint", "--discern-color-accent-100"],
-      ["--discern-color-accent-700", "--discern-color-accent-100"],
-      ["--discern-color-accent-800", "--discern-color-accent-100"],
-      ["--discern-color-success-deep", "--discern-color-success-soft"],
-      ["--discern-color-warning-deep", "--discern-color-warning-soft"],
+      ["--discern-color-ink", "--discern-color-canvas", 7],
+      ["--discern-color-ink-muted", "--discern-color-canvas", 4.5],
+      ["--discern-color-ink-faint", "--discern-color-canvas", 3],
+      ["--discern-color-ink-faint", "--discern-color-surface", 3],
+      ["--discern-color-ink-faint", "--discern-color-surface-sunken", 3],
+      ["--discern-color-ink-faint", "--discern-color-accent-100", 3],
+      ["--discern-color-accent-700", "--discern-color-accent-100", 4.5],
+      ["--discern-color-accent-800", "--discern-color-accent-100", 4.5],
+      ["--discern-color-success-deep", "--discern-color-success-soft", 4.5],
+      ["--discern-color-warning-deep", "--discern-color-warning-soft", 4.5],
     ] as const;
-    for (const [foreground, background] of pairs) {
+    for (const [foreground, background, floor] of pairs) {
       assert(
         contrast(
           themeValue(foreground, mode, overrides),
           themeValue(background, mode, overrides),
-        ) >= 4.5,
-        `${mode} ${foreground} on ${background} lacks text contrast`,
+        ) >= floor,
+        `${mode} ${foreground} on ${background} misses ${floor}:1`,
       );
     }
     assertEquals(
@@ -1601,7 +1650,7 @@ Deno.test("default blue and green themes share component CSS and preserve state 
         const right = states[second];
         assert(left !== undefined && right !== undefined);
         assert(
-          distance(left, right) >= 0.08,
+          oklabDistance(left.color, right.color) >= 0.08,
           `${mode} states ${first}/${second}`,
         );
       }
@@ -1666,8 +1715,8 @@ Deno.test("neutral entrypoints work in an external cached-only Deno project", as
         "../src/runtime.ts",
         import.meta.url,
       ).href,
-      "@discern-sh/design-system/theme/discern": new URL(
-        "../src/theme/discern.ts",
+      "@discern-sh/design-system/theme/blue": new URL(
+        "../src/theme/blue.ts",
         import.meta.url,
       ).href,
       "@discern-sh/design-system/tokens": new URL(
@@ -1692,7 +1741,7 @@ Deno.test("neutral entrypoints work in an external cached-only Deno project", as
 import { renderBadgeCli } from "@discern-sh/design-system/cli";
 import { renderDiagramSvg } from "@discern-sh/design-system/diagram";
 import { emitDesignSystemRuntime } from "@discern-sh/design-system/runtime";
-import { discernTheme } from "@discern-sh/design-system/theme/discern";
+import { blueTheme } from "@discern-sh/design-system/theme/blue";
 const flow = {
   kind: "flow",
   title: "Check a reference",
@@ -1713,7 +1762,7 @@ console.log(JSON.stringify({
   components: result.components,
   diagram: renderDiagramSvg(flow).includes('role="img"'),
   package: packageManifest.package,
-  theme: discernTheme.name,
+  theme: blueTheme.name,
 }));
 `,
     );
@@ -2038,7 +2087,7 @@ Deno.test("landing-scale marketing layouts keep optional structure honest", asyn
   );
   assertMatch(
     headerCss,
-    /@media \(max-width: 480px\)[\s\S]*\.discern-site-header--collapse-nav \.discern-site-header__nav\s*\{[^}]*display:\s*none;/,
+    /@media \(max-width: 30rem\)[\s\S]*\.discern-site-header--collapse-nav \.discern-site-header__nav\s*\{[^}]*display:\s*none;/,
   );
 
   const metricsCss = await Deno.readTextFile(
@@ -2066,7 +2115,7 @@ Deno.test("masked provider-strip marks swap brand artwork for a neutral dark sil
     await emitDesignSystemRuntime({
       outputRoot: toFileUrl(`${output}/`),
       components: ["logo-cloud"],
-      theme: "discern",
+      theme: "blue",
     });
     const css = await Deno.readTextFile(join(output, "discern.css"));
     const markup = renderToStaticMarkup(createElement(LogoCloud, {
@@ -2368,7 +2417,7 @@ Deno.test("quiet header actions and logo marks keep their shared visual roles", 
   );
   assertMatch(
     toggle,
-    /\.discern-theme-toggle--quiet\s*\{[^}]*inline-size:\s*1\.75rem;[^}]*block-size:\s*1\.75rem;[^}]*border-color:\s*transparent;[^}]*background:\s*transparent;/s,
+    /\.discern-theme-toggle--quiet\s*\{[^}]*inline-size:\s*1\.75rem;[^}]*block-size:\s*1\.75rem;[^}]*border-color:\s*color-mix\(in oklab,\s*var\(--discern-color-border\) 0%,\s*transparent\);[^}]*background:\s*transparent;/s,
   );
   const cloud = await Deno.readTextFile(
     join(COMPONENT_ROOT, "marketing", "logo-cloud", "logo-cloud.css"),
@@ -2508,6 +2557,8 @@ Deno.test("monospace is reserved for brand names and code-bearing surfaces", asy
     "src/components/workflow/raw-output/raw-output.css::.discern-raw-output__content",
     "src/styles/utilities.css::.discern-mono",
     "catalogue/styles/components.css::.discern-catalogue-api code",
+    "catalogue/styles/foundations.css::.discern-catalogue-field__export pre",
+    "catalogue/styles/foundations.css::.discern-catalogue-field__role-grid code, .discern-catalogue-field__role-grid small, .discern-catalogue-field__pair code",
     "catalogue/styles/foundations.css::.discern-catalogue-token code",
     "catalogue/styles/foundations.css::.discern-catalogue-token__value",
     "catalogue/styles/shared.css::.discern-catalogue-copyable > code",
@@ -2942,9 +2993,24 @@ Deno.test("Result summary states enroll browser labels, examples, and CSS treatm
     !/success|danger|warning|accent|ink-muted/u.test(declaredRule),
     "declared Result summary treatment must remain a distinct neutral fact",
   );
-  assertMatch(
-    css,
-    /@media \(forced-colors: active\)[\s\S]*\.discern-result-summary__state\s*\{[^}]*border-color:\s*CanvasText;/u,
+  for (
+    const [state, role] of [
+      ["passed", "success"],
+      ["failed", "danger"],
+      ["blocked", "warning"],
+    ] as const
+  ) {
+    assertMatch(
+      css,
+      new RegExp(
+        `data-discern-state="${state}"\\]\\s*\\{[^}]*border-color:\\s*var\\(--discern-color-${role}\\);`,
+        "su",
+      ),
+    );
+  }
+  assert(
+    !css.includes("forced-color-adjust: none"),
+    "Result summary lets the user agent map its token-backed witnesses in forced colours",
   );
 });
 

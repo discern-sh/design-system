@@ -1,5 +1,11 @@
 import { assert, assertEquals, assertNotEquals } from "@std/assert";
-import { baseTokens, themeTokens } from "../../src/tokens/tokens.ts";
+import { oklchToSrgb } from "../../src/internal/oklch.ts";
+import {
+  baseTokens,
+  evaluateOpaqueField,
+  fieldColorRoleLaws,
+  themeTokens,
+} from "../../src/tokens/tokens.ts";
 import {
   deriveTerminalTheme,
   terminalThemeColor,
@@ -26,6 +32,31 @@ Deno.test("truecolour values carry computed 256- and 16-colour fallbacks", () =>
       assert(color.blue >= 0 && color.blue <= 255);
       assert(color.ansi256 >= 0 && color.ansi256 <= 255);
       assert(color.ansi16 >= 0 && color.ansi16 <= 15);
+    }
+  }
+});
+
+Deno.test("terminal field colours are opaque pole evaluations without the blue preset", () => {
+  for (const [variant, darkness] of [["light", 0], ["dark", 1]] as const) {
+    const field = evaluateOpaqueField({ darkness });
+    for (const law of fieldColorRoleLaws) {
+      const value = field[law.name];
+      assert(value !== undefined, `${variant} ${law.name} was not evaluated`);
+      const match = value.match(
+        /^oklch\(([\d.]+)%\s+([\d.]+)\s+(-?[\d.]+)\)$/,
+      );
+      assert(match !== null, `${variant} ${law.name} retained alpha`);
+      const expected = oklchToSrgb(
+        Number(match[1]) / 100,
+        Number(match[2]),
+        Number(match[3]),
+      );
+      const actual = terminalThemes[variant].colors[law.name];
+      assert(actual !== undefined);
+      assertEquals(
+        { red: actual.red, green: actual.green, blue: actual.blue },
+        expected,
+      );
     }
   }
 });

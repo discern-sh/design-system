@@ -130,6 +130,14 @@ refresh` immediately rewrites them back) — the two sides loop forever.
 
 **Fix.** Route every axe scan through `scanBrowserAccessibility` in [`scripts/browser-conformance-support.ts`](../../scripts/browser-conformance-support.ts). That authority waits for two painted frames before analysis; the architecture test rejects any current or future conformance script that imports `@axe-core/playwright` directly. Do not weaken contrast rules or patch the reported element's valid Tokens.
 
+### A computed-style loop repeats its first probe value
+
+**Symptom.** A browser check passes in a default page but reports every sampled custom property as the first property's value in the full reduced-motion conformance context. Colour and geometry samples can both fail this way even though the authored CSS is correct.
+
+**Cause.** The check mutates one probe element's inline style and immediately reads its computed style or layout again inside the same browser task. Chromium can retain the first style resolution across those synchronous mutations under the full conformance context.
+
+**Fix.** Give every sampled fact its own immutable probe: set each probe's style once, append all probes, read each result, then remove them. Do not add delays, retries, or tolerances; those leave measurements coupled through mutable browser state.
+
 ### The main checkout's `node_modules` lags a landed dependency
 
 **Symptom.** In the **main checkout**, `discern done` fails its typecheck stage with `error: Could not resolve "<package>", but found it in a package.json. Deno

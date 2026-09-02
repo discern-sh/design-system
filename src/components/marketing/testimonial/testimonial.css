@@ -12,7 +12,8 @@
     width: min(100%, var(--discern-page-max));
     margin: 0 auto;
     overflow: hidden;
-    padding: clamp(2rem, 6cqi, 4.5rem);
+    padding: clamp(var(--discern-space-8), 6cqi,
+      calc(var(--discern-space-16) + var(--discern-space-2)));
     border: 1px solid var(--discern-color-accent-300);
     border-radius: var(--discern-radius-lg);
     background:
@@ -22,8 +23,8 @@
   }
   .discern-testimonial__mark {
     position: absolute;
-    top: -1.25rem;
-    right: 1.5rem;
+    top: calc(-1 * var(--discern-space-5));
+    right: var(--discern-space-6);
     color: color-mix(in oklab, var(--discern-color-accent-500) 22%,
       transparent);
     font-family: var(--discern-font-display);
@@ -127,7 +128,7 @@
     border-block-start: 1px solid var(--discern-color-border);
     border-inline-start: 0;
   }
-  @container discern-testimonial (max-width: 720px) {
+  @container discern-testimonial (max-width: 45rem) {
     .discern-testimonial__frame {
       grid-template-columns: 1fr;
     }

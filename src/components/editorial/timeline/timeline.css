@@ -71,11 +71,11 @@
   }
   .discern-timeline__marker::after {
     position: absolute;
-    inset-block-start: 0.22rem;
+    inset-block-start: var(--discern-space-1);
     inset-inline-start: 50%;
     inline-size: 0.72rem;
     block-size: 0.72rem;
-    border: 2px solid var(--discern-color-accent-500);
+    border: 0.125rem solid var(--discern-color-accent-500);
     border-radius: 50%;
     background: var(--discern-color-canvas);
     content: "";
@@ -87,7 +87,8 @@
   }
   .discern-timeline__item--current .discern-timeline__marker::after {
     background: var(--discern-color-accent-500);
-    box-shadow: 0 0 0 5px var(--discern-color-accent-100);
+    outline: solid var(--discern-color-accent-100);
+    outline-width: calc(var(--discern-space-1) * 1.25);
   }
   .discern-timeline__content {
     padding-block-end: var(--discern-space-8);

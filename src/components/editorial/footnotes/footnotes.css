@@ -2,7 +2,7 @@
   .discern-footnotes {
     margin-block: var(--discern-space-16) 0;
     padding-block-start: var(--discern-space-8);
-    border-block-start: 2px solid var(--discern-color-ink);
+    border-block-start: 0.125rem solid var(--discern-color-ink);
   }
   .discern-footnotes > header {
     display: flex;
@@ -54,8 +54,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-inline-size: 24px;
-    min-block-size: 24px;
+    min-inline-size: 1.5rem;
+    min-block-size: 1.5rem;
     color: var(--discern-color-ink-faint);
     text-decoration: none;
   }

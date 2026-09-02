@@ -1,13 +1,13 @@
 @layer discern.components {
   .discern-banner {
     --discern-banner-bg: var(--discern-color-surface-sunken);
-    --discern-banner-border: var(--discern-color-border);
+    --discern-color-banner-border: var(--discern-color-border);
     --discern-banner-text: var(--discern-color-ink-muted);
     display: flex;
     align-items: flex-start;
-    gap: 10px;
-    padding: 12px 14px;
-    border: 1px solid var(--discern-banner-border);
+    gap: var(--discern-space-3);
+    padding: var(--discern-space-3) var(--discern-space-4);
+    border: 1px solid var(--discern-color-banner-border);
     border-radius: var(--discern-radius-md);
     background: var(--discern-banner-bg);
     color: var(--discern-banner-text);
@@ -16,22 +16,22 @@
   }
   .discern-banner--accent {
     --discern-banner-bg: var(--discern-color-accent-100);
-    --discern-banner-border: color-mix(in oklab, var(--discern-color-accent-400) 50%, transparent);
+    --discern-color-banner-border: var(--discern-color-accent-400);
     --discern-banner-text: var(--discern-color-accent-800);
   }
   .discern-banner--success {
     --discern-banner-bg: var(--discern-color-success-soft);
-    --discern-banner-border: color-mix(in oklab, var(--discern-color-success) 50%, transparent);
+    --discern-color-banner-border: var(--discern-color-success);
     --discern-banner-text: var(--discern-color-success-deep);
   }
   .discern-banner--warning {
     --discern-banner-bg: var(--discern-color-warning-soft);
-    --discern-banner-border: color-mix(in oklab, var(--discern-color-warning) 36%, transparent);
+    --discern-color-banner-border: var(--discern-color-warning);
     --discern-banner-text: var(--discern-color-warning-deep);
   }
   .discern-banner--danger {
     --discern-banner-bg: var(--discern-color-danger-soft);
-    --discern-banner-border: color-mix(in oklab, var(--discern-color-danger) 36%, transparent);
+    --discern-color-banner-border: var(--discern-color-danger);
     --discern-banner-text: var(--discern-color-danger);
   }
   .discern-banner__icon {
@@ -40,7 +40,7 @@
     place-items: center;
     inline-size: 1.2rem;
     block-size: 1.2rem;
-    margin-block-start: 1px;
+    margin-block-start: calc(var(--discern-space-1) / 4);
   }
   .discern-banner__icon > :where(svg, img) {
     inline-size: 100%;

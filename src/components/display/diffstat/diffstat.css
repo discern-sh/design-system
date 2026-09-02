@@ -2,7 +2,7 @@
   .discern-diffstat {
     display: inline-flex;
     align-items: center;
-    gap: 0.45em;
+    gap: var(--discern-space-1);
     font-size: var(--discern-font-size-xs);
     line-height: 1.2;
     white-space: nowrap;
@@ -19,11 +19,11 @@
   }
   .discern-diffstat__blocks {
     display: inline-flex;
-    gap: 2px;
+    gap: calc(var(--discern-space-1) / 2);
   }
   .discern-diffstat__block {
-    inline-size: 7px;
-    block-size: 7px;
+    inline-size: 0.4375rem;
+    block-size: 0.4375rem;
     border-radius: 1px;
   }
   .discern-diffstat__block--added {

@@ -16,6 +16,13 @@ import {
   catalogueAppearanceStyle,
   defaultCatalogueAppearanceOption,
 } from "../shell/appearance-options.ts";
+import type { CatalogueFieldSelection } from "../shell/field-state.ts";
+import {
+  catalogueFieldLabel,
+  catalogueFieldPolarity,
+  catalogueFieldStyle,
+  serializeCatalogueFieldSelection,
+} from "../shell/field-state.ts";
 import { captureRegionForReview, inspectReviewGeometry } from "./geometry.ts";
 import { reviewMotionStyle } from "./motion.ts";
 import {
@@ -184,6 +191,7 @@ function ReviewSpecimen({
   responsiveAllocation,
   theme,
   appearance,
+  field,
   motion,
   speed,
   replay,
@@ -196,6 +204,7 @@ function ReviewSpecimen({
   readonly responsiveAllocation: "local" | "page";
   readonly theme: "light" | "dark";
   readonly appearance: string;
+  readonly field?: CatalogueFieldSelection | undefined;
   readonly motion: "ordinary" | "reduced";
   readonly speed: "production" | "slow";
   readonly replay: number;
@@ -205,6 +214,9 @@ function ReviewSpecimen({
   const example = entry.webExamples.find(({ id }) => id === posture.example);
   const option = catalogueAppearanceOption(appearance) ??
     defaultCatalogueAppearanceOption;
+  const appliedTheme = field === undefined
+    ? theme
+    : catalogueFieldPolarity(field);
   useEffect(() => {
     const root = document.querySelector<HTMLElement>(
       `[data-discern-review-identity="${
@@ -313,14 +325,16 @@ function ReviewSpecimen({
           key={replay}
           className="discern-review-specimen"
           data-discern-root
-          data-discern-theme={theme}
+          data-discern-theme={appliedTheme}
           data-discern-review-motion={motion}
           data-discern-review-speed={speed}
           data-discern-review-responsive-allocation={responsiveAllocation}
           data-discern-review-identity={identity}
           style={{
             inlineSize: `${width}px`,
-            ...catalogueAppearanceStyle(option, theme),
+            ...(field === undefined
+              ? catalogueAppearanceStyle(option, theme)
+              : catalogueFieldStyle(field)),
             ...reviewMotionStyle(motion, speed),
           } as CSSProperties}
         >
@@ -329,8 +343,10 @@ function ReviewSpecimen({
       </div>
       <footer className="discern-review-evidence">
         <span>{width}px {responsiveAllocation}</span>
-        <span>{theme}</span>
-        <span>{option.label}</span>
+        <span>{appliedTheme}</span>
+        <span>
+          {field === undefined ? option.label : catalogueFieldLabel(field)}
+        </span>
         <span>{motion}</span>
         <span>{speed}</span>
         <span>{status}</span>
@@ -406,14 +422,19 @@ function App() {
   const width = reviewInlineSizes[parsed.width];
   const option = catalogueAppearanceOption(parsed.appearance) ??
     defaultCatalogueAppearanceOption;
+  const appliedTheme = parsed.field === undefined
+    ? parsed.theme
+    : catalogueFieldPolarity(parsed.field);
   const canonical = componentReviewHref({ ...parsed, group });
 
   return (
     <main
       className="discern-review-shell"
       data-discern-root
-      data-discern-theme={parsed.theme}
-      style={catalogueAppearanceStyle(option, parsed.theme) as CSSProperties}
+      data-discern-theme={appliedTheme}
+      style={(parsed.field === undefined
+        ? catalogueAppearanceStyle(option, parsed.theme)
+        : catalogueFieldStyle(parsed.field)) as CSSProperties}
     >
       <header className="discern-review-header">
         <div>
@@ -499,12 +520,40 @@ function App() {
           </Select>
         </label>
         <label>
-          Appearance<Select name="appearance" defaultValue={parsed.appearance}>
+          Appearance<Select
+            name="appearance"
+            defaultValue={parsed.field === undefined
+              ? parsed.appearance
+              : "__field-point__"}
+            onChange={(event) => {
+              const fieldInput = event.currentTarget.form?.elements.namedItem(
+                "field",
+              );
+              if (fieldInput instanceof HTMLInputElement) {
+                fieldInput.disabled =
+                  event.currentTarget.value !== "__field-point__";
+              }
+            }}
+          >
+            {parsed.field === undefined
+              ? null
+              : (
+                <option value="__field-point__">
+                  {catalogueFieldLabel(parsed.field)}
+                </option>
+              )}
             {catalogueAppearanceOptions.map(({ id, label }) => (
               <option key={id} value={id}>{label}</option>
             ))}
           </Select>
         </label>
+        {parsed.field === undefined ? null : (
+          <input
+            type="hidden"
+            name="field"
+            value={serializeCatalogueFieldSelection(parsed.field)}
+          />
+        )}
         <label>
           Motion<Select name="motion" defaultValue={parsed.motion}>
             {reviewMotionModes.map((value) => (
@@ -533,6 +582,42 @@ function App() {
           {visibleCards.length} review items / {visibleCards.length} checkpoints
         </span>
         <a href={canonical}>Canonical URL</a>
+        <a
+          href={componentReviewHref({
+            ...parsed,
+            group,
+            field: {
+              ...(parsed.field ?? {
+                darkness: 0,
+                structure: 1,
+                emphasis: 1,
+                density: 1,
+                preset: "mono",
+              }),
+              darkness: 0,
+            },
+          })}
+        >
+          Light pole
+        </a>
+        <a
+          href={componentReviewHref({
+            ...parsed,
+            group,
+            field: {
+              ...(parsed.field ?? {
+                darkness: 1,
+                structure: 1,
+                emphasis: 1,
+                density: 1,
+                preset: "mono",
+              }),
+              darkness: 1,
+            },
+          })}
+        >
+          Dark pole
+        </a>
         {parsed.mode === "reel" && (
           <button
             className="discern-review-replay"
@@ -584,6 +669,9 @@ function App() {
                   responsiveAllocation={responsiveAllocation}
                   theme={requirements?.theme ?? parsed.theme}
                   appearance={requirements?.appearance ?? parsed.appearance}
+                  field={requirements?.appearance === undefined
+                    ? parsed.field
+                    : undefined}
                   motion={requirements?.reducedMotion
                     ? "reduced"
                     : parsed.motion}

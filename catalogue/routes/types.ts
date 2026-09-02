@@ -21,6 +21,7 @@ export type CatalogueRoute =
     readonly slug: string;
   }
   | { readonly family: "foundations"; readonly page: "index" }
+  | { readonly family: "foundations"; readonly page: "field" }
   | { readonly family: "foundations"; readonly page: "tokens" }
   | { readonly family: "foundations"; readonly page: "terminal-index" }
   | {

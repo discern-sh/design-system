@@ -15,7 +15,7 @@
   }
   .discern-search-palette::backdrop {
     background: var(--discern-color-overlay);
-    backdrop-filter: blur(2px);
+    backdrop-filter: blur(0.125rem);
   }
   .discern-search-palette[open] {
     animation: discern-search-palette-enter var(--discern-duration-medium)
@@ -65,7 +65,7 @@
   }
   .discern-search-palette__close:active {
     background: var(--discern-color-accent-100);
-    transform: translateY(1px);
+    transform: translateY(0.0625rem);
   }
   .discern-search-palette__results {
     max-block-size: min(50vh, 24rem);
@@ -81,7 +81,7 @@
   }
   .discern-search-palette__result {
     display: grid;
-    gap: 2px;
+    gap: calc(var(--discern-space-1) / 2);
     padding: var(--discern-space-3) var(--discern-space-4);
     border-radius: var(--discern-radius-sm);
     color: var(--discern-color-ink);
@@ -92,7 +92,7 @@
     color: var(--discern-color-accent-700);
   }
   .discern-search-palette__result:focus-visible {
-    outline-offset: -2px;
+    outline-offset: -0.125rem;
   }
   .discern-search-palette__result:active {
     background: var(--discern-color-accent-200);

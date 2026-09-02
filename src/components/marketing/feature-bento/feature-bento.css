@@ -121,7 +121,7 @@
     margin: var(--discern-space-4) var(--discern-space-4)
       var(--discern-space-4) 0;
   }
-  @container discern-feature-bento (max-width: 850px) {
+  @container discern-feature-bento (max-width: 53.125rem) {
     .discern-feature-bento__grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       grid-template-rows: repeat(var(--discern-feature-bento-compact-rows, 1),
@@ -136,7 +136,7 @@
         var(--discern-feature-bento-row-span, 1);
     }
   }
-  @container discern-feature-bento (max-width: 620px) {
+  @container discern-feature-bento (max-width: 38.75rem) {
     .discern-feature-bento__grid {
       grid-template-columns: 1fr;
       grid-template-rows: none;

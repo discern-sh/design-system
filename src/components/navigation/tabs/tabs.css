@@ -8,7 +8,7 @@
   .discern-tabs__tab {
     position: relative;
     flex: none;
-    padding: 10px 1px 11px;
+    padding: var(--discern-space-3) calc(var(--discern-space-1) / 4);
     border: 0;
     background: transparent;
     color: var(--discern-color-ink-muted);
@@ -20,8 +20,8 @@
   }
   .discern-tabs__tab::after {
     position: absolute;
-    inset: auto 0 -1px;
-    block-size: 2px;
+    inset: auto 0 calc(-1 * var(--discern-space-1) / 4);
+    block-size: 0.125rem;
     background: var(--discern-color-accent-600);
     content: "";
     opacity: 0;
@@ -56,8 +56,7 @@
   }
   .discern-tabs__panel:focus-visible {
     border-radius: var(--discern-radius-sm);
-    outline: 2px solid color-mix(in oklab, var(--discern-color-accent-500) 45%,
-      transparent);
-    outline-offset: 4px;
+    outline: 0.125rem solid var(--discern-color-accent-500);
+    outline-offset: var(--discern-space-1);
   }
 }

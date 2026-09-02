@@ -110,7 +110,7 @@
   .discern-hover-card__panel > :last-child {
     margin-block-end: 0;
   }
-  @media (max-width: 560px) {
+  @media (max-width: 35rem) {
     .discern-hover-card__panel {
       position: fixed;
       max-block-size: calc(100vh - 2 * var(--discern-space-4));
@@ -153,9 +153,9 @@
   }
   @media (forced-colors: active) {
     .discern-hover-card__panel {
-      border-color: CanvasText;
-      background: Canvas;
-      color: CanvasText;
+      border-color: var(--discern-color-ink);
+      background: var(--discern-color-surface);
+      color: var(--discern-color-ink);
     }
   }
 }

@@ -1,47 +1,90 @@
-import { oklabToLinearRgb } from "../../src/internal/oklch.ts";
-import type { ThemeToken } from "../../src/tokens/tokens.ts";
 import {
-  baseTokens,
-  discernThemeTokens,
+  compositeOklab,
+  type OklabColor,
+  oklabContrast,
+  oklabDistance,
+} from "../../src/internal/oklch.ts";
+import { resolveChartPaletteAtField } from "../../src/chart/palette.ts";
+import { blueThemeRoleTokens, blueThemeTokens } from "../../src/theme/blue.ts";
+import {
+  evaluateField,
+  FIELD_CONTRAST_SAMPLE_DARKNESSES,
+  FIELD_INK_CONTRAST_FLOORS,
+  type ThemeToken,
   themeTokens,
 } from "../../src/tokens/tokens.ts";
+import {
+  evaluateFieldExpression,
+  type FieldPoint,
+  fieldPolarityExpression,
+} from "../../src/tokens/field.ts";
 
-/** Facts shared by every project-facing Appearance choice. */
 interface CatalogueAppearanceOptionBase {
   readonly id: string;
   readonly label: string;
   readonly default?: true;
 }
 
-/** Appearance choice backed by the public low-level accent hue primitive. */
+/** The package's achromatic field with no preset overrides. */
+export interface CatalogueFieldAppearanceOption
+  extends CatalogueAppearanceOptionBase {
+  readonly kind: "field";
+}
+
+/** Appearance choice backed by the blue preset at one accent hue. */
 export interface CatalogueHueAppearanceOption
   extends CatalogueAppearanceOptionBase {
   readonly kind: "hue";
   readonly hue: number;
 }
 
-/** Appearance choice backed by public role-token overrides. */
+/** Appearance choice backed by public role-token overrides over the field. */
 export interface CataloguePresetAppearanceOption
   extends CatalogueAppearanceOptionBase {
   readonly kind: "preset";
   readonly overrides: readonly ThemeToken[];
 }
 
-/** One project-facing Appearance choice: an accent hue or a role preset. */
+/** One project-facing Appearance choice: field, blue-family hue, or role preset. */
 export type CatalogueAppearanceOption =
+  | CatalogueFieldAppearanceOption
   | CatalogueHueAppearanceOption
   | CataloguePresetAppearanceOption;
 
 type ThemeMode = "light" | "dark";
 
-interface Oklab {
-  readonly l: number;
-  readonly a: number;
-  readonly b: number;
+interface ProofColor {
+  readonly color: OklabColor;
+  readonly alpha: number;
 }
 
-interface ProofColor extends Oklab {
-  readonly alpha: number;
+interface ProofSample {
+  readonly label: string;
+  readonly field: boolean;
+  readonly color: (name: `--discern-${string}`) => ProofColor;
+}
+
+/** One numerical floor evaluated by the shared Catalogue admission proof. */
+export interface CatalogueFieldProofCheck {
+  readonly label: string;
+  readonly observed: number;
+  readonly floor: number;
+  readonly margin: number;
+  readonly unit: "opacity" | "contrast" | "OKLab";
+  readonly pass: boolean;
+  readonly failure?: string;
+}
+
+/** Complete browser-safe verdict for one field point. */
+export interface CatalogueFieldProof {
+  readonly accepted: boolean;
+  readonly checks: readonly CatalogueFieldProofCheck[];
+  readonly failures: readonly string[];
+}
+
+/** Structural point shape accepted without coupling Appearance to UI state. */
+export interface CatalogueProofFieldSelection extends FieldPoint {
+  readonly preset: "mono" | "blue";
 }
 
 const semanticRoles = ["success", "warning", "danger"] as const;
@@ -49,22 +92,14 @@ const semanticDistanceFloor = 0.08;
 const seriesSteps = [1, 2, 3, 4, 5, 6] as const;
 const seriesDistanceFloor = 0.09;
 const seriesCanvasContrastFloor = 1.25;
-const inkContrastFloors = [
-  ["--discern-color-ink", 7],
-  ["--discern-color-ink-muted", 4.5],
-  ["--discern-color-ink-faint", 3],
-] as const;
 
-const accentHuePrimitive = discernThemeTokens.find((token) =>
+const accentHuePrimitive = blueThemeTokens.find((token) =>
   token.name === "--discern-accent-hue"
 );
 if (accentHuePrimitive === undefined) {
-  throw new TypeError("Missing the public accent hue primitive");
+  throw new TypeError("Missing the blue preset accent hue primitive");
 }
 const authoredAccentHue = Number(accentHuePrimitive.value);
-const neutralHuePrimitives: readonly (readonly [string, string])[] = baseTokens
-  .filter((token) => token.name.endsWith("-hue"))
-  .map((token) => [token.name, token.value]);
 
 function parseOklch(value: string): ProofColor {
   const match = value.match(
@@ -73,7 +108,7 @@ function parseOklch(value: string): ProofColor {
   if (match === null) {
     throw new TypeError(`Expected concrete oklch(), got ${value}`);
   }
-  const l = Number(match[1]) / 100;
+  const lightness = Number(match[1]) / 100;
   const chroma = Number(match[2]);
   const radians = Number(match[3]) * Math.PI / 180;
   const alpha = match[4] === undefined ? 1 : Number(match[4]);
@@ -81,156 +116,252 @@ function parseOklch(value: string): ProofColor {
     throw new TypeError(`Alpha outside [0, 1] in ${value}`);
   }
   return {
-    l,
-    a: chroma * Math.cos(radians),
-    b: chroma * Math.sin(radians),
+    color: {
+      lightness,
+      a: chroma * Math.cos(radians),
+      b: chroma * Math.sin(radians),
+    },
     alpha,
   };
 }
 
-function encodeChannel(linear: number): number {
-  const clamped = Math.max(0, Math.min(1, linear));
-  return clamped <= 0.0031308
-    ? 12.92 * clamped
-    : 1.055 * Math.pow(clamped, 1 / 2.4) - 0.055;
+function over(color: ProofColor, backdrop: OklabColor): OklabColor {
+  return compositeOklab(color.color, color.alpha, backdrop);
 }
 
-function decodeChannel(encoded: number): number {
-  return encoded <= 0.04045
-    ? encoded / 12.92
-    : Math.pow((encoded + 0.055) / 1.055, 2.4);
+function themeToken(name: `--discern-${string}`): ThemeToken {
+  const token = themeTokens.find((candidate) => candidate.name === name);
+  if (token === undefined) throw new TypeError(`Missing Theme Token ${name}`);
+  return token;
 }
 
-function toGammaRgb(color: Oklab): readonly [number, number, number] {
-  const [red, green, blue] = oklabToLinearRgb(color.l, color.a, color.b);
-  return [encodeChannel(red), encodeChannel(green), encodeChannel(blue)];
+function seriesMode(field: Readonly<Record<string, string>>): ThemeMode {
+  return field["--discern-color-action"]?.startsWith("oklch(0%")
+    ? "light"
+    : "dark";
 }
 
-function linearToOklab(red: number, green: number, blue: number): Oklab {
-  const l = Math.cbrt(
-    0.4122214708 * red + 0.5363325363 * green + 0.0514459929 * blue,
-  );
-  const m = Math.cbrt(
-    0.2119034982 * red + 0.6806995451 * green + 0.1073969566 * blue,
-  );
-  const s = Math.cbrt(
-    0.0883024619 * red + 0.2817188376 * green + 0.6299787005 * blue,
-  );
-  return {
-    l: 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
-    a: 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
-    b: 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
-  };
+function fieldColor(
+  darkness: number,
+  name: `--discern-${string}`,
+): ProofColor {
+  const field = evaluateField({ darkness });
+  const value = field[name as keyof typeof field];
+  if (value !== undefined) return parseOklch(value);
+  const series = name.match(/^--discern-color-series-([1-6])$/)?.[1];
+  if (series !== undefined) {
+    return parseOklch(
+      resolveChartPaletteAtField(darkness)[
+        `series-${series}` as keyof ReturnType<
+          typeof resolveChartPaletteAtField
+        >
+      ],
+    );
+  }
+  const token = themeToken(name);
+  return parseOklch(token[seriesMode(field)]);
 }
 
-/** Composite one possibly-translucent colour over an opaque backdrop as browsers do. */
-function over(color: ProofColor, backdrop: Oklab): Oklab {
-  if (color.alpha === 1) return { l: color.l, a: color.a, b: color.b };
-  const [foreRed, foreGreen, foreBlue] = toGammaRgb(color);
-  const [backRed, backGreen, backBlue] = toGammaRgb(backdrop);
-  const blend = (fore: number, back: number): number =>
-    fore * color.alpha + back * (1 - color.alpha);
-  return linearToOklab(
-    decodeChannel(blend(foreRed, backRed)),
-    decodeChannel(blend(foreGreen, backGreen)),
-    decodeChannel(blend(foreBlue, backBlue)),
-  );
-}
-
-function luminance(color: Oklab): number {
-  const [red, green, blue] = oklabToLinearRgb(color.l, color.a, color.b);
-  const clamp = (channel: number): number => Math.max(0, Math.min(1, channel));
-  return 0.2126 * clamp(red) + 0.7152 * clamp(green) + 0.0722 * clamp(blue);
-}
-
-function contrast(first: Oklab, second: Oklab): number {
-  const [lighter = 0, darker = 0] = [luminance(first), luminance(second)]
-    .toSorted((left, right) => right - left);
-  return (lighter + 0.05) / (darker + 0.05);
-}
-
-function distance(first: Oklab, second: Oklab): number {
-  return Math.hypot(first.l - second.l, first.a - second.a, first.b - second.b);
-}
-
-function tokenColor(
-  option: CatalogueAppearanceOption,
+function poleColor(
+  option: Exclude<CatalogueAppearanceOption, CatalogueFieldAppearanceOption>,
   name: `--discern-${string}`,
   mode: ThemeMode,
 ): ProofColor {
-  if (option.kind === "preset") {
-    const override = option.overrides.find((candidate) =>
-      candidate.name === name
-    );
-    if (override !== undefined) return parseOklch(override[mode]);
-  }
-  const token = themeTokens.find((candidate) => candidate.name === name);
-  if (token === undefined) throw new TypeError(`Missing Theme Token ${name}`);
+  const darkness = mode === "light" ? 0 : 1;
+  const field = evaluateField({ darkness });
+  const override = option.kind === "preset"
+    ? option.overrides.find((candidate) => candidate.name === name)
+    : blueThemeRoleTokens.find((candidate) => candidate.name === name);
+  const tokenValue = override?.[mode] ??
+    field[name as keyof typeof field] ?? themeToken(name)[mode];
   const hue = option.kind === "hue" ? option.hue : authoredAccentHue;
-  let value = token[mode].replaceAll(
-    "var(--discern-accent-hue)",
-    String(hue),
+  return parseOklch(
+    tokenValue.replaceAll("var(--discern-accent-hue)", String(hue)),
   );
-  for (const [primitive, authored] of neutralHuePrimitives) {
-    value = value.replaceAll(`var(${primitive})`, authored);
-  }
-  return parseOklch(value);
 }
 
-function optionFailures(option: CatalogueAppearanceOption): readonly string[] {
-  const failures: string[] = [];
-  for (const mode of ["light", "dark"] as const) {
-    const canvasColor = tokenColor(option, "--discern-color-canvas", mode);
-    if (canvasColor.alpha !== 1) {
-      failures.push(`${mode} canvas must be opaque`);
-    }
-    const canvas: Oklab = {
-      l: canvasColor.l,
-      a: canvasColor.a,
-      b: canvasColor.b,
-    };
-    const resolve = (name: `--discern-${string}`): Oklab =>
-      over(tokenColor(option, name, mode), canvas);
+function fieldPointColor(
+  selection: CatalogueProofFieldSelection,
+  mode: ThemeMode,
+  name: `--discern-${string}`,
+): ProofColor {
+  const field = evaluateField(selection);
+  const override = selection.preset === "blue"
+    ? blueThemeRoleTokens.find((candidate) => candidate.name === name)
+    : undefined;
+  const fieldValue = field[name as keyof typeof field];
+  const series = name.match(/^--discern-color-series-([1-6])$/)?.[1];
+  const seriesValue = series === undefined
+    ? undefined
+    : resolveChartPaletteAtField(selection.darkness)[
+      `series-${series}` as keyof ReturnType<typeof resolveChartPaletteAtField>
+    ];
+  const value = override?.[mode] ?? fieldValue ?? seriesValue ??
+    themeToken(name)[mode];
+  return parseOklch(
+    value.replaceAll("var(--discern-accent-hue)", String(authoredAccentHue)),
+  );
+}
 
-    for (const [name, floor] of inkContrastFloors) {
-      const ratio = contrast(resolve(name), canvas);
-      if (ratio < floor) {
-        failures.push(`${mode} ${name} on canvas ${ratio.toFixed(2)}:1`);
-      }
+function fieldPointSample(
+  selection: CatalogueProofFieldSelection,
+  mode: ThemeMode,
+): ProofSample {
+  return {
+    label: `field ${selection.darkness}`,
+    field: true,
+    color: (name) => fieldPointColor(selection, mode, name),
+  };
+}
+
+function optionSamples(
+  option: CatalogueAppearanceOption,
+): readonly ProofSample[] {
+  if (option.kind === "field") {
+    return FIELD_CONTRAST_SAMPLE_DARKNESSES.map((darkness) => ({
+      label: `field ${darkness}`,
+      field: true,
+      color: (name) => fieldColor(darkness, name),
+    }));
+  }
+  return (["light", "dark"] as const).map((mode) => ({
+    label: mode,
+    field: false,
+    color: (name) => poleColor(option, name, mode),
+  }));
+}
+
+function samplesProof(samples: readonly ProofSample[]): CatalogueFieldProof {
+  const checks: CatalogueFieldProofCheck[] = [];
+  const record = (
+    label: string,
+    observed: number,
+    floor: number,
+    unit: CatalogueFieldProofCheck["unit"],
+    failure?: string,
+  ): void => {
+    checks.push({
+      label,
+      observed,
+      floor,
+      margin: observed - floor,
+      unit,
+      pass: failure === undefined,
+      ...(failure === undefined ? {} : { failure }),
+    });
+  };
+  for (const sample of samples) {
+    const canvasColor = sample.color("--discern-color-canvas");
+    record(
+      `${sample.label} canvas opacity`,
+      canvasColor.alpha,
+      1,
+      "opacity",
+      canvasColor.alpha === 1
+        ? undefined
+        : `${sample.label} canvas must be opaque`,
+    );
+    const canvas = canvasColor.color;
+    const resolve = (name: `--discern-${string}`): OklabColor =>
+      over(sample.color(name), canvas);
+
+    const maximumInkContrast = sample.field
+      ? oklabContrast(resolve("--discern-color-action"), canvas)
+      : Number.POSITIVE_INFINITY;
+    for (const [name, authoredFloor] of FIELD_INK_CONTRAST_FLOORS) {
+      const floor = Math.min(authoredFloor, maximumInkContrast);
+      const ratio = oklabContrast(resolve(name), canvas);
+      record(
+        `${sample.label} ${name} on canvas`,
+        ratio,
+        floor,
+        "contrast",
+        ratio >= floor
+          ? undefined
+          : `${sample.label} ${name} on canvas ${ratio.toFixed(2)}:1`,
+      );
     }
 
+    for (
+      const [name, label] of [
+        ["--discern-color-surface", "raised"],
+        ["--discern-color-inverse-surface", "inverse"],
+      ] as const
+    ) {
+      const alpha = sample.color(name).alpha;
+      record(
+        `${sample.label} ${label} surface opacity`,
+        alpha,
+        1,
+        "opacity",
+        alpha === 1
+          ? undefined
+          : `${sample.label} ${label} surface must be opaque`,
+      );
+    }
     const inverseSurface = resolve("--discern-color-inverse-surface");
     const inverseInk = over(
-      tokenColor(option, "--discern-color-inverse-ink", mode),
+      sample.color("--discern-color-inverse-ink"),
       inverseSurface,
     );
-    const inverseRatio = contrast(inverseInk, inverseSurface);
-    if (inverseRatio < 4.5) {
-      failures.push(`${mode} inverse ink ${inverseRatio.toFixed(2)}:1`);
-    }
+    const inverseRatio = oklabContrast(inverseInk, inverseSurface);
+    record(
+      `${sample.label} inverse ink`,
+      inverseRatio,
+      4.5,
+      "contrast",
+      inverseRatio >= 4.5
+        ? undefined
+        : `${sample.label} inverse ink ${inverseRatio.toFixed(2)}:1`,
+    );
+
+    const action = resolve("--discern-color-action");
+    const onAction = over(sample.color("--discern-color-on-action"), action);
+    const actionRatio = oklabContrast(onAction, action);
+    record(
+      `${sample.label} action pair`,
+      actionRatio,
+      4.5,
+      "contrast",
+      actionRatio >= 4.5
+        ? undefined
+        : `${sample.label} action pair ${actionRatio.toFixed(2)}:1`,
+    );
 
     const soft = resolve("--discern-color-accent-100");
     for (const ink of ["700", "800"] as const) {
-      const ratio = contrast(
-        over(tokenColor(option, `--discern-color-accent-${ink}`, mode), soft),
+      const ratio = oklabContrast(
+        over(sample.color(`--discern-color-accent-${ink}`), soft),
         soft,
       );
-      if (ratio < 4.5) {
-        failures.push(`${mode} accent-${ink} text ${ratio.toFixed(2)}:1`);
-      }
+      record(
+        `${sample.label} accent-${ink} text`,
+        ratio,
+        4.5,
+        "contrast",
+        ratio >= 4.5
+          ? undefined
+          : `${sample.label} accent-${ink} text ${ratio.toFixed(2)}:1`,
+      );
     }
 
     for (const role of ["accent", ...semanticRoles] as const) {
-      const surface = role === "accent"
+      const roleSurface = role === "accent"
         ? soft
         : resolve(`--discern-color-${role}-soft`);
-      const ratio = contrast(
-        over(tokenColor(option, "--discern-color-accent-500", mode), surface),
-        surface,
+      const ratio = oklabContrast(
+        over(sample.color("--discern-color-accent-500"), roleSurface),
+        roleSurface,
       );
-      if (ratio < 3) {
-        failures.push(`${mode} focus on ${role} ${ratio.toFixed(2)}:1`);
-      }
+      record(
+        `${sample.label} focus on ${role}`,
+        ratio,
+        3,
+        "contrast",
+        ratio >= 3
+          ? undefined
+          : `${sample.label} focus on ${role} ${ratio.toFixed(2)}:1`,
+      );
     }
 
     const accent = resolve("--discern-color-accent-600");
@@ -238,25 +369,33 @@ function optionFailures(option: CatalogueAppearanceOption): readonly string[] {
       [role, resolve(`--discern-color-${role}`)] as const
     );
     for (const [role, value] of semantic) {
-      const separation = distance(accent, value);
-      if (separation < semanticDistanceFloor) {
-        failures.push(
-          `${mode} accent collides with ${role} (${
+      const separation = oklabDistance(accent, value);
+      record(
+        `${sample.label} accent to ${role}`,
+        separation,
+        semanticDistanceFloor,
+        "OKLab",
+        separation >= semanticDistanceFloor
+          ? undefined
+          : `${sample.label} accent collides with ${role} (${
             separation.toFixed(3)
           } OKLab)`,
-        );
-      }
+      );
     }
     for (const [index, [firstRole, firstValue]] of semantic.entries()) {
       for (const [secondRole, secondValue] of semantic.slice(index + 1)) {
-        const separation = distance(firstValue, secondValue);
-        if (separation < semanticDistanceFloor) {
-          failures.push(
-            `${mode} ${firstRole} collides with ${secondRole} (${
+        const separation = oklabDistance(firstValue, secondValue);
+        record(
+          `${sample.label} ${firstRole} to ${secondRole}`,
+          separation,
+          semanticDistanceFloor,
+          "OKLab",
+          separation >= semanticDistanceFloor
+            ? undefined
+            : `${sample.label} ${firstRole} collides with ${secondRole} (${
               separation.toFixed(3)
             } OKLab)`,
-          );
-        }
+        );
       }
     }
 
@@ -264,30 +403,63 @@ function optionFailures(option: CatalogueAppearanceOption): readonly string[] {
       [step, resolve(`--discern-color-series-${step}`)] as const
     );
     for (const [step, value] of series) {
-      const ratio = contrast(value, canvas);
-      if (ratio < seriesCanvasContrastFloor) {
-        failures.push(
-          `${mode} series-${step} vanishes on canvas ${ratio.toFixed(2)}:1`,
-        );
-      }
+      const ratio = oklabContrast(value, canvas);
+      record(
+        `${sample.label} series-${step} on canvas`,
+        ratio,
+        seriesCanvasContrastFloor,
+        "contrast",
+        ratio >= seriesCanvasContrastFloor
+          ? undefined
+          : `${sample.label} series-${step} vanishes on canvas ${
+            ratio.toFixed(2)
+          }:1`,
+      );
     }
     for (const [index, [firstStep, firstValue]] of series.entries()) {
       for (const [secondStep, secondValue] of series.slice(index + 1)) {
-        const separation = distance(firstValue, secondValue);
-        if (separation < seriesDistanceFloor) {
-          failures.push(
-            `${mode} series-${firstStep} collides with series-${secondStep} (${
+        const separation = oklabDistance(firstValue, secondValue);
+        record(
+          `${sample.label} series-${firstStep} to series-${secondStep}`,
+          separation,
+          seriesDistanceFloor,
+          "OKLab",
+          separation >= seriesDistanceFloor
+            ? undefined
+            : `${sample.label} series-${firstStep} collides with series-${secondStep} (${
               separation.toFixed(3)
             } OKLab)`,
-          );
-        }
+        );
       }
     }
   }
-  return failures;
+  const failures = checks.flatMap(({ failure }) =>
+    failure === undefined ? [] : [failure]
+  );
+  return { accepted: failures.length === 0, checks, failures };
 }
 
-/** Evaluate one low-level hue against the complete project-facing promise. */
+function optionFailures(option: CatalogueAppearanceOption): readonly string[] {
+  return samplesProof(optionSamples(option)).failures;
+}
+
+/**
+ * Evaluate one arbitrary field point with the same floor loop that admits
+ * every named Catalogue Appearance option.
+ */
+export function catalogueFieldPointProof(
+  selection: CatalogueProofFieldSelection,
+  mode: ThemeMode = evaluateFieldExpression(
+      fieldPolarityExpression,
+      selection,
+    ) === 1
+    ? "dark"
+    : "light",
+): CatalogueFieldProof {
+  return samplesProof([fieldPointSample(selection, mode)]);
+}
+
+/** Evaluate one blue-family hue against the complete project-facing promise. */
 export function catalogueAppearanceHueFailures(hue: number): readonly string[] {
   if (!Number.isInteger(hue) || hue < 0 || hue > 360) {
     throw new TypeError(`Appearance has invalid hue ${hue}`);
@@ -298,6 +470,11 @@ export function catalogueAppearanceHueFailures(hue: number): readonly string[] {
     label: `Hue ${hue}`,
     hue,
   });
+}
+
+/** Evaluate the default field at every signed-off darkness sample. */
+export function catalogueFieldFailures(): readonly string[] {
+  return optionFailures({ kind: "field", id: "field", label: "Field" });
 }
 
 /** Fail closed unless a complete project-facing option set is semantically safe. */
@@ -325,7 +502,7 @@ export function assertCatalogueAppearanceOptions(
         throw new TypeError(`Appearance repeats hue ${option.hue}`);
       }
       hues.add(option.hue);
-    } else {
+    } else if (option.kind === "preset") {
       if (option.overrides.length === 0) {
         throw new TypeError(`${option.id} overrides no Theme Tokens`);
       }
@@ -359,11 +536,12 @@ export function assertCatalogueAppearanceOptions(
 
 const authoredCatalogueAppearanceOptions: readonly CatalogueAppearanceOption[] =
   [
+    { kind: "field", id: "field", label: "Field", default: true },
     { kind: "hue", id: "red", label: "Red", hue: 2 },
     { kind: "hue", id: "green", label: "Green", hue: 120 },
     { kind: "hue", id: "sky", label: "Sky", hue: 235 },
     { kind: "hue", id: "azure", label: "Azure", hue: 245 },
-    { kind: "hue", id: "blue", label: "Blue", hue: 255, default: true },
+    { kind: "hue", id: "blue", label: "Blue", hue: 255 },
     { kind: "hue", id: "indigo", label: "Indigo", hue: 270 },
     { kind: "hue", id: "purple", label: "Purple", hue: 285 },
     { kind: "hue", id: "violet", label: "Violet", hue: 300 },
@@ -380,7 +558,7 @@ export const catalogueAppearanceOptions = Object.freeze(
   authoredCatalogueAppearanceOptions,
 );
 
-/** The default project Appearance, matching the authored public Token value. */
+/** The default project Appearance: the achromatic field with no preset. */
 export const defaultCatalogueAppearanceOption = catalogueAppearanceOptions.find(
   (option) => option.default === true,
 )!;
@@ -402,8 +580,12 @@ export function catalogueAppearanceStyle(
   option: CatalogueAppearanceOption,
   mode: ThemeMode,
 ): Readonly<Record<`--discern-${string}`, string>> {
+  if (option.kind === "field") return {};
   if (option.kind === "hue") {
-    return { "--discern-accent-hue": String(option.hue) };
+    return Object.fromEntries([
+      ["--discern-accent-hue", String(option.hue)],
+      ...blueThemeRoleTokens.map((token) => [token.name, token[mode]] as const),
+    ]) as Record<`--discern-${string}`, string>;
   }
   return Object.fromEntries(
     option.overrides.map((token) => [token.name, token[mode]]),

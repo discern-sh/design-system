@@ -3,7 +3,7 @@
     display: grid;
     gap: var(--discern-space-2);
     padding: var(--discern-space-3) var(--discern-space-4);
-    border-inline-start: 2px solid var(--discern-color-border-strong);
+    border-inline-start: 0.125rem solid var(--discern-color-border-strong);
     background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink);
   }

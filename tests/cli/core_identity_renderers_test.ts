@@ -47,7 +47,7 @@ Deno.test("Icon renders exact narrow, standard, wide, and degraded glyph frames"
   assertEquals(iconCliExamples[0]?.props.tone, "warning");
   assertEquals(
     render(testTerminalCapabilities({ columns: 20, colorDepth: "truecolor" })),
-    "\u001b[1;38;2;242;203;131m✦ Generate\u001b[0m",
+    "\u001b[1;38;2;219;219;219m✦ Generate\u001b[0m",
   );
 });
 

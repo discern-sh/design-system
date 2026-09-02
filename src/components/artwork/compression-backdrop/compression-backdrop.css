@@ -2,10 +2,10 @@
   .discern-compression-backdrop {
     --discern-compression-backdrop-open-x: 1;
     --discern-compression-backdrop-open-y: 1;
-    --discern-compression-backdrop-open-slide: 0px;
+    --discern-compression-backdrop-open-slide: 0;
     --discern-compression-backdrop-closed-x: 1;
     --discern-compression-backdrop-closed-y: 1;
-    --discern-compression-backdrop-closed-slide: 0px;
+    --discern-compression-backdrop-closed-slide: 0;
     color: color-mix(
       in oklab,
       var(--discern-backdrop-guide) 78%,
@@ -39,7 +39,7 @@
 
   .discern-compression-backdrop__fold {
     transform-box: view-box;
-    transform-origin: 380px 270px;
+    transform-origin: 23.75rem 16.875rem;
     animation: discern-compression-backdrop-breathe
       calc(var(--discern-backdrop-beat) * 15) var(--discern-backdrop-ease-drift)
       1;

@@ -5,7 +5,8 @@ import {
   foundationsPaths,
 } from "../../../catalogue/routes.ts";
 import { terminalFoundationSheets } from "../../../catalogue/terminal-foundations.ts";
-import { allTokens } from "../../../src/tokens/tokens.ts";
+import { publicTokens } from "../../../src/token-inventory.ts";
+import { serializeCatalogueFieldSelection } from "../../../catalogue/shell/field-state.ts";
 import { scanBrowserAccessibility } from "../../browser-conformance-support.ts";
 import { withViewport } from "../../viewport.ts";
 import { verifyInlineOverflowCueEdges } from "./overflow-cue.ts";
@@ -43,11 +44,19 @@ async function verifyTokenExplorer(
   page: Page,
   origin: string,
 ): Promise<{ readonly tokenChecks: number; readonly reflowChecks: number }> {
+  const field = serializeCatalogueFieldSelection({
+    darkness: 0.2,
+    structure: 1,
+    emphasis: 1,
+    density: 1,
+    preset: "mono",
+  });
   const url = new URL(foundationsPaths.tokens, origin);
   url.searchParams.set("theme", "light");
+  url.searchParams.set("field", field);
   await loadCataloguePage(page, url.href);
   invariant(
-    await page.locator("[data-discern-token]").count() === allTokens.length,
+    await page.locator("[data-discern-token]").count() === publicTokens.length,
     "Token explorer did not auto-enrol the complete Token authority",
   );
 
@@ -115,11 +124,21 @@ async function verifyTokenExplorer(
       )),
     "Typography selection rendered a Token from another category",
   );
+  const typographyLink = page.locator(".discern-catalogue-nav").getByRole(
+    "link",
+    { name: "Typography", exact: true },
+  );
+  const typographyHref = new URL(
+    await typographyLink.getAttribute("href") ?? "",
+    origin,
+  );
   invariant(
-    await page.locator(
-      `.discern-catalogue-nav a[href="${foundationsPaths.tokens}?category=typography"]`,
-    ).getAttribute("aria-current") === "location",
-    "Foundations navigation did not follow the in-place category URL",
+    await typographyLink.getAttribute("aria-current") === "location" &&
+      typographyHref.pathname === foundationsPaths.tokens &&
+      typographyHref.searchParams.get("category") === "typography" &&
+      typographyHref.searchParams.get("theme") === "light" &&
+      typographyHref.searchParams.get("field") === field,
+    "Foundations navigation did not preserve the active category and Appearance state",
   );
 
   const search = page.getByRole("search").getByRole("searchbox", {
@@ -355,21 +374,25 @@ export async function verifyFoundationsCatalogue(
     await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
     const index = new URL(foundationsPaths.index, origin);
     await loadCataloguePage(page, index.href);
+    const boundedChoices = Object.entries(foundationsPaths).flatMap(
+      ([name, path]) => name === "index" ? [] : [path],
+    );
     invariant(
       await page.locator('[data-discern-foundations-page="index"]').count() ===
           1 &&
-        await page.locator(
-            `[data-discern-foundations-page="index"] a[href="${foundationsPaths.tokens}"]`,
-          ).count() === 1 &&
-        await page.locator(
-            `[data-discern-foundations-page="index"] a[href="${foundationsPaths.terminal}"]`,
-          ).count() === 1,
-      "Foundations index must make its two bounded choices explicit",
+        (await Promise.all(
+          boundedChoices.map(async (path) =>
+            await page.locator(
+              `[data-discern-foundations-page="index"] a[href="${path}"]`,
+            ).count() === 1
+          ),
+        )).every(Boolean),
+      "Foundations index must make every bounded choice explicit",
     );
     invariant(
       await page.locator(
         '[data-discern-foundations-page="index"] [data-discern-catalogue-index-card="visual"] [data-discern-catalogue-index-card-primary]',
-      ).count() === 2,
+      ).count() === boundedChoices.length,
       "Foundations choices bypassed the shared visual-card authority",
     );
     const tokens = await verifyTokenExplorer(page, origin);

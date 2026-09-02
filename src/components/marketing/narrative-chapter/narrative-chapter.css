@@ -54,7 +54,7 @@
     color: var(--discern-color-ink);
     font-weight: var(--discern-font-weight-strong);
   }
-  @container (max-width: 820px) {
+  @container (max-width: 51.25rem) {
     .discern-narrative-chapter__layout {
       grid-template-columns: 1fr;
     }
@@ -62,7 +62,7 @@
       max-inline-size: 44rem;
     }
   }
-  @container (max-width: 520px) {
+  @container (max-width: 32.5rem) {
     .discern-narrative-chapter__aside {
       grid-template-columns: 1fr;
       gap: var(--discern-space-3);

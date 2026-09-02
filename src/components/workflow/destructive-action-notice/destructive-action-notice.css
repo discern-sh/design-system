@@ -18,7 +18,7 @@
 
   .discern-destructive-action-notice__label {
     padding-inline-start: var(--discern-space-3);
-    border-inline-start: 2px solid var(--discern-color-warning);
+    border-inline-start: 0.125rem solid var(--discern-color-warning);
     color: var(--discern-color-warning-deep);
     font-size: var(--discern-font-size-sm);
     font-weight: var(--discern-font-weight-strong);

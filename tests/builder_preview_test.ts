@@ -178,7 +178,18 @@ Deno.test("preview messages are same-origin, versioned, and policy-accepted", ()
     documentKey: JSON.stringify(emptyDocument("Protocol check")),
     viewport: { id: "fluid", label: "Fluid", logicalWidth: 860 },
     zoom: { id: "fit", scale: 1 },
-    appearance: { theme: "light", resolvedTheme: "light", accent: "blue" },
+    appearance: {
+      theme: "light",
+      resolvedTheme: "dark",
+      accent: "field",
+      field: {
+        darkness: 0.6,
+        structure: 1.2,
+        emphasis: 0.8,
+        density: 1.1,
+        preset: "blue",
+      },
+    },
     mode: "edit",
     selectionId: null,
     interactionRevision: 0,
@@ -194,6 +205,24 @@ Deno.test("preview messages are same-origin, versioned, and policy-accepted", ()
   assertEquals(
     builderPreviewMessageFromEvent(
       { origin: "https://elsewhere.test", data: snapshot, source: null },
+      "https://catalogue.test",
+      documentPolicy,
+    ),
+    undefined,
+  );
+  assertEquals(
+    builderPreviewMessageFromEvent(
+      {
+        origin: "https://catalogue.test",
+        data: {
+          ...snapshot,
+          appearance: {
+            ...snapshot.appearance,
+            field: { ...snapshot.appearance.field!, darkness: 1.2 },
+          },
+        },
+        source: null,
+      },
       "https://catalogue.test",
       documentPolicy,
     ),

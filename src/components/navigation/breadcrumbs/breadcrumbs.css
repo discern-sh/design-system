@@ -21,7 +21,7 @@
     white-space: nowrap;
   }
   .discern-breadcrumbs a {
-    min-block-size: 24px;
+    min-block-size: 1.5rem;
     border-radius: var(--discern-radius-xs);
     color: inherit;
     text-decoration-color: transparent;

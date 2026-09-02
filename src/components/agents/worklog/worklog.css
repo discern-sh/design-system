@@ -11,7 +11,7 @@
   .discern-worklog__entry {
     position: relative;
     display: grid;
-    grid-template-columns: 1.5rem minmax(0, 1fr) max-content;
+    grid-template-columns: var(--discern-space-6) minmax(0, 1fr) max-content;
     align-items: start;
     gap: var(--discern-space-3);
     padding-block: var(--discern-space-2);
@@ -19,9 +19,11 @@
   .discern-worklog__entry:not(:last-child)::after {
     position: absolute;
     z-index: 0;
-    inset-block-start: calc(var(--discern-space-2) + 1.5rem);
+    inset-block-start: calc(var(--discern-space-2) + var(--discern-space-6));
     inset-block-end: calc(var(--discern-space-2) * -1);
-    inset-inline-start: calc(0.75rem - 0.5px);
+    inset-inline-start: calc(
+      var(--discern-space-3) - var(--discern-space-1) * 0.125
+    );
     inline-size: 1px;
     background: var(--discern-color-border);
     content: "";
@@ -32,8 +34,8 @@
     display: grid;
     flex: none;
     place-items: center;
-    inline-size: 1.5rem;
-    block-size: 1.5rem;
+    inline-size: var(--discern-space-6);
+    block-size: var(--discern-space-6);
     border: 1px solid var(--discern-color-border);
     border-radius: var(--discern-radius-xs);
     background: var(--discern-color-surface);
@@ -63,9 +65,9 @@
     display: flex;
     flex: 1;
     flex-direction: column;
-    gap: 2px;
+    gap: calc(var(--discern-space-1) * 0.5);
     min-inline-size: 0;
-    padding-block-start: 1px;
+    padding-block-start: calc(var(--discern-space-1) * 0.25);
   }
   .discern-worklog__label {
     color: var(--discern-color-ink);
@@ -90,7 +92,7 @@
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-xs);
     line-height: 1.4;
-    padding-block-start: 2px;
+    padding-block-start: calc(var(--discern-space-1) * 0.5);
     text-align: end;
     white-space: nowrap;
   }

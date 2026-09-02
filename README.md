@@ -19,8 +19,8 @@ deno add jsr:@discern-sh/design-system
 | `@discern-sh/design-system/diagram`                 | Typed diagram specs, descriptions, kind Metadata, and portable standalone SVG             |
 | `@discern-sh/design-system/manifest`                | Framework-neutral manifest schema and the complete package ownership manifest             |
 | `@discern-sh/design-system/runtime`                 | Deterministic selected-runtime emitter                                                    |
-| `@discern-sh/design-system/tokens`                  | Primitive, semantic, and Discern-preset token metadata                                    |
-| `@discern-sh/design-system/theme/discern`           | Default branded blue preset                                                               |
+| `@discern-sh/design-system/tokens`                  | Field/Accent evaluation, admission, scopes, and primitive/semantic pole metadata          |
+| `@discern-sh/design-system/theme/blue`              | Generated hue-255 Accent compatibility preset                                             |
 | `@discern-sh/design-system/react`                   | Optional React components and their public prop types                                     |
 
 Only `./react` resolves React. The package keeps React and React DOM as catalogue development dependencies and peer dependencies, while its root, manifest, runtime, token, and theme graphs do not import them.
@@ -91,28 +91,25 @@ No asset is copied by default. Asset selections are independent:
 
 Component CSS has no hidden texture dependency. The core `.discern-grain-wash` utility remains useful as a gradient without the optional texture; `grain.css` adds the texture only when a consumer chooses it. Consumers should read emitted asset paths from the manifest rather than infer a cache or registry location.
 
-## Custom themes
+## Appearances and consumer themes
 
-Semantic component roles are separate from the default blue preset. The runtime uses that preset unless `theme: "none"` is requested. A consumer can override public tokens in its own layer without forking a component stylesheet:
+Semantic roles derive from the achromatic Field by default. Select `theme: "blue"` for the generated hue-255 Accent compatibility projection; omission and `theme: "none"` keep Field. Accent accepts every finite hue from `0` through `360` (`360` aliases `0`) and keeps success, warning, and danger in recognisable, numerically distinct semantic families even when the chosen hue coincides with one of them.
 
-```css
-@layer discern.consumer {
-  :where([data-discern-root]) {
-    --discern-accent-hue: 145;
-    --discern-color-success: oklch(58% 0.16 190);
-    --discern-color-success-soft: oklch(95% 0.045 190);
-    --discern-color-success-deep: oklch(34% 0.1 190);
-  }
+Select `appearanceScopes: true` when emitting a Runtime that needs local appearance composition. Then use the zero-specificity, Root-contained scope attribute with the inherited hue primitive:
 
-  :where([data-discern-root][data-discern-theme="dark"]) {
-    --discern-color-success: oklch(74% 0.13 190);
-    --discern-color-success-soft: oklch(30% 0.055 190);
-    --discern-color-success-deep: oklch(90% 0.08 190);
-  }
-}
+```html
+<main data-discern-root data-discern-appearance="field">
+  <section
+    data-discern-appearance="accent"
+    style="--discern-accent-hue: 145"
+  >
+    <button class="discern-button">Continue</button>
+    <aside data-discern-appearance="field">Achromatic details</aside>
+  </section>
+</main>
 ```
 
-The distinct success hue is deliberate: a green accent must not erase the difference between brand actions and successful outcomes. Automated package tests cover light/dark text contrast, accent/success/warning/danger separation, reduced-motion rules, forced-colour focus outlines, and unchanged component CSS. Manual browser review still checks visible focus shape and status recognition in the consumer's actual type, layout, zoom, and operating-system colour settings.
+Field can nest inside Accent, Accent can nest inside Field, and a nested Accent can inherit or replace the surrounding hue. Darkness, Structure, Emphasis, and Density inherit unchanged unless the local scope explicitly sets an axis. Consumers may still override public roles in their own cascade layer without forking Component CSS. Automated package tests exhaust the hue circle and cover text contrast, focus, semantic distinction, owned surfaces, fixed series, nested scopes, reduced motion, forced-colour focus outlines, and unchanged Component CSS. Manual browser review still checks visible focus shape and status recognition in the consumer's actual type, layout, zoom, and operating-system colour settings.
 
 Inverse surface and ink roles remain dark-on-light in purpose across both site themes; they do not invert with the ordinary canvas and ink roles.
 

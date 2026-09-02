@@ -24,8 +24,17 @@ import {
   type RuntimeAssetSelection,
   runtimeAssetSelections,
 } from "./runtime-assets.ts";
-import { discernThemeCss } from "./theme/discern.ts";
-import { allTokens, baseTokens, themeTokens } from "./tokens/tokens.ts";
+import { publicTokens } from "./token-inventory.ts";
+import { blueThemeCss } from "./theme/blue.ts";
+import { appearanceScopeCss } from "./tokens/appearance-css.ts";
+import {
+  densityScaledSpacingCssValue,
+  FIELD_LIVE_CSS_SUPPORTS,
+  fieldLiveCssDeclarations,
+  generateAccentHueRegistrationCss,
+  generateFieldAxisRegistrationCss,
+} from "./tokens/field-css.ts";
+import { baseTokens, themeTokens } from "./tokens/tokens.ts";
 import {
   type ComponentGroup,
   componentGroups,
@@ -36,6 +45,14 @@ const LAYER_ORDER =
   "@layer discern.reset, discern.tokens, discern.theme, discern.foundation, discern.components, discern.utilities;";
 const textEncoder = new TextEncoder();
 
+function compactGeneratedTokenCss(source: string): string {
+  // Authored Component CSS joins the runtime only after this generated surface.
+  return source
+    .replaceAll(/: /gu, ":")
+    .replaceAll(/\s*([{},;])\s*/gu, "$1")
+    .replaceAll(/ \* /gu, "*");
+}
+
 /** Selection, theme, and asset choices for one runtime emission. */
 export interface RuntimeOptions {
   /** A dedicated directory URL. Existing contents are replaced. */
@@ -44,7 +61,9 @@ export interface RuntimeOptions {
   readonly groups?: readonly ComponentGroup[];
   readonly all?: boolean;
   readonly assets?: readonly RuntimeAssetSelection[];
-  readonly theme?: "discern" | "none";
+  readonly theme?: "blue" | "none";
+  /** Emit the atomic Field/Accent subtree-scoping contract. */
+  readonly appearanceScopes?: boolean;
 }
 
 /** Counts and the emitted manifest returned by a runtime emission. */
@@ -55,6 +74,7 @@ export interface BuildSummary {
 }
 
 function generateTokenCss(): string {
+  const fieldDeclarations = fieldLiveCssDeclarations();
   const primitiveDeclarations = baseTokens.map(({ name, value }) =>
     `${name}: ${value};`
   ).join(" ");
@@ -64,26 +84,44 @@ function generateTokenCss(): string {
   const darkDeclarations = themeTokens.map(({ name, dark }) =>
     `${name}: ${dark};`
   ).join(" ");
-  return `@layer discern.tokens {
+  const liveDeclarations = [
+    ...baseTokens.filter(({ name }) => name.startsWith("--discern-space-"))
+      .map(({ name, value }) => ({
+        name,
+        value: densityScaledSpacingCssValue(value),
+      })),
+    ...fieldDeclarations,
+  ].map(({ name, value }) => `${name}: ${value};`).join(" ");
+  return compactGeneratedTokenCss(`${generateFieldAxisRegistrationCss()}
+
+${generateAccentHueRegistrationCss()}
+
+@layer discern.tokens {
   :where([data-discern-root]) {
     color-scheme: light dark; ${primitiveDeclarations} ${lightDeclarations}
   }
 
   :where([data-discern-root][data-discern-theme="light"]) {
-    color-scheme: light;
+    color-scheme: light; --discern-darkness: 0;
   }
 
   :where([data-discern-root][data-discern-theme="dark"]) {
-    color-scheme: dark; ${darkDeclarations}
+    color-scheme: dark; --discern-darkness: 1; ${darkDeclarations}
   }
 
   @media (prefers-color-scheme: dark) {
     :where([data-discern-root]:not([data-discern-theme])),
     :where([data-discern-root][data-discern-theme="system"]) {
-      color-scheme: dark; ${darkDeclarations}
+      color-scheme: dark; --discern-darkness: 1; ${darkDeclarations}
     }
   }
-}`;
+
+  @supports ${FIELD_LIVE_CSS_SUPPORTS} {
+    :where([data-discern-root]) {
+      ${liveDeclarations}
+    }
+  }
+}`);
 }
 
 /** One authored CSS surface that the runtime emitter can write. */
@@ -93,6 +131,7 @@ export interface RuntimeCssSurface {
     | "layer-order"
     | "tokens"
     | "theme"
+    | "appearance"
     | "foundation"
     | "utilities"
     | "component"
@@ -124,10 +163,17 @@ export const runtimeCssSurfaceRegistry: readonly RuntimeCssSurface[] = [
     ownedClasses: [],
   },
   {
-    id: "theme:discern",
+    id: "theme:blue",
     kind: "theme",
     outputPath: "discern.css",
-    css: discernThemeCss,
+    css: blueThemeCss,
+    ownedClasses: [],
+  },
+  {
+    id: "appearance-scopes",
+    kind: "appearance",
+    outputPath: "discern.css",
+    css: appearanceScopeCss,
     ownedClasses: [],
   },
   {
@@ -296,7 +342,7 @@ export async function emitDesignSystemRuntime(
   const selection = resolveSelection(options);
   const assets = selectedAssets(options.assets);
   const behaviors = selectedComponentBehaviors(selection.entries);
-  const theme = options.theme ?? "discern";
+  const theme = options.theme ?? "none";
   await removeIfPresent(options.outputRoot);
   await mkdir(options.outputRoot, { recursive: true });
 
@@ -305,7 +351,10 @@ export async function emitDesignSystemRuntime(
   );
   const css = runtimeCssSurfaceRegistry.filter((surface) => {
     if (surface.kind === "asset") return false;
-    if (surface.kind === "theme") return theme === "discern";
+    if (surface.kind === "theme") return theme === "blue";
+    if (surface.kind === "appearance") {
+      return options.appearanceScopes === true;
+    }
     return surface.componentId === undefined ||
       selectedComponentIds.has(surface.componentId);
   }).map((surface) => surface.css)
@@ -372,6 +421,7 @@ export async function emitDesignSystemRuntime(
       resolvedComponents: components.map((component) => component.id),
       assets,
       theme,
+      appearanceScopes: options.appearanceScopes === true,
     },
     groups: componentGroups.map((name) => ({
       name,
@@ -379,7 +429,7 @@ export async function emitDesignSystemRuntime(
         .map((entry) => entry.meta.slug),
     })),
     components,
-    publicTokenNames: allTokens.map((token) => token.name),
+    publicTokenNames: publicTokens.map((token) => token.name),
     outputs: {
       css: "discern.css",
       manifest: "manifest.json",
@@ -394,7 +444,7 @@ export async function emitDesignSystemRuntime(
   );
   return {
     components: components.length,
-    tokens: allTokens.length,
+    tokens: publicTokens.length,
     manifest,
   };
 }
