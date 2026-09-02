@@ -31,6 +31,11 @@ interface SgrColors {
   readonly ansi16: readonly number[];
 }
 
+const SGR_SEQUENCE = new RegExp(
+  `${String.fromCharCode(27)}\\[([0-9;]*)m`,
+  "gu",
+);
+
 function rgbKey(
   color: Readonly<{ red: number; green: number; blue: number }>,
 ): string {
@@ -49,7 +54,7 @@ function sgrColors(frame: string): SgrColors {
   const rgb: string[] = [];
   const ansi256: number[] = [];
   const ansi16: number[] = [];
-  for (const match of frame.matchAll(/\u001b\[([0-9;]*)m/gu)) {
+  for (const match of frame.matchAll(SGR_SEQUENCE)) {
     const codes = (match[1] ?? "").split(";").filter((part) => part !== "")
       .map(Number);
     for (let index = 0; index < codes.length; index += 1) {
