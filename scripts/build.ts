@@ -1184,6 +1184,7 @@ export async function buildDesignSystem(): Promise<BuildSummary> {
     outputRoot: DIST_ROOT,
     all: true,
     assets: ["fonts", "grain"],
+    appearanceScopes: true,
   });
   if (summary.components !== sources.length) {
     throw new Error("Catalogue and runtime component discovery disagree");
