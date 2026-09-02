@@ -18,7 +18,7 @@ The Catalogue exposes only the named Appearance presets in [`appearance-options.
 
 ## The field decision
 
-[ADR 0040](../_adr/0040-derive-the-theme-from-a-monochrome-field.md) records the decision to derive every colour role from a monochrome field of two pigments and numeric axes, with light and dark as the field's poles, an action/on-action pair for inversion, opaque raised surfaces, and the blue accent demoted to a preset. Until that programme lands, the roles remain the authored light/dark pairs described above; the plan and its briefs live under [`map/_private/planning/monochrome-field/`](../_private/planning/monochrome-field/README.md).
+[ADR 0040](../_adr/0040-derive-the-theme-from-a-monochrome-field.md) records the decision to derive every colour role from a monochrome field of two pigments and numeric axes, with light and dark as the field's poles, an action/on-action pair for inversion, opaque raised surfaces, and the blue accent demoted to a preset. Until that programme lands, the roles remain the authored light/dark pairs described above; the plan and its briefs live in the private planning tree under `map/_private/planning/monochrome-field/`.
 
 ## Motion and elevation boundaries
 
