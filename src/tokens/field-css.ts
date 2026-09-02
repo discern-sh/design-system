@@ -25,63 +25,268 @@ export interface FieldCssDeclaration {
   readonly value: string;
 }
 
-const FIELD_CANVAS_LIGHTNESS = "--discern-field-canvas-lightness" as const;
-const FIELD_POLARITY = "--discern-field-polarity" as const;
-const FIELD_ACTIVE_LIGHTNESS = "--discern-field-active-lightness" as const;
-const FIELD_OPPOSITE_LIGHTNESS = "--discern-field-opposite-lightness" as const;
+const FIELD_CANVAS_LIGHTNESS = "--discern-f-l" as const;
+const FIELD_POLARITY = "--discern-f-p" as const;
+const FIELD_ACTIVE_LIGHTNESS = "--discern-f-a" as const;
+const FIELD_OPPOSITE_LIGHTNESS = "--discern-f-o" as const;
 
 function formattedNumber(value: number): string {
   if (!Number.isFinite(value)) {
     throw new TypeError(`Cannot project non-finite field number ${value}`);
   }
-  return Object.is(value, -0) ? "0" : String(value);
+  const text = Object.is(value, -0) ? "0" : String(value);
+  return text.replace(/^(-?)0\./u, "$1.");
 }
 
-function compileExpression(
+function foldedNumber(value: number): string {
+  return formattedNumber(Number(value.toFixed(12)));
+}
+
+function isNumber(
+  expression: FieldExpression,
+  value: number,
+): boolean {
+  return expression.kind === "number" && expression.value === value;
+}
+
+function constantArithmeticValue(
+  expression: FieldExpression,
+): number | undefined {
+  if (expression.kind === "number") return expression.value;
+  if (
+    expression.kind !== "add" && expression.kind !== "subtract" &&
+    expression.kind !== "multiply" && expression.kind !== "divide"
+  ) return undefined;
+  const left = constantArithmeticValue(expression.left);
+  const right = constantArithmeticValue(expression.right);
+  if (left === undefined || right === undefined) return undefined;
+  switch (expression.kind) {
+    case "add":
+      return left + right;
+    case "subtract":
+      return left - right;
+    case "multiply":
+      return left * right;
+    case "divide":
+      return left / right;
+  }
+}
+
+function compileExpressionBody(
   expression: FieldExpression,
   bindings: ReadonlyMap<FieldExpression, string>,
 ): string {
   const binding = bindings.get(expression);
   if (binding !== undefined) return binding;
   const compile = (value: FieldExpression): string =>
-    compileExpression(value, bindings);
+    compileExpressionBody(value, bindings);
   switch (expression.kind) {
     case "number":
       return formattedNumber(expression.value);
     case "axis":
       return `var(${fieldAxisCustomPropertyName(expression.axis)})`;
-    case "add":
-      return `calc(${compile(expression.left)} + ${compile(expression.right)})`;
-    case "subtract":
-      return `calc(${compile(expression.left)} - ${compile(expression.right)})`;
-    case "multiply":
-      return `calc(${compile(expression.left)} * ${compile(expression.right)})`;
-    case "divide":
-      return `calc(${compile(expression.left)} / ${compile(expression.right)})`;
+    case "add": {
+      const left = constantArithmeticValue(expression.left);
+      const right = constantArithmeticValue(expression.right);
+      if (left === 0) return compile(expression.right);
+      if (right === 0) return compile(expression.left);
+      if (left !== undefined && right !== undefined) {
+        return foldedNumber(left + right);
+      }
+      const compiledLeft = compile(expression.left);
+      const compiledRight = compile(expression.right);
+      if (compiledLeft === "0") return compiledRight;
+      if (compiledRight === "0") return compiledLeft;
+      return `(${compiledLeft} + ${compiledRight})`;
+    }
+    case "subtract": {
+      const left = constantArithmeticValue(expression.left);
+      const right = constantArithmeticValue(expression.right);
+      if (right === 0) return compile(expression.left);
+      if (left !== undefined && right !== undefined) {
+        return foldedNumber(left - right);
+      }
+      const compiledLeft = compile(expression.left);
+      const compiledRight = compile(expression.right);
+      if (compiledRight === "0") return compiledLeft;
+      return `(${compiledLeft} - ${compiledRight})`;
+    }
+    case "multiply": {
+      const left = constantArithmeticValue(expression.left);
+      const right = constantArithmeticValue(expression.right);
+      if (left === 0 || right === 0) return "0";
+      if (left === 1) return compile(expression.right);
+      if (right === 1) return compile(expression.left);
+      if (left !== undefined && right !== undefined) {
+        return foldedNumber(left * right);
+      }
+      return `(${compile(expression.left)}*${compile(expression.right)})`;
+    }
+    case "divide": {
+      const left = constantArithmeticValue(expression.left);
+      const right = constantArithmeticValue(expression.right);
+      if (left === 0) return "0";
+      if (right === 1) return compile(expression.left);
+      if (left !== undefined && right !== undefined) {
+        return foldedNumber(left / right);
+      }
+      return `(${compile(expression.left)}/${compile(expression.right)})`;
+    }
     case "min":
     case "max": {
       if (expression.values.length === 0) {
         throw new TypeError(`Cannot project empty field ${expression.kind}()`);
       }
-      return `${expression.kind}(${expression.values.map(compile).join(", ")})`;
+      return `${expression.kind}(${expression.values.map(compile).join(",")})`;
     }
     case "clamp":
-      return `clamp(${compile(expression.minimum)}, ${
+      return `clamp(${compile(expression.minimum)},${
         compile(expression.value)
-      }, ${compile(expression.maximum)})`;
+      },${compile(expression.maximum)})`;
     case "abs":
       return `abs(${compile(expression.value)})`;
     case "round":
-      return `round(${expression.strategy ?? "nearest"}, ${
-        compile(expression.value)
-      }, ${compile(expression.interval)})`;
+      return expression.strategy === undefined
+        ? `round(${compile(expression.value)},${compile(expression.interval)})`
+        : `round(${expression.strategy},${compile(expression.value)},${
+          compile(expression.interval)
+        })`;
     case "lerp": {
+      if (expression.from === expression.to) return compile(expression.from);
+      if (isNumber(expression.position, 0)) return compile(expression.from);
+      if (isNumber(expression.position, 1)) return compile(expression.to);
       const from = compile(expression.from);
       const to = compile(expression.to);
       const position = compile(expression.position);
-      return `calc(${from} * (1 - ${position}) + ${to} * ${position})`;
+      if (isNumber(expression.from, 0) && isNumber(expression.to, 1)) {
+        return position;
+      }
+      if (isNumber(expression.from, 1) && isNumber(expression.to, 0)) {
+        return `(1 - ${position})`;
+      }
+      if (isNumber(expression.from, 0)) return `(${to}*${position})`;
+      if (isNumber(expression.to, 0)) {
+        return `(${from}*(1 - ${position}))`;
+      }
+      if (isNumber(expression.from, 1)) {
+        return `((1 - ${position}) + ${to}*${position})`;
+      }
+      if (isNumber(expression.to, 1)) {
+        return `(${from}*(1 - ${position}) + ${position})`;
+      }
+      if (expression.position.kind === "number") {
+        const weight = expression.position.value;
+        return `(${from}*${foldedNumber(1 - weight)} + ${to}*${
+          foldedNumber(weight)
+        })`;
+      }
+      return `(${from}*(1 - ${position}) + ${to}*${position})`;
     }
   }
+}
+
+function compileExpression(
+  expression: FieldExpression,
+  bindings: ReadonlyMap<FieldExpression, string>,
+): string {
+  const body = compileExpressionBody(expression, bindings);
+  if (bindings.has(expression)) return body;
+  const calculation = expression.kind === "add" ||
+    expression.kind === "subtract" ||
+    expression.kind === "multiply" || expression.kind === "divide" ||
+    expression.kind === "lerp";
+  return calculation && body.startsWith("(") && body.endsWith(")")
+    ? `calc(${body.slice(1, -1)})`
+    : body;
+}
+
+function expressionChildren(
+  expression: FieldExpression,
+): readonly FieldExpression[] {
+  switch (expression.kind) {
+    case "number":
+    case "axis":
+      return [];
+    case "add":
+    case "subtract":
+    case "multiply":
+    case "divide":
+      return [expression.left, expression.right];
+    case "min":
+    case "max":
+      return expression.values;
+    case "clamp":
+      return [expression.minimum, expression.value, expression.maximum];
+    case "abs":
+      return [expression.value];
+    case "round":
+      return [expression.value, expression.interval];
+    case "lerp":
+      return [expression.from, expression.to, expression.position];
+  }
+}
+
+interface SharedExpressionProjection {
+  readonly bindings: ReadonlyMap<FieldExpression, string>;
+  readonly declarations: readonly FieldCssDeclaration[];
+}
+
+/**
+ * Bind repeated nodes in the expression DAG once when doing so makes the
+ * emitted projection smaller. Candidate choice is derived from traversal order
+ * and byte savings, so a future law enrols without an authored CSS shortcut.
+ */
+function projectSharedExpressions(
+  roots: readonly FieldExpression[],
+  baseBindings: ReadonlyMap<FieldExpression, string>,
+): SharedExpressionProjection {
+  const bindings = new Map(baseBindings);
+  const selected: Array<{
+    readonly expression: FieldExpression;
+    readonly name: `--discern-f${number}`;
+  }> = [];
+
+  while (true) {
+    const counts = new Map<FieldExpression, number>();
+    const visit = (expression: FieldExpression): void => {
+      if (bindings.has(expression)) return;
+      counts.set(expression, (counts.get(expression) ?? 0) + 1);
+      for (const child of expressionChildren(expression)) visit(child);
+    };
+    for (const root of roots) visit(root);
+
+    const name = `--discern-f${selected.length}` as const;
+    const reference = `var(${name})`;
+    let best: {
+      readonly expression: FieldExpression;
+      readonly savings: number;
+    } | undefined;
+    for (const [expression, count] of counts) {
+      if (
+        count < 2 || expression.kind === "number" ||
+        expression.kind === "axis"
+      ) continue;
+      const value = compileExpression(expression, bindings);
+      const savings = count * (value.length - reference.length) -
+        (name.length + value.length + 4);
+      if (savings > 0 && (best === undefined || savings > best.savings)) {
+        best = { expression, savings };
+      }
+    }
+    if (best === undefined) break;
+    selected.push({ expression: best.expression, name });
+    bindings.set(best.expression, reference);
+  }
+
+  const declarations = selected.map(({ expression, name }) => {
+    const otherBindings = new Map(bindings);
+    otherBindings.delete(expression);
+    return {
+      name,
+      value: compileExpression(expression, otherBindings),
+    };
+  });
+  return { bindings, declarations };
 }
 
 /** Compile one field expression without restating any numeric law in CSS. */
@@ -156,6 +361,13 @@ export function fieldLiveCssDeclarations(): readonly FieldCssDeclaration[] {
     [fieldActiveLightnessExpression, `var(${FIELD_ACTIVE_LIGHTNESS})`],
     [fieldOppositeLightnessExpression, `var(${FIELD_OPPOSITE_LIGHTNESS})`],
   ]);
+  const projectedExpressions = projectSharedExpressions(
+    [
+      ...fieldColorRoleLaws.map(({ expression }) => expression),
+      ...fieldShadowRoleLaws.map(({ expression }) => expression),
+    ],
+    roleBindings,
+  );
   return Object.freeze([
     {
       name: FIELD_CANVAS_LIGHTNESS,
@@ -179,13 +391,14 @@ export function fieldLiveCssDeclarations(): readonly FieldCssDeclaration[] {
         polarityBindings,
       ),
     },
+    ...projectedExpressions.declarations,
     ...fieldColorRoleLaws.map((law) => ({
       name: law.name,
-      value: colorRoleValue(law, roleBindings),
+      value: colorRoleValue(law, projectedExpressions.bindings),
     })),
     ...fieldShadowRoleLaws.map((law) => ({
       name: law.name,
-      value: shadowRoleValue(law, roleBindings),
+      value: shadowRoleValue(law, projectedExpressions.bindings),
     })),
   ]);
 }

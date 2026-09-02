@@ -171,27 +171,34 @@ const rounded = (value: FieldExpression): FieldExpression => ({
   interval: roundingInterval,
 });
 
+const curveSegmentPositions = Object.freeze(
+  [0, 0.25, 0.5, 0.75].map((start) =>
+    clamp(binary(
+      "divide",
+      binary("subtract", axisNodes.darkness, numberNode(start)),
+      quarter,
+    ))
+  ),
+);
+
 function curve(
   values: readonly [number, number, number, number, number],
 ): FieldExpression {
+  if (values.every((value) => value === values[0])) {
+    return numberNode(values[0]);
+  }
   let expression: FieldExpression = numberNode(values[0]);
   for (let index = 1; index < values.length; index += 1) {
-    const start = numberNode((index - 1) * 0.25);
-    const position = clamp(binary(
-      "divide",
-      binary("subtract", axisNodes.darkness, start),
-      quarter,
-    ));
     const from = numberNode(values[index - 1] ?? 0);
     const to = numberNode(values[index] ?? 0);
+    const position = curveSegmentPositions[index - 1];
+    if (position === undefined) {
+      throw new TypeError(`Missing field curve segment ${index - 1}`);
+    }
     expression = binary(
       "add",
       expression,
-      binary(
-        "subtract",
-        { kind: "lerp", from, to, position },
-        from,
-      ),
+      binary("multiply", binary("subtract", to, from), position),
     );
   }
   return rounded(expression);
@@ -363,6 +370,10 @@ const borderStrongExpression = scaledCurve(
   [0.3, 0.34, 0.4, 0.35, 0.32],
   "structure",
 );
+const fullEmphasisExpression = scaledCurve(
+  [1, 1, 1, 1, 1],
+  "emphasis",
+);
 const accentInkExpression = polaritySelection(
   accent600Expression,
   accent500Expression,
@@ -523,7 +534,7 @@ export const fieldColorRoleLaws: readonly FieldColorRoleLaw[] = Object.freeze(
       "--discern-color-accent-800",
       "Deepest emphasis text.",
       "active-ink",
-      scaledCurve([1, 1, 1, 1, 1], "emphasis"),
+      fullEmphasisExpression,
       true,
     ),
     role(
@@ -558,7 +569,7 @@ export const fieldColorRoleLaws: readonly FieldColorRoleLaw[] = Object.freeze(
       "--discern-color-success-soft",
       "Translucent successful-outcome wash.",
       "active-ink",
-      scaledCurve([0.04, 0.07, 0.12, 0.08, 0.06], "emphasis"),
+      accent100Expression,
       true,
     ),
     role(
@@ -593,7 +604,7 @@ export const fieldColorRoleLaws: readonly FieldColorRoleLaw[] = Object.freeze(
       "--discern-color-danger",
       "Danger hierarchy; meaning also requires a non-colour witness.",
       "active-ink",
-      scaledCurve([1, 1, 1, 1, 1], "emphasis"),
+      fullEmphasisExpression,
       true,
     ),
     role(

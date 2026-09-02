@@ -79,32 +79,44 @@ Deno.test("the CSS backend compiles the complete field expression vocabulary", (
   const cases: readonly [FieldExpression, string][] = [
     [number(3), "3"],
     [axis, "var(--discern-darkness)"],
-    [{ kind: "add", left: number(2), right: number(3) }, "calc(2 + 3)"],
-    [{ kind: "subtract", left: number(2), right: number(3) }, "calc(2 - 3)"],
-    [{ kind: "multiply", left: number(2), right: number(3) }, "calc(2 * 3)"],
-    [{ kind: "divide", left: number(3), right: number(2) }, "calc(3 / 2)"],
-    [{ kind: "min", values: [number(2), number(3)] }, "min(2, 3)"],
-    [{ kind: "max", values: [number(2), number(3)] }, "max(2, 3)"],
+    [
+      { kind: "add", left: axis, right: number(3) },
+      "calc(var(--discern-darkness) + 3)",
+    ],
+    [
+      { kind: "subtract", left: axis, right: number(3) },
+      "calc(var(--discern-darkness) - 3)",
+    ],
+    [
+      { kind: "multiply", left: axis, right: number(3) },
+      "calc(var(--discern-darkness)*3)",
+    ],
+    [
+      { kind: "divide", left: axis, right: number(2) },
+      "calc(var(--discern-darkness)/2)",
+    ],
+    [{ kind: "min", values: [number(2), number(3)] }, "min(2,3)"],
+    [{ kind: "max", values: [number(2), number(3)] }, "max(2,3)"],
     [{
       kind: "clamp",
       minimum: number(0),
       value: number(2),
       maximum: number(1),
-    }, "clamp(0, 2, 1)"],
+    }, "clamp(0,2,1)"],
     [{ kind: "abs", value: number(-2) }, "abs(-2)"],
     [
       { kind: "round", value: number(0.26), interval: number(0.1) },
-      "round(nearest, 0.26, 0.1)",
+      "round(.26,.1)",
     ],
     [{
       kind: "round",
       strategy: "up",
       value: number(0.01),
       interval: number(1),
-    }, "round(up, 0.01, 1)"],
+    }, "round(up,.01,1)"],
     [
       { kind: "lerp", from: number(0), to: number(8), position: axis },
-      "calc(0 * (1 - var(--discern-darkness)) + 8 * var(--discern-darkness))",
+      "calc(8*var(--discern-darkness))",
     ],
   ];
   for (const [expression, expected] of cases) {
@@ -148,12 +160,23 @@ Deno.test("polarity and every live CSS consumer derive from the field authority"
     ],
   );
   const liveNames = fieldLiveCssDeclarations().map(({ name }) => name);
+  const roleNames = [
+    ...fieldColorRoleLaws.map(({ name }) => name),
+    ...fieldShadowRoleLaws.map(({ name }) => name),
+  ];
   assertEquals(
-    liveNames.slice(4),
-    [
-      ...fieldColorRoleLaws.map(({ name }) => name),
-      ...fieldShadowRoleLaws.map(({ name }) => name),
-    ],
+    liveNames.filter((name) => roleNames.includes(name)),
+    roleNames,
+  );
+  assertEquals(new Set(liveNames).size, liveNames.length);
+  assert(liveNames.every((name) => name.startsWith("--discern-")));
+  const projectedBytes = fieldLiveCssDeclarations().reduce(
+    (total, { name, value }) => total + name.length + value.length + 4,
+    0,
+  );
+  assert(
+    projectedBytes < 10_000,
+    `Shared field projection expanded to ${projectedBytes} declaration bytes`,
   );
   assert(
     fieldLiveCssDeclarations().some(({ value }) => value.includes("abs(")),
