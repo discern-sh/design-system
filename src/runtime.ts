@@ -26,10 +26,12 @@ import {
 } from "./runtime-assets.ts";
 import { publicTokens } from "./token-inventory.ts";
 import { blueThemeCss } from "./theme/blue.ts";
+import { appearanceScopeCss } from "./tokens/appearance-css.ts";
 import {
   densityScaledSpacingCssValue,
   FIELD_LIVE_CSS_SUPPORTS,
   fieldLiveCssDeclarations,
+  generateAccentHueRegistrationCss,
   generateFieldAxisRegistrationCss,
 } from "./tokens/field-css.ts";
 import { baseTokens, themeTokens } from "./tokens/tokens.ts";
@@ -52,6 +54,8 @@ export interface RuntimeOptions {
   readonly all?: boolean;
   readonly assets?: readonly RuntimeAssetSelection[];
   readonly theme?: "blue" | "none";
+  /** Emit the atomic Field/Accent subtree-scoping contract. */
+  readonly appearanceScopes?: boolean;
 }
 
 /** Counts and the emitted manifest returned by a runtime emission. */
@@ -81,6 +85,8 @@ function generateTokenCss(): string {
     ...fieldDeclarations,
   ].map(({ name, value }) => `${name}: ${value};`).join(" ");
   return `${generateFieldAxisRegistrationCss()}
+
+${generateAccentHueRegistrationCss()}
 
 @layer discern.tokens {
   :where([data-discern-root]) {
@@ -117,6 +123,7 @@ export interface RuntimeCssSurface {
     | "layer-order"
     | "tokens"
     | "theme"
+    | "appearance"
     | "foundation"
     | "utilities"
     | "component"
@@ -152,6 +159,13 @@ export const runtimeCssSurfaceRegistry: readonly RuntimeCssSurface[] = [
     kind: "theme",
     outputPath: "discern.css",
     css: blueThemeCss,
+    ownedClasses: [],
+  },
+  {
+    id: "appearance-scopes",
+    kind: "appearance",
+    outputPath: "discern.css",
+    css: appearanceScopeCss,
     ownedClasses: [],
   },
   {
@@ -330,6 +344,9 @@ export async function emitDesignSystemRuntime(
   const css = runtimeCssSurfaceRegistry.filter((surface) => {
     if (surface.kind === "asset") return false;
     if (surface.kind === "theme") return theme === "blue";
+    if (surface.kind === "appearance") {
+      return options.appearanceScopes === true;
+    }
     return surface.componentId === undefined ||
       selectedComponentIds.has(surface.componentId);
   }).map((surface) => surface.css)
@@ -396,6 +413,7 @@ export async function emitDesignSystemRuntime(
       resolvedComponents: components.map((component) => component.id),
       assets,
       theme,
+      appearanceScopes: options.appearanceScopes === true,
     },
     groups: componentGroups.map((name) => ({
       name,

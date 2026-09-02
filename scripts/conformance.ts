@@ -98,6 +98,8 @@ const emptyFieldProjectionEvidence: FieldProjectionEvidence = {
   roleChecks: 0,
   poleChecks: 0,
   spacingChecks: 0,
+  appearanceScopeChecks: 0,
+  appearanceNestingChecks: 0,
   oklabTolerance: 0,
 };
 
@@ -235,6 +237,8 @@ export async function runConformance(): Promise<void> {
         `${fieldProjection.points} field points at ` +
         `${fieldProjection.oklabTolerance} OKLab tolerance, with ` +
         `${fieldProjection.spacingChecks} density-spacing checks; ` +
+        `${fieldProjection.appearanceScopeChecks} appearance-scope role checks and ` +
+        `${fieldProjection.appearanceNestingChecks} nested axis/hue checks; ` +
         `${components.accessibilityScans} component accessibility scans, ` +
         `${components.scenarios} interaction scenarios, ` +
         `${components.forcedColorFocusChecks} forced-colour focus checks, and ` +

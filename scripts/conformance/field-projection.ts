@@ -8,7 +8,10 @@ import {
 } from "../../src/internal/oklch.ts";
 import { emitDesignSystemRuntime } from "../../src/runtime.ts";
 import {
+  accentAppearance,
+  type AppearanceName,
   defaultFieldPoint,
+  evaluateAppearance,
   evaluateField,
   FIELD_POLARITY_CROSSOVER_DARKNESS,
   fieldColorRoleLaws,
@@ -43,6 +46,8 @@ export interface FieldProjectionEvidence {
   readonly roleChecks: number;
   readonly poleChecks: number;
   readonly spacingChecks: number;
+  readonly appearanceScopeChecks: number;
+  readonly appearanceNestingChecks: number;
   readonly oklabTolerance: number;
 }
 
@@ -271,6 +276,7 @@ export async function verifyFieldProjection(
     await emitDesignSystemRuntime({
       outputRoot: toFileUrl(`${output}/`),
       components: ["kicker"],
+      appearanceScopes: true,
     });
     const css = await Deno.readTextFile(`${output}/discern.css`);
     await page.setContent(
@@ -297,6 +303,7 @@ export async function verifyFieldProjection(
       "--discern-structure",
       "--discern-emphasis",
       "--discern-density",
+      "--discern-accent-hue",
     ];
     if (
       registrationEvidence.registrations.join("\n") !==
@@ -317,6 +324,8 @@ export async function verifyFieldProjection(
     let roleChecks = 0;
     let poleChecks = 0;
     let spacingChecks = 0;
+    let appearanceScopeChecks = 0;
+    let appearanceNestingChecks = 0;
 
     for (const sample of samples) {
       await page.emulateMedia({ colorScheme: sample.media });
@@ -448,6 +457,174 @@ export async function verifyFieldProjection(
       }
     }
 
+    interface ScopeNode {
+      readonly appearance: AppearanceName;
+      readonly hue?: number;
+      readonly axes?: Partial<FieldPoint>;
+    }
+    const scopeScenarios: readonly {
+      readonly label: string;
+      readonly base: FieldPoint;
+      readonly nodes: readonly ScopeNode[];
+    }[] = [
+      {
+        label: "Field to Accent 255 to Field",
+        base: defaultPoint({
+          darkness: 0.25,
+          structure: 0.35,
+          emphasis: 0.65,
+          density: 0.8,
+        }),
+        nodes: [
+          { appearance: "field" },
+          { appearance: "accent", hue: 255 },
+          { appearance: "field" },
+        ],
+      },
+      {
+        label: "Accent 120 to Field to Accent 335 with local axes",
+        base: defaultPoint({ darkness: 0.25 }),
+        nodes: [
+          { appearance: "accent", hue: 120 },
+          {
+            appearance: "field",
+            axes: {
+              darkness: 0.75,
+              structure: 1.4,
+              emphasis: 1.35,
+              density: 1.2,
+            },
+          },
+          { appearance: "accent", hue: 335 },
+        ],
+      },
+      {
+        label: "Accent hue A to B to C",
+        base: defaultPoint({ darkness: 0.5 }),
+        nodes: [
+          { appearance: "accent", hue: 0 },
+          { appearance: "accent", hue: 120 },
+          { appearance: "accent", hue: 335 },
+        ],
+      },
+    ];
+
+    for (const scenario of scopeScenarios) {
+      const observed = await page.evaluate(
+        ({ roleNames, scenario }) => {
+          const root = document.getElementById("discern-field-probe");
+          if (!(root instanceof HTMLElement)) {
+            throw new Error("Missing appearance-scope probe root");
+          }
+          root.replaceChildren();
+          root.removeAttribute("data-discern-theme");
+          root.removeAttribute("data-discern-appearance");
+          root.removeAttribute("style");
+          for (const [axis, value] of Object.entries(scenario.base)) {
+            root.style.setProperty(`--discern-${axis}`, String(value));
+          }
+
+          let parent: HTMLElement | undefined;
+          const elements = scenario.nodes.map((node, index) => {
+            const element = index === 0 ? root : document.createElement("div");
+            element.dataset.discernAppearance = node.appearance;
+            if (node.hue !== undefined) {
+              element.style.setProperty(
+                "--discern-accent-hue",
+                String(node.hue),
+              );
+            }
+            for (const [axis, value] of Object.entries(node.axes ?? {})) {
+              element.style.setProperty(`--discern-${axis}`, String(value));
+            }
+            if (parent !== undefined) parent.append(element);
+            parent = element;
+            return element;
+          });
+
+          return elements.map((element) => {
+            const probes = roleNames.map((name) => {
+              const probe = document.createElement("span");
+              probe.style.color = `var(${name})`;
+              element.append(probe);
+              return { name, probe };
+            });
+            const roles = probes.map(({ name, probe }) => ({
+              name,
+              computed: getComputedStyle(probe).color,
+            }));
+            for (const { probe } of probes) probe.remove();
+            const style = getComputedStyle(element);
+            return {
+              axes: Object.fromEntries(
+                ["darkness", "structure", "emphasis", "density"].map((axis) => [
+                  axis,
+                  Number(style.getPropertyValue(`--discern-${axis}`)),
+                ]),
+              ),
+              hue: Number(style.getPropertyValue("--discern-accent-hue")),
+              roles,
+            };
+          });
+        },
+        { roleNames, scenario },
+      );
+
+      let inheritedPoint = scenario.base;
+      let inheritedHue = 255;
+      for (const [index, node] of scenario.nodes.entries()) {
+        inheritedPoint = { ...inheritedPoint, ...node.axes };
+        inheritedHue = node.hue ?? inheritedHue;
+        const result = observed[index];
+        if (result === undefined) {
+          failures.push(`${scenario.label}: missing nested scope ${index}`);
+          continue;
+        }
+        for (const [axis, expected] of Object.entries(inheritedPoint)) {
+          appearanceNestingChecks += 1;
+          const actual = result.axes[axis];
+          if (actual === undefined || Math.abs(actual - expected) > 0.0000001) {
+            failures.push(
+              `${scenario.label} scope ${index}: inherited --discern-${axis} expected ${expected}, received ${actual}`,
+            );
+          }
+        }
+        appearanceNestingChecks += 1;
+        if (Math.abs(result.hue - inheritedHue) > 0.0000001) {
+          failures.push(
+            `${scenario.label} scope ${index}: inherited hue expected ${inheritedHue}, received ${result.hue}`,
+          );
+        }
+        const expected = evaluateAppearance(
+          node.appearance === "field"
+            ? { name: "field" }
+            : accentAppearance(inheritedHue),
+          inheritedPoint,
+        );
+        for (const role of result.roles) {
+          const expectedValue = expected[role.name];
+          if (expectedValue === undefined) {
+            failures.push(
+              `${scenario.label} scope ${index}: evaluator omitted ${role.name}`,
+            );
+            continue;
+          }
+          appearanceScopeChecks += 1;
+          const mismatch = colorMismatch(
+            parseOklch(expectedValue),
+            parseComputedFieldColor(role.computed),
+          );
+          if (mismatch !== undefined) {
+            failures.push(
+              `${scenario.label} scope ${index}: ${role.name} expected ${expectedValue}, computed ${role.computed}; OKLab delta ${
+                mismatch.distance.toFixed(6)
+              }, alpha delta ${mismatch.alphaDelta.toFixed(6)}`,
+            );
+          }
+        }
+      }
+    }
+
     if (failures.length > 0) {
       const shown = failures.slice(0, 24);
       const remainder = failures.length - shown.length;
@@ -462,6 +639,8 @@ export async function verifyFieldProjection(
       roleChecks,
       poleChecks,
       spacingChecks,
+      appearanceScopeChecks,
+      appearanceNestingChecks,
       oklabTolerance: OKLAB_TOLERANCE,
     };
   } finally {

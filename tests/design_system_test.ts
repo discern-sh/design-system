@@ -563,6 +563,7 @@ Deno.test("runtime globals are branded and the default runtime stays monochrome"
       [...registeredProperties].toSorted(),
       [
         "--discern-emphasis",
+        "--discern-accent-hue",
         "--discern-density",
         "--discern-darkness",
         "--discern-impression-backdrop-x",

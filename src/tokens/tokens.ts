@@ -15,7 +15,7 @@ import {
   fieldColorRoleLaws,
   fieldShadowRoleLaws,
 } from "./field.ts";
-
+export * from "./appearance-css.ts";
 export * from "./field.ts";
 
 /** Catalogue category a design token belongs to. */
