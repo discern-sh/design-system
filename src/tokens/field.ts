@@ -610,7 +610,7 @@ const accent300Expression = scaledCurve(
 const accent500Expression = boundedScaledCurve(
   [0.52, 0.68, 0.8, 0.66, 0.55],
   "emphasis",
-  0.55,
+  0.5,
   0.9,
 );
 const accent600Expression = boundedScaledCurve(
@@ -636,7 +636,7 @@ const accent800Expression = boundedScaledCurve(
   1,
 );
 const successExpression = boundedScaledCurve(
-  [0.38, 0.36, 0.3, 0.36, 0.42],
+  [0.44, 0.38, 0.34, 0.42, 0.48],
   "emphasis",
   0.2,
   0.55,

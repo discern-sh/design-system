@@ -216,7 +216,7 @@ Deno.test("Field proof renders shared refusal reasons verbatim", () => {
       field: {
         darkness: 0.6,
         structure: 1.2,
-        emphasis: 0.8,
+        emphasis: 1.5,
         density: 1.1,
         preset: "mono",
       },
@@ -225,7 +225,7 @@ Deno.test("Field proof renders shared refusal reasons verbatim", () => {
   assertStringIncludes(html, 'data-discern-field-proof="refused"');
   assertStringIncludes(
     html,
-    "field 0.6 accent collides with danger (0.074 OKLab)",
+    "field 0.6 accent collides with warning (0.067 OKLab)",
   );
 });
 
