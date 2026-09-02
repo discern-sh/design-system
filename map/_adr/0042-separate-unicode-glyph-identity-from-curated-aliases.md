@@ -1,4 +1,4 @@
-# ADR 0041: Separate Unicode glyph identity from curated Discern aliases
+# ADR 0042: Separate Unicode glyph identity from curated Discern aliases
 
 **Status**: accepted
 

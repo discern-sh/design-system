@@ -13,14 +13,14 @@ import {
   type PlannedComponentExampleImage,
   validateComponentExampleCaptureFitsViewport,
 } from "../catalogue/example-images/contract.ts";
+import { componentRegistry } from "../src/generated/component-registry.ts";
 import { componentExampleRegistry } from "./generated/component-examples.ts";
-import {
-  compareCanonicalPngRasters,
-  decodeCanonicalPngRaster,
-  rasterDifferenceIsImperceptible,
-} from "./png-raster.ts";
 import { buildDesignSystem } from "./build.ts";
-import { generateSources, loadComponentSources } from "./generate.ts";
+import {
+  type ComponentSource,
+  generateSources,
+  loadComponentSources,
+} from "./generate.ts";
 import catalogueServer from "./serve.ts";
 
 const ROOT = new URL("../", import.meta.url);
@@ -34,27 +34,28 @@ const MANIFEST_URL = new URL(
 );
 const encoder = new TextEncoder();
 
-const CAPTURE_INPUTS = [
-  "assets/",
-  "catalogue/conformance.ts",
-  "catalogue/example-images/",
+const CAPTURE_SHARED_INPUTS = [
+  "assets/behaviors/",
+  "assets/fonts.css",
+  "assets/fonts/",
+  "assets/grain.css",
+  "assets/textures/grain.png",
+  "catalogue/example-images/capture.css",
+  "catalogue/example-images/index.html",
   "catalogue/styles/components.css",
-  "deno.lock",
-  "scripts/build.ts",
-  "scripts/component-example-images.ts",
-  "scripts/generate.ts",
-  "src/",
+  "src/styles/",
+  "src/theme/",
+  "src/tokens/",
 ] as const;
 
-const NON_CAPTURE_EXAMPLE_IMAGE_INPUTS = new Set([
-  "catalogue/example-images/missing.svg",
-  "catalogue/example-images/review.ts",
-]);
-
-/** Keep consumer-only presentation out of the raster staleness boundary. */
-export function isComponentExampleCaptureSourcePath(path: string): boolean {
-  return !NON_CAPTURE_EXAMPLE_IMAGE_INPUTS.has(path);
-}
+const CAPTURE_GRAPH_ENTRY = new URL(
+  "../catalogue/example-images/capture.tsx",
+  import.meta.url,
+);
+const CAPTURE_REGISTRY = new URL(
+  "../catalogue/generated/example-image-registry.ts",
+  import.meta.url,
+);
 
 interface CapturedImage {
   readonly entry: ComponentExampleImageManifestEntry;
@@ -106,6 +107,7 @@ export function componentExampleScreenshotOptions(
     clip: region,
     animations: "disabled",
     caret: "hide",
+    omitBackground: true,
     scale: "device",
   };
 }
@@ -119,13 +121,10 @@ export function componentExampleScreenshotOptions(
  * changes how its page rasterizes text — every capture proves it through
  * `validateComponentExampleCaptureFitsViewport`.
  *
- * One page, not several. Concurrent pages render four times faster and are not
- * byte-exact: readiness settles on painted frames, and concurrent renderers
- * change that cadence, so an example that prepares an interaction can be
- * measured mid-settle. Across the corpus that moved `tooltip--default` to a
- * different capture region and `tooltip--bottom` by 774 pixels at a channel
- * delta of 71, differently on each run. Concurrency needs a readiness protocol
- * that converges rather than counts frames — see `discern/TODO.md`.
+ * One page, not several. Readiness settles on painted frames, and concurrent
+ * renderers can change that cadence, so an example that prepares an interaction
+ * may be measured mid-settle. Sequential capture keeps one settled geometry
+ * protocol until readiness can converge independently of frame cadence.
  */
 export async function withCapturePage<
   P extends { close(): Promise<void> },
@@ -208,10 +207,13 @@ function assertCanonicalPng(bytes: Uint8Array, source: string): void {
   const chunks = pngChunkTypes(bytes);
   if (
     chunks[0] !== "IHDR" || chunks.at(-1) !== "IEND" ||
-    !chunks.includes("IDAT") || chunks.some((type) => !allowed.has(type))
+    !chunks.includes("IDAT") || chunks.some((type) => !allowed.has(type)) ||
+    bytes[24] !== 8 || (bytes[25] !== 2 && bytes[25] !== 6)
   ) {
     throw new Error(
-      `${source} contains non-canonical PNG chunks: ${chunks.join(", ")}`,
+      `${source} is not a canonical 8-bit RGB or RGBA PNG: ${
+        chunks.join(", ")
+      }`,
     );
   }
 }
@@ -248,23 +250,32 @@ function canonicalJson(value: unknown): unknown {
 }
 
 /**
- * Capture inputs include executable configuration but exclude package identity.
- * A release version cannot change a rendered example, whereas all other config
- * remains enrolled so new compiler, resolver, or runtime settings are hashed.
+ * Capture inputs include only executable configuration that can affect the
+ * rendering graph. Release identity, tasks, and publish metadata cannot change
+ * a rendered example and therefore do not invalidate its image.
  */
 export function componentExampleCaptureConfiguration(
   denoJson: unknown,
   packageJson: unknown,
 ): unknown {
-  const withoutReleaseIdentity = (value: unknown): Record<string, unknown> => {
-    const { name: _name, version: _version, ...configuration } = jsonRecord(
-      value,
-    );
-    return configuration;
-  };
+  const deno = jsonRecord(denoJson);
+  const packageRecord = jsonRecord(packageJson);
+  const dependencies = jsonRecord(packageRecord.devDependencies);
   return canonicalJson({
-    deno: withoutReleaseIdentity(denoJson),
-    package: withoutReleaseIdentity(packageJson),
+    deno: {
+      compilerOptions: deno.compilerOptions,
+      imports: deno.imports,
+      nodeModulesDir: deno.nodeModulesDir,
+      unstable: deno.unstable,
+    },
+    package: {
+      type: packageRecord.type,
+      devDependencies: {
+        "playwright-core": dependencies["playwright-core"],
+        react: dependencies.react,
+        "react-dom": dependencies["react-dom"],
+      },
+    },
   });
 }
 
@@ -347,17 +358,170 @@ export async function repositoryCaptureSourcePaths(
     .toSorted((left, right) => left.localeCompare(right));
 }
 
-/** Hash every repository-owned input that can affect capture pixels or facts. */
-export async function componentExampleCaptureSourceHash(): Promise<
-  `sha256:${string}`
+export interface ComponentExampleCaptureDependency {
+  readonly code?: { readonly specifier: string };
+}
+
+export interface ComponentExampleCaptureDependencyModule {
+  readonly specifier: string;
+  readonly local?: string;
+  readonly dependencies?: readonly ComponentExampleCaptureDependency[];
+}
+
+export interface ComponentExampleCaptureDependencyGraph {
+  readonly root: string;
+  readonly modules: readonly ComponentExampleCaptureDependencyModule[];
+}
+
+/**
+ * Enumerate only local modules reachable from the supplied rendering roots.
+ * An unimported private source cannot become capture evidence merely by living
+ * beneath the same broad directory as a Component.
+ */
+export function componentExampleCaptureDependencyPaths(
+  graph: ComponentExampleCaptureDependencyGraph,
+  roots: readonly string[],
+  projectRoot: URL,
+  blocked: ReadonlySet<string> = new Set(),
+): readonly string[] {
+  const projectPath = fromFileUrl(projectRoot).replace(/\/$/u, "");
+  const modules = new Map(graph.modules.map((module) => [
+    module.specifier,
+    module,
+  ]));
+  const visited = new Set<string>();
+  const paths = new Set<string>();
+  const visit = (specifier: string): void => {
+    if (visited.has(specifier) || blocked.has(specifier)) return;
+    visited.add(specifier);
+    const module = modules.get(specifier);
+    if (module === undefined) return;
+    if (
+      module.local !== undefined &&
+      (module.local === projectPath ||
+        module.local.startsWith(`${projectPath}/`))
+    ) {
+      paths.add(module.local.slice(projectPath.length + 1));
+    }
+    for (const dependency of module.dependencies ?? []) {
+      if (dependency.code !== undefined) visit(dependency.code.specifier);
+    }
+  };
+  for (const root of roots) visit(root);
+  return [...paths].toSorted((left, right) => left.localeCompare(right));
+}
+
+async function captureDependencyGraph(): Promise<
+  ComponentExampleCaptureDependencyGraph
 > {
-  const paths = (await repositoryCaptureSourcePaths(ROOT, CAPTURE_INPUTS))
-    .filter(isComponentExampleCaptureSourcePath);
-  const [sources, denoJson, packageJson] = await Promise.all([
-    Promise.all(paths.map(async (path) => ({
+  const result = await new Deno.Command(Deno.execPath(), {
+    args: ["info", "--json", fromFileUrl(CAPTURE_GRAPH_ENTRY)],
+    cwd: fromFileUrl(ROOT),
+    stdout: "piped",
+    stderr: "piped",
+  }).output();
+  if (!result.success) {
+    throw new Error(
+      `Could not resolve the Component example capture graph: ${
+        new TextDecoder().decode(result.stderr).trim()
+      }`,
+    );
+  }
+  const parsed = JSON.parse(
+    new TextDecoder().decode(result.stdout),
+  ) as {
+    readonly modules?: readonly ComponentExampleCaptureDependencyModule[];
+  };
+  if (!Array.isArray(parsed.modules)) {
+    throw new TypeError("Deno capture graph exposed no module population");
+  }
+  return { root: CAPTURE_GRAPH_ENTRY.href, modules: parsed.modules };
+}
+
+async function captureSourceInputs(
+  paths: readonly string[],
+): Promise<readonly CaptureSourceInput[]> {
+  return await Promise.all(
+    [...new Set(paths)].toSorted().map(async (path) => ({
       path,
       contents: await Deno.readFile(new URL(path, ROOT)),
-    }))),
+    })),
+  );
+}
+
+async function componentStyleInputs(
+  slug: string,
+  sources: readonly ComponentSource[],
+): Promise<readonly CaptureSourceInput[]> {
+  const dependencyEntries = new Map(componentRegistry.map((entry) => [
+    entry.meta.slug,
+    entry,
+  ]));
+  const sourceEntries = new Map(sources.map((source) => [
+    source.meta.slug,
+    source,
+  ]));
+  const visited = new Set<string>();
+  const inputs: CaptureSourceInput[] = [];
+  const visit = async (candidate: string): Promise<void> => {
+    if (visited.has(candidate)) return;
+    visited.add(candidate);
+    const entry = dependencyEntries.get(candidate);
+    const source = sourceEntries.get(candidate);
+    if (entry === undefined || source === undefined) {
+      throw new TypeError(
+        `No generated Component style entry for ${candidate}`,
+      );
+    }
+    inputs.push({
+      path: source.cssUrl.pathname.slice(fromFileUrl(ROOT).length),
+      contents: await Deno.readFile(source.cssUrl),
+    });
+    for (const dependency of entry.dependencies) await visit(dependency);
+  };
+  await visit(slug);
+  return inputs.toSorted((left, right) => left.path.localeCompare(right.path));
+}
+
+function captureSourceKey(
+  input: Pick<PlannedComponentExampleImage, "slug" | "exampleId" | "theme">,
+): string {
+  return `${input.slug}/${input.exampleId}/${input.theme}`;
+}
+
+/** Select exactly the source or artifact entries that require Chromium. */
+export function componentExampleImagesNeedingCapture(
+  plan: readonly PlannedComponentExampleImage[],
+  reusableKeys: ReadonlySet<string>,
+): readonly PlannedComponentExampleImage[] {
+  return plan.filter((input) => !reusableKeys.has(captureSourceKey(input)));
+}
+
+interface ComponentExampleCaptureSourceHashes {
+  readonly overall: `sha256:${string}`;
+  readonly entries: ReadonlyMap<string, `sha256:${string}`>;
+}
+
+async function componentExampleCaptureSourceHashes(
+  plan: readonly PlannedComponentExampleImage[],
+  sources: readonly ComponentSource[],
+): Promise<ComponentExampleCaptureSourceHashes> {
+  const graph = await captureDependencyGraph();
+  const sharedGraphPaths = componentExampleCaptureDependencyPaths(
+    graph,
+    [CAPTURE_GRAPH_ENTRY.href],
+    ROOT,
+    new Set([CAPTURE_REGISTRY.href]),
+  );
+  const sharedStaticPaths = await repositoryCaptureSourcePaths(
+    ROOT,
+    CAPTURE_SHARED_INPUTS,
+  );
+  const sharedInputs = await captureSourceInputs([
+    ...sharedGraphPaths,
+    ...sharedStaticPaths,
+  ]);
+  const [denoJson, packageJson] = await Promise.all([
     Deno.readTextFile(new URL("../deno.json", import.meta.url)).then(
       JSON.parse,
     ),
@@ -365,7 +529,54 @@ export async function componentExampleCaptureSourceHash(): Promise<
       JSON.parse,
     ),
   ]);
-  return await componentExampleCaptureInputHash(sources, denoJson, packageJson);
+  const hashesBySlug = new Map<string, `sha256:${string}`>();
+  for (const source of sources) {
+    const paths = componentExampleCaptureDependencyPaths(
+      graph,
+      [source.metaUrl.href, source.examplesUrl.href],
+      ROOT,
+    );
+    hashesBySlug.set(
+      source.meta.slug,
+      await componentExampleCaptureInputHash(
+        [
+          ...sharedInputs,
+          ...await captureSourceInputs(paths),
+          ...await componentStyleInputs(source.meta.slug, sources),
+        ],
+        denoJson,
+        packageJson,
+      ),
+    );
+  }
+  const entries = new Map<string, `sha256:${string}`>();
+  for (const input of plan) {
+    const hash = hashesBySlug.get(input.slug);
+    if (hash === undefined) {
+      throw new TypeError(`No capture source fingerprint for ${input.slug}`);
+    }
+    entries.set(captureSourceKey(input), hash);
+  }
+  const overall = await componentExampleCaptureInputHash(
+    [...entries].map(([key, hash]) => ({
+      path: `<entry:${key}>`,
+      contents: encoder.encode(hash),
+    })),
+    {},
+    {},
+  );
+  return { overall, entries };
+}
+
+/** Hash every repository-owned input that can affect capture pixels or facts. */
+export async function componentExampleCaptureSourceHash(): Promise<
+  `sha256:${string}`
+> {
+  const plan = planComponentExampleImages(imageSources());
+  return (await componentExampleCaptureSourceHashes(
+    plan,
+    await loadComponentSources(),
+  )).overall;
 }
 
 function imageSources(): readonly ComponentExampleImageSource[] {
@@ -381,7 +592,7 @@ function platformMatchesByteContract(): boolean {
     Deno.osRelease() === componentExampleCaptureContract.bytePlatform.release;
 }
 
-async function assertRuntime(update: boolean): Promise<string> {
+async function assertRuntime(): Promise<string> {
   if (Deno.version.deno !== componentExampleCaptureContract.denoVersion) {
     throw new Error(
       `Component example capture needs Deno ${componentExampleCaptureContract.denoVersion}; received ${Deno.version.deno}`,
@@ -405,11 +616,11 @@ async function assertRuntime(update: boolean): Promise<string> {
       `package.json must pin playwright-core ${componentExampleCaptureContract.playwrightVersion}`,
     );
   }
-  if (update && !platformMatchesByteContract()) {
+  if (!platformMatchesByteContract()) {
     const actual = `${Deno.build.os}/${Deno.build.arch}/${Deno.osRelease()}`;
     const expected = componentExampleCaptureContract.bytePlatform;
     throw new Error(
-      `Image updates require the canonical raster platform ${expected.os}/${expected.arch}/${expected.release}; received ${actual}. Other platforms may verify artifact integrity and live geometry only.`,
+      `Image updates require the canonical raster platform ${expected.os}/${expected.arch}/${expected.release}; received ${actual}. Verification reads source and committed artifacts and does not launch Chromium.`,
     );
   }
   const executable = chromium.executablePath();
@@ -437,13 +648,19 @@ async function assertRuntime(update: boolean): Promise<string> {
 }
 
 async function assertGeneratedExampleRegistryCurrent(): Promise<void> {
-  const expected = (await generateSources()).componentExamples;
-  const actual = await Deno.readTextFile(
+  const generated = await generateSources();
+  const actualExamples = await Deno.readTextFile(
     new URL("./generated/component-examples.ts", import.meta.url),
   );
-  if (actual !== expected) {
+  const actualRegistry = await Deno.readTextFile(
+    new URL("../src/generated/component-registry.ts", import.meta.url),
+  );
+  if (
+    actualExamples !== generated.componentExamples ||
+    actualRegistry !== generated.registry
+  ) {
     throw new Error(
-      "Canonical Component example facts are stale. Run `deno task codegen` before capturing images.",
+      "Canonical Component image facts are stale. Run `deno task codegen` before capturing images.",
     );
   }
 }
@@ -640,11 +857,15 @@ async function captureImage(
       assertCanonicalPng(bytes, source);
       const dimensions = pngDimensions(bytes);
       if (
-        dimensions.width !== state.region.width ||
-        dimensions.height !== state.region.height
+        dimensions.width !==
+          state.region.width *
+            componentExampleCaptureContract.deviceScaleFactor ||
+        dimensions.height !==
+          state.region.height *
+            componentExampleCaptureContract.deviceScaleFactor
       ) {
         throw new Error(
-          `PNG ${dimensions.width}×${dimensions.height} differs from capture region ${state.region.width}×${state.region.height}`,
+          `PNG ${dimensions.width}×${dimensions.height} differs from ${state.region.width}×${state.region.height} CSS pixels at ${componentExampleCaptureContract.deviceScaleFactor}× density`,
         );
       }
       return bytes;
@@ -676,36 +897,64 @@ async function atomicWrite(url: URL, bytes: Uint8Array): Promise<void> {
   await Deno.rename(temporary, url);
 }
 
-/**
- * Decide whether the committed bytes still show what this capture rendered.
- *
- * Chromium re-rasterizes identical source with occasional variation below the
- * perceptual floor. Rewriting the file for that produces reviewable churn that
- * carries no meaning, so a difference inside the declared raster tolerance
- * keeps the committed artifact and its recorded hash.
- */
-async function committedRasterStillShows(
-  committedBytes: Uint8Array,
-  capturedBytes: Uint8Array,
-  source: string,
-): Promise<boolean> {
-  const committed = await decodeCanonicalPngRaster(
-    committedBytes,
-    `${source} (committed)`,
-  );
-  const captured = await decodeCanonicalPngRaster(
-    capturedBytes,
-    `${source} (captured)`,
-  );
-  return rasterDifferenceIsImperceptible(
-    compareCanonicalPngRasters(committed, captured),
-  );
+async function reusableManifestEntries(
+  plan: readonly PlannedComponentExampleImage[],
+  sourceHashes: ComponentExampleCaptureSourceHashes,
+): Promise<ReadonlyMap<string, ComponentExampleImageManifestEntry>> {
+  if (
+    componentExampleImageManifest.captureContractVersion !==
+      componentExampleCaptureContract.version
+  ) return new Map();
+  const reusable = new Map<string, ComponentExampleImageManifestEntry>();
+  const entries = new Map(componentExampleImageManifest.entries.map((entry) => [
+    captureSourceKey(entry),
+    entry,
+  ]));
+  for (const input of plan) {
+    const key = captureSourceKey(input);
+    const sourceHash = sourceHashes.entries.get(key);
+    const entry = entries.get(key);
+    if (
+      sourceHash === undefined || entry === undefined ||
+      entry.sourceHash !== sourceHash ||
+      entry.captureContractVersion !==
+        componentExampleCaptureContract.version ||
+      entry.density !== componentExampleCaptureContract.deviceScaleFactor ||
+      entry.pixelWidth !== entry.width * entry.density ||
+      entry.pixelHeight !== entry.height * entry.density ||
+      entry.assetPath !==
+        `catalogue/generated/example-images/${input.filename}` ||
+      entry.assetUrl !== `/${entry.assetPath}`
+    ) continue;
+    let bytes: Uint8Array;
+    try {
+      bytes = await Deno.readFile(new URL(entry.assetUrl.slice(1), ROOT));
+    } catch (error) {
+      if (error instanceof Deno.errors.NotFound) continue;
+      throw error;
+    }
+    try {
+      assertCanonicalPng(bytes, entry.assetPath);
+      if (
+        JSON.stringify(pngDimensions(bytes)) !== JSON.stringify({
+            width: entry.pixelWidth,
+            height: entry.pixelHeight,
+          }) || await componentExampleContentHash(bytes) !== entry.contentHash
+      ) continue;
+      reusable.set(key, entry);
+    } catch (error) {
+      if (error instanceof Error) continue;
+      throw error;
+    }
+  }
+  return reusable;
 }
 
 async function applyUpdate(
   plan: readonly PlannedComponentExampleImage[],
   captured: readonly CapturedImage[],
-  sourceHash: `sha256:${string}`,
+  sourceHashes: ComponentExampleCaptureSourceHashes,
+  reusable: ReadonlyMap<string, ComponentExampleImageManifestEntry>,
 ): Promise<{
   readonly changed: number;
   readonly removed: number;
@@ -721,7 +970,24 @@ async function applyUpdate(
   let totalBytes = 0;
   const retained: string[] = [];
   const entries: ComponentExampleImageManifestEntry[] = [];
-  for (const image of captured) {
+  const capturedByKey = new Map(captured.map((image) => [
+    captureSourceKey(image.entry),
+    image,
+  ]));
+  for (const input of plan) {
+    const key = captureSourceKey(input);
+    const image = capturedByKey.get(key);
+    if (image === undefined) {
+      const entry = reusable.get(key);
+      if (entry === undefined) {
+        throw new Error(`No captured or reusable image for ${key}`);
+      }
+      const bytes = await Deno.readFile(new URL(entry.assetUrl.slice(1), ROOT));
+      entries.push(entry);
+      retained.push(entry.assetPath);
+      totalBytes += bytes.length;
+      continue;
+    }
     const target = new URL(
       image.entry.assetPath.replace(/^catalogue\//u, ""),
       new URL("../catalogue/", import.meta.url),
@@ -732,22 +998,6 @@ async function applyUpdate(
       await componentExampleContentHash(existing) === image.entry.contentHash
     ) {
       entries.push(image.entry);
-      totalBytes += existing.length;
-      continue;
-    }
-    if (
-      existing !== undefined &&
-      await committedRasterStillShows(
-        existing,
-        image.bytes,
-        image.entry.assetPath,
-      )
-    ) {
-      entries.push({
-        ...image.entry,
-        contentHash: await componentExampleContentHash(existing),
-      });
-      retained.push(image.entry.assetPath);
       totalBytes += existing.length;
       continue;
     }
@@ -762,7 +1012,7 @@ async function applyUpdate(
   }
   const manifest: ComponentExampleImageManifest = {
     captureContractVersion: componentExampleCaptureContract.version,
-    sourceHash,
+    sourceHash: sourceHashes.overall,
     entries,
   };
   const nextManifest = encoder.encode(manifestSource(manifest));
@@ -778,9 +1028,11 @@ async function applyUpdate(
   return { changed, removed: orphans.length, retained, totalBytes };
 }
 
-async function componentNames(): Promise<ReadonlyMap<string, string>> {
+function componentNames(
+  sources: readonly ComponentSource[],
+): ReadonlyMap<string, string> {
   return new Map(
-    (await loadComponentSources()).map(({ meta }) => [
+    sources.map(({ meta }) => [
       meta.slug,
       meta.name,
     ]),
@@ -791,8 +1043,15 @@ async function capturedEntry(
   input: PlannedComponentExampleImage,
   componentName: string,
   bytes: Uint8Array,
+  sourceHash: `sha256:${string}`,
 ): Promise<CapturedImage> {
-  const dimensions = pngDimensions(bytes);
+  const pixels = pngDimensions(bytes);
+  const density = componentExampleCaptureContract.deviceScaleFactor;
+  if (pixels.width % density !== 0 || pixels.height % density !== 0) {
+    throw new Error(
+      `${input.filename} raster ${pixels.width}×${pixels.height} is not divisible by ${density}× density`,
+    );
+  }
   const assetPath = `catalogue/generated/example-images/${input.filename}`;
   return {
     bytes,
@@ -804,8 +1063,13 @@ async function capturedEntry(
       theme: input.theme,
       assetPath,
       assetUrl: `/${assetPath}`,
-      ...dimensions,
+      width: pixels.width / density,
+      height: pixels.height / density,
+      pixelWidth: pixels.width,
+      pixelHeight: pixels.height,
+      density,
       contentHash: await componentExampleContentHash(bytes),
+      sourceHash,
       captureContractVersion: componentExampleCaptureContract.version,
     },
   };
@@ -833,70 +1097,86 @@ async function withCaptureServer<T>(
 
 async function updateImages(): Promise<void> {
   const started = performance.now();
-  const executablePath = await assertRuntime(true);
   await assertGeneratedExampleRegistryCurrent();
   const plan = planComponentExampleImages(imageSources());
-  const names = await componentNames();
+  const sources = await loadComponentSources();
+  const names = componentNames(sources);
   const buildStarted = performance.now();
   await buildDesignSystem();
   const buildMs = performance.now() - buildStarted;
-  const sourceHash = await componentExampleCaptureSourceHash();
+  const sourceHashes = await componentExampleCaptureSourceHashes(plan, sources);
+  const reusable = await reusableManifestEntries(plan, sourceHashes);
+  const pending = componentExampleImagesNeedingCapture(
+    plan,
+    new Set(reusable.keys()),
+  );
   let browserMs = 0;
   let captureMs = 0;
   const captured: CapturedImage[] = [];
-  await withCaptureServer(async (origin) => {
-    const browserStarted = performance.now();
-    const capture = await startCaptureBrowser(executablePath);
-    browserMs = performance.now() - browserStarted;
-    try {
-      await withCapturePage(
-        () => openCapturePage(capture, origin),
-        async (target) => {
-          const captureStarted = performance.now();
-          for (const input of plan) {
-            const name = names.get(input.slug);
-            if (name === undefined) {
-              throw new Error(`No source Metadata name for ${input.slug}`);
+  if (pending.length > 0) {
+    const executablePath = await assertRuntime();
+    await withCaptureServer(async (origin) => {
+      const browserStarted = performance.now();
+      const capture = await startCaptureBrowser(executablePath);
+      browserMs = performance.now() - browserStarted;
+      try {
+        await withCapturePage(
+          () => openCapturePage(capture, origin),
+          async (target) => {
+            const captureStarted = performance.now();
+            for (const input of pending) {
+              const name = names.get(input.slug);
+              const sourceHash = sourceHashes.entries.get(
+                captureSourceKey(input),
+              );
+              if (name === undefined || sourceHash === undefined) {
+                throw new Error(`No source facts for ${input.slug}`);
+              }
+              captured.push(
+                await capturedEntry(
+                  input,
+                  name,
+                  await captureImage(target, origin, input),
+                  sourceHash,
+                ),
+              );
             }
-            captured.push(
-              await capturedEntry(
-                input,
-                name,
-                await captureImage(target, origin, input),
-              ),
-            );
-          }
-          captureMs = performance.now() - captureStarted;
-        },
-      );
-    } finally {
-      await capture.context.close();
-      await capture.browser.close();
-    }
-  });
-  if (await componentExampleCaptureSourceHash() !== sourceHash) {
-    throw new Error(
-      "Capture inputs changed while images were rendering; rerun the update",
+            captureMs = performance.now() - captureStarted;
+          },
+        );
+      } finally {
+        await capture.context.close();
+        await capture.browser.close();
+      }
+    });
+    const finalHashes = await componentExampleCaptureSourceHashes(
+      plan,
+      sources,
     );
+    if (finalHashes.overall !== sourceHashes.overall) {
+      throw new Error(
+        "Capture inputs changed while images were rendering; rerun the update",
+      );
+    }
   }
-  const applied = await applyUpdate(plan, captured, sourceHash);
+  const applied = await applyUpdate(plan, captured, sourceHashes, reusable);
   const timing: CaptureTiming = {
     buildMs,
     browserMs,
     captureMs,
     totalMs: performance.now() - started,
   };
+  const averageCaptureMs = captured.length === 0
+    ? "n/a"
+    : `${(timing.captureMs / captured.length).toFixed(1)}ms/image`;
   console.log(
-    `Updated ${captured.length} Component example images (${applied.totalBytes} bytes); ${applied.changed} files changed, ${applied.retained.length} retained through imperceptible raster variation, and ${applied.removed} orphans removed. ` +
+    `Updated ${plan.length} Component example images (${applied.totalBytes} bytes); ${captured.length} captured, ${applied.retained.length} source-current artifacts reused, ${applied.changed} files changed, and ${applied.removed} orphans removed. ` +
       `Build ${(timing.buildMs / 1000).toFixed(2)}s, browser ${
         (timing.browserMs / 1000).toFixed(2)
-      }s, capture ${(timing.captureMs / 1000).toFixed(2)}s (${
-        (timing.captureMs / captured.length).toFixed(1)
-      }ms/image), total ${(timing.totalMs / 1000).toFixed(2)}s.`,
+      }s, capture ${
+        (timing.captureMs / 1000).toFixed(2)
+      }s (${averageCaptureMs}), total ${(timing.totalMs / 1000).toFixed(2)}s.`,
   );
-  for (const assetPath of applied.retained) {
-    console.log(`  retained ${assetPath}`);
-  }
 }
 
 async function imageFiles(): Promise<string[]> {
@@ -914,12 +1194,18 @@ async function imageFiles(): Promise<string[]> {
 
 async function verifyArtifacts(
   plan: readonly PlannedComponentExampleImage[],
+  sourceHashes: ComponentExampleCaptureSourceHashes,
 ): Promise<void> {
   if (
     componentExampleImageManifest.captureContractVersion !==
       componentExampleCaptureContract.version
   ) {
     throw new Error("Generated image manifest uses a stale capture contract");
+  }
+  if (componentExampleImageManifest.sourceHash !== sourceHashes.overall) {
+    throw new Error(
+      "Generated Component example images are stale for the current rendering sources. Run `deno task catalogue:images --update` on the canonical raster platform.",
+    );
   }
   validateComponentExampleImageCoverage(plan, componentExampleImageManifest);
   const files = await imageFiles();
@@ -930,10 +1216,18 @@ async function verifyArtifacts(
     );
   }
   for (const entry of componentExampleImageManifest.entries) {
+    const key = captureSourceKey(entry);
     if (
       entry.captureContractVersion !==
         componentExampleCaptureContract.version ||
+      entry.sourceHash !== sourceHashes.entries.get(key) ||
       entry.width <= 0 || entry.height <= 0 ||
+      typeof entry.pixelWidth !== "number" ||
+      typeof entry.pixelHeight !== "number" ||
+      entry.pixelWidth <= 0 || entry.pixelHeight <= 0 ||
+      entry.density !== componentExampleCaptureContract.deviceScaleFactor ||
+      entry.pixelWidth !== entry.width * entry.density ||
+      entry.pixelHeight !== entry.height * entry.density ||
       entry.assetPath.startsWith("/") ||
       entry.assetUrl !== `/${entry.assetPath}`
     ) {
@@ -945,10 +1239,11 @@ async function verifyArtifacts(
     assertCanonicalPng(bytes, entry.assetPath);
     const dimensions = pngDimensions(bytes);
     if (
-      dimensions.width !== entry.width || dimensions.height !== entry.height
+      dimensions.width !== entry.pixelWidth ||
+      dimensions.height !== entry.pixelHeight
     ) {
       throw new Error(
-        `${entry.assetPath} dimensions are ${dimensions.width}×${dimensions.height}, manifest records ${entry.width}×${entry.height}`,
+        `${entry.assetPath} dimensions are ${dimensions.width}×${dimensions.height}, manifest records ${entry.pixelWidth}×${entry.pixelHeight} physical pixels`,
       );
     }
     if (await componentExampleContentHash(bytes) !== entry.contentHash) {
@@ -975,99 +1270,18 @@ export function validateComponentExampleImageCoverage(
   }
 }
 
-function witnessInputs(
-  plan: readonly PlannedComponentExampleImage[],
-): readonly PlannedComponentExampleImage[] {
-  if (plan.length === 0) throw new Error("No Web examples to verify");
-  const candidates = [plan[0], plan[Math.floor(plan.length / 2)], plan.at(-1)];
-  const byKey = new Map<string, PlannedComponentExampleImage>();
-  for (const candidate of candidates) {
-    if (candidate !== undefined) byKey.set(candidate.filename, candidate);
-  }
-  return [...byKey.values()];
-}
-
-/**
- * Treat subpixel raster noise as non-semantic while exact capture geometry holds.
- * Committed PNG hashes still protect the stored artifact from corruption.
- */
-export function validateComponentExampleRepeatGeometry(
-  source: string,
-  first: { readonly width: number; readonly height: number },
-  second: { readonly width: number; readonly height: number },
-  committed: { readonly width: number; readonly height: number },
-): void {
-  if (
-    first.width !== second.width || first.height !== second.height ||
-    first.width !== committed.width || first.height !== committed.height
-  ) {
-    throw new Error(
-      `${source} geometry changed across live captures or differs from the committed manifest`,
-    );
-  }
-}
-
 async function verifyImages(): Promise<void> {
   const started = performance.now();
-  const executablePath = await assertRuntime(false);
   await assertGeneratedExampleRegistryCurrent();
   const plan = planComponentExampleImages(imageSources());
-  await verifyArtifacts(plan);
-  const sourceHash = await componentExampleCaptureSourceHash();
-  if (componentExampleImageManifest.sourceHash !== sourceHash) {
-    throw new Error(
-      "Generated Component example images are stale for the current capture inputs. Run `deno task catalogue:images --update` on the canonical raster platform.",
-    );
-  }
   const buildStarted = performance.now();
   await buildDesignSystem();
   const buildMs = performance.now() - buildStarted;
-  const witnesses = witnessInputs(plan);
-  const canonicalRaster = platformMatchesByteContract();
-  await withCaptureServer(async (origin) => {
-    const capture = await startCaptureBrowser(executablePath);
-    try {
-      await withCapturePage(
-        () => openCapturePage(capture, origin),
-        async (target) => {
-          for (const input of witnesses) {
-            const source = `${input.slug}/${input.exampleId}/${input.theme}`;
-            const first = await captureImage(target, origin, input);
-            const second = await captureImage(target, origin, input);
-            const committed = componentExampleImageManifest.entries.find(
-              (entry) =>
-                entry.slug === input.slug &&
-                entry.exampleId === input.exampleId &&
-                entry.theme === input.theme,
-            );
-            if (committed === undefined) {
-              throw new Error("Witness has no manifest entry");
-            }
-            validateComponentExampleRepeatGeometry(
-              source,
-              pngDimensions(first),
-              pngDimensions(second),
-              committed,
-            );
-            if (!canonicalRaster) continue;
-            const committedBytes = await Deno.readFile(
-              new URL(committed.assetUrl.slice(1), ROOT),
-            );
-            if (
-              !await committedRasterStillShows(committedBytes, second, source)
-            ) {
-              throw new Error(
-                `${source} no longer rasterizes as the committed image shows, past the declared raster tolerance. Run \`deno task catalogue:images --update\` if the change is intended.`,
-              );
-            }
-          }
-        },
-      );
-    } finally {
-      await capture.context.close();
-      await capture.browser.close();
-    }
-  });
+  const sourceHashes = await componentExampleCaptureSourceHashes(
+    plan,
+    await loadComponentSources(),
+  );
+  await verifyArtifacts(plan, sourceHashes);
   const actualBytes = await Promise.all(
     componentExampleImageManifest.entries.map(async (entry) =>
       (await Deno.stat(new URL(entry.assetUrl.slice(1), ROOT))).size
@@ -1076,12 +1290,22 @@ async function verifyImages(): Promise<void> {
   console.log(
     `Verified ${plan.length} Component example images (${
       actualBytes.reduce((sum, bytes) => sum + bytes, 0)
-    } bytes) and ${witnesses.length} repeat-capture witnesses in ${
+    } bytes) from source fingerprints and committed artifacts in ${
       ((performance.now() - started) / 1000).toFixed(2)
-    }s (build ${(buildMs / 1000).toFixed(2)}s; exact live geometry compared${
-      canonicalRaster ? ", committed rasters compared within tolerance" : ""
-    }).`,
+    }s (build ${(buildMs / 1000).toFixed(2)}s; Chromium not launched).`,
   );
+}
+
+export function componentExampleImagePostureEffects(
+  value: "update" | "verify",
+): {
+  readonly build: true;
+  readonly browser: "when-stale" | "never";
+  readonly writes: boolean;
+} {
+  return value === "update"
+    ? { build: true, browser: "when-stale", writes: true }
+    : { build: true, browser: "never", writes: false };
 }
 
 function posture(): "update" | "verify" {

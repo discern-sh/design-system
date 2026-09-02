@@ -6,6 +6,8 @@ Each release is cut from a green run of the full release gate — formatting, li
 
 ## Unreleased
 
+- Rebuild committed Catalogue Component imagery under [ADR 0041](map/_adr/0041-verify-component-images-from-sources-and-artifacts.md). Per-entry rendering-graph fingerprints and a Web-only capture registry exclude unrelated private source and CLI renderers; source-current updates reuse all valid artifacts without launching Chromium, while verification is now wholly source-and-artifact based and no longer compares nondeterministic live raster pixels. Capture contract v5 emits two-device-pixel imagery on a transparent canvas, records logical and physical dimensions separately, and preserves transparent corners around circular, rounded, and shadowed subjects.
+
 - Broaden Catalogue Appearance options into a union of hue-backed and role-override presets behind one shared style authority. The admission proof composites translucent `oklch()` values over the opaque canvas in gamma sRGB and now also proves ink/muted/faint legibility, the inverse pair, pairwise semantic-role separation, and categorical-series visibility and distinction for every option; all twelve hue presets pass the extended floors unchanged and unsafe synthetic presets fail closed. Appearance state, URLs, and storage carry option ids (legacy hue values still resolve), and the Builder preview protocol carries the option id at version 3. Recorded in [ADR 0039](map/_adr/0039-admit-role-override-appearance-presets.md).
 
 ## 0.29.0

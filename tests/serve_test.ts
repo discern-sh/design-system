@@ -1,4 +1,4 @@
-import { assertEquals, assertStringIncludes } from "@std/assert";
+import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import server, {
   catalogueFilePath,
   catalogueReviewRoutes,
@@ -251,7 +251,17 @@ Deno.test("Catalogue review routes stay outside replaceable build output", async
   const imageHtml = await imageReview.text();
   assertStringIncludes(
     imageHtml,
-    `${componentExampleImageManifest.entries.length} exact-bounds theme entries`,
+    `${componentExampleImageManifest.entries.length} exact-bounds, high-density theme entries`,
+  );
+  assertStringIncludes(
+    imageHtml,
+    "checkerboard exposes transparent crop edges",
+  );
+  const firstImage = componentExampleImageManifest.entries[0];
+  assert(firstImage !== undefined);
+  assertStringIncludes(
+    imageHtml,
+    `${firstImage.width}×${firstImage.height} CSS · ${firstImage.pixelWidth}×${firstImage.pixelHeight} px · ${firstImage.density}×`,
   );
   assertStringIncludes(imageHtml, 'data-representative="true"');
   assertStringIncludes(imageHtml, "240×150 consumer frame");
@@ -270,8 +280,6 @@ Deno.test("Catalogue review routes stay outside replaceable build output", async
     );
   }
 
-  const firstImage = componentExampleImageManifest.entries[0];
-  if (firstImage === undefined) throw new Error("image manifest is empty");
   const imageResponse = await server.fetch(
     new Request(`http://127.0.0.1:8010${firstImage.assetUrl}`),
   );

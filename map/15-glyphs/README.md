@@ -2,7 +2,7 @@
 
 [`src/glyphs/atlas.ts`](../../src/glyphs/atlas.ts) is the private React-free data authority for two deliberately different layers. The Glyph Atlas is a bounded Unicode 17.0.0 reference population whose exact scalar or standardized-sequence identity can evolve with a reviewed Unicode update. Discern Glyphs is the smaller `discernGlyphAliases` collection: authored names, discovery terms, recommendations, use guidance, surface posture, and contextual ASCII degradation that reference canonical IDs.
 
-[ADR-0041](../_adr/0041-separate-unicode-glyph-identity-from-curated-aliases.md) records why Unicode identity, contextual meaning, and fallback are separate facts and why this foundation has no public export or Catalogue route.
+[ADR-0042](../_adr/0042-separate-unicode-glyph-identity-from-curated-aliases.md) records why Unicode identity, contextual meaning, and fallback are separate facts and why this foundation has no public export or Catalogue route.
 
 ## Authority boundary
 

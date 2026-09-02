@@ -2,7 +2,7 @@ import { Component, useEffect } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import type { CatalogueExample } from "../conformance.ts";
-import { catalogueWebExample } from "../generated/registry.ts";
+import { catalogueWebExample } from "../generated/example-image-registry.ts";
 import {
   componentExampleCaptureContract,
   type ComponentExampleCaptureFramingNode,

@@ -22,7 +22,7 @@ export function renderComponentExampleImageReviewPage(): string {
     }" data-theme="${entry.theme}" data-representative="${representative}">
       <header><strong>${
       escapeHtml(identity)
-    }</strong><span>${entry.width}×${entry.height} · ${
+    }</strong><span>${entry.width}×${entry.height} CSS · ${entry.pixelWidth}×${entry.pixelHeight} px · ${entry.density}× · ${
       representative ? "representative" : "canonical"
     }</span></header>
       <div class="natural"><img src="${
@@ -60,7 +60,7 @@ export function renderComponentExampleImageReviewPage(): string {
 </head>
 <body>
   <h1>Component example images</h1>
-  <p>${componentExampleImageManifest.entries.length} exact-bounds theme entries. Natural pixels expose crop edges; the smaller frame previews consumer fitting without adding chrome to the asset.</p>
+  <p>${componentExampleImageManifest.entries.length} exact-bounds, high-density theme entries. The checkerboard exposes transparent crop edges; the smaller frame previews logical consumer fitting without adding chrome to the asset.</p>
   <main>${figures}</main>
 </body>
 </html>`;

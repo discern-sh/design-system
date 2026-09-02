@@ -10,7 +10,7 @@ export type ComponentExampleImageTheme =
 /** Stable environment and rendering choices that constrain canonical capture. */
 export const componentExampleCaptureContract = Object.freeze(
   {
-    version: "4",
+    version: "5",
     denoVersion: "2.9.6",
     playwrightVersion: "1.61.1",
     chromiumRevision: "1228",
@@ -29,7 +29,7 @@ export const componentExampleCaptureContract = Object.freeze(
     }),
     viewport: Object.freeze({ width: 1600, height: 2000 }),
     harness: Object.freeze({ width: 960, minimumHeight: 720, inset: 256 }),
-    deviceScaleFactor: 1,
+    deviceScaleFactor: 2,
     locale: "en-GB",
     timezoneId: "UTC",
     accentHue: 255,
@@ -637,7 +637,15 @@ export interface ComponentExampleImageManifestEntry {
   readonly assetUrl: string;
   readonly width: number;
   readonly height: number;
+  /** Required by capture contract v5; optional only so a stale v4 manifest can be regenerated. */
+  readonly pixelWidth?: number;
+  /** Required by capture contract v5; optional only so a stale v4 manifest can be regenerated. */
+  readonly pixelHeight?: number;
+  /** Required by capture contract v5; optional only so a stale v4 manifest can be regenerated. */
+  readonly density?: number;
   readonly contentHash: `sha256:${string}`;
+  /** Required by capture contract v5; optional only so a stale v4 manifest can be regenerated. */
+  readonly sourceHash?: `sha256:${string}`;
   readonly captureContractVersion: string;
 }
 
