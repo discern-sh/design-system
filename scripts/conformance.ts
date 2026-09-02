@@ -16,6 +16,10 @@ import {
   assertCatalogueFamilyBrowserCoverage,
   catalogueBrowserCheckPlan,
 } from "./conformance/catalogue/browser-check-plan.ts";
+import {
+  type FieldProjectionEvidence,
+  verifyFieldProjection,
+} from "./conformance/field-projection.ts";
 import type {
   CatalogueBrowserCheckId,
 } from "./conformance/catalogue/browser-check-plan.ts";
@@ -84,6 +88,13 @@ const emptyShellEvidence: CatalogueShellEvidence = {
   reflowChecks: 0,
   metadataRoleChecks: 0,
 };
+const emptyFieldProjectionEvidence: FieldProjectionEvidence = {
+  points: 0,
+  roleChecks: 0,
+  poleChecks: 0,
+  spacingChecks: 0,
+  oklabTolerance: 0,
+};
 
 /** Build and exercise every Component and Catalogue family in Chromium. */
 export async function runConformance(): Promise<void> {
@@ -110,6 +121,17 @@ export async function runConformance(): Promise<void> {
     });
     const page = await context.newPage();
     addPageFailureListeners(page, failures);
+
+    let fieldProjection = emptyFieldProjectionEvidence;
+    try {
+      fieldProjection = await verifyFieldProjection(page);
+    } catch (error) {
+      failures.push(
+        `Field projection: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
 
     let components = emptyComponentEvidence;
     let foundations = emptyFoundationsEvidence;
@@ -204,6 +226,11 @@ export async function runConformance(): Promise<void> {
       resilience.fontFallbackAliasesSkipped.join(", ") || "none";
     console.log(
       `Conformance passed: ${expectedComponents.length} components, ` +
+        `${fieldProjection.roleChecks} live field-role checks and ` +
+        `${fieldProjection.poleChecks} pole-parity checks across ` +
+        `${fieldProjection.points} field points at ` +
+        `${fieldProjection.oklabTolerance} OKLab tolerance, with ` +
+        `${fieldProjection.spacingChecks} density-spacing checks; ` +
         `${components.accessibilityScans} component accessibility scans, ` +
         `${components.scenarios} interaction scenarios, ` +
         `${components.forcedColorFocusChecks} forced-colour focus checks, and ` +
