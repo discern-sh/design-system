@@ -175,6 +175,17 @@ function compileExpressionBody(
       if (isNumber(expression.to, 0)) {
         return `(${from}*(1 - ${position}))`;
       }
+      if (
+        expression.from.kind === "number" &&
+        expression.to.kind === "number"
+      ) {
+        const delta = expression.to.value - expression.from.value;
+        if (delta === 0) return from;
+        const operator = delta > 0 ? "+" : "-";
+        return `(${from} ${operator} ${
+          foldedNumber(Math.abs(delta))
+        }*${position})`;
+      }
       if (isNumber(expression.from, 1)) {
         return `((1 - ${position}) + ${to}*${position})`;
       }
@@ -261,6 +272,9 @@ function projectSharedExpressions(
       for (const child of expressionChildren(expression)) visit(child);
     };
     for (const root of roots) visit(root);
+    for (const { expression } of selected) {
+      for (const child of expressionChildren(expression)) visit(child);
+    }
 
     const name = `--discern-f${selected.length}` as const;
     const reference = `var(${name})`;

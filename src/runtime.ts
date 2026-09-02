@@ -45,6 +45,14 @@ const LAYER_ORDER =
   "@layer discern.reset, discern.tokens, discern.theme, discern.foundation, discern.components, discern.utilities;";
 const textEncoder = new TextEncoder();
 
+function compactGeneratedTokenCss(source: string): string {
+  // Authored Component CSS joins the runtime only after this generated surface.
+  return source
+    .replaceAll(/: /gu, ":")
+    .replaceAll(/\s*([{},;])\s*/gu, "$1")
+    .replaceAll(/ \* /gu, "*");
+}
+
 /** Selection, theme, and asset choices for one runtime emission. */
 export interface RuntimeOptions {
   /** A dedicated directory URL. Existing contents are replaced. */
@@ -84,7 +92,7 @@ function generateTokenCss(): string {
       })),
     ...fieldDeclarations,
   ].map(({ name, value }) => `${name}: ${value};`).join(" ");
-  return `${generateFieldAxisRegistrationCss()}
+  return compactGeneratedTokenCss(`${generateFieldAxisRegistrationCss()}
 
 ${generateAccentHueRegistrationCss()}
 
@@ -113,7 +121,7 @@ ${generateAccentHueRegistrationCss()}
       ${liveDeclarations}
     }
   }
-}`;
+}`);
 }
 
 /** One authored CSS surface that the runtime emitter can write. */

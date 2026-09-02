@@ -118,6 +118,14 @@ Deno.test("the CSS backend compiles the complete field expression vocabulary", (
       { kind: "lerp", from: number(0), to: number(8), position: axis },
       "calc(8*var(--discern-darkness))",
     ],
+    [
+      { kind: "lerp", from: number(0.4), to: number(0.34), position: axis },
+      "calc(.4 - .06*var(--discern-darkness))",
+    ],
+    [
+      { kind: "lerp", from: number(0.34), to: number(0.4), position: axis },
+      "calc(.34 + .06*var(--discern-darkness))",
+    ],
   ];
   for (const [expression, expected] of cases) {
     assertEquals(compileFieldExpressionToCss(expression), expected);

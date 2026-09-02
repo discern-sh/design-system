@@ -78,6 +78,13 @@ const PACKAGE_ROOT_URL = new URL("../", import.meta.url);
 const PACKAGE_ROOT = fromFileUrl(PACKAGE_ROOT_URL);
 const COMPONENT_ROOT = join(PACKAGE_ROOT, "src", "components");
 
+function compactTokenDeclaration(name: string, value: string): string {
+  return `${name}: ${value};`
+    .replaceAll(/: /gu, ":")
+    .replaceAll(/\s*([{},;])\s*/gu, "$1")
+    .replaceAll(/ \* /gu, "*");
+}
+
 async function auditFontMetricCss(
   page: Page,
   css: string,
@@ -573,34 +580,34 @@ Deno.test("runtime globals are branded and the default runtime stays monochrome"
     );
     const output = await Deno.readTextFile(join(temp, "discern.css"));
     assert(!output.includes("--discern-accent-hue: 255;"));
-    assertMatch(
-      output,
-      /@layer discern\.tokens \{\s*:where\(\[data-discern-root\]\)/,
-    );
-    assertStringIncludes(output, "color-scheme: light dark;");
     assertStringIncludes(
       output,
-      ':where([data-discern-root][data-discern-theme="light"]) {\n    color-scheme: light; --discern-darkness: 0;',
+      "@layer discern.tokens{:where([data-discern-root])",
+    );
+    assertStringIncludes(output, "color-scheme:light dark;");
+    assertStringIncludes(
+      output,
+      ':where([data-discern-root][data-discern-theme="light"]){color-scheme:light;--discern-darkness:0;',
     );
     assertStringIncludes(
       output,
-      ':where([data-discern-root][data-discern-theme="dark"]) {\n    color-scheme: dark; --discern-darkness: 1;',
+      ':where([data-discern-root][data-discern-theme="dark"]){color-scheme:dark;--discern-darkness:1;',
     );
-    assertStringIncludes(output, "@supports (color: oklch(");
+    assertStringIncludes(output, "@supports (color:oklch(");
     for (
       const token of baseTokens.filter(({ name }) =>
         name.startsWith("--discern-space-")
       )
     ) {
-      assertStringIncludes(output, `${token.name}: ${token.value};`);
+      assertStringIncludes(output, `${token.name}:${token.value};`);
       assertStringIncludes(
         output,
-        `${token.name}: calc(${token.value} * var(--discern-density));`,
+        `${token.name}:calc(${token.value}*var(--discern-density));`,
       );
     }
-    assertStringIncludes(output, "\n  @media (prefers-color-scheme: dark)");
+    assertStringIncludes(output, "@media (prefers-color-scheme:dark)");
     const systemDark = output.slice(
-      output.indexOf("@media (prefers-color-scheme: dark)"),
+      output.indexOf("@media (prefers-color-scheme:dark)"),
     );
     assertStringIncludes(
       systemDark,
@@ -609,7 +616,7 @@ Deno.test("runtime globals are branded and the default runtime stays monochrome"
     for (const token of themeTokens) {
       assertStringIncludes(
         systemDark,
-        `${token.name}: ${token.dark};`,
+        compactTokenDeclaration(token.name, token.dark),
       );
     }
     assert(!output.includes("\n  :root {"));
