@@ -223,7 +223,7 @@ export const fieldPigments = Object.freeze(
 export const FIELD_POLARITY_CROSSOVER = 0.179;
 
 /** Darkness coordinate whose neutral canvas reaches the polarity crossover. */
-export const FIELD_POLARITY_CROSSOVER_DARKNESS = 1 -
+export const FIELD_POLARITY_CROSSOVER_DARKNESS: number = 1 -
   Math.cbrt(FIELD_POLARITY_CROSSOVER);
 
 const paperLightness = numberNode(fieldPigments.paper.lightness);
