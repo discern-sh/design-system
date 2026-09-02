@@ -4,18 +4,18 @@
  * @module
  */
 
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type { SequentialStepStatus } from "../../../cli/interactive-states.ts";
-import {
-  motifPassthrough,
-  type TerminalMotifOptions,
-} from "../../../cli/motif.ts";
 import {
   renderMotifSectionRule,
   renderMotifWorkflowStepper,
 } from "../../../cli/motifs.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./procedure.meta.ts";
 import renderPrerequisiteListCli, {
   type PrerequisiteListCliItem,
@@ -37,14 +37,13 @@ export interface ProcedureCliStep {
 }
 
 /** Inputs accepted by the terminal Procedure renderer. */
-export interface ProcedureCliProps extends TerminalMotifOptions {
+export interface ProcedureCliProps extends CliPresentationOptions {
   readonly title: string;
   readonly description?: string;
   readonly prerequisites?: readonly PrerequisiteListCliItem[];
   readonly steps: readonly ProcedureCliStep[];
   readonly completion: string;
   readonly completionLabel?: string;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -137,7 +136,7 @@ const renderProcedureCli: CliRenderer<ProcedureCliProps> = (
       workflowPrefixedLines("", props.title, width).join("\n"),
       "accent",
       capabilities,
-      props.theme,
+      props,
     ),
   ];
   if (props.description !== undefined) {
@@ -149,8 +148,8 @@ const renderProcedureCli: CliRenderer<ProcedureCliProps> = (
       "",
       renderPrerequisiteListCli(
         {
+          ...cliPresentationPassthrough(props),
           items: props.prerequisites,
-          ...(props.theme === undefined ? {} : { theme: props.theme }),
           maxWidth: width,
         },
         { ...capabilities, columns: width },
@@ -163,10 +162,9 @@ const renderProcedureCli: CliRenderer<ProcedureCliProps> = (
   lines.push(
     "",
     renderMotifSectionRule("Steps", {
+      ...cliPresentationPassthrough(props),
       width,
       treatment: "quiet",
-      ...(props.theme === undefined ? {} : { theme: props.theme }),
-      ...motifPassthrough(props),
     }, capabilities),
     renderMotifWorkflowStepper(
       props.steps.map((step) => ({
@@ -175,10 +173,7 @@ const renderProcedureCli: CliRenderer<ProcedureCliProps> = (
         ...(step.phase === undefined ? {} : { phase: step.phase }),
       })),
       { ...capabilities, columns: width },
-      {
-        ...(props.theme === undefined ? {} : { theme: props.theme }),
-        ...motifPassthrough(props),
-      },
+      cliPresentationPassthrough(props),
     ),
   );
   const completionLabel = props.completionLabel ?? "Done when";

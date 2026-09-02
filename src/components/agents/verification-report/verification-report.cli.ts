@@ -5,13 +5,14 @@
  */
 
 import { renderBox } from "../../../cli/box.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
-import {
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { terminalToneColor } from "../../../cli/theme.ts";
 import type {
   VerificationReportCheckState,
   VerificationReportStamp,
@@ -40,14 +41,13 @@ export interface VerificationReportCliCheck {
 }
 
 /** Inputs accepted by the terminal Verification report renderer. */
-export interface VerificationReportCliProps {
+export interface VerificationReportCliProps extends CliPresentationOptions {
   readonly title: string;
   readonly stamp?: VerificationReportStamp;
   readonly meta?: readonly VerificationReportCliMeta[];
   readonly checks?: readonly VerificationReportCliCheck[];
   readonly summary?: string;
   readonly footer?: string;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -170,7 +170,7 @@ const renderVerificationReportCli: CliRenderer<VerificationReportCliProps> = (
     body.push("", props.footer);
   }
   if (body.length === 0) body.push("No verification detail");
-  const theme = agentsCliTheme(props.theme);
+  const theme = agentsCliTheme(props);
   const tone = props.stamp === "pass"
     ? "success"
     : props.stamp === "fail"

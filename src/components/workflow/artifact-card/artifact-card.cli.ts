@@ -5,12 +5,13 @@
  */
 
 import { renderBox } from "../../../cli/box.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import {
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { terminalToneColor } from "../../../cli/theme.ts";
 import type { ArtifactOwnership } from "../ownership-badge/ownership-badge.types.ts";
 import meta, { componentExampleVocabulary } from "./artifact-card.meta.ts";
 import {
@@ -28,14 +29,13 @@ const ownershipLabels: Readonly<Record<ArtifactOwnership, string>> = {
 };
 
 /** Inputs accepted by the terminal Artifact card renderer. */
-export interface ArtifactCardCliProps {
+export interface ArtifactCardCliProps extends CliPresentationOptions {
   readonly name: string;
   readonly path: string;
   readonly summary: string;
   readonly ownership: ArtifactOwnership;
   readonly provenance: string;
   readonly source?: string;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -87,7 +87,7 @@ const renderArtifactCardCli: CliRenderer<ArtifactCardCliProps> = (
     assertWorkflowCliText(props.source, "artifact source", true);
   }
   const width = workflowCliWidth(props.maxWidth, capabilities, 20);
-  const theme = workflowCliTheme(props.theme);
+  const theme = workflowCliTheme(props);
   const body = [
     props.summary,
     "",

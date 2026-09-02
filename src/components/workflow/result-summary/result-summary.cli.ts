@@ -4,14 +4,15 @@
  * @module
  */
 
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
 import { wrapInlineCluster } from "../../../cli/layout.ts";
 import { measureText, padText } from "../../../cli/text.ts";
-import type {
-  TerminalSemanticTone,
-  TerminalThemeVariant,
-} from "../../../cli/theme.ts";
+import type { TerminalSemanticTone } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./result-summary.meta.ts";
 import {
   RESULT_SUMMARY_STATE_LABELS,
@@ -76,14 +77,13 @@ export interface ResultSummaryCliCount {
 }
 
 /** Inputs accepted by the terminal Result summary renderer. */
-export interface ResultSummaryCliProps {
+export interface ResultSummaryCliProps extends CliPresentationOptions {
   readonly state: ResultSummaryState;
   readonly fact: string;
   readonly counts?: readonly ResultSummaryCliCount[];
   readonly duration?: string;
   readonly nextAction?: string;
   readonly machineReadable?: string;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -163,7 +163,7 @@ export function renderResultSummaryCliWithPrefixWidth(
       workflowPrefixedLines(prefix, props.fact, width).join("\n"),
       stateTones[props.state],
       capabilities,
-      props.theme,
+      props,
     ),
   ];
   const readings: string[] = [];

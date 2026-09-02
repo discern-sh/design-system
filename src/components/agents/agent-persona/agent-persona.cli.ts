@@ -4,9 +4,13 @@
  * @module
  */
 
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import renderAgentAvatarCli from "../agent-avatar/agent-avatar.cli.ts";
 import type { AgentStatus } from "../agent-avatar/agent-avatar.types.ts";
 import type { AgentPersonaSize } from "./agent-persona.types.ts";
@@ -19,14 +23,13 @@ import {
 } from "../agents-cli.ts";
 
 /** Inputs accepted by the terminal Agent persona renderer. */
-export interface AgentPersonaCliProps {
+export interface AgentPersonaCliProps extends CliPresentationOptions {
   readonly name: string;
   readonly detail?: string;
   readonly sigil?: string;
   readonly status?: AgentStatus;
   readonly statusLabel?: string;
   readonly size?: AgentPersonaSize;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -68,10 +71,10 @@ const renderAgentPersonaCli: CliRenderer<AgentPersonaCliProps> = (
   const width = agentsCliWidth(props.maxWidth, capabilities, 12);
   const avatar = renderAgentAvatarCli(
     {
+      ...cliPresentationPassthrough(props),
       name: props.name,
       ...(props.sigil === undefined ? {} : { sigil: props.sigil }),
       ...(props.size === undefined ? {} : { size: props.size }),
-      ...(props.theme === undefined ? {} : { theme: props.theme }),
       maxWidth: 4,
     },
     { ...capabilities, columns: width },

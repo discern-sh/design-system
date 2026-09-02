@@ -4,19 +4,17 @@
  * @module
  */
 
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
-import { defineCliExamples } from "../../../cli/component-examples.ts";
 import {
-  motifPassthrough,
-  type TerminalMotifOptions,
-} from "../../../cli/motif.ts";
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import { measureText, padText, truncateText } from "../../../cli/text.ts";
 import { renderMotifActivityBeacon } from "../../../cli/motifs.ts";
 import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
-import type {
-  TerminalSemanticTone,
-  TerminalThemeVariant,
-} from "../../../cli/theme.ts";
+import type { TerminalSemanticTone } from "../../../cli/theme.ts";
 import type { AgentStatus } from "../agent-avatar/agent-avatar.types.ts";
 import meta, { componentExampleVocabulary } from "./fleet.meta.ts";
 import {
@@ -49,12 +47,11 @@ export interface FleetCliRow {
 }
 
 /** Inputs accepted by the terminal Fleet renderer. */
-export interface FleetCliProps extends TerminalMotifOptions {
+export interface FleetCliProps extends CliPresentationOptions {
   readonly rows: readonly FleetCliRow[];
   readonly label?: string;
   /** Preserve complete persona and branch text when compact cells cannot. */
   readonly identityMode?: "compact" | "lossless";
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -156,7 +153,7 @@ const renderFleetCli: CliRenderer<FleetCliProps> = (props, capabilities) => {
     assertCount(row.behind, `fleet row ${index + 1} behind`);
   }
   const lines = [
-    styleAgentsHeading(label, "accent", capabilities, props.theme),
+    styleAgentsHeading(label, "accent", capabilities, props),
   ];
   if (width < 52) {
     for (const [index, row] of props.rows.entries()) {
@@ -173,7 +170,7 @@ const renderFleetCli: CliRenderer<FleetCliProps> = (props, capabilities) => {
         identity.join("\n"),
         row.status === undefined ? "neutral" : statusTones[row.status],
         capabilities,
-        props.theme,
+        props,
       ));
       if (lossless && !identity.join("\n").includes(row.persona)) {
         lines.push(`Persona: ${row.persona}`);
@@ -196,14 +193,13 @@ const renderFleetCli: CliRenderer<FleetCliProps> = (props, capabilities) => {
         lines.push(`  ${
           renderMotifActivityBeacon(
             {
+              ...cliPresentationPassthrough(props),
               width: Math.min(12, width - 2),
               phase: row.beaconPhase,
               marker: triangleGlyph(
                 TRIANGLES.filledSmall.up,
                 capabilities.unicode,
               ),
-              ...(props.theme === undefined ? {} : { theme: props.theme }),
-              ...motifPassthrough(props),
             },
             { ...capabilities, columns: width - 2 },
           )
@@ -225,7 +221,7 @@ const renderFleetCli: CliRenderer<FleetCliProps> = (props, capabilities) => {
     }${gap}${padText("STATE", stateWidth)}${gap}DRIFT`,
     "neutral",
     capabilities,
-    props.theme,
+    props,
   ));
   for (const row of props.rows) {
     const state = row.status === undefined
@@ -235,7 +231,7 @@ const renderFleetCli: CliRenderer<FleetCliProps> = (props, capabilities) => {
       padText(truncateText(state, stateWidth), stateWidth),
       row.status === undefined ? "neutral" : statusTones[row.status],
       capabilities,
-      props.theme,
+      props,
     );
     lines.push(
       `${padText(truncateText(row.persona, agentWidth), agentWidth)}${gap}${
@@ -264,14 +260,13 @@ const renderFleetCli: CliRenderer<FleetCliProps> = (props, capabilities) => {
       lines.push(`${" ".repeat(offset)}${
         renderMotifActivityBeacon(
           {
+            ...cliPresentationPassthrough(props),
             width: 8,
             phase: row.beaconPhase,
             marker: triangleGlyph(
               TRIANGLES.filledSmall.up,
               capabilities.unicode,
             ),
-            ...(props.theme === undefined ? {} : { theme: props.theme }),
-            ...motifPassthrough(props),
           },
           { ...capabilities, columns: 8 },
         )

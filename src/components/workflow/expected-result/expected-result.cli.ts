@@ -4,9 +4,12 @@
  * @module
  */
 
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import type { ExpectedResultVariant } from "./expected-result.types.ts";
 import meta, { componentExampleVocabulary } from "./expected-result.meta.ts";
 import {
@@ -18,11 +21,10 @@ import {
 } from "../workflow-cli.ts";
 
 /** Inputs accepted by the terminal Expected result renderer. */
-export interface ExpectedResultCliProps {
+export interface ExpectedResultCliProps extends CliPresentationOptions {
   readonly value: string;
   readonly label?: string;
   readonly variant?: ExpectedResultVariant;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -66,7 +68,7 @@ const renderExpectedResultCli: CliRenderer<ExpectedResultCliProps> = (
       heading,
       "success",
       capabilities,
-      props.theme,
+      props,
     ),
     ...workflowIndentedLines(props.value, width),
   ].join("\n");

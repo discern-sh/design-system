@@ -6,13 +6,14 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
 import { truncateText } from "../../../cli/text.ts";
-import {
-  terminalThemeColor,
-  type TerminalThemeVariant,
-} from "../../../cli/theme.ts";
+import { terminalThemeColor } from "../../../cli/theme.ts";
 import type { ArtifactTreeNodeKind } from "./artifact-tree.types.ts";
 import meta, { componentExampleVocabulary } from "./artifact-tree.meta.ts";
 import {
@@ -32,10 +33,9 @@ export interface ArtifactTreeCliNode {
 }
 
 /** Inputs accepted by the terminal Artifact tree renderer. */
-export interface ArtifactTreeCliProps {
+export interface ArtifactTreeCliProps extends CliPresentationOptions {
   readonly nodes: readonly ArtifactTreeCliNode[];
   readonly label?: string;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -188,7 +188,7 @@ const renderArtifactTreeCli: CliRenderer<ArtifactTreeCliProps> = (
   }
   validateNodes(props.nodes, "artifact tree");
   const width = workflowCliWidth(props.maxWidth, capabilities, 8);
-  const theme = workflowCliTheme(props.theme);
+  const theme = workflowCliTheme(props);
   const tree = styleText(
     treeLines(props.nodes, width, capabilities).join("\n"),
     { color: terminalThemeColor(theme, "--discern-color-ink") },
@@ -201,7 +201,7 @@ const renderArtifactTreeCli: CliRenderer<ArtifactTreeCliProps> = (
       truncateText(props.label, width, capabilities.unicode ? "…" : "."),
       "accent",
       capabilities,
-      props.theme,
+      props,
     ),
     tree,
   ].join("\n");

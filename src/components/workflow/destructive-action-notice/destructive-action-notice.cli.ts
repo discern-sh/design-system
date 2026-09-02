@@ -4,9 +4,12 @@
  * @module
  */
 
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import type { DestructiveActionNoticeTone } from "./destructive-action-notice.types.ts";
 import meta, {
   componentExampleVocabulary,
@@ -20,14 +23,14 @@ import {
 } from "../workflow-cli.ts";
 
 /** Inputs accepted by the terminal Destructive action notice renderer. */
-export interface DestructiveActionNoticeCliProps {
+export interface DestructiveActionNoticeCliProps
+  extends CliPresentationOptions {
   readonly label?: string;
   readonly scope: string;
   readonly impact: string;
   readonly recovery: string;
   readonly authority?: string;
   readonly tone?: DestructiveActionNoticeTone;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -88,7 +91,7 @@ const renderDestructiveActionNoticeCli: CliRenderer<
       ).join("\n"),
       tone,
       capabilities,
-      props.theme,
+      props,
     ),
     ...workflowFactLines("Scope", props.scope, width),
     ...workflowFactLines("Impact", props.impact, width),

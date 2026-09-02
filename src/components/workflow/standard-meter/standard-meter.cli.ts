@@ -4,14 +4,14 @@
  * @module
  */
 
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
-import { defineCliExamples } from "../../../cli/component-examples.ts";
 import {
-  motifPassthrough,
-  type TerminalMotifOptions,
-} from "../../../cli/motif.ts";
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import { renderMotifProgressFrame } from "../../../cli/motifs.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import type {
   StandardDirection,
   StandardTrend,
@@ -26,7 +26,7 @@ import {
 } from "../workflow-cli.ts";
 
 /** Inputs accepted by the terminal Standard meter renderer. */
-export interface StandardMeterCliProps extends TerminalMotifOptions {
+export interface StandardMeterCliProps extends CliPresentationOptions {
   readonly label: string;
   readonly value: number;
   readonly limit: number;
@@ -35,7 +35,6 @@ export interface StandardMeterCliProps extends TerminalMotifOptions {
   readonly max?: number;
   readonly trend?: StandardTrend;
   readonly formatValue?: (value: number) => string;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -122,15 +121,14 @@ const renderStandardMeterCli: CliRenderer<StandardMeterCliProps> = (
       workflowPrefixedLines("", heading, width).join("\n"),
       withinLimit ? "success" : "danger",
       capabilities,
-      props.theme,
+      props,
     ),
     renderMotifProgressFrame(
       {
+        ...cliPresentationPassthrough(props),
         completed: scaleValue,
         total: scaleTotal,
         width,
-        ...(props.theme === undefined ? {} : { theme: props.theme }),
-        ...motifPassthrough(props),
       },
       { ...capabilities, columns: width },
     ),

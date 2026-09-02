@@ -4,9 +4,12 @@
  * @module
  */
 
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./transcript.meta.ts";
 import {
   agentsCliWidth,
@@ -24,9 +27,8 @@ export interface TranscriptCliTurn {
 }
 
 /** Inputs accepted by the terminal Transcript renderer. */
-export interface TranscriptCliProps {
+export interface TranscriptCliProps extends CliPresentationOptions {
   readonly turns: readonly TranscriptCliTurn[];
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -77,7 +79,7 @@ const renderTranscriptCli: CliRenderer<TranscriptCliProps> = (
       agentsPrefixedLines("", label, width).join("\n"),
       "accent",
       capabilities,
-      props.theme,
+      props,
     ));
     lines.push(...agentsIndentedLines(turn.body, width));
   }

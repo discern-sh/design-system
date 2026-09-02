@@ -4,9 +4,12 @@
  * @module
  */
 
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
 import type { DiagnosticSeverity } from "./diagnostic.types.ts";
 import meta, { componentExampleVocabulary } from "./diagnostic.meta.ts";
@@ -21,7 +24,7 @@ import {
 } from "../workflow-cli.ts";
 
 /** Inputs accepted by the terminal Diagnostic renderer. */
-export interface DiagnosticCliProps {
+export interface DiagnosticCliProps extends CliPresentationOptions {
   readonly title: string;
   readonly impact: string;
   readonly correction: string;
@@ -35,7 +38,6 @@ export interface DiagnosticCliProps {
   readonly workingDirectory?: string;
   readonly rawDetail?: string;
   readonly rawLabel?: string;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -111,7 +113,7 @@ const renderDiagnosticCli: CliRenderer<DiagnosticCliProps> = (
       ).join("\n"),
       severity === "failure" ? "danger" : "warning",
       capabilities,
-      props.theme,
+      props,
     ),
     ...workflowFactLines("Why", props.impact, width),
   ];

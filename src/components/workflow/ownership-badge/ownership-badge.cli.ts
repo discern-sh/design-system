@@ -5,14 +5,14 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
 import { truncateText } from "../../../cli/text.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import type { ArtifactOwnership } from "./ownership-badge.types.ts";
 import meta, { componentExampleVocabulary } from "./ownership-badge.meta.ts";
 import { workflowCliWidth } from "../workflow-cli.ts";
@@ -25,9 +25,8 @@ const labels: Readonly<Record<ArtifactOwnership, string>> = {
 };
 
 /** Inputs accepted by the terminal Ownership badge renderer. */
-export interface OwnershipBadgeCliProps {
+export interface OwnershipBadgeCliProps extends CliPresentationOptions {
   readonly ownership: ArtifactOwnership;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -48,7 +47,7 @@ const renderOwnershipBadgeCli: CliRenderer<OwnershipBadgeCliProps> = (
   props,
   capabilities,
 ) => {
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const width = workflowCliWidth(props.maxWidth, capabilities, 3);
   return styleText(
     `[${

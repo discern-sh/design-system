@@ -5,7 +5,12 @@
  */
 
 import { styleText } from "../../../cli/ansi.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
 import { defaultTerminalFrameWidth } from "../../../cli/frame-measure.ts";
 import type {
@@ -13,8 +18,6 @@ import type {
   ActivityLogLineTone,
 } from "../../../cli/interactive-states.ts";
 import {
-  motifPassthrough,
-  type TerminalMotifOptions,
   terminalMotifRegisterRoles,
   terminalMotifRepertoire,
 } from "../../../cli/motif.ts";
@@ -28,9 +31,8 @@ import {
   wrapTextPreservingIndent,
 } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import { renderMotifSpinnerFrame } from "../../../cli/motifs.ts";
@@ -39,8 +41,7 @@ import meta, { componentExampleVocabulary } from "./activity-log.meta.ts";
 
 /** Inputs accepted by the terminal Activity log renderer. */
 export interface ActivityLogCliProps
-  extends ActivityLogFrameState, TerminalMotifOptions {
-  readonly theme?: TerminalThemeVariant;
+  extends ActivityLogFrameState, CliPresentationOptions {
   readonly width?: number;
 }
 
@@ -154,11 +155,8 @@ const renderActivityLogCli: CliRenderer<ActivityLogCliProps> = (
     props.width ?? defaultTerminalFrameWidth(capabilities),
     capabilities,
   );
-  const theme = terminalThemes[props.theme ?? "dark"];
-  const presentation = {
-    ...(props.theme === undefined ? {} : { theme: props.theme }),
-    ...motifPassthrough(props),
-  };
+  const theme = resolveTerminalTheme(props);
+  const presentation = cliPresentationPassthrough(props);
   const gap = " ".repeat(theme.spacing["--discern-space-2"] ?? 1);
   const ellipsis = capabilities.unicode ? "…" : ".";
 
@@ -194,9 +192,9 @@ const renderActivityLogCli: CliRenderer<ActivityLogCliProps> = (
 
   const stableRows = props.stable.map((line) =>
     narrationLineRenderers[stableLineKinds[line.tone]]({
+      ...presentation,
       text: line.text,
       maxWidth: width,
-      ...presentation,
     }, capabilities)
   );
 
