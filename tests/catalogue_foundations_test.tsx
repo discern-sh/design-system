@@ -7,6 +7,7 @@ import {
   FieldPage,
   type FieldPageProps,
 } from "../catalogue/pages/foundations/field-page.tsx";
+import { fieldPoleTerminalProjections } from "../catalogue/pages/foundations/field-terminal.ts";
 import {
   catalogueTerminalFoundationPath,
   foundationsPaths,
@@ -184,11 +185,29 @@ Deno.test("Field page dogfoods public controls and paints every field role", () 
   assertStringIncludes(html, "Admission proof");
   assertStringIncludes(html, "margin +");
   assertStringIncludes(html, "Copy consumer field snippet");
+  assertStringIncludes(html, 'data-discern-field-terminal-pole="light"');
+  assertStringIncludes(html, 'data-discern-field-terminal-pole="dark"');
   assertStringIncludes(
     html,
     'data-discern-field-role="--discern-color-canvas"',
   );
   assertStringIncludes(html, 'data-discern-field-role="--discern-color-ink"');
+});
+
+Deno.test("Field terminal sheet uses the existing inspector at both poles", () => {
+  const projections = fieldPoleTerminalProjections();
+  assertEquals(projections.map(({ theme }) => theme), ["light", "dark"]);
+  for (const projection of projections) {
+    assertStringIncludes(projection.output, "--discern-color-ink-muted");
+    assertStringIncludes(
+      projection.inspectorHtml,
+      `${projection.theme === "light" ? "Light" : "Dark"} field pole`,
+    );
+    assertStringIncludes(
+      projection.inspectorHtml,
+      "data-discern-terminal-inspector",
+    );
+  }
 });
 
 Deno.test("Field proof renders shared refusal reasons verbatim", () => {

@@ -414,7 +414,8 @@
   .discern-catalogue-field__reading,
   .discern-catalogue-field__roles,
   .discern-catalogue-field__proof,
-  .discern-catalogue-field__export {
+  .discern-catalogue-field__export,
+  .discern-catalogue-field__terminal {
     display: grid;
     align-content: start;
     gap: 22px;
@@ -566,6 +567,22 @@
   }
   .discern-catalogue-field__export .discern-copy-button {
     min-height: 40px;
+  }
+  .discern-catalogue-field__terminal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .discern-catalogue-field__terminal-grid article {
+    min-width: 0;
+  }
+  .discern-catalogue-field__terminal-grid h3 {
+    margin: 0 0 8px;
+    font: 650 var(--discern-font-size-sm) var(--discern-font-ui);
+  }
+  .discern-catalogue-field__terminal-grid [data-discern-terminal-inspector] {
+    overflow: auto;
+    border-radius: var(--discern-radius-md);
   }
   .discern-catalogue-field__role-grid {
     display: grid;
@@ -726,6 +743,9 @@
     .discern-catalogue-token-grid,
     .discern-catalogue-terminal-foundation__grid,
     .discern-catalogue-field__instrument {
+      grid-template-columns: 1fr;
+    }
+    .discern-catalogue-field__terminal-grid {
       grid-template-columns: 1fr;
     }
     .discern-catalogue-field__role-grid {

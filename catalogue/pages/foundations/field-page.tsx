@@ -20,6 +20,7 @@ import {
 } from "../../shell/field-state.ts";
 import { CataloguePageHeader } from "../shared.tsx";
 import { catalogueFieldConsumerSnippet } from "./field-export.ts";
+import { fieldPoleTerminalProjections } from "./field-terminal.ts";
 
 function axisLabel(axis: FieldAxisName): string {
   return (axis[0]?.toUpperCase() ?? "") + axis.slice(1);
@@ -98,6 +99,7 @@ export function FieldPage(
     fieldScheme ?? polarity,
   );
   const consumerSnippet = catalogueFieldConsumerSnippet(selection);
+  const terminalPoles = fieldPoleTerminalProjections();
 
   useEffect(() => {
     if (field === undefined && onFieldChange !== undefined) {
@@ -255,6 +257,34 @@ export function FieldPage(
                 margin {check.margin >= 0 ? "+" : ""}
                 {proofValue(check.margin, check.unit)}
               </output>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section
+        className="discern-catalogue-field__terminal"
+        aria-labelledby="discern-catalogue-field-terminal-heading"
+      >
+        <div>
+          <h2 id="discern-catalogue-field-terminal-heading">
+            Terminal at the poles
+          </h2>
+          <p>
+            The existing terminal inspector projects the field-derived CLI
+            palette at both supported poles.
+          </p>
+        </div>
+        <div className="discern-catalogue-field__terminal-grid">
+          {terminalPoles.map((projection) => (
+            <article key={projection.theme}>
+              <h3>{projection.theme === "light" ? "Light" : "Dark"} pole</h3>
+              <div
+                data-discern-field-terminal-pole={projection.theme}
+                dangerouslySetInnerHTML={{
+                  __html: projection.inspectorHtml,
+                }}
+              />
             </article>
           ))}
         </div>
