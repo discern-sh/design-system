@@ -681,7 +681,18 @@ const brandArtworkInkProjection: AccentColorProjection = Object.freeze({
   hue: polaritySelection(accentHueAxis, zero),
   alpha: polaritySelection(one, inkMutedExpression),
 });
-const actionShadowExpression = polaritySelection(accent600Expression, one);
+/** Minimum composited OKLab separation around a hard primary-action shadow. */
+export const ACTION_SHADOW_DISTANCE_FLOOR = 0.08;
+
+const actionShadowExpression = rounded(bounded(
+  0.22,
+  binary(
+    "multiply",
+    curve([0.82, 0.78, 0.72, 0.7, 0.68]),
+    axisNodes.structure,
+  ),
+  0.86,
+));
 const neutralEdgeExpression = polaritySelection(
   inkExpression,
   borderStrongExpression,
@@ -954,7 +965,7 @@ export const fieldColorRoleLaws: readonly FieldColorRoleLaw[] = Object.freeze(
     ),
     role(
       "--discern-color-action-shadow",
-      "Polarity-responsive hard shadow for an emphasised action.",
+      "Structure-responsive hard shadow separated from action fill and canvas.",
       "active-ink",
       actionShadowExpression,
       undefined,

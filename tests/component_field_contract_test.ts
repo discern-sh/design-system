@@ -15,6 +15,8 @@ const PACKAGE_ROOT = fromFileUrl(new URL("..", import.meta.url));
 const COMPONENT_ROOT = join(PACKAGE_ROOT, "src", "components");
 const loudAccent = /var\(\s*--discern-color-accent-(?:400|500|600|700|800)\b/u;
 const onAction = /^var\(\s*--discern-color-on-action\s*\)$/u;
+const primaryAction = /var\(\s*--discern-color-action\s*\)/u;
+const primaryActionShadow = /var\(\s*--discern-color-action-shadow\s*\)/u;
 const rawColor =
   /#[\da-fA-F]{3,8}\b|\b(?:rgb|hsl|hwb|lab|lch|oklab|oklch)\(|\b(?:black|white|Canvas|CanvasText|Highlight)\b/u;
 const pixel = /-?(?:\d+\.)?\d+px\b/gu;
@@ -94,6 +96,28 @@ function rawLiteralViolations(
   return violations;
 }
 
+function hardPrimaryShadowViolations(
+  rules: readonly CssRule[],
+): readonly string[] {
+  return rules.flatMap((rule) => {
+    const fill = rule.declarations.find(({ property, value }) =>
+      (property === "background" || property === "background-color" ||
+        property.includes("fill")) && primaryAction.test(value)
+    );
+    if (fill === undefined) return [];
+    const shadows = rule.declarations.filter(({ property }) =>
+      property === "box-shadow" || property.includes("shadow")
+    );
+    if (
+      shadows.length === 0 ||
+      shadows.some(({ value }) => primaryActionShadow.test(value))
+    ) return [];
+    return [
+      `${rule.file}:${rule.line}: ${rule.selector} gives a primary action a hard shadow without --discern-color-action-shadow`,
+    ];
+  });
+}
+
 async function componentStylesheets(
   directory: string,
 ): Promise<ReadonlyMap<string, string>> {
@@ -128,6 +152,14 @@ Deno.test("Component CSS contains no theme branch or loud-rung text pairing", as
   }
   assertEquals(themeBranches, []);
   assertEquals(loudText, []);
+});
+
+Deno.test("hard-shadow primary actions consume the enrolled shadow role", async () => {
+  const violations: string[] = [];
+  for (const [file, css] of await componentStylesheets(COMPONENT_ROOT)) {
+    violations.push(...hardPrimaryShadowViolations(cssRules(css, file)));
+  }
+  assertEquals(violations, []);
 });
 
 Deno.test("Component CSS contains no non-hairline pixel or colour literal", async () => {
@@ -170,6 +202,23 @@ Deno.test("a future Component cannot bypass the action pair on a loud fill", () 
   );
   assertEquals(loudAccentTextViolations(fixture), [
     "src/components/core/future-action/future-action.css:1: .discern-future-action paints var(--discern-color-accent-600) with var(--discern-color-inverse-ink)",
+  ]);
+});
+
+Deno.test("a future hard-shadow primary action auto-enrols in the shadow guard", () => {
+  const fixture = cssRules(
+    `
+    .discern-future-action {
+      --discern-future-fill: var(--discern-color-action);
+      --discern-future-shadow: 2px 2px 0 var(--discern-color-action);
+      background: var(--discern-future-fill);
+      box-shadow: var(--discern-future-shadow);
+    }
+  `,
+    "src/components/core/future-action/future-action.css",
+  );
+  assertEquals(hardPrimaryShadowViolations(fixture), [
+    "src/components/core/future-action/future-action.css:1: .discern-future-action gives a primary action a hard shadow without --discern-color-action-shadow",
   ]);
 });
 
