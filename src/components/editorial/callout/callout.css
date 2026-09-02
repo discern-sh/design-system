@@ -8,7 +8,7 @@
     margin-block: var(--discern-space-8);
     padding: var(--discern-space-6);
     border: 1px solid var(--discern-color-border-strong);
-    border-inline-start: 4px solid var(--discern-color-accent-500);
+    border-inline-start: 0.25rem solid var(--discern-color-accent-500);
     border-radius: var(--discern-radius-md);
     background: var(--discern-callout-fill);
   }

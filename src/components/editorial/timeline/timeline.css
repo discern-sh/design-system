@@ -75,7 +75,7 @@
     inset-inline-start: 50%;
     inline-size: 0.72rem;
     block-size: 0.72rem;
-    border: 2px solid var(--discern-color-accent-500);
+    border: 0.125rem solid var(--discern-color-accent-500);
     border-radius: 50%;
     background: var(--discern-color-canvas);
     content: "";

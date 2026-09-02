@@ -29,6 +29,9 @@
     text-align: center;
   }
   .discern-site-header__notice a {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 1.5rem;
     color: inherit;
     font-weight: var(--discern-font-weight-strong);
     outline-width: 0.125rem;

@@ -28,7 +28,7 @@
     z-index: -1;
     inset-block-start: 0;
     inset-inline: 0;
-    block-size: 3px;
+    block-size: 0.1875rem;
     background: var(--discern-color-accent-500);
     content: "";
   }
@@ -85,7 +85,7 @@
   .discern-profile-card__links a {
     display: inline-flex;
     align-items: center;
-    min-block-size: 24px;
+    min-block-size: 1.5rem;
   }
   .discern-profile-card--landscape {
     flex-direction: row;

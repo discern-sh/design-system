@@ -25,12 +25,11 @@
   .discern-raw-output__summary:focus-visible {
     outline-width: calc(var(--discern-space-1) * 0.75);
     outline-style: solid;
-    outline-color: var(--discern-color-accent-500);
+    outline-color: var(--discern-color-accent-800);
     outline-offset: calc(var(--discern-space-1) * -0.75);
   }
   .discern-raw-output[open] .discern-raw-output__summary {
-    background: color-mix(in oklab,
-      var(--discern-color-surface-sunken) 66%, var(--discern-color-surface));
+    background: var(--discern-color-surface);
   }
   .discern-raw-output__summary:active {
     background: color-mix(in oklab,

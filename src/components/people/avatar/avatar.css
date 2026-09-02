@@ -11,7 +11,7 @@
     border-radius: 50%;
     background: var(--discern-color-accent-100);
     box-shadow:
-      0 0 0 2px var(--discern-avatar-ring, transparent),
+      0 0 0 0.125rem var(--discern-avatar-ring, transparent),
       inset 0 1px 0 color-mix(in oklab, var(--discern-shadow-color) 18%,
       transparent);
     color: var(--discern-color-accent-700);
@@ -75,9 +75,9 @@
     position: absolute;
     inset-block-end: calc(var(--discern-space-1) / -4);
     inset-inline-end: calc(var(--discern-space-1) / -4);
-    inline-size: max(9px, calc(var(--discern-avatar-size) * 0.26));
-    block-size: max(9px, calc(var(--discern-avatar-size) * 0.26));
-    border: 2px solid var(--discern-color-surface);
+    inline-size: max(0.5625rem, calc(var(--discern-avatar-size) * 0.26));
+    block-size: max(0.5625rem, calc(var(--discern-avatar-size) * 0.26));
+    border: 0.125rem solid var(--discern-color-surface);
     border-radius: 50%;
     background: var(--discern-color-ink-faint);
     box-shadow: 0 0 0 1px var(--discern-shadow-color);
@@ -95,7 +95,7 @@
     background: var(--discern-color-surface);
     box-shadow:
       0 0 0 1px var(--discern-shadow-color),
-      inset 0 0 0 2px var(--discern-color-border-strong);
+      inset 0 0 0 0.125rem var(--discern-color-border-strong);
   }
   @media (forced-colors: active) {
     .discern-avatar {

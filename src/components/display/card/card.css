@@ -18,9 +18,9 @@
   }
   .discern-card--dots {
     background-color: var(--discern-color-surface-sunken);
-    background-image: radial-gradient(var(--discern-color-border-strong) 0.8px,
-      transparent 0.8px);
-    background-size: 10px 10px;
+    background-image: radial-gradient(var(--discern-color-border-strong) 0.05rem,
+      transparent 0.05rem);
+    background-size: 0.625rem 0.625rem;
   }
   .discern-card--pad-none {
     padding: 0;

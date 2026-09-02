@@ -413,10 +413,51 @@ function componentProvidesBehavior(
 
 async function verifyFloatingSurfaceCure(page: Page): Promise<number> {
   const current = await page.evaluate(() => {
+    const colorBytes = (color: string): readonly number[] => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1;
+      canvas.height = 1;
+      const context = canvas.getContext("2d");
+      if (context === null) throw new Error("Canvas colour parser unavailable");
+      context.clearRect(0, 0, 1, 1);
+      context.fillStyle = color;
+      context.fillRect(0, 0, 1, 1);
+      return [...context.getImageData(0, 0, 1, 1).data];
+    };
+    const inspectOpaqueRole = (surface: HTMLElement): string | undefined => {
+      const role = surface.dataset.discernFloatingSurface;
+      const allowed = ["surface", "canvas", "inverse-surface"];
+      if (role === undefined || !allowed.includes(role)) {
+        return `${
+          surface.outerHTML.slice(0, 180)
+        } does not name an opaque surface role`;
+      }
+      const root = surface.closest<HTMLElement>("[data-discern-root]");
+      if (root === null) {
+        return `${surface.outerHTML.slice(0, 180)} has no discern root`;
+      }
+      const probe = document.createElement("span");
+      probe.style.backgroundColor = `var(--discern-color-${role})`;
+      root.append(probe);
+      const expected = colorBytes(getComputedStyle(probe).backgroundColor);
+      probe.remove();
+      const actual = colorBytes(getComputedStyle(surface).backgroundColor);
+      if (actual[3] !== 255) {
+        return `${surface.outerHTML.slice(0, 180)} resolves to alpha ${
+          actual[3]
+        }`;
+      }
+      if (!actual.every((channel, index) => channel === expected[index])) {
+        return `${
+          surface.outerHTML.slice(0, 180)
+        } does not paint the declared --discern-color-${role} role`;
+      }
+      return undefined;
+    };
     const references = [...document.querySelectorAll<HTMLElement>(
       "[aria-details], [aria-describedby]",
     )];
-    return [...document.querySelectorAll<HTMLElement>(
+    const behaviorPanels = [...document.querySelectorAll<HTMLElement>(
       "[id][role='group'], [id][role='tooltip']",
     )].flatMap((panel) => {
       const trigger = references.find((candidate) =>
@@ -434,13 +475,44 @@ async function verifyFloatingSurfaceCure(page: Page): Promise<number> {
         hasRoot: panel.closest("[data-discern-floating-root]") !== null,
         hasTrigger: trigger.hasAttribute("data-discern-floating-trigger"),
         hasPanel: panel.hasAttribute("data-discern-floating-panel"),
+        hasSurface: panel.hasAttribute("data-discern-floating-surface"),
       }];
     });
+    const registered = [...document.querySelectorAll<HTMLElement>(
+      "[data-discern-floating-surface]",
+    )];
+    const roleFailures = registered.flatMap((surface) => {
+      const failure = inspectOpaqueRole(surface);
+      return failure === undefined ? [] : [failure];
+    });
+    const future = document.createElement("span");
+    future.dataset.discernFloatingSurface = "surface";
+    future.style.backgroundColor = "rgb(0 0 0 / 50%)";
+    document.querySelector<HTMLElement>("[data-discern-root]")?.append(future);
+    const futureProof = inspectOpaqueRole(future) !== undefined;
+    future.remove();
+    return {
+      behaviorPanels,
+      registered: registered.length,
+      roleFailures,
+      futureProof,
+    };
   });
-  invariant(current.length > 0, "No floating supplementary surfaces found");
+  invariant(
+    current.behaviorPanels.length > 0,
+    "No floating supplementary surfaces found",
+  );
+  invariant(current.registered > 0, "No opaque floating surfaces registered");
+  invariant(
+    current.futureProof,
+    "A synthetic translucent floating surface escaped the opaque-role detector",
+  );
   const contractFailures: string[] = [];
-  for (const surface of current) {
-    if (!(surface.hasRoot && surface.hasTrigger && surface.hasPanel)) {
+  for (const surface of current.behaviorPanels) {
+    if (
+      !(surface.hasRoot && surface.hasTrigger && surface.hasPanel &&
+        surface.hasSurface)
+    ) {
       contractFailures.push(
         `${surface.component} floating surface lacks the shared behavior contract: ${surface.panel}`,
       );
@@ -547,10 +619,382 @@ async function verifyFloatingSurfaceCure(page: Page): Promise<number> {
     "Escape did not restore the future floating surface trigger",
   );
   invariant(
-    contractFailures.length === 0,
-    contractFailures.join("\n"),
+    contractFailures.length + current.roleFailures.length === 0,
+    [...contractFailures, ...current.roleFailures].join("\n"),
   );
-  return current.length;
+  return current.registered;
+}
+
+interface FieldAxisReachEvidence {
+  readonly points: number;
+  readonly targetChecks: number;
+  readonly textFloorChecks: number;
+  readonly focusRingChecks: number;
+}
+
+async function verifyFieldAxisReach(
+  page: Page,
+): Promise<FieldAxisReachEvidence> {
+  await page.keyboard.press("Tab");
+  return await page.evaluate(async () => {
+    const points = [0, 0.25, 0.5, 0.75, 1] as const;
+    const minimumTargetSize = 24;
+    const minimumFocusContrast = 3;
+    const targetSelector = [
+      "a[href]",
+      "button",
+      "input:not([type='hidden'])",
+      "select",
+      "textarea",
+      "summary",
+      "[role='button']",
+      "[role='link']",
+      "[role='checkbox']",
+      "[role='radio']",
+      "[role='switch']",
+    ].join(",");
+    const focusSelector = `${targetSelector},[tabindex]:not([tabindex='-1'])`;
+    const root = document.querySelector<HTMLElement>("[data-discern-root]");
+    if (root === null) throw new Error("The Catalogue has no discern root");
+    const initial = new Map([
+      ["--discern-darkness", root.style.getPropertyValue("--discern-darkness")],
+      ["--discern-density", root.style.getPropertyValue("--discern-density")],
+      [
+        "--discern-structure",
+        root.style.getPropertyValue("--discern-structure"),
+      ],
+      [
+        "--discern-duration-fast",
+        root.style.getPropertyValue("--discern-duration-fast"),
+      ],
+      [
+        "--discern-duration-medium",
+        root.style.getPropertyValue("--discern-duration-medium"),
+      ],
+      ["color-scheme", root.style.getPropertyValue("color-scheme")],
+    ]);
+    const failures: string[] = [];
+    let targetChecks = 0;
+    let textFloorChecks = 0;
+    let focusRingChecks = 0;
+
+    type Color = readonly [number, number, number, number];
+    const color = (value: string): Color => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1;
+      canvas.height = 1;
+      const context = canvas.getContext("2d");
+      if (context === null) throw new Error("Canvas colour parser unavailable");
+      context.clearRect(0, 0, 1, 1);
+      context.fillStyle = value;
+      context.fillRect(0, 0, 1, 1);
+      const bytes = context.getImageData(0, 0, 1, 1).data;
+      return [bytes[0] ?? 0, bytes[1] ?? 0, bytes[2] ?? 0, bytes[3] ?? 0];
+    };
+    const over = (foreground: Color, background: Color): Color => {
+      const foregroundAlpha = foreground[3] / 255;
+      const backgroundAlpha = background[3] / 255;
+      const alpha = foregroundAlpha + backgroundAlpha * (1 - foregroundAlpha);
+      if (alpha === 0) return [0, 0, 0, 0];
+      return [
+        Math.round(
+          (foreground[0] * foregroundAlpha +
+            background[0] * backgroundAlpha * (1 - foregroundAlpha)) /
+            alpha,
+        ),
+        Math.round(
+          (foreground[1] * foregroundAlpha +
+            background[1] * backgroundAlpha * (1 - foregroundAlpha)) /
+            alpha,
+        ),
+        Math.round(
+          (foreground[2] * foregroundAlpha +
+            background[2] * backgroundAlpha * (1 - foregroundAlpha)) /
+            alpha,
+        ),
+        Math.round(alpha * 255),
+      ];
+    };
+    const luminance = (value: Color): number => {
+      const channel = (byte: number) => {
+        const unit = byte / 255;
+        return unit <= 0.04045 ? unit / 12.92 : ((unit + 0.055) / 1.055) ** 2.4;
+      };
+      return 0.2126 * channel(value[0]) + 0.7152 * channel(value[1]) +
+        0.0722 * channel(value[2]);
+    };
+    const contrast = (first: Color, second: Color): number => {
+      const light = Math.max(luminance(first), luminance(second));
+      const dark = Math.min(luminance(first), luminance(second));
+      return (light + 0.05) / (dark + 0.05);
+    };
+    const backgroundBehind = (element: HTMLElement): Color => {
+      const layers: Color[] = [];
+      for (
+        let ancestor = element.parentElement;
+        ancestor !== null;
+        ancestor = ancestor.parentElement
+      ) {
+        layers.push(color(getComputedStyle(ancestor).backgroundColor));
+      }
+      return layers.toReversed().reduce<Color>(
+        (composite, layer) => over(layer, composite),
+        [255, 255, 255, 255],
+      );
+    };
+    const description = (element: HTMLElement): string => {
+      const component = element.closest<HTMLElement>(
+        "[data-discern-component]",
+      )?.dataset.discernComponent ?? "unknown";
+      const name = element.getAttribute("aria-label") ??
+        element.textContent?.trim().slice(0, 48) ?? element.tagName;
+      return `${component} ${element.tagName.toLowerCase()} “${name}”`;
+    };
+    const visible = (element: HTMLElement): boolean => {
+      const rect = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      return rect.width > 0 && rect.height > 0 && style.display !== "none" &&
+        style.visibility !== "hidden" && style.clipPath !== "inset(50%)" &&
+        (style.clip === "auto" || style.clip === "") &&
+        !element.closest("[inert]");
+    };
+    const inlineTextLink = (element: HTMLElement): boolean =>
+      element.matches("a[href]") &&
+      element.closest("p, li, dd, dt, figcaption") !== null;
+    const labelledNativeChoice = (element: HTMLElement): boolean =>
+      element instanceof HTMLInputElement &&
+      (element.type === "checkbox" || element.type === "radio") &&
+      element.labels?.[0] !== undefined &&
+      element.labels[0].getBoundingClientRect().width >= minimumTargetSize &&
+      element.labels[0].getBoundingClientRect().height >= minimumTargetSize;
+    const inspectFocusRing = (element: HTMLElement): string | undefined => {
+      element.focus();
+      const sibling = element.nextElementSibling;
+      const ringElement = sibling instanceof HTMLElement &&
+          getComputedStyle(sibling).getPropertyValue("--discern-focus-proxy")
+              .trim() === "1"
+        ? sibling
+        : element;
+      const style = getComputedStyle(ringElement);
+      const width = Number.parseFloat(style.outlineWidth);
+      if (
+        style.outlineStyle === "none" || !Number.isFinite(width) || width <= 0
+      ) {
+        return undefined;
+      }
+      const backdrop = backgroundBehind(ringElement);
+      const own = color(style.backgroundColor);
+      const adjacent = Number.parseFloat(style.outlineOffset) < 0
+        ? over(own, backdrop)
+        : backdrop;
+      const ring = over(color(style.outlineColor), adjacent);
+      const ratio = contrast(ring, adjacent);
+      focusRingChecks += 1;
+      return ratio + 0.001 < minimumFocusContrast
+        ? `${description(element)} focus ring is ${ratio.toFixed(2)}:1`
+        : undefined;
+    };
+    const canvases = [...document.querySelectorAll<HTMLElement>(
+      ".discern-catalogue-example-state__canvas",
+    )];
+    const withinCanvases = (selector: string): HTMLElement[] =>
+      canvases.flatMap((canvas) => [
+        ...(canvas.matches(selector) ? [canvas] : []),
+        ...canvas.querySelectorAll<HTMLElement>(selector),
+      ]);
+    const motionOverride = document.createElement("style");
+    motionOverride.textContent = "[data-discern-field-axis-conformance], " +
+      "[data-discern-field-axis-conformance] * {" +
+      "transition: none !important; animation: none !important; }";
+    document.head.append(motionOverride);
+    root.setAttribute("data-discern-field-axis-conformance", "");
+
+    try {
+      root.style.setProperty("--discern-duration-fast", "0ms");
+      root.style.setProperty("--discern-duration-medium", "0ms");
+      for (const darkness of points) {
+        root.style.setProperty("--discern-darkness", String(darkness));
+        root.style.setProperty("--discern-density", "0.8");
+        root.style.setProperty("--discern-structure", "0.35");
+        root.style.setProperty(
+          "color-scheme",
+          darkness >= 0.5 ? "dark" : "light",
+        );
+        await new Promise<void>((resolve) =>
+          requestAnimationFrame(() => resolve())
+        );
+        const probe = document.createElement("span");
+        probe.style.fontSize = "var(--discern-font-size-xs)";
+        root.append(probe);
+        const textFloor = Number.parseFloat(getComputedStyle(probe).fontSize);
+        probe.remove();
+        const targets = withinCanvases(targetSelector).filter((element) =>
+          visible(element) && !element.matches(":disabled")
+        );
+        for (const target of targets) {
+          const rect = target.getBoundingClientRect();
+          if (
+            !inlineTextLink(target) && !labelledNativeChoice(target) &&
+            (rect.width < minimumTargetSize || rect.height < minimumTargetSize)
+          ) {
+            failures.push(
+              `darkness ${darkness}: ${description(target)} target is ${
+                rect.width.toFixed(1)
+              }×${rect.height.toFixed(1)}px`,
+            );
+          }
+          const fontSize = Number.parseFloat(getComputedStyle(target).fontSize);
+          if (fontSize + 0.01 < textFloor) {
+            failures.push(
+              `darkness ${darkness}: ${description(target)} text is ${
+                fontSize.toFixed(2)
+              }px below the ${textFloor.toFixed(2)}px xs floor`,
+            );
+          }
+          targetChecks += 1;
+          textFloorChecks += 1;
+        }
+        const focusTargets = withinCanvases(focusSelector).filter((element) =>
+          visible(element) && !element.matches(":disabled")
+        );
+        for (const target of focusTargets) {
+          const failure = inspectFocusRing(target);
+          if (failure !== undefined) {
+            failures.push(`darkness ${darkness}: ${failure}`);
+          }
+        }
+      }
+
+      const futureBackdrop = document.createElement("span");
+      futureBackdrop.style.background = "rgb(120 120 120)";
+      const future = document.createElement("button");
+      future.textContent = "Future field target";
+      future.style.cssText =
+        "width:12px;height:12px;min-width:0;min-height:0;padding:0;" +
+        "font-size:8px;outline:2px solid rgb(120 120 120)";
+      futureBackdrop.append(future);
+      root.append(futureBackdrop);
+      const futureRect = future.getBoundingClientRect();
+      const futureFocusFailure = inspectFocusRing(future);
+      const futureProof = futureRect.width < minimumTargetSize &&
+        Number.parseFloat(getComputedStyle(future).fontSize) < 13 &&
+        futureFocusFailure !== undefined;
+      futureBackdrop.remove();
+      if (!futureProof) {
+        failures.push("Synthetic future field target escaped an axis detector");
+      }
+    } finally {
+      root.removeAttribute("data-discern-field-axis-conformance");
+      motionOverride.remove();
+      for (const [property, value] of initial) {
+        if (value === "") root.style.removeProperty(property);
+        else root.style.setProperty(property, value);
+      }
+    }
+
+    if (targetChecks === 0 || textFloorChecks === 0 || focusRingChecks === 0) {
+      failures.push("Field-axis browser check exercised an empty population");
+    }
+    if (failures.length > 0) {
+      throw new Error(`Field-axis reach failed:\n${failures.join("\n")}`);
+    }
+    return {
+      points: points.length,
+      targetChecks,
+      textFloorChecks,
+      focusRingChecks,
+    };
+  });
+}
+
+async function verifyStatusWitnesses(page: Page): Promise<number> {
+  return await page.evaluate(() => {
+    const normalize = (value: string): string =>
+      value.toLowerCase().replace(/[^a-z0-9]+/gu, " ").trim();
+    const namesState = (value: string, state: string): boolean =>
+      ` ${normalize(value)} `.includes(` ${normalize(state)} `);
+    const hidden = (element: Element): boolean =>
+      element.closest(
+        "[aria-hidden='true'],[hidden],script,style,template,.discern-visually-hidden,.sr-only",
+      ) !== null;
+    const visibleText = (root: Element): string => {
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const text: string[] = [];
+      for (
+        let node = walker.nextNode();
+        node !== null;
+        node = walker.nextNode()
+      ) {
+        const parent = node.parentElement;
+        if (parent !== null && !hidden(parent)) {
+          text.push(node.textContent ?? "");
+        }
+      }
+      return text.join(" ");
+    };
+    const textForIds = (ids: string): string =>
+      ids.split(/\s+/u).map((id) =>
+        document.getElementById(id)?.textContent ?? ""
+      ).join(" ");
+    const accessibleName = (element: Element): string =>
+      element.getAttribute("aria-label") ?? element.getAttribute("alt") ??
+        (element.getAttribute("aria-labelledby") === null
+          ? undefined
+          : textForIds(element.getAttribute("aria-labelledby") ?? "")) ??
+        element.getAttribute("title") ??
+        element.querySelector("title")?.textContent ?? "";
+    const icon = (element: Element): boolean =>
+      element.matches("img,svg,[role='img']") ||
+      /(?:^|[-_\s])(?:icon|glyph|marker|sigil)(?:$|[-_\s])/iu.test(
+        element.getAttribute("class") ?? "",
+      );
+    const inspect = (element: HTMLElement): string | undefined => {
+      const attribute = element.hasAttribute("data-discern-tone")
+        ? "data-discern-tone"
+        : "data-discern-status";
+      const state = element.getAttribute(attribute)?.trim() ?? "";
+      if (state === "" || namesState(visibleText(element), state)) {
+        return undefined;
+      }
+      const namedIcon = [element, ...element.querySelectorAll("*")].some(
+        (candidate) =>
+          !hidden(candidate) && icon(candidate) &&
+          namesState(accessibleName(candidate), state),
+      );
+      if (namedIcon) return undefined;
+      const component = element.closest<HTMLElement>(
+        "[data-discern-component]",
+      )?.dataset.discernComponent ?? "unknown";
+      return `${component} ${attribute}="${state}" lacks a visible state label or named icon`;
+    };
+
+    const elements = [...document.querySelectorAll<HTMLElement>(
+      ".discern-catalogue-component__canvas [data-discern-tone]," +
+        ".discern-catalogue-component__canvas [data-discern-status]",
+    )];
+    const failures = elements.flatMap((element) => {
+      const failure = inspect(element);
+      return failure === undefined ? [] : [failure];
+    });
+    const fixture = document.createElement("span");
+    fixture.dataset.discernStatus = "blocked";
+    fixture.innerHTML = '<span class="future-icon" aria-hidden="true">!</span>';
+    document.body.append(fixture);
+    const futureProof = inspect(fixture) !== undefined;
+    fixture.remove();
+    if (!futureProof) {
+      failures.push("A synthetic missing status witness escaped the detector");
+    }
+    if (elements.length === 0) {
+      failures.push(
+        "The status-witness browser contract exercised no elements",
+      );
+    }
+    if (failures.length > 0) {
+      throw new Error(`Status witnesses failed:\n${failures.join("\n")}`);
+    }
+    return elements.length;
+  });
 }
 
 async function scanAccessibility(
@@ -1416,6 +1860,11 @@ async function verifyForcedColors(
 
 export interface ComponentContractEvidence {
   readonly floatingSurfaces: number;
+  readonly fieldAxisPoints: number;
+  readonly fieldAxisTargetChecks: number;
+  readonly fieldAxisTextFloorChecks: number;
+  readonly fieldAxisFocusRingChecks: number;
+  readonly statusWitnessChecks: number;
   readonly accessibilityScans: number;
   readonly scenarios: number;
   readonly screenshots: number;
@@ -1443,6 +1892,8 @@ export async function runComponentContractConformance(
     "Catalogue examples must start quiescent; an auto-open modal makes every unrelated example inert",
   );
   const floatingSurfaces = await verifyFloatingSurfaceCure(page);
+  const fieldAxisReach = await verifyFieldAxisReach(page);
+  const statusWitnessChecks = await verifyStatusWitnesses(page);
   let accessibilityScans = 0;
   for (const theme of ["light", "dark"] as const) {
     await loadConformancePage(page, conformanceUrl(origin, theme));
@@ -1492,6 +1943,11 @@ export async function runComponentContractConformance(
   );
   return {
     floatingSurfaces,
+    fieldAxisPoints: fieldAxisReach.points,
+    fieldAxisTargetChecks: fieldAxisReach.targetChecks,
+    fieldAxisTextFloorChecks: fieldAxisReach.textFloorChecks,
+    fieldAxisFocusRingChecks: fieldAxisReach.focusRingChecks,
+    statusWitnessChecks,
     accessibilityScans,
     scenarios,
     screenshots,

@@ -44,6 +44,9 @@
     --discern-marketing-accent-ink: var(--discern-color-inverse-ink);
     background: var(--discern-color-canvas);
   }
+  .discern-marketing-section--contrast :focus-visible {
+    outline-color: var(--discern-color-inverse-ink);
+  }
   .discern-marketing-section__inner {
     width: min(100% - 2 * var(--discern-space-6),
       var(--discern-marketing-section-max));

@@ -82,7 +82,7 @@
     color: var(--discern-color-accent-700);
     font-weight: var(--discern-font-weight-strong);
   }
-  @media (max-width: 760px) {
+  @media (max-width: 47.5rem) {
     .discern-related-content__inner > header,
     .discern-related-content__grid {
       grid-template-columns: 1fr;

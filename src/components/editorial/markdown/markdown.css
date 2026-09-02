@@ -15,8 +15,8 @@
 
   .discern-markdown__footnote-reference > a {
     display: inline-flex;
-    min-inline-size: 24px;
-    min-block-size: 24px;
+    min-inline-size: 1.5rem;
+    min-block-size: 1.5rem;
     align-items: center;
     justify-content: center;
     font-size: var(--discern-font-size-xs);

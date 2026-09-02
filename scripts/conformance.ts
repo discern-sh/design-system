@@ -52,6 +52,11 @@ const WIDE_VIEWPORT = { width: 1440, height: 1000 } as const;
 
 const emptyComponentEvidence: ComponentContractEvidence = {
   floatingSurfaces: 0,
+  fieldAxisPoints: 0,
+  fieldAxisTargetChecks: 0,
+  fieldAxisTextFloorChecks: 0,
+  fieldAxisFocusRingChecks: 0,
+  statusWitnessChecks: 0,
   accessibilityScans: 0,
   scenarios: 0,
   screenshots: 0,
@@ -182,7 +187,6 @@ export async function runConformance(): Promise<void> {
         );
       }
     }
-
     const review = await verifyComponentReviewInstrument(
       activeBrowser,
       origin,
@@ -238,6 +242,12 @@ export async function runConformance(): Promise<void> {
         `metadata-role checks; ` +
         `${components.screenshots + 1} review screenshots; ` +
         `${components.floatingSurfaces} floating surfaces share the clipping cure. ` +
+        `Field-axis reach passed ${components.fieldAxisTargetChecks} touch-target ` +
+        `and ${components.fieldAxisTextFloorChecks} xs-floor checks plus ` +
+        `${components.fieldAxisFocusRingChecks} focus-ring contrast checks across ` +
+        `${components.fieldAxisPoints} darkness points at density 0.8 and ` +
+        `structure 0.35; ${components.statusWitnessChecks} rendered status ` +
+        `elements retain non-colour witnesses. ` +
         `Catalogue shell passed ${shell.routeShapes} route shapes, ` +
         `${shell.axeScans} axe scans, ${shell.reflowChecks} reflow checks, ` +
         `${shell.drawerChecks} drawer checks, ${shell.navigationChecks} navigation checks, ` +

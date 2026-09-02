@@ -80,7 +80,7 @@
     text-align: end;
   }
   .discern-code-listing__line--highlighted {
-    border-inline-start: 2px solid var(--discern-color-accent-500);
+    border-inline-start: 0.125rem solid var(--discern-color-accent-500);
     background: var(--discern-color-accent-100);
   }
   .discern-code-listing figcaption {
@@ -117,6 +117,9 @@
     background: var(--discern-color-inverse-surface);
     color: color-mix(in oklab,
       var(--discern-color-inverse-ink) 90%, transparent);
+  }
+  .discern-code-listing--showcase .discern-code-listing__body:focus-visible {
+    outline-color: var(--discern-color-inverse-ink);
   }
   .discern-code-listing--showcase .discern-code-listing__line--highlighted {
     background: color-mix(in oklab,

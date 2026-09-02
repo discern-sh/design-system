@@ -3,6 +3,7 @@
     display: inline-flex;
     align-items: center;
     gap: var(--discern-space-2);
+    min-block-size: 1.5rem;
     padding: var(--discern-space-1) var(--discern-space-3);
     border: 1px solid var(--discern-color-border-strong);
     border-radius: var(--discern-radius-sm);
