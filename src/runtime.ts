@@ -24,7 +24,7 @@ import {
   type RuntimeAssetSelection,
   runtimeAssetSelections,
 } from "./runtime-assets.ts";
-import { discernThemeCss } from "./theme/discern.ts";
+import { blueThemeCss } from "./theme/blue.ts";
 import { allTokens, baseTokens, themeTokens } from "./tokens/tokens.ts";
 import {
   type ComponentGroup,
@@ -44,7 +44,7 @@ export interface RuntimeOptions {
   readonly groups?: readonly ComponentGroup[];
   readonly all?: boolean;
   readonly assets?: readonly RuntimeAssetSelection[];
-  readonly theme?: "discern" | "none";
+  readonly theme?: "blue" | "none";
 }
 
 /** Counts and the emitted manifest returned by a runtime emission. */
@@ -124,10 +124,10 @@ export const runtimeCssSurfaceRegistry: readonly RuntimeCssSurface[] = [
     ownedClasses: [],
   },
   {
-    id: "theme:discern",
+    id: "theme:blue",
     kind: "theme",
     outputPath: "discern.css",
-    css: discernThemeCss,
+    css: blueThemeCss,
     ownedClasses: [],
   },
   {
@@ -296,7 +296,7 @@ export async function emitDesignSystemRuntime(
   const selection = resolveSelection(options);
   const assets = selectedAssets(options.assets);
   const behaviors = selectedComponentBehaviors(selection.entries);
-  const theme = options.theme ?? "discern";
+  const theme = options.theme ?? "none";
   await removeIfPresent(options.outputRoot);
   await mkdir(options.outputRoot, { recursive: true });
 
@@ -305,7 +305,7 @@ export async function emitDesignSystemRuntime(
   );
   const css = runtimeCssSurfaceRegistry.filter((surface) => {
     if (surface.kind === "asset") return false;
-    if (surface.kind === "theme") return theme === "discern";
+    if (surface.kind === "theme") return theme === "blue";
     return surface.componentId === undefined ||
       selectedComponentIds.has(surface.componentId);
   }).map((surface) => surface.css)

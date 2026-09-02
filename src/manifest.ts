@@ -54,7 +54,7 @@ export interface RuntimeManifest {
     readonly requestedGroups: readonly ComponentGroup[];
     readonly resolvedComponents: readonly string[];
     readonly assets: readonly RuntimeAssetSelection[];
-    readonly theme: "discern" | "none";
+    readonly theme: "blue" | "none";
   };
   readonly groups: readonly ManifestGroup[];
   readonly components: readonly ManifestComponent[];

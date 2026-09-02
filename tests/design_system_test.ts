@@ -1666,8 +1666,8 @@ Deno.test("neutral entrypoints work in an external cached-only Deno project", as
         "../src/runtime.ts",
         import.meta.url,
       ).href,
-      "@discern-sh/design-system/theme/discern": new URL(
-        "../src/theme/discern.ts",
+      "@discern-sh/design-system/theme/blue": new URL(
+        "../src/theme/blue.ts",
         import.meta.url,
       ).href,
       "@discern-sh/design-system/tokens": new URL(
@@ -1692,7 +1692,7 @@ Deno.test("neutral entrypoints work in an external cached-only Deno project", as
 import { renderBadgeCli } from "@discern-sh/design-system/cli";
 import { renderDiagramSvg } from "@discern-sh/design-system/diagram";
 import { emitDesignSystemRuntime } from "@discern-sh/design-system/runtime";
-import { discernTheme } from "@discern-sh/design-system/theme/discern";
+import { blueTheme } from "@discern-sh/design-system/theme/blue";
 const flow = {
   kind: "flow",
   title: "Check a reference",
@@ -1713,7 +1713,7 @@ console.log(JSON.stringify({
   components: result.components,
   diagram: renderDiagramSvg(flow).includes('role="img"'),
   package: packageManifest.package,
-  theme: discernTheme.name,
+  theme: blueTheme.name,
 }));
 `,
     );
@@ -2066,7 +2066,7 @@ Deno.test("masked provider-strip marks swap brand artwork for a neutral dark sil
     await emitDesignSystemRuntime({
       outputRoot: toFileUrl(`${output}/`),
       components: ["logo-cloud"],
-      theme: "discern",
+      theme: "blue",
     });
     const css = await Deno.readTextFile(join(output, "discern.css"));
     const markup = renderToStaticMarkup(createElement(LogoCloud, {

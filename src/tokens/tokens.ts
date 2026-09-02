@@ -13,6 +13,7 @@ import {
   fieldColorRoleLaws,
   fieldShadowRoleLaws,
 } from "./field.ts";
+import { blueThemeTokens } from "../theme/blue.ts";
 
 export * from "./field.ts";
 
@@ -57,30 +58,13 @@ const themeToken = (
   category: TokenCategory = "Color",
 ): ThemeToken => ({ name, light, dark, category, description });
 
-/** Public values owned by the default blue preset, not by the semantic base. */
-export const discernThemeTokens: readonly DesignToken[] = [
-  token(
-    "--discern-accent-hue",
-    "255",
-    "Color",
-    "Master hue for the default Discern accent family. Consumer overrides near a semantic role must override that role coherently and re-run contrast and distinction checks.",
-  ),
-];
+export { blueThemeTokens } from "../theme/blue.ts";
+
+/** @deprecated Import `blueThemeTokens` from `./theme/blue` while migrating. */
+export const discernThemeTokens = blueThemeTokens;
 
 /** Framework-neutral primitives and system-font defaults shared by every theme. */
 export const baseTokens: readonly DesignToken[] = [
-  token(
-    "--discern-ink-hue",
-    "285",
-    "Color",
-    "Master hue for cool ink neutrals.",
-  ),
-  token(
-    "--discern-canvas-hue",
-    "80.72",
-    "Color",
-    "Master hue for canvas neutrals.",
-  ),
   token(
     "--discern-font-display",
     '"Iowan Old Style", "Palatino Linotype", Georgia, ui-serif, serif',
@@ -266,7 +250,7 @@ export const baseTokens: readonly DesignToken[] = [
 /** Compatibility inventory for catalogue consumers; base and preset stay distinct. */
 export const designTokens: readonly DesignToken[] = [
   ...baseTokens,
-  ...discernThemeTokens,
+  ...blueThemeTokens,
 ];
 
 const lightField = evaluateField({ darkness: 0 });

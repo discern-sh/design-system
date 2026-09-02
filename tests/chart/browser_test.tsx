@@ -223,7 +223,7 @@ Deno.test("React Chart browser matrix holds for every generated corpus case", as
     await emitDesignSystemRuntime({
       outputRoot: toFileUrl(`${output}/`),
       components: ["chart", "data-figure"],
-      theme: "discern",
+      theme: "blue",
     });
     const runtimeCss = await Deno.readTextFile(join(output, "discern.css"));
     const palettes = new Map<string, ChartBrowserInspection>();
@@ -335,7 +335,7 @@ Deno.test("Chart and DataFigure compositions are Axe-clean in light, dark, and f
     await emitDesignSystemRuntime({
       outputRoot: toFileUrl(`${output}/`),
       components: ["chart", "data-figure"],
-      theme: "discern",
+      theme: "blue",
     });
     const css = await Deno.readTextFile(join(output, "discern.css"));
     const markup = (theme: "light" | "dark") =>
