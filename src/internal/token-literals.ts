@@ -5,11 +5,7 @@
  * @module
  */
 
-import {
-  baseTokens,
-  discernThemeTokens,
-  themeTokens,
-} from "../tokens/tokens.ts";
+import { baseTokens, themeTokens } from "../tokens/tokens.ts";
 
 /** Explicit palette variant resolvable without a live cascade. */
 export type TokenPaletteVariant = "light" | "dark";
@@ -20,7 +16,6 @@ export function authoredTokenValues(
 ): ReadonlyMap<string, string> {
   return new Map([
     ...baseTokens.map((token) => [token.name, token.value] as const),
-    ...discernThemeTokens.map((token) => [token.name, token.value] as const),
     ...themeTokens.map((token) => [token.name, token[variant]] as const),
   ]);
 }
