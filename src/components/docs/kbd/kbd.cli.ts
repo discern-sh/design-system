@@ -6,19 +6,21 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { truncateText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./kbd.meta.ts";
 
 /** Inputs accepted by the terminal Kbd renderer. */
-export interface KbdCliProps {
+export interface KbdCliProps extends CliPresentationOptions {
   readonly label: string;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -49,7 +51,7 @@ const renderKbdCli: CliRenderer<KbdCliProps> = (props, capabilities) => {
     width - 4,
     capabilities.unicode ? "…" : ".",
   );
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   return styleText(`[ ${label} ]`, {
     ...theme.typography.strong,
     color: terminalThemeColor(theme, "--discern-color-ink"),

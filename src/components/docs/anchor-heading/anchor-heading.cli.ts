@@ -6,17 +6,17 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import { withCliHeadingBoundary } from "../../../cli/heading-boundary.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import {
-  motifPassthrough,
-  type TerminalMotifOptions,
-} from "../../../cli/motif.ts";
-import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import {
   type MotifSectionRuleTreatment,
@@ -26,12 +26,11 @@ import meta, { componentExampleVocabulary } from "./anchor-heading.meta.ts";
 import type { AnchorHeadingLevel } from "./anchor-heading.types.ts";
 
 /** Inputs accepted by the terminal Anchor heading renderer. */
-export interface AnchorHeadingCliProps extends TerminalMotifOptions {
+export interface AnchorHeadingCliProps extends CliPresentationOptions {
   readonly id: string;
   readonly text: string;
   readonly level?: AnchorHeadingLevel;
   readonly showTarget?: boolean;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
   /** Full-width section-boundary treatment; defaults to `embedded`. */
   readonly treatment?: MotifSectionRuleTreatment;
@@ -83,15 +82,14 @@ const renderAnchorHeadingCli: CliRenderer<AnchorHeadingCliProps> = (
   const prefix = `${"#".repeat(level)} `;
   const label = `${prefix}${props.text}`;
   const rule = renderMotifSectionRule(label, {
+    ...cliPresentationPassthrough(props),
     width,
-    ...(props.theme === undefined ? {} : { theme: props.theme }),
     ...(props.treatment === undefined ? {} : { treatment: props.treatment }),
-    ...motifPassthrough(props),
   }, capabilities);
   if (props.showTarget !== true) {
     return withCliHeadingBoundary(rule, props.leadingBlankLines);
   }
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   return withCliHeadingBoundary(
     joinVertical([
       rule,

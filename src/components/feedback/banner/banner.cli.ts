@@ -6,21 +6,20 @@
 
 import { renderBox } from "../../../cli/box.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import type { BannerTone } from "./banner.types.ts";
 import meta, { componentExampleVocabulary } from "./banner.meta.ts";
 
 /** Inputs accepted by the terminal Banner renderer. */
-export interface BannerCliProps {
+export interface BannerCliProps extends CliPresentationOptions {
   readonly message: string;
   readonly title?: string;
   readonly tone?: BannerTone;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -52,7 +51,7 @@ const renderBannerCli: CliRenderer<BannerCliProps> = (props, capabilities) => {
     throw new TypeError("banner message must be non-empty");
   }
   const tone = props.tone ?? "neutral";
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   return renderBox({
     body: props.message,
     title: props.title ?? tone[0]?.toLocaleUpperCase() + tone.slice(1),

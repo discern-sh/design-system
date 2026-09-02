@@ -6,10 +6,15 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
 import {
-  terminalThemes,
+  resolveTerminalTheme,
   type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
@@ -20,7 +25,8 @@ import type {
 } from "./theme-toggle.types.ts";
 
 /** Inputs accepted by the terminal Theme toggle renderer. */
-export interface ThemeToggleCliProps {
+export interface ThemeToggleCliProps
+  extends Omit<CliPresentationOptions, "theme"> {
   readonly theme: ThemeToggleTheme;
   readonly toLightLabel?: string;
   readonly toDarkLabel?: string;
@@ -73,7 +79,10 @@ const renderThemeToggleCli: CliRenderer<ThemeToggleCliProps> = (
     capabilities.unicode ? "…" : ".",
   );
   const frame = outlined ? `[ ${glyph} ${text} ]` : `${glyph} ${text}`;
-  const theme = terminalThemes[props.palette ?? props.theme];
+  const theme = resolveTerminalTheme({
+    ...cliPresentationPassthrough(props),
+    theme: props.palette ?? props.theme,
+  });
   return styleText(
     frame,
     {

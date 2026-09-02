@@ -6,28 +6,24 @@
 
 import { renderStyledSpans, styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import {
-  motifPassthrough,
-  type TerminalMotifOptions,
-} from "../../../cli/motif.ts";
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import { measureText, padText, truncateText } from "../../../cli/text.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import { renderMotifPattern } from "../../../cli/motifs.ts";
 import meta, { componentExampleVocabulary } from "./logo.meta.ts";
 import type { LogoShape, LogoSize, LogoTreatment } from "./logo.types.ts";
 
 /** Inputs accepted by the terminal Logo renderer. */
-export interface LogoCliProps extends TerminalMotifOptions {
+export interface LogoCliProps extends CliPresentationOptions {
   readonly text: string;
   readonly size?: LogoSize;
   readonly treatment?: LogoTreatment;
   readonly shape?: LogoShape;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -62,19 +58,12 @@ const renderLogoCli: CliRenderer<LogoCliProps> = (props, capabilities) => {
   const width = Math.min(requestedWidth, capabilities.columns);
   const treatment = props.treatment ?? "plain";
   const shape = props.shape ?? "natural";
-  const theme = terminalThemes[props.theme ?? "dark"];
-  const markOptions = props.theme === undefined
-    ? {
-      length: 1,
-      register: "brand" as const,
-      ...motifPassthrough(props),
-    }
-    : {
-      length: 1,
-      theme: props.theme,
-      register: "brand" as const,
-      ...motifPassthrough(props),
-    };
+  const theme = resolveTerminalTheme(props);
+  const markOptions = {
+    length: 1,
+    register: "brand" as const,
+    ...cliPresentationPassthrough(props),
+  };
   const mark = renderMotifPattern(markOptions, capabilities);
   const frameCells = treatment === "tile" ? 2 : 0;
 

@@ -6,22 +6,21 @@
 
 import { renderBox } from "../../../cli/box.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defaultTerminalFrameWidth } from "../../../cli/frame-measure.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import type { ToastTone } from "./toast.types.ts";
 import meta, { componentExampleVocabulary } from "./toast.meta.ts";
 
 /** Inputs accepted by the terminal Toast renderer. */
-export interface ToastCliProps {
+export interface ToastCliProps extends CliPresentationOptions {
   readonly message: string;
   readonly tone?: ToastTone;
   readonly dismissible?: boolean;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -60,7 +59,7 @@ const renderToastCli: CliRenderer<ToastCliProps> = (props, capabilities) => {
     throw new TypeError("toast message must be non-empty");
   }
   const tone = props.tone ?? "neutral";
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const dismiss = props.dismissible === true
     ? `  ${capabilities.unicode ? "×" : "x"}`
     : "";

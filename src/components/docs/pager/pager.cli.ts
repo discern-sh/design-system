@@ -6,13 +6,13 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./pager.meta.ts";
 
 /** One terminal Pager destination. */
@@ -22,13 +22,12 @@ export interface PagerCliLink {
 }
 
 /** Inputs accepted by the terminal Pager renderer. */
-export interface PagerCliProps {
+export interface PagerCliProps extends CliPresentationOptions {
   readonly previous?: PagerCliLink;
   readonly next?: PagerCliLink;
   readonly previousLabel?: string;
   readonly nextLabel?: string;
   readonly showTargets?: boolean;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -88,7 +87,7 @@ const renderPagerCli: CliRenderer<PagerCliProps> = (props, capabilities) => {
   const boundedNext = next === undefined
     ? undefined
     : truncateText(next, width, capabilities.unicode ? "…" : ".");
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const renderLink = (value: string): string =>
     styleText(value, {
       ...theme.typography.strong,

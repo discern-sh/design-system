@@ -6,24 +6,23 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./button.meta.ts";
 import type { ButtonSize, ButtonVariant } from "./button.types.ts";
 
 /** Inputs accepted by the terminal Button renderer. */
-export interface ButtonCliProps {
+export interface ButtonCliProps extends CliPresentationOptions {
   readonly label: string;
   readonly variant?: ButtonVariant;
   readonly size?: ButtonSize;
   readonly leadingIcon?: string;
   readonly trailingIcon?: string;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -90,7 +89,7 @@ const renderButtonCli: CliRenderer<ButtonCliProps> = (props, capabilities) => {
   const content = `${
     props.leadingIcon === undefined ? "" : `${props.leadingIcon} `
   }${label}${props.trailingIcon === undefined ? "" : ` ${props.trailingIcon}`}`;
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const tone = variant === "danger"
     ? "danger"
     : variant === "secondary" || variant === "ghost"

@@ -7,21 +7,20 @@
 import { styleText } from "../../../cli/ansi.ts";
 import { renderBox } from "../../../cli/box.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./empty-state.meta.ts";
 
 /** Inputs accepted by the terminal Empty state renderer. */
-export interface EmptyStateCliProps {
+export interface EmptyStateCliProps extends CliPresentationOptions {
   readonly title: string;
   readonly description?: string;
   readonly action?: string;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -50,7 +49,7 @@ const renderEmptyStateCli: CliRenderer<EmptyStateCliProps> = (
   if (props.title.trim() === "") {
     throw new TypeError("empty-state title must be non-empty");
   }
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const mark = capabilities.unicode ? "◇" : "*";
   const action = props.action === undefined ? "" : styleText(
     `${capabilities.unicode ? "→" : "->"} ${props.action}`,

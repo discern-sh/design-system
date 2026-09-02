@@ -6,13 +6,13 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { wrapInlineCluster } from "../../../cli/layout.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./breadcrumbs.meta.ts";
 
 /** One terminal breadcrumb ancestor. */
@@ -22,12 +22,11 @@ export interface BreadcrumbsCliItem {
 }
 
 /** Inputs accepted by the terminal Breadcrumbs renderer. */
-export interface BreadcrumbsCliProps {
+export interface BreadcrumbsCliProps extends CliPresentationOptions {
   readonly items?: readonly BreadcrumbsCliItem[];
   readonly current: string;
   readonly label?: string;
   readonly separator?: string;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -84,7 +83,7 @@ const renderBreadcrumbsCli: CliRenderer<BreadcrumbsCliProps> = (
       : `${item.label} ${separator}`
   );
   const path = wrapInlineCluster(pieces, { columns: width, gap: 1 });
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const rendered = styleText(path, {
     ...theme.typography.strong,
     color: terminalToneColor(theme, "accent"),
