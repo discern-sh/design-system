@@ -37,16 +37,23 @@ const PUBLIC_ENTRYPOINTS =
 const VERSION_EXPECTATION =
   "States the exact package version or checkout the answer was authored against.";
 
-/** The pinned light-theme image for a Component's canonical Web example. */
+/**
+ * The pinned light-theme image for a Component's canonical Web example. Every
+ * validated vocabulary carries one — a rendered stance needs a shared example
+ * and an exempt stance is Web-only — so an inventory without it is a defect.
+ */
 export function componentReferenceImage(
   source: ComponentAuthorGuideSource,
-): string | undefined {
+): string {
   const example = source.examples.find(({ surfaces }) =>
     surfaces.includes("web")
   );
-  return example === undefined
-    ? undefined
-    : `catalogue/generated/example-images/${source.meta.slug}--${example.id}--light.png`;
+  if (example === undefined) {
+    throw new Error(
+      `${source.meta.slug} has no Web example to pin a reference image to`,
+    );
+  }
+  return `catalogue/generated/example-images/${source.meta.slug}--${example.id}--light.png`;
 }
 
 function selectionEval(
@@ -59,14 +66,13 @@ function selectionEval(
   const terminal = meta.cli.stance === "rendered"
     ? `or \`render${pascal}Cli\` from ./cli`
     : "(no terminal renderer: the Component is exempt)";
-  const image = componentReferenceImage(source);
   return {
     id,
     prompt:
       `Situation: ${statement}\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer.`,
     expected_output:
-      `Selects ${meta.name} (\`${meta.slug}\`) and authors it as \`${pascal}\` from ./react ${terminal} after emitting a runtime that selects \`${meta.slug}\`.${
-        image === undefined ? "" : ` Reference image: ${image}`
+      `Selects ${meta.name} (\`${meta.slug}\`) and authors it as \`${pascal}\` from ./react ${terminal} after emitting a runtime that selects \`${meta.slug}\`. Reference image: ${
+        componentReferenceImage(source)
       }`,
     files: [],
     expectations: [

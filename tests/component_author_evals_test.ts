@@ -1,4 +1,9 @@
-import { assert, assertEquals, assertStringIncludes } from "@std/assert";
+import {
+  assert,
+  assertEquals,
+  assertStringIncludes,
+  assertThrows,
+} from "@std/assert";
 import {
   COMPONENT_AUTHOR_SKILL,
   type ComponentAuthorEvalSet,
@@ -100,20 +105,44 @@ Deno.test("Components without guidance statements contribute no evals", () => {
   ) as ComponentAuthorEvalSet;
   assertEquals(set.evals, []);
   assertEquals(
-    componentReferenceImage(
-      source(bare, [{
-        id: "only-terminal",
-        label: "Terminal only",
-        only: "cli",
-        reason:
-          "This posture depends on terminal cell geometry that browsers do not expose.",
-      }]),
-    ),
-    undefined,
-  );
-  assertEquals(
     componentReferenceImage(source(bare)),
     "catalogue/generated/example-images/bare-mark--default--light.png",
+  );
+});
+
+Deno.test("a reference image needs a Web example, which every valid vocabulary has", () => {
+  const exempt: ComponentMeta = {
+    name: "Probe field",
+    slug: "probe-field",
+    group: "Artwork",
+    order: 999,
+    cli: {
+      stance: "exempt",
+      reason:
+        "Probe field paints a continuous decorative browser plane that terminal cells cannot represent.",
+    },
+    description: "A synthetic decorative field.",
+    useWhen: ["A canvas needs a synthetic field."],
+  };
+  assertEquals(
+    componentReferenceImage(
+      source(exempt, [{ id: "default", label: "Probe field", only: "web" }]),
+    ),
+    "catalogue/generated/example-images/probe-field--default--light.png",
+  );
+  const terminalOnly: ComponentAuthorGuideSource = {
+    meta: exempt,
+    examples: [{ id: "frame", label: "Frame", surfaces: ["cli"] }],
+  };
+  assertThrows(
+    () => componentReferenceImage(terminalOnly),
+    Error,
+    "no Web example",
+  );
+  assertThrows(
+    () => renderComponentAuthorEvals([terminalOnly]),
+    Error,
+    "no Web example",
   );
 });
 
