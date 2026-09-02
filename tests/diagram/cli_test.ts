@@ -4,9 +4,12 @@ import {
   assertInstanceOf,
   assertThrows,
 } from "@std/assert";
-import { stripAnsi } from "../../src/cli/ansi.ts";
+import { stripAnsi, styleText } from "../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
-import { resolveCliExampleCapabilities } from "../../src/cli/contracts.ts";
+import {
+  type CliPresentationOptions,
+  resolveCliExampleCapabilities,
+} from "../../src/cli/contracts.ts";
 import { renderDiagramCli } from "../../src/cli/mod.ts";
 import {
   assertExactFrame,
@@ -14,6 +17,11 @@ import {
   testTerminalCapabilities,
 } from "../../src/cli/interactive/testing.ts";
 import { measureText } from "../../src/cli/text.ts";
+import {
+  resolveTerminalTheme,
+  terminalToneColor,
+} from "../../src/cli/theme.ts";
+import { accentAppearance, fieldAppearance } from "../../src/tokens/tokens.ts";
 import { cliReleaseFixtures } from "../../src/components/editorial/diagram/diagram.cli.ts";
 import {
   describeDiagram,
@@ -64,9 +72,10 @@ function render(
   spec: FlowDiagramSpec,
   capabilities: TerminalCapabilities,
   mode: "auto" | "description" = "auto",
+  presentation: CliPresentationOptions = {},
 ): string {
   return renderDiagramCli(
-    { spec, mode, maxWidth: capabilities.columns },
+    { ...presentation, spec, mode, maxWidth: capabilities.columns },
     capabilities,
   );
 }
@@ -116,6 +125,60 @@ Deno.test("flow CLI is byte-stable and bounded across widths and capabilities", 
       }
     }
   }
+});
+
+Deno.test("diagram projections select local Accent without changing semantics", () => {
+  for (const theme of ["light", "dark"] as const) {
+    const fieldPresentation = { theme, appearance: fieldAppearance } as const;
+    const accentPresentation = {
+      theme,
+      appearance: accentAppearance(245),
+    } as const;
+    for (
+      const colorDepth of ["truecolor", "ansi256", "ansi16"] as const
+    ) {
+      const capabilities = testTerminalCapabilities({
+        columns: 96,
+        colorDepth,
+        hyperlinks: false,
+      });
+      const field = render(
+        decisionFlow,
+        capabilities,
+        "auto",
+        fieldPresentation,
+      );
+      const accent = render(
+        decisionFlow,
+        capabilities,
+        "auto",
+        accentPresentation,
+      );
+      assertEquals(stripAnsi(accent), stripAnsi(field));
+      assert(
+        accent !== field,
+        `${theme} ${colorDepth} diagram did not select Accent`,
+      );
+      const color = terminalToneColor(
+        resolveTerminalTheme(accentPresentation),
+        "accent",
+      );
+      const probe = styleText("x", { color }, capabilities);
+      assert(
+        accent.includes(probe.slice(0, probe.indexOf("x"))),
+        `${theme} ${colorDepth} diagram omitted the selected Accent code`,
+      );
+    }
+  }
+
+  const plain = testTerminalCapabilities({ columns: 96, colorDepth: "none" });
+  assertEquals(
+    render(decisionFlow, plain, "auto", {
+      theme: "light",
+      appearance: accentAppearance(245),
+    }),
+    render(decisionFlow, plain, "auto", { theme: "light" }),
+  );
 });
 
 Deno.test("enhanced flow output preserves the universal description facts", () => {

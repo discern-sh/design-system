@@ -1,8 +1,14 @@
 import { assert, assertEquals, assertRejects } from "@std/assert";
+import { styleText } from "../../src/cli/ansi.ts";
 import {
   type SpinnerScheduler,
   withActivityLog,
 } from "../../src/cli/interactive/activity.ts";
+import {
+  resolveTerminalTheme,
+  terminalToneColor,
+} from "../../src/cli/theme.ts";
+import { accentAppearance } from "../../src/tokens/tokens.ts";
 import {
   HIDE_TERMINAL_CURSOR,
   SHOW_TERMINAL_CURSOR,
@@ -88,6 +94,54 @@ Deno.test("the activity driver carries a consumer motif through live and stable 
     "\n",
     SHOW_TERMINAL_CURSOR,
   ]);
+});
+
+Deno.test("the activity driver carries Accent through live and collapsed frames", async () => {
+  const capabilities = testTerminalCapabilities({
+    colorDepth: "truecolor",
+    columns: 40,
+  });
+  const io = new FakeTerminalIO([], {
+    colorDepth: "truecolor",
+    columns: 40,
+    rows: 24,
+  });
+  const scheduler = new ManualScheduler();
+  const appearance = accentAppearance(335);
+  await withActivityLog(
+    {
+      label: "Build styles",
+      tailRows: 1,
+      io,
+      scheduler,
+      theme: "dark",
+      appearance,
+    },
+    (log) => {
+      log.pin("Context held", "success");
+      log.append("one");
+      scheduler.tick();
+      log.finish({ mode: "result", tone: "success", text: "Styles woven" });
+    },
+  );
+  const palette = resolveTerminalTheme({ theme: "dark", appearance });
+  const output = io.writes.join("");
+  assert(
+    output.includes(styleText(
+      "◐",
+      { color: terminalToneColor(palette, "accent") },
+      capabilities,
+    )),
+    "live Activity frame omitted the bound Accent code",
+  );
+  assert(
+    output.includes(styleText(
+      "✓",
+      { color: terminalToneColor(palette, "success") },
+      capabilities,
+    )),
+    "collapsed Activity frame omitted the selected success code",
+  );
 });
 
 Deno.test("a fast producer coalesces into one repaint per tick showing the last rows", async () => {
