@@ -92,29 +92,92 @@ const TONE_TOKENS = {
   Record<TerminalSemanticTone, TerminalColorTokenName>
 >;
 
+interface ParsedCssColor {
+  readonly color: TerminalRgbColor;
+  readonly chroma: number;
+}
+
 function parseCssColor(
   source: string,
-): TerminalRgbColor | undefined {
+): ParsedCssColor | undefined {
   const value = source.trim();
   const oklch = value.match(
     /^oklch\(\s*([0-9]+(?:\.[0-9]+)?)%\s+([0-9]+(?:\.[0-9]+)?)\s+(-?[0-9]+(?:\.[0-9]+)?)\s*\)$/u,
   );
   if (oklch !== null) {
-    return oklchToSrgb(
-      Number(oklch[1]) / 100,
-      Number(oklch[2]),
-      Number(oklch[3]),
-    );
+    const chroma = Number(oklch[2]);
+    return {
+      color: oklchToSrgb(
+        Number(oklch[1]) / 100,
+        chroma,
+        Number(oklch[3]),
+      ),
+      chroma,
+    };
   }
   return undefined;
 }
 
-function terminalColor(color: TerminalRgbColor): TerminalColor {
+function terminalColor(
+  color: TerminalRgbColor,
+  ansi16 = nearestPaletteIndex(color, ANSI_16_RGB),
+): TerminalColor {
   return {
     ...color,
     ansi256: nearestPaletteIndex(color, ANSI_256_RGB),
-    ansi16: nearestPaletteIndex(color, ANSI_16_RGB),
+    ansi16,
   };
+}
+
+function rgbHue(color: TerminalRgbColor): number | undefined {
+  const red = color.red / 255;
+  const green = color.green / 255;
+  const blue = color.blue / 255;
+  const maximum = Math.max(red, green, blue);
+  const minimum = Math.min(red, green, blue);
+  const range = maximum - minimum;
+  if (range === 0) return undefined;
+  const sector = maximum === red
+    ? (green - blue) / range
+    : maximum === green
+    ? (blue - red) / range + 2
+    : (red - green) / range + 4;
+  return ((sector * 60) % 360 + 360) % 360;
+}
+
+function circularHueDistance(first: number, second: number): number {
+  const distance = Math.abs(first - second);
+  return Math.min(distance, 360 - distance);
+}
+
+/**
+ * Keep an evaluated chromatic role chromatic in ANSI 16. Euclidean RGB
+ * proximity otherwise sends every pale role on dark ground to white. The
+ * finite palette has six hue families, so select the nearest family by its
+ * own RGB hue and use the ground-appropriate intensity. Collisions between
+ * nearby authored hues are then the palette's real six-family limit.
+ */
+function chromaticAnsi16Index(
+  color: TerminalRgbColor,
+  variant: TerminalThemeVariant,
+): number {
+  const hue = rgbHue(color);
+  if (hue === undefined) return nearestPaletteIndex(color, ANSI_16_RGB);
+  const first = variant === "light" ? 1 : 9;
+  let nearest = first;
+  let distance = Number.POSITIVE_INFINITY;
+  for (let index = first; index < first + 6; index += 1) {
+    const candidate = ANSI_16_RGB[index];
+    if (candidate === undefined) continue;
+    const candidateHue = rgbHue(candidate);
+    if (candidateHue === undefined) continue;
+    const candidateDistance = circularHueDistance(hue, candidateHue);
+    if (candidateDistance < distance) {
+      nearest = index;
+      distance = candidateDistance;
+    }
+  }
+  return nearest;
 }
 
 function numericToken(name: string): number {
@@ -187,21 +250,32 @@ export function deriveTerminalTheme(
       candidate.category === "Color"
     )
   ) {
-    const source = token.name in appearanceValues
-      ? appearanceValues[token.name as FieldColorRoleName]
-      : token[variant];
+    const appearanceValue = appearanceValues[
+      token.name as FieldColorRoleName
+    ];
+    const source = appearanceValue ??
+      (token.name.startsWith("--discern-color-series-")
+        ? token[variant]
+        : undefined);
     if (source === undefined) {
       throw new TypeError(
-        `Field did not evaluate terminal colour ${token.name}`,
+        `Appearance did not evaluate terminal colour ${token.name}`,
       );
     }
-    const color = parseCssColor(source);
-    if (color === undefined) {
+    const parsed = parseCssColor(source);
+    if (parsed === undefined) {
       throw new TypeError(
         `Cannot derive terminal colour ${token.name} from ${source}`,
       );
     }
-    colors[token.name] = terminalColor(color);
+    const preservesIndependentSeries = token.name.startsWith(
+      "--discern-color-series-",
+    );
+    const ansi16 = resolvedAppearance.name === "accent" &&
+        !preservesIndependentSeries && parsed.chroma > 0.0000001
+      ? chromaticAnsi16Index(parsed.color, variant)
+      : undefined;
+    colors[token.name] = terminalColor(parsed.color, ansi16);
   }
   return {
     variant,

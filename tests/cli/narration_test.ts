@@ -1,5 +1,6 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { stripAnsi } from "../../src/cli/ansi.ts";
+import { accentAppearance } from "../../src/tokens/tokens.ts";
 import {
   type NarrationLineKind,
   narrationLineRenderers,
@@ -10,13 +11,30 @@ import {
   renderWarningLine,
   styleSemanticText,
 } from "../../src/cli/narration.ts";
-import type { TerminalTextRole } from "../../src/cli/theme.ts";
+import {
+  resolveTerminalTheme,
+  type TerminalColor,
+  type TerminalTextRole,
+  terminalToneColor,
+} from "../../src/cli/theme.ts";
 import {
   assertExactFrame,
   testTerminalCapabilities,
 } from "../../src/cli/interactive/testing.ts";
 
 const ESC = "\u001b";
+
+function foregroundCode(
+  color: TerminalColor,
+  depth: "truecolor" | "ansi256" | "ansi16",
+): string {
+  if (depth === "truecolor") {
+    return `${ESC}[38;2;${color.red};${color.green};${color.blue}m`;
+  }
+  if (depth === "ansi256") return `${ESC}[38;5;${color.ansi256}m`;
+  const code = color.ansi16 < 8 ? 30 + color.ansi16 : 90 + color.ansi16 - 8;
+  return `${ESC}[${code}m`;
+}
 
 Deno.test("narration verbs render exact plain frames with Unicode markers", () => {
   const capabilities = testTerminalCapabilities();
@@ -80,6 +98,60 @@ Deno.test("narration markers carry exact Token-derived colour at every depth", (
     renderFailureLine({ text: "The check refused" }, ansi16),
     `${ESC}[97m✕${ESC}[0m The check refused`,
   );
+});
+
+Deno.test("narration selects exact Accent semantic codes across poles and depths", () => {
+  const cases = [
+    [renderSuccessLine, "Saved", "✓", "success"],
+    [renderNoteLine, "Noted", "▸", "accent"],
+    [renderWarningLine, "Review", "!", "warning"],
+    [renderFailureLine, "Refused", "✕", "danger"],
+  ] as const;
+  for (const hue of [28, 74, 120, 152, 255, 335]) {
+    const appearance = accentAppearance(hue);
+    for (const theme of ["light", "dark"] as const) {
+      const palette = resolveTerminalTheme({ theme, appearance });
+      for (
+        const colorDepth of ["truecolor", "ansi256", "ansi16"] as const
+      ) {
+        const capabilities = testTerminalCapabilities({ colorDepth });
+        for (const [render, text, marker, tone] of cases) {
+          assertEquals(
+            render({ text, theme, appearance }, capabilities),
+            `${foregroundCode(terminalToneColor(palette, tone), colorDepth)}` +
+              `${marker}${ESC}[0m ${text}`,
+            `${theme} Accent(${hue}) ${colorDepth} ${tone}`,
+          );
+        }
+      }
+    }
+  }
+});
+
+Deno.test("Accent narration keeps exact witnesses and emits no styling without colour", () => {
+  const appearance = accentAppearance(335);
+  const cases = [
+    [renderSuccessLine, "Saved", "✓ Saved", "+ Saved"],
+    [renderNoteLine, "Noted", "▸ Noted", "> Noted"],
+    [renderWarningLine, "Review", "! Review", "! Review"],
+    [renderFailureLine, "Refused", "✕ Refused", "x Refused"],
+  ] as const;
+  for (const [render, text, unicode, ascii] of cases) {
+    assertEquals(
+      render(
+        { text, theme: "light", appearance },
+        testTerminalCapabilities({ colorDepth: "none", unicode: true }),
+      ),
+      unicode,
+    );
+    assertEquals(
+      render(
+        { text, theme: "dark", appearance },
+        testTerminalCapabilities({ colorDepth: "none", unicode: false }),
+      ),
+      ascii,
+    );
+  }
 });
 
 Deno.test("narration lead lines take the strong uppercase title treatment", () => {

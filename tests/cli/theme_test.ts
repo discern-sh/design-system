@@ -19,6 +19,7 @@ import {
   resolveTerminalTheme,
   terminalThemeColor,
   terminalThemes,
+  terminalToneColor,
 } from "../../src/cli/theme.ts";
 
 Deno.test("terminal palettes enroll every authored semantic colour Token", () => {
@@ -30,6 +31,38 @@ Deno.test("terminal palettes enroll every authored semantic colour Token", () =>
     terminalThemeColor(terminalThemes.light, "--discern-color-canvas"),
     terminalThemeColor(terminalThemes.dark, "--discern-color-canvas"),
   );
+});
+
+Deno.test("only categorical series colours bypass the appearance evaluator", () => {
+  const appearanceRoles = new Set(fieldColorRoleLaws.map(({ name }) => name));
+  const independentRoles = themeTokens
+    .filter((token) =>
+      token.category === "Color" && !appearanceRoles.has(token.name)
+    )
+    .map(({ name }) => name)
+    .toSorted();
+  assertEquals(independentRoles, [
+    "--discern-color-series-1",
+    "--discern-color-series-2",
+    "--discern-color-series-3",
+    "--discern-color-series-4",
+    "--discern-color-series-5",
+    "--discern-color-series-6",
+  ]);
+
+  for (const variant of ["light", "dark"] as const) {
+    const accent = resolveTerminalTheme({
+      theme: variant,
+      appearance: accentAppearance(137.5),
+    });
+    for (const name of independentRoles) {
+      assertEquals(
+        accent.colors[name],
+        terminalThemes[variant].colors[name],
+        `${variant} ${name} must keep ADR 0032's fixed projection`,
+      );
+    }
+  }
 });
 
 Deno.test("truecolour values carry computed 256- and 16-colour fallbacks", () => {
@@ -107,6 +140,69 @@ Deno.test("terminal palette authority projects the complete Accent hue domain", 
         );
       }
     }
+  }
+});
+
+Deno.test("Accent semantic roles keep the strongest finite-palette distinction", () => {
+  const expected = {
+    light: {
+      ansi256: { accent: 5, success: 22, warning: 94, danger: 88 },
+      ansi16: { accent: 5, success: 2, warning: 3, danger: 1 },
+    },
+    dark: {
+      ansi256: { accent: 218, success: 151, warning: 222, danger: 210 },
+      ansi16: { accent: 13, success: 10, warning: 11, danger: 9 },
+    },
+  } as const;
+  for (const variant of ["light", "dark"] as const) {
+    const palette = resolveTerminalTheme({
+      theme: variant,
+      appearance: accentAppearance(335),
+    });
+    for (const tone of ["accent", "success", "warning", "danger"] as const) {
+      const color = terminalToneColor(palette, tone);
+      assertEquals(color.ansi256, expected[variant].ansi256[tone]);
+      assertEquals(color.ansi16, expected[variant].ansi16[tone]);
+    }
+    assertEquals(
+      new Set(
+        (["success", "warning", "danger"] as const).map((tone) =>
+          terminalToneColor(palette, tone).ansi256
+        ),
+      ).size,
+      3,
+    );
+    assertEquals(
+      new Set(
+        (["success", "warning", "danger"] as const).map((tone) =>
+          terminalToneColor(palette, tone).ansi16
+        ),
+      ).size,
+      3,
+    );
+  }
+});
+
+Deno.test("finite-palette collisions stay local to matching semantic hue families", () => {
+  const cases = [
+    { hue: 28, variant: "light", depth: "ansi16", tone: "danger" },
+    { hue: 28, variant: "dark", depth: "ansi16", tone: "danger" },
+    { hue: 74, variant: "light", depth: "ansi256", tone: "warning" },
+    { hue: 74, variant: "dark", depth: "ansi16", tone: "warning" },
+    { hue: 152, variant: "light", depth: "ansi256", tone: "success" },
+    { hue: 152, variant: "light", depth: "ansi16", tone: "success" },
+    { hue: 152, variant: "dark", depth: "ansi16", tone: "success" },
+  ] as const;
+  for (const { hue, variant, depth, tone } of cases) {
+    const palette = resolveTerminalTheme({
+      theme: variant,
+      appearance: accentAppearance(hue),
+    });
+    assertEquals(
+      terminalToneColor(palette, "accent")[depth],
+      terminalToneColor(palette, tone)[depth],
+      `${variant} Accent(${hue}) should share ${tone}'s ${depth} family`,
+    );
   }
 });
 
