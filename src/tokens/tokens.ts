@@ -13,7 +13,6 @@ import {
   fieldColorRoleLaws,
   fieldShadowRoleLaws,
 } from "./field.ts";
-import { blueThemeTokens } from "../theme/blue.ts";
 
 export * from "./field.ts";
 
@@ -242,11 +241,8 @@ export const baseTokens: readonly DesignToken[] = [
   ),
 ];
 
-/** Compatibility inventory for catalogue consumers; base and preset stay distinct. */
-export const designTokens: readonly DesignToken[] = [
-  ...baseTokens,
-  ...blueThemeTokens,
-];
+/** Theme-independent Tokens shared by every emitted identity. */
+export const designTokens: readonly DesignToken[] = baseTokens;
 
 const lightField = evaluateField({ darkness: 0 });
 const darkField = evaluateField({ darkness: 1 });
@@ -349,7 +345,7 @@ export const themeTokens: readonly ThemeToken[] = [
   ...presentationThemeTokens,
 ];
 
-/** Every public token: primitives, presets, and theme roles together. */
+/** Every token in the neutral field identity. Optional presets stay separate. */
 export const allTokens: readonly (DesignToken | ThemeToken)[] = [
   ...designTokens,
   ...themeTokens,

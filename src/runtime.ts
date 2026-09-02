@@ -24,8 +24,9 @@ import {
   type RuntimeAssetSelection,
   runtimeAssetSelections,
 } from "./runtime-assets.ts";
+import { publicTokens } from "./token-inventory.ts";
 import { blueThemeCss } from "./theme/blue.ts";
-import { allTokens, baseTokens, themeTokens } from "./tokens/tokens.ts";
+import { baseTokens, themeTokens } from "./tokens/tokens.ts";
 import {
   type ComponentGroup,
   componentGroups,
@@ -379,7 +380,7 @@ export async function emitDesignSystemRuntime(
         .map((entry) => entry.meta.slug),
     })),
     components,
-    publicTokenNames: allTokens.map((token) => token.name),
+    publicTokenNames: publicTokens.map((token) => token.name),
     outputs: {
       css: "discern.css",
       manifest: "manifest.json",
@@ -394,7 +395,7 @@ export async function emitDesignSystemRuntime(
   );
   return {
     components: components.length,
-    tokens: allTokens.length,
+    tokens: publicTokens.length,
     manifest,
   };
 }

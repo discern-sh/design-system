@@ -15,7 +15,7 @@ import {
 } from "../catalogue/routes/foundations.ts";
 import type { TerminalFoundationSheet } from "../catalogue/terminal-foundations.ts";
 import { terminalFoundationSheets } from "../catalogue/terminal-foundations.ts";
-import { allTokens } from "../src/tokens/tokens.ts";
+import { publicTokens } from "../src/token-inventory.ts";
 
 const origin = "https://catalogue.example";
 
@@ -75,10 +75,10 @@ Deno.test("Token URL state and authority-backed matching round-trip", () => {
     `${foundationsPaths.tokens}?theme=dark&q=body&category=typography`,
     origin,
   );
-  const state = foundationTokenExplorerState(requested, allTokens);
+  const state = foundationTokenExplorerState(requested, publicTokens);
   assertEquals(state, { query: "body", category: "Typography" });
   assertEquals(
-    matchingFoundationTokens(allTokens, state).map(({ name }) => name),
+    matchingFoundationTokens(publicTokens, state).map(({ name }) => name),
     [
       "--discern-font-body",
       "--discern-font-weight-body",
@@ -94,7 +94,7 @@ Deno.test("Token URL state and authority-backed matching round-trip", () => {
   assertEquals(reset.searchParams.has("q"), false);
   assertEquals(reset.searchParams.has("category"), false);
 
-  const valueMatches = matchingFoundationTokens(allTokens, {
+  const valueMatches = matchingFoundationTokens(publicTokens, {
     query: "0.85rem",
     category: "Typography",
   });
@@ -106,7 +106,7 @@ Deno.test("Token URL state and authority-backed matching round-trip", () => {
 Deno.test("Token explorer auto-enrols every category and labels themed and single values", () => {
   const html = renderFoundations(foundationsPaths.tokens);
   assertEquals((html.match(/<h1/g) ?? []).length, 1);
-  for (const category of foundationTokenCategories(allTokens)) {
+  for (const category of foundationTokenCategories(publicTokens)) {
     assertStringIncludes(html, `>${category}</button>`);
     assertStringIncludes(html, `data-discern-token-category="${category}"`);
   }
@@ -136,7 +136,7 @@ Deno.test("Foundations index and terminal gallery stay bounded and source-backed
   assertEquals((indexHtml.match(/<h1/g) ?? []).length, 1);
   assertStringIncludes(indexHtml, `href="${foundationsPaths.tokens}"`);
   assertStringIncludes(indexHtml, `href="${foundationsPaths.terminal}"`);
-  assertStringIncludes(indexHtml, `${allTokens.length} Tokens`);
+  assertStringIncludes(indexHtml, `${publicTokens.length} Tokens`);
   assertStringIncludes(indexHtml, `${terminalFoundationSheets.length} sheets`);
   assertEquals(
     indexHtml.includes("data-discern-terminal-foundation-specimen"),
@@ -181,7 +181,7 @@ Deno.test("a synthetic terminal sheet joins route, index, detail, navigation, an
   });
 
   const records = foundationsSearchRecords({
-    tokens: allTokens,
+    tokens: publicTokens,
     terminalFoundations: [futureSheet],
   });
   assertEquals(

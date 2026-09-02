@@ -221,7 +221,8 @@ type FieldPaint =
   | "active-ink"
   | "opposite-ink"
   | "raised-surface"
-  | "ink-pigment";
+  | "ink-pigment"
+  | "paper-pigment";
 
 /** One public colour role and its sole field expression. */
 export interface FieldColorRoleLaw {
@@ -267,7 +268,7 @@ export const fieldColorRoleLaws: readonly FieldColorRoleLaw[] = Object.freeze(
       "--discern-color-ink-faint",
       "Tertiary ink.",
       "active-ink",
-      curve([0.5, 0.56, 0.6, 0.6, 0.55]),
+      curve([0.55, 0.56, 0.6, 0.6, 0.55]),
       false,
     ),
     role(
@@ -293,15 +294,15 @@ export const fieldColorRoleLaws: readonly FieldColorRoleLaw[] = Object.freeze(
     ),
     role(
       "--discern-color-inverse-surface",
-      "Opaque active-ink surface for bounded inverse treatments.",
-      "active-ink",
+      "Opaque ink-pigment surface for stable light-on-dark treatments.",
+      "ink-pigment",
       one,
       false,
     ),
     role(
       "--discern-color-inverse-ink",
-      "Opposite-pigment ink for an inverse surface.",
-      "opposite-ink",
+      "Paper-pigment ink for a stable inverse surface.",
+      "paper-pigment",
       one,
       false,
     ),
@@ -575,8 +576,9 @@ export function evaluateFieldExpression(
         return Math.abs(evaluate(node.value));
       case "round": {
         const interval = evaluate(node.interval);
-        return Number(
-          (Math.round(evaluate(node.value) / interval) * interval).toFixed(12),
+        return roundDecimal(
+          Math.round(evaluate(node.value) / interval) * interval,
+          12,
         );
       }
       case "lerp": {
@@ -646,13 +648,22 @@ function evaluateStructuredField(
       case "ink-pigment":
         evaluated = { color: fieldPigments.ink, alpha: amount };
         break;
+      case "paper-pigment":
+        evaluated = { color: fieldPigments.paper, alpha: amount };
+        break;
     }
     return [law.name, evaluated];
   })) as Record<FieldColorRoleName, EvaluatedFieldColor>);
 }
 
+function roundDecimal(value: number, places: number): number {
+  const scale = 10 ** places;
+  const roundedMagnitude = Math.round(Math.abs(value) * scale) / scale;
+  return Math.sign(value) * roundedMagnitude;
+}
+
 function formattedNumber(value: number, places = 4): string {
-  const roundedValue = Number(value.toFixed(places));
+  const roundedValue = roundDecimal(value, places);
   return Object.is(roundedValue, -0) ? "0" : String(roundedValue);
 }
 
@@ -753,5 +764,5 @@ export function fieldContrastMargin(): number {
       );
     }
   }
-  return Number(minimum.toFixed(6));
+  return roundDecimal(minimum, 6);
 }

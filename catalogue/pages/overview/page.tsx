@@ -1,6 +1,6 @@
 import { Button } from "../../../src/components/core/button/button.tsx";
 import { Kicker } from "../../../src/components/display/kicker/kicker.tsx";
-import { allTokens } from "../../../src/tokens/tokens.ts";
+import { publicTokens } from "../../../src/token-inventory.ts";
 import { componentGroups } from "../../../src/types/component-meta.ts";
 import { cliCompositionRecipes } from "../../cli-compositions.ts";
 import { compositionRecipes } from "../../compositions.tsx";
@@ -29,7 +29,7 @@ const overviewRouteDetails = {
   foundations: {
     description:
       "Explore Tokens and the visual rules shared by browser and terminal surfaces.",
-    count: `${allTokens.length} Tokens`,
+    count: `${publicTokens.length} Tokens`,
     action: "Explore Tokens",
   },
   compositions: {
@@ -126,7 +126,7 @@ export function OverviewPage() {
           </Button>
         </div>
         <div className="discern-catalogue-stats">
-          <span>{allTokens.length} tokens</span>
+          <span>{publicTokens.length} tokens</span>
           <span>{registry.length} components</span>
           <span>{componentGroups.length} groups</span>
         </div>

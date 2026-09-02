@@ -1,6 +1,6 @@
 import { DocsNav } from "../../../src/components/docs/docs-nav/docs-nav.tsx";
 import type { DocsNavItem } from "../../../src/components/docs/docs-nav/docs-nav.tsx";
-import { allTokens } from "../../../src/tokens/tokens.ts";
+import { publicTokens } from "../../../src/token-inventory.ts";
 import {
   catalogueTerminalFoundationPath,
   foundationsPaths,
@@ -47,7 +47,7 @@ function sourceBackedSections(
     }];
   }
   if (route.page === "tokens") {
-    const state = foundationTokenExplorerState(url, allTokens);
+    const state = foundationTokenExplorerState(url, publicTokens);
     return [
       {
         items: [navigationItem(foundationsPaths.index, "← Foundations")],
@@ -60,7 +60,7 @@ function sourceBackedSections(
             "All",
             state.category === undefined,
           ),
-          ...foundationTokenCategories(allTokens).map((category) =>
+          ...foundationTokenCategories(publicTokens).map((category) =>
             navigationItem(
               foundationTokenCategoryPath(category),
               category,

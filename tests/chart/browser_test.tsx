@@ -373,7 +373,15 @@ Deno.test("Chart and DataFigure compositions are Axe-clean in light, dark, and f
         assertEquals(
           accessibility.violations.map(({ id }) => id),
           [],
-          `${posture.theme}/${posture.forcedColors}`,
+          `${posture.theme}/${posture.forcedColors}\n${
+            accessibility.violations.map((violation) =>
+              `${violation.id}: ${
+                violation.nodes.map((node) =>
+                  `${node.target.join(" ")} (${node.failureSummary ?? ""})`
+                ).join("; ")
+              }`
+            ).join("\n")
+          }`,
         );
         const facts = await page.evaluate(() => {
           const svgs = [...document.querySelectorAll(".discern-chart")];

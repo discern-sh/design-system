@@ -5,7 +5,7 @@ import {
   foundationsPaths,
 } from "../../../catalogue/routes.ts";
 import { terminalFoundationSheets } from "../../../catalogue/terminal-foundations.ts";
-import { allTokens } from "../../../src/tokens/tokens.ts";
+import { publicTokens } from "../../../src/token-inventory.ts";
 import { scanBrowserAccessibility } from "../../browser-conformance-support.ts";
 import { withViewport } from "../../viewport.ts";
 import { verifyInlineOverflowCueEdges } from "./overflow-cue.ts";
@@ -47,7 +47,7 @@ async function verifyTokenExplorer(
   url.searchParams.set("theme", "light");
   await loadCataloguePage(page, url.href);
   invariant(
-    await page.locator("[data-discern-token]").count() === allTokens.length,
+    await page.locator("[data-discern-token]").count() === publicTokens.length,
     "Token explorer did not auto-enrol the complete Token authority",
   );
 

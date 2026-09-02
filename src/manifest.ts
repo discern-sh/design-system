@@ -8,7 +8,7 @@
  * @module
  */
 import { componentRegistry } from "./generated/component-registry.ts";
-import { allTokens } from "./tokens/tokens.ts";
+import { publicTokens } from "./token-inventory.ts";
 import {
   type ComponentBehavior,
   type ComponentGroup,
@@ -98,5 +98,5 @@ export const packageManifest: PackageManifest = {
     ownedClasses: entry.ownedClasses,
     publicTokenNames: entry.publicTokenNames,
   })),
-  publicTokenNames: allTokens.map((token) => token.name),
+  publicTokenNames: publicTokens.map((token) => token.name),
 };

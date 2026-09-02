@@ -3,7 +3,8 @@ import type { CSSProperties, FormEvent } from "react";
 import type { TerminalThemeVariant } from "../../../src/cli/theme.ts";
 import { CopyButton } from "../../../src/components/docs/copy-button/copy-button.tsx";
 import { OverflowCue } from "../../../src/components/layout/overflow-cue/overflow-cue.tsx";
-import { allTokens, baseTokens } from "../../../src/tokens/tokens.ts";
+import { publicTokens } from "../../../src/token-inventory.ts";
+import { baseTokens } from "../../../src/tokens/tokens.ts";
 import type { TokenCategory } from "../../../src/tokens/tokens.ts";
 import { blueThemeTokens } from "../../../src/theme/blue.ts";
 import {
@@ -617,7 +618,7 @@ export function FoundationsPage(
   {
     terminalTheme,
     url = new URL(globalThis.location.href),
-    tokens = allTokens,
+    tokens = publicTokens,
     sheets = terminalFoundationSheets,
   }: FoundationsPageProps,
 ) {
