@@ -67,6 +67,7 @@ Deno.test("Catalogue routes resolve every explorer surface and Component detail"
     }],
     [catalogueRoutePaths.foundations, { family: "foundations", page: "index" }],
     [foundationsPaths.tokens, { family: "foundations", page: "tokens" }],
+    [foundationsPaths.field, { family: "foundations", page: "field" }],
     [foundationsPaths.terminal, {
       family: "foundations",
       page: "terminal-index",

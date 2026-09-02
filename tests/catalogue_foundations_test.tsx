@@ -35,7 +35,7 @@ function renderFoundations(
   );
 }
 
-Deno.test("Foundations family owns bounded index, Token, and terminal sheet routes", () => {
+Deno.test("Foundations family owns bounded Field, Token, and terminal sheet routes", () => {
   assertEquals(foundationsRouteFamily.match(foundationsPaths.index), {
     family: "foundations",
     page: "index",
@@ -43,6 +43,10 @@ Deno.test("Foundations family owns bounded index, Token, and terminal sheet rout
   assertEquals(foundationsRouteFamily.match(foundationsPaths.tokens), {
     family: "foundations",
     page: "tokens",
+  });
+  assertEquals(foundationsRouteFamily.match(foundationsPaths.field), {
+    family: "foundations",
+    page: "field",
   });
   assertEquals(foundationsRouteFamily.match(foundationsPaths.terminal), {
     family: "foundations",
@@ -59,6 +63,7 @@ Deno.test("Foundations family owns bounded index, Token, and terminal sheet rout
   for (
     const pathname of [
       foundationsPaths.index,
+      foundationsPaths.field,
       foundationsPaths.tokens,
       foundationsPaths.terminal,
       ...terminalFoundationSheets.map(({ id }) =>
@@ -135,6 +140,7 @@ Deno.test("Foundations index and terminal gallery stay bounded and source-backed
   const indexHtml = renderFoundations(foundationsPaths.index);
   assertEquals((indexHtml.match(/<h1/g) ?? []).length, 1);
   assertStringIncludes(indexHtml, `href="${foundationsPaths.tokens}"`);
+  assertStringIncludes(indexHtml, `href="${foundationsPaths.field}"`);
   assertStringIncludes(indexHtml, `href="${foundationsPaths.terminal}"`);
   assertStringIncludes(indexHtml, `${publicTokens.length} Tokens`);
   assertStringIncludes(indexHtml, `${terminalFoundationSheets.length} sheets`);
@@ -159,6 +165,22 @@ Deno.test("Foundations index and terminal gallery stay bounded and source-backed
     terminalHtml.includes("data-discern-terminal-foundation-specimen"),
     false,
   );
+});
+
+Deno.test("Field page dogfoods public controls and paints every field role", () => {
+  const html = renderFoundations(foundationsPaths.field);
+  assertStringIncludes(html, 'data-discern-foundations-page="field"');
+  for (const axis of ["darkness", "structure", "emphasis", "density"]) {
+    assertStringIncludes(html, `id="discern-catalogue-field-${axis}"`);
+    assertStringIncludes(html, 'type="range"');
+  }
+  assertStringIncludes(html, "Blue preset");
+  assertStringIncludes(html, "Token polarity is");
+  assertStringIncludes(
+    html,
+    'data-discern-field-role="--discern-color-canvas"',
+  );
+  assertStringIncludes(html, 'data-discern-field-role="--discern-color-ink"');
 });
 
 Deno.test("a synthetic terminal sheet joins route, index, detail, navigation, and search projections", () => {

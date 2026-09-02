@@ -29,6 +29,7 @@ import {
 } from "../../routes/foundations.ts";
 import { announceCatalogueLocationChange } from "../../shell/location.ts";
 import { CatalogueIndexCard, CataloguePageHeader } from "../shared.tsx";
+import { FieldPage } from "./field-page.tsx";
 
 function isThemed(token: FoundationToken): token is FoundationToken & {
   readonly light: string;
@@ -456,6 +457,24 @@ function FoundationsIndex(
       />
       <div className="discern-catalogue-foundations-index">
         <CatalogueIndexCard
+          href={foundationsPaths.field}
+          title="Field"
+          description="Drive the live axes and inspect the result."
+          action="Open the Field instrument"
+          metadata={<span>4 continuous axes</span>}
+          media={
+            <div
+              className="discern-catalogue-foundations-index__field"
+              aria-hidden="true"
+            >
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+          }
+        />
+        <CatalogueIndexCard
           href={foundationsPaths.tokens}
           title="Tokens"
           description="Colour, type, scale, shape, and motion."
@@ -638,6 +657,7 @@ export function FoundationsPage(
   if (route.page === "tokens") {
     return <TokenExplorer url={url} tokens={tokens} />;
   }
+  if (route.page === "field") return <FieldPage />;
   if (route.page === "terminal-index") {
     return (
       <TerminalFoundationsIndex terminalTheme={terminalTheme} sheets={sheets} />
