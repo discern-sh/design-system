@@ -1,6 +1,6 @@
 # ADR 0038: Frame Component images by subject and paint
 
-**Status**: accepted
+**Status**: superseded by [ADR-0041](0041-verify-component-images-from-sources-and-artifacts.md)
 
 ## Context
 

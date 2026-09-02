@@ -38,27 +38,114 @@ import {
 } from "../catalogue/example-images/contract.ts";
 import { componentExampleRegistry } from "../scripts/generated/component-examples.ts";
 import {
+  componentExampleCaptureDependencyPaths,
   componentExampleCaptureInputHash,
   componentExampleCaptureSourceHash,
   componentExampleContentHash,
+  componentExampleImagePostureEffects,
+  componentExampleImagesNeedingCapture,
   componentExampleScreenshotOptions,
-  isComponentExampleCaptureSourcePath,
   pngChunkTypes,
   pngDimensions,
   repositoryCaptureSourcePaths,
   validateComponentExampleImageCoverage,
-  validateComponentExampleRepeatGeometry,
   withCapturePage,
 } from "../scripts/component-example-images.ts";
-import {
-  type CanonicalPngRaster,
-  compareCanonicalPngRasters,
-  componentExampleRasterTolerance,
-  decodeCanonicalPngRaster,
-  rasterDifferenceIsImperceptible,
-} from "../scripts/png-raster.ts";
 
 const ROOT = new URL("../", import.meta.url);
+
+Deno.test("capture dependency discovery follows imports and excludes unrelated source containers", () => {
+  const root = "file:///workspace/catalogue/example-images/capture.tsx";
+  const webRegistry =
+    "file:///workspace/catalogue/generated/example-image-registry.ts";
+  const example =
+    "file:///workspace/src/components/display/sample/sample.examples.tsx";
+  const implementation =
+    "file:///workspace/src/components/display/sample/sample.tsx";
+  const privateSibling = "file:///workspace/src/glyphs/private-atlas.ts";
+  const paths = componentExampleCaptureDependencyPaths(
+    {
+      root,
+      modules: [
+        {
+          specifier: root,
+          local: "/workspace/catalogue/example-images/capture.tsx",
+          dependencies: [{ code: { specifier: webRegistry } }],
+        },
+        {
+          specifier: webRegistry,
+          local: "/workspace/catalogue/generated/example-image-registry.ts",
+          dependencies: [{ code: { specifier: example } }],
+        },
+        {
+          specifier: example,
+          local: "/workspace/src/components/display/sample/sample.examples.tsx",
+          dependencies: [{ code: { specifier: implementation } }],
+        },
+        {
+          specifier: implementation,
+          local: "/workspace/src/components/display/sample/sample.tsx",
+          dependencies: [],
+        },
+        {
+          specifier: privateSibling,
+          local: "/workspace/src/glyphs/private-atlas.ts",
+          dependencies: [],
+        },
+      ],
+    },
+    [example],
+    new URL("file:///workspace/"),
+  );
+  assertEquals(paths, [
+    "src/components/display/sample/sample.examples.tsx",
+    "src/components/display/sample/sample.tsx",
+  ]);
+});
+
+Deno.test("image verification is source-and-artifact based without a live browser", () => {
+  assertEquals(componentExampleImagePostureEffects("verify"), {
+    build: true,
+    browser: "never",
+    writes: false,
+  });
+  assertEquals(componentExampleImagePostureEffects("update"), {
+    build: true,
+    browser: "when-stale",
+    writes: true,
+  });
+});
+
+Deno.test("source-current entries bypass Chromium while stale entries enroll", () => {
+  const plan = planComponentExampleImages([{
+    slug: "future-panel",
+    examples: [{
+      id: "overview",
+      label: "Overview",
+      surfaces: ["web"],
+    }],
+  }]);
+  const keys = new Set(
+    plan.map(({ slug, exampleId, theme }) => `${slug}/${exampleId}/${theme}`),
+  );
+  assertEquals(componentExampleImagesNeedingCapture(plan, keys), []);
+  keys.delete("future-panel/overview/dark");
+  assertEquals(
+    componentExampleImagesNeedingCapture(plan, keys).map(({ theme }) => theme),
+    ["dark"],
+  );
+});
+
+Deno.test("the generated image renderer registry excludes CLI implementations", async () => {
+  const source = await Deno.readTextFile(
+    new URL(
+      "../catalogue/generated/example-image-registry.ts",
+      import.meta.url,
+    ),
+  );
+  assert(!source.includes(".cli.ts"));
+  assert(!source.includes("cliExamples"));
+});
 
 function imageSources(): readonly ComponentExampleImageSource[] {
   return Object.entries(componentExampleRegistry).map(([slug, examples]) => ({
@@ -79,26 +166,6 @@ function includesBytes(bytes: Uint8Array, needle: string): boolean {
     encoded.every((value, offset) => bytes[start + offset] === value)
   );
 }
-
-Deno.test("raster staleness excludes consumer-only image presentation", () => {
-  assertEquals(
-    isComponentExampleCaptureSourcePath(
-      "catalogue/example-images/review.ts",
-    ),
-    false,
-  );
-  assertEquals(
-    isComponentExampleCaptureSourcePath(
-      "catalogue/example-images/missing.svg",
-    ),
-    false,
-  );
-  assert(
-    isComponentExampleCaptureSourcePath(
-      "catalogue/example-images/future-capture-helper.ts",
-    ),
-  );
-});
 
 Deno.test("capture source hashing excludes release identity but retains executable configuration", async () => {
   const source = [{
@@ -127,9 +194,11 @@ Deno.test("capture source hashing excludes release identity but retains executab
     await componentExampleCaptureInputHash(source, {
       ...deno,
       version: "0.29.0",
+      tasks: { unrelated: "deno eval true" },
     }, {
       ...packageJson,
       version: "0.29.0",
+      private: false,
     }),
     baseline,
   );
@@ -279,7 +348,11 @@ Deno.test("a synthetic future example joins plan, coverage, representative choic
       assetUrl: `/catalogue/generated/example-images/${entry.filename}`,
       width: 10,
       height: 10,
+      pixelWidth: 20,
+      pixelHeight: 20,
+      density: 2,
       contentHash: "sha256:fixture",
+      sourceHash: "sha256:fixture",
       captureContractVersion: componentExampleCaptureContract.version,
     })),
   };
@@ -620,26 +693,8 @@ Deno.test("exact-bounds screenshots retain document-space clips taller than the 
   const options = componentExampleScreenshotOptions(region);
   assertEquals(options.clip, region);
   assertEquals(options.fullPage, true);
-});
-
-Deno.test("repeat witnesses ignore raster-byte noise only while exact geometry holds", () => {
-  validateComponentExampleRepeatGeometry(
-    "future-panel/overview/dark",
-    { width: 320, height: 180 },
-    { width: 320, height: 180 },
-    { width: 320, height: 180 },
-  );
-  assertThrows(
-    () =>
-      validateComponentExampleRepeatGeometry(
-        "future-panel/overview/dark",
-        { width: 320, height: 180 },
-        { width: 321, height: 180 },
-        { width: 320, height: 180 },
-      ),
-    Error,
-    "geometry changed",
-  );
+  assertEquals(options.omitBackground, true);
+  assertEquals(options.scale, "device");
 });
 
 Deno.test("image hashes cover only a Playwright Buffer view, not its pooled backing bytes", async () => {
@@ -743,10 +798,33 @@ Deno.test("the generated manifest and exact-bounds PNG population match every cu
   }
   for (const entry of componentExampleImageManifest.entries) {
     const bytes = await Deno.readFile(new URL(entry.assetUrl.slice(1), ROOT));
+    assertEquals(entry.density, 2, entry.assetPath);
+    assert(entry.pixelWidth !== undefined, entry.assetPath);
+    assert(entry.pixelHeight !== undefined, entry.assetPath);
+    assert(entry.density !== undefined, entry.assetPath);
+    assert(entry.sourceHash !== undefined, entry.assetPath);
     assertEquals(pngDimensions(bytes), {
-      width: entry.width,
-      height: entry.height,
+      width: entry.pixelWidth,
+      height: entry.pixelHeight,
     });
+    assertEquals(
+      entry.pixelWidth,
+      entry.width * entry.density,
+      entry.assetPath,
+    );
+    assertEquals(
+      entry.pixelHeight,
+      entry.height * entry.density,
+      entry.assetPath,
+    );
+    assert(
+      bytes[25] === 2 || bytes[25] === 6,
+      `${entry.assetPath} must be an RGB or RGBA PNG`,
+    );
+    assert(
+      entry.sourceHash.startsWith("sha256:"),
+      `${entry.assetPath} has no source fingerprint`,
+    );
     assert(
       pngChunkTypes(bytes).every((chunk) =>
         ["IHDR", "sRGB", "IDAT", "IEND"].includes(chunk)
@@ -771,6 +849,21 @@ Deno.test("the generated manifest and exact-bounds PNG population match every cu
     assertEquals(presentation.height, entry.height);
     assertStringIncludes(presentation.alt, entry.componentName);
     assertStringIncludes(presentation.alt, entry.label);
+  }
+  for (
+    const assetPath of [
+      "catalogue/generated/example-images/avatar--default--dark.png",
+      "catalogue/generated/example-images/avatar-group--default--dark.png",
+      "catalogue/generated/example-images/persona--default--dark.png",
+      "catalogue/generated/example-images/dialog--default--dark.png",
+    ]
+  ) {
+    const bytes = await Deno.readFile(new URL(assetPath, ROOT));
+    assertEquals(
+      bytes[25],
+      6,
+      `${assetPath} must preserve transparent corners`,
+    );
   }
 });
 
@@ -813,154 +906,5 @@ Deno.test("Catalogue-only generated images cannot enter the JSR publish set", as
       entry.assetPath.startsWith("catalogue/generated/example-images/")
     ),
     true,
-  );
-});
-
-function committedImageUrl(index: number): URL {
-  const entry = componentExampleImageManifest.entries[index];
-  assert(entry !== undefined, `no manifest entry at ${index}`);
-  return new URL(entry.assetUrl.slice(1), ROOT);
-}
-
-/** Move one channel by `delta` without wrapping past the 8-bit range. */
-function perturb(
-  raster: CanonicalPngRaster,
-  pixels: number,
-  delta: number,
-): CanonicalPngRaster {
-  const copy = new Uint8Array(raster.pixels);
-  for (let pixel = 0; pixel < pixels; pixel += 1) {
-    const offset = pixel * 3;
-    const current = copy[offset] ?? 0;
-    copy[offset] = current > 127 ? current - delta : current + delta;
-  }
-  return { width: raster.width, height: raster.height, pixels: copy };
-}
-
-Deno.test("the raster decoder reads the committed capture output", async () => {
-  const total = componentExampleImageManifest.entries.length;
-  const sampled = [
-    0,
-    Math.floor(total / 3),
-    Math.floor((total * 2) / 3),
-    total - 1,
-  ];
-  for (const index of sampled) {
-    const entry = componentExampleImageManifest.entries[index];
-    assert(entry !== undefined);
-    const raster = await decodeCanonicalPngRaster(
-      await Deno.readFile(committedImageUrl(index)),
-      entry.assetPath,
-    );
-    assertEquals(
-      { width: raster.width, height: raster.height },
-      { width: entry.width, height: entry.height },
-      entry.assetPath,
-    );
-    assertEquals(raster.pixels.length, entry.width * entry.height * 3);
-  }
-});
-
-Deno.test("the declared raster tolerance stays at its evidenced bounds", () => {
-  // Observed noise reaches 38 changed pixels at delta 2; the smallest real
-  // change measured 105 changed pixels at delta 71. Loosening either bound
-  // past that evidence would start absorbing real visual changes.
-  assertEquals(componentExampleRasterTolerance, {
-    maxChannelDelta: 2,
-    maxChangedPixels: 64,
-  });
-});
-
-Deno.test("raster comparison separates imperceptible variation from a real change", async () => {
-  const entry = componentExampleImageManifest.entries[0];
-  assert(entry !== undefined);
-  const committed = await decodeCanonicalPngRaster(
-    await Deno.readFile(committedImageUrl(0)),
-    entry.assetPath,
-  );
-  const { maxChangedPixels, maxChannelDelta } = componentExampleRasterTolerance;
-
-  const same = compareCanonicalPngRasters(committed, committed);
-  assertEquals(same, { kind: "identical" });
-  assert(rasterDifferenceIsImperceptible(same));
-
-  const noise = compareCanonicalPngRasters(
-    committed,
-    perturb(committed, maxChangedPixels, maxChannelDelta),
-  );
-  assertEquals(noise, {
-    kind: "differs",
-    changedPixels: maxChangedPixels,
-    maxChannelDelta,
-  });
-  assert(
-    rasterDifferenceIsImperceptible(noise),
-    "variation at both bounds must keep the committed artifact",
-  );
-
-  const tooManyPixels = compareCanonicalPngRasters(
-    committed,
-    perturb(committed, maxChangedPixels + 1, 1),
-  );
-  assertEquals(tooManyPixels, {
-    kind: "differs",
-    changedPixels: maxChangedPixels + 1,
-    maxChannelDelta: 1,
-  });
-  assert(
-    !rasterDifferenceIsImperceptible(tooManyPixels),
-    "a change wider than the pixel bound must be written",
-  );
-
-  const tooDeep = compareCanonicalPngRasters(
-    committed,
-    perturb(committed, 1, maxChannelDelta + 1),
-  );
-  assertEquals(tooDeep, {
-    kind: "differs",
-    changedPixels: 1,
-    maxChannelDelta: maxChannelDelta + 1,
-  });
-  assert(
-    !rasterDifferenceIsImperceptible(tooDeep),
-    "a change deeper than the channel bound must be written",
-  );
-
-  const resized = compareCanonicalPngRasters(committed, {
-    width: committed.width,
-    height: committed.height - 1,
-    pixels: committed.pixels.subarray(0, committed.width * 3),
-  });
-  assertEquals(resized, { kind: "geometry" });
-  assert(
-    !rasterDifferenceIsImperceptible(resized),
-    "a resized example is always a real change",
-  );
-});
-
-Deno.test("the raster decoder refuses images outside the canonical capture shape", async () => {
-  const original = await Deno.readFile(committedImageUrl(0));
-  const rejected = [
-    ["bit depth", 24, 16],
-    ["colour type", 25, 6],
-    ["interlace", 28, 1],
-  ] as const;
-  for (const [label, offset, value] of rejected) {
-    const patched = new Uint8Array(original);
-    patched[offset] = value;
-    await assertRejects(
-      () => decodeCanonicalPngRaster(patched, label),
-      TypeError,
-      "8-bit non-interlaced RGB",
-    );
-  }
-  await assertRejects(
-    () => decodeCanonicalPngRaster(original.subarray(0, 12), "truncated"),
-    TypeError,
-  );
-  await assertRejects(
-    () => decodeCanonicalPngRaster(new Uint8Array(40), "not a png"),
-    TypeError,
-    "is not a PNG",
   );
 });

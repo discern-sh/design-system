@@ -1,14 +1,14 @@
 @layer catalogue {
   :root {
     color-scheme: light dark;
-    background: var(--discern-color-canvas);
+    background: transparent;
   }
 
   html,
   body {
     margin: 0;
     overflow: visible;
-    background: var(--discern-color-canvas);
+    background: transparent;
   }
 
   .discern-example-image-capture {
@@ -17,7 +17,7 @@
     --discern-font-ui: "Inter", sans-serif;
     --discern-font-mono: "JetBrains Mono", monospace;
     box-sizing: border-box;
-    background: var(--discern-color-canvas);
+    background: transparent;
   }
 
   [data-discern-capture-example] {
