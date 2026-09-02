@@ -1,4 +1,16 @@
-import { assert, assertEquals, assertThrows } from "@std/assert";
+import {
+  assert,
+  assertEquals,
+  assertStringIncludes,
+  assertThrows,
+} from "@std/assert";
+import {
+  compileFieldExpressionToCss,
+  densityScaledSpacingCssValue,
+  fieldAxisDefaultDeclarations,
+  fieldLiveCssDeclarations,
+  generateFieldAxisRegistrationCss,
+} from "../src/tokens/field-css.ts";
 import {
   defaultFieldPoint,
   evaluateField,
@@ -6,11 +18,14 @@ import {
   evaluateFieldShadows,
   evaluateFieldSpacingUnit,
   FIELD_CONTRAST_SAMPLE_DARKNESSES,
+  FIELD_POLARITY_CROSSOVER_DARKNESS,
   FIELD_SPACING_UNIT_PX,
   fieldAxes,
   fieldColorRoleLaws,
   fieldContrastMargin,
   type FieldExpression,
+  fieldPolarityExpression,
+  fieldShadowRoleLaws,
 } from "../src/tokens/field.ts";
 import { themeTokens } from "../src/tokens/tokens.ts";
 
@@ -38,6 +53,12 @@ Deno.test("the field expression vocabulary evaluates every CSS-compatible node",
     }, 1],
     [{ kind: "abs", value: number(-2) }, 2],
     [{ kind: "round", value: number(0.26), interval: number(0.1) }, 0.3],
+    [{
+      kind: "round",
+      strategy: "up",
+      value: number(0.01),
+      interval: number(1),
+    }, 1],
     [{ kind: "lerp", from: number(0), to: number(8), position: axis }, 2],
   ];
   for (const [expression, expected] of expressions) {
@@ -46,6 +67,106 @@ Deno.test("the field expression vocabulary evaluates every CSS-compatible node",
       expected,
     );
   }
+});
+
+Deno.test("the CSS backend compiles the complete field expression vocabulary", () => {
+  const number = (value: number): FieldExpression => ({
+    kind: "number",
+    name: `test-${value}`,
+    value,
+  });
+  const axis: FieldExpression = { kind: "axis", axis: "darkness" };
+  const cases: readonly [FieldExpression, string][] = [
+    [number(3), "3"],
+    [axis, "var(--discern-darkness)"],
+    [{ kind: "add", left: number(2), right: number(3) }, "calc(2 + 3)"],
+    [{ kind: "subtract", left: number(2), right: number(3) }, "calc(2 - 3)"],
+    [{ kind: "multiply", left: number(2), right: number(3) }, "calc(2 * 3)"],
+    [{ kind: "divide", left: number(3), right: number(2) }, "calc(3 / 2)"],
+    [{ kind: "min", values: [number(2), number(3)] }, "min(2, 3)"],
+    [{ kind: "max", values: [number(2), number(3)] }, "max(2, 3)"],
+    [{
+      kind: "clamp",
+      minimum: number(0),
+      value: number(2),
+      maximum: number(1),
+    }, "clamp(0, 2, 1)"],
+    [{ kind: "abs", value: number(-2) }, "abs(-2)"],
+    [
+      { kind: "round", value: number(0.26), interval: number(0.1) },
+      "round(nearest, 0.26, 0.1)",
+    ],
+    [{
+      kind: "round",
+      strategy: "up",
+      value: number(0.01),
+      interval: number(1),
+    }, "round(up, 0.01, 1)"],
+    [
+      { kind: "lerp", from: number(0), to: number(8), position: axis },
+      "calc(0 * (1 - var(--discern-darkness)) + 8 * var(--discern-darkness))",
+    ],
+  ];
+  for (const [expression, expected] of cases) {
+    assertEquals(compileFieldExpressionToCss(expression), expected);
+  }
+});
+
+Deno.test("polarity and every live CSS consumer derive from the field authority", () => {
+  assertEquals(
+    evaluateFieldExpression(fieldPolarityExpression, {
+      darkness: FIELD_POLARITY_CROSSOVER_DARKNESS - 0.000001,
+    }),
+    0,
+  );
+  assertEquals(
+    evaluateFieldExpression(fieldPolarityExpression, {
+      darkness: FIELD_POLARITY_CROSSOVER_DARKNESS + 0.000001,
+    }),
+    1,
+  );
+  const registrations = generateFieldAxisRegistrationCss();
+  assertEquals(
+    [...registrations.matchAll(/@property\s+(--discern-[a-z-]+)/gu)].map(
+      (match) => match[1],
+    ),
+    [
+      "--discern-darkness",
+      "--discern-structure",
+      "--discern-emphasis",
+      "--discern-density",
+    ],
+  );
+  assertStringIncludes(registrations, 'syntax: "<number>";');
+  assertEquals(
+    fieldAxisDefaultDeclarations().map(({ name }) => name),
+    [
+      "--discern-darkness",
+      "--discern-structure",
+      "--discern-emphasis",
+      "--discern-density",
+    ],
+  );
+  const liveNames = fieldLiveCssDeclarations().map(({ name }) => name);
+  assertEquals(
+    liveNames.slice(4),
+    [
+      ...fieldColorRoleLaws.map(({ name }) => name),
+      ...fieldShadowRoleLaws.map(({ name }) => name),
+    ],
+  );
+  assert(
+    fieldLiveCssDeclarations().some(({ value }) => value.includes("abs(")),
+  );
+  assertEquals(
+    densityScaledSpacingCssValue("8px"),
+    "calc(8px * var(--discern-density))",
+  );
+  assertThrows(
+    () => densityScaledSpacingCssValue("0.5rem"),
+    TypeError,
+    "authored pixel spacing fact",
+  );
 });
 
 Deno.test("field axes expose bounded defaults and density only projects spacing", () => {

@@ -10,7 +10,6 @@ import {
   compositeOklab,
   type OklabColor,
   oklabContrast,
-  oklabRelativeLuminance,
 } from "../internal/oklch.ts";
 
 /** Numeric axes accepted by the monochrome field. */
@@ -109,6 +108,7 @@ export type FieldExpression =
   | { readonly kind: "abs"; readonly value: FieldExpression }
   | {
     readonly kind: "round";
+    readonly strategy?: "nearest" | "up";
     readonly value: FieldExpression;
     readonly interval: FieldExpression;
   }
@@ -141,6 +141,7 @@ function numberNode(value: number): FieldNumberExpression {
 
 const zero: FieldNumberExpression = numberNode(0);
 const one: FieldNumberExpression = numberNode(1);
+const two: FieldNumberExpression = numberNode(2);
 const quarter: FieldNumberExpression = numberNode(0.25);
 const roundingInterval: FieldNumberExpression = numberNode(0.0001);
 const axisNodes = Object.freeze(
@@ -213,10 +214,74 @@ export const fieldPigments = Object.freeze(
 /** Relative-luminance crossover where black and white ink have equal contrast. */
 export const FIELD_POLARITY_CROSSOVER = 0.179;
 
+/** Darkness coordinate whose neutral canvas reaches the polarity crossover. */
+export const FIELD_POLARITY_CROSSOVER_DARKNESS = 1 -
+  Math.cbrt(FIELD_POLARITY_CROSSOVER);
+
+const paperLightness = numberNode(fieldPigments.paper.lightness);
+const inkLightness = numberNode(fieldPigments.ink.lightness);
+
+/** Canvas OKLab lightness derived from the field darkness axis. */
+export const fieldCanvasLightnessExpression: FieldExpression = {
+  kind: "lerp",
+  from: paperLightness,
+  to: inkLightness,
+  position: axisNodes.darkness,
+};
+
+const canvasLightnessSquared = binary(
+  "multiply",
+  fieldCanvasLightnessExpression,
+  fieldCanvasLightnessExpression,
+);
+const canvasRelativeLuminance = binary(
+  "multiply",
+  canvasLightnessSquared,
+  fieldCanvasLightnessExpression,
+);
+const polarityDelta = binary(
+  "subtract",
+  numberNode(FIELD_POLARITY_CROSSOVER),
+  canvasRelativeLuminance,
+);
+const positivePolarityDelta = binary(
+  "divide",
+  binary("add", polarityDelta, { kind: "abs", value: polarityDelta }),
+  two,
+);
+
+/**
+ * Zero selects ink on a light canvas; one selects paper once the canvas falls
+ * below the shared relative-luminance crossover.
+ */
+export const fieldPolarityExpression: FieldExpression = {
+  kind: "round",
+  strategy: "up",
+  value: positivePolarityDelta,
+  interval: one,
+};
+
+/** Current canvas-contrast pigment lightness. */
+export const fieldActiveLightnessExpression: FieldExpression = {
+  kind: "lerp",
+  from: inkLightness,
+  to: paperLightness,
+  position: fieldPolarityExpression,
+};
+
+/** Pigment lightness opposite the current canvas-contrast pigment. */
+export const fieldOppositeLightnessExpression: FieldExpression = {
+  kind: "lerp",
+  from: paperLightness,
+  to: inkLightness,
+  position: fieldPolarityExpression,
+};
+
 /** Numeric spacing fact; density is applied only by a projection. */
 export const FIELD_SPACING_UNIT_PX = 4;
 
-type FieldPaint =
+/** Pigment treatment applied to one field role's scalar expression. */
+export type FieldPaint =
   | "canvas"
   | "active-ink"
   | "opposite-ink"
@@ -275,7 +340,7 @@ export const fieldColorRoleLaws: readonly FieldColorRoleLaw[] = Object.freeze(
       "--discern-color-canvas",
       "Opaque page canvas.",
       "canvas",
-      { kind: "lerp", from: zero, to: one, position: axisNodes.darkness },
+      fieldCanvasLightnessExpression,
       false,
     ),
     role(
@@ -576,8 +641,12 @@ export function evaluateFieldExpression(
         return Math.abs(evaluate(node.value));
       case "round": {
         const interval = evaluate(node.interval);
+        const quotient = evaluate(node.value) / interval;
+        const rounded = node.strategy === "up"
+          ? Math.ceil(quotient)
+          : Math.round(quotient);
         return roundDecimal(
-          Math.round(evaluate(node.value) / interval) * interval,
+          rounded * interval,
           12,
         );
       }
@@ -596,24 +665,12 @@ interface EvaluatedFieldColor {
   readonly alpha: number;
 }
 
-function interpolatePigment(position: number): OklabColor {
-  const interpolate = (paper: number, ink: number): number =>
-    paper * (1 - position) + ink * position;
-  return {
-    lightness: interpolate(
-      fieldPigments.paper.lightness,
-      fieldPigments.ink.lightness,
-    ),
-    a: interpolate(fieldPigments.paper.a, fieldPigments.ink.a),
-    b: interpolate(fieldPigments.paper.b, fieldPigments.ink.b),
-  };
-}
-
-function activePigments(canvas: OklabColor): {
+function activePigments(point: Partial<FieldPoint>): {
   readonly active: OklabColor;
   readonly opposite: OklabColor;
 } {
-  const paperWins = oklabRelativeLuminance(canvas) < FIELD_POLARITY_CROSSOVER;
+  const paperWins = evaluateFieldExpression(fieldPolarityExpression, point) ===
+    1;
   return paperWins
     ? { active: fieldPigments.paper, opposite: fieldPigments.ink }
     : { active: fieldPigments.ink, opposite: fieldPigments.paper };
@@ -625,10 +682,12 @@ function evaluateStructuredField(
   const resolved = resolveFieldPoint(point);
   const canvasLaw = fieldColorRoleLaws.find((law) => law.paint === "canvas");
   if (canvasLaw === undefined) throw new TypeError("Field has no canvas law");
-  const canvas = interpolatePigment(
-    evaluateFieldExpression(canvasLaw.expression, resolved),
-  );
-  const { active, opposite } = activePigments(canvas);
+  const canvas: OklabColor = {
+    lightness: evaluateFieldExpression(canvasLaw.expression, resolved),
+    a: 0,
+    b: 0,
+  };
+  const { active, opposite } = activePigments(resolved);
   return Object.freeze(Object.fromEntries(fieldColorRoleLaws.map((law) => {
     const amount = evaluateFieldExpression(law.expression, resolved);
     let evaluated: EvaluatedFieldColor;
@@ -754,7 +813,10 @@ export function fieldContrastMargin(): number {
       values,
       "--discern-color-canvas",
     ).color;
-    const maximum = oklabContrast(activePigments(canvas).active, canvas);
+    const maximum = oklabContrast(
+      activePigments({ darkness }).active,
+      canvas,
+    );
     for (const [name, floor] of FIELD_INK_CONTRAST_FLOORS) {
       const value = requiredFieldValue(values, name);
       const opaque = compositeOklab(value.color, value.alpha, canvas);
