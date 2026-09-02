@@ -601,6 +601,50 @@
       "${scripts.dir}/measure-cli-pending.ts",
     ]
 
+  # Component spacing and offsets consume the shared spacing roles. This raw
+  # legacy population may only fall until the density sweep replaces it at zero.
+  [standards.raw_spacing]
+    metric = "raw_spacing"
+    direction = "down"
+    limit = 116
+    run = "deno run --config deno.json --allow-read ${scripts.dir}/measure-raw-spacing.ts"
+    inputs = [
+      "src/components/**/*.css",
+      "${scripts.dir}/component-css-metrics.ts",
+      "${scripts.dir}/measure-raw-spacing.ts",
+    ]
+
+  # Component edges and shadows consume public structure roles. Local colour
+  # aliases and raw paint stay measurable until the structure sweep reaches zero.
+  [standards.untokenised_structure]
+    metric = "untokenised_structure"
+    direction = "down"
+    limit = 60
+    run = "deno run --config deno.json --allow-read ${scripts.dir}/measure-untokenised-structure.ts"
+    inputs = [
+      "src/components/**/*.css",
+      "${scripts.dir}/component-css-metrics.ts",
+      "${scripts.dir}/measure-untokenised-structure.ts",
+    ]
+
+  # Canonical Web examples name every tone or status with visible text or an
+  # accessibly named glyph. Production mode is explicit so React renders a
+  # deterministic static projection instead of reading an ambient mode.
+  [standards.missing_witnesses]
+    metric = "missing_witnesses"
+    direction = "down"
+    limit = 22
+    run = "NODE_ENV=production deno run --config deno.json --allow-read --allow-env=NODE_ENV ${scripts.dir}/measure-missing-witnesses.ts"
+    inputs = [
+      "src/components/**/*.tsx",
+      "src/components/**/*.meta.ts",
+      "src/types/component-examples.ts",
+      "catalogue/conformance.ts",
+      "catalogue/web-examples.ts",
+      "scripts/build.ts",
+      "${scripts.dir}/measure-missing-witnesses.ts",
+    ]
+
   # Coverage — keep line coverage at or above a rising floor:
   # [standards.coverage]
   # direction = "up"
