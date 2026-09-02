@@ -2,7 +2,7 @@
 
 **Status**: accepted
 
-**Partially superseded by**: [ADR 0042](0042-project-accent-from-the-field.md), for the authored Blue-pair and no-terminal-appearance conclusions only. The Field default and the remaining decisions below stay in force.
+**Partially superseded by**: [ADR 0043](0043-project-accent-from-the-field.md), for the authored Blue-pair and no-terminal-appearance conclusions only. The Field default and the remaining decisions below stay in force.
 
 ## Context
 

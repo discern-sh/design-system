@@ -50,7 +50,7 @@ Semantic roles (canvas, ink, accent, success, warning, danger, and the deliberat
 
 **How it shows up.** [`field.ts`](../../src/tokens/field.ts) is the one authority for Field and Accent values of every non-series colour role; [`tokens.ts`](../../src/tokens/tokens.ts) projects the Field fallback poles, [`field-css.ts`](../../src/tokens/field-css.ts) compiles the same expression DAG into live CSS, and [`appearance-css.ts`](../../src/tokens/appearance-css.ts) generates symmetric scoped projections. [`theme/blue.ts`](../../src/theme/blue.ts) is the generated hue-255 compatibility projection rather than a value table. [`cli/theme.ts`](../../src/cli/theme.ts) currently derives terminal and ANSI values from opaque Field poles until explicit Accent propagation lands. Tests fail a theme that forks Component CSS, a role that misses either projection, a browser projection that differs from the evaluator, a terminal colour that escapes Token enrollment, or an Accent hue that swallows a semantic family.
 
-[ADR-0040](../_adr/0040-derive-the-theme-from-a-monochrome-field.md) records the Field and its poles. [ADR-0042](../_adr/0042-project-accent-from-the-field.md) records the generic Accent projection and symmetric scope boundary.
+[ADR-0040](../_adr/0040-derive-the-theme-from-a-monochrome-field.md) records the Field and its poles. [ADR-0043](../_adr/0043-project-accent-from-the-field.md) records the generic Accent projection and symmetric scope boundary.
 
 ## 6. Accessibility invariants are tested contract, not garnish
 
