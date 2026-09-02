@@ -4,19 +4,36 @@ The monochrome field, its light/dark Token projection, the optional blue Preset,
 
 ## Field authority and poles
 
-[`field.ts`](../../src/tokens/field.ts) owns paper and ink as OKLab pigments, the bounded darkness, structure, emphasis, and density axes, and one CSS-expressible expression tree for each non-series colour role. `evaluateField(point)` evaluates those laws to deterministic `oklch()` strings. [`tokens.ts`](../../src/tokens/tokens.ts) evaluates darkness `0` and `1` and projects the results into the existing `ThemeToken` light/dark pair shape; consumers and the Runtime therefore keep the same browser contract while every grey has one authority.
+[`field.ts`](../../src/tokens/field.ts) owns paper and ink as OKLab pigments, the bounded darkness, structure, emphasis, and density axes, and one CSS-expressible expression tree for each non-series colour role. `evaluateField(point)` evaluates those laws to deterministic `oklch()` strings. [`tokens.ts`](../../src/tokens/tokens.ts) evaluates darkness `0` and `1` into the existing `ThemeToken` light/dark pair shape, while [`field-css.ts`](../../src/tokens/field-css.ts) walks the same nodes to project the live browser calculations. The pair projection is the static pole fallback; it is not a second role authority.
 
 Canvas follows darkness and active pigment polarity changes at the `0.179` relative-luminance crossover. Structure scales structural roles, emphasis scales state roles, and density applies only when the numeric four-pixel spacing fact is projected. `--discern-color-action` is full active ink and `--discern-color-on-action` is the opposite pigment, so action inversion does not depend on a moving accent rung. Raised `--discern-color-surface` is composited once and emitted opaque; the deliberately non-inverting `--discern-color-inverse-surface` remains opaque ink under paper ink at every point. Sunken surfaces, washes, borders, and overlays retain alpha because their caller-owned backdrop is part of their contract.
 
-The Runtime emits the field when its `theme` option is absent or `"none"`. [`theme/blue.ts`](../../src/theme/blue.ts) is the opt-in `"blue"` Preset. Its chromatic role membership is enumerated from field metadata, so a future role cannot silently miss the Preset; its action pair preserves the quiet blue fill and deep blue text treatment. Consumer Presets remain public Token overrides, never Component CSS.
+The Runtime emits the field when its `theme` option is absent or `"none"`. [`theme/blue.ts`](../../src/theme/blue.ts) is the opt-in `"blue"` Preset. Its chromatic role membership is enumerated from field metadata, so a future role cannot silently miss the Preset; its action pair preserves the quiet blue fill and deep blue text treatment. The Preset's static role overrides sit above the derived Token layer. Consumer Presets remain public Token overrides, never Component CSS.
+
+## Browser projection and authored points
+
+The Token layer registers `--discern-darkness`, `--discern-structure`, `--discern-emphasis`, and `--discern-density` as inherited `<number>` properties with the field defaults. Inside one feature query, the CSS backend binds repeated expression subtrees once and derives every non-series colour role with `calc()`, `min()`, `max()`, `clamp()`, `abs()`, `round()`, `oklch()`, and opaque compositing where the role contract requires it. Series roles remain static. A browser conformance guard evaluates every computed role at the field poles, the signed-off quarter points, and both sides of the polarity crossover, then compares it with `evaluateField` within `0.006` OKLab; the pole paths also compare independently with the static pair emission.
+
+The Runtime emits the static pole pairs before that feature-gated live layer. `data-discern-theme="light"` pins darkness `0` and `color-scheme: light`; `"dark"` pins darkness `1` and `color-scheme: dark`; `"system"` and an unattributed Root follow `prefers-color-scheme`. Browsers without the complete live feature set therefore retain the package's previous pole behavior. Full live derivation requires Chrome or Edge 138+, Firefox 128+, or Safari 16.4+: [Chromium 138 supplies `abs()`](https://developer.chrome.com/release-notes/138#css_sign-related_functions_abs_sign), Firefox 128 and Safari 16.4 supply [`@property`](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@property), and those versions also cover the numeric [`round()`](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/round) form used here.
+
+An author places a Root at a mid-field point by setting the axis and declaring the matching native colour scheme. Darkness `0.85` is on the dark-canvas side of the `0.4364259205` polarity crossover, so its controls use the dark scheme:
+
+```html
+<main
+  data-discern-root
+  style="--discern-darkness: 0.85; color-scheme: dark"
+>
+  <!-- Page content -->
+</main>
+```
+
+Structure and emphasis can be set on the same Root within their documented bounds. Density multiplies authored pixel spacing facts only; it never changes font size. Component-owned interface-text and touch-target floors remain unscaled.
 
 ## Typography roles
 
 The display face carries editorial headings. The body and interface faces carry prose, labels, indices, dates, measurements, status metadata, annotations, captions, and identities. The monospace face is reserved for an explicitly monospaced brand name and code, including source, commands, file paths, and terminal output. A component does not use monospace to create a technical mood.
 
 Components that accept arbitrary content keep the text face by default. Consumers mark code through the component's code-bearing prop or semantic markup. The `Brand`, `SiteHeader`, and `SiteFooter` `mono` variants and the `.discern-mono` utility remain explicit opt-ins; discern's public surfaces use that brand variant for the name `discern`.
-
-The emitted Runtime treats the user's system colour scheme as the default. A Root with no `data-discern-theme`, or with `data-discern-theme="system"`, follows `prefers-color-scheme`; `"light"` and `"dark"` remain deterministic overrides. Consumer Presets mirror their dark overrides inside the same system media query so branding and semantic roles move together.
 
 Theme roles can carry non-colour presentation values when a Component needs one semantic behavior to switch with the active Theme. `--discern-brand-artwork-opacity` keeps supplied multicolour artwork visible in light Theme and removes it in dark Theme when the Component provides a separate monochrome treatment; it does not affect ordinary artwork by itself.
 
