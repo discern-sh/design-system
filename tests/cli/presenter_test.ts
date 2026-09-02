@@ -260,6 +260,28 @@ Deno.test("presenter motifs bind globally, override per call, and reach semantic
   );
 });
 
+Deno.test("presenter binds, overrides, and derives the complete motif register", () => {
+  const capabilities = testTerminalCapabilities({ columns: 8 });
+  const branded = createCliPresenter(capabilities, { register: "brand" });
+  assertEquals(branded.register, "brand");
+  assertEquals(
+    branded.present(renderMotifPattern, { length: 4 }),
+    "◮⧩◭⧨",
+  );
+  assertEquals(
+    branded.present(renderMotifPattern, { length: 4, register: "plain" }),
+    "▲▷▼◁",
+  );
+
+  const plain = branded.with({ register: "plain" });
+  assertEquals(plain.register, "plain");
+  assertEquals(plain.present(renderMotifPattern, { length: 4 }), "▲▷▼◁");
+  assertEquals(
+    plain.present(renderMotifPattern, { length: 4, register: "brand" }),
+    "◮⧩◭⧨",
+  );
+});
+
 Deno.test("the motif leak guard catches an unrelated renderer that resets the default", () => {
   const capabilities = testTerminalCapabilities({ columns: 8 });
   const presenter = createCliPresenter(capabilities, {
