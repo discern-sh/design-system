@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { Input } from "../../../src/components/forms/input/input.tsx";
 import { Switch } from "../../../src/components/forms/switch/switch.tsx";
 import {
+  catalogueFieldPointProof,
+  type CatalogueFieldProofCheck,
+} from "../../shell/appearance-options.ts";
+import {
   evaluateField,
   fieldAxes,
   type FieldAxisName,
@@ -17,6 +21,14 @@ import { CataloguePageHeader } from "../shared.tsx";
 
 function axisLabel(axis: FieldAxisName): string {
   return (axis[0]?.toUpperCase() ?? "") + axis.slice(1);
+}
+
+function proofValue(
+  value: number,
+  unit: CatalogueFieldProofCheck["unit"],
+): string {
+  const formatted = value.toFixed(unit === "contrast" ? 2 : 3);
+  return unit === "contrast" ? `${formatted}:1` : `${formatted} ${unit}`;
 }
 
 function FieldAxisControl(
@@ -79,6 +91,10 @@ export function FieldPage(
   const pageRef = useRef<HTMLDivElement>(null);
   const evaluated = evaluateField(selection);
   const polarity = catalogueFieldPolarity(selection);
+  const proof = catalogueFieldPointProof(
+    selection,
+    fieldScheme ?? polarity,
+  );
 
   useEffect(() => {
     if (field === undefined && onFieldChange !== undefined) {
@@ -195,6 +211,51 @@ export function FieldPage(
           </div>
         </section>
       </div>
+
+      <section
+        className="discern-catalogue-field__proof"
+        data-discern-field-proof={proof.accepted ? "accepted" : "refused"}
+        aria-labelledby="discern-catalogue-field-proof-heading"
+      >
+        <div className="discern-catalogue-field__proof-heading">
+          <div>
+            <h2 id="discern-catalogue-field-proof-heading">
+              Admission proof
+            </h2>
+            <p>
+              The browser runs the same numerical floor loop that admits the
+              named Appearance presets in tests.
+            </p>
+          </div>
+          <strong>{proof.accepted ? "Admitted" : "Refused"}</strong>
+        </div>
+        {proof.failures.length === 0
+          ? null
+          : (
+            <ul className="discern-catalogue-field__refusals">
+              {proof.failures.map((failure) => <li key={failure}>{failure}
+              </li>)}
+            </ul>
+          )}
+        <div className="discern-catalogue-field__proof-grid">
+          {proof.checks.map((check) => (
+            <article
+              key={check.label}
+              data-discern-field-check={check.pass ? "pass" : "fail"}
+            >
+              <strong>{check.label}</strong>
+              <span>
+                observed {proofValue(check.observed, check.unit)} · floor{" "}
+                {proofValue(check.floor, check.unit)}
+              </span>
+              <output>
+                margin {check.margin >= 0 ? "+" : ""}
+                {proofValue(check.margin, check.unit)}
+              </output>
+            </article>
+          ))}
+        </div>
+      </section>
 
       <section
         className="discern-catalogue-field__roles"

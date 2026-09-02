@@ -4,6 +4,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { FoundationsNavigationContent } from "../catalogue/pages/foundations/navigation.tsx";
 import { FoundationsPage } from "../catalogue/pages/foundations/page.tsx";
 import {
+  FieldPage,
+  type FieldPageProps,
+} from "../catalogue/pages/foundations/field-page.tsx";
+import {
   catalogueTerminalFoundationPath,
   foundationsPaths,
   foundationsRouteFamily,
@@ -176,11 +180,33 @@ Deno.test("Field page dogfoods public controls and paints every field role", () 
   }
   assertStringIncludes(html, "Blue preset");
   assertStringIncludes(html, "Token polarity is");
+  assertStringIncludes(html, 'data-discern-field-proof="accepted"');
+  assertStringIncludes(html, "Admission proof");
+  assertStringIncludes(html, "margin +");
   assertStringIncludes(
     html,
     'data-discern-field-role="--discern-color-canvas"',
   );
   assertStringIncludes(html, 'data-discern-field-role="--discern-color-ink"');
+});
+
+Deno.test("Field proof renders shared refusal reasons verbatim", () => {
+  const html = renderToStaticMarkup(
+    createElement<FieldPageProps>(FieldPage, {
+      field: {
+        darkness: 0.6,
+        structure: 1.2,
+        emphasis: 0.8,
+        density: 1.1,
+        preset: "mono",
+      },
+    }),
+  );
+  assertStringIncludes(html, 'data-discern-field-proof="refused"');
+  assertStringIncludes(
+    html,
+    "field 0.6 accent collides with danger (0.074 OKLab)",
+  );
 });
 
 Deno.test("a synthetic terminal sheet joins route, index, detail, navigation, and search projections", () => {

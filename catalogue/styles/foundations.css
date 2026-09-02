@@ -412,7 +412,8 @@
   }
   .discern-catalogue-field__controls,
   .discern-catalogue-field__reading,
-  .discern-catalogue-field__roles {
+  .discern-catalogue-field__roles,
+  .discern-catalogue-field__proof {
     display: grid;
     align-content: start;
     gap: 22px;
@@ -483,6 +484,69 @@
   }
   .discern-catalogue-field__roles {
     background: var(--discern-color-canvas);
+  }
+  .discern-catalogue-field__proof {
+    gap: 18px;
+  }
+  .discern-catalogue-field__proof-heading {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  .discern-catalogue-field__proof-heading > strong {
+    padding: 7px 11px;
+    border-radius: var(--discern-radius-pill);
+    background: var(--discern-color-success-soft);
+    color: var(--discern-color-success-deep);
+    font: 650 var(--discern-font-size-xs) var(--discern-font-ui);
+  }
+  .discern-catalogue-field__proof[data-discern-field-proof="refused"] .discern-catalogue-field__proof-heading > strong {
+    background: var(--discern-color-danger-soft);
+    color: var(--discern-color-danger-deep);
+  }
+  .discern-catalogue-field__refusals {
+    margin: 0;
+    padding: 14px 14px 14px 34px;
+    border: 1px solid var(--discern-color-danger);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-danger-soft);
+    color: var(--discern-color-danger-deep);
+    font: var(--discern-font-size-sm) var(--discern-font-mono);
+  }
+  .discern-catalogue-field__proof-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    overflow: hidden;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-border);
+  }
+  .discern-catalogue-field__proof-grid article {
+    display: grid;
+    min-width: 0;
+    gap: 5px;
+    padding: 12px;
+    background: var(--discern-color-canvas);
+  }
+  .discern-catalogue-field__proof-grid article[data-discern-field-check="fail"] {
+    background: var(--discern-color-danger-soft);
+  }
+  .discern-catalogue-field__proof-grid strong {
+    font: 650 var(--discern-font-size-xs) var(--discern-font-ui);
+  }
+  .discern-catalogue-field__proof-grid span,
+  .discern-catalogue-field__proof-grid output {
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-size-xs) var(--discern-font-mono);
+    overflow-wrap: anywhere;
+  }
+  .discern-catalogue-field__proof-grid output {
+    color: var(--discern-color-success-deep);
+  }
+  .discern-catalogue-field__proof-grid article[data-discern-field-check="fail"] output {
+    color: var(--discern-color-danger-deep);
   }
   .discern-catalogue-field__role-grid {
     display: grid;
@@ -648,10 +712,14 @@
     .discern-catalogue-field__role-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+    .discern-catalogue-field__proof-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
   @media (max-width: 520px) {
     .discern-catalogue-field__role-grid,
-    .discern-catalogue-field__pair {
+    .discern-catalogue-field__pair,
+    .discern-catalogue-field__proof-grid {
       grid-template-columns: 1fr;
     }
     .discern-catalogue-terminal-foundation__evidence-pair {

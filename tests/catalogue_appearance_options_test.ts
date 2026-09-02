@@ -11,6 +11,7 @@ import {
   catalogueAppearanceOptions,
   catalogueAppearanceStyle,
   catalogueFieldFailures,
+  catalogueFieldPointProof,
   defaultCatalogueAppearanceOption,
 } from "../catalogue/shell/appearance-options.ts";
 import { blueThemeRoleTokens, blueThemeTokens } from "../src/theme/blue.ts";
@@ -69,6 +70,42 @@ Deno.test("every exposed Appearance option passes both Theme semantic proofs", (
       });
     }
   }
+});
+
+Deno.test("one detailed authority supplies browser margins and test refusals", () => {
+  const proof = catalogueFieldPointProof({
+    darkness: 0.6,
+    structure: 1.2,
+    emphasis: 0.8,
+    density: 1.1,
+    preset: "mono",
+  });
+  assertEquals(proof.accepted, false);
+  assertEquals(proof.failures, [
+    "field 0.6 accent collides with danger (0.074 OKLab)",
+  ]);
+  assert(proof.checks.length > 30);
+  assert(
+    proof.checks.every((check) =>
+      check.margin === check.observed - check.floor
+    ),
+  );
+  assert(
+    proof.checks.some(({ label }) => label.includes("action pair")),
+  );
+  assert(
+    proof.checks.some(({ label }) => label.includes("series-1 to series-2")),
+  );
+  assertEquals(
+    catalogueFieldPointProof({
+      darkness: 0,
+      structure: 1,
+      emphasis: 1,
+      density: 1,
+      preset: "mono",
+    }).accepted,
+    true,
+  );
 });
 
 Deno.test("unsafe arbitrary and synthetic future Appearance choices fail closed", () => {
