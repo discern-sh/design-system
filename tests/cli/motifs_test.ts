@@ -1,6 +1,12 @@
-import { assertEquals, assertStringIncludes, assertThrows } from "@std/assert";
+import {
+  assertEquals,
+  assertNotEquals,
+  assertStringIncludes,
+  assertThrows,
+} from "@std/assert";
 import { stripAnsi, styleText } from "../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
+import type { CliPresentationOptions } from "../../src/cli/contracts.ts";
 import {
   renderMotifActivityBeacon,
   renderMotifDivider,
@@ -19,7 +25,13 @@ import {
   type TerminalMotifDefinition,
 } from "../../src/cli/motif.ts";
 import { measureText } from "../../src/cli/text.ts";
-import { terminalThemeColor, terminalThemes } from "../../src/cli/theme.ts";
+import {
+  resolveTerminalTheme,
+  terminalThemeColor,
+  terminalThemes,
+  terminalToneColor,
+} from "../../src/cli/theme.ts";
+import { accentAppearance, fieldAppearance } from "../../src/tokens/tokens.ts";
 import {
   assertExactFrame,
   assertStyledFrame,
@@ -91,17 +103,25 @@ async function terminalSourceFiles(directory: URL): Promise<URL[]> {
 
 function renderCapabilityMatrix(
   capabilities: TerminalCapabilities,
+  presentation: CliPresentationOptions = {},
 ): readonly string[] {
   return [
-    renderMotifPattern({ length: 4 }, capabilities),
-    renderMotifSpinnerFrame(0, capabilities),
+    renderMotifPattern({ length: 4, ...presentation }, capabilities),
+    renderMotifSpinnerFrame(0, capabilities, presentation),
     renderMotifProgressFrame(
-      { completed: 1, total: 2, width: 12 },
+      { completed: 1, total: 2, width: 12, ...presentation },
       capabilities,
     ),
-    renderMotifSectionRule("go", { width: 12 }, capabilities),
-    renderMotifWorkflowStepper(CAPABILITY_MATRIX_STEPS, capabilities),
-    renderMotifActivityBeacon({ width: 8, phase: 0 }, capabilities),
+    renderMotifSectionRule("go", { width: 12, ...presentation }, capabilities),
+    renderMotifWorkflowStepper(
+      CAPABILITY_MATRIX_STEPS,
+      capabilities,
+      presentation,
+    ),
+    renderMotifActivityBeacon(
+      { width: 8, phase: 0, ...presentation },
+      capabilities,
+    ),
   ];
 }
 
@@ -642,5 +662,58 @@ Deno.test("every motif primitive degrades exactly across the capability matrix",
       capabilities,
       false,
     );
+  }
+});
+
+Deno.test("every motif primitive honours exact local appearance palettes", () => {
+  const appearance = accentAppearance(335);
+
+  for (const theme of ["light", "dark"] as const) {
+    const palette = resolveTerminalTheme({ theme, appearance });
+    for (const unicode of [true, false]) {
+      for (const colorDepth of ["truecolor", "ansi256", "ansi16"] as const) {
+        const capabilities = testTerminalCapabilities({
+          colorDepth,
+          columns: 30,
+          unicode,
+        });
+        const inheritedField = renderCapabilityMatrix(capabilities, { theme });
+        const explicitField = renderCapabilityMatrix(capabilities, {
+          theme,
+          appearance: fieldAppearance,
+        });
+        const accented = renderCapabilityMatrix(capabilities, {
+          theme,
+          appearance,
+        });
+
+        assertEquals(explicitField, inheritedField);
+        assertEquals(accented.map(stripAnsi), explicitField.map(stripAnsi));
+        for (const [index, frame] of accented.entries()) {
+          assertNotEquals(frame, explicitField[index]);
+        }
+        assertEquals(
+          accented[1],
+          styleText(
+            unicode ? "◐" : "^",
+            { color: terminalToneColor(palette, "accent") },
+            capabilities,
+          ),
+        );
+      }
+
+      const noColor = testTerminalCapabilities({
+        colorDepth: "none",
+        columns: 30,
+        unicode,
+      });
+      assertEquals(
+        renderCapabilityMatrix(noColor, { theme, appearance }),
+        renderCapabilityMatrix(noColor, {
+          theme,
+          appearance: fieldAppearance,
+        }),
+      );
+    }
   }
 });
