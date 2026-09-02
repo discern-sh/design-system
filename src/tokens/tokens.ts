@@ -60,9 +60,6 @@ const themeToken = (
 
 export { blueThemeTokens } from "../theme/blue.ts";
 
-/** @deprecated Import `blueThemeTokens` from `./theme/blue` while migrating. */
-export const discernThemeTokens = blueThemeTokens;
-
 /** Framework-neutral primitives and system-font defaults shared by every theme. */
 export const baseTokens: readonly DesignToken[] = [
   token(

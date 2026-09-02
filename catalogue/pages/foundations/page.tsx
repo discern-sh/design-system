@@ -3,12 +3,9 @@ import type { CSSProperties, FormEvent } from "react";
 import type { TerminalThemeVariant } from "../../../src/cli/theme.ts";
 import { CopyButton } from "../../../src/components/docs/copy-button/copy-button.tsx";
 import { OverflowCue } from "../../../src/components/layout/overflow-cue/overflow-cue.tsx";
-import {
-  allTokens,
-  baseTokens,
-  discernThemeTokens,
-} from "../../../src/tokens/tokens.ts";
+import { allTokens, baseTokens } from "../../../src/tokens/tokens.ts";
 import type { TokenCategory } from "../../../src/tokens/tokens.ts";
+import { blueThemeTokens } from "../../../src/theme/blue.ts";
 import {
   catalogueCliCapabilities,
   CliOutputPreview,
@@ -41,10 +38,10 @@ function isThemed(token: FoundationToken): token is FoundationToken & {
 
 function tokenSource(token: FoundationToken): string {
   if (baseTokens.some((candidate) => candidate === token)) return "Base Token";
-  if (discernThemeTokens.some((candidate) => candidate === token)) {
-    return "Discern theme Token";
+  if (blueThemeTokens.some((candidate) => candidate === token)) {
+    return "Blue preset Token";
   }
-  return "Semantic theme Token";
+  return "Field Token";
 }
 
 function previewVariable(name: string, value: string): CSSProperties {
