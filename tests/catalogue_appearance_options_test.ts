@@ -80,10 +80,8 @@ Deno.test("one detailed authority supplies browser margins and test refusals", (
     density: 1.1,
     preset: "mono",
   });
-  assertEquals(proof.accepted, false);
-  assertEquals(proof.failures, [
-    "field 0.6 accent collides with danger (0.074 OKLab)",
-  ]);
+  assertEquals(proof.accepted, true);
+  assertEquals(proof.failures, []);
   assert(proof.checks.length > 30);
   assert(
     proof.checks.every((check) =>
@@ -108,20 +106,14 @@ Deno.test("one detailed authority supplies browser margins and test refusals", (
   );
 });
 
-Deno.test("unsafe arbitrary and synthetic future Appearance choices fail closed", () => {
+Deno.test("the pre-2B picker stays named while full-domain future hues admit", () => {
   for (const hue of [20, 128, 145, 200]) {
     assertEquals(catalogueAppearanceOption(String(hue)), undefined);
   }
-  const error = assertThrows(
-    () =>
-      assertCatalogueAppearanceOptions([
-        ...catalogueAppearanceOptions,
-        { kind: "hue", id: "future-green", label: "Future green", hue: 145 },
-      ]),
-    TypeError,
-  );
-  assertStringIncludes(error.message, "future-green");
-  assertStringIncludes(error.message, "success");
+  assertCatalogueAppearanceOptions([
+    ...catalogueAppearanceOptions,
+    { kind: "hue", id: "future-green", label: "Future green", hue: 145 },
+  ]);
 
   assertThrows(
     () =>
@@ -132,6 +124,15 @@ Deno.test("unsafe arbitrary and synthetic future Appearance choices fail closed"
       ),
     TypeError,
     "exactly one default",
+  );
+  assertThrows(
+    () =>
+      assertCatalogueAppearanceOptions([
+        ...catalogueAppearanceOptions,
+        { kind: "hue", id: "invalid", label: "Invalid", hue: 361 },
+      ]),
+    TypeError,
+    "invalid hue",
   );
 });
 
@@ -221,30 +222,21 @@ Deno.test("the complete low-level hue range is swept before presets claim safety
     { length: 361 },
     (_, hue) => hue,
   ).filter((hue) => catalogueAppearanceHueFailures(hue).length === 0);
-  assert(safeHues.length > 0);
-  assert(safeHues.length < 361);
+  assertEquals(safeHues.length, 361);
   for (const option of catalogueAppearanceOptions) {
     if (option.kind === "hue") assert(safeHues.includes(option.hue));
   }
-  assert(
-    catalogueAppearanceHueFailures(20).some((failure) =>
-      failure.includes("danger")
-    ),
-  );
-  assert(
-    catalogueAppearanceHueFailures(145).some((failure) =>
-      failure.includes("success")
-    ),
-  );
+  assertEquals(catalogueAppearanceHueFailures(20), []);
+  assertEquals(catalogueAppearanceHueFailures(145), []);
 });
 
-Deno.test("the blue hue primitive tells consumers to coordinate semantic roles", async () => {
+Deno.test("the blue compatibility primitive documents the generic hue domain", async () => {
   const accent = blueThemeTokens.find(({ name }) =>
     name === "--discern-accent-hue"
   );
   assert(accent !== undefined);
-  assertStringIncludes(accent.description, "semantic");
-  assertStringIncludes(accent.description, "override");
+  assertStringIncludes(accent.description, "finite hue");
+  assertStringIncludes(accent.description, "0 through 360");
 
   const fixture = await Deno.readTextFile(
     new URL("fixtures/green-theme.css", import.meta.url),

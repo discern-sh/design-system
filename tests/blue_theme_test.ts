@@ -1,34 +1,60 @@
-import { assert, assertEquals, assertStringIncludes } from "@std/assert";
+import {
+  assert,
+  assertEquals,
+  assertNotEquals,
+  assertStringIncludes,
+} from "@std/assert";
 import {
   blueTheme,
   blueThemeCss,
   blueThemeRoleTokens,
   blueThemeTokens,
 } from "../src/theme/blue.ts";
-import { evaluateField, fieldColorRoleLaws } from "../src/tokens/field.ts";
+import {
+  accentAppearance,
+  DEFAULT_ACCENT_HUE,
+  evaluateAppearance,
+  evaluateField,
+  fieldColorRoleLaws,
+} from "../src/tokens/field.ts";
+import { FIELD_LIVE_CSS_SUPPORTS } from "../src/tokens/field-css.ts";
 
-Deno.test("blue preset role membership derives exhaustively from field metadata", () => {
-  const expected = fieldColorRoleLaws.filter((law) => law.bluePreset).map((
-    law,
-  ) => law.name);
+Deno.test("Blue membership and poles derive exhaustively from Accent metadata", () => {
+  const expected = fieldColorRoleLaws.filter((law) => law.accent !== "field")
+    .map((law) => law.name);
   assertEquals(blueThemeRoleTokens.map((token) => token.name), expected);
   assertEquals(blueTheme.roles, blueThemeRoleTokens);
   assertEquals(blueTheme.primitives, blueThemeTokens);
   assertEquals(blueTheme.name, "blue");
 
-  const light = evaluateField({ darkness: 0 });
-  const dark = evaluateField({ darkness: 1 });
+  const light = evaluateAppearance(accentAppearance(DEFAULT_ACCENT_HUE), {
+    darkness: 0,
+  });
+  const dark = evaluateAppearance(accentAppearance(DEFAULT_ACCENT_HUE), {
+    darkness: 1,
+  });
   for (const token of blueThemeRoleTokens) {
-    assert(
-      token.light !== light[token.name] || token.dark !== dark[token.name],
-      `${token.name} does not differ from the field`,
+    assertEquals(
+      token.light.replaceAll(
+        "var(--discern-accent-hue)",
+        String(DEFAULT_ACCENT_HUE),
+      ),
+      light[token.name],
+    );
+    assertEquals(
+      token.dark.replaceAll(
+        "var(--discern-accent-hue)",
+        String(DEFAULT_ACCENT_HUE),
+      ),
+      dark[token.name],
     );
   }
 });
 
-Deno.test("blue preset CSS covers explicit and system dark selection", () => {
+Deno.test("Blue compatibility CSS supplies pole fallback and the live law", () => {
   assertStringIncludes(blueThemeCss, "@layer discern.theme");
   assertStringIncludes(blueThemeCss, "--discern-accent-hue: 255;");
+  assertStringIncludes(blueThemeCss, `@supports ${FIELD_LIVE_CSS_SUPPORTS}`);
   assertStringIncludes(
     blueThemeCss,
     ':where([data-discern-root][data-discern-theme="dark"])',
@@ -40,58 +66,27 @@ Deno.test("blue preset CSS covers explicit and system dark selection", () => {
   }
 });
 
-Deno.test("blue action pair preserves the quiet-fill and deep-text treatment", () => {
-  const values = Object.fromEntries(
-    blueThemeRoleTokens.map((token) => [token.name, token]),
-  );
-  assertEquals(
-    values["--discern-color-action"]?.light,
-    values["--discern-color-accent-100"]?.light,
-  );
-  assertEquals(
-    values["--discern-color-on-action"]?.dark,
-    values["--discern-color-accent-800"]?.dark,
-  );
+Deno.test("Blue action fill is chromatic and preserves Field inversion", () => {
+  for (const darkness of [0, 1]) {
+    const field = evaluateField({ darkness });
+    const blue = evaluateAppearance(accentAppearance(DEFAULT_ACCENT_HUE), {
+      darkness,
+    });
+    assertNotEquals(
+      blue["--discern-color-action"],
+      field["--discern-color-action"],
+    );
+    assertEquals(
+      blue["--discern-color-on-action"],
+      field["--discern-color-on-action"],
+    );
+  }
 });
 
-Deno.test("blue derived roles preserve the component pairs they replace", () => {
-  const values = Object.fromEntries(
-    blueThemeRoleTokens.map((token) => [token.name, token]),
+Deno.test("Blue has no hand-authored role-value table", async () => {
+  const source = await Deno.readTextFile(
+    new URL("../src/theme/blue.ts", import.meta.url),
   );
-  assertEquals(values["--discern-color-accent-ink"], {
-    name: "--discern-color-accent-ink",
-    light: "var(--discern-color-accent-600)",
-    dark: "var(--discern-color-accent-500)",
-    category: "Color",
-    description:
-      "Polarity-responsive accent ink for concise emphasis and data marks.",
-  });
-  assertEquals(
-    values["--discern-color-brand-artwork-mask"]?.light,
-    "transparent",
-  );
-  assertEquals(
-    values["--discern-color-brand-artwork-mask"]?.dark,
-    "currentColor",
-  );
-  assertEquals(
-    values["--discern-color-action-edge"]?.light,
-    "var(--discern-color-accent-600)",
-  );
-  assertEquals(
-    values["--discern-color-action-shadow"]?.dark,
-    "var(--discern-shadow-color)",
-  );
-  assertEquals(
-    values["--discern-color-avatar-highlight"]?.light,
-    "var(--discern-color-surface)",
-  );
-  assertEquals(
-    values["--discern-color-avatar-fill-start"]?.dark,
-    "color-mix(in oklab, var(--discern-color-accent-200) 68%, var(--discern-color-accent-100))",
-  );
-  assertEquals(
-    values["--discern-color-avatar-fill-end"]?.dark,
-    "color-mix(in oklab, var(--discern-color-accent-300) 52%, var(--discern-color-accent-200))",
-  );
+  assert(!source.includes("blueRoleValues"));
+  assert(!source.includes("oklch(96.2%"));
 });

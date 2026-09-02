@@ -1,7 +1,7 @@
 /**
- * Monochrome field authority for every non-series colour role. One ordered law
- * table supplies token pole emission, terminal projection, chart ramps, and
- * Catalogue admission arithmetic.
+ * Field/Accent authority for every non-series colour role. One ordered law
+ * table supplies token pole emission, live browser projection, terminal-ready
+ * pure evaluation, chart ramps, and package admission arithmetic.
  *
  * @module
  */
@@ -66,6 +66,49 @@ export interface FieldPoint {
   readonly density: number;
 }
 
+/** Public browser and terminal vocabulary for one appearance identity. */
+export type AppearanceName = "field" | "accent";
+
+/** Achromatic appearance identity. */
+export interface FieldAppearance {
+  readonly name: "field";
+}
+
+/** Hue-parameterised chromatic appearance identity. */
+export interface AccentAppearance {
+  readonly name: "accent";
+  readonly hue: number;
+}
+
+/** Explicit appearance input shared by every pure projection. */
+export type Appearance = FieldAppearance | AccentAppearance;
+
+/** Default achromatic appearance. */
+export const fieldAppearance: FieldAppearance = Object.freeze({
+  name: "field",
+});
+
+/** Default hue retained by the named Blue compatibility projection. */
+export const DEFAULT_ACCENT_HUE = 255;
+
+/**
+ * Validate and normalise the public circular hue domain. Every finite value
+ * from 0 through 360 is admitted; 360 is the same point as 0.
+ */
+export function normalizeAccentHue(hue: number): number {
+  if (!Number.isFinite(hue) || hue < 0 || hue > 360) {
+    throw new TypeError(
+      `Accent hue ${hue} is outside the finite [0, 360] domain`,
+    );
+  }
+  return hue === 360 ? 0 : hue;
+}
+
+/** Construct one validated chromatic appearance input. */
+export function accentAppearance(hue: number): AccentAppearance {
+  return Object.freeze({ name: "accent", hue: normalizeAccentHue(hue) });
+}
+
 /** Default field point used when an axis is omitted. */
 export const defaultFieldPoint: FieldPoint = Object.freeze({
   darkness: fieldAxes.darkness.default,
@@ -84,7 +127,7 @@ export interface FieldNumberExpression {
 /** One field-axis reference. */
 export interface FieldAxisExpression {
   readonly kind: "axis";
-  readonly axis: FieldAxisName;
+  readonly axis: FieldAxisName | "accent-hue";
 }
 
 /** Minimal CSS-calc-compatible numeric expression vocabulary for field laws. */
@@ -153,6 +196,10 @@ const axisNodes = Object.freeze(
     density: { kind: "axis", axis: "density" },
   } as const satisfies Readonly<Record<FieldAxisName, FieldAxisExpression>>,
 );
+const accentHueAxis: FieldAxisExpression = Object.freeze({
+  kind: "axis",
+  axis: "accent-hue",
+});
 
 const binary = (
   kind: "add" | "subtract" | "multiply" | "divide",
@@ -164,6 +211,16 @@ const clamp = (value: FieldExpression): FieldExpression => ({
   minimum: zero,
   value,
   maximum: one,
+});
+const bounded = (
+  minimum: number,
+  value: FieldExpression,
+  maximum: number,
+): FieldExpression => ({
+  kind: "clamp",
+  minimum: numberNode(minimum),
+  value,
+  maximum: numberNode(maximum),
 });
 const rounded = (value: FieldExpression): FieldExpression => ({
   kind: "round",
@@ -209,6 +266,19 @@ function scaledCurve(
   axis: "structure" | "emphasis",
 ): FieldExpression {
   return rounded(clamp(binary("multiply", curve(values), axisNodes[axis])));
+}
+
+function boundedScaledCurve(
+  values: readonly [number, number, number, number, number],
+  axis: "structure" | "emphasis",
+  minimum: number,
+  maximum: number,
+): FieldExpression {
+  return rounded(bounded(
+    minimum,
+    binary("multiply", curve(values), axisNodes[axis]),
+    maximum,
+  ));
 }
 
 /** Paper and ink pigments authored once in OKLab. */
@@ -297,8 +367,17 @@ export type FieldPaint =
   | "active-ink"
   | "opposite-ink"
   | "raised-surface"
+  | "owned-surface"
   | "ink-pigment"
   | "paper-pigment";
+
+/** One chromatic projection carried beside its achromatic role law. */
+export interface AccentColorProjection {
+  readonly lightness: FieldExpression;
+  readonly chroma: FieldExpression;
+  readonly hue: FieldExpression;
+  readonly alpha: FieldExpression;
+}
 
 /** One public colour role and its sole field expression. */
 export interface FieldColorRoleLaw {
@@ -306,19 +385,28 @@ export interface FieldColorRoleLaw {
   readonly description: string;
   readonly paint: FieldPaint;
   readonly expression: FieldExpression;
-  readonly bluePreset: boolean;
+  readonly accent: AccentColorProjection | "field";
+  readonly ownedSurface: boolean;
 }
 
 const role = <
   const Name extends `--discern-${string}`,
-  const Blue extends boolean,
+  const Accent extends AccentColorProjection | undefined,
 >(
   name: Name,
   description: string,
   paint: FieldPaint,
   expression: FieldExpression,
-  bluePreset: Blue,
-) => ({ name, description, paint, expression, bluePreset } as const);
+  accent: Accent,
+) => ({
+  name,
+  description,
+  paint,
+  expression,
+  accent: accent ?? "field",
+  ownedSurface: paint === "canvas" || paint === "raised-surface" ||
+    paint === "owned-surface",
+} as const);
 
 const polaritySelection = (
   light: FieldExpression,
@@ -340,12 +428,177 @@ const weightedMix = (
   position: numberNode(toWeight),
 });
 
-const inkExpression = curve([0.87, 0.84, 1, 0.96, 0.92]);
-const inkMutedExpression = curve([0.66, 0.72, 0.82, 0.78, 0.72]);
-const accent100Expression = scaledCurve(
-  [0.05, 0.07, 0.12, 0.08, 0.06],
-  "emphasis",
+const lightPolarityProgress = clamp(binary(
+  "divide",
+  axisNodes.darkness,
+  numberNode(FIELD_POLARITY_CROSSOVER_DARKNESS),
+));
+const darkPolarityProgress = clamp(binary(
+  "divide",
+  binary(
+    "subtract",
+    axisNodes.darkness,
+    numberNode(FIELD_POLARITY_CROSSOVER_DARKNESS),
+  ),
+  numberNode(1 - FIELD_POLARITY_CROSSOVER_DARKNESS),
+));
+
+function polarCurve(
+  lightPole: number,
+  lightCrossover: number,
+  darkCrossover: number,
+  darkPole: number,
+): FieldExpression {
+  return rounded(polaritySelection(
+    {
+      kind: "lerp",
+      from: numberNode(lightPole),
+      to: numberNode(lightCrossover),
+      position: lightPolarityProgress,
+    },
+    {
+      kind: "lerp",
+      from: numberNode(darkCrossover),
+      to: numberNode(darkPole),
+      position: darkPolarityProgress,
+    },
+  ));
+}
+
+function accentProjection(
+  lightness: readonly [number, number, number, number],
+  chroma: readonly [number, number, number, number],
+  hue: FieldExpression,
+  emphasis = true,
+): AccentColorProjection {
+  const baseChroma = polarCurve(...chroma);
+  return Object.freeze({
+    lightness: polarCurve(...lightness),
+    chroma: emphasis
+      ? rounded(bounded(
+        0,
+        binary("multiply", baseChroma, axisNodes.emphasis),
+        0.28,
+      ))
+      : baseChroma,
+    hue,
+    alpha: one,
+  });
+}
+
+const accent100Projection = accentProjection(
+  [0.962, 0.9, 0.32, 0.35],
+  [0.019, 0.03, 0.065, 0.055],
+  accentHueAxis,
 );
+const accent200Projection = accentProjection(
+  [0.92, 0.84, 0.36, 0.4],
+  [0.045, 0.06, 0.09, 0.08],
+  accentHueAxis,
+);
+const accent300Projection = accentProjection(
+  [0.85, 0.76, 0.42, 0.46],
+  [0.082, 0.1, 0.125, 0.115],
+  accentHueAxis,
+);
+const accent400Projection = accentProjection(
+  [0.73, 0.64, 0.54, 0.58],
+  [0.128, 0.14, 0.16, 0.15],
+  accentHueAxis,
+);
+const accent500Projection = accentProjection(
+  [0.55, 0.5, 0.64, 0.67],
+  [0.185, 0.19, 0.175, 0.165],
+  accentHueAxis,
+);
+const accent600Projection = accentProjection(
+  [0.52, 0.44, 0.72, 0.74],
+  [0.208, 0.2, 0.15, 0.14],
+  accentHueAxis,
+);
+const accent700Projection = accentProjection(
+  [0.44, 0.36, 0.82, 0.82],
+  [0.185, 0.18, 0.115, 0.105],
+  accentHueAxis,
+);
+const accent800Projection = accentProjection(
+  [0.34, 0.28, 0.9, 0.9],
+  [0.13, 0.13, 0.07, 0.06],
+  accentHueAxis,
+);
+const actionProjection = accentProjection(
+  [0.4, 0.34, 0.82, 0.8],
+  [0.16, 0.16, 0.13, 0.13],
+  accentHueAxis,
+);
+const successHue = numberNode(152);
+const warningHue = polarCurve(74, 78, 82, 82);
+const dangerHue = numberNode(28);
+const successProjection = accentProjection(
+  [0.64, 0.6, 0.56, 0.58],
+  [0.165, 0.17, 0.17, 0.155],
+  successHue,
+);
+const successSoftProjection = accentProjection(
+  [0.95, 0.92, 0.26, 0.29],
+  [0.05, 0.055, 0.065, 0.06],
+  successHue,
+);
+const successDeepProjection = accentProjection(
+  [0.37, 0.32, 0.92, 0.88],
+  [0.09, 0.095, 0.105, 0.1],
+  successHue,
+);
+const warningProjection = accentProjection(
+  [0.64, 0.6, 0.58, 0.6],
+  [0.14, 0.145, 0.14, 0.13],
+  warningHue,
+);
+const warningSoftProjection = accentProjection(
+  [0.96, 0.92, 0.27, 0.3],
+  [0.045, 0.05, 0.06, 0.055],
+  warningHue,
+);
+const warningDeepProjection = accentProjection(
+  [0.5, 0.42, 0.9, 0.86],
+  [0.12, 0.12, 0.105, 0.1],
+  warningHue,
+);
+const dangerProjection = accentProjection(
+  [0.42, 0.3, 0.84, 0.82],
+  [0.19, 0.195, 0.18, 0.17],
+  dangerHue,
+);
+const dangerSoftProjection = accentProjection(
+  [0.96, 0.92, 0.26, 0.29],
+  [0.035, 0.045, 0.06, 0.055],
+  dangerHue,
+);
+const avatarFillStartProjection = accentProjection(
+  [0.962, 0.9, 0.35, 0.384],
+  [0.019, 0.03, 0.08, 0.072],
+  accentHueAxis,
+);
+const avatarFillEndProjection = accentProjection(
+  [0.936, 0.86, 0.4, 0.4312],
+  [0.0351, 0.05, 0.105, 0.0982],
+  accentHueAxis,
+);
+
+const inkExpression: FieldExpression = {
+  kind: "max",
+  values: [
+    curve([0.87, 0.84, 1, 0.96, 0.92]),
+    polarCurve(0.87, 1, 1, 0.92),
+  ],
+};
+const inkMutedExpression = polarCurve(0.66, 1, 1, 0.72);
+const inkFaintExpression = polarCurve(0.55, 0.72, 0.72, 0.55);
+const accent100Expression = rounded(clamp(binary(
+  "multiply",
+  polarCurve(0.05, 0, 0, 0.06),
+  axisNodes.emphasis,
+)));
 const accent200Expression = scaledCurve(
   [0.09, 0.12, 0.18, 0.13, 0.1],
   "emphasis",
@@ -354,26 +607,62 @@ const accent300Expression = scaledCurve(
   [0.17, 0.22, 0.28, 0.22, 0.18],
   "emphasis",
 );
-const accent500Expression = scaledCurve(
+const accent500Expression = boundedScaledCurve(
   [0.52, 0.68, 0.8, 0.66, 0.55],
   "emphasis",
+  0.55,
+  0.9,
 );
-const accent600Expression = scaledCurve(
-  [0.82, 0.86, 0.82, 0.86, 0.85],
+const accent600Expression = boundedScaledCurve(
+  [0.82, 0.86, 0.75, 0.86, 0.85],
   "emphasis",
+  0.5,
+  0.86,
 );
-const accent700Expression = scaledCurve(
+const accent700Expression = boundedScaledCurve(
   [0.93, 0.96, 1, 0.96, 0.94],
   "emphasis",
+  0.82,
+  1,
 );
 const borderStrongExpression = scaledCurve(
   [0.3, 0.34, 0.4, 0.35, 0.32],
   "structure",
 );
-const fullEmphasisExpression = scaledCurve(
+const accent800Expression = boundedScaledCurve(
   [1, 1, 1, 1, 1],
   "emphasis",
+  0.86,
+  1,
 );
+const successExpression = boundedScaledCurve(
+  [0.38, 0.36, 0.3, 0.36, 0.42],
+  "emphasis",
+  0.2,
+  0.55,
+);
+const warningExpression = boundedScaledCurve(
+  [0.62, 0.6, 0.58, 0.62, 0.66],
+  "emphasis",
+  0.35,
+  0.74,
+);
+const dangerExpression = boundedScaledCurve(
+  [1, 1, 1, 1, 1],
+  "emphasis",
+  0.7,
+  1,
+);
+const warningSoftExpression = rounded(clamp(binary(
+  "multiply",
+  polarCurve(0.07, 0, 0, 0.09),
+  axisNodes.emphasis,
+)));
+const dangerSoftExpression = rounded(clamp(binary(
+  "multiply",
+  polarCurve(0.1, 0, 0, 0.12),
+  axisNodes.emphasis,
+)));
 const accentInkExpression = polaritySelection(
   accent600Expression,
   accent500Expression,
@@ -386,6 +675,12 @@ const brandArtworkInkExpression = polaritySelection(
   accent700Expression,
   inkMutedExpression,
 );
+const brandArtworkInkProjection: AccentColorProjection = Object.freeze({
+  lightness: polaritySelection(accent700Projection.lightness, one),
+  chroma: polaritySelection(accent700Projection.chroma, zero),
+  hue: polaritySelection(accentHueAxis, zero),
+  alpha: polaritySelection(one, inkMutedExpression),
+});
 const actionShadowExpression = polaritySelection(accent600Expression, one);
 const neutralEdgeExpression = polaritySelection(
   inkExpression,
@@ -406,8 +701,9 @@ const avatarFillEndExpression = polaritySelection(
 );
 
 /**
- * Ordered field law population. Every non-series colour Theme Token derives
- * from this table; `bluePreset` is metadata, not a second value authority.
+ * Ordered appearance law population. Every non-series colour Theme Token
+ * derives from this table; an Accent projection is metadata beside the Field
+ * law, not a second role population.
  */
 export const fieldColorRoleLaws: readonly FieldColorRoleLaw[] = Object.freeze(
   [
@@ -416,287 +712,287 @@ export const fieldColorRoleLaws: readonly FieldColorRoleLaw[] = Object.freeze(
       "Primary ink.",
       "active-ink",
       inkExpression,
-      false,
+      undefined,
     ),
     role(
       "--discern-color-ink-muted",
       "Secondary ink.",
       "active-ink",
       inkMutedExpression,
-      false,
+      undefined,
     ),
     role(
       "--discern-color-ink-faint",
       "Tertiary ink.",
       "active-ink",
-      curve([0.55, 0.56, 0.6, 0.6, 0.55]),
-      false,
+      inkFaintExpression,
+      undefined,
     ),
     role(
       "--discern-color-canvas",
       "Opaque page canvas.",
       "canvas",
       fieldCanvasLightnessExpression,
-      false,
+      undefined,
     ),
     role(
       "--discern-color-surface",
       "Opaque raised surface, composited once over canvas.",
       "raised-surface",
       curve([0, 0.04, 0.07, 0.07, 0.07]),
-      false,
+      undefined,
     ),
     role(
       "--discern-color-surface-sunken",
       "Translucent inset wash used only over an owned opaque canvas.",
       "active-ink",
       curve([0.04, 0.06, 0.08, 0.05, 0.03]),
-      false,
+      undefined,
     ),
     role(
       "--discern-color-inverse-surface",
       "Opaque ink-pigment surface for stable light-on-dark treatments.",
       "ink-pigment",
       one,
-      false,
+      undefined,
     ),
     role(
       "--discern-color-inverse-ink",
       "Paper-pigment ink for a stable inverse surface.",
       "paper-pigment",
       one,
-      false,
+      undefined,
     ),
     role(
       "--discern-color-action",
       "Primary action fill: full active ink in the field.",
       "active-ink",
       one,
-      true,
+      actionProjection,
     ),
     role(
       "--discern-color-on-action",
       "Primary action content: the opposite pigment.",
       "opposite-ink",
       one,
-      true,
+      undefined,
     ),
     role(
       "--discern-color-accent-100",
       "Subtlest translucent emphasis wash.",
       "active-ink",
       accent100Expression,
-      true,
+      accent100Projection,
     ),
     role(
       "--discern-color-accent-200",
       "Quiet translucent emphasis wash.",
       "active-ink",
       accent200Expression,
-      true,
+      accent200Projection,
     ),
     role(
       "--discern-color-accent-300",
       "Soft emphasis fill.",
       "active-ink",
       accent300Expression,
-      true,
+      accent300Projection,
     ),
     role(
       "--discern-color-accent-400",
       "Mid emphasis fill.",
       "active-ink",
       scaledCurve([0.32, 0.39, 0.44, 0.39, 0.34], "emphasis"),
-      true,
+      accent400Projection,
     ),
     role(
       "--discern-color-accent-500",
       "Strong emphasis fill.",
       "active-ink",
       accent500Expression,
-      true,
+      accent500Projection,
     ),
     role(
       "--discern-color-accent-600",
       "Default emphasis action.",
       "active-ink",
       accent600Expression,
-      true,
+      accent600Projection,
     ),
     role(
       "--discern-color-accent-700",
       "Strong emphasis text.",
       "active-ink",
       accent700Expression,
-      true,
+      accent700Projection,
     ),
     role(
       "--discern-color-accent-800",
       "Deepest emphasis text.",
       "active-ink",
-      fullEmphasisExpression,
-      true,
+      accent800Expression,
+      accent800Projection,
     ),
     role(
       "--discern-color-border",
       "Structural hairline ink.",
       "active-ink",
       scaledCurve([0.14, 0.18, 0.24, 0.19, 0.16], "structure"),
-      false,
+      undefined,
     ),
     role(
       "--discern-color-border-strong",
       "Emphasised structural ink.",
       "active-ink",
       borderStrongExpression,
-      false,
+      undefined,
     ),
     role(
       "--discern-color-stripe",
       "Decorative structural hatch ink.",
       "active-ink",
       scaledCurve([0.07, 0.1, 0.14, 0.11, 0.09], "structure"),
-      false,
+      undefined,
     ),
     role(
       "--discern-color-success",
       "Successful outcome hierarchy; meaning also requires a non-colour witness.",
       "active-ink",
-      scaledCurve([0.44, 0.42, 0.34, 0.42, 0.48], "emphasis"),
-      true,
+      successExpression,
+      successProjection,
     ),
     role(
       "--discern-color-success-soft",
       "Translucent successful-outcome wash.",
       "active-ink",
       accent100Expression,
-      true,
+      successSoftProjection,
     ),
     role(
       "--discern-color-success-deep",
       "Successful-outcome text on its wash.",
       "active-ink",
       scaledCurve([0.82, 0.86, 0.9, 0.9, 0.9], "emphasis"),
-      true,
+      successDeepProjection,
     ),
     role(
       "--discern-color-warning",
       "Warning hierarchy; meaning also requires a non-colour witness.",
       "active-ink",
-      scaledCurve([0.62, 0.6, 0.58, 0.62, 0.66], "emphasis"),
-      true,
+      warningExpression,
+      warningProjection,
     ),
     role(
       "--discern-color-warning-soft",
       "Translucent warning wash.",
       "active-ink",
-      scaledCurve([0.07, 0.1, 0.16, 0.11, 0.09], "emphasis"),
-      true,
+      warningSoftExpression,
+      warningSoftProjection,
     ),
     role(
       "--discern-color-warning-deep",
       "Warning text on its wash.",
       "active-ink",
       scaledCurve([0.78, 0.82, 0.86, 0.86, 0.86], "emphasis"),
-      true,
+      warningDeepProjection,
     ),
     role(
       "--discern-color-danger",
       "Danger hierarchy; meaning also requires a non-colour witness.",
       "active-ink",
-      fullEmphasisExpression,
-      true,
+      dangerExpression,
+      dangerProjection,
     ),
     role(
       "--discern-color-danger-soft",
       "Translucent danger wash.",
       "active-ink",
-      scaledCurve([0.1, 0.14, 0.2, 0.15, 0.12], "emphasis"),
-      true,
+      dangerSoftExpression,
+      dangerSoftProjection,
     ),
     role(
       "--discern-shadow-color",
       "Active-ink shadow pigment.",
       "active-ink",
       one,
-      false,
+      undefined,
     ),
     role(
       "--discern-color-overlay",
       "Black overlay pigment with a darkness-dependent alpha.",
       "ink-pigment",
       curve([0.38, 0.44, 0.5, 0.56, 0.62]),
-      false,
+      undefined,
     ),
     role(
       "--discern-color-accent-ink",
       "Polarity-responsive accent ink for concise emphasis and data marks.",
       "active-ink",
       accentInkExpression,
-      true,
+      accent600Projection,
     ),
     role(
       "--discern-color-brand-artwork-mask",
       "Paper-pigment silhouette revealed only on dark-polarity canvases.",
       "paper-pigment",
       brandArtworkMaskExpression,
-      true,
+      undefined,
     ),
     role(
       "--discern-color-brand-artwork-ink",
       "Contrast ink for branded artwork and its monochrome silhouette.",
       "active-ink",
       brandArtworkInkExpression,
-      true,
+      brandArtworkInkProjection,
     ),
     role(
       "--discern-color-action-edge",
       "Polarity-responsive edge for an emphasised action.",
       "active-ink",
       accentInkExpression,
-      true,
+      accent700Projection,
     ),
     role(
       "--discern-color-action-shadow",
       "Polarity-responsive hard shadow for an emphasised action.",
       "active-ink",
       actionShadowExpression,
-      true,
+      undefined,
     ),
     role(
       "--discern-color-neutral-edge",
       "Polarity-responsive edge for a neutral control.",
       "active-ink",
       neutralEdgeExpression,
-      false,
+      undefined,
     ),
     role(
       "--discern-color-neutral-shadow",
       "Polarity-responsive hard shadow for a neutral control.",
       "active-ink",
       neutralShadowExpression,
-      false,
+      undefined,
     ),
     role(
       "--discern-color-avatar-highlight",
       "Paper-pigment highlight for an illustrated identity fill.",
       "paper-pigment",
       avatarHighlightExpression,
-      true,
+      undefined,
     ),
     role(
       "--discern-color-avatar-fill-start",
       "Opening stop of the illustrated identity fill.",
       "active-ink",
       avatarFillStartExpression,
-      true,
+      avatarFillStartProjection,
     ),
     role(
       "--discern-color-avatar-fill-end",
       "Closing stop of the illustrated identity fill.",
       "active-ink",
       avatarFillEndExpression,
-      true,
+      avatarFillEndProjection,
     ),
   ] as const satisfies readonly FieldColorRoleLaw[],
 );
@@ -774,18 +1070,17 @@ function resolveFieldPoint(point: Partial<FieldPoint>): FieldPoint {
   return Object.freeze(resolved);
 }
 
-/** Evaluate one field expression at a validated point. */
-export function evaluateFieldExpression(
+function evaluateResolvedExpression(
   expression: FieldExpression,
-  point: Partial<FieldPoint> = {},
+  resolved: FieldPoint,
+  accentHue: number,
 ): number {
-  const resolved = resolveFieldPoint(point);
   const evaluate = (node: FieldExpression): number => {
     switch (node.kind) {
       case "number":
         return node.value;
       case "axis":
-        return resolved[node.axis];
+        return node.axis === "accent-hue" ? accentHue : resolved[node.axis];
       case "add":
         return evaluate(node.left) + evaluate(node.right);
       case "subtract":
@@ -824,6 +1119,30 @@ export function evaluateFieldExpression(
     }
   };
   return evaluate(expression);
+}
+
+/** Evaluate one field expression at a validated point. */
+export function evaluateFieldExpression(
+  expression: FieldExpression,
+  point: Partial<FieldPoint> = {},
+): number {
+  return evaluateResolvedExpression(
+    expression,
+    resolveFieldPoint(point),
+    DEFAULT_ACCENT_HUE,
+  );
+}
+
+/** Evaluate one shared expression for an explicit appearance and field point. */
+export function evaluateAppearanceExpression(
+  expression: FieldExpression,
+  appearance: Appearance,
+  point: Partial<FieldPoint> = {},
+): number {
+  const hue = appearance.name === "accent"
+    ? normalizeAccentHue(appearance.hue)
+    : DEFAULT_ACCENT_HUE;
+  return evaluateResolvedExpression(expression, resolveFieldPoint(point), hue);
 }
 
 interface EvaluatedFieldColor {
@@ -868,6 +1187,7 @@ function evaluateStructuredField(
         evaluated = { color: opposite, alpha: amount };
         break;
       case "raised-surface":
+      case "owned-surface":
         evaluated = { color: compositeOklab(active, amount, canvas), alpha: 1 };
         break;
       case "ink-pigment":
@@ -878,6 +1198,46 @@ function evaluateStructuredField(
         break;
     }
     return [law.name, evaluated];
+  })) as Record<FieldColorRoleName, EvaluatedFieldColor>);
+}
+
+function evaluateStructuredAppearance(
+  appearance: Appearance,
+  point: Partial<FieldPoint>,
+): Readonly<Record<FieldColorRoleName, EvaluatedFieldColor>> {
+  const resolved = resolveFieldPoint(point);
+  const field = evaluateStructuredField(resolved);
+  if (appearance.name === "field") return field;
+
+  const hue = normalizeAccentHue(appearance.hue);
+  return Object.freeze(Object.fromEntries(fieldColorRoleLaws.map((law) => {
+    if (law.accent === "field") {
+      return [law.name, field[law.name]];
+    }
+    const lightness = evaluateResolvedExpression(
+      law.accent.lightness,
+      resolved,
+      hue,
+    );
+    const chroma = evaluateResolvedExpression(
+      law.accent.chroma,
+      resolved,
+      hue,
+    );
+    const projectedHue = evaluateResolvedExpression(
+      law.accent.hue,
+      resolved,
+      hue,
+    );
+    const radians = projectedHue * Math.PI / 180;
+    return [law.name, {
+      color: {
+        lightness,
+        a: chroma * Math.cos(radians),
+        b: chroma * Math.sin(radians),
+      },
+      alpha: evaluateResolvedExpression(law.accent.alpha, resolved, hue),
+    }];
   })) as Record<FieldColorRoleName, EvaluatedFieldColor>);
 }
 
@@ -918,7 +1278,15 @@ function requiredFieldValue<Value>(
 export function evaluateField(
   point: Partial<FieldPoint> = {},
 ): Readonly<Record<FieldColorRoleName, string>> {
-  const values = evaluateStructuredField(point);
+  return evaluateAppearance(fieldAppearance, point);
+}
+
+/** Evaluate every role for one explicit appearance and field point. */
+export function evaluateAppearance(
+  appearance: Appearance,
+  point: Partial<FieldPoint> = {},
+): Readonly<Record<FieldColorRoleName, string>> {
+  const values = evaluateStructuredAppearance(appearance, point);
   return Object.freeze(Object.fromEntries(
     fieldColorRoleLaws.map((law) => [
       law.name,
@@ -931,7 +1299,15 @@ export function evaluateField(
 export function evaluateOpaqueField(
   point: Partial<FieldPoint> = {},
 ): Readonly<Record<FieldColorRoleName, string>> {
-  const values = evaluateStructuredField(point);
+  return evaluateOpaqueAppearance(fieldAppearance, point);
+}
+
+/** Evaluate appearance roles composited over their inherited opaque canvas. */
+export function evaluateOpaqueAppearance(
+  appearance: Appearance,
+  point: Partial<FieldPoint> = {},
+): Readonly<Record<FieldColorRoleName, string>> {
+  const values = evaluateStructuredAppearance(appearance, point);
   const canvas = requiredFieldValue(
     values,
     "--discern-color-canvas",

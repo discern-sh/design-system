@@ -1,6 +1,8 @@
 /** CSS projection of the monochrome field's authored numeric expressions. */
 
 import {
+  type AppearanceName,
+  DEFAULT_ACCENT_HUE,
   defaultFieldPoint,
   fieldActiveLightnessExpression,
   fieldAxes,
@@ -24,6 +26,9 @@ export interface FieldCssDeclaration {
   readonly name: `--discern-${string}`;
   readonly value: string;
 }
+
+/** Public hue primitive shared by every Accent projection. */
+export const ACCENT_HUE_CUSTOM_PROPERTY_NAME = "--discern-accent-hue" as const;
 
 const FIELD_CANVAS_LIGHTNESS = "--discern-f-l" as const;
 const FIELD_POLARITY = "--discern-f-p" as const;
@@ -84,7 +89,9 @@ function compileExpressionBody(
     case "number":
       return formattedNumber(expression.value);
     case "axis":
-      return `var(${fieldAxisCustomPropertyName(expression.axis)})`;
+      return expression.axis === "accent-hue"
+        ? `var(${ACCENT_HUE_CUSTOM_PROPERTY_NAME})`
+        : `var(${fieldAxisCustomPropertyName(expression.axis)})`;
     case "add": {
       const left = constantArithmeticValue(expression.left);
       const right = constantArithmeticValue(expression.right);
@@ -315,6 +322,15 @@ export function generateFieldAxisRegistrationCss(): string {
   }).join("\n\n");
 }
 
+/** Register the inherited hue primitive used by live Accent scopes. */
+export function generateAccentHueRegistrationCss(): string {
+  return `@property ${ACCENT_HUE_CUSTOM_PROPERTY_NAME} {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: ${formattedNumber(DEFAULT_ACCENT_HUE)};
+}`;
+}
+
 function colorRoleValue(
   law: FieldColorRoleLaw,
   expressionBindings: ReadonlyMap<FieldExpression, string>,
@@ -328,12 +344,31 @@ function colorRoleValue(
     case "opposite-ink":
       return `oklch(var(${FIELD_OPPOSITE_LIGHTNESS}) 0 0 / ${amount})`;
     case "raised-surface":
+    case "owned-surface":
       return `color-mix(in srgb, oklch(var(${FIELD_ACTIVE_LIGHTNESS}) 0 0) calc(${amount} * 100%), oklch(var(${FIELD_CANVAS_LIGHTNESS}) 0 0))`;
     case "ink-pigment":
       return `oklch(0 0 0 / ${amount})`;
     case "paper-pigment":
       return `oklch(1 0 0 / ${amount})`;
   }
+}
+
+function appearanceColorRoleValue(
+  law: FieldColorRoleLaw,
+  appearance: AppearanceName,
+  expressionBindings: ReadonlyMap<FieldExpression, string>,
+): string {
+  if (appearance === "field" || law.accent === "field") {
+    return colorRoleValue(law, expressionBindings);
+  }
+  const lightness = compileExpression(
+    law.accent.lightness,
+    expressionBindings,
+  );
+  const chroma = compileExpression(law.accent.chroma, expressionBindings);
+  const hue = compileExpression(law.accent.hue, expressionBindings);
+  const alpha = compileExpression(law.accent.alpha, expressionBindings);
+  return `oklch(${lightness} ${chroma} ${hue} / ${alpha})`;
 }
 
 function shadowRoleValue(
@@ -348,7 +383,9 @@ function shadowRoleValue(
  * Project every shared helper and field-derived role. New laws auto-enrol in
  * source order; series and presentation pairs remain outside this population.
  */
-export function fieldLiveCssDeclarations(): readonly FieldCssDeclaration[] {
+export function appearanceLiveCssDeclarations(
+  appearance: AppearanceName,
+): readonly FieldCssDeclaration[] {
   const canvasBindings = new Map<FieldExpression, string>([
     [fieldCanvasLightnessExpression, `var(${FIELD_CANVAS_LIGHTNESS})`],
   ]);
@@ -363,7 +400,16 @@ export function fieldLiveCssDeclarations(): readonly FieldCssDeclaration[] {
   ]);
   const projectedExpressions = projectSharedExpressions(
     [
-      ...fieldColorRoleLaws.map(({ expression }) => expression),
+      ...fieldColorRoleLaws.flatMap((law) =>
+        appearance === "accent" && law.accent !== "field"
+          ? [
+            law.accent.lightness,
+            law.accent.chroma,
+            law.accent.hue,
+            law.accent.alpha,
+          ]
+          : [law.expression]
+      ),
       ...fieldShadowRoleLaws.map(({ expression }) => expression),
     ],
     roleBindings,
@@ -394,13 +440,22 @@ export function fieldLiveCssDeclarations(): readonly FieldCssDeclaration[] {
     ...projectedExpressions.declarations,
     ...fieldColorRoleLaws.map((law) => ({
       name: law.name,
-      value: colorRoleValue(law, projectedExpressions.bindings),
+      value: appearanceColorRoleValue(
+        law,
+        appearance,
+        projectedExpressions.bindings,
+      ),
     })),
     ...fieldShadowRoleLaws.map((law) => ({
       name: law.name,
       value: shadowRoleValue(law, projectedExpressions.bindings),
     })),
   ]);
+}
+
+/** Project the default achromatic Field appearance. */
+export function fieldLiveCssDeclarations(): readonly FieldCssDeclaration[] {
+  return appearanceLiveCssDeclarations("field");
 }
 
 /** Scale one authored pixel spacing fact by the registered density axis. */
