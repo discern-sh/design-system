@@ -42,6 +42,8 @@ These contracts deliberately supersede two conclusions in [ADR 0040](../../../_a
 
 This is an independently landed sequence. Dispatch 1A alone. After it lands, dispatch 2A and 2B together; 2B lands first, and 2A uses the `discern-await-the-fleet` procedure if necessary, then runs `discern_update` before its final gate. Dispatch 3A only after both wave-2 briefs are in `_done/` on `main`. The original monochrome-field 4A remains blocked until a package release containing this programme is published and selected by the owner.
 
+Wave 1A includes an owner-authorised canonical-image regeneration because its shared action and Avatar token changes made the existing corpus stale. Later capture work remains governed by the source-currentness guard.
+
 Expected topology: four owner-dispatched sessions and four worktrees, with peak cross-worktree concurrency of two. Wave 2A may use up to four sub-agents inside its own worktree after its coordinator establishes the shared terminal API; those sub-agents edit only their assigned Component folders.
 
 ## Ownership seams

@@ -4,6 +4,8 @@
 
 **Wave:** 1. Runs alone. It establishes the contract consumed by 2A and 2B.
 
+**Completion record:** The owner authorised canonical imagery regeneration in this stream after the source-currentness guard identified the shared action and Avatar token changes as stale. The deterministic producer updated the corpus; no generated image or manifest was hand-edited.
+
 You own `1A` only. Do not launch, dispatch, or supervise the later briefs. Do not edit Component CSS/TSX, terminal renderers, Catalogue UI, or canonical imagery.
 
 ## Orient, verify the prerequisites, then re-root
