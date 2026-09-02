@@ -993,15 +993,15 @@ export const fieldColorRoleLaws: readonly FieldColorRoleLaw[] = Object.freeze(
     ),
     role(
       "--discern-color-avatar-fill-start",
-      "Opening stop of the illustrated identity fill.",
-      "active-ink",
+      "Opaque opening base stop of the illustrated identity fill.",
+      "owned-surface",
       avatarFillStartExpression,
       avatarFillStartProjection,
     ),
     role(
       "--discern-color-avatar-fill-end",
-      "Closing stop of the illustrated identity fill.",
-      "active-ink",
+      "Opaque closing base stop of the illustrated identity fill.",
+      "owned-surface",
       avatarFillEndExpression,
       avatarFillEndProjection,
     ),
@@ -1010,6 +1010,14 @@ export const fieldColorRoleLaws: readonly FieldColorRoleLaw[] = Object.freeze(
 
 /** Public field colour-role name. */
 export type FieldColorRoleName = typeof fieldColorRoleLaws[number]["name"];
+
+/** Metadata predicate enrolling every role that must own its painted backdrop. */
+export function ownedSurfaceRoleNames(
+  laws: readonly Pick<FieldColorRoleLaw, "name" | "ownedSurface">[] =
+    fieldColorRoleLaws,
+): readonly `--discern-${string}`[] {
+  return laws.filter((law) => law.ownedSurface).map((law) => law.name);
+}
 
 /** One shadow role whose opacity follows the field's structure axis. */
 export interface FieldShadowRoleLaw {

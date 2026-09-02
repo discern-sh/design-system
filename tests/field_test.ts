@@ -321,11 +321,11 @@ Deno.test("derived component-intent roles preserve every current pole pair", () 
     pair("--discern-color-accent-300")[1],
   ]);
   assertEquals(pair("--discern-color-avatar-fill-start"), [
-    "oklch(0% 0 0 / 0.05)",
-    "oklch(100% 0 0 / 0.0872)",
+    "oklch(96.1902% 0 0)",
+    "oklch(20.1242% 0 0)",
   ]);
   assertEquals(pair("--discern-color-avatar-fill-end"), [
-    "oklch(0% 0 0 / 0.0748)",
-    "oklch(100% 0 0 / 0.1416)",
+    "oklch(94.2866% 0 0)",
+    "oklch(26.0774% 0 0)",
   ]);
 });
