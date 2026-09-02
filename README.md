@@ -8,20 +8,20 @@ deno add jsr:@discern-sh/design-system
 
 ## Public imports
 
-| Import                                              | Contract                                                                                  |
-| --------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `@discern-sh/design-system`                         | Token metadata, component/group metadata types, the package manifest, and `semanticClass` |
-| `@discern-sh/design-system/chart`                   | Typed chart specs, descriptions, kind Metadata, and portable standalone SVG               |
-| `@discern-sh/design-system/cli`                     | Pure React-free terminal renderers, capabilities, themes, and semantic motif primitives   |
-| `@discern-sh/design-system/cli/interactive`         | Optional Deno terminal driver and typed interaction state machines                        |
-| `@discern-sh/design-system/cli/interactive/testing` | Deterministic fake terminal, semantic key/resize scripts, and frame assertions            |
-| `@discern-sh/design-system/cli/projection`          | Package-output decoding, browser projection, and explicit layout inspection               |
-| `@discern-sh/design-system/diagram`                 | Typed diagram specs, descriptions, kind Metadata, and portable standalone SVG             |
-| `@discern-sh/design-system/manifest`                | Framework-neutral manifest schema and the complete package ownership manifest             |
-| `@discern-sh/design-system/runtime`                 | Deterministic selected-runtime emitter                                                    |
-| `@discern-sh/design-system/tokens`                  | Primitive, semantic, and Discern-preset token metadata                                    |
-| `@discern-sh/design-system/theme/discern`           | Default branded blue preset                                                               |
-| `@discern-sh/design-system/react`                   | Optional React components and their public prop types                                     |
+| Import                                              | Contract                                                                                                                            |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `@discern-sh/design-system`                         | Token metadata, Component Metadata with its generated author guide, group metadata types, the package manifest, and `semanticClass` |
+| `@discern-sh/design-system/chart`                   | Typed chart specs, descriptions, kind Metadata, and portable standalone SVG                                                         |
+| `@discern-sh/design-system/cli`                     | Pure React-free terminal renderers, capabilities, themes, and semantic motif primitives                                             |
+| `@discern-sh/design-system/cli/interactive`         | Optional Deno terminal driver and typed interaction state machines                                                                  |
+| `@discern-sh/design-system/cli/interactive/testing` | Deterministic fake terminal, semantic key/resize scripts, and frame assertions                                                      |
+| `@discern-sh/design-system/cli/projection`          | Package-output decoding, browser projection, and explicit layout inspection                                                         |
+| `@discern-sh/design-system/diagram`                 | Typed diagram specs, descriptions, kind Metadata, and portable standalone SVG                                                       |
+| `@discern-sh/design-system/manifest`                | Framework-neutral manifest schema and the complete package ownership manifest                                                       |
+| `@discern-sh/design-system/runtime`                 | Deterministic selected-runtime emitter                                                                                              |
+| `@discern-sh/design-system/tokens`                  | Primitive, semantic, and Discern-preset token metadata                                                                              |
+| `@discern-sh/design-system/theme/discern`           | Default branded blue preset                                                                                                         |
+| `@discern-sh/design-system/react`                   | Optional React components and their public prop types                                                                               |
 
 Only `./react` resolves React. The package keeps React and React DOM as catalogue development dependencies and peer dependencies, while its root, manifest, runtime, token, and theme graphs do not import them.
 
@@ -115,6 +115,33 @@ Semantic component roles are separate from the default blue preset. The runtime 
 The distinct success hue is deliberate: a green accent must not erase the difference between brand actions and successful outcomes. Automated package tests cover light/dark text contrast, accent/success/warning/danger separation, reduced-motion rules, forced-colour focus outlines, and unchanged component CSS. Manual browser review still checks visible focus shape and status recognition in the consumer's actual type, layout, zoom, and operating-system colour settings.
 
 Inverse surface and ink roles remain dark-on-light in purpose across both site themes; they do not invert with the ordinary canvas and ink roles.
+
+## Component Metadata and author guide
+
+Every Component declares its Metadata once — description, purpose collections, when to use it, when another route serves better, terminal stance, and accessibility notes — and codegen projects that authority into the root entrypoint beside the registries it already generates. `componentMetadata` is the canonical array in Catalogue order. `componentAuthorGuide` is the Markdown guide generated from it: an index of the purpose collections, then one section per Component beneath its Group naming the React adapter and terminal renderer the generated barrels publish, its use and refusal guidance, its accessibility contract, and its canonical examples, with an explicit line wherever optional Metadata is absent. `cataloguePurposeDetails` carries the label and scope of each purpose collection.
+
+```ts
+import {
+  cataloguePurposeDetails,
+  componentAuthorGuide,
+  componentMetadata,
+} from "@discern-sh/design-system";
+
+export const toolOutputComponents = componentMetadata
+  .filter((meta) => meta.purposes?.includes("displaying-tool-output"))
+  .map((meta) => meta.slug);
+export const toolOutputLabel =
+  cataloguePurposeDetails["displaying-tool-output"].label;
+export const componentAuthoringReference = componentAuthorGuide;
+```
+
+The guide exists so a coding agent selects and authors Components from the package it is building against rather than from memory. [`skills/use-discern-design-system/`](skills/use-discern-design-system/) is the matching agent skill: its script prints the installed package's guide whole or filtered by purpose, Group, or slug, and the playbook walks selection, the pinned-imagery check, public-contract authoring, and verification. Link or copy that directory into your agent's skills location — for Claude Code, `~/.claude/skills/` serves every project and `.claude/skills/` one project:
+
+```sh
+ln -s "$(pwd)/skills/use-discern-design-system" ~/.claude/skills/use-discern-design-system
+```
+
+The skill's `evals/evals.json` is generated from the same Metadata: each Component's first use-when statement becomes a selection prompt, its first refusal becomes a refusal prompt, and the pinned Catalogue image of its default example is the reference a reviewer compares against.
 
 ## Semantic diagrams
 
@@ -581,7 +608,7 @@ deno install
 deno task verify
 ```
 
-`deno task verify` runs formatting, lint, type-checks, the catalogue build, and the unit and real-browser conformance tests. `deno task serve` builds and serves the local component catalogue. Run `deno task codegen` after changing component metadata, component CSS, component imports, or package assets; do not edit `src/generated/` or `catalogue/generated/` by hand.
+`deno task verify` runs formatting, lint, type-checks, the catalogue build, and the unit and real-browser conformance tests. `deno task serve` builds and serves the local component catalogue. Run `deno task codegen` after changing component metadata, component CSS, component imports, or package assets; do not edit `src/generated/`, `catalogue/generated/`, or the generated skill eval set under `skills/use-discern-design-system/evals/` by hand.
 
 `deno task test` creates a temporary external Deno project. Its neutral fixture declares no React dependency, imports only documented package exports, emits a runtime, and is exercised again with `deno run --cached-only`. A second fixture adds the React peer contract and renders static HTML through `./react`. Neither fixture reaches into `dist/`, relies on a global Deno-cache path, uses `--unstable-raw-imports`, or fetches an asset at runtime.
 
