@@ -52,7 +52,8 @@ export const fieldAxes = Object.freeze(
       minimum: 0.5,
       maximum: 2,
       default: 1,
-      description: "Projection-time multiplier for the spacing unit.",
+      description:
+        "Projection-time multiplier for spacing only. It never changes font size; interface-text and component-owned touch-target floors remain unscaled.",
     },
   } as const satisfies Readonly<Record<FieldAxisName, FieldAxisDefinition>>,
 );
@@ -277,7 +278,10 @@ export const fieldOppositeLightnessExpression: FieldExpression = {
   position: fieldPolarityExpression,
 };
 
-/** Numeric spacing fact; density is applied only by a projection. */
+/**
+ * Numeric spacing fact retained for non-browser projections. Browser density
+ * scales spacing only and never changes font size.
+ */
 export const FIELD_SPACING_UNIT_PX = 4;
 
 /** Pigment treatment applied to one field role's scalar expression. */

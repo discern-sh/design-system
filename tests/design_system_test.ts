@@ -586,6 +586,17 @@ Deno.test("runtime globals are branded and the default runtime stays monochrome"
       ':where([data-discern-root][data-discern-theme="dark"]) {\n    color-scheme: dark; --discern-darkness: 1;',
     );
     assertStringIncludes(output, "@supports (color: oklch(");
+    for (
+      const token of baseTokens.filter(({ name }) =>
+        name.startsWith("--discern-space-")
+      )
+    ) {
+      assertStringIncludes(output, `${token.name}: ${token.value};`);
+      assertStringIncludes(
+        output,
+        `${token.name}: calc(${token.value} * var(--discern-density));`,
+      );
+    }
     assertStringIncludes(output, "\n  @media (prefers-color-scheme: dark)");
     const systemDark = output.slice(
       output.indexOf("@media (prefers-color-scheme: dark)"),

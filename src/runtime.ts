@@ -27,6 +27,7 @@ import {
 import { publicTokens } from "./token-inventory.ts";
 import { blueThemeCss } from "./theme/blue.ts";
 import {
+  densityScaledSpacingCssValue,
   FIELD_LIVE_CSS_SUPPORTS,
   fieldLiveCssDeclarations,
   generateFieldAxisRegistrationCss,
@@ -71,9 +72,14 @@ function generateTokenCss(): string {
   const darkDeclarations = themeTokens.map(({ name, dark }) =>
     `${name}: ${dark};`
   ).join(" ");
-  const liveDeclarations = fieldDeclarations.map(({ name, value }) =>
-    `${name}: ${value};`
-  ).join(" ");
+  const liveDeclarations = [
+    ...baseTokens.filter(({ name }) => name.startsWith("--discern-space-"))
+      .map(({ name, value }) => ({
+        name,
+        value: densityScaledSpacingCssValue(value),
+      })),
+    ...fieldDeclarations,
+  ].map(({ name, value }) => `${name}: ${value};`).join(" ");
   return `${generateFieldAxisRegistrationCss()}
 
 @layer discern.tokens {

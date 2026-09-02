@@ -115,7 +115,7 @@ export const baseTokens: readonly DesignToken[] = [
     "--discern-font-size-xs",
     "0.85rem",
     "Typography",
-    "Fine print and compact labels.",
+    "Authored interface-text floor for fine print and compact labels; density never scales font size.",
   ),
   token(
     "--discern-font-size-sm",
@@ -191,7 +191,11 @@ export const baseTokens: readonly DesignToken[] = [
       `--discern-space-${step}`,
       `${step * FIELD_SPACING_UNIT_PX}px`,
       "Spacing",
-      `${step * FIELD_SPACING_UNIT_PX}px spacing step.`,
+      step === 1
+        ? `${FIELD_SPACING_UNIT_PX}px spacing unit. Density scales spacing only and never font size; interface-text and component-owned touch-target floors do not shrink.`
+        : `${
+          step * FIELD_SPACING_UNIT_PX
+        }px authored spacing step; browser emission multiplies it by density.`,
     )
   ),
   token("--discern-radius-xs", "4px", "Shape", "Fine control radius."),
