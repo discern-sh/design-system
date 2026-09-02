@@ -29,6 +29,7 @@ import {
 } from "../../routes/foundations.ts";
 import { announceCatalogueLocationChange } from "../../shell/location.ts";
 import type { CatalogueFieldSelection } from "../../shell/field-state.ts";
+import type { AppearanceName } from "../../../src/tokens/field.ts";
 import { CatalogueIndexCard, CataloguePageHeader } from "../shared.tsx";
 import { FieldPage } from "./field-page.tsx";
 
@@ -629,6 +630,8 @@ function TerminalFoundationDetail(
 
 export interface FoundationsPageProps {
   readonly terminalTheme: TerminalThemeVariant;
+  readonly appearance?: AppearanceName | undefined;
+  readonly accentHue?: number | undefined;
   readonly field?: CatalogueFieldSelection | undefined;
   readonly fieldScheme?: "light" | "dark" | undefined;
   readonly onFieldChange?:
@@ -642,6 +645,8 @@ export interface FoundationsPageProps {
 export function FoundationsPage(
   {
     terminalTheme,
+    appearance,
+    accentHue,
     field,
     fieldScheme,
     onFieldChange,
@@ -669,6 +674,8 @@ export function FoundationsPage(
   if (route.page === "field") {
     return (
       <FieldPage
+        appearance={appearance}
+        accentHue={accentHue}
         field={field}
         fieldScheme={fieldScheme}
         onFieldChange={onFieldChange}
