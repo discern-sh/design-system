@@ -2,7 +2,6 @@ import { fromFileUrl } from "@std/path";
 import type { Browser, Page } from "playwright-core";
 import {
   catalogueAppearanceOptions,
-  catalogueAppearanceStyle,
 } from "../../../catalogue/shell/appearance-options.ts";
 import { componentReviewPath } from "../../../catalogue/review/state.ts";
 import { reviewInlineSizes } from "../../../catalogue/review-postures.ts";
@@ -224,7 +223,7 @@ export async function verifyComponentReviewInstrument(
           group,
           width: "medium",
           theme: "light",
-          appearance: "blue",
+          appearance: "field",
           motion: "ordinary",
           mode: "contact",
           speed: "production",
@@ -254,7 +253,7 @@ export async function verifyComponentReviewInstrument(
         group: "Core",
         width: "medium",
         theme: "light",
-        appearance: "blue",
+        appearance: "field",
         motion: "ordinary",
         mode: "contact",
         speed: "production",
@@ -319,46 +318,26 @@ export async function verifyComponentReviewInstrument(
             posture: "settled-default",
             width: "narrow",
             theme,
-            appearance: option.id,
+            appearance: "accent",
+            accent: String(option.hue),
             motion: "ordinary",
             mode: "contact",
             speed: "production",
           }),
         );
-        const appearanceMismatches = await page.locator(
+        const appliedAppearance = await page.locator(
           "[data-discern-review-identity]",
-        ).evaluate(
-          (element, expected: readonly (readonly [string, string])[]) => {
-            const reference = document.createElement("div");
-            reference.setAttribute("data-discern-root", "");
-            reference.setAttribute(
-              "data-discern-theme",
-              element.getAttribute("data-discern-theme") ?? "system",
-            );
-            for (const [property, value] of expected) {
-              reference.style.setProperty(property, value);
-            }
-            document.body.append(reference);
-            const computed = getComputedStyle(element);
-            const computedReference = getComputedStyle(reference);
-            const mismatches = expected.flatMap(([property]) => {
-              const expectedValue = computedReference.getPropertyValue(
-                property,
-              ).trim();
-              const actualValue = computed.getPropertyValue(property).trim();
-              return actualValue === expectedValue ? [] : [
-                `${property}: expected ${expectedValue}, found ${actualValue}`,
-              ];
-            });
-            reference.remove();
-            return mismatches;
-          },
-          Object.entries(catalogueAppearanceStyle(option, theme)),
-        );
+        ).evaluate((element) => ({
+          appearance: element.getAttribute("data-discern-appearance"),
+          hue: getComputedStyle(element).getPropertyValue(
+            "--discern-accent-hue",
+          ).trim(),
+        }));
         invariant(
-          appearanceMismatches.length === 0,
-          `${theme}/${option.id} Appearance did not reach the specimen: ${
-            appearanceMismatches.join("; ")
+          appliedAppearance.appearance === "accent" &&
+            Number(appliedAppearance.hue) === option.hue,
+          `${theme}/${option.id} numeric Accent did not reach the specimen: ${
+            JSON.stringify(appliedAppearance)
           }`,
         );
         appearanceCases += 1;
@@ -372,7 +351,8 @@ export async function verifyComponentReviewInstrument(
             posture: "settled-validation-error",
             width: "narrow",
             theme,
-            appearance: option.id,
+            appearance: "accent",
+            accent: String(option.hue),
             motion: "ordinary",
             mode: "reel",
             speed: "production",
@@ -424,7 +404,8 @@ export async function verifyComponentReviewInstrument(
               example: reviewCase.example,
               width: localWidth,
               theme: "light",
-              appearance: "blue",
+              appearance: "accent",
+              accent: "255",
               motion: "reduced",
               mode: "reel",
               speed: "production",
@@ -517,7 +498,8 @@ export async function verifyComponentReviewInstrument(
                 group,
                 width: requestedWidth,
                 theme: "light",
-                appearance: "blue",
+                appearance: "accent",
+                accent: "255",
                 motion: "reduced",
                 mode: "contact",
                 speed: "production",
@@ -587,7 +569,8 @@ export async function verifyComponentReviewInstrument(
         category: "motion",
         width: "medium",
         theme: "dark",
-        appearance: "violet",
+        appearance: "accent",
+        accent: "300",
         motion: "ordinary",
         mode: "reel",
         speed: "production",
@@ -620,7 +603,8 @@ export async function verifyComponentReviewInstrument(
         category: "motion",
         width: "medium",
         theme: "dark",
-        appearance: "violet",
+        appearance: "accent",
+        accent: "300",
         motion: "ordinary",
         mode: "reel",
         speed: "production",
@@ -647,7 +631,8 @@ export async function verifyComponentReviewInstrument(
         category: "motion",
         width: "medium",
         theme: "dark",
-        appearance: "violet",
+        appearance: "accent",
+        accent: "300",
         motion: "reduced",
         mode: "reel",
         speed: "production",
@@ -671,7 +656,8 @@ export async function verifyComponentReviewInstrument(
         posture: "focus-button",
         width: "medium",
         theme: "light",
-        appearance: "blue",
+        appearance: "accent",
+        accent: "255",
         motion: "ordinary",
         mode: "reel",
         speed: "production",
@@ -697,7 +683,8 @@ export async function verifyComponentReviewInstrument(
         posture: "focus-button",
         width: "medium",
         theme: "light",
-        appearance: "blue",
+        appearance: "accent",
+        accent: "255",
         motion: "ordinary",
         mode: "reel",
         speed: "slow",
@@ -722,7 +709,8 @@ export async function verifyComponentReviewInstrument(
         category: "interaction",
         width: "medium",
         theme: "light",
-        appearance: "blue",
+        appearance: "accent",
+        accent: "255",
         motion: "ordinary",
         mode: "reel",
         speed: "production",
@@ -770,7 +758,8 @@ export async function verifyComponentReviewInstrument(
           category: "motion",
           width: "medium",
           theme: "dark",
-          appearance: "violet",
+          appearance: "accent",
+          accent: "300",
           motion,
           mode: "reel",
           speed: "production",
@@ -854,7 +843,8 @@ export async function verifyComponentReviewInstrument(
         category: "motion",
         width: "medium",
         theme: "light",
-        appearance: "blue",
+        appearance: "accent",
+        accent: "255",
         motion: "reduced",
         mode: "reel",
         speed: "production",
@@ -891,7 +881,8 @@ export async function verifyComponentReviewInstrument(
           posture: "settled-default",
           width: "narrow",
           theme: "light",
-          appearance: "blue",
+          appearance: "accent",
+          accent: "255",
           motion: "reduced",
           mode: "reel",
           speed: "production",

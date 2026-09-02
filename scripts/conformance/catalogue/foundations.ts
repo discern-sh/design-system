@@ -49,7 +49,6 @@ async function verifyTokenExplorer(
     structure: 1,
     emphasis: 1,
     density: 1,
-    preset: "mono",
   });
   const url = new URL(foundationsPaths.tokens, origin);
   url.searchParams.set("theme", "light");
