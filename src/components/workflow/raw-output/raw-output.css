@@ -23,8 +23,10 @@
     display: none;
   }
   .discern-raw-output__summary:focus-visible {
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: -2px;
+    outline-width: calc(var(--discern-space-1) * 0.75);
+    outline-style: solid;
+    outline-color: var(--discern-color-accent-500);
+    outline-offset: calc(var(--discern-space-1) * -0.75);
   }
   .discern-raw-output[open] .discern-raw-output__summary {
     background: color-mix(in oklab,
@@ -85,11 +87,6 @@
   @media (hover: hover) {
     .discern-raw-output__summary:hover {
       background: var(--discern-color-surface-sunken);
-    }
-  }
-  @media (forced-colors: active) {
-    .discern-raw-output__summary:focus-visible {
-      outline-color: Highlight;
     }
   }
 }

@@ -73,7 +73,7 @@
   .discern-artifact-card__meta dd > a {
     display: inline-flex;
     align-items: center;
-    min-block-size: 24px;
+    min-block-size: 1.5rem;
   }
   @container discern-artifact-card (max-width: 28rem) {
     .discern-artifact-card__meta > div {

@@ -11,8 +11,8 @@ const meta = {
     "Compact statused feed of a run's steps — done, active, queued, failed, or skipped — with text annotations and right-aligned timing.",
   purposes: ["displaying-tool-output"],
   accessibility: [
-    "Each entry's status is spoken as visually hidden text after its label; the marker glyphs are hidden decoration.",
-    "Status pairs a distinct glyph shape with its colour, so no state is conveyed by colour alone.",
+    "Each entry's visible marker glyph carries an accessible status name beside the printed task label.",
+    "Status pairs a distinct glyph shape and accessible name with its colour, so no state is conveyed by colour alone.",
     "Renders an ordered list, so assistive technology announces the run's length and each step's place in it.",
   ],
 } satisfies ComponentMeta;

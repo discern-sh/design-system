@@ -42,7 +42,7 @@
     place-items: center;
     inline-size: var(--discern-space-5);
     block-size: var(--discern-space-5);
-    border: 1px solid currentColor;
+    border: 1px solid var(--discern-color-border-strong);
     border-radius: 50%;
     color: var(--discern-color-ink-faint);
     font-size: var(--discern-font-size-xs);

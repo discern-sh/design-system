@@ -17,6 +17,14 @@ export interface AgentAvatarProps extends HTMLAttributes<HTMLSpanElement> {
   readonly decorative?: boolean;
 }
 
+const statusGlyphs: Readonly<Record<AgentStatus, string>> = {
+  working: "●",
+  waiting: "◌",
+  blocked: "!",
+  done: "✓",
+  idle: "·",
+};
+
 /** Dark square tile with an interface-type sigil identifying one agent, with optional status. */
 export const AgentAvatar: DiscernComponent<HTMLSpanElement, AgentAvatarProps> =
   forwardRef<HTMLSpanElement, AgentAvatarProps>(function AgentAvatar(
@@ -47,6 +55,9 @@ export const AgentAvatar: DiscernComponent<HTMLSpanElement, AgentAvatarProps> =
           `discern-agent-avatar--${size}`,
           className,
         )}
+        {...(!decorative && status !== undefined
+          ? { "data-discern-status": status }
+          : {})}
         {...identity}
         {...props}
       >
@@ -57,9 +68,11 @@ export const AgentAvatar: DiscernComponent<HTMLSpanElement, AgentAvatarProps> =
           ? (
             <span
               className="discern-agent-avatar__status"
-              data-discern-status={status}
+              data-discern-avatar-status={status}
               aria-hidden="true"
-            />
+            >
+              {statusGlyphs[status]}
+            </span>
           )
           : null}
       </span>

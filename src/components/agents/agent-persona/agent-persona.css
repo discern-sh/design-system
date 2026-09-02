@@ -12,7 +12,13 @@
   .discern-agent-persona__text {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: calc(var(--discern-space-1) * 0.5);
+    min-inline-size: 0;
+  }
+  .discern-agent-persona__identity {
+    display: flex;
+    align-items: baseline;
+    gap: var(--discern-space-2);
     min-inline-size: 0;
   }
   .discern-agent-persona__name {
@@ -32,6 +38,14 @@
     line-height: 1.35;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .discern-agent-persona__status {
+    flex: none;
+    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-xs);
+    font-weight: var(--discern-font-weight-body);
+    line-height: 1.35;
+    text-transform: capitalize;
   }
   .discern-agent-persona--sm {
     gap: var(--discern-space-2);

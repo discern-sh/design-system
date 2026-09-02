@@ -21,9 +21,9 @@
       var(--discern-color-inverse-surface) 62%
     );
     box-shadow:
-      0 0 0 2px var(--discern-avatar-ring, transparent),
-      inset 0 1px 0 color-mix(in oklab, var(--discern-color-inverse-ink) 16%,
-      transparent);
+      0 0 0 0.125rem var(--discern-avatar-ring, transparent),
+      inset 0 1px 0 color-mix(in oklab, var(--discern-shadow-color)
+      calc(var(--discern-structure) * 16%), transparent);
     color: var(--discern-color-inverse-ink);
     user-select: none;
   }
@@ -56,36 +56,46 @@
   }
   .discern-agent-avatar__status {
     position: absolute;
-    inset-block-end: -1px;
-    inset-inline-end: -1px;
-    inline-size: max(9px, calc(var(--discern-avatar-size) * 0.26));
-    block-size: max(9px, calc(var(--discern-avatar-size) * 0.26));
-    border: 2px solid var(--discern-color-surface);
-    border-radius: 3px;
+    inset-block-end: calc(var(--discern-space-1) * -0.25);
+    inset-inline-end: calc(var(--discern-space-1) * -0.25);
+    inline-size: max(0.5625rem, calc(var(--discern-avatar-size) * 0.26));
+    block-size: max(0.5625rem, calc(var(--discern-avatar-size) * 0.26));
+    border: 0.125rem solid var(--discern-color-surface);
+    border-radius: var(--discern-radius-xs);
     background: var(--discern-color-ink-faint);
-    box-shadow: 0 0 0 1px color-mix(in oklab, var(--discern-color-ink) 12%,
-      transparent);
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--discern-shadow-color)
+      calc(var(--discern-structure) * 12%), transparent);
+    color: var(--discern-color-ink);
+    font-size: calc(var(--discern-avatar-size) * 0.18);
+    font-weight: var(--discern-font-weight-strong);
+    line-height: 1;
   }
-  .discern-agent-avatar__status[data-discern-status="working"] {
-    background: var(--discern-color-accent-500);
+  .discern-agent-avatar__status[data-discern-avatar-status="working"] {
+    border-color: var(--discern-color-accent-300);
+    background: var(--discern-color-accent-100);
+    color: var(--discern-color-accent-ink);
   }
-  .discern-agent-avatar__status[data-discern-status="waiting"] {
-    background: var(--discern-color-warning);
+  .discern-agent-avatar__status[data-discern-avatar-status="waiting"] {
+    background: var(--discern-color-warning-soft);
+    color: var(--discern-color-warning-deep);
   }
-  .discern-agent-avatar__status[data-discern-status="blocked"] {
-    background: var(--discern-color-danger);
+  .discern-agent-avatar__status[data-discern-avatar-status="blocked"] {
+    background: var(--discern-color-danger-soft);
+    color: var(--discern-color-danger);
   }
-  .discern-agent-avatar__status[data-discern-status="done"] {
-    background: var(--discern-color-success);
+  .discern-agent-avatar__status[data-discern-avatar-status="done"] {
+    background: var(--discern-color-success-soft);
+    color: var(--discern-color-success-deep);
   }
-  .discern-agent-avatar__status[data-discern-status="idle"] {
+  .discern-agent-avatar__status[data-discern-avatar-status="idle"] {
     background: var(--discern-color-surface);
     box-shadow:
-      0 0 0 1px color-mix(in oklab, var(--discern-color-ink) 12%, transparent),
-      inset 0 0 0 2px var(--discern-color-border-strong);
+      0 0 0 1px color-mix(in oklab, var(--discern-shadow-color)
+      calc(var(--discern-structure) * 12%), transparent),
+      inset 0 0 0 0.125rem var(--discern-color-border-strong);
   }
   @media (prefers-reduced-motion: no-preference) {
-    .discern-agent-avatar__status[data-discern-status="working"] {
+    .discern-agent-avatar__status[data-discern-avatar-status="working"] {
       animation: discern-agent-avatar-working 2.4s var(--discern-ease-in-out)
         infinite;
     }
@@ -93,15 +103,6 @@
   @keyframes discern-agent-avatar-working {
     50% {
       opacity: 0.45;
-    }
-  }
-  @media (forced-colors: active) {
-    .discern-agent-avatar {
-      border-color: CanvasText;
-    }
-    .discern-agent-avatar__status {
-      border-color: Canvas;
-      background: CanvasText;
     }
   }
 }
