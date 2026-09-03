@@ -1,7 +1,8 @@
-# Discern Glyph curation review
+# Discern Glyph curation decision record
 
-Status: **awaiting owner decisions**. This packet recommends decisions; it does
-not change the curated authority or create a public contract.
+Status: **accepted and applied**. The owner accepted all nine decisions on
+2026-09-03. This record explains the evidence and outcomes; it does not create
+a public contract or replace the curated authority.
 
 ## Review binding
 
@@ -21,21 +22,21 @@ dataset and must not be consumed as one. Generated files, snapshots, Catalogue
 projections, and repetitions of an authority are not counted as independent
 usage evidence.
 
-## Proposed decision set
+## Accepted decision set
 
 | Disposition                     | Aliases                                                                                                                                      |
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | Keep unchanged                  | `spark`, `arrow-right`, `arrow-left`, `arrow-up`, `arrow-down`, `status-complete`, `close`, `warning`, `disclosure-right`, `disclosure-down` |
 | Rename and narrow               | `information` to `info`; `moon` to `theme-dark`                                                                                              |
-| Split or narrow                 | Replace broad `check` with a selection-specific alias; keep `status-complete` as the status role                                             |
+| Rename and narrow               | Replace broad `check` with `selection-selected`; keep `status-complete` as the status role                                                   |
 | Retain as brand-reserved        | `brand-mark`, without an approved ASCII fallback                                                                                             |
 | Defer from the first public set | `arrow-bidirectional`, `shape-circle`, `shape-square`, `shape-diamond`, `shape-star`                                                         |
 | Remove as curated aliases       | `outline-small-up`, `keycap-one`, `technologist`, `warning-emoji`; their canonical records remain in the factual Atlas                       |
 
-The proposed first public candidate set therefore contains fourteen names: the
-ten unchanged names, `info`, `theme-dark`, one selection-specific replacement
-for `check`, and brand-reserved `brand-mark`. That count is a review outcome,
-not an export implemented by this effort.
+The accepted future public candidate set therefore contains fourteen names:
+the ten unchanged names, `info`, `theme-dark`, `selection-selected`, and
+brand-reserved `brand-mark`. That count is a review outcome, not an export
+implemented by this effort.
 
 ## Evidence method and cross-cutting findings
 
@@ -187,7 +188,7 @@ macOS fonts, not to other platforms.
   exposes `check` with `✓ → v` (`src/components/core/icon/icon.cli.ts:22-45`).
 - Assessment: `check` and `status-complete` are conceptually distinct, but the
   current `check` alias is not. Replace it with one selection-specific name,
-  proposed `selection-selected`, category `selection`, with ASCII `x` and
+  accepted `selection-selected`, category `selection`, with ASCII `x` and
   guidance requiring native state or an adjacent label. Do not create an
   `action-confirm` alias without an authored need.
 
@@ -440,9 +441,9 @@ macOS fonts, not to other platforms.
   the comparison. `warning` should be the only curated product role, bound to
   explicit text presentation.
 
-## Fallback policy recommendations
+## Accepted fallback policy
 
-| Alias or group                                                                          | Proposal                                                | Reason                                                                                                                              |
+| Alias or group                                                                          | Outcome                                                 | Reason                                                                                                                              |
 | --------------------------------------------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | `spark`, directional arrows, `status-complete`, `info`, `close`, `warning`, disclosures | Keep current fallbacks and fidelity                     | They match authored practice and their contextual guidance remains honest.                                                          |
 | Selection replacement for `check`                                                       | `x`, semantic only in native/labelled selection context | Checkbox supplies direct evidence; `+` belongs to completion and `v` can read as Down.                                              |
@@ -452,22 +453,20 @@ macOS fonts, not to other platforms.
 | Four shape aliases                                                                      | Do not ratify a public fallback while deferred          | Their current fallbacks are useful inside independent series grammars, not generic semantics; star demonstrably needs a role split. |
 | Four removed reference aliases                                                          | No fallback                                             | Canonical Atlas records remain reference data, not supported product glyphs.                                                        |
 
-The current fidelity words—`semantic`, `approximation`, and `lossy`—remain
-useful. The surface model is insufficient because `supported` currently forces
-an ASCII fallback. Add an explicit Unicode-supported/no-approved-ASCII posture
-or make fallback availability explicit; do not fabricate identity-preserving
-ASCII.
+The fidelity words—`semantic`, `approximation`, and `lossy`—remain useful. The
+terminal model now uses `unicode-only` when Unicode is supported but no ASCII
+fallback is approved; it does not fabricate identity-preserving ASCII.
 
 ## Category, recommendation, and publication vocabulary
 
-- Add category `selection` if the selection replacement for `check` is accepted.
-  It is neither an action nor a status result.
-- Add category `appearance` if `theme-dark` is accepted. `decoration`
-  understates the controlled theme role.
+- Category `selection` owns `selection-selected`; it is neither an action nor a
+  status result.
+- Category `appearance` owns `theme-dark`; `decoration` understates the
+  controlled theme role.
 - Keep `recommended`, `reference-only`, and `brand-reserved` as use postures.
   They should not be overloaded to encode public-contract review.
-- Add an orthogonal private publication disposition at the curation authority,
-  at minimum `candidate` and `deferred`. Removed reference aliases need no
+- The curation authority carries the orthogonal private publication dispositions
+  `candidate` and `deferred`. Removed reference aliases need no
   disposition because their canonical records remain. This lets a future
   `./glyphs` design enumerate only owner-approved candidates without treating
   every internally recommended alias as approved for publication.
@@ -487,17 +486,18 @@ ASCII.
 | Accessibility            | Can state once that discovery titles are not labels and return no automatic accessible-name field.                                                           | Canonical labels create stronger pressure to misuse official Unicode names as UI labels.                                                                                  | Catalogue explains the rule, but copied implementations may omit it.           |
 | Migration pressure       | Does not imply migration of Icon, motif, triangles, charts, or local grammars.                                                                               | Makes Atlas records look like a universal registry and raises pressure to consolidate independent owners.                                                                 | Avoids migration now but offers no stable path away from copied policy.        |
 
-### Recommendation
+### Decision
 
-Choose option 1: publish only owner-approved curated names and a purpose-built,
-React-free resolution projection; keep complete canonical Atlas records private
-and Catalogue-visible. This boundary supplies the product contract consumers
-need without making Unicode research schema and membership SemVer commitments.
-Option 2 overturns the separation principle without a consumer need. Option 3
-leaves real repeated package usage without a supported neutral vocabulary.
+Option 1 is accepted: a future package boundary publishes only owner-approved
+curated names and a purpose-built, React-free resolution projection; complete
+canonical Atlas records remain private and Catalogue-visible. This boundary
+supplies the product contract consumers need without making Unicode research
+schema and membership SemVer commitments. Option 2 overturns the separation
+principle without a consumer need. Option 3 leaves real repeated package usage
+without a supported neutral vocabulary.
 
-This is a hard-to-reverse publication boundary. If the owner accepts it, record
-the decision in an ADR in this effort, but do not add `./glyphs` or any export.
+ADR-0044 records this hard-to-reverse publication boundary. This effort does
+not add `./glyphs` or any export.
 
 ### Non-binding ergonomics sketch
 
@@ -541,35 +541,19 @@ reconstruct it from code points. ASCII fallback is optional because absence is
 part of the approved contract. The neutral module must not import React; the
 existing `Icon` wrapper merely receives resolved text as children.
 
-## Owner checkpoint
+## Owner decision
 
-Please decide these exact questions before `src/glyphs/atlas.ts`, validation,
-tests, map guidance, or the TODO changes:
-
-1. Approve the ten unchanged keeps?
-2. Replace `check` with proposed `selection-selected`, add category `selection`,
-   and use `x` only in labelled/native selection context—or choose a different
-   selection name/fallback?
-3. Rename `information` to `info` while keeping discovery title `Information`?
-4. Rename `moon` to `theme-dark`, add category `appearance`, and change fallback
-   from lossy `c` to semantic `D`?
-5. Retain `brand-mark` as brand-reserved but expose no approved ASCII fallback,
-   requiring the terminal surface model to represent that honestly?
-6. Defer `arrow-bidirectional` and all four shape aliases from the first public
-   candidate set?
-7. Remove the four reference-only aliases while retaining their canonical Atlas
-   records and Catalogue detail pages?
-8. Add an orthogonal private `candidate`/`deferred` publication disposition
-   rather than overloading recommendation state?
-9. Accept publication boundary option 1 for a future `./glyphs` entrypoint, to
-   be recorded now in an ADR but not implemented?
+The owner approved the complete decision set without amendments on 2026-09-03.
+The curated authority applies the accepted names, categories, fallbacks, and
+publication dispositions. The canonical Atlas population and every independent
+Icon, motif, triangle, chart-ramp, and local glyph authority remain unchanged.
 
 ## Live review URLs
 
 - Explorer: <http://127.0.0.1:18999/catalogue/glyphs/>
-- Split `check`: <http://127.0.0.1:18999/catalogue/glyphs/u-2713/>
-- Rename `information`: <http://127.0.0.1:18999/catalogue/glyphs/u-24d8/>
-- Rename `moon`: <http://127.0.0.1:18999/catalogue/glyphs/u-263e/>
+- Accepted `selection-selected`: <http://127.0.0.1:18999/catalogue/glyphs/u-2713/>
+- Accepted `info`: <http://127.0.0.1:18999/catalogue/glyphs/u-24d8/>
+- Accepted `theme-dark`: <http://127.0.0.1:18999/catalogue/glyphs/u-263e/>
 - Defer `arrow-bidirectional`: <http://127.0.0.1:18999/catalogue/glyphs/u-2194/>
 - Defer shapes: <http://127.0.0.1:18999/catalogue/glyphs/u-25cf/>,
   <http://127.0.0.1:18999/catalogue/glyphs/u-25a0/>,
