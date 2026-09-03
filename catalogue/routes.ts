@@ -13,6 +13,15 @@ import {
 } from "./routes/components.ts";
 import { catalogueTerminalLayoutPath } from "./routes/terminal.ts";
 import {
+  catalogueGlyphPath,
+  glyphCatalogueEntries,
+  glyphCatalogueEntryFromSlug,
+  glyphSearchRecords,
+  glyphSearchRecordsForEntries,
+  glyphSequenceSlug,
+  parseGlyphSequenceSlug,
+} from "./routes/glyphs.ts";
+import {
   canonicalFoundationsLegacyUrl,
   catalogueTerminalFoundationPath,
   foundationsPaths,
@@ -36,6 +45,7 @@ import { normalizedCataloguePathname } from "./routes/types.ts";
 export {
   canonicalCatalogueShellPathname,
   catalogueComponentPath,
+  catalogueGlyphPath,
   catalogueGroupSlug,
   catalogueNavigation,
   catalogueRoute,
@@ -46,6 +56,12 @@ export {
   catalogueTerminalLayoutPath,
   componentSearchRecords,
   foundationsPaths,
+  glyphCatalogueEntries,
+  glyphCatalogueEntryFromSlug,
+  glyphSearchRecords,
+  glyphSearchRecordsForEntries,
+  glyphSequenceSlug,
+  parseGlyphSequenceSlug,
 };
 export type {
   CatalogueRoute,
@@ -53,6 +69,10 @@ export type {
   CatalogueRouteFamilyId,
   CatalogueSearchSources,
 };
+export type {
+  GlyphCatalogueData,
+  GlyphCatalogueEntry,
+} from "./routes/glyphs.ts";
 
 /** Resolve a URL slug back to the canonical Metadata-owned Component Group. */
 export function catalogueGroupFromSlug(

@@ -4,6 +4,7 @@ import { compareRouteFamily } from "./compare.ts";
 import { componentsRouteFamily } from "./components.ts";
 import { compositionsRouteFamily } from "./compositions.ts";
 import { foundationsRouteFamily } from "./foundations.ts";
+import { glyphsRouteFamily } from "./glyphs.ts";
 import { overviewRouteFamily } from "./overview.ts";
 import { terminalRouteFamily } from "./terminal.ts";
 import type {
@@ -19,6 +20,7 @@ export const catalogueRouteFamilies = Object.freeze(
   [
     overviewRouteFamily,
     componentsRouteFamily,
+    glyphsRouteFamily,
     foundationsRouteFamily,
     compositionsRouteFamily,
     terminalRouteFamily,
@@ -33,6 +35,7 @@ export const catalogueNavigation: readonly CatalogueRouteDescriptor[] =
 export const catalogueRoutePaths = Object.freeze({
   overview: overviewRouteFamily.descriptor.path,
   components: componentsRouteFamily.descriptor.path,
+  glyphs: glyphsRouteFamily.descriptor.path,
   foundations: foundationsRouteFamily.descriptor.path,
   compositions: compositionsRouteFamily.descriptor.path,
   terminal: terminalRouteFamily.descriptor.path,

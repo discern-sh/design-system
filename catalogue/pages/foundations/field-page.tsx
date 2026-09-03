@@ -192,7 +192,7 @@ export function FieldPage(
         ← Foundations
       </a>
       <CataloguePageHeader
-        index="03"
+        index="04"
         eyebrow="Foundations"
         title="Field"
         description="Place the live system at one point, inspect every derived role, and verify Field and Accent scopes in both directions."

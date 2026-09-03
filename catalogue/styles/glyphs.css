@@ -1,0 +1,397 @@
+@layer catalogue {
+  .discern-catalogue-glyphs__populations {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-block: -24px 36px;
+  }
+
+  .discern-catalogue-glyphs__populations p {
+    margin: 0;
+    padding: 10px 14px;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-pill);
+    background: var(--discern-color-surface);
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+  }
+
+  .discern-catalogue-glyphs__populations strong {
+    color: var(--discern-color-ink);
+  }
+
+  .discern-catalogue-glyphs__controls {
+    display: grid;
+    grid-template-columns: minmax(260px, 1.5fr) repeat(2, minmax(170px, 0.7fr))
+      auto;
+    gap: 14px;
+    align-items: end;
+    margin-block-end: 36px;
+    padding: 18px;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-surface-sunken);
+  }
+
+  .discern-catalogue-glyphs__controls .discern-field {
+    min-width: 0;
+  }
+
+  .discern-catalogue-glyphs__controls .discern-control {
+    width: 100%;
+  }
+
+  .discern-catalogue-glyph-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    gap: 18px;
+  }
+
+  .discern-catalogue-glyph-card__specimen {
+    display: grid;
+    min-block-size: 180px;
+    place-items: center;
+    overflow: hidden;
+    color: var(--discern-color-ink);
+    font-size: clamp(4rem, 10vw, 7rem);
+    line-height: 1;
+  }
+
+  .discern-catalogue-glyph-card__warning {
+    color: var(--discern-color-warning-deep);
+  }
+
+  .discern-catalogue-glyph-card__aliases {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .discern-catalogue-glyph-detail__back {
+    display: inline-flex;
+    margin-block-end: 28px;
+    color: var(--discern-color-accent-700);
+    font: 650 var(--discern-font-size-sm) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+    text-decoration: none;
+  }
+
+  .discern-catalogue-glyph-detail__back:hover {
+    text-decoration: underline;
+  }
+
+  .discern-catalogue-glyph-identity {
+    display: grid;
+    grid-template-columns: minmax(220px, 0.7fr) minmax(0, 1.3fr);
+    gap: clamp(24px, 5vw, 64px);
+    align-items: center;
+    margin-block-end: 72px;
+    padding: clamp(24px, 5vw, 56px);
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-lg);
+    background: var(--discern-color-surface);
+  }
+
+  .discern-catalogue-glyph-identity__specimen {
+    display: grid;
+    min-inline-size: 0;
+    min-block-size: 240px;
+    place-items: center;
+    overflow: hidden;
+    color: var(--discern-color-ink);
+    font-size: clamp(6rem, 16vw, 12rem);
+    line-height: 1;
+  }
+
+  .discern-catalogue-glyph-identity h2,
+  .discern-catalogue-glyph-section > h2 {
+    margin-block-start: 0;
+    font-size: var(--discern-font-size-display-sm);
+  }
+
+  .discern-catalogue-glyph-section {
+    margin-block-end: 68px;
+  }
+
+  .discern-catalogue-glyph-section > p {
+    max-inline-size: 78ch;
+    color: var(--discern-color-ink-muted);
+    line-height: 1.65;
+  }
+
+  .discern-catalogue-glyph-facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 1px;
+    overflow: hidden;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-border);
+  }
+
+  .discern-catalogue-glyph-facts > div {
+    min-width: 0;
+    padding: 16px;
+    background: var(--discern-color-surface);
+  }
+
+  .discern-catalogue-glyph-facts dt {
+    color: var(--discern-color-ink-faint);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+  }
+
+  .discern-catalogue-glyph-facts dd {
+    margin: 6px 0 0;
+    overflow-wrap: anywhere;
+    color: var(--discern-color-ink);
+  }
+
+  .discern-catalogue-glyph-code-points {
+    margin-block-start: 32px;
+  }
+
+  .discern-catalogue-glyph-table-scroll {
+    max-inline-size: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
+  }
+
+  .discern-catalogue-glyph-table-scroll:focus-visible {
+    outline: 2px solid var(--discern-color-accent-500);
+    outline-offset: 3px;
+  }
+
+  .discern-catalogue-glyph-table-scroll table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+    background: var(--discern-color-surface);
+    font-size: var(--discern-font-size-sm);
+  }
+
+  .discern-catalogue-glyph-table-scroll :is(th, td) {
+    padding: 12px 14px;
+    border-block-end: 1px solid var(--discern-color-border);
+    text-align: start;
+    vertical-align: top;
+  }
+
+  .discern-catalogue-glyph-table-scroll th {
+    color: var(--discern-color-ink-faint);
+    font: 650 var(--discern-font-size-xs) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+  }
+
+  .discern-catalogue-glyph-hazards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+    gap: 14px;
+    margin-block-start: 24px;
+  }
+
+  .discern-catalogue-glyph-hazards > div {
+    padding: 16px;
+    border-inline-start: 4px solid var(--discern-color-warning);
+    background: var(--discern-color-warning-soft);
+    color: var(--discern-color-warning-deep);
+  }
+
+  .discern-catalogue-glyph-hazards h3,
+  .discern-catalogue-glyph-hazards p {
+    margin: 0;
+  }
+
+  .discern-catalogue-glyph-hazards p {
+    margin-block-start: 6px;
+  }
+
+  .discern-catalogue-glyph-sources {
+    display: grid;
+    gap: 10px;
+    padding-inline-start: 1.25rem;
+  }
+
+  .discern-catalogue-glyph-sources span {
+    color: var(--discern-color-ink-faint);
+    font-size: var(--discern-font-size-xs);
+  }
+
+  .discern-catalogue-glyph-fonts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+    gap: 14px;
+    margin-block-start: 24px;
+  }
+
+  .discern-catalogue-glyph-fonts figure {
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-surface);
+  }
+
+  .discern-catalogue-glyph-fonts figure > div {
+    display: grid;
+    min-block-size: 150px;
+    place-items: center;
+    overflow: hidden;
+    font-size: clamp(4rem, 10vw, 7rem);
+    line-height: 1;
+  }
+
+  .discern-catalogue-glyph-fonts figcaption {
+    padding: 12px;
+    border-block-start: 1px solid var(--discern-color-border);
+    overflow-wrap: anywhere;
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+    font-feature-settings: var(--discern-font-features-ui);
+  }
+
+  .discern-catalogue-glyph-rendering-note {
+    font-size: var(--discern-font-size-sm);
+  }
+
+  .discern-catalogue-glyph-alias {
+    margin-block-start: 18px;
+    padding: clamp(18px, 3vw, 28px);
+    border: 1px solid var(--discern-color-border);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-surface);
+  }
+
+  .discern-catalogue-glyph-alias > header {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    align-items: start;
+  }
+
+  .discern-catalogue-glyph-alias h3 {
+    margin: 6px 0 0;
+  }
+
+  .discern-catalogue-glyph-alias__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: end;
+  }
+
+  .discern-catalogue-glyph-alias__uses,
+  .discern-catalogue-glyph-alias__surfaces {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-block-start: 22px;
+  }
+
+  .discern-catalogue-glyph-alias__uses section,
+  .discern-catalogue-glyph-alias__surfaces section {
+    min-width: 0;
+    padding: 16px;
+    border-radius: var(--discern-radius-sm);
+    background: var(--discern-color-surface-sunken);
+  }
+
+  .discern-catalogue-glyph-alias h4 {
+    margin: 0 0 8px;
+    font-size: var(--discern-font-size-sm);
+  }
+
+  .discern-catalogue-glyph-alias ul,
+  .discern-catalogue-glyph-alias p {
+    color: var(--discern-color-ink-muted);
+    line-height: 1.55;
+  }
+
+  .discern-catalogue-glyph-alias__fallback {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    gap: 8px 12px;
+    align-items: baseline;
+    margin-block-start: 14px;
+  }
+
+  .discern-catalogue-glyph-alias__fallback p {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+
+  .discern-catalogue-glyph-pagination {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-block-start: 72px;
+    padding-block-start: 28px;
+    border-block-start: 1px solid var(--discern-color-border);
+  }
+
+  .discern-catalogue-glyph-pagination .discern-button:last-child {
+    justify-self: end;
+    text-align: end;
+  }
+}
+
+@layer catalogue {
+  @media (prefers-reduced-motion: reduce) {
+    .discern-catalogue-glyphs *,
+    .discern-catalogue-glyph-detail * {
+      scroll-behavior: auto;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .discern-catalogue-glyph-hazards > div {
+      border: 1px solid CanvasText;
+      border-inline-start-width: 4px;
+      background: Canvas;
+      color: CanvasText;
+    }
+  }
+
+  @media (max-width: 980px) {
+    .discern-catalogue-glyphs__controls {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 640px) {
+    .discern-catalogue-glyphs__controls,
+    .discern-catalogue-glyph-identity,
+    .discern-catalogue-glyph-alias__uses,
+    .discern-catalogue-glyph-alias__surfaces {
+      grid-template-columns: 1fr;
+    }
+
+    .discern-catalogue-glyph-identity {
+      padding: 20px;
+    }
+
+    .discern-catalogue-glyph-identity__specimen {
+      min-block-size: 180px;
+    }
+
+    .discern-catalogue-glyph-alias > header {
+      align-items: start;
+      flex-direction: column;
+    }
+
+    .discern-catalogue-glyph-alias__badges {
+      justify-content: start;
+    }
+
+    .discern-catalogue-glyph-pagination {
+      grid-template-columns: 1fr;
+    }
+
+    .discern-catalogue-glyph-pagination .discern-button:last-child {
+      justify-self: stretch;
+    }
+  }
+}
