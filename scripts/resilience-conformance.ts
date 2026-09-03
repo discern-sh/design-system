@@ -76,6 +76,49 @@ interface ReducedMotionResult {
   readonly futureProof: boolean;
 }
 
+/** Browser-observed contract between one theme root, control, and persistence. */
+export interface ThemeConsumerState {
+  readonly mode: string | null;
+  readonly selected: string | null;
+  readonly controlPresent: boolean;
+  readonly storageKey: string | null;
+  readonly stored: string | null;
+  readonly storageParameter: string | null;
+}
+
+/** Detect mismatches for both bare theme storage and parameterised records. */
+export function themeConsumerStateFailures(
+  state: ThemeConsumerState,
+): readonly string[] {
+  const failures: string[] = [];
+  if (state.selected !== state.mode) {
+    failures.push(
+      `selected theme ${state.selected ?? "none"} disagrees with root ${
+        state.mode ?? "none"
+      }`,
+    );
+  }
+  if (!state.controlPresent) {
+    failures.push("declared theme control is missing");
+  }
+  if (state.storageKey !== null) {
+    const storedMode = state.storageParameter === null || state.stored === null
+      ? state.stored
+      : new URLSearchParams(state.stored).get(state.storageParameter);
+    const expected = state.storageParameter === null && state.mode === "system"
+      ? null
+      : state.mode;
+    if (storedMode !== expected) {
+      failures.push(
+        `stored theme ${storedMode ?? "none"} disagrees with root ${
+          state.mode ?? "none"
+        }`,
+      );
+    }
+  }
+  return failures;
+}
+
 interface ThemeResult {
   readonly consumers: number;
   readonly geometryChecks: number;
@@ -1146,46 +1189,37 @@ async function verifyThemeSystem(
     const inspect = async (): Promise<{
       readonly consumers: number;
       readonly failures: readonly string[];
-    }> =>
-      await page.evaluate(() => {
-        const problems: string[] = [];
-        const consumers = Array.from(
+    }> => {
+      const states: ThemeConsumerState[] = await page.evaluate(() =>
+        Array.from(
           document.querySelectorAll<HTMLElement>(
             "[data-discern-theme-consumer]",
           ),
-        );
-        for (const consumer of consumers) {
+        ).map((consumer) => {
           const mode = consumer.dataset.discernTheme;
           const controlSelector = consumer.dataset.discernThemeControl;
           const control = controlSelector === undefined
             ? null
             : consumer.querySelector(controlSelector);
-          const selected = control?.getAttribute("data-discern-mode");
           const storageKey = consumer.dataset.discernThemeStorageKey;
-          const stored = storageKey === undefined
-            ? undefined
-            : localStorage.getItem(storageKey);
-          if (selected !== mode) {
-            problems.push(
-              `selected theme ${
-                selected ?? "none"
-              } disagrees with root ${mode}`,
-            );
-          }
-          if (control === null) {
-            problems.push("declared theme control is missing");
-          }
-          if (
-            storageKey !== undefined &&
-            (mode === "system" ? stored !== null : stored !== mode)
-          ) {
-            problems.push(
-              `stored theme ${stored ?? "none"} disagrees with root ${mode}`,
-            );
-          }
-        }
-        return { consumers: consumers.length, failures: problems };
-      });
+          return {
+            mode: mode ?? null,
+            selected: control?.getAttribute("data-discern-mode") ?? null,
+            controlPresent: control !== null,
+            storageKey: storageKey ?? null,
+            stored: storageKey === undefined
+              ? null
+              : localStorage.getItem(storageKey),
+            storageParameter: consumer.dataset.discernThemeStorageParameter ??
+              null,
+          };
+        })
+      );
+      return {
+        consumers: states.length,
+        failures: states.flatMap(themeConsumerStateFailures),
+      };
+    };
 
     const initial = await inspect();
     const root = page.locator("[data-discern-theme-consumer]").first();
@@ -1244,7 +1278,9 @@ async function verifyThemeSystem(
       await appearance.click();
     }
     const darkGeometry = await geometry();
-    await control.click();
+    const lightRadio = control.locator('input[type="radio"][value="light"]');
+    if (await lightRadio.count() === 1) await lightRadio.check();
+    else await control.click();
     const lightGeometry = await geometry();
     let geometryChecks = 0;
     for (const [name, before] of Object.entries(darkGeometry)) {
@@ -1273,7 +1309,11 @@ async function verifyThemeSystem(
       ),
     );
     await page.evaluate(() => {
-      localStorage.removeItem("discern-catalogue-theme");
+      const consumer = document.querySelector<HTMLElement>(
+        "[data-discern-theme-consumer]",
+      );
+      const storageKey = consumer?.dataset.discernThemeStorageKey;
+      if (storageKey !== undefined) localStorage.removeItem(storageKey);
       const url = new URL(globalThis.location.href);
       url.searchParams.delete("theme");
       globalThis.history.replaceState(globalThis.history.state, "", url);
@@ -1455,26 +1495,7 @@ async function verifyThemeSystem(
       ...fontGeometry.failures.map((failure) => `Font geometry: ${failure}`),
     );
 
-    const futureProof = await page.evaluate(() => {
-      function failuresFor(consumer: HTMLElement): string[] {
-        const problems: string[] = [];
-        const mode = consumer.dataset.discernTheme;
-        const selector = consumer.dataset.discernThemeControl;
-        const control = selector === undefined
-          ? null
-          : consumer.querySelector(selector);
-        const selected = control?.getAttribute("data-discern-mode");
-        const key = consumer.dataset.discernThemeStorageKey;
-        const stored = key === undefined
-          ? undefined
-          : localStorage.getItem(key);
-        if (selected !== mode) problems.push("control/root mismatch");
-        if (key !== undefined && stored !== mode) {
-          problems.push("storage/root mismatch");
-        }
-        return problems;
-      }
-
+    const futureState: ThemeConsumerState = await page.evaluate(() => {
       const future = document.createElement("div");
       future.dataset.discernThemeConsumer = "";
       future.dataset.discernTheme = "dark";
@@ -1484,11 +1505,20 @@ async function verifyThemeSystem(
         "data-discern-mode='system'></button>";
       localStorage.setItem("future-theme", "light");
       document.body.append(future);
-      const caught = failuresFor(future).length === 2;
+      const control = future.querySelector(".discern-theme-toggle");
+      const state = {
+        mode: future.dataset.discernTheme ?? null,
+        selected: control?.getAttribute("data-discern-mode") ?? null,
+        controlPresent: control !== null,
+        storageKey: future.dataset.discernThemeStorageKey ?? null,
+        stored: localStorage.getItem("future-theme"),
+        storageParameter: null,
+      };
       future.remove();
       localStorage.removeItem("future-theme");
-      return caught;
+      return state;
     });
+    const futureProof = themeConsumerStateFailures(futureState).length === 2;
     if (!futureProof) {
       failures.push(
         "Theme system: synthetic future consumer escaped the detector",

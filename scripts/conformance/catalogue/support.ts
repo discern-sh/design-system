@@ -32,3 +32,27 @@ export async function loadCataloguePage(
   await page.locator(".discern-catalogue-shell").waitFor();
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
 }
+
+/** Select one global Catalogue theme policy through the shared public control. */
+export async function selectCatalogueTheme(
+  page: Page,
+  theme: "system" | CatalogueTheme,
+): Promise<void> {
+  const disclosure = page.locator(".discern-catalogue-appearance");
+  if (await disclosure.getAttribute("open") === null) {
+    await disclosure.locator('summary[aria-label="Change appearance"]').click();
+  }
+  const label = theme === "system"
+    ? "System"
+    : theme === "light"
+    ? "Light pole"
+    : "Dark pole";
+  await disclosure.getByRole("radio", { name: label, exact: true }).check();
+  await eventually(
+    async () =>
+      await page.locator(".discern-catalogue-shell").getAttribute(
+        "data-discern-theme",
+      ) === theme,
+    `Catalogue did not apply the ${theme} theme policy`,
+  );
+}

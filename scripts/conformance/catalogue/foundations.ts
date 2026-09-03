@@ -16,6 +16,7 @@ import {
   eventually,
   invariant,
   loadCataloguePage,
+  selectCatalogueTheme,
 } from "./support.ts";
 
 export interface FoundationsCatalogueEvidence {
@@ -24,13 +25,6 @@ export interface FoundationsCatalogueEvidence {
   readonly animationChecks: number;
   readonly tokenChecks: number;
   readonly reflowChecks: number;
-}
-
-async function openAppearance(page: Page): Promise<void> {
-  const disclosure = page.locator(".discern-catalogue-appearance");
-  if (await disclosure.getAttribute("open") === null) {
-    await disclosure.locator('summary[aria-label="Change appearance"]').click();
-  }
 }
 
 async function documentOverflow(page: Page): Promise<number> {
@@ -322,8 +316,7 @@ async function verifyTerminalFoundations(
       .count() > 0,
     "Light theme did not reach terminal foundation frames",
   );
-  await openAppearance(page);
-  await page.getByRole("button", { name: "Switch to the dark theme" }).click();
+  await selectCatalogueTheme(page, "dark");
   await eventually(
     async () =>
       await page.locator(

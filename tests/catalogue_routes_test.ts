@@ -69,8 +69,15 @@ Deno.test("live Appearance URL updates announce link-state changes", async () =>
   const source = await Deno.readTextFile(
     new URL("../catalogue/shell/appearance.tsx", import.meta.url),
   );
+  const shell = await Deno.readTextFile(
+    new URL("../catalogue/shell/catalogue-shell.tsx", import.meta.url),
+  );
   assertStringIncludes(source, "announceCatalogueLocationChange();");
   assertStringIncludes(source, "history.replaceState");
+  assertStringIncludes(
+    shell,
+    'data-discern-theme-storage-parameter="theme"',
+  );
 });
 
 Deno.test("Catalogue routes resolve every explorer surface and Component detail", () => {

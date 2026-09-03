@@ -61,6 +61,7 @@ export function CatalogueShell(
       data-discern-theme-consumer=""
       data-discern-theme-control=".discern-catalogue-appearance .discern-theme-switcher"
       data-discern-theme-storage-key="discern-catalogue-appearance"
+      data-discern-theme-storage-parameter="theme"
       style={style}
     >
       <SkipLink

@@ -21,6 +21,7 @@ import {
   eventually,
   invariant,
   loadCataloguePage,
+  selectCatalogueTheme,
 } from "./support.ts";
 import type { CatalogueTheme } from "./support.ts";
 
@@ -28,13 +29,6 @@ export interface TerminalCatalogueEvidence {
   readonly layouts: number;
   readonly profileChecks: number;
   readonly componentSpecimens: number;
-}
-
-async function openAppearance(page: Page): Promise<void> {
-  const disclosure = page.locator(".discern-catalogue-appearance");
-  if (await disclosure.getAttribute("open") === null) {
-    await disclosure.locator('summary[aria-label="Change appearance"]').click();
-  }
 }
 
 async function verifyCliProjectionStyles(page: Page): Promise<void> {
@@ -314,10 +308,7 @@ export async function verifyTerminalCatalogue(
       await activeTerminalLayoutUses("light"),
       "Light mode did not reach the active terminal layout",
     );
-    await openAppearance(page);
-    await page.getByRole("button", {
-      name: "Switch to the dark theme",
-    }).click();
+    await selectCatalogueTheme(page, "dark");
     await eventually(
       async () => await activeTerminalLayoutUses("dark"),
       "Dark mode did not reach the active terminal layout",
@@ -430,10 +421,7 @@ export async function verifyTerminalCatalogue(
       "Heading CLI specimen needs projected colour evidence",
     );
 
-    await openAppearance(page);
-    await page.getByRole("button", {
-      name: "Switch to the dark theme",
-    }).click();
+    await selectCatalogueTheme(page, "dark");
     await eventually(
       async () => await allComponentSurfacesUse("dark"),
       "Dark mode did not reach every terminal Component",
