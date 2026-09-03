@@ -43,7 +43,7 @@ export function TerminalIndexPage(
   return (
     <div className="discern-catalogue-page" id="terminal-layouts">
       <CataloguePageHeader
-        index="05"
+        index="06"
         eyebrow="Terminal layouts"
         title="Choose one complete frame."
         description="Open a focused capability lab for one complete CLI layout."
@@ -96,7 +96,7 @@ export function TerminalDetailPage(
         <span aria-current="page">{recipe.title}</span>
       </nav>
       <CataloguePageHeader
-        index="05"
+        index="06"
         eyebrow="Terminal layout"
         title={recipe.title}
         description={recipe.description}

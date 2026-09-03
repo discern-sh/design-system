@@ -3,6 +3,7 @@ import { componentGroups } from "../src/types/component-meta.ts";
 import {
   canonicalCatalogueLegacyUrl,
   catalogueComponentPath,
+  catalogueGlyphPath,
   catalogueGroupFromSlug,
   catalogueGroupSlug,
   catalogueNavigation,
@@ -12,6 +13,7 @@ import {
   catalogueTerminalLayoutPath,
   foundationsPaths,
 } from "../catalogue/routes.ts";
+import { glyphAtlasData } from "../src/glyphs/atlas.ts";
 import { preserveCatalogueAppearanceHref } from "../catalogue/shell/appearance-state.ts";
 import { componentReviewPath } from "../catalogue/review/state.ts";
 import catalogueServer from "../scripts/serve.ts";
@@ -90,6 +92,12 @@ Deno.test("Catalogue routes resolve every explorer surface and Component detail"
       page: "detail",
       slug: "command-group",
     }],
+    [catalogueRoutePaths.glyphs, { family: "glyphs", page: "index" }],
+    [catalogueGlyphPath(glyphAtlasData.canonical[0]!), {
+      family: "glyphs",
+      page: "detail",
+      slug: catalogueGlyphPath(glyphAtlasData.canonical[0]!).split("/").at(-2)!,
+    }],
     [catalogueRoutePaths.foundations, { family: "foundations", page: "index" }],
     [foundationsPaths.tokens, { family: "foundations", page: "tokens" }],
     [foundationsPaths.field, { family: "foundations", page: "field" }],
@@ -134,6 +142,7 @@ Deno.test("Catalogue navigation has one canonical human order and route vocabula
         label: "Components",
         path: "/catalogue/components/",
       },
+      { id: "glyphs", label: "Glyphs", path: "/catalogue/glyphs/" },
       {
         id: "foundations",
         label: "Foundations",
