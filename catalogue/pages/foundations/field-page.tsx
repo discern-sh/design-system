@@ -30,6 +30,7 @@ import {
 import { CataloguePageHeader } from "../shared.tsx";
 import { catalogueFieldConsumerSnippet } from "./field-export.ts";
 import { fieldPoleTerminalProjections } from "./field-terminal.ts";
+import { TerminalAppearanceScopes } from "./terminal-appearance-scopes.tsx";
 
 export interface FieldPageProps {
   readonly appearance?: AppearanceName | undefined;
@@ -330,6 +331,8 @@ export function FieldPage(
           />
         </div>
       </section>
+
+      <TerminalAppearanceScopes theme={resolvedTerminalPresentation.theme} />
 
       <section
         className="discern-catalogue-field__proof"

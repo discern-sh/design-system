@@ -413,6 +413,7 @@
   .discern-catalogue-field__controls,
   .discern-catalogue-field__reading,
   .discern-catalogue-field__scopes,
+  .discern-catalogue-field__terminal-scopes,
   .discern-catalogue-field__roles,
   .discern-catalogue-field__proof,
   .discern-catalogue-field__export,
@@ -442,6 +443,47 @@
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 14px;
+  }
+  .discern-catalogue-field__terminal-scope-grid {
+    display: grid;
+    gap: 14px;
+  }
+  .discern-catalogue-field__terminal-scope-grid > article {
+    display: grid;
+    min-inline-size: 0;
+    gap: 16px;
+    padding: 16px;
+    border: 1px solid var(--discern-color-border-strong);
+    border-radius: var(--discern-radius-md);
+    background: var(--discern-color-canvas);
+  }
+  .discern-catalogue-field__terminal-scope-grid header,
+  .discern-catalogue-field__terminal-scope-grid h3,
+  .discern-catalogue-field__terminal-scope-grid h4,
+  .discern-catalogue-field__terminal-scope-grid p {
+    margin: 0;
+  }
+  .discern-catalogue-field__terminal-scope-grid h3 {
+    font-size: var(--discern-font-size-md);
+  }
+  .discern-catalogue-field__terminal-scope-grid h4 {
+    font-size: var(--discern-font-size-sm);
+  }
+  .discern-catalogue-field__terminal-scope-grid p,
+  .discern-catalogue-field__terminal-scope-grid small {
+    color: var(--discern-color-ink-muted);
+    font-size: var(--discern-font-size-xs);
+    line-height: 1.45;
+  }
+  .discern-catalogue-field__terminal-scope-frames {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .discern-catalogue-field__terminal-scope-frames > div {
+    display: grid;
+    min-inline-size: 0;
+    gap: 8px;
   }
   .discern-catalogue-field-scope {
     display: grid;
@@ -793,6 +835,9 @@
       grid-template-columns: 1fr;
     }
     .discern-catalogue-field__terminal-grid {
+      grid-template-columns: 1fr;
+    }
+    .discern-catalogue-field__terminal-scope-frames {
       grid-template-columns: 1fr;
     }
     .discern-catalogue-field__role-grid {
