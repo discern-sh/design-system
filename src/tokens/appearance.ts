@@ -204,13 +204,13 @@ export interface AppearanceNumberExpression {
   readonly value: number;
 }
 
-/** One field-axis reference. */
+/** One axis reference. */
 export interface AppearanceAxisExpression {
   readonly kind: "axis";
   readonly axis: AppearanceAxisName | "accent-hue";
 }
 
-/** Minimal CSS-calc-compatible numeric expression vocabulary for field laws. */
+/** Minimal CSS-calc-compatible numeric expression vocabulary for appearance laws. */
 export type AppearanceExpression =
   | AppearanceNumberExpression
   | AppearanceAxisExpression
@@ -330,7 +330,7 @@ function curve(
     const to = numberNode(values[index] ?? 0);
     const position = curveSegmentPositions[index - 1];
     if (position === undefined) {
-      throw new TypeError(`Missing field curve segment ${index - 1}`);
+      throw new TypeError(`Missing curve segment ${index - 1}`);
     }
     expression = binary(
       "add",
@@ -514,7 +514,7 @@ export const appearanceOppositeHueExpression: AppearanceExpression = {
  */
 export const APPEARANCE_SPACING_UNIT_PX = 4;
 
-/** Pigment treatment applied to one field role's scalar expression. */
+/** Pigment treatment applied to one role's scalar expression. */
 export type AppearancePaint =
   | "canvas"
   | "active-ink"
@@ -532,7 +532,7 @@ export interface AccentColorProjection {
   readonly alpha: AppearanceExpression;
 }
 
-/** One public colour role and its sole field expression. */
+/** One public colour role and its sole appearance expression. */
 export interface AppearanceColorRoleLaw {
   readonly name: `--discern-${string}`;
   readonly description: string;
@@ -867,7 +867,7 @@ const avatarFillEndExpression = polaritySelection(
 
 /**
  * Ordered appearance law population. Every non-series colour Theme Token
- * derives from this table; an Accent projection is metadata beside the Field
+ * derives from this table; an Accent projection is metadata beside the monochrome
  * law, not a second role population.
  */
 export const appearanceColorRoleLaws: readonly AppearanceColorRoleLaw[] = Object
@@ -931,7 +931,7 @@ export const appearanceColorRoleLaws: readonly AppearanceColorRoleLaw[] = Object
       ),
       role(
         "--discern-color-action",
-        "Primary action fill: full active ink in the field.",
+        "Primary action fill: full active ink in monochrome.",
         "active-ink",
         one,
         actionProjection,
@@ -1163,7 +1163,7 @@ export const appearanceColorRoleLaws: readonly AppearanceColorRoleLaw[] = Object
     ] as const satisfies readonly AppearanceColorRoleLaw[],
   );
 
-/** Public field colour-role name. */
+/** Public colour-role name. */
 export type AppearanceColorRoleName =
   typeof appearanceColorRoleLaws[number]["name"];
 
@@ -1175,7 +1175,7 @@ export function ownedSurfaceRoleNames(
   return laws.filter((law) => law.ownedSurface).map((law) => law.name);
 }
 
-/** One shadow role whose opacity follows the field's structure axis. */
+/** One shadow role whose opacity follows the structure axis. */
 export interface AppearanceShadowRoleLaw {
   readonly name: `--discern-${string}`;
   readonly description: string;
@@ -1208,11 +1208,11 @@ export const appearanceShadowRoleLaws: readonly AppearanceShadowRoleLaw[] =
     ] as const satisfies readonly AppearanceShadowRoleLaw[],
   );
 
-/** Public field-derived shadow-role name. */
+/** Public shadow-role name. */
 export type AppearanceShadowRoleName =
   typeof appearanceShadowRoleLaws[number]["name"];
 
-/** Field samples signed off by the monochrome-field proof of concept. */
+/** Darkness samples signed off by the exploratory proof of concept. */
 export const APPEARANCE_CONTRAST_SAMPLE_DARKNESSES = [
   0,
   0.25,
@@ -1517,7 +1517,7 @@ export function evaluateAppearanceShadows(
   );
 }
 
-/** Minimum sampled contrast headroom over the field's three ink-rung floors. */
+/** Minimum sampled contrast headroom over the three ink-rung floors. */
 export function appearanceContrastMargin(): number {
   let minimum = Number.POSITIVE_INFINITY;
   for (const darkness of APPEARANCE_CONTRAST_SAMPLE_DARKNESSES) {

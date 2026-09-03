@@ -50,7 +50,7 @@ interface AppearanceProjectionSample {
   readonly poleMode?: "light" | "dark";
 }
 
-/** Evidence counts returned by the browser field-projection guard. */
+/** Evidence counts returned by the browser appearance-projection guard. */
 export interface AppearanceProjectionEvidence {
   readonly points: number;
   readonly roleChecks: number;
@@ -178,7 +178,9 @@ function parseOklch(value: string): ProjectionColor {
     /^oklch\(\s*([+-]?[\d.]+)%\s+([+-]?[\d.]+)\s+([+-]?[\d.]+)(?:\s+\/\s+([+-]?[\d.]+))?\s*\)$/u,
   );
   if (match === null) {
-    throw new TypeError(`Field projection expected OKLCH, received ${value}`);
+    throw new TypeError(
+      `Appearance projection expected OKLCH, received ${value}`,
+    );
   }
   const lightness = Number(match[1]) / 100;
   const chroma = Number(match[2]);

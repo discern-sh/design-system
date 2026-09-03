@@ -71,7 +71,7 @@ const points: readonly AppearanceAxes[] = [
   point({ darkness: 0.75, structure: 2 }),
 ];
 
-Deno.test("hard primary shadows stay separate across Field and the Accent circle", () => {
+Deno.test("hard primary shadows stay separate across monochrome and the Accent circle", () => {
   const appearances: readonly Pick<Appearance, "accent">[] = [
     {},
     ...Array.from({ length: 361 }, (_, hue) => ({ accent: hue })),

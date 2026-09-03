@@ -1,5 +1,5 @@
 /**
- * Numerical admission proof for the shared Field/Accent appearance graph.
+ * Numerical admission proof for the shared appearance graph.
  * The proof consumes public role evaluation rather than carrying colour
  * coefficients of its own.
  *
@@ -43,7 +43,7 @@ export interface AppearanceSeriesPair {
   readonly dark: string;
 }
 
-/** One signed field point in the package admission sweep. */
+/** One signed axis point in the package admission sweep. */
 export interface AppearanceAdmissionPoint {
   readonly label: string;
   readonly point: AppearanceAxes;
@@ -221,7 +221,7 @@ function requiredPaint(
 const semanticRoles = ["success", "warning", "danger"] as const;
 
 /**
- * Exhaust the public Accent hue circle and all signed field samples. Series
+ * Exhaust the public Accent hue circle and all signed axis samples. Series
  * pairs are injected from their independent authored palette authority.
  */
 export function proveAppearanceAdmission(

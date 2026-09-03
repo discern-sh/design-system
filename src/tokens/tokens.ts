@@ -81,7 +81,7 @@ const appearanceAxisTokenCategories = {
   inkTintHue: "Color",
 } as const satisfies Readonly<Record<AppearanceAxisName, TokenCategory>>;
 
-/** Registered field-axis Tokens exposed as numeric author controls. */
+/** Registered appearance-axis Tokens exposed as numeric author controls. */
 export const appearanceAxisTokens: readonly DesignToken[] = Object.freeze(
   (Object.keys(appearanceAxes) as AppearanceAxisName[]).map((axis) =>
     token(
@@ -404,7 +404,7 @@ const presentationThemeTokens: readonly ThemeToken[] = [
   ),
 ];
 
-/** Semantic light/dark role Tokens projected from the field's two poles. */
+/** Semantic light/dark role Tokens projected from the two poles. */
 export const themeTokens: readonly ThemeToken[] = [
   ...appearanceThemeTokens,
   ...seriesThemeTokens,
@@ -412,7 +412,7 @@ export const themeTokens: readonly ThemeToken[] = [
   ...presentationThemeTokens,
 ];
 
-/** Every token in the neutral field identity. Optional presets stay separate. */
+/** Every token in the monochrome identity. */
 export const allTokens: readonly (DesignToken | ThemeToken)[] = [
   ...designTokens,
   ...themeTokens,
@@ -420,7 +420,7 @@ export const allTokens: readonly (DesignToken | ThemeToken)[] = [
 
 let cachedAppearanceAdmission: AppearanceAdmissionProof | undefined;
 
-/** Lazily run and retain the exhaustive Field, Accent, and series proof. */
+/** Lazily run and retain the exhaustive appearance and series proof. */
 export function appearanceAdmission(): AppearanceAdmissionProof {
   return cachedAppearanceAdmission ??= proveAppearanceAdmission(
     appearanceSeriesPairs,

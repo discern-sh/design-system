@@ -19,7 +19,7 @@ const point = {
   density: 0.8,
 } as const;
 
-Deno.test("Catalogue field points round-trip through one canonical URL and storage value", () => {
+Deno.test("Catalogue axes round-trip through one canonical URL and storage value", () => {
   const encoded = serializeCatalogueAxes(point);
   assertEquals(encoded, "0.6,1.25,0.75,0.8");
   assertEquals(parseCatalogueAxes(encoded), point);
@@ -82,7 +82,7 @@ Deno.test("live scheme hysteresis holds only inside the crossover band", () => {
   );
 });
 
-Deno.test("a field style writes axes, numeric hue, and the implied scheme", () => {
+Deno.test("a root style writes axes, numeric hue, and the implied scheme", () => {
   const style = catalogueAppearanceRootStyle(point, undefined, 145.5);
   assertEquals(style["--discern-darkness" as keyof typeof style], 0.6);
   assertEquals(style["--discern-structure" as keyof typeof style], 1.25);

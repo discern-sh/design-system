@@ -75,7 +75,7 @@ function poleSeriesValue(
 }
 
 /**
- * Resolve the portable chart palette at any field point. Field roles evaluate
+ * Resolve the portable chart palette at any darkness. Appearance roles evaluate
  * directly; each fixed series slot selects its more visible authored pole value.
  */
 export function resolveChartPaletteAtDarkness(
@@ -83,7 +83,9 @@ export function resolveChartPaletteAtDarkness(
 ): Readonly<Record<ChartPaintRole, string>> {
   const field = evaluateAppearance({ darkness });
   const canvasValue = field["--discern-color-canvas"];
-  if (canvasValue === undefined) throw new TypeError("Field has no canvas");
+  if (canvasValue === undefined) {
+    throw new TypeError("Appearance has no canvas");
+  }
   const canvas = parseOklch(canvasValue);
   return Object.freeze(Object.fromEntries(
     Object.entries(CHART_PAINT_TOKEN_NAMES).map(([role, tokenName]) => {

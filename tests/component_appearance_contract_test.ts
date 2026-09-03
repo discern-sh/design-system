@@ -138,7 +138,7 @@ async function componentStylesheets(
   return stylesheets;
 }
 
-Deno.test("Component CSS keeps density and structure on the field authorities", async () => {
+Deno.test("Component CSS keeps density and structure on the appearance authorities", async () => {
   assertEquals(await componentCssHits(rawSpacingHits), []);
   assertEquals(await componentCssHits(untokenisedStructureHits), []);
 });

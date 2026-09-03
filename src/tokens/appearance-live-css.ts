@@ -26,7 +26,7 @@ import {
 export const APPEARANCE_LIVE_CSS_SUPPORTS =
   "(color: oklch(calc(round(up, abs(-0.2), 1) * 0.5) 0 0))";
 
-/** One custom-property declaration emitted by the live field projection. */
+/** One custom-property declaration emitted by the live appearance projection. */
 export interface AppearanceCssDeclaration {
   readonly name: `--discern-${string}`;
   readonly value: string;
@@ -51,7 +51,7 @@ const INK_CHROMA = "--discern-f-ic" as const;
 
 function formattedNumber(value: number): string {
   if (!Number.isFinite(value)) {
-    throw new TypeError(`Cannot project non-finite field number ${value}`);
+    throw new TypeError(`Cannot project non-finite number ${value}`);
   }
   const text = Object.is(value, -0) ? "0" : String(value);
   return text.replace(/^(-?)0\./u, "$1.");
@@ -157,7 +157,7 @@ function compileExpressionBody(
     case "min":
     case "max": {
       if (expression.values.length === 0) {
-        throw new TypeError(`Cannot project empty field ${expression.kind}()`);
+        throw new TypeError(`Cannot project empty ${expression.kind}()`);
       }
       return `${expression.kind}(${expression.values.map(compile).join(",")})`;
     }
@@ -325,14 +325,14 @@ function projectSharedExpressions(
   return { bindings, declarations };
 }
 
-/** Compile one field expression without restating any numeric law in CSS. */
+/** Compile one appearance expression without restating any numeric law in CSS. */
 export function compileAppearanceExpressionToCss(
   expression: AppearanceExpression,
 ): string {
   return compileExpression(expression, new Map());
 }
 
-/** Public custom-property name for one registered field axis. */
+/** Public custom-property name for one registered appearance axis. */
 export function appearanceAxisCustomPropertyName(
   axis: AppearanceAxisName,
 ): `--discern-${string}` {
@@ -355,7 +355,7 @@ function inkPigmentColor(): string {
   }))`;
 }
 
-/** Emit the exact top-level registered-property population for field axes. */
+/** Emit the exact top-level registered-property population for appearance axes. */
 export function generateAppearanceAxisRegistrationCss(): string {
   return (Object.keys(appearanceAxes) as AppearanceAxisName[]).map((axis) => {
     const definition = appearanceAxes[axis];
@@ -429,7 +429,7 @@ function shadowRoleValue(
 }
 
 /**
- * Project every shared helper and field-derived role. New laws auto-enrol in
+ * Project every shared helper and appearance-derived role. New laws auto-enrol in
  * source order; series and presentation pairs remain outside this population.
  */
 export function appearanceLiveCssDeclarations(
@@ -551,7 +551,7 @@ export function densityScaledSpacingCssValue(authoredValue: string): string {
   }))`;
 }
 
-/** Axis defaults in the same deterministic order as the field authority. */
+/** Axis defaults in the same deterministic order as the appearance authority. */
 export function appearanceAxisDefaultDeclarations(): readonly AppearanceCssDeclaration[] {
   return Object.freeze(
     (Object.keys(appearanceAxes) as AppearanceAxisName[]).map((axis) => ({

@@ -31,7 +31,7 @@ import {
 } from "../src/tokens/appearance.ts";
 import { themeTokens } from "../src/tokens/tokens.ts";
 
-Deno.test("the field expression vocabulary evaluates every CSS-compatible node", () => {
+Deno.test("the appearance expression vocabulary evaluates every CSS-compatible node", () => {
   const number = (value: number): AppearanceExpression => ({
     kind: "number",
     name: `test-${value}`,
@@ -71,7 +71,7 @@ Deno.test("the field expression vocabulary evaluates every CSS-compatible node",
   }
 });
 
-Deno.test("the CSS backend compiles the complete field expression vocabulary", () => {
+Deno.test("the CSS backend compiles the complete appearance expression vocabulary", () => {
   const number = (value: number): AppearanceExpression => ({
     kind: "number",
     name: `test-${value}`,
@@ -134,7 +134,7 @@ Deno.test("the CSS backend compiles the complete field expression vocabulary", (
   }
 });
 
-Deno.test("polarity and every live CSS consumer derive from the field authority", () => {
+Deno.test("polarity and every live CSS consumer derive from the appearance authority", () => {
   assertEquals(
     evaluateAppearanceExpression(appearancePolarityExpression, {
       darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS - 0.000001,
@@ -206,7 +206,7 @@ Deno.test("polarity and every live CSS consumer derive from the field authority"
   );
 });
 
-Deno.test("field axes expose bounded defaults and density only projects spacing", () => {
+Deno.test("appearance axes expose bounded defaults and density only projects spacing", () => {
   for (
     const name of Object.keys(appearanceAxes) as (keyof typeof appearanceAxes)[]
   ) {
@@ -238,7 +238,7 @@ Deno.test("one ordered expression tree owns every non-series colour role", () =>
   }
 });
 
-Deno.test("the field preserves alpha only for backdrop-owned roles", () => {
+Deno.test("monochrome preserves alpha only for backdrop-owned roles", () => {
   for (const darkness of APPEARANCE_CONTRAST_SAMPLE_DARKNESSES) {
     const values = evaluateAppearance({ darkness });
     const value = (name: `--discern-${string}`): string => {
@@ -257,14 +257,14 @@ Deno.test("the field preserves alpha only for backdrop-owned roles", () => {
   }
 });
 
-Deno.test("sampled field rungs hold every attainable contrast floor", () => {
+Deno.test("sampled rungs hold every attainable contrast floor", () => {
   assert(
     appearanceContrastMargin() >= 0,
     `field margin ${appearanceContrastMargin()}`,
   );
 });
 
-Deno.test("theme Token poles pin representative field emission", () => {
+Deno.test("theme Token poles pin representative monochrome emission", () => {
   const pairs = Object.fromEntries(
     themeTokens.map((token) => [token.name, [token.light, token.dark]]),
   );

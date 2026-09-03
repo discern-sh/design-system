@@ -157,12 +157,12 @@ export async function runConformance(): Promise<void> {
     const page = await context.newPage();
     addPageFailureListeners(page, failures);
 
-    let fieldProjection = emptyAppearanceProjectionEvidence;
+    let appearanceProjection = emptyAppearanceProjectionEvidence;
     try {
-      fieldProjection = await verifyAppearanceProjection(page);
+      appearanceProjection = await verifyAppearanceProjection(page);
     } catch (error) {
       failures.push(
-        `Field projection: ${
+        `Appearance projection: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -268,13 +268,13 @@ export async function runConformance(): Promise<void> {
       resilience.fontFallbackAliasesSkipped.join(", ") || "none";
     console.log(
       `Conformance passed: ${expectedComponents.length} components, ` +
-        `${fieldProjection.roleChecks} live field-role checks and ` +
-        `${fieldProjection.poleChecks} pole-parity checks across ` +
-        `${fieldProjection.points} field points at ` +
-        `${fieldProjection.oklabTolerance} OKLab tolerance, with ` +
-        `${fieldProjection.spacingChecks} density-spacing checks; ` +
-        `${fieldProjection.appearanceScopeChecks} appearance-scope role checks and ` +
-        `${fieldProjection.appearanceNestingChecks} nested axis/hue checks; ` +
+        `${appearanceProjection.roleChecks} live role checks and ` +
+        `${appearanceProjection.poleChecks} pole-parity checks across ` +
+        `${appearanceProjection.points} axis points at ` +
+        `${appearanceProjection.oklabTolerance} OKLab tolerance, with ` +
+        `${appearanceProjection.spacingChecks} density-spacing checks; ` +
+        `${appearanceProjection.appearanceScopeChecks} appearance-scope role checks and ` +
+        `${appearanceProjection.appearanceNestingChecks} nested axis/hue checks; ` +
         `${components.accessibilityScans} component accessibility scans, ` +
         `${components.scenarios} interaction scenarios, ` +
         `${components.forcedColorFocusChecks} forced-colour focus checks, and ` +

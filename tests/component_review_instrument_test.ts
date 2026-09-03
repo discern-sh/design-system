@@ -88,7 +88,7 @@ Deno.test("review URLs reproduce every judgment input with a stable canonical or
   );
 });
 
-Deno.test("review URLs carry a field point for contact sheets and pole links", () => {
+Deno.test("review URLs carry the axes for contact sheets and pole links", () => {
   const state = parseComponentReviewState(
     new URL(
       "https://catalogue.example/catalogue/reviews/components/?group=Core&field=0.6,1.2,0.8,1.1,blue",

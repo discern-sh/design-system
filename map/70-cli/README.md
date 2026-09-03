@@ -28,7 +28,8 @@ Renderers receive a [`TerminalCapabilities`](../../src/cli/capabilities.ts) valu
 
 ## Token bridge and primitives
 
-[`theme.ts`](../../src/cli/theme.ts) keeps terminal ground and appearance independent. `theme: "light" | "dark"` selects the pole; `appearance` selects the achromatic `fieldAppearance` or `accentAppearance(hue)` across the complete finite `0…360` circle. `resolveTerminalTheme()` evaluates every appearance-owned colour through the shared opaque Field authority, converts the resulting OKLCH values to sRGB, and computes ANSI 256 and ANSI 16 fallbacks. Field is the cached default exposed by compatibility values `terminalThemes.light` and `.dark`, so callers that omit `appearance` retain the exact monochrome projection. Accent never restores the removed CSS parser or a terminal RGB table. Its pale dark-ground roles keep chromatic meaning in ANSI 16 by selecting the nearest of that palette's six hue families at the ground-appropriate intensity; success, warning, and danger therefore retain distinct green, yellow, and red families, while an Accent near one of those hues may share the finite family because the visible word or glyph remains the semantic witness. The six categorical series colours stay on ADR 0032's independent fixed projection in every appearance. A population guard requires every metadata-enrolled colour role to appear in every palette and permits only those six series roles to bypass the appearance evaluator.
+[`theme.ts`](../../src/cli/theme.ts) keeps terminal ground and appearance independent. `theme: "light" | "dark"` selects the pole; `appearance` carries an optional `accent` hue across the complete finite `0…360` circle plus optional paper and ink tints, the same vocabulary the browser scope uses. `resolveTerminalTheme()` evaluates every appearance-owned colour through the shared opaque appearance authority, converts the resulting OKLCH values to sRGB, and computes ANSI 256 and ANSI 16 fallbacks. Untinted monochrome is the cached default exposed by compatibility values `terminalThemes.light` and `.dark`, so callers that omit `appearance`, or pass one whose accent is absent and whose tints are inert, retain the exact monochrome projection. Accent never restores the removed CSS parser or a terminal RGB table. Its pale dark-ground roles keep chromatic meaning in ANSI 16 by selecting the nearest of that palette's six hue families at the ground-appropriate intensity; success, warning, and danger therefore retain distinct green, yellow, and red families, while an Accent near one of those hues may share the finite family because the visible word or glyph remains the semantic witness. The six categorical series colours stay on ADR 0032's independent fixed projection in every appearance. A population guard requires every metadata-enrolled colour role to appear in every palette and permits only those six series roles to bypass the appearance evaluator.
+
 
 Spacing Tokens map to character cells relative to `--discern-space-2`; weight Tokens determine bold roles, while muted, emphasis, and annotation roles use dim and italic terminal attributes. The authored `--discern-measure` Token bounds prose-oriented default frame widths through [`frame-measure.ts`](../../src/cli/frame-measure.ts): ordinary form frames, focus-driven menus, Toast, Meter, and the interactive activity and sequential-form paints clamp to its character-cell value on wide terminals. Form and browsing choice frames instead use the currently available terminal columns so avoidable wrapping does not hide options; an explicit `width` remains authoritative for every policy.
 
@@ -44,7 +45,7 @@ Spacing Tokens map to character cells relative to `--discern-space-2`; weight To
 
 ## Presenter, narration, and rhythm
 
-[`presenter.ts`](../../src/cli/presenter.ts) is the default way to render this surface. `createCliPresenter(capabilities, { theme, appearance, motif, register, width })` binds terminal capabilities, a ground, a Field-or-Accent appearance, a semantic motif/register, and a default frame width once and returns a pure presenter value; `present(renderer, props)` then supplies everything except the call's own props. Props win over bound defaults one call at a time, presenter values win over package defaults, the bound width narrows the effective columns and never widens the real terminal, and `with()` derives a new presenter from the same base terminal while leaving its source untouched. A Field presenter can opt one call or composed subtree into any Accent hue; an Accent presenter can opt one call back into Field or replace its inherited hue, and the next call returns to the bound appearance. [`CliPresentationOptions`](../../src/cli/contracts.ts) is the shared input authority, and `cliPresentationPassthrough()` forwards only explicit values so a child spread afterwards can override in either direction. There is no ambient read, mutable palette registry, singleton, async context, or React context. Box and the three motif APIs whose call shapes cannot satisfy the generic renderer contract have named bindings — `box`, `motifSpinnerFrame`, `motifSectionRule`, and `motifWorkflowStepper`. The raw fully specified forms remain the escape hatch for callers that thread those facts themselves.
+[`presenter.ts`](../../src/cli/presenter.ts) is the default way to render this surface. `createCliPresenter(capabilities, { theme, appearance, motif, register, width })` binds terminal capabilities, a ground, an appearance, a semantic motif/register, and a default frame width once and returns a pure presenter value; `present(renderer, props)` then supplies everything except the call's own props. Props win over bound defaults one call at a time, presenter values win over package defaults, the bound width narrows the effective columns and never widens the real terminal, and `with()` derives a new presenter from the same base terminal while leaving its source untouched. A monochrome presenter can opt one call or composed subtree into any accent hue; an accent presenter can opt one call back to monochrome or replace its inherited hue, and the next call returns to the bound appearance. [`CliPresentationOptions`](../../src/cli/contracts.ts) is the shared input authority, and `cliPresentationPassthrough()` forwards only explicit values so a child spread afterwards can override in either direction. There is no ambient read, mutable palette registry, singleton, async context, or React context. Box and the three motif APIs whose call shapes cannot satisfy the generic renderer contract have named bindings — `box`, `motifSpinnerFrame`, `motifSectionRule`, and `motifWorkflowStepper`. The raw fully specified forms remain the escape hatch for callers that thread those facts themselves.
 
 These are ordinary package calls; no raw ANSI value or terminal-global configuration is involved:
 
@@ -53,34 +54,30 @@ import {
   createCliPresenter,
   renderBadgeCli,
 } from "@discern-sh/design-system/cli";
-import {
-  accentAppearance,
-  DEFAULT_ACCENT_HUE,
-  fieldAppearance,
-} from "@discern-sh/design-system/tokens";
 
 // Omission is the byte-compatible dark-ground monochrome default.
-const field = createCliPresenter(capabilities);
-field.present(renderBadgeCli, { label: "Quiet by default" });
+const mono = createCliPresenter(capabilities);
+mono.present(renderBadgeCli, { label: "Quiet by default" });
 
-// Accent accepts an arbitrary hue. Blue remains the named hue-255 convenience.
-const accent = field.with({ appearance: accentAppearance(335) });
-const blue = field.with({
-  appearance: accentAppearance(DEFAULT_ACCENT_HUE),
-});
+// An accent is one optional hue. 255 is the hue the Catalogue names Blue.
+const accent = mono.with({ appearance: { accent: 335 } });
+const blue = mono.with({ appearance: { accent: 255 } });
 
-// One Accent call inside Field, then inheritance returns to Field.
-field.present(renderBadgeCli, {
+// A faintly navy ground for a monochrome presenter.
+const navy = mono.with({ appearance: { inkTint: 0.4, inkTintHue: 265 } });
+
+// One accent call inside monochrome, then inheritance returns to monochrome.
+mono.present(renderBadgeCli, {
   label: "High-value status",
-  appearance: accentAppearance(120),
+  appearance: { accent: 120 },
 });
-field.present(renderBadgeCli, { label: "Quiet again" });
+mono.present(renderBadgeCli, { label: "Quiet again" });
 
-// Field and a different Accent hue inside Accent, then hue 335 resumes.
-accent.present(renderBadgeCli, { label: "Neutral region", appearance: fieldAppearance });
+// Monochrome and a different hue inside an accent, then hue 335 resumes.
+accent.present(renderBadgeCli, { label: "Neutral region", appearance: {} });
 accent.present(renderBadgeCli, {
   label: "Local blue region",
-  appearance: accentAppearance(245),
+  appearance: { accent: 245 },
 });
 accent.present(renderBadgeCli, { label: "Inherited hue 335" });
 ```
@@ -90,17 +87,17 @@ Ground sensing remains an effects-boundary decision owned by the caller. Appeara
 ```ts
 import { createCliPresenter } from "@discern-sh/design-system/cli";
 import { senseTerminalBackground } from "@discern-sh/design-system/cli/interactive";
-import { accentAppearance } from "@discern-sh/design-system/tokens";
 
 const reading = await senseTerminalBackground({ io, environment });
 const theme = reading.ground === "light" ? "light" : "dark"; // caller chooses unknown
 const presenter = createCliPresenter(capabilities, {
   theme,
-  appearance: accentAppearance(335),
+  appearance: { accent: 335 },
 });
 ```
 
-Every rendered Component prop contract accepts `CliPresentationOptions`, and the interaction runtime plus spinner, progress, activity-log, sequential-form, and Markdown-browser state carry the same explicit ground, appearance, motif, and register facts. A generated-registry type proof requires every current and future rendered props type to expose every shared key. Its runtime companion renders every canonical example in Field and representative Accent hues at both poles, all four colour depths, Unicode/ASCII, and narrow/standard/wide widths; emitted codes must belong to the selected palette, while explicit Field must equal the no-option bytes. A synthetic renderer that accepts but ignores `appearance` fails the same guard. The Catalogue's one presentation adapter feeds this contract from its global Appearance state, and cross-surface conformance compares Web and CLI under the same canonical example and exact numeric hue. New Components therefore inherit the complete presenter path or fail population conformance instead of silently resetting one presentation fact.
+Every rendered Component prop contract accepts `CliPresentationOptions`, and the interaction runtime plus spinner, progress, activity-log, sequential-form, and Markdown-browser state carry the same explicit ground, appearance, motif, and register facts. A generated-registry type proof requires every current and future rendered props type to expose every shared key. Its runtime companion renders every canonical example in monochrome and representative accent hues at both poles, all four colour depths, Unicode/ASCII, and narrow/standard/wide widths; emitted codes must belong to the selected palette, while an explicit empty appearance must equal the no-option bytes. A synthetic renderer that accepts but ignores `appearance` fails the same guard. The Catalogue's one presentation adapter feeds this contract from its global Appearance state, and cross-surface conformance compares Web and CLI under the same canonical example and exact numeric hue. New Components therefore inherit the complete presenter path or fail population conformance instead of silently resetting one presentation fact.
+
 
 [`narration.ts`](../../src/cli/narration.ts) supplies the verbs for output too small to deserve a Component: `renderSuccessLine`, `renderNoteLine`, `renderWarningLine`, `renderFailureLine`, and `renderLeadLine`, each a pure `CliRenderer` over one trimmed control-free line with optional `theme`, `motif`, and `maxWidth`. Success, warning, and failure retain their semantic check, bang, and cross; note uses the fixed disclosure arrow `▸`/`>`, while lead uses the effective motif's accent marker. Only the marker takes the tone colour, wrapped lines hang under the marker column, and the lead-in takes the embedded section rule's uppercase strong title treatment without its rule or any owned blank lines, so it stays lighter than Display Heading. `narrationLineRenderers` maps kinds to verbs for severity-driven callers, and `styleSemanticText` styles inline text by type role and semantic tone. The presenter carries all of it bound: `success`, `note`, `warning`, `failure`, `lead`, and `style`.
 
@@ -164,7 +161,7 @@ Choice IDs stay stable across values and disabled choices remain visible but uns
 
 `withActivityLog` ([ADR-0016](../_adr/0016-stream-activity-through-a-component-backed-log-frame.md)) is the third activity kind: long-running work with streaming detail. Its producer controller appends committed lines, replaces the in-progress partial line, pins narration-toned stable lines, relabels the headline, and finishes with a declared completion — keep the stable summary, or collapse to one toned result line — with an unfinished operation getting the summary applied for it and post-finish calls throwing. Frames render through Workflow's Activity log renderer, fitted through the shared viewport authority with the tail region as the variable budget, repainted only on scheduler ticks so fast producers coalesce, and following the stranded-frame resize contract. The visible tail indents every row behind one muted rail, with `└─│`/`` `-| `` attaching its first row to the stable frame above. A SIGINT paints the stable summary under the cancelled headline before restoration. Unlike the spinner and progress wrappers, it never refuses a non-interactive terminal: non-TTY, missing ANSI control, unfittable viewports, and painter refusals all degrade to one truthful append-only feed — the headline as a lead line, committed lines once each behind the muted rail, stable lines as narration lines when pinned, no partial churn, and an uncommitted partial flushed once at finish. Streamed text is sanitised rather than trusted — foreign ANSI stripped, carriage-return overwrites reduced to their final visible segment, tabs expanded, remaining control and format characters removed — while caller-authored labels, hints, and pinned lines stay under the throwing validation. One live activity or request per terminal at a time remains the Adapter's contract; the log adds no multiplexing.
 
-[`background.ts`](../../src/cli/interactive/background.ts) senses the terminal ground at the effects boundary. `senseTerminalBackground` takes a caller-supplied `TerminalIO` and environment snapshot — nothing ambient, mirroring capability detection — queries the terminal's reported background colour (OSC 11) inside a cursor-untouched raw round-trip bounded by a strict timeout (250ms default), falls back to the `COLORFGBG` hint when the query cannot answer, and returns a typed `TerminalBackgroundReading`: a ground of `light`, `dark`, or `unknown` plus the evidence used. Light and dark split at the WCAG text-contrast flip point; non-TTY handles are inert; and the shared package-internal read broker ([`read-broker.ts`](../../src/cli/interactive/read-broker.ts)) keeps buffered bytes separate from its one pending raw read. If the deadline wins, a brokered byte-stream filter retains ownership of the eventual OSC 11 reply while streaming ordinary input onward in order, so neither a late reply nor preserving already-read input can corrupt or steal a later interaction's keys. Consumers map `light` and `dark` to the presenter's `theme` input and choose their own default for `unknown`; the separate Field-or-Accent choice never triggers sensing. [ADR-0015](../_adr/0015-sense-terminal-background-as-a-caller-driven-effect.md) records why sensing is effectful and caller-driven, the timeout posture, and why unknown is a first-class answer.
+[`background.ts`](../../src/cli/interactive/background.ts) senses the terminal ground at the effects boundary. `senseTerminalBackground` takes a caller-supplied `TerminalIO` and environment snapshot — nothing ambient, mirroring capability detection — queries the terminal's reported background colour (OSC 11) inside a cursor-untouched raw round-trip bounded by a strict timeout (250ms default), falls back to the `COLORFGBG` hint when the query cannot answer, and returns a typed `TerminalBackgroundReading`: a ground of `light`, `dark`, or `unknown` plus the evidence used. Light and dark split at the WCAG text-contrast flip point; non-TTY handles are inert; and the shared package-internal read broker ([`read-broker.ts`](../../src/cli/interactive/read-broker.ts)) keeps buffered bytes separate from its one pending raw read. If the deadline wins, a brokered byte-stream filter retains ownership of the eventual OSC 11 reply while streaming ordinary input onward in order, so neither a late reply nor preserving already-read input can corrupt or steal a later interaction's keys. Consumers map `light` and `dark` to the presenter's `theme` input and choose their own default for `unknown`; the separate appearance choice never triggers sensing. [ADR-0015](../_adr/0015-sense-terminal-background-as-a-caller-driven-effect.md) records why sensing is effectful and caller-driven, the timeout posture, and why unknown is a first-class answer.
 
 Interaction modules pass their typed states and presentation facts directly to Component renderers. Text, masked, and autocomplete use Forms' Input; confirm uses Switch; select uses Select; multiselect and query-filtered multiselect use Checkbox; search uses Radio; acknowledgement uses Field; and textarea uses Textarea. Sequential forms bind a motif on `SequentialFormOptions`, pass it into nested request runtimes, and render their sections through Marketing's Process steps. The removed temporary frame dispatcher leaves terminal I/O, decoding, editing, state transitions, and Component rendering as separate authorities without an intermediate presentation language.
 

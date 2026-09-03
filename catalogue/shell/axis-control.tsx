@@ -32,7 +32,7 @@ export interface AxisControlProps {
   readonly onChange: (value: number) => void;
 }
 
-/** Shared public-Input projection used by the shell and Field instrument. */
+/** Shared public-Input projection used by the shell and Appearance instrument. */
 export function AxisControl(
   { axis, value, onChange }: AxisControlProps,
 ) {

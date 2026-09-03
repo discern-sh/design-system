@@ -175,7 +175,7 @@ Deno.test("Foundations index and terminal gallery stay bounded and source-backed
   );
 });
 
-Deno.test("Appearance page dogfoods public controls and paints every field role", () => {
+Deno.test("Appearance page dogfoods public controls and paints every role", () => {
   const html = renderFoundations(foundationsPaths.appearance);
   assertStringIncludes(html, 'data-discern-foundations-page="appearance"');
   for (const axis of ["darkness", "structure", "emphasis", "density"]) {

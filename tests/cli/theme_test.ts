@@ -78,7 +78,7 @@ Deno.test("truecolour values carry computed 256- and 16-colour fallbacks", () =>
   }
 });
 
-Deno.test("terminal field colours are opaque pole evaluations without the blue preset", () => {
+Deno.test("terminal monochrome colours are opaque pole evaluations", () => {
   for (const [variant, darkness] of [["light", 0], ["dark", 1]] as const) {
     const field = evaluateOpaqueAppearance({ darkness });
     for (const law of appearanceColorRoleLaws) {
@@ -206,7 +206,7 @@ Deno.test("finite-palette collisions stay local to matching semantic hue familie
   }
 });
 
-Deno.test("terminal appearance defaults to cached Field poles and validates Accent", () => {
+Deno.test("terminal appearance defaults to cached monochrome poles and validates the accent", () => {
   assertStrictEquals(resolveTerminalTheme(), terminalThemes.dark);
   assertStrictEquals(
     resolveTerminalTheme({ theme: "light", appearance: {} }),

@@ -343,7 +343,7 @@ Deno.test("bound theme and width defaults replace the consumer shims", () => {
   );
 });
 
-Deno.test("presenters bind and locally override Field-or-Accent appearance", () => {
+Deno.test("presenters bind and locally override the appearance", () => {
   const capabilities = testTerminalCapabilities({
     columns: 80,
     colorDepth: "truecolor",

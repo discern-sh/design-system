@@ -1,5 +1,7 @@
 # Field appearance programme
 
+> Completed. [ADR 0045](../../_adr/0045-name-the-model-appearance-and-tint-the-pigments.md) later renamed the model Appearance, collapsed the Field/Accent identity into one optional accent hue, replaced `data-discern-appearance` with `data-discern-accent`, removed the Blue export, and added the pigment tints. The contracts below are the historical record of this programme.
+
 Briefs for the corrective programme between the completed [monochrome field](../monochrome-field/README.md) package work and its deferred site adoption. The field remains the authority and the default identity. This programme makes a chromatic appearance a projection of the same laws, makes Field and chromatic appearances symmetrically scopeable on browser and terminal subtrees, restores opt-in terminal colour without changing monochrome defaults, and fixes the two visual defects exposed by the first full component sweep.
 
 This is a dedicated programme rather than a renumbering of monochrome-field 4A. That brief is a cross-repository adoption step whose stable name is already useful; these changes all belong to the package and must land before 4A can be dispatched. The programme slug is `appearance`, and every brief carries its literal `discern_start` name.

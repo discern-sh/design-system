@@ -222,7 +222,7 @@ Deno.test("the authored OKLCH values reproduce the selected medium-contrast pale
   }
 });
 
-Deno.test("every authored series colour clears every sampled field canvas", () => {
+Deno.test("every authored series colour clears every sampled canvas", () => {
   assert(
     oklabContrast(fieldCanvas(0.25), fieldCanvas(0.25)) <
       SERIES_CANVAS_CONTRAST_FLOOR,
@@ -251,7 +251,7 @@ Deno.test("every authored series colour clears every sampled field canvas", () =
   }
 });
 
-Deno.test("the sequential chart ramp is the field's ordered ink-alpha ladder", () => {
+Deno.test("the sequential chart ramp is the ordered ink-alpha ladder", () => {
   for (const darkness of APPEARANCE_CONTRAST_SAMPLE_DARKNESSES) {
     const palette = resolveChartPaletteAtDarkness(darkness);
     const alphas = ([1, 2, 3, 4] as const).map((step) => {

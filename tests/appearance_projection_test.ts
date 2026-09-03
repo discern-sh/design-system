@@ -4,7 +4,7 @@ import {
 } from "../scripts/conformance/appearance-projection.ts";
 import { oklabDistance } from "../src/internal/oklch.ts";
 
-Deno.test("computed field colours retain low-alpha coordinates without raster loss", () => {
+Deno.test("computed appearance colours retain low-alpha coordinates without raster loss", () => {
   const white = { lightness: 1, a: 0, b: 0 };
   for (
     const serialized of [
@@ -23,7 +23,7 @@ Deno.test("computed field colours retain low-alpha coordinates without raster lo
   }
 });
 
-Deno.test("computed field colour parsing rejects an unrecognized future form", () => {
+Deno.test("computed appearance colour parsing rejects an unrecognized future form", () => {
   assertThrows(
     () => parseComputedAppearanceColor("hsl(0 0% 50%)"),
     TypeError,

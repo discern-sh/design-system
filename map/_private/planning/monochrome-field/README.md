@@ -93,9 +93,9 @@ This planning package must land before any brief is dispatched. Each landing str
 
 ## Decisions the maintainer still holds
 
-- Whether discern's own CLI opts into the package's chromatic terminal appearance remains a product decision for the sibling repository. The package default stays achromatic; the field-appearance programme restores an explicit per-presenter and per-renderer opt-in rather than forcing either identity.
-- Whether the blue preset accepts achromatic neutrals, or whether neutral hue and chroma join the field as axes later.
-- The final rung numbers. 0A proposes them from the eye; 1A pins them from the arithmetic; the maintainer signs off between the two.
+- Whether discern's own CLI opts into an accent or a pigment tint remains a product decision for the sibling repository. The package default stays monochrome and untinted; the terminal takes an explicit per-presenter and per-renderer appearance rather than forcing either.
+- Whether an accent chroma axis joins the appearance so a low-chroma brand can quieten the accent without quietening state emphasis. [ADR 0045](../../_adr/0045-name-the-model-appearance-and-tint-the-pigments.md) settled the vocabulary, the optional accent, and the pigment tints; accent chroma is the next held decision.
+- Whether a monochrome brand may keep chromatic status colours. Today success, warning, and danger take colour with the accent.
 
 ## Adversarial review loop
 
