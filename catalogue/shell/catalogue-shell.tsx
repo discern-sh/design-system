@@ -6,6 +6,7 @@ import type { RegistryEntry } from "../generated/registry.ts";
 import type { CatalogueRoute } from "../routes.ts";
 import { AppearanceControl } from "./appearance.tsx";
 import type { AppearanceControlProps } from "./appearance.tsx";
+import { catalogueAppearanceStorageKey } from "./appearance-state.ts";
 import { GlobalSearch } from "./global-search.tsx";
 import { useMobileDrawer } from "./mobile-drawer.ts";
 import { CatalogueNavigation } from "./navigation.tsx";
@@ -57,9 +58,11 @@ export function CatalogueShell(
       className="discern-catalogue-shell"
       data-discern-root
       data-discern-theme={appearance.theme}
+      data-discern-appearance={appearance.appearance}
       data-discern-theme-consumer=""
-      data-discern-theme-control=".discern-catalogue-appearance .discern-theme-toggle"
-      data-discern-theme-storage-key="discern-catalogue-theme"
+      data-discern-theme-control=".discern-catalogue-appearance .discern-theme-switcher"
+      data-discern-theme-storage-key={catalogueAppearanceStorageKey}
+      data-discern-theme-storage-parameter="theme"
       style={style}
     >
       <SkipLink

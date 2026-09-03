@@ -45,7 +45,7 @@ Deno.test("local Catalogue state transitions preserve valid explicit Appearance"
       current,
       "/catalogue/components/table/?example=dense-overflow#component-table--dense-overflow",
     ),
-    "/catalogue/components/table/?example=dense-overflow&theme=dark&accent=violet#component-table--dense-overflow",
+    "/catalogue/components/table/?example=dense-overflow&theme=dark&appearance=accent&accent=300&field=1%2C1%2C1%2C1#component-table--dense-overflow",
   );
   assertEquals(
     preserveCatalogueAppearanceHref(
@@ -54,14 +54,14 @@ Deno.test("local Catalogue state transitions preserve valid explicit Appearance"
       ),
       "/catalogue/components/card/",
     ),
-    "/catalogue/components/card/?field=0.6%2C1%2C0.8%2C1.2%2Cblue",
+    "/catalogue/components/card/?theme=dark&appearance=accent&accent=255&field=0.6%2C1%2C0.8%2C1.2",
   );
   assertEquals(
     preserveCatalogueAppearanceHref(
       new URL("https://catalogue.example/catalogue/?theme=invalid&accent=999"),
       "/catalogue/review/?scope=all",
     ),
-    "/catalogue/review/?scope=all",
+    "/catalogue/review/?scope=all&theme=system&appearance=field&accent=255&field=0%2C1%2C1%2C1",
   );
 });
 
@@ -69,8 +69,16 @@ Deno.test("live Appearance URL updates announce link-state changes", async () =>
   const source = await Deno.readTextFile(
     new URL("../catalogue/shell/appearance.tsx", import.meta.url),
   );
+  const shell = await Deno.readTextFile(
+    new URL("../catalogue/shell/catalogue-shell.tsx", import.meta.url),
+  );
   assertStringIncludes(source, "announceCatalogueLocationChange();");
   assertStringIncludes(source, "history.replaceState");
+  assertStringIncludes(
+    shell,
+    "data-discern-theme-storage-key={catalogueAppearanceStorageKey}",
+  );
+  assertStringIncludes(shell, 'data-discern-theme-storage-parameter="theme"');
 });
 
 Deno.test("Catalogue routes resolve every explorer surface and Component detail", () => {

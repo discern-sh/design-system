@@ -2,9 +2,61 @@ import { assertEquals } from "@std/assert";
 import { fromFileUrl, join, relative } from "@std/path";
 import { registry } from "../catalogue/generated/registry.ts";
 import type { ResolvedComponentReviewPosture } from "../catalogue/review-postures.ts";
+import { themeConsumerStateFailures } from "../scripts/conformance/theme-consumer.ts";
 
 const PACKAGE_ROOT = fromFileUrl(new URL("..", import.meta.url));
 const COMPONENT_ROOT = join(PACKAGE_ROOT, "src", "components");
+
+Deno.test("theme consumers preserve bare and parameterised storage contracts", () => {
+  assertEquals(
+    themeConsumerStateFailures({
+      mode: "light",
+      selected: "light",
+      controlPresent: true,
+      storageKey: "discern-catalogue-appearance",
+      stored:
+        "theme=light&appearance=accent&accent=145.5&field=0.2%2C1%2C1%2C1",
+      storageParameter: "theme",
+    }),
+    [],
+  );
+  assertEquals(
+    themeConsumerStateFailures({
+      mode: "system",
+      selected: "system",
+      controlPresent: true,
+      storageKey: "discern-catalogue-appearance",
+      stored: "theme=system&appearance=field&accent=255&field=1%2C1%2C1%2C1",
+      storageParameter: "theme",
+    }),
+    [],
+  );
+  assertEquals(
+    themeConsumerStateFailures({
+      mode: "system",
+      selected: "system",
+      controlPresent: true,
+      storageKey: "legacy-theme",
+      stored: null,
+      storageParameter: null,
+    }),
+    [],
+  );
+  assertEquals(
+    themeConsumerStateFailures({
+      mode: "dark",
+      selected: "system",
+      controlPresent: true,
+      storageKey: "discern-catalogue-appearance",
+      stored: "theme=light&appearance=field&accent=255&field=0%2C1%2C1%2C1",
+      storageParameter: "theme",
+    }),
+    [
+      "selected theme system disagrees with root dark",
+      "stored theme light disagrees with root dark",
+    ],
+  );
+});
 
 function capturesPointerContact(
   posture: ResolvedComponentReviewPosture,

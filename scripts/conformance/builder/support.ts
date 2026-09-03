@@ -3,6 +3,7 @@ import {
   BUILDER_DISCOVERY_STORAGE_KEY,
 } from "../../../catalogue/builder/discovery/preferences.ts";
 import { BUILDER_STORAGE_KEYS } from "../../../catalogue/builder/persistence.ts";
+import { catalogueAppearanceStorageKey } from "../../../catalogue/shell/appearance-state.ts";
 import {
   addPageFailureListeners,
   FOCUSABLE_SELECTOR,
@@ -32,6 +33,7 @@ export const THEMES: readonly BuilderTheme[] = ["light", "dark"];
 export const STORAGE_KEYS = [
   ...Object.values(BUILDER_STORAGE_KEYS),
   BUILDER_DISCOVERY_STORAGE_KEY,
+  catalogueAppearanceStorageKey,
 ] as const;
 
 export interface AdaptiveCase {
@@ -182,13 +184,15 @@ export async function useScopedTheme(
   const wasOpen = await details.getAttribute("open") !== null;
   if (!wasOpen) await details.locator("summary").click();
   try {
-    const toggle = details.locator(".discern-theme-toggle");
+    const switcher = details.locator(".discern-theme-switcher");
     for (let attempt = 0; attempt < 2; attempt += 1) {
-      if (await toggle.getAttribute("data-discern-mode") === theme) return;
-      await toggle.click({ timeout: ACTION_TIMEOUT });
+      if (await switcher.getAttribute("data-discern-mode") === theme) return;
+      await switcher.locator(`label:has(input[value="${theme}"])`).click({
+        timeout: ACTION_TIMEOUT,
+      });
     }
     invariant(
-      await toggle.getAttribute("data-discern-mode") === theme,
+      await switcher.getAttribute("data-discern-mode") === theme,
       `${scope} Appearance did not resolve to ${theme}`,
     );
   } finally {

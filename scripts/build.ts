@@ -1172,6 +1172,21 @@ async function buildLandingPage(version: string): Promise<void> {
   );
 }
 
+async function writeCatalogueAppearanceScopes(
+  surfaces: readonly Readonly<{ id: string; css: string }>[],
+): Promise<void> {
+  const matches = surfaces.filter(({ id }) => id === "appearance-scopes");
+  if (matches.length !== 1) {
+    throw new Error(
+      `Runtime registry exposed ${matches.length} appearance scope surfaces`,
+    );
+  }
+  await Deno.writeTextFile(
+    new URL("appearance-scopes.css", DIST_ROOT),
+    `${matches[0]!.css.trim()}\n`,
+  );
+}
+
 /** Build the React catalogue, its all-component runtime, and the landing page. */
 export async function buildDesignSystem(): Promise<BuildSummary> {
   await writeGeneratedSources();
@@ -1179,12 +1194,15 @@ export async function buildDesignSystem(): Promise<BuildSummary> {
   const version = await packageVersion();
   await generateRegistry(sources, shared, version);
   await writeCatalogueMarkdownAssets();
-  const { emitDesignSystemRuntime } = await import("../src/runtime.ts");
+  const { emitDesignSystemRuntime, runtimeCssSurfaceRegistry } = await import(
+    "../src/runtime.ts"
+  );
   const summary = await emitDesignSystemRuntime({
     outputRoot: DIST_ROOT,
     all: true,
     assets: ["fonts", "grain"],
   });
+  await writeCatalogueAppearanceScopes(runtimeCssSurfaceRegistry);
   if (summary.components !== sources.length) {
     throw new Error("Catalogue and runtime component discovery disagree");
   }

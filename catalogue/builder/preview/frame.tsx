@@ -6,15 +6,7 @@ import {
   useState,
 } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import {
-  catalogueAppearanceOption,
-  catalogueAppearanceStyle,
-  defaultCatalogueAppearanceOption,
-} from "../../shell/appearance-options.ts";
-import {
-  catalogueFieldPolarity,
-  catalogueFieldStyle,
-} from "../../shell/field-state.ts";
+import { catalogueFieldStyle } from "../../shell/field-state.ts";
 import type { BuilderSlotChild } from "../model.ts";
 import type { RenderOptions } from "../render.tsx";
 import { renderBuilderChild } from "../render.tsx";
@@ -317,19 +309,16 @@ function FrameDocument(
       ref={rootRef}
       className="discern-builder-frame-document"
       data-discern-root
-      data-discern-theme={snapshot.appearance.field === undefined
-        ? snapshot.appearance.resolvedTheme
-        : catalogueFieldPolarity(snapshot.appearance.field)}
+      data-discern-theme={snapshot.appearance.resolvedTheme}
+      data-discern-appearance={snapshot.appearance.appearance}
       data-discern-theme-preference={snapshot.appearance.theme}
       data-discern-builder-preview-mode={snapshot.mode}
       aria-hidden={snapshot.mode === "edit" ? "true" : undefined}
-      style={(snapshot.appearance.field === undefined
-        ? catalogueAppearanceStyle(
-          catalogueAppearanceOption(snapshot.appearance.accent) ??
-            defaultCatalogueAppearanceOption,
-          snapshot.appearance.resolvedTheme,
-        )
-        : catalogueFieldStyle(snapshot.appearance.field)) as CSSProperties}
+      style={catalogueFieldStyle(
+        snapshot.appearance.field,
+        snapshot.appearance.resolvedTheme,
+        snapshot.appearance.accentHue,
+      ) as CSSProperties}
     >
       {snapshot.document.children.length === 0
         ? (

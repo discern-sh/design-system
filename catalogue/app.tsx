@@ -92,6 +92,8 @@ function App() {
             terminalTheme={appearance.terminalTheme}
             field={appearance.field}
             fieldScheme={appearance.fieldScheme}
+            appearance={appearance.appearance}
+            accentHue={appearance.accentHue}
             onFieldChange={appearance.changeField}
           />
         );
@@ -127,10 +129,14 @@ function App() {
       appearance={{
         theme: appearance.theme,
         resolvedTheme: appearance.terminalTheme,
-        accent: appearance.accent,
+        appearance: appearance.appearance,
+        accentHue: appearance.accentHue,
         field: appearance.field,
         onThemeChange: appearance.changeTheme,
-        onAccentChange: appearance.changeAccent,
+        onAppearanceChange: appearance.changeAppearance,
+        onAccentHueChange: appearance.changeAccentHue,
+        onFieldChange: appearance.changeField,
+        onFieldReset: appearance.resetField,
       }}
       style={appearance.style}
     >

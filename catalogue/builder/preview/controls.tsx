@@ -1,26 +1,33 @@
 import { useCallback, useEffect, useState } from "react";
 import type { CSSProperties } from "react";
+import type { ThemeSwitcherMode } from "../../../src/components/core/theme-switcher/theme-switcher.tsx";
+import { Select } from "../../../src/components/forms/select/select.tsx";
+import {
+  type AppearanceName,
+  DEFAULT_ACCENT_HUE,
+  fieldAxes,
+} from "../../../src/tokens/field.ts";
 import {
   AppearanceControl,
   type AppearanceControlProps,
   useCatalogueAppearance,
 } from "../../shell/appearance.tsx";
+import { catalogueAccentHue } from "../../shell/appearance-options.ts";
 import {
-  type CatalogueAppearanceOption,
-  catalogueAppearanceOption,
-  catalogueAppearanceStyle,
-  defaultCatalogueAppearanceOption,
-} from "../../shell/appearance-options.ts";
-import type { CatalogueFieldSelection } from "../../shell/field-state.ts";
+  type CatalogueAppearanceParameterNames,
+  type CatalogueAppearanceState,
+  defaultCatalogueAppearanceState,
+  parseCatalogueAppearanceParameters,
+  setCatalogueAccentHue,
+  setCatalogueAppearanceIdentity,
+  setCatalogueFieldPoint,
+  writeCatalogueAppearanceParameters,
+} from "../../shell/appearance-state.ts";
 import {
-  catalogueFieldPolarity,
+  catalogueFieldControlScheme,
   catalogueFieldStyle,
-  parseCatalogueFieldSelection,
-  serializeCatalogueFieldSelection,
 } from "../../shell/field-state.ts";
 import { useCatalogueTerminalTheme } from "../../terminal-theme.ts";
-import type { ThemeSwitcherMode } from "../../../src/components/core/theme-switcher/theme-switcher.tsx";
-import { Select } from "../../../src/components/forms/select/select.tsx";
 import type {
   BuilderPreviewAppearance,
   BuilderPreviewMode,
@@ -50,19 +57,12 @@ export interface BuilderPreviewMeasurement {
   readonly devicePixelRatio: number;
 }
 
-interface MutableAppearance {
-  readonly theme: ThemeSwitcherMode;
-  readonly accent: CatalogueAppearanceOption;
-  readonly field?: CatalogueFieldSelection;
-}
-
 export interface BuilderPreviewPreferences {
   readonly viewport: BuilderPreviewViewportPreset;
   readonly zoomId: BuilderPreviewZoomId;
   readonly mode: BuilderPreviewMode;
   readonly previewAppearance: BuilderPreviewAppearance;
-  readonly previewAccent: CatalogueAppearanceOption;
-  readonly workspaceAppearance: MutableAppearance;
+  readonly workspaceAppearance: CatalogueAppearanceState;
   readonly previewResolvedTheme: "light" | "dark";
   readonly workspaceResolvedTheme: "light" | "dark";
   readonly workspaceStyle: CSSProperties;
@@ -73,13 +73,27 @@ export interface BuilderPreviewPreferences {
   readonly setZoom: (id: BuilderPreviewZoomId) => void;
   readonly setMode: (mode: BuilderPreviewMode) => void;
   readonly setPreviewTheme: AppearanceControlProps["onThemeChange"];
-  readonly setPreviewAccent: AppearanceControlProps["onAccentChange"];
+  readonly setPreviewAppearance: AppearanceControlProps["onAppearanceChange"];
+  readonly setPreviewAccentHue: AppearanceControlProps["onAccentHueChange"];
+  readonly setPreviewField: AppearanceControlProps["onFieldChange"];
+  readonly resetPreviewField: AppearanceControlProps["onFieldReset"];
   readonly setWorkspaceTheme: AppearanceControlProps["onThemeChange"];
-  readonly setWorkspaceAccent: AppearanceControlProps["onAccentChange"];
+  readonly setWorkspaceAppearance: AppearanceControlProps["onAppearanceChange"];
+  readonly setWorkspaceAccentHue: AppearanceControlProps["onAccentHueChange"];
+  readonly setWorkspaceField: AppearanceControlProps["onFieldChange"];
+  readonly resetWorkspaceField: AppearanceControlProps["onFieldReset"];
   readonly reportMeasurement: (next: BuilderPreviewMeasurement) => void;
   readonly resetView: () => void;
   readonly resetInteractions: () => void;
 }
+
+const previewAppearanceParameterNames: CatalogueAppearanceParameterNames =
+  Object.freeze({
+    theme: "previewTheme",
+    appearance: "previewAppearance",
+    accent: "previewAccent",
+    field: "previewField",
+  });
 
 function previewViewport(value: string | null): BuilderPreviewViewportId {
   return value === "desktop" || value === "tablet" || value === "phone"
@@ -95,16 +109,19 @@ function previewMode(value: string | null): BuilderPreviewMode {
   return value === "interact" ? "interact" : "edit";
 }
 
-function theme(value: string | null, fallback: ThemeSwitcherMode) {
-  return value === "system" || value === "light" || value === "dark"
-    ? value
-    : fallback;
+/** Legacy/numeric preview hue migration with the package default fallback. */
+export function builderPreviewAccent(value: string | null): number {
+  return catalogueAccentHue(value) ?? DEFAULT_ACCENT_HUE;
 }
 
-export function builderPreviewAccent(
-  value: string | null,
-): CatalogueAppearanceOption {
-  return catalogueAppearanceOption(value) ?? defaultCatalogueAppearanceOption;
+function initialPreviewAppearance(
+  parameters: URLSearchParams,
+  initialTheme: ThemeSwitcherMode,
+): CatalogueAppearanceState {
+  return parseCatalogueAppearanceParameters(
+    parameters,
+    previewAppearanceParameterNames,
+  ) ?? { ...defaultCatalogueAppearanceState, theme: initialTheme };
 }
 
 function updateComfortUrl(
@@ -112,9 +129,8 @@ function updateComfortUrl(
     viewport: BuilderPreviewViewportId;
     zoom: BuilderPreviewZoomId;
     mode: BuilderPreviewMode;
-    preview: MutableAppearance;
-    workspace: MutableAppearance;
-    initialPreviewTheme: ThemeSwitcherMode;
+    preview: CatalogueAppearanceState;
+    workspace: CatalogueAppearanceState;
   }>,
 ): void {
   const url = new URL(globalThis.location.href);
@@ -125,39 +141,18 @@ function updateComfortUrl(
   set("previewWidth", input.viewport, "fluid");
   set("previewZoom", input.zoom, "fit");
   set("previewMode", input.mode, "edit");
-  set("previewTheme", input.preview.theme, input.initialPreviewTheme);
-  if (input.preview.field === undefined) {
-    url.searchParams.delete("previewField");
-  } else {
-    url.searchParams.set(
-      "previewField",
-      serializeCatalogueFieldSelection(input.preview.field),
-    );
-  }
-  set(
-    "previewAccent",
-    input.preview.accent.id,
-    defaultCatalogueAppearanceOption.id,
+  writeCatalogueAppearanceParameters(
+    url.searchParams,
+    input.preview,
+    previewAppearanceParameterNames,
   );
-  set("theme", input.workspace.theme, "system");
-  if (input.workspace.field === undefined) url.searchParams.delete("field");
-  else {
-    url.searchParams.set(
-      "field",
-      serializeCatalogueFieldSelection(input.workspace.field),
-    );
-  }
-  set(
-    "accent",
-    input.workspace.accent.id,
-    defaultCatalogueAppearanceOption.id,
-  );
+  writeCatalogueAppearanceParameters(url.searchParams, input.workspace);
   globalThis.history.replaceState(globalThis.history.state, "", url);
 }
 
 /**
- * Builder adapter over the shared Appearance control/types. Comfort state is
- * URL-local and never enters the accepted document or its history.
+ * Builder adapter over the shared orthogonal state. Workspace and Preview own
+ * distinct points but consume the same transitions and serialisation.
  */
 export function useBuilderPreviewPreferences(
   initialPreviewTheme: ThemeSwitcherMode,
@@ -172,15 +167,14 @@ export function useBuilderPreviewPreferences(
   const [mode, setMode] = useState<BuilderPreviewMode>(() =>
     previewMode(url.searchParams.get("previewMode"))
   );
-  const [previewTheme, setPreviewTheme] = useState<ThemeSwitcherMode>(() =>
-    theme(url.searchParams.get("previewTheme"), initialPreviewTheme)
+  const [preview, setPreview] = useState<CatalogueAppearanceState>(() =>
+    initialPreviewAppearance(url.searchParams, initialPreviewTheme)
   );
-  const [previewAccent, setPreviewAccent] = useState<
-    CatalogueAppearanceOption
-  >(() => builderPreviewAccent(url.searchParams.get("previewAccent")));
-  const [previewField, setPreviewField] = useState<
-    CatalogueFieldSelection | undefined
-  >(() => parseCatalogueFieldSelection(url.searchParams.get("previewField")));
+  const [previewScheme, setPreviewScheme] = useState<"light" | "dark">(() =>
+    catalogueFieldControlScheme(
+      initialPreviewAppearance(url.searchParams, initialPreviewTheme).field,
+    )
+  );
   const [measurement, setMeasurement] = useState<BuilderPreviewMeasurement>({
     logicalWidth: 0,
     zoomPercent: 100,
@@ -189,39 +183,44 @@ export function useBuilderPreviewPreferences(
   const [resetViewRevision, setResetViewRevision] = useState(0);
   const [interactionRevision, setInteractionRevision] = useState(0);
   const workspace = useCatalogueAppearance(url);
-  const selectedPreviewTheme = useCatalogueTerminalTheme(previewTheme);
-  const previewResolvedTheme = previewField === undefined
-    ? selectedPreviewTheme
-    : catalogueFieldPolarity(previewField);
+  const systemTheme = useCatalogueTerminalTheme("system");
+
+  useEffect(() => {
+    if (preview.theme !== "system") return;
+    const darkness = systemTheme === "dark"
+      ? fieldAxes.darkness.maximum
+      : fieldAxes.darkness.minimum;
+    if (
+      preview.field.darkness === darkness && previewScheme === systemTheme
+    ) return;
+    setPreview((current) =>
+      setCatalogueFieldPoint(current, { ...current.field, darkness })
+    );
+    setPreviewScheme(systemTheme);
+  }, [preview, previewScheme, systemTheme]);
 
   useEffect(() => {
     updateComfortUrl({
       viewport: viewportId,
       zoom: zoomId,
       mode,
-      preview: {
-        theme: previewTheme,
-        accent: previewAccent,
-        ...(previewField === undefined ? {} : { field: previewField }),
-      },
+      preview,
       workspace: {
         theme: workspace.theme,
-        accent: workspace.accent,
-        ...(workspace.field === undefined ? {} : { field: workspace.field }),
+        appearance: workspace.appearance,
+        accentHue: workspace.accentHue,
+        field: workspace.field,
       },
-      initialPreviewTheme,
     });
   }, [
     viewportId,
     zoomId,
     mode,
-    previewTheme,
-    previewAccent,
-    previewField,
+    preview,
     workspace.theme,
-    workspace.accent,
+    workspace.appearance,
+    workspace.accentHue,
     workspace.field,
-    initialPreviewTheme,
   ]);
 
   const reportMeasurement = useCallback((next: BuilderPreviewMeasurement) => {
@@ -234,23 +233,44 @@ export function useBuilderPreviewPreferences(
     );
   }, []);
 
+  const changePreviewTheme = (theme: ThemeSwitcherMode): void => {
+    const scheme = theme === "system" ? systemTheme : theme;
+    const darkness = scheme === "dark"
+      ? fieldAxes.darkness.maximum
+      : fieldAxes.darkness.minimum;
+    setPreview((current) => ({
+      ...current,
+      theme,
+      field: { ...current.field, darkness },
+    }));
+    setPreviewScheme(scheme);
+  };
+  const changePreviewField = (
+    field: CatalogueAppearanceState["field"],
+  ): void => {
+    const scheme = catalogueFieldControlScheme(field, previewScheme);
+    setPreview((current) => ({
+      ...setCatalogueFieldPoint(current, field),
+      ...(field.darkness === current.field.darkness ? {} : { theme: scheme }),
+    }));
+    setPreviewScheme(scheme);
+  };
+
   return {
     viewport: builderPreviewViewports[viewportId],
     zoomId,
     mode,
     previewAppearance: {
-      theme: previewTheme,
-      resolvedTheme: previewResolvedTheme,
-      accent: previewAccent.id,
-      ...(previewField === undefined ? {} : { field: previewField }),
+      ...preview,
+      resolvedTheme: previewScheme,
     },
-    previewAccent,
     workspaceAppearance: {
       theme: workspace.theme,
-      accent: workspace.accent,
-      ...(workspace.field === undefined ? {} : { field: workspace.field }),
+      appearance: workspace.appearance,
+      accentHue: workspace.accentHue,
+      field: workspace.field,
     },
-    previewResolvedTheme,
+    previewResolvedTheme: previewScheme,
     workspaceResolvedTheme: workspace.terminalTheme,
     workspaceStyle: workspace.style,
     measurement,
@@ -259,13 +279,25 @@ export function useBuilderPreviewPreferences(
     setViewport,
     setZoom,
     setMode,
-    setPreviewTheme,
-    setPreviewAccent: (next) => {
-      setPreviewField(undefined);
-      setPreviewAccent(builderPreviewAccent(next));
+    setPreviewTheme: changePreviewTheme,
+    setPreviewAppearance: (appearance: AppearanceName) =>
+      setPreview((current) =>
+        setCatalogueAppearanceIdentity(current, appearance)
+      ),
+    setPreviewAccentHue: (value) => {
+      const hue = catalogueAccentHue(value);
+      if (hue !== undefined) {
+        setPreview((current) => setCatalogueAccentHue(current, hue));
+      }
     },
+    setPreviewField: changePreviewField,
+    resetPreviewField: () =>
+      changePreviewField(defaultCatalogueAppearanceState.field),
     setWorkspaceTheme: workspace.changeTheme,
-    setWorkspaceAccent: workspace.changeAccent,
+    setWorkspaceAppearance: workspace.changeAppearance,
+    setWorkspaceAccentHue: workspace.changeAccentHue,
+    setWorkspaceField: workspace.changeField,
+    resetWorkspaceField: workspace.resetField,
     reportMeasurement,
     resetView() {
       setViewport("fluid");
@@ -279,34 +311,51 @@ export function useBuilderPreviewPreferences(
 }
 
 function AppearanceBoundary(
-  { label, appearance, resolvedTheme, onThemeChange, onAccentChange }: Readonly<
-    {
-      label: string;
-      appearance: MutableAppearance;
-      resolvedTheme: "light" | "dark";
-      onThemeChange: AppearanceControlProps["onThemeChange"];
-      onAccentChange: AppearanceControlProps["onAccentChange"];
-    }
-  >,
+  {
+    label,
+    appearance,
+    resolvedTheme,
+    onThemeChange,
+    onAppearanceChange,
+    onAccentHueChange,
+    onFieldChange,
+    onFieldReset,
+  }: Readonly<{
+    label: string;
+    appearance: CatalogueAppearanceState;
+    resolvedTheme: "light" | "dark";
+    onThemeChange: AppearanceControlProps["onThemeChange"];
+    onAppearanceChange: AppearanceControlProps["onAppearanceChange"];
+    onAccentHueChange: AppearanceControlProps["onAccentHueChange"];
+    onFieldChange: AppearanceControlProps["onFieldChange"];
+    onFieldReset: AppearanceControlProps["onFieldReset"];
+  }>,
 ) {
   return (
     <div
       className="discern-builder-appearance"
       role="group"
       aria-label={`${label} appearance`}
-      style={(appearance.field === undefined
-        ? catalogueAppearanceStyle(appearance.accent, resolvedTheme)
-        : catalogueFieldStyle(appearance.field)) as CSSProperties}
+      data-discern-appearance={appearance.appearance}
+      style={catalogueFieldStyle(
+        appearance.field,
+        resolvedTheme,
+        appearance.accentHue,
+      ) as CSSProperties}
     >
       <span>{label}</span>
       <AppearanceControl
         scopeLabel={label}
         theme={appearance.theme}
         resolvedTheme={resolvedTheme}
-        accent={appearance.accent}
+        appearance={appearance.appearance}
+        accentHue={appearance.accentHue}
         field={appearance.field}
         onThemeChange={onThemeChange}
-        onAccentChange={onAccentChange}
+        onAppearanceChange={onAppearanceChange}
+        onAccentHueChange={onAccentHueChange}
+        onFieldChange={onFieldChange}
+        onFieldReset={onFieldReset}
       />
     </div>
   );
@@ -397,20 +446,20 @@ export function PreviewToolbarControls(
         appearance={preferences.workspaceAppearance}
         resolvedTheme={preferences.workspaceResolvedTheme}
         onThemeChange={preferences.setWorkspaceTheme}
-        onAccentChange={preferences.setWorkspaceAccent}
+        onAppearanceChange={preferences.setWorkspaceAppearance}
+        onAccentHueChange={preferences.setWorkspaceAccentHue}
+        onFieldChange={preferences.setWorkspaceField}
+        onFieldReset={preferences.resetWorkspaceField}
       />
       <AppearanceBoundary
         label="Preview"
-        appearance={{
-          theme: preferences.previewAppearance.theme,
-          accent: preferences.previewAccent,
-          ...(preferences.previewAppearance.field === undefined
-            ? {}
-            : { field: preferences.previewAppearance.field }),
-        }}
+        appearance={preferences.previewAppearance}
         resolvedTheme={preferences.previewResolvedTheme}
         onThemeChange={preferences.setPreviewTheme}
-        onAccentChange={preferences.setPreviewAccent}
+        onAppearanceChange={preferences.setPreviewAppearance}
+        onAccentHueChange={preferences.setPreviewAccentHue}
+        onFieldChange={preferences.setPreviewField}
+        onFieldReset={preferences.resetPreviewField}
       />
     </>
   );

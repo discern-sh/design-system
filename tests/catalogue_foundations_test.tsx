@@ -176,14 +176,24 @@ Deno.test("Field page dogfoods public controls and paints every field role", () 
   const html = renderFoundations(foundationsPaths.field);
   assertStringIncludes(html, 'data-discern-foundations-page="field"');
   for (const axis of ["darkness", "structure", "emphasis", "density"]) {
-    assertStringIncludes(html, `id="discern-catalogue-field-${axis}"`);
-    assertStringIncludes(html, 'type="range"');
+    assertStringIncludes(html, `data-discern-field-axis="${axis}"`);
   }
-  assertStringIncludes(html, "Blue preset");
-  assertStringIncludes(html, "Token polarity is");
+  assertEquals((html.match(/type="range"/g) ?? []).length, 4);
+  assertStringIncludes(html, "These are the same controls");
+  assertStringIncludes(html, "Current projection");
   assertStringIncludes(html, 'data-discern-field-proof="accepted"');
-  assertStringIncludes(html, "Admission proof");
-  assertStringIncludes(html, "margin +");
+  assertStringIncludes(html, "Package admission");
+  assertStringIncludes(html, "No failed package invariants");
+  for (
+    const scope of [
+      "field-to-accent-255",
+      "accent-120-to-field",
+      "accent-245-to-accent-335",
+    ]
+  ) assertStringIncludes(html, `data-discern-scope-demo="${scope}"`);
+  assertStringIncludes(html, 'class="discern-button');
+  assertStringIncludes(html, 'class="discern-badge');
+  assertStringIncludes(html, 'class="discern-avatar-group');
   assertStringIncludes(html, "Copy consumer field snippet");
   assertStringIncludes(html, 'data-discern-field-terminal-pole="light"');
   assertStringIncludes(html, 'data-discern-field-terminal-pole="dark"');
@@ -210,23 +220,22 @@ Deno.test("Field terminal sheet uses the existing inspector at both poles", () =
   }
 });
 
-Deno.test("Field proof renders shared refusal reasons verbatim", () => {
+Deno.test("Field page admits arbitrary Accent hues through the package proof", () => {
   const html = renderToStaticMarkup(
     createElement<FieldPageProps>(FieldPage, {
+      appearance: "accent",
+      accentHue: 145.5,
       field: {
         darkness: 0.6,
         structure: 1.2,
         emphasis: 1.5,
         density: 1.1,
-        preset: "mono",
       },
     }),
   );
-  assertStringIncludes(html, 'data-discern-field-proof="refused"');
-  assertStringIncludes(
-    html,
-    "field 0.6 accent collides with warning (0.067 OKLab)",
-  );
+  assertStringIncludes(html, 'data-discern-field-proof="accepted"');
+  assertStringIncludes(html, "Accent · Hue 145.5");
+  assertStringIncludes(html, 'data-discern-appearance="accent"');
 });
 
 Deno.test("a synthetic terminal sheet joins route, index, detail, navigation, and search projections", () => {

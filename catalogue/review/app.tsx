@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
+import { Input } from "../../src/components/forms/input/input.tsx";
 import { Select } from "../../src/components/forms/select/select.tsx";
+import type { AppearanceName } from "../../src/tokens/field.ts";
 import { componentGroups } from "../../src/types/component-meta.ts";
 import type { ConformanceStep, ConformanceTarget } from "../conformance.ts";
 import { registry } from "../generated/registry.ts";
@@ -11,10 +13,9 @@ import {
 } from "../review-postures.ts";
 import type { ResolvedComponentReviewPosture } from "../review-postures.ts";
 import {
-  catalogueAppearanceOption,
+  catalogueAccentHue,
+  catalogueAccentHueLabel,
   catalogueAppearanceOptions,
-  catalogueAppearanceStyle,
-  defaultCatalogueAppearanceOption,
 } from "../shell/appearance-options.ts";
 import type { CatalogueFieldSelection } from "../shell/field-state.ts";
 import {
@@ -191,6 +192,7 @@ function ReviewSpecimen({
   responsiveAllocation,
   theme,
   appearance,
+  accentHue,
   field,
   motion,
   speed,
@@ -203,8 +205,9 @@ function ReviewSpecimen({
   readonly width: number;
   readonly responsiveAllocation: "local" | "page";
   readonly theme: "light" | "dark";
-  readonly appearance: string;
-  readonly field?: CatalogueFieldSelection | undefined;
+  readonly appearance: AppearanceName;
+  readonly accentHue: number;
+  readonly field: CatalogueFieldSelection;
   readonly motion: "ordinary" | "reduced";
   readonly speed: "production" | "slow";
   readonly replay: number;
@@ -212,11 +215,7 @@ function ReviewSpecimen({
 }) {
   const [status, setStatus] = useState("Preparing");
   const example = entry.webExamples.find(({ id }) => id === posture.example);
-  const option = catalogueAppearanceOption(appearance) ??
-    defaultCatalogueAppearanceOption;
-  const appliedTheme = field === undefined
-    ? theme
-    : catalogueFieldPolarity(field);
+  const appliedTheme = theme;
   useEffect(() => {
     const root = document.querySelector<HTMLElement>(
       `[data-discern-review-identity="${
@@ -326,15 +325,14 @@ function ReviewSpecimen({
           className="discern-review-specimen"
           data-discern-root
           data-discern-theme={appliedTheme}
+          data-discern-appearance={appearance}
           data-discern-review-motion={motion}
           data-discern-review-speed={speed}
           data-discern-review-responsive-allocation={responsiveAllocation}
           data-discern-review-identity={identity}
           style={{
             inlineSize: `${width}px`,
-            ...(field === undefined
-              ? catalogueAppearanceStyle(option, theme)
-              : catalogueFieldStyle(field)),
+            ...catalogueFieldStyle(field, theme, accentHue),
             ...reviewMotionStyle(motion, speed),
           } as CSSProperties}
         >
@@ -345,7 +343,9 @@ function ReviewSpecimen({
         <span>{width}px {responsiveAllocation}</span>
         <span>{appliedTheme}</span>
         <span>
-          {field === undefined ? option.label : catalogueFieldLabel(field)}
+          {appearance === "field"
+            ? "Field"
+            : catalogueAccentHueLabel(accentHue)} · {catalogueFieldLabel(field)}
         </span>
         <span>{motion}</span>
         <span>{speed}</span>
@@ -420,21 +420,56 @@ function App() {
   }, [ready, viewport, visibleCards.length]);
   const onReady = useMemo(() => () => setReady((value) => value + 1), []);
   const width = reviewInlineSizes[parsed.width];
-  const option = catalogueAppearanceOption(parsed.appearance) ??
-    defaultCatalogueAppearanceOption;
-  const appliedTheme = parsed.field === undefined
-    ? parsed.theme
-    : catalogueFieldPolarity(parsed.field);
+  const appliedTheme = parsed.theme;
   const canonical = componentReviewHref({ ...parsed, group });
+  const pointHref = (
+    label: string,
+    field: CatalogueFieldSelection,
+  ) => ({
+    label,
+    href: componentReviewHref({
+      ...parsed,
+      group,
+      theme: catalogueFieldPolarity(field),
+      field,
+    }),
+  });
+  const judgmentLinks = [
+    pointHref("Light pole", { ...parsed.field, darkness: 0 }),
+    pointHref("0A light", { ...parsed.field, darkness: 0.25 }),
+    pointHref("0A midpoint", { ...parsed.field, darkness: 0.5 }),
+    pointHref("0A dark", { ...parsed.field, darkness: 0.75 }),
+    pointHref("Dark pole", { ...parsed.field, darkness: 1 }),
+    pointHref("Structure low", { ...parsed.field, structure: 0 }),
+    pointHref("Structure high", { ...parsed.field, structure: 2 }),
+    pointHref("Density low", { ...parsed.field, density: 0.5 }),
+    pointHref("Density high", { ...parsed.field, density: 2 }),
+    {
+      label: "Field identity",
+      href: componentReviewHref({ ...parsed, group, appearance: "field" }),
+    },
+    {
+      label: "Accent 255",
+      href: componentReviewHref({
+        ...parsed,
+        group,
+        appearance: "accent",
+        accentHue: 255,
+      }),
+    },
+  ];
 
   return (
     <main
       className="discern-review-shell"
       data-discern-root
       data-discern-theme={appliedTheme}
-      style={(parsed.field === undefined
-        ? catalogueAppearanceStyle(option, parsed.theme)
-        : catalogueFieldStyle(parsed.field)) as CSSProperties}
+      data-discern-appearance={parsed.appearance}
+      style={catalogueFieldStyle(
+        parsed.field,
+        parsed.theme,
+        parsed.accentHue,
+      ) as CSSProperties}
     >
       <header className="discern-review-header">
         <div>
@@ -522,38 +557,32 @@ function App() {
         <label>
           Appearance<Select
             name="appearance"
-            defaultValue={parsed.field === undefined
-              ? parsed.appearance
-              : "__field-point__"}
-            onChange={(event) => {
-              const fieldInput = event.currentTarget.form?.elements.namedItem(
-                "field",
-              );
-              if (fieldInput instanceof HTMLInputElement) {
-                fieldInput.disabled =
-                  event.currentTarget.value !== "__field-point__";
-              }
-            }}
+            defaultValue={parsed.appearance}
           >
-            {parsed.field === undefined
-              ? null
-              : (
-                <option value="__field-point__">
-                  {catalogueFieldLabel(parsed.field)}
-                </option>
-              )}
-            {catalogueAppearanceOptions.map(({ id, label }) => (
-              <option key={id} value={id}>{label}</option>
-            ))}
+            <option value="field">Field</option>
+            <option value="accent">Accent</option>
           </Select>
         </label>
-        {parsed.field === undefined ? null : (
-          <input
-            type="hidden"
-            name="field"
-            value={serializeCatalogueFieldSelection(parsed.field)}
-          />
-        )}
+        <Input
+          name="accent"
+          type="number"
+          min="0"
+          max="360"
+          step="any"
+          label="Accent hue"
+          defaultValue={parsed.accentHue}
+          list="discern-review-accent-hues"
+        />
+        <datalist id="discern-review-accent-hues">
+          {catalogueAppearanceOptions.map(({ id, hue }) => (
+            <option key={id} value={hue}>{id}</option>
+          ))}
+        </datalist>
+        <input
+          type="hidden"
+          name="field"
+          value={serializeCatalogueFieldSelection(parsed.field)}
+        />
         <label>
           Motion<Select name="motion" defaultValue={parsed.motion}>
             {reviewMotionModes.map((value) => (
@@ -582,42 +611,9 @@ function App() {
           {visibleCards.length} review items / {visibleCards.length} checkpoints
         </span>
         <a href={canonical}>Canonical URL</a>
-        <a
-          href={componentReviewHref({
-            ...parsed,
-            group,
-            field: {
-              ...(parsed.field ?? {
-                darkness: 0,
-                structure: 1,
-                emphasis: 1,
-                density: 1,
-                preset: "mono",
-              }),
-              darkness: 0,
-            },
-          })}
-        >
-          Light pole
-        </a>
-        <a
-          href={componentReviewHref({
-            ...parsed,
-            group,
-            field: {
-              ...(parsed.field ?? {
-                darkness: 1,
-                structure: 1,
-                emphasis: 1,
-                density: 1,
-                preset: "mono",
-              }),
-              darkness: 1,
-            },
-          })}
-        >
-          Dark pole
-        </a>
+        {judgmentLinks.map(({ label, href }) => (
+          <a key={label} href={href}>{label}</a>
+        ))}
         {parsed.mode === "reel" && (
           <button
             className="discern-review-replay"
@@ -659,6 +655,9 @@ function App() {
                 requestedInlineSize: requestedWidth,
                 pageViewportWidth: viewport.width,
               });
+              const postureHue = requirements?.appearance === undefined
+                ? undefined
+                : catalogueAccentHue(requirements.appearance);
               return (
                 <ReviewSpecimen
                   key={`${entry.meta.slug}/${posture.id}/${checkpoint}/${replay}`}
@@ -668,10 +667,11 @@ function App() {
                   width={effectiveWidth}
                   responsiveAllocation={responsiveAllocation}
                   theme={requirements?.theme ?? parsed.theme}
-                  appearance={requirements?.appearance ?? parsed.appearance}
-                  field={requirements?.appearance === undefined
-                    ? parsed.field
-                    : undefined}
+                  appearance={postureHue === undefined
+                    ? parsed.appearance
+                    : "accent"}
+                  accentHue={postureHue ?? parsed.accentHue}
+                  field={parsed.field}
                   motion={requirements?.reducedMotion
                     ? "reduced"
                     : parsed.motion}
