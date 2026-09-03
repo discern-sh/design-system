@@ -69,6 +69,7 @@ The map records what the code cannot say (boundaries, invariants, intent, where 
 
 - `00-orientation` — Orientation
 - `10-tokens-themes` — Tokens & themes
+- `15-glyphs` — Glyph Atlas and Discern Glyphs
 - `20-components` — Components
 - `25-diagrams` — Diagrams
 - `26-dataviz` — Dataviz
