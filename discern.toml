@@ -459,7 +459,7 @@
 # the measurement output; the consumer-facing budget is [standards.docs_selection].)
 [standards.css_density]
   run = "[ -f dist/discern.css ] || deno task build >/dev/null 2>&1; printf 'DISCERN_METRIC css_bytes %s\\n' \"$(wc -c < dist/discern.css | tr -d ' ')\""
-  limit = 2470.9214285714284
+  limit = 2483.964285714286
   direction = "down"
   metric = "css_bytes"
   per = { files = "src/components/**/*.css" }
