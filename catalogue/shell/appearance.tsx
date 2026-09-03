@@ -39,34 +39,48 @@ import {
 } from "./field-state.ts";
 import { announceCatalogueLocationChange } from "./location.ts";
 
+let appearanceStorageUsable = true;
+
 function storedCatalogueAppearance(): CatalogueAppearanceState | undefined {
-  const stored = localStorage.getItem(catalogueAppearanceStorageKey);
-  if (stored !== null) {
-    return parseCatalogueAppearanceParameters(new URLSearchParams(stored));
+  if (!appearanceStorageUsable) return undefined;
+  try {
+    const stored = localStorage.getItem(catalogueAppearanceStorageKey);
+    if (stored !== null) {
+      return parseCatalogueAppearanceParameters(new URLSearchParams(stored));
+    }
+    const legacy = new URLSearchParams();
+    const theme = localStorage.getItem(
+      legacyCatalogueAppearanceStorageKeys.theme,
+    );
+    const accent = localStorage.getItem(
+      legacyCatalogueAppearanceStorageKeys.accent,
+    );
+    const field = localStorage.getItem(
+      legacyCatalogueAppearanceStorageKeys.field,
+    );
+    if (theme !== null) legacy.set("theme", theme);
+    if (accent !== null) legacy.set("accent", accent);
+    if (field !== null) legacy.set("field", field);
+    return parseCatalogueAppearanceParameters(legacy);
+  } catch {
+    appearanceStorageUsable = false;
+    return undefined;
   }
-  const legacy = new URLSearchParams();
-  const theme = localStorage.getItem(
-    legacyCatalogueAppearanceStorageKeys.theme,
-  );
-  const accent = localStorage.getItem(
-    legacyCatalogueAppearanceStorageKeys.accent,
-  );
-  const field = localStorage.getItem(
-    legacyCatalogueAppearanceStorageKeys.field,
-  );
-  if (theme !== null) legacy.set("theme", theme);
-  if (accent !== null) legacy.set("accent", accent);
-  if (field !== null) legacy.set("field", field);
-  return parseCatalogueAppearanceParameters(legacy);
 }
 
 function persistCatalogueAppearance(state: CatalogueAppearanceState): void {
-  localStorage.setItem(
-    catalogueAppearanceStorageKey,
-    serializeCatalogueAppearanceState(state),
-  );
-  for (const key of Object.values(legacyCatalogueAppearanceStorageKeys)) {
-    localStorage.removeItem(key);
+  if (appearanceStorageUsable) {
+    try {
+      localStorage.setItem(
+        catalogueAppearanceStorageKey,
+        serializeCatalogueAppearanceState(state),
+      );
+      for (const key of Object.values(legacyCatalogueAppearanceStorageKeys)) {
+        localStorage.removeItem(key);
+      }
+    } catch {
+      appearanceStorageUsable = false;
+    }
   }
   const current = new URL(globalThis.location.href);
   writeCatalogueAppearanceParameters(current.searchParams, state);
