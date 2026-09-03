@@ -155,3 +155,11 @@ expects the node_modules/ directory to be up to date. Did you forget to run
 **Cause.** The capture viewport is deliberately taller than the tallest example. A `fullPage` screenshot of a document larger than the viewport permanently changes how that Chromium page rasterizes text, for every later capture it takes, and navigation does not clear it — so a single tall example would silently move the pixels of whichever examples followed it. Because the run reuses one page, the viewport must stay clear of every document, and `validateComponentExampleCaptureFitsViewport` refuses rather than let that happen.
 
 **Fix.** Decide first whether the example should be that tall — a capture is discovery imagery, not a page, and trimming its content is usually the better answer. If the height is genuine, raise `viewport.height` in [`contract.ts`](../../catalogue/example-images/contract.ts) past it with room to spare, bump the capture `version`, and recapture. Expect top-layer postures such as Dialog and Search palette to change: they position against the viewport, not the document, so they move when it does. `tests/component_example_images_test.ts` proves the remaining headroom from committed image heights, so it will fail before the browser does when a committed image gets close.
+
+### A role lookup anchored at the start of a name misses a disclosure button
+
+**Symptom.** Browser conformance times out on `getByRole("button", { name: /^Axes/ })` (or any `^`-anchored name) for the Appearance panel's Tint and Axes disclosures, even though the button visibly reads "Axes …" and `ariaSnapshot()` shows it present.
+
+**Cause.** The disclosure buttons draw their caret with a `::before` pseudo-element whose `content` is a real glyph. Accessible-name computation includes generated content, so the computed name is `▸ Axes default · …`; an anchored regex never matches, while an unanchored one does.
+
+**Fix.** Match names by substring or an unanchored regex for controls that carry a `::before` or `::after` glyph, and keep the shared helpers in [`scripts/conformance/catalogue/support.ts`](../../scripts/conformance/catalogue/support.ts) as the one place that spells those lookups. Do not move the caret into the DOM to satisfy a locator; the snapshot is the truth to test against.
