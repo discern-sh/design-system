@@ -434,9 +434,7 @@ export async function verifyTerminalCatalogue(
     );
 
     await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
-    await page.evaluate(() =>
-      localStorage.removeItem("discern-catalogue-theme")
-    );
+    await selectCatalogueTheme(page, "system");
     const systemReviewUrl = new URL(catalogueRoutePaths.review, origin);
     systemReviewUrl.searchParams.set("scope", "all");
     systemReviewUrl.searchParams.set("surface", "cli");
