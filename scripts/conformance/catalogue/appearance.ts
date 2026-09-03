@@ -15,7 +15,8 @@ import {
 import {
   APPEARANCE_ADMISSION_HUES,
   APPEARANCE_POLARITY_CROSSOVER_DARKNESS,
-  defaultAppearancePoint,
+  appearanceProjection,
+  defaultAppearance,
 } from "../../../src/tokens/tokens.ts";
 import { withViewport } from "../../viewport.ts";
 import { parseComputedAppearanceColor } from "../appearance-projection.ts";
@@ -104,7 +105,6 @@ function appearanceUrl(
   origin: string,
   options: {
     readonly theme: "light" | "dark" | "system";
-    readonly appearance: "field" | "accent";
     readonly accent: string;
     readonly field: string;
     readonly surface?: "web" | "cli";
@@ -114,7 +114,6 @@ function appearanceUrl(
 ): URL {
   const url = new URL(path, origin);
   url.searchParams.set("theme", options.theme);
-  url.searchParams.set("appearance", options.appearance);
   url.searchParams.set("accent", options.accent);
   url.searchParams.set("field", options.field);
   if (options.surface === "cli") url.searchParams.set("surface", "cli");
@@ -134,10 +133,10 @@ async function loadConformanceSurface(page: Page, url: URL): Promise<void> {
 
 function fieldAt(
   darkness: number,
-  overrides: Partial<typeof defaultAppearancePoint> = {},
+  overrides: Partial<typeof defaultAppearance> = {},
 ): string {
   return serializeCatalogueAxes({
-    ...defaultAppearancePoint,
+    ...defaultAppearance,
     darkness,
     ...overrides,
   });
@@ -216,24 +215,21 @@ async function verifyGeneratedCliPopulation(
   );
   const postures = [
     {
-      id: "field-light",
+      id: "mono-light",
       theme: "light",
-      appearance: "field",
-      hue: 255,
+      accent: undefined,
       field: fieldAt(0),
     },
     {
       id: "accent-fractional-light",
       theme: "light",
-      appearance: "accent",
-      hue: 137.5,
+      accent: 137.5,
       field: fieldAt(0),
     },
     {
       id: "accent-fractional-dark",
       theme: "dark",
-      appearance: "accent",
-      hue: 137.5,
+      accent: 137.5,
       field: fieldAt(1),
     },
   ] as const;
@@ -241,8 +237,7 @@ async function verifyGeneratedCliPopulation(
   for (const posture of postures) {
     const url = appearanceUrl(catalogueRoutePaths.overview, origin, {
       theme: posture.theme,
-      appearance: posture.appearance,
-      accent: String(posture.hue),
+      accent: posture.accent === undefined ? "none" : String(posture.accent),
       field: posture.field,
       surface: "cli",
     });
@@ -265,10 +260,11 @@ async function verifyGeneratedCliPopulation(
     invariant(
       attributes.length === expectedIdentities.length &&
         attributes.every(({ appearance, ground, hue }) =>
-          appearance === posture.appearance && ground === posture.theme &&
-          (posture.appearance === "field"
+          appearance === appearanceProjection(posture) &&
+          ground === posture.theme &&
+          (posture.accent === undefined
             ? hue === null
-            : Number(hue) === posture.hue)
+            : Number(hue) === posture.accent)
         ),
       posture.id + " did not reach every generated CLI preview",
     );
@@ -288,7 +284,6 @@ async function verifyGeneratedCliPopulation(
   await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
   const systemUrl = appearanceUrl(catalogueRoutePaths.overview, origin, {
     theme: "system",
-    appearance: "accent",
     accent: "137.5",
     field: fieldAt(0),
     surface: "cli",
@@ -391,7 +386,7 @@ async function semanticColours(
 
 function assertColourPosture(
   colours: ReadonlyMap<string, string>,
-  posture: "field" | "accent",
+  posture: "mono" | "accent",
   label: string,
 ): void {
   for (const id of semanticIds) {
@@ -400,7 +395,7 @@ function assertColourPosture(
     const parsed = parseComputedAppearanceColor(value);
     const chroma = Math.hypot(parsed.color.a, parsed.color.b);
     invariant(
-      posture === "field" ? chroma < 0.004 : chroma > 0.015,
+      posture === "mono" ? chroma < 0.004 : chroma > 0.015,
       label + "/" + id + " has unexpected " + posture + " chroma " +
         chroma.toFixed(4) + " from " + value,
     );
@@ -409,8 +404,7 @@ function assertColourPosture(
 
 async function assertTerminalAttributes(
   page: Page,
-  appearance: "field" | "accent",
-  hue: number,
+  accent: number | undefined,
   ground: "light" | "dark",
 ): Promise<void> {
   const attributes = await page.locator(
@@ -425,12 +419,13 @@ async function assertTerminalAttributes(
   invariant(
     attributes.length > 0 &&
       attributes.every((value) =>
-        value.appearance === appearance && value.ground === ground &&
-        (appearance === "field"
+        value.appearance === appearanceProjection({ accent }) &&
+        value.ground === ground &&
+        (accent === undefined
           ? value.hue === null
-          : Number(value.hue) === hue)
+          : Number(value.hue) === accent)
       ),
-    [ground, appearance, hue].join(" ") +
+    [ground, accent ?? "mono"].join(" ") +
       " did not reach every active CLI preview",
   );
 }
@@ -463,8 +458,7 @@ async function verifySemanticMatrix(
   for (const theme of ["light", "dark"] as const) {
     const fieldUrl = appearanceUrl(path, origin, {
       theme,
-      appearance: "field",
-      accent: "255",
+      accent: "none",
       field: fieldAt(theme === "light" ? 0 : 1),
       surface: "cli",
       view: "all",
@@ -473,23 +467,23 @@ async function verifySemanticMatrix(
     equalValues(
       await actualSurfaceIds(page, "cli"),
       expectedSurfaceIds(entry, "cli"),
-      theme + " Field CLI semantic identities",
+      theme + " monochrome CLI semantic identities",
     );
-    await assertTerminalAttributes(page, "field", 255, theme);
+    await assertTerminalAttributes(page, undefined, theme);
     assertColourPosture(
       await semanticColours(page, entry, "cli"),
-      "field",
+      "mono",
       theme + "/CLI",
     );
     await switchSurface(page, "Web");
     equalValues(
       await actualSurfaceIds(page, "web"),
       expectedSurfaceIds(entry, "web"),
-      theme + " Field Web semantic identities",
+      theme + " monochrome Web semantic identities",
     );
     assertColourPosture(
       await semanticColours(page, entry, "web"),
-      "field",
+      "mono",
       theme + "/Web",
     );
     cases += 1;
@@ -503,7 +497,6 @@ async function verifySemanticMatrix(
     for (const hueCase of crossSurfaceHueCases) {
       const url = appearanceUrl(path, origin, {
         theme,
-        appearance: "accent",
         accent: hueCase.input,
         field: fieldAt(theme === "light" ? 0 : 1),
         surface: "cli",
@@ -523,7 +516,7 @@ async function verifySemanticMatrix(
         expectedSurfaceIds(entry, "cli"),
         [theme, hueCase.id, "CLI semantic identities"].join("/"),
       );
-      await assertTerminalAttributes(page, "accent", hueCase.hue, theme);
+      await assertTerminalAttributes(page, hueCase.hue, theme);
       const cliColours = await semanticColours(page, entry, "cli");
       assertColourPosture(
         cliColours,
@@ -608,7 +601,6 @@ async function verifyInteractiveAxesAndIdentity(
   const example = semanticIds[0];
   const url = appearanceUrl(catalogueComponentPath(entry.meta.slug), origin, {
     theme: "light",
-    appearance: "accent",
     accent: "137.5",
     field: fieldAt(0.25, {
       structure: 0.35,
@@ -684,31 +676,31 @@ async function verifyInteractiveAxesAndIdentity(
     "Dark-side terminal ground did not hold inside the hysteresis band",
   );
 
-  const palette = page.getByRole("combobox", { name: "Palette" });
+  const palette = page.getByRole("combobox", { name: "Accent" });
   const originalText = (await cliState(page)).text;
-  await palette.selectOption("field");
+  await palette.selectOption("none");
   await eventually(
-    async () => (await cliState(page)).appearance === "field",
-    "Accent to Field did not reach the CLI Component",
+    async () => (await cliState(page)).appearance === "mono",
+    "Accent to monochrome did not reach the CLI Component",
   );
   invariant(
     (await cliState(page)).text === originalText,
-    "Field changed CLI example identity",
+    "Monochrome changed CLI example identity",
   );
-  await palette.selectOption("accent");
+  await palette.selectOption("custom");
   await eventually(
     async () => (await cliState(page)).appearance === "accent",
-    "Field to Accent did not reach the CLI Component",
+    "Monochrome to Accent did not reach the CLI Component",
   );
-  await palette.selectOption("field");
-  await palette.selectOption("accent");
-  await palette.selectOption("field");
+  await palette.selectOption("none");
+  await palette.selectOption("custom");
+  await palette.selectOption("none");
   invariant(
-    (await cliState(page)).appearance === "field" &&
+    (await cliState(page)).appearance === "mono" &&
       (await cliState(page)).text === originalText,
-    "Field to Accent to Field changed semantic CLI identity",
+    "Monochrome to Accent to monochrome changed semantic CLI identity",
   );
-  await palette.selectOption("accent");
+  await palette.selectOption("custom");
   const hue = page.getByRole("spinbutton", { name: "Hue" });
   await setCatalogueAppearanceInput(hue, 245);
   const accent245 = await cliState(page);
@@ -745,7 +737,6 @@ async function verifyLocalScopes(
 ): Promise<number> {
   const url = appearanceUrl(foundationsPaths.appearance, origin, {
     theme: "dark",
-    appearance: "accent",
     accent: "335",
     field: fieldAt(0.75, {
       structure: 1.4,
@@ -799,16 +790,14 @@ async function verifyLocalScopes(
         }),
       };
     });
-    const parentHue = definition.parentAppearance.name === "accent"
-      ? String(definition.parentAppearance.hue)
-      : null;
-    const localHue = definition.localAppearance.name === "accent"
-      ? String(definition.localAppearance.hue)
-      : null;
+    const parentAccent = definition.parentAppearance.accent;
+    const localAccent = definition.localAppearance.accent;
+    const parentHue = parentAccent === undefined ? null : String(parentAccent);
+    const localHue = localAccent === undefined ? null : String(localAccent);
     invariant(
-      state.parent === definition.parentAppearance.name &&
+      state.parent === appearanceProjection(definition.parentAppearance) &&
         state.parentHue === parentHue &&
-        state.local === definition.localAppearance.name &&
+        state.local === appearanceProjection(definition.localAppearance) &&
         state.localHue === localHue && state.presentations.length === 2 &&
         state.presentations.every(({ ground }) => ground === "dark") &&
         state.presentations[0]?.text === state.presentations[1]?.text &&

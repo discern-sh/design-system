@@ -1,6 +1,5 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { stripAnsi } from "../../src/cli/ansi.ts";
-import { accentAppearance } from "../../src/tokens/tokens.ts";
 import {
   type NarrationLineKind,
   narrationLineRenderers,
@@ -108,7 +107,7 @@ Deno.test("narration selects exact Accent semantic codes across poles and depths
     [renderFailureLine, "Refused", "✕", "danger"],
   ] as const;
   for (const hue of [28, 74, 120, 152, 255, 335]) {
-    const appearance = accentAppearance(hue);
+    const appearance = { accent: hue };
     for (const theme of ["light", "dark"] as const) {
       const palette = resolveTerminalTheme({ theme, appearance });
       for (
@@ -129,7 +128,7 @@ Deno.test("narration selects exact Accent semantic codes across poles and depths
 });
 
 Deno.test("Accent narration keeps exact witnesses and emits no styling without colour", () => {
-  const appearance = accentAppearance(335);
+  const appearance = { accent: 335 };
   const cases = [
     [renderSuccessLine, "Saved", "✓ Saved", "+ Saved"],
     [renderNoteLine, "Noted", "▸ Noted", "> Noted"],

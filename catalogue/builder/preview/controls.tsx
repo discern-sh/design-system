@@ -2,11 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import type { ThemeSwitcherMode } from "../../../src/components/core/theme-switcher/theme-switcher.tsx";
 import { Select } from "../../../src/components/forms/select/select.tsx";
-import {
-  appearanceAxes,
-  type AppearanceName,
-  DEFAULT_ACCENT_HUE,
-} from "../../../src/tokens/appearance.ts";
+import { appearanceAxes } from "../../../src/tokens/appearance.ts";
 import {
   AppearanceControl,
   type AppearanceControlProps,
@@ -18,12 +14,14 @@ import {
   type CatalogueAppearanceState,
   defaultCatalogueAppearanceState,
   parseCatalogueAppearanceParameters,
-  setCatalogueAccentHue,
-  setCatalogueAppearanceIdentity,
+  setCatalogueAccent,
   setCatalogueFieldPoint,
   writeCatalogueAppearanceParameters,
 } from "../../shell/appearance-state.ts";
-import { catalogueAxesControlScheme } from "../../shell/axes-state.ts";
+import {
+  catalogueAxesControlScheme,
+  resetCatalogueAxes,
+} from "../../shell/axes-state.ts";
 import { useCatalogueTerminalTheme } from "../../use-terminal-theme.ts";
 import type {
   BuilderPreviewAppearance,
@@ -70,13 +68,11 @@ export interface BuilderPreviewPreferences {
   readonly setZoom: (id: BuilderPreviewZoomId) => void;
   readonly setMode: (mode: BuilderPreviewMode) => void;
   readonly setPreviewTheme: AppearanceControlProps["onThemeChange"];
-  readonly setPreviewAppearance: AppearanceControlProps["onAppearanceChange"];
-  readonly setPreviewAccentHue: AppearanceControlProps["onAccentHueChange"];
+  readonly setPreviewAccent: AppearanceControlProps["onAccentChange"];
   readonly setPreviewField: AppearanceControlProps["onFieldChange"];
   readonly resetPreviewField: AppearanceControlProps["onFieldReset"];
   readonly setWorkspaceTheme: AppearanceControlProps["onThemeChange"];
-  readonly setWorkspaceAppearance: AppearanceControlProps["onAppearanceChange"];
-  readonly setWorkspaceAccentHue: AppearanceControlProps["onAccentHueChange"];
+  readonly setWorkspaceAccent: AppearanceControlProps["onAccentChange"];
   readonly setWorkspaceField: AppearanceControlProps["onFieldChange"];
   readonly resetWorkspaceField: AppearanceControlProps["onFieldReset"];
   readonly reportMeasurement: (next: BuilderPreviewMeasurement) => void;
@@ -87,9 +83,9 @@ export interface BuilderPreviewPreferences {
 const previewAppearanceParameterNames: CatalogueAppearanceParameterNames =
   Object.freeze({
     theme: "previewTheme",
-    appearance: "previewAppearance",
     accent: "previewAccent",
     field: "previewField",
+    legacyAppearance: "previewAppearance",
   });
 
 function previewViewport(value: string | null): BuilderPreviewViewportId {
@@ -104,11 +100,6 @@ function previewZoom(value: string | null): BuilderPreviewZoomId {
 
 function previewMode(value: string | null): BuilderPreviewMode {
   return value === "interact" ? "interact" : "edit";
-}
-
-/** Legacy/numeric preview hue migration with the package default fallback. */
-export function builderPreviewAccent(value: string | null): number {
-  return catalogueAccentHue(value) ?? DEFAULT_ACCENT_HUE;
 }
 
 function initialPreviewAppearance(
@@ -204,8 +195,7 @@ export function useBuilderPreviewPreferences(
       preview,
       workspace: {
         theme: workspace.theme,
-        appearance: workspace.appearance,
-        accentHue: workspace.accentHue,
+        accent: workspace.accent,
         field: workspace.field,
       },
     });
@@ -215,8 +205,7 @@ export function useBuilderPreviewPreferences(
     mode,
     preview,
     workspace.theme,
-    workspace.appearance,
-    workspace.accentHue,
+    workspace.accent,
     workspace.field,
   ]);
 
@@ -263,8 +252,7 @@ export function useBuilderPreviewPreferences(
     },
     workspaceAppearance: {
       theme: workspace.theme,
-      appearance: workspace.appearance,
-      accentHue: workspace.accentHue,
+      accent: workspace.accent,
       field: workspace.field,
     },
     previewResolvedTheme: previewScheme,
@@ -277,22 +265,21 @@ export function useBuilderPreviewPreferences(
     setZoom,
     setMode,
     setPreviewTheme: changePreviewTheme,
-    setPreviewAppearance: (appearance: AppearanceName) =>
-      setPreview((current) =>
-        setCatalogueAppearanceIdentity(current, appearance)
-      ),
-    setPreviewAccentHue: (value) => {
+    setPreviewAccent: (value) => {
+      if (value === undefined) {
+        setPreview((current) => setCatalogueAccent(current, undefined));
+        return;
+      }
       const hue = catalogueAccentHue(value);
       if (hue !== undefined) {
-        setPreview((current) => setCatalogueAccentHue(current, hue));
+        setPreview((current) => setCatalogueAccent(current, hue));
       }
     },
     setPreviewField: changePreviewField,
     resetPreviewField: () =>
-      changePreviewField(defaultCatalogueAppearanceState.field),
+      changePreviewField(resetCatalogueAxes(preview.field)),
     setWorkspaceTheme: workspace.changeTheme,
-    setWorkspaceAppearance: workspace.changeAppearance,
-    setWorkspaceAccentHue: workspace.changeAccentHue,
+    setWorkspaceAccent: workspace.changeAccent,
     setWorkspaceField: workspace.changeField,
     resetWorkspaceField: workspace.resetField,
     reportMeasurement,
@@ -313,8 +300,7 @@ function AppearanceBoundary(
     appearance,
     resolvedTheme,
     onThemeChange,
-    onAppearanceChange,
-    onAccentHueChange,
+    onAccentChange,
     onFieldChange,
     onFieldReset,
   }: Readonly<{
@@ -322,8 +308,7 @@ function AppearanceBoundary(
     appearance: CatalogueAppearanceState;
     resolvedTheme: "light" | "dark";
     onThemeChange: AppearanceControlProps["onThemeChange"];
-    onAppearanceChange: AppearanceControlProps["onAppearanceChange"];
-    onAccentHueChange: AppearanceControlProps["onAccentHueChange"];
+    onAccentChange: AppearanceControlProps["onAccentChange"];
     onFieldChange: AppearanceControlProps["onFieldChange"];
     onFieldReset: AppearanceControlProps["onFieldReset"];
   }>,
@@ -339,12 +324,10 @@ function AppearanceBoundary(
         scopeLabel={label}
         theme={appearance.theme}
         resolvedTheme={resolvedTheme}
-        appearance={appearance.appearance}
-        accentHue={appearance.accentHue}
+        accent={appearance.accent}
         field={appearance.field}
         onThemeChange={onThemeChange}
-        onAppearanceChange={onAppearanceChange}
-        onAccentHueChange={onAccentHueChange}
+        onAccentChange={onAccentChange}
         onFieldChange={onFieldChange}
         onFieldReset={onFieldReset}
       />
@@ -437,8 +420,7 @@ export function PreviewToolbarControls(
         appearance={preferences.workspaceAppearance}
         resolvedTheme={preferences.workspaceResolvedTheme}
         onThemeChange={preferences.setWorkspaceTheme}
-        onAppearanceChange={preferences.setWorkspaceAppearance}
-        onAccentHueChange={preferences.setWorkspaceAccentHue}
+        onAccentChange={preferences.setWorkspaceAccent}
         onFieldChange={preferences.setWorkspaceField}
         onFieldReset={preferences.resetWorkspaceField}
       />
@@ -447,8 +429,7 @@ export function PreviewToolbarControls(
         appearance={preferences.previewAppearance}
         resolvedTheme={preferences.previewResolvedTheme}
         onThemeChange={preferences.setPreviewTheme}
-        onAppearanceChange={preferences.setPreviewAppearance}
-        onAccentHueChange={preferences.setPreviewAccentHue}
+        onAccentChange={preferences.setPreviewAccent}
         onFieldChange={preferences.setPreviewField}
         onFieldReset={preferences.resetPreviewField}
       />

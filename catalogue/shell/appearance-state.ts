@@ -1,9 +1,8 @@
 import type { ThemeSwitcherMode } from "../../src/components/core/theme-switcher/theme-switcher.tsx";
 import {
   appearanceAxes,
-  type AppearanceName,
   DEFAULT_ACCENT_HUE,
-  defaultAppearancePoint,
+  defaultAppearance,
   normalizeAccentHue,
 } from "../../src/tokens/appearance.ts";
 import { catalogueAccentHue } from "./appearance-options.ts";
@@ -14,19 +13,19 @@ import {
   serializeCatalogueAxes,
 } from "./axes-state.ts";
 
+/** Complete orthogonal Catalogue Appearance: policy, optional accent, and axes. */
 export interface CatalogueAppearanceState {
   readonly theme: ThemeSwitcherMode;
-  readonly appearance: AppearanceName;
-  readonly accentHue: number;
+  /** Accent hue, or `undefined` for the monochrome default. */
+  readonly accent: number | undefined;
   readonly field: CatalogueAxesSelection;
 }
 
 export const defaultCatalogueAppearanceState: CatalogueAppearanceState = Object
   .freeze({
     theme: "system",
-    appearance: "field",
-    accentHue: DEFAULT_ACCENT_HUE,
-    field: defaultAppearancePoint,
+    accent: undefined,
+    field: defaultAppearance,
   });
 
 export const catalogueAppearanceStorageKey = "discern-catalogue-appearance";
@@ -34,27 +33,34 @@ export const catalogueAppearanceStorageKey = "discern-catalogue-appearance";
 export const legacyCatalogueAppearanceStorageKeys = Object.freeze({
   theme: "discern-catalogue-theme",
   accent: "discern-catalogue-accent-hue",
-  field: "discern-catalogue-appearance-page",
+  field: "discern-catalogue-field",
 });
+
+/** URL value that selects the monochrome default explicitly. */
+export const CATALOGUE_ACCENT_NONE = "none";
 
 export interface CatalogueAppearanceParameterNames {
   readonly theme: string;
-  readonly appearance: string;
   readonly accent: string;
   readonly field: string;
+  /** Former identity coordinate, read only to migrate older links. */
+  readonly legacyAppearance: string;
 }
 
 export const catalogueAppearanceParameterNames:
   CatalogueAppearanceParameterNames = Object.freeze({
     theme: "theme",
-    appearance: "appearance",
     accent: "accent",
     field: "field",
+    legacyAppearance: "appearance",
   });
 
-export const catalogueAppearanceParameters = Object.freeze(
-  Object.values(catalogueAppearanceParameterNames),
-);
+/** Canonical parameters written by the Catalogue, in serialisation order. */
+export const catalogueAppearanceParameters = Object.freeze([
+  catalogueAppearanceParameterNames.theme,
+  catalogueAppearanceParameterNames.accent,
+  catalogueAppearanceParameterNames.field,
+]);
 
 export function catalogueTheme(
   value: string | null,
@@ -64,8 +70,8 @@ export function catalogueTheme(
     : undefined;
 }
 
-function appearanceName(value: string | null): AppearanceName | undefined {
-  return value === "field" || value === "accent" ? value : undefined;
+function legacyAppearance(value: string | null): "mono" | "accent" | undefined {
+  return value === "field" ? "mono" : value === "accent" ? value : undefined;
 }
 
 function hasAnyAppearanceParameter(
@@ -75,34 +81,35 @@ function hasAnyAppearanceParameter(
   return Object.values(names).some((name) => parameters.has(name));
 }
 
-/** Parse canonical state plus former named-accent and preset-bearing links. */
+/** Parse canonical state plus former identity, named-accent, and preset-bearing links. */
 export function parseCatalogueAppearanceParameters(
   parameters: URLSearchParams,
   names: CatalogueAppearanceParameterNames = catalogueAppearanceParameterNames,
 ): CatalogueAppearanceState | undefined {
   if (!hasAnyAppearanceParameter(parameters, names)) return undefined;
-  const parsedField = parseCatalogueAxesValue(
-    parameters.get(names.field),
-  );
+  const parsedField = parseCatalogueAxesValue(parameters.get(names.field));
   const parsedTheme = catalogueTheme(parameters.get(names.theme));
   const field = parsedField?.field ?? (parsedTheme === "dark"
     ? {
-      ...defaultAppearancePoint,
+      ...defaultAppearance,
       darkness: appearanceAxes.darkness.maximum,
     }
-    : defaultAppearancePoint);
-  const explicitAppearance = appearanceName(parameters.get(names.appearance));
+    : defaultAppearance);
+  const former = legacyAppearance(parameters.get(names.legacyAppearance));
   const accentValue = parameters.get(names.accent);
-  const parsedAccentHue = catalogueAccentHue(accentValue);
-  const accentHue = parsedAccentHue ?? DEFAULT_ACCENT_HUE;
-  const appearance = explicitAppearance ??
-    (parsedField?.legacyPreset === "blue"
-      ? "accent"
-      : parsedField !== undefined
-      ? "field"
-      : parsedAccentHue !== undefined
-      ? "accent"
-      : "field");
+  const explicitNone = accentValue === CATALOGUE_ACCENT_NONE;
+  const parsedAccentHue = accentValue === null || explicitNone
+    ? undefined
+    : catalogueAccentHue(accentValue);
+  const accent = former === "mono"
+    ? undefined
+    : former === "accent"
+    ? parsedAccentHue ?? DEFAULT_ACCENT_HUE
+    : parsedField?.legacyPreset === "blue"
+    ? parsedAccentHue ?? DEFAULT_ACCENT_HUE
+    : parsedField?.legacyPreset === "mono"
+    ? undefined
+    : parsedAccentHue;
   const theme = parsedTheme === undefined
     ? parsedField === undefined ? "system" : catalogueAxesPolarity(field)
     : parsedTheme === "system" && field.darkness !== 0 && field.darkness !== 1
@@ -111,12 +118,12 @@ export function parseCatalogueAppearanceParameters(
 
   const invalidExplicitValue =
     (parameters.has(names.theme) && parsedTheme === undefined) ||
-    (parameters.has(names.appearance) && explicitAppearance === undefined) ||
-    (parameters.has(names.accent) && parsedAccentHue === undefined) ||
+    (parameters.has(names.legacyAppearance) && former === undefined) ||
+    (accentValue !== null && !explicitNone && parsedAccentHue === undefined) ||
     (parameters.has(names.field) && parsedField === undefined);
   if (invalidExplicitValue) return defaultCatalogueAppearanceState;
 
-  return { theme, appearance, accentHue, field };
+  return { theme, accent, field };
 }
 
 /** Write the exact canonical order used by both URLs and localStorage. */
@@ -125,9 +132,14 @@ export function writeCatalogueAppearanceParameters(
   state: CatalogueAppearanceState,
   names: CatalogueAppearanceParameterNames = catalogueAppearanceParameterNames,
 ): void {
+  parameters.delete(names.legacyAppearance);
   parameters.set(names.theme, state.theme);
-  parameters.set(names.appearance, state.appearance);
-  parameters.set(names.accent, String(normalizeAccentHue(state.accentHue)));
+  parameters.set(
+    names.accent,
+    state.accent === undefined
+      ? CATALOGUE_ACCENT_NONE
+      : String(normalizeAccentHue(state.accent)),
+  );
   parameters.set(names.field, serializeCatalogueAxes(state.field));
 }
 
@@ -140,18 +152,15 @@ export function serializeCatalogueAppearanceState(
   return parameters.toString();
 }
 
-export function setCatalogueAppearanceIdentity(
+/** Select an accent hue, or `undefined` to return to monochrome. */
+export function setCatalogueAccent(
   state: CatalogueAppearanceState,
-  appearance: AppearanceName,
+  accent: number | undefined,
 ): CatalogueAppearanceState {
-  return { ...state, appearance };
-}
-
-export function setCatalogueAccentHue(
-  state: CatalogueAppearanceState,
-  accentHue: number,
-): CatalogueAppearanceState {
-  return { ...state, accentHue: normalizeAccentHue(accentHue) };
+  return {
+    ...state,
+    accent: accent === undefined ? undefined : normalizeAccentHue(accent),
+  };
 }
 
 export function setCatalogueFieldPoint(
@@ -171,7 +180,7 @@ export function preserveCatalogueAppearanceHref(
   if (state !== undefined) {
     const canonicalCurrent = new URLSearchParams();
     writeCatalogueAppearanceParameters(canonicalCurrent, state);
-    for (const name of Object.values(catalogueAppearanceParameterNames)) {
+    for (const name of catalogueAppearanceParameters) {
       if (!target.searchParams.has(name)) {
         target.searchParams.set(name, canonicalCurrent.get(name)!);
       }

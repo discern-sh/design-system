@@ -58,7 +58,7 @@ export function CatalogueShell(
       className="discern-catalogue-shell"
       data-discern-root
       data-discern-theme={appearance.theme}
-      data-discern-appearance={appearance.appearance}
+      data-discern-accent={appearance.accent === undefined ? undefined : ""}
       data-discern-theme-consumer=""
       data-discern-theme-control=".discern-catalogue-appearance .discern-theme-switcher"
       data-discern-theme-storage-key={catalogueAppearanceStorageKey}

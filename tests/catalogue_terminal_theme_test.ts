@@ -41,12 +41,12 @@ Deno.test("Catalogue terminal theme resolves explicit and system modes", () => {
 
 Deno.test("Catalogue terminal adapter preserves ground, identity, and numeric hue", () => {
   assertEquals(
-    resolveCatalogueTerminalPresentation("light", "field", 335),
-    { theme: "light", appearance: { name: "field" } },
+    resolveCatalogueTerminalPresentation("light", undefined),
+    { theme: "light", appearance: {} },
   );
   assertEquals(
-    resolveCatalogueTerminalPresentation("dark", "accent", 137.5),
-    { theme: "dark", appearance: { name: "accent", hue: 137.5 } },
+    resolveCatalogueTerminalPresentation("dark", 137.5),
+    { theme: "dark", appearance: { accent: 137.5 } },
   );
 });
 

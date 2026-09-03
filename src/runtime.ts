@@ -1,6 +1,6 @@
 /**
  * Deterministic selected-runtime emitter. {@linkcode emitDesignSystemRuntime}
- * resolves the requested components, groups, theme, and optional assets to a
+ * resolves the requested components, groups, appearance scopes, and optional assets to a
  * dedicated output directory: dependency-ordered `discern.css`,
  * selection-scoped `discern.js` when required, a {@linkcode RuntimeManifest}
  * as `manifest.json`, and only the assets the consumer selected. Repeated
@@ -25,7 +25,6 @@ import {
   runtimeAssetSelections,
 } from "./runtime-assets.ts";
 import { publicTokens } from "./token-inventory.ts";
-import { blueThemeCss } from "./theme/blue.ts";
 import { appearanceScopeCss } from "./tokens/appearance-scope-css.ts";
 import {
   APPEARANCE_LIVE_CSS_SUPPORTS,
@@ -53,7 +52,7 @@ function compactGeneratedTokenCss(source: string): string {
     .replaceAll(/ \* /gu, "*");
 }
 
-/** Selection, theme, and asset choices for one runtime emission. */
+/** Selection, scope, and asset choices for one runtime emission. */
 export interface RuntimeOptions {
   /** A dedicated directory URL. Existing contents are replaced. */
   readonly outputRoot: URL;
@@ -61,8 +60,7 @@ export interface RuntimeOptions {
   readonly groups?: readonly ComponentGroup[];
   readonly all?: boolean;
   readonly assets?: readonly RuntimeAssetSelection[];
-  readonly theme?: "blue" | "none";
-  /** Emit the atomic Field/Accent subtree-scoping contract. */
+  /** Emit the symmetric monochrome/Accent subtree-scoping contract. */
   readonly appearanceScopes?: boolean;
 }
 
@@ -130,7 +128,6 @@ export interface RuntimeCssSurface {
   readonly kind:
     | "layer-order"
     | "tokens"
-    | "theme"
     | "appearance"
     | "foundation"
     | "utilities"
@@ -160,13 +157,6 @@ export const runtimeCssSurfaceRegistry: readonly RuntimeCssSurface[] = [
     kind: "tokens",
     outputPath: "discern.css",
     css: generateTokenCss(),
-    ownedClasses: [],
-  },
-  {
-    id: "theme:blue",
-    kind: "theme",
-    outputPath: "discern.css",
-    css: blueThemeCss,
     ownedClasses: [],
   },
   {
@@ -342,7 +332,6 @@ export async function emitDesignSystemRuntime(
   const selection = resolveSelection(options);
   const assets = selectedAssets(options.assets);
   const behaviors = selectedComponentBehaviors(selection.entries);
-  const theme = options.theme ?? "none";
   await removeIfPresent(options.outputRoot);
   await mkdir(options.outputRoot, { recursive: true });
 
@@ -351,7 +340,6 @@ export async function emitDesignSystemRuntime(
   );
   const css = runtimeCssSurfaceRegistry.filter((surface) => {
     if (surface.kind === "asset") return false;
-    if (surface.kind === "theme") return theme === "blue";
     if (surface.kind === "appearance") {
       return options.appearanceScopes === true;
     }
@@ -420,7 +408,6 @@ export async function emitDesignSystemRuntime(
       requestedGroups: selection.requestedGroups,
       resolvedComponents: components.map((component) => component.id),
       assets,
-      theme,
       appearanceScopes: options.appearanceScopes === true,
     },
     groups: componentGroups.map((name) => ({

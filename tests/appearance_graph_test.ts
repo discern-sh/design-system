@@ -21,11 +21,11 @@ import {
   type AppearanceExpression,
   appearancePolarityExpression,
   appearanceShadowRoleLaws,
-  defaultAppearancePoint,
+  defaultAppearance,
+  evaluateAppearance,
+  evaluateAppearanceExpression,
   evaluateAppearanceShadows,
   evaluateAppearanceSpacingUnit,
-  evaluateField,
-  evaluateFieldExpression,
 } from "../src/tokens/appearance.ts";
 import { themeTokens } from "../src/tokens/tokens.ts";
 
@@ -63,7 +63,7 @@ Deno.test("the field expression vocabulary evaluates every CSS-compatible node",
   ];
   for (const [expression, expected] of expressions) {
     assertEquals(
-      evaluateFieldExpression(expression, { darkness: 0.25 }),
+      evaluateAppearanceExpression(expression, { darkness: 0.25 }),
       expected,
     );
   }
@@ -134,13 +134,13 @@ Deno.test("the CSS backend compiles the complete field expression vocabulary", (
 
 Deno.test("polarity and every live CSS consumer derive from the field authority", () => {
   assertEquals(
-    evaluateFieldExpression(appearancePolarityExpression, {
+    evaluateAppearanceExpression(appearancePolarityExpression, {
       darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS - 0.000001,
     }),
     0,
   );
   assertEquals(
-    evaluateFieldExpression(appearancePolarityExpression, {
+    evaluateAppearanceExpression(appearancePolarityExpression, {
       darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS + 0.000001,
     }),
     1,
@@ -204,11 +204,15 @@ Deno.test("field axes expose bounded defaults and density only projects spacing"
   for (
     const name of Object.keys(appearanceAxes) as (keyof typeof appearanceAxes)[]
   ) {
-    assertEquals(defaultAppearancePoint[name], appearanceAxes[name].default);
+    assertEquals(defaultAppearance[name], appearanceAxes[name].default);
   }
   assertEquals(evaluateAppearanceSpacingUnit(), APPEARANCE_SPACING_UNIT_PX);
   assertEquals(evaluateAppearanceSpacingUnit({ density: 1.2 }), 4.8);
-  assertThrows(() => evaluateField({ darkness: 1.01 }), TypeError, "outside");
+  assertThrows(
+    () => evaluateAppearance({ darkness: 1.01 }),
+    TypeError,
+    "outside",
+  );
 });
 
 Deno.test("one ordered expression tree owns every non-series colour role", () => {
@@ -222,7 +226,7 @@ Deno.test("one ordered expression tree owns every non-series colour role", () =>
   );
   for (const darkness of APPEARANCE_CONTRAST_SAMPLE_DARKNESSES) {
     assertEquals(
-      Object.keys(evaluateField({ darkness })),
+      Object.keys(evaluateAppearance({ darkness })),
       appearanceColorRoleLaws.map((law) => law.name),
     );
   }
@@ -230,7 +234,7 @@ Deno.test("one ordered expression tree owns every non-series colour role", () =>
 
 Deno.test("the field preserves alpha only for backdrop-owned roles", () => {
   for (const darkness of APPEARANCE_CONTRAST_SAMPLE_DARKNESSES) {
-    const values = evaluateField({ darkness });
+    const values = evaluateAppearance({ darkness });
     const value = (name: `--discern-${string}`): string => {
       const result = values[name];
       assert(

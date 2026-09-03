@@ -90,14 +90,24 @@ Deno.test("a field style writes axes, numeric hue, and the implied scheme", () =
   assertEquals(style.colorScheme, "dark");
 });
 
-Deno.test("consumer export reproduces the public Appearance scope and axes", () => {
-  const accent = catalogueAppearanceConsumerSnippet(point, "accent", 145.5);
+Deno.test("consumer export reproduces the public accent scope and axes", () => {
+  const accent = catalogueAppearanceConsumerSnippet(point, 145.5);
   assertEquals(
     accent,
     `<main
   data-discern-root
-  data-discern-appearance="accent"
+  data-discern-accent
   style="--discern-darkness: 0.6; --discern-structure: 1.25; --discern-emphasis: 0.75; --discern-density: 0.8; --discern-accent-hue: 145.5; color-scheme: dark"
+>
+  <!-- Page content -->
+</main>`,
+  );
+  const mono = catalogueAppearanceConsumerSnippet(point);
+  assertEquals(
+    mono,
+    `<main
+  data-discern-root
+  style="--discern-darkness: 0.6; --discern-structure: 1.25; --discern-emphasis: 0.75; --discern-density: 0.8; color-scheme: dark"
 >
   <!-- Page content -->
 </main>`,

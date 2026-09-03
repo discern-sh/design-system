@@ -1,6 +1,5 @@
 /** Versioned same-origin data boundary for the isolated Builder preview. */
 import type { ThemeSwitcherMode } from "../../../src/components/core/theme-switcher/theme-switcher.tsx";
-import type { AppearanceName } from "../../../src/tokens/appearance.ts";
 import { catalogueAccentHue } from "../../shell/appearance-options.ts";
 import type { CatalogueAxesSelection } from "../../shell/axes-state.ts";
 import { isCatalogueAxesSelection } from "../../shell/axes-state.ts";
@@ -13,7 +12,7 @@ import {
 import type { BuilderPreviewRect } from "./geometry.ts";
 
 export const BUILDER_PREVIEW_PROTOCOL = "discern-builder-preview";
-export const BUILDER_PREVIEW_PROTOCOL_VERSION = 5 as const;
+export const BUILDER_PREVIEW_PROTOCOL_VERSION = 6 as const;
 
 export type BuilderPreviewMode = "edit" | "interact";
 export type BuilderPreviewViewportId =
@@ -40,8 +39,8 @@ export interface BuilderPreviewZoom {
 export interface BuilderPreviewAppearance {
   readonly theme: ThemeSwitcherMode;
   readonly resolvedTheme: "light" | "dark";
-  readonly appearance: AppearanceName;
-  readonly accentHue: number;
+  /** Accent hue, or `undefined` for monochrome. */
+  readonly accent: number | undefined;
   readonly field: CatalogueAxesSelection;
 }
 
@@ -286,9 +285,8 @@ export function builderPreviewMessageFromEvent(
       !validTheme(appearance.theme) ||
       (appearance.resolvedTheme !== "light" &&
         appearance.resolvedTheme !== "dark") ||
-      (appearance.appearance !== "field" &&
-        appearance.appearance !== "accent") ||
-      catalogueAccentHue(appearance.accentHue as number) === undefined ||
+      (appearance.accent !== undefined &&
+        catalogueAccentHue(appearance.accent as number) === undefined) ||
       !isCatalogueAxesSelection(appearance.field) ||
       (snapshot.mode !== "edit" && snapshot.mode !== "interact") ||
       !(snapshot.selectionId === null ||

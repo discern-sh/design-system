@@ -6,7 +6,6 @@ import {
   assertThrows,
 } from "@std/assert";
 import { stripAnsi } from "../../src/cli/ansi.ts";
-import { accentAppearance, fieldAppearance } from "../../src/tokens/tokens.ts";
 import { renderBox } from "../../src/cli/box.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import type {
@@ -356,16 +355,16 @@ Deno.test("presenters bind and locally override Field-or-Accent appearance", () 
   const field = createCliPresenter(capabilities);
   const fieldBefore = field.present(renderTone, {});
   const blue = field.present(renderTone, {
-    appearance: accentAppearance(255),
+    appearance: { accent: 255 },
   });
   const green = field.present(renderTone, {
-    appearance: accentAppearance(120),
+    appearance: { accent: 120 },
   });
-  assertEquals(field.appearance, fieldAppearance);
+  assertEquals(field.appearance, {});
   assertEquals(
     blue,
     renderTone(
-      { theme: "dark", appearance: accentAppearance(255) },
+      { theme: "dark", appearance: { accent: 255 } },
       capabilities,
     ),
   );
@@ -373,19 +372,19 @@ Deno.test("presenters bind and locally override Field-or-Accent appearance", () 
   assertEquals(field.present(renderTone, {}), fieldBefore);
 
   const accent = createCliPresenter(capabilities, {
-    appearance: accentAppearance(335),
+    appearance: { accent: 335 },
   });
   const inherited = accent.present(renderTone, {});
-  const neutral = accent.present(renderTone, { appearance: fieldAppearance });
+  const neutral = accent.present(renderTone, { appearance: {} });
   const changed = accent.present(renderTone, {
-    appearance: accentAppearance(245),
+    appearance: { accent: 245 },
   });
-  assertEquals(accent.appearance, accentAppearance(335));
+  assertEquals(accent.appearance, { accent: 335 });
   assertNotEquals(inherited, neutral);
   assertNotEquals(inherited, changed);
   assertEquals(accent.present(renderTone, {}), inherited);
   assertEquals(
-    accent.with({ appearance: fieldAppearance }).present(renderTone, {}),
+    accent.with({ appearance: {} }).present(renderTone, {}),
     fieldBefore,
   );
 });

@@ -289,7 +289,6 @@
     "src/components/**",
     "src/styles/**",
     "src/tokens/**",
-    "src/theme/**",
     "catalogue/**",
     "assets/**",
   ]

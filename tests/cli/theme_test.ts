@@ -7,11 +7,9 @@ import {
 } from "@std/assert";
 import { oklchToSrgb } from "../../src/internal/oklch.ts";
 import {
-  accentAppearance,
   appearanceColorRoleLaws,
   baseTokens,
   evaluateOpaqueAppearance,
-  evaluateOpaqueField,
   themeTokens,
 } from "../../src/tokens/tokens.ts";
 import {
@@ -55,7 +53,7 @@ Deno.test("only categorical series colours bypass the appearance evaluator", () 
   for (const variant of ["light", "dark"] as const) {
     const accent = resolveTerminalTheme({
       theme: variant,
-      appearance: accentAppearance(137.5),
+      appearance: { accent: 137.5 },
     });
     for (const name of independentRoles) {
       assertEquals(
@@ -82,7 +80,7 @@ Deno.test("truecolour values carry computed 256- and 16-colour fallbacks", () =>
 
 Deno.test("terminal field colours are opaque pole evaluations without the blue preset", () => {
   for (const [variant, darkness] of [["light", 0], ["dark", 1]] as const) {
-    const field = evaluateOpaqueField({ darkness });
+    const field = evaluateOpaqueAppearance({ darkness });
     for (const law of appearanceColorRoleLaws) {
       const value = field[law.name];
       assert(value !== undefined, `${variant} ${law.name} was not evaluated`);
@@ -116,8 +114,8 @@ Deno.test("terminal palette authority projects the complete Accent hue domain", 
   ];
   for (const [variant, darkness] of [["light", 0], ["dark", 1]] as const) {
     for (const hue of hues) {
-      const appearance = accentAppearance(hue);
-      const expected = evaluateOpaqueAppearance(appearance, { darkness });
+      const appearance = { accent: hue };
+      const expected = evaluateOpaqueAppearance({ darkness, ...appearance });
       const actual = resolveTerminalTheme({ theme: variant, appearance });
       for (const law of appearanceColorRoleLaws) {
         const value = expected[law.name];
@@ -159,7 +157,7 @@ Deno.test("Accent semantic roles keep the strongest finite-palette distinction",
   for (const variant of ["light", "dark"] as const) {
     const palette = resolveTerminalTheme({
       theme: variant,
-      appearance: accentAppearance(335),
+      appearance: { accent: 335 },
     });
     for (const tone of ["accent", "success", "warning", "danger"] as const) {
       const color = terminalToneColor(palette, tone);
@@ -198,7 +196,7 @@ Deno.test("finite-palette collisions stay local to matching semantic hue familie
   for (const { hue, variant, depth, tone } of cases) {
     const palette = resolveTerminalTheme({
       theme: variant,
-      appearance: accentAppearance(hue),
+      appearance: { accent: hue },
     });
     assertEquals(
       terminalToneColor(palette, "accent")[depth],
@@ -211,18 +209,18 @@ Deno.test("finite-palette collisions stay local to matching semantic hue familie
 Deno.test("terminal appearance defaults to cached Field poles and validates Accent", () => {
   assertStrictEquals(resolveTerminalTheme(), terminalThemes.dark);
   assertStrictEquals(
-    resolveTerminalTheme({ theme: "light", appearance: { name: "field" } }),
+    resolveTerminalTheme({ theme: "light", appearance: {} }),
     terminalThemes.light,
   );
   assertEquals(
-    resolveTerminalTheme({ appearance: accentAppearance(360) }).colors,
-    resolveTerminalTheme({ appearance: accentAppearance(0) }).colors,
+    resolveTerminalTheme({ appearance: { accent: 360 } }).colors,
+    resolveTerminalTheme({ appearance: { accent: 0 } }).colors,
   );
   for (const hue of [-0.01, 360.01, Number.NaN, Number.POSITIVE_INFINITY]) {
     assertThrows(
       () =>
         resolveTerminalTheme({
-          appearance: { name: "accent", hue },
+          appearance: { accent: hue },
         }),
       TypeError,
       "outside the finite [0, 360] domain",

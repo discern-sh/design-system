@@ -60,37 +60,42 @@ export const appearanceAxes = Object.freeze(
   >,
 );
 
-/** A fully resolved point in the monochrome field. */
-export interface AppearancePoint {
+/** The numeric axis coordinates of one appearance. */
+export interface AppearanceAxes {
   readonly darkness: number;
   readonly structure: number;
   readonly emphasis: number;
   readonly density: number;
 }
 
-/** Public browser and terminal vocabulary for one appearance identity. */
-export type AppearanceName = "field" | "accent";
-
-/** Achromatic appearance identity. */
-export interface FieldAppearance {
-  readonly name: "field";
+/**
+ * One complete appearance: the axis coordinates plus an optional accent hue.
+ * Omit `accent` for the monochrome default; supply any finite hue from `0`
+ * through `360` to project the chromatic roles at that hue.
+ */
+export interface Appearance extends AppearanceAxes {
+  readonly accent?: number | undefined;
 }
 
-/** Hue-parameterised chromatic appearance identity. */
-export interface AccentAppearance {
-  readonly name: "accent";
-  readonly hue: number;
+/**
+ * Which pigment projection a role graph consumer wants: `mono` derives every
+ * role from paper and ink, `accent` projects the chromatic roles at the
+ * selected hue and leaves the rest monochrome.
+ */
+export type AppearanceProjection = "mono" | "accent";
+
+/** Both projections, in the order every scoped surface emits them. */
+export const appearanceProjections: readonly AppearanceProjection[] = Object
+  .freeze(["mono", "accent"]);
+
+/** Name the projection one appearance selects. */
+export function appearanceProjection(
+  appearance: Pick<Appearance, "accent">,
+): AppearanceProjection {
+  return appearance.accent === undefined ? "mono" : "accent";
 }
 
-/** Explicit appearance input shared by every pure projection. */
-export type Appearance = FieldAppearance | AccentAppearance;
-
-/** Default achromatic appearance. */
-export const fieldAppearance: FieldAppearance = Object.freeze({
-  name: "field",
-});
-
-/** Default hue retained by the named Blue compatibility projection. */
+/** Hue the Catalogue names Blue; also the registered initial value of the hue primitive. */
 export const DEFAULT_ACCENT_HUE = 255;
 
 /**
@@ -106,13 +111,8 @@ export function normalizeAccentHue(hue: number): number {
   return hue === 360 ? 0 : hue;
 }
 
-/** Construct one validated chromatic appearance input. */
-export function accentAppearance(hue: number): AccentAppearance {
-  return Object.freeze({ name: "accent", hue: normalizeAccentHue(hue) });
-}
-
-/** Default field point used when an axis is omitted. */
-export const defaultAppearancePoint: AppearancePoint = Object.freeze({
+/** Default monochrome appearance used when a coordinate is omitted. */
+export const defaultAppearance: Appearance = Object.freeze({
   darkness: appearanceAxes.darkness.default,
   structure: appearanceAxes.structure.default,
   emphasis: appearanceAxes.emphasis.default,
@@ -389,7 +389,8 @@ export interface AppearanceColorRoleLaw {
   readonly description: string;
   readonly paint: AppearancePaint;
   readonly expression: AppearanceExpression;
-  readonly accent: AccentColorProjection | "field";
+  /** Chromatic projection under Accent, or `mono` when the role stays pigment-derived. */
+  readonly accent: AccentColorProjection | "mono";
   readonly ownedSurface: boolean;
 }
 
@@ -407,7 +408,7 @@ const role = <
   description,
   paint,
   expression,
-  accent: accent ?? "field",
+  accent: accent ?? "mono",
   ownedSurface: paint === "canvas" || paint === "raised-surface" ||
     paint === "owned-surface",
 } as const);
@@ -1080,10 +1081,18 @@ export const APPEARANCE_INK_CONTRAST_FLOORS = Object.freeze(
   ] as const satisfies readonly (readonly [AppearanceColorRoleName, number])[],
 );
 
-function resolveAppearancePoint(
-  point: Partial<AppearancePoint>,
-): AppearancePoint {
-  const resolved = { ...defaultAppearancePoint, ...point };
+/**
+ * Fill omitted coordinates from the default appearance, validate every axis
+ * against its documented bounds, and normalise a supplied accent hue. The
+ * result carries no `accent` key at all for the monochrome projection.
+ */
+export function resolveAppearance(
+  appearance: Partial<Appearance> = {},
+): Appearance {
+  const { accent, ...axes } = appearance;
+  const resolved: Appearance = accent === undefined
+    ? { ...defaultAppearance, ...axes }
+    : { ...defaultAppearance, ...axes, accent: normalizeAccentHue(accent) };
   for (const axis of Object.keys(appearanceAxes) as AppearanceAxisName[]) {
     const value = resolved[axis];
     const definition = appearanceAxes[axis];
@@ -1092,7 +1101,7 @@ function resolveAppearancePoint(
       value > definition.maximum
     ) {
       throw new TypeError(
-        `Field axis ${axis}=${value} is outside [${definition.minimum}, ${definition.maximum}]`,
+        `Appearance axis ${axis}=${value} is outside [${definition.minimum}, ${definition.maximum}]`,
       );
     }
   }
@@ -1101,9 +1110,9 @@ function resolveAppearancePoint(
 
 function evaluateResolvedExpression(
   expression: AppearanceExpression,
-  resolved: AppearancePoint,
-  accentHue: number,
+  resolved: Appearance,
 ): number {
+  const accentHue = resolved.accent ?? DEFAULT_ACCENT_HUE;
   const evaluate = (node: AppearanceExpression): number => {
     switch (node.kind) {
       case "number":
@@ -1150,32 +1159,12 @@ function evaluateResolvedExpression(
   return evaluate(expression);
 }
 
-/** Evaluate one field expression at a validated point. */
-export function evaluateFieldExpression(
-  expression: AppearanceExpression,
-  point: Partial<AppearancePoint> = {},
-): number {
-  return evaluateResolvedExpression(
-    expression,
-    resolveAppearancePoint(point),
-    DEFAULT_ACCENT_HUE,
-  );
-}
-
-/** Evaluate one shared expression for an explicit appearance and field point. */
+/** Evaluate one shared expression at a validated appearance. */
 export function evaluateAppearanceExpression(
   expression: AppearanceExpression,
-  appearance: Appearance,
-  point: Partial<AppearancePoint> = {},
+  appearance: Partial<Appearance> = {},
 ): number {
-  const hue = appearance.name === "accent"
-    ? normalizeAccentHue(appearance.hue)
-    : DEFAULT_ACCENT_HUE;
-  return evaluateResolvedExpression(
-    expression,
-    resolveAppearancePoint(point),
-    hue,
-  );
+  return evaluateResolvedExpression(expression, resolveAppearance(appearance));
 }
 
 interface EvaluatedRoleColor {
@@ -1183,34 +1172,34 @@ interface EvaluatedRoleColor {
   readonly alpha: number;
 }
 
-function activePigments(point: Partial<AppearancePoint>): {
+function activePigments(resolved: Appearance): {
   readonly active: OklabColor;
   readonly opposite: OklabColor;
 } {
   const paperWins =
-    evaluateFieldExpression(appearancePolarityExpression, point) ===
-      1;
+    evaluateResolvedExpression(appearancePolarityExpression, resolved) === 1;
   return paperWins
     ? { active: appearancePigments.paper, opposite: appearancePigments.ink }
     : { active: appearancePigments.ink, opposite: appearancePigments.paper };
 }
 
 function evaluateStructuredMono(
-  point: Partial<AppearancePoint>,
+  resolved: Appearance,
 ): Readonly<Record<AppearanceColorRoleName, EvaluatedRoleColor>> {
-  const resolved = resolveAppearancePoint(point);
   const canvasLaw = appearanceColorRoleLaws.find((law) =>
     law.paint === "canvas"
   );
-  if (canvasLaw === undefined) throw new TypeError("Field has no canvas law");
+  if (canvasLaw === undefined) {
+    throw new TypeError("Appearance has no canvas law");
+  }
   const canvas: OklabColor = {
-    lightness: evaluateFieldExpression(canvasLaw.expression, resolved),
+    lightness: evaluateResolvedExpression(canvasLaw.expression, resolved),
     a: 0,
     b: 0,
   };
   const { active, opposite } = activePigments(resolved);
   return Object.freeze(Object.fromEntries(appearanceColorRoleLaws.map((law) => {
-    const amount = evaluateFieldExpression(law.expression, resolved);
+    const amount = evaluateResolvedExpression(law.expression, resolved);
     let evaluated: EvaluatedRoleColor;
     switch (law.paint) {
       case "canvas":
@@ -1238,33 +1227,22 @@ function evaluateStructuredMono(
 }
 
 function evaluateStructuredAppearance(
-  appearance: Appearance,
-  point: Partial<AppearancePoint>,
+  appearance: Partial<Appearance>,
 ): Readonly<Record<AppearanceColorRoleName, EvaluatedRoleColor>> {
-  const resolved = resolveAppearancePoint(point);
-  const field = evaluateStructuredMono(resolved);
-  if (appearance.name === "field") return field;
+  const resolved = resolveAppearance(appearance);
+  const mono = evaluateStructuredMono(resolved);
+  if (resolved.accent === undefined) return mono;
 
-  const hue = normalizeAccentHue(appearance.hue);
   return Object.freeze(Object.fromEntries(appearanceColorRoleLaws.map((law) => {
-    if (law.accent === "field") {
-      return [law.name, field[law.name]];
+    if (law.accent === "mono") {
+      return [law.name, mono[law.name]];
     }
     const lightness = evaluateResolvedExpression(
       law.accent.lightness,
       resolved,
-      hue,
     );
-    const chroma = evaluateResolvedExpression(
-      law.accent.chroma,
-      resolved,
-      hue,
-    );
-    const projectedHue = evaluateResolvedExpression(
-      law.accent.hue,
-      resolved,
-      hue,
-    );
+    const chroma = evaluateResolvedExpression(law.accent.chroma, resolved);
+    const projectedHue = evaluateResolvedExpression(law.accent.hue, resolved);
     const radians = projectedHue * Math.PI / 180;
     return [law.name, {
       color: {
@@ -1272,7 +1250,7 @@ function evaluateStructuredAppearance(
         a: chroma * Math.cos(radians),
         b: chroma * Math.sin(radians),
       },
-      alpha: evaluateResolvedExpression(law.accent.alpha, resolved, hue),
+      alpha: evaluateResolvedExpression(law.accent.alpha, resolved),
     }];
   })) as Record<AppearanceColorRoleName, EvaluatedRoleColor>);
 }
@@ -1305,24 +1283,19 @@ function requiredRoleValue<Value>(
 ): Value {
   const value = values[name];
   if (value === undefined) {
-    throw new TypeError(`Field did not evaluate ${name}`);
+    throw new TypeError(`Appearance did not evaluate ${name}`);
   }
   return value;
 }
 
-/** Evaluate every field role, preserving alpha only for backdrop-owned washes. */
-export function evaluateField(
-  point: Partial<AppearancePoint> = {},
-): Readonly<Record<AppearanceColorRoleName, string>> {
-  return evaluateAppearance(fieldAppearance, point);
-}
-
-/** Evaluate every role for one explicit appearance and field point. */
+/**
+ * Evaluate every role at one appearance, preserving alpha only for
+ * backdrop-owned washes. Omitted coordinates take the default appearance.
+ */
 export function evaluateAppearance(
-  appearance: Appearance,
-  point: Partial<AppearancePoint> = {},
+  appearance: Partial<Appearance> = {},
 ): Readonly<Record<AppearanceColorRoleName, string>> {
-  const values = evaluateStructuredAppearance(appearance, point);
+  const values = evaluateStructuredAppearance(appearance);
   return Object.freeze(Object.fromEntries(
     appearanceColorRoleLaws.map((law) => [
       law.name,
@@ -1331,19 +1304,11 @@ export function evaluateAppearance(
   ) as Record<AppearanceColorRoleName, string>);
 }
 
-/** Evaluate every field role as an opaque colour composited over its canvas. */
-export function evaluateOpaqueField(
-  point: Partial<AppearancePoint> = {},
-): Readonly<Record<AppearanceColorRoleName, string>> {
-  return evaluateOpaqueAppearance(fieldAppearance, point);
-}
-
-/** Evaluate appearance roles composited over their inherited opaque canvas. */
+/** Evaluate every role composited over its inherited opaque canvas. */
 export function evaluateOpaqueAppearance(
-  appearance: Appearance,
-  point: Partial<AppearancePoint> = {},
+  appearance: Partial<Appearance> = {},
 ): Readonly<Record<AppearanceColorRoleName, string>> {
-  const values = evaluateStructuredAppearance(appearance, point);
+  const values = evaluateStructuredAppearance(appearance);
   const canvas = requiredRoleValue(
     values,
     "--discern-color-canvas",
@@ -1362,18 +1327,19 @@ export function evaluateOpaqueAppearance(
 
 /** Density-scaled spacing unit for projections that opt into the density axis. */
 export function evaluateAppearanceSpacingUnit(
-  point: Partial<AppearancePoint> = {},
+  appearance: Partial<Appearance> = {},
 ): number {
-  return APPEARANCE_SPACING_UNIT_PX * resolveAppearancePoint(point).density;
+  return APPEARANCE_SPACING_UNIT_PX * resolveAppearance(appearance).density;
 }
 
-/** Evaluate field-derived shadows without restating their alpha ladder. */
+/** Evaluate appearance-derived shadows without restating their alpha ladder. */
 export function evaluateAppearanceShadows(
-  point: Partial<AppearancePoint> = {},
+  appearance: Partial<Appearance> = {},
 ): Readonly<Record<AppearanceShadowRoleName, string>> {
+  const resolved = resolveAppearance(appearance);
   return Object.freeze(
     Object.fromEntries(appearanceShadowRoleLaws.map((law) => {
-      const alpha = evaluateFieldExpression(law.expression, point);
+      const alpha = evaluateResolvedExpression(law.expression, resolved);
       return [
         law.name,
         `${law.offset} color-mix(in oklab, var(--discern-shadow-color) ${
@@ -1388,15 +1354,13 @@ export function evaluateAppearanceShadows(
 export function appearanceContrastMargin(): number {
   let minimum = Number.POSITIVE_INFINITY;
   for (const darkness of APPEARANCE_CONTRAST_SAMPLE_DARKNESSES) {
-    const values = evaluateStructuredMono({ darkness });
+    const resolved = resolveAppearance({ darkness });
+    const values = evaluateStructuredMono(resolved);
     const canvas = requiredRoleValue(
       values,
       "--discern-color-canvas",
     ).color;
-    const maximum = oklabContrast(
-      activePigments({ darkness }).active,
-      canvas,
-    );
+    const maximum = oklabContrast(activePigments(resolved).active, canvas);
     for (const [name, floor] of APPEARANCE_INK_CONTRAST_FLOORS) {
       const value = requiredRoleValue(values, name);
       const opaque = compositeOklab(value.color, value.alpha, canvas);

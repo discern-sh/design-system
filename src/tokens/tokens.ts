@@ -12,9 +12,11 @@ import {
   type AppearanceAxisName,
   appearanceColorRoleLaws,
   appearanceShadowRoleLaws,
+  DEFAULT_ACCENT_HUE,
+  evaluateAppearance,
   evaluateAppearanceShadows,
-  evaluateField,
 } from "./appearance.ts";
+import { ACCENT_HUE_CUSTOM_PROPERTY_NAME } from "./appearance-live-css.ts";
 import {
   type AppearanceAdmissionProof,
   type AppearanceSeriesPair,
@@ -84,9 +86,18 @@ export const appearanceAxisTokens: readonly DesignToken[] = Object.freeze(
   ),
 );
 
+/** Public hue primitive read by the Accent projection wherever `data-discern-accent` switches it on. */
+export const accentHueToken: DesignToken = token(
+  ACCENT_HUE_CUSTOM_PROPERTY_NAME,
+  String(DEFAULT_ACCENT_HUE),
+  "Color",
+  "Accent hue for the Accent projection; any finite hue from 0 through 360, where 360 aliases 0. It changes nothing until an element opts into Accent.",
+);
+
 /** Framework-neutral primitives and system-font defaults shared by every theme. */
 export const baseTokens: readonly DesignToken[] = [
   ...appearanceAxisTokens,
+  accentHueToken,
   token(
     "--discern-font-display",
     '"Iowan Old Style", "Palatino Linotype", Georgia, ui-serif, serif',
@@ -276,8 +287,8 @@ export const baseTokens: readonly DesignToken[] = [
 /** Theme-independent Tokens shared by every emitted identity. */
 export const designTokens: readonly DesignToken[] = baseTokens;
 
-const lightField = evaluateField({ darkness: 0 });
-const darkField = evaluateField({ darkness: 1 });
+const lightPole = evaluateAppearance({ darkness: 0 });
+const darkPole = evaluateAppearance({ darkness: 1 });
 const lightShadows = evaluateAppearanceShadows({ darkness: 0 });
 const darkShadows = evaluateAppearanceShadows({ darkness: 1 });
 
@@ -296,8 +307,8 @@ const appearanceThemeTokens: readonly ThemeToken[] = appearanceColorRoleLaws
   .map((law) =>
     themeToken(
       law.name,
-      requiredProjectedValue(lightField, law.name),
-      requiredProjectedValue(darkField, law.name),
+      requiredProjectedValue(lightPole, law.name),
+      requiredProjectedValue(darkPole, law.name),
       law.description,
     )
   );

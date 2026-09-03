@@ -70,7 +70,6 @@ import {
 } from "../src/react.ts";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
 import { semanticClass } from "../src/semantic-class.ts";
-import { blueThemeRoleTokens, blueThemeTokens } from "../src/theme/blue.ts";
 import { baseTokens, themeTokens } from "../src/tokens/tokens.ts";
 import type { ComponentMeta } from "../src/types/component-meta.ts";
 
@@ -240,18 +239,14 @@ function themeValue(
   overrides: ReadonlyMap<string, string>,
 ): string {
   const override = overrides.get(`${mode}:${name}`) ?? overrides.get(name);
-  const preset = blueThemeRoleTokens.find((candidate) =>
-    candidate.name === name
-  );
   const token = themeTokens.find((candidate) => candidate.name === name);
   assert(
-    override !== undefined || preset !== undefined || token !== undefined,
+    override !== undefined || token !== undefined,
     `unknown token ${name}`,
   );
-  const raw = override ?? preset?.[mode] ?? token?.[mode] ?? "";
+  const raw = override ?? token?.[mode] ?? "";
   const values = new Map([
     ...baseTokens.map((item) => [item.name, item.value] as const),
-    ...blueThemeTokens.map((item) => [item.name, item.value] as const),
     ...[...overrides.entries()].filter(([key]) => !key.includes(":")),
   ]);
   return raw.replace(
@@ -512,7 +507,7 @@ Deno.test("runtime globals are branded and the default runtime stays monochrome"
       all: true,
       assets: ["fonts", "grain"],
     });
-    assertEquals(summary.manifest.selection.theme, "none");
+    assertEquals(summary.manifest.selection.appearanceScopes, false);
     const authoredSources = (await walk(PACKAGE_ROOT)).filter((path) => {
       const packagePath = relative(PACKAGE_ROOT, path);
       return !packagePath.startsWith("tests/") &&
@@ -658,16 +653,16 @@ Deno.test("selection resolves dependencies and excludes unrelated groups", async
     const branding = await emitDesignSystemRuntime({
       outputRoot: toFileUrl(`${temp}/`),
       components: ["brand"],
-      theme: "blue",
+      appearanceScopes: true,
     });
     assertEquals(branding.manifest.selection.resolvedComponents, [
       "logo",
       "brand",
     ]);
-    assertEquals(branding.manifest.selection.theme, "blue");
+    assertEquals(branding.manifest.selection.appearanceScopes, true);
     assertStringIncludes(
       await Deno.readTextFile(join(temp, "discern.css")),
-      "--discern-accent-hue: 255;",
+      "[data-discern-accent]",
     );
 
     const glossary = await emitDesignSystemRuntime({
@@ -1587,7 +1582,7 @@ Deno.test("font metric audit enrolls future aliases and rejects malformed faces"
   }
 });
 
-Deno.test("blue and green themes share component CSS and preserve state semantics", async () => {
+Deno.test("a consumer green theme shares component CSS and preserves state semantics", async () => {
   const fixture = await Deno.readTextFile(
     join(PACKAGE_ROOT, "tests", "fixtures", "green-theme.css"),
   );
@@ -1715,10 +1710,6 @@ Deno.test("neutral entrypoints work in an external cached-only Deno project", as
         "../src/runtime.ts",
         import.meta.url,
       ).href,
-      "@discern-sh/design-system/theme/blue": new URL(
-        "../src/theme/blue.ts",
-        import.meta.url,
-      ).href,
       "@discern-sh/design-system/tokens": new URL(
         "../src/tokens/tokens.ts",
         import.meta.url,
@@ -1741,7 +1732,6 @@ Deno.test("neutral entrypoints work in an external cached-only Deno project", as
 import { renderBadgeCli } from "@discern-sh/design-system/cli";
 import { renderDiagramSvg } from "@discern-sh/design-system/diagram";
 import { emitDesignSystemRuntime } from "@discern-sh/design-system/runtime";
-import { blueTheme } from "@discern-sh/design-system/theme/blue";
 const flow = {
   kind: "flow",
   title: "Check a reference",
@@ -1762,7 +1752,6 @@ console.log(JSON.stringify({
   components: result.components,
   diagram: renderDiagramSvg(flow).includes('role="img"'),
   package: packageManifest.package,
-  theme: blueTheme.name,
 }));
 `,
     );
@@ -2115,7 +2104,6 @@ Deno.test("masked provider-strip marks swap brand artwork for a neutral dark sil
     await emitDesignSystemRuntime({
       outputRoot: toFileUrl(`${output}/`),
       components: ["logo-cloud"],
-      theme: "blue",
     });
     const css = await Deno.readTextFile(join(output, "discern.css"));
     const markup = renderToStaticMarkup(createElement(LogoCloud, {

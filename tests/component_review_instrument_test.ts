@@ -69,8 +69,7 @@ Deno.test("review URLs reproduce every judgment input with a stable canonical or
     category: "interaction",
     width: "narrow",
     theme: "dark",
-    appearance: "accent",
-    accentHue: 300,
+    accent: 300,
     field: {
       darkness: 1,
       structure: 1,
@@ -83,7 +82,7 @@ Deno.test("review URLs reproduce every judgment input with a stable canonical or
   });
   assertEquals(
     componentReviewHref(state),
-    "/catalogue/reviews/components/?group=Core&component=button&example=default&posture=pressed&category=interaction&width=narrow&theme=dark&appearance=accent&accent=300&field=1%2C1%2C1%2C1&motion=reduced&mode=reel&speed=slow",
+    "/catalogue/reviews/components/?group=Core&component=button&example=default&posture=pressed&category=interaction&width=narrow&theme=dark&accent=300&field=1%2C1%2C1%2C1&motion=reduced&mode=reel&speed=slow",
   );
 });
 
@@ -99,11 +98,10 @@ Deno.test("review URLs carry a field point for contact sheets and pole links", (
     emphasis: 0.8,
     density: 1.1,
   });
-  assertEquals(state.appearance, "accent");
-  assertEquals(state.accentHue, 255);
+  assertEquals(state.accent, 255);
   assertStringIncludes(
     componentReviewHref(state),
-    "appearance=accent&accent=255&field=0.6%2C1.2%2C0.8%2C1.1",
+    "accent=255&field=0.6%2C1.2%2C0.8%2C1.1",
   );
 });
 

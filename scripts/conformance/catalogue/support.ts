@@ -65,7 +65,7 @@ export async function openCatalogueAppearanceAxes(page: Page): Promise<void> {
       'summary[aria-label^="Change "][aria-label$="appearance"]',
     ).click();
   }
-  const axes = appearance.getByRole("button", { name: /Field axes/ });
+  const axes = appearance.getByRole("button", { name: /^Axes/ });
   if (await axes.getAttribute("aria-expanded") !== "true") {
     await axes.click();
   }

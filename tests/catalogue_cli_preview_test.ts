@@ -20,17 +20,9 @@ import {
 import { registry } from "../catalogue/generated/registry.ts";
 import { resolveCatalogueTerminalPresentation } from "../catalogue/terminal-theme.ts";
 
-const fieldLight = resolveCatalogueTerminalPresentation(
-  "light",
-  "field",
-  255,
-);
-const fieldDark = resolveCatalogueTerminalPresentation("dark", "field", 255);
-const fractionalAccent = resolveCatalogueTerminalPresentation(
-  "dark",
-  "accent",
-  137.5,
-);
+const fieldLight = resolveCatalogueTerminalPresentation("light", undefined);
+const fieldDark = resolveCatalogueTerminalPresentation("dark", undefined);
+const fractionalAccent = resolveCatalogueTerminalPresentation("dark", 137.5);
 
 Deno.test("one named CLI specimen uses the bare shared projection", () => {
   const entry = registry.find(({ cli }) => cli.stance === "rendered");
@@ -106,14 +98,16 @@ Deno.test("browser Catalogue projects every declared CLI stance from disk", () =
         );
         assert(
           output.length > 0,
-          `${fragment}/${presentation.appearance.name} rendered an empty frame`,
+          `${fragment}/${
+            presentation.appearance.accent ?? "mono"
+          } rendered an empty frame`,
         );
         const projected = projectTerminalSpans(output).map(({ text }) => text)
           .join("");
         assertEquals(
           projected,
           stripAnsi(output),
-          `${fragment}/${presentation.appearance.name} lost text`,
+          `${fragment}/${presentation.appearance.accent ?? "mono"} lost text`,
         );
       }
     }
@@ -184,8 +178,8 @@ Deno.test("browser CLI specimens follow the resolved Catalogue terminal presenta
 
   assertStringIncludes(light, 'data-discern-theme="light"');
   assertStringIncludes(dark, 'data-discern-theme="dark"');
-  assertStringIncludes(light, 'data-discern-appearance="field"');
-  assertStringIncludes(dark, 'data-discern-appearance="accent"');
+  assert(!light.includes("data-discern-accent"));
+  assertStringIncludes(dark, 'data-discern-accent=""');
   assertStringIncludes(dark, "--discern-accent-hue:137.5");
   assertNotEquals(light, dark);
   assertEquals(

@@ -310,14 +310,16 @@ function FrameDocument(
       className="discern-builder-frame-document"
       data-discern-root
       data-discern-theme={snapshot.appearance.resolvedTheme}
-      data-discern-appearance={snapshot.appearance.appearance}
+      data-discern-accent={snapshot.appearance.accent === undefined
+        ? undefined
+        : ""}
       data-discern-theme-preference={snapshot.appearance.theme}
       data-discern-builder-preview-mode={snapshot.mode}
       aria-hidden={snapshot.mode === "edit" ? "true" : undefined}
       style={catalogueAppearanceRootStyle(
         snapshot.appearance.field,
         snapshot.appearance.resolvedTheme,
-        snapshot.appearance.accentHue,
+        snapshot.appearance.accent,
       ) as CSSProperties}
     >
       {snapshot.document.children.length === 0

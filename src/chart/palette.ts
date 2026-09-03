@@ -7,7 +7,7 @@ import {
   resolveTokenLiteral,
   type TokenPaletteVariant,
 } from "../internal/token-literals.ts";
-import { evaluateField, themeTokens } from "../tokens/tokens.ts";
+import { evaluateAppearance, themeTokens } from "../tokens/tokens.ts";
 import type { ChartPaintRole } from "./scene.ts";
 
 /** Explicit package palette used by a standalone SVG asset. */
@@ -81,7 +81,7 @@ function poleSeriesValue(
 export function resolveChartPaletteAtDarkness(
   darkness: number,
 ): Readonly<Record<ChartPaintRole, string>> {
-  const field = evaluateField({ darkness });
+  const field = evaluateAppearance({ darkness });
   const canvasValue = field["--discern-color-canvas"];
   if (canvasValue === undefined) throw new TypeError("Field has no canvas");
   const canvas = parseOklch(canvasValue);

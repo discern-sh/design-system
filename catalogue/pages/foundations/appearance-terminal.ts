@@ -5,10 +5,7 @@ import {
   resolveTerminalTheme,
   terminalThemeColor,
 } from "../../../src/cli/theme.ts";
-import {
-  type Appearance,
-  fieldAppearance,
-} from "../../../src/tokens/appearance.ts";
+import type { TerminalAppearance } from "../../../src/cli/theme.ts";
 
 const capabilities: TerminalCapabilities = {
   ansiControl: true,
@@ -37,7 +34,7 @@ export interface AppearancePoleTerminalProjection {
 
 /** Project the selected appearance through both honest terminal ground poles. */
 export function appearancePoleTerminalProjections(
-  appearance: Appearance = fieldAppearance,
+  appearance: TerminalAppearance = {},
 ): readonly AppearancePoleTerminalProjection[] {
   return (["light", "dark"] as const).map((variant) => {
     const theme = resolveTerminalTheme({ theme: variant, appearance });
@@ -55,7 +52,7 @@ export function appearancePoleTerminalProjections(
       inspectorHtml: projectTerminalInspectorHtml(output, {
         columns: capabilities.columns,
         rows: paletteRoles.length,
-        title: `${variant === "light" ? "Light" : "Dark"} field pole`,
+        title: `${variant === "light" ? "Light" : "Dark"} ground`,
         theme: variant,
         appearance,
       }),

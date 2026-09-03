@@ -8,14 +8,12 @@ import {
 } from "../../src/internal/oklch.ts";
 import { emitDesignSystemRuntime } from "../../src/runtime.ts";
 import {
-  accentAppearance,
   APPEARANCE_POLARITY_CROSSOVER_DARKNESS,
+  type AppearanceAxes,
   appearanceColorRoleLaws,
-  type AppearanceName,
-  type AppearancePoint,
-  defaultAppearancePoint,
+  type AppearanceProjection,
+  defaultAppearance,
   evaluateAppearance,
-  evaluateField,
 } from "../../src/tokens/appearance.ts";
 import { APPEARANCE_LIVE_CSS_SUPPORTS } from "../../src/tokens/appearance-live-css.ts";
 import { baseTokens, themeTokens } from "../../src/tokens/tokens.ts";
@@ -32,7 +30,7 @@ export interface ProjectionColor {
 
 interface AppearanceProjectionSample {
   readonly label: string;
-  readonly point: AppearancePoint;
+  readonly point: AppearanceAxes;
   readonly theme: "light" | "dark" | "system" | null;
   readonly media: "light" | "dark";
   readonly scheme: "light" | "dark";
@@ -52,8 +50,8 @@ export interface AppearanceProjectionEvidence {
 }
 
 const defaultPoint = (
-  overrides: Partial<AppearancePoint> = {},
-): AppearancePoint => ({ ...defaultAppearancePoint, ...overrides });
+  overrides: Partial<AppearanceAxes> = {},
+): AppearanceAxes => ({ ...defaultAppearance, ...overrides });
 
 const samples: readonly AppearanceProjectionSample[] = [
   {
@@ -295,7 +293,7 @@ export async function verifyAppearanceProjection(
     }), APPEARANCE_LIVE_CSS_SUPPORTS);
     if (!registrationEvidence.supportsLiveProjection) {
       throw new Error(
-        `Conformance browser does not support the live field query ${APPEARANCE_LIVE_CSS_SUPPORTS}`,
+        `Conformance browser does not support the live appearance query ${APPEARANCE_LIVE_CSS_SUPPORTS}`,
       );
     }
     const expectedRegistrations = [
@@ -310,7 +308,7 @@ export async function verifyAppearanceProjection(
         expectedRegistrations.join("\n")
     ) {
       throw new Error(
-        `Field axis registrations differ: expected ${
+        `Appearance axis registrations differ: expected ${
           expectedRegistrations.join(", ")
         }; received ${registrationEvidence.registrations.join(", ")}`,
       );
@@ -333,7 +331,7 @@ export async function verifyAppearanceProjection(
         ({ roleNames, sample, spacingNames }) => {
           const root = document.getElementById("discern-appearance-probe");
           if (!(root instanceof HTMLElement)) {
-            throw new Error("Missing field probe root");
+            throw new Error("Missing appearance probe root");
           }
           root.removeAttribute("data-discern-theme");
           root.removeAttribute("style");
@@ -406,7 +404,7 @@ export async function verifyAppearanceProjection(
         );
       }
 
-      const expectedRoles = evaluateField(sample.point);
+      const expectedRoles = evaluateAppearance(sample.point);
       for (const value of observed.roles) {
         const expectedValue = expectedRoles[value.name];
         if (expectedValue === undefined) {
@@ -458,17 +456,17 @@ export async function verifyAppearanceProjection(
     }
 
     interface ScopeNode {
-      readonly appearance: AppearanceName;
+      readonly appearance: AppearanceProjection;
       readonly hue?: number;
-      readonly axes?: Partial<AppearancePoint>;
+      readonly axes?: Partial<AppearanceAxes>;
     }
     const scopeScenarios: readonly {
       readonly label: string;
-      readonly base: AppearancePoint;
+      readonly base: AppearanceAxes;
       readonly nodes: readonly ScopeNode[];
     }[] = [
       {
-        label: "Field to Accent 255 to Field",
+        label: "Mono to Accent 255 to Mono",
         base: defaultPoint({
           darkness: 0.25,
           structure: 0.35,
@@ -476,18 +474,18 @@ export async function verifyAppearanceProjection(
           density: 0.8,
         }),
         nodes: [
-          { appearance: "field" },
+          { appearance: "mono" },
           { appearance: "accent", hue: 255 },
-          { appearance: "field" },
+          { appearance: "mono" },
         ],
       },
       {
-        label: "Accent 120 to Field to Accent 335 with local axes",
+        label: "Accent 120 to Mono to Accent 335 with local axes",
         base: defaultPoint({ darkness: 0.25 }),
         nodes: [
           { appearance: "accent", hue: 120 },
           {
-            appearance: "field",
+            appearance: "mono",
             axes: {
               darkness: 0.75,
               structure: 1.4,
@@ -518,7 +516,7 @@ export async function verifyAppearanceProjection(
           }
           root.replaceChildren();
           root.removeAttribute("data-discern-theme");
-          root.removeAttribute("data-discern-appearance");
+          root.removeAttribute("data-discern-accent");
           root.removeAttribute("style");
           for (const [axis, value] of Object.entries(scenario.base)) {
             root.style.setProperty(`--discern-${axis}`, String(value));
@@ -527,7 +525,9 @@ export async function verifyAppearanceProjection(
           let parent: HTMLElement | undefined;
           const elements = scenario.nodes.map((node, index) => {
             const element = index === 0 ? root : document.createElement("div");
-            element.dataset.discernAppearance = node.appearance;
+            element.dataset.discernAccent = node.appearance === "mono"
+              ? "none"
+              : "";
             if (node.hue !== undefined) {
               element.style.setProperty(
                 "--discern-accent-hue",
@@ -595,12 +595,10 @@ export async function verifyAppearanceProjection(
             `${scenario.label} scope ${index}: inherited hue expected ${inheritedHue}, received ${result.hue}`,
           );
         }
-        const expected = evaluateAppearance(
-          node.appearance === "field"
-            ? { name: "field" }
-            : accentAppearance(inheritedHue),
-          inheritedPoint,
-        );
+        const expected = evaluateAppearance({
+          ...inheritedPoint,
+          ...(node.appearance === "accent" ? { accent: inheritedHue } : {}),
+        });
         for (const role of result.roles) {
           const expectedValue = expected[role.name];
           if (expectedValue === undefined) {
@@ -629,7 +627,7 @@ export async function verifyAppearanceProjection(
       const shown = failures.slice(0, 24);
       const remainder = failures.length - shown.length;
       throw new Error(
-        `Field CSS projection mismatch:\n- ${shown.join("\n- ")}${
+        `Appearance CSS projection mismatch:\n- ${shown.join("\n- ")}${
           remainder > 0 ? `\n- … ${remainder} more` : ""
         }`,
       );

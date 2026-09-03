@@ -395,7 +395,7 @@ async function appearanceRootState(page: Page) {
   return await page.locator(".discern-catalogue-shell").evaluate((root) => {
     const style = getComputedStyle(root);
     return {
-      appearance: root.getAttribute("data-discern-appearance"),
+      accent: root.hasAttribute("data-discern-accent"),
       theme: root.getAttribute("data-discern-theme"),
       hue: style.getPropertyValue("--discern-accent-hue").trim(),
       darkness: style.getPropertyValue("--discern-darkness").trim(),
@@ -426,8 +426,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
   ) {
     const route = new URL(path, origin);
     route.searchParams.set("theme", "light");
-    route.searchParams.set("appearance", "field");
-    route.searchParams.set("accent", "255");
+    route.searchParams.set("accent", "none");
     route.searchParams.set("field", "0,1,1,1");
     await loadCataloguePage(page, route.href);
     await openCatalogueAppearanceAxes(page);
@@ -437,8 +436,8 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
           ).count() === 4 &&
         await page.getByRole("slider", { name: "Accent hue slider" })
             .count() ===
-          1 &&
-        await page.getByRole("combobox", { name: "Palette" }).count() === 1,
+          0 &&
+        await page.getByRole("combobox", { name: "Accent" }).count() === 1,
       `${path} does not expose the complete global Appearance control`,
     );
     checks += 1;
@@ -446,7 +445,6 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
 
   const buttonUrl = new URL(catalogueComponentPath("button"), origin);
   buttonUrl.searchParams.set("theme", "light");
-  buttonUrl.searchParams.set("appearance", "accent");
   buttonUrl.searchParams.set("accent", "145.5");
   buttonUrl.searchParams.set("field", "0.25,1,0.8,1");
   await loadCataloguePage(page, buttonUrl.href);
@@ -579,42 +577,46 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
     }`,
   );
   const fieldBeforeHueShortcut = new URL(page.url()).searchParams.get("field");
-  await page.getByRole("combobox", { name: "Named Accent hue" }).selectOption(
+  await page.getByRole("combobox", { name: "Accent" }).selectOption(
     "violet",
   );
   const afterNamedHue = new URL(page.url());
   invariant(
     afterNamedHue.searchParams.get("accent") === "300" &&
-      afterNamedHue.searchParams.get("appearance") === "accent" &&
+      page.url().includes("appearance=") === false &&
       afterNamedHue.searchParams.get("field") === fieldBeforeHueShortcut,
     "Named hue shortcut did not set numeric 300 while preserving axes",
   );
   checks += 2;
 
-  const palette = page.getByRole("combobox", { name: "Palette" });
+  const palette = page.getByRole("combobox", { name: "Accent" });
   const fieldBeforePalette = afterNamedHue.searchParams.get("field");
-  await palette.selectOption("field");
-  await palette.selectOption("accent");
+  await palette.selectOption("none");
+  invariant(
+    new URL(page.url()).searchParams.get("accent") === "none" &&
+      await page.getByRole("slider", { name: "Accent hue slider" }).count() ===
+        0,
+    "Monochrome did not retire the hue controls",
+  );
+  await palette.selectOption("custom");
   const afterPalette = new URL(page.url());
   invariant(
-    afterPalette.searchParams.get("appearance") === "accent" &&
-      afterPalette.searchParams.get("accent") === "300" &&
+    afterPalette.searchParams.get("accent") === "300" &&
       afterPalette.searchParams.get("field") === fieldBeforePalette,
-    "Field → Accent → Field identity changes erased hue or axes",
+    "Accent → monochrome → Accent erased the remembered hue or axes",
   );
   await setCatalogueAppearanceInput(density, 1.3);
   const afterAxis = new URL(page.url());
   invariant(
-    afterAxis.searchParams.get("appearance") === "accent" &&
-      afterAxis.searchParams.get("accent") === "300",
-    "Moving a field axis erased Appearance identity or Accent hue",
+    afterAxis.searchParams.get("accent") === "300",
+    "Moving an axis erased the Accent hue",
   );
   checks += 2;
 
   await page.reload({ waitUntil: "networkidle" });
   const reloaded = await appearanceRootState(page);
   invariant(
-    reloaded.appearance === "accent" && reloaded.hue === "300" &&
+    reloaded.accent && reloaded.hue === "300" &&
       reloaded.density === "1.3",
     `Canonical Appearance did not survive reload: ${JSON.stringify(reloaded)}`,
   );
@@ -623,8 +625,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
     catalogueAppearanceStorageKey,
   );
   invariant(
-    stored?.includes("appearance=accent") === true &&
-      stored.includes("accent=300") && stored.includes("field="),
+    stored?.includes("accent=300") === true && stored.includes("field="),
     `Orthogonal Appearance state did not persist canonically: ${stored}`,
   );
   const exactBeforeNavigation = new URL(page.url());
@@ -633,7 +634,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
     exact: true,
   }).click();
   const navigated = new URL(page.url());
-  for (const name of ["theme", "appearance", "accent", "field"]) {
+  for (const name of ["theme", "accent", "field"]) {
     invariant(
       navigated.searchParams.get(name) ===
         exactBeforeNavigation.searchParams.get(name),
@@ -654,8 +655,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
   await eventually(
     () =>
       Promise.resolve(
-        new URL(page.url()).searchParams.get("appearance") ===
-          "accent",
+        new URL(page.url()).searchParams.get("accent") === "300",
       ),
     "Legacy named Accent URL did not migrate",
   );
@@ -665,7 +665,6 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
   );
   invariant(
     migratedAccent.searchParams.get("theme") === "system" &&
-      migratedAccent.searchParams.get("appearance") === "accent" &&
       migratedAccent.searchParams.get("accent") === "300" &&
       migratedAccent.searchParams.get("field") === systemField,
     `Legacy named Accent migration is incomplete: ${migratedAccent}`,
@@ -674,7 +673,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
   legacyField.searchParams.set("field", "0.6,1.4,0.7,0.8,blue");
   await loadCataloguePage(page, legacyField.href);
   invariant(
-    new URL(page.url()).searchParams.get("appearance") === "accent" &&
+    !new URL(page.url()).searchParams.has("appearance") &&
       new URL(page.url()).searchParams.get("accent") === "255" &&
       new URL(page.url()).searchParams.get("field") === "0.6,1.4,0.7,0.8",
     `Legacy blue Field migration is incomplete: ${page.url()}`,
@@ -723,8 +722,8 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
         };
         return {
           id: node.getAttribute("data-discern-scope-demo"),
-          parentAppearance: node.getAttribute("data-discern-appearance"),
-          childAppearance: nested.getAttribute("data-discern-appearance"),
+          parentAccent: node.getAttribute("data-discern-accent"),
+          childAccent: nested.getAttribute("data-discern-accent"),
           structure: nestedStyle.getPropertyValue("--discern-structure").trim(),
           density: nestedStyle.getPropertyValue("--discern-density").trim(),
           parentPaint: paint(parentAction),
@@ -737,8 +736,8 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
     );
   invariant(
     JSON.stringify(scopeEvidence.map(({ id }) => id)) === JSON.stringify([
-          "field-to-accent-255",
-          "accent-120-to-field",
+          "mono-to-accent-255",
+          "accent-120-to-mono",
           "accent-245-to-accent-335",
         ]) &&
       scopeEvidence.every(({ structure, density }) =>
@@ -787,7 +786,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
     const summary = page.locator(".discern-catalogue-appearance > summary");
     await summary.focus();
     await summary.press("Enter");
-    const axes = page.getByRole("button", { name: /Field axes/ });
+    const axes = page.getByRole("button", { name: /^Axes/ });
     await axes.focus();
     await axes.press("Enter");
     const darknessSlider = page.locator(

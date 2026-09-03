@@ -5,54 +5,52 @@ import {
   joinVertical,
   renderBadgeCli,
   renderResultSummaryCli,
+  type TerminalAppearance,
 } from "../../../src/cli/mod.ts";
-import {
-  accentAppearance,
-  type Appearance,
-  fieldAppearance,
-} from "../../../src/tokens/appearance.ts";
+import { appearanceProjection } from "../../../src/tokens/appearance.ts";
 import {
   catalogueCliCapabilities,
   CliOutputPreview,
 } from "../../cli-preview.tsx";
 import type { CatalogueTerminalPresentation } from "../../terminal-theme.ts";
 
-/** One deliberate local terminal appearance override shown by the Field lab. */
+/** One deliberate local terminal appearance override shown by the Appearance lab. */
 export interface TerminalAppearanceScopeCase {
   readonly id: string;
   readonly title: string;
   readonly description: string;
-  readonly parentAppearance: Appearance;
-  readonly localAppearance: Appearance;
+  readonly parentAppearance: TerminalAppearance;
+  readonly localAppearance: TerminalAppearance;
 }
 
 /** Terminal counterparts to the browser appearance-scope demonstrations. */
-export const terminalAppearanceScopeCases = [
-  {
-    id: "field-to-accent-255",
-    title: "Field → Accent 255",
-    description:
-      "A local presenter opts a status composition into the Blue compatibility hue.",
-    parentAppearance: fieldAppearance,
-    localAppearance: accentAppearance(255),
-  },
-  {
-    id: "accent-120-to-field",
-    title: "Accent 120 → Field",
-    description:
-      "A local presenter restores an achromatic status composition inside green Accent.",
-    parentAppearance: accentAppearance(120),
-    localAppearance: fieldAppearance,
-  },
-  {
-    id: "accent-245-to-accent-335",
-    title: "Accent 245 → Accent 335",
-    description:
-      "A local presenter replaces its inherited Accent hue without changing semantic content.",
-    parentAppearance: accentAppearance(245),
-    localAppearance: accentAppearance(335),
-  },
-] as const satisfies readonly TerminalAppearanceScopeCase[];
+export const terminalAppearanceScopeCases:
+  readonly TerminalAppearanceScopeCase[] = [
+    {
+      id: "mono-to-accent-255",
+      title: "Monochrome → Accent 255",
+      description:
+        "A local presenter opts a status composition into the hue the Catalogue names Blue.",
+      parentAppearance: {},
+      localAppearance: { accent: 255 },
+    },
+    {
+      id: "accent-120-to-mono",
+      title: "Accent 120 → Monochrome",
+      description:
+        "A local presenter restores a monochrome status composition inside green Accent.",
+      parentAppearance: { accent: 120 },
+      localAppearance: {},
+    },
+    {
+      id: "accent-245-to-accent-335",
+      title: "Accent 245 → Accent 335",
+      description:
+        "A local presenter replaces its inherited Accent hue without changing semantic content.",
+      parentAppearance: { accent: 245 },
+      localAppearance: { accent: 335 },
+    },
+  ];
 
 const statusProps = {
   state: "changed",
@@ -72,8 +70,10 @@ export const terminalAppearanceScopeBadges = [
   { label: "Blocked", tone: "danger", dot: true },
 ] as const;
 
-function appearanceLabel(appearance: Appearance): string {
-  return appearance.name === "field" ? "Field" : `Accent ${appearance.hue}`;
+function appearanceLabel(appearance: TerminalAppearance): string {
+  return appearance.accent === undefined
+    ? "Monochrome"
+    : `Accent ${appearance.accent}`;
 }
 
 function renderStatusComposition(
@@ -158,18 +158,16 @@ export function TerminalAppearanceScopes(
           <article
             key={projection.definition.id}
             data-discern-terminal-scope-demo={projection.definition.id}
-            data-discern-terminal-scope-parent={projection.parentPresentation
-              .appearance.name}
+            data-discern-terminal-scope-parent={appearanceProjection(
+              projection.parentPresentation.appearance,
+            )}
             data-discern-terminal-scope-parent-hue={projection
-                .parentPresentation.appearance.name === "accent"
-              ? projection.parentPresentation.appearance.hue
-              : undefined}
-            data-discern-terminal-scope-local={projection.localPresentation
-              .appearance.name}
+              .parentPresentation.appearance.accent}
+            data-discern-terminal-scope-local={appearanceProjection(
+              projection.localPresentation.appearance,
+            )}
             data-discern-terminal-scope-local-hue={projection.localPresentation
-                .appearance.name === "accent"
-              ? projection.localPresentation.appearance.hue
-              : undefined}
+              .appearance.accent}
           >
             <header>
               <h3>{projection.definition.title}</h3>

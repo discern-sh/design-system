@@ -15,14 +15,10 @@ import {
   registryCoreBySlug,
 } from "../catalogue/builder/registry-core.ts";
 import {
-  builderPreviewAccent,
   type BuilderPreviewPreferences,
   builderPreviewViewports,
   PreviewToolbarControls,
 } from "../catalogue/builder/preview/controls.tsx";
-import {
-  catalogueAppearanceOptions,
-} from "../catalogue/shell/appearance-options.ts";
 import { defaultCatalogueAppearanceState } from "../catalogue/shell/appearance-state.ts";
 import { appearanceAxes } from "../src/tokens/appearance.ts";
 import {
@@ -187,8 +183,7 @@ Deno.test("preview messages are same-origin, versioned, and policy-accepted", ()
     appearance: {
       theme: "light",
       resolvedTheme: "dark",
-      appearance: "accent",
-      accentHue: 145.5,
+      accent: 145.5,
       field: {
         darkness: 0.6,
         structure: 1.2,
@@ -375,16 +370,6 @@ Deno.test("the shared preview renderer injects optional callback witnesses only 
   assertEquals(inert.props.onValueChange, undefined);
 });
 
-Deno.test("Builder preview Appearance accepts named and arbitrary numeric hues", () => {
-  for (const option of catalogueAppearanceOptions) {
-    assertEquals(builderPreviewAccent(option.id), option.hue);
-    assertEquals(builderPreviewAccent(String(option.hue)), option.hue);
-  }
-  assertEquals(builderPreviewAccent("145.5"), 145.5);
-  assertEquals(builderPreviewAccent("360"), 0);
-  assertEquals(builderPreviewAccent("not-a-preset"), 255);
-});
-
 Deno.test("Builder Appearance labels stay outside independently themed scopes", () => {
   const noop = () => undefined;
   const previewAppearance = {
@@ -416,13 +401,11 @@ Deno.test("Builder Appearance labels stay outside independently themed scopes", 
     setZoom: noop,
     setMode: noop,
     setPreviewTheme: noop,
-    setPreviewAppearance: noop,
-    setPreviewAccentHue: noop,
+    setPreviewAccent: noop,
     setPreviewField: noop,
     resetPreviewField: noop,
     setWorkspaceTheme: noop,
-    setWorkspaceAppearance: noop,
-    setWorkspaceAccentHue: noop,
+    setWorkspaceAccent: noop,
     setWorkspaceField: noop,
     resetWorkspaceField: noop,
     reportMeasurement: noop,
@@ -452,7 +435,7 @@ Deno.test("Builder Appearance labels stay outside independently themed scopes", 
     detailsStart,
     markup.indexOf(">", detailsStart) + 1,
   );
-  assertStringIncludes(detailsOpen, 'data-discern-appearance="field"');
+  assert(!detailsOpen.includes("data-discern-accent"));
   assertStringIncludes(detailsOpen, "style=");
 });
 
@@ -473,9 +456,9 @@ Deno.test("Catalogue opts into Appearance scopes without bloating the base runti
       ].map((path) => Deno.readTextFile(new URL(path, import.meta.url))),
     ),
   ]);
-  assert(!runtime.includes("data-discern-appearance"));
-  assertStringIncludes(scopes, 'data-discern-appearance="field"');
-  assertStringIncludes(scopes, 'data-discern-appearance="accent"');
+  assert(!runtime.includes("data-discern-accent"));
+  assertStringIncludes(scopes, '[data-discern-accent="none"]');
+  assertStringIncludes(scopes, "[data-discern-accent]:not(");
   assertEquals(
     (JSON.parse(manifest) as {
       selection: { appearanceScopes: boolean };

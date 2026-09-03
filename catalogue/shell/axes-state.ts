@@ -1,20 +1,20 @@
 import type { CSSProperties } from "react";
 import {
   APPEARANCE_POLARITY_CROSSOVER_DARKNESS,
+  type AppearanceAxes,
   appearanceAxes,
   type AppearanceAxisName,
-  type AppearancePoint,
   appearancePolarityExpression,
-  defaultAppearancePoint,
-  evaluateFieldExpression,
+  defaultAppearance,
+  evaluateAppearanceExpression,
   normalizeAccentHue,
 } from "../../src/tokens/appearance.ts";
 
 /** Complete, portable Catalogue field point. */
-export type CatalogueAxesSelection = AppearancePoint;
+export type CatalogueAxesSelection = AppearanceAxes;
 
 export const defaultCatalogueAxesSelection: CatalogueAxesSelection = Object
-  .freeze({ ...defaultAppearancePoint });
+  .freeze({ ...defaultAppearance });
 
 /** Width of the live control's scheme hold around the exact token crossover. */
 export const CATALOGUE_AXES_HYSTERESIS = 0.02;
@@ -89,9 +89,9 @@ export function parseCatalogueAxes(
 
 /** Exact polarity owned by the token field; this authority has no hysteresis. */
 export function catalogueAxesPolarity(
-  point: AppearancePoint,
+  point: AppearanceAxes,
 ): "light" | "dark" {
-  return evaluateFieldExpression(appearancePolarityExpression, point) === 1
+  return evaluateAppearanceExpression(appearancePolarityExpression, point) === 1
     ? "dark"
     : "light";
 }
@@ -101,7 +101,7 @@ export function catalogueAxesPolarity(
  * A newly loaded point always uses the token model's exact polarity.
  */
 export function catalogueAxesControlScheme(
-  point: AppearancePoint,
+  point: AppearanceAxes,
   previous?: "light" | "dark",
 ): "light" | "dark" {
   if (previous === undefined) return catalogueAxesPolarity(point);
@@ -120,14 +120,16 @@ export function catalogueAxesControlScheme(
 export function catalogueAppearanceRootStyle(
   selection: CatalogueAxesSelection,
   scheme = catalogueAxesPolarity(selection),
-  accentHue = 255,
+  accent?: number,
 ): CSSProperties {
   return {
     "--discern-darkness": selection.darkness,
     "--discern-structure": selection.structure,
     "--discern-emphasis": selection.emphasis,
     "--discern-density": selection.density,
-    "--discern-accent-hue": normalizeAccentHue(accentHue),
+    ...(accent === undefined
+      ? {}
+      : { "--discern-accent-hue": normalizeAccentHue(accent) }),
     colorScheme: scheme,
   } as CSSProperties;
 }
@@ -141,4 +143,28 @@ export function catalogueAxesLabel(
   } · E ${formatCatalogueAxisNumber(selection.emphasis)} · ρ ${
     formatCatalogueAxisNumber(selection.density)
   }`;
+}
+
+const nonDarknessAxes = (Object.keys(appearanceAxes) as AppearanceAxisName[])
+  .filter((axis) => axis !== "darkness");
+
+/** Whether every axis other than darkness sits at its package default. */
+export function catalogueAxesAreDefault(
+  selection: CatalogueAxesSelection,
+): boolean {
+  return nonDarknessAxes.every((axis) =>
+    selection[axis] === defaultAppearance[axis]
+  );
+}
+
+/** Return every axis other than darkness to its default; the pole stays. */
+export function resetCatalogueAxes(
+  selection: CatalogueAxesSelection,
+): CatalogueAxesSelection {
+  return {
+    ...selection,
+    ...Object.fromEntries(
+      nonDarknessAxes.map((axis) => [axis, defaultAppearance[axis]]),
+    ),
+  };
 }

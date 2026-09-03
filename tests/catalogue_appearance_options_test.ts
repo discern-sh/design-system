@@ -12,12 +12,8 @@ import {
   catalogueAppearanceStyle,
   defaultCatalogueAppearanceOption,
 } from "../catalogue/shell/appearance-options.ts";
-import {
-  accentAppearance,
-  evaluateAppearance,
-} from "../src/tokens/appearance.ts";
+import { evaluateAppearance } from "../src/tokens/appearance.ts";
 import { appearanceAdmission } from "../src/tokens/tokens.ts";
-import { blueThemeTokens } from "../src/theme/blue.ts";
 
 Deno.test("named Accent choices are numeric conveniences, with Blue at hue 255", () => {
   assertEquals(
@@ -80,20 +76,22 @@ Deno.test("Catalogue defers full-domain admission and role projection to the pac
   assert(proof.points >= 11);
   assert(proof.checks > 100_000);
 
-  const appearance = accentAppearance(145.5);
-  const lightQuiet = evaluateAppearance(appearance, {
+  const lightQuiet = evaluateAppearance({
+    accent: 145.5,
     darkness: 0.2,
     structure: 1,
     emphasis: 0.6,
     density: 1,
   });
-  const darkQuiet = evaluateAppearance(appearance, {
+  const darkQuiet = evaluateAppearance({
+    accent: 145.5,
     darkness: 0.8,
     structure: 1,
     emphasis: 0.6,
     density: 1,
   });
-  const darkStrong = evaluateAppearance(appearance, {
+  const darkStrong = evaluateAppearance({
+    accent: 145.5,
     darkness: 0.8,
     structure: 1,
     emphasis: 1.4,
@@ -109,14 +107,7 @@ Deno.test("Catalogue defers full-domain admission and role projection to the pac
   );
 });
 
-Deno.test("the blue compatibility primitive documents the generic hue domain", async () => {
-  const accent = blueThemeTokens.find(({ name }) =>
-    name === "--discern-accent-hue"
-  );
-  assert(accent !== undefined);
-  assertStringIncludes(accent.description, "finite hue");
-  assertStringIncludes(accent.description, "0 through 360");
-
+Deno.test("the green consumer fixture overrides the public accent hue primitive", async () => {
   const fixture = await Deno.readTextFile(
     new URL("fixtures/green-theme.css", import.meta.url),
   );

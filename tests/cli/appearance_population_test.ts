@@ -10,14 +10,10 @@ import {
 import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
 import {
   resolveTerminalTheme,
+  type TerminalAppearance,
   type TerminalTheme,
   terminalThemes,
 } from "../../src/cli/theme.ts";
-import {
-  accentAppearance,
-  type Appearance,
-  fieldAppearance,
-} from "../../src/tokens/tokens.ts";
 import { cliComponentRegistry } from "../../src/generated/cli-registry.ts";
 import {
   listCliComponents,
@@ -161,12 +157,11 @@ function renderConformantFrame<Props>(
   return frame;
 }
 
-const APPEARANCES: readonly Appearance[] = [
-  fieldAppearance,
-  accentAppearance(120),
-  accentAppearance(137.5),
-  accentAppearance(255),
-  accentAppearance(335),
+const APPEARANCES: readonly TerminalAppearance[] = [
+  { accent: 120 },
+  { accent: 137.5 },
+  { accent: 255 },
+  { accent: 335 },
 ];
 
 Deno.test("every rendered Component props type auto-enrols in the presentation contract", async () => {
@@ -261,7 +256,7 @@ Deno.test("every CLI example renders through every appearance pole and colour de
         };
         const implicit = module.render(example.props, capabilities);
         const explicitField = module.render(
-          presentedProps(example.props, { appearance: fieldAppearance }),
+          presentedProps(example.props, { appearance: {} }),
           capabilities,
         );
         assertEquals(
@@ -277,12 +272,16 @@ Deno.test("every CLI example renders through every appearance pole and colour de
               example.props,
               { theme, appearance },
               capabilities,
-              `${slug}/${example.name} ${theme} ${appearance.name} ${colorDepth}`,
+              `${slug}/${example.name} ${theme} ${
+                appearance.accent ?? "mono"
+              } ${colorDepth}`,
             );
             assertEquals(
               stripAnsi(frame),
               stripAnsi(implicit),
-              `${slug}/${example.name} ${theme} ${appearance.name} changed semantic text or glyphs`,
+              `${slug}/${example.name} ${theme} ${
+                appearance.accent ?? "mono"
+              } changed semantic text or glyphs`,
             );
           }
         }
@@ -309,7 +308,7 @@ Deno.test("every rendered Component family samples Unicode and ASCII at narrow, 
         renderConformantFrame(
           module.render,
           example.props,
-          { theme: "dark", appearance: accentAppearance(245) },
+          { theme: "dark", appearance: { accent: 245 } },
           capabilities,
           `${fact.group}/${fact.slug} ${columns} ${
             unicode ? "Unicode" : "ASCII"
@@ -331,7 +330,7 @@ Deno.test("every rendered Component family samples Unicode and ASCII at narrow, 
 Deno.test("the population guard rejects a future renderer that ignores appearance", () => {
   const selected = resolveTerminalTheme({
     theme: "dark",
-    appearance: accentAppearance(137.5),
+    appearance: { accent: 137.5 },
   });
   const selectedRgb = new Set(Object.values(selected.colors).map(rgbKey));
   const fieldOnly = Object.values(terminalThemes.dark.colors).find((color) =>
@@ -348,7 +347,7 @@ Deno.test("the population guard rejects a future renderer that ignores appearanc
       renderConformantFrame(
         ignored,
         { text: "ignored" },
-        { theme: "dark", appearance: accentAppearance(137.5) },
+        { theme: "dark", appearance: { accent: 137.5 } },
         testTerminalCapabilities({ colorDepth: "truecolor" }),
         "future-sibling",
       ),

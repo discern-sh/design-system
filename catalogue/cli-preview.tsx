@@ -5,6 +5,7 @@ import { projectTerminalInlineHtml } from "../src/cli/projection.ts";
 import { OverflowCue } from "../src/components/layout/overflow-cue/overflow-cue.tsx";
 import type { RegistryEntry } from "./generated/registry.ts";
 import { catalogueDecisionCopyProps } from "./metadata-copy.ts";
+import { appearanceProjection } from "../src/tokens/appearance.ts";
 import type { CatalogueTerminalPresentation } from "./terminal-theme.ts";
 
 /** Fixed terminal profile used for deterministic Catalogue specimens. */
@@ -23,11 +24,10 @@ export function CliOutputPreview(
     readonly presentation: CatalogueTerminalPresentation;
   },
 ) {
-  const accentStyle = presentation.appearance.name === "accent"
-    ? {
-      "--discern-accent-hue": presentation.appearance.hue,
-    } as CSSProperties
-    : undefined;
+  const accent = presentation.appearance.accent;
+  const accentStyle = accent === undefined
+    ? undefined
+    : { "--discern-accent-hue": accent } as CSSProperties;
   return (
     <OverflowCue
       axis="inline"
@@ -35,13 +35,12 @@ export function CliOutputPreview(
       className="discern-catalogue-cli-preview"
       data-discern-root
       data-discern-theme={presentation.theme}
-      data-discern-appearance={presentation.appearance.name}
+      data-discern-accent={accent === undefined ? undefined : ""}
       data-discern-terminal-ground={presentation.theme}
-      data-discern-terminal-appearance={presentation.appearance.name}
-      data-discern-terminal-accent-hue={presentation.appearance.name ===
-          "accent"
-        ? presentation.appearance.hue
-        : undefined}
+      data-discern-terminal-appearance={appearanceProjection(
+        presentation.appearance,
+      )}
+      data-discern-terminal-accent-hue={accent}
       style={accentStyle}
     >
       <pre

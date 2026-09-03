@@ -21,7 +21,6 @@ import {
   resolveTerminalTheme,
   terminalToneColor,
 } from "../../src/cli/theme.ts";
-import { accentAppearance, fieldAppearance } from "../../src/tokens/tokens.ts";
 import { cliReleaseFixtures } from "../../src/components/editorial/diagram/diagram.cli.ts";
 import {
   describeDiagram,
@@ -129,10 +128,10 @@ Deno.test("flow CLI is byte-stable and bounded across widths and capabilities", 
 
 Deno.test("diagram projections select local Accent without changing semantics", () => {
   for (const theme of ["light", "dark"] as const) {
-    const fieldPresentation = { theme, appearance: fieldAppearance } as const;
+    const fieldPresentation = { theme, appearance: {} } as const;
     const accentPresentation = {
       theme,
-      appearance: accentAppearance(245),
+      appearance: { accent: 245 },
     } as const;
     for (
       const colorDepth of ["truecolor", "ansi256", "ansi16"] as const
@@ -175,7 +174,7 @@ Deno.test("diagram projections select local Accent without changing semantics", 
   assertEquals(
     render(decisionFlow, plain, "auto", {
       theme: "light",
-      appearance: accentAppearance(245),
+      appearance: { accent: 245 },
     }),
     render(decisionFlow, plain, "auto", { theme: "light" }),
   );

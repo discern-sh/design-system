@@ -24,11 +24,7 @@ import { resolveCatalogueTerminalPresentation } from "../catalogue/terminal-them
 import { publicTokens } from "../src/token-inventory.ts";
 
 const origin = "https://catalogue.example";
-const fieldLight = resolveCatalogueTerminalPresentation(
-  "light",
-  "field",
-  255,
-);
+const fieldLight = resolveCatalogueTerminalPresentation("light", undefined);
 
 function renderFoundations(
   pathname: string,
@@ -46,7 +42,7 @@ function renderFoundations(
   );
 }
 
-Deno.test("Foundations family owns bounded Field, Token, and terminal sheet routes", () => {
+Deno.test("Foundations family owns bounded Appearance, Token, and terminal sheet routes", () => {
   assertEquals(foundationsRouteFamily.match(foundationsPaths.index), {
     family: "foundations",
     page: "index",
@@ -178,7 +174,7 @@ Deno.test("Foundations index and terminal gallery stay bounded and source-backed
   );
 });
 
-Deno.test("Field page dogfoods public controls and paints every field role", () => {
+Deno.test("Appearance page dogfoods public controls and paints every field role", () => {
   const html = renderFoundations(foundationsPaths.appearance);
   assertStringIncludes(html, 'data-discern-foundations-page="appearance"');
   for (const axis of ["darkness", "structure", "emphasis", "density"]) {
@@ -192,15 +188,15 @@ Deno.test("Field page dogfoods public controls and paints every field role", () 
   assertStringIncludes(html, "No failed package invariants");
   for (
     const scope of [
-      "field-to-accent-255",
-      "accent-120-to-field",
+      "mono-to-accent-255",
+      "accent-120-to-mono",
       "accent-245-to-accent-335",
     ]
   ) assertStringIncludes(html, `data-discern-scope-demo="${scope}"`);
   assertStringIncludes(html, 'class="discern-button');
   assertStringIncludes(html, 'class="discern-badge');
   assertStringIncludes(html, 'class="discern-avatar-group');
-  assertStringIncludes(html, "Copy consumer field snippet");
+  assertStringIncludes(html, "Copy consumer appearance snippet");
   assertStringIncludes(html, 'data-discern-appearance-terminal-pole="light"');
   assertStringIncludes(html, 'data-discern-appearance-terminal-pole="dark"');
   assertStringIncludes(
@@ -213,14 +209,14 @@ Deno.test("Field page dogfoods public controls and paints every field role", () 
   );
 });
 
-Deno.test("Field terminal sheet uses the existing inspector at both poles", () => {
+Deno.test("Appearance terminal sheet uses the existing inspector at both poles", () => {
   const projections = appearancePoleTerminalProjections();
   assertEquals(projections.map(({ theme }) => theme), ["light", "dark"]);
   for (const projection of projections) {
     assertStringIncludes(projection.output, "--discern-color-ink-muted");
     assertStringIncludes(
       projection.inspectorHtml,
-      `${projection.theme === "light" ? "Light" : "Dark"} field pole`,
+      `${projection.theme === "light" ? "Light" : "Dark"} ground`,
     );
     assertStringIncludes(
       projection.inspectorHtml,
@@ -229,11 +225,10 @@ Deno.test("Field terminal sheet uses the existing inspector at both poles", () =
   }
 });
 
-Deno.test("Field page admits arbitrary Accent hues through the package proof", () => {
+Deno.test("Appearance page admits arbitrary Accent hues through the package proof", () => {
   const html = renderToStaticMarkup(
     createElement<AppearancePageProps>(AppearancePage, {
-      appearance: "accent",
-      accentHue: 145.5,
+      accent: 145.5,
       field: {
         darkness: 0.6,
         structure: 1.2,
@@ -244,7 +239,7 @@ Deno.test("Field page admits arbitrary Accent hues through the package proof", (
   );
   assertStringIncludes(html, 'data-discern-appearance-proof="accepted"');
   assertStringIncludes(html, "Accent · Hue 145.5");
-  assertStringIncludes(html, 'data-discern-appearance="accent"');
+  assertStringIncludes(html, 'data-discern-accent=""');
 });
 
 Deno.test("a synthetic terminal sheet joins route, index, detail, navigation, and search projections", () => {

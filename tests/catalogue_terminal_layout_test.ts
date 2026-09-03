@@ -28,12 +28,8 @@ import { projectTerminalLayoutRecipe } from "../catalogue/terminal-layout-inspec
 import { parseTerminalLabState } from "../catalogue/terminal-lab-state.ts";
 import { resolveCatalogueTerminalPresentation } from "../catalogue/terminal-theme.ts";
 
-const fieldLight = resolveCatalogueTerminalPresentation(
-  "light",
-  "field",
-  255,
-);
-const fieldDark = resolveCatalogueTerminalPresentation("dark", "field", 255);
+const fieldLight = resolveCatalogueTerminalPresentation("light", undefined);
+const fieldDark = resolveCatalogueTerminalPresentation("dark", undefined);
 
 const futureRecipe: CliCompositionRecipe = {
   id: "future-signal-lab",

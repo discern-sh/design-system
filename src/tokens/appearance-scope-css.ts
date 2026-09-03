@@ -1,19 +1,19 @@
 /**
- * Symmetric browser scopes for the Field and Accent projections. Static pole
- * fallback and feature-gated live CSS both derive from the appearance graph.
+ * Symmetric browser scopes for the monochrome and Accent projections. Static
+ * pole fallback and feature-gated live CSS both derive from the appearance
+ * graph, so a Root or subtree switches Accent on or off without copying roles.
  *
  * @module
  */
 
 import {
-  accentAppearance,
   appearanceColorRoleLaws,
-  type AppearanceName,
+  type AppearanceProjection,
+  appearanceProjections,
   appearanceShadowRoleLaws,
   DEFAULT_ACCENT_HUE,
   evaluateAppearance,
   evaluateAppearanceShadows,
-  fieldAppearance,
 } from "./appearance.ts";
 import {
   ACCENT_HUE_CUSTOM_PROPERTY_NAME,
@@ -21,14 +21,11 @@ import {
   appearanceLiveCssDeclarations,
 } from "./appearance-live-css.ts";
 
-/** Public attribute selecting one browser appearance projection. */
-export const APPEARANCE_ATTRIBUTE = "data-discern-appearance" as const;
+/** Public attribute that applies the Accent projection to a Root or subtree. */
+export const ACCENT_ATTRIBUTE = "data-discern-accent" as const;
 
-/** Public appearance values accepted by the namespaced browser scope. */
-export const browserAppearances: readonly AppearanceName[] = Object.freeze([
-  "field",
-  "accent",
-]);
+/** Attribute value that restores the monochrome projection inside an Accent scope. */
+export const ACCENT_NONE_VALUE = "none" as const;
 
 /** One generated pole projection used by fallback CSS and compatibility APIs. */
 export interface AppearancePoleProjection {
@@ -49,7 +46,7 @@ function accentHueTemplate(
   law: (typeof appearanceColorRoleLaws)[number],
   value: string,
 ): string {
-  if (law.accent === "field") return value;
+  if (law.accent === "mono") return value;
   const usesAccentHue = JSON.stringify(law.accent.hue).includes("accent-hue");
   if (!usesAccentHue) return value;
   const marker = ` ${DEFAULT_ACCENT_HUE}`;
@@ -65,21 +62,22 @@ function accentHueTemplate(
   }`;
 }
 
-/** Generate one static light or dark appearance pole from the shared graph. */
+/** Generate one static light or dark pole for either projection from the shared graph. */
 export function appearancePoleProjection(
-  appearance: AppearanceName,
+  projection: AppearanceProjection,
   mode: "light" | "dark",
 ): AppearancePoleProjection {
   const darkness = mode === "light" ? 0 : 1;
-  const identity = appearance === "field"
-    ? fieldAppearance
-    : accentAppearance(DEFAULT_ACCENT_HUE);
-  const evaluated = evaluateAppearance(identity, { darkness });
+  const evaluated = evaluateAppearance(
+    projection === "accent"
+      ? { darkness, accent: DEFAULT_ACCENT_HUE }
+      : { darkness },
+  );
   const roles = Object.fromEntries(appearanceColorRoleLaws.map((law) => {
     const value = requiredValue(evaluated, law.name);
     return [
       law.name,
-      appearance === "accent" ? accentHueTemplate(law, value) : value,
+      projection === "accent" ? accentHueTemplate(law, value) : value,
     ];
   })) as Record<`--discern-${string}`, string>;
   return Object.freeze({
@@ -88,64 +86,74 @@ export function appearancePoleProjection(
   });
 }
 
-function scopeSelector(appearance: AppearanceName): string {
-  return `:where([data-discern-root][${APPEARANCE_ATTRIBUTE}="${appearance}"], [data-discern-root] [${APPEARANCE_ATTRIBUTE}="${appearance}"])`;
+/** Attribute selector that activates one projection on an element. */
+export function accentScopeAttributeSelector(
+  projection: AppearanceProjection,
+): string {
+  return projection === "accent"
+    ? `[${ACCENT_ATTRIBUTE}]:not([${ACCENT_ATTRIBUTE}="${ACCENT_NONE_VALUE}"])`
+    : `[${ACCENT_ATTRIBUTE}="${ACCENT_NONE_VALUE}"]`;
 }
 
-function darkScopeSelector(appearance: AppearanceName): string {
-  const attribute = `[${APPEARANCE_ATTRIBUTE}="${appearance}"]`;
+function scopeSelector(projection: AppearanceProjection): string {
+  const attribute = accentScopeAttributeSelector(projection);
+  return `:where([data-discern-root]${attribute}, [data-discern-root] ${attribute})`;
+}
+
+function darkScopeSelector(projection: AppearanceProjection): string {
+  const attribute = accentScopeAttributeSelector(projection);
   return `:where([data-discern-root][data-discern-theme="dark"]${attribute}, [data-discern-root][data-discern-theme="dark"] ${attribute})`;
 }
 
-function systemDarkScopeSelector(appearance: AppearanceName): string {
-  const attribute = `[${APPEARANCE_ATTRIBUTE}="${appearance}"]`;
+function systemDarkScopeSelector(projection: AppearanceProjection): string {
+  const attribute = accentScopeAttributeSelector(projection);
   return `:where([data-discern-root]:not([data-discern-theme])${attribute}, [data-discern-root]:not([data-discern-theme]) ${attribute}, [data-discern-root][data-discern-theme="system"]${attribute}, [data-discern-root][data-discern-theme="system"] ${attribute})`;
 }
 
 function poleDeclarations(
-  appearance: AppearanceName,
+  projection: AppearanceProjection,
   mode: "light" | "dark",
 ): string {
-  const projection = appearancePoleProjection(appearance, mode);
+  const pole = appearancePoleProjection(projection, mode);
   return [
     ...appearanceColorRoleLaws.map((law) =>
-      `    ${law.name}: ${requiredValue(projection.roles, law.name)};`
+      `    ${law.name}: ${requiredValue(pole.roles, law.name)};`
     ),
     ...appearanceShadowRoleLaws.map((law) =>
-      `    ${law.name}: ${requiredValue(projection.shadows, law.name)};`
+      `    ${law.name}: ${requiredValue(pole.shadows, law.name)};`
     ),
   ].join("\n");
 }
 
-function liveDeclarations(appearance: AppearanceName): string {
-  return appearanceLiveCssDeclarations(appearance).map((declaration) =>
+function liveDeclarations(projection: AppearanceProjection): string {
+  return appearanceLiveCssDeclarations(projection).map((declaration) =>
     `    ${declaration.name}: ${declaration.value};`
   ).join("\n");
 }
 
 /**
  * Generate the atomic two-way scope contract. Selecting this surface admits
- * both identities so either can be nested inside the other without copying
+ * both projections so either can be nested inside the other without copying
  * declarations.
  */
 export function generateAppearanceScopeCss(): string {
-  const light = browserAppearances.map((appearance) =>
-    `  ${scopeSelector(appearance)} {\n${
-      poleDeclarations(appearance, "light")
+  const light = appearanceProjections.map((projection) =>
+    `  ${scopeSelector(projection)} {\n${
+      poleDeclarations(projection, "light")
     }\n  }`
   ).join("\n\n");
-  const dark = browserAppearances.map((appearance) =>
-    `  ${darkScopeSelector(appearance)} {\n${
-      poleDeclarations(appearance, "dark")
+  const dark = appearanceProjections.map((projection) =>
+    `  ${darkScopeSelector(projection)} {\n${
+      poleDeclarations(projection, "dark")
     }\n  }`
   ).join("\n\n");
-  const systemDark = browserAppearances.map((appearance) =>
-    `    ${systemDarkScopeSelector(appearance)} {\n${
-      poleDeclarations(appearance, "dark")
+  const systemDark = appearanceProjections.map((projection) =>
+    `    ${systemDarkScopeSelector(projection)} {\n${
+      poleDeclarations(projection, "dark")
     }\n    }`
   ).join("\n\n");
-  const live = browserAppearances.map((appearance) =>
-    `    ${scopeSelector(appearance)} {\n${liveDeclarations(appearance)}\n    }`
+  const live = appearanceProjections.map((projection) =>
+    `    ${scopeSelector(projection)} {\n${liveDeclarations(projection)}\n    }`
   ).join("\n\n");
 
   return `@layer discern.theme {

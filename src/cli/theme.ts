@@ -12,18 +12,21 @@ import {
 } from "./ansi-palette.ts";
 import { oklchToSrgb } from "../internal/oklch.ts";
 import {
-  accentAppearance,
   type Appearance,
   type AppearanceColorRoleName,
   baseTokens,
   evaluateOpaqueAppearance,
-  fieldAppearance,
+  resolveAppearance,
   themeTokens,
 } from "../tokens/tokens.ts";
 
 export type { TerminalRgbColor };
-/** Explicit Field or hue-parameterised Accent input for terminal presentation. */
-export type { Appearance } from "../tokens/tokens.ts";
+
+/**
+ * Colour choices a terminal palette honours: an optional accent hue. The
+ * caller's ground supplies darkness, so no axis coordinate belongs here.
+ */
+export type TerminalAppearance = Pick<Appearance, "accent">;
 
 /** One semantic colour with precomputed terminal-palette fallbacks. */
 export interface TerminalColor extends TerminalRgbColor {
@@ -40,12 +43,12 @@ export type TerminalSpacingTokenName = `--discern-space-${string}`;
 /** Theme variant whose Token values feed one terminal palette. */
 export type TerminalThemeVariant = "light" | "dark";
 
-/** Independent ground and Field-or-Accent inputs for one terminal palette. */
+/** Independent ground and appearance inputs for one terminal palette. */
 export interface TerminalThemeOptions {
   /** Caller-selected terminal ground; defaults to `"dark"`. */
   readonly theme?: TerminalThemeVariant;
-  /** Caller-selected appearance; defaults to the achromatic Field. */
-  readonly appearance?: Appearance;
+  /** Caller-selected appearance; omission or an absent accent stays monochrome. */
+  readonly appearance?: TerminalAppearance;
 }
 
 /** Semantic terminal type roles available without a font renderer. */
@@ -75,7 +78,7 @@ export type TerminalSemanticTone =
 /** One fully derived light or dark terminal theme. */
 export interface TerminalTheme {
   readonly variant: TerminalThemeVariant;
-  readonly appearance: Appearance;
+  readonly appearance: TerminalAppearance;
   readonly colors: Readonly<Record<TerminalColorTokenName, TerminalColor>>;
   readonly spacing: Readonly<
     Record<TerminalSpacingTokenName, number>
@@ -229,22 +232,16 @@ function deriveTypography(): Readonly<
 /** Derive one terminal palette directly from the package's authored Token values. */
 export function deriveTerminalTheme(
   variant: TerminalThemeVariant,
-  appearance: Appearance = fieldAppearance,
+  appearance: TerminalAppearance = {},
 ): TerminalTheme {
-  const resolvedAppearance = appearance.name === "field"
-    ? fieldAppearance
-    : appearance.name === "accent"
-    ? accentAppearance(appearance.hue)
-    : (() => {
-      throw new TypeError(
-        `unknown terminal appearance ${
-          JSON.stringify((appearance as { readonly name?: unknown }).name)
-        }`,
-      );
-    })();
-  const appearanceValues = evaluateOpaqueAppearance(resolvedAppearance, {
+  const resolved = resolveAppearance({
     darkness: variant === "light" ? 0 : 1,
+    accent: appearance.accent,
   });
+  const resolvedAppearance: TerminalAppearance = resolved.accent === undefined
+    ? {}
+    : { accent: resolved.accent };
+  const appearanceValues = evaluateOpaqueAppearance(resolved);
   const colors: Partial<Record<TerminalColorTokenName, TerminalColor>> = {};
   for (
     const token of themeTokens.filter((candidate) =>
@@ -272,7 +269,7 @@ export function deriveTerminalTheme(
     const preservesIndependentSeries = token.name.startsWith(
       "--discern-color-series-",
     );
-    const ansi16 = resolvedAppearance.name === "accent" &&
+    const ansi16 = resolvedAppearance.accent !== undefined &&
         !preservesIndependentSeries && parsed.chroma > 0.0000001
       ? chromaticAnsi16Index(parsed.color, variant)
       : undefined;
@@ -297,8 +294,8 @@ export const terminalThemes: Readonly<
 
 /**
  * Resolve one terminal palette from independent ground and appearance inputs.
- * Field poles reuse the package's compatibility projections; Accent palettes
- * are evaluated directly from the shared hue-parameterised appearance law.
+ * Monochrome poles reuse the cached package palettes; an accent palette is
+ * evaluated directly from the shared hue-parameterised appearance law.
  */
 export function resolveTerminalTheme(
   options: TerminalThemeOptions = {},
@@ -307,8 +304,8 @@ export function resolveTerminalTheme(
   if (variant !== "light" && variant !== "dark") {
     throw new TypeError(`unknown terminal theme variant ${variant}`);
   }
-  const appearance = options.appearance ?? fieldAppearance;
-  return appearance.name === "field"
+  const appearance = options.appearance ?? {};
+  return appearance.accent === undefined
     ? terminalThemes[variant]
     : deriveTerminalTheme(variant, appearance);
 }

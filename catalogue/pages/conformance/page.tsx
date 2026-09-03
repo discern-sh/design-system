@@ -3,7 +3,6 @@ import { compositionRecipes } from "../../compositions.tsx";
 import { packageVersion } from "../../generated/registry.ts";
 import type { RegistryEntry } from "../../generated/registry.ts";
 import type { CatalogueTerminalPresentation } from "../../terminal-theme.ts";
-import type { AppearanceName } from "../../../src/tokens/appearance.ts";
 import type { CatalogueAxesSelection } from "../../shell/axes-state.ts";
 import { catalogueAppearanceRootStyle } from "../../shell/axes-state.ts";
 import { ComponentPreview } from "../components/component-preview.tsx";
@@ -34,8 +33,7 @@ function JourneyPreview({ recipe }: { readonly recipe: CompositionRecipe }) {
 export function ConformancePage(
   {
     components,
-    appearance,
-    accentHue,
+    accent,
     field,
     fieldScheme,
     includeJourneys,
@@ -44,8 +42,7 @@ export function ConformancePage(
     theme,
   }: {
     readonly components: readonly RegistryEntry[];
-    readonly appearance: AppearanceName;
-    readonly accentHue: number;
+    readonly accent: number | undefined;
     readonly field: CatalogueAxesSelection;
     readonly fieldScheme: "light" | "dark";
     readonly includeJourneys: boolean;
@@ -59,9 +56,9 @@ export function ConformancePage(
       className="discern-catalogue-conformance"
       data-discern-root
       data-discern-theme={theme}
-      data-discern-appearance={appearance}
+      data-discern-accent={accent === undefined ? undefined : ""}
       data-discern-conformance-ready="true"
-      style={catalogueAppearanceRootStyle(field, fieldScheme, accentHue)}
+      style={catalogueAppearanceRootStyle(field, fieldScheme, accent)}
     >
       <h1 className="discern-visually-hidden">
         Discern component conformance sheet

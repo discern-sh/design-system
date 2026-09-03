@@ -5,14 +5,12 @@ import {
   oklabDistance,
 } from "../src/internal/oklch.ts";
 import {
-  accentAppearance,
   ACTION_SHADOW_DISTANCE_FLOOR,
   type Appearance,
   APPEARANCE_POLARITY_CROSSOVER_DARKNESS,
-  type AppearancePoint,
-  defaultAppearancePoint,
+  type AppearanceAxes,
+  defaultAppearance,
   evaluateAppearance,
-  fieldAppearance,
 } from "../src/tokens/appearance.ts";
 
 interface Paint {
@@ -46,12 +44,12 @@ function required(
   return parseOklch(value);
 }
 
-const point = (overrides: Partial<AppearancePoint>): AppearancePoint => ({
-  ...defaultAppearancePoint,
+const point = (overrides: Partial<AppearanceAxes>): AppearanceAxes => ({
+  ...defaultAppearance,
   ...overrides,
 });
 
-const points: readonly AppearancePoint[] = [
+const points: readonly AppearanceAxes[] = [
   point({ darkness: 0 }),
   point({
     darkness: 0.25,
@@ -74,13 +72,13 @@ const points: readonly AppearancePoint[] = [
 ];
 
 Deno.test("hard primary shadows stay separate across Field and the Accent circle", () => {
-  const appearances: readonly Appearance[] = [
-    fieldAppearance,
-    ...Array.from({ length: 361 }, (_, hue) => accentAppearance(hue)),
+  const appearances: readonly Pick<Appearance, "accent">[] = [
+    {},
+    ...Array.from({ length: 361 }, (_, hue) => ({ accent: hue })),
   ];
   for (const appearance of appearances) {
     for (const fieldPoint of points) {
-      const values = evaluateAppearance(appearance, fieldPoint);
+      const values = evaluateAppearance({ ...fieldPoint, ...appearance });
       const canvas = required(values, "--discern-color-canvas").color;
       const fillPaint = required(values, "--discern-color-action");
       const shadowPaint = required(values, "--discern-color-action-shadow");
@@ -92,13 +90,13 @@ Deno.test("hard primary shadows stay separate across Field and the Accent circle
       );
       assert(
         oklabDistance(shadow, fill) >= ACTION_SHADOW_DISTANCE_FLOOR,
-        `${appearance.name} ${
+        `${appearance.accent ?? "mono"} ${
           JSON.stringify(fieldPoint)
         } shadow merges with fill`,
       );
       assert(
         oklabDistance(shadow, canvas) >= ACTION_SHADOW_DISTANCE_FLOOR,
-        `${appearance.name} ${
+        `${appearance.accent ?? "mono"} ${
           JSON.stringify(fieldPoint)
         } shadow merges with canvas`,
       );

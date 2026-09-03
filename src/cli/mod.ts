@@ -5,8 +5,6 @@
  * @module
  */
 
-import type { Appearance as TerminalAppearance } from "./theme.ts";
-
 export * from "./ansi.ts";
 export * from "./box.ts";
 export * from "./block-composition.ts";
@@ -41,8 +39,6 @@ export * from "./presenter.ts";
 export * from "./result-summary-group.ts";
 export * from "./rhythm.ts";
 export * from "./text.ts";
-/** Explicit Field or hue-parameterised Accent input for terminal presentation. */
-export type Appearance = TerminalAppearance;
 export * from "./theme.ts";
 export * from "./triangles.ts";
 export * from "../generated/cli-registry.ts";

@@ -771,13 +771,9 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
     if (await previewAppearanceDetails.getAttribute("open") === null) {
       await previewAppearanceDetails.locator("summary").click();
     }
-    await previewAppearance.getByRole("combobox", { name: "Palette" })
-      .selectOption("accent", { timeout: ACTION_TIMEOUT });
-    await previewAppearance.getByRole("combobox", {
-      name: "Preview named Accent hue",
-    })
+    await previewAppearance.getByRole("combobox", { name: "Accent" })
       .selectOption("violet", { timeout: ACTION_TIMEOUT });
-    await previewAppearance.getByRole("button", { name: /Field axes/ })
+    await previewAppearance.getByRole("button", { name: /^Axes/ })
       .click({ timeout: ACTION_TIMEOUT });
     await previewAppearance.getByRole("slider", { name: "Density" })
       .fill("1.6");
@@ -791,7 +787,6 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
       );
       return frameDocument?.style.getPropertyValue("--discern-density") ===
           "1.6" &&
-        parameters.get("previewAppearance") === "accent" &&
         parameters.get("previewAccent") === "300" &&
         parameters.get("previewField") === "1,1,1,1.6";
     });
@@ -800,14 +795,14 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
       workspaceTheme: await page.locator(BUILDER_SHELL).getAttribute(
         "data-discern-theme",
       ),
-      workspaceAppearance: await page.locator(BUILDER_SHELL).getAttribute(
-        "data-discern-appearance",
+      workspaceAccent: await page.locator(BUILDER_SHELL).getAttribute(
+        "data-discern-accent",
       ),
       previewTheme: await preview.locator(".discern-builder-frame-document")
         .getAttribute("data-discern-theme"),
-      previewAppearance: await preview.locator(
+      previewAccent: await preview.locator(
         ".discern-builder-frame-document",
-      ).getAttribute("data-discern-appearance"),
+      ).getAttribute("data-discern-accent"),
       previewHue: await preview.locator(".discern-builder-frame-document")
         .evaluate((element) =>
           element.style.getPropertyValue("--discern-accent-hue")
@@ -820,7 +815,6 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
         element.style.getPropertyValue("--discern-density")
       ),
       urlTheme: appearanceUrl.searchParams.get("theme"),
-      urlAppearance: appearanceUrl.searchParams.get("appearance"),
       urlField: appearanceUrl.searchParams.get("field"),
       previewUrlTheme: appearanceUrl.searchParams.get("previewTheme"),
       editorColour: await page.locator(BUILDER_SHELL).evaluate((element) =>
@@ -833,14 +827,13 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
     };
     invariant(
       appearanceBoundaryState.workspaceTheme === "light" &&
-        appearanceBoundaryState.workspaceAppearance === "field" &&
+        appearanceBoundaryState.workspaceAccent === null &&
         appearanceBoundaryState.previewTheme === "dark" &&
-        appearanceBoundaryState.previewAppearance === "accent" &&
+        appearanceBoundaryState.previewAccent === "" &&
         appearanceBoundaryState.previewHue === "300" &&
         appearanceBoundaryState.previewDensity === "1.6" &&
         appearanceBoundaryState.workspaceDensity === "1" &&
         appearanceBoundaryState.urlTheme === "light" &&
-        appearanceBoundaryState.urlAppearance === "field" &&
         appearanceBoundaryState.urlField === "0,1,1,1" &&
         appearanceBoundaryState.previewUrlTheme === "dark" &&
         appearanceBoundaryState.editorColour === editorColour &&

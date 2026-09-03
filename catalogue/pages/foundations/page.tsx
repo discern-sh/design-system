@@ -5,7 +5,6 @@ import { OverflowCue } from "../../../src/components/layout/overflow-cue/overflo
 import { publicTokens } from "../../../src/token-inventory.ts";
 import { baseTokens } from "../../../src/tokens/tokens.ts";
 import type { TokenCategory } from "../../../src/tokens/tokens.ts";
-import { blueThemeTokens } from "../../../src/theme/blue.ts";
 import {
   catalogueCliCapabilities,
   CliOutputPreview,
@@ -29,7 +28,6 @@ import {
 } from "../../routes/foundations.ts";
 import { announceCatalogueLocationChange } from "../../shell/location.ts";
 import type { CatalogueAxesSelection } from "../../shell/axes-state.ts";
-import type { AppearanceName } from "../../../src/tokens/appearance.ts";
 import { CatalogueIndexCard, CataloguePageHeader } from "../shared.tsx";
 import { AppearancePage } from "./appearance-page.tsx";
 
@@ -42,9 +40,6 @@ function isThemed(token: FoundationToken): token is FoundationToken & {
 
 function tokenSource(token: FoundationToken): string {
   if (baseTokens.some((candidate) => candidate === token)) return "Base Token";
-  if (blueThemeTokens.some((candidate) => candidate === token)) {
-    return "Blue preset Token";
-  }
   return "Appearance Token";
 }
 
@@ -633,8 +628,7 @@ function TerminalFoundationDetail(
 
 export interface FoundationsPageProps {
   readonly terminalPresentation: CatalogueTerminalPresentation;
-  readonly appearance?: AppearanceName | undefined;
-  readonly accentHue?: number | undefined;
+  readonly accent?: number | undefined;
   readonly field?: CatalogueAxesSelection | undefined;
   readonly fieldScheme?: "light" | "dark" | undefined;
   readonly onFieldChange?:
@@ -648,8 +642,7 @@ export interface FoundationsPageProps {
 export function FoundationsPage(
   {
     terminalPresentation,
-    appearance,
-    accentHue,
+    accent,
     field,
     fieldScheme,
     onFieldChange,
@@ -677,8 +670,7 @@ export function FoundationsPage(
   if (route.page === "appearance") {
     return (
       <AppearancePage
-        appearance={appearance}
-        accentHue={accentHue}
+        accent={accent}
         field={field}
         fieldScheme={fieldScheme}
         terminalPresentation={terminalPresentation}

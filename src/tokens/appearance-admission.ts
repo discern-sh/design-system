@@ -13,16 +13,14 @@ import {
   oklabDistance,
 } from "../internal/oklch.ts";
 import {
-  accentAppearance,
   ACTION_SHADOW_DISTANCE_FLOOR,
   type Appearance,
   APPEARANCE_INK_CONTRAST_FLOORS,
   APPEARANCE_POLARITY_CROSSOVER_DARKNESS,
+  type AppearanceAxes,
   appearanceColorRoleLaws,
-  type AppearancePoint,
-  defaultAppearancePoint,
+  defaultAppearance,
   evaluateAppearance,
-  fieldAppearance,
   ownedSurfaceRoleNames,
 } from "./appearance.ts";
 
@@ -45,7 +43,7 @@ export interface AppearanceSeriesPair {
 /** One signed field point in the package admission sweep. */
 export interface AppearanceAdmissionPoint {
   readonly label: string;
-  readonly point: AppearancePoint;
+  readonly point: AppearanceAxes;
 }
 
 /** A failed numerical invariant with enough coordinates to reproduce it. */
@@ -68,10 +66,10 @@ export interface AppearanceAdmissionProof {
 
 const point = (
   label: string,
-  overrides: Partial<AppearancePoint>,
+  overrides: Partial<AppearanceAxes>,
 ): AppearanceAdmissionPoint => ({
   label,
-  point: { ...defaultAppearancePoint, ...overrides },
+  point: { ...defaultAppearance, ...overrides },
 });
 
 /** Poles, signed 0A postures, crossover neighbours, and axis stress points. */
@@ -174,9 +172,9 @@ export function proveAppearanceAdmission(
 ): AppearanceAdmissionProof {
   const failures: AppearanceAdmissionFailure[] = [];
   let checks = 0;
-  const appearances: readonly Appearance[] = [
-    fieldAppearance,
-    ...APPEARANCE_ADMISSION_HUES.map(accentAppearance),
+  const appearances: readonly Partial<Appearance>[] = [
+    {},
+    ...APPEARANCE_ADMISSION_HUES.map((accent) => ({ accent })),
   ];
   const record = (
     appearance: string,
@@ -198,11 +196,11 @@ export function proveAppearanceAdmission(
   };
 
   for (const appearance of appearances) {
-    const appearanceLabel = appearance.name === "field"
-      ? "field"
-      : `accent(${appearance.hue})`;
+    const appearanceLabel = appearance.accent === undefined
+      ? "mono"
+      : `accent(${appearance.accent})`;
     for (const sample of APPEARANCE_ADMISSION_POINTS) {
-      const values = evaluateAppearance(appearance, sample.point);
+      const values = evaluateAppearance({ ...sample.point, ...appearance });
       if (Object.keys(values).length !== appearanceColorRoleLaws.length) {
         throw new TypeError(`${appearanceLabel} did not enrol every role`);
       }

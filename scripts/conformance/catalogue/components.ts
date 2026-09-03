@@ -1900,19 +1900,16 @@ export async function runComponentContractConformance(
   let statusWitnessChecks = 0;
   const statusPostures = [
     {
-      appearance: "field",
-      accent: "255",
+      accent: "none",
       field: "0,1,1,1",
     },
     {
-      appearance: "accent",
       accent: "137.5",
       field: "0.75,1.4,1.35,1.2",
     },
   ] as const;
   for (const posture of statusPostures) {
     const url = new URL(conformanceUrl(origin, "light"));
-    url.searchParams.set("appearance", posture.appearance);
     url.searchParams.set("accent", posture.accent);
     url.searchParams.set("field", posture.field);
     await loadConformancePage(page, url.href);
@@ -1920,7 +1917,6 @@ export async function runComponentContractConformance(
   }
   await page.emulateMedia({ forcedColors: "active" });
   const forcedStatusUrl = new URL(conformanceUrl(origin, "dark"));
-  forcedStatusUrl.searchParams.set("appearance", "accent");
   forcedStatusUrl.searchParams.set("accent", "335");
   forcedStatusUrl.searchParams.set("field", "1,1,1,1");
   await loadConformancePage(page, forcedStatusUrl.href);

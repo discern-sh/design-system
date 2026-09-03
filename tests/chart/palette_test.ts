@@ -8,7 +8,7 @@ import {
 import { terminalThemes } from "../../src/cli/theme.ts";
 import {
   APPEARANCE_CONTRAST_SAMPLE_DARKNESSES,
-  evaluateField,
+  evaluateAppearance,
   themeTokens,
 } from "../../src/tokens/tokens.ts";
 import { resolveChartPaletteAtDarkness } from "../../src/chart/palette.ts";
@@ -69,7 +69,7 @@ function asOklab(value: SeriesOklch): OklabColor {
 }
 
 function fieldCanvas(darkness: number): OklabColor {
-  const value = evaluateField({ darkness })["--discern-color-canvas"];
+  const value = evaluateAppearance({ darkness })["--discern-color-canvas"];
   assert(value !== undefined, `field ${darkness} has no canvas`);
   const match = value.match(/^oklch\(([\d.]+)%\s+0\s+0\)$/);
   assert(match !== null, `field canvas ${value} is not opaque neutral OKLCH`);

@@ -1,4 +1,4 @@
-/** CSS projection of the monochrome field's authored numeric expressions. */
+/** CSS projection of the appearance graph's authored numeric expressions. */
 
 import {
   appearanceActiveLightnessExpression,
@@ -8,13 +8,13 @@ import {
   type AppearanceColorRoleLaw,
   appearanceColorRoleLaws,
   type AppearanceExpression,
-  type AppearanceName,
   appearanceOppositeLightnessExpression,
   appearancePolarityExpression,
+  type AppearanceProjection,
   type AppearanceShadowRoleLaw,
   appearanceShadowRoleLaws,
   DEFAULT_ACCENT_HUE,
-  defaultAppearancePoint,
+  defaultAppearance,
 } from "./appearance.ts";
 
 /** Feature query guarding the live projection while static poles remain usable. */
@@ -370,10 +370,10 @@ function colorRoleValue(
 
 function appearanceColorRoleValue(
   law: AppearanceColorRoleLaw,
-  appearance: AppearanceName,
+  projection: AppearanceProjection,
   expressionBindings: ReadonlyMap<AppearanceExpression, string>,
 ): string {
-  if (appearance === "field" || law.accent === "field") {
+  if (projection === "mono" || law.accent === "mono") {
     return colorRoleValue(law, expressionBindings);
   }
   const lightness = compileExpression(
@@ -399,7 +399,7 @@ function shadowRoleValue(
  * source order; series and presentation pairs remain outside this population.
  */
 export function appearanceLiveCssDeclarations(
-  appearance: AppearanceName,
+  projection: AppearanceProjection,
 ): readonly AppearanceCssDeclaration[] {
   const canvasBindings = new Map<AppearanceExpression, string>([
     [appearanceCanvasLightnessExpression, `var(${FIELD_CANVAS_LIGHTNESS})`],
@@ -416,7 +416,7 @@ export function appearanceLiveCssDeclarations(
   const projectedExpressions = projectSharedExpressions(
     [
       ...appearanceColorRoleLaws.flatMap((law) =>
-        appearance === "accent" && law.accent !== "field"
+        projection === "accent" && law.accent !== "mono"
           ? [
             law.accent.lightness,
             law.accent.chroma,
@@ -459,7 +459,7 @@ export function appearanceLiveCssDeclarations(
       name: law.name,
       value: appearanceColorRoleValue(
         law,
-        appearance,
+        projection,
         projectedExpressions.bindings,
       ),
     })),
@@ -470,9 +470,9 @@ export function appearanceLiveCssDeclarations(
   ]);
 }
 
-/** Project the default achromatic Field appearance. */
+/** Project the default monochrome appearance. */
 export function monoLiveCssDeclarations(): readonly AppearanceCssDeclaration[] {
-  return appearanceLiveCssDeclarations("field");
+  return appearanceLiveCssDeclarations("mono");
 }
 
 /** Scale one authored pixel spacing fact by the registered density axis. */
@@ -492,7 +492,7 @@ export function appearanceAxisDefaultDeclarations(): readonly AppearanceCssDecla
   return Object.freeze(
     (Object.keys(appearanceAxes) as AppearanceAxisName[]).map((axis) => ({
       name: appearanceAxisCustomPropertyName(axis),
-      value: formattedNumber(defaultAppearancePoint[axis]),
+      value: formattedNumber(defaultAppearance[axis]),
     })),
   );
 }

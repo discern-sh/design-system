@@ -40,11 +40,7 @@ import { foundationsPaths } from "../catalogue/routes/foundations.ts";
 import { terminalFoundationSheets } from "../catalogue/terminal-foundations.ts";
 import { glyphAtlasData } from "../src/glyphs/atlas.ts";
 
-const fieldLight = resolveCatalogueTerminalPresentation(
-  "light",
-  "field",
-  255,
-);
+const fieldLight = resolveCatalogueTerminalPresentation("light", undefined);
 
 function attributeCount(markup: string, attribute: string): number {
   return (markup.match(new RegExp(`${attribute}=`, "g")) ?? []).length;

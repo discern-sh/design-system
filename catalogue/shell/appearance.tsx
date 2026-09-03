@@ -8,12 +8,13 @@ import { Select } from "../../src/components/forms/select/select.tsx";
 import {
   appearanceAxes,
   type AppearanceAxisName,
-  type AppearanceName,
-  defaultAppearancePoint,
+  DEFAULT_ACCENT_HUE,
 } from "../../src/tokens/appearance.ts";
 import { resolveCatalogueTerminalPresentation } from "../terminal-theme.ts";
 import { useCatalogueTerminalTheme } from "../use-terminal-theme.ts";
 import {
+  CATALOGUE_ACCENT_CHOICE_CUSTOM,
+  CATALOGUE_ACCENT_CHOICE_NONE,
   catalogueAccentHue,
   catalogueAccentHueLabel,
   catalogueAppearanceOptions,
@@ -25,8 +26,7 @@ import {
   legacyCatalogueAppearanceStorageKeys,
   parseCatalogueAppearanceParameters,
   serializeCatalogueAppearanceState,
-  setCatalogueAccentHue,
-  setCatalogueAppearanceIdentity,
+  setCatalogueAccent,
   setCatalogueFieldPoint,
   writeCatalogueAppearanceParameters,
 } from "./appearance-state.ts";
@@ -34,9 +34,10 @@ import { AxisControl } from "./axis-control.tsx";
 import type { CatalogueAxesSelection } from "./axes-state.ts";
 import {
   catalogueAppearanceRootStyle,
+  catalogueAxesAreDefault,
   catalogueAxesControlScheme,
   catalogueAxesLabel,
-  defaultCatalogueAxesSelection,
+  resetCatalogueAxes,
 } from "./axes-state.ts";
 import { announceCatalogueLocationChange } from "./location.ts";
 
@@ -154,13 +155,14 @@ export function useCatalogueAppearance(url: URL) {
       scheme,
     );
   };
-  const changeAppearance = (appearance: AppearanceName): void => {
-    commit(setCatalogueAppearanceIdentity(state, appearance), fieldScheme);
-  };
-  const changeAccentHue = (value: number | string): void => {
-    const accentHue = catalogueAccentHue(value);
-    if (accentHue === undefined) return;
-    commit(setCatalogueAccentHue(state, accentHue), fieldScheme);
+  const changeAccent = (value: number | string | undefined): void => {
+    if (value === undefined) {
+      commit(setCatalogueAccent(state, undefined), fieldScheme);
+      return;
+    }
+    const accent = catalogueAccentHue(value);
+    if (accent === undefined) return;
+    commit(setCatalogueAccent(state, accent), fieldScheme);
   };
   const changeField = (field: CatalogueAxesSelection): void => {
     const scheme = catalogueAxesControlScheme(field, fieldScheme);
@@ -170,11 +172,10 @@ export function useCatalogueAppearance(url: URL) {
       ...(darknessChanged ? { theme: scheme } : {}),
     }, scheme);
   };
-  const resetField = (): void => changeField(defaultCatalogueAxesSelection);
+  const resetField = (): void => changeField(resetCatalogueAxes(state.field));
   const terminalPresentation = resolveCatalogueTerminalPresentation(
     fieldScheme,
-    state.appearance,
-    state.accentHue,
+    state.accent,
   );
 
   return {
@@ -182,14 +183,13 @@ export function useCatalogueAppearance(url: URL) {
     terminalPresentation,
     fieldScheme,
     changeTheme,
-    changeAppearance,
-    changeAccentHue,
+    changeAccent,
     changeField,
     resetField,
     style: catalogueAppearanceRootStyle(
       state.field,
       fieldScheme,
-      state.accentHue,
+      state.accent,
     ) as CSSProperties,
   } as const;
 }
@@ -198,21 +198,17 @@ export interface AppearanceControlProps {
   readonly scopeLabel?: string;
   readonly theme: ThemeSwitcherMode;
   readonly resolvedTheme: "light" | "dark";
-  readonly appearance: AppearanceName;
-  readonly accentHue: number;
+  /** Accent hue, or `undefined` for monochrome. */
+  readonly accent: number | undefined;
   readonly field: CatalogueAxesSelection;
   readonly onThemeChange: (theme: ThemeSwitcherMode) => void;
-  readonly onAppearanceChange: (appearance: AppearanceName) => void;
-  readonly onAccentHueChange: (hue: number | string) => void;
+  /** A hue, a named convenience, or `undefined` to return to monochrome. */
+  readonly onAccentChange: (accent: number | string | undefined) => void;
   readonly onFieldChange: (field: CatalogueAxesSelection) => void;
   readonly onFieldReset: () => void;
 }
 
-function fieldIsDefault(field: CatalogueAxesSelection): boolean {
-  return (Object.keys(appearanceAxes) as AppearanceAxisName[]).every((axis) =>
-    field[axis] === defaultAppearancePoint[axis]
-  );
-}
+const axisOrder = Object.keys(appearanceAxes) as AppearanceAxisName[];
 
 /** Compact control boundary shared by the shell and Builder state owners. */
 export function AppearanceControl(
@@ -220,12 +216,10 @@ export function AppearanceControl(
     scopeLabel,
     theme,
     resolvedTheme,
-    appearance,
-    accentHue,
+    accent,
     field,
     onThemeChange,
-    onAppearanceChange,
-    onAccentHueChange,
+    onAccentChange,
     onFieldChange,
     onFieldReset,
   }: AppearanceControlProps,
@@ -236,40 +230,40 @@ export function AppearanceControl(
   const hueGuidanceId = useId();
   const axesId = useId();
   const [axesOpen, setAxesOpen] = useState(false);
-  const namedHue = catalogueAppearanceOptions.find(({ hue }) =>
-    hue === accentHue
+  const [rememberedHue, setRememberedHue] = useState(
+    accent ?? DEFAULT_ACCENT_HUE,
   );
-  const defaultField = fieldIsDefault(field);
-  const defaultNonDarkness =
-    field.structure === defaultAppearancePoint.structure &&
-    field.emphasis === defaultAppearancePoint.emphasis &&
-    field.density === defaultAppearancePoint.density;
-  const paletteSummary = appearance === "field"
-    ? "Field"
-    : catalogueAccentHueLabel(accentHue);
-  const pointSummary = theme === "system" && defaultNonDarkness
-    ? `${resolvedTheme} pole`
-    : defaultField
-    ? "default"
-    : "custom";
+  useEffect(() => {
+    if (accent !== undefined) setRememberedHue(accent);
+  }, [accent]);
+  const namedHue = accent === undefined
+    ? undefined
+    : catalogueAppearanceOptions.find(({ hue }) => hue === accent);
+  const accentChoice = accent === undefined
+    ? CATALOGUE_ACCENT_CHOICE_NONE
+    : namedHue?.id ?? CATALOGUE_ACCENT_CHOICE_CUSTOM;
+  const defaultAxes = catalogueAxesAreDefault(field);
+  const atPole = resolvedTheme === "light"
+    ? field.darkness === appearanceAxes.darkness.minimum
+    : field.darkness === appearanceAxes.darkness.maximum;
+  const paletteSummary = accent === undefined
+    ? "Monochrome"
+    : catalogueAccentHueLabel(accent);
+  const pointSummary = defaultAxes ? "default" : "custom";
   const schemeSummary = theme === "system"
-    ? `System · ${resolvedTheme} pole`
-    : field.darkness === appearanceAxes.darkness.minimum &&
-        resolvedTheme === "light"
-    ? "Light pole"
-    : field.darkness === appearanceAxes.darkness.maximum &&
-        resolvedTheme === "dark"
-    ? "Dark pole"
-    : `Custom ${resolvedTheme} field`;
+    ? `System · ${resolvedTheme}`
+    : atPole
+    ? resolvedTheme === "light" ? "Light" : "Dark"
+    : `Custom · ${resolvedTheme}`;
 
   return (
     <details
       className="discern-catalogue-appearance"
-      data-discern-appearance={appearance}
+      data-discern-accent={accent === undefined ? undefined : ""}
       style={catalogueAppearanceRootStyle(
         field,
         resolvedTheme,
-        accentHue,
+        accent,
       ) as CSSProperties}
     >
       <summary aria-label={`Change ${appearanceLabel}`}>
@@ -285,82 +279,80 @@ export function AppearanceControl(
           className="discern-catalogue-appearance__theme"
           mode={theme}
           onModeChange={onThemeChange}
-          label="Theme policy"
+          label="Theme"
           systemLabel="System"
-          lightLabel="Light pole"
-          darkLabel="Dark pole"
+          lightLabel="Light"
+          darkLabel="Dark"
         />
         <output className="discern-catalogue-appearance__scheme">
           {schemeSummary}
         </output>
 
         <Select
-          label="Palette"
-          value={appearance}
-          onChange={(event) =>
-            onAppearanceChange(event.currentTarget.value as AppearanceName)}
+          label="Accent"
+          value={accentChoice}
+          onChange={(event) => {
+            const choice = event.currentTarget.value;
+            if (choice === CATALOGUE_ACCENT_CHOICE_NONE) {
+              onAccentChange(undefined);
+            } else if (choice === CATALOGUE_ACCENT_CHOICE_CUSTOM) {
+              onAccentChange(rememberedHue);
+            } else {
+              const option = catalogueAppearanceOptions.find(({ id }) =>
+                id === choice
+              );
+              if (option !== undefined) onAccentChange(option.hue);
+            }
+          }}
           options={[
-            { value: "field", label: "Field" },
-            { value: "accent", label: "Accent" },
+            { value: CATALOGUE_ACCENT_CHOICE_NONE, label: "Monochrome" },
+            ...catalogueAppearanceOptions.map((option) => ({
+              value: option.id,
+              label: `${option.label} · ${option.hue}`,
+            })),
+            { value: CATALOGUE_ACCENT_CHOICE_CUSTOM, label: "Custom hue" },
           ]}
         />
 
-        <div className="discern-catalogue-accent">
-          <span
-            className="discern-catalogue-accent__swatch"
-            aria-hidden="true"
-          />
-          <strong>Accent hue</strong>
-          <output>{catalogueAccentHueLabel(accentHue)}</output>
-          <Select
-            aria-label={scopeLabel === undefined
-              ? "Named Accent hue"
-              : `${scopeLabel} named Accent hue`}
-            value={namedHue?.id ?? ""}
-            onChange={(event) => {
-              const option = catalogueAppearanceOptions.find(({ id }) =>
-                id === event.currentTarget.value
-              );
-              if (option !== undefined) onAccentHueChange(option.hue);
-            }}
-            options={[
-              { value: "", label: "Custom hue" },
-              ...catalogueAppearanceOptions.map((option) => ({
-                value: option.id,
-                label: `${option.label} · ${option.hue}`,
-              })),
-            ]}
-          />
-          <div className="discern-catalogue-accent__inputs">
-            <Input
-              type="range"
-              min="0"
-              max="360"
-              step="0.1"
-              value={accentHue}
-              aria-label="Accent hue slider"
-              aria-describedby={hueGuidanceId}
-              onInput={(event) =>
-                onAccentHueChange(event.currentTarget.valueAsNumber)}
-            />
-            <Input
-              type="number"
-              min="0"
-              max="360"
-              step="any"
-              value={accentHue}
-              label="Hue"
-              aria-describedby={hueGuidanceId}
-              onChange={(event) =>
-                onAccentHueChange(event.currentTarget.valueAsNumber)}
-            />
-          </div>
-          <small id={hueGuidanceId}>
-            0–360. {appearance === "field"
-              ? "Remembered until Accent is selected."
-              : "Updates the live Accent projection."}
-          </small>
-        </div>
+        {accent === undefined
+          ? null
+          : (
+            <div className="discern-catalogue-accent">
+              <span
+                className="discern-catalogue-accent__swatch"
+                aria-hidden="true"
+              />
+              <strong>Accent hue</strong>
+              <output>{catalogueAccentHueLabel(accent)}</output>
+              <div className="discern-catalogue-accent__inputs">
+                <Input
+                  type="range"
+                  min="0"
+                  max="360"
+                  step="0.1"
+                  value={accent}
+                  aria-label="Accent hue slider"
+                  aria-describedby={hueGuidanceId}
+                  onInput={(event) =>
+                    onAccentChange(event.currentTarget.valueAsNumber)}
+                />
+                <Input
+                  type="number"
+                  min="0"
+                  max="360"
+                  step="any"
+                  value={accent}
+                  label="Hue"
+                  aria-describedby={hueGuidanceId}
+                  onChange={(event) =>
+                    onAccentChange(event.currentTarget.valueAsNumber)}
+                />
+              </div>
+              <small id={hueGuidanceId}>
+                0–360. Updates the live Accent projection.
+              </small>
+            </div>
+          )}
 
         <section className="discern-catalogue-appearance__axes">
           <button
@@ -369,7 +361,7 @@ export function AppearanceControl(
             aria-controls={axesId}
             onClick={() => setAxesOpen((open) => !open)}
           >
-            <span>Field axes</span>
+            <span>Axes</span>
             <span className="discern-catalogue-appearance__axes-summary">
               {pointSummary} · {catalogueAxesLabel(field)}
             </span>
@@ -377,9 +369,7 @@ export function AppearanceControl(
           {axesOpen
             ? (
               <div id={axesId}>
-                {(
-                  ["darkness", "structure", "emphasis", "density"] as const
-                ).map((axis) => (
+                {axisOrder.map((axis) => (
                   <AxisControl
                     key={axis}
                     axis={axis}
@@ -392,9 +382,9 @@ export function AppearanceControl(
                   size="sm"
                   variant="secondary"
                   onClick={onFieldReset}
-                  disabled={defaultField}
+                  disabled={defaultAxes}
                 >
-                  Reset field point
+                  Reset axes
                 </Button>
               </div>
             )
@@ -403,9 +393,9 @@ export function AppearanceControl(
 
         <a
           className="discern-catalogue-appearance__page-link"
-          href="/catalogue/foundations/field/"
+          href="/catalogue/foundations/appearance/"
         >
-          Inspect the Field projection
+          Inspect the Appearance projection
         </a>
       </div>
     </details>
