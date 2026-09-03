@@ -1,8 +1,8 @@
-# 4A — Adopt the field on discern.sh and the homepage
+# 4A — Adopt the appearance on discern.sh and the homepage
 
-**Goal:** Make discern's public surfaces wear the field: the brand record names monochrome as the identity, every site bundle selects the achromatic default, the documentation pages hold at both poles, and the homepage drives darkness from scroll so the page itself demonstrates the system instead of describing it.
+**Goal:** Make discern's public surfaces wear the appearance: the brand record names monochrome as the identity, every site bundle selects the achromatic default, the documentation pages hold at both poles, and the homepage drives darkness from scroll so the page itself demonstrates the system instead of describing it.
 
-**Wave:** 4. Runs in the discern repository at `/Users/jack/Sites/discern`, under that project's own instructions and gate. Starts only after a release of `@discern-sh/design-system` containing waves 1A to 3B **and the complete field-appearance programme** is published and the maintainer has said which version to pin.
+**Wave:** 4. Runs in the discern repository at `/Users/jack/Sites/discern`, under that project's own instructions and gate. Starts only after a release of `@discern-sh/design-system` containing waves 1A to 3B, **the complete field-appearance programme, and the appearance model of ADR 0045** is published and the maintainer has said which version to pin.
 
 You own `4A` only. Do not edit the design-system package; a defect found in it is reported with a reproducible URL.
 
@@ -32,17 +32,17 @@ Pin the named release in `deno.json`. Select the achromatic default in every bun
 
 ### 3. The homepage
 
-Rework the landing composition on the field. Drive `--discern-darkness` from a scroll timeline over the page's length with a still posture for reduced motion that picks one pole and loses nothing; set the colour scheme the polarity implies at the flip; place the flip at the mark's moment. Use low structure for the editorial opening and raise it where real artifacts appear, because those are the evidence. Content stays artifact-first: the proof line, gate results, and the map are the visuals; no simulated dashboard, glowing anything, or decorative field art. Keep the page static HTML and CSS; a scroll timeline is CSS, and any script the bootstrap already ships is the ceiling.
+Rework the landing composition on the appearance. Drive `--discern-darkness` from a scroll timeline over the page's length with a still posture for reduced motion that picks one pole and loses nothing; set the colour scheme the polarity implies at the flip; place the flip at the mark's moment. Two facts the composition depends on: the polarity flips where the canvas's relative luminance crosses `APPEARANCE_POLARITY_CROSSOVER`, which for an untinted canvas is darkness `APPEARANCE_POLARITY_CROSSOVER_DARKNESS` (about 0.436), not 0.5, and a paper or ink tint moves it, so derive the scroll position of the mark's moment from the package's exported constants and the page's own tints rather than from a hard-coded midpoint; and a browser without scroll-driven animations must take the same still posture as reduced motion, not a broken half-state. Use low structure for the editorial opening and raise it where real artifacts appear, because those are the evidence. Content stays artifact-first: the proof line, gate results, and the map are the visuals; no simulated dashboard, glowing anything, or decorative field art. Keep the page static HTML and CSS; a scroll timeline is CSS, and any script the bootstrap already ships is the ceiling.
 
 ### 4. Records
 
-Update that repository's map and changelog as its instructions require, and note in the site's own documentation how a page selects a field point.
+Update that repository's map and changelog as its instructions require, and note in the site's own documentation how a page selects an appearance point.
 
 ## Constraints
 
 - Follow the discern repository's instructions, gate, and landing rules; this brief adds no exception.
-- Do not fork or override component CSS on the site; the field is consumed through the axes and the theme attribute only.
-- Reduced motion, forced colours, and the pre-paint theme bootstrap remain correct at both poles.
+- Do not fork or override component CSS on the site; the appearance is consumed through the axes, the tint properties, the theme attribute, and the accent scope only.
+- Reduced motion, forced colours, browsers without scroll-driven animations, and the pre-paint theme bootstrap remain correct at both poles.
 - Commit in focused steps: brand record, pin and bundles, homepage, records.
 
 ## Out of scope

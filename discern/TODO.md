@@ -53,7 +53,7 @@ _Work built but not merged, or otherwise at risk of being lost. Nothing outstand
 
 ## 🟣 Programmes — dispatch from the planning tree
 
-- [ ] **Land the monochrome field programme.** ADR 0040 derives every colour role from a monochrome field; the briefs for its seven streams, their waves, and the maintainer sign-off that gates wave 1 live in `map/_private/planning/monochrome-field/README.md`. Dispatch 1B and 0A first, then 1A after sign-off. Delete this line when 4A lands. Evidence: `map/_adr/0040-derive-the-theme-from-a-monochrome-field.md`.
+- [ ] **Release the appearance, then dispatch monochrome-field 4A.** Waves 0A to 3B, the field-appearance programme, and the appearance model of ADR 0045 have all landed; only 4A remains and it runs in the discern repository against a published release. Next: cut the release (breaking for the sibling site, which pins 0.29.0 and selects the removed `theme: "discern"`), write the version into the 4A brief's prerequisite line, then dispatch `map/_private/planning/monochrome-field/4a-site-adoption-and-homepage.md`. Delete this line when 4A lands. Evidence: `map/_adr/0040-derive-the-theme-from-a-monochrome-field.md`; `map/_adr/0045-name-the-model-appearance-and-tint-the-pigments.md`.
 
 ## ⚪ Explorations / ideas (unscheduled)
 
