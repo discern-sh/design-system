@@ -1,6 +1,6 @@
 # Working in discern Design System
 
-discern's built-in instructions comes first; discern Design System's own instructions fills the second half and wins on any conflict.
+discern's built-in instructions come first; discern Design System's own instructions fill the second half and win on any conflict.
 
 ## Operating discern
 

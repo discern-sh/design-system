@@ -158,7 +158,7 @@
   exclude = []
 
 # ─────────────────────────────────────────────────────────────────────────────
-# [assurance]
+# [setup]
 #
 # What:    Known jobs that do not apply to this project.
 # Why:     Setup measures how many applicable known jobs are wired. A lifecycle
@@ -168,10 +168,10 @@
 #   discern config set-job build --not-applicable   declare one
 #   discern config set-job build --applicable       restore it
 #
-# Help:    `discern config explain assurance`
+# Help:    `discern config explain setup`
 # ─────────────────────────────────────────────────────────────────────────────
 
-[assurance]
+[setup]
   # Known jobs this project's lifecycle does not have. A job listed here cannot
   # also be configured under [jobs].
   not_applicable = []
@@ -844,8 +844,9 @@
 # [meta]
 #
 # What:    Installer bookkeeping.
-# Why:     `discern upgrade` reads the schema version to migrate this file.
-#          Nothing here needs your attention.
+# Why:     discern writes these keys while setting up or upgrading the project.
+#          They record schema and setup evidence; nothing here needs
+#          hand-editing.
 #
 # Help:    `discern config explain meta`
 # ─────────────────────────────────────────────────────────────────────────────
