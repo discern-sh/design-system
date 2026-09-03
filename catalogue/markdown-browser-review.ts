@@ -6,6 +6,7 @@ import {
   createMarkdownBrowserCatalogueState,
   type MarkdownBrowserCataloguePosture,
 } from "./markdown-browser-example.ts";
+import { defaultCatalogueTerminalPresentation } from "./terminal-theme.ts";
 
 /** One deterministic browser frame and its browser-ready inspector fragment. */
 export interface MarkdownBrowserReviewArtifact {
@@ -50,7 +51,7 @@ function reviewArtifact(
   const state = createMarkdownBrowserCatalogueState(
     facts,
     rows,
-    "dark",
+    defaultCatalogueTerminalPresentation,
     posture,
   );
   const frame = renderMarkdownBrowser(state, facts);
@@ -64,7 +65,7 @@ function reviewArtifact(
       columns,
       rows,
       title,
-      theme: "dark",
+      ...defaultCatalogueTerminalPresentation,
     }),
   });
 }
@@ -74,7 +75,7 @@ function resizedArtifact(): MarkdownBrowserReviewArtifact {
   let state = createMarkdownBrowserCatalogueState(
     narrow,
     24,
-    "dark",
+    defaultCatalogueTerminalPresentation,
     "split-reader",
   );
   for (let page = 0; page < 3; page += 1) {
@@ -101,7 +102,7 @@ function resizedArtifact(): MarkdownBrowserReviewArtifact {
       columns: 120,
       rows: 30,
       title,
-      theme: "dark",
+      ...defaultCatalogueTerminalPresentation,
     }),
   });
 }

@@ -3,6 +3,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { catalogueCliCapabilities } from "../catalogue/cli-preview.tsx";
 import { TerminalFoundationPreview } from "../catalogue/terminal-foundation-preview.tsx";
+import { defaultCatalogueTerminalPresentation } from "../catalogue/terminal-theme.ts";
 import { foundationsSearchRecords } from "../catalogue/routes/foundations.ts";
 import { stripAnsi } from "../src/cli/ansi.ts";
 import { browseTopChoices } from "../scripts/playground/browse.ts";
@@ -141,7 +142,7 @@ Deno.test("a fresh terminal foundation sheet auto-enrols in search and browser r
   const html = renderToStaticMarkup(
     createElement(TerminalFoundationPreview, {
       sheet: futureSheet,
-      theme: "dark",
+      presentation: defaultCatalogueTerminalPresentation,
     }),
   );
   assertStringIncludes(

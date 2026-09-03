@@ -29,6 +29,7 @@ import {
   searchRecords,
 } from "../catalogue/search/mod.ts";
 import { catalogue, catalogueEntry } from "./support/catalogue.ts";
+import { defaultCatalogueTerminalPresentation } from "../catalogue/terminal-theme.ts";
 
 const PACKAGE_ROOT = fromFileUrl(new URL("../", import.meta.url));
 
@@ -53,7 +54,7 @@ Deno.test("complete Component panels keep supporting disclosures closed in canon
     createElement(ComponentPreview, {
       entry: command,
       surface: "web",
-      terminalTheme: "dark",
+      terminalPresentation: defaultCatalogueTerminalPresentation,
       onSurfaceChange: () => undefined,
     }),
   );
@@ -226,7 +227,7 @@ Deno.test("detail specimens keep canonical identity across surfaces and make com
         surface,
         exampleId: shared.id,
         view: "single",
-        terminalTheme: "dark",
+        terminalPresentation: defaultCatalogueTerminalPresentation,
         headingLevel: 2,
       }),
     );
@@ -242,7 +243,7 @@ Deno.test("detail specimens keep canonical identity across surfaces and make com
       surface: "web",
       exampleId: shared.id,
       view: "all",
-      terminalTheme: "dark",
+      terminalPresentation: defaultCatalogueTerminalPresentation,
       headingLevel: 2,
     }),
   );

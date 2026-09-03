@@ -11,7 +11,10 @@ import {
   fieldAxes,
   type FieldAxisName,
 } from "../../src/tokens/field.ts";
-import { useCatalogueTerminalTheme } from "../terminal-theme.ts";
+import {
+  resolveCatalogueTerminalPresentation,
+  useCatalogueTerminalTheme,
+} from "../terminal-theme.ts";
 import {
   catalogueAccentHue,
   catalogueAccentHueLabel,
@@ -170,10 +173,15 @@ export function useCatalogueAppearance(url: URL) {
     }, scheme);
   };
   const resetField = (): void => changeField(defaultCatalogueFieldSelection);
+  const terminalPresentation = resolveCatalogueTerminalPresentation(
+    fieldScheme,
+    state.appearance,
+    state.accentHue,
+  );
 
   return {
     ...state,
-    terminalTheme: fieldScheme,
+    terminalPresentation,
     fieldScheme,
     changeTheme,
     changeAppearance,

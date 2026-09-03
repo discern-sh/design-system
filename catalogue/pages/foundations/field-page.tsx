@@ -23,6 +23,10 @@ import {
   defaultCatalogueFieldSelection,
   serializeCatalogueFieldSelection,
 } from "../../shell/field-state.ts";
+import {
+  type CatalogueTerminalPresentation,
+  resolveCatalogueTerminalPresentation,
+} from "../../terminal-theme.ts";
 import { CataloguePageHeader } from "../shared.tsx";
 import { catalogueFieldConsumerSnippet } from "./field-export.ts";
 import { fieldPoleTerminalProjections } from "./field-terminal.ts";
@@ -32,6 +36,7 @@ export interface FieldPageProps {
   readonly accentHue?: number | undefined;
   readonly field?: CatalogueFieldSelection | undefined;
   readonly fieldScheme?: "light" | "dark" | undefined;
+  readonly terminalPresentation?: CatalogueTerminalPresentation | undefined;
   readonly onFieldChange?:
     | ((field: CatalogueFieldSelection) => void)
     | undefined;
@@ -106,6 +111,7 @@ export function FieldPage(
     accentHue = 255,
     field,
     fieldScheme,
+    terminalPresentation,
     onFieldChange,
   }: FieldPageProps = {},
 ) {
@@ -128,7 +134,15 @@ export function FieldPage(
     appearance,
     accentHue,
   );
-  const terminalPoles = fieldPoleTerminalProjections();
+  const resolvedTerminalPresentation = terminalPresentation ??
+    resolveCatalogueTerminalPresentation(
+      fieldScheme ?? polarity,
+      appearance,
+      accentHue,
+    );
+  const terminalPoles = fieldPoleTerminalProjections(
+    resolvedTerminalPresentation.appearance,
+  );
   const foundationsHref = `/catalogue/foundations/?${
     new URLSearchParams({
       appearance,
@@ -369,11 +383,11 @@ export function FieldPage(
       >
         <div>
           <h2 id="discern-catalogue-field-terminal-heading">
-            Terminal at the poles
+            Terminal appearance at the poles
           </h2>
           <p>
-            The existing terminal inspector retains its current ground
-            projection; terminal Appearance integration belongs to 3A.
+            The selected Field or Accent appearance keeps the same hue while
+            each terminal uses an honest light or dark ground.
           </p>
         </div>
         <div className="discern-catalogue-field__terminal-grid">
@@ -382,6 +396,12 @@ export function FieldPage(
               <h3>{projection.theme === "light" ? "Light" : "Dark"} pole</h3>
               <div
                 data-discern-field-terminal-pole={projection.theme}
+                data-discern-terminal-appearance={resolvedTerminalPresentation
+                  .appearance.name}
+                data-discern-terminal-accent-hue={resolvedTerminalPresentation
+                    .appearance.name === "accent"
+                  ? resolvedTerminalPresentation.appearance.hue
+                  : undefined}
                 dangerouslySetInnerHTML={{
                   __html: projection.inspectorHtml,
                 }}

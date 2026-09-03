@@ -13,10 +13,24 @@ import { projectTerminalSpans } from "../src/cli/projection.ts";
 import { measureText } from "../src/cli/text.ts";
 import {
   catalogueCliCapabilities,
+  catalogueCliExampleProps,
   CliComponentPreview,
   CliExamplePreview,
 } from "../catalogue/cli-preview.tsx";
 import { registry } from "../catalogue/generated/registry.ts";
+import { resolveCatalogueTerminalPresentation } from "../catalogue/terminal-theme.ts";
+
+const fieldLight = resolveCatalogueTerminalPresentation(
+  "light",
+  "field",
+  255,
+);
+const fieldDark = resolveCatalogueTerminalPresentation("dark", "field", 255);
+const fractionalAccent = resolveCatalogueTerminalPresentation(
+  "dark",
+  "accent",
+  137.5,
+);
 
 Deno.test("one named CLI specimen uses the bare shared projection", () => {
   const entry = registry.find(({ cli }) => cli.stance === "rendered");
@@ -26,7 +40,7 @@ Deno.test("one named CLI specimen uses the bare shared projection", () => {
   const markup = renderToStaticMarkup(createElement(CliExamplePreview, {
     entry,
     exampleId: example.id,
-    theme: "dark",
+    presentation: fractionalAccent,
   }));
   assertStringIncludes(
     markup,
@@ -35,7 +49,10 @@ Deno.test("one named CLI specimen uses the bare shared projection", () => {
   assertStringIncludes(markup, example.label);
   assertEquals([...markup.matchAll(/<pre\b/g)].length, 1);
   assertStringIncludes(markup, 'class="discern-catalogue-cli-output"');
-  assertEquals(markup.includes("discern-terminal"), false);
+  assertStringIncludes(markup, 'data-discern-terminal-ground="dark"');
+  assertStringIncludes(markup, 'data-discern-terminal-appearance="accent"');
+  assertStringIncludes(markup, 'data-discern-terminal-accent-hue="137.5"');
+  assertEquals(markup.includes('class="discern-terminal'), false);
 });
 
 Deno.test("browser Catalogue projects every declared CLI stance from disk", () => {
@@ -50,7 +67,10 @@ Deno.test("browser Catalogue projects every declared CLI stance from disk", () =
       assertEquals(entry.cli.reason, entry.meta.cli.reason);
       assert(entry.cli.reason.trim().length > 0);
       const markup = renderToStaticMarkup(
-        createElement(CliComponentPreview, { entry, theme: "dark" }),
+        createElement(CliComponentPreview, {
+          entry,
+          presentation: fieldDark,
+        }),
       );
       assertStringIncludes(
         markup,
@@ -75,14 +95,27 @@ Deno.test("browser Catalogue projects every declared CLI stance from disk", () =
       assert(!fragments.has(fragment), `duplicate CLI fragment ${fragment}`);
       fragments.add(fragment);
 
-      const output = entry.cli.render(
-        example.props,
-        resolveCliExampleCapabilities(example, catalogueCliCapabilities),
-      );
-      assert(output.length > 0, `${fragment} rendered an empty frame`);
-      const projected = projectTerminalSpans(output).map(({ text }) => text)
-        .join("");
-      assertEquals(projected, stripAnsi(output), `${fragment} lost text`);
+      for (const presentation of [fieldLight, fractionalAccent]) {
+        const output = entry.cli.render(
+          catalogueCliExampleProps(
+            entry.meta.slug,
+            example.props,
+            presentation,
+          ),
+          resolveCliExampleCapabilities(example, catalogueCliCapabilities),
+        );
+        assert(
+          output.length > 0,
+          `${fragment}/${presentation.appearance.name} rendered an empty frame`,
+        );
+        const projected = projectTerminalSpans(output).map(({ text }) => text)
+          .join("");
+        assertEquals(
+          projected,
+          stripAnsi(output),
+          `${fragment}/${presentation.appearance.name} lost text`,
+        );
+      }
     }
   }
 });
@@ -132,19 +165,28 @@ Deno.test("browser Catalogue enrols grouped interactions and lossless Fleet iden
   }
 });
 
-Deno.test("browser CLI specimens follow the resolved Catalogue terminal theme", () => {
+Deno.test("browser CLI specimens follow the resolved Catalogue terminal presentation", () => {
   const heading = registry.find(({ meta }) => meta.slug === "heading");
   if (heading === undefined) throw new TypeError("heading is missing");
 
   const light = renderToStaticMarkup(
-    createElement(CliComponentPreview, { entry: heading, theme: "light" }),
+    createElement(CliComponentPreview, {
+      entry: heading,
+      presentation: fieldLight,
+    }),
   );
   const dark = renderToStaticMarkup(
-    createElement(CliComponentPreview, { entry: heading, theme: "dark" }),
+    createElement(CliComponentPreview, {
+      entry: heading,
+      presentation: fractionalAccent,
+    }),
   );
 
   assertStringIncludes(light, 'data-discern-theme="light"');
   assertStringIncludes(dark, 'data-discern-theme="dark"');
+  assertStringIncludes(light, 'data-discern-appearance="field"');
+  assertStringIncludes(dark, 'data-discern-appearance="accent"');
+  assertStringIncludes(dark, "--discern-accent-hue:137.5");
   assertNotEquals(light, dark);
   assertEquals(
     [...light.matchAll(/<h5>([^<]+)<\/h5>/g)].map((match) => match[1]),
@@ -174,7 +216,7 @@ Deno.test("Catalogue palette injection preserves Theme toggle example states", (
   const light = renderToStaticMarkup(
     createElement(CliComponentPreview, {
       entry: themeToggle,
-      theme: "light",
+      presentation: fieldLight,
     }),
   );
 

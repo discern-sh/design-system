@@ -4,7 +4,6 @@ import { Select } from "../src/components/forms/select/select.tsx";
 import { OverflowCue } from "../src/components/layout/overflow-cue/overflow-cue.tsx";
 import type { TerminalCapabilities } from "../src/cli/capabilities.ts";
 import { projectTerminalInspectorHtml } from "../src/cli/projection.ts";
-import type { TerminalThemeVariant } from "../src/cli/theme.ts";
 import type { CliCompositionRecipe } from "./cli-compositions.ts";
 import {
   parseTerminalLabState,
@@ -15,6 +14,7 @@ import {
   withTerminalCustomGeometry,
   withTerminalViewportPreset,
 } from "./terminal-lab-state.ts";
+import type { CatalogueTerminalPresentation } from "./terminal-theme.ts";
 
 /** One pure projection from validated lab state into real output and geometry. */
 export interface TerminalLayoutProjection {
@@ -27,7 +27,7 @@ export interface TerminalLayoutProjection {
 export function projectTerminalLayoutRecipe(
   recipe: CliCompositionRecipe,
   state: TerminalLabState,
-  theme: TerminalThemeVariant,
+  presentation: CatalogueTerminalPresentation,
 ): TerminalLayoutProjection {
   const capabilities: TerminalCapabilities = {
     ansiControl: true,
@@ -36,7 +36,7 @@ export function projectTerminalLayoutRecipe(
     hyperlinks: state.hyperlinks,
     unicode: state.unicode,
   };
-  const output = recipe.render(capabilities, theme, state.rows);
+  const output = recipe.render(capabilities, presentation, state.rows);
   const profile = terminalViewportPreset(state.presetId);
   const title = `${recipe.title} · ${state.custom ? "Custom" : profile.label}`;
   return {
@@ -47,7 +47,7 @@ export function projectTerminalLayoutRecipe(
       rows: state.rows,
       title,
       showGrid: state.showGrid,
-      theme,
+      ...presentation,
     }),
   };
 }
@@ -67,9 +67,9 @@ function validCustomGeometry(
 
 /** Focused capability lab for one complete CLI recipe. */
 export function TerminalLayoutLab(
-  { recipe, theme, initialUrl }: {
+  { recipe, presentation, initialUrl }: {
     readonly recipe: CliCompositionRecipe;
-    readonly theme: TerminalThemeVariant;
+    readonly presentation: CatalogueTerminalPresentation;
     readonly initialUrl: URL;
   },
 ) {
@@ -84,8 +84,8 @@ export function TerminalLayoutLab(
   const [state, setState] = useState<TerminalLabState>(initial.state);
   const [notices, setNotices] = useState(initial.notices);
   const projection = useMemo(
-    () => projectTerminalLayoutRecipe(recipe, state, theme),
-    [recipe, state, theme],
+    () => projectTerminalLayoutRecipe(recipe, state, presentation),
+    [presentation, recipe, state],
   );
   const shareUrl = useMemo(
     () => terminalLabStateUrl(initialUrl, state, recipe.capabilityControls),
@@ -110,6 +110,12 @@ export function TerminalLayoutLab(
     <article
       className="discern-catalogue-terminal-lab"
       data-discern-cli-composition={recipe.id}
+      data-discern-terminal-ground={presentation.theme}
+      data-discern-terminal-appearance={presentation.appearance.name}
+      data-discern-terminal-accent-hue={presentation.appearance.name ===
+          "accent"
+        ? presentation.appearance.hue
+        : undefined}
     >
       <OverflowCue
         axis="both"

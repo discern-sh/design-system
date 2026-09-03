@@ -2,10 +2,10 @@ import { styleText } from "../../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../../src/cli/capabilities.ts";
 import { projectTerminalInspectorHtml } from "../../../src/cli/projection.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
 } from "../../../src/cli/theme.ts";
+import { type Appearance, fieldAppearance } from "../../../src/tokens/field.ts";
 
 const capabilities: TerminalCapabilities = {
   ansiControl: true,
@@ -27,15 +27,17 @@ const paletteRoles = [
 ] as const;
 
 export interface FieldPoleTerminalProjection {
-  readonly theme: TerminalThemeVariant;
+  readonly theme: "light" | "dark";
   readonly output: string;
   readonly inspectorHtml: string;
 }
 
-/** Both CLI palettes projected from the field's existing terminal pole themes. */
-export function fieldPoleTerminalProjections(): readonly FieldPoleTerminalProjection[] {
+/** Project the selected appearance through both honest terminal ground poles. */
+export function fieldPoleTerminalProjections(
+  appearance: Appearance = fieldAppearance,
+): readonly FieldPoleTerminalProjection[] {
   return (["light", "dark"] as const).map((variant) => {
-    const theme = terminalThemes[variant];
+    const theme = resolveTerminalTheme({ theme: variant, appearance });
     const output = paletteRoles.map((name) => {
       const swatch = styleText(
         "    ",
@@ -52,6 +54,7 @@ export function fieldPoleTerminalProjections(): readonly FieldPoleTerminalProjec
         rows: paletteRoles.length,
         title: `${variant === "light" ? "Light" : "Dark"} field pole`,
         theme: variant,
+        appearance,
       }),
     };
   });

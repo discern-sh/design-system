@@ -1,10 +1,10 @@
-import type { TerminalThemeVariant } from "../../../src/cli/theme.ts";
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { Select } from "../../../src/components/forms/select/select.tsx";
 import { OverflowCue } from "../../../src/components/layout/overflow-cue/overflow-cue.tsx";
 import { CliComponentPreview, CliExamplePreview } from "../../cli-preview.tsx";
 import type { RegistryEntry } from "../../generated/registry.ts";
+import type { CatalogueTerminalPresentation } from "../../terminal-theme.ts";
 import { catalogueDecisionCopyProps } from "../../metadata-copy.ts";
 import { CopyableCode, stateFragmentId } from "../shared.tsx";
 import type { CatalogueSurface } from "../shared.tsx";
@@ -322,12 +322,12 @@ function WebExample(
 
 /** One named specimen by default; the ordered complete gallery only on request. */
 export function ComponentSpecimen(
-  { entry, surface, exampleId, view, terminalTheme, headingLevel = 5 }: {
+  { entry, surface, exampleId, view, terminalPresentation, headingLevel = 5 }: {
     readonly entry: RegistryEntry;
     readonly surface: CatalogueSurface;
     readonly exampleId: string;
     readonly view: "single" | "all";
-    readonly terminalTheme: TerminalThemeVariant;
+    readonly terminalPresentation: CatalogueTerminalPresentation;
     readonly headingLevel?: ExampleHeadingLevel;
   },
 ) {
@@ -378,7 +378,7 @@ export function ComponentSpecimen(
             <CliExamplePreview
               entry={entry}
               exampleId={id}
-              theme={terminalTheme}
+              presentation={terminalPresentation}
               headingLevel={headingLevel === 4 ? 4 : 5}
               key={id}
             />
@@ -555,10 +555,16 @@ export function ComponentEvidence(
 
 /** Exhaustive conformance panel retained separately from ordinary human pages. */
 export function ComponentPreview(
-  { entry, surface, terminalTheme, headingLevel = 4, onSurfaceChange }: {
+  {
+    entry,
+    surface,
+    terminalPresentation,
+    headingLevel = 4,
+    onSurfaceChange,
+  }: {
     readonly entry: RegistryEntry;
     readonly surface: CatalogueSurface;
-    readonly terminalTheme: TerminalThemeVariant;
+    readonly terminalPresentation: CatalogueTerminalPresentation;
     readonly headingLevel?: 1 | 3 | 4;
     readonly onSurfaceChange?: (surface: CatalogueSurface) => void;
   },
@@ -591,14 +597,19 @@ export function ComponentPreview(
         </div>
       </header>
       {resolvedSurface === "cli"
-        ? <CliComponentPreview entry={entry} theme={terminalTheme} />
+        ? (
+          <CliComponentPreview
+            entry={entry}
+            presentation={terminalPresentation}
+          />
+        )
         : (
           <ComponentSpecimen
             entry={entry}
             surface="web"
             exampleId={entry.canonicalExamples[0]?.id ?? "default"}
             view="all"
-            terminalTheme={terminalTheme}
+            terminalPresentation={terminalPresentation}
           />
         )}
       <ComponentEvidence entry={entry} />

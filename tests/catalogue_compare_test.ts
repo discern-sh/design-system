@@ -13,6 +13,7 @@ import {
   ComparisonItem,
   resolveCompareScope,
 } from "../catalogue/pages/compare/page.tsx";
+import { defaultCatalogueTerminalPresentation } from "../catalogue/terminal-theme.ts";
 
 Deno.test("Compare requires a deliberate scope before selecting specimens", () => {
   assertEquals(resolveCompareScope(new URLSearchParams(), registry), undefined);
@@ -84,7 +85,7 @@ Deno.test("ordinary Compare items lead with one specimen and omit detail evidenc
       entry: button,
       surface: "web",
       exampleId: example.id,
-      terminalTheme: "dark",
+      terminalPresentation: defaultCatalogueTerminalPresentation,
       overridden: false,
       onSurfaceChange: () => undefined,
       onExampleChange: () => undefined,

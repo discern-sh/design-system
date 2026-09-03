@@ -1,5 +1,6 @@
 import { assert, assertEquals } from "@std/assert";
 import { cliCompositionRecipes } from "../../catalogue/cli-compositions.ts";
+import { defaultCatalogueTerminalPresentation } from "../../catalogue/terminal-theme.ts";
 import { inspectTerminalLayout } from "../../src/cli/projection.ts";
 import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
 
@@ -36,9 +37,17 @@ Deno.test("complete CLI compositions stay deterministic and width-safe", () => {
         columns: viewport.columns,
         colorDepth: "truecolor",
       });
-      const output = recipe.render(capabilities, "dark", viewport.rows);
+      const output = recipe.render(
+        capabilities,
+        defaultCatalogueTerminalPresentation,
+        viewport.rows,
+      );
       assertEquals(
-        recipe.render(capabilities, "dark", viewport.rows),
+        recipe.render(
+          capabilities,
+          defaultCatalogueTerminalPresentation,
+          viewport.rows,
+        ),
         output,
         `${recipe.id} changed across identical renders`,
       );

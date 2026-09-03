@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
-import type { TerminalThemeVariant } from "../src/cli/theme.ts";
 import { catalogueCliCapabilities, CliOutputPreview } from "./cli-preview.tsx";
 import type {
   TerminalFoundationAnimation,
   TerminalFoundationSheet,
   TerminalFoundationSpecimen,
 } from "./terminal-foundations.ts";
+import type { CatalogueTerminalPresentation } from "./terminal-theme.ts";
 
 function TerminalFoundationFrame(
-  { value, label, theme }: {
+  { value, label, presentation }: {
     readonly value: string;
     readonly label: string;
-    readonly theme: TerminalThemeVariant;
+    readonly presentation: CatalogueTerminalPresentation;
   },
 ) {
   return (
@@ -21,7 +21,11 @@ function TerminalFoundationFrame(
       aria-label={label}
       tabIndex={0}
     >
-      <CliOutputPreview value={value} label={`${label} output`} theme={theme} />
+      <CliOutputPreview
+        value={value}
+        label={`${label} output`}
+        presentation={presentation}
+      />
     </div>
   );
 }
@@ -32,11 +36,11 @@ function prefersReducedMotion(): boolean {
 }
 
 function AnimatedTerminalSpecimen(
-  { animation, sheetTitle, specimenTitle, theme }: {
+  { animation, sheetTitle, specimenTitle, presentation }: {
     readonly animation: TerminalFoundationAnimation;
     readonly sheetTitle: string;
     readonly specimenTitle: string;
-    readonly theme: TerminalThemeVariant;
+    readonly presentation: CatalogueTerminalPresentation;
   },
 ) {
   const [running, setRunning] = useState(() => !prefersReducedMotion());
@@ -83,7 +87,7 @@ function AnimatedTerminalSpecimen(
         <TerminalFoundationFrame
           value={frame}
           label={`${sheetTitle}: ${specimenTitle} live preview`}
-          theme={theme}
+          presentation={presentation}
         />
       </div>
     </div>
@@ -103,12 +107,12 @@ function groupedSpecimens(specimens: readonly TerminalFoundationSpecimen[]) {
 
 /** Render every specimen declared by one terminal foundation registry entry. */
 export function TerminalFoundationPreview(
-  { sheet, theme }: {
+  { sheet, presentation }: {
     readonly sheet: TerminalFoundationSheet;
-    readonly theme: TerminalThemeVariant;
+    readonly presentation: CatalogueTerminalPresentation;
   },
 ) {
-  const specimens = sheet.specimens(catalogueCliCapabilities, { theme });
+  const specimens = sheet.specimens(catalogueCliCapabilities, presentation);
   return (
     <div
       className="discern-catalogue-terminal-foundation"
@@ -146,7 +150,7 @@ export function TerminalFoundationPreview(
                     <TerminalFoundationFrame
                       value={specimen.output}
                       label={`${sheet.title}: ${specimen.title}`}
-                      theme={theme}
+                      presentation={presentation}
                     />
                   )
                   : (
@@ -155,7 +159,7 @@ export function TerminalFoundationPreview(
                         animation={specimen.animation}
                         sheetTitle={sheet.title}
                         specimenTitle={specimen.title}
-                        theme={theme}
+                        presentation={presentation}
                       />
                       <div className="discern-catalogue-terminal-foundation__static">
                         <span className="discern-catalogue-terminal-foundation__label">
@@ -164,7 +168,7 @@ export function TerminalFoundationPreview(
                         <TerminalFoundationFrame
                           value={specimen.output}
                           label={`${sheet.title}: ${specimen.title} complete frame set`}
-                          theme={theme}
+                          presentation={presentation}
                         />
                       </div>
                     </div>

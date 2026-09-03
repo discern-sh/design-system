@@ -52,7 +52,7 @@ function App() {
       <ConformancePage
         components={conformanceComponents}
         includeJourneys={selectedComponent === null}
-        terminalTheme={appearance.terminalTheme}
+        terminalPresentation={appearance.terminalPresentation}
         theme={appearance.theme}
       />
     );
@@ -80,7 +80,7 @@ function App() {
           <ComponentDetailPage
             entry={entry}
             surface={componentSurfaces[entry.meta.slug] ?? defaultSurface}
-            terminalTheme={appearance.terminalTheme}
+            terminalPresentation={appearance.terminalPresentation}
             onSurfaceChange={(surface) =>
               changeComponentSurface(entry.meta.slug, surface)}
           />
@@ -89,7 +89,7 @@ function App() {
       case "foundations":
         return (
           <FoundationsPage
-            terminalTheme={appearance.terminalTheme}
+            terminalPresentation={appearance.terminalPresentation}
             field={appearance.field}
             fieldScheme={appearance.fieldScheme}
             appearance={appearance.appearance}
@@ -104,7 +104,7 @@ function App() {
           <TerminalPage
             route={route}
             currentUrl={currentUrl}
-            terminalTheme={appearance.terminalTheme}
+            terminalPresentation={appearance.terminalPresentation}
           />
         );
       case "compare":
@@ -113,7 +113,7 @@ function App() {
             sortedComponents={sortedComponents}
             defaultSurface={defaultSurface}
             componentSurfaces={componentSurfaces}
-            terminalTheme={appearance.terminalTheme}
+            terminalPresentation={appearance.terminalPresentation}
             onSurfaceChange={changeComponentSurface}
           />
         );
@@ -128,7 +128,7 @@ function App() {
       sortedComponents={sortedComponents}
       appearance={{
         theme: appearance.theme,
-        resolvedTheme: appearance.terminalTheme,
+        resolvedTheme: appearance.terminalPresentation.theme,
         appearance: appearance.appearance,
         accentHue: appearance.accentHue,
         field: appearance.field,

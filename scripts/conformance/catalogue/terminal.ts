@@ -9,6 +9,7 @@ import {
   terminalViewportPresets,
 } from "../../../catalogue/terminal-lab-state.ts";
 import { projectTerminalLayoutRecipe } from "../../../catalogue/terminal-layout-inspector.tsx";
+import { resolveCatalogueTerminalPresentation } from "../../../catalogue/terminal-theme.ts";
 import { inspectTerminalLayout } from "../../../src/cli/projection.ts";
 import { withViewport } from "../../viewport.ts";
 import {
@@ -24,6 +25,9 @@ import {
   selectCatalogueTheme,
 } from "./support.ts";
 import type { CatalogueTheme } from "./support.ts";
+
+const fieldPresentation = (theme: CatalogueTheme) =>
+  resolveCatalogueTerminalPresentation(theme, "field", 255);
 
 export interface TerminalCatalogueEvidence {
   readonly layouts: number;
@@ -170,7 +174,7 @@ export async function verifyTerminalCatalogue(
         const expected = projectTerminalLayoutRecipe(
           recipe,
           parsed.state,
-          "light",
+          fieldPresentation("light"),
         );
         const expectedInspection = inspectTerminalLayout(expected.output, {
           columns: preset.columns,
@@ -259,7 +263,7 @@ export async function verifyTerminalCatalogue(
         customUrl.searchParams,
         activeRecipe.capabilityControls,
       ).state,
-      "light",
+      fieldPresentation("light"),
     );
     invariant(
       rawCopy === expectedCustom.output,

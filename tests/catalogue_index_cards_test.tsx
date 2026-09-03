@@ -28,13 +28,21 @@ import {
 } from "../catalogue/pages/overview/page.tsx";
 import { CatalogueIndexCard } from "../catalogue/pages/shared.tsx";
 import { TerminalIndexPage } from "../catalogue/pages/terminal/page.tsx";
+import { resolveCatalogueTerminalPresentation } from "../catalogue/terminal-theme.ts";
 import {
   catalogueRoutePaths,
   catalogueTerminalLayoutPath,
 } from "../catalogue/routes.ts";
+
 import { compositionRecipePath } from "../catalogue/routes/compositions.ts";
 import { foundationsPaths } from "../catalogue/routes/foundations.ts";
 import { terminalFoundationSheets } from "../catalogue/terminal-foundations.ts";
+
+const fieldLight = resolveCatalogueTerminalPresentation(
+  "light",
+  "field",
+  255,
+);
 
 function attributeCount(markup: string, attribute: string): number {
   return (markup.match(new RegExp(`${attribute}=`, "g")) ?? []).length;
@@ -147,13 +155,13 @@ Deno.test("every source-backed Catalogue index population uses the shared card a
   );
 
   const foundations = renderToStaticMarkup(createElement(FoundationsPage, {
-    terminalTheme: "light",
+    terminalPresentation: fieldLight,
     url: new URL(foundationsPaths.index, "https://catalogue.example"),
   }));
   assertSharedCards(foundations, 3, "visual");
   const terminalFoundations = renderToStaticMarkup(
     createElement(FoundationsPage, {
-      terminalTheme: "light",
+      terminalPresentation: fieldLight,
       url: new URL(foundationsPaths.terminal, "https://catalogue.example"),
     }),
   );

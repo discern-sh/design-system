@@ -26,6 +26,14 @@ import { terminalSearchRecords } from "../catalogue/routes/terminal.ts";
 import { searchRecords } from "../catalogue/search/mod.ts";
 import { projectTerminalLayoutRecipe } from "../catalogue/terminal-layout-inspector.tsx";
 import { parseTerminalLabState } from "../catalogue/terminal-lab-state.ts";
+import { resolveCatalogueTerminalPresentation } from "../catalogue/terminal-theme.ts";
+
+const fieldLight = resolveCatalogueTerminalPresentation(
+  "light",
+  "field",
+  255,
+);
+const fieldDark = resolveCatalogueTerminalPresentation("dark", "field", 255);
 
 const futureRecipe: CliCompositionRecipe = {
   id: "future-signal-lab",
@@ -37,8 +45,8 @@ const futureRecipe: CliCompositionRecipe = {
     'import { renderSection } from "@discern-sh/design-system/cli";',
     'const output = renderSection({ title: "Signal" }, capabilities);',
   ].join("\n"),
-  render: (capabilities, theme, rows) =>
-    `${theme}:${capabilities.columns}:${rows}:${
+  render: (capabilities, presentation = fieldDark, rows) =>
+    `${presentation.theme}:${capabilities.columns}:${rows}:${
       capabilities.unicode ? "✓" : "ok"
     }`,
 };
@@ -96,7 +104,7 @@ Deno.test("Terminal index remains light and detail renders one focused URL-backe
   const detail = renderToStaticMarkup(createElement(TerminalDetailPage, {
     recipe,
     recipes: cliCompositionRecipes,
-    terminalTheme: "dark",
+    terminalPresentation: fieldDark,
     currentUrl,
   }));
 
@@ -125,14 +133,14 @@ Deno.test("validated capabilities feed the real renderer and inspector authoriti
     ),
     recipe.capabilityControls,
   );
-  const projection = projectTerminalLayoutRecipe(recipe, state, "light");
+  const projection = projectTerminalLayoutRecipe(recipe, state, fieldLight);
 
   assertEquals(projection.capabilities.columns, 91);
   assertEquals(projection.capabilities.unicode, false);
   assertEquals(projection.capabilities.colorDepth, "ansi256");
   assertEquals(
     projection.output,
-    recipe.render(projection.capabilities, "light", 37),
+    recipe.render(projection.capabilities, fieldLight, 37),
   );
   assertNotEquals(projection.output, recipe.source);
   assertStringIncludes(
@@ -154,7 +162,7 @@ Deno.test("guided choice independently demonstrates the contextual menu contract
     recipe.capabilityControls,
   );
   const output = stripAnsi(
-    projectTerminalLayoutRecipe(recipe, state, "dark").output,
+    projectTerminalLayoutRecipe(recipe, state, fieldDark).output,
   );
 
   assertStringIncludes(recipe.source, 'presentation: "menu"');
@@ -177,8 +185,8 @@ Deno.test("theme changes re-project the same recipe and inspector consistently",
     new URLSearchParams("preset=standard"),
     recipe.capabilityControls,
   );
-  const light = projectTerminalLayoutRecipe(recipe, state, "light");
-  const dark = projectTerminalLayoutRecipe(recipe, state, "dark");
+  const light = projectTerminalLayoutRecipe(recipe, state, fieldLight);
+  const dark = projectTerminalLayoutRecipe(recipe, state, fieldDark);
 
   assertNotEquals(light.output, dark.output);
   assertNotEquals(light.inspectorHtml, dark.inspectorHtml);
@@ -231,7 +239,11 @@ Deno.test("a future recipe auto-enrols across routes, pages, search, order, and 
     new URLSearchParams("preset=compact&unicode=1&color=truecolor"),
     futureRecipe.capabilityControls,
   );
-  const projection = projectTerminalLayoutRecipe(futureRecipe, state, "dark");
+  const projection = projectTerminalLayoutRecipe(
+    futureRecipe,
+    state,
+    fieldDark,
+  );
   assertEquals(projection.output, "dark:40:24:✓");
   assertStringIncludes(projection.inspectorHtml, "Future signal lab");
 });

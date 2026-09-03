@@ -1,8 +1,8 @@
-import type { TerminalThemeVariant } from "../../../src/cli/theme.ts";
 import type { CompositionRecipe } from "../../compositions.tsx";
 import { compositionRecipes } from "../../compositions.tsx";
 import { packageVersion } from "../../generated/registry.ts";
 import type { RegistryEntry } from "../../generated/registry.ts";
+import type { CatalogueTerminalPresentation } from "../../terminal-theme.ts";
 import { ComponentPreview } from "../components/component-preview.tsx";
 
 function JourneyPreview({ recipe }: { readonly recipe: CompositionRecipe }) {
@@ -31,12 +31,12 @@ export function ConformancePage(
   {
     components,
     includeJourneys,
-    terminalTheme,
+    terminalPresentation,
     theme,
   }: {
     readonly components: readonly RegistryEntry[];
     readonly includeJourneys: boolean;
-    readonly terminalTheme: TerminalThemeVariant;
+    readonly terminalPresentation: CatalogueTerminalPresentation;
     readonly theme: "system" | "light" | "dark";
   },
 ) {
@@ -62,7 +62,7 @@ export function ConformancePage(
         <ComponentPreview
           entry={entry}
           surface="web"
-          terminalTheme={terminalTheme}
+          terminalPresentation={terminalPresentation}
           key={entry.meta.slug}
         />
       ))}

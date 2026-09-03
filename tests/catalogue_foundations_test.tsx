@@ -20,9 +20,15 @@ import {
 } from "../catalogue/routes/foundations.ts";
 import type { TerminalFoundationSheet } from "../catalogue/terminal-foundations.ts";
 import { terminalFoundationSheets } from "../catalogue/terminal-foundations.ts";
+import { resolveCatalogueTerminalPresentation } from "../catalogue/terminal-theme.ts";
 import { publicTokens } from "../src/token-inventory.ts";
 
 const origin = "https://catalogue.example";
+const fieldLight = resolveCatalogueTerminalPresentation(
+  "light",
+  "field",
+  255,
+);
 
 function renderFoundations(
   pathname: string,
@@ -33,7 +39,7 @@ function renderFoundations(
 ): string {
   return renderToStaticMarkup(
     createElement(FoundationsPage, {
-      terminalTheme: "light",
+      terminalPresentation: fieldLight,
       url: new URL(`${pathname}${options.search ?? ""}`, origin),
       ...(options.sheets === undefined ? {} : { sheets: options.sheets }),
     }),

@@ -271,7 +271,7 @@ export function useBuilderPreviewPreferences(
       field: workspace.field,
     },
     previewResolvedTheme: previewScheme,
-    workspaceResolvedTheme: workspace.terminalTheme,
+    workspaceResolvedTheme: workspace.terminalPresentation.theme,
     workspaceStyle: workspace.style,
     measurement,
     resetViewRevision,

@@ -1,6 +1,9 @@
 import type { TerminalCapabilities } from "../src/cli/capabilities.ts";
-import type { TerminalThemeVariant } from "../src/cli/theme.ts";
 import type { TerminalLabCapability } from "./terminal-lab-state.ts";
+import {
+  type CatalogueTerminalPresentation,
+  defaultCatalogueTerminalPresentation,
+} from "./terminal-theme.ts";
 import {
   composeCliBlocks,
   createCliPresenter,
@@ -29,7 +32,7 @@ export interface CliCompositionRecipe {
   readonly capabilityControls: readonly TerminalLabCapability[];
   readonly render: (
     capabilities: TerminalCapabilities,
-    theme?: TerminalThemeVariant,
+    presentation?: CatalogueTerminalPresentation,
     rows?: number,
   ) => string;
   readonly source: string;
@@ -45,7 +48,7 @@ interface CliRecipeDefinition<Definition> {
   readonly render: (
     definition: Definition,
     capabilities: TerminalCapabilities,
-    theme: TerminalThemeVariant,
+    presentation: CatalogueTerminalPresentation,
     rows: number,
   ) => string;
   readonly source: (definition: Definition) => string;
@@ -60,8 +63,11 @@ function defineCliRecipe<Definition>(
     description: recipe.description,
     components: recipe.components,
     capabilityControls: recipe.capabilityControls,
-    render: (capabilities, theme = "dark", rows = 24) =>
-      recipe.render(recipe.definition, capabilities, theme, rows),
+    render: (
+      capabilities,
+      presentation = defaultCatalogueTerminalPresentation,
+      rows = 24,
+    ) => recipe.render(recipe.definition, capabilities, presentation, rows),
     source: recipe.source(recipe.definition),
   };
 }
@@ -130,8 +136,8 @@ const operationalStatusRecipe = defineCliRecipe({
   ],
   capabilityControls: ["unicode", "colorDepth"],
   definition: operationalStatus,
-  render: (definition, capabilities, theme) => {
-    const presenter = createCliPresenter(capabilities, { theme });
+  render: (definition, capabilities, presentation) => {
+    const presenter = createCliPresenter(capabilities, presentation);
     return composeCliBlocks([
       presenter.present(renderDocsHeaderCli, {
         brand: "Project status",
@@ -239,8 +245,8 @@ const failureReportRecipe = defineCliRecipe({
   ],
   capabilityControls: ["unicode", "colorDepth"],
   definition: failureReport,
-  render: (definition, capabilities, theme) => {
-    const presenter = createCliPresenter(capabilities, { theme });
+  render: (definition, capabilities, presentation) => {
+    const presenter = createCliPresenter(capabilities, presentation);
     return composeCliBlocks([
       presenter.present(renderDocsHeaderCli, {
         brand: "Validation report",
@@ -328,8 +334,8 @@ const commandReferenceRecipe = defineCliRecipe({
   ],
   capabilityControls: ["unicode", "colorDepth", "hyperlinks"],
   definition: commandReference,
-  render: (definition, capabilities, theme) => {
-    const presenter = createCliPresenter(capabilities, { theme });
+  render: (definition, capabilities, presentation) => {
+    const presenter = createCliPresenter(capabilities, presentation);
     return composeCliBlocks([
       presenter.present(renderDocsHeaderCli, {
         brand: "Command reference",
@@ -453,8 +459,8 @@ const guidedChoiceRecipe = defineCliRecipe({
   components: ["docs-header", "section", "select"],
   capabilityControls: ["unicode", "colorDepth"],
   definition: guidedChoice,
-  render: (definition, capabilities, theme) => {
-    const presenter = createCliPresenter(capabilities, { theme });
+  render: (definition, capabilities, presentation) => {
+    const presenter = createCliPresenter(capabilities, presentation);
     return composeCliBlocks([
       presenter.present(renderDocsHeaderCli, {
         brand: "Setup",
@@ -523,11 +529,15 @@ const markdownBrowserRecipe: CliCompositionRecipe = {
     "A keyboard-complete grouped reader with addressable links, caller-owned resolution, and optional terminal-cell pointer input.",
   components: ["markdown"],
   capabilityControls: ["unicode", "colorDepth", "hyperlinks"],
-  render: (capabilities, theme = "dark", rows = 24) =>
+  render: (
+    capabilities,
+    presentation = defaultCatalogueTerminalPresentation,
+    rows = 24,
+  ) =>
     renderMarkdownBrowserCatalogueFrame(
       capabilities,
       rows,
-      theme,
+      presentation,
       "split-reader",
     ),
   source: `import {
