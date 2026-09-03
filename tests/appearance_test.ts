@@ -2,6 +2,7 @@ import {
   assert,
   assertEquals,
   assertNotEquals,
+  assertStrictEquals,
   assertThrows,
 } from "@std/assert";
 import {
@@ -24,6 +25,13 @@ Deno.test("the package admits Field and the complete Accent hue circle", () => {
   assertEquals(proof.appearances, APPEARANCE_ADMISSION_HUES.length + 1);
   assertEquals(proof.points, APPEARANCE_ADMISSION_POINTS.length);
   assert(proof.checks > 190_000);
+});
+
+Deno.test("the package appearance admission is proved only once", () => {
+  const proof = appearanceAdmission();
+  const futureConsumer = appearanceAdmission;
+  assertStrictEquals(appearanceAdmission(), proof);
+  assertStrictEquals(futureConsumer(), proof);
 });
 
 Deno.test("Accent accepts the finite closed hue domain and normalises its seam", () => {

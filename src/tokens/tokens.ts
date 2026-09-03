@@ -396,7 +396,11 @@ export const allTokens: readonly (DesignToken | ThemeToken)[] = [
   ...themeTokens,
 ];
 
-/** Exhaustive package-level proof for Field, Accent, and fixed series roles. */
+let cachedAppearanceAdmission: AppearanceAdmissionProof | undefined;
+
+/** Lazily run and retain the exhaustive Field, Accent, and series proof. */
 export function appearanceAdmission(): AppearanceAdmissionProof {
-  return proveAppearanceAdmission(appearanceSeriesPairs);
+  return cachedAppearanceAdmission ??= proveAppearanceAdmission(
+    appearanceSeriesPairs,
+  );
 }
