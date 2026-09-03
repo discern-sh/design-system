@@ -505,7 +505,8 @@
   }
   .discern-catalogue-field__proof-summary dd {
     margin: 0;
-    font: 650 var(--discern-font-size-lg) var(--discern-font-mono);
+    font-size: var(--discern-font-size-lg);
+    font-weight: 650;
   }
   .discern-catalogue-field__pair {
     display: grid;

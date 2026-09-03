@@ -72,7 +72,7 @@ Deno.test("review URLs reproduce every judgment input with a stable canonical or
     appearance: "accent",
     accentHue: 300,
     field: {
-      darkness: 0,
+      darkness: 1,
       structure: 1,
       emphasis: 1,
       density: 1,
@@ -83,7 +83,7 @@ Deno.test("review URLs reproduce every judgment input with a stable canonical or
   });
   assertEquals(
     componentReviewHref(state),
-    "/catalogue/reviews/components/?group=Core&component=button&example=default&posture=pressed&category=interaction&width=narrow&theme=dark&appearance=accent&accent=300&field=0%2C1%2C1%2C1&motion=reduced&mode=reel&speed=slow",
+    "/catalogue/reviews/components/?group=Core&component=button&example=default&posture=pressed&category=interaction&width=narrow&theme=dark&appearance=accent&accent=300&field=1%2C1%2C1%2C1&motion=reduced&mode=reel&speed=slow",
   );
 });
 

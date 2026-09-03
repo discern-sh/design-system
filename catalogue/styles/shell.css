@@ -327,7 +327,7 @@
   .discern-catalogue-appearance__axes-summary {
     overflow: hidden;
     color: var(--discern-color-ink-faint);
-    font: var(--discern-font-size-xs) var(--discern-font-mono);
+    font-size: var(--discern-font-size-xs);
     text-align: end;
     text-overflow: ellipsis;
     white-space: nowrap;
