@@ -378,6 +378,37 @@ Deno.test("Builder preview Appearance accepts named and arbitrary numeric hues",
   assertEquals(builderPreviewAccent("not-a-preset"), 255);
 });
 
+Deno.test("Catalogue opts into Appearance scopes without bloating the base runtime", async () => {
+  await builderModules();
+  const [runtime, scopes, manifest, documents] = await Promise.all([
+    Deno.readTextFile(new URL("../dist/discern.css", import.meta.url)),
+    Deno.readTextFile(
+      new URL("../dist/appearance-scopes.css", import.meta.url),
+    ),
+    Deno.readTextFile(new URL("../dist/manifest.json", import.meta.url)),
+    Promise.all(
+      [
+        "../catalogue/index.html",
+        "../catalogue/builder/index.html",
+        "../catalogue/builder/preview.html",
+        "../catalogue/reviews/components/index.html",
+      ].map((path) => Deno.readTextFile(new URL(path, import.meta.url))),
+    ),
+  ]);
+  assert(!runtime.includes("data-discern-appearance"));
+  assertStringIncludes(scopes, 'data-discern-appearance="field"');
+  assertStringIncludes(scopes, 'data-discern-appearance="accent"');
+  assertEquals(
+    (JSON.parse(manifest) as {
+      selection: { appearanceScopes: boolean };
+    }).selection.appearanceScopes,
+    false,
+  );
+  for (const document of documents) {
+    assertStringIncludes(document, "dist/appearance-scopes.css");
+  }
+});
+
 Deno.test("preview styles preserve a real frame width and stable editor chrome", async () => {
   const css = await Deno.readTextFile(
     new URL("../catalogue/builder/styles/preview.css", import.meta.url),
