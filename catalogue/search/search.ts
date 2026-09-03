@@ -1,5 +1,6 @@
 /** UI-independent fields that may explain why a Catalogue search record matched. */
 export type SearchField =
+  | "literal"
   | "alias"
   | "title"
   | "slug"
@@ -26,8 +27,13 @@ export interface SearchRecord<Payload = unknown> {
   readonly title: string;
   readonly context: string;
   readonly slug?: string;
+  /** Exact display sequences matched byte-for-byte before textual search. */
+  readonly literals?: readonly string[];
+  /** Provider-owned names whose match reason must retain its authored label. */
+  readonly aliases?: readonly SearchFact[];
   readonly group?: string;
   readonly category?: string;
+  readonly categories?: readonly string[];
   readonly description?: string;
   readonly purposes?: readonly string[];
   readonly keywords?: readonly string[];
@@ -132,8 +138,14 @@ function candidates(record: SearchRecord): readonly Candidate[] {
     });
   };
   add("slug", "Slug", record.slug, 2);
+  for (const alias of record.aliases ?? []) {
+    add("alias", alias.label, alias.value, 2);
+  }
   add("group", "Group", record.group, 3);
   add("category", "Category", record.category, 3);
+  for (const category of record.categories ?? []) {
+    add("category", "Category", category, 3);
+  }
   add("description", "Description", record.description, 6);
   for (const purpose of record.purposes ?? []) {
     add("purpose", "Purpose", purpose, 4);
@@ -179,13 +191,30 @@ export function searchRecords<Payload>(
   query: string,
   options: Readonly<{ limit?: number }> = {},
 ): readonly SearchResult<Payload>[] {
+  const literalQuery = query.trim();
   const normalizedQuery = normalizeSearchText(query);
   const tokens = tokenizeSearchText(query);
-  if (tokens.length === 0) return [];
   const aliases = matchedSearchAliases(query);
 
   const results: SearchResult<Payload>[] = [];
   for (const record of records) {
+    const literal = literalQuery === ""
+      ? undefined
+      : record.literals?.find((candidate) => candidate === literalQuery);
+    if (literal !== undefined) {
+      results.push({
+        record,
+        score: Number.MAX_SAFE_INTEGER,
+        reasons: [{
+          field: "literal",
+          label: "Literal glyph",
+          value: literal,
+          token: literal,
+        }],
+      });
+      continue;
+    }
+    if (tokens.length === 0) continue;
     const available = candidates(record);
     const reasons: SearchMatchReason[] = [];
     const tiers: number[] = [];

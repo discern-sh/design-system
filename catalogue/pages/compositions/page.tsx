@@ -113,7 +113,7 @@ function CompositionsGallery(
   return (
     <div className="discern-catalogue-page" id="compositions">
       <CataloguePageHeader
-        index="04"
+        index="05"
         eyebrow="Compositions"
         title="Illustrative patterns for real interfaces."
         description="High-quality demonstrations of Components working together, curated to help you recognise and shape a complete experience."

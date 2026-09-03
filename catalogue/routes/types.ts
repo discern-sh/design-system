@@ -1,11 +1,13 @@
 import type { ComponentMeta } from "../../src/types/component-meta.ts";
 import type { DesignToken, ThemeToken } from "../../src/tokens/tokens.ts";
 import type { SearchRecord } from "../search/mod.ts";
+import type { GlyphAtlasData } from "../../src/glyphs/atlas.ts";
 
 /** Canonical human-facing Catalogue families. */
 export type CatalogueRouteFamilyId =
   | "overview"
   | "components"
+  | "glyphs"
   | "foundations"
   | "compositions"
   | "terminal"
@@ -17,6 +19,12 @@ export type CatalogueRoute =
   | { readonly family: "components"; readonly page: "index" }
   | {
     readonly family: "components";
+    readonly page: "detail";
+    readonly slug: string;
+  }
+  | { readonly family: "glyphs"; readonly page: "index" }
+  | {
+    readonly family: "glyphs";
     readonly page: "detail";
     readonly slug: string;
   }
@@ -56,6 +64,7 @@ export interface CatalogueRouteDescriptor {
 /** Source shapes consumed by route-family search projections. */
 export interface CatalogueSearchSources {
   readonly components: readonly { readonly meta: ComponentMeta }[];
+  readonly glyphs: GlyphAtlasData;
   readonly tokens: readonly (DesignToken | ThemeToken)[];
   readonly compositions: readonly {
     readonly id: string;

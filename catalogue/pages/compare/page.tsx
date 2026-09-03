@@ -257,7 +257,7 @@ export function ComparePage(
     return (
       <div className="discern-catalogue-page discern-catalogue-compare-landing">
         <CataloguePageHeader
-          index="06"
+          index="07"
           eyebrow="Compare"
           title="Build a deliberate comparison."
           description="Choose one focused collection or return to the Components directory."
@@ -292,7 +292,7 @@ export function ComparePage(
   return (
     <div className="discern-catalogue-page discern-catalogue-review">
       <CataloguePageHeader
-        index="06"
+        index="07"
         eyebrow="Compare"
         title={scope.title}
         description={`${scope.components.length} Component${

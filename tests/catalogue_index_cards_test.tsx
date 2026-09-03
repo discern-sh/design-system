@@ -22,6 +22,7 @@ import {
 import { componentDirectory } from "../catalogue/pages/components/collections.ts";
 import { CompositionsPage } from "../catalogue/pages/compositions/page.tsx";
 import { FoundationsPage } from "../catalogue/pages/foundations/page.tsx";
+import { GlyphIndexPage } from "../catalogue/pages/glyphs/index-page.tsx";
 import {
   overviewCatalogueDestinations,
   OverviewPage,
@@ -37,6 +38,7 @@ import {
 import { compositionRecipePath } from "../catalogue/routes/compositions.ts";
 import { foundationsPaths } from "../catalogue/routes/foundations.ts";
 import { terminalFoundationSheets } from "../catalogue/terminal-foundations.ts";
+import { glyphAtlasData } from "../src/glyphs/atlas.ts";
 
 const fieldLight = resolveCatalogueTerminalPresentation(
   "light",
@@ -159,6 +161,15 @@ Deno.test("every source-backed Catalogue index population uses the shared card a
     url: new URL(foundationsPaths.index, "https://catalogue.example"),
   }));
   assertSharedCards(foundations, 3, "visual");
+
+  const glyphs = renderToStaticMarkup(createElement(GlyphIndexPage, {
+    data: glyphAtlasData,
+    currentUrl: new URL(
+      catalogueRoutePaths.glyphs,
+      "https://catalogue.example",
+    ),
+  }));
+  assertSharedCards(glyphs, glyphAtlasData.canonical.length, "visual");
   const terminalFoundations = renderToStaticMarkup(
     createElement(FoundationsPage, {
       terminalPresentation: fieldLight,

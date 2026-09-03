@@ -2,6 +2,7 @@ import { Button } from "../../../src/components/core/button/button.tsx";
 import { Kicker } from "../../../src/components/display/kicker/kicker.tsx";
 import { publicTokens } from "../../../src/token-inventory.ts";
 import { componentGroups } from "../../../src/types/component-meta.ts";
+import { glyphAtlasData } from "../../../src/glyphs/atlas.ts";
 import { cliCompositionRecipes } from "../../cli-compositions.ts";
 import { compositionRecipes } from "../../compositions.tsx";
 import {
@@ -31,6 +32,13 @@ const overviewRouteDetails = {
       "Explore Tokens and the visual rules shared by browser and terminal surfaces.",
     count: `${publicTokens.length} Tokens`,
     action: "Explore Tokens",
+  },
+  glyphs: {
+    description:
+      "Search exact Unicode identities, then inspect contextual Discern guidance.",
+    count:
+      `${glyphAtlasData.canonical.length} Atlas records · ${glyphAtlasData.aliases.length} Discern aliases`,
+    action: "Browse Glyphs",
   },
   compositions: {
     description:
@@ -114,8 +122,8 @@ export function OverviewPage() {
           Find the part you <em>need</em>.
         </h1>
         <p>
-          Start with a Component, Token, illustrative pattern, terminal layout,
-          or focused comparison.
+          Start with a Component, Glyph, Token, illustrative pattern, terminal
+          layout, or focused comparison.
         </p>
         <div className="discern-catalogue-hero__actions">
           <Button
@@ -128,6 +136,7 @@ export function OverviewPage() {
         <div className="discern-catalogue-stats">
           <span>{publicTokens.length} tokens</span>
           <span>{registry.length} components</span>
+          <span>{glyphAtlasData.canonical.length} glyph identities</span>
           <span>{componentGroups.length} groups</span>
         </div>
       </section>
