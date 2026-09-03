@@ -76,8 +76,9 @@ Deno.test("live Appearance URL updates announce link-state changes", async () =>
   assertStringIncludes(source, "history.replaceState");
   assertStringIncludes(
     shell,
-    'data-discern-theme-storage-parameter="theme"',
+    "data-discern-theme-storage-key={catalogueAppearanceStorageKey}",
   );
+  assertStringIncludes(shell, 'data-discern-theme-storage-parameter="theme"');
 });
 
 Deno.test("Catalogue routes resolve every explorer surface and Component detail", () => {

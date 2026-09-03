@@ -6,6 +6,7 @@ import type {
   BuilderTextChild,
 } from "../../../catalogue/builder/model.ts";
 import { BUILDER_STORAGE_KEYS } from "../../../catalogue/builder/persistence.ts";
+import { catalogueAppearanceStorageKey } from "../../../catalogue/shell/appearance-state.ts";
 import {
   ACTION_TIMEOUT,
   BUILDER_READY,
@@ -353,8 +354,9 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
     BUILDER_STORAGE_KEYS.document,
   );
   const originalUrl = page.url();
-  const originalAppearanceStorage = await page.evaluate(() =>
-    localStorage.getItem("discern-catalogue-appearance")
+  const originalAppearanceStorage = await page.evaluate(
+    (key) => localStorage.getItem(key),
+    catalogueAppearanceStorageKey,
   );
   try {
     await page.evaluate(
@@ -781,45 +783,71 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
       .fill("1.6");
     await page.waitForFunction(() => {
       const parameters = new URL(location.href).searchParams;
-      return parameters.get("previewAppearance") === "accent" &&
+      const frame = document.querySelector<HTMLIFrameElement>(
+        "iframe[data-discern-builder-preview-frame]",
+      );
+      const frameDocument = frame?.contentDocument?.querySelector<HTMLElement>(
+        ".discern-builder-frame-document",
+      );
+      return frameDocument?.style.getPropertyValue("--discern-density") ===
+          "1.6" &&
+        parameters.get("previewAppearance") === "accent" &&
         parameters.get("previewAccent") === "300" &&
         parameters.get("previewField") === "1,1,1,1.6";
     });
     const appearanceUrl = new URL(page.url());
+    const appearanceBoundaryState = {
+      workspaceTheme: await page.locator(BUILDER_SHELL).getAttribute(
+        "data-discern-theme",
+      ),
+      workspaceAppearance: await page.locator(BUILDER_SHELL).getAttribute(
+        "data-discern-appearance",
+      ),
+      previewTheme: await preview.locator(".discern-builder-frame-document")
+        .getAttribute("data-discern-theme"),
+      previewAppearance: await preview.locator(
+        ".discern-builder-frame-document",
+      ).getAttribute("data-discern-appearance"),
+      previewHue: await preview.locator(".discern-builder-frame-document")
+        .evaluate((element) =>
+          element.style.getPropertyValue("--discern-accent-hue")
+        ),
+      previewDensity: await preview.locator(".discern-builder-frame-document")
+        .evaluate((element) =>
+          element.style.getPropertyValue("--discern-density")
+        ),
+      workspaceDensity: await page.locator(BUILDER_SHELL).evaluate((element) =>
+        element.style.getPropertyValue("--discern-density")
+      ),
+      urlTheme: appearanceUrl.searchParams.get("theme"),
+      urlAppearance: appearanceUrl.searchParams.get("appearance"),
+      urlField: appearanceUrl.searchParams.get("field"),
+      previewUrlTheme: appearanceUrl.searchParams.get("previewTheme"),
+      editorColour: await page.locator(BUILDER_SHELL).evaluate((element) =>
+        getComputedStyle(element).getPropertyValue(
+          "--discern-builder-editor-selection",
+        )
+      ),
+      cardImage: await page.locator(".discern-builder-card img").first()
+        .getAttribute("src"),
+    };
     invariant(
-      await page.locator(BUILDER_SHELL).getAttribute("data-discern-theme") ===
-          "light" &&
-        await page.locator(BUILDER_SHELL).getAttribute(
-            "data-discern-appearance",
-          ) === "field" &&
-        await preview.locator(".discern-builder-frame-document").getAttribute(
-            "data-discern-theme",
-          ) === "dark" &&
-        await preview.locator(".discern-builder-frame-document").getAttribute(
-            "data-discern-appearance",
-          ) === "accent" &&
-        await preview.locator(".discern-builder-frame-document").evaluate(
-            (element) => element.style.getPropertyValue("--discern-accent-hue"),
-          ) === "300" &&
-        await preview.locator(".discern-builder-frame-document").evaluate(
-            (element) => element.style.getPropertyValue("--discern-density"),
-          ) === "1.6" &&
-        await page.locator(BUILDER_SHELL).evaluate((element) =>
-            element.style.getPropertyValue("--discern-density")
-          ) === "1" &&
-        appearanceUrl.searchParams.get("theme") === "light" &&
-        appearanceUrl.searchParams.get("appearance") === "field" &&
-        appearanceUrl.searchParams.get("field") === "0,1,1,1" &&
-        appearanceUrl.searchParams.get("previewTheme") === "dark" &&
-        await page.locator(BUILDER_SHELL).evaluate((element) =>
-            getComputedStyle(element).getPropertyValue(
-              "--discern-builder-editor-selection",
-            )
-          ) === editorColour &&
-        (await page.locator(".discern-builder-card img").first().getAttribute(
-            "src",
-          ))?.endsWith("--dark.png") === true,
-      "Workspace/Preview Appearance or stable editor chrome crossed boundaries",
+      appearanceBoundaryState.workspaceTheme === "light" &&
+        appearanceBoundaryState.workspaceAppearance === "field" &&
+        appearanceBoundaryState.previewTheme === "dark" &&
+        appearanceBoundaryState.previewAppearance === "accent" &&
+        appearanceBoundaryState.previewHue === "300" &&
+        appearanceBoundaryState.previewDensity === "1.6" &&
+        appearanceBoundaryState.workspaceDensity === "1" &&
+        appearanceBoundaryState.urlTheme === "light" &&
+        appearanceBoundaryState.urlAppearance === "field" &&
+        appearanceBoundaryState.urlField === "0,1,1,1" &&
+        appearanceBoundaryState.previewUrlTheme === "dark" &&
+        appearanceBoundaryState.editorColour === editorColour &&
+        appearanceBoundaryState.cardImage?.endsWith("--dark.png") === true,
+      `Workspace/Preview Appearance or stable editor chrome crossed boundaries: ${
+        JSON.stringify(appearanceBoundaryState)
+      }`,
     );
     await previewAppearanceDetails.locator("summary").click();
 
@@ -898,17 +926,17 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
     );
   } finally {
     await page.evaluate(
-      ({ key, source, appearance }) => {
+      ({ key, source, appearance, appearanceKey }) => {
         if (source === null) localStorage.removeItem(key);
         else localStorage.setItem(key, source);
-        const storageKey = "discern-catalogue-appearance";
-        if (appearance === null) localStorage.removeItem(storageKey);
-        else localStorage.setItem(storageKey, appearance);
+        if (appearance === null) localStorage.removeItem(appearanceKey);
+        else localStorage.setItem(appearanceKey, appearance);
       },
       {
         key: BUILDER_STORAGE_KEYS.document,
         source: originalSource,
         appearance: originalAppearanceStorage,
+        appearanceKey: catalogueAppearanceStorageKey,
       },
     );
     await page.goto(originalUrl, { waitUntil: "networkidle" });

@@ -29,6 +29,14 @@ export const defaultCatalogueAppearanceState: CatalogueAppearanceState = Object
     field: defaultFieldPoint,
   });
 
+export const catalogueAppearanceStorageKey = "discern-catalogue-appearance";
+
+export const legacyCatalogueAppearanceStorageKeys = Object.freeze({
+  theme: "discern-catalogue-theme",
+  accent: "discern-catalogue-accent-hue",
+  field: "discern-catalogue-field",
+});
+
 export interface CatalogueAppearanceParameterNames {
   readonly theme: string;
   readonly appearance: string;

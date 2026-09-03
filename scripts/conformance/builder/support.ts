@@ -3,6 +3,7 @@ import {
   BUILDER_DISCOVERY_STORAGE_KEY,
 } from "../../../catalogue/builder/discovery/preferences.ts";
 import { BUILDER_STORAGE_KEYS } from "../../../catalogue/builder/persistence.ts";
+import { catalogueAppearanceStorageKey } from "../../../catalogue/shell/appearance-state.ts";
 import {
   addPageFailureListeners,
   FOCUSABLE_SELECTOR,
@@ -32,6 +33,7 @@ export const THEMES: readonly BuilderTheme[] = ["light", "dark"];
 export const STORAGE_KEYS = [
   ...Object.values(BUILDER_STORAGE_KEYS),
   BUILDER_DISCOVERY_STORAGE_KEY,
+  catalogueAppearanceStorageKey,
 ] as const;
 
 export interface AdaptiveCase {

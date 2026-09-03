@@ -19,7 +19,9 @@ import {
 } from "./appearance-options.ts";
 import {
   type CatalogueAppearanceState,
+  catalogueAppearanceStorageKey,
   defaultCatalogueAppearanceState,
+  legacyCatalogueAppearanceStorageKeys,
   parseCatalogueAppearanceParameters,
   serializeCatalogueAppearanceState,
   setCatalogueAccentHue,
@@ -37,20 +39,21 @@ import {
 } from "./field-state.ts";
 import { announceCatalogueLocationChange } from "./location.ts";
 
-const appearanceStorageKey = "discern-catalogue-appearance";
-const legacyThemeStorageKey = "discern-catalogue-theme";
-const legacyAccentStorageKey = "discern-catalogue-accent-hue";
-const legacyFieldStorageKey = "discern-catalogue-field";
-
 function storedCatalogueAppearance(): CatalogueAppearanceState | undefined {
-  const stored = localStorage.getItem(appearanceStorageKey);
+  const stored = localStorage.getItem(catalogueAppearanceStorageKey);
   if (stored !== null) {
     return parseCatalogueAppearanceParameters(new URLSearchParams(stored));
   }
   const legacy = new URLSearchParams();
-  const theme = localStorage.getItem(legacyThemeStorageKey);
-  const accent = localStorage.getItem(legacyAccentStorageKey);
-  const field = localStorage.getItem(legacyFieldStorageKey);
+  const theme = localStorage.getItem(
+    legacyCatalogueAppearanceStorageKeys.theme,
+  );
+  const accent = localStorage.getItem(
+    legacyCatalogueAppearanceStorageKeys.accent,
+  );
+  const field = localStorage.getItem(
+    legacyCatalogueAppearanceStorageKeys.field,
+  );
   if (theme !== null) legacy.set("theme", theme);
   if (accent !== null) legacy.set("accent", accent);
   if (field !== null) legacy.set("field", field);
@@ -59,12 +62,12 @@ function storedCatalogueAppearance(): CatalogueAppearanceState | undefined {
 
 function persistCatalogueAppearance(state: CatalogueAppearanceState): void {
   localStorage.setItem(
-    appearanceStorageKey,
+    catalogueAppearanceStorageKey,
     serializeCatalogueAppearanceState(state),
   );
-  localStorage.removeItem(legacyThemeStorageKey);
-  localStorage.removeItem(legacyAccentStorageKey);
-  localStorage.removeItem(legacyFieldStorageKey);
+  for (const key of Object.values(legacyCatalogueAppearanceStorageKeys)) {
+    localStorage.removeItem(key);
+  }
   const current = new URL(globalThis.location.href);
   writeCatalogueAppearanceParameters(current.searchParams, state);
   globalThis.history.replaceState(globalThis.history.state, "", current);

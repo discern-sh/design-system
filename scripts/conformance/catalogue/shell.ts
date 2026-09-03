@@ -5,6 +5,10 @@ import {
   catalogueRoutePaths,
   foundationsPaths,
 } from "../../../catalogue/routes.ts";
+import {
+  catalogueAppearanceStorageKey,
+  legacyCatalogueAppearanceStorageKeys,
+} from "../../../catalogue/shell/appearance-state.ts";
 import { scanBrowserAccessibility } from "../../browser-conformance-support.ts";
 import { withViewport } from "../../viewport.ts";
 import {
@@ -427,12 +431,13 @@ async function appearanceRootState(page: Page) {
 
 async function verifyAppearance(page: Page, origin: string): Promise<number> {
   let checks = 0;
-  await page.evaluate(() => {
-    localStorage.removeItem("discern-catalogue-appearance");
-    localStorage.removeItem("discern-catalogue-accent-hue");
-    localStorage.removeItem("discern-catalogue-field");
-    localStorage.removeItem("discern-catalogue-theme");
-  });
+  await page.evaluate(
+    (keys) => keys.forEach((key) => localStorage.removeItem(key)),
+    [
+      catalogueAppearanceStorageKey,
+      ...Object.values(legacyCatalogueAppearanceStorageKeys),
+    ],
+  );
 
   for (
     const path of [
@@ -636,8 +641,9 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
       reloaded.density === "1.3",
     `Canonical Appearance did not survive reload: ${JSON.stringify(reloaded)}`,
   );
-  const stored = await page.evaluate(() =>
-    localStorage.getItem("discern-catalogue-appearance")
+  const stored = await page.evaluate(
+    (key) => localStorage.getItem(key),
+    catalogueAppearanceStorageKey,
   );
   invariant(
     stored?.includes("appearance=accent") === true &&
@@ -677,9 +683,14 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
     "Legacy named Accent URL did not migrate",
   );
   const migratedAccent = new URL(page.url());
+  const systemField = await page.evaluate(() =>
+    matchMedia("(prefers-color-scheme: dark)").matches ? "1,1,1,1" : "0,1,1,1"
+  );
   invariant(
-    migratedAccent.searchParams.get("accent") === "300" &&
-      migratedAccent.searchParams.get("field") === "0,1,1,1",
+    migratedAccent.searchParams.get("theme") === "system" &&
+      migratedAccent.searchParams.get("appearance") === "accent" &&
+      migratedAccent.searchParams.get("accent") === "300" &&
+      migratedAccent.searchParams.get("field") === systemField,
     `Legacy named Accent migration is incomplete: ${migratedAccent}`,
   );
   const legacyField = new URL(foundationsPaths.field, origin);
