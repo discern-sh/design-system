@@ -313,12 +313,11 @@ async function verifySearch(
   );
   const starts = await dialog.locator(".discern-search-palette__result-title")
     .allTextContents();
+  const expectedStarts = catalogueNavigation.slice(1, 4).map(({ label }) =>
+    label
+  );
   invariant(
-    JSON.stringify(starts) === JSON.stringify([
-      "Components",
-      "Foundations",
-      "Compositions",
-    ]),
+    JSON.stringify(starts) === JSON.stringify(expectedStarts),
     `Empty search starts differ from route authority: ${starts.join(", ")}`,
   );
 
@@ -343,6 +342,7 @@ async function verifySearch(
   invariant(
     await dialog.getByRole("link", { name: "View all Components" }).count() ===
         1 &&
+      await dialog.getByRole("link", { name: "Browse Glyphs" }).count() === 1 &&
       await dialog.getByRole("button", { name: "Clear search" }).count() === 1,
     "No-result posture lacks direct recovery actions",
   );
