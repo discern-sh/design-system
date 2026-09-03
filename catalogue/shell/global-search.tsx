@@ -5,6 +5,7 @@ import {
   SearchPaletteResult,
 } from "../../src/components/docs/search-palette/search-palette.tsx";
 import { publicTokens } from "../../src/token-inventory.ts";
+import { glyphAtlasData } from "../../src/glyphs/atlas.ts";
 import { cliCompositionRecipes } from "../cli-compositions.ts";
 import { compositionRecipes } from "../compositions.tsx";
 import { registry } from "../generated/registry.ts";
@@ -33,6 +34,7 @@ export function GlobalSearch(
   const records = useMemo(() =>
     catalogueSearchRecords({
       components: registry,
+      glyphs: glyphAtlasData,
       tokens: publicTokens,
       compositions: compositionRecipes,
       terminalLayouts: cliCompositionRecipes,
@@ -54,7 +56,7 @@ export function GlobalSearch(
       value={query}
       onValueChange={onQueryChange}
       label="Search the Catalogue"
-      placeholder="Find a Component, Token, Composition, or layout"
+      placeholder="Find a Component, Glyph, Token, Composition, or layout"
       icon={<span>⌕</span>}
       hint={
         <span>
@@ -84,6 +86,9 @@ export function GlobalSearch(
             <div>
               <a href={catalogueRoutePaths.components} onClick={close}>
                 View all Components
+              </a>
+              <a href={catalogueRoutePaths.glyphs} onClick={close}>
+                Browse Glyphs
               </a>
               <button type="button" onClick={() => onQueryChange("")}>
                 Clear search

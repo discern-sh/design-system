@@ -39,6 +39,10 @@ import {
 import type {
   FoundationsCatalogueEvidence,
 } from "./conformance/catalogue/foundations.ts";
+import {
+  type GlyphsCatalogueEvidence,
+  verifyGlyphsCatalogue,
+} from "./conformance/catalogue/glyphs.ts";
 import { verifyLandingPage } from "./conformance/catalogue/front-doors.ts";
 import { verifyCatalogueShell } from "./conformance/catalogue/shell.ts";
 import type { CatalogueShellEvidence } from "./conformance/catalogue/shell.ts";
@@ -87,6 +91,17 @@ const emptyFoundationsEvidence: FoundationsCatalogueEvidence = {
   animationChecks: 0,
   tokenChecks: 0,
   reflowChecks: 0,
+};
+const emptyGlyphsEvidence: GlyphsCatalogueEvidence = {
+  records: 0,
+  details: 0,
+  searchChecks: 0,
+  filterHistoryChecks: 0,
+  copyChecks: 0,
+  themeChecks: 0,
+  accessibilityScans: 0,
+  reflowChecks: 0,
+  forcedColorChecks: 0,
 };
 const emptyCompositionsEvidence: CompositionsCatalogueEvidence = {
   patterns: 0,
@@ -155,6 +170,7 @@ export async function runConformance(): Promise<void> {
 
     let components = emptyComponentEvidence;
     let foundations = emptyFoundationsEvidence;
+    let glyphs = emptyGlyphsEvidence;
     let compositions = emptyCompositionsEvidence;
     let terminal = emptyTerminalEvidence;
     let appearance = emptyCrossSurfaceAppearanceEvidence;
@@ -174,6 +190,9 @@ export async function runConformance(): Promise<void> {
       },
       foundations: async () => {
         foundations = await verifyFoundationsCatalogue(page, origin);
+      },
+      glyphs: async () => {
+        glyphs = await verifyGlyphsCatalogue(page, origin);
       },
       compositions: async () => {
         compositions = await verifyCompositionsCatalogue(page, origin);
@@ -287,6 +306,12 @@ export async function runConformance(): Promise<void> {
         `${foundations.specimens} specimens across ${foundations.sheets} terminal ` +
         `foundations with ${foundations.animationChecks} reduced-motion and playback ` +
         `checks plus ${foundations.reflowChecks} reflow checks. ` +
+        `Glyphs passed ${glyphs.searchChecks} shared search checks, ` +
+        `${glyphs.filterHistoryChecks} filter/history checks, ${glyphs.copyChecks} ` +
+        `copy checks, ${glyphs.themeChecks} theme checks, ${glyphs.accessibilityScans} ` +
+        `accessibility scans, ${glyphs.forcedColorChecks} forced-colour checks, ` +
+        `and ${glyphs.reflowChecks} reflow checks across ` +
+        `${glyphs.records} canonical records and ${glyphs.details} representative details. ` +
         `Compositions passed ${compositions.widthChecks} width checks and ` +
         `${compositions.themeChecks} theme checks across ${compositions.patterns} ` +
         `patterns, with ${compositions.accessibilityScans} accessibility scans, ` +

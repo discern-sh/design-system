@@ -369,7 +369,7 @@ function TokenExplorer(
         ← Foundations
       </a>
       <CataloguePageHeader
-        index="03"
+        index="04"
         eyebrow="Foundations"
         title="Tokens"
         description="Find a value by name or recognise it from its preview."
@@ -452,7 +452,7 @@ function FoundationsIndex(
       data-discern-foundations-page="index"
     >
       <CataloguePageHeader
-        index="03"
+        index="04"
         eyebrow="Foundations"
         title="Foundations"
         description="Choose the visual language or its terminal primitives."
@@ -536,7 +536,7 @@ function TerminalFoundationsIndex(
         ← Foundations
       </a>
       <CataloguePageHeader
-        index="03"
+        index="04"
         eyebrow="Foundations"
         title="Terminal foundations"
         description="Motifs and narration primitives; Terminal layouts are composed full frames."
@@ -598,7 +598,7 @@ function TerminalFoundationDetail(
         ← Foundations
       </a>
       <CataloguePageHeader
-        index="03"
+        index="04"
         eyebrow="Terminal foundations"
         title={sheet.title}
         description={sheet.description}
@@ -702,7 +702,7 @@ export function FoundationsPage(
         data-discern-foundations-page="missing"
       >
         <CataloguePageHeader
-          index="03"
+          index="04"
           eyebrow="Foundations"
           title="Foundation not found"
           description="Return to the registered terminal foundations."

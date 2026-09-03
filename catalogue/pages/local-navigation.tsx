@@ -2,6 +2,7 @@ import { compareNavigationSections } from "./compare/navigation.tsx";
 import { componentsNavigationSections } from "./components/navigation.tsx";
 import { compositionNavigationSections } from "./compositions/navigation.tsx";
 import { foundationsNavigationSections } from "./foundations/navigation.tsx";
+import { glyphsNavigationSections } from "./glyphs/navigation.tsx";
 import type {
   CatalogueNavigationSections,
   LocalNavigationProps,
@@ -17,6 +18,8 @@ export function localNavigationSections(
       return componentsNavigationSections(props);
     case "foundations":
       return foundationsNavigationSections(props);
+    case "glyphs":
+      return glyphsNavigationSections(props);
     case "compositions":
       return compositionNavigationSections(props);
     case "terminal":

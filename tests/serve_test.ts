@@ -6,8 +6,10 @@ import server, {
 import {
   canonicalCatalogueShellPathname,
   catalogueComponentPath,
+  catalogueGlyphPath,
   catalogueNavigation,
 } from "../catalogue/routes.ts";
+import { glyphAtlasData } from "../src/glyphs/atlas.ts";
 import { componentExampleImageManifest } from "../catalogue/generated/example-images-manifest.ts";
 import { componentExampleImageThemes } from "../catalogue/example-images/contract.ts";
 
@@ -142,6 +144,7 @@ Deno.test("Catalogue explorer routes serve one canonical shell", async () => {
   const shellPaths = [
     ...catalogueNavigation.map(({ path }) => path),
     catalogueComponentPath("command-group"),
+    catalogueGlyphPath(glyphAtlasData.canonical[0]!),
   ];
   for (const pathname of shellPaths) {
     assertEquals(canonicalCatalogueShellPathname(pathname), pathname);

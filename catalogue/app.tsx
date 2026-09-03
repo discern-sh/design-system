@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { useInitialFragmentTarget } from "../src/components/use-initial-fragment-target.ts";
 import { componentGroups } from "../src/types/component-meta.ts";
+import { glyphAtlasData } from "../src/glyphs/atlas.ts";
 import { registry } from "./generated/registry.ts";
 import { ComparePage } from "./pages/compare/page.tsx";
 import { ComponentDetailPage } from "./pages/components/detail-page.tsx";
@@ -9,6 +10,7 @@ import { ComponentIndexPage } from "./pages/components/index-page.tsx";
 import { CompositionsPage } from "./pages/compositions/page.tsx";
 import { ConformancePage } from "./pages/conformance/page.tsx";
 import { FoundationsPage } from "./pages/foundations/page.tsx";
+import { GlyphsPage } from "./pages/glyphs/page.tsx";
 import { NotFoundPage } from "./pages/not-found/page.tsx";
 import { OverviewPage } from "./pages/overview/page.tsx";
 import type { CatalogueSurface } from "./pages/shared.tsx";
@@ -100,6 +102,14 @@ function App() {
             appearance={appearance.appearance}
             accentHue={appearance.accentHue}
             onFieldChange={appearance.changeField}
+          />
+        );
+      case "glyphs":
+        return (
+          <GlyphsPage
+            route={route}
+            data={glyphAtlasData}
+            currentUrl={currentUrl}
           />
         );
       case "compositions":

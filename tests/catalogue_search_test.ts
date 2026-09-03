@@ -44,6 +44,48 @@ Deno.test("direct and prefix names outrank weak supporting prose", () => {
   assertEquals(searchRecords(records, "but")[0]?.record.id, "direct");
 });
 
+Deno.test("exact literals retain complete sequences and outrank textual matches", () => {
+  const literal: SearchRecord = {
+    id: "keycap",
+    href: "/glyphs/keycap/",
+    title: "Keycap one",
+    context: "Glyph Atlas",
+    literals: ["1️⃣"],
+    aliases: [{ label: "Discern alias", value: "step-one" }],
+    keywords: ["1"],
+  };
+  const prose: SearchRecord = {
+    id: "prose",
+    href: "/prose/",
+    title: "First step",
+    context: "Test",
+    keywords: ["1"],
+  };
+  const results = searchRecords([prose, literal], "1️⃣");
+  assertEquals(results[0]?.record.id, "keycap");
+  assertEquals(results[0]?.reasons, [{
+    field: "literal",
+    label: "Literal glyph",
+    value: "1️⃣",
+    token: "1️⃣",
+  }]);
+  assertEquals(
+    searchRecords([literal], "step-one")[0]?.reasons[0]?.label,
+    "Discern alias",
+  );
+});
+
+Deno.test("literal capability leaves established text-only ranks and scores intact", () => {
+  const baseline = searchRecords(records, "button").map((
+    { record, score },
+  ) => ({ id: record.id, score }));
+  const literalEnabled = searchRecords(
+    records.map((record) => ({ ...record, literals: ["✓"] })),
+    "button",
+  ).map(({ record, score }) => ({ id: record.id, score }));
+  assertEquals(literalEnabled, baseline);
+});
+
 Deno.test("call to action finds CTA band through the shared alias vocabulary", () => {
   const results = searchRecords(
     componentSearchRecords(registry),

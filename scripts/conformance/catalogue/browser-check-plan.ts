@@ -8,6 +8,11 @@ export const catalogueBrowserCheckPlan = Object.freeze(
       failureLabel: "Component contracts",
     }),
     Object.freeze({
+      id: "glyphs",
+      familyIds: Object.freeze(["glyphs"]),
+      failureLabel: "Glyph Catalogue",
+    }),
+    Object.freeze({
       id: "foundations",
       familyIds: Object.freeze(["foundations"]),
       failureLabel: "Foundations Catalogue",
