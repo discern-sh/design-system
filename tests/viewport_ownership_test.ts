@@ -1,14 +1,12 @@
-import {
-  assert,
-  assertEquals,
-  assertRejects,
-  assertStringIncludes,
-} from "@std/assert";
-import { fromFileUrl, join } from "@std/path";
+import { assertEquals, assertRejects, assertStringIncludes } from "@std/assert";
+import { join } from "@std/path";
 import type { Page } from "playwright-core";
 import { withViewport } from "../scripts/viewport.ts";
+import {
+  PACKAGE_ROOT,
+  trackedTypeScriptSources,
+} from "./support/tracked-typescript.ts";
 
-const PACKAGE_ROOT = fromFileUrl(new URL("../", import.meta.url));
 const VIEWPORT_AUTHORITY = "scripts/viewport.ts";
 type Viewport = { readonly height: number; readonly width: number };
 
@@ -41,41 +39,11 @@ function fakePage(initial: Viewport | null): {
   };
 }
 
-async function trackedTypeScriptPaths(): Promise<readonly string[]> {
-  const result = await new Deno.Command("git", {
-    args: [
-      "ls-files",
-      "-z",
-      "--cached",
-      "--others",
-      "--exclude-standard",
-      "--",
-      "*.ts",
-      "*.tsx",
-    ],
-    cwd: PACKAGE_ROOT,
-    stderr: "piped",
-    stdout: "piped",
-  }).output();
-  assert(
-    result.success,
-    new TextDecoder().decode(result.stderr),
-  );
-  return new TextDecoder().decode(result.stdout).split("\0").filter(Boolean);
-}
-
 Deno.test("temporary viewport changes have one transactional authority", async () => {
   const rawViewportMutation = ".setViewport" + "Size(";
   const violations: string[] = [];
-  for (const path of await trackedTypeScriptPaths()) {
+  for (const { path, source } of await trackedTypeScriptSources()) {
     if (path === VIEWPORT_AUTHORITY) continue;
-    let source: string;
-    try {
-      source = await Deno.readTextFile(join(PACKAGE_ROOT, path));
-    } catch (error) {
-      if (error instanceof Deno.errors.NotFound) continue;
-      throw error;
-    }
     source.split("\n").forEach((line, index) => {
       if (line.includes(rawViewportMutation)) {
         violations.push(`${path}:${index + 1}`);
