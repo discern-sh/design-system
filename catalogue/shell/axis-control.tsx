@@ -20,6 +20,10 @@ const axisCopy: Readonly<
   structure: { label: "Structure", minimum: "Flat", maximum: "Strong" },
   emphasis: { label: "Emphasis", minimum: "Quiet", maximum: "Vivid" },
   density: { label: "Density", minimum: "Compact", maximum: "Airy" },
+  paperTint: { label: "Paper tint", minimum: "Plain", maximum: "Full" },
+  paperTintHue: { label: "Paper tint hue", minimum: "Hue", maximum: "Hue" },
+  inkTint: { label: "Ink tint", minimum: "Plain", maximum: "Full" },
+  inkTintHue: { label: "Ink tint hue", minimum: "Hue", maximum: "Hue" },
 };
 
 export interface AxisControlProps {

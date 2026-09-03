@@ -16,7 +16,10 @@ import {
   evaluateAppearance,
   evaluateAppearanceShadows,
 } from "./appearance.ts";
-import { ACCENT_HUE_CUSTOM_PROPERTY_NAME } from "./appearance-live-css.ts";
+import {
+  ACCENT_HUE_CUSTOM_PROPERTY_NAME,
+  appearanceAxisCustomPropertyName,
+} from "./appearance-live-css.ts";
 import {
   type AppearanceAdmissionProof,
   type AppearanceSeriesPair,
@@ -72,13 +75,17 @@ const appearanceAxisTokenCategories = {
   structure: "Color",
   emphasis: "Color",
   density: "Spacing",
+  paperTint: "Color",
+  paperTintHue: "Color",
+  inkTint: "Color",
+  inkTintHue: "Color",
 } as const satisfies Readonly<Record<AppearanceAxisName, TokenCategory>>;
 
 /** Registered field-axis Tokens exposed as numeric author controls. */
 export const appearanceAxisTokens: readonly DesignToken[] = Object.freeze(
   (Object.keys(appearanceAxes) as AppearanceAxisName[]).map((axis) =>
     token(
-      `--discern-${axis}`,
+      appearanceAxisCustomPropertyName(axis),
       String(appearanceAxes[axis].default),
       appearanceAxisTokenCategories[axis],
       appearanceAxes[axis].description,
@@ -86,7 +93,11 @@ export const appearanceAxisTokens: readonly DesignToken[] = Object.freeze(
   ),
 );
 
-/** Public hue primitive read by the Accent projection wherever `data-discern-accent` switches it on. */
+/**
+ * Public hue primitive read by the Accent projection wherever
+ * `data-discern-accent` switches it on. It is registered with this default and
+ * documented in the public inventory; the neutral Root declares nothing for it.
+ */
 export const accentHueToken: DesignToken = token(
   ACCENT_HUE_CUSTOM_PROPERTY_NAME,
   String(DEFAULT_ACCENT_HUE),
@@ -97,7 +108,6 @@ export const accentHueToken: DesignToken = token(
 /** Framework-neutral primitives and system-font defaults shared by every theme. */
 export const baseTokens: readonly DesignToken[] = [
   ...appearanceAxisTokens,
-  accentHueToken,
   token(
     "--discern-font-display",
     '"Iowan Old Style", "Palatino Linotype", Georgia, ui-serif, serif',

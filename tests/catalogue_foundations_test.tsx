@@ -20,6 +20,7 @@ import {
 } from "../catalogue/routes/foundations.ts";
 import type { TerminalFoundationSheet } from "../catalogue/terminal-foundations.ts";
 import { terminalFoundationSheets } from "../catalogue/terminal-foundations.ts";
+import { defaultCatalogueAxesSelection } from "../catalogue/shell/axes-state.ts";
 import { resolveCatalogueTerminalPresentation } from "../catalogue/terminal-theme.ts";
 import { publicTokens } from "../src/token-inventory.ts";
 
@@ -180,7 +181,7 @@ Deno.test("Appearance page dogfoods public controls and paints every field role"
   for (const axis of ["darkness", "structure", "emphasis", "density"]) {
     assertStringIncludes(html, `data-discern-axis="${axis}"`);
   }
-  assertEquals((html.match(/type="range"/g) ?? []).length, 4);
+  assertEquals((html.match(/type="range"/g) ?? []).length, 8);
   assertStringIncludes(html, "These are the same controls");
   assertStringIncludes(html, "Current projection");
   assertStringIncludes(html, 'data-discern-appearance-proof="accepted"');
@@ -230,6 +231,7 @@ Deno.test("Appearance page admits arbitrary Accent hues through the package proo
     createElement<AppearancePageProps>(AppearancePage, {
       accent: 145.5,
       field: {
+        ...defaultCatalogueAxesSelection,
         darkness: 0.6,
         structure: 1.2,
         emphasis: 1.5,

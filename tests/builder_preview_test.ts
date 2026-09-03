@@ -20,6 +20,7 @@ import {
   PreviewToolbarControls,
 } from "../catalogue/builder/preview/controls.tsx";
 import { defaultCatalogueAppearanceState } from "../catalogue/shell/appearance-state.ts";
+import { defaultCatalogueAxesSelection } from "../catalogue/shell/axes-state.ts";
 import { appearanceAxes } from "../src/tokens/appearance.ts";
 import {
   builderPreviewMessageFromEvent,
@@ -185,6 +186,7 @@ Deno.test("preview messages are same-origin, versioned, and policy-accepted", ()
       resolvedTheme: "dark",
       accent: 145.5,
       field: {
+        ...defaultCatalogueAxesSelection,
         darkness: 0.6,
         structure: 1.2,
         emphasis: 0.8,

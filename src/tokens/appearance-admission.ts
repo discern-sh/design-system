@@ -11,6 +11,7 @@ import {
   type OklabColor,
   oklabContrast,
   oklabDistance,
+  oklabToLinearRgb,
 } from "../internal/oklch.ts";
 import {
   ACTION_SHADOW_DISTANCE_FLOOR,
@@ -19,8 +20,10 @@ import {
   APPEARANCE_POLARITY_CROSSOVER_DARKNESS,
   type AppearanceAxes,
   appearanceColorRoleLaws,
+  appearancePigmentLaws,
   defaultAppearance,
   evaluateAppearance,
+  evaluatePigment,
   ownedSurfaceRoleNames,
 } from "./appearance.ts";
 
@@ -100,7 +103,61 @@ export const APPEARANCE_ADMISSION_POINTS: readonly AppearanceAdmissionPoint[] =
     point("high emphasis", { darkness: 0.75, emphasis: 1.5 }),
     point("low structure", { darkness: 0.25, structure: 0 }),
     point("high structure", { darkness: 0.75, structure: 2 }),
+    ...Array.from({ length: 12 }, (_, step) => step * 30).flatMap((hue) => [
+      point(`tinted light pole at hue ${hue}`, {
+        darkness: 0,
+        paperTint: 1,
+        paperTintHue: hue,
+        inkTint: 1,
+        inkTintHue: hue,
+      }),
+      point(`tinted dark pole at hue ${hue}`, {
+        darkness: 1,
+        paperTint: 1,
+        paperTintHue: hue,
+        inkTint: 1,
+        inkTintHue: hue,
+      }),
+    ]),
+    point("tinted polarity light neighbour", {
+      darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS - 0.0001,
+      paperTint: 1,
+      paperTintHue: 300,
+      inkTint: 1,
+      inkTintHue: 30,
+    }),
+    point("tinted polarity dark neighbour", {
+      darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS + 0.0001,
+      paperTint: 1,
+      paperTintHue: 300,
+      inkTint: 1,
+      inkTintHue: 30,
+    }),
+    point("tinted 0A dark posture", {
+      darkness: 0.75,
+      structure: 1.4,
+      emphasis: 1.35,
+      density: 1.2,
+      paperTint: 0.5,
+      paperTintHue: 265,
+      inkTint: 0.5,
+      inkTintHue: 265,
+    }),
   ]);
+
+/** Tint strengths swept against the complete hue circle for gamut safety. */
+export const APPEARANCE_TINT_STRENGTHS: readonly number[] = Object.freeze([
+  0.25,
+  0.5,
+  0.75,
+  1,
+]);
+
+/** Smallest headroom of any linear sRGB channel inside the displayable range. */
+function gamutMargin(color: OklabColor): number {
+  const channels = oklabToLinearRgb(color.lightness, color.a, color.b);
+  return Math.min(...channels.flatMap((channel) => [channel, 1 - channel]));
+}
 
 const boundaryHues = [
   0.0001,
@@ -374,6 +431,36 @@ export function proveAppearanceAdmission(
           );
         }
       }
+    }
+  }
+
+  for (const strength of APPEARANCE_TINT_STRENGTHS) {
+    for (let hue = 0; hue <= 360; hue += 1) {
+      const sample = `tint ${strength} at hue ${hue}`;
+      record(
+        "pigments",
+        sample,
+        "paper pigment in gamut",
+        gamutMargin(
+          evaluatePigment(appearancePigmentLaws.paper, {
+            paperTint: strength,
+            paperTintHue: hue,
+          }),
+        ),
+        0,
+      );
+      record(
+        "pigments",
+        sample,
+        "ink pigment in gamut",
+        gamutMargin(
+          evaluatePigment(appearancePigmentLaws.ink, {
+            inkTint: strength,
+            inkTintHue: hue,
+          }),
+        ),
+        0,
+      );
     }
   }
 

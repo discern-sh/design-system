@@ -1,3 +1,9 @@
+import {
+  appearanceAxisNames,
+  defaultAppearance,
+  pigmentTintAxisNames,
+} from "../../../src/tokens/appearance.ts";
+import { appearanceAxisCustomPropertyName } from "../../../src/tokens/appearance-live-css.ts";
 import type { CatalogueAxesSelection } from "../../shell/axes-state.ts";
 import {
   catalogueAxesPolarity,
@@ -9,11 +15,17 @@ export function catalogueAppearanceConsumerSnippet(
   selection: CatalogueAxesSelection,
   accent?: number,
 ): string {
+  const tinted = pigmentTintAxisNames.some((axis) =>
+    selection[axis] !== defaultAppearance[axis]
+  );
   const declaration = [
-    `--discern-darkness: ${formatCatalogueAxisNumber(selection.darkness)}`,
-    `--discern-structure: ${formatCatalogueAxisNumber(selection.structure)}`,
-    `--discern-emphasis: ${formatCatalogueAxisNumber(selection.emphasis)}`,
-    `--discern-density: ${formatCatalogueAxisNumber(selection.density)}`,
+    ...appearanceAxisNames.filter((axis) =>
+      tinted || !(pigmentTintAxisNames as readonly string[]).includes(axis)
+    ).map((axis) =>
+      `${appearanceAxisCustomPropertyName(axis)}: ${
+        formatCatalogueAxisNumber(selection[axis])
+      }`
+    ),
     ...(accent === undefined
       ? []
       : [`--discern-accent-hue: ${formatCatalogueAxisNumber(accent)}`]),

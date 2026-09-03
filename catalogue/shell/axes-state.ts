@@ -1,16 +1,20 @@
 import type { CSSProperties } from "react";
 import {
+  activePigmentTints,
   APPEARANCE_POLARITY_CROSSOVER_DARKNESS,
   type AppearanceAxes,
   appearanceAxes,
   type AppearanceAxisName,
+  appearanceAxisNames,
   appearancePolarityExpression,
   defaultAppearance,
   evaluateAppearanceExpression,
   normalizeAccentHue,
+  primaryAppearanceAxisNames,
 } from "../../src/tokens/appearance.ts";
+import { appearanceAxisCustomPropertyName } from "../../src/tokens/appearance-live-css.ts";
 
-/** Complete, portable Catalogue field point. */
+/** Complete, portable Catalogue axis coordinates. */
 export type CatalogueAxesSelection = AppearanceAxes;
 
 export const defaultCatalogueAxesSelection: CatalogueAxesSelection = Object
@@ -31,7 +35,7 @@ export function isCatalogueAxesSelection(
 ): value is CatalogueAxesSelection {
   if (typeof value !== "object" || value === null) return false;
   const candidate = value as Partial<CatalogueAxesSelection>;
-  return (Object.keys(appearanceAxes) as AppearanceAxisName[]).every((axis) =>
+  return appearanceAxisNames.every((axis) =>
     boundedAxis(axis, candidate[axis] ?? Number.NaN)
   );
 }
@@ -41,13 +45,26 @@ export function formatCatalogueAxisNumber(value: number): string {
   return String(Number(value.toFixed(4)));
 }
 
-/** Stable four-axis URL/storage representation used by every Catalogue surface. */
+/** Whether either pigment currently carries a tint. */
+export function catalogueAxesAreTinted(
+  selection: CatalogueAxesSelection,
+): boolean {
+  return Object.keys(activePigmentTints(selection)).length > 0;
+}
+
+/**
+ * Stable URL/storage representation used by every Catalogue surface: the four
+ * primary axes, followed by the four tint axes only when a tint is in use.
+ */
 export function serializeCatalogueAxes(
   selection: CatalogueAxesSelection,
 ): string {
-  return (Object.keys(appearanceAxes) as AppearanceAxisName[]).map((axis) =>
-    formatCatalogueAxisNumber(selection[axis])
-  ).join(",");
+  const axes = catalogueAxesAreTinted(selection)
+    ? appearanceAxisNames
+    : primaryAppearanceAxisNames;
+  return axes.map((axis) => formatCatalogueAxisNumber(selection[axis])).join(
+    ",",
+  );
 }
 
 export interface ParsedCatalogueAxes {
@@ -55,43 +72,50 @@ export interface ParsedCatalogueAxes {
   readonly legacyPreset?: "mono" | "blue";
 }
 
-/** Parse canonical points and the former mono/blue suffix for migration. */
+/** Parse canonical primary or tinted points and the former mono/blue suffix. */
 export function parseCatalogueAxesValue(
   value: string | null,
 ): ParsedCatalogueAxes | undefined {
   if (value === null) return undefined;
-  const [darkness, structure, emphasis, density, preset, ...extra] = value
-    .split(",");
-  if (
-    darkness === undefined || structure === undefined ||
-    emphasis === undefined || density === undefined || extra.length > 0 ||
-    !(preset === undefined || preset === "mono" || preset === "blue")
-  ) return undefined;
+  const parts = value.split(",");
+  const last = parts[parts.length - 1];
+  const legacyPreset = parts.length === primaryAppearanceAxisNames.length + 1 &&
+      (last === "mono" || last === "blue")
+    ? last
+    : undefined;
+  const numbers = legacyPreset === undefined ? parts : parts.slice(0, -1);
+  const axes = numbers.length === primaryAppearanceAxisNames.length
+    ? primaryAppearanceAxisNames
+    : numbers.length === appearanceAxisNames.length
+    ? appearanceAxisNames
+    : undefined;
+  if (axes === undefined) return undefined;
   const field = {
-    darkness: Number(darkness),
-    structure: Number(structure),
-    emphasis: Number(emphasis),
-    density: Number(density),
+    ...defaultAppearance,
+    ...Object.fromEntries(
+      axes.map((axis, index) => [axis, Number(numbers[index])]),
+    ),
   };
   if (!isCatalogueAxesSelection(field)) return undefined;
   return {
     field,
-    ...(preset === undefined ? {} : { legacyPreset: preset }),
+    ...(legacyPreset === undefined ? {} : { legacyPreset }),
   };
 }
 
-/** Parse a complete bounded field point; partial values fail closed. */
+/** Parse a complete bounded point; partial values fail closed. */
 export function parseCatalogueAxes(
   value: string | null,
 ): CatalogueAxesSelection | undefined {
   return parseCatalogueAxesValue(value)?.field;
 }
 
-/** Exact polarity owned by the token field; this authority has no hysteresis. */
+/** Exact polarity owned by the appearance graph; this authority has no hysteresis. */
 export function catalogueAxesPolarity(
   point: AppearanceAxes,
 ): "light" | "dark" {
-  return evaluateAppearanceExpression(appearancePolarityExpression, point) === 1
+  return evaluateAppearanceExpression(appearancePolarityExpression, point) ===
+      1
     ? "dark"
     : "light";
 }
@@ -123,10 +147,12 @@ export function catalogueAppearanceRootStyle(
   accent?: number,
 ): CSSProperties {
   return {
-    "--discern-darkness": selection.darkness,
-    "--discern-structure": selection.structure,
-    "--discern-emphasis": selection.emphasis,
-    "--discern-density": selection.density,
+    ...Object.fromEntries(
+      appearanceAxisNames.map((axis) => [
+        appearanceAxisCustomPropertyName(axis),
+        selection[axis],
+      ]),
+    ),
     ...(accent === undefined
       ? {}
       : { "--discern-accent-hue": normalizeAccentHue(accent) }),
@@ -138,15 +164,17 @@ export function catalogueAppearanceRootStyle(
 export function catalogueAxesLabel(
   selection: CatalogueAxesSelection,
 ): string {
-  return `D ${formatCatalogueAxisNumber(selection.darkness)} · S ${
+  const primary = `D ${formatCatalogueAxisNumber(selection.darkness)} · S ${
     formatCatalogueAxisNumber(selection.structure)
   } · E ${formatCatalogueAxisNumber(selection.emphasis)} · ρ ${
     formatCatalogueAxisNumber(selection.density)
   }`;
+  return catalogueAxesAreTinted(selection) ? `${primary} · tinted` : primary;
 }
 
-const nonDarknessAxes = (Object.keys(appearanceAxes) as AppearanceAxisName[])
-  .filter((axis) => axis !== "darkness");
+const nonDarknessAxes = appearanceAxisNames.filter((axis) =>
+  axis !== "darkness"
+);
 
 /** Whether every axis other than darkness sits at its package default. */
 export function catalogueAxesAreDefault(

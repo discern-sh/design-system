@@ -1,5 +1,5 @@
 /**
- * Field/Accent authority for every non-series colour role. One ordered law
+ * Appearance authority for every non-series colour role. One ordered law
  * table supplies token pole emission, live browser projection, terminal-ready
  * pure evaluation, chart ramps, and package admission arithmetic.
  *
@@ -12,14 +12,22 @@ import {
   oklabContrast,
 } from "../internal/oklch.ts";
 
-/** Numeric axes accepted by the monochrome field. */
+/** The four axes that tint the two pigments; inert at their zero defaults. */
+export type PigmentTintAxisName =
+  | "paperTint"
+  | "paperTintHue"
+  | "inkTint"
+  | "inkTintHue";
+
+/** Numeric axes accepted by the appearance graph. */
 export type AppearanceAxisName =
   | "darkness"
   | "structure"
   | "emphasis"
-  | "density";
+  | "density"
+  | PigmentTintAxisName;
 
-/** Documented bounds and default for one field axis. */
+/** Documented bounds and default for one appearance axis. */
 export interface AppearanceAxisDefinition {
   readonly minimum: number;
   readonly maximum: number;
@@ -27,7 +35,7 @@ export interface AppearanceAxisDefinition {
   readonly description: string;
 }
 
-/** Axis definitions shared by evaluation and the later live-CSS projection. */
+/** Axis definitions shared by evaluation and the live-CSS projection. */
 export const appearanceAxes = Object.freeze(
   {
     darkness: {
@@ -55,10 +63,77 @@ export const appearanceAxes = Object.freeze(
       description:
         "Projection-time multiplier for spacing only. It never changes font size; interface-text and component-owned touch-target floors remain unscaled.",
     },
+    paperTint: {
+      minimum: 0,
+      maximum: 1,
+      default: 0,
+      description:
+        "Strength of the paper tint: 0 keeps pure white, 1 reaches the deepest stock every hue can show inside sRGB.",
+    },
+    paperTintHue: {
+      minimum: 0,
+      maximum: 360,
+      default: 0,
+      description:
+        "Hue of the paper tint from 0 through 360; inert while the paper tint is 0.",
+    },
+    inkTint: {
+      minimum: 0,
+      maximum: 1,
+      default: 0,
+      description:
+        "Strength of the ink tint: 0 keeps pure black, 1 lifts the ink to the deepest coloured black every hue can show inside sRGB.",
+    },
+    inkTintHue: {
+      minimum: 0,
+      maximum: 360,
+      default: 0,
+      description:
+        "Hue of the ink tint from 0 through 360; inert while the ink tint is 0.",
+    },
   } as const satisfies Readonly<
     Record<AppearanceAxisName, AppearanceAxisDefinition>
   >,
 );
+
+/** Every axis name in authored order. */
+export const appearanceAxisNames: readonly AppearanceAxisName[] = Object
+  .freeze(Object.keys(appearanceAxes) as AppearanceAxisName[]);
+
+/** The pigment-tint axes in authored order. */
+export const pigmentTintAxisNames: readonly PigmentTintAxisName[] = Object
+  .freeze(["paperTint", "paperTintHue", "inkTint", "inkTintHue"]);
+
+/**
+ * The tint coordinates that actually colour a pigment. A hue is inert while its
+ * strength sits at zero, so only a strength above the default carries its hue
+ * through; the result is `{}` for an untinted appearance.
+ */
+export function activePigmentTints(
+  axes: Partial<AppearanceAxes>,
+): Partial<Pick<AppearanceAxes, PigmentTintAxisName>> {
+  const tints: Partial<Record<PigmentTintAxisName, number>> = {};
+  for (
+    const [strength, hue] of [
+      ["paperTint", "paperTintHue"],
+      ["inkTint", "inkTintHue"],
+    ] as const
+  ) {
+    const value = axes[strength] ?? appearanceAxes[strength].default;
+    if (value === appearanceAxes[strength].default) continue;
+    tints[strength] = value;
+    tints[hue] = axes[hue] ?? appearanceAxes[hue].default;
+  }
+  return tints;
+}
+
+/** The darkness, structure, emphasis, and density axes, in authored order. */
+export const primaryAppearanceAxisNames: readonly AppearanceAxisName[] = Object
+  .freeze(
+    appearanceAxisNames.filter((axis) =>
+      !(pigmentTintAxisNames as readonly string[]).includes(axis)
+    ),
+  );
 
 /** The numeric axis coordinates of one appearance. */
 export interface AppearanceAxes {
@@ -66,6 +141,10 @@ export interface AppearanceAxes {
   readonly structure: number;
   readonly emphasis: number;
   readonly density: number;
+  readonly paperTint: number;
+  readonly paperTintHue: number;
+  readonly inkTint: number;
+  readonly inkTintHue: number;
 }
 
 /**
@@ -112,12 +191,11 @@ export function normalizeAccentHue(hue: number): number {
 }
 
 /** Default monochrome appearance used when a coordinate is omitted. */
-export const defaultAppearance: Appearance = Object.freeze({
-  darkness: appearanceAxes.darkness.default,
-  structure: appearanceAxes.structure.default,
-  emphasis: appearanceAxes.emphasis.default,
-  density: appearanceAxes.density.default,
-});
+export const defaultAppearance: Appearance = Object.freeze(
+  Object.fromEntries(
+    appearanceAxisNames.map((axis) => [axis, appearanceAxes[axis].default]),
+  ) as Record<AppearanceAxisName, number>,
+);
 
 /** One named scalar shared wherever the same number enters multiple laws. */
 export interface AppearanceNumberExpression {
@@ -191,14 +269,12 @@ const two: AppearanceNumberExpression = numberNode(2);
 const quarter: AppearanceNumberExpression = numberNode(0.25);
 const roundingInterval: AppearanceNumberExpression = numberNode(0.0001);
 const axisNodes = Object.freeze(
-  {
-    darkness: { kind: "axis", axis: "darkness" },
-    structure: { kind: "axis", axis: "structure" },
-    emphasis: { kind: "axis", axis: "emphasis" },
-    density: { kind: "axis", axis: "density" },
-  } as const satisfies Readonly<
-    Record<AppearanceAxisName, AppearanceAxisExpression>
-  >,
+  Object.fromEntries(
+    appearanceAxisNames.map((axis) => [
+      axis,
+      Object.freeze({ kind: "axis", axis }),
+    ]),
+  ) as Readonly<Record<AppearanceAxisName, AppearanceAxisExpression>>,
 );
 const accentHueAxis: AppearanceAxisExpression = Object.freeze({
   kind: "axis",
@@ -285,25 +361,66 @@ function boundedScaledCurve(
   ));
 }
 
-/** Paper and ink pigments authored once in OKLab. */
-export const appearancePigments = Object.freeze(
-  {
-    paper: { lightness: 1, a: 0, b: 0 },
-    ink: { lightness: 0, a: 0, b: 0 },
-  } as const satisfies Readonly<Record<"paper" | "ink", OklabColor>>,
-);
+/**
+ * Reach of a full paper tint: the lightness pure white gives up and the OKLCH
+ * chroma it gains at strength 1. The pair keeps every hue inside sRGB along
+ * the whole strength ramp; the admission proof sweeps the circle to hold it.
+ */
+export const PAPER_TINT_DEPTH = 0.05;
+/** OKLCH chroma of the paper pigment at full tint strength. */
+export const PAPER_TINT_CHROMA = 0.02;
+/** Lightness a full ink tint lifts pure black to. */
+export const INK_TINT_LIFT = 0.14;
+/** OKLCH chroma of the ink pigment at full tint strength. */
+export const INK_TINT_CHROMA = 0.021;
+
+/** One pigment as OKLCH expressions of the tint axes. */
+export interface AppearancePigmentLaw {
+  readonly lightness: AppearanceExpression;
+  readonly chroma: AppearanceExpression;
+  readonly hue: AppearanceExpression;
+}
+
+/**
+ * Paper and ink pigments. Untinted they are pure white and pure black; the
+ * tint axes move each one along a gamut-safe line towards a coloured stock or
+ * a coloured black, and every derived role follows because it is these
+ * pigments at an alpha.
+ */
+export const appearancePigmentLaws: Readonly<
+  Record<"paper" | "ink", AppearancePigmentLaw>
+> = Object.freeze({
+  paper: Object.freeze({
+    lightness: binary(
+      "subtract",
+      one,
+      binary("multiply", axisNodes.paperTint, numberNode(PAPER_TINT_DEPTH)),
+    ),
+    chroma: binary(
+      "multiply",
+      axisNodes.paperTint,
+      numberNode(PAPER_TINT_CHROMA),
+    ),
+    hue: axisNodes.paperTintHue,
+  }),
+  ink: Object.freeze({
+    lightness: binary("multiply", axisNodes.inkTint, numberNode(INK_TINT_LIFT)),
+    chroma: binary("multiply", axisNodes.inkTint, numberNode(INK_TINT_CHROMA)),
+    hue: axisNodes.inkTintHue,
+  }),
+});
 
 /** Relative-luminance crossover where black and white ink have equal contrast. */
 export const APPEARANCE_POLARITY_CROSSOVER = 0.179;
 
-/** Darkness coordinate whose neutral canvas reaches the polarity crossover. */
+/** Darkness coordinate whose untinted canvas reaches the polarity crossover. */
 export const APPEARANCE_POLARITY_CROSSOVER_DARKNESS: number = 1 -
   Math.cbrt(APPEARANCE_POLARITY_CROSSOVER);
 
-const paperLightness = numberNode(appearancePigments.paper.lightness);
-const inkLightness = numberNode(appearancePigments.ink.lightness);
+const paperLightness = appearancePigmentLaws.paper.lightness;
+const inkLightness = appearancePigmentLaws.ink.lightness;
 
-/** Canvas OKLab lightness derived from the field darkness axis. */
+/** Canvas OKLab lightness derived from the darkness axis. */
 export const appearanceCanvasLightnessExpression: AppearanceExpression = {
   kind: "lerp",
   from: paperLightness,
@@ -356,6 +473,38 @@ export const appearanceOppositeLightnessExpression: AppearanceExpression = {
   kind: "lerp",
   from: paperLightness,
   to: inkLightness,
+  position: appearancePolarityExpression,
+};
+
+/** OKLCH chroma of the current canvas-contrast pigment. */
+export const appearanceActiveChromaExpression: AppearanceExpression = {
+  kind: "lerp",
+  from: appearancePigmentLaws.ink.chroma,
+  to: appearancePigmentLaws.paper.chroma,
+  position: appearancePolarityExpression,
+};
+
+/** OKLCH hue of the current canvas-contrast pigment. */
+export const appearanceActiveHueExpression: AppearanceExpression = {
+  kind: "lerp",
+  from: appearancePigmentLaws.ink.hue,
+  to: appearancePigmentLaws.paper.hue,
+  position: appearancePolarityExpression,
+};
+
+/** OKLCH chroma of the pigment opposite the canvas-contrast pigment. */
+export const appearanceOppositeChromaExpression: AppearanceExpression = {
+  kind: "lerp",
+  from: appearancePigmentLaws.paper.chroma,
+  to: appearancePigmentLaws.ink.chroma,
+  position: appearancePolarityExpression,
+};
+
+/** OKLCH hue of the pigment opposite the canvas-contrast pigment. */
+export const appearanceOppositeHueExpression: AppearanceExpression = {
+  kind: "lerp",
+  from: appearancePigmentLaws.paper.hue,
+  to: appearancePigmentLaws.ink.hue,
   position: appearancePolarityExpression,
 };
 
@@ -650,7 +799,7 @@ const warningExpression = boundedScaledCurve(
   [0.62, 0.6, 0.58, 0.62, 0.66],
   "emphasis",
   0.35,
-  0.74,
+  0.72,
 );
 const dangerExpression = boundedScaledCurve(
   [1, 1, 1, 1, 1],
@@ -1089,12 +1238,8 @@ export const APPEARANCE_INK_CONTRAST_FLOORS = Object.freeze(
 export function resolveAppearance(
   appearance: Partial<Appearance> = {},
 ): Appearance {
-  const { accent, ...axes } = appearance;
-  const resolved: Appearance = accent === undefined
-    ? { ...defaultAppearance, ...axes }
-    : { ...defaultAppearance, ...axes, accent: normalizeAccentHue(accent) };
-  for (const axis of Object.keys(appearanceAxes) as AppearanceAxisName[]) {
-    const value = resolved[axis];
+  const axes = Object.fromEntries(appearanceAxisNames.map((axis) => {
+    const value = appearance[axis] ?? appearanceAxes[axis].default;
     const definition = appearanceAxes[axis];
     if (
       !Number.isFinite(value) || value < definition.minimum ||
@@ -1104,7 +1249,11 @@ export function resolveAppearance(
         `Appearance axis ${axis}=${value} is outside [${definition.minimum}, ${definition.maximum}]`,
       );
     }
-  }
+    return [axis, value];
+  })) as Record<AppearanceAxisName, number>;
+  const resolved: Appearance = appearance.accent === undefined
+    ? axes
+    : { ...axes, accent: normalizeAccentHue(appearance.accent) };
   return Object.freeze(resolved);
 }
 
@@ -1172,32 +1321,50 @@ interface EvaluatedRoleColor {
   readonly alpha: number;
 }
 
-function activePigments(resolved: Appearance): {
+/** Evaluate one pigment law to an OKLab colour at a resolved appearance. */
+export function evaluatePigment(
+  law: AppearancePigmentLaw,
+  appearance: Partial<Appearance> = {},
+): OklabColor {
+  const resolved = resolveAppearance(appearance);
+  const chroma = evaluateResolvedExpression(law.chroma, resolved);
+  const radians = evaluateResolvedExpression(law.hue, resolved) * Math.PI /
+    180;
+  return {
+    lightness: evaluateResolvedExpression(law.lightness, resolved),
+    a: chroma * Math.cos(radians),
+    b: chroma * Math.sin(radians),
+  };
+}
+
+interface ResolvedPigments {
+  readonly paper: OklabColor;
+  readonly ink: OklabColor;
+  readonly canvas: OklabColor;
   readonly active: OklabColor;
   readonly opposite: OklabColor;
-} {
+}
+
+function resolvePigments(resolved: Appearance): ResolvedPigments {
+  const paper = evaluatePigment(appearancePigmentLaws.paper, resolved);
+  const ink = evaluatePigment(appearancePigmentLaws.ink, resolved);
+  const darkness = resolved.darkness;
+  const canvas: OklabColor = {
+    lightness: paper.lightness * (1 - darkness) + ink.lightness * darkness,
+    a: paper.a * (1 - darkness) + ink.a * darkness,
+    b: paper.b * (1 - darkness) + ink.b * darkness,
+  };
   const paperWins =
     evaluateResolvedExpression(appearancePolarityExpression, resolved) === 1;
   return paperWins
-    ? { active: appearancePigments.paper, opposite: appearancePigments.ink }
-    : { active: appearancePigments.ink, opposite: appearancePigments.paper };
+    ? { paper, ink, canvas, active: paper, opposite: ink }
+    : { paper, ink, canvas, active: ink, opposite: paper };
 }
 
 function evaluateStructuredMono(
   resolved: Appearance,
 ): Readonly<Record<AppearanceColorRoleName, EvaluatedRoleColor>> {
-  const canvasLaw = appearanceColorRoleLaws.find((law) =>
-    law.paint === "canvas"
-  );
-  if (canvasLaw === undefined) {
-    throw new TypeError("Appearance has no canvas law");
-  }
-  const canvas: OklabColor = {
-    lightness: evaluateResolvedExpression(canvasLaw.expression, resolved),
-    a: 0,
-    b: 0,
-  };
-  const { active, opposite } = activePigments(resolved);
+  const { paper, ink, canvas, active, opposite } = resolvePigments(resolved);
   return Object.freeze(Object.fromEntries(appearanceColorRoleLaws.map((law) => {
     const amount = evaluateResolvedExpression(law.expression, resolved);
     let evaluated: EvaluatedRoleColor;
@@ -1216,10 +1383,10 @@ function evaluateStructuredMono(
         evaluated = { color: compositeOklab(active, amount, canvas), alpha: 1 };
         break;
       case "ink-pigment":
-        evaluated = { color: appearancePigments.ink, alpha: amount };
+        evaluated = { color: ink, alpha: amount };
         break;
       case "paper-pigment":
-        evaluated = { color: appearancePigments.paper, alpha: amount };
+        evaluated = { color: paper, alpha: amount };
         break;
     }
     return [law.name, evaluated];
@@ -1360,7 +1527,7 @@ export function appearanceContrastMargin(): number {
       values,
       "--discern-color-canvas",
     ).color;
-    const maximum = oklabContrast(activePigments(resolved).active, canvas);
+    const maximum = oklabContrast(resolvePigments(resolved).active, canvas);
     for (const [name, floor] of APPEARANCE_INK_CONTRAST_FLOORS) {
       const value = requiredRoleValue(values, name);
       const opaque = compositeOklab(value.color, value.alpha, canvas);

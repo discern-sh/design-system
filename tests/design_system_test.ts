@@ -571,6 +571,10 @@ Deno.test("runtime globals are branded and the default runtime stays monochrome"
         "--discern-impression-backdrop-x",
         "--discern-impression-backdrop-y",
         "--discern-structure",
+        "--discern-paper-tint",
+        "--discern-paper-tint-hue",
+        "--discern-ink-tint",
+        "--discern-ink-tint-hue",
       ].toSorted(),
     );
     const output = await Deno.readTextFile(join(temp, "discern.css"));

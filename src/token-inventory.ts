@@ -6,9 +6,9 @@
  * @module
  */
 
-import { allTokens } from "./tokens/tokens.ts";
+import { accentHueToken, allTokens } from "./tokens/tokens.ts";
 import type { DesignToken, ThemeToken } from "./tokens/tokens.ts";
 
-/** Every public Token exposed by the package. */
+/** Every public Token exposed by the package, including the accent hue primitive. */
 export const publicTokens: readonly (DesignToken | ThemeToken)[] = Object
-  .freeze([...allTokens]);
+  .freeze([...allTokens, accentHueToken]);

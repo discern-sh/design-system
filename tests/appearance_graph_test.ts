@@ -5,6 +5,7 @@ import {
   assertThrows,
 } from "@std/assert";
 import {
+  appearanceAxisCustomPropertyName,
   appearanceAxisDefaultDeclarations,
   compileAppearanceExpressionToCss,
   densityScaledSpacingCssValue,
@@ -16,6 +17,7 @@ import {
   APPEARANCE_POLARITY_CROSSOVER_DARKNESS,
   APPEARANCE_SPACING_UNIT_PX,
   appearanceAxes,
+  appearanceAxisNames,
   appearanceColorRoleLaws,
   appearanceContrastMargin,
   type AppearanceExpression,
@@ -146,26 +148,30 @@ Deno.test("polarity and every live CSS consumer derive from the field authority"
     1,
   );
   const registrations = generateAppearanceAxisRegistrationCss();
+  const expectedAxisProperties = [
+    "--discern-darkness",
+    "--discern-structure",
+    "--discern-emphasis",
+    "--discern-density",
+    "--discern-paper-tint",
+    "--discern-paper-tint-hue",
+    "--discern-ink-tint",
+    "--discern-ink-tint-hue",
+  ];
   assertEquals(
-    [...registrations.matchAll(/@property\s+(--discern-[a-z-]+)/gu)].map(
+    appearanceAxisNames.map(appearanceAxisCustomPropertyName),
+    expectedAxisProperties,
+  );
+  assertEquals(
+    [...registrations.matchAll(/\s+(--discern-[a-z-]+)/gu)].map(
       (match) => match[1],
     ),
-    [
-      "--discern-darkness",
-      "--discern-structure",
-      "--discern-emphasis",
-      "--discern-density",
-    ],
+    expectedAxisProperties,
   );
   assertStringIncludes(registrations, 'syntax: "<number>";');
   assertEquals(
     appearanceAxisDefaultDeclarations().map(({ name }) => name),
-    [
-      "--discern-darkness",
-      "--discern-structure",
-      "--discern-emphasis",
-      "--discern-density",
-    ],
+    expectedAxisProperties,
   );
   const liveNames = monoLiveCssDeclarations().map(({ name }) => name);
   const roleNames = [
@@ -183,7 +189,7 @@ Deno.test("polarity and every live CSS consumer derive from the field authority"
     0,
   );
   assert(
-    projectedBytes < 10_000,
+    projectedBytes < 13_000,
     `Shared field projection expanded to ${projectedBytes} declaration bytes`,
   );
   assert(

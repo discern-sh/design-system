@@ -1,6 +1,8 @@
 /** CSS projection of the appearance graph's authored numeric expressions. */
 
 import {
+  appearanceActiveChromaExpression,
+  appearanceActiveHueExpression,
   appearanceActiveLightnessExpression,
   appearanceAxes,
   type AppearanceAxisName,
@@ -8,7 +10,10 @@ import {
   type AppearanceColorRoleLaw,
   appearanceColorRoleLaws,
   type AppearanceExpression,
+  appearanceOppositeChromaExpression,
+  appearanceOppositeHueExpression,
   appearanceOppositeLightnessExpression,
+  appearancePigmentLaws,
   appearancePolarityExpression,
   type AppearanceProjection,
   type AppearanceShadowRoleLaw,
@@ -30,10 +35,19 @@ export interface AppearanceCssDeclaration {
 /** Public hue primitive shared by every Accent projection. */
 export const ACCENT_HUE_CUSTOM_PROPERTY_NAME = "--discern-accent-hue" as const;
 
-const FIELD_CANVAS_LIGHTNESS = "--discern-f-l" as const;
-const FIELD_POLARITY = "--discern-f-p" as const;
-const FIELD_ACTIVE_LIGHTNESS = "--discern-f-a" as const;
-const FIELD_OPPOSITE_LIGHTNESS = "--discern-f-o" as const;
+const CANVAS_LIGHTNESS = "--discern-f-l" as const;
+const CANVAS_COLOR = "--discern-f-c" as const;
+const POLARITY = "--discern-f-p" as const;
+const ACTIVE_LIGHTNESS = "--discern-f-a" as const;
+const ACTIVE_CHROMA = "--discern-f-ac" as const;
+const ACTIVE_HUE = "--discern-f-ah" as const;
+const OPPOSITE_LIGHTNESS = "--discern-f-o" as const;
+const OPPOSITE_CHROMA = "--discern-f-oc" as const;
+const OPPOSITE_HUE = "--discern-f-oh" as const;
+const PAPER_LIGHTNESS = "--discern-f-pl" as const;
+const PAPER_CHROMA = "--discern-f-pc" as const;
+const INK_LIGHTNESS = "--discern-f-il" as const;
+const INK_CHROMA = "--discern-f-ic" as const;
 
 function formattedNumber(value: number): string {
   if (!Number.isFinite(value)) {
@@ -321,8 +335,24 @@ export function compileAppearanceExpressionToCss(
 /** Public custom-property name for one registered field axis. */
 export function appearanceAxisCustomPropertyName(
   axis: AppearanceAxisName,
-): `--discern-${AppearanceAxisName}` {
-  return `--discern-${axis}`;
+): `--discern-${string}` {
+  return `--discern-${
+    axis.replaceAll(/[A-Z]/gu, (letter) => `-${letter.toLowerCase()}`)
+  }`;
+}
+
+/** The tinted paper pigment as an OKLCH colour of the live helpers. */
+function paperPigmentColor(): string {
+  return `oklch(var(${PAPER_LIGHTNESS}) var(${PAPER_CHROMA}) var(${
+    appearanceAxisCustomPropertyName("paperTintHue")
+  }))`;
+}
+
+/** The tinted ink pigment as an OKLCH colour of the live helpers. */
+function inkPigmentColor(): string {
+  return `oklch(var(${INK_LIGHTNESS}) var(${INK_CHROMA}) var(${
+    appearanceAxisCustomPropertyName("inkTintHue")
+  }))`;
 }
 
 /** Emit the exact top-level registered-property population for field axes. */
@@ -353,18 +383,22 @@ function colorRoleValue(
   const amount = compileExpression(law.expression, expressionBindings);
   switch (law.paint) {
     case "canvas":
-      return `oklch(var(${FIELD_CANVAS_LIGHTNESS}) 0 0)`;
+      return `var(${CANVAS_COLOR})`;
     case "active-ink":
-      return `oklch(var(${FIELD_ACTIVE_LIGHTNESS}) 0 0 / ${amount})`;
+      return `oklch(var(${ACTIVE_LIGHTNESS}) var(${ACTIVE_CHROMA}) var(${ACTIVE_HUE}) / ${amount})`;
     case "opposite-ink":
-      return `oklch(var(${FIELD_OPPOSITE_LIGHTNESS}) 0 0 / ${amount})`;
+      return `oklch(var(${OPPOSITE_LIGHTNESS}) var(${OPPOSITE_CHROMA}) var(${OPPOSITE_HUE}) / ${amount})`;
     case "raised-surface":
     case "owned-surface":
-      return `color-mix(in srgb, oklch(var(${FIELD_ACTIVE_LIGHTNESS}) 0 0) calc(${amount} * 100%), oklch(var(${FIELD_CANVAS_LIGHTNESS}) 0 0))`;
+      return `color-mix(in srgb, oklch(var(${ACTIVE_LIGHTNESS}) var(${ACTIVE_CHROMA}) var(${ACTIVE_HUE})) calc(${amount} * 100%), var(${CANVAS_COLOR}))`;
     case "ink-pigment":
-      return `oklch(0 0 0 / ${amount})`;
+      return `oklch(var(${INK_LIGHTNESS}) var(${INK_CHROMA}) var(${
+        appearanceAxisCustomPropertyName("inkTintHue")
+      }) / ${amount})`;
     case "paper-pigment":
-      return `oklch(1 0 0 / ${amount})`;
+      return `oklch(var(${PAPER_LIGHTNESS}) var(${PAPER_CHROMA}) var(${
+        appearanceAxisCustomPropertyName("paperTintHue")
+      }) / ${amount})`;
   }
 }
 
@@ -401,17 +435,28 @@ function shadowRoleValue(
 export function appearanceLiveCssDeclarations(
   projection: AppearanceProjection,
 ): readonly AppearanceCssDeclaration[] {
+  const pigmentBindings = new Map<AppearanceExpression, string>([
+    [appearancePigmentLaws.paper.lightness, `var(${PAPER_LIGHTNESS})`],
+    [appearancePigmentLaws.paper.chroma, `var(${PAPER_CHROMA})`],
+    [appearancePigmentLaws.ink.lightness, `var(${INK_LIGHTNESS})`],
+    [appearancePigmentLaws.ink.chroma, `var(${INK_CHROMA})`],
+  ]);
   const canvasBindings = new Map<AppearanceExpression, string>([
-    [appearanceCanvasLightnessExpression, `var(${FIELD_CANVAS_LIGHTNESS})`],
+    ...pigmentBindings,
+    [appearanceCanvasLightnessExpression, `var(${CANVAS_LIGHTNESS})`],
   ]);
   const polarityBindings = new Map<AppearanceExpression, string>([
     ...canvasBindings,
-    [appearancePolarityExpression, `var(${FIELD_POLARITY})`],
+    [appearancePolarityExpression, `var(${POLARITY})`],
   ]);
   const roleBindings = new Map<AppearanceExpression, string>([
     ...polarityBindings,
-    [appearanceActiveLightnessExpression, `var(${FIELD_ACTIVE_LIGHTNESS})`],
-    [appearanceOppositeLightnessExpression, `var(${FIELD_OPPOSITE_LIGHTNESS})`],
+    [appearanceActiveLightnessExpression, `var(${ACTIVE_LIGHTNESS})`],
+    [appearanceActiveChromaExpression, `var(${ACTIVE_CHROMA})`],
+    [appearanceActiveHueExpression, `var(${ACTIVE_HUE})`],
+    [appearanceOppositeLightnessExpression, `var(${OPPOSITE_LIGHTNESS})`],
+    [appearanceOppositeChromaExpression, `var(${OPPOSITE_CHROMA})`],
+    [appearanceOppositeHueExpression, `var(${OPPOSITE_HUE})`],
   ]);
   const projectedExpressions = projectSharedExpressions(
     [
@@ -429,31 +474,50 @@ export function appearanceLiveCssDeclarations(
     ],
     roleBindings,
   );
+  const helper = (
+    name: `--discern-${string}`,
+    expression: AppearanceExpression,
+    bindings: ReadonlyMap<AppearanceExpression, string>,
+  ): AppearanceCssDeclaration => ({
+    name,
+    value: compileExpression(expression, bindings),
+  });
+  const untouched = new Map<AppearanceExpression, string>();
   return Object.freeze([
+    helper(PAPER_LIGHTNESS, appearancePigmentLaws.paper.lightness, untouched),
+    helper(PAPER_CHROMA, appearancePigmentLaws.paper.chroma, untouched),
+    helper(INK_LIGHTNESS, appearancePigmentLaws.ink.lightness, untouched),
+    helper(INK_CHROMA, appearancePigmentLaws.ink.chroma, untouched),
+    helper(
+      CANVAS_LIGHTNESS,
+      appearanceCanvasLightnessExpression,
+      pigmentBindings,
+    ),
     {
-      name: FIELD_CANVAS_LIGHTNESS,
-      value: compileAppearanceExpressionToCss(
-        appearanceCanvasLightnessExpression,
-      ),
+      name: CANVAS_COLOR,
+      value: `color-mix(in oklab, ${paperPigmentColor()} calc((1 - var(${
+        appearanceAxisCustomPropertyName("darkness")
+      })) * 100%), ${inkPigmentColor()})`,
     },
-    {
-      name: FIELD_POLARITY,
-      value: compileExpression(appearancePolarityExpression, canvasBindings),
-    },
-    {
-      name: FIELD_ACTIVE_LIGHTNESS,
-      value: compileExpression(
-        appearanceActiveLightnessExpression,
-        polarityBindings,
-      ),
-    },
-    {
-      name: FIELD_OPPOSITE_LIGHTNESS,
-      value: compileExpression(
-        appearanceOppositeLightnessExpression,
-        polarityBindings,
-      ),
-    },
+    helper(POLARITY, appearancePolarityExpression, canvasBindings),
+    helper(
+      ACTIVE_LIGHTNESS,
+      appearanceActiveLightnessExpression,
+      polarityBindings,
+    ),
+    helper(ACTIVE_CHROMA, appearanceActiveChromaExpression, polarityBindings),
+    helper(ACTIVE_HUE, appearanceActiveHueExpression, polarityBindings),
+    helper(
+      OPPOSITE_LIGHTNESS,
+      appearanceOppositeLightnessExpression,
+      polarityBindings,
+    ),
+    helper(
+      OPPOSITE_CHROMA,
+      appearanceOppositeChromaExpression,
+      polarityBindings,
+    ),
+    helper(OPPOSITE_HUE, appearanceOppositeHueExpression, polarityBindings),
     ...projectedExpressions.declarations,
     ...appearanceColorRoleLaws.map((law) => ({
       name: law.name,

@@ -10,6 +10,8 @@ import {
   appearanceColorRoleLaws,
   appearanceProjection,
   evaluateAppearance,
+  pigmentTintAxisNames,
+  primaryAppearanceAxisNames,
 } from "../../../src/tokens/appearance.ts";
 import { appearanceAdmission } from "../../../src/tokens/tokens.ts";
 import { catalogueAccentHueLabel } from "../../shell/appearance-options.ts";
@@ -131,7 +133,11 @@ export function AppearancePage(
     accent,
   );
   const resolvedTerminalPresentation = terminalPresentation ??
-    resolveCatalogueTerminalPresentation(fieldScheme ?? polarity, accent);
+    resolveCatalogueTerminalPresentation(
+      fieldScheme ?? polarity,
+      accent,
+      selection,
+    );
   const terminalPoles = appearancePoleTerminalProjections(
     resolvedTerminalPresentation.appearance,
   );
@@ -200,9 +206,28 @@ export function AppearancePage(
               These are the same controls as the global Appearance panel.
             </p>
           </div>
-          {(
-            ["darkness", "structure", "emphasis", "density"] as const
-          ).map((axis) => (
+          {primaryAppearanceAxisNames.map((axis) => (
+            <AxisControl
+              key={axis}
+              axis={axis}
+              value={selection[axis]}
+              onChange={(value) => changeAxis(axis, value)}
+            />
+          ))}
+        </section>
+
+        <section
+          className="discern-catalogue-appearance-page__controls"
+          aria-labelledby="discern-catalogue-appearance-tint-heading"
+        >
+          <div>
+            <h2 id="discern-catalogue-appearance-tint-heading">Tint</h2>
+            <p>
+              Paper and ink each take a hue and a strength. Every setting stays
+              inside sRGB, and every derived role follows the pigments.
+            </p>
+          </div>
+          {pigmentTintAxisNames.map((axis) => (
             <AxisControl
               key={axis}
               axis={axis}

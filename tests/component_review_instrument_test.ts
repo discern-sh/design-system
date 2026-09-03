@@ -4,6 +4,7 @@ import {
   assertStringIncludes,
   assertThrows,
 } from "@std/assert";
+import { defaultCatalogueAxesSelection } from "../catalogue/shell/axes-state.ts";
 import {
   captureRegionForReview,
   inspectReviewGeometry,
@@ -71,6 +72,7 @@ Deno.test("review URLs reproduce every judgment input with a stable canonical or
     theme: "dark",
     accent: 300,
     field: {
+      ...defaultCatalogueAxesSelection,
       darkness: 1,
       structure: 1,
       emphasis: 1,
@@ -93,6 +95,7 @@ Deno.test("review URLs carry a field point for contact sheets and pole links", (
     ),
   );
   assertEquals(state.field, {
+    ...defaultCatalogueAxesSelection,
     darkness: 0.6,
     structure: 1.2,
     emphasis: 0.8,

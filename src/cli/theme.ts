@@ -12,10 +12,13 @@ import {
 } from "./ansi-palette.ts";
 import { oklchToSrgb } from "../internal/oklch.ts";
 import {
+  activePigmentTints,
   type Appearance,
+  type AppearanceAxes,
   type AppearanceColorRoleName,
   baseTokens,
   evaluateOpaqueAppearance,
+  type PigmentTintAxisName,
   resolveAppearance,
   themeTokens,
 } from "../tokens/tokens.ts";
@@ -23,10 +26,21 @@ import {
 export type { TerminalRgbColor };
 
 /**
- * Colour choices a terminal palette honours: an optional accent hue. The
- * caller's ground supplies darkness, so no axis coordinate belongs here.
+ * Colour choices a terminal palette honours: an optional accent hue and the
+ * optional paper and ink tints. The caller's ground supplies darkness, so no
+ * other axis coordinate belongs here.
  */
-export type TerminalAppearance = Pick<Appearance, "accent">;
+export type TerminalAppearance =
+  & Pick<Appearance, "accent">
+  & Partial<Pick<AppearanceAxes, PigmentTintAxisName>>;
+
+/** Retain only the accent and the tints that actually colour a pigment. */
+function explicitTerminalAppearance(resolved: Appearance): TerminalAppearance {
+  return {
+    ...(resolved.accent === undefined ? {} : { accent: resolved.accent }),
+    ...activePigmentTints(resolved),
+  };
+}
 
 /** One semantic colour with precomputed terminal-palette fallbacks. */
 export interface TerminalColor extends TerminalRgbColor {
@@ -235,12 +249,10 @@ export function deriveTerminalTheme(
   appearance: TerminalAppearance = {},
 ): TerminalTheme {
   const resolved = resolveAppearance({
+    ...appearance,
     darkness: variant === "light" ? 0 : 1,
-    accent: appearance.accent,
   });
-  const resolvedAppearance: TerminalAppearance = resolved.accent === undefined
-    ? {}
-    : { accent: resolved.accent };
+  const resolvedAppearance = explicitTerminalAppearance(resolved);
   const appearanceValues = evaluateOpaqueAppearance(resolved);
   const colors: Partial<Record<TerminalColorTokenName, TerminalColor>> = {};
   for (
@@ -294,8 +306,8 @@ export const terminalThemes: Readonly<
 
 /**
  * Resolve one terminal palette from independent ground and appearance inputs.
- * Monochrome poles reuse the cached package palettes; an accent palette is
- * evaluated directly from the shared hue-parameterised appearance law.
+ * Untinted monochrome poles reuse the cached package palettes; an accent or
+ * tinted palette is evaluated directly from the shared appearance law.
  */
 export function resolveTerminalTheme(
   options: TerminalThemeOptions = {},
@@ -305,9 +317,12 @@ export function resolveTerminalTheme(
     throw new TypeError(`unknown terminal theme variant ${variant}`);
   }
   const appearance = options.appearance ?? {};
-  return appearance.accent === undefined
+  const explicit = explicitTerminalAppearance(
+    resolveAppearance({ ...appearance, darkness: variant === "light" ? 0 : 1 }),
+  );
+  return Object.keys(explicit).length === 0
     ? terminalThemes[variant]
-    : deriveTerminalTheme(variant, appearance);
+    : deriveTerminalTheme(variant, explicit);
 }
 
 /** Resolve one authored semantic colour from a derived terminal theme. */

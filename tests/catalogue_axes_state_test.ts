@@ -6,11 +6,13 @@ import {
   catalogueAppearanceRootStyle,
   catalogueAxesControlScheme,
   catalogueAxesPolarity,
+  defaultCatalogueAxesSelection,
   parseCatalogueAxes,
   serializeCatalogueAxes,
 } from "../catalogue/shell/axes-state.ts";
 
 const point = {
+  ...defaultCatalogueAxesSelection,
   darkness: 0.6,
   structure: 1.25,
   emphasis: 0.75,
@@ -112,4 +114,26 @@ Deno.test("consumer export reproduces the public accent scope and axes", () => {
   <!-- Page content -->
 </main>`,
   );
+});
+
+Deno.test("tinted points append the four tint axes and untinted points omit them", () => {
+  const tinted = {
+    ...point,
+    paperTint: 0.4,
+    paperTintHue: 80,
+    inkTint: 0.6,
+    inkTintHue: 265,
+  } as const;
+  const encoded = serializeCatalogueAxes(tinted);
+  assertEquals(encoded, "0.6,1.25,0.75,0.8,0.4,80,0.6,265");
+  assertEquals(parseCatalogueAxes(encoded), tinted);
+  assertEquals(parseCatalogueAxes("0.6,1.25,0.75,0.8,0,0,0,0"), point);
+  assertEquals(
+    parseCatalogueAxes("0.6,1.25,0.75,0.8,1.5,80,0.6,265"),
+    undefined,
+  );
+  assertEquals(parseCatalogueAxes("0.6,1.25,0.75,0.8,0.4,80"), undefined);
+  const style = catalogueAppearanceRootStyle(tinted, "light");
+  assertEquals(style["--discern-paper-tint" as keyof typeof style], 0.4);
+  assertEquals(style["--discern-ink-tint-hue" as keyof typeof style], 265);
 });

@@ -3,7 +3,12 @@ import type {
   TerminalAppearance,
   TerminalThemeVariant,
 } from "../src/cli/theme.ts";
-import { normalizeAccentHue } from "../src/tokens/appearance.ts";
+import {
+  activePigmentTints,
+  type AppearanceAxes,
+  normalizeAccentHue,
+  type PigmentTintAxisName,
+} from "../src/tokens/appearance.ts";
 
 /** Resolve the Catalogue control to the concrete terminal palette it implies. */
 export function resolveCatalogueTerminalTheme(
@@ -26,15 +31,21 @@ export const defaultCatalogueTerminalPresentation:
     appearance: {},
   });
 
-/** Translate orthogonal Catalogue state into the public terminal contract. */
+/**
+ * Translate orthogonal Catalogue state into the public terminal contract. The
+ * ground is the resolved pole; the accent and any non-default tints travel as
+ * the explicit appearance so a monochrome, untinted state stays `{}`.
+ */
 export function resolveCatalogueTerminalPresentation(
   theme: TerminalThemeVariant,
   accent: number | undefined,
+  axes?: Partial<Pick<AppearanceAxes, PigmentTintAxisName>>,
 ): CatalogueTerminalPresentation {
   return Object.freeze({
     theme,
-    appearance: accent === undefined
-      ? {}
-      : { accent: normalizeAccentHue(accent) },
+    appearance: {
+      ...(accent === undefined ? {} : { accent: normalizeAccentHue(accent) }),
+      ...activePigmentTints(axes ?? {}),
+    },
   });
 }

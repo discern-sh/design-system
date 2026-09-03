@@ -1,4 +1,5 @@
 import { assertEquals } from "@std/assert";
+import { defaultCatalogueAxesSelection } from "../catalogue/shell/axes-state.ts";
 import {
   defaultCatalogueAppearanceState,
   parseCatalogueAppearanceParameters,
@@ -12,6 +13,7 @@ const state = {
   theme: "dark",
   accent: 145.5,
   field: {
+    ...defaultCatalogueAxesSelection,
     darkness: 0.72,
     structure: 1.6,
     emphasis: 0.65,
@@ -117,6 +119,7 @@ Deno.test("legacy identity, named Accent, and preset-bearing links migrate witho
       theme: "dark",
       accent: 255,
       field: {
+        ...defaultCatalogueAxesSelection,
         darkness: 0.6,
         structure: 1.2,
         emphasis: 0.8,
@@ -132,6 +135,7 @@ Deno.test("legacy identity, named Accent, and preset-bearing links migrate witho
       theme: "light",
       accent: undefined,
       field: {
+        ...defaultCatalogueAxesSelection,
         darkness: 0.25,
         structure: 0.4,
         emphasis: 1.3,

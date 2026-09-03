@@ -247,3 +247,35 @@ Deno.test("terminal spacing and type roles derive from base Token metadata", () 
   assertEquals(terminalThemes.dark.typography.muted, { dim: true });
   assertEquals(terminalThemes.dark.typography.emphasis, { italic: true });
 });
+
+Deno.test("pigment tints reach the terminal palette and leave the untinted cache alone", () => {
+  assertStrictEquals(
+    resolveTerminalTheme({
+      theme: "dark",
+      appearance: { paperTint: 0, paperTintHue: 120, inkTint: 0 },
+    }),
+    terminalThemes.dark,
+  );
+  const navy = resolveTerminalTheme({
+    theme: "dark",
+    appearance: { inkTint: 1, inkTintHue: 265 },
+  });
+  assertEquals(navy.appearance, { inkTint: 1, inkTintHue: 265 });
+  const expected = evaluateOpaqueAppearance({
+    darkness: 1,
+    inkTint: 1,
+    inkTintHue: 265,
+  })["--discern-color-canvas"];
+  const match = expected?.match(/^oklch\(([\d.]+)%\s+([\d.]+)\s+(-?[\d.]+)\)$/);
+  assert(match !== null && match !== undefined);
+  const canvas = terminalThemeColor(navy, "--discern-color-canvas");
+  assertEquals(
+    { red: canvas.red, green: canvas.green, blue: canvas.blue },
+    oklchToSrgb(Number(match[1]) / 100, Number(match[2]), Number(match[3])),
+  );
+  assert(canvas.blue > canvas.red, "a navy ink tint must lean blue");
+  assertNotEquals(
+    canvas,
+    terminalThemeColor(terminalThemes.dark, "--discern-color-canvas"),
+  );
+});

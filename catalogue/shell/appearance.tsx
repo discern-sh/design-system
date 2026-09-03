@@ -7,8 +7,9 @@ import { Input } from "../../src/components/forms/input/input.tsx";
 import { Select } from "../../src/components/forms/select/select.tsx";
 import {
   appearanceAxes,
-  type AppearanceAxisName,
   DEFAULT_ACCENT_HUE,
+  pigmentTintAxisNames,
+  primaryAppearanceAxisNames,
 } from "../../src/tokens/appearance.ts";
 import { resolveCatalogueTerminalPresentation } from "../terminal-theme.ts";
 import { useCatalogueTerminalTheme } from "../use-terminal-theme.ts";
@@ -35,8 +36,10 @@ import type { CatalogueAxesSelection } from "./axes-state.ts";
 import {
   catalogueAppearanceRootStyle,
   catalogueAxesAreDefault,
+  catalogueAxesAreTinted,
   catalogueAxesControlScheme,
   catalogueAxesLabel,
+  formatCatalogueAxisNumber,
   resetCatalogueAxes,
 } from "./axes-state.ts";
 import { announceCatalogueLocationChange } from "./location.ts";
@@ -176,6 +179,7 @@ export function useCatalogueAppearance(url: URL) {
   const terminalPresentation = resolveCatalogueTerminalPresentation(
     fieldScheme,
     state.accent,
+    state.field,
   );
 
   return {
@@ -208,8 +212,6 @@ export interface AppearanceControlProps {
   readonly onFieldReset: () => void;
 }
 
-const axisOrder = Object.keys(appearanceAxes) as AppearanceAxisName[];
-
 /** Compact control boundary shared by the shell and Builder state owners. */
 export function AppearanceControl(
   {
@@ -229,7 +231,33 @@ export function AppearanceControl(
     : `${scopeLabel} appearance`;
   const hueGuidanceId = useId();
   const axesId = useId();
+  const tintId = useId();
+  const tintStrengthId = useId();
+  const tintHueId = useId();
+  const tintGuidanceId = useId();
   const [axesOpen, setAxesOpen] = useState(false);
+  const [tintOpen, setTintOpen] = useState(false);
+  const tintShared = field.paperTint === field.inkTint &&
+    field.paperTintHue === field.inkTintHue;
+  const [tintSplit, setTintSplit] = useState(!tintShared);
+  const tinted = catalogueAxesAreTinted(field);
+  const tintSummary = !tinted
+    ? "none"
+    : tintSplit || !tintShared
+    ? "paper and ink"
+    : `${formatCatalogueAxisNumber(field.paperTint)} at hue ${
+      formatCatalogueAxisNumber(field.paperTintHue)
+    }`;
+  const setSharedTint = (
+    next: Partial<Pick<CatalogueAxesSelection, "paperTint" | "paperTintHue">>,
+  ): void =>
+    onFieldChange({
+      ...field,
+      paperTint: next.paperTint ?? field.paperTint,
+      inkTint: next.paperTint ?? field.paperTint,
+      paperTintHue: next.paperTintHue ?? field.paperTintHue,
+      inkTintHue: next.paperTintHue ?? field.paperTintHue,
+    });
   const [rememberedHue, setRememberedHue] = useState(
     accent ?? DEFAULT_ACCENT_HUE,
   );
@@ -354,6 +382,113 @@ export function AppearanceControl(
             </div>
           )}
 
+        <section className="discern-catalogue-appearance__axes discern-catalogue-appearance__tint">
+          <button
+            type="button"
+            aria-expanded={tintOpen}
+            aria-controls={tintId}
+            onClick={() => setTintOpen((open) => !open)}
+          >
+            <span>Tint</span>
+            <span className="discern-catalogue-appearance__axes-summary">
+              {tintSummary}
+            </span>
+          </button>
+          {tintOpen
+            ? (
+              <div id={tintId}>
+                {tintSplit
+                  ? (
+                    <>
+                      {pigmentTintAxisNames.map((axis) => (
+                        <AxisControl
+                          key={axis}
+                          axis={axis}
+                          value={field[axis]}
+                          onChange={(value) =>
+                            onFieldChange({ ...field, [axis]: value })}
+                        />
+                      ))}
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => {
+                          setTintSplit(false);
+                          setSharedTint({});
+                        }}
+                      >
+                        Share one tint
+                      </Button>
+                    </>
+                  )
+                  : (
+                    <>
+                      <div
+                        className="discern-catalogue-axis"
+                        data-discern-tint="strength"
+                      >
+                        <div>
+                          <label htmlFor={tintStrengthId}>Tint</label>
+                          <output htmlFor={tintStrengthId}>
+                            {formatCatalogueAxisNumber(field.paperTint)}
+                          </output>
+                        </div>
+                        <Input
+                          id={tintStrengthId}
+                          type="range"
+                          min={appearanceAxes.paperTint.minimum}
+                          max={appearanceAxes.paperTint.maximum}
+                          step="0.01"
+                          value={field.paperTint}
+                          aria-describedby={tintGuidanceId}
+                          onInput={(event) =>
+                            setSharedTint({
+                              paperTint: event.currentTarget.valueAsNumber,
+                            })}
+                        />
+                      </div>
+                      <div
+                        className="discern-catalogue-axis"
+                        data-discern-tint="hue"
+                      >
+                        <div>
+                          <label htmlFor={tintHueId}>Tint hue</label>
+                          <output htmlFor={tintHueId}>
+                            {formatCatalogueAxisNumber(field.paperTintHue)}
+                          </output>
+                        </div>
+                        <Input
+                          id={tintHueId}
+                          type="range"
+                          min={appearanceAxes.paperTintHue.minimum}
+                          max={appearanceAxes.paperTintHue.maximum}
+                          step="1"
+                          value={field.paperTintHue}
+                          aria-describedby={tintGuidanceId}
+                          onInput={(event) =>
+                            setSharedTint({
+                              paperTintHue: event.currentTarget.valueAsNumber,
+                            })}
+                        />
+                      </div>
+                      <small id={tintGuidanceId}>
+                        Tints paper and ink together: a whisper of stock at the
+                        light pole, a coloured black at the dark pole.
+                      </small>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => setTintSplit(true)}
+                      >
+                        Split paper and ink
+                      </Button>
+                    </>
+                  )}
+              </div>
+            )
+            : null}
+        </section>
+
         <section className="discern-catalogue-appearance__axes">
           <button
             type="button"
@@ -369,7 +504,7 @@ export function AppearanceControl(
           {axesOpen
             ? (
               <div id={axesId}>
-                {axisOrder.map((axis) => (
+                {primaryAppearanceAxisNames.map((axis) => (
                   <AxisControl
                     key={axis}
                     axis={axis}

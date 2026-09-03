@@ -10,13 +10,25 @@ import { emitDesignSystemRuntime } from "../../src/runtime.ts";
 import {
   APPEARANCE_POLARITY_CROSSOVER_DARKNESS,
   type AppearanceAxes,
+  appearanceAxisNames,
   appearanceColorRoleLaws,
   type AppearanceProjection,
   defaultAppearance,
   evaluateAppearance,
 } from "../../src/tokens/appearance.ts";
-import { APPEARANCE_LIVE_CSS_SUPPORTS } from "../../src/tokens/appearance-live-css.ts";
+import {
+  APPEARANCE_LIVE_CSS_SUPPORTS,
+  appearanceAxisCustomPropertyName,
+} from "../../src/tokens/appearance-live-css.ts";
 import { baseTokens, themeTokens } from "../../src/tokens/tokens.ts";
+
+/** Every axis with its registered custom property, in authored order. */
+const axisProperties: Readonly<Record<string, string>> = Object.fromEntries(
+  appearanceAxisNames.map((axis) => [
+    axis,
+    appearanceAxisCustomPropertyName(axis),
+  ]),
+);
 
 const OKLAB_TOLERANCE = 0.006;
 const ALPHA_TOLERANCE = 1 / 255 + 0.0005;
@@ -102,6 +114,21 @@ const samples: readonly AppearanceProjectionSample[] = [
     theme: null,
     media: "light",
     scheme: "dark",
+    authoredPoint: true,
+  },
+  {
+    label: "tinted stock and navy ink",
+    point: defaultPoint({
+      darkness: 0.3,
+      structure: 1.2,
+      paperTint: 0.6,
+      paperTintHue: 80,
+      inkTint: 0.8,
+      inkTintHue: 265,
+    }),
+    theme: null,
+    media: "light",
+    scheme: "light",
     authoredPoint: true,
   },
   {
@@ -297,10 +324,7 @@ export async function verifyAppearanceProjection(
       );
     }
     const expectedRegistrations = [
-      "--discern-darkness",
-      "--discern-structure",
-      "--discern-emphasis",
-      "--discern-density",
+      ...Object.values(axisProperties),
       "--discern-accent-hue",
     ];
     if (
@@ -328,7 +352,7 @@ export async function verifyAppearanceProjection(
     for (const sample of samples) {
       await page.emulateMedia({ colorScheme: sample.media });
       const observed = await page.evaluate(
-        ({ roleNames, sample, spacingNames }) => {
+        ({ axisProperties, roleNames, sample, spacingNames }) => {
           const root = document.getElementById("discern-appearance-probe");
           if (!(root instanceof HTMLElement)) {
             throw new Error("Missing appearance probe root");
@@ -340,7 +364,11 @@ export async function verifyAppearanceProjection(
           }
           if (sample.authoredPoint) {
             for (const [axis, value] of Object.entries(sample.point)) {
-              root.style.setProperty(`--discern-${axis}`, String(value));
+              const property = axisProperties[axis];
+              if (property === undefined) {
+                throw new Error(`unknown axis ${axis}`);
+              }
+              root.style.setProperty(property, String(value));
             }
             root.style.colorScheme = sample.scheme;
           }
@@ -373,9 +401,9 @@ export async function verifyAppearanceProjection(
           const rootStyle = getComputedStyle(root);
           return {
             axes: Object.fromEntries(
-              ["darkness", "structure", "emphasis", "density"].map((axis) => [
+              Object.entries(axisProperties).map(([axis, property]) => [
                 axis,
-                Number(rootStyle.getPropertyValue(`--discern-${axis}`)),
+                Number(rootStyle.getPropertyValue(property)),
               ]),
             ),
             colorScheme: rootStyle.colorScheme,
@@ -384,6 +412,7 @@ export async function verifyAppearanceProjection(
           };
         },
         {
+          axisProperties,
           roleNames,
           sample,
           spacingNames: spacingTokens.map(({ name }) => name),
@@ -394,7 +423,9 @@ export async function verifyAppearanceProjection(
         const actual = observed.axes[axis];
         if (actual === undefined || Math.abs(actual - expected) > 0.0000001) {
           failures.push(
-            `${sample.label}: --discern-${axis} expected ${expected}, received ${actual}`,
+            `${sample.label}: ${
+              axisProperties[axis]
+            } expected ${expected}, received ${actual}`,
           );
         }
       }
@@ -491,6 +522,8 @@ export async function verifyAppearanceProjection(
               structure: 1.4,
               emphasis: 1.35,
               density: 1.2,
+              inkTint: 0.5,
+              inkTintHue: 265,
             },
           },
           { appearance: "accent", hue: 335 },
@@ -509,7 +542,7 @@ export async function verifyAppearanceProjection(
 
     for (const scenario of scopeScenarios) {
       const observed = await page.evaluate(
-        ({ roleNames, scenario }) => {
+        ({ axisProperties, roleNames, scenario }) => {
           const root = document.getElementById("discern-appearance-probe");
           if (!(root instanceof HTMLElement)) {
             throw new Error("Missing appearance-scope probe root");
@@ -518,8 +551,13 @@ export async function verifyAppearanceProjection(
           root.removeAttribute("data-discern-theme");
           root.removeAttribute("data-discern-accent");
           root.removeAttribute("style");
+          const axisProperty = (axis: string): string => {
+            const property = axisProperties[axis];
+            if (property === undefined) throw new Error(`unknown axis ${axis}`);
+            return property;
+          };
           for (const [axis, value] of Object.entries(scenario.base)) {
-            root.style.setProperty(`--discern-${axis}`, String(value));
+            root.style.setProperty(axisProperty(axis), String(value));
           }
 
           let parent: HTMLElement | undefined;
@@ -535,7 +573,7 @@ export async function verifyAppearanceProjection(
               );
             }
             for (const [axis, value] of Object.entries(node.axes ?? {})) {
-              element.style.setProperty(`--discern-${axis}`, String(value));
+              element.style.setProperty(axisProperty(axis), String(value));
             }
             if (parent !== undefined) parent.append(element);
             parent = element;
@@ -557,9 +595,9 @@ export async function verifyAppearanceProjection(
             const style = getComputedStyle(element);
             return {
               axes: Object.fromEntries(
-                ["darkness", "structure", "emphasis", "density"].map((axis) => [
+                Object.entries(axisProperties).map(([axis, property]) => [
                   axis,
-                  Number(style.getPropertyValue(`--discern-${axis}`)),
+                  Number(style.getPropertyValue(property)),
                 ]),
               ),
               hue: Number(style.getPropertyValue("--discern-accent-hue")),
@@ -567,7 +605,7 @@ export async function verifyAppearanceProjection(
             };
           });
         },
-        { roleNames, scenario },
+        { axisProperties, roleNames, scenario },
       );
 
       let inheritedPoint = scenario.base;
@@ -585,7 +623,9 @@ export async function verifyAppearanceProjection(
           const actual = result.axes[axis];
           if (actual === undefined || Math.abs(actual - expected) > 0.0000001) {
             failures.push(
-              `${scenario.label} scope ${index}: inherited --discern-${axis} expected ${expected}, received ${actual}`,
+              `${scenario.label} scope ${index}: inherited ${
+                axisProperties[axis]
+              } expected ${expected}, received ${actual}`,
             );
           }
         }
