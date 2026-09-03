@@ -27,7 +27,7 @@ import {
   catalogueFieldControlScheme,
   catalogueFieldStyle,
 } from "../../shell/field-state.ts";
-import { useCatalogueTerminalTheme } from "../../terminal-theme.ts";
+import { useCatalogueTerminalTheme } from "../../use-terminal-theme.ts";
 import type {
   BuilderPreviewAppearance,
   BuilderPreviewMode,
