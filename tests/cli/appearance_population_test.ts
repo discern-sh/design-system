@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertThrows } from "@std/assert";
-import { styleText } from "../../src/cli/ansi.ts";
+import { stripAnsi, styleText } from "../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
 import {
   type CliPresentationOptions,
@@ -164,6 +164,7 @@ function renderConformantFrame<Props>(
 const APPEARANCES: readonly Appearance[] = [
   fieldAppearance,
   accentAppearance(120),
+  accentAppearance(137.5),
   accentAppearance(255),
   accentAppearance(335),
 ];
@@ -271,12 +272,17 @@ Deno.test("every CLI example renders through every appearance pole and colour de
 
         for (const theme of ["light", "dark"] as const) {
           for (const appearance of APPEARANCES) {
-            renderConformantFrame(
+            const frame = renderConformantFrame(
               module.render,
               example.props,
               { theme, appearance },
               capabilities,
               `${slug}/${example.name} ${theme} ${appearance.name} ${colorDepth}`,
+            );
+            assertEquals(
+              stripAnsi(frame),
+              stripAnsi(implicit),
+              `${slug}/${example.name} ${theme} ${appearance.name} changed semantic text or glyphs`,
             );
           }
         }

@@ -23,6 +23,11 @@ export const catalogueBrowserCheckPlan = Object.freeze(
       failureLabel: "Terminal Catalogue",
     }),
     Object.freeze({
+      id: "appearance",
+      familyIds: Object.freeze([]),
+      failureLabel: "Cross-surface appearance",
+    }),
+    Object.freeze({
       id: "shell",
       familyIds: Object.freeze([]),
       failureLabel: "Catalogue shell",

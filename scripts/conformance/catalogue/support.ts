@@ -56,3 +56,30 @@ export async function selectCatalogueTheme(
     `Catalogue did not apply the ${theme} theme policy`,
   );
 }
+
+/** Open the shared global Appearance disclosure and its four field axes. */
+export async function openCatalogueAppearanceAxes(page: Page): Promise<void> {
+  const appearance = page.locator(".discern-catalogue-appearance");
+  if (await appearance.getAttribute("open") === null) {
+    await appearance.locator(
+      'summary[aria-label^="Change "][aria-label$="appearance"]',
+    ).click();
+  }
+  const axes = appearance.getByRole("button", { name: /Field axes/ });
+  if (await axes.getAttribute("aria-expanded") !== "true") {
+    await axes.click();
+  }
+}
+
+/** Set one numeric Appearance control and wait for its double-frame commit. */
+export async function setCatalogueAppearanceInput(
+  input: ReturnType<Page["locator"]>,
+  value: number,
+): Promise<void> {
+  await input.fill(String(value));
+  await input.evaluate(async () => {
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+    );
+  });
+}

@@ -97,32 +97,36 @@ Deno.test("terminal scope frames use the public palette at every colour depth", 
   for (
     const colorDepth of ["truecolor", "ansi256", "ansi16"] as const
   ) {
-    const terminal = capabilities(colorDepth);
-    for (const theme of ["light", "dark"] as const) {
-      for (const definition of terminalAppearanceScopeCases) {
-        const projection = projectTerminalAppearanceScope(
-          definition,
-          theme,
-          terminal,
-        );
-        for (
-          const [output, presentation] of [
-            [projection.parentOutput, projection.parentPresentation],
-            [projection.localOutput, projection.localPresentation],
-          ] as const
-        ) {
-          const spans = projectTerminalSpans(output);
-          for (const { label, tone } of terminalAppearanceScopeBadges) {
-            const actual = spans.find((span) => span.text.includes(label));
-            assert(
-              actual?.style?.color !== undefined,
-              `${label}/${colorDepth}`,
-            );
-            assertEquals(
-              actual.style.color,
-              projectedTone(tone, presentation, terminal),
-              `${definition.id}/${theme}/${colorDepth}/${label}`,
-            );
+    for (const unicode of [true, false]) {
+      const terminal = capabilities(colorDepth, unicode);
+      for (const theme of ["light", "dark"] as const) {
+        for (const definition of terminalAppearanceScopeCases) {
+          const projection = projectTerminalAppearanceScope(
+            definition,
+            theme,
+            terminal,
+          );
+          for (
+            const [output, presentation] of [
+              [projection.parentOutput, projection.parentPresentation],
+              [projection.localOutput, projection.localPresentation],
+            ] as const
+          ) {
+            const spans = projectTerminalSpans(output);
+            for (const { label, tone } of terminalAppearanceScopeBadges) {
+              const actual = spans.find((span) => span.text.includes(label));
+              assert(
+                actual?.style?.color !== undefined,
+                `${label}/${colorDepth}/${unicode ? "unicode" : "ascii"}`,
+              );
+              assertEquals(
+                actual.style.color,
+                projectedTone(tone, presentation, terminal),
+                `${definition.id}/${theme}/${colorDepth}/${label}/${
+                  unicode ? "unicode" : "ascii"
+                }`,
+              );
+            }
           }
         }
       }

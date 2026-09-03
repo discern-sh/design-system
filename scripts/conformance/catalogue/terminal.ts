@@ -32,39 +32,6 @@ const fieldPresentation = (theme: CatalogueTheme) =>
 export interface TerminalCatalogueEvidence {
   readonly layouts: number;
   readonly profileChecks: number;
-  readonly componentSpecimens: number;
-}
-
-async function verifyCliProjectionStyles(page: Page): Promise<void> {
-  const style = await page.locator(".discern-catalogue-cli-output").first()
-    .evaluate((node) => {
-      const computed = getComputedStyle(node);
-      return {
-        fontFamily: computed.fontFamily,
-        fontFeatureSettings: computed.fontFeatureSettings,
-        fontVariantLigatures: computed.fontVariantLigatures,
-        padding: computed.padding,
-        whiteSpace: computed.whiteSpace,
-      };
-    });
-  invariant(style.padding === "0px", "CLI projection must remain unpadded");
-  invariant(
-    style.fontFamily.includes("monospace"),
-    "CLI projection must use a monospace cell font",
-  );
-  invariant(
-    style.fontFeatureSettings.includes('"liga" 0') &&
-      style.fontFeatureSettings.includes('"calt" 0'),
-    "CLI projection must disable shaping features that move terminal cells",
-  );
-  invariant(
-    style.fontVariantLigatures === "none",
-    "CLI projection must disable font ligatures",
-  );
-  invariant(
-    style.whiteSpace === "pre",
-    "CLI projection must preserve terminal whitespace",
-  );
 }
 
 export async function verifyTerminalCatalogue(
@@ -376,87 +343,9 @@ export async function verifyTerminalCatalogue(
 
     await verifyOverflowCueCatalogue(page, origin);
 
-    const reviewUrl = new URL(catalogueRoutePaths.review, origin);
-    reviewUrl.searchParams.set("scope", "all");
-    reviewUrl.searchParams.set("surface", "cli");
-    reviewUrl.searchParams.set("theme", "light");
-    await loadCataloguePage(page, reviewUrl.href);
-
-    const terminalSpecimens = page.locator(".discern-catalogue-cli-preview");
-    const componentSpecimens = page.locator(
-      "[data-discern-component] .discern-catalogue-cli-preview",
-    );
-    const componentSpecimenCount = await componentSpecimens.count();
-    invariant(
-      componentSpecimenCount > 0,
-      "Terminal Catalogue needs a rendered Component specimen",
-    );
-    await verifyCliProjectionStyles(page);
-    const allComponentSurfacesUse = async (
-      theme: CatalogueTheme,
-    ): Promise<boolean> => {
-      const surfaceThemes = await terminalSpecimens.evaluateAll((nodes) =>
-        nodes.map((node) => node.getAttribute("data-discern-theme"))
-      );
-      return surfaceThemes.length === componentSpecimenCount &&
-        surfaceThemes.every((value) => value === theme);
-    };
-    invariant(
-      await allComponentSurfacesUse("light"),
-      "Light mode did not reach every terminal Component",
-    );
-
-    const headingOutput = page.locator(
-      '[data-discern-component="heading"] .discern-catalogue-cli-preview',
-    ).first();
-    const terminalPalette = async (): Promise<
-      { readonly background: string; readonly foreground: string }
-    > =>
-      await headingOutput.evaluate((node) => {
-        const coloured = node.querySelector<HTMLElement>('[style*="color"]');
-        return {
-          background: getComputedStyle(node).backgroundColor,
-          foreground: coloured === null ? "" : getComputedStyle(coloured).color,
-        };
-      });
-    const lightPalette = await terminalPalette();
-    invariant(
-      lightPalette.foreground !== "",
-      "Heading CLI specimen needs projected colour evidence",
-    );
-
-    await selectCatalogueTheme(page, "dark");
-    await eventually(
-      async () => await allComponentSurfacesUse("dark"),
-      "Dark mode did not reach every terminal Component",
-    );
-    const darkPalette = await terminalPalette();
-    invariant(
-      darkPalette.background !== lightPalette.background &&
-        darkPalette.foreground !== lightPalette.foreground,
-      "Dark mode changed terminal labels without re-rendering its palette",
-    );
-
-    await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
-    await selectCatalogueTheme(page, "system");
-    const systemReviewUrl = new URL(catalogueRoutePaths.review, origin);
-    systemReviewUrl.searchParams.set("scope", "all");
-    systemReviewUrl.searchParams.set("surface", "cli");
-    await loadCataloguePage(page, systemReviewUrl.href);
-    await eventually(
-      async () => await allComponentSurfacesUse("light"),
-      "System mode did not follow a light browser preference",
-    );
-    await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
-    await eventually(
-      async () => await allComponentSurfacesUse("dark"),
-      "System mode did not follow a changed dark browser preference",
-    );
-
     return {
       layouts: layoutCount,
       profileChecks,
-      componentSpecimens: componentSpecimenCount,
     };
   });
 }

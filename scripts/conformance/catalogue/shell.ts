@@ -21,6 +21,8 @@ import {
   eventually,
   invariant,
   loadCataloguePage,
+  openCatalogueAppearanceAxes,
+  setCatalogueAppearanceInput,
 } from "./support.ts";
 
 export interface CatalogueShellEvidence {
@@ -389,31 +391,6 @@ async function verifySearch(
   return { checks: 8, metadataRoles };
 }
 
-async function openAppearanceAxes(page: Page): Promise<void> {
-  const appearance = page.locator(".discern-catalogue-appearance");
-  if (await appearance.getAttribute("open") === null) {
-    await appearance.locator(
-      'summary[aria-label^="Change "][aria-label$="appearance"]',
-    ).click();
-  }
-  const axes = appearance.getByRole("button", { name: /Field axes/ });
-  if (await axes.getAttribute("aria-expanded") !== "true") {
-    await axes.click();
-  }
-}
-
-async function setAppearanceInput(
-  input: ReturnType<Page["locator"]>,
-  value: number,
-): Promise<void> {
-  await input.fill(String(value));
-  await input.evaluate(async () => {
-    await new Promise<void>((resolve) =>
-      requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
-    );
-  });
-}
-
 async function appearanceRootState(page: Page) {
   return await page.locator(".discern-catalogue-shell").evaluate((root) => {
     const style = getComputedStyle(root);
@@ -453,7 +430,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
     route.searchParams.set("accent", "255");
     route.searchParams.set("field", "0,1,1,1");
     await loadCataloguePage(page, route.href);
-    await openAppearanceAxes(page);
+    await openCatalogueAppearanceAxes(page);
     invariant(
       await page.locator(
             ".discern-catalogue-appearance [data-discern-field-axis]",
@@ -474,7 +451,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
   buttonUrl.searchParams.set("field", "0.25,1,0.8,1");
   await loadCataloguePage(page, buttonUrl.href);
   await page.getByRole("button", { name: /View all 4 examples/ }).click();
-  await openAppearanceAxes(page);
+  await openCatalogueAppearanceAxes(page);
   const primary = page.locator("main .discern-button--primary").first();
   const secondary = page.locator("main .discern-button--secondary").first();
   const density = page.locator(
@@ -502,9 +479,9 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
         xs: root.getPropertyValue("--discern-font-size-xs").trim(),
       };
     });
-  await setAppearanceInput(density, 0.5);
+  await setCatalogueAppearanceInput(density, 0.5);
   const compact = await buttonMeasure();
-  await setAppearanceInput(density, 2);
+  await setCatalogueAppearanceInput(density, 2);
   const airy = await buttonMeasure();
   invariant(
     compact.paddingInline !== airy.paddingInline &&
@@ -517,12 +494,12 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
   );
   checks += 1;
 
-  await setAppearanceInput(structure, 0);
+  await setCatalogueAppearanceInput(structure, 0);
   const flat = await Promise.all([
     primary.evaluate((node) => getComputedStyle(node).boxShadow),
     secondary.evaluate((node) => getComputedStyle(node).borderColor),
   ]);
-  await setAppearanceInput(structure, 2);
+  await setCatalogueAppearanceInput(structure, 2);
   const strong = await Promise.all([
     primary.evaluate((node) => getComputedStyle(node).boxShadow),
     secondary.evaluate((node) => getComputedStyle(node).borderColor),
@@ -556,16 +533,16 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
   });
   const darknessColours: string[] = [];
   for (const value of [0.2, 0.5, 0.8]) {
-    await setAppearanceInput(darkness, value);
+    await setCatalogueAppearanceInput(darkness, value);
     darknessColours.push(JSON.stringify(await buttonColours()));
   }
   invariant(
     new Set(darknessColours).size === darknessColours.length,
     `Accent roles did not move continuously with Darkness: ${darknessColours}`,
   );
-  await setAppearanceInput(emphasis, 0.6);
+  await setCatalogueAppearanceInput(emphasis, 0.6);
   const quiet = await buttonColours();
-  await setAppearanceInput(emphasis, 1.4);
+  await setCatalogueAppearanceInput(emphasis, 1.4);
   const vivid = await buttonColours();
   invariant(
     quiet.accentSoft !== vivid.accentSoft,
@@ -578,7 +555,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
   const hue = page.getByRole("spinbutton", { name: "Hue" });
   const hueColours = new Map<number, string>();
   for (const value of [0, 360, 145.5, 20]) {
-    await setAppearanceInput(hue, value);
+    await setCatalogueAppearanceInput(hue, value);
     hueColours.set(
       value,
       await primary.evaluate((node) => {
@@ -625,7 +602,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
       afterPalette.searchParams.get("field") === fieldBeforePalette,
     "Field → Accent → Field identity changes erased hue or axes",
   );
-  await setAppearanceInput(density, 1.3);
+  await setCatalogueAppearanceInput(density, 1.3);
   const afterAxis = new URL(page.url());
   invariant(
     afterAxis.searchParams.get("appearance") === "accent" &&
@@ -704,7 +681,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
   );
   checks += 2;
 
-  await openAppearanceAxes(page);
+  await openCatalogueAppearanceAxes(page);
   const darknessControls = page.locator(
     '[data-discern-field-axis="darkness"] input[type="range"]',
   );
@@ -712,7 +689,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
     await darknessControls.count() === 2,
     "Field page and global control do not share the same axis projection",
   );
-  await setAppearanceInput(darknessControls.first(), 0.35);
+  await setCatalogueAppearanceInput(darknessControls.first(), 0.35);
   await eventually(
     async () => await darknessControls.nth(1).inputValue() === "0.35",
     "Field page and header axis controls fell out of sync",
@@ -846,7 +823,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
     page,
     new URL(catalogueRoutePaths.overview, origin).href,
   );
-  await openAppearanceAxes(page);
+  await openCatalogueAppearanceAxes(page);
   const forcedPanel = await page.locator(".discern-catalogue-appearance__panel")
     .evaluate((node) => ({
       border: getComputedStyle(node).borderColor,

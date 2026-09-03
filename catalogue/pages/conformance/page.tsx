@@ -3,7 +3,11 @@ import { compositionRecipes } from "../../compositions.tsx";
 import { packageVersion } from "../../generated/registry.ts";
 import type { RegistryEntry } from "../../generated/registry.ts";
 import type { CatalogueTerminalPresentation } from "../../terminal-theme.ts";
+import type { AppearanceName } from "../../../src/tokens/field.ts";
+import type { CatalogueFieldSelection } from "../../shell/field-state.ts";
+import { catalogueFieldStyle } from "../../shell/field-state.ts";
 import { ComponentPreview } from "../components/component-preview.tsx";
+import type { CatalogueSurface } from "../shared.tsx";
 
 function JourneyPreview({ recipe }: { readonly recipe: CompositionRecipe }) {
   const { id, title, description, journey, Example } = recipe;
@@ -30,12 +34,22 @@ function JourneyPreview({ recipe }: { readonly recipe: CompositionRecipe }) {
 export function ConformancePage(
   {
     components,
+    appearance,
+    accentHue,
+    field,
+    fieldScheme,
     includeJourneys,
+    surface,
     terminalPresentation,
     theme,
   }: {
     readonly components: readonly RegistryEntry[];
+    readonly appearance: AppearanceName;
+    readonly accentHue: number;
+    readonly field: CatalogueFieldSelection;
+    readonly fieldScheme: "light" | "dark";
     readonly includeJourneys: boolean;
+    readonly surface: CatalogueSurface;
     readonly terminalPresentation: CatalogueTerminalPresentation;
     readonly theme: "system" | "light" | "dark";
   },
@@ -45,7 +59,9 @@ export function ConformancePage(
       className="discern-catalogue-conformance"
       data-discern-root
       data-discern-theme={theme}
+      data-discern-appearance={appearance}
       data-discern-conformance-ready="true"
+      style={catalogueFieldStyle(field, fieldScheme, accentHue)}
     >
       <h1 className="discern-visually-hidden">
         Discern component conformance sheet
@@ -61,7 +77,7 @@ export function ConformancePage(
       {components.map((entry) => (
         <ComponentPreview
           entry={entry}
-          surface="web"
+          surface={surface}
           terminalPresentation={terminalPresentation}
           key={entry.meta.slug}
         />

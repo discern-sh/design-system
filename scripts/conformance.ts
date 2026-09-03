@@ -17,6 +17,10 @@ import {
   catalogueBrowserCheckPlan,
 } from "./conformance/catalogue/browser-check-plan.ts";
 import {
+  type CrossSurfaceAppearanceEvidence,
+  verifyCrossSurfaceAppearanceCatalogue,
+} from "./conformance/catalogue/appearance.ts";
+import {
   type FieldProjectionEvidence,
   verifyFieldProjection,
 } from "./conformance/field-projection.ts";
@@ -66,7 +70,16 @@ const emptyComponentEvidence: ComponentContractEvidence = {
 const emptyTerminalEvidence: TerminalCatalogueEvidence = {
   layouts: 0,
   profileChecks: 0,
-  componentSpecimens: 0,
+};
+const emptyCrossSurfaceAppearanceEvidence: CrossSurfaceAppearanceEvidence = {
+  renderedComponents: 0,
+  renderedExamples: 0,
+  populationPostures: 0,
+  appearanceCases: 0,
+  semanticWitnessChecks: 0,
+  identityChecks: 0,
+  axisChecks: 0,
+  localScopeChecks: 0,
 };
 const emptyFoundationsEvidence: FoundationsCatalogueEvidence = {
   sheets: 0,
@@ -144,6 +157,7 @@ export async function runConformance(): Promise<void> {
     let foundations = emptyFoundationsEvidence;
     let compositions = emptyCompositionsEvidence;
     let terminal = emptyTerminalEvidence;
+    let appearance = emptyCrossSurfaceAppearanceEvidence;
     let shell = emptyShellEvidence;
     let landingAxeScans = 0;
     const catalogueCheckRunners: Readonly<
@@ -166,6 +180,9 @@ export async function runConformance(): Promise<void> {
       },
       terminal: async () => {
         terminal = await verifyTerminalCatalogue(page, origin);
+      },
+      appearance: async () => {
+        appearance = await verifyCrossSurfaceAppearanceCatalogue(page, origin);
       },
       shell: async () => {
         shell = await verifyCatalogueShell(page, origin);
@@ -258,8 +275,14 @@ export async function runConformance(): Promise<void> {
         `${shell.searchChecks} search checks, ` +
         `and ${shell.appearanceChecks} appearance checks. ` +
         `Terminal Catalogue passed ${terminal.profileChecks} profile fits across ` +
-        `${terminal.layouts} layouts and re-themed ${terminal.componentSpecimens} ` +
-        `Component specimens. ` +
+        `${terminal.layouts} layouts. ` +
+        `Cross-surface appearance passed ${appearance.populationPostures} generated ` +
+        `population postures across ${appearance.renderedExamples} examples from ` +
+        `${appearance.renderedComponents} rendered Components, ${appearance.appearanceCases} ` +
+        `named/arbitrary hue cases, ${appearance.semanticWitnessChecks} semantic ` +
+        `witness checks, ${appearance.identityChecks} identity checks, ` +
+        `${appearance.axisChecks} axis/pole checks, and ${appearance.localScopeChecks} ` +
+        `local scope checks. ` +
         `Foundations passed ${foundations.tokenChecks} Token checks and auto-enrolled ` +
         `${foundations.specimens} specimens across ${foundations.sheets} terminal ` +
         `foundations with ${foundations.animationChecks} reduced-motion and playback ` +

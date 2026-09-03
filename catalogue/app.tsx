@@ -50,8 +50,13 @@ function App() {
   if (currentUrl.searchParams.get("conformance") === "1") {
     return (
       <ConformancePage
+        appearance={appearance.appearance}
+        accentHue={appearance.accentHue}
         components={conformanceComponents}
+        field={appearance.field}
+        fieldScheme={appearance.fieldScheme}
         includeJourneys={selectedComponent === null}
+        surface={defaultSurface}
         terminalPresentation={appearance.terminalPresentation}
         theme={appearance.theme}
       />
