@@ -472,8 +472,9 @@ export function AppearanceControl(
                         />
                       </div>
                       <small id={tintGuidanceId}>
-                        Tints paper and ink together: a whisper of stock at the
-                        light pole, a coloured black at the dark pole.
+                        Tints paper and ink together: a whisper of stock on the
+                        light pigment, a coloured black on the dark one,
+                        whichever role each plays at the current darkness.
                       </small>
                       <Button
                         size="sm"

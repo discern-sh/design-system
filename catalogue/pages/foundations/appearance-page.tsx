@@ -223,8 +223,13 @@ export function AppearancePage(
           <div>
             <h2 id="discern-catalogue-appearance-tint-heading">Tint</h2>
             <p>
-              Paper and ink each take a hue and a strength. Every setting stays
-              inside sRGB, and every derived role follows the pigments.
+              Paper is the light pigment and ink the dark one, and they swap
+              roles with darkness: at the light pole the paper tint colours the
+              canvas while the ink tint colours text and fills; at the dark pole
+              the ink tint colours the canvas while the paper tint colours the
+              text. A tinted ink reads as black in small text and shows in
+              primary fills, inverse surfaces, and the dark canvas. Every
+              setting stays inside sRGB.
             </p>
           </div>
           {pigmentTintAxisNames.map((axis) => (

@@ -68,7 +68,7 @@ export const appearanceAxes = Object.freeze(
       maximum: 1,
       default: 0,
       description:
-        "Strength of the paper tint: 0 keeps pure white, 1 reaches the deepest stock every hue can show inside sRGB.",
+        "Tint strength of the paper pigment, which is the canvas at the light pole and the text at the dark pole: 0 keeps pure white, 1 reaches the deepest stock every hue can show inside sRGB.",
     },
     paperTintHue: {
       minimum: 0,
@@ -82,7 +82,7 @@ export const appearanceAxes = Object.freeze(
       maximum: 1,
       default: 0,
       description:
-        "Strength of the ink tint: 0 keeps pure black, 1 lifts the ink to the deepest coloured black every hue can show inside sRGB.",
+        "Tint strength of the ink pigment, which is the text at the light pole and the canvas at the dark pole: 0 keeps pure black, 1 lifts the ink to the deepest coloured black every hue can show inside sRGB.",
     },
     inkTintHue: {
       minimum: 0,
