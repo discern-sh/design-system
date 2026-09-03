@@ -773,7 +773,7 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
     }
     await previewAppearance.getByRole("combobox", { name: "Accent" })
       .selectOption("violet", { timeout: ACTION_TIMEOUT });
-    await previewAppearance.getByRole("button", { name: /^Axes/ })
+    await previewAppearance.getByRole("button", { name: /Axes/ })
       .click({ timeout: ACTION_TIMEOUT });
     await previewAppearance.getByRole("slider", { name: "Density" })
       .fill("1.6");

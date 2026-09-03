@@ -786,7 +786,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
     const summary = page.locator(".discern-catalogue-appearance > summary");
     await summary.focus();
     await summary.press("Enter");
-    const axes = page.getByRole("button", { name: /^Axes/ });
+    const axes = page.getByRole("button", { name: /Axes/ });
     await axes.focus();
     await axes.press("Enter");
     const darknessSlider = page.locator(
