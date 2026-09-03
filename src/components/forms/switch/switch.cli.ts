@@ -6,13 +6,17 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import type { ConfirmFrameState } from "../../../cli/interactive-states.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import {
@@ -26,14 +30,15 @@ import meta, { componentExampleVocabulary } from "./switch.meta.ts";
 
 /** Inputs accepted by the terminal Switch renderer. */
 export interface SwitchCliProps
-  extends Omit<ConfirmFrameState, "yesLabel" | "noLabel"> {
+  extends
+    Omit<ConfirmFrameState, "yesLabel" | "noLabel">,
+    CliPresentationOptions {
   /** Optional label shown on the off side of the track. */
   readonly noLabel?: string;
   /** Optional label shown on the on side of the track. */
   readonly yesLabel?: string;
   readonly presentation?: FormCliPresentation;
   readonly showStatus?: boolean;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -112,10 +117,10 @@ const renderSwitchCli: CliRenderer<SwitchCliProps> = (props, capabilities) => {
     ? `${capabilities.unicode ? "›" : ">"} `
     : "";
   const disabled = props.presentation === "disabled";
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const styleOptions = {
+    ...cliPresentationPassthrough(props),
     disabled,
-    ...(props.theme === undefined ? {} : { theme: props.theme }),
   };
   const availableWidth = controlWidth - measureText(pointer);
   const rawNoLabel = state.noLabel ?? "";
@@ -200,6 +205,7 @@ const renderSwitchCli: CliRenderer<SwitchCliProps> = (props, capabilities) => {
     ? `${noLabel} ${leftIndicator} ${track} ${rightIndicator}${yesLabel}`
     : `${noLabel} ${leftIndicator} ${track} ${rightIndicator} ${yesLabel}`;
   return renderFormCliFrame({
+    ...cliPresentationPassthrough(props),
     label: state.label,
     control: `${pointer}${control}`,
     lifecycle: state.lifecycle,
@@ -208,7 +214,6 @@ const renderSwitchCli: CliRenderer<SwitchCliProps> = (props, capabilities) => {
       ? {}
       : { presentation: props.presentation }),
     ...(props.showStatus === undefined ? {} : { showStatus: props.showStatus }),
-    ...(props.theme === undefined ? {} : { theme: props.theme }),
     ...(props.width === undefined ? {} : { width: props.width }),
   }, capabilities);
 };

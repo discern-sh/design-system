@@ -34,10 +34,10 @@ import { joinVertical } from "../../../cli/layout.ts";
 import { composeCliBlocks } from "../../../cli/rhythm.ts";
 import { measureText, padText, wrapText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   type TerminalColor,
   type TerminalTheme,
   terminalThemeColor,
-  terminalThemes,
 } from "../../../cli/theme.ts";
 import { barUnitSuffix, barValueText } from "./bar.description.ts";
 import type { ValidatedBarChart, ValidatedBarChartSeries } from "./bar.spec.ts";
@@ -404,7 +404,7 @@ function renderExactBar(
   labelColumn: number,
 ): string {
   const { capabilities } = context;
-  const theme = terminalThemes[context.theme];
+  const theme = resolveTerminalTheme(context);
   const inner = width - 4;
   const presentation: BarPresentation = {
     spec,

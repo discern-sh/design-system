@@ -6,14 +6,18 @@
 
 import { renderStyledSpans } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { truncateText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   type TerminalSemanticTone,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import renderSparklineCli from "../sparkline/sparkline.cli.ts";
@@ -22,14 +26,13 @@ import meta, { componentExampleVocabulary } from "./stat.meta.ts";
 import type { StatTrend } from "./stat.types.ts";
 
 /** Inputs accepted by the terminal Stat renderer. */
-export interface StatCliProps {
+export interface StatCliProps extends CliPresentationOptions {
   readonly label: string;
   readonly value: string;
   readonly context?: string;
   readonly trend?: StatTrend;
   /** Recent movement rendered as an annotated Sparkline beneath the trend. */
   readonly sparkline?: readonly SparklineValue[];
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -94,7 +97,7 @@ const renderStatCli: CliRenderer<StatCliProps> = (props, capabilities) => {
     );
   }
   const width = Math.min(requestedWidth, capabilities.columns);
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const contextTone: TerminalSemanticTone | undefined =
     props.trend === "positive"
       ? "success"
@@ -136,9 +139,9 @@ const renderStatCli: CliRenderer<StatCliProps> = (props, capabilities) => {
   if (props.sparkline !== undefined) {
     blocks.push(renderSparklineCli(
       {
+        ...cliPresentationPassthrough(props),
         values: props.sparkline,
         maxWidth: width,
-        ...(props.theme === undefined ? {} : { theme: props.theme }),
       },
       capabilities,
     ));

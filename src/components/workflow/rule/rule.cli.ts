@@ -4,9 +4,12 @@
  * @module
  */
 
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./rule.meta.ts";
 import {
   assertWorkflowCliText,
@@ -17,11 +20,10 @@ import {
 } from "../workflow-cli.ts";
 
 /** Inputs accepted by the terminal Rule renderer. */
-export interface RuleCliProps {
+export interface RuleCliProps extends CliPresentationOptions {
   readonly rule: string;
   readonly origin: string;
   readonly scope: string;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -63,7 +65,7 @@ const renderRuleCli: CliRenderer<RuleCliProps> = (props, capabilities) => {
   }
   const width = workflowCliWidth(props.maxWidth, capabilities);
   return [
-    styleWorkflowHeading("RULE", "accent", capabilities, props.theme),
+    styleWorkflowHeading("RULE", "accent", capabilities, props),
     ...workflowIndentedLines(props.rule, width),
     ...workflowFactLines("Origin", props.origin, width),
     ...workflowFactLines("Scope", props.scope, width),

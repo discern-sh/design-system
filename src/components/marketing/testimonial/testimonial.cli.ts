@@ -6,19 +6,19 @@
 
 import { renderBox } from "../../../cli/box.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import type { TestimonialLayout } from "./testimonial.types.ts";
 import { marketingCliWidth, wrapMarketingCliText } from "../marketing-frame.ts";
 import meta, { componentExampleVocabulary } from "./testimonial.meta.ts";
 
 /** Inputs accepted by the terminal Testimonial renderer. */
-export interface TestimonialCliProps {
+export interface TestimonialCliProps extends CliPresentationOptions {
   readonly quote: string;
   readonly author: string;
   readonly authorRole?: string;
@@ -26,7 +26,6 @@ export interface TestimonialCliProps {
   readonly metric?: string;
   readonly metricLabel?: string;
   readonly layout?: TestimonialLayout;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -72,7 +71,7 @@ const renderTestimonialCli: CliRenderer<TestimonialCliProps> = (
     ? ""
     : joinVertical([props.metric, props.metricLabel ?? ""]);
   const body = joinVertical([story, metric], { spacing: 1 });
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   return renderBox({
     body,
     title: "Testimonial",

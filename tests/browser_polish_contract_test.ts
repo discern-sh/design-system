@@ -2,9 +2,61 @@ import { assertEquals } from "@std/assert";
 import { fromFileUrl, join, relative } from "@std/path";
 import { registry } from "../catalogue/generated/registry.ts";
 import type { ResolvedComponentReviewPosture } from "../catalogue/review-postures.ts";
+import { themeConsumerStateFailures } from "../scripts/conformance/theme-consumer.ts";
 
 const PACKAGE_ROOT = fromFileUrl(new URL("..", import.meta.url));
 const COMPONENT_ROOT = join(PACKAGE_ROOT, "src", "components");
+
+Deno.test("theme consumers preserve bare and parameterised storage contracts", () => {
+  assertEquals(
+    themeConsumerStateFailures({
+      mode: "light",
+      selected: "light",
+      controlPresent: true,
+      storageKey: "discern-catalogue-appearance",
+      stored:
+        "theme=light&appearance=accent&accent=145.5&field=0.2%2C1%2C1%2C1",
+      storageParameter: "theme",
+    }),
+    [],
+  );
+  assertEquals(
+    themeConsumerStateFailures({
+      mode: "system",
+      selected: "system",
+      controlPresent: true,
+      storageKey: "discern-catalogue-appearance",
+      stored: "theme=system&appearance=field&accent=255&field=1%2C1%2C1%2C1",
+      storageParameter: "theme",
+    }),
+    [],
+  );
+  assertEquals(
+    themeConsumerStateFailures({
+      mode: "system",
+      selected: "system",
+      controlPresent: true,
+      storageKey: "legacy-theme",
+      stored: null,
+      storageParameter: null,
+    }),
+    [],
+  );
+  assertEquals(
+    themeConsumerStateFailures({
+      mode: "dark",
+      selected: "system",
+      controlPresent: true,
+      storageKey: "discern-catalogue-appearance",
+      stored: "theme=light&appearance=field&accent=255&field=0%2C1%2C1%2C1",
+      storageParameter: "theme",
+    }),
+    [
+      "selected theme system disagrees with root dark",
+      "stored theme light disagrees with root dark",
+    ],
+  );
+});
 
 function capturesPointerContact(
   posture: ResolvedComponentReviewPosture,
@@ -36,6 +88,12 @@ function visibleValidationProxyViolations(
   stylesheets: ReadonlyMap<string, string>,
   validationCapablePaths: ReadonlySet<string> = new Set(stylesheets.keys()),
 ): readonly string[] {
+  const carriesEmphaticBorderWidth = (body: string): boolean => {
+    const match = /border-width\s*:\s*(\d*\.?\d+)(px|rem)\b/.exec(body);
+    if (match === null) return false;
+    const value = Number(match[1]);
+    return match[2] === "rem" ? value * 16 >= 2 : value >= 2;
+  };
   const violations: string[] = [];
   for (const [path, css] of stylesheets) {
     if (!validationCapablePaths.has(path)) continue;
@@ -54,7 +112,7 @@ function visibleValidationProxyViolations(
           const body = match[2] ?? "";
           return selectors.includes('[aria-invalid="true"]') &&
             selectors.includes(`.${proxyClass}`) &&
-            /border-width\s*:\s*(?:2|[3-9]|[1-9][0-9]+)px\b/.test(body) &&
+            carriesEmphaticBorderWidth(body) &&
             /border(?:-color)?\s*:\s*var\(--discern-color-danger\)/.test(body);
         });
       if (!hasSemanticInvalidRule) {
@@ -195,7 +253,7 @@ Deno.test("a synthetic future control proxy cannot hide validation", () => {
         `
       ${unguarded.get(path)}
       .discern-future-choice input[aria-invalid="true"] + .discern-future-choice__proxy {
-        border-width: 2px;
+        border-width: 0.125rem;
         border-color: var(--discern-color-danger);
       }
     `,

@@ -4,9 +4,12 @@
  * @module
  */
 
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./retry-notice.meta.ts";
 import {
   assertWorkflowCliText,
@@ -17,11 +20,10 @@ import {
 } from "../workflow-cli.ts";
 
 /** Inputs accepted by the terminal Retry notice renderer. */
-export interface RetryNoticeCliProps {
+export interface RetryNoticeCliProps extends CliPresentationOptions {
   readonly safeToRetry: boolean;
   readonly reason: string;
   readonly label?: string;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -71,7 +73,7 @@ const renderRetryNoticeCli: CliRenderer<RetryNoticeCliProps> = (
       workflowPrefixedLines(`${marker} `, `${state}${label}`, width).join("\n"),
       props.safeToRetry ? "success" : "danger",
       capabilities,
-      props.theme,
+      props,
     ),
     ...workflowIndentedLines(props.reason, width),
   ].join("\n");

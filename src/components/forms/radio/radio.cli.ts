@@ -5,17 +5,17 @@
  */
 
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import type {
   SearchFrameState,
   SelectFrameState,
 } from "../../../cli/interactive-states.ts";
 import { isInteractiveChoice } from "../../../cli/interactive-choice.ts";
-import {
-  motifPassthrough,
-  type TerminalMotifOptions,
-} from "../../../cli/motif.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
   formCliChoiceFrameWidth,
   formCliEmptyResultsRow,
@@ -32,11 +32,10 @@ import {
 import meta, { componentExampleVocabulary } from "./radio.meta.ts";
 
 /** Inputs accepted by the terminal Radio renderer. */
-interface RadioCliOptions extends TerminalMotifOptions {
+interface RadioCliOptions extends CliPresentationOptions {
   readonly presentation?: FormCliSelectionPresentation;
   readonly required?: boolean;
   readonly showStatus?: boolean;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -211,9 +210,9 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
       const highlighted = expanded && index === highlightedIndex;
       const pointer = highlighted ? capabilities.unicode ? "› " : "> " : "  ";
       const styleOptions = {
+        ...cliPresentationPassthrough(props),
         highlighted,
         disabled: isInteractiveChoice(entry) && entry.disabled === true,
-        ...(props.theme === undefined ? {} : { theme: props.theme }),
       };
       const marker = props.presentation === "menu"
         ? markerGlyph
@@ -233,6 +232,7 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
           )
         })`;
       return renderFormCliChoiceEntry({
+        ...cliPresentationPassthrough(props),
         entry,
         pointer,
         marker,
@@ -243,14 +243,13 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
         ...(props.presentation === "menu" && index > 0
           ? { separateHeading: true }
           : {}),
-        ...(props.theme === undefined ? {} : { theme: props.theme }),
-        ...motifPassthrough(props),
         width,
       }, capabilities);
     });
   const menuDetail = props.presentation === "menu" && expanded &&
       choiceRows.length > 0
     ? renderFormCliMenuDetail({
+      ...cliPresentationPassthrough(props),
       entries: options,
       highlightedIndex,
       ...(state.menuDetailLineLimit === undefined
@@ -259,7 +258,6 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
       ...(state.kind === "search" && state.menuDetailEntries !== undefined
         ? { reserveEntries: state.menuDetailEntries }
         : {}),
-      ...(props.theme === undefined ? {} : { theme: props.theme }),
       width,
     }, capabilities)
     : "";
@@ -277,6 +275,7 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
     )
     : choices.join("\n");
   return renderFormCliFrame({
+    ...cliPresentationPassthrough(props),
     label: state.label,
     control,
     lifecycle: state.lifecycle,
@@ -289,7 +288,6 @@ const renderRadioCli: CliRenderer<RadioCliProps> = (props, capabilities) => {
       : { presentation: props.presentation }),
     ...(props.required === undefined ? {} : { required: props.required }),
     ...(props.showStatus === undefined ? {} : { showStatus: props.showStatus }),
-    ...(props.theme === undefined ? {} : { theme: props.theme }),
     width,
     choiceOverflow: state.kind === "select"
       ? visibleFormCliChoiceOverflow(state)

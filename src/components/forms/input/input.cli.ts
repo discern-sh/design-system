@@ -5,13 +5,17 @@
  */
 
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import type {
   AutocompleteFrameState,
   MaskedInputFrameState,
   TextInputFrameState,
 } from "../../../cli/interactive-states.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
   type FormCliPresentation,
   insertFormCliCursor,
@@ -26,11 +30,11 @@ export type InputCliProps =
     | MaskedInputFrameState
     | AutocompleteFrameState
   )
+  & CliPresentationOptions
   & {
     readonly presentation?: FormCliPresentation;
     readonly required?: boolean;
     readonly showStatus?: boolean;
-    readonly theme?: TerminalThemeVariant;
     readonly width?: number;
   };
 
@@ -162,6 +166,7 @@ const renderInputCli: CliRenderer<InputCliProps> = (props, capabilities) => {
     ? insertFormCliCursor(raw, state.cursor, capabilities)
     : raw;
   return renderFormCliFrame({
+    ...cliPresentationPassthrough(props),
     label: state.label,
     control: value,
     lifecycle: state.lifecycle,
@@ -174,7 +179,6 @@ const renderInputCli: CliRenderer<InputCliProps> = (props, capabilities) => {
       : { presentation: props.presentation }),
     ...(props.required === undefined ? {} : { required: props.required }),
     ...(props.showStatus === undefined ? {} : { showStatus: props.showStatus }),
-    ...(props.theme === undefined ? {} : { theme: props.theme }),
     ...(props.width === undefined ? {} : { width: props.width }),
   }, capabilities);
 };

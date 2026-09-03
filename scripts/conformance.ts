@@ -16,6 +16,14 @@ import {
   assertCatalogueFamilyBrowserCoverage,
   catalogueBrowserCheckPlan,
 } from "./conformance/catalogue/browser-check-plan.ts";
+import {
+  type CrossSurfaceAppearanceEvidence,
+  verifyCrossSurfaceAppearanceCatalogue,
+} from "./conformance/catalogue/appearance.ts";
+import {
+  type FieldProjectionEvidence,
+  verifyFieldProjection,
+} from "./conformance/field-projection.ts";
 import type {
   CatalogueBrowserCheckId,
 } from "./conformance/catalogue/browser-check-plan.ts";
@@ -48,6 +56,11 @@ const WIDE_VIEWPORT = { width: 1440, height: 1000 } as const;
 
 const emptyComponentEvidence: ComponentContractEvidence = {
   floatingSurfaces: 0,
+  fieldAxisPoints: 0,
+  fieldAxisTargetChecks: 0,
+  fieldAxisTextFloorChecks: 0,
+  fieldAxisFocusRingChecks: 0,
+  statusWitnessChecks: 0,
   accessibilityScans: 0,
   scenarios: 0,
   screenshots: 0,
@@ -57,7 +70,16 @@ const emptyComponentEvidence: ComponentContractEvidence = {
 const emptyTerminalEvidence: TerminalCatalogueEvidence = {
   layouts: 0,
   profileChecks: 0,
-  componentSpecimens: 0,
+};
+const emptyCrossSurfaceAppearanceEvidence: CrossSurfaceAppearanceEvidence = {
+  renderedComponents: 0,
+  renderedExamples: 0,
+  populationPostures: 0,
+  appearanceCases: 0,
+  semanticWitnessChecks: 0,
+  identityChecks: 0,
+  axisChecks: 0,
+  localScopeChecks: 0,
 };
 const emptyFoundationsEvidence: FoundationsCatalogueEvidence = {
   sheets: 0,
@@ -83,6 +105,15 @@ const emptyShellEvidence: CatalogueShellEvidence = {
   appearanceChecks: 0,
   reflowChecks: 0,
   metadataRoleChecks: 0,
+};
+const emptyFieldProjectionEvidence: FieldProjectionEvidence = {
+  points: 0,
+  roleChecks: 0,
+  poleChecks: 0,
+  spacingChecks: 0,
+  appearanceScopeChecks: 0,
+  appearanceNestingChecks: 0,
+  oklabTolerance: 0,
 };
 
 /** Build and exercise every Component and Catalogue family in Chromium. */
@@ -111,10 +142,22 @@ export async function runConformance(): Promise<void> {
     const page = await context.newPage();
     addPageFailureListeners(page, failures);
 
+    let fieldProjection = emptyFieldProjectionEvidence;
+    try {
+      fieldProjection = await verifyFieldProjection(page);
+    } catch (error) {
+      failures.push(
+        `Field projection: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+
     let components = emptyComponentEvidence;
     let foundations = emptyFoundationsEvidence;
     let compositions = emptyCompositionsEvidence;
     let terminal = emptyTerminalEvidence;
+    let appearance = emptyCrossSurfaceAppearanceEvidence;
     let shell = emptyShellEvidence;
     let landingAxeScans = 0;
     const catalogueCheckRunners: Readonly<
@@ -138,6 +181,9 @@ export async function runConformance(): Promise<void> {
       terminal: async () => {
         terminal = await verifyTerminalCatalogue(page, origin);
       },
+      appearance: async () => {
+        appearance = await verifyCrossSurfaceAppearanceCatalogue(page, origin);
+      },
       shell: async () => {
         shell = await verifyCatalogueShell(page, origin);
       },
@@ -160,7 +206,6 @@ export async function runConformance(): Promise<void> {
         );
       }
     }
-
     const review = await verifyComponentReviewInstrument(
       activeBrowser,
       origin,
@@ -204,6 +249,13 @@ export async function runConformance(): Promise<void> {
       resilience.fontFallbackAliasesSkipped.join(", ") || "none";
     console.log(
       `Conformance passed: ${expectedComponents.length} components, ` +
+        `${fieldProjection.roleChecks} live field-role checks and ` +
+        `${fieldProjection.poleChecks} pole-parity checks across ` +
+        `${fieldProjection.points} field points at ` +
+        `${fieldProjection.oklabTolerance} OKLab tolerance, with ` +
+        `${fieldProjection.spacingChecks} density-spacing checks; ` +
+        `${fieldProjection.appearanceScopeChecks} appearance-scope role checks and ` +
+        `${fieldProjection.appearanceNestingChecks} nested axis/hue checks; ` +
         `${components.accessibilityScans} component accessibility scans, ` +
         `${components.scenarios} interaction scenarios, ` +
         `${components.forcedColorFocusChecks} forced-colour focus checks, and ` +
@@ -211,14 +263,26 @@ export async function runConformance(): Promise<void> {
         `metadata-role checks; ` +
         `${components.screenshots + 1} review screenshots; ` +
         `${components.floatingSurfaces} floating surfaces share the clipping cure. ` +
+        `Field-axis reach passed ${components.fieldAxisTargetChecks} touch-target ` +
+        `and ${components.fieldAxisTextFloorChecks} xs-floor checks plus ` +
+        `${components.fieldAxisFocusRingChecks} focus-ring contrast checks across ` +
+        `${components.fieldAxisPoints} darkness points at density 0.8 and ` +
+        `structure 0.35; ${components.statusWitnessChecks} rendered status ` +
+        `elements retain non-colour witnesses. ` +
         `Catalogue shell passed ${shell.routeShapes} route shapes, ` +
         `${shell.axeScans} axe scans, ${shell.reflowChecks} reflow checks, ` +
         `${shell.drawerChecks} drawer checks, ${shell.navigationChecks} navigation checks, ` +
         `${shell.searchChecks} search checks, ` +
         `and ${shell.appearanceChecks} appearance checks. ` +
         `Terminal Catalogue passed ${terminal.profileChecks} profile fits across ` +
-        `${terminal.layouts} layouts and re-themed ${terminal.componentSpecimens} ` +
-        `Component specimens. ` +
+        `${terminal.layouts} layouts. ` +
+        `Cross-surface appearance passed ${appearance.populationPostures} generated ` +
+        `population postures across ${appearance.renderedExamples} examples from ` +
+        `${appearance.renderedComponents} rendered Components, ${appearance.appearanceCases} ` +
+        `named/arbitrary hue cases, ${appearance.semanticWitnessChecks} semantic ` +
+        `witness checks, ${appearance.identityChecks} identity checks, ` +
+        `${appearance.axisChecks} axis/pole checks, and ${appearance.localScopeChecks} ` +
+        `local scope checks. ` +
         `Foundations passed ${foundations.tokenChecks} Token checks and auto-enrolled ` +
         `${foundations.specimens} specimens across ${foundations.sheets} terminal ` +
         `foundations with ${foundations.animationChecks} reduced-motion and playback ` +

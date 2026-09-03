@@ -4,13 +4,14 @@
  * @module
  */
 
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
-import type {
-  TerminalSemanticTone,
-  TerminalThemeVariant,
-} from "../../../cli/theme.ts";
+import type { TerminalSemanticTone } from "../../../cli/theme.ts";
 import { derivedInitials } from "../../initials.ts";
 import type { AgentAvatarSize, AgentStatus } from "./agent-avatar.types.ts";
 import meta, { componentExampleVocabulary } from "./agent-avatar.meta.ts";
@@ -29,13 +30,12 @@ const statusTones: Readonly<Record<AgentStatus, TerminalSemanticTone>> = {
 };
 
 /** Inputs accepted by the terminal Agent avatar renderer. */
-export interface AgentAvatarCliProps {
+export interface AgentAvatarCliProps extends CliPresentationOptions {
   readonly name: string;
   readonly sigil?: string;
   readonly size?: AgentAvatarSize;
   readonly status?: AgentStatus;
   readonly statusLabel?: string;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -75,7 +75,7 @@ const renderAgentAvatarCli: CliRenderer<AgentAvatarCliProps> = (
       truncateText(chip, width, capabilities.unicode ? "…" : "."),
       "accent",
       capabilities,
-      props.theme,
+      props,
     );
   }
   const marker = props.status === "working"
@@ -96,7 +96,7 @@ const renderAgentAvatarCli: CliRenderer<AgentAvatarCliProps> = (
     frame,
     statusTones[props.status],
     capabilities,
-    props.theme,
+    props,
   );
 };
 

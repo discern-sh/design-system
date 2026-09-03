@@ -4,9 +4,12 @@
  * @module
  */
 
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import type {
   TaskFileEffects,
   TaskRetrySafety,
@@ -33,7 +36,7 @@ const retrySafetyLabels: Readonly<Record<TaskRetrySafety, string>> = {
 };
 
 /** Inputs accepted by the terminal Task metadata renderer. */
-export interface TaskMetadataCliProps {
+export interface TaskMetadataCliProps extends CliPresentationOptions {
   readonly outcome: string;
   readonly audience: string;
   readonly prerequisites: string;
@@ -42,7 +45,6 @@ export interface TaskMetadataCliProps {
   readonly retrySafety: TaskRetrySafety;
   readonly expectedState: string;
   readonly label?: string;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -105,7 +107,7 @@ const renderTaskMetadataCli: CliRenderer<TaskMetadataCliProps> = (
       workflowPrefixedLines("", label, width).join("\n"),
       "neutral",
       capabilities,
-      props.theme,
+      props,
     ),
     ...workflowFactLines("Outcome", props.outcome, width),
     ...workflowFactLines("For", props.audience, width),

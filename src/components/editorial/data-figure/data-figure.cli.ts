@@ -29,16 +29,19 @@ import { renderStyledSpans, styleText } from "../../../cli/ansi.ts";
 import { renderBox } from "../../../cli/box.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { rampGlyph, SERIES_MARKERS } from "../../../cli/glyph-ramps.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { measureText, wrapText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   type TerminalColor,
   type TerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./data-figure.meta.ts";
@@ -56,7 +59,7 @@ export interface DataFigureCliLegendItem {
 }
 
 /** Inputs accepted by the terminal Data figure renderer. */
-export interface DataFigureCliProps {
+export interface DataFigureCliProps extends CliPresentationOptions {
   readonly eyebrow?: string;
   readonly title: string;
   readonly visual: string;
@@ -64,7 +67,6 @@ export interface DataFigureCliProps {
   readonly caption: string;
   readonly source?: string;
   readonly surface?: DataFigureSurface;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -204,7 +206,7 @@ const renderDataFigureCli: CliRenderer<DataFigureCliProps> = (
     );
   }
   const width = Math.min(requested, capabilities.columns);
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const heading = props.eyebrow === undefined
     ? props.title
     : `${props.eyebrow.toLocaleUpperCase()}: ${props.title}`;

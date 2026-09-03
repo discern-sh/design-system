@@ -5,10 +5,14 @@
  */
 
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import type { TextareaFrameState } from "../../../cli/interactive-states.ts";
 import { wrapText } from "../../../cli/text.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
   formCliControlWidth,
   type FormCliPresentation,
@@ -18,11 +22,11 @@ import {
 import meta, { componentExampleVocabulary } from "./textarea.meta.ts";
 
 /** Inputs accepted by the terminal Textarea renderer. */
-export interface TextareaCliProps extends TextareaFrameState {
+export interface TextareaCliProps
+  extends TextareaFrameState, CliPresentationOptions {
   readonly presentation?: FormCliPresentation;
   readonly required?: boolean;
   readonly showStatus?: boolean;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -147,6 +151,7 @@ const renderTextareaCli: CliRenderer<TextareaCliProps> = (
   );
   while (lines.length < state.rows) lines.push("");
   return renderFormCliFrame({
+    ...cliPresentationPassthrough(props),
     label: state.label,
     control: lines.join("\n"),
     lifecycle: state.lifecycle,
@@ -156,7 +161,6 @@ const renderTextareaCli: CliRenderer<TextareaCliProps> = (
       : { presentation: props.presentation }),
     ...(props.required === undefined ? {} : { required: props.required }),
     ...(props.showStatus === undefined ? {} : { showStatus: props.showStatus }),
-    ...(props.theme === undefined ? {} : { theme: props.theme }),
     ...(props.width === undefined ? {} : { width: props.width }),
   }, capabilities);
 };

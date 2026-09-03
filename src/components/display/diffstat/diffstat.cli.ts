@@ -6,23 +6,25 @@
 
 import { renderStyledSpans, type StyledSpan } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { measureText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./diffstat.meta.ts";
 import { allocateDiffstatBlocks } from "./diffstat.shared.ts";
 
 /** Inputs accepted by the terminal Diffstat renderer. */
-export interface DiffstatCliProps {
+export interface DiffstatCliProps extends CliPresentationOptions {
   readonly added: number;
   readonly removed: number;
   readonly blocks?: number;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -78,7 +80,7 @@ const renderDiffstatCli: CliRenderer<DiffstatCliProps> = (
     );
   }
   const blocks = Math.min(requestedBlocks, availableBlocks);
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const bar = allocateDiffstatBlocks(props.added, props.removed, blocks);
   const spans: StyledSpan[] = [
     { text: added, style: { color: terminalToneColor(theme, "success") } },

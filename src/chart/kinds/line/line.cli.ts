@@ -33,10 +33,10 @@ import { joinVertical } from "../../../cli/layout.ts";
 import { composeCliBlocks } from "../../../cli/rhythm.ts";
 import { measureText, padText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   type TerminalColor,
   type TerminalTheme,
   terminalThemeColor,
-  terminalThemes,
 } from "../../../cli/theme.ts";
 import { chartLinearFraction, chartLogFraction } from "../../scale.ts";
 import {
@@ -443,7 +443,7 @@ function renderFaithfulLine(
   gutter: number,
 ): string {
   const { capabilities } = context;
-  const theme = terminalThemes[context.theme];
+  const theme = resolveTerminalTheme(context);
   const presentation: LinePresentation = {
     spec,
     theme,

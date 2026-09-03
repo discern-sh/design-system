@@ -59,7 +59,7 @@
   .discern-branch-choice__path a {
     display: inline-flex;
     align-items: center;
-    min-block-size: 24px;
+    min-block-size: 1.5rem;
     overflow-wrap: anywhere;
     color: var(--discern-color-accent-700);
     text-underline-offset: 0.16em;

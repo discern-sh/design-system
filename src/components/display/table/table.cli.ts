@@ -7,7 +7,12 @@
 import { styleText, type TerminalTextStyle } from "../../../cli/ansi.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import {
   renderSemanticInlineContent,
   type SemanticInlineContent,
@@ -21,9 +26,8 @@ import {
   wrapText,
 } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./table.meta.ts";
 
@@ -48,11 +52,10 @@ export interface TableCliResponsiveColumn {
   readonly align?: TerminalAlignment;
 }
 
-interface TableCliOptions {
+interface TableCliOptions extends CliPresentationOptions {
   readonly caption?: string;
   readonly striped?: boolean;
   readonly numeric?: boolean;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -293,7 +296,7 @@ function renderCompactTable(
   );
   const columnWidths = allocateWidths(natural, available);
   const glyphs = frameGlyphs(capabilities.unicode);
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const borderStyle = {
     ...theme.typography.muted,
     color: terminalThemeColor(theme, "--discern-color-border-strong"),
@@ -401,7 +404,7 @@ function semanticOptions(
   baseRole: "body" | "strong" | "muted" | "annotation",
 ) {
   return {
-    ...(props.theme === undefined ? {} : { theme: props.theme }),
+    ...cliPresentationPassthrough(props),
     baseRole,
   } as const;
 }
@@ -489,7 +492,7 @@ function responsiveCaption(
   ) {
     throw new TypeError("table caption must be non-empty and control-free");
   }
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   return wrapText(props.caption, width).map((line) =>
     styleText(line, theme.typography.annotation, capabilities)
   );
@@ -544,7 +547,7 @@ function renderResponsiveGrid(
     GRID_MINIMUM_CELL_WIDTH,
   );
   const glyphs = frameGlyphs(capabilities.unicode);
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const borderStyle = {
     ...theme.typography.muted,
     color: terminalThemeColor(theme, "--discern-color-border-strong"),

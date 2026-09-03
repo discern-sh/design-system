@@ -25,7 +25,7 @@
   }
   .discern-pager__link:active {
     background: var(--discern-color-accent-100);
-    transform: translateY(1px);
+    transform: translateY(0.0625rem);
   }
   .discern-pager__direction {
     color: var(--discern-color-ink-faint);
@@ -40,7 +40,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  @container discern-pager (max-width: 460px) {
+  @container discern-pager (max-width: 28.75rem) {
     .discern-pager__link {
       grid-column: 1 / -1;
     }

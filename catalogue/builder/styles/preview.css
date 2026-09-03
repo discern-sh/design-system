@@ -76,6 +76,7 @@
   }
   .discern-builder-appearance .discern-catalogue-appearance {
     position: relative;
+    margin-inline-start: 0;
   }
   .discern-builder-appearance .discern-catalogue-appearance > summary {
     display: grid;
@@ -99,7 +100,9 @@
     inset-block-start: calc(100% + 8px);
     inset-inline-end: 0;
     display: grid;
-    inline-size: min(270px, calc(100vw - 24px));
+    inline-size: min(390px, calc(100vw - 24px));
+    max-block-size: min(36rem, calc(100dvh - 80px));
+    overflow-y: auto;
     gap: 12px;
     padding: 12px;
     border: 1px solid var(--discern-color-border-strong);

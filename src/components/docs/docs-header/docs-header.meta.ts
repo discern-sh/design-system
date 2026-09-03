@@ -8,7 +8,7 @@ const meta = {
   order: 20,
   cli: { stance: "rendered" },
   description:
-    "Sticky translucent documentation top bar with brand, middle, and action regions.",
+    "Sticky opaque documentation top bar with brand, middle, and action regions.",
   purposes: ["building-documentation"],
   accessibility: [
     "The header element is a banner landmark; slotted controls keep their own semantics and focus outlines.",

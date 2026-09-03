@@ -10,14 +10,20 @@ import {
   nearestPaletteIndex,
   type TerminalRgbColor,
 } from "./ansi-palette.ts";
-import { clampRgbChannel, oklchToSrgb } from "../internal/oklch.ts";
+import { oklchToSrgb } from "../internal/oklch.ts";
 import {
+  accentAppearance,
+  type Appearance,
   baseTokens,
-  discernThemeTokens,
+  evaluateOpaqueAppearance,
+  fieldAppearance,
+  type FieldColorRoleName,
   themeTokens,
 } from "../tokens/tokens.ts";
 
 export type { TerminalRgbColor };
+/** Explicit Field or hue-parameterised Accent input for terminal presentation. */
+export type { Appearance } from "../tokens/tokens.ts";
 
 /** One semantic colour with precomputed terminal-palette fallbacks. */
 export interface TerminalColor extends TerminalRgbColor {
@@ -33,6 +39,14 @@ export type TerminalSpacingTokenName = `--discern-space-${string}`;
 
 /** Theme variant whose Token values feed one terminal palette. */
 export type TerminalThemeVariant = "light" | "dark";
+
+/** Independent ground and Field-or-Accent inputs for one terminal palette. */
+export interface TerminalThemeOptions {
+  /** Caller-selected terminal ground; defaults to `"dark"`. */
+  readonly theme?: TerminalThemeVariant;
+  /** Caller-selected appearance; defaults to the achromatic Field. */
+  readonly appearance?: Appearance;
+}
 
 /** Semantic terminal type roles available without a font renderer. */
 export type TerminalTextRole =
@@ -61,6 +75,7 @@ export type TerminalSemanticTone =
 /** One fully derived light or dark terminal theme. */
 export interface TerminalTheme {
   readonly variant: TerminalThemeVariant;
+  readonly appearance: Appearance;
   readonly colors: Readonly<Record<TerminalColorTokenName, TerminalColor>>;
   readonly spacing: Readonly<
     Record<TerminalSpacingTokenName, number>
@@ -78,158 +93,92 @@ const TONE_TOKENS = {
   Record<TerminalSemanticTone, TerminalColorTokenName>
 >;
 
-function splitTopLevel(source: string): readonly string[] {
-  const parts: string[] = [];
-  let depth = 0;
-  let start = 0;
-  for (let index = 0; index < source.length; index += 1) {
-    const character = source[index];
-    if (character === "(") depth += 1;
-    else if (character === ")") depth -= 1;
-    else if (character === "," && depth === 0) {
-      parts.push(source.slice(start, index).trim());
-      start = index + 1;
-    }
-  }
-  parts.push(source.slice(start).trim());
-  return parts;
-}
-
-interface WeightedColor {
-  readonly color: TerminalRgbColor | undefined;
-  readonly weight: number;
-}
-
-function parseWeightedColor(
-  source: string,
-  canvas: TerminalRgbColor,
-): WeightedColor | undefined {
-  const match = source.match(/^(.*?)(?:\s+([0-9]+(?:\.[0-9]+)?)%)?$/u);
-  if (match === null) return undefined;
-  const value = match[1]?.trim() ?? "";
-  const weight = Number(match[2] ?? "50") / 100;
-  if (!Number.isFinite(weight) || weight < 0 || weight > 1) return undefined;
-  if (value === "transparent") return { color: undefined, weight };
-  const color = parseCssColor(value, canvas);
-  return color === undefined ? undefined : { color, weight };
-}
-
-function mixChannel(
-  foreground: number,
-  background: number,
-  amount: number,
-): number {
-  return clampRgbChannel(foreground * amount + background * (1 - amount));
-}
-
-function parseColorMix(
-  source: string,
-  canvas: TerminalRgbColor,
-): TerminalRgbColor | undefined {
-  if (!source.startsWith("color-mix(") || !source.endsWith(")")) {
-    return undefined;
-  }
-  const parts = splitTopLevel(source.slice("color-mix(".length, -1));
-  if (parts.length !== 3 || !parts[0]?.startsWith("in ")) return undefined;
-  const first = parseWeightedColor(parts[1] ?? "", canvas);
-  const second = parseWeightedColor(parts[2] ?? "", canvas);
-  if (first === undefined || second === undefined) return undefined;
-
-  if (first.color === undefined && second.color === undefined) return canvas;
-  if (first.color === undefined) {
-    const color = second.color ?? canvas;
-    return {
-      red: mixChannel(color.red, canvas.red, second.weight),
-      green: mixChannel(color.green, canvas.green, second.weight),
-      blue: mixChannel(color.blue, canvas.blue, second.weight),
-    };
-  }
-  if (second.color === undefined) {
-    return {
-      red: mixChannel(first.color.red, canvas.red, first.weight),
-      green: mixChannel(first.color.green, canvas.green, first.weight),
-      blue: mixChannel(first.color.blue, canvas.blue, first.weight),
-    };
-  }
-  const total = first.weight + second.weight;
-  const firstAmount = total === 0 ? 0.5 : first.weight / total;
-  return {
-    red: mixChannel(first.color.red, second.color.red, firstAmount),
-    green: mixChannel(first.color.green, second.color.green, firstAmount),
-    blue: mixChannel(first.color.blue, second.color.blue, firstAmount),
-  };
+interface ParsedCssColor {
+  readonly color: TerminalRgbColor;
+  readonly chroma: number;
 }
 
 function parseCssColor(
   source: string,
-  canvas: TerminalRgbColor,
-): TerminalRgbColor | undefined {
+): ParsedCssColor | undefined {
   const value = source.trim();
-  const shortHex = value.match(/^#([0-9a-f])([0-9a-f])([0-9a-f])$/iu);
-  if (shortHex !== null) {
-    return {
-      red: Number.parseInt(`${shortHex[1]}${shortHex[1]}`, 16),
-      green: Number.parseInt(`${shortHex[2]}${shortHex[2]}`, 16),
-      blue: Number.parseInt(`${shortHex[3]}${shortHex[3]}`, 16),
-    };
-  }
-  const longHex = value.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/iu);
-  if (longHex !== null) {
-    return {
-      red: Number.parseInt(longHex[1] ?? "0", 16),
-      green: Number.parseInt(longHex[2] ?? "0", 16),
-      blue: Number.parseInt(longHex[3] ?? "0", 16),
-    };
-  }
   const oklch = value.match(
     /^oklch\(\s*([0-9]+(?:\.[0-9]+)?)%\s+([0-9]+(?:\.[0-9]+)?)\s+(-?[0-9]+(?:\.[0-9]+)?)\s*\)$/u,
   );
   if (oklch !== null) {
-    return oklchToSrgb(
-      Number(oklch[1]) / 100,
-      Number(oklch[2]),
-      Number(oklch[3]),
-    );
+    const chroma = Number(oklch[2]);
+    return {
+      color: oklchToSrgb(
+        Number(oklch[1]) / 100,
+        chroma,
+        Number(oklch[3]),
+      ),
+      chroma,
+    };
   }
-  return parseColorMix(value, canvas);
+  return undefined;
 }
 
-function terminalColor(color: TerminalRgbColor): TerminalColor {
+function terminalColor(
+  color: TerminalRgbColor,
+  ansi16 = nearestPaletteIndex(color, ANSI_16_RGB),
+): TerminalColor {
   return {
     ...color,
     ansi256: nearestPaletteIndex(color, ANSI_256_RGB),
-    ansi16: nearestPaletteIndex(color, ANSI_16_RGB),
+    ansi16,
   };
 }
 
-function rawTokenValues(
-  variant: TerminalThemeVariant,
-): ReadonlyMap<string, string> {
-  return new Map([
-    ...baseTokens.map((token) => [token.name, token.value] as const),
-    ...discernThemeTokens.map((token) => [token.name, token.value] as const),
-    ...themeTokens.map((token) => [token.name, token[variant]] as const),
-  ]);
+function rgbHue(color: TerminalRgbColor): number | undefined {
+  const red = color.red / 255;
+  const green = color.green / 255;
+  const blue = color.blue / 255;
+  const maximum = Math.max(red, green, blue);
+  const minimum = Math.min(red, green, blue);
+  const range = maximum - minimum;
+  if (range === 0) return undefined;
+  const sector = maximum === red
+    ? (green - blue) / range
+    : maximum === green
+    ? (blue - red) / range + 2
+    : (red - green) / range + 4;
+  return ((sector * 60) % 360 + 360) % 360;
 }
 
-function resolveTokenValue(
-  name: string,
-  values: ReadonlyMap<string, string>,
-  stack: ReadonlySet<string> = new Set(),
-): string {
-  if (stack.has(name)) {
-    throw new TypeError(`Circular Token reference at ${name}`);
+function circularHueDistance(first: number, second: number): number {
+  const distance = Math.abs(first - second);
+  return Math.min(distance, 360 - distance);
+}
+
+/**
+ * Keep an evaluated chromatic role chromatic in ANSI 16. Euclidean RGB
+ * proximity otherwise sends every pale role on dark ground to white. The
+ * finite palette has six hue families, so select the nearest family by its
+ * own RGB hue and use the ground-appropriate intensity. Collisions between
+ * nearby authored hues are then the palette's real six-family limit.
+ */
+function chromaticAnsi16Index(
+  color: TerminalRgbColor,
+  variant: TerminalThemeVariant,
+): number {
+  const hue = rgbHue(color);
+  if (hue === undefined) return nearestPaletteIndex(color, ANSI_16_RGB);
+  const first = variant === "light" ? 1 : 9;
+  let nearest = first;
+  let distance = Number.POSITIVE_INFINITY;
+  for (let index = first; index < first + 6; index += 1) {
+    const candidate = ANSI_16_RGB[index];
+    if (candidate === undefined) continue;
+    const candidateHue = rgbHue(candidate);
+    if (candidateHue === undefined) continue;
+    const candidateDistance = circularHueDistance(hue, candidateHue);
+    if (candidateDistance < distance) {
+      nearest = index;
+      distance = candidateDistance;
+    }
   }
-  const source = values.get(name);
-  if (source === undefined) {
-    throw new TypeError(`Unknown Token reference ${name}`);
-  }
-  const nextStack = new Set(stack).add(name);
-  return source.replace(
-    /var\(\s*(--discern-[a-z0-9-]+)\s*\)/giu,
-    (_match, dependency: string) =>
-      resolveTokenValue(dependency, values, nextStack),
-  );
+  return nearest;
 }
 
 function numericToken(name: string): number {
@@ -280,30 +229,58 @@ function deriveTypography(): Readonly<
 /** Derive one terminal palette directly from the package's authored Token values. */
 export function deriveTerminalTheme(
   variant: TerminalThemeVariant,
+  appearance: Appearance = fieldAppearance,
 ): TerminalTheme {
-  const values = rawTokenValues(variant);
-  const canvasSource = resolveTokenValue("--discern-color-canvas", values);
-  const canvas = parseCssColor(canvasSource, { red: 0, green: 0, blue: 0 });
-  if (canvas === undefined) {
-    throw new TypeError(`Cannot resolve terminal canvas from ${canvasSource}`);
-  }
+  const resolvedAppearance = appearance.name === "field"
+    ? fieldAppearance
+    : appearance.name === "accent"
+    ? accentAppearance(appearance.hue)
+    : (() => {
+      throw new TypeError(
+        `unknown terminal appearance ${
+          JSON.stringify((appearance as { readonly name?: unknown }).name)
+        }`,
+      );
+    })();
+  const appearanceValues = evaluateOpaqueAppearance(resolvedAppearance, {
+    darkness: variant === "light" ? 0 : 1,
+  });
   const colors: Partial<Record<TerminalColorTokenName, TerminalColor>> = {};
   for (
     const token of themeTokens.filter((candidate) =>
       candidate.category === "Color"
     )
   ) {
-    const source = resolveTokenValue(token.name, values);
-    const color = parseCssColor(source, canvas);
-    if (color === undefined) {
+    const appearanceValue = appearanceValues[
+      token.name as FieldColorRoleName
+    ];
+    const source = appearanceValue ??
+      (token.name.startsWith("--discern-color-series-")
+        ? token[variant]
+        : undefined);
+    if (source === undefined) {
+      throw new TypeError(
+        `Appearance did not evaluate terminal colour ${token.name}`,
+      );
+    }
+    const parsed = parseCssColor(source);
+    if (parsed === undefined) {
       throw new TypeError(
         `Cannot derive terminal colour ${token.name} from ${source}`,
       );
     }
-    colors[token.name] = terminalColor(color);
+    const preservesIndependentSeries = token.name.startsWith(
+      "--discern-color-series-",
+    );
+    const ansi16 = resolvedAppearance.name === "accent" &&
+        !preservesIndependentSeries && parsed.chroma > 0.0000001
+      ? chromaticAnsi16Index(parsed.color, variant)
+      : undefined;
+    colors[token.name] = terminalColor(parsed.color, ansi16);
   }
   return {
     variant,
+    appearance: resolvedAppearance,
     colors: colors as Readonly<Record<TerminalColorTokenName, TerminalColor>>,
     spacing: deriveSpacing(),
     typography: deriveTypography(),
@@ -317,6 +294,24 @@ export const terminalThemes: Readonly<
   light: deriveTerminalTheme("light"),
   dark: deriveTerminalTheme("dark"),
 };
+
+/**
+ * Resolve one terminal palette from independent ground and appearance inputs.
+ * Field poles reuse the package's compatibility projections; Accent palettes
+ * are evaluated directly from the shared hue-parameterised appearance law.
+ */
+export function resolveTerminalTheme(
+  options: TerminalThemeOptions = {},
+): TerminalTheme {
+  const variant = options.theme ?? "dark";
+  if (variant !== "light" && variant !== "dark") {
+    throw new TypeError(`unknown terminal theme variant ${variant}`);
+  }
+  const appearance = options.appearance ?? fieldAppearance;
+  return appearance.name === "field"
+    ? terminalThemes[variant]
+    : deriveTerminalTheme(variant, appearance);
+}
 
 /** Resolve one authored semantic colour from a derived terminal theme. */
 export function terminalThemeColor(

@@ -6,12 +6,12 @@
 
 import { styleText } from "../../cli/ansi.ts";
 import type { TerminalCapabilities } from "../../cli/capabilities.ts";
+import type { CliPresentationOptions } from "../../cli/contracts.ts";
 import { measureText, truncateText, wrapText } from "../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   type TerminalSemanticTone,
   type TerminalTheme,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../cli/theme.ts";
 
@@ -56,9 +56,9 @@ export function assertWorkflowCliText(
 
 /** Select the Token-derived theme used by one Workflow frame. */
 export function workflowCliTheme(
-  variant: TerminalThemeVariant | undefined,
+  options: CliPresentationOptions,
 ): TerminalTheme {
-  return terminalThemes[variant ?? "dark"];
+  return resolveTerminalTheme(options);
 }
 
 /** Style a Workflow heading with a semantic Token-derived tone. */
@@ -66,9 +66,9 @@ export function styleWorkflowHeading(
   value: string,
   tone: TerminalSemanticTone,
   capabilities: TerminalCapabilities,
-  variant?: TerminalThemeVariant,
+  options: CliPresentationOptions,
 ): string {
-  const theme = workflowCliTheme(variant);
+  const theme = workflowCliTheme(options);
   return styleText(
     value,
     {

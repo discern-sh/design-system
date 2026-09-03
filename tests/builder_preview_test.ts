@@ -17,7 +17,6 @@ import {
 import { builderPreviewAccent } from "../catalogue/builder/preview/controls.tsx";
 import {
   catalogueAppearanceOptions,
-  defaultCatalogueAppearanceOption,
 } from "../catalogue/shell/appearance-options.ts";
 import {
   builderPreviewMessageFromEvent,
@@ -178,7 +177,18 @@ Deno.test("preview messages are same-origin, versioned, and policy-accepted", ()
     documentKey: JSON.stringify(emptyDocument("Protocol check")),
     viewport: { id: "fluid", label: "Fluid", logicalWidth: 860 },
     zoom: { id: "fit", scale: 1 },
-    appearance: { theme: "light", resolvedTheme: "light", accent: "blue" },
+    appearance: {
+      theme: "light",
+      resolvedTheme: "dark",
+      appearance: "accent",
+      accentHue: 145.5,
+      field: {
+        darkness: 0.6,
+        structure: 1.2,
+        emphasis: 0.8,
+        density: 1.1,
+      },
+    },
     mode: "edit",
     selectionId: null,
     interactionRevision: 0,
@@ -194,6 +204,24 @@ Deno.test("preview messages are same-origin, versioned, and policy-accepted", ()
   assertEquals(
     builderPreviewMessageFromEvent(
       { origin: "https://elsewhere.test", data: snapshot, source: null },
+      "https://catalogue.test",
+      documentPolicy,
+    ),
+    undefined,
+  );
+  assertEquals(
+    builderPreviewMessageFromEvent(
+      {
+        origin: "https://catalogue.test",
+        data: {
+          ...snapshot,
+          appearance: {
+            ...snapshot.appearance,
+            field: { ...snapshot.appearance.field!, darkness: 1.2 },
+          },
+        },
+        source: null,
+      },
       "https://catalogue.test",
       documentPolicy,
     ),
@@ -340,21 +368,45 @@ Deno.test("the shared preview renderer injects optional callback witnesses only 
   assertEquals(inert.props.onValueChange, undefined);
 });
 
-Deno.test("Builder preview Appearance accepts only the exhaustive shared presets", () => {
+Deno.test("Builder preview Appearance accepts named and arbitrary numeric hues", () => {
   for (const option of catalogueAppearanceOptions) {
-    assertEquals(builderPreviewAccent(option.id), option);
-    if (option.kind === "hue") {
-      assertEquals(builderPreviewAccent(String(option.hue)), option);
-    }
+    assertEquals(builderPreviewAccent(option.id), option.hue);
+    assertEquals(builderPreviewAccent(String(option.hue)), option.hue);
   }
+  assertEquals(builderPreviewAccent("145.5"), 145.5);
+  assertEquals(builderPreviewAccent("360"), 0);
+  assertEquals(builderPreviewAccent("not-a-preset"), 255);
+});
+
+Deno.test("Catalogue opts into Appearance scopes without bloating the base runtime", async () => {
+  await builderModules();
+  const [runtime, scopes, manifest, documents] = await Promise.all([
+    Deno.readTextFile(new URL("../dist/discern.css", import.meta.url)),
+    Deno.readTextFile(
+      new URL("../dist/appearance-scopes.css", import.meta.url),
+    ),
+    Deno.readTextFile(new URL("../dist/manifest.json", import.meta.url)),
+    Promise.all(
+      [
+        "../catalogue/index.html",
+        "../catalogue/builder/index.html",
+        "../catalogue/builder/preview.html",
+        "../catalogue/reviews/components/index.html",
+      ].map((path) => Deno.readTextFile(new URL(path, import.meta.url))),
+    ),
+  ]);
+  assert(!runtime.includes("data-discern-appearance"));
+  assertStringIncludes(scopes, 'data-discern-appearance="field"');
+  assertStringIncludes(scopes, 'data-discern-appearance="accent"');
   assertEquals(
-    builderPreviewAccent("145"),
-    defaultCatalogueAppearanceOption,
+    (JSON.parse(manifest) as {
+      selection: { appearanceScopes: boolean };
+    }).selection.appearanceScopes,
+    false,
   );
-  assertEquals(
-    builderPreviewAccent("not-a-preset"),
-    defaultCatalogueAppearanceOption,
-  );
+  for (const document of documents) {
+    assertStringIncludes(document, "dist/appearance-scopes.css");
+  }
 });
 
 Deno.test("preview styles preserve a real frame width and stable editor chrome", async () => {

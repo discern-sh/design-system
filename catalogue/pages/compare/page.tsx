@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import type { TerminalThemeVariant } from "../../../src/cli/theme.ts";
 import { Select } from "../../../src/components/forms/select/select.tsx";
 import { OverflowCue } from "../../../src/components/layout/overflow-cue/overflow-cue.tsx";
 import type { RegistryEntry } from "../../generated/registry.ts";
+import type { CatalogueTerminalPresentation } from "../../terminal-theme.ts";
 import { catalogueDecisionCopyProps } from "../../metadata-copy.ts";
 import { catalogueRoutePaths } from "../../routes.ts";
 import { announceCatalogueLocationChange } from "../../shell/location.ts";
@@ -33,7 +33,7 @@ export function ComparisonItem(
     entry,
     surface,
     exampleId,
-    terminalTheme,
+    terminalPresentation,
     overridden,
     onSurfaceChange,
     onExampleChange,
@@ -43,7 +43,7 @@ export function ComparisonItem(
     readonly entry: RegistryEntry;
     readonly surface: CatalogueSurface;
     readonly exampleId: string;
-    readonly terminalTheme: TerminalThemeVariant;
+    readonly terminalPresentation: CatalogueTerminalPresentation;
     readonly overridden: boolean;
     readonly onSurfaceChange: (surface: CatalogueSurface) => void;
     readonly onExampleChange: (id: string) => void;
@@ -99,7 +99,7 @@ export function ComparisonItem(
         surface={surface}
         exampleId={exampleId}
         view="single"
-        terminalTheme={terminalTheme}
+        terminalPresentation={terminalPresentation}
         headingLevel={4}
       />
     </article>
@@ -194,11 +194,16 @@ function ScopePicker(
 }
 
 export function ComparePage(
-  { sortedComponents, defaultSurface, terminalTheme, onSurfaceChange }: {
+  {
+    sortedComponents,
+    defaultSurface,
+    terminalPresentation,
+    onSurfaceChange,
+  }: {
     readonly sortedComponents: readonly RegistryEntry[];
     readonly defaultSurface: CatalogueSurface;
     readonly componentSurfaces: Readonly<Record<string, CatalogueSurface>>;
-    readonly terminalTheme: TerminalThemeVariant;
+    readonly terminalPresentation: CatalogueTerminalPresentation;
     readonly onSurfaceChange: (slug: string, surface: CatalogueSurface) => void;
   },
 ) {
@@ -419,7 +424,7 @@ export function ComparePage(
                         entry={entry}
                         surface={itemSurface}
                         exampleId={exampleId}
-                        terminalTheme={terminalTheme}
+                        terminalPresentation={terminalPresentation}
                         overridden={entry.meta.slug in state.surfaceOverrides}
                         onSurfaceChange={(surface) => {
                           onSurfaceChange(entry.meta.slug, surface);

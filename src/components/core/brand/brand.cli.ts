@@ -6,17 +6,17 @@
 
 import { renderStyledSpans } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
-import { joinVertical } from "../../../cli/layout.ts";
 import {
-  motifPassthrough,
-  type TerminalMotifOptions,
-} from "../../../cli/motif.ts";
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
+import { joinVertical } from "../../../cli/layout.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import { renderMotifPattern } from "../../../cli/motifs.ts";
@@ -25,7 +25,7 @@ import meta, { componentExampleVocabulary } from "./brand.meta.ts";
 import type { BrandSize, BrandTypeface } from "./brand.types.ts";
 
 /** Inputs accepted by the terminal Brand renderer. */
-export interface BrandCliProps extends TerminalMotifOptions {
+export interface BrandCliProps extends CliPresentationOptions {
   readonly name: string;
   readonly tagline?: string;
   readonly mark?: boolean;
@@ -33,7 +33,6 @@ export interface BrandCliProps extends TerminalMotifOptions {
   readonly typeface?: BrandTypeface;
   readonly markTreatment?: LogoTreatment;
   readonly markShape?: LogoShape;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -73,25 +72,15 @@ const renderBrandCli: CliRenderer<BrandCliProps> = (props, capabilities) => {
     );
   }
   const width = Math.min(requestedWidth, capabilities.columns);
-  const theme = terminalThemes[props.theme ?? "dark"];
-  const markOptions = props.theme === undefined
-    ? {
-      length: 1,
-      direction: props.markShape === "square"
-        ? "reverse" as const
-        : "forward" as const,
-      register: "brand" as const,
-      ...motifPassthrough(props),
-    }
-    : {
-      length: 1,
-      theme: props.theme,
-      direction: props.markShape === "square"
-        ? "reverse" as const
-        : "forward" as const,
-      register: "brand" as const,
-      ...motifPassthrough(props),
-    };
+  const theme = resolveTerminalTheme(props);
+  const markOptions = {
+    length: 1,
+    direction: props.markShape === "square"
+      ? "reverse" as const
+      : "forward" as const,
+    register: "brand" as const,
+    ...cliPresentationPassthrough(props),
+  };
   const mark = props.mark === false
     ? ""
     : renderMotifPattern(markOptions, capabilities);

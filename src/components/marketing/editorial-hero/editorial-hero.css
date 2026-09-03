@@ -85,7 +85,7 @@
   .discern-editorial-hero--without-visual .discern-editorial-hero__lower {
     grid-template-columns: minmax(0, 42rem);
   }
-  @container (max-width: 860px) {
+  @container (max-width: 53.75rem) {
     .discern-editorial-hero__title {
       font-size: clamp(3.25rem, 12cqi, 6rem);
     }
@@ -96,7 +96,7 @@
       max-inline-size: 44rem;
     }
   }
-  @container (max-width: 520px) {
+  @container (max-width: 32.5rem) {
     .discern-editorial-hero__title {
       font-size: clamp(2.85rem, 14cqi, 4.6rem);
       line-height: 0.96;

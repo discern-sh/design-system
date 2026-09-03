@@ -4,7 +4,7 @@ import {
   assertStringIncludes,
   assertThrows,
 } from "@std/assert";
-import { stripAnsi } from "../../src/cli/ansi.ts";
+import { stripAnsi, styleText } from "../../src/cli/ansi.ts";
 import {
   type MarkdownBrowserTransition,
   transitionMarkdownBrowser,
@@ -23,8 +23,14 @@ import {
   markdownBrowserDocumentMaximumOffset,
   markdownBrowserOffsetForAnchor,
   markdownBrowserPickerWindow,
+  renderMarkdownBrowser,
 } from "../../src/cli/interactive/markdown-browser-renderer.ts";
 import { testTerminalCapabilities } from "../../src/cli/interactive/testing.ts";
+import {
+  resolveTerminalTheme,
+  terminalToneColor,
+} from "../../src/cli/theme.ts";
+import { accentAppearance } from "../../src/tokens/tokens.ts";
 import {
   markdownBrowserEntries,
   markdownBrowserOptions,
@@ -86,6 +92,54 @@ Deno.test("browser queries reject resumed and pasted format controls", () => {
   state = key(state, { kind: "text", text: "safe\u202Etxt\u2066" }).state;
   assertEquals(state.query, "safetxt");
   assert(!/[\p{Cc}\p{Cf}]/u.test(state.query));
+});
+
+Deno.test("Markdown browser state carries Accent through nested document rendering", () => {
+  const appearance = accentAppearance(245);
+  let state = createMarkdownBrowserState(
+    markdownBrowserOptions,
+    { columns: 80, rows: 24 },
+    { theme: "light", appearance },
+  );
+  assertEquals(state.theme, "light");
+  assertEquals(state.appearance, appearance);
+  state = key(state, { kind: "named", name: "enter" }).state;
+  assertEquals(state.appearance, appearance);
+
+  const styledCapabilities = testTerminalCapabilities({
+    colorDepth: "truecolor",
+    columns: 80,
+    hyperlinks: false,
+  });
+  const styled = renderMarkdownBrowser(state, styledCapabilities);
+  const palette = resolveTerminalTheme({ theme: "light", appearance });
+  const probe = styleText(
+    "x",
+    { color: terminalToneColor(palette, "accent") },
+    styledCapabilities,
+  );
+  assert(
+    styled.includes(probe.slice(0, probe.indexOf("x"))),
+    "nested Markdown browser frame omitted the selected Accent code",
+  );
+  const plain = renderMarkdownBrowser(
+    state,
+    testTerminalCapabilities({
+      colorDepth: "none",
+      columns: 80,
+      hyperlinks: false,
+    }),
+  );
+  assertStringIncludes(
+    plain,
+    "# A deliberately long guide heading that wraps without losing its",
+  );
+  assertStringIncludes(
+    plain,
+    "Keep the selected document and the reading position as separate facts.",
+  );
+  assert(!plain.includes("\u001b["));
+  assert(!plain.includes("\u001b]"));
 });
 
 Deno.test("steady document scrolling advances every rendered row despite repeated anchors", () => {

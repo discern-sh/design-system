@@ -4,18 +4,16 @@
  * @module
  */
 
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
-import { defineCliExamples } from "../../../cli/component-examples.ts";
 import {
-  motifPassthrough,
-  type TerminalMotifOptions,
-} from "../../../cli/motif.ts";
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
 import { renderMotifActivityBeacon } from "../../../cli/motifs.ts";
 import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
-import type {
-  TerminalSemanticTone,
-  TerminalThemeVariant,
-} from "../../../cli/theme.ts";
+import type { TerminalSemanticTone } from "../../../cli/theme.ts";
 import type { WorklogStatus } from "./worklog.types.ts";
 import meta, { componentExampleVocabulary } from "./worklog.meta.ts";
 import {
@@ -47,9 +45,8 @@ export interface WorklogCliEntry {
 }
 
 /** Inputs accepted by the terminal Worklog renderer. */
-export interface WorklogCliProps extends TerminalMotifOptions {
+export interface WorklogCliProps extends CliPresentationOptions {
   readonly entries: readonly WorklogCliEntry[];
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -136,11 +133,10 @@ const renderWorklogCli: CliRenderer<WorklogCliProps> = (
     const marker = entry.status === "active"
       ? renderMotifActivityBeacon(
         {
+          ...cliPresentationPassthrough(props),
           width: 8,
           phase: entry.phase ?? 0,
           marker: triangleGlyph(TRIANGLES.filledSmall.up, capabilities.unicode),
-          ...(props.theme === undefined ? {} : { theme: props.theme }),
-          ...motifPassthrough(props),
         },
         { ...capabilities, columns: 8 },
       )
@@ -148,7 +144,7 @@ const renderWorklogCli: CliRenderer<WorklogCliProps> = (
         staticMarker(entry.status, capabilities.unicode),
         statusTones[entry.status],
         capabilities,
-        props.theme,
+        props,
       );
     lines.push(...agentsPrefixedLines(
       `${marker} `,

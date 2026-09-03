@@ -34,7 +34,7 @@
     place-items: center;
     inline-size: 1.35rem;
     block-size: 1.35rem;
-    border: 1px solid currentColor;
+    border: 1px solid var(--discern-color-border-strong);
     border-radius: var(--discern-radius-xs);
     line-height: 1;
   }

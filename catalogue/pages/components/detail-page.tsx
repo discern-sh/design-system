@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import type { TerminalThemeVariant } from "../../../src/cli/theme.ts";
 import { registry } from "../../generated/registry.ts";
 import type { RegistryEntry } from "../../generated/registry.ts";
 import { catalogueDecisionCopyProps } from "../../metadata-copy.ts";
+import type { CatalogueTerminalPresentation } from "../../terminal-theme.ts";
 import { catalogueRoutePaths } from "../../routes.ts";
 import { announceCatalogueLocationChange } from "../../shell/location.ts";
 import { preserveCatalogueAppearanceHref } from "../../shell/appearance-state.ts";
@@ -22,10 +22,10 @@ import {
 } from "./state.ts";
 
 export function ComponentDetailPage(
-  { entry, surface, terminalTheme, onSurfaceChange }: {
+  { entry, surface, terminalPresentation, onSurfaceChange }: {
     readonly entry: RegistryEntry;
     readonly surface: CatalogueSurface;
-    readonly terminalTheme: TerminalThemeVariant;
+    readonly terminalPresentation: CatalogueTerminalPresentation;
     readonly onSurfaceChange: (surface: CatalogueSurface) => void;
   },
 ) {
@@ -136,7 +136,7 @@ export function ComponentDetailPage(
           surface={state.surface}
           exampleId={state.exampleId}
           view={state.view}
-          terminalTheme={terminalTheme}
+          terminalPresentation={terminalPresentation}
           headingLevel={2}
         />
         <ComponentEvidence entry={entry} />

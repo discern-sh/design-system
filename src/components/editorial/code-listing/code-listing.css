@@ -20,7 +20,7 @@
   }
   .discern-code-listing__header > span {
     display: flex;
-    gap: 0.34rem;
+    gap: calc(var(--discern-space-1) * 1.36);
   }
   .discern-code-listing__header i {
     inline-size: 0.48rem;
@@ -66,19 +66,21 @@
   .discern-code-listing__line {
     display: block;
     min-width: max-content;
-    padding-inline: 4.2rem var(--discern-space-6);
+    padding-inline: calc(var(--discern-space-16) + var(--discern-space-1))
+      var(--discern-space-6);
     white-space: pre;
   }
   .discern-code-listing__line::before {
     display: inline-block;
     width: 2.2rem;
-    margin-inline: -3rem 0.8rem;
+    margin-inline: calc(var(--discern-space-12) * -1)
+      var(--discern-space-3);
     color: var(--discern-color-ink-faint);
     content: attr(data-line);
     text-align: end;
   }
   .discern-code-listing__line--highlighted {
-    border-inline-start: 2px solid var(--discern-color-accent-500);
+    border-inline-start: 0.125rem solid var(--discern-color-accent-500);
     background: var(--discern-color-accent-100);
   }
   .discern-code-listing figcaption {
@@ -115,6 +117,9 @@
     background: var(--discern-color-inverse-surface);
     color: color-mix(in oklab,
       var(--discern-color-inverse-ink) 90%, transparent);
+  }
+  .discern-code-listing--showcase .discern-code-listing__body:focus-visible {
+    outline-color: var(--discern-color-inverse-ink);
   }
   .discern-code-listing--showcase .discern-code-listing__line--highlighted {
     background: color-mix(in oklab,

@@ -42,7 +42,7 @@
   .discern-closing-statement__reassurance > :last-child {
     margin-block-end: 0;
   }
-  @container (max-width: 520px) {
+  @container (max-width: 32.5rem) {
     .discern-closing-statement__actions {
       align-items: stretch;
       inline-size: 100%;

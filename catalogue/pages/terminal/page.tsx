@@ -1,4 +1,3 @@
-import type { TerminalThemeVariant } from "../../../src/cli/theme.ts";
 import {
   type CliCompositionRecipe,
   cliCompositionRecipes,
@@ -11,6 +10,7 @@ import {
 } from "../../routes.ts";
 import type { CatalogueRoute } from "../../routes.ts";
 import { TerminalLayoutLab } from "../../terminal-layout-inspector.tsx";
+import type { CatalogueTerminalPresentation } from "../../terminal-theme.ts";
 import { NotFoundPage } from "../not-found/page.tsx";
 import { CatalogueIndexCard, CataloguePageHeader } from "../shared.tsx";
 
@@ -80,10 +80,10 @@ export function TerminalIndexPage(
 
 /** One recipe detail where the real frame leads the capability controls. */
 export function TerminalDetailPage(
-  { recipe, recipes, terminalTheme, currentUrl }: {
+  { recipe, recipes, terminalPresentation, currentUrl }: {
     readonly recipe: CliCompositionRecipe;
     readonly recipes: readonly CliCompositionRecipe[];
-    readonly terminalTheme: TerminalThemeVariant;
+    readonly terminalPresentation: CatalogueTerminalPresentation;
     readonly currentUrl: URL;
   },
 ) {
@@ -113,7 +113,7 @@ export function TerminalDetailPage(
       </div>
       <TerminalLayoutLab
         recipe={recipe}
-        theme={terminalTheme}
+        presentation={terminalPresentation}
         initialUrl={currentUrl}
       />
       <nav
@@ -141,10 +141,10 @@ export function TerminalDetailPage(
 }
 
 export function TerminalPage(
-  { route, currentUrl, terminalTheme }: {
+  { route, currentUrl, terminalPresentation }: {
     readonly route: Extract<CatalogueRoute, { readonly family: "terminal" }>;
     readonly currentUrl: URL;
-    readonly terminalTheme: TerminalThemeVariant;
+    readonly terminalPresentation: CatalogueTerminalPresentation;
   },
 ) {
   if (route.page === "index") return <TerminalIndexPage />;
@@ -154,7 +154,7 @@ export function TerminalPage(
     <TerminalDetailPage
       recipe={recipe}
       recipes={cliCompositionRecipes}
-      terminalTheme={terminalTheme}
+      terminalPresentation={terminalPresentation}
       currentUrl={currentUrl}
     />
   );

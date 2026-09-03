@@ -83,7 +83,7 @@
     grid-template-columns: max-content minmax(0, 1fr);
     gap: var(--discern-space-3);
     padding: var(--discern-space-3) var(--discern-space-4);
-    border-inline-start: 2px solid var(--discern-color-warning);
+    border-inline-start: 0.125rem solid var(--discern-color-warning);
     background: var(--discern-color-warning-soft);
     color: var(--discern-color-warning-deep);
     font-size: var(--discern-font-size-xs);

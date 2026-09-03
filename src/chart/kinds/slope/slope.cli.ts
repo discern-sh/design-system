@@ -24,10 +24,10 @@ import { joinVertical } from "../../../cli/layout.ts";
 import { composeCliBlocks } from "../../../cli/rhythm.ts";
 import { measureText, padText, wrapText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   type TerminalColor,
   type TerminalTheme,
   terminalThemeColor,
-  terminalThemes,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import {
@@ -182,7 +182,7 @@ function renderSlopeList(
   columns: SlopeColumns,
 ): string {
   const { capabilities } = context;
-  const theme = terminalThemes[context.theme];
+  const theme = resolveTerminalTheme(context);
   const summary = styleText(
     `Summary: ${spec.summary}`,
     {

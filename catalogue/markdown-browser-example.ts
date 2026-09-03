@@ -1,5 +1,4 @@
 import type { TerminalCapabilities } from "../src/cli/capabilities.ts";
-import type { TerminalThemeVariant } from "../src/cli/theme.ts";
 import { transitionMarkdownBrowser } from "../src/cli/interactive/markdown-browser-machine.ts";
 import {
   createMarkdownBrowserState,
@@ -23,6 +22,7 @@ import {
   markdownDiagramExampleMarkdown,
   markdownDiagramExampleResource,
 } from "../src/diagram/markdown.example.ts";
+import type { CatalogueTerminalPresentation } from "./terminal-theme.ts";
 
 /** Markdown corpus exercising the browser's document-reading treatment. */
 export const markdownBrowserDocumentSource =
@@ -158,7 +158,7 @@ export type MarkdownBrowserCataloguePosture =
 export function createMarkdownBrowserCatalogueState(
   capabilities: TerminalCapabilities,
   rows: number,
-  theme: TerminalThemeVariant,
+  presentation: CatalogueTerminalPresentation,
   posture: MarkdownBrowserCataloguePosture,
 ): MarkdownBrowserState<string> {
   const single = posture === "single-document" || posture === "single-picker";
@@ -168,7 +168,7 @@ export function createMarkdownBrowserCatalogueState(
       ...(single ? { pickerMinimumRows: 11, documentMinimumRows: 12 } : {}),
     },
     { columns: capabilities.columns, rows },
-    { theme },
+    presentation,
   );
   if (posture === "initial-picker") return state;
   state = transitionMarkdownBrowser(state, {
@@ -255,11 +255,16 @@ export function createMarkdownBrowserCatalogueState(
 export function renderMarkdownBrowserCatalogueFrame(
   capabilities: TerminalCapabilities,
   rows: number,
-  theme: TerminalThemeVariant,
+  presentation: CatalogueTerminalPresentation,
   posture: MarkdownBrowserCataloguePosture = "split-reader",
 ): string {
   return renderMarkdownBrowser(
-    createMarkdownBrowserCatalogueState(capabilities, rows, theme, posture),
+    createMarkdownBrowserCatalogueState(
+      capabilities,
+      rows,
+      presentation,
+      posture,
+    ),
     capabilities,
   );
 }

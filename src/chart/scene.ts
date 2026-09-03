@@ -32,8 +32,8 @@ export type ChartRampPaintSlot = 1 | 2 | 3 | 4;
 
 /**
  * Sequential paint role for one declared magnitude bin. The ramp rides the
- * accent scale with lightness carrying the value — never a second palette
- * and never a semantic state tone.
+ * field's active-ink alpha ladder — never a second palette and never a
+ * semantic state tone.
  */
 export type ChartRampPaintRole = `ramp-${ChartRampPaintSlot}`;
 

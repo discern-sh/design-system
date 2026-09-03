@@ -11,7 +11,11 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import {
   DECLARED_GAP_GLYPH,
   rampGlyph,
@@ -19,9 +23,8 @@ import {
 } from "../../../cli/glyph-ramps.ts";
 import { measureText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./sparkline.meta.ts";
@@ -33,10 +36,9 @@ import {
 } from "./sparkline.shared.ts";
 
 /** Inputs accepted by the terminal Sparkline renderer. */
-export interface SparklineCliProps {
+export interface SparklineCliProps extends CliPresentationOptions {
   /** Recent movement in order: finite values with explicit null gaps. */
   readonly values: readonly SparklineValue[];
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -78,7 +80,7 @@ const renderSparklineCli: CliRenderer<SparklineCliProps> = (
       `sparkline needs ${required} columns for ${props.values.length} entries and its annotation; received ${width}`,
     );
   }
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const run = sparklineLevels(props.values).map((level) => {
     if (level === null) {
       return rampGlyph(DECLARED_GAP_GLYPH, capabilities.unicode);

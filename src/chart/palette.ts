@@ -1,11 +1,13 @@
 /** Literal Token resolution for portable chart assets. */
 
 import type { SceneFontRole } from "../internal/font-metrics.ts";
+import { type OklabColor, oklabContrast } from "../internal/oklch.ts";
 import {
   authoredTokenValues,
   resolveTokenLiteral,
   type TokenPaletteVariant,
 } from "../internal/token-literals.ts";
+import { evaluateField, themeTokens } from "../tokens/tokens.ts";
 import type { ChartPaintRole } from "./scene.ts";
 
 /** Explicit package palette used by a standalone SVG asset. */
@@ -42,17 +44,63 @@ function resolveValue(
   return resolveTokenLiteral(name, values, "chart");
 }
 
+function parseOklch(value: string): OklabColor {
+  const match = value.match(
+    /^oklch\(([\d.]+)%\s+([\d.]+)\s+(-?[\d.]+)\)$/,
+  );
+  if (match === null) {
+    throw new TypeError(`Expected opaque chart oklch(), got ${value}`);
+  }
+  const chroma = Number(match[2]);
+  const radians = Number(match[3]) * Math.PI / 180;
+  return {
+    lightness: Number(match[1]) / 100,
+    a: chroma * Math.cos(radians),
+    b: chroma * Math.sin(radians),
+  };
+}
+
+function fieldSeriesValue(
+  name: ChartPaintTokenName,
+  darkness: number,
+  canvas: OklabColor,
+): string {
+  const token = themeTokens.find((candidate) => candidate.name === name);
+  if (token === undefined) throw new TypeError(`Missing chart Token ${name}`);
+  if (darkness === 0) return token.light;
+  if (darkness === 1) return token.dark;
+  const lightContrast = oklabContrast(parseOklch(token.light), canvas);
+  const darkContrast = oklabContrast(parseOklch(token.dark), canvas);
+  return darkContrast > lightContrast ? token.dark : token.light;
+}
+
+/**
+ * Resolve the portable chart palette at any field point. Field roles evaluate
+ * directly; each fixed series slot selects its more visible authored pole value.
+ */
+export function resolveChartPaletteAtField(
+  darkness: number,
+): Readonly<Record<ChartPaintRole, string>> {
+  const field = evaluateField({ darkness });
+  const canvasValue = field["--discern-color-canvas"];
+  if (canvasValue === undefined) throw new TypeError("Field has no canvas");
+  const canvas = parseOklch(canvasValue);
+  return Object.freeze(Object.fromEntries(
+    Object.entries(CHART_PAINT_TOKEN_NAMES).map(([role, tokenName]) => {
+      const fieldValue = field[tokenName as keyof typeof field];
+      return [
+        role,
+        fieldValue ?? fieldSeriesValue(tokenName, darkness, canvas),
+      ];
+    }),
+  ) as Record<ChartPaintRole, string>);
+}
+
 /** Resolve every semantic chart paint role to one self-contained literal. */
 export function resolveChartPalette(
   variant: ChartPaletteVariant,
 ): Readonly<Record<ChartPaintRole, string>> {
-  const values = authoredTokenValues(variant);
-  return Object.freeze(Object.fromEntries(
-    Object.entries(CHART_PAINT_TOKEN_NAMES).map(([role, tokenName]) => [
-      role,
-      resolveValue(tokenName as ChartPaintTokenName, values),
-    ]),
-  ) as Record<ChartPaintRole, string>);
+  return resolveChartPaletteAtField(variant === "light" ? 0 : 1);
 }
 
 /** Resolve the authored interface or annotation font stack without a web root. */

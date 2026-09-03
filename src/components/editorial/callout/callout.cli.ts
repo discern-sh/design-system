@@ -10,20 +10,20 @@ import {
   renderCliBlocks,
 } from "../../../cli/block-composition.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./callout.meta.ts";
 import type { CalloutTone } from "./callout.types.ts";
 
-interface CalloutCliOptions {
+interface CalloutCliOptions extends CliPresentationOptions {
   readonly eyebrow?: string;
   readonly title: string;
   readonly tone?: CalloutTone;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -98,7 +98,7 @@ const renderCalloutCli: CliRenderer<CalloutCliProps> = (
     );
   }
   const tone = props.tone ?? "note";
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const title = props.eyebrow === undefined
     ? props.title
     : `${props.eyebrow.toLocaleUpperCase()}: ${props.title}`;
@@ -107,6 +107,7 @@ const renderCalloutCli: CliRenderer<CalloutCliProps> = (
     : props.children.length === 0
     ? ""
     : renderCliBlocks(props.children, capabilities, {
+      ...cliPresentationPassthrough(props),
       maxWidth: Math.min(width, capabilities.columns) - 4,
     });
   return renderBox({

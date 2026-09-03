@@ -31,9 +31,9 @@ import { joinVertical } from "../../../cli/layout.ts";
 import { composeCliBlocks } from "../../../cli/rhythm.ts";
 import { measureText, padText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   type TerminalTheme,
   terminalThemeColor,
-  terminalThemes,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import { chartLinearFraction } from "../../scale.ts";
@@ -404,7 +404,7 @@ const projectDistributionChartCli = (
 ): ChartKindCliProjection => {
   const width = Math.min(context.maxWidth, context.capabilities.columns);
   const presentation: DistributionPresentation = {
-    theme: terminalThemes[context.theme],
+    theme: resolveTerminalTheme(context),
     capabilities: context.capabilities,
     unit: distributionUnitSuffix(spec.value),
     format: spec.value.format,

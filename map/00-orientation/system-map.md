@@ -9,12 +9,13 @@ Bird's-eye view of how discern-design-system fits together. Read this once and t
 ```
         AUTHORED SOURCES                          GENERATED SURFACES
 ┌───────────────────────────────┐   deno task   ┌──────────────────────────────┐
-│ Tokens        tokens.ts       │    codegen    │ src/generated/               │
+│ Field         tokens/field.ts │    codegen    │ src/generated/               │
+│ Token poles   tokens/tokens.ts│               │                              │
 │ Foundations   styles/*.css    │ ────────────► │  Registry (deps, classes)    │
 │ Components    src/components/ │  generate.ts  │  React surface               │
 │  120 folders × (css, tsx,     │               │  CLI stances + renderers     │
 │   meta, examples, mod, CLI*)  │               │  base styles · asset tables  │
-│ Preset        theme/discern.ts│               │  example registry            │
+│ Preset        theme/blue.ts   │               │  example registry            │
 └───────────────────────────────┘               └───────┬──────────────────────┘
                                                         │ resolved through
                        ┌────────────────────────────────┼───────────────┐

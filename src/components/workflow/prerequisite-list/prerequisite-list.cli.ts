@@ -4,12 +4,13 @@
  * @module
  */
 
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
-import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type {
-  TerminalSemanticTone,
-  TerminalThemeVariant,
-} from "../../../cli/theme.ts";
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
+import type { TerminalSemanticTone } from "../../../cli/theme.ts";
 import type { PrerequisiteState } from "./prerequisite-list.types.ts";
 import meta, { componentExampleVocabulary } from "./prerequisite-list.meta.ts";
 import {
@@ -40,10 +41,9 @@ export interface PrerequisiteListCliItem {
 }
 
 /** Inputs accepted by the terminal Prerequisite list renderer. */
-export interface PrerequisiteListCliProps {
+export interface PrerequisiteListCliProps extends CliPresentationOptions {
   readonly title?: string;
   readonly items: readonly PrerequisiteListCliItem[];
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -93,7 +93,7 @@ const renderPrerequisiteListCli: CliRenderer<PrerequisiteListCliProps> = (
       workflowPrefixedLines("", title, width).join("\n"),
       "neutral",
       capabilities,
-      props.theme,
+      props,
     ),
   ];
   for (const [index, item] of props.items.entries()) {
@@ -119,7 +119,7 @@ const renderPrerequisiteListCli: CliRenderer<PrerequisiteListCliProps> = (
       itemLines.join("\n"),
       stateTones[item.state],
       capabilities,
-      props.theme,
+      props,
     ));
     if (item.detail !== undefined) {
       lines.push(...workflowIndentedLines(item.detail, width));

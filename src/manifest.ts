@@ -8,7 +8,7 @@
  * @module
  */
 import { componentRegistry } from "./generated/component-registry.ts";
-import { allTokens } from "./tokens/tokens.ts";
+import { publicTokens } from "./token-inventory.ts";
 import {
   type ComponentBehavior,
   type ComponentGroup,
@@ -17,7 +17,7 @@ import {
 import type { RuntimeAssetSelection } from "./runtime-assets.ts";
 
 /** Schema version stamped into every emitted `manifest.json`. */
-export const RUNTIME_MANIFEST_SCHEMA_VERSION = 2 as const;
+export const RUNTIME_MANIFEST_SCHEMA_VERSION = 3 as const;
 
 /** One component's identity, dependencies, behaviors, and CSS-ownership facts. */
 export interface ManifestComponent {
@@ -54,7 +54,8 @@ export interface RuntimeManifest {
     readonly requestedGroups: readonly ComponentGroup[];
     readonly resolvedComponents: readonly string[];
     readonly assets: readonly RuntimeAssetSelection[];
-    readonly theme: "discern" | "none";
+    readonly theme: "blue" | "none";
+    readonly appearanceScopes: boolean;
   };
   readonly groups: readonly ManifestGroup[];
   readonly components: readonly ManifestComponent[];
@@ -98,5 +99,5 @@ export const packageManifest: PackageManifest = {
     ownedClasses: entry.ownedClasses,
     publicTokenNames: entry.publicTokenNames,
   })),
-  publicTokenNames: allTokens.map((token) => token.name),
+  publicTokenNames: publicTokens.map((token) => token.name),
 };

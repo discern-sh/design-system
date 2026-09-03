@@ -5,12 +5,28 @@
  */
 
 import type { TerminalCapabilities } from "./capabilities.ts";
-import type { TerminalMotifOptions } from "./motif.ts";
-import type { TerminalThemeVariant } from "./theme.ts";
+import { motifPassthrough, type TerminalMotifOptions } from "./motif.ts";
+import type { TerminalThemeOptions } from "./theme.ts";
 
 /** Theme and motif defaults that can be bound across pure CLI renderers. */
-export interface CliPresentationOptions extends TerminalMotifOptions {
-  readonly theme?: TerminalThemeVariant;
+export interface CliPresentationOptions
+  extends TerminalThemeOptions, TerminalMotifOptions {}
+
+/**
+ * Forward explicit presentation inputs through a composed CLI subtree without
+ * materialising absent options. A child spread after this result may override
+ * ground, appearance, hue, motif, or register independently.
+ */
+export function cliPresentationPassthrough(
+  options: CliPresentationOptions,
+): CliPresentationOptions {
+  return {
+    ...(options.theme === undefined ? {} : { theme: options.theme }),
+    ...(options.appearance === undefined
+      ? {}
+      : { appearance: options.appearance }),
+    ...motifPassthrough(options),
+  };
 }
 
 /** Pure renderer signature implemented by every rendered CLI component. */

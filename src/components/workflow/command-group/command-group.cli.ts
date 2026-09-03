@@ -4,9 +4,13 @@
  * @module
  */
 
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./command-group.meta.ts";
 import renderCommandCli, {
   type CommandCliProps,
@@ -24,10 +28,9 @@ export interface CommandGroupCliItem extends CommandCliProps {
 }
 
 /** Inputs accepted by the terminal Command group renderer. */
-export interface CommandGroupCliProps {
+export interface CommandGroupCliProps extends CliPresentationOptions {
   readonly title?: string;
   readonly items: readonly CommandGroupCliItem[];
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -66,7 +69,7 @@ const renderCommandGroupCli: CliRenderer<CommandGroupCliProps> = (
         workflowPrefixedLines("", props.title, width).join("\n"),
         "accent",
         capabilities,
-        props.theme,
+        props,
       ),
     );
   }
@@ -76,11 +79,10 @@ const renderCommandGroupCli: CliRenderer<CommandGroupCliProps> = (
     assertWorkflowCliText(item.label, `command group item ${index + 1} label`);
     if (lines.length > 0) lines.push("");
     lines.push(...workflowPrefixedLines(`${index + 1}. `, item.label, width));
-    const theme = item.theme ?? props.theme;
     const rendered = renderCommandCli(
       {
+        ...cliPresentationPassthrough(props),
         ...item,
-        ...(theme === undefined ? {} : { theme }),
         maxWidth: width - indent.length,
       },
       innerCapabilities,

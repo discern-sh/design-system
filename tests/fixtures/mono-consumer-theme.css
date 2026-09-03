@@ -1,0 +1,25 @@
+/* Consumer fixture: one semantic family gains hue over the default field. */
+@layer discern.consumer {
+  :where([data-discern-root]) {
+    --discern-color-success: oklch(64% 0.165 152);
+    --discern-color-success-soft: oklch(95% 0.05 152);
+    --discern-color-success-deep: oklch(37% 0.09 152);
+  }
+
+  :where([data-discern-root][data-discern-theme="dark"]) {
+    --discern-color-success: oklch(70% 0.155 152);
+    --discern-color-success-soft: oklch(29% 0.06 152);
+    --discern-color-success-deep: oklch(88% 0.1 152);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  @layer discern.consumer {
+    :where([data-discern-root]:not([data-discern-theme])),
+    :where([data-discern-root][data-discern-theme="system"]) {
+      --discern-color-success: oklch(70% 0.155 152);
+      --discern-color-success-soft: oklch(29% 0.06 152);
+      --discern-color-success-deep: oklch(88% 0.1 152);
+    }
+  }
+}

@@ -29,10 +29,10 @@ import { joinVertical } from "../../../cli/layout.ts";
 import { composeCliBlocks } from "../../../cli/rhythm.ts";
 import { measureText, padText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   type TerminalColor,
   type TerminalTheme,
   terminalThemeColor,
-  terminalThemes,
 } from "../../../cli/theme.ts";
 import {
   chartLinearPosition,
@@ -371,7 +371,7 @@ function renderFaithfulScatter(
   grid: ScatterGrid,
 ): string {
   const { capabilities } = context;
-  const theme = terminalThemes[context.theme];
+  const theme = resolveTerminalTheme(context);
   const presentation: ScatterPresentation = {
     spec,
     theme,

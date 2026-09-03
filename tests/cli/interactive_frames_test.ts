@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import {
   createSequentialForm,
   requestAutocomplete,
@@ -16,6 +16,11 @@ import {
   FakeTerminalIO,
   testTerminalCapabilities,
 } from "../../src/cli/interactive/testing.ts";
+import {
+  resolveTerminalTheme,
+  terminalToneColor,
+} from "../../src/cli/theme.ts";
+import { accentAppearance } from "../../src/tokens/tokens.ts";
 import { TEST_TERMINAL_MOTIF } from "./motif_fixture.ts";
 
 const ENTER = "\r";
@@ -191,4 +196,29 @@ Deno.test("sequential forms pass a consumer motif through every step", async () 
     "Setup\n\n ▵  Account\n │\n[◷] Confirm\n",
     "Setup\n\n ▵  Account\n │\n ▵  Confirm\n\n✓ Complete\n",
   ]);
+});
+
+Deno.test("sequential forms carry Accent through every Component-backed step", async () => {
+  const io = new FakeTerminalIO([], {
+    colorDepth: "truecolor",
+    columns: 32,
+  });
+  const appearance = accentAppearance(245);
+  await createSequentialForm({
+    label: "Setup",
+    io,
+    theme: "dark",
+    appearance,
+  })
+    .add({ id: "account", label: "Account", run: () => "Ada" })
+    .add({ id: "confirm", label: "Confirm", run: () => true })
+    .submit();
+  const palette = resolveTerminalTheme({ theme: "dark", appearance });
+  const accent = terminalToneColor(palette, "accent");
+  const success = terminalToneColor(palette, "success");
+  const accentCode = `38;2;${accent.red};${accent.green};${accent.blue}m`;
+  const successCode = `38;2;${success.red};${success.green};${success.blue}m`;
+  assert(io.writes[0]?.includes(accentCode));
+  assert(io.writes[1]?.includes(accentCode));
+  assert(io.writes[2]?.includes(successCode));
 });

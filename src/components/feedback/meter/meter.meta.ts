@@ -19,6 +19,8 @@ export const componentExampleVocabulary = [
   { id: "default", label: "Empty" },
   { id: "quarter", label: "In progress" },
   { id: "complete", label: "Complete" },
+  { id: "warning", label: "Warning" },
+  { id: "danger", label: "Danger" },
 ] as const;
 defineComponentExampleVocabulary(meta, componentExampleVocabulary);
 

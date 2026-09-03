@@ -1,10 +1,11 @@
+import type { CSSProperties } from "react";
 import type { TerminalCapabilities } from "../src/cli/capabilities.ts";
 import { resolveCliExampleCapabilities } from "../src/cli/contracts.ts";
 import { projectTerminalInlineHtml } from "../src/cli/projection.ts";
-import type { TerminalThemeVariant } from "../src/cli/theme.ts";
 import { OverflowCue } from "../src/components/layout/overflow-cue/overflow-cue.tsx";
 import type { RegistryEntry } from "./generated/registry.ts";
 import { catalogueDecisionCopyProps } from "./metadata-copy.ts";
+import type { CatalogueTerminalPresentation } from "./terminal-theme.ts";
 
 /** Fixed terminal profile used for deterministic Catalogue specimens. */
 export const catalogueCliCapabilities = {
@@ -16,19 +17,32 @@ export const catalogueCliCapabilities = {
 
 /** Project one bare terminal frame through the Catalogue's shared ANSI host. */
 export function CliOutputPreview(
-  { value, label, theme }: {
+  { value, label, presentation }: {
     readonly value: string;
     readonly label: string;
-    readonly theme: TerminalThemeVariant;
+    readonly presentation: CatalogueTerminalPresentation;
   },
 ) {
+  const accentStyle = presentation.appearance.name === "accent"
+    ? {
+      "--discern-accent-hue": presentation.appearance.hue,
+    } as CSSProperties
+    : undefined;
   return (
     <OverflowCue
       axis="inline"
       scrollContainer="descendant"
       className="discern-catalogue-cli-preview"
       data-discern-root
-      data-discern-theme={theme}
+      data-discern-theme={presentation.theme}
+      data-discern-appearance={presentation.appearance.name}
+      data-discern-terminal-ground={presentation.theme}
+      data-discern-terminal-appearance={presentation.appearance.name}
+      data-discern-terminal-accent-hue={presentation.appearance.name ===
+          "accent"
+        ? presentation.appearance.hue
+        : undefined}
+      style={accentStyle}
     >
       <pre
         className="discern-catalogue-cli-output"
@@ -52,10 +66,10 @@ export function cliFragmentId(component: string, state: string): string {
 
 /** Render one named canonical CLI example, preserving its stable deep link. */
 export function CliExamplePreview(
-  { entry, exampleId, theme, headingLevel = 5 }: {
+  { entry, exampleId, presentation, headingLevel = 5 }: {
     readonly entry: RegistryEntry;
     readonly exampleId: string;
-    readonly theme: TerminalThemeVariant;
+    readonly presentation: CatalogueTerminalPresentation;
     readonly headingLevel?: 4 | 5;
   },
 ) {
@@ -65,7 +79,7 @@ export function CliExamplePreview(
   if (example === undefined) return null;
   const fragmentId = cliFragmentId(meta.slug, example.id);
   const output = cli.render(
-    terminalThemeProps(meta.slug, example.props, theme),
+    catalogueCliExampleProps(meta.slug, example.props, presentation),
     resolveCliExampleCapabilities(example, catalogueCliCapabilities),
   );
   const Heading = headingLevel === 4 ? "h4" : "h5";
@@ -87,16 +101,17 @@ export function CliExamplePreview(
       <CliOutputPreview
         value={output}
         label={`${meta.name}: ${example.label} CLI output`}
-        theme={theme}
+        presentation={presentation}
       />
     </section>
   );
 }
 
-function terminalThemeProps(
+/** Bind one canonical example to the shared public terminal presentation. */
+export function catalogueCliExampleProps(
   component: string,
   props: unknown,
-  theme: TerminalThemeVariant,
+  presentation: CatalogueTerminalPresentation,
 ): Readonly<Record<string, unknown>> {
   if (props === null || typeof props !== "object" || Array.isArray(props)) {
     throw new TypeError("Catalogue CLI example props must be an object");
@@ -105,15 +120,19 @@ function terminalThemeProps(
   // Theme toggle uses `theme` for its authored current-state example and
   // `palette` for terminal colour; every other renderer uses `theme` itself.
   return component === "theme-toggle"
-    ? { ...example, palette: theme }
-    : { ...example, theme };
+    ? {
+      ...example,
+      palette: presentation.theme,
+      appearance: presentation.appearance,
+    }
+    : { ...example, ...presentation };
 }
 
 /** Render one Component's real CLI Catalogue examples as bare terminal output. */
 export function CliComponentPreview(
-  { entry, theme }: {
+  { entry, presentation }: {
     readonly entry: RegistryEntry;
-    readonly theme: TerminalThemeVariant;
+    readonly presentation: CatalogueTerminalPresentation;
   },
 ) {
   const { cli, meta } = entry;
@@ -153,7 +172,7 @@ export function CliComponentPreview(
         <CliExamplePreview
           entry={entry}
           exampleId={id}
-          theme={theme}
+          presentation={presentation}
           key={id}
         />
       ))}

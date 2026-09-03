@@ -6,20 +6,19 @@
 
 import { renderStyledSpans } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { measureText, truncateText, wrapText } from "../../../cli/text.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./glossary-term.meta.ts";
 
 /** Inputs accepted by the terminal Glossary term renderer. */
-export interface GlossaryTermCliProps {
+export interface GlossaryTermCliProps extends CliPresentationOptions {
   readonly term: string;
   readonly definition: string;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -63,7 +62,7 @@ const renderGlossaryTermCli: CliRenderer<GlossaryTermCliProps> = (
     props.definition,
     Math.max(1, width - prefixWidth),
   );
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const first = renderStyledSpans([
     {
       text: term,

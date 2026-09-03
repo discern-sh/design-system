@@ -6,27 +6,26 @@
 
 import { renderStyledSpans } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { measureText, wrapText } from "../../../cli/text.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import { derivedInitials } from "../../initials.ts";
 import type { AvatarPresence } from "../avatar/avatar.types.ts";
 import meta, { componentExampleVocabulary } from "./persona.meta.ts";
 import type { PersonaSize } from "./persona.types.ts";
 
 /** Inputs accepted by the terminal Persona renderer. */
-export interface PersonaCliProps {
+export interface PersonaCliProps extends CliPresentationOptions {
   readonly name: string;
   readonly detail?: string;
   readonly initials?: string;
   readonly presence?: AvatarPresence;
   readonly presenceLabel?: string;
   readonly size?: PersonaSize;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -85,7 +84,7 @@ const renderPersonaCli: CliRenderer<PersonaCliProps> = (
   }${presence}`;
   const prefix = `${chip} `;
   const lines = wrapText(body, Math.max(1, width - measureText(prefix)));
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const first = renderStyledSpans([
     {
       text: chip,

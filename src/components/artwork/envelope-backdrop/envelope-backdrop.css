@@ -6,9 +6,9 @@
   .discern-envelope-backdrop__plate {
     mask-image: radial-gradient(
       ellipse 78% 92% at 74% 62%,
-      rgb(0 0 0 / 1) 0%,
-      rgb(0 0 0 / 0.6) 62%,
-      rgb(0 0 0 / 0.28) 100%
+      var(--discern-color-ink) 0%,
+      color-mix(in srgb, var(--discern-color-ink) 60%, transparent) 62%,
+      color-mix(in srgb, var(--discern-color-ink) 28%, transparent) 100%
     );
   }
 

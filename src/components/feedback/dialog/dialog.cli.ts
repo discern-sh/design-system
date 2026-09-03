@@ -7,23 +7,22 @@
 import { styleText } from "../../../cli/ansi.ts";
 import { renderBox } from "../../../cli/box.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./dialog.meta.ts";
 
 /** Inputs accepted by the terminal Dialog renderer. */
-export interface DialogCliProps {
+export interface DialogCliProps extends CliPresentationOptions {
   readonly title: string;
   readonly body: string;
   readonly kicker?: string;
   readonly actions?: readonly string[];
   readonly status?: "open" | "submitted" | "cancelled";
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -65,7 +64,7 @@ const renderDialogCli: CliRenderer<DialogCliProps> = (props, capabilities) => {
   if (props.title.trim() === "" || props.body.trim() === "") {
     throw new TypeError("dialog title and body must be non-empty");
   }
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const marker = props.status === "submitted"
     ? capabilities.unicode ? "✓ Submitted" : "OK Submitted"
     : props.status === "cancelled"

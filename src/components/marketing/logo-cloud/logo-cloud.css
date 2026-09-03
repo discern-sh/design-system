@@ -61,14 +61,13 @@
   .discern-logo-cloud__mark--masked::after {
     position: absolute;
     inset: 0;
-    background: light-dark(transparent, currentColor);
+    background: var(--discern-color-brand-artwork-mask);
     content: "";
     mask: var(--discern-logo-cloud-mark-mask) center / contain no-repeat;
     pointer-events: none;
   }
   .discern-logo-cloud__mark--masked {
-    color: light-dark(var(--discern-color-accent-700),
-      var(--discern-color-ink-muted));
+    color: var(--discern-color-brand-artwork-ink);
   }
   .discern-logo-cloud__mark--masked > :where(img, svg) {
     opacity: var(--discern-brand-artwork-opacity);
@@ -106,7 +105,7 @@
     inline-size: 2rem;
     block-size: 2rem;
   }
-  @container discern-logo-cloud (max-width: 680px) {
+  @container discern-logo-cloud (max-width: 42.5rem) {
     .discern-logo-cloud__list {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }

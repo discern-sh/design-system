@@ -4,7 +4,7 @@ import {
   SearchPalette,
   SearchPaletteResult,
 } from "../../src/components/docs/search-palette/search-palette.tsx";
-import { allTokens } from "../../src/tokens/tokens.ts";
+import { publicTokens } from "../../src/token-inventory.ts";
 import { cliCompositionRecipes } from "../cli-compositions.ts";
 import { compositionRecipes } from "../compositions.tsx";
 import { registry } from "../generated/registry.ts";
@@ -33,7 +33,7 @@ export function GlobalSearch(
   const records = useMemo(() =>
     catalogueSearchRecords({
       components: registry,
-      tokens: allTokens,
+      tokens: publicTokens,
       compositions: compositionRecipes,
       terminalLayouts: cliCompositionRecipes,
       terminalFoundations: terminalFoundationSheets,

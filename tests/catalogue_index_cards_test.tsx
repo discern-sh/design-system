@@ -1,4 +1,9 @@
-import { assert, assertEquals, assertStringIncludes } from "@std/assert";
+import {
+  assert,
+  assertEquals,
+  assertStringIncludes,
+  assertThrows,
+} from "@std/assert";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
@@ -23,16 +28,30 @@ import {
 } from "../catalogue/pages/overview/page.tsx";
 import { CatalogueIndexCard } from "../catalogue/pages/shared.tsx";
 import { TerminalIndexPage } from "../catalogue/pages/terminal/page.tsx";
+import { resolveCatalogueTerminalPresentation } from "../catalogue/terminal-theme.ts";
 import {
   catalogueRoutePaths,
   catalogueTerminalLayoutPath,
 } from "../catalogue/routes.ts";
+
 import { compositionRecipePath } from "../catalogue/routes/compositions.ts";
 import { foundationsPaths } from "../catalogue/routes/foundations.ts";
 import { terminalFoundationSheets } from "../catalogue/terminal-foundations.ts";
 
+const fieldLight = resolveCatalogueTerminalPresentation(
+  "light",
+  "field",
+  255,
+);
+
 function attributeCount(markup: string, attribute: string): number {
   return (markup.match(new RegExp(`${attribute}=`, "g")) ?? []).length;
+}
+
+function classTokenCount(markup: string, token: string): number {
+  return [...markup.matchAll(/class="([^"]*)"/g)].filter((match) =>
+    (match[1] ?? "").split(/\s+/).includes(token)
+  ).length;
 }
 
 function assertSharedCards(
@@ -52,6 +71,11 @@ function assertSharedCards(
   assertEquals(
     attributeCount(markup, "data-discern-catalogue-index-card-primary"),
     expected,
+  );
+  assertEquals(
+    classTokenCount(markup, "discern-card"),
+    expected,
+    "a route-index Card bypassed CatalogueIndexCard",
   );
 }
 
@@ -94,6 +118,16 @@ Deno.test("CatalogueIndexCard keeps one stretched primary action and sibling sec
     (markup.slice(primaryStart, primaryEnd).match(/<a\b/g) ?? []).length,
     0,
   );
+  assertThrows(
+    () =>
+      assertSharedCards(
+        `${markup}<div class="discern-card">future route</div>`,
+        1,
+        "compact",
+      ),
+    Error,
+    "bypassed CatalogueIndexCard",
+  );
 });
 
 Deno.test("every source-backed Catalogue index population uses the shared card authority", () => {
@@ -121,13 +155,13 @@ Deno.test("every source-backed Catalogue index population uses the shared card a
   );
 
   const foundations = renderToStaticMarkup(createElement(FoundationsPage, {
-    terminalTheme: "light",
+    terminalPresentation: fieldLight,
     url: new URL(foundationsPaths.index, "https://catalogue.example"),
   }));
-  assertSharedCards(foundations, 2, "visual");
+  assertSharedCards(foundations, 3, "visual");
   const terminalFoundations = renderToStaticMarkup(
     createElement(FoundationsPage, {
-      terminalTheme: "light",
+      terminalPresentation: fieldLight,
       url: new URL(foundationsPaths.terminal, "https://catalogue.example"),
     }),
   );

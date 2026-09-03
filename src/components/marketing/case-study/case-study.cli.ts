@@ -6,13 +6,14 @@
 
 import { renderBox } from "../../../cli/box.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
-import { joinVertical, layoutColumns } from "../../../cli/layout.ts";
 import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
+import { joinVertical, layoutColumns } from "../../../cli/layout.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import {
   marketingCliWidth,
   renderMarketingCliHeader,
@@ -27,14 +28,13 @@ export interface CaseStudyCliStat {
 }
 
 /** Inputs accepted by the terminal Case study renderer. */
-export interface CaseStudyCliProps {
+export interface CaseStudyCliProps extends CliPresentationOptions {
   readonly title: string;
   readonly summary: string;
   readonly eyebrow?: string;
   readonly body?: string;
   readonly stats?: readonly CaseStudyCliStat[];
   readonly action?: string;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -81,12 +81,12 @@ const renderCaseStudyCli: CliRenderer<CaseStudyCliProps> = (
     statRows,
     props.action === undefined ? "" : `[${props.action}]`,
   ], { spacing: 1 });
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   return joinVertical([
     renderMarketingCliHeader({
       title: props.title,
       ...(props.eyebrow === undefined ? {} : { eyebrow: props.eyebrow }),
-      ...(props.theme === undefined ? {} : { theme: props.theme }),
+      ...cliPresentationPassthrough(props),
       width,
     }, capabilities),
     renderBox({

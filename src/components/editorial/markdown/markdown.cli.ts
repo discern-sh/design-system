@@ -11,7 +11,12 @@ import {
   renderCliBlocks,
 } from "../../../cli/block-composition.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import type { TerminalMotif } from "../../../cli/motif.ts";
 import { createCliPresenter } from "../../../cli/presenter.ts";
 import {
@@ -19,7 +24,7 @@ import {
   type SemanticInlineNode,
   semanticInlineText,
 } from "../../../cli/semantic-inline.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
+import type { Appearance, TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
   markdownChartExampleMarkdown,
   markdownChartExampleResource,
@@ -60,13 +65,9 @@ import type { MarkdownChartResource } from "../../../chart/markdown.ts";
 import type { MarkdownDiagramResource } from "../../../diagram/markdown.ts";
 
 /** Inputs accepted by the terminal Markdown renderer. */
-export interface MarkdownCliProps {
+export interface MarkdownCliProps extends CliPresentationOptions {
   /** Untrusted CommonMark/GFM source rendered through the fixed package dialect. */
   readonly source: string;
-  /** Explicit terminal Theme variant; defaults to dark. */
-  readonly theme?: TerminalThemeVariant;
-  /** Optional package-validated terminal motif forwarded to child Components. */
-  readonly motif?: TerminalMotif;
   /** Maximum document measure in cells, bounded by terminal capabilities. */
   readonly maxWidth?: number;
   /** Explicit ordinary-image resources eligible for Diagram promotion. */
@@ -287,8 +288,9 @@ function cliInline(
     );
 }
 
-interface MarkdownCliPresentation {
+interface MarkdownCliPresentation extends CliPresentationOptions {
   readonly theme: TerminalThemeVariant;
+  readonly appearance: Appearance;
   readonly motif: TerminalMotif;
 }
 
@@ -300,17 +302,17 @@ function blockToCli(
   switch (block.kind) {
     case "paragraph":
       return createCliBlock(renderParagraphCli, {
+        ...cliPresentationPassthrough(presentation),
         content: cliInline(block.content, context),
-        ...presentation,
       });
     case "heading": {
       const props = {
+        ...cliPresentationPassthrough(presentation),
         content: cliInline(block.content, context),
         level: block.level,
         overflow: "wrap",
         treatment: "document",
         leadingBlankLines: 0,
-        ...presentation,
       } as const;
       const tracking = context.tracking;
       if (tracking === undefined) {
@@ -331,6 +333,7 @@ function blockToCli(
     }
     case "list":
       return createCliBlock(renderListCli, {
+        ...cliPresentationPassthrough(presentation),
         kind: block.listKind,
         ...(block.start === undefined ? {} : { start: block.start }),
         spacing: block.spacing,
@@ -343,36 +346,36 @@ function blockToCli(
             blocks: item.blocks.map((child) => blockToCli(child, context)),
           }),
         })),
-        ...presentation,
       });
     case "blockquote":
       return createCliBlock(renderBlockquoteCli, {
+        ...cliPresentationPassthrough(presentation),
         children: block.children.map((child) => blockToCli(child, context)),
-        ...presentation,
       });
     case "callout":
       return createCliBlock(renderCalloutCli, {
+        ...cliPresentationPassthrough(presentation),
         title: block.title,
         tone: block.tone,
         children: block.children.map((child) => blockToCli(child, context)),
-        ...presentation,
       });
     case "code":
       return createCliBlock(renderCodeBlockCli, {
+        ...cliPresentationPassthrough(presentation),
         code: block.code,
         ...(block.language === undefined ? {} : { language: block.language }),
         ...(block.info === undefined ? {} : { info: block.info }),
         widthPolicy: "wrap",
-        ...presentation,
       });
     case "thematic-break":
       return createCliBlock(renderDividerCli, {
+        ...cliPresentationPassthrough(presentation),
         treatment: "plain",
         tone: "neutral",
-        ...presentation,
       });
     case "table":
       return createCliBlock(renderTableCli, {
+        ...cliPresentationPassthrough(presentation),
         layout: "responsive",
         columns: block.columns.map((column) => ({
           header: cliInline(column.header, context),
@@ -381,10 +384,10 @@ function blockToCli(
         rows: block.rows.map((row) =>
           row.map((content) => cliInline(content, context))
         ),
-        ...presentation,
       });
     case "footnotes":
       return createCliBlock(renderFootnotesCli, {
+        ...cliPresentationPassthrough(presentation),
         items: block.items.map((item) => ({
           id: item.id,
           content: item.children.length === 1 &&
@@ -406,19 +409,18 @@ function blockToCli(
             })),
           }),
         })),
-        ...presentation,
       });
     case "diagram":
       return createCliBlock(renderDiagramCli, {
+        ...cliPresentationPassthrough(presentation),
         spec: block.spec,
         mode: context.diagramMode,
-        theme: presentation.theme,
       });
     case "chart":
       return createCliBlock(renderChartCli, {
+        ...cliPresentationPassthrough(presentation),
         spec: block.spec,
         mode: context.chartMode,
-        theme: presentation.theme,
       });
     default:
       return assertNever(block);
@@ -433,13 +435,14 @@ function renderMarkdownDocument(
 ): string {
   if (document.children.length === 0) return "";
   const presenter = createCliPresenter(capabilities, {
-    ...(props.theme === undefined ? {} : { theme: props.theme }),
-    ...(props.motif === undefined ? {} : { motif: props.motif }),
+    ...cliPresentationPassthrough(props),
     ...(props.maxWidth === undefined ? {} : { width: props.maxWidth }),
   });
   const presentation = {
     theme: presenter.theme,
+    appearance: presenter.appearance,
     motif: presenter.motif,
+    ...(props.register === undefined ? {} : { register: props.register }),
   } satisfies MarkdownCliPresentation;
   const context: MarkdownCliContext = {
     presentation,
@@ -450,6 +453,7 @@ function renderMarkdownDocument(
   return renderCliBlocks(
     document.children.map((block) => blockToCli(block, context)),
     presenter.capabilities,
+    presentation,
   );
 }
 

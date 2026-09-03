@@ -7,13 +7,13 @@
 import { styleText } from "../../../cli/ansi.ts";
 import { renderBox } from "../../../cli/box.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical, wrapInlineCluster } from "../../../cli/layout.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./tabs.meta.ts";
 import type { TabsActivationMode } from "./tabs.types.ts";
 
@@ -26,13 +26,12 @@ export interface TabsCliItem {
 }
 
 /** Inputs accepted by the terminal Tabs renderer. */
-export interface TabsCliProps {
+export interface TabsCliProps extends CliPresentationOptions {
   readonly items: readonly TabsCliItem[];
   readonly activeValue: string;
   readonly focusedValue?: string;
   readonly activationMode?: TabsActivationMode;
   readonly label?: string;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -81,7 +80,7 @@ const renderTabsCli: CliRenderer<TabsCliProps> = (props, capabilities) => {
       `tabs width must be a safe integer of at least 8; received ${width}`,
     );
   }
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const tabs = props.items.map((item) => {
     if (item.disabled === true) return `(${item.label})`;
     if (item.value === props.activeValue) return `[${item.label}]`;

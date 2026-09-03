@@ -5,7 +5,12 @@
  */
 
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import type {
   ConfirmFrameState,
   MultiselectFrameState,
@@ -15,11 +20,6 @@ import {
   isInteractiveChoice,
   isInteractiveChoiceGroupHeading,
 } from "../../../cli/interactive-choice.ts";
-import {
-  motifPassthrough,
-  type TerminalMotifOptions,
-} from "../../../cli/motif.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
   formCliChoiceFrameWidth,
   formCliEmptyResultsRow,
@@ -35,11 +35,10 @@ import {
 import meta, { componentExampleVocabulary } from "./checkbox.meta.ts";
 
 /** Inputs accepted by the terminal Checkbox renderer. */
-interface CheckboxCliOptions extends TerminalMotifOptions {
+interface CheckboxCliOptions extends CliPresentationOptions {
   readonly presentation?: FormCliPresentation;
   readonly required?: boolean;
   readonly showStatus?: boolean;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -148,6 +147,7 @@ const renderCheckboxCli: CliRenderer<CheckboxCliProps> = (
     ? renderSearchMultiselectControl(state, active, choiceWidth, capabilities)
     : renderConfirmControl(state, active, capabilities);
   return renderFormCliFrame({
+    ...cliPresentationPassthrough(props),
     label: state.label,
     control,
     lifecycle: state.lifecycle,
@@ -160,7 +160,6 @@ const renderCheckboxCli: CliRenderer<CheckboxCliProps> = (
       : { presentation: props.presentation }),
     ...(props.required === undefined ? {} : { required: props.required }),
     ...(props.showStatus === undefined ? {} : { showStatus: props.showStatus }),
-    ...(props.theme === undefined ? {} : { theme: props.theme }),
     ...(state.kind === "confirm"
       ? props.width === undefined ? {} : { width: props.width }
       : { width: choiceWidth }),
@@ -175,9 +174,8 @@ const renderCheckboxCli: CliRenderer<CheckboxCliProps> = (
 function checkboxMark(
   checked: boolean,
   capabilities: Parameters<CliRenderer<CheckboxCliProps>>[1],
-  options: {
+  options: CliPresentationOptions & {
     readonly disabled?: boolean;
-    readonly theme?: TerminalThemeVariant;
   } = {},
 ): string {
   const mark = checked ? capabilities.unicode ? "✓" : "x" : " ";
@@ -185,14 +183,18 @@ function checkboxMark(
 }
 
 function renderConfirmControl(
-  state: ConfirmFrameState,
+  state: ConfirmFrameState & CheckboxCliOptions,
   active: boolean,
   capabilities: Parameters<CliRenderer<CheckboxCliProps>>[1],
 ): string {
   const pointer = active ? `${capabilities.unicode ? "›" : ">"} ` : "";
-  return `${pointer}${checkboxMark(state.value, capabilities)} ${
-    state.value ? state.yesLabel : state.noLabel
-  }`;
+  return `${pointer}${
+    checkboxMark(
+      state.value,
+      capabilities,
+      cliPresentationPassthrough(state),
+    )
+  } ${state.value ? state.yesLabel : state.noLabel}`;
 }
 
 function renderMultiselectControl(
@@ -232,11 +234,12 @@ function renderMultiselectControl(
     const highlighted = active && index === state.highlightedIndex;
     const pointer = highlighted ? capabilities.unicode ? "› " : "> " : "  ";
     const styleOptions = {
+      ...cliPresentationPassthrough(state),
       highlighted,
       disabled: isInteractiveChoice(entry) && entry.disabled === true,
-      ...(state.theme === undefined ? {} : { theme: state.theme }),
     };
     return renderFormCliChoiceEntry({
+      ...cliPresentationPassthrough(state),
       entry,
       pointer,
       marker: checkboxMark(
@@ -245,8 +248,6 @@ function renderMultiselectControl(
         styleOptions,
       ),
       highlighted,
-      ...(state.theme === undefined ? {} : { theme: state.theme }),
-      ...motifPassthrough(state),
       width,
     }, capabilities);
   }).join("\n");
@@ -285,11 +286,12 @@ function renderSearchMultiselectControl(
       const highlighted = active && index === state.highlightedIndex;
       const pointer = highlighted ? capabilities.unicode ? "› " : "> " : "  ";
       const styleOptions = {
+        ...cliPresentationPassthrough(state),
         highlighted,
         disabled: entry.disabled === true,
-        ...(state.theme === undefined ? {} : { theme: state.theme }),
       };
       return renderFormCliChoiceEntry({
+        ...cliPresentationPassthrough(state),
         entry,
         pointer,
         marker: checkboxMark(
@@ -298,8 +300,6 @@ function renderSearchMultiselectControl(
           styleOptions,
         ),
         highlighted,
-        ...(state.theme === undefined ? {} : { theme: state.theme }),
-        ...motifPassthrough(state),
         width,
       }, capabilities);
     });

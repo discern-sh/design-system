@@ -50,9 +50,14 @@ function App() {
   if (currentUrl.searchParams.get("conformance") === "1") {
     return (
       <ConformancePage
+        appearance={appearance.appearance}
+        accentHue={appearance.accentHue}
         components={conformanceComponents}
+        field={appearance.field}
+        fieldScheme={appearance.fieldScheme}
         includeJourneys={selectedComponent === null}
-        terminalTheme={appearance.terminalTheme}
+        surface={defaultSurface}
+        terminalPresentation={appearance.terminalPresentation}
         theme={appearance.theme}
       />
     );
@@ -80,14 +85,23 @@ function App() {
           <ComponentDetailPage
             entry={entry}
             surface={componentSurfaces[entry.meta.slug] ?? defaultSurface}
-            terminalTheme={appearance.terminalTheme}
+            terminalPresentation={appearance.terminalPresentation}
             onSurfaceChange={(surface) =>
               changeComponentSurface(entry.meta.slug, surface)}
           />
         );
       }
       case "foundations":
-        return <FoundationsPage terminalTheme={appearance.terminalTheme} />;
+        return (
+          <FoundationsPage
+            terminalPresentation={appearance.terminalPresentation}
+            field={appearance.field}
+            fieldScheme={appearance.fieldScheme}
+            appearance={appearance.appearance}
+            accentHue={appearance.accentHue}
+            onFieldChange={appearance.changeField}
+          />
+        );
       case "compositions":
         return <CompositionsPage />;
       case "terminal":
@@ -95,7 +109,7 @@ function App() {
           <TerminalPage
             route={route}
             currentUrl={currentUrl}
-            terminalTheme={appearance.terminalTheme}
+            terminalPresentation={appearance.terminalPresentation}
           />
         );
       case "compare":
@@ -104,7 +118,7 @@ function App() {
             sortedComponents={sortedComponents}
             defaultSurface={defaultSurface}
             componentSurfaces={componentSurfaces}
-            terminalTheme={appearance.terminalTheme}
+            terminalPresentation={appearance.terminalPresentation}
             onSurfaceChange={changeComponentSurface}
           />
         );
@@ -119,10 +133,15 @@ function App() {
       sortedComponents={sortedComponents}
       appearance={{
         theme: appearance.theme,
-        resolvedTheme: appearance.terminalTheme,
-        accent: appearance.accent,
+        resolvedTheme: appearance.terminalPresentation.theme,
+        appearance: appearance.appearance,
+        accentHue: appearance.accentHue,
+        field: appearance.field,
         onThemeChange: appearance.changeTheme,
-        onAccentChange: appearance.changeAccent,
+        onAppearanceChange: appearance.changeAppearance,
+        onAccentHueChange: appearance.changeAccentHue,
+        onFieldChange: appearance.changeField,
+        onFieldReset: appearance.resetField,
       }}
       style={appearance.style}
     >

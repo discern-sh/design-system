@@ -6,14 +6,17 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { measureText, wrapText } from "../../../cli/text.ts";
 import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./docs-nav.meta.ts";
@@ -32,11 +35,10 @@ export interface DocsNavCliSection {
 }
 
 /** Inputs accepted by the terminal Docs nav renderer. */
-export interface DocsNavCliProps {
+export interface DocsNavCliProps extends CliPresentationOptions {
   readonly sections: readonly DocsNavCliSection[];
   readonly label?: string;
   readonly showTargets?: boolean;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -95,7 +97,7 @@ const renderDocsNavCli: CliRenderer<DocsNavCliProps> = (
     );
   }
   const width = Math.min(requested, capabilities.columns);
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const blocks = [styleText(props.label ?? "Section navigation", {
     ...theme.typography.strong,
     color: terminalToneColor(theme, "accent"),

@@ -89,7 +89,10 @@ export const Dialog: DiscernComponent<HTMLDialogElement, DialogProps> =
         onMouseDown={handleBackdrop}
         {...props}
       >
-        <div className="discern-dialog__panel">
+        <div
+          className="discern-dialog__panel"
+          data-discern-floating-surface="surface"
+        >
           <header className="discern-dialog__header">
             <div>
               {kicker ? <Kicker>{kicker}</Kicker> : null}

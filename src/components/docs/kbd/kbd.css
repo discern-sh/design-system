@@ -4,9 +4,9 @@
     align-items: center;
     justify-content: center;
     min-inline-size: 1.6em;
-    padding: 0.1em 0.45em;
+    padding: calc(var(--discern-space-1) / 2) var(--discern-space-2);
     border: 1px solid var(--discern-color-border-strong);
-    border-block-end-width: 2px;
+    border-block-end-width: 0.125rem;
     border-radius: var(--discern-radius-xs);
     background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink-muted);

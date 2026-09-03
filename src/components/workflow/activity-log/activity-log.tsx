@@ -68,12 +68,15 @@ export const ActivityLog: DiscernComponent<HTMLElement, ActivityLogProps> =
         {...props}
       >
         <p className="discern-activity-log__headline">
-          <span className="discern-activity-log__marker" aria-hidden="true">
+          <span
+            className="discern-activity-log__marker"
+            role="img"
+            aria-label={status}
+          >
             {statusMarkers[status]}
           </span>
           <span className="discern-activity-log__label">
             {label}
-            <span className="discern-visually-hidden">{`, ${status}`}</span>
           </span>
         </p>
         {stable !== undefined && stable.length > 0
@@ -87,7 +90,8 @@ export const ActivityLog: DiscernComponent<HTMLElement, ActivityLogProps> =
                 >
                   <span
                     className="discern-activity-log__stable-marker"
-                    aria-hidden="true"
+                    role="img"
+                    aria-label={line.tone}
                   >
                     {stableMarkers[line.tone]}
                   </span>

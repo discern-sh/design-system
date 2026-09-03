@@ -5,12 +5,13 @@
  */
 
 import { renderBox } from "../../../cli/box.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import {
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { terminalToneColor } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./agent-handoff.meta.ts";
 import {
   assertWorkflowCliText,
@@ -19,11 +20,10 @@ import {
 } from "../workflow-cli.ts";
 
 /** Inputs accepted by the terminal Agent handoff renderer. */
-export interface AgentHandoffCliProps {
+export interface AgentHandoffCliProps extends CliPresentationOptions {
   readonly title: string;
   readonly prompt: string;
   readonly description?: string;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -70,7 +70,7 @@ const renderAgentHandoffCli: CliRenderer<AgentHandoffCliProps> = (
     assertWorkflowCliText(props.description, "agent handoff description", true);
   }
   const width = workflowCliWidth(props.maxWidth, capabilities, 20);
-  const theme = workflowCliTheme(props.theme);
+  const theme = workflowCliTheme(props);
   const body = [
     props.description,
     props.description === undefined ? undefined : "",

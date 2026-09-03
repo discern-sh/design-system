@@ -2,6 +2,8 @@
 
 **Status**: accepted
 
+**Partially superseded by**: [ADR 0043](0043-project-accent-from-the-field.md), for the authored Blue-pair and no-terminal-appearance conclusions only. The Field default and the remaining decisions below stay in force.
+
 ## Context
 
 Every colour role in [`tokens.ts`](../../src/tokens/tokens.ts) carries a light value and a dark value written by hand: forty theme roles with two authored values each, two palettes that must be kept in agreement by review. The blue accent is the package default and the brand document in the discern repository names it the identity colour. Themes move tokens and never component CSS ([principle 5](../00-orientation/design-principles.md)), and [ADR 0039](0039-admit-role-override-appearance-presets.md) proved that a complete achromatic posture can be admitted as a preset without touching a stylesheet. A throwaway branch then authored that posture by hand and showed three things a preset cannot do.

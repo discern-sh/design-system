@@ -44,12 +44,15 @@
     --discern-marketing-accent-ink: var(--discern-color-inverse-ink);
     background: var(--discern-color-canvas);
   }
+  .discern-marketing-section--contrast :focus-visible {
+    outline-color: var(--discern-color-inverse-ink);
+  }
   .discern-marketing-section__inner {
     width: min(100% - 2 * var(--discern-space-6),
       var(--discern-marketing-section-max));
     margin-inline: auto;
   }
-  @media (max-width: 700px) {
+  @media (max-width: 43.75rem) {
     .discern-marketing-section--space-spacious {
       --discern-marketing-section-space: clamp(4.75rem, 18vw, 7rem);
     }

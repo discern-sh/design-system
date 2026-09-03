@@ -5,7 +5,13 @@ import meta, { componentExampleVocabulary } from "./agent-avatar.meta.ts";
 
 function IdentityState() {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--discern-space-3)",
+      }}
+    >
       <AgentAvatar name="quill" size="sm" />
       <AgentAvatar name="forge-2" />
       <AgentAvatar name="atlas-3" size="lg" />

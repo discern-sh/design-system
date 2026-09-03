@@ -5,14 +5,14 @@
  */
 
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import type { SelectFrameState } from "../../../cli/interactive-states.ts";
 import { isInteractiveChoice } from "../../../cli/interactive-choice.ts";
-import {
-  motifPassthrough,
-  type TerminalMotifOptions,
-} from "../../../cli/motif.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
   formCliChoiceFrameWidth,
   type FormCliSelectionPresentation,
@@ -27,12 +27,12 @@ import {
 import meta, { componentExampleVocabulary } from "./select.meta.ts";
 
 /** Inputs accepted by the terminal Select renderer. */
-export interface SelectCliProps extends SelectFrameState, TerminalMotifOptions {
+export interface SelectCliProps
+  extends SelectFrameState, CliPresentationOptions {
   readonly presentation?: FormCliSelectionPresentation;
   readonly placeholder?: string;
   readonly required?: boolean;
   readonly showStatus?: boolean;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -187,9 +187,9 @@ const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
             ? capabilities.unicode ? "●" : "*"
             : " ";
           const styleOptions = {
+            ...cliPresentationPassthrough(props),
             highlighted: isHighlighted,
             disabled: isInteractiveChoice(entry) && entry.disabled === true,
-            ...(props.theme === undefined ? {} : { theme: props.theme }),
           };
           const marker = props.presentation === "menu"
             ? mark
@@ -202,6 +202,7 @@ const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
               )
             }]`;
           return renderFormCliChoiceEntry({
+            ...cliPresentationPassthrough(props),
             entry,
             pointer,
             marker,
@@ -212,8 +213,6 @@ const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
             ...(props.presentation === "menu" && sourceIndex > 0
               ? { separateHeading: true }
               : {}),
-            ...(props.theme === undefined ? {} : { theme: props.theme }),
-            ...motifPassthrough(props),
             width,
           }, capabilities);
         },
@@ -221,12 +220,12 @@ const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
       const choices = rows.join("\n");
       if (props.presentation !== "menu") return choices;
       const detail = renderFormCliMenuDetail({
+        ...cliPresentationPassthrough(props),
         entries: state.options,
         highlightedIndex: state.highlightedIndex,
         ...(state.menuDetailLineLimit === undefined
           ? {}
           : { maximumLines: state.menuDetailLineLimit }),
-        ...(props.theme === undefined ? {} : { theme: props.theme }),
         width,
       }, capabilities);
       return detail === "" ? choices : `${choices}\n${detail}`;
@@ -239,12 +238,13 @@ const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
       selected,
       capabilities.unicode ? "⌄" : "v",
       {
-        ...(props.theme === undefined ? {} : { theme: props.theme }),
+        ...cliPresentationPassthrough(props),
         width,
       },
       capabilities,
     );
   return renderFormCliFrame({
+    ...cliPresentationPassthrough(props),
     label: state.label,
     control,
     lifecycle: state.lifecycle,
@@ -254,7 +254,6 @@ const renderSelectCli: CliRenderer<SelectCliProps> = (props, capabilities) => {
       : { presentation: props.presentation }),
     ...(props.required === undefined ? {} : { required: props.required }),
     ...(props.showStatus === undefined ? {} : { showStatus: props.showStatus }),
-    ...(props.theme === undefined ? {} : { theme: props.theme }),
     width,
     ...(expanded
       ? { choiceOverflow: visibleFormCliChoiceOverflow(state) }

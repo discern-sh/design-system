@@ -39,8 +39,8 @@
     color: var(--discern-color-ink);
   }
   .discern-docs-nav ul a:focus-visible {
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: 1px;
+    outline: 0.125rem solid var(--discern-color-accent-500);
+    outline-offset: 0.0625rem;
   }
   .discern-docs-nav ul a:active {
     background: var(--discern-color-accent-200);

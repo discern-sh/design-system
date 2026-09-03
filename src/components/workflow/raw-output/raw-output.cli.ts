@@ -4,9 +4,12 @@
  * @module
  */
 
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
 import meta, { componentExampleVocabulary } from "./raw-output.meta.ts";
 import {
@@ -18,11 +21,10 @@ import {
 } from "../workflow-cli.ts";
 
 /** Inputs accepted by the terminal Raw output renderer. */
-export interface RawOutputCliProps {
+export interface RawOutputCliProps extends CliPresentationOptions {
   readonly output: string;
   readonly label?: string;
   readonly expanded?: boolean;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -66,7 +68,7 @@ const renderRawOutputCli: CliRenderer<RawOutputCliProps> = (
     workflowPrefixedLines(`${marker} `, label, width).join("\n"),
     "neutral",
     capabilities,
-    props.theme,
+    props,
   );
   return expanded
     ? [heading, ...workflowIndentedLines(props.output, width)].join("\n")

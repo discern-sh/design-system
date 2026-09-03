@@ -29,7 +29,7 @@
   .discern-diagnostic__severity {
     flex: none;
     padding: var(--discern-space-1) var(--discern-space-3);
-    border-inline-start: 3px solid var(--discern-color-danger);
+    border-inline-start: 0.1875rem solid var(--discern-color-danger);
     background: var(--discern-color-danger-soft);
     color: var(--discern-color-danger);
     font-weight: var(--discern-font-weight-strong);
@@ -86,7 +86,7 @@
     margin: 0;
     overflow-x: auto;
     padding: var(--discern-space-3) var(--discern-space-4);
-    border-inline-start: 2px solid var(--discern-color-border-strong);
+    border-inline-start: 0.125rem solid var(--discern-color-border-strong);
     background: var(--discern-color-surface-sunken);
     color: var(--discern-color-ink);
     font-family: var(--discern-font-mono);
@@ -110,7 +110,7 @@
     grid-template-columns: max-content minmax(0, 1fr);
     gap: var(--discern-space-3);
     padding: var(--discern-space-3) var(--discern-space-4);
-    border-inline-start: 2px solid var(--discern-color-warning);
+    border-inline-start: 0.125rem solid var(--discern-color-warning);
     background: var(--discern-color-warning-soft);
     color: var(--discern-color-warning-deep);
     font-size: var(--discern-font-size-sm);
@@ -119,12 +119,6 @@
   @container discern-diagnostic (max-width: 30rem) {
     .discern-diagnostic__correction {
       grid-template-columns: minmax(0, 1fr);
-    }
-  }
-  @media (forced-colors: active) {
-    .discern-diagnostic__severity,
-    .discern-diagnostic__correction {
-      border-inline-start-color: CanvasText;
     }
   }
 }

@@ -14,7 +14,11 @@ import {
   type TerminalMotif,
   terminalMotifRepertoire,
 } from "../motif.ts";
-import type { TerminalThemeVariant } from "../theme.ts";
+import {
+  type Appearance,
+  resolveTerminalTheme,
+  type TerminalThemeVariant,
+} from "../theme.ts";
 import {
   assertChoices,
   filterInteractionEntries,
@@ -257,6 +261,7 @@ export interface MarkdownBrowserState<Action> {
   readonly documentMinimumRows: number;
   readonly documentMeasure: number;
   readonly theme: TerminalThemeVariant;
+  readonly appearance: Appearance;
   readonly motif: TerminalMotif;
 }
 
@@ -328,6 +333,7 @@ interface MarkdownBrowserConfig {
   readonly documentMinimumRows: number;
   readonly documentMeasure: number;
   readonly theme: TerminalThemeVariant;
+  readonly appearance: Appearance;
   readonly motif: TerminalMotif;
 }
 
@@ -686,10 +692,7 @@ function configFromOptions<Action>(
   if (options.placeholder !== undefined) {
     assertPlainLabel(options.placeholder, "Markdown browser placeholder");
   }
-  const theme = presentation.theme ?? "dark";
-  if (theme !== "light" && theme !== "dark") {
-    throw new TypeError(`unknown terminal theme variant ${theme}`);
-  }
+  const selectedTheme = resolveTerminalTheme(presentation);
   const motif = presentation.motif ?? DISCERN_TERMINAL_MOTIF;
   terminalMotifRepertoire(motif, true);
   return {
@@ -714,7 +717,8 @@ function configFromOptions<Action>(
       "Markdown browser document measure",
       16,
     ),
-    theme,
+    theme: selectedTheme.variant,
+    appearance: selectedTheme.appearance,
     motif,
   };
 }
@@ -839,6 +843,7 @@ function stateFrom<Action>(
     documentMinimumRows: config.documentMinimumRows,
     documentMeasure: config.documentMeasure,
     theme: config.theme,
+    appearance: config.appearance,
     motif: config.motif,
   });
 }
@@ -856,6 +861,7 @@ function configFromState<Action>(
     documentMinimumRows: state.documentMinimumRows,
     documentMeasure: state.documentMeasure,
     theme: state.theme,
+    appearance: state.appearance,
     motif: state.motif,
   };
 }

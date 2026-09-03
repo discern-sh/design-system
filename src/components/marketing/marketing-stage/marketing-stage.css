@@ -71,7 +71,7 @@
     min-inline-size: 0;
     max-inline-size: 100%;
   }
-  @container (max-width: 520px) {
+  @container (max-width: 32.5rem) {
     :is(.discern-marketing-stage--landscape, .discern-marketing-stage--square) .discern-marketing-stage__body {
       aspect-ratio: auto;
     }

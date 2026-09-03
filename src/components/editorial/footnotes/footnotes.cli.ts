@@ -11,7 +11,12 @@ import {
   renderCliBlocks,
 } from "../../../cli/block-composition.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { composeCliBlocks } from "../../../cli/rhythm.ts";
 import {
@@ -25,11 +30,7 @@ import {
   wrapStyledTextPreservingIndent,
   wrapText,
 } from "../../../cli/text.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import renderBlockquoteCli from "../blockquote/blockquote.cli.ts";
 import renderCodeBlockCli from "../code-block/code-block.cli.ts";
 import renderListCli from "../list/list.cli.ts";
@@ -100,10 +101,9 @@ export type FootnoteCliItem =
   | FootnoteCliRichItem;
 
 /** Inputs accepted by the terminal Footnotes renderer. */
-export interface FootnotesCliProps {
+export interface FootnotesCliProps extends CliPresentationOptions {
   readonly title?: string;
   readonly items: readonly FootnoteCliItem[];
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -329,16 +329,17 @@ function renderRichBody(
   content: string | FootnoteCliRichContent,
   contentWidth: number,
   capabilities: Parameters<CliRenderer<FootnotesCliProps>>[1],
-  theme: TerminalThemeVariant | undefined,
+  presentation: CliPresentationOptions,
 ): string {
   if (isBlockContent(content)) {
     return renderCliBlocks(content.children, capabilities, {
+      ...cliPresentationPassthrough(presentation),
       maxWidth: contentWidth,
     });
   }
   const rendered = renderSemanticInlineContent(content, capabilities, {
+    ...cliPresentationPassthrough(presentation),
     baseRole: "annotation",
-    ...(theme === undefined ? {} : { theme }),
   });
   return wrapStyledTextPreservingIndent(rendered, contentWidth).join("\n");
 }
@@ -347,7 +348,7 @@ function renderLinkedReturns(
   item: FootnoteCliLinkedTextItem | FootnoteCliRichItem,
   contentWidth: number,
   capabilities: Parameters<CliRenderer<FootnotesCliProps>>[1],
-  theme: TerminalThemeVariant | undefined,
+  presentation: CliPresentationOptions,
 ): string {
   const references = item.returnReferences;
   const marker = capabilities.unicode ? "↩" : "<-";
@@ -355,8 +356,8 @@ function renderLinkedReturns(
     if (item.returnLabel === undefined) return "";
     const content = [marker + " ", item.returnLabel] as const;
     const rendered = renderSemanticInlineContent(content, capabilities, {
+      ...cliPresentationPassthrough(presentation),
       baseRole: "annotation",
-      ...(theme === undefined ? {} : { theme }),
     });
     return wrapStyledTextPreservingIndent(rendered, contentWidth).join("\n");
   }
@@ -377,8 +378,8 @@ function renderLinkedReturns(
       { kind: "link", label, destination: reference.href },
     ] as const satisfies SemanticInlineContent;
     const rendered = renderSemanticInlineContent(content, capabilities, {
+      ...cliPresentationPassthrough(presentation),
       baseRole: "annotation",
-      ...(theme === undefined ? {} : { theme }),
     });
     return wrapStyledTextPreservingIndent(rendered, contentWidth);
   }).join("\n");
@@ -402,7 +403,7 @@ const renderFootnotesCli: CliRenderer<FootnotesCliProps> = (
     safePlainText(props.title, "footnotes title");
   }
   const width = footnotesWidth(props.maxWidth, capabilities);
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const mark = capabilities.unicode ? "†" : "+";
   const heading = styleText(`${mark} ${props.title ?? "Notes & sources"}`, {
     ...theme.typography.strong,
@@ -427,13 +428,13 @@ const renderFootnotesCli: CliRenderer<FootnotesCliProps> = (
     const contentWidth = width - prefixWidth;
     const body = hangRendered(
       prefix,
-      renderRichBody(item.content, contentWidth, capabilities, props.theme),
+      renderRichBody(item.content, contentWidth, capabilities, props),
     );
     const returns = renderLinkedReturns(
       item,
       contentWidth,
       capabilities,
-      props.theme,
+      props,
     );
     return returns === ""
       ? body

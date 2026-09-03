@@ -7,7 +7,11 @@
 import { styleText } from "../../../cli/ansi.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import {
   measureText,
@@ -16,16 +20,15 @@ import {
   wrapText,
 } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   type TerminalColor,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./code-listing.meta.ts";
 
 /** Inputs accepted by the terminal Code listing renderer. */
-export interface CodeListingCliProps {
+export interface CodeListingCliProps extends CliPresentationOptions {
   readonly title?: string;
   readonly filename?: string;
   readonly language?: string;
@@ -34,7 +37,6 @@ export interface CodeListingCliProps {
   readonly caption?: string;
   /** Visual emphasis matching the browser listing's standard or showcase posture. */
   readonly variant?: "standard" | "showcase";
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -162,7 +164,7 @@ const renderCodeListingCli: CliRenderer<CodeListingCliProps> = (
   ]
     .filter((value): value is string => value !== undefined)
     .join(" ");
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const showcase = props.variant === "showcase";
   const frame = renderListingFrame(
     body.split("\n"),

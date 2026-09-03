@@ -12,7 +12,7 @@
   .discern-persona__text {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: calc(var(--discern-space-1) / 2);
     min-inline-size: 0;
   }
   .discern-persona__name {

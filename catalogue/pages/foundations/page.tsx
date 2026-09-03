@@ -1,19 +1,17 @@
 import { useEffect, useState } from "react";
 import type { CSSProperties, FormEvent } from "react";
-import type { TerminalThemeVariant } from "../../../src/cli/theme.ts";
 import { CopyButton } from "../../../src/components/docs/copy-button/copy-button.tsx";
 import { OverflowCue } from "../../../src/components/layout/overflow-cue/overflow-cue.tsx";
-import {
-  allTokens,
-  baseTokens,
-  discernThemeTokens,
-} from "../../../src/tokens/tokens.ts";
+import { publicTokens } from "../../../src/token-inventory.ts";
+import { baseTokens } from "../../../src/tokens/tokens.ts";
 import type { TokenCategory } from "../../../src/tokens/tokens.ts";
+import { blueThemeTokens } from "../../../src/theme/blue.ts";
 import {
   catalogueCliCapabilities,
   CliOutputPreview,
 } from "../../cli-preview.tsx";
 import { TerminalFoundationPreview } from "../../terminal-foundation-preview.tsx";
+import type { CatalogueTerminalPresentation } from "../../terminal-theme.ts";
 import {
   type TerminalFoundationSheet,
   terminalFoundationSheets,
@@ -30,7 +28,10 @@ import {
   matchingFoundationTokens,
 } from "../../routes/foundations.ts";
 import { announceCatalogueLocationChange } from "../../shell/location.ts";
+import type { CatalogueFieldSelection } from "../../shell/field-state.ts";
+import type { AppearanceName } from "../../../src/tokens/field.ts";
 import { CatalogueIndexCard, CataloguePageHeader } from "../shared.tsx";
+import { FieldPage } from "./field-page.tsx";
 
 function isThemed(token: FoundationToken): token is FoundationToken & {
   readonly light: string;
@@ -41,10 +42,10 @@ function isThemed(token: FoundationToken): token is FoundationToken & {
 
 function tokenSource(token: FoundationToken): string {
   if (baseTokens.some((candidate) => candidate === token)) return "Base Token";
-  if (discernThemeTokens.some((candidate) => candidate === token)) {
-    return "Discern theme Token";
+  if (blueThemeTokens.some((candidate) => candidate === token)) {
+    return "Blue preset Token";
   }
-  return "Semantic theme Token";
+  return "Field Token";
 }
 
 function previewVariable(name: string, value: string): CSSProperties {
@@ -435,15 +436,15 @@ function TokenExplorer(
 }
 
 function FoundationsIndex(
-  { terminalTheme, tokens, sheets }: {
-    readonly terminalTheme: TerminalThemeVariant;
+  { terminalPresentation, tokens, sheets }: {
+    readonly terminalPresentation: CatalogueTerminalPresentation;
     readonly tokens: readonly FoundationToken[];
     readonly sheets: readonly TerminalFoundationSheet[];
   },
 ) {
   const firstSheet = sheets[0];
   const firstSpecimen = firstSheet?.specimens(catalogueCliCapabilities, {
-    theme: terminalTheme,
+    ...terminalPresentation,
   })[0];
   return (
     <div
@@ -457,6 +458,24 @@ function FoundationsIndex(
         description="Choose the visual language or its terminal primitives."
       />
       <div className="discern-catalogue-foundations-index">
+        <CatalogueIndexCard
+          href={foundationsPaths.field}
+          title="Field"
+          description="Drive the live axes and inspect the result."
+          action="Open the Field instrument"
+          metadata={<span>4 continuous axes</span>}
+          media={
+            <div
+              className="discern-catalogue-foundations-index__field"
+              aria-hidden="true"
+            >
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+          }
+        />
         <CatalogueIndexCard
           href={foundationsPaths.tokens}
           title="Tokens"
@@ -488,7 +507,7 @@ function FoundationsIndex(
                   <CliOutputPreview
                     value={firstSpecimen.output}
                     label={`${firstSheet.title} preview`}
-                    theme={terminalTheme}
+                    presentation={terminalPresentation}
                   />
                 )}
             </div>
@@ -500,8 +519,8 @@ function FoundationsIndex(
 }
 
 function TerminalFoundationsIndex(
-  { terminalTheme, sheets }: {
-    readonly terminalTheme: TerminalThemeVariant;
+  { terminalPresentation, sheets }: {
+    readonly terminalPresentation: CatalogueTerminalPresentation;
     readonly sheets: readonly TerminalFoundationSheet[];
   },
 ) {
@@ -525,7 +544,7 @@ function TerminalFoundationsIndex(
       <div className="discern-catalogue-terminal-foundation-gallery">
         {sheets.map((sheet) => {
           const specimens = sheet.specimens(catalogueCliCapabilities, {
-            theme: terminalTheme,
+            ...terminalPresentation,
           });
           const representative = specimens[0];
           return (
@@ -542,7 +561,7 @@ function TerminalFoundationsIndex(
                   <CliOutputPreview
                     value={representative.output}
                     label={`${sheet.title} preview`}
-                    theme={terminalTheme}
+                    presentation={terminalPresentation}
                   />
                 )}
               data-discern-terminal-foundation-card={sheet.id}
@@ -556,10 +575,10 @@ function TerminalFoundationsIndex(
 }
 
 function TerminalFoundationDetail(
-  { sheet, sheets, terminalTheme }: {
+  { sheet, sheets, terminalPresentation }: {
     readonly sheet: TerminalFoundationSheet;
     readonly sheets: readonly TerminalFoundationSheet[];
-    readonly terminalTheme: TerminalThemeVariant;
+    readonly terminalPresentation: CatalogueTerminalPresentation;
   },
 ) {
   const index = sheets.indexOf(sheet);
@@ -584,7 +603,10 @@ function TerminalFoundationDetail(
         title={sheet.title}
         description={sheet.description}
       />
-      <TerminalFoundationPreview sheet={sheet} theme={terminalTheme} />
+      <TerminalFoundationPreview
+        sheet={sheet}
+        presentation={terminalPresentation}
+      />
       <nav
         className="discern-catalogue-terminal-foundation__pager"
         aria-label="Terminal foundation sheets"
@@ -610,7 +632,14 @@ function TerminalFoundationDetail(
 }
 
 export interface FoundationsPageProps {
-  readonly terminalTheme: TerminalThemeVariant;
+  readonly terminalPresentation: CatalogueTerminalPresentation;
+  readonly appearance?: AppearanceName | undefined;
+  readonly accentHue?: number | undefined;
+  readonly field?: CatalogueFieldSelection | undefined;
+  readonly fieldScheme?: "light" | "dark" | undefined;
+  readonly onFieldChange?:
+    | ((field: CatalogueFieldSelection) => void)
+    | undefined;
   readonly url?: URL;
   readonly tokens?: readonly FoundationToken[];
   readonly sheets?: readonly TerminalFoundationSheet[];
@@ -618,9 +647,14 @@ export interface FoundationsPageProps {
 
 export function FoundationsPage(
   {
-    terminalTheme,
+    terminalPresentation,
+    appearance,
+    accentHue,
+    field,
+    fieldScheme,
+    onFieldChange,
     url = new URL(globalThis.location.href),
-    tokens = allTokens,
+    tokens = publicTokens,
     sheets = terminalFoundationSheets,
   }: FoundationsPageProps,
 ) {
@@ -631,7 +665,7 @@ export function FoundationsPage(
   if (route?.family !== "foundations" || route.page === "index") {
     return (
       <FoundationsIndex
-        terminalTheme={terminalTheme}
+        terminalPresentation={terminalPresentation}
         tokens={tokens}
         sheets={sheets}
       />
@@ -640,9 +674,24 @@ export function FoundationsPage(
   if (route.page === "tokens") {
     return <TokenExplorer url={url} tokens={tokens} />;
   }
+  if (route.page === "field") {
+    return (
+      <FieldPage
+        appearance={appearance}
+        accentHue={accentHue}
+        field={field}
+        fieldScheme={fieldScheme}
+        terminalPresentation={terminalPresentation}
+        onFieldChange={onFieldChange}
+      />
+    );
+  }
   if (route.page === "terminal-index") {
     return (
-      <TerminalFoundationsIndex terminalTheme={terminalTheme} sheets={sheets} />
+      <TerminalFoundationsIndex
+        terminalPresentation={terminalPresentation}
+        sheets={sheets}
+      />
     );
   }
   const sheet = sheets.find(({ id }) => id === route.sheetId);
@@ -665,7 +714,7 @@ export function FoundationsPage(
       <TerminalFoundationDetail
         sheet={sheet}
         sheets={sheets}
-        terminalTheme={terminalTheme}
+        terminalPresentation={terminalPresentation}
       />
     );
 }

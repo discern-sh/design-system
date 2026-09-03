@@ -75,13 +75,13 @@
   .discern-comparison-table__badge {
     display: inline-block;
     margin-inline-start: var(--discern-space-2);
-    padding: 0.1rem 0.45rem;
+    padding: calc(var(--discern-space-1) / 2) var(--discern-space-2);
     border-radius: var(--discern-radius-pill);
     background: var(--discern-color-accent-200);
     color: var(--discern-color-accent-800);
     font-size: var(--discern-font-size-xs);
   }
-  @container discern-comparison-table (max-width: 680px) {
+  @container discern-comparison-table (max-width: 42.5rem) {
     .discern-comparison-table__frame {
       overflow: visible;
       border: 0;

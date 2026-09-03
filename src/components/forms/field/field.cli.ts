@@ -5,13 +5,17 @@
  */
 
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import type {
   CompactAcknowledgementFrameState,
   FramedAcknowledgementFrameState,
   InteractiveFrameLifecycle,
 } from "../../../cli/interactive-states.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import {
   type FormCliPresentation,
   renderFormCliContinuation,
@@ -20,11 +24,10 @@ import {
 import meta, { componentExampleVocabulary } from "./field.meta.ts";
 
 /** Static presentation options shared by every Field rendering. */
-interface FieldCliOptions {
+interface FieldCliOptions extends CliPresentationOptions {
   readonly presentation?: FormCliPresentation;
   readonly required?: boolean;
   readonly showStatus?: boolean;
-  readonly theme?: TerminalThemeVariant;
   readonly width?: number;
 }
 
@@ -42,7 +45,8 @@ export type FieldCliProps =
   | (FramedAcknowledgementFrameState & FieldCliOptions)
   | (
     & CompactAcknowledgementFrameState
-    & Pick<FieldCliOptions, "theme" | "width">
+    & CliPresentationOptions
+    & Pick<FieldCliOptions, "width">
   );
 
 const base = { label: "Environment", control: "staging" } as const;
@@ -122,7 +126,9 @@ export const cliExamples: readonly CliExample<FieldCliProps>[] =
 function isCompactAcknowledgement(
   props: Readonly<FieldCliProps>,
 ): props is Readonly<
-  CompactAcknowledgementFrameState & Pick<FieldCliOptions, "theme" | "width">
+  & CompactAcknowledgementFrameState
+  & CliPresentationOptions
+  & Pick<FieldCliOptions, "width">
 > {
   return "kind" in props && props.kind === "acknowledgement" &&
     "presentation" in props && props.presentation === "compact";
@@ -132,9 +138,9 @@ function isCompactAcknowledgement(
 const renderFieldCli: CliRenderer<FieldCliProps> = (props, capabilities) => {
   if (isCompactAcknowledgement(props)) {
     return renderFormCliContinuation({
+      ...cliPresentationPassthrough(props),
       lifecycle: props.lifecycle,
       hint: props.hint,
-      ...(props.theme === undefined ? {} : { theme: props.theme }),
       ...(props.width === undefined ? {} : { width: props.width }),
     }, capabilities);
   }
@@ -142,6 +148,7 @@ const renderFieldCli: CliRenderer<FieldCliProps> = (props, capabilities) => {
     FieldControlCliProps | (FramedAcknowledgementFrameState & FieldCliOptions)
   >;
   return renderFormCliFrame({
+    ...cliPresentationPassthrough(framed),
     label: framed.label,
     control: "kind" in framed ? framed.message : framed.control,
     lifecycle: framed.lifecycle,
@@ -153,7 +160,6 @@ const renderFieldCli: CliRenderer<FieldCliProps> = (props, capabilities) => {
     ...(framed.showStatus === undefined
       ? {}
       : { showStatus: framed.showStatus }),
-    ...(framed.theme === undefined ? {} : { theme: framed.theme }),
     ...(framed.width === undefined ? {} : { width: framed.width }),
   }, capabilities);
 };

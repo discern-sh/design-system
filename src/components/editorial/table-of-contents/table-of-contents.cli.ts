@@ -6,14 +6,17 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { measureText, wrapText } from "../../../cli/text.ts";
 import { triangleGlyph, TRIANGLES } from "../../../cli/triangles.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./table-of-contents.meta.ts";
@@ -27,12 +30,11 @@ export interface TableOfContentsCliItem {
 }
 
 /** Inputs accepted by the terminal Table of contents renderer. */
-export interface TableOfContentsCliProps {
+export interface TableOfContentsCliProps extends CliPresentationOptions {
   readonly title?: string;
   readonly items: readonly TableOfContentsCliItem[];
   readonly progress?: string;
   readonly showTargets?: boolean;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -76,7 +78,7 @@ const renderTableOfContentsCli: CliRenderer<TableOfContentsCliProps> = (
     );
   }
   const width = Math.min(requested, capabilities.columns);
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const blocks = [styleText(props.title ?? "On this page", {
     ...theme.typography.strong,
     color: terminalToneColor(theme, "accent"),

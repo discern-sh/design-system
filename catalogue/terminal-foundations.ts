@@ -22,13 +22,11 @@ import {
   type SequentialStepStatus,
   type TerminalCapabilities,
   terminalMotifRepertoire,
-  type TerminalThemeVariant,
+  type TerminalThemeOptions,
 } from "../src/cli/mod.ts";
 
 /** Optional browser or stdout presentation bound across one complete sheet. */
-export interface TerminalFoundationPresentation {
-  readonly theme?: TerminalThemeVariant;
-}
+export type TerminalFoundationPresentation = TerminalThemeOptions;
 
 /** A reviewable animation paired with its complete static frame evidence. */
 export interface TerminalFoundationAnimation {
@@ -79,10 +77,10 @@ const CATALOGUE_CUSTOM_MOTIF = deriveTerminalMotif(
   },
 );
 
-function themeOptions(
+function presentationOptions(
   presentation: TerminalFoundationPresentation | undefined,
-): Readonly<{ theme?: TerminalThemeVariant }> {
-  return presentation?.theme === undefined ? {} : { theme: presentation.theme };
+): TerminalThemeOptions {
+  return presentation ?? {};
 }
 
 function motifSpecimens(
@@ -95,7 +93,7 @@ function motifSpecimens(
       `terminal width ${capabilities.columns} cannot hold the motif catalogue`,
     );
   }
-  const appearance = themeOptions(presentation);
+  const appearance = presentationOptions(presentation);
   const patternLength = Math.min(24, width);
   const repertoire = terminalMotifRepertoire(
     DISCERN_TERMINAL_MOTIF,
@@ -265,7 +263,7 @@ function narrationSpecimens(
 ): readonly TerminalFoundationSpecimen[] {
   const presenter = createCliPresenter(
     capabilities,
-    themeOptions(presentation),
+    presentationOptions(presentation),
   );
   return [
     {

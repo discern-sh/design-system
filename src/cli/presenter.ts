@@ -30,9 +30,14 @@ import {
 import {
   DISCERN_TERMINAL_MOTIF,
   type TerminalMotif,
+  type TerminalMotifRegister,
   terminalMotifRepertoire,
 } from "./motif.ts";
-import type { TerminalThemeVariant } from "./theme.ts";
+import {
+  type Appearance,
+  resolveTerminalTheme,
+  type TerminalThemeVariant,
+} from "./theme.ts";
 import {
   type MotifSectionRuleOptions,
   type MotifThemeOptions,
@@ -45,8 +50,6 @@ import {
 
 /** Presentation defaults a presenter binds once for every later call. */
 export interface CliPresenterOptions extends CliPresentationOptions {
-  /** Theme variant supplied to every renderer; defaults to `"dark"`. */
-  readonly theme?: TerminalThemeVariant;
   /**
    * Default frame width in character cells. Bound calls receive effective
    * capabilities whose columns are the narrower of this width and the real
@@ -65,8 +68,12 @@ export interface CliPresenter {
   readonly capabilities: TerminalCapabilities;
   /** The bound theme variant injected wherever props leave it unset. */
   readonly theme: TerminalThemeVariant;
+  /** The bound Field-or-Accent input injected wherever props leave it unset. */
+  readonly appearance: Appearance;
   /** The bound motif injected wherever props leave it unset. */
   readonly motif: TerminalMotif;
+  /** The bound motif register injected wherever props leave it unset. */
+  readonly register: TerminalMotifRegister;
   /**
    * Render one pure renderer with the bound capabilities and theme. Props
    * you pass win over the bound defaults, so per-call overrides stay
@@ -129,10 +136,9 @@ export function createCliPresenter(
   capabilities: TerminalCapabilities,
   options: CliPresenterOptions = {},
 ): CliPresenter {
-  const theme = options.theme ?? "dark";
-  if (theme !== "light" && theme !== "dark") {
-    throw new TypeError(`unknown terminal theme variant ${theme}`);
-  }
+  const selectedTheme = resolveTerminalTheme(options);
+  const theme = selectedTheme.variant;
+  const appearance = selectedTheme.appearance;
   const width = options.width;
   if (width !== undefined && (!Number.isSafeInteger(width) || width < 1)) {
     throw new TypeError(
@@ -143,12 +149,23 @@ export function createCliPresenter(
     ? capabilities
     : { ...capabilities, columns: width };
   const motif = options.motif ?? DISCERN_TERMINAL_MOTIF;
+  const boundRegister = options.register;
+  const register = boundRegister ?? "plain";
   terminalMotifRepertoire(motif, true);
   const present = <Props extends CliPresentationOptions>(
     renderer: CliRenderer<Props>,
     props: Readonly<Props>,
   ): string =>
-    renderer({ theme, motif, ...props } as Readonly<Props>, effective);
+    renderer(
+      {
+        theme,
+        appearance,
+        motif,
+        ...(boundRegister === undefined ? {} : { register: boundRegister }),
+        ...props,
+      } as Readonly<Props>,
+      effective,
+    );
   const line =
     (renderer: CliRenderer<NarrationLineProps>) =>
     (text: string, overrides: CliPresenterLineOptions = {}): string =>
@@ -156,7 +173,9 @@ export function createCliPresenter(
   return {
     capabilities: effective,
     theme,
+    appearance,
     motif,
+    register,
     present,
     box(options: TerminalBoxOptions): string {
       return renderBox(options, effective);
@@ -167,7 +186,9 @@ export function createCliPresenter(
     ): string {
       return renderMotifSpinnerFrame(phase, effective, {
         theme,
+        appearance,
         motif,
+        ...(boundRegister === undefined ? {} : { register: boundRegister }),
         ...overrides,
       });
     },
@@ -177,7 +198,13 @@ export function createCliPresenter(
     ): string {
       return renderMotifSectionRule(
         label,
-        { theme, motif, ...overrides },
+        {
+          theme,
+          appearance,
+          motif,
+          ...(boundRegister === undefined ? {} : { register: boundRegister }),
+          ...overrides,
+        },
         effective,
       );
     },
@@ -187,14 +214,18 @@ export function createCliPresenter(
     ): string {
       return renderMotifWorkflowStepper(steps, effective, {
         theme,
+        appearance,
         motif,
+        ...(boundRegister === undefined ? {} : { register: boundRegister }),
         ...overrides,
       });
     },
     with(overrides: CliPresenterOptions): CliPresenter {
       return createCliPresenter(capabilities, {
         theme,
+        appearance,
         motif,
+        ...(boundRegister === undefined ? {} : { register: boundRegister }),
         ...(width === undefined ? {} : { width }),
         ...overrides,
       });
@@ -205,7 +236,11 @@ export function createCliPresenter(
     failure: line(renderFailureLine),
     lead: line(renderLeadLine),
     style(text: string, overrides: SemanticTextOptions = {}): string {
-      return styleSemanticText(text, { theme, ...overrides }, effective);
+      return styleSemanticText(
+        text,
+        { theme, appearance, ...overrides },
+        effective,
+      );
     },
   };
 }

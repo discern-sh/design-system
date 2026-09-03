@@ -6,26 +6,28 @@
 
 import { renderStyledSpans, styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { wrapText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./pull-quote.meta.ts";
 import type { PullQuoteAlign } from "./pull-quote.types.ts";
 
 /** Inputs accepted by the terminal Pull quote renderer. */
-export interface PullQuoteCliProps {
+export interface PullQuoteCliProps extends CliPresentationOptions {
   readonly quote: string;
   readonly attribution?: string;
   readonly citation?: string;
   readonly citeUrl?: string;
   readonly align?: PullQuoteAlign;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -65,7 +67,7 @@ const renderPullQuoteCli: CliRenderer<PullQuoteCliProps> = (
   }
   const align = props.align ?? "wide";
   const width = Math.min(requested, capabilities.columns, ALIGN_COLUMNS[align]);
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const open = capabilities.unicode ? "“" : '"';
   const close = capabilities.unicode ? "”" : '"';
   const rail = capabilities.unicode ? "┃" : "|";

@@ -45,6 +45,7 @@ export const AgentPersona: DiscernComponent<
         `discern-agent-persona--${size}`,
         className,
       )}
+      {...(status === undefined ? {} : { "data-discern-status": status })}
       {...props}
     >
       {avatar ?? (
@@ -57,12 +58,12 @@ export const AgentPersona: DiscernComponent<
         />
       )}
       <span className="discern-agent-persona__text">
-        <span className="discern-agent-persona__name">
-          {name}
+        <span className="discern-agent-persona__identity">
+          <span className="discern-agent-persona__name">{name}</span>
           {status !== undefined
             ? (
-              <span className="discern-visually-hidden">
-                {`, ${statusLabel ?? status}`}
+              <span className="discern-agent-persona__status">
+                {statusLabel ?? status}
               </span>
             )
             : null}

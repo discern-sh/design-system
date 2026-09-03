@@ -6,13 +6,16 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { measureText, wrapText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./related-content.meta.ts";
@@ -28,12 +31,11 @@ export interface RelatedContentCliItem {
 }
 
 /** Inputs accepted by the terminal Related content renderer. */
-export interface RelatedContentCliProps {
+export interface RelatedContentCliProps extends CliPresentationOptions {
   readonly eyebrow?: string;
   readonly title: string;
   readonly items: readonly RelatedContentCliItem[];
   readonly surface?: RelatedContentSurface;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -97,7 +99,7 @@ const renderRelatedContentCli: CliRenderer<RelatedContentCliProps> = (
     );
   }
   const width = Math.min(requested, capabilities.columns);
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const headingTone = props.surface === "canvas" ? "neutral" : "accent";
   const blocks: string[] = [];
   if (props.eyebrow !== undefined) {

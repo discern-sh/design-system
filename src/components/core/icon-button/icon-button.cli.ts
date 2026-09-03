@@ -6,24 +6,23 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./icon-button.meta.ts";
 import type { IconButtonSize, IconButtonVariant } from "./icon-button.types.ts";
 
 /** Inputs accepted by the terminal Icon button renderer. */
-export interface IconButtonCliProps {
+export interface IconButtonCliProps extends CliPresentationOptions {
   readonly icon: string;
   readonly asciiIcon?: string;
   readonly label: string;
   readonly variant?: IconButtonVariant;
   readonly size?: IconButtonSize;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -91,7 +90,7 @@ const renderIconButtonCli: CliRenderer<IconButtonCliProps> = (
     labelWidth,
     capabilities.unicode ? "…" : ".",
   );
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   return styleText(
     `${start}${icon} ${label}${end}`,
     {

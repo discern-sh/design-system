@@ -1,7 +1,11 @@
+import type { AppearanceName } from "../../src/tokens/field.ts";
+import { catalogueAccentHue } from "../shell/appearance-options.ts";
 import {
-  catalogueAppearanceOption,
-  defaultCatalogueAppearanceOption,
-} from "../shell/appearance-options.ts";
+  type CatalogueAppearanceState,
+  defaultCatalogueAppearanceState,
+  parseCatalogueAppearanceParameters,
+  writeCatalogueAppearanceParameters,
+} from "../shell/appearance-state.ts";
 import {
   reviewInlineSizes,
   reviewStateCategories,
@@ -24,7 +28,9 @@ export interface ComponentReviewState {
   readonly category?: ReviewStateCategory;
   readonly width: ReviewInlineSize;
   readonly theme: "light" | "dark";
-  readonly appearance: string;
+  readonly appearance: AppearanceName;
+  readonly accentHue: number;
+  readonly field: CatalogueAppearanceState["field"];
   readonly motion: (typeof reviewMotionModes)[number];
   readonly mode: (typeof reviewSurfaceModes)[number];
   readonly speed: (typeof reviewTimingModes)[number];
@@ -43,10 +49,34 @@ function identifier(value: string | null): string | undefined {
   return value !== null && value.trim() !== "" ? value.trim() : undefined;
 }
 
+function reviewAppearance(
+  parameters: URLSearchParams,
+): CatalogueAppearanceState & { readonly theme: "light" | "dark" } {
+  const migrated = new URLSearchParams(parameters);
+  const formerAppearance = migrated.get("appearance");
+  if (
+    formerAppearance !== null && formerAppearance !== "field" &&
+    formerAppearance !== "accent"
+  ) {
+    const hue = catalogueAccentHue(formerAppearance);
+    if (hue !== undefined) {
+      migrated.set("appearance", "accent");
+      migrated.set("accent", String(hue));
+    }
+  }
+  const parsed = parseCatalogueAppearanceParameters(migrated);
+  const state = parsed ?? {
+    ...defaultCatalogueAppearanceState,
+    theme: "light" as const,
+  };
+  const theme = state.theme === "system" ? "light" : state.theme;
+  return { ...state, theme };
+}
+
 /** Parse only stable, meaningful inputs; unknown values fall back safely. */
 export function parseComponentReviewState(url: URL): ComponentReviewState {
   const parameters = url.searchParams;
-  const appearance = catalogueAppearanceOption(parameters.get("appearance"));
+  const appearance = reviewAppearance(parameters);
   const group = identifier(parameters.get("group"));
   const component = identifier(parameters.get("component"));
   const example = identifier(parameters.get("example"));
@@ -62,9 +92,10 @@ export function parseComponentReviewState(url: URL): ComponentReviewState {
       parameters.get("width"),
       Object.keys(reviewInlineSizes) as ReviewInlineSize[],
     ) ?? "medium",
-    theme: oneOf(parameters.get("theme"), ["light", "dark"] as const) ??
-      "light",
-    appearance: appearance?.id ?? defaultCatalogueAppearanceOption.id,
+    theme: appearance.theme,
+    appearance: appearance.appearance,
+    accentHue: appearance.accentHue,
+    field: appearance.field,
     motion: oneOf(parameters.get("motion"), reviewMotionModes) ?? "ordinary",
     mode: oneOf(parameters.get("mode"), reviewSurfaceModes) ?? "contact",
     speed: oneOf(parameters.get("speed"), reviewTimingModes) ?? "production",
@@ -82,14 +113,22 @@ export function componentReviewHref(state: ComponentReviewState): string {
       ["posture", state.posture],
       ["category", state.category],
       ["width", state.width],
-      ["theme", state.theme],
-      ["appearance", state.appearance],
-      ["motion", state.motion],
-      ["mode", state.mode],
-      ["speed", state.speed],
     ] as const
   ) {
     if (value !== undefined) parameters.set(name, value);
   }
+  writeCatalogueAppearanceParameters(parameters, {
+    theme: state.theme,
+    appearance: state.appearance,
+    accentHue: state.accentHue,
+    field: state.field,
+  });
+  for (
+    const [name, value] of [
+      ["motion", state.motion],
+      ["mode", state.mode],
+      ["speed", state.speed],
+    ] as const
+  ) parameters.set(name, value);
   return `${componentReviewPath}?${parameters.toString()}`;
 }

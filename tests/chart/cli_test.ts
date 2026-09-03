@@ -5,8 +5,9 @@ import {
   assertStringIncludes,
   assertThrows,
 } from "@std/assert";
-import { stripAnsi } from "../../src/cli/ansi.ts";
+import { stripAnsi, styleText } from "../../src/cli/ansi.ts";
 import type { TerminalCapabilities } from "../../src/cli/capabilities.ts";
+import type { CliPresentationOptions } from "../../src/cli/contracts.ts";
 import {
   CHART_KIND_CLI_DECLINE_GUIDANCE,
   type ChartKindCliDecline,
@@ -23,6 +24,12 @@ import {
   testTerminalCapabilities,
 } from "../../src/cli/interactive/testing.ts";
 import { measureText } from "../../src/cli/text.ts";
+import {
+  resolveTerminalTheme,
+  terminalThemeColor,
+  terminalToneColor,
+} from "../../src/cli/theme.ts";
+import { accentAppearance, fieldAppearance } from "../../src/tokens/tokens.ts";
 import { cliReleaseFixtures } from "../../src/components/editorial/chart/chart.cli.ts";
 import projectBarChartCli from "../../src/chart/kinds/bar/bar.cli.ts";
 import {
@@ -98,9 +105,10 @@ function render(
   spec: ChartSpec,
   capabilities: TerminalCapabilities,
   mode: "auto" | "description" = "auto",
+  presentation: CliPresentationOptions = {},
 ): string {
   return renderChartCli(
-    { spec, mode, maxWidth: capabilities.columns },
+    { ...presentation, spec, mode, maxWidth: capabilities.columns },
     capabilities,
   );
 }
@@ -173,6 +181,97 @@ Deno.test("bar CLI is byte-stable and bounded across widths and capabilities", (
       }
     }
   }
+});
+
+Deno.test("chart Accent moves semantic chrome while series projection stays fixed", () => {
+  for (
+    const colorDepth of ["truecolor", "ansi256", "ansi16"] as const
+  ) {
+    const capabilities = testTerminalCapabilities({
+      columns: 80,
+      colorDepth,
+      hyperlinks: false,
+    });
+    const fieldAppearanceOptions = {
+      theme: "dark",
+      appearance: fieldAppearance,
+    } as const;
+    const accentAppearanceOptions = {
+      theme: "dark",
+      appearance: accentAppearance(335),
+    } as const;
+    const field = render(
+      representative,
+      capabilities,
+      "auto",
+      fieldAppearanceOptions,
+    );
+    const accent = render(
+      representative,
+      capabilities,
+      "auto",
+      accentAppearanceOptions,
+    );
+    assertEquals(stripAnsi(accent), stripAnsi(field));
+
+    const fieldPalette = resolveTerminalTheme(fieldAppearanceOptions);
+    const accentPalette = resolveTerminalTheme(accentAppearanceOptions);
+    for (const [slot, label] of [[1, "Completed"], [2, "Open"]] as const) {
+      const name = `--discern-color-series-${slot}` as const;
+      const fieldSeries = terminalThemeColor(fieldPalette, name);
+      const accentSeries = terminalThemeColor(accentPalette, name);
+      assertEquals(
+        accentSeries,
+        fieldSeries,
+        `series ${slot} diverged under Accent`,
+      );
+      const probe = styleText("x", { color: accentSeries }, capabilities);
+      const prefix = probe.slice(0, probe.indexOf("x"));
+      assert(
+        accent.split("\n").some((line) =>
+          stripAnsi(line).includes(label) && line.includes(prefix)
+        ),
+        `series ${slot} lost its ${colorDepth} colour-and-label witness`,
+      );
+    }
+
+    const chromatic = cliReleaseFixtures.find(({ name }) =>
+      name === "distribution-enhanced"
+    );
+    assert(chromatic !== undefined, "missing chromatic chart fixture");
+    const chromaticField = render(
+      chromatic.props.spec,
+      { ...capabilities, columns: 160 },
+      "auto",
+      fieldAppearanceOptions,
+    );
+    const chromaticAccent = render(
+      chromatic.props.spec,
+      { ...capabilities, columns: 160 },
+      "auto",
+      accentAppearanceOptions,
+    );
+    assertEquals(stripAnsi(chromaticAccent), stripAnsi(chromaticField));
+    assert(
+      chromaticAccent !== chromaticField,
+      `${colorDepth} chromatic chart did not select Accent`,
+    );
+    const accentColor = terminalToneColor(accentPalette, "accent");
+    const probe = styleText("x", { color: accentColor }, capabilities);
+    assert(
+      chromaticAccent.includes(probe.slice(0, probe.indexOf("x"))),
+      `${colorDepth} chromatic chart omitted the selected Accent code`,
+    );
+  }
+
+  const plain = testTerminalCapabilities({ columns: 80, colorDepth: "none" });
+  assertEquals(
+    render(representative, plain, "auto", {
+      theme: "dark",
+      appearance: accentAppearance(335),
+    }),
+    render(representative, plain),
+  );
 });
 
 /** Strip frame borders and whitespace so wrapped facts compare whole. */

@@ -8,8 +8,8 @@
   }
   .discern-switch__label input {
     position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
+    inline-size: 0.0625rem;
+    block-size: 0.0625rem;
     opacity: 0;
   }
   .discern-switch__text {
@@ -19,7 +19,7 @@
   }
   .discern-switch__description {
     display: block;
-    margin-block-start: 3px;
+    margin-block-start: var(--discern-space-1);
     color: var(--discern-color-ink-muted);
     font-size: var(--discern-font-size-xs);
     line-height: var(--discern-leading-snug);
@@ -29,9 +29,9 @@
     display: flex;
     flex: none;
     align-items: center;
-    inline-size: 38px;
-    block-size: 22px;
-    padding: 2px;
+    inline-size: 2.375rem;
+    block-size: 1.375rem;
+    padding: calc(var(--discern-space-1) / 2);
     border: 1px solid var(--discern-color-border-strong);
     border-radius: var(--discern-radius-pill);
     background: var(--discern-color-surface-sunken);
@@ -39,26 +39,27 @@
     transition-duration: var(--discern-duration-fast);
   }
   .discern-switch__track > span {
-    inline-size: 16px;
-    block-size: 16px;
+    inline-size: 1rem;
+    block-size: 1rem;
     border-radius: 50%;
     background: var(--discern-color-surface);
-    box-shadow: 0 1px 2px color-mix(in oklab, var(--discern-shadow-color) 22%,
+    box-shadow: 0 0.0625rem 0.125rem color-mix(in oklab,
+      var(--discern-shadow-color) 22%,
       transparent);
     transition: translate var(--discern-duration-medium)
       var(--discern-ease-out);
   }
   .discern-switch input:checked + .discern-switch__track {
-    border-color: var(--discern-color-accent-600);
-    background: var(--discern-color-accent-600);
+    border-color: var(--discern-color-action);
+    background: var(--discern-color-action);
   }
   .discern-switch input:checked + .discern-switch__track > span {
-    translate: 16px 0;
+    background: var(--discern-color-on-action);
+    translate: 1rem 0;
   }
   .discern-switch input:focus-visible + .discern-switch__track {
-    box-shadow: 0 0 0 3px color-mix(in oklab, var(--discern-color-accent-500)
-      20%,
-      transparent);
+    outline: 0.125rem solid var(--discern-color-accent-500);
+    outline-offset: calc(var(--discern-space-1) / 2);
   }
   @media (hover: hover) {
     .discern-switch__label:hover input:not(:disabled) + .discern-switch__track {
@@ -66,10 +67,10 @@
     }
   }
   .discern-switch__label:active input:not(:disabled) + .discern-switch__track {
-    transform: translateY(1px);
+    transform: translateY(0.0625rem);
   }
   .discern-switch input[aria-invalid="true"]:not(:disabled) + .discern-switch__track {
-    border-width: 2px;
+    border-width: 0.125rem;
     border-color: var(--discern-color-danger);
   }
   .discern-switch__label:has(input:disabled) {

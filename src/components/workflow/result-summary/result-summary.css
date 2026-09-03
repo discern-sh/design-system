@@ -110,9 +110,4 @@
       justify-self: start;
     }
   }
-  @media (forced-colors: active) {
-    .discern-result-summary__state {
-      border-color: CanvasText;
-    }
-  }
 }

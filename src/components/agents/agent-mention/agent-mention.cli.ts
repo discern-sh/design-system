@@ -4,10 +4,13 @@
  * @module
  */
 
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
 import { truncateText } from "../../../cli/text.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./agent-mention.meta.ts";
 import {
   agentsCliWidth,
@@ -16,11 +19,10 @@ import {
 } from "../agents-cli.ts";
 
 /** Inputs accepted by the terminal Agent mention renderer. */
-export interface AgentMentionCliProps {
+export interface AgentMentionCliProps extends CliPresentationOptions {
   readonly name: string;
   readonly sigil?: string;
   readonly href?: string;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -58,7 +60,7 @@ const renderAgentMentionCli: CliRenderer<AgentMentionCliProps> = (
     truncateText(frame, width, capabilities.unicode ? "…" : "."),
     "accent",
     capabilities,
-    props.theme,
+    props,
   );
 };
 

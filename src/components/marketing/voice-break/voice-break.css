@@ -75,8 +75,8 @@
   }
   .discern-voice-break__quote::before {
     position: absolute;
-    inset-block-start: -0.2em;
-    inset-inline-start: -0.42em;
+    inset-block-start: calc(-1 * var(--discern-space-1));
+    inset-inline-start: calc(-1 * var(--discern-space-2));
     color: var(--discern-marketing-accent-ink,
       var(--discern-color-accent-700));
     content: "“";
@@ -86,16 +86,16 @@
   }
   .discern-voice-break--end .discern-voice-break__statement {
     justify-items: end;
-    padding-inline-end: 0.5em;
+    padding-inline-end: var(--discern-space-2);
     text-align: end;
   }
   .discern-voice-break--end .discern-voice-break__quote {
     margin-inline-start: auto;
   }
   .discern-voice-break--end .discern-voice-break__quote::before {
-    inset-inline: auto -0.42em;
+    inset-inline: auto calc(-1 * var(--discern-space-2));
   }
-  @container (max-width: 760px) {
+  @container (max-width: 47.5rem) {
     .discern-voice-break__figure {
       grid-template-columns: 1fr;
     }
@@ -109,7 +109,7 @@
       max-inline-size: 24rem;
     }
   }
-  @container (max-width: 520px) {
+  @container (max-width: 32.5rem) {
     .discern-voice-break__quote {
       font-size: clamp(2.45rem, 12cqi, 4rem);
     }

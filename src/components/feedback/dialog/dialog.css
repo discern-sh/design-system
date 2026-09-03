@@ -12,7 +12,7 @@
   }
   .discern-dialog::backdrop {
     background: var(--discern-color-overlay);
-    backdrop-filter: blur(2px);
+    backdrop-filter: blur(0.125rem);
   }
   .discern-dialog[open] {
     display: grid;
@@ -39,15 +39,15 @@
     gap: var(--discern-space-4);
   }
   .discern-dialog__title {
-    margin: 7px 0 0;
+    margin: var(--discern-space-2) 0 0;
     font-size: var(--discern-font-size-display-sm);
   }
   .discern-dialog__close {
     display: grid;
     flex: none;
     place-items: center;
-    inline-size: 32px;
-    block-size: 32px;
+    inline-size: 2rem;
+    block-size: 2rem;
     padding: 0;
     border: 0;
     border-radius: var(--discern-radius-sm);
@@ -65,7 +65,7 @@
   }
   .discern-dialog__close:active {
     background: var(--discern-color-accent-100);
-    transform: translateY(1px);
+    transform: translateY(calc(var(--discern-space-1) / 4));
   }
   .discern-dialog__body {
     margin-block-start: var(--discern-space-5);

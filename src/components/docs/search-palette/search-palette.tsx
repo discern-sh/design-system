@@ -98,6 +98,7 @@ export const SearchPalette: DiscernComponent<
       }}
       onMouseDown={handleBackdrop}
       {...props}
+      data-discern-floating-surface="surface"
     >
       <div className="discern-search-palette__field">
         {icon !== undefined && (

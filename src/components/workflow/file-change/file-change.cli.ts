@@ -4,12 +4,13 @@
  * @module
  */
 
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
-import { defineCliExamples } from "../../../cli/component-examples.ts";
 import type {
-  TerminalSemanticTone,
-  TerminalThemeVariant,
-} from "../../../cli/theme.ts";
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
+import { defineCliExamples } from "../../../cli/component-examples.ts";
+import type { TerminalSemanticTone } from "../../../cli/theme.ts";
 import type {
   FileChangeMagnitude,
   FileDisposition,
@@ -39,11 +40,10 @@ const tones: Readonly<Record<FileDisposition, TerminalSemanticTone>> = {
 };
 
 /** Inputs accepted by the terminal File change renderer. */
-export interface FileChangeCliProps {
+export interface FileChangeCliProps extends CliPresentationOptions {
   readonly path: string;
   readonly disposition: FileDisposition;
   readonly magnitude?: FileChangeMagnitude;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -140,7 +140,7 @@ const renderFileChangeCli: CliRenderer<FileChangeCliProps> = (
     frame,
     tones[props.disposition],
     capabilities,
-    props.theme,
+    props,
   );
 };
 

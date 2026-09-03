@@ -6,12 +6,15 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { measureText, truncateText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   type TerminalSemanticTone,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./icon.meta.ts";
@@ -26,11 +29,10 @@ export type IconCliGlyph =
   | "close";
 
 /** Inputs accepted by the terminal Icon renderer. */
-export interface IconCliProps {
+export interface IconCliProps extends CliPresentationOptions {
   readonly glyph: IconCliGlyph;
   readonly label?: string;
   readonly tone?: TerminalSemanticTone;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -78,7 +80,7 @@ const renderIconCli: CliRenderer<IconCliProps> = (props, capabilities) => {
         capabilities.unicode ? "…" : ".",
       )
     }`;
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   return styleText(
     truncateText(`${glyph}${suffix}`, width, capabilities.unicode ? "…" : "."),
     {

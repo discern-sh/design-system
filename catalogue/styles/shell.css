@@ -180,9 +180,12 @@
     flex: none;
   }
   .discern-catalogue-appearance > summary {
-    display: grid;
+    display: flex;
+    min-inline-size: 8.5rem;
     min-height: 38px;
-    place-items: center;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     padding-inline: 12px;
     border: 1px solid var(--discern-color-border-strong);
     border-radius: var(--discern-radius-md);
@@ -193,6 +196,13 @@
     font-feature-settings: var(--discern-font-features-ui);
     list-style: none;
     white-space: nowrap;
+  }
+  .discern-catalogue-appearance > summary small {
+    max-inline-size: 10rem;
+    overflow: hidden;
+    color: var(--discern-color-ink-faint);
+    font: inherit;
+    text-overflow: ellipsis;
   }
   .discern-catalogue-appearance > summary::-webkit-details-marker {
     display: none;
@@ -210,8 +220,11 @@
     inset-block-start: calc(100% + 9px);
     inset-inline-end: 0;
     display: grid;
-    width: min(290px, calc(100vw - 24px));
+    width: min(390px, calc(100vw - 24px));
+    max-block-size: calc(100dvh - 86px);
     gap: 14px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 14px;
     border: 1px solid var(--discern-color-border-strong);
     border-radius: var(--discern-radius-md);
@@ -219,10 +232,12 @@
     box-shadow: var(--discern-shadow-pop);
   }
   .discern-catalogue-appearance__theme {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+    inline-size: 100%;
+    color: var(--discern-color-ink-muted);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+  }
+  .discern-catalogue-appearance__scheme {
+    justify-self: start;
     color: var(--discern-color-ink-muted);
     font: var(--discern-font-size-xs) var(--discern-font-ui);
   }
@@ -236,6 +251,9 @@
     font-feature-settings: var(--discern-font-features-ui);
     font-size: var(--discern-font-size-xs);
     white-space: nowrap;
+  }
+  .discern-catalogue-accent strong {
+    font-weight: 650;
   }
   .discern-catalogue-accent__swatch {
     inline-size: 12px;
@@ -253,17 +271,143 @@
   .discern-catalogue-accent output {
     grid-column: 3;
     grid-row: 1;
-    inline-size: 8ch;
+    min-inline-size: 10ch;
     color: var(--discern-color-ink);
     font-variant-numeric: tabular-nums;
     text-align: end;
   }
-  .discern-catalogue-accent__guidance {
+  .discern-catalogue-accent__inputs {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 7.5rem;
+    align-items: end;
+    gap: 10px;
+  }
+  .discern-catalogue-accent__inputs > .discern-control[type="range"] {
+    min-block-size: 2.625rem;
+    padding-inline: 0;
+    border-color: transparent;
+    background: transparent;
+    accent-color: var(--discern-color-accent-600);
+  }
+  .discern-catalogue-accent > small {
     grid-column: 1 / -1;
     color: var(--discern-color-ink-faint);
     font-size: var(--discern-font-size-xs);
     line-height: 1.45;
     white-space: normal;
+  }
+  .discern-catalogue-appearance__axes {
+    border-block: 1px solid var(--discern-color-border);
+  }
+  .discern-catalogue-appearance__axes > button {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    min-block-size: 44px;
+    inline-size: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    color: var(--discern-color-ink);
+    font: 650 var(--discern-font-size-sm) var(--discern-font-ui);
+    text-align: start;
+  }
+  .discern-catalogue-appearance__axes > button::before {
+    content: "▸";
+  }
+  .discern-catalogue-appearance__axes > button[aria-expanded="true"]::before {
+    content: "▾";
+  }
+  .discern-catalogue-appearance__axes > button {
+    grid-template-columns: auto auto minmax(0, 1fr);
+  }
+  .discern-catalogue-appearance__axes-summary {
+    overflow: hidden;
+    color: var(--discern-color-ink-faint);
+    font-size: var(--discern-font-size-xs);
+    text-align: end;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .discern-catalogue-appearance__axes > div {
+    display: grid;
+    gap: 16px;
+    padding-block: 4px 14px;
+  }
+  .discern-catalogue-field-axis {
+    display: grid;
+    gap: 7px;
+    min-inline-size: 0;
+  }
+  .discern-catalogue-field-axis > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .discern-catalogue-field-axis label,
+  .discern-catalogue-field-axis output {
+    font: 650 var(--discern-font-size-sm) var(--discern-font-ui);
+  }
+  .discern-catalogue-field-axis output {
+    color: var(--discern-color-accent-700);
+    font-variant-numeric: tabular-nums;
+  }
+  .discern-catalogue-field-axis .discern-control[type="range"] {
+    min-block-size: 2.625rem;
+    padding-inline: 0;
+    border-color: transparent;
+    background: transparent;
+    accent-color: var(--discern-color-accent-600);
+  }
+  .discern-catalogue-field-axis small {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--discern-color-ink-faint);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+  }
+  .discern-catalogue-field-axis__description {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .discern-catalogue-appearance__field-link {
+    justify-self: start;
+    color: var(--discern-color-accent-700);
+    font: var(--discern-font-size-xs) var(--discern-font-ui);
+    text-underline-offset: 3px;
+  }
+  @media (pointer: coarse) {
+    .discern-catalogue-appearance > summary,
+    .discern-catalogue-appearance__axes > button,
+    .discern-catalogue-field-axis .discern-control[type="range"] {
+      min-block-size: 44px;
+    }
+  }
+  @media (max-width: 640px) {
+    .discern-catalogue-appearance__panel {
+      position: fixed;
+      inset-block-start: 68px;
+      inset-inline: 12px;
+      width: auto;
+      max-block-size: calc(100dvh - 80px);
+    }
+  }
+  @media (forced-colors: active) {
+    .discern-catalogue-accent__swatch {
+      border-color: CanvasText;
+      background: Highlight;
+    }
+    .discern-catalogue-appearance__panel {
+      border-color: CanvasText;
+      box-shadow: none;
+    }
   }
   .discern-search-palette__result-context {
     display: grid;

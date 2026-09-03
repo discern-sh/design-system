@@ -4,9 +4,12 @@
  * @module
  */
 
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./branch-choice.meta.ts";
 import {
   assertWorkflowCliText,
@@ -23,10 +26,9 @@ export interface BranchChoiceCliItem {
 }
 
 /** Inputs accepted by the terminal Branch choice renderer. */
-export interface BranchChoiceCliProps {
+export interface BranchChoiceCliProps extends CliPresentationOptions {
   readonly title?: string;
   readonly choices: readonly BranchChoiceCliItem[];
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -86,7 +88,7 @@ const renderBranchChoiceCli: CliRenderer<BranchChoiceCliProps> = (
       workflowPrefixedLines("", title, width).join("\n"),
       "accent",
       capabilities,
-      props.theme,
+      props,
     ),
   ];
   for (const [index, choice] of props.choices.entries()) {

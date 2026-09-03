@@ -6,12 +6,12 @@
 
 import { renderBox } from "../../../cli/box.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import { derivedInitials } from "../../initials.ts";
 import meta, { componentExampleVocabulary } from "./profile-card.meta.ts";
 import type { ProfileCardLayout } from "./profile-card.types.ts";
@@ -23,14 +23,13 @@ export interface ProfileCardCliLink {
 }
 
 /** Inputs accepted by the terminal Profile card renderer. */
-export interface ProfileCardCliProps {
+export interface ProfileCardCliProps extends CliPresentationOptions {
   readonly name: string;
   readonly detail?: string;
   readonly bio?: string;
   readonly initials?: string;
   readonly links?: readonly ProfileCardCliLink[];
   readonly layout?: ProfileCardLayout;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -96,7 +95,7 @@ const renderProfileCardCli: CliRenderer<ProfileCardCliProps> = (
       ...(props.links ?? []).map((link) => `${link.label}: ${link.href}`),
     );
   }
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   return renderBox({
     title: "Profile",
     body: body.join("\n"),

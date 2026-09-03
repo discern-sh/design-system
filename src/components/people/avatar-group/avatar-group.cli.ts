@@ -6,13 +6,16 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { measureText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import { derivedInitials } from "../../initials.ts";
@@ -26,12 +29,11 @@ export interface AvatarGroupCliPerson {
 }
 
 /** Inputs accepted by the terminal Avatar group renderer. */
-export interface AvatarGroupCliProps {
+export interface AvatarGroupCliProps extends CliPresentationOptions {
   readonly people: readonly AvatarGroupCliPerson[];
   readonly max?: number;
   readonly label?: string;
   readonly size?: AvatarSize;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -108,7 +110,7 @@ const renderAvatarGroupCli: CliRenderer<AvatarGroupCliProps> = (
   }
   const width = Math.min(requested, capabilities.columns);
   const limit = Math.min(props.max ?? props.people.length, props.people.length);
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const initialLimit = props.size === "xs" ? 1 : 2;
   const chips = props.people.slice(0, limit).map((person) => {
     const initials = person.initials?.trim().toLocaleUpperCase() ??

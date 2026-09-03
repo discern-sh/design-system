@@ -11,21 +11,23 @@ import {
   renderCliBlocks,
 } from "../../../cli/block-composition.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
 import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
+import {
+  resolveTerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
 } from "../../../cli/theme.ts";
 import renderParagraphCli from "../paragraph/paragraph.cli.ts";
 import meta, { componentExampleVocabulary } from "./blockquote.meta.ts";
 
 /** Inputs accepted by the terminal Blockquote renderer. */
-export interface BlockquoteCliProps {
+export interface BlockquoteCliProps extends CliPresentationOptions {
   /** Opaque package Component blocks rendered within the quotation. */
   readonly children: readonly CliBlock[];
-  /** Terminal Theme variant; defaults to dark. */
-  readonly theme?: TerminalThemeVariant;
   /** Maximum quotation measure in cells, bounded by terminal columns. */
   readonly maxWidth?: number;
 }
@@ -55,7 +57,7 @@ const renderBlockquoteCli: CliRenderer<BlockquoteCliProps> = (
     );
   }
 
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   const rail = styleText(
     `${capabilities.unicode ? "│" : "|"} `,
     {
@@ -65,6 +67,7 @@ const renderBlockquoteCli: CliRenderer<BlockquoteCliProps> = (
     capabilities,
   );
   const content = renderCliBlocks(props.children, capabilities, {
+    ...cliPresentationPassthrough(props),
     maxWidth: width - RAIL_WIDTH,
   });
   return content.split("\n").map((line) => `${rail}${line}`).join("\n");

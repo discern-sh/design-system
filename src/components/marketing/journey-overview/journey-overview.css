@@ -60,13 +60,13 @@
   .discern-journey-overview__outcome {
     margin-block-start: var(--discern-space-8);
     padding-inline-start: var(--discern-space-4);
-    border-inline-start: 2px solid var(--discern-color-accent-500);
+    border-inline-start: 0.125rem solid var(--discern-color-accent-500);
     color: var(--discern-color-ink);
     font-size: var(--discern-font-size-sm);
     font-weight: var(--discern-font-weight-strong);
     line-height: var(--discern-leading-body);
   }
-  @container (max-width: 520px) {
+  @container (max-width: 32.5rem) {
     .discern-journey-overview__steps {
       gap: var(--discern-space-10);
     }

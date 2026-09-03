@@ -6,17 +6,17 @@
   .discern-tooltip__bubble {
     position: absolute;
     z-index: 20;
-    inset-block-end: calc(100% + 8px);
+    inset-block-end: calc(100% + var(--discern-space-2));
     inset-inline-start: 50%;
     width: max-content;
     max-width: 18rem;
-    padding: 6px 8px;
+    padding: calc(var(--discern-space-3) / 2) var(--discern-space-2);
     border-radius: var(--discern-radius-xs);
     background: var(--discern-color-inverse-surface);
     color: var(--discern-color-inverse-ink);
     opacity: 0;
     pointer-events: none;
-    translate: -50% 3px;
+    translate: -50% 0.1875rem;
     transition-property: opacity, translate;
     transition-duration: var(--discern-duration-fast);
     font-family: var(--discern-font-ui);
@@ -25,7 +25,7 @@
     line-height: 1.4;
   }
   .discern-tooltip--bottom .discern-tooltip__bubble {
-    inset-block: calc(100% + 8px) auto;
+    inset-block: calc(100% + var(--discern-space-2)) auto;
   }
   .discern-tooltip:is(:hover, :focus-within) .discern-tooltip__bubble {
     opacity: 1;

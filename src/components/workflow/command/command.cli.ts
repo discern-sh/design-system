@@ -4,9 +4,12 @@
  * @module
  */
 
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import meta, { componentExampleVocabulary } from "./command.meta.ts";
 import type { ExpectedResultVariant } from "../expected-result/expected-result.types.ts";
 import {
@@ -19,7 +22,7 @@ import {
 } from "../workflow-cli.ts";
 
 /** Inputs accepted by the terminal Command renderer. */
-export interface CommandCliProps {
+export interface CommandCliProps extends CliPresentationOptions {
   readonly command: string;
   readonly workingDirectory?: string;
   readonly explanation?: string;
@@ -28,7 +31,6 @@ export interface CommandCliProps {
   readonly expectedResultVariant?: ExpectedResultVariant;
   readonly failureNote?: string;
   readonly platform?: string;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -100,7 +102,7 @@ const renderCommandCli: CliRenderer<CommandCliProps> = (
     "\n",
   );
   lines.push(
-    styleWorkflowHeading(command, "accent", capabilities, props.theme),
+    styleWorkflowHeading(command, "accent", capabilities, props),
   );
   if (props.explanation !== undefined) {
     assertWorkflowCliText(props.explanation, "command explanation", true);

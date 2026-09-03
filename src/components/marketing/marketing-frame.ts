@@ -6,22 +6,21 @@
 
 import { styleText } from "../../cli/ansi.ts";
 import type { TerminalCapabilities } from "../../cli/capabilities.ts";
+import type { CliPresentationOptions } from "../../cli/contracts.ts";
 import { joinVertical } from "../../cli/layout.ts";
 import { wrapText } from "../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   type TerminalSemanticTone,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../cli/theme.ts";
 
 /** Shared heading inputs for a terminal Marketing section. */
-export interface MarketingCliHeaderOptions {
+export interface MarketingCliHeaderOptions extends CliPresentationOptions {
   readonly title: string;
   readonly eyebrow?: string;
   readonly description?: string;
   readonly tone?: TerminalSemanticTone;
-  readonly theme?: TerminalThemeVariant;
   readonly width: number;
 }
 
@@ -53,7 +52,7 @@ export function renderMarketingCliHeader(
   if (options.title.trim() === "") {
     throw new TypeError("marketing frame title must be non-empty");
   }
-  const theme = terminalThemes[options.theme ?? "dark"];
+  const theme = resolveTerminalTheme(options);
   const tone = options.tone ?? "accent";
   return joinVertical([
     options.eyebrow === undefined ? "" : styleText(

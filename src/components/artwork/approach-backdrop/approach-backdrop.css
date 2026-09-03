@@ -7,8 +7,8 @@
     mask-image: linear-gradient(
       90deg,
       transparent 0 14%,
-      rgb(0 0 0 / 0.55) 42%,
-      rgb(0 0 0 / 1) 68% 100%
+      color-mix(in srgb, var(--discern-color-ink) 55%, transparent) 42%,
+      var(--discern-color-ink) 68% 100%
     );
   }
 

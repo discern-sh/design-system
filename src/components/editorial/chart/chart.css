@@ -6,8 +6,8 @@
     overscroll-behavior-inline: contain;
   }
   .discern-chart__viewport:focus-visible {
-    outline: 2px solid var(--discern-color-accent-500);
-    outline-offset: 2px;
+    outline: 0.125rem solid var(--discern-color-accent-500);
+    outline-offset: 0.125rem;
   }
   .discern-chart {
     display: block;
@@ -114,18 +114,18 @@
       forced-color-adjust: none;
     }
     .discern-chart__canvas {
-      fill: Canvas;
+      fill: var(--discern-color-canvas);
     }
     .discern-chart__mark,
     .discern-chart__area {
-      fill: Canvas;
-      stroke: CanvasText;
+      fill: var(--discern-color-canvas);
+      stroke: var(--discern-color-ink);
       stroke-width: 1;
       vector-effect: non-scaling-stroke;
     }
     .discern-chart__points {
-      fill: Canvas;
-      stroke: CanvasText;
+      fill: var(--discern-color-canvas);
+      stroke: var(--discern-color-ink);
       stroke-width: 1.5;
       vector-effect: non-scaling-stroke;
     }
@@ -133,10 +133,10 @@
     .discern-chart__axis,
     .discern-chart__grid,
     .discern-chart__reference {
-      stroke: CanvasText;
+      stroke: var(--discern-color-ink);
     }
     .discern-chart__label {
-      fill: CanvasText;
+      fill: var(--discern-color-ink);
     }
   }
 }

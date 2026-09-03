@@ -6,25 +6,24 @@
 
 import { styleText } from "../../../cli/ansi.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { truncateText } from "../../../cli/text.ts";
-import {
-  terminalThemes,
-  type TerminalThemeVariant,
-  terminalToneColor,
-} from "../../../cli/theme.ts";
+import { resolveTerminalTheme, terminalToneColor } from "../../../cli/theme.ts";
 import { derivedInitials } from "../../initials.ts";
 import meta, { componentExampleVocabulary } from "./mention.meta.ts";
 
 /** Inputs accepted by the terminal Mention renderer. */
-export interface MentionCliProps {
+export interface MentionCliProps extends CliPresentationOptions {
   readonly name: string;
   readonly initials?: string;
   readonly sigil?: string;
   readonly avatar?: boolean;
   readonly href?: string;
   readonly showTarget?: boolean;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -64,7 +63,7 @@ const renderMentionCli: CliRenderer<MentionCliProps> = (
     width,
     capabilities.unicode ? "…" : ".",
   );
-  const theme = terminalThemes[props.theme ?? "dark"];
+  const theme = resolveTerminalTheme(props);
   return styleText(value, {
     ...theme.typography.strong,
     color: terminalToneColor(theme, "accent"),

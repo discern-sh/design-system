@@ -4,9 +4,12 @@
  * @module
  */
 
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import type {
+  CliExample,
+  CliPresentationOptions,
+  CliRenderer,
+} from "../../../cli/contracts.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { TerminalThemeVariant } from "../../../cli/theme.ts";
 import type { DecisionRecordStatus } from "./decision-record.types.ts";
 import meta, { componentExampleVocabulary } from "./decision-record.meta.ts";
 import {
@@ -23,7 +26,7 @@ const statusLabels: Readonly<Record<DecisionRecordStatus, string>> = {
 };
 
 /** Inputs accepted by the terminal Decision record renderer. */
-export interface DecisionRecordCliProps {
+export interface DecisionRecordCliProps extends CliPresentationOptions {
   readonly identifier?: string;
   readonly title: string;
   readonly status: DecisionRecordStatus;
@@ -32,7 +35,6 @@ export interface DecisionRecordCliProps {
   readonly context: string;
   readonly decision: string;
   readonly consequences: string;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -102,7 +104,7 @@ const renderDecisionRecordCli: CliRenderer<DecisionRecordCliProps> = (
       heading,
       props.status === "accepted" ? "success" : "neutral",
       capabilities,
-      props.theme,
+      props,
     ),
     ...workflowFactLines("Status", statusLabels[props.status], width),
     ...workflowFactLines("Date", props.dateLabel ?? props.date, width),

@@ -14,15 +14,19 @@ import { styleText } from "../../../cli/ansi.ts";
 import { chartKindCliDeclineMessage } from "../../../cli/chart-kinds.ts";
 import type { TerminalCapabilities } from "../../../cli/capabilities.ts";
 import { defineCliExamples } from "../../../cli/component-examples.ts";
-import type { CliExample, CliRenderer } from "../../../cli/contracts.ts";
+import {
+  type CliExample,
+  type CliPresentationOptions,
+  cliPresentationPassthrough,
+  type CliRenderer,
+} from "../../../cli/contracts.ts";
 import { joinVertical } from "../../../cli/layout.ts";
 import { composeCliBlocks } from "../../../cli/rhythm.ts";
 import { wrapText } from "../../../cli/text.ts";
 import {
+  resolveTerminalTheme,
   type TerminalTheme,
   terminalThemeColor,
-  terminalThemes,
-  type TerminalThemeVariant,
   terminalToneColor,
 } from "../../../cli/theme.ts";
 import { barDataTableFacts } from "../../../chart/kinds/bar/bar.description.ts";
@@ -45,10 +49,9 @@ import meta, { componentExampleVocabulary } from "./chart.meta.ts";
 export type ChartCliMode = "auto" | "description";
 
 /** Inputs accepted by the terminal Chart renderer. */
-export interface ChartCliProps {
+export interface ChartCliProps extends CliPresentationOptions {
   readonly spec: ChartSpec;
   readonly mode?: ChartCliMode;
-  readonly theme?: TerminalThemeVariant;
   readonly maxWidth?: number;
 }
 
@@ -218,11 +221,12 @@ function chartDataTableFacts(validated: ValidatedChart): ChartDataTableFacts {
 function dataTable(
   facts: ChartDataTableFacts,
   width: number,
-  theme: TerminalThemeVariant,
+  presentation: CliPresentationOptions,
   capabilities: TerminalCapabilities,
 ): string {
   return renderTableCli(
     {
+      ...cliPresentationPassthrough(presentation),
       layout: "responsive",
       columns: facts.columns.map((column) =>
         column.numeric
@@ -230,7 +234,6 @@ function dataTable(
           : { header: column.header }
       ),
       rows: facts.rows,
-      theme,
       width,
     },
     capabilities,
@@ -248,10 +251,10 @@ function renderChartDescription(
   validated: ValidatedChart,
   description: string,
   width: number,
-  themeName: TerminalThemeVariant,
+  theme: TerminalTheme,
+  presentation: CliPresentationOptions,
   capabilities: TerminalCapabilities,
 ): string {
-  const theme = terminalThemes[themeName];
   const lines = description.trimEnd().split("\n");
   const facts = chartDataTableFacts(validated);
   const headerIndexes = lines.flatMap((line, index) =>
@@ -268,7 +271,7 @@ function renderChartDescription(
       const rowsEnd = start + 1 + facts.rows.length;
       blocks.push(joinVertical([
         styledLines(lines.slice(start, start + 1), width, theme, capabilities),
-        dataTable(facts, width, themeName, capabilities),
+        dataTable(facts, width, presentation, capabilities),
       ]));
       if (rowsEnd < end) {
         blocks.push(
@@ -312,13 +315,15 @@ const renderChartCli: CliRenderer<ChartCliProps> = (
       `chart CLI theme must be light or dark; received ${String(themeName)}`,
     );
   }
+  const theme = resolveTerminalTheme(props);
   const { validated, description } = prepareChartSemantics(props.spec);
   const fallback = (): string =>
     renderChartDescription(
       validated,
       description,
       width,
-      themeName,
+      theme,
+      props,
       capabilities,
     );
   if (mode === "description") return fallback();
@@ -326,7 +331,8 @@ const renderChartCli: CliRenderer<ChartCliProps> = (
   const projection = projectChartKindCli(validated, {
     capabilities,
     maxWidth: width,
-    theme: themeName,
+    theme: theme.variant,
+    appearance: theme.appearance,
     description,
   });
   if (projection === undefined) return fallback();
@@ -335,7 +341,7 @@ const renderChartCli: CliRenderer<ChartCliProps> = (
     styledLines(
       [chartKindCliDeclineMessage(projection)],
       width,
-      terminalThemes[themeName],
+      theme,
       capabilities,
     ),
     fallback(),
