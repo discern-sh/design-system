@@ -340,7 +340,6 @@ Deno.test("React Diagram browser geometry holds for the generated corpus", async
     await emitDesignSystemRuntime({
       outputRoot: toFileUrl(`${output}/`),
       components: ["diagram", "data-figure", "markdown"],
-      theme: "blue",
     });
     const runtimeCss = await Deno.readTextFile(join(output, "discern.css"));
     const fontCss = await browserFontCss("bundled");
@@ -521,7 +520,6 @@ Deno.test("Diagram and registered Markdown compositions are Axe-clean in forced 
     await emitDesignSystemRuntime({
       outputRoot: toFileUrl(`${output}/`),
       components: ["diagram", "data-figure", "markdown"],
-      theme: "blue",
     });
     const css = await Deno.readTextFile(join(output, "discern.css"));
     const resource = {

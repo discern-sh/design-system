@@ -600,8 +600,8 @@
   metric = "field_contrast_margin"
   direction = "up"
   limit = 0
-  run = "deno eval --config deno.json 'import { appearanceContrastMargin } from \"./src/tokens/appearance.ts\"; console.log(\"DISCERN_METRIC field_contrast_margin \" + appearanceContrastMargin())'"
-  inputs = ["src/tokens/**"]
+  run = "deno run --config deno.json --allow-read ${scripts.dir}/measure-contrast-margin.ts"
+  inputs = ["src/tokens/**", "${scripts.dir}/measure-contrast-margin.ts"]
 
 # Component spacing and offsets consume the shared spacing roles. This raw
 # legacy population may only fall until the density sweep replaces it at zero.
