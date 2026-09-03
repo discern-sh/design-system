@@ -125,6 +125,7 @@ export function glyphCatalogueEntryFromSlug(
 
 function aliasFacts(alias: DiscernGlyphAlias): readonly SearchFact[] {
   return [
+    { label: "Publication disposition", value: alias.publication },
     {
       label: "Recommendation rationale",
       value: alias.recommendation.rationale,
@@ -165,6 +166,7 @@ export function glyphSearchRecordsForEntries(
       entry.canonical.presentation.effectivePresentation,
       ...entry.aliases.flatMap((alias) => [
         ...alias.searchTerms,
+        alias.publication,
         alias.recommendation.state,
       ]),
     ],

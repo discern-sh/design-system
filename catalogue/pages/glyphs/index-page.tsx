@@ -82,11 +82,15 @@ function GlyphCard(
                 {aliases.map((alias) => (
                   <Badge
                     key={alias.name}
-                    tone={alias.recommendation.state === "recommended"
+                    tone={alias.publication === "deferred" ||
+                        alias.recommendation.state === "brand-reserved"
+                      ? "warning"
+                      : alias.recommendation.state === "recommended"
                       ? "success"
                       : "neutral"}
                   >
-                    {alias.name} · {humanize(alias.recommendation.state)}
+                    {alias.name} · {humanize(alias.recommendation.state)} ·{" "}
+                    {humanize(alias.publication)}
                   </Badge>
                 ))}
               </span>

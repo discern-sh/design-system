@@ -1250,12 +1250,14 @@ export const glyphAtlasCanonicalRecords: readonly CanonicalGlyphRecord[] =
 export const DISCERN_GLYPH_CATEGORIES = Object.freeze(
   [
     "action",
+    "appearance",
     "brand",
     "decoration",
     "direction",
     "disclosure",
     "information",
     "people",
+    "selection",
     "shape",
     "status",
     "workflow",
@@ -1277,6 +1279,15 @@ export const DISCERN_GLYPH_RECOMMENDATION_STATES = Object.freeze(
 /** One recommendation state in the curated collection. */
 export type DiscernGlyphRecommendationState =
   (typeof DISCERN_GLYPH_RECOMMENDATION_STATES)[number];
+
+/** Publication review outcomes, separate from contextual recommendation. */
+export const DISCERN_GLYPH_PUBLICATION_DISPOSITIONS = Object.freeze(
+  ["candidate", "deferred"] as const,
+);
+
+/** One owner-approved publication disposition for a curated alias. */
+export type DiscernGlyphPublicationDisposition =
+  (typeof DISCERN_GLYPH_PUBLICATION_DISPOSITIONS)[number];
 
 /** Fidelity of a context-specific ASCII degradation. */
 export const DISCERN_GLYPH_ASCII_FIDELITIES = Object.freeze(
@@ -1315,6 +1326,11 @@ export type DiscernGlyphTerminalGuidance =
     readonly asciiFallback: DiscernGlyphAsciiFallback;
   }
   | {
+    readonly posture: "unicode-only";
+    readonly geometry: "one-cell" | "width-aware";
+    readonly guidance: string;
+  }
+  | {
     readonly posture: "reference-only";
     readonly geometry: "width-aware";
     readonly guidance: string;
@@ -1327,6 +1343,7 @@ export interface DiscernGlyphAlias {
   readonly canonicalId: string;
   readonly searchTerms: readonly string[];
   readonly category: DiscernGlyphCategory;
+  readonly publication: DiscernGlyphPublicationDisposition;
   readonly recommendation: {
     readonly state: DiscernGlyphRecommendationState;
     readonly rationale: string;
@@ -1394,14 +1411,6 @@ function terminal(
   });
 }
 
-function referenceTerminal(guidance: string): DiscernGlyphTerminalGuidance {
-  return Object.freeze({
-    posture: "reference-only",
-    geometry: "width-aware",
-    guidance,
-  });
-}
-
 /** Complete private curated Discern glyph collection. */
 export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
   defineDiscernGlyphAlias({
@@ -1410,6 +1419,7 @@ export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
     canonicalId: glyphSequenceId(0x2726),
     searchTerms: ["generate", "magic", "new", "shine"],
     category: "action",
+    publication: "candidate",
     recommendation: {
       state: "recommended",
       rationale:
@@ -1450,6 +1460,7 @@ export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
       "right",
     ],
     category: "direction",
+    publication: "candidate",
     recommendation: {
       state: "recommended",
       rationale:
@@ -1483,6 +1494,7 @@ export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
     canonicalId: glyphSequenceId(0x2190),
     searchTerms: ["back", "input", "left", "previous", "return"],
     category: "direction",
+    publication: "candidate",
     recommendation: {
       state: "recommended",
       rationale:
@@ -1511,6 +1523,7 @@ export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
     canonicalId: glyphSequenceId(0x2191),
     searchTerms: ["increase", "move up", "previous", "sort ascending", "up"],
     category: "direction",
+    publication: "candidate",
     recommendation: {
       state: "recommended",
       rationale:
@@ -1550,6 +1563,7 @@ export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
       "down",
     ],
     category: "direction",
+    publication: "candidate",
     recommendation: {
       state: "recommended",
       rationale:
@@ -1583,6 +1597,7 @@ export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
     canonicalId: glyphSequenceId(0x2194),
     searchTerms: ["both ways", "exchange", "relationship", "sync", "two way"],
     category: "direction",
+    publication: "deferred",
     recommendation: {
       state: "recommended",
       rationale:
@@ -1612,35 +1627,36 @@ export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
     },
   }),
   defineDiscernGlyphAlias({
-    name: "check",
-    discoveryTitle: "Check mark",
+    name: "selection-selected",
+    discoveryTitle: "Selected",
     canonicalId: glyphSequenceId(0x2713),
-    searchTerms: ["confirm", "done", "pass", "select", "yes"],
-    category: "action",
+    searchTerms: ["chosen", "selected", "selection"],
+    category: "selection",
+    publication: "candidate",
     recommendation: {
       state: "recommended",
       rationale:
-        "A compact affirmative mark for a labelled confirmation or selection context.",
+        "A compact selected-state mark whose native state or adjacent wording remains authoritative.",
     },
     recommendedUses: [
-      "Selected state",
-      "Confirmed action",
-      "Passing result with text",
+      "Selected option with native state",
+      "Confirmed choice with an adjacent label",
     ],
     discouragedUses: [
-      "Sole carrier of success meaning",
-      "Checkbox control without native semantics",
+      "Completion or passing status",
+      "Checkbox appearance without native state",
+      "Glyph-only selection meaning",
     ],
     surfaces: {
       browser: browser(
         "supported",
-        "Pair with native state or a localized label; the glyph alone supplies no control semantics.",
+        "Pair with native selection state or a localized label; the glyph alone supplies no control semantics.",
       ),
       terminal: terminal(
-        "+",
-        "approximation",
-        "Safe in one-cell terminal geometry and suitable beside an explicit state label.",
-        "A plus remains affirmative but loses the check-mark silhouette.",
+        "x",
+        "semantic",
+        "Safe in one-cell geometry when native selection state or adjacent wording carries the meaning.",
+        "A lowercase x preserves selection only inside an established selection control or beside a selected-state label.",
       ),
     },
   }),
@@ -1650,6 +1666,7 @@ export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
     canonicalId: glyphSequenceId(0x2713),
     searchTerms: ["complete", "done", "finished", "passed", "success"],
     category: "status",
+    publication: "candidate",
     recommendation: {
       state: "recommended",
       rationale:
@@ -1677,11 +1694,12 @@ export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
     },
   }),
   defineDiscernGlyphAlias({
-    name: "information",
+    name: "info",
     discoveryTitle: "Information",
     canonicalId: glyphSequenceId(0x24D8),
     searchTerms: ["about", "details", "help", "info", "note"],
     category: "information",
+    publication: "candidate",
     recommendation: {
       state: "recommended",
       rationale:
@@ -1707,31 +1725,33 @@ export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
     },
   }),
   defineDiscernGlyphAlias({
-    name: "moon",
-    discoveryTitle: "Moon",
+    name: "theme-dark",
+    discoveryTitle: "Dark theme",
     canonicalId: glyphSequenceId(0x263E),
-    searchTerms: ["crescent", "dark", "night", "theme"],
-    category: "decoration",
+    searchTerms: ["appearance", "dark", "theme", "theme toggle"],
+    category: "appearance",
+    publication: "candidate",
     recommendation: {
       state: "recommended",
       rationale:
-        "A stable text symbol for a labelled night or dark-theme context, not a theme state by itself.",
+        "A labelled appearance action targeting dark theme, not an indicator of the current theme.",
     },
-    recommendedUses: ["Dark-theme action with text", "Night-time decoration"],
+    recommendedUses: ["Dark-theme action with localized text"],
     discouragedUses: [
       "Unlabelled current-theme state",
-      "Astronomical phase precision",
+      "Night-time decoration",
+      "Astronomical meaning",
     ],
     surfaces: {
       browser: browser(
         "supported",
-        "Use beside explicit theme wording because the moon shape does not encode current versus target state.",
+        "Use beside localized target-theme wording because the moon shape does not encode current versus target state.",
       ),
       terminal: terminal(
-        "c",
-        "lossy",
-        "Safe in one-cell terminal geometry.",
-        "The letter c approximates the crescent silhouette and requires an adjacent label.",
+        "D",
+        "semantic",
+        "Safe in one-cell geometry when a localized label names the target theme.",
+        "The letter D preserves dark-theme intent only when adjacent wording carries the appearance action.",
       ),
     },
   }),
@@ -1741,6 +1761,7 @@ export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
     canonicalId: glyphSequenceId(0x00D7),
     searchTerms: ["cancel", "clear", "dismiss", "remove", "x"],
     category: "action",
+    publication: "candidate",
     recommendation: {
       state: "recommended",
       rationale:
@@ -1775,6 +1796,7 @@ export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
     canonicalId: glyphSequenceId(0x26A0, 0xFE0E),
     searchTerms: ["alert", "attention", "caution", "risk", "warning"],
     category: "status",
+    publication: "candidate",
     recommendation: {
       state: "recommended",
       rationale:
@@ -1808,6 +1830,7 @@ export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
     canonicalId: glyphSequenceId(0x25B8),
     searchTerms: ["collapsed", "disclosure", "expand", "right"],
     category: "disclosure",
+    publication: "candidate",
     recommendation: {
       state: "recommended",
       rationale:
@@ -1834,6 +1857,7 @@ export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
     canonicalId: glyphSequenceId(0x25BE),
     searchTerms: ["down", "disclosure", "expanded", "open"],
     category: "disclosure",
+    publication: "candidate",
     recommendation: {
       state: "recommended",
       rationale:
@@ -1860,6 +1884,7 @@ export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
     canonicalId: glyphSequenceId(0x25EE),
     searchTerms: ["brand", "discern", "identity", "logo", "mark"],
     category: "brand",
+    publication: "candidate",
     recommendation: {
       state: "brand-reserved",
       rationale:
@@ -1876,12 +1901,12 @@ export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
         "caution",
         "Use only under Discern brand ownership and inspect the selected display font.",
       ),
-      terminal: terminal(
-        ">",
-        "lossy",
-        "Safe in one-cell terminal geometry but reserved by product policy.",
-        "The greater-than fallback retains forward energy, not the half-filled brand geometry.",
-      ),
+      terminal: {
+        posture: "unicode-only",
+        geometry: "one-cell",
+        guidance:
+          "Supported as measured one-cell Unicode under Discern brand ownership; no ASCII fallback is approved because none preserves the identity.",
+      },
     },
   }),
   defineDiscernGlyphAlias({
@@ -1890,6 +1915,7 @@ export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
     canonicalId: glyphSequenceId(0x25CF),
     searchTerms: ["bullet", "circle", "dot", "marker", "series"],
     category: "shape",
+    publication: "deferred",
     recommendation: {
       state: "recommended",
       rationale:
@@ -1919,6 +1945,7 @@ export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
     canonicalId: glyphSequenceId(0x25A0),
     searchTerms: ["block", "marker", "series", "square"],
     category: "shape",
+    publication: "deferred",
     recommendation: {
       state: "recommended",
       rationale:
@@ -1952,6 +1979,7 @@ export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
     canonicalId: glyphSequenceId(0x25C6),
     searchTerms: ["diamond", "marker", "milestone", "series"],
     category: "shape",
+    publication: "deferred",
     recommendation: {
       state: "recommended",
       rationale:
@@ -1982,6 +2010,7 @@ export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
     canonicalId: glyphSequenceId(0x2605),
     searchTerms: ["favorite", "featured", "marker", "rating", "star"],
     category: "shape",
+    publication: "deferred",
     recommendation: {
       state: "recommended",
       rationale:
@@ -2003,118 +2032,6 @@ export const discernGlyphAliases: readonly DiscernGlyphAlias[] = Object.freeze([
         "lossy",
         "Safe in one-cell terminal geometry under narrow-A measurement.",
         "The x remains distinct in a series but does not preserve star meaning outside a legend.",
-      ),
-    },
-  }),
-  defineDiscernGlyphAlias({
-    name: "outline-small-up",
-    discoveryTitle: "Small outline up triangle",
-    canonicalId: glyphSequenceId(0x25B5),
-    searchTerms: ["outline", "small", "triangle", "up", "white"],
-    category: "shape",
-    recommendation: {
-      state: "reference-only",
-      rationale:
-        "Useful for Atlas comparison, but common fallback fonts can render the nominally small outline family at inconsistent size.",
-    },
-    recommendedUses: ["Font inspection", "Reference comparison"],
-    discouragedUses: [
-      "Default component geometry",
-      "Width-critical terminal controls",
-    ],
-    surfaces: {
-      browser: browser(
-        "reference-only",
-        "Inspect the exact target font before considering this family for product use.",
-      ),
-      terminal: referenceTerminal(
-        "Do not adopt as a package default without font and geometry evidence for the target environment.",
-      ),
-    },
-  }),
-  defineDiscernGlyphAlias({
-    name: "keycap-one",
-    discoveryTitle: "Keycap one",
-    canonicalId: glyphSequenceId(0x0031, 0xFE0F, 0x20E3),
-    searchTerms: ["1", "first", "keycap", "number", "step"],
-    category: "workflow",
-    recommendation: {
-      state: "reference-only",
-      rationale:
-        "A recognized three-scalar emoji sequence that demonstrates exact grapheme identity but has two-cell, font-dependent artwork.",
-    },
-    recommendedUses: ["Sequence inspection", "Emoji reference"],
-    discouragedUses: [
-      "Compact numbered steps",
-      "Width-critical terminal layout",
-    ],
-    surfaces: {
-      browser: browser(
-        "reference-only",
-        "Prefer ordinary text numerals for product steps unless emoji styling is intentional.",
-      ),
-      terminal: referenceTerminal(
-        "The package measures this grapheme as two cells; use ordinary numbered text for stable terminal steps.",
-      ),
-    },
-  }),
-  defineDiscernGlyphAlias({
-    name: "technologist",
-    discoveryTitle: "Woman technologist",
-    canonicalId: glyphSequenceId(0x1F469, 0x200D, 0x1F4BB),
-    searchTerms: [
-      "computer",
-      "developer",
-      "engineer",
-      "person",
-      "technologist",
-      "woman",
-    ],
-    category: "people",
-    recommendation: {
-      state: "reference-only",
-      rationale:
-        "An RGI ZWJ sequence that proves multi-code-point identity and fallback hazards without becoming a generic person or agent icon.",
-    },
-    recommendedUses: ["ZWJ sequence inspection", "Emoji reference"],
-    discouragedUses: [
-      "Generic user identity",
-      "Automated accessible label",
-      "Width-critical terminal layout",
-    ],
-    surfaces: {
-      browser: browser(
-        "reference-only",
-        "Use only when the represented identity is intended and localized context supplies meaning.",
-      ),
-      terminal: referenceTerminal(
-        "The package measures this grapheme as two cells and does not promise font coverage or identical artwork.",
-      ),
-    },
-  }),
-  defineDiscernGlyphAlias({
-    name: "warning-emoji",
-    discoveryTitle: "Warning emoji presentation",
-    canonicalId: glyphSequenceId(0x26A0, 0xFE0F),
-    searchTerms: ["alert", "attention", "caution", "emoji", "warning"],
-    category: "status",
-    recommendation: {
-      state: "reference-only",
-      rationale:
-        "The explicit emoji-presentation variant is searchable reference material, while compact Discern interfaces prefer the text sequence.",
-    },
-    recommendedUses: ["Emoji presentation comparison", "Reference detail"],
-    discouragedUses: [
-      "One-cell status columns",
-      "Default compact warning icon",
-    ],
-    surfaces: {
-      browser: browser(
-        "reference-only",
-        "Use the text-presentation warning alias for compact interface guidance.",
-      ),
-      terminal: referenceTerminal(
-        "The package measures this explicit emoji presentation as two cells; it is not a one-cell status mark.",
       ),
     },
   }),

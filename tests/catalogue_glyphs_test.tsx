@@ -59,6 +59,7 @@ function syntheticFutureData(): GlyphCatalogueData {
     canonicalId: canonical.id,
     searchTerms: ["future fixture", "round witness"],
     category: "shape",
+    publication: "candidate",
     recommendation: {
       state: "recommended",
       rationale: "Synthetic future alias proving joined Catalogue guidance.",
@@ -193,10 +194,10 @@ Deno.test("Glyph search shares exact literals and all canonical or curated disco
       "✓",
       "U+2713",
       "CHECK MARK",
-      "check",
-      "action",
-      "Confirmed action",
-      "select",
+      "selection-selected",
+      "selection",
+      "Selected option",
+      "chosen",
     ]
   ) {
     assert(
@@ -212,6 +213,20 @@ Deno.test("Glyph search shares exact literals and all canonical or curated disco
   assert(
     alias?.reasons.some(({ label }) => label === "Discern alias"),
     "Curated alias matches should retain a Discern alias explanation",
+  );
+  assertEquals(
+    searchRecords(records, "deferred").map(({ record }) =>
+      record.payload?.aliases.find(({ publication }) =>
+        publication === "deferred"
+      )?.name
+    ).sort(),
+    [
+      "arrow-bidirectional",
+      "shape-circle",
+      "shape-diamond",
+      "shape-square",
+      "shape-star",
+    ],
   );
 
   const zwjId = glyphSequenceId(0x1F469, 0x200D, 0x1F4BB);
@@ -303,6 +318,7 @@ Deno.test("future canonical and alias members auto-enrol every Catalogue project
   }));
   assertStringIncludes(detail, 'data-discern-glyph-alias="future-circle"');
   assertStringIncludes(detail, "Future enrollment fixture");
+  assertStringIncludes(detail, "Candidate");
 });
 
 Deno.test("unknown canonical Glyph slugs render Not Found and exact sequences remain copyable", () => {
