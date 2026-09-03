@@ -44,7 +44,6 @@ const CAPTURE_SHARED_INPUTS = [
   "catalogue/example-images/index.html",
   "catalogue/styles/components.css",
   "src/styles/",
-  "src/theme/",
   "src/tokens/",
 ] as const;
 

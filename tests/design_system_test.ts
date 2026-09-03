@@ -70,7 +70,12 @@ import {
 } from "../src/react.ts";
 import { emitDesignSystemRuntime } from "../src/runtime.ts";
 import { semanticClass } from "../src/semantic-class.ts";
-import { baseTokens, themeTokens } from "../src/tokens/tokens.ts";
+import { appearancePoleProjection } from "../src/tokens/appearance-scope-css.ts";
+import {
+  accentHueToken,
+  baseTokens,
+  themeTokens,
+} from "../src/tokens/tokens.ts";
 import type { ComponentMeta } from "../src/types/component-meta.ts";
 
 const PACKAGE_ROOT_URL = new URL("../", import.meta.url);
@@ -239,14 +244,17 @@ function themeValue(
   overrides: ReadonlyMap<string, string>,
 ): string {
   const override = overrides.get(`${mode}:${name}`) ?? overrides.get(name);
+  const accentRole = appearancePoleProjection("accent", mode)
+    .roles[name as `--discern-${string}`];
   const token = themeTokens.find((candidate) => candidate.name === name);
   assert(
-    override !== undefined || token !== undefined,
+    override !== undefined || accentRole !== undefined || token !== undefined,
     `unknown token ${name}`,
   );
-  const raw = override ?? token?.[mode] ?? "";
+  const raw = override ?? accentRole ?? token?.[mode] ?? "";
   const values = new Map([
     ...baseTokens.map((item) => [item.name, item.value] as const),
+    [accentHueToken.name, accentHueToken.value] as const,
     ...[...overrides.entries()].filter(([key]) => !key.includes(":")),
   ]);
   return raw.replace(

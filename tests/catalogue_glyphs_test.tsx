@@ -256,7 +256,8 @@ Deno.test("Glyph explorer URL state validates filters, preserves Appearance, and
   assertEquals(target.searchParams.get("category"), "status");
   assertEquals(target.searchParams.get("recommendation"), "recommended");
   assertEquals(target.searchParams.get("theme"), "dark");
-  assertEquals(target.searchParams.get("appearance"), "accent");
+  assertEquals(target.searchParams.get("accent"), "300");
+  assertEquals(target.searchParams.has("appearance"), false);
 
   const entries = glyphCatalogueEntries(glyphAtlasData);
   const matches = matchingGlyphCatalogueEntries(entries, {
