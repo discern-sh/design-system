@@ -6,7 +6,7 @@ import {
   useState,
 } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import { catalogueFieldStyle } from "../../shell/field-state.ts";
+import { catalogueAppearanceRootStyle } from "../../shell/axes-state.ts";
 import type { BuilderSlotChild } from "../model.ts";
 import type { RenderOptions } from "../render.tsx";
 import { renderBuilderChild } from "../render.tsx";
@@ -314,7 +314,7 @@ function FrameDocument(
       data-discern-theme-preference={snapshot.appearance.theme}
       data-discern-builder-preview-mode={snapshot.mode}
       aria-hidden={snapshot.mode === "edit" ? "true" : undefined}
-      style={catalogueFieldStyle(
+      style={catalogueAppearanceRootStyle(
         snapshot.appearance.field,
         snapshot.appearance.resolvedTheme,
         snapshot.appearance.accentHue,

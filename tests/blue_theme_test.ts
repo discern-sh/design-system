@@ -12,15 +12,17 @@ import {
 } from "../src/theme/blue.ts";
 import {
   accentAppearance,
+  appearanceColorRoleLaws,
   DEFAULT_ACCENT_HUE,
   evaluateAppearance,
   evaluateField,
-  fieldColorRoleLaws,
-} from "../src/tokens/field.ts";
-import { FIELD_LIVE_CSS_SUPPORTS } from "../src/tokens/field-css.ts";
+} from "../src/tokens/appearance.ts";
+import { APPEARANCE_LIVE_CSS_SUPPORTS } from "../src/tokens/appearance-live-css.ts";
 
 Deno.test("Blue membership and poles derive exhaustively from Accent metadata", () => {
-  const expected = fieldColorRoleLaws.filter((law) => law.accent !== "field")
+  const expected = appearanceColorRoleLaws.filter((law) =>
+    law.accent !== "field"
+  )
     .map((law) => law.name);
   assertEquals(blueThemeRoleTokens.map((token) => token.name), expected);
   assertEquals(blueTheme.roles, blueThemeRoleTokens);
@@ -54,7 +56,10 @@ Deno.test("Blue membership and poles derive exhaustively from Accent metadata", 
 Deno.test("Blue compatibility CSS supplies pole fallback and the live law", () => {
   assertStringIncludes(blueThemeCss, "@layer discern.theme");
   assertStringIncludes(blueThemeCss, "--discern-accent-hue: 255;");
-  assertStringIncludes(blueThemeCss, `@supports ${FIELD_LIVE_CSS_SUPPORTS}`);
+  assertStringIncludes(
+    blueThemeCss,
+    `@supports ${APPEARANCE_LIVE_CSS_SUPPORTS}`,
+  );
   assertStringIncludes(
     blueThemeCss,
     ':where([data-discern-root][data-discern-theme="dark"])',

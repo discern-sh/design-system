@@ -7,14 +7,14 @@ import {
 import {
   accentAppearance,
   type Appearance,
-  defaultFieldPoint,
+  APPEARANCE_POLARITY_CROSSOVER_DARKNESS,
+  appearanceColorRoleLaws,
+  type AppearancePoint,
+  defaultAppearancePoint,
   evaluateAppearance,
-  FIELD_POLARITY_CROSSOVER_DARKNESS,
   fieldAppearance,
-  fieldColorRoleLaws,
-  type FieldPoint,
   ownedSurfaceRoleNames,
-} from "../src/tokens/field.ts";
+} from "../src/tokens/appearance.ts";
 
 interface Paint {
   readonly color: OklabColor;
@@ -47,16 +47,16 @@ function required(
   return parseOklch(value);
 }
 
-const point = (overrides: Partial<FieldPoint>): FieldPoint => ({
-  ...defaultFieldPoint,
+const point = (overrides: Partial<AppearancePoint>): AppearancePoint => ({
+  ...defaultAppearancePoint,
   ...overrides,
 });
 
-const points: readonly FieldPoint[] = [
+const points: readonly AppearancePoint[] = [
   point({ darkness: 0 }),
   point({ darkness: 0.25 }),
-  point({ darkness: FIELD_POLARITY_CROSSOVER_DARKNESS - 0.0001 }),
-  point({ darkness: FIELD_POLARITY_CROSSOVER_DARKNESS + 0.0001 }),
+  point({ darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS - 0.0001 }),
+  point({ darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS + 0.0001 }),
   point({ darkness: 0.5 }),
   point({ darkness: 0.75 }),
   point({ darkness: 1 }),
@@ -74,7 +74,7 @@ Deno.test("owned-surface metadata auto-enrols identity bases", () => {
     ["--discern-color-future-identity"],
   );
   assert(
-    fieldColorRoleLaws.filter((law) => law.ownedSurface).every((law) =>
+    appearanceColorRoleLaws.filter((law) => law.ownedSurface).every((law) =>
       owned.includes(law.name)
     ),
   );

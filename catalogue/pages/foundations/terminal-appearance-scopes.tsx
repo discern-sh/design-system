@@ -10,7 +10,7 @@ import {
   accentAppearance,
   type Appearance,
   fieldAppearance,
-} from "../../../src/tokens/field.ts";
+} from "../../../src/tokens/appearance.ts";
 import {
   catalogueCliCapabilities,
   CliOutputPreview,
@@ -140,11 +140,11 @@ export function TerminalAppearanceScopes(
   return (
     <section
       id="terminal-appearance-scopes"
-      className="discern-catalogue-field__terminal-scopes"
-      aria-labelledby="discern-catalogue-field-terminal-scopes-heading"
+      className="discern-catalogue-appearance-page__terminal-scopes"
+      aria-labelledby="discern-catalogue-appearance-terminal-scopes-heading"
     >
       <div>
-        <h2 id="discern-catalogue-field-terminal-scopes-heading">
+        <h2 id="discern-catalogue-appearance-terminal-scopes-heading">
           Local terminal appearance scopes
         </h2>
         <p>
@@ -153,7 +153,7 @@ export function TerminalAppearanceScopes(
           without changing its semantic Component props or terminal ground.
         </p>
       </div>
-      <div className="discern-catalogue-field__terminal-scope-grid">
+      <div className="discern-catalogue-appearance-page__terminal-scope-grid">
         {projections.map((projection) => (
           <article
             key={projection.definition.id}
@@ -176,7 +176,7 @@ export function TerminalAppearanceScopes(
               <p>{projection.definition.description}</p>
               <small>Shared {theme} terminal ground</small>
             </header>
-            <div className="discern-catalogue-field__terminal-scope-frames">
+            <div className="discern-catalogue-appearance-page__terminal-scope-frames">
               <div>
                 <h4>
                   Inherited {appearanceLabel(

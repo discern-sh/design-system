@@ -1,11 +1,14 @@
 import { useId } from "react";
 import { Input } from "../../src/components/forms/input/input.tsx";
-import { fieldAxes, type FieldAxisName } from "../../src/tokens/field.ts";
-import { formatCatalogueFieldNumber } from "./field-state.ts";
+import {
+  appearanceAxes,
+  type AppearanceAxisName,
+} from "../../src/tokens/appearance.ts";
+import { formatCatalogueAxisNumber } from "./axes-state.ts";
 
 const axisCopy: Readonly<
   Record<
-    FieldAxisName,
+    AppearanceAxisName,
     {
       readonly label: string;
       readonly minimum: string;
@@ -19,29 +22,29 @@ const axisCopy: Readonly<
   density: { label: "Density", minimum: "Compact", maximum: "Airy" },
 };
 
-export interface FieldAxisControlProps {
-  readonly axis: FieldAxisName;
+export interface AxisControlProps {
+  readonly axis: AppearanceAxisName;
   readonly value: number;
   readonly onChange: (value: number) => void;
 }
 
 /** Shared public-Input projection used by the shell and Field instrument. */
-export function FieldAxisControl(
-  { axis, value, onChange }: FieldAxisControlProps,
+export function AxisControl(
+  { axis, value, onChange }: AxisControlProps,
 ) {
   const generatedId = useId();
-  const id = `discern-catalogue-field-${axis}-${generatedId}`;
+  const id = `discern-catalogue-axis-${axis}-${generatedId}`;
   const descriptionId = `${id}-description`;
-  const definition = fieldAxes[axis];
+  const definition = appearanceAxes[axis];
   const copy = axisCopy[axis];
   return (
     <div
-      className="discern-catalogue-field-axis"
-      data-discern-field-axis={axis}
+      className="discern-catalogue-axis"
+      data-discern-axis={axis}
     >
       <div>
         <label htmlFor={id}>{copy.label}</label>
-        <output htmlFor={id}>{formatCatalogueFieldNumber(value)}</output>
+        <output htmlFor={id}>{formatCatalogueAxisNumber(value)}</output>
       </div>
       <Input
         id={id}
@@ -56,7 +59,7 @@ export function FieldAxisControl(
       <small id={descriptionId}>
         <span>{copy.minimum} {definition.minimum}</span>
         <span>{copy.maximum} {definition.maximum}</span>
-        <span className="discern-catalogue-field-axis__description">
+        <span className="discern-catalogue-axis__description">
           {definition.description}
         </span>
       </small>

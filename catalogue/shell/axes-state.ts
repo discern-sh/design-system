@@ -1,64 +1,64 @@
 import type { CSSProperties } from "react";
 import {
-  defaultFieldPoint,
+  APPEARANCE_POLARITY_CROSSOVER_DARKNESS,
+  appearanceAxes,
+  type AppearanceAxisName,
+  type AppearancePoint,
+  appearancePolarityExpression,
+  defaultAppearancePoint,
   evaluateFieldExpression,
-  FIELD_POLARITY_CROSSOVER_DARKNESS,
-  fieldAxes,
-  type FieldAxisName,
-  type FieldPoint,
-  fieldPolarityExpression,
   normalizeAccentHue,
-} from "../../src/tokens/field.ts";
+} from "../../src/tokens/appearance.ts";
 
 /** Complete, portable Catalogue field point. */
-export type CatalogueFieldSelection = FieldPoint;
+export type CatalogueAxesSelection = AppearancePoint;
 
-export const defaultCatalogueFieldSelection: CatalogueFieldSelection = Object
-  .freeze({ ...defaultFieldPoint });
+export const defaultCatalogueAxesSelection: CatalogueAxesSelection = Object
+  .freeze({ ...defaultAppearancePoint });
 
 /** Width of the live control's scheme hold around the exact token crossover. */
-export const CATALOGUE_FIELD_HYSTERESIS = 0.02;
+export const CATALOGUE_AXES_HYSTERESIS = 0.02;
 
-function boundedAxis(axis: FieldAxisName, value: number): boolean {
-  const definition = fieldAxes[axis];
+function boundedAxis(axis: AppearanceAxisName, value: number): boolean {
+  const definition = appearanceAxes[axis];
   return Number.isFinite(value) && value >= definition.minimum &&
     value <= definition.maximum;
 }
 
 /** Runtime guard for frame messages and other untyped Catalogue boundaries. */
-export function isCatalogueFieldSelection(
+export function isCatalogueAxesSelection(
   value: unknown,
-): value is CatalogueFieldSelection {
+): value is CatalogueAxesSelection {
   if (typeof value !== "object" || value === null) return false;
-  const candidate = value as Partial<CatalogueFieldSelection>;
-  return (Object.keys(fieldAxes) as FieldAxisName[]).every((axis) =>
+  const candidate = value as Partial<CatalogueAxesSelection>;
+  return (Object.keys(appearanceAxes) as AppearanceAxisName[]).every((axis) =>
     boundedAxis(axis, candidate[axis] ?? Number.NaN)
   );
 }
 
 /** Canonical number rendering shared by links, labels, and consumer snippets. */
-export function formatCatalogueFieldNumber(value: number): string {
+export function formatCatalogueAxisNumber(value: number): string {
   return String(Number(value.toFixed(4)));
 }
 
 /** Stable four-axis URL/storage representation used by every Catalogue surface. */
-export function serializeCatalogueFieldSelection(
-  selection: CatalogueFieldSelection,
+export function serializeCatalogueAxes(
+  selection: CatalogueAxesSelection,
 ): string {
-  return (Object.keys(fieldAxes) as FieldAxisName[]).map((axis) =>
-    formatCatalogueFieldNumber(selection[axis])
+  return (Object.keys(appearanceAxes) as AppearanceAxisName[]).map((axis) =>
+    formatCatalogueAxisNumber(selection[axis])
   ).join(",");
 }
 
-export interface ParsedCatalogueFieldSelection {
-  readonly field: CatalogueFieldSelection;
+export interface ParsedCatalogueAxes {
+  readonly field: CatalogueAxesSelection;
   readonly legacyPreset?: "mono" | "blue";
 }
 
 /** Parse canonical points and the former mono/blue suffix for migration. */
-export function parseCatalogueFieldSelectionValue(
+export function parseCatalogueAxesValue(
   value: string | null,
-): ParsedCatalogueFieldSelection | undefined {
+): ParsedCatalogueAxes | undefined {
   if (value === null) return undefined;
   const [darkness, structure, emphasis, density, preset, ...extra] = value
     .split(",");
@@ -73,7 +73,7 @@ export function parseCatalogueFieldSelectionValue(
     emphasis: Number(emphasis),
     density: Number(density),
   };
-  if (!isCatalogueFieldSelection(field)) return undefined;
+  if (!isCatalogueAxesSelection(field)) return undefined;
   return {
     field,
     ...(preset === undefined ? {} : { legacyPreset: preset }),
@@ -81,17 +81,17 @@ export function parseCatalogueFieldSelectionValue(
 }
 
 /** Parse a complete bounded field point; partial values fail closed. */
-export function parseCatalogueFieldSelection(
+export function parseCatalogueAxes(
   value: string | null,
-): CatalogueFieldSelection | undefined {
-  return parseCatalogueFieldSelectionValue(value)?.field;
+): CatalogueAxesSelection | undefined {
+  return parseCatalogueAxesValue(value)?.field;
 }
 
 /** Exact polarity owned by the token field; this authority has no hysteresis. */
-export function catalogueFieldPolarity(
-  point: FieldPoint,
+export function catalogueAxesPolarity(
+  point: AppearancePoint,
 ): "light" | "dark" {
-  return evaluateFieldExpression(fieldPolarityExpression, point) === 1
+  return evaluateFieldExpression(appearancePolarityExpression, point) === 1
     ? "dark"
     : "light";
 }
@@ -100,26 +100,26 @@ export function catalogueFieldPolarity(
  * Hold the browser scheme while a live drag remains within the crossover band.
  * A newly loaded point always uses the token model's exact polarity.
  */
-export function catalogueFieldControlScheme(
-  point: FieldPoint,
+export function catalogueAxesControlScheme(
+  point: AppearancePoint,
   previous?: "light" | "dark",
 ): "light" | "dark" {
-  if (previous === undefined) return catalogueFieldPolarity(point);
+  if (previous === undefined) return catalogueAxesPolarity(point);
   if (
     point.darkness <
-      FIELD_POLARITY_CROSSOVER_DARKNESS - CATALOGUE_FIELD_HYSTERESIS
+      APPEARANCE_POLARITY_CROSSOVER_DARKNESS - CATALOGUE_AXES_HYSTERESIS
   ) return "light";
   if (
     point.darkness >
-      FIELD_POLARITY_CROSSOVER_DARKNESS + CATALOGUE_FIELD_HYSTERESIS
+      APPEARANCE_POLARITY_CROSSOVER_DARKNESS + CATALOGUE_AXES_HYSTERESIS
   ) return "dark";
   return previous;
 }
 
 /** Axis and hue declarations for a root; public Appearance scopes own roles. */
-export function catalogueFieldStyle(
-  selection: CatalogueFieldSelection,
-  scheme = catalogueFieldPolarity(selection),
+export function catalogueAppearanceRootStyle(
+  selection: CatalogueAxesSelection,
+  scheme = catalogueAxesPolarity(selection),
   accentHue = 255,
 ): CSSProperties {
   return {
@@ -133,12 +133,12 @@ export function catalogueFieldStyle(
 }
 
 /** Compact human label used by summaries and review evidence. */
-export function catalogueFieldLabel(
-  selection: CatalogueFieldSelection,
+export function catalogueAxesLabel(
+  selection: CatalogueAxesSelection,
 ): string {
-  return `D ${formatCatalogueFieldNumber(selection.darkness)} · S ${
-    formatCatalogueFieldNumber(selection.structure)
-  } · E ${formatCatalogueFieldNumber(selection.emphasis)} · ρ ${
-    formatCatalogueFieldNumber(selection.density)
+  return `D ${formatCatalogueAxisNumber(selection.darkness)} · S ${
+    formatCatalogueAxisNumber(selection.structure)
+  } · E ${formatCatalogueAxisNumber(selection.emphasis)} · ρ ${
+    formatCatalogueAxisNumber(selection.density)
   }`;
 }

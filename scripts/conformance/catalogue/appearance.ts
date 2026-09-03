@@ -1,9 +1,9 @@
 import type { Locator, Page } from "playwright-core";
 import { catalogueAppearanceOptions } from "../../../catalogue/shell/appearance-options.ts";
 import {
-  CATALOGUE_FIELD_HYSTERESIS,
-  serializeCatalogueFieldSelection,
-} from "../../../catalogue/shell/field-state.ts";
+  CATALOGUE_AXES_HYSTERESIS,
+  serializeCatalogueAxes,
+} from "../../../catalogue/shell/axes-state.ts";
 import { terminalAppearanceScopeCases } from "../../../catalogue/pages/foundations/terminal-appearance-scopes.tsx";
 import { registry } from "../../../catalogue/generated/registry.ts";
 import type { RegistryEntry } from "../../../catalogue/generated/registry.ts";
@@ -14,11 +14,11 @@ import {
 } from "../../../catalogue/routes.ts";
 import {
   APPEARANCE_ADMISSION_HUES,
-  defaultFieldPoint,
-  FIELD_POLARITY_CROSSOVER_DARKNESS,
+  APPEARANCE_POLARITY_CROSSOVER_DARKNESS,
+  defaultAppearancePoint,
 } from "../../../src/tokens/tokens.ts";
 import { withViewport } from "../../viewport.ts";
-import { parseComputedFieldColor } from "../field-projection.ts";
+import { parseComputedAppearanceColor } from "../appearance-projection.ts";
 import {
   CATALOGUE_WIDE_VIEWPORT,
   eventually,
@@ -134,10 +134,10 @@ async function loadConformanceSurface(page: Page, url: URL): Promise<void> {
 
 function fieldAt(
   darkness: number,
-  overrides: Partial<typeof defaultFieldPoint> = {},
+  overrides: Partial<typeof defaultAppearancePoint> = {},
 ): string {
-  return serializeCatalogueFieldSelection({
-    ...defaultFieldPoint,
+  return serializeCatalogueAxes({
+    ...defaultAppearancePoint,
     darkness,
     ...overrides,
   });
@@ -397,7 +397,7 @@ function assertColourPosture(
   for (const id of semanticIds) {
     const value = colours.get(id);
     invariant(value !== undefined, label + "/" + id + " has no colour");
-    const parsed = parseComputedFieldColor(value);
+    const parsed = parseComputedAppearanceColor(value);
     const chroma = Math.hypot(parsed.color.a, parsed.color.b);
     invariant(
       posture === "field" ? chroma < 0.004 : chroma > 0.015,
@@ -595,7 +595,7 @@ async function cliState(page: Page): Promise<{
 
 function fieldAxis(page: Page, axis: string): Locator {
   return page.locator(
-    '.discern-catalogue-appearance [data-discern-field-axis="' + axis +
+    '.discern-catalogue-appearance [data-discern-axis="' + axis +
       '"] input',
   );
 }
@@ -650,10 +650,11 @@ async function verifyInteractiveAxesAndIdentity(
   );
 
   const withinHysteresis = Number(
-    FIELD_POLARITY_CROSSOVER_DARKNESS.toFixed(2),
+    APPEARANCE_POLARITY_CROSSOVER_DARKNESS.toFixed(2),
   );
   const beyondDarkHysteresis = Math.ceil(
-    (FIELD_POLARITY_CROSSOVER_DARKNESS + CATALOGUE_FIELD_HYSTERESIS + 0.001) *
+    (APPEARANCE_POLARITY_CROSSOVER_DARKNESS + CATALOGUE_AXES_HYSTERESIS +
+      0.001) *
       100,
   ) / 100;
   await setCatalogueAppearanceInput(
@@ -742,7 +743,7 @@ async function verifyLocalScopes(
   page: Page,
   origin: string,
 ): Promise<number> {
-  const url = appearanceUrl(foundationsPaths.field, origin, {
+  const url = appearanceUrl(foundationsPaths.appearance, origin, {
     theme: "dark",
     appearance: "accent",
     accent: "335",

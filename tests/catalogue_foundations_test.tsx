@@ -4,10 +4,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { FoundationsNavigationContent } from "../catalogue/pages/foundations/navigation.tsx";
 import { FoundationsPage } from "../catalogue/pages/foundations/page.tsx";
 import {
-  FieldPage,
-  type FieldPageProps,
-} from "../catalogue/pages/foundations/field-page.tsx";
-import { fieldPoleTerminalProjections } from "../catalogue/pages/foundations/field-terminal.ts";
+  AppearancePage,
+  type AppearancePageProps,
+} from "../catalogue/pages/foundations/appearance-page.tsx";
+import { appearancePoleTerminalProjections } from "../catalogue/pages/foundations/appearance-terminal.ts";
 import {
   catalogueTerminalFoundationPath,
   foundationsPaths,
@@ -55,9 +55,9 @@ Deno.test("Foundations family owns bounded Field, Token, and terminal sheet rout
     family: "foundations",
     page: "tokens",
   });
-  assertEquals(foundationsRouteFamily.match(foundationsPaths.field), {
+  assertEquals(foundationsRouteFamily.match(foundationsPaths.appearance), {
     family: "foundations",
-    page: "field",
+    page: "appearance",
   });
   assertEquals(foundationsRouteFamily.match(foundationsPaths.terminal), {
     family: "foundations",
@@ -74,7 +74,7 @@ Deno.test("Foundations family owns bounded Field, Token, and terminal sheet rout
   for (
     const pathname of [
       foundationsPaths.index,
-      foundationsPaths.field,
+      foundationsPaths.appearance,
       foundationsPaths.tokens,
       foundationsPaths.terminal,
       ...terminalFoundationSheets.map(({ id }) =>
@@ -151,7 +151,7 @@ Deno.test("Foundations index and terminal gallery stay bounded and source-backed
   const indexHtml = renderFoundations(foundationsPaths.index);
   assertEquals((indexHtml.match(/<h1/g) ?? []).length, 1);
   assertStringIncludes(indexHtml, `href="${foundationsPaths.tokens}"`);
-  assertStringIncludes(indexHtml, `href="${foundationsPaths.field}"`);
+  assertStringIncludes(indexHtml, `href="${foundationsPaths.appearance}"`);
   assertStringIncludes(indexHtml, `href="${foundationsPaths.terminal}"`);
   assertStringIncludes(indexHtml, `${publicTokens.length} Tokens`);
   assertStringIncludes(indexHtml, `${terminalFoundationSheets.length} sheets`);
@@ -179,15 +179,15 @@ Deno.test("Foundations index and terminal gallery stay bounded and source-backed
 });
 
 Deno.test("Field page dogfoods public controls and paints every field role", () => {
-  const html = renderFoundations(foundationsPaths.field);
-  assertStringIncludes(html, 'data-discern-foundations-page="field"');
+  const html = renderFoundations(foundationsPaths.appearance);
+  assertStringIncludes(html, 'data-discern-foundations-page="appearance"');
   for (const axis of ["darkness", "structure", "emphasis", "density"]) {
-    assertStringIncludes(html, `data-discern-field-axis="${axis}"`);
+    assertStringIncludes(html, `data-discern-axis="${axis}"`);
   }
   assertEquals((html.match(/type="range"/g) ?? []).length, 4);
   assertStringIncludes(html, "These are the same controls");
   assertStringIncludes(html, "Current projection");
-  assertStringIncludes(html, 'data-discern-field-proof="accepted"');
+  assertStringIncludes(html, 'data-discern-appearance-proof="accepted"');
   assertStringIncludes(html, "Package admission");
   assertStringIncludes(html, "No failed package invariants");
   for (
@@ -201,17 +201,20 @@ Deno.test("Field page dogfoods public controls and paints every field role", () 
   assertStringIncludes(html, 'class="discern-badge');
   assertStringIncludes(html, 'class="discern-avatar-group');
   assertStringIncludes(html, "Copy consumer field snippet");
-  assertStringIncludes(html, 'data-discern-field-terminal-pole="light"');
-  assertStringIncludes(html, 'data-discern-field-terminal-pole="dark"');
+  assertStringIncludes(html, 'data-discern-appearance-terminal-pole="light"');
+  assertStringIncludes(html, 'data-discern-appearance-terminal-pole="dark"');
   assertStringIncludes(
     html,
-    'data-discern-field-role="--discern-color-canvas"',
+    'data-discern-appearance-role="--discern-color-canvas"',
   );
-  assertStringIncludes(html, 'data-discern-field-role="--discern-color-ink"');
+  assertStringIncludes(
+    html,
+    'data-discern-appearance-role="--discern-color-ink"',
+  );
 });
 
 Deno.test("Field terminal sheet uses the existing inspector at both poles", () => {
-  const projections = fieldPoleTerminalProjections();
+  const projections = appearancePoleTerminalProjections();
   assertEquals(projections.map(({ theme }) => theme), ["light", "dark"]);
   for (const projection of projections) {
     assertStringIncludes(projection.output, "--discern-color-ink-muted");
@@ -228,7 +231,7 @@ Deno.test("Field terminal sheet uses the existing inspector at both poles", () =
 
 Deno.test("Field page admits arbitrary Accent hues through the package proof", () => {
   const html = renderToStaticMarkup(
-    createElement<FieldPageProps>(FieldPage, {
+    createElement<AppearancePageProps>(AppearancePage, {
       appearance: "accent",
       accentHue: 145.5,
       field: {
@@ -239,7 +242,7 @@ Deno.test("Field page admits arbitrary Accent hues through the package proof", (
       },
     }),
   );
-  assertStringIncludes(html, 'data-discern-field-proof="accepted"');
+  assertStringIncludes(html, 'data-discern-appearance-proof="accepted"');
   assertStringIncludes(html, "Accent · Hue 145.5");
   assertStringIncludes(html, 'data-discern-appearance="accent"');
 });

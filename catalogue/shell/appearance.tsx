@@ -6,11 +6,11 @@ import { ThemeSwitcher } from "../../src/components/core/theme-switcher/theme-sw
 import { Input } from "../../src/components/forms/input/input.tsx";
 import { Select } from "../../src/components/forms/select/select.tsx";
 import {
+  appearanceAxes,
+  type AppearanceAxisName,
   type AppearanceName,
-  defaultFieldPoint,
-  fieldAxes,
-  type FieldAxisName,
-} from "../../src/tokens/field.ts";
+  defaultAppearancePoint,
+} from "../../src/tokens/appearance.ts";
 import { resolveCatalogueTerminalPresentation } from "../terminal-theme.ts";
 import { useCatalogueTerminalTheme } from "../use-terminal-theme.ts";
 import {
@@ -30,14 +30,14 @@ import {
   setCatalogueFieldPoint,
   writeCatalogueAppearanceParameters,
 } from "./appearance-state.ts";
-import { FieldAxisControl } from "./field-axis-control.tsx";
-import type { CatalogueFieldSelection } from "./field-state.ts";
+import { AxisControl } from "./axis-control.tsx";
+import type { CatalogueAxesSelection } from "./axes-state.ts";
 import {
-  catalogueFieldControlScheme,
-  catalogueFieldLabel,
-  catalogueFieldStyle,
-  defaultCatalogueFieldSelection,
-} from "./field-state.ts";
+  catalogueAppearanceRootStyle,
+  catalogueAxesControlScheme,
+  catalogueAxesLabel,
+  defaultCatalogueAxesSelection,
+} from "./axes-state.ts";
 import { announceCatalogueLocationChange } from "./location.ts";
 
 let appearanceStorageUsable = true;
@@ -100,13 +100,13 @@ export function useCatalogueAppearance(url: URL) {
     initialCatalogueAppearance(url)
   );
   const [fieldScheme, setFieldScheme] = useState<"light" | "dark">(() =>
-    catalogueFieldControlScheme(initialCatalogueAppearance(url).field)
+    catalogueAxesControlScheme(initialCatalogueAppearance(url).field)
   );
   const systemTheme = useCatalogueTerminalTheme("system");
 
   const commit = (
     next: CatalogueAppearanceState,
-    scheme = catalogueFieldControlScheme(next.field),
+    scheme = catalogueAxesControlScheme(next.field),
   ): void => {
     setState(next);
     setFieldScheme(scheme);
@@ -123,7 +123,7 @@ export function useCatalogueAppearance(url: URL) {
         new URL(globalThis.location.href).searchParams,
       ) ?? storedCatalogueAppearance() ?? defaultCatalogueAppearanceState;
       setState(restored);
-      setFieldScheme(catalogueFieldControlScheme(restored.field));
+      setFieldScheme(catalogueAxesControlScheme(restored.field));
     };
     globalThis.addEventListener("popstate", restoreFromLocation);
     return () =>
@@ -133,8 +133,8 @@ export function useCatalogueAppearance(url: URL) {
   useEffect(() => {
     if (state.theme !== "system") return;
     const darkness = systemTheme === "dark"
-      ? fieldAxes.darkness.maximum
-      : fieldAxes.darkness.minimum;
+      ? appearanceAxes.darkness.maximum
+      : appearanceAxes.darkness.minimum;
     if (state.field.darkness === darkness && fieldScheme === systemTheme) {
       return;
     }
@@ -147,8 +147,8 @@ export function useCatalogueAppearance(url: URL) {
   const changeTheme = (theme: ThemeSwitcherMode): void => {
     const scheme = theme === "system" ? systemTheme : theme;
     const darkness = scheme === "dark"
-      ? fieldAxes.darkness.maximum
-      : fieldAxes.darkness.minimum;
+      ? appearanceAxes.darkness.maximum
+      : appearanceAxes.darkness.minimum;
     commit(
       { ...state, theme, field: { ...state.field, darkness } },
       scheme,
@@ -162,15 +162,15 @@ export function useCatalogueAppearance(url: URL) {
     if (accentHue === undefined) return;
     commit(setCatalogueAccentHue(state, accentHue), fieldScheme);
   };
-  const changeField = (field: CatalogueFieldSelection): void => {
-    const scheme = catalogueFieldControlScheme(field, fieldScheme);
+  const changeField = (field: CatalogueAxesSelection): void => {
+    const scheme = catalogueAxesControlScheme(field, fieldScheme);
     const darknessChanged = field.darkness !== state.field.darkness;
     commit({
       ...setCatalogueFieldPoint(state, field),
       ...(darknessChanged ? { theme: scheme } : {}),
     }, scheme);
   };
-  const resetField = (): void => changeField(defaultCatalogueFieldSelection);
+  const resetField = (): void => changeField(defaultCatalogueAxesSelection);
   const terminalPresentation = resolveCatalogueTerminalPresentation(
     fieldScheme,
     state.appearance,
@@ -186,7 +186,7 @@ export function useCatalogueAppearance(url: URL) {
     changeAccentHue,
     changeField,
     resetField,
-    style: catalogueFieldStyle(
+    style: catalogueAppearanceRootStyle(
       state.field,
       fieldScheme,
       state.accentHue,
@@ -200,17 +200,17 @@ export interface AppearanceControlProps {
   readonly resolvedTheme: "light" | "dark";
   readonly appearance: AppearanceName;
   readonly accentHue: number;
-  readonly field: CatalogueFieldSelection;
+  readonly field: CatalogueAxesSelection;
   readonly onThemeChange: (theme: ThemeSwitcherMode) => void;
   readonly onAppearanceChange: (appearance: AppearanceName) => void;
   readonly onAccentHueChange: (hue: number | string) => void;
-  readonly onFieldChange: (field: CatalogueFieldSelection) => void;
+  readonly onFieldChange: (field: CatalogueAxesSelection) => void;
   readonly onFieldReset: () => void;
 }
 
-function fieldIsDefault(field: CatalogueFieldSelection): boolean {
-  return (Object.keys(fieldAxes) as FieldAxisName[]).every((axis) =>
-    field[axis] === defaultFieldPoint[axis]
+function fieldIsDefault(field: CatalogueAxesSelection): boolean {
+  return (Object.keys(appearanceAxes) as AppearanceAxisName[]).every((axis) =>
+    field[axis] === defaultAppearancePoint[axis]
   );
 }
 
@@ -240,9 +240,10 @@ export function AppearanceControl(
     hue === accentHue
   );
   const defaultField = fieldIsDefault(field);
-  const defaultNonDarkness = field.structure === defaultFieldPoint.structure &&
-    field.emphasis === defaultFieldPoint.emphasis &&
-    field.density === defaultFieldPoint.density;
+  const defaultNonDarkness =
+    field.structure === defaultAppearancePoint.structure &&
+    field.emphasis === defaultAppearancePoint.emphasis &&
+    field.density === defaultAppearancePoint.density;
   const paletteSummary = appearance === "field"
     ? "Field"
     : catalogueAccentHueLabel(accentHue);
@@ -253,9 +254,11 @@ export function AppearanceControl(
     : "custom";
   const schemeSummary = theme === "system"
     ? `System · ${resolvedTheme} pole`
-    : field.darkness === fieldAxes.darkness.minimum && resolvedTheme === "light"
+    : field.darkness === appearanceAxes.darkness.minimum &&
+        resolvedTheme === "light"
     ? "Light pole"
-    : field.darkness === fieldAxes.darkness.maximum && resolvedTheme === "dark"
+    : field.darkness === appearanceAxes.darkness.maximum &&
+        resolvedTheme === "dark"
     ? "Dark pole"
     : `Custom ${resolvedTheme} field`;
 
@@ -263,7 +266,7 @@ export function AppearanceControl(
     <details
       className="discern-catalogue-appearance"
       data-discern-appearance={appearance}
-      style={catalogueFieldStyle(
+      style={catalogueAppearanceRootStyle(
         field,
         resolvedTheme,
         accentHue,
@@ -368,7 +371,7 @@ export function AppearanceControl(
           >
             <span>Field axes</span>
             <span className="discern-catalogue-appearance__axes-summary">
-              {pointSummary} · {catalogueFieldLabel(field)}
+              {pointSummary} · {catalogueAxesLabel(field)}
             </span>
           </button>
           {axesOpen
@@ -377,7 +380,7 @@ export function AppearanceControl(
                 {(
                   ["darkness", "structure", "emphasis", "density"] as const
                 ).map((axis) => (
-                  <FieldAxisControl
+                  <AxisControl
                     key={axis}
                     axis={axis}
                     value={field[axis]}
@@ -399,7 +402,7 @@ export function AppearanceControl(
         </section>
 
         <a
-          className="discern-catalogue-appearance__field-link"
+          className="discern-catalogue-appearance__page-link"
           href="/catalogue/foundations/field/"
         >
           Inspect the Field projection

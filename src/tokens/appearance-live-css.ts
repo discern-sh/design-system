@@ -1,28 +1,28 @@
 /** CSS projection of the monochrome field's authored numeric expressions. */
 
 import {
+  appearanceActiveLightnessExpression,
+  appearanceAxes,
+  type AppearanceAxisName,
+  appearanceCanvasLightnessExpression,
+  type AppearanceColorRoleLaw,
+  appearanceColorRoleLaws,
+  type AppearanceExpression,
   type AppearanceName,
+  appearanceOppositeLightnessExpression,
+  appearancePolarityExpression,
+  type AppearanceShadowRoleLaw,
+  appearanceShadowRoleLaws,
   DEFAULT_ACCENT_HUE,
-  defaultFieldPoint,
-  fieldActiveLightnessExpression,
-  fieldAxes,
-  type FieldAxisName,
-  fieldCanvasLightnessExpression,
-  type FieldColorRoleLaw,
-  fieldColorRoleLaws,
-  type FieldExpression,
-  fieldOppositeLightnessExpression,
-  fieldPolarityExpression,
-  type FieldShadowRoleLaw,
-  fieldShadowRoleLaws,
-} from "./field.ts";
+  defaultAppearancePoint,
+} from "./appearance.ts";
 
 /** Feature query guarding the live projection while static poles remain usable. */
-export const FIELD_LIVE_CSS_SUPPORTS =
+export const APPEARANCE_LIVE_CSS_SUPPORTS =
   "(color: oklch(calc(round(up, abs(-0.2), 1) * 0.5) 0 0))";
 
 /** One custom-property declaration emitted by the live field projection. */
-export interface FieldCssDeclaration {
+export interface AppearanceCssDeclaration {
   readonly name: `--discern-${string}`;
   readonly value: string;
 }
@@ -49,14 +49,14 @@ function foldedNumber(value: number): string {
 }
 
 function isNumber(
-  expression: FieldExpression,
+  expression: AppearanceExpression,
   value: number,
 ): boolean {
   return expression.kind === "number" && expression.value === value;
 }
 
 function constantArithmeticValue(
-  expression: FieldExpression,
+  expression: AppearanceExpression,
 ): number | undefined {
   if (expression.kind === "number") return expression.value;
   if (
@@ -79,12 +79,12 @@ function constantArithmeticValue(
 }
 
 function compileExpressionBody(
-  expression: FieldExpression,
-  bindings: ReadonlyMap<FieldExpression, string>,
+  expression: AppearanceExpression,
+  bindings: ReadonlyMap<AppearanceExpression, string>,
 ): string {
   const binding = bindings.get(expression);
   if (binding !== undefined) return binding;
-  const compile = (value: FieldExpression): string =>
+  const compile = (value: AppearanceExpression): string =>
     compileExpressionBody(value, bindings);
   switch (expression.kind) {
     case "number":
@@ -92,7 +92,7 @@ function compileExpressionBody(
     case "axis":
       return expression.axis === "accent-hue"
         ? `var(${ACCENT_HUE_CUSTOM_PROPERTY_NAME})`
-        : `var(${fieldAxisCustomPropertyName(expression.axis)})`;
+        : `var(${appearanceAxisCustomPropertyName(expression.axis)})`;
     case "add": {
       const left = constantArithmeticValue(expression.left);
       const right = constantArithmeticValue(expression.right);
@@ -205,8 +205,8 @@ function compileExpressionBody(
 }
 
 function compileExpression(
-  expression: FieldExpression,
-  bindings: ReadonlyMap<FieldExpression, string>,
+  expression: AppearanceExpression,
+  bindings: ReadonlyMap<AppearanceExpression, string>,
 ): string {
   const body = compileExpressionBody(expression, bindings);
   if (bindings.has(expression)) return body;
@@ -220,8 +220,8 @@ function compileExpression(
 }
 
 function expressionChildren(
-  expression: FieldExpression,
-): readonly FieldExpression[] {
+  expression: AppearanceExpression,
+): readonly AppearanceExpression[] {
   switch (expression.kind) {
     case "number":
     case "axis":
@@ -246,8 +246,8 @@ function expressionChildren(
 }
 
 interface SharedExpressionProjection {
-  readonly bindings: ReadonlyMap<FieldExpression, string>;
-  readonly declarations: readonly FieldCssDeclaration[];
+  readonly bindings: ReadonlyMap<AppearanceExpression, string>;
+  readonly declarations: readonly AppearanceCssDeclaration[];
 }
 
 /**
@@ -256,18 +256,18 @@ interface SharedExpressionProjection {
  * and byte savings, so a future law enrols without an authored CSS shortcut.
  */
 function projectSharedExpressions(
-  roots: readonly FieldExpression[],
-  baseBindings: ReadonlyMap<FieldExpression, string>,
+  roots: readonly AppearanceExpression[],
+  baseBindings: ReadonlyMap<AppearanceExpression, string>,
 ): SharedExpressionProjection {
   const bindings = new Map(baseBindings);
   const selected: Array<{
-    readonly expression: FieldExpression;
+    readonly expression: AppearanceExpression;
     readonly name: `--discern-f${number}`;
   }> = [];
 
   while (true) {
-    const counts = new Map<FieldExpression, number>();
-    const visit = (expression: FieldExpression): void => {
+    const counts = new Map<AppearanceExpression, number>();
+    const visit = (expression: AppearanceExpression): void => {
       if (bindings.has(expression)) return;
       counts.set(expression, (counts.get(expression) ?? 0) + 1);
       for (const child of expressionChildren(expression)) visit(child);
@@ -280,7 +280,7 @@ function projectSharedExpressions(
     const name = `--discern-f${selected.length}` as const;
     const reference = `var(${name})`;
     let best: {
-      readonly expression: FieldExpression;
+      readonly expression: AppearanceExpression;
       readonly savings: number;
     } | undefined;
     for (const [expression, count] of counts) {
@@ -312,24 +312,24 @@ function projectSharedExpressions(
 }
 
 /** Compile one field expression without restating any numeric law in CSS. */
-export function compileFieldExpressionToCss(
-  expression: FieldExpression,
+export function compileAppearanceExpressionToCss(
+  expression: AppearanceExpression,
 ): string {
   return compileExpression(expression, new Map());
 }
 
 /** Public custom-property name for one registered field axis. */
-export function fieldAxisCustomPropertyName(
-  axis: FieldAxisName,
-): `--discern-${FieldAxisName}` {
+export function appearanceAxisCustomPropertyName(
+  axis: AppearanceAxisName,
+): `--discern-${AppearanceAxisName}` {
   return `--discern-${axis}`;
 }
 
 /** Emit the exact top-level registered-property population for field axes. */
-export function generateFieldAxisRegistrationCss(): string {
-  return (Object.keys(fieldAxes) as FieldAxisName[]).map((axis) => {
-    const definition = fieldAxes[axis];
-    return `@property ${fieldAxisCustomPropertyName(axis)} {
+export function generateAppearanceAxisRegistrationCss(): string {
+  return (Object.keys(appearanceAxes) as AppearanceAxisName[]).map((axis) => {
+    const definition = appearanceAxes[axis];
+    return `@property ${appearanceAxisCustomPropertyName(axis)} {
   syntax: "<number>";
   inherits: true;
   initial-value: ${formattedNumber(definition.default)};
@@ -347,8 +347,8 @@ export function generateAccentHueRegistrationCss(): string {
 }
 
 function colorRoleValue(
-  law: FieldColorRoleLaw,
-  expressionBindings: ReadonlyMap<FieldExpression, string>,
+  law: AppearanceColorRoleLaw,
+  expressionBindings: ReadonlyMap<AppearanceExpression, string>,
 ): string {
   const amount = compileExpression(law.expression, expressionBindings);
   switch (law.paint) {
@@ -369,9 +369,9 @@ function colorRoleValue(
 }
 
 function appearanceColorRoleValue(
-  law: FieldColorRoleLaw,
+  law: AppearanceColorRoleLaw,
   appearance: AppearanceName,
-  expressionBindings: ReadonlyMap<FieldExpression, string>,
+  expressionBindings: ReadonlyMap<AppearanceExpression, string>,
 ): string {
   if (appearance === "field" || law.accent === "field") {
     return colorRoleValue(law, expressionBindings);
@@ -387,8 +387,8 @@ function appearanceColorRoleValue(
 }
 
 function shadowRoleValue(
-  law: FieldShadowRoleLaw,
-  expressionBindings: ReadonlyMap<FieldExpression, string>,
+  law: AppearanceShadowRoleLaw,
+  expressionBindings: ReadonlyMap<AppearanceExpression, string>,
 ): string {
   const amount = compileExpression(law.expression, expressionBindings);
   return `${law.offset} color-mix(in oklab, var(--discern-shadow-color) calc(${amount} * 100%), transparent)`;
@@ -400,22 +400,22 @@ function shadowRoleValue(
  */
 export function appearanceLiveCssDeclarations(
   appearance: AppearanceName,
-): readonly FieldCssDeclaration[] {
-  const canvasBindings = new Map<FieldExpression, string>([
-    [fieldCanvasLightnessExpression, `var(${FIELD_CANVAS_LIGHTNESS})`],
+): readonly AppearanceCssDeclaration[] {
+  const canvasBindings = new Map<AppearanceExpression, string>([
+    [appearanceCanvasLightnessExpression, `var(${FIELD_CANVAS_LIGHTNESS})`],
   ]);
-  const polarityBindings = new Map<FieldExpression, string>([
+  const polarityBindings = new Map<AppearanceExpression, string>([
     ...canvasBindings,
-    [fieldPolarityExpression, `var(${FIELD_POLARITY})`],
+    [appearancePolarityExpression, `var(${FIELD_POLARITY})`],
   ]);
-  const roleBindings = new Map<FieldExpression, string>([
+  const roleBindings = new Map<AppearanceExpression, string>([
     ...polarityBindings,
-    [fieldActiveLightnessExpression, `var(${FIELD_ACTIVE_LIGHTNESS})`],
-    [fieldOppositeLightnessExpression, `var(${FIELD_OPPOSITE_LIGHTNESS})`],
+    [appearanceActiveLightnessExpression, `var(${FIELD_ACTIVE_LIGHTNESS})`],
+    [appearanceOppositeLightnessExpression, `var(${FIELD_OPPOSITE_LIGHTNESS})`],
   ]);
   const projectedExpressions = projectSharedExpressions(
     [
-      ...fieldColorRoleLaws.flatMap((law) =>
+      ...appearanceColorRoleLaws.flatMap((law) =>
         appearance === "accent" && law.accent !== "field"
           ? [
             law.accent.lightness,
@@ -425,35 +425,37 @@ export function appearanceLiveCssDeclarations(
           ]
           : [law.expression]
       ),
-      ...fieldShadowRoleLaws.map(({ expression }) => expression),
+      ...appearanceShadowRoleLaws.map(({ expression }) => expression),
     ],
     roleBindings,
   );
   return Object.freeze([
     {
       name: FIELD_CANVAS_LIGHTNESS,
-      value: compileFieldExpressionToCss(fieldCanvasLightnessExpression),
+      value: compileAppearanceExpressionToCss(
+        appearanceCanvasLightnessExpression,
+      ),
     },
     {
       name: FIELD_POLARITY,
-      value: compileExpression(fieldPolarityExpression, canvasBindings),
+      value: compileExpression(appearancePolarityExpression, canvasBindings),
     },
     {
       name: FIELD_ACTIVE_LIGHTNESS,
       value: compileExpression(
-        fieldActiveLightnessExpression,
+        appearanceActiveLightnessExpression,
         polarityBindings,
       ),
     },
     {
       name: FIELD_OPPOSITE_LIGHTNESS,
       value: compileExpression(
-        fieldOppositeLightnessExpression,
+        appearanceOppositeLightnessExpression,
         polarityBindings,
       ),
     },
     ...projectedExpressions.declarations,
-    ...fieldColorRoleLaws.map((law) => ({
+    ...appearanceColorRoleLaws.map((law) => ({
       name: law.name,
       value: appearanceColorRoleValue(
         law,
@@ -461,7 +463,7 @@ export function appearanceLiveCssDeclarations(
         projectedExpressions.bindings,
       ),
     })),
-    ...fieldShadowRoleLaws.map((law) => ({
+    ...appearanceShadowRoleLaws.map((law) => ({
       name: law.name,
       value: shadowRoleValue(law, projectedExpressions.bindings),
     })),
@@ -469,7 +471,7 @@ export function appearanceLiveCssDeclarations(
 }
 
 /** Project the default achromatic Field appearance. */
-export function fieldLiveCssDeclarations(): readonly FieldCssDeclaration[] {
+export function monoLiveCssDeclarations(): readonly AppearanceCssDeclaration[] {
   return appearanceLiveCssDeclarations("field");
 }
 
@@ -481,16 +483,16 @@ export function densityScaledSpacingCssValue(authoredValue: string): string {
     );
   }
   return `calc(${authoredValue} * var(${
-    fieldAxisCustomPropertyName("density")
+    appearanceAxisCustomPropertyName("density")
   }))`;
 }
 
 /** Axis defaults in the same deterministic order as the field authority. */
-export function fieldAxisDefaultDeclarations(): readonly FieldCssDeclaration[] {
+export function appearanceAxisDefaultDeclarations(): readonly AppearanceCssDeclaration[] {
   return Object.freeze(
-    (Object.keys(fieldAxes) as FieldAxisName[]).map((axis) => ({
-      name: fieldAxisCustomPropertyName(axis),
-      value: formattedNumber(defaultFieldPoint[axis]),
+    (Object.keys(appearanceAxes) as AppearanceAxisName[]).map((axis) => ({
+      name: appearanceAxisCustomPropertyName(axis),
+      value: formattedNumber(defaultAppearancePoint[axis]),
     })),
   );
 }

@@ -11,11 +11,11 @@ import {
 } from "../src/tokens/appearance-admission.ts";
 import {
   accentAppearance,
+  appearanceColorRoleLaws,
   evaluateAppearance,
-  fieldColorRoleLaws,
   normalizeAccentHue,
-} from "../src/tokens/field.ts";
-import { appearanceLiveCssDeclarations } from "../src/tokens/field-css.ts";
+} from "../src/tokens/appearance.ts";
+import { appearanceLiveCssDeclarations } from "../src/tokens/appearance-live-css.ts";
 import { appearanceAdmission } from "../src/tokens/tokens.ts";
 
 Deno.test("the package admits Field and the complete Accent hue circle", () => {
@@ -50,7 +50,7 @@ Deno.test("Accent accepts the finite closed hue domain and normalises its seam",
 });
 
 Deno.test("every role auto-enrols in both evaluator and live CSS projections", () => {
-  const roleNames = fieldColorRoleLaws.map((law) => law.name);
+  const roleNames = appearanceColorRoleLaws.map((law) => law.name);
   for (const appearance of ["field", "accent"] as const) {
     const declarations = appearanceLiveCssDeclarations(appearance);
     for (const name of roleNames) {
@@ -61,7 +61,7 @@ Deno.test("every role auto-enrols in both evaluator and live CSS projections", (
       );
     }
   }
-  assert(fieldColorRoleLaws.every((law) => Object.hasOwn(law, "accent")));
+  assert(appearanceColorRoleLaws.every((law) => Object.hasOwn(law, "accent")));
 });
 
 Deno.test("palette and axes remain orthogonal inputs", () => {

@@ -1,14 +1,14 @@
 import { assertEquals } from "@std/assert";
-import { FIELD_POLARITY_CROSSOVER_DARKNESS } from "../src/tokens/field.ts";
-import { catalogueFieldConsumerSnippet } from "../catalogue/pages/foundations/field-export.ts";
+import { APPEARANCE_POLARITY_CROSSOVER_DARKNESS } from "../src/tokens/appearance.ts";
+import { catalogueAppearanceConsumerSnippet } from "../catalogue/pages/foundations/appearance-export.ts";
 import {
-  CATALOGUE_FIELD_HYSTERESIS,
-  catalogueFieldControlScheme,
-  catalogueFieldPolarity,
-  catalogueFieldStyle,
-  parseCatalogueFieldSelection,
-  serializeCatalogueFieldSelection,
-} from "../catalogue/shell/field-state.ts";
+  CATALOGUE_AXES_HYSTERESIS,
+  catalogueAppearanceRootStyle,
+  catalogueAxesControlScheme,
+  catalogueAxesPolarity,
+  parseCatalogueAxes,
+  serializeCatalogueAxes,
+} from "../catalogue/shell/axes-state.ts";
 
 const point = {
   darkness: 0.6,
@@ -18,9 +18,9 @@ const point = {
 } as const;
 
 Deno.test("Catalogue field points round-trip through one canonical URL and storage value", () => {
-  const encoded = serializeCatalogueFieldSelection(point);
+  const encoded = serializeCatalogueAxes(point);
   assertEquals(encoded, "0.6,1.25,0.75,0.8");
-  assertEquals(parseCatalogueFieldSelection(encoded), point);
+  assertEquals(parseCatalogueAxes(encoded), point);
   for (
     const invalid of [
       null,
@@ -33,7 +33,7 @@ Deno.test("Catalogue field points round-trip through one canonical URL and stora
       "NaN,1,1,1",
     ]
   ) {
-    assertEquals(parseCatalogueFieldSelection(invalid), undefined);
+    assertEquals(parseCatalogueAxes(invalid), undefined);
   }
 });
 
@@ -42,44 +42,46 @@ Deno.test("live scheme hysteresis holds only inside the crossover band", () => {
     ...point,
     darkness,
   });
-  const insideLight = FIELD_POLARITY_CROSSOVER_DARKNESS +
-    CATALOGUE_FIELD_HYSTERESIS / 2;
-  const insideDark = FIELD_POLARITY_CROSSOVER_DARKNESS -
-    CATALOGUE_FIELD_HYSTERESIS / 2;
+  const insideLight = APPEARANCE_POLARITY_CROSSOVER_DARKNESS +
+    CATALOGUE_AXES_HYSTERESIS / 2;
+  const insideDark = APPEARANCE_POLARITY_CROSSOVER_DARKNESS -
+    CATALOGUE_AXES_HYSTERESIS / 2;
   assertEquals(
-    catalogueFieldControlScheme(selection(insideLight), "light"),
+    catalogueAxesControlScheme(selection(insideLight), "light"),
     "light",
   );
   assertEquals(
-    catalogueFieldControlScheme(selection(insideDark), "dark"),
+    catalogueAxesControlScheme(selection(insideDark), "dark"),
     "dark",
   );
   assertEquals(
-    catalogueFieldControlScheme(
+    catalogueAxesControlScheme(
       selection(
-        FIELD_POLARITY_CROSSOVER_DARKNESS + CATALOGUE_FIELD_HYSTERESIS + 0.001,
+        APPEARANCE_POLARITY_CROSSOVER_DARKNESS + CATALOGUE_AXES_HYSTERESIS +
+          0.001,
       ),
       "light",
     ),
     "dark",
   );
   assertEquals(
-    catalogueFieldControlScheme(
+    catalogueAxesControlScheme(
       selection(
-        FIELD_POLARITY_CROSSOVER_DARKNESS - CATALOGUE_FIELD_HYSTERESIS - 0.001,
+        APPEARANCE_POLARITY_CROSSOVER_DARKNESS - CATALOGUE_AXES_HYSTERESIS -
+          0.001,
       ),
       "dark",
     ),
     "light",
   );
   assertEquals(
-    catalogueFieldControlScheme(selection(insideLight)),
-    catalogueFieldPolarity(selection(insideLight)),
+    catalogueAxesControlScheme(selection(insideLight)),
+    catalogueAxesPolarity(selection(insideLight)),
   );
 });
 
 Deno.test("a field style writes axes, numeric hue, and the implied scheme", () => {
-  const style = catalogueFieldStyle(point, undefined, 145.5);
+  const style = catalogueAppearanceRootStyle(point, undefined, 145.5);
   assertEquals(style["--discern-darkness" as keyof typeof style], 0.6);
   assertEquals(style["--discern-structure" as keyof typeof style], 1.25);
   assertEquals(style["--discern-emphasis" as keyof typeof style], 0.75);
@@ -89,7 +91,7 @@ Deno.test("a field style writes axes, numeric hue, and the implied scheme", () =
 });
 
 Deno.test("consumer export reproduces the public Appearance scope and axes", () => {
-  const accent = catalogueFieldConsumerSnippet(point, "accent", 145.5);
+  const accent = catalogueAppearanceConsumerSnippet(point, "accent", 145.5);
   assertEquals(
     accent,
     `<main

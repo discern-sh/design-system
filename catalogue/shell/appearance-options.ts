@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import {
   DEFAULT_ACCENT_HUE,
   normalizeAccentHue,
-} from "../../src/tokens/field.ts";
+} from "../../src/tokens/appearance.ts";
 
 /** One human shortcut into the package's complete numeric Accent hue domain. */
 export interface CatalogueAppearanceOption {

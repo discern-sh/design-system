@@ -12,7 +12,10 @@ import {
   catalogueAppearanceStyle,
   defaultCatalogueAppearanceOption,
 } from "../catalogue/shell/appearance-options.ts";
-import { accentAppearance, evaluateAppearance } from "../src/tokens/field.ts";
+import {
+  accentAppearance,
+  evaluateAppearance,
+} from "../src/tokens/appearance.ts";
 import { appearanceAdmission } from "../src/tokens/tokens.ts";
 import { blueThemeTokens } from "../src/theme/blue.ts";
 

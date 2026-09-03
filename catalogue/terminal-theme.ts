@@ -7,7 +7,7 @@ import {
   accentAppearance,
   type AppearanceName,
   fieldAppearance,
-} from "../src/tokens/field.ts";
+} from "../src/tokens/appearance.ts";
 
 /** Resolve the Catalogue control to the concrete terminal palette it implies. */
 export function resolveCatalogueTerminalTheme(

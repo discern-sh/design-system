@@ -6,16 +6,16 @@ import {
   appearancePoleProjection,
   appearanceScopeCss,
   browserAppearances,
-} from "../src/tokens/appearance-css.ts";
+} from "../src/tokens/appearance-scope-css.ts";
 import {
   accentAppearance,
+  appearanceColorRoleLaws,
+  appearanceShadowRoleLaws,
   DEFAULT_ACCENT_HUE,
   evaluateAppearance,
+  evaluateAppearanceShadows,
   evaluateField,
-  evaluateFieldShadows,
-  fieldColorRoleLaws,
-  fieldShadowRoleLaws,
-} from "../src/tokens/field.ts";
+} from "../src/tokens/appearance.ts";
 
 function concreteHue(value: string): string {
   return value.replaceAll(
@@ -29,13 +29,13 @@ Deno.test("static appearance poles are projections of the same role graph", () =
     const darkness = mode === "light" ? 0 : 1;
     const field = appearancePoleProjection("field", mode);
     assertEquals(field.roles, evaluateField({ darkness }));
-    assertEquals(field.shadows, evaluateFieldShadows({ darkness }));
+    assertEquals(field.shadows, evaluateAppearanceShadows({ darkness }));
 
     const accent = appearancePoleProjection("accent", mode);
     const expected = evaluateAppearance(accentAppearance(DEFAULT_ACCENT_HUE), {
       darkness,
     });
-    for (const law of fieldColorRoleLaws) {
+    for (const law of appearanceColorRoleLaws) {
       assertEquals(
         concreteHue(accent.roles[law.name] ?? ""),
         expected[law.name],
@@ -60,7 +60,7 @@ Deno.test("appearance scope CSS is symmetric, rooted, and zero-specificity", () 
       assert(value.includes("[data-discern-root]"), value);
     }
   }
-  for (const law of [...fieldColorRoleLaws, ...fieldShadowRoleLaws]) {
+  for (const law of [...appearanceColorRoleLaws, ...appearanceShadowRoleLaws]) {
     assertStringIncludes(appearanceScopeCss, `${law.name}:`);
   }
 });

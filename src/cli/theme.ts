@@ -14,10 +14,10 @@ import { oklchToSrgb } from "../internal/oklch.ts";
 import {
   accentAppearance,
   type Appearance,
+  type AppearanceColorRoleName,
   baseTokens,
   evaluateOpaqueAppearance,
   fieldAppearance,
-  type FieldColorRoleName,
   themeTokens,
 } from "../tokens/tokens.ts";
 
@@ -252,7 +252,7 @@ export function deriveTerminalTheme(
     )
   ) {
     const appearanceValue = appearanceValues[
-      token.name as FieldColorRoleName
+      token.name as AppearanceColorRoleName
     ];
     const source = appearanceValue ??
       (token.name.startsWith("--discern-color-series-")

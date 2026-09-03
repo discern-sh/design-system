@@ -7,16 +7,16 @@
  */
 
 import {
+  appearanceColorRoleLaws,
   DEFAULT_ACCENT_HUE,
   evaluateField,
-  fieldColorRoleLaws,
-} from "../tokens/field.ts";
-import { appearancePoleProjection } from "../tokens/appearance-css.ts";
+} from "../tokens/appearance.ts";
+import { appearancePoleProjection } from "../tokens/appearance-scope-css.ts";
 import {
   ACCENT_HUE_CUSTOM_PROPERTY_NAME,
+  APPEARANCE_LIVE_CSS_SUPPORTS,
   appearanceLiveCssDeclarations,
-  FIELD_LIVE_CSS_SUPPORTS,
-} from "../tokens/field-css.ts";
+} from "../tokens/appearance-live-css.ts";
 import type { DesignToken, ThemeToken } from "../tokens/tokens.ts";
 
 /** Name selected by runtime consumers that opt into the Blue compatibility preset. */
@@ -33,7 +33,9 @@ export const blueThemeTokens: readonly DesignToken[] = Object.freeze([
   },
 ]);
 
-const blueRoleLaws = fieldColorRoleLaws.filter((law) => law.accent !== "field");
+const blueRoleLaws = appearanceColorRoleLaws.filter((law) =>
+  law.accent !== "field"
+);
 const blueLight = appearancePoleProjection("accent", "light").roles;
 const blueDark = appearancePoleProjection("accent", "dark").roles;
 
@@ -106,7 +108,7 @@ ${darkDeclarations}
     }
   }
 
-  @supports ${FIELD_LIVE_CSS_SUPPORTS} {
+  @supports ${APPEARANCE_LIVE_CSS_SUPPORTS} {
     :where([data-discern-root]) {
 ${liveDeclarations}
     }

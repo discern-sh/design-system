@@ -8,12 +8,12 @@ import {
   accentAppearance,
   ACTION_SHADOW_DISTANCE_FLOOR,
   type Appearance,
-  defaultFieldPoint,
+  APPEARANCE_POLARITY_CROSSOVER_DARKNESS,
+  type AppearancePoint,
+  defaultAppearancePoint,
   evaluateAppearance,
-  FIELD_POLARITY_CROSSOVER_DARKNESS,
   fieldAppearance,
-  type FieldPoint,
-} from "../src/tokens/field.ts";
+} from "../src/tokens/appearance.ts";
 
 interface Paint {
   readonly color: OklabColor;
@@ -46,12 +46,12 @@ function required(
   return parseOklch(value);
 }
 
-const point = (overrides: Partial<FieldPoint>): FieldPoint => ({
-  ...defaultFieldPoint,
+const point = (overrides: Partial<AppearancePoint>): AppearancePoint => ({
+  ...defaultAppearancePoint,
   ...overrides,
 });
 
-const points: readonly FieldPoint[] = [
+const points: readonly AppearancePoint[] = [
   point({ darkness: 0 }),
   point({
     darkness: 0.25,
@@ -59,8 +59,8 @@ const points: readonly FieldPoint[] = [
     emphasis: 0.65,
     density: 0.8,
   }),
-  point({ darkness: FIELD_POLARITY_CROSSOVER_DARKNESS - 0.0001 }),
-  point({ darkness: FIELD_POLARITY_CROSSOVER_DARKNESS + 0.0001 }),
+  point({ darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS - 0.0001 }),
+  point({ darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS + 0.0001 }),
   point({ darkness: 0.5 }),
   point({
     darkness: 0.75,

@@ -16,15 +16,15 @@ import {
   accentAppearance,
   ACTION_SHADOW_DISTANCE_FLOOR,
   type Appearance,
-  defaultFieldPoint,
+  APPEARANCE_INK_CONTRAST_FLOORS,
+  APPEARANCE_POLARITY_CROSSOVER_DARKNESS,
+  appearanceColorRoleLaws,
+  type AppearancePoint,
+  defaultAppearancePoint,
   evaluateAppearance,
-  FIELD_INK_CONTRAST_FLOORS,
-  FIELD_POLARITY_CROSSOVER_DARKNESS,
   fieldAppearance,
-  fieldColorRoleLaws,
-  type FieldPoint,
   ownedSurfaceRoleNames,
-} from "./field.ts";
+} from "./appearance.ts";
 
 /** Minimum OKLab distance between Accent and semantic families. */
 export const APPEARANCE_SEMANTIC_DISTANCE_FLOOR = 0.08;
@@ -45,7 +45,7 @@ export interface AppearanceSeriesPair {
 /** One signed field point in the package admission sweep. */
 export interface AppearanceAdmissionPoint {
   readonly label: string;
-  readonly point: FieldPoint;
+  readonly point: AppearancePoint;
 }
 
 /** A failed numerical invariant with enough coordinates to reproduce it. */
@@ -68,10 +68,10 @@ export interface AppearanceAdmissionProof {
 
 const point = (
   label: string,
-  overrides: Partial<FieldPoint>,
+  overrides: Partial<AppearancePoint>,
 ): AppearanceAdmissionPoint => ({
   label,
-  point: { ...defaultFieldPoint, ...overrides },
+  point: { ...defaultAppearancePoint, ...overrides },
 });
 
 /** Poles, signed 0A postures, crossover neighbours, and axis stress points. */
@@ -85,10 +85,10 @@ export const APPEARANCE_ADMISSION_POINTS: readonly AppearanceAdmissionPoint[] =
       density: 0.8,
     }),
     point("polarity light neighbour", {
-      darkness: FIELD_POLARITY_CROSSOVER_DARKNESS - 0.0001,
+      darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS - 0.0001,
     }),
     point("polarity dark neighbour", {
-      darkness: FIELD_POLARITY_CROSSOVER_DARKNESS + 0.0001,
+      darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS + 0.0001,
     }),
     point("0A midpoint", { darkness: 0.5 }),
     point("0A dark posture", {
@@ -203,7 +203,7 @@ export function proveAppearanceAdmission(
       : `accent(${appearance.hue})`;
     for (const sample of APPEARANCE_ADMISSION_POINTS) {
       const values = evaluateAppearance(appearance, sample.point);
-      if (Object.keys(values).length !== fieldColorRoleLaws.length) {
+      if (Object.keys(values).length !== appearanceColorRoleLaws.length) {
         throw new TypeError(`${appearanceLabel} did not enrol every role`);
       }
       const canvasPaint = requiredPaint(values, "--discern-color-canvas");
@@ -220,7 +220,7 @@ export function proveAppearanceAdmission(
         canvasPaint.alpha,
         1,
       );
-      for (const name of ownedSurfaceRoleNames(fieldColorRoleLaws)) {
+      for (const name of ownedSurfaceRoleNames(appearanceColorRoleLaws)) {
         record(
           appearanceLabel,
           sample.label,
@@ -234,7 +234,7 @@ export function proveAppearanceAdmission(
         opaque("--discern-color-action"),
         canvas,
       );
-      for (const [name, authoredFloor] of FIELD_INK_CONTRAST_FLOORS) {
+      for (const [name, authoredFloor] of APPEARANCE_INK_CONTRAST_FLOORS) {
         record(
           appearanceLabel,
           sample.label,

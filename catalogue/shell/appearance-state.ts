@@ -1,24 +1,24 @@
 import type { ThemeSwitcherMode } from "../../src/components/core/theme-switcher/theme-switcher.tsx";
 import {
+  appearanceAxes,
   type AppearanceName,
   DEFAULT_ACCENT_HUE,
-  defaultFieldPoint,
-  fieldAxes,
+  defaultAppearancePoint,
   normalizeAccentHue,
-} from "../../src/tokens/field.ts";
+} from "../../src/tokens/appearance.ts";
 import { catalogueAccentHue } from "./appearance-options.ts";
-import type { CatalogueFieldSelection } from "./field-state.ts";
+import type { CatalogueAxesSelection } from "./axes-state.ts";
 import {
-  catalogueFieldPolarity,
-  parseCatalogueFieldSelectionValue,
-  serializeCatalogueFieldSelection,
-} from "./field-state.ts";
+  catalogueAxesPolarity,
+  parseCatalogueAxesValue,
+  serializeCatalogueAxes,
+} from "./axes-state.ts";
 
 export interface CatalogueAppearanceState {
   readonly theme: ThemeSwitcherMode;
   readonly appearance: AppearanceName;
   readonly accentHue: number;
-  readonly field: CatalogueFieldSelection;
+  readonly field: CatalogueAxesSelection;
 }
 
 export const defaultCatalogueAppearanceState: CatalogueAppearanceState = Object
@@ -26,7 +26,7 @@ export const defaultCatalogueAppearanceState: CatalogueAppearanceState = Object
     theme: "system",
     appearance: "field",
     accentHue: DEFAULT_ACCENT_HUE,
-    field: defaultFieldPoint,
+    field: defaultAppearancePoint,
   });
 
 export const catalogueAppearanceStorageKey = "discern-catalogue-appearance";
@@ -34,7 +34,7 @@ export const catalogueAppearanceStorageKey = "discern-catalogue-appearance";
 export const legacyCatalogueAppearanceStorageKeys = Object.freeze({
   theme: "discern-catalogue-theme",
   accent: "discern-catalogue-accent-hue",
-  field: "discern-catalogue-field",
+  field: "discern-catalogue-appearance-page",
 });
 
 export interface CatalogueAppearanceParameterNames {
@@ -81,16 +81,16 @@ export function parseCatalogueAppearanceParameters(
   names: CatalogueAppearanceParameterNames = catalogueAppearanceParameterNames,
 ): CatalogueAppearanceState | undefined {
   if (!hasAnyAppearanceParameter(parameters, names)) return undefined;
-  const parsedField = parseCatalogueFieldSelectionValue(
+  const parsedField = parseCatalogueAxesValue(
     parameters.get(names.field),
   );
   const parsedTheme = catalogueTheme(parameters.get(names.theme));
   const field = parsedField?.field ?? (parsedTheme === "dark"
     ? {
-      ...defaultFieldPoint,
-      darkness: fieldAxes.darkness.maximum,
+      ...defaultAppearancePoint,
+      darkness: appearanceAxes.darkness.maximum,
     }
-    : defaultFieldPoint);
+    : defaultAppearancePoint);
   const explicitAppearance = appearanceName(parameters.get(names.appearance));
   const accentValue = parameters.get(names.accent);
   const parsedAccentHue = catalogueAccentHue(accentValue);
@@ -104,9 +104,9 @@ export function parseCatalogueAppearanceParameters(
       ? "accent"
       : "field");
   const theme = parsedTheme === undefined
-    ? parsedField === undefined ? "system" : catalogueFieldPolarity(field)
+    ? parsedField === undefined ? "system" : catalogueAxesPolarity(field)
     : parsedTheme === "system" && field.darkness !== 0 && field.darkness !== 1
-    ? catalogueFieldPolarity(field)
+    ? catalogueAxesPolarity(field)
     : parsedTheme;
 
   const invalidExplicitValue =
@@ -128,7 +128,7 @@ export function writeCatalogueAppearanceParameters(
   parameters.set(names.theme, state.theme);
   parameters.set(names.appearance, state.appearance);
   parameters.set(names.accent, String(normalizeAccentHue(state.accentHue)));
-  parameters.set(names.field, serializeCatalogueFieldSelection(state.field));
+  parameters.set(names.field, serializeCatalogueAxes(state.field));
 }
 
 /** One storage value with the same canonical parameter representation as URLs. */
@@ -156,7 +156,7 @@ export function setCatalogueAccentHue(
 
 export function setCatalogueFieldPoint(
   state: CatalogueAppearanceState,
-  field: CatalogueFieldSelection,
+  field: CatalogueAxesSelection,
 ): CatalogueAppearanceState {
   return { ...state, field };
 }

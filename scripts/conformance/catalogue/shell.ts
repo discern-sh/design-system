@@ -433,7 +433,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
     await openCatalogueAppearanceAxes(page);
     invariant(
       await page.locator(
-            ".discern-catalogue-appearance [data-discern-field-axis]",
+            ".discern-catalogue-appearance [data-discern-axis]",
           ).count() === 4 &&
         await page.getByRole("slider", { name: "Accent hue slider" })
             .count() ===
@@ -455,16 +455,16 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
   const primary = page.locator("main .discern-button--primary").first();
   const secondary = page.locator("main .discern-button--secondary").first();
   const density = page.locator(
-    '.discern-catalogue-appearance [data-discern-field-axis="density"] input',
+    '.discern-catalogue-appearance [data-discern-axis="density"] input',
   );
   const structure = page.locator(
-    '.discern-catalogue-appearance [data-discern-field-axis="structure"] input',
+    '.discern-catalogue-appearance [data-discern-axis="structure"] input',
   );
   const darkness = page.locator(
-    '.discern-catalogue-appearance [data-discern-field-axis="darkness"] input',
+    '.discern-catalogue-appearance [data-discern-axis="darkness"] input',
   );
   const emphasis = page.locator(
-    '.discern-catalogue-appearance [data-discern-field-axis="emphasis"] input',
+    '.discern-catalogue-appearance [data-discern-axis="emphasis"] input',
   );
   const buttonMeasure = async () =>
     await primary.evaluate((node) => {
@@ -670,7 +670,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
       migratedAccent.searchParams.get("field") === systemField,
     `Legacy named Accent migration is incomplete: ${migratedAccent}`,
   );
-  const legacyField = new URL(foundationsPaths.field, origin);
+  const legacyField = new URL(foundationsPaths.appearance, origin);
   legacyField.searchParams.set("field", "0.6,1.4,0.7,0.8,blue");
   await loadCataloguePage(page, legacyField.href);
   invariant(
@@ -683,7 +683,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
 
   await openCatalogueAppearanceAxes(page);
   const darknessControls = page.locator(
-    '[data-discern-field-axis="darkness"] input[type="range"]',
+    '[data-discern-axis="darkness"] input[type="range"]',
   );
   invariant(
     await darknessControls.count() === 2,
@@ -698,12 +698,12 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
     .evaluateAll((nodes) =>
       nodes.map((node) => {
         const nested = node.querySelector<HTMLElement>(
-          ".discern-catalogue-field-scope__nested",
+          ".discern-catalogue-appearance-scope__nested",
         )!;
         const parentStyle = getComputedStyle(node);
         const nestedStyle = getComputedStyle(nested);
         const parentRegion = node.querySelector<HTMLElement>(
-          ":scope > .discern-catalogue-field-scope__specimen > div:first-child",
+          ":scope > .discern-catalogue-appearance-scope__specimen > div:first-child",
         );
         const parentAction = parentRegion?.querySelector<HTMLElement>(
           ".discern-button--primary, .discern-avatar",
@@ -791,7 +791,7 @@ async function verifyAppearance(page: Page, origin: string): Promise<number> {
     await axes.focus();
     await axes.press("Enter");
     const darknessSlider = page.locator(
-      '.discern-catalogue-appearance [data-discern-field-axis="darkness"] input',
+      '.discern-catalogue-appearance [data-discern-axis="darkness"] input',
     );
     const before = await darknessSlider.inputValue();
     await darknessSlider.focus();

@@ -28,10 +28,10 @@ import {
   matchingFoundationTokens,
 } from "../../routes/foundations.ts";
 import { announceCatalogueLocationChange } from "../../shell/location.ts";
-import type { CatalogueFieldSelection } from "../../shell/field-state.ts";
-import type { AppearanceName } from "../../../src/tokens/field.ts";
+import type { CatalogueAxesSelection } from "../../shell/axes-state.ts";
+import type { AppearanceName } from "../../../src/tokens/appearance.ts";
 import { CatalogueIndexCard, CataloguePageHeader } from "../shared.tsx";
-import { FieldPage } from "./field-page.tsx";
+import { AppearancePage } from "./appearance-page.tsx";
 
 function isThemed(token: FoundationToken): token is FoundationToken & {
   readonly light: string;
@@ -45,7 +45,7 @@ function tokenSource(token: FoundationToken): string {
   if (blueThemeTokens.some((candidate) => candidate === token)) {
     return "Blue preset Token";
   }
-  return "Field Token";
+  return "Appearance Token";
 }
 
 function previewVariable(name: string, value: string): CSSProperties {
@@ -459,14 +459,14 @@ function FoundationsIndex(
       />
       <div className="discern-catalogue-foundations-index">
         <CatalogueIndexCard
-          href={foundationsPaths.field}
-          title="Field"
+          href={foundationsPaths.appearance}
+          title="Appearance"
           description="Drive the live axes and inspect the result."
-          action="Open the Field instrument"
+          action="Open the Appearance instrument"
           metadata={<span>4 continuous axes</span>}
           media={
             <div
-              className="discern-catalogue-foundations-index__field"
+              className="discern-catalogue-foundations-index__appearance"
               aria-hidden="true"
             >
               <span />
@@ -635,10 +635,10 @@ export interface FoundationsPageProps {
   readonly terminalPresentation: CatalogueTerminalPresentation;
   readonly appearance?: AppearanceName | undefined;
   readonly accentHue?: number | undefined;
-  readonly field?: CatalogueFieldSelection | undefined;
+  readonly field?: CatalogueAxesSelection | undefined;
   readonly fieldScheme?: "light" | "dark" | undefined;
   readonly onFieldChange?:
-    | ((field: CatalogueFieldSelection) => void)
+    | ((field: CatalogueAxesSelection) => void)
     | undefined;
   readonly url?: URL;
   readonly tokens?: readonly FoundationToken[];
@@ -674,9 +674,9 @@ export function FoundationsPage(
   if (route.page === "tokens") {
     return <TokenExplorer url={url} tokens={tokens} />;
   }
-  if (route.page === "field") {
+  if (route.page === "appearance") {
     return (
-      <FieldPage
+      <AppearancePage
         appearance={appearance}
         accentHue={accentHue}
         field={field}

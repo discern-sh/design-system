@@ -625,16 +625,16 @@ async function verifyFloatingSurfaceCure(page: Page): Promise<number> {
   return current.registered;
 }
 
-interface FieldAxisReachEvidence {
+interface AxisReachEvidence {
   readonly points: number;
   readonly targetChecks: number;
   readonly textFloorChecks: number;
   readonly focusRingChecks: number;
 }
 
-async function verifyFieldAxisReach(
+async function verifyAxisReach(
   page: Page,
-): Promise<FieldAxisReachEvidence> {
+): Promise<AxisReachEvidence> {
   await page.keyboard.press("Tab");
   return await page.evaluate(async () => {
     const points = [0, 0.25, 0.5, 0.75, 1] as const;
@@ -803,11 +803,11 @@ async function verifyFieldAxisReach(
         ...canvas.querySelectorAll<HTMLElement>(selector),
       ]);
     const motionOverride = document.createElement("style");
-    motionOverride.textContent = "[data-discern-field-axis-conformance], " +
-      "[data-discern-field-axis-conformance] * {" +
+    motionOverride.textContent = "[data-discern-axis-conformance], " +
+      "[data-discern-axis-conformance] * {" +
       "transition: none !important; animation: none !important; }";
     document.head.append(motionOverride);
-    root.setAttribute("data-discern-field-axis-conformance", "");
+    root.setAttribute("data-discern-axis-conformance", "");
 
     try {
       root.style.setProperty("--discern-duration-fast", "0ms");
@@ -884,7 +884,7 @@ async function verifyFieldAxisReach(
         failures.push("Synthetic future field target escaped an axis detector");
       }
     } finally {
-      root.removeAttribute("data-discern-field-axis-conformance");
+      root.removeAttribute("data-discern-axis-conformance");
       motionOverride.remove();
       for (const [property, value] of initial) {
         if (value === "") root.style.removeProperty(property);
@@ -1864,10 +1864,10 @@ async function verifyForcedColors(
 
 export interface ComponentContractEvidence {
   readonly floatingSurfaces: number;
-  readonly fieldAxisPoints: number;
-  readonly fieldAxisTargetChecks: number;
-  readonly fieldAxisTextFloorChecks: number;
-  readonly fieldAxisFocusRingChecks: number;
+  readonly axisPoints: number;
+  readonly axisTargetChecks: number;
+  readonly axisTextFloorChecks: number;
+  readonly axisFocusRingChecks: number;
   readonly statusWitnessChecks: number;
   readonly accessibilityScans: number;
   readonly scenarios: number;
@@ -1896,7 +1896,7 @@ export async function runComponentContractConformance(
     "Catalogue examples must start quiescent; an auto-open modal makes every unrelated example inert",
   );
   const floatingSurfaces = await verifyFloatingSurfaceCure(page);
-  const fieldAxisReach = await verifyFieldAxisReach(page);
+  const axisReach = await verifyAxisReach(page);
   let statusWitnessChecks = 0;
   const statusPostures = [
     {
@@ -1975,10 +1975,10 @@ export async function runComponentContractConformance(
   );
   return {
     floatingSurfaces,
-    fieldAxisPoints: fieldAxisReach.points,
-    fieldAxisTargetChecks: fieldAxisReach.targetChecks,
-    fieldAxisTextFloorChecks: fieldAxisReach.textFloorChecks,
-    fieldAxisFocusRingChecks: fieldAxisReach.focusRingChecks,
+    axisPoints: axisReach.points,
+    axisTargetChecks: axisReach.targetChecks,
+    axisTextFloorChecks: axisReach.textFloorChecks,
+    axisFocusRingChecks: axisReach.focusRingChecks,
     statusWitnessChecks,
     accessibilityScans,
     scenarios,

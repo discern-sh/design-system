@@ -8,10 +8,10 @@ import {
 import { oklchToSrgb } from "../../src/internal/oklch.ts";
 import {
   accentAppearance,
+  appearanceColorRoleLaws,
   baseTokens,
   evaluateOpaqueAppearance,
   evaluateOpaqueField,
-  fieldColorRoleLaws,
   themeTokens,
 } from "../../src/tokens/tokens.ts";
 import {
@@ -34,7 +34,9 @@ Deno.test("terminal palettes enroll every authored semantic colour Token", () =>
 });
 
 Deno.test("only categorical series colours bypass the appearance evaluator", () => {
-  const appearanceRoles = new Set(fieldColorRoleLaws.map(({ name }) => name));
+  const appearanceRoles = new Set(
+    appearanceColorRoleLaws.map(({ name }) => name),
+  );
   const independentRoles = themeTokens
     .filter((token) =>
       token.category === "Color" && !appearanceRoles.has(token.name)
@@ -81,7 +83,7 @@ Deno.test("truecolour values carry computed 256- and 16-colour fallbacks", () =>
 Deno.test("terminal field colours are opaque pole evaluations without the blue preset", () => {
   for (const [variant, darkness] of [["light", 0], ["dark", 1]] as const) {
     const field = evaluateOpaqueField({ darkness });
-    for (const law of fieldColorRoleLaws) {
+    for (const law of appearanceColorRoleLaws) {
       const value = field[law.name];
       assert(value !== undefined, `${variant} ${law.name} was not evaluated`);
       const match = value.match(
@@ -117,7 +119,7 @@ Deno.test("terminal palette authority projects the complete Accent hue domain", 
       const appearance = accentAppearance(hue);
       const expected = evaluateOpaqueAppearance(appearance, { darkness });
       const actual = resolveTerminalTheme({ theme: variant, appearance });
-      for (const law of fieldColorRoleLaws) {
+      for (const law of appearanceColorRoleLaws) {
         const value = expected[law.name];
         assert(value !== undefined, `${law.name} was not evaluated`);
         const match = value.match(

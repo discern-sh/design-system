@@ -1,4 +1,4 @@
-import type { AppearanceName } from "../../src/tokens/field.ts";
+import type { AppearanceName } from "../../src/tokens/appearance.ts";
 import { catalogueAccentHue } from "../shell/appearance-options.ts";
 import {
   type CatalogueAppearanceState,

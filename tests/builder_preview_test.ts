@@ -24,7 +24,7 @@ import {
   catalogueAppearanceOptions,
 } from "../catalogue/shell/appearance-options.ts";
 import { defaultCatalogueAppearanceState } from "../catalogue/shell/appearance-state.ts";
-import { fieldAxes } from "../src/tokens/field.ts";
+import { appearanceAxes } from "../src/tokens/appearance.ts";
 import {
   builderPreviewMessageFromEvent,
   builderPreviewSnapshot,
@@ -393,7 +393,7 @@ Deno.test("Builder Appearance labels stay outside independently themed scopes", 
     resolvedTheme: "dark" as const,
     field: {
       ...defaultCatalogueAppearanceState.field,
-      darkness: fieldAxes.darkness.maximum,
+      darkness: appearanceAxes.darkness.maximum,
     },
   };
   const preferences = {

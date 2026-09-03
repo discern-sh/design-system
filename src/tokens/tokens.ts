@@ -7,22 +7,22 @@
  */
 
 import {
+  APPEARANCE_SPACING_UNIT_PX,
+  appearanceAxes,
+  type AppearanceAxisName,
+  appearanceColorRoleLaws,
+  appearanceShadowRoleLaws,
+  evaluateAppearanceShadows,
   evaluateField,
-  evaluateFieldShadows,
-  FIELD_SPACING_UNIT_PX,
-  fieldAxes,
-  type FieldAxisName,
-  fieldColorRoleLaws,
-  fieldShadowRoleLaws,
-} from "./field.ts";
+} from "./appearance.ts";
 import {
   type AppearanceAdmissionProof,
   type AppearanceSeriesPair,
   proveAppearanceAdmission,
 } from "./appearance-admission.ts";
 export * from "./appearance-admission.ts";
-export * from "./appearance-css.ts";
-export * from "./field.ts";
+export * from "./appearance-scope-css.ts";
+export * from "./appearance.ts";
 
 /** Catalogue category a design token belongs to. */
 export type TokenCategory =
@@ -65,28 +65,28 @@ const themeToken = (
   category: TokenCategory = "Color",
 ): ThemeToken => ({ name, light, dark, category, description });
 
-const fieldAxisTokenCategories = {
+const appearanceAxisTokenCategories = {
   darkness: "Color",
   structure: "Color",
   emphasis: "Color",
   density: "Spacing",
-} as const satisfies Readonly<Record<FieldAxisName, TokenCategory>>;
+} as const satisfies Readonly<Record<AppearanceAxisName, TokenCategory>>;
 
 /** Registered field-axis Tokens exposed as numeric author controls. */
-export const fieldAxisTokens: readonly DesignToken[] = Object.freeze(
-  (Object.keys(fieldAxes) as FieldAxisName[]).map((axis) =>
+export const appearanceAxisTokens: readonly DesignToken[] = Object.freeze(
+  (Object.keys(appearanceAxes) as AppearanceAxisName[]).map((axis) =>
     token(
       `--discern-${axis}`,
-      String(fieldAxes[axis].default),
-      fieldAxisTokenCategories[axis],
-      fieldAxes[axis].description,
+      String(appearanceAxes[axis].default),
+      appearanceAxisTokenCategories[axis],
+      appearanceAxes[axis].description,
     )
   ),
 );
 
 /** Framework-neutral primitives and system-font defaults shared by every theme. */
 export const baseTokens: readonly DesignToken[] = [
-  ...fieldAxisTokens,
+  ...appearanceAxisTokens,
   token(
     "--discern-font-display",
     '"Iowan Old Style", "Palatino Linotype", Georgia, ui-serif, serif',
@@ -195,12 +195,12 @@ export const baseTokens: readonly DesignToken[] = [
   ...([1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24] as const).map((step) =>
     token(
       `--discern-space-${step}`,
-      `${step * FIELD_SPACING_UNIT_PX}px`,
+      `${step * APPEARANCE_SPACING_UNIT_PX}px`,
       "Spacing",
       step === 1
-        ? `${FIELD_SPACING_UNIT_PX}px spacing unit. Density scales spacing only and never font size; interface-text and component-owned touch-target floors do not shrink.`
+        ? `${APPEARANCE_SPACING_UNIT_PX}px spacing unit. Density scales spacing only and never font size; interface-text and component-owned touch-target floors do not shrink.`
         : `${
-          step * FIELD_SPACING_UNIT_PX
+          step * APPEARANCE_SPACING_UNIT_PX
         }px authored spacing step; browser emission multiplies it by density.`,
     )
   ),
@@ -278,8 +278,8 @@ export const designTokens: readonly DesignToken[] = baseTokens;
 
 const lightField = evaluateField({ darkness: 0 });
 const darkField = evaluateField({ darkness: 1 });
-const lightShadows = evaluateFieldShadows({ darkness: 0 });
-const darkShadows = evaluateFieldShadows({ darkness: 1 });
+const lightShadows = evaluateAppearanceShadows({ darkness: 0 });
+const darkShadows = evaluateAppearanceShadows({ darkness: 1 });
 
 function requiredProjectedValue(
   values: Readonly<Record<`--discern-${string}`, string>>,
@@ -292,14 +292,15 @@ function requiredProjectedValue(
   return value;
 }
 
-const fieldThemeTokens: readonly ThemeToken[] = fieldColorRoleLaws.map((law) =>
-  themeToken(
-    law.name,
-    requiredProjectedValue(lightField, law.name),
-    requiredProjectedValue(darkField, law.name),
-    law.description,
-  )
-);
+const appearanceThemeTokens: readonly ThemeToken[] = appearanceColorRoleLaws
+  .map((law) =>
+    themeToken(
+      law.name,
+      requiredProjectedValue(lightField, law.name),
+      requiredProjectedValue(darkField, law.name),
+      law.description,
+    )
+  );
 
 const seriesThemeTokens: readonly ThemeToken[] = [
   themeToken(
@@ -353,7 +354,7 @@ const appearanceSeriesPairs: readonly AppearanceSeriesPair[] = Object.freeze(
   }),
 );
 
-const shadowThemeTokens: readonly ThemeToken[] = fieldShadowRoleLaws.map((
+const shadowThemeTokens: readonly ThemeToken[] = appearanceShadowRoleLaws.map((
   law,
 ) =>
   themeToken(
@@ -384,7 +385,7 @@ const presentationThemeTokens: readonly ThemeToken[] = [
 
 /** Semantic light/dark role Tokens projected from the field's two poles. */
 export const themeTokens: readonly ThemeToken[] = [
-  ...fieldThemeTokens,
+  ...appearanceThemeTokens,
   ...seriesThemeTokens,
   ...shadowThemeTokens,
   ...presentationThemeTokens,

@@ -601,7 +601,7 @@
   metric = "field_contrast_margin"
   direction = "up"
   limit = 0
-  run = "deno eval --config deno.json 'import { fieldContrastMargin } from \"./src/tokens/field.ts\"; console.log(\"DISCERN_METRIC field_contrast_margin \" + fieldContrastMargin())'"
+  run = "deno eval --config deno.json 'import { appearanceContrastMargin } from \"./src/tokens/appearance.ts\"; console.log(\"DISCERN_METRIC field_contrast_margin \" + appearanceContrastMargin())'"
   inputs = ["src/tokens/**"]
 
 # Component spacing and offsets consume the shared spacing roles. This raw

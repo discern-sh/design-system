@@ -26,14 +26,14 @@ import {
 } from "./runtime-assets.ts";
 import { publicTokens } from "./token-inventory.ts";
 import { blueThemeCss } from "./theme/blue.ts";
-import { appearanceScopeCss } from "./tokens/appearance-css.ts";
+import { appearanceScopeCss } from "./tokens/appearance-scope-css.ts";
 import {
+  APPEARANCE_LIVE_CSS_SUPPORTS,
   densityScaledSpacingCssValue,
-  FIELD_LIVE_CSS_SUPPORTS,
-  fieldLiveCssDeclarations,
   generateAccentHueRegistrationCss,
-  generateFieldAxisRegistrationCss,
-} from "./tokens/field-css.ts";
+  generateAppearanceAxisRegistrationCss,
+  monoLiveCssDeclarations,
+} from "./tokens/appearance-live-css.ts";
 import { baseTokens, themeTokens } from "./tokens/tokens.ts";
 import {
   type ComponentGroup,
@@ -74,7 +74,7 @@ export interface BuildSummary {
 }
 
 function generateTokenCss(): string {
-  const fieldDeclarations = fieldLiveCssDeclarations();
+  const fieldDeclarations = monoLiveCssDeclarations();
   const primitiveDeclarations = baseTokens.map(({ name, value }) =>
     `${name}: ${value};`
   ).join(" ");
@@ -92,7 +92,7 @@ function generateTokenCss(): string {
       })),
     ...fieldDeclarations,
   ].map(({ name, value }) => `${name}: ${value};`).join(" ");
-  return compactGeneratedTokenCss(`${generateFieldAxisRegistrationCss()}
+  return compactGeneratedTokenCss(`${generateAppearanceAxisRegistrationCss()}
 
 ${generateAccentHueRegistrationCss()}
 
@@ -116,7 +116,7 @@ ${generateAccentHueRegistrationCss()}
     }
   }
 
-  @supports ${FIELD_LIVE_CSS_SUPPORTS} {
+  @supports ${APPEARANCE_LIVE_CSS_SUPPORTS} {
     :where([data-discern-root]) {
       ${liveDeclarations}
     }

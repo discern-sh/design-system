@@ -3,10 +3,10 @@ import type { CSSProperties } from "react";
 import type { ThemeSwitcherMode } from "../../../src/components/core/theme-switcher/theme-switcher.tsx";
 import { Select } from "../../../src/components/forms/select/select.tsx";
 import {
+  appearanceAxes,
   type AppearanceName,
   DEFAULT_ACCENT_HUE,
-  fieldAxes,
-} from "../../../src/tokens/field.ts";
+} from "../../../src/tokens/appearance.ts";
 import {
   AppearanceControl,
   type AppearanceControlProps,
@@ -23,7 +23,7 @@ import {
   setCatalogueFieldPoint,
   writeCatalogueAppearanceParameters,
 } from "../../shell/appearance-state.ts";
-import { catalogueFieldControlScheme } from "../../shell/field-state.ts";
+import { catalogueAxesControlScheme } from "../../shell/axes-state.ts";
 import { useCatalogueTerminalTheme } from "../../use-terminal-theme.ts";
 import type {
   BuilderPreviewAppearance,
@@ -168,7 +168,7 @@ export function useBuilderPreviewPreferences(
     initialPreviewAppearance(url.searchParams, initialPreviewTheme)
   );
   const [previewScheme, setPreviewScheme] = useState<"light" | "dark">(() =>
-    catalogueFieldControlScheme(
+    catalogueAxesControlScheme(
       initialPreviewAppearance(url.searchParams, initialPreviewTheme).field,
     )
   );
@@ -185,8 +185,8 @@ export function useBuilderPreviewPreferences(
   useEffect(() => {
     if (preview.theme !== "system") return;
     const darkness = systemTheme === "dark"
-      ? fieldAxes.darkness.maximum
-      : fieldAxes.darkness.minimum;
+      ? appearanceAxes.darkness.maximum
+      : appearanceAxes.darkness.minimum;
     if (
       preview.field.darkness === darkness && previewScheme === systemTheme
     ) return;
@@ -233,8 +233,8 @@ export function useBuilderPreviewPreferences(
   const changePreviewTheme = (theme: ThemeSwitcherMode): void => {
     const scheme = theme === "system" ? systemTheme : theme;
     const darkness = scheme === "dark"
-      ? fieldAxes.darkness.maximum
-      : fieldAxes.darkness.minimum;
+      ? appearanceAxes.darkness.maximum
+      : appearanceAxes.darkness.minimum;
     setPreview((current) => ({
       ...current,
       theme,
@@ -245,7 +245,7 @@ export function useBuilderPreviewPreferences(
   const changePreviewField = (
     field: CatalogueAppearanceState["field"],
   ): void => {
-    const scheme = catalogueFieldControlScheme(field, previewScheme);
+    const scheme = catalogueAxesControlScheme(field, previewScheme);
     setPreview((current) => ({
       ...setCatalogueFieldPoint(current, field),
       ...(field.darkness === current.field.darkness ? {} : { theme: scheme }),

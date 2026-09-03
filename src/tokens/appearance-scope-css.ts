@@ -7,19 +7,19 @@
 
 import {
   accentAppearance,
+  appearanceColorRoleLaws,
   type AppearanceName,
+  appearanceShadowRoleLaws,
   DEFAULT_ACCENT_HUE,
   evaluateAppearance,
-  evaluateFieldShadows,
+  evaluateAppearanceShadows,
   fieldAppearance,
-  fieldColorRoleLaws,
-  fieldShadowRoleLaws,
-} from "./field.ts";
+} from "./appearance.ts";
 import {
   ACCENT_HUE_CUSTOM_PROPERTY_NAME,
+  APPEARANCE_LIVE_CSS_SUPPORTS,
   appearanceLiveCssDeclarations,
-  FIELD_LIVE_CSS_SUPPORTS,
-} from "./field-css.ts";
+} from "./appearance-live-css.ts";
 
 /** Public attribute selecting one browser appearance projection. */
 export const APPEARANCE_ATTRIBUTE = "data-discern-appearance" as const;
@@ -46,7 +46,7 @@ function requiredValue(
 }
 
 function accentHueTemplate(
-  law: (typeof fieldColorRoleLaws)[number],
+  law: (typeof appearanceColorRoleLaws)[number],
   value: string,
 ): string {
   if (law.accent === "field") return value;
@@ -75,7 +75,7 @@ export function appearancePoleProjection(
     ? fieldAppearance
     : accentAppearance(DEFAULT_ACCENT_HUE);
   const evaluated = evaluateAppearance(identity, { darkness });
-  const roles = Object.fromEntries(fieldColorRoleLaws.map((law) => {
+  const roles = Object.fromEntries(appearanceColorRoleLaws.map((law) => {
     const value = requiredValue(evaluated, law.name);
     return [
       law.name,
@@ -84,7 +84,7 @@ export function appearancePoleProjection(
   })) as Record<`--discern-${string}`, string>;
   return Object.freeze({
     roles: Object.freeze(roles),
-    shadows: evaluateFieldShadows({ darkness }),
+    shadows: evaluateAppearanceShadows({ darkness }),
   });
 }
 
@@ -108,10 +108,10 @@ function poleDeclarations(
 ): string {
   const projection = appearancePoleProjection(appearance, mode);
   return [
-    ...fieldColorRoleLaws.map((law) =>
+    ...appearanceColorRoleLaws.map((law) =>
       `    ${law.name}: ${requiredValue(projection.roles, law.name)};`
     ),
-    ...fieldShadowRoleLaws.map((law) =>
+    ...appearanceShadowRoleLaws.map((law) =>
       `    ${law.name}: ${requiredValue(projection.shadows, law.name)};`
     ),
   ].join("\n");
@@ -157,7 +157,7 @@ ${dark}
 ${systemDark}
   }
 
-  @supports ${FIELD_LIVE_CSS_SUPPORTS} {
+  @supports ${APPEARANCE_LIVE_CSS_SUPPORTS} {
 ${live}
   }
 }`;

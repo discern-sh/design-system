@@ -1,9 +1,9 @@
 /** Versioned same-origin data boundary for the isolated Builder preview. */
 import type { ThemeSwitcherMode } from "../../../src/components/core/theme-switcher/theme-switcher.tsx";
-import type { AppearanceName } from "../../../src/tokens/field.ts";
+import type { AppearanceName } from "../../../src/tokens/appearance.ts";
 import { catalogueAccentHue } from "../../shell/appearance-options.ts";
-import type { CatalogueFieldSelection } from "../../shell/field-state.ts";
-import { isCatalogueFieldSelection } from "../../shell/field-state.ts";
+import type { CatalogueAxesSelection } from "../../shell/axes-state.ts";
+import { isCatalogueAxesSelection } from "../../shell/axes-state.ts";
 import type { BuilderDocument } from "../model.ts";
 import {
   assertBuilderDocument,
@@ -42,7 +42,7 @@ export interface BuilderPreviewAppearance {
   readonly resolvedTheme: "light" | "dark";
   readonly appearance: AppearanceName;
   readonly accentHue: number;
-  readonly field: CatalogueFieldSelection;
+  readonly field: CatalogueAxesSelection;
 }
 
 /** Complete accepted state sent from the Builder into the frame. */
@@ -289,7 +289,7 @@ export function builderPreviewMessageFromEvent(
       (appearance.appearance !== "field" &&
         appearance.appearance !== "accent") ||
       catalogueAccentHue(appearance.accentHue as number) === undefined ||
-      !isCatalogueFieldSelection(appearance.field) ||
+      !isCatalogueAxesSelection(appearance.field) ||
       (snapshot.mode !== "edit" && snapshot.mode !== "interact") ||
       !(snapshot.selectionId === null ||
         typeof snapshot.selectionId === "string") ||

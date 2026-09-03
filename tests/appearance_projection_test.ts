@@ -1,7 +1,7 @@
 import { assert, assertAlmostEquals, assertThrows } from "@std/assert";
 import {
   parseComputedFieldColor,
-} from "../scripts/conformance/field-projection.ts";
+} from "../scripts/conformance/appearance-projection.ts";
 import { oklabDistance } from "../src/internal/oklch.ts";
 
 Deno.test("computed field colours retain low-alpha coordinates without raster loss", () => {

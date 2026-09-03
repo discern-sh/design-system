@@ -60,7 +60,7 @@ function parseOklch(value: string): OklabColor {
   };
 }
 
-function fieldSeriesValue(
+function poleSeriesValue(
   name: ChartPaintTokenName,
   darkness: number,
   canvas: OklabColor,
@@ -78,7 +78,7 @@ function fieldSeriesValue(
  * Resolve the portable chart palette at any field point. Field roles evaluate
  * directly; each fixed series slot selects its more visible authored pole value.
  */
-export function resolveChartPaletteAtField(
+export function resolveChartPaletteAtDarkness(
   darkness: number,
 ): Readonly<Record<ChartPaintRole, string>> {
   const field = evaluateField({ darkness });
@@ -90,7 +90,7 @@ export function resolveChartPaletteAtField(
       const fieldValue = field[tokenName as keyof typeof field];
       return [
         role,
-        fieldValue ?? fieldSeriesValue(tokenName, darkness, canvas),
+        fieldValue ?? poleSeriesValue(tokenName, darkness, canvas),
       ];
     }),
   ) as Record<ChartPaintRole, string>);
@@ -100,7 +100,7 @@ export function resolveChartPaletteAtField(
 export function resolveChartPalette(
   variant: ChartPaletteVariant,
 ): Readonly<Record<ChartPaintRole, string>> {
-  return resolveChartPaletteAtField(variant === "light" ? 0 : 1);
+  return resolveChartPaletteAtDarkness(variant === "light" ? 0 : 1);
 }
 
 /** Resolve the authored interface or annotation font stack without a web root. */

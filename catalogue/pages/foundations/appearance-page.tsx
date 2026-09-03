@@ -7,39 +7,39 @@ import { AvatarGroup } from "../../../src/components/people/avatar-group/avatar-
 import { Avatar } from "../../../src/components/people/avatar/avatar.tsx";
 import {
   accentAppearance,
+  type AppearanceAxisName,
+  appearanceColorRoleLaws,
   type AppearanceName,
   evaluateAppearance,
   fieldAppearance,
-  type FieldAxisName,
-  fieldColorRoleLaws,
-} from "../../../src/tokens/field.ts";
+} from "../../../src/tokens/appearance.ts";
 import { appearanceAdmission } from "../../../src/tokens/tokens.ts";
 import { catalogueAccentHueLabel } from "../../shell/appearance-options.ts";
-import { FieldAxisControl } from "../../shell/field-axis-control.tsx";
-import type { CatalogueFieldSelection } from "../../shell/field-state.ts";
+import { AxisControl } from "../../shell/axis-control.tsx";
+import type { CatalogueAxesSelection } from "../../shell/axes-state.ts";
 import {
-  catalogueFieldPolarity,
-  catalogueFieldStyle,
-  defaultCatalogueFieldSelection,
-  serializeCatalogueFieldSelection,
-} from "../../shell/field-state.ts";
+  catalogueAppearanceRootStyle,
+  catalogueAxesPolarity,
+  defaultCatalogueAxesSelection,
+  serializeCatalogueAxes,
+} from "../../shell/axes-state.ts";
 import {
   type CatalogueTerminalPresentation,
   resolveCatalogueTerminalPresentation,
 } from "../../terminal-theme.ts";
 import { CataloguePageHeader } from "../shared.tsx";
-import { catalogueFieldConsumerSnippet } from "./field-export.ts";
-import { fieldPoleTerminalProjections } from "./field-terminal.ts";
+import { catalogueAppearanceConsumerSnippet } from "./appearance-export.ts";
+import { appearancePoleTerminalProjections } from "./appearance-terminal.ts";
 import { TerminalAppearanceScopes } from "./terminal-appearance-scopes.tsx";
 
-export interface FieldPageProps {
+export interface AppearancePageProps {
   readonly appearance?: AppearanceName | undefined;
   readonly accentHue?: number | undefined;
-  readonly field?: CatalogueFieldSelection | undefined;
+  readonly field?: CatalogueAxesSelection | undefined;
   readonly fieldScheme?: "light" | "dark" | undefined;
   readonly terminalPresentation?: CatalogueTerminalPresentation | undefined;
   readonly onFieldChange?:
-    | ((field: CatalogueFieldSelection) => void)
+    | ((field: CatalogueAxesSelection) => void)
     | undefined;
 }
 
@@ -63,7 +63,7 @@ function ScopeCard(
     readonly parentHue?: number;
     readonly childAppearance: AppearanceName;
     readonly childHue?: number;
-    readonly axes: CatalogueFieldSelection;
+    readonly axes: CatalogueAxesSelection;
     readonly parent: ReactNode;
     readonly child: ReactNode;
   },
@@ -74,7 +74,7 @@ function ScopeCard(
       : { "--discern-accent-hue": hue } as CSSProperties;
   return (
     <article
-      className="discern-catalogue-field-scope"
+      className="discern-catalogue-appearance-scope"
       data-discern-scope-demo={id}
       data-discern-appearance={parentAppearance}
       style={hueStyle(parentHue)}
@@ -86,10 +86,10 @@ function ScopeCard(
           Inherits Structure {axes.structure} · Density {axes.density}
         </small>
       </header>
-      <div className="discern-catalogue-field-scope__specimen">
+      <div className="discern-catalogue-appearance-scope__specimen">
         <div>{parent}</div>
         <div
-          className="discern-catalogue-field-scope__nested"
+          className="discern-catalogue-appearance-scope__nested"
           data-discern-appearance={childAppearance}
           style={hueStyle(childHue)}
         >
@@ -106,7 +106,7 @@ function ScopeCard(
 }
 
 /** Live browser instrument for the shared Field and Accent projection. */
-export function FieldPage(
+export function AppearancePage(
   {
     appearance = "field",
     accentHue = 255,
@@ -114,10 +114,10 @@ export function FieldPage(
     fieldScheme,
     terminalPresentation,
     onFieldChange,
-  }: FieldPageProps = {},
+  }: AppearancePageProps = {},
 ) {
   const [localSelection, setLocalSelection] = useState(
-    defaultCatalogueFieldSelection,
+    defaultCatalogueAxesSelection,
   );
   const selection = field ?? localSelection;
   const [computedRoles, setComputedRoles] = useState<
@@ -128,9 +128,9 @@ export function FieldPage(
     ? fieldAppearance
     : accentAppearance(accentHue);
   const evaluated = evaluateAppearance(identity, selection);
-  const polarity = catalogueFieldPolarity(selection);
+  const polarity = catalogueAxesPolarity(selection);
   const proof = appearanceAdmission();
-  const consumerSnippet = catalogueFieldConsumerSnippet(
+  const consumerSnippet = catalogueAppearanceConsumerSnippet(
     selection,
     appearance,
     accentHue,
@@ -141,14 +141,14 @@ export function FieldPage(
       appearance,
       accentHue,
     );
-  const terminalPoles = fieldPoleTerminalProjections(
+  const terminalPoles = appearancePoleTerminalProjections(
     resolvedTerminalPresentation.appearance,
   );
   const foundationsHref = `/catalogue/foundations/?${
     new URLSearchParams({
       appearance,
       accent: String(accentHue),
-      field: serializeCatalogueFieldSelection(selection),
+      field: serializeCatalogueAxes(selection),
     }).toString()
   }`;
 
@@ -156,7 +156,7 @@ export function FieldPage(
     const root = pageRef.current;
     if (root === null) return;
     const roles = Object.fromEntries(
-      [...root.querySelectorAll<HTMLElement>("[data-discern-field-role]")]
+      [...root.querySelectorAll<HTMLElement>("[data-discern-appearance-role]")]
         .map((swatch) => [
           swatch.dataset.discernFieldRole ?? "",
           getComputedStyle(swatch).backgroundColor,
@@ -165,24 +165,24 @@ export function FieldPage(
     setComputedRoles(roles);
   }, [accentHue, appearance, fieldScheme, selection]);
 
-  const changeSelection = (next: CatalogueFieldSelection): void => {
+  const changeSelection = (next: CatalogueAxesSelection): void => {
     if (onFieldChange === undefined) setLocalSelection(next);
     else onFieldChange(next);
   };
-  const changeAxis = (axis: FieldAxisName, value: number): void => {
+  const changeAxis = (axis: AppearanceAxisName, value: number): void => {
     changeSelection({ ...selection, [axis]: value });
   };
 
   return (
     <div
       ref={pageRef}
-      className="discern-catalogue-page discern-catalogue-field"
-      data-discern-foundations-page="field"
+      className="discern-catalogue-page discern-catalogue-appearance-page"
+      data-discern-foundations-page="appearance"
       data-discern-appearance={onFieldChange === undefined
         ? appearance
         : undefined}
       style={onFieldChange === undefined
-        ? catalogueFieldStyle(selection, fieldScheme, accentHue)
+        ? catalogueAppearanceRootStyle(selection, fieldScheme, accentHue)
         : undefined}
     >
       <a
@@ -198,13 +198,15 @@ export function FieldPage(
         description="Place the live system at one point, inspect every derived role, and verify Field and Accent scopes in both directions."
       />
 
-      <div className="discern-catalogue-field__instrument">
+      <div className="discern-catalogue-appearance-page__instrument">
         <section
-          className="discern-catalogue-field__controls"
-          aria-labelledby="discern-catalogue-field-controls-heading"
+          className="discern-catalogue-appearance-page__controls"
+          aria-labelledby="discern-catalogue-appearance-controls-heading"
         >
           <div>
-            <h2 id="discern-catalogue-field-controls-heading">Field point</h2>
+            <h2 id="discern-catalogue-appearance-controls-heading">
+              Field point
+            </h2>
             <p>
               These are the same controls as the global Appearance panel.
             </p>
@@ -212,7 +214,7 @@ export function FieldPage(
           {(
             ["darkness", "structure", "emphasis", "density"] as const
           ).map((axis) => (
-            <FieldAxisControl
+            <AxisControl
               key={axis}
               axis={axis}
               value={selection[axis]}
@@ -222,11 +224,11 @@ export function FieldPage(
         </section>
 
         <section
-          className="discern-catalogue-field__reading"
-          aria-labelledby="discern-catalogue-field-reading-heading"
+          className="discern-catalogue-appearance-page__reading"
+          aria-labelledby="discern-catalogue-appearance-reading-heading"
         >
           <div>
-            <h2 id="discern-catalogue-field-reading-heading">
+            <h2 id="discern-catalogue-appearance-reading-heading">
               Current projection
             </h2>
             <p>
@@ -239,7 +241,7 @@ export function FieldPage(
               <strong>{fieldScheme ?? polarity}</strong>.
             </p>
           </div>
-          <div className="discern-catalogue-field__pair">
+          <div className="discern-catalogue-appearance-page__pair">
             {(
               [
                 ["Canvas", "--discern-color-canvas"],
@@ -248,7 +250,7 @@ export function FieldPage(
             ).map(([label, role]) => (
               <div key={role}>
                 <span
-                  data-discern-field-role={role}
+                  data-discern-appearance-role={role}
                   style={{ background: `var(${role})` }}
                 />
                 <strong>{label}</strong>
@@ -260,11 +262,11 @@ export function FieldPage(
       </div>
 
       <section
-        className="discern-catalogue-field__scopes"
-        aria-labelledby="discern-catalogue-field-scopes-heading"
+        className="discern-catalogue-appearance-page__scopes"
+        aria-labelledby="discern-catalogue-appearance-scopes-heading"
       >
         <div>
-          <h2 id="discern-catalogue-field-scopes-heading">
+          <h2 id="discern-catalogue-appearance-scopes-heading">
             Symmetric appearance scopes
           </h2>
           <p>
@@ -272,7 +274,7 @@ export function FieldPage(
             Density continue to come from the current parent field point.
           </p>
         </div>
-        <div className="discern-catalogue-field__scope-grid">
+        <div className="discern-catalogue-appearance-page__scope-grid">
           <ScopeCard
             id="field-to-accent-255"
             title="Field → Accent 255"
@@ -335,13 +337,13 @@ export function FieldPage(
       <TerminalAppearanceScopes theme={resolvedTerminalPresentation.theme} />
 
       <section
-        className="discern-catalogue-field__proof"
-        data-discern-field-proof={proof.accepted ? "accepted" : "refused"}
-        aria-labelledby="discern-catalogue-field-proof-heading"
+        className="discern-catalogue-appearance-page__proof"
+        data-discern-appearance-proof={proof.accepted ? "accepted" : "refused"}
+        aria-labelledby="discern-catalogue-appearance-proof-heading"
       >
-        <div className="discern-catalogue-field__proof-heading">
+        <div className="discern-catalogue-appearance-page__proof-heading">
           <div>
-            <h2 id="discern-catalogue-field-proof-heading">
+            <h2 id="discern-catalogue-appearance-proof-heading">
               Package admission
             </h2>
             <p>
@@ -351,7 +353,7 @@ export function FieldPage(
           </div>
           <strong>{proof.accepted ? "Admitted" : "Refused"}</strong>
         </div>
-        <dl className="discern-catalogue-field__proof-summary">
+        <dl className="discern-catalogue-appearance-page__proof-summary">
           <div>
             <dt>Appearances</dt>
             <dd>{proof.appearances}</dd>
@@ -368,7 +370,7 @@ export function FieldPage(
         {proof.failures.length === 0
           ? <p>No failed package invariants.</p>
           : (
-            <ul className="discern-catalogue-field__refusals">
+            <ul className="discern-catalogue-appearance-page__refusals">
               {proof.failures.map((failure) => (
                 <li
                   key={`${failure.appearance}/${failure.point}/${failure.check}`}
@@ -381,11 +383,11 @@ export function FieldPage(
       </section>
 
       <section
-        className="discern-catalogue-field__terminal"
-        aria-labelledby="discern-catalogue-field-terminal-heading"
+        className="discern-catalogue-appearance-page__terminal"
+        aria-labelledby="discern-catalogue-appearance-terminal-heading"
       >
         <div>
-          <h2 id="discern-catalogue-field-terminal-heading">
+          <h2 id="discern-catalogue-appearance-terminal-heading">
             Terminal appearance at the poles
           </h2>
           <p>
@@ -393,12 +395,12 @@ export function FieldPage(
             each terminal uses an honest light or dark ground.
           </p>
         </div>
-        <div className="discern-catalogue-field__terminal-grid">
+        <div className="discern-catalogue-appearance-page__terminal-grid">
           {terminalPoles.map((projection) => (
             <article key={projection.theme}>
               <h3>{projection.theme === "light" ? "Light" : "Dark"} pole</h3>
               <div
-                data-discern-field-terminal-pole={projection.theme}
+                data-discern-appearance-terminal-pole={projection.theme}
                 data-discern-terminal-appearance={resolvedTerminalPresentation
                   .appearance.name}
                 data-discern-terminal-accent-hue={resolvedTerminalPresentation
@@ -415,11 +417,13 @@ export function FieldPage(
       </section>
 
       <section
-        className="discern-catalogue-field__export"
-        aria-labelledby="discern-catalogue-field-export-heading"
+        className="discern-catalogue-appearance-page__export"
+        aria-labelledby="discern-catalogue-appearance-export-heading"
       >
         <div>
-          <h2 id="discern-catalogue-field-export-heading">Take this point</h2>
+          <h2 id="discern-catalogue-appearance-export-heading">
+            Take this point
+          </h2>
           <p>
             Copy the same public Root and Appearance scope used by this page.
           </p>
@@ -433,21 +437,21 @@ export function FieldPage(
       </section>
 
       <section
-        className="discern-catalogue-field__roles"
-        aria-labelledby="discern-catalogue-field-roles-heading"
+        className="discern-catalogue-appearance-page__roles"
+        aria-labelledby="discern-catalogue-appearance-roles-heading"
       >
         <div>
-          <h2 id="discern-catalogue-field-roles-heading">Derived roles</h2>
+          <h2 id="discern-catalogue-appearance-roles-heading">Derived roles</h2>
           <p>
             Each swatch paints through the public scope; the value beside it is
             read back from the browser.
           </p>
         </div>
-        <div className="discern-catalogue-field__role-grid">
-          {fieldColorRoleLaws.map(({ name }) => (
+        <div className="discern-catalogue-appearance-page__role-grid">
+          {appearanceColorRoleLaws.map(({ name }) => (
             <article key={name}>
               <span
-                data-discern-field-role={name}
+                data-discern-appearance-role={name}
                 style={{ background: `var(${name})` }}
               />
               <code>{name}</code>

@@ -3,7 +3,7 @@ import type { CSSProperties } from "react";
 import { createRoot } from "react-dom/client";
 import { Input } from "../../src/components/forms/input/input.tsx";
 import { Select } from "../../src/components/forms/select/select.tsx";
-import type { AppearanceName } from "../../src/tokens/field.ts";
+import type { AppearanceName } from "../../src/tokens/appearance.ts";
 import { componentGroups } from "../../src/types/component-meta.ts";
 import type { ConformanceStep, ConformanceTarget } from "../conformance.ts";
 import { registry } from "../generated/registry.ts";
@@ -17,13 +17,13 @@ import {
   catalogueAccentHueLabel,
   catalogueAppearanceOptions,
 } from "../shell/appearance-options.ts";
-import type { CatalogueFieldSelection } from "../shell/field-state.ts";
+import type { CatalogueAxesSelection } from "../shell/axes-state.ts";
 import {
-  catalogueFieldLabel,
-  catalogueFieldPolarity,
-  catalogueFieldStyle,
-  serializeCatalogueFieldSelection,
-} from "../shell/field-state.ts";
+  catalogueAppearanceRootStyle,
+  catalogueAxesLabel,
+  catalogueAxesPolarity,
+  serializeCatalogueAxes,
+} from "../shell/axes-state.ts";
 import { captureRegionForReview, inspectReviewGeometry } from "./geometry.ts";
 import { reviewMotionStyle } from "./motion.ts";
 import {
@@ -207,7 +207,7 @@ function ReviewSpecimen({
   readonly theme: "light" | "dark";
   readonly appearance: AppearanceName;
   readonly accentHue: number;
-  readonly field: CatalogueFieldSelection;
+  readonly field: CatalogueAxesSelection;
   readonly motion: "ordinary" | "reduced";
   readonly speed: "production" | "slow";
   readonly replay: number;
@@ -332,7 +332,7 @@ function ReviewSpecimen({
           data-discern-review-identity={identity}
           style={{
             inlineSize: `${width}px`,
-            ...catalogueFieldStyle(field, theme, accentHue),
+            ...catalogueAppearanceRootStyle(field, theme, accentHue),
             ...reviewMotionStyle(motion, speed),
           } as CSSProperties}
         >
@@ -345,7 +345,7 @@ function ReviewSpecimen({
         <span>
           {appearance === "field"
             ? "Field"
-            : catalogueAccentHueLabel(accentHue)} · {catalogueFieldLabel(field)}
+            : catalogueAccentHueLabel(accentHue)} · {catalogueAxesLabel(field)}
         </span>
         <span>{motion}</span>
         <span>{speed}</span>
@@ -424,13 +424,13 @@ function App() {
   const canonical = componentReviewHref({ ...parsed, group });
   const pointHref = (
     label: string,
-    field: CatalogueFieldSelection,
+    field: CatalogueAxesSelection,
   ) => ({
     label,
     href: componentReviewHref({
       ...parsed,
       group,
-      theme: catalogueFieldPolarity(field),
+      theme: catalogueAxesPolarity(field),
       field,
     }),
   });
@@ -465,7 +465,7 @@ function App() {
       data-discern-root
       data-discern-theme={appliedTheme}
       data-discern-appearance={parsed.appearance}
-      style={catalogueFieldStyle(
+      style={catalogueAppearanceRootStyle(
         parsed.field,
         parsed.theme,
         parsed.accentHue,
@@ -581,7 +581,7 @@ function App() {
         <input
           type="hidden"
           name="field"
-          value={serializeCatalogueFieldSelection(parsed.field)}
+          value={serializeCatalogueAxes(parsed.field)}
         />
         <label>
           Motion<Select name="motion" defaultValue={parsed.motion}>

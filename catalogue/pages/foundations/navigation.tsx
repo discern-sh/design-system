@@ -38,7 +38,7 @@ function sourceBackedSections(
     return [{
       title: "Explore",
       items: [
-        navigationItem(foundationsPaths.field, "Field"),
+        navigationItem(foundationsPaths.appearance, "Appearance"),
         navigationItem(foundationsPaths.tokens, "Tokens"),
         navigationItem(
           foundationsPaths.terminal,
@@ -72,11 +72,11 @@ function sourceBackedSections(
       },
     ];
   }
-  if (route.page === "field") {
+  if (route.page === "appearance") {
     return [{
       items: [
         navigationItem(foundationsPaths.index, "← Foundations"),
-        navigationItem(foundationsPaths.field, "Field", true),
+        navigationItem(foundationsPaths.appearance, "Appearance", true),
       ],
     }];
   }

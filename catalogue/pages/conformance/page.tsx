@@ -3,9 +3,9 @@ import { compositionRecipes } from "../../compositions.tsx";
 import { packageVersion } from "../../generated/registry.ts";
 import type { RegistryEntry } from "../../generated/registry.ts";
 import type { CatalogueTerminalPresentation } from "../../terminal-theme.ts";
-import type { AppearanceName } from "../../../src/tokens/field.ts";
-import type { CatalogueFieldSelection } from "../../shell/field-state.ts";
-import { catalogueFieldStyle } from "../../shell/field-state.ts";
+import type { AppearanceName } from "../../../src/tokens/appearance.ts";
+import type { CatalogueAxesSelection } from "../../shell/axes-state.ts";
+import { catalogueAppearanceRootStyle } from "../../shell/axes-state.ts";
 import { ComponentPreview } from "../components/component-preview.tsx";
 import type { CatalogueSurface } from "../shared.tsx";
 
@@ -46,7 +46,7 @@ export function ConformancePage(
     readonly components: readonly RegistryEntry[];
     readonly appearance: AppearanceName;
     readonly accentHue: number;
-    readonly field: CatalogueFieldSelection;
+    readonly field: CatalogueAxesSelection;
     readonly fieldScheme: "light" | "dark";
     readonly includeJourneys: boolean;
     readonly surface: CatalogueSurface;
@@ -61,7 +61,7 @@ export function ConformancePage(
       data-discern-theme={theme}
       data-discern-appearance={appearance}
       data-discern-conformance-ready="true"
-      style={catalogueFieldStyle(field, fieldScheme, accentHue)}
+      style={catalogueAppearanceRootStyle(field, fieldScheme, accentHue)}
     >
       <h1 className="discern-visually-hidden">
         Discern component conformance sheet

@@ -9,15 +9,15 @@ import {
 import { emitDesignSystemRuntime } from "../../src/runtime.ts";
 import {
   accentAppearance,
+  APPEARANCE_POLARITY_CROSSOVER_DARKNESS,
+  appearanceColorRoleLaws,
   type AppearanceName,
-  defaultFieldPoint,
+  type AppearancePoint,
+  defaultAppearancePoint,
   evaluateAppearance,
   evaluateField,
-  FIELD_POLARITY_CROSSOVER_DARKNESS,
-  fieldColorRoleLaws,
-  type FieldPoint,
-} from "../../src/tokens/field.ts";
-import { FIELD_LIVE_CSS_SUPPORTS } from "../../src/tokens/field-css.ts";
+} from "../../src/tokens/appearance.ts";
+import { APPEARANCE_LIVE_CSS_SUPPORTS } from "../../src/tokens/appearance-live-css.ts";
 import { baseTokens, themeTokens } from "../../src/tokens/tokens.ts";
 
 const OKLAB_TOLERANCE = 0.006;
@@ -30,9 +30,9 @@ export interface ProjectionColor {
   readonly alpha: number;
 }
 
-interface FieldProjectionSample {
+interface AppearanceProjectionSample {
   readonly label: string;
-  readonly point: FieldPoint;
+  readonly point: AppearancePoint;
   readonly theme: "light" | "dark" | "system" | null;
   readonly media: "light" | "dark";
   readonly scheme: "light" | "dark";
@@ -41,7 +41,7 @@ interface FieldProjectionSample {
 }
 
 /** Evidence counts returned by the browser field-projection guard. */
-export interface FieldProjectionEvidence {
+export interface AppearanceProjectionEvidence {
   readonly points: number;
   readonly roleChecks: number;
   readonly poleChecks: number;
@@ -52,10 +52,10 @@ export interface FieldProjectionEvidence {
 }
 
 const defaultPoint = (
-  overrides: Partial<FieldPoint> = {},
-): FieldPoint => ({ ...defaultFieldPoint, ...overrides });
+  overrides: Partial<AppearancePoint> = {},
+): AppearancePoint => ({ ...defaultAppearancePoint, ...overrides });
 
-const samples: readonly FieldProjectionSample[] = [
+const samples: readonly AppearanceProjectionSample[] = [
   {
     label: "explicit light pole",
     point: defaultPoint({ darkness: 0 }),
@@ -81,7 +81,7 @@ const samples: readonly FieldProjectionSample[] = [
   {
     label: "polarity crossover light neighbour",
     point: defaultPoint({
-      darkness: FIELD_POLARITY_CROSSOVER_DARKNESS - 0.0001,
+      darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS - 0.0001,
     }),
     theme: null,
     media: "light",
@@ -91,7 +91,7 @@ const samples: readonly FieldProjectionSample[] = [
   {
     label: "polarity crossover dark neighbour",
     point: defaultPoint({
-      darkness: FIELD_POLARITY_CROSSOVER_DARKNESS + 0.0001,
+      darkness: APPEARANCE_POLARITY_CROSSOVER_DARKNESS + 0.0001,
     }),
     theme: null,
     media: "light",
@@ -179,7 +179,7 @@ function alphaChannel(value: string | undefined): number {
 }
 
 /** Parse the CSSOM colour forms emitted by the conformance browser. */
-export function parseComputedFieldColor(value: string): ProjectionColor {
+export function parseComputedAppearanceColor(value: string): ProjectionColor {
   const oklch = value.match(
     /^oklch\(\s*([+-]?[\d.]+%?)\s+([+-]?[\d.]+)\s+([+-]?[\d.]+)(?:deg)?(?:\s+\/\s+([+-]?[\d.]+%?))?\s*\)$/u,
   );
@@ -268,9 +268,9 @@ function requiredPoleValue(
  * the signed-off samples and crossover neighbours. Browser RGBA quantization
  * sets the stated 0.006 OKLab and one-channel alpha tolerances.
  */
-export async function verifyFieldProjection(
+export async function verifyAppearanceProjection(
   page: Page,
-): Promise<FieldProjectionEvidence> {
+): Promise<AppearanceProjectionEvidence> {
   const output = await Deno.makeTempDir();
   try {
     await emitDesignSystemRuntime({
@@ -280,7 +280,7 @@ export async function verifyFieldProjection(
     });
     const css = await Deno.readTextFile(`${output}/discern.css`);
     await page.setContent(
-      '<main id="discern-field-probe" data-discern-root></main>',
+      '<main id="discern-appearance-probe" data-discern-root></main>',
     );
     await page.addStyleTag({ content: css });
 
@@ -292,10 +292,10 @@ export async function verifyFieldProjection(
           return match?.[1] === undefined ? [] : [match[1]];
         })
       ),
-    }), FIELD_LIVE_CSS_SUPPORTS);
+    }), APPEARANCE_LIVE_CSS_SUPPORTS);
     if (!registrationEvidence.supportsLiveProjection) {
       throw new Error(
-        `Conformance browser does not support the live field query ${FIELD_LIVE_CSS_SUPPORTS}`,
+        `Conformance browser does not support the live field query ${APPEARANCE_LIVE_CSS_SUPPORTS}`,
       );
     }
     const expectedRegistrations = [
@@ -316,7 +316,7 @@ export async function verifyFieldProjection(
       );
     }
 
-    const roleNames = fieldColorRoleLaws.map(({ name }) => name);
+    const roleNames = appearanceColorRoleLaws.map(({ name }) => name);
     const spacingTokens = baseTokens.filter(({ name }) =>
       name.startsWith("--discern-space-")
     );
@@ -331,7 +331,7 @@ export async function verifyFieldProjection(
       await page.emulateMedia({ colorScheme: sample.media });
       const observed = await page.evaluate(
         ({ roleNames, sample, spacingNames }) => {
-          const root = document.getElementById("discern-field-probe");
+          const root = document.getElementById("discern-appearance-probe");
           if (!(root instanceof HTMLElement)) {
             throw new Error("Missing field probe root");
           }
@@ -415,7 +415,7 @@ export async function verifyFieldProjection(
         }
         const mismatch = colorMismatch(
           parseOklch(expectedValue),
-          parseComputedFieldColor(value.computed),
+          parseComputedAppearanceColor(value.computed),
         );
         roleChecks += 1;
         if (mismatch !== undefined) {
@@ -428,7 +428,7 @@ export async function verifyFieldProjection(
         if (sample.poleMode !== undefined) {
           const poleMismatch = colorMismatch(
             parseOklch(requiredPoleValue(value.name, sample.poleMode)),
-            parseComputedFieldColor(value.computed),
+            parseComputedAppearanceColor(value.computed),
           );
           poleChecks += 1;
           if (poleMismatch !== undefined) {
@@ -460,11 +460,11 @@ export async function verifyFieldProjection(
     interface ScopeNode {
       readonly appearance: AppearanceName;
       readonly hue?: number;
-      readonly axes?: Partial<FieldPoint>;
+      readonly axes?: Partial<AppearancePoint>;
     }
     const scopeScenarios: readonly {
       readonly label: string;
-      readonly base: FieldPoint;
+      readonly base: AppearancePoint;
       readonly nodes: readonly ScopeNode[];
     }[] = [
       {
@@ -512,7 +512,7 @@ export async function verifyFieldProjection(
     for (const scenario of scopeScenarios) {
       const observed = await page.evaluate(
         ({ roleNames, scenario }) => {
-          const root = document.getElementById("discern-field-probe");
+          const root = document.getElementById("discern-appearance-probe");
           if (!(root instanceof HTMLElement)) {
             throw new Error("Missing appearance-scope probe root");
           }
@@ -612,7 +612,7 @@ export async function verifyFieldProjection(
           appearanceScopeChecks += 1;
           const mismatch = colorMismatch(
             parseOklch(expectedValue),
-            parseComputedFieldColor(role.computed),
+            parseComputedAppearanceColor(role.computed),
           );
           if (mismatch !== undefined) {
             failures.push(
