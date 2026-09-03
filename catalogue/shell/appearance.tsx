@@ -11,10 +11,8 @@ import {
   fieldAxes,
   type FieldAxisName,
 } from "../../src/tokens/field.ts";
-import {
-  resolveCatalogueTerminalPresentation,
-  useCatalogueTerminalTheme,
-} from "../terminal-theme.ts";
+import { resolveCatalogueTerminalPresentation } from "../terminal-theme.ts";
+import { useCatalogueTerminalTheme } from "../use-terminal-theme.ts";
 import {
   catalogueAccentHue,
   catalogueAccentHueLabel,
