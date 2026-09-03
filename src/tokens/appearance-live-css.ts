@@ -24,7 +24,7 @@ import {
 
 /** Feature query guarding the live projection while static poles remain usable. */
 export const APPEARANCE_LIVE_CSS_SUPPORTS =
-  "(color: oklch(calc(round(up, abs(-0.2), 1) * 0.5) 0 0))";
+  "(color: oklch(from oklch(calc(round(up, abs(-0.2), 1) * 0.5) 0 0) l c h / 0.5))";
 
 /** One custom-property declaration emitted by the live appearance projection. */
 export interface AppearanceCssDeclaration {
@@ -48,6 +48,15 @@ const PAPER_LIGHTNESS = "--discern-f-pl" as const;
 const PAPER_CHROMA = "--discern-f-pc" as const;
 const INK_LIGHTNESS = "--discern-f-il" as const;
 const INK_CHROMA = "--discern-f-ic" as const;
+const PAPER_PIGMENT = "--discern-f-pp" as const;
+const INK_PIGMENT = "--discern-f-ip" as const;
+const ACTIVE_PIGMENT = "--discern-f-ap" as const;
+const OPPOSITE_PIGMENT = "--discern-f-op" as const;
+
+/** One pigment's alpha expression over its bound OKLCH colour helper. */
+function pigmentAtAlpha(pigment: string, amount: string): string {
+  return `oklch(from var(${pigment}) l c h / ${amount})`;
+}
 
 function formattedNumber(value: number): string {
   if (!Number.isFinite(value)) {
@@ -385,20 +394,16 @@ function colorRoleValue(
     case "canvas":
       return `var(${CANVAS_COLOR})`;
     case "active-ink":
-      return `oklch(var(${ACTIVE_LIGHTNESS}) var(${ACTIVE_CHROMA}) var(${ACTIVE_HUE}) / ${amount})`;
+      return pigmentAtAlpha(ACTIVE_PIGMENT, amount);
     case "opposite-ink":
-      return `oklch(var(${OPPOSITE_LIGHTNESS}) var(${OPPOSITE_CHROMA}) var(${OPPOSITE_HUE}) / ${amount})`;
+      return pigmentAtAlpha(OPPOSITE_PIGMENT, amount);
     case "raised-surface":
     case "owned-surface":
-      return `color-mix(in srgb, oklch(var(${ACTIVE_LIGHTNESS}) var(${ACTIVE_CHROMA}) var(${ACTIVE_HUE})) calc(${amount} * 100%), var(${CANVAS_COLOR}))`;
+      return `color-mix(in srgb, var(${ACTIVE_PIGMENT}) calc(${amount} * 100%), var(${CANVAS_COLOR}))`;
     case "ink-pigment":
-      return `oklch(var(${INK_LIGHTNESS}) var(${INK_CHROMA}) var(${
-        appearanceAxisCustomPropertyName("inkTintHue")
-      }) / ${amount})`;
+      return pigmentAtAlpha(INK_PIGMENT, amount);
     case "paper-pigment":
-      return `oklch(var(${PAPER_LIGHTNESS}) var(${PAPER_CHROMA}) var(${
-        appearanceAxisCustomPropertyName("paperTintHue")
-      }) / ${amount})`;
+      return pigmentAtAlpha(PAPER_PIGMENT, amount);
   }
 }
 
@@ -488,6 +493,8 @@ export function appearanceLiveCssDeclarations(
     helper(PAPER_CHROMA, appearancePigmentLaws.paper.chroma, untouched),
     helper(INK_LIGHTNESS, appearancePigmentLaws.ink.lightness, untouched),
     helper(INK_CHROMA, appearancePigmentLaws.ink.chroma, untouched),
+    { name: PAPER_PIGMENT, value: paperPigmentColor() },
+    { name: INK_PIGMENT, value: inkPigmentColor() },
     helper(
       CANVAS_LIGHTNESS,
       appearanceCanvasLightnessExpression,
@@ -495,9 +502,9 @@ export function appearanceLiveCssDeclarations(
     ),
     {
       name: CANVAS_COLOR,
-      value: `color-mix(in oklab, ${paperPigmentColor()} calc((1 - var(${
+      value: `color-mix(in oklab, var(${PAPER_PIGMENT}) calc((1 - var(${
         appearanceAxisCustomPropertyName("darkness")
-      })) * 100%), ${inkPigmentColor()})`,
+      })) * 100%), var(${INK_PIGMENT}))`,
     },
     helper(POLARITY, appearancePolarityExpression, canvasBindings),
     helper(
@@ -518,6 +525,16 @@ export function appearanceLiveCssDeclarations(
       polarityBindings,
     ),
     helper(OPPOSITE_HUE, appearanceOppositeHueExpression, polarityBindings),
+    {
+      name: ACTIVE_PIGMENT,
+      value:
+        `oklch(var(${ACTIVE_LIGHTNESS}) var(${ACTIVE_CHROMA}) var(${ACTIVE_HUE}))`,
+    },
+    {
+      name: OPPOSITE_PIGMENT,
+      value:
+        `oklch(var(${OPPOSITE_LIGHTNESS}) var(${OPPOSITE_CHROMA}) var(${OPPOSITE_HUE}))`,
+    },
     ...projectedExpressions.declarations,
     ...appearanceColorRoleLaws.map((law) => ({
       name: law.name,
