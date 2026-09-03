@@ -182,13 +182,15 @@ export async function useScopedTheme(
   const wasOpen = await details.getAttribute("open") !== null;
   if (!wasOpen) await details.locator("summary").click();
   try {
-    const toggle = details.locator(".discern-theme-toggle");
+    const switcher = details.locator(".discern-theme-switcher");
     for (let attempt = 0; attempt < 2; attempt += 1) {
-      if (await toggle.getAttribute("data-discern-mode") === theme) return;
-      await toggle.click({ timeout: ACTION_TIMEOUT });
+      if (await switcher.getAttribute("data-discern-mode") === theme) return;
+      await switcher.locator(`label:has(input[value="${theme}"])`).click({
+        timeout: ACTION_TIMEOUT,
+      });
     }
     invariant(
-      await toggle.getAttribute("data-discern-mode") === theme,
+      await switcher.getAttribute("data-discern-mode") === theme,
       `${scope} Appearance did not resolve to ${theme}`,
     );
   } finally {

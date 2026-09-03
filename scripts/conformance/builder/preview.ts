@@ -353,10 +353,9 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
     BUILDER_STORAGE_KEYS.document,
   );
   const originalUrl = page.url();
-  const originalAppearanceStorage = await page.evaluate(() => ({
-    theme: localStorage.getItem("discern-catalogue-theme"),
-    accent: localStorage.getItem("discern-catalogue-accent-hue"),
-  }));
+  const originalAppearanceStorage = await page.evaluate(() =>
+    localStorage.getItem("discern-catalogue-appearance")
+  );
   try {
     await page.evaluate(
       ({ key, source }) => localStorage.setItem(key, source),
@@ -372,7 +371,7 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
     const preview = page.frameLocator(selector);
     invariant(await frame.count() === 1, "builder preview is not a real frame");
     invariant(
-      await page.locator(".discern-theme-switcher").count() === 0 &&
+      await page.locator(".discern-theme-switcher").count() === 2 &&
         await page.locator(".discern-catalogue-appearance").count() === 2,
       "Builder forked the shared Appearance control or rendered it twice",
     );
@@ -770,20 +769,48 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
     if (await previewAppearanceDetails.getAttribute("open") === null) {
       await previewAppearanceDetails.locator("summary").click();
     }
+    await previewAppearance.getByRole("combobox", { name: "Palette" })
+      .selectOption("accent", { timeout: ACTION_TIMEOUT });
     await previewAppearance.getByRole("combobox", {
-      name: "Preview accent review preset",
+      name: "Preview named Accent hue",
     })
       .selectOption("violet", { timeout: ACTION_TIMEOUT });
-    await page.waitForTimeout(50);
+    await previewAppearance.getByRole("button", { name: /Field axes/ })
+      .click({ timeout: ACTION_TIMEOUT });
+    await previewAppearance.getByRole("slider", { name: "Density" })
+      .fill("1.6");
+    await page.waitForFunction(() => {
+      const parameters = new URL(location.href).searchParams;
+      return parameters.get("previewAppearance") === "accent" &&
+        parameters.get("previewAccent") === "300" &&
+        parameters.get("previewField") === "1,1,1,1.6";
+    });
+    const appearanceUrl = new URL(page.url());
     invariant(
       await page.locator(BUILDER_SHELL).getAttribute("data-discern-theme") ===
           "light" &&
+        await page.locator(BUILDER_SHELL).getAttribute(
+            "data-discern-appearance",
+          ) === "field" &&
         await preview.locator(".discern-builder-frame-document").getAttribute(
             "data-discern-theme",
           ) === "dark" &&
+        await preview.locator(".discern-builder-frame-document").getAttribute(
+            "data-discern-appearance",
+          ) === "accent" &&
         await preview.locator(".discern-builder-frame-document").evaluate(
             (element) => element.style.getPropertyValue("--discern-accent-hue"),
           ) === "300" &&
+        await preview.locator(".discern-builder-frame-document").evaluate(
+            (element) => element.style.getPropertyValue("--discern-density"),
+          ) === "1.6" &&
+        await page.locator(BUILDER_SHELL).evaluate((element) =>
+            element.style.getPropertyValue("--discern-density")
+          ) === "1" &&
+        appearanceUrl.searchParams.get("theme") === "light" &&
+        appearanceUrl.searchParams.get("appearance") === "field" &&
+        appearanceUrl.searchParams.get("field") === "0,1,1,1" &&
+        appearanceUrl.searchParams.get("previewTheme") === "dark" &&
         await page.locator(BUILDER_SHELL).evaluate((element) =>
             getComputedStyle(element).getPropertyValue(
               "--discern-builder-editor-selection",
@@ -874,15 +901,9 @@ async function verifyLogicalPreviewFrame(page: Page): Promise<void> {
       ({ key, source, appearance }) => {
         if (source === null) localStorage.removeItem(key);
         else localStorage.setItem(key, source);
-        for (
-          const [storageKey, value] of [
-            ["discern-catalogue-theme", appearance.theme],
-            ["discern-catalogue-accent-hue", appearance.accent],
-          ] as const
-        ) {
-          if (value === null) localStorage.removeItem(storageKey);
-          else localStorage.setItem(storageKey, value);
-        }
+        const storageKey = "discern-catalogue-appearance";
+        if (appearance === null) localStorage.removeItem(storageKey);
+        else localStorage.setItem(storageKey, appearance);
       },
       {
         key: BUILDER_STORAGE_KEYS.document,
