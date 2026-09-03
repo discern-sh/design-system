@@ -22,6 +22,7 @@ import {
 } from "../tokens/tokens.ts";
 
 export type { TerminalRgbColor };
+/** Explicit Field or hue-parameterised Accent input for terminal presentation. */
 export type { Appearance } from "../tokens/tokens.ts";
 
 /** One semantic colour with precomputed terminal-palette fallbacks. */
