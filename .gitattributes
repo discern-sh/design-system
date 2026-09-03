@@ -6,10 +6,9 @@ skills/use-discern-design-system/evals/** merge=discern-generated linguist-gener
 /CLAUDE.md merge=discern-generated diff=markdown
 /AGENTS.md merge=discern-generated diff=markdown
 /GEMINI.md merge=discern-generated diff=markdown
-discern/instructions.md diff=markdown
+/discern/instructions.md diff=markdown
 map/**/*.md diff=markdown
 discern/skills/**/*.md diff=markdown
 discern/scripts/**/*.md diff=markdown
-discern/TODO.md diff=markdown
-discern/brief.md diff=markdown
+/discern/TODO.md diff=markdown
 # --- /discern ---
