@@ -1270,7 +1270,9 @@ async function verifyComponentJourneys(
       await exampleSelect.inputValue() === selectedId &&
         new URL(page.url()).searchParams.get("example") === selectedId &&
         new URL(page.url()).searchParams.get("theme") === "light" &&
-        new URL(page.url()).searchParams.get("accent") === "violet",
+        new URL(page.url()).searchParams.get("appearance") === "accent" &&
+        new URL(page.url()).searchParams.get("accent") === "300" &&
+        new URL(page.url()).searchParams.get("field") === "0,1,1,1",
       "Web/CLI switching changed canonical example or Appearance identity",
     );
     await page.getByRole("button", { name: "Web", exact: true }).click();
@@ -1365,7 +1367,9 @@ async function verifyComponentJourneys(
     invariant(
       new URL(page.url()).searchParams.get("surface") === "cli" &&
         new URL(page.url()).searchParams.get("theme") === "dark" &&
-        new URL(page.url()).searchParams.get("accent") === "violet",
+        new URL(page.url()).searchParams.get("appearance") === "accent" &&
+        new URL(page.url()).searchParams.get("accent") === "300" &&
+        new URL(page.url()).searchParams.get("field") === "1,1,1,1",
       "Set all to CLI did not enter URL state without losing Appearance",
     );
     await compareItems.first().getByRole("button", {

@@ -45,7 +45,7 @@ Deno.test("local Catalogue state transitions preserve valid explicit Appearance"
       current,
       "/catalogue/components/table/?example=dense-overflow#component-table--dense-overflow",
     ),
-    "/catalogue/components/table/?example=dense-overflow&theme=dark&appearance=accent&accent=300&field=0%2C1%2C1%2C1#component-table--dense-overflow",
+    "/catalogue/components/table/?example=dense-overflow&theme=dark&appearance=accent&accent=300&field=1%2C1%2C1%2C1#component-table--dense-overflow",
   );
   assertEquals(
     preserveCatalogueAppearanceHref(

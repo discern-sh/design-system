@@ -77,6 +77,15 @@ Deno.test("legacy named Accent and preset-bearing Field links migrate without lo
       theme: "dark",
       appearance: "accent",
       accentHue: 300,
+      field: { ...defaultCatalogueAppearanceState.field, darkness: 1 },
+    },
+  );
+  assertEquals(
+    parseCatalogueAppearanceParameters(new URLSearchParams("theme=dark")),
+    {
+      ...defaultCatalogueAppearanceState,
+      theme: "dark",
+      field: { ...defaultCatalogueAppearanceState.field, darkness: 1 },
     },
   );
   assertEquals(

@@ -3,6 +3,7 @@ import {
   type AppearanceName,
   DEFAULT_ACCENT_HUE,
   defaultFieldPoint,
+  fieldAxes,
   normalizeAccentHue,
 } from "../../src/tokens/field.ts";
 import { catalogueAccentHue } from "./appearance-options.ts";
@@ -75,7 +76,13 @@ export function parseCatalogueAppearanceParameters(
   const parsedField = parseCatalogueFieldSelectionValue(
     parameters.get(names.field),
   );
-  const field = parsedField?.field ?? defaultFieldPoint;
+  const parsedTheme = catalogueTheme(parameters.get(names.theme));
+  const field = parsedField?.field ?? (parsedTheme === "dark"
+    ? {
+      ...defaultFieldPoint,
+      darkness: fieldAxes.darkness.maximum,
+    }
+    : defaultFieldPoint);
   const explicitAppearance = appearanceName(parameters.get(names.appearance));
   const accentValue = parameters.get(names.accent);
   const parsedAccentHue = catalogueAccentHue(accentValue);
@@ -88,7 +95,6 @@ export function parseCatalogueAppearanceParameters(
       : parsedAccentHue !== undefined
       ? "accent"
       : "field");
-  const parsedTheme = catalogueTheme(parameters.get(names.theme));
   const theme = parsedTheme === undefined
     ? parsedField === undefined ? "system" : catalogueFieldPolarity(field)
     : parsedTheme === "system" && field.darkness !== 0 && field.darkness !== 1
