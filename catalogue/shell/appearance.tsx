@@ -260,7 +260,15 @@ export function AppearanceControl(
     : `Custom ${resolvedTheme} field`;
 
   return (
-    <details className="discern-catalogue-appearance">
+    <details
+      className="discern-catalogue-appearance"
+      data-discern-appearance={appearance}
+      style={catalogueFieldStyle(
+        field,
+        resolvedTheme,
+        accentHue,
+      ) as CSSProperties}
+    >
       <summary aria-label={`Change ${appearanceLabel}`}>
         <span>Appearance</span>
         <small>{paletteSummary} · {pointSummary}</small>

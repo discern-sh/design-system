@@ -14,10 +14,17 @@ import {
   deriveBuilderCallbackProps,
   registryCoreBySlug,
 } from "../catalogue/builder/registry-core.ts";
-import { builderPreviewAccent } from "../catalogue/builder/preview/controls.tsx";
+import {
+  builderPreviewAccent,
+  type BuilderPreviewPreferences,
+  builderPreviewViewports,
+  PreviewToolbarControls,
+} from "../catalogue/builder/preview/controls.tsx";
 import {
   catalogueAppearanceOptions,
 } from "../catalogue/shell/appearance-options.ts";
+import { defaultCatalogueAppearanceState } from "../catalogue/shell/appearance-state.ts";
+import { fieldAxes } from "../src/tokens/field.ts";
 import {
   builderPreviewMessageFromEvent,
   builderPreviewSnapshot,
@@ -376,6 +383,77 @@ Deno.test("Builder preview Appearance accepts named and arbitrary numeric hues",
   assertEquals(builderPreviewAccent("145.5"), 145.5);
   assertEquals(builderPreviewAccent("360"), 0);
   assertEquals(builderPreviewAccent("not-a-preset"), 255);
+});
+
+Deno.test("Builder Appearance labels stay outside independently themed scopes", () => {
+  const noop = () => undefined;
+  const previewAppearance = {
+    ...defaultCatalogueAppearanceState,
+    theme: "dark" as const,
+    resolvedTheme: "dark" as const,
+    field: {
+      ...defaultCatalogueAppearanceState.field,
+      darkness: fieldAxes.darkness.maximum,
+    },
+  };
+  const preferences = {
+    viewport: builderPreviewViewports.fluid,
+    zoomId: "fit",
+    mode: "edit",
+    previewAppearance,
+    workspaceAppearance: defaultCatalogueAppearanceState,
+    previewResolvedTheme: "dark",
+    workspaceResolvedTheme: "light",
+    workspaceStyle: {},
+    measurement: {
+      logicalWidth: 860,
+      zoomPercent: 100,
+      devicePixelRatio: 1,
+    },
+    resetViewRevision: 0,
+    interactionRevision: 0,
+    setViewport: noop,
+    setZoom: noop,
+    setMode: noop,
+    setPreviewTheme: noop,
+    setPreviewAppearance: noop,
+    setPreviewAccentHue: noop,
+    setPreviewField: noop,
+    resetPreviewField: noop,
+    setWorkspaceTheme: noop,
+    setWorkspaceAppearance: noop,
+    setWorkspaceAccentHue: noop,
+    setWorkspaceField: noop,
+    resetWorkspaceField: noop,
+    reportMeasurement: noop,
+    resetView: noop,
+    resetInteractions: noop,
+  } satisfies BuilderPreviewPreferences;
+  const markup = renderToStaticMarkup(
+    PreviewToolbarControls({ preferences }),
+  );
+  const previewStart = markup.indexOf('aria-label="Preview appearance"');
+  assert(previewStart >= 0, "Preview Appearance group must render");
+  const groupOpen = markup.slice(
+    previewStart,
+    markup.indexOf(">", previewStart) + 1,
+  );
+  assert(
+    !groupOpen.includes("data-discern-appearance") &&
+      !groupOpen.includes("style="),
+    "the independently themed Preview scope must not encompass its Workspace label",
+  );
+  const detailsStart = markup.indexOf(
+    '<details class="discern-catalogue-appearance"',
+    previewStart,
+  );
+  assert(detailsStart >= 0, "Preview Appearance control must render");
+  const detailsOpen = markup.slice(
+    detailsStart,
+    markup.indexOf(">", detailsStart) + 1,
+  );
+  assertStringIncludes(detailsOpen, 'data-discern-appearance="field"');
+  assertStringIncludes(detailsOpen, "style=");
 });
 
 Deno.test("Catalogue opts into Appearance scopes without bloating the base runtime", async () => {

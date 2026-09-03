@@ -23,10 +23,7 @@ import {
   setCatalogueFieldPoint,
   writeCatalogueAppearanceParameters,
 } from "../../shell/appearance-state.ts";
-import {
-  catalogueFieldControlScheme,
-  catalogueFieldStyle,
-} from "../../shell/field-state.ts";
+import { catalogueFieldControlScheme } from "../../shell/field-state.ts";
 import { useCatalogueTerminalTheme } from "../../use-terminal-theme.ts";
 import type {
   BuilderPreviewAppearance,
@@ -336,12 +333,6 @@ function AppearanceBoundary(
       className="discern-builder-appearance"
       role="group"
       aria-label={`${label} appearance`}
-      data-discern-appearance={appearance.appearance}
-      style={catalogueFieldStyle(
-        appearance.field,
-        resolvedTheme,
-        appearance.accentHue,
-      ) as CSSProperties}
     >
       <span>{label}</span>
       <AppearanceControl
