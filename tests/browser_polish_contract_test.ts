@@ -2,7 +2,7 @@ import { assertEquals } from "@std/assert";
 import { fromFileUrl, join, relative } from "@std/path";
 import { registry } from "../catalogue/generated/registry.ts";
 import type { ResolvedComponentReviewPosture } from "../catalogue/review-postures.ts";
-import { themeConsumerStateFailures } from "../scripts/resilience-conformance.ts";
+import { themeConsumerStateFailures } from "../scripts/conformance/theme-consumer.ts";
 
 const PACKAGE_ROOT = fromFileUrl(new URL("..", import.meta.url));
 const COMPONENT_ROOT = join(PACKAGE_ROOT, "src", "components");
