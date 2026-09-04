@@ -4,10 +4,12 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
-## Unreleased
+## 0.30.0
 
 - Keep the Catalogue Appearance controls responsive by retaining the immutable package admission proof after its first exhaustive pass, so live input no longer repeats its hundreds of thousands of numerical checks on every render.
 - Generate a Component author guide from Metadata and publish it from the dedicated React-free `./components` entrypoint. `componentMetadata` is the canonical Metadata array in Catalogue order, `componentAuthorGuide` is the Markdown guide codegen derives from it beside the chart and diagram kind guides, and `cataloguePurposeDetails` publishes the label and scope of each purpose collection that the Catalogue previously held alone. Each guide section names the React adapter and terminal renderer the generated barrels publish, states absent optional Metadata explicitly, and lists canonical examples whose ids match the pinned Catalogue imagery. The repository also carries the `use-discern-design-system` agent skill under `skills/`: its script prints the installed package's guide filtered by purpose, Group, or slug, and codegen derives exhaustive and curated behavioural eval sets from the same Metadata and imagery.
+
+- Add a private Glyph Atlas to the Catalogue. It keeps 57 canonical Unicode 17.0 identities visibly separate from the smaller owner-reviewed Discern vocabulary, with routed browsing, literal search, filters, provenance, presentation hazards, recommendation, approved ASCII fallbacks, and publication disposition. ADR 0044 keeps the canonical research schema private and defers the curated React-free `./glyphs` entrypoint, so this release adds no glyph package export.
 
 - Isolate unattended browser tests from a developer's desktop browser. The shared launcher now selects Playwright-managed Google Chrome for Testing by exact executable path and never implicitly opens an installed Chrome channel; `DISCERN_CHROME_PATH` remains the deliberate override for another isolated automation browser. A tracked-TypeScript ownership guard rejects parallel Playwright launchers and installed application channels before they can capture macOS Dock and window routing again.
 
