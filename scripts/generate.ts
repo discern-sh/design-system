@@ -23,7 +23,10 @@ import {
   resolveComponentExampleVocabulary,
   validateComponentExampleImplementations,
 } from "../src/types/component-examples.ts";
-import { renderComponentAuthorEvals } from "./component-author-evals.ts";
+import {
+  renderComponentAuthorEvals,
+  renderComponentAuthorSmokeEvals,
+} from "./component-author-evals.ts";
 import {
   type ComponentAuthorGuideSource,
   renderComponentAuthorGuide,
@@ -72,6 +75,7 @@ export interface GeneratedSources {
   readonly registry: string;
   readonly componentMetadata: string;
   readonly componentAuthorEvals: string;
+  readonly componentAuthorSmokeEvals: string;
   readonly assets: string;
   readonly behaviors: string;
   readonly react: string;
@@ -543,6 +547,13 @@ async function generateComponentAuthorEvals(): Promise<string> {
   return renderComponentAuthorEvals(components.map(componentAuthorGuideSource));
 }
 
+async function generateComponentAuthorSmokeEvals(): Promise<string> {
+  const components = await loadComponentSources();
+  return renderComponentAuthorSmokeEvals(
+    components.map(componentAuthorGuideSource),
+  );
+}
+
 async function generateComponentMetadata(): Promise<string> {
   const components = await loadComponentSources();
   const imports = [
@@ -866,6 +877,7 @@ export async function generateSources(): Promise<GeneratedSources> {
     registry: await generateComponentRegistry(),
     componentMetadata: await generateComponentMetadata(),
     componentAuthorEvals: await generateComponentAuthorEvals(),
+    componentAuthorSmokeEvals: await generateComponentAuthorSmokeEvals(),
     assets: await generateAssets(),
     behaviors: await generateBehaviorSources(),
     react: await generateReactModule(),
@@ -935,6 +947,10 @@ export async function generateOutputPlan(): Promise<
     {
       target: new URL("evals.json", SKILL_EVALS_ROOT),
       source: generated.componentAuthorEvals,
+    },
+    {
+      target: new URL("smoke.json", SKILL_EVALS_ROOT),
+      source: generated.componentAuthorSmokeEvals,
     },
     {
       target: new URL(diagramFiles.metadata, GENERATED_ROOT),

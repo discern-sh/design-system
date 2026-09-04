@@ -1703,6 +1703,10 @@ Deno.test("neutral entrypoints work in an external cached-only Deno project", as
     const packageImports = {
       "@discern-sh/design-system":
         new URL("../src/mod.ts", import.meta.url).href,
+      "@discern-sh/design-system/components": new URL(
+        "../src/component-metadata.ts",
+        import.meta.url,
+      ).href,
       "@discern-sh/design-system/cli": new URL(
         "../src/cli/mod.ts",
         import.meta.url,
@@ -1740,7 +1744,8 @@ Deno.test("neutral entrypoints work in an external cached-only Deno project", as
     );
     await Deno.writeTextFile(
       join(temp, "neutral.ts"),
-      `import { componentAuthorGuide, componentMetadata, packageManifest, semanticClass } from "@discern-sh/design-system";
+      `import { packageManifest, semanticClass } from "@discern-sh/design-system";
+import { componentAuthorGuide, componentMetadata } from "@discern-sh/design-system/components";
 import { renderBadgeCli } from "@discern-sh/design-system/cli";
 import { renderDiagramSvg } from "@discern-sh/design-system/diagram";
 import { emitDesignSystemRuntime } from "@discern-sh/design-system/runtime";

@@ -11,7 +11,10 @@ import {
   renderComponentAuthorGuide,
 } from "../scripts/component-author-guide.ts";
 import { componentRegistry } from "../src/generated/component-registry.ts";
-import { componentAuthorGuide, componentMetadata } from "../src/mod.ts";
+import {
+  componentAuthorGuide,
+  componentMetadata,
+} from "../src/component-metadata.ts";
 import {
   type ComponentExampleDefinition,
   resolveComponentExampleVocabulary,

@@ -6,12 +6,13 @@ import {
 } from "@std/assert";
 import {
   COMPONENT_AUTHOR_SKILL,
+  COMPONENT_AUTHOR_SMOKE_CASES,
   type ComponentAuthorEvalSet,
   componentReferenceImage,
   renderComponentAuthorEvals,
 } from "../scripts/component-author-evals.ts";
 import type { ComponentAuthorGuideSource } from "../scripts/component-author-guide.ts";
-import { componentMetadata } from "../src/mod.ts";
+import { componentMetadata } from "../src/component-metadata.ts";
 import {
   type ComponentExampleDefinition,
   resolveComponentExampleVocabulary,
@@ -72,6 +73,9 @@ Deno.test("a future Component's first use-when and refusal become one eval each"
     selection.expected_output,
     "Reference image: catalogue/generated/example-images/probe-panel--default--light.png",
   );
+  assertEquals(selection.files, [
+    "catalogue/generated/example-images/probe-panel--default--light.png",
+  ]);
   assert(
     selection.expectations.some((expectation) =>
       expectation.includes("`probe-panel`") &&
@@ -164,12 +168,58 @@ Deno.test("the committed eval set is named for the skill and pinned to existing 
   assertEquals(set.evals.length, selections + refusals);
   let images = 0;
   for (const candidate of set.evals) {
-    const image = candidate.expected_output.match(/Reference image: (\S+)$/u)
-      ?.[1];
-    if (image === undefined) continue;
-    images += 1;
-    const info = await Deno.stat(new URL(image, PACKAGE_ROOT));
-    assert(info.isFile, `${image} is not a committed file`);
+    for (const image of candidate.files) {
+      images += 1;
+      assertStringIncludes(
+        candidate.expected_output,
+        `Reference image: ${image}`,
+      );
+      const info = await Deno.stat(new URL(image, PACKAGE_ROOT));
+      assert(info.isFile, `${image} is not a committed file`);
+    }
   }
-  assert(images > 0, "selection evals name pinned imagery");
+  assertEquals(images, selections, "every selection eval attaches one image");
+  assertEquals(
+    set.evals.slice(selections).flatMap(({ files }) => files),
+    [],
+    "refusal evals need Metadata rather than imagery",
+  );
+});
+
+Deno.test("the routine smoke set binds every deliberate behavioural posture", async () => {
+  const set = JSON.parse(
+    await Deno.readTextFile(new URL("evals/smoke.json", SKILL_ROOT)),
+  ) as ComponentAuthorEvalSet;
+  assertEquals(set.skill_name, COMPONENT_AUTHOR_SKILL);
+  assertEquals(set.evals.length, COMPONENT_AUTHOR_SMOKE_CASES.length);
+  assertEquals(
+    COMPONENT_AUTHOR_SMOKE_CASES.map(({ posture }) => posture),
+    [
+      "semantic-selection",
+      "refusal",
+      "cli-exemption",
+      "browser-behavior",
+      "imagery",
+    ],
+  );
+  for (const [index, candidate] of COMPONENT_AUTHOR_SMOKE_CASES.entries()) {
+    const evaluation = set.evals[index];
+    assert(evaluation, `missing ${candidate.posture} smoke eval`);
+    assertEquals(evaluation.id, index + 1);
+    assertStringIncludes(evaluation.expected_output, `\`${candidate.slug}\``);
+  }
+  const cliExemption = set.evals[2];
+  const browserBehavior = set.evals[3];
+  const imagery = set.evals[4];
+  assert(cliExemption && browserBehavior && imagery);
+  assertStringIncludes(cliExemption.expected_output, "no terminal renderer");
+  assert(
+    browserBehavior.expectations.some((expectation) =>
+      expectation.includes("generated browser behavior")
+    ),
+  );
+  assertEquals(imagery.files.length, 1);
+  const image = imagery.files[0];
+  assert(image);
+  assert((await Deno.stat(new URL(image, PACKAGE_ROOT))).isFile);
 });

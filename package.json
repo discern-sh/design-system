@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/mod.ts",
+    "./components": "./src/component-metadata.ts",
     "./diagram": "./src/diagram/mod.ts",
     "./chart": "./src/chart/mod.ts",
     "./cli": "./src/cli/mod.ts",

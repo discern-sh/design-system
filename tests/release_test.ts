@@ -203,6 +203,51 @@ Deno.test("the CLI module graphs import without ambient I/O", async () => {
   }
 });
 
+Deno.test("the Component author guide is neutral and isolated from the root graph", async () => {
+  const entry = config.exports["./components"];
+  const root = config.exports["."];
+  assert(entry !== undefined, "deno.json has no ./components export");
+  assert(root !== undefined, "deno.json has no root export");
+  const guideInfo = await run(PACKAGE_ROOT, [
+    "info",
+    "--json",
+    "--config",
+    "deno.json",
+    entry,
+  ]);
+  assertEquals(
+    guideInfo.code,
+    0,
+    `deno info failed for ${entry}:\n${guideInfo.output}`,
+  );
+  assert(!guideInfo.output.includes("npm:react"));
+  assert(!guideInfo.output.includes('.tsx"'));
+  const rootInfo = await run(PACKAGE_ROOT, [
+    "info",
+    "--json",
+    "--config",
+    "deno.json",
+    root,
+  ]);
+  assertEquals(rootInfo.code, 0, `deno info failed for ${root}`);
+  const rootGraph = JSON.parse(rootInfo.output) as {
+    readonly modules: readonly { readonly specifier: string }[];
+  };
+  assert(
+    !rootGraph.modules.some((module) =>
+      module.specifier.endsWith("/src/component-metadata.ts") ||
+      module.specifier.endsWith("/src/generated/component-metadata.ts")
+    ),
+    "the root graph absorbed the complete Component author guide",
+  );
+  const imported = await run(PACKAGE_ROOT, ["run", "--no-prompt", entry]);
+  assertEquals(
+    imported.code,
+    0,
+    `importing ./components with no permissions failed:\n${imported.output}`,
+  );
+});
+
 Deno.test("the published diagram graph is neutral, local, and permission-free", async () => {
   const entry = config.exports["./diagram"];
   assert(entry !== undefined, "deno.json has no ./diagram export");

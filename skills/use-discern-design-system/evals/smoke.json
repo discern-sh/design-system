@@ -1,0 +1,85 @@
+{
+  "skill_name": "use-discern-design-system",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Situation: Minutes-long work should keep its results visible while raw detail streams beneath them.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer. Inspect the attached canonical example as supporting evidence for density and hierarchy, but let Metadata decide semantic fit.",
+      "expected_output": "Selects Activity log (`activity-log`) and authors it as `ActivityLog` from ./react or `renderActivityLogCli` from ./cli after emitting a runtime that selects `activity-log`. Reference image: catalogue/generated/example-images/activity-log--default--light.png",
+      "files": [
+        "catalogue/generated/example-images/activity-log--default--light.png"
+      ],
+      "expectations": [
+        "Recommends Activity log as the primary choice, naming its slug `activity-log` or its React adapter `ActivityLog`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/components, /react, /cli, /cli/interactive, /cli/interactive/testing, /cli/projection, /runtime, /manifest, /tokens, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Activity log by targeting its owned `discern-activity-log` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Activity log — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "Uses the attached canonical example only as supporting evidence for density or hierarchy; imagery does not override Metadata guidance.",
+        "Authors through `ActivityLog` from /react or `renderActivityLogCli` from /cli rather than inventing another projection.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Situation: The output is a finished artifact to read in full; show it with Raw output or Terminal.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system, and a teammate proposed the Activity log Component (`activity-log`). Is that the right choice? If not, name what the package's own guidance points to instead and explain the refusal.",
+      "expected_output": "Refuses Activity log (`activity-log`) for this situation and routes to the alternative the Metadata names: The output is a finished artifact to read in full; show it with Raw output or Terminal.",
+      "files": [],
+      "expectations": [
+        "Does not recommend Activity log (`activity-log`) as the answer for this situation.",
+        "Names the alternative route — another package Component or a consumer-owned pattern — and explains why Activity log is refused here.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Situation: A marketing composition needs one restrained frame for artwork, a diagram, media, or a concise piece of evidence.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer. Inspect the attached canonical example as supporting evidence for density and hierarchy, but let Metadata decide semantic fit.",
+      "expected_output": "Selects Marketing stage (`marketing-stage`) and authors it as `MarketingStage` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `marketing-stage`. Reference image: catalogue/generated/example-images/marketing-stage--framed--light.png",
+      "files": [
+        "catalogue/generated/example-images/marketing-stage--framed--light.png"
+      ],
+      "expectations": [
+        "Recommends Marketing stage as the primary choice, naming its slug `marketing-stage` or its React adapter `MarketingStage`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/components, /react, /cli, /cli/interactive, /cli/interactive/testing, /cli/projection, /runtime, /manifest, /tokens, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Marketing stage by targeting its owned `discern-marketing-stage` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Marketing stage — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "Uses the attached canonical example only as supporting evidence for density or hierarchy; imagery does not override Metadata guidance.",
+        "States that Marketing stage is CLI-exempt and follows its Metadata reason instead of inventing a terminal renderer.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Situation: A bounded region can scroll and its continuation is otherwise easy to miss.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer. Inspect the attached canonical example as supporting evidence for density and hierarchy, but let Metadata decide semantic fit.",
+      "expected_output": "Selects Overflow cue (`overflow-cue`) and authors it as `OverflowCue` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `overflow-cue`. Reference image: catalogue/generated/example-images/overflow-cue--vertical-start--light.png",
+      "files": [
+        "catalogue/generated/example-images/overflow-cue--vertical-start--light.png"
+      ],
+      "expectations": [
+        "Recommends Overflow cue as the primary choice, naming its slug `overflow-cue` or its React adapter `OverflowCue`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/components, /react, /cli, /cli/interactive, /cli/interactive/testing, /cli/projection, /runtime, /manifest, /tokens, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Overflow cue by targeting its owned `discern-overflow-cue` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Overflow cue — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "Uses the attached canonical example only as supporting evidence for density or hierarchy; imagery does not override Metadata guidance.",
+        "States that Overflow cue is CLI-exempt and follows its Metadata reason instead of inventing a terminal renderer.",
+        "Selects `overflow-cue` through the Runtime emitter and relies on its generated browser behavior instead of wiring package-internal JavaScript by hand.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Situation: A curated feature set has an intentional hierarchy and can fill a complete rectangular matrix.\n\nI'm building this in a Deno project that already depends on @discern-sh/design-system. Which package Component fits this situation? Justify the choice from the package's own guidance, then show how to author it through the public contract: runtime selection and either the React adapter or the terminal renderer. Inspect the attached canonical example as supporting evidence for density and hierarchy, but let Metadata decide semantic fit.",
+      "expected_output": "Selects Feature bento (`feature-bento`) and authors it as `FeatureBento` from ./react (no terminal renderer: the Component is exempt) after emitting a runtime that selects `feature-bento`. Reference image: catalogue/generated/example-images/feature-bento--lead-matrix--light.png",
+      "files": [
+        "catalogue/generated/example-images/feature-bento--lead-matrix--light.png"
+      ],
+      "expectations": [
+        "Recommends Feature bento as the primary choice, naming its slug `feature-bento` or its React adapter `FeatureBento`.",
+        "Every package import resolves @discern-sh/design-system or one of its documented entrypoints (/components, /react, /cli, /cli/interactive, /cli/interactive/testing, /cli/projection, /runtime, /manifest, /tokens, /chart, /diagram); nothing imports a path inside the package source.",
+        "Does not style Feature bento by targeting its owned `discern-feature-bento` classes, copying its CSS, or forking the Component.",
+        "Cites at least one Metadata fact for Feature bento — a use-when, do-not-use-when, or accessibility note — as the reason for the choice.",
+        "Uses the attached canonical example only as supporting evidence for density or hierarchy; imagery does not override Metadata guidance.",
+        "States that Feature bento is CLI-exempt and follows its Metadata reason instead of inventing a terminal renderer.",
+        "States the exact package version or checkout the answer was authored against."
+      ]
+    }
+  ]
+}

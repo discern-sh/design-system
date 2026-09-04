@@ -10,7 +10,8 @@ deno add jsr:@discern-sh/design-system
 
 | Import                                              | Contract                                                                                  |
 | --------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `@discern-sh/design-system`                         | Token metadata, Component Metadata with its generated author guide, group metadata types, the package manifest, and `semanticClass` |
+| `@discern-sh/design-system`                         | Token metadata, component/group metadata types, the package manifest, and `semanticClass` |
+| `@discern-sh/design-system/components`              | Generated Component Metadata and author guide                                             |
 | `@discern-sh/design-system/chart`                   | Typed chart specs, descriptions, kind Metadata, and portable standalone SVG               |
 | `@discern-sh/design-system/cli`                     | Pure React-free terminal renderers, capabilities, themes, and semantic motif primitives   |
 | `@discern-sh/design-system/cli/interactive`         | Optional Deno terminal driver and typed interaction state machines                        |
@@ -126,14 +127,14 @@ Inverse surface and ink roles remain dark-on-light in purpose across both site t
 
 ## Component Metadata and author guide
 
-Every Component declares its Metadata once — description, purpose collections, when to use it, when another route serves better, terminal stance, and accessibility notes — and codegen projects that authority into the root entrypoint beside the registries it already generates. `componentMetadata` is the canonical array in Catalogue order. `componentAuthorGuide` is the Markdown guide generated from it: an index of the purpose collections, then one section per Component beneath its Group naming the React adapter and terminal renderer the generated barrels publish, its use and refusal guidance, its accessibility contract, and its canonical examples, with an explicit line wherever optional Metadata is absent. `cataloguePurposeDetails` carries the label and scope of each purpose collection.
+Every Component declares its Metadata once — description, purpose collections, when to use it, when another route serves better, terminal stance, and accessibility notes — and codegen projects that authority into the dedicated React-free `./components` entrypoint. `componentMetadata` is the canonical array in Catalogue order. `componentAuthorGuide` is the Markdown guide generated from it: an index of the purpose collections, then one section per Component beneath its Group naming the React adapter and terminal renderer the generated barrels publish, its use and refusal guidance, its accessibility contract, and its canonical examples, with an explicit line wherever optional Metadata is absent. `cataloguePurposeDetails` carries the label and scope of each purpose collection.
 
 ```ts
 import {
-  cataloguePurposeDetails,
   componentAuthorGuide,
   componentMetadata,
-} from "@discern-sh/design-system";
+} from "@discern-sh/design-system/components";
+import { cataloguePurposeDetails } from "@discern-sh/design-system";
 
 export const toolOutputComponents = componentMetadata
   .filter((meta) => meta.purposes?.includes("displaying-tool-output"))
@@ -143,13 +144,9 @@ export const toolOutputLabel =
 export const componentAuthoringReference = componentAuthorGuide;
 ```
 
-The guide exists so a coding agent selects and authors Components from the package it is building against rather than from memory. [`skills/use-discern-design-system/`](skills/use-discern-design-system/) is the matching agent skill: its script prints the installed package's guide whole or filtered by purpose, Group, or slug, and the playbook walks selection, the pinned-imagery check, public-contract authoring, and verification. Link or copy that directory into your agent's skills location — for Claude Code, `~/.claude/skills/` serves every project and `.claude/skills/` one project:
+The guide exists so a coding agent selects and authors Components from the package it is building against rather than from memory. [`skills/use-discern-design-system/`](skills/use-discern-design-system/) is the matching review copy in this repository: its script prints the installed package's guide whole or filtered by purpose, Group, or slug, and the playbook walks selection, the pinned-imagery check, public-contract authoring, and verification. Its eventual distribution is intentionally undecided and the skill is not part of the published package.
 
-```sh
-ln -s "$(pwd)/skills/use-discern-design-system" ~/.claude/skills/use-discern-design-system
-```
-
-The skill's `evals/evals.json` is generated from the same Metadata: each Component's first use-when statement becomes a selection prompt, its first refusal becomes a refusal prompt, and the pinned Catalogue image of its default example is the reference a reviewer compares against.
+The skill's exhaustive `evals/evals.json` and curated `evals/smoke.json` are generated from the same Metadata. Each Component's first use-when statement becomes a selection prompt, its first refusal becomes a refusal prompt, and selection cases attach the pinned Catalogue image of their first Web example. The smoke set keeps the routine behavioural review small while covering semantic selection, refusal, CLI exemption, browser behaviour, and image-informed judgment.
 
 ## Semantic diagrams
 

@@ -1,6 +1,6 @@
 ---
 name: use-discern-design-system
-description: Build or revise browser and terminal UI with the @discern-sh/design-system package in a consumer project — pick Components from the installed package's generated author guide, then author only through the public contract (runtime emission, React adapter, terminal renderers, or semantic HTML). Use this whenever a task touches design-system Components, tokens, themes, the runtime emitter, `discern-` classes, `data-discern-root`, or asks which Component fits some content — even when the user only names the site, docs, or CLI being built and never says "design system". Not for adding or changing a Component inside the design-system repository itself; that is the add-a-component skill's job.
+description: Select and compose @discern-sh/design-system Components in a consumer project from the installed package's generated author guide and canonical example imagery. Use when building or revising browser or terminal UI with the package; do not use when adding or changing a design-system Component itself.
 metadata:
   author: "discern-design-system"
   version: "1.0"
@@ -8,19 +8,19 @@ metadata:
 
 # Use the discern design system
 
-The package publishes an author guide generated from every Component's Metadata — description, purpose collections, use-when, do-not-use-when, terminal stance, accessibility contract, canonical examples — the same facts that generate its registries, adapters, and Catalogue. Read the guide of the package the project actually builds against, select by the reader's task, and author only through public surfaces. This skill copies nothing from the package: the script below prints the live guide, so it cannot drift from the installed version.
+The package generates its author guide from the same Component Metadata that drives its registries, adapters, and Catalogue. Read the guide from the package the project actually builds against, select by the reader's task, and author only through public surfaces. The helper prints the live guide rather than copying it into this skill.
 
 ## 1. Read the guide of the package you are building against
 
-1. Find the dependency: the `@discern-sh/design-system` entry in the project's `deno.json` imports (a `jsr:` specifier or a local checkout path) and its resolved version in `deno.lock`. Record it; the report names it.
+1. Find the dependency: the `@discern-sh/design-system` entry in the project's `deno.json` imports (a `jsr:` specifier or a local checkout path) and its resolved version in `deno.lock`. Record it for the final report.
 2. List the inventory from that package, running from the project root so its config resolves the alias:
 
    ```sh
    deno run --allow-read --config deno.json <skill-dir>/scripts/component-guide.ts --list
    ```
 
-   `<skill-dir>` is this skill's directory. The script imports the package dynamically, which is why it needs `--allow-read` for a local checkout. Pass `--package <alias>` when the project aliases the package under another name (discern.sh uses `discern-design-system`), or `--package jsr:@discern-sh/design-system` for the latest release when nothing is installed yet. When this skill directory itself lives inside a design-system checkout (for example, linked from `~/.claude/skills/` into the repository), Deno resolves a `jsr:` specifier that checkout's version satisfies to the checkout's own sources; the reported specifier tells you which happened.
-3. If the script reports that the package predates the guide (no `componentAuthorGuide` export; it arrived in 0.30.0), author from that version's README and say so. Never consult a newer checkout than the code will run against without authority to upgrade the dependency.
+   `<skill-dir>` is this skill's directory. The script imports the package's dedicated `./components` entrypoint dynamically, which is why it needs `--allow-read` for a local checkout. Pass `--package <package-root-alias>` when the project aliases the package under another name, `--package <components-entrypoint>` for an explicit module mapping, or `--package jsr:@discern-sh/design-system` for the latest release when nothing is installed yet. The reported entrypoint tells you what it actually read.
+3. If the package has no `./components` entrypoint, author from that installed version's README and say so. Never consult a newer checkout than the code will run against without authority to upgrade the dependency.
 
 ## 2. Select by the reader's task
 

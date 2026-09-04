@@ -16,9 +16,9 @@
  *   --purpose <id>         Components enrolled in one purpose collection (repeatable).
  *   --group <Group>        Components in one Group (repeatable).
  *   --component <slug>     One Component by slug (repeatable).
- *   --package <specifier>  Package root to import. Default: the project's
- *                          `@discern-sh/design-system` alias, then the latest
- *                          `jsr:@discern-sh/design-system` release.
+ *   --package <specifier>  Package root or explicit ./components entrypoint.
+ *                          Default: the project's `@discern-sh/design-system`
+ *                          package, then the latest JSR release.
  *   --help                 This text.
  *
  * Filters combine as a union. Without a filter the complete guide prints.
@@ -51,6 +51,15 @@ const DEFAULT_SPECIFIERS = [
   "@discern-sh/design-system",
   "jsr:@discern-sh/design-system",
 ] as const;
+
+/** Resolve a package root to its Component-guide entrypoint. */
+export function componentEntrypoint(specifier: string): string {
+  const trimmed = specifier.replace(/\/+$/u, "");
+  return trimmed.endsWith("/components") ||
+      /\.[cm]?[jt]sx?$/u.test(trimmed)
+    ? trimmed
+    : `${trimmed}/components`;
+}
 
 function usage(): string {
   const doc = Deno.readTextFileSync(new URL(import.meta.url));
@@ -111,18 +120,19 @@ async function loadPackage(
   const candidates = requested === undefined ? DEFAULT_SPECIFIERS : [requested];
   const failures: string[] = [];
   for (const candidate of candidates) {
+    const entrypoint = componentEntrypoint(candidate);
     try {
-      const module = await import(candidate) as GuidePackage;
-      return { module, specifier: candidate };
+      const module = await import(entrypoint) as GuidePackage;
+      return { module, specifier: entrypoint };
     } catch (error) {
       failures.push(
-        `  ${candidate}: ${error instanceof Error ? error.message : error}`,
+        `  ${entrypoint}: ${error instanceof Error ? error.message : error}`,
       );
     }
   }
   const hint = failures.some((failure) => failure.includes("read access"))
     ? "Run with --allow-read: a dynamically imported local checkout needs read permission."
-    : "Run with --config <project deno.json> so the project's alias resolves, pass --package <alias-or-specifier>, or add the package first.";
+    : "Run with --config <project deno.json> so the package resolves, pass --package <package-root-or-components-entrypoint>, or author from the installed version's README if it predates ./components.";
   throw new Error(
     `Could not import the design system package:\n${
       failures.join("\n")
@@ -140,7 +150,7 @@ function guideFacts(
     !Array.isArray(componentMetadata)
   ) {
     throw new Error(
-      `${specifier} exports no componentAuthorGuide and componentMetadata, so it predates the generated Component author guide. Author from that version's README, or ask for authority to upgrade the dependency; never consult a newer package than the one the code will run against.`,
+      `${specifier} does not export componentAuthorGuide and componentMetadata. Author from that installed version's README, or ask for authority to upgrade the dependency; never consult a newer package than the one the code will run against.`,
     );
   }
   return {
