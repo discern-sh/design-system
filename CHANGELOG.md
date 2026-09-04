@@ -4,6 +4,10 @@ Releases follow [SemVer](https://semver.org). JSR versions are immutable: a publ
 
 Each release is cut from a green run of the full release gate — formatting, lint, strict type-checks, package tests, the catalogue build, generated-output currency, and a publish dry run against the allowlisted artifact — and published through JSR trusted publishing from CI.
 
+## 0.30.1
+
+- Stabilize cross-surface Appearance release verification on loaded CI runners. System-theme changes for the generated CLI population now wait inside Chromium for every preview to commit, using a bounded 30-second population budget and ground-distribution diagnostics instead of crossing the process boundary within the shared two-second interaction window. Published package behaviour and bytes are unchanged.
+
 ## 0.30.0
 
 - Keep the Catalogue Appearance controls responsive by retaining the immutable package admission proof after its first exhaustive pass, so live input no longer repeats its hundreds of thousands of numerical checks on every render.
