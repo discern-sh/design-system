@@ -70,6 +70,41 @@ export async function waitForPaintedFrames(page: Page): Promise<void> {
   );
 }
 
+/** Wait until a browsing context's scroll position is unchanged for two frames. */
+export async function waitForStableWindowScroll(
+  target: Locator,
+): Promise<void> {
+  await target.evaluate((element) => {
+    const view = element.ownerDocument.defaultView;
+    if (view === null) throw new Error("Scroll target has no browsing context");
+    return new Promise<void>((resolve) => {
+      let previousX = view.scrollX;
+      let previousY = view.scrollY;
+      let stableFrames = 0;
+      const observe = (): void => {
+        const currentX = view.scrollX;
+        const currentY = view.scrollY;
+        stableFrames = currentX === previousX && currentY === previousY
+          ? stableFrames + 1
+          : 0;
+        previousX = currentX;
+        previousY = currentY;
+        if (stableFrames >= 2) resolve();
+        else view.requestAnimationFrame(observe);
+      };
+      view.requestAnimationFrame(observe);
+    });
+  });
+}
+
+/** Preserve a scroll position unless a smaller range requires browser clamping. */
+export function clampedScrollPosition(
+  previous: number,
+  maximum: number,
+): number {
+  return Math.min(Math.max(0, previous), Math.max(0, maximum));
+}
+
 /** Run one WCAG scan only after theme and layout paint caches have settled. */
 export async function scanBrowserAccessibility(
   page: Page,

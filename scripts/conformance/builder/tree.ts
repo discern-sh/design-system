@@ -1,4 +1,8 @@
 import type { Locator, Page } from "playwright-core";
+import {
+  clampedScrollPosition,
+  waitForStableWindowScroll,
+} from "../../browser-conformance-support.ts";
 import { BUILDER_STORAGE_KEYS } from "../../../catalogue/builder/persistence.ts";
 import { placeNamedComponent } from "./discovery.ts";
 import {
@@ -431,18 +435,41 @@ async function verifyStructuralAuthoring(page: Page): Promise<number> {
     const editLayer = page.locator(".discern-builder-edit-layer");
     await editLayer.hover();
     const outerScrollBefore = await page.locator(".discern-builder-canvas")
-      .evaluate((element) => element.scrollTop);
+      .evaluate((element) => ({
+        top: element.scrollTop,
+        maximum: element.scrollHeight - element.clientHeight,
+      }));
+    const frameScrollBefore = await preview.locator("html").evaluate((
+      element,
+    ) => element.ownerDocument.defaultView?.scrollY ?? 0);
     await page.mouse.wheel(0, 10_000);
     await page.waitForFunction(() =>
       document.querySelector<HTMLIFrameElement>(
         "iframe[data-discern-builder-preview-frame]",
       )?.contentWindow?.scrollY !== 0
     );
+    await waitForStableWindowScroll(preview.locator("html"));
+    const frameScrollAfter = await preview.locator("html").evaluate((element) =>
+      element.ownerDocument.defaultView?.scrollY ?? 0
+    );
+    const outerScrollAfter = await page.locator(".discern-builder-canvas")
+      .evaluate((element) => ({
+        top: element.scrollTop,
+        maximum: element.scrollHeight - element.clientHeight,
+      }));
     invariant(
-      await page.locator(".discern-builder-canvas").evaluate((element) =>
-        element.scrollTop
-      ) === outerScrollBefore,
-      "edit-mode frame scrolling also moved the outer canvas",
+      outerScrollAfter.top === clampedScrollPosition(
+        outerScrollBefore.top,
+        outerScrollAfter.maximum,
+      ),
+      `edit-mode frame scrolling also moved the outer canvas: ${
+        JSON.stringify({
+          frameScrollBefore,
+          frameScrollAfter,
+          outerScrollBefore,
+          outerScrollAfter,
+        })
+      }`,
     );
     const buttonRect = await preview.locator(".discern-button").last()
       .evaluate((element) => {
@@ -461,19 +488,26 @@ async function verifyStructuralAuthoring(page: Page): Promise<number> {
       x: frameBox.x + target.x,
       y: frameBox.y + target.y,
     };
-    const editLayerReceivesPoint = await page.evaluate(
-      ({ x, y }) =>
-        document.elementFromPoint(x, y)?.closest(
-          ".discern-builder-edit-layer",
-        ) !== null,
+    const hitOwner = await page.evaluate(
+      ({ x, y }) => {
+        const hit = document.elementFromPoint(x, y);
+        return {
+          editLayer: hit?.closest(".discern-builder-edit-layer") !== null,
+          className: hit instanceof HTMLElement ? hit.className : "",
+          tagName: hit?.tagName ?? "",
+        };
+      },
       clientPoint,
     );
     invariant(
-      editLayerReceivesPoint,
+      hitOwner.editLayer,
       `zoomed target was outside the scrolled edit layer: ${
         JSON.stringify({
           clientPoint,
           frameBox,
+          frameScrollBefore,
+          frameScrollAfter,
+          hitOwner,
         })
       }`,
     );

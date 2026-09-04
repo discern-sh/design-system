@@ -106,6 +106,14 @@ refresh` immediately rewrites them back) — the two sides loop forever.
 
 **Fix.** Keep `placeNamedComponent` in [`scripts/conformance/builder/discovery.ts`](../../scripts/conformance/builder/discovery.ts) waiting for the exact matching Layers population to grow by one. Shortcut isolation drains deferred frames before taking its document witness and presses through the target Locator so the tested event is owned by that control. Do not replace either precondition with an existence wait or a fixed delay.
 
+### Builder shortcut isolation reports a zoomed target outside the edit layer
+
+**Symptom.** Browser conformance intermittently reports `zoomed target was outside the scrolled edit layer` or `edit-mode frame scrolling also moved the outer canvas` during interactive shortcut isolation; an unchanged rerun passes.
+
+**Cause.** Scrolling the inner preview moves the selected node's absolute editing overlay upward. That can shrink the outer canvas's legal scroll range, so the browser clamps its existing scroll offset even though the wheel never propagated; comparing raw offsets misdiagnoses the required clamp as scroll leakage. Playwright's mouse wheel also returns before the forwarded frame scroll necessarily settles, so immediate target geometry can still sit beneath the sticky preview-status chrome rather than the edit layer.
+
+**Fix.** Compare the resulting outer offset with `clampedScrollPosition(previous, newMaximum)` rather than with the raw previous offset, then keep wheel-driven pointer geometry behind `waitForStableWindowScroll`. Both authorities live in [`scripts/browser-conformance-support.ts`](../../scripts/browser-conformance-support.ts). Tracked-TypeScript architecture tests reject future wheel witnesses that omit post-layout clamping or sample synthetic-click geometry before the inner scroll settles.
+
 ### The `css_density` standard measures a stale `dist/discern.css`
 
 **Symptom.** The `css_density` number does not move when you expected it to (or a standalone `discern standards` run reports a size that ignores your change).
